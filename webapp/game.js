@@ -1173,9 +1173,9 @@ class MenuScene extends Phaser.Scene {
     infoObjs.push(schTitleBg, schTitle);
 
     const tiers = [
-      { range:'1–10 Premium-покупок',  pct:'5% с каждой покупки → USDT',       col:'#7adfaa' },
-      { range:'11–30 Premium-покупок', pct:'7% с каждой покупки → USDT',       col:'#5ac8f0' },
-      { range:'31+ Premium-покупок',   pct:'10% с любой покупки всегда → USDT', col:'#ffc83c' },
+      { range:'1–10 Premium-покупок',  pct:'5% разово с покупки → USDT',          col:'#7adfaa' },
+      { range:'11–30 Premium-покупок', pct:'7% разово с покупки → USDT',          col:'#5ac8f0' },
+      { range:'31+ Premium-покупок',   pct:'10% всегда с каждой покупки → USDT',  col:'#ffc83c' },
     ];
     tiers.forEach((t, i) => {
       const ty = schY + 36 + i * 40;
