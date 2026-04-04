@@ -1224,7 +1224,7 @@ class ShopScene extends Phaser.Scene {
       try {
         const r = await get(`/api/shop/crypto_check/${invoiceId}`);
         if (r.ok && r.paid) {
-          this._onCryptoPaid(r.diamonds || diamonds, invoiceId);
+          this._onCryptoPaid(r.diamonds || diamonds, invoiceId, r.premium_activated);
           return;
         }
       } catch(_) {}
@@ -1240,7 +1240,7 @@ class ShopScene extends Phaser.Scene {
     try {
       const r = await get(`/api/shop/crypto_check/${invoiceId}`);
       if (r.ok && r.paid) {
-        this._onCryptoPaid(r.diamonds, invoiceId);
+        this._onCryptoPaid(r.diamonds, invoiceId, r.premium_activated);
       } else {
         this._toast('⏳ Оплата ещё не подтверждена');
       }
@@ -1250,11 +1250,11 @@ class ShopScene extends Phaser.Scene {
   }
 
   /* ── Общий обработчик успешной крипто-оплаты ─────────── */
-  _onCryptoPaid(diamonds, invoiceId) {
+  _onCryptoPaid(diamonds, invoiceId, isPremium) {
     tg?.HapticFeedback?.notificationOccurred('success');
     Sound.levelUp?.();
     localStorage.removeItem('cryptoPendingInvoice');
-    const msg = diamonds > 0 ? `✅ +${diamonds} 💎 начислено!` : '✅ Premium активирован!';
+    const msg = isPremium ? '👑 Premium активирован на 21 день!' : `✅ +${diamonds} 💎 начислено!`;
     this._toast(msg);
     post('/api/player').then(d => {
       if (d.ok && d.player) State.player = d.player;
