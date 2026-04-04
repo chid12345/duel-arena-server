@@ -1466,7 +1466,7 @@ class BattleScene extends Phaser.Scene {
 
   _setGhostHpBar(bar, newPct, prevPct, baseColor) {
     if (!bar || !bar.fill) return;
-    const { x, y, w, h, ghost, fill } = bar;
+    const { _x: x, _y: y, _w: w, _h: h, ghost, fill } = bar;
     const np = Math.min(1, Math.max(0, newPct));
     const pp = Math.min(1, Math.max(0, prevPct));
 
