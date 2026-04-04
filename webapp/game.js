@@ -312,6 +312,47 @@ class BootScene extends Phaser.Scene {
   }
 }
 
+/* ── Менеджер in-game уведомлений ────────────────────────── */
+const Notif = (() => {
+  let _scene = null, _busy = false;
+  const _q   = [];
+
+  function _show() {
+    if (_busy || !_q.length || !_scene) return;
+    _busy = true;
+    const { icon, msg, color, dur } = _q.shift();
+    const W    = _scene.game.canvas.width;
+    const panW = W - 28, panH = 48, panX = 14, panY = 82;
+    const hexC = color || '#ffc83c';
+
+    const g = _scene.add.graphics().setDepth(200).setY(-panH);
+    g.fillStyle(C.bgPanel, 0.97);
+    g.fillRoundedRect(panX, 0, panW, panH, 12);
+    g.lineStyle(2, parseInt(hexC.replace('#','0x'), 16), 0.75);
+    g.strokeRoundedRect(panX, 0, panW, panH, 12);
+
+    const t = txt(_scene, panX + panW / 2, panH / 2, `${icon}  ${msg}`, 13, hexC, true)
+      .setOrigin(0.5).setDepth(201).setY(panY - panH);
+
+    _scene.tweens.add({
+      targets: [g, t], y: `+=${panH}`,
+      duration: 280, ease: 'Back.easeOut',
+    });
+    _scene.time.delayedCall(dur || 2600, () => {
+      _scene.tweens.add({
+        targets: [g, t], y: `-=${panH}`, alpha: 0,
+        duration: 220, ease: 'Quad.easeIn',
+        onComplete: () => { g.destroy(); t.destroy(); _busy = false; _show(); },
+      });
+    });
+  }
+
+  return {
+    setScene(s) { _scene = s; _busy = false; },
+    push(icon, msg, color, dur) { _q.push({ icon, msg, color, dur }); _show(); },
+  };
+})();
+
 /* ═══════════════════════════════════════════════════════════
    MENU SCENE — главный экран
    ═══════════════════════════════════════════════════════════ */
@@ -942,10 +983,28 @@ class MenuScene extends Phaser.Scene {
   _setupWS() {
     const p = State.player;
     if (!p) return;
+    Notif.setScene(this);
     connectWS(p.user_id, msg => {
       if (msg.event === 'battle_started') {
         State.battle = msg.battle;
         this.scene.start('Battle');
+        return;
+      }
+      // Уведомления пока игрок на главной
+      if (msg.event === 'level_up') {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        Sound.questDone();
+        Notif.push('🎊', `Новый уровень ${msg.level}! +${msg.free_stats || 1} стат`, '#b45aff', 3500);
+      }
+      if (msg.event === 'quest_complete') {
+        Notif.push('📅', 'Квест дня выполнен — забери награду!', '#3cc864', 3000);
+        this._questBadge = true;
+        // Обновить бейдж на кнопке "Ещё"
+        const btn = this._tabBtns?.more;
+        if (btn) btn.activeBar?.setVisible(false);
+      }
+      if (msg.event === 'clan_event') {
+        Notif.push('⚔️', msg.text || 'Событие в клане', '#5096ff', 3000);
       }
     });
   }
@@ -1535,102 +1594,204 @@ class ResultScene extends Phaser.Scene {
 
   async create() {
     const { width: W, height: H } = this.game.canvas;
+    const res   = State.lastResult;
+    const won   = res?.human_won ?? false;
+    const r     = res?.result    ?? {};
+    const isAfk = res?.afk_loss  === true;
 
-    // Фон
-    const g = this.add.graphics();
-    g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
-    g.fillRect(0, 0, W, H);
+    /* ── Фон (зелёный / красный оттенок) ── */
+    const bg = this.add.graphics();
+    if (won) {
+      bg.fillGradientStyle(0x0d1f09, 0x0d1f09, 0x121c0a, 0x121c0a, 1);
+    } else {
+      bg.fillGradientStyle(0x1a0808, 0x1a0808, 0x120a0a, 0x120a0a, 1);
+    }
+    bg.fillRect(0, 0, W, H);
+    // Звёзды
+    const starCol = won ? 0xffc83c : 0xff6655;
+    for (let i = 0; i < 45; i++) {
+      this.add.circle(
+        Phaser.Math.Between(0, W), Phaser.Math.Between(0, H * 0.85),
+        Phaser.Math.FloatBetween(0.4, 1.8), starCol,
+        Phaser.Math.FloatBetween(0.06, 0.35)
+      );
+    }
 
-    const res = State.lastResult;
-    const won = res?.human_won ?? false;
-    const r   = res?.result ?? {};
-
-    // Заголовок с анимацией
-    const title = txt(this, W/2, H * 0.22,
-      won ? '🏆 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ',
-      32, won ? '#ffc83c' : '#ff4455', true
-    ).setOrigin(0.5).setScale(0).setAlpha(0);
-
-    this.tweens.add({
-      targets: title,
-      scale: 1, alpha: 1,
-      duration: 600, ease: 'Back.easeOut',
-    });
+    /* ── Звук + хаптика ── */
     tg?.HapticFeedback?.notificationOccurred(won ? 'success' : 'error');
     if (won) Sound.victory(); else Sound.defeat();
 
-    // Частицы при победе
+    /* ── Конфетти ── */
     if (won) this._celebrate(W, H);
 
-    // Панель наград
+    /* ── Заголовок ── */
+    const titleStr = won ? '🏆  ПОБЕДА!' : isAfk ? '⏱️  ТАЙМАУТ' : '💀  ПОРАЖЕНИЕ';
+    const titleCol = won ? '#ffc83c' : isAfk ? '#ff8855' : '#ff4455';
+    const title = txt(this, W / 2, H * 0.17, titleStr, 34, titleCol, true)
+      .setOrigin(0.5).setScale(0).setAlpha(0);
+    this.tweens.add({ targets: title, scale: 1, alpha: 1, duration: 550, ease: 'Back.easeOut' });
+
+    /* ── Карточка результата ── */
+    const panH = won ? (r.level_up ? 185 : (r.win_streak > 1 ? 175 : 155))
+                     : (isAfk ? 128 : 88);
+    const panY  = H * 0.28;
+    makePanel(this, 16, panY, W - 32, panH, 16);
+
     if (won) {
-      makePanel(this, W/2 - 110, H * 0.36, 220, 110, 14);
-      txt(this, W/2, H * 0.40, 'НАГРАДЫ', 12, '#8888aa', true).setOrigin(0.5);
-      txt(this, W/2, H * 0.47, `💰 +${r.gold || 0} золота`, 18, '#ffc83c', true).setOrigin(0.5);
-      txt(this, W/2, H * 0.55, `⭐ +${r.exp || 0} опыта`, 16, '#5096ff', true).setOrigin(0.5);
-      if (r.level_up) {
-        txt(this, W/2, H * 0.62, '🎊 НОВЫЙ УРОВЕНЬ!', 16, '#b45aff', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 18, 'НАГРАДЫ', 11, '#8888aa', true).setOrigin(0.5);
+
+      // Gold — счётчик
+      const goldTxt = txt(this, W / 2, panY + 50, '💰 +0 золота', 22, '#ffc83c', true).setOrigin(0.5);
+      this._countUp(goldTxt, r.gold || 0, '💰 +', ' золота', 200);
+
+      // XP — счётчик
+      const expTxt = txt(this, W / 2, panY + 86, '⭐ +0 опыта', 18, '#5096ff', true).setOrigin(0.5);
+      this._countUp(expTxt, r.exp || 0, '⭐ +', ' опыта', 450);
+
+      // Раунды
+      txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#666688').setOrigin(0.5);
+
+      let extraY = panY + 138;
+
+      // Streak bonus
+      if ((r.streak_bonus || 0) > 0) {
+        const sbt = txt(this, W / 2, extraY, `🎉 +${r.streak_bonus} бонус серии!`, 12, '#ff8855', true)
+          .setOrigin(0.5).setAlpha(0);
+        this.tweens.add({ targets: sbt, alpha: 1, delay: 700, duration: 300 });
+        extraY += 24;
       }
-      txt(this, W/2, H * 0.69, `Раундов: ${r.rounds || 0}`, 12, '#8888aa').setOrigin(0.5);
+
+      // Win streak
+      if ((r.win_streak || 0) > 1) {
+        txt(this, W / 2, extraY, `🔥 Серия: ${r.win_streak} побед подряд!`, 13, '#ff8044', true)
+          .setOrigin(0.5);
+      }
+
+      // Level up flash
+      if (r.level_up) this.time.delayedCall(900, () => this._levelUpFlash(W, H));
+
+    } else if (isAfk) {
+      txt(this, W / 2, panY + 24, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
+      txt(this, W / 2, panY + 76, 'Нажимай кнопки быстрее!', 11, '#8888aa').setOrigin(0.5);
+      txt(this, W / 2, panY + 102, `Раундов: ${r.rounds || 0}`, 11, '#555577').setOrigin(0.5);
     } else {
-      const isAfk = res?.afk_loss === true;
-      makePanel(this, W/2 - 110, H * 0.36, 220, isAfk ? 110 : 80, 14);
-      if (isAfk) {
-        txt(this, W/2, H * 0.40, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
-        txt(this, W/2, H * 0.48, '3 раунда без хода', 13, '#cc6633').setOrigin(0.5);
-        txt(this, W/2, H * 0.55, 'Успевай нажать кнопку!', 12, '#8888aa').setOrigin(0.5);
-        txt(this, W/2, H * 0.62, `Раундов: ${r.rounds || 0}`, 11, '#666688').setOrigin(0.5);
-      } else {
-        txt(this, W/2, H * 0.44, 'Не сдавайся!', 16, '#8888aa').setOrigin(0.5);
-        txt(this, W/2, H * 0.52, `Раундов: ${r.rounds || 0}`, 12, '#666688').setOrigin(0.5);
-      }
+      txt(this, W / 2, panY + 30, '💪  Не сдавайся!', 16, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 62, `Раундов: ${r.rounds || 0}`, 12, '#555577').setOrigin(0.5);
     }
 
-    // Обновить профиль
+    /* ── Обновляем профиль ── */
     try {
       const fresh = await post('/api/player');
       if (fresh.ok) State.player = fresh.player;
-    } catch(e) {}
+    } catch (_) {}
 
-    // Кнопки
-    this._mainBtn(W/2, H * 0.82, '⚔️ Ещё бой!', () => {
-      this.scene.start('Menu');
-      this.time.delayedCall(100, () => this.scene.start('Battle').then?.());
+    /* ── Кнопки ── */
+    this._bigBtn(W / 2, H * 0.79,
+      '⚔️  Ещё бой!',
+      won ? C.gold : 0x881a22,
+      won ? '#1a1a28' : '#ffffff',
+      () => { this.scene.start('Menu'); }
+    );
+    this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu'));
+
+    /* ── Поделиться (только при победе) ── */
+    if (won) {
+      const shareY = H * 0.96;
+      const shareT = txt(this, W / 2, shareY, '📤 Поделиться победой', 11, '#555577').setOrigin(0.5);
+      const shareZ = this.add.zone(W / 2, shareY, 200, 24).setInteractive({ useHandCursor: true });
+      shareZ.on('pointerup', () => {
+        const p = State.player;
+        const text = `🏆 Победил в Duel Arena! Ур.${p?.level || '?'} · ★${p?.rating || '?'}\nЗаходи: https://t.me/ZenDuelArena_bot`;
+        tg?.switchInlineQuery ? tg.switchInlineQuery(text) : null;
+      });
+    }
+  }
+
+  _countUp(textObj, target, prefix, suffix, delay) {
+    if (!target || target <= 0) { textObj.setText(`${prefix}0${suffix}`); return; }
+    const steps = 22, stepMs = 35;
+    this.time.delayedCall(delay, () => {
+      let s = 0;
+      this.time.addEvent({
+        delay: stepMs, repeat: steps - 1,
+        callback: () => {
+          s++;
+          textObj.setText(`${prefix}${Math.round(target * s / steps)}${suffix}`);
+          if (s >= steps) textObj.setText(`${prefix}${target}${suffix}`);
+        },
+      });
     });
-    this._mainBtn(W/2, H * 0.91, '🏠 Главная', () => this.scene.start('Menu'));
+  }
+
+  _levelUpFlash(W, H) {
+    const flash = this.add.graphics().setDepth(50);
+    flash.fillStyle(C.purple, 0.55);
+    flash.fillRect(0, 0, W, H);
+    this.tweens.add({ targets: flash, alpha: 0, duration: 350, onComplete: () => flash.destroy() });
+
+    const t = txt(this, W / 2, H * 0.48, '🎊  НОВЫЙ УРОВЕНЬ!', 30, '#cc88ff', true)
+      .setOrigin(0.5).setScale(0).setAlpha(0).setDepth(51);
+    this.tweens.add({
+      targets: t, scale: 1, alpha: 1, duration: 420, ease: 'Back.easeOut',
+      onComplete: () => this.time.delayedCall(1400, () => {
+        this.tweens.add({ targets: t, alpha: 0, y: t.y - 50, duration: 500, onComplete: () => t.destroy() });
+      }),
+    });
+    Sound.questDone();
+    tg?.HapticFeedback?.notificationOccurred('success');
   }
 
   _celebrate(W, H) {
-    const colors = [0xffc83c, 0x5096ff, 0xb45aff, 0x3cc864, 0xff4455];
-    for (let i = 0; i < 30; i++) {
-      const c = this.add.circle(
-        Phaser.Math.Between(0, W),
-        Phaser.Math.Between(-20, 0),
-        Phaser.Math.Between(3, 7),
-        Phaser.Math.RND.pick(colors), 0.9
-      );
+    const cols = [0xffc83c, 0x5096ff, 0xb45aff, 0x3cc864, 0xff8800, 0xff4488, 0x3cc8dc];
+    for (let i = 0; i < 55; i++) {
+      const c    = this.add.graphics();
+      const col  = Phaser.Math.RND.pick(cols);
+      const sz   = Phaser.Math.Between(4, 10);
+      const rect = Math.random() > 0.45;
+      const sx   = Phaser.Math.Between(0, W);
+      c.fillStyle(col, 0.92);
+      if (rect) c.fillRect(-sz / 2, -sz / 2, sz, sz * 1.7);
+      else      c.fillCircle(0, 0, sz / 2);
+      c.x = sx; c.y = Phaser.Math.Between(-40, 0);
+      c.angle = Phaser.Math.Between(0, 360);
       this.tweens.add({
         targets: c,
-        y: H + 20,
-        x: c.x + Phaser.Math.Between(-60, 60),
-        alpha: 0,
-        duration: Phaser.Math.Between(1200, 2400),
-        delay: Phaser.Math.Between(0, 800),
+        y: H + 40, alpha: 0,
+        x: sx + Phaser.Math.Between(-90, 90),
+        angle: c.angle + Phaser.Math.Between(-200, 200),
+        duration: Phaser.Math.Between(1500, 3000),
+        delay: Phaser.Math.Between(0, 1000),
+        ease: 'Quad.easeIn',
         onComplete: () => c.destroy(),
       });
     }
   }
 
+  _bigBtn(x, y, label, fillColor, textColor, cb) {
+    const BW = 260, BH = 52;
+    const g = this.add.graphics();
+    g.fillStyle(fillColor, 1);
+    g.fillRoundedRect(x - BW / 2, y - BH / 2, BW, BH, 14);
+    g.fillStyle(0xffffff, 0.14);
+    g.fillRoundedRect(x - BW / 2 + 4, y - BH / 2 + 4, BW - 8, BH * 0.46, 10);
+    txt(this, x, y, label, 17, textColor, true).setOrigin(0.5);
+    const z = this.add.zone(x, y, BW, BH).setInteractive({ useHandCursor: true });
+    z.on('pointerdown', () => { g.clear(); g.fillStyle(fillColor, 0.65); g.fillRoundedRect(x-BW/2, y-BH/2, BW, BH, 14); tg?.HapticFeedback?.impactOccurred('medium'); });
+    z.on('pointerup',   () => { g.clear(); g.fillStyle(fillColor, 1); g.fillRoundedRect(x-BW/2, y-BH/2, BW, BH, 14); g.fillStyle(0xffffff,0.14); g.fillRoundedRect(x-BW/2+4, y-BH/2+4, BW-8, BH*0.46, 10); cb(); });
+    z.on('pointerout',  () => { g.clear(); g.fillStyle(fillColor, 1); g.fillRoundedRect(x-BW/2, y-BH/2, BW, BH, 14); g.fillStyle(0xffffff,0.14); g.fillRoundedRect(x-BW/2+4, y-BH/2+4, BW-8, BH*0.46, 10); });
+  }
+
   _mainBtn(x, y, label, cb) {
-    const W = 200, H = 38;
+    const BW = 200, BH = 38;
     const g = this.add.graphics();
     g.fillStyle(C.dark, 0.9);
-    g.fillRoundedRect(x - W/2, y - H/2, W, H, 10);
-    g.lineStyle(1.5, C.blue, 0.5);
-    g.strokeRoundedRect(x - W/2, y - H/2, W, H, 10);
+    g.fillRoundedRect(x - BW / 2, y - BH / 2, BW, BH, 10);
+    g.lineStyle(1.5, C.blue, 0.4);
+    g.strokeRoundedRect(x - BW / 2, y - BH / 2, BW, BH, 10);
     txt(this, x, y, label, 14, '#f0f0fa', true).setOrigin(0.5);
-    const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
-    zone.on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); cb(); });
+    const z = this.add.zone(x, y, BW, BH).setInteractive({ useHandCursor: true });
+    z.on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); cb(); });
   }
 }
 
@@ -1642,42 +1803,123 @@ class RatingScene extends Phaser.Scene {
 
   async create() {
     const { width: W, height: H } = this.game.canvas;
-    const g = this.add.graphics();
-    g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
-    g.fillRect(0, 0, W, H);
 
-    txt(this, W/2, 20, '🏆 ТОП ИГРОКОВ', 18, '#ffc83c', true).setOrigin(0.5);
-
-    try {
-      const res = await get('/api/rating', { limit: 15 });
-      if (res.ok) {
-        res.players.forEach((p, i) => {
-          const y = 58 + i * 40;
-          const isMe = p.user_id === State.player?.user_id;
-          makePanel(this, 10, y - 14, W - 20, 36, 8, isMe ? 0.95 : 0.7);
-          if (isMe) {
-            const hl = this.add.graphics();
-            hl.fillStyle(C.gold, 0.08);
-            hl.fillRoundedRect(10, y - 14, W - 20, 36, 8);
-          }
-          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-          txt(this, 20, y, medal, 13, '#ffc83c', true);
-          txt(this, 50, y, p.username, 13, isMe ? '#ffc83c' : '#f0f0fa', isMe);
-          txt(this, W - 20, y, `★ ${p.rating}`, 12, '#8888aa').setOrigin(1, 0.5);
-          txt(this, W - 80, y, `Ур.${p.level}`, 11, '#5096ff').setOrigin(1, 0.5);
-        });
-        if (res.my_rank) {
-          txt(this, W/2, H - 30, `Ваше место: #${res.my_rank}`, 13, '#ffc83c', true).setOrigin(0.5);
-        }
-      }
-    } catch(e) {
-      txt(this, W/2, H/2, 'Нет соединения', 14, '#ff4455').setOrigin(0.5);
+    /* Фон */
+    const bg = this.add.graphics();
+    bg.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
+    bg.fillRect(0, 0, W, H);
+    for (let i = 0; i < 40; i++) {
+      this.add.circle(
+        Phaser.Math.Between(0, W), Phaser.Math.Between(0, H * 0.85),
+        Phaser.Math.FloatBetween(0.3, 1.6), 0xffc83c,
+        Phaser.Math.FloatBetween(0.04, 0.2)
+      );
     }
 
-    // Назад
-    const backBtn = this.add.zone(40, 16, 70, 32).setInteractive({ useHandCursor: true });
-    txt(this, 20, 16, '← Назад', 12, '#8888aa');
-    backBtn.on('pointerup', () => this.scene.start('Menu'));
+    /* Шапка */
+    makePanel(this, 8, 6, W - 16, 48, 11);
+    txt(this, W / 2, 30, '🏆  ТОП ИГРОКОВ', 18, '#ffc83c', true).setOrigin(0.5);
+
+    /* Кнопка назад */
+    const backG = this.add.graphics();
+    backG.fillStyle(C.dark, 0.85);
+    backG.fillRoundedRect(12, 10, 80, 32, 8);
+    txt(this, 52, 26, '← Назад', 12, '#8888aa').setOrigin(0.5);
+    this.add.zone(12, 10, 80, 32).setOrigin(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
+
+    try {
+      const res = await get('/api/rating', { limit: 20 });
+      if (!res.ok) throw new Error('bad');
+
+      const players  = res.players || [];
+      const myRank   = res.my_rank;
+      const myUid    = State.player?.user_id;
+
+      /* ── TOP-3 подиум ── */
+      if (players.length >= 3) {
+        this._buildPodium(players.slice(0, 3), W, 62);
+      }
+
+      /* ── Список с 4-го места ── */
+      const listFrom = Math.min(players.length, 3);
+      const listY    = players.length >= 3 ? 198 : 62;
+      const rowH     = 46;
+
+      players.slice(listFrom).forEach((p, i) => {
+        const rank = listFrom + i + 1;
+        const ry   = listY + i * rowH;
+        const isMe = p.user_id === myUid;
+
+        const rg = this.add.graphics();
+        rg.fillStyle(isMe ? 0x1e2840 : C.bgPanel, isMe ? 0.98 : 0.8);
+        rg.fillRoundedRect(10, ry, W - 20, rowH - 4, 9);
+        if (isMe) {
+          rg.lineStyle(1.5, C.blue, 0.7);
+          rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9);
+        }
+
+        txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#666688', true).setOrigin(0.5);
+        txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
+        txt(this, 52, ry + 27, `Ур.${p.level}  ·  🏆 ${p.wins}W  💀 ${p.losses}L`, 10, '#555577');
+        txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
+      });
+
+      if (players.length === 0) {
+        txt(this, W / 2, H / 2, '📭 Нет данных', 14, '#555577').setOrigin(0.5);
+      }
+
+      /* ── Моя позиция (если не в топ-20) ── */
+      if (myRank && myRank > 20) {
+        const myBY = H - 50;
+        const myBG = this.add.graphics();
+        myBG.fillStyle(0x1a2030, 0.97);
+        myBG.fillRoundedRect(10, myBY, W - 20, 42, 10);
+        myBG.lineStyle(1.5, C.gold, 0.5);
+        myBG.strokeRoundedRect(10, myBY, W - 20, 42, 10);
+        txt(this, W / 2, myBY + 14, `Ваше место в рейтинге`, 10, '#888899').setOrigin(0.5);
+        txt(this, W / 2, myBY + 30, `# ${myRank}  ·  ★ ${State.player?.rating || '?'}`, 15, '#ffc83c', true).setOrigin(0.5);
+      }
+
+    } catch (e) {
+      txt(this, W / 2, H / 2, '❌ Нет соединения', 14, '#ff4455').setOrigin(0.5);
+    }
+  }
+
+  _buildPodium(top3, W, y) {
+    // Порядок: 2-е (слева), 1-е (центр), 3-е (справа)
+    const order     = [top3[1], top3[0], top3[2]];
+    const podH      = [80, 104, 64];
+    const medals    = ['🥈', '🥇', '🥉'];
+    const podColors = [0x666688, 0xcc9900, 0x885533];
+    const posX      = [W * 0.20, W * 0.50, W * 0.80];
+    const myUid     = State.player?.user_id;
+    const baseY     = y + 128; // bottom of podium area
+
+    order.forEach((p, i) => {
+      if (!p) return;
+      const px   = posX[i];
+      const ph   = podH[i];
+      const isMe = p.user_id === myUid;
+
+      /* Подиум-столбик */
+      const pg = this.add.graphics();
+      pg.fillStyle(podColors[i], isMe ? 1 : 0.75);
+      pg.fillRoundedRect(px - 38, baseY - ph, 76, ph, 6);
+      if (isMe) { pg.lineStyle(2, C.blue, 0.8); pg.strokeRoundedRect(px - 38, baseY - ph, 76, ph, 6); }
+
+      /* Медаль */
+      txt(this, px, baseY - ph - 28, medals[i], 24).setOrigin(0.5);
+
+      /* Имя */
+      const name = (p.username || 'User').slice(0, 9);
+      txt(this, px, baseY - ph - 10, name, 10, isMe ? '#88ccff' : '#f0f0fa', isMe).setOrigin(0.5);
+
+      /* Рейтинг */
+      txt(this, px, baseY + 12, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(0.5);
+      txt(this, px, baseY + 30, `Ур.${p.level}`, 10, '#8888aa').setOrigin(0.5);
+    });
   }
 }
 

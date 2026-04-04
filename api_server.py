@@ -388,6 +388,14 @@ async def battle_choice(body: BattleChoiceBody):
                 "rounds":   result.get("rounds", 0),
             }
         })
+        # Проверяем: возможно квест только что выполнился
+        if human_won:
+            try:
+                qs = db.get_daily_quest_status(uid)
+                if qs.get("is_completed") and not qs.get("reward_claimed"):
+                    await manager.send(uid, {"event": "quest_complete"})
+            except Exception:
+                pass
         if is_pvp and b:
             opp_uid = (b["player2"] if b["player1"]["user_id"] == uid else b["player1"]).get("user_id")
             if opp_uid:
