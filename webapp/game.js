@@ -278,14 +278,25 @@ class MenuScene extends Phaser.Scene {
 
   async create() {
     const { width: W, height: H } = this.game.canvas;
-    this._buildBg(W, H);
+    this.W = W; this.H = H;
+    this.TAB_H = 62;
+    this.CONTENT_H = H - this.TAB_H;
+    this._panels = {};
+    this._tabBtns = {};
+    this._activeTab = null;
+
+    this._drawBg(W, H);
 
     // Загружаем игрока
     try {
       const res = await post('/api/player');
       if (res.ok) {
         State.player = res.player;
-        this._buildUI(W, H);
+        this._buildTabBar();
+        this._buildProfilePanel();
+        this._buildBattlePanel();
+        this._buildMorePanel();
+        this._switchTab('profile');
         this._setupWS();
       } else {
         this._showError('Ошибка загрузки профиля');
@@ -295,149 +306,384 @@ class MenuScene extends Phaser.Scene {
     }
   }
 
-  _buildBg(W, H) {
-    // Градиент фона
+  /* ── Фон ─────────────────────────────────────────────── */
+  _drawBg(W, H) {
     const g = this.add.graphics();
     g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
     g.fillRect(0, 0, W, H);
-
-    // Звёзды
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 55; i++) {
       const x = Phaser.Math.Between(0, W);
-      const y = Phaser.Math.Between(0, H * 0.7);
-      const r = Phaser.Math.FloatBetween(0.5, 2);
-      const a = Phaser.Math.FloatBetween(0.3, 0.9);
-      this.add.circle(x, y, r, 0xffffff, a);
+      const y = Phaser.Math.Between(0, H * 0.85);
+      this.add.circle(x, y,
+        Phaser.Math.FloatBetween(0.4, 1.8), 0xffffff,
+        Phaser.Math.FloatBetween(0.15, 0.6));
     }
   }
 
-  _buildUI(W, H) {
-    const p = State.player;
-    const pad = 16;
-    const panelW = W - pad * 2;
+  /* ══════════════════════════════════════════════════════
+     ТАБ-БАР
+     ══════════════════════════════════════════════════════ */
+  _buildTabBar() {
+    const { W, H, TAB_H } = this;
+    const tabs = [
+      { key: 'profile', icon: '🏠', label: 'Профиль' },
+      { key: 'battle',  icon: '⚔️',  label: 'Бой'     },
+      { key: 'stats',   icon: '📊',  label: 'Статы'   },
+      { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
+      { key: 'more',    icon: '☰',   label: 'Ещё'     },
+    ];
 
-    /* ── Верхняя полоса: имя + уровень + рейтинг ── */
-    makePanel(this, pad, pad, panelW, 56, 12);
+    // Подложка таб-бара
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0e0d1a, 1);
+    bg.fillRect(0, H - TAB_H, W, TAB_H);
+    bg.lineStyle(1, C.gold, 0.18);
+    bg.lineBetween(0, H - TAB_H, W, H - TAB_H);
 
-    // Уровень-бейдж
-    const badgeG = this.add.graphics();
-    badgeG.fillStyle(C.gold, 1);
-    badgeG.fillRoundedRect(pad + 8, pad + 10, 52, 28, 8);
-    txt(this, pad + 34, pad + 24, `УР.${p.level}`, 13, '#1a1a28', true).setOrigin(0.5);
+    const tabW = W / tabs.length;
+    tabs.forEach((tab, i) => {
+      const cx = tabW * i + tabW / 2;
+      const cy = H - TAB_H / 2;
 
-    txt(this, pad + 72, pad + 14, p.username, 16, '#f0f0fa', true);
-    txt(this, pad + 72, pad + 34, `★ ${p.rating}  |  🏆 ${p.wins}W  💀 ${p.losses}L`, 11, '#8888aa');
+      // Фон активной вкладки (изначально скрыт)
+      const activeBg = this.add.graphics();
+      activeBg.fillStyle(C.gold, 0.10);
+      activeBg.fillRoundedRect(tabW * i + 4, H - TAB_H + 4, tabW - 8, TAB_H - 8, 10);
+      activeBg.setVisible(false);
 
-    // Золото справа
-    txt(this, W - pad - 8, pad + 20, `💰 ${p.gold}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
+      const iconTxt  = txt(this, cx, cy - 10, tab.icon, 18).setOrigin(0.5);
+      const labelTxt = txt(this, cx, cy + 10, tab.label, 9, '#555577').setOrigin(0.5);
+
+      this._tabBtns[tab.key] = { activeBg, iconTxt, labelTxt };
+
+      const zone = this.add.zone(cx, cy, tabW, TAB_H).setInteractive({ useHandCursor: true });
+      zone.on('pointerup', () => {
+        tg?.HapticFeedback?.selectionChanged();
+        if (tab.key === 'stats')  { this.scene.start('Stats',  { player: State.player }); return; }
+        if (tab.key === 'rating') { this.scene.start('Rating'); return; }
+        this._switchTab(tab.key);
+      });
+    });
+  }
+
+  _switchTab(key) {
+    // Скрыть все панели
+    Object.entries(this._panels).forEach(([k, c]) => c.setVisible(k === key));
+    // Обновить стиль табов
+    Object.entries(this._tabBtns).forEach(([k, btn]) => {
+      const active = k === key;
+      btn.activeBg.setVisible(active);
+      btn.iconTxt.setAlpha(active ? 1 : 0.45);
+      btn.labelTxt.setText(this._tabBtns[k] ? btn.labelTxt.text : '').setStyle({
+        color: active ? '#ffc83c' : '#555577',
+      });
+    });
+    this._activeTab = key;
+  }
+
+  /* ══════════════════════════════════════════════════════
+     ПАНЕЛЬ: ПРОФИЛЬ
+     ══════════════════════════════════════════════════════ */
+  _buildProfilePanel() {
+    const { W, CONTENT_H: CH } = this;
+    const p  = State.player;
+    const c  = this.add.container(0, 0);
+    const pad = 12;
+
+    /* ── Шапка ── */
+    const hBg = this.add.graphics();
+    hBg.fillStyle(C.bgPanel, 0.95);
+    hBg.fillRoundedRect(pad, 8, W - pad * 2, 58, 12);
+    hBg.lineStyle(1.5, C.gold, 0.22);
+    hBg.strokeRoundedRect(pad, 8, W - pad * 2, 58, 12);
+
+    const lvlBg = this.add.graphics();
+    lvlBg.fillStyle(C.gold, 1);
+    lvlBg.fillRoundedRect(pad + 8, 17, 50, 24, 7);
+
+    const lvlTxt  = txt(this, pad + 33, 29, `УР.${p.level}`, 12, '#1a1a28', true).setOrigin(0.5);
+    const nameTxt = txt(this, pad + 68, 20, p.username, 15, '#f0f0fa', true);
+    const subTxt  = txt(this, pad + 68, 38, `★ ${p.rating}  ·  🏆${p.wins}W  💀${p.losses}L`, 10, '#8888aa');
+    const goldTxt = txt(this, W - pad - 10, 37, `💰 ${p.gold}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
 
     /* ── Персонаж ── */
-    const charY = 110;
-    const warrior = this.add.image(W/2, charY, 'warrior_blue')
-      .setOrigin(0.5)
-      .setScale(1.4);
-
-    // Покачивание
-    this.tweens.add({
-      targets: warrior,
-      y: charY - 6,
-      duration: 1800,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    const charY = CH * 0.30;
+    const warrior = this.add.image(W * 0.38, charY, 'warrior_blue').setScale(1.55).setOrigin(0.5);
+    this.tweens.add({ targets: warrior, y: charY - 7, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     /* ── HP бар ── */
-    const barY = charY + 62;
-    const barW = 160;
-    makeBar(this, W/2 - barW/2, barY, barW, 10,
-      p.hp_pct / 100, p.hp_pct > 50 ? C.green : (p.hp_pct > 25 ? C.gold : C.red));
-    txt(this, W/2, barY + 5, `${p.current_hp} / ${p.max_hp} HP`, 10, '#f0f0fa').setOrigin(0.5);
+    const hpY  = charY + 72;
+    const hpW  = 148;
+    const hpX  = W * 0.38 - hpW / 2;
+    const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
+    const hpBg = makeBar(this, hpX, hpY, hpW, 11, p.hp_pct / 100, hpCol);
+    const hpTxt = txt(this, W * 0.38, hpY + 5, `${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5);
 
     /* ── XP бар ── */
+    let xpBg, xpTxt;
     if (!p.max_level) {
-      makeBar(this, W/2 - barW/2, barY + 16, barW, 6, p.xp_pct / 100, C.blue);
-      txt(this, W/2, barY + 19, `XP ${p.exp}/${p.exp_needed}`, 9, '#8888aa').setOrigin(0.5);
+      xpBg  = makeBar(this, hpX, hpY + 15, hpW, 5, p.xp_pct / 100, C.blue);
+      xpTxt = txt(this, W * 0.38, hpY + 17, `XP ${p.exp}/${p.exp_needed}`, 8, '#555577').setOrigin(0.5);
     }
 
-    /* ── Статы (правая панель) ── */
-    const statX = W/2 + 72;
-    const statPanelH = 140;
-    makePanel(this, statX - 4, charY - 52, 100, statPanelH, 10);
+    /* ── Статы справа ── */
+    const sx = W * 0.62;
+    const sy0 = charY - 55;
+    const statsBg = this.add.graphics();
+    statsBg.fillStyle(C.bgPanel, 0.9);
+    statsBg.fillRoundedRect(sx - 4, sy0 - 6, W - sx - pad + 4, 148, 10);
+    statsBg.lineStyle(1, C.gold, 0.12);
+    statsBg.strokeRoundedRect(sx - 4, sy0 - 6, W - sx - pad + 4, 148, 10);
 
-    const stats = [
-      { label: '💪', val: p.strength,  color: '#dc3c46', sub: `~${p.dmg}ур` },
-      { label: '🤸', val: p.agility,   color: '#3cc8dc', sub: `${p.dodge_pct}%` },
-      { label: '💥', val: p.intuition, color: '#b45aff', sub: `${p.crit_pct}%` },
-      { label: '🛡', val: p.stamina,   color: '#3cc864', sub: `${p.armor_pct}%` },
+    const STATS = [
+      { icon: '💪', val: p.strength,  color: C.red,    sub: `~${p.dmg}ур`       },
+      { icon: '🤸', val: p.agility,   color: C.cyan,   sub: `${p.dodge_pct}%`   },
+      { icon: '💥', val: p.intuition, color: C.purple, sub: `${p.crit_pct}%`    },
+      { icon: '🛡', val: p.stamina,   color: C.green,  sub: `${p.armor_pct}%бр` },
     ];
-    stats.forEach((s, i) => {
-      const sy = charY - 44 + i * 34;
-      txt(this, statX + 4, sy, s.label + ' ' + s.val, 14, s.color, true);
-      txt(this, statX + 70, sy + 4, s.sub, 10, '#8888aa').setOrigin(1, 0);
+    const statObjs = STATS.map((s, i) => {
+      const y = sy0 + i * 35;
+      const ico   = txt(this, sx + 4,  y + 2, s.icon, 13);
+      const val   = txt(this, sx + 24, y,     String(s.val), 17, `#${s.color.toString(16).padStart(6,'0')}`, true);
+      const sub   = txt(this, sx + 70, y + 4, s.sub, 9, '#666688').setOrigin(1, 0);
+      const barG  = this.add.graphics();
+      const barW2 = 64;
+      barG.fillStyle(C.dark, 1); barG.fillRoundedRect(sx + 4, y + 22, barW2, 4, 2);
+      const maxV = Math.max(1, 3 + p.level * 2);
+      const pct  = Math.min(1, s.val / maxV);
+      barG.fillStyle(s.color, 0.8); barG.fillRoundedRect(sx + 4, y + 22, Math.max(4, barW2 * pct), 4, 2);
+      return [ico, val, sub, barG];
     });
 
     /* ── Свободные статы ── */
+    let fsBadge;
     if (p.free_stats > 0) {
       const fsG = this.add.graphics();
-      fsG.fillStyle(0x6030a0, 0.8);
-      fsG.fillRoundedRect(W/2 - 70, charY + 90, 140, 26, 8);
-      txt(this, W/2, charY + 103, `⚡ +${p.free_stats} свободных статов`, 11, '#ffc83c', true).setOrigin(0.5);
+      fsG.fillStyle(0x5520a0, 0.85);
+      fsG.fillRoundedRect(W / 2 - 88, hpY + 32, 176, 26, 8);
+      fsG.lineStyle(1.5, C.purple, 0.7);
+      fsG.strokeRoundedRect(W / 2 - 88, hpY + 32, 176, 26, 8);
+      const fsT = txt(this, W / 2, hpY + 45, `⚡ ${p.free_stats} свободных очка статов`, 11, '#ffc83c', true).setOrigin(0.5);
+      this.tweens.add({ targets: fsG, alpha: 0.5, duration: 700, yoyo: true, repeat: -1 });
+      fsBadge = [fsG, fsT];
     }
 
-    /* ── Главные кнопки ── */
-    const btnY = H - 130;
-    this._bigBtn(W/2, btnY, '⚔️  В БОЙ!', C.red, () => this._onFight());
-    this._outlineBtn(W/2 - 78, btnY + 56, '📊 СТАТЫ', () => this._onStats());
-    this._outlineBtn(W/2 + 78, btnY + 56, '🏆 ТОП', () => this._onRating());
-    this._outlineBtn(W/2, btnY + 106, '🔄 Обновить', () => this.scene.restart());
+    /* ── Обновить ── */
+    const refG = this.add.graphics();
+    refG.fillStyle(C.dark, 0.8);
+    refG.fillRoundedRect(W / 2 - 60, CH - 16, 120, 30, 9);
+    refG.lineStyle(1, C.blue, 0.3);
+    refG.strokeRoundedRect(W / 2 - 60, CH - 16, 120, 30, 9);
+    const refT = txt(this, W / 2, CH - 1, '🔄 Обновить', 12, '#8888aa').setOrigin(0.5);
+    const refZ = this.add.zone(W / 2, CH - 1, 120, 30).setInteractive({ useHandCursor: true });
+    refZ.on('pointerup', () => this.scene.restart());
 
-    /* ── Уведомление о свободных HP ── */
+    /* ── Предупреждение HP ── */
+    let hpWarn;
     if (p.hp_pct < 30) {
-      txt(this, W/2, H - 24, '❤️ Восстанови HP перед боем!', 11, '#ff8888').setOrigin(0.5);
+      hpWarn = txt(this, W / 2, CH - 44, '❤️ Восстанови HP перед боем!', 10, '#ff6666').setOrigin(0.5);
     }
+
+    // Добавляем всё в контейнер
+    const children = [
+      hBg, lvlBg, lvlTxt, nameTxt, subTxt, goldTxt,
+      warrior, hpBg, hpTxt,
+      statsBg, ...statObjs.flat(),
+      refG, refT, refZ,
+    ];
+    if (xpBg)  children.push(xpBg, xpTxt);
+    if (fsBadge) children.push(...fsBadge);
+    if (hpWarn)  children.push(hpWarn);
+    children.forEach(o => c.add(o));
+
+    this._panels.profile = c;
   }
 
-  _bigBtn(x, y, label, bgColor, cb) {
-    const W = 220, H = 48;
-    const g = this.add.graphics();
-    g.fillStyle(bgColor, 1);
-    g.fillRoundedRect(x - W/2, y - H/2, W, H, 12);
+  /* ══════════════════════════════════════════════════════
+     ПАНЕЛЬ: БОЙ
+     ══════════════════════════════════════════════════════ */
+  _buildBattlePanel() {
+    const { W, CONTENT_H: CH } = this;
+    const p = State.player;
+    const c = this.add.container(0, 0);
 
-    const t = txt(this, x, y, label, 17, '#ffffff', true).setOrigin(0.5);
-    const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
+    // Заголовок
+    const title = txt(this, W / 2, 30, '⚔️ ВЫБЕРИ БОЙ', 17, '#ffc83c', true).setOrigin(0.5);
+
+    // Разделитель
+    const sep = this.add.graphics();
+    sep.lineStyle(1, C.gold, 0.15);
+    sep.lineBetween(32, 50, W - 32, 50);
+
+    /* ── Карточка PvP ── */
+    const pvpCard = this._makeBattleCard(
+      W / 2, CH * 0.28,
+      '⚔️  ПОИСК СОПЕРНИКА',
+      'Живой игрок · рейтинговый бой',
+      '🏆 +рейтинг  💰 +золото  ⭐ +опыт',
+      C.red, 0xdc3c46,
+      () => this._onFight()
+    );
+
+    /* ── Карточка Бот ── */
+    const botCard = this._makeBattleCard(
+      W / 2, CH * 0.58,
+      '🤖  БОЙ С БОТОМ',
+      'Практика · нет рейтинга',
+      '💰 +золото  ⭐ +опыт',
+      C.blue, 0x2a4880,
+      () => this._onBotFight()
+    );
+
+    /* ── HP предупреждение ── */
+    let warn;
+    if (p.hp_pct < 30) {
+      const wg = this.add.graphics();
+      wg.fillStyle(0x440000, 0.85);
+      wg.fillRoundedRect(20, CH * 0.80, W - 40, 42, 10);
+      wg.lineStyle(1.5, C.red, 0.5);
+      wg.strokeRoundedRect(20, CH * 0.80, W - 40, 42, 10);
+      const wt = txt(this, W / 2, CH * 0.80 + 21,
+        `❤️ HP слишком мало для боя! (${p.current_hp}/${p.max_hp})`,
+        11, '#ff8888', true).setOrigin(0.5);
+      warn = [wg, wt];
+    }
+
+    const children = [title, sep, ...pvpCard, ...botCard];
+    if (warn) children.push(...warn);
+    children.forEach(o => c.add(o));
+
+    this._panels.battle = c;
+  }
+
+  _makeBattleCard(cx, cy, title, sub, bonus, borderColor, fillColor, cb) {
+    const { W } = this;
+    const cw = W - 32, ch = 100;
+    const x = cx - cw / 2, y = cy - ch / 2;
+    const objs = [];
+
+    const bg = this.add.graphics();
+    bg.fillStyle(fillColor, 0.18);
+    bg.fillRoundedRect(x, y, cw, ch, 14);
+    bg.lineStyle(2, borderColor, 0.7);
+    bg.strokeRoundedRect(x, y, cw, ch, 14);
+    objs.push(bg);
+
+    // Блик
+    const shine = this.add.graphics();
+    shine.fillStyle(0xffffff, 0.05);
+    shine.fillRoundedRect(x + 4, y + 4, cw - 8, ch * 0.42, 11);
+    objs.push(shine);
+
+    objs.push(txt(this, cx, y + 26, title,  16, '#f0f0fa', true).setOrigin(0.5));
+    objs.push(txt(this, cx, y + 50, sub,    11, '#8888aa').setOrigin(0.5));
+    objs.push(txt(this, cx, y + 72, bonus,  10, `#${borderColor.toString(16).padStart(6,'0')}`).setOrigin(0.5));
+
+    const zone = this.add.zone(cx, cy, cw, ch).setInteractive({ useHandCursor: true });
     zone.on('pointerdown', () => {
-      g.clear();
-      g.fillStyle(Phaser.Display.Color.ValueToColor(bgColor).darken(20).color, 1);
-      g.fillRoundedRect(x - W/2, y - H/2, W, H, 12);
+      bg.clear();
+      bg.fillStyle(fillColor, 0.32);
+      bg.fillRoundedRect(x, y, cw, ch, 14);
+      bg.lineStyle(2, borderColor, 1);
+      bg.strokeRoundedRect(x, y, cw, ch, 14);
       tg?.HapticFeedback?.impactOccurred('medium');
     });
     zone.on('pointerup', () => {
-      g.clear();
-      g.fillStyle(bgColor, 1);
-      g.fillRoundedRect(x - W/2, y - H/2, W, H, 12);
+      bg.clear();
+      bg.fillStyle(fillColor, 0.18);
+      bg.fillRoundedRect(x, y, cw, ch, 14);
+      bg.lineStyle(2, borderColor, 0.7);
+      bg.strokeRoundedRect(x, y, cw, ch, 14);
       cb();
     });
-    // Пульсация кнопки В БОЙ
-    this.tweens.add({
-      targets: [g, t],
-      scaleX: 1.03, scaleY: 1.03,
-      duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    zone.on('pointerout', () => {
+      bg.clear();
+      bg.fillStyle(fillColor, 0.18);
+      bg.fillRoundedRect(x, y, cw, ch, 14);
+      bg.lineStyle(2, borderColor, 0.7);
+      bg.strokeRoundedRect(x, y, cw, ch, 14);
     });
+    objs.push(zone);
+    return objs;
   }
 
-  _outlineBtn(x, y, label, cb) {
-    const W = 130, H = 38;
-    const g = this.add.graphics();
-    g.lineStyle(1.5, C.blue, 0.6);
-    g.fillStyle(C.dark, 0.8);
-    g.fillRoundedRect(x - W/2, y - H/2, W, H, 9);
-    g.strokeRoundedRect(x - W/2, y - H/2, W, H, 9);
-    txt(this, x, y, label, 13, '#f0f0fa').setOrigin(0.5);
-    const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
-    zone.on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); cb(); });
+  /* ══════════════════════════════════════════════════════
+     ПАНЕЛЬ: ЕЩЁ
+     ══════════════════════════════════════════════════════ */
+  _buildMorePanel() {
+    const { W, CONTENT_H: CH } = this;
+    const c = this.add.container(0, 0);
+
+    txt(this, W / 2, 28, 'ВСЕ ФУНКЦИИ', 14, '#ffc83c', true).setOrigin(0.5);
+    const sep = this.add.graphics();
+    sep.lineStyle(1, C.gold, 0.15);
+    sep.lineBetween(32, 46, W - 32, 46);
+    c.add(sep);
+
+    const items = [
+      { icon: '📋', label: 'Сводка',     cb: () => this._showSummary()       },
+      { icon: '🛍️', label: 'Магазин',    cb: () => this._soon('Магазин')     },
+      { icon: '⭐',  label: 'Сезон',      cb: () => this._soon('Сезон')       },
+      { icon: '🌟', label: 'Battle Pass', cb: () => this._soon('Battle Pass') },
+      { icon: '⚔️', label: 'Клан',       cb: () => this._soon('Клан')        },
+      { icon: '🔗', label: 'Пригласить', cb: () => this._onInvite()          },
+    ];
+
+    const cols = 2, rows = Math.ceil(items.length / cols);
+    const bw = (W - 36) / cols, bh = 72;
+    const startY = 60;
+
+    items.forEach((item, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const bx = 16 + col * (bw + 8) + bw / 2;
+      const by = startY + row * (bh + 10) + bh / 2;
+
+      const bg = this.add.graphics();
+      bg.fillStyle(C.bgPanel, 0.92);
+      bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+      bg.lineStyle(1.5, C.dark, 0.9);
+      bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+      c.add(bg);
+
+      c.add(txt(this, bx, by - 12, item.icon, 22).setOrigin(0.5));
+      c.add(txt(this, bx, by + 16, item.label, 11, '#c0c0e0').setOrigin(0.5));
+
+      const zone = this.add.zone(bx, by, bw, bh).setInteractive({ useHandCursor: true });
+      zone.on('pointerdown', () => {
+        bg.clear();
+        bg.fillStyle(C.dark, 1);
+        bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        bg.lineStyle(1.5, C.blue, 0.5);
+        bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        tg?.HapticFeedback?.selectionChanged();
+      });
+      zone.on('pointerup', () => {
+        bg.clear();
+        bg.fillStyle(C.bgPanel, 0.92);
+        bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        bg.lineStyle(1.5, C.dark, 0.9);
+        bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        item.cb();
+      });
+      zone.on('pointerout', () => {
+        bg.clear();
+        bg.fillStyle(C.bgPanel, 0.92);
+        bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        bg.lineStyle(1.5, C.dark, 0.9);
+        bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+      });
+      c.add(zone);
+    });
+
+    // Версия
+    c.add(txt(this, W / 2, CH - 20, 'Duel Arena v0.5 · @ZenDuelArena_bot', 8, '#333355').setOrigin(0.5));
+
+    this._panels.more = c;
   }
 
+  /* ══════════════════════════════════════════════════════
+     ЛОГИКА КНОПОК
+     ══════════════════════════════════════════════════════ */
   async _onFight() {
     const p = State.player;
     if (!p) return;
@@ -446,33 +692,56 @@ class MenuScene extends Phaser.Scene {
       this._toast('❤️ Нужно восстановить HP!');
       return;
     }
-    this._toast('⚔️ Ищем соперника...');
+    this._toast('🔍 Ищем соперника...');
     try {
-      // queue_only=true: нашли PvP — в бой, не нашли — встаём в очередь (без бота)
       const res = await post('/api/battle/find', { queue_only: true });
       if (!res.ok) {
-        this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : 'Нет противников');
+        this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Нет противников');
         return;
       }
-      if (res.status === 'queued') {
-        // Ждём живого соперника на экране очереди
-        this.scene.start('Queue');
-        return;
-      }
+      if (res.status === 'queued') { this.scene.start('Queue'); return; }
       State.battle = res.battle;
       this.scene.start('Battle');
-    } catch(e) {
-      this._toast('Нет соединения');
-    }
+    } catch(e) { this._toast('❌ Нет соединения'); }
   }
 
-  _onStats() { this.scene.start('Stats', { player: State.player }); }
-  _onRating() { this.scene.start('Rating'); }
+  async _onBotFight() {
+    const p = State.player;
+    if (!p) return;
+    if (p.hp_pct < 30) {
+      tg?.HapticFeedback?.notificationOccurred('error');
+      this._toast('❤️ Нужно восстановить HP!');
+      return;
+    }
+    this._toast('🤖 Запускаем бой с ботом...');
+    try {
+      const res = await post('/api/battle/find', { prefer_bot: true });
+      if (!res.ok) { this._toast('❌ Ошибка'); return; }
+      State.battle = res.battle;
+      this.scene.start('Battle');
+    } catch(e) { this._toast('❌ Нет соединения'); }
+  }
+
+  _showSummary() {
+    const p = State.player;
+    if (!p) return;
+    const total = p.wins + p.losses;
+    const wr = total > 0 ? Math.round(p.wins / total * 100) : 0;
+    this._toast(`🏆 ${p.wins}W  💀 ${p.losses}L  · WR ${wr}%`);
+  }
+
+  _onInvite() {
+    const link = `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id || ''}`;
+    tg?.openTelegramLink ? tg.openTelegramLink(link) : this._toast('Скопируй ссылку в боте');
+  }
+
+  _soon(name) { this._toast(`🚧 ${name} — скоро!`); }
 
   _toast(msg) {
-    const { width: W, height: H } = this.game.canvas;
-    const t = txt(this, W/2, H - 30, msg, 12, '#ffc83c', true).setOrigin(0.5).setAlpha(0);
-    this.tweens.add({ targets: t, alpha: 1, duration: 200, hold: 1500, yoyo: true,
+    const { W, H } = this;
+    const t = txt(this, W / 2, H - this.TAB_H - 22, msg, 12, '#ffc83c', true)
+      .setOrigin(0.5).setAlpha(0).setDepth(20);
+    this.tweens.add({ targets: t, alpha: 1, duration: 200, hold: 1600, yoyo: true,
       onComplete: () => t.destroy() });
   }
 
@@ -488,8 +757,7 @@ class MenuScene extends Phaser.Scene {
   }
 
   _showError(msg) {
-    const { width: W, height: H } = this.game.canvas;
-    txt(this, W/2, H/2, msg, 16, '#ff4455').setOrigin(0.5);
+    txt(this, this.W / 2, this.H / 2, msg, 16, '#ff4455').setOrigin(0.5);
   }
 }
 
