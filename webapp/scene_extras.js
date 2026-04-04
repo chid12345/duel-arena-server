@@ -401,131 +401,266 @@ class ClanScene extends Phaser.Scene {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SHOP SCENE — магазин
+   SHOP SCENE — магазин с реальными покупками
    ═══════════════════════════════════════════════════════════ */
 class ShopScene extends Phaser.Scene {
   constructor() { super('Shop'); }
 
+  init(data) {
+    // Сохраняем активную вкладку при рестарте сцены
+    this._tab = (data && data.tab) ? data.tab : (ShopScene._lastTab || 'potions');
+    ShopScene._lastTab = this._tab;
+    this._buying = false;
+  }
+
   create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
-    this._tab = 'potions';
+
     _extraBg(this, W, H);
     _extraHeader(this, W, '🛍️', 'МАГАЗИН', 'Зелья · Снаряжение · Особые');
     _extraBack(this, W, H);
 
     this._buildTabBar(W, H);
-    this._buildContent(W, H);
+    this._buildBalance(W);
+    this._buildItems(W, H);
   }
 
+  /* ── Вкладки ─────────────────────────────────────────── */
   _buildTabBar(W, H) {
     const tabs = [
-      { key: 'potions', label: '🧪 Зелья' },
-      { key: 'gear',    label: '🛡️ Снаряж.' },
-      { key: 'special', label: '✨ Особые' },
+      { key: 'potions', label: '🧪 Зелья'    },
+      { key: 'gear',    label: '🛡️ Снаряж.'  },
+      { key: 'special', label: '✨ Особые'    },
     ];
     const tw = (W - 24) / tabs.length;
     const ty = 76;
     tabs.forEach((tab, i) => {
-      const tx = 12 + i * tw;
-      const bg = this.add.graphics();
+      const tx     = 12 + i * tw;
       const active = tab.key === this._tab;
-      bg.fillStyle(active ? C.blue : C.dark, active ? 0.9 : 0.6);
+      const bg = this.add.graphics();
+      bg.fillStyle(active ? C.blue : C.dark, active ? 0.9 : 0.55);
       bg.fillRoundedRect(tx, ty, tw - 4, 30, 8);
-      txt(this, tx + (tw-4)/2, ty + 15, tab.label, 10, active ? '#ffffff' : '#8888aa').setOrigin(0.5);
-      this.add.zone(tx, ty, tw-4, 30).setOrigin(0)
+      if (active) {
+        bg.lineStyle(1, C.blue, 0.5);
+        bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
+      }
+      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 10,
+        active ? '#ffffff' : '#8888aa', active).setOrigin(0.5);
+      this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => {
-          this._tab = tab.key;
+          if (this._tab === tab.key) return;
           tg?.HapticFeedback?.selectionChanged();
-          this.scene.restart();
+          this.scene.restart({ tab: tab.key });
         });
     });
   }
 
-  _buildContent(W, H) {
-    const startY = 116;
-    const p = State.player;
+  /* ── Баланс ──────────────────────────────────────────── */
+  _buildBalance(W) {
+    const p   = State.player;
+    const by  = 114;
+    makePanel(this, 8, by, W - 16, 38, 8, 0.95);
 
-    /* Баланс игрока */
-    makePanel(this, 8, startY, W-16, 42, 10);
-    txt(this, 20, startY + 12, `💎 ${p?.diamonds || 0}`, 13, '#3cc8dc', true);
-    txt(this, W - 20, startY + 12, `🪙 ${p?.gold || 0}`, 13, '#ffc83c', true).setOrigin(1, 0);
+    this._goldTxt = txt(this, W / 2 + 8, by + 11, `🪙 ${p?.gold || 0}`, 13, '#ffc83c', true).setOrigin(0, 0);
+    this._diaТxt  = txt(this, 20,         by + 11, `💎 ${p?.diamonds || 0}`, 13, '#3cc8dc', true);
 
+    txt(this, W / 2 - 8, by + 11, '|', 13, '#333355').setOrigin(1, 0);
+  }
+
+  /* ── Товары ──────────────────────────────────────────── */
+  _buildItems(W, H) {
     const items = this._getItems();
-    const iw = (W - 32) / 2, ih = 90;
-    let y = startY + 56;
+    const cols  = 2;
+    const iw    = (W - 32) / cols;
+    const ih    = 110;
+    const startY = 162;
 
     items.forEach((item, i) => {
-      const ix = 8 + (i % 2) * (iw + 8);
-      if (i % 2 === 0 && i > 0) y += ih + 8;
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const ix  = 8 + col * (iw + 8);
+      const iy  = startY + row * (ih + 10);
 
-      const bg = this.add.graphics();
-      const avail = !item.soon;
-      bg.fillStyle(C.bgPanel, 0.92);
-      bg.fillRoundedRect(ix, y, iw, ih, 10);
-      bg.lineStyle(1.5, avail ? C.gold : C.dark, avail ? 0.35 : 0.2);
-      bg.strokeRoundedRect(ix, y, iw, ih, 10);
-
-      txt(this, ix + iw/2, y + 18, item.icon, 22).setOrigin(0.5);
-      txt(this, ix + iw/2, y + 46, item.name, 10, '#c0c0e0').setOrigin(0.5).setWordWrapWidth(iw - 8);
-
-      if (item.soon) {
-        txt(this, ix + iw/2, y + 68, '🚧 Скоро', 9, '#444466').setOrigin(0.5);
-      } else {
-        const priceColor = item.currency === 'diamonds' ? '#3cc8dc' : '#ffc83c';
-        const priceIcon  = item.currency === 'diamonds' ? '💎' : '🪙';
-        txt(this, ix + iw/2, y + 68, `${priceIcon} ${item.price}`, 11, priceColor, true).setOrigin(0.5);
-      }
-
-      this.add.zone(ix, y, iw, ih).setOrigin(0)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => {
-          if (!avail) return;
-          bg.clear(); bg.fillStyle(C.dark, 1); bg.fillRoundedRect(ix, y, iw, ih, 10);
-          tg?.HapticFeedback?.selectionChanged();
-        })
-        .on('pointerup', () => {
-          bg.clear(); bg.fillStyle(C.bgPanel, 0.92); bg.fillRoundedRect(ix, y, iw, ih, 10);
-          bg.lineStyle(1.5, avail ? C.gold : C.dark, avail ? 0.35 : 0.2);
-          bg.strokeRoundedRect(ix, y, iw, ih, 10);
-          if (item.soon) { this._toast('🚧 Скоро!'); }
-          else { this._toast(`🛒 ${item.name} — скоро в продаже!`); }
-        })
-        .on('pointerout', () => {
-          bg.clear(); bg.fillStyle(C.bgPanel, 0.92); bg.fillRoundedRect(ix, y, iw, ih, 10);
-          bg.lineStyle(1.5, avail ? C.gold : C.dark, avail ? 0.35 : 0.2);
-          bg.strokeRoundedRect(ix, y, iw, ih, 10);
-        });
+      this._makeItemCard(item, ix, iy, iw, ih, W);
     });
   }
 
+  _makeItemCard(item, ix, iy, iw, ih, W) {
+    const avail  = !item.soon;
+    const canBuy = avail && this._canAfford(item);
+
+    const bg = this.add.graphics();
+    this._drawCardBg(bg, ix, iy, iw, ih, avail, canBuy);
+
+    /* Иконка */
+    txt(this, ix + iw / 2, iy + 20, item.icon, 26).setOrigin(0.5);
+
+    /* Название */
+    txt(this, ix + iw / 2, iy + 52, item.name, 9, '#c0c0e0')
+      .setOrigin(0.5).setWordWrapWidth(iw - 10);
+
+    /* Цена или "Скоро" */
+    if (item.soon) {
+      txt(this, ix + iw / 2, iy + 82, '🚧 Скоро', 9, '#333355').setOrigin(0.5);
+    } else {
+      const pIcon  = item.currency === 'diamonds' ? '💎' : '🪙';
+      const pColor = item.currency === 'diamonds' ? '#3cc8dc' : '#ffc83c';
+      const dimCol = canBuy ? pColor : '#553333';
+      txt(this, ix + iw / 2, iy + 82, `${pIcon} ${item.price}`, 12, dimCol, true).setOrigin(0.5);
+    }
+
+    /* HP bar превью для зелий */
+    if (item.hpRestorePct && State.player) {
+      const p     = State.player;
+      const curPct = Math.min(1, (p.current_hp || 0) / Math.max(1, p.max_hp || 1));
+      const newPct = Math.min(1, curPct + item.hpRestorePct);
+      makeBar(this, ix + 8, iy + 95, iw - 16, 5, curPct, C.red, C.dark, 3);
+      // Зелёное продолжение — будущий HP
+      const barW  = iw - 16;
+      const prevW = Math.round(barW * curPct);
+      const addW  = Math.round(barW * Math.min(item.hpRestorePct, 1 - curPct));
+      if (addW > 0) {
+        const addG = this.add.graphics();
+        addG.fillStyle(C.green, 0.75);
+        addG.fillRoundedRect(ix + 8 + prevW, iy + 95, addW, 5, 2);
+      }
+    }
+
+    if (!avail) return;
+
+    /* Зона клика */
+    this.add.zone(ix, iy, iw, ih).setOrigin(0)
+      .setInteractive({ useHandCursor: canBuy })
+      .on('pointerdown', () => {
+        if (!canBuy || this._buying) return;
+        this._drawCardBg(bg, ix, iy, iw, ih, true, true, true);
+        tg?.HapticFeedback?.impactOccurred('medium');
+      })
+      .on('pointerup', () => {
+        this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy);
+        if (!canBuy)  { this._toastNoMoney(item); return; }
+        if (this._buying) return;
+        this._doBuy(item);
+      })
+      .on('pointerout', () => this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy));
+  }
+
+  _drawCardBg(bg, ix, iy, iw, ih, avail, canBuy, pressed = false) {
+    bg.clear();
+    const fill  = pressed ? C.dark : C.bgPanel;
+    const alpha = avail ? 0.92 : 0.55;
+    bg.fillStyle(fill, alpha);
+    bg.fillRoundedRect(ix, iy, iw, ih, 12);
+    if (canBuy) {
+      bg.lineStyle(1.5, C.gold, pressed ? 0.7 : 0.35);
+    } else if (avail) {
+      bg.lineStyle(1, 0x553333, 0.5);
+    } else {
+      bg.lineStyle(1, C.dark, 0.3);
+    }
+    bg.strokeRoundedRect(ix, iy, iw, ih, 12);
+  }
+
+  _canAfford(item) {
+    const p = State.player;
+    if (!p) return false;
+    if (item.currency === 'diamonds') return (p.diamonds || 0) >= item.price;
+    return (p.gold || 0) >= item.price;
+  }
+
+  /* ── Покупка ─────────────────────────────────────────── */
+  async _doBuy(item) {
+    if (this._buying) return;
+    this._buying = true;
+
+    try {
+      const res = await post('/api/shop/buy', { item_id: item.id });
+
+      if (res.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        // Обновляем State.player
+        if (res.player) State.player = res.player;
+
+        let msg = `✅ Куплено: ${item.name}`;
+        if (res.hp_restored > 0) msg = `❤️ +${res.hp_restored} HP восстановлено!`;
+        if (res.charges_added)   msg = `⚡ XP Буст ×1.5 — ${res.charges_added} боёв`;
+        this._toast(msg);
+
+        // Обновляем баланс на экране
+        this._goldTxt?.setText(`🪙 ${State.player?.gold || 0}`);
+        this._diaТxt?.setText(`💎 ${State.player?.diamonds || 0}`);
+
+        // Перерисовываем карточки через 0.4с (после тоста)
+        this.time.delayedCall(400, () => this.scene.restart({ tab: this._tab }));
+      } else {
+        tg?.HapticFeedback?.notificationOccurred('error');
+        this._toast(`❌ ${res.reason || 'Ошибка'}`);
+        this._buying = false;
+      }
+    } catch (_) {
+      this._toast('❌ Нет соединения');
+      this._buying = false;
+    }
+  }
+
+  _toastNoMoney(item) {
+    const cur = item.currency === 'diamonds' ? 'кристаллов' : 'золота';
+    this._toast(`🪙 Нужно ${item.price} ${cur}`);
+  }
+
+  /* ── Каталог товаров ─────────────────────────────────── */
   _getItems() {
-    const map = {
+    const p = State.player;
+    const hpFull = (p?.current_hp || 0) >= (p?.max_hp || 1);
+
+    const catalog = {
       potions: [
-        { icon: '🧪', name: 'Малое зелье HP',    price: 50,  currency: 'gold'     },
-        { icon: '⚗️', name: 'Большое зелье HP',   price: 150, currency: 'gold'     },
-        { icon: '💊', name: 'Эликсир силы',       price: 10,  currency: 'diamonds' },
-        { icon: '✨', name: 'Зелье удачи',         price: 20,  currency: 'diamonds', soon: true },
+        {
+          id: 'hp_small', icon: '🧪', name: 'Малое зелье HP',
+          price: 12, currency: 'gold',
+          desc: '+30% HP', hpRestorePct: 0.30,
+          soon: hpFull,   // не показываем "купить" если HP полный
+        },
+        {
+          id: 'hp_full',  icon: '⚗️', name: 'Большое зелье HP',
+          price: 30, currency: 'gold',
+          desc: 'HP до максимума', hpRestorePct: 1.0,
+          soon: hpFull,
+        },
+        {
+          id: 'xp_boost', icon: '💊', name: 'Буст XP ×1.5',
+          price: 100, currency: 'gold',
+          desc: '5 боёв с бонусом опыта',
+        },
+        {
+          id: null, icon: '🌿', name: 'Зелье удачи',
+          price: 20, currency: 'diamonds', soon: true,
+          desc: '+15% крит на 3 боя',
+        },
       ],
       gear: [
-        { icon: '⚔️', name: 'Меч воина',          price: 500, currency: 'gold',    soon: true },
-        { icon: '🛡️', name: 'Щит рыцаря',        price: 500, currency: 'gold',    soon: true },
-        { icon: '🗡️', name: 'Кинжал тени',        price: 300, currency: 'gold',    soon: true },
-        { icon: '🏹', name: 'Лук лесника',         price: 400, currency: 'gold',    soon: true },
+        { id: null, icon: '⚔️', name: 'Меч воина',    price: 500, currency: 'gold',    soon: true },
+        { id: null, icon: '🛡️', name: 'Щит рыцаря',  price: 500, currency: 'gold',    soon: true },
+        { id: null, icon: '🗡️', name: 'Кинжал тени', price: 300, currency: 'gold',    soon: true },
+        { id: null, icon: '🏹', name: 'Лук лесника',  price: 400, currency: 'gold',    soon: true },
       ],
       special: [
-        { icon: '🌟', name: 'Battle Pass Premium', price: 500, currency: 'diamonds', soon: true },
-        { icon: '🎭', name: 'Скин воина',          price: 200, currency: 'diamonds', soon: true },
-        { icon: '🏆', name: 'Рамка профиля',       price: 100, currency: 'diamonds', soon: true },
-        { icon: '🎪', name: 'Эффект победы',       price: 150, currency: 'diamonds', soon: true },
+        { id: 'stat_reset', icon: '🔄', name: 'Сброс статов', price: 50, currency: 'diamonds', desc: 'Сбросить все статы' },
+        { id: null, icon: '🌟', name: 'Battle Pass+', price: 500, currency: 'diamonds', soon: true },
+        { id: null, icon: '🎭', name: 'Скин воина',   price: 200, currency: 'diamonds', soon: true },
+        { id: null, icon: '🏆', name: 'Рамка профиля',price: 100, currency: 'diamonds', soon: true },
       ],
     };
-    return map[this._tab] || map.potions;
+
+    return catalog[this._tab] || catalog.potions;
   }
 
   _toast(msg) {
-    const t = txt(this, this.W/2, this.H - 100, msg, 12, '#ffc83c', true).setOrigin(0.5);
-    this.tweens.add({ targets: t, alpha: 0, y: t.y - 30, duration: 2000, onComplete: () => t.destroy() });
+    const t = txt(this, this.W / 2, this.H - 80, msg, 12, '#ffc83c', true).setOrigin(0.5);
+    t.setDepth(100);
+    this.tweens.add({ targets: t, alpha: 0, y: t.y - 36, duration: 2200,
+      onComplete: () => t.destroy() });
   }
 }

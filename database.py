@@ -1345,6 +1345,34 @@ class Database:
     # Shop buffs (HP зелье, XP буст)
     # ------------------------------------------------------------------
 
+    def buy_hp_potion_small(self, user_id: int) -> Dict[str, Any]:
+        """Малое зелье HP: восстанавливает 30% max HP. Стоит 12 золота."""
+        COST = 12
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT gold, max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        if not row:
+            conn.close()
+            return {"ok": False, "reason": "Игрок не найден"}
+        if row["gold"] < COST:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {COST} золота, у вас {row['gold']}"}
+        max_hp     = int(row["max_hp"] or 100)
+        current_hp = int(row["current_hp"] or max_hp)
+        restore    = int(max_hp * 0.30)
+        new_hp     = min(max_hp, current_hp + restore)
+        if current_hp >= max_hp:
+            conn.close()
+            return {"ok": False, "reason": "HP уже полное!"}
+        cursor.execute(
+            "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ? WHERE user_id = ?",
+            (COST, new_hp, datetime.utcnow().isoformat(), user_id),
+        )
+        conn.commit()
+        conn.close()
+        return {"ok": True, "cost": COST, "hp_restored": new_hp - current_hp, "new_hp": new_hp, "max_hp": max_hp}
+
     def buy_hp_potion(self, user_id: int) -> Dict[str, Any]:
         """Зелье HP: восстанавливает текущий HP до максимума. Стоит 30 золота."""
         COST = 30

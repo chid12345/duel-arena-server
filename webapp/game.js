@@ -478,10 +478,25 @@ class MenuScene extends Phaser.Scene {
     const refZ = this.add.zone(W / 2, CH - 1, 120, 30).setInteractive({ useHandCursor: true });
     refZ.on('pointerup', () => this.scene.restart());
 
-    /* ── Предупреждение HP ── */
-    let hpWarn;
-    if (p.hp_pct < 30) {
-      hpWarn = txt(this, W / 2, CH - 44, '❤️ Восстанови HP перед боем!', 10, '#ff6666').setOrigin(0.5);
+    /* ── Предупреждение HP + кнопка Аптека ── */
+    const hpExtra = [];
+    if (p.hp_pct < 100) {
+      // Кнопка "Аптека" — ведёт в магазин, вкладка зелий
+      const btnW = 130, btnH = 30, btnX = W / 2 - btnW / 2, btnY = CH - 54;
+      const hpWarnColor = p.hp_pct < 30 ? '#ff6666' : '#ffc83c';
+      const hpWarnMsg   = p.hp_pct < 30 ? '❤️ Мало HP — восстанови перед боем!' : `❤️ HP не полный (${p.hp_pct}%)`;
+      const hpWarn = txt(this, W / 2, CH - 68, hpWarnMsg, 9, hpWarnColor).setOrigin(0.5);
+
+      const apBg = this.add.graphics();
+      apBg.fillStyle(C.red, 0.85);
+      apBg.fillRoundedRect(btnX, btnY, btnW, btnH, 9);
+      const apT = txt(this, W / 2, btnY + btnH / 2, '🧪 Аптека', 12, '#ffffff', true).setOrigin(0.5);
+      const apZ = this.add.zone(btnX, btnY, btnW, btnH).setOrigin(0)
+        .setInteractive({ useHandCursor: true });
+      apZ.on('pointerdown', () => { apBg.clear(); apBg.fillStyle(0x991a22, 1); apBg.fillRoundedRect(btnX, btnY, btnW, btnH, 9); });
+      apZ.on('pointerup',   () => { tg?.HapticFeedback?.impactOccurred('medium'); this.scene.start('Shop', { tab: 'potions' }); });
+      apZ.on('pointerout',  () => { apBg.clear(); apBg.fillStyle(C.red, 0.85); apBg.fillRoundedRect(btnX, btnY, btnW, btnH, 9); });
+      hpExtra.push(hpWarn, apBg, apT, apZ);
     }
 
     // Добавляем всё в контейнер
@@ -491,9 +506,9 @@ class MenuScene extends Phaser.Scene {
       statsBg, ...statObjs.flat(),
       refG, refT, refZ,
     ];
-    if (xpBg)  children.push(xpBg, xpTxt);
+    if (xpBg)    children.push(xpBg, xpTxt);
     if (fsBadge) children.push(...fsBadge);
-    if (hpWarn)  children.push(hpWarn);
+    children.push(...hpExtra);
     children.forEach(o => c.add(o));
 
     this._panels.profile = c;

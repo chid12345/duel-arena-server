@@ -574,6 +574,54 @@ async def get_clan(init_data: str):
     return {"ok": True, "clan": dict(clan) if clan else None}
 
 
+# ─── Магазин ─────────────────────────────────────────────────────────────────
+
+# Каталог товаров — единый источник истины для фронта и бэка
+SHOP_CATALOG = {
+    "hp_small":   {"name": "Малое зелье HP",     "price": 12,  "currency": "gold",     "icon": "🧪", "tab": "potions"},
+    "hp_full":    {"name": "Большое зелье HP",    "price": 30,  "currency": "gold",     "icon": "⚗️", "tab": "potions"},
+    "xp_boost":   {"name": "Буст XP ×1.5 (5боёв)","price": 100, "currency": "gold",    "icon": "💊", "tab": "potions"},
+    "stat_reset": {"name": "Сброс статов",        "price": 50,  "currency": "diamonds", "icon": "🔄", "tab": "special"},
+}
+
+
+@app.get("/api/shop/catalog")
+async def shop_catalog():
+    return {"ok": True, "items": SHOP_CATALOG}
+
+
+class ShopBuyBody(BaseModel):
+    init_data: str
+    item_id: str
+
+
+@app.post("/api/shop/buy")
+async def shop_buy(body: ShopBuyBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+
+    item = SHOP_CATALOG.get(body.item_id)
+    if not item:
+        return {"ok": False, "reason": "Товар не найден"}
+
+    if body.item_id == "hp_small":
+        result = db.buy_hp_potion_small(uid)
+    elif body.item_id == "hp_full":
+        result = db.buy_hp_potion(uid)
+    elif body.item_id == "xp_boost":
+        result = db.buy_xp_boost(uid)
+    elif body.item_id == "stat_reset":
+        result = db.buy_stat_reset(uid)
+    else:
+        return {"ok": False, "reason": "Покупка недоступна"}
+
+    if result.get("ok"):
+        # Возвращаем обновлённого игрока
+        player = db.get_or_create_player(uid, "")
+        result["player"] = dict(player)
+    return result
+
+
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────
 
 webapp_dir = os.path.join(os.path.dirname(__file__), "webapp")
