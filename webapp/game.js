@@ -1096,7 +1096,7 @@ class MenuScene extends Phaser.Scene {
       const s2 = this.add.graphics().setDepth(D);
       s2.fillStyle(0x2a50a0,1); s2.fillRoundedRect(s2x,cY,stW,sH,10);
       s2.lineStyle(1.5,0xffc83c,0.5); s2.strokeRoundedRect(s2x,cY,stW,sH,10);
-      const s2l = at(s2x+stW/2, cY+14, '💎 Бонусов',    10, '#a8c4ff');
+      const s2l = at(s2x+stW/2, cY+14, '💰 USDT бонус', 10, '#a8c4ff');
       const s2v = at(s2x+stW/2, cY+34, `${dia}`, 18, '#ffc83c', true);
 
       let premTxt = null;
@@ -1152,7 +1152,7 @@ class MenuScene extends Phaser.Scene {
     const rows = [
       { icon:'1️⃣', title:'Поделись ссылкой с другом',              sub:'Кнопка «Скопировать» на вкладке «Статистика»' },
       { icon:'2️⃣', title:'Друг регистрируется по ссылке',          sub:'Один раз — привязка навсегда' },
-      { icon:'3️⃣', title:'Друг покупает Premium — ты получаешь 💎', sub:'Бонус алмазами зачисляется автоматически' },
+      { icon:'3️⃣', title:'Друг покупает Premium — ты получаешь USDT', sub:'Бонус USDT зачисляется автоматически' },
     ];
     rows.forEach((r, i) => {
       const ry = iY + i * 52;
@@ -1173,17 +1173,19 @@ class MenuScene extends Phaser.Scene {
     infoObjs.push(schTitleBg, schTitle);
 
     const tiers = [
-      { range:'1–10 Premium-покупок', pct:'5% → USDT/TON', col:'#7adfaa' },
-      { range:'11–30 Premium-покупок', pct:'7% → USDT/TON', col:'#5ac8f0' },
-      { range:'31+ Premium-покупок',  pct:'10% + магазин → USDT/TON', col:'#ffc83c' },
+      { range:'1–10 Premium-покупок',  pct:'5% с каждой покупки → USDT',       col:'#7adfaa' },
+      { range:'11–30 Premium-покупок', pct:'7% с каждой покупки → USDT',       col:'#5ac8f0' },
+      { range:'31+ Premium-покупок',   pct:'10% с любой покупки всегда → USDT', col:'#ffc83c' },
     ];
     tiers.forEach((t, i) => {
-      const ty = schY + 36 + i * 30;
+      const ty = schY + 36 + i * 40;
       const tg2 = this.add.graphics().setDepth(D).setVisible(false);
       tg2.fillStyle(i%2===0 ? 0x243878 : 0x1e3060, 1);
-      tg2.fillRoundedRect(px+10, ty, pw-20, 26, 6);
-      const tl = txt(this, px+18, ty+13, t.range, 11, '#dce8ff').setOrigin(0,0.5).setDepth(D).setVisible(false);
-      const tv = txt(this, px+pw-18, ty+13, t.pct, 11, t.col, true).setOrigin(1,0.5).setDepth(D).setVisible(false);
+      tg2.fillRoundedRect(px+10, ty, pw-20, 36, 7);
+      /* диапазон — слева сверху */
+      const tl = txt(this, px+18, ty+10, t.range, 10, '#dce8ff').setOrigin(0,0).setDepth(D).setVisible(false);
+      /* процент — слева снизу, цветом */
+      const tv = txt(this, px+18, ty+24, t.pct, 11, t.col, true).setOrigin(0,0).setDepth(D).setVisible(false);
       infoObjs.push(tg2, tl, tv);
     });
   }
