@@ -1073,20 +1073,29 @@ class ShopScene extends Phaser.Scene {
 
   /* ── Premium карточка ────────────────────────────────── */
   _makePremiumCard(pkg, ix, iy, iw, ih, W) {
+    const p = State.player || {};
+    const isActive = !!p.is_premium;
+    const daysLeft = p.premium_days_left || 0;
+
     const bg = this.add.graphics();
     bg.fillStyle(0x1a0a30, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
-    bg.lineStyle(2, C.purple, 0.7); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, isActive ? 0xb45aff : C.purple, isActive ? 1.0 : 0.7);
+    bg.strokeRoundedRect(ix, iy, iw, ih, 11);
     bg.fillStyle(0xffffff, 0.04); bg.fillRoundedRect(ix+2, iy+2, iw-4, ih/2, 9);
 
     txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5);
     txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
-    txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
-    txt(this, iw-4, iy+ih/2-2, `⭐ ${pkg.stars}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
-
-    this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
-      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a0a30,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(2,C.purple,0.7); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
-      .on('pointerup',   () => this._buyStars(pkg));
+    if (isActive) {
+      txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${daysLeft} дн.`, 9, '#b45aff');
+      txt(this, iw-4, iy+ih/2-2, '— куплено —', 10, '#888899', false).setOrigin(1, 0.5);
+    } else {
+      txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
+      txt(this, iw-4, iy+ih/2-2, `⭐ ${pkg.stars}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
+      this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
+        .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a0a30,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(2,C.purple,0.7); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+        .on('pointerup',   () => this._buyStars(pkg));
+    }
   }
 
   /* ── CryptoPay Premium карточка ─────────────────────── */
@@ -1094,21 +1103,29 @@ class ShopScene extends Phaser.Scene {
     const asset  = this._cryptoAsset || 'TON';
     const price  = asset === 'TON' ? pkg.ton : pkg.usdt;
     const symbol = asset === 'TON' ? 'TON' : 'USDT';
+    const p = State.player || {};
+    const isActive = !!p.is_premium;
+    const daysLeft = p.premium_days_left || 0;
 
     const bg = this.add.graphics();
     bg.fillStyle(0x1a0a30, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
-    bg.lineStyle(2, C.purple, 0.7); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, isActive ? 0xb45aff : C.purple, isActive ? 1.0 : 0.7);
+    bg.strokeRoundedRect(ix, iy, iw, ih, 11);
     bg.fillStyle(0xffffff, 0.04); bg.fillRoundedRect(ix+2, iy+2, iw-4, ih/2, 9);
 
     txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5);
     txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
-    txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
-    txt(this, iw-4, iy+ih/2-2, `${price} ${symbol}`, 12, '#3cc8dc', true).setOrigin(1, 0.5);
-
-    this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
-      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a0a30,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(2,C.purple,0.7); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
-      .on('pointerup',   () => this._buyCrypto(pkg));
+    if (isActive) {
+      txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${daysLeft} дн.`, 9, '#b45aff');
+      txt(this, iw-4, iy+ih/2-2, '— куплено —', 10, '#888899', false).setOrigin(1, 0.5);
+    } else {
+      txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
+      txt(this, iw-4, iy+ih/2-2, `${price} ${symbol}`, 12, '#3cc8dc', true).setOrigin(1, 0.5);
+      this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
+        .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a0a30,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(2,C.purple,0.7); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+        .on('pointerup',   () => this._buyCrypto(pkg));
+    }
   }
 
   /* ── CryptoPay карточка ──────────────────────────────── */

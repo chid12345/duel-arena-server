@@ -78,6 +78,21 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 
+
+async def _send_tg_message(chat_id: int, text: str, parse_mode: str = "HTML") -> None:
+    """Отправить сообщение пользователю через Bot API (fire-and-forget)."""
+    if not BOT_TOKEN:
+        return
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            await client.post(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage",
+                json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode},
+            )
+    except Exception as e:
+        logger.warning("_send_tg_message failed: %s", e)
+
 # ─── Авторизация через Telegram initData ────────────────────────────────────
 
 def _verify_telegram_init_data(init_data: str) -> Optional[Dict]:
@@ -878,19 +893,26 @@ async def stars_confirm(body: StarsConfirmBody):
             }
         # Активируем Premium на 21 день
         prem_result = db.activate_premium(uid, days=21)
-        bonus_d = prem_result.get("bonus_diamonds", 0)
+        bonus_d   = prem_result.get("bonus_diamonds", 0)
+        days_left = prem_result.get("days_left", 21)
         await manager.send(uid, {
             "event":          "premium_activated",
-            "days_left":      prem_result.get("days_left", 21),
+            "days_left":      days_left,
             "bonus_diamonds": bonus_d,
             "source":         "stars",
         })
+        bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
+        await _send_tg_message(uid,
+            f"👑 <b>Premium подписка активирована!</b>\n"
+            f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n\n"
+            f"Спасибо за покупку! ⚔️ Duel Arena"
+        )
         fresh = db.get_or_create_player(uid, "")
         return {
             "ok": True,
             "diamonds_added": bonus_d,
             "premium_activated": True,
-            "premium_days_left": prem_result.get("days_left", 21),
+            "premium_days_left": days_left,
             "bonus_diamonds":    bonus_d,
             "player": _player_api(dict(fresh)),
         }
@@ -904,6 +926,11 @@ async def stars_confirm(body: StarsConfirmBody):
                 "diamonds": diamonds,
                 "source":   "stars",
             })
+            await _send_tg_message(uid,
+                f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
+                f"Оплата через Telegram Stars подтверждена.\n\n"
+                f"⚔️ Duel Arena"
+            )
     # already_credited тоже OK для UI — просто показываем успех
     fresh  = db.get_or_create_player(uid, "")
     return {
@@ -990,6 +1017,16 @@ async def crypto_invoice(body: CryptoInvoiceBody):
 
     amount = pkg["ton"] if asset == "TON" else pkg["usdt"]
     is_premium = pkg.get("premium", False)
+
+    # Блокируем повторную покупку Premium если уже активна
+    if is_premium:
+        prem_status = db.get_premium_status(uid)
+        if prem_status["is_active"]:
+            return {
+                "ok": False,
+                "reason": f"👑 Premium уже активен ещё {prem_status['days_left']} дн. — деньги не списаны"
+            }
+
     description = (
         "Duel Arena — 👑 Premium подписка"
         if is_premium else
@@ -1075,18 +1112,31 @@ async def cryptopay_webhook(request: Request):
                     uid, diamonds, is_premium, invoice_id)
         if is_premium:
             prem = db.activate_premium(uid, days=21)
+            bonus_d = prem.get("bonus_diamonds", 0)
+            days_left = prem.get("days_left", 21)
             await manager.send(uid, {
                 "event":          "premium_activated",
-                "days_left":      prem.get("days_left", 21),
-                "bonus_diamonds": prem.get("bonus_diamonds", 0),
+                "days_left":      days_left,
+                "bonus_diamonds": bonus_d,
                 "source":         "cryptopay",
             })
+            bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
+            await _send_tg_message(uid,
+                f"👑 <b>Premium подписка активирована!</b>\n"
+                f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n\n"
+                f"Спасибо за покупку! ⚔️ Duel Arena"
+            )
         else:
             await manager.send(uid, {
                 "event":    "diamonds_credited",
                 "diamonds": diamonds,
                 "source":   "cryptopay",
             })
+            await _send_tg_message(uid,
+                f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
+                f"Оплата через CryptoPay подтверждена.\n\n"
+                f"⚔️ Duel Arena"
+            )
     else:
         logger.warning("CryptoPay confirm_invoice %s: %s", invoice_id, result.get("reason"))
 
@@ -1130,19 +1180,31 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
             if is_premium:
                 prem = db.activate_premium(uid, days=21)
                 bonus_d = prem.get("bonus_diamonds", 0)
+                days_left = prem.get("days_left", 21)
                 await manager.send(uid, {
                     "event":          "premium_activated",
-                    "days_left":      prem.get("days_left", 21),
+                    "days_left":      days_left,
                     "bonus_diamonds": bonus_d,
                     "source":         "cryptopay",
                 })
+                bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
+                await _send_tg_message(uid,
+                    f"👑 <b>Premium подписка активирована!</b>\n"
+                    f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n\n"
+                    f"Спасибо за покупку! ⚔️ Duel Arena"
+                )
                 return {"ok": True, "paid": True, "diamonds": bonus_d, "premium_activated": True,
-                        "premium_days_left": prem.get("days_left", 21), "bonus_diamonds": bonus_d}
+                        "premium_days_left": days_left, "bonus_diamonds": bonus_d}
             await manager.send(uid, {
                 "event":    "diamonds_credited",
                 "diamonds": diamonds,
                 "source":   "cryptopay",
             })
+            await _send_tg_message(uid,
+                f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
+                f"Оплата через CryptoPay подтверждена.\n\n"
+                f"⚔️ Duel Arena"
+            )
             return {"ok": True, "paid": True, "diamonds": diamonds}
         # already_paid тоже считаем успехом для UI
         if result.get("reason") == "already_paid":
