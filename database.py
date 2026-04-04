@@ -432,6 +432,13 @@ class Database:
                 ],
             ),
             (
+                "2026_04_13_000a_premium_subscription",
+                [
+                    # Дата окончания Premium подписки (ISO строка, NULL = нет подписки)
+                    "ALTER TABLE players ADD COLUMN premium_until TEXT DEFAULT NULL",
+                ],
+            ),
+            (
                 "2026_04_13_000_stars_payments",
                 [
                     # Лог Stars-оплат для идемпотентного начисления алмазов
@@ -2045,6 +2052,66 @@ class Database:
             )
             conn.commit()
             return True, int(referrer_id)
+        finally:
+            conn.close()
+
+    # ─── Premium подписка ────────────────────────────────────────────────────
+
+    def get_premium_status(self, user_id: int) -> Dict[str, Any]:
+        """Вернуть статус Premium: is_active, days_left, premium_until."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT premium_until FROM players WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            if not row or not row["premium_until"]:
+                return {"is_active": False, "days_left": 0, "premium_until": None}
+            from datetime import datetime
+            try:
+                until = datetime.fromisoformat(row["premium_until"])
+                now   = datetime.utcnow()
+                if until <= now:
+                    return {"is_active": False, "days_left": 0, "premium_until": row["premium_until"]}
+                days_left = max(0, (until - now).days)
+                return {"is_active": True, "days_left": days_left, "premium_until": row["premium_until"]}
+            except Exception:
+                return {"is_active": False, "days_left": 0, "premium_until": None}
+        finally:
+            conn.close()
+
+    def activate_premium(self, user_id: int, days: int = 21) -> Dict[str, Any]:
+        """
+        Активировать Premium на N дней.
+        Если уже активна — продлить от текущей даты окончания.
+        Возвращает {"ok": True, "premium_until": "...", "days_left": N}
+        """
+        from datetime import datetime, timedelta
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT premium_until FROM players WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            now = datetime.utcnow()
+
+            # Если подписка ещё активна — продлеваем от конца текущего периода
+            current_until = None
+            if row and row["premium_until"]:
+                try:
+                    current_until = datetime.fromisoformat(row["premium_until"])
+                except Exception:
+                    current_until = None
+
+            base = current_until if (current_until and current_until > now) else now
+            new_until = base + timedelta(days=days)
+            new_until_str = new_until.isoformat()
+
+            cursor.execute(
+                "UPDATE players SET premium_until = ? WHERE user_id = ?",
+                (new_until_str, user_id),
+            )
+            conn.commit()
+            days_left = max(0, (new_until - now).days)
+            return {"ok": True, "premium_until": new_until_str, "days_left": days_left}
         finally:
             conn.close()
 

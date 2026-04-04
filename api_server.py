@@ -206,7 +206,25 @@ def _player_api(player: dict) -> dict:
                 * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
             ))
         ),
+        # Premium подписка
+        **_premium_fields(player),
     }
+
+
+def _premium_fields(player: dict) -> dict:
+    """Вычислить поля Premium из данных игрока."""
+    from datetime import datetime
+    until_str = player.get("premium_until")
+    if not until_str:
+        return {"is_premium": False, "premium_until": None, "premium_days_left": 0}
+    try:
+        until = datetime.fromisoformat(until_str)
+        if until <= datetime.utcnow():
+            return {"is_premium": False, "premium_until": until_str, "premium_days_left": 0}
+        days_left = max(0, (until - datetime.utcnow()).days)
+        return {"is_premium": True, "premium_until": until_str, "premium_days_left": days_left}
+    except Exception:
+        return {"is_premium": False, "premium_until": None, "premium_days_left": 0}
 
 
 def _battle_state_api(user_id: int) -> Optional[dict]:
@@ -844,13 +862,35 @@ async def stars_confirm(body: StarsConfirmBody):
     if not pkg:
         return {"ok": False, "reason": "Пакет не найден"}
 
-    diamonds = pkg["diamonds"]
-    stars    = pkg["stars"]
+    diamonds   = pkg["diamonds"]
+    stars      = pkg["stars"]
+    is_premium = pkg["id"] == "premium"
+
+    # Проверка: нельзя купить Premium если уже активен
+    if is_premium:
+        prem = db.get_premium_status(uid)
+        if prem["is_active"]:
+            fresh = db.get_or_create_player(uid, "")
+            return {
+                "ok": False,
+                "reason": f"Premium уже активен ещё {prem['days_left']} дн.",
+                "player": dict(fresh),
+            }
+        # Активируем Premium на 21 день
+        prem_result = db.activate_premium(uid, days=21)
+        await manager.send(uid, {"event": "premium_activated", "days_left": prem_result.get("days_left", 21)})
+        fresh = db.get_or_create_player(uid, "")
+        return {
+            "ok": True,
+            "diamonds_added": 0,
+            "premium_activated": True,
+            "premium_days_left": prem_result.get("days_left", 21),
+            "player": _player_api(dict(fresh)),
+        }
 
     result = db.confirm_stars_payment(uid, body.package_id, diamonds, stars)
 
     if result.get("ok"):
-        # WS уведомление если есть подключение
         if diamonds > 0:
             await manager.send(uid, {
                 "event":    "diamonds_credited",
@@ -863,7 +903,7 @@ async def stars_confirm(body: StarsConfirmBody):
         "ok":     True,
         "diamonds_added": diamonds,
         "already_credited": result.get("reason") == "already_credited",
-        "player": dict(fresh),
+        "player": _player_api(dict(fresh)),
     }
 
 

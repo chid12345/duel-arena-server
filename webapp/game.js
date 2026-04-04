@@ -524,9 +524,13 @@ class MenuScene extends Phaser.Scene {
     const lvlTxt = txt(this, lvlX + lvlW / 2, hY + hH / 2, `УР.${p.level}`, 14, '#1a1a28', true).setOrigin(0.5);
 
     // Имя + статистика
-    const nameX = lvlX + lvlW + 10;
-    const nameTxt = txt(this, nameX, hY + 12, p.username, 18, '#f0f0fa', true);
-    const subTxt  = txt(this, nameX, hY + 38, `★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12, '#8888aa');
+    const nameX   = lvlX + lvlW + 10;
+    const crown   = p.is_premium ? '👑 ' : '';
+    const nameTxt = txt(this, nameX, hY + 12, crown + p.username, 18, p.is_premium ? '#c8a0ff' : '#f0f0fa', true);
+    const premSub = p.is_premium ? `⭐ Premium · ${p.premium_days_left} дн.` : '';
+    const subTxt  = txt(this, nameX, hY + 38,
+      premSub || `★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12,
+      p.is_premium ? '#b45aff' : '#8888aa');
 
     // Золото — справа вверху
     const goldTxt = txt(this, W - pad - 12, hY + 18, `💰 ${p.gold}`, 17, '#ffc83c', true).setOrigin(1, 0.5);
@@ -679,8 +683,9 @@ class MenuScene extends Phaser.Scene {
     refG.strokeRoundedRect(refX, refY, refW, refH, 13);
     const refT = txt(this, W / 2, refY + refH / 2, '🔄 Обновить данные', 14, '#7799cc', true).setOrigin(0.5);
     const refZ = this.add.zone(W / 2, refY + refH / 2, refW, refH).setInteractive({ useHandCursor: true });
+    let _refBusy = false;
     refZ.on('pointerdown', () => { refG.clear(); refG.fillStyle(C.blue, 0.25); refG.fillRoundedRect(refX, refY, refW, refH, 13); tg?.HapticFeedback?.impactOccurred('light'); });
-    refZ.on('pointerup',   () => this.scene.restart());
+    refZ.on('pointerup',   () => { if (_refBusy) return; _refBusy = true; refT.setText('⏳'); this.time.delayedCall(400, () => this.scene.restart()); });
     refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, isLight ? 1 : 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, isLight ? 0.5 : 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
 
     /* ══ СБОРКА ═════════════════════════════════════════════ */
@@ -1871,7 +1876,9 @@ class RatingScene extends Phaser.Scene {
         }
 
         txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#666688', true).setOrigin(0.5);
-        txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
+        const rCrown = p.is_premium ? '👑 ' : '';
+        txt(this, 52, ry + 10, rCrown + (p.username || `User${p.user_id}`), 13,
+          isMe ? '#5096ff' : (p.is_premium ? '#c8a0ff' : '#f0f0fa'), isMe || p.is_premium);
         txt(this, 52, ry + 27, `Ур.${p.level}  ·  🏆 ${p.wins}W  💀 ${p.losses}L`, 10, '#555577');
         txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
       });

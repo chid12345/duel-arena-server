@@ -944,6 +944,17 @@ class ShopScene extends Phaser.Scene {
     const cryptoOn   = d.cryptopay_enabled;
     let y = 162;
 
+    /* ═══ PREMIUM СТАТУС ════════════════════════════════════ */
+    const p = State.player;
+    if (p?.is_premium) {
+      const sb = this.add.graphics();
+      sb.fillStyle(0x1a0a30, 0.95); sb.fillRoundedRect(8, y, W-16, 32, 9);
+      sb.lineStyle(2, C.purple, 0.7); sb.strokeRoundedRect(8, y, W-16, 32, 9);
+      txt(this, 20, y+10, '👑 Premium активен', 12, '#c8a0ff', true);
+      txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#8888aa').setOrigin(1, 0);
+      y += 40;
+    }
+
     /* ═══ TELEGRAM STARS ═══════════════════════════════════ */
     makePanel(this, 8, y, W-16, 22, 8, 0.6);
     txt(this, 20, y+5, '⭐  TELEGRAM STARS', 10, '#ffc83c', true);
@@ -1141,16 +1152,22 @@ class ShopScene extends Phaser.Scene {
         if (status === 'paid') {
           tg?.HapticFeedback?.notificationOccurred('success');
           Sound.levelUp?.();
-          this._toast('⏳ Начисляем алмазы...');
+          this._toast('⏳ Активируем...');
           try {
-            // Прямое начисление через API (не ждём бота)
             const confirm = await post('/api/shop/stars_confirm', { package_id: pkg.id });
             if (confirm.ok) {
               if (confirm.player) State.player = confirm.player;
-              const added = confirm.diamonds_added || pkg.diamonds;
-              this._toast(added > 0 ? `✅ +${added} 💎 начислено!` : '✅ Premium активирован!');
+              if (confirm.premium_activated) {
+                this._toast(`👑 Premium активирован на 21 день!`);
+              } else {
+                const added = confirm.diamonds_added || pkg.diamonds;
+                this._toast(`✅ +${added} 💎 начислено!`);
+              }
+            } else if (confirm.reason?.includes('уже активен')) {
+              if (confirm.player) State.player = confirm.player;
+              this._toast(`👑 ${confirm.reason}`);
             } else {
-              this._toast('✅ Оплата прошла! Алмазы придут в течение минуты.');
+              this._toast('✅ Оплата прошла! Обновите профиль.');
             }
           } catch(_) {
             this._toast('✅ Оплата прошла! Обновите профиль.');
