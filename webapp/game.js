@@ -23,7 +23,36 @@ const C = {
   white:   0xf0f0fa,
   gray:    0x8888aa,
   dark:    0x28243c,
+  _name:   'dark',
 };
+
+/* ── Темы ───────────────────────────────────────────────────── */
+const THEMES = {
+  dark: {
+    bg: 0x12121c, bgMid: 0x1c1a2e, bgPanel: 0x1e1c30,
+    gold: 0xffc83c, red: 0xdc3c46, green: 0x3cc864,
+    blue: 0x5096ff, purple: 0xb45aff, cyan: 0x3cc8dc,
+    white: 0xf0f0fa, gray: 0x8888aa, dark: 0x28243c, _name: 'dark',
+  },
+  light: {
+    bg: 0xf0f2ff, bgMid: 0xe4e8ff, bgPanel: 0xfcfdff,
+    gold: 0xcc8800, red: 0xcc2233, green: 0x1a8a3c,
+    blue: 0x1a66cc, purple: 0x7722bb, cyan: 0x0088aa,
+    white: 0x1a1a2e, gray: 0x4444aa, dark: 0xdde0f8, _name: 'light',
+  },
+};
+
+function applyTheme(name) {
+  const t = THEMES[name] || THEMES.dark;
+  Object.assign(C, t);
+  try { localStorage.setItem('da_theme', name); } catch (_) {}
+  document.body.style.background = name === 'light' ? '#f0f2ff' : '#12121c';
+}
+// Применяем тему при старте (Telegram colorScheme или localStorage)
+applyTheme(
+  (() => { try { return localStorage.getItem('da_theme'); } catch(_){} return null; })() ||
+  (tg?.colorScheme === 'light' ? 'light' : 'dark')
+);
 
 /* Shared state */
 const State = {
@@ -79,11 +108,23 @@ function makeBar(scene, x, y, w, h, pct, fillColor, bgColor = C.dark, radius = 4
   return g;
 }
 
+/* Адаптация цветов текста к светлой теме */
+function tCol(color) {
+  if (C._name !== 'light') return color;
+  const m = {
+    '#f0f0fa': '#1a1a2e', '#ffffff': '#0a0a1e',
+    '#8888aa': '#333366', '#555577': '#444466',
+    '#666688': '#445577', '#333355': '#555588',
+    '#c0c0e0': '#1a1a44', '#7799cc': '#1144aa',
+  };
+  return m[color] || color;
+}
+
 function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false) {
   return scene.add.text(x, y, str, {
     fontSize: `${size}px`,
     fontFamily: bold ? "'Arial Black', Arial, sans-serif" : 'Arial, sans-serif',
-    color,
+    color: tCol(color),
     resolution: 2,
   });
 }
@@ -279,7 +320,7 @@ class MenuScene extends Phaser.Scene {
   async create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
-    this.TAB_H = 62;
+    this.TAB_H = 76;
     this.CONTENT_H = H - this.TAB_H;
     this._panels = {};
     this._tabBtns = {};
@@ -334,12 +375,15 @@ class MenuScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
     g.fillRect(0, 0, W, H);
+    // Звёзды (в тёмной теме) или лёгкие блики (в светлой)
+    const starAlpha = C._name === 'light' ? 0.08 : 0.5;
     for (let i = 0; i < 55; i++) {
       const x = Phaser.Math.Between(0, W);
       const y = Phaser.Math.Between(0, H * 0.85);
       this.add.circle(x, y,
-        Phaser.Math.FloatBetween(0.4, 1.8), 0xffffff,
-        Phaser.Math.FloatBetween(0.15, 0.6));
+        Phaser.Math.FloatBetween(0.4, 1.8),
+        C._name === 'light' ? C.blue : 0xffffff,
+        Phaser.Math.FloatBetween(0.05, starAlpha));
     }
   }
 
@@ -356,30 +400,38 @@ class MenuScene extends Phaser.Scene {
       { key: 'more',    icon: '☰',   label: 'Ещё'     },
     ];
 
-    // Подложка таб-бара
+    // Подложка таб-бара — чуть светлее bg
     const bg = this.add.graphics();
-    bg.fillStyle(0x0e0d1a, 1);
+    const tabBgCol = C._name === 'light' ? 0xe8ecff : 0x0e0d1a;
+    bg.fillStyle(tabBgCol, 1);
     bg.fillRect(0, H - TAB_H, W, TAB_H);
-    bg.lineStyle(1, C.gold, 0.18);
+    // Золотая черта сверху
+    bg.lineStyle(1.5, C.gold, C._name === 'light' ? 0.35 : 0.22);
     bg.lineBetween(0, H - TAB_H, W, H - TAB_H);
 
     const tabW = W / tabs.length;
     tabs.forEach((tab, i) => {
       const cx = tabW * i + tabW / 2;
-      const cy = H - TAB_H / 2;
+      const tabTop = H - TAB_H;
 
-      // Фон активной вкладки (изначально скрыт)
+      // Фон активной вкладки
       const activeBg = this.add.graphics();
-      activeBg.fillStyle(C.gold, 0.10);
-      activeBg.fillRoundedRect(tabW * i + 4, H - TAB_H + 4, tabW - 8, TAB_H - 8, 10);
+      activeBg.fillStyle(C.gold, C._name === 'light' ? 0.18 : 0.12);
+      activeBg.fillRoundedRect(tabW * i + 5, tabTop + 5, tabW - 10, TAB_H - 10, 12);
+      // Золотая черта-индикатор сверху
+      const activeBar = this.add.graphics();
+      activeBar.fillStyle(C.gold, 1);
+      activeBar.fillRoundedRect(tabW * i + tabW * 0.2, tabTop + 1, tabW * 0.6, 3, 2);
       activeBg.setVisible(false);
+      activeBar.setVisible(false);
 
-      const iconTxt  = txt(this, cx, cy - 10, tab.icon, 18).setOrigin(0.5);
-      const labelTxt = txt(this, cx, cy + 10, tab.label, 9, '#555577').setOrigin(0.5);
+      const iconTxt  = txt(this, cx, tabTop + 24, tab.icon, 24).setOrigin(0.5).setAlpha(0.45);
+      const labelTxt = txt(this, cx, tabTop + 54, tab.label, 12,
+        C._name === 'light' ? '#666699' : '#555577').setOrigin(0.5);
 
-      this._tabBtns[tab.key] = { activeBg, iconTxt, labelTxt };
+      this._tabBtns[tab.key] = { activeBg, activeBar, iconTxt, labelTxt };
 
-      const zone = this.add.zone(cx, cy, tabW, TAB_H).setInteractive({ useHandCursor: true });
+      const zone = this.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true });
       zone.on('pointerup', () => {
         Sound.tab();
         tg?.HapticFeedback?.selectionChanged();
@@ -391,16 +443,15 @@ class MenuScene extends Phaser.Scene {
   }
 
   _switchTab(key) {
-    // Скрыть все панели
     Object.entries(this._panels).forEach(([k, c]) => c.setVisible(k === key));
-    // Обновить стиль табов
+    const inactiveCol = C._name === 'light' ? '#666699' : '#555577';
+    const activeCol   = C._name === 'light' ? '#cc8800' : '#ffc83c';
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
       const active = k === key;
       btn.activeBg.setVisible(active);
+      btn.activeBar?.setVisible(active);
       btn.iconTxt.setAlpha(active ? 1 : 0.45);
-      btn.labelTxt.setText(this._tabBtns[k] ? btn.labelTxt.text : '').setStyle({
-        color: active ? '#ffc83c' : '#555577',
-      });
+      btn.labelTxt.setStyle({ color: active ? activeCol : inactiveCol });
     });
     this._activeTab = key;
   }
@@ -410,151 +461,196 @@ class MenuScene extends Phaser.Scene {
      ══════════════════════════════════════════════════════ */
   _buildProfilePanel() {
     const { W, CONTENT_H: CH } = this;
-    const p  = State.player;
-    const c  = this.add.container(0, 0);
-    const pad = 12;
+    const p   = State.player;
+    const c   = this.add.container(0, 0);
+    const pad = 14;
+    const isLight = C._name === 'light';
 
-    /* ── Шапка ── */
+    /* ══ ШАПКА (header) ════════════════════════════════════ */
+    const hH = 74, hY = 6;
     const hBg = this.add.graphics();
-    hBg.fillStyle(C.bgPanel, 0.95);
-    hBg.fillRoundedRect(pad, 8, W - pad * 2, 58, 12);
-    hBg.lineStyle(1.5, C.gold, 0.22);
-    hBg.strokeRoundedRect(pad, 8, W - pad * 2, 58, 12);
+    hBg.fillStyle(C.bgPanel, 0.97);
+    hBg.fillRoundedRect(pad, hY, W - pad * 2, hH, 14);
+    hBg.lineStyle(2, C.gold, isLight ? 0.4 : 0.28);
+    hBg.strokeRoundedRect(pad, hY, W - pad * 2, hH, 14);
 
-    const lvlBg = this.add.graphics();
-    lvlBg.fillStyle(C.gold, 1);
-    lvlBg.fillRoundedRect(pad + 8, 17, 50, 24, 7);
+    // Бейдж уровня
+    const lvlW = 60, lvlH = 30, lvlX = pad + 10, lvlY = hY + (hH - lvlH) / 2;
+    const lvlG = this.add.graphics();
+    lvlG.fillStyle(C.gold, 1);
+    lvlG.fillRoundedRect(lvlX, lvlY, lvlW, lvlH, 9);
+    const lvlTxt = txt(this, lvlX + lvlW / 2, hY + hH / 2, `УР.${p.level}`, 14, '#1a1a28', true).setOrigin(0.5);
 
-    const lvlTxt  = txt(this, pad + 33, 29, `УР.${p.level}`, 12, '#1a1a28', true).setOrigin(0.5);
-    const nameTxt = txt(this, pad + 68, 20, p.username, 15, '#f0f0fa', true);
-    const subTxt  = txt(this, pad + 68, 38, `★ ${p.rating}  ·  🏆${p.wins}W  💀${p.losses}L`, 10, '#8888aa');
-    const goldTxt = txt(this, W - pad - 10, 37, `💰 ${p.gold}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
+    // Имя + статистика
+    const nameX = lvlX + lvlW + 10;
+    const nameTxt = txt(this, nameX, hY + 12, p.username, 18, '#f0f0fa', true);
+    const subTxt  = txt(this, nameX, hY + 38, `★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12, '#8888aa');
 
-    /* ── Персонаж ── */
-    const charY = CH * 0.30;
-    const warrior = this.add.image(W * 0.38, charY, 'warrior_blue').setScale(1.55).setOrigin(0.5);
-    this.tweens.add({ targets: warrior, y: charY - 7, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Золото — справа вверху
+    const goldTxt = txt(this, W - pad - 12, hY + 18, `💰 ${p.gold}`, 17, '#ffc83c', true).setOrigin(1, 0.5);
 
-    /* ── HP бар ── */
-    const hpY  = charY + 72;
-    const hpW  = 148;
-    const hpX  = W * 0.38 - hpW / 2;
+    // Кнопка переключения темы ☀️/🌙
+    const thIcon = isLight ? '🌙' : '☀️';
+    const thX = W - pad - 16, thY = hY + 56;
+    const thBg = this.add.graphics();
+    thBg.fillStyle(C.dark, isLight ? 1 : 0.7);
+    thBg.fillCircle(thX, thY, 15);
+    const thTxt = txt(this, thX, thY, thIcon, 14).setOrigin(0.5);
+    const thZ   = this.add.zone(thX, thY, 34, 34).setInteractive({ useHandCursor: true });
+    thZ.on('pointerup', () => {
+      applyTheme(isLight ? 'dark' : 'light');
+      tg?.HapticFeedback?.impactOccurred('light');
+      this.scene.restart();
+    });
+
+    /* ══ ПЕРСОНАЖ — по центру, увеличенный ════════════════ */
+    const charY = 240;
+    const warrior = this.add.image(W / 2, charY, 'warrior_blue').setScale(1.9).setOrigin(0.5);
+    this.tweens.add({
+      targets: warrior, y: charY - 9,
+      duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
+
+    // Свечение под персонажем
+    const glowG = this.add.graphics();
+    glowG.fillStyle(C.blue, 0.06);
+    glowG.fillEllipse(W / 2, charY + 115, 160, 28);
+
+    /* ══ HP БАР — широкий, по центру ══════════════════════ */
+    const hpW  = 200, hpH = 14;
+    const hpX  = W / 2 - hpW / 2;
+    const hpY  = charY + 122;
+    const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
-    const hpBg = makeBar(this, hpX, hpY, hpW, 11, p.hp_pct / 100, hpCol);
-    const hpTxt = txt(this, W * 0.38, hpY + 5, `${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5);
+    const hpBg  = makeBar(this, hpX, hpY, hpW, hpH, hpPct, hpCol);
+    const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#f0f0fa', true).setOrigin(0.5);
 
     /* ── XP бар ── */
     let xpBg, xpTxt;
+    const xpY = hpY + hpH + 7;
     if (!p.max_level) {
-      xpBg  = makeBar(this, hpX, hpY + 15, hpW, 5, p.xp_pct / 100, C.blue);
-      xpTxt = txt(this, W * 0.38, hpY + 17, `XP ${p.exp}/${p.exp_needed}`, 8, '#555577').setOrigin(0.5);
+      xpBg  = makeBar(this, hpX, xpY, hpW, 6, p.xp_pct / 100, C.blue);
+      xpTxt = txt(this, W / 2, xpY + 3,
+        `⭐ XP ${p.exp} / ${p.exp_needed}  (${p.xp_pct}%)`, 10, '#5577cc').setOrigin(0.5);
     }
 
-    /* ── Таймер реген HP ── */
-    let regenTxt;
-    if (p.current_hp < p.max_hp) {
-      const rate = p.regen_per_min || 0;
-      regenTxt = txt(this, hpX, hpY + 28,
-        `❤️ +${rate}/мин`, 8, '#cc4444').setOrigin(0, 0);
-      // Живой обратный отсчёт
-      let secsLeft = p.regen_secs_to_full || 0;
-      const _fmtTime = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
-      const regenTimer = txt(this, hpX + hpW, hpY + 28,
-        secsLeft > 0 ? `полный через ${_fmtTime(secsLeft)}` : '',
-        8, '#553333').setOrigin(1, 0);
-      this._regenInterval = this.time.addEvent({
-        delay: 1000, loop: true,
-        callback: () => {
-          if (secsLeft <= 0) { regenTimer.setText('HP полный!').setStyle({ color: '#3cc864' }); return; }
-          secsLeft = Math.max(0, secsLeft - 1);
-          regenTimer.setText(secsLeft > 0 ? `полный через ${_fmtTime(secsLeft)}` : '✅ HP полный!');
-        },
-      });
-    }
-
-    /* ── Статы справа ── */
-    const sx = W * 0.62;
-    const sy0 = charY - 55;
-    const statsBg = this.add.graphics();
-    statsBg.fillStyle(C.bgPanel, 0.9);
-    statsBg.fillRoundedRect(sx - 4, sy0 - 6, W - sx - pad + 4, 148, 10);
-    statsBg.lineStyle(1, C.gold, 0.12);
-    statsBg.strokeRoundedRect(sx - 4, sy0 - 6, W - sx - pad + 4, 148, 10);
-
+    /* ══ СТАТЫ — 4 карточки в ряд ══════════════════════════ */
     const STATS = [
-      { icon: '💪', val: p.strength,  color: C.red,    sub: `~${p.dmg}ур`       },
-      { icon: '🤸', val: p.agility,   color: C.cyan,   sub: `${p.dodge_pct}%`   },
-      { icon: '💥', val: p.intuition, color: C.purple, sub: `${p.crit_pct}%`    },
-      { icon: '🛡', val: p.stamina,   color: C.green,  sub: `${p.armor_pct}%бр` },
+      { icon: '💪', label: 'СИЛ', val: p.strength,  color: C.red,    hex: '#dc3c46', sub: `~${p.dmg}ур`     },
+      { icon: '🤸', label: 'ЛОВ', val: p.agility,   color: C.cyan,   hex: '#3cc8dc', sub: `${p.dodge_pct}%` },
+      { icon: '💥', label: 'ИНТ', val: p.intuition, color: C.purple, hex: '#b45aff', sub: `${p.crit_pct}%`  },
+      { icon: '🛡', label: 'ВЫН', val: p.stamina,   color: C.green,  hex: '#3cc864', sub: `${p.armor_pct}%` },
     ];
+    const statsTop = xpBg ? xpY + 20 : xpY + 6;
+    const scGap = 6, scH = 76;
+    const scW   = (W - pad * 2 - scGap * 3) / 4;
+    const maxV  = Math.max(1, 3 + p.level * 2);
+
     const statObjs = STATS.map((s, i) => {
-      const y = sy0 + i * 35;
-      const ico   = txt(this, sx + 4,  y + 2, s.icon, 13);
-      const val   = txt(this, sx + 24, y,     String(s.val), 17, `#${s.color.toString(16).padStart(6,'0')}`, true);
-      const sub   = txt(this, sx + 70, y + 4, s.sub, 9, '#666688').setOrigin(1, 0);
-      const barG  = this.add.graphics();
-      const barW2 = 64;
-      barG.fillStyle(C.dark, 1); barG.fillRoundedRect(sx + 4, y + 22, barW2, 4, 2);
-      const maxV = Math.max(1, 3 + p.level * 2);
-      const pct  = Math.min(1, s.val / maxV);
-      barG.fillStyle(s.color, 0.8); barG.fillRoundedRect(sx + 4, y + 22, Math.max(4, barW2 * pct), 4, 2);
-      return [ico, val, sub, barG];
+      const scX  = pad + i * (scW + scGap);
+      const scCX = scX + scW / 2;
+      const hexC = isLight
+        ? `#${Math.max(0, s.color - 0x222222).toString(16).padStart(6,'0')}`
+        : s.hex;
+
+      const sbg = this.add.graphics();
+      sbg.fillStyle(C.bgPanel, 0.92);
+      sbg.fillRoundedRect(scX, statsTop, scW, scH, 11);
+      sbg.lineStyle(1.5, s.color, isLight ? 0.45 : 0.28);
+      sbg.strokeRoundedRect(scX, statsTop, scW, scH, 11);
+
+      const icoT = txt(this, scCX, statsTop + 14, s.icon, 18).setOrigin(0.5);
+      const valT = txt(this, scCX, statsTop + 36, String(s.val), 22, hexC, true).setOrigin(0.5);
+      const subT = txt(this, scCX, statsTop + 58, s.sub, 13, hexC).setOrigin(0.5);
+
+      // Прогресс-бар внутри карточки
+      const pct = Math.min(1, s.val / maxV);
+      const bW  = scW - 12;
+      const bbrG = this.add.graphics();
+      bbrG.fillStyle(C.dark, 1);
+      bbrG.fillRoundedRect(scX + 6, statsTop + scH - 8, bW, 4, 2);
+      bbrG.fillStyle(s.color, 0.85);
+      bbrG.fillRoundedRect(scX + 6, statsTop + scH - 8, Math.max(4, bW * pct), 4, 2);
+
+      return [sbg, icoT, valT, subT, bbrG];
     });
 
-    /* ── Свободные статы ── */
-    let fsBadge;
+    /* ══ СВОБОДНЫЕ ОЧКИ СТАТОВ ═════════════════════════════ */
+    let fsBadge = [];
+    const fsY = statsTop + scH + 10;
     if (p.free_stats > 0) {
       const fsG = this.add.graphics();
-      fsG.fillStyle(0x5520a0, 0.85);
-      fsG.fillRoundedRect(W / 2 - 88, hpY + 32, 176, 26, 8);
-      fsG.lineStyle(1.5, C.purple, 0.7);
-      fsG.strokeRoundedRect(W / 2 - 88, hpY + 32, 176, 26, 8);
-      const fsT = txt(this, W / 2, hpY + 45, `⚡ ${p.free_stats} свободных очка статов`, 11, '#ffc83c', true).setOrigin(0.5);
+      fsG.fillStyle(0x5520a0, 0.88);
+      fsG.fillRoundedRect(W / 2 - 105, fsY, 210, 32, 10);
+      fsG.lineStyle(1.5, C.purple, 0.8);
+      fsG.strokeRoundedRect(W / 2 - 105, fsY, 210, 32, 10);
+      const fsT = txt(this, W / 2, fsY + 16, `⚡ ${p.free_stats} свободных очка статов`, 12, '#ffc83c', true).setOrigin(0.5);
       this.tweens.add({ targets: fsG, alpha: 0.5, duration: 700, yoyo: true, repeat: -1 });
       fsBadge = [fsG, fsT];
     }
 
-    /* ── Обновить ── */
-    const refG = this.add.graphics();
-    refG.fillStyle(C.dark, 0.8);
-    refG.fillRoundedRect(W / 2 - 60, CH - 16, 120, 30, 9);
-    refG.lineStyle(1, C.blue, 0.3);
-    refG.strokeRoundedRect(W / 2 - 60, CH - 16, 120, 30, 9);
-    const refT = txt(this, W / 2, CH - 1, '🔄 Обновить', 12, '#8888aa').setOrigin(0.5);
-    const refZ = this.add.zone(W / 2, CH - 1, 120, 30).setInteractive({ useHandCursor: true });
-    refZ.on('pointerup', () => this.scene.restart());
-
-    /* ── Предупреждение HP + кнопка Аптека ── */
-    const hpExtra = [];
-    if (p.hp_pct < 100) {
-      // Кнопка "Аптека" — ведёт в магазин, вкладка зелий
-      const btnW = 130, btnH = 30, btnX = W / 2 - btnW / 2, btnY = CH - 54;
-      const hpWarnColor = p.hp_pct < 30 ? '#ff6666' : '#ffc83c';
-      const hpWarnMsg   = p.hp_pct < 30 ? '❤️ Мало HP — восстанови перед боем!' : `❤️ HP не полный (${p.hp_pct}%)`;
-      const hpWarn = txt(this, W / 2, CH - 68, hpWarnMsg, 9, hpWarnColor).setOrigin(0.5);
-
-      const apBg = this.add.graphics();
-      apBg.fillStyle(C.red, 0.85);
-      apBg.fillRoundedRect(btnX, btnY, btnW, btnH, 9);
-      const apT = txt(this, W / 2, btnY + btnH / 2, '🧪 Аптека', 12, '#ffffff', true).setOrigin(0.5);
-      const apZ = this.add.zone(btnX, btnY, btnW, btnH).setOrigin(0)
-        .setInteractive({ useHandCursor: true });
-      apZ.on('pointerdown', () => { apBg.clear(); apBg.fillStyle(0x991a22, 1); apBg.fillRoundedRect(btnX, btnY, btnW, btnH, 9); });
-      apZ.on('pointerup',   () => { tg?.HapticFeedback?.impactOccurred('medium'); this.scene.start('Shop', { tab: 'potions' }); });
-      apZ.on('pointerout',  () => { apBg.clear(); apBg.fillStyle(C.red, 0.85); apBg.fillRoundedRect(btnX, btnY, btnW, btnH, 9); });
-      hpExtra.push(hpWarn, apBg, apT, apZ);
+    /* ══ РЕГЕН HP ═══════════════════════════════════════════ */
+    let regenObjs = [];
+    const regenBaseY = fsBadge.length ? fsY + 42 : fsY + 4;
+    if (p.current_hp < p.max_hp) {
+      const rate = p.regen_per_min || 0;
+      let secsLeft = p.regen_secs_to_full || 0;
+      const _fmt = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+      const regenTxt = txt(this, W / 2, regenBaseY,
+        `❤️ +${rate}/мин · полный через ${_fmt(secsLeft)}`, 11, '#cc6655').setOrigin(0.5);
+      this._regenInterval = this.time.addEvent({
+        delay: 1000, loop: true,
+        callback: () => {
+          if (secsLeft <= 0) { regenTxt.setText('✅ HP полный!').setStyle({ color: '#3cc864' }); return; }
+          secsLeft = Math.max(0, secsLeft - 1);
+          regenTxt.setText(secsLeft > 0
+            ? `❤️ +${rate}/мин · полный через ${_fmt(secsLeft)}`
+            : '✅ HP полный!');
+        },
+      });
+      regenObjs = [regenTxt];
     }
 
-    // Добавляем всё в контейнер
+    /* ══ КНОПКА АПТЕКА ══════════════════════════════════════ */
+    let hpExtra = [];
+    const apBtnY = regenBaseY + (regenObjs.length ? 20 : 4);
+    if (p.hp_pct < 100) {
+      const apW = 170, apH = 38, apX = W / 2 - apW / 2;
+      const apBg = this.add.graphics();
+      apBg.fillStyle(C.red, 0.88);
+      apBg.fillRoundedRect(apX, apBtnY, apW, apH, 11);
+      const apT = txt(this, W / 2, apBtnY + apH / 2, '🧪 Аптека', 14, '#ffffff', true).setOrigin(0.5);
+      const apZ = this.add.zone(W / 2, apBtnY + apH / 2, apW, apH).setInteractive({ useHandCursor: true });
+      apZ.on('pointerdown', () => { apBg.clear(); apBg.fillStyle(0x991a22, 1); apBg.fillRoundedRect(apX, apBtnY, apW, apH, 11); });
+      apZ.on('pointerup',   () => { tg?.HapticFeedback?.impactOccurred('medium'); this.scene.start('Shop', { tab: 'potions' }); });
+      apZ.on('pointerout',  () => { apBg.clear(); apBg.fillStyle(C.red, 0.88); apBg.fillRoundedRect(apX, apBtnY, apW, apH, 11); });
+      hpExtra = [apBg, apT, apZ];
+    }
+
+    /* ══ КНОПКА ОБНОВИТЬ ════════════════════════════════════ */
+    const refH = 44, refY = CH - refH - 6;
+    const refW = W - 56, refX = 28;
+    const refG = this.add.graphics();
+    refG.fillStyle(C.dark, isLight ? 1 : 0.85);
+    refG.fillRoundedRect(refX, refY, refW, refH, 13);
+    refG.lineStyle(1.5, C.blue, isLight ? 0.5 : 0.35);
+    refG.strokeRoundedRect(refX, refY, refW, refH, 13);
+    const refT = txt(this, W / 2, refY + refH / 2, '🔄 Обновить данные', 14, '#7799cc', true).setOrigin(0.5);
+    const refZ = this.add.zone(W / 2, refY + refH / 2, refW, refH).setInteractive({ useHandCursor: true });
+    refZ.on('pointerdown', () => { refG.clear(); refG.fillStyle(C.blue, 0.25); refG.fillRoundedRect(refX, refY, refW, refH, 13); tg?.HapticFeedback?.impactOccurred('light'); });
+    refZ.on('pointerup',   () => this.scene.restart());
+    refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, isLight ? 1 : 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, isLight ? 0.5 : 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
+
+    /* ══ СБОРКА ═════════════════════════════════════════════ */
     const children = [
-      hBg, lvlBg, lvlTxt, nameTxt, subTxt, goldTxt,
-      warrior, hpBg, hpTxt,
-      statsBg, ...statObjs.flat(),
+      hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt, thBg, thTxt, thZ,
+      glowG, warrior, hpBg, hpTxt,
+      ...statObjs.flat(),
       refG, refT, refZ,
     ];
-    if (xpBg)      children.push(xpBg, xpTxt);
-    if (regenTxt)  children.push(regenTxt, regenTimer);
-    if (fsBadge)   children.push(...fsBadge);
+    if (xpBg)        children.push(xpBg, xpTxt);
+    if (fsBadge.length)   children.push(...fsBadge);
+    if (regenObjs.length) children.push(...regenObjs);
     children.push(...hpExtra);
     children.forEach(o => c.add(o));
 
@@ -1577,7 +1673,7 @@ class RatingScene extends Phaser.Scene {
    ═══════════════════════════════════════════════════════════ */
 const config = {
   type: Phaser.AUTO,
-  backgroundColor: '#12121c',
+  backgroundColor: C._name === 'light' ? '#f0f2ff' : '#12121c',
   parent: document.body,
   scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
           QuestsScene, SummaryScene, SeasonScene, BattlePassScene, ClanScene, ShopScene],
