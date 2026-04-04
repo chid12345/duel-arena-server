@@ -1003,16 +1003,41 @@ class ShopScene extends Phaser.Scene {
     });
     y += 36;
 
-    // Карточки CryptoPay
-    const cpW = (W - 32) / cryptoPkgs.length;
-    cryptoPkgs.forEach((pkg, i) => {
-      const px = 8 + i * (cpW + 8/cryptoPkgs.length);
+    // Обычные пакеты (без Premium)
+    const cpMain = cryptoPkgs.filter(p => !p.premium);
+    const cpW = (W - 32) / cpMain.length;
+    cpMain.forEach((pkg, i) => {
+      const px = 8 + i * (cpW + 8/cpMain.length);
       this._makeCryptoCard(pkg, px, y, cpW - 4, 80, W);
     });
     y += 90;
 
+    // Premium за крипту — во всю ширину
+    const cpPrem = cryptoPkgs.find(p => p.premium);
+    if (cpPrem) {
+      this._makeCryptoPremiumCard(cpPrem, 8, y, W-16, 52, W);
+      y += 62;
+    }
+
+    y += 4;
     // Подсказка про подтверждение
     txt(this, W/2, y+4, '💡 После оплаты алмазы придут автоматически', 9, '#555577').setOrigin(0.5);
+
+    // Кнопка "Проверить оплату" — если есть pending инвойс в localStorage
+    const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
+    if (pendingId) {
+      y += 20;
+      const checkG = this.add.graphics();
+      checkG.fillStyle(0x1a4055, 0.9); checkG.fillRoundedRect(8, y, W-16, 36, 9);
+      checkG.lineStyle(1.5, 0x3cc8dc, 0.5); checkG.strokeRoundedRect(8, y, W-16, 36, 9);
+      const checkT = txt(this, W/2, y+18, '🔄 Проверить оплату', 12, '#3cc8dc', true).setOrigin(0.5);
+      this.add.zone(8, y, W-16, 36).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { checkG.clear(); checkG.fillStyle(0x0a2535,1); checkG.fillRoundedRect(8,y,W-16,36,9); })
+        .on('pointerup', () => {
+          checkT.setText('⏳ Проверяем...');
+          this._checkPendingInvoice(pendingId);
+        });
+    }
   }
 
   /* ── Stars карточка ──────────────────────────────────── */
@@ -1051,6 +1076,28 @@ class ShopScene extends Phaser.Scene {
       .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
       .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a0a30,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(2,C.purple,0.7); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
       .on('pointerup',   () => this._buyStars(pkg));
+  }
+
+  /* ── CryptoPay Premium карточка ─────────────────────── */
+  _makeCryptoPremiumCard(pkg, ix, iy, iw, ih, W) {
+    const asset  = this._cryptoAsset || 'TON';
+    const price  = asset === 'TON' ? pkg.ton : pkg.usdt;
+    const symbol = asset === 'TON' ? 'TON' : 'USDT';
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1a0a30, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, C.purple, 0.7); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    bg.fillStyle(0xffffff, 0.04); bg.fillRoundedRect(ix+2, iy+2, iw-4, ih/2, 9);
+
+    txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5);
+    txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
+    txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
+    txt(this, iw-4, iy+ih/2-2, `${price} ${symbol}`, 12, '#3cc8dc', true).setOrigin(1, 0.5);
+
+    this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
+      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a0a30,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(2,C.purple,0.7); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+      .on('pointerup',   () => this._buyCrypto(pkg));
   }
 
   /* ── CryptoPay карточка ──────────────────────────────── */
@@ -1135,6 +1182,8 @@ class ShopScene extends Phaser.Scene {
         return;
       }
       const invoiceId = res.invoice_id;
+      // Сохраняем invoice_id — при возврате покажем кнопку "Проверить оплату"
+      localStorage.setItem('cryptoPendingInvoice', String(invoiceId));
       // Открываем ссылку на оплату в Telegram
       if (res.invoice_url) {
         tg?.openLink?.(res.invoice_url);
@@ -1158,14 +1207,8 @@ class ShopScene extends Phaser.Scene {
       try {
         const r = await get(`/api/shop/crypto_check/${invoiceId}`);
         if (r.ok && r.paid) {
-          tg?.HapticFeedback?.notificationOccurred('success');
-          Sound.levelUp?.();
-          this._toast(`✅ Оплата подтверждена! +${r.diamonds || diamonds} 💎`);
-          post('/api/player').then(d => {
-            if (d.ok && d.player) State.player = d.player;
-            this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' }));
-          }).catch(() => {});
-          return; // Стоп
+          this._onCryptoPaid(r.diamonds || diamonds, invoiceId);
+          return;
         }
       } catch(_) {}
       if (attempts < maxAttempts && this.scene.isActive?.('Shop')) {
@@ -1173,6 +1216,33 @@ class ShopScene extends Phaser.Scene {
       }
     };
     this.time.delayedCall(5000, poll);
+  }
+
+  /* ── Ручная проверка pending-инвойса ─────────────────── */
+  async _checkPendingInvoice(invoiceId) {
+    try {
+      const r = await get(`/api/shop/crypto_check/${invoiceId}`);
+      if (r.ok && r.paid) {
+        this._onCryptoPaid(r.diamonds, invoiceId);
+      } else {
+        this._toast('⏳ Оплата ещё не подтверждена');
+      }
+    } catch(_) {
+      this._toast('❌ Нет соединения');
+    }
+  }
+
+  /* ── Общий обработчик успешной крипто-оплаты ─────────── */
+  _onCryptoPaid(diamonds, invoiceId) {
+    tg?.HapticFeedback?.notificationOccurred('success');
+    Sound.levelUp?.();
+    localStorage.removeItem('cryptoPendingInvoice');
+    const msg = diamonds > 0 ? `✅ +${diamonds} 💎 начислено!` : '✅ Premium активирован!';
+    this._toast(msg);
+    post('/api/player').then(d => {
+      if (d.ok && d.player) State.player = d.player;
+      this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' }));
+    }).catch(() => this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' })));
   }
 
   _makeItemCard(item, ix, iy, iw, ih, W) {

@@ -802,11 +802,12 @@ STARS_PACKAGES = [
     {"id": "premium", "diamonds": 0,   "stars": 1, "label": "👑 Premium"},
 ]
 
-# Пакеты алмазов за криптовалюту (CryptoPay)
+# Пакеты за криптовалюту (CryptoPay)
 CRYPTO_PACKAGES = [
-    {"id": "cd100", "diamonds": 100, "ton": "0.50", "usdt": "1.50"},
-    {"id": "cd300", "diamonds": 300, "ton": "1.30", "usdt": "3.50"},
-    {"id": "cd500", "diamonds": 500, "ton": "2.00", "usdt": "5.00"},
+    {"id": "cd100",     "diamonds": 100, "label": "100 💎",          "ton": "0.50", "usdt": "1.50"},
+    {"id": "cd300",     "diamonds": 300, "label": "300 💎",          "ton": "1.30", "usdt": "3.50"},
+    {"id": "cd500",     "diamonds": 500, "label": "500 💎",          "ton": "2.00", "usdt": "5.00"},
+    {"id": "cdpremium", "diamonds": 0,   "label": "👑 Premium",      "ton": "1.50", "usdt": "4.00", "premium": True},
 ]
 
 CRYPTOPAY_API_BASE = (
@@ -941,6 +942,13 @@ async def crypto_invoice(body: CryptoInvoiceBody):
         return {"ok": False, "reason": "Неверная валюта (TON или USDT)"}
 
     amount = pkg["ton"] if asset == "TON" else pkg["usdt"]
+    is_premium = pkg.get("premium", False)
+    description = (
+        "Duel Arena — 👑 Premium подписка"
+        if is_premium else
+        f"Duel Arena — {pkg['diamonds']} 💎 алмазов"
+    )
+    payload_str = f"uid:{uid}:premium:1" if is_premium else f"uid:{uid}:diamonds:{pkg['diamonds']}"
 
     import httpx
     try:
@@ -951,8 +959,8 @@ async def crypto_invoice(body: CryptoInvoiceBody):
                 json={
                     "asset":              asset,
                     "amount":             amount,
-                    "payload":            f"uid:{uid}:diamonds:{pkg['diamonds']}",
-                    "description":        f"Duel Arena — {pkg['diamonds']} 💎 алмазов",
+                    "payload":            payload_str,
+                    "description":        description,
                     "allow_comments":     False,
                     "allow_anonymous":    False,
                 },
@@ -1012,15 +1020,24 @@ async def cryptopay_webhook(request: Request):
 
     result = db.confirm_crypto_invoice(int(invoice_id))
     if result.get("ok"):
-        uid      = result["user_id"]
-        diamonds = result["diamonds"]
-        logger.info("CryptoPay paid: uid=%s +%s diamonds invoice=%s", uid, diamonds, invoice_id)
-        # Уведомить игрока по WS (если он онлайн в TMA)
-        await manager.send(uid, {
-            "event":    "diamonds_credited",
-            "diamonds": diamonds,
-            "source":   "cryptopay",
-        })
+        uid           = result["user_id"]
+        diamonds      = result["diamonds"]
+        custom_payload = inv.get("payload", "")
+        is_premium    = ":premium:" in custom_payload
+        logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s invoice=%s",
+                    uid, diamonds, is_premium, invoice_id)
+        # WS: уведомить игрока (если онлайн в TMA)
+        if is_premium:
+            await manager.send(uid, {
+                "event":  "premium_activated",
+                "source": "cryptopay",
+            })
+        else:
+            await manager.send(uid, {
+                "event":    "diamonds_credited",
+                "diamonds": diamonds,
+                "source":   "cryptopay",
+            })
     else:
         logger.warning("CryptoPay confirm_invoice %s: %s", invoice_id, result.get("reason"))
 

@@ -1009,7 +1009,11 @@ class MenuScene extends Phaser.Scene {
       if (msg.event === 'diamonds_credited') {
         tg?.HapticFeedback?.notificationOccurred('success');
         Notif.push('💎', `+${msg.diamonds} алмазов зачислено!`, '#3cc8dc', 3500);
-        // Обновляем State.player
+        post('/api/player').then(d => { if (d.ok && d.player) State.player = d.player; }).catch(() => {});
+      }
+      if (msg.event === 'premium_activated') {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        Notif.push('👑', 'Premium подписка активирована!', '#b45aff', 4000);
         post('/api/player').then(d => { if (d.ok && d.player) State.player = d.player; }).catch(() => {});
       }
     });
