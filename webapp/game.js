@@ -1107,6 +1107,8 @@ class BattleScene extends Phaser.Scene {
     this._logLines   = [];
     this._prevMyHp   = null;
     this._prevOppHp  = null;
+    this._p1PrevPct  = null;
+    this._p2PrevPct  = null;
     this._oppCardOpen = false;
 
     this._buildArena();
@@ -1357,21 +1359,96 @@ class BattleScene extends Phaser.Scene {
     txt(this, W/2, H * 0.32, 'VS', 20, '#ffc83c', true).setOrigin(0.5).setAlpha(0.5);
   }
 
+  /** HP с «призраком»: заливка скачет к новому HP, светлый хвост догоняет (ghost health). */
   _hpBar(x, y, w, pct, color) {
-    const g = this.add.graphics();
-    this._redrawBar(g, x, y, w, 7, pct, color);
-    g._x = x; g._y = y; g._w = w; g._color = color;
-    return g;
+    const h = 7;
+    const bg = this.add.graphics();
+    bg.fillStyle(C.dark, 1);
+    bg.fillRoundedRect(x, y, w, h, 3);
+
+    const ghost = this.add.graphics();
+    const fill = this.add.graphics();
+
+    const bar = {
+      bg, ghost, fill, _x: x, _y: y, _w: w, _h: h, _baseColor: color, _ghostTween: null, _ghostProxy: null,
+    };
+    this._redrawHpGhost(ghost, x, y, w, h, pct);
+    this._redrawHpFill(fill, x, y, w, h, pct, color);
+    return bar;
   }
 
+  _hpFillColor(pct, baseColor) {
+    return pct > 0.5 ? baseColor : (pct > 0.25 ? C.gold : C.red);
+  }
+
+  _redrawHpGhost(g, x, y, w, h, pct) {
+    g.clear();
+    const fw = Math.max(6, Math.round(w * Math.min(1, Math.max(0, pct))));
+    g.fillStyle(0xe8e8ff, 0.5);
+    g.fillRoundedRect(x, y, fw, h, 3);
+  }
+
+  _redrawHpFill(g, x, y, w, h, pct, baseColor) {
+    g.clear();
+    const fw = Math.max(6, Math.round(w * Math.min(1, Math.max(0, pct))));
+    const col = this._hpFillColor(pct, baseColor);
+    g.fillStyle(col, 1);
+    g.fillRoundedRect(x, y, fw, h, 3);
+  }
+
+  /** Старый одиночный бар (меню и т.д.) */
   _redrawBar(g, x, y, w, h, pct, color) {
     g.clear();
     g.fillStyle(C.dark, 1);
     g.fillRoundedRect(x, y, w, h, 3);
     const fw = Math.max(6, Math.round(w * Math.min(1, Math.max(0, pct))));
-    const col = pct > 0.5 ? color : (pct > 0.25 ? C.gold : C.red);
+    const col = this._hpFillColor(pct, color);
     g.fillStyle(col, 1);
     g.fillRoundedRect(x, y, fw, h, 3);
+  }
+
+  _setGhostHpBar(bar, newPct, prevPct, baseColor) {
+    if (!bar || !bar.fill) return;
+    const { x, y, w, h, ghost, fill } = bar;
+    const np = Math.min(1, Math.max(0, newPct));
+    const pp = Math.min(1, Math.max(0, prevPct));
+
+    this._redrawHpFill(fill, x, y, w, h, np, baseColor);
+
+    if (bar._ghostProxy) {
+      this.tweens.killTweensOf(bar._ghostProxy);
+      bar._ghostProxy = null;
+    }
+    bar._ghostTween = null;
+
+    if (Math.abs(np - pp) < 0.0005) {
+      this._redrawHpGhost(ghost, x, y, w, h, np);
+      return;
+    }
+
+    if (pp > np) {
+      const startW = Math.max(6, Math.round(w * pp));
+      const endW = Math.max(6, Math.round(w * np));
+      this._redrawHpGhost(ghost, x, y, w, h, pp);
+      const proxy = { fw: startW };
+      bar._ghostProxy = proxy;
+      bar._ghostTween = this.tweens.add({
+        targets: proxy,
+        fw: endW,
+        duration: 520,
+        ease: 'Sine.easeOut',
+        onUpdate: () => {
+          const gPct = Math.min(1, Math.max(0, proxy.fw / w));
+          this._redrawHpGhost(ghost, x, y, w, h, gPct);
+        },
+        onComplete: () => {
+          this._redrawHpGhost(ghost, x, y, w, h, np);
+          bar._ghostTween = null;
+        },
+      });
+    } else {
+      this._redrawHpGhost(ghost, x, y, w, h, np);
+    }
   }
 
   _buildChoicePanel() {
@@ -1544,15 +1621,24 @@ class BattleScene extends Phaser.Scene {
 
     State.battle = b;
 
+    const p1n = b.my_max_hp > 0 ? b.my_hp / b.my_max_hp : 0;
+    const p1p = this._p1PrevPct != null ? this._p1PrevPct : p1n;
+    const p2n = b.opp_max_hp > 0 ? b.opp_hp / b.opp_max_hp : 0;
+    const p2p = this._p2PrevPct != null ? this._p2PrevPct : p2n;
+
     /* HP игрока */
     if (this.p1Hp) this.p1Hp.setText(`${b.my_hp} / ${b.my_max_hp}`);
-    if (this.p1Bar) this._redrawBar(this.p1Bar, this.p1Bar._x, this.p1Bar._y,
-      this.p1Bar._w, 7, b.my_hp / b.my_max_hp, C.green);
+    if (this.p1Bar) {
+      this._setGhostHpBar(this.p1Bar, p1n, p1p, C.green);
+      this._p1PrevPct = p1n;
+    }
 
     /* HP соперника */
     if (this.p2Hp) this.p2Hp.setText(`${b.opp_hp} / ${b.opp_max_hp}`);
-    if (this.p2Bar) this._redrawBar(this.p2Bar, this.p2Bar._x, this.p2Bar._y,
-      this.p2Bar._w, 7, b.opp_hp / b.opp_max_hp, C.red);
+    if (this.p2Bar) {
+      this._setGhostHpBar(this.p2Bar, p2n, p2p, C.red);
+      this._p2PrevPct = p2n;
+    }
 
     /* Раунд */
     if (this.roundTxt) this.roundTxt.setText(`РАУНД ${(b.round || 0) + 1}`);
