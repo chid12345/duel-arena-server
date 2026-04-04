@@ -990,8 +990,65 @@ class MenuScene extends Phaser.Scene {
   }
 
   _onInvite() {
-    const link = `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id || ''}`;
-    tg?.openTelegramLink ? tg.openTelegramLink(link) : this._toast('Скопируй ссылку в боте');
+    const uid  = State.player?.user_id || '';
+    const link = `https://t.me/ZenDuelArena_bot?start=ref_${uid}`;
+    const { W, H } = this;
+
+    // Затемнение
+    const ov = this.add.graphics().setDepth(60);
+    ov.fillStyle(0x000000, 0.65); ov.fillRect(0, 0, W, H);
+
+    // Панель
+    const pw = W - 40, ph = 224, px = 20, py = Math.round(H * 0.24);
+    const panBg = this.add.graphics().setDepth(61);
+    panBg.fillStyle(0x1a1828, 1); panBg.fillRoundedRect(px, py, pw, ph, 16);
+    panBg.lineStyle(2, 0x5096ff, 0.8); panBg.strokeRoundedRect(px, py, pw, ph, 16);
+
+    const D = 62;
+    const at = (x, y, s, sz, col, bold) =>
+      txt(this, x, y, s, sz, col || '#f0f0fa', bold).setOrigin(0.5).setDepth(D);
+
+    at(px+pw/2, py+22,  '🔗 Рефералка',                    15, '#f0f0fa', true);
+    at(px+pw/2, py+44,  'Пригласи друга и получи бонус!',  10, '#8888aa');
+    at(px+pw/2, py+70,  'Твоя ссылка:',                    10, '#5096ff');
+
+    // Ссылка в рамке
+    const lb = this.add.graphics().setDepth(D);
+    lb.fillStyle(0x080814, 1); lb.fillRoundedRect(px+10, py+82, pw-20, 30, 7);
+    at(px+pw/2, py+97, link, 8, '#3cc8dc');
+
+    // Скопировать
+    const cbg = this.add.graphics().setDepth(D);
+    cbg.fillStyle(0x5096ff, 0.9); cbg.fillRoundedRect(px+10, py+124, pw-20, 38, 10);
+    at(px+pw/2, py+143, '📋 Скопировать ссылку', 13, '#ffffff', true);
+    this.add.zone(px+10, py+124, pw-20, 38).setOrigin(0).setDepth(65).setInteractive({ useHandCursor: true })
+      .on('pointerup', () => {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        navigator.clipboard?.writeText(link)
+          .then(() => this._toast('✅ Ссылка скопирована!'))
+          .catch(() => { tg?.openLink?.(link); this._toast('🔗 Открываем...'); });
+      });
+
+    // Поделиться
+    const sbg = this.add.graphics().setDepth(D);
+    sbg.fillStyle(0x226644, 0.9); sbg.fillRoundedRect(px+10, py+172, pw-20, 34, 10);
+    at(px+pw/2, py+189, '💬 Поделиться в Telegram', 12, '#ffffff', true);
+    this.add.zone(px+10, py+172, pw-20, 34).setOrigin(0).setDepth(65).setInteractive({ useHandCursor: true })
+      .on('pointerup', () => {
+        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('⚔️ Присоединяйся к Duel Arena!')}`;
+        tg?.openLink?.(shareUrl);
+      });
+
+    // ✕
+    txt(this, px+pw-14, py+14, '✕', 15, '#666688').setOrigin(0.5).setDepth(D);
+    const close = () => this.children.list.filter(o => o.depth >= 59).forEach(o => { try { o.destroy(); } catch(_){} });
+    this.add.zone(px+pw-32, py, 38, 38).setOrigin(0).setDepth(66).setInteractive({ useHandCursor: true })
+      .on('pointerup', close);
+    // Тап вне панели
+    this.add.zone(0, 0, W, H).setOrigin(0).setDepth(59).setInteractive()
+      .on('pointerup', (ptr) => {
+        if (ptr.x < px || ptr.x > px+pw || ptr.y < py || ptr.y > py+ph) close();
+      });
   }
 
   _soon(name) { this._toast(`🚧 ${name} — скоро!`); }

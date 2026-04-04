@@ -565,14 +565,23 @@ class ClanScene extends Phaser.Scene {
 
   _route(data, W, H) {
     this._loading?.destroy();
-    if (!data.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, C.red).setOrigin(0.5); return; }
-    if (data.clan) {
-      this._renderMyClan(data, W, H);
-    } else {
-      if      (this._subview === 'search') this._renderSearch(W, H);
-      else if (this._subview === 'create') this._renderCreate(W, H);
-      else if (this._subview === 'top')    this._renderTop(W, H);
-      else                                  this._renderNoClan(W, H);
+    if (!data.ok) {
+      txt(this, W/2, H/2 - 10, '❌ Ошибка загрузки', 14, '#dc3c46').setOrigin(0.5);
+      txt(this, W/2, H/2 + 14, data.reason || 'Попробуйте позже', 11, '#555577').setOrigin(0.5);
+      return;
+    }
+    try {
+      if (data.clan) {
+        this._renderMyClan(data, W, H);
+      } else {
+        if      (this._subview === 'search') this._renderSearch(W, H);
+        else if (this._subview === 'create') this._renderCreate(W, H);
+        else if (this._subview === 'top')    this._renderTop(W, H);
+        else                                  this._renderNoClan(W, H);
+      }
+    } catch(e) {
+      console.error('ClanScene render error:', e);
+      txt(this, W/2, H/2, '⚠️ Ошибка: ' + e.message, 11, '#dc3c46').setOrigin(0.5);
     }
   }
 
