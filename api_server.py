@@ -516,6 +516,64 @@ async def train_stat(body: TrainBody):
 
     return {"ok": True, "message": result_msg, "player": _player_api(fresh)}
 
+# ─── Сезон ──────────────────────────────────────────────────────────────────
+
+@app.get("/api/season")
+async def get_season_info(init_data: str):
+    tg_user = get_user_from_init_data(init_data)
+    uid     = int(tg_user["id"])
+    season  = db.get_active_season()
+    if not season:
+        return {"ok": True, "season": None, "leaderboard": [], "my_stats": None}
+    lb      = db.get_season_leaderboard(season["id"], limit=20)
+    my_pos  = next((i + 1 for i, r in enumerate(lb) if r["user_id"] == uid), None)
+    my_stat = next((r for r in lb if r["user_id"] == uid), None)
+    return {"ok": True, "season": dict(season), "leaderboard": lb,
+            "my_stats": my_stat, "my_pos": my_pos}
+
+
+# ─── Battle Pass ──────────────────────────────────────────────────────────────
+
+@app.get("/api/battlepass")
+async def get_battlepass(init_data: str):
+    tg_user = get_user_from_init_data(init_data)
+    uid     = int(tg_user["id"])
+    bp      = db.get_battle_pass(uid)
+    tiers   = [
+        {"tier": i + 1, "battles_needed": t[0], "wins_needed": t[1],
+         "diamonds": t[2], "gold": t[3]}
+        for i, t in enumerate(db.BATTLE_PASS_TIERS)
+    ]
+    return {"ok": True, "bp": dict(bp), "tiers": tiers}
+
+
+class BattlePassClaimBody(BaseModel):
+    init_data: str
+    tier: int
+
+
+@app.post("/api/battlepass/claim")
+async def claim_battlepass(body: BattlePassClaimBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.claim_battle_pass_tier(uid, body.tier)
+    return result
+
+
+# ─── Клан ────────────────────────────────────────────────────────────────────
+
+@app.get("/api/clan")
+async def get_clan(init_data: str):
+    tg_user  = get_user_from_init_data(init_data)
+    uid      = int(tg_user["id"])
+    player   = db.get_or_create_player(uid, "")
+    clan_id  = player.get("clan_id")
+    if not clan_id:
+        return {"ok": True, "clan": None}
+    clan = db.get_clan_info(int(clan_id))
+    return {"ok": True, "clan": dict(clan) if clan else None}
+
+
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────
 
 webapp_dir = os.path.join(os.path.dirname(__file__), "webapp")
