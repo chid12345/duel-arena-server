@@ -621,12 +621,12 @@ class MenuScene extends Phaser.Scene {
     c.add(sep);
 
     const items = [
-      { icon: '📋', label: 'Сводка',     cb: () => this._showSummary()       },
-      { icon: '🛍️', label: 'Магазин',    cb: () => this._soon('Магазин')     },
-      { icon: '⭐',  label: 'Сезон',      cb: () => this._soon('Сезон')       },
-      { icon: '🌟', label: 'Battle Pass', cb: () => this._soon('Battle Pass') },
-      { icon: '⚔️', label: 'Клан',       cb: () => this._soon('Клан')        },
-      { icon: '🔗', label: 'Пригласить', cb: () => this._onInvite()          },
+      { icon: '📋', label: 'Сводка',     cb: () => this.scene.start('Summary')    },
+      { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
+      { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
+      { icon: '🌟', label: 'Battle Pass', cb: () => this.scene.start('BattlePass') },
+      { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
+      { icon: '🔗', label: 'Пригласить', cb: () => this._onInvite()               },
     ];
 
     const cols = 2, rows = Math.ceil(items.length / cols);
@@ -1356,7 +1356,8 @@ const config = {
   type: Phaser.AUTO,
   backgroundColor: '#12121c',
   parent: document.body,
-  scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene],
+  scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
+          SummaryScene, SeasonScene, BattlePassScene, ClanScene, ShopScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
