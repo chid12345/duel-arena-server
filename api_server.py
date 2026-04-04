@@ -376,14 +376,16 @@ async def battle_choice(body: BattleChoiceBody):
     if result.get("status") in ("battle_ended", "battle_ended_afk"):
         winner_id = result.get("winner_id")
         human_won = winner_id == uid
+        is_afk    = result.get("status") == "battle_ended_afk"
         await manager.send(uid, {
-            "event": "battle_ended",
+            "event":     "battle_ended",
             "human_won": human_won,
+            "afk_loss":  is_afk and not human_won,
             "result": {
-                "gold": result.get("gold_reward", 0) if human_won else 0,
-                "exp": result.get("exp_reward", 0) if human_won else result.get("exp_reward", 0),
+                "gold":     result.get("gold_reward", 0) if human_won else 0,
+                "exp":      result.get("exp_reward",  0),
                 "level_up": result.get("level_up", False) if human_won else False,
-                "rounds": result.get("rounds", 0),
+                "rounds":   result.get("rounds", 0),
             }
         })
         if is_pvp and b:
@@ -391,16 +393,17 @@ async def battle_choice(body: BattleChoiceBody):
             if opp_uid:
                 opp_won = winner_id == opp_uid
                 await manager.send(opp_uid, {
-                    "event": "battle_ended",
+                    "event":     "battle_ended",
                     "human_won": opp_won,
+                    "afk_loss":  is_afk and not opp_won,
                     "result": {
-                        "gold": result.get("gold_reward", 0) if opp_won else 0,
-                        "exp": result.get("exp_reward", 0),
+                        "gold":     result.get("gold_reward", 0) if opp_won else 0,
+                        "exp":      result.get("exp_reward",  0),
                         "level_up": result.get("level_up", False) if opp_won else False,
-                        "rounds": result.get("rounds", 0),
+                        "rounds":   result.get("rounds", 0),
                     }
                 })
-        return {"ok": True, "status": "battle_ended", "human_won": human_won}
+        return {"ok": True, "status": "battle_ended", "human_won": human_won, "afk_loss": is_afk and not human_won}
 
     if result.get("status") == "choice_made":
         return {"ok": True, "status": "waiting_opponent"}
@@ -431,7 +434,25 @@ async def battle_state(init_data: str):
     tg_user = get_user_from_init_data(init_data)
     uid     = int(tg_user["id"])
     state   = _battle_state_api(uid)
-    return {"ok": True, "in_battle": state is not None, "battle": state}
+    if state:
+        return {"ok": True, "active": True,  **state}
+    return     {"ok": True, "active": False}
+
+
+@app.get("/api/battle/last_result")
+async def battle_last_result(init_data: str):
+    """Последний результат завершённого боя (для polling-fallback)."""
+    tg_user = get_user_from_init_data(init_data)
+    uid     = int(tg_user["id"])
+    player  = db.get_or_create_player(uid, "")
+    # Возвращаем мини-результат на основе stats игрока
+    return {
+        "ok":        True,
+        "human_won": False,          # неизвестно — пусть ResultScene сама разберётся
+        "result":    {},
+        "afk_loss":  True,           # подсказка что это AFK-поражение
+        "player":    _player_api(dict(player)),
+    }
 
 
 @app.get("/api/rating")

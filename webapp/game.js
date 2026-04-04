@@ -1336,18 +1336,29 @@ class BattleScene extends Phaser.Scene {
     });
   }
 
-  _startTimer() {
+  /* ── Таймер синхронизирован с сервером ─────────────────── */
+  _startTimer(serverSecs = null) {
     if (this._timerEvent) this._timerEvent.remove();
-    let secs = 15;
-    this.timerTxt?.setText(secs);
+
+    // Берём время с сервера; -1с запас на сетевую задержку
+    const b    = State.battle;
+    let secs   = serverSecs ?? (b?.deadline_sec ?? 15);
+    secs       = Math.max(1, Math.min(15, secs - 1)); // клamp + буфер 1с
+
+    this.timerTxt?.setText(secs).setColor('#ffffff');
     this._timerEvent = this.time.addEvent({
-      delay: 1000, repeat: 14,
+      delay: 1000, repeat: secs - 1,
       callback: () => {
         secs--;
-        this.timerTxt?.setText(secs);
-        if (secs <= 5) {
+        this.timerTxt?.setText(Math.max(0, secs));
+        if (secs <= 5 && secs > 0) {
           this.timerTxt?.setColor('#ff4455');
+          Sound.countdown(secs);
           tg?.HapticFeedback?.impactOccurred('light');
+        }
+        if (secs <= 0) {
+          // Авто-ход если игрок не успел
+          if (this._choosing) this._onAuto();
         }
       },
     });
@@ -1356,21 +1367,54 @@ class BattleScene extends Phaser.Scene {
   _setupWSBattle() {
     const p = State.player;
     if (!p) return;
-    // Переподключаемся к WS (он уже открыт из Menu, просто обновляем обработчик)
+
+    const handleMsg = msg => {
+      if (msg.event === 'round_result') {
+        this._lastServerMsg = Date.now();
+        this._updateFromState(msg.battle);
+        this._resetChoices();
+        this._choosing = true;
+        this._startTimer(msg.battle?.deadline_sec);
+      } else if (msg.event === 'battle_ended' || msg.event === 'battle_ended_afk') {
+        this._lastServerMsg = Date.now();
+        State.lastResult = msg;
+        this.scene.start('Result');
+      }
+    };
+
     if (State.ws) {
-      State.ws.onmessage = e => {
-        const msg = JSON.parse(e.data);
-        if (msg.event === 'round_result') {
-          this._updateFromState(msg.battle);
-          this._resetChoices();
-          this._choosing = true;
-          this._startTimer();
-        } else if (msg.event === 'battle_ended') {
-          State.lastResult = msg;
-          this.scene.start('Result');
-        }
-      };
+      State.ws.onmessage = e => handleMsg(JSON.parse(e.data));
     }
+    if (!State.player) return;
+    connectWS(State.player.user_id, handleMsg);
+
+    // ── Polling fallback: если WS не пришёл за 7с после сабмита ──
+    this._lastServerMsg = Date.now();
+    this._pollEvent = this.time.addEvent({
+      delay: 4000, loop: true,
+      callback: async () => {
+        if (!this._choosing) return; // ждём ответа — не опрашиваем
+        const gap = Date.now() - this._lastServerMsg;
+        if (gap < 8000) return;     // недавно был сигнал — норм
+        try {
+          const res = await get('/api/battle/state');
+          if (!res?.active) {
+            // Бой уже закончен — переходим на результат
+            const last = await get('/api/battle/last_result').catch(() => null);
+            State.lastResult = last || { human_won: false, result: {} };
+            this.scene.start('Result');
+          } else {
+            this._lastServerMsg = Date.now();
+            this._updateFromState(res);
+            if (!this._choosing) {
+              this._resetChoices();
+              this._choosing = true;
+              this._startTimer(res.deadline_sec);
+            }
+          }
+        } catch(_) {}
+      },
+    });
   }
 }
 
