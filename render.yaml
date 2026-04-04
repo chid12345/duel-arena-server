@@ -12,3 +12,7 @@ services:
         sync: false
       - key: ADMIN_USER_IDS
         sync: false
+      - key: CRYPTOPAY_TOKEN
+        sync: false
+      - key: CRYPTOPAY_TESTNET
+        value: "1"
