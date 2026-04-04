@@ -122,9 +122,10 @@ function tCol(color) {
 
 function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false) {
   return scene.add.text(x, y, str, {
-    fontSize: `${size}px`,
-    fontFamily: bold ? "'Arial Black', Arial, sans-serif" : 'Arial, sans-serif',
-    color: tCol(color),
+    fontSize:   `${size}px`,
+    fontFamily: 'Arial, Helvetica, sans-serif',
+    fontStyle:  bold ? 'bold' : 'normal',
+    color:      tCol(color),
     resolution: 2,
   });
 }
@@ -666,12 +667,7 @@ class MenuScene extends Phaser.Scene {
     const c = this.add.container(0, 0);
 
     // Заголовок
-    const title = txt(this, W / 2, 30, '⚔️ ВЫБЕРИ БОЙ', 17, '#ffc83c', true).setOrigin(0.5);
-
-    // Разделитель
-    const sep = this.add.graphics();
-    sep.lineStyle(1, C.gold, 0.15);
-    sep.lineBetween(32, 50, W - 32, 50);
+    const title = txt(this, W / 2, 28, '⚔️  ВЫБЕРИ БОЙ', 18, '#ffc83c', true).setOrigin(0.5);
 
     /* ── Карточка PvP ── */
     const pvpCard = this._makeBattleCard(
@@ -737,7 +733,7 @@ class MenuScene extends Phaser.Scene {
       hpBlockObjs.push(qBg, qT, qZ);
     }
 
-    const children = [title, sep, ...pvpCard, ...botCard, ...hpBlockObjs];
+    const children = [title, ...pvpCard, ...botCard, ...hpBlockObjs];
     children.forEach(o => c.add(o));
 
     this._panels.battle = c;
@@ -801,12 +797,6 @@ class MenuScene extends Phaser.Scene {
     const { W, CONTENT_H: CH } = this;
     const c = this.add.container(0, 0);
 
-    txt(this, W / 2, 28, 'ВСЕ ФУНКЦИИ', 14, '#ffc83c', true).setOrigin(0.5);
-    const sep = this.add.graphics();
-    sep.lineStyle(1, C.gold, 0.15);
-    sep.lineBetween(32, 46, W - 32, 46);
-    c.add(sep);
-
     const items = [
       { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
       { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
@@ -816,63 +806,71 @@ class MenuScene extends Phaser.Scene {
       { icon: '🔗', label: 'Пригласить', cb: () => this._onInvite()               },
     ];
 
-    const cols = 2, rows = Math.ceil(items.length / cols);
-    const bw = (W - 36) / cols, bh = 72;
-    const startY = 60;
+    const cols = 2;
+    const gap  = 10;
+    const bw   = (W - gap * 3) / cols;  // ширина карточки
+    const bh   = 90;                    // высота карточки
+    const startY = 16;
 
     items.forEach((item, i) => {
-      const col = i % cols, row = Math.floor(i / cols);
-      const bx = 16 + col * (bw + 8) + bw / 2;
-      const by = startY + row * (bh + 10) + bh / 2;
+      const col  = i % cols;
+      const row  = Math.floor(i / cols);
+      const bx   = gap + col * (bw + gap);          // left edge
+      const by   = startY + row * (bh + gap);       // top edge
+      const bcx  = bx + bw / 2;                     // center x
+      const bcy  = by + bh / 2;                     // center y
 
       const bg = this.add.graphics();
-      bg.fillStyle(C.bgPanel, 0.92);
-      bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
-      bg.lineStyle(1.5, C.dark, 0.9);
-      bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+      bg.fillStyle(C.bgPanel, 0.93);
+      bg.fillRoundedRect(bx, by, bw, bh, 14);
+      bg.lineStyle(1.5, C.dark, 0.7);
+      bg.strokeRoundedRect(bx, by, bw, bh, 14);
       c.add(bg);
 
-      c.add(txt(this, bx, by - 12, item.icon, 22).setOrigin(0.5));
-      c.add(txt(this, bx, by + 16, item.label, 11, '#c0c0e0').setOrigin(0.5));
+      // Иконка (крупнее)
+      c.add(txt(this, bcx, by + 26, item.icon, 30).setOrigin(0.5));
+      // Подпись (крупнее, чётче)
+      c.add(txt(this, bcx, by + 68, item.label, 13, '#d0d0ee').setOrigin(0.5));
 
       // Красный бейдж "!" если есть что забрать
       if (item.badge) {
         const bdg = this.add.graphics();
         bdg.fillStyle(C.red, 1);
-        bdg.fillCircle(bx + bw/2 - 8, by - bh/2 + 8, 8);
+        bdg.fillCircle(bx + bw - 14, by + 14, 10);
         c.add(bdg);
-        c.add(txt(this, bx + bw/2 - 8, by - bh/2 + 8, '!', 10, '#ffffff', true).setOrigin(0.5));
+        c.add(txt(this, bx + bw - 14, by + 14, '!', 11, '#ffffff', true).setOrigin(0.5));
       }
 
-      const zone = this.add.zone(bx, by, bw, bh).setInteractive({ useHandCursor: true });
+      const zone = this.add.zone(bcx, bcy, bw, bh).setInteractive({ useHandCursor: true });
       zone.on('pointerdown', () => {
         bg.clear();
-        bg.fillStyle(C.dark, 1);
-        bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
-        bg.lineStyle(1.5, C.blue, 0.5);
-        bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        bg.fillStyle(C.blue, 0.18);
+        bg.fillRoundedRect(bx, by, bw, bh, 14);
+        bg.lineStyle(1.5, C.blue, 0.6);
+        bg.strokeRoundedRect(bx, by, bw, bh, 14);
         tg?.HapticFeedback?.selectionChanged();
       });
       zone.on('pointerup', () => {
         bg.clear();
-        bg.fillStyle(C.bgPanel, 0.92);
-        bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
-        bg.lineStyle(1.5, C.dark, 0.9);
-        bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        bg.fillStyle(C.bgPanel, 0.93);
+        bg.fillRoundedRect(bx, by, bw, bh, 14);
+        bg.lineStyle(1.5, C.dark, 0.7);
+        bg.strokeRoundedRect(bx, by, bw, bh, 14);
+        Sound.click();
         item.cb();
       });
       zone.on('pointerout', () => {
         bg.clear();
-        bg.fillStyle(C.bgPanel, 0.92);
-        bg.fillRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
-        bg.lineStyle(1.5, C.dark, 0.9);
-        bg.strokeRoundedRect(bx - bw / 2, by - bh / 2, bw, bh, 12);
+        bg.fillStyle(C.bgPanel, 0.93);
+        bg.fillRoundedRect(bx, by, bw, bh, 14);
+        bg.lineStyle(1.5, C.dark, 0.7);
+        bg.strokeRoundedRect(bx, by, bw, bh, 14);
       });
       c.add(zone);
     });
 
     // Версия
-    c.add(txt(this, W / 2, CH - 20, 'Duel Arena v0.5 · @ZenDuelArena_bot', 8, '#333355').setOrigin(0.5));
+    c.add(txt(this, W / 2, CH - 18, 'Duel Arena · @ZenDuelArena_bot', 9, '#444466').setOrigin(0.5));
 
     this._panels.more = c;
   }

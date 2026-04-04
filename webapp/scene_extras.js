@@ -212,8 +212,8 @@ class QuestsScene extends Phaser.Scene {
     }
 
     /* Сброс квеста */
-    const resetH = H - 130;
-    txt(this, W/2, resetH, '🔄 Квест обновляется каждый день в 00:00', 9, '#333355').setOrigin(0.5);
+    const resetH = H - 100;
+    txt(this, W/2, resetH, '🔄 Квест обновляется каждый день в 00:00', 10, '#666688').setOrigin(0.5);
   }
 
   /* ── Получить ежедневный бонус ─────────────────────────── */

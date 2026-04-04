@@ -1155,14 +1155,20 @@ class Database:
             conn.close()
             return {"ok": False, "reason": "Квест еще не выполнен"}
 
+        # Атомарный UPDATE: изменяем только если reward_claimed ещё 0
+        # (защита от двойного клика / race condition)
         cursor.execute(
             '''
             UPDATE daily_quests
             SET reward_claimed = 1
-            WHERE user_id = ? AND quest_date = ?
+            WHERE user_id = ? AND quest_date = ? AND reward_claimed = 0
             ''',
             (user_id, today),
         )
+        if cursor.rowcount == 0:
+            conn.close()
+            return {"ok": False, "reason": "Награда уже получена"}
+
         cursor.execute(
             '''
             UPDATE players
