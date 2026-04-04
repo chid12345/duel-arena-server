@@ -535,9 +535,23 @@ class MenuScene extends Phaser.Scene {
     // Золото — справа вверху
     const goldTxt = txt(this, W - pad - 12, hY + 18, `💰 ${p.gold}`, 17, '#ffc83c', true).setOrigin(1, 0.5);
 
-    // Кнопка переключения темы ☀️/🌙
-    const thIcon = isLight ? '🌙' : '☀️';
+    // Кнопки ☀️/🌙 и 🔊/🔇 — рядом справа
     const thX = W - pad - 16, thY = hY + 56;
+    const snX = thX - 36, snY = thY;   // звук левее темы
+
+    // Кнопка звука
+    const snBg = this.add.graphics();
+    snBg.fillStyle(C.dark, 0.7); snBg.fillCircle(snX, snY, 15);
+    const snTxt = txt(this, snX, snY, Sound.muted ? '🔇' : '🔊', 13).setOrigin(0.5);
+    const snZ = this.add.zone(snX, snY, 34, 34).setInteractive({ useHandCursor: true });
+    snZ.on('pointerup', () => {
+      const m = Sound.toggleMute();
+      snTxt.setText(m ? '🔇' : '🔊');
+      tg?.HapticFeedback?.selectionChanged();
+    });
+
+    // Кнопка темы
+    const thIcon = isLight ? '🌙' : '☀️';
     const thBg = this.add.graphics();
     thBg.fillStyle(C.dark, isLight ? 1 : 0.7);
     thBg.fillCircle(thX, thY, 15);
@@ -572,12 +586,16 @@ class MenuScene extends Phaser.Scene {
     const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#f0f0fa', true).setOrigin(0.5);
 
     /* ── XP бар ── */
-    let xpBg, xpTxt;
-    const xpY = hpY + hpH + 7;
+    let xpBg, xpTxt, xpLabel;
+    const xpH = 12;
+    const xpY = hpY + hpH + 8;
     if (!p.max_level) {
-      xpBg  = makeBar(this, hpX, xpY, hpW, 6, p.xp_pct / 100, C.blue);
-      xpTxt = txt(this, W / 2, xpY + 3,
-        `⭐ XP ${p.exp} / ${p.exp_needed}  (${p.xp_pct}%)`, 10, '#5577cc').setOrigin(0.5);
+      xpBg   = makeBar(this, hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, C.dark, 5);
+      xpTxt  = txt(this, W / 2, xpY + xpH / 2,
+        `${p.exp} / ${p.exp_needed} XP`, 10, '#f0f0fa', true).setOrigin(0.5);
+      xpLabel = txt(this, hpX, xpY - 13, `⭐ Опыт  ${p.xp_pct}%`, 10, '#5096ff').setOrigin(0, 0);
+    } else {
+      txt(this, W / 2, xpY + 6, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
     }
 
     /* ══ СТАТЫ — 4 карточки в ряд ══════════════════════════ */
