@@ -506,6 +506,8 @@ class BattleScene extends Phaser.Scene {
     this._selDefense = null;
     this._choosing   = true;
     this._logLines   = [];
+    this._prevMyHp   = null;
+    this._prevOppHp  = null;
 
     this._buildArena();
     this._buildHUDs();
@@ -735,6 +737,13 @@ class BattleScene extends Phaser.Scene {
 
   _updateFromState(b) {
     if (!b) return;
+
+    // Запоминаем дельты ДО обновления UI
+    const myDelta  = this._prevMyHp  != null ? (this._prevMyHp  - b.my_hp)  : 0;
+    const oppDelta = this._prevOppHp != null ? (this._prevOppHp - b.opp_hp) : 0;
+    this._prevMyHp  = b.my_hp;
+    this._prevOppHp = b.opp_hp;
+
     State.battle = b;
 
     /* HP игрока */
@@ -753,26 +762,140 @@ class BattleScene extends Phaser.Scene {
     /* Лог */
     const log = b.combat_log || [];
     if (log.length && this._logTxt) {
-      const clean = log[log.length-1].replace(/<[^>]+>/g, '');
+      const clean = log[log.length - 1].replace(/<[^>]+>/g, '');
       this._logTxt.setText(clean.slice(0, 60));
     }
 
-    /* Анимация удара */
-    if (b.combat_log?.length) this._hitAnimation();
+    /* Анимации раунда */
+    if ((myDelta > 0 || oppDelta > 0) && log.length) {
+      const lastLog = log[log.length - 1].replace(/<[^>]+>/g, '').toLowerCase();
+      const isCrit  = lastLog.includes('крит');
+      const isDodge = lastLog.includes('увор');
+      this._playRoundAnimation(myDelta, oppDelta, isCrit, isDodge);
+    }
   }
 
-  _hitAnimation() {
-    // Тряска персонажа при получении урона
-    const target = this.warrior2;
+  /* ── Система анимаций ─────────────────────────────────── */
+
+  _playRoundAnimation(myDelta, oppDelta, isCrit, isDodge) {
+    // Соперник получил урон → P1 атакует P2
+    if (oppDelta > 0) {
+      if (isDodge) {
+        this._animDodge(this.warrior2);
+        this._floatText(this.warrior2.x, this.warrior2.y - 55, '💨 Уворот!', '#3cc8dc');
+      } else {
+        this._animLunge(this.warrior1, this.warrior2, () => {
+          if (isCrit) {
+            this._flashTint(this.warrior2, 0xff8800, 220);
+            this._shakeX(this.warrior2, 12, 4);
+            this._burst(this.warrior2.x, this.warrior2.y, 'crit_fx', 0.7, 520);
+            this._floatText(this.warrior2.x, this.warrior2.y - 60, `💥 −${oppDelta}`, '#ffc83c');
+            this.cameras.main.shake(280, 0.007);
+          } else {
+            this._flashTint(this.warrior2, 0xff3333, 140);
+            this._shakeX(this.warrior2, 7, 3);
+            this._burst(this.warrior2.x, this.warrior2.y, 'hit_fx', 0.9, 380);
+            this._floatText(this.warrior2.x, this.warrior2.y - 55, `−${oppDelta}`, '#ff4455');
+          }
+        });
+      }
+    }
+
+    // Я получил урон → P2 атакует P1
+    if (myDelta > 0) {
+      this.time.delayedCall(oppDelta > 0 ? 320 : 0, () => {
+        if (isDodge && oppDelta <= 0) {
+          this._animDodge(this.warrior1);
+          this._floatText(this.warrior1.x, this.warrior1.y - 55, '💨 Уворот!', '#3cc8dc');
+        } else {
+          this._animLunge(this.warrior2, this.warrior1, () => {
+            if (isCrit && oppDelta <= 0) {
+              this._flashTint(this.warrior1, 0xff8800, 220);
+              this._shakeX(this.warrior1, 12, 4);
+              this._burst(this.warrior1.x, this.warrior1.y, 'crit_fx', 0.7, 520);
+              this._floatText(this.warrior1.x, this.warrior1.y - 60, `💥 −${myDelta}`, '#ffc83c');
+              this.cameras.main.shake(280, 0.007);
+            } else {
+              this._flashTint(this.warrior1, 0xff3333, 140);
+              this._shakeX(this.warrior1, 7, 3);
+              this._burst(this.warrior1.x, this.warrior1.y, 'hit_fx', 0.9, 380);
+              this._floatText(this.warrior1.x, this.warrior1.y - 55, `−${myDelta}`, '#ff6666');
+            }
+          });
+        }
+      });
+    }
+  }
+
+  /* воин делает выпад к сопернику и возвращается */
+  _animLunge(attacker, defender, onImpact) {
+    const origX   = attacker.x;
+    const midX    = attacker.x + (defender.x - attacker.x) * 0.42;
     this.tweens.add({
-      targets: target,
-      x: target.x + 8,
-      duration: 50, yoyo: true, repeat: 3,
+      targets: attacker, x: midX, scaleX: attacker.scaleX * 1.08,
+      duration: 110, ease: 'Power2.easeOut',
+      onComplete: () => {
+        if (onImpact) onImpact();
+        this.tweens.add({
+          targets: attacker, x: origX, scaleX: attacker.scaleX / 1.08,
+          duration: 190, ease: 'Back.easeOut',
+        });
+      },
     });
-    // Эффект
-    const fx = this.add.image(target.x, target.y, 'hit_fx').setAlpha(0.9).setScale(1.2);
-    this.tweens.add({ targets: fx, alpha: 0, scale: 2, duration: 400,
-      onComplete: () => fx.destroy() });
+  }
+
+  /* воин уклоняется: скользит в сторону и обратно с призраком */
+  _animDodge(warrior) {
+    const origX = warrior.x;
+    const dir   = warrior === this.warrior2 ? 1 : -1;
+    // Призрак
+    const ghost = this.add.image(origX, warrior.y, warrior === this.warrior2 ? 'warrior_red' : 'warrior_blue')
+      .setScale(warrior.scaleX).setFlipX(warrior.flipX).setAlpha(0.35).setTint(0x3cc8dc);
+    this.tweens.add({ targets: ghost, alpha: 0, duration: 380, onComplete: () => ghost.destroy() });
+    // Скольжение
+    this.tweens.add({
+      targets: warrior, x: origX + dir * 30, alpha: 0.55,
+      duration: 130, ease: 'Power2.easeOut', yoyo: true,
+      onComplete: () => { warrior.setX(origX).setAlpha(1); },
+    });
+  }
+
+  /* мгновенная смена тинта с откатом */
+  _flashTint(warrior, color, ms) {
+    warrior.setTint(color);
+    this.time.delayedCall(ms, () => warrior.clearTint());
+  }
+
+  /* горизонтальная тряска */
+  _shakeX(target, px, count) {
+    const ox = target.x;
+    this.tweens.add({
+      targets: target, x: ox + px,
+      duration: 40, yoyo: true, repeat: count - 1,
+      ease: 'Sine.easeInOut',
+      onComplete: () => target.setX(ox),
+    });
+  }
+
+  /* всплывающее число урона */
+  _floatText(x, y, str, color = '#ff4455') {
+    const t = txt(this, x, y, str, 21, color, true).setOrigin(0.5).setDepth(10);
+    this.tweens.add({
+      targets: t, y: y - 72, alpha: 0,
+      duration: 820, ease: 'Power2.easeOut',
+      onComplete: () => t.destroy(),
+    });
+  }
+
+  /* взрыв текстуры-эффекта */
+  _burst(x, y, texKey, startScale, duration) {
+    const fx = this.add.image(x, y, texKey)
+      .setAlpha(0.95).setScale(startScale).setDepth(9);
+    this.tweens.add({
+      targets: fx, alpha: 0, scale: startScale * 2.6,
+      duration, ease: 'Power2.easeOut',
+      onComplete: () => fx.destroy(),
+    });
   }
 
   _startTimer() {
