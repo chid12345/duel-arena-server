@@ -832,6 +832,8 @@ class ShopScene extends Phaser.Scene {
     // Сохраняем активную вкладку при рестарте сцены
     this._tab = (data && data.tab) ? data.tab : (ShopScene._lastTab || 'potions');
     ShopScene._lastTab = this._tab;
+    this._cryptoAsset  = (data && data.asset) ? data.asset : (ShopScene._lastAsset || 'TON');
+    ShopScene._lastAsset = this._cryptoAsset;
     this._buying = false;
   }
 
@@ -854,21 +856,27 @@ class ShopScene extends Phaser.Scene {
       { key: 'potions', label: '🧪 Зелья'    },
       { key: 'gear',    label: '🛡️ Снаряж.'  },
       { key: 'special', label: '✨ Особые'    },
+      { key: 'topup',   label: '💎 Купить'    },
     ];
     const tw = (W - 24) / tabs.length;
     const ty = 76;
     tabs.forEach((tab, i) => {
       const tx     = 12 + i * tw;
       const active = tab.key === this._tab;
+      const isTopup = tab.key === 'topup';
       const bg = this.add.graphics();
-      bg.fillStyle(active ? C.blue : C.dark, active ? 0.9 : 0.55);
+      bg.fillStyle(active ? (isTopup ? 0x1a5c8a : C.blue) : C.dark, active ? 0.92 : 0.55);
       bg.fillRoundedRect(tx, ty, tw - 4, 30, 8);
       if (active) {
-        bg.lineStyle(1, C.blue, 0.5);
+        bg.lineStyle(1.5, isTopup ? 0x3cc8dc : C.blue, 0.6);
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
-      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 10,
-        active ? '#ffffff' : '#8888aa', active).setOrigin(0.5);
+      if (isTopup && !active) {
+        bg.lineStyle(1, 0x1a4055, 0.7);
+        bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
+      }
+      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 9,
+        active ? '#ffffff' : (isTopup ? '#3cc8dc' : '#8888aa'), active).setOrigin(0.5);
       this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => {
@@ -885,14 +893,26 @@ class ShopScene extends Phaser.Scene {
     const by  = 114;
     makePanel(this, 8, by, W - 16, 38, 8, 0.95);
 
-    this._goldTxt = txt(this, W / 2 + 8, by + 11, `🪙 ${p?.gold || 0}`, 13, '#ffc83c', true).setOrigin(0, 0);
-    this._diaТxt  = txt(this, 20,         by + 11, `💎 ${p?.diamonds || 0}`, 13, '#3cc8dc', true);
+    const isTopup = this._tab === 'topup';
 
-    txt(this, W / 2 - 8, by + 11, '|', 13, '#333355').setOrigin(1, 0);
+    this._goldTxt = txt(this, W / 2 + 8, by + 11, `🪙 ${p?.gold || 0}`,
+      isTopup ? 11 : 13, '#ffc83c', true).setOrigin(0, 0);
+    this._diaТxt  = txt(this, 20, by + 11, `💎 ${p?.diamonds || 0}`,
+      isTopup ? 15 : 13, isTopup ? '#3cc8dc' : '#3cc8dc', true);
+
+    if (isTopup) {
+      txt(this, W - 14, by + 11, 'Ваши алмазы', 9, '#555577').setOrigin(1, 0);
+    } else {
+      txt(this, W / 2 - 8, by + 11, '|', 13, '#333355').setOrigin(1, 0);
+    }
   }
 
   /* ── Товары ──────────────────────────────────────────── */
   _buildItems(W, H) {
+    if (this._tab === 'topup') {
+      this._buildTopupPanel(W, H);
+      return;
+    }
     const items = this._getItems();
     const cols  = 2;
     const iw    = (W - 32) / cols;
@@ -907,6 +927,243 @@ class ShopScene extends Phaser.Scene {
 
       this._makeItemCard(item, ix, iy, iw, ih, W);
     });
+  }
+
+  /* ── Вкладка "💎 Купить" ─────────────────────────────── */
+  async _buildTopupPanel(W, H) {
+    let d;
+    try {
+      d = await get('/api/shop/packages');
+    } catch(_) {
+      txt(this, W/2, H/2, '❌ Нет соединения', 13, '#dc3c46').setOrigin(0.5);
+      return;
+    }
+
+    const starsPkgs  = d.stars  || [];
+    const cryptoPkgs = d.crypto || [];
+    const cryptoOn   = d.cryptopay_enabled;
+    let y = 162;
+
+    /* ═══ TELEGRAM STARS ═══════════════════════════════════ */
+    makePanel(this, 8, y, W-16, 22, 8, 0.6);
+    txt(this, 20, y+5, '⭐  TELEGRAM STARS', 10, '#ffc83c', true);
+    txt(this, W-12, y+5, 'мгновенно', 9, '#555577').setOrigin(1, 0);
+    y += 30;
+
+    // Обычные пакеты (d100, d300, d500)
+    const pkgMain = starsPkgs.filter(p => p.id !== 'premium');
+    const pkgW = (W - 32) / pkgMain.length;
+    pkgMain.forEach((pkg, i) => {
+      const px = 8 + i * (pkgW + 8/pkgMain.length);
+      this._makeStarsCard(pkg, px, y, pkgW - 4, 80, W);
+    });
+    y += 90;
+
+    // Premium подписка — во всю ширину
+    const premPkg = starsPkgs.find(p => p.id === 'premium');
+    if (premPkg) {
+      this._makePremiumCard(premPkg, 8, y, W-16, 52, W);
+      y += 62;
+    }
+
+    /* ═══ CRYPTOPAY (TON / USDT) ════════════════════════════ */
+    y += 6;
+    makePanel(this, 8, y, W-16, 22, 8, 0.6);
+    txt(this, 20, y+5, '💎  CRYPTOPAY', 10, '#3cc8dc', true);
+    txt(this, W-12, y+5, cryptoOn ? 'TON · USDT' : 'не настроен', 9,
+      cryptoOn ? '#555577' : '#553333').setOrigin(1, 0);
+    y += 30;
+
+    if (!cryptoOn) {
+      const cg = this.add.graphics();
+      cg.fillStyle(C.bgPanel, 0.6); cg.fillRoundedRect(8, y, W-16, 56, 10);
+      txt(this, W/2, y+18, '⚙️ CryptoPay не подключён', 11, '#555577').setOrigin(0.5);
+      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 9, '#333355').setOrigin(0.5);
+      return;
+    }
+
+    // Переключатель TON / USDT
+    const assetBtns = ['TON', 'USDT'];
+    const abW = (W - 32) / 2;
+    assetBtns.forEach((asset, i) => {
+      const ax = 8 + i * (abW + 8);
+      const active = (this._cryptoAsset || 'TON') === asset;
+      const abg = this.add.graphics();
+      abg.fillStyle(active ? 0x1a4055 : C.dark, active ? 0.95 : 0.55);
+      abg.fillRoundedRect(ax, y, abW, 28, 7);
+      if (active) { abg.lineStyle(1.5, 0x3cc8dc, 0.6); abg.strokeRoundedRect(ax, y, abW, 28, 7); }
+      const icon = asset === 'TON' ? '💎' : '💵';
+      txt(this, ax + abW/2, y+14, `${icon} ${asset}`, 11, active ? '#3cc8dc' : '#8888aa', active).setOrigin(0.5);
+      this.add.zone(ax, y, abW, 28).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerup', () => {
+          if ((this._cryptoAsset||'TON') === asset) return;
+          tg?.HapticFeedback?.selectionChanged();
+          this.scene.restart({ tab: 'topup', asset });
+        });
+    });
+    y += 36;
+
+    // Карточки CryptoPay
+    const cpW = (W - 32) / cryptoPkgs.length;
+    cryptoPkgs.forEach((pkg, i) => {
+      const px = 8 + i * (cpW + 8/cryptoPkgs.length);
+      this._makeCryptoCard(pkg, px, y, cpW - 4, 80, W);
+    });
+    y += 90;
+
+    // Подсказка про подтверждение
+    txt(this, W/2, y+4, '💡 После оплаты алмазы придут автоматически', 9, '#555577').setOrigin(0.5);
+  }
+
+  /* ── Stars карточка ──────────────────────────────────── */
+  _makeStarsCard(pkg, ix, iy, iw, ih, W) {
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1a1808, 0.92); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(1.5, 0xffc83c, 0.4); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+
+    txt(this, ix+iw/2, iy+14, '💎', 20).setOrigin(0.5);
+    txt(this, ix+iw/2, iy+36, `${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
+    txt(this, ix+iw/2, iy+53, 'алмазов', 8, '#8888aa').setOrigin(0.5);
+
+    const btnG = this.add.graphics();
+    btnG.fillStyle(0xffa000, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 13, 5);
+    txt(this, ix+iw/2, iy+68, `⭐ ${pkg.stars}`, 9, '#1a1a28', true).setOrigin(0.5);
+
+    this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a2414, 1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
+      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a1808,0.92); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(1.5,0xffc83c,0.4); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+      .on('pointerup',   () => this._buyStars(pkg));
+  }
+
+  /* ── Premium карточка ────────────────────────────────── */
+  _makePremiumCard(pkg, ix, iy, iw, ih, W) {
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1a0a30, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, C.purple, 0.7); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    bg.fillStyle(0xffffff, 0.04); bg.fillRoundedRect(ix+2, iy+2, iw-4, ih/2, 9);
+
+    txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5);
+    txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
+    txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
+    txt(this, iw-4, iy+ih/2-2, `⭐ ${pkg.stars}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
+
+    this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
+      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a0a30,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(2,C.purple,0.7); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+      .on('pointerup',   () => this._buyStars(pkg));
+  }
+
+  /* ── CryptoPay карточка ──────────────────────────────── */
+  _makeCryptoCard(pkg, ix, iy, iw, ih, W) {
+    const asset  = this._cryptoAsset || 'TON';
+    const price  = asset === 'TON' ? pkg.ton : pkg.usdt;
+    const symbol = asset === 'TON' ? 'TON' : 'USDT';
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0x08141a, 0.92); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(1.5, 0x3cc8dc, 0.4); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+
+    txt(this, ix+iw/2, iy+14, '💎', 20).setOrigin(0.5);
+    txt(this, ix+iw/2, iy+36, `${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
+    txt(this, ix+iw/2, iy+53, 'алмазов', 8, '#8888aa').setOrigin(0.5);
+
+    const btnG = this.add.graphics();
+    btnG.fillStyle(0x0a4055, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 13, 5);
+    txt(this, ix+iw/2, iy+68, `${price} ${symbol}`, 9, '#3cc8dc', true).setOrigin(0.5);
+
+    this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x0f2030,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
+      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x08141a,0.92); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(1.5,0x3cc8dc,0.4); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+      .on('pointerup',   () => this._buyCrypto(pkg));
+  }
+
+  /* ── Покупка за Stars ─────────────────────────────────── */
+  async _buyStars(pkg) {
+    if (this._buying) return;
+    this._buying = true;
+    this._toast('⏳ Открываем оплату...');
+    try {
+      const res = await post('/api/shop/stars_invoice', { package_id: pkg.id });
+      if (!res.ok) {
+        this._toast(`❌ ${res.reason}`);
+        this._buying = false;
+        return;
+      }
+      tg?.openInvoice(res.invoice_url, (status) => {
+        this._buying = false;
+        if (status === 'paid') {
+          tg?.HapticFeedback?.notificationOccurred('success');
+          Sound.levelUp?.();
+          this._toast('✅ Оплата прошла! Алмазы начислены.');
+          // Обновляем данные игрока
+          post('/api/player').then(d => {
+            if (d.ok && d.player) State.player = d.player;
+            this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' }));
+          }).catch(() => this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' })));
+        } else if (status === 'cancelled') {
+          this._toast('❌ Оплата отменена');
+        } else if (status === 'failed') {
+          this._toast('❌ Ошибка оплаты');
+        }
+      });
+    } catch(_) {
+      this._toast('❌ Нет соединения');
+      this._buying = false;
+    }
+  }
+
+  /* ── Покупка за крипту ────────────────────────────────── */
+  async _buyCrypto(pkg) {
+    if (this._buying) return;
+    this._buying = true;
+    const asset = this._cryptoAsset || 'TON';
+    this._toast('⏳ Создаём счёт...');
+    try {
+      const res = await post('/api/shop/crypto_invoice', { package_id: pkg.id, asset });
+      if (!res.ok) {
+        this._toast(`❌ ${res.reason}`);
+        this._buying = false;
+        return;
+      }
+      const invoiceId = res.invoice_id;
+      // Открываем ссылку на оплату в Telegram
+      if (res.invoice_url) {
+        tg?.openLink?.(res.invoice_url);
+      }
+      this._toast('💳 Счёт открыт — оплатите и вернитесь');
+      this._buying = false;
+      // Polling: каждые 5 секунд проверяем статус (до 2 минут)
+      this._startCryptoPolling(invoiceId, pkg.diamonds);
+    } catch(_) {
+      this._toast('❌ Нет соединения');
+      this._buying = false;
+    }
+  }
+
+  /* ── Polling для CryptoPay ───────────────────────────── */
+  _startCryptoPolling(invoiceId, diamonds) {
+    let attempts = 0;
+    const maxAttempts = 24; // 24 × 5s = 2 минуты
+    const poll = async () => {
+      attempts++;
+      try {
+        const r = await get(`/api/shop/crypto_check/${invoiceId}`);
+        if (r.ok && r.paid) {
+          tg?.HapticFeedback?.notificationOccurred('success');
+          Sound.levelUp?.();
+          this._toast(`✅ Оплата подтверждена! +${r.diamonds || diamonds} 💎`);
+          post('/api/player').then(d => {
+            if (d.ok && d.player) State.player = d.player;
+            this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' }));
+          }).catch(() => {});
+          return; // Стоп
+        }
+      } catch(_) {}
+      if (attempts < maxAttempts && this.scene.isActive?.('Shop')) {
+        this.time.delayedCall(5000, poll);
+      }
+    };
+    this.time.delayedCall(5000, poll);
   }
 
   _makeItemCard(item, ix, iy, iw, ih, W) {

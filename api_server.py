@@ -30,7 +30,7 @@ from config import (
     ARMOR_STAMINA_K, STRENGTH_DAMAGE_BASE, STRENGTH_DAMAGE_PCT_PER_POINT,
     HP_MIN_BATTLE_PCT, HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS,
     MAX_LEVEL, exp_needed_for_next_level, format_exp_progress,
-    VICTORY_GOLD,
+    VICTORY_GOLD, CRYPTOPAY_TOKEN, CRYPTOPAY_TESTNET, PREMIUM_SUBSCRIPTION_STARS,
 )
 from database import db
 from battle_system import battle_system
@@ -790,6 +790,250 @@ async def shop_buy(body: ShopBuyBody):
         player = db.get_or_create_player(uid, "")
         result["player"] = dict(player)
     return result
+
+
+# ─── Монетизация: Stars + CryptoPay ─────────────────────────────────────────
+
+# Пакеты алмазов за Telegram Stars
+STARS_PACKAGES = [
+    {"id": "d100",    "diamonds": 100, "stars": 50,                  "label": "100 💎"},
+    {"id": "d300",    "diamonds": 300, "stars": 130,                 "label": "300 💎"},
+    {"id": "d500",    "diamonds": 500, "stars": 200,                 "label": "500 💎"},
+    {"id": "premium", "diamonds": 0,   "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
+]
+
+# Пакеты алмазов за криптовалюту (CryptoPay)
+CRYPTO_PACKAGES = [
+    {"id": "cd100", "diamonds": 100, "ton": "0.50", "usdt": "1.50"},
+    {"id": "cd300", "diamonds": 300, "ton": "1.30", "usdt": "3.50"},
+    {"id": "cd500", "diamonds": 500, "ton": "2.00", "usdt": "5.00"},
+]
+
+CRYPTOPAY_API_BASE = (
+    "https://testnet-pay.crypt.bot/api" if CRYPTOPAY_TESTNET
+    else "https://pay.crypt.bot/api"
+)
+
+
+@app.get("/api/shop/packages")
+async def shop_packages():
+    """Каталог пакетов пополнения (Stars + CryptoPay)."""
+    return {
+        "ok": True,
+        "stars":  STARS_PACKAGES,
+        "crypto": CRYPTO_PACKAGES,
+        "premium_stars": PREMIUM_SUBSCRIPTION_STARS,
+        "cryptopay_enabled": bool(CRYPTOPAY_TOKEN),
+    }
+
+
+class StarsInvoiceBody(BaseModel):
+    init_data: str
+    package_id: str   # d100 | d300 | d500 | premium
+
+
+@app.post("/api/shop/stars_invoice")
+async def stars_invoice(body: StarsInvoiceBody):
+    """Создать invoice для покупки алмазов через Telegram Stars.
+    Возвращает invoice_url — фронт открывает его через tg.openInvoice()."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+
+    pkg = next((p for p in STARS_PACKAGES if p["id"] == body.package_id), None)
+    if not pkg:
+        return {"ok": False, "reason": "Пакет не найден"}
+    if not BOT_TOKEN:
+        return {"ok": False, "reason": "Бот не настроен (нет BOT_TOKEN)"}
+
+    if pkg["id"] == "premium":
+        payload = "premium_sub"
+        title   = "Premium подписка"
+        desc    = "Доступ к Premium функциям Duel Arena"
+    else:
+        payload = f"diamonds_{pkg['diamonds']}"
+        title   = f"{pkg['diamonds']} алмазов"
+        desc    = f"{pkg['diamonds']} 💎 алмазов в Duel Arena"
+
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink",
+                json={
+                    "title":       title,
+                    "description": desc,
+                    "payload":     payload,
+                    "currency":    "XTR",
+                    "prices":      [{"label": title, "amount": pkg["stars"]}],
+                },
+            )
+            data = resp.json()
+        if data.get("ok"):
+            return {"ok": True, "invoice_url": data["result"]}
+        logger.error("createInvoiceLink error: %s", data)
+        return {"ok": False, "reason": "Telegram отклонил запрос"}
+    except Exception as e:
+        logger.error("Stars invoice HTTP error: %s", e)
+        return {"ok": False, "reason": "Ошибка соединения с Telegram"}
+
+
+class CryptoInvoiceBody(BaseModel):
+    init_data:  str
+    package_id: str          # cd100 | cd300 | cd500
+    asset:      str = "TON"  # TON | USDT
+
+
+@app.post("/api/shop/crypto_invoice")
+async def crypto_invoice(body: CryptoInvoiceBody):
+    """Создать CryptoPay invoice.
+    Возвращает mini_app_invoice_url — фронт открывает через tg.openLink()."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+
+    pkg = next((p for p in CRYPTO_PACKAGES if p["id"] == body.package_id), None)
+    if not pkg:
+        return {"ok": False, "reason": "Пакет не найден"}
+
+    if not CRYPTOPAY_TOKEN:
+        return {"ok": False, "reason": "CryptoPay не настроен"}
+
+    asset = body.asset.upper()
+    if asset not in ("TON", "USDT"):
+        return {"ok": False, "reason": "Неверная валюта (TON или USDT)"}
+
+    amount = pkg["ton"] if asset == "TON" else pkg["usdt"]
+
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"{CRYPTOPAY_API_BASE}/createInvoice",
+                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                json={
+                    "asset":              asset,
+                    "amount":             amount,
+                    "payload":            f"uid:{uid}:diamonds:{pkg['diamonds']}",
+                    "description":        f"Duel Arena — {pkg['diamonds']} 💎 алмазов",
+                    "allow_comments":     False,
+                    "allow_anonymous":    False,
+                },
+            )
+            data = resp.json()
+        if data.get("ok"):
+            inv = data["result"]
+            # Сохраняем в БД для webhook-подтверждения
+            db.create_crypto_invoice(
+                uid,
+                inv["invoice_id"],
+                pkg["diamonds"],
+                asset,
+                amount,
+            )
+            return {
+                "ok":          True,
+                "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
+                "invoice_id":  inv["invoice_id"],
+            }
+        logger.error("CryptoPay createInvoice error: %s", data)
+        return {"ok": False, "reason": "CryptoPay отклонил запрос"}
+    except Exception as e:
+        logger.error("CryptoPay HTTP error: %s", e)
+        return {"ok": False, "reason": "Ошибка соединения с CryptoPay"}
+
+
+@app.post("/api/webhooks/cryptopay")
+async def cryptopay_webhook(request: Request):
+    """Webhook от CryptoPay при успешной оплате инвойса (event: invoice_paid)."""
+    if not CRYPTOPAY_TOKEN:
+        return JSONResponse({"ok": False}, status_code=400)
+
+    body_bytes = await request.body()
+    signature  = request.headers.get("crypto-pay-api-signature", "")
+
+    # Верификация подписи HMAC-SHA256
+    import hashlib, hmac as _hmac
+    secret  = hashlib.sha256(CRYPTOPAY_TOKEN.encode()).digest()
+    expected = _hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
+    if not _hmac.compare_digest(expected, signature):
+        logger.warning("CryptoPay webhook: invalid signature")
+        return JSONResponse({"ok": False}, status_code=401)
+
+    try:
+        data = json.loads(body_bytes)
+    except Exception:
+        return JSONResponse({"ok": False}, status_code=400)
+
+    if data.get("update_type") != "invoice_paid":
+        return {"ok": True}  # другие события игнорируем
+
+    inv        = data.get("payload", {})
+    invoice_id = inv.get("invoice_id")
+    if not invoice_id:
+        return {"ok": True}
+
+    result = db.confirm_crypto_invoice(int(invoice_id))
+    if result.get("ok"):
+        uid      = result["user_id"]
+        diamonds = result["diamonds"]
+        logger.info("CryptoPay paid: uid=%s +%s diamonds invoice=%s", uid, diamonds, invoice_id)
+        # Уведомить игрока по WS (если он онлайн в TMA)
+        await manager.send(uid, {
+            "event":    "diamonds_credited",
+            "diamonds": diamonds,
+            "source":   "cryptopay",
+        })
+    else:
+        logger.warning("CryptoPay confirm_invoice %s: %s", invoice_id, result.get("reason"))
+
+    return {"ok": True}
+
+
+@app.get("/api/shop/crypto_check/{invoice_id}")
+async def crypto_check_invoice(invoice_id: int, init_data: str):
+    """Polling-fallback: проверить статус CryptoPay инвойса через API CryptoPay.
+    Если оплачен — подтвердить в БД и начислить алмазы."""
+    tg_user = get_user_from_init_data(init_data)
+    uid     = int(tg_user["id"])
+
+    if not CRYPTOPAY_TOKEN:
+        return {"ok": False, "reason": "CryptoPay не настроен"}
+
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.get(
+                f"{CRYPTOPAY_API_BASE}/getInvoices",
+                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                params={"invoice_ids": str(invoice_id)},
+            )
+            data = resp.json()
+        if not data.get("ok"):
+            return {"ok": False, "reason": "CryptoPay API error"}
+        items = data.get("result", {}).get("items", [])
+        if not items:
+            return {"ok": False, "reason": "invoice_not_found"}
+        inv    = items[0]
+        status = inv.get("status")
+        if status != "paid":
+            return {"ok": True, "status": status, "paid": False}
+        # Подтверждаем
+        result = db.confirm_crypto_invoice(int(invoice_id))
+        if result.get("ok"):
+            diamonds = result["diamonds"]
+            # Уведомить по WS
+            await manager.send(uid, {
+                "event":    "diamonds_credited",
+                "diamonds": diamonds,
+                "source":   "cryptopay",
+            })
+            return {"ok": True, "paid": True, "diamonds": diamonds}
+        # already_paid тоже считаем успехом для UI
+        if result.get("reason") == "already_paid":
+            return {"ok": True, "paid": True, "already_confirmed": True}
+        return {"ok": False, "reason": result.get("reason")}
+    except Exception as e:
+        logger.error("crypto_check error: %s", e)
+        return {"ok": False, "reason": "connection_error"}
 
 
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────

@@ -1006,6 +1006,12 @@ class MenuScene extends Phaser.Scene {
       if (msg.event === 'clan_event') {
         Notif.push('⚔️', msg.text || 'Событие в клане', '#5096ff', 3000);
       }
+      if (msg.event === 'diamonds_credited') {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        Notif.push('💎', `+${msg.diamonds} алмазов зачислено!`, '#3cc8dc', 3500);
+        // Обновляем State.player
+        post('/api/player').then(d => { if (d.ok && d.player) State.player = d.player; }).catch(() => {});
+      }
     });
   }
 

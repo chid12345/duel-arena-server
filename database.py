@@ -432,6 +432,24 @@ class Database:
                 ],
             ),
             (
+                "2026_04_13_001_crypto_invoices",
+                [
+                    """CREATE TABLE IF NOT EXISTS crypto_invoices (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        invoice_id INTEGER UNIQUE NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        diamonds INTEGER NOT NULL DEFAULT 0,
+                        asset TEXT NOT NULL DEFAULT 'TON',
+                        amount TEXT NOT NULL DEFAULT '0',
+                        status TEXT NOT NULL DEFAULT 'pending',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        paid_at TIMESTAMP
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_crypto_invoices_user ON crypto_invoices (user_id)",
+                    "CREATE INDEX IF NOT EXISTS idx_crypto_invoices_status ON crypto_invoices (status, created_at)",
+                ],
+            ),
+            (
                 "2026_04_12_001_referral_payouts",
                 [
                     "ALTER TABLE players ADD COLUMN referral_subscriber_rank INTEGER",
@@ -2011,6 +2029,93 @@ class Database:
             )
             conn.commit()
             return True, int(referrer_id)
+        finally:
+            conn.close()
+
+    # ─── CryptoPay инвойсы ────────────────────────────────────────────────────
+
+    def create_crypto_invoice(
+        self,
+        user_id: int,
+        invoice_id: int,
+        diamonds: int,
+        asset: str,
+        amount: str,
+    ) -> None:
+        """Сохранить новый CryptoPay инвойс в БД (статус pending)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """INSERT OR IGNORE INTO crypto_invoices
+                   (invoice_id, user_id, diamonds, asset, amount, status)
+                   VALUES (?, ?, ?, ?, ?, 'pending')""",
+                (invoice_id, user_id, diamonds, asset.upper(), amount),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def confirm_crypto_invoice(self, invoice_id: int) -> Dict[str, Any]:
+        """
+        Подтвердить оплату CryptoPay инвойса.
+        Атомарно: только один раз (WHERE status='pending') → начислить алмазы.
+        Возвращает {"ok": True, "user_id": ..., "diamonds": ...} или {"ok": False, "reason": ...}
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT user_id, diamonds, status FROM crypto_invoices WHERE invoice_id = ?",
+                (invoice_id,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return {"ok": False, "reason": "invoice_not_found"}
+            if row["status"] == "paid":
+                return {"ok": False, "reason": "already_paid"}
+            if row["status"] != "pending":
+                return {"ok": False, "reason": f"wrong_status:{row['status']}"}
+
+            user_id  = int(row["user_id"])
+            diamonds = int(row["diamonds"])
+
+            # Атомарно обновляем статус (второй параллельный вызов не пройдёт)
+            cursor.execute(
+                """UPDATE crypto_invoices
+                   SET status = 'paid', paid_at = CURRENT_TIMESTAMP
+                   WHERE invoice_id = ? AND status = 'pending'""",
+                (invoice_id,),
+            )
+            if cursor.rowcount == 0:
+                conn.commit()
+                return {"ok": False, "reason": "already_paid"}
+
+            # Начислить алмазы
+            cursor.execute(
+                "UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?",
+                (diamonds, user_id),
+            )
+            conn.commit()
+            return {"ok": True, "user_id": user_id, "diamonds": diamonds}
+        finally:
+            conn.close()
+
+    def get_pending_crypto_invoices_older_than(self, seconds: int) -> List[Dict]:
+        """Вернуть pending-инвойсы старше N секунд (для polling проверки)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """SELECT invoice_id, user_id, diamonds, asset, amount, created_at
+                   FROM crypto_invoices
+                   WHERE status = 'pending'
+                     AND created_at < datetime('now', ? || ' seconds')
+                   ORDER BY created_at ASC LIMIT 50""",
+                (f"-{seconds}",),
+            )
+            rows = [dict(r) for r in cursor.fetchall()]
+            return rows
         finally:
             conn.close()
 
