@@ -207,14 +207,21 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     is_p1 = b and b["player1"]["user_id"] == user_id if b else True
     is_pvp = b and not b.get("is_bot2") if b else False
 
+    # Секунд до конца хода (из deadline в battle)
+    deadline_sec = None
+    if b and b.get("next_turn_deadline"):
+        from datetime import datetime
+        left = (b["next_turn_deadline"] - datetime.now()).total_seconds()
+        deadline_sec = max(0, int(left))
+
     return {
         "battle_id": bid,
         "active": True,
         "is_pvp": is_pvp,
         "is_p1": is_p1,
-        "round": ctx.get("round", 0),
-        "my_hp": ctx.get("player_hp"),
-        "my_max_hp": ctx.get("player_max"),
+        "round": ctx.get("round_num", 0),
+        "my_hp": ctx.get("your_hp"),
+        "my_max_hp": ctx.get("your_max"),
         "opp_hp": ctx.get("opp_hp"),
         "opp_max_hp": ctx.get("opp_max"),
         "opp_name": ctx.get("opponent_name"),
@@ -225,8 +232,8 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),
-        "combat_log": ctx.get("combat_log_lines", [])[-3:],  # последние 3 строки
-        "deadline_sec": ctx.get("deadline_sec"),
+        "combat_log": (b.get("combat_log_lines", []) if b else [])[-3:],
+        "deadline_sec": deadline_sec,
     }
 
 
