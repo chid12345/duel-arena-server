@@ -587,9 +587,9 @@ class ClanScene extends Phaser.Scene {
 
   /* ══ НЕТ КЛАНА ══════════════════════════════════════════ */
   _renderNoClan(W, H) {
-    txt(this, W/2, 90, '🏰', 32).setOrigin(0.5);
-    txt(this, W/2, 128, 'Вы не состоите в клане', 14, '#8888aa').setOrigin(0.5);
-    txt(this, W/2, 150, 'Вступайте и участвуйте в клановых войнах!', 10, '#444466').setOrigin(0.5);
+    txt(this, W/2, 90, '🏰', 34).setOrigin(0.5);
+    txt(this, W/2, 128, 'Вы не состоите в клане', 15, '#a0a0cc').setOrigin(0.5);
+    txt(this, W/2, 150, 'Вступайте и участвуйте в клановых войнах!', 12, '#6060aa').setOrigin(0.5);
 
     const btns = [
       { label: '🔍  Найти клан',   col: C.blue,   sub: 'search' },
@@ -609,7 +609,7 @@ class ClanScene extends Phaser.Scene {
         .on('pointerout',  () => { bg.clear(); bg.fillStyle(b.col,b.col===C.dark?0.7:0.9); bg.fillRoundedRect(16,by,W-32,bh,12); if(b.border){bg.lineStyle(1.5,b.border,0.5);bg.strokeRoundedRect(16,by,W-32,bh,12);} })
         .on('pointerup',   () => this.scene.restart({ sub: b.sub }));
     });
-    txt(this, W/2, 176 + 3*58 + 6, 'Создание клана стоит 200 🪙', 9, '#333355').setOrigin(0.5);
+    txt(this, W/2, 176 + 3*58 + 8, 'Создание клана стоит 200 🪙', 12, '#6060aa').setOrigin(0.5);
   }
 
   /* ══ МОЙ КЛАН ═══════════════════════════════════════════ */
@@ -620,41 +620,63 @@ class ClanScene extends Phaser.Scene {
     let y = 84;
 
     const trunc = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s || '');
-    makePanel(this, 8, y, W-16, 72, 12);
-    txt(this, 20, y+10, `[${clan.tag}]`, 15, '#ffc83c', true);
-    txt(this, 20, y+30, trunc(clan.name, 22), 16, '#f0f0fa', true);
-    txt(this, 20, y+50, `👥 ${members.length}/20  ·  🏆 ${clan.wins} побед  ·  Ур.${clan.level}`, 10, '#8888aa');
-    if (isLeader) txt(this, W-20, y+18, '👑 Лидер', 10, '#ffc83c', true).setOrigin(1,0);
-    y += 82;
 
-    txt(this, 16, y, 'УЧАСТНИКИ', 10, '#555577', true);
-    y += 18;
+    /* ── Инфо-панель клана ─────────────────────────────── */
+    const infoH = 80;
+    makePanel(this, 8, y, W-16, infoH, 12);
 
-    const rowH   = 36;
-    const maxShow = Math.min(members.length, Math.floor((H - y - 100) / rowH));
+    /* Тег слева */
+    txt(this, 20, y+12, `[${clan.tag}]`, 14, '#ffc83c', true);
+    /* Название */
+    txt(this, 20, y+32, trunc(clan.name, 20), 16, '#f0f0fa', true);
+    /* Статы */
+    txt(this, 20, y+56, `👥 ${members.length}/20  ·  🏆 ${clan.wins}  ·  Ур.${clan.level}`, 12, '#a0a0cc');
+    if (isLeader) txt(this, W-20, y+14, '👑 Лидер', 12, '#ffc83c', true).setOrigin(1, 0);
+    y += infoH + 10;
+
+    /* ── Заголовок списка ──────────────────────────────── */
+    txt(this, 16, y, `УЧАСТНИКИ  (${members.length}/20)`, 13, '#7070aa', true);
+    y += 22;
+
+    /* ── Список участников ─────────────────────────────── */
+    const rowH    = 44;
+    const leaveH  = isLeader ? 0 : 52;
+    const maxShow = Math.min(members.length, Math.floor((H - y - leaveH - 70) / rowH));
+
     members.slice(0, maxShow).forEach((m, i) => {
       const ry = y + i * rowH;
+      const isLdr = m.role === 'leader';
       const bg = this.add.graphics();
-      bg.fillStyle(C.bgPanel, 0.7); bg.fillRoundedRect(8, ry, W-16, rowH-3, 7);
-      txt(this, 18, ry+8,  m.role === 'leader' ? '👑' : '⚔️', 14);
-      txt(this, 40, ry+8,  trunc(m.username || `User${m.user_id}`, 18), 12,
-        m.role === 'leader' ? '#ffc83c' : '#c0c0e0', m.role === 'leader');
-      txt(this, 40, ry+22, `Ур.${m.level}  ·  ${m.wins} побед`, 9, '#555577');
-      txt(this, W-16, ry+18, m.role === 'leader' ? 'Лидер' : 'Участник', 9, '#444466').setOrigin(1,0.5);
-    });
-    if (members.length > maxShow)
-      txt(this, W/2, y + maxShow*rowH + 4, `+${members.length - maxShow} ещё`, 9, '#333355').setOrigin(0.5);
+      bg.fillStyle(isLdr ? 0x2a2010 : C.bgPanel, 0.85);
+      bg.fillRoundedRect(8, ry, W-16, rowH-3, 8);
+      if (isLdr) { bg.lineStyle(1.5, C.gold, 0.4); bg.strokeRoundedRect(8, ry, W-16, rowH-3, 8); }
 
+      txt(this, 22, ry + rowH/2 - 4, isLdr ? '👑' : '⚔️', 15).setOrigin(0, 0.5);
+      txt(this, 44, ry+10, trunc(m.username || `User${m.user_id}`, 17), 13,
+        isLdr ? '#ffc83c' : '#e0e0f8', isLdr);
+      txt(this, 44, ry+27, `Ур.${m.level}  ·  ${m.wins} побед`, 11, '#7070aa');
+
+      /* Роль — только для лидера, читаемо */
+      if (isLdr) txt(this, W-18, ry + rowH/2, 'Лидер', 11, '#ffc83c', true).setOrigin(1, 0.5);
+    });
+
+    if (members.length > maxShow) {
+      txt(this, W/2, y + maxShow*rowH + 6, `+ ещё ${members.length - maxShow} участников`, 12, '#5050aa').setOrigin(0.5);
+    }
+
+    /* ── Кнопка «Покинуть» / подсказка лидеру ──────────── */
     if (!isLeader) {
-      const by2 = H - 104;
+      const by2 = H - 100;
       const bg2 = this.add.graphics();
-      bg2.fillStyle(C.dark, 0.8); bg2.fillRoundedRect(16, by2, W-32, 38, 10);
-      bg2.lineStyle(1.5, C.red, 0.5); bg2.strokeRoundedRect(16, by2, W-32, 38, 10);
-      txt(this, W/2, by2+19, '🚪 Покинуть клан', 13, '#cc4444', true).setOrigin(0.5);
-      this.add.zone(16, by2, W-32, 38).setOrigin(0).setInteractive({ useHandCursor: true })
+      bg2.fillStyle(0x4a1010, 1); bg2.fillRoundedRect(16, by2, W-32, 42, 10);
+      bg2.lineStyle(1.5, C.red, 0.7); bg2.strokeRoundedRect(16, by2, W-32, 42, 10);
+      txt(this, W/2, by2+21, '🚪  Покинуть клан', 14, '#ff6666', true).setOrigin(0.5);
+      this.add.zone(16, by2, W-32, 42).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { bg2.clear(); bg2.fillStyle(0x6a1818,1); bg2.fillRoundedRect(16,by2,W-32,42,10); tg?.HapticFeedback?.impactOccurred('medium'); })
+        .on('pointerout',  () => { bg2.clear(); bg2.fillStyle(0x4a1010,1); bg2.fillRoundedRect(16,by2,W-32,42,10); bg2.lineStyle(1.5,C.red,0.7); bg2.strokeRoundedRect(16,by2,W-32,42,10); })
         .on('pointerup', () => this._leaveClan());
     } else {
-      txt(this, W/2, H-104, '👑 Вы лидер — передайте роль чтобы выйти', 9, '#333355').setOrigin(0.5);
+      txt(this, W/2, H-96, '👑 Вы лидер — передайте роль чтобы выйти', 11, '#5050aa').setOrigin(0.5);
     }
   }
 
@@ -751,30 +773,32 @@ class ClanScene extends Phaser.Scene {
       .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,btnY,W-32,46,12); })
       .on('pointerup',   () => this._doCreate(btnT));
 
-    txt(this, W/2, btnY+56, 'Максимум 20 участников · Имя и тег должны быть уникальны', 9, '#333355').setOrigin(0.5);
+    txt(this, W/2, btnY+56, 'Максимум 20 участников · Имя и тег уникальны', 11, '#5050aa').setOrigin(0.5);
   }
 
   /* ══ ТОП КЛАНОВ ══════════════════════════════════════════ */
   _renderTop(W, H) {
-    txt(this, W/2, 84, '🏆 ТОП КЛАНОВ', 14, '#ffc83c', true).setOrigin(0.5);
-    const load2 = txt(this, W/2, 130, 'Загрузка...', 12, '#555577').setOrigin(0.5);
+    txt(this, W/2, 84, '🏆 ТОП КЛАНОВ', 15, '#ffc83c', true).setOrigin(0.5);
+    const load2 = txt(this, W/2, 130, 'Загрузка...', 13, '#7070aa').setOrigin(0.5);
     get('/api/clan/top').then(d => {
       load2.destroy();
       const clans = d.clans || [];
-      if (!clans.length) { txt(this, W/2, 130, '😔 Кланов пока нет', 12, '#555577').setOrigin(0.5); return; }
+      if (!clans.length) { txt(this, W/2, 130, '😔 Кланов пока нет', 13, '#7070aa').setOrigin(0.5); return; }
       let y = 108;
-      clans.slice(0, Math.floor((H - 160) / 46)).forEach((c, i) => {
+      const rowH = 50;
+      clans.slice(0, Math.floor((H - 160) / rowH)).forEach((c, i) => {
         const isTop = i < 3;
         const bg = this.add.graphics();
-        bg.fillStyle(isTop ? 0x1a1808 : C.bgPanel, 0.9); bg.fillRoundedRect(8, y, W-16, 42, 9);
-        if (isTop) { bg.lineStyle(1.5, C.gold, 0.5); bg.strokeRoundedRect(8,y,W-16,42,9); }
+        bg.fillStyle(isTop ? 0x2a2010 : C.bgPanel, 0.92);
+        bg.fillRoundedRect(8, y, W-16, rowH-3, 10);
+        if (isTop) { bg.lineStyle(1.5, C.gold, 0.6); bg.strokeRoundedRect(8,y,W-16,rowH-3,10); }
         const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-        txt(this, 18, y+11, medal, isTop?15:11, '#ffc83c');
+        txt(this, 20, y + (rowH-3)/2, medal, isTop?17:13, '#ffc83c').setOrigin(0, 0.5);
         const ttr = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s || '');
-        txt(this, 44, y+8,  `[${c.tag}] ${ttr(c.name, 18)}`, 12, isTop?'#ffc83c':'#c0c0e0', isTop);
-        txt(this, 44, y+24, `🏆 ${c.wins} побед  ·  👥 ${c.member_count}`, 9, '#555577');
-        txt(this, W-16, y+21, `Ур.${c.level}`, 10, '#8888aa').setOrigin(1,0.5);
-        y += 46;
+        txt(this, 48, y+10, `[${c.tag}] ${ttr(c.name, 16)}`, 13, isTop?'#ffc83c':'#e0e0f8', isTop);
+        txt(this, 48, y+27, `🏆 ${c.wins} побед  ·  👥 ${c.member_count}чел`, 11, '#8888bb');
+        txt(this, W-18, y + (rowH-3)/2, `Ур.${c.level}`, 12, '#a0a0cc').setOrigin(1, 0.5);
+        y += rowH;
       });
     }).catch(() => load2.setText('❌ Ошибка'));
   }

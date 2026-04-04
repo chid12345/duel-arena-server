@@ -990,63 +990,122 @@ class MenuScene extends Phaser.Scene {
   }
 
   _onInvite() {
-    const uid  = State.player?.user_id || '';
-    const link = `https://t.me/ZenDuelArena_bot?start=ref_${uid}`;
     const { W, H } = this;
 
-    // Затемнение
+    /* ── Затемнение фона ── */
     const ov = this.add.graphics().setDepth(60);
-    ov.fillStyle(0x000000, 0.65); ov.fillRect(0, 0, W, H);
+    ov.fillStyle(0x000000, 0.55); ov.fillRect(0, 0, W, H);
 
-    // Панель
-    const pw = W - 40, ph = 224, px = 20, py = Math.round(H * 0.24);
-    const panBg = this.add.graphics().setDepth(61);
-    panBg.fillStyle(0x1a1828, 1); panBg.fillRoundedRect(px, py, pw, ph, 16);
-    panBg.lineStyle(2, 0x5096ff, 0.8); panBg.strokeRoundedRect(px, py, pw, ph, 16);
-
+    /* ── Параметры панели ── */
+    const pw = W - 32, ph = 290, px = 16, py = Math.round((H - ph) / 2);
     const D = 62;
+
+    /* ── Панель: синяя с золотой рамкой (не тёмная!) ── */
+    const panBg = this.add.graphics().setDepth(61);
+    panBg.fillStyle(0x1e3a7a, 1);
+    panBg.fillRoundedRect(px, py, pw, ph, 16);
+    panBg.lineStyle(2.5, 0xffc83c, 0.9);
+    panBg.strokeRoundedRect(px, py, pw, ph, 16);
+    /* лёгкий светлый хайлайт сверху */
+    panBg.fillStyle(0xffffff, 0.07);
+    panBg.fillRoundedRect(px+2, py+2, pw-4, 28, 14);
+
     const at = (x, y, s, sz, col, bold) =>
       txt(this, x, y, s, sz, col || '#f0f0fa', bold).setOrigin(0.5).setDepth(D);
 
-    at(px+pw/2, py+22,  '🔗 Рефералка',                    15, '#f0f0fa', true);
-    at(px+pw/2, py+44,  'Пригласи друга и получи бонус!',  10, '#8888aa');
-    at(px+pw/2, py+70,  'Твоя ссылка:',                    10, '#5096ff');
+    /* ── Заголовок ── */
+    at(px+pw/2, py+20, '🔗  РЕФЕРАЛКА', 15, '#ffc83c', true);
+    at(px+pw/2, py+38, 'Приглашай друзей — получай бонусы!', 11, '#a8c4ff');
 
-    // Ссылка в рамке
-    const lb = this.add.graphics().setDepth(D);
-    lb.fillStyle(0x080814, 1); lb.fillRoundedRect(px+10, py+82, pw-20, 30, 7);
-    at(px+pw/2, py+97, link, 8, '#3cc8dc');
+    /* ── Загрузка статистики ── */
+    const statsLbl = at(px+pw/2, py+66, '⏳ Загрузка...', 11, '#a8c4ff');
 
-    // Скопировать
-    const cbg = this.add.graphics().setDepth(D);
-    cbg.fillStyle(0x5096ff, 0.9); cbg.fillRoundedRect(px+10, py+124, pw-20, 38, 10);
-    at(px+pw/2, py+143, '📋 Скопировать ссылку', 13, '#ffffff', true);
-    this.add.zone(px+10, py+124, pw-20, 38).setOrigin(0).setDepth(65).setInteractive({ useHandCursor: true })
-      .on('pointerup', () => {
-        tg?.HapticFeedback?.notificationOccurred('success');
-        navigator.clipboard?.writeText(link)
-          .then(() => this._toast('✅ Ссылка скопирована!'))
-          .catch(() => { tg?.openLink?.(link); this._toast('🔗 Открываем...'); });
-      });
+    get('/api/referral').then(rd => {
+      statsLbl.destroy();
 
-    // Поделиться
-    const sbg = this.add.graphics().setDepth(D);
-    sbg.fillStyle(0x226644, 0.9); sbg.fillRoundedRect(px+10, py+172, pw-20, 34, 10);
-    at(px+pw/2, py+189, '💬 Поделиться в Telegram', 12, '#ffffff', true);
-    this.add.zone(px+10, py+172, pw-20, 34).setOrigin(0).setDepth(65).setInteractive({ useHandCursor: true })
-      .on('pointerup', () => {
-        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('⚔️ Присоединяйся к Duel Arena!')}`;
-        tg?.openLink?.(shareUrl);
-      });
+      const link  = rd.link || `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id}`;
+      const inv   = rd.invited_count       || 0;
+      const dia   = rd.total_reward_diamonds || 0;
+      const prem  = rd.paying_subscribers   || 0;
 
-    // ✕
-    txt(this, px+pw-14, py+14, '✕', 15, '#666688').setOrigin(0.5).setDepth(D);
-    const close = () => this.children.list.filter(o => o.depth >= 59).forEach(o => { try { o.destroy(); } catch(_){} });
-    this.add.zone(px+pw-32, py, 38, 38).setOrigin(0).setDepth(66).setInteractive({ useHandCursor: true })
+      /* ── Статистика (2 плитки) ── */
+      const stW = (pw - 32) / 2;
+      const s1x = px + 12, s2x = px + 16 + stW, sY = py + 54, sH = 46;
+
+      const s1 = this.add.graphics().setDepth(D);
+      s1.fillStyle(0x2a50a0, 1); s1.fillRoundedRect(s1x, sY, stW, sH, 10);
+      s1.lineStyle(1.5, 0x5096ff, 0.6); s1.strokeRoundedRect(s1x, sY, stW, sH, 10);
+      at(s1x + stW/2, sY+13, '👥 Приглашено', 10, '#a8c4ff');
+      at(s1x + stW/2, sY+32, `${inv}`, 18, '#ffffff', true);
+
+      const s2 = this.add.graphics().setDepth(D);
+      s2.fillStyle(0x2a50a0, 1); s2.fillRoundedRect(s2x, sY, stW, sH, 10);
+      s2.lineStyle(1.5, 0xffc83c, 0.5); s2.strokeRoundedRect(s2x, sY, stW, sH, 10);
+      at(s2x + stW/2, sY+13, '💎 Бонусов', 10, '#a8c4ff');
+      at(s2x + stW/2, sY+32, `${dia}`, 18, '#ffc83c', true);
+
+      if (prem > 0) {
+        at(px+pw/2, sY+sH+10, `⭐ Купили Premium: ${prem}`, 11, '#ffc83c');
+      }
+
+      /* ── Ссылка ── */
+      const lbY = sY + sH + (prem > 0 ? 28 : 16);
+      at(px+pw/2, lbY, 'Твоя ссылка для приглашения:', 11, '#a8c4ff');
+      const lb = this.add.graphics().setDepth(D);
+      lb.fillStyle(0x0e2060, 1); lb.fillRoundedRect(px+10, lbY+12, pw-20, 28, 8);
+      lb.lineStyle(1, 0x5096ff, 0.5); lb.strokeRoundedRect(px+10, lbY+12, pw-20, 28, 8);
+      at(px+pw/2, lbY+26, link.replace('https://',''), 9, '#7ab4ff');
+
+      /* ── Кнопка «Скопировать» ── */
+      const cbY = lbY + 50;
+      const cbg = this.add.graphics().setDepth(D);
+      cbg.fillStyle(0x3a7aff, 1); cbg.fillRoundedRect(px+10, cbY, pw-20, 40, 10);
+      cbg.fillStyle(0xffffff, 0.12); cbg.fillRoundedRect(px+10, cbY+2, pw-20, 18, 8);
+      at(px+pw/2, cbY+20, '📋  Скопировать ссылку', 13, '#ffffff', true);
+      this.add.zone(px+10, cbY, pw-20, 40).setOrigin(0).setDepth(65)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { cbg.clear(); cbg.fillStyle(0x2060e0,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10); })
+        .on('pointerout',  () => { cbg.clear(); cbg.fillStyle(0x3a7aff,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10); cbg.fillStyle(0xffffff,0.12); cbg.fillRoundedRect(px+10,cbY+2,pw-20,18,8); })
+        .on('pointerup', () => {
+          tg?.HapticFeedback?.notificationOccurred('success');
+          navigator.clipboard?.writeText(link)
+            .then(() => this._toast('✅ Ссылка скопирована!'))
+            .catch(() => { tg?.openLink?.(link); this._toast('🔗 Открываем...'); });
+        });
+
+      /* ── Кнопка «Поделиться» ── */
+      const sbY = cbY + 48;
+      const sbg = this.add.graphics().setDepth(D);
+      sbg.fillStyle(0x1a7a48, 1); sbg.fillRoundedRect(px+10, sbY, pw-20, 36, 10);
+      at(px+pw/2, sbY+18, '💬  Поделиться в Telegram', 12, '#ffffff', true);
+      this.add.zone(px+10, sbY, pw-20, 36).setOrigin(0).setDepth(65)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { sbg.clear(); sbg.fillStyle(0x0f5030,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10); })
+        .on('pointerout',  () => { sbg.clear(); sbg.fillStyle(0x1a7a48,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10); })
+        .on('pointerup', () => {
+          const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('⚔️ Присоединяйся к Duel Arena — PvP-арена в Telegram!')}`;
+          tg?.openLink?.(shareUrl);
+        });
+    }).catch(() => {
+      statsLbl.setText('❌ Нет соединения').setStyle({ color: '#ff6666' });
+    });
+
+    /* ── Кнопка ✕ ── */
+    const xBg = this.add.graphics().setDepth(D);
+    xBg.fillStyle(0x2a50a0, 1); xBg.fillCircle(px+pw-18, py+18, 14);
+    txt(this, px+pw-18, py+18, '✕', 13, '#f0f0fa', true).setOrigin(0.5).setDepth(D);
+
+    const close = () => this.children.list
+      .filter(o => o.depth >= 59)
+      .forEach(o => { try { o.destroy(); } catch(_){} });
+
+    this.add.zone(px+pw-32, py, 32, 32).setOrigin(0).setDepth(66)
+      .setInteractive({ useHandCursor: true })
       .on('pointerup', close);
-    // Тап вне панели
+
+    /* тап вне панели → закрыть */
     this.add.zone(0, 0, W, H).setOrigin(0).setDepth(59).setInteractive()
-      .on('pointerup', (ptr) => {
+      .on('pointerup', ptr => {
         if (ptr.x < px || ptr.x > px+pw || ptr.y < py || ptr.y > py+ph) close();
       });
   }

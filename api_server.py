@@ -622,6 +622,27 @@ async def train_stat(body: TrainBody):
 
     return {"ok": True, "message": result_msg, "player": _player_api(fresh)}
 
+# ─── Рефералка ───────────────────────────────────────────────────────────────
+
+@app.get("/api/referral")
+async def get_referral_info(init_data: str):
+    tg_user = get_user_from_init_data(init_data)
+    uid     = int(tg_user["id"])
+    code    = db.get_referral_code(uid)
+    stats   = db.get_referral_stats(uid)
+    recent  = db.get_recent_referrals(uid, limit=5)
+    return {
+        "ok": True,
+        "referral_code": code,
+        "link": f"https://t.me/ZenDuelArena_bot?start={code}",
+        "invited_count":          stats["invited_count"],
+        "paying_subscribers":     stats["paying_subscribers"],
+        "total_reward_diamonds":  stats["total_reward_diamonds"],
+        "total_reward_gold":      stats["total_reward_gold"],
+        "recent": recent,
+    }
+
+
 # ─── Сезон ──────────────────────────────────────────────────────────────────
 
 @app.get("/api/season")
