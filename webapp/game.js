@@ -1464,9 +1464,17 @@ class ResultScene extends Phaser.Scene {
       }
       txt(this, W/2, H * 0.69, `Раундов: ${r.rounds || 0}`, 12, '#8888aa').setOrigin(0.5);
     } else {
-      makePanel(this, W/2 - 100, H * 0.38, 200, 80, 14);
-      txt(this, W/2, H * 0.44, 'Не сдавайся!', 16, '#8888aa').setOrigin(0.5);
-      txt(this, W/2, H * 0.52, `Раундов: ${r.rounds || 0}`, 12, '#666688').setOrigin(0.5);
+      const isAfk = res?.afk_loss === true;
+      makePanel(this, W/2 - 110, H * 0.36, 220, isAfk ? 110 : 80, 14);
+      if (isAfk) {
+        txt(this, W/2, H * 0.40, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
+        txt(this, W/2, H * 0.48, '3 раунда без хода', 13, '#cc6633').setOrigin(0.5);
+        txt(this, W/2, H * 0.55, 'Успевай нажать кнопку!', 12, '#8888aa').setOrigin(0.5);
+        txt(this, W/2, H * 0.62, `Раундов: ${r.rounds || 0}`, 11, '#666688').setOrigin(0.5);
+      } else {
+        txt(this, W/2, H * 0.44, 'Не сдавайся!', 16, '#8888aa').setOrigin(0.5);
+        txt(this, W/2, H * 0.52, `Раундов: ${r.rounds || 0}`, 12, '#666688').setOrigin(0.5);
+      }
     }
 
     // Обновить профиль
