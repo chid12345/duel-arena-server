@@ -381,6 +381,7 @@ class MenuScene extends Phaser.Scene {
 
       const zone = this.add.zone(cx, cy, tabW, TAB_H).setInteractive({ useHandCursor: true });
       zone.on('pointerup', () => {
+        Sound.tab();
         tg?.HapticFeedback?.selectionChanged();
         if (tab.key === 'stats')  { this.scene.start('Stats',  { player: State.player }); return; }
         if (tab.key === 'rating') { this.scene.start('Rating'); return; }
@@ -923,9 +924,30 @@ class BattleScene extends Phaser.Scene {
     this._buildHUDs();
     this._buildChoicePanel();
     this._buildLog();
+    this._buildMuteBtn();
     this._updateFromState(State.battle);
     this._setupWSBattle();
     this._startTimer();
+  }
+
+  _buildMuteBtn() {
+    const { W } = this;
+    const bx = W - 38, by = 8, bw = 30, bh = 30;
+    const bg = this.add.graphics();
+    const draw = () => {
+      bg.clear();
+      bg.fillStyle(0x000000, 0.45);
+      bg.fillRoundedRect(bx, by, bw, bh, 8);
+    };
+    draw();
+    this._muteTxt = this.add.text(bx + bw/2, by + bh/2,
+      Sound.muted ? '🔇' : '🔊', { fontSize: '14px' }).setOrigin(0.5).setDepth(10);
+    this.add.zone(bx, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerup', () => {
+        const m = Sound.toggleMute();
+        this._muteTxt.setText(m ? '🔇' : '🔊');
+        tg?.HapticFeedback?.selectionChanged();
+      });
   }
 
   _buildArena() {
@@ -1191,17 +1213,20 @@ class BattleScene extends Phaser.Scene {
     // Соперник получил урон → P1 атакует P2
     if (oppDelta > 0) {
       if (isDodge) {
+        Sound.dodge();
         this._animDodge(this.warrior2);
         this._floatText(this.warrior2.x, this.warrior2.y - 55, '💨 Уворот!', '#3cc8dc');
       } else {
         this._animLunge(this.warrior1, this.warrior2, () => {
           if (isCrit) {
+            Sound.crit();
             this._flashTint(this.warrior2, 0xff8800, 220);
             this._shakeX(this.warrior2, 12, 4);
             this._burst(this.warrior2.x, this.warrior2.y, 'crit_fx', 0.7, 520);
             this._floatText(this.warrior2.x, this.warrior2.y - 60, `💥 −${oppDelta}`, '#ffc83c');
             this.cameras.main.shake(280, 0.007);
           } else {
+            Sound.hit();
             this._flashTint(this.warrior2, 0xff3333, 140);
             this._shakeX(this.warrior2, 7, 3);
             this._burst(this.warrior2.x, this.warrior2.y, 'hit_fx', 0.9, 380);
@@ -1215,17 +1240,20 @@ class BattleScene extends Phaser.Scene {
     if (myDelta > 0) {
       this.time.delayedCall(oppDelta > 0 ? 320 : 0, () => {
         if (isDodge && oppDelta <= 0) {
+          Sound.dodge();
           this._animDodge(this.warrior1);
           this._floatText(this.warrior1.x, this.warrior1.y - 55, '💨 Уворот!', '#3cc8dc');
         } else {
           this._animLunge(this.warrior2, this.warrior1, () => {
             if (isCrit && oppDelta <= 0) {
+              Sound.crit();
               this._flashTint(this.warrior1, 0xff8800, 220);
               this._shakeX(this.warrior1, 12, 4);
               this._burst(this.warrior1.x, this.warrior1.y, 'crit_fx', 0.7, 520);
               this._floatText(this.warrior1.x, this.warrior1.y - 60, `💥 −${myDelta}`, '#ffc83c');
               this.cameras.main.shake(280, 0.007);
             } else {
+              Sound.hit();
               this._flashTint(this.warrior1, 0xff3333, 140);
               this._shakeX(this.warrior1, 7, 3);
               this._burst(this.warrior1.x, this.warrior1.y, 'hit_fx', 0.9, 380);
@@ -1376,6 +1404,7 @@ class ResultScene extends Phaser.Scene {
       duration: 600, ease: 'Back.easeOut',
     });
     tg?.HapticFeedback?.notificationOccurred(won ? 'success' : 'error');
+    if (won) Sound.victory(); else Sound.defeat();
 
     // Частицы при победе
     if (won) this._celebrate(W, H);

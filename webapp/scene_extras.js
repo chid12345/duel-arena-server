@@ -223,6 +223,7 @@ class QuestsScene extends Phaser.Scene {
       const res = await post('/api/daily/claim');
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
+        Sound.buy();
         if (res.player) State.player = res.player;
         this._toast(`🎁 Ежедневный бонус: +${res.bonus} 🪙`);
         this.time.delayedCall(600, () => this.scene.restart());
@@ -243,6 +244,7 @@ class QuestsScene extends Phaser.Scene {
       const res = await post('/api/quests/claim');
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
+        Sound.questDone();
         if (res.player) State.player = res.player;
         this._toast(`🏆 +${res.gold} 🪙  +${res.diamonds} 💎 — квест выполнен!`);
         this.time.delayedCall(700, () => this.scene.restart());
@@ -801,6 +803,7 @@ class ShopScene extends Phaser.Scene {
 
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
+        Sound.buy();
         // Обновляем State.player
         if (res.player) State.player = res.player;
 
