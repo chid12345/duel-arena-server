@@ -432,6 +432,22 @@ class Database:
                 ],
             ),
             (
+                "2026_04_13_000_stars_payments",
+                [
+                    # Лог Stars-оплат для идемпотентного начисления алмазов
+                    """CREATE TABLE IF NOT EXISTS stars_payments (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        package_id TEXT NOT NULL,
+                        diamonds INTEGER NOT NULL DEFAULT 0,
+                        stars INTEGER NOT NULL DEFAULT 0,
+                        source TEXT NOT NULL DEFAULT 'tma',
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_stars_payments_user ON stars_payments (user_id, created_at)",
+                ],
+            ),
+            (
                 "2026_04_13_001_crypto_invoices",
                 [
                     """CREATE TABLE IF NOT EXISTS crypto_invoices (
@@ -2029,6 +2045,46 @@ class Database:
             )
             conn.commit()
             return True, int(referrer_id)
+        finally:
+            conn.close()
+
+    # ─── Telegram Stars оплаты ───────────────────────────────────────────────
+
+    def confirm_stars_payment(
+        self, user_id: int, package_id: str, diamonds: int, stars: int
+    ) -> Dict[str, Any]:
+        """
+        Атомарно начислить алмазы за Stars-покупку.
+        Идемпотентность: не более 1 начисления одного package_id за последние 5 минут.
+        Возвращает {"ok": True, "diamonds": N} или {"ok": False, "reason": ...}
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            # Проверяем: не было ли начисления этого пакета за последние 5 минут
+            cursor.execute(
+                """SELECT id FROM stars_payments
+                   WHERE user_id = ? AND package_id = ?
+                     AND created_at > datetime('now', '-5 minutes')""",
+                (user_id, package_id),
+            )
+            if cursor.fetchone():
+                return {"ok": False, "reason": "already_credited"}
+
+            # Начислить алмазы
+            if diamonds > 0:
+                cursor.execute(
+                    "UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?",
+                    (diamonds, user_id),
+                )
+            # Записать факт оплаты
+            cursor.execute(
+                """INSERT INTO stars_payments (user_id, package_id, diamonds, stars, source)
+                   VALUES (?, ?, ?, ?, 'tma')""",
+                (user_id, package_id, diamonds, stars),
+            )
+            conn.commit()
+            return {"ok": True, "diamonds": diamonds}
         finally:
             conn.close()
 

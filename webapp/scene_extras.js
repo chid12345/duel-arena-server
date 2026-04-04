@@ -1089,17 +1089,26 @@ class ShopScene extends Phaser.Scene {
         this._buying = false;
         return;
       }
-      tg?.openInvoice(res.invoice_url, (status) => {
+      tg?.openInvoice(res.invoice_url, async (status) => {
         this._buying = false;
         if (status === 'paid') {
           tg?.HapticFeedback?.notificationOccurred('success');
           Sound.levelUp?.();
-          this._toast('✅ Оплата прошла! Алмазы начислены.');
-          // Обновляем данные игрока
-          post('/api/player').then(d => {
-            if (d.ok && d.player) State.player = d.player;
-            this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' }));
-          }).catch(() => this.time.delayedCall(800, () => this.scene.restart({ tab: 'topup' })));
+          this._toast('⏳ Начисляем алмазы...');
+          try {
+            // Прямое начисление через API (не ждём бота)
+            const confirm = await post('/api/shop/stars_confirm', { package_id: pkg.id });
+            if (confirm.ok) {
+              if (confirm.player) State.player = confirm.player;
+              const added = confirm.diamonds_added || pkg.diamonds;
+              this._toast(added > 0 ? `✅ +${added} 💎 начислено!` : '✅ Premium активирован!');
+            } else {
+              this._toast('✅ Оплата прошла! Алмазы придут в течение минуты.');
+            }
+          } catch(_) {
+            this._toast('✅ Оплата прошла! Обновите профиль.');
+          }
+          this.time.delayedCall(1200, () => this.scene.restart({ tab: 'topup' }));
         } else if (status === 'cancelled') {
           this._toast('❌ Оплата отменена');
         } else if (status === 'failed') {

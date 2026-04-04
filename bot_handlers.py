@@ -639,19 +639,22 @@ class BotHandlers:
             diamonds = 0
         if diamonds <= 0:
             return
-        conn = db.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?",
-            (diamonds, user.id),
-        )
-        conn.commit()
-        conn.close()
+        # Идемпотентное начисление: если TMA уже начислил через /api/shop/stars_confirm,
+        # confirm_stars_payment вернёт already_credited и пропустит повторное начисление.
+        package_id = f"d{diamonds}"
+        result = db.confirm_stars_payment(user.id, package_id, diamonds, stars)
         ref = db.process_referral_vip_shop_purchase(user.id, stars=stars)
-        await tg_api_call(
-            update.message.reply_text,
-            f"✅ Оплата прошла! +{diamonds} 💎 начислено. Спасибо!",
-        )
+        if result.get("ok"):
+            await tg_api_call(
+                update.message.reply_text,
+                f"✅ Оплата прошла! +{diamonds} 💎 начислено. Спасибо!",
+            )
+        else:
+            # already_credited — TMA уже начислил, просто подтверждаем
+            await tg_api_call(
+                update.message.reply_text,
+                f"✅ Оплата подтверждена! +{diamonds} 💎 уже на счету. Спасибо!",
+            )
         await BotHandlers.notify_referrer_stars_payment(
             context.bot, user.id, payload, diamonds, stars, ref or {}
         )

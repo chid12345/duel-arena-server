@@ -827,6 +827,45 @@ async def shop_packages():
     }
 
 
+class StarsConfirmBody(BaseModel):
+    init_data:  str
+    package_id: str   # d100 | d300 | d500 | premium
+
+
+@app.post("/api/shop/stars_confirm")
+async def stars_confirm(body: StarsConfirmBody):
+    """Вызывается из TMA сразу после tg.openInvoice() вернул status='paid'.
+    Начисляет алмазы напрямую (без ожидания бота) с защитой от двойного начисления."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+
+    pkg = next((p for p in STARS_PACKAGES if p["id"] == body.package_id), None)
+    if not pkg:
+        return {"ok": False, "reason": "Пакет не найден"}
+
+    diamonds = pkg["diamonds"]
+    stars    = pkg["stars"]
+
+    result = db.confirm_stars_payment(uid, body.package_id, diamonds, stars)
+
+    if result.get("ok"):
+        # WS уведомление если есть подключение
+        if diamonds > 0:
+            await manager.send(uid, {
+                "event":    "diamonds_credited",
+                "diamonds": diamonds,
+                "source":   "stars",
+            })
+    # already_credited тоже OK для UI — просто показываем успех
+    fresh  = db.get_or_create_player(uid, "")
+    return {
+        "ok":     True,
+        "diamonds_added": diamonds,
+        "already_credited": result.get("reason") == "already_credited",
+        "player": dict(fresh),
+    }
+
+
 class StarsInvoiceBody(BaseModel):
     init_data: str
     package_id: str   # d100 | d300 | d500 | premium
