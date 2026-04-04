@@ -794,12 +794,12 @@ async def shop_buy(body: ShopBuyBody):
 
 # ─── Монетизация: Stars + CryptoPay ─────────────────────────────────────────
 
-# Пакеты алмазов за Telegram Stars
+# Пакеты алмазов за Telegram Stars (TEST: все по 1 звезде)
 STARS_PACKAGES = [
-    {"id": "d100",    "diamonds": 100, "stars": 50,                  "label": "100 💎"},
-    {"id": "d300",    "diamonds": 300, "stars": 130,                 "label": "300 💎"},
-    {"id": "d500",    "diamonds": 500, "stars": 200,                 "label": "500 💎"},
-    {"id": "premium", "diamonds": 0,   "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
+    {"id": "d100",    "diamonds": 100, "stars": 1, "label": "100 💎"},
+    {"id": "d300",    "diamonds": 300, "stars": 1, "label": "300 💎"},
+    {"id": "d500",    "diamonds": 500, "stars": 1, "label": "500 💎"},
+    {"id": "premium", "diamonds": 0,   "stars": 1, "label": "👑 Premium"},
 ]
 
 # Пакеты алмазов за криптовалюту (CryptoPay)
