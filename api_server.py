@@ -403,7 +403,20 @@ async def battle_choice(body: BattleChoiceBody):
                         "rounds":   result.get("rounds", 0),
                     }
                 })
-        return {"ok": True, "status": "battle_ended", "human_won": human_won, "afk_loss": is_afk and not human_won}
+        return {
+            "ok":        True,
+            "status":    "battle_ended",
+            "human_won": human_won,
+            "afk_loss":  is_afk and not human_won,
+            "result": {
+                "gold":     result.get("gold_reward", 0) if human_won else 0,
+                "exp":      result.get("exp_reward",  0),
+                "level_up": result.get("level_up", False) if human_won else False,
+                "rounds":   result.get("rounds", 0),
+                "streak_bonus": result.get("streak_bonus_gold", 0) if human_won else 0,
+                "win_streak":   result.get("win_streak", 0) if human_won else 0,
+            },
+        }
 
     if result.get("status") == "choice_made":
         return {"ok": True, "status": "waiting_opponent"}

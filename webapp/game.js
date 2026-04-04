@@ -1233,7 +1233,11 @@ class BattleScene extends Phaser.Scene {
         this._choosing = true;
         this._startTimer();
       } else if (res.status === 'battle_ended') {
-        State.lastResult = res;
+        // Используем HTTP-ответ только если WS ещё не принёс данные с наградами
+        // (WS приходит раньше HTTP примерно в 50% случаев)
+        if (!State.lastResult?.result) {
+          State.lastResult = res;
+        }
         this.scene.start('Result');
       }
     } catch(e) {
