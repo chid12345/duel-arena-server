@@ -701,8 +701,9 @@ async def get_clan(init_data: str):
     if not info:
         return {"ok": True, "clan": None, "is_leader": False}
     is_leader = info["clan"].get("leader_id") == uid
+    username  = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
     return {"ok": True, "clan": info["clan"], "members": info["members"],
-            "is_leader": is_leader}
+            "is_leader": is_leader, "my_user_id": uid, "my_username": username}
 
 
 @app.get("/api/clan/top")
@@ -771,6 +772,38 @@ async def clan_leave(body: ClanLeaveBody):
         player = db.get_or_create_player(uid, "")
         result["player"] = dict(player)
     return result
+
+
+# ─── Клановый чат ────────────────────────────────────────────────────────────
+
+@app.get("/api/clan/chat")
+async def get_clan_chat(init_data: str):
+    tg_user  = get_user_from_init_data(init_data)
+    uid      = int(tg_user["id"])
+    player   = db.get_or_create_player(uid, "")
+    clan_id  = player.get("clan_id")
+    if not clan_id:
+        return {"ok": False, "reason": "not_in_clan"}
+    messages = db.get_clan_messages(int(clan_id), limit=40)
+    return {"ok": True, "messages": messages}
+
+
+class ClanChatSendBody(BaseModel):
+    init_data: str
+    message: str
+
+
+@app.post("/api/clan/chat/send")
+async def send_clan_chat(body: ClanChatSendBody):
+    tg_user  = get_user_from_init_data(body.init_data)
+    uid      = int(tg_user["id"])
+    username = (tg_user.get("username") or tg_user.get("first_name") or f"User{uid}")
+    player   = db.get_or_create_player(uid, username)
+    clan_id  = player.get("clan_id")
+    if not clan_id:
+        return {"ok": False, "reason": "not_in_clan"}
+    ok = db.send_clan_message(int(clan_id), uid, username, body.message)
+    return {"ok": ok, "reason": "empty" if not ok else None}
 
 
 # ─── Ежедневные квесты ───────────────────────────────────────────────────────

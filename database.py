@@ -494,6 +494,20 @@ class Database:
                     "CREATE INDEX IF NOT EXISTS idx_referral_rewards_referrer ON referral_rewards (referrer_id)",
                 ],
             ),
+            (
+                "2026_04_15_001_clan_chat",
+                [
+                    """CREATE TABLE IF NOT EXISTS clan_messages (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        clan_id INTEGER NOT NULL,
+                        user_id INTEGER NOT NULL,
+                        username TEXT NOT NULL DEFAULT '',
+                        message TEXT NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_clan_messages_clan ON clan_messages (clan_id, created_at)",
+                ],
+            ),
         ]
 
         for migration_id, statements in migrations:
@@ -2245,6 +2259,49 @@ class Database:
             )
             rows = [dict(r) for r in cursor.fetchall()]
             return rows
+        finally:
+            conn.close()
+
+
+    # ─── Клановый чат ────────────────────────────────────────────────────────
+
+    def send_clan_message(self, clan_id: int, user_id: int, username: str, message: str) -> bool:
+        """Отправить сообщение в клановый чат. Возвращает True при успехе."""
+        message = (message or "").strip()[:200]
+        if not message:
+            return False
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT 1 FROM clan_members WHERE user_id = ? AND clan_id = ?",
+                (user_id, clan_id),
+            )
+            if not cursor.fetchone():
+                return False
+            cursor.execute(
+                "INSERT INTO clan_messages (clan_id, user_id, username, message) VALUES (?, ?, ?, ?)",
+                (clan_id, user_id, username, message),
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+
+    def get_clan_messages(self, clan_id: int, limit: int = 40) -> List[Dict[str, Any]]:
+        """Вернуть последние N сообщений чата клана (от старых к новым)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """SELECT id, user_id, username, message,
+                          strftime('%H:%M', created_at) AS time_str
+                   FROM clan_messages WHERE clan_id = ?
+                   ORDER BY created_at DESC LIMIT ?""",
+                (clan_id, int(limit)),
+            )
+            rows = cursor.fetchall()
+            return [dict(r) for r in reversed(rows)]
         finally:
             conn.close()
 

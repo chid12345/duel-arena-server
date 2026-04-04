@@ -996,8 +996,8 @@ class MenuScene extends Phaser.Scene {
     const ov = this.add.graphics().setDepth(60);
     ov.fillStyle(0x000000, 0.55); ov.fillRect(0, 0, W, H);
 
-    /* ── Панель ── */
-    const pw = W - 32, ph = 340, px = 16, py = Math.round((H - ph) / 2);
+    /* ── Панель — по высоте экрана с отступами ── */
+    const pw = W - 32, ph = Math.min(360, H - 72), px = 16, py = Math.max(8, Math.round((H - ph) / 2));
     const D = 62;
     const panBg = this.add.graphics().setDepth(61);
     panBg.fillStyle(0x1e3a7a, 1);
@@ -1173,17 +1173,17 @@ class MenuScene extends Phaser.Scene {
     infoObjs.push(schTitleBg, schTitle);
 
     const tiers = [
-      { range:'1–10 друзей купили Premium', pct:'5% от суммы покупки → 💎' },
-      { range:'11–30 друзей купили Premium', pct:'7% от суммы покупки → 💎' },
-      { range:'31+ друзей купили Premium',  pct:'10% + со всех покупок магазина' },
+      { range:'1–10 Premium-покупок', pct:'5% → USDT/TON', col:'#7adfaa' },
+      { range:'11–30 Premium-покупок', pct:'7% → USDT/TON', col:'#5ac8f0' },
+      { range:'31+ Premium-покупок',  pct:'10% + магазин → USDT/TON', col:'#ffc83c' },
     ];
     tiers.forEach((t, i) => {
-      const ty = schY + 36 + i * 32;
+      const ty = schY + 36 + i * 30;
       const tg2 = this.add.graphics().setDepth(D).setVisible(false);
-      tg2.fillStyle(i%2===0 ? 0x1a3060 : 0x162850, 1);
-      tg2.fillRoundedRect(px+10, ty, pw-20, 28, 6);
-      const tl = txt(this, px+18, ty+14, t.range, 10, '#c0d4ff').setOrigin(0,0.5).setDepth(D).setVisible(false);
-      const tv = txt(this, px+pw-18, ty+14, t.pct, 10, '#ffc83c', true).setOrigin(1,0.5).setDepth(D).setVisible(false);
+      tg2.fillStyle(i%2===0 ? 0x243878 : 0x1e3060, 1);
+      tg2.fillRoundedRect(px+10, ty, pw-20, 26, 6);
+      const tl = txt(this, px+18, ty+13, t.range, 11, '#dce8ff').setOrigin(0,0.5).setDepth(D).setVisible(false);
+      const tv = txt(this, px+pw-18, ty+13, t.pct, 11, t.col, true).setOrigin(1,0.5).setDepth(D).setVisible(false);
       infoObjs.push(tg2, tl, tv);
     });
   }
