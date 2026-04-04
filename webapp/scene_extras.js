@@ -1158,7 +1158,8 @@ class ShopScene extends Phaser.Scene {
             if (confirm.ok) {
               if (confirm.player) State.player = confirm.player;
               if (confirm.premium_activated) {
-                this._toast(`👑 Premium активирован на 21 день!`);
+                const bonusTxt = confirm.bonus_diamonds > 0 ? ` +${confirm.bonus_diamonds} 💎` : '';
+                this._toast(`👑 Premium активирован!${bonusTxt}`);
               } else {
                 const added = confirm.diamonds_added || pkg.diamonds;
                 this._toast(`✅ +${added} 💎 начислено!`);
@@ -1224,7 +1225,7 @@ class ShopScene extends Phaser.Scene {
       try {
         const r = await get(`/api/shop/crypto_check/${invoiceId}`);
         if (r.ok && r.paid) {
-          this._onCryptoPaid(r.diamonds || diamonds, invoiceId, r.premium_activated);
+          this._onCryptoPaid(r.diamonds || diamonds, invoiceId, r.premium_activated, r.bonus_diamonds || 0);
           return;
         }
       } catch(_) {}
@@ -1240,7 +1241,7 @@ class ShopScene extends Phaser.Scene {
     try {
       const r = await get(`/api/shop/crypto_check/${invoiceId}`);
       if (r.ok && r.paid) {
-        this._onCryptoPaid(r.diamonds, invoiceId, r.premium_activated);
+        this._onCryptoPaid(r.diamonds, invoiceId, r.premium_activated, r.bonus_diamonds || 0);
       } else {
         this._toast('⏳ Оплата ещё не подтверждена');
       }
@@ -1250,11 +1251,18 @@ class ShopScene extends Phaser.Scene {
   }
 
   /* ── Общий обработчик успешной крипто-оплаты ─────────── */
-  _onCryptoPaid(diamonds, invoiceId, isPremium) {
+  _onCryptoPaid(diamonds, invoiceId, isPremium, bonusDiamonds = 0) {
     tg?.HapticFeedback?.notificationOccurred('success');
     Sound.levelUp?.();
     localStorage.removeItem('cryptoPendingInvoice');
-    const msg = isPremium ? '👑 Premium активирован на 21 день!' : `✅ +${diamonds} 💎 начислено!`;
+    let msg;
+    if (isPremium) {
+      msg = bonusDiamonds > 0
+        ? `👑 Premium активирован! +${bonusDiamonds} 💎`
+        : '👑 Premium активирован на 21 день!';
+    } else {
+      msg = `✅ +${diamonds} 💎 начислено!`;
+    }
     this._toast(msg);
     post('/api/player').then(d => {
       if (d.ok && d.player) State.player = d.player;

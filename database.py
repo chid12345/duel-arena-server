@@ -2105,13 +2105,19 @@ class Database:
             new_until = base + timedelta(days=days)
             new_until_str = new_until.isoformat()
 
+            # Активируем Premium + начисляем 1000 алмазов как бонус при покупке
+            is_renewal = bool(current_until and current_until > now)
+            bonus_diamonds = 0 if is_renewal else 1000
             cursor.execute(
-                "UPDATE players SET premium_until = ? WHERE user_id = ?",
-                (new_until_str, user_id),
+                "UPDATE players SET premium_until = ?, diamonds = diamonds + ? WHERE user_id = ?",
+                (new_until_str, bonus_diamonds, user_id),
             )
             conn.commit()
             days_left = max(0, (new_until - now).days)
-            return {"ok": True, "premium_until": new_until_str, "days_left": days_left}
+            return {
+                "ok": True, "premium_until": new_until_str,
+                "days_left": days_left, "bonus_diamonds": bonus_diamonds,
+            }
         finally:
             conn.close()
 

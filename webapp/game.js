@@ -1018,7 +1018,8 @@ class MenuScene extends Phaser.Scene {
       }
       if (msg.event === 'premium_activated') {
         tg?.HapticFeedback?.notificationOccurred('success');
-        Notif.push('👑', 'Premium подписка активирована!', '#b45aff', 4000);
+        const bonusTxt = msg.bonus_diamonds > 0 ? ` +${msg.bonus_diamonds} 💎` : '';
+        Notif.push('👑', `Premium активирован!${bonusTxt}`, '#b45aff', 5000);
         post('/api/player').then(d => { if (d.ok && d.player) State.player = d.player; }).catch(() => {});
       }
     });

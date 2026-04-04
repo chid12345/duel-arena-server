@@ -878,13 +878,20 @@ async def stars_confirm(body: StarsConfirmBody):
             }
         # Активируем Premium на 21 день
         prem_result = db.activate_premium(uid, days=21)
-        await manager.send(uid, {"event": "premium_activated", "days_left": prem_result.get("days_left", 21)})
+        bonus_d = prem_result.get("bonus_diamonds", 0)
+        await manager.send(uid, {
+            "event":          "premium_activated",
+            "days_left":      prem_result.get("days_left", 21),
+            "bonus_diamonds": bonus_d,
+            "source":         "stars",
+        })
         fresh = db.get_or_create_player(uid, "")
         return {
             "ok": True,
-            "diamonds_added": 0,
+            "diamonds_added": bonus_d,
             "premium_activated": True,
             "premium_days_left": prem_result.get("days_left", 21),
+            "bonus_diamonds":    bonus_d,
             "player": _player_api(dict(fresh)),
         }
 
@@ -1067,12 +1074,12 @@ async def cryptopay_webhook(request: Request):
         logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s invoice=%s",
                     uid, diamonds, is_premium, invoice_id)
         if is_premium:
-            # Активируем Premium на 21 день
             prem = db.activate_premium(uid, days=21)
             await manager.send(uid, {
-                "event":     "premium_activated",
-                "days_left": prem.get("days_left", 21),
-                "source":    "cryptopay",
+                "event":          "premium_activated",
+                "days_left":      prem.get("days_left", 21),
+                "bonus_diamonds": prem.get("bonus_diamonds", 0),
+                "source":         "cryptopay",
             })
         else:
             await manager.send(uid, {
@@ -1122,13 +1129,15 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
             diamonds = result["diamonds"]
             if is_premium:
                 prem = db.activate_premium(uid, days=21)
+                bonus_d = prem.get("bonus_diamonds", 0)
                 await manager.send(uid, {
-                    "event":     "premium_activated",
-                    "days_left": prem.get("days_left", 21),
-                    "source":    "cryptopay",
+                    "event":          "premium_activated",
+                    "days_left":      prem.get("days_left", 21),
+                    "bonus_diamonds": bonus_d,
+                    "source":         "cryptopay",
                 })
-                return {"ok": True, "paid": True, "diamonds": 0, "premium_activated": True,
-                        "premium_days_left": prem.get("days_left", 21)}
+                return {"ok": True, "paid": True, "diamonds": bonus_d, "premium_activated": True,
+                        "premium_days_left": prem.get("days_left", 21), "bonus_diamonds": bonus_d}
             await manager.send(uid, {
                 "event":    "diamonds_credited",
                 "diamonds": diamonds,
