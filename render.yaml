@@ -5,6 +5,10 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
+    disk:
+      name: duel-arena-data
+      mountPath: /app/data
+      sizeGB: 1
     envVars:
       - key: TELEGRAM_BOT_TOKEN
         sync: false
@@ -16,3 +20,5 @@ services:
         sync: false
       - key: CRYPTOPAY_TESTNET
         value: "1"
+      - key: DATA_DIR
+        value: /app/data

@@ -66,7 +66,10 @@ ADMIN_USER_IDS = {
 }
 
 # База данных
-DB_NAME = 'duel_arena.db'
+# DATA_DIR — папка для постоянного хранения (Render Disk: /app/data).
+# Если не задана — используем папку рядом с config.py (локальная разработка).
+_DATA_DIR = os.getenv("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
+DB_NAME   = os.path.join(_DATA_DIR, "duel_arena.db")
 
 # Игровые константы (боты и «эталон» генерации; старт игрока — PLAYER_START_*)
 BASE_STRENGTH = 10
