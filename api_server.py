@@ -260,6 +260,20 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         left = (b["next_turn_deadline"] - datetime.now()).total_seconds()
         deadline_sec = max(0, int(left))
 
+    # Данные соперника для карточки
+    opp_entity = None
+    opp_is_bot = True
+    if b:
+        if is_p1:
+            opp_entity = b.get("player2")
+            opp_is_bot = b.get("is_bot2", True)
+        else:
+            opp_entity = b.get("player1")
+            opp_is_bot = False
+    opp_is_premium = False
+    if opp_entity and not opp_is_bot:
+        opp_is_premium = bool(_premium_fields(opp_entity).get("is_premium"))
+
     return {
         "battle_id": bid,
         "active": True,
@@ -275,6 +289,10 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "opp_strength": ctx.get("opp_strength"),
         "opp_agility": ctx.get("opp_endurance"),
         "opp_intuition": ctx.get("opp_crit"),
+        "opp_stamina": ctx.get("opp_stamina_invested", 0),
+        "opp_rating": ctx.get("opp_rating", 1000),
+        "opp_is_bot": opp_is_bot,
+        "opp_is_premium": opp_is_premium,
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),

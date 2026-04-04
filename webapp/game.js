@@ -1106,6 +1106,7 @@ class BattleScene extends Phaser.Scene {
     this._logLines   = [];
     this._prevMyHp   = null;
     this._prevOppHp  = null;
+    this._oppCardOpen = false;
 
     this._buildArena();
     this._buildHUDs();
@@ -1115,6 +1116,123 @@ class BattleScene extends Phaser.Scene {
     this._updateFromState(State.battle);
     this._setupWSBattle();
     this._startTimer();
+  }
+
+  /* ── Карточка соперника ─────────────────────────────────── */
+  _showOppCard() {
+    if (this._oppCardOpen) return;
+    this._oppCardOpen = true;
+    tg?.HapticFeedback?.impactOccurred('light');
+
+    const { W, H } = this;
+    const b = State.battle || {};
+    const isPrem = !!b.opp_is_premium;
+    const isBot  = !!b.opp_is_bot;
+
+    // Размеры карточки
+    const cw = W - 36, ch = 238;
+    const cx = 18, cy = Math.round(H * 0.18);
+
+    // Затемнение фона
+    const overlay = this.add.graphics().setDepth(30);
+    overlay.fillStyle(0x000000, 0.55);
+    overlay.fillRect(0, 0, W, H);
+
+    // Карточка — фон
+    const card = this.add.graphics().setDepth(31);
+    if (isPrem) {
+      // Золотая карточка (premium)
+      card.fillStyle(0x1a1408, 0.98); card.fillRoundedRect(cx, cy, cw, ch, 14);
+      card.lineStyle(2, 0xffc83c, 0.9); card.strokeRoundedRect(cx, cy, cw, ch, 14);
+      // Мягкое золотое свечение — чуть шире
+      card.lineStyle(6, 0xffc83c, 0.12); card.strokeRoundedRect(cx-2, cy-2, cw+4, ch+4, 15);
+    } else {
+      card.fillStyle(0x12121e, 0.97); card.fillRoundedRect(cx, cy, cw, ch, 14);
+      card.lineStyle(1.5, 0x3a3860, 1); card.strokeRoundedRect(cx, cy, cw, ch, 14);
+    }
+
+    const D = 31; // depth для контента
+
+    // Закрыть по тапу вне карточки
+    const closeZone = this.add.zone(0, 0, W, H).setOrigin(0).setDepth(29).setInteractive();
+    closeZone.on('pointerup', () => this._hideOppCard());
+
+    // Кнопка × (верхний правый угол)
+    const closeBtn = this.add.zone(cx + cw - 36, cy, 40, 40).setOrigin(0).setDepth(35).setInteractive({ useHandCursor: true });
+    const closeTxt = txt(this, cx + cw - 16, cy + 14, '✕', 15, '#888899').setOrigin(0.5).setDepth(D+4);
+    closeBtn.on('pointerup', () => this._hideOppCard());
+
+    // Тип: Бот / Игрок
+    const typeStr = isBot ? '🤖 Бот' : '⚔️ Игрок';
+    const typeCol = isBot ? '#5577cc' : '#3cc864';
+    txt(this, cx + 14, cy + 12, typeStr, 10, typeCol).setDepth(D);
+
+    // Имя + корона
+    const crownPfx = isPrem ? '👑 ' : '';
+    const nameStr  = crownPfx + (b.opp_name || 'Соперник');
+    txt(this, cx + cw / 2, cy + 30, nameStr, 16,
+        isPrem ? '#ffc83c' : '#f0f0fa', true).setOrigin(0.5).setDepth(D);
+
+    // Уровень + рейтинг
+    const lvlStr = `Уровень ${b.opp_level || 1}  ·  ★ ${b.opp_rating || '—'}`;
+    txt(this, cx + cw / 2, cy + 50, lvlStr, 11, isPrem ? '#cc9900' : '#8888aa').setOrigin(0.5).setDepth(D);
+
+    // Разделитель
+    const div = this.add.graphics().setDepth(D);
+    div.lineStyle(1, isPrem ? 0xffc83c : 0x2a2850, 0.45);
+    div.lineBetween(cx + 12, cy + 63, cx + cw - 12, cy + 63);
+
+    // Персонаж — слева
+    const sprite = this.add.image(cx + 56, cy + 120, 'warrior_red')
+      .setScale(1.35).setFlipX(true).setDepth(D);
+    this.tweens.add({ targets: sprite, y: cy + 115, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+
+    // HP
+    const hpPct = Math.min(1, Math.max(0, (b.opp_hp || 0) / (b.opp_max_hp || 1)));
+    const hpCol2 = hpPct > 0.5 ? 0x3cc864 : hpPct > 0.25 ? 0xffc83c : 0xdc3c46;
+    const hpX = cx + 110, hpY = cy + 72, hpW = cw - 122;
+    txt(this, hpX, hpY, '❤️ HP', 10, '#8888aa').setDepth(D);
+    txt(this, cx + cw - 14, hpY, `${b.opp_hp} / ${b.opp_max_hp}`, 10, '#dc3c46').setOrigin(1, 0).setDepth(D);
+    const hpBarG = this.add.graphics().setDepth(D);
+    hpBarG.fillStyle(0x1e1c30, 1); hpBarG.fillRoundedRect(hpX, hpY + 14, hpW, 10, 4);
+    hpBarG.fillStyle(hpCol2, 1); hpBarG.fillRoundedRect(hpX, hpY + 14, Math.max(6, Math.round(hpW * hpPct)), 10, 4);
+
+    // Статы (2 колонки)
+    const stats = [
+      { icon: '💪', label: 'Сила',    val: b.opp_strength  || 0, col: '#dc3c46' },
+      { icon: '🤸', label: 'Ловкость',val: b.opp_agility   || 0, col: '#3cc8dc' },
+      { icon: '💥', label: 'Интуиция',val: b.opp_intuition || 0, col: '#b45aff' },
+      { icon: '🛡', label: 'Выносл.', val: b.opp_stamina   || 0, col: '#3cc864' },
+    ];
+    const sY0 = cy + 106;
+    const sX0 = cx + 110, sX1 = cx + 110 + Math.round((cw - 122) / 2);
+    stats.forEach((s, i) => {
+      const sx = i % 2 === 0 ? sX0 : sX1;
+      const sy = sY0 + Math.floor(i / 2) * 38;
+      txt(this, sx, sy,      s.icon, 18).setDepth(D);
+      txt(this, sx + 22, sy + 2,  s.label, 9, '#8888aa').setDepth(D);
+      txt(this, sx + 22, sy + 14, `${s.val}`, 14, s.col, true).setDepth(D);
+    });
+
+    // Нижняя строка — Premium метка
+    if (isPrem) {
+      txt(this, cx + cw / 2, cy + ch - 18,
+        '✨ Premium игрок', 10, '#cc9900', true).setOrigin(0.5).setDepth(D);
+    }
+
+    // Все объекты карточки имеют depth >= 29 — _hideOppCard уничтожит их по depth
+    this._oppCardDepth = D;
+  }
+
+  _hideOppCard() {
+    if (!this._oppCardOpen) return;
+    this._oppCardOpen = false;
+    // Удаляем все объекты с depth >= 29
+    this.children.list
+      .filter(o => o.depth >= 29)
+      .forEach(o => o.destroy());
+    // На всякий случай чистим сохранённые ref
+    this._oppCardObjs = [];
   }
 
   _buildMuteBtn() {
@@ -1185,6 +1303,12 @@ class BattleScene extends Phaser.Scene {
     this.p2Name = txt(this, W - 16, 24, b.opp_name || 'Соперник', 13, '#f0f0fa', true).setOrigin(1, 0);
     this.p2Hp   = txt(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
     this.p2Bar  = this._hpBar(W/2 + 18, 54, W/2 - 28, b.opp_hp / b.opp_max_hp, C.red);
+    // Подсказка "посмотреть карточку"
+    txt(this, W/2 + 10, 10, '👁', 10).setAlpha(0.55);
+    // Тап на панель соперника → карточка
+    this.add.zone(W/2 + 6, 8, W/2 - 14, 60).setOrigin(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => this._showOppCard());
 
     /* Раунд + таймер */
     this.roundTxt = txt(this, W/2, 76, `РАУНД ${b.round || 1}`, 14, '#ffc83c', true).setOrigin(0.5);
@@ -1330,6 +1454,7 @@ class BattleScene extends Phaser.Scene {
         return;
       }
       if (res.status === 'round_completed') {
+        this._hideOppCard();
         this._updateFromState(res.battle);
         this._resetChoices();
         this._choosing = true;
