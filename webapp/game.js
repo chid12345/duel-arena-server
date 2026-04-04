@@ -1136,8 +1136,19 @@ class BattleScene extends Phaser.Scene {
     this._attackBtns  = zones.map(z => this._zoneButton(z.x, panY + 36, z.key, z.label, 'attack'));
     this._defenseBtns = zones.map(z => this._zoneButton(z.x, panY + H * 0.18 + 32, z.key, z.label, 'defense'));
 
-    /* Кнопка АВТО */
-    this._autoBtn = this._miniBtn(W - 44, panY + 12, '🎲 Авто', () => this._onAuto());
+    /* Кнопка АВТО — внизу панели, во всю ширину */
+    const autoBtnY = H - 34;
+    const autoBg = this.add.graphics();
+    autoBg.fillStyle(0x2a2050, 1);
+    autoBg.fillRoundedRect(12, autoBtnY - 18, W - 24, 36, 10);
+    autoBg.lineStyle(1.5, C.purple, 0.5);
+    autoBg.strokeRoundedRect(12, autoBtnY - 18, W - 24, 36, 10);
+    const autoT = txt(this, W/2, autoBtnY, '🎲  Случайный ход', 14, '#c0a0ff', true).setOrigin(0.5);
+    const autoZ = this.add.zone(W/2, autoBtnY, W - 24, 36).setInteractive({ useHandCursor: true });
+    autoZ.on('pointerdown', () => { autoBg.clear(); autoBg.fillStyle(C.purple, 0.28); autoBg.fillRoundedRect(12, autoBtnY-18, W-24, 36, 10); tg?.HapticFeedback?.impactOccurred('light'); });
+    autoZ.on('pointerup',   () => { autoBg.clear(); autoBg.fillStyle(0x2a2050, 1); autoBg.fillRoundedRect(12, autoBtnY-18, W-24, 36, 10); autoBg.lineStyle(1.5, C.purple, 0.5); autoBg.strokeRoundedRect(12, autoBtnY-18, W-24, 36, 10); this._onAuto(); });
+    autoZ.on('pointerout',  () => { autoBg.clear(); autoBg.fillStyle(0x2a2050, 1); autoBg.fillRoundedRect(12, autoBtnY-18, W-24, 36, 10); autoBg.lineStyle(1.5, C.purple, 0.5); autoBg.strokeRoundedRect(12, autoBtnY-18, W-24, 36, 10); });
+    this._autoBtn = { g: autoBg, t: autoT, zone: autoZ };
 
     /* Статус ожидания */
     this._waitTxt = txt(this, W/2, panY + 80, '', 13, '#ffc83c', true)

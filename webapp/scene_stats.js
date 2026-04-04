@@ -136,24 +136,26 @@ class StatsScene extends Phaser.Scene {
 
   _buildStatRow(s, x, y, w, h, p) {
     const hasStats = State.player.free_stats > 0;
+    // Конвертируем число-цвет в CSS-строку для txt()
+    const hex = `#${s.color.toString(16).padStart(6, '0')}`;
 
     /* Панель */
     const panel = this.add.graphics();
-    panel.fillStyle(C.bgPanel, 0.88);
+    panel.fillStyle(C.bgPanel, 0.92);
     panel.fillRoundedRect(x, y, w, h, 10);
-    panel.lineStyle(1.5, s.color, 0.18);
+    panel.lineStyle(2, s.color, 0.30);
     panel.strokeRoundedRect(x, y, w, h, 10);
 
     /* Цветная полоска слева */
     const stripe = this.add.graphics();
-    stripe.fillStyle(s.color, 0.9);
-    stripe.fillRoundedRect(x + 2, y + 8, 4, h - 16, 2);
+    stripe.fillStyle(s.color, 1);
+    stripe.fillRoundedRect(x + 2, y + 8, 5, h - 16, 2);
 
     /* Иконка + название */
     txt(this, x + 16, y + 9, `${s.icon} ${s.label}`, 13, '#f0f0fa', true);
 
-    /* Значение */
-    const valTxt = txt(this, x + 16, y + 28, String(s.valFn(p)), 22, s.color, true);
+    /* Значение — крупно, в цвете стата */
+    const valTxt = txt(this, x + 16, y + 28, String(s.valFn(p)), 24, hex, true);
 
     /* Мини-бар */
     const barX = x + 16;
@@ -165,13 +167,13 @@ class StatsScene extends Phaser.Scene {
     barBg.fillStyle(C.dark, 1);
     barBg.fillRoundedRect(barX, barY, barW, 5, 2);
     const barFill = this.add.graphics();
-    barFill.fillStyle(s.color, 0.75);
+    barFill.fillStyle(s.color, 0.85);
     barFill.fillRoundedRect(barX, barY, Math.max(5, Math.round(barW * pct)), 5, 2);
 
     /* Эффект + описание (правая часть, перед кнопкой) */
     const midRight = x + w - 62;
-    const effectTxt = txt(this, midRight, y + 14, s.effectFn(p), 13, s.color, true).setOrigin(1, 0.5);
-    txt(this, midRight, y + 30, s.desc, 9, '#555577').setOrigin(1, 0);
+    const effectTxt = txt(this, midRight, y + 14, s.effectFn(p), 13, hex, true).setOrigin(1, 0.5);
+    txt(this, midRight, y + 30, s.desc, 9, '#666688').setOrigin(1, 0);
 
     /* Кнопка +1 */
     const btnW = 48;
@@ -243,23 +245,24 @@ class StatsScene extends Phaser.Scene {
     divider.lineBetween(20, py + 24, W - 20, py + 24);
 
     const cells = [
-      { key: 'dmg',   label: '⚔️ Урон',   valFn: q => `~${q.dmg}`,       color: C.red    },
-      { key: 'armor', label: '🛡 Броня',   valFn: q => `-${q.armor_pct}%`, color: C.green  },
-      { key: 'dodge', label: '🤸 Уворот',  valFn: q => `${q.dodge_pct}%`,  color: C.cyan   },
-      { key: 'crit',  label: '💥 Крит',    valFn: q => `${q.crit_pct}%`,   color: C.purple },
+      { key: 'dmg',   label: '⚔️ Урон',   valFn: q => `~${q.dmg}`,       color: C.red,    hex: '#dc3c46' },
+      { key: 'armor', label: '🛡 Броня',   valFn: q => `-${q.armor_pct}%`, color: C.green,  hex: '#3cc864' },
+      { key: 'dodge', label: '🤸 Уворот',  valFn: q => `${q.dodge_pct}%`,  color: C.cyan,   hex: '#3cc8dc' },
+      { key: 'crit',  label: '💥 Крит',    valFn: q => `${q.crit_pct}%`,   color: C.purple, hex: '#b45aff' },
     ];
 
     this._combatCells = {};
     cells.forEach((c, i) => {
-      const cx = W * (0.13 + i * 0.25);
-      txt(this, cx, py + 34, c.label, 9, '#666688').setOrigin(0.5);
-      const valT = txt(this, cx, py + 52, c.valFn(p), 17, c.color, true).setOrigin(0.5);
+      const cx   = W * (0.13 + i * 0.25);
+      const cHex = `#${c.color.toString(16).padStart(6, '0')}`;
+      txt(this, cx, py + 34, c.label, 9, '#8888aa').setOrigin(0.5);
+      const valT = txt(this, cx, py + 52, c.valFn(p), 18, cHex, true).setOrigin(0.5);
       this._combatCells[c.key] = { t: valT, fn: c.valFn };
     });
 
     txt(this, W / 2, py + ph - 12,
       'относительно среднего противника вашего уровня',
-      9, '#3a3858').setOrigin(0.5);
+      9, '#555577').setOrigin(0.5);
   }
 
   /* ── Кнопка назад ────────────────────────────────────── */
