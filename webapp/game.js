@@ -4,8 +4,6 @@
    ============================================================ */
 
 const tg = window.Telegram?.WebApp;
-tg?.ready();
-tg?.expand();
 
 const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
   ? `http://${window.location.hostname}:8000`
@@ -279,7 +277,7 @@ class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
 
   async create() {
-    const { W, H } = this.game.canvas;
+    const { width: W, height: H } = this.game.canvas;
     this._buildBg(W, H);
 
     // Загружаем игрока
@@ -450,9 +448,15 @@ class MenuScene extends Phaser.Scene {
     }
     this._toast('⚔️ Ищем соперника...');
     try {
-      const res = await post('/api/battle/find');
+      // queue_only=true: нашли PvP — в бой, не нашли — встаём в очередь (без бота)
+      const res = await post('/api/battle/find', { queue_only: true });
       if (!res.ok) {
         this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : 'Нет противников');
+        return;
+      }
+      if (res.status === 'queued') {
+        // Ждём живого соперника на экране очереди
+        this.scene.start('Queue');
         return;
       }
       State.battle = res.battle;
@@ -462,11 +466,11 @@ class MenuScene extends Phaser.Scene {
     }
   }
 
-  _onStats() { this._toast('Статы — скоро!'); }
+  _onStats() { this.scene.start('Stats', { player: State.player }); }
   _onRating() { this.scene.start('Rating'); }
 
   _toast(msg) {
-    const { W, H } = this.game.canvas;
+    const { width: W, height: H } = this.game.canvas;
     const t = txt(this, W/2, H - 30, msg, 12, '#ffc83c', true).setOrigin(0.5).setAlpha(0);
     this.tweens.add({ targets: t, alpha: 1, duration: 200, hold: 1500, yoyo: true,
       onComplete: () => t.destroy() });
@@ -484,7 +488,7 @@ class MenuScene extends Phaser.Scene {
   }
 
   _showError(msg) {
-    const { W, H } = this.game.canvas;
+    const { width: W, height: H } = this.game.canvas;
     txt(this, W/2, H/2, msg, 16, '#ff4455').setOrigin(0.5);
   }
 }
@@ -961,7 +965,7 @@ const config = {
   type: Phaser.AUTO,
   backgroundColor: '#12121c',
   parent: document.body,
-  scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene],
+  scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -975,4 +979,34 @@ const config = {
   },
 };
 
-const game = new Phaser.Game(config);
+/* ── Запуск: ждём пока Telegram расширит окно ──────────────── */
+let _gameStarted = false;
+
+function _launchPhaser() {
+  if (_gameStarted) return;
+  _gameStarted = true;
+  new Phaser.Game(config);
+}
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+
+  // Ждём события расширения viewport
+  tg.onEvent('viewportChanged', function _onVp() {
+    if (tg.viewportHeight > 100) {          // viewport уже нормальный
+      tg.offEvent('viewportChanged', _onVp);
+      _launchPhaser();
+    }
+  });
+
+  // Если уже развёрнут — стартуем сразу, иначе fallback через 700ms
+  if (tg.isExpanded && tg.viewportHeight > 100) {
+    _launchPhaser();
+  } else {
+    setTimeout(_launchPhaser, 700);
+  }
+} else {
+  // Браузер (не Telegram) — запускаем сразу
+  _launchPhaser();
+}

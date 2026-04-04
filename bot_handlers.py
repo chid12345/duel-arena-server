@@ -6,6 +6,7 @@ import asyncio
 import logging
 import time
 from html import escape as html_escape
+from typing import Optional, Tuple
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ContextTypes
 from telegram.error import BadRequest, NetworkError, RetryAfter, TimedOut
@@ -178,9 +179,34 @@ class BotHandlers:
         # Проверяем ежедневный бонус
         daily_bonus = db.check_daily_bonus(user.id)
 
+        # Итог боя, который не удалось вставить в старое сообщение (после «Обновить» / обрыва чата)
+        if not battle_system.get_battle_status(user.id):
+            pending = battle_system.peek_battle_end_ui(user.id)
+            if pending:
+                adapted = CallbackHandlers._adapt_result_for_user(pending, user.id)
+                ok = await CallbackHandlers._deliver_battle_end_chat(
+                    context.bot, update.effective_chat.id, player, adapted,
+                )
+                if ok:
+                    battle_system.clear_battle_end_ui(user.id)
+                    await CallbackHandlers._notify_level_up_chat(
+                        context.bot, update.effective_chat.id, user.id, adapted,
+                    )
+                    if daily_bonus['can_claim']:
+                        bonus_line = f"🎁 <b>Ежедневный бонус!</b> +{daily_bonus['bonus']} золота"
+                        if daily_bonus['streak'] % 7 == 0:
+                            bonus_line += f" и +{DIAMONDS_DAILY_STREAK} 💎"
+                        await update.message.reply_text(bonus_line, parse_mode='HTML')
+                    return
+
         extra_text = ""
         if battle_system.get_battle_status(user.id):
-            extra_text = "⚠️ <b>Активен бой</b> — если экран завис, нажмите «Сбросить»."
+            extra_text = (
+                "⚔️ <b>Бой ещё идёт на сервере</b> (в фоне).\n"
+                "Прокрутите чат к сообщению с кнопками удара/блока или нажмите «Сбросить»."
+            )
+        elif battle_system.peek_battle_end_ui(user.id):
+            extra_text = "📋 <b>Есть итог прошлого боя</b> — нажмите «🔄 Обновить», чтобы увидеть."
         if daily_bonus['can_claim']:
             bonus_line = f"🎁 <b>Ежедневный бонус!</b> +{daily_bonus['bonus']} золота"
             if daily_bonus['streak'] % 7 == 0:
@@ -917,7 +943,9 @@ class CallbackHandlers:
             logger.warning("profile_card send_photo failed, fallback to text: %s", e)
             text = CallbackHandlers._welcome_html(player, username)
             try:
-                await tg_api_call(target.edit_message_text, text, reply_markup=reply_markup, parse_mode='HTML')
+                await CallbackHandlers._callback_set_message(
+                    target, text, reply_markup=reply_markup, parse_mode='HTML',
+                )
             except Exception:
                 pass
 
@@ -1034,7 +1062,64 @@ class CallbackHandlers:
             InlineKeyboardButton("🎲 Авто ход", callback_data='battle_auto'),
         ]
         return InlineKeyboardMarkup([row1, row2, row3])
-    
+
+    @staticmethod
+    async def _callback_set_message(
+        query,
+        text: str,
+        *,
+        reply_markup=None,
+        parse_mode: Optional[str] = "HTML",
+    ) -> Tuple[int, int]:
+        """
+        Заменить текст сообщения по callback. Если сообщение — фото (карточка /start),
+        Telegram не даёт edit_message_text: удаляем и шлём новое текстовое.
+        Возвращает (chat_id, message_id) для привязки UI боя.
+        """
+        bot = query.get_bot()
+        msg = query.message
+        if not msg:
+            send_kw = dict(
+                chat_id=query.from_user.id,
+                text=text,
+                reply_markup=reply_markup,
+            )
+            if parse_mode is not None:
+                send_kw["parse_mode"] = parse_mode
+            sent = await tg_api_call(bot.send_message, **send_kw)
+            return sent.chat_id, sent.message_id
+        if msg.photo:
+            chat_id = msg.chat_id
+            try:
+                await tg_api_call(msg.delete)
+            except Exception as exc:
+                logger.warning("_callback_set_message: delete photo: %s", exc)
+            send_kw = dict(chat_id=chat_id, text=text, reply_markup=reply_markup)
+            if parse_mode is not None:
+                send_kw["parse_mode"] = parse_mode
+            sent = await tg_api_call(bot.send_message, **send_kw)
+            return sent.chat_id, sent.message_id
+        await tg_api_call(query.edit_message_text, text, reply_markup=reply_markup, parse_mode=parse_mode)
+        return msg.chat_id, msg.message_id
+
+    @staticmethod
+    def _sync_battle_ui_pointer(user_id: int, chat_id: int, message_id: int) -> None:
+        """Обновить chat_id/message_id сообщения боя после delete+send (иначе таймер и PvP push целят в старое)."""
+        bid = battle_system.battle_queue.get(user_id)
+        if not bid:
+            return
+        b = battle_system.active_battles.get(bid)
+        if not b or not b.get('battle_active'):
+            return
+        if b.get('is_bot2'):
+            battle_system.set_battle_ui_message(user_id, chat_id, message_id)
+            return
+        p1_uid = b['player1']['user_id']
+        if user_id == p1_uid:
+            battle_system.set_battle_ui_message(user_id, chat_id, message_id)
+        elif b['player2'].get('user_id') == user_id:
+            battle_system.set_battle_p2_ui_message(user_id, chat_id, message_id)
+
     @staticmethod
     async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Основной обработчик callback запросов"""
@@ -1158,20 +1243,20 @@ class CallbackHandlers:
             elif callback_data.startswith('defend_'):
                 await CallbackHandlers.handle_battle_choice(query, user.id, callback_data)
             else:
-                await query.edit_message_text("❌ Неизвестное действие")
+                await CallbackHandlers._callback_set_message(query,"❌ Неизвестное действие")
                 
         except BadRequest as e:
             if _telegram_message_unchanged(e):
                 return
             logger.exception("BadRequest in callback handler")
             try:
-                await query.edit_message_text("❌ Произошла ошибка. Попробуйте снова.")
+                await CallbackHandlers._callback_set_message(query,"❌ Произошла ошибка. Попробуйте снова.")
             except Exception:
                 pass
         except Exception as e:
             logger.exception("Error in callback handler: %s", e)
             try:
-                await query.edit_message_text("❌ Произошла ошибка. Попробуйте снова.")
+                await CallbackHandlers._callback_set_message(query,"❌ Произошла ошибка. Попробуйте снова.")
             except Exception:
                 pass
     
@@ -1179,7 +1264,7 @@ class CallbackHandlers:
     async def find_battle(query, player):
         """Найти бой"""
         if battle_system.get_battle_status(player['user_id']):
-            await query.edit_message_text(
+            await CallbackHandlers._callback_set_message(query,
                 "⚠️ У вас уже идёт бой. Закончите его или сбросьте зависшее состояние.",
                 reply_markup=CallbackHandlers._stale_battle_markup(),
                 parse_mode='HTML',
@@ -1207,7 +1292,7 @@ class CallbackHandlers:
             secs_needed = int(hp_needed / max(0.001, regen_per_sec))
             mins, secs = divmod(secs_needed, 60)
             time_str = f"{mins}м {secs}с" if mins else f"{secs}с"
-            await query.edit_message_text(
+            await CallbackHandlers._callback_set_message(query,
                 f"⚠️ <b>Нужно восстановиться!</b>\n\n"
                 f"❤️ HP: {ch}/{mh}  (нужно минимум {min_hp})\n"
                 f"⏱ До боя: примерно {time_str}\n\n"
@@ -1232,15 +1317,16 @@ class CallbackHandlers:
             # Показываем бой текущему игроку (P1)
             packed = CallbackHandlers._battle_message_html_for_user(uid)
             if not packed:
-                await query.edit_message_text("❌ Ошибка старта боя.")
+                await CallbackHandlers._callback_set_message(query,"❌ Ошибка старта боя.")
                 return
             text1, pa1, pd1 = packed
-            await query.edit_message_text(
+            chat_id, mid = await CallbackHandlers._callback_set_message(
+                query,
                 text1,
                 reply_markup=CallbackHandlers._battle_inline_markup(pa1, pd1),
                 parse_mode='HTML',
             )
-            battle_system.set_battle_ui_message(uid, query.message.chat_id, query.message.message_id)
+            battle_system.set_battle_ui_message(uid, chat_id, mid)
 
             # Уведомляем P2 (ждавшего игрока) — правим его «waiting» сообщение
             opp_chat_id = pvp_entry["chat_id"]
@@ -1264,8 +1350,8 @@ class CallbackHandlers:
             return
 
         # Живых соперников нет — встаём в очередь (waiting screen)
-        db.pvp_enqueue(uid, int(player.get("level", PLAYER_START_LEVEL)), query.message.chat_id, query.message.message_id)
-        await query.edit_message_text(
+        chat_id, mid = await CallbackHandlers._callback_set_message(
+            query,
             "⏳ <b>Поиск соперника...</b>\n\nИщем живого игрока вашего уровня.",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("❌ Отмена", callback_data='pvp_cancel')],
@@ -1273,6 +1359,7 @@ class CallbackHandlers:
             ]),
             parse_mode='HTML',
         )
+        db.pvp_enqueue(uid, int(player.get("level", PLAYER_START_LEVEL)), chat_id, mid)
 
     @staticmethod
     async def _start_bot_battle(query, player):
@@ -1280,7 +1367,7 @@ class CallbackHandlers:
         uid = player['user_id']
         opponent = db.find_suitable_opponent(player["level"])
         if not opponent:
-            await query.edit_message_text("😔 Не удалось найти противника. Попробуйте позже.")
+            await CallbackHandlers._callback_set_message(query,"😔 Не удалось найти противника. Попробуйте позже.")
             return
 
         completed_before = player.get("wins", 0) + player.get("losses", 0)
@@ -1297,15 +1384,16 @@ class CallbackHandlers:
             )
         packed = CallbackHandlers._battle_message_html_for_user(uid)
         if not packed:
-            await query.edit_message_text("❌ Ошибка старта боя.")
+            await CallbackHandlers._callback_set_message(query,"❌ Ошибка старта боя.")
             return
         battle_ui, pa, pd = packed
-        await query.edit_message_text(
+        chat_id, mid = await CallbackHandlers._callback_set_message(
+            query,
             battle_ui,
             reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
             parse_mode='HTML',
         )
-        battle_system.set_battle_ui_message(uid, query.message.chat_id, query.message.message_id)
+        battle_system.set_battle_ui_message(uid, chat_id, mid)
         battle_system.schedule_turn_timer(battle_id)
 
     @staticmethod
@@ -1313,7 +1401,7 @@ class CallbackHandlers:
         """Отмена поиска PvP — выходим из очереди."""
         db.pvp_dequeue(player['user_id'])
         player = db.get_or_create_player(player['user_id'], query.from_user.username or "")
-        await query.edit_message_text(
+        await CallbackHandlers._callback_set_message(query,
             CallbackHandlers._welcome_html(player, player.get('username') or ""),
             reply_markup=CallbackHandlers._main_menu_markup(),
             parse_mode='HTML',
@@ -1338,13 +1426,13 @@ class CallbackHandlers:
     async def handle_battle_abandon(query, player):
         """Сброс зависшего боя без записи в статистику."""
         if battle_system.force_abandon_battle(player['user_id']):
-            await query.edit_message_text(
+            await CallbackHandlers._callback_set_message(query,
                 "🧹 Бой сброшен (без записи в статистику). Можно начать заново.",
                 reply_markup=CallbackHandlers._main_menu_markup(),
                 parse_mode='HTML',
             )
         else:
-            await query.edit_message_text(
+            await CallbackHandlers._callback_set_message(query,
                 "Активного боя в памяти нет. Главное меню:",
                 reply_markup=CallbackHandlers._main_menu_markup(),
                 parse_mode='HTML',
@@ -1353,11 +1441,17 @@ class CallbackHandlers:
     @staticmethod
     async def _resolve_stale_battle_message(query, user_id: int) -> None:
         """Нет активного боя в памяти: показать сохранённый итог (vs бот) или главное меню."""
-        snap = battle_system.pop_battle_end_ui(user_id)
+        snap = battle_system.peek_battle_end_ui(user_id)
         if snap:
             player = db.get_or_create_player(user_id, query.from_user.username or "")
-            snap = CallbackHandlers._adapt_result_for_user(snap, user_id)
-            await CallbackHandlers._show_battle_end(query, player, snap)
+            adapted = CallbackHandlers._adapt_result_for_user(snap, user_id)
+            delivered = await CallbackHandlers._show_battle_end(query, player, adapted)
+            if not delivered:
+                delivered = await CallbackHandlers._deliver_battle_end_chat(
+                    query.get_bot(), query.from_user.id, player, adapted,
+                )
+            if delivered:
+                battle_system.clear_battle_end_ui(user_id)
             await query.answer()
             return
         player = db.get_or_create_player(user_id, query.from_user.username or "")
@@ -1436,13 +1530,15 @@ class CallbackHandlers:
                 return
             other_player = db.get_or_create_player(other_uid, "")
             adapted = CallbackHandlers._adapt_result_for_user(round_result, other_uid)
-            await CallbackHandlers._show_battle_end(
+            delivered = await CallbackHandlers._show_battle_end(
                 None, other_player, adapted,
                 is_bot_target=True, bot=bot,
                 chat_id=other_um['chat_id'], message_id=other_um['message_id'],
             )
-            battle_system.clear_battle_end_ui(other_uid)
-            await CallbackHandlers._notify_level_up_chat(bot, other_um['chat_id'], other_uid, adapted)
+            if delivered:
+                battle_system.clear_battle_end_ui(other_uid)
+            notify_chat = db.get_player_chat_id(other_uid) or other_um['chat_id']
+            await CallbackHandlers._notify_level_up_chat(bot, notify_chat, other_uid, adapted)
 
     @staticmethod
     def _battle_end_stats_html(round_result: dict) -> str:
@@ -1506,35 +1602,78 @@ class CallbackHandlers:
         return f"{summary}\n\n{welcome}"
 
     @staticmethod
-    async def _show_battle_end(target, player: dict, round_result: dict, *, is_bot_target=False, bot=None, chat_id=None, message_id=None):
+    async def _deliver_battle_end_chat(bot, chat_id: int, player: dict, round_result: dict) -> bool:
+        """Новое сообщение с итогом боя (старое сообщение недоступно для правки)."""
+        summary = CallbackHandlers._battle_end_summary(player, round_result)
+        markup = CallbackHandlers._main_menu_markup()
+        img_bytes = generate_profile_card(player)
+        try:
+            await tg_api_call(
+                bot.send_photo,
+                chat_id=chat_id,
+                photo=img_bytes,
+                caption=summary,
+                reply_markup=markup,
+                parse_mode='HTML',
+            )
+            return True
+        except Exception as e:
+            logger.warning("_deliver_battle_end_chat: photo failed: %s", e)
+        try:
+            text = CallbackHandlers._battle_end_message_with_welcome(player, round_result)
+            await tg_api_call(
+                bot.send_message,
+                chat_id=chat_id,
+                text=text,
+                reply_markup=markup,
+                parse_mode='HTML',
+            )
+            return True
+        except Exception as e:
+            logger.warning("_deliver_battle_end_chat: message failed: %s", e)
+        return False
+
+    @staticmethod
+    async def _show_battle_end(target, player: dict, round_result: dict, *, is_bot_target=False, bot=None, chat_id=None, message_id=None) -> bool:
         """
         Показать итог боя как карточку профиля.
         target=query (callback) или None (тогда нужны bot/chat_id/message_id для job).
         is_bot_target=True: вызов из asyncio-таймера, target=None.
+        Возвращает True, если итог, скорее всего, доставлен.
         """
         from telegram import InputMediaPhoto
 
-        username = player.get('username') or ""
-        summary  = CallbackHandlers._battle_end_summary(player, round_result)
-        markup   = CallbackHandlers._main_menu_markup()
+        summary = CallbackHandlers._battle_end_summary(player, round_result)
+        markup = CallbackHandlers._main_menu_markup()
         img_bytes = generate_profile_card(player)
 
         if is_bot_target:
-            # asyncio job / turn timer
             try:
                 media = InputMediaPhoto(media=img_bytes, caption=summary, parse_mode='HTML')
-                await tg_api_call(bot.edit_message_media,
-                                  chat_id=chat_id, message_id=message_id,
-                                  media=media, reply_markup=markup)
-                return
+                await tg_api_call(
+                    bot.edit_message_media,
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    media=media,
+                    reply_markup=markup,
+                )
+                return True
             except Exception:
                 pass
-            # fallback: текст
-            text = CallbackHandlers._battle_end_message_with_welcome(player, round_result)
-            await tg_api_call(bot.edit_message_text,
-                              chat_id=chat_id, message_id=message_id,
-                              text=text, reply_markup=markup, parse_mode='HTML')
-            return
+            try:
+                text = CallbackHandlers._battle_end_message_with_welcome(player, round_result)
+                await tg_api_call(
+                    bot.edit_message_text,
+                    chat_id=chat_id,
+                    message_id=message_id,
+                    text=text,
+                    reply_markup=markup,
+                    parse_mode='HTML',
+                )
+                return True
+            except Exception:
+                pass
+            return await CallbackHandlers._deliver_battle_end_chat(bot, chat_id, player, round_result)
 
         # Callback query
         msg = target.message if target else None
@@ -1542,10 +1681,9 @@ class CallbackHandlers:
             try:
                 media = InputMediaPhoto(media=img_bytes, caption=summary, parse_mode='HTML')
                 await tg_api_call(target.edit_message_media, media=media, reply_markup=markup)
-                return
+                return True
             except Exception:
                 pass
-        # Текстовое — удалить + отправить фото
         try:
             if msg:
                 try:
@@ -1554,16 +1692,23 @@ class CallbackHandlers:
                     pass
             tg_chat_id = msg.chat_id if msg else target.from_user.id
             bot_obj = target.get_bot()
-            await tg_api_call(bot_obj.send_photo,
-                              chat_id=tg_chat_id, photo=img_bytes,
-                              caption=summary, reply_markup=markup, parse_mode='HTML')
+            await tg_api_call(
+                bot_obj.send_photo,
+                chat_id=tg_chat_id,
+                photo=img_bytes,
+                caption=summary,
+                reply_markup=markup,
+                parse_mode='HTML',
+            )
+            return True
         except Exception as e:
             logger.warning("_show_battle_end: send_photo failed, text fallback: %s", e)
-            text = CallbackHandlers._battle_end_message_with_welcome(player, round_result)
-            try:
-                await tg_api_call(target.edit_message_text, text, reply_markup=markup, parse_mode='HTML')
-            except Exception:
-                pass
+        text = CallbackHandlers._battle_end_message_with_welcome(player, round_result)
+        try:
+            await tg_api_call(target.edit_message_text, text, reply_markup=markup, parse_mode='HTML')
+            return True
+        except Exception:
+            return await CallbackHandlers._deliver_battle_end_chat(target.get_bot(), target.from_user.id, player, round_result)
 
     @staticmethod
     async def _notify_level_up_chat(bot, chat_id: int, user_id: int, round_result: dict):
@@ -1589,50 +1734,70 @@ class CallbackHandlers:
             packed = CallbackHandlers._battle_message_html_for_user(user_id)
             if packed:
                 text, pa, pd = packed
+                markup = CallbackHandlers._battle_inline_markup(pa, pd)
+            else:
+                ex = round_result.get('exchange_text') or ''
+                clog = round_result.get('combat_log_html') or ''
+                ctx = battle_system.get_battle_ui_context(user_id)
+                parts = []
+                if clog:
+                    parts.append(f"📜 <b>Лог боя</b>\n{clog}")
+                elif ex:
+                    parts.append(ex)
+                if ctx:
+                    parts.append(CallbackHandlers._build_battle_screen_html(ctx))
+                else:
+                    parts.append(
+                        f"❤️ вы {round_result['player1_hp']} · "
+                        f"враг {round_result['player2_hp']}"
+                    )
+                text = "\n\n".join(parts)
+                markup = CallbackHandlers._battle_inline_markup()
+            try:
                 await tg_api_call(
                     bot.edit_message_text,
                     chat_id=chat_id,
                     message_id=message_id,
                     text=text,
-                    reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
+                    reply_markup=markup,
                     parse_mode='HTML',
                 )
-                return
-            ex = round_result.get('exchange_text') or ''
-            clog = round_result.get('combat_log_html') or ''
-            ctx = battle_system.get_battle_ui_context(user_id)
-            parts = []
-            if clog:
-                parts.append(f"📜 <b>Лог боя</b>\n{clog}")
-            elif ex:
-                parts.append(ex)
-            if ctx:
-                parts.append(CallbackHandlers._build_battle_screen_html(ctx))
-            else:
-                parts.append(
-                    f"❤️ вы {round_result['player1_hp']} · "
-                    f"враг {round_result['player2_hp']}"
+            except Exception as e:
+                logger.warning(
+                    "dispatch_round_from_job: edit round uid=%s mid=%s: %s — шлём новое сообщение",
+                    user_id,
+                    message_id,
+                    e,
                 )
-            text = "\n\n".join(parts)
-            await tg_api_call(
-                bot.edit_message_text,
-                chat_id=chat_id,
-                message_id=message_id,
-                text=text,
-                reply_markup=CallbackHandlers._battle_inline_markup(),
-                parse_mode='HTML',
-            )
+                try:
+                    sent = await tg_api_call(
+                        bot.send_message,
+                        chat_id=chat_id,
+                        text=text,
+                        reply_markup=markup,
+                        parse_mode='HTML',
+                    )
+                    battle_system.set_battle_ui_message(user_id, sent.chat_id, sent.message_id)
+                except Exception as e2:
+                    logger.warning("dispatch_round_from_job: send_message failed uid=%s: %s", user_id, e2)
             return
         if round_result.get('status') in ('battle_ended', 'battle_ended_afk'):
             player = db.get_or_create_player(user_id, "")
             adapted = CallbackHandlers._adapt_result_for_user(round_result, user_id)
-            await CallbackHandlers._show_battle_end(
+            delivered = await CallbackHandlers._show_battle_end(
                 None, player, adapted,
                 is_bot_target=True, bot=bot,
                 chat_id=chat_id, message_id=message_id,
             )
-            battle_system.clear_battle_end_ui(user_id)
-            await CallbackHandlers._notify_level_up_chat(bot, chat_id, user_id, adapted)
+            if delivered:
+                battle_system.clear_battle_end_ui(user_id)
+            else:
+                logger.warning(
+                    "dispatch_round_from_job: итог боя не доставлен в чат uid=%s — остаётся буфер для «Обновить»",
+                    user_id,
+                )
+            notify_chat = db.get_player_chat_id(user_id) or chat_id
+            await CallbackHandlers._notify_level_up_chat(bot, notify_chat, user_id, adapted)
             return
 
     @staticmethod
@@ -1645,12 +1810,13 @@ class CallbackHandlers:
             packed = CallbackHandlers._battle_message_html_for_user(user_id)
             if packed:
                 text, pa, pd = packed
-                await tg_api_call(
-                    query.edit_message_text,
+                chat_id, mid = await CallbackHandlers._callback_set_message(
+                    query,
                     text,
                     reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
                     parse_mode='HTML',
                 )
+                CallbackHandlers._sync_battle_ui_pointer(user_id, chat_id, mid)
                 # PvP: обновить сообщение второго игрока
                 await CallbackHandlers._pvp_push_other(query.get_bot(), user_id, round_result)
                 await query.answer()
@@ -1671,20 +1837,22 @@ class CallbackHandlers:
                     f"враг {round_result['player2_hp']}"
                 )
             text = "\n\n".join(parts)
-            await tg_api_call(
-                query.edit_message_text,
+            chat_id, mid = await CallbackHandlers._callback_set_message(
+                query,
                 text,
                 reply_markup=CallbackHandlers._battle_inline_markup(),
                 parse_mode='HTML',
             )
+            CallbackHandlers._sync_battle_ui_pointer(user_id, chat_id, mid)
             await CallbackHandlers._pvp_push_other(query.get_bot(), user_id, round_result)
             await query.answer()
             return
         if round_result.get('status') in ('battle_ended', 'battle_ended_afk'):
             player = db.get_or_create_player(user_id, query.from_user.username or "")
             adapted = CallbackHandlers._adapt_result_for_user(round_result, user_id)
-            await CallbackHandlers._show_battle_end(query, player, adapted)
-            battle_system.clear_battle_end_ui(user_id)
+            delivered = await CallbackHandlers._show_battle_end(query, player, adapted)
+            if delivered:
+                battle_system.clear_battle_end_ui(user_id)
             if query.message:
                 await CallbackHandlers._notify_level_up_chat(
                     query.get_bot(), query.message.chat_id, user_id, adapted,
@@ -1697,12 +1865,13 @@ class CallbackHandlers:
             ctx = battle_system.get_battle_ui_context(user_id)
             if ctx:
                 text = CallbackHandlers._build_battle_screen_html(ctx)
-                await tg_api_call(
-                    query.edit_message_text,
+                chat_id, mid = await CallbackHandlers._callback_set_message(
+                    query,
                     text,
                     reply_markup=CallbackHandlers._battle_inline_markup(),
                     parse_mode='HTML',
                 )
+                CallbackHandlers._sync_battle_ui_pointer(user_id, chat_id, mid)
             await query.answer()
             return
         await query.answer()
@@ -1755,12 +1924,13 @@ class CallbackHandlers:
                 await CallbackHandlers._resolve_stale_battle_message(query, user_id)
                 return
             text, pa, pd = packed
-            await tg_api_call(
-                query.edit_message_text,
+            chat_id, mid = await CallbackHandlers._callback_set_message(
+                query,
                 text,
                 reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
                 parse_mode='HTML',
             )
+            CallbackHandlers._sync_battle_ui_pointer(user_id, chat_id, mid)
             await query.answer()
 
     @staticmethod
@@ -1778,7 +1948,7 @@ class CallbackHandlers:
                 await CallbackHandlers._handle_round_submitted(query, user_id, result)
             except Exception as e:
                 logger.error(f"Error in battle auto: {e}")
-                await tg_api_call(query.edit_message_text, "❌ Ошибка в бою")
+                await CallbackHandlers._callback_set_message(query, "❌ Ошибка в бою")
                 await query.answer()
 
     @staticmethod
@@ -1805,12 +1975,13 @@ class CallbackHandlers:
                     packed = CallbackHandlers._battle_message_html_for_user(user_id)
                     if packed:
                         text, pa, pd = packed
-                        await tg_api_call(
-                            query.edit_message_text,
+                        chat_id, mid = await CallbackHandlers._callback_set_message(
+                            query,
                             text,
                             reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
                             parse_mode='HTML',
                         )
+                        CallbackHandlers._sync_battle_ui_pointer(user_id, chat_id, mid)
                     await query.answer()
                     return
 
@@ -1821,7 +1992,7 @@ class CallbackHandlers:
                     return
 
                 if 'error' in result:
-                    await tg_api_call(query.edit_message_text, f"❌ {result['error']}")
+                    await CallbackHandlers._callback_set_message(query, f"❌ {result['error']}")
                     await query.answer()
                     return
 
@@ -1829,7 +2000,7 @@ class CallbackHandlers:
 
             except Exception as e:
                 logger.error(f"Error in battle choice: {e}")
-                await tg_api_call(query.edit_message_text, "❌ Ошибка в бою")
+                await CallbackHandlers._callback_set_message(query, "❌ Ошибка в бою")
                 await query.answer()
     
     @staticmethod
@@ -1873,7 +2044,7 @@ class CallbackHandlers:
         ])
         
         reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(training_text, reply_markup=reply_markup, parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,training_text, reply_markup=reply_markup, parse_mode='HTML')
     
     @staticmethod
     async def handle_training(query, player, training_type):
@@ -1956,7 +2127,7 @@ class CallbackHandlers:
         keyboard = [[InlineKeyboardButton("⬅️ Назад", callback_data='back')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        await query.edit_message_text(rating_text, reply_markup=reply_markup)
+        await CallbackHandlers._callback_set_message(query,rating_text, reply_markup=reply_markup)
     
     @staticmethod
     async def show_shop(query, player):
@@ -1990,7 +2161,7 @@ class CallbackHandlers:
             ],
             [InlineKeyboardButton("⬅️ Назад", callback_data='back_to_main')],
         ]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
     @staticmethod
     async def show_shop_category(query, player, category: str):
@@ -2066,7 +2237,7 @@ class CallbackHandlers:
         keyboard = [[InlineKeyboardButton("⬅️ Назад", callback_data='back')]]
         reply_markup = InlineKeyboardMarkup(keyboard)
         
-        await query.edit_message_text(stats_text, reply_markup=reply_markup, parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,stats_text, reply_markup=reply_markup, parse_mode='HTML')
     
     # ------------------------------------------------------------------
     # Сезон
@@ -2076,7 +2247,7 @@ class CallbackHandlers:
     async def show_season_info(query, player):
         season = db.get_active_season()
         if not season:
-            await query.edit_message_text("Сезон не активен.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Назад", callback_data='back_to_main')]]))
+            await CallbackHandlers._callback_set_message(query,"Сезон не активен.", reply_markup=InlineKeyboardMarkup([[InlineKeyboardButton("⬅️ Назад", callback_data='back_to_main')]]))
             return
         lb = db.get_season_leaderboard(season["id"], 5)
         started = str(season["started_at"])[:10]
@@ -2089,7 +2260,7 @@ class CallbackHandlers:
             text += "Пока никто не сыграл в этом сезоне.\n"
         text += f"\n💡 За топ-3 в конце сезона: 100/50/25 💎"
         keyboard = [[InlineKeyboardButton("⬅️ Назад", callback_data='back_to_main')]]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
     # ------------------------------------------------------------------
     # Battle Pass
@@ -2116,7 +2287,7 @@ class CallbackHandlers:
             if i > claimed and b_done >= b_need and w_done >= w_need:
                 keyboard.append([InlineKeyboardButton(f"🎁 Забрать Тир {i}", callback_data=f'bp_claim_{i}')])
         keyboard.append([InlineKeyboardButton("⬅️ Назад", callback_data='back_to_main')])
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
     @staticmethod
     async def claim_battle_pass_tier(query, player, tier: int):
@@ -2168,7 +2339,7 @@ class CallbackHandlers:
                 [InlineKeyboardButton("🏰 Создать клан", callback_data='clan_create_prompt')],
                 [InlineKeyboardButton("⬅️ Назад", callback_data='back_to_main')],
             ]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
     @staticmethod
     async def clan_create_prompt(query, player):
@@ -2181,7 +2352,7 @@ class CallbackHandlers:
             "(тег 2–4 символа, только латиница)"
         )
         keyboard = [[InlineKeyboardButton("⬅️ Назад", callback_data='clan_menu')]]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
     @staticmethod
     async def clan_join(query, player, clan_id: int):
@@ -2221,7 +2392,7 @@ class CallbackHandlers:
             [InlineKeyboardButton(f"➕ Вступить", callback_data=f'clan_join_{clan_id}')],
             [InlineKeyboardButton("⬅️ Назад", callback_data='back_to_main')],
         ]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
     # ------------------------------------------------------------------
     # Invite inline
@@ -2238,7 +2409,7 @@ class CallbackHandlers:
         bot_username = me.username or ""
         text = _referral_program_html(bot_username, ref_code, stats, recent)
         keyboard = [[InlineKeyboardButton("⬅️ Назад", callback_data="back_to_main")]]
-        await query.edit_message_text(text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
+        await CallbackHandlers._callback_set_message(query,text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode='HTML')
 
     # ------------------------------------------------------------------
     # Telegram Stars
@@ -2291,11 +2462,8 @@ class CallbackHandlers:
 
     @staticmethod
     async def back_to_main(query, player):
-        """Вернуться в главное меню"""
-        reply_markup = CallbackHandlers._main_menu_markup()
-        await CallbackHandlers._send_profile_card(
-            query, player, player.get('username') or "", reply_markup,
-        )
+        """Вернуться в главное меню (как «Обновить»: реген, буфер итога боя, предупреждение о бое)."""
+        await CallbackHandlers.refresh_main(query, player)
 
     @staticmethod
     async def back(query, player):
@@ -2306,19 +2474,47 @@ class CallbackHandlers:
     async def refresh_main(query, player):
         """Обновить главный экран — применить реген HP и перерисовать."""
         uid = player['user_id']
+        un = player.get('username') or ""
         endurance_inv = stamina_stats_invested(player.get('max_hp', PLAYER_START_MAX_HP), player.get('level', 1))
         regen_result = db.apply_hp_regen(uid, endurance_inv)
         if regen_result:
             player = dict(player)
             player['current_hp'] = regen_result['current_hp']
-        fresh = db.get_or_create_player(uid, player.get('username') or "")
+        fresh = db.get_or_create_player(uid, un)
         fresh = dict(fresh)
         fresh['current_hp'] = player['current_hp']
+
         if battle_system.get_battle_status(uid):
-            markup = CallbackHandlers._stale_battle_markup()
-        else:
-            markup = CallbackHandlers._main_menu_markup()
-        await CallbackHandlers._send_profile_card(query, fresh, fresh.get('username') or "", markup)
+            extra = (
+                "⚔️ <b>Бой ещё идёт на сервере</b> (в фоне).\n"
+                "Прокрутите чат к сообщению с кнопками атаки/защиты. "
+                "Если его нет — «🧹 Сбросить зависший бой» и начните заново."
+            )
+            await CallbackHandlers._send_profile_card(
+                query, fresh, fresh.get('username') or "",
+                CallbackHandlers._stale_battle_markup(),
+                extra_text=extra,
+            )
+            return
+
+        pending_end = battle_system.peek_battle_end_ui(uid)
+        if pending_end:
+            adapted = CallbackHandlers._adapt_result_for_user(pending_end, uid)
+            delivered = await CallbackHandlers._show_battle_end(query, fresh, adapted)
+            if not delivered:
+                delivered = await CallbackHandlers._deliver_battle_end_chat(
+                    query.get_bot(), query.from_user.id, fresh, adapted,
+                )
+            if delivered:
+                battle_system.clear_battle_end_ui(uid)
+            chat_id = query.message.chat_id if query.message else query.from_user.id
+            await CallbackHandlers._notify_level_up_chat(query.get_bot(), chat_id, uid, adapted)
+            return
+
+        await CallbackHandlers._send_profile_card(
+            query, fresh, fresh.get('username') or "",
+            CallbackHandlers._main_menu_markup(),
+        )
 
     @staticmethod
     async def claim_daily_quest(query, player):
@@ -2329,8 +2525,8 @@ class CallbackHandlers:
             return
 
         await query.answer("✅ Награда получена!", show_alert=False)
-        await tg_api_call(
-            query.edit_message_text,
+        await CallbackHandlers._callback_set_message(
+            query,
             (
                 "🎁 <b>Награда за ежедневный квест получена!</b>\n\n"
                 f"💰 +{result['gold']} золота\n"

@@ -56,10 +56,22 @@ class BattleSystem:
         self._last_battle_end_ui: Dict[int, Tuple[float, Dict[str, Any]]] = {}
 
     def remember_battle_end_ui(self, user_id: int, round_result: Dict[str, Any]) -> None:
-        """Сохранить итог для кнопки «обновить» / любого колбэка после очистки боя (~2 мин)."""
+        """Сохранить итог для «Обновить» / /start, если Telegram не показал итог в старом сообщении (~15 мин)."""
         if user_id is None:
             return
-        self._last_battle_end_ui[user_id] = (time.monotonic() + 120.0, dict(round_result))
+        # Дольше, чтобы успеть нажать «Обновить» после сбоя доставки в Telegram
+        self._last_battle_end_ui[user_id] = (time.monotonic() + 900.0, dict(round_result))
+
+    def peek_battle_end_ui(self, user_id: int) -> Optional[Dict[str, Any]]:
+        """Посмотреть сохранённый итог без удаления (для «Обновить» до успешной доставки)."""
+        t = self._last_battle_end_ui.get(user_id)
+        if not t:
+            return None
+        exp, data = t
+        if time.monotonic() > exp:
+            self._last_battle_end_ui.pop(user_id, None)
+            return None
+        return dict(data)
 
     def pop_battle_end_ui(self, user_id: int) -> Optional[Dict[str, Any]]:
         """Забрать сохранённый итог боя (одноразово)."""

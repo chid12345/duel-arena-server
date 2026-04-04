@@ -39,9 +39,26 @@ from progression_loader import (
 # Токен бота - установить через переменную окружения
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
-# Публичный HTTPS URL Mini App (без завершающего слэша), например https://your-app.up.railway.app
+# Публичный HTTPS URL Mini App (без завершающего слэша), например https://your-app.onrender.com
 # Нужен для кнопки Web App в боте и регистрации в BotFather.
-WEBAPP_PUBLIC_URL = (os.getenv("WEBAPP_PUBLIC_URL") or "").strip().rstrip("/")
+# Если WEBAPP_PUBLIC_URL не задан — подставляем типичные URL хостингов (чтобы кнопка не пропадала после деплоя).
+def _webapp_public_url() -> str:
+    u = (os.getenv("WEBAPP_PUBLIC_URL") or "").strip().rstrip("/")
+    if u:
+        return u
+    render = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
+    if render:
+        return render
+    fly = (os.getenv("FLY_APP_NAME") or "").strip()
+    if fly:
+        return f"https://{fly}.fly.dev"
+    rwy = (os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip().rstrip("/")
+    if rwy:
+        return rwy if rwy.startswith("http") else f"https://{rwy}"
+    return ""
+
+
+WEBAPP_PUBLIC_URL = _webapp_public_url()
 ADMIN_USER_IDS = {
     int(user_id.strip())
     for user_id in os.getenv("ADMIN_USER_IDS", "").split(",")

@@ -136,6 +136,8 @@ class BattleChoiceBody(BaseModel):
 
 class FindBattleBody(BaseModel):
     init_data: str
+    queue_only: bool = False   # True = join PvP queue, don't fall back to bot
+    prefer_bot: bool = False   # True = skip PvP, start bot immediately
 
 class TrainBody(BaseModel):
     init_data: str
@@ -275,28 +277,34 @@ async def find_battle(body: FindBattleBody):
         secs = int(hp_needed / max(0.001, mhp / HP_REGEN_BASE_SECONDS * mult))
         return {"ok": False, "reason": "low_hp", "regen_seconds": secs, "current_hp": chp, "min_hp": int(mhp * HP_MIN_BATTLE_PCT)}
 
-    # PvP поиск
-    pvp_entry = db.pvp_find_opponent(uid, int(player.get("level", PLAYER_START_LEVEL)))
-    if pvp_entry:
-        opp_uid = pvp_entry["user_id"]
-        db.pvp_dequeue(opp_uid)
-        opp_player = db.get_or_create_player(opp_uid, "")
-        battle_id = await battle_system.start_battle(player, opp_player, is_bot2=False)
-        b = battle_system.active_battles.get(battle_id)
-        if b:
-            b["_tma_p1"] = True  # маркер — запущен из TMA
+    # PvP поиск (если не prefer_bot)
+    if not body.prefer_bot:
+        pvp_entry = db.pvp_find_opponent(uid, int(player.get("level", PLAYER_START_LEVEL)))
+        if pvp_entry:
+            opp_uid = pvp_entry["user_id"]
+            db.pvp_dequeue(opp_uid)
+            opp_player = db.get_or_create_player(opp_uid, "")
+            battle_id = await battle_system.start_battle(player, opp_player, is_bot2=False)
+            b = battle_system.active_battles.get(battle_id)
+            if b:
+                b["_tma_p1"] = True  # маркер — запущен из TMA
 
-        # Уведомить P2 по WebSocket
-        await manager.send(opp_uid, {
-            "event": "battle_started",
-            "battle": _battle_state_api(opp_uid),
-        })
+            # Уведомить P2 по WebSocket
+            await manager.send(opp_uid, {
+                "event": "battle_started",
+                "battle": _battle_state_api(opp_uid),
+            })
 
-        return {
-            "ok": True,
-            "status": "pvp_started",
-            "battle": _battle_state_api(uid),
-        }
+            return {
+                "ok": True,
+                "status": "pvp_started",
+                "battle": _battle_state_api(uid),
+            }
+
+        # Режим очереди: встаём ждать, не падаем на бота
+        if body.queue_only:
+            db.pvp_enqueue(uid, int(player.get("level", PLAYER_START_LEVEL)), chat_id=0, message_id=None)
+            return {"ok": True, "status": "queued"}
 
     # Бот
     opponent = db.find_suitable_opponent(player["level"])
