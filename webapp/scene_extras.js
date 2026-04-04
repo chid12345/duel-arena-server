@@ -725,7 +725,7 @@ class ClanScene extends Phaser.Scene {
       .on('pointerup', () => {
         tg?.HapticFeedback?.impactOccurred('light');
         stopTimer();
-        this.scene.restart();   /* без sub → _renderMyClan */
+        this.scene.restart({ sub: 'main' });  /* явно указываем main — не чат */
       });
 
     /* Название клана по центру */

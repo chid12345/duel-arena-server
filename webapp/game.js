@@ -997,7 +997,7 @@ class MenuScene extends Phaser.Scene {
     ov.fillStyle(0x000000, 0.55); ov.fillRect(0, 0, W, H);
 
     /* ── Панель — по высоте экрана с отступами ── */
-    const pw = W - 32, ph = Math.min(360, H - 72), px = 16, py = Math.max(8, Math.round((H - ph) / 2));
+    const pw = W - 32, ph = Math.min(410, H - 56), px = 16, py = Math.max(8, Math.round((H - ph) / 2));
     const D = 62;
     const panBg = this.add.graphics().setDepth(61);
     panBg.fillStyle(0x1e3a7a, 1);
@@ -1155,37 +1155,35 @@ class MenuScene extends Phaser.Scene {
       { icon:'3️⃣', title:'Друг покупает Premium — ты получаешь USDT', sub:'Бонус USDT зачисляется автоматически' },
     ];
     rows.forEach((r, i) => {
-      const ry = iY + i * 52;
+      const ry = iY + i * 44;  /* компактнее: 44px вместо 52 */
       const rg = this.add.graphics().setDepth(D).setVisible(false);
-      rg.fillStyle(0x2a50a0,1); rg.fillRoundedRect(px+10,ry,pw-20,48,10);
-      const ri = at(px+28, ry+24, r.icon, 16).setVisible(false);
-      const rt = txt(this, px+50, ry+13, r.title, 12, '#f0f0fa', true).setDepth(D).setVisible(false);
-      const rs = txt(this, px+50, ry+30, r.sub,   10, '#a8c4ff').setDepth(D).setVisible(false);
+      rg.fillStyle(0x2a50a0,1); rg.fillRoundedRect(px+10,ry,pw-20,40,9);
+      const ri = at(px+28, ry+20, r.icon, 14).setVisible(false);
+      const rt = txt(this, px+48, ry+11, r.title, 12, '#f0f0fa', true).setDepth(D).setVisible(false);
+      const rs = txt(this, px+48, ry+27, r.sub,   10, '#a8c4ff').setDepth(D).setVisible(false);
       infoObjs.push(rg, ri, rt, rs);
     });
 
     /* схема вознаграждений */
-    const schY = iY + rows.length * 52 + 8;
+    const schY = iY + rows.length * 44 + 6;
     const schTitleBg = this.add.graphics().setDepth(D).setVisible(false);
     schTitleBg.fillStyle(0x0e2060,1);
-    schTitleBg.fillRoundedRect(px+10, schY, pw-20, 28, 8);
-    const schTitle = at(px+pw/2, schY+14, '💰 СХЕМА ВОЗНАГРАЖДЕНИЙ', 12, '#ffc83c', true).setVisible(false);
+    schTitleBg.fillRoundedRect(px+10, schY, pw-20, 26, 8);
+    const schTitle = at(px+pw/2, schY+13, '💰 СХЕМА ВОЗНАГРАЖДЕНИЙ', 12, '#ffc83c', true).setVisible(false);
     infoObjs.push(schTitleBg, schTitle);
 
     const tiers = [
-      { range:'1–10 Premium-покупок',  pct:'5% разово с покупки → USDT',          col:'#7adfaa' },
-      { range:'11–30 Premium-покупок', pct:'7% разово с покупки → USDT',          col:'#5ac8f0' },
-      { range:'31+ Premium-покупок',   pct:'10% всегда с каждой покупки → USDT',  col:'#ffc83c' },
+      { range:'1–10 Premium-покупок',  pct:'5% разово с покупки → USDT',         col:'#7adfaa' },
+      { range:'11–30 Premium-покупок', pct:'7% разово с покупки → USDT',         col:'#5ac8f0' },
+      { range:'31+ Premium-покупок',   pct:'10% всегда с каждой покупки → USDT', col:'#ffc83c' },
     ];
     tiers.forEach((t, i) => {
-      const ty = schY + 36 + i * 40;
+      const ty = schY + 30 + i * 34;  /* 34px на ряд */
       const tg2 = this.add.graphics().setDepth(D).setVisible(false);
       tg2.fillStyle(i%2===0 ? 0x243878 : 0x1e3060, 1);
-      tg2.fillRoundedRect(px+10, ty, pw-20, 36, 7);
-      /* диапазон — слева сверху */
-      const tl = txt(this, px+18, ty+10, t.range, 10, '#dce8ff').setOrigin(0,0).setDepth(D).setVisible(false);
-      /* процент — слева снизу, цветом */
-      const tv = txt(this, px+18, ty+24, t.pct, 11, t.col, true).setOrigin(0,0).setDepth(D).setVisible(false);
+      tg2.fillRoundedRect(px+10, ty, pw-20, 30, 6);
+      const tl = txt(this, px+16, ty+9,  t.range, 10, '#dce8ff').setOrigin(0,0).setDepth(D).setVisible(false);
+      const tv = txt(this, px+16, ty+21, t.pct,   11, t.col, true).setOrigin(0,0).setDepth(D).setVisible(false);
       infoObjs.push(tg2, tl, tv);
     });
   }
