@@ -555,8 +555,11 @@ class ClanScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
-    _extraBack(this, W, H);
+    /* Заголовок и кнопку «Назад» рисуем только НЕ для чата — в чате своя шапка */
+    if (this._subview !== 'chat') {
+      _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
+      _extraBack(this, W, H);
+    }
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
     get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
@@ -700,48 +703,77 @@ class ClanScene extends Phaser.Scene {
     const clan = data.clan;
     this._chatMyId = data.my_user_id;
 
-    /* ── Шапка ── */
-    makePanel(this, 8, 8, W-16, 52, 10);
-    txt(this, 20, 21, '💬 ЧАТ КЛАНА', 13, '#ffc83c', true);
-    txt(this, 20, 38, `[${clan.tag}] ${clan.name}`, 11, '#8080cc');
+    const stopTimer = () => {
+      if (this._chatTimer) { this._chatTimer.remove(false); this._chatTimer = null; }
+    };
 
-    /* ← Назад — стопаем таймер ПЕРЕД рестартом */
+    /* ── Шапка (полная ширина) ── */
+    const hdrH = 58;
+    const hdrG = this.add.graphics();
+    hdrG.fillStyle(0x1a3060, 1);
+    hdrG.fillRoundedRect(0, 0, W, hdrH, 0);
+    hdrG.lineStyle(1.5, 0xffc83c, 0.5);
+    hdrG.lineBetween(0, hdrH, W, hdrH);
+
+    /* ← В клан (слева) */
     const backG = this.add.graphics();
-    backG.fillStyle(0x1a2860, 1); backG.fillRoundedRect(W-92, 13, 80, 30, 8);
-    backG.lineStyle(1, 0x5096ff, 0.5); backG.strokeRoundedRect(W-92, 13, 80, 30, 8);
-    txt(this, W-52, 28, '← Назад', 11, '#a8c4ff').setOrigin(0.5);
-    this.add.zone(W-92, 13, 80, 30).setOrigin(0).setInteractive({ useHandCursor: true })
+    backG.fillStyle(0x2a4a8a, 1); backG.fillRoundedRect(10, 12, 80, 34, 9);
+    txt(this, 50, 29, '← В клан', 12, '#a8d4ff', true).setOrigin(0.5);
+    this.add.zone(10, 12, 80, 34).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { backG.clear(); backG.fillStyle(0x1a2a5a,1); backG.fillRoundedRect(10,12,80,34,9); })
+      .on('pointerout',  () => { backG.clear(); backG.fillStyle(0x2a4a8a,1); backG.fillRoundedRect(10,12,80,34,9); })
       .on('pointerup', () => {
         tg?.HapticFeedback?.impactOccurred('light');
-        if (this._chatTimer) { this._chatTimer.remove(false); this._chatTimer = null; }
-        this.scene.restart();   // ← без sub → вернёт в _renderMyClan
+        stopTimer();
+        this.scene.restart();   /* без sub → _renderMyClan */
       });
 
-    /* ── Область сообщений ── */
-    const inputH = 46, inputY = H - inputH - 10;
-    const msgAreaY = 68, msgAreaH = inputY - msgAreaY - 8;
+    /* Название клана по центру */
+    txt(this, W/2, 20, '💬 ЧАТ КЛАНА', 13, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W/2, 40, `[${clan.tag}] ${clan.name}`, 11, '#8888bb').setOrigin(0.5);
 
-    const msgsG = this.add.graphics();
-    msgsG.fillStyle(C.bgPanel, 0.55);
-    msgsG.fillRoundedRect(8, msgAreaY, W-16, msgAreaH, 10);
-
-    /* Контейнер для строк — удаляем при рефреше */
-    this._msgObjs = [];
-    const loadTxt = txt(this, W/2, msgAreaY+msgAreaH/2, '⏳ Загрузка...', 12, '#6060aa').setOrigin(0.5);
-    this._msgObjs.push(loadTxt);
-
-    /* ── Кнопка 🔄 обновить ── */
-    const refG = this.add.graphics();
-    refG.fillStyle(0x1a3060, 1); refG.fillRoundedRect(W-42, msgAreaY+4, 34, 28, 7);
-    const refT = txt(this, W-25, msgAreaY+18, '🔄', 13).setOrigin(0.5);
-    this.add.zone(W-42, msgAreaY+4, 34, 28).setOrigin(0).setInteractive({ useHandCursor: true })
+    /* 🔄 кнопка справа */
+    const rG = this.add.graphics();
+    rG.fillStyle(0x2a4a8a, 1); rG.fillRoundedRect(W-50, 12, 38, 34, 9);
+    txt(this, W-31, 29, '🔄', 14).setOrigin(0.5);
+    this.add.zone(W-50, 12, 38, 34).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this._chatLoad(msgAreaY, msgAreaH, W));
 
-    /* ── Рендер сообщений ── */
-    this._chatLoad = (aY, aH, W) => {
+    /* ── Поле ввода + кнопка (выше нижнего края) ── */
+    const inputH = 44, inputY = H - inputH - 56;  /* 56px от низа = выше таббара */
+    const sendW  = 58, inpW = W - 16 - 8 - sendW - 8;
+
+    /* фон строки ввода */
+    const inpRowG = this.add.graphics();
+    inpRowG.fillStyle(0x12204a, 1);
+    inpRowG.fillRect(0, inputY - 6, W, inputH + 12);
+
+    this._chatInput = this._makeInput(W, inputY, inpW, inputH, '✏️ Написать сообщение...', 200, 16);
+
+    const sbx = 16 + inpW + 8;
+    const sendG = this.add.graphics();
+    sendG.fillStyle(0x3a7aff, 1); sendG.fillRoundedRect(sbx, inputY, sendW, inputH, 10);
+    txt(this, sbx + sendW/2, inputY + inputH/2, '➤', 17, '#ffffff', true).setOrigin(0.5);
+    this.add.zone(sbx, inputY, sendW, inputH).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { sendG.clear(); sendG.fillStyle(0x2050d0,1); sendG.fillRoundedRect(sbx,inputY,sendW,inputH,10); })
+      .on('pointerout',  () => { sendG.clear(); sendG.fillStyle(0x3a7aff,1); sendG.fillRoundedRect(sbx,inputY,sendW,inputH,10); })
+      .on('pointerup', () => this._sendChatMsg(msgAreaY, msgAreaH, W));
+
+    /* ── Область сообщений (между шапкой и строкой ввода) ── */
+    const msgAreaY = hdrH + 6;
+    const msgAreaH = inputY - 6 - msgAreaY - 6;
+
+    const msgsG = this.add.graphics();
+    msgsG.fillStyle(C.bgPanel, 0.4);
+    msgsG.fillRoundedRect(8, msgAreaY, W-16, msgAreaH, 8);
+
+    /* ── Загрузчик и рендер ── */
+    this._msgObjs = [];
+
+    this._chatLoad = (aY, aH, cW) => {
       this._msgObjs.forEach(o => { try { o.destroy(); } catch(_){} });
       this._msgObjs = [];
-      const spin = txt(this, W/2, aY+aH/2, '⏳', 14, '#6060aa').setOrigin(0.5);
+      const spin = txt(this, cW/2, aY+aH/2, '⏳ Загрузка...', 12, '#6060aa').setOrigin(0.5);
       this._msgObjs.push(spin);
 
       get('/api/clan/chat').then(d => {
@@ -750,53 +782,33 @@ class ClanScene extends Phaser.Scene {
         const msgs = d.messages || [];
 
         if (!msgs.length) {
-          const e = txt(this, W/2, aY+aH/2, '💬 Нет сообщений — напишите первым!', 11, '#5050aa').setOrigin(0.5);
+          const e = txt(this, cW/2, aY+aH/2, '💬 Напишите первым!', 12, '#5050aa').setOrigin(0.5);
           this._msgObjs.push(e); return;
         }
 
-        const lineH = 38;
+        const lineH = 40;
         const maxL  = Math.floor(aH / lineH);
         msgs.slice(-maxL).forEach((m, i) => {
           const isMe = (m.user_id === this._chatMyId);
-          const my   = aY + aH - (Math.min(msgs.length, maxL) - i) * lineH + 3;
+          const my   = aY + aH - (Math.min(msgs.length, maxL) - i) * lineH;
           const bg   = this.add.graphics();
-          bg.fillStyle(isMe ? 0x1a3a7a : 0x242038, 0.95);
-          bg.fillRoundedRect(10, my, W-20, lineH-4, 8);
-          const nameCol = isMe ? '#7ab4ff' : '#ffc83c';
-          const t1 = txt(this, 20, my+8,  isMe ? 'Вы' : (m.username||'Игрок'), 10, nameCol, true);
-          const t2 = txt(this, 20, my+22, m.message, 11, '#e8e8ff');
-          const t3 = txt(this, W-14, my+8, m.time_str||'', 9, '#5050aa').setOrigin(1,0);
+          bg.fillStyle(isMe ? 0x1a3a7a : 0x1e1c34, 0.95);
+          bg.fillRoundedRect(10, my+2, cW-20, lineH-4, 8);
+          const nc = isMe ? '#7ab4ff' : '#ffc83c';
+          const t1 = txt(this, 20, my+10, isMe ? 'Вы' : (m.username||'Игрок'), 10, nc, true);
+          const t2 = txt(this, 20, my+24, m.message, 12, '#e8e8ff');
+          const t3 = txt(this, cW-14, my+10, m.time_str||'', 9, '#5050aa').setOrigin(1, 0);
           this._msgObjs.push(bg, t1, t2, t3);
         });
-      }).catch(() => {
-        spin.setText('❌ Нет соединения');
-      });
+      }).catch(() => { spin.setText('❌ Нет соединения'); });
     };
 
-    /* Первая загрузка */
     this._chatLoad(msgAreaY, msgAreaH, W);
 
-    /* Автообновление — НЕ через restart, а через _chatLoad */
     this._chatTimer = this.time.addEvent({
       delay: 20000, loop: true,
       callback: () => this._chatLoad(msgAreaY, msgAreaH, W),
     });
-
-    /* ── Поле ввода ── */
-    const sendW = 62;
-    const inpW  = W - 16 - 8 - sendW - 8;  /* от x=16 до кнопки */
-    this._chatInput = this._makeInput(W, inputY, inpW, inputH, 'Написать сообщение...', 200, 16);
-
-    /* ── Кнопка «➤» ── */
-    const sbx = 16 + inpW + 8;
-    const sendG = this.add.graphics();
-    sendG.fillStyle(0x3a7aff, 1); sendG.fillRoundedRect(sbx, inputY, sendW, inputH, 10);
-    sendG.fillStyle(0xffffff, 0.12); sendG.fillRoundedRect(sbx, inputY+2, sendW, inputH/2, 8);
-    txt(this, sbx+sendW/2, inputY+inputH/2, '➤', 17, '#ffffff', true).setOrigin(0.5);
-    this.add.zone(sbx, inputY, sendW, inputH).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { sendG.clear(); sendG.fillStyle(0x2060e0,1); sendG.fillRoundedRect(sbx,inputY,sendW,inputH,10); })
-      .on('pointerout',  () => { sendG.clear(); sendG.fillStyle(0x3a7aff,1); sendG.fillRoundedRect(sbx,inputY,sendW,inputH,10); sendG.fillStyle(0xffffff,0.12); sendG.fillRoundedRect(sbx,inputY+2,sendW,inputH/2,8); })
-      .on('pointerup', () => this._sendChatMsg(msgAreaY, msgAreaH, W));
   }
 
   async _sendChatMsg(msgAreaY, msgAreaH, W) {
@@ -809,7 +821,6 @@ class ClanScene extends Phaser.Scene {
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         if (this._chatInput) this._chatInput.value = '';
-        /* Обновляем сообщения на месте */
         if (this._chatLoad) this._chatLoad(msgAreaY, msgAreaH, W);
       } else { this._toast('❌ ' + (res.reason || 'Ошибка')); }
     } catch(_) { this._toast('❌ Нет соединения'); }
