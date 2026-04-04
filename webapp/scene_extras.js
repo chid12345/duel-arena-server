@@ -1,5 +1,6 @@
 /* ============================================================
    scene_extras.js — дополнительные экраны TMA:
+     QuestsScene   ('Quests')     — ежедневные задания
      SummaryScene  ('Summary')    — сводка профиля
      SeasonScene   ('Season')     — таблица лидеров сезона
      BattlePassScene ('BattlePass') — прогресс Battle Pass
@@ -38,6 +39,226 @@ function _extraHeader(scene, W, icon, title, sub) {
   makePanel(scene, 8, 8, W - 16, 64, 12);
   txt(scene, 20, 22, icon + '  ' + title, 16, '#ffc83c', true);
   txt(scene, 20, 44, sub, 11, '#555577');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   QUESTS SCENE — ежедневные задания + логин-бонус
+   ═══════════════════════════════════════════════════════════ */
+class QuestsScene extends Phaser.Scene {
+  constructor() { super('Quests'); }
+
+  create() {
+    const { width: W, height: H } = this.game.canvas;
+    this.W = W; this.H = H;
+    _extraBg(this, W, H);
+    _extraHeader(this, W, '📅', 'ЗАДАНИЯ', 'Ежедневные квесты и бонусы');
+    _extraBack(this, W, H);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
+    get('/api/quests').then(d => this._render(d, W, H)).catch(() => {
+      this._loading?.setText('❌ Нет соединения');
+    });
+  }
+
+  _render(data, W, H) {
+    this._loading?.destroy();
+    if (!data.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
+
+    const q = data.quest || {};
+    const d = data.daily || {};
+    let y = 84;
+
+    /* ══ БЛОК 1: Ежедневный логин-бонус ══════════════════════ */
+    y = this._buildDailyBonus(d, W, y);
+    y += 14;
+
+    /* ══ БЛОК 2: Квест дня ════════════════════════════════════ */
+    this._buildDailyQuest(q, W, y, H);
+  }
+
+  /* ── Логин-бонус ─────────────────────────────────────────── */
+  _buildDailyBonus(d, W, y) {
+    const canClaim = d.can_claim;
+    const streak   = d.streak || 0;
+    const bonus    = d.bonus  || 20;
+    const bh       = 88;
+
+    const bg = this.add.graphics();
+    bg.fillStyle(canClaim ? 0x1a2810 : C.bgPanel, 0.95);
+    bg.fillRoundedRect(8, y, W-16, bh, 12);
+    bg.lineStyle(2, canClaim ? C.green : C.dark, canClaim ? 0.8 : 0.3);
+    bg.strokeRoundedRect(8, y, W-16, bh, 12);
+
+    // Иконка + заголовок
+    txt(this, 20, y + 12, '🎁', 22);
+    txt(this, 52, y + 12, 'Ежедневный бонус', 13, canClaim ? '#3cc864' : '#8888aa', true);
+    txt(this, 52, y + 32, `Серия: ${streak} ${streak >= 7 ? '🔥' : '📅'} дней`, 10, '#555577');
+
+    // Прогресс серии (7 дней)
+    const dotW = (W - 80) / 7;
+    for (let i = 0; i < 7; i++) {
+      const dx   = 52 + i * dotW;
+      const done = i < (streak % 7 || (streak > 0 && streak % 7 === 0 ? 7 : 0));
+      const dg   = this.add.graphics();
+      dg.fillStyle(done ? C.gold : C.dark, 1);
+      dg.fillRoundedRect(dx, y + 50, dotW - 4, 10, 4);
+      if (i === (streak % 7 === 0 && streak > 0 ? 6 : streak % 7) - 1 && done) {
+        dg.lineStyle(1.5, C.gold, 0.8);
+        dg.strokeRoundedRect(dx, y + 50, dotW - 4, 10, 4);
+      }
+      const dayN = i + 1;
+      txt(this, dx + (dotW-4)/2, y + 66, String(dayN), 7,
+        done ? '#ffc83c' : '#333355').setOrigin(0.5);
+    }
+
+    // Кнопка забрать
+    if (canClaim) {
+      const btnW = 110, btnH = 30, btnX = W - 126, btnY = y + 14;
+      const btnG = this.add.graphics();
+      btnG.fillStyle(C.green, 1);
+      btnG.fillRoundedRect(btnX, btnY, btnW, btnH, 9);
+      const btnT = txt(this, btnX + btnW/2, btnY + btnH/2,
+        `Забрать  🪙${bonus}`, 11, '#1a1a28', true).setOrigin(0.5);
+      this.add.zone(btnX, btnY, btnW, btnH).setOrigin(0)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { btnG.clear(); btnG.fillStyle(0x28a050,1); btnG.fillRoundedRect(btnX,btnY,btnW,btnH,9); tg?.HapticFeedback?.impactOccurred('medium'); })
+        .on('pointerup',  () => this._claimDaily(btnG, btnT, btnX, btnY, btnW, btnH))
+        .on('pointerout', () => { btnG.clear(); btnG.fillStyle(C.green,1); btnG.fillRoundedRect(btnX,btnY,btnW,btnH,9); });
+    } else {
+      txt(this, W - 30, y + bh/2, '✅', 18).setOrigin(1, 0.5);
+    }
+
+    return y + bh;
+  }
+
+  /* ── Квест дня ───────────────────────────────────────────── */
+  _buildDailyQuest(q, W, y, H) {
+    const battles  = q.battles_played || 0;
+    const wins     = q.battles_won    || 0;
+    const claimed  = q.reward_claimed || false;
+    const done     = q.is_completed   || false;
+
+    /* Блок заголовка */
+    txt(this, 16, y, 'КВЕСТ ДНЯ', 11, '#555577', true);
+    y += 20;
+
+    /* Карточки заданий */
+    const tasks = [
+      {
+        icon: '⚔️', label: 'Сыграй 3 боя',
+        cur: battles, max: 3,
+        done: battles >= 3,
+        color: C.blue,
+      },
+      {
+        icon: '🏆', label: 'Одержи 1 победу',
+        cur: wins, max: 1,
+        done: wins >= 1,
+        color: C.gold,
+      },
+    ];
+
+    tasks.forEach((task, i) => {
+      const th = 70, tx = 8, tw = W - 16, ty2 = y + i * (th + 10);
+      const bg = this.add.graphics();
+      bg.fillStyle(task.done ? 0x0e1e10 : C.bgPanel, 0.92);
+      bg.fillRoundedRect(tx, ty2, tw, th, 12);
+      bg.lineStyle(2, task.done ? task.color : C.dark, task.done ? 0.7 : 0.25);
+      bg.strokeRoundedRect(tx, ty2, tw, th, 12);
+
+      // Иконка
+      txt(this, tx + 20, ty2 + th/2, task.icon, 24).setOrigin(0.5);
+
+      // Название + прогресс
+      txt(this, tx + 44, ty2 + 14, task.label, 13,
+        task.done ? '#3cc864' : '#c0c0e0', task.done);
+      txt(this, tx + 44, ty2 + 34, `${Math.min(task.cur, task.max)} / ${task.max}`,
+        11, task.done ? task.color : '#555577', true);
+
+      // Прогресс-бар
+      makeBar(this, tx + 44, ty2 + 52, tw - 110, 6,
+        Math.min(1, task.cur / task.max), task.color, C.dark, 3);
+
+      // Галочка или замок
+      txt(this, tw - 6, ty2 + th/2, task.done ? '✅' : '🔒', 18).setOrigin(1, 0.5);
+    });
+
+    y += tasks.length * 80 + 10;
+
+    /* Награда */
+    const rewardY = y;
+    makePanel(this, 8, rewardY, W-16, 58, 12);
+    txt(this, W/2, rewardY + 14, '🎁 Награда за квест', 12, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W/2, rewardY + 34, '🪙 40 золота  +  💎 1 кристалл', 11, '#c0c0e0').setOrigin(0.5);
+
+    /* Кнопка забрать / статус */
+    const btnY2  = rewardY + 66;
+    if (claimed) {
+      txt(this, W/2, btnY2 + 20, '✅ Награда уже получена сегодня', 12, '#3cc864').setOrigin(0.5);
+    } else if (done) {
+      const clBg = this.add.graphics();
+      clBg.fillStyle(C.gold, 1);
+      clBg.fillRoundedRect(20, btnY2, W-40, 44, 12);
+      // Блик
+      clBg.fillStyle(0xffffff, 0.12);
+      clBg.fillRoundedRect(22, btnY2+2, W-44, 20, 9);
+      const clT = txt(this, W/2, btnY2+22, '🎁  Забрать награду!', 15, '#1a1a28', true).setOrigin(0.5);
+      this.add.zone(20, btnY2, W-40, 44).setOrigin(0)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { clBg.clear(); clBg.fillStyle(0xcc9000,1); clBg.fillRoundedRect(20,btnY2,W-40,44,12); tg?.HapticFeedback?.impactOccurred('heavy'); })
+        .on('pointerup',  () => this._claimQuest(clBg, clT))
+        .on('pointerout', () => { clBg.clear(); clBg.fillStyle(C.gold,1); clBg.fillRoundedRect(20,btnY2,W-40,44,12); clBg.fillStyle(0xffffff,0.12); clBg.fillRoundedRect(22,btnY2+2,W-44,20,9); });
+    } else {
+      txt(this, W/2, btnY2 + 16, '⚔️ Выполни задания чтобы забрать награду', 10, '#555577').setOrigin(0.5);
+    }
+
+    /* Сброс квеста */
+    const resetH = H - 130;
+    txt(this, W/2, resetH, '🔄 Квест обновляется каждый день в 00:00', 9, '#333355').setOrigin(0.5);
+  }
+
+  /* ── Получить ежедневный бонус ─────────────────────────── */
+  async _claimDaily(btnG, btnT, bx, by, bw, bh) {
+    btnT.setText('...');
+    try {
+      const res = await post('/api/daily/claim');
+      if (res.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        if (res.player) State.player = res.player;
+        this._toast(`🎁 Ежедневный бонус: +${res.bonus} 🪙`);
+        this.time.delayedCall(600, () => this.scene.restart());
+      } else {
+        btnG.clear(); btnG.fillStyle(C.green,1); btnG.fillRoundedRect(bx,by,bw,bh,9);
+        btnT.setText(res.reason || 'Уже получено');
+      }
+    } catch(_) {
+      btnG.clear(); btnG.fillStyle(C.green,1); btnG.fillRoundedRect(bx,by,bw,bh,9);
+      btnT.setText('Ошибка');
+    }
+  }
+
+  /* ── Получить награду за квест ────────────────────────── */
+  async _claimQuest(clBg, clT) {
+    clT.setText('...');
+    try {
+      const res = await post('/api/quests/claim');
+      if (res.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        if (res.player) State.player = res.player;
+        this._toast(`🏆 +${res.gold} 🪙  +${res.diamonds} 💎 — квест выполнен!`);
+        this.time.delayedCall(700, () => this.scene.restart());
+      } else {
+        clT.setText(res.reason || 'Ошибка');
+        this.time.delayedCall(1500, () => clT.setText('🎁  Забрать награду!'));
+      }
+    } catch(_) {
+      clT.setText('❌ Нет соединения');
+    }
+  }
+
+  _toast(msg) {
+    const t = txt(this, this.W/2, this.H - 80, msg, 13, '#ffc83c', true).setOrigin(0.5).setDepth(100);
+    this.tweens.add({ targets: t, alpha: 0, y: t.y - 40, duration: 2500, onComplete: () => t.destroy() });
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════

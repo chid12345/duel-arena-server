@@ -287,11 +287,33 @@ class MenuScene extends Phaser.Scene {
 
     this._drawBg(W, H);
 
-    // Загружаем игрока
+    // Загружаем игрока + статус квестов параллельно
     try {
-      const res = await post('/api/player');
-      if (res.ok) {
-        State.player = res.player;
+      const [playerRes, questRes] = await Promise.all([
+        post('/api/player'),
+        get('/api/quests').catch(() => null),
+      ]);
+      if (playerRes.ok) {
+        State.player = playerRes.player;
+
+        // Определяем нужно ли показать бейдж на кнопке Задания
+        this._questBadge = false;
+        if (questRes?.ok) {
+          const q = questRes.quest || {};
+          const d = questRes.daily || {};
+          this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
+          // Тост при ежедневном бонусе
+          if (d.can_claim) {
+            this.time.delayedCall(800, () =>
+              this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
+            );
+          } else if (q.is_completed && !q.reward_claimed) {
+            this.time.delayedCall(800, () =>
+              this._toast('🏆 Квест дня выполнен — забери награду!')
+            );
+          }
+        }
+
         this._buildTabBar();
         this._buildProfilePanel();
         this._buildBattlePanel();
@@ -689,7 +711,7 @@ class MenuScene extends Phaser.Scene {
     c.add(sep);
 
     const items = [
-      { icon: '📋', label: 'Сводка',     cb: () => this.scene.start('Summary')    },
+      { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
       { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
       { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
       { icon: '🌟', label: 'Battle Pass', cb: () => this.scene.start('BattlePass') },
@@ -715,6 +737,15 @@ class MenuScene extends Phaser.Scene {
 
       c.add(txt(this, bx, by - 12, item.icon, 22).setOrigin(0.5));
       c.add(txt(this, bx, by + 16, item.label, 11, '#c0c0e0').setOrigin(0.5));
+
+      // Красный бейдж "!" если есть что забрать
+      if (item.badge) {
+        const bdg = this.add.graphics();
+        bdg.fillStyle(C.red, 1);
+        bdg.fillCircle(bx + bw/2 - 8, by - bh/2 + 8, 8);
+        c.add(bdg);
+        c.add(txt(this, bx + bw/2 - 8, by - bh/2 + 8, '!', 10, '#ffffff', true).setOrigin(0.5));
+      }
 
       const zone = this.add.zone(bx, by, bw, bh).setInteractive({ useHandCursor: true });
       zone.on('pointerdown', () => {
@@ -1468,7 +1499,7 @@ const config = {
   backgroundColor: '#12121c',
   parent: document.body,
   scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
-          SummaryScene, SeasonScene, BattlePassScene, ClanScene, ShopScene],
+          QuestsScene, SummaryScene, SeasonScene, BattlePassScene, ClanScene, ShopScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

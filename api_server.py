@@ -587,6 +587,49 @@ async def get_clan(init_data: str):
     return {"ok": True, "clan": dict(clan) if clan else None}
 
 
+# ─── Ежедневные квесты ───────────────────────────────────────────────────────
+
+@app.get("/api/quests")
+async def get_quests(init_data: str):
+    tg_user = get_user_from_init_data(init_data)
+    uid     = int(tg_user["id"])
+    quest   = db.get_daily_quest_status(uid)
+    daily   = db.check_daily_bonus(uid)
+    return {
+        "ok":    True,
+        "quest": quest,   # battles_played, battles_won, is_completed, reward_claimed
+        "daily": daily,   # can_claim, streak, bonus
+    }
+
+
+class ClaimQuestBody(BaseModel):
+    init_data: str
+
+
+@app.post("/api/quests/claim")
+async def claim_quest(body: ClaimQuestBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.claim_daily_quest_reward(uid)
+    if result.get("ok"):
+        player = db.get_or_create_player(uid, "")
+        result["player"] = dict(player)
+    return result
+
+
+@app.post("/api/daily/claim")
+async def claim_daily(body: ClaimQuestBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.check_daily_bonus(uid)
+    if not result.get("can_claim"):
+        return {"ok": False, "reason": "Бонус уже получен сегодня"}
+    player  = db.get_or_create_player(uid, "")
+    result["ok"]     = True
+    result["player"] = dict(player)
+    return result
+
+
 # ─── Магазин ─────────────────────────────────────────────────────────────────
 
 # Каталог товаров — единый источник истины для фронта и бэка
