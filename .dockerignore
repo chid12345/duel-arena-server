@@ -1,0 +1,12 @@
+.venv
+venv
+__pycache__
+*.py[cod]
+.git
+.gitignore
+.cursor
+.env.local
+*.md
+terminals
+assets
+progression_100_levels_v4.xlsx

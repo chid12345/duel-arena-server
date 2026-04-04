@@ -1,0 +1,978 @@
+/* ============================================================
+   Duel Arena TMA — Phaser 3
+   Сцены: Boot → Menu → Battle → Result
+   ============================================================ */
+
+const tg = window.Telegram?.WebApp;
+tg?.ready();
+tg?.expand();
+
+const API = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? `http://${window.location.hostname}:8000`
+  : '';  // продакшн — тот же origin
+
+/* Цветовая палитра */
+const C = {
+  bg:      0x12121c,
+  bgMid:   0x1c1a2e,
+  bgPanel: 0x1e1c30,
+  gold:    0xffc83c,
+  red:     0xdc3c46,
+  green:   0x3cc864,
+  blue:    0x5096ff,
+  purple:  0xb45aff,
+  cyan:    0x3cc8dc,
+  white:   0xf0f0fa,
+  gray:    0x8888aa,
+  dark:    0x28243c,
+};
+
+/* Shared state */
+const State = {
+  initData: tg?.initData || '',
+  player: null,
+  battle: null,
+  lastResult: null,
+  ws: null,
+};
+
+function post(path, body = {}) {
+  return fetch(API + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ init_data: State.initData, ...body }),
+  }).then(r => r.json());
+}
+
+function get(path, params = {}) {
+  const q = new URLSearchParams({ init_data: State.initData, ...params });
+  return fetch(`${API}${path}?${q}`).then(r => r.json());
+}
+
+/* ─── WebSocket ─────────────────────────────────────────────── */
+function connectWS(userId, onMessage) {
+  const proto = location.protocol === 'https:' ? 'wss' : 'ws';
+  const host  = API.replace(/^https?:/, '') || `//${location.host}`;
+  const url   = `${proto}:${host}/ws/${userId}`;
+  const ws    = new WebSocket(url);
+  ws.onmessage = e => onMessage(JSON.parse(e.data));
+  ws.onclose   = () => setTimeout(() => connectWS(userId, onMessage), 3000);
+  State.ws = ws;
+  return ws;
+}
+
+/* ─── Вспомогательные Phaser-функции ────────────────────────── */
+function makePanel(scene, x, y, w, h, radius = 14, alpha = 0.92) {
+  const g = scene.add.graphics();
+  g.fillStyle(C.bgPanel, alpha);
+  g.fillRoundedRect(x, y, w, h, radius);
+  g.lineStyle(1.5, C.gold, 0.25);
+  g.strokeRoundedRect(x, y, w, h, radius);
+  return g;
+}
+
+function makeBar(scene, x, y, w, h, pct, fillColor, bgColor = C.dark, radius = 4) {
+  const g = scene.add.graphics();
+  g.fillStyle(bgColor, 1);
+  g.fillRoundedRect(x, y, w, h, radius);
+  const fw = Math.max(radius * 2, Math.round(w * Math.min(1, Math.max(0, pct))));
+  g.fillStyle(fillColor, 1);
+  g.fillRoundedRect(x, y, fw, h, radius);
+  return g;
+}
+
+function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false) {
+  return scene.add.text(x, y, str, {
+    fontSize: `${size}px`,
+    fontFamily: bold ? "'Arial Black', Arial, sans-serif" : 'Arial, sans-serif',
+    color,
+    resolution: 2,
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BOOT SCENE — загрузка ресурсов + инициализация
+   ═══════════════════════════════════════════════════════════ */
+class BootScene extends Phaser.Scene {
+  constructor() { super('Boot'); }
+
+  preload() {
+    // Прогресс-бар загрузки
+    const bar = document.getElementById('loading-bar');
+    this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
+
+    // Генерируем текстуры программно (без внешних файлов)
+    this.load.on('complete', () => this._generateTextures());
+  }
+
+  _generateTextures() {
+    /* Воин P1 (синий) */
+    this._warrior('warrior_blue', '#4488ff', '#2255cc');
+    /* Воин P2 / бот (красный) */
+    this._warrior('warrior_red', '#ff4455', '#cc2233');
+    /* Эффект удара */
+    this._hitFx();
+    /* Эффект крита */
+    this._critFx();
+    /* Эффект уворота */
+    this._dodgeFx();
+    /* Кнопка зоны */
+    this._zoneBtn();
+    /* Фон арены */
+    this._arenaBg();
+    /* Монета */
+    this._coin();
+  }
+
+  _warrior(key, bodyColor, shadowColor) {
+    const g = this.add.graphics({ x: -9999, y: -9999 });
+    const W = 80, H = 120;
+    g.generateTexture(key + '_tmp', W, H);
+
+    const rt = this.add.renderTexture(0, 0, W, H).setVisible(false);
+    const draw = this.add.graphics().setVisible(false);
+
+    // Тень
+    draw.fillStyle(parseInt(shadowColor.replace('#',''), 16), 0.3);
+    draw.fillEllipse(40, 110, 50, 12);
+    // Ноги
+    draw.fillStyle(parseInt(bodyColor.replace('#',''), 16), 1);
+    draw.fillRect(28, 80, 10, 32);
+    draw.fillRect(42, 80, 10, 32);
+    // Тело
+    draw.fillRoundedRect(22, 40, 36, 42, 8);
+    // Щит
+    draw.fillStyle(0x3366cc, 1);
+    draw.fillRoundedRect(4, 42, 18, 30, 5);
+    draw.lineStyle(2, 0x88aaff, 1);
+    draw.strokeRoundedRect(4, 42, 18, 30, 5);
+    draw.lineStyle(2, 0xffffff, 0.5);
+    draw.lineBetween(4+9, 42, 4+9, 72);
+    // Рука с мечом
+    draw.fillStyle(parseInt(bodyColor.replace('#',''), 16), 1);
+    draw.fillRect(58, 44, 8, 6);
+    // Меч
+    draw.lineStyle(4, 0xffc83c, 1);
+    draw.lineBetween(62, 50, 76, 22);
+    draw.lineStyle(2, 0xffc83c, 0.6);
+    draw.lineBetween(57, 42, 70, 42);
+    // Голова
+    draw.fillStyle(parseInt(bodyColor.replace('#',''), 16), 1);
+    draw.fillCircle(40, 26, 16);
+    // Шлем
+    draw.fillStyle(parseInt(shadowColor.replace('#',''), 16), 1);
+    draw.fillRect(24, 14, 32, 8);
+    draw.fillStyle(0xffc83c, 1);
+    draw.fillRect(34, 10, 12, 6);
+    // Глаза
+    draw.fillStyle(0xffffff, 1);
+    draw.fillCircle(34, 26, 4);
+    draw.fillCircle(46, 26, 4);
+    draw.fillStyle(0x111122, 1);
+    draw.fillCircle(35, 26, 2);
+    draw.fillCircle(47, 26, 2);
+
+    rt.draw(draw, 0, 0);
+    rt.saveTexture(key);
+    draw.destroy();
+    rt.destroy();
+    g.destroy();
+  }
+
+  _hitFx() {
+    const g = this.add.graphics().setVisible(false);
+    g.lineStyle(3, 0xff4444, 1);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const r1 = 10, r2 = 22;
+      g.lineBetween(Math.cos(a)*r1+30, Math.sin(a)*r1+30, Math.cos(a)*r2+30, Math.sin(a)*r2+30);
+    }
+    g.generateTexture('hit_fx', 60, 60);
+    g.destroy();
+  }
+
+  _critFx() {
+    const g = this.add.graphics().setVisible(false);
+    g.lineStyle(3, 0xffc83c, 1);
+    const pts = [];
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      const r = i % 2 === 0 ? 28 : 14;
+      pts.push({ x: Math.cos(a)*r+30, y: Math.sin(a)*r+30 });
+    }
+    g.fillStyle(0xffc83c, 0.3);
+    g.fillPoints(pts, true);
+    g.lineStyle(2, 0xffffff, 0.8);
+    g.strokePoints(pts, true);
+    g.generateTexture('crit_fx', 60, 60);
+    g.destroy();
+  }
+
+  _dodgeFx() {
+    const g = this.add.graphics().setVisible(false);
+    g.lineStyle(2, 0x3cc8dc, 0.8);
+    for (let i = 0; i < 5; i++) {
+      g.fillStyle(0x3cc8dc, 0.15 - i * 0.02);
+      g.fillEllipse(35 - i*6, 30, 30 - i*4, 20 - i*2);
+    }
+    g.generateTexture('dodge_fx', 70, 60);
+    g.destroy();
+  }
+
+  _zoneBtn() {
+    const g = this.add.graphics().setVisible(false);
+    g.fillStyle(0x2a2840, 1);
+    g.fillRoundedRect(0, 0, 90, 44, 10);
+    g.lineStyle(1.5, 0x5096ff, 0.5);
+    g.strokeRoundedRect(0, 0, 90, 44, 10);
+    g.generateTexture('zone_btn', 90, 44);
+    g.destroy();
+  }
+
+  _arenaBg() {
+    const W = 400, H = 240;
+    const g = this.add.graphics().setVisible(false);
+    // Пол
+    g.fillStyle(0x1a1828, 1);
+    g.fillRect(0, 0, W, H);
+    // Арена (элипс пола)
+    g.fillStyle(0x22203a, 1);
+    g.fillEllipse(W/2, H*0.72, W*0.9, H*0.3);
+    // Линия пола
+    g.lineStyle(1, 0x5096ff, 0.15);
+    g.strokeEllipse(W/2, H*0.72, W*0.9, H*0.3);
+    // Факелы
+    for (const fx of [60, W-60]) {
+      g.fillStyle(0x2a2840, 1);
+      g.fillRect(fx-4, H*0.2, 8, H*0.5);
+      g.fillStyle(0xff8c00, 0.8);
+      g.fillTriangle(fx-10, H*0.2, fx+10, H*0.2, fx, H*0.1);
+    }
+    g.generateTexture('arena_bg', W, H);
+    g.destroy();
+  }
+
+  _coin() {
+    const g = this.add.graphics().setVisible(false);
+    g.fillStyle(0xffc83c, 1);
+    g.fillCircle(12, 12, 12);
+    g.fillStyle(0xcc9420, 1);
+    g.fillCircle(12, 12, 9);
+    g.fillStyle(0xffc83c, 1);
+    g.fillText = () => {};
+    g.generateTexture('coin', 24, 24);
+    g.destroy();
+  }
+
+  create() {
+    // Скрываем loading screen
+    const ls = document.getElementById('loading-screen');
+    if (ls) { ls.style.opacity = '0'; setTimeout(() => ls.remove(), 500); }
+    this.scene.start('Menu');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   MENU SCENE — главный экран
+   ═══════════════════════════════════════════════════════════ */
+class MenuScene extends Phaser.Scene {
+  constructor() { super('Menu'); }
+
+  async create() {
+    const { W, H } = this.game.canvas;
+    this._buildBg(W, H);
+
+    // Загружаем игрока
+    try {
+      const res = await post('/api/player');
+      if (res.ok) {
+        State.player = res.player;
+        this._buildUI(W, H);
+        this._setupWS();
+      } else {
+        this._showError('Ошибка загрузки профиля');
+      }
+    } catch(e) {
+      this._showError('Нет соединения');
+    }
+  }
+
+  _buildBg(W, H) {
+    // Градиент фона
+    const g = this.add.graphics();
+    g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
+    g.fillRect(0, 0, W, H);
+
+    // Звёзды
+    for (let i = 0; i < 60; i++) {
+      const x = Phaser.Math.Between(0, W);
+      const y = Phaser.Math.Between(0, H * 0.7);
+      const r = Phaser.Math.FloatBetween(0.5, 2);
+      const a = Phaser.Math.FloatBetween(0.3, 0.9);
+      this.add.circle(x, y, r, 0xffffff, a);
+    }
+  }
+
+  _buildUI(W, H) {
+    const p = State.player;
+    const pad = 16;
+    const panelW = W - pad * 2;
+
+    /* ── Верхняя полоса: имя + уровень + рейтинг ── */
+    makePanel(this, pad, pad, panelW, 56, 12);
+
+    // Уровень-бейдж
+    const badgeG = this.add.graphics();
+    badgeG.fillStyle(C.gold, 1);
+    badgeG.fillRoundedRect(pad + 8, pad + 10, 52, 28, 8);
+    txt(this, pad + 34, pad + 24, `УР.${p.level}`, 13, '#1a1a28', true).setOrigin(0.5);
+
+    txt(this, pad + 72, pad + 14, p.username, 16, '#f0f0fa', true);
+    txt(this, pad + 72, pad + 34, `★ ${p.rating}  |  🏆 ${p.wins}W  💀 ${p.losses}L`, 11, '#8888aa');
+
+    // Золото справа
+    txt(this, W - pad - 8, pad + 20, `💰 ${p.gold}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
+
+    /* ── Персонаж ── */
+    const charY = 110;
+    const warrior = this.add.image(W/2, charY, 'warrior_blue')
+      .setOrigin(0.5)
+      .setScale(1.4);
+
+    // Покачивание
+    this.tweens.add({
+      targets: warrior,
+      y: charY - 6,
+      duration: 1800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    /* ── HP бар ── */
+    const barY = charY + 62;
+    const barW = 160;
+    makeBar(this, W/2 - barW/2, barY, barW, 10,
+      p.hp_pct / 100, p.hp_pct > 50 ? C.green : (p.hp_pct > 25 ? C.gold : C.red));
+    txt(this, W/2, barY + 5, `${p.current_hp} / ${p.max_hp} HP`, 10, '#f0f0fa').setOrigin(0.5);
+
+    /* ── XP бар ── */
+    if (!p.max_level) {
+      makeBar(this, W/2 - barW/2, barY + 16, barW, 6, p.xp_pct / 100, C.blue);
+      txt(this, W/2, barY + 19, `XP ${p.exp}/${p.exp_needed}`, 9, '#8888aa').setOrigin(0.5);
+    }
+
+    /* ── Статы (правая панель) ── */
+    const statX = W/2 + 72;
+    const statPanelH = 140;
+    makePanel(this, statX - 4, charY - 52, 100, statPanelH, 10);
+
+    const stats = [
+      { label: '💪', val: p.strength,  color: '#dc3c46', sub: `~${p.dmg}ур` },
+      { label: '🤸', val: p.agility,   color: '#3cc8dc', sub: `${p.dodge_pct}%` },
+      { label: '💥', val: p.intuition, color: '#b45aff', sub: `${p.crit_pct}%` },
+      { label: '🛡', val: p.stamina,   color: '#3cc864', sub: `${p.armor_pct}%` },
+    ];
+    stats.forEach((s, i) => {
+      const sy = charY - 44 + i * 34;
+      txt(this, statX + 4, sy, s.label + ' ' + s.val, 14, s.color, true);
+      txt(this, statX + 70, sy + 4, s.sub, 10, '#8888aa').setOrigin(1, 0);
+    });
+
+    /* ── Свободные статы ── */
+    if (p.free_stats > 0) {
+      const fsG = this.add.graphics();
+      fsG.fillStyle(0x6030a0, 0.8);
+      fsG.fillRoundedRect(W/2 - 70, charY + 90, 140, 26, 8);
+      txt(this, W/2, charY + 103, `⚡ +${p.free_stats} свободных статов`, 11, '#ffc83c', true).setOrigin(0.5);
+    }
+
+    /* ── Главные кнопки ── */
+    const btnY = H - 130;
+    this._bigBtn(W/2, btnY, '⚔️  В БОЙ!', C.red, () => this._onFight());
+    this._outlineBtn(W/2 - 78, btnY + 56, '📊 СТАТЫ', () => this._onStats());
+    this._outlineBtn(W/2 + 78, btnY + 56, '🏆 ТОП', () => this._onRating());
+    this._outlineBtn(W/2, btnY + 106, '🔄 Обновить', () => this.scene.restart());
+
+    /* ── Уведомление о свободных HP ── */
+    if (p.hp_pct < 30) {
+      txt(this, W/2, H - 24, '❤️ Восстанови HP перед боем!', 11, '#ff8888').setOrigin(0.5);
+    }
+  }
+
+  _bigBtn(x, y, label, bgColor, cb) {
+    const W = 220, H = 48;
+    const g = this.add.graphics();
+    g.fillStyle(bgColor, 1);
+    g.fillRoundedRect(x - W/2, y - H/2, W, H, 12);
+
+    const t = txt(this, x, y, label, 17, '#ffffff', true).setOrigin(0.5);
+    const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
+    zone.on('pointerdown', () => {
+      g.clear();
+      g.fillStyle(Phaser.Display.Color.ValueToColor(bgColor).darken(20).color, 1);
+      g.fillRoundedRect(x - W/2, y - H/2, W, H, 12);
+      tg?.HapticFeedback?.impactOccurred('medium');
+    });
+    zone.on('pointerup', () => {
+      g.clear();
+      g.fillStyle(bgColor, 1);
+      g.fillRoundedRect(x - W/2, y - H/2, W, H, 12);
+      cb();
+    });
+    // Пульсация кнопки В БОЙ
+    this.tweens.add({
+      targets: [g, t],
+      scaleX: 1.03, scaleY: 1.03,
+      duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+    });
+  }
+
+  _outlineBtn(x, y, label, cb) {
+    const W = 130, H = 38;
+    const g = this.add.graphics();
+    g.lineStyle(1.5, C.blue, 0.6);
+    g.fillStyle(C.dark, 0.8);
+    g.fillRoundedRect(x - W/2, y - H/2, W, H, 9);
+    g.strokeRoundedRect(x - W/2, y - H/2, W, H, 9);
+    txt(this, x, y, label, 13, '#f0f0fa').setOrigin(0.5);
+    const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
+    zone.on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); cb(); });
+  }
+
+  async _onFight() {
+    const p = State.player;
+    if (!p) return;
+    if (p.hp_pct < 30) {
+      tg?.HapticFeedback?.notificationOccurred('error');
+      this._toast('❤️ Нужно восстановить HP!');
+      return;
+    }
+    this._toast('⚔️ Ищем соперника...');
+    try {
+      const res = await post('/api/battle/find');
+      if (!res.ok) {
+        this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : 'Нет противников');
+        return;
+      }
+      State.battle = res.battle;
+      this.scene.start('Battle');
+    } catch(e) {
+      this._toast('Нет соединения');
+    }
+  }
+
+  _onStats() { this._toast('Статы — скоро!'); }
+  _onRating() { this.scene.start('Rating'); }
+
+  _toast(msg) {
+    const { W, H } = this.game.canvas;
+    const t = txt(this, W/2, H - 30, msg, 12, '#ffc83c', true).setOrigin(0.5).setAlpha(0);
+    this.tweens.add({ targets: t, alpha: 1, duration: 200, hold: 1500, yoyo: true,
+      onComplete: () => t.destroy() });
+  }
+
+  _setupWS() {
+    const p = State.player;
+    if (!p) return;
+    connectWS(p.user_id, msg => {
+      if (msg.event === 'battle_started') {
+        State.battle = msg.battle;
+        this.scene.start('Battle');
+      }
+    });
+  }
+
+  _showError(msg) {
+    const { W, H } = this.game.canvas;
+    txt(this, W/2, H/2, msg, 16, '#ff4455').setOrigin(0.5);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   BATTLE SCENE — боевой экран
+   ═══════════════════════════════════════════════════════════ */
+class BattleScene extends Phaser.Scene {
+  constructor() { super('Battle'); }
+
+  create() {
+    const { width: W, height: H } = this.game.canvas;
+    this.W = W; this.H = H;
+    this._selAttack  = null;
+    this._selDefense = null;
+    this._choosing   = true;
+    this._logLines   = [];
+
+    this._buildArena();
+    this._buildHUDs();
+    this._buildChoicePanel();
+    this._buildLog();
+    this._updateFromState(State.battle);
+    this._setupWSBattle();
+    this._startTimer();
+  }
+
+  _buildArena() {
+    const { W, H } = this;
+    // Фон
+    const bg = this.add.image(W/2, H * 0.36, 'arena_bg').setDisplaySize(W, H * 0.5);
+
+    // Факелы — анимированное пламя
+    [W * 0.12, W * 0.88].forEach(fx => {
+      for (let i = 0; i < 3; i++) {
+        const flame = this.add.circle(fx, H * 0.16 - i * 6, 5 - i, 0xff8c00, 0.8 - i*0.2);
+        this.tweens.add({
+          targets: flame,
+          x: fx + Phaser.Math.Between(-4, 4),
+          scaleX: Phaser.Math.FloatBetween(0.8, 1.2),
+          alpha: 0.5 + Math.random() * 0.4,
+          duration: 200 + i * 80,
+          yoyo: true, repeat: -1,
+        });
+      }
+    });
+
+    /* Персонажи */
+    this.warrior1 = this.add.image(W * 0.28, H * 0.35, 'warrior_blue').setScale(1.5).setFlipX(false);
+    this.warrior2 = this.add.image(W * 0.72, H * 0.35, 'warrior_red').setScale(1.5).setFlipX(true);
+
+    // Покачивание персонажей
+    [this.warrior1, this.warrior2].forEach(w => {
+      this.tweens.add({ targets: w, y: w.y - 4, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    });
+  }
+
+  _buildHUDs() {
+    const { W, H } = this;
+    const b = State.battle;
+    if (!b) return;
+
+    /* Игрок (P1) */
+    makePanel(this, 8, 8, W/2 - 14, 60, 10);
+    txt(this, 16, 14, 'ВЫ', 10, '#8888aa', true);
+    this.p1Name = txt(this, 16, 24, State.player?.username || 'Вы', 13, '#f0f0fa', true);
+    this.p1Hp   = txt(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
+    this.p1Bar  = this._hpBar(16, 54, W/2 - 28, b.my_hp / b.my_max_hp, C.green);
+
+    /* Соперник (P2) */
+    makePanel(this, W/2 + 6, 8, W/2 - 14, 60, 10);
+    txt(this, W - 16, 14, 'СОПЕРНИК', 10, '#8888aa', true).setOrigin(1, 0);
+    this.p2Name = txt(this, W - 16, 24, b.opp_name || 'Соперник', 13, '#f0f0fa', true).setOrigin(1, 0);
+    this.p2Hp   = txt(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
+    this.p2Bar  = this._hpBar(W/2 + 18, 54, W/2 - 28, b.opp_hp / b.opp_max_hp, C.red);
+
+    /* Раунд + таймер */
+    this.roundTxt = txt(this, W/2, 76, `РАУНД ${b.round || 1}`, 14, '#ffc83c', true).setOrigin(0.5);
+    this.timerTxt = txt(this, W/2, 93, '15', 22, '#ffffff', true).setOrigin(0.5);
+
+    /* VS */
+    txt(this, W/2, H * 0.32, 'VS', 20, '#ffc83c', true).setOrigin(0.5).setAlpha(0.5);
+  }
+
+  _hpBar(x, y, w, pct, color) {
+    const g = this.add.graphics();
+    this._redrawBar(g, x, y, w, 7, pct, color);
+    g._x = x; g._y = y; g._w = w; g._color = color;
+    return g;
+  }
+
+  _redrawBar(g, x, y, w, h, pct, color) {
+    g.clear();
+    g.fillStyle(C.dark, 1);
+    g.fillRoundedRect(x, y, w, h, 3);
+    const fw = Math.max(6, Math.round(w * Math.min(1, Math.max(0, pct))));
+    const col = pct > 0.5 ? color : (pct > 0.25 ? C.gold : C.red);
+    g.fillStyle(col, 1);
+    g.fillRoundedRect(x, y, fw, h, 3);
+  }
+
+  _buildChoicePanel() {
+    const { W, H } = this;
+    const panY = H * 0.6;
+
+    makePanel(this, 8, panY - 4, W - 16, H - panY - 8, 14);
+
+    txt(this, W/2, panY + 10, 'ВЫБЕРИ АТАКУ', 12, '#8888aa', true).setOrigin(0.5);
+    txt(this, W/2, panY + H * 0.18 + 6, 'ВЫБЕРИ ЗАЩИТУ', 12, '#8888aa', true).setOrigin(0.5);
+
+    const zones = [
+      { key: 'HEAD',  label: '👤 Голова', x: W * 0.18 },
+      { key: 'TORSO', label: '🧥 Тело',   x: W * 0.50 },
+      { key: 'LEGS',  label: '🦵 Ноги',   x: W * 0.82 },
+    ];
+
+    this._attackBtns  = zones.map(z => this._zoneButton(z.x, panY + 36, z.key, z.label, 'attack'));
+    this._defenseBtns = zones.map(z => this._zoneButton(z.x, panY + H * 0.18 + 32, z.key, z.label, 'defense'));
+
+    /* Кнопка АВТО */
+    this._autoBtn = this._miniBtn(W - 44, panY + 12, '🎲 Авто', () => this._onAuto());
+
+    /* Статус ожидания */
+    this._waitTxt = txt(this, W/2, panY + 80, '', 13, '#ffc83c', true)
+      .setOrigin(0.5).setAlpha(0);
+  }
+
+  _zoneButton(x, y, key, label, type) {
+    const BW = 90, BH = 44;
+    const g = this.add.graphics();
+    this._drawZoneBtn(g, x, y, BW, BH, false);
+    const t = txt(this, x, y, label, 12, '#f0f0fa').setOrigin(0.5);
+    const zone = this.add.zone(x, y, BW, BH).setInteractive({ useHandCursor: true });
+    zone.on('pointerup', () => this._onZone(key, label, type, g, t));
+    return { key, g, t, zone, type, x, y, BW, BH };
+  }
+
+  _drawZoneBtn(g, x, y, BW, BH, selected, selectedColor = C.blue) {
+    g.clear();
+    if (selected) {
+      g.fillStyle(selectedColor, 0.25);
+      g.fillRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
+      g.lineStyle(2, selectedColor, 1);
+      g.strokeRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
+    } else {
+      g.fillStyle(C.dark, 0.9);
+      g.fillRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
+      g.lineStyle(1, C.gray, 0.3);
+      g.strokeRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
+    }
+  }
+
+  _miniBtn(x, y, label, cb) {
+    const W = 70, H = 28;
+    const g = this.add.graphics();
+    g.fillStyle(C.dark, 0.9);
+    g.fillRoundedRect(x - W/2, y - H/2, W, H, 7);
+    g.lineStyle(1, C.gray, 0.4);
+    g.strokeRoundedRect(x - W/2, y - H/2, W, H, 7);
+    const t = txt(this, x, y, label, 10, '#8888aa').setOrigin(0.5);
+    const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
+    zone.on('pointerup', cb);
+    return { g, t, zone };
+  }
+
+  _buildLog() {
+    const { W, H } = this;
+    const logY = H * 0.52;
+    makePanel(this, 8, logY, W - 16, H * 0.08, 8, 0.7);
+    this._logTxt = txt(this, W/2, logY + (H * 0.04), '', 11, '#ccccee').setOrigin(0.5);
+  }
+
+  _onZone(key, label, type, g, t) {
+    if (!this._choosing) return;
+    tg?.HapticFeedback?.selectionChanged();
+
+    if (type === 'attack') {
+      // Сброс предыдущего
+      this._attackBtns.forEach(b => this._drawZoneBtn(b.g, b.x, b.y, b.BW, b.BH, false));
+      this._selAttack = key;
+      this._drawZoneBtn(g, g._x || 0, g._y || 0, 90, 44, true, C.red);
+      // Пересчитаем через кнопку
+      const btn = this._attackBtns.find(b => b.key === key);
+      if (btn) this._drawZoneBtn(btn.g, btn.x, btn.y, btn.BW, btn.BH, true, C.red);
+    } else {
+      this._defenseBtns.forEach(b => this._drawZoneBtn(b.g, b.x, b.y, b.BW, b.BH, false));
+      this._selDefense = key;
+      const btn = this._defenseBtns.find(b => b.key === key);
+      if (btn) this._drawZoneBtn(btn.g, btn.x, btn.y, btn.BW, btn.BH, true, C.blue);
+    }
+
+    if (this._selAttack && this._selDefense) {
+      this._submitChoice();
+    }
+  }
+
+  async _submitChoice() {
+    this._choosing = false;
+    this._showWait('Ход отправлен...');
+    try {
+      const res = await post('/api/battle/choice', {
+        attack: this._selAttack,
+        defense: this._selDefense,
+      });
+      if (res.status === 'waiting_opponent') {
+        this._showWait('⏳ Ждём соперника...');
+        return;
+      }
+      if (res.status === 'round_completed') {
+        this._updateFromState(res.battle);
+        this._resetChoices();
+        this._choosing = true;
+        this._startTimer();
+      } else if (res.status === 'battle_ended') {
+        State.lastResult = res;
+        this.scene.start('Result');
+      }
+    } catch(e) {
+      this._choosing = true;
+      this._showWait('Ошибка. Попробуй ещё раз.');
+    }
+  }
+
+  _onAuto() {
+    if (!this._choosing) return;
+    const zones = ['HEAD', 'TORSO', 'LEGS'];
+    if (!this._selAttack)  this._selAttack  = zones[Phaser.Math.Between(0,2)];
+    if (!this._selDefense) this._selDefense = zones[Phaser.Math.Between(0,2)];
+    this._submitChoice();
+  }
+
+  _showWait(msg) {
+    this._waitTxt.setText(msg).setAlpha(1);
+    this.tweens.add({ targets: this._waitTxt, alpha: 1, duration: 200 });
+  }
+
+  _resetChoices() {
+    this._selAttack  = null;
+    this._selDefense = null;
+    this._waitTxt.setAlpha(0);
+    this._attackBtns.forEach(b => this._drawZoneBtn(b.g, b.x, b.y, b.BW, b.BH, false));
+    this._defenseBtns.forEach(b => this._drawZoneBtn(b.g, b.x, b.y, b.BW, b.BH, false));
+  }
+
+  _updateFromState(b) {
+    if (!b) return;
+    State.battle = b;
+
+    /* HP игрока */
+    if (this.p1Hp) this.p1Hp.setText(`${b.my_hp} / ${b.my_max_hp}`);
+    if (this.p1Bar) this._redrawBar(this.p1Bar, this.p1Bar._x, this.p1Bar._y,
+      this.p1Bar._w, 7, b.my_hp / b.my_max_hp, C.green);
+
+    /* HP соперника */
+    if (this.p2Hp) this.p2Hp.setText(`${b.opp_hp} / ${b.opp_max_hp}`);
+    if (this.p2Bar) this._redrawBar(this.p2Bar, this.p2Bar._x, this.p2Bar._y,
+      this.p2Bar._w, 7, b.opp_hp / b.opp_max_hp, C.red);
+
+    /* Раунд */
+    if (this.roundTxt) this.roundTxt.setText(`РАУНД ${(b.round || 0) + 1}`);
+
+    /* Лог */
+    const log = b.combat_log || [];
+    if (log.length && this._logTxt) {
+      const clean = log[log.length-1].replace(/<[^>]+>/g, '');
+      this._logTxt.setText(clean.slice(0, 60));
+    }
+
+    /* Анимация удара */
+    if (b.combat_log?.length) this._hitAnimation();
+  }
+
+  _hitAnimation() {
+    // Тряска персонажа при получении урона
+    const target = this.warrior2;
+    this.tweens.add({
+      targets: target,
+      x: target.x + 8,
+      duration: 50, yoyo: true, repeat: 3,
+    });
+    // Эффект
+    const fx = this.add.image(target.x, target.y, 'hit_fx').setAlpha(0.9).setScale(1.2);
+    this.tweens.add({ targets: fx, alpha: 0, scale: 2, duration: 400,
+      onComplete: () => fx.destroy() });
+  }
+
+  _startTimer() {
+    if (this._timerEvent) this._timerEvent.remove();
+    let secs = 15;
+    this.timerTxt?.setText(secs);
+    this._timerEvent = this.time.addEvent({
+      delay: 1000, repeat: 14,
+      callback: () => {
+        secs--;
+        this.timerTxt?.setText(secs);
+        if (secs <= 5) {
+          this.timerTxt?.setColor('#ff4455');
+          tg?.HapticFeedback?.impactOccurred('light');
+        }
+      },
+    });
+  }
+
+  _setupWSBattle() {
+    const p = State.player;
+    if (!p) return;
+    // Переподключаемся к WS (он уже открыт из Menu, просто обновляем обработчик)
+    if (State.ws) {
+      State.ws.onmessage = e => {
+        const msg = JSON.parse(e.data);
+        if (msg.event === 'round_result') {
+          this._updateFromState(msg.battle);
+          this._resetChoices();
+          this._choosing = true;
+          this._startTimer();
+        } else if (msg.event === 'battle_ended') {
+          State.lastResult = msg;
+          this.scene.start('Result');
+        }
+      };
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RESULT SCENE — итог боя
+   ═══════════════════════════════════════════════════════════ */
+class ResultScene extends Phaser.Scene {
+  constructor() { super('Result'); }
+
+  async create() {
+    const { width: W, height: H } = this.game.canvas;
+
+    // Фон
+    const g = this.add.graphics();
+    g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
+    g.fillRect(0, 0, W, H);
+
+    const res = State.lastResult;
+    const won = res?.human_won ?? false;
+    const r   = res?.result ?? {};
+
+    // Заголовок с анимацией
+    const title = txt(this, W/2, H * 0.22,
+      won ? '🏆 ПОБЕДА!' : '💀 ПОРАЖЕНИЕ',
+      32, won ? '#ffc83c' : '#ff4455', true
+    ).setOrigin(0.5).setScale(0).setAlpha(0);
+
+    this.tweens.add({
+      targets: title,
+      scale: 1, alpha: 1,
+      duration: 600, ease: 'Back.easeOut',
+    });
+    tg?.HapticFeedback?.notificationOccurred(won ? 'success' : 'error');
+
+    // Частицы при победе
+    if (won) this._celebrate(W, H);
+
+    // Панель наград
+    if (won) {
+      makePanel(this, W/2 - 110, H * 0.36, 220, 110, 14);
+      txt(this, W/2, H * 0.40, 'НАГРАДЫ', 12, '#8888aa', true).setOrigin(0.5);
+      txt(this, W/2, H * 0.47, `💰 +${r.gold || 0} золота`, 18, '#ffc83c', true).setOrigin(0.5);
+      txt(this, W/2, H * 0.55, `⭐ +${r.exp || 0} опыта`, 16, '#5096ff', true).setOrigin(0.5);
+      if (r.level_up) {
+        txt(this, W/2, H * 0.62, '🎊 НОВЫЙ УРОВЕНЬ!', 16, '#b45aff', true).setOrigin(0.5);
+      }
+      txt(this, W/2, H * 0.69, `Раундов: ${r.rounds || 0}`, 12, '#8888aa').setOrigin(0.5);
+    } else {
+      makePanel(this, W/2 - 100, H * 0.38, 200, 80, 14);
+      txt(this, W/2, H * 0.44, 'Не сдавайся!', 16, '#8888aa').setOrigin(0.5);
+      txt(this, W/2, H * 0.52, `Раундов: ${r.rounds || 0}`, 12, '#666688').setOrigin(0.5);
+    }
+
+    // Обновить профиль
+    try {
+      const fresh = await post('/api/player');
+      if (fresh.ok) State.player = fresh.player;
+    } catch(e) {}
+
+    // Кнопки
+    this._mainBtn(W/2, H * 0.82, '⚔️ Ещё бой!', () => {
+      this.scene.start('Menu');
+      this.time.delayedCall(100, () => this.scene.start('Battle').then?.());
+    });
+    this._mainBtn(W/2, H * 0.91, '🏠 Главная', () => this.scene.start('Menu'));
+  }
+
+  _celebrate(W, H) {
+    const colors = [0xffc83c, 0x5096ff, 0xb45aff, 0x3cc864, 0xff4455];
+    for (let i = 0; i < 30; i++) {
+      const c = this.add.circle(
+        Phaser.Math.Between(0, W),
+        Phaser.Math.Between(-20, 0),
+        Phaser.Math.Between(3, 7),
+        Phaser.Math.RND.pick(colors), 0.9
+      );
+      this.tweens.add({
+        targets: c,
+        y: H + 20,
+        x: c.x + Phaser.Math.Between(-60, 60),
+        alpha: 0,
+        duration: Phaser.Math.Between(1200, 2400),
+        delay: Phaser.Math.Between(0, 800),
+        onComplete: () => c.destroy(),
+      });
+    }
+  }
+
+  _mainBtn(x, y, label, cb) {
+    const W = 200, H = 38;
+    const g = this.add.graphics();
+    g.fillStyle(C.dark, 0.9);
+    g.fillRoundedRect(x - W/2, y - H/2, W, H, 10);
+    g.lineStyle(1.5, C.blue, 0.5);
+    g.strokeRoundedRect(x - W/2, y - H/2, W, H, 10);
+    txt(this, x, y, label, 14, '#f0f0fa', true).setOrigin(0.5);
+    const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
+    zone.on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); cb(); });
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RATING SCENE — топ игроков
+   ═══════════════════════════════════════════════════════════ */
+class RatingScene extends Phaser.Scene {
+  constructor() { super('Rating'); }
+
+  async create() {
+    const { width: W, height: H } = this.game.canvas;
+    const g = this.add.graphics();
+    g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
+    g.fillRect(0, 0, W, H);
+
+    txt(this, W/2, 20, '🏆 ТОП ИГРОКОВ', 18, '#ffc83c', true).setOrigin(0.5);
+
+    try {
+      const res = await get('/api/rating', { limit: 15 });
+      if (res.ok) {
+        res.players.forEach((p, i) => {
+          const y = 58 + i * 40;
+          const isMe = p.user_id === State.player?.user_id;
+          makePanel(this, 10, y - 14, W - 20, 36, 8, isMe ? 0.95 : 0.7);
+          if (isMe) {
+            const hl = this.add.graphics();
+            hl.fillStyle(C.gold, 0.08);
+            hl.fillRoundedRect(10, y - 14, W - 20, 36, 8);
+          }
+          const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
+          txt(this, 20, y, medal, 13, '#ffc83c', true);
+          txt(this, 50, y, p.username, 13, isMe ? '#ffc83c' : '#f0f0fa', isMe);
+          txt(this, W - 20, y, `★ ${p.rating}`, 12, '#8888aa').setOrigin(1, 0.5);
+          txt(this, W - 80, y, `Ур.${p.level}`, 11, '#5096ff').setOrigin(1, 0.5);
+        });
+        if (res.my_rank) {
+          txt(this, W/2, H - 30, `Ваше место: #${res.my_rank}`, 13, '#ffc83c', true).setOrigin(0.5);
+        }
+      }
+    } catch(e) {
+      txt(this, W/2, H/2, 'Нет соединения', 14, '#ff4455').setOrigin(0.5);
+    }
+
+    // Назад
+    const backBtn = this.add.zone(40, 16, 70, 32).setInteractive({ useHandCursor: true });
+    txt(this, 20, 16, '← Назад', 12, '#8888aa');
+    backBtn.on('pointerup', () => this.scene.start('Menu'));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   ЗАПУСК PHASER
+   ═══════════════════════════════════════════════════════════ */
+const config = {
+  type: Phaser.AUTO,
+  backgroundColor: '#12121c',
+  parent: document.body,
+  scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene],
+  scale: {
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: 390,
+    height: 700,
+  },
+  dom: { createContainer: false },
+  render: {
+    antialias: true,
+    pixelArt: false,
+  },
+};
+
+const game = new Phaser.Game(config);
