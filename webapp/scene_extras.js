@@ -541,85 +541,284 @@ class BattlePassScene extends Phaser.Scene {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CLAN SCENE — информация о клане
+   CLAN SCENE — полная клановая система
    ═══════════════════════════════════════════════════════════ */
 class ClanScene extends Phaser.Scene {
   constructor() { super('Clan'); }
+
+  init(data) {
+    this._subview = (data && data.sub) ? data.sub : 'main';
+    this._busy = false;
+  }
 
   create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '⚔️', 'КЛАН', 'Вступи или создай клан');
+    _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
     _extraBack(this, W, H);
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
-    get('/api/clan').then(d => this._render(d, W, H)).catch(() => {
+    get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
   }
 
-  _render(data, W, H) {
+  _route(data, W, H) {
     this._loading?.destroy();
-    if (!data.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
-
-    if (!data.clan) {
-      this._renderNoClan(W, H);
+    if (!data.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, C.red).setOrigin(0.5); return; }
+    if (data.clan) {
+      this._renderMyClan(data, W, H);
     } else {
-      this._renderClan(data.clan, W, H);
+      if      (this._subview === 'search') this._renderSearch(W, H);
+      else if (this._subview === 'create') this._renderCreate(W, H);
+      else if (this._subview === 'top')    this._renderTop(W, H);
+      else                                  this._renderNoClan(W, H);
     }
   }
 
+  /* ══ НЕТ КЛАНА ══════════════════════════════════════════ */
   _renderNoClan(W, H) {
-    const cy = H * 0.38;
-    txt(this, W/2, cy,        '🏰', 40).setOrigin(0.5);
-    txt(this, W/2, cy + 50,   'Вы не в клане', 16, '#8888aa').setOrigin(0.5);
-    txt(this, W/2, cy + 74,   'Вступите в клан, чтобы участвовать\nв клановых войнах и рейтинге', 11, '#444466').setOrigin(0.5).setAlign('center');
+    txt(this, W/2, 90, '🏰', 32).setOrigin(0.5);
+    txt(this, W/2, 128, 'Вы не состоите в клане', 14, '#8888aa').setOrigin(0.5);
+    txt(this, W/2, 150, 'Вступайте и участвуйте в клановых войнах!', 10, '#444466').setOrigin(0.5);
 
-    /* Кнопки "скоро" */
-    const makeBtn = (label, bx, by, bw, bh, col) => {
-      const g = this.add.graphics();
-      g.fillStyle(col, 0.85);
-      g.fillRoundedRect(bx, by, bw, bh, 12);
-      txt(this, bx + bw/2, by + bh/2, label, 13, '#f0f0fa', true).setOrigin(0.5);
-      this.add.zone(bx, by, bw, bh).setOrigin(0)
+    const btns = [
+      { label: '🔍  Найти клан',   col: C.blue,   sub: 'search' },
+      { label: '➕  Создать клан', col: C.purple, sub: 'create' },
+      { label: '🏆  Топ кланов',   col: C.dark,   sub: 'top', border: C.gold },
+    ];
+    btns.forEach((b, i) => {
+      const by = 176 + i * 58, bh = 46;
+      const bg = this.add.graphics();
+      bg.fillStyle(b.col, b.col === C.dark ? 0.7 : 0.9);
+      bg.fillRoundedRect(16, by, W-32, bh, 12);
+      if (b.border) { bg.lineStyle(1.5, b.border, 0.5); bg.strokeRoundedRect(16,by,W-32,bh,12); }
+      txt(this, W/2, by + bh/2, b.label, 14, '#f0f0fa', true).setOrigin(0.5);
+      this.add.zone(16, by, W-32, bh).setOrigin(0)
         .setInteractive({ useHandCursor: true })
-        .on('pointerup', () => {
-          tg?.HapticFeedback?.impactOccurred('light');
-          this._toast('🚧 Скоро в следующем обновлении!');
-        });
-    };
-
-    const bw = (W - 48) / 2;
-    makeBtn('🔍 Найти клан',   16,       H*0.62, bw, 48, C.blue);
-    makeBtn('➕ Создать клан', 24 + bw,  H*0.62, bw, 48, C.purple);
-
-    txt(this, W/2, H*0.77, 'Кланы — скоро!', 10, '#333355').setOrigin(0.5);
+        .on('pointerdown', () => { bg.clear(); bg.fillStyle(C.dark,1); bg.fillRoundedRect(16,by,W-32,bh,12); tg?.HapticFeedback?.impactOccurred('light'); })
+        .on('pointerout',  () => { bg.clear(); bg.fillStyle(b.col,b.col===C.dark?0.7:0.9); bg.fillRoundedRect(16,by,W-32,bh,12); if(b.border){bg.lineStyle(1.5,b.border,0.5);bg.strokeRoundedRect(16,by,W-32,bh,12);} })
+        .on('pointerup',   () => this.scene.restart({ sub: b.sub }));
+    });
+    txt(this, W/2, 176 + 3*58 + 6, 'Создание клана стоит 200 🪙', 9, '#333355').setOrigin(0.5);
   }
 
-  _renderClan(clan, W, H) {
-    const mid = H * 0.35;
+  /* ══ МОЙ КЛАН ═══════════════════════════════════════════ */
+  _renderMyClan(data, W, H) {
+    const clan     = data.clan;
+    const members  = data.members || [];
+    const isLeader = data.is_leader;
+    let y = 84;
 
-    /* Иконка и название */
-    txt(this, W/2, mid - 28,  clan.tag ? `[${clan.tag}]` : '⚔️', 20, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W/2, mid + 4,   clan.name || 'Клан', 20, '#f0f0fa', true).setOrigin(0.5);
-    txt(this, W/2, mid + 28,  `👥 ${clan.member_count || '?'} участников`, 12, '#8888aa').setOrigin(0.5);
+    makePanel(this, 8, y, W-16, 72, 12);
+    txt(this, 20, y+10, `[${clan.tag}]`, 15, '#ffc83c', true);
+    txt(this, 20, y+30, clan.name, 16, '#f0f0fa', true);
+    txt(this, 20, y+50, `👥 ${members.length}/20  ·  🏆 ${clan.wins} побед  ·  Ур.${clan.level}`, 10, '#8888aa');
+    if (isLeader) txt(this, W-20, y+18, '👑 Лидер', 10, '#ffc83c', true).setOrigin(1,0);
+    y += 82;
 
-    /* Рейтинг */
-    if (clan.clan_rating !== undefined) {
-      makePanel(this, 16, mid + 52, W-32, 46, 10);
-      txt(this, W/2, mid + 64, '⭐ Рейтинг клана', 11, '#555577').setOrigin(0.5);
-      txt(this, W/2, mid + 82, String(clan.clan_rating), 18, '#ffc83c', true).setOrigin(0.5);
+    txt(this, 16, y, 'УЧАСТНИКИ', 10, '#555577', true);
+    y += 18;
+
+    const rowH   = 36;
+    const maxShow = Math.min(members.length, Math.floor((H - y - 100) / rowH));
+    members.slice(0, maxShow).forEach((m, i) => {
+      const ry = y + i * rowH;
+      const bg = this.add.graphics();
+      bg.fillStyle(C.bgPanel, 0.7); bg.fillRoundedRect(8, ry, W-16, rowH-3, 7);
+      txt(this, 18, ry+8,  m.role === 'leader' ? '👑' : '⚔️', 14);
+      txt(this, 40, ry+8,  m.username || `User${m.user_id}`, 12,
+        m.role === 'leader' ? '#ffc83c' : '#c0c0e0', m.role === 'leader');
+      txt(this, 40, ry+22, `Ур.${m.level}  ·  ${m.wins} побед`, 9, '#555577');
+      txt(this, W-16, ry+18, m.role === 'leader' ? 'Лидер' : 'Участник', 9, '#444466').setOrigin(1,0.5);
+    });
+    if (members.length > maxShow)
+      txt(this, W/2, y + maxShow*rowH + 4, `+${members.length - maxShow} ещё`, 9, '#333355').setOrigin(0.5);
+
+    if (!isLeader) {
+      const by2 = H - 104;
+      const bg2 = this.add.graphics();
+      bg2.fillStyle(C.dark, 0.8); bg2.fillRoundedRect(16, by2, W-32, 38, 10);
+      bg2.lineStyle(1.5, C.red, 0.5); bg2.strokeRoundedRect(16, by2, W-32, 38, 10);
+      txt(this, W/2, by2+19, '🚪 Покинуть клан', 13, '#cc4444', true).setOrigin(0.5);
+      this.add.zone(16, by2, W-32, 38).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerup', () => this._leaveClan());
+    } else {
+      txt(this, W/2, H-104, '👑 Вы лидер — передайте роль чтобы выйти', 9, '#333355').setOrigin(0.5);
     }
+  }
 
-    /* Описание */
-    if (clan.description) {
-      txt(this, W/2, mid + 116, clan.description, 11, '#8888aa').setOrigin(0.5).setWordWrapWidth(W - 40);
+  /* ══ ПОИСК ═══════════════════════════════════════════════ */
+  _renderSearch(W, H) {
+    txt(this, W/2, 84, '🔍 ПОИСК КЛАНА', 14, '#ffc83c', true).setOrigin(0.5);
+    this._inputEl = this._makeInput(W, 104, W-32, 36, 'Имя или тег клана...');
+
+    const sbG = this.add.graphics();
+    sbG.fillStyle(C.blue, 0.9); sbG.fillRoundedRect(16, 148, W-32, 38, 10);
+    txt(this, W/2, 167, '🔍 Найти', 13, '#ffffff', true).setOrigin(0.5);
+    this.add.zone(16, 148, W-32, 38).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerup', () => this._doSearch(W));
+
+    this._resultsY = 198;
+    this._resultsContainer = this.add.container(0, 0);
+    get('/api/clan/top').then(d => this._showSearchResults(d.clans || [], W));
+  }
+
+  _makeInput(W, y, w, h, placeholder) {
+    const el = document.createElement('input');
+    el.type = 'text'; el.placeholder = placeholder; el.maxLength = 20;
+    const left = Math.round((window.innerWidth - w) / 2);
+    const top  = Math.round(y + (window.innerHeight - this.H) / 2);
+    el.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${w}px;height:${h}px;
+      padding:0 10px;background:#1e1c30;color:#f0f0fa;border:1.5px solid #5096ff55;
+      border-radius:9px;font-size:14px;outline:none;z-index:999;`;
+    document.body.appendChild(el);
+    this.events.once('shutdown', () => el.remove());
+    this.events.once('destroy',  () => el.remove());
+    return el;
+  }
+
+  async _doSearch(W) {
+    if (this._busy) return;
+    this._busy = true;
+    const q = this._inputEl?.value?.trim() || '';
+    try {
+      const d = await get('/api/clan/search', { q });
+      this._showSearchResults(d.clans || [], W);
+    } catch(_) { this._toast('❌ Нет соединения'); }
+    this._busy = false;
+  }
+
+  _showSearchResults(clans, W) {
+    this._resultsContainer?.removeAll(true);
+    const y0 = this._resultsY || 198;
+    if (!clans.length) {
+      this._resultsContainer.add(txt(this, W/2, y0+20, '😔 Ничего не найдено', 12, '#555577').setOrigin(0.5));
+      return;
     }
+    clans.forEach((c, i) => {
+      const ry = y0 + i * 48;
+      const bg = this.add.graphics();
+      bg.fillStyle(C.bgPanel, 0.9); bg.fillRoundedRect(8, ry, W-16, 44, 10);
+      bg.lineStyle(1, C.dark, 0.6); bg.strokeRoundedRect(8, ry, W-16, 44, 10);
+      const joinG = this.add.graphics();
+      joinG.fillStyle(C.green, 0.85); joinG.fillRoundedRect(W-74, ry+8, 60, 28, 8);
+      const joinT = txt(this, W-44, ry+22, 'Вступить', 10, '#1a1a28', true).setOrigin(0.5);
+      this._resultsContainer.add([
+        bg,
+        txt(this, 18, ry+8,  `[${c.tag}]`, 12, '#ffc83c', true),
+        txt(this, 18, ry+26, c.name, 11, '#c0c0e0'),
+        txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 9, '#555577'),
+        txt(this, W-82, ry+26, `🏆 ${c.wins}`, 9, '#ffc83c'),
+        joinG, joinT,
+        this.add.zone(W-74, ry+8, 60, 28).setOrigin(0).setInteractive({ useHandCursor: true })
+          .on('pointerdown', () => { joinG.clear(); joinG.fillStyle(0x28a050,1); joinG.fillRoundedRect(W-74,ry+8,60,28,8); tg?.HapticFeedback?.impactOccurred('medium'); })
+          .on('pointerout',  () => { joinG.clear(); joinG.fillStyle(C.green,0.85); joinG.fillRoundedRect(W-74,ry+8,60,28,8); })
+          .on('pointerup',   () => this._joinClan(c.id, c.name, joinT)),
+      ]);
+    });
+  }
+
+  /* ══ СОЗДАНИЕ ════════════════════════════════════════════ */
+  _renderCreate(W, H) {
+    txt(this, W/2, 84, '➕ СОЗДАТЬ КЛАН', 14, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W/2, 104, 'Стоимость: 200 🪙', 11, '#8888aa').setOrigin(0.5);
+
+    makePanel(this, 8, 118, W-16, 128, 12);
+    txt(this, 20, 128, 'Название клана (3–20 символов):', 10, '#8888aa');
+    this._nameEl = this._makeInput(W, 144, W-32, 36, 'Например: Железный Кулак');
+    txt(this, 20, 192, 'Тег (2–4 символа):', 10, '#8888aa');
+    this._tagEl  = this._makeInput(W, 208, (W-32)/2, 34, 'ЖК');
+
+    const btnY = 262;
+    const bgC  = this.add.graphics();
+    bgC.fillStyle(C.purple, 0.9); bgC.fillRoundedRect(16, btnY, W-32, 46, 12);
+    bgC.fillStyle(0xffffff, 0.07); bgC.fillRoundedRect(18, btnY+2, W-36, 20, 9);
+    const btnT = txt(this, W/2, btnY+23, '⚔️  Основать клан  (200 🪙)', 13, '#ffffff', true).setOrigin(0.5);
+    this.add.zone(16, btnY, W-32, 46).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { bgC.clear(); bgC.fillStyle(0x6600cc,1); bgC.fillRoundedRect(16,btnY,W-32,46,12); tg?.HapticFeedback?.impactOccurred('heavy'); })
+      .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,btnY,W-32,46,12); })
+      .on('pointerup',   () => this._doCreate(btnT));
+
+    txt(this, W/2, btnY+56, 'Максимум 20 участников · Имя и тег должны быть уникальны', 9, '#333355').setOrigin(0.5);
+  }
+
+  /* ══ ТОП КЛАНОВ ══════════════════════════════════════════ */
+  _renderTop(W, H) {
+    txt(this, W/2, 84, '🏆 ТОП КЛАНОВ', 14, '#ffc83c', true).setOrigin(0.5);
+    const load2 = txt(this, W/2, 130, 'Загрузка...', 12, '#555577').setOrigin(0.5);
+    get('/api/clan/top').then(d => {
+      load2.destroy();
+      const clans = d.clans || [];
+      if (!clans.length) { txt(this, W/2, 130, '😔 Кланов пока нет', 12, '#555577').setOrigin(0.5); return; }
+      let y = 108;
+      clans.slice(0, Math.floor((H - 160) / 46)).forEach((c, i) => {
+        const isTop = i < 3;
+        const bg = this.add.graphics();
+        bg.fillStyle(isTop ? 0x1a1808 : C.bgPanel, 0.9); bg.fillRoundedRect(8, y, W-16, 42, 9);
+        if (isTop) { bg.lineStyle(1.5, C.gold, 0.5); bg.strokeRoundedRect(8,y,W-16,42,9); }
+        const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+        txt(this, 18, y+11, medal, isTop?15:11, '#ffc83c');
+        txt(this, 44, y+8,  `[${c.tag}] ${c.name}`, 12, isTop?'#ffc83c':'#c0c0e0', isTop);
+        txt(this, 44, y+24, `🏆 ${c.wins} побед  ·  👥 ${c.member_count}`, 9, '#555577');
+        txt(this, W-16, y+21, `Ур.${c.level}`, 10, '#8888aa').setOrigin(1,0.5);
+        y += 46;
+      });
+    }).catch(() => load2.setText('❌ Ошибка'));
+  }
+
+  /* ══ ДЕЙСТВИЯ ════════════════════════════════════════════ */
+  async _joinClan(clanId, clanName, btnT) {
+    if (this._busy) return; this._busy = true;
+    btnT?.setText('...');
+    try {
+      const res = await post('/api/clan/join', { clan_id: clanId });
+      if (res.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success'); Sound.questDone();
+        if (res.player) State.player = res.player;
+        this._toast(`⚔️ Вы вступили в клан ${clanName}!`);
+        this.time.delayedCall(700, () => this.scene.restart());
+      } else { this._toast(`❌ ${res.reason}`); btnT?.setText('Вступить'); }
+    } catch(_) { this._toast('❌ Нет соединения'); btnT?.setText('Вступить'); }
+    this._busy = false;
+  }
+
+  async _doCreate(btnT) {
+    if (this._busy) return;
+    const name = this._nameEl?.value?.trim() || '';
+    const tag  = this._tagEl?.value?.trim()  || '';
+    if (name.length < 3) { this._toast('❌ Название минимум 3 символа'); return; }
+    if (tag.length  < 2) { this._toast('❌ Тег минимум 2 символа'); return; }
+    this._busy = true; btnT?.setText('Создаём...');
+    try {
+      const res = await post('/api/clan/create', { name, tag });
+      if (res.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success'); Sound.levelUp();
+        if (res.player) State.player = res.player;
+        this._toast(`🏰 Клан [${res.tag}] ${res.name} основан!`);
+        this.time.delayedCall(700, () => this.scene.restart());
+      } else { this._toast(`❌ ${res.reason}`); btnT?.setText('⚔️  Основать клан  (200 🪙)'); }
+    } catch(_) { this._toast('❌ Нет соединения'); btnT?.setText('⚔️  Основать клан  (200 🪙)'); }
+    this._busy = false;
+  }
+
+  async _leaveClan() {
+    if (this._busy) return; this._busy = true;
+    try {
+      const res = await post('/api/clan/leave');
+      if (res.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        if (res.player) State.player = res.player;
+        this._toast('🚪 Вы покинули клан');
+        this.time.delayedCall(600, () => this.scene.restart());
+      } else { this._toast(`❌ ${res.reason}`); }
+    } catch(_) { this._toast('❌ Нет соединения'); }
+    this._busy = false;
   }
 
   _toast(msg) {
-    const t = txt(this, this.W/2, this.H - 100, msg, 12, '#ffc83c', true).setOrigin(0.5);
-    this.tweens.add({ targets: t, alpha: 0, y: t.y - 30, duration: 2000, onComplete: () => t.destroy() });
+    const t = txt(this, this.W/2, this.H-80, msg, 12, '#ffc83c', true).setOrigin(0.5).setDepth(100);
+    this.tweens.add({ targets: t, alpha: 0, y: t.y-36, duration: 2400, onComplete: () => t.destroy() });
   }
 }
 

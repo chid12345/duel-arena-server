@@ -577,14 +577,86 @@ async def claim_battlepass(body: BattlePassClaimBody):
 
 @app.get("/api/clan")
 async def get_clan(init_data: str):
-    tg_user  = get_user_from_init_data(init_data)
-    uid      = int(tg_user["id"])
-    player   = db.get_or_create_player(uid, "")
-    clan_id  = player.get("clan_id")
+    tg_user = get_user_from_init_data(init_data)
+    uid     = int(tg_user["id"])
+    player  = db.get_or_create_player(uid, "")
+    clan_id = player.get("clan_id")
     if not clan_id:
-        return {"ok": True, "clan": None}
-    clan = db.get_clan_info(int(clan_id))
-    return {"ok": True, "clan": dict(clan) if clan else None}
+        return {"ok": True, "clan": None, "is_leader": False}
+    info = db.get_clan_info(int(clan_id))
+    if not info:
+        return {"ok": True, "clan": None, "is_leader": False}
+    is_leader = info["clan"].get("leader_id") == uid
+    return {"ok": True, "clan": info["clan"], "members": info["members"],
+            "is_leader": is_leader}
+
+
+@app.get("/api/clan/top")
+async def clan_top():
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        """SELECT c.id, c.name, c.tag, c.level, c.wins,
+                  (SELECT COUNT(*) FROM clan_members WHERE clan_id = c.id) as member_count
+           FROM clans c ORDER BY c.wins DESC, member_count DESC LIMIT 20"""
+    )
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return {"ok": True, "clans": rows}
+
+
+@app.get("/api/clan/search")
+async def clan_search(q: str = "", init_data: str = ""):
+    results = db.search_clans(q.strip(), limit=10)
+    return {"ok": True, "clans": results}
+
+
+class ClanCreateBody(BaseModel):
+    init_data: str
+    name: str
+    tag: str
+
+
+@app.post("/api/clan/create")
+async def clan_create(body: ClanCreateBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.create_clan(uid, body.name.strip(), body.tag.strip())
+    if result.get("ok"):
+        player = db.get_or_create_player(uid, "")
+        result["player"] = dict(player)
+    return result
+
+
+class ClanJoinBody(BaseModel):
+    init_data: str
+    clan_id: int
+
+
+@app.post("/api/clan/join")
+async def clan_join(body: ClanJoinBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.join_clan(uid, body.clan_id)
+    if result.get("ok"):
+        player = db.get_or_create_player(uid, "")
+        result["player"] = dict(player)
+    return result
+
+
+class ClanLeaveBody(BaseModel):
+    init_data: str
+
+
+@app.post("/api/clan/leave")
+async def clan_leave(body: ClanLeaveBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.leave_clan(uid)
+    if result.get("ok"):
+        player = db.get_or_create_player(uid, "")
+        result["player"] = dict(player)
+    return result
 
 
 # ─── Ежедневные квесты ───────────────────────────────────────────────────────
