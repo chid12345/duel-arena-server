@@ -992,77 +992,131 @@ class MenuScene extends Phaser.Scene {
   _onInvite() {
     const { W, H } = this;
 
-    /* ── Затемнение фона ── */
+    /* ── Затемнение ── */
     const ov = this.add.graphics().setDepth(60);
     ov.fillStyle(0x000000, 0.55); ov.fillRect(0, 0, W, H);
 
-    /* ── Параметры панели ── */
-    const pw = W - 32, ph = 290, px = 16, py = Math.round((H - ph) / 2);
+    /* ── Панель ── */
+    const pw = W - 32, ph = 340, px = 16, py = Math.round((H - ph) / 2);
     const D = 62;
-
-    /* ── Панель: синяя с золотой рамкой (не тёмная!) ── */
     const panBg = this.add.graphics().setDepth(61);
     panBg.fillStyle(0x1e3a7a, 1);
     panBg.fillRoundedRect(px, py, pw, ph, 16);
     panBg.lineStyle(2.5, 0xffc83c, 0.9);
     panBg.strokeRoundedRect(px, py, pw, ph, 16);
-    /* лёгкий светлый хайлайт сверху */
-    panBg.fillStyle(0xffffff, 0.07);
-    panBg.fillRoundedRect(px+2, py+2, pw-4, 28, 14);
+    panBg.fillStyle(0xffffff, 0.06);
+    panBg.fillRoundedRect(px+2, py+2, pw-4, 26, 14);
 
     const at = (x, y, s, sz, col, bold) =>
       txt(this, x, y, s, sz, col || '#f0f0fa', bold).setOrigin(0.5).setDepth(D);
+    const atL = (x, y, s, sz, col, bold) =>
+      txt(this, x, y, s, sz, col || '#f0f0fa', bold).setOrigin(0, 0.5).setDepth(D);
 
     /* ── Заголовок ── */
-    at(px+pw/2, py+20, '🔗  РЕФЕРАЛКА', 15, '#ffc83c', true);
-    at(px+pw/2, py+38, 'Приглашай друзей — получай бонусы!', 11, '#a8c4ff');
+    at(px+pw/2, py+18, '🔗  РЕФЕРАЛКА', 15, '#ffc83c', true);
 
-    /* ── Загрузка статистики ── */
-    const statsLbl = at(px+pw/2, py+66, '⏳ Загрузка...', 11, '#a8c4ff');
+    /* ── Кнопка ✕ ── */
+    const xBg = this.add.graphics().setDepth(D);
+    xBg.fillStyle(0x2a50a0, 1); xBg.fillCircle(px+pw-18, py+18, 13);
+    txt(this, px+pw-18, py+18, '✕', 13, '#f0f0fa', true).setOrigin(0.5).setDepth(D+1);
+
+    const close = () => this.children.list
+      .filter(o => o.depth >= 59)
+      .forEach(o => { try { o.destroy(); } catch(_){} });
+    this.add.zone(px+pw-32, py, 32, 32).setOrigin(0).setDepth(70)
+      .setInteractive({ useHandCursor: true }).on('pointerup', close);
+    this.add.zone(0, 0, W, H).setOrigin(0).setDepth(59).setInteractive()
+      .on('pointerup', ptr => {
+        if (ptr.x < px || ptr.x > px+pw || ptr.y < py || ptr.y > py+ph) close();
+      });
+
+    /* ─── ВКЛАДКИ ──────────────────────────────────────────── */
+    const tabY = py + 36, tabH = 32, tabW = (pw - 24) / 2;
+    let activeTab = 'stats';
+    const statsObjs = [], infoObjs = [];
+
+    /* фон вкладок */
+    const tabBar = this.add.graphics().setDepth(D);
+    tabBar.fillStyle(0x12245a, 1);
+    tabBar.fillRoundedRect(px+8, tabY, pw-16, tabH, 8);
+
+    /* отрисовка активной вкладки */
+    const tabAct = this.add.graphics().setDepth(D);
+    const drawTabAct = (tab) => {
+      tabAct.clear();
+      const tx = tab === 'stats' ? px+8 : px+8+tabW+4;
+      tabAct.fillStyle(0x3a7aff, 1);
+      tabAct.fillRoundedRect(tx+2, tabY+3, tabW-4, tabH-6, 6);
+    };
+    drawTabAct('stats');
+
+    const t1 = at(px+8+tabW/2,     tabY+16, '📊 Статистика', 11, '#ffffff', true);
+    const t2 = at(px+8+tabW+4+tabW/2, tabY+16, 'ℹ️ Условия',    11, '#a8c4ff');
+
+    const switchTab = (tab) => {
+      activeTab = tab;
+      drawTabAct(tab);
+      t1.setStyle({ color: tab==='stats' ? '#ffffff' : '#a8c4ff' });
+      t2.setStyle({ color: tab==='info'  ? '#ffffff' : '#a8c4ff' });
+      statsObjs.forEach(o => o?.setVisible?.(tab === 'stats'));
+      infoObjs.forEach(o  => o?.setVisible?.(tab === 'info'));
+      tg?.HapticFeedback?.impactOccurred('light');
+    };
+
+    this.add.zone(px+8, tabY, tabW, tabH).setOrigin(0).setDepth(70)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => switchTab('stats'));
+    this.add.zone(px+8+tabW+4, tabY, tabW, tabH).setOrigin(0).setDepth(70)
+      .setInteractive({ useHandCursor: true }).on('pointerup', () => switchTab('info'));
+
+    /* ─── СОДЕРЖИМОЕ: СТАТИСТИКА ─────────────────────────── */
+    const cY = tabY + tabH + 10;  /* начало контента */
+
+    const loadTxt = at(px+pw/2, cY+20, '⏳ Загрузка...', 11, '#a8c4ff');
+    statsObjs.push(loadTxt);
 
     get('/api/referral').then(rd => {
-      statsLbl.destroy();
+      loadTxt.destroy();
+      statsObjs.splice(statsObjs.indexOf(loadTxt), 1);
 
-      const link  = rd.link || `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id}`;
-      const inv   = rd.invited_count       || 0;
-      const dia   = rd.total_reward_diamonds || 0;
-      const prem  = rd.paying_subscribers   || 0;
+      const link = rd.link || `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id}`;
+      const inv  = rd.invited_count        || 0;
+      const dia  = rd.total_reward_diamonds || 0;
+      const prem = rd.paying_subscribers    || 0;
 
-      /* ── Статистика (2 плитки) ── */
+      /* плитки */
       const stW = (pw - 32) / 2;
-      const s1x = px + 12, s2x = px + 16 + stW, sY = py + 54, sH = 46;
+      const s1x = px+12, s2x = px+16+stW, sH = 50;
 
       const s1 = this.add.graphics().setDepth(D);
-      s1.fillStyle(0x2a50a0, 1); s1.fillRoundedRect(s1x, sY, stW, sH, 10);
-      s1.lineStyle(1.5, 0x5096ff, 0.6); s1.strokeRoundedRect(s1x, sY, stW, sH, 10);
-      at(s1x + stW/2, sY+13, '👥 Приглашено', 10, '#a8c4ff');
-      at(s1x + stW/2, sY+32, `${inv}`, 18, '#ffffff', true);
+      s1.fillStyle(0x2a50a0,1); s1.fillRoundedRect(s1x,cY,stW,sH,10);
+      s1.lineStyle(1.5,0x5096ff,0.6); s1.strokeRoundedRect(s1x,cY,stW,sH,10);
+      const s1l = at(s1x+stW/2, cY+14, '👥 Приглашено',  10, '#a8c4ff');
+      const s1v = at(s1x+stW/2, cY+34, `${inv}`, 18, '#ffffff', true);
 
       const s2 = this.add.graphics().setDepth(D);
-      s2.fillStyle(0x2a50a0, 1); s2.fillRoundedRect(s2x, sY, stW, sH, 10);
-      s2.lineStyle(1.5, 0xffc83c, 0.5); s2.strokeRoundedRect(s2x, sY, stW, sH, 10);
-      at(s2x + stW/2, sY+13, '💎 Бонусов', 10, '#a8c4ff');
-      at(s2x + stW/2, sY+32, `${dia}`, 18, '#ffc83c', true);
+      s2.fillStyle(0x2a50a0,1); s2.fillRoundedRect(s2x,cY,stW,sH,10);
+      s2.lineStyle(1.5,0xffc83c,0.5); s2.strokeRoundedRect(s2x,cY,stW,sH,10);
+      const s2l = at(s2x+stW/2, cY+14, '💎 Бонусов',    10, '#a8c4ff');
+      const s2v = at(s2x+stW/2, cY+34, `${dia}`, 18, '#ffc83c', true);
 
-      if (prem > 0) {
-        at(px+pw/2, sY+sH+10, `⭐ Купили Premium: ${prem}`, 11, '#ffc83c');
-      }
+      let premTxt = null;
+      if (prem > 0) premTxt = at(px+pw/2, cY+sH+10, `⭐ Из них купили Premium: ${prem}`, 11, '#ffc83c');
 
-      /* ── Ссылка ── */
-      const lbY = sY + sH + (prem > 0 ? 28 : 16);
-      at(px+pw/2, lbY, 'Твоя ссылка для приглашения:', 11, '#a8c4ff');
+      /* ссылка */
+      const lbY = cY + sH + (prem > 0 ? 28 : 14);
+      const lbLbl = at(px+pw/2, lbY, 'Твоя реферальная ссылка:', 11, '#a8c4ff');
       const lb = this.add.graphics().setDepth(D);
-      lb.fillStyle(0x0e2060, 1); lb.fillRoundedRect(px+10, lbY+12, pw-20, 28, 8);
-      lb.lineStyle(1, 0x5096ff, 0.5); lb.strokeRoundedRect(px+10, lbY+12, pw-20, 28, 8);
-      at(px+pw/2, lbY+26, link.replace('https://',''), 9, '#7ab4ff');
+      lb.fillStyle(0x0e2060,1); lb.fillRoundedRect(px+10,lbY+12,pw-20,28,8);
+      lb.lineStyle(1,0x5096ff,0.5); lb.strokeRoundedRect(px+10,lbY+12,pw-20,28,8);
+      const lbTxt = at(px+pw/2, lbY+26, link.replace('https://',''), 9, '#7ab4ff');
 
-      /* ── Кнопка «Скопировать» ── */
+      /* кнопки */
       const cbY = lbY + 50;
       const cbg = this.add.graphics().setDepth(D);
-      cbg.fillStyle(0x3a7aff, 1); cbg.fillRoundedRect(px+10, cbY, pw-20, 40, 10);
-      cbg.fillStyle(0xffffff, 0.12); cbg.fillRoundedRect(px+10, cbY+2, pw-20, 18, 8);
-      at(px+pw/2, cbY+20, '📋  Скопировать ссылку', 13, '#ffffff', true);
-      this.add.zone(px+10, cbY, pw-20, 40).setOrigin(0).setDepth(65)
+      cbg.fillStyle(0x3a7aff,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10);
+      cbg.fillStyle(0xffffff,0.12); cbg.fillRoundedRect(px+10,cbY+2,pw-20,18,8);
+      const cbT = at(px+pw/2, cbY+20, '📋  Скопировать ссылку', 13, '#ffffff', true);
+      const cbZ = this.add.zone(px+10,cbY,pw-20,40).setOrigin(0).setDepth(65)
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { cbg.clear(); cbg.fillStyle(0x2060e0,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10); })
         .on('pointerout',  () => { cbg.clear(); cbg.fillStyle(0x3a7aff,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10); cbg.fillStyle(0xffffff,0.12); cbg.fillRoundedRect(px+10,cbY+2,pw-20,18,8); })
@@ -1070,15 +1124,14 @@ class MenuScene extends Phaser.Scene {
           tg?.HapticFeedback?.notificationOccurred('success');
           navigator.clipboard?.writeText(link)
             .then(() => this._toast('✅ Ссылка скопирована!'))
-            .catch(() => { tg?.openLink?.(link); this._toast('🔗 Открываем...'); });
+            .catch(() => { tg?.openLink?.(link); });
         });
 
-      /* ── Кнопка «Поделиться» ── */
       const sbY = cbY + 48;
       const sbg = this.add.graphics().setDepth(D);
-      sbg.fillStyle(0x1a7a48, 1); sbg.fillRoundedRect(px+10, sbY, pw-20, 36, 10);
-      at(px+pw/2, sbY+18, '💬  Поделиться в Telegram', 12, '#ffffff', true);
-      this.add.zone(px+10, sbY, pw-20, 36).setOrigin(0).setDepth(65)
+      sbg.fillStyle(0x1a7a48,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10);
+      const sbT = at(px+pw/2, sbY+18, '💬  Поделиться в Telegram', 12, '#ffffff', true);
+      const sbZ = this.add.zone(px+10,sbY,pw-20,36).setOrigin(0).setDepth(65)
         .setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { sbg.clear(); sbg.fillStyle(0x0f5030,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10); })
         .on('pointerout',  () => { sbg.clear(); sbg.fillStyle(0x1a7a48,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10); })
@@ -1086,28 +1139,53 @@ class MenuScene extends Phaser.Scene {
           const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('⚔️ Присоединяйся к Duel Arena — PvP-арена в Telegram!')}`;
           tg?.openLink?.(shareUrl);
         });
-    }).catch(() => {
-      statsLbl.setText('❌ Нет соединения').setStyle({ color: '#ff6666' });
+
+      statsObjs.push(s1,s1l,s1v, s2,s2l,s2v, lb,lbLbl,lbTxt, cbg,cbT,cbZ, sbg,sbT,sbZ);
+      if (premTxt) statsObjs.push(premTxt);
+      /* применяем видимость если пользователь уже переключил вкладку */
+      statsObjs.forEach(o => o?.setVisible?.(activeTab === 'stats'));
+
+    }).catch(() => { loadTxt.setText('❌ Нет соединения').setStyle({ color:'#ff6666' }); });
+
+    /* ─── СОДЕРЖИМОЕ: УСЛОВИЯ (статично) ────────────────── */
+    const iY = cY;
+    const rows = [
+      { icon:'1️⃣', title:'Поделись ссылкой с другом',              sub:'Кнопка «Скопировать» на вкладке «Статистика»' },
+      { icon:'2️⃣', title:'Друг регистрируется по ссылке',          sub:'Один раз — привязка навсегда' },
+      { icon:'3️⃣', title:'Друг покупает Premium — ты получаешь 💎', sub:'Бонус алмазами зачисляется автоматически' },
+    ];
+    rows.forEach((r, i) => {
+      const ry = iY + i * 52;
+      const rg = this.add.graphics().setDepth(D).setVisible(false);
+      rg.fillStyle(0x2a50a0,1); rg.fillRoundedRect(px+10,ry,pw-20,48,10);
+      const ri = at(px+28, ry+24, r.icon, 16).setVisible(false);
+      const rt = txt(this, px+50, ry+13, r.title, 12, '#f0f0fa', true).setDepth(D).setVisible(false);
+      const rs = txt(this, px+50, ry+30, r.sub,   10, '#a8c4ff').setDepth(D).setVisible(false);
+      infoObjs.push(rg, ri, rt, rs);
     });
 
-    /* ── Кнопка ✕ ── */
-    const xBg = this.add.graphics().setDepth(D);
-    xBg.fillStyle(0x2a50a0, 1); xBg.fillCircle(px+pw-18, py+18, 14);
-    txt(this, px+pw-18, py+18, '✕', 13, '#f0f0fa', true).setOrigin(0.5).setDepth(D);
+    /* схема вознаграждений */
+    const schY = iY + rows.length * 52 + 8;
+    const schTitleBg = this.add.graphics().setDepth(D).setVisible(false);
+    schTitleBg.fillStyle(0x0e2060,1);
+    schTitleBg.fillRoundedRect(px+10, schY, pw-20, 28, 8);
+    const schTitle = at(px+pw/2, schY+14, '💰 СХЕМА ВОЗНАГРАЖДЕНИЙ', 12, '#ffc83c', true).setVisible(false);
+    infoObjs.push(schTitleBg, schTitle);
 
-    const close = () => this.children.list
-      .filter(o => o.depth >= 59)
-      .forEach(o => { try { o.destroy(); } catch(_){} });
-
-    this.add.zone(px+pw-32, py, 32, 32).setOrigin(0).setDepth(66)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerup', close);
-
-    /* тап вне панели → закрыть */
-    this.add.zone(0, 0, W, H).setOrigin(0).setDepth(59).setInteractive()
-      .on('pointerup', ptr => {
-        if (ptr.x < px || ptr.x > px+pw || ptr.y < py || ptr.y > py+ph) close();
-      });
+    const tiers = [
+      { range:'1–10 друзей купили Premium', pct:'5% от суммы покупки → 💎' },
+      { range:'11–30 друзей купили Premium', pct:'7% от суммы покупки → 💎' },
+      { range:'31+ друзей купили Premium',  pct:'10% + со всех покупок магазина' },
+    ];
+    tiers.forEach((t, i) => {
+      const ty = schY + 36 + i * 32;
+      const tg2 = this.add.graphics().setDepth(D).setVisible(false);
+      tg2.fillStyle(i%2===0 ? 0x1a3060 : 0x162850, 1);
+      tg2.fillRoundedRect(px+10, ty, pw-20, 28, 6);
+      const tl = txt(this, px+18, ty+14, t.range, 10, '#c0d4ff').setOrigin(0,0.5).setDepth(D).setVisible(false);
+      const tv = txt(this, px+pw-18, ty+14, t.pct, 10, '#ffc83c', true).setOrigin(1,0.5).setDepth(D).setVisible(false);
+      infoObjs.push(tg2, tl, tv);
+    });
   }
 
   _soon(name) { this._toast(`🚧 ${name} — скоро!`); }

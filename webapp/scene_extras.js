@@ -702,9 +702,10 @@ class ClanScene extends Phaser.Scene {
     const left = Math.round((window.innerWidth - w) / 2);
     const top  = Math.round(y + (window.innerHeight - this.H) / 2);
     el.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${w}px;height:${h}px;
-      padding:0 10px;background:#1e1c30;color:#f0f0fa;border:1.5px solid #5096ff55;
-      border-radius:9px;font-size:14px;outline:none;z-index:999;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
+      padding:0 12px;background:#1e3878;color:#f0f0fa;border:2px solid #5096ffaa;
+      border-radius:10px;font-size:14px;outline:none;z-index:999;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      box-sizing:border-box;`;
     document.body.appendChild(el);
     this.events.once('shutdown', () => el.remove());
     this.events.once('destroy',  () => el.remove());
@@ -754,26 +755,30 @@ class ClanScene extends Phaser.Scene {
 
   /* ══ СОЗДАНИЕ ════════════════════════════════════════════ */
   _renderCreate(W, H) {
-    txt(this, W/2, 84, '➕ СОЗДАТЬ КЛАН', 14, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W/2, 104, 'Стоимость: 200 🪙', 11, '#8888aa').setOrigin(0.5);
+    txt(this, W/2, 84, '➕ СОЗДАТЬ КЛАН', 15, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W/2, 106, 'Стоимость: 200 🪙  ·  Максимум 20 участников', 12, '#8080cc').setOrigin(0.5);
 
-    makePanel(this, 8, 118, W-16, 128, 12);
-    txt(this, 20, 128, 'Название клана (3–20 символов):', 10, '#8888aa');
-    this._nameEl = this._makeInput(W, 144, W-32, 36, 'Например: Железный Кулак', 20);
-    txt(this, 20, 192, 'Тег (2–4 символа):', 10, '#8888aa');
-    this._tagEl  = this._makeInput(W, 208, (W-32)/2, 34, 'ЖК', 4);
+    /* Поле: название */
+    makePanel(this, 8, 122, W-16, 148, 12);
+    txt(this, 20, 132, 'Название клана', 12, '#a0a0cc', true);
+    txt(this, 20, 148, '3–20 символов, например: Железный Кулак', 10, '#6060aa');
+    this._nameEl = this._makeInput(W, 162, W-32, 38, 'Железный Кулак', 20);
 
-    const btnY = 262;
+    txt(this, 20, 210, 'Тег клана', 12, '#a0a0cc', true);
+    txt(this, 20, 226, '2–4 символа, например: ЖК', 10, '#6060aa');
+    this._tagEl  = this._makeInput(W, 238, (W-32)/2, 38, 'ЖК', 4);
+
+    const btnY = 284;
     const bgC  = this.add.graphics();
-    bgC.fillStyle(C.purple, 0.9); bgC.fillRoundedRect(16, btnY, W-32, 46, 12);
-    bgC.fillStyle(0xffffff, 0.07); bgC.fillRoundedRect(18, btnY+2, W-36, 20, 9);
-    const btnT = txt(this, W/2, btnY+23, '⚔️  Основать клан  (200 🪙)', 13, '#ffffff', true).setOrigin(0.5);
-    this.add.zone(16, btnY, W-32, 46).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { bgC.clear(); bgC.fillStyle(0x6600cc,1); bgC.fillRoundedRect(16,btnY,W-32,46,12); tg?.HapticFeedback?.impactOccurred('heavy'); })
-      .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,btnY,W-32,46,12); })
+    bgC.fillStyle(C.purple, 0.9); bgC.fillRoundedRect(16, btnY, W-32, 48, 12);
+    bgC.fillStyle(0xffffff, 0.08); bgC.fillRoundedRect(18, btnY+2, W-36, 22, 10);
+    const btnT = txt(this, W/2, btnY+24, '⚔️  Основать клан  (200 🪙)', 14, '#ffffff', true).setOrigin(0.5);
+    this.add.zone(16, btnY, W-32, 48).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { bgC.clear(); bgC.fillStyle(0x6600cc,1); bgC.fillRoundedRect(16,btnY,W-32,48,12); tg?.HapticFeedback?.impactOccurred('heavy'); })
+      .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,btnY,W-32,48,12); })
       .on('pointerup',   () => this._doCreate(btnT));
 
-    txt(this, W/2, btnY+56, 'Максимум 20 участников · Имя и тег уникальны', 11, '#5050aa').setOrigin(0.5);
+    txt(this, W/2, btnY+60, 'Имя и тег должны быть уникальны', 11, '#5050aa').setOrigin(0.5);
   }
 
   /* ══ ТОП КЛАНОВ ══════════════════════════════════════════ */
