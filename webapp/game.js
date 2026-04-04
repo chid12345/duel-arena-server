@@ -1443,27 +1443,29 @@ class BattleScene extends Phaser.Scene {
     const b = State.battle;
     if (!b) return;
 
+    const hudH = 72;  // высота HUD-панелей
+
     /* Игрок (P1) */
-    makePanel(this, 8, 8, W/2 - 14, 60, 10);
-    txt(this, 16, 14, 'ВЫ', 10, '#8888aa', true);
+    makePanel(this, 8, 8, W/2 - 14, hudH, 10);
+    txt(this, 16, 13, 'ВЫ', 10, '#8888aa', true);
     this.p1Name = txt(this, 16, 24, State.player?.username || 'Вы', 13, '#f0f0fa', true);
     this.p1Hp   = txt(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
-    this.p1Bar  = this._hpBar(16, 54, W/2 - 28, b.my_hp / b.my_max_hp, C.green);
+    this.p1Bar  = this._hpBar(12, 56, W/2 - 22, b.my_max_hp > 0 ? b.my_hp / b.my_max_hp : 0, C.green);
     txt(this, 10, 10, '👁', 10).setAlpha(0.55);
-    this.add.zone(8, 8, W/2 - 14, 60).setOrigin(0)
+    this.add.zone(8, 8, W/2 - 14, hudH).setOrigin(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerup', () => this._showCard('me'));
 
     /* Соперник (P2) */
-    makePanel(this, W/2 + 6, 8, W/2 - 14, 60, 10);
-    txt(this, W - 16, 14, 'СОПЕРНИК', 10, '#8888aa', true).setOrigin(1, 0);
+    makePanel(this, W/2 + 6, 8, W/2 - 14, hudH, 10);
+    txt(this, W - 16, 13, 'СОПЕРНИК', 10, '#8888aa', true).setOrigin(1, 0);
     this.p2Name = txt(this, W - 16, 24, b.opp_name || 'Соперник', 13, '#f0f0fa', true).setOrigin(1, 0);
     this.p2Hp   = txt(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
-    this.p2Bar  = this._hpBar(W/2 + 18, 54, W/2 - 28, b.opp_hp / b.opp_max_hp, C.red);
+    this.p2Bar  = this._hpBar(W/2 + 10, 56, W/2 - 22, b.opp_max_hp > 0 ? b.opp_hp / b.opp_max_hp : 0, C.red);
     // Подсказка "посмотреть карточку"
     txt(this, W/2 + 10, 10, '👁', 10).setAlpha(0.55);
     // Тап на панель соперника → карточка
-    this.add.zone(W/2 + 6, 8, W/2 - 14, 60).setOrigin(0)
+    this.add.zone(W/2 + 6, 8, W/2 - 14, hudH).setOrigin(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerup', () => this._showCard('opp'));
 
@@ -1477,7 +1479,7 @@ class BattleScene extends Phaser.Scene {
 
   /** HP с «призраком»: заливка скачет к новому HP, светлый хвост догоняет (ghost health). */
   _hpBar(x, y, w, pct, color) {
-    const h = 7;
+    const h = 10;
     const bg = this.add.graphics();
     bg.fillStyle(C.dark, 1);
     bg.fillRoundedRect(x, y, w, h, 3);
