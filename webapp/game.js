@@ -708,12 +708,13 @@ class MenuScene extends Phaser.Scene {
 
     /* ══ СБОРКА ═════════════════════════════════════════════ */
     const children = [
-      hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt, thBg, thTxt, thZ,
+      hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt,
+      snBg, snTxt, snZ, thBg, thTxt, thZ,
       glowG, warrior, hpBg, hpTxt,
       ...statObjs.flat(),
       refG, refT, refZ,
     ];
-    if (xpBg)        children.push(xpBg, xpTxt);
+    if (xpBg)        children.push(xpBg, xpTxt, xpLabel);
     if (fsBadge.length)   children.push(...fsBadge);
     if (regenObjs.length) children.push(...regenObjs);
     children.push(...hpExtra);
@@ -867,7 +868,7 @@ class MenuScene extends Phaser.Scene {
       { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
       { icon: '🌟', label: 'Battle Pass', cb: () => this.scene.start('BattlePass') },
       { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
-      { icon: '🔗', label: 'Пригласить', cb: () => this._onInvite()               },
+      { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
     ];
 
     const cols = 2;

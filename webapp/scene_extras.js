@@ -610,9 +610,10 @@ class ClanScene extends Phaser.Scene {
     const isLeader = data.is_leader;
     let y = 84;
 
+    const trunc = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s || '');
     makePanel(this, 8, y, W-16, 72, 12);
     txt(this, 20, y+10, `[${clan.tag}]`, 15, '#ffc83c', true);
-    txt(this, 20, y+30, clan.name, 16, '#f0f0fa', true);
+    txt(this, 20, y+30, trunc(clan.name, 22), 16, '#f0f0fa', true);
     txt(this, 20, y+50, `👥 ${members.length}/20  ·  🏆 ${clan.wins} побед  ·  Ур.${clan.level}`, 10, '#8888aa');
     if (isLeader) txt(this, W-20, y+18, '👑 Лидер', 10, '#ffc83c', true).setOrigin(1,0);
     y += 82;
@@ -627,7 +628,7 @@ class ClanScene extends Phaser.Scene {
       const bg = this.add.graphics();
       bg.fillStyle(C.bgPanel, 0.7); bg.fillRoundedRect(8, ry, W-16, rowH-3, 7);
       txt(this, 18, ry+8,  m.role === 'leader' ? '👑' : '⚔️', 14);
-      txt(this, 40, ry+8,  m.username || `User${m.user_id}`, 12,
+      txt(this, 40, ry+8,  trunc(m.username || `User${m.user_id}`, 18), 12,
         m.role === 'leader' ? '#ffc83c' : '#c0c0e0', m.role === 'leader');
       txt(this, 40, ry+22, `Ур.${m.level}  ·  ${m.wins} побед`, 9, '#555577');
       txt(this, W-16, ry+18, m.role === 'leader' ? 'Лидер' : 'Участник', 9, '#444466').setOrigin(1,0.5);
@@ -664,14 +665,15 @@ class ClanScene extends Phaser.Scene {
     get('/api/clan/top').then(d => this._showSearchResults(d.clans || [], W));
   }
 
-  _makeInput(W, y, w, h, placeholder) {
+  _makeInput(W, y, w, h, placeholder, maxLen = 20) {
     const el = document.createElement('input');
-    el.type = 'text'; el.placeholder = placeholder; el.maxLength = 20;
+    el.type = 'text'; el.placeholder = placeholder; el.maxLength = maxLen;
     const left = Math.round((window.innerWidth - w) / 2);
     const top  = Math.round(y + (window.innerHeight - this.H) / 2);
     el.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${w}px;height:${h}px;
       padding:0 10px;background:#1e1c30;color:#f0f0fa;border:1.5px solid #5096ff55;
-      border-radius:9px;font-size:14px;outline:none;z-index:999;`;
+      border-radius:9px;font-size:14px;outline:none;z-index:999;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;`;
     document.body.appendChild(el);
     this.events.once('shutdown', () => el.remove());
     this.events.once('destroy',  () => el.remove());
@@ -707,7 +709,7 @@ class ClanScene extends Phaser.Scene {
       this._resultsContainer.add([
         bg,
         txt(this, 18, ry+8,  `[${c.tag}]`, 12, '#ffc83c', true),
-        txt(this, 18, ry+26, c.name, 11, '#c0c0e0'),
+        txt(this, 18, ry+26, (s => s.length > 20 ? s.slice(0,20)+'…' : s)(c.name||''), 11, '#c0c0e0'),
         txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 9, '#555577'),
         txt(this, W-82, ry+26, `🏆 ${c.wins}`, 9, '#ffc83c'),
         joinG, joinT,
@@ -726,9 +728,9 @@ class ClanScene extends Phaser.Scene {
 
     makePanel(this, 8, 118, W-16, 128, 12);
     txt(this, 20, 128, 'Название клана (3–20 символов):', 10, '#8888aa');
-    this._nameEl = this._makeInput(W, 144, W-32, 36, 'Например: Железный Кулак');
+    this._nameEl = this._makeInput(W, 144, W-32, 36, 'Например: Железный Кулак', 20);
     txt(this, 20, 192, 'Тег (2–4 символа):', 10, '#8888aa');
-    this._tagEl  = this._makeInput(W, 208, (W-32)/2, 34, 'ЖК');
+    this._tagEl  = this._makeInput(W, 208, (W-32)/2, 34, 'ЖК', 4);
 
     const btnY = 262;
     const bgC  = this.add.graphics();
@@ -759,7 +761,8 @@ class ClanScene extends Phaser.Scene {
         if (isTop) { bg.lineStyle(1.5, C.gold, 0.5); bg.strokeRoundedRect(8,y,W-16,42,9); }
         const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
         txt(this, 18, y+11, medal, isTop?15:11, '#ffc83c');
-        txt(this, 44, y+8,  `[${c.tag}] ${c.name}`, 12, isTop?'#ffc83c':'#c0c0e0', isTop);
+        const ttr = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s || '');
+        txt(this, 44, y+8,  `[${c.tag}] ${ttr(c.name, 18)}`, 12, isTop?'#ffc83c':'#c0c0e0', isTop);
         txt(this, 44, y+24, `🏆 ${c.wins} побед  ·  👥 ${c.member_count}`, 9, '#555577');
         txt(this, W-16, y+21, `Ур.${c.level}`, 10, '#8888aa').setOrigin(1,0.5);
         y += 46;
