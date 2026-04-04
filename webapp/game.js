@@ -298,6 +298,7 @@ class MenuScene extends Phaser.Scene {
         this._buildMorePanel();
         this._switchTab('profile');
         this._setupWS();
+        this._startRegenTick();
       } else {
         this._showError('Ошибка загрузки профиля');
       }
@@ -426,6 +427,28 @@ class MenuScene extends Phaser.Scene {
       xpTxt = txt(this, W * 0.38, hpY + 17, `XP ${p.exp}/${p.exp_needed}`, 8, '#555577').setOrigin(0.5);
     }
 
+    /* ── Таймер реген HP ── */
+    let regenTxt;
+    if (p.current_hp < p.max_hp) {
+      const rate = p.regen_per_min || 0;
+      regenTxt = txt(this, hpX, hpY + 28,
+        `❤️ +${rate}/мин`, 8, '#cc4444').setOrigin(0, 0);
+      // Живой обратный отсчёт
+      let secsLeft = p.regen_secs_to_full || 0;
+      const _fmtTime = s => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+      const regenTimer = txt(this, hpX + hpW, hpY + 28,
+        secsLeft > 0 ? `полный через ${_fmtTime(secsLeft)}` : '',
+        8, '#553333').setOrigin(1, 0);
+      this._regenInterval = this.time.addEvent({
+        delay: 1000, loop: true,
+        callback: () => {
+          if (secsLeft <= 0) { regenTimer.setText('HP полный!').setStyle({ color: '#3cc864' }); return; }
+          secsLeft = Math.max(0, secsLeft - 1);
+          regenTimer.setText(secsLeft > 0 ? `полный через ${_fmtTime(secsLeft)}` : '✅ HP полный!');
+        },
+      });
+    }
+
     /* ── Статы справа ── */
     const sx = W * 0.62;
     const sy0 = charY - 55;
@@ -506,8 +529,9 @@ class MenuScene extends Phaser.Scene {
       statsBg, ...statObjs.flat(),
       refG, refT, refZ,
     ];
-    if (xpBg)    children.push(xpBg, xpTxt);
-    if (fsBadge) children.push(...fsBadge);
+    if (xpBg)      children.push(xpBg, xpTxt);
+    if (regenTxt)  children.push(regenTxt, regenTimer);
+    if (fsBadge)   children.push(...fsBadge);
     children.push(...hpExtra);
     children.forEach(o => c.add(o));
 
@@ -550,22 +574,51 @@ class MenuScene extends Phaser.Scene {
       () => this._onBotFight()
     );
 
-    /* ── HP предупреждение ── */
-    let warn;
-    if (p.hp_pct < 30) {
-      const wg = this.add.graphics();
-      wg.fillStyle(0x440000, 0.85);
-      wg.fillRoundedRect(20, CH * 0.80, W - 40, 42, 10);
-      wg.lineStyle(1.5, C.red, 0.5);
-      wg.strokeRoundedRect(20, CH * 0.80, W - 40, 42, 10);
-      const wt = txt(this, W / 2, CH * 0.80 + 21,
-        `❤️ HP слишком мало для боя! (${p.current_hp}/${p.max_hp})`,
-        11, '#ff8888', true).setOrigin(0.5);
-      warn = [wg, wt];
+    /* ── HP блок (всегда показываем) ── */
+    const hpBlockY = CH * 0.79;
+    const hpBlockObjs = [];
+
+    // Мини HP бар
+    const hpPct = p.hp_pct / 100;
+    const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
+    hpBlockObjs.push(makeBar(this, 20, hpBlockY, W - 40, 10, hpPct, hpCol));
+    hpBlockObjs.push(
+      txt(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
+    );
+
+    if (p.hp_pct < 100) {
+      // Реген-подсказка
+      const regenStr = p.regen_secs_to_full > 0
+        ? `+${p.regen_per_min}/мин · полный через ${Math.ceil(p.regen_secs_to_full / 60)}мин`
+        : `+${p.regen_per_min}/мин`;
+      hpBlockObjs.push(
+        txt(this, 20, hpBlockY + 14, regenStr, 8, '#553333')
+      );
     }
 
-    const children = [title, sep, ...pvpCard, ...botCard];
-    if (warn) children.push(...warn);
+    if (p.hp_pct < 30) {
+      // Большая кнопка "Выпить зелье" с ценой
+      const canAfford = (p.gold || 0) >= 12;
+      const btnBY = hpBlockY + 28;
+      const qBg = this.add.graphics();
+      qBg.fillStyle(canAfford ? C.red : C.dark, canAfford ? 0.88 : 0.55);
+      qBg.fillRoundedRect(20, btnBY, W - 40, 38, 10);
+      if (canAfford) { qBg.lineStyle(1.5, C.gold, 0.3); qBg.strokeRoundedRect(20, btnBY, W - 40, 38, 10); }
+      const qLabel = canAfford
+        ? `🧪 Выпить малое зелье  —  12 🪙`
+        : `🧪 Нужно 12 🪙 (у вас ${p.gold || 0})`;
+      const qT = txt(this, W / 2, btnBY + 19, qLabel, 11, canAfford ? '#ffffff' : '#664444', true).setOrigin(0.5);
+      const qZ = this.add.zone(20, btnBY, W - 40, 38).setOrigin(0)
+        .setInteractive({ useHandCursor: canAfford });
+      if (canAfford) {
+        qZ.on('pointerdown', () => { qBg.clear(); qBg.fillStyle(0x991a22,1); qBg.fillRoundedRect(20,btnBY,W-40,38,10); tg?.HapticFeedback?.impactOccurred('medium'); });
+        qZ.on('pointerout',  () => { qBg.clear(); qBg.fillStyle(C.red,0.88); qBg.fillRoundedRect(20,btnBY,W-40,38,10); qBg.lineStyle(1.5,C.gold,0.3); qBg.strokeRoundedRect(20,btnBY,W-40,38,10); });
+        qZ.on('pointerup',   () => this._quickHeal(qBg, qT, qZ, 20, btnBY, W - 40, 38));
+      }
+      hpBlockObjs.push(qBg, qT, qZ);
+    }
+
+    const children = [title, sep, ...pvpCard, ...botCard, ...hpBlockObjs];
     children.forEach(o => c.add(o));
 
     this._panels.battle = c;
@@ -769,6 +822,49 @@ class MenuScene extends Phaser.Scene {
         this.scene.start('Battle');
       }
     });
+  }
+
+  /* ── Авто-реген HP каждые 30 сек (без запроса на сервер) ── */
+  _startRegenTick() {
+    const p = State.player;
+    if (!p || !p.regen_per_min) return;
+    const regenPerTick = p.regen_per_min / 2; // каждые 30 сек = 1/2 минуты
+    this.time.addEvent({
+      delay: 30_000, loop: true,
+      callback: () => {
+        const sp = State.player;
+        if (!sp || sp.current_hp >= sp.max_hp) return;
+        sp.current_hp = Math.min(sp.max_hp, Math.round(sp.current_hp + regenPerTick));
+        sp.hp_pct     = Math.round(sp.current_hp / sp.max_hp * 100);
+        // Если была открыта ProfilePanel — перерисуем сцену
+        if (this._activeTab === 'profile') this.scene.restart();
+      },
+    });
+  }
+
+  /* ── Быстрое зелье из BattlePanel ─────────────────────── */
+  async _quickHeal(btnBg, btnTxt, zone, bx, by, bw, bh) {
+    zone.disableInteractive();
+    btnTxt.setText('Пьём зелье...');
+    try {
+      const res = await post('/api/shop/buy', { item_id: 'hp_small' });
+      if (res.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        if (res.player) State.player = res.player;
+        this._toast(`❤️ +${res.hp_restored} HP! Теперь ${res.player?.current_hp}/${res.player?.max_hp}`);
+        this.time.delayedCall(700, () => this.scene.restart());
+      } else {
+        tg?.HapticFeedback?.notificationOccurred('error');
+        btnTxt.setText(res.reason || 'Ошибка');
+        this.time.delayedCall(1500, () => {
+          btnTxt.setText('🧪 Выпить малое зелье  —  12 🪙');
+          zone.setInteractive({ useHandCursor: true });
+        });
+      }
+    } catch (_) {
+      btnTxt.setText('❌ Нет соединения');
+      zone.setInteractive({ useHandCursor: true });
+    }
   }
 
   _showError(msg) {

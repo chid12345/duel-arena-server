@@ -193,6 +193,19 @@ def _player_api(player: dict) -> dict:
         "hp_pct": int(chp / max(1, mhp) * 100),
         "xp_pct": int(int(player.get("exp", 0)) / max(1, need_xp) * 100) if need_xp > 0 else 100,
         "max_level": lv >= MAX_LEVEL,
+        # Реген HP — для таймера в TMA
+        "regen_per_min": round(
+            mhp / HP_REGEN_BASE_SECONDS
+            * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
+            * 60, 1
+        ),
+        "regen_secs_to_full": (
+            0 if chp >= mhp else
+            int((mhp - chp) / max(0.001,
+                mhp / HP_REGEN_BASE_SECONDS
+                * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
+            ))
+        ),
     }
 
 
