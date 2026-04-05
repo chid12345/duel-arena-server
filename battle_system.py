@@ -1129,7 +1129,18 @@ class BattleSystem:
         attack_bonus = atk_improvements.get('attack_power', 0) * 0.05
         base_damage = int(base_damage * (1 + attack_bonus))
 
-        base_damage = self._apply_incoming_damage(base_damage, defender)
+        # Фича силы: «пролом брони» — игнорируем часть брони цели.
+        atk_strength_invested = max(0, atk_str - PLAYER_START_STRENGTH)
+        armor_break_chance = min(
+            STRENGTH_ARMOR_BREAK_MAX_CHANCE,
+            (atk_strength_invested // STRENGTH_ARMOR_BREAK_STEP) * STRENGTH_ARMOR_BREAK_PCT_PER_STEP,
+        )
+        if random.random() < armor_break_chance:
+            armor_reduction = max(0.0, 1.0 - self._armor_multiplier(defender))
+            effective_reduction = armor_reduction * (1.0 - STRENGTH_ARMOR_BREAK_IGNORE_PCT)
+            base_damage = max(1, int(base_damage * (1.0 - effective_reduction)))
+        else:
+            base_damage = self._apply_incoming_damage(base_damage, defender)
 
         # Фича танка: шанс поглотить 50% входящего урона (после брони).
         guard_triggered = False

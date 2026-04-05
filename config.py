@@ -195,6 +195,12 @@ FORTRESS_GUARD_STEP = 120
 FORTRESS_GUARD_PCT_PER_STEP = 0.005
 FORTRESS_GUARD_MAX_CHANCE = 0.03
 
+# Сила: «пролом брони» — шанс частично игнорировать броню цели на удар.
+STRENGTH_ARMOR_BREAK_STEP = 25
+STRENGTH_ARMOR_BREAK_PCT_PER_STEP = 0.01
+STRENGTH_ARMOR_BREAK_MAX_CHANCE = 0.12
+STRENGTH_ARMOR_BREAK_IGNORE_PCT = 0.25
+
 # Урон от Силы: убывающая отдача через степенную формулу
 #   raw_dmg = FLAT_PER_LEVEL * level + SCALE * strength^POWER
 #   normal_cap = defender.max_hp * MAX_PCT  (крит может превысить кап)
