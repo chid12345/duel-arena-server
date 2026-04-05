@@ -100,12 +100,12 @@ async def _send_tg_message(chat_id: int, text: str, parse_mode: str = "HTML") ->
 
 
 async def _notify_paid_full_reset(uid: int) -> None:
-    """Полный сброс аккаунта после оплаты USDT (CryptoPay). Идемпотентность — на уровне инвойса."""
+    """Сброс прогресса после оплаты USDT: золото, алмазы, клан и рефералка сохраняются."""
     try:
         battle_system.force_abandon_battle(uid)
     except Exception as e:
         logger.warning("force_abandon before full reset uid=%s: %s", uid, e)
-    db.wipe_player_profile(uid)
+    db.wipe_player_profile(uid, keep_wallet_clan_and_referrals=True)
     db.get_or_create_player(uid, "")
     db.log_metric_event("paid_full_reset", uid, value=1)
     try:
@@ -114,8 +114,9 @@ async def _notify_paid_full_reset(uid: int) -> None:
         logger.warning("ws profile_reset uid=%s: %s", uid, e)
     await _send_tg_message(
         uid,
-        "🔄 <b>Профиль полностью сброшен</b>\n"
-        "Оплата USDT получена. Вы снова новый игрок — откройте /start или Mini App.\n\n"
+        "🔄 <b>Прогресс сброшен</b>\n"
+        "Оплата USDT получена. Уровень и бои — с нуля; <b>золото, алмазы, клан и реферальная программа</b> сохранены.\n"
+        "Откройте /start или Mini App.\n\n"
         "⚔️ Duel Arena",
     )
 
@@ -1004,7 +1005,8 @@ CRYPTO_PACKAGES = [
     {
         "id": "cdfullreset",
         "diamonds": 0,
-        "label": "🔄 Полный сброс",
+        "label": "🔄 Сброс прогресса",
+        "hint": "Уровень и бои с нуля; золото, 💎, клан и рефералка сохраняются",
         "usdt": FULL_RESET_CRYPTO_USDT,
         "full_reset": True,
         "usdt_only": True,
@@ -1222,7 +1224,7 @@ async def crypto_invoice(body: CryptoInvoiceBody):
             }
 
     if is_full_reset:
-        description = "Duel Arena — полный сброс профиля (необратимо, USDT)"
+        description = "Duel Arena — сброс прогресса (💰💎 клан рефералка сохраняются, USDT)"
         payload_str = f"uid:{uid}:full_reset:1"
     elif is_premium:
         description = "Duel Arena — 👑 Premium подписка"

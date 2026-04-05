@@ -1443,14 +1443,16 @@ class ShopScene extends Phaser.Scene {
     bg.lineStyle(2, canPay ? 0xff4444 : 0x553333, canPay ? 0.85 : 0.4);
     bg.strokeRoundedRect(ix, iy, iw, ih, 11);
 
-    txt(this, ix + iw / 2, iy + 14, '🔄 Полный сброс аккаунта', 12, '#ffaaaa', true).setOrigin(0.5);
-    txt(this, ix + iw / 2, iy + 32, 'Как новый игрок · необратимо', 10, '#997777').setOrigin(0.5);
+    const title = pkg.label || '🔄 Сброс прогресса';
+    const sub = pkg.hint || 'Уровень с нуля; 💰💎 клан рефералка сохраняются';
+    txt(this, ix + iw / 2, iy + 12, title, 12, '#ffaaaa', true).setOrigin(0.5);
+    txt(this, ix + iw / 2, iy + 30, sub, 9, '#997777', true).setOrigin(0.5);
     if (!canPay) {
-      txt(this, ix + iw / 2, iy + 50, 'Переключите валюту на USDT ↑', 10, '#cc6666', true).setOrigin(0.5);
+      txt(this, ix + iw / 2, iy + 48, 'Переключите валюту на USDT ↑', 10, '#cc6666', true).setOrigin(0.5);
     } else {
-      txt(this, ix + iw / 2, iy + 50, `Оплата: ${price} USDT`, 11, '#3ce8ff', true).setOrigin(0.5);
+      txt(this, ix + iw / 2, iy + 48, `Оплата: ${price} USDT`, 11, '#3ce8ff', true).setOrigin(0.5);
     }
-    txt(this, ix + iw / 2, iy + 68, 'После оплаты — /start или обновите приложение', 9, '#665555').setOrigin(0.5);
+    txt(this, ix + iw / 2, iy + 66, 'После оплаты — /start или обновите приложение', 9, '#665555').setOrigin(0.5);
 
     if (canPay) {
       this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })

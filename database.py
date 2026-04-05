@@ -1110,8 +1110,14 @@ class Database:
         finally:
             conn.close()
 
-    def wipe_player_profile(self, user_id: int) -> None:
-        """Удалить игрока и связанные строки; при следующем /start создастся новый профиль."""
+    def wipe_player_profile(
+        self, user_id: int, *, keep_wallet_clan_and_referrals: bool = False
+    ) -> None:
+        """
+        Сброс прогресса игрока.
+        keep_wallet_clan_and_referrals=False (по умолчанию, /wipe_me): удалить строку players и связанное.
+        True (оплата USDT полный сброс): оставить золото, алмазы, клан, реферальные поля и таблицы referrals/referral_rewards.
+        """
         conn = self.get_connection()
         cursor = conn.cursor()
         for table in (
@@ -1123,7 +1129,42 @@ class Database:
         ):
             cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM metric_events WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM players WHERE user_id = ?", (user_id,))
+        if keep_wallet_clan_and_referrals:
+            cursor.execute("DELETE FROM season_stats WHERE user_id = ?", (user_id,))
+            cursor.execute("DELETE FROM battle_pass WHERE user_id = ?", (user_id,))
+            cursor.execute("DELETE FROM season_rewards WHERE user_id = ?", (user_id,))
+            cursor.execute("DELETE FROM pvp_queue WHERE user_id = ?", (user_id,))
+            now_iso = datetime.utcnow().isoformat()
+            start_hp = PLAYER_START_MAX_HP
+            cursor.execute(
+                """
+                UPDATE players SET
+                    level = ?, exp = 0, exp_milestones = 0,
+                    strength = ?, endurance = ?, crit = ?,
+                    max_hp = ?, current_hp = ?,
+                    free_stats = ?,
+                    wins = 0, losses = 0, win_streak = 0, rating = 1000,
+                    daily_streak = 0, last_daily = NULL,
+                    xp_boost_charges = 0,
+                    last_active = CURRENT_TIMESTAMP,
+                    last_hp_regen = ?
+                WHERE user_id = ?
+                """,
+                (
+                    PLAYER_START_LEVEL,
+                    PLAYER_START_STRENGTH,
+                    PLAYER_START_ENDURANCE,
+                    PLAYER_START_CRIT,
+                    start_hp,
+                    start_hp,
+                    PLAYER_START_FREE_STATS,
+                    now_iso,
+                    user_id,
+                ),
+            )
+            self._init_player_improvements_with_cursor(cursor, user_id)
+        else:
+            cursor.execute("DELETE FROM players WHERE user_id = ?", (user_id,))
         conn.commit()
         conn.close()
     
