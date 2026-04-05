@@ -833,8 +833,9 @@ class BattleSystem:
         При уроне > 0: «−N cur/max» (пул выносливости), крит — суффикс « ⚡».
         """
         if damage > 0:
-            crit = " ⚡" if outcome == "crit" else ""
-            return f"−{damage} {hp_cur}/{hp_max}{crit}"
+            crit = " ⚡" if outcome in ("crit", "crit_pierce", "crit_double") else ""
+            dbl = " ⚔️x2" if outcome in ("double", "crit_double") else ""
+            return f"−{damage} {hp_cur}/{hp_max}{crit}{dbl}"
         if outcome == "block":
             return f"🛡️ блок · {hp_cur}/{hp_max}"
         if outcome == "miss":
@@ -902,8 +903,14 @@ class BattleSystem:
             line_you = "0 (мимо)"
         elif out1 == 'dodge':
             line_you = "0 (🌪️ соперник увернулся)"
+        elif out1 == 'crit_pierce':
+            line_you = f"🔴 <b>{d1}</b> урона (⚡крит-пробой блока)"
+        elif out1 == 'crit_double':
+            line_you = f"🔴 <b>{d1}</b> урона (⚡крит + второй удар)"
         elif out1 == 'crit':
             line_you = f"🔴 <b>{d1}</b> урона (⚡крит)"
+        elif out1 == 'double':
+            line_you = f"{d1} урона (⚔️ второй удар)"
         elif out1 == 'partial':
             line_you = f"{d1} урона (частичный блок)"
         else:
@@ -915,8 +922,14 @@ class BattleSystem:
             line_en = "0 (мимо по вам)"
         elif out2 == 'dodge':
             line_en = "0 (🌪️ вы увернулись)"
+        elif out2 == 'crit_pierce':
+            line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит-пробой блока)"
+        elif out2 == 'crit_double':
+            line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит + второй удар)"
         elif out2 == 'crit':
             line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит)"
+        elif out2 == 'double':
+            line_en = f"{d2} урона по вам (⚔️ второй удар)"
         elif out2 == 'partial':
             line_en = f"{d2} урона по вам (частичный блок)"
         else:
@@ -968,7 +981,7 @@ class BattleSystem:
         defender_debuffs: Optional[Dict] = None,
     ) -> Tuple[int, str, Optional[str]]:
         """
-        Урон, исход и дебафф: block | miss | dodge | partial | crit | hit
+        Урон, исход и дебафф: block | miss | dodge | partial | crit | crit_pierce | double | crit_double | hit
 
         Формула урона (убывающая отдача):
           base = FLAT_PER_LEVEL*lv + SCALE * str^POWER
@@ -1020,16 +1033,37 @@ class BattleSystem:
             zone_debuff_type = 'legs_debuff'
         base_damage = max(5, base_damage)
 
-        if not defense_skips_block and attack_zone == defense_zone:
-            return 0, 'block', None  # блок — дебафф не применяется
-
-        if random.random() < MISS_CHANCE:
-            return 0, 'miss', None
-
         defender_uid = defender.get('user_id')
         def_improvements = db.get_player_improvements(defender_uid) if defender_uid else {}
         attacker_uid = attacker.get('user_id')
         atk_improvements = db.get_player_improvements(attacker_uid) if attacker_uid else {}
+
+        # Крит-шанс считаем заранее: нужен для фичи «крит может пробить полный блок».
+        atk_int = self._safe_crit_stat(attacker, PLAYER_START_CRIT)
+        def_int = self._safe_crit_stat(defender, PLAYER_START_CRIT)
+        total_int = max(1, atk_int + def_int)
+        int_invested = max(0, atk_int - PLAYER_START_CRIT)
+        imp_crit = atk_improvements.get('critical_strike', 0) * 0.02
+        crit_chance = (atk_int / total_int) * CRIT_MAX_CHANCE
+        crit_chance += (int_invested // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
+        crit_chance += imp_crit
+        def_int_invested = max(0, def_int - PLAYER_START_CRIT)
+        def_int_crit_protection = (def_int_invested // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
+        crit_chance = max(0.01, crit_chance - def_int_crit_protection)
+        crit_chance = min(CRIT_MAX_CHANCE, crit_chance)
+
+        if not defense_skips_block and attack_zone == defense_zone:
+            # Фича Int-билда: редкий пробой полного блока критом.
+            if random.random() < crit_chance and random.random() < CRIT_BLOCK_PIERCE_CHANCE:
+                pierced = int(base_damage * 2 * CRIT_BLOCK_PIERCE_DAMAGE_MULT)
+                attack_bonus = atk_improvements.get('attack_power', 0) * 0.05
+                pierced = int(pierced * (1 + attack_bonus))
+                pierced = self._apply_incoming_damage(pierced, defender)
+                return max(1, pierced), 'crit_pierce', None
+            return 0, 'block', None  # блок — дебафф не применяется
+
+        if random.random() < MISS_CHANCE:
+            return 0, 'miss', None
 
         # Уворот: сравнительный + абсолютный бонус за вложения в ловкость
         def_ag = max(1, int(defender.get('endurance', BASE_ENDURANCE)))
@@ -1053,31 +1087,32 @@ class BattleSystem:
             partial = True
 
         # Крит (Интуиция): сравнительный + абсолютный бонус атакующего − защита защитника
-        atk_int = self._safe_crit_stat(attacker, PLAYER_START_CRIT)
-        def_int = self._safe_crit_stat(defender, PLAYER_START_CRIT)
-        total_int = max(1, atk_int + def_int)
-        # Атакующий: плоский бонус к крит-шансу за каждые INT_BONUS_STEP вложенных очков
-        int_invested = max(0, atk_int - PLAYER_START_CRIT)
-        imp_crit = atk_improvements.get('critical_strike', 0) * 0.02
-        crit_chance = (atk_int / total_int) * CRIT_MAX_CHANCE
-        crit_chance += (int_invested // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
-        crit_chance += imp_crit
-        # Защитник: INT-инвестиции снижают входящий крит-шанс (симметрично атакующему бонусу)
-        def_int_invested = max(0, def_int - PLAYER_START_CRIT)
-        def_int_crit_protection = (def_int_invested // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
-        crit_chance = max(0.01, crit_chance - def_int_crit_protection)
-        crit_chance = min(CRIT_MAX_CHANCE, crit_chance)
         is_crit = random.random() < crit_chance
         if is_crit:
             base_damage *= 2
+
+        # Фича Agi-билда: шанс второго удара в тот же размен.
+        atk_ag = max(1, int(attacker.get('endurance', BASE_ENDURANCE)))
+        atk_agi_invested = max(0, atk_ag - PLAYER_START_ENDURANCE)
+        dbl_chance = min(
+            DODGE_DOUBLE_STRIKE_MAX_CHANCE,
+            (atk_agi_invested // DODGE_DOUBLE_STRIKE_STEP) * DODGE_DOUBLE_STRIKE_PCT_PER_STEP,
+        )
+        is_double = random.random() < dbl_chance
+        if is_double:
+            base_damage += max(1, int(base_damage * DODGE_DOUBLE_STRIKE_DAMAGE_MULT))
 
         attack_bonus = atk_improvements.get('attack_power', 0) * 0.05
         base_damage = int(base_damage * (1 + attack_bonus))
 
         base_damage = self._apply_incoming_damage(base_damage, defender)
 
+        if is_crit and is_double:
+            return base_damage, 'crit_double', zone_debuff_type
         if is_crit:
             return base_damage, 'crit', zone_debuff_type
+        if is_double:
+            return base_damage, 'double', zone_debuff_type
         if partial:
             return base_damage, 'partial', zone_debuff_type
         return base_damage, 'hit', zone_debuff_type

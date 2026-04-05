@@ -171,6 +171,18 @@ MISS_CHANCE = 0.05
 # Частичный блок: атака попала не в ту зону, но вскользь — 70% урона
 PARTIAL_BLOCK_CHANCE = 0.15
 
+# Классовые фишки (мягкие пассивки)
+# Интуиция: редкий пробой полного блока критом (вероятность = crit_chance * CRIT_BLOCK_PIERCE_CHANCE)
+CRIT_BLOCK_PIERCE_CHANCE = 0.10
+# Пробой не должен быть сильнее «чистого» крита в открытую зону
+CRIT_BLOCK_PIERCE_DAMAGE_MULT = 0.70
+
+# Ловкость: шанс второго удара в тот же размен (чем больше вложений в ловкость, тем выше)
+DODGE_DOUBLE_STRIKE_STEP = 25
+DODGE_DOUBLE_STRIKE_PCT_PER_STEP = 0.01
+DODGE_DOUBLE_STRIKE_MAX_CHANCE = 0.12
+DODGE_DOUBLE_STRIKE_DAMAGE_MULT = 0.60
+
 # Урон от Силы: убывающая отдача через степенную формулу
 #   raw_dmg = FLAT_PER_LEVEL * level + SCALE * strength^POWER
 #   normal_cap = defender.max_hp * MAX_PCT  (крит может превысить кап)
