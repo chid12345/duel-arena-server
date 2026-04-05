@@ -26,7 +26,7 @@ from pydantic import BaseModel
 from config import (
     BOT_TOKEN, PLAYER_START_LEVEL, PLAYER_START_MAX_HP, PLAYER_START_CRIT,
     stamina_stats_invested, total_free_stats_at_level,
-    DODGE_MAX_CHANCE, CRIT_MAX_CHANCE, ARMOR_MAX_REDUCTION,
+    DODGE_MAX_CHANCE, CRIT_MAX_CHANCE,
     ARMOR_STAMINA_K_ABS, ARMOR_CAP_BASE, ARMOR_CAP_PER_LEVEL, ARMOR_ABSOLUTE_MAX,
     STRENGTH_DAMAGE_FLAT_PER_LEVEL, STRENGTH_DAMAGE_SCALE, STRENGTH_DAMAGE_POWER,
     AGI_BONUS_STEP, AGI_BONUS_PCT_PER_STEP,
@@ -35,7 +35,7 @@ from config import (
     HP_MIN_BATTLE_PCT, HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS,
     MAX_LEVEL, exp_needed_for_next_level, format_exp_progress,
     VICTORY_GOLD, CRYPTOPAY_TOKEN, CRYPTOPAY_TESTNET, PREMIUM_SUBSCRIPTION_STARS,
-    PREMIUM_XP_BONUS_PERCENT,
+    PREMIUM_XP_BONUS_PERCENT, FULL_RESET_CRYPTO_USDT,
 )
 from database import db
 from battle_system import battle_system
@@ -97,6 +97,28 @@ async def _send_tg_message(chat_id: int, text: str, parse_mode: str = "HTML") ->
             )
     except Exception as e:
         logger.warning("_send_tg_message failed: %s", e)
+
+
+async def _notify_paid_full_reset(uid: int) -> None:
+    """Полный сброс аккаунта после оплаты USDT (CryptoPay). Идемпотентность — на уровне инвойса."""
+    try:
+        battle_system.force_abandon_battle(uid)
+    except Exception as e:
+        logger.warning("force_abandon before full reset uid=%s: %s", uid, e)
+    db.wipe_player_profile(uid)
+    db.get_or_create_player(uid, "")
+    db.log_metric_event("paid_full_reset", uid, value=1)
+    try:
+        await manager.send(uid, {"event": "profile_reset", "source": "cryptopay_usdt"})
+    except Exception as e:
+        logger.warning("ws profile_reset uid=%s: %s", uid, e)
+    await _send_tg_message(
+        uid,
+        "🔄 <b>Профиль полностью сброшен</b>\n"
+        "Оплата USDT получена. Вы снова новый игрок — откройте /start или Mini App.\n\n"
+        "⚔️ Duel Arena",
+    )
+
 
 # ─── Авторизация через Telegram initData ────────────────────────────────────
 
@@ -932,6 +954,14 @@ CRYPTO_PACKAGES = [
     {"id": "cd300",     "diamonds": 300, "label": "300 💎",          "ton": "1.30", "usdt": "3.50"},
     {"id": "cd500",     "diamonds": 500, "label": "500 💎",          "ton": "2.00", "usdt": "5.00"},
     {"id": "cdpremium", "diamonds": 0,   "label": "👑 Premium",      "ton": "1.50", "usdt": "4.00", "premium": True},
+    {
+        "id": "cdfullreset",
+        "diamonds": 0,
+        "label": "🔄 Полный сброс",
+        "usdt": FULL_RESET_CRYPTO_USDT,
+        "full_reset": True,
+        "usdt_only": True,
+    },
 ]
 
 CRYPTOPAY_API_BASE = (
@@ -1123,8 +1153,17 @@ async def crypto_invoice(body: CryptoInvoiceBody):
     if asset not in ("TON", "USDT"):
         return {"ok": False, "reason": "Неверная валюта (TON или USDT)"}
 
-    amount = pkg["ton"] if asset == "TON" else pkg["usdt"]
     is_premium = pkg.get("premium", False)
+    is_full_reset = pkg.get("full_reset", False)
+
+    if is_full_reset:
+        if asset != "USDT":
+            return {"ok": False, "reason": "Полный сброс доступен только за USDT"}
+        amount = str(pkg["usdt"])
+    elif asset == "TON":
+        amount = pkg["ton"]
+    else:
+        amount = pkg["usdt"]
 
     # Блокируем повторную покупку Premium если уже активна
     if is_premium:
@@ -1135,12 +1174,15 @@ async def crypto_invoice(body: CryptoInvoiceBody):
                 "reason": f"👑 Premium уже активен ещё {prem_status['days_left']} дн. — деньги не списаны"
             }
 
-    description = (
-        "Duel Arena — 👑 Premium подписка"
-        if is_premium else
-        f"Duel Arena — {pkg['diamonds']} 💎 алмазов"
-    )
-    payload_str = f"uid:{uid}:premium:1" if is_premium else f"uid:{uid}:diamonds:{pkg['diamonds']}"
+    if is_full_reset:
+        description = "Duel Arena — полный сброс профиля (необратимо, USDT)"
+        payload_str = f"uid:{uid}:full_reset:1"
+    elif is_premium:
+        description = "Duel Arena — 👑 Premium подписка"
+        payload_str = f"uid:{uid}:premium:1"
+    else:
+        description = f"Duel Arena — {pkg['diamonds']} 💎 алмазов"
+        payload_str = f"uid:{uid}:diamonds:{pkg['diamonds']}"
 
     import httpx
     try:
@@ -1218,8 +1260,9 @@ async def cryptopay_webhook(request: Request):
         amount_str     = result.get("amount", "0")
         custom_payload = inv.get("payload", "")
         is_premium     = ":premium:" in custom_payload
-        logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s asset=%s invoice=%s",
-                    uid, diamonds, is_premium, asset, invoice_id)
+        is_full_reset  = ":full_reset:" in custom_payload
+        logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s asset=%s invoice=%s",
+                    uid, diamonds, is_premium, is_full_reset, asset, invoice_id)
         if is_premium:
             prem = db.activate_premium(uid, days=21)
             bonus_d = prem.get("bonus_diamonds", 0)
@@ -1253,6 +1296,8 @@ async def cryptopay_webhook(request: Request):
                 f"📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\n"
                 f"Спасибо за покупку! ⚔️ Duel Arena"
             )
+        elif is_full_reset:
+            await _notify_paid_full_reset(uid)
         else:
             await manager.send(uid, {
                 "event":    "diamonds_credited",
@@ -1301,19 +1346,24 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
         # Подтверждаем
         custom_payload = inv.get("payload", "")
         is_premium     = ":premium:" in custom_payload
+        is_full_reset  = ":full_reset:" in custom_payload
         result = db.confirm_crypto_invoice(int(invoice_id))
         if result.get("ok"):
             diamonds   = result["diamonds"]
             asset      = result.get("asset", "TON")
             amount_str = result.get("amount", "0")
+            owner_uid  = int(result.get("user_id", 0))
+            if owner_uid != uid:
+                logger.warning("crypto_check invoice %s user mismatch db=%s init=%s", invoice_id, owner_uid, uid)
+                return {"ok": False, "reason": "invoice_user_mismatch"}
             if is_premium:
-                prem = db.activate_premium(uid, days=21)
+                prem = db.activate_premium(owner_uid, days=21)
                 bonus_d = prem.get("bonus_diamonds", 0)
                 days_left = prem.get("days_left", 21)
                 # Реферальный бонус в USDT
                 if asset == "USDT":
                     try:
-                        ref_res = db.process_referral_crypto_premium(uid, float(amount_str))
+                        ref_res = db.process_referral_crypto_premium(owner_uid, float(amount_str))
                         if ref_res.get("ok"):
                             await _send_tg_message(
                                 ref_res["referrer_id"],
@@ -1324,14 +1374,14 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
                             )
                     except Exception as e:
                         logger.error("Referral crypto premium (check) error: %s", e)
-                await manager.send(uid, {
+                await manager.send(owner_uid, {
                     "event":          "premium_activated",
                     "days_left":      days_left,
                     "bonus_diamonds": bonus_d,
                     "source":         "cryptopay",
                 })
                 bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
-                await _send_tg_message(uid,
+                await _send_tg_message(owner_uid,
                     f"👑 <b>Premium подписка активирована!</b>\n"
                     f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n"
                     f"📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\n"
@@ -1339,12 +1389,15 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
                 )
                 return {"ok": True, "paid": True, "diamonds": bonus_d, "premium_activated": True,
                         "premium_days_left": days_left, "bonus_diamonds": bonus_d}
-            await manager.send(uid, {
+            if is_full_reset:
+                await _notify_paid_full_reset(owner_uid)
+                return {"ok": True, "paid": True, "profile_reset": True}
+            await manager.send(owner_uid, {
                 "event":    "diamonds_credited",
                 "diamonds": diamonds,
                 "source":   "cryptopay",
             })
-            await _send_tg_message(uid,
+            await _send_tg_message(owner_uid,
                 f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
                 f"Оплата через CryptoPay подтверждена.\n\n"
                 f"⚔️ Duel Arena"
@@ -1352,7 +1405,12 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
             return {"ok": True, "paid": True, "diamonds": diamonds}
         # already_paid тоже считаем успехом для UI
         if result.get("reason") == "already_paid":
-            return {"ok": True, "paid": True, "already_confirmed": True}
+            return {
+                "ok": True,
+                "paid": True,
+                "already_confirmed": True,
+                "profile_reset": is_full_reset,
+            }
         return {"ok": False, "reason": result.get("reason")}
     except Exception as e:
         logger.error("crypto_check error: %s", e)

@@ -337,6 +337,8 @@ HP_MIN_BATTLE_PCT = 0.30          # нельзя начать бой если т
 CRYPTOPAY_TOKEN = os.getenv("CRYPTOPAY_TOKEN", "56515:AAThe6SQhjz10EDpboEUulYqaaQKo47xFLF")
 # 1 = тестовая сеть, 0 = боевая. Менять вместе с токеном.
 CRYPTOPAY_TESTNET = os.getenv("CRYPTOPAY_TESTNET", "1") == "1"
+# Полный сброс аккаунта через CryptoPay Mini App (только USDT)
+FULL_RESET_CRYPTO_USDT = (os.getenv("FULL_RESET_CRYPTO_USDT") or "7.50").strip()
 
 # Алмазы (премиум валюта)
 DIAMONDS_DAILY_STREAK = 1

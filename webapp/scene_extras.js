@@ -1289,14 +1289,20 @@ class ShopScene extends Phaser.Scene {
     });
     y += 36;
 
-    // Обычные пакеты (без Premium)
-    const cpMain = cryptoPkgs.filter(p => !p.premium);
-    const cpW = (W - 32) / cpMain.length;
+    // Обычные пакеты (без Premium и без полного сброса)
+    const cpMain = cryptoPkgs.filter(p => !p.premium && !p.full_reset);
+    const cpW = (W - 32) / Math.max(1, cpMain.length);
     cpMain.forEach((pkg, i) => {
-      const px = 8 + i * (cpW + 8/cpMain.length);
+      const px = 8 + i * (cpW + 8 / Math.max(1, cpMain.length));
       this._makeCryptoCard(pkg, px, y, cpW - 4, 80, W);
     });
     y += 90;
+
+    const cpReset = cryptoPkgs.find(p => p.full_reset);
+    if (cpReset) {
+      this._makeCryptoResetCard(cpReset, 8, y, W - 16, 88, W);
+      y += 98;
+    }
 
     // Premium за крипту — во всю ширину
     const cpPrem = cryptoPkgs.find(p => p.premium);
@@ -1425,6 +1431,35 @@ class ShopScene extends Phaser.Scene {
       .on('pointerup',   () => this._buyCrypto(pkg));
   }
 
+  /* ── Полный сброс за USDT (CryptoPay) ───────────────── */
+  _makeCryptoResetCard(pkg, ix, iy, iw, ih, W) {
+    const asset  = this._cryptoAsset || 'TON';
+    const usdtOnly = !!pkg.usdt_only;
+    const price  = pkg.usdt;
+    const canPay = !usdtOnly || asset === 'USDT';
+
+    const bg = this.add.graphics();
+    bg.fillStyle(0x2a1010, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, canPay ? 0xff4444 : 0x553333, canPay ? 0.85 : 0.4);
+    bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+
+    txt(this, ix + iw / 2, iy + 14, '🔄 Полный сброс аккаунта', 12, '#ffaaaa', true).setOrigin(0.5);
+    txt(this, ix + iw / 2, iy + 32, 'Как новый игрок · необратимо', 10, '#997777').setOrigin(0.5);
+    if (!canPay) {
+      txt(this, ix + iw / 2, iy + 50, 'Переключите валюту на USDT ↑', 10, '#cc6666', true).setOrigin(0.5);
+    } else {
+      txt(this, ix + iw / 2, iy + 50, `Оплата: ${price} USDT`, 11, '#3ce8ff', true).setOrigin(0.5);
+    }
+    txt(this, ix + iw / 2, iy + 68, 'После оплаты — /start или обновите приложение', 9, '#665555').setOrigin(0.5);
+
+    if (canPay) {
+      this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x351818, 1); bg.fillRoundedRect(ix, iy, iw, ih, 11); tg?.HapticFeedback?.impactOccurred('heavy'); })
+        .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x2a1010, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11); bg.lineStyle(2, 0xff4444, 0.85); bg.strokeRoundedRect(ix, iy, iw, ih, 11); })
+        .on('pointerup',   () => this._buyCrypto(pkg));
+    }
+  }
+
   /* ── Покупка за Stars ─────────────────────────────────── */
   async _buyStars(pkg) {
     if (this._buying) return;
@@ -1499,7 +1534,7 @@ class ShopScene extends Phaser.Scene {
       this._toast('💳 Счёт открыт — оплатите и вернитесь');
       this._buying = false;
       // Polling: каждые 5 секунд проверяем статус (до 2 минут)
-      this._startCryptoPolling(invoiceId, pkg.diamonds);
+      this._startCryptoPolling(invoiceId, pkg);
     } catch(_) {
       this._toast('❌ Нет соединения');
       this._buying = false;
@@ -1507,7 +1542,8 @@ class ShopScene extends Phaser.Scene {
   }
 
   /* ── Polling для CryptoPay ───────────────────────────── */
-  _startCryptoPolling(invoiceId, diamonds) {
+  _startCryptoPolling(invoiceId, pkg) {
+    const diamonds = pkg && typeof pkg.diamonds === 'number' ? pkg.diamonds : 0;
     let attempts = 0;
     const maxAttempts = 24; // 24 × 5s = 2 минуты
     const poll = async () => {
@@ -1515,7 +1551,13 @@ class ShopScene extends Phaser.Scene {
       try {
         const r = await get(`/api/shop/crypto_check/${invoiceId}`);
         if (r.ok && r.paid) {
-          this._onCryptoPaid(r.diamonds || diamonds, invoiceId, r.premium_activated, r.bonus_diamonds || 0);
+          this._onCryptoPaid(
+            r.diamonds != null ? r.diamonds : diamonds,
+            invoiceId,
+            r.premium_activated,
+            r.bonus_diamonds || 0,
+            !!(r.profile_reset || (pkg && pkg.full_reset && r.already_confirmed)),
+          );
           return;
         }
       } catch(_) {}
@@ -1531,7 +1573,13 @@ class ShopScene extends Phaser.Scene {
     try {
       const r = await get(`/api/shop/crypto_check/${invoiceId}`);
       if (r.ok && r.paid) {
-        this._onCryptoPaid(r.diamonds, invoiceId, r.premium_activated, r.bonus_diamonds || 0);
+        this._onCryptoPaid(
+          r.diamonds || 0,
+          invoiceId,
+          r.premium_activated,
+          r.bonus_diamonds || 0,
+          !!r.profile_reset,
+        );
       } else {
         this._toast('⏳ Оплата ещё не подтверждена');
       }
@@ -1541,12 +1589,14 @@ class ShopScene extends Phaser.Scene {
   }
 
   /* ── Общий обработчик успешной крипто-оплаты ─────────── */
-  _onCryptoPaid(diamonds, invoiceId, isPremium, bonusDiamonds = 0) {
+  _onCryptoPaid(diamonds, invoiceId, isPremium, bonusDiamonds = 0, profileReset = false) {
     tg?.HapticFeedback?.notificationOccurred('success');
     Sound.levelUp?.();
     localStorage.removeItem('cryptoPendingInvoice');
     let msg;
-    if (isPremium) {
+    if (profileReset) {
+      msg = '🔄 Аккаунт сброшен. Обновляем профиль…';
+    } else if (isPremium) {
       msg = bonusDiamonds > 0
         ? `👑 Premium активирован! +${bonusDiamonds} 💎`
         : '👑 Premium активирован на 21 день!';
