@@ -883,6 +883,24 @@ class BattleSystem:
         hp2_max: int,
     ) -> None:
         """Короткий лог; урон и HP в <code> — в Telegram читается жирнее (фон у цифр)."""
+        def _effect_icons(outcome: str) -> List[str]:
+            t = set((outcome or "").split("_"))
+            icons: List[str] = []
+            # Порядок важен: сперва offensive проки, потом defensive.
+            if "break" in t:
+                icons.append("🪓")
+            if "pierce" in t:
+                icons.append("💥")
+            if "crit" in t:
+                icons.append("⚡")
+            if "double" in t:
+                icons.append("⚔️x2")
+            if "guard" in t:
+                icons.append("🧱")
+            if "fortress" in t:
+                icons.append("🛡️∞")
+            return icons
+
         battle.setdefault('combat_log_lines', [])
         if out1 == 'timeout':
             z1 = "⏱️ пропуск хода"
@@ -897,6 +915,11 @@ class BattleSystem:
             f"<b>Ваш удар</b> {z1} <code>{frag1}</code>\n"
             f"<b>{en}</b> {z2} <code>{frag2}</code>"
         )
+        icons = _effect_icons(out1) + _effect_icons(out2)
+        # Убираем дубли, сохраняя порядок появления.
+        uniq_icons = list(dict.fromkeys(icons))
+        if uniq_icons:
+            line += f"\n<i>Эффекты раунда:</i> {' '.join(uniq_icons)}"
         battle['combat_log_lines'].append(line)
 
     def _format_exchange_text(
