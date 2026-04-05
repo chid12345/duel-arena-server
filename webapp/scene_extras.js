@@ -91,7 +91,7 @@ class QuestsScene extends Phaser.Scene {
     // Иконка + заголовок
     txt(this, 20, y + 12, '🎁', 22);
     txt(this, 52, y + 12, 'Ежедневный бонус', 13, canClaim ? '#3cc864' : '#8888aa', true);
-    txt(this, 52, y + 32, `Серия: ${streak} ${streak >= 7 ? '🔥' : '📅'} дней`, 10, '#555577');
+    txt(this, 52, y + 32, `Серия: ${streak} ${streak >= 7 ? '🔥' : '📅'} дней`, 12, '#555577');
 
     // Прогресс серии (7 дней)
     const dotW = (W - 80) / 7;
@@ -106,7 +106,7 @@ class QuestsScene extends Phaser.Scene {
         dg.strokeRoundedRect(dx, y + 50, dotW - 4, 10, 4);
       }
       const dayN = i + 1;
-      txt(this, dx + (dotW-4)/2, y + 66, String(dayN), 7,
+      txt(this, dx + (dotW-4)/2, y + 66, String(dayN), 9,
         done ? '#ffc83c' : '#333355').setOrigin(0.5);
     }
 
@@ -208,12 +208,12 @@ class QuestsScene extends Phaser.Scene {
         .on('pointerup',  () => this._claimQuest(clBg, clT))
         .on('pointerout', () => { clBg.clear(); clBg.fillStyle(C.gold,1); clBg.fillRoundedRect(20,btnY2,W-40,44,12); clBg.fillStyle(0xffffff,0.12); clBg.fillRoundedRect(22,btnY2+2,W-44,20,9); });
     } else {
-      txt(this, W/2, btnY2 + 16, '⚔️ Выполни задания чтобы забрать награду', 10, '#555577').setOrigin(0.5);
+      txt(this, W/2, btnY2 + 16, '⚔️ Выполни задания чтобы забрать награду', 12, '#555577').setOrigin(0.5);
     }
 
     /* Сброс квеста */
     const resetH = H - 100;
-    txt(this, W/2, resetH, '🔄 Квест обновляется каждый день в 00:00', 10, '#666688').setOrigin(0.5);
+    txt(this, W/2, resetH, '🔄 Квест обновляется каждый день в 00:00', 12, '#666688').setOrigin(0.5);
   }
 
   /* ── Получить ежедневный бонус ─────────────────────────── */
@@ -304,7 +304,7 @@ class SummaryScene extends Phaser.Scene {
       bg.lineStyle(1, C.dark, 0.8);
       bg.strokeRoundedRect(cx, cy, cw, ch, 10);
       scroll.add(bg);
-      scroll.add(txt(this, cx + 8, cy + 8,  s.label, 10, '#8888aa'));
+      scroll.add(txt(this, cx + 8, cy + 8,  s.label, 12, '#8888aa'));
       scroll.add(txt(this, cx + 8, cy + 28, String(s.value), 16, s.color, true));
     });
     y += Math.ceil(statCards.length / 2) * (ch + 8) + 12;
@@ -330,7 +330,7 @@ class SummaryScene extends Phaser.Scene {
       bg2.fillStyle(a.color, 1);
       bg2.fillRoundedRect(ax, y, Math.max(8, Math.round(aw * pct)), 8, 4);
       scroll.add(bg2);
-      scroll.add(txt(this, ax + aw / 2, y + 14, `${a.n} ${a.v}`, 9, '#aaaacc').setOrigin(0.5));
+      scroll.add(txt(this, ax + aw / 2, y + 14, `${a.n} ${a.v}`, 11, '#aaaacc').setOrigin(0.5));
     });
     y += 32;
 
@@ -339,10 +339,10 @@ class SummaryScene extends Phaser.Scene {
     const expPct = (p.exp || 0) / Math.max(1, p.exp_to_next || 1);
 
     scroll.add(makeBar(this, 16, y,     W - 32, 12, hpPct,  C.red,  C.dark));
-    scroll.add(txt(this, W / 2, y + 6, `HP ${p.current_hp || 0}/${p.max_hp || 0}`, 9, '#f0f0fa').setOrigin(0.5));
+    scroll.add(txt(this, W / 2, y + 6, `HP ${p.current_hp || 0}/${p.max_hp || 0}`, 11, '#f0f0fa').setOrigin(0.5));
     y += 20;
     scroll.add(makeBar(this, 16, y,     W - 32, 10, expPct, C.blue, C.dark));
-    scroll.add(txt(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 8, '#8888aa').setOrigin(0.5));
+    scroll.add(txt(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 11, '#8888aa').setOrigin(0.5));
     y += 24;
 
     /* ── Свободные очки ── */
@@ -403,12 +403,12 @@ class SeasonScene extends Phaser.Scene {
       makePanel(this, 8, myY, W-16, 44, 10, 0.95);
       txt(this, 20, myY + 12, `#${data.my_pos || '?'}`, 16, '#ffc83c', true);
       txt(this, 70, myY + 10, `${me.username || 'Ты'}`, 13, '#f0f0fa', true);
-      txt(this, 70, myY + 27, `🏆 ${me.season_wins || 0} побед  ·  ⭐ ${me.season_rating || 0}`, 10, '#8888aa');
+      txt(this, 70, myY + 27, `🏆 ${me.season_wins || 0} побед  ·  ⭐ ${me.season_rating || 0}`, 12, '#8888aa');
     }
 
     /* ── Список лидеров ── */
     const listY = 155;
-    txt(this, 16, listY - 18, 'ТОП ИГРОКОВ', 10, '#555577', true);
+    txt(this, 16, listY - 18, 'ТОП ИГРОКОВ', 12, '#555577', true);
     const rowH = 38, maxShow = Math.floor((H - listY - 80) / rowH);
     lb.slice(0, maxShow).forEach((row, i) => {
       const ry    = listY + i * rowH;
@@ -422,7 +422,7 @@ class SeasonScene extends Phaser.Scene {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
       txt(this, 18,      ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
       txt(this, 52,      ry + 8,  row.username || `User${row.user_id}`, 12, isMy ? '#5096ff' : '#c0c0e0', isMy);
-      txt(this, 52,      ry + 24, `🏆 ${row.season_wins||0}W  ⭐ ${row.season_rating||0}`, 9, '#555577');
+      txt(this, 52,      ry + 24, `🏆 ${row.season_wins||0}W  ⭐ ${row.season_rating||0}`, 11, '#555577');
       txt(this, W - 16,  ry + 17, `${row.season_rating||0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
     });
 
@@ -488,7 +488,7 @@ class BattlePassScene extends Phaser.Scene {
 
       /* Условие */
       const condColor = done ? '#3cc864' : '#8888aa';
-      txt(this, 52, ry + 10, `⚔️ ${tier.battles_needed} боёв  /  🏆 ${tier.wins_needed} побед`, 10, condColor);
+      txt(this, 52, ry + 10, `⚔️ ${tier.battles_needed} боёв  /  🏆 ${tier.wins_needed} побед`, 12, condColor);
 
       /* Прогресс боёв */
       const bPct = Math.min(1, battles / tier.battles_needed);
@@ -498,8 +498,8 @@ class BattlePassScene extends Phaser.Scene {
       makeBar(this, 52, ry + 38, barW, 6, wPct, C.gold, C.dark, 3);
 
       /* Награды */
-      txt(this, W - 110, ry + 11, `💎 ${tier.diamonds}`, 10, '#3cc8dc');
-      txt(this, W - 110, ry + 27, `🪙 ${tier.gold}`,     10, '#ffc83c');
+      txt(this, W - 110, ry + 11, `💎 ${tier.diamonds}`, 12, '#3cc8dc');
+      txt(this, W - 110, ry + 27, `🪙 ${tier.gold}`,     12, '#ffc83c');
 
       /* Кнопка забрать */
       if (gotIt) {
@@ -694,7 +694,7 @@ class ClanScene extends Phaser.Scene {
         .on('pointerout',  () => { bg2.clear(); bg2.fillStyle(0x4a1010,1); bg2.fillRoundedRect(lx,btnZone,lw,42,10); bg2.lineStyle(1.5,C.red,0.7); bg2.strokeRoundedRect(lx,btnZone,lw,42,10); })
         .on('pointerup',   () => this._leaveClan());
     } else {
-      txt(this, W/2, H-50, '👑 Лидер не может покинуть клан — передайте роль', 10, '#5050aa').setOrigin(0.5);
+      txt(this, W/2, H-50, '👑 Лидер не может покинуть клан — передайте роль', 12, '#5050aa').setOrigin(0.5);
     }
   }
 
@@ -795,9 +795,9 @@ class ClanScene extends Phaser.Scene {
           bg.fillStyle(isMe ? 0x1a3a7a : 0x1e1c34, 0.95);
           bg.fillRoundedRect(10, my+2, cW-20, lineH-4, 8);
           const nc = isMe ? '#7ab4ff' : '#ffc83c';
-          const t1 = txt(this, 20, my+10, isMe ? 'Вы' : (m.username||'Игрок'), 10, nc, true);
+          const t1 = txt(this, 20, my+10, isMe ? 'Вы' : (m.username||'Игрок'), 12, nc, true);
           const t2 = txt(this, 20, my+24, m.message, 12, '#e8e8ff');
-          const t3 = txt(this, cW-14, my+10, m.time_str||'', 9, '#5050aa').setOrigin(1, 0);
+          const t3 = txt(this, cW-14, my+10, m.time_str||'', 11, '#5050aa').setOrigin(1, 0);
           this._msgObjs.push(bg, t1, t2, t3);
         });
       }).catch(() => { spin.setText('❌ Нет соединения'); });
@@ -888,13 +888,13 @@ class ClanScene extends Phaser.Scene {
       bg.lineStyle(1, C.dark, 0.6); bg.strokeRoundedRect(8, ry, W-16, 44, 10);
       const joinG = this.add.graphics();
       joinG.fillStyle(C.green, 0.85); joinG.fillRoundedRect(W-74, ry+8, 60, 28, 8);
-      const joinT = txt(this, W-44, ry+22, 'Вступить', 10, '#1a1a28', true).setOrigin(0.5);
+      const joinT = txt(this, W-44, ry+22, 'Вступить', 11, '#1a1a28', true).setOrigin(0.5);
       this._resultsContainer.add([
         bg,
         txt(this, 18, ry+8,  `[${c.tag}]`, 12, '#ffc83c', true),
         txt(this, 18, ry+26, (s => s.length > 20 ? s.slice(0,20)+'…' : s)(c.name||''), 11, '#c0c0e0'),
-        txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 9, '#555577'),
-        txt(this, W-82, ry+26, `🏆 ${c.wins}`, 9, '#ffc83c'),
+        txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 11, '#555577'),
+        txt(this, W-82, ry+26, `🏆 ${c.wins}`, 11, '#ffc83c'),
         joinG, joinT,
         this.add.zone(W-74, ry+8, 60, 28).setOrigin(0).setInteractive({ useHandCursor: true })
           .on('pointerdown', () => { joinG.clear(); joinG.fillStyle(0x28a050,1); joinG.fillRoundedRect(W-74,ry+8,60,28,8); tg?.HapticFeedback?.impactOccurred('medium'); })
@@ -912,11 +912,11 @@ class ClanScene extends Phaser.Scene {
     /* Поле: название */
     makePanel(this, 8, 122, W-16, 148, 12);
     txt(this, 20, 132, 'Название клана', 12, '#a0a0cc', true);
-    txt(this, 20, 148, '3–20 символов, например: Железный Кулак', 10, '#6060aa');
+    txt(this, 20, 148, '3–20 символов, например: Железный Кулак', 12, '#6060aa');
     this._nameEl = this._makeInput(W, 162, W-32, 38, 'Железный Кулак', 20);
 
     txt(this, 20, 210, 'Тег клана', 12, '#a0a0cc', true);
-    txt(this, 20, 226, '2–4 символа, например: ЖК', 10, '#6060aa');
+    txt(this, 20, 226, '2–4 символа, например: ЖК', 12, '#6060aa');
     this._tagEl  = this._makeInput(W, 238, (W-32)/2, 38, 'ЖК', 4);
 
     const btnY = 284;
@@ -1067,7 +1067,7 @@ class ShopScene extends Phaser.Scene {
         bg.lineStyle(1, 0x1a4055, 0.7);
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
-      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 9,
+      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 11,
         active ? '#ffffff' : (isTopup ? '#3cc8dc' : '#8888aa'), active).setOrigin(0.5);
       this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
@@ -1093,7 +1093,7 @@ class ShopScene extends Phaser.Scene {
       isTopup ? 15 : 13, isTopup ? '#3cc8dc' : '#3cc8dc', true);
 
     if (isTopup) {
-      txt(this, W - 14, by + 11, 'Ваши алмазы', 9, '#555577').setOrigin(1, 0);
+      txt(this, W - 14, by + 11, 'Ваши алмазы', 11, '#555577').setOrigin(1, 0);
     } else {
       txt(this, W / 2 - 8, by + 11, '|', 13, '#333355').setOrigin(1, 0);
     }
@@ -1149,8 +1149,8 @@ class ShopScene extends Phaser.Scene {
 
     /* ═══ TELEGRAM STARS ═══════════════════════════════════ */
     makePanel(this, 8, y, W-16, 22, 8, 0.6);
-    txt(this, 20, y+5, '⭐  TELEGRAM STARS', 10, '#ffc83c', true);
-    txt(this, W-12, y+5, 'мгновенно', 9, '#555577').setOrigin(1, 0);
+    txt(this, 20, y+5, '⭐  TELEGRAM STARS', 12, '#ffc83c', true);
+    txt(this, W-12, y+5, 'мгновенно', 11, '#555577').setOrigin(1, 0);
     y += 30;
 
     // Обычные пакеты (d100, d300, d500)
@@ -1172,8 +1172,8 @@ class ShopScene extends Phaser.Scene {
     /* ═══ CRYPTOPAY (TON / USDT) ════════════════════════════ */
     y += 6;
     makePanel(this, 8, y, W-16, 22, 8, 0.6);
-    txt(this, 20, y+5, '💎  CRYPTOPAY', 10, '#3cc8dc', true);
-    txt(this, W-12, y+5, cryptoOn ? 'TON · USDT' : 'не настроен', 9,
+    txt(this, 20, y+5, '💎  CRYPTOPAY', 12, '#3cc8dc', true);
+    txt(this, W-12, y+5, cryptoOn ? 'TON · USDT' : 'не настроен', 11,
       cryptoOn ? '#555577' : '#553333').setOrigin(1, 0);
     y += 30;
 
@@ -1181,7 +1181,7 @@ class ShopScene extends Phaser.Scene {
       const cg = this.add.graphics();
       cg.fillStyle(C.bgPanel, 0.6); cg.fillRoundedRect(8, y, W-16, 56, 10);
       txt(this, W/2, y+18, '⚙️ CryptoPay не подключён', 11, '#555577').setOrigin(0.5);
-      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 9, '#333355').setOrigin(0.5);
+      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 11, '#333355').setOrigin(0.5);
       return;
     }
 
@@ -1224,7 +1224,7 @@ class ShopScene extends Phaser.Scene {
 
     y += 4;
     // Подсказка про подтверждение
-    txt(this, W/2, y+4, '💡 После оплаты алмазы придут автоматически', 9, '#555577').setOrigin(0.5);
+    txt(this, W/2, y+4, '💡 После оплаты алмазы придут автоматически', 11, '#555577').setOrigin(0.5);
 
     // Кнопка "Проверить оплату" — если есть pending инвойс в localStorage
     const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
@@ -1251,11 +1251,11 @@ class ShopScene extends Phaser.Scene {
 
     txt(this, ix+iw/2, iy+14, '💎', 20).setOrigin(0.5);
     txt(this, ix+iw/2, iy+36, `${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
-    txt(this, ix+iw/2, iy+53, 'алмазов', 8, '#8888aa').setOrigin(0.5);
+    txt(this, ix+iw/2, iy+53, 'алмазов', 11, '#8888aa').setOrigin(0.5);
 
     const btnG = this.add.graphics();
-    btnG.fillStyle(0xffa000, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 13, 5);
-    txt(this, ix+iw/2, iy+68, `⭐ ${pkg.stars}`, 9, '#1a1a28', true).setOrigin(0.5);
+    btnG.fillStyle(0xffa000, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 14, 5);
+    txt(this, ix+iw/2, iy+69, `⭐ ${pkg.stars}`, 11, '#1a1a28', true).setOrigin(0.5);
 
     this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a2414, 1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
@@ -1278,10 +1278,10 @@ class ShopScene extends Phaser.Scene {
     txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5);
     txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
     if (isActive) {
-      txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${daysLeft} дн.`, 9, '#b45aff');
-      txt(this, iw-4, iy+ih/2-2, '— куплено —', 10, '#888899', false).setOrigin(1, 0.5);
+      txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${daysLeft} дн.`, 11, '#b45aff');
+      txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899', false).setOrigin(1, 0.5);
     } else {
-      txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
+      txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 11, '#8888aa');
       txt(this, iw-4, iy+ih/2-2, `⭐ ${pkg.stars}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
       this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
@@ -1308,10 +1308,10 @@ class ShopScene extends Phaser.Scene {
     txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5);
     txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
     if (isActive) {
-      txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${daysLeft} дн.`, 9, '#b45aff');
-      txt(this, iw-4, iy+ih/2-2, '— куплено —', 10, '#888899', false).setOrigin(1, 0.5);
+      txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${daysLeft} дн.`, 11, '#b45aff');
+      txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899', false).setOrigin(1, 0.5);
     } else {
-      txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 9, '#8888aa');
+      txt(this, ix+50, iy+ih/2+8, 'Эксклюзивные функции', 11, '#8888aa');
       txt(this, iw-4, iy+ih/2-2, `${price} ${symbol}`, 12, '#3cc8dc', true).setOrigin(1, 0.5);
       this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
         .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a0a40,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('heavy'); })
@@ -1332,11 +1332,11 @@ class ShopScene extends Phaser.Scene {
 
     txt(this, ix+iw/2, iy+14, '💎', 20).setOrigin(0.5);
     txt(this, ix+iw/2, iy+36, `${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
-    txt(this, ix+iw/2, iy+53, 'алмазов', 8, '#8888aa').setOrigin(0.5);
+    txt(this, ix+iw/2, iy+53, 'алмазов', 11, '#8888aa').setOrigin(0.5);
 
     const btnG = this.add.graphics();
-    btnG.fillStyle(0x0a4055, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 13, 5);
-    txt(this, ix+iw/2, iy+68, `${price} ${symbol}`, 9, '#3cc8dc', true).setOrigin(0.5);
+    btnG.fillStyle(0x0a4055, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 14, 5);
+    txt(this, ix+iw/2, iy+69, `${price} ${symbol}`, 11, '#3cc8dc', true).setOrigin(0.5);
 
     this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x0f2030,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
@@ -1490,12 +1490,12 @@ class ShopScene extends Phaser.Scene {
     txt(this, ix + iw / 2, iy + 20, item.icon, 26).setOrigin(0.5);
 
     /* Название */
-    txt(this, ix + iw / 2, iy + 52, item.name, 9, '#c0c0e0')
+    txt(this, ix + iw / 2, iy + 52, item.name, 11, '#c0c0e0')
       .setOrigin(0.5).setWordWrapWidth(iw - 10);
 
     /* Цена или "Скоро" */
     if (item.soon) {
-      txt(this, ix + iw / 2, iy + 82, '🚧 Скоро', 9, '#333355').setOrigin(0.5);
+      txt(this, ix + iw / 2, iy + 82, '🚧 Скоро', 11, '#333355').setOrigin(0.5);
     } else {
       const pIcon  = item.currency === 'diamonds' ? '💎' : '🪙';
       const pColor = item.currency === 'diamonds' ? '#3cc8dc' : '#ffc83c';

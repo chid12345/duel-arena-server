@@ -935,7 +935,7 @@ class MenuScene extends Phaser.Scene {
     });
 
     // Версия
-    c.add(txt(this, W / 2, CH - 18, 'Duel Arena · @ZenDuelArena_bot', 9, '#444466').setOrigin(0.5));
+    c.add(txt(this, W / 2, CH - 18, 'Duel Arena · @ZenDuelArena_bot', 11, '#444466').setOrigin(0.5));
 
     this._panels.more = c;
   }
@@ -1443,13 +1443,13 @@ class BattleScene extends Phaser.Scene {
       const sx = i % 2 === 0 ? sX0 : sX1;
       const sy = sY0 + Math.floor(i / 2) * 42;
       t(sx,      sy,      s.icon,  17);
-      t(sx + 22, sy + 1,  s.label, 9, '#8888aa');
+      t(sx + 22, sy + 1,  s.label, 11, '#8888aa');
       t(sx + 22, sy + 14, String(s.val), 15, s.col, true);
     });
 
     // Premium подпись внизу
     if (isPrem) {
-      tC(cx + cw / 2, cy + ch - 16, '✨ Premium', 10, '#cc9900', true);
+      tC(cx + cw / 2, cy + ch - 16, '✨ Premium', 12, '#cc9900', true);
     }
 
     // Зона закрытия по ✕
