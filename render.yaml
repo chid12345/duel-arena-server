@@ -1,16 +1,14 @@
-# Blueprint для Render.com (Web Service)
+# Blueprint для Render.com (Web Service). База — только Supabase (PostgreSQL), диск под SQLite не нужен.
 services:
   - type: web
     name: zenduelarena
     runtime: docker
     dockerfilePath: ./Dockerfile
     healthCheckPath: /api/health
-    disk:
-      name: duel-arena-data
-      mountPath: /app/data
-      sizeGB: 1
     envVars:
       - key: TELEGRAM_BOT_TOKEN
+        sync: false
+      - key: DATABASE_URL
         sync: false
       - key: WEBAPP_PUBLIC_URL
         sync: false
@@ -20,5 +18,3 @@ services:
         sync: false
       - key: CRYPTOPAY_TESTNET
         value: "1"
-      - key: DATA_DIR
-        value: /app/data

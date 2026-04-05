@@ -66,14 +66,21 @@ ADMIN_USER_IDS = {
 }
 
 # База данных
-# DATA_DIR — папка для постоянного хранения (Render Disk: /app/data).
-# Если не задана — используем папку рядом с config.py (локальная разработка).
+# Локально без DATABASE_URL: SQLite в файле (DATA_DIR или папка рядом с config.py).
+# Продакшен на Render: только PostgreSQL (Supabase) — см. DATABASE_URL ниже.
 _DATA_DIR = os.getenv("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
 DB_NAME   = os.path.join(_DATA_DIR, "duel_arena.db")
 
-# PostgreSQL (Supabase и т.п.): полный URL. Если задан — используется вместо SQLite.
-# Рекомендуется добавлять ?sslmode=require к URL Supabase.
+# PostgreSQL (Supabase): полный URI. Если задан — используется вместо SQLite.
+# У Supabase в настройках проекта скопируйте Connection string (URI), при необходимости добавьте ?sslmode=require
 DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
+
+# На Render без DATABASE_URL SQLite окажется на временном диске контейнера — данные пропадут при деплое.
+if os.environ.get("RENDER") == "true" and not DATABASE_URL:
+    raise RuntimeError(
+        "На Render нужна переменная DATABASE_URL (строка подключения к PostgreSQL из Supabase). "
+        "Без неё база не в облаке и не сохранится между перезапусками."
+    )
 
 # Игровые константы (боты и «эталон» генерации; старт игрока — PLAYER_START_*)
 BASE_STRENGTH = 10
