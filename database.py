@@ -525,6 +525,12 @@ class Database:
                     "CREATE INDEX IF NOT EXISTS idx_ref_withdrawals_user ON referral_withdrawals (user_id)",
                 ],
             ),
+            (
+                "2026_04_05_003_withdrawal_cooldown",
+                [
+                    "ALTER TABLE players ADD COLUMN last_withdrawal_at TIMESTAMP",
+                ],
+            ),
         ]
 
         for migration_id, statements in migrations:
@@ -1826,18 +1832,33 @@ class Database:
         )
         rw = cursor.fetchone()
         cursor.execute(
-            "SELECT COALESCE(referral_usdt_balance, 0) AS bal FROM players WHERE user_id = ?",
+            "SELECT COALESCE(referral_usdt_balance, 0) AS bal, last_withdrawal_at FROM players WHERE user_id = ?",
             (user_id,),
         )
         bal_row = cursor.fetchone()
         conn.close()
+
+        balance = round(float(bal_row["bal"] if bal_row else 0), 4)
+        cooldown_hours = 0
+        last_wd = bal_row["last_withdrawal_at"] if bal_row else None
+        if last_wd:
+            try:
+                last_dt = datetime.fromisoformat(str(last_wd))
+                elapsed = (datetime.utcnow() - last_dt).total_seconds()
+                if elapsed < 86400:
+                    cooldown_hours = max(1, int((86400 - elapsed) / 3600) + 1)
+            except Exception:
+                pass
+
         return {
             "invited_count": invited_count,
             "paying_subscribers": paying_subscribers,
             "total_reward_diamonds": int(rw["d"] or 0),
             "total_reward_gold": int(rw["g"] or 0),
             "total_reward_usdt": round(float(rw["u"] or 0), 4),
-            "usdt_balance": round(float(bal_row["bal"] if bal_row else 0), 4),
+            "usdt_balance": balance,
+            "can_withdraw": balance >= 5.0 and cooldown_hours == 0,
+            "cooldown_hours": cooldown_hours,
         }
 
     def get_recent_referrals(self, referrer_id: int, limit: int = 3) -> List[Dict[str, Any]]:
@@ -2101,37 +2122,144 @@ class Database:
         finally:
             conn.close()
 
+    WITHDRAW_MIN_USDT  = 5.0    # минимум $5
+    WITHDRAW_COOLDOWN  = 86400  # 24 часа в секундах
+
     def request_referral_withdrawal(self, user_id: int) -> Dict[str, Any]:
-        """Создать заявку на вывод накопленного USDT. Минимум 1 USDT."""
+        """Проверить возможность вывода USDT. Минимум $5, раз в 24ч.
+        Не списывает баланс — это делает confirm_referral_withdrawal после успешного Transfer."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT COALESCE(referral_usdt_balance, 0) AS bal, username FROM players WHERE user_id = ?",
+                "SELECT COALESCE(referral_usdt_balance, 0) AS bal, username, last_withdrawal_at FROM players WHERE user_id = ?",
                 (user_id,),
             )
             row = cursor.fetchone()
             if not row:
                 return {"ok": False, "reason": "Игрок не найден"}
             balance = round(float(row["bal"]), 4)
-            if balance < 1.0:
-                return {"ok": False, "reason": f"Минимум для вывода: 1 USDT (у вас {balance:.2f})", "balance": balance}
+            if balance < self.WITHDRAW_MIN_USDT:
+                return {
+                    "ok": False,
+                    "reason": f"Минимум для вывода: ${self.WITHDRAW_MIN_USDT:.0f} USDT (у вас ${balance:.2f})",
+                    "balance": balance,
+                }
+            # Проверка cooldown 24ч
+            if row["last_withdrawal_at"]:
+                try:
+                    last_dt  = datetime.fromisoformat(str(row["last_withdrawal_at"]))
+                    elapsed  = (datetime.utcnow() - last_dt).total_seconds()
+                    if elapsed < self.WITHDRAW_COOLDOWN:
+                        remaining_h = max(1, int((self.WITHDRAW_COOLDOWN - elapsed) / 3600) + 1)
+                        return {
+                            "ok": False,
+                            "reason": f"Следующий вывод через {remaining_h}ч (раз в сутки)",
+                            "cooldown_hours": remaining_h,
+                        }
+                except Exception:
+                    pass
+            return {"ok": True, "amount": balance, "username": row["username"] or ""}
+        finally:
+            conn.close()
+
+    def confirm_referral_withdrawal(self, user_id: int, amount: float) -> Dict[str, Any]:
+        """Зафиксировать успешный вывод: списать баланс, записать в историю, обновить cooldown."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            now = datetime.utcnow().isoformat()
             cursor.execute(
-                "SELECT id FROM referral_withdrawals WHERE user_id = ? AND status = 'pending'",
-                (user_id,),
+                """UPDATE players
+                   SET referral_usdt_balance = MAX(0, COALESCE(referral_usdt_balance,0) - ?),
+                       last_withdrawal_at = ?
+                   WHERE user_id = ?""",
+                (amount, now, user_id),
             )
-            if cursor.fetchone():
-                return {"ok": False, "reason": "Заявка уже отправлена — ожидайте обработки"}
             cursor.execute(
-                "INSERT INTO referral_withdrawals (user_id, amount, telegram_username) VALUES (?, ?, ?)",
-                (user_id, balance, row["username"] or ""),
-            )
-            cursor.execute(
-                "UPDATE players SET referral_usdt_balance = 0 WHERE user_id = ?",
-                (user_id,),
+                """INSERT INTO referral_withdrawals (user_id, amount, status, processed_at)
+                   VALUES (?, ?, 'completed', ?)""",
+                (user_id, amount, now),
             )
             conn.commit()
-            return {"ok": True, "amount": balance}
+            return {"ok": True}
+        finally:
+            conn.close()
+
+    def process_referral_stars_premium(self, buyer_id: int, stars_paid: int) -> Dict[str, Any]:
+        """Начислить USDT рефереру при покупке Premium через Telegram Stars.
+        1 Star = $0.013 нетто. Только за первую покупку, % зависит от ранга."""
+        from config import (
+            REFERRAL_PCT_SUB_RANK_1_10,
+            REFERRAL_PCT_SUB_RANK_11_30,
+            REFERRAL_PCT_SUB_RANK_31_PLUS,
+        )
+        STAR_TO_USDT = 0.013
+
+        referrer_id = self.get_referrer_id(buyer_id)
+        out: Dict[str, Any] = {"ok": False}
+        if not referrer_id:
+            return out
+
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT first_premium_at FROM players WHERE user_id = ?",
+                (buyer_id,),
+            )
+            row = cursor.fetchone()
+            # Только за первую покупку
+            if row and row["first_premium_at"]:
+                return out
+
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS c FROM referrals r
+                INNER JOIN players p ON p.user_id = r.referred_id
+                WHERE r.referrer_id = ? AND p.first_premium_at IS NOT NULL
+                """,
+                (referrer_id,),
+            )
+            rank = int(cursor.fetchone()["c"]) + 1
+            if rank <= 10:
+                pct = REFERRAL_PCT_SUB_RANK_1_10
+            elif rank <= 30:
+                pct = REFERRAL_PCT_SUB_RANK_11_30
+            else:
+                pct = REFERRAL_PCT_SUB_RANK_31_PLUS
+
+            tier = "vip" if rank >= 31 else "early"
+            usdt_base   = round(stars_paid * STAR_TO_USDT, 4)
+            reward_usdt = round(usdt_base * pct / 100, 4)
+            now = datetime.utcnow().isoformat()
+
+            # Обновить данные покупателя
+            cursor.execute(
+                """UPDATE players SET first_premium_at = ?,
+                   referral_subscriber_rank = ?, referral_tier = ?
+                   WHERE user_id = ?""",
+                (now, rank, tier, buyer_id),
+            )
+            # Начислить реферу
+            if reward_usdt > 0:
+                cursor.execute(
+                    "UPDATE players SET referral_usdt_balance = COALESCE(referral_usdt_balance,0) + ? WHERE user_id = ?",
+                    (reward_usdt, referrer_id),
+                )
+            cursor.execute(
+                """INSERT INTO referral_rewards
+                   (referrer_id, buyer_id, reward_type, percent, base_stars, reward_usdt)
+                   VALUES (?, ?, 'stars_premium', ?, ?, ?)""",
+                (referrer_id, buyer_id, pct, stars_paid, reward_usdt),
+            )
+            conn.commit()
+            out["ok"]          = True
+            out["referrer_id"] = referrer_id
+            out["reward_usdt"] = reward_usdt
+            out["rank"]        = rank
+            out["percent"]     = pct
+            return out
         finally:
             conn.close()
 

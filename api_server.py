@@ -635,12 +635,15 @@ async def get_referral_info(init_data: str):
         "ok": True,
         "referral_code": code,
         "link": f"https://t.me/ZenDuelArena_bot?start={code}",
-        "invited_count":          stats["invited_count"],
-        "paying_subscribers":     stats["paying_subscribers"],
-        "total_reward_diamonds":  stats["total_reward_diamonds"],
-        "total_reward_gold":      stats["total_reward_gold"],
-        "total_reward_usdt":      stats["total_reward_usdt"],
-        "usdt_balance":           stats["usdt_balance"],
+        "invited_count":         stats["invited_count"],
+        "paying_subscribers":    stats["paying_subscribers"],
+        "total_reward_diamonds": stats["total_reward_diamonds"],
+        "total_reward_gold":     stats["total_reward_gold"],
+        "total_reward_usdt":     stats["total_reward_usdt"],
+        "usdt_balance":          stats["usdt_balance"],
+        "can_withdraw":          stats["can_withdraw"],
+        "cooldown_hours":        stats["cooldown_hours"],
+        "withdraw_min":          5.0,
         "recent": recent,
     }
 
@@ -969,6 +972,22 @@ async def stars_confirm(body: StarsConfirmBody):
         prem_result = db.activate_premium(uid, days=21)
         bonus_d   = prem_result.get("bonus_diamonds", 0)
         days_left = prem_result.get("days_left", 21)
+        # Реферальный бонус в USDT за Stars
+        try:
+            ref_res = db.process_referral_stars_premium(uid, stars)
+            if ref_res.get("ok"):
+                logger.info("Referral Stars→USDT: referrer=%s reward=%.4f USDT rank=%s",
+                            ref_res["referrer_id"], ref_res["reward_usdt"], ref_res["rank"])
+                await _send_tg_message(
+                    ref_res["referrer_id"],
+                    f"💰 <b>Реферальный бонус!</b>\n"
+                    f"Ваш приглашённый купил Premium за Telegram Stars.\n"
+                    f"<b>+{ref_res['reward_usdt']:.4f} USDT</b> добавлено на ваш баланс.\n"
+                    f"Выведите через раздел «Рефералка» в игре.\n\n"
+                    f"⚔️ Duel Arena"
+                )
+        except Exception as e:
+            logger.error("process_referral_stars_premium error: %s", e)
         await manager.send(uid, {
             "event":          "premium_activated",
             "days_left":      days_left,
@@ -1348,27 +1367,66 @@ class ReferralWithdrawBody(BaseModel):
 async def referral_withdraw(body: ReferralWithdrawBody):
     tg_user  = get_user_from_init_data(body.init_data)
     uid      = int(tg_user["id"])
-    username = tg_user.get("username") or tg_user.get("first_name") or f"id{uid}"
-    result   = db.request_referral_withdrawal(uid)
-    if result.get("ok"):
-        amount = result["amount"]
-        # Уведомляем игрока
-        await _send_tg_message(uid,
-            f"💸 <b>Заявка на вывод {amount:.2f} USDT принята!</b>\n"
-            f"Мы обработаем её в течение 24–48 часов.\n"
-            f"Укажите ваш USDT-кошелёк (TRC20/TON) ответным сообщением.\n\n"
-            f"⚔️ Duel Arena"
-        )
-        # Уведомляем администраторов
-        from config import ADMIN_USER_IDS
-        for admin_id in ADMIN_USER_IDS:
-            await _send_tg_message(admin_id,
-                f"💰 <b>Запрос вывода рефералки</b>\n"
-                f"Игрок: @{username} (id: {uid})\n"
-                f"Сумма: <b>{amount:.4f} USDT</b>\n"
-                f"Нужно выплатить вручную через CryptoPay."
+
+    # Проверяем возможность вывода (баланс >= $5, cooldown 24ч)
+    check = db.request_referral_withdrawal(uid)
+    if not check.get("ok"):
+        return check
+
+    amount = check["amount"]
+
+    if not CRYPTOPAY_TOKEN:
+        return {"ok": False, "reason": "CryptoPay не настроен — обратитесь к администратору"}
+
+    # Автоматический перевод через CryptoPay Transfer API
+    import httpx
+    from datetime import datetime as _dt
+    spend_id = f"ref_wd_{uid}_{int(_dt.utcnow().timestamp())}"
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            resp = await client.post(
+                f"{CRYPTOPAY_API_BASE}/transfer",
+                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                json={
+                    "user_id":                  uid,
+                    "asset":                    "USDT",
+                    "amount":                   f"{amount:.2f}",
+                    "spend_id":                 spend_id,
+                    "comment":                  "Duel Arena — реферальный бонус 💰",
+                    "disable_send_notification": False,
+                },
             )
-    return result
+            data = resp.json()
+
+        if data.get("ok"):
+            # Фиксируем вывод в БД
+            db.confirm_referral_withdrawal(uid, amount)
+            logger.info("Referral withdrawal sent: uid=%s amount=%.2f USDT", uid, amount)
+            await _send_tg_message(uid,
+                f"💸 <b>Вывод {amount:.2f} USDT выполнен!</b>\n"
+                f"Средства отправлены через @CryptoBot.\n"
+                f"Следующий вывод доступен через 24 часа.\n\n"
+                f"⚔️ Duel Arena"
+            )
+            return {"ok": True, "amount": amount}
+
+        # Разбираем ошибки CryptoPay
+        err  = data.get("error", {})
+        code = err.get("code") or err.get("name") or ""
+        logger.warning("CryptoPay transfer failed: uid=%s code=%s data=%s", uid, code, data)
+        if "NOT_ENOUGH_COINS" in code or "not enough" in str(data).lower():
+            return {"ok": False, "reason": "Недостаточно USDT на счёте бота — обратитесь к администратору"}
+        if "USER_NOT_FOUND" in code or "user" in code.lower():
+            return {
+                "ok": False,
+                "reason": "Сначала откройте @CryptoBot в Telegram (один раз), затем повторите",
+                "cryptobot_required": True,
+            }
+        return {"ok": False, "reason": f"Ошибка перевода: {code or 'неизвестно'}"}
+
+    except Exception as e:
+        logger.error("CryptoPay transfer error: %s", e)
+        return {"ok": False, "reason": "Ошибка соединения с CryptoPay"}
 
 
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────

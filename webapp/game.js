@@ -1078,11 +1078,14 @@ class MenuScene extends Phaser.Scene {
       loadTxt.destroy();
       statsObjs.splice(statsObjs.indexOf(loadTxt), 1);
 
-      const link      = rd.link || `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id}`;
-      const inv       = rd.invited_count     || 0;
-      const prem      = rd.paying_subscribers || 0;
-      const usdtBal   = rd.usdt_balance       || 0;
-      const usdtTotal = rd.total_reward_usdt  || 0;
+      const link         = rd.link || `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id}`;
+      const inv          = rd.invited_count     || 0;
+      const prem         = rd.paying_subscribers || 0;
+      const usdtBal      = rd.usdt_balance       || 0;
+      const usdtTotal    = rd.total_reward_usdt  || 0;
+      const canWithdraw  = rd.can_withdraw       || false;
+      const cooldownH    = rd.cooldown_hours     || 0;
+      const withdrawMin  = rd.withdraw_min       || 5;
 
       /* плитки */
       const stW = (pw - 32) / 2;
@@ -1158,28 +1161,37 @@ class MenuScene extends Phaser.Scene {
           tg?.openLink?.(shareUrl);
         });
 
-      /* Кнопка «Вывести USDT» */
+      /* Кнопка / строка вывода USDT */
       const wdY = cbY + 46;
       let wdObjs = [];
-      if (usdtBal >= 1) {
+
+      if (canWithdraw) {
+        /* ── Кнопка «Вывести» — активная ── */
         let wdBusy = false;
         const wdg = this.add.graphics().setDepth(D);
-        wdg.fillStyle(0x1a5a30,1); wdg.fillRoundedRect(px+10,wdY,pw-20,36,10);
-        wdg.lineStyle(1.5,0x3cc864,0.6); wdg.strokeRoundedRect(px+10,wdY,pw-20,36,10);
-        const wdT = at(px+pw/2, wdY+18, `💸  Вывести $${usdtBal.toFixed(2)} USDT`, 13, '#3cc864', true);
-        const wdZ = this.add.zone(px+10,wdY,pw-20,36).setOrigin(0).setDepth(65)
+        wdg.fillStyle(0x1a5a30,1); wdg.fillRoundedRect(px+10,wdY,pw-20,38,10);
+        wdg.lineStyle(1.5,0x3cc864,0.7); wdg.strokeRoundedRect(px+10,wdY,pw-20,38,10);
+        const wdT = at(px+pw/2, wdY+19, `💸  Вывести $${usdtBal.toFixed(2)} USDT`, 13, '#3cc864', true);
+        const wdZ = this.add.zone(px+10,wdY,pw-20,38).setOrigin(0).setDepth(65)
           .setInteractive({ useHandCursor: true })
-          .on('pointerdown', () => { wdg.clear(); wdg.fillStyle(0x0f3820,1); wdg.fillRoundedRect(px+10,wdY,pw-20,36,10); tg?.HapticFeedback?.impactOccurred('heavy'); })
-          .on('pointerout',  () => { wdg.clear(); wdg.fillStyle(0x1a5a30,1); wdg.fillRoundedRect(px+10,wdY,pw-20,36,10); wdg.lineStyle(1.5,0x3cc864,0.6); wdg.strokeRoundedRect(px+10,wdY,pw-20,36,10); })
+          .on('pointerdown', () => { wdg.clear(); wdg.fillStyle(0x0f3820,1); wdg.fillRoundedRect(px+10,wdY,pw-20,38,10); tg?.HapticFeedback?.impactOccurred('heavy'); })
+          .on('pointerout',  () => { wdg.clear(); wdg.fillStyle(0x1a5a30,1); wdg.fillRoundedRect(px+10,wdY,pw-20,38,10); wdg.lineStyle(1.5,0x3cc864,0.7); wdg.strokeRoundedRect(px+10,wdY,pw-20,38,10); })
           .on('pointerup', async () => {
             if (wdBusy) return; wdBusy = true;
-            wdT.setText('⏳ Отправка заявки...');
+            wdT.setText('⏳ Переводим через @CryptoBot...');
+            tg?.HapticFeedback?.impactOccurred('heavy');
             try {
               const res = await post('/api/referral/withdraw');
               if (res.ok) {
                 tg?.HapticFeedback?.notificationOccurred('success');
-                wdT.setText('✅ Заявка отправлена!');
-                this._toast('💸 Заявка на вывод отправлена — ожидайте');
+                wdg.clear(); wdg.fillStyle(0x0f3030,1); wdg.fillRoundedRect(px+10,wdY,pw-20,38,10);
+                wdT.setText(`✅ $${res.amount?.toFixed(2)} USDT отправлен!`).setStyle({ color:'#7affb8' });
+                this._toast('✅ USDT отправлен через @CryptoBot!');
+              } else if (res.cryptobot_required) {
+                wdT.setText(`💸  Вывести $${usdtBal.toFixed(2)} USDT`);
+                this._toast('📲 Откройте @CryptoBot в Telegram один раз');
+                tg?.openLink?.('https://t.me/CryptoBot');
+                wdBusy = false;
               } else {
                 wdT.setText(`💸  Вывести $${usdtBal.toFixed(2)} USDT`);
                 this._toast(`❌ ${res.reason}`);
@@ -1192,6 +1204,22 @@ class MenuScene extends Phaser.Scene {
             }
           });
         wdObjs = [wdg, wdT, wdZ];
+      } else if (cooldownH > 0) {
+        /* ── Cooldown — ждите ── */
+        const cdg = this.add.graphics().setDepth(D);
+        cdg.fillStyle(0x1e2240, 1); cdg.fillRoundedRect(px+10,wdY,pw-20,38,10);
+        cdg.lineStyle(1, 0x444488, 0.5); cdg.strokeRoundedRect(px+10,wdY,pw-20,38,10);
+        const cdT = at(px+pw/2, wdY+13, `⏳ Следующий вывод через ${cooldownH}ч`, 12, '#6060aa');
+        const cdS = at(px+pw/2, wdY+29, 'Вывод доступен раз в сутки', 10, '#404070');
+        wdObjs = [cdg, cdT, cdS];
+      } else {
+        /* ── Ниже минимума — подсказка ── */
+        const ng = this.add.graphics().setDepth(D);
+        ng.fillStyle(0x1a1a30, 1); ng.fillRoundedRect(px+10,wdY,pw-20,38,10);
+        ng.lineStyle(1, 0x333366, 0.5); ng.strokeRoundedRect(px+10,wdY,pw-20,38,10);
+        const nT = at(px+pw/2, wdY+13, `💰 Минимум $${withdrawMin} для вывода`, 12, '#5050aa');
+        const nS = at(px+pw/2, wdY+29, `У вас: $${usdtBal.toFixed(2)} USDT · зарабатывай больше`, 10, '#404070');
+        wdObjs = [ng, nT, nS];
       }
       statsObjs.push(...wdObjs);
 
