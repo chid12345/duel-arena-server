@@ -1078,10 +1078,11 @@ class MenuScene extends Phaser.Scene {
       loadTxt.destroy();
       statsObjs.splice(statsObjs.indexOf(loadTxt), 1);
 
-      const link = rd.link || `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id}`;
-      const inv  = rd.invited_count        || 0;
-      const dia  = rd.total_reward_diamonds || 0;
-      const prem = rd.paying_subscribers    || 0;
+      const link      = rd.link || `https://t.me/ZenDuelArena_bot?start=ref_${State.player?.user_id}`;
+      const inv       = rd.invited_count     || 0;
+      const prem      = rd.paying_subscribers || 0;
+      const usdtBal   = rd.usdt_balance       || 0;
+      const usdtTotal = rd.total_reward_usdt  || 0;
 
       /* плитки */
       const stW = (pw - 32) / 2;
@@ -1090,36 +1091,53 @@ class MenuScene extends Phaser.Scene {
       const s1 = this.add.graphics().setDepth(D);
       s1.fillStyle(0x2a50a0,1); s1.fillRoundedRect(s1x,cY,stW,sH,10);
       s1.lineStyle(1.5,0x5096ff,0.6); s1.strokeRoundedRect(s1x,cY,stW,sH,10);
-      const s1l = at(s1x+stW/2, cY+14, '👥 Приглашено',  10, '#a8c4ff');
+      const s1l = at(s1x+stW/2, cY+14, '👥 Приглашено',  11, '#a8c4ff');
       const s1v = at(s1x+stW/2, cY+34, `${inv}`, 18, '#ffffff', true);
 
       const s2 = this.add.graphics().setDepth(D);
       s2.fillStyle(0x2a50a0,1); s2.fillRoundedRect(s2x,cY,stW,sH,10);
       s2.lineStyle(1.5,0xffc83c,0.5); s2.strokeRoundedRect(s2x,cY,stW,sH,10);
-      const s2l = at(s2x+stW/2, cY+14, '💰 USDT бонус', 10, '#a8c4ff');
-      const s2v = at(s2x+stW/2, cY+34, `${dia}`, 18, '#ffc83c', true);
+      const s2l = at(s2x+stW/2, cY+14, '💰 USDT заработано', 11, '#a8c4ff');
+      const s2v = at(s2x+stW/2, cY+34, `$${usdtTotal.toFixed(2)}`, 18, '#ffc83c', true);
 
       let premTxt = null;
       if (prem > 0) premTxt = at(px+pw/2, cY+sH+10, `⭐ Из них купили Premium: ${prem}`, 11, '#ffc83c');
 
+      /* Баланс USDT к выводу */
+      const balY = cY + sH + (prem > 0 ? 28 : 12);
+      let balObjs = [];
+      if (usdtBal > 0) {
+        const balBg = this.add.graphics().setDepth(D);
+        balBg.fillStyle(0x1a4a18, 1); balBg.fillRoundedRect(px+10, balY, pw-20, 38, 9);
+        balBg.lineStyle(1.5, 0x3cc864, 0.7); balBg.strokeRoundedRect(px+10, balY, pw-20, 38, 9);
+        const balL = at(px+pw/2, balY+12, '💸 Доступно к выводу', 11, '#a8ffb8');
+        const balV = at(px+pw/2, balY+28, `$${usdtBal.toFixed(4)} USDT`, 14, '#3cc864', true);
+        balObjs = [balBg, balL, balV];
+      } else {
+        const noBalT = at(px+pw/2, balY+10, `Баланс: $0.00 — зарабатывай приглашая`, 11, '#5050aa');
+        balObjs = [noBalT];
+      }
+      statsObjs.push(...balObjs);
+
       /* ссылка */
-      const lbY = cY + sH + (prem > 0 ? 28 : 14);
+      const lbY = balY + (usdtBal > 0 ? 48 : 28);
       const lbLbl = at(px+pw/2, lbY, 'Твоя реферальная ссылка:', 11, '#a8c4ff');
       const lb = this.add.graphics().setDepth(D);
       lb.fillStyle(0x0e2060,1); lb.fillRoundedRect(px+10,lbY+12,pw-20,28,8);
       lb.lineStyle(1,0x5096ff,0.5); lb.strokeRoundedRect(px+10,lbY+12,pw-20,28,8);
-      const lbTxt = at(px+pw/2, lbY+26, link.replace('https://',''), 9, '#7ab4ff');
+      const lbTxt = at(px+pw/2, lbY+26, link.replace('https://',''), 10, '#7ab4ff');
 
       /* кнопки */
       const cbY = lbY + 50;
+      const halfW = (pw - 28) / 2;
       const cbg = this.add.graphics().setDepth(D);
-      cbg.fillStyle(0x3a7aff,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10);
-      cbg.fillStyle(0xffffff,0.12); cbg.fillRoundedRect(px+10,cbY+2,pw-20,18,8);
-      const cbT = at(px+pw/2, cbY+20, '📋  Скопировать ссылку', 13, '#ffffff', true);
-      const cbZ = this.add.zone(px+10,cbY,pw-20,40).setOrigin(0).setDepth(65)
+      cbg.fillStyle(0x3a7aff,1); cbg.fillRoundedRect(px+10,cbY,halfW,38,10);
+      cbg.fillStyle(0xffffff,0.12); cbg.fillRoundedRect(px+10,cbY+2,halfW,16,8);
+      const cbT = at(px+10+halfW/2, cbY+19, '📋 Скопировать', 12, '#ffffff', true);
+      const cbZ = this.add.zone(px+10,cbY,halfW,38).setOrigin(0).setDepth(65)
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => { cbg.clear(); cbg.fillStyle(0x2060e0,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10); })
-        .on('pointerout',  () => { cbg.clear(); cbg.fillStyle(0x3a7aff,1); cbg.fillRoundedRect(px+10,cbY,pw-20,40,10); cbg.fillStyle(0xffffff,0.12); cbg.fillRoundedRect(px+10,cbY+2,pw-20,18,8); })
+        .on('pointerdown', () => { cbg.clear(); cbg.fillStyle(0x2060e0,1); cbg.fillRoundedRect(px+10,cbY,halfW,38,10); })
+        .on('pointerout',  () => { cbg.clear(); cbg.fillStyle(0x3a7aff,1); cbg.fillRoundedRect(px+10,cbY,halfW,38,10); cbg.fillStyle(0xffffff,0.12); cbg.fillRoundedRect(px+10,cbY+2,halfW,16,8); })
         .on('pointerup', () => {
           tg?.HapticFeedback?.notificationOccurred('success');
           navigator.clipboard?.writeText(link)
@@ -1127,18 +1145,55 @@ class MenuScene extends Phaser.Scene {
             .catch(() => { tg?.openLink?.(link); });
         });
 
-      const sbY = cbY + 48;
+      const sbx = px+12+halfW+6;
       const sbg = this.add.graphics().setDepth(D);
-      sbg.fillStyle(0x1a7a48,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10);
-      const sbT = at(px+pw/2, sbY+18, '💬  Поделиться в Telegram', 12, '#ffffff', true);
-      const sbZ = this.add.zone(px+10,sbY,pw-20,36).setOrigin(0).setDepth(65)
+      sbg.fillStyle(0x1a7a48,1); sbg.fillRoundedRect(sbx,cbY,halfW,38,10);
+      const sbT = at(sbx+halfW/2, cbY+19, '💬 Поделиться', 12, '#ffffff', true);
+      const sbZ = this.add.zone(sbx,cbY,halfW,38).setOrigin(0).setDepth(65)
         .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => { sbg.clear(); sbg.fillStyle(0x0f5030,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10); })
-        .on('pointerout',  () => { sbg.clear(); sbg.fillStyle(0x1a7a48,1); sbg.fillRoundedRect(px+10,sbY,pw-20,36,10); })
+        .on('pointerdown', () => { sbg.clear(); sbg.fillStyle(0x0f5030,1); sbg.fillRoundedRect(sbx,cbY,halfW,38,10); })
+        .on('pointerout',  () => { sbg.clear(); sbg.fillStyle(0x1a7a48,1); sbg.fillRoundedRect(sbx,cbY,halfW,38,10); })
         .on('pointerup', () => {
           const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(link)}&text=${encodeURIComponent('⚔️ Присоединяйся к Duel Arena — PvP-арена в Telegram!')}`;
           tg?.openLink?.(shareUrl);
         });
+
+      /* Кнопка «Вывести USDT» */
+      const wdY = cbY + 46;
+      let wdObjs = [];
+      if (usdtBal >= 1) {
+        let wdBusy = false;
+        const wdg = this.add.graphics().setDepth(D);
+        wdg.fillStyle(0x1a5a30,1); wdg.fillRoundedRect(px+10,wdY,pw-20,36,10);
+        wdg.lineStyle(1.5,0x3cc864,0.6); wdg.strokeRoundedRect(px+10,wdY,pw-20,36,10);
+        const wdT = at(px+pw/2, wdY+18, `💸  Вывести $${usdtBal.toFixed(2)} USDT`, 13, '#3cc864', true);
+        const wdZ = this.add.zone(px+10,wdY,pw-20,36).setOrigin(0).setDepth(65)
+          .setInteractive({ useHandCursor: true })
+          .on('pointerdown', () => { wdg.clear(); wdg.fillStyle(0x0f3820,1); wdg.fillRoundedRect(px+10,wdY,pw-20,36,10); tg?.HapticFeedback?.impactOccurred('heavy'); })
+          .on('pointerout',  () => { wdg.clear(); wdg.fillStyle(0x1a5a30,1); wdg.fillRoundedRect(px+10,wdY,pw-20,36,10); wdg.lineStyle(1.5,0x3cc864,0.6); wdg.strokeRoundedRect(px+10,wdY,pw-20,36,10); })
+          .on('pointerup', async () => {
+            if (wdBusy) return; wdBusy = true;
+            wdT.setText('⏳ Отправка заявки...');
+            try {
+              const res = await post('/api/referral/withdraw');
+              if (res.ok) {
+                tg?.HapticFeedback?.notificationOccurred('success');
+                wdT.setText('✅ Заявка отправлена!');
+                this._toast('💸 Заявка на вывод отправлена — ожидайте');
+              } else {
+                wdT.setText(`💸  Вывести $${usdtBal.toFixed(2)} USDT`);
+                this._toast(`❌ ${res.reason}`);
+                wdBusy = false;
+              }
+            } catch(_) {
+              wdT.setText(`💸  Вывести $${usdtBal.toFixed(2)} USDT`);
+              this._toast('❌ Нет соединения');
+              wdBusy = false;
+            }
+          });
+        wdObjs = [wdg, wdT, wdZ];
+      }
+      statsObjs.push(...wdObjs);
 
       statsObjs.push(s1,s1l,s1v, s2,s2l,s2v, lb,lbLbl,lbTxt, cbg,cbT,cbZ, sbg,sbT,sbZ);
       if (premTxt) statsObjs.push(premTxt);

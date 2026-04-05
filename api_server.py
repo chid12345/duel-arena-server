@@ -639,6 +639,8 @@ async def get_referral_info(init_data: str):
         "paying_subscribers":     stats["paying_subscribers"],
         "total_reward_diamonds":  stats["total_reward_diamonds"],
         "total_reward_gold":      stats["total_reward_gold"],
+        "total_reward_usdt":      stats["total_reward_usdt"],
+        "usdt_balance":           stats["usdt_balance"],
         "recent": recent,
     }
 
@@ -1178,14 +1180,32 @@ async def cryptopay_webhook(request: Request):
     if result.get("ok"):
         uid            = result["user_id"]
         diamonds       = result["diamonds"]
+        asset          = result.get("asset", "TON")
+        amount_str     = result.get("amount", "0")
         custom_payload = inv.get("payload", "")
         is_premium     = ":premium:" in custom_payload
-        logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s invoice=%s",
-                    uid, diamonds, is_premium, invoice_id)
+        logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s asset=%s invoice=%s",
+                    uid, diamonds, is_premium, asset, invoice_id)
         if is_premium:
             prem = db.activate_premium(uid, days=21)
             bonus_d = prem.get("bonus_diamonds", 0)
             days_left = prem.get("days_left", 21)
+            # Реферальный бонус в USDT (только если оплата в USDT)
+            if asset == "USDT":
+                try:
+                    ref_res = db.process_referral_crypto_premium(uid, float(amount_str))
+                    if ref_res.get("ok"):
+                        logger.info("Referral USDT reward: referrer=%s reward=%.4f USDT",
+                                    ref_res["referrer_id"], ref_res["reward_usdt"])
+                        await _send_tg_message(
+                            ref_res["referrer_id"],
+                            f"💰 <b>Реферальный бонус!</b>\n"
+                            f"Ваш приглашённый купил Premium через CryptoPay.\n"
+                            f"<b>+{ref_res['reward_usdt']:.4f} USDT</b> добавлено на ваш баланс.\n\n"
+                            f"⚔️ Duel Arena"
+                        )
+                except Exception as e:
+                    logger.error("Referral crypto premium error: %s", e)
             await manager.send(uid, {
                 "event":          "premium_activated",
                 "days_left":      days_left,
@@ -1248,11 +1268,27 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
         is_premium     = ":premium:" in custom_payload
         result = db.confirm_crypto_invoice(int(invoice_id))
         if result.get("ok"):
-            diamonds = result["diamonds"]
+            diamonds   = result["diamonds"]
+            asset      = result.get("asset", "TON")
+            amount_str = result.get("amount", "0")
             if is_premium:
                 prem = db.activate_premium(uid, days=21)
                 bonus_d = prem.get("bonus_diamonds", 0)
                 days_left = prem.get("days_left", 21)
+                # Реферальный бонус в USDT
+                if asset == "USDT":
+                    try:
+                        ref_res = db.process_referral_crypto_premium(uid, float(amount_str))
+                        if ref_res.get("ok"):
+                            await _send_tg_message(
+                                ref_res["referrer_id"],
+                                f"💰 <b>Реферальный бонус!</b>\n"
+                                f"Ваш приглашённый купил Premium через CryptoPay.\n"
+                                f"<b>+{ref_res['reward_usdt']:.4f} USDT</b> добавлено на ваш баланс.\n\n"
+                                f"⚔️ Duel Arena"
+                            )
+                    except Exception as e:
+                        logger.error("Referral crypto premium (check) error: %s", e)
                 await manager.send(uid, {
                     "event":          "premium_activated",
                     "days_left":      days_left,
@@ -1285,6 +1321,54 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
     except Exception as e:
         logger.error("crypto_check error: %s", e)
         return {"ok": False, "reason": "connection_error"}
+
+
+# ─── Передача лидерства ───────────────────────────────────────────────────────
+
+class ClanTransferBody(BaseModel):
+    init_data: str
+    new_leader_id: int
+
+
+@app.post("/api/clan/transfer_leader")
+async def clan_transfer_leader(body: ClanTransferBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.transfer_clan_leader(uid, body.new_leader_id)
+    return result
+
+
+# ─── Вывод USDT рефералки ─────────────────────────────────────────────────────
+
+class ReferralWithdrawBody(BaseModel):
+    init_data: str
+
+
+@app.post("/api/referral/withdraw")
+async def referral_withdraw(body: ReferralWithdrawBody):
+    tg_user  = get_user_from_init_data(body.init_data)
+    uid      = int(tg_user["id"])
+    username = tg_user.get("username") or tg_user.get("first_name") or f"id{uid}"
+    result   = db.request_referral_withdrawal(uid)
+    if result.get("ok"):
+        amount = result["amount"]
+        # Уведомляем игрока
+        await _send_tg_message(uid,
+            f"💸 <b>Заявка на вывод {amount:.2f} USDT принята!</b>\n"
+            f"Мы обработаем её в течение 24–48 часов.\n"
+            f"Укажите ваш USDT-кошелёк (TRC20/TON) ответным сообщением.\n\n"
+            f"⚔️ Duel Arena"
+        )
+        # Уведомляем администраторов
+        from config import ADMIN_USER_IDS
+        for admin_id in ADMIN_USER_IDS:
+            await _send_tg_message(admin_id,
+                f"💰 <b>Запрос вывода рефералки</b>\n"
+                f"Игрок: @{username} (id: {uid})\n"
+                f"Сумма: <b>{amount:.4f} USDT</b>\n"
+                f"Нужно выплатить вручную через CryptoPay."
+            )
+    return result
 
 
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────

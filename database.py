@@ -508,6 +508,23 @@ class Database:
                     "CREATE INDEX IF NOT EXISTS idx_clan_messages_clan ON clan_messages (clan_id, created_at)",
                 ],
             ),
+            (
+                "2026_04_05_002_referral_usdt",
+                [
+                    "ALTER TABLE players ADD COLUMN referral_usdt_balance REAL DEFAULT 0",
+                    "ALTER TABLE referral_rewards ADD COLUMN reward_usdt REAL DEFAULT 0",
+                    """CREATE TABLE IF NOT EXISTS referral_withdrawals (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        amount REAL NOT NULL,
+                        status TEXT NOT NULL DEFAULT 'pending',
+                        telegram_username TEXT,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        processed_at TIMESTAMP
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_ref_withdrawals_user ON referral_withdrawals (user_id)",
+                ],
+            ),
         ]
 
         for migration_id, statements in migrations:
@@ -1800,18 +1817,27 @@ class Database:
         paying_subscribers = cursor.fetchone()["cnt"]
         cursor.execute(
             """
-            SELECT COALESCE(SUM(reward_diamonds), 0) AS d, COALESCE(SUM(reward_gold), 0) AS g
+            SELECT COALESCE(SUM(reward_diamonds), 0) AS d,
+                   COALESCE(SUM(reward_gold), 0) AS g,
+                   COALESCE(SUM(reward_usdt), 0) AS u
             FROM referral_rewards WHERE referrer_id = ?
             """,
             (user_id,),
         )
         rw = cursor.fetchone()
+        cursor.execute(
+            "SELECT COALESCE(referral_usdt_balance, 0) AS bal FROM players WHERE user_id = ?",
+            (user_id,),
+        )
+        bal_row = cursor.fetchone()
         conn.close()
         return {
             "invited_count": invited_count,
             "paying_subscribers": paying_subscribers,
             "total_reward_diamonds": int(rw["d"] or 0),
             "total_reward_gold": int(rw["g"] or 0),
+            "total_reward_usdt": round(float(rw["u"] or 0), 4),
+            "usdt_balance": round(float(bal_row["bal"] if bal_row else 0), 4),
         }
 
     def get_recent_referrals(self, referrer_id: int, limit: int = 3) -> List[Dict[str, Any]]:
@@ -2014,6 +2040,133 @@ class Database:
         finally:
             conn.close()
 
+    def process_referral_crypto_premium(self, buyer_id: int, usdt_paid: float) -> Dict[str, Any]:
+        """Начислить USDT рефереру при первой покупке Premium через CryptoPay USDT."""
+        from config import (
+            REFERRAL_PCT_SUB_RANK_1_10,
+            REFERRAL_PCT_SUB_RANK_11_30,
+            REFERRAL_PCT_SUB_RANK_31_PLUS,
+        )
+        referrer_id = self.get_referrer_id(buyer_id)
+        out: Dict[str, Any] = {"ok": False}
+        if not referrer_id:
+            return out
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT first_premium_at FROM players WHERE user_id = ?",
+                (buyer_id,),
+            )
+            row = cursor.fetchone()
+            # Только первая покупка — повтор не вознаграждается
+            if row and row["first_premium_at"]:
+                return out
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS c FROM referrals r
+                INNER JOIN players p ON p.user_id = r.referred_id
+                WHERE r.referrer_id = ? AND p.first_premium_at IS NOT NULL
+                """,
+                (referrer_id,),
+            )
+            rank = int(cursor.fetchone()["c"]) + 1
+            if rank <= 10:
+                pct = REFERRAL_PCT_SUB_RANK_1_10
+            elif rank <= 30:
+                pct = REFERRAL_PCT_SUB_RANK_11_30
+            else:
+                pct = REFERRAL_PCT_SUB_RANK_31_PLUS
+            reward_usdt = round(usdt_paid * pct / 100, 4)
+            if reward_usdt > 0:
+                cursor.execute(
+                    "UPDATE players SET referral_usdt_balance = COALESCE(referral_usdt_balance, 0) + ? WHERE user_id = ?",
+                    (reward_usdt, referrer_id),
+                )
+            cursor.execute(
+                """
+                INSERT INTO referral_rewards
+                (referrer_id, buyer_id, reward_type, percent, reward_usdt)
+                VALUES (?, ?, 'crypto_premium', ?, ?)
+                """,
+                (referrer_id, buyer_id, pct, reward_usdt),
+            )
+            conn.commit()
+            out["ok"] = True
+            out["referrer_id"] = referrer_id
+            out["reward_usdt"] = reward_usdt
+            out["rank"] = rank
+            out["percent"] = pct
+            return out
+        finally:
+            conn.close()
+
+    def request_referral_withdrawal(self, user_id: int) -> Dict[str, Any]:
+        """Создать заявку на вывод накопленного USDT. Минимум 1 USDT."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT COALESCE(referral_usdt_balance, 0) AS bal, username FROM players WHERE user_id = ?",
+                (user_id,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return {"ok": False, "reason": "Игрок не найден"}
+            balance = round(float(row["bal"]), 4)
+            if balance < 1.0:
+                return {"ok": False, "reason": f"Минимум для вывода: 1 USDT (у вас {balance:.2f})", "balance": balance}
+            cursor.execute(
+                "SELECT id FROM referral_withdrawals WHERE user_id = ? AND status = 'pending'",
+                (user_id,),
+            )
+            if cursor.fetchone():
+                return {"ok": False, "reason": "Заявка уже отправлена — ожидайте обработки"}
+            cursor.execute(
+                "INSERT INTO referral_withdrawals (user_id, amount, telegram_username) VALUES (?, ?, ?)",
+                (user_id, balance, row["username"] or ""),
+            )
+            cursor.execute(
+                "UPDATE players SET referral_usdt_balance = 0 WHERE user_id = ?",
+                (user_id,),
+            )
+            conn.commit()
+            return {"ok": True, "amount": balance}
+        finally:
+            conn.close()
+
+    def transfer_clan_leader(self, leader_id: int, new_leader_id: int) -> Dict[str, Any]:
+        """Передать роль лидера клана другому участнику."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id FROM clans WHERE leader_id = ?", (leader_id,))
+            clan_row = cursor.fetchone()
+            if not clan_row:
+                return {"ok": False, "reason": "Вы не являетесь лидером клана"}
+            clan_id = clan_row["id"]
+            if new_leader_id == leader_id:
+                return {"ok": False, "reason": "Вы уже являетесь лидером"}
+            cursor.execute(
+                "SELECT user_id FROM clan_members WHERE user_id = ? AND clan_id = ?",
+                (new_leader_id, clan_id),
+            )
+            if not cursor.fetchone():
+                return {"ok": False, "reason": "Игрок не является участником вашего клана"}
+            cursor.execute("UPDATE clans SET leader_id = ? WHERE id = ?", (new_leader_id, clan_id))
+            cursor.execute(
+                "UPDATE clan_members SET role = 'leader' WHERE user_id = ? AND clan_id = ?",
+                (new_leader_id, clan_id),
+            )
+            cursor.execute(
+                "UPDATE clan_members SET role = 'member' WHERE user_id = ? AND clan_id = ?",
+                (leader_id, clan_id),
+            )
+            conn.commit()
+            return {"ok": True}
+        finally:
+            conn.close()
+
     def get_player_chat_id(self, user_id: int) -> Optional[int]:
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -2209,7 +2362,7 @@ class Database:
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT user_id, diamonds, status FROM crypto_invoices WHERE invoice_id = ?",
+                "SELECT user_id, diamonds, asset, amount, status FROM crypto_invoices WHERE invoice_id = ?",
                 (invoice_id,),
             )
             row = cursor.fetchone()
@@ -2222,6 +2375,8 @@ class Database:
 
             user_id  = int(row["user_id"])
             diamonds = int(row["diamonds"])
+            asset    = str(row["asset"] or "TON")
+            amount   = str(row["amount"] or "0")
 
             # Атомарно обновляем статус (второй параллельный вызов не пройдёт)
             cursor.execute(
@@ -2240,7 +2395,7 @@ class Database:
                 (diamonds, user_id),
             )
             conn.commit()
-            return {"ok": True, "user_id": user_id, "diamonds": diamonds}
+            return {"ok": True, "user_id": user_id, "diamonds": diamonds, "asset": asset, "amount": amount}
         finally:
             conn.close()
 
