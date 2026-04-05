@@ -836,7 +836,8 @@ class BattleSystem:
             crit = " ⚡" if outcome in ("crit", "crit_pierce", "crit_double") else ""
             dbl = " ⚔️x2" if outcome in ("double", "crit_double") else ""
             guard = " 🧱" if outcome in ("guard", "guard_crit", "guard_double", "guard_crit_double") else ""
-            return f"−{damage} {hp_cur}/{hp_max}{crit}{dbl}{guard}"
+            fortress = " 🛡️∞" if outcome == "fortress" else ""
+            return f"−{damage} {hp_cur}/{hp_max}{crit}{dbl}{guard}{fortress}"
         if outcome == "block":
             return f"🛡️ блок · {hp_cur}/{hp_max}"
         if outcome == "miss":
@@ -914,6 +915,8 @@ class BattleSystem:
             line_you = f"{d1} урона (🧱 поглощение + ⚔️ второй удар)"
         elif out1 == 'guard':
             line_you = f"{d1} урона (🧱 поглощение)"
+        elif out1 == 'fortress':
+            line_you = f"{d1} урона (🛡️ абсолютная стойка: входящий удар почти полностью поглощён)"
         elif out1 == 'crit_double':
             line_you = f"🔴 <b>{d1}</b> урона (⚡крит + второй удар)"
         elif out1 == 'crit':
@@ -941,6 +944,8 @@ class BattleSystem:
             line_en = f"{d2} урона по вам (🧱 поглощение + ⚔️ второй удар)"
         elif out2 == 'guard':
             line_en = f"{d2} урона по вам (🧱 поглощение)"
+        elif out2 == 'fortress':
+            line_en = f"{d2} урона по вам (🛡️ абсолютная стойка: входящий удар почти полностью поглощён)"
         elif out2 == 'crit_double':
             line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит + второй удар)"
         elif out2 == 'crit':
@@ -1000,7 +1005,7 @@ class BattleSystem:
         """
         Урон, исход и дебафф:
         block | miss | dodge | partial | crit | crit_pierce | double | crit_double |
-        guard | guard_crit | guard_double | guard_crit_double | hit
+        guard | guard_crit | guard_double | guard_crit_double | fortress | hit
 
         Формула урона (убывающая отдача):
           base = FLAT_PER_LEVEL*lv + SCALE * str^POWER
@@ -1139,6 +1144,16 @@ class BattleSystem:
         if random.random() < guard_chance:
             base_damage = max(1, int(base_damage * TANK_GUARD_DAMAGE_MULT))
             guard_triggered = True
+
+        # Силовой танк (сила + HP): редкая «абсолютная стойка» — любой входящий удар = 1.
+        def_strength_invested = max(0, int(defender.get("strength", PLAYER_START_STRENGTH)) - PLAYER_START_STRENGTH)
+        fortress_score = def_strength_invested + def_stamina_invested
+        fortress_chance = min(
+            FORTRESS_GUARD_MAX_CHANCE,
+            (fortress_score // FORTRESS_GUARD_STEP) * FORTRESS_GUARD_PCT_PER_STEP,
+        )
+        if random.random() < fortress_chance:
+            return 1, "fortress", zone_debuff_type
 
         if guard_triggered and is_crit and is_double:
             return base_damage, "guard_crit_double", zone_debuff_type

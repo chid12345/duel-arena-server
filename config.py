@@ -189,6 +189,12 @@ TANK_GUARD_PCT_PER_STEP = 0.01
 TANK_GUARD_MAX_CHANCE = 0.12
 TANK_GUARD_DAMAGE_MULT = 0.50
 
+# Силовой танк (сила + HP): редкая «абсолютная стойка» — любой входящий удар = 1 урон.
+# Баланс: очень маленький шанс, чтобы не превращать бои в лотерею.
+FORTRESS_GUARD_STEP = 120
+FORTRESS_GUARD_PCT_PER_STEP = 0.005
+FORTRESS_GUARD_MAX_CHANCE = 0.03
+
 # Урон от Силы: убывающая отдача через степенную формулу
 #   raw_dmg = FLAT_PER_LEVEL * level + SCALE * strength^POWER
 #   normal_cap = defender.max_hp * MAX_PCT  (крит может превысить кап)
