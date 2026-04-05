@@ -132,6 +132,8 @@ def main():
         # Создание приложения
         logger.info("🚀 Создание приложения Telegram бота...")
         async def post_init(application: Application):
+            # Иначе Telegram: «другой getUpdates» — часто это не второй ПК, а старый webhook.
+            await application.bot.delete_webhook(drop_pending_updates=True)
             await setup_bot_menu(application)
             from battle_system import battle_system
             battle_system.attach(application)
@@ -182,7 +184,7 @@ def main():
         print("💡 Для остановки нажмите Ctrl+C")
         print("=" * 50)
         
-        application.run_polling()
+        application.run_polling(drop_pending_updates=True)
         
     except KeyboardInterrupt:
         logger.info("🛑 Бот остановлен пользователем")
