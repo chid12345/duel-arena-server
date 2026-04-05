@@ -637,6 +637,25 @@ class BattleSystem:
                 int(player2.get('level', PLAYER_START_LEVEL)),
             )
             return await self._end_battle(battle_id, winner_id, ex)
+
+        # Лимит раундов (тенк vs тенк, сверхдлинные бои)
+        # Победитель — у кого больше HP. Если равно — победа p1 (игрок), честнее для PvB.
+        if round_num >= MAX_BATTLE_ROUNDS:
+            if player1['current_hp'] >= player2['current_hp']:
+                limit_winner = player1['user_id']
+            else:
+                limit_winner = player2.get('user_id') or player2.get('bot_id')
+            ex_limit = (
+                f"⚔️ <b>Размен</b> · раунд {round_num}\n"
+                f"<b>1)</b> Ваш удар в {p1_choices.get('attack', '?')} — "
+                + self._hp_delta_text(p1_damage, o1, player2['current_hp'], player2['max_hp'])
+                + f"\n<b>2)</b> {self.short_display_name(self._entity_name(player2))} "
+                f"(ур. {int(player2.get('level', PLAYER_START_LEVEL))}) бьёт в "
+                f"{p2_choices.get('attack', '?')} — "
+                + self._hp_delta_text(p2_damage, o2, player1['current_hp'], player1['max_hp'])
+                + f"\n\n⏳ <i>Раунд {MAX_BATTLE_ROUNDS} — бой остановлен по лимиту.</i>"
+            )
+            return await self._end_battle(battle_id, limit_winner, ex_limit)
         
         return {
             'status': 'round_completed',
@@ -899,8 +918,9 @@ class BattleSystem:
 
     def _armor_multiplier(self, defender: Dict) -> float:
         """Броня от Выносливости: % вложенных статов от пула уровня.
-        Масштабируется на все 100 уровней — при равном распределении статов
-        броня одинакова на уровне 1 и уровне 100."""
+        K=100, потолок 35%:
+          0% вложено → 0% снижения | 25% → ~20% | 50% → ~33% | 100% → 35% (потолок)
+        Меньшее снижение чем раньше (K=75/40%) → атака не нивелируется даже у full-tank."""
         lv = int(defender.get('level', PLAYER_START_LEVEL))
         stamina = stamina_stats_invested(
             int(defender.get('max_hp', PLAYER_START_MAX_HP)), lv
@@ -924,19 +944,32 @@ class BattleSystem:
     ) -> Tuple[int, str]:
         """
         Урон и исход: block | miss | dodge | partial | crit | hit
-        Сила атакующего — базовый урон с процентом от силы.
-        Ловкость защищающегося — шанс уворота; если она выше ловкости атакующего — доп. шанс.
-        max_hp защищающегося — снижение попавшего урона (броня).
+
+        Формула урона (убывающая отдача):
+          base = FLAT_PER_LEVEL*lv + SCALE * str^POWER
+          → кап обычного удара = 45% max_hp защитника
+          → крит удваивает базу ДО капа → может превысить кап (спецудар)
+          → затем броня от выносливости (0–35%)
+
+        Уклон/промах (DODGE=25%, MISS=5%) — уменьшены для меньшей рандомности.
         """
         atk_str = max(1, int(attacker.get('strength', BASE_STRENGTH)))
-        base_damage = max(
-            5,
-            int(STRENGTH_DAMAGE_BASE * (1 + atk_str * STRENGTH_DAMAGE_PCT_PER_POINT)),
-        )
+        atk_lv  = max(1, int(attacker.get('level', PLAYER_START_LEVEL)))
+        # Убывающая отдача: flat_per_level * lv + scale * str^power
+        # Примеры при SCALE=4, POWER=0.75:
+        #   str=5  (lv1  сбаланс.): 0.3+17=~17    str=540 (lv100 сбаланс.): 30+433=~463
+        #   str=8  (lv1  full-STR): 0.3+21=~21    str=1078(lv100 full-STR): 30+728=~758
+        flat_part = STRENGTH_DAMAGE_FLAT_PER_LEVEL * atk_lv
+        pow_part  = STRENGTH_DAMAGE_SCALE * (atk_str ** STRENGTH_DAMAGE_POWER)
+        base_damage = max(5, int(flat_part + pow_part))
 
-        level_diff = attacker.get('level', PLAYER_START_LEVEL) - defender.get(
-            'level', PLAYER_START_LEVEL
-        )
+        # Кап обычного удара: не более 45% от макс. HP защитника.
+        # Крит и частичный блок модифицируют базу позже — крит может превысить кап.
+        def_max_hp = max(10, int(defender.get('max_hp', PLAYER_START_MAX_HP)))
+        hit_cap = max(10, int(def_max_hp * STRENGTH_DAMAGE_MAX_PCT))
+        base_damage = min(base_damage, hit_cap)
+
+        level_diff = atk_lv - max(1, int(defender.get('level', PLAYER_START_LEVEL)))
         if level_diff >= 3:
             base_damage = int(base_damage * 1.1)
         elif level_diff <= -3:

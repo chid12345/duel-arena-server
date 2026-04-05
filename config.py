@@ -87,7 +87,7 @@ PLAYER_START_FREE_STATS = 5
 LEVEL_UP_HP_BASE = 10
 LEVEL_UP_AUTO_HP = 1
 # Ручное вложение свободного стата в выносливость: +STAMINA_PER_FREE_STAT к max и current
-STAMINA_PER_FREE_STAT = 3
+STAMINA_PER_FREE_STAT = 2
 
 
 def expected_max_hp_from_level(level: int) -> int:
@@ -132,12 +132,12 @@ STREAK_BONUS_GOLD = 10
 
 # --- Боевые формулы (сравнительные, как в combats.com) ---
 # Уворот: def_agi / (def_agi + atk_agi) * DODGE_MAX_CHANCE
-# Равные статы → 15%, большой перевес → до 24%
-DODGE_MAX_CHANCE = 0.30
+# Равные статы → 12.5%, большой перевес → до 20%
+DODGE_MAX_CHANCE = 0.25
 
 # Крит (Интуиция): atk_int / (atk_int + def_int) * CRIT_MAX_CHANCE
-# Равные статы → 20%, большой перевес → до 33%
-CRIT_MAX_CHANCE = 0.40
+# Равные статы → 15%, большой перевес → до 25%
+CRIT_MAX_CHANCE = 0.30
 
 # Промах: случайный шанс не попасть вообще (не зависит от статов)
 MISS_CHANCE = 0.05
@@ -145,18 +145,31 @@ MISS_CHANCE = 0.05
 # Частичный блок: атака попала не в ту зону, но вскользь — 70% урона
 PARTIAL_BLOCK_CHANCE = 0.15
 
-# Урон от Силы: base * (1 + strength * mult)
-# Равные (11 силы): ~22 урона; специалист (20 силы): ~31 урон
-STRENGTH_DAMAGE_BASE = 12
-STRENGTH_DAMAGE_PCT_PER_POINT = 0.08
+# Урон от Силы: убывающая отдача через степенную формулу
+#   raw_dmg = FLAT_PER_LEVEL * level + SCALE * strength^POWER
+#   normal_cap = defender.max_hp * MAX_PCT  (крит может превысить кап)
+#
+# Примеры (зеркальный бой, сбалансированный билд):
+#   Ур.1  (str≈5):   ~17 урона/раунд, бой ≈6 раундов
+#   Ур.50 (str≈250): ~220 урона/раунд, бой ≈7 раундов
+#   Ур.100(str≈540): ~460 урона/раунд, бой ≈8 раундов
+#   Ур.100 full-STR: ~490 урона/раунд, кап 45% HP → бой ≈3–4 раунда (стекло)
+STRENGTH_DAMAGE_FLAT_PER_LEVEL = 0.3    # плоский бонус ×уровень (lv100 = +30)
+STRENGTH_DAMAGE_SCALE = 4.0             # коэффициент при степени
+STRENGTH_DAMAGE_POWER = 0.75            # показатель степени (убывающая отдача)
+STRENGTH_DAMAGE_MAX_PCT = 0.45          # кап обычного удара = 45% от макс. HP защитника
 
 # Броня от Выносливости: % вложенных статов / (% + K), потолок ARMOR_MAX_REDUCTION
-# Формула масштабируется на все 100 уровней (scale-invariant):
 #   stamina_pct = vyn_invested / total_free_stats_at_level * 100
-#   reduction = stamina_pct / (stamina_pct + K)
-# K=75: 25% в вын → -25% урон, 50% → потолок -40%
-ARMOR_STAMINA_K = 75.0
-ARMOR_MAX_REDUCTION = 0.40
+#   reduction = min(ARMOR_MAX_REDUCTION, stamina_pct / (stamina_pct + K))
+# K=100: 25% в вын → 20% снижение, 50% → 33%, 100% → потолок 35%
+# (убрали прежний K=75 + потолок 40% — танк не должен занулять весь урон)
+ARMOR_STAMINA_K = 100.0
+ARMOR_MAX_REDUCTION = 0.35
+
+# Лимит раундов — предотвращение бесконечных боёв (тенк vs тенк)
+# При достижении лимита побеждает тот, у кого больше HP.
+MAX_BATTLE_ROUNDS = 30
 
 
 def total_free_stats_at_level(level: int) -> int:
