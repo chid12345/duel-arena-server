@@ -27,7 +27,8 @@ from config import (
     BOT_TOKEN, PLAYER_START_LEVEL, PLAYER_START_MAX_HP, PLAYER_START_CRIT,
     stamina_stats_invested, total_free_stats_at_level,
     DODGE_MAX_CHANCE, CRIT_MAX_CHANCE, ARMOR_MAX_REDUCTION,
-    ARMOR_STAMINA_K, STRENGTH_DAMAGE_BASE, STRENGTH_DAMAGE_PCT_PER_POINT,
+    ARMOR_STAMINA_K,
+    STRENGTH_DAMAGE_FLAT_PER_LEVEL, STRENGTH_DAMAGE_SCALE, STRENGTH_DAMAGE_POWER,
     HP_MIN_BATTLE_PCT, HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS,
     MAX_LEVEL, exp_needed_for_next_level, format_exp_progress,
     VICTORY_GOLD, CRYPTOPAY_TOKEN, CRYPTOPAY_TESTNET, PREMIUM_SUBSCRIPTION_STARS,
@@ -178,7 +179,7 @@ def _player_api(player: dict) -> dict:
     crit_p  = int(min(CRIT_MAX_CHANCE, intu / (intu + avg_intu) * CRIT_MAX_CHANCE) * 100)
     s_pct   = vyn / tf * 100 if tf > 0 else 0
     armor_p = int(min(ARMOR_MAX_REDUCTION, s_pct / (s_pct + ARMOR_STAMINA_K)) * 100) if s_pct > 0 else 0
-    dmg     = int(STRENGTH_DAMAGE_BASE * (1 + s * STRENGTH_DAMAGE_PCT_PER_POINT))
+    dmg     = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER)))
 
     need_xp = exp_needed_for_next_level(lv)
 
