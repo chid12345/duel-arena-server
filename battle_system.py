@@ -52,6 +52,7 @@ class BattleSystem:
         self.active_battles = {}  # {battle_id: battle_data}
         self.battle_queue = {}    # {user_id: battle_data}
         self._bot = None  # telegram.Bot из attach() — для таймера и обновления UI
+        self._profile_reset_locks: Dict[int, float] = {}  # user_id -> monotonic expire
         # Кратковременный снимок итога боя (игрок vs бот), если Telegram не успел обновить сообщение
         self._last_battle_end_ui: Dict[int, Tuple[float, Dict[str, Any]]] = {}
 
@@ -86,6 +87,24 @@ class BattleSystem:
     def clear_battle_end_ui(self, user_id: int) -> None:
         """Убрать снимок после успешного обновления сообщения в Telegram."""
         self._last_battle_end_ui.pop(user_id, None)
+
+    def mark_profile_reset(self, user_id: int, ttl_seconds: int = 120) -> None:
+        """Временная блокировка учёта старых боёв после сброса профиля."""
+        if user_id is None:
+            return
+        self._profile_reset_locks[int(user_id)] = time.monotonic() + max(1, int(ttl_seconds))
+
+    def _is_profile_reset_locked(self, user_id: Optional[int]) -> bool:
+        if user_id is None:
+            return False
+        uid = int(user_id)
+        exp = self._profile_reset_locks.get(uid)
+        if not exp:
+            return False
+        if time.monotonic() > exp:
+            self._profile_reset_locks.pop(uid, None)
+            return False
+        return True
 
     def force_abandon_battle(self, user_id: int) -> bool:
         """
@@ -832,17 +851,19 @@ class BattleSystem:
           блок → «🛡️ блок · cur/max», мимо → «✕ мимо · …», уклон → «🌪️ уклон · …».
         При уроне > 0: «−N cur/max» (пул выносливости), крит — суффикс « ⚡».
         """
+        tokens = set((outcome or "").split("_"))
         if damage > 0:
-            crit = " ⚡" if outcome in ("crit", "crit_pierce", "crit_double") else ""
-            dbl = " ⚔️x2" if outcome in ("double", "crit_double") else ""
-            guard = " 🧱" if outcome in ("guard", "guard_crit", "guard_double", "guard_crit_double") else ""
-            fortress = " 🛡️∞" if outcome == "fortress" else ""
-            return f"−{damage} {hp_cur}/{hp_max}{crit}{dbl}{guard}{fortress}"
-        if outcome == "block":
+            crit = " ⚡" if "crit" in tokens else ""
+            dbl = " ⚔️x2" if "double" in tokens else ""
+            guard = " 🧱" if "guard" in tokens else ""
+            fortress = " 🛡️∞" if "fortress" in tokens else ""
+            brk = " 🪓" if "break" in tokens else ""
+            return f"−{damage} {hp_cur}/{hp_max}{crit}{dbl}{guard}{fortress}{brk}"
+        if "block" in tokens:
             return f"🛡️ блок · {hp_cur}/{hp_max}"
-        if outcome == "miss":
+        if "miss" in tokens:
             return f"✕ мимо · {hp_cur}/{hp_max}"
-        if outcome == "dodge":
+        if "dodge" in tokens:
             return f"🌪️ уклон · {hp_cur}/{hp_max}"
         return f"— {hp_cur}/{hp_max}"
 
@@ -898,64 +919,70 @@ class BattleSystem:
         acc1 = html_escape(self._zone_accusative(a1))
         acc2 = html_escape(self._zone_accusative(a2))
         op_name = html_escape(opponent_name)
+        t1 = set((out1 or "").split("_"))
+        t2 = set((out2 or "").split("_"))
 
-        if out1 == 'block':
+        if 'block' in t1:
             line_you = f"0 урона (блок соперника по {bp2})"
-        elif out1 == 'miss':
+        elif 'miss' in t1:
             line_you = "0 (мимо)"
-        elif out1 == 'dodge':
+        elif 'dodge' in t1:
             line_you = "0 (🌪️ соперник увернулся)"
-        elif out1 == 'crit_pierce':
+        elif 'pierce' in t1 and 'crit' in t1:
             line_you = f"🔴 <b>{d1}</b> урона (⚡крит-пробой блока)"
-        elif out1 == 'guard_crit_double':
-            line_you = f"🔴 <b>{d1}</b> урона (🧱 поглощение + ⚡крит + второй удар)"
-        elif out1 == 'guard_crit':
-            line_you = f"🔴 <b>{d1}</b> урона (🧱 поглощение + ⚡крит)"
-        elif out1 == 'guard_double':
-            line_you = f"{d1} урона (🧱 поглощение + ⚔️ второй удар)"
-        elif out1 == 'guard':
-            line_you = f"{d1} урона (🧱 поглощение)"
-        elif out1 == 'fortress':
+        elif 'fortress' in t1:
             line_you = f"{d1} урона (🛡️ абсолютная стойка: входящий удар почти полностью поглощён)"
-        elif out1 == 'crit_double':
+        elif 'guard' in t1 and 'crit' in t1 and 'double' in t1:
+            line_you = f"🔴 <b>{d1}</b> урона (🧱 поглощение + ⚡крит + второй удар)"
+        elif 'guard' in t1 and 'crit' in t1:
+            line_you = f"🔴 <b>{d1}</b> урона (🧱 поглощение + ⚡крит)"
+        elif 'guard' in t1 and 'double' in t1:
+            line_you = f"{d1} урона (🧱 поглощение + ⚔️ второй удар)"
+        elif 'guard' in t1:
+            line_you = f"{d1} урона (🧱 поглощение)"
+        elif 'crit' in t1 and 'double' in t1:
             line_you = f"🔴 <b>{d1}</b> урона (⚡крит + второй удар)"
-        elif out1 == 'crit':
+        elif 'crit' in t1:
             line_you = f"🔴 <b>{d1}</b> урона (⚡крит)"
-        elif out1 == 'double':
+        elif 'double' in t1:
             line_you = f"{d1} урона (⚔️ второй удар)"
-        elif out1 == 'partial':
+        elif 'partial' in t1:
             line_you = f"{d1} урона (частичный блок)"
         else:
             line_you = f"{d1} урона"
+        if 'break' in t1:
+            line_you += " (🪓 пролом брони)"
 
-        if out2 == 'block':
+        if 'block' in t2:
             line_en = f"0 урона (ваш блок по {bp1})"
-        elif out2 == 'miss':
+        elif 'miss' in t2:
             line_en = "0 (мимо по вам)"
-        elif out2 == 'dodge':
+        elif 'dodge' in t2:
             line_en = "0 (🌪️ вы увернулись)"
-        elif out2 == 'crit_pierce':
+        elif 'pierce' in t2 and 'crit' in t2:
             line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит-пробой блока)"
-        elif out2 == 'guard_crit_double':
-            line_en = f"🔴 <b>{d2}</b> урона по вам (🧱 поглощение + ⚡крит + второй удар)"
-        elif out2 == 'guard_crit':
-            line_en = f"🔴 <b>{d2}</b> урона по вам (🧱 поглощение + ⚡крит)"
-        elif out2 == 'guard_double':
-            line_en = f"{d2} урона по вам (🧱 поглощение + ⚔️ второй удар)"
-        elif out2 == 'guard':
-            line_en = f"{d2} урона по вам (🧱 поглощение)"
-        elif out2 == 'fortress':
+        elif 'fortress' in t2:
             line_en = f"{d2} урона по вам (🛡️ абсолютная стойка: входящий удар почти полностью поглощён)"
-        elif out2 == 'crit_double':
+        elif 'guard' in t2 and 'crit' in t2 and 'double' in t2:
+            line_en = f"🔴 <b>{d2}</b> урона по вам (🧱 поглощение + ⚡крит + второй удар)"
+        elif 'guard' in t2 and 'crit' in t2:
+            line_en = f"🔴 <b>{d2}</b> урона по вам (🧱 поглощение + ⚡крит)"
+        elif 'guard' in t2 and 'double' in t2:
+            line_en = f"{d2} урона по вам (🧱 поглощение + ⚔️ второй удар)"
+        elif 'guard' in t2:
+            line_en = f"{d2} урона по вам (🧱 поглощение)"
+        elif 'crit' in t2 and 'double' in t2:
             line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит + второй удар)"
-        elif out2 == 'crit':
+        elif 'crit' in t2:
             line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит)"
-        elif out2 == 'double':
+        elif 'double' in t2:
             line_en = f"{d2} урона по вам (⚔️ второй удар)"
-        elif out2 == 'partial':
+        elif 'partial' in t2:
             line_en = f"{d2} урона по вам (частичный блок)"
         else:
             line_en = f"{d2} урона по вам"
+        if 'break' in t2:
+            line_en += " (🪓 пролом брони)"
 
         olv = int(opponent_level)
         if out1 == 'timeout':
@@ -1135,7 +1162,9 @@ class BattleSystem:
             STRENGTH_ARMOR_BREAK_MAX_CHANCE,
             (atk_strength_invested // STRENGTH_ARMOR_BREAK_STEP) * STRENGTH_ARMOR_BREAK_PCT_PER_STEP,
         )
+        armor_break_triggered = False
         if random.random() < armor_break_chance:
+            armor_break_triggered = True
             armor_reduction = max(0.0, 1.0 - self._armor_multiplier(defender))
             effective_reduction = armor_reduction * (1.0 - STRENGTH_ARMOR_BREAK_IGNORE_PCT)
             base_damage = max(1, int(base_damage * (1.0 - effective_reduction)))
@@ -1167,22 +1196,26 @@ class BattleSystem:
             return 1, "fortress", zone_debuff_type
 
         if guard_triggered and is_crit and is_double:
-            return base_damage, "guard_crit_double", zone_debuff_type
-        if guard_triggered and is_crit:
-            return base_damage, "guard_crit", zone_debuff_type
-        if guard_triggered and is_double:
-            return base_damage, "guard_double", zone_debuff_type
-        if guard_triggered:
-            return base_damage, "guard", zone_debuff_type
-        if is_crit and is_double:
-            return base_damage, "crit_double", zone_debuff_type
-        if is_crit:
-            return base_damage, "crit", zone_debuff_type
-        if is_double:
-            return base_damage, "double", zone_debuff_type
-        if partial:
-            return base_damage, "partial", zone_debuff_type
-        return base_damage, "hit", zone_debuff_type
+            outcome = "guard_crit_double"
+        elif guard_triggered and is_crit:
+            outcome = "guard_crit"
+        elif guard_triggered and is_double:
+            outcome = "guard_double"
+        elif guard_triggered:
+            outcome = "guard"
+        elif is_crit and is_double:
+            outcome = "crit_double"
+        elif is_crit:
+            outcome = "crit"
+        elif is_double:
+            outcome = "double"
+        elif partial:
+            outcome = "partial"
+        else:
+            outcome = "hit"
+        if armor_break_triggered:
+            outcome = f"break_{outcome}"
+        return base_damage, outcome, zone_debuff_type
 
     def _calculate_damage(self, attacker: Dict, defender: Dict, attack_zone: str, defense_zone: str) -> int:
         """Совместимость: только число урона."""
@@ -1283,6 +1316,8 @@ class BattleSystem:
                 winner_live = db.get_or_create_player(winner_user_id, winner.get("username") or "")
             if loser_user_id is not None:
                 loser_live = db.get_or_create_player(loser_user_id, loser.get("username") or "")
+        winner_locked = self._is_profile_reset_locked(winner_user_id)
+        loser_locked = self._is_profile_reset_locked(loser_user_id)
 
         # Урон за бой (для XP-формулы)
         p1_total_dmg, p2_total_dmg = self._battle_damage_totals(battle)
@@ -1337,7 +1372,7 @@ class BattleSystem:
 
         # Обновляем статистику победителя
         winner_stats = None
-        if not is_test and winner_user_id is not None:
+        if not is_test and winner_user_id is not None and not winner_locked:
             new_win_streak = winner_live.get('win_streak', 0) + 1
             total_gold = winner_live.get('gold', 0) + gold_reward
             if new_win_streak > 0 and new_win_streak % STREAK_BONUS_EVERY == 0:
@@ -1363,7 +1398,7 @@ class BattleSystem:
 
         # Поражение: без золота, без рейтинга; маленький XP за урон
         loser_stats = None
-        if not is_test and loser_user_id is not None:
+        if not is_test and loser_user_id is not None and not loser_locked:
             loser_stats = {
                 'losses': loser_live.get('losses', 0) + 1,
                 'win_streak': 0,
@@ -1409,7 +1444,8 @@ class BattleSystem:
                 }
             }
             
-            db.save_battle(battle_data)
+            if not (winner_locked or loser_locked):
+                db.save_battle(battle_data)
             db.log_metric_event('battle_ended', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
             logger.info("event=battle_ended winner_id=%s rounds=%s duration_ms=%s", winner_id, len(battle['rounds']), duration_ms)
         else:
@@ -1430,23 +1466,23 @@ class BattleSystem:
             'rounds': len(battle['rounds']),
             'damage_to_opponent': winner_dmg if is_winner_p1 else loser_dmg,
             'damage_to_you': loser_dmg if is_winner_p1 else winner_dmg,
-            'gold_reward': gold_reward if is_winner_p1 else 0,
-            'exp_reward': exp_reward if is_winner_p1 else loser_exp,
+            'gold_reward': (gold_reward if is_winner_p1 else 0) if not winner_locked else 0,
+            'exp_reward': (exp_reward if is_winner_p1 else loser_exp) if not (winner_locked if is_winner_p1 else loser_locked) else 0,
             'xp_boosted': xp_boosted and is_winner_p1,
-            'streak_bonus_gold': streak_bonus_gold if is_winner_p1 else 0,
-            'win_streak': new_win_streak if is_winner_p1 and winner_user_id else 0,
+            'streak_bonus_gold': (streak_bonus_gold if is_winner_p1 else 0) if not winner_locked else 0,
+            'win_streak': new_win_streak if is_winner_p1 and winner_user_id and not winner_locked else 0,
             'rating_change': 0 if is_test else 10,
-            'level_up': bool(did_level) if not is_test else False,
+            'level_up': (bool(did_level) and not winner_locked) if not is_test else False,
             'level_up_level': level_up_level if not is_test else None,
             'duration_ms': duration_ms,
             'exchange_text': exchange_text,
             'combat_log_html': combat_log_html,
             'is_test_battle': is_test,
             # P2-centric поля (для PvP — перспектива второго игрока)
-            'p2_gold_reward': 0 if is_winner_p1 else gold_reward,
-            'p2_exp_reward': loser_exp if is_winner_p1 else exp_reward,
+            'p2_gold_reward': 0 if is_winner_p1 or loser_locked else gold_reward,
+            'p2_exp_reward': 0 if (is_winner_p1 and loser_locked) or (not is_winner_p1 and winner_locked) else (loser_exp if is_winner_p1 else exp_reward),
             'p2_xp_boosted': False if is_winner_p1 else xp_boosted,
-            'p2_streak_bonus_gold': 0 if is_winner_p1 else streak_bonus_gold,
+            'p2_streak_bonus_gold': 0 if is_winner_p1 or loser_locked else streak_bonus_gold,
             'p2_win_streak': 0 if is_winner_p1 else (new_win_streak if winner_user_id else 0),
             'p2_level_up': (bool(did_level) if not is_winner_p1 else False) if not is_test else False,
             'p2_level_up_level': (level_up_level if not is_winner_p1 else None) if not is_test else None,
@@ -1490,11 +1526,20 @@ class BattleSystem:
         winner_user_id = winner.get('user_id')
         loser_user_id = loser.get('user_id')
         is_test = battle.get('is_test_battle', False)
+        winner_live = dict(winner)
+        loser_live = dict(loser)
+        if not is_test:
+            if winner_user_id is not None:
+                winner_live = db.get_or_create_player(winner_user_id, winner.get("username") or "")
+            if loser_user_id is not None:
+                loser_live = db.get_or_create_player(loser_user_id, loser.get("username") or "")
+        winner_locked = self._is_profile_reset_locked(winner_user_id)
+        loser_locked = self._is_profile_reset_locked(loser_user_id)
 
         # Меньшие награды за победу по AFK (в тестовом бою не начисляются)
         gold_reward = 0 if is_test else (VICTORY_GOLD // 2)
         # Половина табличного XP за победу (как обычная победа, но из той же xp_per_win)
-        bx = victory_xp_for_player_level(int(winner.get('level', PLAYER_START_LEVEL)))
+        bx = victory_xp_for_player_level(int(winner_live.get('level', PLAYER_START_LEVEL)))
         exp_reward = 0 if is_test else (max(1, bx // 2) if bx else 0)
         did_level_afk = False
         level_up_level = None
@@ -1502,19 +1547,19 @@ class BattleSystem:
         # Обновляем статистику
         streak_bonus_afk = 0
         new_ws_afk = 0
-        if not is_test and winner_user_id is not None:
-            new_ws_afk = winner.get('win_streak', 0) + 1
-            total_g = winner.get('gold', 0) + gold_reward
+        if not is_test and winner_user_id is not None and not winner_locked:
+            new_ws_afk = winner_live.get('win_streak', 0) + 1
+            total_g = winner_live.get('gold', 0) + gold_reward
             if new_ws_afk > 0 and new_ws_afk % STREAK_BONUS_EVERY == 0:
                 streak_bonus_afk = STREAK_BONUS_GOLD
                 total_g += streak_bonus_afk
-            pl = dict(winner)
+            pl = dict(winner_live)
             pl['gold'] = total_g
             exp_patch, did_level_afk = self._exp_progression_updates(pl, exp_reward)
             if did_level_afk:
                 level_up_level = exp_patch['level']
             winner_stats = {
-                'wins': winner.get('wins', 0) + 1,
+                'wins': winner_live.get('wins', 0) + 1,
                 'gold': exp_patch['gold'],
                 'exp': exp_patch['exp'],
                 'level': exp_patch['level'],
@@ -1522,7 +1567,7 @@ class BattleSystem:
                 'exp_milestones': exp_patch['exp_milestones'],
                 'max_hp': exp_patch['max_hp'],
                 'current_hp': exp_patch['current_hp'],
-                'rating': winner.get('rating', 1000) + 5,
+                'rating': winner_live.get('rating', 1000) + 5,
                 'win_streak': new_ws_afk,
             }
             if battle.get('is_bot2'):
@@ -1530,8 +1575,8 @@ class BattleSystem:
             db.update_player_stats(winner_user_id, winner_stats)
             db.update_daily_quest_progress(winner_user_id, won_battle=True)
 
-        if not is_test and loser_user_id is not None:
-            loser_stats = {'losses': loser.get('losses', 0) + 1, 'win_streak': 0}
+        if not is_test and loser_user_id is not None and not loser_locked:
+            loser_stats = {'losses': loser_live.get('losses', 0) + 1, 'win_streak': 0}
             if battle.get('is_bot2'):
                 loser_stats['current_hp'] = int(loser.get('max_hp', PLAYER_START_MAX_HP))
             db.update_player_stats(loser_user_id, loser_stats)
@@ -1550,7 +1595,8 @@ class BattleSystem:
                 'details': {'reason': 'AFK defeat'}
             }
             
-            db.save_battle(battle_data)
+            if not (winner_locked or loser_locked):
+                db.save_battle(battle_data)
             db.log_metric_event('battle_ended_afk', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
             logger.info("event=battle_ended_afk winner_id=%s rounds=%s duration_ms=%s", winner_id, len(battle['rounds']), duration_ms)
         else:
@@ -1575,8 +1621,8 @@ class BattleSystem:
             'rounds': len(battle['rounds']),
             'damage_to_opponent': dmg_to_opp,
             'damage_to_you': dmg_to_you,
-            'gold_reward': gold_reward if human_won else 0,
-            'exp_reward': exp_reward if human_won else 0,
+            'gold_reward': (gold_reward if human_won else 0) if not winner_locked else 0,
+            'exp_reward': (exp_reward if human_won else 0) if not winner_locked else 0,
             'level_up': bool(did_level_afk) if not is_test else False,
             'level_up_level': level_up_level if not is_test else None,
             'duration_ms': duration_ms,

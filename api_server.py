@@ -106,6 +106,7 @@ async def _notify_paid_full_reset(uid: int) -> None:
     except Exception as e:
         logger.warning("force_abandon before full reset uid=%s: %s", uid, e)
     db.wipe_player_profile(uid, keep_wallet_clan_and_referrals=True)
+    battle_system.mark_profile_reset(uid, ttl_seconds=120)
     db.get_or_create_player(uid, "")
     db.log_metric_event("paid_full_reset", uid, value=1)
     try:
