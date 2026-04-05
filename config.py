@@ -4,6 +4,7 @@
 """
 
 import os
+import sys
 
 def _load_env_local():
     """Подхватить .env.local, если переменные не заданы в системе (удобно при запуске python main.py)."""
@@ -68,18 +69,32 @@ ADMIN_USER_IDS = {
 # База данных
 # Локально без DATABASE_URL: SQLite в файле (DATA_DIR или папка рядом с config.py).
 # Продакшен на Render: только PostgreSQL (Supabase) — см. DATABASE_URL ниже.
-_DATA_DIR = os.getenv("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
-DB_NAME   = os.path.join(_DATA_DIR, "duel_arena.db")
+_default_data_dir = os.path.dirname(os.path.abspath(__file__))
+_env_data_dir = (os.getenv("DATA_DIR") or "").strip()
+# Если в Environment остался DATA_DIR=/app/data без диска Render — каталога нет, SQLite падает.
+if _env_data_dir and os.path.isdir(_env_data_dir):
+    _DATA_DIR = os.path.abspath(_env_data_dir)
+else:
+    _DATA_DIR = _default_data_dir
+    if _env_data_dir:
+        print(
+            f"DATA_DIR={_env_data_dir!r} не существует — SQLite будет в {_DATA_DIR!r}. "
+            "Для Supabase задайте DATABASE_URL и удалите DATA_DIR из Environment.",
+            file=sys.stderr,
+            flush=True,
+        )
+DB_NAME = os.path.join(_DATA_DIR, "duel_arena.db")
 
 # PostgreSQL (Supabase): полный URI. Если задан — используется вместо SQLite.
 # У Supabase в настройках проекта скопируйте Connection string (URI), при необходимости добавьте ?sslmode=require
 DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
 
-# На Render без DATABASE_URL SQLite окажется на временном диске контейнера — данные пропадут при деплое.
-if os.environ.get("RENDER") == "true" and not DATABASE_URL:
+# На Render без DATABASE_URL — старт блокируем: иначе SQLite на эфемерном диске, прогресс пропадёт при деплое.
+_is_render = os.environ.get("RENDER", "").strip().lower() in ("1", "true", "yes")
+if _is_render and not DATABASE_URL:
     raise RuntimeError(
-        "На Render нужна переменная DATABASE_URL (строка подключения к PostgreSQL из Supabase). "
-        "Без неё база не в облаке и не сохранится между перезапусками."
+        "На Render в Environment добавьте переменную DATABASE_URL (URI из Supabase → Database → Connection string). "
+        "Удалите DATA_DIR, если он указывает на /app/data без подключённого диска."
     )
 
 # Игровые константы (боты и «эталон» генерации; старт игрока — PLAYER_START_*)
