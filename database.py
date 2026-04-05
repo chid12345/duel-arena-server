@@ -123,7 +123,11 @@ class _PatchedConn:
 
 class Database:
     """Класс для работы с базой данных"""
-    
+
+    # Uvicorn и main.py стартуют параллельно — только один процесс делает засев/ребаланс ботов (иначе блокировки + timeout).
+    _ADV_PG_INIT_K1 = 428471
+    _ADV_PG_INIT_K2 = 921003
+
     def __init__(self):
         self._pg = bool(DATABASE_URL)
         self.db_name = DB_NAME
@@ -149,13 +153,31 @@ class Database:
         if self._pg:
             conn = self.get_connection()
             cursor = conn.cursor()
+            lock_held = False
             try:
                 bootstrap_postgres_schema(cursor)
                 conn.commit()
+                cursor.execute(
+                    "SELECT pg_try_advisory_lock(%s, %s)",
+                    (Database._ADV_PG_INIT_K1, Database._ADV_PG_INIT_K2),
+                )
+                row = cursor.fetchone()
+                lock_held = bool(row and next(iter(row.values())))
+                if lock_held:
+                    self.create_initial_bots(conn)
+                    self.rebalance_all_bots(conn)
             finally:
+                if lock_held:
+                    try:
+                        ucur = conn.cursor()
+                        ucur.execute(
+                            "SELECT pg_advisory_unlock(%s, %s)",
+                            (Database._ADV_PG_INIT_K1, Database._ADV_PG_INIT_K2),
+                        )
+                        conn.commit()
+                    except Exception:
+                        pass
                 conn.close()
-            self.create_initial_bots()
-            self.rebalance_all_bots()
             return
 
         conn = self.get_connection()
@@ -733,10 +755,15 @@ class Database:
         hp = max(PLAYER_START_MAX_HP, PLAYER_START_MAX_HP + auto_hp + pts_h * STAMINA_PER_FREE_STAT)
         return s, e, c, hp
 
-    def rebalance_all_bots(self) -> None:
+    def rebalance_all_bots(self, conn=None) -> None:
         """Пересчитать статы всех ботов по кривой уровня (после обновления баланса)."""
-        conn = self.get_connection()
+        own_conn = conn is None
+        if own_conn:
+            conn = self.get_connection()
         cursor = conn.cursor()
+        # Supabase: короткие транзакции, иначе statement_timeout при конкурирующих процессах.
+        batch_commit = 60 if self._pg else 10**9
+        n_done = 0
         try:
             cursor.execute("SELECT bot_id, level FROM bots")
             rows = cursor.fetchall()
@@ -751,16 +778,22 @@ class Database:
                     """,
                     (s, e, c, hp, hp, bid),
                 )
+                n_done += 1
+                if self._pg and n_done % batch_commit == 0:
+                    conn.commit()
             conn.commit()
         finally:
-            conn.close()
+            if own_conn:
+                conn.close()
 
-    def create_initial_bots(self):
+    def create_initial_bots(self, conn=None):
         """
         Дополнить популяцию по таблице BOT_COUNT_BY_LEVEL, затем до TARGET_BOT_POPULATION
         (доп. боты с уровнями 11+ — см. BOT_EXTRA_POPULATION_ABOVE_10).
         """
-        conn = self.get_connection()
+        own_conn = conn is None
+        if own_conn:
+            conn = self.get_connection()
         cursor = conn.cursor()
         batch_commit_every = 80
         inserted = 0
@@ -802,7 +835,8 @@ class Database:
                     conn.commit()
             conn.commit()
         finally:
-            conn.close()
+            if own_conn:
+                conn.close()
 
     def _random_bot_level_above_10(self) -> int:
         """Уровень 11..MAX с убывающим весом к высоким (для доп. ботов сверх таблицы)."""
