@@ -575,7 +575,7 @@ class BotHandlers:
     async def buy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         """Команда /buy — купить алмазы за Telegram Stars."""
         from telegram import LabeledPrice
-        from config import PREMIUM_SUBSCRIPTION_STARS
+        from config import PREMIUM_SUBSCRIPTION_STARS, PREMIUM_XP_BONUS_PERCENT
 
         packages = [
             ("100 💎 алмазов", 100, 50),
@@ -584,7 +584,8 @@ class BotHandlers:
         ]
         text = (
             "💎 <b>Магазин Telegram Stars</b>\n\n"
-            f"👑 <b>Premium подписка</b> — {PREMIUM_SUBSCRIPTION_STARS} ⭐\n\n"
+            f"👑 <b>Premium подписка</b> — {PREMIUM_SUBSCRIPTION_STARS} ⭐\n"
+            f"• Опыт за бои: +{PREMIUM_XP_BONUS_PERCENT}%\n\n"
             "<b>Алмазы:</b>\n"
         )
         keyboard = [
@@ -616,11 +617,13 @@ class BotHandlers:
         stars = int(payment.total_amount or 0)
 
         if payload == "premium_sub":
+            from config import PREMIUM_XP_BONUS_PERCENT
             ref = db.process_referral_first_premium(user.id, stars)
             if ref.get("ok"):
-                msg = "✅ <b>Premium активирован!</b> Спасибо за поддержку."
+                xp_line = f"\n📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>"
+                msg = f"✅ <b>Premium активирован!</b> Спасибо за поддержку.{xp_line}"
                 if ref.get("renewal"):
-                    msg = "✅ <b>Подписка продлена.</b> Спасибо!"
+                    msg = f"✅ <b>Подписка продлена.</b> Спасибо!{xp_line}"
                 await tg_api_call(update.message.reply_text, msg, parse_mode="HTML")
             await BotHandlers.notify_referrer_stars_payment(
                 context.bot, user.id, payload, 0, stars, ref or {}

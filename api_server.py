@@ -35,6 +35,7 @@ from config import (
     HP_MIN_BATTLE_PCT, HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS,
     MAX_LEVEL, exp_needed_for_next_level, format_exp_progress,
     VICTORY_GOLD, CRYPTOPAY_TOKEN, CRYPTOPAY_TESTNET, PREMIUM_SUBSCRIPTION_STARS,
+    PREMIUM_XP_BONUS_PERCENT,
 )
 from database import db
 from battle_system import battle_system
@@ -1010,7 +1011,8 @@ async def stars_confirm(body: StarsConfirmBody):
         bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
         await _send_tg_message(uid,
             f"👑 <b>Premium подписка активирована!</b>\n"
-            f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n\n"
+            f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n"
+            f"📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\n"
             f"Спасибо за покупку! ⚔️ Duel Arena"
         )
         fresh = db.get_or_create_player(uid, "")
@@ -1068,7 +1070,7 @@ async def stars_invoice(body: StarsInvoiceBody):
     if pkg["id"] == "premium":
         payload = "premium_sub"
         title   = "Premium подписка"
-        desc    = "Доступ к Premium функциям Duel Arena"
+        desc    = f"Duel Arena Premium: +{PREMIUM_XP_BONUS_PERCENT}% опыта за бои и прочие бонусы"
     else:
         payload = f"diamonds_{pkg['diamonds']}"
         title   = f"{pkg['diamonds']} алмазов"
@@ -1247,7 +1249,8 @@ async def cryptopay_webhook(request: Request):
             bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
             await _send_tg_message(uid,
                 f"👑 <b>Premium подписка активирована!</b>\n"
-                f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n\n"
+                f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n"
+                f"📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\n"
                 f"Спасибо за покупку! ⚔️ Duel Arena"
             )
         else:
@@ -1330,7 +1333,8 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
                 bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
                 await _send_tg_message(uid,
                     f"👑 <b>Premium подписка активирована!</b>\n"
-                    f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n\n"
+                    f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n"
+                    f"📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\n"
                     f"Спасибо за покупку! ⚔️ Duel Arena"
                 )
                 return {"ok": True, "paid": True, "diamonds": bonus_d, "premium_activated": True,

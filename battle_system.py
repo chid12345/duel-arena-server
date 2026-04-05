@@ -230,6 +230,8 @@ class BattleSystem:
             'player1_choices': {},
             'player2_choices': {},
             'pending_choices': {},  # {user_id: {'round': int, 'attack': str|None, 'defense': str|None}}
+            'player1_debuffs': {},  # активные дебаффы на игрока 1 (обновляются каждый раунд)
+            'player2_debuffs': {},  # активные дебаффы на игрока 2
             'battle_active': True,
             'started_at': datetime.now(),
             'ui_message_prefix': '',
@@ -946,18 +948,30 @@ class BattleSystem:
         attack_zone: str,
         defense_zone: str,
         defense_skips_block: bool = False,
-    ) -> Tuple[int, str]:
+        defender_debuffs: Optional[Dict] = None,
+    ) -> Tuple[int, str, Optional[str]]:
         """
-        Урон и исход: block | miss | dodge | partial | crit | hit
+        Урон, исход и дебафф: block | miss | dodge | partial | crit | hit
 
         Формула урона (убывающая отдача):
           base = FLAT_PER_LEVEL*lv + SCALE * str^POWER
+          → зональный множитель: ГОЛОВА ×1.3, НОГИ ×0.75
           → кап обычного удара = 45% max_hp защитника
           → крит удваивает базу ДО капа → может превысить кап (спецудар)
-          → затем броня от выносливости (0–35%)
+          → затем броня от выносливости (0–45%)
 
-        Уклон/промах (DODGE=25%, MISS=5%) — уменьшены для меньшей рандомности.
+        Дебаффы:
+          - Удар в НОГИ (не заблокирован, не уклонились) → 'legs_debuff' в следующем раунде
+            ослабляет уклон жертвы на ZONE_LEGS_DODGE_PENALTY
+          - defender_debuffs — дебаффы текущего раунда (от удара прошлого раунда):
+            'legs_debuff' → −ZONE_LEGS_DODGE_PENALTY к шансу уклона защитника
+
+        Возвращает: (урон, исход, дебафф_для_следующего_раунда)
+          дебафф None = нет эффекта; 'legs_debuff' = жертва получила дебафф ног
         """
+        if defender_debuffs is None:
+            defender_debuffs = {}
+
         atk_str = max(1, int(attacker.get('strength', BASE_STRENGTH)))
         atk_lv  = max(1, int(attacker.get('level', PLAYER_START_LEVEL)))
         # Убывающая отдача: flat_per_level * lv + scale * str^power
@@ -980,11 +994,20 @@ class BattleSystem:
         elif level_diff <= -3:
             base_damage = int(base_damage * 0.8)
 
+        # Зональный множитель (применяется до проверки блока — блок всё равно даёт 0)
+        zone_debuff_type: Optional[str] = None
+        if attack_zone == 'ГОЛОВА':
+            base_damage = int(base_damage * ZONE_HEAD_MULT)
+        elif attack_zone == 'НОГИ':
+            base_damage = int(base_damage * ZONE_LEGS_MULT)
+            zone_debuff_type = 'legs_debuff'
+        base_damage = max(5, base_damage)
+
         if not defense_skips_block and attack_zone == defense_zone:
-            return 0, 'block'
+            return 0, 'block', None  # блок — дебафф не применяется
 
         if random.random() < MISS_CHANCE:
-            return 0, 'miss'
+            return 0, 'miss', None
 
         defender_uid = defender.get('user_id')
         def_improvements = db.get_player_improvements(defender_uid) if defender_uid else {}
@@ -999,26 +1022,33 @@ class BattleSystem:
         agi_invested = max(0, def_ag - PLAYER_START_ENDURANCE)
         dodge_chance += (agi_invested // AGI_BONUS_STEP) * AGI_BONUS_PCT_PER_STEP
         dodge_chance += def_improvements.get('dodge', 0) * 0.02
+        # Дебафф от удара в ноги прошлого раунда → −ZONE_LEGS_DODGE_PENALTY к уклону
+        if defender_debuffs.get('legs_debuff'):
+            dodge_chance = max(0.0, dodge_chance - ZONE_LEGS_DODGE_PENALTY)
         dodge_chance = min(DODGE_MAX_CHANCE, dodge_chance)
 
         if random.random() < dodge_chance:
-            return 0, 'dodge'
+            return 0, 'dodge', None  # уклонился — дебафф не применяется
 
         partial = False
         if random.random() < PARTIAL_BLOCK_CHANCE:
             base_damage = int(base_damage * 0.7)
             partial = True
 
-        # Крит (Интуиция): сравнительный + абсолютный бонус за вложения в интуицию
+        # Крит (Интуиция): сравнительный + абсолютный бонус атакующего − защита защитника
         atk_int = self._safe_crit_stat(attacker, PLAYER_START_CRIT)
         def_int = self._safe_crit_stat(defender, PLAYER_START_CRIT)
         total_int = max(1, atk_int + def_int)
-        # Плоский бонус: каждые INT_BONUS_STEP вложенных очков → +INT_BONUS_PCT_PER_STEP
+        # Атакующий: плоский бонус к крит-шансу за каждые INT_BONUS_STEP вложенных очков
         int_invested = max(0, atk_int - PLAYER_START_CRIT)
         imp_crit = atk_improvements.get('critical_strike', 0) * 0.02
         crit_chance = (atk_int / total_int) * CRIT_MAX_CHANCE
         crit_chance += (int_invested // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
         crit_chance += imp_crit
+        # Защитник: INT-инвестиции снижают входящий крит-шанс (симметрично атакующему бонусу)
+        def_int_invested = max(0, def_int - PLAYER_START_CRIT)
+        def_int_crit_protection = (def_int_invested // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
+        crit_chance = max(0.01, crit_chance - def_int_crit_protection)
         crit_chance = min(CRIT_MAX_CHANCE, crit_chance)
         is_crit = random.random() < crit_chance
         if is_crit:
@@ -1030,14 +1060,14 @@ class BattleSystem:
         base_damage = self._apply_incoming_damage(base_damage, defender)
 
         if is_crit:
-            return base_damage, 'crit'
+            return base_damage, 'crit', zone_debuff_type
         if partial:
-            return base_damage, 'partial'
-        return base_damage, 'hit'
+            return base_damage, 'partial', zone_debuff_type
+        return base_damage, 'hit', zone_debuff_type
 
     def _calculate_damage(self, attacker: Dict, defender: Dict, attack_zone: str, defense_zone: str) -> int:
         """Совместимость: только число урона."""
-        d, _ = self._calculate_damage_detailed(attacker, defender, attack_zone, defense_zone, False)
+        d, _, _ = self._calculate_damage_detailed(attacker, defender, attack_zone, defense_zone, False)
         return d
     
     def _generate_round_events(self, p1_choices: Dict, p2_choices: Dict, p1_damage: int, p2_damage: int) -> List[str]:
@@ -1148,17 +1178,28 @@ class BattleSystem:
             1, int(victory_xp_for_player_level(winner_level) * level_mult * dmg_ratio)
         )
 
-        # XP проигравшего: 7% от того что мог получить, пропорционально нанесённому урону
-        loser_dmg_ratio = min(1.0, loser_dmg / your_max_hp)
-        loser_exp = 0 if is_test else max(
-            0, int(victory_xp_for_player_level(loser_level) * loser_dmg_ratio * 0.07)
+        # XP проигравшего: 10% от гипотетического XP за победу (если бы он выиграл с тем же уроном по max_hp победителя)
+        loser_if_won_diff = loser_level - winner_level
+        loser_if_won_mult = max(0.3, 1.0 - loser_if_won_diff * 0.15)
+        loser_if_won_dmg = min(1.0, max(0.4, loser_dmg / your_max_hp))
+        hypothetical_loser_win = 0 if is_test else int(
+            victory_xp_for_player_level(loser_level) * loser_if_won_mult * loser_if_won_dmg
         )
+        loser_exp = 0 if is_test else int(hypothetical_loser_win * DEFEAT_XP_AS_WIN_FRACTION)
 
         # XP-буст из магазина (+50% если есть заряды)
         xp_boosted = False
         if not is_test and winner_user_id is not None and base_exp > 0:
             xp_boosted = db.consume_xp_boost_charge(winner_user_id)
         exp_reward = int(base_exp * 1.5) if xp_boosted else base_exp
+        if not is_test and winner_user_id is not None and exp_reward > 0:
+            prem = db.get_premium_status(winner_user_id)
+            if prem.get("is_active"):
+                exp_reward = max(1, int(round(exp_reward * PREMIUM_XP_MULTIPLIER)))
+        if not is_test and loser_user_id is not None and loser_exp > 0:
+            prem_l = db.get_premium_status(loser_user_id)
+            if prem_l.get("is_active"):
+                loser_exp = max(0, int(round(loser_exp * PREMIUM_XP_MULTIPLIER)))
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
 
         streak_bonus_gold = 0

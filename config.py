@@ -188,6 +188,13 @@ AGI_BONUS_PCT_PER_STEP = 0.005  # +0.5% за веху
 INT_BONUS_STEP = 25
 INT_BONUS_PCT_PER_STEP = 0.005  # +0.5% за веху
 
+# Зональные множители урона (как в combats.com)
+# Голова: +30% урона, высокий риск/награда — враг защищается головой → блок
+# Ноги:   −25% урона + дебафф: −ZONE_LEGS_DODGE_PENALTY к уклону жертвы в следующем раунде
+ZONE_HEAD_MULT = 1.3            # ×1.3 урона при ударе в голову
+ZONE_LEGS_MULT = 0.75           # ×0.75 урона при ударе в ноги
+ZONE_LEGS_DODGE_PENALTY = 0.15  # −15% шанс уклона у жертвы следующий раунд
+
 
 def total_free_stats_at_level(level: int) -> int:
     """Суммарное кол-во свободных статов которое имеет игрок к данному уровню."""
@@ -208,6 +215,11 @@ ACTIVE_BONUS_GOLD = 50
 
 # Уровни 1..MAX_LEVEL; пороги XP, апы, награды за ап — progression_100_levels_v4/progression.json
 DEFEAT_EXP = 0
+# XP за поражение: доля от гипотетического XP «как за победу» (тот же уровень, множитель разницы уровней, урон по max_hp победителя); золото не начисляется
+DEFEAT_XP_AS_WIN_FRACTION = 0.10
+# Premium: бонус к XP за бой (победа и поражение), после зелья ×1.5 из магазина
+PREMIUM_XP_BONUS_PERCENT = 30
+PREMIUM_XP_MULTIPLIER = 1.0 + PREMIUM_XP_BONUS_PERCENT / 100.0
 MAX_LEVEL = max_level_from_table()
 
 
