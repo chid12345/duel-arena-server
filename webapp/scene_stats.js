@@ -119,7 +119,7 @@ class StatsScene extends Phaser.Scene {
         color:    C.green,
         valFn:    q => q.stamina,
         effectFn: q => `${q.armor_pct}% броня`,
-        desc:     '+3 HP за каждое вложение',
+        desc:     '+2 HP за каждое вложение',
       },
     ];
 
