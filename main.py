@@ -14,7 +14,7 @@ if sys.platform == 'win32':
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
-from config import BOT_TOKEN, WEBAPP_PUBLIC_URL
+from config import BOT_TOKEN, WEBAPP_PUBLIC_URL, DATABASE_URL
 from database import db
 from bot_handlers import BotHandlers, CallbackHandlers
 import progression_loader
@@ -54,13 +54,16 @@ async def daily_bonus_reminder(context):
         except Exception:
             pass
     # Просто шлём всем у кого есть chat_id и кто не заходил 20+ часов
-    import sqlite3
     conn = db.get_connection()
     cursor = conn.cursor()
+    if DATABASE_URL:
+        stale = "last_active < (NOW() - INTERVAL '20 hours')"
+    else:
+        stale = "last_active < datetime('now', '-20 hours')"
     cursor.execute(
-        """SELECT user_id, chat_id FROM players
+        f"""SELECT user_id, chat_id FROM players
            WHERE chat_id IS NOT NULL
-             AND last_active < datetime('now', '-20 hours')
+             AND {stale}
            LIMIT 1000"""
     )
     rows = cursor.fetchall()
@@ -119,8 +122,8 @@ def main():
         conn = db.get_connection()
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM bots")
-            bot_count = cursor.fetchone()[0]
+            cursor.execute("SELECT COUNT(*) AS cnt FROM bots")
+            bot_count = cursor.fetchone()["cnt"]
         finally:
             conn.close()
         

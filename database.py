@@ -1,8 +1,9 @@
 """
 База данных Duel Arena
-SQLite база для хранения игроков, боев, ботов
+Локально: SQLite. Продакшен: PostgreSQL при DATABASE_URL (Supabase / Render).
 """
 
+import re
 import sqlite3
 import random
 import uuid
@@ -10,23 +11,150 @@ from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
 
 from config import *
+from postgres_bootstrap import bootstrap_postgres_schema
+
+
+def _norm_sql(sql: str) -> str:
+    return " ".join(sql.split())
+
+
+# Точные замены SQLite → PostgreSQL (после нормализации пробелов).
+_PG_EXACT: List[Tuple[str, str]] = [
+    (
+        "INSERT OR IGNORE INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (?, ?, 0, 0, 0)",
+        "INSERT INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (%s, %s, 0, 0, 0) ON CONFLICT (user_id, quest_date) DO NOTHING",
+    ),
+    (
+        "INSERT OR IGNORE INTO improvements (user_id, improvement_type, level) VALUES (?, ?, 0)",
+        "INSERT INTO improvements (user_id, improvement_type, level) VALUES (%s, %s, 0) ON CONFLICT (user_id, improvement_type) DO NOTHING",
+    ),
+    (
+        "INSERT OR IGNORE INTO bots (name, level, strength, endurance, crit, max_hp, current_hp, bot_type, ai_pattern) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO bots (name, level, strength, endurance, crit, max_hp, current_hp, bot_type, ai_pattern) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (name) DO NOTHING",
+    ),
+    (
+        "INSERT OR IGNORE INTO referrals (referral_code, referrer_id, referred_id) VALUES (?, ?, ?)",
+        "INSERT INTO referrals (referral_code, referrer_id, referred_id) VALUES (%s, %s, %s) ON CONFLICT (referred_id) DO NOTHING",
+    ),
+    (
+        "INSERT OR IGNORE INTO season_stats (season_id, user_id) VALUES (?, ?)",
+        "INSERT INTO season_stats (season_id, user_id) VALUES (%s, %s) ON CONFLICT (season_id, user_id) DO NOTHING",
+    ),
+    (
+        "INSERT OR IGNORE INTO battle_pass (user_id, season_id) VALUES (?, ?)",
+        "INSERT INTO battle_pass (user_id, season_id) VALUES (%s, %s) ON CONFLICT (user_id, season_id) DO NOTHING",
+    ),
+    (
+        "INSERT OR IGNORE INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status) VALUES (?, ?, ?, ?, ?, 'pending')",
+        "INSERT INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status) VALUES (%s, %s, %s, %s, %s, 'pending') ON CONFLICT (invoice_id) DO NOTHING",
+    ),
+    (
+        "INSERT OR REPLACE INTO pvp_queue (user_id, level, chat_id, message_id) VALUES (?, ?, ?, ?)",
+        "INSERT INTO pvp_queue (user_id, level, chat_id, message_id) VALUES (%s, %s, %s, %s) "
+        "ON CONFLICT (user_id) DO UPDATE SET level = EXCLUDED.level, chat_id = EXCLUDED.chat_id, message_id = EXCLUDED.message_id",
+    ),
+]
+
+
+def _adapt_sql_pg(sql: str) -> str:
+    n = _norm_sql(sql)
+    for lite, pg in _PG_EXACT:
+        if n == _norm_sql(lite):
+            return pg
+    s = sql
+    s = re.sub(
+        r"datetime\s*\(\s*'now'\s*,\s*\?\s*\|\|\s*' seconds'\s*\)",
+        "__PG_INTERVAL_SEC__",
+        s,
+    )
+    s = s.replace("datetime('now', '-1 day')", "(NOW() - INTERVAL '1 day')")
+    s = s.replace("datetime('now', '-1 hour')", "(NOW() - INTERVAL '1 hour')")
+    s = s.replace("datetime('now', '-5 minutes')", "(NOW() - INTERVAL '5 minutes')")
+    s = s.replace("datetime('now', '-20 hours')", "(NOW() - INTERVAL '20 hours')")
+    s = s.replace("strftime('%H:%M', created_at)", "to_char(created_at, 'HH24:MI')")
+    s = s.replace("rating = MAX(900, rating - 5)", "rating = GREATEST(900, rating - 5)")
+    s = s.replace(
+        "referral_usdt_balance = MAX(0, COALESCE(referral_usdt_balance,0) - ?)",
+        "referral_usdt_balance = GREATEST(0, COALESCE(referral_usdt_balance,0) - ?)",
+    )
+    s = s.replace("?", "%s")
+    s = s.replace("__PG_INTERVAL_SEC__", "(NOW() + (%s::text || ' seconds')::interval)")
+    return s
+
+
+class _PatchedCursor:
+    """Для PostgreSQL: плейсхолдеры и отличия диалекта от SQLite."""
+
+    def __init__(self, raw: Any, use_pg: bool):
+        self._raw = raw
+        self._use_pg = use_pg
+
+    def execute(self, sql: str, params: Optional[Any] = None):
+        if self._use_pg:
+            sql = _adapt_sql_pg(sql)
+        if params is None:
+            return self._raw.execute(sql)
+        return self._raw.execute(sql, params)
+
+    def __getattr__(self, name: str):
+        return getattr(self._raw, name)
+
+
+class _PatchedConn:
+    def __init__(self, raw: Any, use_pg: bool):
+        self._raw = raw
+        self._use_pg = use_pg
+
+    def cursor(self):
+        return _PatchedCursor(self._raw.cursor(), self._use_pg)
+
+    def commit(self):
+        return self._raw.commit()
+
+    def rollback(self):
+        return self._raw.rollback()
+
+    def close(self):
+        return self._raw.close()
+
+    def __getattr__(self, name: str):
+        return getattr(self._raw, name)
 
 
 class Database:
     """Класс для работы с базой данных"""
     
     def __init__(self):
+        self._pg = bool(DATABASE_URL)
         self.db_name = DB_NAME
         self.init_database()
     
     def get_connection(self):
         """Получить соединение с базой данных"""
+        if self._pg:
+            import psycopg
+            from psycopg.rows import dict_row
+
+            raw = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+            return _PatchedConn(raw, True)
         conn = sqlite3.connect(self.db_name, timeout=15)
         conn.row_factory = sqlite3.Row
         return conn
     
     def init_database(self):
         """Инициализация всех таблиц"""
+        if self._pg:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                bootstrap_postgres_schema(cursor)
+                conn.commit()
+            finally:
+                conn.close()
+            self.create_initial_bots()
+            self.rebalance_all_bots()
+            return
+
         conn = self.get_connection()
         cursor = conn.cursor()
         
@@ -635,8 +763,8 @@ class Database:
         inserted = 0
         try:
             for level, want in sorted(BOT_COUNT_BY_LEVEL.items()):
-                cursor.execute("SELECT COUNT(*) FROM bots WHERE level = ?", (level,))
-                have = int(cursor.fetchone()[0])
+                cursor.execute("SELECT COUNT(*) AS cnt FROM bots WHERE level = ?", (level,))
+                have = int(cursor.fetchone()["cnt"])
                 need = max(0, int(want) - have)
                 for _ in range(need):
                     bot_data = self._generate_bot_data(level)
@@ -652,8 +780,8 @@ class Database:
                     if inserted % batch_commit_every == 0:
                         conn.commit()
 
-            cursor.execute("SELECT COUNT(*) FROM bots")
-            total = int(cursor.fetchone()[0])
+            cursor.execute("SELECT COUNT(*) AS cnt FROM bots")
+            total = int(cursor.fetchone()["cnt"])
             extra_slots = max(0, int(TARGET_BOT_POPULATION) - total)
             for _ in range(extra_slots):
                 level = self._random_bot_level_above_10()
@@ -832,27 +960,42 @@ class Database:
         """Сохранить информацию о бое"""
         conn = self.get_connection()
         cursor = conn.cursor()
-        
-        cursor.execute('''
-            INSERT INTO battles 
-            (player1_id, player2_id, is_bot1, is_bot2, winner_id, battle_result, 
-             rounds_played, battle_data)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (
-            battle_data['player1_id'],
-            battle_data['player2_id'],
-            battle_data['is_bot1'],
-            battle_data['is_bot2'],
-            battle_data['winner_id'],
-            battle_data['result'],
-            battle_data['rounds'],
-            str(battle_data['details'])
-        ))
-        
-        battle_id = cursor.lastrowid
+        params = (
+            battle_data["player1_id"],
+            battle_data["player2_id"],
+            battle_data["is_bot1"],
+            battle_data["is_bot2"],
+            battle_data["winner_id"],
+            battle_data["result"],
+            battle_data["rounds"],
+            str(battle_data["details"]),
+        )
+        if self._pg:
+            cursor.execute(
+                """
+                INSERT INTO battles
+                (player1_id, player2_id, is_bot1, is_bot2, winner_id, battle_result,
+                 rounds_played, battle_data)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                RETURNING battle_id
+                """,
+                params,
+            )
+            battle_id = int(cursor.fetchone()["battle_id"])
+        else:
+            cursor.execute(
+                """
+                INSERT INTO battles
+                (player1_id, player2_id, is_bot1, is_bot2, winner_id, battle_result,
+                 rounds_played, battle_data)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                params,
+            )
+            battle_id = int(cursor.lastrowid)
         conn.commit()
         conn.close()
-        
+
         return battle_id
     
     def update_player_stats(self, user_id: int, stats_update: Dict):
@@ -1020,7 +1163,7 @@ class Database:
         
         improvements = {}
         for row in cursor.fetchall():
-            improvements[row[0]] = row[1]
+            improvements[row["improvement_type"]] = row["level"]
         
         conn.close()
         return improvements
@@ -1037,19 +1180,19 @@ class Database:
         ''', (user_id, improvement_type))
         
         result = cursor.fetchone()
-        if not result or result[0] >= IMPROVEMENT_LEVELS:
+        if not result or result["level"] >= IMPROVEMENT_LEVELS:
             conn.close()
             return False
         
-        current_level = result[0]
+        current_level = result["level"]
         new_level = current_level + 1
         
         # Рассчитываем стоимость
         base_cost = self._get_improvement_cost(improvement_type, new_level)
         
         # Проверяем золото
-        cursor.execute('SELECT gold FROM players WHERE user_id = ?', (user_id,))
-        player_gold = cursor.fetchone()[0]
+        cursor.execute('SELECT gold AS gold FROM players WHERE user_id = ?', (user_id,))
+        player_gold = cursor.fetchone()["gold"]
         
         if player_gold < base_cost:
             conn.close()
@@ -1416,11 +1559,18 @@ class Database:
             )
             cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (d, uid))
         # Создаём новый сезон
-        cursor.execute(
-            "INSERT INTO seasons (name, status) VALUES (?, 'active')",
-            (new_season_name,),
-        )
-        new_sid = cursor.lastrowid
+        if self._pg:
+            cursor.execute(
+                "INSERT INTO seasons (name, status) VALUES (%s, 'active') RETURNING id",
+                (new_season_name,),
+            )
+            new_sid = int(cursor.fetchone()["id"])
+        else:
+            cursor.execute(
+                "INSERT INTO seasons (name, status) VALUES (?, 'active')",
+                (new_season_name,),
+            )
+            new_sid = int(cursor.lastrowid)
         conn.commit()
         conn.close()
         return {"ok": True, "ended_season_id": sid, "new_season_id": new_sid, "rewarded": len(top3)}
@@ -1668,11 +1818,18 @@ class Database:
             conn.close()
             return {"ok": False, "reason": f"Нужно {self.CLAN_CREATE_COST_GOLD} золота"}
         try:
-            cursor.execute(
-                "INSERT INTO clans (name, tag, leader_id) VALUES (?, ?, ?)",
-                (name, tag, leader_id),
-            )
-            clan_id = cursor.lastrowid
+            if self._pg:
+                cursor.execute(
+                    "INSERT INTO clans (name, tag, leader_id) VALUES (%s, %s, %s) RETURNING id",
+                    (name, tag, leader_id),
+                )
+                clan_id = int(cursor.fetchone()["id"])
+            else:
+                cursor.execute(
+                    "INSERT INTO clans (name, tag, leader_id) VALUES (?, ?, ?)",
+                    (name, tag, leader_id),
+                )
+                clan_id = int(cursor.lastrowid)
             cursor.execute(
                 "INSERT INTO clan_members (user_id, clan_id, role) VALUES (?, ?, 'leader')",
                 (leader_id, clan_id),

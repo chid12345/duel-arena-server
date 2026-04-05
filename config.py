@@ -71,6 +71,10 @@ ADMIN_USER_IDS = {
 _DATA_DIR = os.getenv("DATA_DIR", os.path.dirname(os.path.abspath(__file__)))
 DB_NAME   = os.path.join(_DATA_DIR, "duel_arena.db")
 
+# PostgreSQL (Supabase и т.п.): полный URL. Если задан — используется вместо SQLite.
+# Рекомендуется добавлять ?sslmode=require к URL Supabase.
+DATABASE_URL = (os.getenv("DATABASE_URL") or "").strip()
+
 # Игровые константы (боты и «эталон» генерации; старт игрока — PLAYER_START_*)
 BASE_STRENGTH = 10
 BASE_ENDURANCE = 10
