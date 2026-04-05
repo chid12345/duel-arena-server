@@ -159,13 +159,20 @@ STRENGTH_DAMAGE_SCALE = 4.0             # коэффициент при степ
 STRENGTH_DAMAGE_POWER = 0.75            # показатель степени (убывающая отдача)
 STRENGTH_DAMAGE_MAX_PCT = 0.45          # кап обычного удара = 45% от макс. HP защитника
 
-# Броня от Выносливости: % вложенных статов / (% + K), потолок ARMOR_MAX_REDUCTION
-#   stamina_pct = vyn_invested / total_free_stats_at_level * 100
-#   reduction = min(ARMOR_MAX_REDUCTION, stamina_pct / (stamina_pct + K))
-# K=100: 25% в вын → 20% снижение, 50% → 33%, 100% → потолок 35%
-# (убрали прежний K=75 + потолок 40% — танк не должен занулять весь урон)
-ARMOR_STAMINA_K = 100.0
-ARMOR_MAX_REDUCTION = 0.35
+# Броня от Выносливости: абсолютная формула (не процент от пула!)
+#   stamina_invested = фактическое кол-во вложений в выносливость
+#   base = stamina_invested / (stamina_invested + ARMOR_STAMINA_K_ABS)
+#   level_cap = min(ARMOR_ABSOLUTE_MAX, ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv)
+#   reduction = min(level_cap, base)
+#
+# Прогрессия для heavy-tank билда (80% статов в вын):
+#   Ур.3 → ~2%  | Ур.10 → ~6%  | Ур.25 → ~15%
+#   Ур.50 → ~25% | Ур.75 → ~35% | Ур.100 → 45% (потолок)
+# Броня НИКОГДА не бьёт потолок раньше ~ур.100 при тяжёлом вложении.
+ARMOR_STAMINA_K_ABS    = 600    # абсолютный K (не процентный)
+ARMOR_CAP_BASE         = 0.05   # базовый потолок брони (5% на ур.0)
+ARMOR_CAP_PER_LEVEL    = 0.004  # +0.4% потолка за каждый уровень
+ARMOR_ABSOLUTE_MAX     = 0.45   # жёсткий потолок (45% на ур.100)
 
 # Лимит раундов — предотвращение бесконечных боёв (тенк vs тенк)
 # При достижении лимита побеждает тот, у кого больше HP.

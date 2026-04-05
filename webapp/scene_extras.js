@@ -1329,20 +1329,19 @@ class ShopScene extends Phaser.Scene {
   /* ── Stars карточка ──────────────────────────────────── */
   _makeStarsCard(pkg, ix, iy, iw, ih, W) {
     const bg = this.add.graphics();
-    bg.fillStyle(0x1a1808, 0.92); bg.fillRoundedRect(ix, iy, iw, ih, 11);
-    bg.lineStyle(1.5, 0xffc83c, 0.4); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    bg.fillStyle(0x231e09, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(1.5, 0xffc83c, 0.6); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
 
-    txt(this, ix+iw/2, iy+14, '💎', 20).setOrigin(0.5);
-    txt(this, ix+iw/2, iy+36, `${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
-    txt(this, ix+iw/2, iy+53, 'алмазов', 11, '#8888aa').setOrigin(0.5);
+    txt(this, ix+iw/2, iy+22, `💎 ${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
+    txt(this, ix+iw/2, iy+40, 'алмазов', 11, '#c8b870').setOrigin(0.5);
 
     const btnG = this.add.graphics();
-    btnG.fillStyle(0xffa000, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 14, 5);
-    txt(this, ix+iw/2, iy+69, `⭐ ${pkg.stars}`, 11, '#1a1a28', true).setOrigin(0.5);
+    btnG.fillStyle(0xffa000, 1.0); btnG.fillRoundedRect(ix+4, iy+56, iw-8, 18, 6);
+    txt(this, ix+iw/2, iy+65, `⭐ ${pkg.stars}`, 12, '#1a1208', true).setOrigin(0.5);
 
     this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x2a2414, 1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
-      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a1808,0.92); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(1.5,0xffc83c,0.4); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x332d10, 1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
+      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x231e09,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(1.5,0xffc83c,0.6); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
       .on('pointerup',   () => this._buyStars(pkg));
   }
 
@@ -1410,20 +1409,19 @@ class ShopScene extends Phaser.Scene {
     const symbol = asset === 'TON' ? 'TON' : 'USDT';
 
     const bg = this.add.graphics();
-    bg.fillStyle(0x08141a, 0.92); bg.fillRoundedRect(ix, iy, iw, ih, 11);
-    bg.lineStyle(1.5, 0x3cc8dc, 0.4); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    bg.fillStyle(0x0d2535, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(1.5, 0x3cc8dc, 0.6); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
 
-    txt(this, ix+iw/2, iy+14, '💎', 20).setOrigin(0.5);
-    txt(this, ix+iw/2, iy+36, `${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
-    txt(this, ix+iw/2, iy+53, 'алмазов', 11, '#8888aa').setOrigin(0.5);
+    txt(this, ix+iw/2, iy+22, `💎 ${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5);
+    txt(this, ix+iw/2, iy+40, 'алмазов', 11, '#70bcd0').setOrigin(0.5);
 
     const btnG = this.add.graphics();
-    btnG.fillStyle(0x0a4055, 0.9); btnG.fillRoundedRect(ix+4, iy+62, iw-8, 14, 5);
-    txt(this, ix+iw/2, iy+69, `${price} ${symbol}`, 11, '#3cc8dc', true).setOrigin(0.5);
+    btnG.fillStyle(0x1a6080, 1.0); btnG.fillRoundedRect(ix+4, iy+56, iw-8, 18, 6);
+    txt(this, ix+iw/2, iy+65, `${price} ${symbol}`, 12, '#3ce8ff', true).setOrigin(0.5);
 
     this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x0f2030,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
-      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x08141a,0.92); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(1.5,0x3cc8dc,0.4); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
+      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x163548,1); bg.fillRoundedRect(ix,iy,iw,ih,11); tg?.HapticFeedback?.impactOccurred('medium'); })
+      .on('pointerout',  () => { bg.clear(); bg.fillStyle(0x0d2535,0.95); bg.fillRoundedRect(ix,iy,iw,ih,11); bg.lineStyle(1.5,0x3cc8dc,0.6); bg.strokeRoundedRect(ix,iy,iw,ih,11); })
       .on('pointerup',   () => this._buyCrypto(pkg));
   }
 

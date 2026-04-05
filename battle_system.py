@@ -917,17 +917,22 @@ class BattleSystem:
         )
 
     def _armor_multiplier(self, defender: Dict) -> float:
-        """Броня от Выносливости: % вложенных статов от пула уровня.
-        K=100, потолок 35%:
-          0% вложено → 0% снижения | 25% → ~20% | 50% → ~33% | 100% → 35% (потолок)
-        Меньшее снижение чем раньше (K=75/40%) → атака не нивелируется даже у full-tank."""
+        """Броня от Выносливости — абсолютная формула (не % от пула!).
+
+        base = invested / (invested + ARMOR_STAMINA_K_ABS)
+        level_cap = ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv  (растёт с уровнем)
+        reduction = min(level_cap, base)
+
+        Прогрессия для heavy-tank (80% статов в вын):
+          Ур.3→~2%  Ур.10→~6%  Ур.25→~15%  Ур.50→~25%  Ур.75→~35%  Ур.100→45%
+        Потолок НИКОГДА не достигается раньше ~ур.100 при любом вложении."""
         lv = int(defender.get('level', PLAYER_START_LEVEL))
         stamina = stamina_stats_invested(
             int(defender.get('max_hp', PLAYER_START_MAX_HP)), lv
         )
-        total_free = total_free_stats_at_level(lv)
-        stamina_pct = stamina / total_free * 100
-        reduction = min(ARMOR_MAX_REDUCTION, stamina_pct / (stamina_pct + ARMOR_STAMINA_K))
+        base_reduction = stamina / (stamina + ARMOR_STAMINA_K_ABS) if stamina > 0 else 0.0
+        level_cap = min(ARMOR_ABSOLUTE_MAX, ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv)
+        reduction = min(level_cap, base_reduction)
         return 1.0 - reduction
 
     def _apply_incoming_damage(self, raw: int, defender: Dict) -> int:
