@@ -986,10 +986,13 @@ class BattleSystem:
         attacker_uid = attacker.get('user_id')
         atk_improvements = db.get_player_improvements(attacker_uid) if attacker_uid else {}
 
-        # Уворот: сравнительный — ловкость защитника vs ловкость атакующего
+        # Уворот: сравнительный + абсолютный бонус за вложения в ловкость
         def_ag = max(1, int(defender.get('endurance', BASE_ENDURANCE)))
         atk_ag = max(1, int(attacker.get('endurance', BASE_ENDURANCE)))
         dodge_chance = (def_ag / (def_ag + atk_ag)) * DODGE_MAX_CHANCE
+        # Плоский бонус: каждые AGI_BONUS_STEP вложенных очков → +AGI_BONUS_PCT_PER_STEP
+        agi_invested = max(0, def_ag - PLAYER_START_ENDURANCE)
+        dodge_chance += (agi_invested // AGI_BONUS_STEP) * AGI_BONUS_PCT_PER_STEP
         dodge_chance += def_improvements.get('dodge', 0) * 0.02
         dodge_chance = min(DODGE_MAX_CHANCE, dodge_chance)
 
@@ -1001,12 +1004,17 @@ class BattleSystem:
             base_damage = int(base_damage * 0.7)
             partial = True
 
-        # Крит (Интуиция): сравнительный — интуиция атакующего vs интуиция защитника
+        # Крит (Интуиция): сравнительный + абсолютный бонус за вложения в интуицию
         atk_int = self._safe_crit_stat(attacker, PLAYER_START_CRIT)
         def_int = self._safe_crit_stat(defender, PLAYER_START_CRIT)
         total_int = max(1, atk_int + def_int)
+        # Плоский бонус: каждые INT_BONUS_STEP вложенных очков → +INT_BONUS_PCT_PER_STEP
+        int_invested = max(0, atk_int - PLAYER_START_CRIT)
         imp_crit = atk_improvements.get('critical_strike', 0) * 0.02
-        crit_chance = min(CRIT_MAX_CHANCE, (atk_int / total_int) * CRIT_MAX_CHANCE + imp_crit)
+        crit_chance = (atk_int / total_int) * CRIT_MAX_CHANCE
+        crit_chance += (int_invested // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
+        crit_chance += imp_crit
+        crit_chance = min(CRIT_MAX_CHANCE, crit_chance)
         is_crit = random.random() < crit_chance
         if is_crit:
             base_damage *= 2

@@ -29,6 +29,9 @@ from config import (
     DODGE_MAX_CHANCE, CRIT_MAX_CHANCE, ARMOR_MAX_REDUCTION,
     ARMOR_STAMINA_K,
     STRENGTH_DAMAGE_FLAT_PER_LEVEL, STRENGTH_DAMAGE_SCALE, STRENGTH_DAMAGE_POWER,
+    AGI_BONUS_STEP, AGI_BONUS_PCT_PER_STEP,
+    INT_BONUS_STEP, INT_BONUS_PCT_PER_STEP,
+    PLAYER_START_ENDURANCE, PLAYER_START_CRIT,
     HP_MIN_BATTLE_PCT, HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS,
     MAX_LEVEL, exp_needed_for_next_level, format_exp_progress,
     VICTORY_GOLD, CRYPTOPAY_TOKEN, CRYPTOPAY_TESTNET, PREMIUM_SUBSCRIPTION_STARS,
@@ -173,10 +176,18 @@ def _player_api(player: dict) -> dict:
     vyn  = stamina_stats_invested(mhp, lv)
     tf   = total_free_stats_at_level(lv)
 
-    avg_agi  = max(1, 3 + tf // 4)
+    avg_agi  = max(1, PLAYER_START_ENDURANCE + tf // 4)
     avg_intu = max(1, PLAYER_START_CRIT + tf // 4)
-    dodge_p = int(min(DODGE_MAX_CHANCE, agi / (agi + avg_agi) * DODGE_MAX_CHANCE) * 100)
-    crit_p  = int(min(CRIT_MAX_CHANCE, intu / (intu + avg_intu) * CRIT_MAX_CHANCE) * 100)
+    agi_inv  = max(0, agi - PLAYER_START_ENDURANCE)
+    int_inv  = max(0, intu - PLAYER_START_CRIT)
+    dodge_p = int(min(DODGE_MAX_CHANCE,
+        agi / (agi + avg_agi) * DODGE_MAX_CHANCE
+        + (agi_inv // AGI_BONUS_STEP) * AGI_BONUS_PCT_PER_STEP
+    ) * 100)
+    crit_p  = int(min(CRIT_MAX_CHANCE,
+        intu / (intu + avg_intu) * CRIT_MAX_CHANCE
+        + (int_inv // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP
+    ) * 100)
     s_pct   = vyn / tf * 100 if tf > 0 else 0
     armor_p = int(min(ARMOR_MAX_REDUCTION, s_pct / (s_pct + ARMOR_STAMINA_K)) * 100) if s_pct > 0 else 0
     dmg     = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER)))
