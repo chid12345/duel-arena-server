@@ -739,14 +739,38 @@ class MenuScene extends Phaser.Scene {
       W / 2, CH * 0.28,
       '⚔️  ПОИСК СОПЕРНИКА',
       'Живой игрок · рейтинговый бой',
-      '🏆 +рейтинг  💰 +золото  ⭐ +опыт',
+      '🏆 +рейтинг  💰+30%  ⭐+30% за победу',
       C.red, 0xdc3c46,
       () => this._onFight()
     );
 
+    // Вызов по нику (персональный PvP)
+    const chY = CH * 0.43;
+    const chBg = this.add.graphics();
+    chBg.fillStyle(0x33261a, 0.9);
+    chBg.fillRoundedRect(16, chY - 20, W - 32, 40, 10);
+    chBg.lineStyle(1.5, C.gold, 0.35);
+    chBg.strokeRoundedRect(16, chY - 20, W - 32, 40, 10);
+    const chTxt = txt(this, W / 2, chY, '🎯 Вызов по нику (Прими 1 вызов)', 12, '#ffdca0', true).setOrigin(0.5);
+    const chZone = this.add.zone(16, chY - 20, W - 32, 40).setOrigin(0).setInteractive({ useHandCursor: true });
+    chZone.on('pointerdown', () => {
+      chBg.clear();
+      chBg.fillStyle(0x4a3220, 1.0);
+      chBg.fillRoundedRect(16, chY - 20, W - 32, 40, 10);
+      tg?.HapticFeedback?.impactOccurred('light');
+    });
+    chZone.on('pointerout', () => {
+      chBg.clear();
+      chBg.fillStyle(0x33261a, 0.9);
+      chBg.fillRoundedRect(16, chY - 20, W - 32, 40, 10);
+      chBg.lineStyle(1.5, C.gold, 0.35);
+      chBg.strokeRoundedRect(16, chY - 20, W - 32, 40, 10);
+    });
+    chZone.on('pointerup', () => this._onChallengeByNick());
+
     /* ── Карточка Бот ── */
     const botCard = this._makeBattleCard(
-      W / 2, CH * 0.58,
+      W / 2, CH * 0.62,
       '🤖  БОЙ С БОТОМ',
       'Практика · нет рейтинга',
       '💰 +золото  ⭐ +опыт',
@@ -755,7 +779,7 @@ class MenuScene extends Phaser.Scene {
     );
 
     /* ── HP блок (всегда показываем) ── */
-    const hpBlockY = CH * 0.79;
+    const hpBlockY = CH * 0.82;
     const hpBlockObjs = [];
 
     // Мини HP бар
@@ -798,10 +822,11 @@ class MenuScene extends Phaser.Scene {
       hpBlockObjs.push(qBg, qT, qZ);
     }
 
-    const children = [title, ...pvpCard, ...botCard, ...hpBlockObjs];
+    const children = [title, ...pvpCard, chBg, chTxt, chZone, ...botCard, ...hpBlockObjs];
     children.forEach(o => c.add(o));
 
     this._panels.battle = c;
+    this._checkIncomingChallenge();
   }
 
   _makeBattleCard(cx, cy, title, sub, bonus, borderColor, fillColor, cb) {
@@ -1291,6 +1316,14 @@ class MenuScene extends Phaser.Scene {
         this.scene.start('Battle');
         return;
       }
+      if (msg.event === 'challenge_incoming') {
+        this._showIncomingChallenge(msg.challenge);
+        return;
+      }
+      if (msg.event === 'challenge_declined') {
+        this._toast('🚫 Вызов отклонён');
+        return;
+      }
       // Уведомления пока игрок на главной
       if (msg.event === 'level_up') {
         tg?.HapticFeedback?.notificationOccurred('success');
@@ -1319,6 +1352,76 @@ class MenuScene extends Phaser.Scene {
         post('/api/player').then(d => { if (d.ok && d.player) State.player = d.player; }).catch(() => {});
       }
     });
+  }
+
+  async _checkIncomingChallenge() {
+    try {
+      const r = await get('/api/battle/challenge/pending');
+      if (r.ok && r.pending && r.challenge) this._showIncomingChallenge(r.challenge);
+    } catch (_) {}
+  }
+
+  _showIncomingChallenge(ch) {
+    if (!ch || !ch.id) return;
+    const uname = ch.from_username || 'Боец';
+    const text = `Вызов от @${uname} (ур.${ch.from_level || 1}, рейтинг ${ch.from_rating || 1000}). Принять?`;
+    const respond = async (accept) => {
+      try {
+        const res = await post('/api/battle/challenge/respond', { challenge_id: ch.id, accept: !!accept });
+        if (!res.ok) { this._toast('❌ Вызов устарел или недоступен'); return; }
+        if (!accept) { this._toast('🚫 Вызов отклонён'); return; }
+        if (res.battle) {
+          State.battle = res.battle;
+          this.scene.start('Battle');
+          return;
+        }
+      } catch (_) {
+        this._toast('❌ Нет соединения');
+      }
+    };
+    if (tg?.showPopup) {
+      tg.showPopup({
+        title: '⚔️ PvP-вызов',
+        message: text,
+        buttons: [
+          { id: 'decline', type: 'destructive', text: 'Отклонить' },
+          { id: 'accept', type: 'default', text: 'Принять' },
+        ],
+      }, btnId => { respond(btnId === 'accept'); });
+    } else {
+      const ok = window.confirm(text);
+      respond(ok);
+    }
+  }
+
+  async _onChallengeByNick() {
+    const nickRaw = window.prompt('Введите ник соперника (без @):', '');
+    if (nickRaw == null) return;
+    const nickname = (nickRaw || '').trim().replace(/^@+/, '');
+    if (!nickname) {
+      this._toast('❌ Ник не указан');
+      return;
+    }
+    this._toast('📨 Отправляем вызов...');
+    try {
+      const res = await post('/api/battle/challenge/send', { nickname });
+      if (!res.ok) {
+        const m = {
+          target_not_found: '❌ Игрок не найден',
+          cannot_challenge_self: '❌ Нельзя вызвать самого себя',
+          target_busy: '⏳ Игрок уже в бою',
+          target_low_hp: '❤️ У соперника мало HP',
+          target_has_pending: '⏳ У игрока уже есть входящий вызов',
+          low_hp: '❤️ Нужно восстановить HP',
+          already_in_battle: '⚔️ Вы уже в бою',
+        };
+        this._toast(m[res.reason] || '❌ Не удалось отправить вызов');
+        return;
+      }
+      this._toast('✅ Вызов отправлен');
+    } catch (_) {
+      this._toast('❌ Нет соединения');
+    }
   }
 
   /* ── Авто-реген HP каждые 30 сек (без запроса на сервер) ── */

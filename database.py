@@ -6,6 +6,7 @@
 import re
 import sqlite3
 import random
+import time
 import uuid
 from datetime import datetime, timedelta
 from typing import Any, Dict, List, Optional, Tuple
@@ -318,6 +319,19 @@ class Database:
                 UNIQUE(user_id, quest_date)
             )
         ''')
+        # Вызовы PvP по нику (pending/accepted/declined/expired)
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS pvp_challenges (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                challenger_id INTEGER NOT NULL,
+                target_id INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending',
+                expires_at INTEGER NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_pvp_ch_target_status ON pvp_challenges (target_id, status, created_at)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_pvp_ch_challenger_status ON pvp_challenges (challenger_id, status, created_at)")
 
         # Таблица миграций (эквивалент lightweight migration system)
         cursor.execute('''
@@ -682,6 +696,21 @@ class Database:
                 "2026_04_05_003_withdrawal_cooldown",
                 [
                     "ALTER TABLE players ADD COLUMN last_withdrawal_at TIMESTAMP",
+                ],
+            ),
+            (
+                "2026_04_16_001_pvp_challenges",
+                [
+                    """CREATE TABLE IF NOT EXISTS pvp_challenges (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        challenger_id INTEGER NOT NULL,
+                        target_id INTEGER NOT NULL,
+                        status TEXT NOT NULL DEFAULT 'pending',
+                        expires_at INTEGER NOT NULL,
+                        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_pvp_ch_target_status ON pvp_challenges (target_id, status, created_at)",
+                    "CREATE INDEX IF NOT EXISTS idx_pvp_ch_challenger_status ON pvp_challenges (challenger_id, status, created_at)",
                 ],
             ),
         ]
@@ -1552,6 +1581,130 @@ class Database:
         conn.commit()
         conn.close()
         return deleted
+
+    # ------------------------------------------------------------------
+    # PvP вызовы по нику
+    # ------------------------------------------------------------------
+
+    @staticmethod
+    def _norm_username(username: str) -> str:
+        return (username or "").strip().lstrip("@").lower()
+
+    def find_player_by_username(self, username: str) -> Optional[Dict]:
+        """Найти игрока по нику (без @, регистронезависимо)."""
+        un = self._norm_username(username)
+        if not un:
+            return None
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT user_id, username, level, rating, current_hp, max_hp
+            FROM players
+            WHERE username IS NOT NULL AND LOWER(username) = ?
+            LIMIT 1
+            """,
+            (un,),
+        )
+        row = cursor.fetchone()
+        conn.close()
+        return dict(row) if row else None
+
+    def create_pvp_challenge(self, challenger_id: int, target_id: int, ttl_seconds: int = 300) -> Dict[str, Any]:
+        """Создать вызов на PvP по нику (один входящий pending на цель)."""
+        now_ts = int(time.time())
+        exp_ts = now_ts + max(60, int(ttl_seconds))
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE pvp_challenges SET status = 'expired' WHERE status = 'pending' AND expires_at <= ?",
+                (now_ts,),
+            )
+            cursor.execute(
+                "SELECT id FROM pvp_challenges WHERE target_id = ? AND status = 'pending' AND expires_at > ? LIMIT 1",
+                (target_id, now_ts),
+            )
+            if cursor.fetchone():
+                conn.commit()
+                return {"ok": False, "reason": "target_has_pending"}
+            cursor.execute(
+                """
+                INSERT INTO pvp_challenges (challenger_id, target_id, status, expires_at)
+                VALUES (?, ?, 'pending', ?)
+                """,
+                (challenger_id, target_id, exp_ts),
+            )
+            cid = int(cursor.lastrowid) if not self._pg else None
+            if self._pg and cid is None:
+                cursor.execute(
+                    "SELECT id FROM pvp_challenges WHERE challenger_id = ? AND target_id = ? AND expires_at = ? ORDER BY id DESC LIMIT 1",
+                    (challenger_id, target_id, exp_ts),
+                )
+                rr = cursor.fetchone()
+                cid = int(rr["id"]) if rr else 0
+            conn.commit()
+            return {"ok": True, "challenge_id": cid, "expires_at": exp_ts}
+        finally:
+            conn.close()
+
+    def get_incoming_pvp_challenge(self, target_id: int) -> Optional[Dict]:
+        """Вернуть 1 актуальный входящий вызов для цели."""
+        now_ts = int(time.time())
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE pvp_challenges SET status = 'expired' WHERE status = 'pending' AND expires_at <= ?",
+                (now_ts,),
+            )
+            cursor.execute(
+                """
+                SELECT c.id, c.challenger_id, c.target_id, c.expires_at, c.created_at,
+                       p.username AS challenger_username, p.level AS challenger_level, p.rating AS challenger_rating
+                FROM pvp_challenges c
+                JOIN players p ON p.user_id = c.challenger_id
+                WHERE c.target_id = ? AND c.status = 'pending' AND c.expires_at > ?
+                ORDER BY c.created_at DESC
+                LIMIT 1
+                """,
+                (target_id, now_ts),
+            )
+            row = cursor.fetchone()
+            conn.commit()
+            return dict(row) if row else None
+        finally:
+            conn.close()
+
+    def respond_pvp_challenge(self, challenge_id: int, target_id: int, accept: bool) -> Optional[Dict]:
+        """Принять/отклонить вызов. Возвращает challenge row при успехе."""
+        now_ts = int(time.time())
+        status = "accepted" if accept else "declined"
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """
+                SELECT id, challenger_id, target_id, status, expires_at
+                FROM pvp_challenges
+                WHERE id = ? AND target_id = ? AND status = 'pending' AND expires_at > ?
+                LIMIT 1
+                """,
+                (challenge_id, target_id, now_ts),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return None
+            cursor.execute(
+                "UPDATE pvp_challenges SET status = ? WHERE id = ?",
+                (status, challenge_id),
+            )
+            conn.commit()
+            out = dict(row)
+            out["status"] = status
+            return out
+        finally:
+            conn.close()
 
     # ------------------------------------------------------------------
     # Сезоны

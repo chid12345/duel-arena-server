@@ -183,6 +183,15 @@ class FindBattleBody(BaseModel):
     queue_only: bool = False   # True = join PvP queue, don't fall back to bot
     prefer_bot: bool = False   # True = skip PvP, start bot immediately
 
+class ChallengeSendBody(BaseModel):
+    init_data: str
+    nickname: str
+
+class ChallengeRespondBody(BaseModel):
+    init_data: str
+    challenge_id: int
+    accept: bool
+
 class TrainBody(BaseModel):
     init_data: str
     stat: str   # strength | agility | intuition | stamina
@@ -567,6 +576,111 @@ async def cancel_queue(body: InitDataHeader):
     uid     = int(tg_user["id"])
     db.pvp_dequeue(uid)
     return {"ok": True}
+
+
+@app.post("/api/battle/challenge/send")
+async def send_challenge(body: ChallengeSendBody):
+    """Отправить персональный PvP-вызов по нику (@name)."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    my_username = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
+    me = db.get_or_create_player(uid, my_username)
+    if battle_system.get_battle_status(uid):
+        return {"ok": False, "reason": "already_in_battle"}
+
+    mhp = int(me.get("max_hp", PLAYER_START_MAX_HP))
+    chp = int(me.get("current_hp", mhp))
+    min_hp = int(mhp * HP_MIN_BATTLE_PCT)
+    if chp < min_hp:
+        return {"ok": False, "reason": "low_hp"}
+
+    target = db.find_player_by_username(body.nickname)
+    if not target:
+        return {"ok": False, "reason": "target_not_found"}
+    target_uid = int(target["user_id"])
+    if target_uid == uid:
+        return {"ok": False, "reason": "cannot_challenge_self"}
+    if battle_system.get_battle_status(target_uid):
+        return {"ok": False, "reason": "target_busy"}
+
+    target_mhp = int(target.get("max_hp", PLAYER_START_MAX_HP))
+    target_chp = int(target.get("current_hp", target_mhp))
+    if target_chp < int(target_mhp * HP_MIN_BATTLE_PCT):
+        return {"ok": False, "reason": "target_low_hp"}
+
+    ch = db.create_pvp_challenge(uid, target_uid, ttl_seconds=300)
+    if not ch.get("ok"):
+        return {"ok": False, "reason": ch.get("reason", "challenge_failed")}
+
+    await manager.send(
+        target_uid,
+        {
+            "event": "challenge_incoming",
+            "challenge": {
+                "id": ch["challenge_id"],
+                "from_user_id": uid,
+                "from_username": me.get("username") or my_username,
+                "from_level": int(me.get("level", 1)),
+                "from_rating": int(me.get("rating", 1000)),
+                "expires_at": ch["expires_at"],
+            },
+        },
+    )
+    return {"ok": True, "status": "challenge_sent", "challenge_id": ch["challenge_id"], "expires_at": ch["expires_at"]}
+
+
+@app.get("/api/battle/challenge/pending")
+async def pending_challenge(init_data: str):
+    """Входящий персональный вызов (если есть)."""
+    tg_user = get_user_from_init_data(init_data)
+    uid = int(tg_user["id"])
+    row = db.get_incoming_pvp_challenge(uid)
+    if not row:
+        return {"ok": True, "pending": False}
+    return {
+        "ok": True,
+        "pending": True,
+        "challenge": {
+            "id": int(row["id"]),
+            "from_user_id": int(row["challenger_id"]),
+            "from_username": row.get("challenger_username") or "Боец",
+            "from_level": int(row.get("challenger_level") or 1),
+            "from_rating": int(row.get("challenger_rating") or 1000),
+            "expires_at": int(row.get("expires_at") or 0),
+        },
+    }
+
+
+@app.post("/api/battle/challenge/respond")
+async def respond_challenge(body: ChallengeRespondBody):
+    """Ответить на персональный вызов по нику: accept/decline."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    resp = db.respond_pvp_challenge(int(body.challenge_id), uid, bool(body.accept))
+    if not resp:
+        return {"ok": False, "reason": "challenge_not_found_or_expired"}
+
+    challenger_id = int(resp["challenger_id"])
+    target_id = int(resp["target_id"])
+    if not body.accept:
+        await manager.send(challenger_id, {"event": "challenge_declined", "by_user_id": target_id})
+        return {"ok": True, "status": "declined"}
+
+    if battle_system.get_battle_status(challenger_id) or battle_system.get_battle_status(target_id):
+        return {"ok": False, "reason": "already_in_battle"}
+
+    ch_player = db.get_or_create_player(challenger_id, "")
+    tg_player = db.get_or_create_player(target_id, tg_user.get("username") or tg_user.get("first_name") or "")
+    # Если кто-то в очереди — выходим из неё перед прямым матчем
+    db.pvp_dequeue(challenger_id)
+    db.pvp_dequeue(target_id)
+
+    bid = await battle_system.start_battle(ch_player, tg_player, is_bot2=False)
+    b = battle_system.active_battles.get(bid)
+    if b:
+        b["_tma_p1"] = True
+    await manager.send(challenger_id, {"event": "battle_started", "battle": _battle_state_api(challenger_id)})
+    return {"ok": True, "status": "accepted", "battle": _battle_state_api(target_id)}
 
 
 @app.get("/api/battle/state")

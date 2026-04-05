@@ -1386,6 +1386,10 @@ class BattleSystem:
             prem_l = db.get_premium_status(loser_user_id)
             if prem_l.get("is_active"):
                 loser_exp = max(0, int(round(loser_exp * PREMIUM_XP_MULTIPLIER)))
+        # Победа над живым игроком: +30% золота и опыта.
+        if not is_test and not battle.get("is_bot2"):
+            gold_reward = int(round(gold_reward * 1.30))
+            exp_reward = int(round(exp_reward * 1.30))
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
 
         streak_bonus_gold = 0

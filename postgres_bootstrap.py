@@ -35,6 +35,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_15_001_clan_chat",
     "2026_04_05_002_referral_usdt",
     "2026_04_05_003_withdrawal_cooldown",
+    "2026_04_16_001_pvp_challenges",
 )
 
 # Без внешних ключей battles → players: в SQLite FK часто не проверялись, боты хранятся отдельно.
@@ -193,6 +194,16 @@ POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
     )
     """,
     """
+    CREATE TABLE IF NOT EXISTS pvp_challenges (
+        id SERIAL PRIMARY KEY,
+        challenger_id BIGINT NOT NULL,
+        target_id BIGINT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        expires_at BIGINT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """,
+    """
     CREATE TABLE IF NOT EXISTS seasons (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -332,6 +343,8 @@ POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_players_referral_code ON players (referral_code) WHERE referral_code IS NOT NULL",
     "CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals (referrer_id)",
     "CREATE INDEX IF NOT EXISTS idx_pvp_queue_level ON pvp_queue (level)",
+    "CREATE INDEX IF NOT EXISTS idx_pvp_ch_target_status ON pvp_challenges (target_id, status, created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_pvp_ch_challenger_status ON pvp_challenges (challenger_id, status, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_clan_members_clan ON clan_members (clan_id)",
     "CREATE INDEX IF NOT EXISTS idx_stars_payments_user ON stars_payments (user_id, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_crypto_invoices_user ON crypto_invoices (user_id)",
