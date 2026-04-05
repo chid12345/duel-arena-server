@@ -566,13 +566,30 @@ class BattleSystem:
             if battle['player2_afk_count'] >= AFK_ROUNDS_TO_DEFEAT:
                 return await self._end_battle_by_afk(battle_id, player1['user_id'])
         
-        # Рассчитываем урон (детально — для текста размена)
-        p1_damage, o1 = self._calculate_damage_detailed(
-            player1, player2, p1_choices['attack'], p2_choices['defense']
+        # Рассчитываем урон (детально — для текста размена + дебаффы на следующий раунд)
+        p1_debuffs = battle.get('player1_debuffs', {}) or {}
+        p2_debuffs = battle.get('player2_debuffs', {}) or {}
+        p1_damage, o1, debuff_to_p2 = self._calculate_damage_detailed(
+            player1,
+            player2,
+            p1_choices['attack'],
+            p2_choices['defense'],
+            defender_debuffs=p2_debuffs,
         )
-        p2_damage, o2 = self._calculate_damage_detailed(
-            player2, player1, p2_choices['attack'], p1_choices['defense']
+        p2_damage, o2, debuff_to_p1 = self._calculate_damage_detailed(
+            player2,
+            player1,
+            p2_choices['attack'],
+            p1_choices['defense'],
+            defender_debuffs=p1_debuffs,
         )
+        # Дебаффы живут ровно 1 следующий раунд.
+        battle['player1_debuffs'] = {}
+        battle['player2_debuffs'] = {}
+        if debuff_to_p1:
+            battle['player1_debuffs'][debuff_to_p1] = True
+        if debuff_to_p2:
+            battle['player2_debuffs'][debuff_to_p2] = True
         
         # Применяем урон
         player1['current_hp'] = max(0, player1['current_hp'] - p2_damage)
