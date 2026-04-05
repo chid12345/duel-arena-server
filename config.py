@@ -183,6 +183,12 @@ DODGE_DOUBLE_STRIKE_PCT_PER_STEP = 0.01
 DODGE_DOUBLE_STRIKE_MAX_CHANCE = 0.12
 DODGE_DOUBLE_STRIKE_DAMAGE_MULT = 0.60
 
+# Выносливость/танк: шанс «поглощения» — входящий урон режется вдвое.
+TANK_GUARD_STEP = 25
+TANK_GUARD_PCT_PER_STEP = 0.01
+TANK_GUARD_MAX_CHANCE = 0.12
+TANK_GUARD_DAMAGE_MULT = 0.50
+
 # Урон от Силы: убывающая отдача через степенную формулу
 #   raw_dmg = FLAT_PER_LEVEL * level + SCALE * strength^POWER
 #   normal_cap = defender.max_hp * MAX_PCT  (крит может превысить кап)

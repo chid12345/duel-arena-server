@@ -835,7 +835,8 @@ class BattleSystem:
         if damage > 0:
             crit = " ⚡" if outcome in ("crit", "crit_pierce", "crit_double") else ""
             dbl = " ⚔️x2" if outcome in ("double", "crit_double") else ""
-            return f"−{damage} {hp_cur}/{hp_max}{crit}{dbl}"
+            guard = " 🧱" if outcome in ("guard", "guard_crit", "guard_double", "guard_crit_double") else ""
+            return f"−{damage} {hp_cur}/{hp_max}{crit}{dbl}{guard}"
         if outcome == "block":
             return f"🛡️ блок · {hp_cur}/{hp_max}"
         if outcome == "miss":
@@ -905,6 +906,14 @@ class BattleSystem:
             line_you = "0 (🌪️ соперник увернулся)"
         elif out1 == 'crit_pierce':
             line_you = f"🔴 <b>{d1}</b> урона (⚡крит-пробой блока)"
+        elif out1 == 'guard_crit_double':
+            line_you = f"🔴 <b>{d1}</b> урона (🧱 поглощение + ⚡крит + второй удар)"
+        elif out1 == 'guard_crit':
+            line_you = f"🔴 <b>{d1}</b> урона (🧱 поглощение + ⚡крит)"
+        elif out1 == 'guard_double':
+            line_you = f"{d1} урона (🧱 поглощение + ⚔️ второй удар)"
+        elif out1 == 'guard':
+            line_you = f"{d1} урона (🧱 поглощение)"
         elif out1 == 'crit_double':
             line_you = f"🔴 <b>{d1}</b> урона (⚡крит + второй удар)"
         elif out1 == 'crit':
@@ -924,6 +933,14 @@ class BattleSystem:
             line_en = "0 (🌪️ вы увернулись)"
         elif out2 == 'crit_pierce':
             line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит-пробой блока)"
+        elif out2 == 'guard_crit_double':
+            line_en = f"🔴 <b>{d2}</b> урона по вам (🧱 поглощение + ⚡крит + второй удар)"
+        elif out2 == 'guard_crit':
+            line_en = f"🔴 <b>{d2}</b> урона по вам (🧱 поглощение + ⚡крит)"
+        elif out2 == 'guard_double':
+            line_en = f"{d2} урона по вам (🧱 поглощение + ⚔️ второй удар)"
+        elif out2 == 'guard':
+            line_en = f"{d2} урона по вам (🧱 поглощение)"
         elif out2 == 'crit_double':
             line_en = f"🔴 <b>{d2}</b> урона по вам (⚡крит + второй удар)"
         elif out2 == 'crit':
@@ -981,7 +998,9 @@ class BattleSystem:
         defender_debuffs: Optional[Dict] = None,
     ) -> Tuple[int, str, Optional[str]]:
         """
-        Урон, исход и дебафф: block | miss | dodge | partial | crit | crit_pierce | double | crit_double | hit
+        Урон, исход и дебафф:
+        block | miss | dodge | partial | crit | crit_pierce | double | crit_double |
+        guard | guard_crit | guard_double | guard_crit_double | hit
 
         Формула урона (убывающая отдача):
           base = FLAT_PER_LEVEL*lv + SCALE * str^POWER
@@ -1107,15 +1126,37 @@ class BattleSystem:
 
         base_damage = self._apply_incoming_damage(base_damage, defender)
 
+        # Фича танка: шанс поглотить 50% входящего урона (после брони).
+        guard_triggered = False
+        def_stamina_invested = stamina_stats_invested(
+            int(defender.get("max_hp", PLAYER_START_MAX_HP)),
+            int(defender.get("level", PLAYER_START_LEVEL)),
+        )
+        guard_chance = min(
+            TANK_GUARD_MAX_CHANCE,
+            (def_stamina_invested // TANK_GUARD_STEP) * TANK_GUARD_PCT_PER_STEP,
+        )
+        if random.random() < guard_chance:
+            base_damage = max(1, int(base_damage * TANK_GUARD_DAMAGE_MULT))
+            guard_triggered = True
+
+        if guard_triggered and is_crit and is_double:
+            return base_damage, "guard_crit_double", zone_debuff_type
+        if guard_triggered and is_crit:
+            return base_damage, "guard_crit", zone_debuff_type
+        if guard_triggered and is_double:
+            return base_damage, "guard_double", zone_debuff_type
+        if guard_triggered:
+            return base_damage, "guard", zone_debuff_type
         if is_crit and is_double:
-            return base_damage, 'crit_double', zone_debuff_type
+            return base_damage, "crit_double", zone_debuff_type
         if is_crit:
-            return base_damage, 'crit', zone_debuff_type
+            return base_damage, "crit", zone_debuff_type
         if is_double:
-            return base_damage, 'double', zone_debuff_type
+            return base_damage, "double", zone_debuff_type
         if partial:
-            return base_damage, 'partial', zone_debuff_type
-        return base_damage, 'hit', zone_debuff_type
+            return base_damage, "partial", zone_debuff_type
+        return base_damage, "hit", zone_debuff_type
 
     def _calculate_damage(self, attacker: Dict, defender: Dict, attack_zone: str, defense_zone: str) -> int:
         """Совместимость: только число урона."""
@@ -1207,6 +1248,15 @@ class BattleSystem:
         winner_user_id = winner.get('user_id')
         loser_user_id = loser.get('user_id')
         is_test = battle.get('is_test_battle', False)
+        # Защита от «отката» после платного сброса:
+        # берём актуальные профили из БД, а не только снимок боя на момент старта.
+        winner_live = dict(winner)
+        loser_live = dict(loser)
+        if not is_test:
+            if winner_user_id is not None:
+                winner_live = db.get_or_create_player(winner_user_id, winner.get("username") or "")
+            if loser_user_id is not None:
+                loser_live = db.get_or_create_player(loser_user_id, loser.get("username") or "")
 
         # Урон за бой (для XP-формулы)
         p1_total_dmg, p2_total_dmg = self._battle_damage_totals(battle)
@@ -1221,8 +1271,8 @@ class BattleSystem:
         # XP победителя: base × level_mult × dmg_ratio
         # level_diff > 0 → победитель выше уровнем (лёгкая победа) → меньше XP
         # level_diff < 0 → победитель ниже уровнем (тяжёлая победа) → больше XP
-        winner_level = int(winner.get('level', PLAYER_START_LEVEL))
-        loser_level  = int(loser.get('level', PLAYER_START_LEVEL))
+        winner_level = int(winner_live.get('level', PLAYER_START_LEVEL))
+        loser_level  = int(loser_live.get('level', PLAYER_START_LEVEL))
         level_diff   = winner_level - loser_level
         level_mult   = max(0.3, 1.0 - level_diff * 0.15)
         dmg_ratio    = min(1.0, max(0.4, winner_dmg / opp_max_hp))
@@ -1262,18 +1312,18 @@ class BattleSystem:
         # Обновляем статистику победителя
         winner_stats = None
         if not is_test and winner_user_id is not None:
-            new_win_streak = winner.get('win_streak', 0) + 1
-            total_gold = winner.get('gold', 0) + gold_reward
+            new_win_streak = winner_live.get('win_streak', 0) + 1
+            total_gold = winner_live.get('gold', 0) + gold_reward
             if new_win_streak > 0 and new_win_streak % STREAK_BONUS_EVERY == 0:
                 streak_bonus_gold = STREAK_BONUS_GOLD
                 total_gold += streak_bonus_gold
-            pl = dict(winner)
+            pl = dict(winner_live)
             pl['gold'] = total_gold
             exp_patch, did_level = self._exp_progression_updates(pl, exp_reward)
             if did_level:
                 level_up_level = exp_patch['level']
             winner_stats = {
-                'wins': winner.get('wins', 0) + 1,
+                'wins': winner_live.get('wins', 0) + 1,
                 'gold': exp_patch['gold'],
                 'exp': exp_patch['exp'],
                 'level': exp_patch['level'],
@@ -1281,7 +1331,7 @@ class BattleSystem:
                 'exp_milestones': exp_patch['exp_milestones'],
                 'max_hp': exp_patch['max_hp'],
                 'current_hp': exp_patch['current_hp'],
-                'rating': winner.get('rating', 1000) + 10,
+                'rating': winner_live.get('rating', 1000) + 10,
                 'win_streak': new_win_streak,
             }
 
@@ -1289,12 +1339,12 @@ class BattleSystem:
         loser_stats = None
         if not is_test and loser_user_id is not None:
             loser_stats = {
-                'losses': loser.get('losses', 0) + 1,
+                'losses': loser_live.get('losses', 0) + 1,
                 'win_streak': 0,
                 'current_hp': max(0, int(loser.get('current_hp', 0))),
             }
             if loser_exp > 0:
-                loser_pl = dict(loser)
+                loser_pl = dict(loser_live)
                 loser_exp_patch, _ = self._exp_progression_updates(loser_pl, loser_exp)
                 loser_stats.update({
                     'exp': loser_exp_patch['exp'],
