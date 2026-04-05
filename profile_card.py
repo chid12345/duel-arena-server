@@ -188,8 +188,9 @@ def generate_profile_card(player: dict) -> bytes:
     from config import (
         PLAYER_START_MAX_HP, PLAYER_START_CRIT, PLAYER_START_LEVEL,
         stamina_stats_invested, total_free_stats_at_level,
-        DODGE_MAX_CHANCE, CRIT_MAX_CHANCE, ARMOR_MAX_REDUCTION,
-        ARMOR_STAMINA_K, STRENGTH_DAMAGE_BASE, STRENGTH_DAMAGE_PCT_PER_POINT,
+        DODGE_MAX_CHANCE, CRIT_MAX_CHANCE, ARMOR_ABSOLUTE_MAX,
+        ARMOR_STAMINA_K_ABS, STRENGTH_DAMAGE_FLAT_PER_LEVEL,
+        STRENGTH_DAMAGE_SCALE, STRENGTH_DAMAGE_POWER,
         format_exp_progress, exp_needed_for_next_level, MAX_LEVEL,
     )
 
@@ -216,8 +217,9 @@ def generate_profile_card(player: dict) -> bytes:
     dodge_p  = int(min(DODGE_MAX_CHANCE, agi / (agi + avg_agi) * DODGE_MAX_CHANCE) * 100)
     crit_p   = int(min(CRIT_MAX_CHANCE, intu / (intu + avg_intu) * CRIT_MAX_CHANCE) * 100)
     s_pct    = vyn / tf * 100 if tf > 0 else 0
-    armor_p  = int(min(ARMOR_MAX_REDUCTION, s_pct / (s_pct + ARMOR_STAMINA_K)) * 100) if s_pct > 0 else 0
-    dmg      = int(STRENGTH_DAMAGE_BASE * (1 + s * STRENGTH_DAMAGE_PCT_PER_POINT))
+    armor_p  = int(min(ARMOR_ABSOLUTE_MAX,
+                       vyn / (vyn + ARMOR_STAMINA_K_ABS)) * 100) if vyn > 0 else 0
+    dmg      = int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER))
 
     need_xp  = exp_needed_for_next_level(lv)
 

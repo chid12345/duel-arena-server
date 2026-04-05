@@ -834,11 +834,11 @@ class CallbackHandlers:
 
         # Броня (точная, только от своих статов)
         stamina   = stamina_stats_invested(mhp, lv)
-        s_pct     = stamina / tf * 100
-        armor_pct = min(ARMOR_MAX_REDUCTION, s_pct / (s_pct + ARMOR_STAMINA_K)) * 100 if s_pct > 0 else 0
+        armor_pct = min(ARMOR_ABSOLUTE_MAX,
+                        stamina / (stamina + ARMOR_STAMINA_K_ABS)) * 100 if stamina > 0 else 0
 
-        # Базовый урон от Силы
-        dmg = int(STRENGTH_DAMAGE_BASE * (1 + s * STRENGTH_DAMAGE_PCT_PER_POINT))
+        # Базовый урон от Силы (текущая формула: flat*lv + scale*str^power)
+        dmg = int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER))
 
         return (
             f"⚔️ Урон: ~{dmg}  |  🛡 Броня: -{armor_pct:.0f}%\n"
@@ -1907,9 +1907,9 @@ class CallbackHandlers:
         avg_intu = max(1, PLAYER_START_CRIT + tf // 4)
         dodge_p  = int(min(DODGE_MAX_CHANCE, agi  / (agi  + avg_agi)  * DODGE_MAX_CHANCE) * 100)
         crit_p   = int(min(CRIT_MAX_CHANCE,  intu / (intu + avg_intu) * CRIT_MAX_CHANCE)  * 100)
-        s_pct    = vyn / tf * 100 if tf > 0 else 0
-        armor_p  = int(min(ARMOR_MAX_REDUCTION, s_pct / (s_pct + ARMOR_STAMINA_K)) * 100) if s_pct > 0 else 0
-        dmg      = int(STRENGTH_DAMAGE_BASE * (1 + s * STRENGTH_DAMAGE_PCT_PER_POINT))
+        armor_p  = int(min(ARMOR_ABSOLUTE_MAX,
+                           vyn / (vyn + ARMOR_STAMINA_K_ABS)) * 100) if vyn > 0 else 0
+        dmg      = int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER))
 
         txt = (
             f"{nm} · ур.{lv} · 🏆{ctx['opp_rating']}\n"
