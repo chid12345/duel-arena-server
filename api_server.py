@@ -337,6 +337,34 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     }
 
 
+def _adapt_battle_result_for_user(result: dict, user_id: int) -> dict:
+    """Адаптировать round_result под перспективу user_id (P1/P2)."""
+    if not result:
+        return {}
+    winner_id = result.get("winner_id")
+    if winner_id is None:
+        return dict(result)
+    p1_uid = result.get("pvp_p1_user_id")
+    # Для PvB и для P1 в PvP данные уже в нужной перспективе.
+    if p1_uid is None or user_id == p1_uid:
+        r = dict(result)
+        r["human_won"] = (winner_id == user_id)
+        return r
+    # user_id — P2: используем p2-поля, подготовленные battle_system.
+    r = dict(result)
+    r["human_won"] = (winner_id == user_id)
+    r["damage_to_opponent"] = result.get("damage_to_you")
+    r["damage_to_you"] = result.get("damage_to_opponent")
+    r["gold_reward"] = result.get("p2_gold_reward", 0)
+    r["exp_reward"] = result.get("p2_exp_reward", 0)
+    r["xp_boosted"] = result.get("p2_xp_boosted", False)
+    r["streak_bonus_gold"] = result.get("p2_streak_bonus_gold", 0)
+    r["win_streak"] = result.get("p2_win_streak", 0)
+    r["level_up"] = result.get("p2_level_up", False)
+    r["level_up_level"] = result.get("p2_level_up_level", None)
+    return r
+
+
 # ─── Маршруты API ────────────────────────────────────────────────────────────
 
 @app.get("/api/health")
@@ -461,18 +489,19 @@ async def battle_choice(body: BattleChoiceBody):
         return {"ok": True, "status": "round_completed", "battle": state_p1}
 
     if result.get("status") in ("battle_ended", "battle_ended_afk"):
-        winner_id = result.get("winner_id")
-        human_won = winner_id == uid
+        mine = _adapt_battle_result_for_user(result, uid)
+        winner_id = mine.get("winner_id")
+        human_won = bool(mine.get("human_won", winner_id == uid))
         is_afk    = result.get("status") == "battle_ended_afk"
         await manager.send(uid, {
             "event":     "battle_ended",
             "human_won": human_won,
             "afk_loss":  is_afk and not human_won,
             "result": {
-                "gold":     result.get("gold_reward", 0) if human_won else 0,
-                "exp":      result.get("exp_reward",  0),
-                "level_up": result.get("level_up", False) if human_won else False,
-                "rounds":   result.get("rounds", 0),
+                "gold":     mine.get("gold_reward", 0) if human_won else 0,
+                "exp":      mine.get("exp_reward",  0),
+                "level_up": mine.get("level_up", False) if human_won else False,
+                "rounds":   mine.get("rounds", 0),
             }
         })
         # Проверяем: возможно квест только что выполнился
@@ -486,16 +515,17 @@ async def battle_choice(body: BattleChoiceBody):
         if is_pvp and b:
             opp_uid = (b["player2"] if b["player1"]["user_id"] == uid else b["player1"]).get("user_id")
             if opp_uid:
-                opp_won = winner_id == opp_uid
+                opp = _adapt_battle_result_for_user(result, opp_uid)
+                opp_won = bool(opp.get("human_won", winner_id == opp_uid))
                 await manager.send(opp_uid, {
                     "event":     "battle_ended",
                     "human_won": opp_won,
                     "afk_loss":  is_afk and not opp_won,
                     "result": {
-                        "gold":     result.get("gold_reward", 0) if opp_won else 0,
-                        "exp":      result.get("exp_reward",  0),
-                        "level_up": result.get("level_up", False) if opp_won else False,
-                        "rounds":   result.get("rounds", 0),
+                        "gold":     opp.get("gold_reward", 0) if opp_won else 0,
+                        "exp":      opp.get("exp_reward",  0),
+                        "level_up": opp.get("level_up", False) if opp_won else False,
+                        "rounds":   opp.get("rounds", 0),
                     }
                 })
         return {
@@ -504,12 +534,12 @@ async def battle_choice(body: BattleChoiceBody):
             "human_won": human_won,
             "afk_loss":  is_afk and not human_won,
             "result": {
-                "gold":     result.get("gold_reward", 0) if human_won else 0,
-                "exp":      result.get("exp_reward",  0),
-                "level_up": result.get("level_up", False) if human_won else False,
-                "rounds":   result.get("rounds", 0),
-                "streak_bonus": result.get("streak_bonus_gold", 0) if human_won else 0,
-                "win_streak":   result.get("win_streak", 0) if human_won else 0,
+                "gold":     mine.get("gold_reward", 0) if human_won else 0,
+                "exp":      mine.get("exp_reward",  0),
+                "level_up": mine.get("level_up", False) if human_won else False,
+                "rounds":   mine.get("rounds", 0),
+                "streak_bonus": mine.get("streak_bonus_gold", 0) if human_won else 0,
+                "win_streak":   mine.get("win_streak", 0) if human_won else 0,
             },
         }
 
@@ -549,17 +579,34 @@ async def battle_state(init_data: str):
 
 @app.get("/api/battle/last_result")
 async def battle_last_result(init_data: str):
-    """Последний результат завершённого боя (для polling-fallback)."""
+    """Последний результат завершённого боя (polling-fallback, корректная перспектива)."""
     tg_user = get_user_from_init_data(init_data)
     uid     = int(tg_user["id"])
-    player  = db.get_or_create_player(uid, "")
-    # Возвращаем мини-результат на основе stats игрока
+    snap = battle_system.pop_battle_end_ui(uid)
+    if not snap:
+        player = db.get_or_create_player(uid, "")
+        return {
+            "ok": False,
+            "reason": "no_recent_result",
+            "player": _player_api(dict(player)),
+        }
+    mine = _adapt_battle_result_for_user(snap, uid)
+    human_won = bool(mine.get("human_won", mine.get("winner_id") == uid))
+    afk_loss = mine.get("status") == "battle_ended_afk" and not human_won
+    player = db.get_or_create_player(uid, "")
     return {
-        "ok":        True,
-        "human_won": False,          # неизвестно — пусть ResultScene сама разберётся
-        "result":    {},
-        "afk_loss":  True,           # подсказка что это AFK-поражение
-        "player":    _player_api(dict(player)),
+        "ok": True,
+        "human_won": human_won,
+        "afk_loss": afk_loss,
+        "result": {
+            "gold": mine.get("gold_reward", 0) if human_won else 0,
+            "exp": mine.get("exp_reward", 0),
+            "level_up": mine.get("level_up", False) if human_won else False,
+            "rounds": mine.get("rounds", 0),
+            "streak_bonus": mine.get("streak_bonus_gold", 0) if human_won else 0,
+            "win_streak": mine.get("win_streak", 0) if human_won else 0,
+        },
+        "player": _player_api(dict(player)),
     }
 
 
