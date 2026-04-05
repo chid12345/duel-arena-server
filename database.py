@@ -135,7 +135,10 @@ class Database:
             import psycopg
             from psycopg.rows import dict_row
 
-            raw = psycopg.connect(DATABASE_URL, row_factory=dict_row)
+            # Transaction pooler (Supabase/PgBouncer): без prepared statements — иначе DuplicatePreparedStatement.
+            raw = psycopg.connect(
+                DATABASE_URL, row_factory=dict_row, prepare_threshold=None
+            )
             return _PatchedConn(raw, True)
         conn = sqlite3.connect(self.db_name, timeout=15)
         conn.row_factory = sqlite3.Row
