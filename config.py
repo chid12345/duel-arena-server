@@ -57,18 +57,7 @@ def _webapp_public_url() -> str:
                 rwy = (os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip().rstrip("/")
                 if rwy:
                     u = rwy if rwy.startswith("http") else f"https://{rwy}"
-    if not u:
-        return ""
-    # Anti-cache for Telegram WebView: use versioned Mini App URL.
-    # By default on Render this changes each deploy via RENDER_GIT_COMMIT.
-    web_ver = (
-        (os.getenv("WEBAPP_URL_VERSION") or "").strip()
-        or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
-    )
-    if web_ver:
-        sep = "&" if "?" in u else "?"
-        u = f"{u}{sep}v={web_ver}"
-    return u
+    return u or ""
 
 
 WEBAPP_PUBLIC_URL = _webapp_public_url()
