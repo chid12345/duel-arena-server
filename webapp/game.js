@@ -65,7 +65,7 @@ const State = {
   appVersion: '...',
 };
 
-function post(path, body = {}, timeoutMs = 8000) {
+function post(path, body = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   return fetch(API + path, {
@@ -73,16 +73,21 @@ function post(path, body = {}, timeoutMs = 8000) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ init_data: State.initData, ...body }),
     signal: ctrl.signal,
-  }).then(r => { clearTimeout(t); return r.json(); })
-    .catch(e => { clearTimeout(t); throw e; });
+  }).then(r => {
+    clearTimeout(t);
+    return r.json().catch(() => ({ ok: false, _httpStatus: r.status }));
+  }).catch(e => { clearTimeout(t); throw e; });
 }
 
-function get(path, params = {}, timeoutMs = 8000) {
+function get(path, params = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   const q = new URLSearchParams({ init_data: State.initData, ...params });
   return fetch(`${API}${path}?${q}`, { signal: ctrl.signal })
-    .then(r => { clearTimeout(t); return r.json(); })
+    .then(r => {
+      clearTimeout(t);
+      return r.json().catch(() => ({ ok: false, _httpStatus: r.status }));
+    })
     .catch(e => { clearTimeout(t); throw e; });
 }
 
@@ -494,10 +499,12 @@ class MenuScene extends Phaser.Scene {
         this._setupWS();
         this._startRegenTick();
       } else {
-        this._showError('Ошибка загрузки профиля');
+        const code = playerRes?._httpStatus || playerRes?.detail || '';
+        this._showError(code === 401 ? 'Открой через Telegram' : 'Ошибка сервера');
       }
     } catch(e) {
-      this._showError('Нет соединения');
+      const msg = e?.name === 'AbortError' ? 'Сервер не отвечает (таймаут)' : 'Нет соединения';
+      this._showError(msg);
     }
   }
 
