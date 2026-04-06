@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -129,21 +130,40 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# GZip-сжатие для JS/CSS/JSON (≥1 KB) — уменьшает трафик на ~70%
+app.add_middleware(GZipMiddleware, minimum_size=1024)
 
 
 @app.middleware("http")
-async def disable_webapp_cache(request: Request, call_next):
+async def smart_cache(request: Request, call_next):
     """
-    Telegram WebView агрессивно кэширует статику.
-    Для Mini App принудительно отключаем кэш, чтобы после деплоя сразу тянулась свежая версия JS/CSS/HTML.
+    Умное кэширование статики:
+    - index.html / корень: no-store (всегда свежий, содержит build-версию)
+    - *.js?v=HASH, *.css?v=HASH: кэш на 1 год (версия в URL гарантирует свежесть после деплоя)
+    - картинки, иконки: кэш на 7 дней
+    - API / WebSocket: без изменений
     """
     response = await call_next(request)
-    path = (request.url.path or "/").lower()
-    static_ext = (".html", ".js", ".css", ".map", ".json", ".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico")
-    if request.method == "GET" and (path == "/" or path.endswith(static_ext)):
+    path = request.url.path.lower()
+    has_version = bool(request.query_params.get("v") or request.query_params.get("bv"))
+
+    if request.method != "GET":
+        return response
+
+    # HTML и корень — никогда не кэшируем
+    if path == "/" or path.endswith(".html"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
+
+    # JS/CSS с версией — кэш на 1 год (immutable)
+    elif has_version and path.endswith((".js", ".css")):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+
+    # Картинки/иконки — кэш 7 дней
+    elif path.endswith((".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico", ".gif")):
+        response.headers["Cache-Control"] = "public, max-age=604800"
+
     return response
 
 # ─── WebSocket менеджер ──────────────────────────────────────────────────────
