@@ -1,10 +1,15 @@
 <!DOCTYPE html>
+<!-- build:__BUILD_VERSION__ -->
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
+<meta name="build" content="__BUILD_VERSION__">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#12121c">
 <title>Duel Arena</title>
+<script>
+(function(){var v='__BUILD_VERSION__',k='_da_bv';try{if(localStorage.getItem(k)!==v){localStorage.setItem(k,v);var b=location.href.split('?')[0];location.replace(b+'?bv='+v);throw 0;}}catch(e){if(e!==0)throw e;}})();
+</script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body {
@@ -65,12 +70,12 @@
 <!-- Telegram WebApp SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- Звук (до game.js) -->
-<script src="sound.js"></script>
+<script src="sound.js?v=__BUILD_VERSION__"></script>
 <!-- Сцены -->
-<script src="scene_stats.js"></script>
-<script src="scene_queue.js"></script>
-<script src="scene_extras.js"></script>
+<script src="scene_stats.js?v=__BUILD_VERSION__"></script>
+<script src="scene_queue.js?v=__BUILD_VERSION__"></script>
+<script src="scene_extras.js?v=__BUILD_VERSION__"></script>
 <!-- Основная игра (последним — регистрирует Phaser.Game) -->
-<script src="game.js"></script>
+<script src="game.js?v=__BUILD_VERSION__"></script>
 </body>
 </html>
