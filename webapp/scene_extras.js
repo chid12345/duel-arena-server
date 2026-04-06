@@ -654,7 +654,15 @@ class ClanScene extends Phaser.Scene {
     /* Заголовок и кнопку «Назад» рисуем только НЕ для чата — в чате своя шапка */
     if (this._subview !== 'chat') {
       _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
-      _extraBack(this, W, H);
+      /* Из подразделов возвращаемся в главный экран клана, из main — в Menu */
+      if (this._subview === 'main') {
+        _extraBack(this, W, H);          /* → Menu */
+      } else {
+        makeBackBtn(this, 'Назад', () => {
+          tg?.HapticFeedback?.impactOccurred('light');
+          this.scene.restart({ sub: 'main' });
+        });
+      }
     }
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
@@ -938,16 +946,21 @@ class ClanScene extends Phaser.Scene {
 
   /* ══ ПОИСК ═══════════════════════════════════════════════ */
   _renderSearch(W, H) {
-    txt(this, W/2, 84, '🔍 ПОИСК КЛАНА', 14, '#ffc83c', true).setOrigin(0.5);
-    this._inputEl = this._makeInput(W, 104, W-32, 36, 'Имя или тег клана...');
+    /* Шапка заканчивается на y=72, даём 12px отступ → y=84 для строки поиска */
+    makePanel(this, 8, 80, W-16, 48, 10, 0.8);
+    txt(this, 20, 91, '🔍 Введите имя или тег клана:', 11, '#9999bb');
+    this._inputEl = this._makeInput(W, 104, W-32, 32, 'Железный Кулак / ЖК...');
 
     const sbG = this.add.graphics();
-    sbG.fillStyle(C.blue, 0.9); sbG.fillRoundedRect(16, 148, W-32, 38, 10);
-    txt(this, W/2, 167, '🔍 Найти', 13, '#ffffff', true).setOrigin(0.5);
-    this.add.zone(16, 148, W-32, 38).setOrigin(0).setInteractive({ useHandCursor: true })
+    sbG.fillStyle(C.blue, 0.9); sbG.fillRoundedRect(16, 140, W-32, 40, 10);
+    txt(this, W/2, 160, '🔍 Найти', 13, '#ffffff', true).setOrigin(0.5);
+    this.add.zone(16, 140, W-32, 40).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { sbG.clear(); sbG.fillStyle(0x1040a0,1); sbG.fillRoundedRect(16,140,W-32,40,10); tg?.HapticFeedback?.impactOccurred('light'); })
+      .on('pointerout',  () => { sbG.clear(); sbG.fillStyle(C.blue,0.9); sbG.fillRoundedRect(16,140,W-32,40,10); })
       .on('pointerup', () => this._doSearch(W));
 
-    this._resultsY = 198;
+    txt(this, W/2, 192, 'Все кланы:', 11, '#7777aa').setOrigin(0.5);
+    this._resultsY = 204;
     this._resultsContainer = this.add.container(0, 0);
     get('/api/clan/top').then(d => this._showSearchResults(d.clans || [], W));
   }
@@ -1015,20 +1028,20 @@ class ClanScene extends Phaser.Scene {
 
   /* ══ СОЗДАНИЕ ════════════════════════════════════════════ */
   _renderCreate(W, H) {
-    txt(this, W/2, 84, '➕ СОЗДАТЬ КЛАН', 15, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W/2, 106, 'Стоимость: 200 🪙  ·  Максимум 20 участников', 12, '#8080cc').setOrigin(0.5);
+    txt(this, W/2, 86, '➕ СОЗДАТЬ КЛАН', 14, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W/2, 104, 'Стоимость: 200 🪙  ·  Максимум 20 участников', 11, '#8080cc').setOrigin(0.5);
 
     /* Поле: название */
-    makePanel(this, 8, 122, W-16, 148, 12);
-    txt(this, 20, 132, 'Название клана', 12, '#a0a0cc', true);
-    txt(this, 20, 148, '3–20 символов, например: Железный Кулак', 12, '#9090cc');
-    this._nameEl = this._makeInput(W, 162, W-32, 38, 'Железный Кулак', 20);
+    makePanel(this, 8, 118, W-16, 152, 12);
+    txt(this, 20, 128, 'Название клана', 12, '#a0a0cc', true);
+    txt(this, 20, 144, '3–20 символов, например: Железный Кулак', 11, '#9090cc');
+    this._nameEl = this._makeInput(W, 158, W-32, 36, 'Железный Кулак', 20);
 
-    txt(this, 20, 210, 'Тег клана', 12, '#a0a0cc', true);
-    txt(this, 20, 226, '2–4 символа, например: ЖК', 12, '#9090cc');
-    this._tagEl  = this._makeInput(W, 238, (W-32)/2, 38, 'ЖК', 4);
+    txt(this, 20, 204, 'Тег клана', 12, '#a0a0cc', true);
+    txt(this, 20, 220, '2–4 символа, например: ЖК', 11, '#9090cc');
+    this._tagEl  = this._makeInput(W, 232, (W-32)/2, 36, 'ЖК', 4);
 
-    const btnY = 284;
+    const btnY = 280;
     const bgC  = this.add.graphics();
     bgC.fillStyle(C.purple, 0.9); bgC.fillRoundedRect(16, btnY, W-32, 48, 12);
     bgC.fillStyle(0xffffff, 0.08); bgC.fillRoundedRect(18, btnY+2, W-36, 22, 10);
@@ -1043,13 +1056,13 @@ class ClanScene extends Phaser.Scene {
 
   /* ══ ТОП КЛАНОВ ══════════════════════════════════════════ */
   _renderTop(W, H) {
-    txt(this, W/2, 84, '🏆 ТОП КЛАНОВ', 15, '#ffc83c', true).setOrigin(0.5);
-    const load2 = txt(this, W/2, 130, 'Загрузка...', 13, '#7070aa').setOrigin(0.5);
+    txt(this, W/2, 86, '🏆 ТОП КЛАНОВ', 14, '#ffc83c', true).setOrigin(0.5);
+    const load2 = txt(this, W/2, 140, 'Загрузка...', 13, '#7070aa').setOrigin(0.5);
     get('/api/clan/top').then(d => {
       load2.destroy();
       const clans = d.clans || [];
-      if (!clans.length) { txt(this, W/2, 130, '😔 Кланов пока нет', 13, '#7070aa').setOrigin(0.5); return; }
-      let y = 108;
+      if (!clans.length) { txt(this, W/2, 140, '😔 Кланов пока нет', 13, '#7070aa').setOrigin(0.5); return; }
+      let y = 112;
       const rowH = 50;
       clans.slice(0, Math.floor((H - 160) / rowH)).forEach((c, i) => {
         const isTop = i < 3;
