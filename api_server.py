@@ -763,10 +763,11 @@ async def battle_choice(body: BattleChoiceBody):
             "mode_meta": mine.get("mode_meta") or {},
             "titan_progress": mine.get("titan_progress"),
             "result": {
-                "gold":     mine.get("gold_reward", 0) if human_won else 0,
-                "exp":      mine.get("exp_reward",  0),
-                "level_up": mine.get("level_up", False) if human_won else False,
-                "rounds":   mine.get("rounds", 0),
+                "gold":          mine.get("gold_reward", 0) if human_won else 0,
+                "exp":           mine.get("exp_reward",  0),
+                "level_up":      mine.get("level_up", False) if human_won else False,
+                "rounds":        mine.get("rounds", 0),
+                "rating_change": mine.get("rating_change", 0),
                 "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
             }
         })
@@ -791,10 +792,11 @@ async def battle_choice(body: BattleChoiceBody):
                     "mode_meta": opp.get("mode_meta") or {},
                     "titan_progress": opp.get("titan_progress"),
                     "result": {
-                        "gold":     opp.get("gold_reward", 0) if opp_won else 0,
-                        "exp":      opp.get("exp_reward",  0),
-                        "level_up": opp.get("level_up", False) if opp_won else False,
-                        "rounds":   opp.get("rounds", 0),
+                        "gold":          opp.get("gold_reward", 0) if opp_won else 0,
+                        "exp":           opp.get("exp_reward",  0),
+                        "level_up":      opp.get("level_up", False) if opp_won else False,
+                        "rounds":        opp.get("rounds", 0),
+                        "rating_change": opp.get("rating_change", 0),
                         "pvp_repeat_factor": opp.get("pvp_repeat_factor", 1.0),
                     }
                 })
@@ -807,12 +809,13 @@ async def battle_choice(body: BattleChoiceBody):
             "mode_meta": mine.get("mode_meta") or {},
             "titan_progress": mine.get("titan_progress"),
             "result": {
-                "gold":     mine.get("gold_reward", 0) if human_won else 0,
-                "exp":      mine.get("exp_reward",  0),
-                "level_up": mine.get("level_up", False) if human_won else False,
-                "rounds":   mine.get("rounds", 0),
-                "streak_bonus": mine.get("streak_bonus_gold", 0) if human_won else 0,
-                "win_streak":   mine.get("win_streak", 0) if human_won else 0,
+                "gold":          mine.get("gold_reward", 0) if human_won else 0,
+                "exp":           mine.get("exp_reward",  0),
+                "level_up":      mine.get("level_up", False) if human_won else False,
+                "rounds":        mine.get("rounds", 0),
+                "streak_bonus":  mine.get("streak_bonus_gold", 0) if human_won else 0,
+                "win_streak":    mine.get("win_streak", 0) if human_won else 0,
+                "rating_change": mine.get("rating_change", 0),
                 "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
             },
         }
@@ -1034,14 +1037,15 @@ async def battle_last_result(init_data: str):
 
 @app.get("/api/pvp/top")
 async def pvp_top(limit: int = 30):
-    rows = db.get_pvp_weekly_top(limit=min(100, max(5, int(limit))))
+    rows    = db.get_pvp_weekly_top(limit=min(100, max(5, int(limit))))
+    elo_top = db.get_pvp_elo_top(limit=20)
     rewards = [
         {"rank": 1, "diamonds": 120, "title": "Легенда PvP"},
         {"rank": 2, "diamonds": 80, "title": "Мастер PvP"},
         {"rank": 3, "diamonds": 50, "title": "Герой арены"},
         {"rank": "4-10", "diamonds": 20, "title": "Участник топа"},
     ]
-    return {"ok": True, "week_key": _iso_week_key(), "leaders": rows, "rewards": rewards}
+    return {"ok": True, "week_key": _iso_week_key(), "leaders": rows, "elo_top": elo_top, "rewards": rewards}
 
 
 @app.get("/api/titans/status")

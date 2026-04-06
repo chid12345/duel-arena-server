@@ -2066,6 +2066,23 @@ class Database:
         finally:
             conn.close()
 
+    def get_pvp_elo_top(self, limit: int = 20) -> List[Dict]:
+        """Топ игроков по ELO рейтингу (all-time)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT user_id, username, rating, wins, losses "
+                "FROM players "
+                "WHERE wins + losses > 0 "
+                "ORDER BY rating DESC "
+                "LIMIT ?",
+                (int(limit),),
+            )
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
     def get_recent_pvp_duel_count(self, user_a: int, user_b: int, hours: int = 24) -> int:
         ua, ub = sorted((int(user_a), int(user_b)))
         conn = self.get_connection()

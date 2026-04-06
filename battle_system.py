@@ -1472,6 +1472,26 @@ class BattleSystem:
         did_level         = False
         level_up_level    = None
 
+        # ── ELO ───────────────────────────────────────────────────
+        _is_pvp = not battle.get("is_bot2")
+        if not is_test and _is_pvp and battle_mode != "titan":
+            # Полноценный ELO для PvP боёв
+            _elo_k = 32
+            _r_w   = int(winner_live.get('rating', 1000))
+            _r_l   = int(loser_live.get('rating', 1000))
+            _e_w   = 1.0 / (1.0 + 10.0 ** ((_r_l - _r_w) / 400.0))
+            _e_l   = 1.0 - _e_w
+            elo_delta_w = max(1, round(_elo_k * (1.0 - _e_w)))
+            elo_delta_l = min(-1, round(_elo_k * (0.0 - _e_l)))
+        elif not is_test and not _is_pvp and battle_mode != "titan":
+            # Бот: небольшой фиксированный бонус
+            elo_delta_w = 5
+            elo_delta_l = 0
+        else:
+            # Titan или тест: рейтинг не меняется
+            elo_delta_w = 0
+            elo_delta_l = 0
+
         winner_stats = None
         if not is_test and winner_user_id is not None and not winner_locked:
             new_win_streak = winner_live.get('win_streak', 0) + 1
@@ -1493,8 +1513,7 @@ class BattleSystem:
                 'exp_milestones': exp_patch['exp_milestones'],
                 'max_hp':         exp_patch['max_hp'],
                 'current_hp':     exp_patch['current_hp'],
-                'rating':         winner_live.get('rating', 1000) if battle_mode == "titan"
-                                  else winner_live.get('rating', 1000) + 10,
+                'rating':         int(winner_live.get('rating', 1000)) + elo_delta_w,
                 'win_streak':     new_win_streak,
             }
 
@@ -1504,6 +1523,7 @@ class BattleSystem:
                 'losses':     loser_live.get('losses', 0) + 1,
                 'win_streak': 0,
                 'current_hp': max(0, int(loser.get('current_hp', 0))),
+                'rating':     max(100, int(loser_live.get('rating', 1000)) + elo_delta_l),
             }
             if loser_exp > 0:
                 loser_pl = dict(loser_live)
@@ -1566,7 +1586,7 @@ class BattleSystem:
             'xp_boosted':         xp_boosted and is_winner_p1,
             'streak_bonus_gold':  (streak_bonus_gold if is_winner_p1 else 0) if not winner_locked else 0,
             'win_streak':         new_win_streak if is_winner_p1 and winner_user_id and not winner_locked else 0,
-            'rating_change':      0 if is_test or battle_mode == "titan" else 10,
+            'rating_change':      0 if is_test else (elo_delta_w if is_winner_p1 else elo_delta_l),
             'level_up':           (bool(did_level) and not winner_locked) if not is_test else False,
             'level_up_level':     level_up_level if not is_test else None,
             'duration_ms':        duration_ms,
@@ -1711,8 +1731,9 @@ class BattleSystem:
         # Обновляем статистику
         streak_bonus_afk = 0
         new_ws_afk = 0
-        winner_stats = None
-        loser_stats  = None
+        winner_stats    = None
+        loser_stats     = None
+        afk_elo_delta_l = 0
         if not is_test and winner_user_id is not None and not winner_locked:
             new_ws_afk = winner_live.get('win_streak', 0) + 1
             total_g = winner_live.get('gold', 0) + gold_reward
@@ -1724,6 +1745,18 @@ class BattleSystem:
             exp_patch, did_level_afk = self._exp_progression_updates(pl, exp_reward, max_level_ups=1)
             if did_level_afk:
                 level_up_level = exp_patch['level']
+            _is_pvp_afk = not battle.get("is_bot2")
+            if _is_pvp_afk and battle_mode != "titan":
+                _elo_k2 = 32
+                _r_w2   = int(winner_live.get('rating', 1000))
+                _r_l2   = int(loser_live.get('rating', 1000))
+                _e_w2   = 1.0 / (1.0 + 10.0 ** ((_r_l2 - _r_w2) / 400.0))
+                _e_l2   = 1.0 - _e_w2
+                afk_elo_delta_w = max(1, round(_elo_k2 * (1.0 - _e_w2)))
+                afk_elo_delta_l = min(-1, round(_elo_k2 * (0.0 - _e_l2)))
+            else:
+                afk_elo_delta_w = 0 if battle_mode == "titan" else 5
+                afk_elo_delta_l = 0
             winner_stats = {
                 'wins':           winner_live.get('wins', 0) + 1,
                 'gold':           exp_patch['gold'],
@@ -1733,12 +1766,16 @@ class BattleSystem:
                 'exp_milestones': exp_patch['exp_milestones'],
                 'max_hp':         exp_patch['max_hp'],
                 'current_hp':     int(exp_patch['max_hp']) if battle.get('is_bot2') else exp_patch['current_hp'],
-                'rating':         winner_live.get('rating', 1000) if battle_mode == "titan" else winner_live.get('rating', 1000) + 5,
+                'rating':         int(winner_live.get('rating', 1000)) + afk_elo_delta_w,
                 'win_streak':     new_ws_afk,
             }
 
         if not is_test and loser_user_id is not None and not loser_locked:
-            loser_stats = {'losses': loser_live.get('losses', 0) + 1, 'win_streak': 0}
+            loser_stats = {
+                'losses': loser_live.get('losses', 0) + 1,
+                'win_streak': 0,
+                'rating': max(100, int(loser_live.get('rating', 1000)) + (afk_elo_delta_l if not is_test else 0)),
+            }
             if battle.get('is_bot2'):
                 loser_stats['current_hp'] = int(loser.get('max_hp', PLAYER_START_MAX_HP))
 

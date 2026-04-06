@@ -597,8 +597,8 @@ class MenuScene extends Phaser.Scene {
     const nameTxt = txt(this, nameX, hY + 12, crown + p.username, 18, p.is_premium ? '#c8a0ff' : '#f0f0fa', true);
     const premSub = p.is_premium ? `⭐ Premium · ${p.premium_days_left} дн.` : '';
     const subTxt  = txt(this, nameX, hY + 38,
-      premSub || `★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12,
-      p.is_premium ? '#b45aff' : '#8888aa');
+      premSub || `ELO ★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12,
+      p.is_premium ? '#b45aff' : '#ffc83c');
 
     // Золото — справа вверху
     const goldTxt = txt(this, W - pad - 12, hY + 18, `💰 ${p.gold}`, 17, '#ffc83c', true).setOrigin(1, 0.5);
@@ -1150,20 +1150,8 @@ class MenuScene extends Phaser.Scene {
     }
   }
 
-  async _showPvpTop() {
-    try {
-      const res = await get('/api/pvp/top');
-      if (!res.ok) { this._toast('❌ Не удалось загрузить топ'); return; }
-      const top = (res.leaders || []).slice(0, 5);
-      if (!top.length) {
-        tg?.showAlert?.('🏆 За эту неделю пока нет PvP-боёв.');
-        return;
-      }
-      const lines = top.map((r, i) => `${i + 1}. @${r.username || ('User' + r.user_id)} — ${r.wins || 0}W`);
-      tg?.showAlert?.(`🏆 Топ PvP (${res.week_key || ''})\n${lines.join('\n')}`);
-    } catch (_) {
-      this._toast('❌ Нет соединения');
-    }
+  _showPvpTop() {
+    this.scene.start('Rating');
   }
 
   _showSummary() {
@@ -2533,7 +2521,14 @@ class ResultScene extends Phaser.Scene {
       // Раунды
       txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#666688').setOrigin(0.5);
 
-      let extraY = panY + 138;
+      // ELO изменение
+      if (r.rating_change && r.rating_change !== 0) {
+        const eloSign = r.rating_change > 0 ? '+' : '';
+        txt(this, W / 2, panY + 138, `★ ${eloSign}${r.rating_change} ELO`, 12,
+          r.rating_change > 0 ? '#3cc864' : '#ff4455', true).setOrigin(0.5);
+      }
+
+      let extraY = panY + (r.rating_change && r.rating_change !== 0 ? 158 : 138);
 
       // Streak bonus
       if ((r.streak_bonus || 0) > 0) {
@@ -2557,9 +2552,17 @@ class ResultScene extends Phaser.Scene {
       txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
       txt(this, W / 2, panY + 76, 'Нажимай кнопки быстрее!', 11, '#8888aa').setOrigin(0.5);
       txt(this, W / 2, panY + 102, `Раундов: ${r.rounds || 0}`, 11, '#555577').setOrigin(0.5);
+      if (r.rating_change && r.rating_change !== 0) {
+        const eloSign = r.rating_change > 0 ? '+' : '';
+        txt(this, W / 2, panY + 120, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
+      }
     } else {
-      txt(this, W / 2, panY + 30, '💪  Не сдавайся!', 16, '#8888aa', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 62, `Раундов: ${r.rounds || 0}`, 12, '#555577').setOrigin(0.5);
+      txt(this, W / 2, panY + 22, '💪  Не сдавайся!', 15, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 50, `Раундов: ${r.rounds || 0}`, 12, '#555577').setOrigin(0.5);
+      if (r.rating_change && r.rating_change !== 0) {
+        const eloSign = r.rating_change > 0 ? '+' : '';
+        txt(this, W / 2, panY + 70, `★ ${eloSign}${r.rating_change} ELO`, 12, '#ff4455', true).setOrigin(0.5);
+      }
     }
 
     /* ── Обновляем профиль ── */
@@ -2700,8 +2703,9 @@ class RatingScene extends Phaser.Scene {
     }
 
     /* Шапка */
-    makePanel(this, 8, 6, W - 16, 48, 11);
-    txt(this, W / 2, 30, '🏆  ТОП ИГРОКОВ', 18, '#ffc83c', true).setOrigin(0.5);
+    makePanel(this, 8, 6, W - 16, 54, 11);
+    txt(this, W / 2, 24, '⚔️  ELO Рейтинг', 18, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W / 2, 46, 'PvP · K=32 · стартовый 1000', 10, '#666688').setOrigin(0.5);
 
     /* Кнопка назад */
     const backG = this.add.graphics();
@@ -2713,24 +2717,23 @@ class RatingScene extends Phaser.Scene {
       .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
 
     try {
-      const res = await get('/api/rating', { limit: 20 });
+      const res = await get('/api/pvp/top');
       if (!res.ok) throw new Error('bad');
 
-      const players  = res.players || [];
-      const myRank   = res.my_rank;
-      const myUid    = State.player?.user_id;
+      const players = res.elo_top || [];
+      const myUid   = State.player?.user_id;
 
       /* ── TOP-3 подиум ── */
       if (players.length >= 3) {
-        this._buildPodium(players.slice(0, 3), W, 62);
+        this._buildPodium(players.slice(0, 3), W, 66);
       }
 
       /* ── Список с 4-го места ── */
       const listFrom = Math.min(players.length, 3);
-      const listY    = players.length >= 3 ? 198 : 62;
+      const listY    = players.length >= 3 ? 204 : 66;
       const rowH     = 46;
 
-      players.slice(listFrom).forEach((p, i) => {
+      players.slice(listFrom, listFrom + 10).forEach((p, i) => {
         const rank = listFrom + i + 1;
         const ry   = listY + i * rowH;
         const isMe = p.user_id === myUid;
@@ -2744,27 +2747,30 @@ class RatingScene extends Phaser.Scene {
         }
 
         txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#666688', true).setOrigin(0.5);
-        const rCrown = p.is_premium ? '👑 ' : '';
-        txt(this, 52, ry + 10, rCrown + (p.username || `User${p.user_id}`), 13,
-          isMe ? '#5096ff' : (p.is_premium ? '#c8a0ff' : '#f0f0fa'), isMe || p.is_premium);
-        txt(this, 52, ry + 27, `Ур.${p.level}  ·  🏆 ${p.wins}W  💀 ${p.losses}L`, 10, '#555577');
-        txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
+        txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13,
+          isMe ? '#5096ff' : '#f0f0fa', isMe);
+        txt(this, 52, ry + 27, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#555577');
+        txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 14, '#ffc83c', true).setOrigin(1, 0.5);
       });
 
       if (players.length === 0) {
-        txt(this, W / 2, H / 2, '📭 Нет данных', 14, '#555577').setOrigin(0.5);
+        txt(this, W / 2, H / 2, '📭 Пока нет PvP-боёв', 14, '#555577').setOrigin(0.5);
       }
 
-      /* ── Моя позиция (если не в топ-20) ── */
-      if (myRank && myRank > 20) {
-        const myBY = H - 50;
+      /* ── Моя позиция ── */
+      const myElo   = State.player?.rating || 1000;
+      const myIdx   = players.findIndex(p => p.user_id === myUid);
+      const myRank  = myIdx >= 0 ? myIdx + 1 : null;
+      if (!myRank || myRank > 10) {
+        const myBY = H - 52;
         const myBG = this.add.graphics();
         myBG.fillStyle(0x1a2030, 0.97);
-        myBG.fillRoundedRect(10, myBY, W - 20, 42, 10);
+        myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
         myBG.lineStyle(1.5, C.gold, 0.5);
-        myBG.strokeRoundedRect(10, myBY, W - 20, 42, 10);
-        txt(this, W / 2, myBY + 14, `Ваше место в рейтинге`, 10, '#888899').setOrigin(0.5);
-        txt(this, W / 2, myBY + 30, `# ${myRank}  ·  ★ ${State.player?.rating || '?'}`, 15, '#ffc83c', true).setOrigin(0.5);
+        myBG.strokeRoundedRect(10, myBY, W - 20, 44, 10);
+        const rankStr = myRank ? `#${myRank}` : 'не в топ';
+        txt(this, W / 2, myBY + 13, 'Ваш ELO рейтинг', 10, '#888899').setOrigin(0.5);
+        txt(this, W / 2, myBY + 31, `${rankStr}  ·  ★ ${myElo}`, 15, '#ffc83c', true).setOrigin(0.5);
       }
 
     } catch (e) {
