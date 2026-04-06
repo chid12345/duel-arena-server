@@ -799,16 +799,20 @@ class BotHandlers:
 
     @staticmethod
     async def wipe_me_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Сброс профиля (только ADMIN_USER_IDS): удаление строки и создание нового персонажа."""
+        """Сброс своего профиля — доступно любому игроку (сбрасывает только себя)."""
         user = update.effective_user
-        if user.id not in ADMIN_USER_IDS:
-            await tg_api_call(
-                update.message.reply_text,
-                "🚫 Команда /wipe_me доступна только администраторам бота.",
-            )
-            return
         logger.info("event=command_wipe_me user_id=%s", user.id)
         db.log_metric_event("command_wipe_me", user.id)
+        args = context.args or []
+        if "confirm" not in args:
+            await tg_api_call(
+                update.message.reply_text,
+                "⚠️ Это действие сотрёт весь прогресс (уровень, характеристики, бои).\n"
+                "Золото, алмазы и клан <b>не затронуты</b>.\n\n"
+                "Для подтверждения напишите:\n<code>/wipe_me confirm</code>",
+                parse_mode="HTML",
+            )
+            return
         try:
             battle_system.force_abandon_battle(user.id)
             battle_system.mark_profile_reset(user.id, ttl_seconds=600)
@@ -819,7 +823,7 @@ class BotHandlers:
         db.update_player_stats(user.id, {"profile_reset_ts": int(time.time())})
         await tg_api_call(
             update.message.reply_text,
-            "✅ Профиль полностью сброшен — как новый аккаунт. Откройте /start.",
+            "✅ Профиль сброшен — добро пожаловать снова! Откройте /start.",
         )
 
 class CallbackHandlers:
