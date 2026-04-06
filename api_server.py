@@ -14,6 +14,7 @@ import logging
 import os
 import time
 import urllib.parse
+import urllib.request
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
@@ -1973,6 +1974,35 @@ async def referral_withdraw(body: ReferralWithdrawBody):
     except Exception as e:
         logger.error("CryptoPay transfer error: %s", e)
         return {"ok": False, "reason": "Ошибка соединения с CryptoPay"}
+
+
+# ─── Статика (webapp/) ───────────────────────────────────────────────────────
+
+# ─── Keepalive (Render free tier) ───────────────────────────────────────────
+# Render free tier засыпает через 15 мин без входящего HTTP-трафика.
+# Пингуем собственный /api/health каждые 10 мин — сервис остаётся живым.
+
+async def _keepalive_loop(health_url: str) -> None:
+    await asyncio.sleep(120)  # Даём сервису полностью стартовать
+    while True:
+        try:
+            loop = asyncio.get_event_loop()
+            await loop.run_in_executor(
+                None,
+                lambda: urllib.request.urlopen(health_url, timeout=15),
+            )
+            logger.info("keepalive ping ok → %s", health_url)
+        except Exception as exc:
+            logger.debug("keepalive ping failed: %s", exc)
+        await asyncio.sleep(600)  # Раз в 10 минут
+
+
+@app.on_event("startup")
+async def _start_keepalive() -> None:
+    render_url = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
+    if render_url:
+        asyncio.create_task(_keepalive_loop(f"{render_url}/api/health"))
+        logger.info("keepalive task started → %s/api/health (every 10 min)", render_url)
 
 
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────
