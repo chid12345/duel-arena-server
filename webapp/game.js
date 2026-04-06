@@ -88,12 +88,28 @@ function get(path, params = {}, timeoutMs = 8000) {
 
 /* ─── WebSocket ─────────────────────────────────────────────── */
 function connectWS(userId, onMessage) {
+  // Переиспользуем открытое соединение — просто меняем обработчик
+  if (State.ws && State.ws.readyState === WebSocket.OPEN) {
+    State.ws.onmessage = e => onMessage(JSON.parse(e.data));
+    return State.ws;
+  }
+  // Закрываем "зависшее" соединение без авто-переподключения
+  if (State.ws && State.ws.readyState !== WebSocket.CLOSED) {
+    State.ws.onclose = null;
+    State.ws.close();
+  }
+
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   const host  = API.replace(/^https?:/, '') || `//${location.host}`;
   const url   = `${proto}:${host}/ws/${userId}`;
   const ws    = new WebSocket(url);
   ws.onmessage = e => onMessage(JSON.parse(e.data));
-  ws.onclose   = () => setTimeout(() => connectWS(userId, onMessage), 3000);
+  ws.onclose   = () => {
+    // Переподключаемся только если это ещё активное соединение
+    if (State.ws === ws) {
+      setTimeout(() => connectWS(userId, onMessage), 3000);
+    }
+  };
   State.ws = ws;
   return ws;
 }
@@ -2406,9 +2422,6 @@ class BattleScene extends Phaser.Scene {
       }
     };
 
-    if (State.ws) {
-      State.ws.onmessage = e => handleMsg(JSON.parse(e.data));
-    }
     if (!State.player) return;
     connectWS(State.player.user_id, handleMsg);
 
