@@ -794,7 +794,7 @@ class MenuScene extends Phaser.Scene {
     /* ══ СБОРКА ═════════════════════════════════════════════ */
     const children = [
       hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt,
-      snBg, snTxt, snZ, thBg, thTxt, thZ,
+      snBg, snTxt, snZ,
       glowG, warrior, hpBg, hpTxt,
       ...statObjs.flat(),
       refG, refT, refZ,
