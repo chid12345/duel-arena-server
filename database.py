@@ -1314,11 +1314,16 @@ class Database:
         if not result:
             conn.close()
             return {"can_claim": True, "streak": 0, "bonus": DAILY_BONUS_GOLD}
-        
-        streak, last_daily = result
-        
+
+        streak = result['daily_streak']
+        last_daily = result['last_daily']
+
         if last_daily:
-            last_date = datetime.strptime(last_daily, '%Y-%m-%d').date()
+            # PostgreSQL returns datetime.date; SQLite returns a str
+            if isinstance(last_daily, str):
+                last_date = datetime.strptime(last_daily, '%Y-%m-%d').date()
+            else:
+                last_date = last_daily
             if last_date == today:
                 conn.close()
                 return {"can_claim": False, "streak": streak, "bonus": 0}
