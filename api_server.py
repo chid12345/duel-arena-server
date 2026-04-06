@@ -516,7 +516,8 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
 
 @app.get("/api/health")
 async def health():
-    return {"ok": True, "ts": int(time.time())}
+    from config import WEBAPP_PUBLIC_URL
+    return {"ok": True, "ts": int(time.time()), "version": APP_BUILD_VERSION, "webapp_url": WEBAPP_PUBLIC_URL}
 
 
 @app.get("/api/version")
@@ -1959,9 +1960,26 @@ webapp_dir = os.path.join(os.path.dirname(__file__), "webapp")
 
 _INDEX_SCRIPTS = ["sound.js", "scene_stats.js", "scene_queue.js", "scene_extras.js", "game.js"]
 
+_SELF_RELOAD_SCRIPT = """<script>
+(function(){{
+  var v='{v}';
+  var k='_da_bv';
+  try{{
+    if(localStorage.getItem(k)!==v){{
+      localStorage.setItem(k,v);
+      var loc=location.href.replace(/[?&]_r=[^&]*/,'').replace(/[?&]v=[^&]*/,'');
+      var sep=loc.indexOf('?')>=0?'&':'?';
+      location.replace(loc+sep+'v='+v+'&_r=1');
+      throw 0;
+    }}
+  }}catch(e){{if(e!==0)throw e;}}
+}})();
+</script>"""
+
+
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
 async def serve_index():
-    """Отдаём index.html с version-stamped src для принудительного сброса кэша Telegram WebView."""
+    """Отдаём index.html с version-stamped src и self-reload скриптом для сброса кэша Telegram WebView."""
     html_path = os.path.join(webapp_dir, "index.html")
     try:
         with open(html_path, "r", encoding="utf-8") as f:
@@ -1969,8 +1987,12 @@ async def serve_index():
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="index.html not found")
     v = APP_BUILD_VERSION
+    # Версионируем src скриптов
     for fname in _INDEX_SCRIPTS:
         html = html.replace(f'src="{fname}"', f'src="{fname}?v={v}"')
+    # Вставляем self-reload перед </head>
+    reload_snip = _SELF_RELOAD_SCRIPT.format(v=v)
+    html = html.replace("</head>", reload_snip + "\n</head>", 1)
     no_cache = {
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
         "Pragma": "no-cache",

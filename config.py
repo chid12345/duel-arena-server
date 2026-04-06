@@ -57,15 +57,14 @@ def _webapp_public_url() -> str:
                 rwy = (os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip().rstrip("/")
                 if rwy:
                     u = rwy if rwy.startswith("http") else f"https://{rwy}"
-    # Добавляем ?v=COMMIT для принудительного сброса кэша Telegram WebView при каждом деплое.
-    # Настоящей причиной ошибок /start был баг check_daily_bonus, а не параметр ?v=.
-    if u and "?" not in u:
-        ver = (
-            (os.getenv("WEBAPP_URL_VERSION") or "").strip()
-            or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
-        )
-        if ver:
-            u = f"{u}?v={ver}"
+    # Всегда добавляем ?v=COMMIT, заменяя любой старый ?v= из env-var.
+    ver = (
+        (os.getenv("WEBAPP_URL_VERSION") or "").strip()
+        or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
+    )
+    if u and ver:
+        base = u.split("?")[0]
+        u = f"{base}?v={ver}"
     return u or ""
 
 
