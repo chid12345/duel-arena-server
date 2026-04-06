@@ -2057,9 +2057,12 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    const logY = H * 0.52;
-    makePanel(this, 8, logY, W - 16, H * 0.08, 8, 0.7);
-    this._logTxt = txt(this, W/2, logY + (H * 0.04), '', 11, '#ccccee').setOrigin(0.5);
+    const logY = H * 0.50;
+    const logH = H * 0.12;
+    makePanel(this, 8, logY, W - 16, logH, 8, 0.82);
+    // Две строки лога — последние два события раунда
+    this._logTxt1 = txt(this, W/2, logY + logH * 0.32, '', 12, '#e8e0ff').setOrigin(0.5);
+    this._logTxt2 = txt(this, W/2, logY + logH * 0.72, '', 11, '#9090bb').setOrigin(0.5);
   }
 
   _onZone(key, label, type, g, t) {
@@ -2096,6 +2099,7 @@ class BattleScene extends Phaser.Scene {
       });
       if (res.status === 'waiting_opponent') {
         this._showWait('⏳ Ждём соперника...');
+        this._waitingSince = Date.now();   // Метка для WS-recovery
         return;
       }
       if (res.status === 'round_completed') {
@@ -2172,11 +2176,14 @@ class BattleScene extends Phaser.Scene {
     /* Раунд */
     if (this.roundTxt) this.roundTxt.setText(`РАУНД ${(b.round || 0) + 1}`);
 
-    /* Лог */
+    /* Лог — показываем последние 2 события */
     const log = b.combat_log || [];
-    if (log.length && this._logTxt) {
-      const clean = log[log.length - 1].replace(/<[^>]+>/g, '');
-      this._logTxt.setText(clean.slice(0, 60));
+    const stripHtml = s => s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+    if (this._logTxt1) {
+      const line1 = log.length >= 1 ? stripHtml(log[log.length - 1]) : '';
+      const line2 = log.length >= 2 ? stripHtml(log[log.length - 2]) : '';
+      this._logTxt1.setText(line1.slice(0, 55));
+      this._logTxt2.setText(line2.slice(0, 55));
     }
 
     /* Анимации раунда */
@@ -2369,25 +2376,38 @@ class BattleScene extends Phaser.Scene {
     if (!State.player) return;
     connectWS(State.player.user_id, handleMsg);
 
-    // ── Polling fallback: если WS не пришёл за 7с после сабмита ──
+    // ── Polling fallback ─────────────────────────────────────────
+    // Опрашивает сервер когда:
+    //   a) Выбираем ход, но сигнала от сервера не было > 8 сек
+    //   b) Ждём соперника (WS мог упасть) > 10 сек
     this._lastServerMsg = Date.now();
+    this._waitingSince  = null;
     this._pollEvent = this.time.addEvent({
-      delay: 4000, loop: true,
+      delay: 3000, loop: true,
       callback: async () => {
-        if (!this._choosing) return; // ждём ответа — не опрашиваем
-        const gap = Date.now() - this._lastServerMsg;
-        if (gap < 8000) return;     // недавно был сигнал — норм
+        const now = Date.now();
+
+        // Режим ожидания соперника (после отправки хода)
+        if (!this._choosing) {
+          if (!this._waitingSince) return;
+          if (now - this._waitingSince < 10000) return;  // ждём до 10 сек
+          // WS, похоже, упал — принудительно опрашиваем
+        } else {
+          // Обычный режим: опрашиваем только если давно не было сигнала
+          if (now - this._lastServerMsg < 8000) return;
+        }
+
         try {
           const res = await get('/api/battle/state');
           if (!res?.active) {
-            // Бой уже закончен — переходим на результат
             const last = await get('/api/battle/last_result').catch(() => null);
             State.lastResult = last || { human_won: false, result: {} };
             this.scene.start('Result');
           } else {
-            this._lastServerMsg = Date.now();
+            this._lastServerMsg = now;
             this._updateFromState(res);
             if (!this._choosing) {
+              this._waitingSince = null;
               this._resetChoices();
               this._choosing = true;
               this._startTimer(res.deadline_sec);
