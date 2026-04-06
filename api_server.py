@@ -47,6 +47,40 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 app = FastAPI(title="Duel Arena TMA API", version="1.0")
 
+# ─── Rate Limiter ─────────────────────────────────────────────────────────────
+class _RateLimiter:
+    """Простой in-memory rate limiter по ключу (uid:endpoint)."""
+    def __init__(self) -> None:
+        self._hits: dict[str, list[float]] = {}
+
+    def check(self, key: str, max_hits: int, window_sec: int) -> bool:
+        """True = запрос разрешён, False = превышен лимит."""
+        now = time.monotonic()
+        hits = self._hits.get(key)
+        if hits is None:
+            self._hits[key] = [now]
+            return True
+        cutoff = now - window_sec
+        # удаляем устаревшие записи
+        while hits and hits[0] < cutoff:
+            hits.pop(0)
+        if len(hits) >= max_hits:
+            return False
+        hits.append(now)
+        return True
+
+    def cleanup(self) -> None:
+        """Удаляет пустые/неактивные ключи (вызывается периодически)."""
+        now = time.monotonic()
+        self._hits = {k: v for k, v in self._hits.items() if v and v[-1] > now - 300}
+
+_rl = _RateLimiter()
+
+def _rl_check(uid: int, endpoint: str, max_hits: int, window_sec: int) -> None:
+    """Бросает HTTPException 429 если лимит превышен."""
+    if not _rl.check(f"{uid}:{endpoint}", max_hits, window_sec):
+        raise HTTPException(status_code=429, detail="Слишком много запросов, подожди немного")
+
 # ─── Кэш профиля игрока ───────────────────────────────────────────────────────
 # Хранит (player_dict, timestamp). TTL = 3 сек.
 # Инвалидируется после любой записи (тренировка, квест, сброс, бой).
@@ -576,6 +610,7 @@ async def app_version():
 async def get_player(body: InitDataHeader):
     tg_user = get_user_from_init_data(body.init_data)
     uid      = int(tg_user["id"])
+    _rl_check(uid, "player", max_hits=20, window_sec=10)
     username = tg_user.get("username") or tg_user.get("first_name") or ""
 
     cached = _cache_get(uid)
@@ -597,6 +632,7 @@ async def get_player(body: InitDataHeader):
 async def find_battle(body: FindBattleBody):
     tg_user = get_user_from_init_data(body.init_data)
     uid      = int(tg_user["id"])
+    _rl_check(uid, "battle_find", max_hits=5, window_sec=15)
     username = tg_user.get("username") or ""
 
     player = db.get_or_create_player(uid, username)
@@ -666,6 +702,7 @@ async def find_battle(body: FindBattleBody):
 async def battle_choice(body: BattleChoiceBody):
     tg_user = get_user_from_init_data(body.init_data)
     uid     = int(tg_user["id"])
+    _rl_check(uid, "battle_choice", max_hits=15, window_sec=10)
 
     ZONE_MAP = {
         "HEAD": "ГОЛОВА",
@@ -788,6 +825,7 @@ async def send_challenge(body: ChallengeSendBody):
     """Отправить персональный PvP-вызов по нику (@name)."""
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
+    _rl_check(uid, "challenge_send", max_hits=3, window_sec=30)
     my_username = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
     me = db.get_or_create_player(uid, my_username)
     if battle_system.get_battle_status(uid):
@@ -1086,6 +1124,7 @@ STAT_MAP = {
 async def train_stat(body: TrainBody):
     tg_user = get_user_from_init_data(body.init_data)
     uid     = int(tg_user["id"])
+    _rl_check(uid, "train", max_hits=30, window_sec=10)
     stat    = body.stat.lower()
 
     if stat not in STAT_MAP:
@@ -1309,6 +1348,7 @@ class ClanChatSendBody(BaseModel):
 async def send_clan_chat(body: ClanChatSendBody):
     tg_user  = get_user_from_init_data(body.init_data)
     uid      = int(tg_user["id"])
+    _rl_check(uid, "clan_chat", max_hits=5, window_sec=10)
     username = (tg_user.get("username") or tg_user.get("first_name") or f"User{uid}")
     player   = db.get_or_create_player(uid, username)
     clan_id  = player.get("clan_id")
@@ -1419,6 +1459,7 @@ class ShopBuyBody(BaseModel):
 async def shop_buy(body: ShopBuyBody):
     tg_user = get_user_from_init_data(body.init_data)
     uid     = int(tg_user["id"])
+    _rl_check(uid, "shop_buy", max_hits=5, window_sec=30)
 
     item = SHOP_CATALOG.get(body.item_id)
     if not item:
@@ -1645,6 +1686,8 @@ async def crypto_invoice(body: CryptoInvoiceBody):
     """Создать CryptoPay invoice.
     Возвращает mini_app_invoice_url — фронт открывает через tg.openLink()."""
     tg_user = get_user_from_init_data(body.init_data)
+    uid_rl  = int(tg_user["id"])
+    _rl_check(uid_rl, "crypto_invoice", max_hits=3, window_sec=30)
     uid     = int(tg_user["id"])
 
     pkg = next((p for p in CRYPTO_PACKAGES if p["id"] == body.package_id), None)
@@ -2027,6 +2070,7 @@ async def _keepalive_loop(health_url: str) -> None:
             logger.info("keepalive ping ok → %s", health_url)
         except Exception as exc:
             logger.debug("keepalive ping failed: %s", exc)
+        _rl.cleanup()  # Чистим устаревшие ключи rate limiter
         await asyncio.sleep(600)  # Раз в 10 минут
 
 
