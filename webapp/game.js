@@ -491,13 +491,18 @@ class MenuScene extends Phaser.Scene {
       }
 
       if (playerOk) {
-        this._buildTabBar();
-        this._buildProfilePanel();
-        this._buildBattlePanel();
-        this._buildMorePanel();
-        this._switchTab('profile');
-        this._setupWS();
-        this._startRegenTick();
+        try {
+          this._buildTabBar();
+          this._buildProfilePanel();
+          this._buildBattlePanel();
+          this._buildMorePanel();
+          this._switchTab('profile');
+          this._setupWS();
+          this._startRegenTick();
+        } catch(buildErr) {
+          console.error('UI build error:', buildErr);
+          this._showError('Ошибка UI: ' + (buildErr?.message || buildErr));
+        }
       } else {
         const code = playerRes?._httpStatus || playerRes?.detail || '';
         this._showError(code === 401 ? 'Открой через Telegram' : 'Ошибка сервера');
