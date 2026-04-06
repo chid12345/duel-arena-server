@@ -43,16 +43,13 @@ const THEMES = {
 };
 
 function applyTheme(name) {
-  const t = THEMES[name] || THEMES.dark;
+  // Всегда тёмная тема независимо от системных настроек
+  const t = THEMES.dark;
   Object.assign(C, t);
-  try { localStorage.setItem('da_theme', name); } catch (_) {}
-  document.body.style.background = name === 'light' ? '#f0f2ff' : '#12121c';
+  document.body.style.background = '#12121c';
 }
-// Применяем тему при старте (Telegram colorScheme или localStorage)
-applyTheme(
-  (() => { try { return localStorage.getItem('da_theme'); } catch(_){} return null; })() ||
-  (tg?.colorScheme === 'light' ? 'light' : 'dark')
-);
+// Всегда тёмная тема
+applyTheme('dark');
 
 /* Shared state */
 const State = {
