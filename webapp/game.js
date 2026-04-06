@@ -156,6 +156,20 @@ function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false) {
   });
 }
 
+/** Текст поверх цветных полосок HP/XP: контур вместо тёмной подложки (и всегда в контейнере сцен). */
+function txtBar(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false) {
+  const th = Math.max(2, Math.min(4, Math.round(size / 3)));
+  return scene.add.text(x, y, str, {
+    fontSize: `${size}px`,
+    fontFamily: 'Arial, Helvetica, sans-serif',
+    fontStyle: bold ? 'bold' : 'normal',
+    color: tCol(color),
+    stroke: '#0a0a12',
+    strokeThickness: th,
+    resolution: 2,
+  });
+}
+
 /* ═══════════════════════════════════════════════════════════
    BOOT SCENE — загрузка ресурсов + инициализация
    ═══════════════════════════════════════════════════════════ */
@@ -652,12 +666,7 @@ class MenuScene extends Phaser.Scene {
     const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     const hpBg  = makeBar(this, hpX, hpY, hpW, hpH, hpPct, hpCol);
-    const hpTxtBg = this.add.graphics();
-    hpTxtBg.fillStyle(0x0f1324, 0.88);
-    hpTxtBg.fillRoundedRect(W / 2 - 62, hpY - 2, 124, 18, 6);
-    hpTxtBg.lineStyle(1, C.dark, 0.45);
-    hpTxtBg.strokeRoundedRect(W / 2 - 62, hpY - 2, 124, 18, 6);
-    const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#f0f0fa', true).setOrigin(0.5);
+    const hpTxt = txtBar(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#f0f0fa', true).setOrigin(0.5);
 
     /* ── XP бар ── */
     let xpBg, xpTxt, xpLabel;
@@ -665,15 +674,9 @@ class MenuScene extends Phaser.Scene {
     const xpY = hpY + hpH + 8;
     if (!p.max_level) {
       xpBg   = makeBar(this, hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, C.dark, 5);
-      const xpTxtBg = this.add.graphics();
-      xpTxtBg.fillStyle(0x0f1324, 0.86);
-      xpTxtBg.fillRoundedRect(W / 2 - 74, xpY - 2, 148, 16, 6);
-      xpTxtBg.lineStyle(1, C.dark, 0.45);
-      xpTxtBg.strokeRoundedRect(W / 2 - 74, xpY - 2, 148, 16, 6);
-      xpTxt  = txt(this, W / 2, xpY + xpH / 2,
+      xpTxt  = txtBar(this, W / 2, xpY + xpH / 2,
         `${p.exp} / ${p.exp_needed} XP`, 10, '#f0f0fa', true).setOrigin(0.5);
-      xpLabel = txt(this, W / 2, xpY + 18, `⭐ Опыт: ${p.xp_pct}%`, 10, '#78b2ff', true).setOrigin(0.5, 0);
-      c.add(xpTxtBg);
+      xpLabel = txtBar(this, W / 2, xpY + 18, `⭐ Опыт: ${p.xp_pct}%`, 10, '#78b2ff', true).setOrigin(0.5, 0);
     } else {
       txt(this, W / 2, xpY + 6, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
     }
@@ -890,7 +893,7 @@ class MenuScene extends Phaser.Scene {
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     hpBlockObjs.push(makeBar(this, 20, hpBlockY, W - 40, 10, hpPct, hpCol));
     hpBlockObjs.push(
-      txt(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
+      txtBar(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
     );
 
     if (p.hp_pct < 100) {
@@ -1814,7 +1817,8 @@ class BattleScene extends Phaser.Scene {
     const hpHex = hpPct > 0.5 ? 0x3cc864 : hpPct > 0.25 ? 0xffc83c : 0xdc3c46;
     const hpX = cx + 114, hpY = cy + 76, hpW = cw - 126;
     t(hpX, hpY, '❤️ HP', 10, '#aaaacc');
-    tR(cx + cw - 12, hpY, `${curHp} / ${maxHp}`, 10, hpCol);
+    const hpValT = txtBar(this, cx + cw - 12, hpY, `${curHp} / ${maxHp}`, 10, hpCol).setOrigin(1, 0);
+    con.add(hpValT);
     const hpG = this.add.graphics();
     hpG.fillStyle(0x0a0a18, 1); hpG.fillRoundedRect(hpX, hpY + 16, hpW, 11, 4);
     hpG.fillStyle(hpHex, 1); hpG.fillRoundedRect(hpX, hpY + 16, Math.max(6, Math.round(hpW * hpPct)), 11, 4);
@@ -1910,7 +1914,7 @@ class BattleScene extends Phaser.Scene {
     makePanel(this, 8, 8, W/2 - 14, hudH, 10);
     txt(this, 16, 13, 'ВЫ', 10, '#8888aa', true);
     this.p1Name = txt(this, 16, 24, State.player?.username || 'Вы', 13, '#f0f0fa', true);
-    this.p1Hp   = txt(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
+    this.p1Hp   = txtBar(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
     this.p1Bar  = this._hpBar(12, 56, W/2 - 22, b.my_max_hp > 0 ? b.my_hp / b.my_max_hp : 0, C.green);
     txt(this, 10, 10, '👁', 10).setAlpha(0.55);
     this.add.zone(8, 8, W/2 - 14, hudH).setOrigin(0)
@@ -1921,7 +1925,7 @@ class BattleScene extends Phaser.Scene {
     makePanel(this, W/2 + 6, 8, W/2 - 14, hudH, 10);
     txt(this, W - 16, 13, 'СОПЕРНИК', 10, '#8888aa', true).setOrigin(1, 0);
     this.p2Name = txt(this, W - 16, 24, b.opp_name || 'Соперник', 13, '#f0f0fa', true).setOrigin(1, 0);
-    this.p2Hp   = txt(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
+    this.p2Hp   = txtBar(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
     this.p2Bar  = this._hpBar(W/2 + 10, 56, W/2 - 22, b.opp_max_hp > 0 ? b.opp_hp / b.opp_max_hp : 0, C.red);
     // Подсказка "посмотреть карточку"
     txt(this, W/2 + 10, 10, '👁', 10).setAlpha(0.55);

@@ -396,10 +396,10 @@ class SummaryScene extends Phaser.Scene {
     const expPct = (p.exp || 0) / Math.max(1, p.exp_to_next || 1);
 
     scroll.add(makeBar(this, 16, y,     W - 32, 12, hpPct,  C.red,  C.dark));
-    scroll.add(txt(this, W / 2, y + 6, `HP ${p.current_hp || 0}/${p.max_hp || 0}`, 11, '#f0f0fa').setOrigin(0.5));
+    scroll.add(txtBar(this, W / 2, y + 6, `HP ${p.current_hp || 0}/${p.max_hp || 0}`, 11, '#f0f0fa').setOrigin(0.5));
     y += 20;
     scroll.add(makeBar(this, 16, y,     W - 32, 10, expPct, C.blue, C.dark));
-    scroll.add(txt(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 11, '#8888aa').setOrigin(0.5));
+    scroll.add(txtBar(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 11, '#8888aa').setOrigin(0.5));
     y += 24;
 
     /* ── Свободные очки ── */
