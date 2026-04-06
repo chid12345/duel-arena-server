@@ -596,8 +596,9 @@ class MenuScene extends Phaser.Scene {
     const crown   = p.is_premium ? '👑 ' : '';
     const nameTxt = txt(this, nameX, hY + 12, crown + p.username, 18, p.is_premium ? '#c8a0ff' : '#f0f0fa', true);
     const premSub = p.is_premium ? `⭐ Premium · ${p.premium_days_left} дн.` : '';
+    const titleBit = (!premSub && p.display_title) ? `🏵 ${p.display_title} · ` : '';
     const subTxt  = txt(this, nameX, hY + 38,
-      premSub || `ELO ★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12,
+      premSub || `${titleBit}ELO ★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12,
       p.is_premium ? '#b45aff' : '#ffc83c');
 
     // Золото — справа вверху

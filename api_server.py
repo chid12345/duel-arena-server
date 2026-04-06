@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.04 → 1.05).
-GAME_VERSION = "1.04"
+GAME_VERSION = "1.05"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -359,9 +359,11 @@ def _player_api(player: dict) -> dict:
 
     need_xp = exp_needed_for_next_level(lv)
 
+    title = (player.get("display_title") or "").strip()
     return {
         "user_id": player.get("user_id"),
         "username": player.get("username") or "Боец",
+        "display_title": title or None,
         "level": lv,
         "exp": int(player.get("exp", 0)),
         "exp_needed": need_xp,
@@ -2083,6 +2085,29 @@ async def referral_withdraw(body: ReferralWithdrawBody):
 # Render free tier засыпает через 15 мин без входящего HTTP-трафика.
 # Пингуем собственный /api/health каждые 10 мин — сервис остаётся живым.
 
+async def _run_weekly_leaderboard_payouts() -> None:
+    """Автоначисление наград за прошлую неделю (PvP + Башня), уведомления в Telegram."""
+    try:
+        loop = asyncio.get_event_loop()
+        res = await loop.run_in_executor(None, db.process_weekly_leaderboard_payouts)
+        for uid in res.get("invalidate_uids") or []:
+            _cache_invalidate(int(uid))
+        for msg in res.get("telegram") or []:
+            cid = msg.get("chat_id")
+            if cid:
+                await _send_tg_message(int(cid), msg.get("text") or "")
+        pp, tt = int(res.get("pvp_paid") or 0), int(res.get("titan_paid") or 0)
+        if pp > 0 or tt > 0:
+            logger.info(
+                "weekly leaderboard payouts week=%s pvp_slots=%s titan_slots=%s",
+                res.get("week_key"),
+                pp,
+                tt,
+            )
+    except Exception as exc:
+        logger.warning("weekly leaderboard payouts failed: %s", exc)
+
+
 async def _keepalive_loop(health_url: str) -> None:
     await asyncio.sleep(120)  # Даём сервису полностью стартовать
     while True:
@@ -2096,11 +2121,13 @@ async def _keepalive_loop(health_url: str) -> None:
         except Exception as exc:
             logger.debug("keepalive ping failed: %s", exc)
         _rl.cleanup()  # Чистим устаревшие ключи rate limiter
+        await _run_weekly_leaderboard_payouts()
         await asyncio.sleep(600)  # Раз в 10 минут
 
 
 @app.on_event("startup")
 async def _start_keepalive() -> None:
+    asyncio.create_task(_run_weekly_leaderboard_payouts())
     render_url = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
     if render_url:
         asyncio.create_task(_keepalive_loop(f"{render_url}/api/health"))

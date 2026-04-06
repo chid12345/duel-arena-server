@@ -38,6 +38,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_16_001_pvp_challenges",
     "2026_04_16_002_titan_and_weekly_claims",
     "2026_04_16_003_profile_reset_ts",
+    "2026_04_17_001_weekly_leaderboard_rewards",
 )
 
 # Без внешних ключей battles → players: в SQLite FK часто не проверялись, боты хранятся отдельно.
@@ -380,6 +381,21 @@ POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
 )
 
 POSTGRES_AFTER_DDL: tuple[str, ...] = (
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS display_title TEXT",
+    """CREATE TABLE IF NOT EXISTS weekly_leaderboard_payouts (
+        week_key TEXT NOT NULL,
+        board TEXT NOT NULL,
+        paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (week_key, board)
+    )""",
+    """CREATE TABLE IF NOT EXISTS titan_weekly_scores (
+        user_id BIGINT NOT NULL,
+        week_key TEXT NOT NULL,
+        max_floor INTEGER NOT NULL DEFAULT 0,
+        best_at BIGINT NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, week_key)
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_tws_week_rank ON titan_weekly_scores (week_key, max_floor DESC, best_at ASC)",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS profile_reset_ts BIGINT DEFAULT 0",
     "INSERT INTO seasons (id, name, status) VALUES (1, 'Сезон 1: Начало', 'active') ON CONFLICT (id) DO NOTHING",
     "SELECT setval(pg_get_serial_sequence('seasons', 'id'), COALESCE((SELECT MAX(id) FROM seasons), 1), true)",

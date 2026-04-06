@@ -3,16 +3,67 @@
 Локально: SQLite. Продакшен: PostgreSQL при DATABASE_URL (Supabase / Render).
 """
 
+import logging
 import re
 import sqlite3
 import random
 import time
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
+
+
+def iso_week_key_utc(ts: Optional[float] = None) -> str:
+    """Ключ ISO-недели по UTC, как в API (2026-W15)."""
+    t = time.time() if ts is None else float(ts)
+    dt = datetime.fromtimestamp(t, tz=timezone.utc)
+    y, w, _ = dt.isocalendar()
+    return f"{int(y)}-W{int(w):02d}"
+
+
+def prev_iso_week_bounds_utc() -> Tuple[str, datetime, datetime]:
+    """Прошлая ISO-неделя: (week_key, start включительно, end исключительно), UTC naive для SQL."""
+    now = datetime.now(timezone.utc)
+    d = now.date()
+    monday = datetime(d.year, d.month, d.day, tzinfo=timezone.utc) - timedelta(days=d.weekday())
+    week_start_cur = monday.replace(hour=0, minute=0, second=0, microsecond=0)
+    week_start_prev = week_start_cur - timedelta(days=7)
+    week_end_prev = week_start_cur
+    y, w, _ = week_start_prev.date().isocalendar()
+    key = f"{int(y)}-W{int(w):02d}"
+    # naive UTC для сравнения с created_at в SQLite (текст) и PG timestamp
+    start_naive = week_start_prev.replace(tzinfo=None)
+    end_naive = week_end_prev.replace(tzinfo=None)
+    return key, start_naive, end_naive
+
+
+def weekly_pvp_rank_reward(rank: int) -> Tuple[int, str]:
+    if rank == 1:
+        return 120, "Легенда PvP"
+    if rank == 2:
+        return 80, "Мастер PvP"
+    if rank == 3:
+        return 50, "Герой арены"
+    if 4 <= rank <= 10:
+        return 20, "Участник топа"
+    return 0, ""
+
+
+def weekly_titan_rank_reward(rank: int) -> Tuple[int, str]:
+    if rank == 1:
+        return 150, "Покоритель Титанов"
+    if rank == 2:
+        return 90, "Гроза Башни"
+    if rank == 3:
+        return 60, "Титаноборец"
+    if 4 <= rank <= 10:
+        return 25, "Штурмовик Башни"
+    return 0, ""
 
 from config import *
 from postgres_bootstrap import bootstrap_postgres_schema
+
+_log = logging.getLogger(__name__)
 
 
 def _norm_sql(sql: str) -> str:
@@ -794,6 +845,26 @@ class Database:
                 "2026_04_16_003_profile_reset_ts",
                 [
                     "ALTER TABLE players ADD COLUMN profile_reset_ts INTEGER DEFAULT 0",
+                ],
+            ),
+            (
+                "2026_04_17_001_weekly_leaderboard_rewards",
+                [
+                    "ALTER TABLE players ADD COLUMN display_title TEXT",
+                    """CREATE TABLE IF NOT EXISTS weekly_leaderboard_payouts (
+                        week_key TEXT NOT NULL,
+                        board TEXT NOT NULL,
+                        paid_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (week_key, board)
+                    )""",
+                    """CREATE TABLE IF NOT EXISTS titan_weekly_scores (
+                        user_id INTEGER NOT NULL,
+                        week_key TEXT NOT NULL,
+                        max_floor INTEGER NOT NULL DEFAULT 0,
+                        best_at INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (user_id, week_key)
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_tws_week_rank ON titan_weekly_scores (week_key, max_floor DESC, best_at ASC)",
                 ],
             ),
         ]
@@ -1952,6 +2023,10 @@ class Database:
                 (best_floor, current_floor, weekly_best, weekly_at, user_id),
             )
             conn.commit()
+            try:
+                self.record_titan_weekly_floor(user_id, floor_i, now_ts)
+            except Exception as ex:
+                _log.warning("record_titan_weekly_floor uid=%s: %s", user_id, ex)
             return {
                 "best_floor": best_floor,
                 "current_floor": current_floor,
@@ -1977,22 +2052,54 @@ class Database:
         finally:
             conn.close()
 
-    def get_titan_weekly_top(self, limit: int = 50) -> List[Dict]:
+    def get_titan_weekly_top(self, limit: int = 50, week_key: Optional[str] = None) -> List[Dict]:
+        """Текущая ISO-неделя по UTC; рейтинг из titan_weekly_scores (этажи за эту неделю)."""
+        wk = week_key if week_key is not None else iso_week_key_utc()
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
                 """
-                SELECT t.user_id, p.username, t.weekly_best_floor, t.weekly_best_at
-                FROM titan_progress t
-                JOIN players p ON p.user_id = t.user_id
-                WHERE t.weekly_best_floor > 0
-                ORDER BY t.weekly_best_floor DESC, t.weekly_best_at ASC
+                SELECT s.user_id, p.username, s.max_floor AS weekly_best_floor, s.best_at AS weekly_best_at
+                FROM titan_weekly_scores s
+                JOIN players p ON p.user_id = s.user_id
+                WHERE s.week_key = ? AND s.max_floor > 0
+                ORDER BY s.max_floor DESC, s.best_at ASC
                 LIMIT ?
                 """,
-                (int(limit),),
+                (wk, int(limit)),
             )
             return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def record_titan_weekly_floor(self, user_id: int, floor: int, ts: Optional[int] = None) -> None:
+        """Зафиксировать лучший этаж за текущую ISO-неделю (для недельного топа и наград)."""
+        ts_i = int(ts if ts is not None else time.time())
+        wk = iso_week_key_utc(float(ts_i))
+        floor_i = max(1, int(floor))
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT max_floor, best_at FROM titan_weekly_scores WHERE user_id = ? AND week_key = ?",
+                (int(user_id), wk),
+            )
+            row = cursor.fetchone()
+            if not row:
+                cursor.execute(
+                    "INSERT INTO titan_weekly_scores (user_id, week_key, max_floor, best_at) VALUES (?, ?, ?, ?)",
+                    (int(user_id), wk, floor_i, ts_i),
+                )
+            else:
+                mf = int(row["max_floor"] or 0)
+                ba = int(row["best_at"] or 0)
+                if floor_i > mf or (floor_i == mf and ts_i < ba):
+                    cursor.execute(
+                        "UPDATE titan_weekly_scores SET max_floor = ?, best_at = ? WHERE user_id = ? AND week_key = ?",
+                        (floor_i, ts_i, int(user_id), wk),
+                    )
+            conn.commit()
         finally:
             conn.close()
 
@@ -2066,6 +2173,81 @@ class Database:
         finally:
             conn.close()
 
+    def get_pvp_weekly_top_for_period(self, start_dt: datetime, end_dt: datetime, limit: int = 50) -> List[Dict]:
+        """Топ PvP за интервал [start_dt, end_dt) по UTC (для автоначисления за прошлую неделю)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            if self._pg:
+                cursor.execute(
+                    """
+                    SELECT user_id, username,
+                           SUM(wins) AS wins, SUM(losses) AS losses, SUM(rating_delta) AS rating_delta
+                    FROM (
+                        SELECT b.player1_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player1_id
+                        WHERE b.is_bot2 = FALSE
+                          AND b.created_at >= ? AND b.created_at < ?
+                        GROUP BY b.player1_id, p.username
+                        UNION ALL
+                        SELECT b.player2_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player2_id
+                        WHERE b.is_bot2 = FALSE
+                          AND b.created_at >= ? AND b.created_at < ?
+                        GROUP BY b.player2_id, p.username
+                    ) s
+                    GROUP BY user_id, username
+                    ORDER BY wins DESC, rating_delta DESC, losses ASC
+                    LIMIT ?
+                    """,
+                    (start_dt, end_dt, start_dt, end_dt, int(limit)),
+                )
+            else:
+                ss = start_dt.strftime("%Y-%m-%d %H:%M:%S")
+                ee = end_dt.strftime("%Y-%m-%d %H:%M:%S")
+                cursor.execute(
+                    """
+                    SELECT user_id, username,
+                           SUM(wins) AS wins, SUM(losses) AS losses, SUM(rating_delta) AS rating_delta
+                    FROM (
+                        SELECT b.player1_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player1_id
+                        WHERE b.is_bot2 = 0
+                          AND b.created_at >= ? AND b.created_at < ?
+                        GROUP BY b.player1_id, p.username
+                        UNION ALL
+                        SELECT b.player2_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player2_id
+                        WHERE b.is_bot2 = 0
+                          AND b.created_at >= ? AND b.created_at < ?
+                        GROUP BY b.player2_id, p.username
+                    ) s
+                    GROUP BY user_id, username
+                    ORDER BY wins DESC, rating_delta DESC, losses ASC
+                    LIMIT ?
+                    """,
+                    (ss, ee, ss, ee, int(limit)),
+                )
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
     def get_pvp_elo_top(self, limit: int = 20) -> List[Dict]:
         """Топ игроков по ELO рейтингу (all-time)."""
         conn = self.get_connection()
@@ -2082,6 +2264,121 @@ class Database:
             return [dict(r) for r in cursor.fetchall()]
         finally:
             conn.close()
+
+    def weekly_payout_already_done(self, week_key: str, board: str) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT 1 FROM weekly_leaderboard_payouts WHERE week_key = ? AND board = ? LIMIT 1",
+                (week_key, board),
+            )
+            return cursor.fetchone() is not None
+        finally:
+            conn.close()
+
+    def process_weekly_leaderboard_payouts(self) -> Dict[str, Any]:
+        """
+        Выдать алмазы и титулы за прошлую ISO-неделю (PvP по боям, Башня по titan_weekly_scores).
+        Идемпотентно: повторный вызов не дублирует выплаты.
+        """
+        week_key, start_dt, end_dt = prev_iso_week_bounds_utc()
+        out: Dict[str, Any] = {
+            "week_key": week_key,
+            "pvp_paid": 0,
+            "titan_paid": 0,
+            "invalidate_uids": [],
+            "telegram": [],
+        }
+
+        if not self.weekly_payout_already_done(week_key, "pvp"):
+            rows = self.get_pvp_weekly_top_for_period(start_dt, end_dt, limit=20)
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                for idx, r in enumerate(rows[:10], 1):
+                    d, title = weekly_pvp_rank_reward(idx)
+                    if d <= 0:
+                        continue
+                    uid = int(r["user_id"])
+                    cursor.execute(
+                        "UPDATE players SET diamonds = diamonds + ?, display_title = ? WHERE user_id = ?",
+                        (d, title, uid),
+                    )
+                    out["invalidate_uids"].append(uid)
+                    self.log_metric_event("weekly_pvp_lb_reward", uid, value=d)
+                    cid = self.get_player_chat_id(uid)
+                    if cid:
+                        out["telegram"].append({
+                            "chat_id": cid,
+                            "text": (
+                                f"🏆 <b>Награда за неделю {week_key}</b> (топ PvP)\n\n"
+                                f"Место: <b>#{idx}</b>\n+{d} 💎\nТитул: «{title}»"
+                            ),
+                        })
+                cursor.execute(
+                    "INSERT INTO weekly_leaderboard_payouts (week_key, board) VALUES (?, ?)",
+                    (week_key, "pvp"),
+                )
+                conn.commit()
+                out["pvp_paid"] = min(10, len(rows))
+            except Exception as ex:
+                conn.rollback()
+                _log.exception("weekly PvP payout failed: %s", ex)
+            finally:
+                conn.close()
+
+        if not self.weekly_payout_already_done(week_key, "titan"):
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    """
+                    SELECT s.user_id, p.username, s.max_floor, s.best_at
+                    FROM titan_weekly_scores s
+                    JOIN players p ON p.user_id = s.user_id
+                    WHERE s.week_key = ? AND s.max_floor > 0
+                    ORDER BY s.max_floor DESC, s.best_at ASC
+                    LIMIT 20
+                    """,
+                    (week_key,),
+                )
+                rows = [dict(x) for x in cursor.fetchall()]
+                for idx, r in enumerate(rows[:10], 1):
+                    d, title = weekly_titan_rank_reward(idx)
+                    if d <= 0:
+                        continue
+                    uid = int(r["user_id"])
+                    cursor.execute(
+                        "UPDATE players SET diamonds = diamonds + ?, display_title = ? WHERE user_id = ?",
+                        (d, title, uid),
+                    )
+                    out["invalidate_uids"].append(uid)
+                    self.log_metric_event("weekly_titan_lb_reward", uid, value=d)
+                    cid = self.get_player_chat_id(uid)
+                    if cid:
+                        out["telegram"].append({
+                            "chat_id": cid,
+                            "text": (
+                                f"🗿 <b>Награда за неделю {week_key}</b> (Башня Титанов)\n\n"
+                                f"Место: <b>#{idx}</b>\n+{d} 💎\nТитул: «{title}»"
+                            ),
+                        })
+                cursor.execute(
+                    "INSERT INTO weekly_leaderboard_payouts (week_key, board) VALUES (?, ?)",
+                    (week_key, "titan"),
+                )
+                conn.commit()
+                out["titan_paid"] = min(10, len(rows))
+            except Exception as ex:
+                conn.rollback()
+                _log.exception("weekly Titan payout failed: %s", ex)
+            finally:
+                conn.close()
+
+        # уникальные uid для сброса кэша API
+        out["invalidate_uids"] = list(dict.fromkeys(out["invalidate_uids"]))
+        return out
 
     def get_recent_pvp_duel_count(self, user_a: int, user_b: int, hours: int = 24) -> int:
         ua, ub = sorted((int(user_a), int(user_b)))
