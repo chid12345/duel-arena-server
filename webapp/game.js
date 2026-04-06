@@ -134,22 +134,8 @@ function makeBar(scene, x, y, w, h, pct, fillColor, bgColor = C.dark, radius = 4
   return g;
 }
 
-/* ── Цвет текста: авто-адаптация к светлой теме ──────────────
-   Алгоритм: вычисляем воспринимаемую яркость (L).
-   Если цвет слишком светлый (L > 0.35) — тёмим его до L≈0.20,
-   сохраняя оттенок. Работает для любого hex без ручного маппинга. */
-function tCol(color) {
-  if (C._name !== 'light') return color;
-  if (!color || color[0] !== '#' || color.length < 7) return color;
-  const ri = parseInt(color.slice(1,3), 16);
-  const gi = parseInt(color.slice(3,5), 16);
-  const bi = parseInt(color.slice(5,7), 16);
-  const L  = (0.299*ri + 0.587*gi + 0.114*bi) / 255;
-  if (L < 0.35) return color;                      // уже тёмный — не трогаем
-  const s = Math.min(1, 0.20 / L);                 // коэффициент затемнения
-  const h = x => Math.round(x * s).toString(16).padStart(2, '0');
-  return '#' + h(ri) + h(gi) + h(bi);
-}
+/* tCol() — заглушка (тема всегда тёмная, адаптация не нужна) */
+function tCol(color) { return color; }
 
 /* txt() — универсальный хелпер текста.
    stroke='#000' (опц.) добавляет обводку — для текста поверх цветных баров. */
@@ -165,21 +151,25 @@ function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false, strok
   return scene.add.text(x, y, str, style);
 }
 
-/* makeBackBtn() — единый стиль кнопки «Назад» для всех сцен.
-   Позиция: левый верхний угол (bx=10, bY=8). */
-function makeBackBtn(scene, label, onClick, bx = 10, bY = 8) {
-  const bW = 92, bH = 32;
+/* makeBackBtn() — кнопка «Назад» внизу экрана по центру.
+   По умолчанию: нижний центр (bx/bY не заданы → вычисляются из canvas). */
+function makeBackBtn(scene, label, onClick, bx, bY) {
+  const CW = scene.game.canvas.width;
+  const CH = scene.game.canvas.height;
+  const bW = 180, bH = 42;
+  if (bx === undefined) bx = Math.round(CW / 2 - bW / 2);
+  if (bY === undefined) bY = CH - 58;
   const cx = bx + bW / 2, cy = bY + bH / 2;
   const bg = scene.add.graphics();
   const _draw = (pressed) => {
     bg.clear();
-    bg.fillStyle(pressed ? C.blue : C.bgPanel, pressed ? 0.30 : 0.95);
-    bg.fillRoundedRect(bx, bY, bW, bH, 8);
-    bg.lineStyle(1.5, C.blue, 0.55);
-    bg.strokeRoundedRect(bx, bY, bW, bH, 8);
+    bg.fillStyle(pressed ? 0x2a3a5c : 0x1e2a44, pressed ? 0.95 : 0.90);
+    bg.fillRoundedRect(bx, bY, bW, bH, 10);
+    bg.lineStyle(1.5, C.blue, pressed ? 0.9 : 0.55);
+    bg.strokeRoundedRect(bx, bY, bW, bH, 10);
   };
   _draw(false);
-  const t = txt(scene, cx, cy, '← ' + label, 12, '#a0c0ff').setOrigin(0.5);
+  const t = txt(scene, cx, cy, '← ' + label, 13, '#a8d0ff', true).setOrigin(0.5);
   const z = scene.add.zone(cx, cy, bW, bH).setInteractive({ useHandCursor: true });
   z.on('pointerdown', () => _draw(true));
   z.on('pointerup',   () => { _draw(false); onClick(); });
@@ -557,7 +547,7 @@ class MenuScene extends Phaser.Scene {
 
       // Фон активной вкладки
       const activeBg = this.add.graphics();
-      activeBg.fillStyle(C.gold, C._name === 'light' ? 0.18 : 0.12);
+      activeBg.fillStyle(C.gold, 0.12);
       activeBg.fillRoundedRect(tabW * i + 5, tabTop + 5, tabW - 10, TAB_H - 10, 12);
       // Золотая черта-индикатор сверху
       const activeBar = this.add.graphics();
@@ -567,8 +557,7 @@ class MenuScene extends Phaser.Scene {
       activeBar.setVisible(false);
 
       const iconTxt  = txt(this, cx, tabTop + 24, tab.icon, 24).setOrigin(0.5).setAlpha(0.45);
-      const labelTxt = txt(this, cx, tabTop + 54, tab.label, 12,
-        C._name === 'light' ? '#666699' : '#555577').setOrigin(0.5);
+      const labelTxt = txt(this, cx, tabTop + 54, tab.label, 12, '#8888aa').setOrigin(0.5);
 
       this._tabBtns[tab.key] = { activeBg, activeBar, iconTxt, labelTxt };
 
@@ -585,8 +574,8 @@ class MenuScene extends Phaser.Scene {
 
   _switchTab(key) {
     Object.entries(this._panels).forEach(([k, c]) => c.setVisible(k === key));
-    const inactiveCol = C._name === 'light' ? '#666699' : '#555577';
-    const activeCol   = C._name === 'light' ? '#cc8800' : '#ffc83c';
+    const inactiveCol = '#8888aa';
+    const activeCol   = '#ffc83c';
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
       const active = k === key;
       btn.activeBg.setVisible(active);
@@ -605,14 +594,13 @@ class MenuScene extends Phaser.Scene {
     const p   = State.player;
     const c   = this.add.container(0, 0);
     const pad = 14;
-    const isLight = C._name === 'light';
 
     /* ══ ШАПКА (header) ════════════════════════════════════ */
     const hH = 74, hY = 6;
     const hBg = this.add.graphics();
     hBg.fillStyle(C.bgPanel, 0.97);
     hBg.fillRoundedRect(pad, hY, W - pad * 2, hH, 14);
-    hBg.lineStyle(2, C.gold, isLight ? 0.4 : 0.28);
+    hBg.lineStyle(2, C.gold, 0.28);
     hBg.strokeRoundedRect(pad, hY, W - pad * 2, hH, 14);
 
     // Бейдж уровня
@@ -636,9 +624,8 @@ class MenuScene extends Phaser.Scene {
     // Золото — справа вверху
     const goldTxt = txt(this, W - pad - 12, hY + 18, `💰 ${p.gold}`, 17, '#ffc83c', true).setOrigin(1, 0.5);
 
-    // Кнопки ☀️/🌙 и 🔊/🔇 — рядом справа
-    const thX = W - pad - 16, thY = hY + 56;
-    const snX = thX - 36, snY = thY;   // звук левее темы
+    // Кнопка 🔊/🔇 — справа вверху
+    const snX = W - pad - 16, snY = hY + 56;
 
     // Кнопка звука
     const snBg = this.add.graphics();
@@ -649,19 +636,6 @@ class MenuScene extends Phaser.Scene {
       const m = Sound.toggleMute();
       snTxt.setText(m ? '🔇' : '🔊');
       tg?.HapticFeedback?.selectionChanged();
-    });
-
-    // Кнопка темы
-    const thIcon = isLight ? '🌙' : '☀️';
-    const thBg = this.add.graphics();
-    thBg.fillStyle(C.dark, isLight ? 1 : 0.7);
-    thBg.fillCircle(thX, thY, 15);
-    const thTxt = txt(this, thX, thY, thIcon, 14).setOrigin(0.5);
-    const thZ   = this.add.zone(thX, thY, 34, 34).setInteractive({ useHandCursor: true });
-    thZ.on('pointerup', () => {
-      applyTheme(isLight ? 'dark' : 'light');
-      tg?.HapticFeedback?.impactOccurred('light');
-      this.scene.restart();
     });
 
     /* ══ ПЕРСОНАЖ — по центру, увеличенный ════════════════ */
@@ -714,14 +688,12 @@ class MenuScene extends Phaser.Scene {
     const statObjs = STATS.map((s, i) => {
       const scX  = pad + i * (scW + scGap);
       const scCX = scX + scW / 2;
-      const hexC = isLight
-        ? `#${Math.max(0, s.color - 0x222222).toString(16).padStart(6,'0')}`
-        : s.hex;
+      const hexC = s.hex;
 
       const sbg = this.add.graphics();
       sbg.fillStyle(C.bgPanel, 0.92);
       sbg.fillRoundedRect(scX, statsTop, scW, scH, 11);
-      sbg.lineStyle(1.5, s.color, isLight ? 0.45 : 0.28);
+      sbg.lineStyle(1.5, s.color, 0.28);
       sbg.strokeRoundedRect(scX, statsTop, scW, scH, 11);
 
       const icoT = txt(this, scCX, statsTop + 14, s.icon, 18).setOrigin(0.5);
@@ -796,16 +768,16 @@ class MenuScene extends Phaser.Scene {
     const refH = 44, refY = CH - refH - 6;
     const refW = W - 56, refX = 28;
     const refG = this.add.graphics();
-    refG.fillStyle(C.dark, isLight ? 1 : 0.85);
+    refG.fillStyle(C.dark, 0.85);
     refG.fillRoundedRect(refX, refY, refW, refH, 13);
-    refG.lineStyle(1.5, C.blue, isLight ? 0.5 : 0.35);
+    refG.lineStyle(1.5, C.blue, 0.35);
     refG.strokeRoundedRect(refX, refY, refW, refH, 13);
     const refT = txt(this, W / 2, refY + refH / 2, '🔄 Обновить данные', 14, '#7799cc', true).setOrigin(0.5);
     const refZ = this.add.zone(W / 2, refY + refH / 2, refW, refH).setInteractive({ useHandCursor: true });
     let _refBusy = false;
     refZ.on('pointerdown', () => { refG.clear(); refG.fillStyle(C.blue, 0.25); refG.fillRoundedRect(refX, refY, refW, refH, 13); tg?.HapticFeedback?.impactOccurred('light'); });
     refZ.on('pointerup',   () => { if (_refBusy) return; _refBusy = true; refT.setText('⏳'); this.time.delayedCall(400, () => this.scene.restart()); });
-    refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, isLight ? 1 : 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, isLight ? 0.5 : 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
+    refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
 
     /* ══ СБОРКА ═════════════════════════════════════════════ */
     const children = [
@@ -921,7 +893,7 @@ class MenuScene extends Phaser.Scene {
       const regenStr = p.regen_secs_to_full > 0
         ? `+${p.regen_per_min}/мин · полный через ${Math.ceil(p.regen_secs_to_full / 60)}мин`
         : `+${p.regen_per_min}/мин`;
-      hpBlockObjs.push(txt(this, 20, hpBlockY + 14, regenStr, 8, '#553333'));
+      hpBlockObjs.push(txt(this, 20, hpBlockY + 14, regenStr, 8, '#cc7777'));
     }
 
     if (p.hp_pct < 30) {
@@ -934,7 +906,7 @@ class MenuScene extends Phaser.Scene {
       const qLabel = canAfford
         ? `🧪 Выпить малое зелье  —  12 🪙`
         : `🧪 Нужно 12 🪙 (у вас ${p.gold || 0})`;
-      const qT = txt(this, W / 2, btnBY + 19, qLabel, 11, canAfford ? '#ffffff' : '#664444', true).setOrigin(0.5);
+      const qT = txt(this, W / 2, btnBY + 19, qLabel, 11, canAfford ? '#ffffff' : '#cc8888', true).setOrigin(0.5);
       const qZ = this.add.zone(20, btnBY, W - 40, 38).setOrigin(0)
         .setInteractive({ useHandCursor: canAfford });
       if (canAfford) {
@@ -1100,7 +1072,7 @@ class MenuScene extends Phaser.Scene {
     verBg.strokeRoundedRect(W / 2 - 90, verY - 14, 180, 28, 8);
     c.add(verBg);
     c.add(txt(this, W / 2, verY, `⚔️  Duel Arena  v${State.appVersion || '1.01'}`, 13, '#ffc83c', true).setOrigin(0.5));
-    c.add(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#555577').setOrigin(0.5));
+    c.add(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#9999bb').setOrigin(0.5));
 
     this._panels.more = c;
   }
@@ -1323,7 +1295,7 @@ class MenuScene extends Phaser.Scene {
         const balV = at(px+pw/2, balY+28, `$${usdtBal.toFixed(4)} USDT`, 14, '#3cc864', true);
         balObjs = [balBg, balL, balV];
       } else {
-        const noBalT = at(px+pw/2, balY+10, `Баланс: $0.00 — зарабатывай приглашая`, 11, '#5050aa');
+        const noBalT = at(px+pw/2, balY+10, `Баланс: $0.00 — зарабатывай приглашая`, 11, '#8888cc');
         balObjs = [noBalT];
       }
       statsObjs.push(...balObjs);
@@ -1416,15 +1388,15 @@ class MenuScene extends Phaser.Scene {
         cdg.fillStyle(0x1e2240, 1); cdg.fillRoundedRect(px+10,wdY,pw-20,38,10);
         cdg.lineStyle(1, 0x444488, 0.5); cdg.strokeRoundedRect(px+10,wdY,pw-20,38,10);
         const cdT = at(px+pw/2, wdY+13, `⏳ Следующий вывод через ${cooldownH}ч`, 12, '#6060aa');
-        const cdS = at(px+pw/2, wdY+29, 'Вывод доступен раз в сутки', 10, '#404070');
+        const cdS = at(px+pw/2, wdY+29, 'Вывод доступен раз в сутки', 10, '#8080aa');
         wdObjs = [cdg, cdT, cdS];
       } else {
         /* ── Ниже минимума — подсказка ── */
         const ng = this.add.graphics().setDepth(D);
         ng.fillStyle(0x1a1a30, 1); ng.fillRoundedRect(px+10,wdY,pw-20,38,10);
         ng.lineStyle(1, 0x333366, 0.5); ng.strokeRoundedRect(px+10,wdY,pw-20,38,10);
-        const nT = at(px+pw/2, wdY+13, `💰 Минимум $${withdrawMin} для вывода`, 12, '#5050aa');
-        const nS = at(px+pw/2, wdY+29, `У вас: $${usdtBal.toFixed(2)} USDT · зарабатывай больше`, 10, '#404070');
+        const nT = at(px+pw/2, wdY+13, `💰 Минимум $${withdrawMin} для вывода`, 12, '#8888cc');
+        const nS = at(px+pw/2, wdY+29, `У вас: $${usdtBal.toFixed(2)} USDT · зарабатывай больше`, 10, '#8080aa');
         wdObjs = [ng, nT, nS];
       }
       statsObjs.push(...wdObjs);
@@ -1677,7 +1649,7 @@ class MenuScene extends Phaser.Scene {
 
     // Авто-retry через 5 сек
     let countdown = 5;
-    const cntTxt = txt(this, W / 2, by + bh + 16, `Авто-повтор через ${countdown}с`, 10, '#555577').setOrigin(0.5);
+    const cntTxt = txt(this, W / 2, by + bh + 16, `Авто-повтор через ${countdown}с`, 10, '#9999bb').setOrigin(0.5);
     const timer = this.time.addEvent({
       delay: 1000, repeat: 4,
       callback: () => {
@@ -1810,7 +1782,7 @@ class BattleScene extends Phaser.Scene {
     t(cx + 14, cy + 11, typeStr, 10, typeCol, true);
 
     // ✕ кнопка
-    tR(cx + cw - 12, cy + 10, '✕', 16, '#666688');
+    tR(cx + cw - 12, cy + 10, '✕', 16, '#9999bb');
 
     // Имя
     const nameStr = (isPrem ? '👑 ' : '') + name;
@@ -2552,7 +2524,7 @@ class ResultScene extends Phaser.Scene {
       this._countUp(expTxt, r.exp || 0, '⭐ +', ' опыта', 450);
 
       // Раунды
-      txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#666688').setOrigin(0.5);
+      txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
 
       // ELO изменение
       if (r.rating_change && r.rating_change !== 0) {
@@ -2584,14 +2556,14 @@ class ResultScene extends Phaser.Scene {
       txt(this, W / 2, panY + 24, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
       txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
       txt(this, W / 2, panY + 76, 'Нажимай кнопки быстрее!', 11, '#8888aa').setOrigin(0.5);
-      txt(this, W / 2, panY + 102, `Раундов: ${r.rounds || 0}`, 11, '#555577').setOrigin(0.5);
+      txt(this, W / 2, panY + 102, `Раундов: ${r.rounds || 0}`, 11, '#9999bb').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 120, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
       }
     } else {
       txt(this, W / 2, panY + 22, '💪  Не сдавайся!', 15, '#8888aa', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 50, `Раундов: ${r.rounds || 0}`, 12, '#555577').setOrigin(0.5);
+      txt(this, W / 2, panY + 50, `Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 70, `★ ${eloSign}${r.rating_change} ELO`, 12, '#ff4455', true).setOrigin(0.5);
@@ -2617,7 +2589,7 @@ class ResultScene extends Phaser.Scene {
     /* ── Поделиться (только при победе) ── */
     if (won) {
       const shareY = H * 0.96;
-      const shareT = txt(this, W / 2, shareY, '📤 Поделиться победой', 11, '#555577').setOrigin(0.5);
+      const shareT = txt(this, W / 2, shareY, '📤 Поделиться победой', 11, '#9999bb').setOrigin(0.5);
       const shareZ = this.add.zone(W / 2, shareY, 200, 24).setInteractive({ useHandCursor: true });
       shareZ.on('pointerup', () => {
         const p = State.player;
@@ -2738,7 +2710,7 @@ class RatingScene extends Phaser.Scene {
     /* Шапка */
     makePanel(this, 8, 6, W - 16, 54, 11);
     txt(this, W / 2, 24, '⚔️  ELO Рейтинг', 18, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W / 2, 46, 'PvP · K=32 · стартовый 1000', 10, '#666688').setOrigin(0.5);
+    txt(this, W / 2, 46, 'PvP · K=32 · стартовый 1000', 10, '#9999bb').setOrigin(0.5);
 
     /* Кнопка назад */
     makeBackBtn(this, 'Назад', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
@@ -2773,15 +2745,15 @@ class RatingScene extends Phaser.Scene {
           rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9);
         }
 
-        txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#666688', true).setOrigin(0.5);
+        txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#9999bb', true).setOrigin(0.5);
         txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13,
           isMe ? '#5096ff' : '#f0f0fa', isMe);
-        txt(this, 52, ry + 27, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#555577');
+        txt(this, 52, ry + 27, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#9999bb');
         txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 14, '#ffc83c', true).setOrigin(1, 0.5);
       });
 
       if (players.length === 0) {
-        txt(this, W / 2, H / 2, '📭 Пока нет PvP-боёв', 14, '#555577').setOrigin(0.5);
+        txt(this, W / 2, H / 2, '📭 Пока нет PvP-боёв', 14, '#9999bb').setOrigin(0.5);
       }
 
       /* ── Моя позиция ── */

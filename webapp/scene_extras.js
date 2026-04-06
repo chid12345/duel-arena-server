@@ -28,7 +28,7 @@ function _extraBack(scene, W, H, dest = 'Menu') {
 function _extraHeader(scene, W, icon, title, sub) {
   makePanel(scene, 8, 8, W - 16, 64, 12);
   txt(scene, 20, 22, icon + '  ' + title, 16, '#ffc83c', true);
-  txt(scene, 20, 44, sub, 11, '#555577');
+  txt(scene, 20, 44, sub, 11, '#9999bb');
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -43,7 +43,7 @@ class QuestsScene extends Phaser.Scene {
     _extraBg(this, W, H);
     _extraHeader(this, W, '📅', 'ЗАДАНИЯ', 'Ежедневные и недельные квесты');
     _extraBack(this, W, H);
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     this._loadQuests(W, H);
   }
 
@@ -98,7 +98,7 @@ class QuestsScene extends Phaser.Scene {
     // Иконка + заголовок
     txt(this, 20, y + 12, '🎁', 22);
     txt(this, 52, y + 12, 'Ежедневный бонус', 13, canClaim ? '#3cc864' : '#8888aa', true);
-    txt(this, 52, y + 32, `Серия: ${streak} ${streak >= 7 ? '🔥' : '📅'} дней`, 12, '#555577');
+    txt(this, 52, y + 32, `Серия: ${streak} ${streak >= 7 ? '🔥' : '📅'} дней`, 12, '#9999bb');
 
     // Прогресс серии (7 дней)
     const dotW = (W - 80) / 7;
@@ -114,7 +114,7 @@ class QuestsScene extends Phaser.Scene {
       }
       const dayN = i + 1;
       txt(this, dx + (dotW-4)/2, y + 66, String(dayN), 9,
-        done ? '#ffc83c' : '#333355').setOrigin(0.5);
+        done ? '#ffc83c' : '#7777aa').setOrigin(0.5);
     }
 
     // Кнопка забрать
@@ -145,7 +145,7 @@ class QuestsScene extends Phaser.Scene {
     const done     = q.is_completed   || false;
 
     /* Блок заголовка */
-    txt(this, 16, y, 'КВЕСТ ДНЯ', 11, '#555577', true);
+    txt(this, 16, y, 'КВЕСТ ДНЯ', 11, '#9999bb', true);
     y += 20;
 
     /* Карточки заданий */
@@ -179,7 +179,7 @@ class QuestsScene extends Phaser.Scene {
       txt(this, tx + 44, ty2 + 14, task.label, 13,
         task.done ? '#3cc864' : '#c0c0e0', task.done);
       txt(this, tx + 44, ty2 + 34, `${Math.min(task.cur, task.max)} / ${task.max}`,
-        11, task.done ? task.color : '#555577', true);
+        11, task.done ? task.color : '#9999bb', true);
 
       // Прогресс-бар
       makeBar(this, tx + 44, ty2 + 52, tw - 110, 6,
@@ -215,7 +215,7 @@ class QuestsScene extends Phaser.Scene {
         .on('pointerup',  () => this._claimQuest(clBg, clT))
         .on('pointerout', () => { clBg.clear(); clBg.fillStyle(C.gold,1); clBg.fillRoundedRect(20,btnY2,W-40,44,12); clBg.fillStyle(0xffffff,0.12); clBg.fillRoundedRect(22,btnY2+2,W-44,20,9); });
     } else {
-      txt(this, W/2, btnY2 + 16, '⚔️ Выполни задания чтобы забрать награду', 12, '#555577').setOrigin(0.5);
+      txt(this, W/2, btnY2 + 16, '⚔️ Выполни задания чтобы забрать награду', 12, '#9999bb').setOrigin(0.5);
     }
 
     /* Сброс квеста */
@@ -300,7 +300,7 @@ class QuestsScene extends Phaser.Scene {
           }
         });
     } else {
-      txt(this, W - 20, y + 31, '📌 Выполняй PvP и Башню', 10, '#667799').setOrigin(1, 0.5);
+      txt(this, W - 20, y + 31, '📌 Выполняй PvP и Башню', 10, '#99aabb').setOrigin(1, 0.5);
     }
   }
 }
@@ -352,7 +352,7 @@ class SummaryScene extends Phaser.Scene {
     y += Math.ceil(statCards.length / 2) * (ch + 8) + 12;
 
     /* ── Характеристики персонажа ── */
-    scroll.add(txt(this, 16, y, 'ХАРАКТЕРИСТИКИ', 11, '#555577', true));
+    scroll.add(txt(this, 16, y, 'ХАРАКТЕРИСТИКИ', 11, '#9999bb', true));
     y += 20;
     const attrs = [
       { n: 'STR', v: p.strength   || 0, color: C.red    },
@@ -417,7 +417,7 @@ class SeasonScene extends Phaser.Scene {
     _extraHeader(this, W, '⭐', 'СЕЗОН', 'Таблица лидеров');
     _extraBack(this, W, H);
 
-    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
+    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/season').then(d => this._render(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
@@ -427,7 +427,7 @@ class SeasonScene extends Phaser.Scene {
     this._loading?.destroy();
     if (!data.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
     if (!data.season) {
-      txt(this, W/2, H/2, '😴 Активного сезона нет', 13, '#555577').setOrigin(0.5);
+      txt(this, W/2, H/2, '😴 Активного сезона нет', 13, '#9999bb').setOrigin(0.5);
       return;
     }
 
@@ -450,7 +450,7 @@ class SeasonScene extends Phaser.Scene {
 
     /* ── Список лидеров ── */
     const listY = 155;
-    txt(this, 16, listY - 18, 'ТОП ИГРОКОВ', 12, '#555577', true);
+    txt(this, 16, listY - 18, 'ТОП ИГРОКОВ', 12, '#9999bb', true);
     const rowH = 38, maxShow = Math.floor((H - listY - 80) / rowH);
     lb.slice(0, maxShow).forEach((row, i) => {
       const ry    = listY + i * rowH;
@@ -464,12 +464,12 @@ class SeasonScene extends Phaser.Scene {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
       txt(this, 18,      ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
       txt(this, 52,      ry + 8,  row.username || `User${row.user_id}`, 12, isMy ? '#5096ff' : '#c0c0e0', isMy);
-      txt(this, 52,      ry + 24, `🏆 ${row.season_wins||0}W  ⭐ ${row.season_rating||0}`, 11, '#555577');
+      txt(this, 52,      ry + 24, `🏆 ${row.season_wins||0}W  ⭐ ${row.season_rating||0}`, 11, '#9999bb');
       txt(this, W - 16,  ry + 17, `${row.season_rating||0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
     });
 
     if (lb.length === 0) {
-      txt(this, W/2, H/2, '📭 Нет данных', 13, '#555577').setOrigin(0.5);
+      txt(this, W/2, H/2, '📭 Нет данных', 13, '#9999bb').setOrigin(0.5);
     }
   }
 }
@@ -486,7 +486,7 @@ class TitanTopScene extends Phaser.Scene {
     _extraBg(this, W, H);
     _extraHeader(this, W, '🗿', 'ТОП БАШНИ', 'Недельный рейтинг Башни титанов');
     _extraBack(this, W, H);
-    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
+    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/titans/top').then(d => this._render(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
@@ -507,7 +507,7 @@ class TitanTopScene extends Phaser.Scene {
     txt(this, 16, 145, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#666688');
 
     const listY = 172;
-    txt(this, 16, listY - 18, 'ЛИДЕРЫ', 12, '#555577', true);
+    txt(this, 16, listY - 18, 'ЛИДЕРЫ', 12, '#9999bb', true);
     const rowH = 40;
     const maxShow = Math.max(1, Math.floor((H - listY - 80) / rowH));
 
@@ -524,7 +524,7 @@ class TitanTopScene extends Phaser.Scene {
     });
 
     if (!lb.length) {
-      txt(this, W / 2, H / 2 + 20, '😴 Пока никто не прошёл Башню', 13, '#555577').setOrigin(0.5);
+      txt(this, W / 2, H / 2 + 20, '😴 Пока никто не прошёл Башню', 13, '#9999bb').setOrigin(0.5);
     }
   }
 }
@@ -542,7 +542,7 @@ class BattlePassScene extends Phaser.Scene {
   _extraHeader(this, W, '🌟', 'БОЕВОЙ ПРОПУСК', 'Ежесезонные награды');
     _extraBack(this, W, H);
     this._claimBtns = {};
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/battlepass').then(d => this._render(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
@@ -581,7 +581,7 @@ class BattlePassScene extends Phaser.Scene {
       const numBg = this.add.graphics();
       numBg.fillStyle(gotIt ? C.gold : done ? C.green : C.dark, 1);
       numBg.fillCircle(28, ry + (rowH-6)/2, 16);
-      txt(this, 28, ry + (rowH-6)/2, String(tier.tier), 13, gotIt||done ? '#1a1a28' : '#444466', true).setOrigin(0.5);
+      txt(this, 28, ry + (rowH-6)/2, String(tier.tier), 13, gotIt||done ? '#1a1a28' : '#8888aa', true).setOrigin(0.5);
 
       /* Условие */
       const condColor = done ? '#3cc864' : '#8888aa';
@@ -657,7 +657,7 @@ class ClanScene extends Phaser.Scene {
       _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
       _extraBack(this, W, H);
     }
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
@@ -667,7 +667,7 @@ class ClanScene extends Phaser.Scene {
     this._loading?.destroy();
     if (!data.ok) {
       txt(this, W/2, H/2 - 10, '❌ Ошибка загрузки', 14, '#dc3c46').setOrigin(0.5);
-      txt(this, W/2, H/2 + 14, data.reason || 'Попробуйте позже', 11, '#555577').setOrigin(0.5);
+      txt(this, W/2, H/2 + 14, data.reason || 'Попробуйте позже', 11, '#9999bb').setOrigin(0.5);
       return;
     }
     try {
@@ -690,7 +690,7 @@ class ClanScene extends Phaser.Scene {
   _renderNoClan(W, H) {
     txt(this, W/2, 90, '🏰', 34).setOrigin(0.5);
     txt(this, W/2, 128, 'Вы не состоите в клане', 15, '#a0a0cc').setOrigin(0.5);
-    txt(this, W/2, 150, 'Вступайте и участвуйте в клановых войнах!', 12, '#6060aa').setOrigin(0.5);
+    txt(this, W/2, 150, 'Вступайте и участвуйте в клановых войнах!', 12, '#9090cc').setOrigin(0.5);
 
     const btns = [
       { label: '🔍  Найти клан',   col: C.blue,   sub: 'search' },
@@ -710,7 +710,7 @@ class ClanScene extends Phaser.Scene {
         .on('pointerout',  () => { bg.clear(); bg.fillStyle(b.col,b.col===C.dark?0.7:0.9); bg.fillRoundedRect(16,by,W-32,bh,12); if(b.border){bg.lineStyle(1.5,b.border,0.5);bg.strokeRoundedRect(16,by,W-32,bh,12);} })
         .on('pointerup',   () => this.scene.restart({ sub: b.sub }));
     });
-    txt(this, W/2, 176 + 3*58 + 8, 'Создание клана стоит 200 🪙', 12, '#6060aa').setOrigin(0.5);
+    txt(this, W/2, 176 + 3*58 + 8, 'Создание клана стоит 200 🪙', 12, '#9090cc').setOrigin(0.5);
   }
 
   /* ══ МОЙ КЛАН ═══════════════════════════════════════════ */
@@ -775,7 +775,7 @@ class ClanScene extends Phaser.Scene {
     });
 
     if (members.length > maxShow) {
-      txt(this, W/2, y + maxShow*rowH + 6, `+ ещё ${members.length - maxShow} участников`, 12, '#5050aa').setOrigin(0.5);
+      txt(this, W/2, y + maxShow*rowH + 6, `+ ещё ${members.length - maxShow} участников`, 12, '#8888cc').setOrigin(0.5);
     }
 
     /* ── Кнопки внизу ───────────────────────────────────── */
@@ -804,7 +804,7 @@ class ClanScene extends Phaser.Scene {
         .on('pointerout',  () => { bg2.clear(); bg2.fillStyle(0x4a1010,1); bg2.fillRoundedRect(lx,btnZone,lw,42,10); bg2.lineStyle(1.5,C.red,0.7); bg2.strokeRoundedRect(lx,btnZone,lw,42,10); })
         .on('pointerup',   () => this._leaveClan());
     } else {
-      txt(this, W/2, H-50, '👑 Лидер не может покинуть клан — передайте роль', 12, '#5050aa').setOrigin(0.5);
+      txt(this, W/2, H-50, '👑 Лидер не может покинуть клан — передайте роль', 12, '#8888cc').setOrigin(0.5);
     }
   }
 
@@ -883,7 +883,7 @@ class ClanScene extends Phaser.Scene {
     this._chatLoad = (aY, aH, cW) => {
       this._msgObjs.forEach(o => { try { o.destroy(); } catch(_){} });
       this._msgObjs = [];
-      const spin = txt(this, cW/2, aY+aH/2, '⏳ Загрузка...', 12, '#6060aa').setOrigin(0.5);
+      const spin = txt(this, cW/2, aY+aH/2, '⏳ Загрузка...', 12, '#9090cc').setOrigin(0.5);
       this._msgObjs.push(spin);
 
       get('/api/clan/chat').then(d => {
@@ -892,7 +892,7 @@ class ClanScene extends Phaser.Scene {
         const msgs = d.messages || [];
 
         if (!msgs.length) {
-          const e = txt(this, cW/2, aY+aH/2, '💬 Напишите первым!', 12, '#5050aa').setOrigin(0.5);
+          const e = txt(this, cW/2, aY+aH/2, '💬 Напишите первым!', 12, '#8888cc').setOrigin(0.5);
           this._msgObjs.push(e); return;
         }
 
@@ -907,7 +907,7 @@ class ClanScene extends Phaser.Scene {
           const nc = isMe ? '#7ab4ff' : '#ffc83c';
           const t1 = txt(this, 20, my+10, isMe ? 'Вы' : (m.username||'Игрок'), 12, nc, true);
           const t2 = txt(this, 20, my+24, m.message, 12, '#e8e8ff');
-          const t3 = txt(this, cW-14, my+10, m.time_str||'', 11, '#5050aa').setOrigin(1, 0);
+          const t3 = txt(this, cW-14, my+10, m.time_str||'', 11, '#8888cc').setOrigin(1, 0);
           this._msgObjs.push(bg, t1, t2, t3);
         });
       }).catch(() => { spin.setText('❌ Нет соединения'); });
@@ -988,7 +988,7 @@ class ClanScene extends Phaser.Scene {
     this._resultsContainer?.removeAll(true);
     const y0 = this._resultsY || 198;
     if (!clans.length) {
-      this._resultsContainer.add(txt(this, W/2, y0+20, '😔 Ничего не найдено', 12, '#555577').setOrigin(0.5));
+      this._resultsContainer.add(txt(this, W/2, y0+20, '😔 Ничего не найдено', 12, '#9999bb').setOrigin(0.5));
       return;
     }
     clans.forEach((c, i) => {
@@ -1003,7 +1003,7 @@ class ClanScene extends Phaser.Scene {
         bg,
         txt(this, 18, ry+8,  `[${c.tag}]`, 12, '#ffc83c', true),
         txt(this, 18, ry+26, (s => s.length > 20 ? s.slice(0,20)+'…' : s)(c.name||''), 11, '#c0c0e0'),
-        txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 11, '#555577'),
+        txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 11, '#9999bb'),
         txt(this, W-82, ry+26, `🏆 ${c.wins}`, 11, '#ffc83c'),
         joinG, joinT,
         this.add.zone(W-74, ry+8, 60, 28).setOrigin(0).setInteractive({ useHandCursor: true })
@@ -1022,11 +1022,11 @@ class ClanScene extends Phaser.Scene {
     /* Поле: название */
     makePanel(this, 8, 122, W-16, 148, 12);
     txt(this, 20, 132, 'Название клана', 12, '#a0a0cc', true);
-    txt(this, 20, 148, '3–20 символов, например: Железный Кулак', 12, '#6060aa');
+    txt(this, 20, 148, '3–20 символов, например: Железный Кулак', 12, '#9090cc');
     this._nameEl = this._makeInput(W, 162, W-32, 38, 'Железный Кулак', 20);
 
     txt(this, 20, 210, 'Тег клана', 12, '#a0a0cc', true);
-    txt(this, 20, 226, '2–4 символа, например: ЖК', 12, '#6060aa');
+    txt(this, 20, 226, '2–4 символа, например: ЖК', 12, '#9090cc');
     this._tagEl  = this._makeInput(W, 238, (W-32)/2, 38, 'ЖК', 4);
 
     const btnY = 284;
@@ -1039,7 +1039,7 @@ class ClanScene extends Phaser.Scene {
       .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,btnY,W-32,48,12); })
       .on('pointerup',   () => this._doCreate(btnT));
 
-    txt(this, W/2, btnY+60, 'Имя и тег должны быть уникальны', 11, '#5050aa').setOrigin(0.5);
+    txt(this, W/2, btnY+60, 'Имя и тег должны быть уникальны', 11, '#8888cc').setOrigin(0.5);
   }
 
   /* ══ ТОП КЛАНОВ ══════════════════════════════════════════ */
@@ -1273,9 +1273,9 @@ class ShopScene extends Phaser.Scene {
       isTopup ? 15 : 13, isTopup ? '#3cc8dc' : '#3cc8dc', true);
 
     if (isTopup) {
-      txt(this, W - 14, by + 11, 'Ваши алмазы', 11, '#555577').setOrigin(1, 0);
+      txt(this, W - 14, by + 11, 'Ваши алмазы', 11, '#9999bb').setOrigin(1, 0);
     } else {
-      txt(this, W / 2 - 8, by + 11, '|', 13, '#333355').setOrigin(1, 0);
+      txt(this, W / 2 - 8, by + 11, '|', 13, '#7777aa').setOrigin(1, 0);
     }
   }
 
@@ -1330,7 +1330,7 @@ class ShopScene extends Phaser.Scene {
     /* ═══ TELEGRAM STARS ═══════════════════════════════════ */
     makePanel(this, 8, y, W-16, 22, 8, 0.6);
     txt(this, 20, y+5, '⭐  TELEGRAM STARS', 12, '#ffc83c', true);
-    txt(this, W-12, y+5, 'мгновенно', 11, '#555577').setOrigin(1, 0);
+    txt(this, W-12, y+5, 'мгновенно', 11, '#9999bb').setOrigin(1, 0);
     y += 30;
 
     // Обычные пакеты (d100, d300, d500)
@@ -1354,14 +1354,14 @@ class ShopScene extends Phaser.Scene {
     makePanel(this, 8, y, W-16, 22, 8, 0.6);
     txt(this, 20, y+5, '💎  CRYPTOPAY', 12, '#3cc8dc', true);
     txt(this, W-12, y+5, cryptoOn ? 'TON · USDT' : 'не настроен', 11,
-      cryptoOn ? '#555577' : '#553333').setOrigin(1, 0);
+      cryptoOn ? '#9999bb' : '#cc8888').setOrigin(1, 0);
     y += 30;
 
     if (!cryptoOn) {
       const cg = this.add.graphics();
       cg.fillStyle(C.bgPanel, 0.6); cg.fillRoundedRect(8, y, W-16, 56, 10);
-      txt(this, W/2, y+18, '⚙️ CryptoPay не подключён', 11, '#555577').setOrigin(0.5);
-      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 11, '#333355').setOrigin(0.5);
+      txt(this, W/2, y+18, '⚙️ CryptoPay не подключён', 11, '#9999bb').setOrigin(0.5);
+      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 11, '#7777aa').setOrigin(0.5);
       return;
     }
 
@@ -1410,7 +1410,7 @@ class ShopScene extends Phaser.Scene {
 
     y += 4;
     // Подсказка про подтверждение
-    txt(this, W/2, y+4, '💡 После оплаты алмазы придут автоматически', 11, '#555577').setOrigin(0.5);
+    txt(this, W/2, y+4, '💡 После оплаты алмазы придут автоматически', 11, '#9999bb').setOrigin(0.5);
 
     // Кнопка "Проверить оплату" — если есть pending инвойс в localStorage
     const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
@@ -1549,7 +1549,7 @@ class ShopScene extends Phaser.Scene {
     } else {
       txt(this, ix + iw / 2, iy + 48, `Оплата: ${price} USDT`, 11, '#3ce8ff', true).setOrigin(0.5);
     }
-    txt(this, ix + iw / 2, iy + 66, 'После оплаты — /start или обновите приложение', 9, '#665555').setOrigin(0.5);
+    txt(this, ix + iw / 2, iy + 66, 'После оплаты — /start или обновите приложение', 9, '#aa9999').setOrigin(0.5);
 
     if (canPay) {
       this.add.zone(ix, iy, iw, ih).setOrigin(0).setInteractive({ useHandCursor: true })
@@ -1725,11 +1725,11 @@ class ShopScene extends Phaser.Scene {
 
     /* Цена или "Скоро" */
     if (item.soon) {
-      txt(this, ix + iw / 2, iy + 82, '🚧 Скоро', 11, '#333355').setOrigin(0.5);
+      txt(this, ix + iw / 2, iy + 82, '🚧 Скоро', 11, '#7777aa').setOrigin(0.5);
     } else {
       const pIcon  = item.currency === 'diamonds' ? '💎' : '🪙';
       const pColor = item.currency === 'diamonds' ? '#3cc8dc' : '#ffc83c';
-      const dimCol = canBuy ? pColor : '#553333';
+      const dimCol = canBuy ? pColor : '#cc8888';
       txt(this, ix + iw / 2, iy + 82, `${pIcon} ${item.price}`, 12, dimCol, true).setOrigin(0.5);
     }
 

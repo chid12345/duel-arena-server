@@ -68,7 +68,7 @@ class StatsScene extends Phaser.Scene {
     }
     const label = txt(this, bx - 39, 34,
       active ? `⚡ ${count} свободн.` : '✅ все вложены',
-      10, active ? '#f0f0fa' : '#555577', active
+      10, active ? '#f0f0fa' : '#9999bb', active
     ).setOrigin(0.5);
 
     if (active) {
@@ -174,7 +174,7 @@ class StatsScene extends Phaser.Scene {
     /* Эффект + описание (правая часть, перед кнопкой) */
     const midRight = x + w - 62;
     const effectTxt = txt(this, midRight, y + 14, s.effectFn(p), 13, hex, true).setOrigin(1, 0.5);
-    txt(this, midRight, y + 30, s.desc, 9, '#666688').setOrigin(1, 0);
+    txt(this, midRight, y + 30, s.desc, 9, '#9999bb').setOrigin(1, 0);
 
     /* Кнопка +1 */
     const btnW = 48;
@@ -186,7 +186,7 @@ class StatsScene extends Phaser.Scene {
 
     const btnTxt = txt(this, btnX + btnW / 2, btnY + btnH / 2,
       hasStats ? '+1' : '—', 16,
-      hasStats ? '#ffffff' : '#444466', true
+      hasStats ? '#ffffff' : '#8888aa', true
     ).setOrigin(0.5);
 
     /* Интерактив */
@@ -239,7 +239,7 @@ class StatsScene extends Phaser.Scene {
 
     makePanel(this, 8, py, W - 16, ph, 12);
 
-    txt(this, W / 2, py + 10, 'БОЕВЫЕ ПОКАЗАТЕЛИ', 11, '#666688', true).setOrigin(0.5);
+    txt(this, W / 2, py + 10, 'БОЕВЫЕ ПОКАЗАТЕЛИ', 11, '#9999bb', true).setOrigin(0.5);
 
     const divider = this.add.graphics();
     divider.lineStyle(1, C.gold, 0.12);
@@ -263,7 +263,7 @@ class StatsScene extends Phaser.Scene {
 
     txt(this, W / 2, py + ph - 12,
       'относительно среднего противника вашего уровня',
-      9, '#555577').setOrigin(0.5);
+      9, '#9999bb').setOrigin(0.5);
 
     // Блок пассивных способностей — компактный, перед кнопкой
     const passY = py + ph + 6;
@@ -365,7 +365,7 @@ class StatsScene extends Phaser.Scene {
     Object.values(this._statRows).forEach(row => {
       row.zone.disableInteractive();
       this._drawPlusBtn(row.btn, row.btnX, row.btnY, row.btnW, row.btnH, row.s.color, false, false);
-      row.btnTxt.setText('—').setStyle({ color: '#444466' });
+      row.btnTxt.setText('—').setStyle({ color: '#8888aa' });
     });
   }
 
