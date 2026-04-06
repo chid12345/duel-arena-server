@@ -45,18 +45,30 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # Если WEBAPP_PUBLIC_URL не задан — подставляем типичные URL хостингов (чтобы кнопка не пропадала после деплоя).
 def _webapp_public_url() -> str:
     u = (os.getenv("WEBAPP_PUBLIC_URL") or "").strip().rstrip("/")
-    if u:
-        return u
-    render = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
-    if render:
-        return render
-    fly = (os.getenv("FLY_APP_NAME") or "").strip()
-    if fly:
-        return f"https://{fly}.fly.dev"
-    rwy = (os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip().rstrip("/")
-    if rwy:
-        return rwy if rwy.startswith("http") else f"https://{rwy}"
-    return ""
+    if not u:
+        render = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
+        if render:
+            u = render
+        else:
+            fly = (os.getenv("FLY_APP_NAME") or "").strip()
+            if fly:
+                u = f"https://{fly}.fly.dev"
+            else:
+                rwy = (os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip().rstrip("/")
+                if rwy:
+                    u = rwy if rwy.startswith("http") else f"https://{rwy}"
+    if not u:
+        return ""
+    # Anti-cache for Telegram WebView: use versioned Mini App URL.
+    # By default on Render this changes each deploy via RENDER_GIT_COMMIT.
+    web_ver = (
+        (os.getenv("WEBAPP_URL_VERSION") or "").strip()
+        or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
+    )
+    if web_ver:
+        sep = "&" if "?" in u else "?"
+        u = f"{u}{sep}v={web_ver}"
+    return u
 
 
 WEBAPP_PUBLIC_URL = _webapp_public_url()
