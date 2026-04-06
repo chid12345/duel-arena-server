@@ -1329,51 +1329,112 @@ class BattleSystem:
     async def _end_battle(
         self, battle_id: str, winner_id: int, exchange_text: Optional[str] = None
     ) -> Dict:
-        """Завершить бой"""
+        """Завершить бой.
+        Все DB-читалки — параллельно через run_in_executor.
+        Все DB-записи — фоновой задачей после возврата результата.
+        """
+        import asyncio
+        loop = asyncio.get_event_loop()
+
         battle = self.active_battles[battle_id]
         self.cancel_turn_timer(battle)
         battle['battle_active'] = False
         duration_ms = int((datetime.now() - battle['started_at']).total_seconds() * 1000)
-        
+
         player1 = battle['player1']
         player2 = battle['player2']
-        
-        # Победа игрока 1 только если winner_id — его Telegram id (не bot_id бота)
-        is_winner_p1 = winner_id == player1['user_id']
-        winner = player1 if is_winner_p1 else player2
-        loser = player2 if is_winner_p1 else player1
-        winner_user_id = winner.get('user_id')
-        loser_user_id = loser.get('user_id')
-        is_test = battle.get('is_test_battle', False)
-        battle_mode = battle.get("mode", "normal")
-        mode_meta = dict(battle.get("mode_meta") or {})
-        battle_mode = battle.get("mode", "normal")
-        mode_meta = dict(battle.get("mode_meta") or {})
-        # Защита от «отката» после платного сброса:
-        # берём актуальные профили из БД, а не только снимок боя на момент старта.
-        winner_live = dict(winner)
-        loser_live = dict(loser)
-        if not is_test:
-            if winner_user_id is not None:
-                winner_live = db.get_or_create_player(winner_user_id, winner.get("username") or "")
-            if loser_user_id is not None:
-                loser_live = db.get_or_create_player(loser_user_id, loser.get("username") or "")
-        winner_locked = self._is_profile_reset_locked(winner_user_id) or self._is_stale_after_profile_reset(winner_live, battle["started_at"])
-        loser_locked = self._is_profile_reset_locked(loser_user_id) or self._is_stale_after_profile_reset(loser_live, battle["started_at"])
 
-        # Урон за бой (для XP-формулы)
+        is_winner_p1   = winner_id == player1['user_id']
+        winner         = player1 if is_winner_p1 else player2
+        loser          = player2 if is_winner_p1 else player1
+        winner_user_id = winner.get('user_id')
+        loser_user_id  = loser.get('user_id')
+        is_test        = battle.get('is_test_battle', False)
+        battle_mode    = battle.get("mode", "normal")
+        mode_meta      = dict(battle.get("mode_meta") or {})
+
+        winner_live   = dict(winner)
+        loser_live    = dict(loser)
+        xp_boosted    = False
+        prem_w_active = False
+        prem_l_active = False
+        pvp_repeat_factor = 1.0
+
+        if not is_test:
+            # ── Параллельные DB-читалки ──────────────────────────────────
+            # Оцениваем base_exp по снэпшоту (для consume_xp_boost_charge)
+            p1_dmg_snap, p2_dmg_snap = self._battle_damage_totals(battle)
+            w_dmg_snap   = p1_dmg_snap if is_winner_p1 else p2_dmg_snap
+            snap_level   = int(winner.get('level', PLAYER_START_LEVEL))
+            snap_opp_hp  = max(1, int(loser.get('max_hp', PLAYER_START_MAX_HP)))
+            snap_dmg_r   = min(1.0, max(0.4, w_dmg_snap / snap_opp_hp))
+            snap_base_exp = max(1, int(victory_xp_for_player_level(snap_level) * snap_dmg_r))
+
+            futs: dict = {}
+            if winner_user_id is not None:
+                futs['winner'] = loop.run_in_executor(
+                    None, db.get_or_create_player,
+                    winner_user_id, winner.get("username") or ""
+                )
+            if loser_user_id is not None:
+                futs['loser'] = loop.run_in_executor(
+                    None, db.get_or_create_player,
+                    loser_user_id, loser.get("username") or ""
+                )
+            if winner_user_id is not None:
+                futs['prem_w'] = loop.run_in_executor(
+                    None, db.get_premium_status, winner_user_id
+                )
+            if loser_user_id is not None and not battle.get("is_bot2"):
+                futs['prem_l'] = loop.run_in_executor(
+                    None, db.get_premium_status, loser_user_id
+                )
+            if winner_user_id is not None and snap_base_exp > 0:
+                futs['xp_boost'] = loop.run_in_executor(
+                    None, db.consume_xp_boost_charge, winner_user_id
+                )
+            if not battle.get("is_bot2"):
+                futs['pvp_cnt'] = loop.run_in_executor(
+                    None, db.get_recent_pvp_duel_count,
+                    player1["user_id"], player2["user_id"], 24
+                )
+
+            if futs:
+                vals = await asyncio.gather(*futs.values(), return_exceptions=True)
+                done = dict(zip(futs.keys(), vals))
+                if 'winner' in done and not isinstance(done['winner'], Exception):
+                    winner_live = done['winner']
+                if 'loser' in done and not isinstance(done['loser'], Exception):
+                    loser_live = done['loser']
+                if 'prem_w' in done and not isinstance(done['prem_w'], Exception):
+                    prem_w_active = bool(done['prem_w'].get("is_active"))
+                if 'prem_l' in done and not isinstance(done['prem_l'], Exception):
+                    prem_l_active = bool(done['prem_l'].get("is_active"))
+                if 'xp_boost' in done and not isinstance(done['xp_boost'], Exception):
+                    xp_boosted = bool(done['xp_boost'])
+                if 'pvp_cnt' in done and not isinstance(done['pvp_cnt'], Exception):
+                    cnt = done['pvp_cnt']
+                    if cnt >= 6:   pvp_repeat_factor = 0.2
+                    elif cnt >= 3: pvp_repeat_factor = 0.5
+
+        winner_locked = (
+            self._is_profile_reset_locked(winner_user_id)
+            or self._is_stale_after_profile_reset(winner_live, battle["started_at"])
+        )
+        loser_locked = (
+            self._is_profile_reset_locked(loser_user_id)
+            or self._is_stale_after_profile_reset(loser_live, battle["started_at"])
+        )
+
+        # ── Урон за бой ──────────────────────────────────────────────
         p1_total_dmg, p2_total_dmg = self._battle_damage_totals(battle)
-        winner_dmg = p1_total_dmg if is_winner_p1 else p2_total_dmg
-        loser_dmg  = p2_total_dmg if is_winner_p1 else p1_total_dmg
+        winner_dmg  = p1_total_dmg if is_winner_p1 else p2_total_dmg
+        loser_dmg   = p2_total_dmg if is_winner_p1 else p1_total_dmg
         opp_max_hp  = max(1, int(loser.get('max_hp', PLAYER_START_MAX_HP)))
         your_max_hp = max(1, int(winner.get('max_hp', PLAYER_START_MAX_HP)))
 
-        # Рассчитываем награды (в тестовом бою не начисляются)
-        gold_reward = 0 if is_test else (VICTORY_GOLD if not battle['is_bot2'] else int(VICTORY_GOLD * 0.8))
-
-        # XP победителя: base × level_mult × dmg_ratio
-        # level_diff > 0 → победитель выше уровнем (лёгкая победа) → меньше XP
-        # level_diff < 0 → победитель ниже уровнем (тяжёлая победа) → больше XP
+        # ── Награды ──────────────────────────────────────────────────
+        gold_reward  = 0 if is_test else (VICTORY_GOLD if not battle['is_bot2'] else int(VICTORY_GOLD * 0.8))
         winner_level = int(winner_live.get('level', PLAYER_START_LEVEL))
         loser_level  = int(loser_live.get('level', PLAYER_START_LEVEL))
         level_diff   = winner_level - loser_level
@@ -1383,50 +1444,34 @@ class BattleSystem:
             1, int(victory_xp_for_player_level(winner_level) * level_mult * dmg_ratio)
         )
 
-        # XP проигравшего: 10% от гипотетического XP за победу (если бы он выиграл с тем же уроном по max_hp победителя)
         loser_if_won_diff = loser_level - winner_level
         loser_if_won_mult = max(0.3, 1.0 - loser_if_won_diff * 0.15)
-        loser_if_won_dmg = min(1.0, max(0.4, loser_dmg / your_max_hp))
+        loser_if_won_dmg  = min(1.0, max(0.4, loser_dmg / your_max_hp))
         hypothetical_loser_win = 0 if is_test else int(
             victory_xp_for_player_level(loser_level) * loser_if_won_mult * loser_if_won_dmg
         )
         loser_exp = 0 if is_test else int(hypothetical_loser_win * DEFEAT_XP_AS_WIN_FRACTION)
 
-        # XP-буст из магазина (+50% если есть заряды)
-        xp_boosted = False
-        if not is_test and winner_user_id is not None and base_exp > 0:
-            xp_boosted = db.consume_xp_boost_charge(winner_user_id)
         exp_reward = int(base_exp * 1.5) if xp_boosted else base_exp
-        if not is_test and winner_user_id is not None and exp_reward > 0:
-            prem = db.get_premium_status(winner_user_id)
-            if prem.get("is_active"):
-                exp_reward = max(1, int(round(exp_reward * PREMIUM_XP_MULTIPLIER)))
-        if not is_test and loser_user_id is not None and loser_exp > 0:
-            prem_l = db.get_premium_status(loser_user_id)
-            if prem_l.get("is_active"):
-                loser_exp = max(0, int(round(loser_exp * PREMIUM_XP_MULTIPLIER)))
-        # Победа над живым игроком: +30% золота и опыта.
-        pvp_repeat_factor = 1.0
+        if not is_test and prem_w_active and exp_reward > 0:
+            exp_reward = max(1, int(round(exp_reward * PREMIUM_XP_MULTIPLIER)))
+        if not is_test and prem_l_active and loser_exp > 0:
+            loser_exp = max(0, int(round(loser_exp * PREMIUM_XP_MULTIPLIER)))
+
         if not is_test and not battle.get("is_bot2"):
-            duel_count_24h = db.get_recent_pvp_duel_count(player1["user_id"], player2["user_id"], hours=24)
-            if duel_count_24h >= 6:
-                pvp_repeat_factor = 0.2
-            elif duel_count_24h >= 3:
-                pvp_repeat_factor = 0.5
             gold_reward = int(round(gold_reward * 1.30 * pvp_repeat_factor))
-            exp_reward = int(round(exp_reward * 1.30 * pvp_repeat_factor))
+            exp_reward  = int(round(exp_reward  * 1.30 * pvp_repeat_factor))
         if battle_mode == "titan":
             floor = max(1, int(mode_meta.get("floor", 1)))
             gold_reward = 0 if is_test else int(12 + floor * 5)
-            exp_reward = 0 if is_test else max(1, int(round(base_exp * (1.0 + min(1.0, floor * 0.06)))))
+            exp_reward  = 0 if is_test else max(1, int(round(base_exp * (1.0 + min(1.0, floor * 0.06)))))
+
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
-
         streak_bonus_gold = 0
-        new_win_streak = 0
-        did_level = False
-        level_up_level = None
+        new_win_streak    = 0
+        did_level         = False
+        level_up_level    = None
 
-        # Обновляем статистику победителя
         winner_stats = None
         if not is_test and winner_user_id is not None and not winner_locked:
             new_win_streak = winner_live.get('win_streak', 0) + 1
@@ -1440,23 +1485,23 @@ class BattleSystem:
             if did_level:
                 level_up_level = exp_patch['level']
             winner_stats = {
-                'wins': winner_live.get('wins', 0) + 1,
-                'gold': exp_patch['gold'],
-                'exp': exp_patch['exp'],
-                'level': exp_patch['level'],
-                'free_stats': exp_patch['free_stats'],
+                'wins':           winner_live.get('wins', 0) + 1,
+                'gold':           exp_patch['gold'],
+                'exp':            exp_patch['exp'],
+                'level':          exp_patch['level'],
+                'free_stats':     exp_patch['free_stats'],
                 'exp_milestones': exp_patch['exp_milestones'],
-                'max_hp': exp_patch['max_hp'],
-                'current_hp': exp_patch['current_hp'],
-                'rating': winner_live.get('rating', 1000) if battle_mode == "titan" else winner_live.get('rating', 1000) + 10,
-                'win_streak': new_win_streak,
+                'max_hp':         exp_patch['max_hp'],
+                'current_hp':     exp_patch['current_hp'],
+                'rating':         winner_live.get('rating', 1000) if battle_mode == "titan"
+                                  else winner_live.get('rating', 1000) + 10,
+                'win_streak':     new_win_streak,
             }
 
-        # Поражение: без золота, без рейтинга; маленький XP за урон
         loser_stats = None
         if not is_test and loser_user_id is not None and not loser_locked:
             loser_stats = {
-                'losses': loser_live.get('losses', 0) + 1,
+                'losses':     loser_live.get('losses', 0) + 1,
                 'win_streak': 0,
                 'current_hp': max(0, int(loser.get('current_hp', 0))),
             }
@@ -1464,149 +1509,196 @@ class BattleSystem:
                 loser_pl = dict(loser_live)
                 loser_exp_patch, _ = self._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)
                 loser_stats.update({
-                    'exp': loser_exp_patch['exp'],
+                    'exp':            loser_exp_patch['exp'],
                     'exp_milestones': loser_exp_patch['exp_milestones'],
-                    'free_stats': loser_exp_patch['free_stats'],
-                    'level': loser_exp_patch['level'],
-                    'max_hp': loser_exp_patch['max_hp'],
-                    'gold': loser_exp_patch['gold'],
+                    'free_stats':     loser_exp_patch['free_stats'],
+                    'level':          loser_exp_patch['level'],
+                    'max_hp':         loser_exp_patch['max_hp'],
+                    'gold':           loser_exp_patch['gold'],
                 })
-        
-        # Сохраняем в базу
-        if not is_test:
-            if winner_user_id is not None and winner_stats is not None:
-                db.update_player_stats(winner_user_id, winner_stats)
-                db.update_daily_quest_progress(winner_user_id, won_battle=True)
-                if battle_mode != "titan":
-                    db.update_season_stats(winner_user_id, won=True)
-                db.update_battle_pass(winner_user_id, won=True)
-            if loser_user_id is not None and loser_stats is not None:
-                db.update_player_stats(loser_user_id, loser_stats)
-                db.update_daily_quest_progress(loser_user_id, won_battle=False)
-                if battle_mode != "titan":
-                    db.update_season_stats(loser_user_id, won=False)
-                db.update_battle_pass(loser_user_id, won=False)
-        
-            # Сохраняем информацию о бое
-            battle_data = {
-                'player1_id': player1['user_id'],
-                'player2_id': player2.get('user_id') or player2.get('bot_id'),
-                'is_bot1': battle['is_bot1'],
-                'is_bot2': battle['is_bot2'],
-                'winner_id': winner_id,
-                'result': 'victory' if is_winner_p1 else 'defeat',
-                'rounds': len(battle['rounds']),
-                'details': {
-                    'rounds': [vars(round) for round in battle['rounds']],
-                    'battle_log': battle['battle_log'],
-                    'mode': battle_mode,
-                    'mode_meta': mode_meta,
-                }
-            }
-            
-            if not (winner_locked or loser_locked):
-                db.save_battle(battle_data)
-            titan_progress = None
-            if battle_mode == "titan" and player1.get("user_id") is not None:
-                floor = max(1, int(mode_meta.get("floor", 1)))
+
+        # ── Titan progress (нужен в результате — выполняем до return) ─
+        titan_progress = None
+        if not is_test and battle_mode == "titan" and player1.get("user_id") is not None:
+            floor = max(1, int(mode_meta.get("floor", 1)))
+            try:
                 if is_winner_p1 and not winner_locked:
-                    titan_progress = db.titan_on_win(player1["user_id"], floor)
+                    titan_progress = await loop.run_in_executor(
+                        None, db.titan_on_win, player1["user_id"], floor
+                    )
                 elif not is_winner_p1 and not loser_locked:
-                    titan_progress = db.titan_on_loss(player1["user_id"], floor)
-            db.log_metric_event('battle_ended', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
-            logger.info("event=battle_ended winner_id=%s rounds=%s duration_ms=%s", winner_id, len(battle['rounds']), duration_ms)
-        else:
-            titan_progress = None
-            db.log_metric_event('battle_test_ended', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
-            logger.info(
-                "event=battle_test_ended winner_id=%s rounds=%s duration_ms=%s",
-                winner_id,
-                len(battle['rounds']),
-                duration_ms,
-            )
-        
+                    titan_progress = await loop.run_in_executor(
+                        None, db.titan_on_loss, player1["user_id"], floor
+                    )
+            except Exception as _te:
+                logger.warning("titan_progress error: %s", _te)
+
+        # ── Захватываем данные боя до удаления из памяти ─────────────
+        n_rounds    = len(battle['rounds'])
+        battle_data = {
+            'player1_id': player1['user_id'],
+            'player2_id': player2.get('user_id') or player2.get('bot_id'),
+            'is_bot1':   battle['is_bot1'],
+            'is_bot2':   battle['is_bot2'],
+            'winner_id': winner_id,
+            'result':    'victory' if is_winner_p1 else 'defeat',
+            'rounds':    n_rounds,
+            'details': {
+                'rounds':     [vars(r) for r in battle['rounds']],
+                'battle_log': battle['battle_log'],
+                'mode':       battle_mode,
+                'mode_meta':  mode_meta,
+            }
+        }
+
         result = {
             'status': 'battle_ended',
             'winner': self._entity_name(winner),
-            'loser': self._entity_name(loser),
+            'loser':  self._entity_name(loser),
             'winner_id': winner_id,
             'human_won': is_winner_p1,
-            'rounds': len(battle['rounds']),
+            'rounds':    n_rounds,
             'damage_to_opponent': winner_dmg if is_winner_p1 else loser_dmg,
-            'damage_to_you': loser_dmg if is_winner_p1 else winner_dmg,
-            'gold_reward': (gold_reward if is_winner_p1 else 0) if not winner_locked else 0,
-            'exp_reward': (exp_reward if is_winner_p1 else loser_exp) if not (winner_locked if is_winner_p1 else loser_locked) else 0,
-            'xp_boosted': xp_boosted and is_winner_p1,
-            'streak_bonus_gold': (streak_bonus_gold if is_winner_p1 else 0) if not winner_locked else 0,
-            'win_streak': new_win_streak if is_winner_p1 and winner_user_id and not winner_locked else 0,
-            'rating_change': 0 if is_test or battle_mode == "titan" else 10,
-            'level_up': (bool(did_level) and not winner_locked) if not is_test else False,
-            'level_up_level': level_up_level if not is_test else None,
-            'duration_ms': duration_ms,
-            'exchange_text': exchange_text,
-            'combat_log_html': combat_log_html,
-            'is_test_battle': is_test,
-            # P2-centric поля (для PvP — перспектива второго игрока)
-            'p2_gold_reward': 0 if is_winner_p1 or loser_locked else gold_reward,
-            'p2_exp_reward': 0 if (is_winner_p1 and loser_locked) or (not is_winner_p1 and winner_locked) else (loser_exp if is_winner_p1 else exp_reward),
-            'p2_xp_boosted': False if is_winner_p1 else xp_boosted,
+            'damage_to_you':      loser_dmg  if is_winner_p1 else winner_dmg,
+            'gold_reward':        (gold_reward if is_winner_p1 else 0) if not winner_locked else 0,
+            'exp_reward':         (exp_reward if is_winner_p1 else loser_exp)
+                                  if not (winner_locked if is_winner_p1 else loser_locked) else 0,
+            'xp_boosted':         xp_boosted and is_winner_p1,
+            'streak_bonus_gold':  (streak_bonus_gold if is_winner_p1 else 0) if not winner_locked else 0,
+            'win_streak':         new_win_streak if is_winner_p1 and winner_user_id and not winner_locked else 0,
+            'rating_change':      0 if is_test or battle_mode == "titan" else 10,
+            'level_up':           (bool(did_level) and not winner_locked) if not is_test else False,
+            'level_up_level':     level_up_level if not is_test else None,
+            'duration_ms':        duration_ms,
+            'exchange_text':      exchange_text,
+            'combat_log_html':    combat_log_html,
+            'is_test_battle':     is_test,
+            'p2_gold_reward':     0 if is_winner_p1 or loser_locked else gold_reward,
+            'p2_exp_reward':      0 if (is_winner_p1 and loser_locked) or (not is_winner_p1 and winner_locked)
+                                  else (loser_exp if is_winner_p1 else exp_reward),
+            'p2_xp_boosted':      False if is_winner_p1 else xp_boosted,
             'p2_streak_bonus_gold': 0 if is_winner_p1 or loser_locked else streak_bonus_gold,
-            'p2_win_streak': 0 if is_winner_p1 else (new_win_streak if winner_user_id else 0),
-            'p2_level_up': (bool(did_level) if not is_winner_p1 else False) if not is_test else False,
-            'p2_level_up_level': (level_up_level if not is_winner_p1 else None) if not is_test else None,
-            # PvP: сохранить адреса сообщений (до del active_battles)
-            'pvp_p1_user_id': player1['user_id'] if not battle['is_bot2'] else None,
-            'pvp_p2_user_id': player2.get('user_id') if not battle['is_bot2'] else None,
-            'pvp_p1_ui_message': dict(battle['ui_message']) if not battle['is_bot2'] and battle.get('ui_message') else None,
-            'pvp_p2_ui_message': dict(battle['ui_message_p2']) if not battle['is_bot2'] and battle.get('ui_message_p2') else None,
-            'mode': battle_mode,
-            'mode_meta': mode_meta,
+            'p2_win_streak':      0 if is_winner_p1 else (new_win_streak if winner_user_id else 0),
+            'p2_level_up':        (bool(did_level) if not is_winner_p1 else False) if not is_test else False,
+            'p2_level_up_level':  (level_up_level if not is_winner_p1 else None) if not is_test else None,
+            'pvp_p1_user_id':     player1['user_id'] if not battle['is_bot2'] else None,
+            'pvp_p2_user_id':     player2.get('user_id') if not battle['is_bot2'] else None,
+            'pvp_p1_ui_message':  dict(battle['ui_message'])    if not battle['is_bot2'] and battle.get('ui_message')    else None,
+            'pvp_p2_ui_message':  dict(battle['ui_message_p2']) if not battle['is_bot2'] and battle.get('ui_message_p2') else None,
+            'mode':              battle_mode,
+            'mode_meta':         mode_meta,
             'pvp_repeat_factor': pvp_repeat_factor,
-            'titan_progress': titan_progress,
+            'titan_progress':    titan_progress,
         }
+
         if battle.get('is_bot2') and player1.get('user_id') is not None:
             self.remember_battle_end_ui(player1['user_id'], result)
         elif not battle.get('is_bot2'):
-            # PvP: сохраняем для обоих (на случай если Telegram не успел обновить)
             if player1.get('user_id') is not None:
                 self.remember_battle_end_ui(player1['user_id'], result)
             if player2.get('user_id') is not None:
                 self.remember_battle_end_ui(player2['user_id'], result)
 
-        # Очищаем активные бои
+        # ── Очищаем бой из памяти ─────────────────────────────────────
         if player1['user_id'] in self.battle_queue:
             del self.battle_queue[player1['user_id']]
-        if not battle['is_bot2'] and player2['user_id'] in self.battle_queue:
+        if not battle['is_bot2'] and player2.get('user_id') in self.battle_queue:
             del self.battle_queue[player2['user_id']]
-        
         del self.active_battles[battle_id]
-        
+
+        # ── Все DB-записи — в фоне, не блокируем ответ ───────────────
+        event_name = 'battle_test_ended' if is_test else 'battle_ended'
+        logger.info("event=%s winner_id=%s rounds=%s duration_ms=%s", event_name, winner_id, n_rounds, duration_ms)
+        asyncio.create_task(self._persist_battle_writes(
+            winner_user_id, loser_user_id,
+            winner_stats, loser_stats,
+            winner_locked, loser_locked,
+            battle_data, battle_mode, is_test,
+            winner_id, n_rounds, duration_ms,
+        ))
+
         return result
+
+    async def _persist_battle_writes(
+        self,
+        winner_uid: Optional[int], loser_uid: Optional[int],
+        winner_stats: Optional[dict], loser_stats: Optional[dict],
+        winner_locked: bool, loser_locked: bool,
+        battle_data: dict, battle_mode: str, is_test: bool,
+        winner_id: int, n_rounds: int, duration_ms: int,
+    ) -> None:
+        """Фоновая запись результатов боя в БД (параллельно)."""
+        import asyncio
+        loop = asyncio.get_event_loop()
+        tasks = []
+        event_name = 'battle_test_ended' if is_test else 'battle_ended'
+
+        if not is_test:
+            if winner_uid is not None and winner_stats is not None:
+                tasks.append(loop.run_in_executor(None, db.update_player_stats, winner_uid, winner_stats))
+                tasks.append(loop.run_in_executor(None, db.update_daily_quest_progress, winner_uid, True))
+                if battle_mode != "titan":
+                    tasks.append(loop.run_in_executor(None, db.update_season_stats, winner_uid, True))
+                tasks.append(loop.run_in_executor(None, db.update_battle_pass, winner_uid, True))
+            if loser_uid is not None and loser_stats is not None:
+                tasks.append(loop.run_in_executor(None, db.update_player_stats, loser_uid, loser_stats))
+                tasks.append(loop.run_in_executor(None, db.update_daily_quest_progress, loser_uid, False))
+                if battle_mode != "titan":
+                    tasks.append(loop.run_in_executor(None, db.update_season_stats, loser_uid, False))
+                tasks.append(loop.run_in_executor(None, db.update_battle_pass, loser_uid, False))
+            if not (winner_locked or loser_locked):
+                tasks.append(loop.run_in_executor(None, db.save_battle, battle_data))
+
+        tasks.append(loop.run_in_executor(None, db.log_metric_event, event_name, winner_id, n_rounds, duration_ms))
+
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        for r in results:
+            if isinstance(r, Exception):
+                logger.error("battle_persist error: %s", r)
     
     async def _end_battle_by_afk(self, battle_id: str, winner_id: int) -> Dict:
-        """Завершить бой по AFK"""
+        """Завершить бой по AFK (параллельные читалки + фоновые записи)."""
+        import asyncio
+        loop = asyncio.get_event_loop()
+
         battle = self.active_battles[battle_id]
         self.cancel_turn_timer(battle)
         battle['battle_active'] = False
         duration_ms = int((datetime.now() - battle['started_at']).total_seconds() * 1000)
-        
+
         player1 = battle['player1']
         player2 = battle['player2']
-        
+
         winner = player1 if winner_id == player1['user_id'] else player2
-        loser = player2 if winner_id == player1['user_id'] else player1
+        loser  = player2 if winner_id == player1['user_id'] else player1
         winner_user_id = winner.get('user_id')
-        loser_user_id = loser.get('user_id')
-        is_test = battle.get('is_test_battle', False)
+        loser_user_id  = loser.get('user_id')
+        is_test     = battle.get('is_test_battle', False)
+        battle_mode = battle.get("mode", "normal")
+        mode_meta   = dict(battle.get("mode_meta") or {})
+
         winner_live = dict(winner)
-        loser_live = dict(loser)
+        loser_live  = dict(loser)
         if not is_test:
+            futs = {}
             if winner_user_id is not None:
-                winner_live = db.get_or_create_player(winner_user_id, winner.get("username") or "")
+                futs['winner'] = loop.run_in_executor(
+                    None, db.get_or_create_player, winner_user_id, winner.get("username") or ""
+                )
             if loser_user_id is not None:
-                loser_live = db.get_or_create_player(loser_user_id, loser.get("username") or "")
+                futs['loser'] = loop.run_in_executor(
+                    None, db.get_or_create_player, loser_user_id, loser.get("username") or ""
+                )
+            if futs:
+                vals = await asyncio.gather(*futs.values(), return_exceptions=True)
+                done = dict(zip(futs.keys(), vals))
+                if 'winner' in done and not isinstance(done['winner'], Exception):
+                    winner_live = done['winner']
+                if 'loser' in done and not isinstance(done['loser'], Exception):
+                    loser_live = done['loser']
+
         winner_locked = self._is_profile_reset_locked(winner_user_id) or self._is_stale_after_profile_reset(winner_live, battle["started_at"])
-        loser_locked = self._is_profile_reset_locked(loser_user_id) or self._is_stale_after_profile_reset(loser_live, battle["started_at"])
+        loser_locked  = self._is_profile_reset_locked(loser_user_id)  or self._is_stale_after_profile_reset(loser_live,  battle["started_at"])
 
         # Меньшие награды за победу по AFK (в тестовом бою не начисляются)
         gold_reward = 0 if is_test else (VICTORY_GOLD // 2)
@@ -1619,6 +1711,8 @@ class BattleSystem:
         # Обновляем статистику
         streak_bonus_afk = 0
         new_ws_afk = 0
+        winner_stats = None
+        loser_stats  = None
         if not is_test and winner_user_id is not None and not winner_locked:
             new_ws_afk = winner_live.get('win_streak', 0) + 1
             total_g = winner_live.get('gold', 0) + gold_reward
@@ -1631,63 +1725,47 @@ class BattleSystem:
             if did_level_afk:
                 level_up_level = exp_patch['level']
             winner_stats = {
-                'wins': winner_live.get('wins', 0) + 1,
-                'gold': exp_patch['gold'],
-                'exp': exp_patch['exp'],
-                'level': exp_patch['level'],
-                'free_stats': exp_patch['free_stats'],
+                'wins':           winner_live.get('wins', 0) + 1,
+                'gold':           exp_patch['gold'],
+                'exp':            exp_patch['exp'],
+                'level':          exp_patch['level'],
+                'free_stats':     exp_patch['free_stats'],
                 'exp_milestones': exp_patch['exp_milestones'],
-                'max_hp': exp_patch['max_hp'],
-                'current_hp': exp_patch['current_hp'],
-                'rating': winner_live.get('rating', 1000) if battle_mode == "titan" else winner_live.get('rating', 1000) + 5,
-                'win_streak': new_ws_afk,
+                'max_hp':         exp_patch['max_hp'],
+                'current_hp':     int(exp_patch['max_hp']) if battle.get('is_bot2') else exp_patch['current_hp'],
+                'rating':         winner_live.get('rating', 1000) if battle_mode == "titan" else winner_live.get('rating', 1000) + 5,
+                'win_streak':     new_ws_afk,
             }
-            if battle.get('is_bot2'):
-                winner_stats['current_hp'] = int(exp_patch['max_hp'])
-            db.update_player_stats(winner_user_id, winner_stats)
-            db.update_daily_quest_progress(winner_user_id, won_battle=True)
 
         if not is_test and loser_user_id is not None and not loser_locked:
             loser_stats = {'losses': loser_live.get('losses', 0) + 1, 'win_streak': 0}
             if battle.get('is_bot2'):
                 loser_stats['current_hp'] = int(loser.get('max_hp', PLAYER_START_MAX_HP))
-            db.update_player_stats(loser_user_id, loser_stats)
-            db.update_daily_quest_progress(loser_user_id, won_battle=False)
-        
-        # Сохраняем бой
-        if not is_test:
-            battle_data = {
-                'player1_id': player1['user_id'],
-                'player2_id': player2.get('user_id') or player2.get('bot_id'),
-                'is_bot1': battle['is_bot1'],
-                'is_bot2': battle['is_bot2'],
-                'winner_id': winner_id,
-                'result': 'afk_defeat',
-                'rounds': len(battle['rounds']),
-                'details': {'reason': 'AFK defeat', 'mode': battle_mode, 'mode_meta': mode_meta}
-            }
-            
-            if not (winner_locked or loser_locked):
-                db.save_battle(battle_data)
-            titan_progress = None
-            if battle_mode == "titan" and player1.get("user_id") is not None:
-                floor = max(1, int(mode_meta.get("floor", 1)))
+
+        # Titan progress (нужен в результате)
+        titan_progress = None
+        if not is_test and battle_mode == "titan" and player1.get("user_id") is not None:
+            floor = max(1, int(mode_meta.get("floor", 1)))
+            try:
                 if winner_id == player1["user_id"] and not winner_locked:
-                    titan_progress = db.titan_on_win(player1["user_id"], floor)
+                    titan_progress = await loop.run_in_executor(None, db.titan_on_win, player1["user_id"], floor)
                 elif winner_id != player1["user_id"] and not loser_locked:
-                    titan_progress = db.titan_on_loss(player1["user_id"], floor)
-            db.log_metric_event('battle_ended_afk', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
-            logger.info("event=battle_ended_afk winner_id=%s rounds=%s duration_ms=%s", winner_id, len(battle['rounds']), duration_ms)
-        else:
-            titan_progress = None
-            db.log_metric_event('battle_test_ended_afk', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
-            logger.info(
-                "event=battle_test_ended_afk winner_id=%s rounds=%s duration_ms=%s",
-                winner_id,
-                len(battle['rounds']),
-                duration_ms,
-            )
-        
+                    titan_progress = await loop.run_in_executor(None, db.titan_on_loss, player1["user_id"], floor)
+            except Exception as _te:
+                logger.warning("titan_progress afk error: %s", _te)
+
+        n_rounds   = len(battle['rounds'])
+        battle_data = {
+            'player1_id': player1['user_id'],
+            'player2_id': player2.get('user_id') or player2.get('bot_id'),
+            'is_bot1':   battle['is_bot1'],
+            'is_bot2':   battle['is_bot2'],
+            'winner_id': winner_id,
+            'result':    'afk_defeat',
+            'rounds':    n_rounds,
+            'details':   {'reason': 'AFK defeat', 'mode': battle_mode, 'mode_meta': mode_meta}
+        }
+
         human_won = winner_id == player1['user_id']
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
         dmg_to_opp, dmg_to_you = self._battle_damage_totals(battle)
@@ -1732,16 +1810,26 @@ class BattleSystem:
             if player2.get('user_id') is not None:
                 self.remember_battle_end_ui(player2['user_id'], result)
 
-        # Очищаем
+        # Очищаем память
         if player1['user_id'] in self.battle_queue:
             del self.battle_queue[player1['user_id']]
-        if not battle['is_bot2'] and player2['user_id'] in self.battle_queue:
+        if not battle['is_bot2'] and player2.get('user_id') in self.battle_queue:
             del self.battle_queue[player2['user_id']]
-        
         del self.active_battles[battle_id]
-        
+
+        # Фоновые DB-записи
+        event_name = 'battle_test_ended_afk' if is_test else 'battle_ended_afk'
+        logger.info("event=%s winner_id=%s rounds=%s duration_ms=%s", event_name, winner_id, n_rounds, duration_ms)
+        asyncio.create_task(self._persist_battle_writes(
+            winner_user_id, loser_user_id,
+            winner_stats, loser_stats,
+            winner_locked, loser_locked,
+            battle_data, battle_mode, is_test,
+            winner_id, n_rounds, duration_ms,
+        ))
+
         return result
-    
+
     def _exp_progression_updates(self, player: Dict, exp_gained: int, max_level_ups: int = 1) -> Tuple[Dict, bool]:
         """
         Начислить опыт: промежуточные +1 стат по «апам» из таблицы (пороги need*k/steps),
