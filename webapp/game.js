@@ -134,53 +134,57 @@ function makeBar(scene, x, y, w, h, pct, fillColor, bgColor = C.dark, radius = 4
   return g;
 }
 
-/* Адаптация цветов текста к светлой теме */
+/* ── Цвет текста: авто-адаптация к светлой теме ──────────────
+   Алгоритм: вычисляем воспринимаемую яркость (L).
+   Если цвет слишком светлый (L > 0.35) — тёмим его до L≈0.20,
+   сохраняя оттенок. Работает для любого hex без ручного маппинга. */
 function tCol(color) {
   if (C._name !== 'light') return color;
-  const m = {
-    // основные
-    '#f0f0fa': '#1a1a2e', '#ffffff': '#0a0a1e',
-    '#8888aa': '#333366', '#555577': '#444466',
-    '#666688': '#445577', '#333355': '#555588',
-    '#c0c0e0': '#1a1a44', '#7799cc': '#1144aa',
-    // светло-золотые / кремовые (текст кнопок)
-    '#ffdca0': '#7a4800', '#ffc870': '#7a5000',
-    // светло-фиолетовые / lilac (premium, Башня Титанов)
-    '#d8c0ff': '#5500aa', '#c8a0ff': '#6a00cc',
-    // голубые разных оттенков
-    '#a0c0ff': '#0a3a99', '#a8c4ff': '#0a3a99',
-    '#88a8ff': '#1133cc', '#a0c0ee': '#0a3a99',
-    // серо-синие / lavender
-    '#aaaacc': '#333366', '#d0d0ee': '#1a1a44',
-    '#a8b8d8': '#1a3355', '#9090cc': '#2a2a88',
-    // тёмные серо-синие (иконки, мелкие метки)
-    '#667799': '#334466', '#777799': '#334466',
-  };
-  return m[color] || color;
+  if (!color || color[0] !== '#' || color.length < 7) return color;
+  const ri = parseInt(color.slice(1,3), 16);
+  const gi = parseInt(color.slice(3,5), 16);
+  const bi = parseInt(color.slice(5,7), 16);
+  const L  = (0.299*ri + 0.587*gi + 0.114*bi) / 255;
+  if (L < 0.35) return color;                      // уже тёмный — не трогаем
+  const s = Math.min(1, 0.20 / L);                 // коэффициент затемнения
+  const h = x => Math.round(x * s).toString(16).padStart(2, '0');
+  return '#' + h(ri) + h(gi) + h(bi);
 }
 
-function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false) {
-  return scene.add.text(x, y, str, {
+/* txt() — универсальный хелпер текста.
+   stroke='#000' (опц.) добавляет обводку — для текста поверх цветных баров. */
+function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false, stroke = null) {
+  const style = {
     fontSize:   `${size}px`,
     fontFamily: 'Arial, Helvetica, sans-serif',
     fontStyle:  bold ? 'bold' : 'normal',
     color:      tCol(color),
     resolution: 2,
-  });
+  };
+  if (stroke) { style.stroke = stroke; style.strokeThickness = Math.max(2, Math.round(size * 0.22)); }
+  return scene.add.text(x, y, str, style);
 }
 
-/** Текст поверх цветных полосок HP/XP: контур вместо тёмной подложки (и всегда в контейнере сцен). */
-function txtBar(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false) {
-  const th = Math.max(2, Math.min(4, Math.round(size / 3)));
-  return scene.add.text(x, y, str, {
-    fontSize: `${size}px`,
-    fontFamily: 'Arial, Helvetica, sans-serif',
-    fontStyle: bold ? 'bold' : 'normal',
-    color: tCol(color),
-    stroke: '#0a0a12',
-    strokeThickness: th,
-    resolution: 2,
-  });
+/* makeBackBtn() — единый стиль кнопки «Назад» для всех сцен.
+   Позиция: левый верхний угол (bx=10, bY=8). */
+function makeBackBtn(scene, label, onClick, bx = 10, bY = 8) {
+  const bW = 92, bH = 32;
+  const cx = bx + bW / 2, cy = bY + bH / 2;
+  const bg = scene.add.graphics();
+  const _draw = (pressed) => {
+    bg.clear();
+    bg.fillStyle(pressed ? C.blue : C.bgPanel, pressed ? 0.30 : 0.95);
+    bg.fillRoundedRect(bx, bY, bW, bH, 8);
+    bg.lineStyle(1.5, C.blue, 0.55);
+    bg.strokeRoundedRect(bx, bY, bW, bH, 8);
+  };
+  _draw(false);
+  const t = txt(scene, cx, cy, '← ' + label, 12, '#a0c0ff').setOrigin(0.5);
+  const z = scene.add.zone(cx, cy, bW, bH).setInteractive({ useHandCursor: true });
+  z.on('pointerdown', () => _draw(true));
+  z.on('pointerup',   () => { _draw(false); onClick(); });
+  z.on('pointerout',  () => _draw(false));
+  return { bg, t, z };
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -680,7 +684,7 @@ class MenuScene extends Phaser.Scene {
     const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     const hpBg  = makeBar(this, hpX, hpY, hpW, hpH, hpPct, hpCol);
-    const hpTxt = txtBar(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#f0f0fa', true).setOrigin(0.5);
+    const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#ffffff', true, '#00000088').setOrigin(0.5);
 
     /* ── XP бар ── */
     let xpBg, xpTxt, xpLabel;
@@ -688,9 +692,9 @@ class MenuScene extends Phaser.Scene {
     const xpY = hpY + hpH + 8;
     if (!p.max_level) {
       xpBg   = makeBar(this, hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, C.dark, 5);
-      xpTxt  = txtBar(this, W / 2, xpY + xpH / 2,
-        `${p.exp} / ${p.exp_needed} XP`, 10, '#f0f0fa', true).setOrigin(0.5);
-      xpLabel = txtBar(this, W / 2, xpY + 18, `⭐ Опыт: ${p.xp_pct}%`, 10, '#78b2ff', true).setOrigin(0.5, 0);
+      xpTxt  = txt(this, W / 2, xpY + xpH / 2,
+        `${p.exp} / ${p.exp_needed} XP`, 10, '#ffffff', true, '#00000088').setOrigin(0.5);
+      xpLabel = txt(this, hpX, xpY - 15, `⭐ Опыт  ${p.xp_pct}%`, 11, '#6aabff', true).setOrigin(0, 0);
     } else {
       txt(this, W / 2, xpY + 6, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
     }
@@ -702,7 +706,7 @@ class MenuScene extends Phaser.Scene {
       { icon: '💥', label: 'ИНТ', val: p.intuition, color: C.purple, hex: '#b45aff', sub: `${p.crit_pct}%`  },
       { icon: '🛡', label: 'ВЫН', val: p.stamina,   color: C.green,  hex: '#3cc864', sub: `${p.armor_pct}%` },
     ];
-    const statsTop = xpBg ? xpY + 34 : xpY + 6;
+    const statsTop = xpBg ? xpY + 20 : xpY + 6;
     const scGap = 6, scH = 76;
     const scW   = (W - pad * 2 - scGap * 3) / 4;
     const maxV  = Math.max(1, 3 + p.level * 2);
@@ -885,8 +889,11 @@ class MenuScene extends Phaser.Scene {
     // Строка 0: [🎯 Вызов по нику]  [📨 Мои вызовы]
     const btnCh   = secBtn(0, 0, '🎯 Вызов по нику', 0x2e2010, C.gold,   '#ffdca0', () => this._onChallengeByNick());
     const btnMyC  = secBtn(1, 0, '📨 Мои вызовы',   0x161e38, C.blue,   '#b8d4ff', () => this._showOutgoingChallenges());
-    // Строка 1: [🗿 Башня Титанов] — полная ширина
-    const btnTT = secBtnFull(1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
+    // Строка 1: [🗿 Башня Титанов]  [🏆 Топ PvP]
+    const btnTT   = secBtn(0, 1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
+    const btnPvpT = secBtn(1, 1, '🏆 Топ PvP',       0x2a2010, C.gold,   '#ffdca0', () => this._showPvpTop());
+    // Строка 2: [🏆 Топ Башни] — полная ширина, менее заметная
+    const btnTTTop = secBtnFull(2, '🏆 Открыть Топ Башни', 0x0d1422, 0x4466aa, '#7aa0dd', () => this.scene.start('TitanTop'));
 
     // ── Бот карточка (главная, крупнее)
     const botCY = CH * 0.76;
@@ -907,7 +914,7 @@ class MenuScene extends Phaser.Scene {
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     hpBlockObjs.push(makeBar(this, 20, hpBlockY, W - 40, 10, hpPct, hpCol));
     hpBlockObjs.push(
-      txtBar(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
+      txt(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
     );
 
     if (p.hp_pct < 100) {
@@ -942,7 +949,8 @@ class MenuScene extends Phaser.Scene {
       title,
       ...pvpCard,
       ...btnCh, ...btnMyC,
-      ...btnTT,
+      ...btnTT, ...btnPvpT,
+      ...btnTTTop,
       ...botCard,
       ...hpBlockObjs,
     ];
@@ -1011,21 +1019,20 @@ class MenuScene extends Phaser.Scene {
     const c = this.add.container(0, 0);
 
     const items = [
-      { icon: '📅', label: 'Задания',         cb: () => this.scene.start('Quests'),    badge: this._questBadge },
-      { icon: '🏆', label: 'Топ PvP',         cb: () => this.scene.start('Rating')      },
-      { icon: '🗿', label: 'Открыть Топ Башни', cb: () => this.scene.start('TitanTop')   },
-      { icon: '🛍️', label: 'Магазин',         cb: () => this.scene.start('Shop')        },
-      { icon: '⭐',  label: 'Сезон',           cb: () => this.scene.start('Season')      },
-      { icon: '🌟', label: 'Боевой пропуск',  cb: () => this.scene.start('BattlePass')  },
-      { icon: '⚔️', label: 'Клан',            cb: () => this.scene.start('Clan')        },
-      { icon: '🔗', label: 'Рефералка',       cb: () => this._onInvite()                },
+      { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
+      { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
+      { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
+      { icon: '🗿', label: 'Топ Башни',  cb: () => this.scene.start('TitanTop')   },
+      { icon: '🌟', label: 'Боевой пропуск', cb: () => this.scene.start('BattlePass') },
+      { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
+      { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
     ];
 
     const cols = 2;
     const gap  = 10;
     const bw   = (W - gap * 3) / cols;  // ширина карточки
-    const bh   = 84;                    // высота карточки
-    const startY = 12;
+    const bh   = 90;                    // высота карточки
+    const startY = 16;
 
     items.forEach((item, i) => {
       const col  = i % cols;
@@ -1084,9 +1091,8 @@ class MenuScene extends Phaser.Scene {
       c.add(zone);
     });
 
-    // Версия — ниже сетки, чтобы ничего не перекрывать
-    const rows = Math.ceil(items.length / cols);
-    const verY = Math.min(CH - 32, startY + rows * (bh + gap) + 8);
+    // Версия — крупная, хорошо видна
+    const verY = CH - 32;
     const verBg = this.add.graphics();
     verBg.fillStyle(0x1e1c30, 0.9);
     verBg.fillRoundedRect(W / 2 - 90, verY - 14, 180, 28, 8);
@@ -1831,8 +1837,7 @@ class BattleScene extends Phaser.Scene {
     const hpHex = hpPct > 0.5 ? 0x3cc864 : hpPct > 0.25 ? 0xffc83c : 0xdc3c46;
     const hpX = cx + 114, hpY = cy + 76, hpW = cw - 126;
     t(hpX, hpY, '❤️ HP', 10, '#aaaacc');
-    const hpValT = txtBar(this, cx + cw - 12, hpY, `${curHp} / ${maxHp}`, 10, hpCol).setOrigin(1, 0);
-    con.add(hpValT);
+    tR(cx + cw - 12, hpY, `${curHp} / ${maxHp}`, 10, hpCol);
     const hpG = this.add.graphics();
     hpG.fillStyle(0x0a0a18, 1); hpG.fillRoundedRect(hpX, hpY + 16, hpW, 11, 4);
     hpG.fillStyle(hpHex, 1); hpG.fillRoundedRect(hpX, hpY + 16, Math.max(6, Math.round(hpW * hpPct)), 11, 4);
@@ -1928,7 +1933,7 @@ class BattleScene extends Phaser.Scene {
     makePanel(this, 8, 8, W/2 - 14, hudH, 10);
     txt(this, 16, 13, 'ВЫ', 10, '#8888aa', true);
     this.p1Name = txt(this, 16, 24, State.player?.username || 'Вы', 13, '#f0f0fa', true);
-    this.p1Hp   = txtBar(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
+    this.p1Hp   = txt(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
     this.p1Bar  = this._hpBar(12, 56, W/2 - 22, b.my_max_hp > 0 ? b.my_hp / b.my_max_hp : 0, C.green);
     txt(this, 10, 10, '👁', 10).setAlpha(0.55);
     this.add.zone(8, 8, W/2 - 14, hudH).setOrigin(0)
@@ -1939,7 +1944,7 @@ class BattleScene extends Phaser.Scene {
     makePanel(this, W/2 + 6, 8, W/2 - 14, hudH, 10);
     txt(this, W - 16, 13, 'СОПЕРНИК', 10, '#8888aa', true).setOrigin(1, 0);
     this.p2Name = txt(this, W - 16, 24, b.opp_name || 'Соперник', 13, '#f0f0fa', true).setOrigin(1, 0);
-    this.p2Hp   = txtBar(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
+    this.p2Hp   = txt(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
     this.p2Bar  = this._hpBar(W/2 + 10, 56, W/2 - 22, b.opp_max_hp > 0 ? b.opp_hp / b.opp_max_hp : 0, C.red);
     // Подсказка "посмотреть карточку"
     txt(this, W/2 + 10, 10, '👁', 10).setAlpha(0.55);
@@ -2735,17 +2740,8 @@ class RatingScene extends Phaser.Scene {
     txt(this, W / 2, 24, '⚔️  ELO Рейтинг', 18, '#ffc83c', true).setOrigin(0.5);
     txt(this, W / 2, 46, 'PvP · K=32 · стартовый 1000', 10, '#666688').setOrigin(0.5);
 
-    /* Кнопка назад (внизу, крупнее) */
-    const backW = 140, backH = 42, backX = 14, backY = H - 54;
-    const backG = this.add.graphics();
-    backG.fillStyle(C.dark, 0.95);
-    backG.fillRoundedRect(backX, backY, backW, backH, 10);
-    backG.lineStyle(1.5, C.blue, 0.45);
-    backG.strokeRoundedRect(backX, backY, backW, backH, 10);
-    txt(this, backX + backW / 2, backY + backH / 2, '← Назад', 15, '#a8c8ff', true).setOrigin(0.5);
-    this.add.zone(backX, backY, backW, backH).setOrigin(0)
-      .setInteractive({ useHandCursor: true })
-      .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
+    /* Кнопка назад */
+    makeBackBtn(this, 'Назад', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
 
     try {
       const res = await get('/api/pvp/top');

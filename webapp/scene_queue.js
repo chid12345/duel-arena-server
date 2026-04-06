@@ -112,11 +112,7 @@ class QueueScene extends Phaser.Scene {
     );
 
     // Кнопка: Отмена
-    this._makeBtn(
-      W / 2, cy2, 180, 42,
-      '← Отменить поиск', C.dark, '#8888aa',
-      () => this._onCancel(), C.blue, 0.35
-    );
+    makeBackBtn(this, 'Отменить поиск', () => this._onCancel(), W / 2 - 46, cy2 - 16);
 
     // Подсказка
     txt(this, W / 2, cy3,

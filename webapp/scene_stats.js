@@ -282,21 +282,7 @@ class StatsScene extends Phaser.Scene {
 
   /* ── Кнопка назад ────────────────────────────────────── */
   _buildBackBtn(W, H) {
-    const y = H - 26;
-    const bw = 190, bh = 38;
-    // Заливка фона под кнопкой — текст не просвечивает
-    const backdrop = this.add.graphics();
-    backdrop.fillStyle(0x12121c, 1);
-    backdrop.fillRect(0, y - bh / 2 - 6, W, bh + 12);
-    const g = this.add.graphics();
-    g.fillStyle(C.dark, 0.95);
-    g.fillRoundedRect(W / 2 - bw / 2, y - bh / 2, bw, bh, 10);
-    g.lineStyle(1.5, C.blue, 0.45);
-    g.strokeRoundedRect(W / 2 - bw / 2, y - bh / 2, bw, bh, 10);
-    txt(this, W / 2, y, '← Главное меню', 13, '#a0c0ee').setOrigin(0.5);
-
-    const zone = this.add.zone(W / 2, y, bw, bh).setInteractive({ useHandCursor: true });
-    zone.on('pointerup', () => {
+    makeBackBtn(this, 'Меню', () => {
       tg?.HapticFeedback?.impactOccurred('light');
       this.scene.start('Menu');
     });

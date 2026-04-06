@@ -22,22 +22,7 @@ function _extraBg(scene, W, H) {
 }
 
 function _extraBack(scene, W, H, dest = 'Menu') {
-  // Отдельная подложка снизу, чтобы текст контента не налезал на кнопку
-  const footer = scene.add.graphics();
-  footer.fillStyle(0x0d1020, 0.94);
-  footer.fillRect(0, H - 72, W, 72);
-  const bw = 126, bh = 42, bx = 14, by = H - 56;
-  const bg = scene.add.graphics();
-  bg.fillStyle(C.dark, 0.9);
-  bg.fillRoundedRect(bx, by, bw, bh, 10);
-  bg.lineStyle(1.5, C.blue, 0.4);
-  bg.strokeRoundedRect(bx, by, bw, bh, 10);
-  txt(scene, bx + bw / 2, by + bh / 2, '← Назад', 15, '#a8c8ff', true).setOrigin(0.5);
-  scene.add.zone(bx, by, bw, bh).setOrigin(0)
-    .setInteractive({ useHandCursor: true })
-    .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x1c1a2c, 0.9); bg.fillRoundedRect(bx, by, bw, bh, 10); })
-    .on('pointerup',   () => { tg?.HapticFeedback?.impactOccurred('light'); scene.scene.start(dest); })
-    .on('pointerout',  () => { bg.clear(); bg.fillStyle(C.dark, 0.9); bg.fillRoundedRect(bx, by, bw, bh, 10); bg.lineStyle(1.5, C.blue, 0.4); bg.strokeRoundedRect(bx, by, bw, bh, 10); });
+  makeBackBtn(scene, 'Назад', () => { tg?.HapticFeedback?.impactOccurred('light'); scene.scene.start(dest); });
 }
 
 function _extraHeader(scene, W, icon, title, sub) {
@@ -396,10 +381,10 @@ class SummaryScene extends Phaser.Scene {
     const expPct = (p.exp || 0) / Math.max(1, p.exp_to_next || 1);
 
     scroll.add(makeBar(this, 16, y,     W - 32, 12, hpPct,  C.red,  C.dark));
-    scroll.add(txtBar(this, W / 2, y + 6, `HP ${p.current_hp || 0}/${p.max_hp || 0}`, 11, '#f0f0fa').setOrigin(0.5));
+    scroll.add(txt(this, W / 2, y + 6, `HP ${p.current_hp || 0}/${p.max_hp || 0}`, 11, '#f0f0fa').setOrigin(0.5));
     y += 20;
     scroll.add(makeBar(this, 16, y,     W - 32, 10, expPct, C.blue, C.dark));
-    scroll.add(txtBar(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 11, '#8888aa').setOrigin(0.5));
+    scroll.add(txt(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 11, '#8888aa').setOrigin(0.5));
     y += 24;
 
     /* ── Свободные очки ── */
