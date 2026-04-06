@@ -408,6 +408,11 @@ const Notif = (() => {
 class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
 
+  init(data) {
+    /* Если пришли из подсцены (Еще/Рейтинг/Статы) — запомним нужную вкладку */
+    this._returnTab = (data && data.returnTab) ? data.returnTab : null;
+  }
+
   async create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
@@ -493,7 +498,7 @@ class MenuScene extends Phaser.Scene {
           this._buildProfilePanel();
           this._buildBattlePanel();
           this._buildMorePanel();
-          this._switchTab('profile');
+          this._switchTab(this._returnTab || 'profile');
           this._setupWS();
           this._startRegenTick();
         } catch(buildErr) {

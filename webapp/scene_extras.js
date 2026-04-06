@@ -21,8 +21,11 @@ function _extraBg(scene, W, H) {
   for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
 }
 
-function _extraBack(scene, W, H, dest = 'Menu') {
-  makeBackBtn(scene, 'Назад', () => { tg?.HapticFeedback?.impactOccurred('light'); scene.scene.start(dest); });
+function _extraBack(scene, W, H, dest = 'Menu', returnTab = 'more') {
+  makeBackBtn(scene, 'Назад', () => {
+    tg?.HapticFeedback?.impactOccurred('light');
+    scene.scene.start(dest, returnTab ? { returnTab } : undefined);
+  });
 }
 
 function _extraHeader(scene, W, icon, title, sub) {
@@ -656,7 +659,7 @@ class ClanScene extends Phaser.Scene {
       _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
       /* Из подразделов возвращаемся в главный экран клана, из main — в Menu */
       if (this._subview === 'main') {
-        _extraBack(this, W, H);          /* → Menu */
+        _extraBack(this, W, H, 'Menu', 'more');   /* → Menu → вкладка Еще */
       } else {
         makeBackBtn(this, 'Назад', () => {
           tg?.HapticFeedback?.impactOccurred('light');

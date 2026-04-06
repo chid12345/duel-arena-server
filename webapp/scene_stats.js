@@ -282,7 +282,7 @@ class StatsScene extends Phaser.Scene {
 
   /* ── Кнопка назад ────────────────────────────────────── */
   _buildBackBtn(W, H) {
-    makeBackBtn(this, 'Меню', () => {
+    makeBackBtn(this, 'Назад', () => {
       tg?.HapticFeedback?.impactOccurred('light');
       this.scene.start('Menu');
     });
