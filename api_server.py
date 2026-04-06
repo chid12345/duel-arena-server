@@ -19,7 +19,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -1956,5 +1956,28 @@ async def referral_withdraw(body: ReferralWithdrawBody):
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────
 
 webapp_dir = os.path.join(os.path.dirname(__file__), "webapp")
+
+_INDEX_SCRIPTS = ["sound.js", "scene_stats.js", "scene_queue.js", "scene_extras.js", "game.js"]
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+async def serve_index():
+    """Отдаём index.html с version-stamped src для принудительного сброса кэша Telegram WebView."""
+    html_path = os.path.join(webapp_dir, "index.html")
+    try:
+        with open(html_path, "r", encoding="utf-8") as f:
+            html = f.read()
+    except FileNotFoundError:
+        raise HTTPException(status_code=404, detail="index.html not found")
+    v = APP_BUILD_VERSION
+    for fname in _INDEX_SCRIPTS:
+        html = html.replace(f'src="{fname}"', f'src="{fname}?v={v}"')
+    no_cache = {
+        "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    }
+    return HTMLResponse(content=html, headers=no_cache)
+
+
 if os.path.isdir(webapp_dir):
     app.mount("/", StaticFiles(directory=webapp_dir, html=True), name="webapp")
