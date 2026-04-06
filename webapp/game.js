@@ -789,7 +789,7 @@ class MenuScene extends Phaser.Scene {
     const refZ = this.add.zone(W / 2, refY + refH / 2, refW, refH).setInteractive({ useHandCursor: true });
     let _refBusy = false;
     refZ.on('pointerdown', () => { refG.clear(); refG.fillStyle(C.blue, 0.25); refG.fillRoundedRect(refX, refY, refW, refH, 13); tg?.HapticFeedback?.impactOccurred('light'); });
-    refZ.on('pointerup',   () => { if (_refBusy) return; _refBusy = true; refT.setText('⏳'); this.time.delayedCall(400, () => this.scene.restart()); });
+    refZ.on('pointerup',   () => { if (_refBusy) return; _refBusy = true; refT.setText('⏳'); this.time.delayedCall(400, () => this.scene.restart({ returnTab: this._activeTab || 'profile' })); });
     refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
 
     /* ══ СБОРКА ═════════════════════════════════════════════ */
@@ -872,13 +872,10 @@ class MenuScene extends Phaser.Scene {
     };
 
     // Строка 0: [🎯 Вызов по нику]  [📨 Мои вызовы]
-    const btnCh   = secBtn(0, 0, '🎯 Вызов по нику', 0x2e2010, C.gold,   '#ffdca0', () => this._onChallengeByNick());
-    const btnMyC  = secBtn(1, 0, '📨 Мои вызовы',   0x161e38, C.blue,   '#b8d4ff', () => this._showOutgoingChallenges());
-    // Строка 1: [🗿 Башня Титанов]  [🏆 Топ PvP]
-    const btnTT   = secBtn(0, 1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
-    const btnPvpT = secBtn(1, 1, '🏆 Топ PvP',       0x2a2010, C.gold,   '#ffdca0', () => this._showPvpTop());
-    // Строка 2: [🏆 Топ Башни] — полная ширина, менее заметная
-    const btnTTTop = secBtnFull(2, '🏆 Открыть Топ Башни', 0x0d1422, 0x4466aa, '#7aa0dd', () => this.scene.start('TitanTop'));
+    const btnCh  = secBtn(0, 0, '🎯 Вызов по нику', 0x2e2010, C.gold,   '#ffdca0', () => this._onChallengeByNick());
+    const btnMyC = secBtn(1, 0, '📨 Мои вызовы',   0x161e38, C.blue,   '#b8d4ff', () => this._showOutgoingChallenges());
+    // Строка 1: [🗿 Башня Титанов] — во всю ширину
+    const btnTT  = secBtnFull(1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
 
     // ── Бот карточка (главная, крупнее)
     const botCY = CH * 0.76;
@@ -934,8 +931,7 @@ class MenuScene extends Phaser.Scene {
       title,
       ...pvpCard,
       ...btnCh, ...btnMyC,
-      ...btnTT, ...btnPvpT,
-      ...btnTTTop,
+      ...btnTT,
       ...botCard,
       ...hpBlockObjs,
     ];
@@ -1007,7 +1003,6 @@ class MenuScene extends Phaser.Scene {
       { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
       { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
       { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
-      { icon: '🗿', label: 'Топ Башни',  cb: () => this.scene.start('TitanTop')   },
       { icon: '🌟', label: 'Боевой пропуск', cb: () => this.scene.start('BattlePass') },
       { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
       { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
@@ -1611,7 +1606,7 @@ class MenuScene extends Phaser.Scene {
         sp.current_hp = Math.min(sp.max_hp, Math.round(sp.current_hp + regenPerTick));
         sp.hp_pct     = Math.round(sp.current_hp / sp.max_hp * 100);
         // Если была открыта ProfilePanel — перерисуем сцену
-        if (this._activeTab === 'profile') this.scene.restart();
+        if (this._activeTab === 'profile') this.scene.restart({ returnTab: 'profile' });
       },
     });
   }
@@ -1626,7 +1621,7 @@ class MenuScene extends Phaser.Scene {
         tg?.HapticFeedback?.notificationOccurred('success');
         if (res.player) State.player = res.player;
         this._toast(`❤️ +${res.hp_restored} HP! Теперь ${res.player?.current_hp}/${res.player?.max_hp}`);
-        this.time.delayedCall(700, () => this.scene.restart());
+        this.time.delayedCall(700, () => this.scene.restart({ returnTab: this._activeTab || 'profile' }));
       } else {
         tg?.HapticFeedback?.notificationOccurred('error');
         btnTxt.setText(res.reason || 'Ошибка');
@@ -2700,13 +2695,19 @@ class ResultScene extends Phaser.Scene {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   RATING SCENE — топ игроков
+   RATING SCENE — рейтинг: Топ PvP + Башня Титанов
    ═══════════════════════════════════════════════════════════ */
 class RatingScene extends Phaser.Scene {
   constructor() { super('Rating'); }
 
+  init(data) {
+    this._tab = (data && data.tab) ? data.tab : (RatingScene._lastTab || 'pvp');
+    RatingScene._lastTab = this._tab;
+  }
+
   async create() {
     const { width: W, height: H } = this.game.canvas;
+    this.W = W; this.H = H;
 
     /* Фон */
     const bg = this.add.graphics();
@@ -2721,46 +2722,78 @@ class RatingScene extends Phaser.Scene {
     }
 
     /* Шапка */
-    makePanel(this, 8, 6, W - 16, 54, 11);
-    txt(this, W / 2, 24, '⚔️  ELO Рейтинг', 18, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W / 2, 46, 'PvP · K=32 · стартовый 1000', 10, '#9999bb').setOrigin(0.5);
+    makePanel(this, 8, 6, W - 16, 52, 11);
+    txt(this, W / 2, 22, '🏆  РЕЙТИНГ', 17, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W / 2, 42, 'Топ PvP · Башня Титанов', 10, '#9999bb').setOrigin(0.5);
+
+    /* Вкладки */
+    this._buildTabBar(W);
 
     /* Кнопка назад */
     makeBackBtn(this, 'Назад', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
 
+    /* Контент */
+    if (this._tab === 'pvp') {
+      await this._buildPvpTab(W, H);
+    } else {
+      this._buildTitansTab(W, H);
+    }
+  }
+
+  _buildTabBar(W) {
+    const tabs = [
+      { key: 'pvp',    label: '🏆 Топ PvP'      },
+      { key: 'titans', label: '🗿 Башня Титанов' },
+    ];
+    const tw = (W - 24) / tabs.length;
+    const ty = 66;
+    tabs.forEach((tab, i) => {
+      const tx     = 12 + i * tw;
+      const active = tab.key === this._tab;
+      const bg = this.add.graphics();
+      bg.fillStyle(active ? C.blue : C.dark, active ? 0.92 : 0.55);
+      bg.fillRoundedRect(tx, ty, tw - 4, 28, 8);
+      if (active) { bg.lineStyle(1.5, C.blue, 0.6); bg.strokeRoundedRect(tx, ty, tw - 4, 28, 8); }
+      txt(this, tx + (tw - 4) / 2, ty + 14, tab.label, 11,
+        active ? '#ffffff' : '#8888aa', active).setOrigin(0.5);
+      this.add.zone(tx, ty, tw - 4, 28).setOrigin(0)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerup', () => {
+          if (this._tab === tab.key) return;
+          tg?.HapticFeedback?.selectionChanged();
+          this.scene.restart({ tab: tab.key });
+        });
+    });
+  }
+
+  async _buildPvpTab(W, H) {
+    const tabContentY = 102;
     try {
       const res = await get('/api/pvp/top');
       if (!res.ok) throw new Error('bad');
-
       const players = res.elo_top || [];
       const myUid   = State.player?.user_id;
 
       /* ── TOP-3 подиум ── */
       if (players.length >= 3) {
-        this._buildPodium(players.slice(0, 3), W, 66);
+        this._buildPodium(players.slice(0, 3), W, tabContentY);
       }
 
       /* ── Список с 4-го места ── */
       const listFrom = Math.min(players.length, 3);
-      const listY    = players.length >= 3 ? 204 : 66;
+      const listY    = players.length >= 3 ? tabContentY + 138 : tabContentY;
       const rowH     = 46;
 
-      players.slice(listFrom, listFrom + 10).forEach((p, i) => {
+      players.slice(listFrom, listFrom + 8).forEach((p, i) => {
         const rank = listFrom + i + 1;
         const ry   = listY + i * rowH;
         const isMe = p.user_id === myUid;
-
         const rg = this.add.graphics();
         rg.fillStyle(isMe ? 0x1e2840 : C.bgPanel, isMe ? 0.98 : 0.8);
         rg.fillRoundedRect(10, ry, W - 20, rowH - 4, 9);
-        if (isMe) {
-          rg.lineStyle(1.5, C.blue, 0.7);
-          rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9);
-        }
-
+        if (isMe) { rg.lineStyle(1.5, C.blue, 0.7); rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9); }
         txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#9999bb', true).setOrigin(0.5);
-        txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13,
-          isMe ? '#5096ff' : '#f0f0fa', isMe);
+        txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
         txt(this, 52, ry + 27, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#9999bb');
         txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 14, '#ffc83c', true).setOrigin(1, 0.5);
       });
@@ -2769,57 +2802,82 @@ class RatingScene extends Phaser.Scene {
         txt(this, W / 2, H / 2, '📭 Пока нет PvP-боёв', 14, '#9999bb').setOrigin(0.5);
       }
 
-      /* ── Моя позиция ── */
-      const myElo   = State.player?.rating || 1000;
-      const myIdx   = players.findIndex(p => p.user_id === myUid);
-      const myRank  = myIdx >= 0 ? myIdx + 1 : null;
+      /* ── Моя позиция (над кнопкой Назад) ── */
+      const myElo  = State.player?.rating || 1000;
+      const myIdx  = players.findIndex(p => p.user_id === myUid);
+      const myRank = myIdx >= 0 ? myIdx + 1 : null;
       if (!myRank || myRank > 10) {
-        const myBY = H - 52;
+        const myBY = H - 108;
         const myBG = this.add.graphics();
         myBG.fillStyle(0x1a2030, 0.97);
         myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
         myBG.lineStyle(1.5, C.gold, 0.5);
         myBG.strokeRoundedRect(10, myBY, W - 20, 44, 10);
-        const rankStr = myRank ? `#${myRank}` : 'не в топ';
         txt(this, W / 2, myBY + 13, 'Ваш ELO рейтинг', 10, '#888899').setOrigin(0.5);
-        txt(this, W / 2, myBY + 31, `${rankStr}  ·  ★ ${myElo}`, 15, '#ffc83c', true).setOrigin(0.5);
+        txt(this, W / 2, myBY + 31,
+          `${myRank ? '#' + myRank : 'не в топ'}  ·  ★ ${myElo}`, 15, '#ffc83c', true).setOrigin(0.5);
       }
-
     } catch (e) {
       txt(this, W / 2, H / 2, '❌ Нет соединения', 14, '#ff4455').setOrigin(0.5);
     }
   }
 
+  _buildTitansTab(W, H) {
+    const loadT = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    get('/api/titans/top').then(data => {
+      loadT.destroy();
+      if (!data.ok) { txt(this, W / 2, H / 2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
+      const lb = data.leaders || [];
+
+      txt(this, W / 2, 106, `Неделя: ${data.week_key || '-'}`, 11, '#8888aa').setOrigin(0.5);
+      makePanel(this, 8, 116, W - 16, 56, 10, 0.95);
+      txt(this, 16, 126, '🎁 Награды недели:', 12, '#ffc83c', true);
+      txt(this, 16, 143, '1 место: 150💎 · 2: 90💎 · 3: 60💎 · 4-10: 25💎', 11, '#c0c0e0');
+      txt(this, 16, 158, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#9999bb');
+
+      const listY  = 182;
+      const rowH   = 40;
+      const maxShow = Math.max(1, Math.floor((H - listY - 100) / rowH));
+
+      lb.slice(0, maxShow).forEach((row, i) => {
+        const ry = listY + i * rowH;
+        const bg = this.add.graphics();
+        bg.fillStyle(C.bgPanel, 0.86);
+        bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+        txt(this, 18, ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
+        txt(this, 52, ry + 9,  row.username || `User${row.user_id}`, 12, '#d0d0ee', true);
+        txt(this, 52, ry + 24, `🗿 Этаж: ${row.weekly_best_floor || 0}`, 11, '#777799');
+        txt(this, W - 16, ry + 17, `${row.weekly_best_floor || 0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
+      });
+
+      if (!lb.length) {
+        txt(this, W / 2, H / 2 + 20, '😴 Пока никто не прошёл Башню', 13, '#9999bb').setOrigin(0.5);
+      }
+    }).catch(() => loadT.setText('❌ Нет соединения'));
+  }
+
   _buildPodium(top3, W, y) {
-    // Порядок: 2-е (слева), 1-е (центр), 3-е (справа)
     const order     = [top3[1], top3[0], top3[2]];
     const podH      = [80, 104, 64];
     const medals    = ['🥈', '🥇', '🥉'];
     const podColors = [0x666688, 0xcc9900, 0x885533];
     const posX      = [W * 0.20, W * 0.50, W * 0.80];
     const myUid     = State.player?.user_id;
-    const baseY     = y + 128; // bottom of podium area
+    const baseY     = y + 128;
 
     order.forEach((p, i) => {
       if (!p) return;
       const px   = posX[i];
       const ph   = podH[i];
       const isMe = p.user_id === myUid;
-
-      /* Подиум-столбик */
       const pg = this.add.graphics();
       pg.fillStyle(podColors[i], isMe ? 1 : 0.75);
       pg.fillRoundedRect(px - 38, baseY - ph, 76, ph, 6);
       if (isMe) { pg.lineStyle(2, C.blue, 0.8); pg.strokeRoundedRect(px - 38, baseY - ph, 76, ph, 6); }
-
-      /* Медаль */
       txt(this, px, baseY - ph - 28, medals[i], 24).setOrigin(0.5);
-
-      /* Имя */
       const name = (p.username || 'User').slice(0, 9);
       txt(this, px, baseY - ph - 10, name, 10, isMe ? '#88ccff' : '#f0f0fa', isMe).setOrigin(0.5);
-
-      /* Рейтинг */
       txt(this, px, baseY + 12, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(0.5);
       txt(this, px, baseY + 30, `Ур.${p.level}`, 10, '#8888aa').setOrigin(0.5);
     });
