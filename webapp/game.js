@@ -751,7 +751,7 @@ class MenuScene extends Phaser.Scene {
     chBg.fillRoundedRect(16, chY - 20, W - 32, 40, 10);
     chBg.lineStyle(1.5, C.gold, 0.35);
     chBg.strokeRoundedRect(16, chY - 20, W - 32, 40, 10);
-    const chTxt = txt(this, W / 2, chY, '🎯 Вызов по нику (Прими 1 вызов)', 12, '#ffdca0', true).setOrigin(0.5);
+    const chTxt = txt(this, W / 2, chY, '🎯 Вызов по нику', 12, '#ffdca0', true).setOrigin(0.5);
     const chZone = this.add.zone(16, chY - 20, W - 32, 40).setOrigin(0).setInteractive({ useHandCursor: true });
     chZone.on('pointerdown', () => {
       chBg.clear();
@@ -768,9 +768,44 @@ class MenuScene extends Phaser.Scene {
     });
     chZone.on('pointerup', () => this._onChallengeByNick());
 
+    // Мини-кнопки PvP: мои вызовы / топ
+    const miniY = chY + 30;
+    const miniW = (W - 42) / 2;
+    const miniH = 32;
+    const m1x = 16;
+    const m2x = 16 + miniW + 10;
+    const m1bg = this.add.graphics();
+    m1bg.fillStyle(0x1e2f52, 0.95);
+    m1bg.fillRoundedRect(m1x, miniY, miniW, miniH, 9);
+    m1bg.lineStyle(1.2, C.blue, 0.5);
+    m1bg.strokeRoundedRect(m1x, miniY, miniW, miniH, 9);
+    const m1txt = txt(this, m1x + miniW / 2, miniY + miniH / 2, '📨 Мои вызовы', 11, '#b8d4ff', true).setOrigin(0.5);
+    const m1z = this.add.zone(m1x, miniY, miniW, miniH).setOrigin(0).setInteractive({ useHandCursor: true });
+    m1z.on('pointerup', () => this._showOutgoingChallenges());
+
+    const m2bg = this.add.graphics();
+    m2bg.fillStyle(0x3a2c14, 0.95);
+    m2bg.fillRoundedRect(m2x, miniY, miniW, miniH, 9);
+    m2bg.lineStyle(1.2, C.gold, 0.5);
+    m2bg.strokeRoundedRect(m2x, miniY, miniW, miniH, 9);
+    const m2txt = txt(this, m2x + miniW / 2, miniY + miniH / 2, '🏆 Топ PvP', 11, '#ffdca0', true).setOrigin(0.5);
+    const m2z = this.add.zone(m2x, miniY, miniW, miniH).setOrigin(0).setInteractive({ useHandCursor: true });
+    m2z.on('pointerup', () => this._showPvpTop());
+
+    // Башня титанов
+    const ttY = miniY + 42;
+    const ttBg = this.add.graphics();
+    ttBg.fillStyle(0x2a1f44, 0.92);
+    ttBg.fillRoundedRect(16, ttY - 18, W - 32, 36, 10);
+    ttBg.lineStyle(1.5, C.purple, 0.45);
+    ttBg.strokeRoundedRect(16, ttY - 18, W - 32, 36, 10);
+    const ttTxt = txt(this, W / 2, ttY, '🗿 Башня титанов (боссы по этажам)', 12, '#d8c0ff', true).setOrigin(0.5);
+    const ttZone = this.add.zone(16, ttY - 18, W - 32, 36).setOrigin(0).setInteractive({ useHandCursor: true });
+    ttZone.on('pointerup', () => this._onTitanFight());
+
     /* ── Карточка Бот ── */
     const botCard = this._makeBattleCard(
-      W / 2, CH * 0.62,
+      W / 2, CH * 0.69,
       '🤖  БОЙ С БОТОМ',
       'Практика · нет рейтинга',
       '💰 +золото  ⭐ +опыт',
@@ -779,7 +814,7 @@ class MenuScene extends Phaser.Scene {
     );
 
     /* ── HP блок (всегда показываем) ── */
-    const hpBlockY = CH * 0.82;
+    const hpBlockY = CH * 0.88;
     const hpBlockObjs = [];
 
     // Мини HP бар
@@ -822,7 +857,12 @@ class MenuScene extends Phaser.Scene {
       hpBlockObjs.push(qBg, qT, qZ);
     }
 
-    const children = [title, ...pvpCard, chBg, chTxt, chZone, ...botCard, ...hpBlockObjs];
+    const children = [
+      title, ...pvpCard, chBg, chTxt, chZone,
+      m1bg, m1txt, m1z, m2bg, m2txt, m2z,
+      ttBg, ttTxt, ttZone,
+      ...botCard, ...hpBlockObjs,
+    ];
     children.forEach(o => c.add(o));
 
     this._panels.battle = c;
@@ -891,7 +931,7 @@ class MenuScene extends Phaser.Scene {
       { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
       { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
       { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
-      { icon: '🌟', label: 'Battle Pass', cb: () => this.scene.start('BattlePass') },
+      { icon: '🌟', label: 'Боевой пропуск', cb: () => this.scene.start('BattlePass') },
       { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
       { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
     ];
@@ -1004,6 +1044,59 @@ class MenuScene extends Phaser.Scene {
       State.battle = res.battle;
       this.scene.start('Battle');
     } catch(e) { this._toast('❌ Нет соединения'); }
+  }
+
+  async _onTitanFight() {
+    const p = State.player;
+    if (!p) return;
+    if (p.hp_pct < 30) {
+      this._toast('❤️ Нужно восстановить HP!');
+      return;
+    }
+    this._toast('🗿 Запускаем Башню титанов...');
+    try {
+      const res = await post('/api/titans/start', {});
+      if (!res.ok) {
+        this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Башня недоступна');
+        return;
+      }
+      State.battle = res.battle;
+      this.scene.start('Battle');
+    } catch (_) {
+      this._toast('❌ Нет соединения');
+    }
+  }
+
+  async _showOutgoingChallenges() {
+    try {
+      const res = await get('/api/battle/challenge/outgoing');
+      if (!res.ok) { this._toast('❌ Не удалось загрузить'); return; }
+      const list = (res.challenges || []).slice(0, 5);
+      if (!list.length) {
+        tg?.showAlert?.('📭 У вас нет активных/последних вызовов.');
+        return;
+      }
+      const lines = list.map((c, i) => `${i + 1}. @${c.target_username || 'Боец'} · ${c.status}`);
+      tg?.showAlert?.(`📨 Мои вызовы:\n${lines.join('\n')}`);
+    } catch (_) {
+      this._toast('❌ Нет соединения');
+    }
+  }
+
+  async _showPvpTop() {
+    try {
+      const res = await get('/api/pvp/top');
+      if (!res.ok) { this._toast('❌ Не удалось загрузить топ'); return; }
+      const top = (res.leaders || []).slice(0, 5);
+      if (!top.length) {
+        tg?.showAlert?.('🏆 За эту неделю пока нет PvP-боёв.');
+        return;
+      }
+      const lines = top.map((r, i) => `${i + 1}. @${r.username || ('User' + r.user_id)} — ${r.wins || 0}W`);
+      tg?.showAlert?.(`🏆 Топ PvP (${res.week_key || ''})\n${lines.join('\n')}`);
+    } catch (_) {
+      this._toast('❌ Нет соединения');
+    }
   }
 
   _showSummary() {
@@ -1406,9 +1499,15 @@ class MenuScene extends Phaser.Scene {
     try {
       const res = await post('/api/battle/challenge/send', { nickname });
       if (!res.ok) {
+        if (res.reason === 'multiple_candidates' && Array.isArray(res.candidates) && res.candidates.length) {
+          const list = res.candidates.slice(0, 5).map(c => `@${c.username} (ур.${c.level}, ⭐${c.rating})`).join('\n');
+          tg?.showAlert?.(`Найдено несколько игроков:\n${list}\n\nВведи точный ник.`);
+          return;
+        }
         const m = {
           target_not_found: '❌ Игрок не найден',
           cannot_challenge_self: '❌ Нельзя вызвать самого себя',
+          target_offline: '📴 Игрок офлайн',
           target_busy: '⏳ Игрок уже в бою',
           target_low_hp: '❤️ У соперника мало HP',
           target_has_pending: '⏳ У игрока уже есть входящий вызов',

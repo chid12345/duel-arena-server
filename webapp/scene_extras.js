@@ -3,7 +3,7 @@
      QuestsScene   ('Quests')     — ежедневные задания
      SummaryScene  ('Summary')    — сводка профиля
      SeasonScene   ('Season')     — таблица лидеров сезона
-     BattlePassScene ('BattlePass') — прогресс Battle Pass
+     BattlePassScene ('BattlePass') — прогресс Боевого пропуска
      ClanScene     ('Clan')       — клан
      ShopScene     ('Shop')       — магазин
    ============================================================ */
@@ -51,7 +51,7 @@ class QuestsScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '📅', 'ЗАДАНИЯ', 'Ежедневные квесты и бонусы');
+    _extraHeader(this, W, '📅', 'ЗАДАНИЯ', 'Ежедневные и недельные квесты');
     _extraBack(this, W, H);
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
     get('/api/quests').then(d => this._render(d, W, H)).catch(() => {
@@ -65,6 +65,7 @@ class QuestsScene extends Phaser.Scene {
 
     const q = data.quest || {};
     const d = data.daily || {};
+    const w = data.weekly || {};
     let y = 84;
 
     /* ══ БЛОК 1: Ежедневный логин-бонус ══════════════════════ */
@@ -73,6 +74,7 @@ class QuestsScene extends Phaser.Scene {
 
     /* ══ БЛОК 2: Квест дня ════════════════════════════════════ */
     this._buildDailyQuest(q, W, y, H);
+    this._buildWeeklyMini(w, W, H);
   }
 
   /* ── Логин-бонус ─────────────────────────────────────────── */
@@ -261,6 +263,41 @@ class QuestsScene extends Phaser.Scene {
     const t = txt(this, this.W/2, this.H - 80, msg, 13, '#ffc83c', true).setOrigin(0.5).setDepth(100);
     this.tweens.add({ targets: t, alpha: 0, y: t.y - 40, duration: 2500, onComplete: () => t.destroy() });
   }
+
+  _buildWeeklyMini(w, W, H) {
+    const list = Array.isArray(w.quests) ? w.quests : [];
+    if (!list.length) return;
+    const y = H - 168;
+    const box = this.add.graphics();
+    box.fillStyle(0x13203a, 0.95);
+    box.fillRoundedRect(8, y, W - 16, 62, 12);
+    box.lineStyle(1.5, C.blue, 0.35);
+    box.strokeRoundedRect(8, y, W - 16, 62, 12);
+    txt(this, 18, y + 8, `🗓 Недельные задания (${w.week_key || ''})`, 11, '#88a8ff', true);
+    const done = list.filter(q => q.is_completed && !q.reward_claimed);
+    const totalDone = list.filter(q => q.is_completed).length;
+    txt(this, 18, y + 27, `Выполнено: ${totalDone}/${list.length}`, 11, '#a8b8d8');
+    const claimable = done[0];
+    if (claimable) {
+      const bx = W - 128, by = y + 15, bw = 108, bh = 30;
+      const btn = this.add.graphics();
+      btn.fillStyle(C.green, 1);
+      btn.fillRoundedRect(bx, by, bw, bh, 9);
+      txt(this, bx + bw / 2, by + bh / 2, 'Забрать', 11, '#1a1a28', true).setOrigin(0.5);
+      this.add.zone(bx, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerup', async () => {
+          const res = await post('/api/quests/weekly_claim', { claim_key: claimable.key }).catch(() => ({ ok: false }));
+          if (res.ok) {
+            this._toast(`✅ Недельная награда: +${res.gold}🪙 +${res.diamonds}💎`);
+            this.time.delayedCall(700, () => this.scene.restart());
+          } else {
+            this._toast('❌ Пока нельзя забрать');
+          }
+        });
+    } else {
+      txt(this, W - 20, y + 31, '📌 Выполняй PvP и Башню', 10, '#667799').setOrigin(1, 0.5);
+    }
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -442,7 +479,7 @@ class BattlePassScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '🌟', 'BATTLE PASS', 'Ежесезонные награды');
+  _extraHeader(this, W, '🌟', 'БОЕВОЙ ПРОПУСК', 'Ежесезонные награды');
     _extraBack(this, W, H);
     this._claimBtns = {};
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);

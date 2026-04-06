@@ -36,6 +36,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_05_002_referral_usdt",
     "2026_04_05_003_withdrawal_cooldown",
     "2026_04_16_001_pvp_challenges",
+    "2026_04_16_002_titan_and_weekly_claims",
 )
 
 # Без внешних ключей battles → players: в SQLite FK часто не проверялись, боты хранятся отдельно.
@@ -204,6 +205,26 @@ POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
     )
     """,
     """
+    CREATE TABLE IF NOT EXISTS titan_progress (
+        user_id BIGINT PRIMARY KEY,
+        best_floor INTEGER DEFAULT 0,
+        current_floor INTEGER DEFAULT 1,
+        weekly_best_floor INTEGER DEFAULT 0,
+        weekly_best_at BIGINT DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS weekly_claims (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        week_key TEXT NOT NULL,
+        claim_key TEXT NOT NULL,
+        claimed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (user_id, week_key, claim_key)
+    )
+    """,
+    """
     CREATE TABLE IF NOT EXISTS seasons (
         id SERIAL PRIMARY KEY,
         name TEXT NOT NULL,
@@ -345,6 +366,8 @@ POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_pvp_queue_level ON pvp_queue (level)",
     "CREATE INDEX IF NOT EXISTS idx_pvp_ch_target_status ON pvp_challenges (target_id, status, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_pvp_ch_challenger_status ON pvp_challenges (challenger_id, status, created_at)",
+    "CREATE INDEX IF NOT EXISTS idx_titan_weekly_best ON titan_progress (weekly_best_floor DESC, weekly_best_at ASC)",
+    "CREATE INDEX IF NOT EXISTS idx_weekly_claims_user_week ON weekly_claims (user_id, week_key)",
     "CREATE INDEX IF NOT EXISTS idx_clan_members_clan ON clan_members (clan_id)",
     "CREATE INDEX IF NOT EXISTS idx_stars_payments_user ON stars_payments (user_id, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_crypto_invoices_user ON crypto_invoices (user_id)",

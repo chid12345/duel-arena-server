@@ -14,6 +14,7 @@ import logging
 import os
 import time
 import urllib.parse
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect, Depends, Request
@@ -72,6 +73,9 @@ class ConnectionManager:
                 await ws.send_json(data)
             except Exception:
                 self.disconnect(user_id)
+
+    def is_online(self, user_id: int) -> bool:
+        return int(user_id) in self.connections
 
     async def broadcast_battle(self, battle: dict, payload: dict):
         p1_uid = battle["player1"]["user_id"]
@@ -191,6 +195,18 @@ class ChallengeRespondBody(BaseModel):
     init_data: str
     challenge_id: int
     accept: bool
+
+class ChallengeCancelBody(BaseModel):
+    init_data: str
+    challenge_id: int
+
+class TitanStartBody(BaseModel):
+    init_data: str
+    floor: Optional[int] = None
+
+class WeeklyClaimBody(BaseModel):
+    init_data: str
+    claim_key: str
 
 class TrainBody(BaseModel):
     init_data: str
@@ -376,6 +392,103 @@ def _adapt_battle_result_for_user(result: dict, user_id: int) -> dict:
     return r
 
 
+def _iso_week_key() -> str:
+    y, w, _ = datetime.utcnow().isocalendar()
+    return f"{int(y)}-W{int(w):02d}"
+
+
+def _titan_boss_for_floor(floor: int, player: Dict[str, Any]) -> Dict[str, Any]:
+    fl = max(1, int(floor))
+    lvl = int(player.get("level", 1))
+    base_lvl = max(1, lvl + (fl - 1) // 2)
+    hp_scale = 1.0 + min(3.5, fl * 0.14)
+    str_scale = 1.0 + min(2.4, fl * 0.09)
+    end_scale = 1.0 + min(2.8, fl * 0.10)
+    crit_bonus = min(22, fl // 2)
+    names = [
+        "Страж Руин", "Костяной Колосс", "Пепельный Воитель", "Ледяной Палач",
+        "Громовой Вестник", "Темный Титан", "Владыка Башни",
+    ]
+    nick = names[(fl - 1) % len(names)]
+    p_max_hp = int(player.get("max_hp", PLAYER_START_MAX_HP))
+    p_str = int(player.get("strength", 10))
+    p_end = int(player.get("endurance", 10))
+    p_crit = int(player.get("crit", PLAYER_START_CRIT))
+    max_hp = max(140, int(round(p_max_hp * hp_scale)))
+    strength = max(8, int(round(p_str * str_scale)))
+    endurance = max(8, int(round(p_end * end_scale)))
+    crit = max(PLAYER_START_CRIT, p_crit + crit_bonus)
+    return {
+        "bot_id": 900000 + fl,
+        "name": f"🗿 {nick} [{fl}]",
+        "level": base_lvl,
+        "strength": strength,
+        "endurance": endurance,
+        "crit": crit,
+        "max_hp": max_hp,
+        "current_hp": max_hp,
+        "bot_type": "titan_boss",
+        "ai_pattern": "adaptive",
+    }
+
+
+def _weekly_quests_status(uid: int) -> Dict[str, Any]:
+    week_key = _iso_week_key()
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    try:
+        if db._pg:
+            cursor.execute(
+                """
+                SELECT SUM(CASE WHEN winner_id = ? THEN 1 ELSE 0 END) AS wins
+                FROM battles
+                WHERE is_bot2 = FALSE
+                  AND (player1_id = ? OR player2_id = ?)
+                  AND created_at >= date_trunc('week', now())
+                """,
+                (uid, uid, uid),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT SUM(CASE WHEN winner_id = ? THEN 1 ELSE 0 END) AS wins
+                FROM battles
+                WHERE is_bot2 = 0
+                  AND (player1_id = ? OR player2_id = ?)
+                  AND date(created_at) >= date('now', 'weekday 1', '-7 days')
+                """,
+                (uid, uid, uid),
+            )
+        row = cursor.fetchone() or {}
+        pvp_wins = int(row.get("wins") or 0)
+    finally:
+        conn.close()
+
+    titan = db.get_titan_progress(uid)
+    weekly_floor = int(titan.get("weekly_best_floor", 0))
+    streak = int((db.get_or_create_player(uid, "") or {}).get("win_streak", 0))
+    defs = [
+        {"key": "weekly_pvp_wins_10", "label": "Победи 10 игроков в PvP", "cur": pvp_wins, "max": 10, "gold": 150, "diamonds": 2},
+        {"key": "weekly_titan_floor_5", "label": "Дойди до 5 этажа Башни", "cur": weekly_floor, "max": 5, "gold": 180, "diamonds": 2},
+        {"key": "weekly_streak_5", "label": "Собери серию из 5 побед", "cur": streak, "max": 5, "gold": 120, "diamonds": 1},
+    ]
+    quests = []
+    for q in defs:
+        done = int(q["cur"]) >= int(q["max"])
+        claimed = db.has_weekly_claim(uid, week_key, q["key"])
+        quests.append({
+            "key": q["key"],
+            "label": q["label"],
+            "current": int(q["cur"]),
+            "target": int(q["max"]),
+            "is_completed": bool(done),
+            "reward_claimed": bool(claimed),
+            "reward_gold": int(q["gold"]),
+            "reward_diamonds": int(q["diamonds"]),
+        })
+    return {"week_key": week_key, "quests": quests}
+
+
 # ─── Маршруты API ────────────────────────────────────────────────────────────
 
 @app.get("/api/health")
@@ -508,11 +621,15 @@ async def battle_choice(body: BattleChoiceBody):
             "event":     "battle_ended",
             "human_won": human_won,
             "afk_loss":  is_afk and not human_won,
+            "mode": mine.get("mode", "normal"),
+            "mode_meta": mine.get("mode_meta") or {},
+            "titan_progress": mine.get("titan_progress"),
             "result": {
                 "gold":     mine.get("gold_reward", 0) if human_won else 0,
                 "exp":      mine.get("exp_reward",  0),
                 "level_up": mine.get("level_up", False) if human_won else False,
                 "rounds":   mine.get("rounds", 0),
+                "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
             }
         })
         # Проверяем: возможно квест только что выполнился
@@ -532,11 +649,15 @@ async def battle_choice(body: BattleChoiceBody):
                     "event":     "battle_ended",
                     "human_won": opp_won,
                     "afk_loss":  is_afk and not opp_won,
+                    "mode": opp.get("mode", "normal"),
+                    "mode_meta": opp.get("mode_meta") or {},
+                    "titan_progress": opp.get("titan_progress"),
                     "result": {
                         "gold":     opp.get("gold_reward", 0) if opp_won else 0,
                         "exp":      opp.get("exp_reward",  0),
                         "level_up": opp.get("level_up", False) if opp_won else False,
                         "rounds":   opp.get("rounds", 0),
+                        "pvp_repeat_factor": opp.get("pvp_repeat_factor", 1.0),
                     }
                 })
         return {
@@ -544,6 +665,9 @@ async def battle_choice(body: BattleChoiceBody):
             "status":    "battle_ended",
             "human_won": human_won,
             "afk_loss":  is_afk and not human_won,
+            "mode": mine.get("mode", "normal"),
+            "mode_meta": mine.get("mode_meta") or {},
+            "titan_progress": mine.get("titan_progress"),
             "result": {
                 "gold":     mine.get("gold_reward", 0) if human_won else 0,
                 "exp":      mine.get("exp_reward",  0),
@@ -551,6 +675,7 @@ async def battle_choice(body: BattleChoiceBody):
                 "rounds":   mine.get("rounds", 0),
                 "streak_bonus": mine.get("streak_bonus_gold", 0) if human_won else 0,
                 "win_streak":   mine.get("win_streak", 0) if human_won else 0,
+                "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
             },
         }
 
@@ -594,12 +719,31 @@ async def send_challenge(body: ChallengeSendBody):
     if chp < min_hp:
         return {"ok": False, "reason": "low_hp"}
 
-    target = db.find_player_by_username(body.nickname)
-    if not target:
+    candidates = db.search_players_by_username(body.nickname, limit=5)
+    if not candidates:
         return {"ok": False, "reason": "target_not_found"}
+    norm = (body.nickname or "").strip().lstrip("@").lower()
+    exact = next((c for c in candidates if (c.get("username") or "").lower() == norm), None)
+    target = exact or (candidates[0] if len(candidates) == 1 else None)
+    if target is None:
+        return {
+            "ok": False,
+            "reason": "multiple_candidates",
+            "candidates": [
+                {
+                    "user_id": int(c["user_id"]),
+                    "username": c.get("username") or f"User{c['user_id']}",
+                    "level": int(c.get("level") or 1),
+                    "rating": int(c.get("rating") or 1000),
+                }
+                for c in candidates
+            ],
+        }
     target_uid = int(target["user_id"])
     if target_uid == uid:
         return {"ok": False, "reason": "cannot_challenge_self"}
+    if not manager.is_online(target_uid):
+        return {"ok": False, "reason": "target_offline"}
     if battle_system.get_battle_status(target_uid):
         return {"ok": False, "reason": "target_busy"}
 
@@ -651,6 +795,22 @@ async def pending_challenge(init_data: str):
     }
 
 
+@app.get("/api/battle/challenge/outgoing")
+async def outgoing_challenges(init_data: str):
+    tg_user = get_user_from_init_data(init_data)
+    uid = int(tg_user["id"])
+    rows = db.get_outgoing_pvp_challenges(uid, limit=12)
+    return {"ok": True, "challenges": rows}
+
+
+@app.post("/api/battle/challenge/cancel")
+async def cancel_challenge(body: ChallengeCancelBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    ok = db.cancel_pvp_challenge(body.challenge_id, uid)
+    return {"ok": bool(ok)}
+
+
 @app.post("/api/battle/challenge/respond")
 async def respond_challenge(body: ChallengeRespondBody):
     """Ответить на персональный вызов по нику: accept/decline."""
@@ -668,6 +828,8 @@ async def respond_challenge(body: ChallengeRespondBody):
 
     if battle_system.get_battle_status(challenger_id) or battle_system.get_battle_status(target_id):
         return {"ok": False, "reason": "already_in_battle"}
+    if not manager.is_online(challenger_id):
+        return {"ok": False, "reason": "challenger_offline"}
 
     ch_player = db.get_or_create_player(challenger_id, "")
     tg_player = db.get_or_create_player(target_id, tg_user.get("username") or tg_user.get("first_name") or "")
@@ -714,6 +876,9 @@ async def battle_last_result(init_data: str):
         "ok": True,
         "human_won": human_won,
         "afk_loss": afk_loss,
+        "mode": mine.get("mode", "normal"),
+        "mode_meta": mine.get("mode_meta") or {},
+        "titan_progress": mine.get("titan_progress"),
         "result": {
             "gold": mine.get("gold_reward", 0) if human_won else 0,
             "exp": mine.get("exp_reward", 0),
@@ -721,9 +886,69 @@ async def battle_last_result(init_data: str):
             "rounds": mine.get("rounds", 0),
             "streak_bonus": mine.get("streak_bonus_gold", 0) if human_won else 0,
             "win_streak": mine.get("win_streak", 0) if human_won else 0,
+            "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
         },
         "player": _player_api(dict(player)),
     }
+
+
+@app.get("/api/pvp/top")
+async def pvp_top(limit: int = 30):
+    rows = db.get_pvp_weekly_top(limit=min(100, max(5, int(limit))))
+    rewards = [
+        {"rank": 1, "diamonds": 120, "title": "Легенда PvP"},
+        {"rank": 2, "diamonds": 80, "title": "Мастер PvP"},
+        {"rank": 3, "diamonds": 50, "title": "Герой арены"},
+        {"rank": "4-10", "diamonds": 20, "title": "Участник топа"},
+    ]
+    return {"ok": True, "week_key": _iso_week_key(), "leaders": rows, "rewards": rewards}
+
+
+@app.get("/api/titans/status")
+async def titan_status(init_data: str):
+    tg_user = get_user_from_init_data(init_data)
+    uid = int(tg_user["id"])
+    prog = db.get_titan_progress(uid)
+    floor = max(1, int(prog.get("current_floor", 1)))
+    return {
+        "ok": True,
+        "progress": prog,
+        "next_boss_preview": _titan_boss_for_floor(floor, db.get_or_create_player(uid, "")),
+    }
+
+
+@app.post("/api/titans/start")
+async def titan_start(body: TitanStartBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    if battle_system.get_battle_status(uid):
+        state = _battle_state_api(uid)
+        return {"ok": True, "status": "already_in_battle", "battle": state}
+    player = db.get_or_create_player(uid, tg_user.get("username") or "")
+    mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
+    chp = int(player.get("current_hp", mhp))
+    if chp < int(mhp * HP_MIN_BATTLE_PCT):
+        return {"ok": False, "reason": "low_hp"}
+    prog = db.get_titan_progress(uid)
+    floor = max(1, int(body.floor or prog.get("current_floor", 1)))
+    boss = _titan_boss_for_floor(floor, player)
+    bid = await battle_system.start_battle(player, boss, is_bot2=True, mode="titan", mode_meta={"floor": floor})
+    b = battle_system.active_battles.get(bid)
+    if b:
+        b["_tma_p1"] = True
+    return {"ok": True, "status": "titan_started", "floor": floor, "boss": boss, "battle": _battle_state_api(uid)}
+
+
+@app.get("/api/titans/top")
+async def titan_top(limit: int = 30):
+    rows = db.get_titan_weekly_top(limit=min(100, max(5, int(limit))))
+    rewards = [
+        {"rank": 1, "diamonds": 150, "title": "Покоритель Титанов"},
+        {"rank": 2, "diamonds": 90, "title": "Гроза Башни"},
+        {"rank": 3, "diamonds": 60, "title": "Титаноборец"},
+        {"rank": "4-10", "diamonds": 25, "title": "Штурмовик Башни"},
+    ]
+    return {"ok": True, "week_key": _iso_week_key(), "leaders": rows, "rewards": rewards}
 
 
 @app.get("/api/rating")
@@ -1018,10 +1243,12 @@ async def get_quests(init_data: str):
     uid     = int(tg_user["id"])
     quest   = db.get_daily_quest_status(uid)
     daily   = db.check_daily_bonus(uid)
+    weekly  = _weekly_quests_status(uid)
     return {
-        "ok":    True,
-        "quest": quest,   # battles_played, battles_won, is_completed, reward_claimed
-        "daily": daily,   # can_claim, streak, bonus
+        "ok":     True,
+        "quest":  quest,   # battles_played, battles_won, is_completed, reward_claimed
+        "daily":  daily,   # can_claim, streak, bonus
+        "weekly": weekly,  # week_key + quests
     }
 
 
@@ -1051,6 +1278,36 @@ async def claim_daily(body: ClaimQuestBody):
     result["ok"]     = True
     result["player"] = dict(player)
     return result
+
+
+@app.post("/api/quests/weekly_claim")
+async def claim_weekly_quest(body: WeeklyClaimBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    status = _weekly_quests_status(uid)
+    q = next((x for x in status["quests"] if x["key"] == body.claim_key), None)
+    if not q:
+        return {"ok": False, "reason": "quest_not_found"}
+    if q.get("reward_claimed"):
+        return {"ok": False, "reason": "already_claimed"}
+    if not q.get("is_completed"):
+        return {"ok": False, "reason": "not_completed"}
+    wk = status["week_key"]
+    if not db.add_weekly_claim(uid, wk, body.claim_key):
+        return {"ok": False, "reason": "already_claimed"}
+    pl = db.get_or_create_player(uid, "")
+    upd = {
+        "gold": int(pl.get("gold", 0)) + int(q.get("reward_gold", 0)),
+        "diamonds": int(pl.get("diamonds", 0)) + int(q.get("reward_diamonds", 0)),
+    }
+    db.update_player_stats(uid, upd)
+    fresh = db.get_or_create_player(uid, "")
+    return {
+        "ok": True,
+        "gold": int(q.get("reward_gold", 0)),
+        "diamonds": int(q.get("reward_diamonds", 0)),
+        "player": dict(fresh),
+    }
 
 
 # ─── Магазин ─────────────────────────────────────────────────────────────────

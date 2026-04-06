@@ -217,6 +217,8 @@ class BattleSystem:
         player2: Dict,
         is_bot2: bool = False,
         is_test_battle: bool = False,
+        mode: str = "normal",
+        mode_meta: Optional[Dict] = None,
     ) -> str:
         """Начать новый бой. is_test_battle: без наград, БД и квестов — для проверки баланса."""
         p1_id = self._entity_id(player1)
@@ -234,6 +236,8 @@ class BattleSystem:
             'is_bot1': False,
             'is_bot2': is_bot2,
             'is_test_battle': is_test_battle,
+            'mode': mode or "normal",
+            'mode_meta': dict(mode_meta or {}),
             'current_round': 0,
             'player1_afk_count': 0,
             'player2_afk_count': 0,
@@ -1330,6 +1334,10 @@ class BattleSystem:
         winner_user_id = winner.get('user_id')
         loser_user_id = loser.get('user_id')
         is_test = battle.get('is_test_battle', False)
+        battle_mode = battle.get("mode", "normal")
+        mode_meta = dict(battle.get("mode_meta") or {})
+        battle_mode = battle.get("mode", "normal")
+        mode_meta = dict(battle.get("mode_meta") or {})
         # Защита от «отката» после платного сброса:
         # берём актуальные профили из БД, а не только снимок боя на момент старта.
         winner_live = dict(winner)
@@ -1387,9 +1395,19 @@ class BattleSystem:
             if prem_l.get("is_active"):
                 loser_exp = max(0, int(round(loser_exp * PREMIUM_XP_MULTIPLIER)))
         # Победа над живым игроком: +30% золота и опыта.
+        pvp_repeat_factor = 1.0
         if not is_test and not battle.get("is_bot2"):
-            gold_reward = int(round(gold_reward * 1.30))
-            exp_reward = int(round(exp_reward * 1.30))
+            duel_count_24h = db.get_recent_pvp_duel_count(player1["user_id"], player2["user_id"], hours=24)
+            if duel_count_24h >= 6:
+                pvp_repeat_factor = 0.2
+            elif duel_count_24h >= 3:
+                pvp_repeat_factor = 0.5
+            gold_reward = int(round(gold_reward * 1.30 * pvp_repeat_factor))
+            exp_reward = int(round(exp_reward * 1.30 * pvp_repeat_factor))
+        if battle_mode == "titan":
+            floor = max(1, int(mode_meta.get("floor", 1)))
+            gold_reward = 0 if is_test else int(12 + floor * 5)
+            exp_reward = 0 if is_test else max(1, int(round(base_exp * (1.0 + min(1.0, floor * 0.06)))))
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
 
         streak_bonus_gold = 0
@@ -1419,7 +1437,7 @@ class BattleSystem:
                 'exp_milestones': exp_patch['exp_milestones'],
                 'max_hp': exp_patch['max_hp'],
                 'current_hp': exp_patch['current_hp'],
-                'rating': winner_live.get('rating', 1000) + 10,
+                'rating': winner_live.get('rating', 1000) if battle_mode == "titan" else winner_live.get('rating', 1000) + 10,
                 'win_streak': new_win_streak,
             }
 
@@ -1448,12 +1466,14 @@ class BattleSystem:
             if winner_user_id is not None and winner_stats is not None:
                 db.update_player_stats(winner_user_id, winner_stats)
                 db.update_daily_quest_progress(winner_user_id, won_battle=True)
-                db.update_season_stats(winner_user_id, won=True)
+                if battle_mode != "titan":
+                    db.update_season_stats(winner_user_id, won=True)
                 db.update_battle_pass(winner_user_id, won=True)
             if loser_user_id is not None and loser_stats is not None:
                 db.update_player_stats(loser_user_id, loser_stats)
                 db.update_daily_quest_progress(loser_user_id, won_battle=False)
-                db.update_season_stats(loser_user_id, won=False)
+                if battle_mode != "titan":
+                    db.update_season_stats(loser_user_id, won=False)
                 db.update_battle_pass(loser_user_id, won=False)
         
             # Сохраняем информацию о бое
@@ -1467,15 +1487,25 @@ class BattleSystem:
                 'rounds': len(battle['rounds']),
                 'details': {
                     'rounds': [vars(round) for round in battle['rounds']],
-                    'battle_log': battle['battle_log']
+                    'battle_log': battle['battle_log'],
+                    'mode': battle_mode,
+                    'mode_meta': mode_meta,
                 }
             }
             
             if not (winner_locked or loser_locked):
                 db.save_battle(battle_data)
+            titan_progress = None
+            if battle_mode == "titan" and player1.get("user_id") is not None:
+                floor = max(1, int(mode_meta.get("floor", 1)))
+                if is_winner_p1 and not winner_locked:
+                    titan_progress = db.titan_on_win(player1["user_id"], floor)
+                elif not is_winner_p1 and not loser_locked:
+                    titan_progress = db.titan_on_loss(player1["user_id"], floor)
             db.log_metric_event('battle_ended', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
             logger.info("event=battle_ended winner_id=%s rounds=%s duration_ms=%s", winner_id, len(battle['rounds']), duration_ms)
         else:
+            titan_progress = None
             db.log_metric_event('battle_test_ended', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
             logger.info(
                 "event=battle_test_ended winner_id=%s rounds=%s duration_ms=%s",
@@ -1498,7 +1528,7 @@ class BattleSystem:
             'xp_boosted': xp_boosted and is_winner_p1,
             'streak_bonus_gold': (streak_bonus_gold if is_winner_p1 else 0) if not winner_locked else 0,
             'win_streak': new_win_streak if is_winner_p1 and winner_user_id and not winner_locked else 0,
-            'rating_change': 0 if is_test else 10,
+            'rating_change': 0 if is_test or battle_mode == "titan" else 10,
             'level_up': (bool(did_level) and not winner_locked) if not is_test else False,
             'level_up_level': level_up_level if not is_test else None,
             'duration_ms': duration_ms,
@@ -1518,6 +1548,10 @@ class BattleSystem:
             'pvp_p2_user_id': player2.get('user_id') if not battle['is_bot2'] else None,
             'pvp_p1_ui_message': dict(battle['ui_message']) if not battle['is_bot2'] and battle.get('ui_message') else None,
             'pvp_p2_ui_message': dict(battle['ui_message_p2']) if not battle['is_bot2'] and battle.get('ui_message_p2') else None,
+            'mode': battle_mode,
+            'mode_meta': mode_meta,
+            'pvp_repeat_factor': pvp_repeat_factor,
+            'titan_progress': titan_progress,
         }
         if battle.get('is_bot2') and player1.get('user_id') is not None:
             self.remember_battle_end_ui(player1['user_id'], result)
@@ -1594,7 +1628,7 @@ class BattleSystem:
                 'exp_milestones': exp_patch['exp_milestones'],
                 'max_hp': exp_patch['max_hp'],
                 'current_hp': exp_patch['current_hp'],
-                'rating': winner_live.get('rating', 1000) + 5,
+                'rating': winner_live.get('rating', 1000) if battle_mode == "titan" else winner_live.get('rating', 1000) + 5,
                 'win_streak': new_ws_afk,
             }
             if battle.get('is_bot2'):
@@ -1619,14 +1653,22 @@ class BattleSystem:
                 'winner_id': winner_id,
                 'result': 'afk_defeat',
                 'rounds': len(battle['rounds']),
-                'details': {'reason': 'AFK defeat'}
+                'details': {'reason': 'AFK defeat', 'mode': battle_mode, 'mode_meta': mode_meta}
             }
             
             if not (winner_locked or loser_locked):
                 db.save_battle(battle_data)
+            titan_progress = None
+            if battle_mode == "titan" and player1.get("user_id") is not None:
+                floor = max(1, int(mode_meta.get("floor", 1)))
+                if winner_id == player1["user_id"] and not winner_locked:
+                    titan_progress = db.titan_on_win(player1["user_id"], floor)
+                elif winner_id != player1["user_id"] and not loser_locked:
+                    titan_progress = db.titan_on_loss(player1["user_id"], floor)
             db.log_metric_event('battle_ended_afk', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
             logger.info("event=battle_ended_afk winner_id=%s rounds=%s duration_ms=%s", winner_id, len(battle['rounds']), duration_ms)
         else:
+            titan_progress = None
             db.log_metric_event('battle_test_ended_afk', winner_id, value=len(battle['rounds']), duration_ms=duration_ms)
             logger.info(
                 "event=battle_test_ended_afk winner_id=%s rounds=%s duration_ms=%s",
@@ -1667,6 +1709,9 @@ class BattleSystem:
             'pvp_p2_user_id': player2.get('user_id') if not battle['is_bot2'] else None,
             'pvp_p1_ui_message': dict(battle['ui_message']) if not battle['is_bot2'] and battle.get('ui_message') else None,
             'pvp_p2_ui_message': dict(battle['ui_message_p2']) if not battle['is_bot2'] and battle.get('ui_message_p2') else None,
+            'mode': battle_mode,
+            'mode_meta': mode_meta,
+            'titan_progress': titan_progress,
         }
         if battle.get('is_bot2') and player1.get('user_id') is not None:
             self.remember_battle_end_ui(player1['user_id'], result)

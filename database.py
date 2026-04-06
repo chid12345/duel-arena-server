@@ -332,6 +332,29 @@ class Database:
         ''')
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_pvp_ch_target_status ON pvp_challenges (target_id, status, created_at)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_pvp_ch_challenger_status ON pvp_challenges (challenger_id, status, created_at)")
+        # Башня титанов: прогресс и недельные клеймы
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS titan_progress (
+                user_id INTEGER PRIMARY KEY,
+                best_floor INTEGER DEFAULT 0,
+                current_floor INTEGER DEFAULT 1,
+                weekly_best_floor INTEGER DEFAULT 0,
+                weekly_best_at INTEGER DEFAULT 0,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_titan_weekly_best ON titan_progress (weekly_best_floor DESC, weekly_best_at ASC)")
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS weekly_claims (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                week_key TEXT NOT NULL,
+                claim_key TEXT NOT NULL,
+                claimed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, week_key, claim_key)
+            )
+        ''')
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_weekly_claims_user_week ON weekly_claims (user_id, week_key)")
 
         # Таблица миграций (эквивалент lightweight migration system)
         cursor.execute('''
@@ -711,6 +734,29 @@ class Database:
                     )""",
                     "CREATE INDEX IF NOT EXISTS idx_pvp_ch_target_status ON pvp_challenges (target_id, status, created_at)",
                     "CREATE INDEX IF NOT EXISTS idx_pvp_ch_challenger_status ON pvp_challenges (challenger_id, status, created_at)",
+                ],
+            ),
+            (
+                "2026_04_16_002_titan_and_weekly_claims",
+                [
+                    """CREATE TABLE IF NOT EXISTS titan_progress (
+                        user_id INTEGER PRIMARY KEY,
+                        best_floor INTEGER DEFAULT 0,
+                        current_floor INTEGER DEFAULT 1,
+                        weekly_best_floor INTEGER DEFAULT 0,
+                        weekly_best_at INTEGER DEFAULT 0,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_titan_weekly_best ON titan_progress (weekly_best_floor DESC, weekly_best_at ASC)",
+                    """CREATE TABLE IF NOT EXISTS weekly_claims (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        user_id INTEGER NOT NULL,
+                        week_key TEXT NOT NULL,
+                        claim_key TEXT NOT NULL,
+                        claimed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                        UNIQUE(user_id, week_key, claim_key)
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_weekly_claims_user_week ON weekly_claims (user_id, week_key)",
                 ],
             ),
         ]
@@ -1610,6 +1656,29 @@ class Database:
         conn.close()
         return dict(row) if row else None
 
+    def search_players_by_username(self, query: str, limit: int = 5) -> List[Dict]:
+        """Поиск игроков по частичному совпадению ника."""
+        q = self._norm_username(query)
+        if not q:
+            return []
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        like = f"%{q}%"
+        cursor.execute(
+            """
+            SELECT user_id, username, level, rating
+            FROM players
+            WHERE username IS NOT NULL AND LOWER(username) LIKE ?
+            ORDER BY CASE WHEN LOWER(username) = ? THEN 0 ELSE 1 END,
+                     rating DESC
+            LIMIT ?
+            """,
+            (like, q, int(limit)),
+        )
+        rows = [dict(r) for r in cursor.fetchall()]
+        conn.close()
+        return rows
+
     def create_pvp_challenge(self, challenger_id: int, target_id: int, ttl_seconds: int = 300) -> Dict[str, Any]:
         """Создать вызов на PvP по нику (один входящий pending на цель)."""
         now_ts = int(time.time())
@@ -1676,6 +1745,47 @@ class Database:
         finally:
             conn.close()
 
+    def get_outgoing_pvp_challenges(self, challenger_id: int, limit: int = 10) -> List[Dict]:
+        now_ts = int(time.time())
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE pvp_challenges SET status = 'expired' WHERE status = 'pending' AND expires_at <= ?",
+                (now_ts,),
+            )
+            cursor.execute(
+                """
+                SELECT c.id, c.target_id, c.status, c.expires_at, c.created_at,
+                       p.username AS target_username, p.level AS target_level, p.rating AS target_rating
+                FROM pvp_challenges c
+                JOIN players p ON p.user_id = c.target_id
+                WHERE c.challenger_id = ?
+                ORDER BY c.created_at DESC
+                LIMIT ?
+                """,
+                (challenger_id, int(limit)),
+            )
+            rows = [dict(r) for r in cursor.fetchall()]
+            conn.commit()
+            return rows
+        finally:
+            conn.close()
+
+    def cancel_pvp_challenge(self, challenge_id: int, challenger_id: int) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE pvp_challenges SET status = 'expired' WHERE id = ? AND challenger_id = ? AND status = 'pending'",
+                (int(challenge_id), challenger_id),
+            )
+            ok = cursor.rowcount > 0
+            conn.commit()
+            return ok
+        finally:
+            conn.close()
+
     def respond_pvp_challenge(self, challenge_id: int, target_id: int, accept: bool) -> Optional[Dict]:
         """Принять/отклонить вызов. Возвращает challenge row при успехе."""
         now_ts = int(time.time())
@@ -1703,6 +1813,232 @@ class Database:
             out = dict(row)
             out["status"] = status
             return out
+        finally:
+            conn.close()
+
+    # ------------------------------------------------------------------
+    # Башня титанов + недельные клеймы
+    # ------------------------------------------------------------------
+
+    def get_titan_progress(self, user_id: int) -> Dict[str, Any]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at FROM titan_progress WHERE user_id = ?",
+                (user_id,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                cursor.execute(
+                    "INSERT INTO titan_progress (user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at) VALUES (?, 0, 1, 0, 0)",
+                    (user_id,),
+                )
+                conn.commit()
+                return {"user_id": user_id, "best_floor": 0, "current_floor": 1, "weekly_best_floor": 0, "weekly_best_at": 0}
+            return dict(row)
+        finally:
+            conn.close()
+
+    def titan_on_win(self, user_id: int, floor: int) -> Dict[str, Any]:
+        now_ts = int(time.time())
+        floor_i = max(1, int(floor))
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            prog = self.get_titan_progress(user_id)
+            best_floor = max(int(prog.get("best_floor", 0)), floor_i)
+            current_floor = max(int(prog.get("current_floor", 1)), floor_i + 1)
+            weekly_best = int(prog.get("weekly_best_floor", 0))
+            weekly_at = int(prog.get("weekly_best_at", 0))
+            if floor_i > weekly_best:
+                weekly_best = floor_i
+                weekly_at = now_ts
+            cursor.execute(
+                """
+                UPDATE titan_progress
+                SET best_floor = ?, current_floor = ?, weekly_best_floor = ?, weekly_best_at = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE user_id = ?
+                """,
+                (best_floor, current_floor, weekly_best, weekly_at, user_id),
+            )
+            conn.commit()
+            return {
+                "best_floor": best_floor,
+                "current_floor": current_floor,
+                "weekly_best_floor": weekly_best,
+                "weekly_best_at": weekly_at,
+            }
+        finally:
+            conn.close()
+
+    def titan_on_loss(self, user_id: int, floor: int) -> Dict[str, Any]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            prog = self.get_titan_progress(user_id)
+            next_floor = max(1, int(floor))
+            cursor.execute(
+                "UPDATE titan_progress SET current_floor = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+                (next_floor, user_id),
+            )
+            conn.commit()
+            prog["current_floor"] = next_floor
+            return dict(prog)
+        finally:
+            conn.close()
+
+    def get_titan_weekly_top(self, limit: int = 50) -> List[Dict]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """
+                SELECT t.user_id, p.username, t.weekly_best_floor, t.weekly_best_at
+                FROM titan_progress t
+                JOIN players p ON p.user_id = t.user_id
+                WHERE t.weekly_best_floor > 0
+                ORDER BY t.weekly_best_floor DESC, t.weekly_best_at ASC
+                LIMIT ?
+                """,
+                (int(limit),),
+            )
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get_pvp_weekly_top(self, limit: int = 50) -> List[Dict]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            if self._pg:
+                cursor.execute(
+                    """
+                    SELECT user_id, username, wins, losses, rating_delta
+                    FROM (
+                        SELECT b.player1_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player1_id
+                        WHERE b.is_bot2 = FALSE
+                          AND b.created_at >= date_trunc('week', now())
+                        GROUP BY b.player1_id, p.username
+                        UNION ALL
+                        SELECT b.player2_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player2_id
+                        WHERE b.is_bot2 = FALSE
+                          AND b.created_at >= date_trunc('week', now())
+                        GROUP BY b.player2_id, p.username
+                    ) s
+                    GROUP BY user_id, username
+                    ORDER BY wins DESC, rating_delta DESC, losses ASC
+                    LIMIT ?
+                    """,
+                    (int(limit),),
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT user_id, username, wins, losses, rating_delta
+                    FROM (
+                        SELECT b.player1_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player1_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player1_id
+                        WHERE b.is_bot2 = 0
+                          AND date(b.created_at) >= date('now', 'weekday 1', '-7 days')
+                        GROUP BY b.player1_id, p.username
+                        UNION ALL
+                        SELECT b.player2_id AS user_id, p.username,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 1 ELSE 0 END) AS wins,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 0 ELSE 1 END) AS losses,
+                               SUM(CASE WHEN b.winner_id = b.player2_id THEN 12 ELSE -8 END) AS rating_delta
+                        FROM battles b
+                        JOIN players p ON p.user_id = b.player2_id
+                        WHERE b.is_bot2 = 0
+                          AND date(b.created_at) >= date('now', 'weekday 1', '-7 days')
+                        GROUP BY b.player2_id, p.username
+                    ) s
+                    GROUP BY user_id, username
+                    ORDER BY wins DESC, rating_delta DESC, losses ASC
+                    LIMIT ?
+                    """,
+                    (int(limit),),
+                )
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get_recent_pvp_duel_count(self, user_a: int, user_b: int, hours: int = 24) -> int:
+        ua, ub = sorted((int(user_a), int(user_b)))
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            if self._pg:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) AS cnt
+                    FROM battles
+                    WHERE is_bot2 = FALSE
+                      AND created_at >= (NOW() - (?::text || ' hours')::interval)
+                      AND LEAST(player1_id, player2_id) = ?
+                      AND GREATEST(player1_id, player2_id) = ?
+                    """,
+                    (str(int(hours)), ua, ub),
+                )
+            else:
+                cursor.execute(
+                    """
+                    SELECT COUNT(*) AS cnt
+                    FROM battles
+                    WHERE is_bot2 = 0
+                      AND created_at >= datetime('now', ?)
+                      AND min(player1_id, player2_id) = ?
+                      AND max(player1_id, player2_id) = ?
+                    """,
+                    (f"-{int(hours)} hours", ua, ub),
+                )
+            row = cursor.fetchone()
+            return int((row or {}).get("cnt", 0))
+        finally:
+            conn.close()
+
+    def get_week_key(self) -> str:
+        now = datetime.utcnow()
+        y, w, _ = now.isocalendar()
+        return f"{y}-W{int(w):02d}"
+
+    def has_weekly_claim(self, user_id: int, week_key: str, claim_key: str) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT 1 FROM weekly_claims WHERE user_id = ? AND week_key = ? AND claim_key = ? LIMIT 1",
+                (user_id, week_key, claim_key),
+            )
+            return bool(cursor.fetchone())
+        finally:
+            conn.close()
+
+    def add_weekly_claim(self, user_id: int, week_key: str, claim_key: str) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT OR IGNORE INTO weekly_claims (user_id, week_key, claim_key) VALUES (?, ?, ?)",
+                (user_id, week_key, claim_key),
+            )
+            ok = cursor.rowcount > 0
+            conn.commit()
+            return ok
         finally:
             conn.close()
 
