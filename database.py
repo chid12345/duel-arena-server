@@ -125,6 +125,9 @@ class _PatchedConn:
 class Database:
     """Класс для работы с базой данных"""
 
+    # Сериализация bootstrap схемы PostgreSQL (устраняет гонки CREATE TABLE/TYPE при параллельном старте процессов).
+    _ADV_PG_SCHEMA_K1 = 428470
+    _ADV_PG_SCHEMA_K2 = 921002
     # Uvicorn и main.py стартуют параллельно — только один процесс делает засев/ребаланс ботов (иначе блокировки + timeout).
     _ADV_PG_INIT_K1 = 428471
     _ADV_PG_INIT_K2 = 921003
@@ -154,10 +157,28 @@ class Database:
         if self._pg:
             conn = self.get_connection()
             cursor = conn.cursor()
+            schema_lock_held = False
             lock_held = False
             try:
-                bootstrap_postgres_schema(cursor)
-                conn.commit()
+                # 1) Блокируем bootstrap схемы (все процессы по очереди, без конкурентных CREATE).
+                cursor.execute(
+                    "SELECT pg_advisory_lock(%s, %s)",
+                    (Database._ADV_PG_SCHEMA_K1, Database._ADV_PG_SCHEMA_K2),
+                )
+                schema_lock_held = True
+                try:
+                    bootstrap_postgres_schema(cursor)
+                    conn.commit()
+                finally:
+                    ucur = conn.cursor()
+                    ucur.execute(
+                        "SELECT pg_advisory_unlock(%s, %s)",
+                        (Database._ADV_PG_SCHEMA_K1, Database._ADV_PG_SCHEMA_K2),
+                    )
+                    conn.commit()
+                    schema_lock_held = False
+
+                # 2) Тяжёлый засев/ребаланс выполняет только один процесс.
                 cursor.execute(
                     "SELECT pg_try_advisory_lock(%s, %s)",
                     (Database._ADV_PG_INIT_K1, Database._ADV_PG_INIT_K2),
@@ -168,6 +189,16 @@ class Database:
                     self.create_initial_bots(conn)
                     self.rebalance_all_bots(conn)
             finally:
+                if schema_lock_held:
+                    try:
+                        ucur = conn.cursor()
+                        ucur.execute(
+                            "SELECT pg_advisory_unlock(%s, %s)",
+                            (Database._ADV_PG_SCHEMA_K1, Database._ADV_PG_SCHEMA_K2),
+                        )
+                        conn.commit()
+                    except Exception:
+                        pass
                 if lock_held:
                     try:
                         ucur = conn.cursor()
