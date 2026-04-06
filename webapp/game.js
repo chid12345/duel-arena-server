@@ -61,6 +61,7 @@ const State = {
   battle: null,
   lastResult: null,
   ws: null,
+  appVersion: '...',
 };
 
 function post(path, body = {}) {
@@ -372,12 +373,16 @@ class MenuScene extends Phaser.Scene {
 
     // Загружаем игрока + статус квестов параллельно
     try {
-      const [playerRes, questRes] = await Promise.all([
+      const [playerRes, questRes, versionRes] = await Promise.all([
         post('/api/player'),
         get('/api/quests').catch(() => null),
+        get('/api/version').catch(() => null),
       ]);
       if (playerRes.ok) {
         State.player = playerRes.player;
+        if (versionRes?.ok && versionRes.version) {
+          State.appVersion = String(versionRes.version);
+        }
 
         // Определяем нужно ли показать бейдж на кнопке Задания
         this._questBadge = false;
@@ -707,12 +712,21 @@ class MenuScene extends Phaser.Scene {
     refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, isLight ? 1 : 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, isLight ? 0.5 : 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
 
     /* ══ СБОРКА ═════════════════════════════════════════════ */
+    const verTxt = txt(
+      this,
+      W - 12,
+      CH - 10,
+      `ver ${State.appVersion || '...'}`,
+      10,
+      '#666688'
+    ).setOrigin(1, 0.5);
+
     const children = [
       hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt,
       snBg, snTxt, snZ, thBg, thTxt, thZ,
       glowG, warrior, hpBg, hpTxt,
       ...statObjs.flat(),
-      refG, refT, refZ,
+      refG, refT, refZ, verTxt,
     ];
     if (xpBg)        children.push(xpBg, xpTxt, xpLabel);
     if (fsBadge.length)   children.push(...fsBadge);
@@ -1004,7 +1018,7 @@ class MenuScene extends Phaser.Scene {
     });
 
     // Версия
-    c.add(txt(this, W / 2, CH - 18, 'Duel Arena · @ZenDuelArena_bot', 11, '#444466').setOrigin(0.5));
+    c.add(txt(this, W / 2, CH - 18, `Duel Arena · @ZenDuelArena_bot · v${State.appVersion || '...'}`, 11, '#444466').setOrigin(0.5));
 
     this._panels.more = c;
   }

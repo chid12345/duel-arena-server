@@ -46,6 +46,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 app = FastAPI(title="Duel Arena TMA API", version="1.0")
 
+# Видимая версия сборки для Mini App (меняется на каждый деплой на Render).
+APP_BUILD_VERSION = (
+    (os.getenv("WEBAPP_URL_VERSION") or "").strip()
+    or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
+    or "dev"
+)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -510,6 +517,11 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
 @app.get("/api/health")
 async def health():
     return {"ok": True, "ts": int(time.time())}
+
+
+@app.get("/api/version")
+async def app_version():
+    return {"ok": True, "version": APP_BUILD_VERSION}
 
 
 @app.post("/api/player")
