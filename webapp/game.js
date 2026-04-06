@@ -670,16 +670,15 @@ class MenuScene extends Phaser.Scene {
     const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#ffffff', true, '#00000088').setOrigin(0.5);
 
     /* ── XP бар ── */
-    let xpBg, xpTxt, xpLabel;
-    const xpH = 12;
-    const xpY = hpY + hpH + 8;
+    let xpBg, xpTxt;
+    const xpH = 14;
+    const xpY = hpY + hpH + 6;
     if (!p.max_level) {
-      xpBg   = makeBar(this, hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, C.dark, 5);
-      xpTxt  = txt(this, W / 2, xpY + xpH / 2,
-        `${p.exp} / ${p.exp_needed} XP`, 10, '#ffffff', true, '#00000088').setOrigin(0.5);
-      xpLabel = txt(this, hpX, xpY - 15, `⭐ Опыт  ${p.xp_pct}%`, 11, '#6aabff', true).setOrigin(0, 0);
+      xpBg  = makeBar(this, hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, C.dark, 5);
+      xpTxt = txt(this, W / 2, xpY + xpH / 2,
+        `⭐ ${p.xp_pct}%  ·  ${p.exp} / ${p.exp_needed} XP`, 10, '#ffffff', true, '#00000088').setOrigin(0.5);
     } else {
-      txt(this, W / 2, xpY + 6, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
+      txt(this, W / 2, xpY + xpH / 2, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
     }
 
     /* ══ СТАТЫ — 4 карточки в ряд ══════════════════════════ */
@@ -796,7 +795,7 @@ class MenuScene extends Phaser.Scene {
       ...statObjs.flat(),
       refG, refT, refZ,
     ];
-    if (xpBg)        children.push(xpBg, xpTxt, xpLabel);
+    if (xpBg)        children.push(xpBg, xpTxt);
     if (fsBadge.length)   children.push(...fsBadge);
     if (regenObjs.length) children.push(...regenObjs);
     children.push(...hpExtra);
