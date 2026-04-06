@@ -45,10 +45,11 @@ BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 # Если WEBAPP_PUBLIC_URL не задан — подставляем типичные URL хостингов (чтобы кнопка не пропадала после деплоя).
 def _webapp_public_url() -> str:
     u = (os.getenv("WEBAPP_PUBLIC_URL") or "").strip().rstrip("/")
+    render_ext = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
+
     if not u:
-        render = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
-        if render:
-            u = render
+        if render_ext:
+            u = render_ext
         else:
             fly = (os.getenv("FLY_APP_NAME") or "").strip()
             if fly:
@@ -57,6 +58,18 @@ def _webapp_public_url() -> str:
                 rwy = (os.getenv("RAILWAY_PUBLIC_DOMAIN") or "").strip().rstrip("/")
                 if rwy:
                     u = rwy if rwy.startswith("http") else f"https://{rwy}"
+    elif render_ext:
+        # Авто-коррекция: если WEBAPP_PUBLIC_URL указывает на другой хост (например, -2 сервис),
+        # а сам сервис знает свой URL через RENDER_EXTERNAL_URL — используем собственный URL.
+        u_base = u.split("?")[0]
+        if u_base != render_ext:
+            import logging as _log
+            _log.getLogger(__name__).warning(
+                "WEBAPP_PUBLIC_URL (%s) != RENDER_EXTERNAL_URL (%s) — using own service URL",
+                u_base, render_ext,
+            )
+            u = render_ext
+
     # Всегда добавляем ?v=COMMIT, заменяя любой старый ?v= из env-var.
     ver = (
         (os.getenv("WEBAPP_URL_VERSION") or "").strip()

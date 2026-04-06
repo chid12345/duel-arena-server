@@ -53,6 +53,17 @@ APP_BUILD_VERSION = (
     or "dev"
 )
 
+# Диагностика: предупреждаем если WEBAPP_PUBLIC_URL указывает на другой хост чем сам сервис.
+_self_host = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
+_webapp_host = (os.getenv("WEBAPP_PUBLIC_URL") or "").strip().rstrip("/").split("?")[0]
+if _self_host and _webapp_host and _self_host != _webapp_host:
+    logger.warning(
+        "⚠️  WEBAPP_PUBLIC_URL (%s) differs from RENDER_EXTERNAL_URL (%s)! "
+        "Mini App will open on a DIFFERENT service → API calls will fail. "
+        "Fix: set WEBAPP_PUBLIC_URL=%s in Render env vars.",
+        _webapp_host, _self_host, _self_host,
+    )
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -517,7 +528,17 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
 @app.get("/api/health")
 async def health():
     from config import WEBAPP_PUBLIC_URL
-    return {"ok": True, "ts": int(time.time()), "version": APP_BUILD_VERSION, "webapp_url": WEBAPP_PUBLIC_URL}
+    self_url = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
+    webapp_base = WEBAPP_PUBLIC_URL.split("?")[0] if WEBAPP_PUBLIC_URL else ""
+    url_mismatch = bool(self_url and webapp_base and self_url != webapp_base)
+    return {
+        "ok": True,
+        "ts": int(time.time()),
+        "version": APP_BUILD_VERSION,
+        "webapp_url": WEBAPP_PUBLIC_URL,
+        "self_url": self_url,
+        "url_mismatch": url_mismatch,
+    }
 
 
 @app.get("/api/version")
