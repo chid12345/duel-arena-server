@@ -802,6 +802,9 @@ class MenuScene extends Phaser.Scene {
     const ttTxt = txt(this, W / 2, ttY, '🗿 Башня титанов (боссы по этажам)', 12, '#d8c0ff', true).setOrigin(0.5);
     const ttZone = this.add.zone(16, ttY - 18, W - 32, 36).setOrigin(0).setInteractive({ useHandCursor: true });
     ttZone.on('pointerup', () => this._onTitanFight());
+    const ttTopTxt = txt(this, W / 2, ttY + 20, '🏆 Открыть ТОП БАШНИ', 10, '#9ec2ff', true).setOrigin(0.5);
+    const ttTopZone = this.add.zone(16, ttY + 10, W - 32, 20).setOrigin(0).setInteractive({ useHandCursor: true });
+    ttTopZone.on('pointerup', () => this.scene.start('TitanTop'));
 
     /* ── Карточка Бот ── */
     const botCard = this._makeBattleCard(
@@ -860,7 +863,7 @@ class MenuScene extends Phaser.Scene {
     const children = [
       title, ...pvpCard, chBg, chTxt, chZone,
       m1bg, m1txt, m1z, m2bg, m2txt, m2z,
-      ttBg, ttTxt, ttZone,
+      ttBg, ttTxt, ttZone, ttTopTxt, ttTopZone,
       ...botCard, ...hpBlockObjs,
     ];
     children.forEach(o => c.add(o));
@@ -931,6 +934,7 @@ class MenuScene extends Phaser.Scene {
       { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
       { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
       { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
+      { icon: '🗿', label: 'Топ Башни',  cb: () => this.scene.start('TitanTop')   },
       { icon: '🌟', label: 'Боевой пропуск', cb: () => this.scene.start('BattlePass') },
       { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
       { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
@@ -2698,7 +2702,7 @@ const config = {
   backgroundColor: C._name === 'light' ? '#f0f2ff' : '#12121c',
   parent: document.body,
   scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
-          QuestsScene, SummaryScene, SeasonScene, BattlePassScene, ClanScene, ShopScene],
+          QuestsScene, SummaryScene, SeasonScene, TitanTopScene, BattlePassScene, ClanScene, ShopScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
