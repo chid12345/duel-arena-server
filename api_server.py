@@ -47,6 +47,27 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name
 
 app = FastAPI(title="Duel Arena TMA API", version="1.0")
 
+# ─── Кэш профиля игрока ───────────────────────────────────────────────────────
+# Хранит (player_dict, timestamp). TTL = 3 сек.
+# Инвалидируется после любой записи (тренировка, квест, сброс, бой).
+_PLAYER_CACHE_TTL = 3.0
+_player_cache: dict[int, tuple[dict, float]] = {}
+
+
+def _cache_get(uid: int) -> dict | None:
+    entry = _player_cache.get(uid)
+    if entry and (time.monotonic() - entry[1]) < _PLAYER_CACHE_TTL:
+        return entry[0]
+    return None
+
+
+def _cache_set(uid: int, player: dict) -> None:
+    _player_cache[uid] = (dict(player), time.monotonic())
+
+
+def _cache_invalidate(uid: int) -> None:
+    _player_cache.pop(uid, None)
+
 # Видимая версия сборки для Mini App (меняется на каждый деплой на Render).
 APP_BUILD_VERSION = (
     (os.getenv("WEBAPP_URL_VERSION") or "").strip()
@@ -146,6 +167,7 @@ async def _notify_paid_full_reset(uid: int) -> None:
         logger.warning("force_abandon before full reset uid=%s: %s", uid, e)
     db.wipe_player_profile(uid, keep_wallet_clan_and_referrals=True)
     battle_system.mark_profile_reset(uid, ttl_seconds=600)
+    _cache_invalidate(uid)
     db.get_or_create_player(uid, "")
     db.log_metric_event("paid_full_reset", uid, value=1)
     try:
@@ -553,14 +575,18 @@ async def get_player(body: InitDataHeader):
     uid      = int(tg_user["id"])
     username = tg_user.get("username") or tg_user.get("first_name") or ""
 
+    cached = _cache_get(uid)
+    if cached is not None:
+        return {"ok": True, "player": _player_api(cached), "cached": True}
+
     player = db.get_or_create_player(uid, username)
-    # Реген HP
     inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
     regen = db.apply_hp_regen(uid, inv)
     if regen:
         player = dict(player)
         player["current_hp"] = regen["current_hp"]
 
+    _cache_set(uid, player)
     return {"ok": True, "player": _player_api(player)}
 
 
@@ -922,6 +948,7 @@ async def battle_last_result(init_data: str):
     mine = _adapt_battle_result_for_user(snap, uid)
     human_won = bool(mine.get("human_won", mine.get("winner_id") == uid))
     afk_loss = mine.get("status") == "battle_ended_afk" and not human_won
+    _cache_invalidate(uid)  # Бой закончен — данные игрока изменились
     player = db.get_or_create_player(uid, "")
     return {
         "ok": True,
@@ -1087,6 +1114,7 @@ async def train_stat(body: TrainBody):
         result_msg = f"+{inc} ❤️ к пулу HP → {stats_update['max_hp']}"
 
     db.update_player_stats(uid, stats_update)
+    _cache_invalidate(uid)
 
     fresh = db.get_or_create_player(uid, "")
     inv   = stamina_stats_invested(fresh.get("max_hp", PLAYER_START_MAX_HP), fresh.get("level", 1))
@@ -1095,6 +1123,7 @@ async def train_stat(body: TrainBody):
         fresh = dict(fresh)
         fresh["current_hp"] = regen["current_hp"]
 
+    _cache_set(uid, fresh)
     return {"ok": True, "message": result_msg, "player": _player_api(fresh)}
 
 # ─── Рефералка ───────────────────────────────────────────────────────────────
@@ -1352,6 +1381,7 @@ async def claim_weekly_quest(body: WeeklyClaimBody):
         "diamonds": int(pl.get("diamonds", 0)) + int(q.get("reward_diamonds", 0)),
     }
     db.update_player_stats(uid, upd)
+    _cache_invalidate(uid)
     fresh = db.get_or_create_player(uid, "")
     return {
         "ok": True,
