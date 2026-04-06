@@ -327,9 +327,10 @@ class StatsScene extends Phaser.Scene {
       return;
     }
 
-    // Обновляем данные
+    // Обновляем данные (и сбрасываем клиентский кэш меню)
     const prev = State.player;
     State.player = res.player;
+    State.playerLoadedAt = Date.now();
     tg?.HapticFeedback?.notificationOccurred('success');
 
     // Анимируем строку

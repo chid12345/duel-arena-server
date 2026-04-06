@@ -58,6 +58,7 @@ applyTheme(
 const State = {
   initData: tg?.initData || '',
   player: null,
+  playerLoadedAt: 0,   // timestamp последней загрузки профиля
   battle: null,
   lastResult: null,
   ws: null,
@@ -395,34 +396,59 @@ class MenuScene extends Phaser.Scene {
       }
     }
 
-    try {
-      const [playerRes, questRes, versionRes] = await Promise.all([
-        post('/api/player'),
-        get('/api/quests').catch(() => null),
-        get('/api/version').catch(() => null),
-      ]);
-      if (playerRes.ok) {
-        State.player = playerRes.player;
-        if (versionRes?.ok && versionRes.version) {
-          State.appVersion = String(versionRes.version);
-        }
+    // Клиентский кэш профиля: если данные свежие (<30 сек) — не идём в сеть
+    const _PROFILE_TTL = 30000;
+    const cached = State.player && (Date.now() - State.playerLoadedAt) < _PROFILE_TTL;
 
-        this._questBadge = false;
-        if (questRes?.ok) {
+    try {
+      let playerOk = false;
+
+      if (cached) {
+        // Данные свежие — сразу рисуем UI, в фоне обновим квест-бейдж
+        playerOk = true;
+        get('/api/quests').catch(() => null).then(questRes => {
+          if (!questRes?.ok) return;
           const q = questRes.quest || {};
           const d = questRes.daily || {};
-          this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
-          if (d.can_claim) {
-            this.time.delayedCall(800, () =>
-              this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
-            );
-          } else if (q.is_completed && !q.reward_claimed) {
-            this.time.delayedCall(800, () =>
-              this._toast('🏆 Квест дня выполнен — забери награду!')
-            );
+          const badge = d.can_claim || (q.is_completed && !q.reward_claimed);
+          if (badge !== this._questBadge) {
+            this._questBadge = badge;
+            // обновляем иконку таб-бара без перестройки всего UI
+            if (this._tabBarObjs) this._buildTabBar();
+          }
+        });
+      } else {
+        const [playerRes, questRes, versionRes] = await Promise.all([
+          post('/api/player'),
+          get('/api/quests').catch(() => null),
+          get('/api/version').catch(() => null),
+        ]);
+        if (playerRes.ok) {
+          State.player = playerRes.player;
+          State.playerLoadedAt = Date.now();
+          playerOk = true;
+          if (versionRes?.ok && versionRes.version) {
+            State.appVersion = String(versionRes.version);
+          }
+          this._questBadge = false;
+          if (questRes?.ok) {
+            const q = questRes.quest || {};
+            const d = questRes.daily || {};
+            this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
+            if (d.can_claim) {
+              this.time.delayedCall(800, () =>
+                this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
+              );
+            } else if (q.is_completed && !q.reward_claimed) {
+              this.time.delayedCall(800, () =>
+                this._toast('🏆 Квест дня выполнен — забери награду!')
+              );
+            }
           }
         }
+      }
 
+      if (playerOk) {
         this._buildTabBar();
         this._buildProfilePanel();
         this._buildBattlePanel();
@@ -1461,13 +1487,15 @@ class MenuScene extends Phaser.Scene {
       if (msg.event === 'diamonds_credited') {
         tg?.HapticFeedback?.notificationOccurred('success');
         Notif.push('💎', `+${msg.diamonds} алмазов зачислено!`, '#3cc8dc', 3500);
-        post('/api/player').then(d => { if (d.ok && d.player) State.player = d.player; }).catch(() => {});
+        State.playerLoadedAt = 0;
+        post('/api/player').then(d => { if (d.ok && d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); } }).catch(() => {});
       }
       if (msg.event === 'premium_activated') {
         tg?.HapticFeedback?.notificationOccurred('success');
         const bonusTxt = msg.bonus_diamonds > 0 ? ` +${msg.bonus_diamonds} 💎` : '';
         Notif.push('👑', `Premium активирован!${bonusTxt}`, '#b45aff', 5000);
-        post('/api/player').then(d => { if (d.ok && d.player) State.player = d.player; }).catch(() => {});
+        State.playerLoadedAt = 0;
+        post('/api/player').then(d => { if (d.ok && d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); } }).catch(() => {});
       }
     });
   }
@@ -2522,9 +2550,10 @@ class ResultScene extends Phaser.Scene {
     }
 
     /* ── Обновляем профиль ── */
+    State.playerLoadedAt = 0;
     try {
       const fresh = await post('/api/player');
-      if (fresh.ok) State.player = fresh.player;
+      if (fresh.ok) { State.player = fresh.player; State.playerLoadedAt = Date.now(); }
     } catch (_) {}
 
     /* ── Кнопки ── */
