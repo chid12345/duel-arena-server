@@ -2709,28 +2709,13 @@ class RatingScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
 
-    /* Фон */
-    const bg = this.add.graphics();
-    bg.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
-    bg.fillRect(0, 0, W, H);
-    for (let i = 0; i < 40; i++) {
-      this.add.circle(
-        Phaser.Math.Between(0, W), Phaser.Math.Between(0, H * 0.85),
-        Phaser.Math.FloatBetween(0.3, 1.6), 0xffc83c,
-        Phaser.Math.FloatBetween(0.04, 0.2)
-      );
-    }
+    /* Фон — как в ShopScene */
+    _extraBg(this, W, H);
+    _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня Титанов');
+    _extraBack(this, W, H);
 
-    /* Шапка */
-    makePanel(this, 8, 6, W - 16, 52, 11);
-    txt(this, W / 2, 22, '🏆  РЕЙТИНГ', 17, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W / 2, 42, 'Топ PvP · Башня Титанов', 10, '#9999bb').setOrigin(0.5);
-
-    /* Вкладки */
+    /* Вкладки — точно как в Магазине */
     this._buildTabBar(W);
-
-    /* Кнопка назад */
-    makeBackBtn(this, 'Назад', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
 
     /* Контент */
     if (this._tab === 'pvp') {
@@ -2742,21 +2727,21 @@ class RatingScene extends Phaser.Scene {
 
   _buildTabBar(W) {
     const tabs = [
-      { key: 'pvp',    label: '🏆 Топ PvP'      },
-      { key: 'titans', label: '🗿 Башня Титанов' },
+      { key: 'pvp',    label: '🏆 Топ PvP'  },
+      { key: 'titans', label: '🗿 Башня'     },
     ];
-    const tw = (W - 24) / tabs.length;
-    const ty = 66;
+    const tw  = (W - 24) / tabs.length;
+    const ty  = 76;
     tabs.forEach((tab, i) => {
       const tx     = 12 + i * tw;
       const active = tab.key === this._tab;
       const bg = this.add.graphics();
       bg.fillStyle(active ? C.blue : C.dark, active ? 0.92 : 0.55);
-      bg.fillRoundedRect(tx, ty, tw - 4, 28, 8);
-      if (active) { bg.lineStyle(1.5, C.blue, 0.6); bg.strokeRoundedRect(tx, ty, tw - 4, 28, 8); }
-      txt(this, tx + (tw - 4) / 2, ty + 14, tab.label, 11,
+      bg.fillRoundedRect(tx, ty, tw - 4, 30, 8);
+      if (active) { bg.lineStyle(1.5, C.blue, 0.6); bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8); }
+      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 11,
         active ? '#ffffff' : '#8888aa', active).setOrigin(0.5);
-      this.add.zone(tx, ty, tw - 4, 28).setOrigin(0)
+      this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => {
           if (this._tab === tab.key) return;
@@ -2767,7 +2752,7 @@ class RatingScene extends Phaser.Scene {
   }
 
   async _buildPvpTab(W, H) {
-    const tabContentY = 102;
+    const startY = 114;   /* ниже шапки + табов, как в магазине */
     try {
       const res = await get('/api/pvp/top');
       if (!res.ok) throw new Error('bad');
@@ -2776,13 +2761,13 @@ class RatingScene extends Phaser.Scene {
 
       /* ── TOP-3 подиум ── */
       if (players.length >= 3) {
-        this._buildPodium(players.slice(0, 3), W, tabContentY);
+        this._buildPodium(players.slice(0, 3), W, startY);
       }
 
       /* ── Список с 4-го места ── */
       const listFrom = Math.min(players.length, 3);
-      const listY    = players.length >= 3 ? tabContentY + 138 : tabContentY;
-      const rowH     = 46;
+      const listY    = players.length >= 3 ? startY + 136 : startY;
+      const rowH     = 44;
 
       players.slice(listFrom, listFrom + 8).forEach((p, i) => {
         const rank = listFrom + i + 1;
@@ -2794,7 +2779,7 @@ class RatingScene extends Phaser.Scene {
         if (isMe) { rg.lineStyle(1.5, C.blue, 0.7); rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9); }
         txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#9999bb', true).setOrigin(0.5);
         txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
-        txt(this, 52, ry + 27, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#9999bb');
+        txt(this, 52, ry + 26, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#9999bb');
         txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 14, '#ffc83c', true).setOrigin(1, 0.5);
       });
 
@@ -2823,20 +2808,21 @@ class RatingScene extends Phaser.Scene {
   }
 
   _buildTitansTab(W, H) {
-    const loadT = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    const startY = 114;
+    const loadT  = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/titans/top').then(data => {
       loadT.destroy();
       if (!data.ok) { txt(this, W / 2, H / 2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
       const lb = data.leaders || [];
 
-      txt(this, W / 2, 106, `Неделя: ${data.week_key || '-'}`, 11, '#8888aa').setOrigin(0.5);
-      makePanel(this, 8, 116, W - 16, 56, 10, 0.95);
-      txt(this, 16, 126, '🎁 Награды недели:', 12, '#ffc83c', true);
-      txt(this, 16, 143, '1 место: 150💎 · 2: 90💎 · 3: 60💎 · 4-10: 25💎', 11, '#c0c0e0');
-      txt(this, 16, 158, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#9999bb');
+      txt(this, W / 2, startY + 4, `Неделя: ${data.week_key || '-'}`, 11, '#8888aa').setOrigin(0.5);
+      makePanel(this, 8, startY + 16, W - 16, 54, 10, 0.95);
+      txt(this, 16, startY + 26, '🎁 Награды недели:', 12, '#ffc83c', true);
+      txt(this, 16, startY + 43, '1 место: 150💎 · 2: 90💎 · 3: 60💎 · 4-10: 25💎', 11, '#c0c0e0');
+      txt(this, 16, startY + 57, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#9999bb');
 
-      const listY  = 182;
-      const rowH   = 40;
+      const listY   = startY + 80;
+      const rowH    = 40;
       const maxShow = Math.max(1, Math.floor((H - listY - 100) / rowH));
 
       lb.slice(0, maxShow).forEach((row, i) => {
