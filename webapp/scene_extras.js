@@ -22,13 +22,17 @@ function _extraBg(scene, W, H) {
 }
 
 function _extraBack(scene, W, H, dest = 'Menu') {
-  const bw = 90, bh = 36, bx = 16, by = H - 58;
+  // Отдельная подложка снизу, чтобы текст контента не налезал на кнопку
+  const footer = scene.add.graphics();
+  footer.fillStyle(0x0d1020, 0.94);
+  footer.fillRect(0, H - 72, W, 72);
+  const bw = 126, bh = 42, bx = 14, by = H - 56;
   const bg = scene.add.graphics();
   bg.fillStyle(C.dark, 0.9);
   bg.fillRoundedRect(bx, by, bw, bh, 10);
   bg.lineStyle(1.5, C.blue, 0.4);
   bg.strokeRoundedRect(bx, by, bw, bh, 10);
-  txt(scene, bx + bw / 2, by + bh / 2, '← Назад', 13, '#8888aa').setOrigin(0.5);
+  txt(scene, bx + bw / 2, by + bh / 2, '← Назад', 15, '#a8c8ff', true).setOrigin(0.5);
   scene.add.zone(bx, by, bw, bh).setOrigin(0)
     .setInteractive({ useHandCursor: true })
     .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x1c1a2c, 0.9); bg.fillRoundedRect(bx, by, bw, bh, 10); })

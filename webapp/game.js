@@ -652,6 +652,11 @@ class MenuScene extends Phaser.Scene {
     const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     const hpBg  = makeBar(this, hpX, hpY, hpW, hpH, hpPct, hpCol);
+    const hpTxtBg = this.add.graphics();
+    hpTxtBg.fillStyle(0x0f1324, 0.88);
+    hpTxtBg.fillRoundedRect(W / 2 - 62, hpY - 2, 124, 18, 6);
+    hpTxtBg.lineStyle(1, C.dark, 0.45);
+    hpTxtBg.strokeRoundedRect(W / 2 - 62, hpY - 2, 124, 18, 6);
     const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#f0f0fa', true).setOrigin(0.5);
 
     /* ── XP бар ── */
@@ -660,9 +665,15 @@ class MenuScene extends Phaser.Scene {
     const xpY = hpY + hpH + 8;
     if (!p.max_level) {
       xpBg   = makeBar(this, hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, C.dark, 5);
+      const xpTxtBg = this.add.graphics();
+      xpTxtBg.fillStyle(0x0f1324, 0.86);
+      xpTxtBg.fillRoundedRect(W / 2 - 74, xpY - 2, 148, 16, 6);
+      xpTxtBg.lineStyle(1, C.dark, 0.45);
+      xpTxtBg.strokeRoundedRect(W / 2 - 74, xpY - 2, 148, 16, 6);
       xpTxt  = txt(this, W / 2, xpY + xpH / 2,
         `${p.exp} / ${p.exp_needed} XP`, 10, '#f0f0fa', true).setOrigin(0.5);
-      xpLabel = txt(this, hpX, xpY - 13, `⭐ Опыт  ${p.xp_pct}%`, 10, '#5096ff').setOrigin(0, 0);
+      xpLabel = txt(this, W / 2, xpY + 18, `⭐ Опыт: ${p.xp_pct}%`, 10, '#78b2ff', true).setOrigin(0.5, 0);
+      c.add(xpTxtBg);
     } else {
       txt(this, W / 2, xpY + 6, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
     }
@@ -674,7 +685,7 @@ class MenuScene extends Phaser.Scene {
       { icon: '💥', label: 'ИНТ', val: p.intuition, color: C.purple, hex: '#b45aff', sub: `${p.crit_pct}%`  },
       { icon: '🛡', label: 'ВЫН', val: p.stamina,   color: C.green,  hex: '#3cc864', sub: `${p.armor_pct}%` },
     ];
-    const statsTop = xpBg ? xpY + 20 : xpY + 6;
+    const statsTop = xpBg ? xpY + 34 : xpY + 6;
     const scGap = 6, scH = 76;
     const scW   = (W - pad * 2 - scGap * 3) / 4;
     const maxV  = Math.max(1, 3 + p.level * 2);
@@ -857,11 +868,8 @@ class MenuScene extends Phaser.Scene {
     // Строка 0: [🎯 Вызов по нику]  [📨 Мои вызовы]
     const btnCh   = secBtn(0, 0, '🎯 Вызов по нику', 0x2e2010, C.gold,   '#ffdca0', () => this._onChallengeByNick());
     const btnMyC  = secBtn(1, 0, '📨 Мои вызовы',   0x161e38, C.blue,   '#b8d4ff', () => this._showOutgoingChallenges());
-    // Строка 1: [🗿 Башня Титанов]  [🏆 Топ PvP]
-    const btnTT   = secBtn(0, 1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
-    const btnPvpT = secBtn(1, 1, '🏆 Топ PvP',       0x2a2010, C.gold,   '#ffdca0', () => this._showPvpTop());
-    // Строка 2: [🏆 Топ Башни] — полная ширина, менее заметная
-    const btnTTTop = secBtnFull(2, '🏆 Открыть Топ Башни', 0x0d1422, 0x4466aa, '#7aa0dd', () => this.scene.start('TitanTop'));
+    // Строка 1: [🗿 Башня Титанов] — полная ширина
+    const btnTT = secBtnFull(1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
 
     // ── Бот карточка (главная, крупнее)
     const botCY = CH * 0.76;
@@ -917,8 +925,7 @@ class MenuScene extends Phaser.Scene {
       title,
       ...pvpCard,
       ...btnCh, ...btnMyC,
-      ...btnTT, ...btnPvpT,
-      ...btnTTTop,
+      ...btnTT,
       ...botCard,
       ...hpBlockObjs,
     ];
@@ -987,20 +994,21 @@ class MenuScene extends Phaser.Scene {
     const c = this.add.container(0, 0);
 
     const items = [
-      { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
-      { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
-      { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
-      { icon: '🗿', label: 'Топ Башни',  cb: () => this.scene.start('TitanTop')   },
-      { icon: '🌟', label: 'Боевой пропуск', cb: () => this.scene.start('BattlePass') },
-      { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
-      { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
+      { icon: '📅', label: 'Задания',         cb: () => this.scene.start('Quests'),    badge: this._questBadge },
+      { icon: '🏆', label: 'Топ PvP',         cb: () => this.scene.start('Rating')      },
+      { icon: '🗿', label: 'Открыть Топ Башни', cb: () => this.scene.start('TitanTop')   },
+      { icon: '🛍️', label: 'Магазин',         cb: () => this.scene.start('Shop')        },
+      { icon: '⭐',  label: 'Сезон',           cb: () => this.scene.start('Season')      },
+      { icon: '🌟', label: 'Боевой пропуск',  cb: () => this.scene.start('BattlePass')  },
+      { icon: '⚔️', label: 'Клан',            cb: () => this.scene.start('Clan')        },
+      { icon: '🔗', label: 'Рефералка',       cb: () => this._onInvite()                },
     ];
 
     const cols = 2;
     const gap  = 10;
     const bw   = (W - gap * 3) / cols;  // ширина карточки
-    const bh   = 90;                    // высота карточки
-    const startY = 16;
+    const bh   = 84;                    // высота карточки
+    const startY = 12;
 
     items.forEach((item, i) => {
       const col  = i % cols;
@@ -1059,8 +1067,9 @@ class MenuScene extends Phaser.Scene {
       c.add(zone);
     });
 
-    // Версия — крупная, хорошо видна
-    const verY = CH - 32;
+    // Версия — ниже сетки, чтобы ничего не перекрывать
+    const rows = Math.ceil(items.length / cols);
+    const verY = Math.min(CH - 32, startY + rows * (bh + gap) + 8);
     const verBg = this.add.graphics();
     verBg.fillStyle(0x1e1c30, 0.9);
     verBg.fillRoundedRect(W / 2 - 90, verY - 14, 180, 28, 8);
@@ -2708,12 +2717,15 @@ class RatingScene extends Phaser.Scene {
     txt(this, W / 2, 24, '⚔️  ELO Рейтинг', 18, '#ffc83c', true).setOrigin(0.5);
     txt(this, W / 2, 46, 'PvP · K=32 · стартовый 1000', 10, '#666688').setOrigin(0.5);
 
-    /* Кнопка назад */
+    /* Кнопка назад (внизу, крупнее) */
+    const backW = 140, backH = 42, backX = 14, backY = H - 54;
     const backG = this.add.graphics();
-    backG.fillStyle(C.dark, 0.85);
-    backG.fillRoundedRect(12, 10, 80, 32, 8);
-    txt(this, 52, 26, '← Назад', 12, '#8888aa').setOrigin(0.5);
-    this.add.zone(12, 10, 80, 32).setOrigin(0)
+    backG.fillStyle(C.dark, 0.95);
+    backG.fillRoundedRect(backX, backY, backW, backH, 10);
+    backG.lineStyle(1.5, C.blue, 0.45);
+    backG.strokeRoundedRect(backX, backY, backW, backH, 10);
+    txt(this, backX + backW / 2, backY + backH / 2, '← Назад', 15, '#a8c8ff', true).setOrigin(0.5);
+    this.add.zone(backX, backY, backW, backH).setOrigin(0)
       .setInteractive({ useHandCursor: true })
       .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu'); });
 
