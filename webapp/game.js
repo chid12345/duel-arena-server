@@ -370,8 +370,23 @@ class MenuScene extends Phaser.Scene {
     this._activeTab = null;
 
     this._drawBg(W, H);
+    this._loadPlayer();
+  }
 
-    // Загружаем игрока + статус квестов параллельно
+  /* ── Загрузка профиля (с retry) ──────────────────────────── */
+  async _loadPlayer() {
+    const { W, H } = this;
+
+    // Если Telegram ещё не передал initData — ждём до 2 сек
+    if (!State.initData) {
+      let waited = 0;
+      while (!State.initData && waited < 2000) {
+        await new Promise(r => setTimeout(r, 200));
+        State.initData = window.Telegram?.WebApp?.initData || '';
+        waited += 200;
+      }
+    }
+
     try {
       const [playerRes, questRes, versionRes] = await Promise.all([
         post('/api/player'),
@@ -384,13 +399,11 @@ class MenuScene extends Phaser.Scene {
           State.appVersion = String(versionRes.version);
         }
 
-        // Определяем нужно ли показать бейдж на кнопке Задания
         this._questBadge = false;
         if (questRes?.ok) {
           const q = questRes.quest || {};
           const d = questRes.daily || {};
           this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
-          // Тост при ежедневном бонусе
           if (d.can_claim) {
             this.time.delayedCall(800, () =>
               this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
@@ -1571,7 +1584,38 @@ class MenuScene extends Phaser.Scene {
   }
 
   _showError(msg) {
-    txt(this, this.W / 2, this.H / 2, msg, 16, '#ff4455').setOrigin(0.5);
+    const { W, H } = this;
+    txt(this, W / 2, H / 2 - 48, '⚠️', 32, '#ff4455').setOrigin(0.5);
+    txt(this, W / 2, H / 2,      msg, 15, '#ff4455', true).setOrigin(0.5);
+
+    // Кнопка "Повторить"
+    const bw = 160, bh = 40, bx = W / 2 - bw / 2, by = H / 2 + 24;
+    const bg = this.add.graphics();
+    bg.fillStyle(0x2a2840, 1);
+    bg.fillRoundedRect(bx, by, bw, bh, 10);
+    bg.lineStyle(1.5, 0x5096ff, 0.7);
+    bg.strokeRoundedRect(bx, by, bw, bh, 10);
+    const btnTxt = txt(this, W / 2, by + bh / 2, '🔄 Повторить', 13, '#a0c0ff', true).setOrigin(0.5);
+    const zone = this.add.zone(bx, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true });
+    zone.on('pointerup', () => {
+      tg?.HapticFeedback?.impactOccurred('light');
+      this.scene.restart();
+    });
+
+    // Авто-retry через 5 сек
+    let countdown = 5;
+    const cntTxt = txt(this, W / 2, by + bh + 16, `Авто-повтор через ${countdown}с`, 10, '#555577').setOrigin(0.5);
+    const timer = this.time.addEvent({
+      delay: 1000, repeat: 4,
+      callback: () => {
+        countdown--;
+        if (countdown <= 0) {
+          this.scene.restart();
+        } else {
+          cntTxt.setText(`Авто-повтор через ${countdown}с`);
+        }
+      },
+    });
   }
 }
 

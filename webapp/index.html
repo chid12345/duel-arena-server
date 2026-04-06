@@ -8,7 +8,18 @@
 <meta name="theme-color" content="#12121c">
 <title>Duel Arena</title>
 <script>
-(function(){var v='__BUILD_VERSION__',k='_da_bv';try{if(localStorage.getItem(k)!==v){localStorage.setItem(k,v);var b=location.href.split('?')[0];location.replace(b+'?bv='+v);throw 0;}}catch(e){if(e!==0)throw e;}})();
+(function(){
+  var v='__BUILD_VERSION__',k='_da_bv';
+  try{
+    if(localStorage.getItem(k)!==v){
+      localStorage.setItem(k,v);
+      // Сохраняем hash (в нём Telegram Desktop хранит initData)
+      var base=location.origin+location.pathname;
+      location.replace(base+'?bv='+v+(location.hash||''));
+      throw 0;
+    }
+  }catch(e){if(e!==0)throw e;}
+})();
 </script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
