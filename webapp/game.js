@@ -712,21 +712,12 @@ class MenuScene extends Phaser.Scene {
     refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, isLight ? 1 : 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, isLight ? 0.5 : 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
 
     /* ══ СБОРКА ═════════════════════════════════════════════ */
-    const verTxt = txt(
-      this,
-      W - 12,
-      CH - 10,
-      `ver ${State.appVersion || '...'}`,
-      10,
-      '#666688'
-    ).setOrigin(1, 0.5);
-
     const children = [
       hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt,
       snBg, snTxt, snZ, thBg, thTxt, thZ,
       glowG, warrior, hpBg, hpTxt,
       ...statObjs.flat(),
-      refG, refT, refZ, verTxt,
+      refG, refT, refZ,
     ];
     if (xpBg)        children.push(xpBg, xpTxt, xpLabel);
     if (fsBadge.length)   children.push(...fsBadge);
@@ -1004,8 +995,16 @@ class MenuScene extends Phaser.Scene {
       c.add(zone);
     });
 
-    // Версия
-    c.add(txt(this, W / 2, CH - 18, `Duel Arena · @ZenDuelArena_bot · v${State.appVersion || '...'}`, 11, '#444466').setOrigin(0.5));
+    // Версия — крупная, хорошо видна
+    const verY = CH - 32;
+    const verBg = this.add.graphics();
+    verBg.fillStyle(0x1e1c30, 0.9);
+    verBg.fillRoundedRect(W / 2 - 90, verY - 14, 180, 28, 8);
+    verBg.lineStyle(1.5, C.gold, 0.35);
+    verBg.strokeRoundedRect(W / 2 - 90, verY - 14, 180, 28, 8);
+    c.add(verBg);
+    c.add(txt(this, W / 2, verY, `⚔️  Duel Arena  v${State.appVersion || '1.01'}`, 13, '#ffc83c', true).setOrigin(0.5));
+    c.add(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#555577').setOrigin(0.5));
 
     this._panels.more = c;
   }

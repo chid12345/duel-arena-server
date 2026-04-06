@@ -68,7 +68,10 @@ def _cache_set(uid: int, player: dict) -> None:
 def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
-# Видимая версия сборки для Mini App (меняется на каждый деплой на Render).
+# Игровая версия — меняй вручную при каждом значимом обновлении.
+GAME_VERSION = "1.01"
+
+# Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
     (os.getenv("WEBAPP_URL_VERSION") or "").strip()
     or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
@@ -566,7 +569,7 @@ async def health():
 
 @app.get("/api/version")
 async def app_version():
-    return {"ok": True, "version": APP_BUILD_VERSION}
+    return {"ok": True, "version": GAME_VERSION, "build": APP_BUILD_VERSION}
 
 
 @app.post("/api/player")

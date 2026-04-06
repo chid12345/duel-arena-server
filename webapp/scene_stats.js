@@ -263,9 +263,20 @@ class StatsScene extends Phaser.Scene {
     txt(this, W / 2, py + ph - 12,
       'относительно среднего противника вашего уровня',
       9, '#555577').setOrigin(0.5);
-    txt(this, W / 2, py + ph + 2,
-      'Пассивки: 💥 крит-пробой, 🤸 второй удар, 🛡 поглощение/стойка, 💪 пролом брони',
-      8, '#5f5f7d').setOrigin(0.5);
+
+    // Блок пассивных способностей — крупный, видный
+    const passY = py + ph + 10;
+    const passW = W - 24;
+    const passBg = this.add.graphics();
+    passBg.fillStyle(0x1a1830, 0.85);
+    passBg.fillRoundedRect(12, passY, passW, 68, 10);
+    passBg.lineStyle(1.5, 0x4a4870, 0.6);
+    passBg.strokeRoundedRect(12, passY, passW, 68, 10);
+
+    txt(this, W / 2, passY + 11, '⚡ Пассивные способности', 11, '#9090cc', true).setOrigin(0.5);
+    txt(this, W / 2, passY + 28, '💥 Интуиция: крит пробивает блок', 11, '#d8a0ff').setOrigin(0.5);
+    txt(this, W / 2, passY + 43, '🤸 Ловкость: уворот → второй удар', 11, '#a0d8ff').setOrigin(0.5);
+    txt(this, W / 2, passY + 58, '🛡 Выносливость: поглощение 50%  ·  💪 Сила: пролом брони', 10, '#ffc870').setOrigin(0.5);
   }
 
   /* ── Кнопка назад ────────────────────────────────────── */
