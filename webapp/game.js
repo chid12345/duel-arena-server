@@ -138,10 +138,23 @@ function makeBar(scene, x, y, w, h, pct, fillColor, bgColor = C.dark, radius = 4
 function tCol(color) {
   if (C._name !== 'light') return color;
   const m = {
+    // основные
     '#f0f0fa': '#1a1a2e', '#ffffff': '#0a0a1e',
     '#8888aa': '#333366', '#555577': '#444466',
     '#666688': '#445577', '#333355': '#555588',
     '#c0c0e0': '#1a1a44', '#7799cc': '#1144aa',
+    // светло-золотые / кремовые (текст кнопок)
+    '#ffdca0': '#7a4800', '#ffc870': '#7a5000',
+    // светло-фиолетовые / lilac (premium, Башня Титанов)
+    '#d8c0ff': '#5500aa', '#c8a0ff': '#6a00cc',
+    // голубые разных оттенков
+    '#a0c0ff': '#0a3a99', '#a8c4ff': '#0a3a99',
+    '#88a8ff': '#1133cc', '#a0c0ee': '#0a3a99',
+    // серо-синие / lavender
+    '#aaaacc': '#333366', '#d0d0ee': '#1a1a44',
+    '#a8b8d8': '#1a3355', '#9090cc': '#2a2a88',
+    // тёмные серо-синие (иконки, мелкие метки)
+    '#667799': '#334466', '#777799': '#334466',
   };
   return m[color] || color;
 }
@@ -608,7 +621,8 @@ class MenuScene extends Phaser.Scene {
     // Имя + статистика
     const nameX   = lvlX + lvlW + 10;
     const crown   = p.is_premium ? '👑 ' : '';
-    const nameTxt = txt(this, nameX, hY + 12, crown + p.username, 18, p.is_premium ? '#c8a0ff' : '#f0f0fa', true);
+    const uname   = p.username.length > 15 ? p.username.slice(0, 14) + '…' : p.username;
+    const nameTxt = txt(this, nameX, hY + 12, crown + uname, 18, p.is_premium ? '#c8a0ff' : '#f0f0fa', true);
     const premSub = p.is_premium ? `⭐ Premium · ${p.premium_days_left} дн.` : '';
     const titleBit = (!premSub && p.display_title) ? `🏵 ${p.display_title} · ` : '';
     const subTxt  = txt(this, nameX, hY + 38,
@@ -1242,8 +1256,8 @@ class MenuScene extends Phaser.Scene {
     const switchTab = (tab) => {
       activeTab = tab;
       drawTabAct(tab);
-      t1.setStyle({ color: tab==='stats' ? '#ffffff' : '#a8c4ff' });
-      t2.setStyle({ color: tab==='info'  ? '#ffffff' : '#a8c4ff' });
+      t1.setStyle({ color: tCol(tab==='stats' ? '#ffffff' : '#a8c4ff') });
+      t2.setStyle({ color: tCol(tab==='info'  ? '#ffffff' : '#a8c4ff') });
       statsObjs.forEach(o => o?.setVisible?.(tab === 'stats'));
       infoObjs.forEach(o  => o?.setVisible?.(tab === 'info'));
       tg?.HapticFeedback?.impactOccurred('light');
