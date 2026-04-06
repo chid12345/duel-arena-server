@@ -53,6 +53,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def disable_webapp_cache(request: Request, call_next):
+    """
+    Telegram WebView агрессивно кэширует статику.
+    Для Mini App принудительно отключаем кэш, чтобы после деплоя сразу тянулась свежая версия JS/CSS/HTML.
+    """
+    response = await call_next(request)
+    path = (request.url.path or "/").lower()
+    static_ext = (".html", ".js", ".css", ".map", ".json", ".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico")
+    if request.method == "GET" and (path == "/" or path.endswith(static_ext)):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
+
 # ─── WebSocket менеджер ──────────────────────────────────────────────────────
 
 class ConnectionManager:
