@@ -55,8 +55,23 @@ class QuestsScene extends Phaser.Scene {
     _extraHeader(this, W, '📅', 'ЗАДАНИЯ', 'Ежедневные и недельные квесты');
     _extraBack(this, W, H);
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#555577').setOrigin(0.5);
+    this._loadQuests(W, H);
+  }
+
+  _loadQuests(W, H) {
+    if (this._loading) this._loading.setText('Загрузка...');
     get('/api/quests').then(d => this._render(d, W, H)).catch(() => {
-      this._loading?.setText('❌ Нет соединения');
+      if (this._loading) this._loading.setText('❌ Нет соединения');
+      if (!this._retryBtn) {
+        const bg = this.add.graphics();
+        bg.fillStyle(0x2a2840, 1);
+        bg.fillRoundedRect(W/2 - 70, H/2 + 22, 140, 34, 8);
+        bg.lineStyle(1.5, 0x5096ff, 0.6);
+        bg.strokeRoundedRect(W/2 - 70, H/2 + 22, 140, 34, 8);
+        txt(this, W/2, H/2 + 39, '🔄 Повторить', 13, '#a0c0ff', true).setOrigin(0.5);
+        this._retryBtn = this.add.zone(W/2 - 70, H/2 + 22, 140, 34).setOrigin(0).setInteractive({ useHandCursor: true });
+        this._retryBtn.on('pointerup', () => this._loadQuests(W, H));
+      }
     });
   }
 

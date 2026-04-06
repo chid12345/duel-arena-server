@@ -264,31 +264,35 @@ class StatsScene extends Phaser.Scene {
       'относительно среднего противника вашего уровня',
       9, '#555577').setOrigin(0.5);
 
-    // Блок пассивных способностей — крупный, видный
-    const passY = py + ph + 10;
+    // Блок пассивных способностей — компактный, перед кнопкой
+    const passY = py + ph + 6;
+    const passH = 54;
     const passW = W - 24;
     const passBg = this.add.graphics();
-    passBg.fillStyle(0x1a1830, 0.85);
-    passBg.fillRoundedRect(12, passY, passW, 68, 10);
+    passBg.fillStyle(0x1a1830, 0.9);
+    passBg.fillRoundedRect(12, passY, passW, passH, 10);
     passBg.lineStyle(1.5, 0x4a4870, 0.6);
-    passBg.strokeRoundedRect(12, passY, passW, 68, 10);
+    passBg.strokeRoundedRect(12, passY, passW, passH, 10);
 
-    txt(this, W / 2, passY + 11, '⚡ Пассивные способности', 11, '#9090cc', true).setOrigin(0.5);
-    txt(this, W / 2, passY + 28, '💥 Интуиция: крит пробивает блок', 11, '#d8a0ff').setOrigin(0.5);
-    txt(this, W / 2, passY + 43, '🤸 Ловкость: уворот → второй удар', 11, '#a0d8ff').setOrigin(0.5);
-    txt(this, W / 2, passY + 58, '🛡 Выносливость: поглощение 50%  ·  💪 Сила: пролом брони', 10, '#ffc870').setOrigin(0.5);
+    txt(this, W / 2, passY + 10, '⚡ Пассивные способности', 10, '#9090cc', true).setOrigin(0.5);
+    txt(this, W / 2, passY + 26, '💥 Крит-пробой блока  ·  🤸 Уворот → 2й удар', 10, '#c8a0ff').setOrigin(0.5);
+    txt(this, W / 2, passY + 42, '🛡 Поглощение 50%  ·  💪 Пролом брони', 10, '#ffc870').setOrigin(0.5);
   }
 
   /* ── Кнопка назад ────────────────────────────────────── */
   _buildBackBtn(W, H) {
-    const y = H - 28;
+    const y = H - 26;
     const bw = 190, bh = 38;
+    // Заливка фона под кнопкой — текст не просвечивает
+    const backdrop = this.add.graphics();
+    backdrop.fillStyle(0x12121c, 1);
+    backdrop.fillRect(0, y - bh / 2 - 6, W, bh + 12);
     const g = this.add.graphics();
-    g.fillStyle(C.dark, 0.9);
+    g.fillStyle(C.dark, 0.95);
     g.fillRoundedRect(W / 2 - bw / 2, y - bh / 2, bw, bh, 10);
-    g.lineStyle(1.5, C.blue, 0.35);
+    g.lineStyle(1.5, C.blue, 0.45);
     g.strokeRoundedRect(W / 2 - bw / 2, y - bh / 2, bw, bh, 10);
-    txt(this, W / 2, y, '← Главное меню', 13, '#a0a0cc').setOrigin(0.5);
+    txt(this, W / 2, y, '← Главное меню', 13, '#a0c0ee').setOrigin(0.5);
 
     const zone = this.add.zone(W / 2, y, bw, bh).setInteractive({ useHandCursor: true });
     zone.on('pointerup', () => {

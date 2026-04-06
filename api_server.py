@@ -69,7 +69,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия — меняй вручную при каждом значимом обновлении.
-GAME_VERSION = "1.01"
+GAME_VERSION = "1.02"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (

@@ -64,17 +64,25 @@ const State = {
   appVersion: '...',
 };
 
-function post(path, body = {}) {
+function post(path, body = {}, timeoutMs = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
   return fetch(API + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ init_data: State.initData, ...body }),
-  }).then(r => r.json());
+    signal: ctrl.signal,
+  }).then(r => { clearTimeout(t); return r.json(); })
+    .catch(e => { clearTimeout(t); throw e; });
 }
 
-function get(path, params = {}) {
+function get(path, params = {}, timeoutMs = 8000) {
+  const ctrl = new AbortController();
+  const t = setTimeout(() => ctrl.abort(), timeoutMs);
   const q = new URLSearchParams({ init_data: State.initData, ...params });
-  return fetch(`${API}${path}?${q}`).then(r => r.json());
+  return fetch(`${API}${path}?${q}`, { signal: ctrl.signal })
+    .then(r => { clearTimeout(t); return r.json(); })
+    .catch(e => { clearTimeout(t); throw e; });
 }
 
 /* ─── WebSocket ─────────────────────────────────────────────── */
@@ -2057,12 +2065,12 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    const logY = H * 0.50;
-    const logH = H * 0.12;
-    makePanel(this, 8, logY, W - 16, logH, 8, 0.82);
-    // Две строки лога — последние два события раунда
-    this._logTxt1 = txt(this, W/2, logY + logH * 0.32, '', 12, '#e8e0ff').setOrigin(0.5);
-    this._logTxt2 = txt(this, W/2, logY + logH * 0.72, '', 11, '#9090bb').setOrigin(0.5);
+    // Лог строго над панелью выбора (H*0.6), не перекрывает кнопки
+    const logH = 42;
+    const logY = H * 0.6 - logH - 6;   // вплотную НАД choice-панелью
+    makePanel(this, 8, logY, W - 16, logH, 8, 0.88);
+    this._logTxt1 = txt(this, W/2, logY + 13, '', 12, '#e8e0ff', true).setOrigin(0.5);
+    this._logTxt2 = txt(this, W/2, logY + 30, '', 10, '#8080aa').setOrigin(0.5);
   }
 
   _onZone(key, label, type, g, t) {
