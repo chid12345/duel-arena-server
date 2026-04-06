@@ -744,13 +744,15 @@ class MenuScene extends Phaser.Scene {
     const { W, CONTENT_H: CH } = this;
     const p = State.player;
     const c = this.add.container(0, 0);
+    const PAD = 16;
 
-    // Заголовок
-    const title = txt(this, W / 2, 28, '⚔️  ВЫБЕРИ БОЙ', 18, '#ffc83c', true).setOrigin(0.5);
+    // ── Заголовок
+    const title = txt(this, W / 2, 26, '⚔️  ВЫБЕРИ БОЙ', 18, '#ffc83c', true).setOrigin(0.5);
 
-    /* ── Карточка PvP ── */
+    // ── PvP карточка (главная, крупнее)
+    const pvpCY = CH * 0.20;
     const pvpCard = this._makeBattleCard(
-      W / 2, CH * 0.28,
+      W / 2, pvpCY,
       '⚔️  ПОИСК СОПЕРНИКА',
       'Живой игрок · рейтинговый бой',
       '🏆 +рейтинг  💰+30%  ⭐+30% за победу',
@@ -758,71 +760,58 @@ class MenuScene extends Phaser.Scene {
       () => this._onFight()
     );
 
-    // Вызов по нику (персональный PvP)
-    const chY = CH * 0.43;
-    const chBg = this.add.graphics();
-    chBg.fillStyle(0x33261a, 0.9);
-    chBg.fillRoundedRect(16, chY - 20, W - 32, 40, 10);
-    chBg.lineStyle(1.5, C.gold, 0.35);
-    chBg.strokeRoundedRect(16, chY - 20, W - 32, 40, 10);
-    const chTxt = txt(this, W / 2, chY, '🎯 Вызов по нику', 12, '#ffdca0', true).setOrigin(0.5);
-    const chZone = this.add.zone(16, chY - 20, W - 32, 40).setOrigin(0).setInteractive({ useHandCursor: true });
-    chZone.on('pointerdown', () => {
-      chBg.clear();
-      chBg.fillStyle(0x4a3220, 1.0);
-      chBg.fillRoundedRect(16, chY - 20, W - 32, 40, 10);
-      tg?.HapticFeedback?.impactOccurred('light');
-    });
-    chZone.on('pointerout', () => {
-      chBg.clear();
-      chBg.fillStyle(0x33261a, 0.9);
-      chBg.fillRoundedRect(16, chY - 20, W - 32, 40, 10);
-      chBg.lineStyle(1.5, C.gold, 0.35);
-      chBg.strokeRoundedRect(16, chY - 20, W - 32, 40, 10);
-    });
-    chZone.on('pointerup', () => this._onChallengeByNick());
+    // ── Сетка вспомогательных кнопок ─────────────────────────────────────────
+    // Две колонки одинаковой высоты + одна полная строка снизу
+    const BH  = 38;
+    const BG  = 8;
+    const BW  = (W - PAD * 2 - BG) / 2;
+    const GT  = pvpCY + 58;   // gridTop: сразу под картой PvP
 
-    // Мини-кнопки PvP: мои вызовы / топ
-    const miniY = chY + 30;
-    const miniW = (W - 42) / 2;
-    const miniH = 32;
-    const m1x = 16;
-    const m2x = 16 + miniW + 10;
-    const m1bg = this.add.graphics();
-    m1bg.fillStyle(0x1e2f52, 0.95);
-    m1bg.fillRoundedRect(m1x, miniY, miniW, miniH, 9);
-    m1bg.lineStyle(1.2, C.blue, 0.5);
-    m1bg.strokeRoundedRect(m1x, miniY, miniW, miniH, 9);
-    const m1txt = txt(this, m1x + miniW / 2, miniY + miniH / 2, '📨 Мои вызовы', 11, '#b8d4ff', true).setOrigin(0.5);
-    const m1z = this.add.zone(m1x, miniY, miniW, miniH).setOrigin(0).setInteractive({ useHandCursor: true });
-    m1z.on('pointerup', () => this._showOutgoingChallenges());
+    // Локальная фабрика полукнопки
+    const secBtn = (col, row, label, fillHex, borderHex, textColor, cb) => {
+      const bx = PAD + col * (BW + BG);
+      const by = GT + row * (BH + BG);
+      const bg = this.add.graphics();
+      bg.fillStyle(fillHex, 0.92);
+      bg.fillRoundedRect(bx, by, BW, BH, 9);
+      bg.lineStyle(1.5, borderHex, 0.5);
+      bg.strokeRoundedRect(bx, by, BW, BH, 9);
+      const t = txt(this, bx + BW / 2, by + BH / 2, label, 11, textColor, true).setOrigin(0.5);
+      const z = this.add.zone(bx, by, BW, BH).setOrigin(0).setInteractive({ useHandCursor: true });
+      z.on('pointerdown', () => { tg?.HapticFeedback?.impactOccurred('light'); });
+      z.on('pointerup', cb);
+      return [bg, t, z];
+    };
 
-    const m2bg = this.add.graphics();
-    m2bg.fillStyle(0x3a2c14, 0.95);
-    m2bg.fillRoundedRect(m2x, miniY, miniW, miniH, 9);
-    m2bg.lineStyle(1.2, C.gold, 0.5);
-    m2bg.strokeRoundedRect(m2x, miniY, miniW, miniH, 9);
-    const m2txt = txt(this, m2x + miniW / 2, miniY + miniH / 2, '🏆 Топ PvP', 11, '#ffdca0', true).setOrigin(0.5);
-    const m2z = this.add.zone(m2x, miniY, miniW, miniH).setOrigin(0).setInteractive({ useHandCursor: true });
-    m2z.on('pointerup', () => this._showPvpTop());
+    // Локальная фабрика кнопки полной ширины
+    const secBtnFull = (row, label, fillHex, borderHex, textColor, cb) => {
+      const bx = PAD, bw = W - PAD * 2;
+      const by = GT + row * (BH + BG);
+      const bg = this.add.graphics();
+      bg.fillStyle(fillHex, 0.85);
+      bg.fillRoundedRect(bx, by, bw, BH, 9);
+      bg.lineStyle(1.5, borderHex, 0.4);
+      bg.strokeRoundedRect(bx, by, bw, BH, 9);
+      const t = txt(this, bx + bw / 2, by + BH / 2, label, 11, textColor, true).setOrigin(0.5);
+      const z = this.add.zone(bx, by, bw, BH).setOrigin(0).setInteractive({ useHandCursor: true });
+      z.on('pointerdown', () => { tg?.HapticFeedback?.impactOccurred('light'); });
+      z.on('pointerup', cb);
+      return [bg, t, z];
+    };
 
-    // Башня титанов
-    const ttY = miniY + 42;
-    const ttBg = this.add.graphics();
-    ttBg.fillStyle(0x2a1f44, 0.92);
-    ttBg.fillRoundedRect(16, ttY - 18, W - 32, 36, 10);
-    ttBg.lineStyle(1.5, C.purple, 0.45);
-    ttBg.strokeRoundedRect(16, ttY - 18, W - 32, 36, 10);
-    const ttTxt = txt(this, W / 2, ttY, '🗿 Башня титанов (боссы по этажам)', 12, '#d8c0ff', true).setOrigin(0.5);
-    const ttZone = this.add.zone(16, ttY - 18, W - 32, 36).setOrigin(0).setInteractive({ useHandCursor: true });
-    ttZone.on('pointerup', () => this._onTitanFight());
-    const ttTopTxt = txt(this, W / 2, ttY + 20, '🏆 Открыть ТОП БАШНИ', 10, '#9ec2ff', true).setOrigin(0.5);
-    const ttTopZone = this.add.zone(16, ttY + 10, W - 32, 20).setOrigin(0).setInteractive({ useHandCursor: true });
-    ttTopZone.on('pointerup', () => this.scene.start('TitanTop'));
+    // Строка 0: [🎯 Вызов по нику]  [📨 Мои вызовы]
+    const btnCh   = secBtn(0, 0, '🎯 Вызов по нику', 0x2e2010, C.gold,   '#ffdca0', () => this._onChallengeByNick());
+    const btnMyC  = secBtn(1, 0, '📨 Мои вызовы',   0x161e38, C.blue,   '#b8d4ff', () => this._showOutgoingChallenges());
+    // Строка 1: [🗿 Башня Титанов]  [🏆 Топ PvP]
+    const btnTT   = secBtn(0, 1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
+    const btnPvpT = secBtn(1, 1, '🏆 Топ PvP',       0x2a2010, C.gold,   '#ffdca0', () => this._showPvpTop());
+    // Строка 2: [🏆 Топ Башни] — полная ширина, менее заметная
+    const btnTTTop = secBtnFull(2, '🏆 Открыть Топ Башни', 0x0d1422, 0x4466aa, '#7aa0dd', () => this.scene.start('TitanTop'));
 
-    /* ── Карточка Бот ── */
+    // ── Бот карточка (главная, крупнее)
+    const botCY = CH * 0.76;
     const botCard = this._makeBattleCard(
-      W / 2, CH * 0.69,
+      W / 2, botCY,
       '🤖  БОЙ С БОТОМ',
       'Практика · нет рейтинга',
       '💰 +золото  ⭐ +опыт',
@@ -830,11 +819,10 @@ class MenuScene extends Phaser.Scene {
       () => this._onBotFight()
     );
 
-    /* ── HP блок (всегда показываем) ── */
+    // ── HP блок
     const hpBlockY = CH * 0.88;
     const hpBlockObjs = [];
 
-    // Мини HP бар
     const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     hpBlockObjs.push(makeBar(this, 20, hpBlockY, W - 40, 10, hpPct, hpCol));
@@ -843,17 +831,13 @@ class MenuScene extends Phaser.Scene {
     );
 
     if (p.hp_pct < 100) {
-      // Реген-подсказка
       const regenStr = p.regen_secs_to_full > 0
         ? `+${p.regen_per_min}/мин · полный через ${Math.ceil(p.regen_secs_to_full / 60)}мин`
         : `+${p.regen_per_min}/мин`;
-      hpBlockObjs.push(
-        txt(this, 20, hpBlockY + 14, regenStr, 8, '#553333')
-      );
+      hpBlockObjs.push(txt(this, 20, hpBlockY + 14, regenStr, 8, '#553333'));
     }
 
     if (p.hp_pct < 30) {
-      // Большая кнопка "Выпить зелье" с ценой
       const canAfford = (p.gold || 0) >= 12;
       const btnBY = hpBlockY + 28;
       const qBg = this.add.graphics();
@@ -875,10 +859,13 @@ class MenuScene extends Phaser.Scene {
     }
 
     const children = [
-      title, ...pvpCard, chBg, chTxt, chZone,
-      m1bg, m1txt, m1z, m2bg, m2txt, m2z,
-      ttBg, ttTxt, ttZone, ttTopTxt, ttTopZone,
-      ...botCard, ...hpBlockObjs,
+      title,
+      ...pvpCard,
+      ...btnCh, ...btnMyC,
+      ...btnTT, ...btnPvpT,
+      ...btnTTTop,
+      ...botCard,
+      ...hpBlockObjs,
     ];
     children.forEach(o => c.add(o));
 
