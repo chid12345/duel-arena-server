@@ -414,7 +414,7 @@ class SeasonScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '⭐', 'СЕЗОН', 'Таблица лидеров');
+    _extraHeader(this, W, '⭐', 'СЕЗОН', '');
     _extraBack(this, W, H);
 
     this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
@@ -450,7 +450,6 @@ class SeasonScene extends Phaser.Scene {
 
     /* ── Список лидеров ── */
     const listY = 155;
-    txt(this, 16, listY - 18, 'ТОП ИГРОКОВ', 12, '#9999bb', true);
     const rowH = 38, maxShow = Math.floor((H - listY - 80) / rowH);
     lb.slice(0, maxShow).forEach((row, i) => {
       const ry    = listY + i * rowH;
@@ -1228,27 +1227,30 @@ class ShopScene extends Phaser.Scene {
       { key: 'potions', label: '🧪 Зелья'    },
       { key: 'gear',    label: '🛡️ Снаряж.'  },
       { key: 'special', label: '✨ Особые'    },
-      { key: 'topup',   label: '💎 Купить'    },
+      { key: 'stars',   label: '⭐ Звёзды'   },
+      { key: 'crypto',  label: '💎 Крипто'   },
     ];
     const tw = (W - 24) / tabs.length;
     const ty = 76;
     tabs.forEach((tab, i) => {
-      const tx     = 12 + i * tw;
-      const active = tab.key === this._tab;
-      const isTopup = tab.key === 'topup';
+      const tx      = 12 + i * tw;
+      const active  = tab.key === this._tab;
+      const isShop  = tab.key === 'stars' || tab.key === 'crypto';
+      const isCrypto = tab.key === 'crypto';
       const bg = this.add.graphics();
-      bg.fillStyle(active ? (isTopup ? 0x1a5c8a : C.blue) : C.dark, active ? 0.92 : 0.55);
+      bg.fillStyle(active ? (isShop ? 0x1a5c8a : C.blue) : C.dark, active ? 0.92 : 0.55);
       bg.fillRoundedRect(tx, ty, tw - 4, 30, 8);
       if (active) {
-        bg.lineStyle(1.5, isTopup ? 0x3cc8dc : C.blue, 0.6);
+        bg.lineStyle(1.5, isShop ? 0x3cc8dc : C.blue, 0.6);
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
-      if (isTopup && !active) {
+      if (isShop && !active) {
         bg.lineStyle(1, 0x1a4055, 0.7);
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
-      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 11,
-        active ? '#ffffff' : (isTopup ? '#3cc8dc' : '#8888aa'), active).setOrigin(0.5);
+      const labelColor = active ? '#ffffff' : (isShop ? (isCrypto ? '#3cc8dc' : '#ffc83c') : '#8888aa');
+      txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 10,
+        labelColor, active).setOrigin(0.5);
       this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => {
@@ -1265,14 +1267,14 @@ class ShopScene extends Phaser.Scene {
     const by  = 114;
     makePanel(this, 8, by, W - 16, 38, 8, 0.95);
 
-    const isTopup = this._tab === 'topup';
+    const isPayTab = this._tab === 'stars' || this._tab === 'crypto';
 
     this._goldTxt = txt(this, W / 2 + 8, by + 11, `🪙 ${p?.gold || 0}`,
-      isTopup ? 11 : 13, '#ffc83c', true).setOrigin(0, 0);
+      isPayTab ? 11 : 13, '#ffc83c', true).setOrigin(0, 0);
     this._diaТxt  = txt(this, 20, by + 11, `💎 ${p?.diamonds || 0}`,
-      isTopup ? 15 : 13, isTopup ? '#3cc8dc' : '#3cc8dc', true);
+      isPayTab ? 15 : 13, '#3cc8dc', true);
 
-    if (isTopup) {
+    if (isPayTab) {
       txt(this, W - 14, by + 11, 'Ваши алмазы', 11, '#9999bb').setOrigin(1, 0);
     } else {
       txt(this, W / 2 - 8, by + 11, '|', 13, '#7777aa').setOrigin(1, 0);
@@ -1281,8 +1283,12 @@ class ShopScene extends Phaser.Scene {
 
   /* ── Товары ──────────────────────────────────────────── */
   _buildItems(W, H) {
-    if (this._tab === 'topup') {
-      this._buildTopupPanel(W, H);
+    if (this._tab === 'stars') {
+      this._buildStarsPanel(W, H);
+      return;
+    }
+    if (this._tab === 'crypto') {
+      this._buildCryptoPanel(W, H);
       return;
     }
     const items = this._getItems();
@@ -1301,8 +1307,8 @@ class ShopScene extends Phaser.Scene {
     });
   }
 
-  /* ── Вкладка "💎 Купить" ─────────────────────────────── */
-  async _buildTopupPanel(W, H) {
+  /* ── Вкладка "⭐ Звёзды" ─────────────────────────────── */
+  async _buildStarsPanel(W, H) {
     let d;
     try {
       d = await get('/api/shop/packages');
@@ -1311,9 +1317,7 @@ class ShopScene extends Phaser.Scene {
       return;
     }
 
-    const starsPkgs  = d.stars  || [];
-    const cryptoPkgs = d.crypto || [];
-    const cryptoOn   = d.cryptopay_enabled;
+    const starsPkgs = d.stars || [];
     let y = 162;
 
     /* ═══ PREMIUM СТАТУС ════════════════════════════════════ */
@@ -1334,23 +1338,51 @@ class ShopScene extends Phaser.Scene {
     y += 30;
 
     // Обычные пакеты (d100, d300, d500)
-    const pkgMain = starsPkgs.filter(p => p.id !== 'premium');
-    const pkgW = (W - 32) / pkgMain.length;
+    const pkgMain = starsPkgs.filter(pkg => pkg.id !== 'premium');
+    const pkgW = (W - 32) / Math.max(1, pkgMain.length);
     pkgMain.forEach((pkg, i) => {
-      const px = 8 + i * (pkgW + 8/pkgMain.length);
+      const px = 8 + i * (pkgW + 8 / Math.max(1, pkgMain.length));
       this._makeStarsCard(pkg, px, y, pkgW - 4, 80, W);
     });
     y += 90;
 
     // Premium подписка — во всю ширину
-    const premPkg = starsPkgs.find(p => p.id === 'premium');
+    const premPkg = starsPkgs.find(pkg => pkg.id === 'premium');
     if (premPkg) {
       this._makePremiumCard(premPkg, 8, y, W-16, 52, W);
       y += 62;
     }
 
+    y += 8;
+    txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5);
+  }
+
+  /* ── Вкладка "💎 Крипто" ─────────────────────────────── */
+  async _buildCryptoPanel(W, H) {
+    let d;
+    try {
+      d = await get('/api/shop/packages');
+    } catch(_) {
+      txt(this, W/2, H/2, '❌ Нет соединения', 13, '#dc3c46').setOrigin(0.5);
+      return;
+    }
+
+    const cryptoPkgs = d.crypto || [];
+    const cryptoOn   = d.cryptopay_enabled;
+    let y = 162;
+
+    /* ═══ PREMIUM СТАТУС ════════════════════════════════════ */
+    const p = State.player;
+    if (p?.is_premium) {
+      const sb = this.add.graphics();
+      sb.fillStyle(0x1a0a30, 0.95); sb.fillRoundedRect(8, y, W-16, 32, 9);
+      sb.lineStyle(2, C.purple, 0.7); sb.strokeRoundedRect(8, y, W-16, 32, 9);
+      txt(this, 20, y+10, '👑 Premium активен', 12, '#c8a0ff', true);
+      txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#8888aa').setOrigin(1, 0);
+      y += 40;
+    }
+
     /* ═══ CRYPTOPAY (TON / USDT) ════════════════════════════ */
-    y += 6;
     makePanel(this, 8, y, W-16, 22, 8, 0.6);
     txt(this, 20, y+5, '💎  CRYPTOPAY', 12, '#3cc8dc', true);
     txt(this, W-12, y+5, cryptoOn ? 'TON · USDT' : 'не настроен', 11,
@@ -1381,13 +1413,13 @@ class ShopScene extends Phaser.Scene {
         .on('pointerup', () => {
           if ((this._cryptoAsset||'TON') === asset) return;
           tg?.HapticFeedback?.selectionChanged();
-          this.scene.restart({ tab: 'topup', asset });
+          this.scene.restart({ tab: 'crypto', asset });
         });
     });
     y += 36;
 
     // Обычные пакеты (без Premium и без полного сброса)
-    const cpMain = cryptoPkgs.filter(p => !p.premium && !p.full_reset);
+    const cpMain = cryptoPkgs.filter(pkg => !pkg.premium && !pkg.full_reset);
     const cpW = (W - 32) / Math.max(1, cpMain.length);
     cpMain.forEach((pkg, i) => {
       const px = 8 + i * (cpW + 8 / Math.max(1, cpMain.length));
@@ -1395,14 +1427,14 @@ class ShopScene extends Phaser.Scene {
     });
     y += 90;
 
-    const cpReset = cryptoPkgs.find(p => p.full_reset);
+    const cpReset = cryptoPkgs.find(pkg => pkg.full_reset);
     if (cpReset) {
       this._makeCryptoResetCard(cpReset, 8, y, W - 16, 88, W);
       y += 98;
     }
 
     // Premium за крипту — во всю ширину
-    const cpPrem = cryptoPkgs.find(p => p.premium);
+    const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
     if (cpPrem) {
       this._makeCryptoPremiumCard(cpPrem, 8, y, W-16, 52, W);
       y += 62;
