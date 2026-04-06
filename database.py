@@ -1222,6 +1222,50 @@ class Database:
         finally:
             conn.close()
 
+    def apply_hp_regen_from_player(self, player: Dict, endurance_invested: int) -> Dict:
+        """
+        Быстрая версия apply_hp_regen: принимает уже загруженный dict игрока.
+        Экономит 1 лишний SELECT — данные уже есть из get_or_create_player.
+        Возвращает {'current_hp': ..., 'max_hp': ...} или {} если ничего не изменилось.
+        """
+        from datetime import datetime
+        from config import HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS, PLAYER_START_MAX_HP
+        user_id = player.get("user_id")
+        if not user_id:
+            return {}
+        max_hp = int(player.get("max_hp") or PLAYER_START_MAX_HP)
+        _raw_ch = player.get("current_hp")
+        current_hp = max_hp if _raw_ch is None else int(_raw_ch)
+        last_regen_str = player.get("last_hp_regen")
+        now = datetime.utcnow()
+
+        if current_hp < max_hp:
+            if last_regen_str:
+                try:
+                    last_regen = datetime.fromisoformat(str(last_regen_str).split("+")[0].split(".")[0] if last_regen_str else "")
+                except (ValueError, AttributeError):
+                    last_regen = now
+            else:
+                last_regen = now
+
+            elapsed = max(0.0, (now - last_regen).total_seconds())
+            endurance_mult = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS
+            regen_per_sec = max_hp / HP_REGEN_BASE_SECONDS * endurance_mult
+            hp_gained = int(elapsed * regen_per_sec)
+            current_hp = min(max_hp, current_hp + hp_gained)
+
+        conn = self.get_connection()
+        try:
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE players SET current_hp = ?, last_hp_regen = ? WHERE user_id = ?",
+                (current_hp, now.isoformat(), user_id)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return {'current_hp': current_hp, 'max_hp': max_hp}
+
     def wipe_player_profile(
         self, user_id: int, *, keep_wallet_clan_and_referrals: bool = False
     ) -> None:

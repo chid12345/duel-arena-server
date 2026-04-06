@@ -639,7 +639,8 @@ async def get_player(body: InitDataHeader):
 
     player = db.get_or_create_player(uid, username)
     inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
-    regen = db.apply_hp_regen(uid, inv)
+    # Используем данные уже загруженного игрока — экономим 1 лишний SELECT
+    regen = db.apply_hp_regen_from_player(player, inv)
     if regen:
         player = dict(player)
         player["current_hp"] = regen["current_hp"]
