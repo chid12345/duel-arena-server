@@ -74,7 +74,7 @@ def _norm_sql(sql: str) -> str:
 _PG_EXACT: List[Tuple[str, str]] = [
     (
         "INSERT OR IGNORE INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (?, ?, 0, 0, 0)",
-        "INSERT INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (%s, %s, 0, 0, 0) ON CONFLICT (user_id, quest_date) DO NOTHING",
+        "INSERT INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (%s, %s, 0, 0, FALSE) ON CONFLICT (user_id, quest_date) DO NOTHING",
     ),
     (
         "INSERT OR IGNORE INTO improvements (user_id, improvement_type, level) VALUES (?, ?, 0)",
@@ -129,6 +129,9 @@ def _adapt_sql_pg(sql: str) -> str:
         "referral_usdt_balance = MAX(0, COALESCE(referral_usdt_balance,0) - ?)",
         "referral_usdt_balance = GREATEST(0, COALESCE(referral_usdt_balance,0) - ?)",
     )
+    # Булевые поля: 0/1 → FALSE/TRUE для PostgreSQL BOOLEAN-колонок
+    s = re.sub(r'\breward_claimed\s*=\s*1\b', 'reward_claimed = TRUE',  s)
+    s = re.sub(r'\breward_claimed\s*=\s*0\b', 'reward_claimed = FALSE', s)
     s = s.replace("?", "%s")
     s = s.replace("__PG_INTERVAL_SEC__", "(NOW() + (%s::text || ' seconds')::interval)")
     return s
