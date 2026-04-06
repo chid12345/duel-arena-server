@@ -673,6 +673,8 @@ class MenuScene extends Phaser.Scene {
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     const hpBg  = makeBar(this, hpX, hpY, hpW, hpH, hpPct, hpCol);
     const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#ffffff', true, '#00000088').setOrigin(0.5);
+    /* Сохраняем для live-обновления регеном без перезапуска сцены */
+    this._liveHp = { g: hpBg, t: hpTxt, x: hpX, y: hpY, w: hpW, h: hpH };
 
     /* ── XP бар ── */
     let xpBg, xpTxt;
@@ -1605,8 +1607,17 @@ class MenuScene extends Phaser.Scene {
         if (!sp || sp.current_hp >= sp.max_hp) return;
         sp.current_hp = Math.min(sp.max_hp, Math.round(sp.current_hp + regenPerTick));
         sp.hp_pct     = Math.round(sp.current_hp / sp.max_hp * 100);
-        // Если была открыта ProfilePanel — перерисуем сцену
-        if (this._activeTab === 'profile') this.scene.restart({ returnTab: 'profile' });
+
+        /* Обновляем HP-бар напрямую — без перезапуска всей сцены */
+        if (this._activeTab === 'profile' && this._liveHp) {
+          const { g, t, x, y, w, h } = this._liveHp;
+          const col = sp.hp_pct > 50 ? C.green : sp.hp_pct > 25 ? C.gold : C.red;
+          g.clear();
+          g.fillStyle(C.dark, 1); g.fillRoundedRect(x, y, w, h, 4);
+          const fw = Math.max(8, Math.round(w * sp.hp_pct / 100));
+          g.fillStyle(col, 1);   g.fillRoundedRect(x, y, fw, h, 4);
+          t.setText(`${sp.current_hp} / ${sp.max_hp} HP`);
+        }
       },
     });
   }
@@ -2703,6 +2714,12 @@ class RatingScene extends Phaser.Scene {
   init(data) {
     this._tab = (data && data.tab) ? data.tab : (RatingScene._lastTab || 'pvp');
     RatingScene._lastTab = this._tab;
+    /* Кеш данных живёт 60 сек, не делаем повторный запрос при смене вкладки */
+    const now = Date.now();
+    if (!RatingScene._cache || (now - (RatingScene._cacheTs || 0)) > 60_000) {
+      RatingScene._cache   = {};
+      RatingScene._cacheTs = now;
+    }
   }
 
   async create() {
@@ -2754,7 +2771,7 @@ class RatingScene extends Phaser.Scene {
   async _buildPvpTab(W, H) {
     const startY = 114;   /* ниже шапки + табов, как в магазине */
     try {
-      const res = await get('/api/pvp/top');
+      const res = RatingScene._cache.pvp || (RatingScene._cache.pvp = await get('/api/pvp/top'));
       if (!res.ok) throw new Error('bad');
       const players = res.elo_top || [];
       const myUid   = State.player?.user_id;
@@ -2809,38 +2826,43 @@ class RatingScene extends Phaser.Scene {
 
   _buildTitansTab(W, H) {
     const startY = 114;
-    const loadT  = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    if (RatingScene._cache.titans) {
+      this._renderTitans(RatingScene._cache.titans, W, H, startY);
+      return;
+    }
+    const loadT = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/titans/top').then(data => {
+      RatingScene._cache.titans = data;
       loadT.destroy();
       if (!data.ok) { txt(this, W / 2, H / 2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
-      const lb = data.leaders || [];
-
-      txt(this, W / 2, startY + 4, `Неделя: ${data.week_key || '-'}`, 11, '#8888aa').setOrigin(0.5);
-      makePanel(this, 8, startY + 16, W - 16, 54, 10, 0.95);
-      txt(this, 16, startY + 26, '🎁 Награды недели:', 12, '#ffc83c', true);
-      txt(this, 16, startY + 43, '1 место: 150💎 · 2: 90💎 · 3: 60💎 · 4-10: 25💎', 11, '#c0c0e0');
-      txt(this, 16, startY + 57, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#9999bb');
-
-      const listY   = startY + 80;
-      const rowH    = 40;
-      const maxShow = Math.max(1, Math.floor((H - listY - 100) / rowH));
-
-      lb.slice(0, maxShow).forEach((row, i) => {
-        const ry = listY + i * rowH;
-        const bg = this.add.graphics();
-        bg.fillStyle(C.bgPanel, 0.86);
-        bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
-        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-        txt(this, 18, ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
-        txt(this, 52, ry + 9,  row.username || `User${row.user_id}`, 12, '#d0d0ee', true);
-        txt(this, 52, ry + 24, `🗿 Этаж: ${row.weekly_best_floor || 0}`, 11, '#777799');
-        txt(this, W - 16, ry + 17, `${row.weekly_best_floor || 0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
-      });
-
-      if (!lb.length) {
-        txt(this, W / 2, H / 2 + 20, '😴 Пока никто не прошёл Башню', 13, '#9999bb').setOrigin(0.5);
-      }
+      this._renderTitans(data, W, H, startY);
     }).catch(() => loadT.setText('❌ Нет соединения'));
+  }
+
+  _renderTitans(data, W, H, startY) {
+    const lb = data.leaders || [];
+    txt(this, W / 2, startY + 4, `Неделя: ${data.week_key || '-'}`, 11, '#8888aa').setOrigin(0.5);
+    makePanel(this, 8, startY + 16, W - 16, 54, 10, 0.95);
+    txt(this, 16, startY + 26, '🎁 Награды недели:', 12, '#ffc83c', true);
+    txt(this, 16, startY + 43, '1 место: 150💎 · 2: 90💎 · 3: 60💎 · 4-10: 25💎', 11, '#c0c0e0');
+    txt(this, 16, startY + 57, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#9999bb');
+    const listY   = startY + 80;
+    const rowH    = 40;
+    const maxShow = Math.max(1, Math.floor((H - listY - 100) / rowH));
+    lb.slice(0, maxShow).forEach((row, i) => {
+      const ry = listY + i * rowH;
+      const bg = this.add.graphics();
+      bg.fillStyle(C.bgPanel, 0.86);
+      bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+      txt(this, 18, ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
+      txt(this, 52, ry + 9,  row.username || `User${row.user_id}`, 12, '#d0d0ee', true);
+      txt(this, 52, ry + 24, `🗿 Этаж: ${row.weekly_best_floor || 0}`, 11, '#777799');
+      txt(this, W - 16, ry + 17, `${row.weekly_best_floor || 0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
+    });
+    if (!lb.length) {
+      txt(this, W / 2, H / 2 + 20, '😴 Пока никто не прошёл Башню', 13, '#9999bb').setOrigin(0.5);
+    }
   }
 
   _buildPodium(top3, W, y) {

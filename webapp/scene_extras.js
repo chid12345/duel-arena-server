@@ -16,9 +16,7 @@ function _extraBg(scene, W, H) {
   const g = scene.add.graphics();
   g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
   g.fillRect(0, 0, W, H);
-  g.lineStyle(1, C.blue, 0.03);
-  for (let x = 0; x < W; x += 32) g.lineBetween(x, 0, x, H);
-  for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
+  /* Сетка убрана: 50+ lineBetween при opacity 0.03 давали лишние draw-call */
 }
 
 function _extraBack(scene, W, H, dest = 'Menu', returnTab = 'more') {
