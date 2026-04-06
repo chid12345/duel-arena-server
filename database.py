@@ -132,6 +132,14 @@ def _adapt_sql_pg(sql: str) -> str:
     # Булевые поля: 0/1 → FALSE/TRUE для PostgreSQL BOOLEAN-колонок
     s = re.sub(r'\breward_claimed\s*=\s*1\b', 'reward_claimed = TRUE',  s)
     s = re.sub(r'\breward_claimed\s*=\s*0\b', 'reward_claimed = FALSE', s)
+    s = re.sub(r'\bis_bot2\s*=\s*1\b',        'is_bot2 = TRUE',         s)
+    s = re.sub(r'\bis_bot2\s*=\s*0\b',        'is_bot2 = FALSE',        s)
+    s = re.sub(r'\bis_bot1\s*=\s*1\b',        'is_bot1 = TRUE',         s)
+    s = re.sub(r'\bis_bot1\s*=\s*0\b',        'is_bot1 = FALSE',        s)
+    s = re.sub(r'\bis_premium\s*=\s*1\b',     'is_premium = TRUE',      s)
+    s = re.sub(r'\bis_premium\s*=\s*0\b',     'is_premium = FALSE',     s)
+    s = re.sub(r'\bclaimed\s*=\s*1\b',        'claimed = TRUE',         s)
+    s = re.sub(r'\bclaimed\s*=\s*0\b',        'claimed = FALSE',        s)
     s = s.replace("?", "%s")
     s = s.replace("__PG_INTERVAL_SEC__", "(NOW() + (%s::text || ' seconds')::interval)")
     return s
