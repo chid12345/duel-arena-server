@@ -1882,7 +1882,7 @@ class ShopScene extends Phaser.Scene {
       ],
       special: [
         { id: 'stat_reset', icon: '🔄', name: 'Сброс статов', price: 50, currency: 'diamonds', desc: 'Сбросить все статы' },
-        { id: null, icon: '🌟', name: 'Battle Pass+', price: 500, currency: 'diamonds', soon: true },
+        { id: null, icon: '🌟', name: 'Боевой пропуск+', price: 500, currency: 'diamonds', soon: true },
         { id: null, icon: '🎭', name: 'Скин воина',   price: 200, currency: 'diamonds', soon: true },
         { id: null, icon: '🏆', name: 'Рамка профиля',price: 100, currency: 'diamonds', soon: true },
       ],

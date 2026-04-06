@@ -86,7 +86,7 @@ async def setup_bot_menu(application: Application):
         BotCommand("rating", "Топ игроков"),
         BotCommand("quests", "Ежедневные квесты"),
         BotCommand("season", "Текущий сезон"),
-        BotCommand("pass", "Battle Pass"),
+        BotCommand("pass", "Боевой пропуск"),
         BotCommand("clan", "Кланы"),
         BotCommand("buy", "Купить алмазы"),
         BotCommand("invite", "Пригласить друга"),

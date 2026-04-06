@@ -103,8 +103,8 @@ def _cache_set(uid: int, player: dict) -> None:
 def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
-# Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.04 → 1.05).
-GAME_VERSION = "1.05"
+# Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.05 → 1.06).
+GAME_VERSION = "1.06"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -914,6 +914,21 @@ async def send_challenge(body: ChallengeSendBody):
             },
         },
     )
+    # Пуш в Telegram-чат (если есть chat_id), чтобы не пропустить вызов
+    try:
+        target_chat_id = db.get_player_chat_id(target_uid)
+        if target_chat_id:
+            chall_name = me.get("username") or my_username
+            await _send_tg_message(
+                int(target_chat_id),
+                (
+                    "⚔️ <b>Новый PvP-вызов</b>\n\n"
+                    f"Игрок @{chall_name} бросил тебе вызов.\n"
+                    "Открой мини-приложение и прими/отклони."
+                ),
+            )
+    except Exception as e:
+        logger.warning("challenge tg notify failed: %s", e)
     return {"ok": True, "status": "challenge_sent", "challenge_id": ch["challenge_id"], "expires_at": ch["expires_at"]}
 
 

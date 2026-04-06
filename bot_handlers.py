@@ -540,13 +540,13 @@ class BotHandlers:
 
     @staticmethod
     async def pass_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Команда /pass — Battle Pass."""
+        """Команда /pass — Боевой пропуск."""
         user = update.effective_user
         player = db.get_or_create_player(user.id, user.username)
         bp = db.get_battle_pass(user.id)
         tiers = db.BATTLE_PASS_TIERS
         claimed = bp.get('last_claimed_tier', 0)
-        text = "🎖️ <b>BATTLE PASS</b>\n\n"
+        text = "🎖️ <b>БОЕВОЙ ПРОПУСК</b>\n\n"
         for i, (b_need, w_need, d, g) in enumerate(tiers, 1):
             b_done = min(bp.get('battles_done', 0), b_need)
             w_done = min(bp.get('wins_done', 0), w_need)
