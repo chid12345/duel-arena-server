@@ -106,6 +106,17 @@ class BattleSystem:
             return False
         return True
 
+    @staticmethod
+    def _is_stale_after_profile_reset(player_live: Dict[str, Any], battle_started_at: datetime) -> bool:
+        """Если профиль был сброшен после старта боя — его результат применять нельзя."""
+        try:
+            reset_ts = int(player_live.get("profile_reset_ts") or 0)
+        except Exception:
+            reset_ts = 0
+        if reset_ts <= 0:
+            return False
+        return float(reset_ts) > float(battle_started_at.timestamp())
+
     def force_abandon_battle(self, user_id: int) -> bool:
         """
         Убрать активный бой из памяти без записи в БД (зависший UI / сброс).
@@ -1347,8 +1358,8 @@ class BattleSystem:
                 winner_live = db.get_or_create_player(winner_user_id, winner.get("username") or "")
             if loser_user_id is not None:
                 loser_live = db.get_or_create_player(loser_user_id, loser.get("username") or "")
-        winner_locked = self._is_profile_reset_locked(winner_user_id)
-        loser_locked = self._is_profile_reset_locked(loser_user_id)
+        winner_locked = self._is_profile_reset_locked(winner_user_id) or self._is_stale_after_profile_reset(winner_live, battle["started_at"])
+        loser_locked = self._is_profile_reset_locked(loser_user_id) or self._is_stale_after_profile_reset(loser_live, battle["started_at"])
 
         # Урон за бой (для XP-формулы)
         p1_total_dmg, p2_total_dmg = self._battle_damage_totals(battle)
@@ -1425,7 +1436,7 @@ class BattleSystem:
                 total_gold += streak_bonus_gold
             pl = dict(winner_live)
             pl['gold'] = total_gold
-            exp_patch, did_level = self._exp_progression_updates(pl, exp_reward)
+            exp_patch, did_level = self._exp_progression_updates(pl, exp_reward, max_level_ups=1)
             if did_level:
                 level_up_level = exp_patch['level']
             winner_stats = {
@@ -1451,7 +1462,7 @@ class BattleSystem:
             }
             if loser_exp > 0:
                 loser_pl = dict(loser_live)
-                loser_exp_patch, _ = self._exp_progression_updates(loser_pl, loser_exp)
+                loser_exp_patch, _ = self._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)
                 loser_stats.update({
                     'exp': loser_exp_patch['exp'],
                     'exp_milestones': loser_exp_patch['exp_milestones'],
@@ -1594,8 +1605,8 @@ class BattleSystem:
                 winner_live = db.get_or_create_player(winner_user_id, winner.get("username") or "")
             if loser_user_id is not None:
                 loser_live = db.get_or_create_player(loser_user_id, loser.get("username") or "")
-        winner_locked = self._is_profile_reset_locked(winner_user_id)
-        loser_locked = self._is_profile_reset_locked(loser_user_id)
+        winner_locked = self._is_profile_reset_locked(winner_user_id) or self._is_stale_after_profile_reset(winner_live, battle["started_at"])
+        loser_locked = self._is_profile_reset_locked(loser_user_id) or self._is_stale_after_profile_reset(loser_live, battle["started_at"])
 
         # Меньшие награды за победу по AFK (в тестовом бою не начисляются)
         gold_reward = 0 if is_test else (VICTORY_GOLD // 2)
@@ -1616,7 +1627,7 @@ class BattleSystem:
                 total_g += streak_bonus_afk
             pl = dict(winner_live)
             pl['gold'] = total_g
-            exp_patch, did_level_afk = self._exp_progression_updates(pl, exp_reward)
+            exp_patch, did_level_afk = self._exp_progression_updates(pl, exp_reward, max_level_ups=1)
             if did_level_afk:
                 level_up_level = exp_patch['level']
             winner_stats = {
@@ -1731,7 +1742,7 @@ class BattleSystem:
         
         return result
     
-    def _exp_progression_updates(self, player: Dict, exp_gained: int) -> Tuple[Dict, bool]:
+    def _exp_progression_updates(self, player: Dict, exp_gained: int, max_level_ups: int = 1) -> Tuple[Dict, bool]:
         """
         Начислить опыт: промежуточные +1 стат по «апам» из таблицы (пороги need*k/steps),
         ап уровня — награды из progression.json. exp_milestones — битовая маска пройденных апов на текущей полоске.
@@ -1745,6 +1756,7 @@ class BattleSystem:
         current_hp = int(player.get('current_hp', max_hp))
 
         leveled = False
+        gained_levels = 0
         while level < MAX_LEVEL:
             need = exp_needed_for_next_level(level)
             if need <= 0:
@@ -1765,8 +1777,13 @@ class BattleSystem:
                     mask |= bit
             if exp < need:
                 break
+            if gained_levels >= max(1, int(max_level_ups)):
+                # Защита от аномалий (дубли итогов/гонки): максимум +N уровней за один бой.
+                exp = min(exp, max(0, need - 1))
+                break
             exp -= need
             level += 1
+            gained_levels += 1
             leveled = True
             mask = 0
             gold += gold_when_reaching_level(level)

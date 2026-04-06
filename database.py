@@ -759,6 +759,12 @@ class Database:
                     "CREATE INDEX IF NOT EXISTS idx_weekly_claims_user_week ON weekly_claims (user_id, week_key)",
                 ],
             ),
+            (
+                "2026_04_16_003_profile_reset_ts",
+                [
+                    "ALTER TABLE players ADD COLUMN profile_reset_ts INTEGER DEFAULT 0",
+                ],
+            ),
         ]
 
         for migration_id, statements in migrations:
@@ -1210,6 +1216,7 @@ class Database:
             cursor.execute("DELETE FROM season_rewards WHERE user_id = ?", (user_id,))
             cursor.execute("DELETE FROM pvp_queue WHERE user_id = ?", (user_id,))
             now_iso = datetime.utcnow().isoformat()
+            now_ts = int(time.time())
             start_hp = PLAYER_START_MAX_HP
             cursor.execute(
                 """
@@ -1221,6 +1228,7 @@ class Database:
                     wins = 0, losses = 0, win_streak = 0, rating = 1000,
                     daily_streak = 0, last_daily = NULL,
                     xp_boost_charges = 0,
+                    profile_reset_ts = ?,
                     last_active = CURRENT_TIMESTAMP,
                     last_hp_regen = ?
                 WHERE user_id = ?
@@ -1233,6 +1241,7 @@ class Database:
                     start_hp,
                     start_hp,
                     PLAYER_START_FREE_STATS,
+                    now_ts,
                     now_iso,
                     user_id,
                 ),

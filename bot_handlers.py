@@ -404,8 +404,14 @@ class BotHandlers:
             )
             return
         logger.info("event=agent_code_reset user_id=%s", user.id)
+        try:
+            battle_system.force_abandon_battle(user.id)
+            battle_system.mark_profile_reset(user.id, ttl_seconds=600)
+        except Exception:
+            pass
         db.wipe_player_profile(user.id)
         db.get_or_create_player(user.id, user.username or "")
+        db.update_player_stats(user.id, {"profile_reset_ts": int(time.time())})
         await tg_api_call(
             update.message.reply_text,
             "✅ Профиль полностью сброшен — ты снова новый игрок!\n\nНажми /start чтобы начать.",
@@ -803,8 +809,14 @@ class BotHandlers:
             return
         logger.info("event=command_wipe_me user_id=%s", user.id)
         db.log_metric_event("command_wipe_me", user.id)
+        try:
+            battle_system.force_abandon_battle(user.id)
+            battle_system.mark_profile_reset(user.id, ttl_seconds=600)
+        except Exception:
+            pass
         db.wipe_player_profile(user.id)
         db.get_or_create_player(user.id, user.username or "")
+        db.update_player_stats(user.id, {"profile_reset_ts": int(time.time())})
         await tg_api_call(
             update.message.reply_text,
             "✅ Профиль полностью сброшен — как новый аккаунт. Откройте /start.",

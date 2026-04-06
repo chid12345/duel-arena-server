@@ -37,6 +37,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_05_003_withdrawal_cooldown",
     "2026_04_16_001_pvp_challenges",
     "2026_04_16_002_titan_and_weekly_claims",
+    "2026_04_16_003_profile_reset_ts",
 )
 
 # Без внешних ключей battles → players: в SQLite FK часто не проверялись, боты хранятся отдельно.
@@ -75,7 +76,8 @@ POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
         referral_tier TEXT,
         first_premium_at TEXT,
         referral_usdt_balance DOUBLE PRECISION DEFAULT 0,
-        last_withdrawal_at TIMESTAMP
+        last_withdrawal_at TIMESTAMP,
+        profile_reset_ts BIGINT DEFAULT 0
     )
     """,
     """
@@ -378,6 +380,7 @@ POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
 )
 
 POSTGRES_AFTER_DDL: tuple[str, ...] = (
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS profile_reset_ts BIGINT DEFAULT 0",
     "INSERT INTO seasons (id, name, status) VALUES (1, 'Сезон 1: Начало', 'active') ON CONFLICT (id) DO NOTHING",
     "SELECT setval(pg_get_serial_sequence('seasons', 'id'), COALESCE((SELECT MAX(id) FROM seasons), 1), true)",
 )
