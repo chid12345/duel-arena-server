@@ -1280,11 +1280,8 @@ class NatiskScene extends Phaser.Scene {
 
     const p = d.progress;
 
-    /* ── Активный заход → сбрасываем молча (выход = проигрыш) ── */
-    if (p.is_active && p.current_wave > 0) {
-      post('/api/endless/abandon', {}).catch(() => {}).finally(() => this.scene.restart());
-      return;
-    }
+    /* ── Брошенный заход — сервер сбросит его при старте нового ── */
+    // Если is_active, просто показываем меню; /api/endless/start сам завершит старый заход
 
     let y = 84;
 

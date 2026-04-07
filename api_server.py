@@ -1213,32 +1213,52 @@ async def endless_start(body: TitanStartBody):
     player   = db.get_or_create_player(uid, username)
     progress = db.get_endless_progress(uid)
 
-    # Если есть активный заход — продолжаем без трат попытки
+    # Брошенный заход (вышел между волнами) — засчитываем как проигрыш, начинаем новый
     if progress["is_active"] and progress["current_wave"] > 0:
-        wave = progress["current_wave"]
-        player["current_hp"] = progress["current_hp"]
-    else:
-        # Новый заход — проверяем попытки
-        attempts_data = db.endless_get_attempts(uid)
-        is_premium = bool(_premium_fields(player).get("is_premium"))
-        base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
-        total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
-        attempts_left = max(0, total_available - attempts_data["used"])
-        if attempts_left <= 0:
-            return {"ok": False, "reason": "Попытки закончились. Приходи завтра!"}
-        wave = 1
-        # Новый заход — всегда начинаем с полным HP (не зависит от HP после обычных боёв)
-        full_hp = int(player.get("max_hp", 100))
-        db.endless_start_run(uid, full_hp)
-        db.endless_use_attempt(uid)
+        db.endless_on_loss(uid, progress["current_wave"])
+        progress = db.get_endless_progress(uid)
+
+    # Новый заход — проверяем попытки
+    attempts_data = db.endless_get_attempts(uid)
+    is_premium = bool(_premium_fields(player).get("is_premium"))
+    base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
+    total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
+    attempts_left = max(0, total_available - attempts_data["used"])
+    if attempts_left <= 0:
+        return {"ok": False, "reason": "Попытки закончились. Приходи завтра!"}
+    wave = 1
+    full_hp = int(player.get("max_hp", 100))
+    db.endless_start_run(uid, full_hp)
+    db.endless_use_attempt(uid)
 
     bot = _endless_bot_for_wave(wave)
     player_for_battle = dict(player)
-    player_for_battle["current_hp"] = (
-        progress["current_hp"] if progress["is_active"]
-        else int(player.get("current_hp", player.get("max_hp", 100)))
-    )
+    player_for_battle["current_hp"] = full_hp
     bid = await battle_system.start_battle(
+        player_for_battle, bot,
+        is_bot2=True,
+        mode="endless",
+        mode_meta={"wave": wave}
+    )
+    state = _battle_state_api(uid)
+    return {"ok": True, "status": "endless_started", "wave": wave, "bot": bot, "battle": state}
+
+
+@app.post("/api/endless/next_wave")
+async def endless_next_wave(body: TitanStartBody):
+    """Продолжить активный заход — следующая волна (вызывается из ResultScene)."""
+    tg_user  = get_user_from_init_data(body.init_data)
+    uid      = int(tg_user["id"])
+    username = tg_user.get("username") or ""
+    player   = db.get_or_create_player(uid, username)
+    progress = db.get_endless_progress(uid)
+    if not progress["is_active"] or progress["current_wave"] <= 0:
+        return {"ok": False, "reason": "Нет активного захода"}
+    wave = progress["current_wave"]
+    player_for_battle = dict(player)
+    player_for_battle["current_hp"] = progress["current_hp"]
+    bot = _endless_bot_for_wave(wave)
+    await battle_system.start_battle(
         player_for_battle, bot,
         is_bot2=True,
         mode="endless",

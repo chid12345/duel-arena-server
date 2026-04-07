@@ -2670,7 +2670,7 @@ class ResultScene extends Phaser.Scene {
     const bigBtnLabel = (isEndless && won) ? '🔥  Следующая волна!' : '⚔️  Ещё бой!';
     const bigBtnCb = (isEndless && won)
       ? () => {
-          post('/api/endless/start', {}).then(r => {
+          post('/api/endless/next_wave', {}).then(r => {
             if (!r.ok) { this.scene.start('Natisk'); return; }
             State.battle      = r.battle;
             State.endlessWave = r.wave;
