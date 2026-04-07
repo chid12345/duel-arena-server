@@ -1331,8 +1331,37 @@ class NatiskScene extends Phaser.Scene {
       y += 52;
     }
 
-    /* ── Правила ── */
+    /* ── Задания ── */
     y += 10;
+    const dailyWins  = d.daily_endless_wins  || 0;
+    const weeklyWins = (d.weekly_endless || {}).weekly_wins || 0;
+    const weeklyWave = (d.weekly_endless || {}).best_wave   || 0;
+    const questsH = 88;
+    makePanel(this, 8, y, W-16, questsH, 10, 0.85);
+    txt(this, 20, y+8, '📋 Задания Натиска', 11, '#ffc83c', true);
+    // Ежедневное
+    const dDone = dailyWins >= 3;
+    const dBar  = Math.min(1, dailyWins / 3);
+    const bW    = W - 64;
+    txt(this, 20, y+26, `🌅 Победи 3 врага сегодня  ${dailyWins}/3`, 10, dDone ? '#3cc864' : '#ccccee');
+    const dBg = this.add.graphics();
+    dBg.fillStyle(0x222233, 1); dBg.fillRoundedRect(20, y+38, bW, 6, 3);
+    dBg.fillStyle(dDone ? 0x3cc864 : 0xdc3c46, 1); dBg.fillRoundedRect(20, y+38, Math.max(6, bW * dBar), 6, 3);
+    if (dDone) txt(this, W-16, y+26, '✅ +80🪙 +1💎', 10, '#3cc864', true).setOrigin(1, 0);
+    // Недельное победы
+    const wDone = weeklyWins >= 10;
+    const wBar  = Math.min(1, weeklyWins / 10);
+    txt(this, 20, y+52, `📅 Победи 10 врагов за неделю  ${weeklyWins}/10`, 10, wDone ? '#3cc864' : '#ccccee');
+    const wBg = this.add.graphics();
+    wBg.fillStyle(0x222233, 1); wBg.fillRoundedRect(20, y+64, bW, 6, 3);
+    wBg.fillStyle(wDone ? 0x3cc864 : 0x5096ff, 1); wBg.fillRoundedRect(20, y+64, Math.max(6, bW * wBar), 6, 3);
+    if (wDone) txt(this, W-16, y+52, '✅ +200🪙 +3💎', 10, '#3cc864', true).setOrigin(1, 0);
+    // Недельное волна
+    const wvDone = weeklyWave >= 5;
+    txt(this, 20, y+76, `🌊 Дойди до 5 волны за неделю  ${weeklyWave}/5  ${wvDone ? '✅ +250🪙 +3💎' : ''}`, 10, wvDone ? '#3cc864' : '#ccccee');
+    y += questsH + 8;
+
+    /* ── Правила ── */
     makePanel(this, 8, y, W-16, 84, 10, 0.7);
     const rulesBase = [
       '⚔️  HP переносится между боями',

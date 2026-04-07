@@ -907,6 +907,21 @@ class Database:
                     "CREATE INDEX IF NOT EXISTS idx_endless_progress_best ON endless_progress (best_wave DESC, updated_at ASC)",
                 ],
             ),
+            (
+                "2026_04_19_001_endless_quests",
+                [
+                    # Ежедневный счётчик волн Натиска
+                    "ALTER TABLE daily_quests ADD COLUMN endless_wins INTEGER DEFAULT 0",
+                    # Недельный счётчик волн Натиска (отдельная таблица — по аналогии с titan_weekly_scores)
+                    """CREATE TABLE IF NOT EXISTS endless_weekly_scores (
+                        user_id INTEGER NOT NULL,
+                        week_key TEXT NOT NULL,
+                        weekly_wins INTEGER NOT NULL DEFAULT 0,
+                        best_wave_this_week INTEGER NOT NULL DEFAULT 0,
+                        PRIMARY KEY (user_id, week_key)
+                    )""",
+                ],
+            ),
         ]
 
         for migration_id, statements in migrations:
@@ -1691,15 +1706,20 @@ class Database:
         conn.commit()
         conn.close()
 
-        battles_played = row["battles_played"] if row else 0
-        battles_won = row["battles_won"] if row else 0
+        battles_played = int(row["battles_played"] or 0) if row else 0
+        battles_won    = int(row["battles_won"]    or 0) if row else 0
+        endless_wins   = int(row["endless_wins"]   or 0) if row and "endless_wins" in (row.keys() if hasattr(row, "keys") else dir(row)) else 0
         reward_claimed = bool(row["reward_claimed"]) if row else False
-        is_completed = battles_played >= 3 and battles_won >= 1
+        is_completed   = battles_played >= 3 and battles_won >= 1
+        # Ежедневный квест Натиска: 3 победы в бесконечном режиме
+        endless_quest_completed = endless_wins >= 3
         return {
             "battles_played": battles_played,
             "battles_won": battles_won,
+            "endless_wins": endless_wins,
             "reward_claimed": reward_claimed,
             "is_completed": is_completed,
+            "endless_quest_completed": endless_quest_completed,
         }
 
     def claim_daily_quest_reward(self, user_id: int, gold_reward: int = 40, diamonds_reward: int = 1) -> Dict[str, Any]:
@@ -2242,6 +2262,66 @@ class Database:
                 (limit,)
             )
             return [{"user_id": int(r["user_id"]), "username": r["username"], "best_wave": int(r["best_wave"])} for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def endless_quest_on_win(self, user_id: int, wave: int) -> None:
+        """Вызывается после победы в волне Натиска: обновляет ежедневные и недельные квест-счётчики."""
+        today    = date.today().isoformat()
+        week_key = iso_week_key_utc()
+        conn     = self.get_connection()
+        cursor   = conn.cursor()
+        try:
+            # ── Ежедневный счётчик ───────────────────────────────────────
+            cursor.execute(
+                "INSERT OR IGNORE INTO daily_quests (user_id, quest_date, battles_played, battles_won, endless_wins, reward_claimed) VALUES (?,?,0,0,0,0)",
+                (user_id, today)
+            )
+            cursor.execute(
+                "UPDATE daily_quests SET endless_wins = endless_wins + 1 WHERE user_id=? AND quest_date=?",
+                (user_id, today)
+            )
+            # ── Недельный счётчик ────────────────────────────────────────
+            cursor.execute(
+                """INSERT INTO endless_weekly_scores (user_id, week_key, weekly_wins, best_wave_this_week)
+                   VALUES (?,?,1,?)
+                   ON CONFLICT(user_id, week_key) DO UPDATE SET
+                     weekly_wins = weekly_wins + 1,
+                     best_wave_this_week = MAX(best_wave_this_week, excluded.best_wave_this_week)""",
+                (user_id, week_key, wave)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def endless_get_weekly_progress(self, user_id: int, week_key: str) -> dict:
+        """Прогресс игрока в Натиске за текущую неделю."""
+        conn   = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT weekly_wins, best_wave_this_week FROM endless_weekly_scores WHERE user_id=? AND week_key=?",
+                (user_id, week_key)
+            )
+            row = cursor.fetchone()
+            if row:
+                return {"weekly_wins": int(row["weekly_wins"] or 0), "best_wave": int(row["best_wave_this_week"] or 0)}
+            return {"weekly_wins": 0, "best_wave": 0}
+        finally:
+            conn.close()
+
+    def endless_get_daily_wins(self, user_id: int) -> int:
+        """Количество побед в Натиске сегодня (для ежедневного квеста)."""
+        today  = date.today().isoformat()
+        conn   = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT endless_wins FROM daily_quests WHERE user_id=? AND quest_date=?",
+                (user_id, today)
+            )
+            row = cursor.fetchone()
+            return int(row["endless_wins"] or 0) if row else 0
         finally:
             conn.close()
 

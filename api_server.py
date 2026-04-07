@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.25"
+GAME_VERSION = "1.26"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -554,7 +554,14 @@ def _titan_boss_for_floor(floor: int, player: Dict[str, Any]) -> Dict[str, Any]:
 
 
 def _endless_bot_for_wave(wave: int) -> Dict[str, Any]:
-    """Генератор бота для режима Натиск. Статы реально растут с волной."""
+    """Генератор бота для режима Натиск.
+
+    Кривая сложности:
+      Волны 1-3  — очень лёгкие (str≈2-4, crit=1, hp≈48-74)  → любой новичок проходит
+      Волны 4-7  — лёгкие     (str≈5-7, crit=2, hp≈87-126) → чуть посложнее
+      Волны 8-15 — средние    (str≈8-13, crit=3-5, hp≈139-230) → нужно вложение в статы
+      Волны 16+  — жёсткие    (str≈15+, crit=6+, hp≈243+) → для прокачанных
+    """
     WAVE_NAMES = [
         (1,  3,  "Зелёный новобранец"),
         (4,  6,  "Уличный боец"),
@@ -571,11 +578,12 @@ def _endless_bot_for_wave(wave: int) -> Dict[str, Any]:
         if lo <= wave <= hi:
             name = n
             break
-    strength  = max(3,  3  + int(wave * 1.1))
-    endurance = max(3,  3  + int(wave * 0.8))
-    crit      = max(5,  5  + int(wave * 0.45))
-    max_hp    = max(60, 60 + wave * 18)
-    level     = max(1,  1  + int(wave * 0.7))
+    # Новая плавная кривая: волна 1 значительно слабее игрока-новичка (str≈10, end≈10, crit≈3)
+    strength  = max(2,  2  + int(wave * 0.75))   # w1=2  w5=5  w10=9  w20=17
+    endurance = max(2,  2  + int(wave * 0.50))   # w1=2  w5=4  w10=7  w20=12
+    crit      = max(1,  1  + int(wave * 0.35))   # w1=1  w5=2  w10=4  w20=8
+    max_hp    = max(35, 35 + wave * 13)           # w1=48 w5=100 w10=165 w20=295
+    level     = max(1,  1  + int(wave * 0.55))   # w1=1  w5=3  w10=6  w20=12
     return {
         "bot_id":    800000 + wave,
         "name":      f"[{wave}] {name}",
@@ -624,10 +632,16 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
     titan = db.get_titan_progress(uid)
     weekly_floor = int(titan.get("weekly_best_floor", 0))
     streak = int((db.get_or_create_player(uid, "") or {}).get("win_streak", 0))
+    week_key = _iso_week_key()
+    endless_weekly = db.endless_get_weekly_progress(uid, week_key)
+    endless_weekly_wins = endless_weekly["weekly_wins"]
+    endless_weekly_wave = endless_weekly["best_wave"]
     defs = [
-        {"key": "weekly_pvp_wins_10", "label": "Победи 10 игроков в PvP", "cur": pvp_wins, "max": 10, "gold": 150, "diamonds": 2},
-        {"key": "weekly_titan_floor_5", "label": "Дойди до 5 этажа Башни", "cur": weekly_floor, "max": 5, "gold": 180, "diamonds": 2},
-        {"key": "weekly_streak_5", "label": "Собери серию из 5 побед", "cur": streak, "max": 5, "gold": 120, "diamonds": 1},
+        {"key": "weekly_pvp_wins_10",    "label": "Победи 10 игроков в PvP",           "cur": pvp_wins,            "max": 10,  "gold": 150, "diamonds": 2},
+        {"key": "weekly_titan_floor_5",  "label": "Дойди до 5 этажа Башни Титанов",    "cur": weekly_floor,        "max": 5,   "gold": 180, "diamonds": 2},
+        {"key": "weekly_streak_5",       "label": "Собери серию из 5 побед",            "cur": streak,              "max": 5,   "gold": 120, "diamonds": 1},
+        {"key": "weekly_endless_wins_10","label": "🔥 Победи 10 врагов в Натиске",      "cur": endless_weekly_wins, "max": 10,  "gold": 200, "diamonds": 3},
+        {"key": "weekly_endless_wave_5", "label": "🔥 Дойди до 5 волны в Натиске",      "cur": endless_weekly_wave, "max": 5,   "gold": 250, "diamonds": 3},
     ]
     quests = []
     for q in defs:
@@ -1182,6 +1196,9 @@ async def endless_status(init_data: str):
         "player_diamonds": diamonds,
         "is_premium":      is_premium,
         "progress":        progress,
+        # Квест-прогресс для отображения в NatiskScene
+        "daily_endless_wins": db.endless_get_daily_wins(uid),
+        "weekly_endless":     db.endless_get_weekly_progress(uid, _iso_week_key()),
     }
 
 
@@ -1207,7 +1224,9 @@ async def endless_start(body: TitanStartBody):
         if attempts_left <= 0:
             return {"ok": False, "reason": "Попытки закончились. Приходи завтра!"}
         wave = 1
-        db.endless_start_run(uid, int(player.get("current_hp", player.get("max_hp", 100))))
+        # Новый заход — всегда начинаем с полным HP (не зависит от HP после обычных боёв)
+        full_hp = int(player.get("max_hp", 100))
+        db.endless_start_run(uid, full_hp)
         db.endless_use_attempt(uid)
 
     bot = _endless_bot_for_wave(wave)

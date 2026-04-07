@@ -1575,6 +1575,13 @@ class BattleSystem:
                     endless_progress = await loop.run_in_executor(
                         None, db.endless_on_win, player1["user_id"], wave, hp_left
                     )
+                    # Обновляем квест-счётчики Натиска
+                    try:
+                        await loop.run_in_executor(
+                            None, db.endless_quest_on_win, player1["user_id"], wave
+                        )
+                    except Exception as _qe:
+                        logger.warning("endless_quest_on_win error: %s", _qe)
                 elif not is_winner_p1 and not loser_locked:
                     endless_progress = await loop.run_in_executor(
                         None, db.endless_on_loss, player1["user_id"], wave
