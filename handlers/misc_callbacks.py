@@ -584,9 +584,10 @@ async def claim_daily_quest(query, player):
     await CallbackHandlers._callback_set_message(
         query,
         (
-            "🎁 <b>Награда за ежедневный квест получена!</b>\n\n"
-            f"💰 +{result['gold']} золота\n"
-            f"💎 +{result['diamonds']} алмаз"
+            "⚔️ <b>Боец Арены — задание выполнено!</b>\n\n"
+            "Арена не делает выходных — и вы доказали это сегодня.\n\n"
+            f"🪙 +{result['gold']} золота\n"
+            f"⭐ +{result.get('xp', 150)} опыта"
         ),
         parse_mode='HTML',
     )
