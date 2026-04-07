@@ -2610,15 +2610,19 @@ class ResultScene extends Phaser.Scene {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 120, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
       }
+    } else if (isEndless) {
+      // ── Endless loss — показываем итоги захода ──
+      txt(this, W / 2, panY + 14, 'ИТОГИ ЗАХОДА', 10, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 38, `💀 Волна ${endlessWave > 0 ? endlessWave : '?'} — конец`, 15, '#ff4455', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 64, `⚔️  Урон нанесён: ${r.damage || 0}`, 13, '#ddaa66', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 88, `⭐ +${r.exp || 0} опыта`, 13, '#5096ff', true).setOrigin(0.5);
+      // Лучший результат добавляется асинхронно (см. ниже endlessStatus)
     } else {
       txt(this, W / 2, panY + 22, '💪  Не сдавайся!', 15, '#8888aa', true).setOrigin(0.5);
       txt(this, W / 2, panY + 50, `Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 70, `★ ${eloSign}${r.rating_change} ELO`, 12, '#ff4455', true).setOrigin(0.5);
-      }
-      if (isEndless && endlessWave > 0) {
-        txt(this, W / 2, panY + 92, `💀 Заход завершён — Волна ${endlessWave}`, 12, '#cc4444', true).setOrigin(0.5);
       }
     }
 

@@ -823,6 +823,7 @@ async def battle_choice(body: BattleChoiceBody):
             "result": {
                 "gold":          mine.get("gold_reward", 0) if human_won else 0,
                 "exp":           mine.get("exp_reward",  0),
+                "damage":        mine.get("damage_to_opponent", 0),
                 "level_up":      mine.get("level_up", False) if human_won else False,
                 "rounds":        mine.get("rounds", 0),
                 "rating_change": mine.get("rating_change", 0),
@@ -852,6 +853,7 @@ async def battle_choice(body: BattleChoiceBody):
                     "result": {
                         "gold":          opp.get("gold_reward", 0) if opp_won else 0,
                         "exp":           opp.get("exp_reward",  0),
+                        "damage":        opp.get("damage_to_opponent", 0),
                         "level_up":      opp.get("level_up", False) if opp_won else False,
                         "rounds":        opp.get("rounds", 0),
                         "rating_change": opp.get("rating_change", 0),
@@ -870,6 +872,7 @@ async def battle_choice(body: BattleChoiceBody):
             "result": {
                 "gold":          mine.get("gold_reward", 0) if human_won else 0,
                 "exp":           mine.get("exp_reward",  0),
+                "damage":        mine.get("damage_to_opponent", 0),
                 "level_up":      mine.get("level_up", False) if human_won else False,
                 "rounds":        mine.get("rounds", 0),
                 "streak_bonus":  mine.get("streak_bonus_gold", 0) if human_won else 0,

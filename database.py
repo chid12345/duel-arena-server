@@ -134,6 +134,8 @@ def _adapt_sql_pg(sql: str) -> str:
         "referral_usdt_balance = MAX(0, COALESCE(referral_usdt_balance,0) - ?)",
         "referral_usdt_balance = GREATEST(0, COALESCE(referral_usdt_balance,0) - ?)",
     )
+    # Двухаргументный MAX(a, b) в ON CONFLICT DO UPDATE — в PostgreSQL это агрегат, нужен GREATEST
+    s = re.sub(r'\bMAX\s*\(\s*(\w[\w.]*)\s*,\s*(\w[\w.]*)\s*\)', r'GREATEST(\1, \2)', s)
     # Булевые поля: 0/1 → FALSE/TRUE для PostgreSQL BOOLEAN-колонок
     s = re.sub(r'\breward_claimed\s*=\s*1\b', 'reward_claimed = TRUE',  s)
     s = re.sub(r'\breward_claimed\s*=\s*0\b', 'reward_claimed = FALSE', s)
