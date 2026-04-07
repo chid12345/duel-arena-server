@@ -1266,7 +1266,7 @@ class NatiskScene extends Phaser.Scene {
     this.W = W; this.H = H;
     _extraBg(this, W, H);
     _extraHeader(this, W, '🔥', 'НАТИСК', 'Выживи как можно дольше на арене');
-    _extraBack(this, W, H);
+    _extraBack(this, W, H, 'Menu', 'battle');
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/endless/status').then(d => this._render(d, W, H)).catch(() => {
