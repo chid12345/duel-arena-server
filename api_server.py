@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.22"
+GAME_VERSION = "1.23"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -318,6 +318,10 @@ class TitanStartBody(BaseModel):
     init_data: str
     floor: Optional[int] = None
 
+class BuyAttemptBody(BaseModel):
+    init_data: str
+    kind: str = "gold"
+
 class WeeklyClaimBody(BaseModel):
     init_data: str
     claim_key: str
@@ -458,6 +462,7 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "active": True,
         "is_pvp": is_pvp,
         "is_p1": is_p1,
+        "mode": b.get("mode", "normal") if b else "normal",
         "round": ctx.get("round_num", 0),
         "my_hp": ctx.get("your_hp"),
         "my_max_hp": ctx.get("your_max"),
@@ -545,6 +550,42 @@ def _titan_boss_for_floor(floor: int, player: Dict[str, Any]) -> Dict[str, Any]:
         "current_hp": max_hp,
         "bot_type": "titan_boss",
         "ai_pattern": "adaptive",
+    }
+
+
+def _endless_bot_for_wave(wave: int) -> Dict[str, Any]:
+    """Генератор бота для режима Натиск. Статы реально растут с волной."""
+    WAVE_NAMES = [
+        (1,  3,  "Зелёный новобранец"),
+        (4,  6,  "Уличный боец"),
+        (7,  10, "Опытный головорез"),
+        (11, 15, "Боевой ветеран"),
+        (16, 20, "Закалённый гладиатор"),
+        (21, 30, "Элитный убийца"),
+        (31, 40, "Тёмный рыцарь"),
+        (41, 50, "Демон Арены"),
+        (51, 99, "Легендарный Берсерк"),
+    ]
+    name = "Легендарный Берсерк"
+    for lo, hi, n in WAVE_NAMES:
+        if lo <= wave <= hi:
+            name = n
+            break
+    strength  = max(3,  3  + int(wave * 1.1))
+    endurance = max(3,  3  + int(wave * 0.8))
+    crit      = max(5,  5  + int(wave * 0.45))
+    max_hp    = max(60, 60 + wave * 18)
+    level     = max(1,  1  + int(wave * 0.7))
+    return {
+        "bot_id":    800000 + wave,
+        "name":      f"[{wave}] {name}",
+        "level":     level,
+        "strength":  strength,
+        "endurance": endurance,
+        "crit":      crit,
+        "max_hp":    max_hp,
+        "current_hp": max_hp,
+        "is_premium": False,
     }
 
 
@@ -1098,6 +1139,140 @@ async def titan_start(body: TitanStartBody):
     if b:
         b["_tma_p1"] = True
     return {"ok": True, "status": "titan_started", "floor": floor, "boss": boss, "battle": _battle_state_api(uid)}
+
+
+# ── НАТИСК — бесконечный режим ────────────────────────────────────────────────
+
+BASE_ENDLESS_ATTEMPTS  = 5
+PREMIUM_ENDLESS_BONUS  = 5
+ENDLESS_GOLD_COST      = 100   # цена 1 попытки за золото
+ENDLESS_DIAMOND_COST   = 50    # цена 5 попыток за алмазы
+ENDLESS_DIAMOND_COUNT  = 5
+
+
+@app.get("/api/endless/status")
+async def endless_status(init_data: str):
+    tg_user  = get_user_from_init_data(init_data)
+    uid      = int(tg_user["id"])
+    username = tg_user.get("username") or ""
+    player   = db.get_or_create_player(uid, username)
+    progress = db.get_endless_progress(uid)
+    attempts_data = db.endless_get_attempts(uid)
+    is_premium = bool(_premium_fields(player).get("is_premium"))
+    base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
+    total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
+    attempts_left = max(0, total_available - attempts_data["used"])
+    can_buy_gold    = attempts_data["extra_gold"] == 0  # 1 per day
+    can_buy_diamond = True  # no daily limit
+    gold     = int(player.get("gold", 0))
+    diamonds = int(player.get("diamonds", 0))
+    return {
+        "ok": True,
+        "attempts_left":   attempts_left,
+        "attempts_used":   attempts_data["used"],
+        "base_attempts":   base,
+        "can_buy_gold":    can_buy_gold,
+        "can_buy_diamond": can_buy_diamond,
+        "gold_cost":       ENDLESS_GOLD_COST,
+        "diamond_cost":    ENDLESS_DIAMOND_COST,
+        "diamond_count":   ENDLESS_DIAMOND_COUNT,
+        "player_gold":     gold,
+        "player_diamonds": diamonds,
+        "is_premium":      is_premium,
+        "progress":        progress,
+    }
+
+
+@app.post("/api/endless/start")
+async def endless_start(body: TitanStartBody):
+    tg_user  = get_user_from_init_data(body.init_data)
+    uid      = int(tg_user["id"])
+    username = tg_user.get("username") or ""
+    player   = db.get_or_create_player(uid, username)
+    progress = db.get_endless_progress(uid)
+
+    # Если есть активный заход — продолжаем без трат попытки
+    if progress["is_active"] and progress["current_wave"] > 0:
+        wave = progress["current_wave"]
+        player["current_hp"] = progress["current_hp"]
+    else:
+        # Новый заход — проверяем попытки
+        attempts_data = db.endless_get_attempts(uid)
+        is_premium = bool(_premium_fields(player).get("is_premium"))
+        base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
+        total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
+        attempts_left = max(0, total_available - attempts_data["used"])
+        if attempts_left <= 0:
+            return {"ok": False, "reason": "Попытки закончились. Приходи завтра!"}
+        wave = 1
+        db.endless_start_run(uid, int(player.get("current_hp", player.get("max_hp", 100))))
+        db.endless_use_attempt(uid)
+
+    bot = _endless_bot_for_wave(wave)
+    player_for_battle = dict(player)
+    player_for_battle["current_hp"] = (
+        progress["current_hp"] if progress["is_active"]
+        else int(player.get("current_hp", player.get("max_hp", 100)))
+    )
+    bid = await battle_system.start_battle(
+        player_for_battle, bot,
+        is_bot2=True,
+        mode="endless",
+        mode_meta={"wave": wave}
+    )
+    state = _battle_state_api(uid)
+    return {"ok": True, "status": "endless_started", "wave": wave, "bot": bot, "battle": state}
+
+
+@app.post("/api/endless/buy_attempt")
+async def endless_buy_attempt(body: BuyAttemptBody):
+    tg_user  = get_user_from_init_data(body.init_data)
+    uid      = int(tg_user["id"])
+    username = tg_user.get("username") or ""
+    player   = db.get_or_create_player(uid, username)
+    kind     = body.kind  # "gold" or "diamond"
+
+    if kind == "gold":
+        attempts_data = db.endless_get_attempts(uid)
+        if attempts_data["extra_gold"] > 0:
+            return {"ok": False, "reason": "Уже куплена попытка за золото сегодня"}
+        gold = int(player.get("gold", 0))
+        if gold < ENDLESS_GOLD_COST:
+            return {"ok": False, "reason": f"Нужно {ENDLESS_GOLD_COST} 🪙"}
+        db.update_player_stats(uid, {"gold": gold - ENDLESS_GOLD_COST})
+        db.endless_add_extra(uid, "gold", 1)
+        return {"ok": True, "bought": 1, "cost": ENDLESS_GOLD_COST}
+    elif kind == "diamond":
+        diamonds = int(player.get("diamonds", 0))
+        if diamonds < ENDLESS_DIAMOND_COST:
+            return {"ok": False, "reason": f"Нужно {ENDLESS_DIAMOND_COST} 💎"}
+        db.update_player_stats(uid, {"diamonds": diamonds - ENDLESS_DIAMOND_COST})
+        db.endless_add_extra(uid, "diamond", ENDLESS_DIAMOND_COUNT)
+        return {"ok": True, "bought": ENDLESS_DIAMOND_COUNT, "cost": ENDLESS_DIAMOND_COST}
+    return {"ok": False, "reason": "Неверный тип"}
+
+
+@app.post("/api/endless/abandon")
+async def endless_abandon(body: TitanStartBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    progress = db.get_endless_progress(uid)
+    if progress["is_active"]:
+        db.endless_on_loss(uid, progress["current_wave"])
+    return {"ok": True}
+
+
+@app.get("/api/endless/top")
+async def endless_top(init_data: str):
+    tg_user  = get_user_from_init_data(init_data)
+    uid      = int(tg_user["id"])
+    leaders  = db.endless_get_top(20)
+    my_pos   = None
+    for i, row in enumerate(leaders):
+        if row["user_id"] == uid:
+            my_pos = i + 1
+            break
+    return {"ok": True, "leaders": leaders, "my_pos": my_pos}
 
 
 @app.get("/api/titans/top")

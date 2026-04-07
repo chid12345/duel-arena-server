@@ -1465,6 +1465,10 @@ class BattleSystem:
             floor = max(1, int(mode_meta.get("floor", 1)))
             gold_reward = 0 if is_test else int(12 + floor * 5)
             exp_reward  = 0 if is_test else max(1, int(round(base_exp * (1.0 + min(1.0, floor * 0.06)))))
+        if battle_mode == "endless":
+            wave = max(1, int(mode_meta.get("wave", 1)))
+            gold_reward = 0 if is_test else int(8 + wave * 4)
+            exp_reward  = 0 if is_test else max(1, int(round(base_exp * (1.0 + min(1.5, wave * 0.08)))))
 
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
         streak_bonus_gold = 0
@@ -1474,7 +1478,7 @@ class BattleSystem:
 
         # ── ELO ───────────────────────────────────────────────────
         _is_pvp = not battle.get("is_bot2")
-        if not is_test and _is_pvp and battle_mode != "titan":
+        if not is_test and _is_pvp and battle_mode not in ("titan", "endless"):
             # Полноценный ELO для PvP боёв
             _elo_k = 32
             _r_w   = int(winner_live.get('rating', 1000))
@@ -1483,12 +1487,12 @@ class BattleSystem:
             _e_l   = 1.0 - _e_w
             elo_delta_w = max(1, round(_elo_k * (1.0 - _e_w)))
             elo_delta_l = min(-1, round(_elo_k * (0.0 - _e_l)))
-        elif not is_test and not _is_pvp and battle_mode != "titan":
+        elif not is_test and not _is_pvp and battle_mode not in ("titan", "endless"):
             # Бот: небольшой фиксированный бонус
             elo_delta_w = 5
             elo_delta_l = 0
         else:
-            # Titan или тест: рейтинг не меняется
+            # Titan/Endless или тест: рейтинг не меняется
             elo_delta_w = 0
             elo_delta_l = 0
 
@@ -1553,6 +1557,31 @@ class BattleSystem:
             except Exception as _te:
                 logger.warning("titan_progress error: %s", _te)
 
+        # ── Endless progress (Натиск) ─────────────────────────────
+        endless_progress = None
+        if not is_test and battle_mode == "endless" and player1.get("user_id") is not None:
+            wave = max(1, int(mode_meta.get("wave", 1)))
+            try:
+                if is_winner_p1 and not winner_locked:
+                    # HP left after this fight (from winner stats)
+                    hp_left = int(winner_stats.get('current_hp', 0)) if winner_stats else 0
+                    # Every 5 waves: +10% max_hp heal
+                    max_hp = int(player1.get('max_hp', 100))
+                    if wave % 5 == 0:
+                        heal = max(1, int(max_hp * 0.10))
+                        hp_left = min(max_hp, hp_left + heal)
+                        if winner_stats:
+                            winner_stats['current_hp'] = hp_left
+                    endless_progress = await loop.run_in_executor(
+                        None, db.endless_on_win, player1["user_id"], wave, hp_left
+                    )
+                elif not is_winner_p1 and not loser_locked:
+                    endless_progress = await loop.run_in_executor(
+                        None, db.endless_on_loss, player1["user_id"], wave
+                    )
+            except Exception as _ee:
+                logger.warning("endless_progress error: %s", _ee)
+
         # ── Захватываем данные боя до удаления из памяти ─────────────
         n_rounds    = len(battle['rounds'])
         battle_data = {
@@ -1609,6 +1638,7 @@ class BattleSystem:
             'mode_meta':         mode_meta,
             'pvp_repeat_factor': pvp_repeat_factor,
             'titan_progress':    titan_progress,
+            'endless_progress':  endless_progress,
         }
 
         if battle.get('is_bot2') and player1.get('user_id') is not None:

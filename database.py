@@ -9,7 +9,8 @@ import sqlite3
 import random
 import time
 import uuid
-from datetime import datetime, timedelta, timezone
+import datetime as _datetime_module
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 
@@ -105,6 +106,10 @@ _PG_EXACT: List[Tuple[str, str]] = [
         "INSERT INTO pvp_queue (user_id, level, chat_id, message_id) VALUES (%s, %s, %s, %s) "
         "ON CONFLICT (user_id) DO UPDATE SET level = EXCLUDED.level, chat_id = EXCLUDED.chat_id, message_id = EXCLUDED.message_id",
     ),
+    (
+        "INSERT OR IGNORE INTO endless_attempts (user_id, attempt_date, attempts_used, extra_gold, extra_diamond) VALUES (?,?,0,0,0)",
+        "INSERT INTO endless_attempts (user_id, attempt_date, attempts_used, extra_gold, extra_diamond) VALUES (%s, %s, 0, 0, 0) ON CONFLICT (user_id, attempt_date) DO NOTHING",
+    ),
 ]
 
 
@@ -140,6 +145,8 @@ def _adapt_sql_pg(sql: str) -> str:
     s = re.sub(r'\bis_premium\s*=\s*0\b',     'is_premium = FALSE',     s)
     s = re.sub(r'\bclaimed\s*=\s*1\b',        'claimed = TRUE',         s)
     s = re.sub(r'\bclaimed\s*=\s*0\b',        'claimed = FALSE',        s)
+    s = re.sub(r'\bis_active\s*=\s*1\b',      'is_active = TRUE',       s)
+    s = re.sub(r'\bis_active\s*=\s*0\b',      'is_active = FALSE',      s)
     s = s.replace("?", "%s")
     s = s.replace("__PG_INTERVAL_SEC__", "(NOW() + (%s::text || ' seconds')::interval)")
     return s
@@ -876,6 +883,28 @@ class Database:
                         PRIMARY KEY (user_id, week_key)
                     )""",
                     "CREATE INDEX IF NOT EXISTS idx_tws_week_rank ON titan_weekly_scores (week_key, max_floor DESC, best_at ASC)",
+                ],
+            ),
+            (
+                "2026_04_18_001_endless_mode",
+                [
+                    """CREATE TABLE IF NOT EXISTS endless_progress (
+                        user_id INTEGER PRIMARY KEY,
+                        best_wave INTEGER DEFAULT 0,
+                        current_wave INTEGER DEFAULT 0,
+                        current_hp INTEGER DEFAULT 0,
+                        is_active INTEGER DEFAULT 0,
+                        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                    )""",
+                    """CREATE TABLE IF NOT EXISTS endless_attempts (
+                        user_id INTEGER NOT NULL,
+                        attempt_date TEXT NOT NULL,
+                        attempts_used INTEGER DEFAULT 0,
+                        extra_gold INTEGER DEFAULT 0,
+                        extra_diamond INTEGER DEFAULT 0,
+                        PRIMARY KEY (user_id, attempt_date)
+                    )""",
+                    "CREATE INDEX IF NOT EXISTS idx_endless_progress_best ON endless_progress (best_wave DESC, updated_at ASC)",
                 ],
             ),
         ]
@@ -2060,6 +2089,158 @@ class Database:
             conn.commit()
             prog["current_floor"] = next_floor
             return dict(prog)
+        finally:
+            conn.close()
+
+    # ── ENDLESS / НАТИСК ─────────────────────────────────────────────────────────
+
+    def get_endless_progress(self, user_id: int) -> dict:
+        """Прогресс игрока в режиме Натиск."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT best_wave, current_wave, current_hp, is_active FROM endless_progress WHERE user_id=?",
+                (user_id,)
+            )
+            row = cursor.fetchone()
+            if row:
+                return {"best_wave": int(row["best_wave"] or 0), "current_wave": int(row["current_wave"] or 0),
+                        "current_hp": int(row["current_hp"] or 0), "is_active": bool(row["is_active"])}
+            return {"best_wave": 0, "current_wave": 0, "current_hp": 0, "is_active": False}
+        finally:
+            conn.close()
+
+    def endless_get_attempts(self, user_id: int) -> dict:
+        """Попытки на сегодня."""
+        today = date.today().isoformat()
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT attempts_used, extra_gold, extra_diamond FROM endless_attempts WHERE user_id=? AND attempt_date=?",
+                (user_id, today)
+            )
+            row = cursor.fetchone()
+            if row:
+                return {"used": int(row["attempts_used"] or 0), "extra_gold": int(row["extra_gold"] or 0),
+                        "extra_diamond": int(row["extra_diamond"] or 0)}
+            return {"used": 0, "extra_gold": 0, "extra_diamond": 0}
+        finally:
+            conn.close()
+
+    def endless_use_attempt(self, user_id: int) -> bool:
+        """Потратить 1 попытку. Возвращает True если успешно."""
+        today = date.today().isoformat()
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT OR IGNORE INTO endless_attempts (user_id, attempt_date, attempts_used, extra_gold, extra_diamond) VALUES (?,?,0,0,0)",
+                (user_id, today)
+            )
+            cursor.execute(
+                "UPDATE endless_attempts SET attempts_used = attempts_used + 1 WHERE user_id=? AND attempt_date=?",
+                (user_id, today)
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+
+    def endless_add_extra(self, user_id: int, kind: str, count: int) -> bool:
+        """Добавить доп. попытки (kind='gold' или 'diamond')."""
+        today = date.today().isoformat()
+        col = "extra_gold" if kind == "gold" else "extra_diamond"
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT OR IGNORE INTO endless_attempts (user_id, attempt_date, attempts_used, extra_gold, extra_diamond) VALUES (?,?,0,0,0)",
+                (user_id, today)
+            )
+            cursor.execute(
+                f"UPDATE endless_attempts SET {col} = {col} + ? WHERE user_id=? AND attempt_date=?",
+                (count, user_id, today)
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+
+    def endless_start_run(self, user_id: int, player_hp: int) -> dict:
+        """Начать новый заход (волна 1)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
+                   VALUES (?,0,1,?,1,CURRENT_TIMESTAMP)
+                   ON CONFLICT(user_id) DO UPDATE SET
+                     current_wave=1, current_hp=excluded.current_hp, is_active=1, updated_at=CURRENT_TIMESTAMP""",
+                (user_id, player_hp)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return self.get_endless_progress(user_id)
+
+    def endless_on_win(self, user_id: int, wave: int, hp_left: int) -> dict:
+        """Победа в волне — переходим к следующей."""
+        next_wave = wave + 1
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
+                   VALUES (?,?,?,?,1,CURRENT_TIMESTAMP)
+                   ON CONFLICT(user_id) DO UPDATE SET
+                     best_wave=MAX(best_wave, excluded.best_wave),
+                     current_wave=excluded.current_wave,
+                     current_hp=excluded.current_hp,
+                     is_active=1,
+                     updated_at=CURRENT_TIMESTAMP""",
+                (user_id, wave, next_wave, hp_left)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return self.get_endless_progress(user_id)
+
+    def endless_on_loss(self, user_id: int, wave: int) -> dict:
+        """Поражение — заход завершён, обновляем рекорд."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
+                   VALUES (?,?,0,0,0,CURRENT_TIMESTAMP)
+                   ON CONFLICT(user_id) DO UPDATE SET
+                     best_wave=MAX(best_wave, excluded.best_wave),
+                     current_wave=0, current_hp=0, is_active=0,
+                     updated_at=CURRENT_TIMESTAMP""",
+                (user_id, wave)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return self.get_endless_progress(user_id)
+
+    def endless_get_top(self, limit: int = 20) -> list:
+        """Таблица лидеров по лучшей волне."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """SELECT ep.user_id, p.username, ep.best_wave
+                   FROM endless_progress ep
+                   JOIN players p ON p.user_id = ep.user_id
+                   WHERE ep.best_wave > 0
+                   ORDER BY ep.best_wave DESC, ep.updated_at ASC
+                   LIMIT ?""",
+                (limit,)
+            )
+            return [{"user_id": int(r["user_id"]), "username": r["username"], "best_wave": int(r["best_wave"])} for r in cursor.fetchall()]
         finally:
             conn.close()
 

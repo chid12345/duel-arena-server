@@ -878,6 +878,8 @@ class MenuScene extends Phaser.Scene {
     const btnMyC = secBtn(1, 0, '📨 Мои вызовы',   0x161e38, C.blue,   '#b8d4ff', () => this._showOutgoingChallenges());
     // Строка 1: [🗿 Башня Титанов] — во всю ширину
     const btnTT  = secBtnFull(1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
+    // Строка 2: [🔥 Натиск] — во всю ширину
+    const btnNatisk = secBtnFull(2, '🔥 Натиск  —  Арена выживания', 0x2a1010, 0xdc3c46, '#ff9999', () => this.scene.start('Natisk'));
 
     // ── Бот карточка (главная, крупнее)
     const botCY = CH * 0.76;
@@ -934,6 +936,7 @@ class MenuScene extends Phaser.Scene {
       ...pvpCard,
       ...btnCh, ...btnMyC,
       ...btnTT,
+      ...btnNatisk,
       ...botCard,
       ...hpBlockObjs,
     ];
@@ -1147,6 +1150,21 @@ class MenuScene extends Phaser.Scene {
     } catch (_) {
       this._toast('❌ Нет соединения');
     }
+  }
+
+  async _onEndlessFight() {
+    if (this._buying) return;
+    this._buying = true;
+    try {
+      const res = await post('/api/endless/start', {});
+      if (!res.ok) { this._toast('❌ ' + (res.reason || 'Ошибка')); this._buying = false; return; }
+      State.battle = res.battle;
+      State.endlessWave = res.wave;
+      this.scene.start('Battle');
+    } catch (_) {
+      this._toast('❌ Нет соединения');
+    }
+    this._buying = false;
   }
 
   async _showOutgoingChallenges() {
@@ -2492,6 +2510,9 @@ class ResultScene extends Phaser.Scene {
     const won   = res?.human_won ?? false;
     const r     = res?.result    ?? {};
     const isAfk = res?.afk_loss  === true;
+    const isEndless    = res?.mode === 'endless';
+    const endlessWave  = res?.mode_meta?.wave || State.endlessWave || 0;
+    const endlessProgress = res?.endless_progress;
 
     /* ── Фон (зелёный / красный оттенок) ── */
     const bg = this.add.graphics();
@@ -2571,6 +2592,15 @@ class ResultScene extends Phaser.Scene {
       // Level up flash
       if (r.level_up) this.time.delayedCall(900, () => this._levelUpFlash(W, H));
 
+      // Endless wave info
+      if (isEndless && endlessWave > 0) {
+        const waveLabel = `🔥 Волна ${endlessWave} пройдена!`;
+        txt(this, W / 2, panY + 160, waveLabel, 13, '#ff6644', true).setOrigin(0.5);
+        if (endlessWave % 5 === 0) {
+          txt(this, W / 2, panY + 178, '💚 +10% HP восстановлено!', 12, '#3cc864').setOrigin(0.5);
+        }
+      }
+
     } else if (isAfk) {
       txt(this, W / 2, panY + 24, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
       txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
@@ -2587,6 +2617,9 @@ class ResultScene extends Phaser.Scene {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 70, `★ ${eloSign}${r.rating_change} ELO`, 12, '#ff4455', true).setOrigin(0.5);
       }
+      if (isEndless && endlessWave > 0) {
+        txt(this, W / 2, panY + 92, `💀 Заход завершён — Волна ${endlessWave}`, 12, '#cc4444', true).setOrigin(0.5);
+      }
     }
 
     /* ── Обновляем профиль ── */
@@ -2597,11 +2630,15 @@ class ResultScene extends Phaser.Scene {
     } catch (_) {}
 
     /* ── Кнопки ── */
+    const bigBtnLabel = (isEndless && won) ? '🔥  Следующая волна!' : '⚔️  Ещё бой!';
+    const bigBtnCb = (isEndless)
+      ? () => { this.scene.start('Natisk'); }
+      : () => { this.scene.start('Menu'); };
     this._bigBtn(W / 2, H * 0.79,
-      '⚔️  Ещё бой!',
+      bigBtnLabel,
       won ? C.gold : 0x881a22,
       won ? '#1a1a28' : '#ffffff',
-      () => { this.scene.start('Menu'); }
+      bigBtnCb
     );
     this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu'));
 
@@ -2737,6 +2774,8 @@ class RatingScene extends Phaser.Scene {
     /* Контент */
     if (this._tab === 'pvp') {
       await this._buildPvpTab(W, H);
+    } else if (this._tab === 'natisk') {
+      this._buildNatiskTab(W, H);
     } else {
       this._buildTitansTab(W, H);
     }
@@ -2746,6 +2785,7 @@ class RatingScene extends Phaser.Scene {
     const tabs = [
       { key: 'pvp',    label: '🏆 Топ PvP'  },
       { key: 'titans', label: '🗿 Башня'     },
+      { key: 'natisk', label: '🔥 Натиск'   },
     ];
     const tw  = (W - 24) / tabs.length;
     const ty  = 76;
@@ -2865,6 +2905,42 @@ class RatingScene extends Phaser.Scene {
     }
   }
 
+  _buildNatiskTab(W, H) {
+    const startY = 114;
+    if (RatingScene._cache.natisk) { this._renderNatisk(RatingScene._cache.natisk, W, H, startY); return; }
+    const loadT = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    get('/api/endless/top').then(data => {
+      RatingScene._cache.natisk = data;
+      loadT.destroy();
+      if (!data.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
+      this._renderNatisk(data, W, H, startY);
+    }).catch(() => loadT.setText('❌ Нет соединения'));
+  }
+
+  _renderNatisk(data, W, H, startY) {
+    const leaders = data.leaders || [];
+    const myUid   = State.player?.user_id;
+    const rowH    = 44;
+    const maxShow = Math.max(1, Math.floor((H - startY - 100) / rowH));
+    if (!leaders.length) {
+      txt(this, W/2, H/2, '🔥 Первым войди в историю!', 13, '#ff9999').setOrigin(0.5);
+      return;
+    }
+    leaders.slice(0, maxShow).forEach((row, i) => {
+      const ry   = startY + i * rowH;
+      const isMe = row.user_id === myUid;
+      const bg   = this.add.graphics();
+      bg.fillStyle(isMe ? 0x2a1010 : C.bgPanel, isMe ? 0.98 : 0.85);
+      bg.fillRoundedRect(8, ry, W-16, rowH-4, 9);
+      if (isMe) { bg.lineStyle(1.5, 0xff4444, 0.6); bg.strokeRoundedRect(8, ry, W-16, rowH-4, 9); }
+      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
+      txt(this, 20, ry+(rowH-4)/2, medal, i<3?16:12, '#ffc83c').setOrigin(0, 0.5);
+      txt(this, 52, ry+10, row.username||`User${row.user_id}`, 13, isMe?'#ff6666':'#f0f0fa', isMe);
+      txt(this, 52, ry+26, `🔥 Волна ${row.best_wave}`, 11, '#cc6644');
+      txt(this, W-14, ry+(rowH-4)/2, `${row.best_wave}`, 15, '#ff6644', true).setOrigin(1, 0.5);
+    });
+  }
+
   _buildPodium(top3, W, y) {
     const order     = [top3[1], top3[0], top3[2]];
     const podH      = [80, 104, 64];
@@ -2900,7 +2976,7 @@ const config = {
   backgroundColor: C._name === 'light' ? '#f0f2ff' : '#12121c',
   parent: document.body,
   scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
-          QuestsScene, SummaryScene, SeasonScene, TitanTopScene, BattlePassScene, ClanScene, ShopScene],
+          QuestsScene, SummaryScene, SeasonScene, TitanTopScene, BattlePassScene, ClanScene, ShopScene, NatiskScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,

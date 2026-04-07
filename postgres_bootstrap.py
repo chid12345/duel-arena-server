@@ -39,6 +39,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_16_002_titan_and_weekly_claims",
     "2026_04_16_003_profile_reset_ts",
     "2026_04_17_001_weekly_leaderboard_rewards",
+    "2026_04_18_001_endless_mode",
 )
 
 # Без внешних ключей battles → players: в SQLite FK часто не проверялись, боты хранятся отдельно.
@@ -399,6 +400,23 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS profile_reset_ts BIGINT DEFAULT 0",
     "INSERT INTO seasons (id, name, status) VALUES (1, 'Сезон 1: Начало', 'active') ON CONFLICT (id) DO NOTHING",
     "SELECT setval(pg_get_serial_sequence('seasons', 'id'), COALESCE((SELECT MAX(id) FROM seasons), 1), true)",
+    """CREATE TABLE IF NOT EXISTS endless_progress (
+        user_id BIGINT PRIMARY KEY,
+        best_wave INTEGER DEFAULT 0,
+        current_wave INTEGER DEFAULT 0,
+        current_hp INTEGER DEFAULT 0,
+        is_active BOOLEAN DEFAULT FALSE,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_endless_progress_best ON endless_progress (best_wave DESC, updated_at ASC)",
+    """CREATE TABLE IF NOT EXISTS endless_attempts (
+        user_id BIGINT NOT NULL,
+        attempt_date TEXT NOT NULL,
+        attempts_used INTEGER DEFAULT 0,
+        extra_gold INTEGER DEFAULT 0,
+        extra_diamond INTEGER DEFAULT 0,
+        PRIMARY KEY (user_id, attempt_date)
+    )""",
 )
 
 
