@@ -2224,7 +2224,7 @@ class Database:
                 """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
                    VALUES (?,?,?,?,TRUE,CURRENT_TIMESTAMP)
                    ON CONFLICT(user_id) DO UPDATE SET
-                     best_wave=MAX(best_wave, excluded.best_wave),
+                     best_wave=MAX(endless_progress.best_wave, excluded.best_wave),
                      current_wave=excluded.current_wave,
                      current_hp=excluded.current_hp,
                      is_active=TRUE,
@@ -2245,7 +2245,7 @@ class Database:
                 """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
                    VALUES (?,?,0,0,FALSE,CURRENT_TIMESTAMP)
                    ON CONFLICT(user_id) DO UPDATE SET
-                     best_wave=MAX(best_wave, excluded.best_wave),
+                     best_wave=MAX(endless_progress.best_wave, excluded.best_wave),
                      current_wave=0, current_hp=0, is_active=FALSE,
                      updated_at=CURRENT_TIMESTAMP""",
                 (user_id, wave)
