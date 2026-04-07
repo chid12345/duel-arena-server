@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.24"
+GAME_VERSION = "1.25"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -1735,6 +1735,25 @@ CRYPTOPAY_API_BASE = (
 )
 
 
+@app.get("/api/debug/cryptopay")
+async def debug_cryptopay():
+    """Диагностика CryptoPay — показывает конфиг и делает тест-запрос getMe."""
+    import httpx
+    token_hint = (CRYPTOPAY_TOKEN[:8] + "...") if CRYPTOPAY_TOKEN else "НЕ ЗАДАН"
+    result = {"testnet": CRYPTOPAY_TESTNET, "api_base": CRYPTOPAY_API_BASE, "token_hint": token_hint}
+    try:
+        async with httpx.AsyncClient(timeout=8) as client:
+            r = await client.get(f"{CRYPTOPAY_API_BASE}/getMe",
+                                 headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN})
+            d = r.json()
+            result["getMe_ok"]   = d.get("ok")
+            result["getMe_name"] = (d.get("result") or {}).get("name")
+            result["getMe_err"]  = d.get("error")
+    except Exception as e:
+        result["getMe_exception"] = str(e)
+    return result
+
+
 @app.get("/api/shop/packages")
 async def shop_packages():
     """Каталог пакетов пополнения (Stars + CryptoPay)."""
@@ -1982,11 +2001,19 @@ async def crypto_invoice(body: CryptoInvoiceBody):
                 "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
                 "invoice_id":  inv["invoice_id"],
             }
-        logger.error("CryptoPay createInvoice error: %s", data)
-        return {"ok": False, "reason": "CryptoPay отклонил запрос"}
+        # Реальная ошибка от CryptoPay — передаём в ответ для диагностики
+        err  = data.get("error") or {}
+        code = err.get("code", "?")
+        name = err.get("name", "UNKNOWN")
+        msg  = err.get("message", "")
+        logger.error("CryptoPay createInvoice error [%s %s] %s | full=%s", code, name, msg, data)
+        reason = f"CryptoPay [{code}] {name}"
+        if msg:
+            reason += f": {msg}"
+        return {"ok": False, "reason": reason}
     except Exception as e:
         logger.error("CryptoPay HTTP error: %s", e)
-        return {"ok": False, "reason": "Ошибка соединения с CryptoPay"}
+        return {"ok": False, "reason": f"Ошибка соединения с CryptoPay: {e}"}
 
 
 @app.post("/api/webhooks/cryptopay")
