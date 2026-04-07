@@ -1,6 +1,17 @@
 .venv/
 __pycache__/
 *.pyc
+*.pyo
+
+# Database & logs
+*.db
+*.log
+*.log.*
 
 # Local secrets
 .env.local
+.env
+
+# OS
+.DS_Store
+Thumbs.db
