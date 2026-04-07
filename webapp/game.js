@@ -2548,7 +2548,7 @@ class ResultScene extends Phaser.Scene {
 
     /* ── Карточка результата ── */
     const panH = won ? (r.level_up ? 185 : (r.win_streak > 1 ? 175 : 155))
-                     : (isAfk ? 128 : 88);
+                     : (isAfk ? 128 : (isEndless ? 120 : 88));
     const panY  = H * 0.28;
     makePanel(this, 16, panY, W - 32, panH, 16);
 
@@ -2633,8 +2633,26 @@ class ResultScene extends Phaser.Scene {
       try { endlessStatus = await get('/api/endless/status'); } catch (_) {}
     }
 
-    /* ── Показываем оставшиеся попытки (Натиск) ── */
+    /* ── Рекорд + оставшиеся попытки (Натиск) ── */
     if (isEndless && endlessStatus?.ok) {
+      const bestWave = endlessStatus.progress?.best_wave ?? endlessProgress?.best_wave ?? 0;
+
+      // Личный рекорд — в панели поражения
+      if (!won && endlessWave > 0) {
+        const isNewRecord = endlessWave > 0 && bestWave === endlessWave;
+        if (isNewRecord) {
+          txt(this, W / 2, panY + 108, '🆕 Новый рекорд!', 12, '#ffc83c', true).setOrigin(0.5);
+        } else if (bestWave > endlessWave) {
+          txt(this, W / 2, panY + 108, `🏆 Твой рекорд: ${bestWave} волн`, 11, '#9999bb').setOrigin(0.5);
+        }
+      }
+
+      // При победе — новый рекорд если побил
+      if (won && isEndless && endlessWave > 0 && bestWave === endlessWave && endlessWave > 1) {
+        txt(this, W / 2, panY + 178, '🆕 Новый рекорд волны!', 11, '#ffc83c', true).setOrigin(0.5);
+      }
+
+      // Оставшиеся попытки
       const left = endlessStatus.attempts_left ?? 0;
       const attColor = left > 0 ? '#88ddaa' : '#cc5555';
       txt(this, W / 2, H * 0.72, `🔥 Осталось попыток: ${left}`, 12, attColor, true).setOrigin(0.5);
