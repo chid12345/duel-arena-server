@@ -1725,17 +1725,19 @@ async def claim_weekly_quest(body: WeeklyClaimBody):
         return {"ok": False, "reason": "already_claimed"}
     pl = db.get_or_create_player(uid, "")
     upd = {
-        "gold": int(pl.get("gold", 0)) + int(q.get("reward_gold", 0)),
+        "gold":     int(pl.get("gold",     0)) + int(q.get("reward_gold",     0)),
         "diamonds": int(pl.get("diamonds", 0)) + int(q.get("reward_diamonds", 0)),
+        "exp":      int(pl.get("exp",      0)) + int(q.get("reward_xp",       0)),
     }
     db.update_player_stats(uid, upd)
     _cache_invalidate(uid)
     fresh = db.get_or_create_player(uid, "")
     return {
-        "ok": True,
-        "gold": int(q.get("reward_gold", 0)),
-        "diamonds": int(q.get("reward_diamonds", 0)),
-        "player": dict(fresh),
+        "ok":      True,
+        "gold":    int(q.get("reward_gold",     0)),
+        "diamonds":int(q.get("reward_diamonds", 0)),
+        "xp":      int(q.get("reward_xp",       0)),
+        "player":  dict(fresh),
     }
 
 

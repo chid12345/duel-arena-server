@@ -90,11 +90,14 @@ class BattlesMixin:
             "battles_won": battles_won,
             "endless_wins": endless_wins,
             "reward_claimed": reward_claimed,
-            "is_completed": battles_played >= 3 and battles_won >= 1,
+            "is_completed": battles_played >= 5 and battles_won >= 3,   # было: 3 боя + 1 победа
             "endless_quest_completed": endless_wins >= 3,
+            # Метаданные квеста для UI
+            "quest_target_played": 5,
+            "quest_target_won": 3,
         }
 
-    def claim_daily_quest_reward(self, user_id: int, gold_reward: int = 40, diamonds_reward: int = 1) -> Dict[str, Any]:
+    def claim_daily_quest_reward(self, user_id: int, gold_reward: int = 55, xp_reward: int = 150) -> Dict[str, Any]:
         today = datetime.now().date().isoformat()
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -109,7 +112,7 @@ class BattlesMixin:
         if row["reward_claimed"]:
             conn.close()
             return {"ok": False, "reason": "Награда уже получена"}
-        if row["battles_played"] < 3 or row["battles_won"] < 1:
+        if row["battles_played"] < 5 or row["battles_won"] < 3:
             conn.close()
             return {"ok": False, "reason": "Квест еще не выполнен"}
         cursor.execute(
@@ -120,12 +123,12 @@ class BattlesMixin:
             conn.close()
             return {"ok": False, "reason": "Награда уже получена"}
         cursor.execute(
-            "UPDATE players SET gold = gold + ?, diamonds = diamonds + ? WHERE user_id = ?",
-            (gold_reward, diamonds_reward, user_id),
+            "UPDATE players SET gold = gold + ?, exp = exp + ? WHERE user_id = ?",
+            (gold_reward, xp_reward, user_id),
         )
         conn.commit()
         conn.close()
-        return {"ok": True, "gold": gold_reward, "diamonds": diamonds_reward}
+        return {"ok": True, "gold": gold_reward, "xp": xp_reward}
 
     # ── PvP очередь ───────────────────────────────────────────────────────────
 
