@@ -19,6 +19,7 @@ class StatsScene extends Phaser.Scene {
 
     this._drawBg(W, H);
     this._buildHeader(W);
+    this._buildBattleStats(W);
     this._buildStatRows(W, H);
     this._buildCombatPreview(W, H);
     this._buildBackBtn(W, H);
@@ -81,6 +82,32 @@ class StatsScene extends Phaser.Scene {
     return { bg, label };
   }
 
+  /* ── Боевая статистика (под заголовком) ──────────────── */
+  _buildBattleStats(W) {
+    const p     = State.player;
+    const wins  = p.wins   || 0;
+    const losses= p.losses || 0;
+    const total = wins + losses;
+    const wr    = total > 0 ? Math.round(wins / total * 100) : 0;
+    const streak= p.win_streak || 0;
+
+    const y = 74;
+    makePanel(this, 8, y, W - 16, 34, 8, 0.85);
+
+    const cols = [
+      { v: String(wins),   sub: 'Победы',   col: '#3cc864' },
+      { v: String(losses), sub: 'Пораж.',   col: '#dc3c46' },
+      { v: `${wr}%`,       sub: 'Винрейт',  col: '#ffc83c' },
+      { v: String(streak), sub: 'Серия 🔥', col: '#ff8844' },
+    ];
+    const cw = (W - 16) / cols.length;
+    cols.forEach((c, i) => {
+      const cx = 8 + cw * (i + 0.5);
+      txt(this, cx, y + 10, c.v,   13, c.col, true).setOrigin(0.5);
+      txt(this, cx, y + 24, c.sub,  8, '#9999bb').setOrigin(0.5);
+    });
+  }
+
   /* ── Строки статов ───────────────────────────────────── */
   _buildStatRows(W, H) {
     const p = State.player;
@@ -124,8 +151,8 @@ class StatsScene extends Phaser.Scene {
       },
     ];
 
-    // Область: от 82px до начала combat preview
-    const areaTop = 82;
+    // Область: от 116px (после панели боевой статистики) до начала combat preview
+    const areaTop = 116;
     const areaBot = H * 0.62;
     const rowH    = (areaBot - areaTop) / STATS.length;
 

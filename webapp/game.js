@@ -2687,7 +2687,14 @@ class ResultScene extends Phaser.Scene {
       won ? '#1a1a28' : '#ffffff',
       bigBtnCb
     );
-    this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu'));
+    if (isEndless && won) {
+      // В Натиске после победы над волной: "Завершить заход" = abandon + возврат в меню Натиска
+      this._mainBtn(W / 2, H * 0.89, '🚪  Завершить заход', () => {
+        post('/api/endless/abandon', {}).catch(() => {}).finally(() => this.scene.start('Natisk'));
+      });
+    } else {
+      this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu'));
+    }
 
     /* ── Поделиться (только при победе) ── */
     if (won) {
