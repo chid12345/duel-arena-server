@@ -1332,16 +1332,20 @@ class NatiskScene extends Phaser.Scene {
     }
 
     /* ── Правила ── */
-    y += 8;
-    const rules = [
-      '• HP переносится между боями',
-      '• Боты становятся сильнее с каждой волной',
-      '• Каждые 5 побед: +10% восстановления HP',
-      d.is_premium ? '• 👑 Premium: +5 попыток/день' : '• 👑 Premium даёт +5 попыток/день',
+    y += 10;
+    makePanel(this, 8, y, W-16, 84, 10, 0.7);
+    const rulesBase = [
+      '⚔️  HP переносится между боями',
+      '📈  Боты сильнее с каждой волной',
+      '💚  Каждые 5 побед: +10% HP восстановления',
     ];
-    rules.forEach((r, i) => {
-      txt(this, 20, y + i * 18, r, 11, '#8888aa');
+    rulesBase.forEach((r, i) => {
+      txt(this, 20, y + 10 + i * 22, r, 11, '#ddddff');
     });
+    const premLine = d.is_premium
+      ? '👑 Premium активен: +5 попыток/день'
+      : '👑 Premium: +5 бесплатных попыток/день';
+    txt(this, W/2, y + 68, premLine, 11, d.is_premium ? '#ffc83c' : '#aabbcc').setOrigin(0.5);
   }
 
   async _startFight() {

@@ -2173,12 +2173,13 @@ class Database:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
+            # is_active передаётся как параметр (True/1) — работает и в SQLite и в PostgreSQL BOOLEAN
             cursor.execute(
                 """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
-                   VALUES (?,0,1,?,1,CURRENT_TIMESTAMP)
+                   VALUES (?,0,1,?,?,CURRENT_TIMESTAMP)
                    ON CONFLICT(user_id) DO UPDATE SET
                      current_wave=1, current_hp=excluded.current_hp, is_active=1, updated_at=CURRENT_TIMESTAMP""",
-                (user_id, player_hp)
+                (user_id, player_hp, True)
             )
             conn.commit()
         finally:
@@ -2193,14 +2194,14 @@ class Database:
         try:
             cursor.execute(
                 """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
-                   VALUES (?,?,?,?,1,CURRENT_TIMESTAMP)
+                   VALUES (?,?,?,?,?,CURRENT_TIMESTAMP)
                    ON CONFLICT(user_id) DO UPDATE SET
                      best_wave=MAX(best_wave, excluded.best_wave),
                      current_wave=excluded.current_wave,
                      current_hp=excluded.current_hp,
                      is_active=1,
                      updated_at=CURRENT_TIMESTAMP""",
-                (user_id, wave, next_wave, hp_left)
+                (user_id, wave, next_wave, hp_left, True)
             )
             conn.commit()
         finally:
@@ -2214,12 +2215,12 @@ class Database:
         try:
             cursor.execute(
                 """INSERT INTO endless_progress (user_id, best_wave, current_wave, current_hp, is_active, updated_at)
-                   VALUES (?,?,0,0,0,CURRENT_TIMESTAMP)
+                   VALUES (?,?,0,0,?,CURRENT_TIMESTAMP)
                    ON CONFLICT(user_id) DO UPDATE SET
                      best_wave=MAX(best_wave, excluded.best_wave),
                      current_wave=0, current_hp=0, is_active=0,
                      updated_at=CURRENT_TIMESTAMP""",
-                (user_id, wave)
+                (user_id, wave, False)
             )
             conn.commit()
         finally:

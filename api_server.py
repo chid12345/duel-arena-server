@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.23"
+GAME_VERSION = "1.24"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -805,6 +805,7 @@ async def battle_choice(body: BattleChoiceBody):
             "mode": mine.get("mode", "normal"),
             "mode_meta": mine.get("mode_meta") or {},
             "titan_progress": mine.get("titan_progress"),
+            "endless_progress": mine.get("endless_progress"),
             "result": {
                 "gold":          mine.get("gold_reward", 0) if human_won else 0,
                 "exp":           mine.get("exp_reward",  0),
@@ -851,6 +852,7 @@ async def battle_choice(body: BattleChoiceBody):
             "mode": mine.get("mode", "normal"),
             "mode_meta": mine.get("mode_meta") or {},
             "titan_progress": mine.get("titan_progress"),
+            "endless_progress": mine.get("endless_progress"),
             "result": {
                 "gold":          mine.get("gold_reward", 0) if human_won else 0,
                 "exp":           mine.get("exp_reward",  0),
