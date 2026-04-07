@@ -166,7 +166,7 @@ class QuestsScene extends Phaser.Scene {
 
   /* ── Логин-бонус ─────────────────────────────────────────── */
   _buildDailyBonus(d, W, y) {
-    const canClaim = d.can_claim, streak = d.streak || 0, bonus = d.bonus || 20;
+    const canClaim = d.can_claim, streak = d.streak || 0, bonus = d.bonus || 40;
     const bh = 82;
     const bg = this.add.graphics();
     bg.fillStyle(canClaim ? 0x1a2810 : C.bgPanel, 0.95);
@@ -2105,19 +2105,19 @@ class ShopScene extends Phaser.Scene {
       potions: [
         {
           id: 'hp_small', icon: '🧪', name: 'Малое зелье HP',
-          price: 12, currency: 'gold',
+          price: 60, currency: 'gold',
           desc: '+30% HP', hpRestorePct: 0.30,
           soon: hpFull,   // не показываем "купить" если HP полный
         },
         {
           id: 'hp_full',  icon: '⚗️', name: 'Большое зелье HP',
-          price: 30, currency: 'gold',
+          price: 200, currency: 'gold',
           desc: 'HP до максимума', hpRestorePct: 1.0,
           soon: hpFull,
         },
         {
           id: 'xp_boost', icon: '💊', name: 'Буст XP ×1.5',
-          price: 100, currency: 'gold',
+          price: 400, currency: 'gold',
           desc: '5 боёв с бонусом опыта',
         },
         {
@@ -2133,7 +2133,7 @@ class ShopScene extends Phaser.Scene {
         { id: null, icon: '🏹', name: 'Лук лесника',  price: 400, currency: 'gold',    soon: true },
       ],
       special: [
-        { id: 'stat_reset', icon: '🔄', name: 'Сброс статов', price: 50, currency: 'diamonds', desc: 'Сбросить все статы' },
+        { id: 'stat_reset', icon: '🔄', name: 'Сброс статов', price: 200, currency: 'diamonds', desc: 'Сбросить все статы' },
         { id: null, icon: '🌟', name: 'Боевой пропуск+', price: 500, currency: 'diamonds', soon: true },
         { id: null, icon: '🎭', name: 'Скин воина',   price: 200, currency: 'diamonds', soon: true },
         { id: null, icon: '🏆', name: 'Рамка профиля',price: 100, currency: 'diamonds', soon: true },
