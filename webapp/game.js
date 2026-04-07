@@ -2559,9 +2559,13 @@ class ResultScene extends Phaser.Scene {
       const goldTxt = txt(this, W / 2, panY + 50, '💰 +0 золота', 22, '#ffc83c', true).setOrigin(0.5);
       this._countUp(goldTxt, r.gold || 0, '💰 +', ' золота', 200);
 
-      // XP — счётчик
-      const expTxt = txt(this, W / 2, panY + 86, '⭐ +0 опыта', 18, '#5096ff', true).setOrigin(0.5);
-      this._countUp(expTxt, r.exp || 0, '⭐ +', ' опыта', 450);
+      // XP — счётчик (в Натиске XP не начисляется, вместо него — урон)
+      if (isEndless) {
+        txt(this, W / 2, panY + 86, `⚔️  Урон нанесён: ${r.damage || 0}`, 17, '#ddaa66', true).setOrigin(0.5);
+      } else {
+        const expTxt = txt(this, W / 2, panY + 86, '⭐ +0 опыта', 18, '#5096ff', true).setOrigin(0.5);
+        this._countUp(expTxt, r.exp || 0, '⭐ +', ' опыта', 450);
+      }
 
       // Раунды
       txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
@@ -2613,9 +2617,9 @@ class ResultScene extends Phaser.Scene {
     } else if (isEndless) {
       // ── Endless loss — показываем итоги захода ──
       txt(this, W / 2, panY + 14, 'ИТОГИ ЗАХОДА', 10, '#8888aa', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 38, `💀 Волна ${endlessWave > 0 ? endlessWave : '?'} — конец`, 15, '#ff4455', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 64, `⚔️  Урон нанесён: ${r.damage || 0}`, 13, '#ddaa66', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 88, `⭐ +${r.exp || 0} опыта`, 13, '#5096ff', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 42, `💀 Волна ${endlessWave > 0 ? endlessWave : '?'} — конец`, 16, '#ff4455', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 74, `⚔️  Урон нанесён: ${r.damage || 0}`, 13, '#ddaa66', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 98, `⏱️  Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
       // Лучший результат добавляется асинхронно (см. ниже endlessStatus)
     } else {
       txt(this, W / 2, panY + 22, '💪  Не сдавайся!', 15, '#8888aa', true).setOrigin(0.5);
