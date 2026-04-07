@@ -1620,7 +1620,7 @@ class BattleSystem:
             'rounds':    n_rounds,
             'damage_to_opponent': winner_dmg if is_winner_p1 else loser_dmg,
             'damage_to_you':      loser_dmg  if is_winner_p1 else winner_dmg,
-            'gold_reward':        (gold_reward if is_winner_p1 else 0) if not winner_locked else 0,
+            'gold_reward':        (gold_reward if is_winner_p1 else DEFEAT_GOLD) if not winner_locked else 0,
             'exp_reward':         (exp_reward if is_winner_p1 else loser_exp)
                                   if not (winner_locked if is_winner_p1 else loser_locked) else 0,
             'xp_boosted':         xp_boosted and is_winner_p1,
@@ -1633,7 +1633,7 @@ class BattleSystem:
             'exchange_text':      exchange_text,
             'combat_log_html':    combat_log_html,
             'is_test_battle':     is_test,
-            'p2_gold_reward':     0 if is_winner_p1 or loser_locked else gold_reward,
+            'p2_gold_reward':     (DEFEAT_GOLD if is_winner_p1 else gold_reward) if not loser_locked else 0,
             'p2_exp_reward':      0 if (is_winner_p1 and loser_locked) or (not is_winner_p1 and winner_locked)
                                   else (loser_exp if is_winner_p1 else exp_reward),
             'p2_xp_boosted':      False if is_winner_p1 else xp_boosted,
@@ -1857,7 +1857,7 @@ class BattleSystem:
             'rounds': len(battle['rounds']),
             'damage_to_opponent': dmg_to_opp,
             'damage_to_you': dmg_to_you,
-            'gold_reward': (gold_reward if human_won else 0) if not winner_locked else 0,
+            'gold_reward': (gold_reward if human_won else DEFEAT_GOLD) if not winner_locked else 0,
             'exp_reward': (exp_reward if human_won else 0) if not winner_locked else 0,
             'level_up': bool(did_level_afk) if not is_test else False,
             'level_up_level': level_up_level if not is_test else None,
@@ -1865,7 +1865,7 @@ class BattleSystem:
             'combat_log_html': combat_log_html,
             'is_test_battle': is_test,
             # P2-centric поля (PvP)
-            'p2_gold_reward': 0 if human_won else gold_reward,
+            'p2_gold_reward': DEFEAT_GOLD if human_won else gold_reward,
             'p2_exp_reward': 0 if human_won else exp_reward,
             'p2_xp_boosted': False,
             'p2_streak_bonus_gold': 0,
