@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.26"
+GAME_VERSION = "1.27"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -1450,6 +1450,12 @@ async def get_season_info(init_data: str):
 
 # ─── Battle Pass ──────────────────────────────────────────────────────────────
 
+ENDLESS_BP_TIERS = [
+    {"tier": 1, "needed": 5,  "gold": 50,  "diamonds": 2, "label": "5 побед в Натиске"},
+    {"tier": 2, "needed": 15, "gold": 100, "diamonds": 3, "label": "15 побед в Натиске"},
+    {"tier": 3, "needed": 30, "gold": 200, "diamonds": 5, "label": "30 побед в Натиске"},
+]
+
 @app.get("/api/battlepass")
 async def get_battlepass(init_data: str):
     tg_user = get_user_from_init_data(init_data)
@@ -1460,7 +1466,12 @@ async def get_battlepass(init_data: str):
          "diamonds": t[2], "gold": t[3]}
         for i, t in enumerate(db.BATTLE_PASS_TIERS)
     ]
-    return {"ok": True, "bp": dict(bp), "tiers": tiers}
+    return {
+        "ok": True, "bp": dict(bp), "tiers": tiers,
+        "endless_tiers": ENDLESS_BP_TIERS,
+        "endless_done": int((bp or {}).get("endless_done") or 0),
+        "endless_tier_claimed": int((bp or {}).get("endless_tier_claimed") or 0),
+    }
 
 
 class BattlePassClaimBody(BaseModel):
@@ -1473,6 +1484,17 @@ async def claim_battlepass(body: BattlePassClaimBody):
     tg_user = get_user_from_init_data(body.init_data)
     uid     = int(tg_user["id"])
     result  = db.claim_battle_pass_tier(uid, body.tier)
+    return result
+
+
+@app.post("/api/battlepass/claim_endless")
+async def claim_battlepass_endless(body: BattlePassClaimBody):
+    """Забрать Натиск-бонус из Battle Pass."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid     = int(tg_user["id"])
+    result  = db.claim_battle_pass_endless_tier(uid, body.tier)
+    if result.get("ok"):
+        _cache_invalidate(uid)
     return result
 
 

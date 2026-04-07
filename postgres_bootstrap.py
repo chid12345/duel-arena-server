@@ -40,6 +40,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_16_003_profile_reset_ts",
     "2026_04_17_001_weekly_leaderboard_rewards",
     "2026_04_18_001_endless_mode",
+    "2026_04_19_002_battlepass_endless",
     "2026_04_19_001_endless_quests",
 )
 
@@ -419,6 +420,8 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
         PRIMARY KEY (user_id, attempt_date)
     )""",
     # Квесты Натиска
+    "ALTER TABLE battle_pass ADD COLUMN IF NOT EXISTS endless_done INTEGER DEFAULT 0",
+    "ALTER TABLE battle_pass ADD COLUMN IF NOT EXISTS endless_tier_claimed INTEGER DEFAULT 0",
     "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS endless_wins INTEGER DEFAULT 0",
     """CREATE TABLE IF NOT EXISTS endless_weekly_scores (
         user_id BIGINT NOT NULL,

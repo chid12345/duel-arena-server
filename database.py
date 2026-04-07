@@ -908,6 +908,13 @@ class Database:
                 ],
             ),
             (
+                "2026_04_19_002_battlepass_endless",
+                [
+                    "ALTER TABLE battle_pass ADD COLUMN endless_done INTEGER DEFAULT 0",
+                    "ALTER TABLE battle_pass ADD COLUMN endless_tier_claimed INTEGER DEFAULT 0",
+                ],
+            ),
+            (
                 "2026_04_19_001_endless_quests",
                 [
                     # Ежедневный счётчик волн Натиска
@@ -2999,6 +3006,55 @@ class Database:
         )
         conn.commit()
         conn.close()
+
+    def update_battle_pass_endless(self, user_id: int) -> None:
+        """Засчитать победу в волне Натиска в Battle Pass."""
+        s = self.get_active_season()
+        sid = s["id"] if s else 1
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "INSERT OR IGNORE INTO battle_pass (user_id, season_id) VALUES (?, ?)",
+            (user_id, sid),
+        )
+        cursor.execute(
+            "UPDATE battle_pass SET endless_done = endless_done + 1 WHERE user_id = ? AND season_id = ?",
+            (user_id, sid),
+        )
+        conn.commit()
+        conn.close()
+
+    def claim_battle_pass_endless_tier(self, user_id: int, tier: int) -> dict:
+        """Забрать Натиск-бонус из Battle Pass (tier 1/2/3)."""
+        # Тиры: 1=5 волн→50g+2d, 2=15 волн→100g+3d, 3=30 волн→200g+5d
+        ENDLESS_TIERS = [(5, 50, 2), (15, 100, 3), (30, 200, 5)]
+        if tier < 1 or tier > len(ENDLESS_TIERS):
+            return {"ok": False, "reason": "Неверный тир"}
+        s = self.get_active_season(); sid = s["id"] if s else 1
+        bp = self.get_battle_pass(user_id, sid)
+        endless_done = int(bp.get("endless_done") or 0)
+        tier_claimed = int(bp.get("endless_tier_claimed") or 0)
+        if tier <= tier_claimed:
+            return {"ok": False, "reason": "Уже получено"}
+        needed, _, _ = ENDLESS_TIERS[tier - 1]
+        if endless_done < needed:
+            return {"ok": False, "reason": f"Нужно {needed} побед в Натиске"}
+        # Суммируем все неполученные тиры до tier
+        gold = diamonds = 0
+        for i in range(tier_claimed, tier):
+            _, g, d = ENDLESS_TIERS[i]
+            gold += g; diamonds += d
+        conn = self.get_connection(); cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE battle_pass SET endless_tier_claimed = ? WHERE user_id = ? AND season_id = ?",
+            (tier, user_id, sid),
+        )
+        cursor.execute(
+            "UPDATE players SET gold = gold + ?, diamonds = diamonds + ? WHERE user_id = ?",
+            (gold, diamonds, user_id),
+        )
+        conn.commit(); conn.close()
+        return {"ok": True, "gold": gold, "diamonds": diamonds, "tier": tier}
 
     def claim_battle_pass_tier(self, user_id: int, tier: int) -> Dict[str, Any]:
         """Забрать награду за тир Battle Pass (0-based tier index)."""
