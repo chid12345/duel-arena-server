@@ -430,4 +430,4 @@ REFERRAL_PCT_SUB_RANK_11_30 = 7
 REFERRAL_PCT_SUB_RANK_31_PLUS = 10
 REFERRAL_PCT_VIP_ALL_SHOP = 10  # с 31-го платящего: все покупки этого игрока в магазине и Stars-пакеты
 # Цена подписки Premium в Telegram Stars (инвойс payload premium_sub)
-PREMIUM_SUBSCRIPTION_STARS = 299
+PREMIUM_SUBSCRIPTION_STARS = 390

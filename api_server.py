@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.32b"
+GAME_VERSION = "1.33b"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -1783,7 +1783,7 @@ STARS_PACKAGES = [
     {"id": "d100",    "diamonds": 100, "stars": 150, "label": "100 💎"},
     {"id": "d300",    "diamonds": 300, "stars": 390, "label": "300 💎"},
     {"id": "d500",    "diamonds": 500, "stars": 650, "label": "500 💎"},
-    {"id": "premium", "diamonds": 0,   "stars": 1, "label": "👑 Premium"},
+    {"id": "premium", "diamonds": 0,   "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
 ]
 
 # Пакеты за криптовалюту (CryptoPay)
@@ -1791,7 +1791,7 @@ CRYPTO_PACKAGES = [
     {"id": "cd100",     "diamonds": 100, "label": "100 💎",          "ton": "0.50", "usdt": "2.99"},
     {"id": "cd300",     "diamonds": 300, "label": "300 💎",          "ton": "1.30", "usdt": "7.99"},
     {"id": "cd500",     "diamonds": 500, "label": "500 💎",          "ton": "2.00", "usdt": "12.99"},
-    {"id": "cdpremium", "diamonds": 0,   "label": "👑 Premium",      "ton": "1.50", "usdt": "4.00", "premium": True},
+    {"id": "cdpremium", "diamonds": 0,   "label": "👑 Premium",      "ton": "1.50", "usdt": "8.00", "premium": True},
     {
         "id": "cdfullreset",
         "diamonds": 0,
