@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.27"
+GAME_VERSION = "1.28"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -1159,11 +1159,11 @@ async def titan_start(body: TitanStartBody):
 
 # ── НАТИСК — бесконечный режим ────────────────────────────────────────────────
 
-BASE_ENDLESS_ATTEMPTS  = 5
+BASE_ENDLESS_ATTEMPTS  = 3
 PREMIUM_ENDLESS_BONUS  = 5
 ENDLESS_GOLD_COST      = 100   # цена 1 попытки за золото
-ENDLESS_DIAMOND_COST   = 50    # цена 5 попыток за алмазы
-ENDLESS_DIAMOND_COUNT  = 5
+ENDLESS_DIAMOND_COST   = 50    # цена 3 попытки за алмазы
+ENDLESS_DIAMOND_COUNT  = 3
 
 
 @app.get("/api/endless/status")

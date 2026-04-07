@@ -2624,14 +2624,35 @@ class ResultScene extends Phaser.Scene {
 
     /* ── Обновляем профиль ── */
     State.playerLoadedAt = 0;
+    let endlessStatus = null;
     try {
       const fresh = await post('/api/player');
       if (fresh.ok) { State.player = fresh.player; State.playerLoadedAt = Date.now(); }
     } catch (_) {}
+    if (isEndless) {
+      try { endlessStatus = await get('/api/endless/status'); } catch (_) {}
+    }
+
+    /* ── Показываем оставшиеся попытки (Натиск) ── */
+    if (isEndless && endlessStatus?.ok) {
+      const left = endlessStatus.attempts_left ?? 0;
+      const attColor = left > 0 ? '#88ddaa' : '#cc5555';
+      txt(this, W / 2, H * 0.72, `🔥 Осталось попыток: ${left}`, 12, attColor, true).setOrigin(0.5);
+    }
 
     /* ── Кнопки ── */
     const bigBtnLabel = (isEndless && won) ? '🔥  Следующая волна!' : '⚔️  Ещё бой!';
-    const bigBtnCb = (isEndless)
+    const bigBtnCb = (isEndless && won)
+      ? () => {
+          post('/api/endless/start', {}).then(r => {
+            if (!r.ok) { this.scene.start('Natisk'); return; }
+            State.battle      = r.battle;
+            State.endlessWave = r.wave;
+            tg?.HapticFeedback?.impactOccurred('heavy');
+            this.scene.start('Battle');
+          }).catch(() => this.scene.start('Natisk'));
+        }
+      : (isEndless)
       ? () => { this.scene.start('Natisk'); }
       : () => { this.scene.start('Menu'); };
     this._bigBtn(W / 2, H * 0.79,

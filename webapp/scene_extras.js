@@ -1370,7 +1370,7 @@ class NatiskScene extends Phaser.Scene {
       dG.fillStyle(canDia ? 0x0a2035 : C.dark, canDia ? 0.9 : 0.5);
       dG.fillRoundedRect(dBx, y, halfW, 42, 10);
       if (canDia) { dG.lineStyle(1.5, 0x3cc8dc, 0.5); dG.strokeRoundedRect(dBx, y, halfW, 42, 10); }
-      txt(this, dBx+halfW/2, y+12, '+5 попыток', 11, canDia ? '#3cc8dc' : '#666688', canDia).setOrigin(0.5);
+      txt(this, dBx+halfW/2, y+12, '+3 попытки', 11, canDia ? '#3cc8dc' : '#666688', canDia).setOrigin(0.5);
       txt(this, dBx+halfW/2, y+28, `${d.diamond_cost} 💎`, 12, canDia ? '#a8e8ff' : '#555566', canDia).setOrigin(0.5);
       if (canDia) {
         this.add.zone(dBx, y, halfW, 42).setOrigin(0).setInteractive({ useHandCursor: true })

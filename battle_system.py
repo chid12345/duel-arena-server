@@ -1468,7 +1468,7 @@ class BattleSystem:
         if battle_mode == "endless":
             wave = max(1, int(mode_meta.get("wave", 1)))
             gold_reward = 0 if is_test else int(8 + wave * 4)
-            exp_reward  = 0 if is_test else max(1, int(round(base_exp * (1.0 + min(1.5, wave * 0.08)))))
+            exp_reward  = 0 if is_test else max(1, int(round(base_exp * 0.10)))
 
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
         streak_bonus_gold = 0
