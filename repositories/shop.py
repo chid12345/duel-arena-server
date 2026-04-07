@@ -234,7 +234,9 @@ class ShopMixin:
         conn.commit(); conn.close()
 
     def claim_battle_pass_endless_tier(self, user_id: int, tier: int) -> dict:
-        ENDLESS_TIERS = [(5, 50, 2), (15, 100, 3), (30, 200, 5)]
+        # (victories_needed, gold, diamonds, xp) — синхронизировано с reward_calculator REWARD_TABLE
+        # once/easy=250g/0d/600xp | once/medium=450g/3d/1200xp | once/hard=650g/6d/2000xp
+        ENDLESS_TIERS = [(5, 250, 0, 600), (15, 450, 3, 1200), (30, 650, 6, 2000)]
         if tier < 1 or tier > len(ENDLESS_TIERS):
             return {"ok": False, "reason": "Неверный тир"}
         s = self.get_active_season(); sid = s["id"] if s else 1
@@ -243,23 +245,23 @@ class ShopMixin:
         tier_claimed = int(bp.get("endless_tier_claimed") or 0)
         if tier <= tier_claimed:
             return {"ok": False, "reason": "Уже получено"}
-        needed, _, _ = ENDLESS_TIERS[tier - 1]
+        needed, _, _, _ = ENDLESS_TIERS[tier - 1]
         if endless_done < needed:
             return {"ok": False, "reason": f"Нужно {needed} побед в Натиске"}
-        gold = diamonds = 0
+        gold = diamonds = xp = 0
         for i in range(tier_claimed, tier):
-            _, g, d = ENDLESS_TIERS[i]; gold += g; diamonds += d
+            _, g, d, x = ENDLESS_TIERS[i]; gold += g; diamonds += d; xp += x
         conn = self.get_connection(); cursor = conn.cursor()
         cursor.execute(
             "UPDATE battle_pass SET endless_tier_claimed = ? WHERE user_id = ? AND season_id = ?",
             (tier, user_id, sid),
         )
         cursor.execute(
-            "UPDATE players SET gold = gold + ?, diamonds = diamonds + ? WHERE user_id = ?",
-            (gold, diamonds, user_id),
+            "UPDATE players SET gold = gold + ?, diamonds = diamonds + ?, exp = exp + ? WHERE user_id = ?",
+            (gold, diamonds, xp, user_id),
         )
         conn.commit(); conn.close()
-        return {"ok": True, "gold": gold, "diamonds": diamonds, "tier": tier}
+        return {"ok": True, "gold": gold, "diamonds": diamonds, "xp": xp, "tier": tier}
 
     def claim_battle_pass_tier(self, user_id: int, tier: int) -> Dict[str, Any]:
         s = self.get_active_season(); sid = s["id"] if s else 1

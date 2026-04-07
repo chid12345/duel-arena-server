@@ -289,7 +289,7 @@ class QuestsScene extends Phaser.Scene {
         tg?.HapticFeedback?.notificationOccurred('success');
         Sound.questDone();
         if (res.player) State.player = res.player;
-        this._toast(`🏆 +${res.gold || 40} 🪙  +${res.diamonds || 1} 💎 — квест выполнен!`);
+        this._toast(`🏆 +${res.gold || 55}🪙  +${res.xp || 150}⭐ — квест выполнен!`);
         this.time.delayedCall(700, () => this.scene.restart({ tab: 'daily' }));
       } else {
         clT.setText(res.reason || 'Ошибка');
@@ -2133,7 +2133,7 @@ class ShopScene extends Phaser.Scene {
         { id: null, icon: '🏹', name: 'Лук лесника',  price: 400, currency: 'gold',    soon: true },
       ],
       special: [
-        { id: 'stat_reset', icon: '🔄', name: 'Сброс статов', price: 200, currency: 'diamonds', desc: 'Сбросить все статы' },
+        { id: 'stat_reset', icon: '🔄', name: 'Сброс статов', price: 100, currency: 'diamonds', desc: 'Сбросить все статы' },
         { id: null, icon: '🌟', name: 'Боевой пропуск+', price: 500, currency: 'diamonds', soon: true },
         { id: null, icon: '🎭', name: 'Скин воина',   price: 200, currency: 'diamonds', soon: true },
         { id: null, icon: '🏆', name: 'Рамка профиля',price: 100, currency: 'diamonds', soon: true },
