@@ -288,10 +288,10 @@ class UsersMixin:
 
     def _get_improvement_cost(self, improvement_type: str, level: int) -> int:
         base_costs = {
-            "attack_power": 1000,
-            "dodge": 1500,
-            "block_mastery": 1200,
-            "critical_strike": 2000,
+            "attack_power": 2000,
+            "dodge": 3000,
+            "block_mastery": 2500,
+            "critical_strike": 4000,
         }
         base_cost = base_costs.get(improvement_type, 1000)
         return int(base_cost * (IMPROVEMENT_COST_MULTIPLIER ** (level - 1)))

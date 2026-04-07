@@ -93,7 +93,7 @@ class ShopMixin:
     # ── Магазин ───────────────────────────────────────────────────────────────
 
     def buy_hp_potion_small(self, user_id: int) -> Dict[str, Any]:
-        COST = 12
+        COST = 60
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT gold, max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
@@ -115,7 +115,7 @@ class ShopMixin:
         return {"ok": True, "cost": COST, "hp_restored": new_hp - current_hp, "new_hp": new_hp, "max_hp": max_hp}
 
     def buy_hp_potion(self, user_id: int) -> Dict[str, Any]:
-        COST = 30
+        COST = 200
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT gold, max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
@@ -132,7 +132,7 @@ class ShopMixin:
         return {"ok": True, "cost": COST, "hp_restored": row["max_hp"] - row["current_hp"]}
 
     def buy_xp_boost(self, user_id: int) -> Dict[str, Any]:
-        COST = 100
+        COST = 400
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT gold, xp_boost_charges FROM players WHERE user_id = ?", (user_id,))

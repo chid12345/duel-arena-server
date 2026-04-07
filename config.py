@@ -176,7 +176,7 @@ TURN_LIMIT_SECONDS = 15  # отображение таймера (синхрон
 AFK_ROUNDS_TO_DEFEAT = 3  # подряд пропусков хода без ответа — поражение
 # Бонус за серию побед подряд (каждые N побед — доп. золото)
 STREAK_BONUS_EVERY = 5
-STREAK_BONUS_GOLD = 10
+STREAK_BONUS_GOLD = 30
 
 # --- Боевые формулы (сравнительные, как в combats.com) ---
 # Уворот: def_agi / (def_agi + atk_agi) * DODGE_MAX_CHANCE
@@ -286,10 +286,10 @@ def total_free_stats_at_level(level: int) -> int:
     return max(1, total)
 
 # Экономика
-VICTORY_GOLD = 20
+VICTORY_GOLD = 25
 DEFEAT_GOLD = 0
-DAILY_BONUS_GOLD = 20
-ACTIVE_BONUS_GOLD = 50
+DAILY_BONUS_GOLD = 40
+ACTIVE_BONUS_GOLD = 80
 
 # Уровни 1..MAX_LEVEL; пороги XP, апы, награды за ап — progression_100_levels_v4/progression.json
 DEFEAT_EXP = 0
@@ -419,9 +419,9 @@ CRYPTOPAY_TESTNET = os.getenv("CRYPTOPAY_TESTNET", "1") == "1"
 FULL_RESET_CRYPTO_USDT = (os.getenv("FULL_RESET_CRYPTO_USDT") or "7.50").strip()
 
 # Алмазы (премиум валюта)
-DIAMONDS_DAILY_STREAK = 1
+DIAMONDS_DAILY_STREAK = 2
 DIAMONDS_ACHIEVEMENT_BASE = 10
-RESET_STATS_COST_DIAMONDS = 50  # 5x месячной подписки
+RESET_STATS_COST_DIAMONDS = 200  # редкое и дорогое решение
 
 # Реферальные награды (см. database.process_referral_*)
 # N — порядковый номер приглашённого по факту первой оплаты подписки (Stars).

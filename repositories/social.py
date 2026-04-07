@@ -13,7 +13,7 @@ from typing import Any, Dict, List, Optional, Tuple
 class SocialMixin:
     """Mixin: кланы, рефералы, платежи."""
 
-    CLAN_CREATE_COST_GOLD = 200
+    CLAN_CREATE_COST_GOLD = 800
     WITHDRAW_MIN_USDT  = 5.0
     WITHDRAW_COOLDOWN  = 86400  # 24 часа
 
