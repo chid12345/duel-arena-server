@@ -104,7 +104,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.34b"
+GAME_VERSION = "1.35b"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -1788,10 +1788,10 @@ STARS_PACKAGES = [
 
 # Пакеты за криптовалюту (CryptoPay)
 CRYPTO_PACKAGES = [
-    {"id": "cd100",     "diamonds": 100, "label": "100 💎",          "ton": "0.50", "usdt": "2.99"},
-    {"id": "cd300",     "diamonds": 300, "label": "300 💎",          "ton": "1.30", "usdt": "7.99"},
-    {"id": "cd500",     "diamonds": 500, "label": "500 💎",          "ton": "2.00", "usdt": "12.99"},
-    {"id": "cdpremium", "diamonds": 0,   "label": "👑 Premium",      "ton": "6.40", "usdt": "8.00", "premium": True},
+    {"id": "cd100",     "diamonds": 100, "label": "100 💎",          "usdt": "2.99"},
+    {"id": "cd300",     "diamonds": 300, "label": "300 💎",          "usdt": "7.99"},
+    {"id": "cd500",     "diamonds": 500, "label": "500 💎",          "usdt": "12.99"},
+    {"id": "cdpremium", "diamonds": 0,   "label": "👑 Premium",      "usdt": "8.00", "premium": True},
     {
         "id": "cdfullreset",
         "diamonds": 0,
@@ -1990,7 +1990,7 @@ async def stars_invoice(body: StarsInvoiceBody):
 class CryptoInvoiceBody(BaseModel):
     init_data:  str
     package_id: str          # cd100 | cd300 | cd500
-    asset:      str = "TON"  # TON | USDT
+    asset:      str = "USDT"  # only USDT
 
 
 @app.post("/api/shop/crypto_invoice")
@@ -2009,21 +2009,12 @@ async def crypto_invoice(body: CryptoInvoiceBody):
     if not CRYPTOPAY_TOKEN:
         return {"ok": False, "reason": "CryptoPay не настроен"}
 
-    asset = body.asset.upper()
-    if asset not in ("TON", "USDT"):
-        return {"ok": False, "reason": "Неверная валюта (TON или USDT)"}
+    asset = "USDT"
 
     is_premium = pkg.get("premium", False)
     is_full_reset = pkg.get("full_reset", False)
 
-    if is_full_reset:
-        if asset != "USDT":
-            return {"ok": False, "reason": "Полный сброс доступен только за USDT"}
-        amount = str(pkg["usdt"])
-    elif asset == "TON":
-        amount = pkg["ton"]
-    else:
-        amount = pkg["usdt"]
+    amount = str(pkg["usdt"])
 
     # Блокируем повторную покупку Premium если уже активна
     if is_premium:
@@ -2124,7 +2115,7 @@ async def cryptopay_webhook(request: Request):
     if result.get("ok"):
         uid            = result["user_id"]
         diamonds       = result["diamonds"]
-        asset          = result.get("asset", "TON")
+        asset          = result.get("asset", "USDT")
         amount_str     = result.get("amount", "0")
         custom_payload = inv.get("payload", "")
         is_premium     = ":premium:" in custom_payload
@@ -2218,7 +2209,7 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
         result = db.confirm_crypto_invoice(int(invoice_id))
         if result.get("ok"):
             diamonds   = result["diamonds"]
-            asset      = result.get("asset", "TON")
+            asset      = result.get("asset", "USDT")
             amount_str = result.get("amount", "0")
             owner_uid  = int(result.get("user_id", 0))
             if owner_uid != uid:

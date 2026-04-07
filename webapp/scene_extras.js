@@ -1462,7 +1462,7 @@ class ShopScene extends Phaser.Scene {
     // Сохраняем активную вкладку при рестарте сцены
     this._tab = (data && data.tab) ? data.tab : (ShopScene._lastTab || 'potions');
     ShopScene._lastTab = this._tab;
-    this._cryptoAsset  = (data && data.asset) ? data.asset : (ShopScene._lastAsset || 'TON');
+    this._cryptoAsset  = 'USDT';
     ShopScene._lastAsset = this._cryptoAsset;
     this._buying = false;
   }
@@ -1641,10 +1641,10 @@ class ShopScene extends Phaser.Scene {
       y += 40;
     }
 
-    /* ═══ CRYPTOPAY (TON / USDT) ════════════════════════════ */
+    /* ═══ CRYPTOPAY (USDT) ══════════════════════════════════ */
     makePanel(this, 8, y, W-16, 22, 8, 0.6);
     txt(this, 20, y+5, '💎  CRYPTOPAY', 12, '#3cc8dc', true);
-    txt(this, W-12, y+5, cryptoOn ? 'TON · USDT' : 'не настроен', 11,
+    txt(this, W-12, y+5, cryptoOn ? 'только USDT' : 'не настроен', 11,
       cryptoOn ? '#9999bb' : '#cc8888').setOrigin(1, 0);
     y += 30;
 
@@ -1656,26 +1656,7 @@ class ShopScene extends Phaser.Scene {
       return;
     }
 
-    // Переключатель TON / USDT
-    const assetBtns = ['TON', 'USDT'];
-    const abW = (W - 32) / 2;
-    assetBtns.forEach((asset, i) => {
-      const ax = 8 + i * (abW + 8);
-      const active = (this._cryptoAsset || 'TON') === asset;
-      const abg = this.add.graphics();
-      abg.fillStyle(active ? 0x1a4055 : C.dark, active ? 0.95 : 0.55);
-      abg.fillRoundedRect(ax, y, abW, 28, 7);
-      if (active) { abg.lineStyle(1.5, 0x3cc8dc, 0.6); abg.strokeRoundedRect(ax, y, abW, 28, 7); }
-      const icon = asset === 'TON' ? '💎' : '💵';
-      txt(this, ax + abW/2, y+14, `${icon} ${asset}`, 11, active ? '#3cc8dc' : '#8888aa', active).setOrigin(0.5);
-      this.add.zone(ax, y, abW, 28).setOrigin(0).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => {
-          if ((this._cryptoAsset||'TON') === asset) return;
-          tg?.HapticFeedback?.selectionChanged();
-          this.scene.restart({ tab: 'crypto', asset });
-        });
-    });
-    y += 36;
+    y += 8;
 
     // Обычные пакеты (без Premium и без полного сброса)
     const cpMain = cryptoPkgs.filter(pkg => !pkg.premium && !pkg.full_reset);
@@ -1768,9 +1749,8 @@ class ShopScene extends Phaser.Scene {
 
   /* ── CryptoPay Premium карточка ─────────────────────── */
   _makeCryptoPremiumCard(pkg, ix, iy, iw, ih, W) {
-    const asset  = this._cryptoAsset || 'TON';
-    const price  = asset === 'TON' ? pkg.ton : pkg.usdt;
-    const symbol = asset === 'TON' ? 'TON' : 'USDT';
+    const price  = pkg.usdt;
+    const symbol = 'USDT';
     const p = State.player || {};
     const isActive = !!p.is_premium;
     const daysLeft = p.premium_days_left || 0;
@@ -1798,9 +1778,8 @@ class ShopScene extends Phaser.Scene {
 
   /* ── CryptoPay карточка ──────────────────────────────── */
   _makeCryptoCard(pkg, ix, iy, iw, ih, W) {
-    const asset  = this._cryptoAsset || 'TON';
-    const price  = asset === 'TON' ? pkg.ton : pkg.usdt;
-    const symbol = asset === 'TON' ? 'TON' : 'USDT';
+    const price  = pkg.usdt;
+    const symbol = 'USDT';
 
     const bg = this.add.graphics();
     bg.fillStyle(0x0d2535, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
@@ -1821,10 +1800,8 @@ class ShopScene extends Phaser.Scene {
 
   /* ── Полный сброс за USDT (CryptoPay) ───────────────── */
   _makeCryptoResetCard(pkg, ix, iy, iw, ih, W) {
-    const asset  = this._cryptoAsset || 'TON';
-    const usdtOnly = !!pkg.usdt_only;
     const price  = pkg.usdt;
-    const canPay = !usdtOnly || asset === 'USDT';
+    const canPay = true;
 
     const bg = this.add.graphics();
     bg.fillStyle(0x2a1010, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
@@ -1835,11 +1812,7 @@ class ShopScene extends Phaser.Scene {
     const sub = pkg.hint || 'Уровень с нуля; 💰💎 клан рефералка сохраняются';
     txt(this, ix + iw / 2, iy + 12, title, 12, '#ffaaaa', true).setOrigin(0.5);
     txt(this, ix + iw / 2, iy + 30, sub, 9, '#997777', true).setOrigin(0.5);
-    if (!canPay) {
-      txt(this, ix + iw / 2, iy + 48, 'Переключите валюту на USDT ↑', 10, '#cc6666', true).setOrigin(0.5);
-    } else {
-      txt(this, ix + iw / 2, iy + 48, `Оплата: ${price} USDT`, 11, '#3ce8ff', true).setOrigin(0.5);
-    }
+    txt(this, ix + iw / 2, iy + 48, `Оплата: ${price} USDT`, 11, '#3ce8ff', true).setOrigin(0.5);
     txt(this, ix + iw / 2, iy + 66, 'После оплаты — /start или обновите приложение', 9, '#aa9999').setOrigin(0.5);
 
     if (canPay) {
@@ -1905,10 +1878,9 @@ class ShopScene extends Phaser.Scene {
   async _buyCrypto(pkg) {
     if (this._buying) return;
     this._buying = true;
-    const asset = this._cryptoAsset || 'TON';
     this._toast('⏳ Создаём счёт...');
     try {
-      const res = await post('/api/shop/crypto_invoice', { package_id: pkg.id, asset });
+      const res = await post('/api/shop/crypto_invoice', { package_id: pkg.id });
       if (!res.ok) {
         this._toast(`❌ ${res.reason}`);
         this._buying = false;
