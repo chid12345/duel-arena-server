@@ -649,7 +649,7 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
     for q in defs:
         done = int(q["cur"]) >= int(q["max"])
         claimed = db.has_weekly_claim(uid, week_key, q["key"])
-        gold, diamonds = calc_reward(q["difficulty"], q["frequency"])
+        gold, diamonds, xp = calc_reward(q["difficulty"], q["frequency"])
         quests.append({
             "key": q["key"],
             "label": q["label"],
@@ -659,6 +659,7 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
             "reward_claimed": bool(claimed),
             "reward_gold": gold,
             "reward_diamonds": diamonds,
+            "reward_xp": xp,
         })
     return {"week_key": week_key, "quests": quests}
 
@@ -1494,8 +1495,8 @@ def _make_endless_bp_tiers() -> list:
     ]
     result = []
     for t in _tiers_def:
-        gold, diamonds = calc_reward(t["difficulty"], t["frequency"])
-        result.append({"tier": t["tier"], "needed": t["needed"], "gold": gold, "diamonds": diamonds, "label": t["label"]})
+        gold, diamonds, xp = calc_reward(t["difficulty"], t["frequency"])
+        result.append({"tier": t["tier"], "needed": t["needed"], "gold": gold, "diamonds": diamonds, "xp": xp, "label": t["label"]})
     return result
 
 ENDLESS_BP_TIERS = _make_endless_bp_tiers()
