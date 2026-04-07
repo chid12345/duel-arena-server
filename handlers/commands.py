@@ -460,9 +460,9 @@ class BotHandlers:
         from config import PREMIUM_SUBSCRIPTION_STARS, PREMIUM_XP_BONUS_PERCENT
 
         packages = [
-            ("100 💎 алмазов", 100, 50),
-            ("300 💎 алмазов", 300, 130),
-            ("500 💎 алмазов", 500, 200),
+            ("100 💎 алмазов", 100, 150),
+            ("300 💎 алмазов", 300, 390),
+            ("500 💎 алмазов", 500, 650),
         ]
         text = (
             "💎 <b>Магазин Telegram Stars</b>\n\n"
