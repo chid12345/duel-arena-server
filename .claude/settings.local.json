@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:lib-combats.com)",
+      "WebSearch",
+      "WebFetch(domain:oldbk.com)",
+      "WebFetch(domain:howtogame.ru)"
+    ]
+  }
+}

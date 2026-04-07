@@ -1,4 +1,0 @@
-Traceback (most recent call last):
-  File "D:\Готовые рабочии боты\игра\duel-arena-server\main.py", line 9, in <module>
-    from telegram import Update, BotCommand
-ModuleNotFoundError: No module named 'telegram'
