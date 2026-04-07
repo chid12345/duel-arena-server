@@ -177,23 +177,24 @@ class CallbackHandlers:
             )
         rows.extend(
             [
-                [InlineKeyboardButton("🥊 В БОЙ!", callback_data='find_battle')],
-                [InlineKeyboardButton("🔄 Обновить", callback_data='refresh_main')],
+                [InlineKeyboardButton("⚔️ Найти соперника", callback_data='find_battle')],
+                [InlineKeyboardButton("🤖 Бой с ботом",     callback_data='find_bot_battle')],
+                [InlineKeyboardButton("🔄 Обновить",        callback_data='refresh_main')],
                 [
-                    InlineKeyboardButton("📊 СТАТЫ", callback_data='training'),
-                    InlineKeyboardButton("📈 СВОДКА", callback_data='stats'),
+                    InlineKeyboardButton("📊 Персонаж",   callback_data='training'),
+                    InlineKeyboardButton("📈 Статистика",  callback_data='stats'),
                 ],
                 [
-                    InlineKeyboardButton("🏆 РЕЙТИНГ", callback_data='rating'),
-                    InlineKeyboardButton("🌟 СЕЗОН", callback_data='season_info'),
+                    InlineKeyboardButton("🏆 Рейтинг",    callback_data='rating'),
+                    InlineKeyboardButton("🌟 Сезон",       callback_data='season_info'),
                 ],
                 [
-                    InlineKeyboardButton("🛍️ МАГАЗИН", callback_data='shop'),
-                    InlineKeyboardButton("🎖️ BATTLE PASS", callback_data='battle_pass'),
+                    InlineKeyboardButton("🛒 Магазин",        callback_data='shop'),
+                    InlineKeyboardButton("🎖️ Боевой пропуск", callback_data='battle_pass'),
                 ],
                 [
-                    InlineKeyboardButton("⚔️ КЛАН", callback_data='clan_menu'),
-                    InlineKeyboardButton("🔗 Пригласить", callback_data='show_invite'),
+                    InlineKeyboardButton("🛡️ Клан",         callback_data='clan_menu'),
+                    InlineKeyboardButton("🎁 Позвать друга", callback_data='show_invite'),
                 ],
             ]
         )
@@ -270,9 +271,9 @@ class CallbackHandlers:
             for k, lab in keys
         ]
         row3 = [
-            InlineKeyboardButton("👁 Соперник", callback_data='battle_opponent_stats'),
-            InlineKeyboardButton("🔄", callback_data='battle_refresh'),
-            InlineKeyboardButton("🎲 Авто ход", callback_data='battle_auto'),
+            InlineKeyboardButton("👁️ Разведка", callback_data='battle_opponent_stats'),
+            InlineKeyboardButton("🔄",           callback_data='battle_refresh'),
+            InlineKeyboardButton("🎲 Авто",      callback_data='battle_auto'),
         ]
         return InlineKeyboardMarkup([row1, row2, row3])
 

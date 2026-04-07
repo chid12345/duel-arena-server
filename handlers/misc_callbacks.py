@@ -40,18 +40,18 @@ async def show_training(query, player):
 
     if free_stats > 0:
         keyboard.extend([
-            [InlineKeyboardButton(f"💪 +1 Сила ({free_stats} доступно)", callback_data='train_strength')],
-            [InlineKeyboardButton(f"🤸 +1 Ловкость ({free_stats} доступно)", callback_data='train_endurance')],
-            [InlineKeyboardButton(f"💥 +1 Интуиция ({free_stats} доступно)", callback_data='train_crit_stat')],
-            [InlineKeyboardButton(f"❤️ +{STAMINA_PER_FREE_STAT} выносливости ({free_stats} доступно)", callback_data='train_hp')]
+            [InlineKeyboardButton(f"💪 Сила +1  ({free_stats} очков)", callback_data='train_strength')],
+            [InlineKeyboardButton(f"🤸 Ловкость +1  ({free_stats} очков)", callback_data='train_endurance')],
+            [InlineKeyboardButton(f"💥 Интуиция +1  ({free_stats} очков)", callback_data='train_crit_stat')],
+            [InlineKeyboardButton(f"❤️ Выносливость +{STAMINA_PER_FREE_STAT}  ({free_stats} очков)", callback_data='train_hp')]
         ])
 
     keyboard.extend([
-        [InlineKeyboardButton("⚔️ Улучшить силу атаки", callback_data='train_attack_power')],
-        [InlineKeyboardButton("🏃 Улучшить уклонение", callback_data='train_dodge')],
-        [InlineKeyboardButton("🛡️ Улучшить блоки", callback_data='train_block')],
-        [InlineKeyboardButton("⚡ Улучшить криты", callback_data='train_critical')],
-        [InlineKeyboardButton("⬅️ Назад", callback_data='back')]
+        [InlineKeyboardButton("⚔️ Атака · улучшить",    callback_data='train_attack_power')],
+        [InlineKeyboardButton("🏃 Уклон · улучшить",    callback_data='train_dodge')],
+        [InlineKeyboardButton("🛡️ Блок · улучшить",     callback_data='train_block')],
+        [InlineKeyboardButton("⚡ Крит · улучшить",     callback_data='train_critical')],
+        [InlineKeyboardButton("⬅️ Назад",               callback_data='back')]
     ])
 
     reply_markup = InlineKeyboardMarkup(keyboard)
@@ -151,25 +151,27 @@ async def show_shop(query, player):
     """Показать магазин — только рабочие товары."""
     boost_charges = player.get('xp_boost_charges', 0) or 0
     text = (
-        f"🛍️ <b>МАГАЗИН</b>\n\n"
-        f"💰 Золото: <b>{player['gold']}</b>  |  💎 Алмазы: <b>{player['diamonds']}</b>\n\n"
-        f"<b>🧪 Расходники (работают прямо сейчас):</b>\n"
-        f"• ❤️ Зелье HP — полное восстановление HP · <b>30 золота</b>\n"
-        f"• ⭐ XP-буст +50% на 5 боёв · <b>100 золота</b>"
+        f"🛒 <b>МАГАЗИН</b>\n\n"
+        f"🪙 Золото: <b>{player['gold']}</b>  |  💎 Алмазы: <b>{player['diamonds']}</b>\n\n"
+        f"<b>🧪 Зелья и бусты:</b>\n"
+        f"• 🧪 Малое зелье HP · <b>60🪙</b> — восстановить 30% HP\n"
+        f"• ⚗️ Большое зелье HP · <b>200🪙</b> — полное восстановление HP\n"
+        f"• 💊 XP ×1.5 · <b>400🪙</b> — двойной опыт на 5 боёв"
         f" (у вас: {boost_charges} зарядов)\n\n"
         f"<b>💎 Премиум:</b>\n"
-        f"• 🔄 Сброс характеристик · <b>{RESET_STATS_COST_DIAMONDS} алмазов</b>\n"
+        f"• 🔄 Сброс характеристик · <b>{RESET_STATS_COST_DIAMONDS}💎</b> — вернуть все свободные статы\n"
         f"• 💎 Купить алмазы / Premium → /buy\n\n"
-        f"<i>Оружие и броня — в разработке</i>"
+        f"<i>⚔️ Оружие и броня — скоро</i>"
     )
     from config import PREMIUM_SUBSCRIPTION_STARS
 
     keyboard = [
         [
-            InlineKeyboardButton("❤️ Зелье HP · 30", callback_data='buy_hp_potion'),
-            InlineKeyboardButton("⭐ XP буст · 100", callback_data='buy_xp_boost'),
+            InlineKeyboardButton("🧪 Малое зелье · 60🪙",  callback_data='buy_hp_potion_small'),
+            InlineKeyboardButton("⚗️ Зелье HP · 200🪙",    callback_data='buy_hp_potion'),
         ],
-        [InlineKeyboardButton("🔄 Сброс статов · 50💎", callback_data='buy_stat_reset')],
+        [InlineKeyboardButton("💊 XP ×1.5 · 400🪙",        callback_data='buy_xp_boost')],
+        [InlineKeyboardButton(f"🔄 Сброс статов · {RESET_STATS_COST_DIAMONDS}💎", callback_data='buy_stat_reset')],
         [
             InlineKeyboardButton(
                 f"👑 Premium · {PREMIUM_SUBSCRIPTION_STARS}⭐",
