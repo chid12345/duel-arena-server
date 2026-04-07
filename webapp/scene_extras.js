@@ -1280,11 +1280,13 @@ class NatiskScene extends Phaser.Scene {
 
     const p = d.progress;
 
-    /* ── Активный заход → сразу в бой, меню не показываем ── */
+    /* ── Активный заход → сбрасываем (выход = проигрыш) ── */
     if (p.is_active && p.current_wave > 0) {
-      txt(this, W/2, H/2 - 24, `🔥 Волна ${p.current_wave}`, 22, '#ff6644', true).setOrigin(0.5);
-      txt(this, W/2, H/2 + 14, 'Загружаем бой...', 13, '#9999bb').setOrigin(0.5);
-      this._startFight();
+      txt(this, W/2, H/2 - 16, '💀 Заход прерван', 16, '#cc4444', true).setOrigin(0.5);
+      txt(this, W/2, H/2 + 14, 'Вышел — заход считается проигранным', 10, '#9999bb').setOrigin(0.5);
+      post('/api/endless/abandon', {}).catch(() => {}).finally(() => {
+        this.time.delayedCall(800, () => this.scene.restart());
+      });
       return;
     }
 
