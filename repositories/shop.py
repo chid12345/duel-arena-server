@@ -17,6 +17,23 @@ from config import (
     stats_when_reaching_level,
     expected_max_hp_from_level,
 )
+from reward_calculator import calc_reward as _calc_reward
+
+# (battles_needed, wins_needed, diamonds, gold, xp) — once: easy/easy/medium/hard/epic
+def _build_bp_tiers():
+    rows = []
+    for battles, wins, diff in [
+        (3,   1,  'easy'),
+        (10,  3,  'easy'),
+        (25,  8,  'medium'),
+        (50,  20, 'hard'),
+        (100, 40, 'epic'),
+    ]:
+        g, d, xp = _calc_reward(diff, 'once')
+        rows.append((battles, wins, d, g, xp))
+    return rows
+
+_BP_TIERS = _build_bp_tiers()
 
 
 class ShopMixin:
@@ -189,13 +206,9 @@ class ShopMixin:
 
     # ── Battle Pass ───────────────────────────────────────────────────────────
 
-    BATTLE_PASS_TIERS = [
-        (3,  1,  5,  50),
-        (10, 3,  10, 100),
-        (25, 8,  20, 200),
-        (50, 20, 50, 500),
-        (100, 40, 100, 1000),
-    ]
+    # (battles_needed, wins_needed, diamonds, gold, xp)
+    # once: easy/easy/medium/hard/epic — синхронизировано с reward_calculator
+    BATTLE_PASS_TIERS = _BP_TIERS  # назначается на уровне модуля ниже
 
     def get_battle_pass(self, user_id: int, season_id: Optional[int] = None) -> Dict[str, Any]:
         if season_id is None:
@@ -271,20 +284,21 @@ class ShopMixin:
         if tier > len(self.BATTLE_PASS_TIERS):
             return {"ok": False, "reason": "Тир не существует"}
         for i in range(bp["last_claimed_tier"], tier):
-            b_need, w_need, _, _ = self.BATTLE_PASS_TIERS[i]
+            b_need, w_need, _, _, _ = self.BATTLE_PASS_TIERS[i]
             if bp["battles_done"] < b_need or bp["wins_done"] < w_need:
                 return {"ok": False, "reason": f"Тир {i+1} ещё не выполнен"}
-        total_d = total_g = 0
+        total_d = total_g = total_xp = 0
         for i in range(bp["last_claimed_tier"], tier):
-            _, _, d, g = self.BATTLE_PASS_TIERS[i]; total_d += d; total_g += g
+            _, _, d, g, xp = self.BATTLE_PASS_TIERS[i]
+            total_d += d; total_g += g; total_xp += xp
         conn = self.get_connection(); cursor = conn.cursor()
         cursor.execute(
             "UPDATE battle_pass SET last_claimed_tier = ? WHERE user_id = ? AND season_id = ?",
             (tier, user_id, sid),
         )
         cursor.execute(
-            "UPDATE players SET diamonds = diamonds + ?, gold = gold + ? WHERE user_id = ?",
-            (total_d, total_g, user_id),
+            "UPDATE players SET diamonds = diamonds + ?, gold = gold + ?, exp = exp + ? WHERE user_id = ?",
+            (total_d, total_g, total_xp, user_id),
         )
         conn.commit(); conn.close()
-        return {"ok": True, "diamonds": total_d, "gold": total_g}
+        return {"ok": True, "diamonds": total_d, "gold": total_g, "xp": total_xp}

@@ -287,7 +287,7 @@ def total_free_stats_at_level(level: int) -> int:
 
 # Экономика
 VICTORY_GOLD = 25
-DEFEAT_GOLD = 0
+DEFEAT_GOLD = 5   # небольшое утешение — не демотивирует новичков
 DAILY_BONUS_GOLD = 40
 ACTIVE_BONUS_GOLD = 80
 
