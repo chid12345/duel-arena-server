@@ -1279,6 +1279,15 @@ class NatiskScene extends Phaser.Scene {
     if (!d.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
 
     const p = d.progress;
+
+    /* ── Активный заход → сразу в бой, меню не показываем ── */
+    if (p.is_active && p.current_wave > 0) {
+      txt(this, W/2, H/2 - 24, `🔥 Волна ${p.current_wave}`, 22, '#ff6644', true).setOrigin(0.5);
+      txt(this, W/2, H/2 + 14, 'Загружаем бой...', 13, '#9999bb').setOrigin(0.5);
+      this._startFight();
+      return;
+    }
+
     let y = 84;
 
     /* ── Рекорд ── */
@@ -1289,34 +1298,7 @@ class NatiskScene extends Phaser.Scene {
       y += 46;
     }
 
-    /* ── Активный заход ── */
-    if (p.is_active && p.current_wave > 0) {
-      const activeG = this.add.graphics();
-      activeG.fillStyle(0x2a1020, 0.95); activeG.fillRoundedRect(8, y, W-16, 56, 12);
-      activeG.lineStyle(2, 0xdc3c46, 0.7); activeG.strokeRoundedRect(8, y, W-16, 56, 12);
-      txt(this, W/2, y+14, '🔥 Активный заход', 13, '#ff6666', true).setOrigin(0.5);
-      txt(this, W/2, y+32, `Волна: ${p.current_wave}  ·  HP: ${p.current_hp}`, 12, '#ffaaaa').setOrigin(0.5);
-      y += 66;
-
-      /* Кнопка "Продолжить" */
-      const cG = this.add.graphics();
-      cG.fillStyle(0xaa1a1a, 1); cG.fillRoundedRect(16, y, W-32, 48, 12);
-      cG.lineStyle(1.5, 0xff4444, 0.7); cG.strokeRoundedRect(16, y, W-32, 48, 12);
-      txt(this, W/2, y+24, `⚔️  Продолжить — Волна ${p.current_wave}`, 14, '#ffffff', true).setOrigin(0.5);
-      this.add.zone(16, y, W-32, 48).setOrigin(0).setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => { cG.clear(); cG.fillStyle(0x880000,1); cG.fillRoundedRect(16,y,W-32,48,12); tg?.HapticFeedback?.impactOccurred('heavy'); })
-        .on('pointerup',   () => this._startFight());
-      y += 60;
-
-      /* Кнопка "Завершить заход" */
-      const aG = this.add.graphics();
-      aG.fillStyle(C.dark, 0.8); aG.fillRoundedRect(16, y, W-32, 36, 10);
-      aG.lineStyle(1, C.red, 0.4); aG.strokeRoundedRect(16, y, W-32, 36, 10);
-      txt(this, W/2, y+18, '🚪 Завершить заход', 12, '#cc6666').setOrigin(0.5);
-      this.add.zone(16, y, W-32, 36).setOrigin(0).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => this._abandon());
-      y += 48;
-    } else {
+    {
       /* ── Попытки ── */
       const attG = this.add.graphics();
       attG.fillStyle(C.bgPanel, 0.9); attG.fillRoundedRect(8, y, W-16, 50, 10);
