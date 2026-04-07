@@ -42,6 +42,7 @@ from config import (
 )
 from database import db
 from battle_system import battle_system
+from reward_calculator import calc_reward
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
@@ -636,17 +637,19 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
     endless_weekly = db.endless_get_weekly_progress(uid, week_key)
     endless_weekly_wins = endless_weekly["weekly_wins"]
     endless_weekly_wave = endless_weekly["best_wave"]
+    # battles_needed / difficulty / frequency → авторасчёт через reward_calculator
     defs = [
-        {"key": "weekly_pvp_wins_10",    "label": "Победи 10 игроков в PvP",           "cur": pvp_wins,            "max": 10,  "gold": 150, "diamonds": 2},
-        {"key": "weekly_titan_floor_5",  "label": "Дойди до 5 этажа Башни Титанов",    "cur": weekly_floor,        "max": 5,   "gold": 180, "diamonds": 2},
-        {"key": "weekly_streak_5",       "label": "Собери серию из 5 побед",            "cur": streak,              "max": 5,   "gold": 120, "diamonds": 1},
-        {"key": "weekly_endless_wins_10","label": "🔥 Победи 10 врагов в Натиске",      "cur": endless_weekly_wins, "max": 10,  "gold": 200, "diamonds": 3},
-        {"key": "weekly_endless_wave_5", "label": "🔥 Дойди до 5 волны в Натиске",      "cur": endless_weekly_wave, "max": 5,   "gold": 250, "diamonds": 3},
+        {"key": "weekly_pvp_wins_10",    "label": "Победи 10 игроков в PvP",        "cur": pvp_wins,            "max": 10, "battles_needed": 10, "difficulty": "medium", "frequency": "weekly"},
+        {"key": "weekly_titan_floor_5",  "label": "Дойди до 5 этажа Башни Титанов", "cur": weekly_floor,        "max": 5,  "battles_needed": 12, "difficulty": "hard",   "frequency": "weekly"},
+        {"key": "weekly_streak_5",       "label": "Собери серию из 5 побед",         "cur": streak,              "max": 5,  "battles_needed": 8,  "difficulty": "medium", "frequency": "weekly"},
+        {"key": "weekly_endless_wins_10","label": "🔥 Победи 10 врагов в Натиске",   "cur": endless_weekly_wins, "max": 10, "battles_needed": 15, "difficulty": "hard",   "frequency": "weekly"},
+        {"key": "weekly_endless_wave_5", "label": "🔥 Дойди до 5 волны в Натиске",   "cur": endless_weekly_wave, "max": 5,  "battles_needed": 20, "difficulty": "epic",   "frequency": "weekly"},
     ]
     quests = []
     for q in defs:
         done = int(q["cur"]) >= int(q["max"])
         claimed = db.has_weekly_claim(uid, week_key, q["key"])
+        gold, diamonds = calc_reward(q["battles_needed"], q["difficulty"], q["frequency"])
         quests.append({
             "key": q["key"],
             "label": q["label"],
@@ -654,8 +657,8 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
             "target": int(q["max"]),
             "is_completed": bool(done),
             "reward_claimed": bool(claimed),
-            "reward_gold": int(q["gold"]),
-            "reward_diamonds": int(q["diamonds"]),
+            "reward_gold": gold,
+            "reward_diamonds": diamonds,
         })
     return {"week_key": week_key, "quests": quests}
 
@@ -1483,11 +1486,19 @@ async def get_season_info(init_data: str):
 
 # ─── Battle Pass ──────────────────────────────────────────────────────────────
 
-ENDLESS_BP_TIERS = [
-    {"tier": 1, "needed": 5,  "gold": 50,  "diamonds": 2, "label": "5 побед в Натиске"},
-    {"tier": 2, "needed": 15, "gold": 100, "diamonds": 3, "label": "15 побед в Натиске"},
-    {"tier": 3, "needed": 30, "gold": 200, "diamonds": 5, "label": "30 побед в Натиске"},
-]
+def _make_endless_bp_tiers() -> list:
+    _tiers_def = [
+        {"tier": 1, "needed": 5,  "battles_needed": 5,  "difficulty": "easy",   "frequency": "once", "label": "5 побед в Натиске"},
+        {"tier": 2, "needed": 15, "battles_needed": 15, "difficulty": "medium", "frequency": "once", "label": "15 побед в Натиске"},
+        {"tier": 3, "needed": 30, "battles_needed": 30, "difficulty": "hard",   "frequency": "once", "label": "30 побед в Натиске"},
+    ]
+    result = []
+    for t in _tiers_def:
+        gold, diamonds = calc_reward(t["battles_needed"], t["difficulty"], t["frequency"])
+        result.append({"tier": t["tier"], "needed": t["needed"], "gold": gold, "diamonds": diamonds, "label": t["label"]})
+    return result
+
+ENDLESS_BP_TIERS = _make_endless_bp_tiers()
 
 @app.get("/api/battlepass")
 async def get_battlepass(init_data: str):
