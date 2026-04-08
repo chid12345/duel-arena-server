@@ -26,6 +26,7 @@ from repositories.endless import EndlessMixin
 from repositories.leaderboard import LeaderboardMixin
 from repositories.shop import ShopMixin
 from repositories.social import SocialMixin
+from repositories.avatars import AvatarsMixin
 
 
 class Database(
@@ -39,6 +40,7 @@ class Database(
     LeaderboardMixin,
     ShopMixin,
     SocialMixin,
+    AvatarsMixin,
 ):
     def __init__(self):
         DBCore.__init__(self)

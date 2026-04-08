@@ -580,6 +580,18 @@ class DBSchema:
                     PRIMARY KEY (user_id, week_key)
                 )""",
             ]),
+            ("2026_04_20_001_avatar_classes", [
+                "ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT",
+                """CREATE TABLE IF NOT EXISTS user_avatar_unlocks (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    avatar_id TEXT NOT NULL,
+                    source TEXT DEFAULT 'shop',
+                    unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    UNIQUE(user_id, avatar_id)
+                )""",
+                "CREATE INDEX IF NOT EXISTS idx_avatar_unlocks_user ON user_avatar_unlocks (user_id)",
+            ]),
         ]
 
         for migration_id, statements in migrations:

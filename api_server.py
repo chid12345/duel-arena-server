@@ -39,6 +39,7 @@ from config import (
     MAX_LEVEL, exp_needed_for_next_level, format_exp_progress,
     VICTORY_GOLD, CRYPTOPAY_TOKEN, CRYPTOPAY_TESTNET, PREMIUM_SUBSCRIPTION_STARS,
     PREMIUM_XP_BONUS_PERCENT, FULL_RESET_CRYPTO_USDT,
+    AVATAR_CATALOG, ELITE_AVATAR_ID, ELITE_AVATAR_STARS, ELITE_AVATAR_USDT,
 )
 from database import db
 from battle_system import battle_system
@@ -105,7 +106,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.52"
+GAME_VERSION = "1.53"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -200,6 +201,7 @@ class ConnectionManager:
 
 
 manager = ConnectionManager()
+AVATAR_BY_ID = {a["id"]: dict(a) for a in AVATAR_CATALOG}
 
 
 async def _send_tg_message(chat_id: int, text: str, parse_mode: str = "HTML") -> None:
@@ -365,6 +367,8 @@ def _player_api(player: dict) -> dict:
     need_xp = exp_needed_for_next_level(lv)
 
     title = (player.get("display_title") or "").strip()
+    avatar_id = (player.get("equipped_avatar_id") or "base_neutral").strip()
+    avatar = AVATAR_BY_ID.get(avatar_id) or {}
     return {
         "user_id": player.get("user_id"),
         "username": player.get("username") or "Боец",
@@ -392,6 +396,9 @@ def _player_api(player: dict) -> dict:
         "hp_pct": int(chp / max(1, mhp) * 100),
         "xp_pct": int(int(player.get("exp", 0)) / max(1, need_xp) * 100) if need_xp > 0 else 100,
         "max_level": lv >= MAX_LEVEL,
+        "equipped_avatar_id": avatar_id,
+        "avatar_name": avatar.get("name"),
+        "avatar_badge": avatar.get("badge"),
         # Реген HP — для таймера в TMA
         "regen_per_min": round(
             mhp / HP_REGEN_BASE_SECONDS
@@ -1830,6 +1837,49 @@ async def shop_buy(body: ShopBuyBody):
     return result
 
 
+class AvatarBody(BaseModel):
+    init_data: str
+    avatar_id: str
+
+
+@app.get("/api/avatars")
+async def avatars(init_data: str):
+    tg_user = get_user_from_init_data(init_data)
+    uid = int(tg_user["id"])
+    state = db.get_player_avatar_state(uid)
+    if not state.get("ok"):
+        return state
+    return state
+
+
+@app.post("/api/avatars/buy")
+async def avatars_buy(body: AvatarBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    result = db.buy_avatar(uid, body.avatar_id.strip())
+    if result.get("ok"):
+        _cache_invalidate(uid)
+        state = db.get_player_avatar_state(uid)
+        player = db.get_or_create_player(uid, "")
+        result["avatars"] = state.get("avatars", [])
+        result["player"] = _player_api(dict(player))
+    return result
+
+
+@app.post("/api/avatars/equip")
+async def avatars_equip(body: AvatarBody):
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    result = db.equip_avatar(uid, body.avatar_id.strip())
+    if result.get("ok"):
+        _cache_invalidate(uid)
+        state = db.get_player_avatar_state(uid)
+        player = db.get_or_create_player(uid, "")
+        result["avatars"] = state.get("avatars", [])
+        result["player"] = _player_api(dict(player))
+    return result
+
+
 # ─── Монетизация: Stars + CryptoPay ─────────────────────────────────────────
 
 # Пакеты алмазов за Telegram Stars (боевые цены)
@@ -1839,6 +1889,13 @@ STARS_PACKAGES = [
     {"id": "d500",    "diamonds": 500, "stars": 650, "label": "500 💎"},
     {"id": "premium", "diamonds": 0,   "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
 ]
+
+ELITE_AVATAR_STARS_PACKAGE = {
+    "id": "elite_avatar",
+    "avatar_id": ELITE_AVATAR_ID,
+    "label": "👑 Элитный образ",
+    "stars": int(ELITE_AVATAR_STARS),
+}
 
 # Пакеты за криптовалюту (CryptoPay)
 CRYPTO_PACKAGES = [
@@ -1856,6 +1913,12 @@ CRYPTO_PACKAGES = [
         "usdt_only": True,
     },
 ]
+ELITE_AVATAR_CRYPTO_PACKAGE = {
+    "id": "cd_elite_avatar",
+    "avatar_id": ELITE_AVATAR_ID,
+    "label": "👑 Элитный образ",
+    "usdt": str(ELITE_AVATAR_USDT),
+}
 
 CRYPTOPAY_API_BASE = (
     "https://testnet-pay.crypt.bot/api" if CRYPTOPAY_TESTNET
@@ -1890,6 +1953,8 @@ async def shop_packages():
         "stars":  STARS_PACKAGES,
         "crypto": CRYPTO_PACKAGES,
         "premium_stars": PREMIUM_SUBSCRIPTION_STARS,
+        "elite_avatar_stars": ELITE_AVATAR_STARS_PACKAGE,
+        "elite_avatar_usdt": ELITE_AVATAR_CRYPTO_PACKAGE,
         "cryptopay_enabled": bool(CRYPTOPAY_TOKEN),
     }
 
@@ -2041,6 +2106,65 @@ async def stars_invoice(body: StarsInvoiceBody):
         return {"ok": False, "reason": "Ошибка соединения с Telegram"}
 
 
+class EliteAvatarBody(BaseModel):
+    init_data: str
+
+
+@app.post("/api/avatars/elite/stars_invoice")
+async def elite_avatar_stars_invoice(body: EliteAvatarBody):
+    """Создать Stars invoice для элитного образа."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    st = db.get_player_avatar_state(uid)
+    if st.get("ok"):
+        for av in st.get("avatars", []):
+            if av.get("id") == ELITE_AVATAR_ID and av.get("unlocked"):
+                return {"ok": False, "reason": "Элитный образ уже куплен"}
+
+    if not BOT_TOKEN:
+        return {"ok": False, "reason": "Бот не настроен (нет BOT_TOKEN)"}
+
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink",
+                json={
+                    "title": "👑 Элитный образ",
+                    "description": "Уникальный статусный образ для Duel Arena.",
+                    "payload": f"avatar_{ELITE_AVATAR_ID}",
+                    "currency": "XTR",
+                    "prices": [{"label": "Элитный образ", "amount": int(ELITE_AVATAR_STARS)}],
+                },
+            )
+            data = resp.json()
+        if data.get("ok"):
+            return {"ok": True, "invoice_url": data["result"], "avatar_id": ELITE_AVATAR_ID}
+        logger.error("elite avatar createInvoiceLink error: %s", data)
+        return {"ok": False, "reason": "Telegram отклонил запрос"}
+    except Exception as e:
+        logger.error("elite avatar stars invoice HTTP error: %s", e)
+        return {"ok": False, "reason": "Ошибка соединения с Telegram"}
+
+
+@app.post("/api/avatars/elite/stars_confirm")
+async def elite_avatar_stars_confirm(body: EliteAvatarBody):
+    """Подтверждение после status='paid' из tg.openInvoice() для элитного образа."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    unlock = db.unlock_avatar(uid, ELITE_AVATAR_ID, source="stars")
+    _cache_invalidate(uid)
+    state = db.get_player_avatar_state(uid)
+    player = db.get_or_create_player(uid, "")
+    return {
+        "ok": bool(unlock.get("ok")),
+        "already_unlocked": bool(unlock.get("already_unlocked")),
+        "avatar_id": ELITE_AVATAR_ID,
+        "avatars": state.get("avatars", []),
+        "player": _player_api(dict(player)),
+    }
+
+
 class CryptoInvoiceBody(BaseModel):
     init_data:  str
     package_id: str          # cd100 | cd300 | cd500
@@ -2135,6 +2259,54 @@ async def crypto_invoice(body: CryptoInvoiceBody):
         return {"ok": False, "reason": f"Ошибка соединения с CryptoPay: {e}"}
 
 
+@app.post("/api/avatars/elite/crypto_invoice")
+async def elite_avatar_crypto_invoice(body: EliteAvatarBody):
+    """Создать CryptoPay invoice для элитного образа (USDT)."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    _rl_check(uid, "elite_avatar_crypto_invoice", max_hits=3, window_sec=30)
+
+    if not CRYPTOPAY_TOKEN:
+        return {"ok": False, "reason": "CryptoPay не настроен"}
+
+    st = db.get_player_avatar_state(uid)
+    if st.get("ok"):
+        for av in st.get("avatars", []):
+            if av.get("id") == ELITE_AVATAR_ID and av.get("unlocked"):
+                return {"ok": False, "reason": "Элитный образ уже куплен"}
+
+    import httpx
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"{CRYPTOPAY_API_BASE}/createInvoice",
+                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                json={
+                    "asset": "USDT",
+                    "amount": str(ELITE_AVATAR_USDT),
+                    "payload": f"uid:{uid}:avatar:{ELITE_AVATAR_ID}",
+                    "description": "Duel Arena — 👑 Элитный образ",
+                    "allow_comments": False,
+                    "allow_anonymous": False,
+                },
+            )
+            data = resp.json()
+        if data.get("ok"):
+            inv = data["result"]
+            db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", str(ELITE_AVATAR_USDT))
+            return {
+                "ok": True,
+                "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
+                "invoice_id": inv["invoice_id"],
+                "avatar_id": ELITE_AVATAR_ID,
+            }
+        err = data.get("error") or {}
+        return {"ok": False, "reason": f"CryptoPay [{err.get('code', '?')}] {err.get('name', 'UNKNOWN')}"}
+    except Exception as e:
+        logger.error("Elite avatar CryptoPay HTTP error: %s", e)
+        return {"ok": False, "reason": f"Ошибка соединения с CryptoPay: {e}"}
+
+
 @app.post("/api/webhooks/cryptopay")
 async def cryptopay_webhook(request: Request):
     """Webhook от CryptoPay при успешной оплате инвойса (event: invoice_paid)."""
@@ -2174,9 +2346,22 @@ async def cryptopay_webhook(request: Request):
         custom_payload = inv.get("payload", "")
         is_premium     = ":premium:" in custom_payload
         is_full_reset  = ":full_reset:" in custom_payload
+        avatar_id = None
+        if ":avatar:" in custom_payload:
+            avatar_id = custom_payload.split(":avatar:", 1)[1].strip() or None
         logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s asset=%s invoice=%s",
                     uid, diamonds, is_premium, is_full_reset, asset, invoice_id)
-        if is_premium:
+        if avatar_id:
+            db.unlock_avatar(uid, avatar_id, source="usdt")
+            await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
+            await _send_tg_message(
+                uid,
+                f"👑 <b>Новый образ разблокирован!</b>\n"
+                f"Образ: <b>{avatar_id}</b>\n"
+                f"Откройте «Статы → Образы» и наденьте его.\n\n"
+                f"⚔️ Duel Arena",
+            )
+        elif is_premium:
             prem = db.activate_premium(uid, days=21)
             bonus_d = prem.get("bonus_diamonds", 0)
             days_left = prem.get("days_left", 21)
@@ -2260,6 +2445,9 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
         custom_payload = inv.get("payload", "")
         is_premium     = ":premium:" in custom_payload
         is_full_reset  = ":full_reset:" in custom_payload
+        avatar_id = None
+        if ":avatar:" in custom_payload:
+            avatar_id = custom_payload.split(":avatar:", 1)[1].strip() or None
         result = db.confirm_crypto_invoice(int(invoice_id))
         if result.get("ok"):
             diamonds   = result["diamonds"]
@@ -2269,6 +2457,23 @@ async def crypto_check_invoice(invoice_id: int, init_data: str):
             if owner_uid != uid:
                 logger.warning("crypto_check invoice %s user mismatch db=%s init=%s", invoice_id, owner_uid, uid)
                 return {"ok": False, "reason": "invoice_user_mismatch"}
+            if avatar_id:
+                db.unlock_avatar(owner_uid, avatar_id, source="usdt")
+                await manager.send(owner_uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
+                await _send_tg_message(
+                    owner_uid,
+                    f"👑 <b>Новый образ разблокирован!</b>\n"
+                    f"Образ: <b>{avatar_id}</b>\n"
+                    f"Откройте «Статы → Образы» и наденьте его.\n\n"
+                    f"⚔️ Duel Arena",
+                )
+                fresh = db.get_or_create_player(owner_uid, "")
+                return {
+                    "ok": True, "paid": True, "status": "paid",
+                    "avatar_unlocked": True,
+                    "avatar_id": avatar_id,
+                    "player": _player_api(dict(fresh)),
+                }
             if is_premium:
                 prem = db.activate_premium(owner_uid, days=21)
                 bonus_d = prem.get("bonus_diamonds", 0)

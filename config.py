@@ -431,3 +431,34 @@ REFERRAL_PCT_SUB_RANK_31_PLUS = 10
 REFERRAL_PCT_VIP_ALL_SHOP = 10  # с 31-го платящего: все покупки этого игрока в магазине и Stars-пакеты
 # Цена подписки Premium в Telegram Stars (инвойс payload premium_sub)
 PREMIUM_SUBSCRIPTION_STARS = 390
+
+# Образы (классы): масштабирование бонусов к базовым статам.
+# Раз в N уровней образ усиливается на +1 к основным статам (с потолком),
+# чтобы бонусы не теряли смысл на 50+ уровнях.
+AVATAR_SCALE_EVERY_LEVELS = 20
+AVATAR_SCALE_MAX_BONUS = 3
+
+# Элитный образ продается за Stars/USDT.
+ELITE_AVATAR_ID = "elite_emperor"
+ELITE_AVATAR_STARS = 590
+ELITE_AVATAR_USDT = "11.99"
+
+# Каталог образов.
+# В проекте "agility" соответствует endurance, "intuition" соответствует crit.
+AVATAR_CATALOG = [
+    {"id": "base_tank", "name": "🛡️ Страж Бастиона", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 5, "endurance": 5, "crit": 0, "hp_flat": 6, "badge": "🛡️", "description": "Базовый танк: живучесть и стабильный урон."},
+    {"id": "base_rogue", "name": "🌪️ Теневой Ловкач", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 0, "endurance": 5, "crit": 5, "hp_flat": 0, "badge": "🌪️", "description": "Базовый ловкач: уклонение и темп боя."},
+    {"id": "base_crit", "name": "⚡ Охотник Критов", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 3, "endurance": 2, "crit": 5, "hp_flat": 0, "badge": "⚡", "description": "Базовый критовик: выше шанс решающего удара."},
+    {"id": "base_neutral", "name": "🎯 Универсал", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 3, "endurance": 3, "crit": 2, "hp_flat": 2, "badge": "🎯", "description": "Гибкий базовый образ без перекоса в одну роль."},
+
+    {"id": "gold_vanguard", "name": "🛡️ Железный Авангард", "tier": "gold", "rarity": "rare", "currency": "gold", "price": 4200, "strength": 6, "endurance": 8, "crit": 0, "hp_flat": 12, "badge": "🛡️", "description": "Mid-tier танк: лучше базы, но без имбы."},
+    {"id": "gold_blade", "name": "🗡️ Танцор Клинка", "tier": "gold", "rarity": "rare", "currency": "gold", "price": 4200, "strength": 3, "endurance": 8, "crit": 3, "hp_flat": 6, "badge": "🗡️", "description": "Mid-tier дуэлянт: темп и точность."},
+    {"id": "gold_hunter", "name": "🎯 Охотник за Слабостями", "tier": "gold", "rarity": "rare", "currency": "gold", "price": 4200, "strength": 5, "endurance": 4, "crit": 6, "hp_flat": 4, "badge": "🎯", "description": "Mid-tier крит-давление."},
+    {"id": "gold_tactician", "name": "📘 Полевой Тактик", "tier": "gold", "rarity": "rare", "currency": "gold", "price": 4600, "strength": 4, "endurance": 4, "crit": 4, "hp_flat": 8, "badge": "📘", "description": "Гибкий mid-tier образ."},
+
+    {"id": "dia_duelist", "name": "💎 Кровавый Дуэлянт", "tier": "diamond", "rarity": "epic", "currency": "diamonds", "price": 220, "strength": 6, "endurance": 3, "crit": 7, "hp_flat": 4, "badge": "💎", "description": "Премиум: высокий риск/урон."},
+    {"id": "dia_fortress", "name": "💎 Стальная Крепость", "tier": "diamond", "rarity": "epic", "currency": "diamonds", "price": 220, "strength": 4, "endurance": 9, "crit": 2, "hp_flat": 14, "badge": "💎", "description": "Премиум: максимальная стойкость."},
+    {"id": "dia_phantom", "name": "💎 Призрачный Шаг", "tier": "diamond", "rarity": "epic", "currency": "diamonds", "price": 240, "strength": 4, "endurance": 7, "crit": 5, "hp_flat": 6, "badge": "💎", "description": "Премиум: контроль темпа и точность."},
+
+    {"id": "elite_emperor", "name": "👑 Император Арены", "tier": "elite", "rarity": "legendary", "currency": "usdt_stars", "price": 0, "strength": 8, "endurance": 8, "crit": 8, "hp_flat": 18, "badge": "👑", "description": "Элитный образ с максимальным статусом и визуальным выделением."},
+]
