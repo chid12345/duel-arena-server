@@ -52,8 +52,9 @@ class AvatarsMixin:
         self._ensure_avatar_schema(cursor)
         for aid in self._BASE_AVATAR_IDS:
             cursor.execute(
-                """INSERT OR IGNORE INTO user_avatar_unlocks (user_id, avatar_id, source)
-                   VALUES (?, ?, 'base')""",
+                """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
+                   VALUES (?, ?, 'base')
+                   ON CONFLICT (user_id, avatar_id) DO NOTHING""",
                 (user_id, aid),
             )
         cursor.execute("SELECT equipped_avatar_id FROM players WHERE user_id = ?", (user_id,))
@@ -139,8 +140,9 @@ class AvatarsMixin:
         try:
             self._ensure_avatar_rows(cursor, user_id)
             cursor.execute(
-                """INSERT OR IGNORE INTO user_avatar_unlocks (user_id, avatar_id, source)
-                   VALUES (?, ?, ?)""",
+                """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
+                   VALUES (?, ?, ?)
+                   ON CONFLICT (user_id, avatar_id) DO NOTHING""",
                 (user_id, avatar_id, source),
             )
             created = int(getattr(cursor, "rowcount", 0) or 0) > 0
