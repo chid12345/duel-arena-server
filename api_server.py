@@ -25,6 +25,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from api.avatar_shop_routes import register_avatar_shop_routes
+
 # Подтягиваем существующие модули игры
 from config import (
     BOT_TOKEN, PLAYER_START_LEVEL, PLAYER_START_MAX_HP, PLAYER_START_CRIT,
@@ -106,7 +108,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.53"
+GAME_VERSION = "1.54"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -1837,49 +1839,6 @@ async def shop_buy(body: ShopBuyBody):
     return result
 
 
-class AvatarBody(BaseModel):
-    init_data: str
-    avatar_id: str
-
-
-@app.get("/api/avatars")
-async def avatars(init_data: str):
-    tg_user = get_user_from_init_data(init_data)
-    uid = int(tg_user["id"])
-    state = db.get_player_avatar_state(uid)
-    if not state.get("ok"):
-        return state
-    return state
-
-
-@app.post("/api/avatars/buy")
-async def avatars_buy(body: AvatarBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid = int(tg_user["id"])
-    result = db.buy_avatar(uid, body.avatar_id.strip())
-    if result.get("ok"):
-        _cache_invalidate(uid)
-        state = db.get_player_avatar_state(uid)
-        player = db.get_or_create_player(uid, "")
-        result["avatars"] = state.get("avatars", [])
-        result["player"] = _player_api(dict(player))
-    return result
-
-
-@app.post("/api/avatars/equip")
-async def avatars_equip(body: AvatarBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid = int(tg_user["id"])
-    result = db.equip_avatar(uid, body.avatar_id.strip())
-    if result.get("ok"):
-        _cache_invalidate(uid)
-        state = db.get_player_avatar_state(uid)
-        player = db.get_or_create_player(uid, "")
-        result["avatars"] = state.get("avatars", [])
-        result["player"] = _player_api(dict(player))
-    return result
-
-
 # ─── Монетизация: Stars + CryptoPay ─────────────────────────────────────────
 
 # Пакеты алмазов за Telegram Stars (боевые цены)
@@ -1923,6 +1882,23 @@ ELITE_AVATAR_CRYPTO_PACKAGE = {
 CRYPTOPAY_API_BASE = (
     "https://testnet-pay.crypt.bot/api" if CRYPTOPAY_TESTNET
     else "https://pay.crypt.bot/api"
+)
+
+# Роуты образов вынесены в отдельный модуль.
+register_avatar_shop_routes(
+    app,
+    {
+        "db": db,
+        "get_user_from_init_data": get_user_from_init_data,
+        "_player_api": _player_api,
+        "_cache_invalidate": _cache_invalidate,
+        "ELITE_AVATAR_ID": ELITE_AVATAR_ID,
+        "ELITE_AVATAR_STARS": ELITE_AVATAR_STARS,
+        "ELITE_AVATAR_USDT": ELITE_AVATAR_USDT,
+        "BOT_TOKEN": BOT_TOKEN,
+        "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
+        "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
+    },
 )
 
 
@@ -2106,65 +2082,6 @@ async def stars_invoice(body: StarsInvoiceBody):
         return {"ok": False, "reason": "Ошибка соединения с Telegram"}
 
 
-class EliteAvatarBody(BaseModel):
-    init_data: str
-
-
-@app.post("/api/avatars/elite/stars_invoice")
-async def elite_avatar_stars_invoice(body: EliteAvatarBody):
-    """Создать Stars invoice для элитного образа."""
-    tg_user = get_user_from_init_data(body.init_data)
-    uid = int(tg_user["id"])
-    st = db.get_player_avatar_state(uid)
-    if st.get("ok"):
-        for av in st.get("avatars", []):
-            if av.get("id") == ELITE_AVATAR_ID and av.get("unlocked"):
-                return {"ok": False, "reason": "Элитный образ уже куплен"}
-
-    if not BOT_TOKEN:
-        return {"ok": False, "reason": "Бот не настроен (нет BOT_TOKEN)"}
-
-    import httpx
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.post(
-                f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink",
-                json={
-                    "title": "👑 Элитный образ",
-                    "description": "Уникальный статусный образ для Duel Arena.",
-                    "payload": f"avatar_{ELITE_AVATAR_ID}",
-                    "currency": "XTR",
-                    "prices": [{"label": "Элитный образ", "amount": int(ELITE_AVATAR_STARS)}],
-                },
-            )
-            data = resp.json()
-        if data.get("ok"):
-            return {"ok": True, "invoice_url": data["result"], "avatar_id": ELITE_AVATAR_ID}
-        logger.error("elite avatar createInvoiceLink error: %s", data)
-        return {"ok": False, "reason": "Telegram отклонил запрос"}
-    except Exception as e:
-        logger.error("elite avatar stars invoice HTTP error: %s", e)
-        return {"ok": False, "reason": "Ошибка соединения с Telegram"}
-
-
-@app.post("/api/avatars/elite/stars_confirm")
-async def elite_avatar_stars_confirm(body: EliteAvatarBody):
-    """Подтверждение после status='paid' из tg.openInvoice() для элитного образа."""
-    tg_user = get_user_from_init_data(body.init_data)
-    uid = int(tg_user["id"])
-    unlock = db.unlock_avatar(uid, ELITE_AVATAR_ID, source="stars")
-    _cache_invalidate(uid)
-    state = db.get_player_avatar_state(uid)
-    player = db.get_or_create_player(uid, "")
-    return {
-        "ok": bool(unlock.get("ok")),
-        "already_unlocked": bool(unlock.get("already_unlocked")),
-        "avatar_id": ELITE_AVATAR_ID,
-        "avatars": state.get("avatars", []),
-        "player": _player_api(dict(player)),
-    }
-
-
 class CryptoInvoiceBody(BaseModel):
     init_data:  str
     package_id: str          # cd100 | cd300 | cd500
@@ -2256,54 +2173,6 @@ async def crypto_invoice(body: CryptoInvoiceBody):
         return {"ok": False, "reason": reason}
     except Exception as e:
         logger.error("CryptoPay HTTP error: %s", e)
-        return {"ok": False, "reason": f"Ошибка соединения с CryptoPay: {e}"}
-
-
-@app.post("/api/avatars/elite/crypto_invoice")
-async def elite_avatar_crypto_invoice(body: EliteAvatarBody):
-    """Создать CryptoPay invoice для элитного образа (USDT)."""
-    tg_user = get_user_from_init_data(body.init_data)
-    uid = int(tg_user["id"])
-    _rl_check(uid, "elite_avatar_crypto_invoice", max_hits=3, window_sec=30)
-
-    if not CRYPTOPAY_TOKEN:
-        return {"ok": False, "reason": "CryptoPay не настроен"}
-
-    st = db.get_player_avatar_state(uid)
-    if st.get("ok"):
-        for av in st.get("avatars", []):
-            if av.get("id") == ELITE_AVATAR_ID and av.get("unlocked"):
-                return {"ok": False, "reason": "Элитный образ уже куплен"}
-
-    import httpx
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.post(
-                f"{CRYPTOPAY_API_BASE}/createInvoice",
-                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
-                json={
-                    "asset": "USDT",
-                    "amount": str(ELITE_AVATAR_USDT),
-                    "payload": f"uid:{uid}:avatar:{ELITE_AVATAR_ID}",
-                    "description": "Duel Arena — 👑 Элитный образ",
-                    "allow_comments": False,
-                    "allow_anonymous": False,
-                },
-            )
-            data = resp.json()
-        if data.get("ok"):
-            inv = data["result"]
-            db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", str(ELITE_AVATAR_USDT))
-            return {
-                "ok": True,
-                "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
-                "invoice_id": inv["invoice_id"],
-                "avatar_id": ELITE_AVATAR_ID,
-            }
-        err = data.get("error") or {}
-        return {"ok": False, "reason": f"CryptoPay [{err.get('code', '?')}] {err.get('name', 'UNKNOWN')}"}
-    except Exception as e:
-        logger.error("Elite avatar CryptoPay HTTP error: %s", e)
         return {"ok": False, "reason": f"Ошибка соединения с CryptoPay: {e}"}
 
 
