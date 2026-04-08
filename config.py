@@ -446,10 +446,10 @@ ELITE_AVATAR_USDT = "11.99"
 # Каталог образов.
 # В проекте "agility" соответствует endurance, "intuition" соответствует crit.
 AVATAR_CATALOG = [
-    {"id": "base_tank", "name": "🛡️ Страж Бастиона", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 5, "endurance": 5, "crit": 0, "hp_flat": 6, "badge": "🛡️", "description": "Базовый танк: живучесть и стабильный урон."},
-    {"id": "base_rogue", "name": "🌪️ Теневой Ловкач", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 0, "endurance": 5, "crit": 5, "hp_flat": 0, "badge": "🌪️", "description": "Базовый ловкач: уклонение и темп боя."},
-    {"id": "base_crit", "name": "⚡ Охотник Критов", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 3, "endurance": 2, "crit": 5, "hp_flat": 0, "badge": "⚡", "description": "Базовый критовик: выше шанс решающего удара."},
-    {"id": "base_neutral", "name": "🎯 Универсал", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 3, "endurance": 3, "crit": 2, "hp_flat": 2, "badge": "🎯", "description": "Гибкий базовый образ без перекоса в одну роль."},
+    {"id": "base_tank", "name": "🛡️ Страж Бастиона", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 5, "endurance": 5, "crit": 0, "hp_flat": 0, "badge": "🛡️", "description": "Танк: +5 Сила и +5 Выносливость."},
+    {"id": "base_rogue", "name": "🌪️ Теневой Ловкач", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 0, "endurance": 5, "crit": 0, "hp_flat": 0, "badge": "🌪️", "description": "Ловкач: +5 Ловкость и +5 Выносливость."},
+    {"id": "base_crit", "name": "⚡ Охотник Критов", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 0, "endurance": 5, "crit": 5, "hp_flat": 0, "badge": "⚡", "description": "Критовик: +5 Интуиция и +5 Выносливость."},
+    {"id": "base_neutral", "name": "🎯 Универсал", "tier": "base", "rarity": "common", "currency": "free", "price": 0, "strength": 2, "endurance": 2, "crit": 2, "hp_flat": 4, "badge": "🎯", "description": "Нейтральный: +2 ко всем 4 статам (Сила/Ловкость/Интуиция/Выносливость)."},
 
     {"id": "gold_vanguard", "name": "🛡️ Железный Авангард", "tier": "gold", "rarity": "rare", "currency": "gold", "price": 4200, "strength": 6, "endurance": 8, "crit": 0, "hp_flat": 12, "badge": "🛡️", "description": "Mid-tier танк: лучше базы, но без имбы."},
     {"id": "gold_blade", "name": "🗡️ Танцор Клинка", "tier": "gold", "rarity": "rare", "currency": "gold", "price": 4200, "strength": 3, "endurance": 8, "crit": 3, "hp_flat": 6, "badge": "🗡️", "description": "Mid-tier дуэлянт: темп и точность."},

@@ -50,6 +50,7 @@ from config import (
     PREMIUM_XP_BONUS_PERCENT, FULL_RESET_CRYPTO_USDT,
     AVATAR_CATALOG, ELITE_AVATAR_ID, ELITE_AVATAR_STARS, ELITE_AVATAR_USDT,
     AVATAR_SCALE_EVERY_LEVELS, AVATAR_SCALE_MAX_BONUS,
+    STAMINA_PER_FREE_STAT,
 )
 from database import db
 from battle_system import battle_system
@@ -116,7 +117,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.70"
+GAME_VERSION = "1.71"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -387,11 +388,11 @@ def _player_api(player: dict) -> dict:
     bonus_strength = int(avb.get("strength", 0))
     bonus_agility = int(avb.get("endurance", 0))
     bonus_intuition = int(avb.get("crit", 0))
-    bonus_stamina = 0
+    bonus_stamina = int(avb.get("hp_flat", 0) or 0) // max(1, int(STAMINA_PER_FREE_STAT))
     base_strength = max(1, s - bonus_strength)
     base_agility = max(1, agi - bonus_agility)
     base_intuition = max(1, intu - bonus_intuition)
-    base_stamina = vyn
+    base_stamina = max(0, vyn - bonus_stamina)
     return {
         "user_id": player.get("user_id"),
         "username": player.get("username") or "Боец",
