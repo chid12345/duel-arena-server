@@ -26,6 +26,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from api.avatar_shop_routes import register_avatar_shop_routes
+from api.shop_routes import register_shop_routes
 
 # Подтягиваем существующие модули игры
 from config import (
@@ -108,7 +109,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.54"
+GAME_VERSION = "1.55"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -1801,44 +1802,6 @@ SHOP_CATALOG = {
 }
 
 
-@app.get("/api/shop/catalog")
-async def shop_catalog():
-    return {"ok": True, "items": SHOP_CATALOG}
-
-
-class ShopBuyBody(BaseModel):
-    init_data: str
-    item_id: str
-
-
-@app.post("/api/shop/buy")
-async def shop_buy(body: ShopBuyBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    _rl_check(uid, "shop_buy", max_hits=5, window_sec=30)
-
-    item = SHOP_CATALOG.get(body.item_id)
-    if not item:
-        return {"ok": False, "reason": "Товар не найден"}
-
-    if body.item_id == "hp_small":
-        result = db.buy_hp_potion_small(uid)
-    elif body.item_id == "hp_full":
-        result = db.buy_hp_potion(uid)
-    elif body.item_id == "xp_boost":
-        result = db.buy_xp_boost(uid)
-    elif body.item_id == "stat_reset":
-        result = db.buy_stat_reset(uid)
-    else:
-        return {"ok": False, "reason": "Покупка недоступна"}
-
-    if result.get("ok"):
-        # Возвращаем обновлённого игрока
-        player = db.get_or_create_player(uid, "")
-        result["player"] = dict(player)
-    return result
-
-
 # ─── Монетизация: Stars + CryptoPay ─────────────────────────────────────────
 
 # Пакеты алмазов за Telegram Stars (боевые цены)
@@ -1900,6 +1863,21 @@ register_avatar_shop_routes(
         "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
     },
 )
+register_shop_routes(
+    app,
+    {
+        "db": db,
+        "get_user_from_init_data": get_user_from_init_data,
+        "_rl_check": _rl_check,
+        "PREMIUM_SUBSCRIPTION_STARS": PREMIUM_SUBSCRIPTION_STARS,
+        "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
+        "SHOP_CATALOG": SHOP_CATALOG,
+        "STARS_PACKAGES": STARS_PACKAGES,
+        "CRYPTO_PACKAGES": CRYPTO_PACKAGES,
+        "ELITE_AVATAR_STARS_PACKAGE": ELITE_AVATAR_STARS_PACKAGE,
+        "ELITE_AVATAR_CRYPTO_PACKAGE": ELITE_AVATAR_CRYPTO_PACKAGE,
+    },
+)
 
 
 @app.get("/api/debug/cryptopay")
@@ -1919,20 +1897,6 @@ async def debug_cryptopay():
     except Exception as e:
         result["getMe_exception"] = str(e)
     return result
-
-
-@app.get("/api/shop/packages")
-async def shop_packages():
-    """Каталог пакетов пополнения (Stars + CryptoPay)."""
-    return {
-        "ok": True,
-        "stars":  STARS_PACKAGES,
-        "crypto": CRYPTO_PACKAGES,
-        "premium_stars": PREMIUM_SUBSCRIPTION_STARS,
-        "elite_avatar_stars": ELITE_AVATAR_STARS_PACKAGE,
-        "elite_avatar_usdt": ELITE_AVATAR_CRYPTO_PACKAGE,
-        "cryptopay_enabled": bool(CRYPTOPAY_TOKEN),
-    }
 
 
 class StarsConfirmBody(BaseModel):
