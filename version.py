@@ -3,5 +3,5 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.0.17"
-VERSION_LABEL = "v1.0.17 — UI/UX ревизия кнопок и магазина — Ребаланс экономики, reward_calculator, квесты"
+VERSION = "1.0.18"
+VERSION_LABEL = "v1.0.18 — DOM battle log: BattleLog.hide() при переходе в ResultScene + shutdown()"

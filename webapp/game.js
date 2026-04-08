@@ -116,6 +116,87 @@ function connectWS(userId, onMessage) {
   return ws;
 }
 
+/* ─── BattleLog — DOM-оверлей лога боя ──────────────────────── */
+const BattleLog = {
+  _el: null, _scroll: null, _list: null,
+
+  _get() {
+    if (!this._el) {
+      this._el     = document.getElementById('battle-log-overlay');
+      this._scroll = document.getElementById('battle-log-scroll');
+      this._list   = document.getElementById('battle-log-list');
+    }
+    return this._el;
+  },
+
+  /* Показать и разместить над canvas по координатам сцены */
+  show(canvas, sceneX, sceneY, sceneW, sceneH) {
+    const el = this._get();
+    if (!el) return;
+    const r = canvas.getBoundingClientRect();
+    const scaleX = r.width  / canvas.width;
+    const scaleY = r.height / canvas.height;
+    el.style.left   = (r.left + sceneX * scaleX) + 'px';
+    el.style.top    = (r.top  + sceneY * scaleY) + 'px';
+    el.style.width  = (sceneW * scaleX) + 'px';
+    el.style.height = (sceneH * scaleY) + 'px';
+    el.style.display = 'block';
+  },
+
+  hide() {
+    const el = this._get();
+    if (el) el.style.display = 'none';
+  },
+
+  clear() {
+    if (this._list) this._list.innerHTML = '';
+  },
+
+  /* Определить CSS-класс по тексту события */
+  _classify(raw) {
+    const t = raw.toLowerCase();
+    if (t.includes('💥') || t.includes('крит'))                  return 'crit';
+    if (t.includes('💨') || t.includes('увор'))                   return 'dodge';
+    if (t.includes('🛡')  || t.includes('блок') || t.includes('защит')) return 'block';
+    if (t.includes('промах') || t.includes('❌'))                 return 'miss';
+    if (t.includes('⚗')  || t.includes('зелье') || t.includes('heal'))  return 'heal';
+    if (t.includes('раунд') || t.includes('бой начался'))        return 'system';
+    return 'normal';
+  },
+
+  _strip(s) {
+    return s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+  },
+
+  /* Добавить только новые строки (вызывать на каждом апдейте) */
+  update(entries) {
+    if (!this._list || !entries || !entries.length) return;
+    const was = this._list.children.length;
+    if (entries.length <= was) return;
+
+    for (let i = was; i < entries.length; i++) {
+      const raw  = entries[i];
+      const text = this._strip(raw);
+      const cls  = this._classify(raw);
+      const prefix = { crit: '💥 ', dodge: '💨 ', block: '🛡️ ', miss: '❌ ', heal: '💚 ' }[cls] || '';
+      const li = document.createElement('li');
+      li.className = 'log-' + cls;
+      li.textContent = (prefix + text).slice(0, 68);
+      this._list.appendChild(li);
+    }
+
+    // Авто-скролл вниз
+    requestAnimationFrame(() => {
+      if (this._scroll) this._scroll.scrollTop = this._scroll.scrollHeight;
+    });
+
+    // Держим не больше 40 строк
+    while (this._list.children.length > 40) {
+      this._list.removeChild(this._list.firstChild);
+    }
+  },
+};
+
 /* ─── Вспомогательные Phaser-функции ────────────────────────── */
 function makePanel(scene, x, y, w, h, radius = 14, alpha = 0.92) {
   const g = scene.add.graphics();
@@ -2139,12 +2220,13 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    // Лог строго над панелью выбора (H*0.6), не перекрывает кнопки
-    const logH = 42;
-    const logY = H * 0.6 - logH - 6;   // вплотную НАД choice-панелью
-    makePanel(this, 8, logY, W - 16, logH, 8, 0.88);
-    this._logTxt1 = txt(this, W/2, logY + 13, '', 12, '#e8e0ff', true).setOrigin(0.5);
-    this._logTxt2 = txt(this, W/2, logY + 30, '', 10, '#8080aa').setOrigin(0.5);
+    // Лог над панелью выбора — DOM-оверлей, не Phaser-текст
+    const logH = Math.round(H * 0.14);   // ~14% высоты экрана
+    const logY = Math.round(H * 0.6 - logH - 6);
+    this._logOverlayY = logY;
+    this._logOverlayH = logH;
+    BattleLog.clear();
+    BattleLog.show(this.game.canvas, 8, logY, W - 16, logH);
   }
 
   _onZone(key, label, type, g, t) {
@@ -2196,6 +2278,7 @@ class BattleScene extends Phaser.Scene {
         if (!State.lastResult?.result) {
           State.lastResult = res;
         }
+        BattleLog.hide();
         this.scene.start('Result');
       }
     } catch(e) {
@@ -2258,15 +2341,9 @@ class BattleScene extends Phaser.Scene {
     /* Раунд */
     if (this.roundTxt) this.roundTxt.setText(`РАУНД ${(b.round || 0) + 1}`);
 
-    /* Лог — показываем последние 2 события */
+    /* Лог — DOM-оверлей с цветами, авто-скроллом и fade-in */
     const log = b.combat_log || [];
-    const stripHtml = s => s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-    if (this._logTxt1) {
-      const line1 = log.length >= 1 ? stripHtml(log[log.length - 1]) : '';
-      const line2 = log.length >= 2 ? stripHtml(log[log.length - 2]) : '';
-      this._logTxt1.setText(line1.slice(0, 55));
-      this._logTxt2.setText(line2.slice(0, 55));
-    }
+    BattleLog.update(log);
 
     /* Анимации раунда */
     if ((myDelta > 0 || oppDelta > 0) && log.length) {
@@ -2448,6 +2525,7 @@ class BattleScene extends Phaser.Scene {
       } else if (msg.event === 'battle_ended' || msg.event === 'battle_ended_afk') {
         this._lastServerMsg = Date.now();
         State.lastResult = msg;
+        BattleLog.hide();
         this.scene.start('Result');
       }
     };
@@ -2481,6 +2559,7 @@ class BattleScene extends Phaser.Scene {
           if (!res?.active) {
             const last = await get('/api/battle/last_result').catch(() => null);
             State.lastResult = last || { human_won: false, result: {} };
+            BattleLog.hide();
             this.scene.start('Result');
           } else {
             this._lastServerMsg = now;
@@ -2495,6 +2574,10 @@ class BattleScene extends Phaser.Scene {
         } catch(_) {}
       },
     });
+  }
+
+  shutdown() {
+    BattleLog.hide();
   }
 }
 
