@@ -37,12 +37,16 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
     async def avatars(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
+        username = tg_user.get("username") or tg_user.get("first_name") or ""
+        db.get_or_create_player(uid, username)
         return db.get_player_avatar_state(uid)
 
     @router.post("/api/avatars/buy")
     async def avatars_buy(body: AvatarBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
+        username = tg_user.get("username") or tg_user.get("first_name") or ""
+        db.get_or_create_player(uid, username)
         result = db.buy_avatar(uid, body.avatar_id.strip())
         if result.get("ok"):
             _cache_invalidate(uid)
@@ -56,6 +60,8 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
     async def avatars_equip(body: AvatarBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
+        username = tg_user.get("username") or tg_user.get("first_name") or ""
+        db.get_or_create_player(uid, username)
         result = db.equip_avatar(uid, body.avatar_id.strip())
         if result.get("ok"):
             _cache_invalidate(uid)
