@@ -33,7 +33,6 @@ class AvatarsMixin:
         # Safety net for environments where avatar migration was not applied yet.
         cursor.execute(
             """CREATE TABLE IF NOT EXISTS user_avatar_unlocks (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 user_id INTEGER NOT NULL,
                 avatar_id TEXT NOT NULL,
                 source TEXT DEFAULT 'shop',
