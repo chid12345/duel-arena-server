@@ -1702,14 +1702,13 @@ class MenuScene extends Phaser.Scene {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   BATTLE LOG — DOM-оверлей поверх Phaser-канваса
+   BATTLE LOG — компактный DOM-оверлей над панелью выбора
    ═══════════════════════════════════════════════════════════ */
 const BattleLog = (() => {
   let overlay = null, scroll = null, list = null;
   let _shown = false;
   let _lastCount = 0;
 
-  /* Создаём DOM-элементы и CSS один раз */
   function _init() {
     if (overlay) return;
 
@@ -1717,63 +1716,66 @@ const BattleLog = (() => {
     style.textContent = `
       #battle-log-overlay {
         position: fixed; display: none; z-index: 50;
-        pointer-events: none; overflow: hidden;
-        border-radius: 7px;
+        pointer-events: none;
+        border-radius: 6px;
+        overflow: hidden;
       }
       #battle-log-scroll {
         width: 100%; height: 100%;
         overflow-y: auto; overflow-x: hidden;
         scrollbar-width: none;
+        display: flex; flex-direction: column; justify-content: flex-end;
       }
       #battle-log-scroll::-webkit-scrollbar { display: none; }
       #battle-log-list {
-        list-style: none; padding: 2px 0; margin: 0;
+        list-style: none; padding: 2px 3px; margin: 0;
         display: flex; flex-direction: column; gap: 2px;
+        width: 100%;
       }
-      /* ── Строка раунда ── */
+      /* ── Строка раунда: три колонки ── */
       .bl-row {
-        display: flex; align-items: center; width: 100%;
+        display: flex; align-items: center;
+        justify-content: space-between;
+        width: 100%; box-sizing: border-box;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 10px; line-height: 1.25;
-        background: rgba(20, 18, 38, 0.88);
-        border-radius: 5px; padding: 3px 6px;
-        border: 1px solid rgba(90, 80, 150, 0.22);
-        box-sizing: border-box;
+        font-size: 10px; line-height: 1.3;
+        background: rgba(14, 12, 28, 0.90);
+        border-radius: 4px; padding: 2px 5px;
+        border-left: 2px solid rgba(80,70,140,0.35);
       }
-      .bl-row.bl-crit  { border-color: rgba(255, 200, 60, 0.45); }
-      .bl-row.bl-dodge { border-color: rgba(60, 200, 220, 0.35); }
-      /* Номер раунда */
-      .bl-rnum {
-        color: #ffc83c; font-weight: 700; font-size: 9px;
-        min-width: 26px; flex-shrink: 0; text-align: center;
-      }
-      .bl-divider { color: #443355; margin: 0 4px; flex-shrink: 0; font-size: 9px; }
-      /* Колонка «Вы» — слева */
+      .bl-row.bl-crit  { border-left-color: #ffcc00; background: rgba(30,20,5,0.92); }
+      .bl-row.bl-dodge { border-left-color: #2ecc71; }
+      .bl-row.bl-block { border-left-color: #5096ff; }
+      /* Левая колонка — Вы */
       .bl-you {
-        flex: 1; text-align: left; min-width: 0;
+        flex: 0 0 42%; text-align: left;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        color: #99aacc;
       }
-      .bl-you-zone  { color: #8899cc; margin-right: 2px; }
-      .bl-you-dmg   { color: #6699ff; font-weight: 700; }
-      .bl-you-crit  { color: #ffc83c; font-weight: 700; }
-      .bl-you-dodge { color: #3cc8dc; }
-      .bl-you-miss  { color: #557; }
-      /* Иконка «VS» по центру */
-      .bl-vs { color: #443355; font-size: 9px; margin: 0 4px; flex-shrink: 0; }
-      /* Колонка «Враг» — справа */
+      /* Центр — зона + раунд */
+      .bl-mid {
+        flex: 0 0 16%; text-align: center;
+        font-size: 9px; color: #ffc83c; font-weight: 700;
+        white-space: nowrap;
+      }
+      /* Правая колонка — Враг */
       .bl-enemy {
-        flex: 1; text-align: right; min-width: 0;
+        flex: 0 0 42%; text-align: right;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        color: #cc9999;
       }
-      .bl-enemy-zone  { color: #886699; margin-left: 2px; }
-      .bl-enemy-dmg   { color: #ff4455; font-weight: 700; }
-      .bl-enemy-crit  { color: #ff8800; font-weight: 700; }
-      .bl-enemy-dodge { color: #3cc8dc; }
-      .bl-enemy-miss  { color: #557; }
-      /* Системная строка (не раунд) */
+      /* Цвета урона */
+      .bl-dmg-you   { color: #4d94ff; font-weight: 700; }
+      .bl-dmg-enemy { color: #ff4d4d; font-weight: 700; }
+      .bl-crit-you  { color: #ffcc00; font-weight: 700; }
+      .bl-crit-enemy{ color: #ffcc00; font-weight: 700; }
+      .bl-dodge-col { color: #2ecc71; }
+      .bl-miss-col  { color: #888888; }
+      /* Системная строка */
       .bl-sys {
         font-size: 9px; color: #6677aa; text-align: center;
         padding: 1px 4px; background: transparent; border: none;
+        width: 100%;
       }
     `;
     document.head.appendChild(style);
@@ -1799,55 +1801,58 @@ const BattleLog = (() => {
     return '⚔️';
   }
 
-  /* Разбираем <code>…</code> → { text, cls } */
-  function _parseDmg(code) {
+  /* <code> → { html, rowCls } */
+  function _parseDmg(code, side) {
     const s = (code || '').trim();
-    if (s.includes('уклон'))  return { text: '💨 уклон', cls: 'dodge' };
-    if (s.includes('промах')) return { text: '✕ промах', cls: 'miss'  };
+    const dmgCls  = side === 'you' ? 'bl-dmg-you'   : 'bl-dmg-enemy';
+    const critCls = side === 'you' ? 'bl-crit-you'  : 'bl-crit-enemy';
+
+    if (s.includes('уклон'))  return { html: `<span class="bl-dodge-col">💨 уворот</span>`, row: 'bl-dodge' };
+    if (s.includes('промах')) return { html: `<span class="bl-miss-col">✕ промах</span>`,  row: '' };
+
     const crit  = s.match(/💥.*?[−\-](\d+)/);
-    if (crit)  return { text: `💥 −${crit[1]}`, cls: 'crit' };
+    if (crit)  return { html: `<span class="${critCls}">💥 −${crit[1]}!</span>`, row: 'bl-crit' };
+
     const block = s.match(/🛡.*?[−\-](\d+)/);
-    if (block) return { text: `🛡 −${block[1]}`, cls: 'dmg' };
-    const hit   = s.match(/[−\-](\d+)/);
-    if (hit)   return { text: `−${hit[1]}`, cls: 'dmg' };
-    return { text: '—', cls: 'miss' };
+    if (block) return { html: `<span class="${dmgCls}">🛡 −${block[1]}</span>`, row: 'bl-block' };
+
+    const hit = s.match(/[−\-](\d+)/);
+    if (hit)  return { html: `<span class="${dmgCls}">−${hit[1]}</span>`, row: '' };
+
+    return { html: `<span class="bl-miss-col">—</span>`, row: '' };
   }
 
-  /* Создаём <li> для одной записи */
   function _renderEntry(raw) {
     const li = document.createElement('li');
     const roundM = raw.match(/Раунд\s+(\d+)/);
     if (!roundM) {
-      li.className = 'bl-row bl-sys';
-      li.textContent = raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      li.className = 'bl-sys';
+      li.textContent = raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 70);
       return li;
     }
 
     const rNum = roundM[1];
 
-    // Зоны
     const z1m = raw.match(/Ваш удар<\/b>\s*(по \w+)/);
     const z2m = raw.match(/Удар [^<]+<\/b>\s*(по \w+)/);
     const z1  = z1m ? z1m[1] : '';
     const z2  = z2m ? z2m[1] : '';
 
-    // Результаты из <code>
     const codes = [...raw.matchAll(/<code>([\s\S]*?)<\/code>/g)].map(m => m[1]);
-    const you   = _parseDmg(codes[0]);   // урон, нанесённый ВРАГУ
-    const enemy = _parseDmg(codes[1]);   // урон, нанесённый ВАМ
+    const you   = _parseDmg(codes[0], 'you');    // урон, нанесённый ВРАГУ
+    const enemy = _parseDmg(codes[1], 'enemy');  // урон, нанесённый ВАМ
 
-    const hasCrit  = you.cls === 'crit'  || enemy.cls === 'crit';
-    const hasDodge = you.cls === 'dodge' || enemy.cls === 'dodge';
+    // Приоритет класса строки: crit > dodge > block
+    const rowCls = [you.row, enemy.row].find(c => c === 'bl-crit')
+      || [you.row, enemy.row].find(c => c === 'bl-dodge')
+      || [you.row, enemy.row].find(c => c === 'bl-block')
+      || '';
 
-    li.className = 'bl-row' + (hasCrit ? ' bl-crit' : hasDodge ? ' bl-dodge' : '');
+    li.className = 'bl-row' + (rowCls ? ' ' + rowCls : '');
     li.innerHTML =
-      `<span class="bl-rnum">⚔ Р${rNum}</span>` +
-      `<span class="bl-divider">│</span>` +
-      `<span class="bl-you"><span class="bl-you-zone">${_zoneIcon(z1)}</span>Вы: ` +
-        `<span class="bl-you-${you.cls}">${you.text}</span></span>` +
-      `<span class="bl-vs">↔</span>` +
-      `<span class="bl-enemy">Враг: <span class="bl-enemy-${enemy.cls}">${enemy.text}</span>` +
-        `<span class="bl-enemy-zone">${_zoneIcon(z2)}</span></span>`;
+      `<span class="bl-you">${_zoneIcon(z1)} Вы: ${you.html}</span>` +
+      `<span class="bl-mid">Р${rNum}</span>` +
+      `<span class="bl-enemy">${enemy.html} :Враг ${_zoneIcon(z2)}</span>`;
     return li;
   }
 
@@ -1882,10 +1887,8 @@ const BattleLog = (() => {
 
       newEntries.forEach(raw => list.appendChild(_renderEntry(raw)));
 
-      // Держим последние 40 строк
-      while (list.children.length > 40) list.removeChild(list.firstChild);
+      while (list.children.length > 20) list.removeChild(list.firstChild);
 
-      // Авто-прокрутка вниз
       requestAnimationFrame(() => { scroll.scrollTop = scroll.scrollHeight; });
     },
   };
@@ -2329,9 +2332,9 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    // DOM-оверлей строго над панелью выбора (H*0.6)
-    const logH = Math.round(H * 0.18);   // ~126px = ~5 строк
-    const logY = Math.round(H * 0.6 - logH - 6);
+    // Узкая полоска вплотную над панелью выбора, не перекрывает бойцов
+    const logH = 110;                            // ~4 строки по 22px + отступы
+    const logY = Math.round(H * 0.6 - logH - 4);
     BattleLog.clear();
     BattleLog.show(this.game.canvas, 4, logY, W - 8, logH);
   }
