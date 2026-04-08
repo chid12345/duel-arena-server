@@ -384,54 +384,97 @@ class StatsScene extends Phaser.Scene {
     const cardH = 90;
     const gapX = 8;
     const gapY = 8;
+    const navY = panelY + panelH - 26;
+    const rowsPerPage = 3;
+    const perPage = rowsPerPage * 2;
+    const pageCount = Math.max(1, Math.ceil((avatars.length || 0) / perPage));
+    this._avatarPage = Math.min(this._avatarPage || 0, pageCount - 1);
+    const cardsLayer = [];
 
-    avatars.forEach((a, i) => {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
-      const x = 12 + col * (cardW + gapX);
-      const y = top + row * (cardH + gapY);
-      if (y + cardH > panelY + panelH - 8) return;
+    const clearCards = () => {
+      cardsLayer.forEach(o => { try { o.destroy(); } catch (e) {} });
+      cardsLayer.length = 0;
+    };
 
-      const card = this.add.graphics().setDepth(122);
-      const accent = a.equipped ? C.green : (a.unlocked ? C.blue : C.dark);
-      card.fillStyle(0x1b1a30, 0.96);
-      card.fillRoundedRect(x, y, cardW, cardH, 9);
-      card.lineStyle(1.5, accent, 0.8);
-      card.strokeRoundedRect(x, y, cardW, cardH, 9);
-      overlay.push(card);
+    const pageLabel = txt(this, W / 2, navY + 2, '', 10, '#c8c8e8', true).setOrigin(0.5).setDepth(124);
+    overlay.push(pageLabel);
 
-      const badge = a.badge || '🖼';
-      overlay.push(txt(this, x + 10, y + 8, `${badge} ${a.name || a.id}`, 10, '#f0f0fa', true).setDepth(123));
-      overlay.push(txt(this, x + 10, y + 24, (a.description || '').slice(0, 44), 8, '#a8a8c8').setDepth(123));
-      overlay.push(txt(this, x + 10, y + 38, `+${a.effective_strength || 0} С  +${a.effective_endurance || 0} Л`, 8, '#ffc83c').setDepth(123));
-      overlay.push(txt(this, x + 10, y + 50, `+${a.effective_crit || 0} К  +${a.effective_hp_flat || 0} HP`, 8, '#ffc83c').setDepth(123));
+    const mkNavBtn = (x, label, onClick) => {
+      const bg = this.add.graphics().setDepth(123);
+      bg.fillStyle(0x2a2840, 0.95);
+      bg.fillRoundedRect(x - 36, navY - 10, 72, 22, 7);
+      bg.lineStyle(1, C.purple, 0.8);
+      bg.strokeRoundedRect(x - 36, navY - 10, 72, 22, 7);
+      const t = txt(this, x, navY + 1, label, 10, '#f0f0fa', true).setOrigin(0.5).setDepth(124);
+      const z = this.add.zone(x, navY + 1, 72, 22).setInteractive({ useHandCursor: true }).setDepth(125);
+      z.on('pointerdown', onClick);
+      overlay.push(bg, t, z);
+    };
 
-      let btnLabel = 'Экипировать';
-      let action = 'equip';
-      if (a.equipped) {
-        btnLabel = 'Надет';
-        action = 'none';
-      } else if (!a.unlocked) {
-        if (a.currency === 'gold') btnLabel = `Купить ${a.price} 🪙`;
-        else if (a.currency === 'diamonds') btnLabel = `Купить ${a.price} 💎`;
-        else if (a.currency === 'stars') btnLabel = 'Купить за ⭐';
-        else if (a.currency === 'usdt') btnLabel = 'Купить за USDT';
-        else btnLabel = 'Недоступно';
-        action = (a.currency === 'gold' || a.currency === 'diamonds') ? 'buy' : 'none';
-      }
-      const bx = x + 8, by = y + cardH - 28, bw = cardW - 16, bh = 20;
-      const btn = this.add.graphics().setDepth(123);
-      const bcol = action === 'none' ? 0x3a3a52 : (action === 'buy' ? C.gold : C.green);
-      btn.fillStyle(bcol, 0.95);
-      btn.fillRoundedRect(bx, by, bw, bh, 7);
-      const bt = txt(this, bx + bw / 2, by + bh / 2, btnLabel, 9, '#101020', true).setOrigin(0.5).setDepth(124);
-      overlay.push(btn, bt);
-      if (action !== 'none') {
-        const z = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive({ useHandCursor: true }).setDepth(125);
-        z.on('pointerdown', () => this._avatarAction(action, a));
-        overlay.push(z);
-      }
+    const renderPage = () => {
+      clearCards();
+      const page = this._avatarPage || 0;
+      pageLabel.setText(`Страница ${page + 1}/${pageCount}`);
+      const start = page * perPage;
+      const pageItems = avatars.slice(start, start + perPage);
+      pageItems.forEach((a, i) => {
+        const col = i % 2;
+        const row = Math.floor(i / 2);
+        const x = 12 + col * (cardW + gapX);
+        const y = top + row * (cardH + gapY);
+        const card = this.add.graphics().setDepth(122);
+        const accent = a.equipped ? C.green : (a.unlocked ? C.blue : C.dark);
+        card.fillStyle(0x1b1a30, 0.96);
+        card.fillRoundedRect(x, y, cardW, cardH, 9);
+        card.lineStyle(1.5, accent, 0.8);
+        card.strokeRoundedRect(x, y, cardW, cardH, 9);
+        cardsLayer.push(card);
+
+        const badge = a.badge || '🖼';
+        cardsLayer.push(txt(this, x + 10, y + 8, `${badge} ${a.name || a.id}`, 10, '#f0f0fa', true).setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 24, (a.description || '').slice(0, 44), 8, '#a8a8c8').setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 38, `+${a.effective_strength || 0} С  +${a.effective_endurance || 0} Л`, 8, '#ffc83c').setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 50, `+${a.effective_crit || 0} К  +${a.effective_hp_flat || 0} HP`, 8, '#ffc83c').setDepth(123));
+
+        let btnLabel = 'Экипировать';
+        let action = 'equip';
+        if (a.equipped) {
+          btnLabel = 'Надет';
+          action = 'none';
+        } else if (!a.unlocked) {
+          if (a.currency === 'gold') btnLabel = `Купить ${a.price} 🪙`;
+          else if (a.currency === 'diamonds') btnLabel = `Купить ${a.price} 💎`;
+          else if (a.currency === 'stars') btnLabel = 'Купить за ⭐';
+          else if (a.currency === 'usdt') btnLabel = 'Купить за USDT';
+          else btnLabel = 'Недоступно';
+          action = (a.currency === 'gold' || a.currency === 'diamonds') ? 'buy' : 'none';
+        }
+        const bx = x + 8, by = y + cardH - 28, bw = cardW - 16, bh = 20;
+        const btn = this.add.graphics().setDepth(123);
+        const bcol = action === 'none' ? 0x3a3a52 : (action === 'buy' ? C.gold : C.green);
+        btn.fillStyle(bcol, 0.95);
+        btn.fillRoundedRect(bx, by, bw, bh, 7);
+        const bt = txt(this, bx + bw / 2, by + bh / 2, btnLabel, 9, '#101020', true).setOrigin(0.5).setDepth(124);
+        cardsLayer.push(btn, bt);
+        if (action !== 'none') {
+          const z = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive({ useHandCursor: true }).setDepth(125);
+          z.on('pointerdown', () => this._avatarAction(action, a));
+          cardsLayer.push(z);
+        }
+      });
+    };
+
+    mkNavBtn(W / 2 - 86, '◀ Назад', () => {
+      if ((this._avatarPage || 0) <= 0) return;
+      this._avatarPage -= 1;
+      renderPage();
     });
+    mkNavBtn(W / 2 + 86, 'Вперед ▶', () => {
+      if ((this._avatarPage || 0) >= pageCount - 1) return;
+      this._avatarPage += 1;
+      renderPage();
+    });
+    renderPage();
 
     const closeDim = this.add.zone(W / 2, H / 2, W, H).setInteractive().setDepth(119);
     closeDim.on('pointerdown', () => {});
