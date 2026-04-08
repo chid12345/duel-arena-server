@@ -163,6 +163,14 @@ class StatsScene extends Phaser.Scene {
     });
   }
 
+  _statBase(p, key) {
+    return Number(p?.stats_base?.[key] ?? p?.[key] ?? 0);
+  }
+
+  _statBonus(p, key) {
+    return Number(p?.stats_bonus_total?.[key] ?? 0);
+  }
+
   _buildStatRow(s, x, y, w, h, p) {
     const hasStats = State.player.free_stats > 0;
     // Конвертируем число-цвет в CSS-строку для txt()
@@ -184,7 +192,10 @@ class StatsScene extends Phaser.Scene {
     txt(this, x + 16, y + 9, `${s.icon} ${s.label}`, 13, '#f0f0fa', true);
 
     /* Значение — крупно, в цвете стата */
-    const valTxt = txt(this, x + 16, y + 28, String(s.valFn(p)), 24, hex, true);
+    const valTxt = txt(this, x + 16, y + 26, String(s.valFn(p)), 24, hex, true);
+    const baseVal = this._statBase(p, s.key);
+    const bonusVal = this._statBonus(p, s.key);
+    const breakdownTxt = txt(this, x + 16, y + 49, `база ${baseVal} | бонусы +${bonusVal}`, 8, '#a8a8c8');
 
     /* Мини-бар */
     const barX = x + 16;
@@ -233,7 +244,7 @@ class StatsScene extends Phaser.Scene {
       });
     }
 
-    return { s, valTxt, barFill, effectTxt, btn, btnTxt, zone,
+    return { s, valTxt, breakdownTxt, barFill, effectTxt, btn, btnTxt, zone,
              barX, barY, barW, btnX, btnY, btnW, btnH };
   }
 
@@ -520,10 +531,13 @@ class StatsScene extends Phaser.Scene {
   }
 
   _animateRow(row, p, newFree) {
-    const { s, valTxt, barFill, effectTxt, barX, barY, barW } = row;
+    const { s, valTxt, breakdownTxt, barFill, effectTxt, barX, barY, barW } = row;
 
     // Значение
     valTxt.setText(String(s.valFn(p)));
+    const baseVal = this._statBase(p, s.key);
+    const bonusVal = this._statBonus(p, s.key);
+    breakdownTxt.setText(`база ${baseVal} | бонусы +${bonusVal}`);
     this.tweens.add({
       targets: valTxt, scaleX: 1.35, scaleY: 1.35,
       duration: 130, yoyo: true, ease: 'Back.easeOut',

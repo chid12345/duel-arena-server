@@ -49,6 +49,7 @@ from config import (
     VICTORY_GOLD, CRYPTOPAY_TOKEN, CRYPTOPAY_TESTNET, PREMIUM_SUBSCRIPTION_STARS,
     PREMIUM_XP_BONUS_PERCENT, FULL_RESET_CRYPTO_USDT,
     AVATAR_CATALOG, ELITE_AVATAR_ID, ELITE_AVATAR_STARS, ELITE_AVATAR_USDT,
+    AVATAR_SCALE_EVERY_LEVELS, AVATAR_SCALE_MAX_BONUS,
 )
 from database import db
 from battle_system import battle_system
@@ -115,7 +116,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.69"
+GAME_VERSION = "1.70"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -211,6 +212,26 @@ class ConnectionManager:
 
 manager = ConnectionManager()
 AVATAR_BY_ID = {a["id"]: dict(a) for a in AVATAR_CATALOG}
+
+
+def _avatar_effective_bonus(level: int, avatar_id: str) -> dict:
+    avatar = AVATAR_BY_ID.get((avatar_id or "").strip()) or {}
+    if not avatar:
+        return {"strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0}
+    step = max(1, int(AVATAR_SCALE_EVERY_LEVELS))
+    cap = max(0, int(AVATAR_SCALE_MAX_BONUS))
+    scale = min(cap, max(0, int(level)) // step)
+    tier = (avatar.get("tier") or "").lower()
+    scale_allowed = tier in {"gold", "diamond", "elite"}
+    b_str = int(avatar.get("strength", 0) or 0)
+    b_end = int(avatar.get("endurance", 0) or 0)
+    b_crit = int(avatar.get("crit", 0) or 0)
+    b_hp = int(avatar.get("hp_flat", 0) or 0)
+    if scale_allowed:
+        b_str += scale
+        b_end += scale
+        b_crit += scale
+    return {"strength": b_str, "endurance": b_end, "crit": b_crit, "hp_flat": b_hp}
 
 
 async def _send_tg_message(chat_id: int, text: str, parse_mode: str = "HTML") -> None:
@@ -361,6 +382,16 @@ def _player_api(player: dict) -> dict:
     title = (player.get("display_title") or "").strip()
     avatar_id = (player.get("equipped_avatar_id") or "base_neutral").strip()
     avatar = AVATAR_BY_ID.get(avatar_id) or {}
+    avb = _avatar_effective_bonus(lv, avatar_id)
+    # Бонусы как агрегат: к avatar позже добавим items/buffs и UI не придется переделывать.
+    bonus_strength = int(avb.get("strength", 0))
+    bonus_agility = int(avb.get("endurance", 0))
+    bonus_intuition = int(avb.get("crit", 0))
+    bonus_stamina = 0
+    base_strength = max(1, s - bonus_strength)
+    base_agility = max(1, agi - bonus_agility)
+    base_intuition = max(1, intu - bonus_intuition)
+    base_stamina = vyn
     return {
         "user_id": player.get("user_id"),
         "username": player.get("username") or "Боец",
@@ -391,6 +422,18 @@ def _player_api(player: dict) -> dict:
         "equipped_avatar_id": avatar_id,
         "avatar_name": avatar.get("name"),
         "avatar_badge": avatar.get("badge"),
+        "stats_base": {
+            "strength": base_strength,
+            "agility": base_agility,
+            "intuition": base_intuition,
+            "stamina": base_stamina,
+        },
+        "stats_bonus_total": {
+            "strength": bonus_strength,
+            "agility": bonus_agility,
+            "intuition": bonus_intuition,
+            "stamina": bonus_stamina,
+        },
         # Реген HP — для таймера в TMA
         "regen_per_min": round(
             mhp / HP_REGEN_BASE_SECONDS
