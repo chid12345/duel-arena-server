@@ -26,8 +26,13 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from api.avatar_shop_routes import register_avatar_shop_routes
+from api.endless_routes import register_endless_routes
 from api.payment_routes import register_payment_routes
+from api.progression_routes import register_progression_routes
 from api.shop_routes import register_shop_routes
+from api.social_routes import register_social_routes
+from api.system_realtime_routes import register_system_realtime_routes
+from api.titan_training_routes import register_titan_training_routes
 
 # Подтягиваем существующие модули игры
 from config import (
@@ -110,7 +115,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.56"
+GAME_VERSION = "1.62"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -320,23 +325,6 @@ class ChallengeRespondBody(BaseModel):
 class ChallengeCancelBody(BaseModel):
     init_data: str
     challenge_id: int
-
-class TitanStartBody(BaseModel):
-    init_data: str
-    floor: Optional[int] = None
-
-class BuyAttemptBody(BaseModel):
-    init_data: str
-    kind: str = "gold"
-
-class WeeklyClaimBody(BaseModel):
-    init_data: str
-    claim_key: str
-
-class TrainBody(BaseModel):
-    init_data: str
-    stat: str   # strength | agility | intuition | stamina
-
 
 # ─── Вспомогательные функции ─────────────────────────────────────────────────
 
@@ -704,27 +692,6 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
 
 
 # ─── Маршруты API ────────────────────────────────────────────────────────────
-
-@app.get("/api/health")
-async def health():
-    from config import WEBAPP_PUBLIC_URL
-    self_url = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
-    webapp_base = WEBAPP_PUBLIC_URL.split("?")[0] if WEBAPP_PUBLIC_URL else ""
-    url_mismatch = bool(self_url and webapp_base and self_url != webapp_base)
-    return {
-        "ok": True,
-        "ts": int(time.time()),
-        "version": APP_BUILD_VERSION,
-        "webapp_url": WEBAPP_PUBLIC_URL,
-        "self_url": self_url,
-        "url_mismatch": url_mismatch,
-    }
-
-
-@app.get("/api/version")
-async def app_version():
-    return {"ok": True, "version": GAME_VERSION, "build": APP_BUILD_VERSION}
-
 
 @app.post("/api/player")
 async def get_player(body: InitDataHeader):
@@ -1168,629 +1135,7 @@ async def pvp_top(limit: int = 30):
     return {"ok": True, "week_key": _iso_week_key(), "leaders": rows, "elo_top": elo_top, "rewards": rewards}
 
 
-@app.get("/api/titans/status")
-async def titan_status(init_data: str):
-    tg_user = get_user_from_init_data(init_data)
-    uid = int(tg_user["id"])
-    prog = db.get_titan_progress(uid)
-    floor = max(1, int(prog.get("current_floor", 1)))
-    return {
-        "ok": True,
-        "progress": prog,
-        "next_boss_preview": _titan_boss_for_floor(floor, db.get_or_create_player(uid, "")),
-    }
-
-
-@app.post("/api/titans/start")
-async def titan_start(body: TitanStartBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid = int(tg_user["id"])
-    if battle_system.get_battle_status(uid):
-        state = _battle_state_api(uid)
-        return {"ok": True, "status": "already_in_battle", "battle": state}
-    player = db.get_or_create_player(uid, tg_user.get("username") or "")
-    mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
-    chp = int(player.get("current_hp", mhp))
-    if chp < int(mhp * HP_MIN_BATTLE_PCT):
-        return {"ok": False, "reason": "low_hp"}
-    prog = db.get_titan_progress(uid)
-    floor = max(1, int(body.floor or prog.get("current_floor", 1)))
-    boss = _titan_boss_for_floor(floor, player)
-    bid = await battle_system.start_battle(player, boss, is_bot2=True, mode="titan", mode_meta={"floor": floor})
-    b = battle_system.active_battles.get(bid)
-    if b:
-        b["_tma_p1"] = True
-    return {"ok": True, "status": "titan_started", "floor": floor, "boss": boss, "battle": _battle_state_api(uid)}
-
-
-# ── НАТИСК — бесконечный режим ────────────────────────────────────────────────
-
-BASE_ENDLESS_ATTEMPTS  = 3
-PREMIUM_ENDLESS_BONUS  = 5
-ENDLESS_GOLD_COST      = 100   # цена 1 попытки за золото
-ENDLESS_DIAMOND_COST   = 50    # цена 3 попытки за алмазы
-ENDLESS_DIAMOND_COUNT  = 3
-
-
-@app.get("/api/endless/status")
-async def endless_status(init_data: str):
-    tg_user  = get_user_from_init_data(init_data)
-    uid      = int(tg_user["id"])
-    username = tg_user.get("username") or ""
-    player   = db.get_or_create_player(uid, username)
-    progress = db.get_endless_progress(uid)
-    attempts_data = db.endless_get_attempts(uid)
-    is_premium = bool(_premium_fields(player).get("is_premium"))
-    base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
-    total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
-    attempts_left = max(0, total_available - attempts_data["used"])
-    can_buy_gold    = attempts_data["extra_gold"] == 0  # 1 per day
-    can_buy_diamond = True  # no daily limit
-    gold     = int(player.get("gold", 0))
-    diamonds = int(player.get("diamonds", 0))
-    return {
-        "ok": True,
-        "attempts_left":   attempts_left,
-        "attempts_used":   attempts_data["used"],
-        "base_attempts":   base,
-        "can_buy_gold":    can_buy_gold,
-        "can_buy_diamond": can_buy_diamond,
-        "gold_cost":       ENDLESS_GOLD_COST,
-        "diamond_cost":    ENDLESS_DIAMOND_COST,
-        "diamond_count":   ENDLESS_DIAMOND_COUNT,
-        "player_gold":     gold,
-        "player_diamonds": diamonds,
-        "is_premium":      is_premium,
-        "progress":        progress,
-        # Квест-прогресс для отображения в NatiskScene
-        "daily_endless_wins": db.endless_get_daily_wins(uid),
-        "weekly_endless":     db.endless_get_weekly_progress(uid, _iso_week_key()),
-    }
-
-
-@app.post("/api/endless/start")
-async def endless_start(body: TitanStartBody):
-    uid = "?"
-    try:
-        tg_user  = get_user_from_init_data(body.init_data)
-        uid      = int(tg_user["id"])
-        username = tg_user.get("username") or ""
-        player   = db.get_or_create_player(uid, username)
-        progress = db.get_endless_progress(uid)
-
-        # Брошенный заход (вышел между волнами) — засчитываем как проигрыш, начинаем новый
-        if progress["is_active"] and progress["current_wave"] > 0:
-            db.endless_on_loss(uid, progress["current_wave"])
-            progress = db.get_endless_progress(uid)
-
-        # Новый заход — проверяем попытки
-        attempts_data = db.endless_get_attempts(uid)
-        is_premium = bool(_premium_fields(player).get("is_premium"))
-        base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
-        total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
-        attempts_left = max(0, total_available - attempts_data["used"])
-        if attempts_left <= 0:
-            return {"ok": False, "reason": "Попытки закончились. Приходи завтра!"}
-        wave = 1
-        full_hp = int(player.get("max_hp", 100))
-        db.endless_start_run(uid, full_hp)
-        db.endless_use_attempt(uid)
-
-        bot = _endless_bot_for_wave(wave)
-        player_for_battle = dict(player)
-        player_for_battle["current_hp"] = full_hp
-        bid = await battle_system.start_battle(
-            player_for_battle, bot,
-            is_bot2=True,
-            mode="endless",
-            mode_meta={"wave": wave}
-        )
-        state = _battle_state_api(uid)
-        return {"ok": True, "status": "endless_started", "wave": wave, "bot": bot, "battle": state}
-    except Exception as e:
-        logger.error("endless_start error uid=%s: %s", uid, e, exc_info=True)
-        return {"ok": False, "reason": str(e)[:200]}
-
-
-@app.post("/api/endless/next_wave")
-async def endless_next_wave(body: TitanStartBody):
-    """Продолжить активный заход — следующая волна (вызывается из ResultScene)."""
-    uid = "?"
-    try:
-        tg_user  = get_user_from_init_data(body.init_data)
-        uid      = int(tg_user["id"])
-        username = tg_user.get("username") or ""
-        player   = db.get_or_create_player(uid, username)
-        progress = db.get_endless_progress(uid)
-        if not progress["is_active"] or progress["current_wave"] <= 0:
-            return {"ok": False, "reason": "Нет активного захода"}
-        wave = progress["current_wave"]
-        player_for_battle = dict(player)
-        player_for_battle["current_hp"] = progress["current_hp"]
-        bot = _endless_bot_for_wave(wave)
-        await battle_system.start_battle(
-            player_for_battle, bot,
-            is_bot2=True,
-            mode="endless",
-            mode_meta={"wave": wave}
-        )
-        state = _battle_state_api(uid)
-        return {"ok": True, "status": "endless_started", "wave": wave, "bot": bot, "battle": state}
-    except Exception as e:
-        logger.error("endless_next_wave error uid=%s: %s", uid, e, exc_info=True)
-        return {"ok": False, "reason": str(e)[:200]}
-
-
-@app.post("/api/endless/buy_attempt")
-async def endless_buy_attempt(body: BuyAttemptBody):
-    tg_user  = get_user_from_init_data(body.init_data)
-    uid      = int(tg_user["id"])
-    username = tg_user.get("username") or ""
-    player   = db.get_or_create_player(uid, username)
-    kind     = body.kind  # "gold" or "diamond"
-
-    if kind == "gold":
-        attempts_data = db.endless_get_attempts(uid)
-        if attempts_data["extra_gold"] > 0:
-            return {"ok": False, "reason": "Уже куплена попытка за золото сегодня"}
-        gold = int(player.get("gold", 0))
-        if gold < ENDLESS_GOLD_COST:
-            return {"ok": False, "reason": f"Нужно {ENDLESS_GOLD_COST} 🪙"}
-        db.update_player_stats(uid, {"gold": gold - ENDLESS_GOLD_COST})
-        db.endless_add_extra(uid, "gold", 1)
-        return {"ok": True, "bought": 1, "cost": ENDLESS_GOLD_COST}
-    elif kind == "diamond":
-        diamonds = int(player.get("diamonds", 0))
-        if diamonds < ENDLESS_DIAMOND_COST:
-            return {"ok": False, "reason": f"Нужно {ENDLESS_DIAMOND_COST} 💎"}
-        db.update_player_stats(uid, {"diamonds": diamonds - ENDLESS_DIAMOND_COST})
-        db.endless_add_extra(uid, "diamond", ENDLESS_DIAMOND_COUNT)
-        return {"ok": True, "bought": ENDLESS_DIAMOND_COUNT, "cost": ENDLESS_DIAMOND_COST}
-    return {"ok": False, "reason": "Неверный тип"}
-
-
-@app.post("/api/endless/abandon")
-async def endless_abandon(body: TitanStartBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    progress = db.get_endless_progress(uid)
-    if progress["is_active"]:
-        db.endless_on_loss(uid, progress["current_wave"])
-    return {"ok": True}
-
-
-@app.get("/api/endless/top")
-async def endless_top(init_data: str):
-    tg_user  = get_user_from_init_data(init_data)
-    uid      = int(tg_user["id"])
-    leaders  = db.endless_get_top(20)
-    my_pos   = None
-    for i, row in enumerate(leaders):
-        if row["user_id"] == uid:
-            my_pos = i + 1
-            break
-    return {"ok": True, "leaders": leaders, "my_pos": my_pos}
-
-
-@app.get("/api/titans/top")
-async def titan_top(limit: int = 30):
-    rows = db.get_titan_weekly_top(limit=min(100, max(5, int(limit))))
-    rewards = [
-        {"rank": 1, "diamonds": 150, "title": "Покоритель Титанов"},
-        {"rank": 2, "diamonds": 90, "title": "Гроза Башни"},
-        {"rank": 3, "diamonds": 60, "title": "Титаноборец"},
-        {"rank": "4-10", "diamonds": 25, "title": "Штурмовик Башни"},
-    ]
-    return {"ok": True, "week_key": _iso_week_key(), "leaders": rows, "rewards": rewards}
-
-
-@app.get("/api/rating")
-async def get_rating(init_data: str, limit: int = 20):
-    tg_user = get_user_from_init_data(init_data)
-    uid     = int(tg_user["id"])
-    rows    = db.get_top_players(limit=limit)
-    players = [_player_api(dict(r)) for r in rows]
-    my_rank = next((i + 1 for i, p in enumerate(players) if p["user_id"] == uid), None)
-    return {"ok": True, "players": players, "my_rank": my_rank}
-
-
-# ─── WebSocket ───────────────────────────────────────────────────────────────
-
-@app.websocket("/ws/{user_id}")
-async def websocket_endpoint(ws: WebSocket, user_id: int):
-    await manager.connect(user_id, ws)
-    logger.info("WS connected user_id=%s", user_id)
-    try:
-        # Слать ping каждые 20 сек чтобы не дропало
-        async def _ping():
-            while True:
-                await asyncio.sleep(20)
-                try:
-                    await ws.send_json({"event": "ping"})
-                except Exception:
-                    break
-        ping_task = asyncio.create_task(_ping())
-        while True:
-            data = await ws.receive_text()
-            msg  = json.loads(data)
-            if msg.get("type") == "pong":
-                pass  # heartbeat OK
-    except WebSocketDisconnect:
-        pass
-    except Exception as e:
-        logger.warning("WS error user_id=%s: %s", user_id, e)
-    finally:
-        ping_task.cancel()
-        manager.disconnect(user_id)
-        logger.info("WS disconnected user_id=%s", user_id)
-
-
-# ─── Прокачка статов ─────────────────────────────────────────────────────────
-
-STAT_MAP = {
-    "strength":  "strength",
-    "agility":   "endurance",
-    "intuition": "crit",
-    "stamina":   "stamina",   # особый случай — HP
-}
-
-@app.post("/api/player/train")
-async def train_stat(body: TrainBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    _rl_check(uid, "train", max_hits=30, window_sec=10)
-    stat    = body.stat.lower()
-
-    if stat not in STAT_MAP:
-        raise HTTPException(status_code=400, detail=f"Unknown stat: {stat}")
-
-    player = db.get_or_create_player(uid, "")
-    free   = int(player.get("free_stats", 0))
-
-    if free <= 0:
-        return {"ok": False, "reason": "no_free_stats"}
-
-    stats_update: dict = {"free_stats": free - 1}
-    result_msg = ""
-
-    if stat == "strength":
-        stats_update["strength"] = int(player["strength"]) + 1
-        result_msg = f"+1 💪 Сила → {stats_update['strength']}"
-    elif stat == "agility":
-        stats_update["endurance"] = int(player["endurance"]) + 1
-        result_msg = f"+1 🤸 Ловкость → {stats_update['endurance']}"
-    elif stat == "intuition":
-        stats_update["crit"] = int(player.get("crit", PLAYER_START_CRIT)) + 1
-        result_msg = f"+1 💥 Интуиция → {stats_update['crit']}"
-    elif stat == "stamina":
-        from config import STAMINA_PER_FREE_STAT
-        inc = int(STAMINA_PER_FREE_STAT)
-        stats_update["max_hp"]     = int(player["max_hp"]) + inc
-        stats_update["current_hp"] = int(player["current_hp"]) + inc
-        result_msg = f"+{inc} ❤️ к пулу HP → {stats_update['max_hp']}"
-
-    db.update_player_stats(uid, stats_update)
-    _cache_invalidate(uid)
-
-    fresh = db.get_or_create_player(uid, "")
-    inv   = stamina_stats_invested(fresh.get("max_hp", PLAYER_START_MAX_HP), fresh.get("level", 1))
-    regen = db.apply_hp_regen(uid, inv)
-    if regen:
-        fresh = dict(fresh)
-        fresh["current_hp"] = regen["current_hp"]
-
-    _cache_set(uid, fresh)
-    return {"ok": True, "message": result_msg, "player": _player_api(fresh)}
-
 # ─── Рефералка ───────────────────────────────────────────────────────────────
-
-@app.get("/api/referral")
-async def get_referral_info(init_data: str):
-    tg_user = get_user_from_init_data(init_data)
-    uid     = int(tg_user["id"])
-    code    = db.get_referral_code(uid)
-    stats   = db.get_referral_stats(uid)
-    recent  = db.get_recent_referrals(uid, limit=5)
-    return {
-        "ok": True,
-        "referral_code": code,
-        "link": f"https://t.me/ZenDuelArena_bot?start={code}",
-        "invited_count":         stats["invited_count"],
-        "paying_subscribers":    stats["paying_subscribers"],
-        "total_reward_diamonds": stats["total_reward_diamonds"],
-        "total_reward_gold":     stats["total_reward_gold"],
-        "total_reward_usdt":     stats["total_reward_usdt"],
-        "usdt_balance":          stats["usdt_balance"],
-        "can_withdraw":          stats["can_withdraw"],
-        "cooldown_hours":        stats["cooldown_hours"],
-        "withdraw_min":          5.0,
-        "recent": recent,
-    }
-
-
-# ─── Сезон ──────────────────────────────────────────────────────────────────
-
-@app.get("/api/season")
-async def get_season_info(init_data: str):
-    tg_user = get_user_from_init_data(init_data)
-    uid     = int(tg_user["id"])
-    season  = db.get_active_season()
-    if not season:
-        return {"ok": True, "season": None, "leaderboard": [], "my_stats": None}
-    lb      = db.get_season_leaderboard(season["id"], limit=20)
-    my_pos  = next((i + 1 for i, r in enumerate(lb) if r["user_id"] == uid), None)
-    my_stat = next((r for r in lb if r["user_id"] == uid), None)
-    return {"ok": True, "season": dict(season), "leaderboard": lb,
-            "my_stats": my_stat, "my_pos": my_pos}
-
-
-# ─── Battle Pass ──────────────────────────────────────────────────────────────
-
-def _make_endless_bp_tiers() -> list:
-    _tiers_def = [
-        {
-            "tier": 1, "needed": 5, "difficulty": "easy", "frequency": "once",
-            "label": "🩸 Первая кровь",
-            "desc": "Натиск начинается с первого шага. Одержите 5 побед в режиме Натиск.",
-        },
-        {
-            "tier": 2, "needed": 15, "difficulty": "medium", "frequency": "once",
-            "label": "🛡️ Ветеран волн",
-            "desc": "Пятнадцать побед — это мастерство. Победите 15 раз в Натиске и докажите свой класс.",
-        },
-        {
-            "tier": 3, "needed": 30, "difficulty": "hard", "frequency": "once",
-            "label": "👑 Легенда Натиска",
-            "desc": "Тридцать побед. Имена таких бойцов вырезают в камне. Победите 30 раз в Натиске.",
-        },
-    ]
-    result = []
-    for t in _tiers_def:
-        gold, diamonds, xp = calc_reward(t["difficulty"], t["frequency"])
-        result.append({"tier": t["tier"], "needed": t["needed"], "gold": gold, "diamonds": diamonds, "xp": xp, "label": t["label"], "desc": t["desc"]})
-    return result
-
-ENDLESS_BP_TIERS = _make_endless_bp_tiers()
-
-@app.get("/api/battlepass")
-async def get_battlepass(init_data: str):
-    tg_user = get_user_from_init_data(init_data)
-    uid     = int(tg_user["id"])
-    bp      = db.get_battle_pass(uid)
-    tiers   = [
-        {"tier": i + 1, "battles_needed": t[0], "wins_needed": t[1],
-         "diamonds": t[2], "gold": t[3]}
-        for i, t in enumerate(db.BATTLE_PASS_TIERS)
-    ]
-    return {
-        "ok": True, "bp": dict(bp), "tiers": tiers,
-        "endless_tiers": ENDLESS_BP_TIERS,
-        "endless_done": int((bp or {}).get("endless_done") or 0),
-        "endless_tier_claimed": int((bp or {}).get("endless_tier_claimed") or 0),
-    }
-
-
-class BattlePassClaimBody(BaseModel):
-    init_data: str
-    tier: int
-
-
-@app.post("/api/battlepass/claim")
-async def claim_battlepass(body: BattlePassClaimBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.claim_battle_pass_tier(uid, body.tier)
-    return result
-
-
-@app.post("/api/battlepass/claim_endless")
-async def claim_battlepass_endless(body: BattlePassClaimBody):
-    """Забрать Натиск-бонус из Battle Pass."""
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.claim_battle_pass_endless_tier(uid, body.tier)
-    if result.get("ok"):
-        _cache_invalidate(uid)
-    return result
-
-
-# ─── Клан ────────────────────────────────────────────────────────────────────
-
-@app.get("/api/clan")
-async def get_clan(init_data: str):
-    tg_user = get_user_from_init_data(init_data)
-    uid     = int(tg_user["id"])
-    player  = db.get_or_create_player(uid, "")
-    clan_id = player.get("clan_id")
-    if not clan_id:
-        return {"ok": True, "clan": None, "is_leader": False}
-    info = db.get_clan_info(int(clan_id))
-    if not info:
-        return {"ok": True, "clan": None, "is_leader": False}
-    is_leader = info["clan"].get("leader_id") == uid
-    username  = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
-    return {"ok": True, "clan": info["clan"], "members": info["members"],
-            "is_leader": is_leader, "my_user_id": uid, "my_username": username}
-
-
-@app.get("/api/clan/top")
-async def clan_top():
-    conn = db.get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        """SELECT c.id, c.name, c.tag, c.level, c.wins,
-                  (SELECT COUNT(*) FROM clan_members WHERE clan_id = c.id) as member_count
-           FROM clans c ORDER BY c.wins DESC, member_count DESC LIMIT 20"""
-    )
-    rows = [dict(r) for r in cursor.fetchall()]
-    conn.close()
-    return {"ok": True, "clans": rows}
-
-
-@app.get("/api/clan/search")
-async def clan_search(q: str = "", init_data: str = ""):
-    results = db.search_clans(q.strip(), limit=10)
-    return {"ok": True, "clans": results}
-
-
-class ClanCreateBody(BaseModel):
-    init_data: str
-    name: str
-    tag: str
-
-
-@app.post("/api/clan/create")
-async def clan_create(body: ClanCreateBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.create_clan(uid, body.name.strip(), body.tag.strip())
-    if result.get("ok"):
-        player = db.get_or_create_player(uid, "")
-        result["player"] = dict(player)
-    return result
-
-
-class ClanJoinBody(BaseModel):
-    init_data: str
-    clan_id: int
-
-
-@app.post("/api/clan/join")
-async def clan_join(body: ClanJoinBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.join_clan(uid, body.clan_id)
-    if result.get("ok"):
-        player = db.get_or_create_player(uid, "")
-        result["player"] = dict(player)
-    return result
-
-
-class ClanLeaveBody(BaseModel):
-    init_data: str
-
-
-@app.post("/api/clan/leave")
-async def clan_leave(body: ClanLeaveBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.leave_clan(uid)
-    if result.get("ok"):
-        player = db.get_or_create_player(uid, "")
-        result["player"] = dict(player)
-    return result
-
-
-# ─── Клановый чат ────────────────────────────────────────────────────────────
-
-@app.get("/api/clan/chat")
-async def get_clan_chat(init_data: str):
-    tg_user  = get_user_from_init_data(init_data)
-    uid      = int(tg_user["id"])
-    player   = db.get_or_create_player(uid, "")
-    clan_id  = player.get("clan_id")
-    if not clan_id:
-        return {"ok": False, "reason": "not_in_clan"}
-    messages = db.get_clan_messages(int(clan_id), limit=40)
-    return {"ok": True, "messages": messages}
-
-
-class ClanChatSendBody(BaseModel):
-    init_data: str
-    message: str
-
-
-@app.post("/api/clan/chat/send")
-async def send_clan_chat(body: ClanChatSendBody):
-    tg_user  = get_user_from_init_data(body.init_data)
-    uid      = int(tg_user["id"])
-    _rl_check(uid, "clan_chat", max_hits=5, window_sec=10)
-    username = (tg_user.get("username") or tg_user.get("first_name") or f"User{uid}")
-    player   = db.get_or_create_player(uid, username)
-    clan_id  = player.get("clan_id")
-    if not clan_id:
-        return {"ok": False, "reason": "not_in_clan"}
-    ok = db.send_clan_message(int(clan_id), uid, username, body.message)
-    return {"ok": ok, "reason": "empty" if not ok else None}
-
-
-# ─── Ежедневные квесты ───────────────────────────────────────────────────────
-
-@app.get("/api/quests")
-async def get_quests(init_data: str):
-    tg_user = get_user_from_init_data(init_data)
-    uid     = int(tg_user["id"])
-    quest   = db.get_daily_quest_status(uid)
-    daily   = db.check_daily_bonus(uid)
-    weekly  = _weekly_quests_status(uid)
-    return {
-        "ok":     True,
-        "quest":  quest,   # battles_played, battles_won, is_completed, reward_claimed
-        "daily":  daily,   # can_claim, streak, bonus
-        "weekly": weekly,  # week_key + quests
-    }
-
-
-class ClaimQuestBody(BaseModel):
-    init_data: str
-
-
-@app.post("/api/quests/claim")
-async def claim_quest(body: ClaimQuestBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.claim_daily_quest_reward(uid)
-    if result.get("ok"):
-        player = db.get_or_create_player(uid, "")
-        result["player"] = dict(player)
-    return result
-
-
-@app.post("/api/daily/claim")
-async def claim_daily(body: ClaimQuestBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.check_daily_bonus(uid)
-    if not result.get("can_claim"):
-        return {"ok": False, "reason": "Бонус уже получен сегодня"}
-    player  = db.get_or_create_player(uid, "")
-    result["ok"]     = True
-    result["player"] = dict(player)
-    return result
-
-
-@app.post("/api/quests/weekly_claim")
-async def claim_weekly_quest(body: WeeklyClaimBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid = int(tg_user["id"])
-    status = _weekly_quests_status(uid)
-    q = next((x for x in status["quests"] if x["key"] == body.claim_key), None)
-    if not q:
-        return {"ok": False, "reason": "quest_not_found"}
-    if q.get("reward_claimed"):
-        return {"ok": False, "reason": "already_claimed"}
-    if not q.get("is_completed"):
-        return {"ok": False, "reason": "not_completed"}
-    wk = status["week_key"]
-    if not db.add_weekly_claim(uid, wk, body.claim_key):
-        return {"ok": False, "reason": "already_claimed"}
-    pl = db.get_or_create_player(uid, "")
-    upd = {
-        "gold":     int(pl.get("gold",     0)) + int(q.get("reward_gold",     0)),
-        "diamonds": int(pl.get("diamonds", 0)) + int(q.get("reward_diamonds", 0)),
-        "exp":      int(pl.get("exp",      0)) + int(q.get("reward_xp",       0)),
-    }
-    db.update_player_stats(uid, upd)
-    _cache_invalidate(uid)
-    fresh = db.get_or_create_player(uid, "")
-    return {
-        "ok":      True,
-        "gold":    int(q.get("reward_gold",     0)),
-        "diamonds":int(q.get("reward_diamonds", 0)),
-        "xp":      int(q.get("reward_xp",       0)),
-        "player":  dict(fresh),
-    }
-
 
 # ─── Магазин ─────────────────────────────────────────────────────────────────
 
@@ -1856,6 +1201,7 @@ register_avatar_shop_routes(
         "get_user_from_init_data": get_user_from_init_data,
         "_player_api": _player_api,
         "_cache_invalidate": _cache_invalidate,
+        "_rl_check": _rl_check,
         "ELITE_AVATAR_ID": ELITE_AVATAR_ID,
         "ELITE_AVATAR_STARS": ELITE_AVATAR_STARS,
         "ELITE_AVATAR_USDT": ELITE_AVATAR_USDT,
@@ -1897,115 +1243,73 @@ register_payment_routes(
         "PREMIUM_XP_BONUS_PERCENT": PREMIUM_XP_BONUS_PERCENT,
     },
 )
-
-
-@app.get("/api/debug/cryptopay")
-async def debug_cryptopay():
-    """Диагностика CryptoPay — показывает конфиг и делает тест-запрос getMe."""
-    import httpx
-    token_hint = (CRYPTOPAY_TOKEN[:8] + "...") if CRYPTOPAY_TOKEN else "НЕ ЗАДАН"
-    result = {"testnet": CRYPTOPAY_TESTNET, "api_base": CRYPTOPAY_API_BASE, "token_hint": token_hint}
-    try:
-        async with httpx.AsyncClient(timeout=8) as client:
-            r = await client.get(f"{CRYPTOPAY_API_BASE}/getMe",
-                                 headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN})
-            d = r.json()
-            result["getMe_ok"]   = d.get("ok")
-            result["getMe_name"] = (d.get("result") or {}).get("name")
-            result["getMe_err"]  = d.get("error")
-    except Exception as e:
-        result["getMe_exception"] = str(e)
-    return result
+register_social_routes(
+    app,
+    {
+        "db": db,
+        "get_user_from_init_data": get_user_from_init_data,
+        "_rl_check": _rl_check,
+        "_send_tg_message": _send_tg_message,
+        "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
+        "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
+    },
+)
+register_progression_routes(
+    app,
+    {
+        "db": db,
+        "get_user_from_init_data": get_user_from_init_data,
+        "_cache_invalidate": _cache_invalidate,
+        "_weekly_quests_status": _weekly_quests_status,
+    },
+)
+register_titan_training_routes(
+    app,
+    {
+        "db": db,
+        "get_user_from_init_data": get_user_from_init_data,
+        "battle_system": battle_system,
+        "_battle_state_api": _battle_state_api,
+        "_titan_boss_for_floor": _titan_boss_for_floor,
+        "_player_api": _player_api,
+        "_cache_invalidate": _cache_invalidate,
+        "_cache_set": _cache_set,
+        "_rl_check": _rl_check,
+        "stamina_stats_invested": stamina_stats_invested,
+        "_iso_week_key": _iso_week_key,
+        "PLAYER_START_MAX_HP": PLAYER_START_MAX_HP,
+        "PLAYER_START_CRIT": PLAYER_START_CRIT,
+        "HP_MIN_BATTLE_PCT": HP_MIN_BATTLE_PCT,
+    },
+)
+register_endless_routes(
+    app,
+    {
+        "db": db,
+        "get_user_from_init_data": get_user_from_init_data,
+        "_premium_fields": _premium_fields,
+        "_iso_week_key": _iso_week_key,
+        "_endless_bot_for_wave": _endless_bot_for_wave,
+        "battle_system": battle_system,
+        "_battle_state_api": _battle_state_api,
+    },
+)
+register_system_realtime_routes(
+    app,
+    {
+        "db": db,
+        "manager": manager,
+        "get_user_from_init_data": get_user_from_init_data,
+        "_player_api": _player_api,
+        "APP_BUILD_VERSION": APP_BUILD_VERSION,
+        "GAME_VERSION": GAME_VERSION,
+        "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
+        "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
+    },
+)
 
 
 # Платежные маршруты вынесены в отдельный модуль.
-
-
-# ─── Передача лидерства ───────────────────────────────────────────────────────
-
-class ClanTransferBody(BaseModel):
-    init_data: str
-    new_leader_id: int
-
-
-@app.post("/api/clan/transfer_leader")
-async def clan_transfer_leader(body: ClanTransferBody):
-    tg_user = get_user_from_init_data(body.init_data)
-    uid     = int(tg_user["id"])
-    result  = db.transfer_clan_leader(uid, body.new_leader_id)
-    return result
-
-
-# ─── Вывод USDT рефералки ─────────────────────────────────────────────────────
-
-class ReferralWithdrawBody(BaseModel):
-    init_data: str
-
-
-@app.post("/api/referral/withdraw")
-async def referral_withdraw(body: ReferralWithdrawBody):
-    tg_user  = get_user_from_init_data(body.init_data)
-    uid      = int(tg_user["id"])
-
-    # Проверяем возможность вывода (баланс >= $5, cooldown 24ч)
-    check = db.request_referral_withdrawal(uid)
-    if not check.get("ok"):
-        return check
-
-    amount = check["amount"]
-
-    if not CRYPTOPAY_TOKEN:
-        return {"ok": False, "reason": "CryptoPay не настроен — обратитесь к администратору"}
-
-    # Автоматический перевод через CryptoPay Transfer API
-    import httpx
-    from datetime import datetime as _dt
-    spend_id = f"ref_wd_{uid}_{int(_dt.utcnow().timestamp())}"
-    try:
-        async with httpx.AsyncClient(timeout=15) as client:
-            resp = await client.post(
-                f"{CRYPTOPAY_API_BASE}/transfer",
-                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
-                json={
-                    "user_id":                  uid,
-                    "asset":                    "USDT",
-                    "amount":                   f"{amount:.2f}",
-                    "spend_id":                 spend_id,
-                    "comment":                  "Duel Arena — реферальный бонус 💰",
-                    "disable_send_notification": False,
-                },
-            )
-            data = resp.json()
-
-        if data.get("ok"):
-            # Фиксируем вывод в БД
-            db.confirm_referral_withdrawal(uid, amount)
-            logger.info("Referral withdrawal sent: uid=%s amount=%.2f USDT", uid, amount)
-            await _send_tg_message(uid,
-                f"💸 <b>Вывод {amount:.2f} USDT выполнен!</b>\n"
-                f"Средства отправлены через @CryptoBot.\n"
-                f"Следующий вывод доступен через 24 часа.\n\n"
-                f"⚔️ Duel Arena"
-            )
-            return {"ok": True, "amount": amount}
-
-        # Разбираем ошибки CryptoPay
-        err  = data.get("error", {})
-        code = err.get("code") or err.get("name") or ""
-        logger.warning("CryptoPay transfer failed: uid=%s code=%s data=%s", uid, code, data)
-        if "NOT_ENOUGH_COINS" in code or "not enough" in str(data).lower():
-            return {"ok": False, "reason": "Недостаточно USDT на счёте бота — обратитесь к администратору"}
-        if "USER_NOT_FOUND" in code or "user" in code.lower():
-            return {
-                "ok": False,
-                "reason": "Сначала откройте @CryptoBot в Telegram (один раз), затем повторите",
-                "cryptobot_required": True,
-            }
-        return {"ok": False, "reason": f"Ошибка перевода: {code or 'неизвестно'}"}
-
-    except Exception as e:
-        logger.error("CryptoPay transfer error: %s", e)
-        return {"ok": False, "reason": "Ошибка соединения с CryptoPay"}
 
 
 # ─── Статика (webapp/) ───────────────────────────────────────────────────────

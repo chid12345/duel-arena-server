@@ -22,6 +22,7 @@ class StatsScene extends Phaser.Scene {
     this._buildBattleStats(W);
     this._buildStatRows(W, H);
     this._buildCombatPreview(W, H);
+    this._buildAvatarBtn(W, H);
     this._buildBackBtn(W, H);
   }
 
@@ -305,6 +306,156 @@ class StatsScene extends Phaser.Scene {
     txt(this, W / 2, passY + 10, '⚡ Пассивные способности', 10, '#9090cc', true).setOrigin(0.5);
     txt(this, W / 2, passY + 26, '💥 Крит-пробой блока  ·  🤸 Уворот → 2й удар', 10, '#c8a0ff').setOrigin(0.5);
     txt(this, W / 2, passY + 42, '🛡 Поглощение 50%  ·  💪 Пролом брони', 10, '#ffc870').setOrigin(0.5);
+  }
+
+  _buildAvatarBtn(W, H) {
+    const y = H * 0.935;
+    const w = Math.min(220, W - 32);
+    const x = (W - w) / 2;
+    const h = 34;
+    const g = this.add.graphics();
+    g.fillStyle(0x2a2840, 0.95);
+    g.fillRoundedRect(x, y, w, h, 9);
+    g.lineStyle(1.5, C.purple, 0.75);
+    g.strokeRoundedRect(x, y, w, h, 9);
+    txt(this, W / 2, y + h / 2, '🖼 Образы (классы)', 12, '#f0f0fa', true).setOrigin(0.5);
+    const z = this.add.zone(W / 2, y + h / 2, w, h).setInteractive({ useHandCursor: true });
+    z.on('pointerdown', () => this._openAvatarPanel());
+  }
+
+  async _openAvatarPanel() {
+    if (this._avatarBusy) return;
+    this._avatarBusy = true;
+    let data;
+    try {
+      data = await get('/api/avatars');
+    } catch (e) {
+      this._avatarBusy = false;
+      this._showToast('❌ Образы: нет соединения');
+      return;
+    }
+    this._avatarBusy = false;
+    if (!data?.ok) {
+      this._showToast('❌ Не удалось загрузить образы');
+      return;
+    }
+    this._renderAvatarOverlay(data.avatars || []);
+  }
+
+  _renderAvatarOverlay(avatars) {
+    this._closeAvatarOverlay();
+    const W = this.W, H = this.H;
+    const overlay = [];
+
+    const dim = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.75).setDepth(120);
+    overlay.push(dim);
+    const panelY = 56;
+    const panelH = H - 112;
+    makePanel(this, 8, panelY, W - 16, panelH, 12, 0.98).setDepth?.(121);
+    const title = txt(this, W / 2, panelY + 14, '🖼 Образы', 14, '#f0f0fa', true).setOrigin(0.5).setDepth(122);
+    overlay.push(title);
+
+    const closeBg = this.add.graphics().setDepth(122);
+    closeBg.fillStyle(0x3a2030, 1);
+    closeBg.fillRoundedRect(W - 44, panelY + 8, 28, 24, 7);
+    closeBg.lineStyle(1, 0xff6688, 0.9);
+    closeBg.strokeRoundedRect(W - 44, panelY + 8, 28, 24, 7);
+    const closeTxt = txt(this, W - 30, panelY + 20, '✕', 12, '#ffd8e0', true).setOrigin(0.5).setDepth(123);
+    const closeZone = this.add.zone(W - 30, panelY + 20, 28, 24).setInteractive({ useHandCursor: true }).setDepth(124);
+    closeZone.on('pointerdown', () => this._closeAvatarOverlay());
+    overlay.push(closeBg, closeTxt, closeZone);
+
+    const top = panelY + 40;
+    const cardW = Math.floor((W - 32 - 8) / 2);
+    const cardH = 90;
+    const gapX = 8;
+    const gapY = 8;
+
+    avatars.forEach((a, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = 12 + col * (cardW + gapX);
+      const y = top + row * (cardH + gapY);
+      if (y + cardH > panelY + panelH - 8) return;
+
+      const card = this.add.graphics().setDepth(122);
+      const accent = a.equipped ? C.green : (a.unlocked ? C.blue : C.dark);
+      card.fillStyle(0x1b1a30, 0.96);
+      card.fillRoundedRect(x, y, cardW, cardH, 9);
+      card.lineStyle(1.5, accent, 0.8);
+      card.strokeRoundedRect(x, y, cardW, cardH, 9);
+      overlay.push(card);
+
+      const badge = a.badge || '🖼';
+      overlay.push(txt(this, x + 10, y + 8, `${badge} ${a.name || a.id}`, 10, '#f0f0fa', true).setDepth(123));
+      overlay.push(txt(this, x + 10, y + 24, (a.description || '').slice(0, 44), 8, '#a8a8c8').setDepth(123));
+      overlay.push(txt(this, x + 10, y + 38, `+${a.effective_strength || 0} С  +${a.effective_endurance || 0} Л`, 8, '#ffc83c').setDepth(123));
+      overlay.push(txt(this, x + 10, y + 50, `+${a.effective_crit || 0} К  +${a.effective_hp_flat || 0} HP`, 8, '#ffc83c').setDepth(123));
+
+      let btnLabel = 'Экипировать';
+      let action = 'equip';
+      if (a.equipped) {
+        btnLabel = 'Надет';
+        action = 'none';
+      } else if (!a.unlocked) {
+        if (a.currency === 'gold') btnLabel = `Купить ${a.price} 🪙`;
+        else if (a.currency === 'diamonds') btnLabel = `Купить ${a.price} 💎`;
+        else if (a.currency === 'stars') btnLabel = 'Купить за ⭐';
+        else if (a.currency === 'usdt') btnLabel = 'Купить за USDT';
+        else btnLabel = 'Недоступно';
+        action = (a.currency === 'gold' || a.currency === 'diamonds') ? 'buy' : 'none';
+      }
+      const bx = x + 8, by = y + cardH - 28, bw = cardW - 16, bh = 20;
+      const btn = this.add.graphics().setDepth(123);
+      const bcol = action === 'none' ? 0x3a3a52 : (action === 'buy' ? C.gold : C.green);
+      btn.fillStyle(bcol, 0.95);
+      btn.fillRoundedRect(bx, by, bw, bh, 7);
+      const bt = txt(this, bx + bw / 2, by + bh / 2, btnLabel, 9, '#101020', true).setOrigin(0.5).setDepth(124);
+      overlay.push(btn, bt);
+      if (action !== 'none') {
+        const z = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive({ useHandCursor: true }).setDepth(125);
+        z.on('pointerdown', () => this._avatarAction(action, a));
+        overlay.push(z);
+      }
+    });
+
+    const closeDim = this.add.zone(W / 2, H / 2, W, H).setInteractive().setDepth(119);
+    closeDim.on('pointerdown', () => {});
+    overlay.push(closeDim);
+    this._avatarOverlay = overlay;
+  }
+
+  async _avatarAction(action, avatar) {
+    if (this._avatarBusy) return;
+    this._avatarBusy = true;
+    try {
+      let res = null;
+      if (action === 'buy') res = await post('/api/avatars/buy', { avatar_id: avatar.id });
+      if (action === 'equip') res = await post('/api/avatars/equip', { avatar_id: avatar.id });
+      if (res?.ok) {
+        if (res.player) {
+          State.player = res.player;
+          State.playerLoadedAt = Date.now();
+          this._refreshCombat(State.player);
+        }
+        this._showToast(action === 'buy' ? '✅ Образ куплен' : '✅ Образ надет');
+        this._renderAvatarOverlay(res.avatars || []);
+      } else {
+        this._showToast(`❌ ${res?.reason || 'Ошибка'}`);
+      }
+    } catch (e) {
+      this._showToast('❌ Ошибка сети');
+    } finally {
+      this._avatarBusy = false;
+    }
+  }
+
+  _closeAvatarOverlay() {
+    if (!this._avatarOverlay) return;
+    this._avatarOverlay.forEach(o => {
+      try { o.destroy(); } catch (e) {}
+    });
+    this._avatarOverlay = null;
   }
 
   /* ── Кнопка назад ────────────────────────────────────── */

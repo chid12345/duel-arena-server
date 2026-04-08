@@ -25,6 +25,7 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
     get_user_from_init_data = ctx["get_user_from_init_data"]
     _player_api = ctx["_player_api"]
     _cache_invalidate = ctx["_cache_invalidate"]
+    _rl_check = ctx["_rl_check"]
     ELITE_AVATAR_ID = ctx["ELITE_AVATAR_ID"]
     ELITE_AVATAR_STARS = ctx["ELITE_AVATAR_STARS"]
     ELITE_AVATAR_USDT = ctx["ELITE_AVATAR_USDT"]
