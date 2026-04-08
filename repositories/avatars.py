@@ -43,10 +43,23 @@ class AvatarsMixin:
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_avatar_unlocks_user ON user_avatar_unlocks (user_id)"
         )
-        try:
-            cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
-        except Exception:
-            pass
+        is_pg = bool(getattr(self, "_pg", False))
+        if is_pg:
+            cursor.execute(
+                """SELECT 1
+                   FROM information_schema.columns
+                   WHERE table_name = 'players'
+                     AND column_name = 'equipped_avatar_id'
+                   LIMIT 1"""
+            )
+            has_col = bool(cursor.fetchone())
+            if not has_col:
+                cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
+        else:
+            cursor.execute("PRAGMA table_info(players)")
+            cols = {r[1] for r in cursor.fetchall()}
+            if "equipped_avatar_id" not in cols:
+                cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
 
     def _ensure_avatar_rows(self, cursor, user_id: int) -> None:
         self._ensure_avatar_schema(cursor)
