@@ -36,6 +36,59 @@
     display: block;
     margin: 0 auto;
   }
+
+  /* ── Battle Log Overlay ─────────────────────────────────────── */
+  #battle-log-overlay {
+    position: fixed;
+    display: none;
+    pointer-events: none;   /* не перехватываем касания Phaser */
+    z-index: 50;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #battle-log-scroll {
+    width: 100%; height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: rgba(8, 6, 18, 0.84);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 5px 7px 5px 7px;
+    scrollbar-width: none;       /* Firefox */
+    -ms-overflow-style: none;    /* IE/Edge */
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+  }
+  #battle-log-scroll::-webkit-scrollbar { display: none; }
+
+  #battle-log-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 100%;
+    justify-content: flex-end;
+  }
+  #battle-log-list li {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: clamp(9px, 2.5vw, 11px);
+    line-height: 1.45;
+    opacity: 0;
+    animation: logFadeIn 0.22s ease forwards;
+    word-break: break-word;
+  }
+  @keyframes logFadeIn {
+    from { opacity: 0; transform: translateY(3px); }
+    to   { opacity: 1; transform: translateY(0);   }
+  }
+  /* Цветовая кодировка */
+  .log-crit   { color: #ff3344; font-weight: 700; text-shadow: 0 0 6px #ff334466; }
+  .log-dodge  { color: #28d4f0; }
+  .log-block  { color: #6ab0ff; }
+  .log-miss   { color: #777788; font-style: italic; }
+  .log-heal   { color: #3cd870; }
+  .log-system { color: #ffc83c; font-size: 0.87em; font-weight: 600; }
+  .log-normal { color: #c8c0e8; }
   #loading-screen {
     position: fixed; inset: 0;
     background: #12121c;
@@ -73,6 +126,13 @@
   <div class="sub">Подготовка арены...</div>
   <div id="loading-bar-wrap">
     <div id="loading-bar"></div>
+  </div>
+</div>
+
+<!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
+<div id="battle-log-overlay">
+  <div id="battle-log-scroll">
+    <ul id="battle-log-list"></ul>
   </div>
 </div>
 

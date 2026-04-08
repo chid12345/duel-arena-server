@@ -117,85 +117,90 @@ function connectWS(userId, onMessage) {
 }
 
 /* ─── BattleLog — DOM-оверлей лога боя ──────────────────────── */
-const BattleLog = {
-  _el: null, _scroll: null, _list: null,
+const BattleLog = (() => {
+  let _el = null, _scroll = null, _list = null;
+  /* _seen — сколько записей из массива entries мы уже отрисовали.
+     Не равно числу DOM-нод (те могут обрезаться), поэтому хранится отдельно. */
+  let _seen = 0;
 
-  _get() {
-    if (!this._el) {
-      this._el     = document.getElementById('battle-log-overlay');
-      this._scroll = document.getElementById('battle-log-scroll');
-      this._list   = document.getElementById('battle-log-list');
+  function _init() {
+    if (!_el) {
+      _el     = document.getElementById('battle-log-overlay');
+      _scroll = document.getElementById('battle-log-scroll');
+      _list   = document.getElementById('battle-log-list');
     }
-    return this._el;
-  },
+  }
 
-  /* Показать и разместить над canvas по координатам сцены */
-  show(canvas, sceneX, sceneY, sceneW, sceneH) {
-    const el = this._get();
-    if (!el) return;
-    const r = canvas.getBoundingClientRect();
-    const scaleX = r.width  / canvas.width;
-    const scaleY = r.height / canvas.height;
-    el.style.left   = (r.left + sceneX * scaleX) + 'px';
-    el.style.top    = (r.top  + sceneY * scaleY) + 'px';
-    el.style.width  = (sceneW * scaleX) + 'px';
-    el.style.height = (sceneH * scaleY) + 'px';
-    el.style.display = 'block';
-  },
-
-  hide() {
-    const el = this._get();
-    if (el) el.style.display = 'none';
-  },
-
-  clear() {
-    if (this._list) this._list.innerHTML = '';
-  },
-
-  /* Определить CSS-класс по тексту события */
-  _classify(raw) {
+  function _classify(raw) {
     const t = raw.toLowerCase();
-    if (t.includes('💥') || t.includes('крит'))                  return 'crit';
-    if (t.includes('💨') || t.includes('увор'))                   return 'dodge';
+    if (t.includes('💥') || t.includes('крит'))                         return 'crit';
+    if (t.includes('💨') || t.includes('увор'))                          return 'dodge';
     if (t.includes('🛡')  || t.includes('блок') || t.includes('защит')) return 'block';
-    if (t.includes('промах') || t.includes('❌'))                 return 'miss';
+    if (t.includes('промах') || t.includes('❌'))                        return 'miss';
     if (t.includes('⚗')  || t.includes('зелье') || t.includes('heal'))  return 'heal';
-    if (t.includes('раунд') || t.includes('бой начался'))        return 'system';
+    if (t.includes('раунд') || t.includes('бой начался'))               return 'system';
     return 'normal';
-  },
+  }
 
-  _strip(s) {
+  function _strip(s) {
     return s.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-  },
+  }
 
-  /* Добавить только новые строки (вызывать на каждом апдейте) */
-  update(entries) {
-    if (!this._list || !entries || !entries.length) return;
-    const was = this._list.children.length;
-    if (entries.length <= was) return;
+  return {
+    show(canvas, sceneX, sceneY, sceneW, sceneH) {
+      _init();
+      if (!_el) return;
+      const r = canvas.getBoundingClientRect();
+      const sx = r.width  / canvas.width;
+      const sy = r.height / canvas.height;
+      _el.style.left    = (r.left + sceneX * sx) + 'px';
+      _el.style.top     = (r.top  + sceneY * sy) + 'px';
+      _el.style.width   = (sceneW * sx) + 'px';
+      _el.style.height  = (sceneH * sy) + 'px';
+      _el.style.display = 'block';
+    },
 
-    for (let i = was; i < entries.length; i++) {
-      const raw  = entries[i];
-      const text = this._strip(raw);
-      const cls  = this._classify(raw);
-      const prefix = { crit: '💥 ', dodge: '💨 ', block: '🛡️ ', miss: '❌ ', heal: '💚 ' }[cls] || '';
-      const li = document.createElement('li');
-      li.className = 'log-' + cls;
-      li.textContent = (prefix + text).slice(0, 68);
-      this._list.appendChild(li);
-    }
+    hide() {
+      _init();
+      if (_el) _el.style.display = 'none';
+    },
 
-    // Авто-скролл вниз
-    requestAnimationFrame(() => {
-      if (this._scroll) this._scroll.scrollTop = this._scroll.scrollHeight;
-    });
+    clear() {
+      _init();
+      if (_list) _list.innerHTML = '';
+      _seen = 0;   // сброс счётчика вместе с DOM
+    },
 
-    // Держим не больше 40 строк
-    while (this._list.children.length > 40) {
-      this._list.removeChild(this._list.firstChild);
-    }
-  },
-};
+    /* Добавить только новые строки из entries[_seen..] */
+    update(entries) {
+      _init();
+      if (!_list || !entries || entries.length <= _seen) return;
+
+      const PREFIX = { crit: '💥 ', dodge: '💨 ', block: '🛡️ ', miss: '❌ ', heal: '💚 ' };
+
+      for (let i = _seen; i < entries.length; i++) {
+        const raw  = entries[i];
+        const cls  = _classify(raw);
+        const text = _strip(raw);
+        const li   = document.createElement('li');
+        li.className  = 'log-' + cls;
+        li.textContent = ((PREFIX[cls] || '') + text).slice(0, 72);
+        _list.appendChild(li);
+      }
+      _seen = entries.length;
+
+      /* Убираем старые строки сверху (DOM-лимит 40) */
+      while (_list.children.length > 40) {
+        _list.removeChild(_list.firstChild);
+      }
+
+      /* Авто-прокрутка вниз */
+      requestAnimationFrame(() => {
+        if (_scroll) _scroll.scrollTop = _scroll.scrollHeight;
+      });
+    },
+  };
+})();
 
 /* ─── Вспомогательные Phaser-функции ────────────────────────── */
 function makePanel(scene, x, y, w, h, radius = 14, alpha = 0.92) {
@@ -234,23 +239,26 @@ function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false, strok
   return scene.add.text(x, y, str, style);
 }
 
-/* makeBackBtn() — компактная кнопка «←» в левом верхнем углу, внутри шапки.
-   Не перекрывает контент и кнопки действий внизу экрана. */
+/* makeBackBtn() — компактная кнопка «‹» в левом верхнем углу шапки.
+   Всегда на верхнем слое (depth 20), не перекрывается контентом. */
 function makeBackBtn(scene, label, onClick) {
-  /* Занимает левую часть шапки: x=8..54, y=8..72 (совпадает с _extraHeader панелью) */
-  const bx = 8, bY = 8, bW = 46, bH = 64;
+  const bx = 10, bY = 14, bW = 44, bH = 44;
   const cx = bx + bW / 2, cy = bY + bH / 2;
-  const bg = scene.add.graphics();
+  const D  = 20;   // depth выше панелей (depth 0) и контента
+  const bg = scene.add.graphics().setDepth(D);
   const _draw = (pressed) => {
     bg.clear();
-    if (pressed) {
-      bg.fillStyle(0xffffff, 0.10);
-      bg.fillRoundedRect(bx + 2, bY + 4, bW - 4, bH - 8, 9);
-    }
+    /* Всегда рисуем видимый фон */
+    bg.fillStyle(pressed ? 0x3a5080 : 0x1e3050, pressed ? 1 : 0.88);
+    bg.fillRoundedRect(bx, bY, bW, bH, 10);
+    bg.lineStyle(1.5, 0x5096ff, pressed ? 1 : 0.65);
+    bg.strokeRoundedRect(bx, bY, bW, bH, 10);
   };
   _draw(false);
-  const t = txt(scene, cx, cy, '‹', 30, '#a8d0ff', true).setOrigin(0.5);
-  const z = scene.add.zone(cx, cy, bW, bH).setInteractive({ useHandCursor: true });
+  const t = txt(scene, cx, cy, '‹', 26, '#c0d8ff', true).setOrigin(0.5).setDepth(D + 1);
+  const z = scene.add.zone(cx, cy, bW, bH)
+    .setInteractive({ useHandCursor: true })
+    .setDepth(D + 2);   // zone выше всего — гарантирует перехват тапов
   z.on('pointerdown', () => { _draw(true);  tg?.HapticFeedback?.impactOccurred('light'); });
   z.on('pointerup',   () => { _draw(false); onClick(); });
   z.on('pointerout',  () => _draw(false));
@@ -2900,7 +2908,7 @@ class RatingScene extends Phaser.Scene {
     /* Фон — как в ShopScene */
     _extraBg(this, W, H);
     _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня Титанов');
-    _extraBack(this, W, H);
+    _extraBack(this);
 
     /* Вкладки — точно как в Магазине */
     this._buildTabBar(W);
