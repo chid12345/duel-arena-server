@@ -29,7 +29,28 @@ class AvatarsMixin:
         except Exception:
             return default
 
+    def _ensure_avatar_schema(self, cursor) -> None:
+        # Safety net for environments where avatar migration was not applied yet.
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS user_avatar_unlocks (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                avatar_id TEXT NOT NULL,
+                source TEXT DEFAULT 'shop',
+                unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE(user_id, avatar_id)
+            )"""
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_avatar_unlocks_user ON user_avatar_unlocks (user_id)"
+        )
+        try:
+            cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
+        except Exception:
+            pass
+
     def _ensure_avatar_rows(self, cursor, user_id: int) -> None:
+        self._ensure_avatar_schema(cursor)
         for aid in self._BASE_AVATAR_IDS:
             cursor.execute(
                 """INSERT OR IGNORE INTO user_avatar_unlocks (user_id, avatar_id, source)
@@ -77,6 +98,7 @@ class AvatarsMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
+            self._ensure_avatar_schema(cursor)
             cursor.execute("SELECT level, equipped_avatar_id FROM players WHERE user_id = ?", (user_id,))
             player = cursor.fetchone()
             if not player:
