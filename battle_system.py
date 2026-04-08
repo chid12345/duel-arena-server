@@ -260,6 +260,7 @@ class BattleSystem:
             'rounds': [],
             'battle_log': [],
             'combat_log_lines': [],
+            'webapp_log': [],
             'next_turn_deadline': datetime.now() + timedelta(seconds=TURN_ACTION_SECONDS),
             'player1_choices': {},
             'player2_choices': {},
@@ -917,6 +918,7 @@ class BattleSystem:
             return icons
 
         battle.setdefault('combat_log_lines', [])
+        battle.setdefault('webapp_log', [])
         if out1 == 'timeout':
             z1 = "⏱️ пропуск хода"
         else:
@@ -936,6 +938,59 @@ class BattleSystem:
         if uniq_icons:
             line += f"\n<i>Эффекты раунда:</i> {' '.join(uniq_icons)}"
         battle['combat_log_lines'].append(line)
+
+        # ── WebApp-лог: одна строка ≤33 символа ─────────────────────
+        battle['webapp_log'].append(
+            self._webapp_log_line(round_num, out1, out2, p1_damage, p2_damage)
+        )
+
+    @staticmethod
+    def _webapp_log_line(
+        round_num: int,
+        out1: str,
+        out2: str,
+        dmg1: int,
+        dmg2: int,
+    ) -> str:
+        """
+        Одна строка для WebApp DOM-лога, ≤33 символа.
+
+        Формат: «Р{N} Вы {маркер1} · Враг {маркер2}»
+        Маркеры:
+          −{N}    — нанесли урон
+          −{N}⚡  — крит
+          −{N}💥  — пробой
+          💨      — уворот (их)
+          🛡       — блок (их)
+          ✕       — мимо
+          ⏱       — тайм-аут
+        """
+        def _marker(outcome: str, dmg: int) -> str:
+            t = set((outcome or "").split("_"))
+            if outcome == "timeout":
+                return "⏱"
+            if "dodge" in t:
+                return "💨"
+            if "block" in t:
+                return "🛡"
+            if "miss" in t:
+                return "✕"
+            if dmg <= 0:
+                return "—"
+            suffix = ""
+            if "crit" in t and "pierce" in t:
+                suffix = "⚡💥"
+            elif "crit" in t:
+                suffix = "⚡"
+            elif "double" in t:
+                suffix = "×2"
+            elif "break" in t:
+                suffix = "🪓"
+            return f"−{dmg}{suffix}"
+
+        m1 = _marker(out1, dmg1)
+        m2 = _marker(out2, dmg2)
+        return f"Р{round_num} Вы {m1} · Враг {m2}"
 
     def _format_exchange_text(
         self,

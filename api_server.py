@@ -105,7 +105,7 @@ def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.48"
+GAME_VERSION = "1.49"
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
@@ -481,7 +481,9 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),
-        "combat_log": (b.get("combat_log_lines", []) if b else [])[-3:],
+        # webapp_log — короткие однострочные записи ≤33 символа для DOM-лога
+        # Fallback на combat_log_lines для старых боёв без webapp_log
+        "combat_log": (b.get("webapp_log") or b.get("combat_log_lines", []) if b else [])[-6:],
         "deadline_sec": deadline_sec,
     }
 
