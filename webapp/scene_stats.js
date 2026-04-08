@@ -336,7 +336,9 @@ class StatsScene extends Phaser.Scene {
     }
     this._avatarBusy = false;
     if (!data?.ok) {
-      const why = data?.reason ? String(data.reason) : 'Не удалось загрузить образы';
+      const why = data?.reason
+        ? String(data.reason)
+        : (data?._httpStatus ? `HTTP ${data._httpStatus}` : 'Не удалось загрузить образы');
       this._showToast(`❌ ${why}`);
       return;
     }

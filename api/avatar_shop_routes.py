@@ -35,11 +35,15 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
 
     @router.get("/api/avatars")
     async def avatars(init_data: str):
-        tg_user = get_user_from_init_data(init_data)
-        uid = int(tg_user["id"])
-        username = tg_user.get("username") or tg_user.get("first_name") or ""
-        db.get_or_create_player(uid, username)
-        return db.get_player_avatar_state(uid)
+        try:
+            tg_user = get_user_from_init_data(init_data)
+            uid = int(tg_user["id"])
+            username = tg_user.get("username") or tg_user.get("first_name") or ""
+            db.get_or_create_player(uid, username)
+            return db.get_player_avatar_state(uid)
+        except Exception as e:
+            logger.error("avatars load failed: %s", e, exc_info=True)
+            return {"ok": False, "reason": f"avatars_error: {str(e)[:120]}"}
 
     @router.post("/api/avatars/buy")
     async def avatars_buy(body: AvatarBody):
