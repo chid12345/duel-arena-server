@@ -2225,11 +2225,9 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    // Лог над панелью выбора — DOM-оверлей, не Phaser-текст
-    const logH = Math.round(H * 0.14);   // ~14% высоты экрана
-    const logY = Math.round(H * 0.6 - logH - 6);
-    this._logOverlayY = logY;
-    this._logOverlayH = logH;
+    // Лог — фиксированные 3 строки (48px), вплотную над choice-панелью
+    const logH = 48;
+    const logY = Math.round(H * 0.6 - logH - 4);
     BattleLog.clear();
     BattleLog.show(this.game.canvas, 8, logY, W - 16, logH);
   }
@@ -2768,7 +2766,7 @@ class ResultScene extends Phaser.Scene {
         }
       : (isEndless)
       ? () => { this.scene.start('Natisk'); }
-      : () => { this.scene.start('Menu'); };
+      : () => { this.scene.start('Menu', { returnTab: 'profile' }); };
     this._bigBtn(W / 2, H * 0.79,
       bigBtnLabel,
       won ? C.gold : 0x881a22,
@@ -2781,7 +2779,7 @@ class ResultScene extends Phaser.Scene {
         post('/api/endless/abandon', {}).catch(() => {}).finally(() => this.scene.start('Natisk'));
       });
     } else {
-      this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu'));
+      this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
     }
 
     /* ── Поделиться (только при победе) ── */
@@ -2908,7 +2906,7 @@ class RatingScene extends Phaser.Scene {
     /* Фон — как в ShopScene */
     _extraBg(this, W, H);
     _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня Титанов');
-    _extraBack(this);
+    _extraBack(this, 'Menu', 'profile');
 
     /* Вкладки — точно как в Магазине */
     this._buildTabBar(W);

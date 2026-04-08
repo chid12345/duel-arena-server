@@ -27,12 +27,10 @@ class StatsScene extends Phaser.Scene {
 
   /* ── Фон ─────────────────────────────────────────────── */
   _drawBg(W, H) {
+    /* Градиент без сетки — сетка давала 50+ draw-call и тормоза при входе */
     const g = this.add.graphics();
     g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
     g.fillRect(0, 0, W, H);
-    g.lineStyle(1, 0x5096ff, 0.04);
-    for (let x = 0; x < W; x += 32) g.lineBetween(x, 0, x, H);
-    for (let y = 0; y < H; y += 32) g.lineBetween(0, y, W, y);
   }
 
   /* ── Шапка ───────────────────────────────────────────── */
@@ -40,15 +38,17 @@ class StatsScene extends Phaser.Scene {
     const p = State.player;
     makePanel(this, 8, 8, W - 16, 62, 12);
 
-    // Бейдж уровня
+    /* Кнопка «‹» занимает x=10..54 — контент начинаем с x=60 */
+    // Бейдж уровня (сдвинут вправо от кнопки «‹»)
     const bg = this.add.graphics();
     bg.fillStyle(C.gold, 1);
-    bg.fillRoundedRect(16, 18, 54, 26, 7);
-    txt(this, 43, 31, `УР.${p.level}`, 13, '#1a1a28', true).setOrigin(0.5);
+    bg.fillRoundedRect(60, 18, 52, 26, 7);
+    txt(this, 86, 31, `УР.${p.level}`, 13, '#1a1a28', true).setOrigin(0.5);
 
-    txt(this, 82, 20, p.username, 15, '#f0f0fa', true);
-    const tline = p.display_title ? `🏵 ${p.display_title}  ·  ` : '';
-    txt(this, 82, 38, `${tline}ELO ★ ${p.rating}  ·  📊 СТАТЫ`, 11, '#ffc83c');
+    const uname = (p.username || '').slice(0, 14);
+    txt(this, 122, 20, uname, 14, '#f0f0fa', true);
+    const tline = p.display_title ? `🏵 ${p.display_title}  · ` : '';
+    txt(this, 122, 38, `${tline}★ ${p.rating}  ·  СТАТЫ`, 10, '#ffc83c');
 
     // Счётчик свободных статов
     this._fsBadge = this._makeFsBadge(W, p.free_stats);
@@ -310,8 +310,7 @@ class StatsScene extends Phaser.Scene {
   /* ── Кнопка назад ────────────────────────────────────── */
   _buildBackBtn(W, H) {
     makeBackBtn(this, 'Назад', () => {
-      tg?.HapticFeedback?.impactOccurred('light');
-      this.scene.start('Menu');
+      this.scene.start('Menu', { returnTab: 'profile' });
     });
   }
 
