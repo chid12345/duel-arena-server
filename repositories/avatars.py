@@ -4,15 +4,26 @@ repositories/avatars.py — система образов (классов): ка
 
 from __future__ import annotations
 
+import uuid
 from typing import Any, Dict, List, Optional
 
-from config import AVATAR_CATALOG, AVATAR_SCALE_EVERY_LEVELS, AVATAR_SCALE_MAX_BONUS
+from config import (
+    AVATAR_CATALOG,
+    AVATAR_SCALE_EVERY_LEVELS,
+    AVATAR_SCALE_MAX_BONUS,
+    ELITE_AVATAR_ID,
+    ELITE_AVATAR_STARS,
+    ELITE_AVATAR_USDT,
+    STAMINA_PER_FREE_STAT,
+)
 
 
 class AvatarsMixin:
     """Mixin: операции по образам (классам) игрока."""
 
     _BASE_AVATAR_IDS = ("base_tank", "base_rogue", "base_crit", "base_neutral")
+    _ELITE_FREE_POINTS = 19
+    _ELITE_FIXED_ENDURANCE = 5
 
     @staticmethod
     def _avatar_map() -> Dict[str, Dict[str, Any]]:
@@ -61,8 +72,85 @@ class AvatarsMixin:
             if "equipped_avatar_id" not in cols:
                 cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
 
+    def _ensure_elite_builds_schema(self, cursor) -> None:
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS user_elite_builds (
+                build_id TEXT PRIMARY KEY,
+                user_id INTEGER NOT NULL,
+                title TEXT DEFAULT 'Император',
+                alloc_strength INTEGER DEFAULT 0,
+                alloc_endurance INTEGER DEFAULT 0,
+                alloc_crit INTEGER DEFAULT 0,
+                alloc_stamina INTEGER DEFAULT 0,
+                is_active INTEGER DEFAULT 0,
+                resets_used INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )"""
+        )
+        cursor.execute(
+            "CREATE INDEX IF NOT EXISTS idx_elite_builds_user ON user_elite_builds (user_id)"
+        )
+
+    def _elite_half_price(self) -> Dict[str, Any]:
+        try:
+            usdt = round(float(str(ELITE_AVATAR_USDT)) * 0.5, 2)
+        except Exception:
+            usdt = 5.99
+        stars = max(1, int(int(ELITE_AVATAR_STARS) * 0.5))
+        return {"usdt": f"{usdt:.2f}", "stars": stars}
+
+    def _elite_build_points_used(self, row: Any) -> int:
+        return (
+            int(self._row_get(row, "alloc_strength", 0) or 0)
+            + int(self._row_get(row, "alloc_endurance", 0) or 0)
+            + int(self._row_get(row, "alloc_crit", 0) or 0)
+            + int(self._row_get(row, "alloc_stamina", 0) or 0)
+        )
+
+    def _ensure_default_elite_build(self, cursor, user_id: int) -> None:
+        self._ensure_elite_builds_schema(cursor)
+        cursor.execute(
+            "SELECT 1 FROM user_avatar_unlocks WHERE user_id = ? AND avatar_id = ? LIMIT 1",
+            (user_id, ELITE_AVATAR_ID),
+        )
+        if not cursor.fetchone():
+            return
+        cursor.execute("SELECT 1 FROM user_elite_builds WHERE user_id = ? LIMIT 1", (user_id,))
+        if cursor.fetchone():
+            return
+        bid = f"elite_{uuid.uuid4().hex[:12]}"
+        cursor.execute(
+            """INSERT INTO user_elite_builds
+               (build_id, user_id, title, alloc_strength, alloc_endurance, alloc_crit, alloc_stamina, is_active, resets_used)
+               VALUES (?, ?, 'Император #1', 0, 0, 0, 0, 1, 0)""",
+            (bid, user_id),
+        )
+
+    def _get_active_elite_build(self, cursor, user_id: int) -> Optional[Any]:
+        self._ensure_default_elite_build(cursor, user_id)
+        cursor.execute(
+            "SELECT * FROM user_elite_builds WHERE user_id = ? AND is_active = 1 LIMIT 1",
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        if row:
+            return row
+        cursor.execute(
+            "SELECT * FROM user_elite_builds WHERE user_id = ? ORDER BY created_at ASC LIMIT 1",
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        if row:
+            cursor.execute("UPDATE user_elite_builds SET is_active = 0 WHERE user_id = ?", (user_id,))
+            cursor.execute(
+                "UPDATE user_elite_builds SET is_active = 1 WHERE user_id = ? AND build_id = ?",
+                (user_id, self._row_get(row, "build_id")),
+            )
+        return row
+
     def _ensure_avatar_rows(self, cursor, user_id: int) -> None:
         self._ensure_avatar_schema(cursor)
+        self._ensure_elite_builds_schema(cursor)
         for aid in self._BASE_AVATAR_IDS:
             cursor.execute(
                 """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
@@ -106,6 +194,23 @@ class AvatarsMixin:
 
         return {"strength": b_str, "endurance": b_end, "crit": b_crit, "hp_flat": b_hp}
 
+    def _effective_avatar_bonus_for_user(self, cursor, user_id: int, avatar_id: Optional[str], level: int) -> Dict[str, int]:
+        if (avatar_id or "") != ELITE_AVATAR_ID:
+            return self._effective_avatar_bonus(avatar_id, level)
+        active = self._get_active_elite_build(cursor, user_id)
+        if not active:
+            return self._effective_avatar_bonus(avatar_id, level)
+        used = self._elite_build_points_used(active)
+        if used > self._ELITE_FREE_POINTS:
+            used = self._ELITE_FREE_POINTS
+        scale = min(max(0, int(AVATAR_SCALE_MAX_BONUS)), max(0, int(level)) // max(1, int(AVATAR_SCALE_EVERY_LEVELS)))
+        return {
+            "strength": int(self._row_get(active, "alloc_strength", 0) or 0) + scale,
+            "endurance": self._ELITE_FIXED_ENDURANCE + int(self._row_get(active, "alloc_endurance", 0) or 0) + scale,
+            "crit": int(self._row_get(active, "alloc_crit", 0) or 0) + scale,
+            "hp_flat": int(self._row_get(active, "alloc_stamina", 0) or 0) * int(STAMINA_PER_FREE_STAT),
+        }
+
     def get_player_avatar_state(self, user_id: int) -> Dict[str, Any]:
         avatars = self._avatar_map()
         conn = self.get_connection()
@@ -118,6 +223,7 @@ class AvatarsMixin:
                 return {"ok": False, "reason": "Игрок не найден"}
 
             self._ensure_avatar_rows(cursor, user_id)
+            self._ensure_default_elite_build(cursor, user_id)
             cursor.execute(
                 "SELECT avatar_id FROM user_avatar_unlocks WHERE user_id = ?",
                 (user_id,),
@@ -129,7 +235,7 @@ class AvatarsMixin:
             rows: List[Dict[str, Any]] = []
             for a in AVATAR_CATALOG:
                 aid = a["id"]
-                eff = self._effective_avatar_bonus(aid, level)
+                eff = self._effective_avatar_bonus_for_user(cursor, user_id, aid, level)
                 rows.append({
                     **dict(a),
                     "unlocked": aid in unlocked_ids,
@@ -139,7 +245,27 @@ class AvatarsMixin:
                     "effective_crit": eff["crit"],
                     "effective_hp_flat": eff["hp_flat"],
                 })
-            return {"ok": True, "equipped_avatar_id": equipped, "avatars": rows}
+            cursor.execute(
+                "SELECT * FROM user_elite_builds WHERE user_id = ? ORDER BY created_at ASC",
+                (user_id,),
+            )
+            builds = []
+            for b in cursor.fetchall():
+                used = self._elite_build_points_used(b)
+                builds.append({
+                    "build_id": self._row_get(b, "build_id"),
+                    "title": self._row_get(b, "title", "Император"),
+                    "alloc_strength": int(self._row_get(b, "alloc_strength", 0) or 0),
+                    "alloc_endurance": int(self._row_get(b, "alloc_endurance", 0) or 0),
+                    "alloc_crit": int(self._row_get(b, "alloc_crit", 0) or 0),
+                    "alloc_stamina": int(self._row_get(b, "alloc_stamina", 0) or 0),
+                    "fixed_endurance": self._ELITE_FIXED_ENDURANCE,
+                    "free_points_total": self._ELITE_FREE_POINTS,
+                    "free_points_left": max(0, self._ELITE_FREE_POINTS - used),
+                    "is_active": int(self._row_get(b, "is_active", 0) or 0) == 1,
+                    "resets_used": int(self._row_get(b, "resets_used", 0) or 0),
+                })
+            return {"ok": True, "equipped_avatar_id": equipped, "avatars": rows, "elite_builds": builds}
         finally:
             conn.commit()
             conn.close()
@@ -239,8 +365,8 @@ class AvatarsMixin:
             if cur_avatar == avatar_id:
                 return {"ok": True, "already_equipped": True}
 
-            cur_b = self._effective_avatar_bonus(cur_avatar, level)
-            new_b = self._effective_avatar_bonus(avatar_id, level)
+            cur_b = self._effective_avatar_bonus_for_user(cursor, user_id, cur_avatar, level)
+            new_b = self._effective_avatar_bonus_for_user(cursor, user_id, avatar_id, level)
 
             d_str = int(new_b["strength"]) - int(cur_b["strength"])
             d_end = int(new_b["endurance"]) - int(cur_b["endurance"])
@@ -264,6 +390,107 @@ class AvatarsMixin:
                 "ok": True,
                 "equipped_avatar_id": avatar_id,
                 "delta": {"strength": d_str, "endurance": d_end, "crit": d_crit, "max_hp": d_hp},
+            }
+        finally:
+            conn.close()
+
+    def set_active_elite_build(self, user_id: int, build_id: str) -> Dict[str, Any]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            self._ensure_avatar_rows(cursor, user_id)
+            cursor.execute(
+                "SELECT 1 FROM user_elite_builds WHERE user_id = ? AND build_id = ? LIMIT 1",
+                (user_id, build_id),
+            )
+            if not cursor.fetchone():
+                return {"ok": False, "reason": "Билд не найден"}
+            cursor.execute("UPDATE user_elite_builds SET is_active = 0 WHERE user_id = ?", (user_id,))
+            cursor.execute(
+                "UPDATE user_elite_builds SET is_active = 1 WHERE user_id = ? AND build_id = ?",
+                (user_id, build_id),
+            )
+            conn.commit()
+            return {"ok": True}
+        finally:
+            conn.close()
+
+    def save_elite_build_alloc(
+        self,
+        user_id: int,
+        build_id: str,
+        alloc_strength: int,
+        alloc_endurance: int,
+        alloc_crit: int,
+        alloc_stamina: int,
+    ) -> Dict[str, Any]:
+        vals = [max(0, int(alloc_strength)), max(0, int(alloc_endurance)), max(0, int(alloc_crit)), max(0, int(alloc_stamina))]
+        used = sum(vals)
+        if used > self._ELITE_FREE_POINTS:
+            return {"ok": False, "reason": f"Доступно только {self._ELITE_FREE_POINTS} очков"}
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            self._ensure_avatar_rows(cursor, user_id)
+            cursor.execute(
+                "SELECT 1 FROM user_elite_builds WHERE user_id = ? AND build_id = ? LIMIT 1",
+                (user_id, build_id),
+            )
+            if not cursor.fetchone():
+                return {"ok": False, "reason": "Билд не найден"}
+            cursor.execute(
+                """UPDATE user_elite_builds
+                   SET alloc_strength = ?, alloc_endurance = ?, alloc_crit = ?, alloc_stamina = ?
+                   WHERE user_id = ? AND build_id = ?""",
+                (vals[0], vals[1], vals[2], vals[3], user_id, build_id),
+            )
+            conn.commit()
+            return {"ok": True, "free_points_left": self._ELITE_FREE_POINTS - used}
+        finally:
+            conn.close()
+
+    def reset_elite_build(self, user_id: int, build_id: str) -> Dict[str, Any]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            self._ensure_avatar_rows(cursor, user_id)
+            cursor.execute(
+                "SELECT resets_used FROM user_elite_builds WHERE user_id = ? AND build_id = ? LIMIT 1",
+                (user_id, build_id),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return {"ok": False, "reason": "Билд не найден"}
+            resets_used = int(self._row_get(row, "resets_used", 0) or 0)
+            if resets_used <= 0:
+                cursor.execute(
+                    """UPDATE user_elite_builds
+                       SET alloc_strength = 0, alloc_endurance = 0, alloc_crit = 0, alloc_stamina = 0, resets_used = 1
+                       WHERE user_id = ? AND build_id = ?""",
+                    (user_id, build_id),
+                )
+                conn.commit()
+                return {"ok": True, "free_reset_used": True}
+            return {"ok": False, "reason": "Платный сброс", "need_payment": True, "reset_price": self._elite_half_price()}
+        finally:
+            conn.close()
+
+    def create_extra_elite_build(self, user_id: int) -> Dict[str, Any]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            self._ensure_avatar_rows(cursor, user_id)
+            cursor.execute(
+                "SELECT 1 FROM user_avatar_unlocks WHERE user_id = ? AND avatar_id = ? LIMIT 1",
+                (user_id, ELITE_AVATAR_ID),
+            )
+            if not cursor.fetchone():
+                return {"ok": False, "reason": "Сначала купите Императора"}
+            return {
+                "ok": False,
+                "reason": "Требуется покупка нового Императора",
+                "need_payment": True,
+                "new_build_price": {"usdt": str(ELITE_AVATAR_USDT), "stars": int(ELITE_AVATAR_STARS)},
             }
         finally:
             conn.close()

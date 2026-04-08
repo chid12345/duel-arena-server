@@ -18,6 +18,20 @@ class EliteAvatarBody(BaseModel):
     init_data: str
 
 
+class EliteBuildActivateBody(BaseModel):
+    init_data: str
+    build_id: str
+
+
+class EliteBuildAllocateBody(BaseModel):
+    init_data: str
+    build_id: str
+    alloc_strength: int = 0
+    alloc_endurance: int = 0
+    alloc_crit: int = 0
+    alloc_stamina: int = 0
+
+
 def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
     router = APIRouter()
 
@@ -135,5 +149,77 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": f"CryptoPay [{err.get('code', '?')}] {err.get('name', 'UNKNOWN')}"}
         except Exception as e:
             return {"ok": False, "reason": f"Ошибка соединения с CryptoPay: {e}"}
+
+    @router.get("/api/avatars/elite/builds")
+    async def elite_builds(init_data: str):
+        tg_user = get_user_from_init_data(init_data)
+        uid = int(tg_user["id"])
+        st = db.get_player_avatar_state(uid)
+        return {
+            "ok": bool(st.get("ok")),
+            "builds": st.get("elite_builds", []),
+            "reset_price": {"usdt": f"{float(str(ELITE_AVATAR_USDT)) * 0.5:.2f}", "stars": max(1, int(int(ELITE_AVATAR_STARS) * 0.5))},
+            "new_build_price": {"usdt": str(ELITE_AVATAR_USDT), "stars": int(ELITE_AVATAR_STARS)},
+        }
+
+    @router.post("/api/avatars/elite/builds/activate")
+    async def elite_build_activate(body: EliteBuildActivateBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        result = db.set_active_elite_build(uid, body.build_id.strip())
+        if result.get("ok"):
+            _cache_invalidate(uid)
+            player = db.get_or_create_player(uid, "")
+            result["player"] = _player_api(dict(player))
+        return result
+
+    @router.post("/api/avatars/elite/builds/allocate")
+    async def elite_build_allocate(body: EliteBuildAllocateBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        result = db.save_elite_build_alloc(
+            uid,
+            body.build_id.strip(),
+            body.alloc_strength,
+            body.alloc_endurance,
+            body.alloc_crit,
+            body.alloc_stamina,
+        )
+        if result.get("ok"):
+            _cache_invalidate(uid)
+            st = db.get_player_avatar_state(uid)
+            player = db.get_or_create_player(uid, "")
+            result["builds"] = st.get("elite_builds", [])
+            result["player"] = _player_api(dict(player))
+        return result
+
+    @router.post("/api/avatars/elite/builds/reset")
+    async def elite_build_reset(body: EliteBuildActivateBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        result = db.reset_elite_build(uid, body.build_id.strip())
+        if result.get("ok"):
+            _cache_invalidate(uid)
+            st = db.get_player_avatar_state(uid)
+            player = db.get_or_create_player(uid, "")
+            result["builds"] = st.get("elite_builds", [])
+            result["player"] = _player_api(dict(player))
+        return result
+
+    @router.post("/api/avatars/elite/builds/create")
+    async def elite_build_create(body: EliteAvatarBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        result = db.create_extra_elite_build(uid)
+        if result.get("ok"):
+            _cache_invalidate(uid)
+            st = db.get_player_avatar_state(uid)
+            player = db.get_or_create_player(uid, "")
+            result["builds"] = st.get("elite_builds", [])
+            result["player"] = _player_api(dict(player))
+        else:
+            result["need_payment"] = True
+            result["new_build_price"] = {"usdt": str(ELITE_AVATAR_USDT), "stars": int(ELITE_AVATAR_STARS)}
+        return result
 
     app.include_router(router)
