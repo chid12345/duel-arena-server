@@ -18,6 +18,17 @@ class AvatarsMixin:
     def _avatar_map() -> Dict[str, Dict[str, Any]]:
         return {a["id"]: dict(a) for a in AVATAR_CATALOG}
 
+    @staticmethod
+    def _row_get(row: Any, key: str, default: Any = None) -> Any:
+        if row is None:
+            return default
+        if isinstance(row, dict):
+            return row.get(key, default)
+        try:
+            return row[key]
+        except Exception:
+            return default
+
     def _ensure_avatar_rows(self, cursor, user_id: int) -> None:
         for aid in self._BASE_AVATAR_IDS:
             cursor.execute(
@@ -27,7 +38,7 @@ class AvatarsMixin:
             )
         cursor.execute("SELECT equipped_avatar_id FROM players WHERE user_id = ?", (user_id,))
         row = cursor.fetchone()
-        if row and not row.get("equipped_avatar_id"):
+        if row and not self._row_get(row, "equipped_avatar_id"):
             cursor.execute(
                 "UPDATE players SET equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
                 (user_id,),
@@ -78,8 +89,8 @@ class AvatarsMixin:
             )
             unlocked_ids = {r["avatar_id"] for r in cursor.fetchall()}
 
-            level = int(player.get("level", 1) or 1)
-            equipped = player.get("equipped_avatar_id") or "base_neutral"
+            level = int(self._row_get(player, "level", 1) or 1)
+            equipped = self._row_get(player, "equipped_avatar_id") or "base_neutral"
             rows: List[Dict[str, Any]] = []
             for a in AVATAR_CATALOG:
                 aid = a["id"]
@@ -142,8 +153,8 @@ class AvatarsMixin:
             p = cursor.fetchone()
             if not p:
                 return {"ok": False, "reason": "Игрок не найден"}
-            gold = int(p.get("gold", 0) or 0)
-            dia = int(p.get("diamonds", 0) or 0)
+            gold = int(self._row_get(p, "gold", 0) or 0)
+            dia = int(self._row_get(p, "diamonds", 0) or 0)
             if currency == "gold" and gold < price:
                 return {"ok": False, "reason": f"Нужно {price} золота"}
             if currency == "diamonds" and dia < price:
@@ -187,8 +198,8 @@ class AvatarsMixin:
             if not p:
                 return {"ok": False, "reason": "Игрок не найден"}
 
-            level = int(p.get("level", 1) or 1)
-            cur_avatar = p.get("equipped_avatar_id") or "base_neutral"
+            level = int(self._row_get(p, "level", 1) or 1)
+            cur_avatar = self._row_get(p, "equipped_avatar_id") or "base_neutral"
             if cur_avatar == avatar_id:
                 return {"ok": True, "already_equipped": True}
 
