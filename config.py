@@ -34,6 +34,7 @@ from progression_loader import (
     gold_when_reaching_level,
     hp_when_reaching_level,
     stats_when_reaching_level,
+    diamonds_when_reaching_level,
     get_table,
 )
 

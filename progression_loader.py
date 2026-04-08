@@ -86,6 +86,11 @@ def _validate(data: Dict[str, Any]) -> Tuple[bool, str]:
             if not isinstance(arr, list) or len(arr) != 101:
                 return False, f"{key} РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ list РґР»РёРЅС‹ 101 (0..100)"
 
+        # diamonds_on_reach — опциональное поле (обратная совместимость)
+        dia = data.get("diamonds_on_reach")
+        if dia is not None and (not isinstance(dia, list) or len(dia) != 101):
+            return False, "diamonds_on_reach должен быть list длины 101 (0..100)"
+
         for i in range(ml - 1):
             v = int(xp_to_next[i])
             if v < 1:
@@ -205,6 +210,18 @@ def hp_when_reaching_level(new_level: int) -> int:
     if L < 1 or L > ml:
         return 0
     arr: List[int] = _PROGRESSION["hp_on_reach"]
+    return int(arr[L])
+
+
+def diamonds_when_reaching_level(new_level: int) -> int:
+    """Алмазы за достижение нового уровня (только сигнальные уровни, остальные = 0)."""
+    L = int(new_level)
+    ml = max_level_from_table()
+    if L < 1 or L > ml:
+        return 0
+    arr: List[int] = _PROGRESSION.get("diamonds_on_reach", [0] * 101)
+    if L >= len(arr):
+        return 0
     return int(arr[L])
 
 

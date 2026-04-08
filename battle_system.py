@@ -1567,6 +1567,7 @@ class BattleSystem:
             winner_stats = {
                 'wins':           winner_live.get('wins', 0) + 1,
                 'gold':           exp_patch['gold'],
+                'diamonds':       exp_patch['diamonds'],
                 'exp':            exp_patch['exp'],
                 'level':          exp_patch['level'],
                 'free_stats':     exp_patch['free_stats'],
@@ -1595,6 +1596,7 @@ class BattleSystem:
                     'level':          loser_exp_patch['level'],
                     'max_hp':         loser_exp_patch['max_hp'],
                     'gold':           loser_exp_patch['gold'],
+                    'diamonds':       loser_exp_patch['diamonds'],
                 })
 
         # ── Titan progress (нужен в результате — выполняем до return) ─
@@ -1967,12 +1969,14 @@ class BattleSystem:
         """
         Начислить опыт: промежуточные +1 стат по «апам» из таблицы (пороги need*k/steps),
         ап уровня — награды из progression.json. exp_milestones — битовая маска пройденных апов на текущей полоске.
+        Сигнальные уровни (каждые 10): доп. статы + золото + алмазы из diamonds_on_reach.
         """
         exp = int(player.get('exp', 0)) + int(exp_gained)
         level = max(1, int(player.get('level', PLAYER_START_LEVEL)))
         mask = int(player.get('exp_milestones', 0) or 0)
         free_stats = int(player.get('free_stats', 0) or 0)
         gold = int(player.get('gold', 0) or 0)
+        diamonds = int(player.get('diamonds', 0) or 0)
         max_hp = int(player.get('max_hp', PLAYER_START_MAX_HP))
         current_hp = int(player.get('current_hp', max_hp))
 
@@ -2007,20 +2011,22 @@ class BattleSystem:
             gained_levels += 1
             leveled = True
             mask = 0
-            gold += gold_when_reaching_level(level)
-            max_hp += hp_when_reaching_level(level)
+            gold     += gold_when_reaching_level(level)
+            max_hp   += hp_when_reaching_level(level)
             current_hp = max_hp
             free_stats += stats_when_reaching_level(level)
+            diamonds += diamonds_when_reaching_level(level)  # 0 на обычных, >0 на сигнальных (×10)
 
         return (
             {
-                'exp': exp,
-                'level': level,
+                'exp':            exp,
+                'level':          level,
                 'exp_milestones': mask,
-                'free_stats': free_stats,
-                'gold': gold,
-                'max_hp': max_hp,
-                'current_hp': current_hp,
+                'free_stats':     free_stats,
+                'gold':           gold,
+                'diamonds':       diamonds,
+                'max_hp':         max_hp,
+                'current_hp':     current_hp,
             },
             leveled,
         )
