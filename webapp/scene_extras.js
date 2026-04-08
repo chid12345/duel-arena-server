@@ -19,7 +19,7 @@ function _extraBg(scene, W, H) {
   /* Сетка убрана: 50+ lineBetween при opacity 0.03 давали лишние draw-call */
 }
 
-function _extraBack(scene, W, H, dest = 'Menu', returnTab = 'more') {
+function _extraBack(scene, dest = 'Menu', returnTab = 'more') {
   makeBackBtn(scene, 'Назад', () => {
     tg?.HapticFeedback?.impactOccurred('light');
     scene.scene.start(dest, returnTab ? { returnTab } : undefined);
@@ -28,8 +28,11 @@ function _extraBack(scene, W, H, dest = 'Menu', returnTab = 'more') {
 
 function _extraHeader(scene, W, icon, title, sub) {
   makePanel(scene, 8, 8, W - 16, 64, 12);
-  txt(scene, 20, 22, icon + '  ' + title, 16, '#ffc83c', true);
-  txt(scene, 20, 44, sub, 11, '#9999bb');
+  /* Левые 46px = зона кнопки «‹»; текст начинается с x=60 */
+  const maxCh  = Math.floor((W - 72) / 9);   // ~9px на символ при font-size 15
+  const trunc  = (s, n) => s && s.length > n ? s.slice(0, n - 1) + '…' : (s || '');
+  txt(scene, 60, 20, icon + '  ' + trunc(title, maxCh), 15, '#ffc83c', true);
+  if (sub) txt(scene, 60, 44, trunc(sub, Math.floor((W - 72) / 6.5)), 10, '#9999bb');
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -47,7 +50,7 @@ class QuestsScene extends Phaser.Scene {
     this.W = W; this.H = H;
     _extraBg(this, W, H);
     _extraHeader(this, W, '📋', 'ЗАДАНИЯ', '');
-    _extraBack(this, W, H);
+    _extraBack(this);
     this._buildTabBar(W);
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/quests').then(d => this._render(d, W, H)).catch(() => {
@@ -401,7 +404,7 @@ class SummaryScene extends Phaser.Scene {
       y += 48;
     }
 
-    _extraBack(this, W, H);
+    _extraBack(this);
   }
 }
 
@@ -416,7 +419,7 @@ class SeasonScene extends Phaser.Scene {
     this.W = W; this.H = H;
     _extraBg(this, W, H);
     _extraHeader(this, W, '⭐', 'СЕЗОН', '');
-    _extraBack(this, W, H);
+    _extraBack(this);
 
     this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/season').then(d => this._render(d, W, H)).catch(() => {
@@ -485,7 +488,7 @@ class TitanTopScene extends Phaser.Scene {
     this.W = W; this.H = H;
     _extraBg(this, W, H);
     _extraHeader(this, W, '🗿', 'ТОП БАШНИ', 'Недельный рейтинг Башни титанов');
-    _extraBack(this, W, H);
+    _extraBack(this);
     this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/titans/top').then(d => this._render(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
@@ -540,7 +543,7 @@ class BattlePassScene extends Phaser.Scene {
     this.W = W; this.H = H;
     _extraBg(this, W, H);
   _extraHeader(this, W, '🌟', 'БОЕВОЙ ПРОПУСК', 'Ежесезонные награды');
-    _extraBack(this, W, H);
+    _extraBack(this);
     this._claimBtns = {};
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/battlepass').then(d => this._render(d, W, H)).catch(() => {
@@ -705,7 +708,7 @@ class ClanScene extends Phaser.Scene {
       _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
       /* Из подразделов возвращаемся в главный экран клана, из main — в Menu */
       if (this._subview === 'main') {
-        _extraBack(this, W, H, 'Menu', 'more');   /* → Menu → вкладка Еще */
+        _extraBack(this, 'Menu', 'more');   /* → Menu → вкладка Еще */
       } else {
         makeBackBtn(this, 'Назад', () => {
           tg?.HapticFeedback?.impactOccurred('light');
@@ -797,8 +800,8 @@ class ClanScene extends Phaser.Scene {
 
     /* ── Список участников ─────────────────────────────── */
     const rowH    = 44;
-    const leaveH  = isLeader ? 0 : 52;
-    const maxShow = Math.min(members.length, Math.floor((H - y - leaveH - 70) / rowH));
+    /* 64 = зона кнопок внизу (42px кнопка + 22px отступы) */
+    const maxShow = Math.min(members.length, Math.floor((H - y - 64) / rowH));
 
     members.slice(0, maxShow).forEach((m, i) => {
       const ry = y + i * rowH;
@@ -835,7 +838,8 @@ class ClanScene extends Phaser.Scene {
     }
 
     /* ── Кнопки внизу ───────────────────────────────────── */
-    const btnZone = H - 100;
+    /* Кнопки: высота 42px, нижний отступ 14px → btnZone = H - 56 */
+    const btnZone = H - 56;
 
     /* Кнопка «💬 Чат» */
     const chatBtnW = isLeader ? W-32 : Math.round((W-40)/2);
@@ -860,7 +864,8 @@ class ClanScene extends Phaser.Scene {
         .on('pointerout',  () => { bg2.clear(); bg2.fillStyle(0x4a1010,1); bg2.fillRoundedRect(lx,btnZone,lw,42,10); bg2.lineStyle(1.5,C.red,0.7); bg2.strokeRoundedRect(lx,btnZone,lw,42,10); })
         .on('pointerup',   () => this._leaveClan());
     } else {
-      txt(this, W/2, H-50, '👑 Лидер не может покинуть клан — передайте роль', 12, '#8888cc').setOrigin(0.5);
+      /* Подсказка лидеру — ВЫШЕ кнопки, не перекрывает её */
+      txt(this, W/2, btnZone - 16, '👑 Передайте роль, чтобы покинуть клан', 11, '#8888cc').setOrigin(0.5);
     }
   }
 
@@ -961,8 +966,11 @@ class ClanScene extends Phaser.Scene {
           bg.fillStyle(isMe ? 0x1a3a7a : 0x1e1c34, 0.95);
           bg.fillRoundedRect(10, my+2, cW-20, lineH-4, 8);
           const nc = isMe ? '#7ab4ff' : '#ffc83c';
-          const t1 = txt(this, 20, my+10, isMe ? 'Вы' : (m.username||'Игрок'), 12, nc, true);
-          const t2 = txt(this, 20, my+24, m.message, 12, '#e8e8ff');
+          const maxMsgCh = Math.floor((cW - 32) / 7);  // ~7px/символ при 12px
+          const nameStr  = isMe ? 'Вы' : (m.username||'Игрок').slice(0, 14);
+          const msgStr   = (m.message||'').slice(0, maxMsgCh);
+          const t1 = txt(this, 20, my+10, nameStr, 12, nc, true);
+          const t2 = txt(this, 20, my+24, msgStr,  12, '#e8e8ff');
           const t3 = txt(this, cW-14, my+10, m.time_str||'', 11, '#8888cc').setOrigin(1, 0);
           this._msgObjs.push(bg, t1, t2, t3);
         });
@@ -1266,7 +1274,7 @@ class NatiskScene extends Phaser.Scene {
     this.W = W; this.H = H;
     _extraBg(this, W, H);
     _extraHeader(this, W, '🔥', 'НАТИСК', 'Выживи как можно дольше на арене');
-    _extraBack(this, W, H, 'Menu', 'battle');
+    _extraBack(this, 'Menu', 'battle');
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     get('/api/endless/status').then(d => this._render(d, W, H)).catch(() => {
@@ -1473,7 +1481,7 @@ class ShopScene extends Phaser.Scene {
 
     _extraBg(this, W, H);
     _extraHeader(this, W, '🛍️', 'МАГАЗИН', 'Зелья · Снаряжение · Особые');
-    _extraBack(this, W, H);
+    _extraBack(this);
 
     this._buildTabBar(W, H);
     this._buildBalance(W);

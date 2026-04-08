@@ -234,27 +234,24 @@ function txt(scene, x, y, str, size = 14, color = '#f0f0fa', bold = false, strok
   return scene.add.text(x, y, str, style);
 }
 
-/* makeBackBtn() — кнопка «Назад» внизу экрана по центру.
-   По умолчанию: нижний центр (bx/bY не заданы → вычисляются из canvas). */
-function makeBackBtn(scene, label, onClick, bx, bY) {
-  const CW = scene.game.canvas.width;
-  const CH = scene.game.canvas.height;
-  const bW = 180, bH = 42;
-  if (bx === undefined) bx = Math.round(CW / 2 - bW / 2);
-  if (bY === undefined) bY = CH - 58;
+/* makeBackBtn() — компактная кнопка «←» в левом верхнем углу, внутри шапки.
+   Не перекрывает контент и кнопки действий внизу экрана. */
+function makeBackBtn(scene, label, onClick) {
+  /* Занимает левую часть шапки: x=8..54, y=8..72 (совпадает с _extraHeader панелью) */
+  const bx = 8, bY = 8, bW = 46, bH = 64;
   const cx = bx + bW / 2, cy = bY + bH / 2;
   const bg = scene.add.graphics();
   const _draw = (pressed) => {
     bg.clear();
-    bg.fillStyle(pressed ? 0x2a3a5c : 0x1e2a44, pressed ? 0.95 : 0.90);
-    bg.fillRoundedRect(bx, bY, bW, bH, 10);
-    bg.lineStyle(1.5, C.blue, pressed ? 0.9 : 0.55);
-    bg.strokeRoundedRect(bx, bY, bW, bH, 10);
+    if (pressed) {
+      bg.fillStyle(0xffffff, 0.10);
+      bg.fillRoundedRect(bx + 2, bY + 4, bW - 4, bH - 8, 9);
+    }
   };
   _draw(false);
-  const t = txt(scene, cx, cy, '← ' + label, 13, '#a8d0ff', true).setOrigin(0.5);
+  const t = txt(scene, cx, cy, '‹', 30, '#a8d0ff', true).setOrigin(0.5);
   const z = scene.add.zone(cx, cy, bW, bH).setInteractive({ useHandCursor: true });
-  z.on('pointerdown', () => _draw(true));
+  z.on('pointerdown', () => { _draw(true);  tg?.HapticFeedback?.impactOccurred('light'); });
   z.on('pointerup',   () => { _draw(false); onClick(); });
   z.on('pointerout',  () => _draw(false));
   return { bg, t, z };
