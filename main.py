@@ -5,8 +5,10 @@ Duel Arena Bot - Главная точка входа
 
 import logging
 import sys
+import time as _time
 from datetime import time as dt_time
 from telegram import Update, BotCommand, MenuButtonWebApp, MenuButtonDefault, WebAppInfo
+from telegram.error import Conflict as TelegramConflict
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, PreCheckoutQueryHandler, MessageHandler, filters
 
 # Устанавливаем кодировку для Windows
@@ -105,94 +107,91 @@ async def setup_bot_menu(application: Application):
         await application.bot.set_chat_menu_button(menu_button=MenuButtonDefault())
     logger.info("✅ Меню команд Telegram обновлено")
 
-def main():
-    """Главная функция запуска бота"""
-    try:
-        # Проверка токена
-        if not BOT_TOKEN or BOT_TOKEN == 'YOUR_BOT_TOKEN':
-            logger.error("❌ Токен бота не установлен!")
-            logger.info("📝 Установите переменную окружения TELEGRAM_BOT_TOKEN")
-            logger.info("💡 PowerShell: $env:TELEGRAM_BOT_TOKEN='your_bot_token_here'")
-            return
-        
-        # БД уже инициализируется при import database (db = Database())
-        logger.info("🗄️ База данных подключена")
-        
-        # Проверка ботов
-        conn = db.get_connection()
-        try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) AS cnt FROM bots")
-            bot_count = cursor.fetchone()["cnt"]
-        finally:
-            conn.close()
-        
-        logger.info(f"🤖 Готово к работе ботов: {bot_count}")
-        
-        # Создание приложения
-        logger.info("🚀 Создание приложения Telegram бота...")
-        async def post_init(application: Application):
-            # Иначе Telegram: «другой getUpdates» — часто это не второй ПК, а старый webhook.
-            await application.bot.delete_webhook(drop_pending_updates=True)
-            await setup_bot_menu(application)
-            from battle_system import battle_system
-            battle_system.attach(application)
-            # Ежедневный push в 12:00
-            application.job_queue.run_daily(
-                daily_bonus_reminder,
-                time=dt_time(hour=12, minute=0),
-                name="daily_bonus_reminder",
-            )
+def _build_app(bot_count: int) -> Application:
+    """Собрать и настроить Application (вызывается при каждом retry)."""
+    async def post_init(application: Application):
+        # Удаляем вебхук — иначе «другой getUpdates» при первом деплое
+        await application.bot.delete_webhook(drop_pending_updates=True)
+        await setup_bot_menu(application)
+        from battle_system import battle_system
+        battle_system.attach(application)
+        application.job_queue.run_daily(
+            daily_bonus_reminder,
+            time=dt_time(hour=12, minute=0),
+            name="daily_bonus_reminder",
+        )
 
-        application = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
-        
-        # Регистрация обработчиков команд
-        logger.info("📋 Регистрация обработчиков команд...")
-        application.add_handler(CommandHandler("start", BotHandlers.start_command))
-        application.add_handler(CommandHandler("help", BotHandlers.help_command))
-        application.add_handler(CommandHandler("stats", BotHandlers.stats_command))
-        application.add_handler(CommandHandler("rating", BotHandlers.rating_command))
-        application.add_handler(CommandHandler("quests", BotHandlers.quests_command))
-        application.add_handler(CommandHandler("invite", BotHandlers.invite_command))
-        application.add_handler(CommandHandler("season", BotHandlers.season_command))
-        application.add_handler(CommandHandler("end_season", BotHandlers.end_season_command))
-        application.add_handler(CommandHandler("pass", BotHandlers.pass_command))
-        application.add_handler(CommandHandler("clan", BotHandlers.clan_command))
-        application.add_handler(CommandHandler("buy", BotHandlers.buy_command))
-        application.add_handler(CommandHandler("health", BotHandlers.health_command))
-        application.add_handler(CommandHandler("wipe_me", BotHandlers.wipe_me_command))
-        application.add_handler(CommandHandler("agent_code", BotHandlers.agent_code_command))
-        # Telegram Stars
-        application.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
-        application.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, BotHandlers.successful_payment_handler))
-        
-        # Регистрация обработчиков кнопок
-        logger.info("🎮 Регистрация обработчиков кнопок...")
-        application.add_handler(CallbackQueryHandler(CallbackHandlers.handle_callback))
-        application.add_error_handler(error_handler)
-        
-        # Запуск бота
-        logger.info("⚔️ Запуск Duel Arena Bot...")
-        print("=" * 50)
-        print("⚔️ DUEL ARENA BOT ЗАПУЩЕН! ⚔️")
-        print("=" * 50)
-        print(f"🤖 Ботов готово: {bot_count}")
-        print("📊 База данных инициализирована")
-        print("🎮 Бот готов к работе!")
-        print("🌐 Сервер запущен и ожидает игроков...")
-        print("=" * 50)
-        print("💡 Для остановки нажмите Ctrl+C")
-        print("=" * 50)
-        
-        application.run_polling(drop_pending_updates=True)
-        
-    except KeyboardInterrupt:
-        logger.info("🛑 Бот остановлен пользователем")
-        print("\n🛑 Бот остановлен. До встречи!")
-    except Exception as e:
-        logger.error(f"❌ Ошибка запуска бота: {e}")
-        print(f"❌ Ошибка запуска: {e}")
-        print("📝 Проверьте токен и подключение к интернету")
+    app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
+
+    app.add_handler(CommandHandler("start",      BotHandlers.start_command))
+    app.add_handler(CommandHandler("help",       BotHandlers.help_command))
+    app.add_handler(CommandHandler("stats",      BotHandlers.stats_command))
+    app.add_handler(CommandHandler("rating",     BotHandlers.rating_command))
+    app.add_handler(CommandHandler("quests",     BotHandlers.quests_command))
+    app.add_handler(CommandHandler("invite",     BotHandlers.invite_command))
+    app.add_handler(CommandHandler("season",     BotHandlers.season_command))
+    app.add_handler(CommandHandler("end_season", BotHandlers.end_season_command))
+    app.add_handler(CommandHandler("pass",       BotHandlers.pass_command))
+    app.add_handler(CommandHandler("clan",       BotHandlers.clan_command))
+    app.add_handler(CommandHandler("buy",        BotHandlers.buy_command))
+    app.add_handler(CommandHandler("health",     BotHandlers.health_command))
+    app.add_handler(CommandHandler("wipe_me",    BotHandlers.wipe_me_command))
+    app.add_handler(CommandHandler("agent_code", BotHandlers.agent_code_command))
+    app.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
+    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, BotHandlers.successful_payment_handler))
+    app.add_handler(CallbackQueryHandler(CallbackHandlers.handle_callback))
+    app.add_error_handler(error_handler)
+    return app
+
+
+def main():
+    """Главная функция запуска бота."""
+    # Проверка токена
+    if not BOT_TOKEN or BOT_TOKEN == 'YOUR_BOT_TOKEN':
+        logger.error("❌ Токен бота не установлен!")
+        return
+
+    logger.info("🗄️ База данных подключена")
+
+    conn = db.get_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) AS cnt FROM bots")
+        bot_count = cursor.fetchone()["cnt"]
+    finally:
+        conn.close()
+    logger.info("🤖 Готово ботов: %d", bot_count)
+
+    # ── Retry-цикл: при Conflict (два экземпляра в Render zero-downtime deploy)
+    # ждём пока старый контейнер умрёт и пробуем снова.
+    MAX_ATTEMPTS = 8
+    for attempt in range(MAX_ATTEMPTS):
+        try:
+            logger.info("⚔️ Запуск бота (попытка %d/%d)...", attempt + 1, MAX_ATTEMPTS)
+            app = _build_app(bot_count)
+            app.run_polling(drop_pending_updates=True)
+            logger.info("✅ Бот завершил работу штатно")
+            break
+
+        except TelegramConflict:
+            wait = 15 * (attempt + 1)          # 15 → 30 → 45 → … сек
+            if attempt < MAX_ATTEMPTS - 1:
+                logger.warning(
+                    "⚠️ Telegram Conflict — другой экземпляр бота ещё активен. "
+                    "Жду %ds перед повтором (попытка %d/%d)...",
+                    wait, attempt + 1, MAX_ATTEMPTS,
+                )
+                _time.sleep(wait)
+            else:
+                logger.error("❌ Conflict не разрешился за %d попыток. Бот не запущен.", MAX_ATTEMPTS)
+
+        except KeyboardInterrupt:
+            logger.info("🛑 Бот остановлен пользователем")
+            break
+
+        except Exception as e:
+            logger.error("❌ Ошибка запуска бота: %s", e, exc_info=True)
+            break
 
 if __name__ == '__main__':
     main()
