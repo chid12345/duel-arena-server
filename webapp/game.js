@@ -1791,68 +1791,53 @@ const BattleLog = (() => {
     document.body.appendChild(overlay);
   }
 
-  /* Зона → иконка */
-  const ZONE_ICON = { 'голов': '👤', 'тел': '👕', 'ног': '🦵' };
-  function _zoneIcon(zone) {
-    if (!zone) return '⚔️';
-    for (const [k, v] of Object.entries(ZONE_ICON)) {
-      if (zone.includes(k)) return v;
+  /* Маркер → цветной HTML.
+     Формат webapp_log: «Р{N} Вы {m1} · Враг {m2}»
+     Маркеры: −{N}, −{N}⚡, −{N}⚡💥, −{N}×2, 💨, 🛡, ✕, ⏱, — */
+  function _styleMarker(m, side) {
+    if (!m || m === '—')         return `<span class="bl-miss-col">—</span>`;
+    if (m === '⏱')               return `<span class="bl-miss-col">⏱</span>`;
+    if (m === '✕')               return `<span class="bl-miss-col">✕</span>`;
+    if (m.includes('💨'))        return `<span class="bl-dodge-col">💨</span>`;
+    if (m.includes('🛡')) {
+      const cls = side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy';
+      return `<span class="${cls}">🛡</span>`;
     }
-    return '⚔️';
-  }
-
-  /* <code> → { html, rowCls } */
-  function _parseDmg(code, side) {
-    const s = (code || '').trim();
-    const dmgCls  = side === 'you' ? 'bl-dmg-you'   : 'bl-dmg-enemy';
-    const critCls = side === 'you' ? 'bl-crit-you'  : 'bl-crit-enemy';
-
-    if (s.includes('уклон'))  return { html: `<span class="bl-dodge-col">💨 уворот</span>`, row: 'bl-dodge' };
-    if (s.includes('промах')) return { html: `<span class="bl-miss-col">✕ промах</span>`,  row: '' };
-
-    const crit  = s.match(/💥.*?[−\-](\d+)/);
-    if (crit)  return { html: `<span class="${critCls}">💥 −${crit[1]}!</span>`, row: 'bl-crit' };
-
-    const block = s.match(/🛡.*?[−\-](\d+)/);
-    if (block) return { html: `<span class="${dmgCls}">🛡 −${block[1]}</span>`, row: 'bl-block' };
-
-    const hit = s.match(/[−\-](\d+)/);
-    if (hit)  return { html: `<span class="${dmgCls}">−${hit[1]}</span>`, row: '' };
-
-    return { html: `<span class="bl-miss-col">—</span>`, row: '' };
+    if (m.includes('⚡') || m.includes('💥')) {
+      const cls = side === 'you' ? 'bl-crit-you' : 'bl-crit-enemy';
+      return `<span class="${cls}">${m}</span>`;
+    }
+    if (m.startsWith('−') || m.startsWith('-')) {
+      const cls = side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy';
+      return `<span class="${cls}">${m}</span>`;
+    }
+    return `<span class="bl-miss-col">${m}</span>`;
   }
 
   function _renderEntry(raw) {
     const li = document.createElement('li');
-    const roundM = raw.match(/Раунд\s+(\d+)/);
-    if (!roundM) {
+    // webapp_log format: «Р{N} Вы {m1} · Враг {m2}»
+    const parsed = raw.match(/^Р(\d+)\s+Вы\s+(.+?)\s+·\s+Враг\s+(.+)$/);
+    if (!parsed) {
       li.className = 'bl-sys';
-      li.textContent = raw.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 70);
+      li.textContent = raw.replace(/<[^>]+>/g, '').trim().slice(0, 60);
       return li;
     }
 
-    const rNum = roundM[1];
+    const rNum = parsed[1];
+    const m1   = parsed[2].trim();   // ваш результат
+    const m2   = parsed[3].trim();   // результат врага
 
-    const z1m = raw.match(/Ваш удар<\/b>\s*(по \w+)/);
-    const z2m = raw.match(/Удар [^<]+<\/b>\s*(по \w+)/);
-    const z1  = z1m ? z1m[1] : '';
-    const z2  = z2m ? z2m[1] : '';
-
-    const codes = [...raw.matchAll(/<code>([\s\S]*?)<\/code>/g)].map(m => m[1]);
-    const you   = _parseDmg(codes[0], 'you');    // урон, нанесённый ВРАГУ
-    const enemy = _parseDmg(codes[1], 'enemy');  // урон, нанесённый ВАМ
-
-    // Приоритет класса строки: crit > dodge > block
-    const rowCls = [you.row, enemy.row].find(c => c === 'bl-crit')
-      || [you.row, enemy.row].find(c => c === 'bl-dodge')
-      || [you.row, enemy.row].find(c => c === 'bl-block')
-      || '';
+    const hasCrit  = m1.includes('⚡') || m2.includes('⚡') || m1.includes('💥') || m2.includes('💥');
+    const hasDodge = m1.includes('💨') || m2.includes('💨');
+    const hasBlock = m1.includes('🛡') || m2.includes('🛡');
+    const rowCls   = hasCrit ? 'bl-crit' : hasDodge ? 'bl-dodge' : hasBlock ? 'bl-block' : '';
 
     li.className = 'bl-row' + (rowCls ? ' ' + rowCls : '');
     li.innerHTML =
-      `<span class="bl-you">${_zoneIcon(z1)} Вы: ${you.html}</span>` +
+      `<span class="bl-you">Вы: ${_styleMarker(m1, 'you')}</span>` +
       `<span class="bl-mid">Р${rNum}</span>` +
-      `<span class="bl-enemy">${enemy.html} :Враг ${_zoneIcon(z2)}</span>`;
+      `<span class="bl-enemy">Враг: ${_styleMarker(m2, 'enemy')}</span>`;
     return li;
   }
 
@@ -2332,9 +2317,9 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    // Узкая полоска вплотную над панелью выбора, не перекрывает бойцов
-    const logH = 110;                            // ~4 строки по 22px + отступы
-    const logY = Math.round(H * 0.6 - logH - 4);
+    // 2 строки: 10px font * 1.3 lh + 4px padding = ~17px/строка, gap 2px → ~38px + отступы
+    const logH = 52;
+    const logY = Math.round(H * 0.6 - logH - 6);
     BattleLog.clear();
     BattleLog.show(this.game.canvas, 4, logY, W - 8, logH);
   }
@@ -3009,6 +2994,7 @@ class RatingScene extends Phaser.Scene {
   async create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
+    this._alive = true;
 
     /* Фон — как в ShopScene */
     _extraBg(this, W, H);
@@ -3026,6 +3012,10 @@ class RatingScene extends Phaser.Scene {
     } else {
       this._buildTitansTab(W, H);
     }
+  }
+
+  shutdown() {
+    this._alive = false;
   }
 
   _buildTabBar(W) {
@@ -3059,6 +3049,7 @@ class RatingScene extends Phaser.Scene {
     const startY = 114;   /* ниже шапки + табов, как в магазине */
     try {
       const res = RatingScene._cache.pvp || (RatingScene._cache.pvp = await get('/api/pvp/top'));
+      if (!this._alive) return;   // пользователь нажал «Назад» пока шла загрузка
       if (!res.ok) throw new Error('bad');
       const players = res.elo_top || [];
       const myUid   = State.player?.user_id;
