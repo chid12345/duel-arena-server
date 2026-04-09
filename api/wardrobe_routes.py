@@ -167,9 +167,9 @@ def register_wardrobe_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @router.post("/api/wardrobe/usdt/create")
-    async def wardrobe_usdt_create(init_data: str):
+    async def wardrobe_usdt_create(body: InitDataHeader):
         """Создать новый USDT-образ (демо-версия без платежа)."""
-        tg_user = get_user_from_init_data(init_data)
+        tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         username = tg_user.get("username") or tg_user.get("first_name") or ""
         db.get_or_create_player(uid, username)
@@ -179,7 +179,7 @@ def register_wardrobe_routes(app, ctx: Dict[str, Any]) -> None:
         result = {"ok": success, "message": message, "new_class_id": new_class_id}
         if success:
             _cache_invalidate(uid)
-            result.update(await wardrobe(init_data))
+            result.update(await wardrobe(body.init_data))
         
         return result
 
