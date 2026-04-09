@@ -162,6 +162,7 @@
     const pageCount = Math.max(1, Math.ceil((cards.length || 0) / perPage));
     this._avatarPage = Math.min(this._avatarPage || 0, pageCount - 1);
     const cardsLayer = [];
+    this._avatarCardsLayer = cardsLayer;
 
     const clearCards = () => {
       cardsLayer.forEach(o => { try { o.destroy(); } catch (_e) {} });
@@ -282,6 +283,12 @@
   };
 
   StatsScene.prototype._closeAvatarOverlay = function() {
+    if (this._avatarCardsLayer) {
+      this._avatarCardsLayer.forEach(o => {
+        try { o.destroy(); } catch (_e) {}
+      });
+      this._avatarCardsLayer = null;
+    }
     if (!this._avatarOverlay) return;
     this._avatarOverlay.forEach(o => {
       try { o.destroy(); } catch (_e) {}
