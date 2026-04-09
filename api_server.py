@@ -119,8 +119,8 @@ def _cache_set(uid: int, player: dict) -> None:
 def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
-# Игровая версия импортируется из config.py
-from config import GAME_VERSION
+# Игровая версия для UI — один источник истины в version.py
+from version import GAME_VERSION
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
