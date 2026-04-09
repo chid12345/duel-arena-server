@@ -60,8 +60,10 @@
     for (const cls of (available.diamonds || [])) cards.push(_toCard(cls, "diamonds", equippedClassId));
 
     const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
+    let hasUsdt = false;
     for (const item of inventory) {
       if (item.class_type !== "usdt") continue;
+      hasUsdt = true;
       cards.push({
         class_id: item.class_id,
         class_type: "usdt",
@@ -74,6 +76,25 @@
         special_bonus: "Слот сборки: +19 свободных статов, скидка reset 50%",
         owned: true,
         equipped: !!item.equipped,
+        price_gold: 0,
+        price_diamonds: 0,
+      });
+    }
+
+    // USDT-карточка “всегда видна”: если слота ещё нет — показываем как покупку.
+    if (!hasUsdt) {
+      cards.push({
+        class_id: "usdt_slot",
+        class_type: "usdt",
+        name: "USDT-образ",
+        icon: "💠",
+        strength: 0,
+        agility: 0,
+        intuition: 0,
+        endurance: 0,
+        special_bonus: "Слот сборки: сохраняет статы и HP. (-50% на сброс статов)",
+        owned: false,
+        equipped: false,
         price_gold: 0,
         price_diamonds: 0,
       });
@@ -148,46 +169,6 @@
     drawModeBtn(14, panelY + 10, "Магазин", "all");
     drawModeBtn(128, panelY + 10, "Мой инвентарь", "owned");
 
-    // Кнопка “Создать USDT-образ” (демо без платежа) — чтобы слот было видно и можно было получить.
-    const mkCreateUsdtBtn = () => {
-      const x = W - 138;
-      const y = panelY + 10;
-      const w = 120;
-      const h = 20;
-      const bg = this.add.graphics().setDepth(123);
-      bg.fillStyle(0x1f2f28, 0.98);
-      bg.fillRoundedRect(x, y, w, h, 7);
-      bg.lineStyle(1, 0x39d084, 0.85);
-      bg.strokeRoundedRect(x, y, w, h, 7);
-      const t = txt(this, x + w / 2, y + h / 2, "💠 Создать", 9, "#39d084", true).setOrigin(0.5).setDepth(124);
-      const z = this.add.zone(x + w / 2, y + h / 2, w, h).setInteractive({ useHandCursor: true }).setDepth(125);
-      z.on("pointerdown", async () => {
-        if (this._avatarBusy) return;
-        this._avatarBusy = true;
-        try {
-          const res = await post("/api/wardrobe/usdt/create", {});
-          if (res?.ok) {
-            if (res.player) {
-              State.player = res.player;
-              State.playerLoadedAt = Date.now();
-              this._refreshCombat(State.player);
-            }
-            this._showToast("✅ USDT-образ создан");
-            this._renderAvatarOverlay(res);
-          } else {
-            this._showToast(`❌ ${res?.message || res?.reason || "Ошибка"}`);
-          }
-        } catch (_e) {
-          this._showToast("❌ Ошибка сети");
-        } finally {
-          this._avatarBusy = false;
-        }
-      });
-      overlay.push(bg, t, z);
-    };
-
-    mkCreateUsdtBtn();
-
     const top = panelY + 40;
     const cardW = Math.floor((W - 32 - 8) / 2);
     const cardH = 96;
@@ -258,6 +239,9 @@
           if (a.class_type === "free" || a.class_type === "gold" || a.class_type === "diamonds") {
             btnLabel = _buyLabelFor(a);
             action = "buy";
+          } else if (a.class_type === "usdt") {
+            btnLabel = _buyLabelFor(a);
+            action = "buy_usdt";
           } else {
             btnLabel = "Недоступно";
             action = "none";
@@ -305,13 +289,19 @@
       if (action === "buy") res = await post("/api/wardrobe/buy", { class_id: item.class_id });
       if (action === "equip") res = await post("/api/wardrobe/equip", { class_id: item.class_id });
       if (action === "unequip") res = await post("/api/wardrobe/unequip", {});
+      if (action === "buy_usdt") res = await post("/api/wardrobe/usdt/create", {});
       if (res?.ok) {
         if (res.player) {
           State.player = res.player;
           State.playerLoadedAt = Date.now();
           this._refreshCombat(State.player);
         }
-        this._showToast(action === "buy" ? "✅ Образ получен" : (action === "unequip" ? "✅ Образ снят" : "✅ Образ надет"));
+        const okMsg =
+          action === "buy" ? "✅ Образ получен"
+          : action === "unequip" ? "✅ Образ снят"
+          : action === "buy_usdt" ? "✅ USDT-образ получен"
+          : "✅ Образ надет";
+        this._showToast(okMsg);
         this._renderAvatarOverlay(res);
       } else {
         this._showToast(`❌ ${res?.message || res?.reason || "Ошибка"}`);
