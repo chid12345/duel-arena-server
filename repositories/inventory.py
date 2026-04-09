@@ -17,11 +17,15 @@ from config import (
     RESET_STATS_COST_DIAMONDS,
     RESET_STATS_COST_DIAMONDS_USDT,
     STAMINA_PER_FREE_STAT,
+    expected_max_hp_from_level,
+    stamina_stats_invested,
 )
 
 
 class InventoryMixin:
     """Mixin: инвентарь классов, покупка, переключение, USDT-образы."""
+
+    _USDT_MAX_NAME_LEN = 50
 
     def _ensure_inventory_schema(self, cursor) -> None:
         """Safety net: гарантирует наличие user_inventory и полей классов в players."""
@@ -40,7 +44,10 @@ class InventoryMixin:
                     agility_saved INTEGER DEFAULT 0,
                     intuition_saved INTEGER DEFAULT 0,
                     endurance_saved INTEGER DEFAULT 0,
+                    stamina_saved INTEGER DEFAULT 0,
                     free_stats_saved INTEGER DEFAULT 0,
+                    max_hp_saved INTEGER DEFAULT 0,
+                    current_hp_saved INTEGER DEFAULT 0,
                     UNIQUE(user_id, class_id)
                 )"""
             )
@@ -54,6 +61,16 @@ class InventoryMixin:
                 )
                 if not cursor.fetchone():
                     cursor.execute(f"ALTER TABLE players ADD COLUMN {col} TEXT")
+
+            # Добавляем поля USDT-слепка на старых БД.
+            for col in ("stamina_saved", "max_hp_saved", "current_hp_saved"):
+                cursor.execute(
+                    """SELECT 1 FROM information_schema.columns
+                       WHERE table_name = 'user_inventory' AND column_name = %s LIMIT 1""",
+                    (col,),
+                )
+                if not cursor.fetchone():
+                    cursor.execute(f"ALTER TABLE user_inventory ADD COLUMN {col} INTEGER DEFAULT 0")
         else:
             cursor.execute(
                 """CREATE TABLE IF NOT EXISTS user_inventory (
@@ -68,7 +85,10 @@ class InventoryMixin:
                     agility_saved INTEGER DEFAULT 0,
                     intuition_saved INTEGER DEFAULT 0,
                     endurance_saved INTEGER DEFAULT 0,
+                    stamina_saved INTEGER DEFAULT 0,
                     free_stats_saved INTEGER DEFAULT 0,
+                    max_hp_saved INTEGER DEFAULT 0,
+                    current_hp_saved INTEGER DEFAULT 0,
                     FOREIGN KEY (user_id) REFERENCES players(user_id) ON DELETE CASCADE,
                     UNIQUE(user_id, class_id)
                 )"""
@@ -81,6 +101,15 @@ class InventoryMixin:
                 cursor.execute("ALTER TABLE players ADD COLUMN current_class TEXT")
             if "current_class_type" not in cols:
                 cursor.execute("ALTER TABLE players ADD COLUMN current_class_type TEXT")
+
+            cursor.execute("PRAGMA table_info(user_inventory)")
+            inv_cols = {r[1] for r in cursor.fetchall()}
+            if "stamina_saved" not in inv_cols:
+                cursor.execute("ALTER TABLE user_inventory ADD COLUMN stamina_saved INTEGER DEFAULT 0")
+            if "max_hp_saved" not in inv_cols:
+                cursor.execute("ALTER TABLE user_inventory ADD COLUMN max_hp_saved INTEGER DEFAULT 0")
+            if "current_hp_saved" not in inv_cols:
+                cursor.execute("ALTER TABLE user_inventory ADD COLUMN current_hp_saved INTEGER DEFAULT 0")
 
     # ── Получение информации о классах ────────────────────────────────────────
 
@@ -393,17 +422,34 @@ class InventoryMixin:
                 # Для USDT-образов загружаем сохранённые статы (абсолютный слепок)
                 cursor.execute(
                     """SELECT strength_saved, agility_saved, intuition_saved, 
-                              endurance_saved, free_stats_saved
+                              stamina_saved, free_stats_saved, max_hp_saved, current_hp_saved
                        FROM user_inventory 
                        WHERE user_id = ? AND class_id = ?""",
                     (user_id, class_id)
                 )
                 saved_stats = cursor.fetchone()
                 if saved_stats:
+                    cursor.execute("SELECT level FROM players WHERE user_id = ?", (user_id,))
+                    row_lv = cursor.fetchone() or {}
+                    level = int(row_lv.get("level", 1) or 1)
+
+                    stamina_pts = int(saved_stats.get("stamina_saved", 0) or 0)
+                    max_hp = max(1, int(expected_max_hp_from_level(level)) + stamina_pts * int(STAMINA_PER_FREE_STAT))
+
+                    chp = saved_stats.get("current_hp_saved")
+                    if not chp or int(chp) <= 0:
+                        cursor.execute("SELECT current_hp, max_hp FROM players WHERE user_id = ?", (user_id,))
+                        cur_row = cursor.fetchone() or {}
+                        cur_mhp = max(1, int(cur_row.get("max_hp", max_hp) or max_hp))
+                        cur_chp = max(1, int(cur_row.get("current_hp", cur_mhp) or cur_mhp))
+                        chp = int(round(cur_chp / cur_mhp * max_hp))
+                    current_hp = min(max_hp, max(1, int(chp)))
+
                     # В players нет agility/intuition, используем endurance/crit
                     cursor.execute(
                         """UPDATE players 
                            SET strength = ?, endurance = ?, crit = ?, free_stats = ?,
+                               max_hp = ?, current_hp = ?,
                                equipped_avatar_id = 'base_neutral'
                            WHERE user_id = ?""",
                         (
@@ -411,6 +457,8 @@ class InventoryMixin:
                             saved_stats["agility_saved"],
                             saved_stats["intuition_saved"],
                             saved_stats["free_stats_saved"],
+                            max_hp,
+                            current_hp,
                             user_id
                         )
                     )
@@ -423,17 +471,30 @@ class InventoryMixin:
                 hp_row = cursor.fetchone()
                 new_max_hp = max(1, int(hp_row["max_hp"]) + d_hp)
                 new_current_hp = min(new_max_hp, max(1, int(hp_row["current_hp"]) + d_hp))
-                cursor.execute(
-                    """UPDATE players
-                       SET strength = GREATEST(1, strength + ?),
-                           endurance = GREATEST(1, endurance + ?),
-                           crit = GREATEST(1, crit + ?),
-                           max_hp = ?,
-                           current_hp = ?,
-                           equipped_avatar_id = 'base_neutral'
-                       WHERE user_id = ?""",
-                    (d_str, d_end, d_crit, new_max_hp, new_current_hp, user_id),
-                )
+                if bool(getattr(self, "_pg", False)):
+                    cursor.execute(
+                        """UPDATE players
+                           SET strength = GREATEST(1, strength + ?),
+                               endurance = GREATEST(1, endurance + ?),
+                               crit = GREATEST(1, crit + ?),
+                               max_hp = ?,
+                               current_hp = ?,
+                               equipped_avatar_id = 'base_neutral'
+                           WHERE user_id = ?""",
+                        (d_str, d_end, d_crit, new_max_hp, new_current_hp, user_id),
+                    )
+                else:
+                    cursor.execute(
+                        """UPDATE players
+                           SET strength = CASE WHEN (strength + ?) < 1 THEN 1 ELSE (strength + ?) END,
+                               endurance = CASE WHEN (endurance + ?) < 1 THEN 1 ELSE (endurance + ?) END,
+                               crit = CASE WHEN (crit + ?) < 1 THEN 1 ELSE (crit + ?) END,
+                               max_hp = ?,
+                               current_hp = ?,
+                               equipped_avatar_id = 'base_neutral'
+                           WHERE user_id = ?""",
+                        (d_str, d_str, d_end, d_end, d_crit, d_crit, new_max_hp, new_current_hp, user_id),
+                    )
 
             conn.commit()
             display_name = class_info["name"] if class_info else "USDT слот"
@@ -461,7 +522,7 @@ class InventoryMixin:
             ).fetchone()["count"]
             
             class_id = f"usdt_custom_{user_id}_{usdt_count + 1}"
-            display_name = custom_name or f"Кастомный {usdt_count + 1}"
+            display_name = (custom_name or f"Кастомный {usdt_count + 1}").strip()[: self._USDT_MAX_NAME_LEN] or f"Кастомный {usdt_count + 1}"
 
             # Создаём USDT-образ
             cursor.execute(
@@ -492,26 +553,35 @@ class InventoryMixin:
         try:
             # Получаем текущие статы игрока
             cursor.execute(
-                """SELECT strength, endurance, crit, free_stats
+                """SELECT level, strength, endurance, crit, free_stats, max_hp, current_hp
                    FROM players WHERE user_id = ?""",
-                (user_id,)
+                (user_id,),
             )
             stats = cursor.fetchone()
             if not stats:
                 return False, "Игрок не найден"
 
+            level = int(stats.get("level", 1) or 1)
+            max_hp = int(stats.get("max_hp", expected_max_hp_from_level(level)) or expected_max_hp_from_level(level))
+            current_hp = int(stats.get("current_hp", max_hp) or max_hp)
+            stamina_pts = int(stamina_stats_invested(max_hp, level))
+
             # Сохраняем статы в USDT-образ
             cursor.execute(
                 """UPDATE user_inventory 
                    SET strength_saved = ?, agility_saved = ?, intuition_saved = ?,
-                       endurance_saved = ?, free_stats_saved = ?
+                       endurance_saved = ?, stamina_saved = ?,
+                       free_stats_saved = ?, max_hp_saved = ?, current_hp_saved = ?
                    WHERE user_id = ? AND class_id = ?""",
                 (
                     stats["strength"],
                     stats["endurance"],
                     stats["crit"],
-                    0,
+                    0,  # legacy
+                    stamina_pts,
                     stats["free_stats"],
+                    max_hp,
+                    current_hp,
                     user_id,
                     class_id
                 )

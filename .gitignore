@@ -8,6 +8,10 @@ __pycache__/
 *.log
 *.log.*
 
+# Cursor/Claude agent artifacts (never commit)
+.claude/
+.cursor/
+
 # Local secrets
 .env.local
 .env

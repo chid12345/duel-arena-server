@@ -70,7 +70,7 @@
         strength: Number(item.strength_saved || 0),
         agility: Number(item.agility_saved || 0),
         intuition: Number(item.intuition_saved || 0),
-        endurance: Number(item.endurance_saved || 0),
+        endurance: Number(item.stamina_saved || item.endurance_saved || 0),
         special_bonus: "Слот сборки: +19 свободных статов, скидка reset 50%",
         owned: true,
         equipped: !!item.equipped,

@@ -388,11 +388,30 @@ def _player_api(player: dict) -> dict:
     avatar_id = (player.get("equipped_avatar_id") or "base_neutral").strip()
     avatar = AVATAR_BY_ID.get(avatar_id) or {}
     avb = _avatar_effective_bonus(lv, avatar_id)
-    # Бонусы как агрегат: к avatar позже добавим items/buffs и UI не придется переделывать.
+
+    # Бонусы (агрегат): сейчас считаем из (avatar + текущий класс из гардероба).
     bonus_strength = int(avb.get("strength", 0))
     bonus_agility = int(avb.get("endurance", 0))
     bonus_intuition = int(avb.get("crit", 0))
     bonus_stamina = int(avb.get("hp_flat", 0) or 0) // max(1, int(STAMINA_PER_FREE_STAT))
+
+    cls_id = (player.get("current_class") or "").strip()
+    cls_type = (player.get("current_class_type") or "").strip()
+    class_info = None
+    if cls_type in ("free", "gold", "diamonds"):
+        if cls_type == "free":
+            class_info = FREE_CLASSES.get(cls_id)
+        elif cls_type == "gold":
+            class_info = GOLD_CLASSES.get(cls_id)
+        else:
+            class_info = DIAMONDS_CLASSES.get(cls_id)
+
+    if class_info:
+        bonus_strength += int(class_info.get("bonus_strength", 0) or 0)
+        bonus_agility += int(class_info.get("bonus_agility", 0) or 0)
+        bonus_intuition += int(class_info.get("bonus_intuition", 0) or 0)
+        bonus_stamina += int(class_info.get("bonus_endurance", 0) or 0)
+
     base_strength = max(1, s - bonus_strength)
     base_agility = max(1, agi - bonus_agility)
     base_intuition = max(1, intu - bonus_intuition)
