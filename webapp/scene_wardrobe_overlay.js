@@ -212,8 +212,8 @@
         let btnLabel = "Надеть";
         let action = "equip";
         if (a.equipped) {
-          btnLabel = "Надет";
-          action = "none";
+          btnLabel = "Снять";
+          action = "unequip";
         } else if (!a.owned) {
           if (a.class_type === "free" || a.class_type === "gold" || a.class_type === "diamonds") {
             btnLabel = _buyLabelFor(a);
@@ -264,13 +264,14 @@
       let res = null;
       if (action === "buy") res = await post("/api/wardrobe/buy", { class_id: item.class_id });
       if (action === "equip") res = await post("/api/wardrobe/equip", { class_id: item.class_id });
+      if (action === "unequip") res = await post("/api/wardrobe/unequip", {});
       if (res?.ok) {
         if (res.player) {
           State.player = res.player;
           State.playerLoadedAt = Date.now();
           this._refreshCombat(State.player);
         }
-        this._showToast(action === "buy" ? "✅ Образ получен" : "✅ Образ надет");
+        this._showToast(action === "buy" ? "✅ Образ получен" : (action === "unequip" ? "✅ Образ снят" : "✅ Образ надет"));
         this._renderAvatarOverlay(res);
       } else {
         this._showToast(`❌ ${res?.message || res?.reason || "Ошибка"}`);

@@ -27,6 +27,24 @@ class InventoryMixin:
 
     _USDT_MAX_NAME_LEN = 50
 
+    def _player_current_class_info(self, cursor, user_id: int) -> Optional[Dict]:
+        """Источник истины: players.current_class(+type). Нужен, чтобы дельты статов не ломались при рассинхроне equipped-флагов."""
+        cursor.execute("SELECT current_class, current_class_type FROM players WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone() or {}
+        class_id = (row.get("current_class") or "").strip()
+        class_type = (row.get("current_class_type") or "").strip()
+        if not class_id or not class_type:
+            return None
+        if class_type == "free" and class_id in FREE_CLASSES:
+            return {**FREE_CLASSES[class_id], "class_id": class_id, "class_type": "free"}
+        if class_type == "gold" and class_id in GOLD_CLASSES:
+            return {**GOLD_CLASSES[class_id], "class_id": class_id, "class_type": "gold"}
+        if class_type == "diamonds" and class_id in DIAMONDS_CLASSES:
+            return {**DIAMONDS_CLASSES[class_id], "class_id": class_id, "class_type": "diamonds"}
+        if class_type == "usdt" and class_id.startswith("usdt_custom_"):
+            return {**USDT_CLASS_BASE, "class_id": class_id, "class_type": "usdt"}
+        return None
+
     def _ensure_inventory_schema(self, cursor) -> None:
         """Safety net: гарантирует наличие user_inventory и полей классов в players."""
         is_pg = bool(getattr(self, "_pg", False))
@@ -128,6 +146,10 @@ class InventoryMixin:
         }
 
     def _equipped_inventory_class_info(self, cursor, user_id: int) -> Optional[Dict]:
+        # Приоритет — players.current_class: он обновляется всегда при switch/equip.
+        cur_info = self._player_current_class_info(cursor, user_id)
+        if cur_info and cur_info.get("class_type") != "usdt":
+            return cur_info
         cursor.execute(
             "SELECT class_id FROM user_inventory WHERE user_id = ? AND equipped = TRUE LIMIT 1",
             (user_id,),
@@ -136,6 +158,70 @@ class InventoryMixin:
         if not row:
             return None
         return self.get_class_info(row["class_id"])
+
+    def unequip_class(self, user_id: int) -> Tuple[bool, str]:
+        """Снять текущий образ/класс. После снятия игрок остаётся со своими текущими статами БЕЗ бонусов класса."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
+        try:
+            cur_info = self._player_current_class_info(cursor, user_id)
+            # Снимаем equipped у всех (даже если рассинхрон)
+            cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
+
+            if cur_info and cur_info.get("class_type") in {"free", "gold", "diamonds"}:
+                vec = self._class_stat_vector(cur_info)
+                cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
+                hp_row = cursor.fetchone() or {}
+                new_max_hp = max(1, int(hp_row.get("max_hp", 1) or 1) - int(vec["max_hp"]))
+                new_current_hp = min(new_max_hp, max(1, int(hp_row.get("current_hp", new_max_hp) or new_max_hp) - int(vec["max_hp"])))
+                if bool(getattr(self, "_pg", False)):
+                    cursor.execute(
+                        """UPDATE players
+                           SET strength = GREATEST(1, strength - ?),
+                               endurance = GREATEST(1, endurance - ?),
+                               crit = GREATEST(1, crit - ?),
+                               max_hp = ?,
+                               current_hp = ?,
+                               current_class = NULL,
+                               current_class_type = NULL,
+                               equipped_avatar_id = 'base_neutral'
+                           WHERE user_id = ?""",
+                        (vec["strength"], vec["endurance"], vec["crit"], new_max_hp, new_current_hp, user_id),
+                    )
+                else:
+                    cursor.execute(
+                        """UPDATE players
+                           SET strength = CASE WHEN (strength - ?) < 1 THEN 1 ELSE (strength - ?) END,
+                               endurance = CASE WHEN (endurance - ?) < 1 THEN 1 ELSE (endurance - ?) END,
+                               crit = CASE WHEN (crit - ?) < 1 THEN 1 ELSE (crit - ?) END,
+                               max_hp = ?,
+                               current_hp = ?,
+                               current_class = NULL,
+                               current_class_type = NULL,
+                               equipped_avatar_id = 'base_neutral'
+                           WHERE user_id = ?""",
+                        (
+                            vec["strength"], vec["strength"],
+                            vec["endurance"], vec["endurance"],
+                            vec["crit"], vec["crit"],
+                            new_max_hp, new_current_hp, user_id,
+                        ),
+                    )
+            else:
+                # Если класса нет или это USDT — просто очищаем маркеры (статы не трогаем).
+                cursor.execute(
+                    "UPDATE players SET current_class = NULL, current_class_type = NULL, equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
+                    (user_id,),
+                )
+
+            conn.commit()
+            return True, "Образ снят"
+        except Exception as e:
+            conn.rollback()
+            return False, f"Ошибка: {str(e)}"
+        finally:
+            conn.close()
 
     def _remove_legacy_avatar_bonus_with_cursor(self, cursor, user_id: int) -> None:
         """Снимает бонус старого avatar-catalog, чтобы не наслаивался на новую систему классов."""

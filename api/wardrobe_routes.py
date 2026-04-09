@@ -8,6 +8,9 @@ from pydantic import BaseModel
 
 logger = logging.getLogger(__name__)
 
+class InitDataHeader(BaseModel):
+    init_data: str
+
 
 class WardrobeBuyBody(BaseModel):
     init_data: str
@@ -127,6 +130,23 @@ def register_wardrobe_routes(app, ctx: Dict[str, Any]) -> None:
             result["player"] = _player_api(dict(player))
             result.update(await wardrobe(body.init_data))
         
+        return result
+
+    @router.post("/api/wardrobe/unequip")
+    async def wardrobe_unequip(body: InitDataHeader):
+        """Снять текущий образ/класс (играть без образа)."""
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        username = tg_user.get("username") or tg_user.get("first_name") or ""
+        db.get_or_create_player(uid, username)
+
+        success, message = db.unequip_class(uid)
+        result = {"ok": bool(success), "message": message}
+        if success:
+            _cache_invalidate(uid)
+            player = db.get_or_create_player(uid, "")
+            result["player"] = _player_api(dict(player))
+            result.update(await wardrobe(body.init_data))
         return result
 
     @router.post("/api/wardrobe/usdt/create")
