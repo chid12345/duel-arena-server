@@ -42,7 +42,7 @@ from progression_loader import (
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.78"
+GAME_VERSION = "1.79"
 
 # ── Система классов и инвентаря ──────────────────────────────────────────────
 
@@ -573,7 +573,6 @@ FULL_RESET_CRYPTO_USDT = (os.getenv("FULL_RESET_CRYPTO_USDT") or "11.99").strip(
 # Алмазы (премиум валюта)
 DIAMONDS_DAILY_STREAK = 2
 DIAMONDS_ACHIEVEMENT_BASE = 10
-RESET_STATS_COST_DIAMONDS = 100  # ~6-7 месяцев копить при ~13-15 алмазов/месяц
 
 # Реферальные награды (см. database.process_referral_*)
 # N — порядковый номер приглашённого по факту первой оплаты подписки (Stars).

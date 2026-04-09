@@ -33,6 +33,7 @@ from api.shop_routes import register_shop_routes
 from api.social_routes import register_social_routes
 from api.system_realtime_routes import register_system_realtime_routes
 from api.titan_training_routes import register_titan_training_routes
+from api.wardrobe_routes import register_wardrobe_routes
 
 # Подтягиваем существующие модули игры
 from config import (
@@ -51,6 +52,8 @@ from config import (
     AVATAR_CATALOG, ELITE_AVATAR_ID, ELITE_AVATAR_STARS, ELITE_AVATAR_USDT,
     AVATAR_SCALE_EVERY_LEVELS, AVATAR_SCALE_MAX_BONUS,
     STAMINA_PER_FREE_STAT,
+    FREE_CLASSES, GOLD_CLASSES, DIAMONDS_CLASSES, USDT_CLASS_BASE,
+    RESET_STATS_COST_DIAMONDS, RESET_STATS_COST_DIAMONDS_USDT,
 )
 from database import db
 from battle_system import battle_system
@@ -1255,6 +1258,23 @@ register_avatar_shop_routes(
         "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
     },
 )
+register_wardrobe_routes(
+    app,
+    {
+        "db": db,
+        "get_user_from_init_data": get_user_from_init_data,
+        "_player_api": _player_api,
+        "_cache_invalidate": _cache_invalidate,
+        "_rl_check": _rl_check,
+        "FREE_CLASSES": FREE_CLASSES,
+        "GOLD_CLASSES": GOLD_CLASSES,
+        "DIAMONDS_CLASSES": DIAMONDS_CLASSES,
+        "USDT_CLASS_BASE": USDT_CLASS_BASE,
+        "RESET_STATS_COST_DIAMONDS": RESET_STATS_COST_DIAMONDS,
+        "RESET_STATS_COST_DIAMONDS_USDT": RESET_STATS_COST_DIAMONDS_USDT,
+    },
+)
+
 register_shop_routes(
     app,
     {
