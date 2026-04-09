@@ -148,38 +148,6 @@
     drawModeBtn(14, panelY + 10, "Магазин", "all");
     drawModeBtn(128, panelY + 10, "Мой инвентарь", "owned");
 
-    // Кнопка “Починить статы” — на случай старых рассинхронов после смены образов
-    const fixBg = this.add.graphics().setDepth(123);
-    fixBg.fillStyle(0x2a2840, 0.95);
-    fixBg.fillRoundedRect(W - 138, panelY + 10, 120, 20, 7);
-    fixBg.lineStyle(1, 0xffc83c, 0.8);
-    fixBg.strokeRoundedRect(W - 138, panelY + 10, 120, 20, 7);
-    const fixTxt = txt(this, W - 78, panelY + 20, "🛠 Починить", 9, "#ffc83c", true).setOrigin(0.5).setDepth(124);
-    const fixZone = this.add.zone(W - 78, panelY + 20, 120, 20).setInteractive({ useHandCursor: true }).setDepth(125);
-    fixZone.on("pointerdown", async () => {
-      if (this._avatarBusy) return;
-      this._avatarBusy = true;
-      try {
-        const res = await post("/api/wardrobe/resync", {});
-        if (res?.ok) {
-          if (res.player) {
-            State.player = res.player;
-            State.playerLoadedAt = Date.now();
-            this._refreshCombat(State.player);
-          }
-          this._showToast("✅ Статы починены");
-          this._renderAvatarOverlay(res);
-        } else {
-          this._showToast(`❌ ${res?.message || res?.reason || "Ошибка"}`);
-        }
-      } catch (_e) {
-        this._showToast("❌ Ошибка сети");
-      } finally {
-        this._avatarBusy = false;
-      }
-    });
-    overlay.push(fixBg, fixTxt, fixZone);
-
     const top = panelY + 40;
     const cardW = Math.floor((W - 32 - 8) / 2);
     const cardH = 96;

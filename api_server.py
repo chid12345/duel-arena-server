@@ -223,6 +223,10 @@ def _avatar_effective_bonus(level: int, avatar_id: str) -> dict:
     avatar = AVATAR_BY_ID.get((avatar_id or "").strip()) or {}
     if not avatar:
         return {"strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0}
+    # После введения гардероба-классов базовые аватары считаем косметикой (без бонусов),
+    # иначе игроки получают “левые” +2/+5 даже без надетого класса.
+    if (avatar.get("tier") or "").lower() == "base":
+        return {"strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0}
     step = max(1, int(AVATAR_SCALE_EVERY_LEVELS))
     cap = max(0, int(AVATAR_SCALE_MAX_BONUS))
     scale = min(cap, max(0, int(level)) // step)
@@ -778,6 +782,23 @@ async def get_player(body: InitDataHeader):
     if regen:
         player = dict(player)
         player["current_hp"] = regen["current_hp"]
+
+    # Автопочинка: если профиль “сломался” после старых смен образов — один раз пересобираем статы.
+    try:
+        lv = int(player.get("level", 1) or 1)
+        exp_hp = int(expected_max_hp_from_level(lv))
+        if (
+            int(player.get("strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH) < int(PLAYER_START_STRENGTH)
+            or int(player.get("endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE) < int(PLAYER_START_ENDURANCE)
+            or int(player.get("crit", PLAYER_START_CRIT) or PLAYER_START_CRIT) < int(PLAYER_START_CRIT)
+            or int(player.get("max_hp", exp_hp) or exp_hp) < exp_hp
+        ):
+            db.resync_player_stats(uid)
+            _cache_invalidate(uid)
+            player = db.get_or_create_player(uid, username)
+    except Exception as _e:
+        # Если resync не смог — просто отдаём как есть (не валим API).
+        pass
 
     _cache_set(uid, player)
     return {"ok": True, "player": _player_api(player)}

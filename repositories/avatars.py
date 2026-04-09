@@ -180,6 +180,10 @@ class AvatarsMixin:
 
         scale = self._scale_bonus(level)
         tier = (avatar.get("tier") or "").lower()
+        # Базовые аватары после появления гардероба-классов считаем косметикой (без статов),
+        # чтобы не наслаивались “левые” бонусы у игрока без выбранного класса.
+        if tier == "base":
+            return {"strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0}
         scale_allowed = tier in {"gold", "diamond", "elite"}
 
         b_str = int(avatar.get("strength", 0))
