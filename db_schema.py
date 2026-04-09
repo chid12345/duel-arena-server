@@ -241,6 +241,26 @@ class DBSchema:
                 applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS user_inventory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                class_id TEXT NOT NULL,
+                class_type TEXT NOT NULL,
+                purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                equipped BOOLEAN DEFAULT FALSE,
+                custom_name TEXT,
+                strength_saved INTEGER DEFAULT 0,
+                agility_saved INTEGER DEFAULT 0,
+                intuition_saved INTEGER DEFAULT 0,
+                endurance_saved INTEGER DEFAULT 0,
+                free_stats_saved INTEGER DEFAULT 0,
+                FOREIGN KEY (user_id) REFERENCES players(user_id) ON DELETE CASCADE,
+                UNIQUE(user_id, class_id)
+            )
+        ''')
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_user ON user_inventory (user_id, class_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_equipped ON user_inventory (user_id, equipped) WHERE equipped = TRUE")
 
         self._apply_migrations(cursor)
         conn.commit()

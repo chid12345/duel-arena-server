@@ -41,6 +41,150 @@ from progression_loader import (
 # Токен бота - установить через переменную окружения
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
+# ── Система классов и инвентаря ──────────────────────────────────────────────
+
+# Бесплатные классы (эксклюзивный выбор - только один)
+FREE_CLASSES = {
+    "tank_free": {
+        "name": "Танк",
+        "price_gold": 0,
+        "price_diamonds": 0,
+        "bonus_strength": 5,
+        "bonus_agility": 0,
+        "bonus_intuition": 0,
+        "bonus_endurance": 5,
+        "special_bonus": "Броня +10%"
+    },
+    "agile_free": {
+        "name": "Ловкач", 
+        "price_gold": 0,
+        "price_diamonds": 0,
+        "bonus_strength": 0,
+        "bonus_agility": 5,
+        "bonus_intuition": 0,
+        "bonus_endurance": 5,
+        "special_bonus": "Уклонение +5%"
+    },
+    "crit_free": {
+        "name": "Крит",
+        "price_gold": 0,
+        "price_diamonds": 0,
+        "bonus_strength": 0,
+        "bonus_agility": 0,
+        "bonus_intuition": 5,
+        "bonus_endurance": 5,
+        "special_bonus": "Крит. урон +15%"
+    },
+    "universal_free": {
+        "name": "Универсал",
+        "price_gold": 0,
+        "price_diamonds": 0,
+        "bonus_strength": 2,
+        "bonus_agility": 2,
+        "bonus_intuition": 2,
+        "bonus_endurance": 2,
+        "special_bonus": "Все статы +1%"
+    }
+}
+
+# Платные классы за золото
+GOLD_CLASSES = {
+    "berserker_gold": {
+        "name": "Берсерк",
+        "price_gold": 5000,
+        "price_diamonds": 0,
+        "bonus_strength": 8,
+        "bonus_agility": 2,
+        "bonus_intuition": 0,
+        "bonus_endurance": 5,
+        "special_bonus": "Ярость: урон +20% при HP < 30%"
+    },
+    "assassin_gold": {
+        "name": "Ассасин",
+        "price_gold": 5000,
+        "price_diamonds": 0,
+        "bonus_strength": 2,
+        "bonus_agility": 8,
+        "bonus_intuition": 0,
+        "bonus_endurance": 5,
+        "special_bonus": "Скрытность: шанс двойного удара 10%"
+    },
+    "mage_gold": {
+        "name": "Маг",
+        "price_gold": 5000,
+        "price_diamonds": 0,
+        "bonus_strength": 0,
+        "bonus_agility": 2,
+        "bonus_intuition": 8,
+        "bonus_endurance": 5,
+        "special_bonus": "Магический щит: поглощает 15% урона"
+    },
+    "paladin_gold": {
+        "name": "Паладин",
+        "price_gold": 5000,
+        "price_diamonds": 0,
+        "bonus_strength": 5,
+        "bonus_agility": 0,
+        "bonus_intuition": 5,
+        "bonus_endurance": 5,
+        "special_bonus": "Святость: лечение 5% HP каждый раунд"
+    }
+}
+
+# Платные классы за алмазы
+DIAMONDS_CLASSES = {
+    "dragonknight_diamonds": {
+        "name": "Драконьий Рыцарь",
+        "price_gold": 0,
+        "price_diamonds": 100,
+        "bonus_strength": 10,
+        "bonus_agility": 0,
+        "bonus_intuition": 0,
+        "bonus_endurance": 10,
+        "special_bonus": "Дыхание дракона: огненный урон +25%"
+    },
+    "shadowdancer_diamonds": {
+        "name": "Теневой Танцор",
+        "price_gold": 0,
+        "price_diamonds": 100,
+        "bonus_strength": 0,
+        "bonus_agility": 10,
+        "bonus_intuition": 5,
+        "bonus_endurance": 5,
+        "special_bonus": "Теневой клинок: игнорирует 20% брони"
+    },
+    "archmage_diamonds": {
+        "name": "Архимаг",
+        "price_gold": 0,
+        "price_diamonds": 100,
+        "bonus_strength": 0,
+        "bonus_agility": 0,
+        "bonus_intuition": 15,
+        "bonus_endurance": 5,
+        "special_bonus": "Магическая вспышка: шанс оглушить врага 15%"
+    }
+}
+
+# USDT-образы (премиум)
+USDT_CLASS_BASE = {
+    "name": "Кастомный",
+    "price_gold": 0,
+    "price_diamonds": 0,
+    "price_usdt": 10.0,  # $10 USDT
+    "bonus_strength": 0,
+    "bonus_agility": 0,
+    "bonus_intuition": 0,
+    "bonus_endurance": 5,
+    "free_stats": 19,  # 19 свободных статов
+    "special_bonus": "Сброс статов на 50% дешевле"
+}
+
+# Цены сброса статов
+RESET_STATS_COST_DIAMONDS = 50  # обычная цена
+RESET_STATS_COST_DIAMONDS_USDT = 25  # для владельцев USDT-образов
+
+# Публичный HTTPS URL Mini App (без завершающего слэша), например https://your-app.onrender.com
+
 # Публичный HTTPS URL Mini App (без завершающего слэша), например https://your-app.onrender.com
 # Нужен для кнопки Web App в боте и регистрации в BotFather.
 # Если WEBAPP_PUBLIC_URL не задан — подставляем типичные URL хостингов (чтобы кнопка не пропадала после деплоя).

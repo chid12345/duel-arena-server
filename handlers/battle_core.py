@@ -100,6 +100,59 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await CallbackHandlers.pvp_bot_fallback(query, player)
         elif callback_data == 'show_invite':
             await CallbackHandlers.show_invite_inline(query, player, context)
+        elif callback_data.startswith('wardrobe_menu:'):
+            # Гардероб
+            try:
+                page = int(callback_data.split(':')[1])
+                from handlers.misc_callbacks import wardrobe_menu_callback
+                await wardrobe_menu_callback(query, context.bot, user.id, page)
+            except Exception as e:
+                logger.error("wardrobe_menu error: %s", e)
+                await query.answer("Ошибка открытия гардероба")
+        elif callback_data.startswith('wardrobe_type:'):
+            # Тип классов в гардеробе
+            try:
+                _, class_type, page_str = callback_data.split(':')
+                page = int(page_str)
+                from handlers.misc_callbacks import wardrobe_type_callback
+                await wardrobe_type_callback(query, context.bot, user.id, class_type, page)
+            except Exception as e:
+                logger.error("wardrobe_type error: %s", e)
+                await query.answer("Ошибка открытия типа классов")
+        elif callback_data.startswith('wardrobe_class:'):
+            # Действие с классом
+            try:
+                _, class_type, class_id, page_str = callback_data.split(':')
+                page = int(page_str)
+                from handlers.misc_callbacks import wardrobe_class_callback
+                await wardrobe_class_callback(query, context.bot, user.id, class_type, class_id, page)
+            except Exception as e:
+                logger.error("wardrobe_class error: %s", e)
+                await query.answer("Ошибка действия с классом")
+        elif callback_data == 'usdt_create':
+            # Создание USDT-образа
+            from handlers.misc_callbacks import usdt_create_callback
+            await usdt_create_callback(query, context.bot, user.id)
+        elif callback_data.startswith('usdt_equip:'):
+            # Экипировка USDT-образа
+            try:
+                _, class_id, page_str = callback_data.split(':')
+                page = int(page_str)
+                from handlers.misc_callbacks import usdt_equip_callback
+                await usdt_equip_callback(query, context.bot, user.id, class_id, page)
+            except Exception as e:
+                logger.error("usdt_equip error: %s", e)
+                await query.answer("Ошибка экипировки USDT-образа")
+        elif callback_data.startswith('usdt_save:'):
+            # Сохранение статов в USDT-образ
+            try:
+                _, class_id, page_str = callback_data.split(':')
+                page = int(page_str)
+                from handlers.misc_callbacks import usdt_save_callback
+                await usdt_save_callback(query, context.bot, user.id, class_id, page)
+            except Exception as e:
+                logger.error("usdt_save error: %s", e)
+                await query.answer("Ошибка сохранения статов")
         elif callback_data == "stars_buy_premium":
             await CallbackHandlers.send_premium_invoice(query, player, context)
         elif callback_data.startswith("stars_buy_"):
