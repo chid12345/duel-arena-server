@@ -22,6 +22,47 @@ from config import (
 class InventoryMixin:
     """Mixin: инвентарь классов, покупка, переключение, USDT-образы."""
 
+    def _ensure_inventory_schema(self, cursor) -> None:
+        """Safety net: гарантирует наличие user_inventory и полей классов в players."""
+        cursor.execute(
+            """CREATE TABLE IF NOT EXISTS user_inventory (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                class_id TEXT NOT NULL,
+                class_type TEXT NOT NULL,
+                purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                equipped BOOLEAN DEFAULT FALSE,
+                custom_name TEXT,
+                strength_saved INTEGER DEFAULT 0,
+                agility_saved INTEGER DEFAULT 0,
+                intuition_saved INTEGER DEFAULT 0,
+                endurance_saved INTEGER DEFAULT 0,
+                free_stats_saved INTEGER DEFAULT 0,
+                FOREIGN KEY (user_id) REFERENCES players(user_id) ON DELETE CASCADE,
+                UNIQUE(user_id, class_id)
+            )"""
+        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_user ON user_inventory (user_id, class_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_equipped ON user_inventory (user_id, equipped) WHERE equipped = TRUE")
+
+        is_pg = bool(getattr(self, "_pg", False))
+        if is_pg:
+            for col in ("current_class", "current_class_type"):
+                cursor.execute(
+                    """SELECT 1 FROM information_schema.columns
+                       WHERE table_name = 'players' AND column_name = %s LIMIT 1""",
+                    (col,),
+                )
+                if not cursor.fetchone():
+                    cursor.execute(f"ALTER TABLE players ADD COLUMN {col} TEXT")
+        else:
+            cursor.execute("PRAGMA table_info(players)")
+            cols = {r[1] for r in cursor.fetchall()}
+            if "current_class" not in cols:
+                cursor.execute("ALTER TABLE players ADD COLUMN current_class TEXT")
+            if "current_class_type" not in cols:
+                cursor.execute("ALTER TABLE players ADD COLUMN current_class_type TEXT")
+
     # ── Получение информации о классах ────────────────────────────────────────
 
     def get_class_info(self, class_id: str) -> Optional[Dict]:
@@ -57,11 +98,13 @@ class InventoryMixin:
         """Получить весь инвентарь пользователя."""
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
         cursor.execute(
             "SELECT * FROM user_inventory WHERE user_id = ? ORDER BY class_type, purchased_at",
             (user_id,)
         )
         inventory = [dict(row) for row in cursor.fetchall()]
+        conn.commit()
         conn.close()
         return inventory
 
@@ -69,11 +112,13 @@ class InventoryMixin:
         """Получить текущий экипированный класс."""
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
         cursor.execute(
             "SELECT * FROM user_inventory WHERE user_id = ? AND equipped = TRUE",
             (user_id,)
         )
         row = cursor.fetchone()
+        conn.commit()
         conn.close()
         return dict(row) if row else None
 
@@ -81,11 +126,13 @@ class InventoryMixin:
         """Проверить, есть ли у пользователя класс."""
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
         cursor.execute(
             "SELECT 1 FROM user_inventory WHERE user_id = ? AND class_id = ?",
             (user_id, class_id)
         )
         result = cursor.fetchone() is not None
+        conn.commit()
         conn.close()
         return result
 
@@ -93,11 +140,13 @@ class InventoryMixin:
         """Получить выбранный бесплатный класс (эксклюзивный выбор)."""
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
         cursor.execute(
             "SELECT class_id FROM user_inventory WHERE user_id = ? AND class_type = 'free'",
             (user_id,)
         )
         row = cursor.fetchone()
+        conn.commit()
         conn.close()
         return row["class_id"] if row else None
 
@@ -115,6 +164,7 @@ class InventoryMixin:
 
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
 
         try:
             # Получаем данные игрока
@@ -204,6 +254,7 @@ class InventoryMixin:
 
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
 
         try:
             # Снимаем экипировку со всех классов
@@ -266,6 +317,7 @@ class InventoryMixin:
         """Создать новый USDT-образ. Возвращает (успех, сообщение, class_id)."""
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
 
         try:
             # Генерируем уникальный ID для USDT-образа
@@ -301,6 +353,7 @@ class InventoryMixin:
 
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
 
         try:
             # Получаем текущие статы игрока
@@ -343,11 +396,13 @@ class InventoryMixin:
         """Получить стоимость сброса статов (скидка 50% для владельцев USDT)."""
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
         cursor.execute(
             "SELECT 1 FROM user_inventory WHERE user_id = ? AND class_type = 'usdt' LIMIT 1",
             (user_id,)
         )
         has_usdt = cursor.fetchone() is not None
+        conn.commit()
         conn.close()
         
         return RESET_STATS_COST_DIAMONDS_USDT if has_usdt else RESET_STATS_COST_DIAMONDS
