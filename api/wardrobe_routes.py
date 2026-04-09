@@ -149,6 +149,23 @@ def register_wardrobe_routes(app, ctx: Dict[str, Any]) -> None:
             result.update(await wardrobe(body.init_data))
         return result
 
+    @router.post("/api/wardrobe/resync")
+    async def wardrobe_resync(body: InitDataHeader):
+        """Починить статы, если они стали некорректными (например ловкость=1 после смены образов)."""
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        username = tg_user.get("username") or tg_user.get("first_name") or ""
+        db.get_or_create_player(uid, username)
+
+        success, message = db.resync_player_stats(uid)
+        result = {"ok": bool(success), "message": message}
+        if success:
+            _cache_invalidate(uid)
+            player = db.get_or_create_player(uid, "")
+            result["player"] = _player_api(dict(player))
+            result.update(await wardrobe(body.init_data))
+        return result
+
     @router.post("/api/wardrobe/usdt/create")
     async def wardrobe_usdt_create(init_data: str):
         """Создать новый USDT-образ (демо-версия без платежа)."""

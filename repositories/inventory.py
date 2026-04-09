@@ -19,6 +19,10 @@ from config import (
     STAMINA_PER_FREE_STAT,
     expected_max_hp_from_level,
     stamina_stats_invested,
+    total_free_stats_at_level,
+    PLAYER_START_STRENGTH,
+    PLAYER_START_ENDURANCE,
+    PLAYER_START_CRIT,
 )
 
 
@@ -215,6 +219,23 @@ class InventoryMixin:
                     (user_id,),
                 )
 
+            # Safety: если раньше статы уже “сломались” (например ловкость ушла в 1),
+            # делаем мягкую пересборку из текущих вложений → гарантируем минимум стартовых статов.
+            cursor.execute(
+                "SELECT level, strength, endurance, crit, free_stats, max_hp, current_hp FROM players WHERE user_id = ?",
+                (user_id,),
+            )
+            p = cursor.fetchone() or {}
+            lv = int(p.get("level", 1) or 1)
+            exp_hp = int(expected_max_hp_from_level(lv))
+            if (
+                int(p.get("strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH) < PLAYER_START_STRENGTH
+                or int(p.get("endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE) < PLAYER_START_ENDURANCE
+                or int(p.get("crit", PLAYER_START_CRIT) or PLAYER_START_CRIT) < PLAYER_START_CRIT
+                or int(p.get("max_hp", exp_hp) or exp_hp) < exp_hp
+            ):
+                self.resync_player_stats(user_id, _cursor=cursor, _in_tx=True)
+
             conn.commit()
             return True, "Образ снят"
         except Exception as e:
@@ -222,6 +243,91 @@ class InventoryMixin:
             return False, f"Ошибка: {str(e)}"
         finally:
             conn.close()
+
+    def resync_player_stats(self, user_id: int, *, _cursor=None, _in_tx: bool = False) -> Tuple[bool, str]:
+        """
+        Починка статов игрока, если они ушли в некорректные значения (например ловкость=1).
+        Логика: берём сколько очков уже вложено (по текущим числам), нормализуем сумму под (total_free - free_stats),
+        выставляем статы не ниже стартовых, а HP — из expected_max_hp_from_level + вложения в выносливость.
+        """
+        own_conn = None
+        cursor = _cursor
+        if cursor is None:
+            own_conn = self.get_connection()
+            cursor = own_conn.cursor()
+            self._ensure_inventory_schema(cursor)
+        try:
+            # Снимаем любые классы: resync — “чистое тело”.
+            cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
+            cursor.execute(
+                "UPDATE players SET current_class = NULL, current_class_type = NULL, equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
+                (user_id,),
+            )
+
+            cursor.execute(
+                "SELECT level, strength, endurance, crit, max_hp, current_hp, free_stats FROM players WHERE user_id = ?",
+                (user_id,),
+            )
+            p = cursor.fetchone()
+            if not p:
+                return False, "Игрок не найден"
+            lv = int(p.get("level", 1) or 1)
+            free_stats = max(0, int(p.get("free_stats", 0) or 0))
+            total_free = int(total_free_stats_at_level(lv))
+            spent = max(0, total_free - free_stats)
+
+            # Текущие вложения по числам (если меньше старта — считаем 0).
+            cur_str = int(p.get("strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH)
+            cur_agi = int(p.get("endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE)
+            cur_int = int(p.get("crit", PLAYER_START_CRIT) or PLAYER_START_CRIT)
+            inv_str = max(0, cur_str - int(PLAYER_START_STRENGTH))
+            inv_agi = max(0, cur_agi - int(PLAYER_START_ENDURANCE))
+            inv_int = max(0, cur_int - int(PLAYER_START_CRIT))
+            cur_mhp = int(p.get("max_hp", expected_max_hp_from_level(lv)) or expected_max_hp_from_level(lv))
+            inv_sta = max(0, int(stamina_stats_invested(cur_mhp, lv)))
+
+            raw = [inv_str, inv_agi, inv_int, inv_sta]
+            sraw = sum(raw)
+            if spent <= 0:
+                alloc = [0, 0, 0, 0]
+            elif sraw <= 0:
+                alloc = [spent, 0, 0, 0]
+            elif sraw == spent:
+                alloc = raw
+            else:
+                # Нормализуем вложения под spent, сохраняя пропорции.
+                scaled = [r * spent / sraw for r in raw]
+                floors = [int(x) for x in scaled]
+                rem = spent - sum(floors)
+                fracs = sorted([(scaled[i] - floors[i], i) for i in range(4)], reverse=True)
+                for _ in range(rem):
+                    floors[fracs[_ % 4][1]] += 1
+                alloc = floors
+
+            new_str = PLAYER_START_STRENGTH + alloc[0]
+            new_agi = PLAYER_START_ENDURANCE + alloc[1]
+            new_int = PLAYER_START_CRIT + alloc[2]
+            base_hp = int(expected_max_hp_from_level(lv))
+            new_mhp = max(1, base_hp + alloc[3] * int(STAMINA_PER_FREE_STAT))
+            # Сохраняем процент текущего HP.
+            old_mhp = max(1, cur_mhp)
+            old_chp = max(1, int(p.get("current_hp", old_mhp) or old_mhp))
+            new_chp = min(new_mhp, max(1, int(round(old_chp / old_mhp * new_mhp))))
+
+            cursor.execute(
+                "UPDATE players SET strength = ?, endurance = ?, crit = ?, max_hp = ?, current_hp = ? WHERE user_id = ?",
+                (int(new_str), int(new_agi), int(new_int), int(new_mhp), int(new_chp), user_id),
+            )
+            if own_conn and not _in_tx:
+                own_conn.commit()
+            return True, "Статы пересчитаны"
+        except Exception as e:
+            if own_conn and not _in_tx:
+                own_conn.rollback()
+            return False, f"Ошибка: {str(e)}"
+        finally:
+            if own_conn:
+                own_conn.close()
 
     def _remove_legacy_avatar_bonus_with_cursor(self, cursor, user_id: int) -> None:
         """Снимает бонус старого avatar-catalog, чтобы не наслаивался на новую систему классов."""
