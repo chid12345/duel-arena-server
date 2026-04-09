@@ -31,12 +31,23 @@ class InventoryMixin:
 
     _USDT_MAX_NAME_LEN = 50
 
+    @staticmethod
+    def _row_get(row: Any, key: str, default: Any = None) -> Any:
+        if row is None:
+            return default
+        if isinstance(row, dict):
+            return row.get(key, default)
+        try:
+            return row[key]
+        except Exception:
+            return default
+
     def _player_current_class_info(self, cursor, user_id: int) -> Optional[Dict]:
         """Источник истины: players.current_class(+type). Нужен, чтобы дельты статов не ломались при рассинхроне equipped-флагов."""
         cursor.execute("SELECT current_class, current_class_type FROM players WHERE user_id = ?", (user_id,))
-        row = cursor.fetchone() or {}
-        class_id = (row.get("current_class") or "").strip()
-        class_type = (row.get("current_class_type") or "").strip()
+        row = cursor.fetchone()
+        class_id = (self._row_get(row, "current_class") or "").strip()
+        class_type = (self._row_get(row, "current_class_type") or "").strip()
         if not class_id or not class_type:
             return None
         if class_type == "free" and class_id in FREE_CLASSES:
@@ -176,9 +187,12 @@ class InventoryMixin:
             if cur_info and cur_info.get("class_type") in {"free", "gold", "diamonds"}:
                 vec = self._class_stat_vector(cur_info)
                 cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
-                hp_row = cursor.fetchone() or {}
-                new_max_hp = max(1, int(hp_row.get("max_hp", 1) or 1) - int(vec["max_hp"]))
-                new_current_hp = min(new_max_hp, max(1, int(hp_row.get("current_hp", new_max_hp) or new_max_hp) - int(vec["max_hp"])))
+                hp_row = cursor.fetchone()
+                new_max_hp = max(1, int(self._row_get(hp_row, "max_hp", 1) or 1) - int(vec["max_hp"]))
+                new_current_hp = min(
+                    new_max_hp,
+                    max(1, int(self._row_get(hp_row, "current_hp", new_max_hp) or new_max_hp) - int(vec["max_hp"])),
+                )
                 if bool(getattr(self, "_pg", False)):
                     cursor.execute(
                         """UPDATE players
@@ -225,14 +239,14 @@ class InventoryMixin:
                 "SELECT level, strength, endurance, crit, free_stats, max_hp, current_hp FROM players WHERE user_id = ?",
                 (user_id,),
             )
-            p = cursor.fetchone() or {}
-            lv = int(p.get("level", 1) or 1)
+            p = cursor.fetchone()
+            lv = int(self._row_get(p, "level", 1) or 1)
             exp_hp = int(expected_max_hp_from_level(lv))
             if (
-                int(p.get("strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH) < PLAYER_START_STRENGTH
-                or int(p.get("endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE) < PLAYER_START_ENDURANCE
-                or int(p.get("crit", PLAYER_START_CRIT) or PLAYER_START_CRIT) < PLAYER_START_CRIT
-                or int(p.get("max_hp", exp_hp) or exp_hp) < exp_hp
+                int(self._row_get(p, "strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH) < PLAYER_START_STRENGTH
+                or int(self._row_get(p, "endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE) < PLAYER_START_ENDURANCE
+                or int(self._row_get(p, "crit", PLAYER_START_CRIT) or PLAYER_START_CRIT) < PLAYER_START_CRIT
+                or int(self._row_get(p, "max_hp", exp_hp) or exp_hp) < exp_hp
             ):
                 self.resync_player_stats(user_id, _cursor=cursor, _in_tx=True)
 
@@ -271,19 +285,19 @@ class InventoryMixin:
             p = cursor.fetchone()
             if not p:
                 return False, "Игрок не найден"
-            lv = int(p.get("level", 1) or 1)
-            free_stats = max(0, int(p.get("free_stats", 0) or 0))
+            lv = int(self._row_get(p, "level", 1) or 1)
+            free_stats = max(0, int(self._row_get(p, "free_stats", 0) or 0))
             total_free = int(total_free_stats_at_level(lv))
             spent = max(0, total_free - free_stats)
 
             # Текущие вложения по числам (если меньше старта — считаем 0).
-            cur_str = int(p.get("strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH)
-            cur_agi = int(p.get("endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE)
-            cur_int = int(p.get("crit", PLAYER_START_CRIT) or PLAYER_START_CRIT)
+            cur_str = int(self._row_get(p, "strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH)
+            cur_agi = int(self._row_get(p, "endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE)
+            cur_int = int(self._row_get(p, "crit", PLAYER_START_CRIT) or PLAYER_START_CRIT)
             inv_str = max(0, cur_str - int(PLAYER_START_STRENGTH))
             inv_agi = max(0, cur_agi - int(PLAYER_START_ENDURANCE))
             inv_int = max(0, cur_int - int(PLAYER_START_CRIT))
-            cur_mhp = int(p.get("max_hp", expected_max_hp_from_level(lv)) or expected_max_hp_from_level(lv))
+            cur_mhp = int(self._row_get(p, "max_hp", expected_max_hp_from_level(lv)) or expected_max_hp_from_level(lv))
             inv_sta = max(0, int(stamina_stats_invested(cur_mhp, lv)))
 
             raw = [inv_str, inv_agi, inv_int, inv_sta]
@@ -311,7 +325,7 @@ class InventoryMixin:
             new_mhp = max(1, base_hp + alloc[3] * int(STAMINA_PER_FREE_STAT))
             # Сохраняем процент текущего HP.
             old_mhp = max(1, cur_mhp)
-            old_chp = max(1, int(p.get("current_hp", old_mhp) or old_mhp))
+            old_chp = max(1, int(self._row_get(p, "current_hp", old_mhp) or old_mhp))
             new_chp = min(new_mhp, max(1, int(round(old_chp / old_mhp * new_mhp))))
 
             cursor.execute(
@@ -340,11 +354,11 @@ class InventoryMixin:
         if not p:
             return
 
-        avatar_id = (p.get("equipped_avatar_id") or "base_neutral").strip()
+        avatar_id = (self._row_get(p, "equipped_avatar_id") or "base_neutral").strip()
         if avatar_id in {"", "base_neutral"}:
             return
 
-        level = int(p.get("level", 1) or 1)
+        level = int(self._row_get(p, "level", 1) or 1)
         av = self._effective_avatar_bonus(avatar_id, level)
         d_str = int(av.get("strength", 0) or 0)
         d_end = int(av.get("endurance", 0) or 0)
@@ -579,7 +593,7 @@ class InventoryMixin:
             owned_row = cursor.fetchone()
             if not owned_row:
                 return False, "У вас нет этого класса"
-            target_type = (owned_row.get("class_type") or "").strip()
+            target_type = (self._row_get(owned_row, "class_type") or "").strip()
 
             class_info = self.get_class_info(class_id)
             if target_type != "usdt" and not class_info:
@@ -622,18 +636,18 @@ class InventoryMixin:
                 saved_stats = cursor.fetchone()
                 if saved_stats:
                     cursor.execute("SELECT level FROM players WHERE user_id = ?", (user_id,))
-                    row_lv = cursor.fetchone() or {}
-                    level = int(row_lv.get("level", 1) or 1)
+                    row_lv = cursor.fetchone()
+                    level = int(self._row_get(row_lv, "level", 1) or 1)
 
-                    stamina_pts = int(saved_stats.get("stamina_saved", 0) or 0)
+                    stamina_pts = int(self._row_get(saved_stats, "stamina_saved", 0) or 0)
                     max_hp = max(1, int(expected_max_hp_from_level(level)) + stamina_pts * int(STAMINA_PER_FREE_STAT))
 
-                    chp = saved_stats.get("current_hp_saved")
+                    chp = self._row_get(saved_stats, "current_hp_saved")
                     if not chp or int(chp) <= 0:
                         cursor.execute("SELECT current_hp, max_hp FROM players WHERE user_id = ?", (user_id,))
-                        cur_row = cursor.fetchone() or {}
-                        cur_mhp = max(1, int(cur_row.get("max_hp", max_hp) or max_hp))
-                        cur_chp = max(1, int(cur_row.get("current_hp", cur_mhp) or cur_mhp))
+                        cur_row = cursor.fetchone()
+                        cur_mhp = max(1, int(self._row_get(cur_row, "max_hp", max_hp) or max_hp))
+                        cur_chp = max(1, int(self._row_get(cur_row, "current_hp", cur_mhp) or cur_mhp))
                         chp = int(round(cur_chp / cur_mhp * max_hp))
                     current_hp = min(max_hp, max(1, int(chp)))
 
@@ -753,9 +767,9 @@ class InventoryMixin:
             if not stats:
                 return False, "Игрок не найден"
 
-            level = int(stats.get("level", 1) or 1)
-            max_hp = int(stats.get("max_hp", expected_max_hp_from_level(level)) or expected_max_hp_from_level(level))
-            current_hp = int(stats.get("current_hp", max_hp) or max_hp)
+            level = int(self._row_get(stats, "level", 1) or 1)
+            max_hp = int(self._row_get(stats, "max_hp", expected_max_hp_from_level(level)) or expected_max_hp_from_level(level))
+            current_hp = int(self._row_get(stats, "current_hp", max_hp) or max_hp)
             stamina_pts = int(stamina_stats_invested(max_hp, level))
 
             # Сохраняем статы в USDT-образ
