@@ -105,7 +105,8 @@
 
   StatsScene.prototype._renderAvatarOverlay = function(wardrobePayload) {
     this._closeAvatarOverlay();
-    const cards = this._wardrobeCardsFromPayload(wardrobePayload);
+    const allCards = this._wardrobeCardsFromPayload(wardrobePayload);
+    if (!this._wardrobeView) this._wardrobeView = "all";
     const W = this.W, H = this.H;
     const overlay = [];
 
@@ -127,6 +128,26 @@
     closeZone.on("pointerdown", () => this._closeAvatarOverlay());
     overlay.push(closeBg, closeTxt, closeZone);
 
+    const drawModeBtn = (x, y, label, mode) => {
+      const active = this._wardrobeView === mode;
+      const bg = this.add.graphics().setDepth(123);
+      bg.fillStyle(active ? C.purple : 0x2a2840, active ? 0.95 : 0.85);
+      bg.fillRoundedRect(x, y, 110, 20, 7);
+      bg.lineStyle(1, active ? 0xd9c8ff : 0x4a4870, 0.85);
+      bg.strokeRoundedRect(x, y, 110, 20, 7);
+      const t = txt(this, x + 55, y + 10, label, 9, active ? "#ffffff" : "#c8c8e8", true).setOrigin(0.5).setDepth(124);
+      const z = this.add.zone(x + 55, y + 10, 110, 20).setInteractive({ useHandCursor: true }).setDepth(125);
+      z.on("pointerdown", () => {
+        if (this._wardrobeView === mode) return;
+        this._wardrobeView = mode;
+        this._avatarPage = 0;
+        this._renderAvatarOverlay(wardrobePayload);
+      });
+      overlay.push(bg, t, z);
+    };
+    drawModeBtn(14, panelY + 10, "Магазин", "all");
+    drawModeBtn(128, panelY + 10, "Мой инвентарь", "owned");
+
     const top = panelY + 40;
     const cardW = Math.floor((W - 32 - 8) / 2);
     const cardH = 96;
@@ -135,6 +156,9 @@
     const navY = panelY + panelH - 26;
     const rowsPerPage = 3;
     const perPage = rowsPerPage * 2;
+    const cards = this._wardrobeView === "owned"
+      ? allCards.filter((x) => !!x.owned)
+      : allCards;
     const pageCount = Math.max(1, Math.ceil((cards.length || 0) / perPage));
     this._avatarPage = Math.min(this._avatarPage || 0, pageCount - 1);
     const cardsLayer = [];

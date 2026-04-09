@@ -16,6 +16,7 @@ from config import (
     USDT_CLASS_BASE,
     RESET_STATS_COST_DIAMONDS,
     RESET_STATS_COST_DIAMONDS_USDT,
+    STAMINA_PER_FREE_STAT,
 )
 
 
@@ -83,6 +84,69 @@ class InventoryMixin:
 
     # ── Получение информации о классах ────────────────────────────────────────
 
+    @staticmethod
+    def _class_stat_vector(class_info: Optional[Dict]) -> Dict[str, int]:
+        if not class_info:
+            return {"strength": 0, "endurance": 0, "crit": 0, "max_hp": 0}
+        return {
+            "strength": int(class_info.get("bonus_strength", 0) or 0),
+            # В проекте поле bonus_agility хранится в players.endurance
+            "endurance": int(class_info.get("bonus_agility", 0) or 0),
+            # В проекте поле bonus_intuition хранится в players.crit
+            "crit": int(class_info.get("bonus_intuition", 0) or 0),
+            # Выносливость класса трактуем как вложения в stamina (через HP)
+            "max_hp": int(class_info.get("bonus_endurance", 0) or 0) * int(STAMINA_PER_FREE_STAT),
+        }
+
+    def _equipped_inventory_class_info(self, cursor, user_id: int) -> Optional[Dict]:
+        cursor.execute(
+            "SELECT class_id FROM user_inventory WHERE user_id = ? AND equipped = TRUE LIMIT 1",
+            (user_id,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        return self.get_class_info(row["class_id"])
+
+    def _remove_legacy_avatar_bonus_with_cursor(self, cursor, user_id: int) -> None:
+        """Снимает бонус старого avatar-catalog, чтобы не наслаивался на новую систему классов."""
+        cursor.execute(
+            "SELECT level, strength, endurance, crit, max_hp, current_hp, equipped_avatar_id "
+            "FROM players WHERE user_id = ?",
+            (user_id,),
+        )
+        p = cursor.fetchone()
+        if not p:
+            return
+
+        avatar_id = (p.get("equipped_avatar_id") or "base_neutral").strip()
+        if avatar_id in {"", "base_neutral"}:
+            return
+
+        level = int(p.get("level", 1) or 1)
+        av = self._effective_avatar_bonus(avatar_id, level)
+        d_str = int(av.get("strength", 0) or 0)
+        d_end = int(av.get("endurance", 0) or 0)
+        d_crit = int(av.get("crit", 0) or 0)
+        d_hp = int(av.get("hp_flat", 0) or 0)
+        new_max_hp = max(1, int(p["max_hp"]) - d_hp)
+        new_current_hp = min(new_max_hp, max(1, int(p["current_hp"]) - d_hp))
+
+        cursor.execute(
+            """UPDATE players
+               SET strength = ?, endurance = ?, crit = ?,
+                   max_hp = ?, current_hp = ?, equipped_avatar_id = 'base_neutral'
+               WHERE user_id = ?""",
+            (
+                max(1, int(p["strength"]) - d_str),
+                max(1, int(p["endurance"]) - d_end),
+                max(1, int(p["crit"]) - d_crit),
+                new_max_hp,
+                new_current_hp,
+                user_id,
+            ),
+        )
+
     def get_class_info(self, class_id: str) -> Optional[Dict]:
         """Получить информацию о классе по ID."""
         if class_id in FREE_CLASSES:
@@ -91,6 +155,8 @@ class InventoryMixin:
             return {**GOLD_CLASSES[class_id], "class_id": class_id, "class_type": "gold"}
         elif class_id in DIAMONDS_CLASSES:
             return {**DIAMONDS_CLASSES[class_id], "class_id": class_id, "class_type": "diamonds"}
+        elif class_id.startswith("usdt_custom_"):
+            return {**USDT_CLASS_BASE, "class_id": class_id, "class_type": "usdt"}
         return None
 
     def get_all_classes(self) -> Dict[str, List[Dict]]:
@@ -243,6 +309,23 @@ class InventoryMixin:
                     "UPDATE user_inventory SET equipped = TRUE WHERE user_id = ? AND class_id = ?",
                     (user_id, class_id)
                 )
+                self._remove_legacy_avatar_bonus_with_cursor(cursor, user_id)
+                v = self._class_stat_vector(class_info)
+                cursor.execute(
+                    "SELECT max_hp, current_hp FROM players WHERE user_id = ?",
+                    (user_id,),
+                )
+                hp_row = cursor.fetchone()
+                hp_delta = int(v["max_hp"])
+                new_max_hp = max(1, int(hp_row["max_hp"]) + hp_delta)
+                new_current_hp = min(new_max_hp, max(1, int(hp_row["current_hp"]) + hp_delta))
+                cursor.execute(
+                    """UPDATE players
+                       SET strength = strength + ?, endurance = endurance + ?, crit = crit + ?,
+                           max_hp = ?, current_hp = ?
+                       WHERE user_id = ?""",
+                    (v["strength"], v["endurance"], v["crit"], new_max_hp, new_current_hp, user_id),
+                )
                 # Обновляем текущий класс в players
                 cursor.execute(
                     "UPDATE players SET current_class = ?, current_class_type = ? WHERE user_id = ?",
@@ -262,19 +345,32 @@ class InventoryMixin:
 
     def switch_class(self, user_id: int, class_id: str) -> Tuple[bool, str]:
         """Переключиться на другой класс. Возвращает (успех, сообщение)."""
-        # Проверяем, есть ли класс у пользователя
-        if not self.has_class(user_id, class_id):
-            return False, "У вас нет этого класса"
-
-        class_info = self.get_class_info(class_id)
-        if not class_info:
-            return False, "Класс не найден"
-
         conn = self.get_connection()
         cursor = conn.cursor()
         self._ensure_inventory_schema(cursor)
 
         try:
+            # Проверяем, есть ли класс у пользователя
+            cursor.execute(
+                "SELECT class_type FROM user_inventory WHERE user_id = ? AND class_id = ? LIMIT 1",
+                (user_id, class_id),
+            )
+            owned_row = cursor.fetchone()
+            if not owned_row:
+                return False, "У вас нет этого класса"
+            target_type = (owned_row.get("class_type") or "").strip()
+
+            class_info = self.get_class_info(class_id)
+            if target_type != "usdt" and not class_info:
+                return False, "Класс не найден"
+
+            self._remove_legacy_avatar_bonus_with_cursor(cursor, user_id)
+
+            # Вычисляем дельту между старым и новым обычными классами
+            old_info = self._equipped_inventory_class_info(cursor, user_id)
+            old_vec = self._class_stat_vector(old_info)
+            new_vec = self._class_stat_vector(class_info) if target_type != "usdt" else {"strength": 0, "endurance": 0, "crit": 0}
+
             # Снимаем экипировку со всех классов
             cursor.execute(
                 "UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?",
@@ -290,11 +386,11 @@ class InventoryMixin:
             # Обновляем текущий класс в players
             cursor.execute(
                 "UPDATE players SET current_class = ?, current_class_type = ? WHERE user_id = ?",
-                (class_id, class_info["class_type"], user_id)
+                (class_id, target_type, user_id)
             )
 
-            # Для USDT-образов загружаем сохранённые статы
-            if class_info["class_type"] == "usdt":
+            if target_type == "usdt":
+                # Для USDT-образов загружаем сохранённые статы (абсолютный слепок)
                 cursor.execute(
                     """SELECT strength_saved, agility_saved, intuition_saved, 
                               endurance_saved, free_stats_saved
@@ -304,24 +400,44 @@ class InventoryMixin:
                 )
                 saved_stats = cursor.fetchone()
                 if saved_stats:
-                    # Применяем сохранённые статы
+                    # В players нет agility/intuition, используем endurance/crit
                     cursor.execute(
                         """UPDATE players 
-                           SET strength = ?, agility = ?, intuition = ?,
-                               endurance = ?, free_stats = ?
+                           SET strength = ?, endurance = ?, crit = ?, free_stats = ?,
+                               equipped_avatar_id = 'base_neutral'
                            WHERE user_id = ?""",
                         (
                             saved_stats["strength_saved"],
                             saved_stats["agility_saved"],
                             saved_stats["intuition_saved"],
-                            saved_stats["endurance_saved"],
                             saved_stats["free_stats_saved"],
                             user_id
                         )
                     )
+            else:
+                d_str = new_vec["strength"] - old_vec["strength"]
+                d_end = new_vec["endurance"] - old_vec["endurance"]
+                d_crit = new_vec["crit"] - old_vec["crit"]
+                d_hp = new_vec["max_hp"] - old_vec["max_hp"]
+                cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
+                hp_row = cursor.fetchone()
+                new_max_hp = max(1, int(hp_row["max_hp"]) + d_hp)
+                new_current_hp = min(new_max_hp, max(1, int(hp_row["current_hp"]) + d_hp))
+                cursor.execute(
+                    """UPDATE players
+                       SET strength = GREATEST(1, strength + ?),
+                           endurance = GREATEST(1, endurance + ?),
+                           crit = GREATEST(1, crit + ?),
+                           max_hp = ?,
+                           current_hp = ?,
+                           equipped_avatar_id = 'base_neutral'
+                       WHERE user_id = ?""",
+                    (d_str, d_end, d_crit, new_max_hp, new_current_hp, user_id),
+                )
 
             conn.commit()
-            return True, f"Переключен на класс '{class_info['name']}'"
+            display_name = class_info["name"] if class_info else "USDT слот"
+            return True, f"Переключен на класс '{display_name}'"
 
         except Exception as e:
             conn.rollback()
@@ -376,7 +492,7 @@ class InventoryMixin:
         try:
             # Получаем текущие статы игрока
             cursor.execute(
-                """SELECT strength, agility, intuition, endurance, free_stats
+                """SELECT strength, endurance, crit, free_stats
                    FROM players WHERE user_id = ?""",
                 (user_id,)
             )
@@ -392,9 +508,9 @@ class InventoryMixin:
                    WHERE user_id = ? AND class_id = ?""",
                 (
                     stats["strength"],
-                    stats["agility"],
-                    stats["intuition"],
                     stats["endurance"],
+                    stats["crit"],
+                    0,
                     stats["free_stats"],
                     user_id,
                     class_id
