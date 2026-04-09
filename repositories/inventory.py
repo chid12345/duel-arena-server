@@ -24,29 +24,27 @@ class InventoryMixin:
 
     def _ensure_inventory_schema(self, cursor) -> None:
         """Safety net: гарантирует наличие user_inventory и полей классов в players."""
-        cursor.execute(
-            """CREATE TABLE IF NOT EXISTS user_inventory (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                class_id TEXT NOT NULL,
-                class_type TEXT NOT NULL,
-                purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                equipped BOOLEAN DEFAULT FALSE,
-                custom_name TEXT,
-                strength_saved INTEGER DEFAULT 0,
-                agility_saved INTEGER DEFAULT 0,
-                intuition_saved INTEGER DEFAULT 0,
-                endurance_saved INTEGER DEFAULT 0,
-                free_stats_saved INTEGER DEFAULT 0,
-                FOREIGN KEY (user_id) REFERENCES players(user_id) ON DELETE CASCADE,
-                UNIQUE(user_id, class_id)
-            )"""
-        )
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_user ON user_inventory (user_id, class_type)")
-        cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_equipped ON user_inventory (user_id, equipped) WHERE equipped = TRUE")
-
         is_pg = bool(getattr(self, "_pg", False))
         if is_pg:
+            cursor.execute(
+                """CREATE TABLE IF NOT EXISTS user_inventory (
+                    id BIGSERIAL PRIMARY KEY,
+                    user_id BIGINT NOT NULL,
+                    class_id TEXT NOT NULL,
+                    class_type TEXT NOT NULL,
+                    purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    equipped BOOLEAN DEFAULT FALSE,
+                    custom_name TEXT,
+                    strength_saved INTEGER DEFAULT 0,
+                    agility_saved INTEGER DEFAULT 0,
+                    intuition_saved INTEGER DEFAULT 0,
+                    endurance_saved INTEGER DEFAULT 0,
+                    free_stats_saved INTEGER DEFAULT 0,
+                    UNIQUE(user_id, class_id)
+                )"""
+            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_user ON user_inventory (user_id, class_type)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_equipped ON user_inventory (user_id, equipped) WHERE equipped = TRUE")
             for col in ("current_class", "current_class_type"):
                 cursor.execute(
                     """SELECT 1 FROM information_schema.columns
@@ -56,6 +54,26 @@ class InventoryMixin:
                 if not cursor.fetchone():
                     cursor.execute(f"ALTER TABLE players ADD COLUMN {col} TEXT")
         else:
+            cursor.execute(
+                """CREATE TABLE IF NOT EXISTS user_inventory (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    class_id TEXT NOT NULL,
+                    class_type TEXT NOT NULL,
+                    purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    equipped BOOLEAN DEFAULT FALSE,
+                    custom_name TEXT,
+                    strength_saved INTEGER DEFAULT 0,
+                    agility_saved INTEGER DEFAULT 0,
+                    intuition_saved INTEGER DEFAULT 0,
+                    endurance_saved INTEGER DEFAULT 0,
+                    free_stats_saved INTEGER DEFAULT 0,
+                    FOREIGN KEY (user_id) REFERENCES players(user_id) ON DELETE CASCADE,
+                    UNIQUE(user_id, class_id)
+                )"""
+            )
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_user ON user_inventory (user_id, class_type)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_inventory_equipped ON user_inventory (user_id, equipped) WHERE equipped = TRUE")
             cursor.execute("PRAGMA table_info(players)")
             cols = {r[1] for r in cursor.fetchall()}
             if "current_class" not in cols:
