@@ -628,6 +628,10 @@ class DBSchema:
                      END IF;
                    END $$""",
             ]),
+            ("2026_04_21_001_class_inventory_fields", [
+                "ALTER TABLE players ADD COLUMN current_class TEXT",
+                "ALTER TABLE players ADD COLUMN current_class_type TEXT",
+            ]),
         ]
 
         for migration_id, statements in migrations:

@@ -336,6 +336,7 @@ class CallbackHandlers:
         if user_id == p1_uid:
             battle_system.set_battle_ui_message(user_id, chat_id, message_id)
         elif b['player2'].get('user_id') == user_id:
+            battle_system.set_battle_ui_message(user_id, chat_id, message_id)
 
     # ── Гардероб / Инвентарь классов ─────────────────────────────────────────
 
