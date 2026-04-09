@@ -62,34 +62,34 @@ def _build_builtin_table() -> Dict[str, Any]:
 def _validate(data: Dict[str, Any]) -> Tuple[bool, str]:
     try:
         ml = int(data.get("max_level", 100))
-        if ml < 1 or ml > 100:
-            return False, "max_level РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ 1 РґРѕ 100"
+        if ml < 1 or ml > 200:
+            return False, "max_level должен быть от 1 до 200"
 
         xp_to_next = data.get("xp_to_next")
-        if not isinstance(xp_to_next, list) or len(xp_to_next) != 99:
-            return False, "xp_to_next РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ list РґР»РёРЅС‹ 99 (РїРµСЂРµС…РѕРґС‹ 1в†’2 вЂ¦ 99в†’100)"
+        if not isinstance(xp_to_next, list) or len(xp_to_next) != ml - 1:
+            return False, f"xp_to_next должен быть list длины {ml - 1} (переходы 1→2 … {ml-1}→{ml})"
 
         xp_per_win = data.get("xp_per_win")
-        if not isinstance(xp_per_win, list) or len(xp_per_win) != 100:
-            return False, "xp_per_win РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ list РґР»РёРЅС‹ 100 (СѓСЂ. 1вЂ¦100)"
+        if not isinstance(xp_per_win, list) or len(xp_per_win) != ml:
+            return False, f"xp_per_win должен быть list длины {ml} (ур. 1…{ml})"
 
         steps = data.get("steps_per_level")
-        if not isinstance(steps, list) or len(steps) != 99:
-            return False, "steps_per_level РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ list РґР»РёРЅС‹ 99"
+        if not isinstance(steps, list) or len(steps) != ml - 1:
+            return False, f"steps_per_level должен быть list длины {ml - 1}"
         for i, s in enumerate(steps):
             si = int(s)
             if si < 1 or si > 16:
-                return False, f"steps_per_level[{i}] РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РѕС‚ 1 РґРѕ 8"
+                return False, f"steps_per_level[{i}] должен быть от 1 до 16"
 
         for key in ("stats_on_reach", "gold_on_reach", "hp_on_reach"):
             arr = data[key]
-            if not isinstance(arr, list) or len(arr) != 101:
-                return False, f"{key} РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ list РґР»РёРЅС‹ 101 (0..100)"
+            if not isinstance(arr, list) or len(arr) != ml + 1:
+                return False, f"{key} должен быть list длины {ml + 1} (0..{ml})"
 
         # diamonds_on_reach — опциональное поле (обратная совместимость)
         dia = data.get("diamonds_on_reach")
-        if dia is not None and (not isinstance(dia, list) or len(dia) != 101):
-            return False, "diamonds_on_reach должен быть list длины 101 (0..100)"
+        if dia is not None and (not isinstance(dia, list) or len(dia) != ml + 1):
+            return False, f"diamonds_on_reach должен быть list длины {ml + 1} (0..{ml})"
 
         for i in range(ml - 1):
             v = int(xp_to_next[i])
@@ -219,7 +219,7 @@ def diamonds_when_reaching_level(new_level: int) -> int:
     ml = max_level_from_table()
     if L < 1 or L > ml:
         return 0
-    arr: List[int] = _PROGRESSION.get("diamonds_on_reach", [0] * 101)
+    arr: List[int] = _PROGRESSION.get("diamonds_on_reach", [0] * (ml + 1))
     if L >= len(arr):
         return 0
     return int(arr[L])
