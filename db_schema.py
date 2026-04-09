@@ -592,6 +592,22 @@ class DBSchema:
                 )""",
                 "CREATE INDEX IF NOT EXISTS idx_avatar_unlocks_user ON user_avatar_unlocks (user_id)",
             ]),
+            ("2026_04_20_002_elite_builds_is_active_bool", [
+                # PostgreSQL: конвертируем is_active INTEGER → BOOLEAN чтобы
+                # совпадало с db_core.py _sqlite_to_pg() который пишет is_active = TRUE/FALSE
+                """DO $$ BEGIN
+                     IF EXISTS (
+                         SELECT 1 FROM information_schema.columns
+                         WHERE table_name='user_elite_builds'
+                           AND column_name='is_active'
+                           AND data_type='integer'
+                     ) THEN
+                         ALTER TABLE user_elite_builds
+                             ALTER COLUMN is_active TYPE BOOLEAN
+                             USING is_active::boolean;
+                     END IF;
+                   END $$""",
+            ]),
         ]
 
         for migration_id, statements in migrations:

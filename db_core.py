@@ -147,6 +147,9 @@ def _adapt_sql_pg(sql: str) -> str:
     s = re.sub(r'\bclaimed\s*=\s*0\b',        'claimed = FALSE',        s)
     s = re.sub(r'\bis_active\s*=\s*1\b',      'is_active = TRUE',       s)
     s = re.sub(r'\bis_active\s*=\s*0\b',      'is_active = FALSE',      s)
+    # DDL: INTEGER DEFAULT 0/1 → BOOLEAN для булевых колонок в CREATE TABLE
+    s = re.sub(r'\bis_active\s+INTEGER\s+DEFAULT\s+0\b', 'is_active BOOLEAN DEFAULT FALSE', s)
+    s = re.sub(r'\bis_active\s+INTEGER\s+DEFAULT\s+1\b', 'is_active BOOLEAN DEFAULT TRUE',  s)
     s = s.replace("?", "%s")
     s = s.replace("__PG_INTERVAL_SEC__", "(NOW() + (%s::text || ' seconds')::interval)")
     return s
