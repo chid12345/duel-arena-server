@@ -41,6 +41,9 @@ from progression_loader import (
 # Токен бота - установить через переменную окружения
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
+# Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
+GAME_VERSION = "1.76"
+
 # ── Система классов и инвентаря ──────────────────────────────────────────────
 
 # Бесплатные классы (эксклюзивный выбор - только один)
@@ -216,8 +219,10 @@ def _webapp_public_url() -> str:
             u = render_ext
 
     # Всегда добавляем ?v=COMMIT, заменяя любой старый ?v= из env-var.
+    # Используем GAME_VERSION для гарантированного сброса кэша при обновлениях
     ver = (
-        (os.getenv("WEBAPP_URL_VERSION") or "").strip()
+        GAME_VERSION  # Приоритет: версия игры для сброса кэша
+        or (os.getenv("WEBAPP_URL_VERSION") or "").strip()
         or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
     )
     if u and ver:

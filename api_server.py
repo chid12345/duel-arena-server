@@ -116,12 +116,13 @@ def _cache_set(uid: int, player: dict) -> None:
 def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
 
-# Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.76"
+# Игровая версия импортируется из config.py
+from config import GAME_VERSION
 
 # Технический хэш сборки (для кэш-бастинга URL, не показывается игрокам).
 APP_BUILD_VERSION = (
-    (os.getenv("WEBAPP_URL_VERSION") or "").strip()
+    GAME_VERSION  # Используем версию игры для сброса кэша
+    or (os.getenv("WEBAPP_URL_VERSION") or "").strip()
     or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
     or "dev"
 )
