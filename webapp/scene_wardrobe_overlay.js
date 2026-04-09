@@ -5,9 +5,9 @@
 
 (() => {
   const TYPE_META = {
-    free: { title: "FREE", color: 0x3a3a52 },
-    gold: { title: "GOLD", color: 0xffc83c },
-    diamonds: { title: "DIAMONDS", color: 0x34a6ff },
+    free: { title: "БЕСПЛ.", color: 0x3a3a52 },
+    gold: { title: "ЗОЛОТО", color: 0xffc83c },
+    diamonds: { title: "АЛМАЗЫ", color: 0x34a6ff },
     usdt: { title: "USDT", color: 0x39d084 },
   };
 
@@ -40,6 +40,14 @@
       price_gold: Number(cls.price_gold || 0),
       price_diamonds: Number(cls.price_diamonds || 0),
     };
+  }
+
+  function _buyLabelFor(card) {
+    if (card.class_type === "free") return "Выбрать";
+    if (card.class_type === "gold") return `Купить ${card.price_gold} золота`;
+    if (card.class_type === "diamonds") return `Купить ${card.price_diamonds} алмазов`;
+    if (card.class_type === "usdt") return "Купить за USDT";
+    return "Недоступно";
   }
 
   StatsScene.prototype._wardrobeCardsFromPayload = function(payload) {
@@ -121,7 +129,7 @@
 
     const top = panelY + 40;
     const cardW = Math.floor((W - 32 - 8) / 2);
-    const cardH = 92;
+    const cardH = 96;
     const gapX = 8;
     const gapY = 8;
     const navY = panelY + panelH - 26;
@@ -174,7 +182,7 @@
         cardsLayer.push(txt(this, x + 10, y + 8, `${a.icon} ${a.name}`, 10, "#f0f0fa", true).setDepth(123));
         cardsLayer.push(txt(this, x + cardW - 8, y + 8, tMeta.title, 8, "#9999bb", true).setOrigin(1, 0).setDepth(123));
         cardsLayer.push(txt(this, x + 10, y + 24, `С +${a.strength}  Л +${a.agility}  И +${a.intuition}  В +${a.endurance}`, 8, "#ffc83c").setDepth(123));
-        cardsLayer.push(txt(this, x + 10, y + 37, (a.special_bonus || "Без бонуса").slice(0, 42), 8, "#a8a8c8").setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 37, (a.special_bonus || "Без бонуса").slice(0, 36), 8, "#a8a8c8").setDepth(123));
 
         let btnLabel = "Надеть";
         let action = "equip";
@@ -182,14 +190,8 @@
           btnLabel = "Надет";
           action = "none";
         } else if (!a.owned) {
-          if (a.class_type === "free") {
-            btnLabel = "Выбрать";
-            action = "buy";
-          } else if (a.class_type === "gold") {
-            btnLabel = `Купить ${a.price_gold} 🪙`;
-            action = "buy";
-          } else if (a.class_type === "diamonds") {
-            btnLabel = `Купить ${a.price_diamonds} 💎`;
+          if (a.class_type === "free" || a.class_type === "gold" || a.class_type === "diamonds") {
+            btnLabel = _buyLabelFor(a);
             action = "buy";
           } else {
             btnLabel = "Недоступно";
