@@ -3,5 +3,5 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.0.63"
-VERSION_LABEL = "v1.0.63 — webapp: гардероб вынесен в отдельный модуль и переведен на /api/wardrobe"
+VERSION = "1.0.64"
+VERSION_LABEL = "v1.0.64 — fix: открытие гардероба в Mini App (устранен JS ReferenceError)"

@@ -6,7 +6,7 @@
 (() => {
   const TYPE_META = {
     free: { title: "FREE", color: 0x3a3a52 },
-    gold: { title: "GOLD", color: C.gold },
+    gold: { title: "GOLD", color: 0xffc83c },
     diamonds: { title: "DIAMONDS", color: 0x34a6ff },
     usdt: { title: "USDT", color: 0x39d084 },
   };
