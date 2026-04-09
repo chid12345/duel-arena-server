@@ -461,34 +461,45 @@ class MenuScene extends Phaser.Scene {
             if (this._tabBarObjs) this._buildTabBar();
           }
         });
+        get('/api/version').catch(() => null).then(versionRes => {
+          if (versionRes?.ok && versionRes.version) {
+            State.appVersion = String(versionRes.version);
+          }
+        });
       } else {
-        const [playerRes, questRes, versionRes] = await Promise.all([
-          post('/api/player'),
-          get('/api/quests').catch(() => null),
-          get('/api/version').catch(() => null),
-        ]);
+        const playerRes = await post('/api/player');
         if (playerRes.ok) {
           State.player = playerRes.player;
           State.playerLoadedAt = Date.now();
           playerOk = true;
-          if (versionRes?.ok && versionRes.version) {
-            State.appVersion = String(versionRes.version);
-          }
-          this._questBadge = false;
-          if (questRes?.ok) {
-            const q = questRes.quest || {};
-            const d = questRes.daily || {};
-            this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
-            if (d.can_claim) {
-              this.time.delayedCall(800, () =>
-                this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
-              );
-            } else if (q.is_completed && !q.reward_claimed) {
-              this.time.delayedCall(800, () =>
-                this._toast('🏆 Квест дня выполнен — забери награду!')
-              );
+
+          // Неблокирующая догрузка второстепенных данных:
+          // дашборд рисуем сразу после player, не ждём quests/version.
+          get('/api/version').catch(() => null).then(versionRes => {
+            if (versionRes?.ok && versionRes.version) {
+              State.appVersion = String(versionRes.version);
             }
-          }
+          });
+
+          this._questBadge = false;
+
+          get('/api/quests').catch(() => null).then(questRes => {
+            if (questRes?.ok) {
+              const q = questRes.quest || {};
+              const d = questRes.daily || {};
+              this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
+              if (this._tabBarObjs) this._buildTabBar();
+              if (d.can_claim) {
+                this.time.delayedCall(800, () =>
+                  this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
+                );
+              } else if (q.is_completed && !q.reward_claimed) {
+                this.time.delayedCall(800, () =>
+                  this._toast('🏆 Квест дня выполнен — забери награду!')
+                );
+              }
+            }
+          });
         }
       }
 
