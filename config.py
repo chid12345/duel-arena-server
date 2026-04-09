@@ -42,7 +42,7 @@ from progression_loader import (
 BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 
 # Игровая версия для UI (экран «Ещё»). При любом деплое с изменениями кода — +0.01 (1.06 → 1.07).
-GAME_VERSION = "1.80"
+GAME_VERSION = "1.86"
 
 # ── Система классов и инвентаря ──────────────────────────────────────────────
 
@@ -56,7 +56,7 @@ FREE_CLASSES = {
         "bonus_agility": 0,
         "bonus_intuition": 0,
         "bonus_endurance": 5,
-        "special_bonus": "Броня +10%"
+        "special_bonus": "Броня +2%"
     },
     "agile_free": {
         "name": "Ловкач", 
@@ -66,7 +66,7 @@ FREE_CLASSES = {
         "bonus_agility": 5,
         "bonus_intuition": 0,
         "bonus_endurance": 5,
-        "special_bonus": "Уклонение +5%"
+        "special_bonus": "Уклонение +2%"
     },
     "crit_free": {
         "name": "Крит",
@@ -76,7 +76,7 @@ FREE_CLASSES = {
         "bonus_agility": 0,
         "bonus_intuition": 5,
         "bonus_endurance": 5,
-        "special_bonus": "Крит. урон +15%"
+        "special_bonus": "Крит. урон +3%"
     },
     "universal_free": {
         "name": "Универсал",
@@ -86,85 +86,85 @@ FREE_CLASSES = {
         "bonus_agility": 2,
         "bonus_intuition": 2,
         "bonus_endurance": 2,
-        "special_bonus": "Все статы +1%"
+        "special_bonus": "Макс. HP +1%"
     }
 }
 
 # Платные классы за золото
 GOLD_CLASSES = {
     "berserker_gold": {
-        "name": "Берсерк",
+        "name": "Силач+",
         "price_gold": 5000,
         "price_diamonds": 0,
-        "bonus_strength": 8,
-        "bonus_agility": 2,
+        "bonus_strength": 7,
+        "bonus_agility": 0,
         "bonus_intuition": 0,
-        "bonus_endurance": 5,
-        "special_bonus": "Ярость: урон +20% при HP < 30%"
+        "bonus_endurance": 7,
+        "special_bonus": "Силач: урон +4% при HP < 30%"
     },
     "assassin_gold": {
-        "name": "Ассасин",
-        "price_gold": 5000,
-        "price_diamonds": 0,
-        "bonus_strength": 2,
-        "bonus_agility": 8,
-        "bonus_intuition": 0,
-        "bonus_endurance": 5,
-        "special_bonus": "Скрытность: шанс двойного удара 10%"
-    },
-    "mage_gold": {
-        "name": "Маг",
+        "name": "Ловкач+",
         "price_gold": 5000,
         "price_diamonds": 0,
         "bonus_strength": 0,
-        "bonus_agility": 2,
-        "bonus_intuition": 8,
-        "bonus_endurance": 5,
-        "special_bonus": "Магический щит: поглощает 15% урона"
+        "bonus_agility": 7,
+        "bonus_intuition": 0,
+        "bonus_endurance": 7,
+        "special_bonus": "Ловкач: шанс двойного удара 4%"
     },
-    "paladin_gold": {
-        "name": "Паладин",
+    "mage_gold": {
+        "name": "Крит+",
         "price_gold": 5000,
         "price_diamonds": 0,
-        "bonus_strength": 5,
+        "bonus_strength": 0,
         "bonus_agility": 0,
-        "bonus_intuition": 5,
-        "bonus_endurance": 5,
-        "special_bonus": "Святость: лечение 5% HP каждый раунд"
+        "bonus_intuition": 7,
+        "bonus_endurance": 7,
+        "special_bonus": "Крит: крит. урон +4%"
+    },
+    "paladin_gold": {
+        "name": "Выносливый+",
+        "price_gold": 5000,
+        "price_diamonds": 0,
+        "bonus_strength": 4,
+        "bonus_agility": 4,
+        "bonus_intuition": 4,
+        "bonus_endurance": 4,
+        "special_bonus": "Выносливость: входящий урон -3%"
     }
 }
 
 # Платные классы за алмазы
 DIAMONDS_CLASSES = {
     "dragonknight_diamonds": {
-        "name": "Драконьий Рыцарь",
+        "name": "Силач++",
         "price_gold": 0,
         "price_diamonds": 100,
-        "bonus_strength": 10,
+        "bonus_strength": 9,
         "bonus_agility": 0,
         "bonus_intuition": 0,
-        "bonus_endurance": 10,
-        "special_bonus": "Дыхание дракона: огненный урон +25%"
+        "bonus_endurance": 9,
+        "special_bonus": "Силач: урон +6% при HP < 40%"
     },
     "shadowdancer_diamonds": {
-        "name": "Теневой Танцор",
+        "name": "Ловкач++",
         "price_gold": 0,
         "price_diamonds": 100,
         "bonus_strength": 0,
-        "bonus_agility": 10,
-        "bonus_intuition": 5,
-        "bonus_endurance": 5,
-        "special_bonus": "Теневой клинок: игнорирует 20% брони"
+        "bonus_agility": 9,
+        "bonus_intuition": 0,
+        "bonus_endurance": 9,
+        "special_bonus": "Ловкач: шанс двойного удара 6%"
     },
     "archmage_diamonds": {
-        "name": "Архимаг",
+        "name": "Крит++",
         "price_gold": 0,
         "price_diamonds": 100,
         "bonus_strength": 0,
         "bonus_agility": 0,
-        "bonus_intuition": 15,
-        "bonus_endurance": 5,
-        "special_bonus": "Магическая вспышка: шанс оглушить врага 15%"
+        "bonus_intuition": 9,
+        "bonus_endurance": 9,
+        "special_bonus": "Крит: крит. урон +6%"
     }
 }
 
@@ -179,7 +179,7 @@ USDT_CLASS_BASE = {
     "bonus_intuition": 0,
     "bonus_endurance": 5,
     "free_stats": 19,  # 19 свободных статов
-    "special_bonus": "Сброс статов на 50% дешевле"
+    "special_bonus": "Выбор 1 пассивки из списка: эффект +8%"
 }
 
 # Цены сброса статов
