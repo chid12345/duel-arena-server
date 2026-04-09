@@ -8,9 +8,12 @@ __pycache__/
 *.log
 *.log.*
 
-# Cursor/Claude agent artifacts (never commit)
+# Cursor/Claude agent artifacts
 .claude/
-.cursor/
+# Кэш Cursor не коммитим; правила для ИИ — в .cursor/rules/
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
 
 # Local secrets
 .env.local
