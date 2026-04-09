@@ -196,10 +196,7 @@ class CallbackHandlers:
                     InlineKeyboardButton("🛡️ Клан",         callback_data='clan_menu'),
                     InlineKeyboardButton("🎁 Позвать друга", callback_data='show_invite'),
                 ],
-                [
-                    InlineKeyboardButton("🎭 Гардероб",      callback_data='wardrobe_menu:0'),
-                    InlineKeyboardButton("⚙️ Настройки",     callback_data='settings'),
-                ],
+
             ]
         )
         return InlineKeyboardMarkup(rows)

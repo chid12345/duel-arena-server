@@ -3,5 +3,5 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.0.55"
-VERSION_LABEL = "v1.0.55 — feat: API гардероба для Mini App"
+VERSION = "1.0.56"
+VERSION_LABEL = "v1.0.56 — fix: убрана кнопка Гардероб из бота (только Mini App)"
