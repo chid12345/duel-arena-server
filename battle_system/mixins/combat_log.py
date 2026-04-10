@@ -122,9 +122,12 @@ class BattleCombatLogMixin:
             line += f"\n<i>Эффекты раунда:</i> {' '.join(uniq_icons)}"
         battle['combat_log_lines'].append(line)
 
-        # ── WebApp-лог: одна строка ≤33 символа ─────────────────────
+        # ── WebApp-лог: 2 строки на раунд (своя атака + атака врага) ──
         battle['webapp_log'].append(
-            self._webapp_log_line(round_num, out1, out2, p1_damage, p2_damage)
+            self._webapp_log_line(
+                round_num, out1, out2, p1_damage, p2_damage,
+                p1_choices['attack'], p2_choices['attack'],
+            )
         )
 
     @staticmethod
@@ -134,32 +137,28 @@ class BattleCombatLogMixin:
         out2: str,
         dmg1: int,
         dmg2: int,
+        atk_zone1: str = "ТУЛОВИЩЕ",
+        atk_zone2: str = "ТУЛОВИЩЕ",
     ) -> str:
         """
-        Одна строка для WebApp DOM-лога, ≤33 символа.
-
-        Формат: «Р{N} Вы {маркер1} · Враг {маркер2}»
-        Маркеры:
-          −{N}    — нанесли урон
-          −{N}⚡  — крит
-          −{N}💥  — пробой
-          💨      — уворот (их)
-          🛡       — блок (их)
-          ✕       — мимо
-          ⏱       — тайм-аут
+        2 строки для WebApp DOM-лога.
+        Строка 1: твой удар (зона + итог)
+        Строка 2: удар врага (зона + итог)
         """
+        _ZONE_SHORT = {'ГОЛОВА': 'Гол', 'ТУЛОВИЩЕ': 'Тело', 'НОГИ': 'Ноги'}
+
         def _marker(outcome: str, dmg: int) -> str:
             t = set((outcome or "").split("_"))
             if outcome == "timeout":
                 return "⏱"
             if "dodge" in t:
-                return "💨"
+                return "💨уклон"
             if "block" in t:
-                return "🛡"
+                return "🛡блок"
             if "miss" in t:
-                return "✕"
+                return "✕мимо"
             if dmg <= 0:
-                return "—"
+                return "0"
             suffix = ""
             if "crit" in t and "pierce" in t:
                 suffix = "⚡💥"
@@ -171,6 +170,8 @@ class BattleCombatLogMixin:
                 suffix = "🪓"
             return f"−{dmg}{suffix}"
 
+        z1 = _ZONE_SHORT.get(atk_zone1, atk_zone1[:3])
+        z2 = _ZONE_SHORT.get(atk_zone2, atk_zone2[:3])
         m1 = _marker(out1, dmg1)
         m2 = _marker(out2, dmg2)
-        return f"Р{round_num} Вы {m1} · Враг {m2}"
+        return f"⚔ Р{round_num} Вы→{z1}: {m1}\n💢 Враг→{z2}: {m2}"
