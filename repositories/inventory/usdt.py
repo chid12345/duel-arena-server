@@ -7,7 +7,11 @@ from typing import Dict, List, Tuple
 from config import (
     RESET_STATS_COST_DIAMONDS,
     RESET_STATS_COST_DIAMONDS_USDT,
+    STAMINA_PER_FREE_STAT,
 )
+
+_USDT_BASE_STAMINA = 5  # базовая выносливость USDT-образа (должна совпадать с switch.py)
+_USDT_CI = lambda cid: {"class_type": "usdt", "class_id": cid}  # noqa: E731
 
 
 class InventoryUsdtMixin:
@@ -51,12 +55,31 @@ class InventoryUsdtMixin:
         return True, "OK"
 
     def reset_usdt_slot_stats(self, user_id: int, class_id: str) -> Tuple[bool, str]:
-        """Сбросить сохранённые статы USDT-образа (после оплаты)."""
+        """Сбросить сохранённые статы USDT-образа (после оплаты).
+        Если слот надет и applied=1 — снять дельту с персонажа.
+        """
         if not self.has_class(user_id, class_id):
             return False, "USDT-образ не найден"
         conn = self.get_connection()
         cursor = conn.cursor()
+        self._ensure_inventory_schema(cursor)
         try:
+            equipped = self._is_slot_equipped(cursor, user_id, class_id)
+            applied = self._get_stats_applied(cursor, user_id, class_id)
+
+            if equipped and applied:
+                # Снять дельту применённых статов с персонажа
+                old_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id))
+                base_hp = _USDT_BASE_STAMINA * int(STAMINA_PER_FREE_STAT)
+                new_vec = {"strength": 0, "endurance": 0, "crit": 0, "max_hp": base_hp}
+                self._apply_stat_delta_to_player(
+                    cursor, user_id,
+                    new_vec["strength"] - old_vec["strength"],
+                    new_vec["endurance"] - old_vec["endurance"],
+                    new_vec["crit"] - old_vec["crit"],
+                    new_vec["max_hp"] - old_vec["max_hp"],
+                )
+
             cursor.execute(
                 """UPDATE user_inventory
                    SET strength_saved=0, agility_saved=0, intuition_saved=0,

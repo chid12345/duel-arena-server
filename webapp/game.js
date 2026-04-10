@@ -1546,6 +1546,25 @@ class MenuScene extends Phaser.Scene {
         State.playerLoadedAt = 0;
         post('/api/player').then(d => { if (d.ok && d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); } }).catch(() => {});
       }
+      if (msg.event === 'usdt_slot_reset') {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        State.playerLoadedAt = 0;
+        post('/api/player').then(d => { if (d.ok && d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); } }).catch(() => {});
+        // Обновить гардероб если открыт, иначе toast
+        if (this._avatarOverlay) {
+          this._openAvatarPanel();
+        } else {
+          this._showToast?.('🔄 Сброс выполнен — зайди в Гардероб');
+        }
+      }
+      if (msg.event === 'usdt_slot_created') {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        if (this._avatarOverlay) {
+          this._openAvatarPanel();
+        } else {
+          this._showToast?.('💠 USDT-образ получен — открой Гардероб');
+        }
+      }
     });
   }
 
