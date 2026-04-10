@@ -7,6 +7,8 @@ class ShopScene extends Phaser.Scene {
   init(data) {
     this._tab = (data && data.tab) ? data.tab : (ShopScene._lastTab || 'consumables');
     ShopScene._lastTab = this._tab;
+    this._shopPage = (data && typeof data.page === 'number') ? data.page : (ShopScene._lastPage || 0);
+    ShopScene._lastPage = this._shopPage;
     this._buying = false;
     this._applyBusy = false;
   }
@@ -62,7 +64,8 @@ class ShopScene extends Phaser.Scene {
         .on('pointerup', () => {
           if (this._tab === tab.key) return;
           tg?.HapticFeedback?.selectionChanged();
-          this.scene.restart({ tab: tab.key });
+          ShopScene._lastPage = 0;
+          this.scene.restart({ tab: tab.key, page: 0 });
         });
     });
   }
@@ -91,10 +94,32 @@ class ShopScene extends Phaser.Scene {
     const items = this._getItems();
     if (!items.length) return;
     const cols = 2, iw = (W - 32) / cols, ih = 110, startY = 162;
-    items.forEach((item, i) => {
+    const perPage = 6; // 3 ряда × 2 колонки
+    const pageCount = Math.max(1, Math.ceil(items.length / perPage));
+    const page = Math.min(this._shopPage || 0, pageCount - 1);
+    this._shopPage = page;
+
+    const slice = items.slice(page * perPage, (page + 1) * perPage);
+    slice.forEach((item, i) => {
       const col = i % cols, row = Math.floor(i / cols);
       this._makeItemCard(item, 8 + col * (iw + 8), startY + row * (ih + 10), iw, ih);
     });
+
+    // Навигация страниц
+    if (pageCount > 1) {
+      const navY = H - 46;
+      const mkNav = (x, label, nextPage) => {
+        const g = this.add.graphics();
+        g.fillStyle(0x2a2840, .95); g.fillRoundedRect(x - 42, navY, 84, 26, 7);
+        g.lineStyle(1, C.blue, .6); g.strokeRoundedRect(x - 42, navY, 84, 26, 7);
+        txt(this, x, navY + 13, label, 11, '#f0f0fa', true).setOrigin(.5);
+        this.add.zone(x, navY + 13, 84, 26).setInteractive({ useHandCursor: true })
+          .on('pointerdown', () => { ShopScene._lastPage = nextPage; this.scene.restart({ tab: this._tab, page: nextPage }); });
+      };
+      if (page > 0) mkNav(W / 2 - 64, '◀ Назад', page - 1);
+      if (page < pageCount - 1) mkNav(W / 2 + 64, 'Вперёд ▶', page + 1);
+      txt(this, W / 2, navY + 13, `${page + 1} / ${pageCount}`, 10, '#8888aa', true).setOrigin(.5);
+    }
   }
 
   /* ── Каталог по вкладке ──────────────────────────────── */
@@ -244,7 +269,7 @@ class ShopScene extends Phaser.Scene {
         this._toast(msg);
         this._goldTxt?.setText(`🪙 ${State.player?.gold || 0}`);
         this._diaTxt?.setText(`💎 ${State.player?.diamonds || 0}`);
-        this.time.delayedCall(400, () => this.scene.restart({ tab: this._tab }));
+        this.time.delayedCall(400, () => this.scene.restart({ tab: this._tab, page: this._shopPage || 0 }));
       } else {
         tg?.HapticFeedback?.notificationOccurred('error');
         this._toast(`❌ ${res.reason || 'Ошибка'}`);

@@ -21,7 +21,6 @@
     scroll_armor_10:{ icon:'🔰', name:'Броня +10%',      desc:'armor_pct +10%, 3 боя', tab:'scrolls' },
     scroll_hp_200:  { icon:'❤️', name:'HP +200',         desc:'hp_bonus +200, 3 боя', tab:'scrolls' },
     scroll_double_10:{icon:'⚡', name:'Двойной удар +10%',desc:'double_pct +10%, 3 боя', tab:'scrolls' },
-    scroll_lifesteal:{icon:'🩸', name:'Вампиризм +5%',   desc:'lifesteal +5%, 3 боя', tab:'scrolls' },
     scroll_all_4:   { icon:'✨', name:'Все статы +4',    desc:'str/end/crit +4, 1 бой', tab:'scrolls' },
     scroll_bastion: { icon:'🏰', name:'Бастион',         desc:'end+5, armor+8%, 3 боя', tab:'scrolls' },
     scroll_predator:{ icon:'🐆', name:'Хищник',          desc:'crit+5, double+8%, 3 боя', tab:'scrolls' },
@@ -115,25 +114,24 @@
     if (items.length === 0) {
       ov.push(txt(this, W/2, listY + listH/2, 'Пусто. Загляни в Магазин!', 11, '#777799', true).setOrigin(.5).setDepth(133));
     } else {
-      const layer = []; this._invCardsLayer = layer;
-      items.slice(0, Math.floor(listH / (cardH + 6))).forEach((it, i) => {
+      const maxVisible = Math.floor(listH / (cardH + 6));
+      items.slice(0, maxVisible).forEach((it, i) => {
         const meta = ITEM_META[it.item_id] || { icon:'📦', name: it.item_id, desc: '', tab: 'scrolls' };
         const y = listY + i * (cardH + 6);
         const crd = this.add.graphics().setDepth(132);
         crd.fillStyle(0x1b1a30,.96); crd.fillRoundedRect(16, y, cardW, cardH, 8);
         crd.lineStyle(1, 0x3a3a60,.8); crd.strokeRoundedRect(16, y, cardW, cardH, 8);
-        layer.push(crd);
-        layer.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#f0f0fa', true).setDepth(133));
-        layer.push(txt(this, 28, y+28, meta.desc, 9, '#9999bb').setDepth(133));
-        layer.push(txt(this, 28, y+42, `Кол-во: ${it.quantity}`, 9, '#ffc83c').setDepth(133));
+        ov.push(crd);
+        ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#f0f0fa', true).setDepth(133));
+        ov.push(txt(this, 28, y+28, meta.desc, 9, '#9999bb').setDepth(133));
+        ov.push(txt(this, 28, y+42, `Кол-во: ${it.quantity}`, 9, '#ffc83c').setDepth(133));
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;
         const bg2 = this.add.graphics().setDepth(133);
         bg2.fillStyle(0x2a6040,.95); bg2.fillRoundedRect(bx, by, bw, 24, 7);
         bg2.lineStyle(1, 0x55cc66,.8); bg2.strokeRoundedRect(bx, by, bw, 24, 7);
-        layer.push(bg2, txt(this, bx+bw/2, by+12, 'Применить', 10, '#d0ffd8', true).setOrigin(.5).setDepth(134));
+        ov.push(bg2, txt(this, bx+bw/2, by+12, 'Применить', 10, '#d0ffd8', true).setOrigin(.5).setDepth(134));
         const z = this.add.zone(bx+bw/2, by+12, bw, 24).setInteractive({useHandCursor:true}).setDepth(135);
-        z.on('pointerdown', () => this._applyInventoryItem(it.item_id)); layer.push(z);
-        ov.push(...layer);
+        z.on('pointerdown', () => this._applyInventoryItem(it.item_id)); ov.push(z);
       });
     }
 
@@ -145,19 +143,20 @@
   StatsScene.prototype._applyInventoryItem = async function(itemId) {
     if (this._invBusy) return;
     this._invBusy = true;
-    const res = await post('/api/shop/apply', { item_id: itemId, replace: false });
-    this._invBusy = false;
-    if (res?.conflict) {
-      // Диалог замены
-      this._showReplaceDialog(itemId, res.active_buff_type, res.active_charges);
-      return;
-    }
-    if (res?.ok) {
-      if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-      this._invData = await get('/api/shop/inventory').catch(() => this._invData);
-      this._showToast(res.msg || '✅ Применено!');
-      this._renderInvOverlay();
-    } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
+    try {
+      const res = await post('/api/shop/apply', { item_id: itemId, replace: false });
+      this._invBusy = false;
+      if (res?.conflict) {
+        this._showReplaceDialog(itemId, res.active_buff_type, res.active_charges);
+        return;
+      }
+      if (res?.ok) {
+        if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
+        this._invData = await get('/api/shop/inventory').catch(() => this._invData);
+        this._showToast(res.msg || '✅ Применено!');
+        this._renderInvOverlay();
+      } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
+    } catch { this._invBusy = false; this._showToast('❌ Нет соединения'); }
   };
 
   StatsScene.prototype._showReplaceDialog = function(newItemId, activeBuffType, activeCharges) {
@@ -197,6 +196,5 @@
   StatsScene.prototype._closeInvOverlay = function() {
     (this._invOverlay || []).forEach(o => { try { o.destroy(); } catch {} });
     this._invOverlay = null;
-    this._invCardsLayer = null;
   };
 })();
