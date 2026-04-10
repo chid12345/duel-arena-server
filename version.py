@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.1.10"
-VERSION_LABEL = "v1.1.10 — fix: armor scales with stamina investment, cap 35%, passive stat-only"
+VERSION = "1.1.11"
+VERSION_LABEL = "v1.1.11 — fix: armor formula identical to dodge/crit (base+investments, no level cap)"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "2.34"
+GAME_VERSION = "2.35"

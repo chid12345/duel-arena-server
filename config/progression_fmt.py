@@ -9,24 +9,23 @@ from progression_loader import (
 
 from config.battle_constants import (
     ARMOR_ABSOLUTE_MAX,
-    ARMOR_CAP_BASE,
-    ARMOR_CAP_PER_LEVEL,
+    PLAYER_START_ENDURANCE,
     PLAYER_START_FREE_STATS,
 )
 
 
 def armor_reduction(vyn: int, level: int) -> float:
-    """Броня от вложений в выносливость (только stat-based, без пассивок).
-    vyn=0 → 0%. Среднее вложение (25% статов) → ~50% потолка.
-    Heavy tank (100% статов) → ~80% потолка. Потолок = 35% на макс. уровне.
+    """Броня — идентичная структура формулы как у уворота и крита.
+    stamina_val = vyn + PLAYER_START_ENDURANCE (база, как agi/intu).
+    avg_stamina = PLAYER_START_ENDURANCE + tf // 4 (как avg_agi/avg_intu).
+    При равном распределении статов броня сопоставима с уворотом и критом.
+    Потолок ARMOR_ABSOLUTE_MAX = 35% (только статы; пассивки/экипировка — сверху).
     """
     lv = max(1, int(level))
-    if vyn <= 0:
-        return 0.0
-    cap = min(ARMOR_ABSOLUTE_MAX, ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv)
+    stamina_val = int(vyn) + PLAYER_START_ENDURANCE
     tf = total_free_stats_at_level(lv)
-    avg_vyn = max(1, tf // 4)          # ожидаемые вложения при равном распределении
-    return vyn / (vyn + avg_vyn) * cap  # всегда < cap
+    avg_stamina = max(1, PLAYER_START_ENDURANCE + tf // 4)
+    return min(ARMOR_ABSOLUTE_MAX, stamina_val / (stamina_val + avg_stamina) * ARMOR_ABSOLUTE_MAX)
 
 
 def total_free_stats_at_level(level: int) -> int:

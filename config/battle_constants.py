@@ -160,13 +160,12 @@ STRENGTH_DAMAGE_SCALE = 4.0             # коэффициент при степ
 STRENGTH_DAMAGE_POWER = 0.75            # показатель степени (убывающая отдача)
 STRENGTH_DAMAGE_MAX_PCT = 0.45          # кап обычного удара = 45% от макс. HP защитника
 
-# Броня от Выносливости: та же сравнительная формула, что уворот/крит.
-#   armor_reduction(vyn, lv) в config/progression_fmt.py
-#   base = (vyn+BASE) / (vyn+BASE + avg_stamina) * ARMOR_ABSOLUTE_MAX
-#   level_cap = min(ARMOR_ABSOLUTE_MAX, ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv)
-ARMOR_CAP_BASE         = 0.05   # базовый потолок брони (5% на ур.0)
-ARMOR_CAP_PER_LEVEL    = 0.004  # +0.4% потолка за каждый уровень
-ARMOR_ABSOLUTE_MAX     = 0.35   # жёсткий потолок стат-брони (35% на ур.80). Пассивки/экипировка могут давать выше.
+# Броня от Выносливости: идентичная структура формулы как у уворота/крита.
+#   stamina_val / (stamina_val + avg_stamina) * ARMOR_ABSOLUTE_MAX
+#   stamina_val = vyn + PLAYER_START_ENDURANCE (база, как у agi/intu)
+#   avg_stamina = PLAYER_START_ENDURANCE + tf // 4 (как avg_agi/avg_intu)
+#   Функция: armor_reduction(vyn, lv) в config/progression_fmt.py
+ARMOR_ABSOLUTE_MAX     = 0.35   # жёсткий потолок стат-брони (35%). Пассивки/экипировка могут давать выше.
 
 # Лимит раундов — предотвращение бесконечных боёв (тенк vs тенк)
 # При достижении лимита побеждает тот, у кого больше HP.
