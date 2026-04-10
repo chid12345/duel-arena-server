@@ -2981,7 +2981,7 @@ class RatingScene extends Phaser.Scene {
 
     /* Фон — как в ShopScene */
     _extraBg(this, W, H);
-    _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня Титанов');
+    _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня Титанов · Сезон');
     _extraBack(this, 'Menu', 'profile');
 
     /* Вкладки — точно как в Магазине */
@@ -2992,6 +2992,8 @@ class RatingScene extends Phaser.Scene {
       await this._buildPvpTab(W, H);
     } else if (this._tab === 'natisk') {
       this._buildNatiskTab(W, H);
+    } else if (this._tab === 'season') {
+      await this._buildSeasonTab(W, H);
     } else {
       this._buildTitansTab(W, H);
     }
@@ -3003,9 +3005,10 @@ class RatingScene extends Phaser.Scene {
 
   _buildTabBar(W) {
     const tabs = [
-      { key: 'pvp',    label: '🏆 Топ PvP'  },
-      { key: 'titans', label: '🗿 Башня'     },
-      { key: 'natisk', label: '🔥 Натиск'   },
+      { key: 'pvp',    label: '🏆 PvP'    },
+      { key: 'titans', label: '🗿 Башня'  },
+      { key: 'natisk', label: '🔥 Натиск' },
+      { key: 'season', label: '🌟 Сезон'  },
     ];
     const tw  = (W - 24) / tabs.length;
     const ty  = 76;
@@ -3160,6 +3163,81 @@ class RatingScene extends Phaser.Scene {
       txt(this, 52, ry+26, `🔥 Волна ${row.best_wave}`, 11, '#cc6644');
       txt(this, W-14, ry+(rowH-4)/2, `${row.best_wave}`, 15, '#ff6644', true).setOrigin(1, 0.5);
     });
+  }
+
+  async _buildSeasonTab(W, H) {
+    const startY = 114;
+    try {
+      const res = RatingScene._cache.season || (RatingScene._cache.season = await get('/api/season'));
+      if (!this._alive) return;
+      if (!res.ok) throw new Error('bad');
+      this._renderSeason(res, W, H, startY);
+    } catch (e) {
+      txt(this, W / 2, H / 2, '❌ Нет соединения', 14, '#ff4455').setOrigin(0.5);
+    }
+  }
+
+  _renderSeason(res, W, H, startY) {
+    const season = res.season;
+    const lb     = res.leaderboard || [];
+    const myUid  = State.player?.user_id;
+
+    /* ── Нет сезона ── */
+    if (!season) {
+      txt(this, W / 2, H / 2, '⏳ Сезон скоро начнётся', 14, '#9999bb').setOrigin(0.5);
+      return;
+    }
+
+    /* ── Шапка: имя + дней до конца ── */
+    const startedMs  = new Date(String(season.started_at).replace(' ', 'T')).getTime();
+    const endsMs     = startedMs + 14 * 24 * 3600 * 1000;
+    const daysLeft   = Math.max(0, Math.ceil((endsMs - Date.now()) / (24 * 3600 * 1000)));
+    txt(this, W / 2, startY + 4,  season.name || 'Текущий сезон', 13, '#ffc83c', true).setOrigin(0.5);
+    txt(this, W / 2, startY + 20, `⏳ До конца: ${daysLeft} дн.`, 11, '#8888aa').setOrigin(0.5);
+
+    /* ── Награды (компактная полоска) ── */
+    makePanel(this, 8, startY + 30, W - 16, 40, 8, 0.9);
+    txt(this, 16, startY + 40, '🎁 Награды сезона:', 11, '#ffc83c', true);
+    txt(this, 16, startY + 55, '🥇500💰+200💎  🥈300💰+120💎  🥉200💰+75💎  4-10: 50💰+20💎', 9, '#c0c0e0');
+
+    /* ── Список топ-10 ── */
+    const listY = startY + 78;
+    const rowH  = 40;
+    const maxShow = Math.max(1, Math.floor((H - listY - 112) / rowH));
+
+    if (!lb.length) {
+      txt(this, W / 2, listY + 40, '📭 Никто ещё не сыграл в этом сезоне', 12, '#9999bb').setOrigin(0.5);
+    }
+
+    lb.slice(0, maxShow).forEach((p, i) => {
+      const ry   = listY + i * rowH;
+      const isMe = p.user_id === myUid;
+      const bg   = this.add.graphics();
+      bg.fillStyle(isMe ? 0x1e2840 : C.bgPanel, isMe ? 0.98 : 0.82);
+      bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+      if (isMe) { bg.lineStyle(1.5, C.blue, 0.7); bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8); }
+      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
+      txt(this, 20,     ry + (rowH - 4) / 2, medal, i < 3 ? 15 : 11, '#ffc83c').setOrigin(0, 0.5);
+      txt(this, 52,     ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
+      txt(this, 52,     ry + 25, `🏆 ${p.wins || 0}П`, 10, '#9999bb');
+      txt(this, W - 14, ry + (rowH - 4) / 2, `⭐ ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
+    });
+
+    /* ── Моя позиция если не в топе ── */
+    const myPos = res.my_pos;
+    const myStat = res.my_stats;
+    if (!myPos || myPos > maxShow) {
+      const myBY = H - 108;
+      const myBG = this.add.graphics();
+      myBG.fillStyle(0x1a2030, 0.97);
+      myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
+      myBG.lineStyle(1.5, C.gold, 0.5);
+      myBG.strokeRoundedRect(10, myBY, W - 20, 44, 10);
+      txt(this, W / 2, myBY + 12, 'Ваша позиция в сезоне', 10, '#888899').setOrigin(0.5);
+      const posLabel = myPos ? `#${myPos}` : 'не в топ';
+      const myRating = myStat ? myStat.rating : (State.player?.rating || 1000);
+      txt(this, W / 2, myBY + 30, `${posLabel}  ·  ⭐ ${myRating}`, 14, '#ffc83c', true).setOrigin(0.5);
+    }
   }
 
   _buildPodium(top3, W, y) {
