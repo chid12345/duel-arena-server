@@ -23,6 +23,16 @@ class UsersWipeLeaderboardMixin:
         for table in ("improvements", "daily_quests", "daily_bonuses", "achievements", "inventory"):
             cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM metric_events WHERE user_id = ?", (user_id,))
+        # Классы: удаляем всё кроме USDT-покупок (игрок заплатил реальные деньги)
+        cursor.execute(
+            "DELETE FROM user_inventory WHERE user_id = ? AND class_type != 'usdt'",
+            (user_id,),
+        )
+        # USDT-слоты снимаем (equipped=FALSE), но сами записи сохраняем
+        cursor.execute(
+            "UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?",
+            (user_id,),
+        )
         if keep_wallet_clan_and_referrals:
             for table in ("season_stats", "battle_pass", "season_rewards", "pvp_queue"):
                 cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
@@ -37,6 +47,7 @@ class UsersWipeLeaderboardMixin:
                    wins = 0, losses = 0, win_streak = 0, rating = 1000,
                    daily_streak = 0, last_daily = NULL,
                    xp_boost_charges = 0, profile_reset_ts = ?,
+                   current_class = NULL, current_class_type = NULL,
                    last_active = CURRENT_TIMESTAMP, last_hp_regen = ?
                    WHERE user_id = ?""",
                 (

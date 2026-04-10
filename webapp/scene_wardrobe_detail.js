@@ -35,6 +35,11 @@
       stamina:   Number(raw.stamina_saved   || 0),
     };
 
+    // Blocking zone — перехватывает клики до нижележащего оверлея гардероба
+    const blockZ = this.add.zone(W/2, H/2, W, H).setInteractive().setDepth(129);
+    blockZ.on("pointerdown", () => {});
+    layer.push(blockZ);
+
     // Dim + panel
     layer.push(this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.82).setDepth(130));
     const panel = makePanel(this, 8, pY, W-16, pH, 12, 0.99);
