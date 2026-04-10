@@ -465,7 +465,8 @@ class MenuScene extends Phaser.Scene {
           if (versionRes?.ok && versionRes.version) {
             State.appVersion = String(versionRes.version);
             if (this._panels?.more) { this._panels.more.destroy(); this._panels.more = null; }
-            if (this._activeTab === 'more') this._showTab('more');
+            this._buildMorePanel();
+            if (this._activeTab === 'more') this._switchTab('more');
           }
         });
       } else {
@@ -481,7 +482,8 @@ class MenuScene extends Phaser.Scene {
             if (versionRes?.ok && versionRes.version) {
               State.appVersion = String(versionRes.version);
               if (this._panels?.more) { this._panels.more.destroy(); this._panels.more = null; }
-              if (this._activeTab === 'more') this._showTab('more');
+              this._buildMorePanel();
+              if (this._activeTab === 'more') this._switchTab('more');
             }
           });
 
@@ -602,7 +604,7 @@ class MenuScene extends Phaser.Scene {
   }
 
   _switchTab(key) {
-    Object.entries(this._panels).forEach(([k, c]) => c.setVisible(k === key));
+    Object.entries(this._panels).forEach(([k, c]) => c?.setVisible(k === key));
     const inactiveCol = '#8888aa';
     const activeCol   = '#ffc83c';
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
