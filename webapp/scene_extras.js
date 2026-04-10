@@ -2,7 +2,6 @@
    scene_extras.js — дополнительные экраны TMA:
      QuestsScene   ('Quests')     — ежедневные задания
      SummaryScene  ('Summary')    — сводка профиля
-    SeasonScene   ('Season')     — таблица лидеров сезона
     TitanTopScene ('TitanTop')   — недельный топ Башни титанов
      BattlePassScene ('BattlePass') — прогресс Боевого пропуска
      ClanScene     ('Clan')       — клан
@@ -569,75 +568,6 @@ class SummaryScene extends Phaser.Scene {
     }
 
     _extraBack(this);
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════
-   SEASON SCENE — таблица лидеров текущего сезона
-   ═══════════════════════════════════════════════════════════ */
-class SeasonScene extends Phaser.Scene {
-  constructor() { super('Season'); }
-
-  create() {
-    const { width: W, height: H } = this.game.canvas;
-    this.W = W; this.H = H;
-    _extraBg(this, W, H);
-    _extraHeader(this, W, '⭐', 'СЕЗОН', '');
-    _extraBack(this);
-
-    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
-    get('/api/season').then(d => this._render(d, W, H)).catch(() => {
-      this._loading?.setText('❌ Нет соединения');
-    });
-  }
-
-  _render(data, W, H) {
-    this._loading?.destroy();
-    if (!data.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
-    if (!data.season) {
-      txt(this, W/2, H/2, '😴 Активного сезона нет', 13, '#9999bb').setOrigin(0.5);
-      return;
-    }
-
-    const s  = data.season;
-    const lb = data.leaderboard || [];
-    const me = data.my_stats;
-
-    /* ── Инфо о сезоне ── */
-    const end = s.end_date ? new Date(s.end_date).toLocaleDateString('ru') : '?';
-    txt(this, W/2, 82, `${s.name || 'Сезон'}  ·  до ${end}`, 12, '#8888aa').setOrigin(0.5);
-
-    /* ── Моя позиция ── */
-    if (me) {
-      const myY = 100;
-      makePanel(this, 8, myY, W-16, 44, 10, 0.95);
-      txt(this, 20, myY + 12, `#${data.my_pos || '?'}`, 16, '#ffc83c', true);
-      txt(this, 70, myY + 10, `${me.username || 'Ты'}`, 13, '#f0f0fa', true);
-      txt(this, 70, myY + 27, `🏆 ${me.season_wins || 0} побед  ·  ⭐ ${me.season_rating || 0}`, 12, '#8888aa');
-    }
-
-    /* ── Список лидеров ── */
-    const listY = 155;
-    const rowH = 38, maxShow = Math.floor((H - listY - 80) / rowH);
-    lb.slice(0, maxShow).forEach((row, i) => {
-      const ry    = listY + i * rowH;
-      const isMy  = me && row.user_id === me.user_id;
-      const bg    = this.add.graphics();
-      const bgCol = isMy ? 0x1e2840 : C.bgPanel;
-      bg.fillStyle(bgCol, 0.85);
-      bg.fillRoundedRect(8, ry, W-16, rowH - 4, 8);
-      if (isMy) { bg.lineStyle(1.5, C.blue, 0.5); bg.strokeRoundedRect(8, ry, W-16, rowH-4, 8); }
-
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i+1}.`;
-      txt(this, 18,      ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
-      txt(this, 52,      ry + 8,  row.username || `User${row.user_id}`, 12, isMy ? '#5096ff' : '#c0c0e0', isMy);
-      txt(this, 52,      ry + 24, `🏆 ${row.season_wins||0}W  ⭐ ${row.season_rating||0}`, 11, '#9999bb');
-      txt(this, W - 16,  ry + 17, `${row.season_rating||0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
-    });
-
-    if (lb.length === 0) {
-      txt(this, W/2, H/2, '📭 Нет данных', 13, '#9999bb').setOrigin(0.5);
-    }
   }
 }
 

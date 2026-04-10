@@ -557,7 +557,7 @@ class MenuScene extends Phaser.Scene {
       { key: 'battle',  icon: '⚔️',  label: 'Бой'     },
       { key: 'stats',   icon: '📊',  label: 'Статы'   },
       { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
-      { key: 'more',    icon: '☰',   label: 'Ещё'     },
+      { key: 'more',    icon: '☰',   label: 'Меню'    },
     ];
 
     // Подложка таб-бара — чуть светлее bg
@@ -1023,7 +1023,6 @@ class MenuScene extends Phaser.Scene {
     const items = [
       { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
       { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
-      { icon: '⭐',  label: 'Сезон',      cb: () => this.scene.start('Season')     },
       { icon: '🌟', label: 'Боевой пропуск', cb: () => this.scene.start('BattlePass') },
       { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
       { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
@@ -3289,7 +3288,7 @@ const config = {
   backgroundColor: C._name === 'light' ? '#f0f2ff' : '#12121c',
   parent: document.body,
   scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
-          QuestsScene, SummaryScene, SeasonScene, TitanTopScene, BattlePassScene, ClanScene, ShopScene, NatiskScene],
+          QuestsScene, SummaryScene, TitanTopScene, BattlePassScene, ClanScene, ShopScene, NatiskScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_BOTH,
