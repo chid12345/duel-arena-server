@@ -1,0 +1,42 @@
+"""ID миграций SQLite, помечаемых применёнными после PG bootstrap."""
+
+from __future__ import annotations
+
+# Порядок и состав совпадают с _apply_migrations в database.py (на момент введения PG).
+POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
+    "2026_04_02_001_add_hot_indexes",
+    "2026_04_03_001_player_win_streak",
+    "2026_04_03_002_progression_crit_milestones",
+    "2026_04_03_003_level_zero_based",
+    "2026_04_03_004_battle_energy",
+    "2026_04_04_001_bots_crit",
+    "2026_04_05_001_generous_energy",
+    "2026_04_06_001_global_progress_reset",
+    "2026_04_07_001_seed_bots_level_zero",
+    "2026_04_08_001_null_crit_defaults",
+    "2026_04_09_001_drop_energy_columns",
+    "2026_04_09_002_referral_system",
+    "2026_04_09_003_chat_id_and_pvp",
+    "2026_04_09_004_seasons",
+    "2026_04_09_005_shop_buffs",
+    "2026_04_09_006_battle_pass",
+    "2026_04_09_007_clans",
+    "2026_04_10_001_level_one_based",
+    "2026_04_10_002_fix_level1_free_stats",
+    "2026_04_11_001_hp_regen",
+    "2026_04_11_002_sync_last_hp_regen_all",
+    "2026_04_13_000a_premium_subscription",
+    "2026_04_13_000_stars_payments",
+    "2026_04_13_001_crypto_invoices",
+    "2026_04_12_001_referral_payouts",
+    "2026_04_15_001_clan_chat",
+    "2026_04_05_002_referral_usdt",
+    "2026_04_05_003_withdrawal_cooldown",
+    "2026_04_16_001_pvp_challenges",
+    "2026_04_16_002_titan_and_weekly_claims",
+    "2026_04_16_003_profile_reset_ts",
+    "2026_04_17_001_weekly_leaderboard_rewards",
+    "2026_04_18_001_endless_mode",
+    "2026_04_19_002_battlepass_endless",
+    "2026_04_19_001_endless_quests",
+)
