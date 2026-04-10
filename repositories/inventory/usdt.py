@@ -7,8 +7,6 @@ from typing import Dict, List, Tuple
 from config import (
     RESET_STATS_COST_DIAMONDS,
     RESET_STATS_COST_DIAMONDS_USDT,
-    expected_max_hp_from_level,
-    stamina_stats_invested,
 )
 
 
@@ -31,9 +29,9 @@ class InventoryUsdtMixin:
             display_name = (custom_name or f"Кастомный {usdt_count + 1}").strip()[: self._USDT_MAX_NAME_LEN] or f"Кастомный {usdt_count + 1}"
 
             cursor.execute(
-                """INSERT INTO user_inventory 
-                   (user_id, class_id, class_type, custom_name, equipped, purchased_at)
-                   VALUES (?, ?, 'usdt', ?, FALSE, CURRENT_TIMESTAMP)""",
+                """INSERT INTO user_inventory
+                   (user_id, class_id, class_type, custom_name, equipped, free_stats_saved, purchased_at)
+                   VALUES (?, ?, 'usdt', ?, FALSE, 19, CURRENT_TIMESTAMP)""",
                 (user_id, class_id, display_name),
             )
 
@@ -47,57 +45,10 @@ class InventoryUsdtMixin:
             conn.close()
 
     def save_usdt_stats(self, user_id: int, class_id: str) -> Tuple[bool, str]:
-        """Сохранить текущие статы в USDT-образ."""
+        """Устарело — статы теперь задаются через train_usdt_stat. No-op."""
         if not self.has_class(user_id, class_id):
             return False, "У вас нет этого USDT-образа"
-
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        self._ensure_inventory_schema(cursor)
-
-        try:
-            cursor.execute(
-                """SELECT level, strength, endurance, crit, free_stats, max_hp, current_hp
-                   FROM players WHERE user_id = ?""",
-                (user_id,),
-            )
-            stats = cursor.fetchone()
-            if not stats:
-                return False, "Игрок не найден"
-
-            level = int(self._row_get(stats, "level", 1) or 1)
-            max_hp = int(self._row_get(stats, "max_hp", expected_max_hp_from_level(level)) or expected_max_hp_from_level(level))
-            current_hp = int(self._row_get(stats, "current_hp", max_hp) or max_hp)
-            stamina_pts = int(stamina_stats_invested(max_hp, level))
-
-            cursor.execute(
-                """UPDATE user_inventory 
-                   SET strength_saved = ?, agility_saved = ?, intuition_saved = ?,
-                       endurance_saved = ?, stamina_saved = ?,
-                       free_stats_saved = ?, max_hp_saved = ?, current_hp_saved = ?
-                   WHERE user_id = ? AND class_id = ?""",
-                (
-                    stats["strength"],
-                    stats["endurance"],
-                    stats["crit"],
-                    0,
-                    stamina_pts,
-                    stats["free_stats"],
-                    max_hp,
-                    current_hp,
-                    user_id,
-                    class_id,
-                ),
-            )
-
-            conn.commit()
-            return True, "Статы сохранены в USDT-образ"
-
-        except Exception as e:
-            conn.rollback()
-            return False, f"Ошибка сохранения статов: {str(e)}"
-        finally:
-            conn.close()
+        return True, "OK"
 
     def reset_usdt_slot_stats(self, user_id: int, class_id: str) -> Tuple[bool, str]:
         """Сбросить сохранённые статы USDT-образа (после оплаты)."""
@@ -109,8 +60,8 @@ class InventoryUsdtMixin:
             cursor.execute(
                 """UPDATE user_inventory
                    SET strength_saved=0, agility_saved=0, intuition_saved=0,
-                       endurance_saved=0, stamina_saved=0, free_stats_saved=0,
-                       max_hp_saved=0, current_hp_saved=0
+                       endurance_saved=0, stamina_saved=0, free_stats_saved=19,
+                       max_hp_saved=0, current_hp_saved=0, passive_type=NULL
                    WHERE user_id=? AND class_id=?""",
                 (user_id, class_id),
             )

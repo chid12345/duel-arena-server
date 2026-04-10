@@ -10,10 +10,12 @@ from repositories.inventory.legacy_avatar import InventoryLegacyAvatarMixin
 from repositories.inventory.switch import InventorySwitchMixin
 from repositories.inventory.unequip_resync import InventoryUnequipResyncMixin
 from repositories.inventory.usdt import InventoryUsdtMixin
+from repositories.inventory.usdt_train import InventoryUsdtTrainMixin
 
 
 class InventoryMixin(
     InventoryUsdtMixin,
+    InventoryUsdtTrainMixin,
     InventorySwitchMixin,
     InventoryCrudMixin,
     InventoryClassCatalogMixin,

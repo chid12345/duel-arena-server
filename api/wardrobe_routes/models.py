@@ -35,3 +35,15 @@ class USDTBuyInvoiceBody(BaseModel):
 class USDTResetInvoiceBody(BaseModel):
     init_data: str
     class_id: str
+
+
+class USDTTrainBody(BaseModel):
+    init_data: str
+    class_id: str
+    stat: str
+
+
+class USDTPassiveBody(BaseModel):
+    init_data: str
+    class_id: str
+    passive_type: str

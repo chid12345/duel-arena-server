@@ -88,6 +88,13 @@ class InventoryBaseMixin:
                 )
                 if not cursor.fetchone():
                     cursor.execute(f"ALTER TABLE user_inventory ADD COLUMN {col} INTEGER DEFAULT 0")
+
+            cursor.execute(
+                """SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'user_inventory' AND column_name = 'passive_type' LIMIT 1"""
+            )
+            if not cursor.fetchone():
+                cursor.execute("ALTER TABLE user_inventory ADD COLUMN passive_type TEXT")
         else:
             cursor.execute(
                 """CREATE TABLE IF NOT EXISTS user_inventory (
@@ -127,6 +134,8 @@ class InventoryBaseMixin:
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN max_hp_saved INTEGER DEFAULT 0")
             if "current_hp_saved" not in inv_cols:
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN current_hp_saved INTEGER DEFAULT 0")
+            if "passive_type" not in inv_cols:
+                cursor.execute("ALTER TABLE user_inventory ADD COLUMN passive_type TEXT")
 
     @staticmethod
     def _class_stat_vector(class_info: Optional[Dict]) -> Dict[str, int]:

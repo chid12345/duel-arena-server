@@ -14,7 +14,9 @@ from api.wardrobe_routes.models import (
     USDTBody,
     USDTBuyInvoiceBody,
     USDTNameBody,
+    USDTPassiveBody,
     USDTResetInvoiceBody,
+    USDTTrainBody,
 )
 
 logger = logging.getLogger(__name__)
@@ -137,6 +139,33 @@ def attach_wardrobe_usdt(
         except Exception as e:
             logger.error("usdt buy-invoice: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)[:120]}
+
+    @router.post("/api/wardrobe/usdt/train")
+    async def wardrobe_usdt_train(body: USDTTrainBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        ok, msg, item = db.train_usdt_stat(uid, body.class_id.strip(), body.stat.strip())
+        if ok:
+            _cache_invalidate(uid)
+        return {"ok": ok, "message": msg, "inventory_item": item}
+
+    @router.post("/api/wardrobe/usdt/untrain")
+    async def wardrobe_usdt_untrain(body: USDTTrainBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        ok, msg, item = db.untrain_usdt_stat(uid, body.class_id.strip(), body.stat.strip())
+        if ok:
+            _cache_invalidate(uid)
+        return {"ok": ok, "message": msg, "inventory_item": item}
+
+    @router.post("/api/wardrobe/usdt/set-passive")
+    async def wardrobe_usdt_set_passive(body: USDTPassiveBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        ok, msg, item = db.set_usdt_passive(uid, body.class_id.strip(), body.passive_type)
+        if ok:
+            _cache_invalidate(uid)
+        return {"ok": ok, "message": msg, "inventory_item": item}
 
     @router.post("/api/wardrobe/usdt/reset-invoice")
     async def wardrobe_usdt_reset_invoice(body: USDTResetInvoiceBody):

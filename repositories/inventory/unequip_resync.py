@@ -14,6 +14,24 @@ from config import (
     total_free_stats_at_level,
 )
 
+_PG_UNEQUIP_SQL = """UPDATE players
+   SET strength  = GREATEST(1, strength  - ?),
+       endurance = GREATEST(1, endurance - ?),
+       crit      = GREATEST(1, crit      - ?),
+       max_hp = ?, current_hp = ?,
+       current_class = NULL, current_class_type = NULL,
+       equipped_avatar_id = 'base_neutral'
+   WHERE user_id = ?"""
+
+_SQ_UNEQUIP_SQL = """UPDATE players
+   SET strength  = CASE WHEN (strength  - ?) < 1 THEN 1 ELSE (strength  - ?) END,
+       endurance = CASE WHEN (endurance - ?) < 1 THEN 1 ELSE (endurance - ?) END,
+       crit      = CASE WHEN (crit      - ?) < 1 THEN 1 ELSE (crit      - ?) END,
+       max_hp = ?, current_hp = ?,
+       current_class = NULL, current_class_type = NULL,
+       equipped_avatar_id = 'base_neutral'
+   WHERE user_id = ?"""
+
 
 class InventoryUnequipResyncMixin:
     def unequip_class(self, user_id: int) -> Tuple[bool, str]:
@@ -25,8 +43,17 @@ class InventoryUnequipResyncMixin:
             cur_info = self._player_current_class_info(cursor, user_id)
             cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
 
+            vec_to_subtract = None
             if cur_info and cur_info.get("class_type") in {"free", "gold", "diamonds"}:
-                vec = self._class_stat_vector(cur_info)
+                vec_to_subtract = self._class_stat_vector(cur_info)
+            elif cur_info and cur_info.get("class_type") == "usdt":
+                # USDT: вычитаем ровно то, что было добавлено при equip (saved + пассивка)
+                usdt_vec = self._usdt_stat_vector(cursor, user_id, cur_info)
+                if any(v > 0 for v in usdt_vec.values()):
+                    vec_to_subtract = usdt_vec
+
+            if vec_to_subtract:
+                vec = vec_to_subtract
                 cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
                 hp_row = cursor.fetchone()
                 new_max_hp = max(1, int(self._row_get(hp_row, "max_hp", 1) or 1) - int(vec["max_hp"]))
@@ -35,43 +62,12 @@ class InventoryUnequipResyncMixin:
                     max(1, int(self._row_get(hp_row, "current_hp", new_max_hp) or new_max_hp) - int(vec["max_hp"])),
                 )
                 if bool(getattr(self, "_pg", False)):
-                    cursor.execute(
-                        """UPDATE players
-                           SET strength = GREATEST(1, strength - ?),
-                               endurance = GREATEST(1, endurance - ?),
-                               crit = GREATEST(1, crit - ?),
-                               max_hp = ?,
-                               current_hp = ?,
-                               current_class = NULL,
-                               current_class_type = NULL,
-                               equipped_avatar_id = 'base_neutral'
-                           WHERE user_id = ?""",
-                        (vec["strength"], vec["endurance"], vec["crit"], new_max_hp, new_current_hp, user_id),
-                    )
+                    cursor.execute(_PG_UNEQUIP_SQL,
+                        (vec["strength"], vec["endurance"], vec["crit"], new_max_hp, new_current_hp, user_id))
                 else:
-                    cursor.execute(
-                        """UPDATE players
-                           SET strength = CASE WHEN (strength - ?) < 1 THEN 1 ELSE (strength - ?) END,
-                               endurance = CASE WHEN (endurance - ?) < 1 THEN 1 ELSE (endurance - ?) END,
-                               crit = CASE WHEN (crit - ?) < 1 THEN 1 ELSE (crit - ?) END,
-                               max_hp = ?,
-                               current_hp = ?,
-                               current_class = NULL,
-                               current_class_type = NULL,
-                               equipped_avatar_id = 'base_neutral'
-                           WHERE user_id = ?""",
-                        (
-                            vec["strength"],
-                            vec["strength"],
-                            vec["endurance"],
-                            vec["endurance"],
-                            vec["crit"],
-                            vec["crit"],
-                            new_max_hp,
-                            new_current_hp,
-                            user_id,
-                        ),
-                    )
+                    cursor.execute(_SQ_UNEQUIP_SQL,
+                        (vec["strength"], vec["strength"], vec["endurance"], vec["endurance"],
+                         vec["crit"], vec["crit"], new_max_hp, new_current_hp, user_id))
             else:
                 cursor.execute(
                     "UPDATE players SET current_class = NULL, current_class_type = NULL, equipped_avatar_id = 'base_neutral' WHERE user_id = ?",

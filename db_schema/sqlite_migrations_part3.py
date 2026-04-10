@@ -107,4 +107,7 @@ MIGRATIONS_PART3 = [
         "ALTER TABLE players ADD COLUMN current_class TEXT",
         "ALTER TABLE players ADD COLUMN current_class_type TEXT",
     ]),
+    ("2026_04_21_002_usdt_passive_type", [
+        "ALTER TABLE user_inventory ADD COLUMN passive_type TEXT",
+    ]),
 ]
