@@ -135,7 +135,9 @@
     overlay.push(dim);
     const panelY = 56;
     const panelH = H - 112;
-    makePanel(this, 8, panelY, W - 16, panelH, 12, 0.98).setDepth?.(121);
+    const panelBg = makePanel(this, 8, panelY, W - 16, panelH, 12, 0.98);
+    if (panelBg && panelBg.setDepth) panelBg.setDepth(121);
+    overlay.push(panelBg);
     const title = txt(this, W / 2, panelY + 14, "🧥 Гардероб", 14, "#f0f0fa", true).setOrigin(0.5).setDepth(122);
     overlay.push(title);
 
@@ -171,11 +173,11 @@
 
     const top = panelY + 40;
     const cardW = Math.floor((W - 32 - 8) / 2);
-    const cardH = 96;
+    const cardH = 140;
     const gapX = 8;
     const gapY = 8;
     const navY = panelY + panelH - 26;
-    const rowsPerPage = 3;
+    const rowsPerPage = 2;
     const perPage = rowsPerPage * 2;
     const cards = this._wardrobeView === "owned"
       ? allCards.filter((x) => !!x.owned)
@@ -225,10 +227,11 @@
         card.strokeRoundedRect(x, y, cardW, cardH, 9);
         cardsLayer.push(card);
 
-        cardsLayer.push(txt(this, x + 10, y + 8, `${a.icon} ${a.name}`, 10, "#f0f0fa", true).setDepth(123));
-        cardsLayer.push(txt(this, x + cardW - 8, y + 8, tMeta.title, 8, "#9999bb", true).setOrigin(1, 0).setDepth(123));
-        cardsLayer.push(txt(this, x + 10, y + 24, `С +${a.strength}  Л +${a.agility}  И +${a.intuition}  В +${a.endurance}`, 8, "#ffc83c").setDepth(123));
-        cardsLayer.push(txt(this, x + 10, y + 37, (a.special_bonus || "Без бонуса").slice(0, 36), 8, "#a8a8c8").setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 10, `${a.icon} ${a.name}`, 12, "#f0f0fa", true).setDepth(123));
+        cardsLayer.push(txt(this, x + cardW - 8, y + 10, tMeta.title, 9, "#9999bb", true).setOrigin(1, 0).setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 30, `С +${a.strength}  Л +${a.agility}`, 11, "#ffc83c", true).setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 46, `И +${a.intuition}  В +${a.endurance}`, 11, "#ffc83c", true).setDepth(123));
+        cardsLayer.push(txt(this, x + 10, y + 64, (a.special_bonus || "Без бонуса").slice(0, 42), 10, "#a8a8c8").setDepth(123));
 
         let btnLabel = "Надеть";
         let action = "equip";
@@ -248,17 +251,41 @@
           }
         }
 
-        const bx = x + 8, by = y + cardH - 26, bw = cardW - 16, bh = 20;
-        const btn = this.add.graphics().setDepth(123);
-        const bcol = action === "none" ? 0x3a3a52 : (action === "buy" ? C.gold : C.green);
-        btn.fillStyle(bcol, 0.95);
-        btn.fillRoundedRect(bx, by, bw, bh, 7);
-        const bt = txt(this, bx + bw / 2, by + bh / 2, btnLabel, 9, "#101020", true).setOrigin(0.5).setDepth(124);
-        cardsLayer.push(btn, bt);
-        if (action !== "none") {
-          const z = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive({ useHandCursor: true }).setDepth(125);
-          z.on("pointerdown", () => this._avatarAction(action, a));
-          cardsLayer.push(z);
+        // USDT экипированный: две кнопки — Сохранить + Снять
+        if (a.equipped && a.class_type === "usdt") {
+          const bh2 = 28;
+          const halfW = Math.floor((cardW - 24) / 2);
+          // Кнопка «Сохранить»
+          const sx = x + 8, sy = y + cardH - bh2 - 6;
+          const sbtn = this.add.graphics().setDepth(123);
+          sbtn.fillStyle(0x34a6ff, 0.95);
+          sbtn.fillRoundedRect(sx, sy, halfW, bh2, 9);
+          const st = txt(this, sx + halfW / 2, sy + bh2 / 2, "💾 Сохр.", 10, "#ffffff", true).setOrigin(0.5).setDepth(124);
+          const sz = this.add.zone(sx + halfW / 2, sy + bh2 / 2, halfW, bh2).setInteractive({ useHandCursor: true }).setDepth(125);
+          sz.on("pointerdown", () => this._avatarAction("save_usdt", a));
+          cardsLayer.push(sbtn, st, sz);
+          // Кнопка «Снять»
+          const ux = sx + halfW + 8;
+          const ubtn = this.add.graphics().setDepth(123);
+          ubtn.fillStyle(C.green, 0.95);
+          ubtn.fillRoundedRect(ux, sy, halfW, bh2, 9);
+          const ut = txt(this, ux + halfW / 2, sy + bh2 / 2, "Снять", 10, "#101020", true).setOrigin(0.5).setDepth(124);
+          const uz = this.add.zone(ux + halfW / 2, sy + bh2 / 2, halfW, bh2).setInteractive({ useHandCursor: true }).setDepth(125);
+          uz.on("pointerdown", () => this._avatarAction("unequip", a));
+          cardsLayer.push(ubtn, ut, uz);
+        } else {
+          const bx = x + 8, by = y + cardH - 34, bw = cardW - 16, bh = 28;
+          const btn = this.add.graphics().setDepth(123);
+          const bcol = action === "none" ? 0x3a3a52 : (action === "buy" || action === "buy_usdt" ? C.gold : C.green);
+          btn.fillStyle(bcol, 0.95);
+          btn.fillRoundedRect(bx, by, bw, bh, 9);
+          const bt = txt(this, bx + bw / 2, by + bh / 2, btnLabel, 11, "#101020", true).setOrigin(0.5).setDepth(124);
+          cardsLayer.push(btn, bt);
+          if (action !== "none") {
+            const z = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive({ useHandCursor: true }).setDepth(125);
+            z.on("pointerdown", () => this._avatarAction(action, a));
+            cardsLayer.push(z);
+          }
         }
       });
     };
@@ -290,19 +317,24 @@
       if (action === "equip") res = await post("/api/wardrobe/equip", { class_id: item.class_id });
       if (action === "unequip") res = await post("/api/wardrobe/unequip", {});
       if (action === "buy_usdt") res = await post("/api/wardrobe/usdt/create", {});
+      if (action === "save_usdt") res = await post("/api/wardrobe/usdt/save", { class_id: item.class_id });
       if (res?.ok) {
         if (res.player) {
           State.player = res.player;
           State.playerLoadedAt = Date.now();
-          this._refreshCombat(State.player);
         }
         const okMsg =
           action === "buy" ? "✅ Образ получен"
           : action === "unequip" ? "✅ Образ снят"
           : action === "buy_usdt" ? "✅ USDT-образ получен"
+          : action === "save_usdt" ? "✅ Статы сохранены"
           : "✅ Образ надет";
-        this._showToast(okMsg);
-        this._renderAvatarOverlay(res);
+        // Сохраняем wardrobe payload для повторного открытия после restart
+        this._pendingWardrobePayload = res;
+        this._pendingToast = okMsg;
+        this._avatarBusy = false;
+        this.scene.restart({ player: State.player, reopenWardrobe: true, wardrobePayload: res, toast: okMsg });
+        return;
       } else {
         this._showToast(`❌ ${res?.message || res?.reason || "Ошибка"}`);
       }

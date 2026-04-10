@@ -7,6 +7,7 @@ class StatsScene extends Phaser.Scene {
   constructor() { super('Stats'); }
 
   init(data) {
+    this._initData = data || {};
     if (data && data.player) State.player = data.player;
   }
 
@@ -24,6 +25,13 @@ class StatsScene extends Phaser.Scene {
     this._buildCombatPreview(W, H);
     this._buildAvatarBtn(W, H);
     this._buildBackBtn(W, H);
+
+    // После restart от wardrobe-действия — открыть гардероб заново
+    const d = this._initData;
+    if (d.reopenWardrobe && d.wardrobePayload) {
+      this._renderAvatarOverlay(d.wardrobePayload);
+      if (d.toast) this._showToast(d.toast);
+    }
   }
 
   /* ── Фон ─────────────────────────────────────────────── */
