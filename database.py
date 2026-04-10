@@ -12,7 +12,7 @@ Database собирается из отдельных модулей через 
   repositories/game_logic.py  — Башня Титанов
   repositories/endless.py     — Натиск (волны, попытки, квесты, топ)
   repositories/leaderboard.py — PvP/Titan топы, недельные выплаты
-  repositories/shop.py        — магазин, сезоны, Battle Pass
+  repositories/shop/          — магазин, сезоны, Battle Pass
   repositories/social/        — кланы, рефералы, Stars/Crypto платежи
   repositories/avatars/       — образы, элит-билды, магазин
 """
