@@ -82,7 +82,11 @@ def _player_api(player: dict) -> dict:
     )
     armor_base = vyn / (vyn + ARMOR_STAMINA_K_ABS) if vyn > 0 else 0.0
     armor_cap = min(ARMOR_ABSOLUTE_MAX, ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv)
-    armor_p = int(min(armor_cap, armor_base) * 100)
+    armor_raw = min(armor_cap, armor_base)
+    # USDT пассивка: броня +4% (отражаем в UI, как и в бою)
+    if (player.get("usdt_passive_type") or "").strip() == "armor_pct":
+        armor_raw = min(ARMOR_ABSOLUTE_MAX, armor_raw + 0.04)
+    armor_p = round(armor_raw * 100, 1)
     dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s**STRENGTH_DAMAGE_POWER)))
 
     need_xp = exp_needed_for_next_level(lv)

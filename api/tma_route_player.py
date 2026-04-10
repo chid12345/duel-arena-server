@@ -34,8 +34,13 @@ def register_tma_player_route(
         _rl_check(uid, "player", max_hits=20, window_sec=10)
         username = tg_user.get("username") or tg_user.get("first_name") or ""
 
+        usdt_passive = db.get_equipped_usdt_passive(uid)
+
         cached = _cache_get(uid)
         if cached is not None:
+            if usdt_passive:
+                cached = dict(cached)
+                cached["usdt_passive_type"] = usdt_passive
             return {"ok": True, "player": _player_api(cached), "cached": True}
 
         player = db.get_or_create_player(uid, username)
@@ -62,4 +67,7 @@ def register_tma_player_route(
             pass
 
         _cache_set(uid, player)
+        if usdt_passive:
+            player = dict(player)
+            player["usdt_passive_type"] = usdt_passive
         return {"ok": True, "player": _player_api(player)}

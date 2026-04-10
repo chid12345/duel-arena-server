@@ -146,8 +146,11 @@ def attach_wardrobe_usdt(
             return {"ok": False, "reason": str(e)[:120]}
 
     def _player_response(uid: int) -> dict:
-        p = db.get_or_create_player(uid, "")
-        return _player_api(dict(p))
+        p = dict(db.get_or_create_player(uid, ""))
+        usdt_passive = db.get_equipped_usdt_passive(uid)
+        if usdt_passive:
+            p["usdt_passive_type"] = usdt_passive
+        return _player_api(p)
 
     @router.post("/api/wardrobe/usdt/apply-stats")
     async def wardrobe_usdt_apply_stats(body: USDTBody):
