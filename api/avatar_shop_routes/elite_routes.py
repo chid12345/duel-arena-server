@@ -1,40 +1,22 @@
+"""Элитный образ: инвойсы, билды."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any, Dict
 
 from fastapi import APIRouter
-from pydantic import BaseModel
+
+from api.avatar_shop_routes.models import (
+    EliteAvatarBody,
+    EliteBuildActivateBody,
+    EliteBuildAllocateBody,
+)
 
 logger = logging.getLogger(__name__)
 
 
-class AvatarBody(BaseModel):
-    init_data: str
-    avatar_id: str
-
-
-class EliteAvatarBody(BaseModel):
-    init_data: str
-
-
-class EliteBuildActivateBody(BaseModel):
-    init_data: str
-    build_id: str
-
-
-class EliteBuildAllocateBody(BaseModel):
-    init_data: str
-    build_id: str
-    alloc_strength: int = 0
-    alloc_endurance: int = 0
-    alloc_crit: int = 0
-    alloc_stamina: int = 0
-
-
-def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
-    router = APIRouter()
-
+def attach_avatar_elite(router: APIRouter, ctx: Dict[str, Any]) -> None:
     db = ctx["db"]
     get_user_from_init_data = ctx["get_user_from_init_data"]
     _player_api = ctx["_player_api"]
@@ -46,49 +28,6 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
     BOT_TOKEN = ctx["BOT_TOKEN"]
     CRYPTOPAY_TOKEN = ctx["CRYPTOPAY_TOKEN"]
     CRYPTOPAY_API_BASE = ctx["CRYPTOPAY_API_BASE"]
-
-    @router.get("/api/avatars")
-    async def avatars(init_data: str):
-        try:
-            tg_user = get_user_from_init_data(init_data)
-            uid = int(tg_user["id"])
-            username = tg_user.get("username") or tg_user.get("first_name") or ""
-            db.get_or_create_player(uid, username)
-            return db.get_player_avatar_state(uid)
-        except Exception as e:
-            logger.error("avatars load failed: %s", e, exc_info=True)
-            return {"ok": False, "reason": f"avatars_error: {str(e)[:120]}"}
-
-    @router.post("/api/avatars/buy")
-    async def avatars_buy(body: AvatarBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        username = tg_user.get("username") or tg_user.get("first_name") or ""
-        db.get_or_create_player(uid, username)
-        result = db.buy_avatar(uid, body.avatar_id.strip())
-        if result.get("ok"):
-            _cache_invalidate(uid)
-            state = db.get_player_avatar_state(uid)
-            player = db.get_or_create_player(uid, "")
-            result["avatars"] = state.get("avatars", [])
-            result["player"] = _player_api(dict(player))
-        return result
-
-    @router.post("/api/avatars/equip")
-    async def avatars_equip(body: AvatarBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        username = tg_user.get("username") or tg_user.get("first_name") or ""
-        db.get_or_create_player(uid, username)
-        result = db.equip_avatar(uid, body.avatar_id.strip())
-        if result.get("ok"):
-            _cache_invalidate(uid)
-            state = db.get_player_avatar_state(uid)
-            player = db.get_or_create_player(uid, "")
-            result["avatars"] = state.get("avatars", [])
-            result["player"] = _player_api(dict(player))
-        return result
-
 
     @router.post("/api/avatars/elite/stars_invoice")
     async def elite_avatar_stars_invoice(body: EliteAvatarBody):
@@ -104,7 +43,16 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
         import httpx
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.post(f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink", json={"title": "👑 Элитный образ", "description": "Уникальный статусный образ для Duel Arena.", "payload": f"avatar_{ELITE_AVATAR_ID}", "currency": "XTR", "prices": [{"label": "Элитный образ", "amount": int(ELITE_AVATAR_STARS)}]})
+                resp = await client.post(
+                    f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink",
+                    json={
+                        "title": "👑 Элитный образ",
+                        "description": "Уникальный статусный образ для Duel Arena.",
+                        "payload": f"avatar_{ELITE_AVATAR_ID}",
+                        "currency": "XTR",
+                        "prices": [{"label": "Элитный образ", "amount": int(ELITE_AVATAR_STARS)}],
+                    },
+                )
                 data = resp.json()
             if data.get("ok"):
                 return {"ok": True, "invoice_url": data["result"], "avatar_id": ELITE_AVATAR_ID}
@@ -121,8 +69,13 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
         _cache_invalidate(uid)
         state = db.get_player_avatar_state(uid)
         player = db.get_or_create_player(uid, "")
-        return {"ok": bool(unlock.get("ok")), "already_unlocked": bool(unlock.get("already_unlocked")), "avatar_id": ELITE_AVATAR_ID, "avatars": state.get("avatars", []), "player": _player_api(dict(player))}
-
+        return {
+            "ok": bool(unlock.get("ok")),
+            "already_unlocked": bool(unlock.get("already_unlocked")),
+            "avatar_id": ELITE_AVATAR_ID,
+            "avatars": state.get("avatars", []),
+            "player": _player_api(dict(player)),
+        }
 
     @router.post("/api/avatars/elite/crypto_invoice")
     async def elite_avatar_crypto_invoice(body: EliteAvatarBody):
@@ -139,12 +92,28 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
         import httpx
         try:
             async with httpx.AsyncClient(timeout=10) as client:
-                resp = await client.post(f"{CRYPTOPAY_API_BASE}/createInvoice", headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN}, json={"asset": "USDT", "amount": str(ELITE_AVATAR_USDT), "payload": f"uid:{uid}:avatar:{ELITE_AVATAR_ID}", "description": "Duel Arena — 👑 Элитный образ", "allow_comments": False, "allow_anonymous": False})
+                resp = await client.post(
+                    f"{CRYPTOPAY_API_BASE}/createInvoice",
+                    headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                    json={
+                        "asset": "USDT",
+                        "amount": str(ELITE_AVATAR_USDT),
+                        "payload": f"uid:{uid}:avatar:{ELITE_AVATAR_ID}",
+                        "description": "Duel Arena — 👑 Элитный образ",
+                        "allow_comments": False,
+                        "allow_anonymous": False,
+                    },
+                )
                 data = resp.json()
             if data.get("ok"):
                 inv = data["result"]
                 db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", str(ELITE_AVATAR_USDT))
-                return {"ok": True, "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"), "invoice_id": inv["invoice_id"], "avatar_id": ELITE_AVATAR_ID}
+                return {
+                    "ok": True,
+                    "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
+                    "invoice_id": inv["invoice_id"],
+                    "avatar_id": ELITE_AVATAR_ID,
+                }
             err = data.get("error") or {}
             return {"ok": False, "reason": f"CryptoPay [{err.get('code', '?')}] {err.get('name', 'UNKNOWN')}"}
         except Exception as e:
@@ -221,5 +190,3 @@ def register_avatar_shop_routes(app, ctx: Dict[str, Any]) -> None:
             result["need_payment"] = True
             result["new_build_price"] = {"usdt": str(ELITE_AVATAR_USDT), "stars": int(ELITE_AVATAR_STARS)}
         return result
-
-    app.include_router(router)

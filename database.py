@@ -7,11 +7,11 @@ Database собирается из отдельных модулей через 
   db_core.py                  — подключение, SQL-адаптер SQLite↔PostgreSQL
   db_schema/                  — CREATE TABLE, индексы, миграции
   repositories/users/         — игрок, HP, бонусы, улучшения, Premium
-  repositories/bots.py        — боты, ребаланс, matchmaking
+  repositories/bots/          — боты, ребаланс, matchmaking
   repositories/battles/       — бои, квесты, PvP очередь/вызовы
   repositories/game_logic.py  — Башня Титанов
-  repositories/endless.py     — Натиск (волны, попытки, квесты, топ)
-  repositories/leaderboard.py — PvP/Titan топы, недельные выплаты
+  repositories/endless/       — Натиск (волны, попытки, квесты, топ)
+  repositories/leaderboard/   — PvP/Titan топы, недельные выплаты
   repositories/shop/          — магазин, сезоны, Battle Pass
   repositories/social/        — кланы, рефералы, Stars/Crypto платежи
   repositories/avatars/       — образы, элит-билды, магазин

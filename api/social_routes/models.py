@@ -1,0 +1,32 @@
+from __future__ import annotations
+
+from pydantic import BaseModel
+
+
+class ClanCreateBody(BaseModel):
+    init_data: str
+    name: str
+    tag: str
+
+
+class ClanJoinBody(BaseModel):
+    init_data: str
+    clan_id: int
+
+
+class ClanLeaveBody(BaseModel):
+    init_data: str
+
+
+class ClanChatSendBody(BaseModel):
+    init_data: str
+    message: str
+
+
+class ClanTransferBody(BaseModel):
+    init_data: str
+    new_leader_id: int
+
+
+class ReferralWithdrawBody(BaseModel):
+    init_data: str
