@@ -78,7 +78,7 @@ class BattleUiContextMixin:
             'opponent_level': int(opp.get('level', PLAYER_START_LEVEL)),
             'opp_strength': self._safe_int_field(opp, 'strength', BASE_STRENGTH),
             'opp_endurance': self._safe_int_field(opp, 'endurance', BASE_ENDURANCE),
-            'opp_crit': self._safe_crit_stat(opp, PLAYER_START_CRIT),
+            'opp_crit': self._safe_crit_stat(opp, "crit", PLAYER_START_CRIT),
             'opp_stamina_invested': opp_stamina_iv,
             'opp_max_hp': int(opp.get('max_hp', PLAYER_START_MAX_HP)),
             'opp_rating': int(opp.get('rating', 1000)),

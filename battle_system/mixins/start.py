@@ -33,7 +33,7 @@ class BattleStartMixin:
 
         p2_store = dict(player2) if is_bot2 else player2
         if is_bot2:
-            p2_store["crit"] = self._safe_crit_stat(p2_store, PLAYER_START_CRIT)
+            p2_store["crit"] = self._safe_crit_stat(p2_store, "crit", PLAYER_START_CRIT)
         
         battle_data = {
             'battle_id': battle_id,

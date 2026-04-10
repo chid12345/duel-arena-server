@@ -178,14 +178,4 @@ class BattleStateMixin:
         b["crit"] = max(1, int(int(c0) * m))
         return b
 
-    @staticmethod
-    def _safe_int_field(entity: Dict, key: str, default: int) -> int:
-        """Поле из сущности боя: NULL в БД даёт None в dict — не путать с «нет ключа»."""
-        v = entity.get(key)
-        if v is None:
-            return int(default)
-        return int(v)
 
-    def _safe_crit_stat(self, entity: Dict, default: int = PLAYER_START_CRIT) -> int:
-        """Крит бота/игрока для UI и расчёта шанса."""
-        return max(0, self._safe_int_field(entity, "crit", default))
