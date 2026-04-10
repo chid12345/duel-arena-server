@@ -128,6 +128,19 @@ class InventoryUsdtTrainMixin:
             if self._get_stats_applied(cursor, user_id, class_id):
                 return False, "Сборка уже сохранена", None
 
+            # Проверка: все очки должны быть распределены и пассивка выбрана
+            cursor.execute(
+                "SELECT free_stats_saved, passive_type FROM user_inventory WHERE user_id=? AND class_id=?",
+                (user_id, class_id),
+            )
+            row = cursor.fetchone()
+            free = int(self._row_get(row, "free_stats_saved", 0) or 0)
+            passive = (self._row_get(row, "passive_type") or "").strip()
+            if free > 0:
+                return False, f"Распредели все очки статов — осталось {free}", None
+            if not passive:
+                return False, "Выбери пассивный бонус перед сохранением", None
+
             equipped = self._is_slot_equipped(cursor, user_id, class_id)
             old_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id)) if equipped else None
 

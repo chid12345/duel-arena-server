@@ -172,8 +172,22 @@
 
     // Кнопка "Сохранить сборку" — только пока не locked
     if (!locked) {
-      btnY = mkBtn(btnY, "💾 Сохранить сборку", 0x1a6aaa,
-        () => this._usdtDetailAction("apply_stats", item, wp));
+      const canSave = free === 0 && !!passive;
+      if (canSave) {
+        btnY = mkBtn(btnY, "💾 Сохранить сборку", 0x1a6aaa,
+          () => this._usdtDetailAction("apply_stats", item, wp));
+      } else {
+        // Заблокированная кнопка с подсказкой
+        const hint = free > 0
+          ? `⛔ Осталось вложить ${free} очков`
+          : "⛔ Выбери пассивный бонус";
+        const g = this.add.graphics().setDepth(132);
+        const btnH = 30, btnW = W - 24;
+        g.fillStyle(0x2a2a3a, .8); g.fillRoundedRect(12, btnY, btnW, btnH, 9);
+        g.lineStyle(1, 0x555568, .7); g.strokeRoundedRect(12, btnY, btnW, btnH, 9);
+        layer.push(g, txt(this, W/2, btnY+btnH/2, hint, 10, "#6666aa", false).setOrigin(0.5).setDepth(133));
+        btnY += btnH + 5;
+      }
     }
 
     // Надеть / Снять
