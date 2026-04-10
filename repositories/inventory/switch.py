@@ -58,33 +58,11 @@ class InventorySwitchMixin:
             d_crit = new_vec["crit"] - old_vec["crit"]
             d_hp = new_vec["max_hp"] - old_vec["max_hp"]
 
-            cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
-            hp_row = cursor.fetchone()
-            new_max_hp = max(1, int(hp_row["max_hp"]) + d_hp)
-            new_current_hp = min(new_max_hp, max(1, int(hp_row["current_hp"]) + d_hp))
-
-            if bool(getattr(self, "_pg", False)):
-                cursor.execute(
-                    """UPDATE players
-                       SET strength = GREATEST(1, strength + ?),
-                           endurance = GREATEST(1, endurance + ?),
-                           crit = GREATEST(1, crit + ?),
-                           max_hp = ?, current_hp = ?,
-                           equipped_avatar_id = 'base_neutral'
-                       WHERE user_id = ?""",
-                    (d_str, d_end, d_crit, new_max_hp, new_current_hp, user_id),
-                )
-            else:
-                cursor.execute(
-                    """UPDATE players
-                       SET strength  = CASE WHEN (strength  + ?) < 1 THEN 1 ELSE (strength  + ?) END,
-                           endurance = CASE WHEN (endurance + ?) < 1 THEN 1 ELSE (endurance + ?) END,
-                           crit      = CASE WHEN (crit      + ?) < 1 THEN 1 ELSE (crit      + ?) END,
-                           max_hp = ?, current_hp = ?,
-                           equipped_avatar_id = 'base_neutral'
-                       WHERE user_id = ?""",
-                    (d_str, d_str, d_end, d_end, d_crit, d_crit, new_max_hp, new_current_hp, user_id),
-                )
+            self._apply_stat_delta_to_player(cursor, user_id, d_str, d_end, d_crit, d_hp)
+            cursor.execute(
+                "UPDATE players SET equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
+                (user_id,),
+            )
 
             conn.commit()
             return True, f"Переключен на класс '{class_info['name'] if class_info else 'USDT слот'}'"
@@ -94,6 +72,30 @@ class InventorySwitchMixin:
             return False, f"Ошибка переключения: {str(e)}"
         finally:
             conn.close()
+
+    def _apply_stat_delta_to_player(self, cursor, user_id: int,
+                                    d_str: int, d_end: int, d_crit: int, d_hp: int) -> None:
+        """Применить delta статов к players (min 1 для всех, HP скорректировать)."""
+        cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
+        hp_row = cursor.fetchone()
+        new_max_hp = max(1, int(hp_row["max_hp"]) + d_hp)
+        new_cur_hp = min(new_max_hp, max(1, int(hp_row["current_hp"]) + d_hp))
+        if bool(getattr(self, "_pg", False)):
+            cursor.execute(
+                """UPDATE players SET strength=GREATEST(1,strength+?),
+                   endurance=GREATEST(1,endurance+?), crit=GREATEST(1,crit+?),
+                   max_hp=?, current_hp=? WHERE user_id=?""",
+                (d_str, d_end, d_crit, new_max_hp, new_cur_hp, user_id),
+            )
+        else:
+            cursor.execute(
+                """UPDATE players
+                   SET strength  = CASE WHEN (strength +?)<1 THEN 1 ELSE strength +? END,
+                       endurance = CASE WHEN (endurance+?)<1 THEN 1 ELSE endurance+? END,
+                       crit      = CASE WHEN (crit     +?)<1 THEN 1 ELSE crit     +? END,
+                       max_hp=?, current_hp=? WHERE user_id=?""",
+                (d_str,d_str, d_end,d_end, d_crit,d_crit, new_max_hp, new_cur_hp, user_id),
+            )
 
     def _usdt_stat_vector(self, cursor, user_id: int, class_info) -> dict:
         """Вектор статов: для USDT читает saved + пассивку, для остальных — _class_stat_vector."""

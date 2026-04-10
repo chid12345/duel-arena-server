@@ -110,4 +110,15 @@ MIGRATIONS_PART3 = [
     ("2026_04_21_002_usdt_passive_type", [
         "ALTER TABLE user_inventory ADD COLUMN passive_type TEXT",
     ]),
+    ("2026_04_21_003_usdt_free_stats_restore", [
+        # Старые USDT-слоты созданы без free_stats_saved=19.
+        # Восстанавливаем только слоты, где ничего не вложено (все saved=0).
+        """UPDATE user_inventory SET free_stats_saved = 19
+           WHERE class_type = 'usdt'
+             AND (free_stats_saved IS NULL OR free_stats_saved = 0)
+             AND COALESCE(strength_saved,0) = 0
+             AND COALESCE(agility_saved,0)  = 0
+             AND COALESCE(intuition_saved,0)= 0
+             AND COALESCE(stamina_saved,0)  = 0""",
+    ]),
 ]

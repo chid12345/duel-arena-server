@@ -149,14 +149,22 @@ class InventoryBaseMixin:
         }
 
     def _equipped_inventory_class_info(self, cursor, user_id: int) -> Optional[Dict]:
+        """Возвращает класс-инфо текущего надетого класса.
+        Источник истины — players.current_class; inventory — только fallback.
+        """
         cur_info = self._player_current_class_info(cursor, user_id)
-        if cur_info and cur_info.get("class_type") != "usdt":
-            return cur_info
+        if cur_info:
+            return cur_info  # включая USDT — корректный class_id и class_type
+        # Fallback: состояние рассинхронизировано, ищем в inventory
         cursor.execute(
-            "SELECT class_id FROM user_inventory WHERE user_id = ? AND equipped = TRUE LIMIT 1",
+            "SELECT class_id, class_type FROM user_inventory WHERE user_id = ? AND equipped = TRUE LIMIT 1",
             (user_id,),
         )
         row = cursor.fetchone()
         if not row:
             return None
-        return self.get_class_info(row["class_id"])
+        cid = self._row_get(row, "class_id", "")
+        ctype = self._row_get(row, "class_type", "")
+        if ctype == "usdt":
+            return {**USDT_CLASS_BASE, "class_id": cid, "class_type": "usdt"}
+        return self.get_class_info(cid)

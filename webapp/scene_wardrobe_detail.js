@@ -57,13 +57,16 @@
     const eqLabel = item.equipped ? "✅ Надет" : "⬜ Снят";
     layer.push(txt(this, W/2, pY+30, eqLabel, 10, item.equipped ? "#3cc864" : "#9999bb", true).setOrigin(0.5).setDepth(132));
 
-    // Free-stats counter
-    const freeColor = free > 0 ? "#ffc83c" : "#666688";
-    layer.push(txt(this, W/2, pY+46, `Свободных очков: ${free} / 19`, 11, freeColor, true).setOrigin(0.5).setDepth(132));
+    // Stat allocation counter
+    const allocated = 19 - free;
+    const freeColor = free > 0 ? "#ffc83c" : "#3cc864";
+    layer.push(txt(this, W/2, pY+46,
+      `Вложено: ${allocated}/19${free > 0 ? `  (ещё ${free})` : "  ✓"}`,
+      11, freeColor, true).setOrigin(0.5).setDepth(132));
 
     // Stat rows
-    const rowH = 28, statsY = pY + 60;
-    const btnSz = 22;
+    const rowH = 30, statsY = pY + 62;
+    const btnSz = 28, minusX = W - 60, plusX = W - 26;
 
     STATS.forEach((s, i) => {
       const y = statsY + i * rowH;
@@ -76,30 +79,30 @@
       if (isPassive) { bg.lineStyle(1, 0xffcc00, .55); bg.strokeRoundedRect(12, y, W-24, rowH-3, 6); }
       layer.push(bg);
 
-      // Label
-      layer.push(txt(this, 22, y+5, s.label, 10, "#9999bb").setDepth(133));
-      // Value (+passive indicator)
+      // Label + value
+      layer.push(txt(this, 22, y+6, s.label, 10, "#9999bb").setDepth(133));
       const valStr = String(displayVal) + (isPassive ? " ★+8" : "");
-      layer.push(txt(this, 108, y+5, valStr, 11, s.col, isPassive).setDepth(133));
+      layer.push(txt(this, 120, y+6, valStr, 12, s.col, true).setDepth(133));
 
-      // − button (left)
-      const minusX = W - 52, plusX = W - 26;
+      // − button
       const canSub = sv[s.key] > 0;
       const mbg = this.add.graphics().setDepth(133);
-      mbg.fillStyle(canSub ? 0x5a2020 : 0x1e1e2e, .9); mbg.fillRoundedRect(minusX-btnSz/2, y+3, btnSz, rowH-9, 5);
+      mbg.fillStyle(canSub ? 0x5a2020 : 0x1e1e2e, .9);
+      mbg.fillRoundedRect(minusX - btnSz/2, y+3, btnSz, rowH-7, 6);
       layer.push(mbg);
-      layer.push(txt(this, minusX, y+8, "−", 13, canSub ? "#e06464" : "#44445a", true).setOrigin(0.5).setDepth(134));
-      const mz = this.add.zone(minusX, y+8, btnSz, rowH-9).setInteractive({useHandCursor:true}).setDepth(135);
+      layer.push(txt(this, minusX, y+9, "−", 14, canSub ? "#e06464" : "#44445a", true).setOrigin(0.5).setDepth(134));
+      const mz = this.add.zone(minusX, y+9, btnSz, rowH-7).setInteractive({useHandCursor:true}).setDepth(135);
       mz.on("pointerdown", () => { if (!this._avatarBusy && canSub) this._usdtDetailAction("untrain", {...item, _stat: s.key}, wp); });
       layer.push(mz);
 
-      // + button (right)
+      // + button
       const canAdd = free > 0;
       const pbg = this.add.graphics().setDepth(133);
-      pbg.fillStyle(canAdd ? 0x205a20 : 0x1e1e2e, .9); pbg.fillRoundedRect(plusX-btnSz/2, y+3, btnSz, rowH-9, 5);
+      pbg.fillStyle(canAdd ? 0x1a5a1a : 0x1e1e2e, .9);
+      pbg.fillRoundedRect(plusX - btnSz/2, y+3, btnSz, rowH-7, 6);
       layer.push(pbg);
-      layer.push(txt(this, plusX, y+8, "+", 13, canAdd ? "#3cc864" : "#44445a", true).setOrigin(0.5).setDepth(134));
-      const pz = this.add.zone(plusX, y+8, btnSz, rowH-9).setInteractive({useHandCursor:true}).setDepth(135);
+      layer.push(txt(this, plusX, y+9, "+", 14, canAdd ? "#44dd44" : "#44445a", true).setOrigin(0.5).setDepth(134));
+      const pz = this.add.zone(plusX, y+9, btnSz, rowH-7).setInteractive({useHandCursor:true}).setDepth(135);
       pz.on("pointerdown", () => { if (!this._avatarBusy && canAdd) this._usdtDetailAction("train", {...item, _stat: s.key}, wp); });
       layer.push(pz);
     });
@@ -145,9 +148,9 @@
     };
 
     if (!item.equipped) {
-      mkBtn(btnY, "▶ Надеть образ", C.green, () => this._usdtDetailAction("equip", item, wp));
+      mkBtn(btnY, "▶ Надеть образ", 0x2a7a2a, () => this._usdtDetailAction("equip", item, wp));
     } else {
-      mkBtn(btnY, "✖ Снять образ", 0x4a4870, () => this._usdtDetailAction("unequip", item, wp));
+      mkBtn(btnY, "✅ Надет  ·  Снять образ", 0xcc4422, () => this._usdtDetailAction("unequip", item, wp));
     }
     mkBtn(btnY + btnH + 5, "🔄 Сброс статов · 5.99 USDT", 0xd4a010,
       () => this._usdtDetailAction("reset_invoice", item, wp));
@@ -180,6 +183,7 @@
       } else if (action === "train") {
         const res = await post("/api/wardrobe/usdt/train", { class_id: item.class_id, stat: item._stat });
         if (res?.ok && res.inventory_item) {
+          if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
           this._avatarBusy = false;
           this._openUsdtDetail({...item, _raw: res.inventory_item}, wp);
           return;
@@ -189,6 +193,7 @@
       } else if (action === "untrain") {
         const res = await post("/api/wardrobe/usdt/untrain", { class_id: item.class_id, stat: item._stat });
         if (res?.ok && res.inventory_item) {
+          if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
           this._avatarBusy = false;
           this._openUsdtDetail({...item, _raw: res.inventory_item}, wp);
           return;
@@ -198,6 +203,7 @@
       } else if (action === "set_passive") {
         const res = await post("/api/wardrobe/usdt/set-passive", { class_id: item.class_id, passive_type: item._passive });
         if (res?.ok && res.inventory_item) {
+          if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
           this._avatarBusy = false;
           this._openUsdtDetail({...item, _raw: res.inventory_item}, wp);
           return;

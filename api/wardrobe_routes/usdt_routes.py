@@ -29,6 +29,7 @@ def attach_wardrobe_usdt(
 ) -> None:
     db = ctx["db"]
     get_user_from_init_data = ctx["get_user_from_init_data"]
+    _player_api = ctx["_player_api"]
     _cache_invalidate = ctx["_cache_invalidate"]
     RESET_STATS_COST_DIAMONDS = ctx["RESET_STATS_COST_DIAMONDS"]
     RESET_STATS_COST_DIAMONDS_USDT = ctx["RESET_STATS_COST_DIAMONDS_USDT"]
@@ -140,6 +141,10 @@ def attach_wardrobe_usdt(
             logger.error("usdt buy-invoice: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)[:120]}
 
+    def _player_response(uid: int) -> dict:
+        p = db.get_or_create_player(uid, "")
+        return _player_api(dict(p))
+
     @router.post("/api/wardrobe/usdt/train")
     async def wardrobe_usdt_train(body: USDTTrainBody):
         tg_user = get_user_from_init_data(body.init_data)
@@ -147,7 +152,8 @@ def attach_wardrobe_usdt(
         ok, msg, item = db.train_usdt_stat(uid, body.class_id.strip(), body.stat.strip())
         if ok:
             _cache_invalidate(uid)
-        return {"ok": ok, "message": msg, "inventory_item": item}
+            return {"ok": True, "message": msg, "inventory_item": item, "player": _player_response(uid)}
+        return {"ok": False, "message": msg, "inventory_item": item}
 
     @router.post("/api/wardrobe/usdt/untrain")
     async def wardrobe_usdt_untrain(body: USDTTrainBody):
@@ -156,7 +162,8 @@ def attach_wardrobe_usdt(
         ok, msg, item = db.untrain_usdt_stat(uid, body.class_id.strip(), body.stat.strip())
         if ok:
             _cache_invalidate(uid)
-        return {"ok": ok, "message": msg, "inventory_item": item}
+            return {"ok": True, "message": msg, "inventory_item": item, "player": _player_response(uid)}
+        return {"ok": False, "message": msg, "inventory_item": item}
 
     @router.post("/api/wardrobe/usdt/set-passive")
     async def wardrobe_usdt_set_passive(body: USDTPassiveBody):
@@ -165,7 +172,8 @@ def attach_wardrobe_usdt(
         ok, msg, item = db.set_usdt_passive(uid, body.class_id.strip(), body.passive_type)
         if ok:
             _cache_invalidate(uid)
-        return {"ok": ok, "message": msg, "inventory_item": item}
+            return {"ok": True, "message": msg, "inventory_item": item, "player": _player_response(uid)}
+        return {"ok": False, "message": msg, "inventory_item": item}
 
     @router.post("/api/wardrobe/usdt/reset-invoice")
     async def wardrobe_usdt_reset_invoice(body: USDTResetInvoiceBody):

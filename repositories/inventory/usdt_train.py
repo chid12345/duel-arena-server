@@ -12,11 +12,18 @@ _STAT_COL = {
     "intuition": "intuition_saved",
     "stamina":   "stamina_saved",
 }
+_USDT_CI = lambda cid: {"class_type": "usdt", "class_id": cid}  # noqa: E731
 
 
 class InventoryUsdtTrainMixin:
+
+    def _is_slot_equipped(self, cursor, user_id: int, class_id: str) -> bool:
+        cursor.execute("SELECT current_class FROM players WHERE user_id = ?", (user_id,))
+        row = cursor.fetchone()
+        return (self._row_get(row, "current_class") or "") == class_id
+
     def train_usdt_stat(self, user_id: int, class_id: str, stat: str) -> Tuple[bool, str, Optional[dict]]:
-        """Вложить 1 очко в стат USDT-образа. Возвращает (ok, msg, item_row)."""
+        """Вложить 1 очко в стат. Если слот надет — применить дельту к players."""
         if stat not in _VALID_STATS:
             return False, f"Неверный стат: {stat}", None
         if not self.has_class(user_id, class_id):
@@ -35,14 +42,26 @@ class InventoryUsdtTrainMixin:
             if free <= 0:
                 return False, "Нет свободных очков", None
 
+            equipped = self._is_slot_equipped(cursor, user_id, class_id)
+            old_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id)) if equipped else None
+
             col = _STAT_COL[stat]
             cursor.execute(
-                f"""UPDATE user_inventory
-                    SET free_stats_saved = free_stats_saved - 1,
-                        {col} = {col} + 1
-                    WHERE user_id=? AND class_id=?""",
+                f"UPDATE user_inventory SET free_stats_saved=free_stats_saved-1, {col}={col}+1 "
+                "WHERE user_id=? AND class_id=?",
                 (user_id, class_id),
             )
+
+            if equipped:
+                new_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id))
+                self._apply_stat_delta_to_player(
+                    cursor, user_id,
+                    new_vec["strength"] - old_vec["strength"],
+                    new_vec["endurance"] - old_vec["endurance"],
+                    new_vec["crit"] - old_vec["crit"],
+                    new_vec["max_hp"] - old_vec["max_hp"],
+                )
+
             cursor.execute(
                 "SELECT * FROM user_inventory WHERE user_id=? AND class_id=?",
                 (user_id, class_id),
@@ -57,7 +76,7 @@ class InventoryUsdtTrainMixin:
             conn.close()
 
     def untrain_usdt_stat(self, user_id: int, class_id: str, stat: str) -> Tuple[bool, str, Optional[dict]]:
-        """Вернуть 1 очко из стата обратно в пул. Возвращает (ok, msg, item_row)."""
+        """Вернуть 1 очко из стата в пул. Если слот надет — вычесть дельту из players."""
         if stat not in _VALID_STATS:
             return False, f"Неверный стат: {stat}", None
         if not self.has_class(user_id, class_id):
@@ -69,7 +88,7 @@ class InventoryUsdtTrainMixin:
         try:
             col = _STAT_COL[stat]
             cursor.execute(
-                f"SELECT {col}, free_stats_saved FROM user_inventory WHERE user_id=? AND class_id=?",
+                f"SELECT {col} FROM user_inventory WHERE user_id=? AND class_id=?",
                 (user_id, class_id),
             )
             row = cursor.fetchone()
@@ -77,13 +96,25 @@ class InventoryUsdtTrainMixin:
             if cur_val <= 0:
                 return False, "Нечего снимать", None
 
+            equipped = self._is_slot_equipped(cursor, user_id, class_id)
+            old_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id)) if equipped else None
+
             cursor.execute(
-                f"""UPDATE user_inventory
-                    SET free_stats_saved = free_stats_saved + 1,
-                        {col} = {col} - 1
-                    WHERE user_id=? AND class_id=?""",
+                f"UPDATE user_inventory SET free_stats_saved=free_stats_saved+1, {col}={col}-1 "
+                "WHERE user_id=? AND class_id=?",
                 (user_id, class_id),
             )
+
+            if equipped:
+                new_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id))
+                self._apply_stat_delta_to_player(
+                    cursor, user_id,
+                    new_vec["strength"] - old_vec["strength"],
+                    new_vec["endurance"] - old_vec["endurance"],
+                    new_vec["crit"] - old_vec["crit"],
+                    new_vec["max_hp"] - old_vec["max_hp"],
+                )
+
             cursor.execute(
                 "SELECT * FROM user_inventory WHERE user_id=? AND class_id=?",
                 (user_id, class_id),
@@ -98,7 +129,7 @@ class InventoryUsdtTrainMixin:
             conn.close()
 
     def set_usdt_passive(self, user_id: int, class_id: str, passive_type: str) -> Tuple[bool, str, Optional[dict]]:
-        """Установить пассивный бонус USDT-образа. passive_type = '' снимает бонус."""
+        """Установить/снять пассивный бонус. Если слот надет — применить дельту."""
         pt = passive_type.strip() if passive_type else ""
         if pt and pt not in _VALID_STATS:
             return False, f"Неверный тип пассивки: {pt}", None
@@ -109,10 +140,24 @@ class InventoryUsdtTrainMixin:
         cursor = conn.cursor()
         self._ensure_inventory_schema(cursor)
         try:
+            equipped = self._is_slot_equipped(cursor, user_id, class_id)
+            old_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id)) if equipped else None
+
             cursor.execute(
                 "UPDATE user_inventory SET passive_type=? WHERE user_id=? AND class_id=?",
                 (pt or None, user_id, class_id),
             )
+
+            if equipped:
+                new_vec = self._usdt_stat_vector(cursor, user_id, _USDT_CI(class_id))
+                self._apply_stat_delta_to_player(
+                    cursor, user_id,
+                    new_vec["strength"] - old_vec["strength"],
+                    new_vec["endurance"] - old_vec["endurance"],
+                    new_vec["crit"] - old_vec["crit"],
+                    new_vec["max_hp"] - old_vec["max_hp"],
+                )
+
             cursor.execute(
                 "SELECT * FROM user_inventory WHERE user_id=? AND class_id=?",
                 (user_id, class_id),
