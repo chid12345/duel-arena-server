@@ -40,9 +40,22 @@ class BattleDamageMixin:
 
         crit_chance = self._safe_crit_stat(attacker, "crit_chance", 0)
         crit_damage = self._safe_crit_stat(attacker, "crit_damage", 0)
+
+        # USDT пассивка: крит урон +8%
+        usdt_passive = (attacker.get("usdt_passive_type") or "").strip()
+        if usdt_passive == "crit_dmg_pct":
+            crit_damage = min(100, crit_damage + 8)
+
         is_crit = random.random() < (crit_chance / 100.0)
         if is_crit:
             damage = int(damage * (1.0 + crit_damage / 100.0))
+
+        # USDT пассивка: урон +8%
+        if usdt_passive == "damage_pct":
+            damage = int(damage * 1.08)
+        # USDT пассивка: 8% шанс двойного удара
+        elif usdt_passive == "double_hit" and random.random() < 0.08:
+            damage = damage * 2
 
         damage = self._apply_incoming_damage(damage, defender)
 

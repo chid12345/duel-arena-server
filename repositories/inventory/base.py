@@ -136,6 +136,8 @@ class InventoryBaseMixin:
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN current_hp_saved INTEGER DEFAULT 0")
             if "passive_type" not in inv_cols:
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN passive_type TEXT")
+            if "stats_applied" not in inv_cols:
+                cursor.execute("ALTER TABLE user_inventory ADD COLUMN stats_applied INTEGER DEFAULT 0")
 
     @staticmethod
     def _class_stat_vector(class_info: Optional[Dict]) -> Dict[str, int]:

@@ -61,7 +61,8 @@ class InventoryUsdtMixin:
                 """UPDATE user_inventory
                    SET strength_saved=0, agility_saved=0, intuition_saved=0,
                        endurance_saved=0, stamina_saved=0, free_stats_saved=19,
-                       max_hp_saved=0, current_hp_saved=0, passive_type=NULL
+                       max_hp_saved=0, current_hp_saved=0, passive_type=NULL,
+                       stats_applied=0
                    WHERE user_id=? AND class_id=?""",
                 (user_id, class_id),
             )

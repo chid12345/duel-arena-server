@@ -35,7 +35,7 @@ class UsersWipeLeaderboardMixin:
         # но сами записи (=купленные слоты) сохраняем
         cursor.execute(
             """UPDATE user_inventory SET
-               equipped = FALSE,
+               equipped = FALSE, stats_applied = 0,
                strength_saved = 0, agility_saved = 0,
                intuition_saved = 0, stamina_saved = 0,
                free_stats_saved = 19, passive_type = NULL

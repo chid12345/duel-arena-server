@@ -145,6 +145,16 @@ def attach_wardrobe_usdt(
         p = db.get_or_create_player(uid, "")
         return _player_api(dict(p))
 
+    @router.post("/api/wardrobe/usdt/apply-stats")
+    async def wardrobe_usdt_apply_stats(body: USDTBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        ok, msg, item = db.apply_usdt_stats(uid, body.class_id.strip())
+        if ok:
+            _cache_invalidate(uid)
+            return {"ok": True, "message": msg, "inventory_item": item, "player": _player_response(uid)}
+        return {"ok": False, "message": msg, "inventory_item": item}
+
     @router.post("/api/wardrobe/usdt/train")
     async def wardrobe_usdt_train(body: USDTTrainBody):
         tg_user = get_user_from_init_data(body.init_data)

@@ -110,6 +110,9 @@ MIGRATIONS_PART3 = [
     ("2026_04_21_002_usdt_passive_type", [
         "ALTER TABLE user_inventory ADD COLUMN passive_type TEXT",
     ]),
+    ("2026_04_21_004_usdt_stats_applied", [
+        "ALTER TABLE user_inventory ADD COLUMN stats_applied INTEGER DEFAULT 0",
+    ]),
     ("2026_04_21_003_usdt_free_stats_restore", [
         # Старые USDT-слоты созданы без free_stats_saved=19.
         # Восстанавливаем только слоты, где ничего не вложено (все saved=0).

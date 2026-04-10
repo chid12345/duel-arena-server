@@ -19,4 +19,7 @@ class BattleDamageArmorMixin:
 
     def _apply_incoming_damage(self, raw: int, defender: Dict) -> int:
         m = self._armor_multiplier(defender)
+        # USDT пассивка: броня +4%
+        if (defender.get("usdt_passive_type") or "").strip() == "armor_pct":
+            m = max(0.0, m - 0.04)
         return max(1, int(raw * m))

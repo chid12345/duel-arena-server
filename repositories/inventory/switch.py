@@ -6,7 +6,7 @@ from typing import Tuple
 
 from config import STAMINA_PER_FREE_STAT
 
-_USDT_PASSIVE_BONUS = 8  # бонус пассивки USDT-образа в очках стата
+_USDT_BASE_STAMINA = 5  # базовая выносливость USDT-образа (даёт броню сразу)
 
 
 class InventorySwitchMixin:
@@ -98,23 +98,29 @@ class InventorySwitchMixin:
             )
 
     def _usdt_stat_vector(self, cursor, user_id: int, class_info) -> dict:
-        """Вектор статов: для USDT читает saved + пассивку, для остальных — _class_stat_vector."""
+        """Вектор статов USDT-слота.
+        Базово: +5 выносливости (броня) всегда при надевании.
+        Сохранённые 19 статов применяются только когда stats_applied=TRUE.
+        Пассивка — боевой модификатор, не стат (не входит в вектор).
+        """
         if not class_info:
             return {"strength": 0, "endurance": 0, "crit": 0, "max_hp": 0}
         if class_info.get("class_type") == "usdt":
             cid = class_info.get("class_id", "")
             cursor.execute(
-                """SELECT strength_saved, agility_saved, intuition_saved, stamina_saved, passive_type
+                """SELECT strength_saved, agility_saved, intuition_saved, stamina_saved, stats_applied
                    FROM user_inventory WHERE user_id=? AND class_id=?""",
                 (user_id, cid),
             )
             saved = cursor.fetchone()
-            passive = (self._row_get(saved, "passive_type") or "").strip()
-            pb = _USDT_PASSIVE_BONUS
+            base_hp = _USDT_BASE_STAMINA * int(STAMINA_PER_FREE_STAT)
+            if not bool(self._row_get(saved, "stats_applied", False)):
+                # Статы ещё не сохранены — только базовая выносливость
+                return {"strength": 0, "endurance": 0, "crit": 0, "max_hp": base_hp}
             return {
-                "strength": int(self._row_get(saved, "strength_saved", 0) or 0) + (pb if passive == "strength" else 0),
-                "endurance": int(self._row_get(saved, "agility_saved", 0) or 0) + (pb if passive == "agility" else 0),
-                "crit":      int(self._row_get(saved, "intuition_saved", 0) or 0) + (pb if passive == "intuition" else 0),
-                "max_hp":    (int(self._row_get(saved, "stamina_saved", 0) or 0) + (pb if passive == "stamina" else 0)) * int(STAMINA_PER_FREE_STAT),
+                "strength": int(self._row_get(saved, "strength_saved", 0) or 0),
+                "endurance": int(self._row_get(saved, "agility_saved", 0) or 0),
+                "crit":      int(self._row_get(saved, "intuition_saved", 0) or 0),
+                "max_hp":    int(self._row_get(saved, "stamina_saved", 0) or 0) * int(STAMINA_PER_FREE_STAT) + base_hp,
             }
         return self._class_stat_vector(class_info)

@@ -33,6 +33,10 @@ def register_find_battle_route(
         username = tg_user.get("username") or ""
 
         player = db.get_or_create_player(uid, username)
+        usdt_passive = db.get_equipped_usdt_passive(uid)
+        if usdt_passive:
+            player = dict(player)
+            player["usdt_passive_type"] = usdt_passive
 
         if battle_system.get_battle_status(uid):
             state = _battle_state_api(uid)
@@ -59,6 +63,10 @@ def register_find_battle_route(
                 opp_uid = pvp_entry["user_id"]
                 db.pvp_dequeue(opp_uid)
                 opp_player = db.get_or_create_player(opp_uid, "")
+                opp_passive = db.get_equipped_usdt_passive(opp_uid)
+                if opp_passive:
+                    opp_player = dict(opp_player)
+                    opp_player["usdt_passive_type"] = opp_passive
                 battle_id = await battle_system.start_battle(player, opp_player, is_bot2=False)
                 b = battle_system.active_battles.get(battle_id)
                 if b:
