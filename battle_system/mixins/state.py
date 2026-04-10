@@ -186,7 +186,6 @@ class BattleStateMixin:
             return int(default)
         return int(v)
 
-    @staticmethod
-    def _safe_crit_stat(entity: Dict, default: int = PLAYER_START_CRIT) -> int:
+    def _safe_crit_stat(self, entity: Dict, default: int = PLAYER_START_CRIT) -> int:
         """Крит бота/игрока для UI и расчёта шанса."""
         return max(0, self._safe_int_field(entity, "crit", default))
