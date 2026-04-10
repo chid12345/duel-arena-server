@@ -28,6 +28,9 @@ class UsersWipeLeaderboardMixin:
             "DELETE FROM user_inventory WHERE user_id = ? AND class_type != 'usdt'",
             (user_id,),
         )
+        # Гарантируем наличие всех колонок (stamina_saved, passive_type могут быть
+        # добавлены динамически и отсутствовать в старых БД)
+        self._ensure_inventory_schema(cursor)
         # USDT-слоты снимаем (equipped=FALSE) и сбрасываем распределённые статы,
         # но сами записи (=купленные слоты) сохраняем
         cursor.execute(
