@@ -14,7 +14,7 @@
 ## Куда добавлять новый код (матрица)
 - **Новая таблица/индекс/миграция** → `db_schema.py`
 - **Запросы к БД** → новый/существующий `repositories/<тема>.py`
-- **Telegram команда (/xxx)** → `handlers/commands.py`
+- **Telegram команда (/xxx)** → пакет `handlers/commands/` (миксины ≤200 строк)
 - **Telegram кнопка (callback)** → `handlers/*` по теме
 - **API эндпоинт (Mini App)** → `api_server.py` или `api/*_routes.py`
 - **Константы/формулы** → `config.py`
