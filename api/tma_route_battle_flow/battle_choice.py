@@ -36,14 +36,17 @@ def register_battle_choice_route(
 
         result = await battle_system.make_choice(uid, atk, dfn)
 
+        # Для round_completed — бой ещё активен, можно читать из памяти.
+        # Для battle_ended — бой уже удалён из active_battles/battle_queue,
+        # поэтому is_pvp определяем из полей результата, а не из battle dict.
         bid = battle_system.battle_queue.get(uid)
         b = battle_system.active_battles.get(bid) if bid else None
-        is_pvp = b and not b.get("is_bot2") if b else False
+        is_pvp_active = b and not b.get("is_bot2") if b else False
 
         if result.get("status") == "round_completed":
             state_p1 = _battle_state_api(uid)
             await manager.send(uid, {"event": "round_result", "battle": state_p1, "result": result})
-            if is_pvp and b:
+            if is_pvp_active and b:
                 opp_uid = (b["player2"] if b["player1"]["user_id"] == uid else b["player1"]).get("user_id")
                 if opp_uid:
                     state_p2 = _battle_state_api(opp_uid)
@@ -83,9 +86,12 @@ def register_battle_choice_route(
                         await manager.send(uid, {"event": "quest_complete"})
                 except Exception:
                     pass
-            if is_pvp and b:
-                opp_uid = (b["player2"] if b["player1"]["user_id"] == uid else b["player1"]).get("user_id")
-                if opp_uid:
+            # Определяем оппонента из результата (бой уже удалён из памяти после battle_ended).
+            pvp_p1_uid = result.get("pvp_p1_user_id")
+            pvp_p2_uid = result.get("pvp_p2_user_id")
+            if pvp_p1_uid is not None and pvp_p2_uid is not None:
+                opp_uid = pvp_p2_uid if uid == pvp_p1_uid else pvp_p1_uid
+                if opp_uid and opp_uid != uid:
                     opp = _adapt_battle_result_for_user(result, opp_uid)
                     opp_won = bool(opp.get("human_won", winner_id == opp_uid))
                     await manager.send(
@@ -98,7 +104,7 @@ def register_battle_choice_route(
                             "mode_meta": opp.get("mode_meta") or {},
                             "titan_progress": opp.get("titan_progress"),
                             "result": {
-                                "gold": opp.get("gold_reward", 0) if opp_won else 0,
+                                "gold": opp.get("gold_reward", 0),
                                 "exp": opp.get("exp_reward", 0),
                                 "damage": opp.get("damage_to_opponent", 0),
                                 "level_up": opp.get("level_up", False) if opp_won else False,
