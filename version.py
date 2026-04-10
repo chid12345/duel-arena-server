@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.1.22"
-VERSION_LABEL = "v1.1.22 — fix: webapp_log 2-line format with zone info (Вы→Зона: маркер / Враг→Зона: маркер)"
+VERSION = "1.1.23"
+VERSION_LABEL = "v1.1.23 — fix: defeat screen shows consolation gold+exp (was empty panel)"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "2.46"
+GAME_VERSION = "2.47"

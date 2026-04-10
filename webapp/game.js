@@ -2757,7 +2757,7 @@ class ResultScene extends Phaser.Scene {
 
     /* ── Карточка результата ── */
     const panH = won ? (r.level_up ? 185 : (r.win_streak > 1 ? 175 : 155))
-                     : (isAfk ? 128 : (isEndless ? 120 : 88));
+                     : (isAfk ? 128 : (isEndless ? 120 : 132));
     const panY  = H * 0.28;
     makePanel(this, 16, panY, W - 32, panH, 16);
 
@@ -2831,11 +2831,20 @@ class ResultScene extends Phaser.Scene {
       txt(this, W / 2, panY + 98, `⏱️  Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
       // Лучший результат добавляется асинхронно (см. ниже endlessStatus)
     } else {
-      txt(this, W / 2, panY + 22, '💪  Не сдавайся!', 15, '#8888aa', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 50, `Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, panY + 18, '💪  Не сдавайся!', 14, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 42, 'Утешительные награды', 10, '#666688').setOrigin(0.5);
+      if ((r.gold || 0) > 0) {
+        const cGold = txt(this, W / 2, panY + 64, '💰 +0 золота', 18, '#cc9922', true).setOrigin(0.5);
+        this._countUp(cGold, r.gold, '💰 +', ' золота', 200);
+      }
+      if ((r.exp || 0) > 0) {
+        const cExp = txt(this, W / 2, panY + 90, '⭐ +0 опыта', 15, '#3366cc', true).setOrigin(0.5);
+        this._countUp(cExp, r.exp, '⭐ +', ' опыта', 400);
+      }
+      txt(this, W / 2, panY + 114, `Раундов: ${r.rounds || 0}`, 11, '#9999bb').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
-        txt(this, W / 2, panY + 70, `★ ${eloSign}${r.rating_change} ELO`, 12, '#ff4455', true).setOrigin(0.5);
+        txt(this, W / 2, panY + 130, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
       }
     }
 
