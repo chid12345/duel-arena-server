@@ -152,7 +152,7 @@
     });
 
     // Separator
-    const sepY = passiveY + 60;
+    const sepY = passiveY + 72;
     const dg = this.add.graphics().setDepth(132);
     dg.lineStyle(1, 0x3a3850, .6); dg.lineBetween(16, sepY, W-16, sepY);
     layer.push(dg);

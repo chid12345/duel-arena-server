@@ -95,6 +95,13 @@ class InventoryBaseMixin:
             )
             if not cursor.fetchone():
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN passive_type TEXT")
+
+            cursor.execute(
+                """SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'user_inventory' AND column_name = 'stats_applied' LIMIT 1"""
+            )
+            if not cursor.fetchone():
+                cursor.execute("ALTER TABLE user_inventory ADD COLUMN stats_applied INTEGER DEFAULT 0")
         else:
             cursor.execute(
                 """CREATE TABLE IF NOT EXISTS user_inventory (
