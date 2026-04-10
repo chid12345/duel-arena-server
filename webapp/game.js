@@ -646,8 +646,9 @@ class MenuScene extends Phaser.Scene {
       premSub || `${titleBit}ELO ★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12,
       p.is_premium ? '#b45aff' : '#ffc83c');
 
-    // Золото — справа вверху
-    const goldTxt = txt(this, W - pad - 12, hY + 18, `💰 ${p.gold}`, 17, '#ffc83c', true).setOrigin(1, 0.5);
+    // Золото и алмазы — справа вверху
+    const goldTxt = txt(this, W - pad - 12, hY + 14, `💰 ${p.gold}`, 15, '#ffc83c', true).setOrigin(1, 0.5);
+    txt(this, W - pad - 12, hY + 32, `💎 ${p.diamonds}`, 13, '#3cc8dc', true).setOrigin(1, 0.5);
 
     // Кнопка 🔊/🔇 — справа вверху
     const snX = W - pad - 16, snY = hY + 56;

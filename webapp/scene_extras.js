@@ -753,7 +753,7 @@ class BattlePassScene extends Phaser.Scene {
       makeBar(this, 48, ry + 24, barW, 5, Math.min(1, battles/tier.battles_needed), C.blue, C.dark, 3);
       makeBar(this, 48, ry + 33, barW, 5, Math.min(1, wins/tier.wins_needed), C.gold, C.dark, 3);
       txt(this, W-106, ry+8,  `💎${tier.diamonds}`, 11, '#3cc8dc');
-      txt(this, W-106, ry+22, `🪙${tier.gold}`,      11, '#ffc83c');
+      txt(this, W-106, ry+22, `💰${tier.gold}`,      11, '#ffc83c');
       if (gotIt) {
         txt(this, W-30, ry+(rowH-6)/2, '✅', 15).setOrigin(0.5);
       } else if (isClaim) {

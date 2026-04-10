@@ -146,14 +146,14 @@
     const mkBtn = (y, label, col, fn) => {
       const g = this.add.graphics().setDepth(132);
       g.fillStyle(col, .95); g.fillRoundedRect(12, y, btnW, btnH, 9);
-      layer.push(g, txt(this, W/2, y+btnH/2, label, 11, "#101020", true).setOrigin(0.5).setDepth(133));
+      layer.push(g, txt(this, W/2, y+btnH/2, label, 11, "#f0f0fa", true).setOrigin(0.5).setDepth(133));
       const z = this.add.zone(W/2, y+btnH/2, btnW, btnH).setInteractive({useHandCursor:true}).setDepth(134);
       z.on("pointerdown", fn);
       layer.push(z);
     };
 
     if (!item.equipped) {
-      mkBtn(btnY, "▶ Надеть образ", 0x2a7a2a, () => this._usdtDetailAction("equip", item, wp));
+      mkBtn(btnY, "▶ Надеть образ", 0x1a9944, () => this._usdtDetailAction("equip", item, wp));
     } else {
       mkBtn(btnY, "✅ Надет  ·  Снять образ", 0xcc4422, () => this._usdtDetailAction("unequip", item, wp));
     }

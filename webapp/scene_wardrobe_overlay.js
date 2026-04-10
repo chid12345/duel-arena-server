@@ -157,26 +157,46 @@
         layer.push(txt(this, x+10, y+43, `И +${a.intuition}  В +${a.endurance}`, 10, "#ffc83c", true).setDepth(123));
         layer.push(txt(this, x+10, y+60, (a.special_bonus||"Без бонуса").slice(0,42), 9, "#a8a8c8").setDepth(123));
 
-        // Кнопка
-        let label = "Надеть", action = "equip";
-        if (a.is_buy_card) { label = "Купить 11.99 USDT"; action = "buy_usdt"; }
-        else if (a.is_usdt_slot) { label = "Открыть →"; action = "open_detail"; }
-        else if (a.equipped) { label = "Снять"; action = "unequip"; }
-        else if (!a.owned) {
-          if (a.class_type === "gold") label = `Купить ${a.price_gold} зол.`;
-          else if (a.class_type === "diamonds") label = `Купить ${a.price_diamonds} алм.`;
-          else label = "Выбрать";
-          action = "buy";
-        }
-
+        // Кнопки
         const bx = x+8, by = y+cardH-34, bw = cardW-16, bh = 28;
-        const bcol = action==="open_detail" ? C.purple : (action==="unequip" ? C.green : (a.equipped ? C.green : (action==="buy"||action==="buy_usdt" ? C.gold : C.dark)));
-        const btn = this.add.graphics().setDepth(123);
-        btn.fillStyle(bcol,.95); btn.fillRoundedRect(bx,by,bw,bh,9);
-        layer.push(btn, txt(this, bx+bw/2, by+bh/2, label, 10, "#101020", true).setOrigin(.5).setDepth(124));
-        const z = this.add.zone(bx+bw/2, by+bh/2, bw, bh).setInteractive({useHandCursor:true}).setDepth(125);
-        z.on("pointerdown", () => this._avatarAction(action, a, wp));
-        layer.push(z);
+
+        if (a.is_usdt_slot) {
+          // USDT: две кнопки — "Открыть" + "Надеть"/"Снять"
+          const openW = Math.floor(bw * 0.55), equipW = bw - openW - 4;
+          const g1 = this.add.graphics().setDepth(123);
+          g1.fillStyle(C.purple,.95); g1.fillRoundedRect(bx, by, openW, bh, 9);
+          layer.push(g1, txt(this, bx+openW/2, by+bh/2, "Открыть →", 9, "#f0f0fa", true).setOrigin(.5).setDepth(124));
+          const z1 = this.add.zone(bx+openW/2, by+bh/2, openW, bh).setInteractive({useHandCursor:true}).setDepth(125);
+          z1.on("pointerdown", () => this._avatarAction("open_detail", a, wp));
+          layer.push(z1);
+
+          const ex = bx + openW + 4;
+          const eqCol = a.equipped ? 0xcc4422 : C.green;
+          const eqLabel = a.equipped ? "Снять" : "Надеть";
+          const g2 = this.add.graphics().setDepth(123);
+          g2.fillStyle(eqCol,.95); g2.fillRoundedRect(ex, by, equipW, bh, 9);
+          layer.push(g2, txt(this, ex+equipW/2, by+bh/2, eqLabel, 9, "#f0f0fa", true).setOrigin(.5).setDepth(124));
+          const z2 = this.add.zone(ex+equipW/2, by+bh/2, equipW, bh).setInteractive({useHandCursor:true}).setDepth(125);
+          z2.on("pointerdown", () => this._avatarAction(a.equipped ? "unequip" : "equip", a, wp));
+          layer.push(z2);
+        } else {
+          let label = "Надеть", action = "equip";
+          if (a.is_buy_card) { label = "Купить 11.99 USDT"; action = "buy_usdt"; }
+          else if (a.equipped) { label = "✅ Снять"; action = "unequip"; }
+          else if (!a.owned) {
+            if (a.class_type === "gold") label = `Купить ${a.price_gold} зол.`;
+            else if (a.class_type === "diamonds") label = `Купить ${a.price_diamonds} алм.`;
+            else label = "Выбрать";
+            action = "buy";
+          }
+          const bcol = action==="unequip" ? 0xcc4422 : (action==="buy"||action==="buy_usdt" ? C.gold : C.green);
+          const btn = this.add.graphics().setDepth(123);
+          btn.fillStyle(bcol,.95); btn.fillRoundedRect(bx,by,bw,bh,9);
+          layer.push(btn, txt(this, bx+bw/2, by+bh/2, label, 10, "#f0f0fa", true).setOrigin(.5).setDepth(124));
+          const z = this.add.zone(bx+bw/2, by+bh/2, bw, bh).setInteractive({useHandCursor:true}).setDepth(125);
+          z.on("pointerdown", () => this._avatarAction(action, a, wp));
+          layer.push(z);
+        }
       });
     };
     render();

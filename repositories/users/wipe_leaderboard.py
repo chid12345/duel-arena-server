@@ -28,9 +28,15 @@ class UsersWipeLeaderboardMixin:
             "DELETE FROM user_inventory WHERE user_id = ? AND class_type != 'usdt'",
             (user_id,),
         )
-        # USDT-слоты снимаем (equipped=FALSE), но сами записи сохраняем
+        # USDT-слоты снимаем (equipped=FALSE) и сбрасываем распределённые статы,
+        # но сами записи (=купленные слоты) сохраняем
         cursor.execute(
-            "UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?",
+            """UPDATE user_inventory SET
+               equipped = FALSE,
+               strength_saved = 0, agility_saved = 0,
+               intuition_saved = 0, stamina_saved = 0,
+               free_stats_saved = 19, passive_type = NULL
+               WHERE user_id = ?""",
             (user_id,),
         )
         if keep_wallet_clan_and_referrals:

@@ -128,7 +128,7 @@ def _player_api(player: dict) -> dict:
         "strength": s,
         "agility": agi,
         "intuition": intu,
-        "stamina": vyn,
+        "stamina": vyn + PLAYER_START_ENDURANCE,
         "max_hp": mhp,
         "current_hp": chp,
         "gold": int(player.get("gold", 0)),
