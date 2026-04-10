@@ -121,7 +121,11 @@ def attach_wardrobe_usdt(
         if data.get("ok"):
             inv = data["result"]
             db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", amount)
-            return {"ok": True, "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url")}
+            return {
+                "ok": True,
+                "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
+                "invoice_id": inv["invoice_id"],
+            }
         err = data.get("error") or {}
         return {"ok": False, "reason": f"CryptoPay [{err.get('code','?')}] {err.get('name','UNKNOWN')}"}
 
@@ -190,14 +194,51 @@ def attach_wardrobe_usdt(
         try:
             tg_user = get_user_from_init_data(body.init_data)
             uid = int(tg_user["id"])
-            if not db.has_class(uid, body.class_id.strip()):
+            class_id = body.class_id.strip()
+            if not db.has_class(uid, class_id):
                 return {"ok": False, "reason": "USDT-образ не найден"}
-            return await _create_cryptopay_invoice(
+            result = await _create_cryptopay_invoice(
                 uid,
                 amount="5.99",
                 description="Duel Arena — сброс статов USDT-образа",
-                payload_str=f"uid:{uid}:usdt_reset:{body.class_id.strip()}",
+                payload_str=f"uid:{uid}:usdt_reset:{class_id}",
             )
+            return result  # содержит ok, invoice_url, invoice_id
         except Exception as e:
             logger.error("usdt reset-invoice: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)[:120]}
+
+    @router.get("/api/wardrobe/usdt/check-reset")
+    async def wardrobe_usdt_check_reset(init_data: str, class_id: str, invoice_id: int):
+        """Проверить оплату сброса напрямую у CryptoPay и применить сброс."""
+        try:
+            tg_user = get_user_from_init_data(init_data)
+            uid = int(tg_user["id"])
+            cid = class_id.strip()
+            if not CRYPTOPAY_TOKEN:
+                return {"ok": False, "reason": "CryptoPay не настроен"}
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.get(
+                    f"{CRYPTOPAY_API_BASE}/getInvoices",
+                    headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                    params={"invoice_ids": str(invoice_id)},
+                )
+                data = resp.json()
+            items = (data.get("result") or {}).get("items") or []
+            if not items:
+                return {"ok": False, "reason": "Счёт не найден"}
+            status = items[0].get("status", "")
+            if status != "paid":
+                return {"ok": False, "reason": f"Счёт ещё не оплачен (статус: {status})"}
+            # Счёт оплачен — подтвердить (игнорируем already_paid, сброс всё равно применяем)
+            db.confirm_crypto_invoice(invoice_id)
+            ok, msg = db.reset_usdt_slot_stats(uid, cid)
+            if ok:
+                _cache_invalidate(uid)
+                inventory = db.get_user_inventory(uid)
+                inv_item = next((i for i in inventory if i["class_id"] == cid), None)
+                return {"ok": True, "reset_applied": True, "inventory_item": inv_item, "player": _player_response(uid)}
+            return {"ok": False, "reason": msg}
+        except Exception as e:
+            logger.error("usdt check-reset: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)[:120]}

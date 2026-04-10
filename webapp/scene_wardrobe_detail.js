@@ -184,8 +184,14 @@
     }
 
     // Сброс статов
-    mkBtn(btnY, "🔄 Сброс сборки · 5.99 USDT", 0xd4a010,
+    btnY = mkBtn(btnY, "🔄 Сброс сборки · 5.99 USDT", 0xd4a010,
       () => this._usdtDetailAction("reset_invoice", item, wp));
+
+    // "Я оплатил" — показываем только если есть ожидающий счёт для этого образа
+    if (this._pendingResetInvoice?.class_id === item.class_id) {
+      mkBtn(btnY, "✅ Я оплатил — применить сброс", 0x1a7a2a,
+        () => this._usdtDetailAction("check_reset", item, wp));
+    }
   };
 
   StatsScene.prototype._usdtDetailAction = async function(action, item, wp) {
@@ -257,8 +263,34 @@
         const res = await post("/api/wardrobe/usdt/reset-invoice", { class_id: item.class_id });
         if (res?.ok && res.invoice_url) {
           tg?.openLink?.(res.invoice_url);
-          this._showToast("💳 Счёт открыт — после оплаты сборка сбросится");
-        } else { this._showToast(`❌ ${res?.reason || "Ошибка"}`); }
+          if (res.invoice_id) {
+            this._pendingResetInvoice = { class_id: item.class_id, invoice_id: res.invoice_id };
+          }
+          this._avatarBusy = false;
+          this._openUsdtDetail(item, wp);
+          this._showToast("💳 Счёт открыт — оплати и нажми «Я оплатил»");
+          return;
+        }
+        this._showToast(`❌ ${res?.reason || "Ошибка"}`);
+
+      } else if (action === "check_reset") {
+        const inv = this._pendingResetInvoice;
+        if (!inv?.invoice_id) { this._showToast("❌ Нет ожидающего счёта"); }
+        else {
+          const res = await get("/api/wardrobe/usdt/check-reset", {
+            class_id: item.class_id,
+            invoice_id: String(inv.invoice_id),
+          });
+          if (res?.ok && res.reset_applied && res.inventory_item) {
+            if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
+            this._pendingResetInvoice = null;
+            this._avatarBusy = false;
+            this._openUsdtDetail({...item, _raw: res.inventory_item}, wp);
+            this._showToast("✅ Сборка сброшена! Статы обнулены.");
+            return;
+          }
+          this._showToast(`❌ ${res?.reason || "Счёт ещё не оплачен"}`);
+        }
       }
     } catch { this._showToast("❌ Ошибка сети"); }
     this._avatarBusy = false;
