@@ -24,7 +24,7 @@ class BattleDamageMixin:
         self, attacker: Dict, defender: Dict, attack_zone: str, defense_zone: str, is_afk: bool = False
     ) -> Tuple[int, str, str]:
         """Возвращает (урон, outcome, reason) для лога боя."""
-        if attack_zone == defense_zone:
+        if not is_afk and attack_zone == defense_zone:
             return 0, "blocked", "block"
 
         if random.random() < MISS_CHANCE:

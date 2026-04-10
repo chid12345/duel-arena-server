@@ -34,7 +34,7 @@ class BattleExecuteAfkMixin:
             player1,
             p2_choices['attack'],
             p1_choices['defense'],
-            defense_skips_block=True,
+            is_afk=True,
         )
         player1['current_hp'] = max(0, player1['current_hp'] - p2_damage)
         player2['current_hp'] = max(0, player2['current_hp'] - p1_damage)
