@@ -59,14 +59,12 @@ class BattleExecuteMixin:
             player2,
             p1_choices['attack'],
             p2_choices['defense'],
-            defender_debuffs=p2_debuffs,
         )
         p2_damage, o2, debuff_to_p1 = self._calculate_damage_detailed(
             player2,
             player1,
             p2_choices['attack'],
             p1_choices['defense'],
-            defender_debuffs=p1_debuffs,
         )
         # Дебаффы живут ровно 1 следующий раунд.
         battle['player1_debuffs'] = {}
@@ -149,16 +147,17 @@ class BattleExecuteMixin:
                 limit_winner = player1['user_id']
             else:
                 limit_winner = player2.get('user_id') or player2.get('bot_id')
-            ex_limit = (
-                f"⚔️ <b>Размен</b> · раунд {round_num}\n"
-                f"<b>1)</b> Ваш удар в {p1_choices.get('attack', '?')} — "
-                + self._hp_delta_text(p1_damage, o1, player2['current_hp'], player2['max_hp'])
-                + f"\n<b>2)</b> {self.short_display_name(self._entity_name(player2))} "
-                f"(ур. {int(player2.get('level', PLAYER_START_LEVEL))}) бьёт в "
-                f"{p2_choices.get('attack', '?')} — "
-                + self._hp_delta_text(p2_damage, o2, player1['current_hp'], player1['max_hp'])
-                + f"\n\n⏳ <i>Раунд {MAX_BATTLE_ROUNDS} — бой остановлен по лимиту.</i>"
-            )
+            ex_limit = self._format_exchange_text(
+                p1_choices,
+                p2_choices,
+                p1_damage,
+                p2_damage,
+                o1,
+                o2,
+                round_num,
+                self.short_display_name(self._entity_name(player2)),
+                int(player2.get('level', PLAYER_START_LEVEL)),
+            ) + f"\n\n⏳ <i>Раунд {MAX_BATTLE_ROUNDS} — бой остановлен по лимиту.</i>"
             return await self._end_battle(battle_id, limit_winner, ex_limit)
         
         return {
