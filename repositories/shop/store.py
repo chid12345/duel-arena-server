@@ -30,7 +30,7 @@ class ShopStoreMixin:
             conn.close()
             return {"ok": False, "reason": f"Нужно {COST} золота, у вас {row['gold']}"}
         max_hp = int(row["max_hp"] or 100)
-        current_hp = int(row["current_hp"] or max_hp)
+        current_hp = int(row["current_hp"]) if row["current_hp"] is not None else max_hp
         if current_hp >= max_hp:
             conn.close()
             return {"ok": False, "reason": "HP уже полное!"}
