@@ -1857,6 +1857,7 @@ class BattleScene extends Phaser.Scene {
     this._selAttack  = null;
     this._selDefense = null;
     this._choosing   = true;
+    this._submitting = false;
     this._logLines   = [];
     this._prevMyHp   = null;
     this._prevOppHp  = null;
@@ -2291,7 +2292,7 @@ class BattleScene extends Phaser.Scene {
   }
 
   _onZone(key, label, type, g, t) {
-    if (!this._choosing) return;
+    if (!this._choosing || this._submitting) return;
     tg?.HapticFeedback?.selectionChanged();
 
     if (type === 'attack') {
@@ -2315,6 +2316,8 @@ class BattleScene extends Phaser.Scene {
   }
 
   async _submitChoice() {
+    if (this._submitting) return;   // защита от параллельных вызовов
+    this._submitting = true;
     this._choosing = false;
     this._showWait('Ход отправлен...');
     try {
@@ -2339,15 +2342,22 @@ class BattleScene extends Phaser.Scene {
         State.lastResult = res;
         BattleLog.hide();
         this.scene.start('Result');
+      } else {
+        // Неизвестный статус: rate-limit 429, duplicate_choice, ошибки — не зависаем
+        this._choosing = true;
+        const hint = res.detail || res.message || res.error || '';
+        this._showWait(hint ? `⚠️ ${hint}` : 'Ошибка. Попробуй ещё раз.');
       }
     } catch(e) {
       this._choosing = true;
       this._showWait('Ошибка. Попробуй ещё раз.');
+    } finally {
+      this._submitting = false;
     }
   }
 
   _onAuto() {
-    if (!this._choosing) return;
+    if (!this._choosing || this._submitting) return;
     const zones = ['HEAD', 'TORSO', 'LEGS'];
     if (!this._selAttack)  this._selAttack  = zones[Phaser.Math.Between(0,2)];
     if (!this._selDefense) this._selDefense = zones[Phaser.Math.Between(0,2)];
