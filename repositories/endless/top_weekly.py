@@ -22,6 +22,21 @@ class EndlessTopWeeklyMixin:
         finally:
             conn.close()
 
+    def endless_get_weekly_top(self, week_key: str, limit: int = 20) -> list:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT ews.user_id, p.username, ews.best_wave_this_week FROM endless_weekly_scores ews "
+                "JOIN players p ON p.user_id = ews.user_id "
+                "WHERE ews.week_key = ? AND ews.best_wave_this_week > 0 "
+                "ORDER BY ews.best_wave_this_week DESC LIMIT ?",
+                (week_key, limit),
+            )
+            return [{"user_id": int(r["user_id"]), "username": r["username"], "best_wave": int(r["best_wave_this_week"])} for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
     def endless_quest_on_win(self, user_id: int, wave: int) -> None:
         today = date.today().isoformat()
         week_key = iso_week_key_utc()

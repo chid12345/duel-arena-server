@@ -17,7 +17,7 @@ Database собирается из отдельных модулей через 
   repositories/avatars/       — образы, элит-билды, магазин
 """
 
-from db_core import DBCore, iso_week_key_utc, prev_iso_week_bounds_utc, weekly_pvp_rank_reward, weekly_titan_rank_reward
+from db_core import DBCore, iso_week_key_utc, prev_iso_week_bounds_utc, weekly_pvp_rank_reward, weekly_titan_rank_reward, weekly_natisk_rank_reward
 from db_schema import DBSchema
 from repositories.users import UsersMixin
 from repositories.bots import BotsMixin

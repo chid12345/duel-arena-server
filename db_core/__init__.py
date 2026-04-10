@@ -11,6 +11,7 @@ from db_core.week_utils import (
     prev_iso_week_bounds_utc,
     weekly_pvp_rank_reward,
     weekly_titan_rank_reward,
+    weekly_natisk_rank_reward,
 )
 
 __all__ = (
@@ -19,4 +20,5 @@ __all__ = (
     "prev_iso_week_bounds_utc",
     "weekly_pvp_rank_reward",
     "weekly_titan_rank_reward",
+    "weekly_natisk_rank_reward",
 )

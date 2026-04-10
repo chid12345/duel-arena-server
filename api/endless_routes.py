@@ -169,14 +169,20 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
 
     @router.get("/api/endless/top")
     async def endless_top(init_data: str):
+        from db_core import iso_week_key_utc
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         leaders = db.endless_get_top(20)
-        my_pos = None
-        for i, row in enumerate(leaders):
-            if row["user_id"] == uid:
-                my_pos = i + 1
-                break
-        return {"ok": True, "leaders": leaders, "my_pos": my_pos}
+        my_pos = next((i + 1 for i, r in enumerate(leaders) if r["user_id"] == uid), None)
+        week_key = iso_week_key_utc()
+        weekly = db.endless_get_weekly_top(week_key, limit=20)
+        rewards = [
+            {"rank": 1,    "diamonds": 100, "gold": 300, "title": "Покоритель Волн"},
+            {"rank": 2,    "diamonds": 60,  "gold": 200, "title": "Штормовой боец"},
+            {"rank": 3,    "diamonds": 40,  "gold": 100, "title": "Волновой боец"},
+            {"rank": "4-10","diamonds": 15, "gold": 50,  "title": "Участник натиска"},
+        ]
+        return {"ok": True, "leaders": leaders, "my_pos": my_pos,
+                "week_key": week_key, "weekly": weekly, "rewards": rewards}
 
     app.include_router(router)
