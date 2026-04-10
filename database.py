@@ -6,7 +6,7 @@ Database собирается из отдельных модулей через 
 Читать/редактировать по темам:
   db_core.py                  — подключение, SQL-адаптер SQLite↔PostgreSQL
   db_schema/                  — CREATE TABLE, индексы, миграции
-  repositories/users.py       — игрок, HP, бонусы, улучшения, Premium
+  repositories/users/         — игрок, HP, бонусы, улучшения, Premium
   repositories/bots.py        — боты, ребаланс, matchmaking
   repositories/battles.py     — бои, квесты, PvP очередь/вызовы
   repositories/game_logic.py  — Башня Титанов
