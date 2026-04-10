@@ -70,19 +70,3 @@ class BotHandlersQuestsAdmin:
             update.message.reply_text,
             "✅ Профиль полностью сброшен — ты снова новый игрок!\n\nНажми /start чтобы начать.",
         )
-
-    @staticmethod
-    async def wipe_season_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-        """Команда /wipe_season — сброс рейтинга и статистики ВСЕХ игроков (только ADMIN)."""
-        user = update.effective_user
-        if user.id not in ADMIN_USER_IDS:
-            await tg_api_call(update.message.reply_text, "🚫 Команда недоступна.")
-            return
-        logger.info("event=wipe_season_reset user_id=%s", user.id)
-        affected = db.wipe_all_ratings()
-        await tg_api_call(
-            update.message.reply_text,
-            f"✅ Сезонный сброс выполнен!\n"
-            f"Рейтинг и статистика сброшены для {affected} игроков.\n"
-            f"Таблица season_stats очищена.",
-        )

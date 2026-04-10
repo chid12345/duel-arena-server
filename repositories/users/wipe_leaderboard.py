@@ -71,20 +71,6 @@ class UsersWipeLeaderboardMixin:
         conn.commit()
         conn.close()
 
-    def wipe_all_ratings(self) -> int:
-        """Сброс рейтинга / статистики ВСЕХ игроков (сезонный ресет).
-        Возвращает кол-во затронутых строк."""
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE players SET wins = 0, losses = 0, win_streak = 0, rating = 1000"
-        )
-        affected = cursor.rowcount
-        cursor.execute("DELETE FROM season_stats")
-        conn.commit()
-        conn.close()
-        return affected
-
     def get_top_players(self, limit: int = 10) -> List[Dict]:
         conn = self.get_connection()
         cursor = conn.cursor()
