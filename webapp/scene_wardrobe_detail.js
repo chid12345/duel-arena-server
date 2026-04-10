@@ -285,8 +285,8 @@
             if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
             this._pendingResetInvoice = null;
             this._avatarBusy = false;
-            this._openUsdtDetail({...item, _raw: res.inventory_item}, wp);
-            this._showToast("✅ Сборка сброшена! Статы обнулены.");
+            this._showToast("✅ Сборка сброшена! Можешь выставить статы.");
+            await this._openAvatarPanel();
             return;
           }
           this._showToast(`❌ ${res?.reason || "Счёт ещё не оплачен"}`);
