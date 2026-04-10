@@ -7,7 +7,6 @@ from datetime import datetime
 from config import (
     AGI_BONUS_PCT_PER_STEP,
     AGI_BONUS_STEP,
-    ARMOR_ABSOLUTE_MAX,
     CRIT_MAX_CHANCE,
     DIAMONDS_CLASSES,
     DODGE_MAX_CHANCE,
@@ -78,11 +77,7 @@ def _player_api(player: dict) -> dict:
         )
         * 100
     )
-    armor_raw = armor_reduction(vyn, lv)
-    # USDT пассивка: броня +4% (отражаем в UI, как и в бою)
-    if (player.get("usdt_passive_type") or "").strip() == "armor_pct":
-        armor_raw = min(ARMOR_ABSOLUTE_MAX, armor_raw + 0.04)
-    armor_p = round(armor_raw * 100, 1)
+    armor_p = round(armor_reduction(vyn, lv) * 100, 1)
     dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s**STRENGTH_DAMAGE_POWER)))
 
     need_xp = exp_needed_for_next_level(lv)
