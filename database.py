@@ -8,7 +8,7 @@ Database собирается из отдельных модулей через 
   db_schema/                  — CREATE TABLE, индексы, миграции
   repositories/users/         — игрок, HP, бонусы, улучшения, Premium
   repositories/bots.py        — боты, ребаланс, matchmaking
-  repositories/battles.py     — бои, квесты, PvP очередь/вызовы
+  repositories/battles/       — бои, квесты, PvP очередь/вызовы
   repositories/game_logic.py  — Башня Титанов
   repositories/endless.py     — Натиск (волны, попытки, квесты, топ)
   repositories/leaderboard.py — PvP/Titan топы, недельные выплаты
