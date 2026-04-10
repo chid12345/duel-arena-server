@@ -8,9 +8,6 @@ from config import (
     AGI_BONUS_PCT_PER_STEP,
     AGI_BONUS_STEP,
     ARMOR_ABSOLUTE_MAX,
-    ARMOR_CAP_BASE,
-    ARMOR_CAP_PER_LEVEL,
-    ARMOR_STAMINA_K_ABS,
     CRIT_MAX_CHANCE,
     DIAMONDS_CLASSES,
     DODGE_MAX_CHANCE,
@@ -28,6 +25,7 @@ from config import (
     STRENGTH_DAMAGE_FLAT_PER_LEVEL,
     STRENGTH_DAMAGE_POWER,
     STRENGTH_DAMAGE_SCALE,
+    armor_reduction,
     exp_needed_for_next_level,
     stamina_stats_invested,
     total_free_stats_at_level,
@@ -80,9 +78,7 @@ def _player_api(player: dict) -> dict:
         )
         * 100
     )
-    armor_base = vyn / (vyn + ARMOR_STAMINA_K_ABS) if vyn > 0 else 0.0
-    armor_cap = min(ARMOR_ABSOLUTE_MAX, ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv)
-    armor_raw = min(armor_cap, armor_base)
+    armor_raw = armor_reduction(vyn, lv)
     # USDT пассивка: броня +4% (отражаем в UI, как и в бою)
     if (player.get("usdt_passive_type") or "").strip() == "armor_pct":
         armor_raw = min(ARMOR_ABSOLUTE_MAX, armor_raw + 0.04)

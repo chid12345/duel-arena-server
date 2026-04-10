@@ -32,9 +32,7 @@ class CallbackHandlersProfileUi:
         crit_pct = min(CRIT_MAX_CHANCE, intu / (intu + avg_intu) * CRIT_MAX_CHANCE) * 100
 
         stamina = stamina_stats_invested(mhp, lv)
-        armor_pct = (
-            min(ARMOR_ABSOLUTE_MAX, stamina / (stamina + ARMOR_STAMINA_K_ABS)) * 100 if stamina > 0 else 0
-        )
+        armor_pct = armor_reduction(stamina, lv) * 100
 
         dmg = int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER))
 

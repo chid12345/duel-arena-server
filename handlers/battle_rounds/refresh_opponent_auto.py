@@ -3,8 +3,6 @@ import logging
 from handlers.ui_helpers import CallbackHandlers
 from handlers.common import _battle_turn_lock
 from config import (
-    ARMOR_ABSOLUTE_MAX,
-    ARMOR_STAMINA_K_ABS,
     CRIT_MAX_CHANCE,
     DODGE_MAX_CHANCE,
     PLAYER_START_CRIT,
@@ -12,6 +10,7 @@ from config import (
     STRENGTH_DAMAGE_FLAT_PER_LEVEL,
     STRENGTH_DAMAGE_POWER,
     STRENGTH_DAMAGE_SCALE,
+    armor_reduction,
     total_free_stats_at_level,
 )
 from battle_system import battle_system
@@ -40,7 +39,7 @@ async def show_battle_opponent_stats(query, user_id):
     avg_intu = max(1, PLAYER_START_CRIT + tf // 4)
     dodge_p = int(min(DODGE_MAX_CHANCE, agi / (agi + avg_agi) * DODGE_MAX_CHANCE) * 100)
     crit_p = int(min(CRIT_MAX_CHANCE, intu / (intu + avg_intu) * CRIT_MAX_CHANCE) * 100)
-    armor_p = int(min(ARMOR_ABSOLUTE_MAX, vyn / (vyn + ARMOR_STAMINA_K_ABS)) * 100) if vyn > 0 else 0
+    armor_p = round(armor_reduction(vyn, lv) * 100, 1)
     dmg = int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER))
     txt = (
         f"{nm} · ур.{lv} · 🏆{ctx['opp_rating']}\n"

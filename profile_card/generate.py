@@ -7,8 +7,6 @@ import io
 from PIL import Image, ImageDraw
 
 from config import (
-    ARMOR_ABSOLUTE_MAX,
-    ARMOR_STAMINA_K_ABS,
     CRIT_MAX_CHANCE,
     DODGE_MAX_CHANCE,
     MAX_LEVEL,
@@ -17,6 +15,7 @@ from config import (
     STRENGTH_DAMAGE_FLAT_PER_LEVEL,
     STRENGTH_DAMAGE_POWER,
     STRENGTH_DAMAGE_SCALE,
+    armor_reduction,
     exp_needed_for_next_level,
     stamina_stats_invested,
     total_free_stats_at_level,
@@ -65,8 +64,7 @@ def generate_profile_card(player: dict) -> bytes:
     avg_intu = max(1, PLAYER_START_CRIT + tf // 4)
     dodge_p = int(min(DODGE_MAX_CHANCE, agi / (agi + avg_agi) * DODGE_MAX_CHANCE) * 100)
     crit_p = int(min(CRIT_MAX_CHANCE, intu / (intu + avg_intu) * CRIT_MAX_CHANCE) * 100)
-    armor_p = int(min(ARMOR_ABSOLUTE_MAX,
-                      vyn / (vyn + ARMOR_STAMINA_K_ABS)) * 100) if vyn > 0 else 0
+    armor_p = round(armor_reduction(vyn, lv) * 100, 1)
     dmg = int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER))
 
     need_xp = exp_needed_for_next_level(lv)

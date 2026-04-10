@@ -160,17 +160,10 @@ STRENGTH_DAMAGE_SCALE = 4.0             # коэффициент при степ
 STRENGTH_DAMAGE_POWER = 0.75            # показатель степени (убывающая отдача)
 STRENGTH_DAMAGE_MAX_PCT = 0.45          # кап обычного удара = 45% от макс. HP защитника
 
-# Броня от Выносливости: абсолютная формула (не процент от пула!)
-#   stamina_invested = фактическое кол-во вложений в выносливость
-#   base = stamina_invested / (stamina_invested + ARMOR_STAMINA_K_ABS)
+# Броня от Выносливости: та же сравнительная формула, что уворот/крит.
+#   armor_reduction(vyn, lv) в config/progression_fmt.py
+#   base = (vyn+BASE) / (vyn+BASE + avg_stamina) * ARMOR_ABSOLUTE_MAX
 #   level_cap = min(ARMOR_ABSOLUTE_MAX, ARMOR_CAP_BASE + ARMOR_CAP_PER_LEVEL * lv)
-#   reduction = min(level_cap, base)
-#
-# Прогрессия для heavy-tank билда (80% статов в вын):
-#   Ур.3 → ~2%  | Ур.10 → ~6%  | Ур.25 → ~15%
-#   Ур.50 → ~25% | Ур.75 → ~35% | Ур.100 → 45% (потолок)
-# Броня НИКОГДА не бьёт потолок раньше ~ур.100 при тяжёлом вложении.
-ARMOR_STAMINA_K_ABS    = 600    # абсолютный K (не процентный)
 ARMOR_CAP_BASE         = 0.05   # базовый потолок брони (5% на ур.0)
 ARMOR_CAP_PER_LEVEL    = 0.004  # +0.4% потолка за каждый уровень
 ARMOR_ABSOLUTE_MAX     = 0.45   # жёсткий потолок (45% на ур.100)
