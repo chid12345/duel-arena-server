@@ -76,28 +76,26 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
             "win_streak": new_win_streak,
         }
 
+    defeat_gold = 0 if is_test else max(1, int(gold_reward * 0.10))
+
     loser_stats = None
     if not is_test and loser_user_id is not None and not loser_locked:
+        loser_pl = dict(loser_live)
+        loser_pl["gold"] = loser_pl.get("gold", 0) + defeat_gold
+        loser_exp_patch, _ = bs._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)
         loser_stats = {
             "losses": loser_live.get("losses", 0) + 1,
             "win_streak": 0,
             "current_hp": max(0, int(loser.get("current_hp", 0))),
             "rating": max(100, int(loser_live.get("rating", 1000)) + elo_delta_l),
+            "exp": loser_exp_patch["exp"],
+            "exp_milestones": loser_exp_patch["exp_milestones"],
+            "free_stats": loser_exp_patch["free_stats"],
+            "level": loser_exp_patch["level"],
+            "max_hp": loser_exp_patch["max_hp"],
+            "gold": loser_exp_patch["gold"],
+            "diamonds": loser_exp_patch["diamonds"],
         }
-        if loser_exp > 0:
-            loser_pl = dict(loser_live)
-            loser_exp_patch, _ = bs._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)
-            loser_stats.update(
-                {
-                    "exp": loser_exp_patch["exp"],
-                    "exp_milestones": loser_exp_patch["exp_milestones"],
-                    "free_stats": loser_exp_patch["free_stats"],
-                    "level": loser_exp_patch["level"],
-                    "max_hp": loser_exp_patch["max_hp"],
-                    "gold": loser_exp_patch["gold"],
-                    "diamonds": loser_exp_patch["diamonds"],
-                }
-            )
 
     titan_progress, endless_progress = await run_titan_endless_progress(
         loop,
@@ -138,6 +136,7 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         winner_dmg=winner_dmg,
         loser_dmg=loser_dmg,
         gold_reward=gold_reward,
+        defeat_gold=defeat_gold,
         exp_reward=exp_reward,
         loser_exp=loser_exp,
         xp_boosted=xp_boosted,

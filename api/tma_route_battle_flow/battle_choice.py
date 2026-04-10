@@ -66,7 +66,7 @@ def register_battle_choice_route(
                     "titan_progress": mine.get("titan_progress"),
                     "endless_progress": mine.get("endless_progress"),
                     "result": {
-                        "gold": mine.get("gold_reward", 0) if human_won else 0,
+                        "gold": mine.get("gold_reward", 0),
                         "exp": mine.get("exp_reward", 0),
                         "damage": mine.get("damage_to_opponent", 0),
                         "level_up": mine.get("level_up", False) if human_won else False,
@@ -118,7 +118,7 @@ def register_battle_choice_route(
                 "titan_progress": mine.get("titan_progress"),
                 "endless_progress": mine.get("endless_progress"),
                 "result": {
-                    "gold": mine.get("gold_reward", 0) if human_won else 0,
+                    "gold": mine.get("gold_reward", 0),
                     "exp": mine.get("exp_reward", 0),
                     "damage": mine.get("damage_to_opponent", 0),
                     "level_up": mine.get("level_up", False) if human_won else False,

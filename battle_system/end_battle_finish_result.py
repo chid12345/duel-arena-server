@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from config import DEFEAT_GOLD
+from config import DEFEAT_GOLD  # noqa: F401 — kept for afk_end.py
 
 
 def build_battle_ended_result(
@@ -18,6 +18,7 @@ def build_battle_ended_result(
     winner_dmg: int,
     loser_dmg: int,
     gold_reward: int,
+    defeat_gold: int,
     exp_reward: int,
     loser_exp: int,
     xp_boosted: bool,
@@ -52,7 +53,7 @@ def build_battle_ended_result(
         "rounds": n_rounds,
         "damage_to_opponent": winner_dmg if is_winner_p1 else loser_dmg,
         "damage_to_you": loser_dmg if is_winner_p1 else winner_dmg,
-        "gold_reward": (gold_reward if is_winner_p1 else DEFEAT_GOLD) if not winner_locked else 0,
+        "gold_reward": (gold_reward if is_winner_p1 else defeat_gold) if not winner_locked else 0,
         "exp_reward": (exp_reward if is_winner_p1 else loser_exp)
         if not (winner_locked if is_winner_p1 else loser_locked)
         else 0,
@@ -66,7 +67,7 @@ def build_battle_ended_result(
         "exchange_text": exchange_text,
         "combat_log_html": combat_log_html,
         "is_test_battle": is_test,
-        "p2_gold_reward": (DEFEAT_GOLD if is_winner_p1 else gold_reward) if not loser_locked else 0,
+        "p2_gold_reward": (defeat_gold if is_winner_p1 else gold_reward) if not loser_locked else 0,
         "p2_exp_reward": 0
         if (is_winner_p1 and loser_locked) or (not is_winner_p1 and winner_locked)
         else (loser_exp if is_winner_p1 else exp_reward),

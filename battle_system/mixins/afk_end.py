@@ -59,6 +59,7 @@ class BattleAfkEndMixin:
 
         # Меньшие награды за победу по AFK (в тестовом бою не начисляются)
         gold_reward = 0 if is_test else (VICTORY_GOLD // 2)
+        defeat_gold = 0 if is_test else max(1, int(gold_reward * 0.10))
         # Половина табличного XP за победу (как обычная победа, но из той же xp_per_win)
         bx = victory_xp_for_player_level(int(winner_live.get('level', PLAYER_START_LEVEL)))
         exp_reward = 0 if is_test else (max(1, bx // 2) if bx else 0)
@@ -111,6 +112,7 @@ class BattleAfkEndMixin:
                 'losses': loser_live.get('losses', 0) + 1,
                 'win_streak': 0,
                 'rating': max(100, int(loser_live.get('rating', 1000)) + (afk_elo_delta_l if not is_test else 0)),
+                'gold': int(loser_live.get('gold', 0)) + defeat_gold,
             }
             if battle.get('is_bot2'):
                 loser_stats['current_hp'] = int(loser.get('max_hp', PLAYER_START_MAX_HP))
@@ -151,14 +153,14 @@ class BattleAfkEndMixin:
             'rounds': len(battle['rounds']),
             'damage_to_opponent': dmg_to_opp,
             'damage_to_you': dmg_to_you,
-            'gold_reward': (gold_reward if human_won else DEFEAT_GOLD) if not winner_locked else 0,
+            'gold_reward': (gold_reward if human_won else defeat_gold) if not winner_locked else 0,
             'exp_reward': (exp_reward if human_won else 0) if not winner_locked else 0,
             'level_up': bool(did_level_afk) if not is_test else False,
             'level_up_level': level_up_level if not is_test else None,
             'duration_ms': duration_ms,
             'combat_log_html': combat_log_html,
             'is_test_battle': is_test,
-            'p2_gold_reward': DEFEAT_GOLD if human_won else gold_reward,
+            'p2_gold_reward': defeat_gold if human_won else gold_reward,
             'p2_exp_reward': 0 if human_won else exp_reward,
             'p2_xp_boosted': False,
             'p2_streak_bonus_gold': 0,
