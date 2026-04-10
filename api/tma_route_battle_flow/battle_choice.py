@@ -24,7 +24,7 @@ def register_battle_choice_route(
     async def battle_choice(body: BattleChoiceBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        _rl_check(uid, "battle_choice", max_hits=15, window_sec=10)
+        _rl_check(uid, "battle_choice", max_hits=35, window_sec=60)
 
         ZONE_MAP = {
             "HEAD": "ГОЛОВА",
