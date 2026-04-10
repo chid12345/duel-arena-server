@@ -13,7 +13,8 @@ Database собирается из отдельных модулей через 
   repositories/endless.py     — Натиск (волны, попытки, квесты, топ)
   repositories/leaderboard.py — PvP/Titan топы, недельные выплаты
   repositories/shop.py        — магазин, сезоны, Battle Pass
-  repositories/social.py      — кланы, рефералы, Stars/Crypto платежи
+  repositories/social/        — кланы, рефералы, Stars/Crypto платежи
+  repositories/avatars/       — образы, элит-билды, магазин
 """
 
 from db_core import DBCore, iso_week_key_utc, prev_iso_week_bounds_utc, weekly_pvp_rank_reward, weekly_titan_rank_reward
