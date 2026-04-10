@@ -1823,16 +1823,16 @@ const BattleLog = (() => {
   }
 
   /* Маркер → цветной HTML.
-     Формат webapp_log: «Р{N} Вы {m1} · Враг {m2}»
-     Маркеры: −{N}, −{N}⚡, −{N}⚡💥, −{N}×2, 💨, 🛡, ✕, ⏱, — */
+     Формат webapp_log: «Р{N} Вы→Зона {m1} · Враг→Зона {m2}»
+     Маркеры: −{N}, −{N}⚡, −{N}⚡💥, −{N}×2, −{N}🪓, 💨уклон, 🛡блок, ✕мимо, ⏱, 0 */
   function _styleMarker(m, side) {
-    if (!m || m === '—')         return `<span class="bl-miss-col">—</span>`;
-    if (m === '⏱')               return `<span class="bl-miss-col">⏱</span>`;
-    if (m === '✕')               return `<span class="bl-miss-col">✕</span>`;
-    if (m.includes('💨'))        return `<span class="bl-dodge-col">💨</span>`;
+    if (!m || m === '—' || m === '0') return `<span class="bl-miss-col">—</span>`;
+    if (m.startsWith('⏱'))        return `<span class="bl-miss-col">⏱</span>`;
+    if (m.startsWith('✕'))        return `<span class="bl-miss-col">✕мимо</span>`;
+    if (m.includes('💨'))         return `<span class="bl-dodge-col">💨уклон</span>`;
     if (m.includes('🛡')) {
       const cls = side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy';
-      return `<span class="${cls}">🛡</span>`;
+      return `<span class="${cls}">🛡блок</span>`;
     }
     if (m.includes('⚡') || m.includes('💥')) {
       const cls = side === 'you' ? 'bl-crit-you' : 'bl-crit-enemy';
@@ -1847,8 +1847,8 @@ const BattleLog = (() => {
 
   function _renderEntry(raw) {
     const li = document.createElement('li');
-    // webapp_log format: «Р{N} Вы {m1} · Враг {m2}»
-    const parsed = raw.match(/^Р(\d+)\s+Вы\s+(.+?)\s+·\s+Враг\s+(.+)$/);
+    // webapp_log format: «Р{N} Вы→Зона {m1} · Враг→Зона {m2}»
+    const parsed = raw.match(/^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/);
     if (!parsed) {
       li.className = 'bl-sys';
       li.textContent = raw.replace(/<[^>]+>/g, '').trim().slice(0, 60);
@@ -1856,8 +1856,10 @@ const BattleLog = (() => {
     }
 
     const rNum = parsed[1];
-    const m1   = parsed[2].trim();   // ваш результат
-    const m2   = parsed[3].trim();   // результат врага
+    const z1   = parsed[2].trim();   // ваша зона атаки
+    const m1   = parsed[3].trim();   // ваш результат
+    const z2   = parsed[4].trim();   // зона атаки врага
+    const m2   = parsed[5].trim();   // результат врага
 
     const hasCrit  = m1.includes('⚡') || m2.includes('⚡') || m1.includes('💥') || m2.includes('💥');
     const hasDodge = m1.includes('💨') || m2.includes('💨');
@@ -1866,9 +1868,9 @@ const BattleLog = (() => {
 
     li.className = 'bl-row' + (rowCls ? ' ' + rowCls : '');
     li.innerHTML =
-      `<span class="bl-you">Вы: ${_styleMarker(m1, 'you')}</span>` +
+      `<span class="bl-you">${z1}: ${_styleMarker(m1, 'you')}</span>` +
       `<span class="bl-mid">Р${rNum}</span>` +
-      `<span class="bl-enemy">Враг: ${_styleMarker(m2, 'enemy')}</span>`;
+      `<span class="bl-enemy">${z2}: ${_styleMarker(m2, 'enemy')}</span>`;
     return li;
   }
 
@@ -2399,11 +2401,9 @@ class BattleScene extends Phaser.Scene {
         this._choosing = true;
         this._startTimer();
       } else if (res.status === 'battle_ended') {
-        // Используем HTTP-ответ только если WS ещё не принёс данные с наградами
-        // (WS приходит раньше HTTP примерно в 50% случаев)
-        if (!State.lastResult?.result) {
-          State.lastResult = res;
-        }
+        // WS-событие перезапишет это позже если придёт раньше;
+        // всегда обновляем чтобы не показывать результат прошлого боя при разрыве WS
+        State.lastResult = res;
         BattleLog.hide();
         this.scene.start('Result');
       }

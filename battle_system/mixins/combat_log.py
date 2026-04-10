@@ -174,4 +174,4 @@ class BattleCombatLogMixin:
         z2 = _ZONE_SHORT.get(atk_zone2, atk_zone2[:3])
         m1 = _marker(out1, dmg1)
         m2 = _marker(out2, dmg2)
-        return f"⚔ Р{round_num} Вы→{z1}: {m1}\n💢 Враг→{z2}: {m2}"
+        return f"Р{round_num} Вы→{z1} {m1} · Враг→{z2} {m2}"
