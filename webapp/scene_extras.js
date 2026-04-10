@@ -2286,13 +2286,11 @@ class ShopScene extends Phaser.Scene {
           id: 'hp_small', icon: '🧪', name: 'Малое зелье HP',
           price: 60, currency: 'gold',
           desc: '+30% HP', hpRestorePct: 0.30,
-          soon: hpFull,   // не показываем "купить" если HP полный
         },
         {
           id: 'hp_full',  icon: '⚗️', name: 'Большое зелье HP',
           price: 200, currency: 'gold',
           desc: 'HP до максимума', hpRestorePct: 1.0,
-          soon: hpFull,
         },
         {
           id: 'xp_boost', icon: '💊', name: 'Буст XP ×1.5',

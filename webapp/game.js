@@ -1735,133 +1735,75 @@ class MenuScene extends Phaser.Scene {
 /* ═══════════════════════════════════════════════════════════
    BATTLE LOG — компактный DOM-оверлей над панелью выбора
    ═══════════════════════════════════════════════════════════ */
+/* BattleLog: показывает последний раунд как 2 строки (ваш удар / удар врага).
+   Простая архитектура: один div, replace innerHTML — без списков/скролла/счётчиков. */
 const BattleLog = (() => {
-  let overlay = null, scroll = null, list = null;
+  let overlay = null, inner = null;
   let _shown = false;
-  let _lastCount = 0;
 
   function _init() {
     if (overlay) return;
-
     const style = document.createElement('style');
     style.textContent = `
       #battle-log-overlay {
         position: fixed; display: none; z-index: 50;
-        pointer-events: none;
-        border-radius: 6px;
-        overflow: hidden;
+        pointer-events: none; box-sizing: border-box;
+        border-radius: 6px; overflow: hidden;
+        background: rgba(10, 8, 22, 0.84);
+        border: 1px solid rgba(80, 70, 140, 0.28);
       }
-      #battle-log-scroll {
-        width: 100%; height: 100%;
-        overflow-y: auto; overflow-x: hidden;
-        scrollbar-width: none;
-        display: flex; flex-direction: column; justify-content: flex-end;
-      }
-      #battle-log-scroll::-webkit-scrollbar { display: none; }
-      #battle-log-list {
-        list-style: none; padding: 2px 3px; margin: 0;
-        display: flex; flex-direction: column; gap: 3px;
-        width: 100%;
-      }
-      /* ── Строка раунда: 2 линии ── */
-      .bl-row {
-        display: flex; flex-direction: column; gap: 1px;
-        width: 100%; box-sizing: border-box;
+      #battle-log-inner {
+        width: 100%; height: 100%; box-sizing: border-box;
+        display: flex; flex-direction: column; justify-content: center;
+        padding: 4px 8px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 10px; line-height: 1.35;
-        background: rgba(14, 12, 28, 0.90);
-        border-radius: 4px; padding: 3px 6px;
-        border-left: 2px solid rgba(80,70,140,0.35);
       }
-      .bl-row.bl-crit  { border-left-color: #ffcc00; background: rgba(30,20,5,0.92); }
-      .bl-row.bl-dodge { border-left-color: #2ecc71; }
-      .bl-row.bl-block { border-left-color: #5096ff; }
-      /* Строка 1 — ваш удар */
-      .bl-line1 {
-        color: #aabbdd;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      /* Строка 2 — удар врага */
-      .bl-line2 {
-        color: #cc9999;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-      }
-      /* Цвета урона */
+      .bl-line1 { font-size: 10px; line-height: 1.4; color: #aabbdd;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .bl-line2 { font-size: 10px; line-height: 1.4; color: #cc9999; margin-top: 2px;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
       .bl-dmg-you   { color: #4d94ff; font-weight: 700; }
       .bl-dmg-enemy { color: #ff4d4d; font-weight: 700; }
-      .bl-crit-you  { color: #ffcc00; font-weight: 700; }
-      .bl-crit-enemy{ color: #ffcc00; font-weight: 700; }
+      .bl-crit      { color: #ffcc00; font-weight: 700; }
       .bl-dodge-col { color: #2ecc71; }
       .bl-miss-col  { color: #888888; }
-      /* Системная строка */
-      .bl-sys {
-        font-size: 9px; color: #6677aa; text-align: center;
-        padding: 1px 4px; background: transparent; border: none;
-        width: 100%;
-      }
     `;
     document.head.appendChild(style);
-
     overlay = document.createElement('div');
     overlay.id = 'battle-log-overlay';
-    scroll = document.createElement('div');
-    scroll.id = 'battle-log-scroll';
-    list = document.createElement('ul');
-    list.id = 'battle-log-list';
-    scroll.appendChild(list);
-    overlay.appendChild(scroll);
+    inner = document.createElement('div');
+    inner.id = 'battle-log-inner';
+    overlay.appendChild(inner);
     document.body.appendChild(overlay);
   }
 
   /* Маркер → цветной HTML.
-     Формат webapp_log: «Р{N} Вы→Зона {m1} · Враг→Зона {m2}»
+     Формат: «Р{N} Вы→Зона {m1} · Враг→Зона {m2}»
      Маркеры: −{N}, −{N}⚡, −{N}⚡💥, −{N}×2, −{N}🪓, 💨уклон, 🛡блок, ✕мимо, ⏱, 0 */
   function _styleMarker(m, side) {
     if (!m || m === '—' || m === '0') return `<span class="bl-miss-col">—</span>`;
-    if (m.startsWith('⏱'))        return `<span class="bl-miss-col">⏱</span>`;
-    if (m.startsWith('✕'))        return `<span class="bl-miss-col">✕мимо</span>`;
-    if (m.includes('💨'))         return `<span class="bl-dodge-col">💨уклон</span>`;
-    if (m.includes('🛡')) {
-      const cls = side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy';
-      return `<span class="${cls}">🛡блок</span>`;
-    }
-    if (m.includes('⚡') || m.includes('💥')) {
-      const cls = side === 'you' ? 'bl-crit-you' : 'bl-crit-enemy';
-      return `<span class="${cls}">${m}</span>`;
-    }
-    if (m.startsWith('−') || m.startsWith('-')) {
-      const cls = side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy';
-      return `<span class="${cls}">${m}</span>`;
-    }
+    if (m.startsWith('⏱'))  return `<span class="bl-miss-col">⏱</span>`;
+    if (m.startsWith('✕'))  return `<span class="bl-miss-col">✕мимо</span>`;
+    if (m.includes('💨'))   return `<span class="bl-dodge-col">💨уклон</span>`;
+    if (m.includes('🛡'))   return `<span class="${side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy'}">🛡блок</span>`;
+    if (m.includes('⚡') || m.includes('💥')) return `<span class="bl-crit">${m}</span>`;
+    if (m.startsWith('−') || m.startsWith('-'))
+      return `<span class="${side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy'}">${m}</span>`;
     return `<span class="bl-miss-col">${m}</span>`;
   }
 
-  function _renderEntry(raw) {
-    const li = document.createElement('li');
-    // webapp_log format: «Р{N} Вы→Зона {m1} · Враг→Зона {m2}»
-    const parsed = raw.match(/^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/);
+  function _render(raw) {
+    if (!inner) return;
+    const parsed = (raw || '').match(/^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/);
     if (!parsed) {
-      li.className = 'bl-sys';
-      li.textContent = raw.replace(/<[^>]+>/g, '').trim().slice(0, 60);
-      return li;
+      inner.innerHTML = `<div class="bl-line1">${(raw||'').replace(/<[^>]+>/g,'').slice(0,60)}</div>`;
+      return;
     }
-
-    const rNum = parsed[1];
-    const z1   = parsed[2].trim();   // ваша зона атаки
-    const m1   = parsed[3].trim();   // ваш результат
-    const z2   = parsed[4].trim();   // зона атаки врага
-    const m2   = parsed[5].trim();   // результат врага
-
-    const hasCrit  = m1.includes('⚡') || m2.includes('⚡') || m1.includes('💥') || m2.includes('💥');
-    const hasDodge = m1.includes('💨') || m2.includes('💨');
-    const hasBlock = m1.includes('🛡') || m2.includes('🛡');
-    const rowCls   = hasCrit ? 'bl-crit' : hasDodge ? 'bl-dodge' : hasBlock ? 'bl-block' : '';
-
-    li.className = 'bl-row' + (rowCls ? ' ' + rowCls : '');
-    li.innerHTML =
-      `<span class="bl-line1">⚔ <b>Р${rNum}</b> Вы→${z1}: ${_styleMarker(m1, 'you')}</span>` +
-      `<span class="bl-line2">💢 Враг→${z2}: ${_styleMarker(m2, 'enemy')}</span>`;
-    return li;
+    const [, rNum, z1, m1r, z2, m2r] = parsed;
+    const m1 = m1r.trim(), m2 = m2r.trim();
+    inner.innerHTML =
+      `<div class="bl-line1">⚔ <b>Р${rNum}</b> Вы→${z1}: ${_styleMarker(m1, 'you')}</div>` +
+      `<div class="bl-line2">💢 Враг→${z2}: ${_styleMarker(m2, 'enemy')}</div>`;
   }
 
   return {
@@ -1875,6 +1817,7 @@ const BattleLog = (() => {
       overlay.style.width  = (sceneW * sx) + 'px';
       overlay.style.height = (sceneH * sy) + 'px';
       overlay.style.display = 'block';
+      if (inner) inner.innerHTML = '';
       _shown = true;
     },
     hide() {
@@ -1884,20 +1827,12 @@ const BattleLog = (() => {
     },
     clear() {
       _init();
-      list.innerHTML = '';
-      _lastCount = 0;
+      if (inner) inner.innerHTML = '';
     },
+    /* entries — массив webapp_log; показываем только последний элемент */
     update(entries) {
-      if (!_shown || !entries) return;
-      if (entries.length <= _lastCount) return;
-      const newEntries = entries.slice(_lastCount);
-      _lastCount = entries.length;
-
-      newEntries.forEach(raw => list.appendChild(_renderEntry(raw)));
-
-      while (list.children.length > 20) list.removeChild(list.firstChild);
-
-      requestAnimationFrame(() => { scroll.scrollTop = scroll.scrollHeight; });
+      if (!_shown || !entries || !entries.length) return;
+      _render(entries[entries.length - 1]);
     },
   };
 })();
@@ -2340,9 +2275,9 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    // 2 строки: 10px font * 1.3 lh + 4px padding = ~17px/строка, gap 2px → ~38px + отступы
-    const logH = 52;
-    const logY = Math.round(H * 0.6 - logH - 6);
+    // 2 строки × (10px × 1.4) + margin-top 2px + padding 8px = ~38px → 40px
+    const logH = 40;
+    const logY = Math.round(H * 0.6 - logH - 4);
     BattleLog.clear();
     BattleLog.show(this.game.canvas, 4, logY, W - 8, logH);
   }
