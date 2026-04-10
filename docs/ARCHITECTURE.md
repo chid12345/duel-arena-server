@@ -7,7 +7,7 @@
 - `handlers/`: весь Telegram UI (команды/кнопки/колбэки).
 - `api_server.py`: FastAPI для Mini App.
 - `battle_system.py`: механика боя (ядро).
-- `config.py`: всё настраиваемое (константы/формулы).
+- `config/`: всё настраиваемое (константы/формулы; модули ≤200 строк).
 - `db_schema.py`: DDL и миграции (без бизнес-логики).
 - `database.py`: точка сборки Database (только импорты миксинов + `db = Database()`).
 
@@ -17,7 +17,7 @@
 - **Telegram команда (/xxx)** → пакет `handlers/commands/` (миксины ≤200 строк)
 - **Telegram кнопка (callback)** → `handlers/*` по теме
 - **API эндпоинт (Mini App)** → `api_server.py` или `api/*_routes.py`
-- **Константы/формулы** → `config.py`
+- **Константы/формулы** → пакет `config/`
 
 ## Порядок импортов (слои)
 Цепочка: `config/progression_loader → db_core → db_schema → repositories → database → battle_system → handlers/api_server`.
