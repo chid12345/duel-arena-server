@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from typing import Tuple
 
-from config import STAMINA_PER_FREE_STAT, USDT_PASSIVE_BONUS
+from config import STAMINA_PER_FREE_STAT
+
+_USDT_PASSIVE_BONUS = 8  # бонус пассивки USDT-образа в очках стата
 
 
 class InventorySwitchMixin:
@@ -106,7 +108,7 @@ class InventorySwitchMixin:
             )
             saved = cursor.fetchone()
             passive = (self._row_get(saved, "passive_type") or "").strip()
-            pb = int(USDT_PASSIVE_BONUS)
+            pb = _USDT_PASSIVE_BONUS
             return {
                 "strength": int(self._row_get(saved, "strength_saved", 0) or 0) + (pb if passive == "strength" else 0),
                 "endurance": int(self._row_get(saved, "agility_saved", 0) or 0) + (pb if passive == "agility" else 0),
