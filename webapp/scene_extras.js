@@ -1646,15 +1646,21 @@ class ShopScene extends Phaser.Scene {
     this._buying = false;
   }
 
-  create() {
+  async create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
 
     _extraBg(this, W, H);
     _extraHeader(this, W, '🛍️', 'МАГАЗИН', 'Зелья · Снаряжение · Особые');
     _extraBack(this);
-
     this._buildTabBar(W, H);
+
+    // Свежие данные игрока перед отрисовкой HP-баров
+    try {
+      const d = await post('/api/player');
+      if (d.ok && d.player) State.player = d.player;
+    } catch(_) {}
+
     this._buildBalance(W);
     this._buildItems(W, H);
   }

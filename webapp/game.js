@@ -1754,14 +1754,21 @@ const BattleLog = (() => {
       }
       #battle-log-inner {
         width: 100%; height: 100%; box-sizing: border-box;
-        display: flex; flex-direction: column; justify-content: center;
-        padding: 4px 8px;
+        display: flex; align-items: center;
+        padding: 0 6px;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        font-size: 10px; line-height: 1.3;
       }
-      .bl-line1 { font-size: 10px; line-height: 1.4; color: #aabbdd;
-                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-      .bl-line2 { font-size: 10px; line-height: 1.4; color: #cc9999; margin-top: 2px;
-                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* 3 колонки: Вы | Раунд | Враг */
+      .bl-you   { flex: 0 0 42%; text-align: left;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                  color: #aabbdd; }
+      .bl-mid   { flex: 0 0 16%; text-align: center;
+                  font-size: 9px; color: #ffc83c; font-weight: 700;
+                  white-space: nowrap; }
+      .bl-enemy { flex: 0 0 42%; text-align: right;
+                  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                  color: #cc9999; }
       .bl-dmg-you   { color: #4d94ff; font-weight: 700; }
       .bl-dmg-enemy { color: #ff4d4d; font-weight: 700; }
       .bl-crit      { color: #ffcc00; font-weight: 700; }
@@ -1796,14 +1803,15 @@ const BattleLog = (() => {
     if (!inner) return;
     const parsed = (raw || '').match(/^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/);
     if (!parsed) {
-      inner.innerHTML = `<div class="bl-line1">${(raw||'').replace(/<[^>]+>/g,'').slice(0,60)}</div>`;
+      inner.innerHTML = `<span class="bl-you">${(raw||'').replace(/<[^>]+>/g,'').slice(0,40)}</span>`;
       return;
     }
     const [, rNum, z1, m1r, z2, m2r] = parsed;
     const m1 = m1r.trim(), m2 = m2r.trim();
     inner.innerHTML =
-      `<div class="bl-line1">⚔ <b>Р${rNum}</b> Вы→${z1}: ${_styleMarker(m1, 'you')}</div>` +
-      `<div class="bl-line2">💢 Враг→${z2}: ${_styleMarker(m2, 'enemy')}</div>`;
+      `<span class="bl-you">${z1} ${_styleMarker(m1, 'you')}</span>` +
+      `<span class="bl-mid">Р${rNum}</span>` +
+      `<span class="bl-enemy">${z2} ${_styleMarker(m2, 'enemy')}</span>`;
   }
 
   return {
@@ -2275,8 +2283,8 @@ class BattleScene extends Phaser.Scene {
 
   _buildLog() {
     const { W, H } = this;
-    // 2 строки × (10px × 1.4) + margin-top 2px + padding 8px = ~38px → 40px
-    const logH = 40;
+    // 1 строка × 10px × 1.3 + padding 6px top/bottom = ~26px
+    const logH = 26;
     const logY = Math.round(H * 0.6 - logH - 4);
     BattleLog.clear();
     BattleLog.show(this.game.canvas, 4, logY, W - 8, logH);
