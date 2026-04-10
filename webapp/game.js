@@ -1760,40 +1760,31 @@ const BattleLog = (() => {
       #battle-log-scroll::-webkit-scrollbar { display: none; }
       #battle-log-list {
         list-style: none; padding: 2px 3px; margin: 0;
-        display: flex; flex-direction: column; gap: 2px;
+        display: flex; flex-direction: column; gap: 3px;
         width: 100%;
       }
-      /* ── Строка раунда: три колонки ── */
+      /* ── Строка раунда: 2 линии ── */
       .bl-row {
-        display: flex; align-items: center;
-        justify-content: space-between;
+        display: flex; flex-direction: column; gap: 1px;
         width: 100%; box-sizing: border-box;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        font-size: 10px; line-height: 1.3;
+        font-size: 10px; line-height: 1.35;
         background: rgba(14, 12, 28, 0.90);
-        border-radius: 4px; padding: 2px 5px;
+        border-radius: 4px; padding: 3px 6px;
         border-left: 2px solid rgba(80,70,140,0.35);
       }
       .bl-row.bl-crit  { border-left-color: #ffcc00; background: rgba(30,20,5,0.92); }
       .bl-row.bl-dodge { border-left-color: #2ecc71; }
       .bl-row.bl-block { border-left-color: #5096ff; }
-      /* Левая колонка — Вы */
-      .bl-you {
-        flex: 0 0 42%; text-align: left;
+      /* Строка 1 — ваш удар */
+      .bl-line1 {
+        color: #aabbdd;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        color: #99aacc;
       }
-      /* Центр — зона + раунд */
-      .bl-mid {
-        flex: 0 0 16%; text-align: center;
-        font-size: 9px; color: #ffc83c; font-weight: 700;
-        white-space: nowrap;
-      }
-      /* Правая колонка — Враг */
-      .bl-enemy {
-        flex: 0 0 42%; text-align: right;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      /* Строка 2 — удар врага */
+      .bl-line2 {
         color: #cc9999;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
       /* Цвета урона */
       .bl-dmg-you   { color: #4d94ff; font-weight: 700; }
@@ -1868,9 +1859,8 @@ const BattleLog = (() => {
 
     li.className = 'bl-row' + (rowCls ? ' ' + rowCls : '');
     li.innerHTML =
-      `<span class="bl-you">${z1}: ${_styleMarker(m1, 'you')}</span>` +
-      `<span class="bl-mid">Р${rNum}</span>` +
-      `<span class="bl-enemy">${z2}: ${_styleMarker(m2, 'enemy')}</span>`;
+      `<span class="bl-line1">⚔ <b>Р${rNum}</b> Вы→${z1}: ${_styleMarker(m1, 'you')}</span>` +
+      `<span class="bl-line2">💢 Враг→${z2}: ${_styleMarker(m2, 'enemy')}</span>`;
     return li;
   }
 

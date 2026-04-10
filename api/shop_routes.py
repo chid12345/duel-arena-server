@@ -5,6 +5,8 @@ from typing import Any, Dict
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from api.tma_player_api import _player_api
+
 
 class ShopBuyBody(BaseModel):
     init_data: str
@@ -52,7 +54,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
 
         if result.get("ok"):
             player = db.get_or_create_player(uid, "")
-            result["player"] = dict(player)
+            result["player"] = _player_api(dict(player))
         return result
 
     @router.get("/api/shop/packages")
