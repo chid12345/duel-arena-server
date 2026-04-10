@@ -1,10 +1,12 @@
 """Тренировка статов и экран рейтинга (патчи CallbackHandlers)."""
 
+from datetime import datetime, timedelta
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from handlers.ui_helpers import CallbackHandlers
 from config import *
 from database import db
+from repositories.shop.seasons import SEASON_DURATION_DAYS
 
 
 async def show_training(query, player):
@@ -134,23 +136,59 @@ async def handle_training(query, player, training_type):
 CallbackHandlers.handle_training = staticmethod(handle_training)
 
 
+def _season_days_left(started_at_str: str) -> int:
+    """Дней до конца сезона (0 если истёк)."""
+    try:
+        started = datetime.fromisoformat(str(started_at_str)[:19].replace(" ", "T"))
+        ends = started + timedelta(days=SEASON_DURATION_DAYS)
+        delta = (ends - datetime.utcnow()).days
+        return max(0, delta)
+    except Exception:
+        return 0
+
+
 async def show_rating(query, player):
-    """Показать рейтинг"""
-    top_players = db.get_top_players(10)
+    """Показать рейтинг — сезонный топ с наградами."""
+    season = db.get_active_season()
 
-    rating_text = "🏆 **Топ-10 бойцов Арены**\n\n"
+    if not season:
+        text = "🏆 <b>Рейтинг Арены</b>\n\nСезон скоро начнётся. Следи за обновлениями!"
+        keyboard = [[InlineKeyboardButton("⬅️ Назад", callback_data="back")]]
+        await CallbackHandlers._callback_set_message(
+            query, text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="HTML",
+        )
+        return
 
-    for i, p in enumerate(top_players, 1):
-        medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
-        win_rate = p["wins"] / (p["wins"] + p["losses"]) * 100 if (p["wins"] + p["losses"]) > 0 else 0
+    top = db.get_season_leaderboard(season["id"], 10)
+    days_left = _season_days_left(season["started_at"])
 
-        rating_text += f"{medal} {p['username']}\n"
-        rating_text += f"   📊 Ур.{p['level']} | 🏆 {p['rating']} | 🔥 {p['wins']} побед | 📈 {win_rate:.1f}%\n\n"
+    text = (
+        f"🏆 <b>{season['name']}</b>\n"
+        f"⏳ До конца сезона: <b>{days_left} дн.</b>\n\n"
+    )
+
+    if top:
+        for i, p in enumerate(top, 1):
+            medal = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else f"{i}."
+            total = (p["wins"] or 0) + (p["losses"] or 0)
+            wr = p["wins"] / total * 100 if total > 0 else 0
+            text += f"{medal} {p['username']}\n"
+            text += f"   ⭐ {p['rating']} · 🔥 {p['wins']}П · 📈 {wr:.0f}%\n\n"
+    else:
+        text += "Никто ещё не сыграл в этом сезоне.\n\n"
+
+    text += (
+        "🎁 <b>Награды топа:</b>\n"
+        "🥇 500💰 + 200💎\n"
+        "🥈 300💰 + 120💎\n"
+        "🥉 200💰 + 75💎\n"
+        "4–10: 50💰 + 20💎"
+    )
 
     keyboard = [[InlineKeyboardButton("⬅️ Назад", callback_data="back")]]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-
-    await CallbackHandlers._callback_set_message(query, rating_text, reply_markup=reply_markup)
+    await CallbackHandlers._callback_set_message(
+        query, text, reply_markup=InlineKeyboardMarkup(keyboard), parse_mode="HTML",
+    )
 
 
 CallbackHandlers.show_rating = staticmethod(show_rating)

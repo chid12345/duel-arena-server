@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any, Dict, List, Optional
+
+_SEASON_LB_CACHE: List[Dict] = []
+_SEASON_LB_CACHE_ID: int = -1
+_SEASON_LB_CACHE_TS: float = 0.0
+_SEASON_LB_TTL = 300  # 5 минут
 
 # Награды за место в сезоне: (gold, diamonds, title)
 _SEASON_RANK_REWARDS = {
@@ -52,6 +58,10 @@ class ShopSeasonsMixin:
         conn.close()
 
     def get_season_leaderboard(self, season_id: int, limit: int = 10) -> List[Dict]:
+        global _SEASON_LB_CACHE, _SEASON_LB_CACHE_ID, _SEASON_LB_CACHE_TS
+        now = time.time()
+        if _SEASON_LB_CACHE and _SEASON_LB_CACHE_ID == season_id and now - _SEASON_LB_CACHE_TS < _SEASON_LB_TTL:
+            return _SEASON_LB_CACHE[:limit]
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -62,9 +72,15 @@ class ShopSeasonsMixin:
         )
         rows = [dict(r) for r in cursor.fetchall()]
         conn.close()
+        _SEASON_LB_CACHE = rows
+        _SEASON_LB_CACHE_ID = season_id
+        _SEASON_LB_CACHE_TS = now
         return rows
 
     def end_season(self, new_season_name: str) -> Dict[str, Any]:
+        global _SEASON_LB_CACHE, _SEASON_LB_CACHE_TS
+        _SEASON_LB_CACHE = []
+        _SEASON_LB_CACHE_TS = 0.0
         season = self.get_active_season()
         if not season:
             return {"ok": False, "reason": "Нет активного сезона"}

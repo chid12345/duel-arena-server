@@ -47,10 +47,14 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
     async def get_rating(init_data: str, limit: int = 20):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
-        rows = db.get_top_players(limit=limit)
+        season = db.get_active_season()
+        if season:
+            rows = db.get_season_leaderboard(season["id"], limit=limit)
+        else:
+            rows = db.get_top_players(limit=limit)
         players = [_player_api(dict(r)) for r in rows]
-        my_rank = next((i + 1 for i, p in enumerate(players) if p["user_id"] == uid), None)
-        return {"ok": True, "players": players, "my_rank": my_rank}
+        my_rank = next((i + 1 for i, p in enumerate(players) if p.get("user_id") == uid), None)
+        return {"ok": True, "players": players, "my_rank": my_rank, "season": season}
 
     @router.get("/api/debug/cryptopay")
     async def debug_cryptopay():
