@@ -328,18 +328,25 @@ class StatsScene extends Phaser.Scene {
   }
 
   _buildAvatarBtn(W, H) {
-    const y = H * 0.935;
-    const w = Math.min(220, W - 32);
-    const x = (W - w) / 2;
-    const h = 34;
-    const g = this.add.graphics();
-    g.fillStyle(0x2a2840, 0.95);
-    g.fillRoundedRect(x, y, w, h, 9);
-    g.lineStyle(1.5, C.purple, 0.75);
-    g.strokeRoundedRect(x, y, w, h, 9);
-    txt(this, W / 2, y + h / 2, '🧥 Гардероб', 12, '#f0f0fa', true).setOrigin(0.5);
-    const z = this.add.zone(W / 2, y + h / 2, w, h).setInteractive({ useHandCursor: true });
-    z.on('pointerdown', () => this._openAvatarPanel());
+    const y = H * 0.935, h = 34, gap = 8;
+    const totalW = Math.min(W - 32, 300);
+    const btnW = Math.floor((totalW - gap) / 2);
+    const x0 = (W - totalW) / 2;
+    const x1 = x0 + btnW + gap;
+
+    const g1 = this.add.graphics();
+    g1.fillStyle(0x2a2840, 0.95); g1.fillRoundedRect(x0, y, btnW, h, 9);
+    g1.lineStyle(1.5, C.purple, 0.75); g1.strokeRoundedRect(x0, y, btnW, h, 9);
+    txt(this, x0 + btnW / 2, y + h / 2, '🧥 Гардероб', 12, '#f0f0fa', true).setOrigin(0.5);
+    const z1 = this.add.zone(x0 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
+    z1.on('pointerdown', () => this._openAvatarPanel());
+
+    const g2 = this.add.graphics();
+    g2.fillStyle(0x1e2a1e, 0.95); g2.fillRoundedRect(x1, y, btnW, h, 9);
+    g2.lineStyle(1.5, 0x55cc66, 0.75); g2.strokeRoundedRect(x1, y, btnW, h, 9);
+    txt(this, x1 + btnW / 2, y + h / 2, '👜 Моё', 12, '#d0ffd8', true).setOrigin(0.5);
+    const z2 = this.add.zone(x1 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
+    z2.on('pointerdown', () => this._openInventoryPanel());
   }
   // Методы гардероба (_openAvatarPanel/_renderAvatarOverlay/_avatarAction/_closeAvatarOverlay)
   // вынесены в отдельный файл webapp/scene_wardrobe_overlay.js

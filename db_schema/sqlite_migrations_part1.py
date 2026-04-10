@@ -166,4 +166,27 @@ MIGRATIONS_PART1 = [
               AND crit = {PLAYER_START_CRIT}
               AND free_stats = {PLAYER_START_FREE_STATS + stats_when_reaching_level(1)}""",
     ]),
+    ("2026_04_11_001_player_inventory", [
+        """CREATE TABLE IF NOT EXISTS player_inventory (
+            id       INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id  INTEGER NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+            item_id  TEXT NOT NULL,
+            quantity INTEGER NOT NULL DEFAULT 1
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_inv_uid ON player_inventory(user_id)",
+    ]),
+    ("2026_04_11_002_player_buffs", [
+        """CREATE TABLE IF NOT EXISTS player_buffs (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+            buff_type  TEXT NOT NULL,
+            value      INTEGER NOT NULL,
+            charges    INTEGER,
+            expires_at TEXT
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_pbuffs_uid ON player_buffs(user_id)",
+    ]),
+    ("2026_04_11_003_premium_box_claimed", [
+        "ALTER TABLE players ADD COLUMN premium_box_claimed DATE",
+    ]),
 ]

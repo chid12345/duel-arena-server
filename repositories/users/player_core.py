@@ -40,6 +40,8 @@ class UsersPlayerCoreMixin:
             conn.commit()
             cursor.execute("SELECT * FROM players WHERE user_id = ?", (user_id,))
             player = cursor.fetchone()
+            # Стартовый набор новичка
+            self.add_starter_kit(user_id)
         conn.close()
         return dict(player)
 

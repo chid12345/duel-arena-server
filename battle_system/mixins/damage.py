@@ -53,8 +53,9 @@ class BattleDamageMixin:
             base_dmg = int(base_dmg * ZONE_LEGS_MULT)
             debuff = "legs"
 
-        # Промах (не зависит от статов)
-        if not is_afk and random.random() < MISS_CHANCE:
+        # Промах (снижается бафом accuracy у атакующего)
+        eff_miss = max(0.0, MISS_CHANCE - attacker.get("_buff_accuracy", 0) / 100.0)
+        if not is_afk and random.random() < eff_miss:
             return 0, "miss", ""
 
         # Блок
@@ -73,11 +74,12 @@ class BattleDamageMixin:
                 return self._apply_incoming_damage(dmg, defender), "partial", debuff
             return 0, "block", ""
 
-        # Уворот: сравнительная формула по Ловкости (endurance)
+        # Уворот: сравнительная формула по Ловкости (endurance) + баф уворота защитника
         if not is_afk:
             def_agi = max(1, self._safe_int_field(defender, "endurance", PLAYER_START_ENDURANCE))
             atk_agi = max(1, self._safe_int_field(attacker, "endurance", PLAYER_START_ENDURANCE))
             dodge_ch = min(DODGE_MAX_CHANCE, def_agi / (def_agi + atk_agi) * DODGE_MAX_CHANCE)
+            dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + defender.get("_buff_dodge_pct", 0) / 100.0)
             if random.random() < dodge_ch:
                 # Двойной удар атакующего при уклоне
                 atk_agi_inv = stamina_stats_invested(
@@ -115,6 +117,7 @@ class BattleDamageMixin:
                      * DODGE_DOUBLE_STRIKE_PCT_PER_STEP)
         if usdt == "double_hit":
             dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.08)
+        dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + attacker.get("_buff_double_pct", 0) / 100.0)
         is_double = random.random() < dbl_ch
         if is_double:
             damage += max(1, int(damage * DODGE_DOUBLE_STRIKE_DAMAGE_MULT))

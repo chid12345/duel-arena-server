@@ -58,9 +58,17 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
             is_usdt_slot = ":usdt_slot:" in custom_payload
             is_usdt_reset = ":usdt_reset:" in custom_payload
+            is_usdt_scroll = ":usdt_scroll:" in custom_payload
             usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
-            logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, asset, invoice_id)
-            if is_usdt_slot:
+            usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
+            logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, usdt_scroll_id, asset, invoice_id)
+            if is_usdt_scroll and usdt_scroll_id:
+                db.add_to_inventory(uid, usdt_scroll_id)
+                await manager.send(uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
+                from api.tma_catalogs import SHOP_CATALOG
+                scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})
+                await _send_tg_message(uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Статы → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
+            elif is_usdt_slot:
                 ok2, msg2, new_class_id = db.create_usdt_class(uid)
                 await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
                 await _send_tg_message(uid, f"💠 <b>USDT-образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")

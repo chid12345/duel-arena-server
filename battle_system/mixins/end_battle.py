@@ -69,6 +69,13 @@ class BattleEndBattleMixin:
                 futs["prem_l"] = loop.run_in_executor(None, db.get_premium_status, loser_user_id)
             if winner_user_id is not None and snap_base_exp > 0:
                 futs["xp_boost"] = loop.run_in_executor(None, db.consume_xp_boost_charge, winner_user_id)
+            # Consume scroll charges for both players after battle
+            if winner_user_id is not None:
+                loop.run_in_executor(None, db.consume_charges, winner_user_id)
+                loop.run_in_executor(None, db.cleanup_expired, winner_user_id)
+            if loser_user_id is not None and not battle.get("is_bot2"):
+                loop.run_in_executor(None, db.consume_charges, loser_user_id)
+                loop.run_in_executor(None, db.cleanup_expired, loser_user_id)
             if not battle.get("is_bot2"):
                 futs["pvp_cnt"] = loop.run_in_executor(
                     None, db.get_recent_pvp_duel_count, player1["user_id"], player2["user_id"], 24

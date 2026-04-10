@@ -20,4 +20,8 @@ class BattleDamageArmorMixin:
         # USDT пассивка: броня +4%
         if (defender.get("usdt_passive_type") or "").strip() == "armor_pct":
             m = max(0.0, m - 0.04)
+        # Баф брони из свитка (может быть отрицательным у берсерка)
+        buff_armor = defender.get("_buff_armor_pct", 0)
+        if buff_armor:
+            m = max(0.0, m - buff_armor / 100.0)
         return max(1, int(raw * m))

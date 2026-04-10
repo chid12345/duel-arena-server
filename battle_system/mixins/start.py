@@ -34,7 +34,12 @@ class BattleStartMixin:
         p2_store = dict(player2) if is_bot2 else player2
         if is_bot2:
             p2_store["crit"] = self._safe_crit_stat(p2_store, "crit", PLAYER_START_CRIT)
-        
+
+        # Применяем активные бафы из player_buffs к статам игроков
+        self._apply_player_buffs_to_stats(player1)
+        if not is_bot2:
+            self._apply_player_buffs_to_stats(p2_store)
+
         battle_data = {
             'battle_id': battle_id,
             'player1': player1,
@@ -74,6 +79,29 @@ class BattleStartMixin:
             self.battle_queue[player2['user_id']] = battle_id
         
         return battle_id
+
+    def _apply_player_buffs_to_stats(self, player: dict) -> None:
+        """Применить активные бафы к статам игрока перед боем (мутирует dict)."""
+        uid = player.get("user_id")
+        if not uid:
+            return
+        try:
+            combined = db.get_combined_buffs(int(uid))
+        except Exception:
+            return
+        if not combined:
+            return
+        player["strength"]  = max(1, int(player.get("strength",  PLAYER_START_STRENGTH))  + combined.get("strength",  0))
+        player["endurance"] = max(1, int(player.get("endurance", PLAYER_START_ENDURANCE)) + combined.get("endurance", 0))
+        player["crit"]      = max(0, int(player.get("crit",      PLAYER_START_CRIT))      + combined.get("crit",      0))
+        hp_bonus = combined.get("hp_bonus", 0)
+        if hp_bonus:
+            player["max_hp"] = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)) + hp_bonus)
+        # Боевые pct-модификаторы добавляем как поля в dict (damage.py их читает)
+        player["_buff_armor_pct"]  = combined.get("armor_pct",    0)
+        player["_buff_dodge_pct"]  = combined.get("dodge_pct",    0)
+        player["_buff_double_pct"] = combined.get("double_pct",   0)
+        player["_buff_accuracy"]   = combined.get("accuracy",     0)
 
     def set_battle_ui_message(self, user_id: int, chat_id: int, message_id: int) -> None:
         """Сообщение с клавиатурой боя — для таймера и обновления без callback."""
