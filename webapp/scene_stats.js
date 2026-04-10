@@ -294,7 +294,7 @@ class StatsScene extends Phaser.Scene {
 
     const cells = [
       { key: 'dmg',   label: '⚔️ Урон',   valFn: q => `~${q.dmg}`,       color: C.red,    hex: '#dc3c46' },
-      { key: 'armor', label: '🛡 Броня',   valFn: q => `-${q.armor_pct}%`, color: C.green,  hex: '#3cc864' },
+      { key: 'armor', label: '🛡 Броня',   valFn: q => `${q.armor_pct}%`,  color: C.green,  hex: '#3cc864' },
       { key: 'dodge', label: '🤸 Уворот',  valFn: q => `${q.dodge_pct}%`,  color: C.cyan,   hex: '#3cc8dc' },
       { key: 'crit',  label: '💥 Крит',    valFn: q => `${q.crit_pct}%`,   color: C.purple, hex: '#b45aff' },
     ];
