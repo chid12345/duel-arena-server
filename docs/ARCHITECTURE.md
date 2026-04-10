@@ -16,7 +16,7 @@
 - **Запросы к БД** → новый/существующий `repositories/<тема>.py`
 - **Telegram команда (/xxx)** → пакет `handlers/commands/` (миксины ≤200 строк)
 - **Telegram кнопка (callback)** → `handlers/*` по теме
-- **API эндпоинт (Mini App)** → `api_server.py` или `api/*_routes.py`
+- **API эндпоинт (Mini App)** → пакет `api/<тема>/` (регистрация из `api/tma_wire_*.py`) или точечно в `api_server.py`
 - **Константы/формулы** → пакет `config/`
 
 ## Порядок импортов (слои)
@@ -49,3 +49,7 @@ class SomeFeatureMixin:
 - UI/кнопки → `handlers/`
 - API → `api_server.py` / `api/*_routes.py`
 - Smoke-тест: `python -c "from database import db; from handlers import BotHandlers"`
+
+## Скрипты и офлайн-утилиты
+- **Таблица прогрессии XLSX** — пакет `_make_xlsx/`. Из корня репозитория: `python -m _make_xlsx` (нужен `openpyxl`). Результат: `progression_100_levels_v4/progression_100_levels_v4.xlsx`.
+- **Симуляция баланса (игрок vs бот)** — пакет `balance_simulation/`, точка входа `tools/simulate_balance.py`. Из корня: `python tools/simulate_balance.py -n 500` (нужна БД с записями в `bots`).
