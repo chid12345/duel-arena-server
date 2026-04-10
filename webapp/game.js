@@ -464,6 +464,8 @@ class MenuScene extends Phaser.Scene {
         get('/api/version').catch(() => null).then(versionRes => {
           if (versionRes?.ok && versionRes.version) {
             State.appVersion = String(versionRes.version);
+            if (this._panels?.more) { this._panels.more.destroy(); this._panels.more = null; }
+            if (this._activeTab === 'more') this._showTab('more');
           }
         });
       } else {
@@ -478,6 +480,8 @@ class MenuScene extends Phaser.Scene {
           get('/api/version').catch(() => null).then(versionRes => {
             if (versionRes?.ok && versionRes.version) {
               State.appVersion = String(versionRes.version);
+              if (this._panels?.more) { this._panels.more.destroy(); this._panels.more = null; }
+              if (this._activeTab === 'more') this._showTab('more');
             }
           });
 
