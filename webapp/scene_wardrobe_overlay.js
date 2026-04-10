@@ -1,102 +1,66 @@
 /* ============================================================
    Wardrobe Overlay для StatsScene
-   Вынесен из scene_stats.js + переведен на /api/wardrobe
+   Карточки гардероба. Детальный вид USDT-слота → scene_wardrobe_detail.js
    ============================================================ */
 
 (() => {
   const TYPE_META = {
-    free: { title: "БЕСПЛ.", color: 0x3a3a52 },
-    gold: { title: "ЗОЛОТО", color: 0xffc83c },
+    free:     { title: "БЕСПЛ.",  color: 0x3a3a52 },
+    gold:     { title: "ЗОЛОТО",  color: 0xffc83c },
     diamonds: { title: "АЛМАЗЫ", color: 0x34a6ff },
-    usdt: { title: "USDT", color: 0x39d084 },
+    usdt:     { title: "USDT",   color: 0x39d084 },
   };
 
-  function _iconForClassId(classId = "") {
-    const v = String(classId).toLowerCase();
-    if (v.includes("tank") || v.includes("berserker") || v.includes("dragonknight")) return "🛡️";
-    if (v.includes("agile") || v.includes("assassin") || v.includes("shadow")) return "🌪️";
-    if (v.includes("crit") || v.includes("mage") || v.includes("archmage")) return "⚡";
-    if (v.includes("universal") || v.includes("paladin")) return "🎯";
-    if (v.includes("usdt")) return "💠";
-    return "🖼️";
-  }
-
-  function _toCard(cls, classType, equippedClassId) {
-    const classId = cls.class_id;
+  function _toCard(cls, classType, equippedId) {
     const owned = !!cls.owned;
-    const equipped = classId === equippedClassId || !!cls.equipped;
     return {
-      class_id: classId,
-      class_type: classType,
-      name: cls.name || classId,
-      icon: _iconForClassId(classId),
+      class_id: cls.class_id, class_type: classType,
+      name: cls.name || cls.class_id,
+      icon: classType === "usdt" ? "💠" : "🖼️",
       strength: Number(cls.bonus_strength || 0),
-      agility: Number(cls.bonus_agility || 0),
-      intuition: Number(cls.bonus_intuition || 0),
-      endurance: Number(cls.bonus_endurance || 0),
+      agility:  Number(cls.bonus_agility  || 0),
+      intuition:Number(cls.bonus_intuition|| 0),
+      endurance:Number(cls.bonus_endurance|| 0),
       special_bonus: cls.special_bonus || "",
-      owned,
-      equipped,
+      owned, equipped: cls.class_id === equippedId || !!cls.equipped,
       price_gold: Number(cls.price_gold || 0),
       price_diamonds: Number(cls.price_diamonds || 0),
     };
   }
 
-  function _buyLabelFor(card) {
-    if (card.class_type === "free") return "Выбрать";
-    if (card.class_type === "gold") return `Купить ${card.price_gold} золота`;
-    if (card.class_type === "diamonds") return `Купить ${card.price_diamonds} алмазов`;
-    if (card.class_type === "usdt") return "Купить за USDT";
-    return "Недоступно";
-  }
-
   StatsScene.prototype._wardrobeCardsFromPayload = function(payload) {
-    const available = payload?.available_classes || {};
-    const equippedClassId = payload?.equipped_class?.class_id || "";
+    const avail = payload?.available_classes || {};
+    const eqId  = payload?.equipped_class?.class_id || "";
+    const cards  = [];
 
-    const cards = [];
-    for (const cls of (available.free || [])) cards.push(_toCard(cls, "free", equippedClassId));
-    for (const cls of (available.gold || [])) cards.push(_toCard(cls, "gold", equippedClassId));
-    for (const cls of (available.diamonds || [])) cards.push(_toCard(cls, "diamonds", equippedClassId));
+    for (const cls of (avail.free     || [])) cards.push(_toCard(cls, "free",     eqId));
+    for (const cls of (avail.gold     || [])) cards.push(_toCard(cls, "gold",     eqId));
+    for (const cls of (avail.diamonds || [])) cards.push(_toCard(cls, "diamonds", eqId));
 
-    const inventory = Array.isArray(payload?.inventory) ? payload.inventory : [];
-    let hasUsdt = false;
-    for (const item of inventory) {
+    // Одна карточка покупки (в магазине)
+    cards.push({
+      class_id: "usdt_buy", class_type: "usdt", is_buy_card: true,
+      name: "USDT-образ", icon: "💠",
+      strength: 0, agility: 0, intuition: 0, endurance: 0,
+      special_bonus: "+19 своб. статов · -50% на сброс · своя сборка",
+      owned: false, equipped: false, price_usdt: "11.99",
+      price_gold: 0, price_diamonds: 0,
+    });
+
+    // Купленные USDT-слоты (в инвентаре)
+    for (const item of (Array.isArray(payload?.inventory) ? payload.inventory : [])) {
       if (item.class_type !== "usdt") continue;
-      hasUsdt = true;
       cards.push({
-        class_id: item.class_id,
-        class_type: "usdt",
-        name: item.custom_name || "USDT слот",
-        icon: "💠",
+        class_id: item.class_id, class_type: "usdt", is_usdt_slot: true,
+        name: item.custom_name || "USDT слот", icon: "💠",
         strength: Number(item.strength_saved || 0),
-        agility: Number(item.agility_saved || 0),
-        intuition: Number(item.intuition_saved || 0),
-        endurance: Number(item.stamina_saved || item.endurance_saved || 0),
-        special_bonus: "Слот сборки: +19 свободных статов, скидка reset 50%",
-        owned: true,
-        equipped: !!item.equipped,
-        price_gold: 0,
-        price_diamonds: 0,
-      });
-    }
-
-    // USDT-карточка “всегда видна”: если слота ещё нет — показываем как покупку.
-    if (!hasUsdt) {
-      cards.push({
-        class_id: "usdt_slot",
-        class_type: "usdt",
-        name: "USDT-образ",
-        icon: "💠",
-        strength: 0,
-        agility: 0,
-        intuition: 0,
-        endurance: 0,
-        special_bonus: "Слот сборки: сохраняет статы и HP. (-50% на сброс статов)",
-        owned: false,
-        equipped: false,
-        price_gold: 0,
-        price_diamonds: 0,
+        agility:  Number(item.agility_saved  || 0),
+        intuition:Number(item.intuition_saved|| 0),
+        endurance:Number(item.stamina_saved  || 0),
+        special_bonus: "Слот сборки: +19 своб. статов · сброс -50%",
+        owned: true, is_usdt_slot: true, equipped: !!item.equipped,
+        price_gold: 0, price_diamonds: 0,
+        _raw: item,
       });
     }
     return cards;
@@ -106,256 +70,154 @@
     if (this._avatarBusy) return;
     this._avatarBusy = true;
     let data;
-    try {
-      data = await get("/api/wardrobe");
-    } catch (_e) {
-      this._avatarBusy = false;
-      this._showToast("❌ Гардероб: нет соединения");
-      return;
-    }
+    try   { data = await get("/api/wardrobe"); }
+    catch { this._avatarBusy = false; this._showToast("❌ Гардероб: нет соединения"); return; }
     this._avatarBusy = false;
     if (!data?.ok) {
-      const why = data?.reason
-        ? String(data.reason)
-        : (data?._httpStatus ? `HTTP ${data._httpStatus}` : "Не удалось загрузить гардероб");
-      this._showToast(`❌ ${why}`);
+      this._showToast(`❌ ${data?.reason || (data?._httpStatus ? `HTTP ${data._httpStatus}` : "Ошибка гардероба")}`);
       return;
     }
     this._renderAvatarOverlay(data);
   };
 
-  StatsScene.prototype._renderAvatarOverlay = function(wardrobePayload) {
+  StatsScene.prototype._renderAvatarOverlay = function(wp) {
     this._closeAvatarOverlay();
-    const allCards = this._wardrobeCardsFromPayload(wardrobePayload);
+    const allCards = this._wardrobeCardsFromPayload(wp);
     if (!this._wardrobeView) this._wardrobeView = "all";
-    const W = this.W, H = this.H;
-    const overlay = [];
+    const { W, H } = this, overlay = [], panelY = 56, panelH = H - 112;
+    overlay.push(this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.75).setDepth(120));
+    const bg = makePanel(this, 8, panelY, W-16, panelH, 12, 0.98);
+    if (bg?.setDepth) bg.setDepth(121);
+    overlay.push(bg);
+    overlay.push(txt(this, W/2, panelY+14, "🧥 Гардероб", 14, "#f0f0fa", true).setOrigin(0.5).setDepth(122));
 
-    const dim = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.75).setDepth(120);
-    overlay.push(dim);
-    const panelY = 56;
-    const panelH = H - 112;
-    const panelBg = makePanel(this, 8, panelY, W - 16, panelH, 12, 0.98);
-    if (panelBg && panelBg.setDepth) panelBg.setDepth(121);
-    overlay.push(panelBg);
-    const title = txt(this, W / 2, panelY + 14, "🧥 Гардероб", 14, "#f0f0fa", true).setOrigin(0.5).setDepth(122);
-    overlay.push(title);
+    // Кнопка закрыть
+    const cg = this.add.graphics().setDepth(122);
+    cg.fillStyle(0x3a2030,1); cg.fillRoundedRect(W-44,panelY+8,28,24,7);
+    cg.lineStyle(1,0xff6688,.9); cg.strokeRoundedRect(W-44,panelY+8,28,24,7);
+    const ct = txt(this, W-30, panelY+20, "✕", 12, "#ffd8e0", true).setOrigin(0.5).setDepth(123);
+    const cz = this.add.zone(W-30, panelY+20, 28, 24).setInteractive({useHandCursor:true}).setDepth(124);
+    cz.on("pointerdown", () => this._closeAvatarOverlay());
+    overlay.push(cg, ct, cz);
 
-    const closeBg = this.add.graphics().setDepth(122);
-    closeBg.fillStyle(0x3a2030, 1);
-    closeBg.fillRoundedRect(W - 44, panelY + 8, 28, 24, 7);
-    closeBg.lineStyle(1, 0xff6688, 0.9);
-    closeBg.strokeRoundedRect(W - 44, panelY + 8, 28, 24, 7);
-    const closeTxt = txt(this, W - 30, panelY + 20, "✕", 12, "#ffd8e0", true).setOrigin(0.5).setDepth(123);
-    const closeZone = this.add.zone(W - 30, panelY + 20, 28, 24).setInteractive({ useHandCursor: true }).setDepth(124);
-    closeZone.on("pointerdown", () => this._closeAvatarOverlay());
-    overlay.push(closeBg, closeTxt, closeZone);
-
-    const drawModeBtn = (x, y, label, mode) => {
+    // Табы
+    const mkTab = (x, label, mode) => {
       const active = this._wardrobeView === mode;
-      const bg = this.add.graphics().setDepth(123);
-      bg.fillStyle(active ? C.purple : 0x2a2840, active ? 0.95 : 0.85);
-      bg.fillRoundedRect(x, y, 110, 20, 7);
-      bg.lineStyle(1, active ? 0xd9c8ff : 0x4a4870, 0.85);
-      bg.strokeRoundedRect(x, y, 110, 20, 7);
-      const t = txt(this, x + 55, y + 10, label, 9, active ? "#ffffff" : "#c8c8e8", true).setOrigin(0.5).setDepth(124);
-      const z = this.add.zone(x + 55, y + 10, 110, 20).setInteractive({ useHandCursor: true }).setDepth(125);
-      z.on("pointerdown", () => {
-        if (this._wardrobeView === mode) return;
-        this._wardrobeView = mode;
-        this._avatarPage = 0;
-        this._renderAvatarOverlay(wardrobePayload);
-      });
-      overlay.push(bg, t, z);
+      const g = this.add.graphics().setDepth(123);
+      g.fillStyle(active ? C.purple : 0x2a2840, active ? .95 : .85);
+      g.fillRoundedRect(x, panelY+10, 110, 20, 7);
+      g.lineStyle(1, active ? 0xd9c8ff : 0x4a4870, .85);
+      g.strokeRoundedRect(x, panelY+10, 110, 20, 7);
+      const t = txt(this, x+55, panelY+20, label, 9, active ? "#fff" : "#c8c8e8", true).setOrigin(.5).setDepth(124);
+      const z = this.add.zone(x+55, panelY+20, 110, 20).setInteractive({useHandCursor:true}).setDepth(125);
+      z.on("pointerdown", () => { if (this._wardrobeView === mode) return; this._wardrobeView = mode; this._avatarPage = 0; this._renderAvatarOverlay(wp); });
+      overlay.push(g, t, z);
     };
-    drawModeBtn(14, panelY + 10, "Магазин", "all");
-    drawModeBtn(128, panelY + 10, "Мой инвентарь", "owned");
+    mkTab(14, "Магазин", "all");
+    mkTab(128, "Мой инвентарь", "owned");
 
-    const top = panelY + 40;
-    const cardW = Math.floor((W - 32 - 8) / 2);
-    const cardH = 140;
-    const gapX = 8;
-    const gapY = 8;
-    const navY = panelY + panelH - 26;
-    const rowsPerPage = 2;
-    const perPage = rowsPerPage * 2;
+    const top = panelY + 40, cardW = Math.floor((W-40)/2), cardH = 140, navY = panelY + panelH - 26;
     const cards = this._wardrobeView === "owned"
-      ? allCards.filter((x) => !!x.owned)
-      : allCards;
-    const pageCount = Math.max(1, Math.ceil((cards.length || 0) / perPage));
+      ? allCards.filter(x => x.owned || x.is_usdt_slot)
+      : allCards.filter(x => !x.is_usdt_slot);
+    const perPage = 4, pageCount = Math.max(1, Math.ceil(cards.length / perPage));
     this._avatarPage = Math.min(this._avatarPage || 0, pageCount - 1);
-    const cardsLayer = [];
-    this._avatarCardsLayer = cardsLayer;
+    const layer = []; this._avatarCardsLayer = layer;
 
-    const clearCards = () => {
-      cardsLayer.forEach(o => { try { o.destroy(); } catch (_e) {} });
-      cardsLayer.length = 0;
-    };
-
-    const pageLabel = txt(this, W / 2, navY + 2, "", 10, "#c8c8e8", true).setOrigin(0.5).setDepth(124);
+    const pageLabel = txt(this, W/2, navY+2, "", 10, "#c8c8e8", true).setOrigin(.5).setDepth(124);
     overlay.push(pageLabel);
 
-    const mkNavBtn = (x, label, onClick) => {
-      const bg = this.add.graphics().setDepth(123);
-      bg.fillStyle(0x2a2840, 0.95);
-      bg.fillRoundedRect(x - 36, navY - 10, 72, 22, 7);
-      bg.lineStyle(1, C.purple, 0.8);
-      bg.strokeRoundedRect(x - 36, navY - 10, 72, 22, 7);
-      const t = txt(this, x, navY + 1, label, 10, "#f0f0fa", true).setOrigin(0.5).setDepth(124);
-      const z = this.add.zone(x, navY + 1, 72, 22).setInteractive({ useHandCursor: true }).setDepth(125);
-      z.on("pointerdown", onClick);
-      overlay.push(bg, t, z);
+    const mkNav = (x, label, fn) => {
+      const g = this.add.graphics().setDepth(123);
+      g.fillStyle(0x2a2840,.95); g.fillRoundedRect(x-36, navY-10, 72, 22, 7);
+      g.lineStyle(1, C.purple,.8); g.strokeRoundedRect(x-36, navY-10, 72, 22, 7);
+      const t = txt(this, x, navY+1, label, 10, "#f0f0fa", true).setOrigin(.5).setDepth(124);
+      const z = this.add.zone(x, navY+1, 72, 22).setInteractive({useHandCursor:true}).setDepth(125);
+      z.on("pointerdown", fn);
+      overlay.push(g, t, z);
     };
+    mkNav(W/2-86, "◀ Назад", () => { if ((this._avatarPage||0) > 0) { this._avatarPage--; render(); } });
+    mkNav(W/2+86, "Вперед ▶", () => { if ((this._avatarPage||0) < pageCount-1) { this._avatarPage++; render(); } });
 
-    const renderPage = () => {
-      clearCards();
-      const page = this._avatarPage || 0;
-      pageLabel.setText(`Страница ${page + 1}/${pageCount}`);
-      const start = page * perPage;
-      const pageItems = cards.slice(start, start + perPage);
-      pageItems.forEach((a, i) => {
-        const col = i % 2;
-        const row = Math.floor(i / 2);
-        const x = 12 + col * (cardW + gapX);
-        const y = top + row * (cardH + gapY);
+    const render = () => {
+      layer.forEach(o => { try { o.destroy(); } catch {} }); layer.length = 0;
+      pageLabel.setText(`Страница ${(this._avatarPage||0)+1}/${pageCount}`);
+      cards.slice((this._avatarPage||0)*perPage, ((this._avatarPage||0)+1)*perPage).forEach((a, i) => {
+        const col = i%2, row = Math.floor(i/2);
+        const x = 12 + col*(cardW+8), y = top + row*(cardH+8);
+        const meta = TYPE_META[a.class_type] || TYPE_META.free;
+        const accent = a.equipped ? C.green : (a.owned ? meta.color : C.dark);
         const card = this.add.graphics().setDepth(122);
-        const tMeta = TYPE_META[a.class_type] || TYPE_META.free;
-        const accent = a.equipped ? C.green : (a.owned ? tMeta.color : C.dark);
-        card.fillStyle(0x1b1a30, 0.96);
-        card.fillRoundedRect(x, y, cardW, cardH, 9);
-        card.lineStyle(1.5, accent, 0.8);
-        card.strokeRoundedRect(x, y, cardW, cardH, 9);
-        cardsLayer.push(card);
+        card.fillStyle(0x1b1a30,.96); card.fillRoundedRect(x,y,cardW,cardH,9);
+        card.lineStyle(1.5,accent,.8); card.strokeRoundedRect(x,y,cardW,cardH,9);
+        layer.push(card);
+        layer.push(txt(this, x+10, y+10, `${a.icon} ${a.name}`, 12, "#f0f0fa", true).setDepth(123));
+        layer.push(txt(this, x+cardW-8, y+10, meta.title, 9, "#9999bb", true).setOrigin(1,0).setDepth(123));
+        layer.push(txt(this, x+10, y+28, `С +${a.strength}  Л +${a.agility}`, 10, "#ffc83c", true).setDepth(123));
+        layer.push(txt(this, x+10, y+43, `И +${a.intuition}  В +${a.endurance}`, 10, "#ffc83c", true).setDepth(123));
+        layer.push(txt(this, x+10, y+60, (a.special_bonus||"Без бонуса").slice(0,42), 9, "#a8a8c8").setDepth(123));
 
-        cardsLayer.push(txt(this, x + 10, y + 10, `${a.icon} ${a.name}`, 12, "#f0f0fa", true).setDepth(123));
-        cardsLayer.push(txt(this, x + cardW - 8, y + 10, tMeta.title, 9, "#9999bb", true).setOrigin(1, 0).setDepth(123));
-        cardsLayer.push(txt(this, x + 10, y + 30, `С +${a.strength}  Л +${a.agility}`, 11, "#ffc83c", true).setDepth(123));
-        cardsLayer.push(txt(this, x + 10, y + 46, `И +${a.intuition}  В +${a.endurance}`, 11, "#ffc83c", true).setDepth(123));
-        cardsLayer.push(txt(this, x + 10, y + 64, (a.special_bonus || "Без бонуса").slice(0, 42), 10, "#a8a8c8").setDepth(123));
-
-        let btnLabel = "Надеть";
-        let action = "equip";
-        if (a.equipped) {
-          btnLabel = "Снять";
-          action = "unequip";
-        } else if (!a.owned) {
-          if (a.class_type === "free" || a.class_type === "gold" || a.class_type === "diamonds") {
-            btnLabel = _buyLabelFor(a);
-            action = "buy";
-          } else if (a.class_type === "usdt") {
-            btnLabel = _buyLabelFor(a);
-            action = "buy_usdt";
-          } else {
-            btnLabel = "Недоступно";
-            action = "none";
-          }
+        // Кнопка
+        let label = "Надеть", action = "equip";
+        if (a.is_buy_card) { label = "Купить 11.99 USDT"; action = "buy_usdt"; }
+        else if (a.is_usdt_slot) { label = "Открыть →"; action = "open_detail"; }
+        else if (a.equipped) { label = "Снять"; action = "unequip"; }
+        else if (!a.owned) {
+          if (a.class_type === "gold") label = `Купить ${a.price_gold} зол.`;
+          else if (a.class_type === "diamonds") label = `Купить ${a.price_diamonds} алм.`;
+          else label = "Выбрать";
+          action = "buy";
         }
 
-        // USDT экипированный: две кнопки — Сохранить + Снять
-        if (a.equipped && a.class_type === "usdt") {
-          const bh2 = 28;
-          const halfW = Math.floor((cardW - 24) / 2);
-          // Кнопка «Сохранить»
-          const sx = x + 8, sy = y + cardH - bh2 - 6;
-          const sbtn = this.add.graphics().setDepth(123);
-          sbtn.fillStyle(0x34a6ff, 0.95);
-          sbtn.fillRoundedRect(sx, sy, halfW, bh2, 9);
-          const st = txt(this, sx + halfW / 2, sy + bh2 / 2, "💾 Сохр.", 10, "#ffffff", true).setOrigin(0.5).setDepth(124);
-          const sz = this.add.zone(sx + halfW / 2, sy + bh2 / 2, halfW, bh2).setInteractive({ useHandCursor: true }).setDepth(125);
-          sz.on("pointerdown", () => this._avatarAction("save_usdt", a));
-          cardsLayer.push(sbtn, st, sz);
-          // Кнопка «Снять»
-          const ux = sx + halfW + 8;
-          const ubtn = this.add.graphics().setDepth(123);
-          ubtn.fillStyle(C.green, 0.95);
-          ubtn.fillRoundedRect(ux, sy, halfW, bh2, 9);
-          const ut = txt(this, ux + halfW / 2, sy + bh2 / 2, "Снять", 10, "#101020", true).setOrigin(0.5).setDepth(124);
-          const uz = this.add.zone(ux + halfW / 2, sy + bh2 / 2, halfW, bh2).setInteractive({ useHandCursor: true }).setDepth(125);
-          uz.on("pointerdown", () => this._avatarAction("unequip", a));
-          cardsLayer.push(ubtn, ut, uz);
-        } else {
-          const bx = x + 8, by = y + cardH - 34, bw = cardW - 16, bh = 28;
-          const btn = this.add.graphics().setDepth(123);
-          const bcol = action === "none" ? 0x3a3a52 : (action === "buy" || action === "buy_usdt" ? C.gold : C.green);
-          btn.fillStyle(bcol, 0.95);
-          btn.fillRoundedRect(bx, by, bw, bh, 9);
-          const bt = txt(this, bx + bw / 2, by + bh / 2, btnLabel, 11, "#101020", true).setOrigin(0.5).setDepth(124);
-          cardsLayer.push(btn, bt);
-          if (action !== "none") {
-            const z = this.add.zone(bx + bw / 2, by + bh / 2, bw, bh).setInteractive({ useHandCursor: true }).setDepth(125);
-            z.on("pointerdown", () => this._avatarAction(action, a));
-            cardsLayer.push(z);
-          }
-        }
+        const bx = x+8, by = y+cardH-34, bw = cardW-16, bh = 28;
+        const bcol = action==="open_detail" ? C.purple : (action==="unequip" ? C.green : (a.equipped ? C.green : (action==="buy"||action==="buy_usdt" ? C.gold : C.dark)));
+        const btn = this.add.graphics().setDepth(123);
+        btn.fillStyle(bcol,.95); btn.fillRoundedRect(bx,by,bw,bh,9);
+        layer.push(btn, txt(this, bx+bw/2, by+bh/2, label, 10, "#101020", true).setOrigin(.5).setDepth(124));
+        const z = this.add.zone(bx+bw/2, by+bh/2, bw, bh).setInteractive({useHandCursor:true}).setDepth(125);
+        z.on("pointerdown", () => this._avatarAction(action, a, wp));
+        layer.push(z);
       });
     };
+    render();
 
-    mkNavBtn(W / 2 - 86, "◀ Назад", () => {
-      if ((this._avatarPage || 0) <= 0) return;
-      this._avatarPage -= 1;
-      renderPage();
-    });
-    mkNavBtn(W / 2 + 86, "Вперед ▶", () => {
-      if ((this._avatarPage || 0) >= pageCount - 1) return;
-      this._avatarPage += 1;
-      renderPage();
-    });
-    renderPage();
-
-    const closeDim = this.add.zone(W / 2, H / 2, W, H).setInteractive().setDepth(119);
-    closeDim.on("pointerdown", () => {});
-    overlay.push(closeDim);
+    const dimZ = this.add.zone(W/2, H/2, W, H).setInteractive().setDepth(119);
+    dimZ.on("pointerdown", () => {});
+    overlay.push(dimZ);
     this._avatarOverlay = overlay;
   };
 
-  StatsScene.prototype._avatarAction = async function(action, item) {
+  StatsScene.prototype._avatarAction = async function(action, item, wp) {
     if (this._avatarBusy) return;
+    if (action === "open_detail") { this._openUsdtDetail(item, wp); return; }
     this._avatarBusy = true;
     try {
       let res = null;
-      if (action === "buy") res = await post("/api/wardrobe/buy", { class_id: item.class_id });
-      if (action === "equip") res = await post("/api/wardrobe/equip", { class_id: item.class_id });
-      if (action === "unequip") res = await post("/api/wardrobe/unequip", {});
-      if (action === "buy_usdt") res = await post("/api/wardrobe/usdt/create", {});
-      if (action === "save_usdt") res = await post("/api/wardrobe/usdt/save", { class_id: item.class_id });
-      if (res?.ok) {
-        if (res.player) {
-          State.player = res.player;
-          State.playerLoadedAt = Date.now();
-        }
-        const okMsg =
-          action === "buy" ? "✅ Образ получен"
-          : action === "unequip" ? "✅ Образ снят"
-          : action === "buy_usdt" ? "✅ USDT-образ получен"
-          : action === "save_usdt" ? "✅ Статы сохранены"
-          : "✅ Образ надет";
-        // Сохраняем wardrobe payload для повторного открытия после restart
-        this._pendingWardrobePayload = res;
-        this._pendingToast = okMsg;
-        this._avatarBusy = false;
-        this.scene.restart({ player: State.player, reopenWardrobe: true, wardrobePayload: res, toast: okMsg });
-        return;
-      } else {
-        this._showToast(`❌ ${res?.message || res?.reason || "Ошибка"}`);
+      if (action === "buy")      res = await post("/api/wardrobe/buy",    { class_id: item.class_id });
+      if (action === "equip")    res = await post("/api/wardrobe/equip",  { class_id: item.class_id });
+      if (action === "unequip")  res = await post("/api/wardrobe/unequip",{});
+      if (action === "buy_usdt") {
+        res = await post("/api/wardrobe/usdt/buy-invoice", {});
+        if (res?.ok && res.invoice_url) { tg?.openLink?.(res.invoice_url); this._showToast("💳 Счёт открыт — оплатите и вернитесь"); }
+        else this._showToast(`❌ ${res?.reason || "Ошибка"}`);
+        this._avatarBusy = false; return;
       }
-    } catch (_e) {
-      this._showToast("❌ Ошибка сети");
-    } finally {
-      this._avatarBusy = false;
-    }
+      if (res?.ok) {
+        if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
+        const msg = action==="buy" ? "✅ Образ получен" : action==="unequip" ? "✅ Образ снят" : "✅ Образ надет";
+        this._avatarBusy = false;
+        this.scene.restart({ player: State.player, reopenWardrobe: true, wardrobePayload: res, toast: msg });
+        return;
+      } else { this._showToast(`❌ ${res?.message || res?.reason || "Ошибка"}`); }
+    } catch { this._showToast("❌ Ошибка сети"); }
+    this._avatarBusy = false;
   };
 
   StatsScene.prototype._closeAvatarOverlay = function() {
-    if (this._avatarCardsLayer) {
-      this._avatarCardsLayer.forEach(o => {
-        try { o.destroy(); } catch (_e) {}
-      });
-      this._avatarCardsLayer = null;
-    }
-    if (!this._avatarOverlay) return;
-    this._avatarOverlay.forEach(o => {
-      try { o.destroy(); } catch (_e) {}
-    });
+    (this._avatarCardsLayer || []).forEach(o => { try { o.destroy(); } catch {} });
+    this._avatarCardsLayer = null;
+    (this._avatarOverlay || []).forEach(o => { try { o.destroy(); } catch {} });
     this._avatarOverlay = null;
+    this._closeUsdtDetail?.();
   };
 })();

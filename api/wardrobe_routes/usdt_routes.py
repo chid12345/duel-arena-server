@@ -7,7 +7,15 @@ from typing import Any, Awaitable, Callable, Dict
 
 from fastapi import APIRouter
 
-from api.wardrobe_routes.models import InitDataHeader, USDTBody, USDTNameBody
+import httpx
+
+from api.wardrobe_routes.models import (
+    InitDataHeader,
+    USDTBody,
+    USDTBuyInvoiceBody,
+    USDTNameBody,
+    USDTResetInvoiceBody,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +30,8 @@ def attach_wardrobe_usdt(
     _cache_invalidate = ctx["_cache_invalidate"]
     RESET_STATS_COST_DIAMONDS = ctx["RESET_STATS_COST_DIAMONDS"]
     RESET_STATS_COST_DIAMONDS_USDT = ctx["RESET_STATS_COST_DIAMONDS_USDT"]
+    CRYPTOPAY_TOKEN = ctx.get("CRYPTOPAY_TOKEN", "")
+    CRYPTOPAY_API_BASE = ctx.get("CRYPTOPAY_API_BASE", "https://pay.crypt.bot/api")
 
     @router.post("/api/wardrobe/usdt/create")
     async def wardrobe_usdt_create(body: InitDataHeader):
@@ -87,3 +97,60 @@ def attach_wardrobe_usdt(
             "regular_cost": RESET_STATS_COST_DIAMONDS,
             "discounted_cost": RESET_STATS_COST_DIAMONDS_USDT,
         }
+
+    async def _create_cryptopay_invoice(uid: int, amount: str, description: str, payload_str: str):
+        if not CRYPTOPAY_TOKEN:
+            return {"ok": False, "reason": "CryptoPay не настроен"}
+        async with httpx.AsyncClient(timeout=10) as client:
+            resp = await client.post(
+                f"{CRYPTOPAY_API_BASE}/createInvoice",
+                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                json={
+                    "asset": "USDT",
+                    "amount": amount,
+                    "payload": payload_str,
+                    "description": description,
+                    "allow_comments": False,
+                    "allow_anonymous": False,
+                },
+            )
+            data = resp.json()
+        if data.get("ok"):
+            inv = data["result"]
+            db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", amount)
+            return {"ok": True, "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url")}
+        err = data.get("error") or {}
+        return {"ok": False, "reason": f"CryptoPay [{err.get('code','?')}] {err.get('name','UNKNOWN')}"}
+
+    @router.post("/api/wardrobe/usdt/buy-invoice")
+    async def wardrobe_usdt_buy_invoice(body: USDTBuyInvoiceBody):
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            db.get_or_create_player(uid, tg_user.get("username") or tg_user.get("first_name") or "")
+            return await _create_cryptopay_invoice(
+                uid,
+                amount="11.99",
+                description="Duel Arena — USDT-образ (кастомный слот)",
+                payload_str=f"uid:{uid}:usdt_slot:1",
+            )
+        except Exception as e:
+            logger.error("usdt buy-invoice: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)[:120]}
+
+    @router.post("/api/wardrobe/usdt/reset-invoice")
+    async def wardrobe_usdt_reset_invoice(body: USDTResetInvoiceBody):
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            if not db.has_class(uid, body.class_id.strip()):
+                return {"ok": False, "reason": "USDT-образ не найден"}
+            return await _create_cryptopay_invoice(
+                uid,
+                amount="5.99",
+                description="Duel Arena — сброс статов USDT-образа",
+                payload_str=f"uid:{uid}:usdt_reset:{body.class_id.strip()}",
+            )
+        except Exception as e:
+            logger.error("usdt reset-invoice: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)[:120]}

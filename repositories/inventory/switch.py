@@ -55,13 +55,50 @@ class InventorySwitchMixin:
 
             if target_type == "usdt":
                 cursor.execute(
-                    """SELECT strength_saved, agility_saved, intuition_saved, 
+                    """SELECT strength_saved, agility_saved, intuition_saved,
                               stamina_saved, free_stats_saved, max_hp_saved, current_hp_saved
-                       FROM user_inventory 
+                       FROM user_inventory
                        WHERE user_id = ? AND class_id = ?""",
                     (user_id, class_id),
                 )
                 saved_stats = cursor.fetchone()
+                # Если слот новый (все статы 0) — сначала авто-сохраняем текущие статы игрока
+                if saved_stats and not any([
+                    self._row_get(saved_stats, "strength_saved", 0),
+                    self._row_get(saved_stats, "agility_saved", 0),
+                    self._row_get(saved_stats, "intuition_saved", 0),
+                    self._row_get(saved_stats, "stamina_saved", 0),
+                ]):
+                    cursor.execute(
+                        """SELECT level, strength, endurance, crit, free_stats, max_hp, current_hp
+                           FROM players WHERE user_id = ?""",
+                        (user_id,),
+                    )
+                    p_now = cursor.fetchone()
+                    if p_now:
+                        from config import stamina_stats_invested
+                        lv_now = int(self._row_get(p_now, "level", 1) or 1)
+                        mhp_now = int(self._row_get(p_now, "max_hp", 1) or 1)
+                        sta_pts = int(stamina_stats_invested(mhp_now, lv_now))
+                        cursor.execute(
+                            """UPDATE user_inventory
+                               SET strength_saved=?, agility_saved=?, intuition_saved=?,
+                                   stamina_saved=?, free_stats_saved=?, max_hp_saved=?, current_hp_saved=?
+                               WHERE user_id=? AND class_id=?""",
+                            (
+                                p_now["strength"], p_now["endurance"], p_now["crit"],
+                                sta_pts, p_now["free_stats"], mhp_now, p_now["current_hp"],
+                                user_id, class_id,
+                            ),
+                        )
+                        # перечитать saved_stats после авто-сохранения
+                        cursor.execute(
+                            """SELECT strength_saved, agility_saved, intuition_saved,
+                                      stamina_saved, free_stats_saved, max_hp_saved, current_hp_saved
+                               FROM user_inventory WHERE user_id=? AND class_id=?""",
+                            (user_id, class_id),
+                        )
+                        saved_stats = cursor.fetchone()
                 if saved_stats:
                     cursor.execute("SELECT level FROM players WHERE user_id = ?", (user_id,))
                     row_lv = cursor.fetchone()

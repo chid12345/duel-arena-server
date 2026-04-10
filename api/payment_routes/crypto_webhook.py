@@ -56,8 +56,19 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_premium = ":premium:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
-            logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, asset, invoice_id)
-            if avatar_id:
+            is_usdt_slot = ":usdt_slot:" in custom_payload
+            is_usdt_reset = ":usdt_reset:" in custom_payload
+            usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
+            logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, asset, invoice_id)
+            if is_usdt_slot:
+                ok2, msg2, new_class_id = db.create_usdt_class(uid)
+                await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
+                await _send_tg_message(uid, f"💠 <b>USDT-образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+            elif is_usdt_reset and usdt_reset_class_id:
+                db.reset_usdt_slot_stats(uid, usdt_reset_class_id)
+                await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
+                await _send_tg_message(uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+            elif avatar_id:
                 db.unlock_avatar(uid, avatar_id, source="usdt")
                 await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
                 await _send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")

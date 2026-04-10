@@ -26,3 +26,12 @@ class USDTNameBody(BaseModel):
     init_data: str
     class_id: str
     custom_name: str
+
+
+class USDTBuyInvoiceBody(BaseModel):
+    init_data: str
+
+
+class USDTResetInvoiceBody(BaseModel):
+    init_data: str
+    class_id: str

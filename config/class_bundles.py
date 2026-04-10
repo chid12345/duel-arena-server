@@ -124,7 +124,7 @@ USDT_CLASS_BASE = {
     "name": "Кастомный",
     "price_gold": 0,
     "price_diamonds": 0,
-    "price_usdt": 10.0,
+    "price_usdt": "11.99",
     "bonus_strength": 0,
     "bonus_agility": 0,
     "bonus_intuition": 0,
@@ -132,6 +132,10 @@ USDT_CLASS_BASE = {
     "free_stats": 19,
     "special_bonus": "Выбор 1 пассивки из списка: эффект +8%",
 }
+
+# Стоимость покупки USDT-образа и сброса статов
+USDT_SLOT_PRICE = "11.99"
+USDT_RESET_PRICE = "5.99"
 
 RESET_STATS_COST_DIAMONDS = 50
 RESET_STATS_COST_DIAMONDS_USDT = 25

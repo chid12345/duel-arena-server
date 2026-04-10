@@ -86,6 +86,8 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
             "USDT_CLASS_BASE": USDT_CLASS_BASE,
             "RESET_STATS_COST_DIAMONDS": RESET_STATS_COST_DIAMONDS,
             "RESET_STATS_COST_DIAMONDS_USDT": RESET_STATS_COST_DIAMONDS_USDT,
+            "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
+            "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
         },
     )
     register_shop_routes(

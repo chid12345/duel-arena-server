@@ -99,6 +99,29 @@ class InventoryUsdtMixin:
         finally:
             conn.close()
 
+    def reset_usdt_slot_stats(self, user_id: int, class_id: str) -> Tuple[bool, str]:
+        """Сбросить сохранённые статы USDT-образа (после оплаты)."""
+        if not self.has_class(user_id, class_id):
+            return False, "USDT-образ не найден"
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """UPDATE user_inventory
+                   SET strength_saved=0, agility_saved=0, intuition_saved=0,
+                       endurance_saved=0, stamina_saved=0, free_stats_saved=0,
+                       max_hp_saved=0, current_hp_saved=0
+                   WHERE user_id=? AND class_id=?""",
+                (user_id, class_id),
+            )
+            conn.commit()
+            return True, "Статы образа сброшены"
+        except Exception as e:
+            conn.rollback()
+            return False, f"Ошибка сброса: {str(e)}"
+        finally:
+            conn.close()
+
     def get_reset_stats_cost(self, user_id: int) -> int:
         """Получить стоимость сброса статов (скидка для владельцев USDT)."""
         conn = self.get_connection()
