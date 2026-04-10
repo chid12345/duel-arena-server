@@ -3220,7 +3220,7 @@ class RatingScene extends Phaser.Scene {
       txt(this, 20,     ry + (rowH - 4) / 2, medal, i < 3 ? 15 : 11, '#ffc83c').setOrigin(0, 0.5);
       txt(this, 52,     ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
       txt(this, 52,     ry + 25, `🏆 ${p.wins || 0}П`, 10, '#9999bb');
-      txt(this, W - 14, ry + (rowH - 4) / 2, `⭐ ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
+      txt(this, W - 14, ry + (rowH - 4) / 2, `\u2605 ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
     });
 
     /* ── Моя позиция если не в топе ── */
@@ -3236,7 +3236,7 @@ class RatingScene extends Phaser.Scene {
       txt(this, W / 2, myBY + 12, 'Ваша позиция в сезоне', 10, '#888899').setOrigin(0.5);
       const posLabel = myPos ? `#${myPos}` : 'не в топ';
       const myRating = myStat ? myStat.rating : (State.player?.rating || 1000);
-      txt(this, W / 2, myBY + 30, `${posLabel}  ·  ⭐ ${myRating}`, 14, '#ffc83c', true).setOrigin(0.5);
+      txt(this, W / 2, myBY + 30, `${posLabel}  ·  \u2605 ${myRating}`, 14, '#ffc83c', true).setOrigin(0.5);
     }
   }
 
