@@ -6,6 +6,10 @@ import time
 from datetime import datetime
 from typing import Dict, List
 
+_TOP_CACHE: List[Dict] = []
+_TOP_CACHE_TS: float = 0.0
+_TOP_CACHE_TTL = 300  # 5 минут
+
 from config import (
     PLAYER_START_CRIT,
     PLAYER_START_ENDURANCE,
@@ -72,6 +76,10 @@ class UsersWipeLeaderboardMixin:
         conn.close()
 
     def get_top_players(self, limit: int = 10) -> List[Dict]:
+        global _TOP_CACHE, _TOP_CACHE_TS
+        now = time.time()
+        if _TOP_CACHE and now - _TOP_CACHE_TS < _TOP_CACHE_TTL:
+            return _TOP_CACHE[:limit]
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -81,4 +89,6 @@ class UsersWipeLeaderboardMixin:
         )
         rows = [dict(r) for r in cursor.fetchall()]
         conn.close()
+        _TOP_CACHE = rows
+        _TOP_CACHE_TS = now
         return rows

@@ -124,4 +124,7 @@ MIGRATIONS_PART3 = [
              AND COALESCE(intuition_saved,0)= 0
              AND COALESCE(stamina_saved,0)  = 0""",
     ]),
+    ("2026_04_22_001_season_rewards_gold", [
+        "ALTER TABLE season_rewards ADD COLUMN gold INTEGER DEFAULT 0",
+    ]),
 ]

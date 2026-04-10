@@ -30,7 +30,7 @@ class BotHandlersSeasonPass:
             text += f"{medal} {un} · {p['wins']}W/{p['losses']}L · {p['rating']}⭐\n"
         if not lb:
             text += "Никто ещё не сыграл.\n"
-        text += "\n💡 Топ-1: 100💎 · Топ-2: 50💎 · Топ-3: 25💎"
+        text += "\n💡 Награды: 🥇500💰+200💎 · 🥈300💰+120💎 · 🥉200💰+75💎 · Топ-10: 50💰+20💎"
         await tg_api_call(update.message.reply_text, text, parse_mode="HTML")
 
     @staticmethod

@@ -4,6 +4,22 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+# Награды за место в сезоне: (gold, diamonds, title)
+_SEASON_RANK_REWARDS = {
+    1:  (500, 200, "Чемпион сезона"),
+    2:  (300, 120, "Вице-чемпион"),
+    3:  (200, 75,  "Бронзовый боец"),
+    4:  (100, 40,  "Элита арены"),
+    5:  (100, 40,  "Элита арены"),
+    6:  (50,  20,  "Участник топа"),
+    7:  (50,  20,  "Участник топа"),
+    8:  (50,  20,  "Участник топа"),
+    9:  (50,  20,  "Участник топа"),
+    10: (50,  20,  "Участник топа"),
+}
+
+SEASON_DURATION_DAYS = 14
+
 
 class ShopSeasonsMixin:
     def get_active_season(self) -> Optional[Dict]:
@@ -56,15 +72,41 @@ class ShopSeasonsMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("UPDATE seasons SET status = 'ended', ended_at = CURRENT_TIMESTAMP WHERE id = ?", (sid,))
-        cursor.execute("SELECT user_id, rating FROM season_stats WHERE season_id = ? ORDER BY rating DESC LIMIT 3", (sid,))
-        top3 = cursor.fetchall()
-        for i, row in enumerate(top3):
-            uid, d, t = row["user_id"], [100, 50, 25][i], ["Чемпион сезона", "Серебро сезона", "Бронза сезона"][i]
+        cursor.execute(
+            "SELECT ss.user_id, ss.rating, p.username FROM season_stats ss "
+            "JOIN players p ON p.user_id = ss.user_id "
+            "WHERE ss.season_id = ? ORDER BY ss.rating DESC LIMIT 10",
+            (sid,),
+        )
+        top10 = [dict(r) for r in cursor.fetchall()]
+
+        telegram_msgs: List[Dict] = []
+        for i, row in enumerate(top10, 1):
+            gold, diamonds, title = _SEASON_RANK_REWARDS[i]
+            uid = int(row["user_id"])
             cursor.execute(
-                "INSERT INTO season_rewards (season_id, user_id, rank, diamonds, reward_title) VALUES (?, ?, ?, ?, ?)",
-                (sid, uid, i + 1, d, t),
+                "INSERT INTO season_rewards (season_id, user_id, rank, gold, diamonds, reward_title) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (sid, uid, i, gold, diamonds, title),
             )
-            cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (d, uid))
+            cursor.execute(
+                "UPDATE players SET gold = gold + ?, diamonds = diamonds + ?, display_title = ? WHERE user_id = ?",
+                (gold, diamonds, title, uid),
+            )
+            cid = self.get_player_chat_id(uid)
+            if cid:
+                medal = ("🥇", "🥈", "🥉")[i - 1] if i <= 3 else f"#{i}"
+                telegram_msgs.append({
+                    "chat_id": cid,
+                    "text": (
+                        f"🏆 <b>Сезон завершён!</b>\n\n"
+                        f"Твоё место: <b>{medal}</b>\n"
+                        f"Получено: <b>+{gold}💰 +{diamonds}💎</b>\n"
+                        f"Титул: «{title}»\n\n"
+                        f"Новый сезон уже начался — вперёд!"
+                    ),
+                })
+
         if self._pg:
             cursor.execute("INSERT INTO seasons (name, status) VALUES (%s, 'active') RETURNING id", (new_season_name,))
             new_sid = int(cursor.fetchone()["id"])
@@ -73,4 +115,10 @@ class ShopSeasonsMixin:
             new_sid = int(cursor.lastrowid)
         conn.commit()
         conn.close()
-        return {"ok": True, "ended_season_id": sid, "new_season_id": new_sid, "rewarded": len(top3)}
+        return {
+            "ok": True,
+            "ended_season_id": sid,
+            "new_season_id": new_sid,
+            "rewarded": len(top10),
+            "telegram": telegram_msgs,
+        }
