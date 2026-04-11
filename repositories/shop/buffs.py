@@ -52,16 +52,13 @@ class ShopBuffsMixin:
         buffs = self.get_raw_buffs(user_id)
         return {b["buff_type"]: b for b in buffs if b["buff_type"] != "gold_pct"}
 
-    def clear_buff_types(self, user_id: int, buff_types: List[str]) -> None:
-        """Удалить бафы конкретных типов (для замены одного свитка без сброса остальных)."""
-        if not buff_types:
-            return
+    def clear_all_combat_buffs(self, user_id: int) -> None:
+        """Удалить все боевые бафы (кроме gold_pct) — при замене свитка."""
         conn = self.get_connection()
         cursor = conn.cursor()
-        placeholders = ",".join("?" * len(buff_types))
         cursor.execute(
-            f"DELETE FROM player_buffs WHERE user_id = ? AND buff_type IN ({placeholders})",
-            [user_id, *buff_types],
+            "DELETE FROM player_buffs WHERE user_id = ? AND buff_type != 'gold_pct'",
+            (user_id,),
         )
         conn.commit()
         conn.close()
@@ -124,19 +121,20 @@ class ShopBuffsMixin:
         Применить свиток из инвентаря.
         effects: [(buff_type, value, charges), ...]
         Конфликт только если ТОТ ЖЕ тип баффа уже активен.
-        replace=True → заменить конфликтующие типы, остальные оставить.
+        replace=True → очистить ВСЕ боевые бафы, применить новый свиток с чистого листа.
+        Стаковать разные типы можно только когда нет конфликта (dialog не открывается).
         """
         active = self.get_active_buff_types(user_id)
         new_types = [bt for (bt, _, _) in effects]
         conflicting = {bt: active[bt] for bt in new_types if bt in active}
 
         if conflicting and not replace:
-            # Вернуть первый конфликт для диалога
             first_conflict = next(iter(conflicting.values()))
             return {"ok": False, "conflict": True, "active_buff": first_conflict}
 
-        if conflicting and replace:
-            self.clear_buff_types(user_id, list(conflicting.keys()))
+        if replace:
+            # Полная очистка всех боевых бафов — замена "с чистого листа"
+            self.clear_all_combat_buffs(user_id)
 
         for buff_type, value, charges in effects:
             self.add_buff(user_id, buff_type, value, charges=charges)
