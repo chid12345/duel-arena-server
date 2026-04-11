@@ -59,39 +59,45 @@ def register_titan_training_routes(app, ctx: Dict[str, Any]) -> None:
 
     @router.post("/api/titans/start")
     async def titan_start(body: TitanStartBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        if battle_system.get_battle_status(uid):
-            state = _battle_state_api(uid)
-            return {"ok": True, "status": "already_in_battle", "battle": state}
-        player = db.get_or_create_player(uid, tg_user.get("username") or "")
-        mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
-        chp = int(player.get("current_hp", mhp))
-        if chp < int(mhp * HP_MIN_BATTLE_PCT):
-            return {"ok": False, "reason": "low_hp"}
-        prog = db.get_titan_progress(uid)
-        floor = max(1, int(body.floor or prog.get("current_floor", 1)))
-        # 1 сессия Башни = 1 заряд баффа. Сессия истекает при поражении или >1 мин неактивности.
-        run_active = int(prog.get("run_active", 0))
-        if run_active:
-            try:
-                upd = str(prog.get("updated_at") or "")[:19]
-                upd_ts = datetime.strptime(upd, "%Y-%m-%d %H:%M:%S").timestamp()
-                if time.time() - upd_ts > _TITAN_SESSION_TTL:
-                    run_active = 0
-                    db.titan_set_run_active(uid, 0)
-            except Exception:
-                pass
-        if not run_active:
-            db.consume_charges(uid)
-            db.cleanup_expired(uid)
-            db.titan_set_run_active(uid, 1)
-        boss = _titan_boss_for_floor(floor, player)
-        bid = await battle_system.start_battle(player, boss, is_bot2=True, mode="titan", mode_meta={"floor": floor})
-        b = battle_system.active_battles.get(bid)
-        if b:
-            b["_tma_p1"] = True
-        return {"ok": True, "status": "titan_started", "floor": floor, "boss": boss, "battle": _battle_state_api(uid)}
+        uid = "?"
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            if battle_system.get_battle_status(uid):
+                state = _battle_state_api(uid)
+                return {"ok": True, "status": "already_in_battle", "battle": state}
+            player = db.get_or_create_player(uid, tg_user.get("username") or "")
+            mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
+            chp = int(player.get("current_hp", mhp))
+            if chp < int(mhp * HP_MIN_BATTLE_PCT):
+                return {"ok": False, "reason": "low_hp"}
+            prog = db.get_titan_progress(uid)
+            floor = max(1, int(body.floor or prog.get("current_floor", 1)))
+            # 1 сессия Башни = 1 заряд баффа. Сессия истекает при поражении или >1 мин неактивности.
+            run_active = int(prog.get("run_active", 0))
+            if run_active:
+                try:
+                    upd = str(prog.get("updated_at") or "")[:19]
+                    upd_ts = datetime.strptime(upd, "%Y-%m-%d %H:%M:%S").timestamp()
+                    if time.time() - upd_ts > _TITAN_SESSION_TTL:
+                        run_active = 0
+                        db.titan_set_run_active(uid, 0)
+                except Exception:
+                    pass
+            if not run_active:
+                db.consume_charges(uid)
+                db.cleanup_expired(uid)
+                db.titan_set_run_active(uid, 1)
+            boss = _titan_boss_for_floor(floor, player)
+            bid = await battle_system.start_battle(player, boss, is_bot2=True, mode="titan", mode_meta={"floor": floor})
+            b = battle_system.active_battles.get(bid)
+            if b:
+                b["_tma_p1"] = True
+            return {"ok": True, "status": "titan_started", "floor": floor, "boss": boss, "battle": _battle_state_api(uid)}
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error("titan_start error uid=%s: %s", uid, e, exc_info=True)
+            return {"ok": False, "reason": str(e)[:200]}
 
     @router.get("/api/titans/top")
     async def titan_top(limit: int = 30):

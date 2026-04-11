@@ -24,19 +24,34 @@ class GameLogicMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute(
-                "SELECT user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at, COALESCE(run_active, 0) AS run_active FROM titan_progress WHERE user_id = ?",
-                (user_id,),
-            )
-            row = cursor.fetchone()
-            if not row:
+            # Пробуем с run_active (после миграции); при ошибке — без него
+            try:
                 cursor.execute(
-                    "INSERT INTO titan_progress (user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at, run_active) VALUES (?, 0, 1, 0, 0, 0)",
+                    "SELECT user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at, COALESCE(run_active, 0) AS run_active FROM titan_progress WHERE user_id = ?",
                     (user_id,),
                 )
+            except Exception:
+                cursor.execute(
+                    "SELECT user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at FROM titan_progress WHERE user_id = ?",
+                    (user_id,),
+                )
+            row = cursor.fetchone()
+            if not row:
+                try:
+                    cursor.execute(
+                        "INSERT INTO titan_progress (user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at, run_active) VALUES (?, 0, 1, 0, 0, 0)",
+                        (user_id,),
+                    )
+                except Exception:
+                    cursor.execute(
+                        "INSERT INTO titan_progress (user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at) VALUES (?, 0, 1, 0, 0)",
+                        (user_id,),
+                    )
                 conn.commit()
                 return {"user_id": user_id, "best_floor": 0, "current_floor": 1, "weekly_best_floor": 0, "weekly_best_at": 0, "run_active": 0}
-            return dict(row)
+            result = dict(row)
+            result.setdefault("run_active", 0)
+            return result
         finally:
             conn.close()
 
@@ -75,10 +90,16 @@ class GameLogicMixin:
         try:
             prog = self.get_titan_progress(user_id)
             next_floor = max(1, int(floor))
-            cursor.execute(
-                "UPDATE titan_progress SET current_floor = ?, run_active = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
-                (next_floor, user_id),
-            )
+            try:
+                cursor.execute(
+                    "UPDATE titan_progress SET current_floor = ?, run_active = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+                    (next_floor, user_id),
+                )
+            except Exception:
+                cursor.execute(
+                    "UPDATE titan_progress SET current_floor = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+                    (next_floor, user_id),
+                )
             conn.commit()
             prog["current_floor"] = next_floor
             prog["run_active"] = 0
@@ -96,6 +117,8 @@ class GameLogicMixin:
                 (int(value), user_id),
             )
             conn.commit()
+        except Exception:
+            pass  # Колонка ещё не добавлена миграцией — игнорируем
         finally:
             conn.close()
 
