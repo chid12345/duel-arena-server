@@ -327,8 +327,6 @@ class StatsScene extends Phaser.Scene {
     txt(this, W / 2, passY + 26, '💥 Крит-пробой блока  ·  🤸 Уворот → 2й удар', 10, '#c8a0ff').setOrigin(0.5);
     txt(this, W / 2, passY + 42, '🛡 Поглощение 50%  ·  💪 Пролом брони', 10, '#ffc870').setOrigin(0.5);
 
-    // Placeholder для строки активных бафов (создаётся синхронно, текст обновляется async)
-    this._buffLineTxt = txt(this, W / 2, passY + passH + 8, '', 9, '#88ddaa').setOrigin(0.5);
     this._refreshBuffDisplay();
   }
 
@@ -362,10 +360,7 @@ class StatsScene extends Phaser.Scene {
         if (rowAgility) rowAgility.effectTxt.setText(rowAgility.s.effectFn(p));
       }
 
-      if (!buffs.length) {
-        if (this._buffLineTxt) this._buffLineTxt.setText('');
-        return;
-      }
+      if (!buffs.length) { return; }
 
       // Суммируем бонусы по типу
       const B = {};
@@ -422,11 +417,6 @@ class StatsScene extends Phaser.Scene {
         B.accuracy   && `👁+${B.accuracy}`,
         B.lifesteal_pct && `🩸+${B.lifesteal_pct}%`,
       ].filter(Boolean).join(' ');
-      const chargesBuff = buffs.find(b => b.charges != null);
-      const chStr = chargesBuff ? ` (${chargesBuff.charges}б)` : '';
-      const goldStr = B.gold_pct ? `  💰+${B.gold_pct}%` : '';
-      const lineText = statParts ? `🧪 ${statParts}${chStr}${goldStr}` : (goldStr ? `🧪${goldStr}` : '');
-      if (this._buffLineTxt) this._buffLineTxt.setText(lineText);
     } catch {}
   }
 

@@ -152,11 +152,16 @@
         ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#f0f0fa', true).setDepth(133));
         ov.push(txt(this, 28, y+28, meta.desc, 9, '#9999bb').setDepth(133));
         ov.push(txt(this, 28, y+42, `Кол-во: ${it.quantity}`, 9, '#ffc83c').setDepth(133));
+        const isBox = it.item_id.startsWith('box_');
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;
         const bg2 = this.add.graphics().setDepth(133);
-        bg2.fillStyle(0x2a6040,.95); bg2.fillRoundedRect(bx, by, bw, 24, 7);
-        bg2.lineStyle(1, 0x55cc66,.8); bg2.strokeRoundedRect(bx, by, bw, 24, 7);
-        ov.push(bg2, txt(this, bx+bw/2, by+12, 'Применить', 10, '#d0ffd8', true).setOrigin(.5).setDepth(134));
+        const btnColor = isBox ? 0x7a3800 : 0x2a6040;
+        const btnBorder = isBox ? 0xffaa33 : 0x55cc66;
+        const btnLabel = isBox ? '🎲 Открыть' : 'Применить';
+        const btnTxtColor = isBox ? '#ffe0aa' : '#d0ffd8';
+        bg2.fillStyle(btnColor,.95); bg2.fillRoundedRect(bx, by, bw, 24, 7);
+        bg2.lineStyle(1, btnBorder,.8); bg2.strokeRoundedRect(bx, by, bw, 24, 7);
+        ov.push(bg2, txt(this, bx+bw/2, by+12, btnLabel, 10, btnTxtColor, true).setOrigin(.5).setDepth(134));
         const z = this.add.zone(bx+bw/2, by+12, bw, 24).setInteractive({useHandCursor:true}).setDepth(135);
         z.on('pointerdown', () => this._applyInventoryItem(it.item_id)); ov.push(z);
       });
@@ -180,9 +185,13 @@
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
         this._invData = await get('/api/shop/inventory').catch(() => this._invData);
-        this._showToast(res.msg || '✅ Применено!');
-        this._renderInvOverlay();
-        this._refreshBuffDisplay(); // обновить статы сразу
+        if (res.box_opened) {
+          this._showBoxReveal(res);
+        } else {
+          this._showToast(res.msg || '✅ Применено!');
+          this._renderInvOverlay();
+          this._refreshBuffDisplay();
+        }
       } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
     } catch { this._invBusy = false; this._showToast('❌ Нет соединения'); }
   };
@@ -226,5 +235,58 @@
     (this._invOverlay || []).forEach(o => { try { o.destroy(); } catch {} });
     this._invOverlay = null;
     this._refreshBuffDisplay(); // синхронизировать статы после закрытия
+  };
+
+  /* ── Красивый попап при открытии ящика ─────────────────── */
+  StatsScene.prototype._showBoxReveal = function(res) {
+    const { W, H } = this;
+    const icon = res.item_icon || '🎁';
+    const name = res.item_name || 'Предмет';
+    const isEpic = (res.item_id || '').includes('12') || (res.item_id || '').includes('titan') || (res.item_id || '').includes('500');
+    const glowColor = isEpic ? 0xffaa00 : 0x55cc66;
+    const glowHex   = isEpic ? '#ffaa00' : '#55cc66';
+    const rvl = [];
+
+    // Затемнение
+    rvl.push(this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.85).setDepth(160));
+
+    // Карточка
+    const cW = W - 64, cH = 220, cX = 32, cY = H/2 - cH/2;
+    const bg = this.add.graphics().setDepth(161);
+    bg.fillStyle(0x12101e, 0.98); bg.fillRoundedRect(cX, cY, cW, cH, 16);
+    bg.lineStyle(2.5, glowColor, 0.9); bg.strokeRoundedRect(cX, cY, cW, cH, 16);
+    rvl.push(bg);
+
+    // Лучи (статичные линии вместо анимации — просто)
+    const rg = this.add.graphics().setDepth(161);
+    rg.lineStyle(1, glowColor, 0.18);
+    for (let a = 0; a < 360; a += 30) {
+      const rad = a * Math.PI / 180;
+      rg.lineBetween(W/2, H/2, W/2 + Math.cos(rad)*140, H/2 + Math.sin(rad)*140);
+    }
+    rvl.push(rg);
+
+    rvl.push(txt(this, W/2, cY + 22, '🎲 ИЗ ЯЩИКА ВЫПАЛО', 11, glowHex, true).setOrigin(0.5).setDepth(162));
+    rvl.push(txt(this, W/2, cY + 70, icon, 44).setOrigin(0.5).setDepth(162));
+    rvl.push(txt(this, W/2, cY + 120, name, 15, '#ffffff', true).setOrigin(0.5).setDepth(162));
+    rvl.push(txt(this, W/2, cY + 142, '→ добавлено в инвентарь', 10, '#aaaacc').setOrigin(0.5).setDepth(162));
+
+    if (isEpic) rvl.push(txt(this, W/2, cY + 158, '⭐ РЕДКИЙ ПРЕДМЕТ ⭐', 11, '#ffcc44', true).setOrigin(0.5).setDepth(162));
+
+    // Кнопка OK
+    const okY = cY + cH - 44, okW = cW - 48;
+    const okG = this.add.graphics().setDepth(162);
+    okG.fillStyle(glowColor === 0xffaa00 ? 0x7a5000 : 0x1a4a2a, 1);
+    okG.fillRoundedRect(cX + 24, okY, okW, 36, 10);
+    okG.lineStyle(1.5, glowColor, 0.9);
+    okG.strokeRoundedRect(cX + 24, okY, okW, 36, 10);
+    rvl.push(okG, txt(this, W/2, okY + 18, '✅ Отлично!', 13, '#ffffff', true).setOrigin(0.5).setDepth(163));
+    const okZ = this.add.zone(W/2, okY + 18, okW, 36).setInteractive({useHandCursor:true}).setDepth(164);
+    okZ.on('pointerdown', () => {
+      rvl.forEach(o => { try { o.destroy(); } catch {} });
+      this._renderInvOverlay();
+    });
+    rvl.push(okZ);
+    this._invOverlay = (this._invOverlay || []).concat(rvl);
   };
 })();
