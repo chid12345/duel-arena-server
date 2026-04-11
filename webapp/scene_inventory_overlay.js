@@ -37,11 +37,6 @@
     xp_boost_20:   { icon:'⚡', name:'XP Буст ×1.5',    desc:'×1.5 XP, 20 зарядов', tab:'elixirs' },
     xp_boost_x2:   { icon:'⚡', name:'XP Буст ×2.0',    desc:'×2.0 XP, 10 зарядов', tab:'elixirs' },
     gold_hunt:     { icon:'💰', name:'Охота за золотом', desc:'+20% золото 24 ч', tab:'elixirs' },
-    hp_small:      { icon:'🧪', name:'Зелье HP (30%)',   desc:'восстановить 30% HP', tab:'elixirs' },
-    hp_medium:     { icon:'🧪', name:'Зелье HP (60%)',   desc:'восстановить 60% HP', tab:'elixirs' },
-    hp_full:       { icon:'🧪', name:'Зелье HP (100%)',  desc:'полное восстановление HP', tab:'elixirs' },
-    box_common:    { icon:'📦', name:'Обычный ящик',     desc:'рандомный предмет', tab:'elixirs' },
-    box_rare:      { icon:'📦', name:'Редкий ящик',      desc:'ценный рандомный предмет', tab:'elixirs' },
   };
 
   const TABS = [
@@ -198,5 +193,6 @@
   StatsScene.prototype._closeInvOverlay = function() {
     (this._invOverlay || []).forEach(o => { try { o.destroy(); } catch {} });
     this._invOverlay = null;
+    this._refreshBuffDisplay(); // синхронизировать статы после закрытия
   };
 })();

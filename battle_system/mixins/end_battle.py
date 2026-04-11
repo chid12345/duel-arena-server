@@ -149,6 +149,15 @@ class BattleEndBattleMixin:
             exp_reward = 0
             loser_exp = 0
 
+        # gold_pct buff (gold_hunt item: +20% gold for 24h)
+        if not is_test and gold_reward > 0 and winner_user_id:
+            try:
+                _gold_pct = db.get_combined_buffs(int(winner_user_id)).get("gold_pct", 0)
+                if _gold_pct:
+                    gold_reward = int(gold_reward * (1.0 + _gold_pct / 100.0))
+            except Exception:
+                pass
+
         combat_log_html = "\n\n".join(battle.get("combat_log_lines", []))
 
         _is_pvp = not battle.get("is_bot2")

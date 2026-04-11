@@ -98,10 +98,11 @@ class BattleStartMixin:
         if hp_bonus:
             player["max_hp"] = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)) + hp_bonus)
         # Боевые pct-модификаторы добавляем как поля в dict (damage.py их читает)
-        player["_buff_armor_pct"]  = combined.get("armor_pct",    0)
-        player["_buff_dodge_pct"]  = combined.get("dodge_pct",    0)
-        player["_buff_double_pct"] = combined.get("double_pct",   0)
-        player["_buff_accuracy"]   = combined.get("accuracy",     0)
+        player["_buff_armor_pct"]    = combined.get("armor_pct",    0)
+        player["_buff_dodge_pct"]    = combined.get("dodge_pct",    0)
+        player["_buff_double_pct"]   = combined.get("double_pct",   0)
+        player["_buff_accuracy"]     = combined.get("accuracy",     0)
+        player["_buff_lifesteal_pct"] = combined.get("lifesteal_pct", 0)
 
     def set_battle_ui_message(self, user_id: int, chat_id: int, message_id: int) -> None:
         """Сообщение с клавиатурой боя — для таймера и обновления без callback."""

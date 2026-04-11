@@ -148,6 +148,15 @@ class BattleDamageMixin:
                        * STRENGTH_ARMOR_BREAK_PCT_PER_STEP)
         is_break = random.random() < break_ch
 
+        # Вампиризм атакующего (lifesteal_pct buff) — лечение до применения брони защитника
+        _lifesteal = attacker.get("_buff_lifesteal_pct", 0)
+        if _lifesteal and damage > 0:
+            _heal = max(1, int(damage * _lifesteal / 100))
+            attacker["current_hp"] = min(
+                int(attacker.get("max_hp", 1)),
+                int(attacker.get("current_hp", 1)) + _heal,
+            )
+
         damage = self._apply_incoming_damage(damage, defender)
         if is_break:
             damage = max(1, damage + int(damage * STRENGTH_ARMOR_BREAK_IGNORE_PCT))

@@ -350,12 +350,11 @@ class StatsScene extends Phaser.Scene {
         row.valTxt.setText(String(row.s.valFn(p))).setColor(`#${row.s.color.toString(16).padStart(6,'0')}`);
         row.breakdownTxt.setText(`база ${base} | бонусы +${perm}`);
       }
-      // Сброс combat cells
+      // Сброс combat cells (setColor, не setStyle — иначе сбрасывается весь шрифт)
       if (this._combatCells) {
-        for (const [key, cell] of Object.entries(this._combatCells)) {
-          cell.t.setText(cell.fn(p)).setStyle({ color: cell.origColor || cell.t.style.color });
+        for (const [, cell] of Object.entries(this._combatCells)) {
+          cell.t.setText(cell.fn(p)).setColor(cell.origColor);
         }
-        // Сброс effectTxt
         const rowStamina = this._statRows.stamina;
         const rowAgility = this._statRows.agility;
         if (rowStamina) rowStamina.effectTxt.setText(rowStamina.s.effectFn(p));
@@ -371,7 +370,7 @@ class StatsScene extends Phaser.Scene {
       const B = {};
       for (const b of buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
 
-      // Прямые бафы статов: strength / endurance→stamina / crit→intuition
+      // ── Стат-строки: strength / endurance→stamina / crit→intuition ──
       const STAT_MAP = { strength: 'strength', endurance: 'stamina', crit: 'intuition' };
       for (const [bt, rk] of Object.entries(STAT_MAP)) {
         const bonus = B[bt]; if (!bonus) continue;
@@ -382,34 +381,46 @@ class StatsScene extends Phaser.Scene {
         row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
       }
 
-      // armor_pct → Выносливость effectFn + боевой показатель Броня
+      // ── armor_pct → Выносливость effectFn + Броня в боевых ──
       if (B.armor_pct) {
         const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
         if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${v}% броня🧪`);
         if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${v}%`).setColor('#88ffcc');
       }
-      // dodge_pct → Ловкость effectFn + боевой показатель Уворот
+      // ── dodge_pct → Ловкость effectFn + Уворот в боевых ──
       if (B.dodge_pct) {
         const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
         if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${v}% уворот🧪`);
         if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${v}%`).setColor('#88ffcc');
       }
-      // crit buff (1:1 с crit_pct)
+      // ── crit buff (1:1 с crit_pct) → Крит в боевых ──
       if (B.crit && this._combatCells?.crit) {
         const v = (parseFloat(p.crit_pct || 0) + B.crit).toFixed(0);
         this._combatCells.crit.t.setText(`${v}%`).setColor('#cc88ff');
       }
+      // ── strength buff → намёк на Урон в боевых (формула серверная, точно не пересчитать) ──
+      if (B.strength && this._combatCells?.dmg) {
+        this._combatCells.dmg.t.setText(`~${p.dmg}+`).setColor('#ff9966');
+      }
 
-      // Обновляем строку-placeholder (не создаём новый объект)
-      const BN = { strength:'⚔️', endurance:'🛡', crit:'🎯', armor_pct:'🔰',
-        dodge_pct:'💨', hp_bonus:'❤️', double_pct:'⚡', accuracy:'👁',
-        gold_pct:'💰', lifesteal_pct:'🩸' };
-      const line = buffs.map(b => {
-        const ic = BN[b.buff_type] || '🧪';
-        const dur = b.charges != null ? `${b.charges}б` : '∞';
-        return `${ic}+${b.value}(${dur})`;
-      }).join(' · ');
-      if (this._buffLineTxt) this._buffLineTxt.setText(`🧪 ${line}`);
+      // ── Форматируем строку активных бафов ──
+      // Статовые бафы (заряды берём из первого charge-based бафа)
+      const statParts = [
+        B.strength   && `⚔️+${B.strength}`,
+        B.endurance  && `🛡+${B.endurance}`,
+        B.crit       && `🎯+${B.crit}`,
+        B.armor_pct  && `🔰+${B.armor_pct}%`,
+        B.dodge_pct  && `💨+${B.dodge_pct}%`,
+        B.hp_bonus   && `❤️+${B.hp_bonus}`,
+        B.double_pct && `⚡+${B.double_pct}%`,
+        B.accuracy   && `👁+${B.accuracy}`,
+        B.lifesteal_pct && `🩸+${B.lifesteal_pct}%`,
+      ].filter(Boolean).join(' ');
+      const chargesBuff = buffs.find(b => b.charges != null);
+      const chStr = chargesBuff ? ` (${chargesBuff.charges}б)` : '';
+      const goldStr = B.gold_pct ? `  💰+${B.gold_pct}%` : '';
+      const lineText = statParts ? `🧪 ${statParts}${chStr}${goldStr}` : (goldStr ? `🧪${goldStr}` : '');
+      if (this._buffLineTxt) this._buffLineTxt.setText(lineText);
     } catch {}
   }
 
