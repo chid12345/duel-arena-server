@@ -287,15 +287,22 @@ class ShopScene extends Phaser.Scene {
     this._toast(`Нужно ${item.price} ${cur}`);
   }
 
-  /* ── Вкладка "⭐ Звёзды" ─────────────────────────────── */
+  /* ── Вкладка "⭐ Звёзды" — 2 страницы ───────────────── */
   async _buildStarsPanel(W, H) {
     let d;
     try { d = await get('/api/shop/packages'); }
     catch(_) { if (this.scene?.isActive('Shop')) txt(this, W/2, H/2, '❌ Нет соединения', 13, '#dc3c46').setOrigin(0.5); return; }
     if (!this.scene?.isActive('Shop') || this._tab !== 'stars') return;
     const starsPkgs = d.stars || [];
+    const pg = this._shopPage || 0;
     let y = 162;
     const p = State.player;
+    const pkgMain = starsPkgs.filter(pkg => pkg.id !== 'premium');
+    const premPkg  = starsPkgs.find(pkg => pkg.id === 'premium');
+    const pageCount = premPkg ? 2 : 1;
+    const page = Math.min(pg, pageCount - 1);
+
+    // Премиум-бейдж — на обеих страницах
     if (p?.is_premium) {
       const sb = this.add.graphics();
       sb.fillStyle(0x1a0a30, 0.95); sb.fillRoundedRect(8, y, W-16, 32, 9);
@@ -304,21 +311,61 @@ class ShopScene extends Phaser.Scene {
       txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#8888aa').setOrigin(1, 0);
       y += 40;
     }
-    makePanel(this, 8, y, W-16, 22, 8, 0.6);
-    txt(this, 20, y+5, '⭐  TELEGRAM STARS', 12, '#ffc83c', true);
-    txt(this, W-12, y+5, 'мгновенно', 11, '#9999bb').setOrigin(1, 0);
-    y += 30;
-    const pkgMain = starsPkgs.filter(pkg => pkg.id !== 'premium');
-    const pkgW = (W - 32) / Math.max(1, pkgMain.length);
-    pkgMain.forEach((pkg, i) => {
-      const px = 8 + i * (pkgW + 8 / Math.max(1, pkgMain.length));
-      this._makeStarsCard(pkg, px, y, pkgW - 4, 80);
-    });
-    y += 90;
-    const premPkg = starsPkgs.find(pkg => pkg.id === 'premium');
-    if (premPkg) { this._makePremiumCard(premPkg, 8, y, W-16, 52); y += 62; }
-    y += 8;
-    txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5);
+
+    const mkStarsNav = (navY, prevPg, nextPg) => {
+      const navG = this.add.graphics();
+      if (prevPg !== null) {
+        navG.fillStyle(0x2a2010, 0.9); navG.fillRoundedRect(W/2-116, navY, 108, 30, 8);
+        navG.lineStyle(1.5, 0xffc83c, 0.55); navG.strokeRoundedRect(W/2-116, navY, 108, 30, 8);
+        txt(this, W/2-62, navY+15, '◀ Алмазы', 11, '#ffc83c', true).setOrigin(0.5);
+        this.add.zone(W/2-116, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { ShopScene._lastPage = prevPg; this.scene.restart({ tab: 'stars', page: prevPg }); });
+      }
+      if (nextPg !== null) {
+        navG.fillStyle(0x2a1a0a, 0.9); navG.fillRoundedRect(W/2+8, navY, 108, 30, 8);
+        navG.lineStyle(1.5, 0xffc83c, 0.55); navG.strokeRoundedRect(W/2+8, navY, 108, 30, 8);
+        txt(this, W/2+62, navY+15, 'Premium ▶', 11, '#ffc83c', true).setOrigin(0.5);
+        this.add.zone(W/2+8, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { ShopScene._lastPage = nextPg; this.scene.restart({ tab: 'stars', page: nextPg }); });
+      }
+      txt(this, W/2, navY+15, `${page+1} / ${pageCount}`, 9, '#7777aa', true).setOrigin(0.5);
+    };
+
+    if (page === 0) {
+      // ── Страница 1: Алмазы за Stars ──
+      makePanel(this, 8, y, W-16, 22, 8, 0.6);
+      txt(this, 20, y+5, '⭐  TELEGRAM STARS', 12, '#ffc83c', true);
+      txt(this, W-12, y+5, 'мгновенно', 11, '#9999bb').setOrigin(1, 0);
+      y += 30;
+      const pkgW = (W - 32) / Math.max(1, pkgMain.length);
+      pkgMain.forEach((pkg, i) => {
+        const px = 8 + i * (pkgW + 8 / Math.max(1, pkgMain.length));
+        this._makeStarsCard(pkg, px, y, pkgW - 4, 80);
+      });
+      y += 98;
+      txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5);
+      y += 20;
+      if (premPkg) mkStarsNav(y, null, 1);
+    } else {
+      // ── Страница 2: Premium подписка ──
+      makePanel(this, 8, y, W-16, 22, 8, 0.6);
+      txt(this, 20, y+5, '👑  PREMIUM ПОДПИСКА', 12, '#c8a0ff', true);
+      txt(this, W-12, y+5, '⭐ Stars', 11, '#9999bb').setOrigin(1, 0);
+      y += 30;
+      if (premPkg) { this._makePremiumCard(premPkg, 8, y, W-16, 52); y += 62; }
+      y += 8;
+      const perks = [
+        '⚔️ +15% XP за каждый бой',
+        '📦 Бесплатный ящик каждый день',
+        '🏷️ Скидки в магазине',
+        '👑 Значок Premium у имени',
+      ];
+      perks.forEach(line => {
+        txt(this, 28, y, line, 11, '#b0a0d0'); y += 18;
+      });
+      y += 8;
+      mkStarsNav(y, 0, null);
+    }
   }
 
   /* ── Вкладка "💵 Купить" (USDT) — 2 страницы ────────── */

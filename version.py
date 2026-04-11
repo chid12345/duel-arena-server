@@ -3,8 +3,8 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.1.98"
-VERSION_LABEL = "v1.1.98 — fix: crypto_invoices.payload колонка через after_ddl (PG migration)"
+VERSION = "1.1.99"
+VERSION_LABEL = "v1.1.99 — feat: Stars вкладка — пагинация (стр.1 Алмазы, стр.2 Premium)"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
