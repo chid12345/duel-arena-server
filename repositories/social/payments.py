@@ -75,6 +75,38 @@ class SocialPaymentsMixin:
         finally:
             conn.close()
 
+    def get_purchases_usdt(self, limit: int = 500) -> List[Dict]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """SELECT c.invoice_id, c.user_id, p.username, c.amount, c.asset,
+                          c.status, c.payload, c.created_at, c.paid_at
+                   FROM crypto_invoices c
+                   LEFT JOIN players p ON p.user_id = c.user_id
+                   ORDER BY c.created_at DESC LIMIT ?""",
+                (limit,),
+            )
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
+    def get_purchases_stars(self, limit: int = 500) -> List[Dict]:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                """SELECT s.id, s.user_id, p.username, s.package_id,
+                          s.diamonds, s.stars, s.created_at
+                   FROM stars_payments s
+                   LEFT JOIN players p ON p.user_id = s.user_id
+                   ORDER BY s.created_at DESC LIMIT ?""",
+                (limit,),
+            )
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
     def get_pending_crypto_invoices_older_than(self, seconds: int) -> List[Dict]:
         conn = self.get_connection()
         cursor = conn.cursor()
