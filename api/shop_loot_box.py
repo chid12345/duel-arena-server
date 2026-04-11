@@ -57,6 +57,29 @@ def _weighted_choice(pool: list) -> str:
     return random.choices(items, weights=weights, k=1)[0]
 
 
+def _open_box_free(box_id: str, db: Any, user_id: int) -> Dict[str, Any]:
+    """
+    Открыть ящик из инвентаря (без списания валюты — уже оплачен при покупке/USDT).
+    """
+    from api.tma_catalogs import SHOP_CATALOG
+    _POOL_MAP = {"box_common": _COMMON_POOL, "box_rare": _RARE_POOL, "box_epic": _EPIC_POOL}
+    pool = _POOL_MAP.get(box_id)
+    if not pool:
+        return {"ok": False, "reason": "Неизвестный тип ящика"}
+    prize_id = _weighted_choice(pool)
+    db.add_to_inventory(user_id, prize_id)
+    prize_info = SHOP_CATALOG.get(prize_id, {})
+    from api.tma_player_api import _player_api
+    player = db.get_or_create_player(user_id, "")
+    return {
+        "ok": True,
+        "item_id": prize_id,
+        "item_name": prize_info.get("name", prize_id),
+        "item_icon": prize_info.get("icon", "🎁"),
+        "player": _player_api(dict(player)),
+    }
+
+
 def open_box(box_id: str, db: Any, user_id: int) -> Dict[str, Any]:
     """
     Открыть ящик: списать цену, положить приз в инвентарь.

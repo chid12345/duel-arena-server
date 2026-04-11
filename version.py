@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.1.57"
-VERSION_LABEL = "v1.1.57 — feat: box_epic открывается, reveal-попап ящика, убран buffLine из Stats"
+VERSION = "1.1.58"
+VERSION_LABEL = "v1.1.58 — fix: box_epic через _open_box_free, shop overlap при смене вкладок"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "2.81"
+GAME_VERSION = "2.82"

@@ -172,13 +172,13 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             player = db.get_or_create_player(uid, "")
             return {"ok": True, "msg": "💰 Охота за золотом активирована на 24 ч!", "player": _player_api(dict(player))}
 
-        # Ящики из инвентаря (box_epic — USDT-награда, открывается вручную)
+        # Ящики из инвентаря (открываются без списания валюты — уже куплены)
         if iid in ("box_common", "box_rare", "box_epic"):
             if not db.has_item(uid, iid):
                 return {"ok": False, "reason": "Предмет не найден в инвентаре"}
             db.remove_from_inventory(uid, iid)
-            from api.shop_loot_box import open_box
-            result = open_box(iid, db, uid)
+            from api.shop_loot_box import _open_box_free
+            result = _open_box_free(iid, db, uid)
             result["box_opened"] = True
             return result
 
