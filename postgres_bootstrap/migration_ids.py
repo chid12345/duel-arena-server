@@ -39,4 +39,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_18_001_endless_mode",
     "2026_04_19_002_battlepass_endless",
     "2026_04_19_001_endless_quests",
+    "2026_04_11_001_player_inventory",
+    "2026_04_11_002_player_buffs",
+    "2026_04_11_003_premium_box_claimed",
 )

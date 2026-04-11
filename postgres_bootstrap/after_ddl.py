@@ -48,4 +48,22 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
         best_wave_this_week INTEGER NOT NULL DEFAULT 0,
         PRIMARY KEY (user_id, week_key)
     )""",
+    # ── Магазин: инвентарь + бафы ──────────────────────────────
+    """CREATE TABLE IF NOT EXISTS player_inventory (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+        item_id TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_inv_uid ON player_inventory(user_id)",
+    """CREATE TABLE IF NOT EXISTS player_buffs (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+        buff_type TEXT NOT NULL,
+        value INTEGER NOT NULL,
+        charges INTEGER,
+        expires_at TEXT
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_pbuffs_uid ON player_buffs(user_id)",
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS premium_box_claimed DATE",
 )
