@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.1.80"
-VERSION_LABEL = "v1.1.80 — fix: HP_MIN_BATTLE_PCT 30%→15%, JS threshold sync"
+VERSION = "1.1.81"
+VERSION_LABEL = "v1.1.81 — fix: endurance buff теперь даёт ловкость/уворот в бою, не HP"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "3.04"
+GAME_VERSION = "3.05"

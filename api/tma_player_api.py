@@ -59,11 +59,10 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     # Эффективные статы с учётом активных баффов (свитки/зелья) для производных
     _cb = combined_buffs or {}
     _s = s + int(_cb.get("strength", 0))
-    _agi = agi  # endurance buff → HP/броня (не уворот), dodge_pct buff применяется отдельно в бою
+    _agi = agi + int(_cb.get("endurance", 0))  # endurance buff → ловкость/уворот в бою
     _intu = intu + int(_cb.get("crit", 0))
-    _end_buff = int(_cb.get("endurance", 0))
     vyn = stamina_stats_invested(mhp, lv)
-    _vyn = vyn + _end_buff  # endurance buff = +вложения в выносливость → HP и броня
+    _vyn = vyn  # endurance buff идёт в ловкость, а не в HP-инвестиции
     tf = total_free_stats_at_level(lv)
 
     avg_agi = max(1, PLAYER_START_ENDURANCE + tf // 4)
@@ -86,7 +85,7 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     )
     armor_p = round(armor_reduction(_vyn, lv) * 100, 1)
     dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (_s**STRENGTH_DAMAGE_POWER)))
-    _eff_mhp = mhp + _end_buff * STAMINA_PER_FREE_STAT + int(_cb.get("hp_bonus", 0))
+    _eff_mhp = mhp + int(_cb.get("hp_bonus", 0))
 
     need_xp = exp_needed_for_next_level(lv)
 
