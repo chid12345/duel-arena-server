@@ -75,8 +75,11 @@ class BattleStartMixin:
         
         self.active_battles[battle_id] = battle_data
         self.battle_queue[player1['user_id']] = battle_id
+        # Сброс старого результата: защита от polling-фантомов (pop_battle_end_ui вернёт None)
+        self.clear_battle_end_ui(player1['user_id'])
         if not is_bot2:
             self.battle_queue[player2['user_id']] = battle_id
+            self.clear_battle_end_ui(player2['user_id'])
         
         return battle_id
 

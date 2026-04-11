@@ -90,9 +90,13 @@ function get(path, params = {}, timeoutMs = 15000) {
 
 /* ─── WebSocket ─────────────────────────────────────────────── */
 function connectWS(userId, onMessage) {
-  // Переиспользуем открытое соединение — просто меняем обработчик
+  // Переиспользуем открытое соединение — меняем обработчик и onclose
   if (State.ws && State.ws.readyState === WebSocket.OPEN) {
     State.ws.onmessage = e => onMessage(JSON.parse(e.data));
+    // ВАЖНО: обновляем onclose чтобы переподключение использовало ТЕКУЩИЙ handler
+    State.ws.onclose = () => {
+      if (State.ws === State.ws) setTimeout(() => connectWS(userId, onMessage), 3000);
+    };
     return State.ws;
   }
   // Закрываем "зависшее" соединение без авто-переподключения
@@ -2595,6 +2599,9 @@ class BattleScene extends Phaser.Scene {
     const p = State.player;
     if (!p) return;
 
+    // Запоминаем battle_id текущего боя — чтобы игнорировать события от старых боёв
+    const myBattleId = State.battle?.battle_id || null;
+
     const handleMsg = msg => {
       if (msg.event === 'round_result') {
         this._lastServerMsg = Date.now();
@@ -2603,6 +2610,8 @@ class BattleScene extends Phaser.Scene {
         this._choosing = true;
         this._startTimer(msg.battle?.deadline_sec);
       } else if (msg.event === 'battle_ended' || msg.event === 'battle_ended_afk') {
+        // Защита от "призрачных" событий старых боёв: если battle_id есть и не совпадает — игнорируем
+        if (myBattleId && msg.battle_id && msg.battle_id !== myBattleId) return;
         this._lastServerMsg = Date.now();
         State.lastResult = msg;
         BattleLog.hide();

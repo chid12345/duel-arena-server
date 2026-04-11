@@ -62,6 +62,7 @@ def register_battle_choice_route(
                 uid,
                 {
                     "event": "battle_ended",
+                    "battle_id": mine.get("battle_id", ""),
                     "human_won": human_won,
                     "afk_loss": is_afk and not human_won,
                     "mode": mine.get("mode", "normal"),
@@ -98,6 +99,7 @@ def register_battle_choice_route(
                         opp_uid,
                         {
                             "event": "battle_ended",
+                            "battle_id": opp.get("battle_id", ""),
                             "human_won": opp_won,
                             "afk_loss": is_afk and not opp_won,
                             "mode": opp.get("mode", "normal"),

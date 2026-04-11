@@ -163,6 +163,8 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         endless_progress=endless_progress,
     )
 
+    result["battle_id"] = battle_id  # нужен фронтенду для защиты от "старых" WS-событий
+
     if battle.get("is_bot2") and player1.get("user_id") is not None:
         bs.remember_battle_end_ui(player1["user_id"], result)
     elif not battle.get("is_bot2"):

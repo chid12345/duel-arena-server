@@ -174,6 +174,7 @@ class BattleAfkEndMixin:
             'mode': battle_mode,
             'mode_meta': mode_meta,
             'titan_progress': titan_progress,
+            'battle_id': battle_id,  # нужен фронтенду для защиты от "старых" WS-событий
         }
         if battle.get('is_bot2') and player1.get('user_id') is not None:
             self.remember_battle_end_ui(player1['user_id'], result)
