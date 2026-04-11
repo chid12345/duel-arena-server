@@ -45,6 +45,20 @@ async def shop_apply_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP
         player = db.get_or_create_player(uid, "")
         return {"ok": True, "msg": "💰 Охота за золотом активирована на 24 ч!", "player": _player_api(dict(player))}
 
+    # xp_hunt: +50% XP за бой на 24 часа
+    if iid == "xp_hunt":
+        if not db.has_item(uid, iid):
+            return {"ok": False, "reason": "Предмет не найден в инвентаре"}
+        existing_xp = next(
+            (b for b in db.get_raw_buffs(uid) if b["buff_type"] == "xp_pct"), None
+        )
+        if existing_xp:
+            return {"ok": False, "reason": "Охота за опытом уже активна! Дождитесь окончания."}
+        db.remove_from_inventory(uid, iid)
+        db.add_buff(uid, "xp_pct", 50, hours=24)
+        player = db.get_or_create_player(uid, "")
+        return {"ok": True, "msg": "📚 Охота за опытом активирована на 24 ч!", "player": _player_api(dict(player))}
+
     # Ящики из инвентаря (открываются без списания валюты — уже куплены)
     if iid in ("box_common", "box_rare", "box_epic"):
         if not db.has_item(uid, iid):

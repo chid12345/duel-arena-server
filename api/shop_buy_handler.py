@@ -50,8 +50,8 @@ async def shop_buy_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_C
     if iid in ("box_common", "box_rare"):
         return _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
 
-    # === Золото за охоту → в инвентарь ===
-    if iid == "gold_hunt":
+    # === Охоты (золото/опыт) → в инвентарь ===
+    if iid in ("gold_hunt", "xp_hunt"):
         return _buy_to_inventory(db, uid, iid, price=20, currency="diamonds")
 
     # === Свитки → в инвентарь ===

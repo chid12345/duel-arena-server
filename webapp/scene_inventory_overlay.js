@@ -23,8 +23,8 @@
     scroll_double_10:{icon:'⚡', name:'Двойной удар +10%',desc:'double_pct +10%, 3 боя', tab:'scrolls' },
     scroll_all_4:   { icon:'✨', name:'Все статы +4',    desc:'str/end/crit +4, 1 бой', tab:'scrolls' },
     scroll_bastion: { icon:'🏰', name:'Бастион',         desc:'end+5, armor+8%, 3 боя', tab:'scrolls' },
-    scroll_predator:{ icon:'🐆', name:'Хищник',          desc:'crit+5, double+8%, 3 боя', tab:'scrolls' },
-    scroll_berserker:{icon:'😤', name:'Берсерк',         desc:'str+8, armor-5%, 3 боя', tab:'scrolls' },
+    scroll_predator:{ icon:'🐍', name:'Хищник',          desc:'крит+5, двойной+8%, 3 боя', tab:'scrolls' },
+    scroll_berserker:{icon:'🔥', name:'Берсерк',         desc:'сила+8, броня-5%, 3 боя', tab:'scrolls' },
     scroll_accuracy:{ icon:'👁️', name:'Точность +15',    desc:'accuracy +15, 3 боя', tab:'scrolls' },
     scroll_str_12:  { icon:'⚔️', name:'Сила +12',       desc:'strength +12, 5 боёв', tab:'special' },
     scroll_end_12:  { icon:'🌀', name:'Ловкость +12',    desc:'уворот +12, 5 боёв', tab:'special' },
@@ -32,14 +32,15 @@
     scroll_crit_12: { icon:'🎯', name:'Интуиция +12',    desc:'крит +12, 5 боёв', tab:'special' },
     scroll_hp_500:  { icon:'❤️', name:'HP +500',         desc:'hp_bonus +500, 7 боёв', tab:'special' },
     scroll_all_12:  { icon:'✨', name:'Все статы +12',   desc:'str/end/crit +12, 5 боёв', tab:'special' },
-    scroll_titan:   { icon:'👹', name:'Титан',           desc:'все статы +15, armor+10%, 3 боя', tab:'special' },
+    scroll_titan:   { icon:'👹', name:'Титан',           desc:'сила+ловк+инт+вын +15, 3 боя', tab:'special' },
     box_common:     { icon:'📦', name:'Обычный ящик',     desc:'Случайный предмет (открыть)', tab:'special' },
     box_rare:       { icon:'🟦', name:'Редкий ящик',      desc:'Ценный предмет · 5% USDT', tab:'special' },
     box_epic:       { icon:'🟣', name:'Эпик ящик',        desc:'гарантированный USDT-свиток', tab:'special' },
     xp_boost_5:    { icon:'⚡', name:'XP Буст ×1.5',    desc:'×1.5 XP, 5 зарядов', tab:'elixirs' },
     xp_boost_20:   { icon:'⚡', name:'XP Буст ×1.5',    desc:'×1.5 XP, 20 зарядов', tab:'elixirs' },
     xp_boost_x2:   { icon:'⚡', name:'XP Буст ×2.0',    desc:'×2.0 XP, 10 зарядов', tab:'elixirs' },
-    gold_hunt:     { icon:'💰', name:'Охота за золотом', desc:'+20% золото 24 ч', tab:'elixirs' },
+    gold_hunt:     { icon:'💰', name:'Охота за золотом', desc:'+20% золото за бой · 24 ч', tab:'elixirs' },
+    xp_hunt:       { icon:'📚', name:'Охота за опытом',  desc:'+50% опыта за бой · 24 ч', tab:'elixirs' },
   };
 
   const TABS = [

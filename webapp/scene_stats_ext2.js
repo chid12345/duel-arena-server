@@ -55,6 +55,8 @@ Object.assign(StatsScene.prototype, {
           `🛡 Броня ${parseFloat(p.armor_pct || 0).toFixed(1)}%  ·  ⚔️ Урон ~${p.dmg || 0}`
         ).setColor('#ffc870');
       }
+      if (this._passLine3) this._passLine3.setText('');
+      if (this._passLine4) this._passLine4.setText('');
 
       if (!buffs.length) { return; }
 
@@ -124,6 +126,29 @@ Object.assign(StatsScene.prototype, {
           ? (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1)
           : parseFloat(p.armor_pct || 0).toFixed(1);
         this._passLine2.setText(`🛡 Броня ${armorV}%  ·  ⚔️ Урон ~${p.dmg || 0}`).setColor('#ffcc88');
+      }
+
+      // ── passLine3: Двойной удар + Точность (только если есть бафы) ──
+      if (this._passLine3) {
+        const parts3 = [];
+        if (B.double_pct) parts3.push(`⚡ Двойной +${B.double_pct}%`);
+        if (B.accuracy)   parts3.push(`👁 Точность +${B.accuracy}`);
+        if (parts3.length) this._passLine3.setText(parts3.join('  ·  ')).setColor('#88ddff');
+      }
+
+      // ── passLine4: time-based бафы (Охота за золотом / опытом) ──
+      if (this._passLine4) {
+        const timeBased = buffs.filter(b => b.expires_at != null);
+        const parts4 = timeBased.map(b => {
+          const msLeft = Math.max(0, new Date(b.expires_at + 'Z') - Date.now());
+          const hLeft = Math.floor(msLeft / 3600000);
+          const mLeft = Math.floor((msLeft % 3600000) / 60000);
+          const t = hLeft > 0 ? `${hLeft}ч` : `${mLeft}м`;
+          if (b.buff_type === 'gold_pct') return `💰 Золото+${b.value}% · ${t}`;
+          if (b.buff_type === 'xp_pct')  return `📚 Опыт+${b.value}% · ${t}`;
+          return `${b.buff_type}+${b.value}% · ${t}`;
+        });
+        if (parts4.length) this._passLine4.setText(parts4.join('  ·  ')).setColor('#ffcc55');
       }
     } catch {}
   },

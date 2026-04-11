@@ -19,7 +19,8 @@ SHOP_CATALOG = {
     "xp_boost_5":    {"name": "XP Буст ×1.5",         "price": 100, "currency": "gold",     "icon": "⚡", "tab": "consumables", "desc": "5 боёв с бонусом XP",   "inventory": True},
     "xp_boost_20":   {"name": "XP Буст ×1.5",         "price": 25,  "currency": "diamonds", "icon": "⚡", "tab": "consumables", "desc": "20 боёв с бонусом XP",  "inventory": True},
     "xp_boost_x2":   {"name": "XP Буст ×2.0",         "price": 40,  "currency": "diamonds", "icon": "🚀", "tab": "consumables", "desc": "10 боёв XP ×2.0",       "inventory": True},
-    "gold_hunt":     {"name": "Охота за золотом",      "price": 20,  "currency": "diamonds", "icon": "💰", "tab": "consumables", "desc": "+20% золото, 24 ч",     "inventory": True},
+    "gold_hunt":     {"name": "Охота за золотом",      "price": 20,  "currency": "diamonds", "icon": "💰", "tab": "consumables", "desc": "+20% золото за бой, 24 ч", "inventory": True},
+    "xp_hunt":       {"name": "Охота за опытом",       "price": 20,  "currency": "diamonds", "icon": "📚", "tab": "consumables", "desc": "+50% опыта за бой, 24 ч",  "inventory": True},
     "stat_reset":    {"name": "Сброс статов",          "price": 200, "currency": "diamonds", "icon": "🔄", "tab": "consumables", "desc": "Сбросить все статы"},
 
     # ── Свитки — золото (1 бой, дёшево) ───────────────────────
