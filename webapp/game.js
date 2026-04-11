@@ -2712,8 +2712,8 @@ class ResultScene extends Phaser.Scene {
     this.tweens.add({ targets: title, scale: 1, alpha: 1, duration: 550, ease: 'Back.easeOut' });
 
     /* ── Карточка результата ── */
-    const panH = won ? (r.level_up ? 185 : (r.win_streak > 1 ? 175 : 155))
-                     : (isAfk ? 128 : (isEndless ? 120 : 132));
+    const panH = won ? (r.level_up ? 185 : (r.win_streak > 1 ? 175 : (isTitan ? 185 : 155)))
+                     : (isAfk ? 128 : (isEndless ? 120 : (isTitan ? 110 : 132)));
     const panY  = H * 0.28;
     makePanel(this, 16, panY, W - 32, panH, 16);
 
@@ -2770,6 +2770,15 @@ class ResultScene extends Phaser.Scene {
         }
       }
 
+      // Titan floor info
+      if (isTitan && titanFloor > 0) {
+        txt(this, W / 2, panY + 160, `🗿 Этаж ${titanFloor} пройден!`, 14, '#b45aff', true).setOrigin(0.5);
+        const tp = res?.titan_progress;
+        if (tp && Number(tp.best_floor) === titanFloor) {
+          txt(this, W / 2, panY + 179, '🆕 Новый рекорд Башни!', 11, '#ffc83c', true).setOrigin(0.5);
+        }
+      }
+
     } else if (isAfk) {
       txt(this, W / 2, panY + 24, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
       txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
@@ -2786,6 +2795,15 @@ class ResultScene extends Phaser.Scene {
       txt(this, W / 2, panY + 74, `⚔️  Урон нанесён: ${r.damage || 0}`, 13, '#ddaa66', true).setOrigin(0.5);
       txt(this, W / 2, panY + 98, `⏱️  Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
       // Лучший результат добавляется асинхронно (см. ниже endlessStatus)
+    } else if (isTitan) {
+      // ── Titan loss ──
+      txt(this, W / 2, panY + 14, 'ИТОГИ БАШНИ', 10, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 44, `💀 Этаж ${titanFloor > 0 ? titanFloor : '?'} — не пройден`, 16, '#ff4455', true).setOrigin(0.5);
+      const tpLoss = res?.titan_progress;
+      const bestFloor = tpLoss?.best_floor ?? 0;
+      if (bestFloor > 0) {
+        txt(this, W / 2, panY + 76, `🏆 Твой рекорд: ${bestFloor} этаж`, 12, '#9999bb').setOrigin(0.5);
+      }
     } else {
       txt(this, W / 2, panY + 18, '💪  Не сдавайся!', 14, '#8888aa', true).setOrigin(0.5);
       txt(this, W / 2, panY + 42, 'Утешительные награды', 10, '#666688').setOrigin(0.5);
