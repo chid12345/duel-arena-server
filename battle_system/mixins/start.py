@@ -94,16 +94,17 @@ class BattleStartMixin:
             return
         if not combined:
             return
-        player["strength"]  = max(1, int(player.get("strength",  PLAYER_START_STRENGTH))  + combined.get("strength",  0))
-        player["endurance"] = max(1, int(player.get("endurance", PLAYER_START_ENDURANCE)) + combined.get("endurance", 0))
-        player["crit"]      = max(0, int(player.get("crit",      PLAYER_START_CRIT))      + combined.get("crit",      0))
-        hp_bonus = combined.get("hp_bonus", 0)
-        if hp_bonus:
+        player["strength"] = max(1, int(player.get("strength", PLAYER_START_STRENGTH)) + combined.get("strength", 0))
+        player["crit"]     = max(0, int(player.get("crit",     PLAYER_START_CRIT))     + combined.get("crit",     0))
+        # endurance buff → HP/броня (выносливость), не уворот. dodge_pct buff — отдельно ниже.
+        end_bonus = combined.get("endurance", 0)
+        hp_bonus  = combined.get("hp_bonus",  0)
+        total_hp_bonus = end_bonus * STAMINA_PER_FREE_STAT + hp_bonus
+        if total_hp_bonus:
             old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
             old_cur = int(player.get("current_hp", old_max))
-            player["max_hp"] = old_max + hp_bonus
-            # Preserve HP percentage: add the same bonus to current_hp
-            player["current_hp"] = min(player["max_hp"], old_cur + hp_bonus)
+            player["max_hp"]     = old_max + total_hp_bonus
+            player["current_hp"] = min(player["max_hp"], old_cur + total_hp_bonus)
         # Боевые pct-модификаторы добавляем как поля в dict (damage.py их читает)
         player["_buff_armor_pct"]    = combined.get("armor_pct",    0)
         player["_buff_dodge_pct"]    = combined.get("dodge_pct",    0)

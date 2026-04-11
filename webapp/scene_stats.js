@@ -377,19 +377,22 @@ class StatsScene extends Phaser.Scene {
         row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
       }
 
-      // ── endurance buff → Уворот пересчитан сервером (p.dodge_pct уже актуален) ──
+      // ── endurance buff → Выносливость: броня и HP пересчитаны сервером ──
       if (B.endurance) {
-        const v = parseFloat(p.dodge_pct || 0).toFixed(1);
-        if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${v}% уворот🧪`);
-        if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${v}%`).setColor('#88ffcc');
+        const armorV = parseFloat(p.armor_pct || 0).toFixed(1);
+        if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${armorV}% броня🧪`);
+        if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${armorV}%`).setColor('#88ffcc');
+        if (this._combatCells?.hp) {
+          this._combatCells.hp.t.setText(String(p.max_hp_effective ?? p.max_hp)).setColor('#aaffaa');
+        }
       }
-      // ── armor_pct → Выносливость effectFn + Броня в боевых ──
+      // ── armor_pct → дополнительная броня поверх базовой ──
       if (B.armor_pct) {
         const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
         if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${v}% броня🧪`);
         if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${v}%`).setColor('#88ffcc');
       }
-      // ── dodge_pct → Ловкость effectFn + Уворот в боевых (p.dodge_pct уже включает endurance buff) ──
+      // ── dodge_pct → Ловкость effectFn + Уворот в боевых ──
       if (B.dodge_pct) {
         const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
         if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${v}% уворот🧪`);
@@ -403,10 +406,9 @@ class StatsScene extends Phaser.Scene {
       if (B.strength && this._combatCells?.dmg) {
         this._combatCells.dmg.t.setText(String(p.dmg)).setColor('#ff9966');
       }
-      // ── hp_bonus → HP ячейка ──
+      // ── hp_bonus → HP ячейка (max_hp_effective уже включает hp_bonus) ──
       if (B.hp_bonus && this._combatCells?.hp) {
-        const baseHp = parseInt(p.max_hp || 0);
-        this._combatCells.hp.t.setText(String(baseHp + B.hp_bonus)).setColor('#ff8888');
+        this._combatCells.hp.t.setText(String(p.max_hp_effective ?? p.max_hp)).setColor('#ff8888');
       }
 
       // ── Форматируем строку активных бафов ──
