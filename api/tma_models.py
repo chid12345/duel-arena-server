@@ -30,6 +30,17 @@ class ChallengeRespondBody(BaseModel):
     accept: bool
 
 
+class ShopBuyBody(BaseModel):
+    init_data: str
+    item_id: str
+
+
+class ShopApplyBody(BaseModel):
+    init_data: str
+    item_id: str
+    replace: bool = False  # True → заменить активный свиток
+
+
 class ChallengeCancelBody(BaseModel):
     init_data: str
     challenge_id: int

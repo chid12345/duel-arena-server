@@ -11,10 +11,12 @@ from repositories.inventory.switch import InventorySwitchMixin
 from repositories.inventory.unequip_resync import InventoryUnequipResyncMixin
 from repositories.inventory.usdt import InventoryUsdtMixin
 from repositories.inventory.usdt_train import InventoryUsdtTrainMixin
+from repositories.inventory.usdt_apply_passive import InventoryUsdtApplyPassiveMixin
 
 
 class InventoryMixin(
     InventoryUsdtMixin,
+    InventoryUsdtApplyPassiveMixin,
     InventoryUsdtTrainMixin,
     InventorySwitchMixin,
     InventoryCrudMixin,

@@ -1,0 +1,134 @@
+"""Вспомогательные функции и константы магазина."""
+
+from __future__ import annotations
+
+from datetime import datetime
+
+from api.tma_player_api import _player_api
+
+
+# Количество зарядов xp_boost для каждого item_id
+_XP_BOOST_CHARGES = {
+    "xp_boost_5":  (5,  1.5),
+    "xp_boost_20": (20, 1.5),
+    "xp_boost_x2": (10, 2.0),
+}
+
+# Золото за обмен алмазов
+_EXCHANGE_GOLD = {
+    "exchange_small":  (5,  350),
+    "exchange_medium": (15, 1100),
+    "exchange_large":  (50, 4000),
+}
+
+
+def _finalize(db, uid: int, result: dict) -> dict:
+    if result.get("ok"):
+        player = db.get_or_create_player(uid, "")
+        result["player"] = _player_api(dict(player))
+    return result
+
+
+def _buy_hp(db, uid: int, price: int, pct: float) -> dict:
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT gold, max_hp, current_hp FROM players WHERE user_id = ?", (uid,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return {"ok": False, "reason": "Игрок не найден"}
+    if (row["gold"] or 0) < price:
+        conn.close()
+        return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
+    max_hp = int(row["max_hp"] or 100)
+    cur_hp = int(row["current_hp"]) if row["current_hp"] is not None else max_hp
+    if cur_hp >= max_hp:
+        conn.close()
+        return {"ok": False, "reason": "HP уже полное!"}
+    if pct >= 1.0:
+        new_hp = max_hp
+    else:
+        new_hp = min(max_hp, cur_hp + max(1, int(max_hp * pct)))
+    cursor.execute(
+        "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ? WHERE user_id = ?",
+        (price, new_hp, datetime.utcnow().isoformat(), uid),
+    )
+    conn.commit()
+    conn.close()
+    player = db.get_or_create_player(uid, "")
+    return {"ok": True, "hp_restored": new_hp - cur_hp, "new_hp": new_hp, "max_hp": max_hp,
+            "player": _player_api(dict(player))}
+
+
+def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str) -> dict:
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    if currency == "gold":
+        cursor.execute("SELECT gold FROM players WHERE user_id = ?", (uid,))
+        row = cursor.fetchone()
+        if not row or (row["gold"] or 0) < price:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
+        cursor.execute("UPDATE players SET gold = gold - ? WHERE user_id = ?", (price, uid))
+    else:
+        cursor.execute("SELECT diamonds FROM players WHERE user_id = ?", (uid,))
+        row = cursor.fetchone()
+        if not row or (row["diamonds"] or 0) < price:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {price} 💎 алмазов"}
+        cursor.execute("UPDATE players SET diamonds = diamonds - ? WHERE user_id = ?", (price, uid))
+    conn.commit()
+    conn.close()
+    db.add_to_inventory(uid, item_id)
+    player = db.get_or_create_player(uid, "")
+    from api.tma_catalogs import SHOP_CATALOG
+    info = SHOP_CATALOG.get(item_id, {})
+    return {"ok": True, "added_to_inventory": True, "item_id": item_id,
+            "item_name": info.get("name", item_id), "player": _player_api(dict(player))}
+
+
+def _buy_xp_boost_item(db, uid: int, item_id: str, charges: int, mult: float) -> dict:
+    from api.tma_catalogs import SHOP_CATALOG
+    item = SHOP_CATALOG[item_id]
+    price = item["price"]
+    currency = item["currency"]
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    if currency == "gold":
+        cursor.execute("SELECT gold FROM players WHERE user_id = ?", (uid,))
+        row = cursor.fetchone()
+        if not row or (row["gold"] or 0) < price:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
+        cursor.execute("UPDATE players SET gold = gold - ? WHERE user_id = ?", (price, uid))
+    else:
+        cursor.execute("SELECT diamonds FROM players WHERE user_id = ?", (uid,))
+        row = cursor.fetchone()
+        if not row or (row["diamonds"] or 0) < price:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {price} 💎 алмазов"}
+        cursor.execute("UPDATE players SET diamonds = diamonds - ? WHERE user_id = ?", (price, uid))
+    conn.commit()
+    conn.close()
+    db.add_to_inventory(uid, item_id)
+    player = db.get_or_create_player(uid, "")
+    return {"ok": True, "added_to_inventory": True, "item_id": item_id,
+            "charges": charges, "player": _player_api(dict(player))}
+
+
+def _exchange_diamonds(db, uid: int, cost_diamonds: int, gold_gain: int) -> dict:
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT diamonds FROM players WHERE user_id = ?", (uid,))
+    row = cursor.fetchone()
+    if not row or (row["diamonds"] or 0) < cost_diamonds:
+        conn.close()
+        return {"ok": False, "reason": f"Нужно {cost_diamonds} 💎 алмазов"}
+    cursor.execute(
+        "UPDATE players SET diamonds = diamonds - ?, gold = gold + ? WHERE user_id = ?",
+        (cost_diamonds, gold_gain, uid),
+    )
+    conn.commit()
+    conn.close()
+    player = db.get_or_create_player(uid, "")
+    return {"ok": True, "gold_gained": gold_gain, "player": _player_api(dict(player))}
