@@ -164,26 +164,27 @@ def main():
 
     # ── Retry-цикл: при Conflict (два экземпляра в Render zero-downtime deploy)
     # ждём пока старый контейнер умрёт и пробуем снова.
-    MAX_ATTEMPTS = 8
-    for attempt in range(MAX_ATTEMPTS):
+    # Render может держать старый контейнер долго — retry без жёсткого лимита,
+    # ждём до 60 сек между попытками. Выход только по не-Conflict ошибке или Ctrl-C.
+    attempt = 0
+    while True:
         try:
-            logger.info("⚔️ Запуск бота (попытка %d/%d)...", attempt + 1, MAX_ATTEMPTS)
+            logger.info("⚔️ Запуск бота (попытка %d)...", attempt + 1)
             app = _build_app(bot_count)
             app.run_polling(drop_pending_updates=True)
             logger.info("✅ Бот завершил работу штатно")
             break
 
         except TelegramConflict:
-            wait = 15 * (attempt + 1)          # 15 → 30 → 45 → … сек
-            if attempt < MAX_ATTEMPTS - 1:
-                logger.warning(
-                    "⚠️ Telegram Conflict — другой экземпляр бота ещё активен. "
-                    "Жду %ds перед повтором (попытка %d/%d)...",
-                    wait, attempt + 1, MAX_ATTEMPTS,
-                )
-                _time.sleep(wait)
-            else:
-                logger.error("❌ Conflict не разрешился за %d попыток. Бот не запущен.", MAX_ATTEMPTS)
+            attempt += 1
+            wait = min(60, 15 * attempt)       # 15 → 30 → 45 → 60 → 60 → … сек
+            logger.warning(
+                "⚠️ Telegram Conflict — другой экземпляр бота ещё активен. "
+                "Жду %ds перед повтором (попытка %d)...",
+                wait, attempt + 1,
+            )
+            _time.sleep(wait)
+            continue
 
         except KeyboardInterrupt:
             logger.info("🛑 Бот остановлен пользователем")
