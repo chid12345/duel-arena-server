@@ -1735,6 +1735,10 @@ class MenuScene extends Phaser.Scene {
       },
     });
   }
+
+  shutdown() {
+    this.time.removeAllEvents();
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
