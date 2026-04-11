@@ -40,7 +40,7 @@ SHOP_CATALOG = {
     "scroll_armor_10": {"name": "Свиток брони 10%",     "price": 30,  "currency": "diamonds", "icon": "🛡️", "tab": "scrolls", "desc": "Броня +10%, 3 боя",       "inventory": True},
     "scroll_hp_200":   {"name": "Эликсир HP +200",      "price": 25,  "currency": "diamonds", "icon": "❤️", "tab": "scrolls", "desc": "+200 HP, 3 боя",          "inventory": True},
     "scroll_double_10":{"name": "Двойной удар +10%",    "price": 35,  "currency": "diamonds", "icon": "⚡", "tab": "scrolls", "desc": "Двойной удар +10%, 3 боя", "inventory": True},
-    "scroll_all_4":    {"name": "Все пассивки +4",      "price": 40,  "currency": "diamonds", "icon": "✨", "tab": "scrolls", "desc": "Все статы +4, 1 бой",      "inventory": True},
+    "scroll_all_4":    {"name": "Все пассивки +4",      "price": 40,  "currency": "diamonds", "icon": "✨", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +4, 1 бой", "inventory": True},
     "scroll_bastion":  {"name": "Бастион",              "price": 35,  "currency": "diamonds", "icon": "🏰", "tab": "scrolls", "desc": "Ловк+5, Броня+8%, 3 боя",  "inventory": True},
     "scroll_predator": {"name": "Хищник",               "price": 35,  "currency": "diamonds", "icon": "🐍", "tab": "scrolls", "desc": "Крит+5, Двойн+8%, 3 боя",  "inventory": True},
     "scroll_berserker":{"name": "Берсерк",              "price": 40,  "currency": "diamonds", "icon": "🔥", "tab": "scrolls", "desc": "Сила+8, Броня-5%, 3 боя",   "inventory": True},
@@ -73,7 +73,7 @@ SCROLL_EFFECTS = {
     "scroll_armor_10": [("armor_pct",   10,  3)],
     "scroll_hp_200":   [("hp_bonus",    200, 3)],
     "scroll_double_10":[("double_pct",  10,  3)],
-    "scroll_all_4":    [("strength",    4,   1), ("endurance",  4,  1), ("crit", 4, 1)],
+    "scroll_all_4":    [("strength",    4,   1), ("endurance",  4,  1), ("crit", 4, 1), ("stamina", 4, 1)],
     "scroll_bastion":  [("endurance",   5,   3), ("armor_pct",  8,  3)],
     "scroll_predator": [("crit",        5,   3), ("double_pct", 8,  3)],
     "scroll_berserker":[("strength",    8,   3), ("armor_pct",  -5, 3)],
@@ -84,8 +84,8 @@ SCROLL_EFFECTS = {
     "scroll_stam_12":  [("stamina",     12,  5)],
     "scroll_crit_12":  [("crit",        12,  5)],
     "scroll_hp_500":   [("hp_bonus",    500, 7)],
-    "scroll_all_12":   [("strength",    12,  5), ("endurance", 12, 5), ("crit", 12, 5)],
-    "scroll_titan":    [("strength",    15,  3), ("endurance", 15, 3), ("crit", 15, 3), ("armor_pct", 10, 3)],
+    "scroll_all_12":   [("strength",    12,  5), ("endurance", 12, 5), ("crit", 12, 5), ("stamina", 12, 5)],
+    "scroll_titan":    [("strength",    15,  3), ("endurance", 15, 3), ("crit", 15, 3), ("stamina", 15, 3)],
 }
 
 STARS_PACKAGES = [

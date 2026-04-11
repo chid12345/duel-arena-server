@@ -67,7 +67,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 await manager.send(uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
                 from api.tma_catalogs import SHOP_CATALOG
                 scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})
-                await _send_tg_message(uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Статы → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
+                await _send_tg_message(uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
             elif is_usdt_slot:
                 ok2, msg2, new_class_id = db.create_usdt_class(uid)
                 await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})

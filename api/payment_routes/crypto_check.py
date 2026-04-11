@@ -65,7 +65,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await manager.send(owner_uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
                     from api.tma_catalogs import SHOP_CATALOG
                     scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})
-                    await _send_tg_message(owner_uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Статы → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
+                    await _send_tg_message(owner_uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
                     return {"ok": True, "paid": True, "scroll_received": True, "scroll_id": usdt_scroll_id}
                 if avatar_id:
                     db.unlock_avatar(owner_uid, avatar_id, source="usdt")
@@ -95,7 +95,12 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 await _send_tg_message(owner_uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
                 return {"ok": True, "paid": True, "diamonds": diamonds}
             if result.get("reason") == "already_paid":
-                return {"ok": True, "paid": True, "already_confirmed": True, "profile_reset": is_full_reset}
+                return {
+                    "ok": True, "paid": True, "already_confirmed": True,
+                    "profile_reset": is_full_reset,
+                    "scroll_received": is_usdt_scroll,
+                    "scroll_id": usdt_scroll_id if is_usdt_scroll else None,
+                }
             return {"ok": False, "reason": result.get("reason")}
         except Exception as e:
             logger.error("crypto_check error: %s", e)
