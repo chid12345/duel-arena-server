@@ -63,7 +63,10 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, usdt_scroll_id, asset, invoice_id)
             if is_usdt_scroll and usdt_scroll_id:
-                db.add_to_inventory(uid, usdt_scroll_id)
+                try:
+                    db.add_to_inventory(uid, usdt_scroll_id)
+                except Exception as _e:
+                    logger.error("CRITICAL: add_to_inventory failed after confirm uid=%s scroll=%s invoice=%s err=%s", uid, usdt_scroll_id, invoice_id, _e)
                 await manager.send(uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
                 from api.tma_catalogs import SHOP_CATALOG
                 scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})

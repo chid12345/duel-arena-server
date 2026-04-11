@@ -27,13 +27,13 @@ class SocialPaymentsMixin:
         finally:
             conn.close()
 
-    def create_crypto_invoice(self, user_id: int, invoice_id: int, diamonds: int, asset: str, amount: str) -> None:
+    def create_crypto_invoice(self, user_id: int, invoice_id: int, diamonds: int, asset: str, amount: str, payload: str = "") -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "INSERT OR IGNORE INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status) VALUES (?, ?, ?, ?, ?, 'pending')",
-                (invoice_id, user_id, diamonds, asset.upper(), amount),
+                "INSERT OR IGNORE INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status, payload) VALUES (?, ?, ?, ?, ?, 'pending', ?)",
+                (invoice_id, user_id, diamonds, asset.upper(), amount, payload),
             )
             conn.commit()
         finally:
@@ -80,7 +80,7 @@ class SocialPaymentsMixin:
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT invoice_id, user_id, diamonds, asset, amount, created_at FROM crypto_invoices "
+                "SELECT invoice_id, user_id, diamonds, asset, amount, payload, created_at FROM crypto_invoices "
                 "WHERE status = 'pending' AND created_at < datetime('now', ? || ' seconds') ORDER BY created_at ASC LIMIT 50",
                 (f"-{seconds}",),
             )

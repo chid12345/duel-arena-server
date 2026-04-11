@@ -139,6 +139,7 @@ POSTGRES_DDL_02: tuple[str, ...] = (
         asset TEXT NOT NULL DEFAULT 'TON',
         amount TEXT NOT NULL DEFAULT '0',
         status TEXT NOT NULL DEFAULT 'pending',
+        payload TEXT NOT NULL DEFAULT '',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         paid_at TIMESTAMP
     )

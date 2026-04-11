@@ -107,7 +107,7 @@ def attach_avatar_elite(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 data = resp.json()
             if data.get("ok"):
                 inv = data["result"]
-                db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", str(ELITE_AVATAR_USDT))
+                db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", str(ELITE_AVATAR_USDT), payload=f"uid:{uid}:avatar:{ELITE_AVATAR_ID}")
                 return {
                     "ok": True,
                     "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),

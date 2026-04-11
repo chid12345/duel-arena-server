@@ -61,7 +61,10 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     logger.warning("crypto_check invoice %s user mismatch db=%s init=%s", invoice_id, owner_uid, uid)
                     return {"ok": False, "reason": "invoice_user_mismatch"}
                 if is_usdt_scroll and usdt_scroll_id:
-                    db.add_to_inventory(owner_uid, usdt_scroll_id)
+                    try:
+                        db.add_to_inventory(owner_uid, usdt_scroll_id)
+                    except Exception as _e:
+                        logger.error("CRITICAL: add_to_inventory failed after confirm uid=%s scroll=%s invoice=%s err=%s", owner_uid, usdt_scroll_id, invoice_id, _e)
                     await manager.send(owner_uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
                     from api.tma_catalogs import SHOP_CATALOG
                     scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})

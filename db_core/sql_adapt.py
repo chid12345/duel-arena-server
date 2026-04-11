@@ -36,8 +36,8 @@ _PG_EXACT: List[Tuple[str, str]] = [
         "INSERT INTO battle_pass (user_id, season_id) VALUES (%s, %s) ON CONFLICT (user_id, season_id) DO NOTHING",
     ),
     (
-        "INSERT OR IGNORE INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status) VALUES (?, ?, ?, ?, ?, 'pending')",
-        "INSERT INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status) VALUES (%s, %s, %s, %s, %s, 'pending') ON CONFLICT (invoice_id) DO NOTHING",
+        "INSERT OR IGNORE INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status, payload) VALUES (?, ?, ?, ?, ?, 'pending', ?)",
+        "INSERT INTO crypto_invoices (invoice_id, user_id, diamonds, asset, amount, status, payload) VALUES (%s, %s, %s, %s, %s, 'pending', %s) ON CONFLICT (invoice_id) DO NOTHING",
     ),
     (
         "INSERT OR REPLACE INTO pvp_queue (user_id, level, chat_id, message_id) VALUES (?, ?, ?, ?)",

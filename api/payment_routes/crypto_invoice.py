@@ -48,7 +48,7 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     data = resp.json()
                 if data.get("ok"):
                     inv = data["result"]
-                    db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", amount)
+                    db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", amount, payload=payload_str)
                     return {"ok": True, "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"), "invoice_id": inv["invoice_id"]}
                 err = data.get("error") or {}
                 return {"ok": False, "reason": f"CryptoPay [{err.get('code', '?')}] {err.get('name', 'UNKNOWN')}"}
@@ -95,7 +95,7 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 data = resp.json()
             if data.get("ok"):
                 inv = data["result"]
-                db.create_crypto_invoice(uid, inv["invoice_id"], pkg["diamonds"], "USDT", amount)
+                db.create_crypto_invoice(uid, inv["invoice_id"], pkg["diamonds"], "USDT", amount, payload=payload_str)
                 return {"ok": True, "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"), "invoice_id": inv["invoice_id"]}
             err = data.get("error") or {}
             code = err.get("code", "?")

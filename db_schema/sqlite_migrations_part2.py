@@ -38,6 +38,9 @@ MIGRATIONS_PART2 = [
         "CREATE INDEX IF NOT EXISTS idx_crypto_invoices_user ON crypto_invoices (user_id)",
         "CREATE INDEX IF NOT EXISTS idx_crypto_invoices_status ON crypto_invoices (status, created_at)",
     ]),
+    ("2026_04_13_002_crypto_invoices_payload", [
+        "ALTER TABLE crypto_invoices ADD COLUMN payload TEXT NOT NULL DEFAULT ''",
+    ]),
     ("2026_04_12_001_referral_payouts", [
         "ALTER TABLE players ADD COLUMN referral_subscriber_rank INTEGER",
         "ALTER TABLE players ADD COLUMN referral_tier TEXT",

@@ -190,4 +190,13 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
             "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
         },
     )
-    attach_tma_startup(app, db=db, _cache_invalidate=_cache_invalidate, _send_tg_message=_send_tg_message)
+    attach_tma_startup(
+        app,
+        db=db,
+        _cache_invalidate=_cache_invalidate,
+        _send_tg_message=_send_tg_message,
+        manager=manager,
+        CRYPTOPAY_TOKEN=CRYPTOPAY_TOKEN,
+        CRYPTOPAY_API_BASE=CRYPTOPAY_API_BASE,
+        USDT_SCROLL_PACKAGES=USDT_SCROLL_PACKAGES,
+    )
