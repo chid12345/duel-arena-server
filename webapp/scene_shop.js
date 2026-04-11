@@ -105,20 +105,21 @@ class ShopScene extends Phaser.Scene {
       this._makeItemCard(item, 8 + col * (iw + 8), startY + row * (ih + 10), iw, ih);
     });
 
-    // Навигация страниц
+    // Навигация страниц — прямо под карточками
     if (pageCount > 1) {
-      const navY = H - 46;
+      const actualRows = Math.ceil(slice.length / cols);
+      const navY = startY + actualRows * (ih + 10) + 14;
       const mkNav = (x, label, nextPage) => {
         const g = this.add.graphics();
-        g.fillStyle(0x2a2840, .95); g.fillRoundedRect(x - 42, navY, 84, 26, 7);
-        g.lineStyle(1, C.blue, .6); g.strokeRoundedRect(x - 42, navY, 84, 26, 7);
-        txt(this, x, navY + 13, label, 11, '#f0f0fa', true).setOrigin(.5);
-        this.add.zone(x, navY + 13, 84, 26).setInteractive({ useHandCursor: true })
+        g.fillStyle(0x2a2840, .95); g.fillRoundedRect(x - 50, navY, 100, 32, 8);
+        g.lineStyle(1.5, C.blue, .7); g.strokeRoundedRect(x - 50, navY, 100, 32, 8);
+        txt(this, x, navY + 16, label, 12, '#f0f0fa', true).setOrigin(.5);
+        this.add.zone(x - 50, navY, 100, 32).setOrigin(0).setInteractive({ useHandCursor: true })
           .on('pointerdown', () => { ShopScene._lastPage = nextPage; this.scene.restart({ tab: this._tab, page: nextPage }); });
       };
       if (page > 0) mkNav(W / 2 - 64, '◀ Назад', page - 1);
       if (page < pageCount - 1) mkNav(W / 2 + 64, 'Вперёд ▶', page + 1);
-      txt(this, W / 2, navY + 13, `${page + 1} / ${pageCount}`, 10, '#8888aa', true).setOrigin(.5);
+      txt(this, W / 2, navY + 16, `${page + 1} / ${pageCount}`, 10, '#8888aa', true).setOrigin(.5);
     }
   }
 
@@ -320,7 +321,7 @@ class ShopScene extends Phaser.Scene {
     txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5);
   }
 
-  /* ── Вкладка "💵 Купить" (USDT) ─────────────────────── */
+  /* ── Вкладка "💵 Купить" (USDT) — 2 страницы ────────── */
   async _buildSpecialPanel(W, H) {
     let d;
     try { d = await get('/api/shop/packages'); }
@@ -329,8 +330,11 @@ class ShopScene extends Phaser.Scene {
     const cryptoPkgs = d.crypto || [];
     const scrollPkgs = d.usdt_scrolls || [];
     const cryptoOn   = d.cryptopay_enabled;
+    const pg = this._shopPage || 0;
     let y = 162;
     const p = State.player;
+
+    // Премиум-бейдж — на обеих страницах
     if (p?.is_premium) {
       const sb = this.add.graphics();
       sb.fillStyle(0x1a0a30, 0.95); sb.fillRoundedRect(8, y, W-16, 32, 9);
@@ -339,6 +343,7 @@ class ShopScene extends Phaser.Scene {
       txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#8888aa').setOrigin(1, 0);
       y += 40;
     }
+
     if (!cryptoOn) {
       const cg = this.add.graphics();
       cg.fillStyle(C.bgPanel, 0.6); cg.fillRoundedRect(8, y, W-16, 56, 10);
@@ -347,8 +352,31 @@ class ShopScene extends Phaser.Scene {
       return;
     }
 
-    // USDT-свитки сначала
-    if (scrollPkgs.length) {
+    const hasScrolls = scrollPkgs.length > 0;
+    const pageCount  = hasScrolls ? 2 : 1;
+    const page       = Math.min(pg, pageCount - 1);
+
+    const mkSpecNav = (navY, prevPg, nextPg) => {
+      const navG = this.add.graphics();
+      if (prevPg !== null) {
+        navG.fillStyle(0x1a4055, 0.9); navG.fillRoundedRect(W/2-116, navY, 108, 30, 8);
+        navG.lineStyle(1.5, 0x3cc8dc, 0.55); navG.strokeRoundedRect(W/2-116, navY, 108, 30, 8);
+        txt(this, W/2-62, navY+15, '◀ Свитки', 11, '#3ce8ff', true).setOrigin(0.5);
+        this.add.zone(W/2-116, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { ShopScene._lastPage = prevPg; this.scene.restart({ tab: 'special', page: prevPg }); });
+      }
+      if (nextPg !== null) {
+        navG.fillStyle(0x1a4055, 0.9); navG.fillRoundedRect(W/2+8, navY, 108, 30, 8);
+        navG.lineStyle(1.5, 0x3cc8dc, 0.55); navG.strokeRoundedRect(W/2+8, navY, 108, 30, 8);
+        txt(this, W/2+62, navY+15, 'Алмазы ▶', 11, '#3ce8ff', true).setOrigin(0.5);
+        this.add.zone(W/2+8, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => { ShopScene._lastPage = nextPg; this.scene.restart({ tab: 'special', page: nextPg }); });
+      }
+      txt(this, W/2, navY+15, `${page+1} / ${pageCount}`, 9, '#7777aa', true).setOrigin(0.5);
+    };
+
+    if (page === 0 && hasScrolls) {
+      // ── Страница 1: USDT свитки ──
       makePanel(this, 8, y, W-16, 22, 8, 0.6);
       txt(this, 20, y+5, '📜  ОСОБЫЕ СВИТКИ', 12, '#3cc8dc', true);
       txt(this, W-12, y+5, 'USDT', 11, '#9999bb').setOrigin(1, 0);
@@ -359,35 +387,37 @@ class ShopScene extends Phaser.Scene {
         const ix = 8 + col * (iw + 8), iy = y + row * 74;
         this._makeUsdtScrollCard(pkg, ix, iy, iw - 4, 68);
       });
-      y += Math.ceil(scrollPkgs.length / 2) * 74 + 8;
-    }
-
-    // Пакеты алмазов
-    makePanel(this, 8, y, W-16, 22, 8, 0.6);
-    txt(this, 20, y+5, '💎  АЛМАЗЫ / USDT', 12, '#3cc8dc', true);
-    y += 30;
-    const cpMain = cryptoPkgs.filter(pkg => !pkg.premium && !pkg.full_reset);
-    const cpW = (W - 32) / Math.max(1, cpMain.length);
-    cpMain.forEach((pkg, i) => {
-      this._makeCryptoCard(pkg, 8 + i * (cpW + 8 / Math.max(1,cpMain.length)), y, cpW - 4, 80);
-    });
-    y += 90;
-    const cpReset = cryptoPkgs.find(pkg => pkg.full_reset);
-    if (cpReset) { this._makeCryptoResetCard(cpReset, 8, y, W-16, 88); y += 98; }
-    const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
-    if (cpPrem) { this._makeCryptoPremiumCard(cpPrem, 8, y, W-16, 52); y += 62; }
-    txt(this, W/2, y+4, '💡 После оплаты товар придёт автоматически', 11, '#9999bb').setOrigin(0.5);
-
-    const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
-    if (pendingId) {
+      y += Math.ceil(scrollPkgs.length / 2) * 74 + 12;
+      mkSpecNav(y, null, 1);
+    } else {
+      // ── Страница 2: Алмазы / Premium / Сброс ──
+      makePanel(this, 8, y, W-16, 22, 8, 0.6);
+      txt(this, 20, y+5, '💎  АЛМАЗЫ / USDT', 12, '#3cc8dc', true);
+      y += 30;
+      const cpMain = cryptoPkgs.filter(pkg => !pkg.premium && !pkg.full_reset);
+      const cpW = (W - 32) / Math.max(1, cpMain.length);
+      cpMain.forEach((pkg, i) => {
+        this._makeCryptoCard(pkg, 8 + i * (cpW + 8 / Math.max(1,cpMain.length)), y, cpW - 4, 80);
+      });
+      y += 90;
+      const cpReset = cryptoPkgs.find(pkg => pkg.full_reset);
+      if (cpReset) { this._makeCryptoResetCard(cpReset, 8, y, W-16, 88); y += 98; }
+      const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
+      if (cpPrem) { this._makeCryptoPremiumCard(cpPrem, 8, y, W-16, 52); y += 62; }
+      txt(this, W/2, y+4, '💡 После оплаты товар придёт автоматически', 11, '#9999bb').setOrigin(0.5);
       y += 22;
-      const checkG = this.add.graphics();
-      checkG.fillStyle(0x1a4055, 0.9); checkG.fillRoundedRect(8, y, W-16, 36, 9);
-      checkG.lineStyle(1.5, 0x3cc8dc, 0.5); checkG.strokeRoundedRect(8, y, W-16, 36, 9);
-      const checkT = txt(this, W/2, y+18, '🔄 Проверить оплату', 12, '#3cc8dc', true).setOrigin(0.5);
-      this.add.zone(8, y, W-16, 36).setOrigin(0).setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => { checkG.clear(); checkG.fillStyle(0x0a2535,1); checkG.fillRoundedRect(8,y,W-16,36,9); })
-        .on('pointerup', () => { checkT.setText('⏳ Проверяем...'); this._checkPendingInvoice(pendingId); });
+      const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
+      if (pendingId) {
+        const checkG = this.add.graphics();
+        checkG.fillStyle(0x1a4055, 0.9); checkG.fillRoundedRect(8, y, W-16, 36, 9);
+        checkG.lineStyle(1.5, 0x3cc8dc, 0.5); checkG.strokeRoundedRect(8, y, W-16, 36, 9);
+        const checkT = txt(this, W/2, y+18, '🔄 Проверить оплату', 12, '#3cc8dc', true).setOrigin(0.5);
+        this.add.zone(8, y, W-16, 36).setOrigin(0).setInteractive({ useHandCursor: true })
+          .on('pointerdown', () => { checkG.clear(); checkG.fillStyle(0x0a2535,1); checkG.fillRoundedRect(8,y,W-16,36,9); })
+          .on('pointerup', () => { checkT.setText('⏳ Проверяем...'); this._checkPendingInvoice(pendingId); });
+        y += 44;
+      }
+      if (hasScrolls) mkSpecNav(y, 0, null);
     }
   }
 
