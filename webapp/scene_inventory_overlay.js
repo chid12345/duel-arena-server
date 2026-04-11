@@ -110,10 +110,16 @@
       const timeBased   = activeBuffs.filter(b => b.expires_at != null);
       const lines = [];
       if (chargeBased.length > 0) {
-        const parts = chargeBased.map(b => `${BUFF_LABEL[b.buff_type] || b.buff_type}+${b.value}`).join(' ');
+        const parts = chargeBased.map(b => `${BUFF_LABEL[b.buff_type] || b.buff_type}+${b.value}`);
         const ch = chargeBased[0].charges;
-        lines.push({ text: `${parts}  · ещё ${ch} ${ch === 1 ? 'бой' : 'боёв'}`, color: '#aaffee' });
-        lines.push({ text: `Натиск / Башня Титанов = 1 заряд за заход`, color: '#88aadd' });
+        const chWord = ch === 1 ? 'бой' : ch < 5 ? 'боя' : 'боёв';
+        // Разбить на строки по 2 стата чтобы не переполнять строку
+        for (let i = 0; i < parts.length; i += 2) {
+          const chunk = parts.slice(i, i + 2).join('   ');
+          const isLast = i + 2 >= parts.length;
+          lines.push({ text: isLast ? `${chunk}   · ${ch} ${chWord}` : chunk, color: '#ffffff' });
+        }
+        lines.push({ text: `Натиск / Башня Титанов = 1 заряд за заход`, color: '#aaccff' });
       }
       timeBased.forEach(b => {
         const msLeft = Math.max(0, new Date(b.expires_at + 'Z') - Date.now());
@@ -121,18 +127,18 @@
         const mLeft  = Math.floor((msLeft % 3600000) / 60000);
         const timeStr = hLeft > 0 ? `${hLeft}ч ${mLeft}м` : `${mLeft}м`;
         const label = BUFF_LABEL[b.buff_type] || b.buff_type;
-        lines.push({ text: `${label}+${b.value}%  · ещё ${timeStr}`, color: '#ffc83c' });
+        lines.push({ text: `${label}+${b.value}%   · ${timeStr}`, color: '#ffc83c' });
       });
-      buffCardH = 20 + lines.length * 18 + 4;
+      buffCardH = 18 + lines.length * 17 + 4;
       const bcg = this.add.graphics().setDepth(132);
-      bcg.fillStyle(0x0e2a1a, 0.97);
+      bcg.fillStyle(0x0a1a30, 0.97);
       bcg.fillRoundedRect(12, buffCardY, W-24, buffCardH, 8);
-      bcg.lineStyle(1.5, 0x44cc77, 0.8);
+      bcg.lineStyle(1.5, 0x4488cc, 0.8);
       bcg.strokeRoundedRect(12, buffCardY, W-24, buffCardH, 8);
       ov.push(bcg);
-      ov.push(txt(this, 20, buffCardY + 9, '✨ Активный баф', 9, '#66cc88', true).setDepth(133));
+      ov.push(txt(this, 20, buffCardY + 9, '🧪 Активный баф:', 9, '#88ccff', true).setDepth(133));
       lines.forEach((line, i) => {
-        ov.push(txt(this, 20, buffCardY + 20 + i * 18, line.text, 10, line.color, true).setDepth(133));
+        ov.push(txt(this, 20, buffCardY + 19 + i * 17, line.text, 10, line.color, true).setDepth(133));
       });
     }
 
@@ -221,15 +227,18 @@
     makeDlgBtn(32, bw, 'Заменить', 0xcc6600, async () => {
       dlg.forEach(o => { try { o.destroy(); } catch {} });
       this._invBusy = true;
-      const res = await post('/api/shop/apply', { item_id: newItemId, replace: true });
-      this._invBusy = false;
-      if (res?.ok) {
-        if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-        this._invData = await get('/api/shop/inventory').catch(() => this._invData);
-        this._showToast(res.msg || '✅ Заменён!');
-        this._renderInvOverlay();
-        this._refreshBuffDisplay(); // обновить статы сразу
-      } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
+      this._showToast('⏳ Заменяем...');
+      try {
+        const res = await post('/api/shop/apply', { item_id: newItemId, replace: true });
+        if (res?.ok) {
+          if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
+          this._invData = await get('/api/shop/inventory').catch(() => this._invData);
+          this._showToast(res.msg || '✅ Заменён!');
+          this._renderInvOverlay();
+          this._refreshBuffDisplay();
+        } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
+      } catch { this._showToast('❌ Нет соединения'); }
+      finally { this._invBusy = false; }
     });
     makeDlgBtn(32 + bw + 8, bw, 'Отмена', 0x444466, () => { dlg.forEach(o => { try { o.destroy(); } catch {} }); });
     this._invOverlay = (this._invOverlay || []).concat(dlg);
