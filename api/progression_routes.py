@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from reward_calculator import calc_reward
+from api.tma_player_api import _player_api
 
 
 class WeeklyClaimBody(BaseModel):
@@ -128,7 +129,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         result = db.claim_daily_quest_reward(uid)
         if result.get("ok"):
             player = db.get_or_create_player(uid, "")
-            result["player"] = dict(player)
+            result["player"] = _player_api(dict(player))
         return result
 
     @router.post("/api/daily/claim")
@@ -140,7 +141,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": "Бонус уже получен сегодня"}
         player = db.get_or_create_player(uid, "")
         result["ok"] = True
-        result["player"] = dict(player)
+        result["player"] = _player_api(dict(player))
         return result
 
     @router.post("/api/quests/weekly_claim")
@@ -172,7 +173,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
             "gold": int(q.get("reward_gold", 0)),
             "diamonds": int(q.get("reward_diamonds", 0)),
             "xp": int(q.get("reward_xp", 0)),
-            "player": dict(fresh),
+            "player": _player_api(dict(fresh)),
         }
 
     app.include_router(router)

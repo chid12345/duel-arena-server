@@ -35,7 +35,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             prem = db.get_premium_status(uid)
             if prem["is_active"]:
                 fresh = db.get_or_create_player(uid, "")
-                return {"ok": False, "reason": f"Premium уже активен ещё {prem['days_left']} дн.", "player": dict(fresh)}
+                return {"ok": False, "reason": f"Premium уже активен ещё {prem['days_left']} дн.", "player": _player_api(dict(fresh))}
             prem_result = db.activate_premium(uid, days=21)
             bonus_d = prem_result.get("bonus_diamonds", 0)
             days_left = prem_result.get("days_left", 21)

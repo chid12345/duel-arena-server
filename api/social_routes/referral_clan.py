@@ -14,6 +14,7 @@ from api.social_routes.models import (
     ClanLeaveBody,
     ClanTransferBody,
 )
+from api.tma_player_api import _player_api
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ def attach_social_referral_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
         result = db.create_clan(uid, body.name.strip(), body.tag.strip())
         if result.get("ok"):
             player = db.get_or_create_player(uid, "")
-            result["player"] = dict(player)
+            result["player"] = _player_api(dict(player))
         return result
 
     @router.post("/api/clan/join")
@@ -96,7 +97,7 @@ def attach_social_referral_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
         result = db.join_clan(uid, body.clan_id)
         if result.get("ok"):
             player = db.get_or_create_player(uid, "")
-            result["player"] = dict(player)
+            result["player"] = _player_api(dict(player))
         return result
 
     @router.post("/api/clan/leave")
@@ -106,7 +107,7 @@ def attach_social_referral_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
         result = db.leave_clan(uid)
         if result.get("ok"):
             player = db.get_or_create_player(uid, "")
-            result["player"] = dict(player)
+            result["player"] = _player_api(dict(player))
         return result
 
     @router.get("/api/clan/chat")
