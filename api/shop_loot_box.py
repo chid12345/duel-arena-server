@@ -11,12 +11,11 @@ _COMMON_POOL = [
     ("scroll_end_3",   30),
     ("scroll_crit_3",  20),
     ("scroll_armor_6", 15),
-    ("scroll_hp_100",  15),
+    ("scroll_hp_100",  20),
     ("scroll_warrior", 10),
     ("scroll_shadow",  10),
     ("scroll_fury",    10),
     ("xp_boost_5",     20),
-    ("hp_medium",      15),
     ("scroll_str_6",    5),   # diamond-уровень: редко
     ("scroll_end_6",    5),
     ("scroll_all_4",    1),   # супер-редко

@@ -264,8 +264,7 @@ class ShopScene extends Phaser.Scene {
         let msg = `✅ Куплено: ${item.name}`;
         if (res.hp_restored > 0) msg = `❤️ +${res.hp_restored} HP восстановлено!`;
         if (res.gold_gained)     msg = `💰 +${res.gold_gained} золота!`;
-        if (res.added_to_inventory) msg = `📦 ${item.icon} ${item.name} → в инвентарь`;
-        if (res.item_name && res.item_icon) msg = `🎉 Ящик: ${res.item_icon} ${res.item_name}!`;
+        if (res.added_to_inventory) msg = `📦 ${item.icon} ${item.name} → в инвентарь (открой в «Моё»)`;
         this._toast(msg);
         this._goldTxt?.setText(`🪙 ${State.player?.gold || 0}`);
         this._diaTxt?.setText(`💎 ${State.player?.diamonds || 0}`);
@@ -548,7 +547,11 @@ class ShopScene extends Phaser.Scene {
       try {
         const r = await get(`/api/shop/crypto_check/${invoiceId}`);
         if (r.ok && r.paid) {
-          this._onCryptoPaid(r.diamonds || 0, invoiceId, r.premium_activated, r.bonus_diamonds || 0, !!r.profile_reset);
+          if (r.scroll_received) {
+            this._onScrollReceived(r.scroll_id, invoiceId);
+          } else {
+            this._onCryptoPaid(r.diamonds || 0, invoiceId, r.premium_activated, r.bonus_diamonds || 0, !!r.profile_reset);
+          }
           return;
         }
       } catch(_) {}
@@ -560,9 +563,22 @@ class ShopScene extends Phaser.Scene {
   async _checkPendingInvoice(invoiceId) {
     try {
       const r = await get(`/api/shop/crypto_check/${invoiceId}`);
-      if (r.ok && r.paid) this._onCryptoPaid(r.diamonds || 0, invoiceId, r.premium_activated, r.bonus_diamonds || 0, !!r.profile_reset);
-      else this._toast('⏳ Оплата ещё не подтверждена');
+      if (r.ok && r.paid) {
+        if (r.scroll_received) this._onScrollReceived(r.scroll_id, invoiceId);
+        else this._onCryptoPaid(r.diamonds || 0, invoiceId, r.premium_activated, r.bonus_diamonds || 0, !!r.profile_reset);
+      } else { this._toast('⏳ Оплата ещё не подтверждена'); }
     } catch(_) { this._toast('❌ Нет соединения'); }
+  }
+
+  _onScrollReceived(scrollId, invoiceId) {
+    tg?.HapticFeedback?.notificationOccurred('success');
+    Sound.levelUp?.();
+    localStorage.removeItem('cryptoPendingInvoice');
+    this._toast('✅ Свиток получен! Открой «Статы → Моё → Особые»');
+    post('/api/player').then(d => {
+      if (d.ok && d.player) State.player = d.player;
+      this.time.delayedCall(800, () => this.scene.restart({ tab: 'special' }));
+    }).catch(() => this.time.delayedCall(800, () => this.scene.restart({ tab: 'special' })));
   }
 
   _onCryptoPaid(diamonds, invoiceId, isPremium, bonusDiamonds = 0, profileReset = false) {

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from api.tma_catalogs import SCROLL_EFFECTS, USDT_SCROLL_PACKAGES
 from api.tma_player_api import _player_api
-from api.shop_loot_box import open_box
+from api.shop_loot_box import _open_box_free as _open_loot_box
 
 
 class ShopBuyBody(BaseModel):
@@ -110,10 +110,9 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             cost_d, gold_gain = _EXCHANGE_GOLD[iid]
             return _exchange_diamonds(db, uid, cost_d, gold_gain)
 
-        # === Лут-боксы ===
+        # === Лут-боксы → в инвентарь (открываются через "Моё") ===
         if iid in ("box_common", "box_rare"):
-            result = open_box(iid, db, uid)
-            return result
+            return _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
 
         # === Золото за охоту → в инвентарь ===
         if iid == "gold_hunt":
@@ -177,8 +176,8 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             if not db.has_item(uid, iid):
                 return {"ok": False, "reason": "Предмет не найден в инвентаре"}
             db.remove_from_inventory(uid, iid)
-            from api.shop_loot_box import _open_box_free
-            result = _open_box_free(iid, db, uid)
+            from api.shop_loot_box import _open_box_free as _free_open
+            result = _free_open(iid, db, uid)
             result["box_opened"] = True
             return result
 
@@ -246,9 +245,9 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
         cursor.execute("UPDATE players SET premium_box_claimed = ? WHERE user_id = ?", (today, uid))
         conn.commit()
         conn.close()
-        db.add_to_inventory(uid, "box_common")
-        result = open_box("box_common", db, uid)
+        result = _open_loot_box("box_common", db, uid)
         result["free"] = True
+        result["box_opened"] = True
         return result
 
     app.include_router(router)
