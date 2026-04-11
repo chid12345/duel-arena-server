@@ -57,7 +57,7 @@
     try { data = await get('/api/shop/inventory'); }
     catch { this._invBusy = false; this._showToast('❌ Нет соединения'); return; }
     this._invBusy = false;
-    if (!data?.ok) { this._showToast(`❌ ${data?.reason || 'Ошибка'}`); return; }
+    if (!data?.ok) { this._showToast(`❌ ${data?.reason || data?.detail || 'Ошибка'}${data?._httpStatus ? ' (HTTP '+data._httpStatus+')' : ''}`); return; }
     this._invData = data;
     if (!this._invTab) this._invTab = 'scrolls';
     this._renderInvOverlay();

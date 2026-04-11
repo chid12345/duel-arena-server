@@ -59,14 +59,25 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
 
     @router.get("/api/shop/inventory")
     async def shop_inventory(init_data: str):
-        tg_user = get_user_from_init_data(init_data)
-        uid = int(tg_user["id"])
-        items = db.get_inventory(uid)
-        buffs = db.get_raw_buffs(uid)
-        return {"ok": True, "inventory": items, "active_buffs": buffs}
+        try:
+            tg_user = get_user_from_init_data(init_data)
+            uid = int(tg_user["id"])
+            items = db.get_inventory(uid)
+            buffs = db.get_raw_buffs(uid)
+            return {"ok": True, "inventory": items, "active_buffs": buffs}
+        except Exception as exc:
+            import traceback; traceback.print_exc()
+            return {"ok": False, "reason": f"Ошибка: {type(exc).__name__}: {exc}"}
 
     @router.post("/api/shop/buy")
     async def shop_buy(body: ShopBuyBody):
+        try:
+            return await _shop_buy_inner(body)
+        except Exception as exc:
+            import traceback; traceback.print_exc()
+            return {"ok": False, "reason": f"Серверная ошибка: {type(exc).__name__}: {exc}"}
+
+    async def _shop_buy_inner(body: ShopBuyBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         _rl_check(uid, "shop_buy", max_hits=5, window_sec=30)
@@ -117,6 +128,13 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
     @router.post("/api/shop/apply")
     async def shop_apply(body: ShopApplyBody):
         """Применить предмет из инвентаря."""
+        try:
+            return await _shop_apply_inner(body)
+        except Exception as exc:
+            import traceback; traceback.print_exc()
+            return {"ok": False, "reason": f"Ошибка: {type(exc).__name__}: {exc}"}
+
+    async def _shop_apply_inner(body: ShopApplyBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         _rl_check(uid, "shop_apply", max_hits=10, window_sec=60)

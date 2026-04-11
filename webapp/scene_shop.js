@@ -272,11 +272,12 @@ class ShopScene extends Phaser.Scene {
         this.time.delayedCall(400, () => this.scene.restart({ tab: this._tab, page: this._shopPage || 0 }));
       } else {
         tg?.HapticFeedback?.notificationOccurred('error');
-        this._toast(`❌ ${res.reason || 'Ошибка'}`);
+        const detail = res._httpStatus ? ` (HTTP ${res._httpStatus})` : '';
+        this._toast(`❌ ${res.reason || res.detail || 'Ошибка'}${detail}`);
         this._buying = false;
       }
-    } catch(_) {
-      this._toast('❌ Нет соединения');
+    } catch(e) {
+      this._toast(`❌ Сеть: ${e.message || 'нет соединения'}`);
       this._buying = false;
     }
   }
