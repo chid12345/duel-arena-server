@@ -85,7 +85,7 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     )
     armor_p = round(armor_reduction(_vyn, lv) * 100, 1)
     dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (_s**STRENGTH_DAMAGE_POWER)))
-    _eff_mhp = mhp + int(_cb.get("hp_bonus", 0))
+    _eff_mhp = mhp + int(_cb.get("hp_bonus", 0)) + int(_cb.get("stamina", 0)) * STAMINA_PER_FREE_STAT
 
     need_xp = exp_needed_for_next_level(lv)
 

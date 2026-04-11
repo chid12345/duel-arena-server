@@ -366,8 +366,8 @@ class StatsScene extends Phaser.Scene {
       const B = {};
       for (const b of buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
 
-      // ── Стат-строки: strength / endurance→agility(ловкость) / crit→intuition ──
-      const STAT_MAP = { strength: 'strength', endurance: 'agility', crit: 'intuition' };
+      // ── Стат-строки: strength / endurance→agility / stamina→stamina / crit→intuition ──
+      const STAT_MAP = { strength: 'strength', endurance: 'agility', crit: 'intuition', stamina: 'stamina' };
       for (const [bt, rk] of Object.entries(STAT_MAP)) {
         const bonus = B[bt]; if (!bonus) continue;
         const row = this._statRows[rk]; if (!row) continue;
@@ -376,11 +376,18 @@ class StatsScene extends Phaser.Scene {
         row.valTxt.setText(String(row.s.valFn(p) + bonus)).setColor('#88ffbb');
         row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
       }
-      // ── endurance buff → уворот пересчитан сервером (p.dodge_pct включает бафф) ──
+      // ── endurance buff → уворот пересчитан сервером ──
       if (B.endurance) {
         const dodgeV = parseFloat(p.dodge_pct || 0).toFixed(1);
         if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${dodgeV}% уворот🧪`);
         if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${dodgeV}%`).setColor('#88ffcc');
+      }
+      // ── stamina buff → броня/HP (max_hp_effective включает бонус) ──
+      if (B.stamina) {
+        const armorV = parseFloat(p.armor_pct || 0).toFixed(1);
+        if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${armorV}% броня🧪`);
+        if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${armorV}%`).setColor('#88ffcc');
+        if (this._combatCells?.hp) this._combatCells.hp.t.setText(String(p.max_hp_effective ?? p.max_hp)).setColor('#aaffaa');
       }
       // ── armor_pct → дополнительная броня поверх базовой ──
       if (B.armor_pct) {
@@ -411,7 +418,8 @@ class StatsScene extends Phaser.Scene {
       // Статовые бафы (заряды берём из первого charge-based бафа)
       const statParts = [
         B.strength   && `⚔️+${B.strength}`,
-        B.endurance  && `🛡+${B.endurance}`,
+        B.endurance  && `🌀+${B.endurance}`,
+        B.stamina    && `🛡+${B.stamina}`,
         B.crit       && `🎯+${B.crit}`,
         B.armor_pct  && `🔰+${B.armor_pct}%`,
         B.dodge_pct  && `💨+${B.dodge_pct}%`,

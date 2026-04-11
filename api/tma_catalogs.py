@@ -24,7 +24,7 @@ SHOP_CATALOG = {
 
     # ── Свитки — золото (1 бой, дёшево) ───────────────────────
     "scroll_str_3":    {"name": "Эликсир силы +3",      "price": 60,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила +3, 1 бой",          "inventory": True},
-    "scroll_end_3":    {"name": "Эликсир ловкости +3",  "price": 60,  "currency": "gold",     "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +3, 1 бой",       "inventory": True},
+    "scroll_end_3":    {"name": "Эликсир ловкости +3",  "price": 60,  "currency": "gold",     "icon": "🌀", "tab": "scrolls", "desc": "Уворот +3, 1 бой",        "inventory": True},
     "scroll_crit_3":   {"name": "Свиток крита +3",      "price": 75,  "currency": "gold",     "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +3, 1 бой",       "inventory": True},
     "scroll_armor_6":  {"name": "Свиток брони 6%",      "price": 80,  "currency": "gold",     "icon": "🛡️", "tab": "scrolls", "desc": "Броня +6%, 1 бой",        "inventory": True},
     "scroll_hp_100":   {"name": "Эликсир HP +100",      "price": 70,  "currency": "gold",     "icon": "❤️", "tab": "scrolls", "desc": "+100 HP, 1 бой",          "inventory": True},
@@ -34,7 +34,7 @@ SHOP_CATALOG = {
 
     # ── Свитки — алмазы (3 боя, средние) ─────────────────────
     "scroll_str_6":    {"name": "Эликсир силы +6",      "price": 20,  "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +6, 3 боя",          "inventory": True},
-    "scroll_end_6":    {"name": "Эликсир ловкости +6",  "price": 20,  "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +6, 3 боя",       "inventory": True},
+    "scroll_end_6":    {"name": "Эликсир ловкости +6",  "price": 20,  "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Уворот +6, 3 боя",        "inventory": True},
     "scroll_crit_6":   {"name": "Свиток крита +6",      "price": 25,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +6, 3 боя",       "inventory": True},
     "scroll_dodge_5":  {"name": "Свиток уворота 5%",    "price": 25,  "currency": "diamonds", "icon": "💨", "tab": "scrolls", "desc": "Уворот +5%, 3 боя",        "inventory": True},
     "scroll_armor_10": {"name": "Свиток брони 10%",     "price": 30,  "currency": "diamonds", "icon": "🛡️", "tab": "scrolls", "desc": "Броня +10%, 3 боя",       "inventory": True},
@@ -81,6 +81,7 @@ SCROLL_EFFECTS = {
     # USDT
     "scroll_str_12":   [("strength",    12,  5)],
     "scroll_end_12":   [("endurance",   12,  5)],
+    "scroll_stam_12":  [("stamina",     12,  5)],
     "scroll_crit_12":  [("crit",        12,  5)],
     "scroll_hp_500":   [("hp_bonus",    500, 7)],
     "scroll_all_12":   [("strength",    12,  5), ("endurance", 12, 5), ("crit", 12, 5)],
@@ -103,13 +104,14 @@ ELITE_AVATAR_STARS_PACKAGE = {
 
 # USDT-свитки в "Особые" вкладке (дополнительно к обычным пакетам)
 USDT_SCROLL_PACKAGES = [
-    {"id": "us_str_12",  "scroll_id": "scroll_str_12",  "label": "⚔️ Эликсир силы +12",     "usdt": "1"},
-    {"id": "us_end_12",  "scroll_id": "scroll_end_12",  "label": "🌀 Эликсир ловкости +12",  "usdt": "1"},
-    {"id": "us_crit_12", "scroll_id": "scroll_crit_12", "label": "🎯 Свиток крита +12",       "usdt": "1"},
-    {"id": "us_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",       "usdt": "1"},
-    {"id": "us_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",       "usdt": "2"},
-    {"id": "us_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",         "usdt": "3"},
-    {"id": "us_box",     "scroll_id": "box_epic",        "label": "🟣 Эпический ящик",         "usdt": "2"},
+    {"id": "us_str_12",  "scroll_id": "scroll_str_12",  "label": "⚔️ Эликсир силы +12",        "usdt": "1"},
+    {"id": "us_end_12",  "scroll_id": "scroll_end_12",  "label": "🌀 Эликсир ловкости +12",     "usdt": "1"},
+    {"id": "us_stam_12", "scroll_id": "scroll_stam_12", "label": "🛡️ Эликсир выносливости +12", "usdt": "1"},
+    {"id": "us_crit_12", "scroll_id": "scroll_crit_12", "label": "🎯 Свиток крита +12",          "usdt": "1"},
+    {"id": "us_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",          "usdt": "1"},
+    {"id": "us_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "usdt": "2"},
+    {"id": "us_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "usdt": "3"},
+    {"id": "us_box",     "scroll_id": "box_epic",        "label": "🟣 Эпический ящик",            "usdt": "2"},
 ]
 
 CRYPTO_PACKAGES = [

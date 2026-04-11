@@ -100,6 +100,14 @@ class BattleStartMixin:
         end_bonus = combined.get("endurance", 0)
         if end_bonus:
             player["endurance"] = max(1, int(player.get("endurance", PLAYER_START_ENDURANCE)) + end_bonus)
+        # stamina buff → увеличивает max_hp как ручные вложения (+value*STAMINA_PER_FREE_STAT)
+        stam_bonus = combined.get("stamina", 0)
+        if stam_bonus:
+            hp_add = stam_bonus * STAMINA_PER_FREE_STAT
+            old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
+            old_cur = int(player.get("current_hp", old_max))
+            player["max_hp"]     = old_max + hp_add
+            player["current_hp"] = min(player["max_hp"], old_cur + hp_add)
         # hp_bonus → прямой бонус HP в бой
         hp_bonus = combined.get("hp_bonus", 0)
         if hp_bonus:

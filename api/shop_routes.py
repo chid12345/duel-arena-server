@@ -199,7 +199,9 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                 }
             db.remove_from_inventory(uid, iid)
             # HP-свитки: сразу восстанавливаем current_hp на величину бонуса
-            hp_bonus_added = sum(v for (bt, v, _) in effects if bt == "hp_bonus")
+            from config import STAMINA_PER_FREE_STAT as _SPF
+            stam_added = sum(v for (bt, v, _) in effects if bt == "stamina")
+            hp_bonus_added = sum(v for (bt, v, _) in effects if bt == "hp_bonus") + stam_added * _SPF
             if hp_bonus_added > 0:
                 conn = db.get_connection()
                 cursor = conn.cursor()
