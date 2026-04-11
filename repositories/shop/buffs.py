@@ -47,21 +47,21 @@ class ShopBuffsMixin:
                 combined[bt] = max(-cap, min(cap, combined[bt]))
         return combined
 
-    def has_any_combat_buff(self, user_id: int) -> Optional[Dict[str, Any]]:
-        """Возвращает первый активный combat-баф (свиток), или None."""
+    def get_active_buff_types(self, user_id: int) -> Dict[str, Dict]:
+        """Возвращает словарь {buff_type: buff_row} активных боевых бафов."""
         buffs = self.get_raw_buffs(user_id)
-        for b in buffs:
-            if b["buff_type"] not in ("gold_pct",):
-                return b
-        return None
+        return {b["buff_type"]: b for b in buffs if b["buff_type"] != "gold_pct"}
 
-    def clear_combat_buffs(self, user_id: int) -> None:
-        """Удалить все combat-бафы (при замене свитка)."""
+    def clear_buff_types(self, user_id: int, buff_types: List[str]) -> None:
+        """Удалить бафы конкретных типов (для замены одного свитка без сброса остальных)."""
+        if not buff_types:
+            return
         conn = self.get_connection()
         cursor = conn.cursor()
+        placeholders = ",".join("?" * len(buff_types))
         cursor.execute(
-            "DELETE FROM player_buffs WHERE user_id = ? AND buff_type != 'gold_pct'",
-            (user_id,),
+            f"DELETE FROM player_buffs WHERE user_id = ? AND buff_type IN ({placeholders})",
+            [user_id, *buff_types],
         )
         conn.commit()
         conn.close()
@@ -123,13 +123,21 @@ class ShopBuffsMixin:
         """
         Применить свиток из инвентаря.
         effects: [(buff_type, value, charges), ...]
-        replace=True → убрать старый свиток перед применением.
+        Конфликт только если ТОТ ЖЕ тип баффа уже активен.
+        replace=True → заменить конфликтующие типы, остальные оставить.
         """
-        existing = self.has_any_combat_buff(user_id)
-        if existing and not replace:
-            return {"ok": False, "conflict": True, "active_buff": existing}
-        if replace:
-            self.clear_combat_buffs(user_id)
+        active = self.get_active_buff_types(user_id)
+        new_types = [bt for (bt, _, _) in effects]
+        conflicting = {bt: active[bt] for bt in new_types if bt in active}
+
+        if conflicting and not replace:
+            # Вернуть первый конфликт для диалога
+            first_conflict = next(iter(conflicting.values()))
+            return {"ok": False, "conflict": True, "active_buff": first_conflict}
+
+        if conflicting and replace:
+            self.clear_buff_types(user_id, list(conflicting.keys()))
+
         for buff_type, value, charges in effects:
             self.add_buff(user_id, buff_type, value, charges=charges)
         return {"ok": True}

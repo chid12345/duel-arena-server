@@ -195,7 +195,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                     "conflict": True,
                     "active_buff_type": active.get("buff_type"),
                     "active_charges": active.get("charges"),
-                    "reason": "Уже есть активный свиток. Заменить?",
+                    "reason": f"Уже активен {active.get('buff_type', 'этот тип')}. Заменить?",
                 }
             db.remove_from_inventory(uid, iid)
             # HP-свитки: сразу восстанавливаем current_hp на величину бонуса
