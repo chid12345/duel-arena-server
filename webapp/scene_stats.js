@@ -324,8 +324,12 @@ class StatsScene extends Phaser.Scene {
     passBg.strokeRoundedRect(12, passY, passW, passH, 10);
 
     txt(this, W / 2, passY + 10, '⚡ Пассивные способности', 10, '#9090cc', true).setOrigin(0.5);
-    txt(this, W / 2, passY + 26, '💥 Крит-пробой блока  ·  🤸 Уворот → 2й удар', 10, '#c8a0ff').setOrigin(0.5);
-    txt(this, W / 2, passY + 42, '🛡 Поглощение 50%  ·  💪 Пролом брони', 10, '#ffc870').setOrigin(0.5);
+    this._passLine1 = txt(this, W / 2, passY + 26,
+      `💥 Крит ${parseFloat(p.crit_pct || 0).toFixed(0)}%  ·  🤸 Уворот ${parseFloat(p.dodge_pct || 0).toFixed(1)}%`,
+      10, '#c8a0ff').setOrigin(0.5);
+    this._passLine2 = txt(this, W / 2, passY + 42,
+      `🛡 Броня ${parseFloat(p.armor_pct || 0).toFixed(1)}%  ·  ⚔️ Урон ~${p.dmg || 0}`,
+      10, '#ffc870').setOrigin(0.5);
 
     this._refreshBuffDisplay();
   }
@@ -358,6 +362,18 @@ class StatsScene extends Phaser.Scene {
         const rowAgility = this._statRows.agility;
         if (rowStamina) rowStamina.effectTxt.setText(rowStamina.s.effectFn(p));
         if (rowAgility) rowAgility.effectTxt.setText(rowAgility.s.effectFn(p));
+      }
+
+      // Сброс пассивных строк к базовым значениям
+      if (this._passLine1) {
+        this._passLine1.setText(
+          `💥 Крит ${parseFloat(p.crit_pct || 0).toFixed(0)}%  ·  🤸 Уворот ${parseFloat(p.dodge_pct || 0).toFixed(1)}%`
+        ).setColor('#c8a0ff');
+      }
+      if (this._passLine2) {
+        this._passLine2.setText(
+          `🛡 Броня ${parseFloat(p.armor_pct || 0).toFixed(1)}%  ·  ⚔️ Урон ~${p.dmg || 0}`
+        ).setColor('#ffc870');
       }
 
       if (!buffs.length) { return; }
@@ -412,6 +428,21 @@ class StatsScene extends Phaser.Scene {
       // ── hp_bonus → HP ячейка (max_hp_effective уже включает hp_bonus) ──
       if (B.hp_bonus && this._combatCells?.hp) {
         this._combatCells.hp.t.setText(String(p.max_hp_effective ?? p.max_hp)).setColor('#ff8888');
+      }
+
+      // ── Пассивные способности: обновляем с учётом бафов ──
+      if (this._passLine1) {
+        const critV  = parseFloat(p.crit_pct  || 0).toFixed(0);
+        const dodgeV = B.dodge_pct
+          ? (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1)
+          : parseFloat(p.dodge_pct || 0).toFixed(1);
+        this._passLine1.setText(`💥 Крит ${critV}%  ·  🤸 Уворот ${dodgeV}%`).setColor('#ccaaff');
+      }
+      if (this._passLine2) {
+        const armorV = B.armor_pct
+          ? (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1)
+          : parseFloat(p.armor_pct || 0).toFixed(1);
+        this._passLine2.setText(`🛡 Броня ${armorV}%  ·  ⚔️ Урон ~${p.dmg || 0}`).setColor('#ffcc88');
       }
 
       // ── Форматируем строку активных бафов ──

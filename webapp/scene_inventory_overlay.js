@@ -8,7 +8,7 @@
   const ITEM_META = {
     scroll_str_3:   { icon:'⚔️', name:'Сила +3',        desc:'strength +3, 1 бой', tab:'scrolls' },
     scroll_end_3:   { icon:'🌀', name:'Ловкость +3',     desc:'уворот +3, 1 бой', tab:'scrolls' },
-    scroll_crit_3:  { icon:'🎯', name:'Критика +3',      desc:'crit +3, 1 бой', tab:'scrolls' },
+    scroll_crit_3:  { icon:'🎯', name:'Интуиция +3',     desc:'крит +3, 1 бой', tab:'scrolls' },
     scroll_armor_6: { icon:'🔰', name:'Броня +6%',       desc:'armor_pct +6%, 1 бой', tab:'scrolls' },
     scroll_hp_100:  { icon:'❤️', name:'HP +100',         desc:'hp_bonus +100, 1 бой', tab:'scrolls' },
     scroll_warrior: { icon:'⚔️', name:'Воин',           desc:'str+2, end+2, 1 бой', tab:'scrolls' },
@@ -16,7 +16,7 @@
     scroll_fury:    { icon:'🔥', name:'Ярость',          desc:'str+4, crit+2, 1 бой', tab:'scrolls' },
     scroll_str_6:   { icon:'⚔️', name:'Сила +6',        desc:'strength +6, 3 боя', tab:'scrolls' },
     scroll_end_6:   { icon:'🌀', name:'Ловкость +6',     desc:'уворот +6, 3 боя', tab:'scrolls' },
-    scroll_crit_6:  { icon:'🎯', name:'Критика +6',      desc:'crit +6, 3 боя', tab:'scrolls' },
+    scroll_crit_6:  { icon:'🎯', name:'Интуиция +6',     desc:'крит +6, 3 боя', tab:'scrolls' },
     scroll_dodge_5: { icon:'💨', name:'Уворот +5%',      desc:'dodge_pct +5%, 3 боя', tab:'scrolls' },
     scroll_armor_10:{ icon:'🔰', name:'Броня +10%',      desc:'armor_pct +10%, 3 боя', tab:'scrolls' },
     scroll_hp_200:  { icon:'❤️', name:'HP +200',         desc:'hp_bonus +200, 3 боя', tab:'scrolls' },
@@ -29,7 +29,7 @@
     scroll_str_12:  { icon:'⚔️', name:'Сила +12',       desc:'strength +12, 5 боёв', tab:'special' },
     scroll_end_12:  { icon:'🌀', name:'Ловкость +12',    desc:'уворот +12, 5 боёв', tab:'special' },
     scroll_stam_12: { icon:'🛡️', name:'Выносливость +12',desc:'броня+HP +12, 5 боёв', tab:'special' },
-    scroll_crit_12: { icon:'🎯', name:'Критика +12',     desc:'crit +12, 5 боёв', tab:'special' },
+    scroll_crit_12: { icon:'🎯', name:'Интуиция +12',    desc:'крит +12, 5 боёв', tab:'special' },
     scroll_hp_500:  { icon:'❤️', name:'HP +500',         desc:'hp_bonus +500, 7 боёв', tab:'special' },
     scroll_all_12:  { icon:'✨', name:'Все статы +12',   desc:'str/end/crit +12, 5 боёв', tab:'special' },
     scroll_titan:   { icon:'👹', name:'Титан',           desc:'все статы +15, armor+10%, 3 боя', tab:'special' },
@@ -62,7 +62,7 @@
   };
 
   const BUFF_LABEL = {
-    strength: '⚔️ Сила', endurance: '🛡 Выносл.', crit: '💥 Крит',
+    strength: '⚔️ Сила', endurance: '🌀 Ловкость', stamina: '🛡 Выносливость', crit: '🎯 Интуиция',
     armor_pct: '🔰 Броня', dodge_pct: '💨 Уворот', hp_bonus: '❤️ HP',
     double_pct: '⚡ Двойной', accuracy: '👁 Точность',
     lifesteal_pct: '🩸 Вампир', gold_pct: '💰 Золото',
