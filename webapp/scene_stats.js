@@ -341,7 +341,8 @@ class StatsScene extends Phaser.Scene {
         const dur = b.charges ? `${b.charges}б` : '∞';
         return `${ic}+${b.value}(${dur})`;
       }).join(' · ');
-      txt(this, W / 2, y + 8, `🧪 ${line}`, 9, '#88ddaa').setOrigin(0.5);
+      if (!this.scene || !this.scene.isActive()) return;
+      txt(this, W / 2, y + 8, `🧪 ${line}`, 9, '#88ddaa').setOrigin(0.5).setDepth(3);
     } catch {}
   }
 
