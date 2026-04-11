@@ -39,6 +39,7 @@ POSTGRES_DDL_02: tuple[str, ...] = (
         current_floor INTEGER DEFAULT 1,
         weekly_best_floor INTEGER DEFAULT 0,
         weekly_best_at BIGINT DEFAULT 0,
+        run_active INTEGER DEFAULT 0,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     """,

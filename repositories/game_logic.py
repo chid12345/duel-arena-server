@@ -31,6 +31,11 @@ class GameLogicMixin:
                     (user_id,),
                 )
             except Exception:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                cursor = conn.cursor()
                 cursor.execute(
                     "SELECT user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at FROM titan_progress WHERE user_id = ?",
                     (user_id,),
@@ -96,6 +101,11 @@ class GameLogicMixin:
                     (next_floor, user_id),
                 )
             except Exception:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                cursor = conn.cursor()
                 cursor.execute(
                     "UPDATE titan_progress SET current_floor = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
                     (next_floor, user_id),

@@ -66,4 +66,6 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     )""",
     "CREATE INDEX IF NOT EXISTS idx_pbuffs_uid ON player_buffs(user_id)",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS premium_box_claimed DATE",
+    # Башня Титанов: флаг активной сессии (1 = в заходе, 0 = завершён)
+    "ALTER TABLE titan_progress ADD COLUMN IF NOT EXISTS run_active INTEGER DEFAULT 0",
 )
