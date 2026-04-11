@@ -341,8 +341,17 @@ class StatsScene extends Phaser.Scene {
       const d = await get('/api/shop/inventory');
       if (!this.scene || !this.scene.isActive()) return;
 
-      const p = State.player;
       const buffs = d?.ok ? (d.active_buffs || []) : [];
+
+      // Если есть активные баффы — обновляем игрока с сервера,
+      // чтобы crit_pct / dodge_pct / armor_pct уже включали бафф
+      if (buffs.length) {
+        const pd = await post('/api/player');
+        if (pd?.ok && pd.player) State.player = pd.player;
+      }
+      if (!this.scene || !this.scene.isActive()) return;
+
+      const p = State.player;
 
       // Сброс к базовым значениям (на случай повторного вызова после снятия бафа)
       const ROW_RESET = { strength: 'strength', endurance: 'agility', crit: 'intuition' };
