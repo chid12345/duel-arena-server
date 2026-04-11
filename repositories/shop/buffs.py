@@ -9,10 +9,12 @@ from typing import Any, Dict, List, Optional
 class ShopBuffsMixin:
     # Максимально допустимые значения бафов (против абуза)
     _BUFF_CAPS: Dict[str, int] = {
-        "armor_pct":    40,
-        "dodge_pct":    30,
-        "double_pct":   40,
+        "armor_pct":     40,
+        "dodge_pct":     30,
+        "double_pct":    40,
         "lifesteal_pct": 15,
+        "gold_pct":      50,   # max +50% золота (1 gold_hunt = 20%, защита от стака)
+        "accuracy":      50,   # max +50 точности (всё равно ограничено miss_chance формулой)
     }
 
     def get_raw_buffs(self, user_id: int) -> List[Dict[str, Any]]:

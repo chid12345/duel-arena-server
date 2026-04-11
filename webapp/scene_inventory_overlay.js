@@ -101,8 +101,8 @@
       ov.push(txt(this, 16, buffY, '— нет активных бафов', 9, '#777799').setDepth(133));
     }
 
-    // Список предметов текущей вкладки
-    const items = inventory.filter(it => (ITEM_META[it.item_id]?.tab || 'scrolls') === this._invTab);
+    // Список предметов текущей вкладки (предметы без ITEM_META пропускаем — они применяются сразу при покупке)
+    const items = inventory.filter(it => ITEM_META[it.item_id] && ITEM_META[it.item_id].tab === this._invTab);
     const listY = panelY + 62, listH = buffY - listY - 8;
     const cardH = 56, cardW = W - 32;
 

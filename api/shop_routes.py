@@ -146,31 +146,27 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             if not db.has_item(uid, iid):
                 return {"ok": False, "reason": "Предмет не найден в инвентаре"}
             charges, mult = _XP_BOOST_CHARGES[iid]
-            mult_int = int(mult * 10)  # 15 или 20
             db.remove_from_inventory(uid, iid)
-            # Добавляем заряды в players.xp_boost_charges
             conn = db.get_connection()
             cursor = conn.cursor()
-            if mult_int == 20:  # x2
-                # Пишем в отдельное поле — пока просто добавляем как обычный буст
-                cursor.execute(
-                    "UPDATE players SET xp_boost_charges = xp_boost_charges + ? WHERE user_id = ?",
-                    (charges, uid),
-                )
-            else:
-                cursor.execute(
-                    "UPDATE players SET xp_boost_charges = xp_boost_charges + ? WHERE user_id = ?",
-                    (charges, uid),
-                )
+            cursor.execute(
+                "UPDATE players SET xp_boost_charges = xp_boost_charges + ? WHERE user_id = ?",
+                (charges, uid),
+            )
             conn.commit()
             conn.close()
             player = db.get_or_create_player(uid, "")
             return {"ok": True, "msg": f"⚡ XP Буст активирован — {charges} зарядов!", "player": _player_api(dict(player))}
 
-        # gold_hunt: добавить time-based баф
+        # gold_hunt: добавить time-based баф (только если нет активного)
         if iid == "gold_hunt":
             if not db.has_item(uid, iid):
                 return {"ok": False, "reason": "Предмет не найден в инвентаре"}
+            existing_gold = next(
+                (b for b in db.get_raw_buffs(uid) if b["buff_type"] == "gold_pct"), None
+            )
+            if existing_gold:
+                return {"ok": False, "reason": "Охота за золотом уже активна! Дождитесь окончания."}
             db.remove_from_inventory(uid, iid)
             db.add_buff(uid, "gold_pct", 20, hours=24)
             player = db.get_or_create_player(uid, "")
