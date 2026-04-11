@@ -696,7 +696,7 @@ class MenuScene extends Phaser.Scene {
     const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     const hpBg  = makeBar(this, hpX, hpY, hpW, hpH, hpPct, hpCol);
-    const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp} HP`, 11, '#ffffff', true, '#00000088').setOrigin(0.5);
+    const hpTxt = txt(this, W / 2, hpY + hpH / 2, `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp} HP`, 11, '#ffffff', true, '#00000088').setOrigin(0.5);
     /* Сохраняем для live-обновления регеном без перезапуска сцены */
     this._liveHp = { g: hpBg, t: hpTxt, x: hpX, y: hpY, w: hpW, h: hpH };
 
@@ -924,7 +924,7 @@ class MenuScene extends Phaser.Scene {
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     hpBlockObjs.push(makeBar(this, 20, hpBlockY, W - 40, 10, hpPct, hpCol));
     hpBlockObjs.push(
-      txt(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
+      txt(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp_effective ?? p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
     );
 
     if (p.hp_pct < 100) {
@@ -1666,7 +1666,8 @@ class MenuScene extends Phaser.Scene {
         const sp = State.player;
         if (!sp || sp.current_hp >= sp.max_hp) return;
         sp.current_hp = Math.min(sp.max_hp, Math.round(sp.current_hp + regenPerTick));
-        sp.hp_pct     = Math.round(sp.current_hp / sp.max_hp * 100);
+        const effMax = sp.max_hp_effective ?? sp.max_hp;
+        sp.hp_pct     = Math.round(sp.current_hp / effMax * 100);
 
         /* Обновляем HP-бар напрямую — без перезапуска всей сцены */
         if (this._activeTab === 'profile' && this._liveHp) {
@@ -1676,7 +1677,7 @@ class MenuScene extends Phaser.Scene {
           g.fillStyle(C.dark, 1); g.fillRoundedRect(x, y, w, h, 4);
           const fw = Math.max(8, Math.round(w * sp.hp_pct / 100));
           g.fillStyle(col, 1);   g.fillRoundedRect(x, y, fw, h, 4);
-          t.setText(`${sp.current_hp} / ${sp.max_hp} HP`);
+          t.setText(`${sp.current_hp} / ${effMax} HP`);
         }
       },
     });

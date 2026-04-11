@@ -86,6 +86,7 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     )
     armor_p = round(armor_reduction(_vyn, lv) * 100, 1)
     dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (_s**STRENGTH_DAMAGE_POWER)))
+    _eff_mhp = mhp + _end_buff * STAMINA_PER_FREE_STAT + int(_cb.get("hp_bonus", 0))
 
     need_xp = exp_needed_for_next_level(lv)
 
@@ -135,7 +136,7 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
         "agility_effective": _agi,
         "intuition_effective": _intu,
         "stamina_effective": _vyn + PLAYER_START_ENDURANCE,
-        "max_hp_effective": mhp + _end_buff * STAMINA_PER_FREE_STAT + int(_cb.get("hp_bonus", 0)),
+        "max_hp_effective": _eff_mhp,
         "max_hp": mhp,
         "current_hp": chp,
         "gold": int(player.get("gold", 0)),
@@ -149,7 +150,7 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
         "dodge_pct": dodge_p,
         "crit_pct": crit_p,
         "armor_pct": armor_p,
-        "hp_pct": int(chp / max(1, mhp) * 100),
+        "hp_pct": int(chp / max(1, _eff_mhp) * 100),
         "xp_pct": int(int(player.get("exp", 0)) / max(1, need_xp) * 100) if need_xp > 0 else 100,
         "max_level": lv >= MAX_LEVEL,
         "equipped_avatar_id": avatar_id,
