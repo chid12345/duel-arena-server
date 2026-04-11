@@ -54,6 +54,16 @@ SHOP_CATALOG = {
     # ── Лут-боксы ─────────────────────────────────────────────
     "box_common":      {"name": "Обычный ящик",         "price": 150, "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "Случайный предмет"},
     "box_rare":        {"name": "Редкий ящик",          "price": 50,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "Ценный предмет, 5% шанс особого"},
+    "box_epic":        {"name": "Эпический ящик",       "price": 0,   "currency": "diamonds", "icon": "🟣", "tab": "boxes", "desc": "Особый предмет USDT-уровня",   "inventory": True},
+
+    # ── USDT-свитки (только для попапов/инвентаря, не в обычном магазине) ───
+    "scroll_str_12":   {"name": "Эликсир силы +12",      "price": 0, "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +12, 5 боёв",         "inventory": True},
+    "scroll_end_12":   {"name": "Эликсир ловкости +12",  "price": 0, "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +12, 5 боёв",      "inventory": True},
+    "scroll_stam_12":  {"name": "Эликсир выносливости +12","price":0, "currency": "diamonds", "icon": "🛡️", "tab": "scrolls", "desc": "Выносливость +12, 5 боёв", "inventory": True},
+    "scroll_crit_12":  {"name": "Эликсир интуиции +12",  "price": 0, "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +12, 5 боёв",      "inventory": True},
+    "scroll_hp_500":   {"name": "Эликсир HP +500",       "price": 0, "currency": "diamonds", "icon": "❤️", "tab": "scrolls", "desc": "+500 HP, 7 боёв",           "inventory": True},
+    "scroll_all_12":   {"name": "Все пассивки +12",      "price": 0, "currency": "diamonds", "icon": "✨", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +12, 5 боёв", "inventory": True},
+    "scroll_titan":    {"name": "Свиток Титана",         "price": 0, "currency": "diamonds", "icon": "🏔️", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +15, 3 боя", "inventory": True},
 }
 
 # Эффекты свитков при apply: [(buff_type, value, charges), ...]
