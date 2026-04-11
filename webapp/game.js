@@ -714,10 +714,10 @@ class MenuScene extends Phaser.Scene {
 
     /* ══ СТАТЫ — 4 карточки в ряд ══════════════════════════ */
     const STATS = [
-      { icon: '💪', label: 'СИЛ', val: p.strength,  color: C.red,    hex: '#dc3c46', sub: `~${p.dmg}ур`     },
-      { icon: '🤸', label: 'ЛОВ', val: p.agility,   color: C.cyan,   hex: '#3cc8dc', sub: `${p.dodge_pct}%` },
-      { icon: '💥', label: 'ИНТ', val: p.intuition, color: C.purple, hex: '#b45aff', sub: `${p.crit_pct}%`  },
-      { icon: '🛡', label: 'ВЫН', val: p.stamina,   color: C.green,  hex: '#3cc864', sub: `${p.armor_pct}%` },
+      { icon: '💪', label: 'СИЛ', val: p.strength_effective  ?? p.strength,  color: C.red,    hex: '#dc3c46', sub: `~${p.dmg}ур`     },
+      { icon: '🤸', label: 'ЛОВ', val: p.agility_effective   ?? p.agility,   color: C.cyan,   hex: '#3cc8dc', sub: `${p.dodge_pct}%` },
+      { icon: '💥', label: 'ИНТ', val: p.intuition_effective ?? p.intuition, color: C.purple, hex: '#b45aff', sub: `${p.crit_pct}%`  },
+      { icon: '🛡', label: 'ВЫН', val: p.stamina,                            color: C.green,  hex: '#3cc864', sub: `${p.armor_pct}%` },
     ];
     const statsTop = xpBg ? xpY + 20 : xpY + 6;
     const scGap = 6, scH = 76;
