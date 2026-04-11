@@ -566,7 +566,7 @@ class MenuScene extends Phaser.Scene {
     const tabs = [
       { key: 'profile', icon: '🏠', label: 'Профиль' },
       { key: 'battle',  icon: '⚔️',  label: 'Бой'     },
-      { key: 'stats',   icon: '📊',  label: 'Статы'   },
+      { key: 'stats',   icon: '🗡️',  label: 'Герой'   },
       { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
       { key: 'more',    icon: '☰',   label: 'Меню'    },
     ];

@@ -574,7 +574,7 @@ class ShopScene extends Phaser.Scene {
     tg?.HapticFeedback?.notificationOccurred('success');
     Sound.levelUp?.();
     localStorage.removeItem('cryptoPendingInvoice');
-    this._toast('✅ Свиток получен! Открой «Статы → Моё → Особые»');
+    this._toast('✅ Свиток получен! Открой «Герой → Моё → Особые»');
     post('/api/player').then(d => {
       if (d.ok && d.player) State.player = d.player;
       this.time.delayedCall(800, () => this.scene.restart({ tab: 'special' }));
