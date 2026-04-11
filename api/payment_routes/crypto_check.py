@@ -48,6 +48,8 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             custom_payload = inv.get("payload", "")
             is_premium = ":premium:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
+            is_usdt_scroll = ":usdt_scroll:" in custom_payload
+            usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
             result = db.confirm_crypto_invoice(int(invoice_id))
             if result.get("ok"):
@@ -58,6 +60,13 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 if owner_uid != uid:
                     logger.warning("crypto_check invoice %s user mismatch db=%s init=%s", invoice_id, owner_uid, uid)
                     return {"ok": False, "reason": "invoice_user_mismatch"}
+                if is_usdt_scroll and usdt_scroll_id:
+                    db.add_to_inventory(owner_uid, usdt_scroll_id)
+                    await manager.send(owner_uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
+                    from api.tma_catalogs import SHOP_CATALOG
+                    scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})
+                    await _send_tg_message(owner_uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Статы → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
+                    return {"ok": True, "paid": True, "scroll_received": True, "scroll_id": usdt_scroll_id}
                 if avatar_id:
                     db.unlock_avatar(owner_uid, avatar_id, source="usdt")
                     await manager.send(owner_uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})

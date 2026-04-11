@@ -326,31 +326,22 @@ class StatsScene extends Phaser.Scene {
     txt(this, W / 2, passY + 26, '💥 Крит-пробой блока  ·  🤸 Уворот → 2й удар', 10, '#c8a0ff').setOrigin(0.5);
     txt(this, W / 2, passY + 42, '🛡 Поглощение 50%  ·  💪 Пролом брони', 10, '#ffc870').setOrigin(0.5);
 
-    // Активные бафы (подгружаем асинхронно)
-    this._loadActiveBuffs(W, passY + passH + 6);
+    // Активные бафы — компактная строка под пассивками
+    this._loadActiveBuffsLine(W, passY + passH);
   }
 
-  async _loadActiveBuffs(W, startY) {
+  async _loadActiveBuffsLine(W, y) {
     try {
       const d = await get('/api/shop/inventory');
-      if (!d?.ok) return;
-      const buffs = d.active_buffs || [];
-      if (!buffs.length) return;
-      const BUFF_NAMES = {
-        strength: '⚔️ Сила', endurance: '🛡 Ловк', crit: '🎯 Крит',
-        armor_pct: '🔰 Броня', dodge_pct: '💨 Уворот', hp_bonus: '❤️ HP',
-        double_pct: '⚡ Двойной', accuracy: '👁 Точность', gold_pct: '💰 Золото',
-      };
-      const bw = W - 24, bh = 14 + buffs.length * 16;
-      const bg = this.add.graphics();
-      bg.fillStyle(0x1a2a1a, 0.9); bg.fillRoundedRect(12, startY, bw, bh, 8);
-      bg.lineStyle(1.5, 0x44aa55, 0.5); bg.strokeRoundedRect(12, startY, bw, bh, 8);
-      txt(this, W / 2, startY + 8, '🧪 Активные бафы', 10, '#55cc66', true).setOrigin(0.5);
-      buffs.forEach((b, i) => {
-        const name = BUFF_NAMES[b.buff_type] || b.buff_type;
-        const dur = b.charges ? `${b.charges} боёв` : (b.expires_at ? 'время' : '∞');
-        txt(this, 24, startY + 18 + i * 16, `${name} +${b.value}  (${dur})`, 10, '#aaffbb');
-      });
+      if (!d?.ok || !d.active_buffs?.length) return;
+      const BN = { strength:'⚔️', endurance:'🛡', crit:'🎯', armor_pct:'🔰',
+        dodge_pct:'💨', hp_bonus:'❤️', double_pct:'⚡', accuracy:'👁', gold_pct:'💰' };
+      const line = d.active_buffs.map(b => {
+        const ic = BN[b.buff_type] || '🧪';
+        const dur = b.charges ? `${b.charges}б` : '∞';
+        return `${ic}+${b.value}(${dur})`;
+      }).join(' · ');
+      txt(this, W / 2, y + 8, `🧪 ${line}`, 9, '#88ddaa').setOrigin(0.5);
     } catch {}
   }
 
