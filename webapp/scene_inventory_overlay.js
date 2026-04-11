@@ -58,6 +58,13 @@
     this._renderInvOverlay();
   };
 
+  const BUFF_LABEL = {
+    strength: '⚔️ Сила', endurance: '🛡 Выносл.', crit: '💥 Крит',
+    armor_pct: '🔰 Броня', dodge_pct: '💨 Уворот', hp_bonus: '❤️ HP',
+    double_pct: '⚡ Двойной', accuracy: '👁 Точность',
+    lifesteal_pct: '🩸 Вампир', gold_pct: '💰 Золото',
+  };
+
   StatsScene.prototype._renderInvOverlay = function() {
     this._closeInvOverlay();
     const data = this._invData || {};
@@ -92,18 +99,43 @@
       z.on('pointerdown', () => { this._invTab = tab.key; this._renderInvOverlay(); }); ov.push(z);
     });
 
-    // Активные бафы (строка снизу)
-    const buffY = panelY + panelH - 26;
+    // ── Блок активных бафов (под вкладками) ─────────────────────────────
+    const buffCardY = panelY + 58;
+    let buffCardH = 0;
     if (activeBuffs.length > 0) {
-      const buffText = activeBuffs.map(b => `${b.buff_type}+${b.value}(${b.charges ?? '∞'})`).join('  ');
-      ov.push(txt(this, 16, buffY, `⚡ Активны: ${buffText}`, 9, '#aaffcc').setDepth(133));
-    } else {
-      ov.push(txt(this, 16, buffY, '— нет активных бафов', 9, '#777799').setDepth(133));
+      const chargeBased = activeBuffs.filter(b => b.charges != null);
+      const timeBased   = activeBuffs.filter(b => b.expires_at != null);
+      const lines = [];
+      if (chargeBased.length > 0) {
+        const parts = chargeBased.map(b => `${BUFF_LABEL[b.buff_type] || b.buff_type}+${b.value}`).join(' ');
+        const ch = chargeBased[0].charges;
+        lines.push({ text: `${parts}  · ещё ${ch} ${ch === 1 ? 'бой' : 'боёв'}`, color: '#aaffee' });
+      }
+      timeBased.forEach(b => {
+        const msLeft = Math.max(0, new Date(b.expires_at + 'Z') - Date.now());
+        const hLeft  = Math.floor(msLeft / 3600000);
+        const mLeft  = Math.floor((msLeft % 3600000) / 60000);
+        const timeStr = hLeft > 0 ? `${hLeft}ч ${mLeft}м` : `${mLeft}м`;
+        const label = BUFF_LABEL[b.buff_type] || b.buff_type;
+        lines.push({ text: `${label}+${b.value}%  · ещё ${timeStr}`, color: '#ffc83c' });
+      });
+      buffCardH = 20 + lines.length * 18 + 4;
+      const bcg = this.add.graphics().setDepth(132);
+      bcg.fillStyle(0x0e2a1a, 0.97);
+      bcg.fillRoundedRect(12, buffCardY, W-24, buffCardH, 8);
+      bcg.lineStyle(1.5, 0x44cc77, 0.8);
+      bcg.strokeRoundedRect(12, buffCardY, W-24, buffCardH, 8);
+      ov.push(bcg);
+      ov.push(txt(this, 20, buffCardY + 9, '✨ Активный баф', 9, '#66cc88', true).setDepth(133));
+      lines.forEach((line, i) => {
+        ov.push(txt(this, 20, buffCardY + 20 + i * 18, line.text, 10, line.color, true).setDepth(133));
+      });
     }
 
     // Список предметов текущей вкладки (предметы без ITEM_META пропускаем — они применяются сразу при покупке)
     const items = inventory.filter(it => ITEM_META[it.item_id] && ITEM_META[it.item_id].tab === this._invTab);
-    const listY = panelY + 62, listH = buffY - listY - 8;
+    const listY = buffCardY + (buffCardH > 0 ? buffCardH + 4 : 2);
+    const listH = panelY + panelH - listY - 10;
     const cardH = 56, cardW = W - 32;
 
     if (items.length === 0) {
