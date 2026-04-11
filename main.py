@@ -34,6 +34,13 @@ logger.info("Прогрессия: %s", progression_loader.describe_progression_
 
 async def error_handler(update: object, context):
     """Глобальный обработчик ошибок Telegram."""
+    # Conflict во время работы = конкурирующий инстанс (Render zero-downtime deploy).
+    # Останавливаем приложение → while-loop в main() сделает force_steal и перезапустит.
+    if isinstance(context.error, TelegramConflict):
+        logger.warning("⚠️ Conflict во время polling — останавливаю приложение для рестарта...")
+        context.application.stop_running()
+        return
+
     logger.exception("Unhandled error in update handling", exc_info=context.error)
 
     if isinstance(update, Update):
