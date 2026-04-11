@@ -62,7 +62,7 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     _agi = agi + int(_cb.get("endurance", 0))  # endurance buff → ловкость/уворот в бою
     _intu = intu + int(_cb.get("crit", 0))
     vyn = stamina_stats_invested(mhp, lv)
-    _vyn = vyn  # endurance buff идёт в ловкость, а не в HP-инвестиции
+    _vyn = vyn + int(_cb.get("stamina", 0))  # stamina buff → симулирует вложения → +броня
     tf = total_free_stats_at_level(lv)
 
     avg_agi = max(1, PLAYER_START_ENDURANCE + tf // 4)

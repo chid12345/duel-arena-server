@@ -407,13 +407,13 @@ class StatsScene extends Phaser.Scene {
         if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${dodgeV}% уворот🧪`);
         if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${dodgeV}%`).setColor('#88ffcc');
       }
-      // ── stamina buff → только +HP (броня от свитка НЕ меняется) ──
+      // ── stamina buff → +HP и +броня (симулирует реальные вложения) ──
       if (B.stamina) {
-        const hpAdd = B.stamina * 2;
-        const newHp = p.max_hp_effective ?? p.max_hp;
-        if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`+${hpAdd} HP🧪`);
-        if (this._combatCells?.hp) this._combatCells.hp.t.setText(String(newHp)).setColor('#aaffaa');
-        // armor_pct не меняется от свитка — не обновляем
+        const armorV = parseFloat(p.armor_pct || 0).toFixed(1);
+        const newHp  = p.max_hp_effective ?? p.max_hp;
+        if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${armorV}% броня🧪`);
+        if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${armorV}%`).setColor('#88ffcc');
+        if (this._combatCells?.hp)    this._combatCells.hp.t.setText(String(newHp)).setColor('#aaffaa');
       }
       // ── armor_pct → дополнительная броня поверх базовой ──
       if (B.armor_pct) {

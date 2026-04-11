@@ -100,7 +100,7 @@ class BattleStartMixin:
         end_bonus = combined.get("endurance", 0)
         if end_bonus:
             player["endurance"] = max(1, int(player.get("endurance", PLAYER_START_ENDURANCE)) + end_bonus)
-        # stamina buff → увеличивает max_hp как ручные вложения (+value*STAMINA_PER_FREE_STAT)
+        # stamina buff → +HP и +броня (симулирует реальные вложения в стат)
         stam_bonus = combined.get("stamina", 0)
         if stam_bonus:
             hp_add = stam_bonus * STAMINA_PER_FREE_STAT
@@ -108,6 +108,12 @@ class BattleStartMixin:
             old_cur = int(player.get("current_hp", old_max))
             player["max_hp"]     = old_max + hp_add
             player["current_hp"] = min(player["max_hp"], old_cur + hp_add)
+            # Прирост брони как от реальных вложений
+            lv  = max(1, int(player.get("level", 1)))
+            vyn = stamina_stats_invested(old_max, lv)
+            armor_delta = armor_reduction(vyn + stam_bonus, lv) - armor_reduction(vyn, lv)
+            combined = dict(combined)
+            combined["armor_pct"] = combined.get("armor_pct", 0) + round(armor_delta * 100, 1)
         # hp_bonus → прямой бонус HP в бой
         hp_bonus = combined.get("hp_bonus", 0)
         if hp_bonus:
