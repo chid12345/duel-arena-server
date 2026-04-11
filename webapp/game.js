@@ -937,7 +937,7 @@ class MenuScene extends Phaser.Scene {
       hpBlockObjs.push(txt(this, 20, hpBlockY + 14, regenStr, 8, '#cc7777'));
     }
 
-    if (p.hp_pct < 30) {
+    if (p.hp_pct < 15) {
       const canAfford = (p.gold || 0) >= 12;
       const btnBY = hpBlockY + 28;
       const qBg = this.add.graphics();
@@ -1122,7 +1122,7 @@ class MenuScene extends Phaser.Scene {
   async _onFight() {
     const p = State.player;
     if (!p) return;
-    if (p.hp_pct < 30) {
+    if (p.hp_pct < 15) {
       tg?.HapticFeedback?.notificationOccurred('error');
       this._toast('❤️ Нужно восстановить HP!');
       return;
@@ -1143,7 +1143,7 @@ class MenuScene extends Phaser.Scene {
   async _onBotFight() {
     const p = State.player;
     if (!p) return;
-    if (p.hp_pct < 30) {
+    if (p.hp_pct < 15) {
       tg?.HapticFeedback?.notificationOccurred('error');
       this._toast('❤️ Нужно восстановить HP!');
       return;
@@ -1160,7 +1160,7 @@ class MenuScene extends Phaser.Scene {
   async _onTitanFight() {
     const p = State.player;
     if (!p) return;
-    if (p.hp_pct < 30) {
+    if (p.hp_pct < 15) {
       this._toast('❤️ Нужно восстановить HP!');
       return;
     }
