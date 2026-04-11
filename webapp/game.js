@@ -2674,7 +2674,9 @@ class ResultScene extends Phaser.Scene {
     const r     = res?.result    ?? {};
     const isAfk = res?.afk_loss  === true;
     const isEndless    = res?.mode === 'endless';
+    const isTitan      = res?.mode === 'titan';
     const endlessWave  = res?.mode_meta?.wave || State.endlessWave || 0;
+    const titanFloor   = res?.mode_meta?.floor || 0;
     const endlessProgress = res?.endless_progress;
 
     /* ── Фон (зелёный / красный оттенок) ── */
@@ -2839,7 +2841,18 @@ class ResultScene extends Phaser.Scene {
     }
 
     /* ── Кнопки ── */
-    const bigBtnLabel = (isEndless && won) ? '🔥  Следующая волна!' : '⚔️  Ещё бой!';
+    const _goTitanNext = () => {
+      post('/api/titans/start', {}).then(r => {
+        if (!r.ok) { this.scene.start('Menu', { returnTab: 'battle' }); return; }
+        State.battle = r.battle;
+        tg?.HapticFeedback?.impactOccurred('heavy');
+        this.scene.start('Battle');
+      }).catch(() => this.scene.start('Menu', { returnTab: 'battle' }));
+    };
+    const bigBtnLabel = (isEndless && won) ? '🔥  Следующая волна!'
+                      : (isTitan && won)   ? '⚔️  Следующий этаж!'
+                      : (isTitan)          ? '🔄  Попробовать снова!'
+                      :                      '⚔️  Ещё бой!';
     const bigBtnCb = (isEndless && won)
       ? () => {
           post('/api/endless/next_wave', {}).then(r => {
@@ -2850,6 +2863,8 @@ class ResultScene extends Phaser.Scene {
             this.scene.start('Battle');
           }).catch(() => this.scene.start('Natisk'));
         }
+      : (isTitan)
+      ? _goTitanNext
       : (isEndless)
       ? () => { this.scene.start('Natisk'); }
       : () => { this.scene.start('Menu', { returnTab: 'profile' }); };
@@ -2864,6 +2879,8 @@ class ResultScene extends Phaser.Scene {
       this._mainBtn(W / 2, H * 0.89, '🚪  Завершить заход', () => {
         post('/api/endless/abandon', {}).catch(() => {}).finally(() => this.scene.start('Natisk'));
       });
+    } else if (isTitan) {
+      this._mainBtn(W / 2, H * 0.89, '🚪  Выйти к боям', () => this.scene.start('Menu', { returnTab: 'battle' }));
     } else {
       this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
     }
