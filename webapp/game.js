@@ -614,6 +614,7 @@ class MenuScene extends Phaser.Scene {
 
   _switchTab(key) {
     Object.entries(this._panels).forEach(([k, c]) => c?.setVisible(k === key));
+    if (key === 'profile') this._loadProfileBuffs();
     const inactiveCol = '#8888aa';
     const activeCol   = '#ffc83c';
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
@@ -727,6 +728,7 @@ class MenuScene extends Phaser.Scene {
     const scW   = (W - pad * 2 - scGap * 3) / 4;
     const maxV  = Math.max(1, 3 + p.level * 2);
 
+    this._profileStatSubs = [];
     const statObjs = STATS.map((s, i) => {
       const scX  = pad + i * (scW + scGap);
       const scCX = scX + scW / 2;
@@ -741,6 +743,7 @@ class MenuScene extends Phaser.Scene {
       const icoT = txt(this, scCX, statsTop + 14, s.icon, 18).setOrigin(0.5);
       const valT = txt(this, scCX, statsTop + 36, String(s.val), 22, hexC, true).setOrigin(0.5);
       const subT = txt(this, scCX, statsTop + 58, s.sub, 13, hexC).setOrigin(0.5);
+      this._profileStatSubs[i] = subT;
 
       // Прогресс-бар внутри карточки
       const pct = Math.min(1, s.val / maxV);
@@ -836,6 +839,33 @@ class MenuScene extends Phaser.Scene {
     children.forEach(o => c.add(o));
 
     this._panels.profile = c;
+    this._loadProfileBuffs();
+  }
+
+  async _loadProfileBuffs() {
+    try {
+      const [d, pd] = await Promise.all([get('/api/shop/inventory'), post('/api/player')]);
+      if (!this.scene?.isActive?.()) return;
+
+      const buffs = d?.ok ? (d.active_buffs || []) : [];
+      if (pd?.ok && pd.player) {
+        State.player = pd.player;
+        const p = pd.player;
+        if (this._liveHp?.t)
+          this._liveHp.t.setText(`${p.current_hp} / ${p.max_hp_effective ?? p.max_hp} HP`);
+      }
+      if (!buffs.length) return;
+
+      const B = {};
+      for (const b of buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
+      const p = State.player;
+
+      // 0=Сила, 1=Ловкость, 2=Интуиция, 3=Выносливость
+      if (B.strength   && this._profileStatSubs?.[0]) this._profileStatSubs[0].setText(`~${p.dmg}🧪`).setStyle({ color: '#ffaa66' });
+      if (B.endurance  && this._profileStatSubs?.[1]) this._profileStatSubs[1].setText(`${p.dodge_pct}%🧪`).setStyle({ color: '#88ffcc' });
+      if (B.crit       && this._profileStatSubs?.[2]) this._profileStatSubs[2].setText(`${p.crit_pct}%🧪`).setStyle({ color: '#cc88ff' });
+      if (B.stamina    && this._profileStatSubs?.[3]) this._profileStatSubs[3].setText(`+${B.stamina * 2} HP🧪`).setStyle({ color: '#aaffaa' });
+    } catch {}
   }
 
   /* ══════════════════════════════════════════════════════
