@@ -305,7 +305,7 @@ class StatsScene extends Phaser.Scene {
       const cHex = `#${c.color.toString(16).padStart(6, '0')}`;
       txt(this, cx, py + 34, c.label, 9, '#8888aa').setOrigin(0.5);
       const valT = txt(this, cx, py + 52, c.valFn(p), 18, cHex, true).setOrigin(0.5);
-      this._combatCells[c.key] = { t: valT, fn: c.valFn };
+      this._combatCells[c.key] = { t: valT, fn: c.valFn, origColor: cHex };
     });
 
     txt(this, W / 2, py + ph - 12,
@@ -326,25 +326,54 @@ class StatsScene extends Phaser.Scene {
     txt(this, W / 2, passY + 26, '💥 Крит-пробой блока  ·  🤸 Уворот → 2й удар', 10, '#c8a0ff').setOrigin(0.5);
     txt(this, W / 2, passY + 42, '🛡 Поглощение 50%  ·  💪 Пролом брони', 10, '#ffc870').setOrigin(0.5);
 
-    // Активные бафы — компактная строка под пассивками
-    this._loadActiveBuffsLine(W, passY + passH);
+    // Placeholder для строки активных бафов (создаётся синхронно, текст обновляется async)
+    this._buffLineTxt = txt(this, W / 2, passY + passH + 8, '', 9, '#88ddaa').setOrigin(0.5);
+    this._refreshBuffDisplay();
   }
 
-  async _loadActiveBuffsLine(W, y) {
+  /* Загружает активные бафы и обновляет все отображения в сцене.
+     Вызывается при create() и после apply/replace из оверлея Моё. */
+  async _refreshBuffDisplay() {
     try {
       const d = await get('/api/shop/inventory');
       if (!this.scene || !this.scene.isActive()) return;
-      if (!d?.ok || !d.active_buffs?.length) return;
+
+      const p = State.player;
+      const buffs = d?.ok ? (d.active_buffs || []) : [];
+
+      // Сброс к базовым значениям (на случай повторного вызова после снятия бафа)
+      const ROW_RESET = { strength: 'strength', endurance: 'stamina', crit: 'intuition' };
+      for (const rk of Object.values(ROW_RESET)) {
+        const row = this._statRows[rk]; if (!row) continue;
+        const base = this._statBase(p, rk);
+        const perm = this._statBonus(p, rk);
+        row.valTxt.setText(String(row.s.valFn(p))).setColor(`#${row.s.color.toString(16).padStart(6,'0')}`);
+        row.breakdownTxt.setText(`база ${base} | бонусы +${perm}`);
+      }
+      // Сброс combat cells
+      if (this._combatCells) {
+        for (const [key, cell] of Object.entries(this._combatCells)) {
+          cell.t.setText(cell.fn(p)).setStyle({ color: cell.origColor || cell.t.style.color });
+        }
+        // Сброс effectTxt
+        const rowStamina = this._statRows.stamina;
+        const rowAgility = this._statRows.agility;
+        if (rowStamina) rowStamina.effectTxt.setText(rowStamina.s.effectFn(p));
+        if (rowAgility) rowAgility.effectTxt.setText(rowAgility.s.effectFn(p));
+      }
+
+      if (!buffs.length) {
+        if (this._buffLineTxt) this._buffLineTxt.setText('');
+        return;
+      }
 
       // Суммируем бонусы по типу
       const B = {};
-      for (const b of d.active_buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
+      for (const b of buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
 
-      const p = State.player;
-
-      // Прямые бафы статов: buff_type → ключ строки в _statRows
-      const ROW_MAP = { strength: 'strength', endurance: 'stamina', crit: 'intuition' };
-      for (const [bt, rk] of Object.entries(ROW_MAP)) {
+      // Прямые бафы статов: strength / endurance→stamina / crit→intuition
+      const STAT_MAP = { strength: 'strength', endurance: 'stamina', crit: 'intuition' };
+      for (const [bt, rk] of Object.entries(STAT_MAP)) {
         const bonus = B[bt]; if (!bonus) continue;
         const row = this._statRows[rk]; if (!row) continue;
         const base = this._statBase(p, rk);
@@ -353,44 +382,34 @@ class StatsScene extends Phaser.Scene {
         row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
       }
 
-      // armor_pct / dodge_pct → обновляем effectTxt в строках статов
+      // armor_pct → Выносливость effectFn + боевой показатель Броня
       if (B.armor_pct) {
-        const row = this._statRows.stamina;
-        if (row) {
-          const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
-          row.effectTxt.setText(`${v}% броня🧪`);
-        }
-        if (this._combatCells?.armor) {
-          const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
-          this._combatCells.armor.t.setText(`${v}%`).setColor('#88ffcc');
-        }
+        const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
+        if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${v}% броня🧪`);
+        if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${v}%`).setColor('#88ffcc');
       }
+      // dodge_pct → Ловкость effectFn + боевой показатель Уворот
       if (B.dodge_pct) {
-        const row = this._statRows.agility;
-        if (row) {
-          const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
-          row.effectTxt.setText(`${v}% уворот🧪`);
-        }
-        if (this._combatCells?.dodge) {
-          const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
-          this._combatCells.dodge.t.setText(`${v}%`).setColor('#88ffcc');
-        }
+        const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
+        if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${v}% уворот🧪`);
+        if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${v}%`).setColor('#88ffcc');
       }
       // crit buff (1:1 с crit_pct)
       if (B.crit && this._combatCells?.crit) {
-        this._combatCells.crit.t.setText(`${(parseFloat(p.crit_pct || 0) + B.crit).toFixed(0)}%`).setColor('#cc88ff');
+        const v = (parseFloat(p.crit_pct || 0) + B.crit).toFixed(0);
+        this._combatCells.crit.t.setText(`${v}%`).setColor('#cc88ff');
       }
 
-      // Компактная строка под пассивками
+      // Обновляем строку-placeholder (не создаём новый объект)
       const BN = { strength:'⚔️', endurance:'🛡', crit:'🎯', armor_pct:'🔰',
         dodge_pct:'💨', hp_bonus:'❤️', double_pct:'⚡', accuracy:'👁',
         gold_pct:'💰', lifesteal_pct:'🩸' };
-      const line = d.active_buffs.map(b => {
+      const line = buffs.map(b => {
         const ic = BN[b.buff_type] || '🧪';
         const dur = b.charges != null ? `${b.charges}б` : '∞';
         return `${ic}+${b.value}(${dur})`;
       }).join(' · ');
-      txt(this, W / 2, y + 8, `🧪 ${line}`, 9, '#88ddaa').setOrigin(0.5).setDepth(3);
+      if (this._buffLineTxt) this._buffLineTxt.setText(`🧪 ${line}`);
     } catch {}
   }
 

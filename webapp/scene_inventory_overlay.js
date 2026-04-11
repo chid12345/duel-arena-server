@@ -155,6 +155,7 @@
         this._invData = await get('/api/shop/inventory').catch(() => this._invData);
         this._showToast(res.msg || '✅ Применено!');
         this._renderInvOverlay();
+        this._refreshBuffDisplay(); // обновить статы сразу
       } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
     } catch { this._invBusy = false; this._showToast('❌ Нет соединения'); }
   };
@@ -187,6 +188,7 @@
         this._invData = await get('/api/shop/inventory').catch(() => this._invData);
         this._showToast(res.msg || '✅ Заменён!');
         this._renderInvOverlay();
+        this._refreshBuffDisplay(); // обновить статы сразу
       } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
     });
     makeDlgBtn(32 + bw + 8, bw, 'Отмена', 0x444466, () => { dlg.forEach(o => { try { o.destroy(); } catch {} }); });
