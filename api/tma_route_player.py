@@ -41,7 +41,7 @@ def register_tma_player_route(
             if usdt_passive:
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
-            return {"ok": True, "player": _player_api(cached), "cached": True}
+            return {"ok": True, "player": _player_api(cached, combined_buffs=db.get_combined_buffs(uid)), "cached": True}
 
         player = db.get_or_create_player(uid, username)
         inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
@@ -70,4 +70,4 @@ def register_tma_player_route(
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
-        return {"ok": True, "player": _player_api(player)}
+        return {"ok": True, "player": _player_api(player, combined_buffs=db.get_combined_buffs(uid))}

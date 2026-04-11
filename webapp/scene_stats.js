@@ -377,26 +377,31 @@ class StatsScene extends Phaser.Scene {
         row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
       }
 
+      // ── endurance buff → Уворот пересчитан сервером (p.dodge_pct уже актуален) ──
+      if (B.endurance) {
+        const v = parseFloat(p.dodge_pct || 0).toFixed(1);
+        if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${v}% уворот🧪`);
+        if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${v}%`).setColor('#88ffcc');
+      }
       // ── armor_pct → Выносливость effectFn + Броня в боевых ──
       if (B.armor_pct) {
         const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
         if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${v}% броня🧪`);
         if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${v}%`).setColor('#88ffcc');
       }
-      // ── dodge_pct → Ловкость effectFn + Уворот в боевых ──
+      // ── dodge_pct → Ловкость effectFn + Уворот в боевых (p.dodge_pct уже включает endurance buff) ──
       if (B.dodge_pct) {
         const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
         if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${v}% уворот🧪`);
         if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${v}%`).setColor('#88ffcc');
       }
-      // ── crit buff (1:1 с crit_pct) → Крит в боевых ──
+      // ── crit buff → Крит пересчитан сервером (p.crit_pct уже включает бафф) ──
       if (B.crit && this._combatCells?.crit) {
-        const v = (parseFloat(p.crit_pct || 0) + B.crit).toFixed(0);
-        this._combatCells.crit.t.setText(`${v}%`).setColor('#cc88ff');
+        this._combatCells.crit.t.setText(`${parseFloat(p.crit_pct || 0).toFixed(0)}%`).setColor('#cc88ff');
       }
-      // ── strength buff → намёк на Урон в боевых (формула серверная, точно не пересчитать) ──
+      // ── strength buff → Урон пересчитан сервером (p.dmg уже включает бафф) ──
       if (B.strength && this._combatCells?.dmg) {
-        this._combatCells.dmg.t.setText(`~${p.dmg}+`).setColor('#ff9966');
+        this._combatCells.dmg.t.setText(String(p.dmg)).setColor('#ff9966');
       }
       // ── hp_bonus → HP ячейка ──
       if (B.hp_bonus && this._combatCells?.hp) {

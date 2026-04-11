@@ -205,7 +205,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                 "ok": True,
                 "msg": f"✅ {item_info.get('icon', '')} {item_info.get('name', iid)} применён!",
                 "active_buffs": db.get_raw_buffs(uid),
-                "player": _player_api(dict(player)),
+                "player": _player_api(dict(player), combined_buffs=db.get_combined_buffs(uid)),
             }
 
         return {"ok": False, "reason": "Нельзя применить этот предмет"}

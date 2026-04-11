@@ -48,7 +48,7 @@ def _premium_fields(player: dict) -> dict:
         return {"is_premium": False, "premium_until": None, "premium_days_left": 0}
 
 
-def _player_api(player: dict) -> dict:
+def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     """Сериализовать игрока для API."""
     lv = int(player.get("level", 1))
     mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
@@ -56,29 +56,34 @@ def _player_api(player: dict) -> dict:
     s = int(player.get("strength", 3))
     agi = int(player.get("endurance", 3))
     intu = int(player.get("crit", PLAYER_START_CRIT))
+    # Эффективные статы с учётом активных баффов (свитки/зелья) для производных
+    _cb = combined_buffs or {}
+    _s = s + int(_cb.get("strength", 0))
+    _agi = agi + int(_cb.get("endurance", 0))
+    _intu = intu + int(_cb.get("crit", 0))
     vyn = stamina_stats_invested(mhp, lv)
     tf = total_free_stats_at_level(lv)
 
     avg_agi = max(1, PLAYER_START_ENDURANCE + tf // 4)
     avg_intu = max(1, PLAYER_START_CRIT + tf // 4)
-    agi_inv = max(0, agi - PLAYER_START_ENDURANCE)
-    int_inv = max(0, intu - PLAYER_START_CRIT)
+    agi_inv = max(0, _agi - PLAYER_START_ENDURANCE)
+    int_inv = max(0, _intu - PLAYER_START_CRIT)
     dodge_p = int(
         min(
             DODGE_MAX_CHANCE,
-            agi / (agi + avg_agi) * DODGE_MAX_CHANCE + (agi_inv // AGI_BONUS_STEP) * AGI_BONUS_PCT_PER_STEP,
+            _agi / (_agi + avg_agi) * DODGE_MAX_CHANCE + (agi_inv // AGI_BONUS_STEP) * AGI_BONUS_PCT_PER_STEP,
         )
         * 100
     )
     crit_p = int(
         min(
             CRIT_MAX_CHANCE,
-            intu / (intu + avg_intu) * CRIT_MAX_CHANCE + (int_inv // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP,
+            _intu / (_intu + avg_intu) * CRIT_MAX_CHANCE + (int_inv // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP,
         )
         * 100
     )
     armor_p = round(armor_reduction(vyn, lv) * 100, 1)
-    dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s**STRENGTH_DAMAGE_POWER)))
+    dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (_s**STRENGTH_DAMAGE_POWER)))
 
     need_xp = exp_needed_for_next_level(lv)
 
