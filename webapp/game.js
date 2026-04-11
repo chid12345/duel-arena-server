@@ -485,6 +485,7 @@ class MenuScene extends Phaser.Scene {
               if (this._panels?.more) { this._panels.more.destroy(); this._panels.more = null; }
               this._buildMorePanel();
               if (this._activeTab === 'more') this._switchTab('more');
+              else if (this._panels?.more) this._panels.more.setVisible(false);
             }
           });
 
