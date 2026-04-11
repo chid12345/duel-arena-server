@@ -96,7 +96,11 @@ class BattleStartMixin:
         player["crit"]      = max(0, int(player.get("crit",      PLAYER_START_CRIT))      + combined.get("crit",      0))
         hp_bonus = combined.get("hp_bonus", 0)
         if hp_bonus:
-            player["max_hp"] = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)) + hp_bonus)
+            old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
+            old_cur = int(player.get("current_hp", old_max))
+            player["max_hp"] = old_max + hp_bonus
+            # Preserve HP percentage: add the same bonus to current_hp
+            player["current_hp"] = min(player["max_hp"], old_cur + hp_bonus)
         # Боевые pct-модификаторы добавляем как поля в dict (damage.py их читает)
         player["_buff_armor_pct"]    = combined.get("armor_pct",    0)
         player["_buff_dodge_pct"]    = combined.get("dodge_pct",    0)
