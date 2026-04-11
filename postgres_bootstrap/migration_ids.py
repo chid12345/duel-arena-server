@@ -28,6 +28,7 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_13_000a_premium_subscription",
     "2026_04_13_000_stars_payments",
     "2026_04_13_001_crypto_invoices",
+    "2026_04_13_002_crypto_invoices_payload",
     "2026_04_12_001_referral_payouts",
     "2026_04_15_001_clan_chat",
     "2026_04_05_002_referral_usdt",
