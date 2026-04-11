@@ -77,14 +77,12 @@ def _webapp_public_url() -> str:
             )
             u = render_ext
 
-    # Всегда добавляем ?v=COMMIT, заменяя любой старый ?v= из env-var.
-    # Используем GAME_VERSION + timestamp для гарантированного сброса кэша
-    import time
-    timestamp = str(int(time.time()))[-6:]  # Последние 6 цифр timestamp
+    # Добавляем ?v=GAME_VERSION для сброса кэша WebView при деплое.
+    # Не используем timestamp — URL кнопки меню не должен меняться при рестарте бота.
     ver = (
-        f"{GAME_VERSION}.{timestamp}"  # Версия + timestamp для уникальности
-        or (os.getenv("WEBAPP_URL_VERSION") or "").strip()
+        (os.getenv("WEBAPP_URL_VERSION") or "").strip()
         or (os.getenv("RENDER_GIT_COMMIT") or "").strip()[:8]
+        or GAME_VERSION
     )
     if u and ver:
         base = u.split("?")[0]

@@ -123,11 +123,22 @@
 
 <div id="loading-screen">
   <div class="logo">⚔️ DUEL ARENA</div>
-  <div class="sub">Подготовка арены...</div>
+  <div class="sub" id="loading-sub">Подготовка арены...</div>
   <div id="loading-bar-wrap">
     <div id="loading-bar"></div>
   </div>
 </div>
+<script>
+// Watchdog: если loading screen не убран за 10с — показываем ошибку
+setTimeout(function(){
+  var ls = document.getElementById('loading-screen');
+  var sub = document.getElementById('loading-sub');
+  if (ls && ls.parentNode && sub) {
+    sub.textContent = '❌ Не удалось загрузить. Закройте и откройте заново.';
+    sub.style.color = '#dc3c46';
+  }
+}, 10000);
+</script>
 
 <!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
 <div id="battle-log-overlay">

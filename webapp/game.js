@@ -195,7 +195,14 @@ class BootScene extends Phaser.Scene {
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
 
     // Генерируем текстуры программно (без внешних файлов)
-    this.load.on('complete', () => this._generateTextures());
+    this.load.on('complete', () => {
+      try {
+        this._generateTextures();
+      } catch(e) {
+        console.error('_generateTextures error:', e);
+        // Всё равно переходим в create() — текстуры сгенерируются частично, но игра запустится
+      }
+    });
   }
 
   _generateTextures() {
@@ -218,10 +225,7 @@ class BootScene extends Phaser.Scene {
   }
 
   _warrior(key, bodyColor, shadowColor) {
-    const g = this.add.graphics({ x: -9999, y: -9999 });
     const W = 80, H = 120;
-    g.generateTexture(key + '_tmp', W, H);
-
     const rt = this.add.renderTexture(0, 0, W, H).setVisible(false);
     const draw = this.add.graphics().setVisible(false);
 
@@ -269,7 +273,6 @@ class BootScene extends Phaser.Scene {
     rt.saveTexture(key);
     draw.destroy();
     rt.destroy();
-    g.destroy();
   }
 
   _hitFx() {
@@ -3361,7 +3364,13 @@ let _gameStarted = false;
 function _launchPhaser() {
   if (_gameStarted) return;
   _gameStarted = true;
-  new Phaser.Game(config);
+  try {
+    new Phaser.Game(config);
+  } catch(e) {
+    console.error('Phaser.Game init error:', e);
+    const sub = document.querySelector('#loading-screen .sub');
+    if (sub) sub.textContent = '❌ Ошибка запуска. Перезапустите приложение.';
+  }
 }
 
 if (tg) {
