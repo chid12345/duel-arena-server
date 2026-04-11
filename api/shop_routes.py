@@ -198,6 +198,17 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                     "reason": "Уже есть активный свиток. Заменить?",
                 }
             db.remove_from_inventory(uid, iid)
+            # HP-свитки: сразу восстанавливаем current_hp на величину бонуса
+            hp_bonus_added = sum(v for (bt, v, _) in effects if bt == "hp_bonus")
+            if hp_bonus_added > 0:
+                conn = db.get_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE players SET current_hp = MIN(max_hp + ?, current_hp + ?) WHERE user_id = ?",
+                    (hp_bonus_added, hp_bonus_added, uid),
+                )
+                conn.commit()
+                conn.close()
             item_info = SHOP_CATALOG.get(iid, {})
             player = db.get_or_create_player(uid, "")
             return {
