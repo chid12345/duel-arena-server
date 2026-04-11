@@ -333,15 +333,63 @@ class StatsScene extends Phaser.Scene {
   async _loadActiveBuffsLine(W, y) {
     try {
       const d = await get('/api/shop/inventory');
+      if (!this.scene || !this.scene.isActive()) return;
       if (!d?.ok || !d.active_buffs?.length) return;
+
+      // Суммируем бонусы по типу
+      const B = {};
+      for (const b of d.active_buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
+
+      const p = State.player;
+
+      // Прямые бафы статов: buff_type → ключ строки в _statRows
+      const ROW_MAP = { strength: 'strength', endurance: 'stamina', crit: 'intuition' };
+      for (const [bt, rk] of Object.entries(ROW_MAP)) {
+        const bonus = B[bt]; if (!bonus) continue;
+        const row = this._statRows[rk]; if (!row) continue;
+        const base = this._statBase(p, rk);
+        const perm = this._statBonus(p, rk);
+        row.valTxt.setText(String(row.s.valFn(p) + bonus)).setColor('#88ffbb');
+        row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
+      }
+
+      // armor_pct / dodge_pct → обновляем effectTxt в строках статов
+      if (B.armor_pct) {
+        const row = this._statRows.stamina;
+        if (row) {
+          const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
+          row.effectTxt.setText(`${v}% броня🧪`);
+        }
+        if (this._combatCells?.armor) {
+          const v = (parseFloat(p.armor_pct || 0) + B.armor_pct).toFixed(1);
+          this._combatCells.armor.t.setText(`${v}%`).setColor('#88ffcc');
+        }
+      }
+      if (B.dodge_pct) {
+        const row = this._statRows.agility;
+        if (row) {
+          const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
+          row.effectTxt.setText(`${v}% уворот🧪`);
+        }
+        if (this._combatCells?.dodge) {
+          const v = (parseFloat(p.dodge_pct || 0) + B.dodge_pct).toFixed(1);
+          this._combatCells.dodge.t.setText(`${v}%`).setColor('#88ffcc');
+        }
+      }
+      // crit buff (1:1 с crit_pct)
+      if (B.crit && this._combatCells?.crit) {
+        this._combatCells.crit.t.setText(`${(parseFloat(p.crit_pct || 0) + B.crit).toFixed(0)}%`).setColor('#cc88ff');
+      }
+
+      // Компактная строка под пассивками
       const BN = { strength:'⚔️', endurance:'🛡', crit:'🎯', armor_pct:'🔰',
-        dodge_pct:'💨', hp_bonus:'❤️', double_pct:'⚡', accuracy:'👁', gold_pct:'💰' };
+        dodge_pct:'💨', hp_bonus:'❤️', double_pct:'⚡', accuracy:'👁',
+        gold_pct:'💰', lifesteal_pct:'🩸' };
       const line = d.active_buffs.map(b => {
         const ic = BN[b.buff_type] || '🧪';
-        const dur = b.charges ? `${b.charges}б` : '∞';
+        const dur = b.charges != null ? `${b.charges}б` : '∞';
         return `${ic}+${b.value}(${dur})`;
       }).join(' · ');
-      if (!this.scene || !this.scene.isActive()) return;
       txt(this, W / 2, y + 8, `🧪 ${line}`, 9, '#88ddaa').setOrigin(0.5).setDepth(3);
     } catch {}
   }
