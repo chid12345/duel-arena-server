@@ -71,13 +71,16 @@ class BattleEndBattleMixin:
                 futs["xp_boost"] = loop.run_in_executor(None, db.consume_xp_boost_charge, winner_user_id)
             # Consume scroll charges after battle.
             # Endless/titan: заряды списываются при входе в режим (не за каждый этаж/волну).
+            # ВАЖНО: добавляем в futs (не fire-and-forget) — await гарантирует списание
+            # ДО отправки результата клиенту, иначе гонка: клиент читает стат и видит
+            # устаревший баф с ненулевым зарядом.
             _charge_modes = ("endless", "titan")
             if winner_user_id is not None and battle_mode not in _charge_modes:
-                loop.run_in_executor(None, db.consume_charges, winner_user_id)
-                loop.run_in_executor(None, db.cleanup_expired, winner_user_id)
+                futs["consume_w"] = loop.run_in_executor(None, db.consume_charges, winner_user_id)
+                futs["cleanup_w"] = loop.run_in_executor(None, db.cleanup_expired, winner_user_id)
             if loser_user_id is not None and not battle.get("is_bot2") and battle_mode not in _charge_modes:
-                loop.run_in_executor(None, db.consume_charges, loser_user_id)
-                loop.run_in_executor(None, db.cleanup_expired, loser_user_id)
+                futs["consume_l"] = loop.run_in_executor(None, db.consume_charges, loser_user_id)
+                futs["cleanup_l"] = loop.run_in_executor(None, db.cleanup_expired, loser_user_id)
             if not battle.get("is_bot2"):
                 futs["pvp_cnt"] = loop.run_in_executor(
                     None, db.get_recent_pvp_duel_count, player1["user_id"], player2["user_id"], 24

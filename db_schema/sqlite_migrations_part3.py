@@ -131,4 +131,8 @@ MIGRATIONS_PART3 = [
         # Флаг активной сессии башни — 1 заряд баффа на весь заход (не на этаж)
         "ALTER TABLE titan_progress ADD COLUMN run_active INTEGER DEFAULT 0",
     ]),
+    ("2026_04_23_002_cleanup_zero_charges", [
+        # Зачистка осиротевших строк с charges=0 (могли остаться из-за гонки fire-and-forget)
+        "DELETE FROM player_buffs WHERE charges IS NOT NULL AND charges <= 0",
+    ]),
 ]
