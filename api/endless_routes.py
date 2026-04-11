@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import logging
+import time
+from datetime import datetime
 from typing import Any, Dict
+
+_ENDLESS_SESSION_TTL = 60  # секунд — сессия Натиска истекает после 1 мин неактивности
 
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -121,6 +125,15 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
             progress = db.get_endless_progress(uid)
             if not progress["is_active"] or progress["current_wave"] <= 0:
                 return {"ok": False, "reason": "Нет активного захода"}
+            # Сессия истекла (>1 мин неактивности) — заход считается проигранным
+            try:
+                upd = str(progress.get("updated_at") or "")[:19]
+                upd_ts = datetime.strptime(upd, "%Y-%m-%d %H:%M:%S").timestamp()
+                if time.time() - upd_ts > _ENDLESS_SESSION_TTL:
+                    db.endless_on_loss(uid, progress["current_wave"])
+                    return {"ok": False, "reason": "Заход истёк. Начни новый!"}
+            except Exception:
+                pass
             wave = progress["current_wave"]
             player_for_battle = dict(player)
             player_for_battle["current_hp"] = progress["current_hp"]

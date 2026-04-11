@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import time
+from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+
+_TITAN_SESSION_TTL = 60  # секунд — сессия истекает после 1 мин неактивности
 
 
 class TitanStartBody(BaseModel):
@@ -67,8 +71,18 @@ def register_titan_training_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": "low_hp"}
         prog = db.get_titan_progress(uid)
         floor = max(1, int(body.floor or prog.get("current_floor", 1)))
-        # 1 сессия Башни = 1 заряд баффа. Сессия заканчивается на поражении.
-        if not prog.get("run_active", 0):
+        # 1 сессия Башни = 1 заряд баффа. Сессия истекает при поражении или >1 мин неактивности.
+        run_active = int(prog.get("run_active", 0))
+        if run_active:
+            try:
+                upd = str(prog.get("updated_at") or "")[:19]
+                upd_ts = datetime.strptime(upd, "%Y-%m-%d %H:%M:%S").timestamp()
+                if time.time() - upd_ts > _TITAN_SESSION_TTL:
+                    run_active = 0
+                    db.titan_set_run_active(uid, 0)
+            except Exception:
+                pass
+        if not run_active:
             db.consume_charges(uid)
             db.cleanup_expired(uid)
             db.titan_set_run_active(uid, 1)

@@ -110,6 +110,7 @@
         const parts = chargeBased.map(b => `${BUFF_LABEL[b.buff_type] || b.buff_type}+${b.value}`).join(' ');
         const ch = chargeBased[0].charges;
         lines.push({ text: `${parts}  · ещё ${ch} ${ch === 1 ? 'бой' : 'боёв'}`, color: '#aaffee' });
+        lines.push({ text: `Натиск / Башня Титанов = 1 заряд за заход`, color: '#88aadd' });
       }
       timeBased.forEach(b => {
         const msLeft = Math.max(0, new Date(b.expires_at + 'Z') - Date.now());
