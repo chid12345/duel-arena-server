@@ -341,7 +341,7 @@ class StatsScene extends Phaser.Scene {
       const buffs = d?.ok ? (d.active_buffs || []) : [];
 
       // Сброс к базовым значениям (на случай повторного вызова после снятия бафа)
-      const ROW_RESET = { strength: 'strength', endurance: 'stamina', crit: 'intuition' };
+      const ROW_RESET = { strength: 'strength', endurance: 'agility', crit: 'intuition' };
       for (const rk of Object.values(ROW_RESET)) {
         const row = this._statRows[rk]; if (!row) continue;
         const base = this._statBase(p, rk);
@@ -366,8 +366,8 @@ class StatsScene extends Phaser.Scene {
       const B = {};
       for (const b of buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
 
-      // ── Стат-строки: strength / endurance→stamina / crit→intuition ──
-      const STAT_MAP = { strength: 'strength', endurance: 'stamina', crit: 'intuition' };
+      // ── Стат-строки: strength / endurance→agility(ловкость) / crit→intuition ──
+      const STAT_MAP = { strength: 'strength', endurance: 'agility', crit: 'intuition' };
       for (const [bt, rk] of Object.entries(STAT_MAP)) {
         const bonus = B[bt]; if (!bonus) continue;
         const row = this._statRows[rk]; if (!row) continue;
@@ -376,15 +376,11 @@ class StatsScene extends Phaser.Scene {
         row.valTxt.setText(String(row.s.valFn(p) + bonus)).setColor('#88ffbb');
         row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
       }
-
-      // ── endurance buff → Выносливость: броня и HP пересчитаны сервером ──
+      // ── endurance buff → уворот пересчитан сервером (p.dodge_pct включает бафф) ──
       if (B.endurance) {
-        const armorV = parseFloat(p.armor_pct || 0).toFixed(1);
-        if (this._statRows.stamina) this._statRows.stamina.effectTxt.setText(`${armorV}% броня🧪`);
-        if (this._combatCells?.armor) this._combatCells.armor.t.setText(`${armorV}%`).setColor('#88ffcc');
-        if (this._combatCells?.hp) {
-          this._combatCells.hp.t.setText(String(p.max_hp_effective ?? p.max_hp)).setColor('#aaffaa');
-        }
+        const dodgeV = parseFloat(p.dodge_pct || 0).toFixed(1);
+        if (this._statRows.agility) this._statRows.agility.effectTxt.setText(`${dodgeV}% уворот🧪`);
+        if (this._combatCells?.dodge) this._combatCells.dodge.t.setText(`${dodgeV}%`).setColor('#88ffcc');
       }
       // ── armor_pct → дополнительная броня поверх базовой ──
       if (B.armor_pct) {

@@ -120,22 +120,15 @@ class ShopBuffsMixin:
         """
         Применить свиток из инвентаря.
         effects: [(buff_type, value, charges), ...]
-        Конфликт только если ТОТ ЖЕ тип баффа уже активен.
-        replace=True → очистить ВСЕ боевые бафы, применить новый свиток с чистого листа.
-        Стаковать разные типы можно только когда нет конфликта (dialog не открывается).
+        Правило: один свиток за раз. Любой активный боевой баф = конфликт.
+        replace=True → очистить все боевые бафы, применить новый.
         """
         active = self.get_active_buff_types(user_id)
-        new_types = [bt for (bt, _, _) in effects]
-        conflicting = {bt: active[bt] for bt in new_types if bt in active}
-
-        if conflicting and not replace:
-            first_conflict = next(iter(conflicting.values()))
+        if active and not replace:
+            first_conflict = next(iter(active.values()))
             return {"ok": False, "conflict": True, "active_buff": first_conflict}
-
         if replace:
-            # Полная очистка всех боевых бафов — замена "с чистого листа"
             self.clear_all_combat_buffs(user_id)
-
         for buff_type, value, charges in effects:
             self.add_buff(user_id, buff_type, value, charges=charges)
         return {"ok": True}
