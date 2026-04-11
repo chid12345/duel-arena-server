@@ -6,6 +6,8 @@ Duel Arena Bot - Главная точка входа
 import logging
 import sys
 import time as _time
+import urllib.request
+import urllib.parse
 from datetime import time as dt_time
 from telegram import Update, BotCommand, MenuButtonWebApp, MenuButtonDefault, WebAppInfo
 from telegram.error import Conflict as TelegramConflict
@@ -144,6 +146,22 @@ def _build_app(bot_count: int) -> Application:
     return app
 
 
+def _force_steal_polling_session() -> None:
+    """
+    Принудительно убиваем чужой polling-сессию через прямой HTTP-запрос.
+    Telegram отдаёт getUpdates одному клиенту — наш запрос "выигрывает" у старого.
+    """
+    try:
+        base = f"https://api.telegram.org/bot{BOT_TOKEN}"
+        # 1. deleteWebhook чтобы не было конфликта вебхук vs polling
+        urllib.request.urlopen(f"{base}/deleteWebhook?drop_pending_updates=true", timeout=10)
+        # 2. getUpdates с offset=-1 — захватываем сессию, старый инстанс получит Conflict
+        urllib.request.urlopen(f"{base}/getUpdates?offset=-1&timeout=0", timeout=10)
+        logger.info("🔄 Polling-сессия сброшена (steal OK)")
+    except Exception as e:
+        logger.warning("⚠️ _force_steal_polling_session: %s", e)
+
+
 def main():
     """Главная функция запуска бота."""
     # Проверка токена
@@ -169,6 +187,8 @@ def main():
     attempt = 0
     while True:
         try:
+            _force_steal_polling_session()
+            _time.sleep(3)  # дать Telegram зарегистрировать смену владельца сессии
             logger.info("⚔️ Запуск бота (попытка %d)...", attempt + 1)
             app = _build_app(bot_count)
             app.run_polling(drop_pending_updates=True)
