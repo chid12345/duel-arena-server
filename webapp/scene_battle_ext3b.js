@@ -1,0 +1,91 @@
+/* ============================================================
+   BattleScene — ext3b: _buildMuteBtn, _buildArena,
+                        _buildHUDs, shutdown
+   ============================================================ */
+
+Object.assign(BattleScene.prototype, {
+
+  _buildMuteBtn() {
+    const { W } = this;
+    const bx = W - 38, by = 8, bw = 30, bh = 30;
+    const bg = this.add.graphics();
+    const draw = () => {
+      bg.clear();
+      bg.fillStyle(0x000000, 0.45);
+      bg.fillRoundedRect(bx, by, bw, bh, 8);
+    };
+    draw();
+    this._muteTxt = this.add.text(bx + bw/2, by + bh/2,
+      Sound.muted ? '🔇' : '🔊', { fontSize: '14px' }).setOrigin(0.5).setDepth(10);
+    this.add.zone(bx, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerup', () => {
+        const m = Sound.toggleMute();
+        this._muteTxt.setText(m ? '🔇' : '🔊');
+        tg?.HapticFeedback?.selectionChanged();
+      });
+  },
+
+  _buildArena() {
+    const { W, H } = this;
+    const bg = this.add.image(W/2, H * 0.36, 'arena_bg').setDisplaySize(W, H * 0.5);
+
+    [W * 0.12, W * 0.88].forEach(fx => {
+      for (let i = 0; i < 3; i++) {
+        const flame = this.add.circle(fx, H * 0.16 - i * 6, 5 - i, 0xff8c00, 0.8 - i*0.2);
+        this.tweens.add({
+          targets: flame,
+          x: fx + Phaser.Math.Between(-4, 4),
+          scaleX: Phaser.Math.FloatBetween(0.8, 1.2),
+          alpha: 0.5 + Math.random() * 0.4,
+          duration: 200 + i * 80,
+          yoyo: true, repeat: -1,
+        });
+      }
+    });
+
+    this.warrior1 = this.add.image(W * 0.28, H * 0.35, 'warrior_blue').setScale(1.5).setFlipX(false);
+    this.warrior2 = this.add.image(W * 0.72, H * 0.35, 'warrior_red').setScale(1.5).setFlipX(true);
+
+    [this.warrior1, this.warrior2].forEach(w => {
+      this.tweens.add({ targets: w, y: w.y - 4, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    });
+  },
+
+  _buildHUDs() {
+    const { W, H } = this;
+    const b = State.battle;
+    if (!b) return;
+
+    const hudH = 72;
+
+    makePanel(this, 8, 8, W/2 - 14, hudH, 10);
+    txt(this, 16, 13, 'ВЫ', 10, '#8888aa', true);
+    this.p1Name = txt(this, 16, 24, State.player?.username || 'Вы', 13, '#f0f0fa', true);
+    this.p1Hp   = txt(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
+    this.p1Bar  = this._hpBar(12, 56, W/2 - 22, b.my_max_hp > 0 ? b.my_hp / b.my_max_hp : 0, C.green);
+    txt(this, 10, 10, '👁', 10).setAlpha(0.55);
+    this.add.zone(8, 8, W/2 - 14, hudH).setOrigin(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => this._showCard('me'));
+
+    makePanel(this, W/2 + 6, 8, W/2 - 14, hudH, 10);
+    txt(this, W - 16, 13, 'СОПЕРНИК', 10, '#8888aa', true).setOrigin(1, 0);
+    this.p2Name = txt(this, W - 16, 24, b.opp_name || 'Соперник', 13, '#f0f0fa', true).setOrigin(1, 0);
+    this.p2Hp   = txt(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
+    this.p2Bar  = this._hpBar(W/2 + 10, 56, W/2 - 22, b.opp_max_hp > 0 ? b.opp_hp / b.opp_max_hp : 0, C.red);
+    txt(this, W/2 + 10, 10, '👁', 10).setAlpha(0.55);
+    this.add.zone(W/2 + 6, 8, W/2 - 14, hudH).setOrigin(0)
+      .setInteractive({ useHandCursor: true })
+      .on('pointerup', () => this._showCard('opp'));
+
+    this.roundTxt = txt(this, W/2, 76, `РАУНД ${b.round || 1}`, 14, '#ffc83c', true).setOrigin(0.5);
+    this.timerTxt = txt(this, W/2, 93, '15', 22, '#ffffff', true).setOrigin(0.5);
+
+    txt(this, W/2, H * 0.32, 'VS', 20, '#ffc83c', true).setOrigin(0.5).setAlpha(0.5);
+  },
+
+  shutdown() {
+    BattleLog.hide();
+  },
+
+});
