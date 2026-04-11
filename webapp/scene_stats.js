@@ -293,18 +293,19 @@ class StatsScene extends Phaser.Scene {
     divider.lineBetween(20, py + 24, W - 20, py + 24);
 
     const cells = [
-      { key: 'dmg',   label: '⚔️ Урон',   valFn: q => `~${q.dmg}`,       color: C.red,    hex: '#dc3c46' },
-      { key: 'armor', label: '🛡 Броня',   valFn: q => `${q.armor_pct}%`,  color: C.green,  hex: '#3cc864' },
-      { key: 'dodge', label: '🤸 Уворот',  valFn: q => `${q.dodge_pct}%`,  color: C.cyan,   hex: '#3cc8dc' },
-      { key: 'crit',  label: '💥 Крит',    valFn: q => `${q.crit_pct}%`,   color: C.purple, hex: '#b45aff' },
+      { key: 'dmg',   label: '⚔️ Урон',   valFn: q => `~${q.dmg}`,        color: C.red,    hex: '#dc3c46' },
+      { key: 'hp',    label: '❤️ HP',      valFn: q => String(q.max_hp||0), color: 0xe05050, hex: '#e05050' },
+      { key: 'armor', label: '🛡 Броня',   valFn: q => `${q.armor_pct}%`,   color: C.green,  hex: '#3cc864' },
+      { key: 'dodge', label: '🤸 Уворот',  valFn: q => `${q.dodge_pct}%`,   color: C.cyan,   hex: '#3cc8dc' },
+      { key: 'crit',  label: '💥 Крит',    valFn: q => `${q.crit_pct}%`,    color: C.purple, hex: '#b45aff' },
     ];
 
     this._combatCells = {};
     cells.forEach((c, i) => {
-      const cx   = W * (0.13 + i * 0.25);
-      const cHex = `#${c.color.toString(16).padStart(6, '0')}`;
+      const cx   = W * (0.1 + i * 0.2);
+      const cHex = c.hex || `#${c.color.toString(16).padStart(6, '0')}`;
       txt(this, cx, py + 34, c.label, 9, '#8888aa').setOrigin(0.5);
-      const valT = txt(this, cx, py + 52, c.valFn(p), 18, cHex, true).setOrigin(0.5);
+      const valT = txt(this, cx, py + 52, c.valFn(p), 16, cHex, true).setOrigin(0.5);
       this._combatCells[c.key] = { t: valT, fn: c.valFn, origColor: cHex };
     });
 
@@ -401,6 +402,11 @@ class StatsScene extends Phaser.Scene {
       // ── strength buff → намёк на Урон в боевых (формула серверная, точно не пересчитать) ──
       if (B.strength && this._combatCells?.dmg) {
         this._combatCells.dmg.t.setText(`~${p.dmg}+`).setColor('#ff9966');
+      }
+      // ── hp_bonus → HP ячейка ──
+      if (B.hp_bonus && this._combatCells?.hp) {
+        const baseHp = parseInt(p.max_hp || 0);
+        this._combatCells.hp.t.setText(String(baseHp + B.hp_bonus)).setColor('#ff8888');
       }
 
       // ── Форматируем строку активных бафов ──
