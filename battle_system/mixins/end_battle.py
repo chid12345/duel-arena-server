@@ -69,18 +69,21 @@ class BattleEndBattleMixin:
                 futs["prem_l"] = loop.run_in_executor(None, db.get_premium_status, loser_user_id)
             if winner_user_id is not None and snap_base_exp > 0:
                 futs["xp_boost"] = loop.run_in_executor(None, db.consume_xp_boost_charge, winner_user_id)
-            # Consume scroll charges after battle.
-            # Endless/titan: заряды списываются при входе в режим (не за каждый этаж/волну).
-            # ВАЖНО: добавляем в futs (не fire-and-forget) — await гарантирует списание
-            # ДО отправки результата клиенту, иначе гонка: клиент читает стат и видит
-            # устаревший баф с ненулевым зарядом.
+            # Consume scroll charges after battle (awaited в futs — не fire-and-forget).
+            # Endless/titan: заряды списываются при входе в режим, здесь пропускаем.
+            # Логика: списываем у player1 (всегда человек) всегда;
+            #         у player2 — только в PvP (не is_bot2).
             _charge_modes = ("endless", "titan")
-            if winner_user_id is not None and battle_mode not in _charge_modes:
-                futs["consume_w"] = loop.run_in_executor(None, db.consume_charges, winner_user_id)
-                futs["cleanup_w"] = loop.run_in_executor(None, db.cleanup_expired, winner_user_id)
-            if loser_user_id is not None and not battle.get("is_bot2") and battle_mode not in _charge_modes:
-                futs["consume_l"] = loop.run_in_executor(None, db.consume_charges, loser_user_id)
-                futs["cleanup_l"] = loop.run_in_executor(None, db.cleanup_expired, loser_user_id)
+            if battle_mode not in _charge_modes:
+                _p1_uid = player1.get("user_id")
+                if _p1_uid is not None:
+                    futs["consume_p1"] = loop.run_in_executor(None, db.consume_charges, _p1_uid)
+                    futs["cleanup_p1"] = loop.run_in_executor(None, db.cleanup_expired, _p1_uid)
+                if not battle.get("is_bot2"):
+                    _p2_uid = player2.get("user_id")
+                    if _p2_uid is not None:
+                        futs["consume_p2"] = loop.run_in_executor(None, db.consume_charges, _p2_uid)
+                        futs["cleanup_p2"] = loop.run_in_executor(None, db.cleanup_expired, _p2_uid)
             if not battle.get("is_bot2"):
                 futs["pvp_cnt"] = loop.run_in_executor(
                     None, db.get_recent_pvp_duel_count, player1["user_id"], player2["user_id"], 24
