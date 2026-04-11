@@ -94,6 +94,9 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
             full_hp = int(player.get("max_hp", 100))
             db.endless_start_run(uid, full_hp)
             db.endless_use_attempt(uid)
+            # 1 заход в Натиск = 1 заряд баффа (независимо от числа волн)
+            db.consume_charges(uid)
+            db.cleanup_expired(uid)
 
             bot = _endless_bot_for_wave(wave)
             player_for_battle = dict(player)

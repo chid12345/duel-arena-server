@@ -127,4 +127,8 @@ MIGRATIONS_PART3 = [
     ("2026_04_22_001_season_rewards_gold", [
         "ALTER TABLE season_rewards ADD COLUMN gold INTEGER DEFAULT 0",
     ]),
+    ("2026_04_23_001_titan_run_active", [
+        # Флаг активной сессии башни — 1 заряд баффа на весь заход (не на этаж)
+        "ALTER TABLE titan_progress ADD COLUMN run_active INTEGER DEFAULT 0",
+    ]),
 ]

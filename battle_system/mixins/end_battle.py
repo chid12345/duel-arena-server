@@ -69,11 +69,13 @@ class BattleEndBattleMixin:
                 futs["prem_l"] = loop.run_in_executor(None, db.get_premium_status, loser_user_id)
             if winner_user_id is not None and snap_base_exp > 0:
                 futs["xp_boost"] = loop.run_in_executor(None, db.consume_xp_boost_charge, winner_user_id)
-            # Consume scroll charges for both players after battle
-            if winner_user_id is not None:
+            # Consume scroll charges after battle.
+            # Endless/titan: заряды списываются при входе в режим (не за каждый этаж/волну).
+            _charge_modes = ("endless", "titan")
+            if winner_user_id is not None and battle_mode not in _charge_modes:
                 loop.run_in_executor(None, db.consume_charges, winner_user_id)
                 loop.run_in_executor(None, db.cleanup_expired, winner_user_id)
-            if loser_user_id is not None and not battle.get("is_bot2"):
+            if loser_user_id is not None and not battle.get("is_bot2") and battle_mode not in _charge_modes:
                 loop.run_in_executor(None, db.consume_charges, loser_user_id)
                 loop.run_in_executor(None, db.cleanup_expired, loser_user_id)
             if not battle.get("is_bot2"):

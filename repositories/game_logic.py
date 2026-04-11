@@ -25,17 +25,17 @@ class GameLogicMixin:
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at FROM titan_progress WHERE user_id = ?",
+                "SELECT user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at, COALESCE(run_active, 0) AS run_active FROM titan_progress WHERE user_id = ?",
                 (user_id,),
             )
             row = cursor.fetchone()
             if not row:
                 cursor.execute(
-                    "INSERT INTO titan_progress (user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at) VALUES (?, 0, 1, 0, 0)",
+                    "INSERT INTO titan_progress (user_id, best_floor, current_floor, weekly_best_floor, weekly_best_at, run_active) VALUES (?, 0, 1, 0, 0, 0)",
                     (user_id,),
                 )
                 conn.commit()
-                return {"user_id": user_id, "best_floor": 0, "current_floor": 1, "weekly_best_floor": 0, "weekly_best_at": 0}
+                return {"user_id": user_id, "best_floor": 0, "current_floor": 1, "weekly_best_floor": 0, "weekly_best_at": 0, "run_active": 0}
             return dict(row)
         finally:
             conn.close()
@@ -76,12 +76,26 @@ class GameLogicMixin:
             prog = self.get_titan_progress(user_id)
             next_floor = max(1, int(floor))
             cursor.execute(
-                "UPDATE titan_progress SET current_floor = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
+                "UPDATE titan_progress SET current_floor = ?, run_active = 0, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?",
                 (next_floor, user_id),
             )
             conn.commit()
             prog["current_floor"] = next_floor
+            prog["run_active"] = 0
             return dict(prog)
+        finally:
+            conn.close()
+
+    def titan_set_run_active(self, user_id: int, value: int) -> None:
+        """Установить флаг активной сессии Башни (1 = в заходе, 0 = завершён)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE titan_progress SET run_active = ? WHERE user_id = ?",
+                (int(value), user_id),
+            )
+            conn.commit()
         finally:
             conn.close()
 

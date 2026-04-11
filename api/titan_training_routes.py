@@ -67,6 +67,11 @@ def register_titan_training_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": "low_hp"}
         prog = db.get_titan_progress(uid)
         floor = max(1, int(body.floor or prog.get("current_floor", 1)))
+        # 1 сессия Башни = 1 заряд баффа. Сессия заканчивается на поражении.
+        if not prog.get("run_active", 0):
+            db.consume_charges(uid)
+            db.cleanup_expired(uid)
+            db.titan_set_run_active(uid, 1)
         boss = _titan_boss_for_floor(floor, player)
         bid = await battle_system.start_battle(player, boss, is_bot2=True, mode="titan", mode_meta={"floor": floor})
         b = battle_system.active_battles.get(bid)
