@@ -36,14 +36,14 @@ Object.assign(ShopScene.prototype, {
       sb.lineStyle(2, C.purple, 0.7); sb.strokeRoundedRect(8, y, W-16, 32, 9);
       container.add(sb);
       container.add(txt(this, 20, y+10, '👑 Premium активен', 12, '#c8a0ff', true));
-      container.add(txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#8888aa').setOrigin(1, 0));
+      container.add(txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#bbbbdd').setOrigin(1, 0));
       y += 40;
     }
 
     // ── Секция: Алмазы за Stars ──
     container.add(makePanel(this, 8, y, W-16, 22, 8, 0.6));
     container.add(txt(this, 20, y+5, '⭐  TELEGRAM STARS', 12, '#ffc83c', true));
-    container.add(txt(this, W-12, y+5, 'мгновенно', 11, '#9999bb').setOrigin(1, 0));
+    container.add(txt(this, W-12, y+5, 'мгновенно', 11, '#ccccdd').setOrigin(1, 0));
     y += 30;
     const pkgW = (W - 32) / Math.max(1, pkgMain.length);
     pkgMain.forEach((pkg, i) => {
@@ -52,14 +52,14 @@ Object.assign(ShopScene.prototype, {
       taps.push({ x: px, y, w: pkgW - 4, h: 80, fn: () => this._buyStars(pkg) });
     });
     y += 98;
-    container.add(txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5));
+    container.add(txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#ccccdd').setOrigin(0.5));
     y += 28;
 
     // ── Секция: Premium подписка ──
     if (premPkg) {
       container.add(makePanel(this, 8, y, W-16, 22, 8, 0.6));
       container.add(txt(this, 20, y+5, '👑  PREMIUM ПОДПИСКА', 12, '#c8a0ff', true));
-      container.add(txt(this, W-12, y+5, '⭐ Stars', 11, '#9999bb').setOrigin(1, 0));
+      container.add(txt(this, W-12, y+5, '⭐ Stars', 11, '#ccccdd').setOrigin(1, 0));
       y += 30;
       this._makePremiumCardC(container, premPkg, 8, y, W-16, 52);
       if (!(State.player || {}).is_premium) {
@@ -74,7 +74,7 @@ Object.assign(ShopScene.prototype, {
         '👑 Значок Premium у имени',
       ];
       perks.forEach(line => {
-        container.add(txt(this, 28, y, line, 11, '#b0a0d0'));
+        container.add(txt(this, 28, y, line, 11, '#d4c8ee'));
         y += 18;
       });
     }
@@ -99,8 +99,8 @@ Object.assign(ShopScene.prototype, {
       if (p?.is_premium) y += 40;
       const cg = this.add.graphics();
       cg.fillStyle(C.bgPanel, 0.6); cg.fillRoundedRect(8, y, W-16, 56, 10);
-      txt(this, W/2, y+18, '⚙️ CryptoPay не подключён', 11, '#9999bb').setOrigin(0.5);
-      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 11, '#7777aa').setOrigin(0.5);
+      txt(this, W/2, y+18, '⚙️ CryptoPay не подключён', 11, '#ccccdd').setOrigin(0.5);
+      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 11, '#aaaacc').setOrigin(0.5);
       return;
     }
 
@@ -123,7 +123,7 @@ Object.assign(ShopScene.prototype, {
       sb.lineStyle(2, C.purple, 0.7); sb.strokeRoundedRect(8, y, W-16, 32, 9);
       container.add(sb);
       container.add(txt(this, 20, y+10, '👑 Premium активен', 12, '#c8a0ff', true));
-      container.add(txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#8888aa').setOrigin(1, 0));
+      container.add(txt(this, W-14, y+10, `ещё ${p.premium_days_left} дн.`, 11, '#bbbbdd').setOrigin(1, 0));
       y += 40;
     }
 
@@ -131,7 +131,7 @@ Object.assign(ShopScene.prototype, {
     if (scrollPkgs.length > 0) {
       container.add(makePanel(this, 8, y, W-16, 22, 8, 0.6));
       container.add(txt(this, 20, y+5, '📜  ОСОБЫЕ СВИТКИ', 12, '#3cc8dc', true));
-      container.add(txt(this, W-12, y+5, 'USDT', 11, '#9999bb').setOrigin(1, 0));
+      container.add(txt(this, W-12, y+5, 'USDT', 11, '#ccccdd').setOrigin(1, 0));
       y += 30;
       const iw = (W - 32) / 2;
       scrollPkgs.forEach((pkg, i) => {
@@ -169,7 +169,7 @@ Object.assign(ShopScene.prototype, {
       }
       y += 62;
     }
-    container.add(txt(this, W/2, y+4, '💡 После оплаты товар придёт автоматически', 11, '#9999bb').setOrigin(0.5));
+    container.add(txt(this, W/2, y+4, '💡 После оплаты товар придёт автоматически', 11, '#ccccdd').setOrigin(0.5));
     y += 22;
     const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
     if (pendingId) {

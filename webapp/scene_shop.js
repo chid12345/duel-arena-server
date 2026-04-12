@@ -81,9 +81,9 @@ class ShopScene extends Phaser.Scene {
     this._diaTxt  = txt(this, 20, by + 11, `💎 ${p?.diamonds || 0}`,
       isPay ? 15 : 13, '#3cc8dc', true);
     if (isPay) {
-      txt(this, W - 14, by + 11, 'Ваши алмазы', 11, '#9999bb').setOrigin(1, 0);
+      txt(this, W - 14, by + 11, 'Ваши алмазы', 11, '#ccccdd').setOrigin(1, 0);
     } else {
-      txt(this, W / 2 - 8, by + 11, '|', 13, '#7777aa').setOrigin(1, 0);
+      txt(this, W / 2 - 8, by + 11, '|', 13, '#aaaacc').setOrigin(1, 0);
     }
   }
 
