@@ -86,23 +86,74 @@ class TasksScene extends Phaser.Scene {
     else                             this._buildAchieveTab(d.achievements, this.W, this.H, startY);
   }
 
-  /* ── Общий скроллируемый контейнер ─────────────────────── */
-  _makeScrollZone(W, H, startY) {
-    const zone = this.add.zone(0, startY, W, H - startY - 10).setOrigin(0).setInteractive();
+  /* ── Скролл с инерцией, горизонтальный свайп и тап ─────── */
+  /* opts: { onSwipe(dir), onTap(relY, relX), onScroll(scrollY) }  */
+  _makeScrollZone(W, H, startY, opts) {
+    opts = opts || {};
+    const viewH = H - startY - 10;
+    const zone = this.add.zone(0, startY, W, viewH).setOrigin(0).setInteractive();
     const container = this.add.container(0, startY);
-    let baseY = 0, startDrag = 0, dragY = 0;
-    zone.on('pointerdown', p => { startDrag = p.y; dragY = baseY; });
-    zone.on('pointermove', p => {
-      if (!zone._dragging && Math.abs(p.y - startDrag) < 5) return;
-      zone._dragging = true;
-      baseY = dragY + (p.y - startDrag);
-      const maxScroll = -(container._contentH || 0) + (H - startY - 10);
-      baseY = Math.min(0, Math.max(maxScroll, baseY));
-      container.setY(startY + baseY);
+
+    let baseY = 0, sx = 0, sy = 0, dragY = 0;
+    let vel = 0, lastY = 0, lastT = 0, active = false, hSwipe = false;
+
+    const clamp = y => Math.min(0, Math.max(-(container._contentH || 0) + viewH, y));
+
+    zone.on('pointerdown', p => {
+      sx = p.x; sy = p.y; dragY = baseY; vel = 0;
+      lastY = p.y; lastT = this.game.loop.now;
+      active = true; hSwipe = false;
     });
-    zone.on('pointerup', () => { zone._dragging = false; });
-    return { container, setContentH: h => container._contentH = h };
+
+    zone.on('pointermove', p => {
+      if (!active) return;
+      const dx = p.x - sx, dy = p.y - sy;
+      const adx = Math.abs(dx), ady = Math.abs(dy);
+      if (!hSwipe && adx > 12 && adx > ady * 1.5) { hSwipe = true; }
+      if (hSwipe || (ady < 8 && adx < 12)) return;
+      const now = this.game.loop.now, dt = now - lastT;
+      if (dt > 0) vel = (p.y - lastY) / dt * 16;
+      lastY = p.y; lastT = now;
+      baseY = clamp(dragY + dy);
+      container.setY(startY + baseY);
+      if (opts.onScroll) opts.onScroll(-baseY);
+    });
+
+    zone.on('pointerup', p => {
+      if (!active) return; active = false;
+      const dx = p.x - sx, dy = p.y - sy;
+      const adx = Math.abs(dx), ady = Math.abs(dy);
+      if (hSwipe || (adx > 30 && adx > ady * 2)) {
+        hSwipe = false; vel = 0;
+        if (opts.onSwipe) opts.onSwipe(dx < 0 ? 'left' : 'right');
+        return;
+      }
+      if (ady < 10 && opts.onTap) {
+        vel = 0;
+        opts.onTap(p.y - container.y, p.x);
+        return;
+      }
+      // Инерция продолжается через velocity
+    });
+
+    zone.on('pointerout', () => { active = false; });
+
+    this._scrollFn = () => {
+      if (Math.abs(vel) < 0.15) { vel = 0; return; }
+      baseY = clamp(baseY + vel); vel *= 0.88;
+      container.setY(startY + baseY);
+      if (opts.onScroll) opts.onScroll(-baseY);
+    };
+
+    return {
+      container,
+      setContentH: h => { container._contentH = h; },
+      getScrollY:  () => -baseY,
+      scrollTo:    y  => { baseY = clamp(-y); vel = 0; container.setY(startY + baseY); },
+    };
   }
+
+  update() { if (this._scrollFn) this._scrollFn(); }
 
   _toast(msg) {
     const bg = this.add.graphics();

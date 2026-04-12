@@ -9,7 +9,16 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     return;
   }
 
-  const { container, setContentH } = this._makeScrollZone(W, H, startY);
+  const taps = []; // { y, h, x, w, fn() }
+  const { container, setContentH } = this._makeScrollZone(W, H, startY, {
+    onTap: (relY, relX) => {
+      for (const t of taps) {
+        if (relY < t.y || relY >= t.y + t.h) continue;
+        if (t.x !== undefined && (relX < t.x || relX >= t.x + t.w)) continue;
+        t.fn(); return;
+      }
+    },
+  });
   let y = 8;
 
   const setNames = ['A', 'B', 'C', 'D'];
@@ -112,16 +121,15 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
       container.add(txt(this, cx, y + 68, parts[1] || '', 8, rwCol).setOrigin(0.5));
     }
 
-    // Пульсация + зона клика для текущего
+    // Пульсация + тап для текущего дня
     if (isCurrent) {
       const pulse = this.add.graphics();
       pulse.fillStyle(0xffc83c, 0.12);
       pulse.fillRoundedRect(dx + 1, y + 1, cellW - 2, cellH - 2, 6);
       container.add(pulse);
       this.tweens.add({ targets: pulse, alpha: 0, duration: 800, yoyo: true, repeat: -1 });
-      this.add.zone(dx + 1, y + 1 + startY, cellW - 2, cellH - 2)
-        .setOrigin(0).setInteractive({ useHandCursor: true })
-        .on('pointerup', () => this._claimStreakDay(dn));
+      const ty = y, tx = dx + 1, tw = cellW - 2;
+      taps.push({ y: ty + 1, h: cellH - 2, x: tx, w: tw, fn: () => this._claimStreakDay(dn) });
     }
   }
   y += cellH + 10;
