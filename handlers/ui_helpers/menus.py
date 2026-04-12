@@ -32,10 +32,7 @@ class CallbackHandlersMenus:
                     InlineKeyboardButton("🏆 Рейтинг", callback_data="rating"),
                     InlineKeyboardButton("🌟 Сезон", callback_data="season_info"),
                 ],
-                [
-                    InlineKeyboardButton("🛒 Магазин", callback_data="shop"),
-                    InlineKeyboardButton("🎖️ Боевой пропуск", callback_data="battle_pass"),
-                ],
+                [InlineKeyboardButton("🛒 Магазин", callback_data="shop")],
                 [
                     InlineKeyboardButton("🛡️ Клан", callback_data="clan_menu"),
                     InlineKeyboardButton("🎁 Позвать друга", callback_data="show_invite"),

@@ -9,9 +9,7 @@ Object.assign(MenuScene.prototype, {
     const c = this.add.container(0, 0);
 
     const items = [
-      { icon: '📅', label: 'Задания',    cb: () => this.scene.start('Quests'),    badge: this._questBadge },
       { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
-      { icon: '🌟', label: 'Боевой пропуск', cb: () => this.scene.start('BattlePass') },
       { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
       { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
     ];
