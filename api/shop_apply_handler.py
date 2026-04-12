@@ -85,6 +85,7 @@ async def shop_apply_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP
                 "reason": f"Уже активен {active.get('buff_type', 'этот тип')}. Заменить?",
             }
         db.remove_from_inventory(uid, iid)
+        db.track_item_use(uid, iid)
         from config import STAMINA_PER_FREE_STAT as _SPF
         stam_added = sum(v for (bt, v, _) in effects if bt == "stamina")
         hp_bonus_added = sum(v for (bt, v, _) in effects if bt == "hp_bonus") + stam_added * _SPF

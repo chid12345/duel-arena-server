@@ -31,16 +31,17 @@ class BattlePersistMixin:
         tasks = []
         event_name = 'battle_test_ended' if is_test else 'battle_ended'
 
+        _is_bot_battle = bool(battle_data.get("is_bot2"))
         if not is_test:
             if winner_uid is not None and winner_stats is not None:
                 tasks.append(loop.run_in_executor(None, db.update_player_stats, winner_uid, winner_stats))
-                tasks.append(loop.run_in_executor(None, db.update_daily_quest_progress, winner_uid, True))
+                tasks.append(loop.run_in_executor(None, db.update_daily_quest_progress, winner_uid, True, _is_bot_battle))
                 if battle_mode != "titan":
                     tasks.append(loop.run_in_executor(None, db.update_season_stats, winner_uid, True))
                 tasks.append(loop.run_in_executor(None, db.update_battle_pass, winner_uid, True))
             if loser_uid is not None and loser_stats is not None:
                 tasks.append(loop.run_in_executor(None, db.update_player_stats, loser_uid, loser_stats))
-                tasks.append(loop.run_in_executor(None, db.update_daily_quest_progress, loser_uid, False))
+                tasks.append(loop.run_in_executor(None, db.update_daily_quest_progress, loser_uid, False, False))
                 if battle_mode != "titan":
                     tasks.append(loop.run_in_executor(None, db.update_season_stats, loser_uid, False))
                 tasks.append(loop.run_in_executor(None, db.update_battle_pass, loser_uid, False))

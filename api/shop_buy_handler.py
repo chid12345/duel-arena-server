@@ -26,11 +26,17 @@ async def shop_buy_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_C
 
     # === HP зелья (сразу) ===
     if iid == "hp_small":
-        return _buy_hp(db, uid, price=12, pct=0.30)
+        r = _buy_hp(db, uid, price=12, pct=0.30)
+        if r.get("ok"): db.track_purchase(uid, iid, "gold", 12)
+        return r
     if iid == "hp_medium":
-        return _buy_hp(db, uid, price=25, pct=0.60)
+        r = _buy_hp(db, uid, price=25, pct=0.60)
+        if r.get("ok"): db.track_purchase(uid, iid, "gold", 25)
+        return r
     if iid == "hp_full":
-        return _buy_hp(db, uid, price=50, pct=1.0)
+        r = _buy_hp(db, uid, price=50, pct=1.0)
+        if r.get("ok"): db.track_purchase(uid, iid, "gold", 50)
+        return r
 
     # === Сброс статов (сразу) ===
     if iid == "stat_reset":
@@ -48,14 +54,20 @@ async def shop_buy_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_C
 
     # === Лут-боксы → в инвентарь ===
     if iid in ("box_common", "box_rare"):
-        return _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
+        r = _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
+        if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
+        return r
 
     # === Охоты (золото/опыт) → в инвентарь ===
     if iid in ("gold_hunt", "xp_hunt"):
-        return _buy_to_inventory(db, uid, iid, price=20, currency="diamonds")
+        r = _buy_to_inventory(db, uid, iid, price=20, currency="diamonds")
+        if r.get("ok"): db.track_purchase(uid, iid, "diamonds", 20)
+        return r
 
     # === Свитки → в инвентарь ===
     if item.get("inventory") and iid.startswith("scroll_"):
-        return _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
+        r = _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
+        if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
+        return r
 
     return {"ok": False, "reason": "Покупка недоступна"}
