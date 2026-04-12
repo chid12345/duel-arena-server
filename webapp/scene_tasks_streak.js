@@ -75,7 +75,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw.item)            shortReward = 'бокс';
     else if (rw.diamonds > 0) shortReward = `${rw.diamonds}💎`;
     else if (rw.gold > 0)   shortReward = `${rw.gold}🪙`;
-    const rwColor = isClaimed ? '#448844' : isCurrent ? '#cccc44' : '#5555aa';
+    const rwColor = isClaimed ? '#44aa44' : isCurrent ? '#ffd700' : '#aaaacc';
     container.add(txt(this, cx, y + 50, shortReward, 7, rwColor).setOrigin(0.5));
 
     // Кнопка клейма (только текущий незабранный)
@@ -119,7 +119,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw2.diamonds > 0) parts.push(`+${rw2.diamonds}💎`);
     if (rw2.xp > 0)       parts.push(`+${rw2.xp}⭐`);
     if (rw2.item)         parts.push(`📦 ${rw2.item}`);
-    const rewardColor = isCl2 ? '#558855' : isCur2 ? '#ddddee' : '#aaaacc';
+    const rewardColor = isCl2 ? '#55aa55' : isCur2 ? '#ffffff' : '#ccddee';
     container.add(txt(this, 72, y + 17, parts.join('  '), 10, rewardColor).setOrigin(0, 0.5));
 
     // Статус

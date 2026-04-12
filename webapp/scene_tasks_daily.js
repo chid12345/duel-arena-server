@@ -9,8 +9,8 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
 
   // Заголовок ежедневных
   const dateTxt = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-  txt(this, 14, y + startY, '⚡ ЕЖЕДНЕВНЫЕ', 10, '#9999bb', true);
-  txt(this, W - 10, y + startY, dateTxt, 9, '#555577').setOrigin(1, 0);
+  container.add(txt(this, 12, y, '⚡ ЕЖЕДНЕВНЫЕ', 10, '#8899cc', true).setOrigin(0, 0));
+  container.add(txt(this, W - 10, y, dateTxt, 9, '#7777aa').setOrigin(1, 0));
   y += 18;
 
   const claimable = daily.filter(q => q.is_completed && !q.reward_claimed);
@@ -40,14 +40,14 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     // Иконка + текст
     container.add(txt(this, 26, y + 20, q.label.split(' ')[0], 18).setOrigin(0.5));
     const labelTxt = q.label.replace(/^[^ ]+ /, '');
-    container.add(txt(this, 42, y + 10, labelTxt, 11, done ? '#3cc864' : '#ccccee', done).setOrigin(0, 0));
-    container.add(txt(this, 42, y + 24, `${cur} / ${max}`, 9, '#9999bb', true).setOrigin(0, 0));
+    container.add(txt(this, 42, y + 10, labelTxt, 11, done ? '#3cc864' : '#ffffff', done).setOrigin(0, 0));
+    container.add(txt(this, 42, y + 24, `${cur} / ${max}`, 9, '#aaaacc', true).setOrigin(0, 0));
     makeBar(this, 42, y + 38, W - 120, 4, Math.min(1, cur / max), done ? C.green : C.blue, C.dark, 3);
 
     // Награда или галочка
     const rwTxt = `+${q.reward_gold}🪙${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
     container.add(txt(this, W - 12, y + 10, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
-    if (!claimed) container.add(txt(this, W - 12, y + 34, rwTxt, 8, done ? '#ffd700' : '#556655').setOrigin(1, 0));
+    if (!claimed) container.add(txt(this, W - 12, y + 34, rwTxt, 8, done ? '#ffd700' : '#aabbcc').setOrigin(1, 0));
 
     // Кнопка клейма
     if (done && !claimed) {
@@ -59,7 +59,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
   });
 
   y += 6;
-  txt(this, W/2, y + startY, '🔄 Сбрасываются каждые сутки в 00:00', 9, '#555577').setOrigin(0.5);
+  container.add(txt(this, W/2, y, '🔄 Сбрасываются каждые сутки в 00:00', 9, '#7777aa').setOrigin(0.5));
   y += 20;
 
   // Кнопка к недельным
