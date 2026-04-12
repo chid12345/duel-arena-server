@@ -44,32 +44,44 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
     @router.post("/api/tasks/login")
     async def task_login(body: InitDataBody):
         """Обработать вход — обновить стрик."""
-        tg = get_user(body.init_data)
-        uid = int(tg["id"])
-        result = db.process_login_streak(uid)
-        status = db.get_login_streak_status(uid)
-        return {"ok": True, "streak": status, "advanced": result.get("advanced", False)}
+        import logging
+        _log = logging.getLogger(__name__)
+        try:
+            tg = get_user(body.init_data)
+            uid = int(tg["id"])
+            result = db.process_login_streak(uid)
+            status = db.get_login_streak_status(uid)
+            return {"ok": True, "streak": status, "advanced": result.get("advanced", False)}
+        except Exception as e:
+            _log.error("task_login error: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)}
 
     @router.get("/api/tasks/status")
     async def tasks_status(init_data: str):
         """Полный статус всех заданий."""
-        tg = get_user(init_data)
-        uid = int(tg["id"])
-        week_key = _iso_week()
+        import logging
+        _log = logging.getLogger(__name__)
+        try:
+            tg = get_user(init_data)
+            uid = int(tg["id"])
+            week_key = _iso_week()
 
-        daily = db.get_daily_tasks_status(uid)
-        weekly_extra = db.get_weekly_extra_status(uid, week_key)
-        achievements = db.get_achievements_status(uid)
-        streak = db.get_login_streak_status(uid)
+            daily = db.get_daily_tasks_status(uid)
+            weekly_extra = db.get_weekly_extra_status(uid, week_key)
+            achievements = db.get_achievements_status(uid)
+            streak = db.get_login_streak_status(uid)
 
-        return {
-            "ok": True,
-            "week_key": week_key,
-            "daily": daily,
-            "weekly_extra": weekly_extra,
-            "achievements": achievements,
-            "streak": streak,
-        }
+            return {
+                "ok": True,
+                "week_key": week_key,
+                "daily": daily,
+                "weekly_extra": weekly_extra,
+                "achievements": achievements,
+                "streak": streak,
+            }
+        except Exception as e:
+            _log.error("tasks_status error uid=%s: %s", locals().get("uid", "?"), e, exc_info=True)
+            return {"ok": False, "reason": str(e)}
 
     @router.post("/api/tasks/claim_daily")
     async def claim_daily(body: TaskClaimBody):

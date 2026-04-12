@@ -34,9 +34,13 @@ class QuestsProgressMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO task_progress (user_id, task_key, value) VALUES (?,?,?) "
-            "ON CONFLICT(user_id, task_key) DO UPDATE SET value=value+?, updated_at=CURRENT_TIMESTAMP",
-            (user_id, task_key, amount, amount),
+            "INSERT OR IGNORE INTO task_progress (user_id, task_key, value) VALUES (?,?,0)",
+            (user_id, task_key),
+        )
+        cur.execute(
+            "UPDATE task_progress SET value=value+?, updated_at=CURRENT_TIMESTAMP "
+            "WHERE user_id=? AND task_key=?",
+            (amount, user_id, task_key),
         )
         cur.execute("SELECT value FROM task_progress WHERE user_id=? AND task_key=?",
                     (user_id, task_key))
@@ -118,13 +122,13 @@ class QuestsProgressMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute("SELECT wins, losses, level FROM players WHERE user_id=?", (user_id,))
-        p = cur.fetchone() or {}
+        _r = cur.fetchone(); p = dict(_r) if _r else {}
         cur.execute("SELECT best_floor FROM titan_progress WHERE user_id=?", (user_id,))
-        t = cur.fetchone() or {}
+        _r = cur.fetchone(); t = dict(_r) if _r else {}
         cur.execute("SELECT best_wave FROM endless_progress WHERE user_id=?", (user_id,))
-        e = cur.fetchone() or {}
+        _r = cur.fetchone(); e = dict(_r) if _r else {}
         cur.execute("SELECT COUNT(*) AS cnt FROM referrals WHERE referrer_id=?", (user_id,))
-        r = cur.fetchone() or {}
+        _r = cur.fetchone(); r = dict(_r) if _r else {}
         conn.close()
         wins = int(p.get("wins") or 0)
         losses = int(p.get("losses") or 0)
@@ -226,15 +230,28 @@ class QuestsProgressMixin:
         today = _TODAY()
         conn = self.get_connection()
         cur = conn.cursor()
-        cur.execute(
-            "SELECT battles_played, battles_won, endless_wins, bot_wins, shop_buys "
-            "FROM daily_quests WHERE user_id=? AND quest_date=?",
-            (user_id, today),
-        )
+        try:
+            cur.execute(
+                "SELECT battles_played, battles_won, endless_wins, bot_wins, shop_buys "
+                "FROM daily_quests WHERE user_id=? AND quest_date=?",
+                (user_id, today),
+            )
+        except Exception:
+            # Колонки bot_wins/shop_buys могут отсутствовать до миграции
+            cur.execute(
+                "SELECT battles_played, battles_won, endless_wins "
+                "FROM daily_quests WHERE user_id=? AND quest_date=?",
+                (user_id, today),
+            )
         row = cur.fetchone() or {}
         conn.close()
         p = dict(row) if row else {}
-        streak = int((self.get_or_create_player(user_id, "") or {}).get("win_streak", 0))
+        conn2 = self.get_connection()
+        cur2 = conn2.cursor()
+        cur2.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
+        _wr = cur2.fetchone()
+        conn2.close()
+        streak = int(_wr["win_streak"] if _wr else 0)
         track_map = {
             "battles": int(p.get("battles_played") or 0),
             "wins": int(p.get("battles_won") or 0),
@@ -284,7 +301,12 @@ class QuestsProgressMixin:
     # ── Дополнительные недельные задания ──────────────────────────────
 
     def get_weekly_extra_status(self, user_id: int, week_key: str) -> list[dict]:
-        streak = int((self.get_or_create_player(user_id, "") or {}).get("win_streak", 0))
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
+        _wr = cur.fetchone()
+        conn.close()
+        streak = int(_wr["win_streak"] if _wr else 0)
         result = []
         for wq in WEEKLY_EXTRA_DEFS:
             if wq["track"] == "streak":
