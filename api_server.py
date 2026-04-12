@@ -68,6 +68,7 @@ async def serve_index():
             html = f.read()
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="index.html not found")
+    html = html.replace("__BUILD_VERSION__", APP_BUILD_VERSION)
     no_cache = {
         "Cache-Control": "no-store, no-cache, must-revalidate, max-age=0",
         "Pragma": "no-cache",
