@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import time
-from typing import Dict
+from typing import Any, Dict
 
 from fastapi import HTTPException, WebSocket
 
@@ -83,6 +83,26 @@ def _buffs_cache_get(uid: int) -> dict | None:
 
 def _buffs_cache_set(uid: int, buffs: dict) -> None:
     _buffs_cache[uid] = (dict(buffs), time.monotonic())
+
+
+# ── Глобальный кеш медленно-меняющихся данных (сезон, лидерборд) ──────────
+_GLOBAL_CACHE_TTL = 60.0  # 60 секунд — данные одинаковы для всех пользователей
+_global_cache: dict[str, tuple[Any, float]] = {}
+
+
+def _global_cache_get(key: str) -> Any | None:
+    entry = _global_cache.get(key)
+    if entry and (time.monotonic() - entry[1]) < _GLOBAL_CACHE_TTL:
+        return entry[0]
+    return None
+
+
+def _global_cache_set(key: str, value: Any) -> None:
+    _global_cache[key] = (value, time.monotonic())
+
+
+def _global_cache_invalidate(key: str) -> None:
+    _global_cache.pop(key, None)
 
 
 class ConnectionManager:

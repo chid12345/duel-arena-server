@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from reward_calculator import calc_reward
 from api.tma_player_api import _player_api
+from api.tma_infra import _global_cache_get, _global_cache_set
 
 
 class WeeklyClaimBody(BaseModel):
@@ -69,19 +70,26 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
     _weekly_quests_status = ctx["_weekly_quests_status"]
 
     @router.get("/api/season")
-    async def get_season_info(init_data: str):
+    def get_season_info(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
-        season = db.get_active_season()
+        # Глобальный кеш лидерборда (60 сек) — одинаков для всех пользователей
+        cached_lb = _global_cache_get("season_leaderboard")
+        if cached_lb is not None:
+            season, lb = cached_lb
+        else:
+            season = db.get_active_season()
+            lb = db.get_season_leaderboard(season["id"], limit=20) if season else []
+            if season:
+                _global_cache_set("season_leaderboard", (dict(season), lb))
         if not season:
             return {"ok": True, "season": None, "leaderboard": [], "my_stats": None}
-        lb = db.get_season_leaderboard(season["id"], limit=20)
         my_pos = next((i + 1 for i, r in enumerate(lb) if r["user_id"] == uid), None)
         my_stat = next((r for r in lb if r["user_id"] == uid), None)
         return {"ok": True, "season": dict(season), "leaderboard": lb, "my_stats": my_stat, "my_pos": my_pos}
 
     @router.get("/api/battlepass")
-    async def get_battlepass(init_data: str):
+    def get_battlepass(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         bp = db.get_battle_pass(uid)
@@ -99,13 +107,13 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         }
 
     @router.post("/api/battlepass/claim")
-    async def claim_battlepass(body: BattlePassClaimBody):
+    def claim_battlepass(body: BattlePassClaimBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         return db.claim_battle_pass_tier(uid, body.tier)
 
     @router.post("/api/battlepass/claim_endless")
-    async def claim_battlepass_endless(body: BattlePassClaimBody):
+    def claim_battlepass_endless(body: BattlePassClaimBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         result = db.claim_battle_pass_endless_tier(uid, body.tier)
@@ -114,7 +122,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @router.get("/api/quests")
-    async def get_quests(init_data: str):
+    def get_quests(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         quest = db.get_daily_quest_status(uid)
@@ -123,7 +131,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         return {"ok": True, "quest": quest, "daily": daily, "weekly": weekly}
 
     @router.post("/api/quests/claim")
-    async def claim_quest(body: ClaimQuestBody):
+    def claim_quest(body: ClaimQuestBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         result = db.claim_daily_quest_reward(uid)
@@ -133,7 +141,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @router.post("/api/daily/claim")
-    async def claim_daily(body: ClaimQuestBody):
+    def claim_daily(body: ClaimQuestBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         result = db.check_daily_bonus(uid)
@@ -145,7 +153,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @router.post("/api/quests/weekly_claim")
-    async def claim_weekly_quest(body: WeeklyClaimBody):
+    def claim_weekly_quest(body: WeeklyClaimBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         status = _weekly_quests_status(uid)

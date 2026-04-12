@@ -42,7 +42,7 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
     invalidate = ctx["_cache_invalidate"]
 
     @router.post("/api/tasks/login")
-    async def task_login(body: InitDataBody):
+    def task_login(body: InitDataBody):
         """Обработать вход — обновить стрик."""
         import logging
         _log = logging.getLogger(__name__)
@@ -57,7 +57,7 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": str(e)}
 
     @router.get("/api/tasks/status")
-    async def tasks_status(init_data: str):
+    def tasks_status(init_data: str):
         """Полный статус всех заданий."""
         import logging
         _log = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": str(e)}
 
     @router.post("/api/tasks/claim_daily")
-    async def claim_daily(body: TaskClaimBody):
+    def claim_daily(body: TaskClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
         result = db.claim_daily_task(uid, body.task_key)
@@ -95,7 +95,7 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @router.post("/api/tasks/claim_weekly_extra")
-    async def claim_weekly_extra(body: TaskClaimBody):
+    def claim_weekly_extra(body: TaskClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
         result = db.claim_weekly_extra(uid, body.task_key, _iso_week())
@@ -106,7 +106,7 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @router.post("/api/tasks/claim_achievement")
-    async def claim_achievement(body: AchClaimBody):
+    def claim_achievement(body: AchClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
         result = db.claim_achievement_tier(uid, body.quest_key, body.tier)
@@ -117,7 +117,7 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @router.post("/api/tasks/claim_streak")
-    async def claim_streak(body: StreakClaimBody):
+    def claim_streak(body: StreakClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
         result = db.claim_streak_day(uid, body.day_num)

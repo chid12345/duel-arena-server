@@ -30,7 +30,7 @@ def register_tma_player_route(
     expected_max_hp_from_level: Callable[[int], int],
 ) -> None:
     @app.post("/api/player")
-    async def get_player(body: InitDataHeader):
+    def get_player(body: InitDataHeader):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         _rl_check(uid, "player", max_hits=20, window_sec=10)
