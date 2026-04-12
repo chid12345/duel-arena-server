@@ -109,7 +109,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
       if (canClaim) {
         this.tweens.add({ targets: bg, alpha: { from: 0.95, to: 0.6 }, duration: 900, yoyo: true, repeat: -1 });
         const rwFull = `+${a.next_gold}💰${a.next_diamonds ? ' +' + a.next_diamonds + '💎' : ''}`;
-        taps.push({ y, h: bh, fn: () => this._claimAchievement(a.key, a.can_claim_tier, rwFull) });
+        taps.push({ y, h: bh, fn: () => this._claimAchievement(a.key, a.can_claim_tier) });
       }
     }
     y += bh + 5;
@@ -120,15 +120,19 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 };
 
 /* ── Клейм достижения ──────────────────────────────────────── */
-TasksScene.prototype._claimAchievement = function(questKey, tier, rwTxt) {
+TasksScene.prototype._claimAchievement = function(questKey, tier) {
   if (this._claimBusy) return;
   this._claimBusy = true;
-  post('/api/tasks/claim_achievement', { init_data: State.initData, quest_key: questKey, tier })
+  post('/api/tasks/claim_achievement', { quest_key: questKey, tier })
     .then(r => {
       this._claimBusy = false;
       if (r?.ok) {
-        State.player = r.player;
-        this._toast(`🏆 Достижение ур.${tier}: ${rwTxt}`);
+        if (r.player) State.player = r.player;
+        const p = [];
+        if (r.gold)     p.push(`+${r.gold}💰`);
+        if (r.diamonds) p.push(`+${r.diamonds}💎`);
+        if (r.xp)       p.push(`+${r.xp}⭐`);
+        this._toast(`🏆 Достижение ур.${tier}: ${p.join(' ') || 'Награда получена!'}`);
         this.time.delayedCall(600, () => this.scene.restart({ tab: 'achieve' }));
       } else {
         this._toast('❌ ' + (r?.reason || 'Ошибка'));

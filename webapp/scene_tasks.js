@@ -130,7 +130,7 @@ class TasksScene extends Phaser.Scene {
         if (opts.onSwipe) opts.onSwipe(dx < 0 ? 'left' : 'right');
         return;
       }
-      if (ady < 10 && opts.onTap) {
+      if (ady < 20 && opts.onTap) {
         vel = 0;
         opts.onTap(p.y - container.y, p.x);
         return;

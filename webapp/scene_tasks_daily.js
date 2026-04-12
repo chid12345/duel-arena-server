@@ -3,6 +3,14 @@
    Ежедневные + Недельные на одной прокручиваемой странице
    ============================================================ */
 
+function _rewardToast(r) {
+  const p = [];
+  if (r.gold)     p.push(`+${r.gold}💰`);
+  if (r.diamonds) p.push(`+${r.diamonds}💎`);
+  if (r.xp)       p.push(`+${r.xp}⭐`);
+  return p.length ? `🎁 ${p.join(' ')}` : '🎁 Награда получена!';
+}
+
 TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
   const taps = []; // { y, h, xMin?, xMax?, fn() }
   const { container, setContentH } = this._makeScrollZone(W, H, startY, {
@@ -64,7 +72,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
 
     if (done && !claimed) {
       const ty = y;
-      taps.push({ y: ty, h: bh, fn: () => this._claimDaily(q.key, `+${q.reward_gold}💰`) });
+      taps.push({ y: ty, h: bh, fn: () => this._claimDaily(q.key) });
     }
     y += bh + 5;
   });
@@ -106,8 +114,8 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     if (done && !claimed) {
       const ty = y;
       taps.push({ y: ty, h: bh, fn: () => {
-        if (isExtra) this._claimWeeklyExtra(q.key, weekKey, `+${q.reward_gold}💰`);
-        else         this._claimWeeklyOld(q.key, `+${q.reward_gold}💰`);
+        if (isExtra) this._claimWeeklyExtra(q.key, weekKey);
+        else         this._claimWeeklyOld(q.key);
       }});
     }
     y += bh + 5;
@@ -136,7 +144,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
 
 // ── Клеймы ────────────────────────────────────────────────
 
-TasksScene.prototype._claimDaily = function(taskKey, rewardTxt) {
+TasksScene.prototype._claimDaily = function(taskKey) {
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/tasks/claim_daily', { task_key: taskKey })
@@ -144,31 +152,43 @@ TasksScene.prototype._claimDaily = function(taskKey, rewardTxt) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        this._toast(`🎁 ${rewardTxt}`);
+        this._toast(_rewardToast(r));
         this.time.delayedCall(500, () => this.scene.restart({ tab: 'daily' }));
       } else this._toast('❌ ' + (r?.reason || 'Ошибка'));
-    }).catch(() => { this._claimBusy = false; });
+    }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };
 
 TasksScene.prototype._claimAllDaily = function(tasks) {
   if (this._claimBusy) return;
   this._claimBusy = true;
   const keys = tasks.map(t => t.key);
+  let totalG = 0, totalD = 0, totalXp = 0, ok = 0;
   const doNext = () => {
     if (!keys.length) {
       this._claimBusy = false;
-      this._toast('✅ Все награды получены!');
+      if (ok > 0) {
+        this._toast(_rewardToast({ gold: totalG, diamonds: totalD, xp: totalXp }));
+      } else {
+        this._toast('❌ Не удалось забрать награды');
+      }
       this.time.delayedCall(600, () => this.scene.restart({ tab: 'daily' }));
       return;
     }
     post('/api/tasks/claim_daily', { task_key: keys.shift() })
-      .then(r => { if (r?.ok && r.player) State.player = r.player; doNext(); })
+      .then(r => {
+        if (r?.ok) {
+          ok++;
+          totalG += r.gold || 0; totalD += r.diamonds || 0; totalXp += r.xp || 0;
+          if (r.player) State.player = r.player;
+        }
+        doNext();
+      })
       .catch(() => doNext());
   };
   doNext();
 };
 
-TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey, rewardTxt) {
+TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey) {
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/tasks/claim_weekly_extra', { task_key: taskKey })
@@ -176,13 +196,13 @@ TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey, rewardTxt) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        this._toast(`🎁 ${rewardTxt}`);
+        this._toast(_rewardToast(r));
         this.time.delayedCall(500, () => this.scene.restart({ tab: 'daily' }));
       } else this._toast('❌ ' + (r?.reason || 'Ошибка'));
-    }).catch(() => { this._claimBusy = false; });
+    }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };
 
-TasksScene.prototype._claimWeeklyOld = function(key, rewardTxt) {
+TasksScene.prototype._claimWeeklyOld = function(key) {
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/quests/weekly_claim', { claim_key: key })
@@ -190,8 +210,8 @@ TasksScene.prototype._claimWeeklyOld = function(key, rewardTxt) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        this._toast(`🎁 ${rewardTxt}`);
+        this._toast(_rewardToast(r));
         this.time.delayedCall(500, () => this.scene.restart({ tab: 'daily' }));
       } else this._toast('❌ ' + (r?.reason || 'Ошибка'));
-    }).catch(() => { this._claimBusy = false; });
+    }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };
