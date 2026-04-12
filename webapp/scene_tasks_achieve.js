@@ -82,8 +82,8 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
       container.add(txt(this, PAD + 6, y + 28, `${displayCur} / ${nextT}`, 10, '#ffffff', true).setOrigin(0, 0));
 
       const progress = Math.min(1, Math.max(0, (cur - prevT) / Math.max(1, nextT - prevT)));
-      makeBar(this, PAD + 6, y + 46, barW, 6,
-        progress, canClaim ? C.green : C.gold, 0x1a1a3a, 3);
+      container.add(makeBar(this, PAD + 6, y + 46, barW, 6,
+        progress, canClaim ? C.green : C.gold, 0x1a1a3a, 3));
 
       // ── Описание ──────────────────────────────────────────
       container.add(txt(this, PAD + 6, y + 68, a.desc, 9, '#7799bb').setOrigin(0, 0));

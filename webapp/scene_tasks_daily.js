@@ -100,7 +100,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
 
       // Прогресс
       container.add(txt(this, PAD + 34, y + 26, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
-      makeBar(this, PAD + 34, y + 40, W - 120, 5, Math.min(1, cur / max), done ? C.green : C.blue, 0x1a1a3a, 3);
+      container.add(makeBar(this, PAD + 34, y + 40, W - 120, 5, Math.min(1, cur / max), done ? C.green : C.blue, 0x1a1a3a, 3));
 
       // Статус + награда
       container.add(txt(this, W - PAD - 4, y + 12, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
@@ -151,7 +151,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
 
       // Прогресс
       container.add(txt(this, PAD + 34, y + 36, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
-      makeBar(this, PAD + 80, y + 38, W - 140, 4, Math.min(1, cur / max), done ? C.green : C.gold, 0x1a1a3a, 3);
+      container.add(makeBar(this, PAD + 80, y + 38, W - 140, 4, Math.min(1, cur / max), done ? C.green : C.gold, 0x1a1a3a, 3));
 
       // Статус + награда
       container.add(txt(this, W - PAD - 4, y + 9, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
