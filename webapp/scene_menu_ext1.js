@@ -34,76 +34,82 @@ Object.assign(MenuScene.prototype, {
     const { W, CONTENT_H: CH } = this;
     const p = State.player;
     const c = this.add.container(0, 0);
-    const PAD = 16;
+    const PAD = 14;
 
-    const title = txt(this, W / 2, 26, '⚔️  ВЫБЕРИ БОЙ', 18, '#ffc83c', true).setOrigin(0.5);
+    // ── Заголовок ──
+    const title = txt(this, W / 2, 24, '⚔️  ВЫБЕРИ БОЙ', 17, '#ffc83c', true).setOrigin(0.5);
 
-    const pvpCY = CH * 0.20;
-    const pvpCard = this._makeBattleCard(
-      W / 2, pvpCY,
-      '⚔️  ПОИСК СОПЕРНИКА',
-      'Живой игрок · рейтинговый бой',
-      '🏆 +рейтинг  💰+30%  ⭐+30% за победу',
-      C.red, 0xdc3c46,
-      () => this._onFight()
-    );
+    let curY = 46;
+    const GAP = 8;
 
-    const BH  = 38;
-    const BG  = 8;
-    const BW  = (W - PAD * 2 - BG) / 2;
-    const GT  = pvpCY + 58;
+    // ── Карточки с полосой-акцентом ──
+    const cards = [
+      this._makeBattleStrip(PAD, curY, W - PAD * 2, 72,
+        0xdc3c46, '#ff6672', '⚔️  Поиск соперника',
+        'Живой игрок · рейтинговый бой',
+        '🏆 +рейтинг  💰 +30%  ⭐ +30% за победу',
+        () => this._onFight()),
+      // advance curY
+    ];
+    curY += 72 + GAP;
 
-    const secBtn = (col, row, label, fillHex, borderHex, textColor, cb) => {
-      const bx = PAD + col * (BW + BG);
-      const by = GT + row * (BH + BG);
+    cards.push(this._makeBattleStrip(PAD, curY, W - PAD * 2, 62,
+      0xb45aff, '#c97aff', '🗿  Башня Титанов',
+      'PvE · прогрессия уровней · редкие награды',
+      null, () => this._onTitanFight()));
+    curY += 62 + GAP;
+
+    cards.push(this._makeBattleStrip(PAD, curY, W - PAD * 2, 62,
+      0xff5533, '#ff7755', '🔥  Натиск',
+      'Арена выживания · волны врагов',
+      null, () => this.scene.start('Natisk')));
+    curY += 62 + GAP;
+
+    // ── 2 малые кнопки в ряд ──
+    const BH  = 52;
+    const BW  = (W - PAD * 2 - GAP) / 2;
+
+    const smBtn = (x, y, w, h, stripCol, nameCol, emo, name, sub, cb) => {
+      const objs = [];
       const bg = this.add.graphics();
-      bg.fillStyle(fillHex, 0.92);
-      bg.fillRoundedRect(bx, by, BW, BH, 9);
-      bg.lineStyle(1.5, borderHex, 0.5);
-      bg.strokeRoundedRect(bx, by, BW, BH, 9);
-      const t = txt(this, bx + BW / 2, by + BH / 2, label, 11, textColor, true).setOrigin(0.5);
-      const z = this.add.zone(bx, by, BW, BH).setOrigin(0).setInteractive({ useHandCursor: true });
-      z.on('pointerdown', () => { tg?.HapticFeedback?.impactOccurred('light'); });
-      z.on('pointerup', cb);
-      return [bg, t, z];
+      bg.fillStyle(0x1a1828, 1);
+      bg.fillRoundedRect(x, y, w, h, 10);
+      objs.push(bg);
+
+      const strip = this.add.graphics();
+      strip.fillStyle(stripCol, 1);
+      strip.fillRoundedRect(x, y, 4, h, { tl: 10, bl: 10, tr: 2, br: 2 });
+      objs.push(strip);
+
+      objs.push(txt(this, x + 14, y + 14, emo + ' ' + name, 11, nameCol, true));
+      objs.push(txt(this, x + 14, y + 32, sub, 9, '#ddddff'));
+
+      const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
+      z.on('pointerdown', () => { tg?.HapticFeedback?.impactOccurred('light'); bg.clear(); bg.fillStyle(0x221f36, 1); bg.fillRoundedRect(x, y, w, h, 10); });
+      z.on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a1828, 1); bg.fillRoundedRect(x, y, w, h, 10); });
+      z.on('pointerup',   () => { bg.clear(); bg.fillStyle(0x1a1828, 1); bg.fillRoundedRect(x, y, w, h, 10); cb(); });
+      objs.push(z);
+      return objs;
     };
 
-    const secBtnFull = (row, label, fillHex, borderHex, textColor, cb) => {
-      const bx = PAD, bw = W - PAD * 2;
-      const by = GT + row * (BH + BG);
-      const bg = this.add.graphics();
-      bg.fillStyle(fillHex, 0.85);
-      bg.fillRoundedRect(bx, by, bw, BH, 9);
-      bg.lineStyle(1.5, borderHex, 0.4);
-      bg.strokeRoundedRect(bx, by, bw, BH, 9);
-      const t = txt(this, bx + bw / 2, by + BH / 2, label, 11, textColor, true).setOrigin(0.5);
-      const z = this.add.zone(bx, by, bw, BH).setOrigin(0).setInteractive({ useHandCursor: true });
-      z.on('pointerdown', () => { tg?.HapticFeedback?.impactOccurred('light'); });
-      z.on('pointerup', cb);
-      return [bg, t, z];
-    };
+    const smLeft  = smBtn(PAD,            curY, BW, BH, 0xffc83c, '#ffdca0', '🎯', 'Вызов по нику', 'PvP дуэль',      () => this._onChallengeByNick());
+    const smRight = smBtn(PAD + BW + GAP, curY, BW, BH, 0x5096ff, '#b8d4ff', '📨', 'Мои вызовы',    'Входящие вызовы',() => this._showOutgoingChallenges());
+    curY += BH + GAP;
 
-    const btnCh  = secBtn(0, 0, '🎯 Вызов по нику', 0x2e2010, C.gold,   '#ffdca0', () => this._onChallengeByNick());
-    const btnMyC = secBtn(1, 0, '📨 Мои вызовы',   0x161e38, C.blue,   '#b8d4ff', () => this._showOutgoingChallenges());
-    const btnTT  = secBtnFull(1, '🗿 Башня Титанов', 0x1e1630, C.purple, '#d8c0ff', () => this._onTitanFight());
-    const btnNatisk = secBtnFull(2, '🔥 Натиск  —  Арена выживания', 0x2a1010, 0xdc3c46, '#ff9999', () => this.scene.start('Natisk'));
+    // ── Бот ──
+    const botCard = this._makeBattleStrip(PAD, curY, W - PAD * 2, 62,
+      0x5096ff, '#7ab4ff', '🤖  Бой с ботом',
+      'Практика · без рейтинга · 💰 +золото',
+      null, () => this._onBotFight());
+    curY += 62 + GAP;
 
-    const botCY = CH * 0.76;
-    const botCard = this._makeBattleCard(
-      W / 2, botCY,
-      '🤖  БОЙ С БОТОМ',
-      'Практика · нет рейтинга',
-      '💰 +золото  ⭐ +опыт',
-      C.blue, 0x2a4880,
-      () => this._onBotFight()
-    );
-
-    const hpBlockY = CH * 0.88;
+    // ── HP блок ──
+    const hpBlockY = curY;
     const hpBlockObjs = [];
 
     const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
-    hpBlockObjs.push(makeBar(this, 20, hpBlockY, W - 40, 10, hpPct, hpCol));
+    hpBlockObjs.push(makeBar(this, PAD, hpBlockY, W - PAD * 2, 10, hpPct, hpCol));
     hpBlockObjs.push(
       txt(this, W / 2, hpBlockY + 5, `❤️ ${p.current_hp}/${p.max_hp_effective ?? p.max_hp} HP`, 9, '#f0f0fa').setOrigin(0.5)
     );
@@ -112,7 +118,7 @@ Object.assign(MenuScene.prototype, {
       const regenStr = p.regen_secs_to_full > 0
         ? `+${p.regen_per_min}/мин · полный через ${Math.ceil(p.regen_secs_to_full / 60)}мин`
         : `+${p.regen_per_min}/мин`;
-      hpBlockObjs.push(txt(this, 20, hpBlockY + 14, regenStr, 8, '#cc7777'));
+      hpBlockObjs.push(txt(this, PAD, hpBlockY + 14, regenStr, 8, '#ddddff'));
     }
 
     if (p.hp_pct < 15) {
@@ -120,28 +126,26 @@ Object.assign(MenuScene.prototype, {
       const btnBY = hpBlockY + 28;
       const qBg = this.add.graphics();
       qBg.fillStyle(canAfford ? C.red : C.dark, canAfford ? 0.88 : 0.55);
-      qBg.fillRoundedRect(20, btnBY, W - 40, 38, 10);
-      if (canAfford) { qBg.lineStyle(1.5, C.gold, 0.3); qBg.strokeRoundedRect(20, btnBY, W - 40, 38, 10); }
+      qBg.fillRoundedRect(PAD, btnBY, W - PAD * 2, 38, 10);
+      if (canAfford) { qBg.lineStyle(1.5, C.gold, 0.3); qBg.strokeRoundedRect(PAD, btnBY, W - PAD * 2, 38, 10); }
       const qLabel = canAfford
         ? `🧪 Выпить малое зелье  —  12 🪙`
         : `🧪 Нужно 12 🪙 (у вас ${p.gold || 0})`;
       const qT = txt(this, W / 2, btnBY + 19, qLabel, 11, canAfford ? '#ffffff' : '#cc8888', true).setOrigin(0.5);
-      const qZ = this.add.zone(20, btnBY, W - 40, 38).setOrigin(0)
+      const qZ = this.add.zone(PAD, btnBY, W - PAD * 2, 38).setOrigin(0)
         .setInteractive({ useHandCursor: canAfford });
       if (canAfford) {
-        qZ.on('pointerdown', () => { qBg.clear(); qBg.fillStyle(0x991a22,1); qBg.fillRoundedRect(20,btnBY,W-40,38,10); tg?.HapticFeedback?.impactOccurred('medium'); });
-        qZ.on('pointerout',  () => { qBg.clear(); qBg.fillStyle(C.red,0.88); qBg.fillRoundedRect(20,btnBY,W-40,38,10); qBg.lineStyle(1.5,C.gold,0.3); qBg.strokeRoundedRect(20,btnBY,W-40,38,10); });
-        qZ.on('pointerup',   () => this._quickHeal(qBg, qT, qZ, 20, btnBY, W - 40, 38));
+        qZ.on('pointerdown', () => { qBg.clear(); qBg.fillStyle(0x991a22,1); qBg.fillRoundedRect(PAD,btnBY,W-PAD*2,38,10); tg?.HapticFeedback?.impactOccurred('medium'); });
+        qZ.on('pointerout',  () => { qBg.clear(); qBg.fillStyle(C.red,0.88); qBg.fillRoundedRect(PAD,btnBY,W-PAD*2,38,10); qBg.lineStyle(1.5,C.gold,0.3); qBg.strokeRoundedRect(PAD,btnBY,W-PAD*2,38,10); });
+        qZ.on('pointerup',   () => this._quickHeal(qBg, qT, qZ, PAD, btnBY, W - PAD * 2, 38));
       }
       hpBlockObjs.push(qBg, qT, qZ);
     }
 
     const children = [
       title,
-      ...pvpCard,
-      ...btnCh, ...btnMyC,
-      ...btnTT,
-      ...btnNatisk,
+      ...cards.flat(),
+      ...smLeft, ...smRight,
       ...botCard,
       ...hpBlockObjs,
     ];
@@ -151,54 +155,50 @@ Object.assign(MenuScene.prototype, {
     this._checkIncomingChallenge();
   },
 
-  _makeBattleCard(cx, cy, title, sub, bonus, borderColor, fillColor, cb) {
-    const { W } = this;
-    const cw = W - 32, ch = 100;
-    const x = cx - cw / 2, y = cy - ch / 2;
+  /* Карточка с цветной полосой слева */
+  _makeBattleStrip(x, y, w, h, stripColorHex, nameColor, name, sub, bonus, cb) {
     const objs = [];
 
+    // Фон карточки
     const bg = this.add.graphics();
-    bg.fillStyle(fillColor, 0.18);
-    bg.fillRoundedRect(x, y, cw, ch, 14);
-    bg.lineStyle(2, borderColor, 0.7);
-    bg.strokeRoundedRect(x, y, cw, ch, 14);
+    bg.fillStyle(0x1a1828, 1);
+    bg.fillRoundedRect(x, y, w, h, 12);
     objs.push(bg);
 
-    const shine = this.add.graphics();
-    shine.fillStyle(0xffffff, 0.05);
-    shine.fillRoundedRect(x + 4, y + 4, cw - 8, ch * 0.42, 11);
-    objs.push(shine);
+    // Полоса слева
+    const strip = this.add.graphics();
+    strip.fillStyle(stripColorHex, 1);
+    strip.fillRoundedRect(x, y, 5, h, { tl: 12, bl: 12, tr: 2, br: 2 });
+    objs.push(strip);
 
-    objs.push(txt(this, cx, y + 26, title,  16, '#f0f0fa', true).setOrigin(0.5));
-    objs.push(txt(this, cx, y + 50, sub,    11, '#ccccee').setOrigin(0.5));
-    objs.push(txt(this, cx, y + 72, bonus,  10, `#${borderColor.toString(16).padStart(6,'0')}`).setOrigin(0.5));
+    // Текст
+    const tx = x + 16;
+    objs.push(txt(this, tx, y + 16, name, 13, nameColor, true));
+    objs.push(txt(this, tx, y + 34, sub, 10, '#ddddff'));
+    if (bonus) {
+      objs.push(txt(this, tx, y + 52, bonus, 9, '#ffc83c'));
+    }
 
-    const zone = this.add.zone(cx, cy, cw, ch).setInteractive({ useHandCursor: true });
-    zone.on('pointerdown', () => {
-      bg.clear();
-      bg.fillStyle(fillColor, 0.32);
-      bg.fillRoundedRect(x, y, cw, ch, 14);
-      bg.lineStyle(2, borderColor, 1);
-      bg.strokeRoundedRect(x, y, cw, ch, 14);
+    // Зона клика
+    const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
+    z.on('pointerdown', () => {
       tg?.HapticFeedback?.impactOccurred('medium');
+      bg.clear(); bg.fillStyle(0x221f36, 1); bg.fillRoundedRect(x, y, w, h, 12);
     });
-    zone.on('pointerup', () => {
-      bg.clear();
-      bg.fillStyle(fillColor, 0.18);
-      bg.fillRoundedRect(x, y, cw, ch, 14);
-      bg.lineStyle(2, borderColor, 0.7);
-      bg.strokeRoundedRect(x, y, cw, ch, 14);
+    z.on('pointerout', () => {
+      bg.clear(); bg.fillStyle(0x1a1828, 1); bg.fillRoundedRect(x, y, w, h, 12);
+    });
+    z.on('pointerup', () => {
+      bg.clear(); bg.fillStyle(0x1a1828, 1); bg.fillRoundedRect(x, y, w, h, 12);
       cb();
     });
-    zone.on('pointerout', () => {
-      bg.clear();
-      bg.fillStyle(fillColor, 0.18);
-      bg.fillRoundedRect(x, y, cw, ch, 14);
-      bg.lineStyle(2, borderColor, 0.7);
-      bg.strokeRoundedRect(x, y, cw, ch, 14);
-    });
-    objs.push(zone);
+    objs.push(z);
     return objs;
+  },
+
+  // Оставляем _makeBattleCard для совместимости (не используется в новом дизайне)
+  _makeBattleCard(cx, cy, title, sub, bonus, borderColor, fillColor, cb) {
+    return this._makeBattleStrip(cx - 140, cy - 50, 280, 100, borderColor, '#f0f0fa', title, sub, bonus, cb);
   },
 
 });
