@@ -39,7 +39,9 @@ class TasksScene extends Phaser.Scene {
       this._data = d;
       this._render(d);
     } catch(e) {
-      this._loading?.setText('❌ Нет соединения');
+      this._loading?.destroy(); this._loading = null;
+      txt(this, this.W/2, this.H/2 - 20, '❌ Нет соединения', 13, '#dc3c46').setOrigin(0.5);
+      txt(this, this.W/2, this.H/2 + 10, String(e?.message || e), 9, '#ff9999').setOrigin(0.5);
     }
   }
 

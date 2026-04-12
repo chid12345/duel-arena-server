@@ -4,7 +4,7 @@ from __future__ import annotations
 import json
 import logging
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Set
 
 from repositories.quests.definitions_achieve import ACHIEVEMENT_DEFS, ACHIEVEMENT_BY_KEY
 from repositories.quests.definitions_tasks import (
@@ -62,14 +62,31 @@ class QuestsProgressMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         try:
-            cur.execute("INSERT INTO task_claims (user_id, claim_key) VALUES (?,?)",
+            cur.execute("INSERT OR IGNORE INTO task_claims (user_id, claim_key) VALUES (?,?)",
                         (user_id, claim_key))
             conn.commit()
-            return True
-        except Exception:
+            # Проверим что запись реально появилась (INSERT OR IGNORE не кидает ошибку при дубле)
+            cur.execute("SELECT 1 FROM task_claims WHERE user_id=? AND claim_key=?",
+                        (user_id, claim_key))
+            return cur.fetchone() is not None
+        except Exception as e:
+            log.warning("add_task_claim error: %s", e)
             return False
         finally:
             conn.close()
+
+    # ── Батчевая загрузка всех данных за 2 запроса ────────────────────
+
+    def _fetch_user_tasks_batch(self, user_id: int):
+        """Вернуть (progress_dict, claims_set) одним подключением."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute("SELECT task_key, value FROM task_progress WHERE user_id=?", (user_id,))
+        progress = {r["task_key"]: int(r["value"]) for r in cur.fetchall()}
+        cur.execute("SELECT claim_key FROM task_claims WHERE user_id=?", (user_id,))
+        claims: Set[str] = {r["claim_key"] for r in cur.fetchall()}
+        conn.close()
+        return progress, claims
 
     # ── Трекинг покупок и использования предметов ──────────────────────
 
@@ -116,7 +133,7 @@ class QuestsProgressMixin:
         conn.commit()
         conn.close()
 
-    # ── Достижения ─────────────────────────────────────────────────────
+    # ── Достижения (1 подключение для всего) ──────────────────────────
 
     def _computed_values(self, user_id: int) -> dict:
         conn = self.get_connection()
@@ -143,17 +160,18 @@ class QuestsProgressMixin:
 
     def get_achievements_status(self, user_id: int) -> list[dict]:
         computed = self._computed_values(user_id)
+        progress, claims = self._fetch_user_tasks_batch(user_id)
         result = []
         for ach in ACHIEVEMENT_DEFS:
             key = ach["key"]
             if ach["source"] == "computed":
                 cur_val = computed.get(ach["compute"], 0)
             else:
-                cur_val = self.get_task_progress(user_id, key)
+                cur_val = progress.get(key, 0)
 
             claimed_tier = 0
             for t in ach["tiers"]:
-                if self.has_task_claim(user_id, f"{key}_t{t['tier']}"):
+                if f"{key}_t{t['tier']}" in claims:
                     claimed_tier = t["tier"]
 
             next_tier = claimed_tier + 1
@@ -168,7 +186,7 @@ class QuestsProgressMixin:
             can_claim_tier = None
             for t in tiers:
                 ck = f"{key}_t{t['tier']}"
-                if not self.has_task_claim(user_id, ck) and cur_val >= t["target"]:
+                if ck not in claims and cur_val >= t["target"]:
                     can_claim_tier = t["tier"]
                     break
 
@@ -224,7 +242,7 @@ class QuestsProgressMixin:
             "xp": tier_def["xp"],
         }
 
-    # ── Ежедневные задания ─────────────────────────────────────────────
+    # ── Ежедневные задания (1 подключение) ────────────────────────────
 
     def get_daily_tasks_status(self, user_id: int) -> list[dict]:
         today = _TODAY()
@@ -237,21 +255,26 @@ class QuestsProgressMixin:
                 (user_id, today),
             )
         except Exception:
-            # Колонки bot_wins/shop_buys могут отсутствовать до миграции
             cur.execute(
                 "SELECT battles_played, battles_won, endless_wins "
                 "FROM daily_quests WHERE user_id=? AND quest_date=?",
                 (user_id, today),
             )
-        row = cur.fetchone() or {}
-        conn.close()
-        p = dict(row) if row else {}
-        conn2 = self.get_connection()
-        cur2 = conn2.cursor()
-        cur2.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
-        _wr = cur2.fetchone()
-        conn2.close()
+        _dq = cur.fetchone()
+        p = dict(_dq) if _dq else {}
+        cur.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
+        _wr = cur.fetchone()
         streak = int(_wr["win_streak"] if _wr else 0)
+        # Клеймы всех ежедневных заданий за сегодня одним запросом
+        daily_keys = [f"{dq['key']}_{today}" for dq in DAILY_QUEST_DEFS]
+        placeholders = ",".join(["?" for _ in daily_keys])
+        cur.execute(
+            f"SELECT claim_key FROM task_claims WHERE user_id=? AND claim_key IN ({placeholders})",
+            (user_id, *daily_keys),
+        )
+        claimed_set = {r["claim_key"] for r in cur.fetchall()}
+        conn.close()
+
         track_map = {
             "battles": int(p.get("battles_played") or 0),
             "wins": int(p.get("battles_won") or 0),
@@ -264,7 +287,7 @@ class QuestsProgressMixin:
         for dq in DAILY_QUEST_DEFS:
             cur_val = track_map.get(dq["track"], 0)
             done = cur_val >= dq["target"]
-            claimed = self.has_task_claim(user_id, f"{dq['key']}_{today}")
+            claimed = f"{dq['key']}_{today}" in claimed_set
             g, d, xp = calc_reward(dq["difficulty"], dq["frequency"])
             result.append({
                 "key": dq["key"], "label": dq["label"], "desc": dq["desc"],
@@ -298,23 +321,44 @@ class QuestsProgressMixin:
         return {"ok": True, "gold": task["reward_gold"],
                 "diamonds": task["reward_diamonds"], "xp": task["reward_xp"]}
 
-    # ── Дополнительные недельные задания ──────────────────────────────
+    # ── Дополнительные недельные задания (1 подключение) ──────────────
 
     def get_weekly_extra_status(self, user_id: int, week_key: str) -> list[dict]:
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
         _wr = cur.fetchone()
-        conn.close()
         streak = int(_wr["win_streak"] if _wr else 0)
+        # Прогресс недельных треков одним запросом
+        wq_keys = [f"{wq['track']}_{week_key}" for wq in WEEKLY_EXTRA_DEFS
+                   if wq["track"] != "streak"]
+        if wq_keys:
+            placeholders = ",".join(["?" for _ in wq_keys])
+            cur.execute(
+                f"SELECT task_key, value FROM task_progress WHERE user_id=? AND task_key IN ({placeholders})",
+                (user_id, *wq_keys),
+            )
+            prog = {r["task_key"]: int(r["value"]) for r in cur.fetchall()}
+        else:
+            prog = {}
+        # Клеймы одним запросом
+        claim_keys = [f"{wq['key']}_{week_key}" for wq in WEEKLY_EXTRA_DEFS]
+        placeholders2 = ",".join(["?" for _ in claim_keys])
+        cur.execute(
+            f"SELECT claim_key FROM task_claims WHERE user_id=? AND claim_key IN ({placeholders2})",
+            (user_id, *claim_keys),
+        )
+        claimed_set = {r["claim_key"] for r in cur.fetchall()}
+        conn.close()
+
         result = []
         for wq in WEEKLY_EXTRA_DEFS:
             if wq["track"] == "streak":
                 cur_val = streak
             else:
-                cur_val = self.get_task_progress(user_id, f"{wq['track']}_{week_key}")
+                cur_val = prog.get(f"{wq['track']}_{week_key}", 0)
             done = cur_val >= wq["target"]
-            claimed = self.has_task_claim(user_id, f"{wq['key']}_{week_key}")
+            claimed = f"{wq['key']}_{week_key}" in claimed_set
             g, d, xp = calc_reward(wq["difficulty"], wq["frequency"])
             result.append({
                 "key": wq["key"], "label": wq["label"], "desc": wq["desc"],
