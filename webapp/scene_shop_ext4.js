@@ -29,7 +29,7 @@ Object.assign(ShopScene.prototype, {
 
     container.add(txt(this, x + 22, y + h / 2, item.icon, 22).setOrigin(0.5));
     container.add(txt(this, x + 44, y + 14, item.name, 13, canBuy ? '#ffffff' : '#888899', true));
-    container.add(txt(this, x + 44, y + 32, item.desc || '', 10, '#ccddee'));
+    container.add(txt(this, x + 44, y + 32, item.desc || '', 11, '#ffffff'));
 
     if (item.badge) {
       const badgeG = this.add.graphics();
@@ -80,7 +80,7 @@ Object.assign(ShopScene.prototype, {
     container.add(txt(this, x + 16, y + h / 2, item.icon, 14).setOrigin(0.5));
     container.add(txt(this, x + 32, y + h / 2, item.name, 11, canBuy ? '#ffffff' : '#888899', true).setOrigin(0, 0.5));
     const shortDesc = (item.desc || '').split('·')[0].trim();
-    container.add(txt(this, x + w - 70, y + h / 2, shortDesc, 9, '#ccddee').setOrigin(1, 0.5));
+    container.add(txt(this, x + w - 70, y + h / 2, shortDesc, 10, '#ffffff').setOrigin(1, 0.5));
     const pIcon = isDia ? '💎' : '🪙';
     const pCol  = canBuy ? (isDia ? '#3cc8dc' : '#ffc83c') : '#cc8888';
     container.add(txt(this, x + w - 8, y + h / 2, `${pIcon}${item.price}`, 11, pCol, true).setOrigin(1, 0.5));
