@@ -9,14 +9,26 @@
     this._invBusy = true;
     try {
       const res = await post('/api/shop/apply', { item_id: itemId, replace: false });
-      this._invBusy = false;
       if (res?.conflict) {
         this._showReplaceDialog(itemId, res.active_buff_type, res.active_charges);
         return;
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-        this._invData = await get('/api/shop/inventory').catch(() => this._invData);
+        // Обновляем инвентарь локально — без второго GET-запроса
+        if (this._invData?.inventory) {
+          const idx = this._invData.inventory.findIndex(i => i.item_id === itemId);
+          if (idx !== -1) {
+            if (this._invData.inventory[idx].quantity > 1) {
+              this._invData.inventory[idx].quantity -= 1;
+            } else {
+              this._invData.inventory.splice(idx, 1);
+            }
+          }
+        }
+        if (res.active_buffs !== undefined && this._invData) {
+          this._invData.active_buffs = res.active_buffs;
+        }
         if (res.box_opened) {
           this._showBoxReveal(res);
         } else {
@@ -25,7 +37,8 @@
           this._refreshBuffDisplay();
         }
       } else { this._showToast(`❌ ${res?.reason || 'Ошибка'}`); }
-    } catch { this._invBusy = false; this._showToast('❌ Нет соединения'); }
+    } catch { this._showToast('❌ Нет соединения'); }
+    finally { this._invBusy = false; }
   };
 
   StatsScene.prototype._showReplaceDialog = function(newItemId, activeBuffType, activeCharges) {
@@ -54,7 +67,20 @@
         const res = await post('/api/shop/apply', { item_id: newItemId, replace: true });
         if (res?.ok) {
           if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-          this._invData = await get('/api/shop/inventory').catch(() => this._invData);
+          // Обновляем локально — без лишнего GET
+          if (this._invData?.inventory) {
+            const idx = this._invData.inventory.findIndex(i => i.item_id === newItemId);
+            if (idx !== -1) {
+              if (this._invData.inventory[idx].quantity > 1) {
+                this._invData.inventory[idx].quantity -= 1;
+              } else {
+                this._invData.inventory.splice(idx, 1);
+              }
+            }
+          }
+          if (res.active_buffs !== undefined && this._invData) {
+            this._invData.active_buffs = res.active_buffs;
+          }
           this._showToast(res.msg || '✅ Заменён!');
           this._renderInvOverlay();
           this._refreshBuffDisplay();
