@@ -33,8 +33,8 @@ Object.assign(MenuScene.prototype, {
       premSub || `${titleBit}ELO ★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`, 12,
       p.is_premium ? '#b45aff' : '#ffc83c');
 
-    const goldTxt = txt(this, W - pad - 12, hY + 14, `💰 ${p.gold}`, 15, '#ffc83c', true).setOrigin(1, 0.5);
-    txt(this, W - pad - 12, hY + 32, `💎 ${p.diamonds}`, 13, '#3cc8dc', true).setOrigin(1, 0.5);
+    const goldTxt    = txt(this, W - pad - 12, hY + 14, `💰 ${p.gold}`,     15, '#ffc83c', true).setOrigin(1, 0.5);
+    const diamondTxt = txt(this, W - pad - 12, hY + 32, `💎 ${p.diamonds}`, 13, '#3cc8dc', true).setOrigin(1, 0.5);
 
     const snX = W - pad - 16, snY = hY + 56;
     const snBg = this.add.graphics();
@@ -181,7 +181,7 @@ Object.assign(MenuScene.prototype, {
     refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
 
     const children = [
-      hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt,
+      hBg, lvlG, lvlTxt, nameTxt, subTxt, goldTxt, diamondTxt,
       snBg, snTxt, snZ,
       glowG, warrior, hpBg, hpTxt,
       ...statObjs.flat(),
