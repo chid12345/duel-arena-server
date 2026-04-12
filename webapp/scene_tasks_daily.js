@@ -105,14 +105,14 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
       // Статус + награда
       container.add(txt(this, W - PAD - 4, y + 12, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
       if (!claimed) {
-        const rwTxt = `+${q.reward_gold}🪙${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
+        const rwTxt = `+${q.reward_gold}G${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
         container.add(txt(this, W - PAD - 4, y + 38, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
       }
 
       if (done && !claimed) {
         this.add.zone(PAD, y + startY, W - PAD*2, bh).setOrigin(0)
           .setInteractive({ useHandCursor: true })
-          .on('pointerup', () => this._claimDaily(q.key, `+${q.reward_gold}🪙`));
+          .on('pointerup', () => this._claimDaily(q.key, `+${q.reward_gold}G`));
       }
       y += bh + 5;
     });
@@ -156,7 +156,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
       // Статус + награда
       container.add(txt(this, W - PAD - 4, y + 9, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
       if (!claimed) {
-        const rwTxt = `+${q.reward_gold}🪙${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
+        const rwTxt = `+${q.reward_gold}G${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
         container.add(txt(this, W - PAD - 4, y + 44, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
       }
 
@@ -164,8 +164,8 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
         this.add.zone(PAD, y + startY, W - PAD*2, bh).setOrigin(0)
           .setInteractive({ useHandCursor: true })
           .on('pointerup', () => {
-            if (isExtra) this._claimWeeklyExtra(q.key, weekKey, `+${q.reward_gold}🪙`);
-            else         this._claimWeeklyOld(q.key, `+${q.reward_gold}🪙`);
+            if (isExtra) this._claimWeeklyExtra(q.key, weekKey, `+${q.reward_gold}G`);
+            else         this._claimWeeklyOld(q.key, `+${q.reward_gold}G`);
           });
       }
       y += bh + 5;
