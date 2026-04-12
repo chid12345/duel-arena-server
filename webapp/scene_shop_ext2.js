@@ -5,22 +5,19 @@
 
 Object.assign(ShopScene.prototype, {
 
-  /* ── Вкладка "⭐ Звёзды" — 2 страницы ───────────────── */
+  /* ── Вкладка "⭐ Звёзды" — единая страница ──────────── */
   async _buildStarsPanel(W, H) {
     let d;
     try { d = await get('/api/shop/packages'); }
     catch(_) { if (this.scene?.isActive('Shop')) txt(this, W/2, H/2, '❌ Нет соединения', 13, '#dc3c46').setOrigin(0.5); return; }
     if (!this.scene?.isActive('Shop') || this._tab !== 'stars') return;
     const starsPkgs = d.stars || [];
-    const pg = this._shopPage || 0;
     let y = 162;
     const p = State.player;
     const pkgMain = starsPkgs.filter(pkg => pkg.id !== 'premium');
-    const premPkg  = starsPkgs.find(pkg => pkg.id === 'premium');
-    const pageCount = premPkg ? 2 : 1;
-    const page = Math.min(pg, pageCount - 1);
+    const premPkg = starsPkgs.find(pkg => pkg.id === 'premium');
 
-    // Премиум-бейдж — на обеих страницах
+    // Премиум-бейдж
     if (p?.is_premium) {
       const sb = this.add.graphics();
       sb.fillStyle(0x1a0a30, 0.95); sb.fillRoundedRect(8, y, W-16, 32, 9);
@@ -30,53 +27,27 @@ Object.assign(ShopScene.prototype, {
       y += 40;
     }
 
-    // Свайп для переключения Stars-страниц
-    if (pageCount > 1 && !this._starsSwipeSetup) {
-      this._starsSwipeSetup = true;
-      let sx = 0, sy = 0;
-      this.input.on('pointerdown', p => { sx = p.x; sy = p.y; });
-      this.input.on('pointerup',   p => {
-        const dx = p.x - sx, dy = p.y - sy;
-        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          const next = page + (dx < 0 ? 1 : -1);
-          if (next >= 0 && next < pageCount) {
-            tg?.HapticFeedback?.selectionChanged?.();
-            ShopScene._lastPage = next;
-            this.scene.restart({ tab: 'stars', page: next });
-          }
-        }
-      });
-    }
-    const mkStarsNav = (navY) => {
-      for (let pi = 0; pi < pageCount; pi++) {
-        const dg = this.add.graphics();
-        dg.fillStyle(pi === page ? 0xffc83c : 0x333355, 1);
-        dg.fillCircle(W/2 - (pageCount-1)*8 + pi*16, navY + 6, pi === page ? 5 : 3.5);
-      }
-    };
+    // ── Секция: Алмазы за Stars ──
+    makePanel(this, 8, y, W-16, 22, 8, 0.6);
+    txt(this, 20, y+5, '⭐  TELEGRAM STARS', 12, '#ffc83c', true);
+    txt(this, W-12, y+5, 'мгновенно', 11, '#9999bb').setOrigin(1, 0);
+    y += 30;
+    const pkgW = (W - 32) / Math.max(1, pkgMain.length);
+    pkgMain.forEach((pkg, i) => {
+      const px = 8 + i * (pkgW + 8 / Math.max(1, pkgMain.length));
+      this._makeStarsCard(pkg, px, y, pkgW - 4, 80);
+    });
+    y += 98;
+    txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5);
+    y += 28;
 
-    if (page === 0) {
-      // ── Страница 1: Алмазы за Stars ──
-      makePanel(this, 8, y, W-16, 22, 8, 0.6);
-      txt(this, 20, y+5, '⭐  TELEGRAM STARS', 12, '#ffc83c', true);
-      txt(this, W-12, y+5, 'мгновенно', 11, '#9999bb').setOrigin(1, 0);
-      y += 30;
-      const pkgW = (W - 32) / Math.max(1, pkgMain.length);
-      pkgMain.forEach((pkg, i) => {
-        const px = 8 + i * (pkgW + 8 / Math.max(1, pkgMain.length));
-        this._makeStarsCard(pkg, px, y, pkgW - 4, 80);
-      });
-      y += 98;
-      txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5);
-      y += 20;
-      if (premPkg) mkStarsNav(y);
-    } else {
-      // ── Страница 2: Premium подписка ──
+    // ── Секция: Premium подписка ──
+    if (premPkg) {
       makePanel(this, 8, y, W-16, 22, 8, 0.6);
       txt(this, 20, y+5, '👑  PREMIUM ПОДПИСКА', 12, '#c8a0ff', true);
       txt(this, W-12, y+5, '⭐ Stars', 11, '#9999bb').setOrigin(1, 0);
       y += 30;
-      if (premPkg) { this._makePremiumCard(premPkg, 8, y, W-16, 52); y += 62; }
+      this._makePremiumCard(premPkg, 8, y, W-16, 52); y += 62;
       y += 8;
       const perks = [
         '⚔️ +15% XP за каждый бой',
@@ -87,8 +58,6 @@ Object.assign(ShopScene.prototype, {
       perks.forEach(line => {
         txt(this, 28, y, line, 11, '#b0a0d0'); y += 18;
       });
-      y += 8;
-      mkStarsNav(y);
     }
   },
 
