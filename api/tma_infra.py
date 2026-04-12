@@ -51,8 +51,11 @@ def rate_limiter_cleanup() -> None:
     _rl.cleanup()
 
 
-_PLAYER_CACHE_TTL = 3.0
+_PLAYER_CACHE_TTL = 20.0   # было 3 с → 20 с (безопасно: инвалидируем при мутациях)
+_BUFFS_CACHE_TTL = 30.0    # бафы меняются редко — кешируем 30 с
+
 _player_cache: dict[int, tuple[dict, float]] = {}
+_buffs_cache: dict[int, tuple[dict, float]] = {}
 
 
 def _cache_get(uid: int) -> dict | None:
@@ -68,6 +71,18 @@ def _cache_set(uid: int, player: dict) -> None:
 
 def _cache_invalidate(uid: int) -> None:
     _player_cache.pop(uid, None)
+    _buffs_cache.pop(uid, None)  # сбрасываем и бафы при любой инвалидации
+
+
+def _buffs_cache_get(uid: int) -> dict | None:
+    entry = _buffs_cache.get(uid)
+    if entry and (time.monotonic() - entry[1]) < _BUFFS_CACHE_TTL:
+        return entry[0]
+    return None
+
+
+def _buffs_cache_set(uid: int, buffs: dict) -> None:
+    _buffs_cache[uid] = (dict(buffs), time.monotonic())
 
 
 class ConnectionManager:

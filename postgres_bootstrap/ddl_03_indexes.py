@@ -26,4 +26,8 @@ POSTGRES_DDL_03: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_referral_rewards_referrer ON referral_rewards (referrer_id)",
     "CREATE INDEX IF NOT EXISTS idx_clan_messages_clan ON clan_messages (clan_id, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_ref_withdrawals_user ON referral_withdrawals (user_id)",
+    # Производительность: поиск по нику, сезонные данные, дневные квесты
+    "CREATE INDEX IF NOT EXISTS idx_players_username ON players (username)",
+    "CREATE INDEX IF NOT EXISTS idx_season_stats_user ON season_stats (user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_daily_quests_user ON daily_quests (user_id)",
 )

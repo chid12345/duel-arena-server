@@ -6,7 +6,7 @@ from fastapi import FastAPI
 
 from api.tma_auth import get_user_from_init_data
 from api.tma_battle_api import _adapt_battle_result_for_user, _battle_state_api
-from api.tma_infra import _cache_get, _cache_invalidate, _cache_set, _rl_check
+from api.tma_infra import _buffs_cache_get, _buffs_cache_set, _cache_get, _cache_invalidate, _cache_set, _rl_check
 from api.tma_notify import _send_tg_message
 from api.tma_player_api import _player_api
 from api.tma_route_battle_flow import register_tma_battle_flow_routes
@@ -39,6 +39,8 @@ def wire_tma_inline_routes(app: FastAPI) -> None:
         _cache_get=_cache_get,
         _cache_set=_cache_set,
         _cache_invalidate=_cache_invalidate,
+        _buffs_cache_get=_buffs_cache_get,
+        _buffs_cache_set=_buffs_cache_set,
         _player_api=_player_api,
         PLAYER_START_MAX_HP=PLAYER_START_MAX_HP,
         PLAYER_START_LEVEL=PLAYER_START_LEVEL,

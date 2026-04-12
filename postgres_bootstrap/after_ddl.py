@@ -96,4 +96,8 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
         days_claimed_json TEXT DEFAULT '[]',
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )""",
+    # Производительность: поиск по нику, сезонные данные, дневные квесты
+    "CREATE INDEX IF NOT EXISTS idx_players_username ON players (username)",
+    "CREATE INDEX IF NOT EXISTS idx_season_stats_user ON season_stats (user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_daily_quests_user ON daily_quests (user_id)",
 )

@@ -18,6 +18,8 @@ def register_tma_player_route(
     _cache_get: Callable[[int], dict | None],
     _cache_set: Callable[[int, dict], None],
     _cache_invalidate: Callable[[int], None],
+    _buffs_cache_get: Callable[[int], dict | None],
+    _buffs_cache_set: Callable[[int, dict], None],
     _player_api: Callable[[dict], dict],
     PLAYER_START_MAX_HP: int,
     PLAYER_START_LEVEL: int,
@@ -38,10 +40,15 @@ def register_tma_player_route(
 
         cached = _cache_get(uid)
         if cached is not None:
+            # Бафы кешируем отдельно — 1 DB-запрос на 30 сек вместо каждого вызова
+            cb = _buffs_cache_get(uid)
+            if cb is None:
+                cb = db.get_combined_buffs(uid)
+                _buffs_cache_set(uid, cb)
             if usdt_passive:
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
-            return {"ok": True, "player": _player_api(cached, combined_buffs=db.get_combined_buffs(uid)), "cached": True}
+            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "cached": True}
 
         player = db.get_or_create_player(uid, username)
         inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
@@ -66,8 +73,10 @@ def register_tma_player_route(
         except Exception:
             pass
 
+        cb = db.get_combined_buffs(uid)
         _cache_set(uid, player)
+        _buffs_cache_set(uid, cb)
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
-        return {"ok": True, "player": _player_api(player, combined_buffs=db.get_combined_buffs(uid))}
+        return {"ok": True, "player": _player_api(player, combined_buffs=cb)}

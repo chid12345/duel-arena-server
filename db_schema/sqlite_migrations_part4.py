@@ -31,4 +31,12 @@ MIGRATIONS_PART4 = [
         "ALTER TABLE daily_quests ADD COLUMN bot_wins INTEGER DEFAULT 0",
         "ALTER TABLE daily_quests ADD COLUMN shop_buys INTEGER DEFAULT 0",
     ]),
+    ("2026_04_26_001_perf_indexes", [
+        # Поиск игроков по имени (PvP вызовы, /challenge)
+        "CREATE INDEX IF NOT EXISTS idx_players_username ON players (username)",
+        # season_stats по user_id (профиль → сезонные данные)
+        "CREATE INDEX IF NOT EXISTS idx_season_stats_user ON season_stats (user_id)",
+        # daily_quests по user_id (задачи на сегодня — частый запрос)
+        "CREATE INDEX IF NOT EXISTS idx_daily_quests_user ON daily_quests (user_id)",
+    ]),
 ]
