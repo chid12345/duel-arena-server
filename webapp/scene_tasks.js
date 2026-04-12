@@ -93,21 +93,23 @@ class TasksScene extends Phaser.Scene {
   _makeScrollZone(W, H, startY, opts) {
     opts = opts || {};
     const viewH = H - startY - 10;
-    const zone = this.add.zone(0, startY, W, viewH).setOrigin(0).setInteractive();
     const container = this.add.container(0, startY);
 
     let baseY = 0, sx = 0, sy = 0, dragY = 0;
     let vel = 0, lastY = 0, lastT = 0, active = false, hSwipe = false;
 
     const clamp = y => Math.min(0, Math.max(-(container._contentH || 0) + viewH, y));
+    const inBounds = p => p.y >= startY && p.y <= startY + viewH;
 
-    zone.on('pointerdown', p => {
+    // Все события через глобальный input — zone-based ввод ненадёжен на мобиле
+    this.input.on('pointerdown', p => {
+      if (!inBounds(p)) return;
       sx = p.x; sy = p.y; dragY = baseY; vel = 0;
       lastY = p.y; lastT = this.game.loop.now;
       active = true; hSwipe = false;
     });
 
-    zone.on('pointermove', p => {
+    this.input.on('pointermove', p => {
       if (!active) return;
       const dx = p.x - sx, dy = p.y - sy;
       const adx = Math.abs(dx), ady = Math.abs(dy);
@@ -121,8 +123,6 @@ class TasksScene extends Phaser.Scene {
       if (opts.onScroll) opts.onScroll(-baseY);
     });
 
-    // Глобальный pointerup — на мобиле zone.pointerup НЕ срабатывает,
-    // если палец при подъёме сдвинулся за границу зоны (pointerout → потеря тапа).
     this.input.on('pointerup', p => {
       if (!active) return; active = false;
       const dx = p.x - sx, dy = p.y - sy;
@@ -132,7 +132,7 @@ class TasksScene extends Phaser.Scene {
         if (opts.onSwipe) opts.onSwipe(dx < 0 ? 'left' : 'right');
         return;
       }
-      if (ady < 25 && adx < 40 && opts.onTap) {
+      if (ady < 30 && adx < 50 && opts.onTap) {
         vel = 0;
         opts.onTap(p.y - container.y, p.x);
         return;
