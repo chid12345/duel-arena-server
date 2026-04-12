@@ -61,9 +61,15 @@ def attach_wardrobe_core(
         uid = int(tg_user["id"])
         username = tg_user.get("username") or tg_user.get("first_name") or ""
         db.get_or_create_player(uid, username)
-        success, message = db.purchase_class(uid, body.class_id.strip())
+        class_id = body.class_id.strip()
+        ci = db.get_class_info(class_id)
+        success, message = db.purchase_class(uid, class_id)
         result = {"ok": success, "message": message}
-        if success:
+        if success and ci:
+            pg = int(ci.get("price_gold") or 0)
+            pd = int(ci.get("price_diamonds") or 0)
+            if pg > 0: db.track_purchase(uid, class_id, "gold", pg)
+            if pd > 0: db.track_purchase(uid, class_id, "diamonds", pd)
             _cache_invalidate(uid)
             player = db.get_or_create_player(uid, "")
             result["player"] = _player_api(dict(player))

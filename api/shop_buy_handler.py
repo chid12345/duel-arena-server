@@ -40,17 +40,23 @@ async def shop_buy_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_C
 
     # === Сброс статов (сразу) ===
     if iid == "stat_reset":
-        return _finalize(db, uid, db.buy_stat_reset(uid))
+        r = _finalize(db, uid, db.buy_stat_reset(uid))
+        if r.get("ok"): db.track_purchase(uid, iid, "gold", item.get("price", 0))
+        return r
 
     # === XP бусты → в инвентарь ===
     if iid in _XP_BOOST_CHARGES:
         charges, mult = _XP_BOOST_CHARGES[iid]
-        return _buy_xp_boost_item(db, uid, iid, charges, mult)
+        r = _buy_xp_boost_item(db, uid, iid, charges, mult)
+        if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
+        return r
 
     # === Обмен алмазы → золото ===
     if iid in _EXCHANGE_GOLD:
         cost_d, gold_gain = _EXCHANGE_GOLD[iid]
-        return _exchange_diamonds(db, uid, cost_d, gold_gain)
+        r = _exchange_diamonds(db, uid, cost_d, gold_gain)
+        if r.get("ok"): db.track_purchase(uid, iid, "diamonds", cost_d)
+        return r
 
     # === Лут-боксы → в инвентарь ===
     if iid in ("box_common", "box_rare"):

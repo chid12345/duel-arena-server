@@ -38,6 +38,7 @@ def attach_avatar_basic(router: APIRouter, ctx: Dict[str, Any]) -> None:
         db.get_or_create_player(uid, username)
         result = db.buy_avatar(uid, body.avatar_id.strip())
         if result.get("ok"):
+            db.track_purchase(uid, body.avatar_id.strip(), result.get("currency", "gold"), result.get("price", 0))
             _cache_invalidate(uid)
             state = db.get_player_avatar_state(uid)
             player = db.get_or_create_player(uid, "")
