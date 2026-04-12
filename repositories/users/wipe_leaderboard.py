@@ -24,7 +24,10 @@ class UsersWipeLeaderboardMixin:
     def wipe_player_profile(self, user_id: int, *, keep_wallet_clan_and_referrals: bool = False) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
-        for table in ("improvements", "daily_quests", "daily_bonuses", "achievements", "inventory"):
+        for table in ("improvements", "daily_quests", "daily_bonuses", "achievements",
+                      "inventory", "task_progress", "task_claims", "login_streak_v2",
+                      "titan_progress", "endless_progress", "endless_attempts",
+                      "player_buffs"):
             cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM metric_events WHERE user_id = ?", (user_id,))
         # Классы: удаляем всё кроме USDT-покупок (игрок заплатил реальные деньги)
