@@ -22,7 +22,7 @@ Object.assign(ClanScene.prototype, {
       .setOrigin(0.5).setDepth(D);
     txt(this, px+pw/2, py+66, `${member.username || `User${member.user_id}`}`, 14, '#f0f0fa', true)
       .setOrigin(0.5).setDepth(D);
-    txt(this, px+pw/2, py+86, 'Отменить нельзя! Вы станете обычным участником.', 10, '#888888')
+    txt(this, px+pw/2, py+86, 'Отменить нельзя! Вы станете обычным участником.', 10, '#cccccc')
       .setOrigin(0.5).setDepth(D);
 
     const destroy = () => {

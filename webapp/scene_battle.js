@@ -42,7 +42,7 @@ const BattleLog = (() => {
       .bl-dmg-enemy { color: #ff4d4d; font-weight: 700; }
       .bl-crit      { color: #ffcc00; font-weight: 700; }
       .bl-dodge-col { color: #2ecc71; }
-      .bl-miss-col  { color: #888888; }
+      .bl-miss-col  { color: #cccccc; }
     `;
     document.head.appendChild(style);
     overlay = document.createElement('div');

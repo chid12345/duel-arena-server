@@ -59,7 +59,7 @@ Object.assign(BattleScene.prototype, {
     const hudH = 72;
 
     makePanel(this, 8, 8, W/2 - 14, hudH, 10);
-    txt(this, 16, 13, 'ВЫ', 10, '#8888aa', true);
+    txt(this, 16, 13, 'ВЫ', 10, '#ccccee', true);
     this.p1Name = txt(this, 16, 24, State.player?.username || 'Вы', 13, '#f0f0fa', true);
     this.p1Hp   = txt(this, 16, 40, `${b.my_hp} / ${b.my_max_hp}`, 11, '#3cc864');
     this.p1Bar  = this._hpBar(12, 56, W/2 - 22, b.my_max_hp > 0 ? b.my_hp / b.my_max_hp : 0, C.green);
@@ -69,7 +69,7 @@ Object.assign(BattleScene.prototype, {
       .on('pointerup', () => this._showCard('me'));
 
     makePanel(this, W/2 + 6, 8, W/2 - 14, hudH, 10);
-    txt(this, W - 16, 13, 'СОПЕРНИК', 10, '#8888aa', true).setOrigin(1, 0);
+    txt(this, W - 16, 13, 'СОПЕРНИК', 10, '#ccccee', true).setOrigin(1, 0);
     this.p2Name = txt(this, W - 16, 24, b.opp_name || 'Соперник', 13, '#f0f0fa', true).setOrigin(1, 0);
     this.p2Hp   = txt(this, W - 16, 40, `${b.opp_hp} / ${b.opp_max_hp}`, 11, '#dc3c46').setOrigin(1, 0);
     this.p2Bar  = this._hpBar(W/2 + 10, 56, W/2 - 22, b.opp_max_hp > 0 ? b.opp_hp / b.opp_max_hp : 0, C.red);

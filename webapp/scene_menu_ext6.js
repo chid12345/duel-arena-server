@@ -7,7 +7,7 @@ Object.assign(MenuScene.prototype, {
   _switchTab(key) {
     Object.entries(this._panels).forEach(([k, c]) => c?.setVisible(k === key));
     if (key === 'profile') this._loadProfileBuffs();
-    const inactiveCol = '#8888aa';
+    const inactiveCol = '#ccccee';
     const activeCol   = '#ffc83c';
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
       const active = k === key;

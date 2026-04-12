@@ -24,7 +24,7 @@ Object.assign(RatingScene.prototype, {
     const myUid  = State.player?.user_id;
 
     if (!season) {
-      txt(this, W / 2, H / 2, '⏳ Сезон скоро начнётся', 14, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, H / 2, '⏳ Сезон скоро начнётся', 14, '#ddddff').setOrigin(0.5);
       return;
     }
 
@@ -32,7 +32,7 @@ Object.assign(RatingScene.prototype, {
     const endsMs     = startedMs + 14 * 24 * 3600 * 1000;
     const daysLeft   = Math.max(0, Math.ceil((endsMs - Date.now()) / (24 * 3600 * 1000)));
     txt(this, W / 2, startY + 4,  season.name || 'Текущий сезон', 13, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W / 2, startY + 20, `⏳ До конца: ${daysLeft} дн.`, 11, '#8888aa').setOrigin(0.5);
+    txt(this, W / 2, startY + 20, `⏳ До конца: ${daysLeft} дн.`, 11, '#ccccee').setOrigin(0.5);
 
     makePanel(this, 8, startY + 30, W - 16, 40, 8, 0.9);
     txt(this, 16, startY + 40, '🎁 Награды сезона:', 11, '#ffc83c', true);
@@ -43,7 +43,7 @@ Object.assign(RatingScene.prototype, {
     const maxShow = Math.max(1, Math.floor((H - listY - 112) / rowH));
 
     if (!lb.length) {
-      txt(this, W / 2, listY + 40, '📭 Никто ещё не сыграл в этом сезоне', 12, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, listY + 40, '📭 Никто ещё не сыграл в этом сезоне', 12, '#ddddff').setOrigin(0.5);
     }
 
     const sRankStyles = [
@@ -76,9 +76,9 @@ Object.assign(RatingScene.prototype, {
       const cx = 24, cy = ry + (rowH - 4) / 2;
       bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
       bg.fillCircle(cx, cy, 13);
-      txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#8888aa', true).setOrigin(0.5);
+      txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#ccccee', true).setOrigin(0.5);
       txt(this, 52,     ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
-      txt(this, 52,     ry + 25, `🏆 ${p.wins || 0}П`, 10, '#9999bb');
+      txt(this, 52,     ry + 25, `🏆 ${p.wins || 0}П`, 10, '#ddddff');
       txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
     });
 
@@ -93,7 +93,7 @@ Object.assign(RatingScene.prototype, {
       myBG.fillRect(18, myBY, W - 36, 2);
       myBG.lineStyle(1, 0x2a2844, 0.5);
       myBG.strokeRoundedRect(10, myBY, W - 20, 44, 10);
-      txt(this, W / 2, myBY + 14, 'Ваша позиция в сезоне', 10, '#888899').setOrigin(0.5);
+      txt(this, W / 2, myBY + 14, 'Ваша позиция в сезоне', 10, '#ccccdd').setOrigin(0.5);
       const posLabel = myPos ? `#${myPos}` : 'не в топ';
       const myRating = myStat ? myStat.rating : (State.player?.rating || 1000);
       txt(this, W / 2, myBY + 31, `${posLabel}  ·  ★ ${myRating}`, 14, '#ffc83c', true).setOrigin(0.5);
@@ -135,11 +135,11 @@ Object.assign(RatingScene.prototype, {
       txt(this, px, baseY - ph - 8, name, 10, isMe ? '#88ccff' : '#f0f0fa', isMe).setOrigin(0.5);
       // Рейтинг и уровень внутри колонки
       txt(this, px, baseY - ph + 18, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(0.5);
-      txt(this, px, baseY - ph + 34, `Ур.${p.level}`, 9, '#aaaacc').setOrigin(0.5);
+      txt(this, px, baseY - ph + 34, `Ур.${p.level}`, 9, '#ddddff').setOrigin(0.5);
     });
 
     // Награды под платформой
-    txt(this, W / 2, baseY + 18, '🏆 Победы решают!', 10, '#777799').setOrigin(0.5);
+    txt(this, W / 2, baseY + 18, '🏆 Победы решают!', 10, '#bbbbcc').setOrigin(0.5);
   }
 
 });

@@ -82,7 +82,7 @@ Object.assign(MenuScene.prototype, {
     verBg.strokeRoundedRect(W / 2 - 90, verY - 14, 180, 28, 8);
     c.add(verBg);
     c.add(txt(this, W / 2, verY, `⚔️  Duel Arena  v${State.appVersion || '1.01'}`, 13, '#ffc83c', true).setOrigin(0.5));
-    c.add(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#9999bb').setOrigin(0.5));
+    c.add(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#ddddff').setOrigin(0.5));
 
     this._panels.more = c;
   },

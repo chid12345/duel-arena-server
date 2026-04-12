@@ -58,7 +58,7 @@ class ShopScene extends Phaser.Scene {
         bg.lineStyle(1, 0x1a4055, 0.5);
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
-      const labelColor = active ? (isPay ? '#3cc8dc' : '#ffc83c') : (isPay ? '#3c8898' : '#777799');
+      const labelColor = active ? (isPay ? '#3cc8dc' : '#ffc83c') : (isPay ? '#3c8898' : '#bbbbcc');
       txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 9, labelColor, active).setOrigin(0.5);
       this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
@@ -83,7 +83,7 @@ class ShopScene extends Phaser.Scene {
     if (isPay) {
       txt(this, W - 14, by + 11, 'Ваши алмазы', 11, '#ccccdd').setOrigin(1, 0);
     } else {
-      txt(this, W / 2 - 8, by + 11, '|', 13, '#aaaacc').setOrigin(1, 0);
+      txt(this, W / 2 - 8, by + 11, '|', 13, '#ddddff').setOrigin(1, 0);
     }
   }
 

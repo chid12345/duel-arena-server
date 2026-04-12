@@ -103,8 +103,8 @@ Object.assign(BattleScene.prototype, {
 
     makePanel(this, 8, panY - 4, W - 16, H - panY - 8, 14);
 
-    txt(this, W/2, panY + 10, 'ВЫБЕРИ АТАКУ', 12, '#8888aa', true).setOrigin(0.5);
-    txt(this, W/2, panY + H * 0.18 + 6, 'ВЫБЕРИ ЗАЩИТУ', 12, '#8888aa', true).setOrigin(0.5);
+    txt(this, W/2, panY + 10, 'ВЫБЕРИ АТАКУ', 12, '#ccccee', true).setOrigin(0.5);
+    txt(this, W/2, panY + H * 0.18 + 6, 'ВЫБЕРИ ЗАЩИТУ', 12, '#ccccee', true).setOrigin(0.5);
 
     const zones = [
       { key: 'HEAD',  label: '👤 Голова', x: W * 0.18 },
@@ -164,7 +164,7 @@ Object.assign(BattleScene.prototype, {
     g.fillRoundedRect(x - W/2, y - H/2, W, H, 7);
     g.lineStyle(1, C.gray, 0.4);
     g.strokeRoundedRect(x - W/2, y - H/2, W, H, 7);
-    const t = txt(this, x, y, label, 10, '#8888aa').setOrigin(0.5);
+    const t = txt(this, x, y, label, 10, '#ccccee').setOrigin(0.5);
     const zone = this.add.zone(x, y, W, H).setInteractive({ useHandCursor: true });
     zone.on('pointerup', cb);
     return { g, t, zone };

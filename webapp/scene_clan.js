@@ -28,7 +28,7 @@ class ClanScene extends Phaser.Scene {
         });
       }
     }
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
@@ -38,7 +38,7 @@ class ClanScene extends Phaser.Scene {
     this._loading?.destroy();
     if (!data.ok) {
       txt(this, W/2, H/2 - 10, '❌ Ошибка загрузки', 14, '#dc3c46').setOrigin(0.5);
-      txt(this, W/2, H/2 + 14, data.reason || 'Попробуйте позже', 11, '#9999bb').setOrigin(0.5);
+      txt(this, W/2, H/2 + 14, data.reason || 'Попробуйте позже', 11, '#ddddff').setOrigin(0.5);
       return;
     }
     try {
@@ -61,7 +61,7 @@ class ClanScene extends Phaser.Scene {
   _renderNoClan(W, H) {
     txt(this, W/2, 90, '🏰', 34).setOrigin(0.5);
     txt(this, W/2, 128, 'Вы не состоите в клане', 15, '#a0a0cc').setOrigin(0.5);
-    txt(this, W/2, 150, 'Вступайте и участвуйте в клановых войнах!', 12, '#9090cc').setOrigin(0.5);
+    txt(this, W/2, 150, 'Вступайте и участвуйте в клановых войнах!', 12, '#bbbbff').setOrigin(0.5);
 
     const btns = [
       { label: '🔍  Найти клан',   col: C.blue,   sub: 'search' },
@@ -81,7 +81,7 @@ class ClanScene extends Phaser.Scene {
         .on('pointerout',  () => { bg.clear(); bg.fillStyle(b.col,b.col===C.dark?0.7:0.9); bg.fillRoundedRect(16,by,W-32,bh,12); if(b.border){bg.lineStyle(1.5,b.border,0.5);bg.strokeRoundedRect(16,by,W-32,bh,12);} })
         .on('pointerup',   () => this.scene.restart({ sub: b.sub }));
     });
-    txt(this, W/2, 176 + 3*58 + 8, 'Создание клана стоит 200 🪙', 12, '#9090cc').setOrigin(0.5);
+    txt(this, W/2, 176 + 3*58 + 8, 'Создание клана стоит 200 🪙', 12, '#bbbbff').setOrigin(0.5);
   }
 
   /* ══ МОЙ КЛАН ═══════════════════════════════════════════ */
@@ -107,7 +107,7 @@ class ClanScene extends Phaser.Scene {
     y += infoH + 10;
 
     /* ── Заголовок списка ──────────────────────────────── */
-    txt(this, 16, y, `УЧАСТНИКИ  (${members.length}/20)`, 13, '#7070aa', true);
+    txt(this, 16, y, `УЧАСТНИКИ  (${members.length}/20)`, 13, '#aaaaee', true);
     y += 22;
 
     /* ── Список участников ─────────────────────────────── */
@@ -126,7 +126,7 @@ class ClanScene extends Phaser.Scene {
       txt(this, 22, ry + rowH/2 - 4, isLdr ? '👑' : '⚔️', 15).setOrigin(0, 0.5);
       txt(this, 44, ry+10, trunc(m.username || `User${m.user_id}`, 17), 13,
         isLdr ? '#ffc83c' : '#e0e0f8', isLdr);
-      txt(this, 44, ry+27, `Ур.${m.level}  ·  ${m.wins} побед`, 11, '#7070aa');
+      txt(this, 44, ry+27, `Ур.${m.level}  ·  ${m.wins} побед`, 11, '#aaaaee');
 
       /* Роль/кнопка */
       if (isLdr) {
@@ -146,7 +146,7 @@ class ClanScene extends Phaser.Scene {
     });
 
     if (members.length > maxShow) {
-      txt(this, W/2, y + maxShow*rowH + 6, `+ ещё ${members.length - maxShow} участников`, 12, '#8888cc').setOrigin(0.5);
+      txt(this, W/2, y + maxShow*rowH + 6, `+ ещё ${members.length - maxShow} участников`, 12, '#aaaaff').setOrigin(0.5);
     }
 
     /* ── Кнопки внизу ───────────────────────────────────── */
@@ -175,7 +175,7 @@ class ClanScene extends Phaser.Scene {
         .on('pointerout',  () => { bg2.clear(); bg2.fillStyle(0x4a1010,1); bg2.fillRoundedRect(lx,btnZone,lw,42,10); bg2.lineStyle(1.5,C.red,0.7); bg2.strokeRoundedRect(lx,btnZone,lw,42,10); })
         .on('pointerup',   () => this._leaveClan());
     } else {
-      txt(this, W/2, btnZone - 16, '👑 Передайте роль, чтобы покинуть клан', 11, '#8888cc').setOrigin(0.5);
+      txt(this, W/2, btnZone - 16, '👑 Передайте роль, чтобы покинуть клан', 11, '#aaaaff').setOrigin(0.5);
     }
   }
 }

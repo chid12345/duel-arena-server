@@ -43,7 +43,7 @@ class QueueScene extends Phaser.Scene {
 
     // Заголовок
     txt(this, cx, H * 0.10, '⚔️ ПОИСК СОПЕРНИКА', 18, '#ffc83c', true).setOrigin(0.5);
-    txt(this, cx, H * 0.16, 'Ищем живого игрока...', 12, '#9999bb').setOrigin(0.5);
+    txt(this, cx, H * 0.16, 'Ищем живого игрока...', 12, '#ddddff').setOrigin(0.5);
 
     // Статические кольца радара
     const rg = this.add.graphics();
@@ -77,9 +77,9 @@ class QueueScene extends Phaser.Scene {
     });
 
     // Статус и таймер
-    this._statusTxt = txt(this, cx, cy + 112, 'Ищем соперника...', 13, '#8888aa')
+    this._statusTxt = txt(this, cx, cy + 112, 'Ищем соперника...', 13, '#ccccee')
       .setOrigin(0.5);
-    this._timerTxt  = txt(this, cx, cy + 132, '0:00', 12, '#8888aa')
+    this._timerTxt  = txt(this, cx, cy + 132, '0:00', 12, '#ccccee')
       .setOrigin(0.5);
 
     // Анимация точек в тексте
@@ -114,7 +114,7 @@ class QueueScene extends Phaser.Scene {
     // Подсказка
     txt(this, W / 2, cy2,
       'Матч найдётся автоматически — можешь подождать',
-      9, '#8888aa').setOrigin(0.5);
+      9, '#ccccee').setOrigin(0.5);
 
     // Кнопка: Отмена (внизу)
     makeBackBtn(this, 'Отменить поиск', () => this._onCancel());

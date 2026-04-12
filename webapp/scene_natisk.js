@@ -12,7 +12,7 @@ class NatiskScene extends Phaser.Scene {
     _extraHeader(this, W, '🔥', 'НАТИСК', 'Выживи как можно дольше на арене');
     _extraBack(this, 'Menu', 'battle');
 
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     get('/api/endless/status').then(d => this._render(d, W, H)).catch(() => {
       if (this._loading) this._loading.setText('❌ Нет соединения');
     });
@@ -38,7 +38,7 @@ class NatiskScene extends Phaser.Scene {
       const attG = this.add.graphics();
       attG.fillStyle(C.bgPanel, 0.9); attG.fillRoundedRect(8, y, W-16, 50, 10);
       const dots = '🔥'.repeat(Math.min(d.attempts_left, 5)) + (d.attempts_left > 5 ? `+${d.attempts_left-5}` : '') || '💀';
-      txt(this, 20, y+10, 'Попытки:', 12, '#9999bb', true);
+      txt(this, 20, y+10, 'Попытки:', 12, '#ddddff', true);
       txt(this, 20, y+28, dots, 14);
       txt(this, W-16, y+18, `${d.attempts_left} / ${d.base_attempts}`, 15, '#ffc83c', true).setOrigin(1, 0.5);
       y += 58;
@@ -57,13 +57,13 @@ class NatiskScene extends Phaser.Scene {
       } else {
         makePanel(this, 8, y, W-16, 44, 10, 0.7);
         txt(this, W/2, y+13, '💀 Попытки закончились', 13, '#cc6666', true).setOrigin(0.5);
-        txt(this, W/2, y+31, 'Восстановятся завтра', 11, '#9999bb').setOrigin(0.5);
+        txt(this, W/2, y+31, 'Восстановятся завтра', 11, '#ddddff').setOrigin(0.5);
         y += 54;
       }
 
       /* ── Купить попытки ── */
       y += 4;
-      txt(this, W/2, y, '— купить попытки —', 11, '#7777aa').setOrigin(0.5);
+      txt(this, W/2, y, '— купить попытки —', 11, '#aaaaee').setOrigin(0.5);
       y += 16;
 
       /* За золото (1/день) */
@@ -73,7 +73,7 @@ class NatiskScene extends Phaser.Scene {
       gG.fillStyle(canGold ? 0x2a2010 : C.dark, canGold ? 0.9 : 0.5);
       gG.fillRoundedRect(8, y, halfW, 42, 10);
       if (canGold) { gG.lineStyle(1.5, C.gold, 0.5); gG.strokeRoundedRect(8, y, halfW, 42, 10); }
-      txt(this, 8+halfW/2, y+12, '+1 попытка', 11, canGold ? '#ffc83c' : '#666688', canGold).setOrigin(0.5);
+      txt(this, 8+halfW/2, y+12, '+1 попытка', 11, canGold ? '#ffc83c' : '#aaaacc', canGold).setOrigin(0.5);
       txt(this, 8+halfW/2, y+28, `${d.gold_cost} 🪙`, 12, canGold ? '#ffdca0' : '#555566', canGold).setOrigin(0.5);
       if (canGold) {
         this.add.zone(8, y, halfW, 42).setOrigin(0).setInteractive({ useHandCursor: true })
@@ -87,7 +87,7 @@ class NatiskScene extends Phaser.Scene {
       dG.fillStyle(canDia ? 0x0a2035 : C.dark, canDia ? 0.9 : 0.5);
       dG.fillRoundedRect(dBx, y, halfW, 42, 10);
       if (canDia) { dG.lineStyle(1.5, 0x3cc8dc, 0.5); dG.strokeRoundedRect(dBx, y, halfW, 42, 10); }
-      txt(this, dBx+halfW/2, y+12, '+3 попытки', 11, canDia ? '#3cc8dc' : '#666688', canDia).setOrigin(0.5);
+      txt(this, dBx+halfW/2, y+12, '+3 попытки', 11, canDia ? '#3cc8dc' : '#aaaacc', canDia).setOrigin(0.5);
       txt(this, dBx+halfW/2, y+28, `${d.diamond_cost} 💎`, 12, canDia ? '#a8e8ff' : '#555566', canDia).setOrigin(0.5);
       if (canDia) {
         this.add.zone(dBx, y, halfW, 42).setOrigin(0).setInteractive({ useHandCursor: true })

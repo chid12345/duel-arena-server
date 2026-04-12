@@ -21,7 +21,7 @@ class TasksScene extends Phaser.Scene {
     _extraHeader(this, W, '📋', 'ЗАДАНИЯ', '');
     _extraBack(this, 'Menu', 'profile');
     this._buildTabBar(W);
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     this._loadData();
   }
 
@@ -69,7 +69,7 @@ class TasksScene extends Phaser.Scene {
       bg.fillRoundedRect(tx, ty, tabW - 4, th, 8);
       if (act) { bg.lineStyle(1.5, C.blue, 0.7); bg.strokeRoundedRect(tx, ty, tabW - 4, th, 8); }
       const t = txt(this, tx + (tabW-4)/2, ty + th/2, tab.label, 10,
-        act ? '#ffffff' : '#8888aa', act).setOrigin(0.5);
+        act ? '#ffffff' : '#ccccee', act).setOrigin(0.5);
       this._tabObjs[tab.key] = { bg, t };
       this.add.zone(tx, ty, tabW - 4, th).setOrigin(0)
         .setInteractive({ useHandCursor: true })

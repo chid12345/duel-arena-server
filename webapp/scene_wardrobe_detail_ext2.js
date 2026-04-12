@@ -31,7 +31,7 @@
       pbg2.fillRoundedRect(bx, by, passiveBtnW, 22, 5);
       if (active) { pbg2.lineStyle(1.5, 0xffcc00, .9); pbg2.strokeRoundedRect(bx, by, passiveBtnW, 22, 5); }
       layer.push(pbg2);
-      layer.push(txt(this, bx+passiveBtnW/2, by+11, opt.label, 9, active ? "#ffcc00" : "#8888aa", active).setOrigin(0.5).setDepth(133));
+      layer.push(txt(this, bx+passiveBtnW/2, by+11, opt.label, 9, active ? "#ffcc00" : "#ccccee", active).setOrigin(0.5).setDepth(133));
       if (!locked) {
         const ppz = this.add.zone(bx+passiveBtnW/2, by+11, passiveBtnW, 22).setInteractive({useHandCursor:true}).setDepth(134);
         ppz.on("pointerdown", () => {

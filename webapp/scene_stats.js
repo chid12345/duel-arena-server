@@ -78,7 +78,7 @@ class StatsScene extends Phaser.Scene {
     }
     const label = txt(this, bx - 39, 34,
       active ? `⚡ ${count} свободн.` : '✅ все вложены',
-      10, active ? '#f0f0fa' : '#9999bb', active
+      10, active ? '#f0f0fa' : '#ddddff', active
     ).setOrigin(0.5);
 
     if (active) {
@@ -113,7 +113,7 @@ class StatsScene extends Phaser.Scene {
     cols.forEach((c, i) => {
       const cx = 8 + cw * (i + 0.5);
       txt(this, cx, y + 10, c.v,   13, c.col, true).setOrigin(0.5);
-      txt(this, cx, y + 24, c.sub,  8, '#9999bb').setOrigin(0.5);
+      txt(this, cx, y + 24, c.sub,  8, '#ddddff').setOrigin(0.5);
     });
   }
 

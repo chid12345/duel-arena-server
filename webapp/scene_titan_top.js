@@ -11,7 +11,7 @@ class TitanTopScene extends Phaser.Scene {
     _extraBg(this, W, H);
     _extraHeader(this, W, '🗿', 'ТОП БАШНИ', 'Недельный рейтинг Башни титанов');
     _extraBack(this);
-    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     get('/api/titans/top').then(d => this._render(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
@@ -24,15 +24,15 @@ class TitanTopScene extends Phaser.Scene {
       return;
     }
     const lb = data.leaders || [];
-    txt(this, W / 2, 82, `Неделя: ${data.week_key || '-'}`, 12, '#8888aa').setOrigin(0.5);
+    txt(this, W / 2, 82, `Неделя: ${data.week_key || '-'}`, 12, '#ccccee').setOrigin(0.5);
 
     makePanel(this, 8, 98, W - 16, 62, 10, 0.95);
     txt(this, 16, 108, '🎁 Награды:', 12, '#ffc83c', true);
     txt(this, 16, 128, '1 место: 150💎 · 2: 90💎 · 3: 60💎 · 4-10: 25💎', 11, '#c0c0e0');
-    txt(this, 16, 145, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#666688');
+    txt(this, 16, 145, 'Титулы: Покоритель / Гроза / Титаноборец', 10, '#aaaacc');
 
     const listY = 172;
-    txt(this, 16, listY - 18, 'ЛИДЕРЫ', 12, '#9999bb', true);
+    txt(this, 16, listY - 18, 'ЛИДЕРЫ', 12, '#ddddff', true);
     const rowH = 40;
     const maxShow = Math.max(1, Math.floor((H - listY - 80) / rowH));
 
@@ -44,12 +44,12 @@ class TitanTopScene extends Phaser.Scene {
       const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
       txt(this, 18, ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
       txt(this, 52, ry + 9, row.username || `User${row.user_id}`, 12, '#d0d0ee', true);
-      txt(this, 52, ry + 24, `🗿 Этаж: ${row.weekly_best_floor || 0}`, 11, '#777799');
+      txt(this, 52, ry + 24, `🗿 Этаж: ${row.weekly_best_floor || 0}`, 11, '#bbbbcc');
       txt(this, W - 16, ry + 17, `#${row.weekly_best_floor || 0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
     });
 
     if (!lb.length) {
-      txt(this, W / 2, H / 2 + 20, '😴 Пока никто не прошёл Башню', 13, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, H / 2 + 20, '😴 Пока никто не прошёл Башню', 13, '#ddddff').setOrigin(0.5);
     }
   }
 }

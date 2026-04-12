@@ -62,7 +62,7 @@ class RatingScene extends Phaser.Scene {
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
       txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 11,
-        active ? '#ffc83c' : '#777799', active).setOrigin(0.5);
+        active ? '#ffc83c' : '#bbbbcc', active).setOrigin(0.5);
       this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => {
@@ -121,14 +121,14 @@ class RatingScene extends Phaser.Scene {
         const circleX = 28, circleY = ry + (rowH - 4) / 2;
         rg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
         rg.fillCircle(circleX, circleY, 13);
-        txt(this, circleX, circleY, `${rank}`, 11, rs ? rs.numCol : '#8888aa', true).setOrigin(0.5);
+        txt(this, circleX, circleY, `${rank}`, 11, rs ? rs.numCol : '#ccccee', true).setOrigin(0.5);
         txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
-        txt(this, 52, ry + 26, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#9999bb');
+        txt(this, 52, ry + 26, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#ddddff');
         txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 14, '#ffc83c', true).setOrigin(1, 0.5);
       });
 
       if (players.length === 0) {
-        txt(this, W / 2, H / 2, '📭 Пока нет PvP-боёв', 14, '#9999bb').setOrigin(0.5);
+        txt(this, W / 2, H / 2, '📭 Пока нет PvP-боёв', 14, '#ddddff').setOrigin(0.5);
       }
 
       const myElo  = State.player?.rating || 1000;
@@ -143,7 +143,7 @@ class RatingScene extends Phaser.Scene {
         myBG.fillRect(18, myBY, W - 36, 2);
         myBG.lineStyle(1, 0x2a2844, 0.5);
         myBG.strokeRoundedRect(10, myBY, W - 20, 44, 10);
-        txt(this, W / 2, myBY + 14, 'Ваш ELO рейтинг', 10, '#888899').setOrigin(0.5);
+        txt(this, W / 2, myBY + 14, 'Ваш ELO рейтинг', 10, '#ccccdd').setOrigin(0.5);
         txt(this, W / 2, myBY + 31,
           `${myRank ? '#' + myRank : 'не в топ'}  ·  ★ ${myElo}`, 15, '#ffc83c', true).setOrigin(0.5);
       }

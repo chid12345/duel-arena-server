@@ -37,7 +37,7 @@ Object.assign(BattleScene.prototype, {
         ];
     const spriteKey = isMe ? 'warrior_blue' : 'warrior_red';
     const typeStr   = isMe ? '🧑 Вы'        : (isBot ? '🤖 Бот' : '⚔️ Игрок');
-    const typeCol   = isMe ? '#5096ff'       : (isBot ? '#8888aa' : '#3cc864');
+    const typeCol   = isMe ? '#5096ff'       : (isBot ? '#ccccee' : '#3cc864');
     const borderCol = isPrem ? 0xffc83c : (isMe ? 0x5096ff : 0x444466);
     const bgCol     = isPrem ? 0x1a1508 : (isMe ? 0x0a1428 : 0x141420);
 
@@ -82,11 +82,11 @@ Object.assign(BattleScene.prototype, {
     const tR = (x, y, str, sz, col) => t(x, y, str, sz, col).setOrigin(1, 0);
 
     t(cx + 14, cy + 11, typeStr, 10, typeCol, true);
-    tR(cx + cw - 12, cy + 10, '✕', 16, '#9999bb');
+    tR(cx + cw - 12, cy + 10, '✕', 16, '#ddddff');
 
     const nameStr = (isPrem ? '👑 ' : '') + name;
     tC(cx + cw / 2, cy + 34, nameStr, 17, isPrem ? '#ffc83c' : '#f0f0fa', true);
-    tC(cx + cw / 2, cy + 55, `Ур. ${level}  ·  ★ ${rating}`, 11, isPrem ? '#cc9900' : '#8888aa');
+    tC(cx + cw / 2, cy + 55, `Ур. ${level}  ·  ★ ${rating}`, 11, isPrem ? '#cc9900' : '#ccccee');
 
     const divG = this.add.graphics();
     divG.lineStyle(1, isPrem ? 0xffc83c : 0x2a2850, 0.5);
@@ -102,7 +102,7 @@ Object.assign(BattleScene.prototype, {
     const hpCol = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
     const hpHex = hpPct > 0.5 ? 0x3cc864 : hpPct > 0.25 ? 0xffc83c : 0xdc3c46;
     const hpX = cx + 114, hpY = cy + 76, hpW = cw - 126;
-    t(hpX, hpY, '❤️ HP', 10, '#aaaacc');
+    t(hpX, hpY, '❤️ HP', 10, '#ddddff');
     tR(cx + cw - 12, hpY, `${curHp} / ${maxHp}`, 10, hpCol);
     const hpG = this.add.graphics();
     hpG.fillStyle(0x0a0a18, 1); hpG.fillRoundedRect(hpX, hpY + 16, hpW, 11, 4);
@@ -114,7 +114,7 @@ Object.assign(BattleScene.prototype, {
       const sx = i % 2 === 0 ? sX0 : sX1;
       const sy = sY0 + Math.floor(i / 2) * 42;
       t(sx,      sy,      s.icon,  17);
-      t(sx + 22, sy + 1,  s.label, 11, '#8888aa');
+      t(sx + 22, sy + 1,  s.label, 11, '#ccccee');
       t(sx + 22, sy + 14, String(s.val), 15, s.col, true);
     });
 

@@ -74,7 +74,7 @@ Object.assign(MenuScene.prototype, {
     });
 
     let countdown = 5;
-    const cntTxt = txt(this, W / 2, by + bh + 16, `Авто-повтор через ${countdown}с`, 10, '#9999bb').setOrigin(0.5);
+    const cntTxt = txt(this, W / 2, by + bh + 16, `Авто-повтор через ${countdown}с`, 10, '#ddddff').setOrigin(0.5);
     const timer = this.time.addEvent({
       delay: 1000, repeat: 4,
       callback: () => {

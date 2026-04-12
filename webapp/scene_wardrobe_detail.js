@@ -67,7 +67,7 @@
 
     // Status badge
     const eqLabel = item.equipped ? "✅ Надет" : "⬜ Снят";
-    layer.push(txt(this, W/2, pY+30, eqLabel, 10, item.equipped ? "#3cc864" : "#9999bb", true).setOrigin(0.5).setDepth(132));
+    layer.push(txt(this, W/2, pY+30, eqLabel, 10, item.equipped ? "#3cc864" : "#ddddff", true).setOrigin(0.5).setDepth(132));
 
     // Lock badge
     if (locked) {
@@ -94,7 +94,7 @@
       layer.push(bg);
 
       // Label + value
-      layer.push(txt(this, 22, y+5, s.label, 10, "#9999bb").setDepth(133));
+      layer.push(txt(this, 22, y+5, s.label, 10, "#ddddff").setDepth(133));
       layer.push(txt(this, 110, y+5, String(val), 12, s.col, true).setDepth(133));
 
       if (!locked) {

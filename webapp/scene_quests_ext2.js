@@ -14,15 +14,15 @@ Object.assign(QuestsScene.prototype, {
     bg.lineStyle(2, canClaim ? C.green : C.dark, canClaim ? 0.7 : 0.25);
     bg.strokeRoundedRect(8, y, W-16, bh, 12);
     txt(this, 22, y+11, '🎁', 18);
-    txt(this, 48, y+10, 'Ежедневный бонус', 12, canClaim ? '#3cc864' : '#8888aa', true);
-    txt(this, 48, y+26, `Серия: ${streak} ${streak >= 7 ? '🔥' : '📅'} дней`, 10, '#9999bb');
+    txt(this, 48, y+10, 'Ежедневный бонус', 12, canClaim ? '#3cc864' : '#ccccee', true);
+    txt(this, 48, y+26, `Серия: ${streak} ${streak >= 7 ? '🔥' : '📅'} дней`, 10, '#ddddff');
     const dotW = (W - 72) / 7;
     for (let i = 0; i < 7; i++) {
       const dx = 48 + i * dotW;
       const ok = i < (streak % 7 || (streak > 0 && streak % 7 === 0 ? 7 : 0));
       const dg = this.add.graphics();
       dg.fillStyle(ok ? C.gold : C.dark, 1); dg.fillRoundedRect(dx, y+44, dotW-3, 7, 3);
-      txt(this, dx+(dotW-3)/2, y+57, String(i+1), 7, ok ? '#ffc83c' : '#7777aa').setOrigin(0.5);
+      txt(this, dx+(dotW-3)/2, y+57, String(i+1), 7, ok ? '#ffc83c' : '#aaaaee').setOrigin(0.5);
     }
     if (canClaim) {
       /* Кнопка сбора — широкая, сразу бросается в глаза */

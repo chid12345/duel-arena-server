@@ -9,7 +9,7 @@ Object.assign(QuestsScene.prototype, {
   _buildWeeklyTab(w, W, H, y) {
     const list = Array.isArray(w.quests) ? w.quests : [];
     const readyCount = list.filter(q => q.is_completed && !q.reward_claimed).length;
-    txt(this, 14, y, `ЗАДАНИЯ НЕДЕЛИ  (выполнено: ${list.filter(q=>q.is_completed).length}/${list.length})`, 10, '#9999bb', true);
+    txt(this, 14, y, `ЗАДАНИЯ НЕДЕЛИ  (выполнено: ${list.filter(q=>q.is_completed).length}/${list.length})`, 10, '#ddddff', true);
     if (readyCount > 0) {
       const bdg = this.add.graphics();
       bdg.fillStyle(0x1a4010, 1); bdg.fillRoundedRect(W-108, y-4, 100, 18, 5);
@@ -36,7 +36,7 @@ Object.assign(QuestsScene.prototype, {
                    q.key.includes('endless') ? '🔥' : q.key.includes('streak') ? '🔥' : '📌';
       txt(this, 22, qy+32, icon, 18).setOrigin(0.5);
       txt(this, 40, qy+9,  q.label, 11, done ? (isEndless ? '#ff8855' : '#3cc864') : '#ccccee', done);
-      txt(this, 40, qy+24, `${Math.min(q.current, q.target)} / ${q.target}`, 9, '#9999bb', true);
+      txt(this, 40, qy+24, `${Math.min(q.current, q.target)} / ${q.target}`, 9, '#ddddff', true);
       makeBar(this, 40, qy+38, W-160, 4, Math.min(1, q.current/q.target),
         isEndless ? 0xdc3c46 : (done ? C.green : C.blue), C.dark, 3);
 
@@ -86,7 +86,7 @@ Object.assign(QuestsScene.prototype, {
             });
         });
       } else {
-        txt(this, W/2, qy+52, '🔒 Выполни задание', 9, '#666688').setOrigin(0.5);
+        txt(this, W/2, qy+52, '🔒 Выполни задание', 9, '#aaaacc').setOrigin(0.5);
       }
     });
     txt(this, W/2, H-42, '🔄 Обновляется каждую неделю (Пн 00:00)', 9, '#555577').setOrigin(0.5);

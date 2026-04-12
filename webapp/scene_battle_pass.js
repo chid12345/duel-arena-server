@@ -12,7 +12,7 @@ class BattlePassScene extends Phaser.Scene {
     _extraHeader(this, W, '🌟', 'БОЕВОЙ ПРОПУСК', 'Ежесезонные награды');
     _extraBack(this);
     this._claimBtns = {};
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     get('/api/battlepass').then(d => this._render(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
@@ -31,7 +31,7 @@ class BattlePassScene extends Phaser.Scene {
     const endlessClaimed = data.endless_tier_claimed || 0;
     const claimed        = bp.last_claimed_tier || 0;
 
-    txt(this, W/2, 84, `Боёв: ${battles}  ·  Побед: ${wins}  ·  🔥 Натиск: ${endlessDone}`, 11, '#8888aa').setOrigin(0.5);
+    txt(this, W/2, 84, `Боёв: ${battles}  ·  Побед: ${wins}  ·  🔥 Натиск: ${endlessDone}`, 11, '#ccccee').setOrigin(0.5);
 
     /* ── Обычные тиры ── */
     const startY = 104, rowH = 60;
@@ -49,8 +49,8 @@ class BattlePassScene extends Phaser.Scene {
       const numBg = this.add.graphics();
       numBg.fillStyle(gotIt ? C.gold : done ? C.green : C.dark, 1);
       numBg.fillCircle(26, ry + (rowH-6)/2, 14);
-      txt(this, 26, ry + (rowH-6)/2, String(tier.tier), 12, gotIt||done ? '#1a1a28' : '#8888aa', true).setOrigin(0.5);
-      const condColor = done ? '#3cc864' : '#8888aa';
+      txt(this, 26, ry + (rowH-6)/2, String(tier.tier), 12, gotIt||done ? '#1a1a28' : '#ccccee', true).setOrigin(0.5);
+      const condColor = done ? '#3cc864' : '#ccccee';
       txt(this, 48, ry + 8, `⚔️ ${tier.battles_needed} боёв  /  🏆 ${tier.wins_needed} побед`, 11, condColor);
       const barW = W - 156;
       makeBar(this, 48, ry + 24, barW, 5, Math.min(1, battles/tier.battles_needed), C.blue, C.dark, 3);
@@ -90,7 +90,7 @@ class BattlePassScene extends Phaser.Scene {
       ebG.lineStyle(1.5, got ? C.gold : done2 ? 0xdc3c46 : C.dark, got||done2 ? 0.6 : 0.2);
       ebG.strokeRoundedRect(8, ey, W-16, 46, 9);
       txt(this, 22, ey+23, '🔥', 16).setOrigin(0.5);
-      txt(this, 40, ey+10, et.label, 11, done2 ? '#ff8855' : '#9999bb', done2);
+      txt(this, 40, ey+10, et.label, 11, done2 ? '#ff8855' : '#ddddff', done2);
       makeBar(this, 40, ey+26, W-148, 5, Math.min(1, endlessDone/et.needed), 0xdc3c46, C.dark, 3);
       txt(this, 40+(W-148)*Math.min(1,endlessDone/et.needed)+4, ey+22, `${Math.min(endlessDone,et.needed)}/${et.needed}`, 8, '#ff8855').setOrigin(0,0.5);
       txt(this, W-106, ey+6,  `💎${et.diamonds}`, 10, '#3cc8dc');

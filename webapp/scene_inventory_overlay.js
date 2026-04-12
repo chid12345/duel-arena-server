@@ -150,7 +150,7 @@
     const cardH = 56, cardW = W - 32;
 
     if (items.length === 0) {
-      ov.push(txt(this, W/2, listY + listH/2, 'Пусто. Загляни в Магазин!', 11, '#777799', true).setOrigin(.5).setDepth(133));
+      ov.push(txt(this, W/2, listY + listH/2, 'Пусто. Загляни в Магазин!', 11, '#bbbbcc', true).setOrigin(.5).setDepth(133));
     } else {
       const maxVisible = Math.floor(listH / (cardH + 6));
       items.slice(0, maxVisible).forEach((it, i) => {
@@ -161,7 +161,7 @@
         crd.lineStyle(1, 0x3a3a60,.8); crd.strokeRoundedRect(16, y, cardW, cardH, 8);
         ov.push(crd);
         ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#f0f0fa', true).setDepth(133));
-        ov.push(txt(this, 28, y+28, meta.desc, 9, '#9999bb').setDepth(133));
+        ov.push(txt(this, 28, y+28, meta.desc, 9, '#ddddff').setDepth(133));
         ov.push(txt(this, 28, y+42, `Кол-во: ${it.quantity}`, 9, '#ffc83c').setDepth(133));
         const isBox = it.item_id.startsWith('box_');
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;

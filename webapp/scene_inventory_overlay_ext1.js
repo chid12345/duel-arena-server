@@ -130,7 +130,7 @@
     rvl.push(txt(this, W/2, cY + 22, '🎲 ИЗ ЯЩИКА ВЫПАЛО', 11, glowHex, true).setOrigin(0.5).setDepth(162));
     rvl.push(txt(this, W/2, cY + 70, icon, 44).setOrigin(0.5).setDepth(162));
     rvl.push(txt(this, W/2, cY + 120, name, 15, '#ffffff', true).setOrigin(0.5).setDepth(162));
-    rvl.push(txt(this, W/2, cY + 142, '→ добавлено в инвентарь', 10, '#aaaacc').setOrigin(0.5).setDepth(162));
+    rvl.push(txt(this, W/2, cY + 142, '→ добавлено в инвентарь', 10, '#ddddff').setOrigin(0.5).setDepth(162));
 
     if (isEpic) rvl.push(txt(this, W/2, cY + 158, '⭐ РЕДКИЙ ПРЕДМЕТ ⭐', 11, '#ffcc44', true).setOrigin(0.5).setDepth(162));
 

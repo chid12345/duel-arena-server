@@ -30,7 +30,7 @@ Object.assign(ShopScene.prototype, {
     txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
     if (isActive) {
       txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${p.premium_days_left} дн.`, 11, '#b45aff');
-      txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899').setOrigin(1, 0.5);
+      txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#ccccdd').setOrigin(1, 0.5);
     } else {
       txt(this, ix+50, iy+ih/2+8, '+15% XP · ежедн. ящик · скидки', 11, '#ccbbee');
       txt(this, iw-4, iy+ih/2-2, `⭐ ${pkg.stars}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
@@ -51,7 +51,7 @@ Object.assign(ShopScene.prototype, {
     txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true);
     if (isActive) {
       txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${p.premium_days_left} дн.`, 11, '#b45aff');
-      txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899').setOrigin(1, 0.5);
+      txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#ccccdd').setOrigin(1, 0.5);
     } else {
       txt(this, ix+50, iy+ih/2+8, '+15% XP · ежедн. ящик · скидки', 11, '#ccbbee');
       txt(this, iw-4, iy+ih/2-2, `${pkg.usdt} USDT`, 12, '#3cc8dc', true).setOrigin(1, 0.5);
@@ -116,7 +116,7 @@ Object.assign(ShopScene.prototype, {
     c.add(txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true));
     if (isActive) {
       c.add(txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${p.premium_days_left} дн.`, 11, '#b45aff'));
-      c.add(txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899').setOrigin(1, 0.5));
+      c.add(txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#ccccdd').setOrigin(1, 0.5));
     } else {
       c.add(txt(this, ix+50, iy+ih/2+8, '+15% XP · ежедн. ящик · скидки', 11, '#ccbbee'));
       c.add(txt(this, iw-4, iy+ih/2-2, `⭐ ${pkg.stars}`, 12, '#ffc83c', true).setOrigin(1, 0.5));
@@ -158,7 +158,7 @@ Object.assign(ShopScene.prototype, {
     c.add(txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true));
     if (isActive) {
       c.add(txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${p.premium_days_left} дн.`, 11, '#b45aff'));
-      c.add(txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899').setOrigin(1, 0.5));
+      c.add(txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#ccccdd').setOrigin(1, 0.5));
     } else {
       c.add(txt(this, ix+50, iy+ih/2+8, '+15% XP · ежедн. ящик · скидки', 11, '#ccbbee'));
       c.add(txt(this, iw-4, iy+ih/2-2, `${pkg.usdt} USDT`, 12, '#3cc8dc', true).setOrigin(1, 0.5));

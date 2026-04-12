@@ -57,7 +57,7 @@ Object.assign(ClanScene.prototype, {
     this._resultsContainer?.removeAll(true);
     const y0 = this._resultsY || 198;
     if (!clans.length) {
-      this._resultsContainer.add(txt(this, W/2, y0+20, '😔 Ничего не найдено', 12, '#9999bb').setOrigin(0.5));
+      this._resultsContainer.add(txt(this, W/2, y0+20, '😔 Ничего не найдено', 12, '#ddddff').setOrigin(0.5));
       return;
     }
     clans.forEach((c, i) => {
@@ -72,7 +72,7 @@ Object.assign(ClanScene.prototype, {
         bg,
         txt(this, 18, ry+8,  `[${c.tag}]`, 12, '#ffc83c', true),
         txt(this, 18, ry+26, (s => s.length > 20 ? s.slice(0,20)+'…' : s)(c.name||''), 11, '#c0c0e0'),
-        txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 11, '#9999bb'),
+        txt(this, W-82, ry+8,  `👥 ${c.member_count}/20`, 11, '#ddddff'),
         txt(this, W-82, ry+26, `🏆 ${c.wins}`, 11, '#ffc83c'),
         joinG, joinT,
         this.add.zone(W-74, ry+8, 60, 28).setOrigin(0).setInteractive({ useHandCursor: true })

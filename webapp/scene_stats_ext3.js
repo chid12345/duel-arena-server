@@ -85,7 +85,7 @@ Object.assign(StatsScene.prototype, {
     Object.values(this._statRows).forEach(row => {
       row.zone.disableInteractive();
       this._drawPlusBtn(row.btn, row.btnX, row.btnY, row.btnW, row.btnH, row.s.color, false, false);
-      row.btnTxt.setText('—').setStyle({ color: '#8888aa' });
+      row.btnTxt.setText('—').setStyle({ color: '#ccccee' });
     });
   },
 

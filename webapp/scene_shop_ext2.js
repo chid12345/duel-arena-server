@@ -100,7 +100,7 @@ Object.assign(ShopScene.prototype, {
       const cg = this.add.graphics();
       cg.fillStyle(C.bgPanel, 0.6); cg.fillRoundedRect(8, y, W-16, 56, 10);
       txt(this, W/2, y+18, '⚙️ CryptoPay не подключён', 11, '#ccccdd').setOrigin(0.5);
-      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 11, '#aaaacc').setOrigin(0.5);
+      txt(this, W/2, y+36, 'Нужна переменная CRYPTOPAY_TOKEN', 11, '#ddddff').setOrigin(0.5);
       return;
     }
 

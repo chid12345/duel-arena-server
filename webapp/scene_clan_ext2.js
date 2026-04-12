@@ -76,7 +76,7 @@ Object.assign(ClanScene.prototype, {
     this._chatLoad = (aY, aH, cW) => {
       this._msgObjs.forEach(o => { try { o.destroy(); } catch(_){} });
       this._msgObjs = [];
-      const spin = txt(this, cW/2, aY+aH/2, '⏳ Загрузка...', 12, '#9090cc').setOrigin(0.5);
+      const spin = txt(this, cW/2, aY+aH/2, '⏳ Загрузка...', 12, '#bbbbff').setOrigin(0.5);
       this._msgObjs.push(spin);
 
       get('/api/clan/chat').then(d => {
@@ -85,7 +85,7 @@ Object.assign(ClanScene.prototype, {
         const msgs = d.messages || [];
 
         if (!msgs.length) {
-          const e = txt(this, cW/2, aY+aH/2, '💬 Напишите первым!', 12, '#8888cc').setOrigin(0.5);
+          const e = txt(this, cW/2, aY+aH/2, '💬 Напишите первым!', 12, '#aaaaff').setOrigin(0.5);
           this._msgObjs.push(e); return;
         }
 
@@ -103,7 +103,7 @@ Object.assign(ClanScene.prototype, {
           const msgStr   = (m.message||'').slice(0, maxMsgCh);
           const t1 = txt(this, 20, my+10, nameStr, 12, nc, true);
           const t2 = txt(this, 20, my+24, msgStr,  12, '#e8e8ff');
-          const t3 = txt(this, cW-14, my+10, m.time_str||'', 11, '#8888cc').setOrigin(1, 0);
+          const t3 = txt(this, cW-14, my+10, m.time_str||'', 11, '#aaaaff').setOrigin(1, 0);
           this._msgObjs.push(bg, t1, t2, t3);
         });
       }).catch(() => { spin.setText('❌ Нет соединения'); });
@@ -120,7 +120,7 @@ Object.assign(ClanScene.prototype, {
   /* ══ ПОИСК ═══════════════════════════════════════════════ */
   _renderSearch(W, H) {
     makePanel(this, 8, 80, W-16, 48, 10, 0.8);
-    txt(this, 20, 91, '🔍 Введите имя или тег клана:', 11, '#9999bb');
+    txt(this, 20, 91, '🔍 Введите имя или тег клана:', 11, '#ddddff');
     this._inputEl = this._makeInput(W, 104, W-32, 32, 'Железный Кулак / ЖК...');
 
     const sbG = this.add.graphics();
@@ -131,7 +131,7 @@ Object.assign(ClanScene.prototype, {
       .on('pointerout',  () => { sbG.clear(); sbG.fillStyle(C.blue,0.9); sbG.fillRoundedRect(16,140,W-32,40,10); })
       .on('pointerup', () => this._doSearch(W));
 
-    txt(this, W/2, 192, 'Все кланы:', 11, '#7777aa').setOrigin(0.5);
+    txt(this, W/2, 192, 'Все кланы:', 11, '#aaaaee').setOrigin(0.5);
     this._resultsY = 204;
     this._resultsContainer = this.add.container(0, 0);
     get('/api/clan/top').then(d => this._showSearchResults(d.clans || [], W));
@@ -144,11 +144,11 @@ Object.assign(ClanScene.prototype, {
 
     makePanel(this, 8, 118, W-16, 152, 12);
     txt(this, 20, 128, 'Название клана', 12, '#a0a0cc', true);
-    txt(this, 20, 144, '3–20 символов, например: Железный Кулак', 11, '#9090cc');
+    txt(this, 20, 144, '3–20 символов, например: Железный Кулак', 11, '#bbbbff');
     this._nameEl = this._makeInput(W, 158, W-32, 36, 'Железный Кулак', 20);
 
     txt(this, 20, 204, 'Тег клана', 12, '#a0a0cc', true);
-    txt(this, 20, 220, '2–4 символа, например: ЖК', 11, '#9090cc');
+    txt(this, 20, 220, '2–4 символа, например: ЖК', 11, '#bbbbff');
     this._tagEl  = this._makeInput(W, 232, (W-32)/2, 36, 'ЖК', 4);
 
     const btnY = 280;
@@ -161,17 +161,17 @@ Object.assign(ClanScene.prototype, {
       .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,btnY,W-32,48,12); })
       .on('pointerup',   () => this._doCreate(btnT));
 
-    txt(this, W/2, btnY+60, 'Имя и тег должны быть уникальны', 11, '#8888cc').setOrigin(0.5);
+    txt(this, W/2, btnY+60, 'Имя и тег должны быть уникальны', 11, '#aaaaff').setOrigin(0.5);
   },
 
   /* ══ ТОП КЛАНОВ ══════════════════════════════════════════ */
   _renderTop(W, H) {
     txt(this, W/2, 86, '🏆 ТОП КЛАНОВ', 14, '#ffc83c', true).setOrigin(0.5);
-    const load2 = txt(this, W/2, 140, 'Загрузка...', 13, '#7070aa').setOrigin(0.5);
+    const load2 = txt(this, W/2, 140, 'Загрузка...', 13, '#aaaaee').setOrigin(0.5);
     get('/api/clan/top').then(d => {
       load2.destroy();
       const clans = d.clans || [];
-      if (!clans.length) { txt(this, W/2, 140, '😔 Кланов пока нет', 13, '#7070aa').setOrigin(0.5); return; }
+      if (!clans.length) { txt(this, W/2, 140, '😔 Кланов пока нет', 13, '#aaaaee').setOrigin(0.5); return; }
       let y = 112;
       const rowH = 50;
       clans.slice(0, Math.floor((H - 160) / rowH)).forEach((c, i) => {

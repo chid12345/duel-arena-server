@@ -43,7 +43,7 @@ Object.assign(MenuScene.prototype, {
       const balV = at(px+pw/2, balY+28, `$${usdtBal.toFixed(4)} USDT`, 14, '#3cc864', true);
       balObjs = [balBg, balL, balV];
     } else {
-      const noBalT = at(px+pw/2, balY+10, `Баланс: $0.00 — зарабатывай приглашая`, 11, '#8888cc');
+      const noBalT = at(px+pw/2, balY+10, `Баланс: $0.00 — зарабатывай приглашая`, 11, '#aaaaff');
       balObjs = [noBalT];
     }
     statsObjs.push(...balObjs);
@@ -131,14 +131,14 @@ Object.assign(MenuScene.prototype, {
       cdg.fillStyle(0x1e2240, 1); cdg.fillRoundedRect(px+10,wdY,pw-20,38,10);
       cdg.lineStyle(1, 0x444488, 0.5); cdg.strokeRoundedRect(px+10,wdY,pw-20,38,10);
       const cdT = at(px+pw/2, wdY+13, `⏳ Следующий вывод через ${cooldownH}ч`, 12, '#6060aa');
-      const cdS = at(px+pw/2, wdY+29, 'Вывод доступен раз в сутки', 10, '#8080aa');
+      const cdS = at(px+pw/2, wdY+29, 'Вывод доступен раз в сутки', 10, '#bbbbee');
       wdObjs = [cdg, cdT, cdS];
     } else {
       const ng = this.add.graphics().setDepth(D);
       ng.fillStyle(0x1a1a30, 1); ng.fillRoundedRect(px+10,wdY,pw-20,38,10);
       ng.lineStyle(1, 0x333366, 0.5); ng.strokeRoundedRect(px+10,wdY,pw-20,38,10);
-      const nT = at(px+pw/2, wdY+13, `💰 Минимум $${withdrawMin} для вывода`, 12, '#8888cc');
-      const nS = at(px+pw/2, wdY+29, `У вас: $${usdtBal.toFixed(2)} USDT · зарабатывай больше`, 10, '#8080aa');
+      const nT = at(px+pw/2, wdY+13, `💰 Минимум $${withdrawMin} для вывода`, 12, '#aaaaff');
+      const nS = at(px+pw/2, wdY+29, `У вас: $${usdtBal.toFixed(2)} USDT · зарабатывай больше`, 10, '#bbbbee');
       wdObjs = [ng, nT, nS];
     }
     statsObjs.push(...wdObjs);

@@ -11,7 +11,7 @@ Object.assign(ResultScene.prototype, {
     makePanel(this, 16, panY, W - 32, panH, 16);
 
     if (won) {
-      txt(this, W / 2, panY + 18, 'НАГРАДЫ', 11, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 18, 'НАГРАДЫ', 11, '#ccccee', true).setOrigin(0.5);
 
       const goldTxt = txt(this, W / 2, panY + 50, '💰 +0 золота', 22, '#ffc83c', true).setOrigin(0.5);
       this._countUp(goldTxt, r.gold || 0, '💰 +', ' золота', 200);
@@ -23,7 +23,7 @@ Object.assign(ResultScene.prototype, {
         this._countUp(expTxt, r.exp || 0, '⭐ +', ' опыта', 450);
       }
 
-      txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#ddddff').setOrigin(0.5);
 
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
@@ -66,28 +66,28 @@ Object.assign(ResultScene.prototype, {
     } else if (isAfk) {
       txt(this, W / 2, panY + 24, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
       txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
-      txt(this, W / 2, panY + 76, 'Нажимай кнопки быстрее!', 11, '#8888aa').setOrigin(0.5);
-      txt(this, W / 2, panY + 102, `Раундов: ${r.rounds || 0}`, 11, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, panY + 76, 'Нажимай кнопки быстрее!', 11, '#ccccee').setOrigin(0.5);
+      txt(this, W / 2, panY + 102, `Раундов: ${r.rounds || 0}`, 11, '#ddddff').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 120, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
       }
     } else if (isEndless) {
-      txt(this, W / 2, panY + 14, 'ИТОГИ ЗАХОДА', 10, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 14, 'ИТОГИ ЗАХОДА', 10, '#ccccee', true).setOrigin(0.5);
       txt(this, W / 2, panY + 42, `💀 Волна ${endlessWave > 0 ? endlessWave : '?'} — конец`, 16, '#ff4455', true).setOrigin(0.5);
       txt(this, W / 2, panY + 74, `⚔️  Урон нанесён: ${r.damage || 0}`, 13, '#ddaa66', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 98, `⏱️  Раундов: ${r.rounds || 0}`, 12, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, panY + 98, `⏱️  Раундов: ${r.rounds || 0}`, 12, '#ddddff').setOrigin(0.5);
     } else if (isTitan) {
-      txt(this, W / 2, panY + 14, 'ИТОГИ БАШНИ', 10, '#8888aa', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 14, 'ИТОГИ БАШНИ', 10, '#ccccee', true).setOrigin(0.5);
       txt(this, W / 2, panY + 44, `💀 Этаж ${titanFloor > 0 ? titanFloor : '?'} — не пройден`, 16, '#ff4455', true).setOrigin(0.5);
       const tpLoss = res?.titan_progress;
       const bestFloor = tpLoss?.best_floor ?? 0;
       if (bestFloor > 0) {
-        txt(this, W / 2, panY + 76, `🏆 Твой рекорд: ${bestFloor} этаж`, 12, '#9999bb').setOrigin(0.5);
+        txt(this, W / 2, panY + 76, `🏆 Твой рекорд: ${bestFloor} этаж`, 12, '#ddddff').setOrigin(0.5);
       }
     } else {
-      txt(this, W / 2, panY + 18, '💪  Не сдавайся!', 14, '#8888aa', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 42, 'Утешительные награды', 10, '#666688').setOrigin(0.5);
+      txt(this, W / 2, panY + 18, '💪  Не сдавайся!', 14, '#ccccee', true).setOrigin(0.5);
+      txt(this, W / 2, panY + 42, 'Утешительные награды', 10, '#aaaacc').setOrigin(0.5);
       if ((r.gold || 0) > 0) {
         const cGold = txt(this, W / 2, panY + 64, '💰 +0 золота', 18, '#cc9922', true).setOrigin(0.5);
         this._countUp(cGold, r.gold, '💰 +', ' золота', 200);
@@ -96,7 +96,7 @@ Object.assign(ResultScene.prototype, {
         const cExp = txt(this, W / 2, panY + 90, '⭐ +0 опыта', 15, '#3366cc', true).setOrigin(0.5);
         this._countUp(cExp, r.exp, '⭐ +', ' опыта', 400);
       }
-      txt(this, W / 2, panY + 114, `Раундов: ${r.rounds || 0}`, 11, '#9999bb').setOrigin(0.5);
+      txt(this, W / 2, panY + 114, `Раундов: ${r.rounds || 0}`, 11, '#ddddff').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 130, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
@@ -114,7 +114,7 @@ Object.assign(ResultScene.prototype, {
         if (isNewRecord) {
           txt(this, W / 2, panY + 108, '🆕 Новый рекорд!', 12, '#ffc83c', true).setOrigin(0.5);
         } else if (bestWave > endlessWave) {
-          txt(this, W / 2, panY + 108, `🏆 Твой рекорд: ${bestWave} волн`, 11, '#9999bb').setOrigin(0.5);
+          txt(this, W / 2, panY + 108, `🏆 Твой рекорд: ${bestWave} волн`, 11, '#ddddff').setOrigin(0.5);
         }
       }
 
@@ -172,7 +172,7 @@ Object.assign(ResultScene.prototype, {
 
     if (won) {
       const shareY = H * 0.96;
-      const shareT = txt(this, W / 2, shareY, '📤 Поделиться победой', 11, '#9999bb').setOrigin(0.5);
+      const shareT = txt(this, W / 2, shareY, '📤 Поделиться победой', 11, '#ddddff').setOrigin(0.5);
       const shareZ = this.add.zone(W / 2, shareY, 200, 24).setInteractive({ useHandCursor: true });
       shareZ.on('pointerup', () => {
         const p = State.player;

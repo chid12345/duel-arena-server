@@ -5,7 +5,7 @@
 
 TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
   if (!streak) {
-    txt(this, W/2, startY + 60, 'Загрузка стрика...', 12, '#9999bb').setOrigin(0.5);
+    txt(this, W/2, startY + 60, 'Загрузка стрика...', 12, '#ddddff').setOrigin(0.5);
     return;
   }
 
@@ -94,7 +94,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     const cx = dx + cellW / 2;
 
     // "День N" сверху
-    const dayColor = isClaimed ? '#8899aa' : isCurrent ? '#ffd700' : '#ffffff';
+    const dayColor = isClaimed ? '#bbccee' : isCurrent ? '#ffd700' : '#ffffff';
     container.add(txt(this, cx, y + 9, `Д${dn}`, 8, dayColor, isCurrent).setOrigin(0.5));
 
     // Иконка / статус (центр)
@@ -113,7 +113,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw.item)               parts.push('бокс');
     else if (rw.xp > 0)        parts.push(`${rw.xp}⭐`);
 
-    const rwCol = isClaimed ? '#8899aa' : isCurrent ? '#ffd700' : '#ffffff';
+    const rwCol = isClaimed ? '#bbccee' : isCurrent ? '#ffd700' : '#ffffff';
     if (parts.length <= 1) {
       container.add(txt(this, cx, y + 62, parts[0] || '', 8, rwCol).setOrigin(0.5));
     } else {
@@ -159,7 +159,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     container.add(txt(this, PAD + 12, y + rowH/2, stIcon, 11).setOrigin(0.5));
 
     // "День N:"
-    const lColor = isCl2 ? '#8899aa' : isCur2 ? '#ffd700' : '#ffffff';
+    const lColor = isCl2 ? '#bbccee' : isCur2 ? '#ffd700' : '#ffffff';
     container.add(txt(this, PAD + 26, y + rowH/2, `День ${dn2}`, 10, lColor, isCur2).setOrigin(0, 0.5));
 
     // Награды (основной контент)
@@ -168,7 +168,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw2.diamonds > 0) parts2.push(`+${rw2.diamonds}💎`);
     if (rw2.xp > 0)       parts2.push(`+${rw2.xp}⭐`);
     if (rw2.item)         parts2.push(`📦 ${rw2.item}`);
-    const rwColor2 = isCl2 ? '#8899aa' : '#ffffff';
+    const rwColor2 = isCl2 ? '#bbccee' : '#ffffff';
     container.add(txt(this, PAD + 76, y + rowH/2, parts2.join('  '), 10, rwColor2).setOrigin(0, 0.5));
 
     // Замок/галочка справа (кроме статус-иконки)

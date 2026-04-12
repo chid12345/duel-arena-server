@@ -37,7 +37,7 @@ Object.assign(StatsScene.prototype, {
     const valTxt = txt(this, x + 16, y + 26, String(s.valFn(p)), 24, hex, true);
     const baseVal = this._statBase(p, s.key);
     const bonusVal = this._statBonus(p, s.key);
-    const breakdownTxt = txt(this, x + 16, y + 49, `база ${baseVal} | бонусы +${bonusVal}`, 8, '#a8a8c8');
+    const breakdownTxt = txt(this, x + 16, y + 49, `база ${baseVal} | бонусы +${bonusVal}`, 8, '#ddddff');
 
     /* Мини-бар */
     const barX = x + 16;
@@ -55,7 +55,7 @@ Object.assign(StatsScene.prototype, {
     /* Эффект + описание (правая часть, перед кнопкой) */
     const midRight = x + w - 62;
     const effectTxt = txt(this, midRight, y + 14, s.effectFn(p), 13, hex, true).setOrigin(1, 0.5);
-    txt(this, midRight, y + 30, s.desc, 9, '#9999bb').setOrigin(1, 0);
+    txt(this, midRight, y + 30, s.desc, 9, '#ddddff').setOrigin(1, 0);
 
     /* Кнопка +1 */
     const btnW = 48;
@@ -67,7 +67,7 @@ Object.assign(StatsScene.prototype, {
 
     const btnTxt = txt(this, btnX + btnW / 2, btnY + btnH / 2,
       hasStats ? '+1' : '—', 16,
-      hasStats ? '#ffffff' : '#8888aa', true
+      hasStats ? '#ffffff' : '#ccccee', true
     ).setOrigin(0.5);
 
     /* Интерактив */
@@ -120,7 +120,7 @@ Object.assign(StatsScene.prototype, {
 
     makePanel(this, 8, py, W - 16, ph, 12);
 
-    txt(this, W / 2, py + 10, 'БОЕВЫЕ ПОКАЗАТЕЛИ', 11, '#9999bb', true).setOrigin(0.5);
+    txt(this, W / 2, py + 10, 'БОЕВЫЕ ПОКАЗАТЕЛИ', 11, '#ddddff', true).setOrigin(0.5);
 
     const divider = this.add.graphics();
     divider.lineStyle(1, C.gold, 0.12);
@@ -138,14 +138,14 @@ Object.assign(StatsScene.prototype, {
     cells.forEach((c, i) => {
       const cx   = W * (0.1 + i * 0.2);
       const cHex = c.hex || `#${c.color.toString(16).padStart(6, '0')}`;
-      txt(this, cx, py + 34, c.label, 9, '#8888aa').setOrigin(0.5);
+      txt(this, cx, py + 34, c.label, 9, '#ccccee').setOrigin(0.5);
       const valT = txt(this, cx, py + 52, c.valFn(p), 16, cHex, true).setOrigin(0.5);
       this._combatCells[c.key] = { t: valT, fn: c.valFn, origColor: cHex };
     });
 
     txt(this, W / 2, py + ph - 12,
       'относительно среднего противника вашего уровня',
-      9, '#9999bb').setOrigin(0.5);
+      9, '#ddddff').setOrigin(0.5);
 
     // Блок пассивных способностей — 4 строки: базовые + бафы
     const passY = py + ph + 6;
@@ -157,7 +157,7 @@ Object.assign(StatsScene.prototype, {
     passBg.lineStyle(1.5, 0x4a4870, 0.6);
     passBg.strokeRoundedRect(12, passY, passW, passH, 10);
 
-    txt(this, W / 2, passY + 9, '⚡ Пассивные способности', 10, '#9090cc', true).setOrigin(0.5);
+    txt(this, W / 2, passY + 9, '⚡ Пассивные способности', 10, '#bbbbff', true).setOrigin(0.5);
     this._passLine1 = txt(this, W / 2, passY + 23,
       `💥 Крит ${parseFloat(p.crit_pct || 0).toFixed(0)}%  ·  🤸 Уворот ${parseFloat(p.dodge_pct || 0).toFixed(1)}%`,
       10, '#c8a0ff').setOrigin(0.5);

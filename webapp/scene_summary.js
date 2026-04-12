@@ -26,7 +26,7 @@ class SummaryScene extends Phaser.Scene {
       { label: '💎 Кристаллы', value: p.diamonds || 0,  color: '#3cc8dc' },
       { label: '🥇 Победы',    value: p.wins || 0,       color: '#3cc864' },
       { label: '💀 Поражения', value: p.losses || 0,     color: '#dc3c46' },
-      { label: '⚔️ Боёв всего',value: total,             color: '#8888aa' },
+      { label: '⚔️ Боёв всего',value: total,             color: '#ccccee' },
       { label: '🎯 Винрейт',   value: `${wr}%`,          color: wr > 50 ? '#3cc864' : '#dc3c46' },
     ];
 
@@ -40,13 +40,13 @@ class SummaryScene extends Phaser.Scene {
       bg.lineStyle(1, C.dark, 0.8);
       bg.strokeRoundedRect(cx, cy, cw, ch, 10);
       scroll.add(bg);
-      scroll.add(txt(this, cx + 8, cy + 8,  s.label, 12, '#8888aa'));
+      scroll.add(txt(this, cx + 8, cy + 8,  s.label, 12, '#ccccee'));
       scroll.add(txt(this, cx + 8, cy + 28, String(s.value), 16, s.color, true));
     });
     y += Math.ceil(statCards.length / 2) * (ch + 8) + 12;
 
     /* ── Характеристики персонажа ── */
-    scroll.add(txt(this, 16, y, 'ХАРАКТЕРИСТИКИ', 11, '#9999bb', true));
+    scroll.add(txt(this, 16, y, 'ХАРАКТЕРИСТИКИ', 11, '#ddddff', true));
     y += 20;
     const attrs = [
       { n: 'STR', v: p.strength   || 0, color: C.red    },
@@ -66,7 +66,7 @@ class SummaryScene extends Phaser.Scene {
       bg2.fillStyle(a.color, 1);
       bg2.fillRoundedRect(ax, y, Math.max(8, Math.round(aw * pct)), 8, 4);
       scroll.add(bg2);
-      scroll.add(txt(this, ax + aw / 2, y + 14, `${a.n} ${a.v}`, 11, '#aaaacc').setOrigin(0.5));
+      scroll.add(txt(this, ax + aw / 2, y + 14, `${a.n} ${a.v}`, 11, '#ddddff').setOrigin(0.5));
     });
     y += 32;
 
@@ -78,7 +78,7 @@ class SummaryScene extends Phaser.Scene {
     scroll.add(txt(this, W / 2, y + 6, `HP ${p.current_hp || 0}/${p.max_hp || 0}`, 11, '#f0f0fa').setOrigin(0.5));
     y += 20;
     scroll.add(makeBar(this, 16, y,     W - 32, 10, expPct, C.blue, C.dark));
-    scroll.add(txt(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 11, '#8888aa').setOrigin(0.5));
+    scroll.add(txt(this, W / 2, y + 5, `EXP ${p.exp || 0}/${p.exp_to_next || '?'}`, 11, '#ccccee').setOrigin(0.5));
     y += 24;
 
     /* ── Свободные очки ── */

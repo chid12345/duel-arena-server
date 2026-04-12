@@ -17,7 +17,7 @@ class QuestsScene extends Phaser.Scene {
     _extraHeader(this, W, '📋', 'ЗАДАНИЯ', '');
     _extraBack(this);
     this._buildTabBar(W);
-    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
+    this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     get('/api/quests').then(d => this._render(d, W, H)).catch(() => {
       if (this._loading) this._loading.setText('❌ Нет соединения');
     });
@@ -40,7 +40,7 @@ class QuestsScene extends Phaser.Scene {
       bg.fillRoundedRect(tx, ty, tabW - 4, th, 8);
       if (activ) { bg.lineStyle(1.5, C.blue, 0.7); bg.strokeRoundedRect(tx, ty, tabW - 4, th, 8); }
       const t = txt(this, tx + (tabW-4)/2, ty + th/2, tab.label, 11,
-        activ ? '#ffffff' : '#8888aa', activ).setOrigin(0.5);
+        activ ? '#ffffff' : '#ccccee', activ).setOrigin(0.5);
       this._tabObjs[tab.key] = { bg, t };
       this.add.zone(tx, ty, tabW - 4, th).setOrigin(0)
         .setInteractive({ useHandCursor: true })
@@ -76,7 +76,7 @@ class QuestsScene extends Phaser.Scene {
     const xp      = q.reward_xp      || 150;
 
     /* Заголовок секции + badge «Готово!» */
-    txt(this, 14, y, 'КВЕСТ ДНЯ', 10, '#9999bb', true);
+    txt(this, 14, y, 'КВЕСТ ДНЯ', 10, '#ddddff', true);
     if (done && !claimed) {
       const bdg = this.add.graphics();
       bdg.fillStyle(0x1a4010, 1); bdg.fillRoundedRect(W-100, y-4, 92, 18, 5);
@@ -98,7 +98,7 @@ class QuestsScene extends Phaser.Scene {
       bg.strokeRoundedRect(tx, ty2, tw, th, 10);
       txt(this, tx+18, ty2+th/2, task.icon, 19).setOrigin(0.5);
       txt(this, tx+36, ty2+9,  task.label, 12, ok ? '#3cc864' : '#ccccee', ok);
-      txt(this, tx+36, ty2+24, `${Math.min(task.cur,task.max)} / ${task.max}`, 10, '#9999bb', true);
+      txt(this, tx+36, ty2+24, `${Math.min(task.cur,task.max)} / ${task.max}`, 10, '#ddddff', true);
       makeBar(this, tx+36, ty2+40, tw-80, 4, Math.min(1, task.cur/task.max), task.color, C.dark, 3);
       txt(this, tw, ty2+th/2, ok ? '✅' : '🔒', 15).setOrigin(1, 0.5);
     });
@@ -114,7 +114,7 @@ class QuestsScene extends Phaser.Scene {
     eBg.strokeRoundedRect(8, y, W-16, 52, 10);
     txt(this, 22, y+26, '🔥', 18).setOrigin(0.5);
     txt(this, 38, y+9, 'Победи 3 врага в Натиске', 12, eDone ? '#ff8855' : '#ccccee', eDone);
-    txt(this, 38, y+23, `${Math.min(eWins,3)} / 3`, 10, '#9999bb', true);
+    txt(this, 38, y+23, `${Math.min(eWins,3)} / 3`, 10, '#ddddff', true);
     makeBar(this, 38, y+38, W-98, 4, Math.min(1, eWins/3), 0xdc3c46, C.dark, 3);
     txt(this, W-14, y+24, eDone ? '✅' : '🔒', 15).setOrigin(1, 0.5);
     if (eDone) txt(this, W-14, y+8, '+80🪙 +1💎', 9, '#ff8855', true).setOrigin(1, 0);
@@ -149,7 +149,7 @@ class QuestsScene extends Phaser.Scene {
         this._claimQuest(clBg, clT, gold, xp, W, y);
       });
     } else {
-      txt(this, W/2, y+14, '⚔️ Выполни задания — здесь появится кнопка сбора', 10, '#666688').setOrigin(0.5);
+      txt(this, W/2, y+14, '⚔️ Выполни задания — здесь появится кнопка сбора', 10, '#aaaacc').setOrigin(0.5);
     }
 
     txt(this, W/2, H-44, '🔄 Обновляется каждый день в 00:00', 9, '#555577').setOrigin(0.5);

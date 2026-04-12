@@ -68,10 +68,10 @@
       card.lineStyle(1.5,accent,.8); card.strokeRoundedRect(x,y,cardW,cardH,9);
       layer.push(card);
       layer.push(txt(this, x+10, y+10, `${a.icon} ${a.name}`, 12, "#f0f0fa", true).setDepth(123));
-      layer.push(txt(this, x+cardW-8, y+10, meta.title, 9, "#9999bb", true).setOrigin(1,0).setDepth(123));
+      layer.push(txt(this, x+cardW-8, y+10, meta.title, 9, "#ddddff", true).setOrigin(1,0).setDepth(123));
       layer.push(txt(this, x+10, y+28, `С +${a.strength}  Л +${a.agility}`, 10, "#ffc83c", true).setDepth(123));
       layer.push(txt(this, x+10, y+43, `И +${a.intuition}  В +${a.endurance}`, 10, "#ffc83c", true).setDepth(123));
-      layer.push(txt(this, x+10, y+60, (a.special_bonus||"Без бонуса").slice(0,42), 9, "#a8a8c8").setDepth(123));
+      layer.push(txt(this, x+10, y+60, (a.special_bonus||"Без бонуса").slice(0,42), 9, "#ddddff").setDepth(123));
 
       // Кнопки
       const bx = x+8, by = y+cardH-34, bw = cardW-16, bh = 28;

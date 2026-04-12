@@ -119,5 +119,5 @@ function _extraHeader(scene, W, icon, title, sub) {
   const maxCh  = Math.floor((W - 72) / 9);   // ~9px на символ при font-size 15
   const trunc  = (s, n) => s && s.length > n ? s.slice(0, n - 1) + '…' : (s || '');
   txt(scene, 60, 20, icon + '  ' + trunc(title, maxCh), 15, '#ffc83c', true);
-  if (sub) txt(scene, 60, 44, trunc(sub, Math.floor((W - 72) / 6.5)), 10, '#9999bb');
+  if (sub) txt(scene, 60, 44, trunc(sub, Math.floor((W - 72) / 6.5)), 10, '#ddddff');
 }

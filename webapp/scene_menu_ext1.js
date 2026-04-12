@@ -170,7 +170,7 @@ Object.assign(MenuScene.prototype, {
     objs.push(shine);
 
     objs.push(txt(this, cx, y + 26, title,  16, '#f0f0fa', true).setOrigin(0.5));
-    objs.push(txt(this, cx, y + 50, sub,    11, '#8888aa').setOrigin(0.5));
+    objs.push(txt(this, cx, y + 50, sub,    11, '#ccccee').setOrigin(0.5));
     objs.push(txt(this, cx, y + 72, bonus,  10, `#${borderColor.toString(16).padStart(6,'0')}`).setOrigin(0.5));
 
     const zone = this.add.zone(cx, cy, cw, ch).setInteractive({ useHandCursor: true });
