@@ -65,7 +65,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
         progress, canClaim ? C.green : C.gold, C.dark, 4);
 
       // Награда за след. уровень
-      const rwTxt = `+${a.next_gold}🪙${a.next_diamonds ? ' +' + a.next_diamonds + '💎' : ''}`;
+      const rwTxt = `+${a.next_gold}G${a.next_diamonds ? ' +' + a.next_diamonds + '💎' : ''}`;
       container.add(txt(this, W - 12, y + 30, rwTxt, 9, canClaim ? '#ffd700' : '#ffffff').setOrigin(1, 0));
       container.add(txt(this, W - 12, y + 44, canClaim ? '🎁' : '🔒', 16).setOrigin(1, 0));
 
