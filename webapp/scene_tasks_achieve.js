@@ -42,11 +42,11 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
     container.add(bg);
 
     // Название
-    container.add(txt(this, 14, y + 8, a.label, 11, allDone ? '#ffd700' : canClaim ? '#3cc864' : '#ccccee', canClaim || allDone).setOrigin(0, 0));
+    container.add(txt(this, 14, y + 8, a.label, 11, allDone ? '#ffd700' : canClaim ? '#3cc864' : '#ffffff', canClaim || allDone).setOrigin(0, 0));
 
     // Уровень
     const tierLabel = allDone ? `Макс. (${maxTier}/${maxTier})` : `Ур. ${tier}/${maxTier}`;
-    container.add(txt(this, W - 12, y + 8, tierLabel, 9, '#8888aa').setOrigin(1, 0));
+    container.add(txt(this, W - 12, y + 8, tierLabel, 9, '#aaaacc').setOrigin(1, 0));
 
     if (allDone) {
       // Всё выполнено
@@ -58,7 +58,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 
       // Цифры под шкалой
       const displayCur = Math.min(cur, nextT);
-      container.add(txt(this, 14, y + 24, `${displayCur} / ${nextT}`, 9, '#9999bb', true).setOrigin(0, 0));
+      container.add(txt(this, 14, y + 24, `${displayCur} / ${nextT}`, 9, '#aaaacc', true).setOrigin(0, 0));
 
       // Шкала прогресса
       makeBar(this, 14, y + 40, barW, 6,
@@ -66,7 +66,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 
       // Награда за след. уровень
       const rwTxt = `+${a.next_gold}🪙${a.next_diamonds ? ' +' + a.next_diamonds + '💎' : ''}`;
-      container.add(txt(this, W - 12, y + 30, rwTxt, 8, canClaim ? '#ffd700' : '#556655').setOrigin(1, 0));
+      container.add(txt(this, W - 12, y + 30, rwTxt, 8, canClaim ? '#ffd700' : '#aabbdd').setOrigin(1, 0));
       container.add(txt(this, W - 12, y + 44, canClaim ? '🎁' : '🔒', 16).setOrigin(1, 0));
 
       // Кнопка клейма
@@ -79,7 +79,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
     }
 
     // Описание
-    container.add(txt(this, 14, y + 58, a.desc, 8, '#666688').setOrigin(0, 0));
+    container.add(txt(this, 14, y + 58, a.desc, 8, '#9999bb').setOrigin(0, 0));
 
     y += bh + 6;
   });
