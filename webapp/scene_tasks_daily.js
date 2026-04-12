@@ -63,7 +63,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
     const daily = data.daily || [];
     const dateTxt = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
     container.add(txt(this, PAD, y, '📅 ЕЖЕДНЕВНЫЕ ЗАДАНИЯ', 13, '#ffffff', true).setOrigin(0, 0));
-    container.add(txt(this, W - PAD, y, dateTxt, 11, '#aabbcc').setOrigin(1, 0));
+    container.add(txt(this, W - PAD, y, dateTxt, 11, '#ffffff').setOrigin(1, 0));
     y += 22;
 
     // Кнопка "Забрать все"
@@ -99,14 +99,14 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
       container.add(txt(this, PAD + 34, y + 11, name, 11, done ? '#44ee77' : '#ffffff', done).setOrigin(0, 0));
 
       // Прогресс
-      container.add(txt(this, PAD + 34, y + 26, `${cur} / ${max}`, 9, '#aaaacc', true).setOrigin(0, 0));
+      container.add(txt(this, PAD + 34, y + 26, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
       makeBar(this, PAD + 34, y + 40, W - 120, 5, Math.min(1, cur / max), done ? C.green : C.blue, 0x1a1a3a, 3);
 
       // Статус + награда
       container.add(txt(this, W - PAD - 4, y + 12, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
       if (!claimed) {
         const rwTxt = `+${q.reward_gold}🪙${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
-        container.add(txt(this, W - PAD - 4, y + 38, rwTxt, 8, done ? '#ffd700' : '#aabbcc').setOrigin(1, 0));
+        container.add(txt(this, W - PAD - 4, y + 38, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
       }
 
       if (done && !claimed) {
@@ -118,7 +118,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
     });
 
     y += 6;
-    container.add(txt(this, W/2, y, '🔄 Сбрасываются каждые сутки в 00:00', 9, '#555577').setOrigin(0.5));
+    container.add(txt(this, W/2, y, '🔄 Сбрасываются каждые сутки в 00:00', 10, '#aaccff').setOrigin(0.5));
     y += 22;
   }
 
@@ -147,17 +147,17 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
       container.add(txt(this, PAD + 34, y + 9, name2, 11, done ? '#44ee77' : '#ffffff', done).setOrigin(0, 0));
 
       // Описание
-      if (q.desc) container.add(txt(this, PAD + 34, y + 23, q.desc, 8, '#8888bb').setOrigin(0, 0));
+      if (q.desc) container.add(txt(this, PAD + 34, y + 23, q.desc, 9, '#ccddff').setOrigin(0, 0));
 
       // Прогресс
-      container.add(txt(this, PAD + 34, y + 36, `${cur} / ${max}`, 9, '#aaaacc', true).setOrigin(0, 0));
+      container.add(txt(this, PAD + 34, y + 36, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
       makeBar(this, PAD + 80, y + 38, W - 140, 4, Math.min(1, cur / max), done ? C.green : C.gold, 0x1a1a3a, 3);
 
       // Статус + награда
       container.add(txt(this, W - PAD - 4, y + 9, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
       if (!claimed) {
         const rwTxt = `+${q.reward_gold}🪙${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
-        container.add(txt(this, W - PAD - 4, y + 44, rwTxt, 8, done ? '#ffd700' : '#aabbcc').setOrigin(1, 0));
+        container.add(txt(this, W - PAD - 4, y + 44, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
       }
 
       if (done && !claimed) {
@@ -188,7 +188,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
       y += 6;
     }
 
-    container.add(txt(this, W/2, y, '🔄 Сброс в понедельник в 00:00', 9, '#555577').setOrigin(0.5));
+    container.add(txt(this, W/2, y, '🔄 Сброс в понедельник в 00:00', 10, '#aaccff').setOrigin(0.5));
     y += 22;
   }
 

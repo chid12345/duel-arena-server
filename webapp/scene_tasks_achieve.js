@@ -46,7 +46,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 
     // Уровень
     const tierLabel = allDone ? `Макс. (${maxTier}/${maxTier})` : `Ур. ${tier}/${maxTier}`;
-    container.add(txt(this, W - 12, y + 8, tierLabel, 9, '#aaaacc').setOrigin(1, 0));
+    container.add(txt(this, W - 12, y + 8, tierLabel, 10, '#ffffff').setOrigin(1, 0));
 
     if (allDone) {
       // Всё выполнено
@@ -58,7 +58,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 
       // Цифры под шкалой
       const displayCur = Math.min(cur, nextT);
-      container.add(txt(this, 14, y + 24, `${displayCur} / ${nextT}`, 9, '#aaaacc', true).setOrigin(0, 0));
+      container.add(txt(this, 14, y + 24, `${displayCur} / ${nextT}`, 10, '#ffffff', true).setOrigin(0, 0));
 
       // Шкала прогресса
       makeBar(this, 14, y + 40, barW, 6,
@@ -66,7 +66,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 
       // Награда за след. уровень
       const rwTxt = `+${a.next_gold}🪙${a.next_diamonds ? ' +' + a.next_diamonds + '💎' : ''}`;
-      container.add(txt(this, W - 12, y + 30, rwTxt, 8, canClaim ? '#ffd700' : '#aabbdd').setOrigin(1, 0));
+      container.add(txt(this, W - 12, y + 30, rwTxt, 9, canClaim ? '#ffd700' : '#ffffff').setOrigin(1, 0));
       container.add(txt(this, W - 12, y + 44, canClaim ? '🎁' : '🔒', 16).setOrigin(1, 0));
 
       // Кнопка клейма
@@ -79,7 +79,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
     }
 
     // Описание
-    container.add(txt(this, 14, y + 58, a.desc, 8, '#9999bb').setOrigin(0, 0));
+    container.add(txt(this, 14, y + 58, a.desc, 9, '#ccddff').setOrigin(0, 0));
 
     y += bh + 6;
   });
