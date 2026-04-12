@@ -94,12 +94,12 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     else if (isLocked)        icon = '🔒';
     else if (rw.item)         icon = '📦';
     else if (rw.diamonds > 0) icon = '💎';
-    else                      icon = 'G';
+    else                      icon = '💰';
     container.add(txt(this, cx, y + 32, icon, isCurrent ? 22 : 18).setOrigin(0.5));
 
     // Краткая награда снизу (2 строки если надо)
     const parts = [];
-    if (rw.gold > 0)           parts.push(`${rw.gold}G`);
+    if (rw.gold > 0)           parts.push(`${rw.gold}💰`);
     if (rw.diamonds > 0)       parts.push(`${rw.diamonds}💎`);
     if (rw.item)               parts.push('бокс');
     else if (rw.xp > 0)        parts.push(`${rw.xp}⭐`);
@@ -156,7 +156,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
 
     // Награды (основной контент)
     const parts2 = [];
-    if (rw2.gold > 0)     parts2.push(`+${rw2.gold}G`);
+    if (rw2.gold > 0)     parts2.push(`+${rw2.gold}💰`);
     if (rw2.diamonds > 0) parts2.push(`+${rw2.diamonds}💎`);
     if (rw2.xp > 0)       parts2.push(`+${rw2.xp}⭐`);
     if (rw2.item)         parts2.push(`📦 ${rw2.item}`);
@@ -193,7 +193,7 @@ TasksScene.prototype._claimStreakDay = function(dayNum) {
       if (r?.ok) {
         if (r.player) State.player = r.player;
         const parts = [];
-        if (r.gold)     parts.push(`+${r.gold}G`);
+        if (r.gold)     parts.push(`+${r.gold}💰`);
         if (r.diamonds) parts.push(`+${r.diamonds}💎`);
         if (r.xp)       parts.push(`+${r.xp}⭐`);
         if (r.item)     parts.push('📦');
