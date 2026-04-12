@@ -37,7 +37,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
   // Заголовок и подзаголовок
   container.add(txt(this, PAD + 54, y + 16, '7-Дневный стрик входа', 12, '#ffd700', true).setOrigin(0, 0.5));
   const statusStr = sd === 0 ? '✨ Начни новый цикл!' : `День ${sd} из 7`;
-  container.add(txt(this, PAD + 54, y + 34, statusStr, 10, sd > 0 ? '#aaccff' : '#888899').setOrigin(0, 0.5));
+  container.add(txt(this, PAD + 54, y + 34, statusStr, 10, '#ffffff').setOrigin(0, 0.5));
 
   // Прогресс-точки справа
   const dotX = W - PAD - 8;
@@ -53,8 +53,8 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
   y += 64;
 
   // ── 2. Метка раздела ────────────────────────────────────────
-  container.add(txt(this, PAD, y, 'НАГРАДЫ ТЕКУЩЕГО ЦИКЛА', 8, '#6677aa', true).setOrigin(0, 0));
-  container.add(txt(this, W - PAD, y, `Набор ${setNames[ws]}`, 8, '#6677aa').setOrigin(1, 0));
+  container.add(txt(this, PAD, y, 'НАГРАДЫ ТЕКУЩЕГО ЦИКЛА', 10, '#ffffff', true).setOrigin(0, 0));
+  container.add(txt(this, W - PAD, y, `Набор ${setNames[ws]}`, 10, '#ffffff').setOrigin(1, 0));
   y += 14;
 
   // ── 3. Ряд 7 ячеек ──────────────────────────────────────────
@@ -85,7 +85,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     const cx = dx + cellW / 2;
 
     // "День N" сверху
-    const dayColor = isClaimed ? '#44cc44' : isCurrent ? '#ffd700' : '#555577';
+    const dayColor = isClaimed ? '#44cc44' : isCurrent ? '#ffd700' : '#ffffff';
     container.add(txt(this, cx, y + 9, `Д${dn}`, 8, dayColor, isCurrent).setOrigin(0.5));
 
     // Иконка / статус (центр)
@@ -104,7 +104,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw.item)               parts.push('бокс');
     else if (rw.xp > 0)        parts.push(`${rw.xp}⭐`);
 
-    const rwCol = isClaimed ? '#33aa33' : isCurrent ? '#ffd700' : '#8888bb';
+    const rwCol = isClaimed ? '#44cc44' : isCurrent ? '#ffd700' : '#ffffff';
     if (parts.length <= 1) {
       container.add(txt(this, cx, y + 62, parts[0] || '', 8, rwCol).setOrigin(0.5));
     } else {
@@ -151,7 +151,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     container.add(txt(this, PAD + 12, y + rowH/2, stIcon, 11).setOrigin(0.5));
 
     // "День N:"
-    const lColor = isCl2 ? '#44cc44' : isCur2 ? '#ffd700' : '#6666aa';
+    const lColor = isCl2 ? '#44cc44' : isCur2 ? '#ffd700' : '#ffffff';
     container.add(txt(this, PAD + 26, y + rowH/2, `День ${dn2}`, 10, lColor, isCur2).setOrigin(0, 0.5));
 
     // Награды (основной контент)
@@ -160,7 +160,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw2.diamonds > 0) parts2.push(`+${rw2.diamonds}💎`);
     if (rw2.xp > 0)       parts2.push(`+${rw2.xp}⭐`);
     if (rw2.item)         parts2.push(`📦 ${rw2.item}`);
-    const rwColor2 = isCl2 ? '#55aa55' : isCur2 ? '#ffffff' : '#ccddee';
+    const rwColor2 = isCl2 ? '#44cc44' : '#ffffff';
     container.add(txt(this, PAD + 76, y + rowH/2, parts2.join('  '), 10, rwColor2).setOrigin(0, 0.5));
 
     // Замок/галочка справа (кроме статус-иконки)
