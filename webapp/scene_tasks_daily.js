@@ -33,19 +33,6 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
   container.add(txt(this, W - PAD, y, dateTxt, 11, '#ffffff').setOrigin(1, 0));
   y += 22;
 
-  // Кнопка «Забрать все»
-  const claimable = daily.filter(q => q.is_completed && !q.reward_claimed);
-  if (claimable.length > 1) {
-    const allBg = this.add.graphics();
-    allBg.fillStyle(0xffc83c, 1);
-    allBg.fillRoundedRect(PAD, y, W - PAD * 2, 34, 8);
-    container.add(allBg);
-    container.add(txt(this, W / 2, y + 17, `🎁 Забрать все выполненные (${claimable.length})`, 11, '#1a1a28', true).setOrigin(0.5));
-    const ty = y;
-    taps.push({ y: ty, h: 34, fn: () => this._claimAllDaily(claimable) });
-    y += 42;
-  }
-
   const claimedCount = daily.filter(q => q.reward_claimed).length;
   daily.forEach(q => {
     const done = q.is_completed, claimed = q.reward_claimed;
@@ -160,36 +147,6 @@ TasksScene.prototype._claimDaily = function(taskKey) {
     }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };
 
-TasksScene.prototype._claimAllDaily = function(tasks) {
-  if (this._claimBusy) return;
-  this._claimBusy = true;
-  const keys = tasks.map(t => t.key);
-  let totalG = 0, totalD = 0, totalXp = 0, ok = 0;
-  const doNext = () => {
-    if (!keys.length) {
-      this._claimBusy = false;
-      if (ok > 0) {
-        _rewardAnim(this, { gold: totalG, diamonds: totalD, xp: totalXp },
-          () => this.scene.restart({ tab: 'daily' }));
-      } else {
-        this._toast('❌ Не удалось забрать награды');
-        this.time.delayedCall(600, () => this.scene.restart({ tab: 'daily' }));
-      }
-      return;
-    }
-    post('/api/tasks/claim_daily', { task_key: keys.shift() })
-      .then(r => {
-        if (r?.ok) {
-          ok++;
-          totalG += r.gold || 0; totalD += r.diamonds || 0; totalXp += r.xp || 0;
-          if (r.player) State.player = r.player;
-        }
-        doNext();
-      })
-      .catch(() => doNext());
-  };
-  doNext();
-};
 
 TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey) {
   if (this._claimBusy) return;
