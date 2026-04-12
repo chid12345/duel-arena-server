@@ -62,9 +62,9 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
   if (subpage === 'daily') {
     const daily = data.daily || [];
     const dateTxt = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
-    container.add(txt(this, PAD, y, '📅 ЕЖЕДНЕВНЫЕ ЗАДАНИЯ', 9, '#8899cc', true).setOrigin(0, 0));
-    container.add(txt(this, W - PAD, y, dateTxt, 9, '#7777aa').setOrigin(1, 0));
-    y += 16;
+    container.add(txt(this, PAD, y, '📅 ЕЖЕДНЕВНЫЕ ЗАДАНИЯ', 13, '#ffffff', true).setOrigin(0, 0));
+    container.add(txt(this, W - PAD, y, dateTxt, 11, '#aabbcc').setOrigin(1, 0));
+    y += 22;
 
     // Кнопка "Забрать все"
     const claimable = daily.filter(q => q.is_completed && !q.reward_claimed);
@@ -173,7 +173,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
 
     // Старые недельные (если есть)
     if (oldWeekly.length > 0) {
-      container.add(txt(this, PAD, y, '📋 ЕЖЕНЕДЕЛЬНЫЕ', 9, '#8899cc', true).setOrigin(0, 0));
+      container.add(txt(this, PAD, y, '📋 ЕЖЕНЕДЕЛЬНЫЕ', 13, '#ffffff', true).setOrigin(0, 0));
       y += 16;
       oldWeekly.forEach(q => renderWeeklyQuest(q, false));
       y += 6;
@@ -182,7 +182,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
     // Новые недельные
     if (weeklyExtra.length > 0) {
       const secLabel = oldWeekly.length > 0 ? '✨ НОВЫЕ НЕДЕЛЬНЫЕ' : '📋 ЕЖЕНЕДЕЛЬНЫЕ ЗАДАНИЯ';
-      container.add(txt(this, PAD, y, secLabel, 9, '#8899cc', true).setOrigin(0, 0));
+      container.add(txt(this, PAD, y, secLabel, 13, '#ffffff', true).setOrigin(0, 0));
       y += 16;
       weeklyExtra.forEach(q => renderWeeklyQuest(q, true));
       y += 6;
