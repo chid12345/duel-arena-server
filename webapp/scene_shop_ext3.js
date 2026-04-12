@@ -91,6 +91,92 @@ Object.assign(ShopScene.prototype, {
       .on('pointerup',   () => this._buyCrypto(pkg));
   },
 
+  /* ── Container-версии карточек (для scroll zone) ──── */
+  _makeStarsCardC(c, pkg, ix, iy, iw, ih) {
+    const bg = this.add.graphics();
+    bg.fillStyle(0x231e09, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(1.5, 0xffc83c, 0.6); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    c.add(bg);
+    c.add(txt(this, ix+iw/2, iy+22, `💎 ${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5));
+    c.add(txt(this, ix+iw/2, iy+40, 'алмазов', 11, '#c8b870').setOrigin(0.5));
+    const btnG = this.add.graphics();
+    btnG.fillStyle(0xffa000, 1); btnG.fillRoundedRect(ix+4, iy+56, iw-8, 18, 6);
+    c.add(btnG);
+    c.add(txt(this, ix+iw/2, iy+65, `⭐ ${pkg.stars}`, 12, '#1a1208', true).setOrigin(0.5));
+  },
+
+  _makePremiumCardC(c, pkg, ix, iy, iw, ih) {
+    const p = State.player || {}, isActive = !!p.is_premium;
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1a0a30, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, isActive ? 0xb45aff : C.purple, isActive ? 1.0 : 0.7);
+    bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    c.add(bg);
+    c.add(txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5));
+    c.add(txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true));
+    if (isActive) {
+      c.add(txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${p.premium_days_left} дн.`, 11, '#b45aff'));
+      c.add(txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899').setOrigin(1, 0.5));
+    } else {
+      c.add(txt(this, ix+50, iy+ih/2+8, '+15% XP · ежедн. ящик · скидки', 11, '#8888aa'));
+      c.add(txt(this, iw-4, iy+ih/2-2, `⭐ ${pkg.stars}`, 12, '#ffc83c', true).setOrigin(1, 0.5));
+    }
+  },
+
+  _makeCryptoCardC(c, pkg, ix, iy, iw, ih) {
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0d2535, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(1.5, 0x3cc8dc, 0.6); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    c.add(bg);
+    c.add(txt(this, ix+iw/2, iy+22, `💎 ${pkg.diamonds}`, 15, '#f0f0fa', true).setOrigin(0.5));
+    c.add(txt(this, ix+iw/2, iy+40, 'алмазов', 11, '#70bcd0').setOrigin(0.5));
+    const btnG = this.add.graphics();
+    btnG.fillStyle(0x1a6080, 1); btnG.fillRoundedRect(ix+4, iy+56, iw-8, 18, 6);
+    c.add(btnG);
+    c.add(txt(this, ix+iw/2, iy+65, `${pkg.usdt} USDT`, 12, '#3ce8ff', true).setOrigin(0.5));
+  },
+
+  _makeCryptoResetCardC(c, pkg, ix, iy, iw, ih) {
+    const bg = this.add.graphics();
+    bg.fillStyle(0x2a1010, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, 0xff4444, 0.85); bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    c.add(bg);
+    c.add(txt(this, ix+iw/2, iy+12, pkg.label || '🔄 Сброс прогресса', 12, '#ffaaaa', true).setOrigin(0.5));
+    c.add(txt(this, ix+iw/2, iy+30, pkg.hint || 'Уровень с нуля; 💰💎 сохраняются', 9, '#997777', true).setOrigin(0.5));
+    c.add(txt(this, ix+iw/2, iy+48, `Оплата: ${pkg.usdt} USDT`, 11, '#3ce8ff', true).setOrigin(0.5));
+    c.add(txt(this, ix+iw/2, iy+66, 'После оплаты — /start или обновите приложение', 9, '#aa9999').setOrigin(0.5));
+  },
+
+  _makeCryptoPremiumCardC(c, pkg, ix, iy, iw, ih) {
+    const p = State.player || {}, isActive = !!p.is_premium;
+    const bg = this.add.graphics();
+    bg.fillStyle(0x1a0a30, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 11);
+    bg.lineStyle(2, isActive ? 0xb45aff : C.purple, isActive ? 1.0 : 0.7);
+    bg.strokeRoundedRect(ix, iy, iw, ih, 11);
+    c.add(bg);
+    c.add(txt(this, ix+20, iy+ih/2-2, '👑', 20).setOrigin(0, 0.5));
+    c.add(txt(this, ix+50, iy+ih/2-8, 'Premium подписка', 12, '#c8a0ff', true));
+    if (isActive) {
+      c.add(txt(this, ix+50, iy+ih/2+8, `✅ Активна · ${p.premium_days_left} дн.`, 11, '#b45aff'));
+      c.add(txt(this, iw-4, iy+ih/2-2, '— куплено —', 11, '#888899').setOrigin(1, 0.5));
+    } else {
+      c.add(txt(this, ix+50, iy+ih/2+8, '+15% XP · ежедн. ящик · скидки', 11, '#8888aa'));
+      c.add(txt(this, iw-4, iy+ih/2-2, `${pkg.usdt} USDT`, 12, '#3cc8dc', true).setOrigin(1, 0.5));
+    }
+  },
+
+  _makeUsdtScrollCardC(c, pkg, ix, iy, iw, ih) {
+    const bg = this.add.graphics();
+    bg.fillStyle(0x0d2535, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 10);
+    bg.lineStyle(1.5, 0x3cc8dc, 0.5); bg.strokeRoundedRect(ix, iy, iw, ih, 10);
+    c.add(bg);
+    c.add(txt(this, ix+iw/2, iy+18, pkg.label, 10, '#c8e8ff', true).setOrigin(0.5).setWordWrapWidth(iw-8));
+    const btnG = this.add.graphics();
+    btnG.fillStyle(0x1a6080, 1); btnG.fillRoundedRect(ix+4, iy+ih-22, iw-8, 17, 5);
+    c.add(btnG);
+    c.add(txt(this, ix+iw/2, iy+ih-14, `${pkg.usdt} USDT`, 11, '#3ce8ff', true).setOrigin(0.5));
+  },
+
   /* ── Покупки ─────────────────────────────────────────── */
   async _buyStars(pkg) {
     if (this._buying) return;
