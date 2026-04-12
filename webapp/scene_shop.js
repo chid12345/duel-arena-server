@@ -11,6 +11,7 @@ class ShopScene extends Phaser.Scene {
     this._buying = false;
     this._applyBusy = false;
     this._swiping = false;
+    this._gen = (this._gen || 0) + 1; // поколение для async race protection
   }
 
   async create() {

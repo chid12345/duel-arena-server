@@ -7,10 +7,11 @@ Object.assign(ShopScene.prototype, {
 
   /* ── Вкладка "⭐ Звёзды" — единая прокручиваемая страница ── */
   async _buildStarsPanel(W, H) {
+    const gen = this._gen;
     let d;
     try { d = await get('/api/shop/packages'); }
     catch(_) { if (this.scene?.isActive('Shop')) txt(this, W/2, H/2, '❌ Нет соединения', 13, '#dc3c46').setOrigin(0.5); return; }
-    if (!this.scene?.isActive('Shop') || this._tab !== 'stars') return;
+    if (gen !== this._gen || !this.scene?.isActive('Shop') || this._tab !== 'stars') return;
     const starsPkgs = d.stars || [];
     const p = State.player;
     const pkgMain = starsPkgs.filter(pkg => pkg.id !== 'premium');
@@ -82,10 +83,11 @@ Object.assign(ShopScene.prototype, {
 
   /* ── Вкладка "💵 Купить" (USDT) — единая прокручиваемая страница ── */
   async _buildSpecialPanel(W, H) {
+    const gen = this._gen;
     let d;
     try { d = await get('/api/shop/packages'); }
     catch(_) { if (this.scene?.isActive('Shop')) txt(this, W/2, H/2, '❌ Нет соединения', 13, '#dc3c46').setOrigin(0.5); return; }
-    if (!this.scene?.isActive('Shop') || this._tab !== 'special') return;
+    if (gen !== this._gen || !this.scene?.isActive('Shop') || this._tab !== 'special') return;
     const cryptoPkgs = d.crypto || [];
     const scrollPkgs = d.usdt_scrolls || [];
     const cryptoOn   = d.cryptopay_enabled;

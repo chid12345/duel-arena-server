@@ -10,8 +10,8 @@ class TasksScene extends Phaser.Scene {
 
   init(data) {
     this._tab     = (data && data.tab)     ? data.tab     : 'streak';
-    this._subpage = (data && data.subpage) ? data.subpage : 'daily';
     this._scrollY = (data && data.scrollY) ? data.scrollY : 0;
+    this._gen     = (this._gen || 0) + 1; // поколение рендера для защиты от async race
   }
 
   create() {
@@ -19,13 +19,14 @@ class TasksScene extends Phaser.Scene {
     this.W = W; this.H = H;
     _extraBg(this, W, H);
     _extraHeader(this, W, '📋', 'ЗАДАНИЯ', '');
-    _extraBack(this);
+    _extraBack(this, 'Menu', 'profile');
     this._buildTabBar(W);
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#9999bb').setOrigin(0.5);
     this._loadData();
   }
 
   async _loadData() {
+    const gen = this._gen;
     try {
       post('/api/tasks/login').catch(() => null);
       // Загружаем статус заданий + квесты (для недельных) параллельно
@@ -33,6 +34,7 @@ class TasksScene extends Phaser.Scene {
         get('/api/tasks/status'),
         this._tab === 'daily' ? get('/api/quests').catch(() => null) : Promise.resolve(null),
       ]);
+      if (gen !== this._gen) return; // сцена уже перезапущена — не рендерим
       this._loading?.destroy(); this._loading = null;
       if (!d?.ok) {
         const reason = d?.reason ? `\n${d.reason}` : '';
