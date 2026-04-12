@@ -121,7 +121,9 @@ class TasksScene extends Phaser.Scene {
       if (opts.onScroll) opts.onScroll(-baseY);
     });
 
-    zone.on('pointerup', p => {
+    // Глобальный pointerup — на мобиле zone.pointerup НЕ срабатывает,
+    // если палец при подъёме сдвинулся за границу зоны (pointerout → потеря тапа).
+    this.input.on('pointerup', p => {
       if (!active) return; active = false;
       const dx = p.x - sx, dy = p.y - sy;
       const adx = Math.abs(dx), ady = Math.abs(dy);
@@ -130,15 +132,12 @@ class TasksScene extends Phaser.Scene {
         if (opts.onSwipe) opts.onSwipe(dx < 0 ? 'left' : 'right');
         return;
       }
-      if (ady < 20 && opts.onTap) {
+      if (ady < 25 && adx < 40 && opts.onTap) {
         vel = 0;
         opts.onTap(p.y - container.y, p.x);
         return;
       }
-      // Инерция продолжается через velocity
     });
-
-    zone.on('pointerout', () => { active = false; });
 
     this._scrollFn = () => {
       if (Math.abs(vel) < 0.15) { vel = 0; return; }
