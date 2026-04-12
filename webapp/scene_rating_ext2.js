@@ -46,15 +46,37 @@ Object.assign(RatingScene.prototype, {
       txt(this, W / 2, listY + 40, '📭 Никто ещё не сыграл в этом сезоне', 12, '#9999bb').setOrigin(0.5);
     }
 
+    const sRankStyles = [
+      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.25, numCol: '#ffd700' },
+      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.25, numCol: '#aabbcc' },
+      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.25, numCol: '#cc9955' },
+    ];
     lb.slice(0, maxShow).forEach((p, i) => {
       const ry   = listY + i * rowH;
       const isMe = p.user_id === myUid;
+      const rs   = sRankStyles[i];
       const bg   = this.add.graphics();
-      bg.fillStyle(isMe ? 0x1e2840 : C.bgPanel, isMe ? 0.98 : 0.82);
-      bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
-      if (isMe) { bg.lineStyle(1.5, C.blue, 0.7); bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8); }
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-      txt(this, 20,     ry + (rowH - 4) / 2, medal, i < 3 ? 15 : 11, '#ffc83c').setOrigin(0, 0.5);
+      if (isMe) {
+        bg.fillStyle(0x141828, 0.98);
+        bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+        bg.lineStyle(2, C.blue, 0.7);
+        bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
+      } else if (rs) {
+        bg.fillStyle(rs.bg, 0.95);
+        bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+        bg.lineStyle(1.5, rs.bd, 0.5);
+        bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
+      } else {
+        bg.fillStyle(0x161422, 0.9);
+        bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+        bg.lineStyle(1, 0x2a2844, 0.4);
+        bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
+      }
+      // Ранг-бейдж
+      const cx = 24, cy = ry + (rowH - 4) / 2;
+      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
+      bg.fillCircle(cx, cy, 13);
+      txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#8888aa', true).setOrigin(0.5);
       txt(this, 52,     ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
       txt(this, 52,     ry + 25, `🏆 ${p.wins || 0}П`, 10, '#9999bb');
       txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(1, 0.5);
@@ -65,25 +87,34 @@ Object.assign(RatingScene.prototype, {
     if (!myPos || myPos > maxShow) {
       const myBY = H - 108;
       const myBG = this.add.graphics();
-      myBG.fillStyle(0x1a2030, 0.97);
+      myBG.fillStyle(0x161426, 0.97);
       myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
-      myBG.lineStyle(1.5, C.gold, 0.5);
+      myBG.fillStyle(C.gold, 0.8);
+      myBG.fillRect(18, myBY, W - 36, 2);
+      myBG.lineStyle(1, 0x2a2844, 0.5);
       myBG.strokeRoundedRect(10, myBY, W - 20, 44, 10);
-      txt(this, W / 2, myBY + 12, 'Ваша позиция в сезоне', 10, '#888899').setOrigin(0.5);
+      txt(this, W / 2, myBY + 14, 'Ваша позиция в сезоне', 10, '#888899').setOrigin(0.5);
       const posLabel = myPos ? `#${myPos}` : 'не в топ';
       const myRating = myStat ? myStat.rating : (State.player?.rating || 1000);
-      txt(this, W / 2, myBY + 30, `${posLabel}  ·  ★ ${myRating}`, 14, '#ffc83c', true).setOrigin(0.5);
+      txt(this, W / 2, myBY + 31, `${posLabel}  ·  ★ ${myRating}`, 14, '#ffc83c', true).setOrigin(0.5);
     }
   },
 
   _buildPodium(top3, W, y) {
     const order     = [top3[1], top3[0], top3[2]];
-    const podH      = [80, 104, 64];
+    const podH      = [84, 110, 68];
     const medals    = ['🥈', '🥇', '🥉'];
-    const podColors = [0x666688, 0xcc9900, 0x885533];
+    const podColors = [0x5a6a88, 0xcc9900, 0x7a5533];
+    const podBd     = [0x7a8aaa, 0xdaa520, 0x996644];
     const posX      = [W * 0.20, W * 0.50, W * 0.80];
     const myUid     = State.player?.user_id;
     const baseY     = y + 128;
+    const colW      = 84;
+
+    // Платформа-база
+    const base = this.add.graphics();
+    base.fillStyle(0x1a1830, 0.6);
+    base.fillRoundedRect(10, baseY, W - 20, 48, 8);
 
     order.forEach((p, i) => {
       if (!p) return;
@@ -91,15 +122,24 @@ Object.assign(RatingScene.prototype, {
       const ph   = podH[i];
       const isMe = p.user_id === myUid;
       const pg = this.add.graphics();
-      pg.fillStyle(podColors[i], isMe ? 1 : 0.75);
-      pg.fillRoundedRect(px - 38, baseY - ph, 76, ph, 6);
-      if (isMe) { pg.lineStyle(2, C.blue, 0.8); pg.strokeRoundedRect(px - 38, baseY - ph, 76, ph, 6); }
-      txt(this, px, baseY - ph - 28, medals[i], 24).setOrigin(0.5);
+      pg.fillStyle(podColors[i], isMe ? 0.9 : 0.7);
+      pg.fillRoundedRect(px - colW / 2, baseY - ph, colW, ph, { tl: 10, tr: 10, bl: 0, br: 0 });
+      pg.lineStyle(1.5, podBd[i], 0.5);
+      pg.strokeRoundedRect(px - colW / 2, baseY - ph, colW, ph, { tl: 10, tr: 10, bl: 0, br: 0 });
+      if (isMe) {
+        pg.lineStyle(2, C.blue, 0.8);
+        pg.strokeRoundedRect(px - colW / 2, baseY - ph, colW, ph, { tl: 10, tr: 10, bl: 0, br: 0 });
+      }
+      txt(this, px, baseY - ph - 28, medals[i], i === 1 ? 28 : 22).setOrigin(0.5);
       const name = (p.username || 'User').slice(0, 9);
-      txt(this, px, baseY - ph - 10, name, 10, isMe ? '#88ccff' : '#f0f0fa', isMe).setOrigin(0.5);
-      txt(this, px, baseY + 12, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(0.5);
-      txt(this, px, baseY + 30, `Ур.${p.level}`, 10, '#8888aa').setOrigin(0.5);
+      txt(this, px, baseY - ph - 8, name, 10, isMe ? '#88ccff' : '#f0f0fa', isMe).setOrigin(0.5);
+      // Рейтинг и уровень внутри колонки
+      txt(this, px, baseY - ph + 18, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(0.5);
+      txt(this, px, baseY - ph + 34, `Ур.${p.level}`, 9, '#aaaacc').setOrigin(0.5);
     });
+
+    // Награды под платформой
+    txt(this, W / 2, baseY + 18, '🏆 Победы решают!', 10, '#777799').setOrigin(0.5);
   }
 
 });

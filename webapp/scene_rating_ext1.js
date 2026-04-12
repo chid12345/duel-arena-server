@@ -30,13 +30,31 @@ Object.assign(RatingScene.prototype, {
     const listY   = startY + 80;
     const rowH    = 40;
     const maxShow = Math.max(1, Math.floor((H - listY - 100) / rowH));
+    const tRankStyles = [
+      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.25, numCol: '#ffd700' },
+      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.25, numCol: '#aabbcc' },
+      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.25, numCol: '#cc9955' },
+    ];
     lb.slice(0, maxShow).forEach((row, i) => {
       const ry = listY + i * rowH;
+      const rs = tRankStyles[i];
       const bg = this.add.graphics();
-      bg.fillStyle(C.bgPanel, 0.86);
-      bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
-      const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `${i + 1}.`;
-      txt(this, 18, ry + 11, medal, i < 3 ? 14 : 11, '#ffc83c').setOrigin(0);
+      if (rs) {
+        bg.fillStyle(rs.bg, 0.95);
+        bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+        bg.lineStyle(1.5, rs.bd, 0.5);
+        bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
+      } else {
+        bg.fillStyle(0x161422, 0.9);
+        bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
+        bg.lineStyle(1, 0x2a2844, 0.4);
+        bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
+      }
+      // Ранг-бейдж
+      const cx = 24, cy = ry + (rowH - 4) / 2;
+      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
+      bg.fillCircle(cx, cy, 13);
+      txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#8888aa', true).setOrigin(0.5);
       txt(this, 52, ry + 9,  row.username || `User${row.user_id}`, 12, '#d0d0ee', true);
       txt(this, 52, ry + 24, `🗿 Этаж: ${row.weekly_best_floor || 0}`, 11, '#777799');
       txt(this, W - 16, ry + 17, `${row.weekly_best_floor || 0}`, 12, '#ffc83c', true).setOrigin(1, 0.5);
@@ -76,15 +94,37 @@ Object.assign(RatingScene.prototype, {
       txt(this, W/2, listY + 40, '🔥 Первым войди в историю!', 13, '#ff9999').setOrigin(0.5);
       return;
     }
+    const nRankStyles = [
+      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.25, numCol: '#ffd700' },
+      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.25, numCol: '#aabbcc' },
+      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.25, numCol: '#cc9955' },
+    ];
     leaders.slice(0, maxShow).forEach((row, i) => {
       const ry   = listY + i * rowH;
       const isMe = row.user_id === myUid;
+      const rs   = nRankStyles[i];
       const bg   = this.add.graphics();
-      bg.fillStyle(isMe ? 0x2a1010 : C.bgPanel, isMe ? 0.98 : 0.85);
-      bg.fillRoundedRect(8, ry, W-16, rowH-4, 9);
-      if (isMe) { bg.lineStyle(1.5, 0xff4444, 0.6); bg.strokeRoundedRect(8, ry, W-16, rowH-4, 9); }
-      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-      txt(this, 20, ry+(rowH-4)/2, medal, i<3?15:11, '#ffc83c').setOrigin(0, 0.5);
+      if (isMe) {
+        bg.fillStyle(0x1a1020, 0.98);
+        bg.fillRoundedRect(8, ry, W-16, rowH-4, 9);
+        bg.lineStyle(2, C.red, 0.6);
+        bg.strokeRoundedRect(8, ry, W-16, rowH-4, 9);
+      } else if (rs) {
+        bg.fillStyle(rs.bg, 0.95);
+        bg.fillRoundedRect(8, ry, W-16, rowH-4, 9);
+        bg.lineStyle(1.5, rs.bd, 0.5);
+        bg.strokeRoundedRect(8, ry, W-16, rowH-4, 9);
+      } else {
+        bg.fillStyle(0x161422, 0.9);
+        bg.fillRoundedRect(8, ry, W-16, rowH-4, 9);
+        bg.lineStyle(1, 0x2a2844, 0.4);
+        bg.strokeRoundedRect(8, ry, W-16, rowH-4, 9);
+      }
+      // Ранг-бейдж
+      const cx = 24, cy = ry + (rowH - 4) / 2;
+      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
+      bg.fillCircle(cx, cy, 13);
+      txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#8888aa', true).setOrigin(0.5);
       txt(this, 52, ry+9,  row.username||`User${row.user_id}`, 13, isMe?'#ff6666':'#f0f0fa', isMe);
       txt(this, 52, ry+24, `🔥 Волна ${row.best_wave}`, 11, '#cc6644');
       txt(this, W-14, ry+(rowH-4)/2, `${row.best_wave}`, 15, '#ff6644', true).setOrigin(1, 0.5);

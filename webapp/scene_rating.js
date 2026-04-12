@@ -55,11 +55,14 @@ class RatingScene extends Phaser.Scene {
       const tx     = 12 + i * tw;
       const active = tab.key === this._tab;
       const bg = this.add.graphics();
-      bg.fillStyle(active ? C.blue : C.dark, active ? 0.92 : 0.55);
+      bg.fillStyle(active ? C.bgPanel : 0x000000, active ? 0.95 : 0.2);
       bg.fillRoundedRect(tx, ty, tw - 4, 30, 8);
-      if (active) { bg.lineStyle(1.5, C.blue, 0.6); bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8); }
+      if (active) {
+        bg.lineStyle(1.5, C.gold, 0.6);
+        bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
+      }
       txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 11,
-        active ? '#ffffff' : '#8888aa', active).setOrigin(0.5);
+        active ? '#ffc83c' : '#777799', active).setOrigin(0.5);
       this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
         .on('pointerup', () => {
@@ -87,15 +90,38 @@ class RatingScene extends Phaser.Scene {
       const listY    = players.length >= 3 ? startY + 136 : startY;
       const rowH     = 44;
 
+      const rankStyles = [
+        { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.25, numCol: '#ffd700' },
+        { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.25, numCol: '#aabbcc' },
+        { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.25, numCol: '#cc9955' },
+      ];
       players.slice(listFrom, listFrom + 8).forEach((p, i) => {
         const rank = listFrom + i + 1;
         const ry   = listY + i * rowH;
         const isMe = p.user_id === myUid;
+        const rs   = rankStyles[rank - 1]; // топ-3 стиль или null
         const rg = this.add.graphics();
-        rg.fillStyle(isMe ? 0x1e2840 : C.bgPanel, isMe ? 0.98 : 0.8);
-        rg.fillRoundedRect(10, ry, W - 20, rowH - 4, 9);
-        if (isMe) { rg.lineStyle(1.5, C.blue, 0.7); rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9); }
-        txt(this, 28, ry + (rowH - 4) / 2, `${rank}.`, 12, '#9999bb', true).setOrigin(0.5);
+        if (isMe) {
+          rg.fillStyle(0x141828, 0.98);
+          rg.fillRoundedRect(10, ry, W - 20, rowH - 4, 9);
+          rg.lineStyle(2, C.blue, 0.7);
+          rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9);
+        } else if (rs) {
+          rg.fillStyle(rs.bg, 0.95);
+          rg.fillRoundedRect(10, ry, W - 20, rowH - 4, 9);
+          rg.lineStyle(1.5, rs.bd, 0.5);
+          rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9);
+        } else {
+          rg.fillStyle(0x161422, 0.9);
+          rg.fillRoundedRect(10, ry, W - 20, rowH - 4, 9);
+          rg.lineStyle(1, 0x2a2844, 0.4);
+          rg.strokeRoundedRect(10, ry, W - 20, rowH - 4, 9);
+        }
+        // Ранг-бейдж в кружке
+        const circleX = 28, circleY = ry + (rowH - 4) / 2;
+        rg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
+        rg.fillCircle(circleX, circleY, 13);
+        txt(this, circleX, circleY, `${rank}`, 11, rs ? rs.numCol : '#8888aa', true).setOrigin(0.5);
         txt(this, 52, ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
         txt(this, 52, ry + 26, `🏆 ${p.wins || 0}W  💀 ${p.losses || 0}L`, 10, '#9999bb');
         txt(this, W - 14, ry + (rowH - 4) / 2, `★ ${p.rating}`, 14, '#ffc83c', true).setOrigin(1, 0.5);
@@ -111,11 +137,13 @@ class RatingScene extends Phaser.Scene {
       if (!myRank || myRank > 10) {
         const myBY = H - 108;
         const myBG = this.add.graphics();
-        myBG.fillStyle(0x1a2030, 0.97);
+        myBG.fillStyle(0x161426, 0.97);
         myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
-        myBG.lineStyle(1.5, C.gold, 0.5);
+        myBG.fillStyle(C.gold, 0.8);
+        myBG.fillRect(18, myBY, W - 36, 2);
+        myBG.lineStyle(1, 0x2a2844, 0.5);
         myBG.strokeRoundedRect(10, myBY, W - 20, 44, 10);
-        txt(this, W / 2, myBY + 13, 'Ваш ELO рейтинг', 10, '#888899').setOrigin(0.5);
+        txt(this, W / 2, myBY + 14, 'Ваш ELO рейтинг', 10, '#888899').setOrigin(0.5);
         txt(this, W / 2, myBY + 31,
           `${myRank ? '#' + myRank : 'не в топ'}  ·  ★ ${myElo}`, 15, '#ffc83c', true).setOrigin(0.5);
       }
