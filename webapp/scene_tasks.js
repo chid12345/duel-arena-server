@@ -30,7 +30,12 @@ class TasksScene extends Phaser.Scene {
       post('/api/tasks/login').catch(() => null);
       const d = await get('/api/tasks/status');
       this._loading?.destroy(); this._loading = null;
-      if (!d?.ok) { txt(this, this.W/2, this.H/2, '❌ Ошибка загрузки', 13, '#dc3c46').setOrigin(0.5); return; }
+      if (!d?.ok) {
+        const reason = d?.reason ? `\n${d.reason}` : '';
+        txt(this, this.W/2, this.H/2 - 20, '❌ Ошибка загрузки', 13, '#dc3c46').setOrigin(0.5);
+        if (reason) txt(this, this.W/2, this.H/2 + 10, reason, 9, '#ff9999').setOrigin(0.5);
+        return;
+      }
       this._data = d;
       this._render(d);
     } catch(e) {
