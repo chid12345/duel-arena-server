@@ -1,5 +1,6 @@
 /* ============================================================
    TasksScene — вкладка 🗓️ Стрик входа
+   Архитектура: header → ряд 7 ячеек → детальный список → warning
    ============================================================ */
 
 TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
@@ -12,134 +13,175 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
   let y = 8;
 
   const setNames = ['A', 'B', 'C', 'D'];
-  const ws  = (streak.week_set || 0) % 4;
-  const sd  = parseInt(streak.streak_day || 0);
+  const ws      = (streak.week_set || 0) % 4;
+  const sd      = parseInt(streak.streak_day || 0);
   const claimed = streak.days_claimed || [];
   const rewards = streak.reward_set || [];
+  const PAD = 10;
 
-  // ── Подзаголовок ────────────────────────────────────────────
+  // ── 1. Шапка стрика ─────────────────────────────────────────
   const hdrBg = this.add.graphics();
-  hdrBg.fillStyle(0x1a1a38, 0.9);
-  hdrBg.fillRoundedRect(8, y, W - 16, 50, 10);
-  hdrBg.lineStyle(1.5, C.gold, 0.4);
-  hdrBg.strokeRoundedRect(8, y, W - 16, 50, 10);
-  const hdrT1 = txt(this, W/2, y + 14, `🗓️ 7-Дневный стрик — Набор ${setNames[ws]}`, 12, '#ffd700', true).setOrigin(0.5);
-  const statusTxt = sd === 0 ? 'Начни новый цикл!' : `День ${sd} из 7`;
-  const hdrT2 = txt(this, W/2, y + 32, statusTxt, 10, '#aaaacc').setOrigin(0.5);
-  container.add([hdrBg, hdrT1, hdrT2]);
-  y += 58;
+  hdrBg.fillStyle(0x1c1c40, 1);
+  hdrBg.fillRoundedRect(PAD, y, W - PAD*2, 56, 12);
+  hdrBg.lineStyle(2, C.gold, 0.5);
+  hdrBg.strokeRoundedRect(PAD, y, W - PAD*2, 56, 12);
+  container.add(hdrBg);
 
-  // ── Метка секции ────────────────────────────────────────────
-  const secLabel = txt(this, 12, y, 'НАГРАДЫ ТЕКУЩЕГО ЦИКЛА', 8, '#6666aa', true).setOrigin(0, 0);
-  const secDayLbl = txt(this, W - 12, y, `День ${sd === 0 ? 1 : sd} из 7`, 8, '#aaaacc').setOrigin(1, 0);
-  container.add([secLabel, secDayLbl]);
-  y += 16;
+  // Значок набора слева
+  const badgeBg = this.add.graphics();
+  badgeBg.fillStyle(0x332200, 1);
+  badgeBg.fillRoundedRect(PAD + 8, y + 10, 36, 36, 8);
+  container.add(badgeBg);
+  container.add(txt(this, PAD + 26, y + 28, setNames[ws], 18, '#ffd700', true).setOrigin(0.5));
 
-  // ── Ряд иконок дней ─────────────────────────────────────────
-  const cellW = Math.floor((W - 16) / 7);
+  // Заголовок и подзаголовок
+  container.add(txt(this, PAD + 54, y + 16, '7-Дневный стрик входа', 12, '#ffd700', true).setOrigin(0, 0.5));
+  const statusStr = sd === 0 ? '✨ Начни новый цикл!' : `День ${sd} из 7`;
+  container.add(txt(this, PAD + 54, y + 34, statusStr, 10, sd > 0 ? '#aaccff' : '#888899').setOrigin(0, 0.5));
+
+  // Прогресс-точки справа
+  const dotX = W - PAD - 8;
+  for (let i = 6; i >= 0; i--) {
+    const dn = i + 1;
+    const isDone = claimed.includes(dn);
+    const isCur  = dn === sd;
+    const dotG = this.add.graphics();
+    dotG.fillStyle(isDone ? 0x44cc44 : isCur ? 0xffc83c : 0x333355, 1);
+    dotG.fillCircle(dotX - (6 - i) * 12, y + 28, isCur ? 5 : 4);
+    container.add(dotG);
+  }
+  y += 64;
+
+  // ── 2. Метка раздела ────────────────────────────────────────
+  container.add(txt(this, PAD, y, 'НАГРАДЫ ТЕКУЩЕГО ЦИКЛА', 8, '#6677aa', true).setOrigin(0, 0));
+  container.add(txt(this, W - PAD, y, `Набор ${setNames[ws]}`, 8, '#6677aa').setOrigin(1, 0));
+  y += 14;
+
+  // ── 3. Ряд 7 ячеек ──────────────────────────────────────────
+  const cellW = Math.floor((W - PAD * 2) / 7);
+  const cellH = 78;
+
   for (let i = 0; i < 7; i++) {
-    const dn      = i + 1;
-    const rw      = rewards[i] || {};
+    const dn        = i + 1;
+    const rw        = rewards[i] || {};
     const isClaimed = claimed.includes(dn);
-    const isCurrent = (sd === dn) && !isClaimed;
-    const isLocked  = dn > sd || (dn === sd && isClaimed);
+    const isCurrent = sd === dn && !isClaimed;
+    const isLocked  = dn > sd;
 
-    const dx = 8 + i * cellW;
-    const col    = isClaimed ? 0x1a3a1a : isCurrent ? 0x2a2060 : 0x141428;
-    const border = isClaimed ? 0x44cc44 : isCurrent ? C.gold : 0x333355;
-    const alpha  = isClaimed ? 1 : isCurrent ? 1 : 0.55;
+    const dx = PAD + i * cellW;
+
+    // Фон ячейки
+    const bgCol    = isClaimed ? 0x0f2a0f : isCurrent ? 0x1a1a50 : 0x111128;
+    const bdColor  = isClaimed ? 0x33cc33 : isCurrent ? 0xffc83c : 0x252545;
+    const bdWidth  = isCurrent ? 2 : 1;
 
     const bg = this.add.graphics();
-    bg.fillStyle(col, alpha);
-    bg.fillRoundedRect(dx, y, cellW - 2, 68, 6);
-    bg.lineStyle(isCurrent ? 2 : 1, border, isCurrent ? 1 : 0.5);
-    bg.strokeRoundedRect(dx, y, cellW - 2, 68, 6);
+    bg.fillStyle(bgCol, 1);
+    bg.fillRoundedRect(dx + 1, y + 1, cellW - 2, cellH - 2, 6);
+    bg.lineStyle(bdWidth, bdColor, 1);
+    bg.strokeRoundedRect(dx + 1, y + 1, cellW - 2, cellH - 2, 6);
     container.add(bg);
 
-    const cx = dx + (cellW - 2) / 2;
-    const dayColor = isClaimed ? '#44cc44' : isCurrent ? '#ffd700' : '#666688';
-    const dayTxt = txt(this, cx, y + 8, `День ${dn}`, 7, dayColor, isCurrent).setOrigin(0.5);
-    container.add(dayTxt);
+    const cx = dx + cellW / 2;
 
-    // Иконка состояния / награды
+    // "День N" сверху
+    const dayColor = isClaimed ? '#44cc44' : isCurrent ? '#ffd700' : '#555577';
+    container.add(txt(this, cx, y + 9, `Д${dn}`, 8, dayColor, isCurrent).setOrigin(0.5));
+
+    // Иконка / статус (центр)
     let icon;
-    if (isClaimed)      icon = '✅';
-    else if (isLocked)  icon = '🔒';
-    else if (rw.item)   icon = '📦';
+    if (isClaimed)            icon = '✅';
+    else if (isLocked)        icon = '🔒';
+    else if (rw.item)         icon = '📦';
     else if (rw.diamonds > 0) icon = '💎';
-    else                icon = '🪙';
-    container.add(txt(this, cx, y + 28, icon, 16).setOrigin(0.5));
+    else                      icon = '🪙';
+    container.add(txt(this, cx, y + 32, icon, isCurrent ? 22 : 18).setOrigin(0.5));
 
-    // Краткий текст награды
-    let shortReward = '';
-    if (rw.item)            shortReward = 'бокс';
-    else if (rw.diamonds > 0) shortReward = `${rw.diamonds}💎`;
-    else if (rw.gold > 0)   shortReward = `${rw.gold}🪙`;
-    const rwColor = isClaimed ? '#44aa44' : isCurrent ? '#ffd700' : '#aaaacc';
-    container.add(txt(this, cx, y + 50, shortReward, 7, rwColor).setOrigin(0.5));
+    // Краткая награда снизу (2 строки если надо)
+    const parts = [];
+    if (rw.gold > 0)           parts.push(`${rw.gold}🪙`);
+    if (rw.diamonds > 0)       parts.push(`${rw.diamonds}💎`);
+    if (rw.item)               parts.push('бокс');
+    else if (rw.xp > 0)        parts.push(`${rw.xp}⭐`);
 
-    // Кнопка клейма (только текущий незабранный)
+    const rwCol = isClaimed ? '#33aa33' : isCurrent ? '#ffd700' : '#8888bb';
+    if (parts.length <= 1) {
+      container.add(txt(this, cx, y + 62, parts[0] || '', 8, rwCol).setOrigin(0.5));
+    } else {
+      container.add(txt(this, cx, y + 56, parts[0], 8, rwCol).setOrigin(0.5));
+      container.add(txt(this, cx, y + 68, parts[1] || '', 8, rwCol).setOrigin(0.5));
+    }
+
+    // Пульсация + зона клика для текущего
     if (isCurrent) {
       const pulse = this.add.graphics();
-      pulse.fillStyle(0xffc83c, 0.18);
-      pulse.fillRoundedRect(dx, y, cellW - 2, 68, 6);
+      pulse.fillStyle(0xffc83c, 0.12);
+      pulse.fillRoundedRect(dx + 1, y + 1, cellW - 2, cellH - 2, 6);
       container.add(pulse);
-      this.tweens.add({ targets: pulse, alpha: 0, duration: 700, yoyo: true, repeat: -1 });
-
-      const zone = this.add.zone(dx, y + startY, cellW - 2, 68).setOrigin(0)
-        .setInteractive({ useHandCursor: true });
-      zone.on('pointerup', () => this._claimStreakDay(dn));
+      this.tweens.add({ targets: pulse, alpha: 0, duration: 800, yoyo: true, repeat: -1 });
+      this.add.zone(dx + 1, y + 1 + startY, cellW - 2, cellH - 2)
+        .setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerup', () => this._claimStreakDay(dn));
     }
   }
-  y += 76;
+  y += cellH + 10;
 
-  // ── Детальный список наград ─────────────────────────────────
+  // ── 4. Детальный список наград ──────────────────────────────
+  const rowH = 38;
+
   for (let i = 0; i < rewards.length; i++) {
-    const dn2    = i + 1;
-    const rw2    = rewards[i] || {};
-    const isCl2  = claimed.includes(dn2);
+    const dn2   = i + 1;
+    const rw2   = rewards[i] || {};
+    const isCl2 = claimed.includes(dn2);
     const isCur2 = dn2 === sd;
+    const isLk2 = dn2 > sd;
 
+    // Фон строки
     const rowBg = this.add.graphics();
-    rowBg.fillStyle(isCl2 ? 0x0e1e0e : isCur2 ? 0x1a1a38 : C.bgPanel, isCl2 ? 0.95 : 0.7);
-    rowBg.fillRoundedRect(8, y, W - 16, 34, 7);
+    rowBg.fillStyle(isCl2 ? 0x0d1f0d : isCur2 ? 0x18184a : 0x0e0e22, isCl2 ? 1 : 0.8);
+    rowBg.fillRoundedRect(PAD, y, W - PAD*2, rowH, 7);
     if (isCur2) {
-      rowBg.lineStyle(1.5, C.gold, 0.7);
-      rowBg.strokeRoundedRect(8, y, W - 16, 34, 7);
+      rowBg.lineStyle(1.5, C.gold, 0.8);
+      rowBg.strokeRoundedRect(PAD, y, W - PAD*2, rowH, 7);
     }
     container.add(rowBg);
 
+    // Иконка статуса
+    const stIcon = isCl2 ? '✅' : isCur2 ? '▶️' : '🔒';
+    container.add(txt(this, PAD + 12, y + rowH/2, stIcon, 11).setOrigin(0.5));
+
     // "День N:"
-    const labelColor = isCl2 ? '#44cc44' : isCur2 ? '#ffd700' : '#7777aa';
-    container.add(txt(this, 18, y + 17, `День ${dn2}:`, 10, labelColor, isCur2).setOrigin(0, 0.5));
+    const lColor = isCl2 ? '#44cc44' : isCur2 ? '#ffd700' : '#6666aa';
+    container.add(txt(this, PAD + 26, y + rowH/2, `День ${dn2}`, 10, lColor, isCur2).setOrigin(0, 0.5));
 
-    // Награды
-    const parts = [];
-    if (rw2.gold > 0)     parts.push(`+${rw2.gold}🪙`);
-    if (rw2.diamonds > 0) parts.push(`+${rw2.diamonds}💎`);
-    if (rw2.xp > 0)       parts.push(`+${rw2.xp}⭐`);
-    if (rw2.item)         parts.push(`📦 ${rw2.item}`);
-    const rewardColor = isCl2 ? '#55aa55' : isCur2 ? '#ffffff' : '#ccddee';
-    container.add(txt(this, 72, y + 17, parts.join('  '), 10, rewardColor).setOrigin(0, 0.5));
+    // Награды (основной контент)
+    const parts2 = [];
+    if (rw2.gold > 0)     parts2.push(`+${rw2.gold}🪙`);
+    if (rw2.diamonds > 0) parts2.push(`+${rw2.diamonds}💎`);
+    if (rw2.xp > 0)       parts2.push(`+${rw2.xp}⭐`);
+    if (rw2.item)         parts2.push(`📦 ${rw2.item}`);
+    const rwColor2 = isCl2 ? '#55aa55' : isCur2 ? '#ffffff' : '#ccddee';
+    container.add(txt(this, PAD + 76, y + rowH/2, parts2.join('  '), 10, rwColor2).setOrigin(0, 0.5));
 
-    // Статус
-    const statusIcon = isCl2 ? '✅' : isCur2 ? '⬅️' : '🔒';
-    container.add(txt(this, W - 16, y + 17, statusIcon, 11).setOrigin(1, 0.5));
+    // Замок/галочка справа (кроме статус-иконки)
+    if (isLk2) container.add(txt(this, W - PAD - 8, y + rowH/2, '🔒', 10).setOrigin(1, 0.5));
 
-    y += 38;
+    y += rowH + 3;
   }
 
-  // ── Предупреждение ──────────────────────────────────────────
-  y += 6;
-  const warnBg = this.add.graphics();
-  warnBg.fillStyle(0x3a1a00, 0.7);
-  warnBg.fillRoundedRect(8, y, W - 16, 28, 7);
-  container.add(warnBg);
-  container.add(txt(this, W/2, y + 14, '⚠️ Пропуск дня сбрасывает стрик!', 9, '#dd8833').setOrigin(0.5));
-  y += 34;
+  // ── 5. Предупреждение ───────────────────────────────────────
+  y += 8;
+  const wBg = this.add.graphics();
+  wBg.fillStyle(0x2a1200, 1);
+  wBg.fillRoundedRect(PAD, y, W - PAD*2, 32, 8);
+  wBg.lineStyle(1, 0x884400, 0.7);
+  wBg.strokeRoundedRect(PAD, y, W - PAD*2, 32, 8);
+  container.add(wBg);
+  container.add(txt(this, W/2, y + 16, '⚠️  Пропуск дня сбрасывает стрик!', 9, '#dd8833').setOrigin(0.5));
+  y += 38;
 
   container.setY(startY);
-  setContentH(y + 10);
+  setContentH(y + 8);
 };
 
 TasksScene.prototype._claimStreakDay = function(dayNum) {
@@ -154,7 +196,7 @@ TasksScene.prototype._claimStreakDay = function(dayNum) {
         if (r.gold)     parts.push(`+${r.gold}🪙`);
         if (r.diamonds) parts.push(`+${r.diamonds}💎`);
         if (r.xp)       parts.push(`+${r.xp}⭐`);
-        if (r.item)     parts.push(`📦`);
+        if (r.item)     parts.push('📦');
         this._toast(`🎁 День ${dayNum}: ${parts.join(' ')}`);
         this.time.delayedCall(800, () => this.scene.restart({ tab: 'streak' }));
       } else {
