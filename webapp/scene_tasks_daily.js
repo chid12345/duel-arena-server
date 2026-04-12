@@ -39,9 +39,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY, subpage) {
   container.add(navBg);
 
   const leftOn = pageIdx > 0, rightOn = pageIdx < pages.length - 1;
-  container.add(txt(this, PAD + 20, y + 18, '◀', 14, leftOn  ? '#ffffff' : '#333355').setOrigin(0.5));
-  container.add(txt(this, W / 2,    y + 18, labels[pageIdx], 12, '#ffd700', true).setOrigin(0.5));
-  container.add(txt(this, W - PAD - 20, y + 18, '▶', 14, rightOn ? '#ffffff' : '#333355').setOrigin(0.5));
+  container.add(txt(this, W / 2, y + 18, labels[pageIdx], 12, '#ffd700', true).setOrigin(0.5));
 
   pages.forEach((_, pi) => {
     const dotG = this.add.graphics();

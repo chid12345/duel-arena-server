@@ -53,6 +53,7 @@ Object.assign(ShopScene.prototype, {
       })
       .on('pointerup', () => {
         this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy);
+        if (this._swiping) return; // свайп — не покупаем
         if (!canBuy) { this._toastNoMoney(item); return; }
         if (this._buying) return;
         this._doBuy(item);

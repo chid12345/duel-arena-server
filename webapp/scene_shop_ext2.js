@@ -30,23 +30,29 @@ Object.assign(ShopScene.prototype, {
       y += 40;
     }
 
-    const mkStarsNav = (navY, prevPg, nextPg) => {
-      const navG = this.add.graphics();
-      if (prevPg !== null) {
-        navG.fillStyle(0x2a2010, 0.9); navG.fillRoundedRect(W/2-116, navY, 108, 30, 8);
-        navG.lineStyle(1.5, 0xffc83c, 0.55); navG.strokeRoundedRect(W/2-116, navY, 108, 30, 8);
-        txt(this, W/2-62, navY+15, '◀ Алмазы', 11, '#ffc83c', true).setOrigin(0.5);
-        this.add.zone(W/2-116, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerup', () => { ShopScene._lastPage = prevPg; this.scene.restart({ tab: 'stars', page: prevPg }); });
+    // Свайп для переключения Stars-страниц
+    if (pageCount > 1 && !this._starsSwipeSetup) {
+      this._starsSwipeSetup = true;
+      let sx = 0, sy = 0;
+      this.input.on('pointerdown', p => { sx = p.x; sy = p.y; });
+      this.input.on('pointerup',   p => {
+        const dx = p.x - sx, dy = p.y - sy;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          const next = page + (dx < 0 ? 1 : -1);
+          if (next >= 0 && next < pageCount) {
+            tg?.HapticFeedback?.selectionChanged?.();
+            ShopScene._lastPage = next;
+            this.scene.restart({ tab: 'stars', page: next });
+          }
+        }
+      });
+    }
+    const mkStarsNav = (navY) => {
+      for (let pi = 0; pi < pageCount; pi++) {
+        const dg = this.add.graphics();
+        dg.fillStyle(pi === page ? 0xffc83c : 0x333355, 1);
+        dg.fillCircle(W/2 - (pageCount-1)*8 + pi*16, navY + 6, pi === page ? 5 : 3.5);
       }
-      if (nextPg !== null) {
-        navG.fillStyle(0x2a1a0a, 0.9); navG.fillRoundedRect(W/2+8, navY, 108, 30, 8);
-        navG.lineStyle(1.5, 0xffc83c, 0.55); navG.strokeRoundedRect(W/2+8, navY, 108, 30, 8);
-        txt(this, W/2+62, navY+15, 'Premium ▶', 11, '#ffc83c', true).setOrigin(0.5);
-        this.add.zone(W/2+8, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerup', () => { ShopScene._lastPage = nextPg; this.scene.restart({ tab: 'stars', page: nextPg }); });
-      }
-      txt(this, W/2, navY+15, `${page+1} / ${pageCount}`, 9, '#7777aa', true).setOrigin(0.5);
     };
 
     if (page === 0) {
@@ -63,7 +69,7 @@ Object.assign(ShopScene.prototype, {
       y += 98;
       txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#9999bb').setOrigin(0.5);
       y += 20;
-      if (premPkg) mkStarsNav(y, null, 1);
+      if (premPkg) mkStarsNav(y);
     } else {
       // ── Страница 2: Premium подписка ──
       makePanel(this, 8, y, W-16, 22, 8, 0.6);
@@ -82,7 +88,7 @@ Object.assign(ShopScene.prototype, {
         txt(this, 28, y, line, 11, '#b0a0d0'); y += 18;
       });
       y += 8;
-      mkStarsNav(y, 0, null);
+      mkStarsNav(y);
     }
   },
 
@@ -121,23 +127,29 @@ Object.assign(ShopScene.prototype, {
     const pageCount  = hasScrolls ? 2 : 1;
     const page       = Math.min(pg, pageCount - 1);
 
-    const mkSpecNav = (navY, prevPg, nextPg) => {
-      const navG = this.add.graphics();
-      if (prevPg !== null) {
-        navG.fillStyle(0x1a4055, 0.9); navG.fillRoundedRect(W/2-116, navY, 108, 30, 8);
-        navG.lineStyle(1.5, 0x3cc8dc, 0.55); navG.strokeRoundedRect(W/2-116, navY, 108, 30, 8);
-        txt(this, W/2-62, navY+15, '◀ Свитки', 11, '#3ce8ff', true).setOrigin(0.5);
-        this.add.zone(W/2-116, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerup', () => { ShopScene._lastPage = prevPg; this.scene.restart({ tab: 'special', page: prevPg }); });
+    // Свайп для переключения Special-страниц
+    if (pageCount > 1 && !this._specSwipeSetup) {
+      this._specSwipeSetup = true;
+      let sx = 0, sy = 0;
+      this.input.on('pointerdown', p => { sx = p.x; sy = p.y; });
+      this.input.on('pointerup',   p => {
+        const dx = p.x - sx, dy = p.y - sy;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          const next = page + (dx < 0 ? 1 : -1);
+          if (next >= 0 && next < pageCount) {
+            tg?.HapticFeedback?.selectionChanged?.();
+            ShopScene._lastPage = next;
+            this.scene.restart({ tab: 'special', page: next });
+          }
+        }
+      });
+    }
+    const mkSpecNav = (navY) => {
+      for (let pi = 0; pi < pageCount; pi++) {
+        const dg = this.add.graphics();
+        dg.fillStyle(pi === page ? 0x3cc8dc : 0x333355, 1);
+        dg.fillCircle(W/2 - (pageCount-1)*8 + pi*16, navY + 6, pi === page ? 5 : 3.5);
       }
-      if (nextPg !== null) {
-        navG.fillStyle(0x1a4055, 0.9); navG.fillRoundedRect(W/2+8, navY, 108, 30, 8);
-        navG.lineStyle(1.5, 0x3cc8dc, 0.55); navG.strokeRoundedRect(W/2+8, navY, 108, 30, 8);
-        txt(this, W/2+62, navY+15, 'Алмазы ▶', 11, '#3ce8ff', true).setOrigin(0.5);
-        this.add.zone(W/2+8, navY, 108, 30).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerup', () => { ShopScene._lastPage = nextPg; this.scene.restart({ tab: 'special', page: nextPg }); });
-      }
-      txt(this, W/2, navY+15, `${page+1} / ${pageCount}`, 9, '#7777aa', true).setOrigin(0.5);
     };
 
     if (page === 0 && hasScrolls) {
@@ -153,7 +165,7 @@ Object.assign(ShopScene.prototype, {
         this._makeUsdtScrollCard(pkg, ix, iy, iw - 4, 68);
       });
       y += Math.ceil(scrollPkgs.length / 2) * 74 + 12;
-      mkSpecNav(y, null, 1);
+      mkSpecNav(y);
     } else {
       // ── Страница 2: Алмазы / Premium / Сброс ──
       makePanel(this, 8, y, W-16, 22, 8, 0.6);
@@ -182,7 +194,7 @@ Object.assign(ShopScene.prototype, {
           .on('pointerup', () => { checkT.setText('⏳ Проверяем...'); this._checkPendingInvoice(pendingId); });
         y += 44;
       }
-      if (hasScrolls) mkSpecNav(y, 0, null);
+      if (hasScrolls) mkSpecNav(y);
     }
   },
 
