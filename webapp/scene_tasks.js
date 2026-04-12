@@ -82,7 +82,7 @@ class TasksScene extends Phaser.Scene {
   _render(d) {
     const startY = 112;
     if (this._tab === 'streak')      this._buildStreakTab(d.streak, this.W, this.H, startY);
-    else if (this._tab === 'daily')  this._buildDailyTab(d, this.W, this.H, startY, this._subpage);
+    else if (this._tab === 'daily')  this._buildDailyTab(d, this.W, this.H, startY);
     else                             this._buildAchieveTab(d.achievements, this.W, this.H, startY);
   }
 

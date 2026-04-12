@@ -8,11 +8,9 @@ class ShopScene extends Phaser.Scene {
   init(data) {
     this._tab = (data && data.tab) ? data.tab : (ShopScene._lastTab || 'consumables');
     ShopScene._lastTab = this._tab;
-    this._shopPage = (data && typeof data.page === 'number') ? data.page : (ShopScene._lastPage || 0);
-    ShopScene._lastPage = this._shopPage;
     this._buying = false;
     this._applyBusy = false;
-    this._swiping = false; // флаг горизонтального свайпа (защита от случайных покупок)
+    this._swiping = false;
   }
 
   async create() {
@@ -66,8 +64,7 @@ class ShopScene extends Phaser.Scene {
         .on('pointerup', () => {
           if (this._tab === tab.key) return;
           tg?.HapticFeedback?.selectionChanged();
-          ShopScene._lastPage = 0;
-          this.scene.restart({ tab: tab.key, page: 0 });
+          this.scene.restart({ tab: tab.key });
         });
     });
   }
@@ -89,6 +86,53 @@ class ShopScene extends Phaser.Scene {
     }
   }
 
+  /* ── Скролл с инерцией и тапом (аналог TasksScene) ──── */
+  _makeScrollZone(W, H, startY, opts) {
+    opts = opts || {};
+    const viewH = H - startY - 10;
+    const zone = this.add.zone(0, startY, W, viewH).setOrigin(0).setInteractive();
+    const container = this.add.container(0, startY);
+    let baseY = 0, sx = 0, sy = 0, dragY = 0;
+    let vel = 0, lastY = 0, lastT = 0, active = false;
+    const clamp = y => Math.min(0, Math.max(-(container._contentH || 0) + viewH, y));
+    zone.on('pointerdown', p => {
+      sx = p.x; sy = p.y; dragY = baseY; vel = 0;
+      lastY = p.y; lastT = this.game.loop.now;
+      active = true; this._swiping = false;
+    });
+    zone.on('pointermove', p => {
+      if (!active) return;
+      const dx = p.x - sx, dy = p.y - sy;
+      const adx = Math.abs(dx), ady = Math.abs(dy);
+      if (adx > 12 && adx > ady * 1.5) { this._swiping = true; }
+      if (this._swiping || (ady < 8 && adx < 12)) return;
+      const now = this.game.loop.now, dt = now - lastT;
+      if (dt > 0) vel = (p.y - lastY) / dt * 16;
+      lastY = p.y; lastT = now;
+      baseY = clamp(dragY + dy);
+      container.setY(startY + baseY);
+    });
+    zone.on('pointerup', p => {
+      if (!active) return; active = false;
+      const dy = p.y - sy, ady = Math.abs(dy);
+      if (ady < 10 && !this._swiping && opts.onTap) {
+        vel = 0;
+        opts.onTap(p.y - container.y, p.x);
+        return;
+      }
+      this._swiping = false;
+    });
+    zone.on('pointerout', () => { active = false; });
+    this._scrollFn = () => {
+      if (Math.abs(vel) < 0.15) { vel = 0; return; }
+      baseY = clamp(baseY + vel); vel *= 0.88;
+      container.setY(startY + baseY);
+    };
+    return { container, setContentH: h => { container._contentH = h; } };
+  }
+
+  update() { if (this._scrollFn) this._scrollFn(); }
+
   /* ── Роутинг вкладок ──────────────────────────────────── */
   _buildItems(W, H) {
     if (this._tab === 'stars')   { this._buildStarsPanel(W, H);  return; }
@@ -96,42 +140,29 @@ class ShopScene extends Phaser.Scene {
     const items = this._getItems();
     if (!items.length) return;
     const cols = 2, iw = (W - 32) / cols, ih = 110, startY = 162;
-    const perPage = 6; // 3 ряда × 2 колонки
-    const pageCount = Math.max(1, Math.ceil(items.length / perPage));
-    const page = Math.min(this._shopPage || 0, pageCount - 1);
-    this._shopPage = page;
-
-    const slice = items.slice(page * perPage, (page + 1) * perPage);
-    slice.forEach((item, i) => {
-      const col = i % cols, row = Math.floor(i / cols);
-      this._makeItemCard(item, 8 + col * (iw + 8), startY + row * (ih + 10), iw, ih);
-    });
-
-    // Навигация: свайп + точки-индикаторы
-    const actualRows = Math.ceil(slice.length / cols);
-    const navY = startY + actualRows * (ih + 10) + 8;
-    if (pageCount > 1) {
-      for (let pi = 0; pi < pageCount; pi++) {
-        const dg = this.add.graphics();
-        dg.fillStyle(pi === page ? 0xffc83c : 0x333355, 1);
-        dg.fillCircle(W / 2 - (pageCount - 1) * 8 + pi * 16, navY + 6, pi === page ? 5 : 3.5);
-      }
-      let sx = 0, sy = 0;
-      this.input.on('pointerdown', p => { sx = p.x; sy = p.y; this._swiping = false; });
-      this.input.on('pointermove', p => { if (Math.abs(p.x - sx) > 20) this._swiping = true; });
-      this.input.on('pointerup',   p => {
-        const dx = p.x - sx, dy = p.y - sy;
-        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          const next = page + (dx < 0 ? 1 : -1);
-          if (next >= 0 && next < pageCount) {
-            tg?.HapticFeedback?.selectionChanged?.();
-            ShopScene._lastPage = next;
-            this.scene.restart({ tab: this._tab, page: next });
+    const taps = [];
+    const { container, setContentH } = this._makeScrollZone(W, H, startY, {
+      onTap: (relY, relX) => {
+        for (const t of taps) {
+          if (relY >= t.y && relY < t.y + t.h && relX >= t.x && relX < t.x + t.w) {
+            t.fn(); return;
           }
         }
-        this._swiping = false;
-      });
-    }
+      },
+    });
+    let y = 0;
+    items.forEach((item, i) => {
+      const col = i % cols, row = Math.floor(i / cols);
+      const ix = 8 + col * (iw + 8), iy = row * (ih + 10);
+      this._makeItemCardInContainer(container, item, ix, iy, iw, ih);
+      taps.push({ x: ix, y: iy, w: iw, h: ih, fn: () => {
+        if (this._buying) return;
+        if (!this._canAfford(item)) { this._toastNoMoney(item); return; }
+        this._doBuy(item);
+      }});
+    });
+    const totalRows = Math.ceil(items.length / cols);
+    setContentH(totalRows * (ih + 10) + 10);
   }
 
   /* ── Каталог по вкладке ──────────────────────────────── */

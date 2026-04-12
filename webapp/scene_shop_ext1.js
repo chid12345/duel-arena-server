@@ -61,6 +61,46 @@ Object.assign(ShopScene.prototype, {
       .on('pointerout', () => this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy));
   },
 
+  /* ── Карточка товара (для scroll-контейнера) ──────────── */
+  _makeItemCardInContainer(container, item, ix, iy, iw, ih) {
+    const canBuy = this._canAfford(item);
+    const bg = this.add.graphics();
+    this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy);
+    container.add(bg);
+
+    container.add(txt(this, ix + iw / 2, iy + 20, item.icon, 24).setOrigin(0.5));
+    container.add(txt(this, ix + iw / 2, iy + 50, item.name, 10, '#c0c0e0')
+      .setOrigin(0.5).setWordWrapWidth(iw - 10));
+
+    if (item.badge) {
+      const bx = ix + iw - 4, by2 = iy + 4;
+      const badgeG = this.add.graphics();
+      badgeG.fillStyle(item.risk ? 0x7a1a1a : 0x1a3a6a, 0.9);
+      badgeG.fillRoundedRect(bx - 34, by2, 34, 13, 4);
+      container.add(badgeG);
+      container.add(txt(this, bx - 17, by2 + 6, item.badge, 8, item.risk ? '#ff8888' : '#88aaff').setOrigin(0.5));
+    }
+
+    if (item.hpPct && State.player) {
+      const p = State.player;
+      const cur = Math.min(1, (p.current_hp || 0) / Math.max(1, p.max_hp || 1));
+      const addPct = Math.min(item.hpPct, 1 - cur);
+      container.add(makeBar(this, ix + 8, iy + 68, iw - 16, 5, cur, C.red, C.dark, 3));
+      if (addPct > 0) {
+        const bw = iw - 16, prev = Math.round(bw * cur), add = Math.round(bw * addPct);
+        const addG = this.add.graphics();
+        addG.fillStyle(C.green, 0.75);
+        addG.fillRoundedRect(ix + 8 + prev, iy + 68, add, 5, 2);
+        container.add(addG);
+      }
+    }
+
+    const pIcon  = item.currency === 'diamonds' ? '💎' : '🪙';
+    const pColor = item.currency === 'diamonds' ? '#3cc8dc' : '#ffc83c';
+    container.add(txt(this, ix + iw / 2, iy + 90, `${pIcon} ${item.price}`,
+      12, canBuy ? pColor : '#cc8888', true).setOrigin(0.5));
+  },
+
   _drawCardBg(bg, ix, iy, iw, ih, avail, canBuy, pressed = false) {
     bg.clear();
     bg.fillStyle(pressed ? C.dark : C.bgPanel, avail ? 0.92 : 0.55);
@@ -98,7 +138,7 @@ Object.assign(ShopScene.prototype, {
         this._toast(msg);
         this._goldTxt?.setText(`🪙 ${State.player?.gold || 0}`);
         this._diaTxt?.setText(`💎 ${State.player?.diamonds || 0}`);
-        this.time.delayedCall(400, () => this.scene.restart({ tab: this._tab, page: this._shopPage || 0 }));
+        this.time.delayedCall(400, () => this.scene.restart({ tab: this._tab }));
       } else {
         tg?.HapticFeedback?.notificationOccurred('error');
         const detail = res._httpStatus ? ` (HTTP ${res._httpStatus})` : '';

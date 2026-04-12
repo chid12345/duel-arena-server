@@ -61,7 +61,7 @@ Object.assign(ShopScene.prototype, {
     }
   },
 
-  /* ── Вкладка "💵 Купить" (USDT) — 2 страницы ────────── */
+  /* ── Вкладка "💵 Купить" (USDT) — единая страница ───── */
   async _buildSpecialPanel(W, H) {
     let d;
     try { d = await get('/api/shop/packages'); }
@@ -70,11 +70,10 @@ Object.assign(ShopScene.prototype, {
     const cryptoPkgs = d.crypto || [];
     const scrollPkgs = d.usdt_scrolls || [];
     const cryptoOn   = d.cryptopay_enabled;
-    const pg = this._shopPage || 0;
     let y = 162;
     const p = State.player;
 
-    // Премиум-бейдж — на обеих страницах
+    // Премиум-бейдж
     if (p?.is_premium) {
       const sb = this.add.graphics();
       sb.fillStyle(0x1a0a30, 0.95); sb.fillRoundedRect(8, y, W-16, 32, 9);
@@ -92,37 +91,8 @@ Object.assign(ShopScene.prototype, {
       return;
     }
 
-    const hasScrolls = scrollPkgs.length > 0;
-    const pageCount  = hasScrolls ? 2 : 1;
-    const page       = Math.min(pg, pageCount - 1);
-
-    // Свайп для переключения Special-страниц
-    if (pageCount > 1 && !this._specSwipeSetup) {
-      this._specSwipeSetup = true;
-      let sx = 0, sy = 0;
-      this.input.on('pointerdown', p => { sx = p.x; sy = p.y; });
-      this.input.on('pointerup',   p => {
-        const dx = p.x - sx, dy = p.y - sy;
-        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-          const next = page + (dx < 0 ? 1 : -1);
-          if (next >= 0 && next < pageCount) {
-            tg?.HapticFeedback?.selectionChanged?.();
-            ShopScene._lastPage = next;
-            this.scene.restart({ tab: 'special', page: next });
-          }
-        }
-      });
-    }
-    const mkSpecNav = (navY) => {
-      for (let pi = 0; pi < pageCount; pi++) {
-        const dg = this.add.graphics();
-        dg.fillStyle(pi === page ? 0x3cc8dc : 0x333355, 1);
-        dg.fillCircle(W/2 - (pageCount-1)*8 + pi*16, navY + 6, pi === page ? 5 : 3.5);
-      }
-    };
-
-    if (page === 0 && hasScrolls) {
-      // ── Страница 1: USDT свитки ──
+    // ── Секция: USDT свитки ──
+    if (scrollPkgs.length > 0) {
       makePanel(this, 8, y, W-16, 22, 8, 0.6);
       txt(this, 20, y+5, '📜  ОСОБЫЕ СВИТКИ', 12, '#3cc8dc', true);
       txt(this, W-12, y+5, 'USDT', 11, '#9999bb').setOrigin(1, 0);
@@ -134,36 +104,33 @@ Object.assign(ShopScene.prototype, {
         this._makeUsdtScrollCard(pkg, ix, iy, iw - 4, 68);
       });
       y += Math.ceil(scrollPkgs.length / 2) * 74 + 12;
-      mkSpecNav(y);
-    } else {
-      // ── Страница 2: Алмазы / Premium / Сброс ──
-      makePanel(this, 8, y, W-16, 22, 8, 0.6);
-      txt(this, 20, y+5, '💎  АЛМАЗЫ / USDT', 12, '#3cc8dc', true);
-      y += 30;
-      const cpMain = cryptoPkgs.filter(pkg => !pkg.premium && !pkg.full_reset);
-      const cpW = (W - 32) / Math.max(1, cpMain.length);
-      cpMain.forEach((pkg, i) => {
-        this._makeCryptoCard(pkg, 8 + i * (cpW + 8 / Math.max(1,cpMain.length)), y, cpW - 4, 80);
-      });
-      y += 90;
-      const cpReset = cryptoPkgs.find(pkg => pkg.full_reset);
-      if (cpReset) { this._makeCryptoResetCard(cpReset, 8, y, W-16, 88); y += 98; }
-      const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
-      if (cpPrem) { this._makeCryptoPremiumCard(cpPrem, 8, y, W-16, 52); y += 62; }
-      txt(this, W/2, y+4, '💡 После оплаты товар придёт автоматически', 11, '#9999bb').setOrigin(0.5);
-      y += 22;
-      const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
-      if (pendingId) {
-        const checkG = this.add.graphics();
-        checkG.fillStyle(0x1a4055, 0.9); checkG.fillRoundedRect(8, y, W-16, 36, 9);
-        checkG.lineStyle(1.5, 0x3cc8dc, 0.5); checkG.strokeRoundedRect(8, y, W-16, 36, 9);
-        const checkT = txt(this, W/2, y+18, '🔄 Проверить оплату', 12, '#3cc8dc', true).setOrigin(0.5);
-        this.add.zone(8, y, W-16, 36).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerdown', () => { checkG.clear(); checkG.fillStyle(0x0a2535,1); checkG.fillRoundedRect(8,y,W-16,36,9); })
-          .on('pointerup', () => { checkT.setText('⏳ Проверяем...'); this._checkPendingInvoice(pendingId); });
-        y += 44;
-      }
-      if (hasScrolls) mkSpecNav(y);
+    }
+
+    // ── Секция: Алмазы / Premium / Сброс ──
+    makePanel(this, 8, y, W-16, 22, 8, 0.6);
+    txt(this, 20, y+5, '💎  АЛМАЗЫ / USDT', 12, '#3cc8dc', true);
+    y += 30;
+    const cpMain = cryptoPkgs.filter(pkg => !pkg.premium && !pkg.full_reset);
+    const cpW = (W - 32) / Math.max(1, cpMain.length);
+    cpMain.forEach((pkg, i) => {
+      this._makeCryptoCard(pkg, 8 + i * (cpW + 8 / Math.max(1,cpMain.length)), y, cpW - 4, 80);
+    });
+    y += 90;
+    const cpReset = cryptoPkgs.find(pkg => pkg.full_reset);
+    if (cpReset) { this._makeCryptoResetCard(cpReset, 8, y, W-16, 88); y += 98; }
+    const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
+    if (cpPrem) { this._makeCryptoPremiumCard(cpPrem, 8, y, W-16, 52); y += 62; }
+    txt(this, W/2, y+4, '💡 После оплаты товар придёт автоматически', 11, '#9999bb').setOrigin(0.5);
+    y += 22;
+    const pendingId = parseInt(localStorage.getItem('cryptoPendingInvoice') || '0');
+    if (pendingId) {
+      const checkG = this.add.graphics();
+      checkG.fillStyle(0x1a4055, 0.9); checkG.fillRoundedRect(8, y, W-16, 36, 9);
+      checkG.lineStyle(1.5, 0x3cc8dc, 0.5); checkG.strokeRoundedRect(8, y, W-16, 36, 9);
+      const checkT = txt(this, W/2, y+18, '🔄 Проверить оплату', 12, '#3cc8dc', true).setOrigin(0.5);
+      this.add.zone(8, y, W-16, 36).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerdown', () => { checkG.clear(); checkG.fillStyle(0x0a2535,1); checkG.fillRoundedRect(8,y,W-16,36,9); })
+        .on('pointerup', () => { checkT.setText('⏳ Проверяем...'); this._checkPendingInvoice(pendingId); });
     }
   },
 

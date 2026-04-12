@@ -41,102 +41,78 @@
       g.strokeRoundedRect(x, panelY+10, 110, 20, 7);
       const t = txt(this, x+55, panelY+20, label, 9, active ? "#fff" : "#c8c8e8", true).setOrigin(.5).setDepth(124);
       const z = this.add.zone(x+55, panelY+20, 110, 20).setInteractive({useHandCursor:true}).setDepth(125);
-      z.on("pointerdown", () => { if (this._wardrobeView === mode) return; this._wardrobeView = mode; this._avatarPage = 0; this._renderAvatarOverlay(wp); });
+      z.on("pointerdown", () => { if (this._wardrobeView === mode) return; this._wardrobeView = mode; this._renderAvatarOverlay(wp); });
       overlay.push(g, t, z);
     };
     mkTab(14, "Магазин", "all");
     mkTab(128, "Мой инвентарь", "owned");
 
-    const top = panelY + 40, cardW = Math.floor((W-40)/2), cardH = 140, navY = panelY + panelH - 26;
+    const top = panelY + 40, cardW = Math.floor((W-40)/2);
     const cards = this._wardrobeView === "owned"
       ? allCards.filter(x => x.owned || x.is_usdt_slot)
       : allCards.filter(x => !x.is_usdt_slot);
-    const perPage = 4, pageCount = Math.max(1, Math.ceil(cards.length / perPage));
-    this._avatarPage = Math.min(this._avatarPage || 0, pageCount - 1);
     const layer = []; this._avatarCardsLayer = layer;
 
-    const pageLabel = txt(this, W/2, navY+2, "", 10, "#c8c8e8", true).setOrigin(.5).setDepth(124);
-    overlay.push(pageLabel);
+    // Подгоняем высоту карточек чтобы все влезли
+    const maxVisH = panelH - 48;
+    const rows = Math.ceil(cards.length / 2);
+    const cardH = rows <= 1 ? 140 : Math.min(140, Math.floor((maxVisH - (rows-1)*8) / rows));
 
-    // Свайп для перелистывания карточек гардероба
-    let wsx = 0, wsy = 0;
-    const _onWDown = p => { wsx = p.x; wsy = p.y; };
-    const _onWUp   = p => {
-      if (p.y < panelY || p.y > panelY + panelH) return;
-      const dx = p.x - wsx, dy = p.y - wsy;
-      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-        const cur = this._avatarPage || 0;
-        const next = cur + (dx < 0 ? 1 : -1);
-        if (next >= 0 && next < pageCount) {
-          tg?.HapticFeedback?.selectionChanged?.();
-          this._avatarPage = next; render();
+    cards.forEach((a, i) => {
+      const col = i%2, row = Math.floor(i/2);
+      const x = 12 + col*(cardW+8), y = top + row*(cardH+8);
+      const meta = TYPE_META[a.class_type] || TYPE_META.free;
+      const accent = a.equipped ? C.green : (a.owned ? meta.color : C.dark);
+      const card = this.add.graphics().setDepth(122);
+      card.fillStyle(0x1b1a30,.96); card.fillRoundedRect(x,y,cardW,cardH,9);
+      card.lineStyle(1.5,accent,.8); card.strokeRoundedRect(x,y,cardW,cardH,9);
+      layer.push(card);
+      layer.push(txt(this, x+10, y+10, `${a.icon} ${a.name}`, 12, "#f0f0fa", true).setDepth(123));
+      layer.push(txt(this, x+cardW-8, y+10, meta.title, 9, "#9999bb", true).setOrigin(1,0).setDepth(123));
+      layer.push(txt(this, x+10, y+28, `С +${a.strength}  Л +${a.agility}`, 10, "#ffc83c", true).setDepth(123));
+      layer.push(txt(this, x+10, y+43, `И +${a.intuition}  В +${a.endurance}`, 10, "#ffc83c", true).setDepth(123));
+      layer.push(txt(this, x+10, y+60, (a.special_bonus||"Без бонуса").slice(0,42), 9, "#a8a8c8").setDepth(123));
+
+      // Кнопки
+      const bx = x+8, by = y+cardH-34, bw = cardW-16, bh = 28;
+
+      if (a.is_usdt_slot) {
+        const openW = Math.floor(bw * 0.55), equipW = bw - openW - 4;
+        const g1 = this.add.graphics().setDepth(123);
+        g1.fillStyle(C.purple,.95); g1.fillRoundedRect(bx, by, openW, bh, 9);
+        layer.push(g1, txt(this, bx+openW/2, by+bh/2, "Открыть →", 9, "#f0f0fa", true).setOrigin(.5).setDepth(124));
+        const z1 = this.add.zone(bx+openW/2, by+bh/2, openW, bh).setInteractive({useHandCursor:true}).setDepth(125);
+        z1.on("pointerdown", () => this._avatarAction("open_detail", a, wp));
+        layer.push(z1);
+
+        const ex = bx + openW + 4;
+        const eqCol = a.equipped ? 0xcc4422 : C.green;
+        const eqLabel = a.equipped ? "Снять" : "Надеть";
+        const g2 = this.add.graphics().setDepth(123);
+        g2.fillStyle(eqCol,.95); g2.fillRoundedRect(ex, by, equipW, bh, 9);
+        layer.push(g2, txt(this, ex+equipW/2, by+bh/2, eqLabel, 9, "#f0f0fa", true).setOrigin(.5).setDepth(124));
+        const z2 = this.add.zone(ex+equipW/2, by+bh/2, equipW, bh).setInteractive({useHandCursor:true}).setDepth(125);
+        z2.on("pointerdown", () => this._avatarAction(a.equipped ? "unequip" : "equip", a, wp));
+        layer.push(z2);
+      } else {
+        let label = "Надеть", action = "equip";
+        if (a.is_buy_card) { label = "Купить 11.99 USDT"; action = "buy_usdt"; }
+        else if (a.equipped) { label = "✅ Снять"; action = "unequip"; }
+        else if (!a.owned) {
+          if (a.class_type === "gold") label = `Купить ${a.price_gold} зол.`;
+          else if (a.class_type === "diamonds") label = `Купить ${a.price_diamonds} алм.`;
+          else label = "Выбрать";
+          action = "buy";
         }
+        const bcol = action==="unequip" ? 0xcc4422 : (action==="buy"||action==="buy_usdt" ? C.gold : C.green);
+        const btn = this.add.graphics().setDepth(123);
+        btn.fillStyle(bcol,.95); btn.fillRoundedRect(bx,by,bw,bh,9);
+        layer.push(btn, txt(this, bx+bw/2, by+bh/2, label, 10, "#f0f0fa", true).setOrigin(.5).setDepth(124));
+        const z = this.add.zone(bx+bw/2, by+bh/2, bw, bh).setInteractive({useHandCursor:true}).setDepth(125);
+        z.on("pointerdown", () => this._avatarAction(action, a, wp));
+        layer.push(z);
       }
-    };
-    this.input.on('pointerdown', _onWDown);
-    this.input.on('pointerup',   _onWUp);
-    overlay.push({ destroy: () => { this.input.off('pointerdown', _onWDown); this.input.off('pointerup', _onWUp); } });
-
-    const render = () => {
-      layer.forEach(o => { try { o.destroy(); } catch {} }); layer.length = 0;
-      pageLabel.setText(`Страница ${(this._avatarPage||0)+1}/${pageCount}`);
-      cards.slice((this._avatarPage||0)*perPage, ((this._avatarPage||0)+1)*perPage).forEach((a, i) => {
-        const col = i%2, row = Math.floor(i/2);
-        const x = 12 + col*(cardW+8), y = top + row*(cardH+8);
-        const meta = TYPE_META[a.class_type] || TYPE_META.free;
-        const accent = a.equipped ? C.green : (a.owned ? meta.color : C.dark);
-        const card = this.add.graphics().setDepth(122);
-        card.fillStyle(0x1b1a30,.96); card.fillRoundedRect(x,y,cardW,cardH,9);
-        card.lineStyle(1.5,accent,.8); card.strokeRoundedRect(x,y,cardW,cardH,9);
-        layer.push(card);
-        layer.push(txt(this, x+10, y+10, `${a.icon} ${a.name}`, 12, "#f0f0fa", true).setDepth(123));
-        layer.push(txt(this, x+cardW-8, y+10, meta.title, 9, "#9999bb", true).setOrigin(1,0).setDepth(123));
-        layer.push(txt(this, x+10, y+28, `С +${a.strength}  Л +${a.agility}`, 10, "#ffc83c", true).setDepth(123));
-        layer.push(txt(this, x+10, y+43, `И +${a.intuition}  В +${a.endurance}`, 10, "#ffc83c", true).setDepth(123));
-        layer.push(txt(this, x+10, y+60, (a.special_bonus||"Без бонуса").slice(0,42), 9, "#a8a8c8").setDepth(123));
-
-        // Кнопки
-        const bx = x+8, by = y+cardH-34, bw = cardW-16, bh = 28;
-
-        if (a.is_usdt_slot) {
-          const openW = Math.floor(bw * 0.55), equipW = bw - openW - 4;
-          const g1 = this.add.graphics().setDepth(123);
-          g1.fillStyle(C.purple,.95); g1.fillRoundedRect(bx, by, openW, bh, 9);
-          layer.push(g1, txt(this, bx+openW/2, by+bh/2, "Открыть →", 9, "#f0f0fa", true).setOrigin(.5).setDepth(124));
-          const z1 = this.add.zone(bx+openW/2, by+bh/2, openW, bh).setInteractive({useHandCursor:true}).setDepth(125);
-          z1.on("pointerdown", () => this._avatarAction("open_detail", a, wp));
-          layer.push(z1);
-
-          const ex = bx + openW + 4;
-          const eqCol = a.equipped ? 0xcc4422 : C.green;
-          const eqLabel = a.equipped ? "Снять" : "Надеть";
-          const g2 = this.add.graphics().setDepth(123);
-          g2.fillStyle(eqCol,.95); g2.fillRoundedRect(ex, by, equipW, bh, 9);
-          layer.push(g2, txt(this, ex+equipW/2, by+bh/2, eqLabel, 9, "#f0f0fa", true).setOrigin(.5).setDepth(124));
-          const z2 = this.add.zone(ex+equipW/2, by+bh/2, equipW, bh).setInteractive({useHandCursor:true}).setDepth(125);
-          z2.on("pointerdown", () => this._avatarAction(a.equipped ? "unequip" : "equip", a, wp));
-          layer.push(z2);
-        } else {
-          let label = "Надеть", action = "equip";
-          if (a.is_buy_card) { label = "Купить 11.99 USDT"; action = "buy_usdt"; }
-          else if (a.equipped) { label = "✅ Снять"; action = "unequip"; }
-          else if (!a.owned) {
-            if (a.class_type === "gold") label = `Купить ${a.price_gold} зол.`;
-            else if (a.class_type === "diamonds") label = `Купить ${a.price_diamonds} алм.`;
-            else label = "Выбрать";
-            action = "buy";
-          }
-          const bcol = action==="unequip" ? 0xcc4422 : (action==="buy"||action==="buy_usdt" ? C.gold : C.green);
-          const btn = this.add.graphics().setDepth(123);
-          btn.fillStyle(bcol,.95); btn.fillRoundedRect(bx,by,bw,bh,9);
-          layer.push(btn, txt(this, bx+bw/2, by+bh/2, label, 10, "#f0f0fa", true).setOrigin(.5).setDepth(124));
-          const z = this.add.zone(bx+bw/2, by+bh/2, bw, bh).setInteractive({useHandCursor:true}).setDepth(125);
-          z.on("pointerdown", () => this._avatarAction(action, a, wp));
-          layer.push(z);
-        }
-      });
-    };
-    render();
+    });
 
     const dimZ = this.add.zone(W/2, H/2, W, H).setInteractive().setDepth(119);
     dimZ.on("pointerdown", () => {});
