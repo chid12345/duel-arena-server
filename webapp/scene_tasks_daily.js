@@ -44,18 +44,18 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     const bh = 62;
 
     const bg = this.add.graphics();
-    bg.fillStyle(done ? (claimed ? 0x0a1a0a : 0x0c1e0e) : 0x0e0e22, 0.95);
+    bg.fillStyle(done ? (claimed ? 0x141622 : 0x0e1828) : 0x0e0e22, 0.95);
     bg.fillRoundedRect(PAD, y, W - PAD * 2, bh, 10);
-    bg.lineStyle(1.5, done ? (claimed ? 0x33aa33 : C.gold) : 0x1e1e44, 1);
+    bg.lineStyle(1.5, done ? (claimed ? 0x556688 : C.gold) : 0x1e1e44, 1);
     bg.strokeRoundedRect(PAD, y, W - PAD * 2, bh, 10);
     container.add(bg);
 
     const icon = q.label.split(' ')[0];
     const name = q.label.replace(/^[^ ]+ /, '');
     container.add(txt(this, PAD + 18, y + 20, icon, 18).setOrigin(0.5));
-    container.add(txt(this, PAD + 34, y + 11, name, 11, done ? '#44ee77' : '#ffffff', done).setOrigin(0, 0));
+    container.add(txt(this, PAD + 34, y + 11, name, 11, done ? (claimed ? '#8899aa' : '#55bbff') : '#ffffff', done).setOrigin(0, 0));
     container.add(txt(this, PAD + 34, y + 26, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
-    container.add(makeBar(this, PAD + 34, y + 40, W - 120, 5, Math.min(1, cur / max), done ? C.green : C.blue, 0x1a1a3a, 3));
+    container.add(makeBar(this, PAD + 34, y + 40, W - 120, 5, Math.min(1, cur / max), done ? (claimed ? 0x667799 : 0x44aaee) : C.blue, 0x1a1a3a, 3));
     container.add(txt(this, W - PAD - 4, y + 12, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
     if (!claimed) {
       const rwTxt = `+${q.reward_gold}💰${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
@@ -84,19 +84,19 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     const bh = 68;
 
     const bg = this.add.graphics();
-    bg.fillStyle(done ? (claimed ? 0x0a1a0a : 0x0c1e0e) : 0x0e0e22, 0.95);
+    bg.fillStyle(done ? (claimed ? 0x141622 : 0x0e1828) : 0x0e0e22, 0.95);
     bg.fillRoundedRect(PAD, y, W - PAD * 2, bh, 10);
-    bg.lineStyle(1.5, done ? (claimed ? 0x33aa33 : C.gold) : 0x1e1e44, 1);
+    bg.lineStyle(1.5, done ? (claimed ? 0x556688 : C.gold) : 0x1e1e44, 1);
     bg.strokeRoundedRect(PAD, y, W - PAD * 2, bh, 10);
     container.add(bg);
 
     const icon2 = q.label.split(' ')[0];
     const name2 = q.label.replace(/^[^ ]+ /, '');
     container.add(txt(this, PAD + 18, y + 22, icon2, 18).setOrigin(0.5));
-    container.add(txt(this, PAD + 34, y + 9, name2, 11, done ? '#44ee77' : '#ffffff', done).setOrigin(0, 0));
+    container.add(txt(this, PAD + 34, y + 9, name2, 11, done ? (claimed ? '#8899aa' : '#55bbff') : '#ffffff', done).setOrigin(0, 0));
     if (q.desc) container.add(txt(this, PAD + 34, y + 23, q.desc, 9, '#ccddff').setOrigin(0, 0));
     container.add(txt(this, PAD + 34, y + 36, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
-    container.add(makeBar(this, PAD + 80, y + 38, W - 140, 4, Math.min(1, cur / max), done ? C.green : C.gold, 0x1a1a3a, 3));
+    container.add(makeBar(this, PAD + 80, y + 38, W - 140, 4, Math.min(1, cur / max), done ? (claimed ? 0x667799 : 0x44aaee) : C.gold, 0x1a1a3a, 3));
     container.add(txt(this, W - PAD - 4, y + 9, claimed ? '✅' : (done ? '🎁' : '🔒'), 16).setOrigin(1, 0));
     if (!claimed) {
       const rwTxt = `+${q.reward_gold}💰${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;

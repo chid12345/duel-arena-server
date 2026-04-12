@@ -55,7 +55,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     const isDone = claimed.includes(dn);
     const isCur  = dn === sd;
     const dotG = this.add.graphics();
-    dotG.fillStyle(isDone ? 0x44cc44 : isCur ? 0xffc83c : 0x333355, 1);
+    dotG.fillStyle(isDone ? 0x667799 : isCur ? 0xffc83c : 0x333355, 1);
     dotG.fillCircle(dotX - (6 - i) * 12, y + 28, isCur ? 5 : 4);
     container.add(dotG);
   }
@@ -80,8 +80,8 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     const dx = PAD + i * cellW;
 
     // Фон ячейки
-    const bgCol    = isClaimed ? 0x0f2a0f : isCurrent ? 0x1a1a50 : 0x111128;
-    const bdColor  = isClaimed ? 0x33cc33 : isCurrent ? 0xffc83c : 0x252545;
+    const bgCol    = isClaimed ? 0x141622 : isCurrent ? 0x1a1a50 : 0x111128;
+    const bdColor  = isClaimed ? 0x556688 : isCurrent ? 0xffc83c : 0x252545;
     const bdWidth  = isCurrent ? 2 : 1;
 
     const bg = this.add.graphics();
@@ -94,7 +94,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     const cx = dx + cellW / 2;
 
     // "День N" сверху
-    const dayColor = isClaimed ? '#44cc44' : isCurrent ? '#ffd700' : '#ffffff';
+    const dayColor = isClaimed ? '#8899aa' : isCurrent ? '#ffd700' : '#ffffff';
     container.add(txt(this, cx, y + 9, `Д${dn}`, 8, dayColor, isCurrent).setOrigin(0.5));
 
     // Иконка / статус (центр)
@@ -113,7 +113,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw.item)               parts.push('бокс');
     else if (rw.xp > 0)        parts.push(`${rw.xp}⭐`);
 
-    const rwCol = isClaimed ? '#44cc44' : isCurrent ? '#ffd700' : '#ffffff';
+    const rwCol = isClaimed ? '#8899aa' : isCurrent ? '#ffd700' : '#ffffff';
     if (parts.length <= 1) {
       container.add(txt(this, cx, y + 62, parts[0] || '', 8, rwCol).setOrigin(0.5));
     } else {
@@ -146,7 +146,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
 
     // Фон строки
     const rowBg = this.add.graphics();
-    rowBg.fillStyle(isCl2 ? 0x0d1f0d : isCur2 ? 0x18184a : 0x0e0e22, isCl2 ? 1 : 0.8);
+    rowBg.fillStyle(isCl2 ? 0x141622 : isCur2 ? 0x18184a : 0x0e0e22, isCl2 ? 1 : 0.8);
     rowBg.fillRoundedRect(PAD, y, W - PAD*2, rowH, 7);
     if (isCur2) {
       rowBg.lineStyle(1.5, C.gold, 0.8);
@@ -159,7 +159,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     container.add(txt(this, PAD + 12, y + rowH/2, stIcon, 11).setOrigin(0.5));
 
     // "День N:"
-    const lColor = isCl2 ? '#44cc44' : isCur2 ? '#ffd700' : '#ffffff';
+    const lColor = isCl2 ? '#8899aa' : isCur2 ? '#ffd700' : '#ffffff';
     container.add(txt(this, PAD + 26, y + rowH/2, `День ${dn2}`, 10, lColor, isCur2).setOrigin(0, 0.5));
 
     // Награды (основной контент)
@@ -168,7 +168,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     if (rw2.diamonds > 0) parts2.push(`+${rw2.diamonds}💎`);
     if (rw2.xp > 0)       parts2.push(`+${rw2.xp}⭐`);
     if (rw2.item)         parts2.push(`📦 ${rw2.item}`);
-    const rwColor2 = isCl2 ? '#44cc44' : '#ffffff';
+    const rwColor2 = isCl2 ? '#8899aa' : '#ffffff';
     container.add(txt(this, PAD + 76, y + rowH/2, parts2.join('  '), 10, rwColor2).setOrigin(0, 0.5));
 
     // Замок/галочка справа (кроме статус-иконки)
