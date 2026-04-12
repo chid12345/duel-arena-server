@@ -1,116 +1,60 @@
 /* ═══════════════════════════════════════════════════════════
-   ShopScene ext1 — _makeItemCard, _drawCardBg, _canAfford,
-                    _doBuy, _toastNoMoney
+   ShopScene ext1 — _getItems (каталог), _canAfford, _doBuy
    ═══════════════════════════════════════════════════════════ */
 
 Object.assign(ShopScene.prototype, {
 
-  /* ── Карточка товара ─────────────────────────────────── */
-  _makeItemCard(item, ix, iy, iw, ih) {
-    const canBuy = this._canAfford(item);
-    const bg = this.add.graphics();
-    this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy);
-
-    txt(this, ix + iw / 2, iy + 20, item.icon, 24).setOrigin(0.5);
-
-    const name = txt(this, ix + iw / 2, iy + 50, item.name, 10, '#c0c0e0')
-      .setOrigin(0.5).setWordWrapWidth(iw - 10);
-
-    if (item.badge) {
-      const bx = ix + iw - 4, by2 = iy + 4;
-      const badgeG = this.add.graphics();
-      badgeG.fillStyle(item.risk ? 0x7a1a1a : 0x1a3a6a, 0.9);
-      badgeG.fillRoundedRect(bx - 34, by2, 34, 13, 4);
-      txt(this, bx - 17, by2 + 6, item.badge, 8, item.risk ? '#ff8888' : '#88aaff').setOrigin(0.5);
+  /* ── Каталог по вкладке ──────────────────────────────── */
+  _getItems() {
+    const p = State.player;
+    const xpCharges = p?.xp_boost_charges || 0;
+    if (this._tab === 'consumables') {
+      return [
+        { id: 'hp_small',    icon: '🧪', name: 'Малое зелье HP',   price: 12,  currency: 'gold',     desc: '+30% HP', hpPct: 0.30 },
+        { id: 'hp_medium',   icon: '💊', name: 'Среднее зелье HP',  price: 25,  currency: 'gold',     desc: '+60% HP', hpPct: 0.60 },
+        { id: 'hp_full',     icon: '⚗️', name: 'Полное зелье HP',  price: 50,  currency: 'gold',     desc: 'Полное HP', hpPct: 1.0 },
+        { id: 'xp_boost_5',  icon: '⚡', name: 'XP Буст ×1.5',    price: 100, currency: 'gold',     desc: `5 боёв · активно: ${xpCharges}` },
+        { id: 'xp_boost_20', icon: '⚡', name: 'XP Буст ×1.5',    price: 25,  currency: 'diamonds', desc: '20 боёв → инвентарь' },
+        { id: 'xp_boost_x2', icon: '🚀', name: 'XP Буст ×2.0',    price: 40,  currency: 'diamonds', desc: '10 боёв → инвентарь' },
+        { id: 'gold_hunt',   icon: '💰', name: 'Охота за золотом', price: 20,  currency: 'diamonds', desc: '+20% золото · 24ч → инвентарь' },
+        { id: 'xp_hunt',     icon: '📚', name: 'Охота за опытом',  price: 20,  currency: 'diamonds', desc: '+50% опыта · 24ч → инвентарь' },
+        { id: 'stat_reset',  icon: '🔄', name: 'Сброс статов',    price: 200, currency: 'diamonds', desc: 'Сброс всех статов' },
+      ];
     }
-
-    if (item.hpPct && State.player) {
-      const p = State.player;
-      const cur = Math.min(1, (p.current_hp || 0) / Math.max(1, p.max_hp || 1));
-      const addPct = Math.min(item.hpPct, 1 - cur);
-      makeBar(this, ix + 8, iy + 68, iw - 16, 5, cur, C.red, C.dark, 3);
-      if (addPct > 0) {
-        const bw = iw - 16, prev = Math.round(bw * cur), add = Math.round(bw * addPct);
-        const addG = this.add.graphics();
-        addG.fillStyle(C.green, 0.75);
-        addG.fillRoundedRect(ix + 8 + prev, iy + 68, add, 5, 2);
-      }
+    if (this._tab === 'scrolls') {
+      return [
+        { id: 'scroll_str_3',   icon: '⚔️', name: 'Эликсир силы +3',     price: 60,  currency: 'gold',     desc: 'Сила +3 · 1 бой',          badge: '1 бой' },
+        { id: 'scroll_end_3',   icon: '🌀', name: 'Эликс. ловкости +3',   price: 60,  currency: 'gold',     desc: 'Ловкость +3 · 1 бой',       badge: '1 бой' },
+        { id: 'scroll_crit_3',  icon: '🎯', name: 'Интуиция +3',           price: 75,  currency: 'gold',     desc: 'Интуиция +3 · 1 бой',       badge: '1 бой' },
+        { id: 'scroll_armor_6', icon: '🛡️', name: 'Свиток брони 6%',      price: 80,  currency: 'gold',     desc: 'Броня +6% · 1 бой',         badge: '1 бой' },
+        { id: 'scroll_hp_100',  icon: '❤️', name: 'Эликсир HP +100',      price: 70,  currency: 'gold',     desc: '+100 HP · 1 бой',           badge: '1 бой' },
+        { id: 'scroll_warrior', icon: '⚔️', name: 'Комбо Воина',          price: 110, currency: 'gold',     desc: 'Сила+2, Ловк+2 · 1 бой',    badge: '1 бой' },
+        { id: 'scroll_shadow',  icon: '🌑', name: 'Комбо Тени',            price: 100, currency: 'gold',     desc: 'Ловк+3, Уворот+3% · 1 бой', badge: '1 бой' },
+        { id: 'scroll_fury',    icon: '💥', name: 'Комбо Ярости',          price: 120, currency: 'gold',     desc: 'Сила+4, Крит+2 · 1 бой',    badge: '1 бой' },
+        { id: 'scroll_str_6',    icon: '⚔️', name: 'Эликсир силы +6',     price: 20, currency: 'diamonds', desc: 'Сила +6 · 3 боя',           badge: '3 боя' },
+        { id: 'scroll_end_6',    icon: '🌀', name: 'Эликс. ловкости +6',  price: 20, currency: 'diamonds', desc: 'Ловкость +6 · 3 боя',        badge: '3 боя' },
+        { id: 'scroll_crit_6',   icon: '🎯', name: 'Интуиция +6',          price: 25, currency: 'diamonds', desc: 'Интуиция +6 · 3 боя',        badge: '3 боя' },
+        { id: 'scroll_dodge_5',  icon: '💨', name: 'Свиток уворота 5%',    price: 25, currency: 'diamonds', desc: 'Уворот +5% · 3 боя',         badge: '3 боя' },
+        { id: 'scroll_armor_10', icon: '🛡️', name: 'Свиток брони 10%',    price: 30, currency: 'diamonds', desc: 'Броня +10% · 3 боя',         badge: '3 боя' },
+        { id: 'scroll_hp_200',   icon: '❤️', name: 'Эликсир HP +200',     price: 25, currency: 'diamonds', desc: '+200 HP · 3 боя',            badge: '3 боя' },
+        { id: 'scroll_double_10',icon: '⚡', name: 'Двойной удар +10%',   price: 35, currency: 'diamonds', desc: 'Двойной удар +10% · 3 боя',  badge: '3 боя' },
+        { id: 'scroll_all_4',    icon: '✨', name: 'Все пассивки +4',     price: 40, currency: 'diamonds', desc: 'Все статы +4 · 1 бой',       badge: '1 бой' },
+        { id: 'scroll_bastion',  icon: '🏰', name: 'Бастион',             price: 35, currency: 'diamonds', desc: 'Ловк+5, Броня+8% · 3 боя',   badge: '3 боя' },
+        { id: 'scroll_predator', icon: '🐍', name: 'Хищник',              price: 35, currency: 'diamonds', desc: 'Крит+5, Двойн+8% · 3 боя',   badge: '3 боя' },
+        { id: 'scroll_berserker',icon: '🔥', name: 'Берсерк',             price: 40, currency: 'diamonds', desc: 'Сила+8, Броня-5% · 3 боя',   badge: '3 боя', risk: true },
+        { id: 'scroll_accuracy', icon: '🎯', name: 'Точность +15%',       price: 20, currency: 'diamonds', desc: 'Точность +15% · 3 боя',       badge: '3 боя' },
+      ];
     }
-
-    // Цена
-    const pIcon  = item.currency === 'diamonds' ? '💎' : '🪙';
-    const pColor = item.currency === 'diamonds' ? '#3cc8dc' : '#ffc83c';
-    txt(this, ix + iw / 2, iy + 90, `${pIcon} ${item.price}`,
-      12, canBuy ? pColor : '#cc8888', true).setOrigin(0.5);
-
-    // Зона клика
-    this.add.zone(ix, iy, iw, ih).setOrigin(0)
-      .setInteractive({ useHandCursor: canBuy })
-      .on('pointerdown', () => {
-        if (!canBuy || this._buying) return;
-        this._drawCardBg(bg, ix, iy, iw, ih, true, true, true);
-        tg?.HapticFeedback?.impactOccurred('medium');
-      })
-      .on('pointerup', () => {
-        this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy);
-        if (this._swiping) return; // свайп — не покупаем
-        if (!canBuy) { this._toastNoMoney(item); return; }
-        if (this._buying) return;
-        this._doBuy(item);
-      })
-      .on('pointerout', () => this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy));
-  },
-
-  /* ── Карточка товара (для scroll-контейнера) ──────────── */
-  _makeItemCardInContainer(container, item, ix, iy, iw, ih) {
-    const canBuy = this._canAfford(item);
-    const bg = this.add.graphics();
-    this._drawCardBg(bg, ix, iy, iw, ih, true, canBuy);
-    container.add(bg);
-
-    container.add(txt(this, ix + iw / 2, iy + 20, item.icon, 24).setOrigin(0.5));
-    container.add(txt(this, ix + iw / 2, iy + 50, item.name, 10, '#c0c0e0')
-      .setOrigin(0.5).setWordWrapWidth(iw - 10));
-
-    if (item.badge) {
-      const bx = ix + iw - 4, by2 = iy + 4;
-      const badgeG = this.add.graphics();
-      badgeG.fillStyle(item.risk ? 0x7a1a1a : 0x1a3a6a, 0.9);
-      badgeG.fillRoundedRect(bx - 34, by2, 34, 13, 4);
-      container.add(badgeG);
-      container.add(txt(this, bx - 17, by2 + 6, item.badge, 8, item.risk ? '#ff8888' : '#88aaff').setOrigin(0.5));
+    if (this._tab === 'boxes') {
+      return [
+        { id: 'exchange_small',  icon: '💱', name: '5💎 → 350🪙',       price: 5,   currency: 'diamonds', desc: 'Обмен алмазы → золото' },
+        { id: 'exchange_medium', icon: '💱', name: '15💎 → 1100🪙',     price: 15,  currency: 'diamonds', desc: 'Лучший курс' },
+        { id: 'exchange_large',  icon: '💱', name: '50💎 → 4000🪙',     price: 50,  currency: 'diamonds', desc: 'Максимальный курс' },
+        { id: 'box_common',      icon: '📦', name: 'Обычный ящик',       price: 150, currency: 'gold',     desc: 'Случайный предмет' },
+        { id: 'box_rare',        icon: '🟦', name: 'Редкий ящик',        price: 50,  currency: 'diamonds', desc: 'Ценный предмет · 5% USDT' },
+      ];
     }
-
-    if (item.hpPct && State.player) {
-      const p = State.player;
-      const cur = Math.min(1, (p.current_hp || 0) / Math.max(1, p.max_hp || 1));
-      const addPct = Math.min(item.hpPct, 1 - cur);
-      container.add(makeBar(this, ix + 8, iy + 68, iw - 16, 5, cur, C.red, C.dark, 3));
-      if (addPct > 0) {
-        const bw = iw - 16, prev = Math.round(bw * cur), add = Math.round(bw * addPct);
-        const addG = this.add.graphics();
-        addG.fillStyle(C.green, 0.75);
-        addG.fillRoundedRect(ix + 8 + prev, iy + 68, add, 5, 2);
-        container.add(addG);
-      }
-    }
-
-    const pIcon  = item.currency === 'diamonds' ? '💎' : '🪙';
-    const pColor = item.currency === 'diamonds' ? '#3cc8dc' : '#ffc83c';
-    container.add(txt(this, ix + iw / 2, iy + 90, `${pIcon} ${item.price}`,
-      12, canBuy ? pColor : '#cc8888', true).setOrigin(0.5));
-  },
-
-  _drawCardBg(bg, ix, iy, iw, ih, avail, canBuy, pressed = false) {
-    bg.clear();
-    bg.fillStyle(pressed ? C.dark : C.bgPanel, avail ? 0.92 : 0.55);
-    bg.fillRoundedRect(ix, iy, iw, ih, 12);
-    if (canBuy) {
-      bg.lineStyle(1.5, C.gold, pressed ? 0.7 : 0.35);
-    } else if (avail) {
-      bg.lineStyle(1, 0x553333, 0.5);
-    }
-    bg.strokeRoundedRect(ix, iy, iw, ih, 12);
+    return [];
   },
 
   _canAfford(item) {

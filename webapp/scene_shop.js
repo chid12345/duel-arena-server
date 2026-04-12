@@ -48,17 +48,17 @@ class ShopScene extends Phaser.Scene {
       const active = tab.key === this._tab;
       const isPay  = tab.key === 'stars' || tab.key === 'special';
       const bg = this.add.graphics();
-      bg.fillStyle(active ? (isPay ? 0x1a5c8a : C.blue) : C.dark, active ? 0.92 : 0.55);
+      bg.fillStyle(active ? C.bgPanel : 0x000000, active ? 0.95 : 0.2);
       bg.fillRoundedRect(tx, ty, tw - 4, 30, 8);
       if (active) {
-        bg.lineStyle(1.5, isPay ? 0x3cc8dc : C.blue, 0.6);
+        bg.lineStyle(1.5, isPay ? 0x3cc8dc : C.gold, 0.6);
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
       if (isPay && !active) {
-        bg.lineStyle(1, 0x1a4055, 0.7);
+        bg.lineStyle(1, 0x1a4055, 0.5);
         bg.strokeRoundedRect(tx, ty, tw - 4, 30, 8);
       }
-      const labelColor = active ? '#ffffff' : (isPay ? '#3cc8dc' : '#8888aa');
+      const labelColor = active ? (isPay ? '#3cc8dc' : '#ffc83c') : (isPay ? '#3c8898' : '#777799');
       txt(this, tx + (tw - 4) / 2, ty + 15, tab.label, 9, labelColor, active).setOrigin(0.5);
       this.add.zone(tx, ty, tw - 4, 30).setOrigin(0)
         .setInteractive({ useHandCursor: true })
@@ -138,9 +138,7 @@ class ShopScene extends Phaser.Scene {
   _buildItems(W, H) {
     if (this._tab === 'stars')   { this._buildStarsPanel(W, H);  return; }
     if (this._tab === 'special') { this._buildSpecialPanel(W, H); return; }
-    const items = this._getItems();
-    if (!items.length) return;
-    const cols = 2, iw = (W - 32) / cols, ih = 110, startY = 162;
+    const startY = 162;
     const taps = [];
     const { container, setContentH } = this._makeScrollZone(W, H, startY, {
       onTap: (relY, relX) => {
@@ -152,72 +150,81 @@ class ShopScene extends Phaser.Scene {
       },
     });
     let y = 0;
-    items.forEach((item, i) => {
-      const col = i % cols, row = Math.floor(i / cols);
-      const ix = 8 + col * (iw + 8), iy = row * (ih + 10);
-      this._makeItemCardInContainer(container, item, ix, iy, iw, ih);
-      taps.push({ x: ix, y: iy, w: iw, h: ih, fn: () => {
-        if (this._buying) return;
-        if (!this._canAfford(item)) { this._toastNoMoney(item); return; }
-        this._doBuy(item);
-      }});
-    });
-    const totalRows = Math.ceil(items.length / cols);
-    setContentH(totalRows * (ih + 10) + 10);
+    const PAD = 8;
+    const tapItem = (item) => () => {
+      if (this._buying) return;
+      if (!this._canAfford(item)) { this._toastNoMoney(item); return; }
+      this._doBuy(item);
+    };
+
+    if (this._tab === 'consumables') {
+      const items = this._getItems();
+      const featured = items.slice(0, 2);
+      const rest = items.slice(2);
+      // Featured
+      y = this._renderSectionLabel(container, PAD, y, W, '⭐  РЕКОМЕНДУЕМ');
+      featured.forEach(item => {
+        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
+        y += 74;
+      });
+      // Rest
+      y = this._renderSectionLabel(container, PAD, y, W, '🧪  ВСЕ ЗЕЛЬЯ И БУСТЫ');
+      rest.forEach(item => {
+        this._renderRowCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 38, fn: tapItem(item) });
+        y += 42;
+      });
+    } else if (this._tab === 'scrolls') {
+      const items = this._getItems();
+      const gold = items.filter(i => i.currency === 'gold');
+      const dia  = items.filter(i => i.currency === 'diamonds');
+      // Gold scrolls — featured top 2
+      y = this._renderSectionLabel(container, PAD, y, W, '🪙  ЗОЛОТЫЕ СВИТКИ · 1 бой');
+      const goldFeat = gold.slice(0, 2), goldRest = gold.slice(2);
+      goldFeat.forEach(item => {
+        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
+        y += 74;
+      });
+      goldRest.forEach(item => {
+        this._renderRowCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 38, fn: tapItem(item) });
+        y += 42;
+      });
+      // Diamond scrolls
+      y += 4;
+      y = this._renderSectionLabel(container, PAD, y, W, '💎  АЛМАЗНЫЕ СВИТКИ · 3 боя');
+      const diaFeat = dia.slice(0, 2), diaRest = dia.slice(2);
+      diaFeat.forEach(item => {
+        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
+        y += 74;
+      });
+      diaRest.forEach(item => {
+        this._renderRowCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 38, fn: tapItem(item) });
+        y += 42;
+      });
+    } else if (this._tab === 'boxes') {
+      const items = this._getItems();
+      const exchanges = items.filter(i => i.id.startsWith('exchange'));
+      const boxes = items.filter(i => i.id.startsWith('box'));
+      y = this._renderSectionLabel(container, PAD, y, W, '💱  ОБМЕН ВАЛЮТ');
+      exchanges.forEach(item => {
+        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
+        y += 74;
+      });
+      y += 4;
+      y = this._renderSectionLabel(container, PAD, y, W, '📦  ЯЩИКИ');
+      boxes.forEach(item => {
+        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
+        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
+        y += 74;
+      });
+    }
+    setContentH(y + 10);
   }
 
-  /* ── Каталог по вкладке ──────────────────────────────── */
-  _getItems() {
-    const p = State.player;
-    const xpCharges = p?.xp_boost_charges || 0;
-    if (this._tab === 'consumables') {
-      return [
-        { id: 'hp_small',    icon: '🧪', name: 'Малое зелье HP',   price: 12,  currency: 'gold',     desc: '+30% HP', hpPct: 0.30 },
-        { id: 'hp_medium',   icon: '💊', name: 'Среднее зелье HP',  price: 25,  currency: 'gold',     desc: '+60% HP', hpPct: 0.60 },
-        { id: 'hp_full',     icon: '⚗️', name: 'Полное зелье HP',  price: 50,  currency: 'gold',     desc: 'Полное HP', hpPct: 1.0 },
-        { id: 'xp_boost_5',  icon: '⚡', name: 'XP Буст ×1.5',    price: 100, currency: 'gold',     desc: `5 боёв · активно: ${xpCharges}` },
-        { id: 'xp_boost_20', icon: '⚡', name: 'XP Буст ×1.5',    price: 25,  currency: 'diamonds', desc: '20 боёв → инвентарь' },
-        { id: 'xp_boost_x2', icon: '🚀', name: 'XP Буст ×2.0',    price: 40,  currency: 'diamonds', desc: '10 боёв → инвентарь' },
-        { id: 'gold_hunt',   icon: '💰', name: 'Охота за золотом', price: 20,  currency: 'diamonds', desc: '+20% золото за бой · 24 ч → инвентарь' },
-        { id: 'xp_hunt',     icon: '📚', name: 'Охота за опытом',  price: 20,  currency: 'diamonds', desc: '+50% опыта за бой · 24 ч → инвентарь' },
-        { id: 'stat_reset',  icon: '🔄', name: 'Сброс статов',    price: 200, currency: 'diamonds', desc: 'Сброс всех статов' },
-      ];
-    }
-    if (this._tab === 'scrolls') {
-      return [
-        // Gold — 1 бой
-        { id: 'scroll_str_3',   icon: '⚔️', name: 'Эликсир силы +3',     price: 60,  currency: 'gold',     desc: 'Сила +3 · 1 бой',          badge: '1 бой' },
-        { id: 'scroll_end_3',   icon: '🌀', name: 'Эликс. ловкости +3',   price: 60,  currency: 'gold',     desc: 'Ловкость +3 · 1 бой',       badge: '1 бой' },
-        { id: 'scroll_crit_3',  icon: '🎯', name: 'Интуиция +3',           price: 75,  currency: 'gold',     desc: 'Интуиция +3 · 1 бой',       badge: '1 бой' },
-        { id: 'scroll_armor_6', icon: '🛡️', name: 'Свиток брони 6%',      price: 80,  currency: 'gold',     desc: 'Броня +6% · 1 бой',         badge: '1 бой' },
-        { id: 'scroll_hp_100',  icon: '❤️', name: 'Эликсир HP +100',      price: 70,  currency: 'gold',     desc: '+100 HP · 1 бой',           badge: '1 бой' },
-        { id: 'scroll_warrior', icon: '⚔️', name: 'Комбо Воина',          price: 110, currency: 'gold',     desc: 'Сила+2, Ловк+2 · 1 бой',    badge: '1 бой' },
-        { id: 'scroll_shadow',  icon: '🌑', name: 'Комбо Тени',            price: 100, currency: 'gold',     desc: 'Ловк+3, Уворот+3% · 1 бой', badge: '1 бой' },
-        { id: 'scroll_fury',    icon: '💥', name: 'Комбо Ярости',          price: 120, currency: 'gold',     desc: 'Сила+4, Крит+2 · 1 бой',    badge: '1 бой' },
-        // Diamonds — 3 боя
-        { id: 'scroll_str_6',    icon: '⚔️', name: 'Эликсир силы +6',     price: 20, currency: 'diamonds', desc: 'Сила +6 · 3 боя',           badge: '3 боя' },
-        { id: 'scroll_end_6',    icon: '🌀', name: 'Эликс. ловкости +6',  price: 20, currency: 'diamonds', desc: 'Ловкость +6 · 3 боя',        badge: '3 боя' },
-        { id: 'scroll_crit_6',   icon: '🎯', name: 'Интуиция +6',          price: 25, currency: 'diamonds', desc: 'Интуиция +6 · 3 боя',        badge: '3 боя' },
-        { id: 'scroll_dodge_5',  icon: '💨', name: 'Свиток уворота 5%',    price: 25, currency: 'diamonds', desc: 'Уворот +5% · 3 боя',         badge: '3 боя' },
-        { id: 'scroll_armor_10', icon: '🛡️', name: 'Свиток брони 10%',    price: 30, currency: 'diamonds', desc: 'Броня +10% · 3 боя',         badge: '3 боя' },
-        { id: 'scroll_hp_200',   icon: '❤️', name: 'Эликсир HP +200',     price: 25, currency: 'diamonds', desc: '+200 HP · 3 боя',            badge: '3 боя' },
-        { id: 'scroll_double_10',icon: '⚡', name: 'Двойной удар +10%',   price: 35, currency: 'diamonds', desc: 'Двойной удар +10% · 3 боя',  badge: '3 боя' },
-        { id: 'scroll_all_4',    icon: '✨', name: 'Все пассивки +4',     price: 40, currency: 'diamonds', desc: 'Все статы +4 · 1 бой',       badge: '1 бой' },
-        { id: 'scroll_bastion',  icon: '🏰', name: 'Бастион',             price: 35, currency: 'diamonds', desc: 'Ловк+5, Броня+8% · 3 боя',   badge: '3 боя' },
-        { id: 'scroll_predator', icon: '🐍', name: 'Хищник',              price: 35, currency: 'diamonds', desc: 'Крит+5, Двойн+8% · 3 боя',   badge: '3 боя' },
-        { id: 'scroll_berserker',icon: '🔥', name: 'Берсерк',             price: 40, currency: 'diamonds', desc: 'Сила+8, Броня-5% · 3 боя',   badge: '3 боя', risk: true },
-        { id: 'scroll_accuracy', icon: '🎯', name: 'Точность +15%',       price: 20, currency: 'diamonds', desc: 'Точность +15% · 3 боя',       badge: '3 боя' },
-      ];
-    }
-    if (this._tab === 'boxes') {
-      return [
-        { id: 'exchange_small',  icon: '💱', name: '5💎 → 350🪙',       price: 5,   currency: 'diamonds', desc: 'Обмен алмазы → золото' },
-        { id: 'exchange_medium', icon: '💱', name: '15💎 → 1100🪙',     price: 15,  currency: 'diamonds', desc: 'Лучший курс' },
-        { id: 'exchange_large',  icon: '💱', name: '50💎 → 4000🪙',     price: 50,  currency: 'diamonds', desc: 'Максимальный курс' },
-        { id: 'box_common',      icon: '📦', name: 'Обычный ящик',       price: 150, currency: 'gold',     desc: 'Случайный предмет' },
-        { id: 'box_rare',        icon: '🟦', name: 'Редкий ящик',        price: 50,  currency: 'diamonds', desc: 'Ценный предмет · 5% USDT' },
-      ];
-    }
-    return [];
-  }
 }
