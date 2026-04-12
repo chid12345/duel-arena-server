@@ -128,12 +128,7 @@ TasksScene.prototype._claimAchievement = function(questKey, tier) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        const p = [];
-        if (r.gold)     p.push(`+${r.gold}💰`);
-        if (r.diamonds) p.push(`+${r.diamonds}💎`);
-        if (r.xp)       p.push(`+${r.xp}⭐`);
-        this._toast(`🏆 Достижение ур.${tier}: ${p.join(' ') || 'Награда получена!'}`);
-        this.time.delayedCall(600, () => this.scene.restart({ tab: 'achieve' }));
+        _rewardAnim(this, r, () => this.scene.restart({ tab: 'achieve' }));
       } else {
         this._toast('❌ ' + (r?.reason || 'Ошибка'));
       }

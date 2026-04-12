@@ -152,8 +152,7 @@ TasksScene.prototype._claimDaily = function(taskKey) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        this._toast(_rewardToast(r));
-        this.time.delayedCall(500, () => this.scene.restart({ tab: 'daily' }));
+        _rewardAnim(this, r, () => this.scene.restart({ tab: 'daily' }));
       } else this._toast('❌ ' + (r?.reason || 'Ошибка'));
     }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };
@@ -167,11 +166,12 @@ TasksScene.prototype._claimAllDaily = function(tasks) {
     if (!keys.length) {
       this._claimBusy = false;
       if (ok > 0) {
-        this._toast(_rewardToast({ gold: totalG, diamonds: totalD, xp: totalXp }));
+        _rewardAnim(this, { gold: totalG, diamonds: totalD, xp: totalXp },
+          () => this.scene.restart({ tab: 'daily' }));
       } else {
         this._toast('❌ Не удалось забрать награды');
+        this.time.delayedCall(600, () => this.scene.restart({ tab: 'daily' }));
       }
-      this.time.delayedCall(600, () => this.scene.restart({ tab: 'daily' }));
       return;
     }
     post('/api/tasks/claim_daily', { task_key: keys.shift() })
@@ -196,8 +196,7 @@ TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        this._toast(_rewardToast(r));
-        this.time.delayedCall(500, () => this.scene.restart({ tab: 'daily' }));
+        _rewardAnim(this, r, () => this.scene.restart({ tab: 'daily' }));
       } else this._toast('❌ ' + (r?.reason || 'Ошибка'));
     }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };
@@ -210,8 +209,7 @@ TasksScene.prototype._claimWeeklyOld = function(key) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        this._toast(_rewardToast(r));
-        this.time.delayedCall(500, () => this.scene.restart({ tab: 'daily' }));
+        _rewardAnim(this, r, () => this.scene.restart({ tab: 'daily' }));
       } else this._toast('❌ ' + (r?.reason || 'Ошибка'));
     }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };

@@ -200,13 +200,7 @@ TasksScene.prototype._claimStreakDay = function(dayNum) {
       this._claimBusy = false;
       if (r?.ok) {
         if (r.player) State.player = r.player;
-        const parts = [];
-        if (r.gold)     parts.push(`+${r.gold}💰`);
-        if (r.diamonds) parts.push(`+${r.diamonds}💎`);
-        if (r.xp)       parts.push(`+${r.xp}⭐`);
-        if (r.item)     parts.push('📦');
-        this._toast(`🎁 День ${dayNum}: ${parts.join(' ')}`);
-        this.time.delayedCall(800, () => this.scene.restart({ tab: 'streak' }));
+        _rewardAnim(this, r, () => this.scene.restart({ tab: 'streak' }));
       } else {
         this._toast('❌ ' + (r?.reason || 'Ошибка'));
       }
