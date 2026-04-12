@@ -47,7 +47,7 @@ Object.assign(MenuScene.prototype, {
     // ── Распределяем оставшееся по 5 элементам ──
     // PvP главная (коэф 1.25), остальные 4 = 1.0
     const totalGaps  = GAP * 6; // title→pvp, pvp→tower, tower→natisk, natisk→sm, sm→bot, bot→hp
-    const pool       = CH - TITLE_H - HP_H - totalGaps;
+    const pool       = (CH - TITLE_H - HP_H - totalGaps) * 0.90;
     const unit       = pool / 5.25;
     const pvpH  = Math.round(unit * 1.25);
     const midH  = Math.round(unit);       // Башня, Натиск, Бот
