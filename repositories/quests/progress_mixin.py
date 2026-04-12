@@ -33,17 +33,26 @@ class QuestsProgressMixin:
     def add_task_progress(self, user_id: int, task_key: str, amount: int = 1) -> int:
         conn = self.get_connection()
         cur = conn.cursor()
-        cur.execute(
-            "INSERT OR IGNORE INTO task_progress (user_id, task_key, value) VALUES (?,?,0)",
-            (user_id, task_key),
-        )
-        cur.execute(
-            "UPDATE task_progress SET value=value+?, updated_at=CURRENT_TIMESTAMP "
-            "WHERE user_id=? AND task_key=?",
-            (amount, user_id, task_key),
-        )
-        cur.execute("SELECT value FROM task_progress WHERE user_id=? AND task_key=?",
-                    (user_id, task_key))
+        if getattr(self, "_pg", False):
+            cur.execute(
+                "INSERT INTO task_progress (user_id, task_key, value) VALUES (%s,%s,%s) "
+                "ON CONFLICT (user_id, task_key) DO UPDATE SET value=task_progress.value+%s, updated_at=CURRENT_TIMESTAMP",
+                (user_id, task_key, amount, amount),
+            )
+            cur.execute("SELECT value FROM task_progress WHERE user_id=%s AND task_key=%s",
+                        (user_id, task_key))
+        else:
+            cur.execute(
+                "INSERT OR IGNORE INTO task_progress (user_id, task_key, value) VALUES (?,?,0)",
+                (user_id, task_key),
+            )
+            cur.execute(
+                "UPDATE task_progress SET value=value+?, updated_at=CURRENT_TIMESTAMP "
+                "WHERE user_id=? AND task_key=?",
+                (amount, user_id, task_key),
+            )
+            cur.execute("SELECT value FROM task_progress WHERE user_id=? AND task_key=?",
+                        (user_id, task_key))
         row = cur.fetchone()
         conn.commit()
         conn.close()
@@ -62,11 +71,16 @@ class QuestsProgressMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         try:
-            cur.execute("INSERT OR IGNORE INTO task_claims (user_id, claim_key) VALUES (?,?)",
-                        (user_id, claim_key))
+            if getattr(self, "_pg", False):
+                cur.execute(
+                    "INSERT INTO task_claims (user_id, claim_key) VALUES (%s,%s) ON CONFLICT DO NOTHING",
+                    (user_id, claim_key))
+            else:
+                cur.execute("INSERT OR IGNORE INTO task_claims (user_id, claim_key) VALUES (?,?)",
+                            (user_id, claim_key))
             conn.commit()
-            # Проверим что запись реально появилась (INSERT OR IGNORE не кидает ошибку при дубле)
-            cur.execute("SELECT 1 FROM task_claims WHERE user_id=? AND claim_key=?",
+            ph = "%s" if getattr(self, "_pg", False) else "?"
+            cur.execute(f"SELECT 1 FROM task_claims WHERE user_id={ph} AND claim_key={ph}",
                         (user_id, claim_key))
             return cur.fetchone() is not None
         except Exception as e:
@@ -124,12 +138,21 @@ class QuestsProgressMixin:
         today = _TODAY()
         conn = self.get_connection()
         cur = conn.cursor()
-        cur.execute(
-            "INSERT OR IGNORE INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (?,?,0,0,0)",
-            (user_id, today),
-        )
-        cur.execute("UPDATE daily_quests SET shop_buys=shop_buys+1 WHERE user_id=? AND quest_date=?",
-                    (user_id, today))
+        if getattr(self, "_pg", False):
+            cur.execute(
+                "INSERT INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) "
+                "VALUES (%s,%s,0,0,0) ON CONFLICT (user_id, quest_date) DO NOTHING",
+                (user_id, today),
+            )
+            cur.execute("UPDATE daily_quests SET shop_buys=shop_buys+1 WHERE user_id=%s AND quest_date=%s",
+                        (user_id, today))
+        else:
+            cur.execute(
+                "INSERT OR IGNORE INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (?,?,0,0,0)",
+                (user_id, today),
+            )
+            cur.execute("UPDATE daily_quests SET shop_buys=shop_buys+1 WHERE user_id=? AND quest_date=?",
+                        (user_id, today))
         conn.commit()
         conn.close()
 
