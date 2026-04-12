@@ -44,6 +44,16 @@ class MenuScene extends Phaser.Scene {
 
       if (cached) {
         playerOk = true;
+        get('/api/quests').catch(() => null).then(questRes => {
+          if (!questRes?.ok) return;
+          const q = questRes.quest || {};
+          const d = questRes.daily || {};
+          const badge = d.can_claim || (q.is_completed && !q.reward_claimed);
+          if (badge !== this._questBadge) {
+            this._questBadge = badge;
+            if (this._tabBarObjs) this._buildTabBar();
+          }
+        });
         get('/api/version').catch(() => null).then(versionRes => {
           if (versionRes?.ok && versionRes.version) {
             State.appVersion = String(versionRes.version);
@@ -70,6 +80,25 @@ class MenuScene extends Phaser.Scene {
             }
           });
 
+          this._questBadge = false;
+
+          get('/api/quests').catch(() => null).then(questRes => {
+            if (questRes?.ok) {
+              const q = questRes.quest || {};
+              const d = questRes.daily || {};
+              this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
+              if (this._tabBarObjs) this._buildTabBar();
+              if (d.can_claim) {
+                this.time.delayedCall(800, () =>
+                  this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
+                );
+              } else if (q.is_completed && !q.reward_claimed) {
+                this.time.delayedCall(800, () =>
+                  this._toast('🏆 Квест дня выполнен — забери награду!')
+                );
+              }
+            }
+          });
         }
       }
 
@@ -117,6 +146,7 @@ class MenuScene extends Phaser.Scene {
       { key: 'profile', icon: '🏠', label: 'Профиль' },
       { key: 'battle',  icon: '⚔️',  label: 'Бой'     },
       { key: 'stats',   icon: '🗡️',  label: 'Герой'   },
+      { key: 'tasks',   icon: '📋',  label: 'Задания'  },
       { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
       { key: 'more',    icon: '☰',   label: 'Меню'    },
     ];
@@ -153,6 +183,7 @@ class MenuScene extends Phaser.Scene {
         tg?.HapticFeedback?.selectionChanged();
         if (tab.key === 'stats')  { this.scene.start('Stats',  { player: State.player }); return; }
         if (tab.key === 'rating') { this.scene.start('Rating'); return; }
+        if (tab.key === 'tasks')  { this.scene.start('Tasks'); return; }
         this._switchTab(tab.key);
       });
     });
