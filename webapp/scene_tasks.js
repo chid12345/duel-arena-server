@@ -9,7 +9,8 @@ class TasksScene extends Phaser.Scene {
   constructor() { super('Tasks'); }
 
   init(data) {
-    this._tab = (data && data.tab) ? data.tab : 'streak';
+    this._tab     = (data && data.tab)     ? data.tab     : 'streak';
+    this._subpage = (data && data.subpage) ? data.subpage : 'daily';
     this._scrollY = (data && data.scrollY) ? data.scrollY : 0;
   }
 
@@ -26,9 +27,12 @@ class TasksScene extends Phaser.Scene {
 
   async _loadData() {
     try {
-      // Вызов login при каждом открытии (обновляет стрик)
       post('/api/tasks/login').catch(() => null);
-      const d = await get('/api/tasks/status');
+      // Загружаем статус заданий + квесты (для недельных) параллельно
+      const [d, qd] = await Promise.all([
+        get('/api/tasks/status'),
+        this._tab === 'daily' ? get('/api/quests').catch(() => null) : Promise.resolve(null),
+      ]);
       this._loading?.destroy(); this._loading = null;
       if (!d?.ok) {
         const reason = d?.reason ? `\n${d.reason}` : '';
@@ -37,6 +41,7 @@ class TasksScene extends Phaser.Scene {
         return;
       }
       this._data = d;
+      if (qd?.ok) this._data.oldWeekly = qd.quests || [];
       this._render(d);
     } catch(e) {
       this._loading?.destroy(); this._loading = null;
@@ -76,8 +81,8 @@ class TasksScene extends Phaser.Scene {
 
   _render(d) {
     const startY = 112;
-    if (this._tab === 'streak')  this._buildStreakTab(d.streak, this.W, this.H, startY);
-    else if (this._tab === 'daily')  this._buildDailyTab(d, this.W, this.H, startY);
+    if (this._tab === 'streak')      this._buildStreakTab(d.streak, this.W, this.H, startY);
+    else if (this._tab === 'daily')  this._buildDailyTab(d, this.W, this.H, startY, this._subpage);
     else                             this._buildAchieveTab(d.achievements, this.W, this.H, startY);
   }
 
