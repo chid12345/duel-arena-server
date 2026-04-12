@@ -157,12 +157,16 @@ class BattleEndBattleMixin:
             exp_reward = 0
             loser_exp = 0
 
-        # gold_pct buff (gold_hunt item: +20% gold for 24h)
-        if not is_test and gold_reward > 0 and winner_user_id:
+        # gold_pct / xp_pct buff (gold_hunt / xp_hunt: +% за 24h)
+        if not is_test and winner_user_id:
             try:
-                _gold_pct = db.get_combined_buffs(int(winner_user_id)).get("gold_pct", 0)
-                if _gold_pct:
+                _combined = db.get_combined_buffs(int(winner_user_id))
+                _gold_pct = _combined.get("gold_pct", 0)
+                if _gold_pct and gold_reward > 0:
                     gold_reward = int(gold_reward * (1.0 + _gold_pct / 100.0))
+                _xp_pct = _combined.get("xp_pct", 0)
+                if _xp_pct and exp_reward > 0:
+                    exp_reward = int(exp_reward * (1.0 + _xp_pct / 100.0))
             except Exception:
                 pass
 

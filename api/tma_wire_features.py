@@ -5,6 +5,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from api.avatar_shop_routes import register_avatar_shop_routes
+from api.task_routes import register_task_routes
 from api.endless_routes import register_endless_routes
 from api.payment_routes import register_payment_routes
 from api.progression_routes import register_progression_routes
@@ -192,6 +193,14 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
         },
     )
     register_admin_purchases(app, db=db)
+    register_task_routes(
+        app,
+        {
+            "db": db,
+            "get_user_from_init_data": get_user_from_init_data,
+            "_cache_invalidate": _cache_invalidate,
+        },
+    )
     attach_tma_startup(
         app,
         db=db,

@@ -14,6 +14,7 @@ class ShopBuffsMixin:
         "double_pct":    40,
         "lifesteal_pct": 15,
         "gold_pct":      50,   # max +50% золота (1 gold_hunt = 20%, защита от стака)
+        "xp_pct":        100,  # max +100% опыта (1 xp_hunt = 50%)
         "accuracy":      50,   # max +50 точности (всё равно ограничено miss_chance формулой)
     }
 
@@ -50,14 +51,15 @@ class ShopBuffsMixin:
     def get_active_buff_types(self, user_id: int) -> Dict[str, Dict]:
         """Возвращает словарь {buff_type: buff_row} активных боевых бафов."""
         buffs = self.get_raw_buffs(user_id)
-        return {b["buff_type"]: b for b in buffs if b["buff_type"] != "gold_pct"}
+        _time_only = {"gold_pct", "xp_pct"}  # time-based, не конфликтуют со свитками
+        return {b["buff_type"]: b for b in buffs if b["buff_type"] not in _time_only}
 
     def clear_all_combat_buffs(self, user_id: int) -> None:
-        """Удалить все боевые бафы (кроме gold_pct) — при замене свитка."""
+        """Удалить все боевые бафы (кроме time-based) — при замене свитка."""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "DELETE FROM player_buffs WHERE user_id = ? AND buff_type != 'gold_pct'",
+            "DELETE FROM player_buffs WHERE user_id = ? AND buff_type NOT IN ('gold_pct', 'xp_pct')",
             (user_id,),
         )
         conn.commit()

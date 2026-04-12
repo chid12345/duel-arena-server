@@ -147,9 +147,9 @@ Object.assign(StatsScene.prototype, {
       'относительно среднего противника вашего уровня',
       9, '#9999bb').setOrigin(0.5);
 
-    // Блок пассивных способностей — компактный, перед кнопкой
+    // Блок пассивных способностей — 4 строки: базовые + бафы
     const passY = py + ph + 6;
-    const passH = 54;
+    const passH = 86;
     const passW = W - 24;
     const passBg = this.add.graphics();
     passBg.fillStyle(0x1a1830, 0.9);
@@ -157,13 +157,17 @@ Object.assign(StatsScene.prototype, {
     passBg.lineStyle(1.5, 0x4a4870, 0.6);
     passBg.strokeRoundedRect(12, passY, passW, passH, 10);
 
-    txt(this, W / 2, passY + 10, '⚡ Пассивные способности', 10, '#9090cc', true).setOrigin(0.5);
-    this._passLine1 = txt(this, W / 2, passY + 26,
+    txt(this, W / 2, passY + 9, '⚡ Пассивные способности', 10, '#9090cc', true).setOrigin(0.5);
+    this._passLine1 = txt(this, W / 2, passY + 23,
       `💥 Крит ${parseFloat(p.crit_pct || 0).toFixed(0)}%  ·  🤸 Уворот ${parseFloat(p.dodge_pct || 0).toFixed(1)}%`,
       10, '#c8a0ff').setOrigin(0.5);
-    this._passLine2 = txt(this, W / 2, passY + 42,
+    this._passLine2 = txt(this, W / 2, passY + 38,
       `🛡 Броня ${parseFloat(p.armor_pct || 0).toFixed(1)}%  ·  ⚔️ Урон ~${p.dmg || 0}`,
       10, '#ffc870').setOrigin(0.5);
+    // passLine3: Двойной удар + Точность (показывается если есть бафы)
+    this._passLine3 = txt(this, W / 2, passY + 53, '', 10, '#88ddff').setOrigin(0.5);
+    // passLine4: Охота за золотом + Охота за опытом (time-based бафы)
+    this._passLine4 = txt(this, W / 2, passY + 68, '', 10, '#ffcc55').setOrigin(0.5);
 
     this._refreshBuffDisplay();
   },

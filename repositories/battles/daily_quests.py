@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 
 class BattlesDailyQuestsMixin:
-    def update_daily_quest_progress(self, user_id: int, won_battle: bool = False):
+    def update_daily_quest_progress(self, user_id: int, won_battle: bool = False, is_bot: bool = False):
         today = datetime.now().date().isoformat()
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -15,9 +15,10 @@ class BattlesDailyQuestsMixin:
             "INSERT OR IGNORE INTO daily_quests (user_id, quest_date, battles_played, battles_won, reward_claimed) VALUES (?, ?, 0, 0, 0)",
             (user_id, today),
         )
+        bot_inc = 1 if (won_battle and is_bot) else 0
         cursor.execute(
-            "UPDATE daily_quests SET battles_played = battles_played + 1, battles_won = battles_won + ? WHERE user_id = ? AND quest_date = ?",
-            (1 if won_battle else 0, user_id, today),
+            "UPDATE daily_quests SET battles_played=battles_played+1, battles_won=battles_won+?, bot_wins=bot_wins+? WHERE user_id=? AND quest_date=?",
+            (1 if won_battle else 0, bot_inc, user_id, today),
         )
         conn.commit()
         conn.close()
