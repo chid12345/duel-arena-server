@@ -172,7 +172,7 @@ class MenuScene extends Phaser.Scene {
       activeBg.setVisible(false);
       activeBar.setVisible(false);
 
-      const iconTxt  = txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.45);
+      const iconTxt  = txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.85);
       const labelTxt = txt(this, cx, tabTop + 52, tab.label, 10, '#ccccee').setOrigin(0.5);
 
       this._tabBtns[tab.key] = { activeBg, activeBar, iconTxt, labelTxt };

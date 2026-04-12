@@ -13,7 +13,7 @@ Object.assign(MenuScene.prototype, {
       const active = k === key;
       btn.activeBg.setVisible(active);
       btn.activeBar?.setVisible(active);
-      btn.iconTxt.setAlpha(active ? 1 : 0.45);
+      btn.iconTxt.setAlpha(active ? 1 : 0.85);
       btn.labelTxt.setStyle({ color: active ? activeCol : inactiveCol });
     });
     this._activeTab = key;
