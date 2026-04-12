@@ -145,6 +145,7 @@ class MenuScene extends Phaser.Scene {
     const tabs = [
       { key: 'profile', icon: '🏠', label: 'Профиль' },
       { key: 'battle',  icon: '⚔️',  label: 'Бой'     },
+      { key: 'stats',   icon: '🗡️',  label: 'Герой'   },
       { key: 'tasks',   icon: '📋',  label: 'Задания'  },
       { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
       { key: 'more',    icon: '☰',   label: 'Меню'    },
@@ -171,8 +172,8 @@ class MenuScene extends Phaser.Scene {
       activeBg.setVisible(false);
       activeBar.setVisible(false);
 
-      const iconTxt  = txt(this, cx, tabTop + 24, tab.icon, 24).setOrigin(0.5).setAlpha(0.45);
-      const labelTxt = txt(this, cx, tabTop + 54, tab.label, 12, '#8888aa').setOrigin(0.5);
+      const iconTxt  = txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.45);
+      const labelTxt = txt(this, cx, tabTop + 52, tab.label, 10, '#8888aa').setOrigin(0.5);
 
       this._tabBtns[tab.key] = { activeBg, activeBar, iconTxt, labelTxt };
 
