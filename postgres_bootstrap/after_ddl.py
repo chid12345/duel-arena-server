@@ -70,4 +70,30 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE titan_progress ADD COLUMN IF NOT EXISTS run_active INTEGER DEFAULT 0",
     # crypto_invoices: payload добавлен позже (для USDT-свитков)
     "ALTER TABLE crypto_invoices ADD COLUMN IF NOT EXISTS payload TEXT NOT NULL DEFAULT ''",
+    # ── Система заданий v2 ─────────────────────────────────────
+    "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS bot_wins INTEGER DEFAULT 0",
+    "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS shop_buys INTEGER DEFAULT 0",
+    """CREATE TABLE IF NOT EXISTS task_progress (
+        user_id BIGINT NOT NULL,
+        task_key TEXT NOT NULL,
+        value INTEGER DEFAULT 0,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, task_key)
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_task_progress_user ON task_progress (user_id)",
+    """CREATE TABLE IF NOT EXISTS task_claims (
+        user_id BIGINT NOT NULL,
+        claim_key TEXT NOT NULL,
+        claimed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, claim_key)
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_task_claims_user ON task_claims (user_id)",
+    """CREATE TABLE IF NOT EXISTS login_streak_v2 (
+        user_id BIGINT PRIMARY KEY,
+        streak_day INTEGER DEFAULT 0,
+        week_set INTEGER DEFAULT 0,
+        last_login_date TEXT DEFAULT '',
+        days_claimed_json TEXT DEFAULT '[]',
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )""",
 )
