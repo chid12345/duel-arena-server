@@ -121,6 +121,9 @@ def open_box(box_id: str, db: Any, user_id: int) -> Dict[str, Any]:
     else:
         prize_id = _weighted_choice(_EPIC_POOL)
 
+    # Трекинг покупки для достижений
+    db.track_purchase(user_id, box_id, currency, price)
+
     # Положить в инвентарь
     db.add_to_inventory(user_id, prize_id)
 

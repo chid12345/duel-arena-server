@@ -45,6 +45,7 @@ class SocialClanMixin:
                 (self.CLAN_CREATE_COST_GOLD, clan_id, leader_id),
             )
             conn.commit()
+            self.track_purchase(leader_id, "clan_create", "gold", self.CLAN_CREATE_COST_GOLD)
             return {"ok": True, "clan_id": clan_id, "name": name, "tag": tag}
         except Exception:
             conn.rollback()

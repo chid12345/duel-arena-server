@@ -44,6 +44,7 @@ class UsersImprovementsMixin:
         cursor.execute("UPDATE players SET gold = gold - ? WHERE user_id = ?", (cost, user_id))
         conn.commit()
         conn.close()
+        self.track_purchase(user_id, f"improve_{improvement_type}", "gold", cost)
         return True
 
     def _get_improvement_cost(self, improvement_type: str, level: int) -> int:

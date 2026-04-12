@@ -164,6 +164,7 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
                 return {"ok": False, "reason": f"Нужно {ENDLESS_GOLD_COST} 🪙"}
             db.update_player_stats(uid, {"gold": gold - ENDLESS_GOLD_COST})
             db.endless_add_extra(uid, "gold", 1)
+            db.track_purchase(uid, "endless_extra", "gold", ENDLESS_GOLD_COST)
             return {"ok": True, "bought": 1, "cost": ENDLESS_GOLD_COST}
         if kind == "diamond":
             diamonds = int(player.get("diamonds", 0))
@@ -171,6 +172,7 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
                 return {"ok": False, "reason": f"Нужно {ENDLESS_DIAMOND_COST} 💎"}
             db.update_player_stats(uid, {"diamonds": diamonds - ENDLESS_DIAMOND_COST})
             db.endless_add_extra(uid, "diamond", ENDLESS_DIAMOND_COUNT)
+            db.track_purchase(uid, "endless_extra", "diamonds", ENDLESS_DIAMOND_COST)
             return {"ok": True, "bought": ENDLESS_DIAMOND_COUNT, "cost": ENDLESS_DIAMOND_COST}
         return {"ok": False, "reason": "Неверный тип"}
 
