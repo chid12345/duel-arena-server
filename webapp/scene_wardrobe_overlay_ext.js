@@ -58,17 +58,24 @@
     const pageLabel = txt(this, W/2, navY+2, "", 10, "#c8c8e8", true).setOrigin(.5).setDepth(124);
     overlay.push(pageLabel);
 
-    const mkNav = (x, label, fn) => {
-      const g = this.add.graphics().setDepth(123);
-      g.fillStyle(0x2a2840,.95); g.fillRoundedRect(x-36, navY-10, 72, 22, 7);
-      g.lineStyle(1, C.purple,.8); g.strokeRoundedRect(x-36, navY-10, 72, 22, 7);
-      const t = txt(this, x, navY+1, label, 10, "#f0f0fa", true).setOrigin(.5).setDepth(124);
-      const z = this.add.zone(x, navY+1, 72, 22).setInteractive({useHandCursor:true}).setDepth(125);
-      z.on("pointerdown", fn);
-      overlay.push(g, t, z);
+    // Свайп для перелистывания карточек гардероба
+    let wsx = 0, wsy = 0;
+    const _onWDown = p => { wsx = p.x; wsy = p.y; };
+    const _onWUp   = p => {
+      if (p.y < panelY || p.y > panelY + panelH) return;
+      const dx = p.x - wsx, dy = p.y - wsy;
+      if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        const cur = this._avatarPage || 0;
+        const next = cur + (dx < 0 ? 1 : -1);
+        if (next >= 0 && next < pageCount) {
+          tg?.HapticFeedback?.selectionChanged?.();
+          this._avatarPage = next; render();
+        }
+      }
     };
-    mkNav(W/2-86, "◀ Назад", () => { if ((this._avatarPage||0) > 0) { this._avatarPage--; render(); } });
-    mkNav(W/2+86, "Вперед ▶", () => { if ((this._avatarPage||0) < pageCount-1) { this._avatarPage++; render(); } });
+    this.input.on('pointerdown', _onWDown);
+    this.input.on('pointerup',   _onWUp);
+    overlay.push({ destroy: () => { this.input.off('pointerdown', _onWDown); this.input.off('pointerup', _onWUp); } });
 
     const render = () => {
       layer.forEach(o => { try { o.destroy(); } catch {} }); layer.length = 0;

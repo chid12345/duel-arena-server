@@ -12,6 +12,7 @@ class ShopScene extends Phaser.Scene {
     ShopScene._lastPage = this._shopPage;
     this._buying = false;
     this._applyBusy = false;
+    this._swiping = false; // флаг горизонтального свайпа (защита от случайных покупок)
   }
 
   async create() {
@@ -106,21 +107,30 @@ class ShopScene extends Phaser.Scene {
       this._makeItemCard(item, 8 + col * (iw + 8), startY + row * (ih + 10), iw, ih);
     });
 
-    // Навигация страниц — прямо под карточками
+    // Навигация: свайп + точки-индикаторы
+    const actualRows = Math.ceil(slice.length / cols);
+    const navY = startY + actualRows * (ih + 10) + 8;
     if (pageCount > 1) {
-      const actualRows = Math.ceil(slice.length / cols);
-      const navY = startY + actualRows * (ih + 10) + 14;
-      const mkNav = (x, label, nextPage) => {
-        const g = this.add.graphics();
-        g.fillStyle(0x2a2840, .95); g.fillRoundedRect(x - 50, navY, 100, 32, 8);
-        g.lineStyle(1.5, C.blue, .7); g.strokeRoundedRect(x - 50, navY, 100, 32, 8);
-        txt(this, x, navY + 16, label, 12, '#f0f0fa', true).setOrigin(.5);
-        this.add.zone(x - 50, navY, 100, 32).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerdown', () => { ShopScene._lastPage = nextPage; this.scene.restart({ tab: this._tab, page: nextPage }); });
-      };
-      if (page > 0) mkNav(W / 2 - 64, '◀ Назад', page - 1);
-      if (page < pageCount - 1) mkNav(W / 2 + 64, 'Вперёд ▶', page + 1);
-      txt(this, W / 2, navY + 16, `${page + 1} / ${pageCount}`, 10, '#8888aa', true).setOrigin(.5);
+      for (let pi = 0; pi < pageCount; pi++) {
+        const dg = this.add.graphics();
+        dg.fillStyle(pi === page ? 0xffc83c : 0x333355, 1);
+        dg.fillCircle(W / 2 - (pageCount - 1) * 8 + pi * 16, navY + 6, pi === page ? 5 : 3.5);
+      }
+      let sx = 0, sy = 0;
+      this.input.on('pointerdown', p => { sx = p.x; sy = p.y; this._swiping = false; });
+      this.input.on('pointermove', p => { if (Math.abs(p.x - sx) > 20) this._swiping = true; });
+      this.input.on('pointerup',   p => {
+        const dx = p.x - sx, dy = p.y - sy;
+        if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          const next = page + (dx < 0 ? 1 : -1);
+          if (next >= 0 && next < pageCount) {
+            tg?.HapticFeedback?.selectionChanged?.();
+            ShopScene._lastPage = next;
+            this.scene.restart({ tab: this._tab, page: next });
+          }
+        }
+        this._swiping = false;
+      });
     }
   }
 
