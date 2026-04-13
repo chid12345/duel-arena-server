@@ -39,7 +39,7 @@ Object.assign(MenuScene.prototype, {
 
     // ── Заголовок ──
     const TITLE_H = 44;
-    txt(this, W / 2, 22, '⚔️  ВЫБЕРИ БОЙ', 17, '#ffc83c', true).setOrigin(0.5);
+    const title = txt(this, W / 2, 22, '⚔️  ВЫБЕРИ БОЙ', 17, '#ffc83c', true).setOrigin(0.5);
 
     // ── HP блок внизу фиксированной высоты ──
     const HP_H = p.hp_pct < 15 ? 78 : (p.hp_pct < 100 ? 32 : 20);
@@ -131,6 +131,7 @@ Object.assign(MenuScene.prototype, {
     }
 
     const children = [
+      title,
       ...pvpCard, ...towerCard, ...natiskCard,
       ...smLeft, ...smRight,
       ...botCard,
