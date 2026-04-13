@@ -36,10 +36,11 @@ Object.assign(MenuScene.prototype, {
     const c = this.add.container(0, 0);
     const PAD = 14;
     const GAP = 9;
+    const rmdl = o => { try { o.removeFromDisplayList(); } catch(_) {} return o; };
 
     // ── Заголовок ──
     const TITLE_H = 44;
-    const title = txt(this, W / 2, 22, '⚔️  ВЫБЕРИ БОЙ', 17, '#ffc83c', true).setOrigin(0.5);
+    const title = rmdl(txt(this, W / 2, 22, '⚔️  ВЫБЕРИ БОЙ', 17, '#ffc83c', true).setOrigin(0.5));
 
     // ── HP блок внизу фиксированной высоты ──
     const HP_H = p.hp_pct < 15 ? 78 : (p.hp_pct < 100 ? 32 : 20);
@@ -102,26 +103,26 @@ Object.assign(MenuScene.prototype, {
     const hpBlockObjs = [];
     const hpPct = p.hp_pct / 100;
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
-    hpBlockObjs.push(makeBar(this, PAD, curY, W - PAD * 2, 12, hpPct, hpCol));
+    hpBlockObjs.push(rmdl(makeBar(this, PAD, curY, W - PAD * 2, 12, hpPct, hpCol)));
     hpBlockObjs.push(
-      txt(this, W / 2, curY + 6, `❤️ ${p.current_hp}/${p.max_hp_effective ?? p.max_hp} HP`, 10, '#f0f0fa').setOrigin(0.5)
+      rmdl(txt(this, W / 2, curY + 6, `❤️ ${p.current_hp}/${p.max_hp_effective ?? p.max_hp} HP`, 10, '#f0f0fa').setOrigin(0.5))
     );
     if (p.hp_pct < 100) {
       const regenStr = p.regen_secs_to_full > 0
         ? `+${p.regen_per_min}/мин · полный через ${Math.ceil(p.regen_secs_to_full / 60)}мин`
         : `+${p.regen_per_min}/мин`;
-      hpBlockObjs.push(txt(this, PAD, curY + 18, regenStr, 9, '#ddddff'));
+      hpBlockObjs.push(rmdl(txt(this, PAD, curY + 18, regenStr, 9, '#ddddff')));
     }
     if (p.hp_pct < 15) {
       const canAfford = (p.gold || 0) >= 12;
       const btnBY = curY + 32;
-      const qBg = this.add.graphics();
+      const qBg = rmdl(this.add.graphics());
       qBg.fillStyle(canAfford ? C.red : C.dark, canAfford ? 0.88 : 0.55);
       qBg.fillRoundedRect(PAD, btnBY, W - PAD * 2, 38, 10);
       if (canAfford) { qBg.lineStyle(1.5, C.gold, 0.3); qBg.strokeRoundedRect(PAD, btnBY, W - PAD * 2, 38, 10); }
       const qLabel = canAfford ? `🧪 Выпить малое зелье  —  12 🪙` : `🧪 Нужно 12 🪙 (у вас ${p.gold || 0})`;
-      const qT = txt(this, W / 2, btnBY + 19, qLabel, 11, canAfford ? '#ffffff' : '#cc8888', true).setOrigin(0.5);
-      const qZ = this.add.zone(PAD, btnBY, W - PAD * 2, 38).setOrigin(0).setInteractive({ useHandCursor: canAfford });
+      const qT = rmdl(txt(this, W / 2, btnBY + 19, qLabel, 11, canAfford ? '#ffffff' : '#cc8888', true).setOrigin(0.5));
+      const qZ = rmdl(this.add.zone(PAD, btnBY, W - PAD * 2, 38).setOrigin(0).setInteractive({ useHandCursor: canAfford }));
       if (canAfford) {
         qZ.on('pointerdown', () => { qBg.clear(); qBg.fillStyle(0x991a22,1); qBg.fillRoundedRect(PAD,btnBY,W-PAD*2,38,10); tg?.HapticFeedback?.impactOccurred('medium'); });
         qZ.on('pointerout',  () => { qBg.clear(); qBg.fillStyle(C.red,0.88); qBg.fillRoundedRect(PAD,btnBY,W-PAD*2,38,10); qBg.lineStyle(1.5,C.gold,0.3); qBg.strokeRoundedRect(PAD,btnBY,W-PAD*2,38,10); });
@@ -149,14 +150,15 @@ Object.assign(MenuScene.prototype, {
 
   /* Карточка с цветной полосой слева, h-адаптивные тексты */
   _makeBattleStrip(x, y, w, h, stripCol, nameCol, name, sub, bonus, cardH, cb) {
+    const rmdl = o => { try { o.removeFromDisplayList(); } catch(_) {} return o; };
     const objs = [];
 
-    const bg = this.add.graphics();
+    const bg = rmdl(this.add.graphics());
     bg.fillStyle(0x1a1828, 1);
     bg.fillRoundedRect(x, y, w, h, 12);
     objs.push(bg);
 
-    const strip = this.add.graphics();
+    const strip = rmdl(this.add.graphics());
     strip.fillStyle(stripCol, 1);
     strip.fillRoundedRect(x, y, 5, h, { tl: 12, bl: 12, tr: 2, br: 2 });
     objs.push(strip);
@@ -166,16 +168,16 @@ Object.assign(MenuScene.prototype, {
 
     if (bonus) {
       // 3 строки: название, подпись, бонус
-      objs.push(txt(this, tx, mid - h * 0.26, name,  14, nameCol, true));
-      objs.push(txt(this, tx, mid,             sub,   11, '#ddddff'));
-      objs.push(txt(this, tx, mid + h * 0.26,  bonus, 10, '#ffc83c'));
+      objs.push(rmdl(txt(this, tx, mid - h * 0.26, name,  14, nameCol, true)));
+      objs.push(rmdl(txt(this, tx, mid,             sub,   11, '#ddddff')));
+      objs.push(rmdl(txt(this, tx, mid + h * 0.26,  bonus, 10, '#ffc83c')));
     } else {
       // 2 строки: название + подпись
-      objs.push(txt(this, tx, mid - h * 0.18, name, 13, nameCol, true));
-      objs.push(txt(this, tx, mid + h * 0.18, sub,  11, '#ddddff'));
+      objs.push(rmdl(txt(this, tx, mid - h * 0.18, name, 13, nameCol, true)));
+      objs.push(rmdl(txt(this, tx, mid + h * 0.18, sub,  11, '#ddddff')));
     }
 
-    const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
+    const z = rmdl(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }));
     z.on('pointerdown', () => { tg?.HapticFeedback?.impactOccurred('medium'); bg.clear(); bg.fillStyle(0x221f36,1); bg.fillRoundedRect(x,y,w,h,12); });
     z.on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a1828,1); bg.fillRoundedRect(x,y,w,h,12); });
     z.on('pointerup',   () => { bg.clear(); bg.fillStyle(0x1a1828,1); bg.fillRoundedRect(x,y,w,h,12); cb(); });
@@ -185,22 +187,23 @@ Object.assign(MenuScene.prototype, {
 
   /* Малая кнопка (половина строки) */
   _makeSmBtn(x, y, w, h, stripCol, nameCol, emo, name, sub, cb) {
+    const rmdl = o => { try { o.removeFromDisplayList(); } catch(_) {} return o; };
     const objs = [];
-    const bg = this.add.graphics();
+    const bg = rmdl(this.add.graphics());
     bg.fillStyle(0x1a1828, 1);
     bg.fillRoundedRect(x, y, w, h, 10);
     objs.push(bg);
 
-    const strip = this.add.graphics();
+    const strip = rmdl(this.add.graphics());
     strip.fillStyle(stripCol, 1);
     strip.fillRoundedRect(x, y, 4, h, { tl: 10, bl: 10, tr: 2, br: 2 });
     objs.push(strip);
 
     const mid = y + h / 2;
-    objs.push(txt(this, x + 14, mid - h * 0.17, emo + ' ' + name, 11, nameCol, true));
-    objs.push(txt(this, x + 14, mid + h * 0.18, sub, 9.5, '#ddddff'));
+    objs.push(rmdl(txt(this, x + 14, mid - h * 0.17, emo + ' ' + name, 11, nameCol, true)));
+    objs.push(rmdl(txt(this, x + 14, mid + h * 0.18, sub, 9.5, '#ddddff')));
 
-    const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
+    const z = rmdl(this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true }));
     z.on('pointerdown', () => { tg?.HapticFeedback?.impactOccurred('light'); bg.clear(); bg.fillStyle(0x221f36,1); bg.fillRoundedRect(x,y,w,h,10); });
     z.on('pointerout',  () => { bg.clear(); bg.fillStyle(0x1a1828,1); bg.fillRoundedRect(x,y,w,h,10); });
     z.on('pointerup',   () => { bg.clear(); bg.fillStyle(0x1a1828,1); bg.fillRoundedRect(x,y,w,h,10); cb(); });
