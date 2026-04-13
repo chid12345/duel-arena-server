@@ -99,8 +99,8 @@ Object.assign(MenuScene.prototype, {
     });
 
     /* ── CHARACTER ───────────────────────────────────────── */
-    const czY = wrY + wrH + 6, czH = 200;
-    const charCY = czY + czH * 0.42;
+    const czY = wrY + wrH + 8, czH = 264;
+    const charCY = czY + czH * 0.44;
     const glowG = ca(mkG()); glowG.fillStyle(C.blue, 0.06); glowG.fillEllipse(W / 2, charCY + 62, 160, 28);
     const warrior = ca(mkI(W / 2, charCY, 'warrior_blue').setScale(1.9).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 9, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
@@ -129,7 +129,7 @@ Object.assign(MenuScene.prototype, {
       { icon: '💥', label: 'Интуиция',  color: C.purple, hex: '#b45aff', val: p.intuition_effective ?? p.intuition,  sub: `${p.crit_pct}%`  },
       { icon: '🛡', label: 'Выносл.',   color: C.green,  hex: '#3cc864', val: p.stamina_effective   ?? p.stamina,    sub: `${p.armor_pct}%` },
     ];
-    const sbY0 = czY + czH + 5, sbRH = 22, sbGap = 4;
+    const sbY0 = czY + czH + 8, sbRH = 24, sbGap = 5;
     const maxV = Math.max(1, 3 + p.level * 2);
     const nameW = 66, trkX = PAD + 22 + nameW + 4;
     const valW = 28, pctW = 48, trkW = W - trkX - valW - pctW - PAD - 4;
@@ -139,9 +139,9 @@ Object.assign(MenuScene.prototype, {
       ca(mkT(PAD,        ry + sbRH / 2, s.icon,  14)).setOrigin(0, 0.5);
       ca(mkT(PAD + 22,   ry + sbRH / 2, s.label, 11, 'rgba(255,255,255,0.45)')).setOrigin(0, 0.5);
       const tbg = ca(mkG());
-      tbg.fillStyle(0xffffff, 0.07); tbg.fillRoundedRect(trkX, ry + 8, trkW, 6, 3);
+      tbg.fillStyle(0xffffff, 0.07); tbg.fillRoundedRect(trkX, ry + 8, trkW, 8, 4);
       const pct = Math.min(1, s.val / maxV);
-      tbg.fillStyle(s.color, 0.85); tbg.fillRoundedRect(trkX, ry + 8, Math.max(6, trkW * pct), 6, 3);
+      tbg.fillStyle(s.color, 0.9); tbg.fillRoundedRect(trkX, ry + 8, Math.max(8, trkW * pct), 8, 4);
       ca(mkT(trkX + trkW + 6, ry + sbRH / 2, String(s.val), 13, s.hex, true)).setOrigin(0, 0.5);
       const subT = ca(mkT(W - PAD, ry + sbRH / 2, s.sub, 10, 'rgba(255,255,255,0.35)')).setOrigin(1, 0.5);
       this._profileStatSubs[i] = subT;
@@ -176,7 +176,10 @@ Object.assign(MenuScene.prototype, {
     }
 
     /* ── ACTION BUTTONS ──────────────────────────────────── */
-    const actY = CH - 60, actH = 52, halfW = (W - PAD * 2 - 8) / 2;
+    const statsEndY = sbY0 + STATS.length * (sbRH + sbGap) - sbGap;
+    const extrasH   = (p.free_stats > 0 ? 32 : 0) + (p.current_hp < p.max_hp ? 18 : 0);
+    const actY = Math.min(CH - 58, statsEndY + extrasH + 8);
+    const actH = 52, halfW = (W - PAD * 2 - 8) / 2;
 
     const fBg = ca(mkG());
     fBg.fillStyle(0xdc3c46, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14);
