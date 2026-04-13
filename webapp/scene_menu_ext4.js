@@ -46,9 +46,8 @@ Object.assign(MenuScene.prototype, {
     const uname  = p.username.length > 15 ? p.username.slice(0, 14) + '…' : p.username;
     ca(mkT(nameX, hY + 12, crown + uname, 18, p.is_premium ? '#c8a0ff' : '#f0f0fa', true));
     const premSub  = p.is_premium ? `⭐ Premium · ${p.premium_days_left} дн.` : '';
-    const titleBit = (!premSub && p.display_title) ? `🏵 ${p.display_title} · ` : '';
     ca(mkT(nameX, hY + 38,
-      premSub || `${titleBit}ELO ★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`,
+      premSub || `ELO ★ ${p.rating}  🏆 ${p.wins}W  💀 ${p.losses}L`,
       12, p.is_premium ? '#b45aff' : '#ffc83c'));
 
     ca(mkT(W - pad - 12, hY + 14, `💰 ${p.gold}`,     15, '#ffc83c', true)).setOrigin(1, 0.5);
