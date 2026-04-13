@@ -55,7 +55,7 @@ class BootScene extends Phaser.Scene {
     rt.draw(g, 0, 0);
     rt.saveTexture(key);
     g.destroy(); rt.destroy();
-  },
+  }
 
   _warrior(key, bodyColor, shadowColor) {
     const W = 80, H = 120;
