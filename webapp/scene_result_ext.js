@@ -166,6 +166,9 @@ Object.assign(ResultScene.prototype, {
       });
     } else if (isTitan) {
       this._mainBtn(W / 2, H * 0.89, '🚪  Выйти к боям', () => this.scene.start('Menu', { returnTab: 'battle' }));
+    } else if (won && r.level_up) {
+      this._bigBtn(W / 2, H * 0.89, '⚡  Улучшить статы!', 0x5520a0, '#ffffff',
+        () => this.scene.start('Stats', { player: State.player }));
     } else {
       this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
     }
