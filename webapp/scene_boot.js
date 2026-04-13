@@ -20,6 +20,8 @@ class BootScene extends Phaser.Scene {
   _generateTextures() {
     this._warrior('warrior_blue', '#4488ff', '#2255cc');
     this._warrior('warrior_red', '#ff4455', '#cc2233');
+    this._warriorFace('warrior_blue_face', '#4488ff', '#2255cc');
+    this._warriorFace('warrior_red_face',  '#ff4455', '#cc2233');
     this._hitFx();
     this._critFx();
     this._dodgeFx();
@@ -27,6 +29,33 @@ class BootScene extends Phaser.Scene {
     this._arenaBg();
     this._coin();
   }
+
+  /* Портрет 56×56 — для аватара в шапке профиля */
+  _warriorFace(key, bodyColor, shadowColor) {
+    const S = 56;
+    const rt = this.add.renderTexture(0, 0, S, S).setVisible(false);
+    const g  = this.add.graphics().setVisible(false);
+    const bc = parseInt(bodyColor.replace('#', ''), 16);
+    const sc = parseInt(shadowColor.replace('#', ''), 16);
+    // Плечи / верх торса
+    g.fillStyle(bc, 1); g.fillRoundedRect(8, 36, 40, 22, 8);
+    // Щит слева
+    g.fillStyle(0x3366cc, 1); g.fillRoundedRect(2, 34, 12, 18, 4);
+    g.lineStyle(1.5, 0x88aaff, 1); g.strokeRoundedRect(2, 34, 12, 18, 4);
+    // Меч справа (намёк)
+    g.lineStyle(3, 0xffc83c, 1); g.lineBetween(46, 34, 55, 18);
+    // Голова
+    g.fillStyle(bc, 1); g.fillCircle(28, 22, 16);
+    // Шлем
+    g.fillStyle(sc, 1); g.fillRect(12, 8, 32, 8);
+    g.fillStyle(0xffc83c, 1); g.fillRect(20, 3, 16, 7);
+    // Глаза
+    g.fillStyle(0xffffff, 1); g.fillCircle(22, 22, 4); g.fillCircle(34, 22, 4);
+    g.fillStyle(0x111122, 1); g.fillCircle(23, 22, 2); g.fillCircle(35, 22, 2);
+    rt.draw(g, 0, 0);
+    rt.saveTexture(key);
+    g.destroy(); rt.destroy();
+  },
 
   _warrior(key, bodyColor, shadowColor) {
     const W = 80, H = 120;
