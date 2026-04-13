@@ -44,17 +44,13 @@ Object.assign(MenuScene.prototype, {
     bnFade.fillGradientStyle(0x12121c, 0x12121c, 0x12121c, 0x12121c, 0, 0, 1, 1);
     bnFade.fillRect(0, BNH - 26, W, 26);
 
-    // Avatar block
-    const avX = PAD + 6, avY = 10, avS = 68;
+    // Avatar block — компактная рамка, персонаж чётко внутри
+    const avX = PAD + 8, avY = 14, avS = 54;
     const avBg = ca(mkG());
-    // Тёмный фон — персонаж чётко виден на контрасте
-    avBg.fillStyle(0x0a0818, 1); avBg.fillRoundedRect(avX, avY, avS, avS, 14);
-    // Внешнее свечение (тень)
-    avBg.lineStyle(4, 0x5096ff, 0.18); avBg.strokeRoundedRect(avX - 2, avY - 2, avS + 4, avS + 4, 16);
-    // Чёткая рамка
-    avBg.lineStyle(2, 0x7ab4ff, 0.75); avBg.strokeRoundedRect(avX, avY, avS, avS, 14);
-    const avChar = ca(mkI(avX + avS / 2, avY + avS / 2 + 2, 'warrior_blue').setScale(1.7).setOrigin(0.5));
-    this.tweens.add({ targets: avChar, y: avY + avS / 2 - 2, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    avBg.fillStyle(0x080614, 1);    avBg.fillRoundedRect(avX, avY, avS, avS, 12);
+    avBg.lineStyle(2, 0x7ab4ff, 0.85); avBg.strokeRoundedRect(avX, avY, avS, avS, 12);
+    // Персонаж масштаб подобран чтобы помещался внутри рамки
+    const avChar = ca(mkI(avX + avS / 2, avY + avS / 2 + 3, 'warrior_blue').setScale(1.15).setOrigin(0.5));
 
     // Name + sub
     const niX = avX + avS + 10;
@@ -70,8 +66,8 @@ Object.assign(MenuScene.prototype, {
     let bx = niX;
     bads.forEach((bd, i) => {
       const bw = i === 2 ? 42 : 56;
-      const bbg = ca(mkG()); bbg.fillStyle(0xffffff, 0.1); bbg.fillRoundedRect(bx, avY + 48, bw, 20, 6);
-      ca(mkT(bx + bw / 2, avY + 58, bd, 10, badCols[i], true)).setOrigin(0.5);
+      const bbg = ca(mkG()); bbg.fillStyle(0xffffff, 0.1); bbg.fillRoundedRect(bx, avY + 46, bw, 20, 6);
+      ca(mkT(bx + bw / 2, avY + 56, bd, 10, badCols[i], true)).setOrigin(0.5);
       bx += bw + 5;
     });
 
