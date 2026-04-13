@@ -161,6 +161,8 @@ Object.assign(MenuScene.prototype, {
     refZ.on('pointerup',   () => { if (_refBusy) return; _refBusy = true; refT.setText('⏳'); this.time.delayedCall(400, () => this.scene.restart({ returnTab: this._activeTab || 'profile' })); });
     refZ.on('pointerout',  () => { refG.clear(); refG.fillStyle(C.dark, 0.85); refG.fillRoundedRect(refX, refY, refW, refH, 13); refG.lineStyle(1.5, C.blue, 0.35); refG.strokeRoundedRect(refX, refY, refW, refH, 13); });
 
+    c.list.forEach(o => { try { this.sys.displayList.remove(o); } catch(_) {} });
+    this.sys.displayList.remove(c);
     this._panels.profile = c;
     this._loadProfileBuffs();
   },

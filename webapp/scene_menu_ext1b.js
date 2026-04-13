@@ -84,6 +84,8 @@ Object.assign(MenuScene.prototype, {
     c.add(txt(this, W / 2, verY, `⚔️  Duel Arena  v${State.appVersion || '1.01'}`, 13, '#ffc83c', true).setOrigin(0.5));
     c.add(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#ddddff').setOrigin(0.5));
 
+    c.list.forEach(o => { try { this.sys.displayList.remove(o); } catch(_) {} });
+    this.sys.displayList.remove(c);
     this._panels.more = c;
   },
 

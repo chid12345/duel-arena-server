@@ -138,6 +138,10 @@ Object.assign(MenuScene.prototype, {
       ...hpBlockObjs,
     ];
     children.forEach(o => c.add(o));
+    // Явно убираем все объекты И контейнер из displayList сцены.
+    // Container.add() должен это делать автоматически, но делаем явно для гарантии.
+    c.list.forEach(o => { try { this.sys.displayList.remove(o); } catch(_) {} });
+    this.sys.displayList.remove(c);
 
     this._panels.battle = c;
     this._checkIncomingChallenge();
