@@ -118,6 +118,19 @@ Object.assign(MenuScene.prototype, {
       ca(mkT(W / 2, xpY + 5, '⭐ Макс. уровень', 10, '#ffc83c', true)).setOrigin(0.5);
     }
 
+    // Free stats badge — прямо под XP-баром
+    if (p.free_stats > 0) {
+      const fsByXp = xpY + xpH + 5;
+      const fsG = ca(mkG());
+      fsG.fillStyle(0x5520a0, 0.88); fsG.fillRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
+      fsG.lineStyle(1.5, C.purple, 0.8); fsG.strokeRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
+      ca(mkT(W / 2, fsByXp + 12,
+        `⚡ ${p.free_stats} своб. очка — нажми чтобы улучшить!`, 11, '#ffc83c', true)).setOrigin(0.5);
+      this.tweens.add({ targets: fsG, alpha: 0.55, duration: 700, yoyo: true, repeat: -1 });
+      const fsZ = ca(mkZ(W / 2, fsByXp + 12, W - PAD * 2, 24).setInteractive({ useHandCursor: true }));
+      fsZ.on('pointerup', () => this.scene.start('Stats', { player: State.player }));
+    }
+
     /* ── STAT BARS ───────────────────────────────────────── */
     const STATS = [
       { icon: '💪', label: 'Сила',      color: C.red,    hex: '#dc3c46', val: p.strength_effective  ?? p.strength,   sub: `~${p.dmg}ур`     },
@@ -125,7 +138,8 @@ Object.assign(MenuScene.prototype, {
       { icon: '💥', label: 'Интуиция',  color: C.purple, hex: '#b45aff', val: p.intuition_effective ?? p.intuition,  sub: `${p.crit_pct}%`  },
       { icon: '🛡', label: 'Выносл.',   color: C.green,  hex: '#3cc864', val: p.stamina_effective   ?? p.stamina,    sub: `${p.armor_pct}%` },
     ];
-    const sbY0 = czY + czH + 8, sbRH = 24, sbGap = 5;
+    const fsBadgeH = p.free_stats > 0 ? 28 : 0;
+    const sbY0 = czY + czH + 8 + fsBadgeH, sbRH = 24, sbGap = 5;
     const maxV = Math.max(1, 3 + p.level * 2);
     const nameW = 66, trkX = PAD + 22 + nameW + 4;
     const valW = 28, pctW = 48, trkW = W - trkX - valW - pctW - PAD - 4;
@@ -145,16 +159,9 @@ Object.assign(MenuScene.prototype, {
 
     /* ── FREE STATS ──────────────────────────────────────── */
     const fsBaseY = sbY0 + STATS.length * (sbRH + sbGap) + 4;
-    if (p.free_stats > 0) {
-      const fsG = ca(mkG());
-      fsG.fillStyle(0x5520a0, 0.88); fsG.fillRoundedRect(W / 2 - 100, fsBaseY, 200, 26, 8);
-      fsG.lineStyle(1.5, C.purple, 0.8); fsG.strokeRoundedRect(W / 2 - 100, fsBaseY, 200, 26, 8);
-      ca(mkT(W / 2, fsBaseY + 13, `⚡ ${p.free_stats} свободных очка статов`, 11, '#ffc83c', true)).setOrigin(0.5);
-      this.tweens.add({ targets: fsG, alpha: 0.5, duration: 700, yoyo: true, repeat: -1 });
-    }
 
     /* ── HP REGEN ────────────────────────────────────────── */
-    const regenBaseY = fsBaseY + (p.free_stats > 0 ? 32 : 2);
+    const regenBaseY = fsBaseY + 2;
     if (p.current_hp < p.max_hp) {
       const rate = p.regen_per_min || 0;
       let secsLeft = p.regen_secs_to_full || 0;
@@ -173,7 +180,7 @@ Object.assign(MenuScene.prototype, {
 
     /* ── ACTION BUTTONS ──────────────────────────────────── */
     const statsEndY = sbY0 + STATS.length * (sbRH + sbGap) - sbGap;
-    const extrasH   = (p.free_stats > 0 ? 32 : 0) + (p.current_hp < p.max_hp ? 18 : 0);
+    const extrasH   = (p.current_hp < p.max_hp ? 18 : 0);
     const actY = Math.min(CH - 58, statsEndY + extrasH + 8);
     const actH = 52, halfW = (W - PAD * 2 - 8) / 2;
 
