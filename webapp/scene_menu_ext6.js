@@ -8,12 +8,15 @@ Object.assign(MenuScene.prototype, {
     Object.entries(this._panels).forEach(([k, c]) => {
       if (!c) return;
       const v = k === key;
-      c.setVisible(v);
-      c.setAlpha(v ? 1 : 0);
-      c.setPosition(0, v ? 0 : -9999); // смещаем скрытые панели за экран
-      if (c.list) c.list.forEach(child => {
-        if (child?.setVisible) child.setVisible(v);
-      });
+      if (v) {
+        this.sys.displayList.add(c);  // re-add if previously removed (handles duplicates safely)
+        c.setVisible(true);
+        c.setAlpha(1);
+        c.setPosition(0, 0);
+      } else {
+        // Remove from display list entirely — guaranteed no rendering, zero ghost
+        this.sys.displayList.remove(c);
+      }
     });
     if (key === 'profile') this._loadProfileBuffs();
     const inactiveCol = '#ccccee';
