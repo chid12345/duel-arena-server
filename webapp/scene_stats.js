@@ -166,7 +166,7 @@ class StatsScene extends Phaser.Scene {
 
     // Область: от 116px (после панели боевой статистики) до начала combat preview
     const areaTop = 116;
-    const areaBot = H * 0.62;
+    const areaBot = H * 0.70;
     const rowH    = (areaBot - areaTop) / STATS.length;
 
     STATS.forEach((s, i) => {

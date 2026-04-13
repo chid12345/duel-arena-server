@@ -122,7 +122,7 @@ Object.assign(StatsScene.prototype, {
   /* ── Боевые показатели (sci-fi стиль) ──── */
   _buildCombatPreview(W, H) {
     const p   = State.player;
-    const py  = H * 0.63;
+    const py  = H * 0.71;
     const ph  = H * 0.20;
 
     /* Секция заголовок */
@@ -161,30 +161,6 @@ Object.assign(StatsScene.prototype, {
       const valT = txt(this, cx, cellY + 32, c.valFn(p), 15, c.hex, true).setOrigin(0.5);
       this._combatCells[c.key] = { t: valT, fn: c.valFn, origColor: c.hex };
     });
-
-    /* ── Пассивные способности ─────────────────────────── */
-    const passY = py + ph + 6;
-    const passH = 86;
-
-    const passG = this.add.graphics();
-    passG.fillStyle(0x060410, 0.9);
-    passG.fillRoundedRect(8, passY, W - 16, passH, 8);
-    passG.lineStyle(1, 0x1a2a50, 0.8);
-    passG.strokeRoundedRect(8, passY, W - 16, passH, 8);
-
-    const sepL2 = this.add.graphics();
-    sepL2.lineStyle(1, 0x1a2a50, 1);
-    sepL2.lineBetween(8, passY, W - 8, passY);
-    txt(this, 14, passY + 10, '◈  ПАССИВНЫЕ СПОСОБНОСТИ', 9, '#1a3a6a');
-
-    this._passLine1 = txt(this, W / 2, passY + 28,
-      `💥 Крит ${parseFloat(p.crit_pct || 0).toFixed(0)}%  ·  🤸 Уворот ${parseFloat(p.dodge_pct || 0).toFixed(1)}%`,
-      10, '#c8a0ff').setOrigin(0.5);
-    this._passLine2 = txt(this, W / 2, passY + 44,
-      `🛡 Броня ${parseFloat(p.armor_pct || 0).toFixed(1)}%  ·  ⚔️ Урон ~${p.dmg || 0}`,
-      10, '#ffc870').setOrigin(0.5);
-    this._passLine3 = txt(this, W / 2, passY + 59, '', 10, '#88ddff').setOrigin(0.5);
-    this._passLine4 = txt(this, W / 2, passY + 74, '', 10, '#ffcc55').setOrigin(0.5);
 
     this._refreshBuffDisplay();
   },
