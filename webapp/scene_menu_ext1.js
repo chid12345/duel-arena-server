@@ -33,7 +33,8 @@ Object.assign(MenuScene.prototype, {
   _buildBattlePanel() {
     const { W, CONTENT_H: CH } = this;
     const p = State.player;
-    const c = this.add.container(0, 0);
+    // Используем new Container напрямую — он НЕ добавляется в displayList автоматически
+    const c = new Phaser.GameObjects.Container(this, 0, 0);
     const PAD = 14;
     const GAP = 9;
     const rmdl = o => { try { o.removeFromDisplayList(); } catch(_) {} return o; };
@@ -139,11 +140,6 @@ Object.assign(MenuScene.prototype, {
       ...hpBlockObjs,
     ];
     children.forEach(o => c.add(o));
-    // Явно убираем все объекты И контейнер из displayList сцены.
-    // Container.add() должен это делать автоматически, но делаем явно для гарантии.
-    c.list.forEach(o => { try { this.sys.displayList.remove(o); } catch(_) {} });
-    this.sys.displayList.remove(c);
-
     this._panels.battle = c;
     this._checkIncomingChallenge();
   },
