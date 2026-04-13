@@ -13,12 +13,15 @@ Object.assign(MenuScene.prototype, {
         c.setVisible(true);
         c.setAlpha(1);
         c.setPosition(0, 0);
-        // Включаем input на всех зонах контейнера
-        c.list.forEach(child => { if (child.input) this.input.enable(child); });
+        c.list.forEach(child => {
+          if (child.input) { child.setActive(true); this.input.enable(child); }
+        });
       } else {
         this.sys.displayList.remove(c);
-        // Отключаем input — без этого зоны скрытой панели ловят тапы (ghost input)
-        c.list.forEach(child => { if (child.input) this.input.disable(child); });
+        // Двойная защита от ghost-input: disable + setActive(false)
+        c.list.forEach(child => {
+          if (child.input) { this.input.disable(child); child.setActive(false); }
+        });
       }
     });
     if (key === 'profile') this._loadProfileBuffs();
