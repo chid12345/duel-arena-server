@@ -10,7 +10,7 @@ Object.assign(MenuScene.prototype, {
       const v = k === key;
       c.setVisible(v);
       c.setAlpha(v ? 1 : 0);
-      // Принудительно прячем каждый дочерний объект — защита от Phaser-бага с Container
+      c.setPosition(0, v ? 0 : -9999); // смещаем скрытые панели за экран
       if (c.list) c.list.forEach(child => {
         if (child?.setVisible) child.setVisible(v);
       });

@@ -90,6 +90,9 @@ Object.assign(MenuScene.prototype, {
 
   shutdown() {
     this.time.removeAllEvents();
+    // Явно уничтожаем все панели вместе с их make.* дочерними объектами
+    Object.values(this._panels || {}).forEach(c => { try { c?.destroy(true); } catch(_){} });
+    this._panels = {};
   },
 
 });
