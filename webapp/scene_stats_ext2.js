@@ -166,7 +166,7 @@ Object.assign(StatsScene.prototype, {
     g1.fillRoundedRect(x0, y, btnW, h, 10);
     g1.lineStyle(1.5, C.blue, 0.5);
     g1.strokeRoundedRect(x0, y, btnW, h, 10);
-    txt(this, x0 + btnW / 2, y + h / 2, '🧥 Гардероб', 13, '#7ab4ff', true).setOrigin(0.5);
+    txt(this, x0 + btnW / 2, y + h / 2, '⚔️ Оснащение', 13, '#7ab4ff', true).setOrigin(0.5);
     const z1 = this.add.zone(x0 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
     z1.on('pointerdown', () => {
       g1.clear();
@@ -192,7 +192,7 @@ Object.assign(StatsScene.prototype, {
     g2.fillRoundedRect(x1, y, btnW, h, 10);
     g2.lineStyle(1.5, C.green, 0.45);
     g2.strokeRoundedRect(x1, y, btnW, h, 10);
-    txt(this, x1 + btnW / 2, y + h / 2, '👜 Моё', 13, '#60cc80', true).setOrigin(0.5);
+    txt(this, x1 + btnW / 2, y + h / 2, '📦 Инвентарь', 13, '#60cc80', true).setOrigin(0.5);
     const z2 = this.add.zone(x1 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
     z2.on('pointerdown', () => {
       g2.clear();

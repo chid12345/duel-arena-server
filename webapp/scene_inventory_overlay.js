@@ -78,7 +78,7 @@
     ov.push(this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.75).setDepth(130));
     const bg = makePanel(this, 8, panelY, W-16, panelH, 12, 0.98); if (bg?.setDepth) bg.setDepth(131);
     ov.push(bg);
-    ov.push(txt(this, W/2, panelY+14, '👜 Моё', 14, '#d0ffd8', true).setOrigin(0.5).setDepth(132));
+    ov.push(txt(this, W/2, panelY+14, '📦 Инвентарь', 14, '#d0ffd8', true).setOrigin(0.5).setDepth(132));
 
     // Кнопка закрыть
     const cg = this.add.graphics().setDepth(132);

@@ -119,12 +119,6 @@ class StatsScene extends Phaser.Scene {
   _buildStatRows(W, H) {
     const p = State.player;
 
-    // Заголовок секции (scan-style)
-    const sepG = this.add.graphics();
-    sepG.lineStyle(1, 0x1a2a50, 0.9);
-    sepG.lineBetween(8, 112, W - 8, 112);
-    txt(this, 14, 108, '◈  СКАНИРОВАНИЕ ГЕРОЯ', 9, '#1a3a6a').setOrigin(0, 1);
-
     const STATS = [
       {
         key:      'strength',
@@ -166,7 +160,7 @@ class StatsScene extends Phaser.Scene {
 
     // Область: от 116px (после панели боевой статистики) до начала combat preview
     const areaTop = 116;
-    const areaBot = H * 0.70;
+    const areaBot = H * 0.72;
     const rowH    = (areaBot - areaTop) / STATS.length;
 
     STATS.forEach((s, i) => {

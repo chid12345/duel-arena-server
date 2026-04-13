@@ -20,7 +20,7 @@
     const bg = makePanel(this, 8, panelY, W-16, panelH, 12, 0.98);
     if (bg?.setDepth) bg.setDepth(121);
     overlay.push(bg);
-    overlay.push(txt(this, W/2, panelY+14, "🧥 Гардероб", 14, "#f0f0fa", true).setOrigin(0.5).setDepth(122));
+    overlay.push(txt(this, W/2, panelY+14, "⚔️ Оснащение", 14, "#f0f0fa", true).setOrigin(0.5).setDepth(122));
 
     // Кнопка закрыть
     const cg = this.add.graphics().setDepth(122);

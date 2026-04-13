@@ -122,8 +122,8 @@ Object.assign(StatsScene.prototype, {
   /* ── Боевые показатели (sci-fi стиль) ──── */
   _buildCombatPreview(W, H) {
     const p   = State.player;
-    const py  = H * 0.71;
-    const ph  = H * 0.20;
+    const py  = H * 0.73;
+    const ph  = H * 0.19;
 
     /* Секция заголовок */
     const sepG = this.add.graphics();
