@@ -15,62 +15,73 @@ Object.assign(StatsScene.prototype, {
 
   _buildStatRow(s, x, y, w, h, p) {
     const hasStats = State.player.free_stats > 0;
-    // Конвертируем число-цвет в CSS-строку для txt()
     const hex = `#${s.color.toString(16).padStart(6, '0')}`;
 
-    /* Панель */
+    /* ── Панель ─────────────────────────────── */
     const panel = this.add.graphics();
-    panel.fillStyle(C.bgPanel, 0.92);
-    panel.fillRoundedRect(x, y, w, h, 10);
-    panel.lineStyle(2, s.color, 0.30);
-    panel.strokeRoundedRect(x, y, w, h, 10);
+    panel.fillStyle(0x0c0a18, 0.92);
+    panel.fillRoundedRect(x, y + 2, w, h - 4, 8);
+    panel.lineStyle(1, s.color, 0.18);
+    panel.strokeRoundedRect(x, y + 2, w, h - 4, 8);
 
-    /* Цветная полоска слева */
+    /* Левый акцент */
     const stripe = this.add.graphics();
     stripe.fillStyle(s.color, 1);
-    stripe.fillRoundedRect(x + 2, y + 8, 5, h - 16, 2);
+    stripe.fillRoundedRect(x + 3, y + 10, 4, h - 20, 2);
 
-    /* Иконка + название */
-    txt(this, x + 16, y + 9, `${s.icon} ${s.label}`, 13, '#f0f0fa', true);
+    /* ── Верхняя строка: иконка + название ──── */
+    const ROW1_Y = y + 18;
+    txt(this, x + 18, ROW1_Y, s.icon, 14).setOrigin(0.5);
+    txt(this, x + 32, ROW1_Y, s.label, 11, 'rgba(255,255,255,0.45)').setOrigin(0, 0.5);
 
-    /* Значение — крупно, в цвете стата */
-    const valTxt = txt(this, x + 16, y + 26, String(s.valFn(p)), 24, hex, true);
-    const baseVal = this._statBase(p, s.key);
-    const bonusVal = this._statBonus(p, s.key);
-    const breakdownTxt = txt(this, x + 16, y + 49, `база ${baseVal} | бонусы +${bonusVal}`, 8, '#ddddff');
-
-    /* Мини-бар */
-    const barX = x + 16;
-    const barY = y + h - 13;
-    const barW = Math.round(w * 0.42);
-    const maxExp = Math.max(1, 3 + p.level * 2);
-    const pct = Math.min(1, s.valFn(p) / maxExp);
-    const barBg = this.add.graphics();
-    barBg.fillStyle(C.dark, 1);
-    barBg.fillRoundedRect(barX, barY, barW, 5, 2);
-    const barFill = this.add.graphics();
-    barFill.fillStyle(s.color, 0.85);
-    barFill.fillRoundedRect(barX, barY, Math.max(5, Math.round(barW * pct)), 5, 2);
-
-    /* Эффект + описание (правая часть, перед кнопкой) */
-    const midRight = x + w - 62;
-    const effectTxt = txt(this, midRight, y + 14, s.effectFn(p), 13, hex, true).setOrigin(1, 0.5);
-    txt(this, midRight, y + 30, s.desc, 9, '#ddddff').setOrigin(1, 0);
-
-    /* Кнопка +1 */
-    const btnW = 48;
-    const btnH = h - 14;
+    /* ── Кнопка +1 (фиксированные размеры) ─── */
+    const btnW = 40;
+    const btnH = 34;
     const btnX = x + w - btnW - 4;
-    const btnY = y + 7;
+    const btnY = y + (h - btnH) / 2;
     const btn  = this.add.graphics();
     this._drawPlusBtn(btn, btnX, btnY, btnW, btnH, s.color, hasStats, false);
-
     const btnTxt = txt(this, btnX + btnW / 2, btnY + btnH / 2,
-      hasStats ? '+1' : '—', 16,
-      hasStats ? '#ffffff' : '#ccccee', true
+      hasStats ? '+1' : '—', 14,
+      hasStats ? '#ffffff' : '#555577', true
     ).setOrigin(0.5);
 
-    /* Интерактив */
+    /* ── Эффект (правее от бара, выровнен по верху) ─ */
+    const effX = btnX - 6;
+    const effW = 58;
+    const effectTxt = txt(this, effX, ROW1_Y, s.effectFn(p), 11, hex, true).setOrigin(1, 0.5);
+
+    /* ── Скан-бар ──────────────────────────── */
+    const barX  = x + 32;
+    const barW  = effX - effW - barX - 6;
+    const barH  = 18;
+    const barY  = y + h / 2 - 2;   // центр чуть вниз
+
+    const barBgG = this.add.graphics();
+    barBgG.fillStyle(0x080614, 1);
+    barBgG.fillRoundedRect(barX, barY, barW, barH, 3);
+    barBgG.lineStyle(1, s.color, 0.12);
+    barBgG.strokeRoundedRect(barX, barY, barW, barH, 3);
+
+    const maxExp = Math.max(1, 3 + p.level * 2);
+    const pct    = Math.min(1, s.valFn(p) / maxExp);
+    const fillW  = Math.max(barH, Math.round(barW * pct));
+
+    const barFill = this.add.graphics();
+    barFill.fillStyle(s.color, 0.38);
+    barFill.fillRoundedRect(barX, barY, fillW, barH, 3);
+
+    /* Значение внутри бара */
+    const valTxt = txt(this, barX + 8, barY + barH / 2,
+      String(s.valFn(p)), 12, hex, true).setOrigin(0, 0.5);
+
+    /* ── Разбивка база|бонусы ──────────────── */
+    const baseVal   = this._statBase(p, s.key);
+    const bonusVal  = this._statBonus(p, s.key);
+    const breakdownTxt = txt(this, barX, barY + barH + 4,
+      `база ${baseVal} | бонусы +${bonusVal}`, 8, '#2a2848');
+
+    /* ── Интерактив ────────────────────────── */
     const zone = this.add.zone(btnX + btnW / 2, btnY + btnH / 2, btnW, btnH);
     if (hasStats) {
       zone.setInteractive({ useHandCursor: true });
@@ -87,87 +98,93 @@ Object.assign(StatsScene.prototype, {
     }
 
     return { s, valTxt, breakdownTxt, barFill, effectTxt, btn, btnTxt, zone,
-             barX, barY, barW, btnX, btnY, btnW, btnH };
+             barX, barY, barW, barH, btnX, btnY, btnW, btnH };
   },
 
   _drawPlusBtn(g, x, y, w, h, color, active, pressed) {
     g.clear();
     if (!active) {
-      g.fillStyle(C.dark, 0.45);
-      g.fillRoundedRect(x, y, w, h, 9);
-      g.lineStyle(1, 0x333355, 0.5);
-      g.strokeRoundedRect(x, y, w, h, 9);
+      g.fillStyle(0x0c0a18, 0.9);
+      g.fillRoundedRect(x, y, w, h, 7);
+      g.lineStyle(1, 0x1e1c30, 0.8);
+      g.strokeRoundedRect(x, y, w, h, 7);
       return;
     }
     const col = pressed
       ? Phaser.Display.Color.IntegerToColor(color).darken(30).color
       : color;
-    g.fillStyle(col, 1);
-    g.fillRoundedRect(x, y, w, h, 9);
-    // Блик
-    g.fillStyle(0xffffff, pressed ? 0.06 : 0.14);
-    g.fillRoundedRect(x + 3, y + 3, w - 6, Math.round(h * 0.45), 7);
-    // Рамка
-    g.lineStyle(1.5, 0xffffff, 0.15);
-    g.strokeRoundedRect(x, y, w, h, 9);
+    g.fillStyle(col, 0.2);
+    g.fillRoundedRect(x, y, w, h, 7);
+    g.lineStyle(1.5, col, pressed ? 0.9 : 0.7);
+    g.strokeRoundedRect(x, y, w, h, 7);
   },
 
-  /* ── Боевые показатели ───────────────────────────────── */
+  /* ── Боевые показатели (sci-fi стиль) ──── */
   _buildCombatPreview(W, H) {
     const p   = State.player;
     const py  = H * 0.63;
-    const ph  = H * 0.205;
+    const ph  = H * 0.20;
 
-    makePanel(this, 8, py, W - 16, ph, 12);
+    /* Секция заголовок */
+    const sepG = this.add.graphics();
+    sepG.lineStyle(1, 0x1a2a50, 1);
+    sepG.lineBetween(8, py, W - 8, py);
+    txt(this, 14, py + 10, '◈  БОЕВЫЕ ПОКАЗАТЕЛИ', 9, '#1a3a6a');
 
-    txt(this, W / 2, py + 10, 'БОЕВЫЕ ПОКАЗАТЕЛИ', 11, '#ddddff', true).setOrigin(0.5);
-
-    const divider = this.add.graphics();
-    divider.lineStyle(1, C.gold, 0.12);
-    divider.lineBetween(20, py + 24, W - 20, py + 24);
-
+    /* Ячейки */
     const cells = [
-      { key: 'dmg',   label: '⚔️ Урон',   valFn: q => `~${q.dmg}`,        color: C.red,    hex: '#dc3c46' },
-      { key: 'hp',    label: '❤️ HP',      valFn: q => String((q.max_hp_effective ?? q.max_hp) || 0), color: 0xe05050, hex: '#e05050' },
-      { key: 'armor', label: '🛡 Броня',   valFn: q => `${q.armor_pct}%`,   color: C.green,  hex: '#3cc864' },
-      { key: 'dodge', label: '🤸 Уворот',  valFn: q => `${q.dodge_pct}%`,   color: C.cyan,   hex: '#3cc8dc' },
-      { key: 'crit',  label: '💥 Крит',    valFn: q => `${q.crit_pct}%`,    color: C.purple, hex: '#b45aff' },
+      { key: 'dmg',   label: '⚔️ Урон',  valFn: q => `~${q.dmg}`,        hex: '#dc3c46' },
+      { key: 'hp',    label: '❤️ HP',     valFn: q => String((q.max_hp_effective ?? q.max_hp) || 0), hex: '#e05050' },
+      { key: 'armor', label: '🛡 Броня',  valFn: q => `${q.armor_pct}%`,   hex: '#3cc864' },
+      { key: 'dodge', label: '🤸 Уворот', valFn: q => `${q.dodge_pct}%`,   hex: '#3cc8dc' },
+      { key: 'crit',  label: '💥 Крит',   valFn: q => `${q.crit_pct}%`,    hex: '#b45aff' },
     ];
+    const cellW = Math.floor((W - 16) / cells.length);
+    const cellY = py + 22;
+    const cellH = 48;
+
+    const cellBg = this.add.graphics();
+    cellBg.fillStyle(0x080614, 0.85);
+    cellBg.fillRoundedRect(8, cellY, W - 16, cellH, 8);
+    cellBg.lineStyle(1, 0x1a2a50, 0.8);
+    cellBg.strokeRoundedRect(8, cellY, W - 16, cellH, 8);
 
     this._combatCells = {};
     cells.forEach((c, i) => {
-      const cx   = W * (0.1 + i * 0.2);
-      const cHex = c.hex || `#${c.color.toString(16).padStart(6, '0')}`;
-      txt(this, cx, py + 34, c.label, 9, '#ccccee').setOrigin(0.5);
-      const valT = txt(this, cx, py + 52, c.valFn(p), 16, cHex, true).setOrigin(0.5);
-      this._combatCells[c.key] = { t: valT, fn: c.valFn, origColor: cHex };
+      const cx = 8 + cellW * i + cellW / 2;
+      if (i > 0) {
+        const sepL = this.add.graphics();
+        sepL.lineStyle(1, 0x1a2a50, 0.5);
+        sepL.lineBetween(8 + cellW * i, cellY + 6, 8 + cellW * i, cellY + cellH - 6);
+      }
+      txt(this, cx, cellY + 12, c.label, 8, '#2a4878').setOrigin(0.5);
+      const valT = txt(this, cx, cellY + 32, c.valFn(p), 15, c.hex, true).setOrigin(0.5);
+      this._combatCells[c.key] = { t: valT, fn: c.valFn, origColor: c.hex };
     });
 
-    txt(this, W / 2, py + ph - 12,
-      'относительно среднего противника вашего уровня',
-      9, '#ddddff').setOrigin(0.5);
-
-    // Блок пассивных способностей — 4 строки: базовые + бафы
+    /* ── Пассивные способности ─────────────────────────── */
     const passY = py + ph + 6;
     const passH = 86;
-    const passW = W - 24;
-    const passBg = this.add.graphics();
-    passBg.fillStyle(0x1a1830, 0.9);
-    passBg.fillRoundedRect(12, passY, passW, passH, 10);
-    passBg.lineStyle(1.5, 0x4a4870, 0.6);
-    passBg.strokeRoundedRect(12, passY, passW, passH, 10);
 
-    txt(this, W / 2, passY + 9, '⚡ Пассивные способности', 10, '#bbbbff', true).setOrigin(0.5);
-    this._passLine1 = txt(this, W / 2, passY + 23,
+    const passG = this.add.graphics();
+    passG.fillStyle(0x060410, 0.9);
+    passG.fillRoundedRect(8, passY, W - 16, passH, 8);
+    passG.lineStyle(1, 0x1a2a50, 0.8);
+    passG.strokeRoundedRect(8, passY, W - 16, passH, 8);
+
+    const sepL2 = this.add.graphics();
+    sepL2.lineStyle(1, 0x1a2a50, 1);
+    sepL2.lineBetween(8, passY, W - 8, passY);
+    txt(this, 14, passY + 10, '◈  ПАССИВНЫЕ СПОСОБНОСТИ', 9, '#1a3a6a');
+
+    this._passLine1 = txt(this, W / 2, passY + 28,
       `💥 Крит ${parseFloat(p.crit_pct || 0).toFixed(0)}%  ·  🤸 Уворот ${parseFloat(p.dodge_pct || 0).toFixed(1)}%`,
       10, '#c8a0ff').setOrigin(0.5);
-    this._passLine2 = txt(this, W / 2, passY + 38,
+    this._passLine2 = txt(this, W / 2, passY + 44,
       `🛡 Броня ${parseFloat(p.armor_pct || 0).toFixed(1)}%  ·  ⚔️ Урон ~${p.dmg || 0}`,
       10, '#ffc870').setOrigin(0.5);
-    // passLine3: Двойной удар + Точность (показывается если есть бафы)
-    this._passLine3 = txt(this, W / 2, passY + 53, '', 10, '#88ddff').setOrigin(0.5);
-    // passLine4: Охота за золотом + Охота за опытом (time-based бафы)
-    this._passLine4 = txt(this, W / 2, passY + 68, '', 10, '#ffcc55').setOrigin(0.5);
+    this._passLine3 = txt(this, W / 2, passY + 59, '', 10, '#88ddff').setOrigin(0.5);
+    this._passLine4 = txt(this, W / 2, passY + 74, '', 10, '#ffcc55').setOrigin(0.5);
 
     this._refreshBuffDisplay();
   },

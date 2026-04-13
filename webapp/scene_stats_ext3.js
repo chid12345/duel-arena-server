@@ -57,7 +57,8 @@ Object.assign(StatsScene.prototype, {
   },
 
   _animateRow(row, p, newFree) {
-    const { s, valTxt, breakdownTxt, barFill, effectTxt, barX, barY, barW } = row;
+    const { s, valTxt, breakdownTxt, barFill, effectTxt, barX, barY, barW, barH } = row;
+    const bH = barH || 18;
 
     // Значение
     valTxt.setText(String(s.valFn(p)));
@@ -73,8 +74,8 @@ Object.assign(StatsScene.prototype, {
     barFill.clear();
     const maxExp = Math.max(1, 3 + p.level * 2);
     const pct    = Math.min(1, s.valFn(p) / maxExp);
-    barFill.fillStyle(s.color, 0.75);
-    barFill.fillRoundedRect(barX, barY, Math.max(5, Math.round(barW * pct)), 5, 2);
+    barFill.fillStyle(s.color, 0.38);
+    barFill.fillRoundedRect(barX, barY, Math.max(bH, Math.round(barW * pct)), bH, 3);
 
     // Эффект
     effectTxt.setText(s.effectFn(p));

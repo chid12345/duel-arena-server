@@ -154,25 +154,63 @@ Object.assign(StatsScene.prototype, {
   },
 
   _buildAvatarBtn(W, H) {
-    const y = H * 0.935, h = 34, gap = 8;
-    const totalW = Math.min(W - 32, 300);
+    const y = H * 0.935, h = 38, gap = 8;
+    const totalW = Math.min(W - 32, 320);
     const btnW = Math.floor((totalW - gap) / 2);
     const x0 = (W - totalW) / 2;
     const x1 = x0 + btnW + gap;
 
+    // Гардероб
     const g1 = this.add.graphics();
-    g1.fillStyle(0x2a2840, 0.95); g1.fillRoundedRect(x0, y, btnW, h, 9);
-    g1.lineStyle(1.5, C.purple, 0.75); g1.strokeRoundedRect(x0, y, btnW, h, 9);
-    txt(this, x0 + btnW / 2, y + h / 2, '🧥 Гардероб', 12, '#f0f0fa', true).setOrigin(0.5);
+    g1.fillStyle(0x0e0c20, 0.97);
+    g1.fillRoundedRect(x0, y, btnW, h, 10);
+    g1.lineStyle(1.5, C.blue, 0.5);
+    g1.strokeRoundedRect(x0, y, btnW, h, 10);
+    txt(this, x0 + btnW / 2, y + h / 2, '🧥 Гардероб', 13, '#7ab4ff', true).setOrigin(0.5);
     const z1 = this.add.zone(x0 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
-    z1.on('pointerdown', () => this._openAvatarPanel());
+    z1.on('pointerdown', () => {
+      g1.clear();
+      g1.fillStyle(C.blue, 0.15); g1.fillRoundedRect(x0, y, btnW, h, 10);
+      g1.lineStyle(1.5, C.blue, 0.9); g1.strokeRoundedRect(x0, y, btnW, h, 10);
+      tg?.HapticFeedback?.selectionChanged();
+    });
+    z1.on('pointerout', () => {
+      g1.clear();
+      g1.fillStyle(0x0e0c20, 0.97); g1.fillRoundedRect(x0, y, btnW, h, 10);
+      g1.lineStyle(1.5, C.blue, 0.5); g1.strokeRoundedRect(x0, y, btnW, h, 10);
+    });
+    z1.on('pointerup', () => {
+      g1.clear();
+      g1.fillStyle(0x0e0c20, 0.97); g1.fillRoundedRect(x0, y, btnW, h, 10);
+      g1.lineStyle(1.5, C.blue, 0.5); g1.strokeRoundedRect(x0, y, btnW, h, 10);
+      this._openAvatarPanel();
+    });
 
+    // Моё
     const g2 = this.add.graphics();
-    g2.fillStyle(0x1e2a1e, 0.95); g2.fillRoundedRect(x1, y, btnW, h, 9);
-    g2.lineStyle(1.5, 0x55cc66, 0.75); g2.strokeRoundedRect(x1, y, btnW, h, 9);
-    txt(this, x1 + btnW / 2, y + h / 2, '👜 Моё', 12, '#d0ffd8', true).setOrigin(0.5);
+    g2.fillStyle(0x081410, 0.97);
+    g2.fillRoundedRect(x1, y, btnW, h, 10);
+    g2.lineStyle(1.5, C.green, 0.45);
+    g2.strokeRoundedRect(x1, y, btnW, h, 10);
+    txt(this, x1 + btnW / 2, y + h / 2, '👜 Моё', 13, '#60cc80', true).setOrigin(0.5);
     const z2 = this.add.zone(x1 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
-    z2.on('pointerdown', () => this._openInventoryPanel());
+    z2.on('pointerdown', () => {
+      g2.clear();
+      g2.fillStyle(C.green, 0.15); g2.fillRoundedRect(x1, y, btnW, h, 10);
+      g2.lineStyle(1.5, C.green, 0.9); g2.strokeRoundedRect(x1, y, btnW, h, 10);
+      tg?.HapticFeedback?.selectionChanged();
+    });
+    z2.on('pointerout', () => {
+      g2.clear();
+      g2.fillStyle(0x081410, 0.97); g2.fillRoundedRect(x1, y, btnW, h, 10);
+      g2.lineStyle(1.5, C.green, 0.45); g2.strokeRoundedRect(x1, y, btnW, h, 10);
+    });
+    z2.on('pointerup', () => {
+      g2.clear();
+      g2.fillStyle(0x081410, 0.97); g2.fillRoundedRect(x1, y, btnW, h, 10);
+      g2.lineStyle(1.5, C.green, 0.45); g2.strokeRoundedRect(x1, y, btnW, h, 10);
+      this._openInventoryPanel();
+    });
   },
   // Методы гардероба (_openAvatarPanel/_renderAvatarOverlay/_avatarAction/_closeAvatarOverlay)
   // вынесены в отдельный файл webapp/scene_wardrobe_overlay.js

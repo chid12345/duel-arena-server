@@ -36,9 +36,8 @@ class StatsScene extends Phaser.Scene {
 
   /* ── Фон ─────────────────────────────────────────────── */
   _drawBg(W, H) {
-    /* Градиент без сетки — сетка давала 50+ draw-call и тормоза при входе */
     const g = this.add.graphics();
-    g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
+    g.fillGradientStyle(0x05040e, 0x05040e, 0x0c0a1c, 0x0c0a1c, 1);
     g.fillRect(0, 0, W, H);
   }
 
@@ -119,6 +118,12 @@ class StatsScene extends Phaser.Scene {
   /* ── Строки статов ───────────────────────────────────── */
   _buildStatRows(W, H) {
     const p = State.player;
+
+    // Заголовок секции (scan-style)
+    const sepG = this.add.graphics();
+    sepG.lineStyle(1, 0x1a2a50, 0.9);
+    sepG.lineBetween(8, 112, W - 8, 112);
+    txt(this, 14, 108, '◈  СКАНИРОВАНИЕ ГЕРОЯ', 9, '#1a3a6a').setOrigin(0, 1);
 
     const STATS = [
       {
