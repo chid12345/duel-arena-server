@@ -61,6 +61,7 @@ const State = {
   lastResult: null,
   ws: null,
   appVersion: '...',
+  avatarId: (() => { try { return parseInt(localStorage.getItem('da_avatar') || '3', 10); } catch(_) { return 3; } })(),
 };
 
 function post(path, body = {}, timeoutMs = 15000) {
