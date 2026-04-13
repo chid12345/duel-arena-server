@@ -40,6 +40,7 @@ class RatingScene extends Phaser.Scene {
 
   shutdown() {
     this._alive = false;
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 
   _buildTabBar(W) {

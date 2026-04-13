@@ -6,6 +6,10 @@
 class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
 
+  shutdown() {
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
+
   async create() {
     const { width: W, height: H } = this.game.canvas;
     const res   = State.lastResult;

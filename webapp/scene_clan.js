@@ -11,6 +11,10 @@ class ClanScene extends Phaser.Scene {
     this._busy = false;
   }
 
+  shutdown() {
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
+
   create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;

@@ -5,6 +5,10 @@
 class NatiskScene extends Phaser.Scene {
   constructor() { super('Natisk'); }
 
+  shutdown() {
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
+
   create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;

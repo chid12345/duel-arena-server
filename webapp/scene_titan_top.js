@@ -5,6 +5,10 @@
 class TitanTopScene extends Phaser.Scene {
   constructor() { super('TitanTop'); }
 
+  shutdown() {
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
+
   create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
