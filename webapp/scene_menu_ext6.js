@@ -9,13 +9,16 @@ Object.assign(MenuScene.prototype, {
       if (!c) return;
       const v = k === key;
       if (v) {
-        this.sys.displayList.add(c);  // re-add if previously removed (handles duplicates safely)
+        this.sys.displayList.add(c);
         c.setVisible(true);
         c.setAlpha(1);
         c.setPosition(0, 0);
+        // Включаем input на всех зонах контейнера
+        c.list.forEach(child => { if (child.input) this.input.enable(child); });
       } else {
-        // Remove from display list entirely — guaranteed no rendering, zero ghost
         this.sys.displayList.remove(c);
+        // Отключаем input — без этого зоны скрытой панели ловят тапы (ghost input)
+        c.list.forEach(child => { if (child.input) this.input.disable(child); });
       }
     });
     if (key === 'profile') this._loadProfileBuffs();
