@@ -45,12 +45,11 @@ Object.assign(MenuScene.prototype, {
     bnFade.fillRect(0, BNH - 26, W, 26);
 
     // Avatar block — компактная рамка, персонаж чётко внутри
-    const avX = PAD + 8, avY = 14, avS = 54;
+    const avX = PAD + 8, avY = 18, avS = 42;
     const avBg = ca(mkG());
-    avBg.fillStyle(0x080614, 1);    avBg.fillRoundedRect(avX, avY, avS, avS, 12);
-    avBg.lineStyle(2, 0x7ab4ff, 0.85); avBg.strokeRoundedRect(avX, avY, avS, avS, 12);
-    // Персонаж масштаб подобран чтобы помещался внутри рамки
-    const avChar = ca(mkI(avX + avS / 2, avY + avS / 2 + 3, 'warrior_blue').setScale(1.15).setOrigin(0.5));
+    avBg.fillStyle(0x080614, 1); avBg.fillRoundedRect(avX, avY, avS, avS, 10);
+    avBg.lineStyle(2, 0x7ab4ff, 0.85); avBg.strokeRoundedRect(avX, avY, avS, avS, 10);
+    const avChar = ca(mkI(avX + avS / 2, avY + avS / 2 + 2, 'warrior_blue').setScale(0.88).setOrigin(0.5));
 
     // Name + sub
     const niX = avX + avS + 10;
