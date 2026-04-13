@@ -227,4 +227,8 @@ class ShopScene extends Phaser.Scene {
     setContentH(y + 10);
   }
 
+  shutdown() {
+    this.time.removeAllEvents();
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
 }

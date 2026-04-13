@@ -161,4 +161,9 @@ class QueueScene extends Phaser.Scene {
       g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12);
     });
   }
+
+  shutdown() {
+    this.time.removeAllEvents();
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
 }

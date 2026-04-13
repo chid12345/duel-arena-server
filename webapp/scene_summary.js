@@ -96,4 +96,9 @@ class SummaryScene extends Phaser.Scene {
 
     _extraBack(this);
   }
+
+  shutdown() {
+    this.time.removeAllEvents();
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
 }

@@ -86,6 +86,8 @@ Object.assign(BattleScene.prototype, {
 
   shutdown() {
     BattleLog.hide();
+    this.time.removeAllEvents();
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   },
 
 });
