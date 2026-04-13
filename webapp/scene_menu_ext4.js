@@ -45,12 +45,16 @@ Object.assign(MenuScene.prototype, {
     bnFade.fillRect(0, BNH - 26, W, 26);
 
     // Avatar block
-    const avX = PAD + 8, avY = 14, avS = 56;
+    const avX = PAD + 6, avY = 10, avS = 68;
     const avBg = ca(mkG());
-    avBg.fillStyle(0xffffff, 0.1); avBg.fillRoundedRect(avX, avY, avS, avS, 13);
-    avBg.lineStyle(2, 0xffffff, 0.18); avBg.strokeRoundedRect(avX, avY, avS, avS, 13);
-    const avChar = ca(mkI(avX + avS / 2, avY + avS / 2, 'warrior_blue').setScale(1.35).setOrigin(0.5));
-    this.tweens.add({ targets: avChar, y: avY + avS / 2 - 4, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Тёмный фон — персонаж чётко виден на контрасте
+    avBg.fillStyle(0x0a0818, 1); avBg.fillRoundedRect(avX, avY, avS, avS, 14);
+    // Внешнее свечение (тень)
+    avBg.lineStyle(4, 0x5096ff, 0.18); avBg.strokeRoundedRect(avX - 2, avY - 2, avS + 4, avS + 4, 16);
+    // Чёткая рамка
+    avBg.lineStyle(2, 0x7ab4ff, 0.75); avBg.strokeRoundedRect(avX, avY, avS, avS, 14);
+    const avChar = ca(mkI(avX + avS / 2, avY + avS / 2 + 2, 'warrior_blue').setScale(1.7).setOrigin(0.5));
+    this.tweens.add({ targets: avChar, y: avY + avS / 2 - 2, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     // Name + sub
     const niX = avX + avS + 10;
@@ -65,9 +69,9 @@ Object.assign(MenuScene.prototype, {
     const badCols = ['#ffc83c', '#3cc8dc', '#ffffff'];
     let bx = niX;
     bads.forEach((bd, i) => {
-      const bw = i === 2 ? 42 : 58;
-      const bbg = ca(mkG()); bbg.fillStyle(0xffffff, 0.1); bbg.fillRoundedRect(bx, avY + 46, bw, 20, 6);
-      ca(mkT(bx + bw / 2, avY + 56, bd, 10, badCols[i], true)).setOrigin(0.5);
+      const bw = i === 2 ? 42 : 56;
+      const bbg = ca(mkG()); bbg.fillStyle(0xffffff, 0.1); bbg.fillRoundedRect(bx, avY + 48, bw, 20, 6);
+      ca(mkT(bx + bw / 2, avY + 58, bd, 10, badCols[i], true)).setOrigin(0.5);
       bx += bw + 5;
     });
 
