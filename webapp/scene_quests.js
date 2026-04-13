@@ -155,4 +155,8 @@ class QuestsScene extends Phaser.Scene {
     txt(this, W/2, H-44, '🔄 Обновляется каждый день в 00:00', 9, '#555577').setOrigin(0.5);
   }
 
+  shutdown() {
+    this.time.removeAllEvents();
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
 }

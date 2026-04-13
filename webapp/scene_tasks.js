@@ -163,4 +163,9 @@ class TasksScene extends Phaser.Scene {
     this.tweens.add({ targets: [bg, t], alpha: 0, delay: 2200, duration: 600,
       onComplete: () => { bg.destroy(); t.destroy(); } });
   }
+
+  shutdown() {
+    this.time.removeAllEvents();
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
 }

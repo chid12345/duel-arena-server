@@ -170,4 +170,10 @@ class StatsScene extends Phaser.Scene {
       this._statRows[s.key] = this._buildStatRow(s, 8, y, W - 16, rowH - 5, p);
     });
   }
+
+  shutdown() {
+    this.time.removeAllEvents();
+    // Явно уничтожаем все объекты сцены — гарантия что ничего не "призраком" остаётся
+    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
 }
