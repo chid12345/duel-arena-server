@@ -31,9 +31,9 @@ Object.assign(RatingScene.prototype, {
     const rowH    = 40;
     const maxShow = Math.max(1, Math.floor((H - listY - 100) / rowH));
     const tRankStyles = [
-      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.25, numCol: '#ffd700' },
-      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.25, numCol: '#aabbcc' },
-      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.25, numCol: '#cc9955' },
+      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.45, numCol: '#ffd700' },
+      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.45, numCol: '#aabbcc' },
+      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.45, numCol: '#cc9955' },
     ];
     lb.slice(0, maxShow).forEach((row, i) => {
       const ry = listY + i * rowH;
@@ -42,17 +42,17 @@ Object.assign(RatingScene.prototype, {
       if (rs) {
         bg.fillStyle(rs.bg, 0.95);
         bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
-        bg.lineStyle(1.5, rs.bd, 0.5);
+        bg.lineStyle(1.5, rs.bd, 0.7);
         bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
       } else {
         bg.fillStyle(0x161422, 0.9);
         bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
-        bg.lineStyle(1, 0x2a2844, 0.4);
+        bg.lineStyle(1, 0x2a2844, 0.6);
         bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
       }
       // Ранг-бейдж
       const cx = 24, cy = ry + (rowH - 4) / 2;
-      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
+      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.8);
       bg.fillCircle(cx, cy, 13);
       txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#ccccee', true).setOrigin(0.5);
       txt(this, 52, ry + 9,  row.username || `User${row.user_id}`, 12, '#d0d0ee', true);
@@ -95,9 +95,9 @@ Object.assign(RatingScene.prototype, {
       return;
     }
     const nRankStyles = [
-      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.25, numCol: '#ffd700' },
-      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.25, numCol: '#aabbcc' },
-      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.25, numCol: '#cc9955' },
+      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.45, numCol: '#ffd700' },
+      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.45, numCol: '#aabbcc' },
+      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.45, numCol: '#cc9955' },
     ];
     leaders.slice(0, maxShow).forEach((row, i) => {
       const ry   = listY + i * rowH;
@@ -112,17 +112,17 @@ Object.assign(RatingScene.prototype, {
       } else if (rs) {
         bg.fillStyle(rs.bg, 0.95);
         bg.fillRoundedRect(8, ry, W-16, rowH-4, 9);
-        bg.lineStyle(1.5, rs.bd, 0.5);
+        bg.lineStyle(1.5, rs.bd, 0.7);
         bg.strokeRoundedRect(8, ry, W-16, rowH-4, 9);
       } else {
         bg.fillStyle(0x161422, 0.9);
         bg.fillRoundedRect(8, ry, W-16, rowH-4, 9);
-        bg.lineStyle(1, 0x2a2844, 0.4);
+        bg.lineStyle(1, 0x2a2844, 0.6);
         bg.strokeRoundedRect(8, ry, W-16, rowH-4, 9);
       }
       // Ранг-бейдж
       const cx = 24, cy = ry + (rowH - 4) / 2;
-      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
+      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.8);
       bg.fillCircle(cx, cy, 13);
       txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#ccccee', true).setOrigin(0.5);
       txt(this, 52, ry+9,  row.username||`User${row.user_id}`, 13, isMe?'#ff6666':'#f0f0fa', isMe);

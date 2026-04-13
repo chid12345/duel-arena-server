@@ -47,9 +47,9 @@ Object.assign(RatingScene.prototype, {
     }
 
     const sRankStyles = [
-      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.25, numCol: '#ffd700' },
-      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.25, numCol: '#aabbcc' },
-      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.25, numCol: '#cc9955' },
+      { bg: 0x201a08, bd: 0xdaa520, circle: 0xdaa520, cAlpha: 0.45, numCol: '#ffd700' },
+      { bg: 0x181c28, bd: 0x7a8aaa, circle: 0x7a8aaa, cAlpha: 0.45, numCol: '#aabbcc' },
+      { bg: 0x1c1610, bd: 0x8a6630, circle: 0x8a6630, cAlpha: 0.45, numCol: '#cc9955' },
     ];
     lb.slice(0, maxShow).forEach((p, i) => {
       const ry   = listY + i * rowH;
@@ -64,17 +64,17 @@ Object.assign(RatingScene.prototype, {
       } else if (rs) {
         bg.fillStyle(rs.bg, 0.95);
         bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
-        bg.lineStyle(1.5, rs.bd, 0.5);
+        bg.lineStyle(1.5, rs.bd, 0.7);
         bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
       } else {
         bg.fillStyle(0x161422, 0.9);
         bg.fillRoundedRect(8, ry, W - 16, rowH - 4, 8);
-        bg.lineStyle(1, 0x2a2844, 0.4);
+        bg.lineStyle(1, 0x2a2844, 0.6);
         bg.strokeRoundedRect(8, ry, W - 16, rowH - 4, 8);
       }
       // Ранг-бейдж
       const cx = 24, cy = ry + (rowH - 4) / 2;
-      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.6);
+      bg.fillStyle(rs ? rs.circle : 0x28243c, rs ? rs.cAlpha : 0.8);
       bg.fillCircle(cx, cy, 13);
       txt(this, cx, cy, `${i + 1}`, 11, rs ? rs.numCol : '#ccccee', true).setOrigin(0.5);
       txt(this, 52,     ry + 10, p.username || `User${p.user_id}`, 13, isMe ? '#5096ff' : '#f0f0fa', isMe);
@@ -113,7 +113,7 @@ Object.assign(RatingScene.prototype, {
 
     // Платформа-база
     const base = this.add.graphics();
-    base.fillStyle(0x1a1830, 0.6);
+    base.fillStyle(0x1a1830, 0.8);
     base.fillRoundedRect(10, baseY, W - 20, 48, 8);
 
     order.forEach((p, i) => {
@@ -122,9 +122,9 @@ Object.assign(RatingScene.prototype, {
       const ph   = podH[i];
       const isMe = p.user_id === myUid;
       const pg = this.add.graphics();
-      pg.fillStyle(podColors[i], isMe ? 0.9 : 0.7);
+      pg.fillStyle(podColors[i], isMe ? 1.0 : 0.9);
       pg.fillRoundedRect(px - colW / 2, baseY - ph, colW, ph, { tl: 10, tr: 10, bl: 0, br: 0 });
-      pg.lineStyle(1.5, podBd[i], 0.5);
+      pg.lineStyle(1.5, podBd[i], 0.7);
       pg.strokeRoundedRect(px - colW / 2, baseY - ph, colW, ph, { tl: 10, tr: 10, bl: 0, br: 0 });
       if (isMe) {
         pg.lineStyle(2, C.blue, 0.8);
