@@ -10,9 +10,10 @@ Object.assign(MenuScene.prototype, {
     const rmdl = o => { try { o.removeFromDisplayList(); } catch(_) {} return o; };
 
     const items = [
-      { icon: '🛍️', label: 'Магазин',    cb: () => this.scene.start('Shop')       },
-      { icon: '⚔️', label: 'Клан',       cb: () => this.scene.start('Clan')       },
-      { icon: '🔗', label: 'Рефералка',  cb: () => this._onInvite()               },
+      { icon: '🛍️', label: 'Магазин',   cb: () => this.scene.start('Shop')   },
+      { icon: '⚔️', label: 'Клан',      cb: () => this.scene.start('Clan')   },
+      { icon: '🎭', label: 'Аватарки',  cb: () => this.scene.start('Avatar') },
+      { icon: '🔗', label: 'Рефералка', cb: () => this._onInvite()           },
     ];
 
     const cols = 2;
@@ -38,14 +39,6 @@ Object.assign(MenuScene.prototype, {
 
       c.add(rmdl(txt(this, bcx, by + 26, item.icon, 30).setOrigin(0.5)));
       c.add(rmdl(txt(this, bcx, by + 68, item.label, 13, '#d0d0ee').setOrigin(0.5)));
-
-      if (item.badge) {
-        const bdg = rmdl(this.add.graphics());
-        bdg.fillStyle(C.red, 1);
-        bdg.fillCircle(bx + bw - 14, by + 14, 10);
-        c.add(bdg);
-        c.add(rmdl(txt(this, bx + bw - 14, by + 14, '!', 11, '#ffffff', true).setOrigin(0.5)));
-      }
 
       const zone = rmdl(this.add.zone(bcx, bcy, bw, bh).setInteractive({ useHandCursor: true }));
       zone.on('pointerdown', () => {
@@ -73,61 +66,6 @@ Object.assign(MenuScene.prototype, {
         bg.strokeRoundedRect(bx, by, bw, bh, 14);
       });
       c.add(zone);
-    });
-
-    /* ── АВАТАРКИ ────────────────────────────────────────── */
-    const avSecY = startY + Math.ceil(items.length / cols) * (bh + gap) + 6;
-
-    const sepG = rmdl(this.add.graphics());
-    sepG.lineStyle(1, C.dark, 0.6);
-    sepG.lineBetween(gap, avSecY, W - gap, avSecY);
-    c.add(sepG);
-    c.add(rmdl(txt(this, gap, avSecY + 16, '🎭  Аватарки', 12, '#888899')));
-
-    const AVS = [
-      { id: 1, label: 'Воин'  },
-      { id: 2, label: 'Ранг'  },
-      { id: 3, label: 'Череп' },
-      { id: 4, label: 'Сфера' },
-    ];
-    const abW = Math.floor((W - gap * 5) / 4);
-    const abH = 80;
-    const abY  = avSecY + 30;
-
-    AVS.forEach((av, i) => {
-      const ax    = gap + i * (abW + gap);
-      const acx   = ax + abW / 2;
-      const acy   = abY + abH / 2;
-      const active = (State.avatarId || 3) === av.id;
-
-      const abg = rmdl(this.add.graphics());
-      abg.fillStyle(active ? C.blue : C.bgPanel, active ? 0.2 : 0.93);
-      abg.fillRoundedRect(ax, abY, abW, abH, 12);
-      abg.lineStyle(1.5, active ? C.blue : C.dark, active ? 0.9 : 0.5);
-      abg.strokeRoundedRect(ax, abY, abW, abH, 12);
-      c.add(abg);
-
-      this._drawAvatarPreview(c, acx, abY + 36, 22, av.id, State.player?.level || 1);
-      c.add(rmdl(txt(this, acx, abY + abH - 12, av.label, 10,
-        active ? '#7ab4ff' : '#888899').setOrigin(0.5)));
-
-      const azone = rmdl(this.add.zone(acx, acy, abW, abH)
-        .setInteractive({ useHandCursor: true }));
-      azone.on('pointerup', () => {
-        if ((State.avatarId || 3) === av.id) return;
-        State.avatarId = av.id;
-        try { localStorage.setItem('da_avatar', String(av.id)); } catch(_) {}
-        tg?.HapticFeedback?.selectionChanged();
-        Sound.click();
-        this.time.delayedCall(0, () => {
-          if (this._panels.profile) { this._panels.profile.destroy(); this._panels.profile = null; }
-          this._buildProfilePanel();
-          if (this._panels.more) { this._panels.more.destroy(); this._panels.more = null; }
-          this._buildMorePanel();
-          this._switchTab('more');
-        });
-      });
-      c.add(azone);
     });
 
     const verY = CH - 32;
