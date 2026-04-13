@@ -75,7 +75,7 @@ Object.assign(MenuScene.prototype, {
       xpTxt = txt(this, W / 2, xpY + xpH / 2,
         `⭐ ${p.xp_pct}%  ·  ${p.exp} / ${p.exp_needed} XP`, 10, '#ffffff', true, '#00000088').setOrigin(0.5);
     } else {
-      txt(this, W / 2, xpY + xpH / 2, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
+      xpTxt = txt(this, W / 2, xpY + xpH / 2, '⭐ Макс. уровень', 11, '#ffc83c', true).setOrigin(0.5);
     }
 
     const STATS = [
@@ -187,7 +187,8 @@ Object.assign(MenuScene.prototype, {
       ...statObjs.flat(),
       refG, refT, refZ,
     ];
-    if (xpBg)        children.push(xpBg, xpTxt);
+    if (xpBg)  children.push(xpBg, xpTxt);
+    else if (xpTxt) children.push(xpTxt);
     if (fsBadge.length)   children.push(...fsBadge);
     if (regenObjs.length) children.push(...regenObjs);
     children.push(...hpExtra);
