@@ -125,12 +125,6 @@ Object.assign(StatsScene.prototype, {
     const py  = H * 0.73;
     const ph  = H * 0.19;
 
-    /* Секция заголовок */
-    const sepG = this.add.graphics();
-    sepG.lineStyle(1, 0x1a2a50, 1);
-    sepG.lineBetween(8, py, W - 8, py);
-    txt(this, 14, py + 10, '◈  БОЕВЫЕ ПОКАЗАТЕЛИ', 9, '#1a3a6a');
-
     /* Ячейки */
     const cells = [
       { key: 'dmg',   label: '⚔️ Урон',  valFn: q => `~${q.dmg}`,        hex: '#dc3c46' },
