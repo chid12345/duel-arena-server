@@ -56,8 +56,7 @@ class StatsScene extends Phaser.Scene {
 
     const uname = (p.username || '').slice(0, 14);
     txt(this, 122, 20, uname, 14, '#f0f0fa', true);
-    const tline = p.display_title ? `🏵 ${p.display_title}  · ` : '';
-    txt(this, 122, 38, `${tline}★ ${p.rating}  ·  ГЕРОЙ`, 10, '#ffc83c');
+    txt(this, 122, 38, `★ ${p.rating}  ·  ГЕРОЙ`, 10, '#ffc83c');
 
     // Счётчик свободных статов
     this._fsBadge = this._makeFsBadge(W, p.free_stats);
