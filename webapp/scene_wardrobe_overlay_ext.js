@@ -105,16 +105,15 @@
       // Мини-статы справа вверху: С Л И В
       const sx = x + cardW - 8; // правый край
       const statDefs = [
-        { lbl: `С+${a.strength}`,  val: a.strength,  col: "#ff6060", dim: "#552020" },
-        { lbl: `Л+${a.agility}`,   val: a.agility,   col: "#3cc8dc", dim: "#1a4450" },
-        { lbl: `И+${a.intuition}`, val: a.intuition, col: "#c080ff", dim: "#3a2060" },
-        { lbl: `В+${a.endurance}`, val: a.endurance, col: "#3cc864", dim: "#1a4030" },
+        { lbl: `С+${a.strength}`,  val: a.strength,  col: "#ff5555", dim: "#886666" },
+        { lbl: `Л+${a.agility}`,   val: a.agility,   col: "#00e8ff", dim: "#6699aa" },
+        { lbl: `И+${a.intuition}`, val: a.intuition, col: "#dd88ff", dim: "#8866aa" },
+        { lbl: `В+${a.endurance}`, val: a.endurance, col: "#44ff88", dim: "#66aa77" },
       ];
       statDefs.forEach((s, si) => {
         const sy = y + 8 + si * 11;
         const col = s.val > 0 ? s.col : s.dim;
-        const bold = s.val > 0;
-        layer.push(txt(this, sx, sy, s.lbl, 8, col, bold).setOrigin(1, 0).setDepth(124));
+        layer.push(txt(this, sx, sy, s.lbl, 8, col, true).setOrigin(1, 0).setDepth(124));
       });
 
       // Статы — под иконкой, адаптивно до кнопки
