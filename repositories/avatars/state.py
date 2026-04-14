@@ -2,13 +2,38 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, List
 
 from config import AVATAR_CATALOG
 
+_log = logging.getLogger(__name__)
+
 
 class AvatarsStateMixin:
     def get_player_avatar_state(self, user_id: int) -> Dict[str, Any]:
+        # ВАЖНО: _ensure_avatar_rows содержит try/except, которые в PostgreSQL
+        # оставляют транзакцию в состоянии ABORTED даже при пойманном исключении.
+        # Запускаем в отдельном соединении — ошибки инициализации не портят
+        # основной SELECT.
+        try:
+            c0 = self.get_connection()
+            cr0 = c0.cursor()
+            try:
+                self._ensure_avatar_rows(cr0, user_id)
+                self._ensure_default_elite_build(cr0, user_id)
+                c0.commit()
+            except Exception as _e0:
+                _log.warning("get_player_avatar_state ensure uid=%s: %s", user_id, _e0)
+                try:
+                    c0.rollback()
+                except Exception:
+                    pass
+            finally:
+                c0.close()
+        except Exception:
+            pass
+
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -17,9 +42,6 @@ class AvatarsStateMixin:
             player = cursor.fetchone()
             if not player:
                 return {"ok": False, "reason": "Игрок не найден"}
-
-            self._ensure_avatar_rows(cursor, user_id)
-            self._ensure_default_elite_build(cursor, user_id)
             cursor.execute(
                 "SELECT avatar_id FROM user_avatar_unlocks WHERE user_id = ?",
                 (user_id,),
