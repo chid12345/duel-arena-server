@@ -12,12 +12,27 @@
     usdt:     { title: "USDT",   color: 0x39d084 },
   };
 
+  const ICON_MAP = {
+    tank_free:              "🛡️",
+    agile_free:             "⚡",
+    crit_free:              "🎯",
+    universal_free:         "⚖️",
+    berserker_gold:         "💪",
+    assassin_gold:          "🗡️",
+    mage_gold:              "✨",
+    paladin_gold:           "🔰",
+    dragonknight_diamonds:  "🐉",
+    shadowdancer_diamonds:  "🌑",
+    archmage_diamonds:      "🔮",
+  };
+
   function _toCard(cls, classType, equippedId) {
     const owned = !!cls.owned;
+    const icon = classType === "usdt" ? "💠" : (ICON_MAP[cls.class_id] || "⚔️");
     return {
       class_id: cls.class_id, class_type: classType,
       name: cls.name || cls.class_id,
-      icon: classType === "usdt" ? "💠" : "🖼️",
+      icon,
       strength: Number(cls.bonus_strength || 0),
       agility:  Number(cls.bonus_agility  || 0),
       intuition:Number(cls.bonus_intuition|| 0),
