@@ -6,16 +6,20 @@
 
 Object.assign(ClanScene.prototype, {
 
-  /* gameX — необязательная x-координата в игровых пикселях; если null — центрирует */
+  /* gameX — x-координата в игровых пикселях; если null — центрирует */
   _makeInput(W, y, w, h, placeholder, maxLen = 20, gameX = null) {
     const el = document.createElement('input');
     el.type = 'text'; el.placeholder = placeholder; el.maxLength = maxLen;
-    const canvasLeft = Math.round((window.innerWidth - W) / 2);
+    const rect = this.game.canvas.getBoundingClientRect();
+    const scaleX = rect.width / W;
+    const scaleY = rect.height / this.H;
     const left = gameX !== null
-      ? Math.round(canvasLeft + gameX)
-      : Math.round((window.innerWidth - w) / 2);
-    const top  = Math.round(y + (window.innerHeight - this.H) / 2);
-    el.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${w}px;height:${h}px;
+      ? Math.round(rect.left + gameX * scaleX)
+      : Math.round(rect.left + (W - w) / 2 * scaleX);
+    const top  = Math.round(rect.top + y * scaleY);
+    const pw   = Math.round(w * scaleX);
+    const ph   = Math.round(h * scaleY);
+    el.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;
       padding:0 12px;background:#1e3878;color:#f0f0fa;border:2px solid #5096ffaa;
       border-radius:10px;font-size:14px;outline:none;z-index:999;
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
