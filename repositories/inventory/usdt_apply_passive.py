@@ -1,4 +1,4 @@
-"""Применение сборки и пассивный бонус USDT-образа."""
+"""Применение сборки и пассивный бонус Легендарный образа."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ class InventoryUsdtApplyPassiveMixin:
     def apply_usdt_stats(self, user_id: int, class_id: str) -> Tuple[bool, str, Optional[dict]]:
         """Сохранить сборку: применить статы к персонажу (если надет), заблокировать редактирование."""
         if not self.has_class(user_id, class_id):
-            return False, "USDT-образ не найден", None
+            return False, "Легендарный образ не найден", None
 
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -70,7 +70,7 @@ class InventoryUsdtApplyPassiveMixin:
         if pt and pt not in _VALID_PASSIVES:
             return False, f"Неверный тип пассивки: {pt}", None
         if not self.has_class(user_id, class_id):
-            return False, "USDT-образ не найден", None
+            return False, "Легендарный образ не найден", None
 
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -97,7 +97,7 @@ class InventoryUsdtApplyPassiveMixin:
             conn.close()
 
     def get_equipped_usdt_passive(self, user_id: int) -> str:
-        """Вернуть passive_type надетого USDT-слота, либо пустую строку."""
+        """Вернуть passive_type надетого Легендарный слота, либо пустую строку."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:

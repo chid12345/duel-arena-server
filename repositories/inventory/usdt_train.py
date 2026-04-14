@@ -1,4 +1,4 @@
-"""Распределение статов USDT-образа (+/-), сохранение сборки, пассивный бонус."""
+"""Распределение статов Легендарный образа (+/-), сохранение сборки, пассивный бонус."""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ _STAT_COL = {
     "intuition": "intuition_saved",
     "stamina":   "stamina_saved",
 }
-# Боевые пассивки USDT-образа (не стат-бонусы, а combat-модификаторы)
+# Боевые пассивки Легендарный образа (не стат-бонусы, а combat-модификаторы)
 _VALID_PASSIVES = ("damage_pct", "double_hit", "crit_dmg_pct", "armor_pct")
 _USDT_CI = lambda cid: {"class_type": "usdt", "class_id": cid}  # noqa: E731
 
@@ -37,7 +37,7 @@ class InventoryUsdtTrainMixin:
         if stat not in _VALID_STATS:
             return False, f"Неверный стат: {stat}", None
         if not self.has_class(user_id, class_id):
-            return False, "USDT-образ не найден", None
+            return False, "Легендарный образ не найден", None
 
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -79,7 +79,7 @@ class InventoryUsdtTrainMixin:
         if stat not in _VALID_STATS:
             return False, f"Неверный стат: {stat}", None
         if not self.has_class(user_id, class_id):
-            return False, "USDT-образ не найден", None
+            return False, "Легендарный образ не найден", None
 
         conn = self.get_connection()
         cursor = conn.cursor()

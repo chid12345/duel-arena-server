@@ -1,5 +1,5 @@
 /* ============================================================
-   USDT-слот детальный экран — ext2: passive section + action buttons
+   Легендарный слот — ext2: passive section + action buttons
    Продолжение от scene_wardrobe_detail.js
    ============================================================ */
 

@@ -1,4 +1,4 @@
-"""Гардероб: действия с классом и USDT-образами."""
+"""Гардероб: действия с классом и Легендарный образами."""
 
 from html import escape as html_escape
 
@@ -42,18 +42,18 @@ class CallbackHandlersWardrobeActions:
 
     @staticmethod
     async def usdt_class_menu(query, bot, user_id: int, class_id: str, page: int):
-        """Меню управления USDT-образом."""
+        """Меню управления Легендарный образом."""
         db.get_or_create_player(user_id, query.from_user.username or "")
 
         inventory = db.get_user_inventory(user_id)
         usdt_item = next((item for item in inventory if item["class_id"] == class_id), None)
 
         if not usdt_item:
-            await query.answer("USDT-образ не найден")
+            await query.answer("Легендарный образ не найден")
             return
 
         name = html_escape(str(usdt_item.get("custom_name", "Кастомный")))
-        text = "💳 <b>USDT-образ</b>\n\n"
+        text = "💳 <b>Легендарный образ</b>\n\n"
         text += f"📛 <b>Название:</b> {name}\n"
         text += f"📅 <b>Создан:</b> {html_escape(str(usdt_item.get('purchased_at', 'Неизвестно')))}\n\n"
 
@@ -64,13 +64,13 @@ class CallbackHandlersWardrobeActions:
         text += f"  • Выносливость: {usdt_item.get('endurance_saved', 0)}\n"
         text += f"  • Свободные статы: {usdt_item.get('free_stats_saved', 0)}\n\n"
 
-        text += "<b>Бонусы USDT-образа:</b>\n"
+        text += "<b>Бонусы Легендарный образа:</b>\n"
         text += "  • Выносливость +5\n"
         text += "  • 19 свободных статов\n"
         text += "  • Сброс статов на 50% дешевле\n\n"
 
         text += (
-            "<i>USDT-образы сохраняют распределение статов и позволяют мгновенно "
+            "<i>Легендарный образы сохраняют распределение статов и позволяют мгновенно "
             "переключаться между разными билдами.</i>"
         )
 
@@ -105,12 +105,12 @@ class CallbackHandlersWardrobeActions:
 
     @staticmethod
     async def usdt_create_action(query, bot, user_id: int):
-        """Создание нового USDT-образа."""
+        """Создание нового Легендарный образа."""
         db.get_or_create_player(user_id, query.from_user.username or "")
 
         success, message, _new_class_id = db.create_usdt_class(user_id)
         if success:
-            await query.answer(f"USDT-образ создан: {message}")
+            await query.answer(f"Легендарный образ создан: {message}")
             from handlers.ui_helpers import CallbackHandlers
 
             await CallbackHandlers.wardrobe_type_menu(query, bot, user_id, "usdt", 0)
@@ -119,10 +119,10 @@ class CallbackHandlersWardrobeActions:
 
     @staticmethod
     async def usdt_equip_action(query, bot, user_id: int, class_id: str, page: int):
-        """Экипировка USDT-образа."""
+        """Экипировка Легендарный образа."""
         success, message = db.switch_class(user_id, class_id)
         if success:
-            await query.answer("Переключен на USDT-образ")
+            await query.answer("Переключен на Легендарный образ")
             from handlers.ui_helpers import CallbackHandlers
 
             await CallbackHandlers.usdt_class_menu(query, bot, user_id, class_id, page)
@@ -131,10 +131,10 @@ class CallbackHandlersWardrobeActions:
 
     @staticmethod
     async def usdt_save_action(query, bot, user_id: int, class_id: str, page: int):
-        """Сохранение статов в USDT-образ."""
+        """Сохранение статов в Легендарный образ."""
         success, message = db.save_usdt_stats(user_id, class_id)
         if success:
-            await query.answer("Статы сохранены в USDT-образ")
+            await query.answer("Статы сохранены в Легендарный образ")
             from handlers.ui_helpers import CallbackHandlers
 
             await CallbackHandlers.usdt_class_menu(query, bot, user_id, class_id, page)

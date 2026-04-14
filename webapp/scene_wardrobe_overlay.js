@@ -1,6 +1,6 @@
 /* ============================================================
    Wardrobe Overlay для StatsScene
-   Карточки гардероба. Детальный вид USDT-слота → scene_wardrobe_detail.js
+   Карточки гардероба. Детальный вид Легендарного слота → scene_wardrobe_detail.js
    Продолжение: scene_wardrobe_overlay_ext.js
    ============================================================ */
 
@@ -9,7 +9,7 @@
     free:     { title: "БЕСПЛ.",  color: 0x3a3a52 },
     gold:     { title: "ЗОЛОТО",  color: 0xffc83c },
     diamonds: { title: "АЛМАЗЫ", color: 0x34a6ff },
-    usdt:     { title: "USDT",   color: 0x39d084 },
+    usdt:     { title: "ЛЕГЕНДА", color: 0x39d084 },
   };
 
   const ICON_MAP = {
@@ -56,7 +56,7 @@
     // Одна карточка покупки (в магазине)
     cards.push({
       class_id: "usdt_buy", class_type: "usdt", is_buy_card: true,
-      name: "USDT-образ", icon: "💠",
+      name: "Легендарный образ", icon: "💠",
       strength: 0, agility: 0, intuition: 0, endurance: 0,
       special_bonus: "+19 своб. статов · -50% на сброс · своя сборка",
       owned: false, equipped: false, price_usdt: "11.99",
@@ -68,7 +68,7 @@
       if (item.class_type !== "usdt") continue;
       cards.push({
         class_id: item.class_id, class_type: "usdt", is_usdt_slot: true,
-        name: item.custom_name || "USDT слот", icon: "💠",
+        name: item.custom_name || "Легендарный слот", icon: "💠",
         strength: Number(item.strength_saved || 0),
         agility:  Number(item.agility_saved  || 0),
         intuition:Number(item.intuition_saved|| 0),

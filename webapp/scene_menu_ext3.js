@@ -66,7 +66,7 @@ Object.assign(MenuScene.prototype, {
         if (this._avatarOverlay) {
           this._openAvatarPanel();
         } else {
-          this._showToast?.('💠 USDT-образ получен — открой Гардероб');
+          this._showToast?.('💠 Легендарный образ получен — открой Гардероб');
         }
       }
     });

@@ -1,4 +1,4 @@
-"""USDT-образы: создание, переименование, тренировка статов, пассивка."""
+"""Легендарный образы: создание, переименование, тренировка статов, пассивка."""
 
 from __future__ import annotations
 
@@ -72,7 +72,7 @@ def attach_wardrobe_usdt(
         inventory = db.get_user_inventory(uid)
         usdt_item = next((item for item in inventory if item["class_id"] == body.class_id), None)
         if not usdt_item or usdt_item["class_type"] != "usdt":
-            return {"ok": False, "message": "USDT-образ не найден"}
+            return {"ok": False, "message": "Легендарный образ не найден"}
         conn = db.get_connection()
         cursor = conn.cursor()
         try:

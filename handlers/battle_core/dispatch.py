@@ -137,7 +137,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 await usdt_equip_callback(query, context.bot, user.id, class_id, page)
             except Exception as e:
                 logger.error("usdt_equip error: %s", e)
-                await query.answer("Ошибка экипировки USDT-образа")
+                await query.answer("Ошибка экипировки Легендарный образа")
         elif callback_data.startswith("usdt_save:"):
             try:
                 _, class_id, page_str = callback_data.split(":")

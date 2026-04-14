@@ -1,4 +1,4 @@
-"""USDT-слоты, сохранение статов, стоимость сброса, список классов для UI."""
+"""Легендарный слоты, сохранение статов, стоимость сброса, список классов для UI."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ from config import (
     STAMINA_PER_FREE_STAT,
 )
 
-_USDT_BASE_STAMINA = 5  # базовая выносливость USDT-образа (должна совпадать с switch.py)
+_USDT_BASE_STAMINA = 5  # базовая выносливость Легендарный образа (должна совпадать с switch.py)
 _USDT_CI = lambda cid: {"class_type": "usdt", "class_id": cid}  # noqa: E731
 
 
@@ -18,7 +18,7 @@ class InventoryUsdtMixin:
     _USDT_MAX_NAME_LEN = 50
 
     def create_usdt_class(self, user_id: int, custom_name: str = None) -> Tuple[bool, str, str]:
-        """Создать новый USDT-образ. Возвращает (успех, сообщение, class_id)."""
+        """Создать новый Легендарный образ. Возвращает (успех, сообщение, class_id)."""
         conn = self.get_connection()
         cursor = conn.cursor()
         self._ensure_inventory_schema(cursor)
@@ -40,26 +40,26 @@ class InventoryUsdtMixin:
             )
 
             conn.commit()
-            return True, f"Создан USDT-образ '{display_name}'", class_id
+            return True, f"Создан Легендарный образ '{display_name}'", class_id
 
         except Exception as e:
             conn.rollback()
-            return False, f"Ошибка создания USDT-образа: {str(e)}", ""
+            return False, f"Ошибка создания Легендарный образа: {str(e)}", ""
         finally:
             conn.close()
 
     def save_usdt_stats(self, user_id: int, class_id: str) -> Tuple[bool, str]:
         """Устарело — статы теперь задаются через train_usdt_stat. No-op."""
         if not self.has_class(user_id, class_id):
-            return False, "У вас нет этого USDT-образа"
+            return False, "У вас нет этого Легендарный образа"
         return True, "OK"
 
     def reset_usdt_slot_stats(self, user_id: int, class_id: str) -> Tuple[bool, str]:
-        """Сбросить сохранённые статы USDT-образа (после оплаты).
+        """Сбросить сохранённые статы Легендарный образа (после оплаты).
         Если слот надет и applied=1 — снять дельту с персонажа.
         """
         if not self.has_class(user_id, class_id):
-            return False, "USDT-образ не найден"
+            return False, "Легендарный образ не найден"
         conn = self.get_connection()
         cursor = conn.cursor()
         self._ensure_inventory_schema(cursor)

@@ -74,7 +74,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             elif is_usdt_slot:
                 ok2, msg2, new_class_id = db.create_usdt_class(uid)
                 await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
-                await _send_tg_message(uid, f"💠 <b>USDT-образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+                await _send_tg_message(uid, f"💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
             elif is_usdt_reset and usdt_reset_class_id:
                 db.reset_usdt_slot_stats(uid, usdt_reset_class_id)
                 await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})

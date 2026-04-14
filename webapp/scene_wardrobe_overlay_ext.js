@@ -9,7 +9,7 @@
     free:     { title:"БЕСПЛ.", color:0xaaaacc, dim:0x444466, bg:0x1e1d2e, stars:"★☆☆☆", btnBg:0x2a2a42, btnTxt:"#ffffff" },
     gold:     { title:"ЗОЛОТО", color:0xffd84a, dim:0xc8a030, bg:0x2e2200, stars:"★★☆☆", btnBg:0x3e2e00, btnTxt:"#ffd84a" },
     diamonds: { title:"АЛМАЗЫ", color:0xc080ff, dim:0xa050e0, bg:0x190a38, stars:"★★★☆", btnBg:0x2e1050, btnTxt:"#c080ff" },
-    usdt:     { title:"USDT",   color:0xff7020, dim:0xcc5010, bg:0x2e1000, stars:"★★★★", btnBg:0x3e1800, btnTxt:"#ff8040" },
+    usdt:     { title:"ЛЕГЕНДА", color:0xff7020, dim:0xcc5010, bg:0x2e1000, stars:"★★★★", btnBg:0x3e1800, btnTxt:"#ff8040" },
   };
 
   StatsScene.prototype._renderAvatarOverlay = function(wp) {
@@ -237,23 +237,43 @@
   };
 
   StatsScene.prototype._showWardrobeDetail = function(a) {
-    const stats = [
-      { label:`⚔️ Сила +${a.strength}`,  bg:0x882222, color:'#ff8888' },
-      { label:`🏃 Ловк +${a.agility}`,   bg:0x115577, color:'#55ddff' },
-      { label:`💥 Инт +${a.intuition}`,   bg:0x551188, color:'#cc77ff' },
-      { label:`🛡 Вын +${a.endurance}`,   bg:0x115533, color:'#55ff99' },
-    ].filter(s => {
-      const v = parseInt(s.label.match(/\+(\d+)/)?.[1] || '0');
-      return v > 0;
-    });
-    const desc = a.special_bonus || '';
     const meta = TYPE_META[a.class_type] || TYPE_META.free;
+    const stats = [
+      { label:`⚔️ +${a.strength}`,  bg:0x882222, color:'#ff8888' },
+      { label:`🏃 +${a.agility}`,   bg:0x115577, color:'#55ddff' },
+      { label:`💥 +${a.intuition}`,  bg:0x551188, color:'#cc77ff' },
+      { label:`🛡 +${a.endurance}`,  bg:0x115533, color:'#55ff99' },
+    ].filter(s => parseInt(s.label.match(/\+(\d+)/)?.[1] || '0') > 0);
+
+    // Легендарный — полное описание
+    if (a.class_type === 'usdt') {
+      const lines = [
+        `${meta.title} · ${meta.stars}`,
+        '',
+        '⚔️ 19 очков статов — распредели сам',
+        '🎯 Выбор пассивки: Урон / Крит / Двойной / Броня',
+        '🔄 Сброс сборки за 5.99 USDT',
+        '💎 Сброс статов всего 25💎 (−87%)',
+        '',
+        a.special_bonus || '',
+      ].filter(Boolean);
+      showItemDetailPopup(this, {
+        icon: a.icon, name: a.name || 'Легендарный образ',
+        desc: lines.join('\n'), stats,
+        depthBase: 250,
+        actionLabel: a.is_buy_card ? '🔥 11.99 USDT — Купить' : (a.equipped ? '✅ Надет' : 'ℹ️ Закрыть'),
+        canAct: true,
+        actionFn: () => closeItemDetailPopup(this),
+      });
+      return;
+    }
+
+    // Обычные классы
+    const desc = a.special_bonus || '';
     showItemDetailPopup(this, {
-      icon: a.icon,
-      name: a.name,
+      icon: a.icon, name: a.name,
       desc: desc ? `${meta.title} · ${meta.stars}\n\n${desc}` : `${meta.title} · ${meta.stars}`,
-      stats,
-      depthBase: 250,
+      stats, depthBase: 250,
       actionLabel: a.owned ? (a.equipped ? '✅ Надет' : 'ℹ️ Закрыть') : null,
       actionFn: () => closeItemDetailPopup(this),
     });

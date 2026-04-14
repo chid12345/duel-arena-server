@@ -1,4 +1,4 @@
-"""Crypto-маршруты USDT-образов: создание/проверка инвойсов CryptoPay."""
+"""Crypto-маршруты Легендарный образов: создание/проверка инвойсов CryptoPay."""
 
 from __future__ import annotations
 
@@ -66,7 +66,7 @@ def attach_wardrobe_usdt_crypto(
             return await _create_cryptopay_invoice(
                 uid,
                 amount="11.99",
-                description="Duel Arena — USDT-образ (кастомный слот)",
+                description="Duel Arena — Легендарный образ (кастомный слот)",
                 payload_str=f"uid:{uid}:usdt_slot:1",
             )
         except Exception as e:
@@ -80,11 +80,11 @@ def attach_wardrobe_usdt_crypto(
             uid = int(tg_user["id"])
             class_id = body.class_id.strip()
             if not db.has_class(uid, class_id):
-                return {"ok": False, "reason": "USDT-образ не найден"}
+                return {"ok": False, "reason": "Легендарный образ не найден"}
             return await _create_cryptopay_invoice(
                 uid,
                 amount="5.99",
-                description="Duel Arena — сброс статов USDT-образа",
+                description="Duel Arena — сброс статов Легендарный образа",
                 payload_str=f"uid:{uid}:usdt_reset:{class_id}",
             )
         except Exception as e:

@@ -16,7 +16,7 @@ def _fmt_payload(payload: str) -> str:
         aid = payload.split(":avatar:", 1)[1].strip()
         return f"Образ: {aid}"
     if ":usdt_slot:" in payload:
-        return "💠 USDT-образ"
+        return "💠 Легендарный образ"
     if ":usdt_reset:" in payload:
         cid = payload.split(":usdt_reset:", 1)[1].strip()
         return f"🔄 Сброс образа: {cid}"

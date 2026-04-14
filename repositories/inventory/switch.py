@@ -6,12 +6,12 @@ from typing import Tuple
 
 from config import STAMINA_PER_FREE_STAT
 
-_USDT_BASE_STAMINA = 5  # базовая выносливость USDT-образа (даёт броню сразу)
+_USDT_BASE_STAMINA = 5  # базовая выносливость Легендарный образа (даёт броню сразу)
 
 
 class InventorySwitchMixin:
     def switch_class(self, user_id: int, class_id: str) -> Tuple[bool, str]:
-        """Переключиться на другой класс (включая USDT-слоты)."""
+        """Переключиться на другой класс (включая Легендарный слоты)."""
         conn = self.get_connection()
         cursor = conn.cursor()
         self._ensure_inventory_schema(cursor)
@@ -35,7 +35,7 @@ class InventorySwitchMixin:
             old_info = self._equipped_inventory_class_info(cursor, user_id)
             old_vec = self._usdt_stat_vector(cursor, user_id, old_info)
 
-            # Вектор нового класса / USDT-слота
+            # Вектор нового класса / Легендарный слота
             if target_type == "usdt":
                 new_vec = self._usdt_stat_vector(cursor, user_id, {"class_type": "usdt", "class_id": class_id})
             else:
@@ -98,7 +98,7 @@ class InventorySwitchMixin:
             )
 
     def _usdt_stat_vector(self, cursor, user_id: int, class_info) -> dict:
-        """Вектор статов USDT-слота.
+        """Вектор статов Легендарный слота.
         Базово: +5 выносливости (броня) всегда при надевании.
         Сохранённые 19 статов применяются только когда stats_applied=TRUE.
         Пассивка — боевой модификатор, не стат (не входит в вектор).

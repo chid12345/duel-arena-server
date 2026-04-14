@@ -49,7 +49,7 @@ class CallbackHandlersWardrobeMenus:
 
         usdt_count = db.get_user_inventory(user_id)
         usdt_count = sum(1 for item in usdt_count if item["class_type"] == "usdt")
-        text += f"  • USDT-образы: {usdt_count}\n"
+        text += f"  • Легендарный образы: {usdt_count}\n"
 
         keyboard = []
 
@@ -66,7 +66,7 @@ class CallbackHandlersWardrobeMenus:
                 [InlineKeyboardButton("💎 Классы за алмазы", callback_data=f"wardrobe_type:diamonds:{page}")]
             )
 
-        keyboard.append([InlineKeyboardButton("💳 USDT-образы", callback_data=f"wardrobe_type:usdt:{page}")])
+        keyboard.append([InlineKeyboardButton("💳 Легендарный образы", callback_data=f"wardrobe_type:usdt:{page}")])
         keyboard.append([InlineKeyboardButton("⬅️ Назад", callback_data="main_menu")])
 
         reply_markup = InlineKeyboardMarkup(keyboard)
@@ -97,7 +97,7 @@ class CallbackHandlersWardrobeMenus:
             "free": "🎁 Бесплатные классы",
             "gold": "💰 Классы за золото",
             "diamonds": "💎 Классы за алмазы",
-            "usdt": "💳 USDT-образы",
+            "usdt": "💳 Легендарный образы",
         }
 
         text = f"{type_names.get(class_type, 'Классы')}\n\n"
@@ -182,7 +182,7 @@ class CallbackHandlersWardrobeMenus:
             keyboard.append(nav_buttons)
 
         if class_type == "usdt":
-            keyboard.append([InlineKeyboardButton("➕ Создать USDT-образ", callback_data="usdt_create")])
+            keyboard.append([InlineKeyboardButton("➕ Создать Легендарный образ", callback_data="usdt_create")])
 
         keyboard.append(
             [
