@@ -19,7 +19,9 @@ function showItemDetailPopup(scene, opts) {
   // ── Dim overlay ──
   const dim = scene.add.rectangle(W/2, H/2, W, H, 0x000000, 0.82).setDepth(dB);
   dim.setInteractive();
-  dim.on('pointerup', () => closeItemDetailPopup(scene));
+  // Защита: игнорируем pointerup от того же касания, что открыло попап
+  const openedAt = Date.now();
+  dim.on('pointerup', () => { if (Date.now() - openedAt > 250) closeItemDetailPopup(scene); });
   layer.push(dim);
 
   // ── Panel sizing ──
@@ -63,7 +65,7 @@ function showItemDetailPopup(scene, opts) {
     .setOrigin(0.5).setDepth(dB + 3));
   const cz = scene.add.zone(pX + pW - 21, pY + 19, 30, 26)
     .setInteractive({ useHandCursor: true }).setDepth(dB + 4);
-  cz.on('pointerup', () => closeItemDetailPopup(scene));
+  cz.on('pointerup', () => { if (Date.now() - openedAt > 250) closeItemDetailPopup(scene); });
   layer.push(cz);
 
   // ── Content ──
