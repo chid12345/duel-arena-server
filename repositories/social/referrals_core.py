@@ -89,12 +89,15 @@ class SocialReferralCoreMixin:
         return [{"referred_id": int(row["referred_id"]), "username": (row["username"] or "").strip()} for row in rows]
 
     def register_referral(self, new_user_id: int, referral_code: str) -> Tuple[bool, Optional[int]]:
+        import logging as _log
+        _logger = _log.getLogger(__name__)
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute("SELECT user_id FROM players WHERE referral_code = ?", (referral_code,))
             referrer_row = cursor.fetchone()
             if not referrer_row:
+                _logger.info("register_referral: code not found uid=%s code=%s", new_user_id, referral_code)
                 return False, None
             referrer_id = referrer_row["user_id"]
             if referrer_id == new_user_id:
@@ -102,16 +105,30 @@ class SocialReferralCoreMixin:
             cursor.execute("SELECT referred_by FROM players WHERE user_id = ?", (new_user_id,))
             rb = cursor.fetchone()
             if rb and rb["referred_by"]:
+                _logger.info("register_referral: already referred uid=%s", new_user_id)
                 return False, None
             cursor.execute("SELECT 1 FROM referrals WHERE referred_id = ?", (new_user_id,))
             if cursor.fetchone():
+                _logger.info("register_referral: already in table uid=%s", new_user_id)
                 return False, None
-            cursor.execute(
-                "INSERT OR IGNORE INTO referrals (referral_code, referrer_id, referred_id) VALUES (?, ?, ?)",
-                (referral_code, referrer_id, new_user_id),
-            )
-            cursor.execute("UPDATE players SET referred_by = ? WHERE user_id = ?", (referral_code, new_user_id))
-            conn.commit()
+            # plain INSERT — без OR IGNORE, чтобы не зависеть от UNIQUE constraint в PG
+            try:
+                cursor.execute(
+                    "INSERT INTO referrals (referral_code, referrer_id, referred_id) VALUES (?, ?, ?)",
+                    (referral_code, referrer_id, new_user_id),
+                )
+                cursor.execute(
+                    "UPDATE players SET referred_by = ? WHERE user_id = ?",
+                    (referral_code, new_user_id),
+                )
+                conn.commit()
+            except Exception as _e:
+                _logger.error("register_referral INSERT failed uid=%s code=%s: %s", new_user_id, referral_code, _e)
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                return False, None
             return True, int(referrer_id)
         finally:
             conn.close()

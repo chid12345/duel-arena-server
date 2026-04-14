@@ -24,10 +24,6 @@ _PG_EXACT: List[Tuple[str, str]] = [
         "INSERT INTO bots (name, level, strength, endurance, crit, max_hp, current_hp, bot_type, ai_pattern) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s) ON CONFLICT (name) DO NOTHING",
     ),
     (
-        "INSERT OR IGNORE INTO referrals (referral_code, referrer_id, referred_id) VALUES (?, ?, ?)",
-        "INSERT INTO referrals (referral_code, referrer_id, referred_id) VALUES (%s, %s, %s) ON CONFLICT (referred_id) DO NOTHING",
-    ),
-    (
         "INSERT OR IGNORE INTO season_stats (season_id, user_id) VALUES (?, ?)",
         "INSERT INTO season_stats (season_id, user_id) VALUES (%s, %s) ON CONFLICT (season_id, user_id) DO NOTHING",
     ),
