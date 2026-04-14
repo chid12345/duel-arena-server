@@ -30,10 +30,16 @@ Object.assign(MenuScene.prototype, {
         Notif.push('🎊', `Новый уровень ${msg.level}! +${msg.free_stats || 1} стат`, '#b45aff', 3500);
       }
       if (msg.event === 'quest_complete') {
-        Notif.push('📅', 'Квест дня выполнен — забери награду!', '#3cc864', 3000);
-        this._questBadge = true;
-        const btn = this._tabBtns?.more;
-        if (btn) btn.activeBar?.setVisible(false);
+        Notif.push('📋', 'Задание выполнено — забери награду!', '#3cc864', 3000);
+        // Обновить бейдж: перезапросить актуальный счётчик
+        get('/api/tasks/status').catch(() => null).then(r => {
+          if (!r?.ok) return;
+          const cnt = r.claimable_count || 0;
+          if (cnt !== this._tasksBadgeCount) {
+            this._tasksBadgeCount = cnt;
+            if (this._tabBarObjs) this._buildTabBar();
+          }
+        });
       }
       if (msg.event === 'clan_event') {
         Notif.push('⚔️', msg.text || 'Событие в клане', '#5096ff', 3000);

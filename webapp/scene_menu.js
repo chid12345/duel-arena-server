@@ -44,13 +44,11 @@ class MenuScene extends Phaser.Scene {
 
       if (cached) {
         playerOk = true;
-        get('/api/quests').catch(() => null).then(questRes => {
-          if (!questRes?.ok) return;
-          const q = questRes.quest || {};
-          const d = questRes.daily || {};
-          const badge = d.can_claim || (q.is_completed && !q.reward_claimed);
-          if (badge !== this._questBadge) {
-            this._questBadge = badge;
+        get('/api/tasks/status').catch(() => null).then(taskRes => {
+          if (!taskRes?.ok) return;
+          const cnt = taskRes.claimable_count || 0;
+          if (cnt !== this._tasksBadgeCount) {
+            this._tasksBadgeCount = cnt;
             if (this._tabBarObjs) this._buildTabBar();
           }
         });
@@ -80,21 +78,16 @@ class MenuScene extends Phaser.Scene {
             }
           });
 
-          this._questBadge = false;
+          this._tasksBadgeCount = 0;
 
-          get('/api/quests').catch(() => null).then(questRes => {
-            if (questRes?.ok) {
-              const q = questRes.quest || {};
-              const d = questRes.daily || {};
-              this._questBadge = d.can_claim || (q.is_completed && !q.reward_claimed);
+          get('/api/tasks/status').catch(() => null).then(taskRes => {
+            if (taskRes?.ok) {
+              const cnt = taskRes.claimable_count || 0;
+              this._tasksBadgeCount = cnt;
               if (this._tabBarObjs) this._buildTabBar();
-              if (d.can_claim) {
+              if (cnt > 0) {
                 this.time.delayedCall(800, () =>
-                  this._toast(`🎁 Ежедневный бонус доступен! +${d.bonus} 🪙`)
-                );
-              } else if (q.is_completed && !q.reward_claimed) {
-                this.time.delayedCall(800, () =>
-                  this._toast('🏆 Квест дня выполнен — забери награду!')
+                  this._toast(`📋 Есть награды в Заданиях! (${cnt})`)
                 );
               }
             }
@@ -141,6 +134,13 @@ class MenuScene extends Phaser.Scene {
   }
 
   _buildTabBar() {
+    // Уничтожить старые элементы таб-бара при перерисовке
+    if (this._tabBarObjs) {
+      this._tabBarObjs.forEach(o => { try { o.destroy(); } catch(_) {} });
+    }
+    this._tabBarObjs = [];
+    const _track = (o) => { this._tabBarObjs.push(o); return o; };
+
     const { W, H, TAB_H } = this;
     const tabs = [
       { key: 'profile', icon: '🏠', label: 'Профиль' },
@@ -151,7 +151,7 @@ class MenuScene extends Phaser.Scene {
       { key: 'more',    icon: '☰',   label: 'Меню'    },
     ];
 
-    const bg = this.add.graphics();
+    const bg = _track(this.add.graphics());
     const tabBgCol = C._name === 'light' ? 0xe8ecff : 0x0e0d1a;
     bg.fillStyle(tabBgCol, 1);
     bg.fillRect(0, H - TAB_H, W, TAB_H);
@@ -163,21 +163,30 @@ class MenuScene extends Phaser.Scene {
       const cx = tabW * i + tabW / 2;
       const tabTop = H - TAB_H;
 
-      const activeBg = this.add.graphics();
+      const activeBg = _track(this.add.graphics());
       activeBg.fillStyle(C.gold, 0.12);
       activeBg.fillRoundedRect(tabW * i + 5, tabTop + 5, tabW - 10, TAB_H - 10, 12);
-      const activeBar = this.add.graphics();
+      const activeBar = _track(this.add.graphics());
       activeBar.fillStyle(C.gold, 1);
       activeBar.fillRoundedRect(tabW * i + tabW * 0.2, tabTop + 1, tabW * 0.6, 3, 2);
       activeBg.setVisible(false);
       activeBar.setVisible(false);
 
-      const iconTxt  = txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.85);
-      const labelTxt = txt(this, cx, tabTop + 52, tab.label, 10, '#ccccee').setOrigin(0.5);
+      const iconTxt  = _track(txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.85));
+      const labelTxt = _track(txt(this, cx, tabTop + 52, tab.label, 10, '#ccccee').setOrigin(0.5));
+
+      // Красный бейдж с числом незабранных наград на табе Задания
+      if (tab.key === 'tasks' && this._tasksBadgeCount > 0) {
+        const bx = cx + 11, by = tabTop + 12;
+        const bdgBg = _track(this.add.graphics());
+        bdgBg.fillStyle(0xe03030, 1);
+        bdgBg.fillCircle(bx, by, 8);
+        _track(txt(this, bx, by, String(this._tasksBadgeCount), 9, '#ffffff', true).setOrigin(0.5));
+      }
 
       this._tabBtns[tab.key] = { activeBg, activeBar, iconTxt, labelTxt };
 
-      const zone = this.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true });
+      const zone = _track(this.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
       zone.on('pointerup', () => {
         Sound.tab();
         tg?.HapticFeedback?.selectionChanged();

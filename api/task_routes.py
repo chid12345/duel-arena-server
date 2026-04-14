@@ -71,6 +71,23 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
             achievements = db.get_achievements_status(uid)
             streak = db.get_login_streak_status(uid)
 
+            # Считаем сколько наград можно забрать прямо сейчас
+            claimable = 0
+            for t in daily:
+                if t["is_completed"] and not t["reward_claimed"]:
+                    claimable += 1
+            for t in weekly_extra:
+                if t["is_completed"] and not t["reward_claimed"]:
+                    claimable += 1
+            for a in achievements:
+                if a.get("can_claim_tier") is not None:
+                    claimable += 1
+            # Стрик: текущий день готов к забору?
+            sd = streak.get("streak_day", 0)
+            claimed_days = streak.get("days_claimed", [])
+            if sd > 0 and sd not in claimed_days:
+                claimable += 1
+
             return {
                 "ok": True,
                 "week_key": week_key,
@@ -78,6 +95,7 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
                 "weekly_extra": weekly_extra,
                 "achievements": achievements,
                 "streak": streak,
+                "claimable_count": claimable,
             }
         except Exception as e:
             _log.error("tasks_status error uid=%s: %s", locals().get("uid", "?"), e, exc_info=True)
