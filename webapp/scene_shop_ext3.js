@@ -258,7 +258,8 @@ Object.assign(ShopScene.prototype, {
     tg?.HapticFeedback?.notificationOccurred('success');
     Sound.levelUp?.();
     localStorage.removeItem('cryptoPendingInvoice');
-    this._toast('✅ Свиток получен! Открой «Герой → Моё → Особые»');
+    const isBox = (scrollId || '').startsWith('box_');
+    this._toast(isBox ? '✅ Ящик получен! Открой «Герой → Моё → Особые»' : '✅ Свиток получен! Открой «Герой → Моё → Особые»');
     post('/api/player').then(d => {
       if (d.ok && d.player) State.player = d.player;
       this.time.delayedCall(800, () => this.scene.restart({ tab: 'special' }));

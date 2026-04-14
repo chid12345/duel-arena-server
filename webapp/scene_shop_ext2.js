@@ -153,9 +153,13 @@ Object.assign(ShopScene.prototype, {
         const ix = 8 + col * (iw + 8), iy = y + row * 74;
         this._makeUsdtScrollCardC(container, pkg, ix, iy, iw - 4, 68);
         taps.push({ x: ix, y: iy, w: iw - 4, h: 68, fn: () => {
+          const isBox = (pkg.scroll_id || '').startsWith('box_');
+          const desc = isBox
+            ? `Эпический ящик с множеством наград.\nВнутри: USDT-свитки, алмазные свитки, шанс на Титана и Premium.\n\nДобавляется в инвентарь → Особые.`
+            : `Мощный боевой свиток USDT-класса.\nДаёт значительный прирост статов на несколько боёв.\n\nДобавляется в инвентарь → Особые.`;
           showItemDetailPopup(this, {
-            icon: '📜', name: pkg.label || 'Особый свиток',
-            desc: `Мощный боевой свиток USDT-класса.\nДаёт значительный прирост статов на несколько боёв.\n\nДобавляется в инвентарь → Особые.`,
+            icon: isBox ? '🎲' : '📜', name: pkg.label || 'Особый предмет',
+            desc,
             actionLabel: `${pkg.usdt} USDT — Купить`, canAct: true,
             actionFn: () => { closeItemDetailPopup(this); this._buyCrypto(pkg); },
           });
