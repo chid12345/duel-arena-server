@@ -28,5 +28,14 @@ class ClanTransferBody(BaseModel):
     new_leader_id: int
 
 
+class ClanKickBody(BaseModel):
+    init_data: str
+    target_user_id: int
+
+
+class ClanDisbandBody(BaseModel):
+    init_data: str
+
+
 class ReferralWithdrawBody(BaseModel):
     init_data: str

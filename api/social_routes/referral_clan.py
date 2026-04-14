@@ -10,7 +10,9 @@ from fastapi import APIRouter
 from api.social_routes.models import (
     ClanChatSendBody,
     ClanCreateBody,
+    ClanDisbandBody,
     ClanJoinBody,
+    ClanKickBody,
     ClanLeaveBody,
     ClanTransferBody,
 )
@@ -139,3 +141,19 @@ def attach_social_referral_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         return db.transfer_clan_leader(uid, body.new_leader_id)
+
+    @router.post("/api/clan/kick")
+    async def clan_kick_member(body: ClanKickBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        return db.kick_clan_member(uid, body.target_user_id)
+
+    @router.post("/api/clan/disband")
+    async def clan_disband(body: ClanDisbandBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
+        result = db.disband_clan(uid)
+        if result.get("ok"):
+            player = db.get_or_create_player(uid, "")
+            result["player"] = _player_api(dict(player))
+        return result
