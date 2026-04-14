@@ -17,6 +17,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
     manager = ctx["manager"]
     _send_tg_message = ctx["_send_tg_message"]
     _notify_paid_full_reset = ctx["_notify_paid_full_reset"]
+    _cache_invalidate = ctx["_cache_invalidate"]
     CRYPTOPAY_TOKEN = ctx["CRYPTOPAY_TOKEN"]
     PREMIUM_XP_BONUS_PERCENT = ctx["PREMIUM_XP_BONUS_PERCENT"]
 
@@ -82,6 +83,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             elif avatar_id:
                 db.unlock_avatar(uid, avatar_id, source="usdt")
                 db.track_purchase(uid, avatar_id, "usdt", 0)
+                _cache_invalidate(uid)
                 await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
                 await _send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
             elif is_premium:

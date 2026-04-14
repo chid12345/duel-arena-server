@@ -117,6 +117,7 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
             "manager": manager,
             "get_user_from_init_data": get_user_from_init_data,
             "_player_api": _player_api,
+            "_cache_invalidate": _cache_invalidate,
             "_send_tg_message": _send_tg_message,
             "_notify_paid_full_reset": _notify_paid_full_reset,
             "_rl_check": _rl_check,

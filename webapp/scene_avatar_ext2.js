@@ -195,9 +195,14 @@ Object.assign(AvatarScene.prototype, {
       if (j.ok && j.invoice_url) {
         tg?.openInvoice?.(j.invoice_url, async (status) => {
           if (status === 'paid') {
-            const cUrl = isElite ? '/api/avatars/elite/stars_confirm' : '/api/avatars/premium/stars_confirm';
-            await post(cUrl, { avatar_id: av.id });
+            try {
+              const cUrl = isElite ? '/api/avatars/elite/stars_confirm' : '/api/avatars/premium/stars_confirm';
+              await post(cUrl, { avatar_id: av.id });
+            } catch (_) { /* fallback: бот-хендлер уже разблокировал */ }
             tg?.HapticFeedback?.notificationOccurred('success');
+            this.scene.restart({ tab: this._tab });
+          } else if (status === 'pending') {
+            // Оплата обрабатывается — перезагружаем для актуального состояния
             this.scene.restart({ tab: this._tab });
           }
         });
@@ -210,8 +215,25 @@ Object.assign(AvatarScene.prototype, {
     const url = isElite ? '/api/avatars/elite/crypto_invoice' : '/api/avatars/premium/crypto_invoice';
     try {
       const j = await post(url, { avatar_id: av.id });
-      if (j.ok && j.invoice_url) { tg?.openLink?.(j.invoice_url); }
-      else { tg?.showAlert?.(j.reason || 'Ошибка'); }
+      if (j.ok && j.invoice_url) {
+        tg?.openLink?.(j.invoice_url);
+        // Подписываемся на WS-событие avatar_unlocked: обновим сцену когда придёт
+        const _prevHandler = State.ws?.onmessage;
+        if (State.ws) {
+          State.ws.onmessage = (e) => {
+            try {
+              const msg = JSON.parse(e.data);
+              if (msg.event === 'avatar_unlocked') {
+                State.ws.onmessage = _prevHandler;
+                tg?.HapticFeedback?.notificationOccurred('success');
+                this.scene.restart({ tab: this._tab });
+                return;
+              }
+            } catch (_) {}
+            if (_prevHandler) _prevHandler(e);
+          };
+        }
+      } else { tg?.showAlert?.(j.reason || 'Ошибка'); }
     } catch (_) { tg?.showAlert?.('Ошибка сети'); }
   },
 });
