@@ -39,4 +39,8 @@ MIGRATIONS_PART4 = [
         # daily_quests по user_id (задачи на сегодня — частый запрос)
         "CREATE INDEX IF NOT EXISTS idx_daily_quests_user ON daily_quests (user_id)",
     ]),
+
+    ("2026_04_27_001_avatar_bonus_applied", [
+        "ALTER TABLE players ADD COLUMN avatar_bonus_applied INTEGER DEFAULT 0",
+    ]),
 ]

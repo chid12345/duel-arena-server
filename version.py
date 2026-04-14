@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.11"
-VERSION_LABEL = "v1.6.11 — hotfix: убрана миграция из get_or_create_player"
+VERSION = "1.6.12"
+VERSION_LABEL = "v1.6.12 — hotfix: колонка avatar_bonus_applied через миграцию, без ALTER"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "4.45"
+GAME_VERSION = "4.46"
