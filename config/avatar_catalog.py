@@ -86,7 +86,7 @@ AVATAR_CATALOG = [
     {"id": "sub_celestial", "name": "👑 Небесный Страж", "tier": "sub", "rarity": "legendary", "currency": "subscription", "price": 0, "strength": 9, "endurance": 9, "crit": 7, "hp_flat": 14, "badge": "👑", "description": "Эксклюзив для Premium подписчиков."},
 
     # ── РЕФЕРАЛЬНЫЙ (referral, legendary, 30 очков) ──────────────────
-    {"id": "ref_guardian", "name": "🤝 Страж Братства", "tier": "referral", "rarity": "legendary", "currency": "referral", "price": 0, "strength": 7, "endurance": 7, "crit": 6, "hp_flat": 10, "badge": "🤝", "description": "Пригласи 5+ друзей."},
+    {"id": "ref_guardian", "name": "🤝 Страж Братства", "tier": "referral", "rarity": "common", "currency": "referral", "price": 0, "strength": 1, "endurance": 1, "crit": 1, "hp_flat": 1, "badge": "🤝", "description": "Пригласи 5+ друзей. Коллекционный."},
 
     # ── ЭЛИТНЫЙ (elite, legendary, 42 базовых + 19 свободных) ───────
     {"id": "elite_emperor", "name": "👑 Император Арены", "tier": "elite", "rarity": "legendary", "currency": "usdt_stars", "price": 0, "strength": 8, "endurance": 8, "crit": 8, "hp_flat": 18, "badge": "👑", "description": "Элитный образ с максимальным статусом."},
