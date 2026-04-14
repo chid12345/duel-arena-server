@@ -39,16 +39,21 @@ Object.assign(AvatarScene.prototype, {
     const tier = _AV_TIER[av.rarity] || _AV_TIER.common;
     const isEq = av.equipped, isUn = av.unlocked;
 
-    // Card background
+    // Card background — куплен: чуть светлее фон
     const g = this.add.graphics();
-    g.fillStyle(tier.bg, 0.96); g.fillRoundedRect(cx, cy, w, h, 14);
-    g.lineStyle(isEq ? 2 : 1.5, isEq ? 0x3cc864 : tier.border, isEq ? 1 : 0.5);
+    const bgColor = isUn ? (isEq ? 0x0d2a14 : 0x0a1a2e) : tier.bg;
+    g.fillStyle(bgColor, 0.97); g.fillRoundedRect(cx, cy, w, h, 14);
+    // Рамка: зелёная (экипирован), синяя (куплен), обычная (не куплен)
+    const borderColor = isEq ? 0x3cc864 : (isUn ? 0x44aaff : tier.border);
+    const borderW = (isEq || isUn) ? 2 : 1.5;
+    const borderA = (isEq || isUn) ? 0.9 : 0.5;
+    g.lineStyle(borderW, borderColor, borderA);
     g.strokeRoundedRect(cx, cy, w, h, 14);
     ctr.add(g); this._layer.push(g);
 
     // Shine accent
     const sg = this.add.graphics();
-    sg.fillStyle(tier.border, 0.04);
+    sg.fillStyle(isUn ? borderColor : tier.border, isUn ? 0.07 : 0.04);
     sg.fillRoundedRect(cx + w * 0.5, cy, w * 0.5, h * 0.6, { tr: 14, br: 0, tl: 0, bl: 0 });
     ctr.add(sg); this._layer.push(sg);
 
@@ -61,6 +66,16 @@ Object.assign(AvatarScene.prototype, {
     const name = (av.name || av.id).replace(/^[^\s]+\s/, '');
     addT(cx + 48, cy + 10, name, 13, '#ffffff', true);
     addT(cx + 48, cy + 27, tier.label, 9, tier.lc, true);
+
+    // Бейдж "КУПЛЕН" в правом верхнем углу
+    if (isUn && !isEq) {
+      const bw = 54, bh = 16, bx = cx + w - bw - 8, by = cy + 8;
+      const bg2 = this.add.graphics();
+      bg2.fillStyle(0x44aaff, 0.22); bg2.fillRoundedRect(bx, by, bw, bh, 6);
+      bg2.lineStyle(1, 0x44aaff, 0.7); bg2.strokeRoundedRect(bx, by, bw, bh, 6);
+      ctr.add(bg2); this._layer.push(bg2);
+      addT(bx + bw / 2, by + bh / 2, '✔ КУПЛЕН', 8, '#88ddff', true).setOrigin(0.5, 0.5);
+    }
 
     // Description
     addT(cx + 12, cy + 48, (av.description || '').slice(0, 45), 11, '#ffffff', true);
@@ -96,7 +111,7 @@ Object.assign(AvatarScene.prototype, {
     if (isEq) {
       addT(cx + 12, cy + h - 20, '✓ Экипирован', 12, '#55ff88', true);
     } else if (isUn) {
-      addT(cx + 12, cy + h - 20, '🔓 Доступен — нажми чтобы надеть', 11, '#99ccff', true);
+      addT(cx + 12, cy + h - 20, '👆 Нажми чтобы надеть', 11, '#66ccff', true);
     } else {
       addT(cx + 12, cy + h - 20, '🔒 ' + pl.text, 12, pl.color, true);
     }
