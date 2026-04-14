@@ -99,21 +99,30 @@
       layer.push(txt(this, x+26, y+26, a.icon, 18, "#ffffff").setOrigin(0.5).setDepth(123));
 
       // Название — белый
-      layer.push(txt(this, x+52, y+10, a.name, 11, "#ffffff", true).setDepth(123));
+      layer.push(txt(this, x+52, y+8,  a.name,      11, "#ffffff", true).setDepth(123));
       // Тип редкости
-      layer.push(txt(this, x+52, y+25, meta.title, 9, colorHex, true).setDepth(123));
+      layer.push(txt(this, x+52, y+22, meta.title,  9,  colorHex, true).setDepth(123));
       // Звёзды
-      layer.push(txt(this, x+52, y+37, meta.stars, 9, colorHex).setDepth(123));
+      layer.push(txt(this, x+52, y+34, meta.stars,  9,  colorHex).setDepth(123));
 
-      // Статы — белый
-      layer.push(txt(this, x+8, y+58, `С +${a.strength}  Л +${a.agility}`, 9, "#ffffff").setDepth(123));
-      layer.push(txt(this, x+8, y+71, `И +${a.intuition}  В +${a.endurance}`, 9, "#ffffff").setDepth(123));
-      if (a.special_bonus) {
-        layer.push(txt(this, x+8, y+84, a.special_bonus.slice(0,38), 8, "#ddddff").setDepth(123));
+      // Статы — под иконкой, адаптивно до кнопки
+      const bh = 26, by2 = y + cardH - 32;
+      const statsTop = y + 50;        // всегда ниже иконки (36px + 8 отступ)
+      const statsBot = by2 - 4;       // сверху от кнопки
+      const gap = statsBot - statsTop;
+
+      // Всегда показываем хотя бы одну строку статов
+      if (gap >= 12) {
+        const s1 = `С+${a.strength}  Л+${a.agility}  И+${a.intuition}  В+${a.endurance}`;
+        layer.push(txt(this, x+8, statsTop, s1, 9, "#ffffff").setDepth(123));
+      }
+      // Спецбонус — только если реально помещается
+      if (gap >= 28 && a.special_bonus) {
+        layer.push(txt(this, x+8, statsTop+14, a.special_bonus.slice(0,32), 8, "#ccccee").setDepth(123));
       }
 
       // Кнопки
-      const bx = x+8, by2 = y+cardH-32, bw = cardW-16, bh = 26;
+      const bx = x+8, bw = cardW-16;
 
       if (a.is_usdt_slot) {
         const openW = Math.floor(bw*0.55), equipW = bw-openW-4;
