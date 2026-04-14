@@ -44,9 +44,13 @@ Object.assign(MenuScene.prototype, {
     bnFade.fillGradientStyle(0x12121c, 0x12121c, 0x12121c, 0x12121c, 0, 0, 1, 1);
     bnFade.fillRect(0, BNH - 26, W, 26);
 
-    // Avatar block — рендерится по State.avatarId
+    // Avatar block — нажатие открывает вкладку Образы
     const avX = PAD + 8, avY = 18, avS = 42;
-    this._drawAvatarPreview(c, avX + avS / 2, avY + avS / 2, avS / 2, State.avatarId, p.level);
+    this._drawAvatarPreview(c, avX + avS / 2, avY + avS / 2, avS / 2, null, p.level);
+    const avZ = this.make.zone({ x: avX + avS / 2, y: avY + avS / 2, width: avS + 8, height: avS + 8 }, false);
+    avZ.setInteractive({ useHandCursor: true });
+    avZ.on('pointerup', () => { Sound.click(); this.scene.start('Avatar'); });
+    c.add(avZ);
 
     // Name + sub
     const niX = avX + avS + 10;
