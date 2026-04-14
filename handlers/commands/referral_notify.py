@@ -52,14 +52,17 @@ class BotHandlersReferralNotify:
         else:
             head = f"💳 Ваш реферал {label} купил <b>{diamonds}</b> 💎 за Stars ({stars}⭐)."
         tails = []
+        if ref.get("reward_usdt"):
+            tails.append(f"Вам: +{ref['reward_usdt']:.4f} USDT 💰")
         if ref.get("reward_diamonds"):
             tails.append(f"Вам: +{ref['reward_diamonds']} 💎")
         if ref.get("reward_gold"):
             tails.append(f"Вам: +{ref['reward_gold']} 💰")
         if (
             ref.get("rank") is not None
-            and ref.get("reward_diamonds", 0) == 0
-            and ref.get("reward_gold", 0) == 0
+            and not ref.get("reward_usdt")
+            and not ref.get("reward_diamonds")
+            and not ref.get("reward_gold")
             and not ref.get("renewal")
         ):
             tails.append(f"Платящий реферал №{ref['rank']} (первая подписка).")

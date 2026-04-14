@@ -1,11 +1,15 @@
 """Команда /buy и обработчики Telegram Stars."""
 
+import logging
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 from telegram import Update
 
 from database import db
 from handlers.common import tg_api_call
+
+logger = logging.getLogger(__name__)
 
 
 class BotHandlersShopPayments:
@@ -63,13 +67,25 @@ class BotHandlersShopPayments:
         if payload == "premium_sub":
             from config import PREMIUM_XP_BONUS_PERCENT
 
-            ref = db.process_referral_first_premium(user.id, stars)
-            if ref.get("ok"):
-                xp_line = f"\n📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>"
-                msg = f"✅ <b>Premium активирован!</b> Спасибо за поддержку.{xp_line}"
-                if ref.get("renewal"):
-                    msg = f"✅ <b>Подписка продлена.</b> Спасибо!{xp_line}"
-                await tg_api_call(update.message.reply_text, msg, parse_mode="HTML")
+            prem_result = db.activate_premium(user.id, days=21)
+            bonus_d = prem_result.get("bonus_diamonds", 0)
+            days_left = prem_result.get("days_left", 21)
+            is_renewal = bonus_d == 0  # при первой активации даётся 1000 алмазов
+
+            try:
+                ref = db.process_referral_stars_premium(user.id, stars)
+            except Exception as _ref_exc:
+                logger.error("process_referral_stars_premium bot error uid=%s: %s", user.id, _ref_exc)
+                ref = {}
+
+            xp_line = f"\n📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>"
+            if is_renewal:
+                msg = f"✅ <b>Подписка продлена!</b> Срок: <b>{days_left} дн.</b>{xp_line}"
+            else:
+                bonus_txt = f"\n💎 Бонус: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
+                msg = f"✅ <b>Premium активирован!</b> Срок: <b>{days_left} дн.</b>{bonus_txt}{xp_line}"
+            await tg_api_call(update.message.reply_text, msg, parse_mode="HTML")
+
             from handlers.commands import BotHandlers
 
             await BotHandlers.notify_referrer_stars_payment(
