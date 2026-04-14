@@ -27,6 +27,17 @@ class SocialClanMixin:
         if not gold_row or gold_row["gold"] < self.CLAN_CREATE_COST_GOLD:
             conn.close()
             return {"ok": False, "reason": f"Нужно {self.CLAN_CREATE_COST_GOLD} золота"}
+        cursor.execute("SELECT clan_id FROM clan_members WHERE user_id = ?", (leader_id,))
+        member_row = cursor.fetchone()
+        if member_row:
+            member_clan_id = int(member_row["clan_id"])
+            cursor.execute("SELECT id FROM clans WHERE id = ?", (member_clan_id,))
+            if cursor.fetchone():
+                cursor.execute("UPDATE players SET clan_id = ? WHERE user_id = ?", (member_clan_id, leader_id))
+                conn.commit()
+                conn.close()
+                return {"ok": False, "reason": "Вы уже состоите в клане"}
+            cursor.execute("DELETE FROM clan_members WHERE user_id = ?", (leader_id,))
         cursor.execute("SELECT id FROM clans WHERE LOWER(name) = LOWER(?) OR UPPER(tag) = ?", (name, tag))
         if cursor.fetchone():
             conn.close()
@@ -55,7 +66,11 @@ class SocialClanMixin:
         except Exception as exc:
             conn.rollback()
             err = str(exc).lower()
-            if "unique" in err or "duplicate key" in err:
+            is_clan_duplicate = (
+                ("unique constraint failed: clans." in err)
+                or ("duplicate key value violates unique constraint" in err and "clans_" in err)
+            )
+            if is_clan_duplicate:
                 return {"ok": False, "reason": "Клан с таким именем или тегом уже существует"}
             return {"ok": False, "reason": "Не удалось создать клан. Попробуйте еще раз"}
         finally:
@@ -165,35 +180,3 @@ class SocialClanMixin:
         finally:
             conn.close()
 
-    def send_clan_message(self, clan_id: int, user_id: int, username: str, message: str) -> bool:
-        message = (message or "").strip()[:200]
-        if not message:
-            return False
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT 1 FROM clan_members WHERE user_id = ? AND clan_id = ?", (user_id, clan_id))
-            if not cursor.fetchone():
-                return False
-            cursor.execute(
-                "INSERT INTO clan_messages (clan_id, user_id, username, message) VALUES (?, ?, ?, ?)",
-                (clan_id, user_id, username, message),
-            )
-            conn.commit()
-            return True
-        finally:
-            conn.close()
-
-    def get_clan_messages(self, clan_id: int, limit: int = 40) -> List[Dict[str, Any]]:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute(
-                "SELECT id, user_id, username, message, strftime('%H:%M', created_at) AS time_str "
-                "FROM clan_messages WHERE clan_id = ? ORDER BY created_at DESC LIMIT ?",
-                (clan_id, int(limit)),
-            )
-            rows = cursor.fetchall()
-            return [dict(r) for r in reversed(rows)]
-        finally:
-            conn.close()
