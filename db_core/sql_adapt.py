@@ -84,6 +84,9 @@ def _adapt_sql_pg(sql: str) -> str:
     s = re.sub(r'\bis_active\s*=\s*0\b', 'is_active = FALSE', s)
     s = re.sub(r'\bis_active\s+INTEGER\s+DEFAULT\s+0\b', 'is_active BOOLEAN DEFAULT FALSE', s)
     s = re.sub(r'\bis_active\s+INTEGER\s+DEFAULT\s+1\b', 'is_active BOOLEAN DEFAULT TRUE', s)
+    # Конвертировать integer-литерал TRUE/FALSE в VALUES когда is_active идёт через параметр %s
+    # Дополнительная защита: is_active BOOLEAN, reward_claimed BOOLEAN не принимают int-литерал
+    s = re.sub(r'\breward_claimed\s+INTEGER\s+DEFAULT\s+0\b', 'reward_claimed BOOLEAN DEFAULT FALSE', s)
     s = s.replace("?", "%s")
     s = s.replace("__PG_INTERVAL_SEC__", "(NOW() + (%s::text || ' seconds')::interval)")
     return s

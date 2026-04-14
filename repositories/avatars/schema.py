@@ -87,11 +87,12 @@ class AvatarsSchemaMixin:
         if cursor.fetchone():
             return
         bid = f"elite_{uuid.uuid4().hex[:12]}"
+        # is_active передаём параметром True — PostgreSQL BOOLEAN не принимает int-литерал 1 в VALUES
         cursor.execute(
             """INSERT INTO user_elite_builds
                (build_id, user_id, title, alloc_strength, alloc_endurance, alloc_crit, alloc_stamina, is_active, resets_used)
-               VALUES (?, ?, 'Император #1', 0, 0, 0, 0, 1, 0)""",
-            (bid, user_id),
+               VALUES (?, ?, 'Император #1', 0, 0, 0, 0, ?, 0)""",
+            (bid, user_id, True),
         )
 
     def _get_active_elite_build(self, cursor, user_id: int) -> Optional[Any]:
