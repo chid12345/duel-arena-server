@@ -30,6 +30,8 @@ function showItemDetailPopup(scene, opts) {
   contentH += 16 + Math.max(1, descLines) * 16 + 4;
   if (opts.stats && opts.stats.length) contentH += 28;
   if (opts.badge) contentH += 24;
+  if (opts.progress != null) contentH += 30;
+  if (opts.rewards) contentH += 24;
   if (opts.hpPct != null) contentH += 22;
   if (opts.actionLabel) contentH += 56;
   else contentH += 16;
@@ -123,6 +125,32 @@ function showItemDetailPopup(scene, opts) {
     layer.push(txt(scene, cx, cy + bh2/2, opts.badge, 10, badgeTxt, true)
       .setOrigin(0.5).setDepth(dB + 3));
     cy += bh2 + 6;
+  }
+
+  // Progress bar (for tasks/quests)
+  if (opts.progress != null) {
+    const pCur = opts.progressCur || 0, pMax = opts.progressMax || 1;
+    const pPct = Math.min(1, pCur / Math.max(1, pMax));
+    const barW = pW - 60, barX = pX + 30;
+    const done = pCur >= pMax;
+    layer.push(makeBar(scene, barX, cy, barW, 7, pPct, done ? C.green : C.blue, C.dark, 4).setDepth(dB + 2));
+    const progLabel = done ? `✅ ${pCur} / ${pMax}` : `${pCur} / ${pMax}`;
+    layer.push(txt(scene, cx, cy + 10, progLabel, 10, done ? '#88ff88' : '#aaccff', true)
+      .setOrigin(0.5, 0).setDepth(dB + 3));
+    cy += 26;
+  }
+
+  // Rewards (for tasks/quests)
+  if (opts.rewards) {
+    const rParts = [];
+    if (opts.rewards.gold) rParts.push(`+${opts.rewards.gold} 💰`);
+    if (opts.rewards.diamonds) rParts.push(`+${opts.rewards.diamonds} 💎`);
+    if (opts.rewards.xp) rParts.push(`+${opts.rewards.xp} ⭐`);
+    if (rParts.length) {
+      layer.push(txt(scene, cx, cy, `🎁 ${rParts.join('  ')}`, 11, '#ffd700', true)
+        .setOrigin(0.5, 0).setDepth(dB + 2));
+      cy += 20;
+    }
   }
 
   // HP bar

@@ -78,6 +78,14 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
       container.add(txt(this, PAD + 8,   y + bh / 2, a.label,                  10, '#778899').setOrigin(0, 0.5));
       container.add(txt(this, W / 2,     y + bh / 2, '✅ Все уровни пройдены',  9,  '#667788').setOrigin(0.5, 0.5));
       container.add(txt(this, W - PAD - 6, y + bh / 2, `${a.max_tier}/${a.max_tier}`, 9, '#556677').setOrigin(1, 0.5));
+      const doneY = y;
+      taps.push({ y: doneY, h: bh, fn: () => {
+        showItemDetailPopup(this, {
+          icon: a.label.split(' ')[0], name: a.label.replace(/^[^ ]+ /, ''),
+          desc: `${a.desc || ''}\n\n✅ Все ${a.max_tier} уровней пройдены!`,
+          badge: `MAX ${a.max_tier}/${a.max_tier}`,
+        });
+      }});
     } else {
       const rcX0 = W - PAD - RCOL;
       const rcBg = this.add.graphics();
@@ -108,8 +116,24 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 
       if (canClaim) {
         this.tweens.add({ targets: bg, alpha: { from: 0.95, to: 0.6 }, duration: 900, yoyo: true, repeat: -1 });
-        taps.push({ y, h: bh, fn: () => this._claimAchievement(a.key, a.can_claim_tier) });
+        // Кнопка 🎁 справа → прямой забор
+        taps.push({ y, h: bh, xMin: W - PAD - RCOL, fn: () => this._claimAchievement(a.key, a.can_claim_tier) });
       }
+      // Тап на карточку → попап
+      const aY = y;
+      taps.push({ y: aY, h: bh, xMax: W - PAD - RCOL, fn: () => {
+        const dispCur2 = Math.min(a.current, a.next_target);
+        showItemDetailPopup(this, {
+          icon: a.label.split(' ')[0], name: a.label.replace(/^[^ ]+ /, ''),
+          desc: a.desc || 'Продолжай играть для прогресса!',
+          badge: `Ур. ${a.claimed_tier} / ${a.max_tier}`,
+          progress: true, progressCur: dispCur2, progressMax: a.next_target,
+          rewards: { gold: a.next_gold, diamonds: a.next_diamonds },
+          actionLabel: canClaim ? '🎁 Забрать награду' : null,
+          canAct: canClaim,
+          actionFn: canClaim ? () => { closeItemDetailPopup(this); this._claimAchievement(a.key, a.can_claim_tier); } : null,
+        });
+      }});
     }
     y += bh + 5;
   }

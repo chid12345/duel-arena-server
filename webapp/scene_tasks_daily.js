@@ -83,10 +83,27 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     const rwTxt = `+${q.reward_gold}💰${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
     container.add(txt(this, W - PAD - 4, y + 38, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
 
+    const ty = y;
     if (done) {
-      const ty = y;
-      taps.push({ y: ty, h: bh, fn: () => this._claimDaily(q.key) });
+      // Кнопка 🎁 справа → прямой забор награды
+      taps.push({ y: ty, h: bh, xMin: W - PAD - 40, fn: () => this._claimDaily(q.key) });
     }
+    // Тап на карточку → попап с описанием
+    taps.push({ y: ty, h: bh, xMax: W - PAD - 40, fn: () => {
+      const rwParts = [];
+      if (q.reward_gold) rwParts.push(`+${q.reward_gold} 💰`);
+      if (q.reward_diamonds) rwParts.push(`+${q.reward_diamonds} 💎`);
+      if (q.reward_xp) rwParts.push(`+${q.reward_xp} ⭐`);
+      showItemDetailPopup(this, {
+        icon, name,
+        desc: q.desc || 'Выполни задание чтобы получить награду!',
+        progress: true, progressCur: cur, progressMax: max,
+        rewards: { gold: q.reward_gold, diamonds: q.reward_diamonds, xp: q.reward_xp },
+        actionLabel: done ? '🎁 Забрать награду' : null,
+        canAct: done,
+        actionFn: done ? () => { closeItemDetailPopup(this); this._claimDaily(q.key); } : null,
+      });
+    }});
     y += bh + 5;
   });
   if (claimedCount > 0) {
@@ -127,13 +144,26 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     const rwTxt = `+${q.reward_gold}💰${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
     container.add(txt(this, W - PAD - 4, y + 44, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
 
+    const ty = y;
+    const icon2 = q.label.split(' ')[0];
+    const name2 = q.label.replace(/^[^ ]+ /, '');
+    const claimFn = isExtra
+      ? () => this._claimWeeklyExtra(q.key, weekKey)
+      : () => this._claimWeeklyOld(q.key);
     if (done) {
-      const ty = y;
-      taps.push({ y: ty, h: bh, fn: () => {
-        if (isExtra) this._claimWeeklyExtra(q.key, weekKey);
-        else         this._claimWeeklyOld(q.key);
-      }});
+      taps.push({ y: ty, h: bh, xMin: W - PAD - 40, fn: claimFn });
     }
+    taps.push({ y: ty, h: bh, xMax: W - PAD - 40, fn: () => {
+      showItemDetailPopup(this, {
+        icon: icon2, name: name2,
+        desc: q.desc || 'Выполни задание за неделю!',
+        progress: true, progressCur: cur, progressMax: max,
+        rewards: { gold: q.reward_gold, diamonds: q.reward_diamonds, xp: q.reward_xp },
+        actionLabel: done ? '🎁 Забрать награду' : null,
+        canAct: done,
+        actionFn: done ? () => { closeItemDetailPopup(this); claimFn(); } : null,
+      });
+    }});
     y += bh + 5;
   };
 
