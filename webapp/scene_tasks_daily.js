@@ -145,8 +145,6 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     container.add(txt(this, W - PAD - 4, y + 44, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
 
     const ty = y;
-    const icon2 = q.label.split(' ')[0];
-    const name2 = q.label.replace(/^[^ ]+ /, '');
     const claimFn = isExtra
       ? () => this._claimWeeklyExtra(q.key, weekKey)
       : () => this._claimWeeklyOld(q.key);
