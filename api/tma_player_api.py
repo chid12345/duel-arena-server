@@ -116,10 +116,13 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
         bonus_intuition += int(class_info.get("bonus_intuition", 0) or 0)
         bonus_stamina += int(class_info.get("bonus_endurance", 0) or 0)
 
-    base_strength = max(1, s - bonus_strength)
-    base_agility = max(1, agi - bonus_agility)
-    base_intuition = max(1, intu - bonus_intuition)
-    base_stamina = max(0, vyn - bonus_stamina)
+    # Если бонус образа ещё не применён к статам в БД — не вычитать
+    _ab = int(player.get("avatar_bonus_applied", 0) or 0)
+    _sub = 1 if _ab else 0
+    base_strength = max(1, s - bonus_strength * _sub)
+    base_agility = max(1, agi - bonus_agility * _sub)
+    base_intuition = max(1, intu - bonus_intuition * _sub)
+    base_stamina = max(0, vyn - bonus_stamina * _sub)
     return {
         "user_id": player.get("user_id"),
         "username": player.get("username") or "Боец",

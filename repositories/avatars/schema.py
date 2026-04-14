@@ -166,4 +166,5 @@ class AvatarsSchemaMixin:
                 (user_id,),
             )
 
-        # Миграция бонуса вызывается в get_or_create_player
+        # Одноразовое применение бонуса образа к статам
+        self._apply_initial_avatar_bonus(cursor, user_id)
