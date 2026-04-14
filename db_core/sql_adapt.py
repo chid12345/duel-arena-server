@@ -73,6 +73,7 @@ def _adapt_sql_pg(sql: str) -> str:
         "referral_usdt_balance = GREATEST(0, COALESCE(referral_usdt_balance,0) - ?)",
     )
     s = re.sub(r'\bMAX\s*\(\s*(\w[\w.]*)\s*,\s*(\w[\w.]*)\s*\)', r'GREATEST(\1, \2)', s)
+    s = re.sub(r'\bMIN\s*\(\s*(\w[\w.]*)\s*,\s*(\w[\w.]*)\s*\)', r'LEAST(\1, \2)', s)
     s = re.sub(r'\breward_claimed\s*=\s*1\b', 'reward_claimed = TRUE', s)
     s = re.sub(r'\breward_claimed\s*=\s*0\b', 'reward_claimed = FALSE', s)
     s = re.sub(r'\bis_bot2\s*=\s*1\b', 'is_bot2 = TRUE', s)

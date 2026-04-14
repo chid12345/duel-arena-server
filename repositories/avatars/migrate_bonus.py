@@ -30,7 +30,7 @@ class AvatarsMigrateBonusMixin:
             return
         try:
             cursor.execute(
-                "SELECT avatar_bonus_applied, equipped_avatar_id, level FROM players WHERE user_id = ?",
+                "SELECT avatar_bonus_applied, equipped_avatar_id, level, max_hp, current_hp FROM players WHERE user_id = ?",
                 (user_id,),
             )
             row = cursor.fetchone()
@@ -50,16 +50,21 @@ class AvatarsMigrateBonusMixin:
             d_hp = int(bonus.get("hp_flat", 0))
 
             if d_str or d_end or d_crit or d_hp:
+                # HP считаем в Python — MIN() не работает как скалярная функция в PostgreSQL
+                old_mhp = int(self._row_get(row, "max_hp", 60) or 60)
+                old_chp = int(self._row_get(row, "current_hp", old_mhp) or old_mhp)
+                new_mhp = old_mhp + d_hp
+                new_chp = min(new_mhp, old_chp + d_hp)
                 cursor.execute(
                     """UPDATE players
                        SET strength = strength + ?,
                            endurance = endurance + ?,
                            crit = crit + ?,
-                           max_hp = max_hp + ?,
-                           current_hp = MIN(max_hp + ?, current_hp + ?),
+                           max_hp = ?,
+                           current_hp = ?,
                            avatar_bonus_applied = 1
                        WHERE user_id = ?""",
-                    (d_str, d_end, d_crit, d_hp, d_hp, d_hp, user_id),
+                    (d_str, d_end, d_crit, new_mhp, new_chp, user_id),
                 )
             else:
                 cursor.execute(
@@ -67,6 +72,7 @@ class AvatarsMigrateBonusMixin:
                     (user_id,),
                 )
             _migrated.add(user_id)
+            log.info("avatar bonus applied uid=%s: str+%s end+%s crit+%s hp+%s", user_id, d_str, d_end, d_crit, d_hp)
         except Exception as e:
-            log.warning("avatar bonus migration skip uid=%s: %s", user_id, e)
-            _migrated.add(user_id)  # не пробовать повторно
+            log.warning("avatar bonus migration FAIL uid=%s: %s", user_id, e, exc_info=True)
+            _migrated.add(user_id)
