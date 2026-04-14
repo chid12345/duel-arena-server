@@ -11,8 +11,7 @@ def _avatar_effective_bonus(level: int, avatar_id: str) -> dict:
     avatar = AVATAR_BY_ID.get((avatar_id or "").strip()) or {}
     if not avatar:
         return {"strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0}
-    if (avatar.get("tier") or "").lower() == "base":
-        return {"strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0}
+    # base даёт статы но не масштабируется с уровнем
     step = max(1, int(AVATAR_SCALE_EVERY_LEVELS))
     cap = max(0, int(AVATAR_SCALE_MAX_BONUS))
     scale = min(cap, max(0, int(level)) // step)

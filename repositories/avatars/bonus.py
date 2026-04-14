@@ -21,8 +21,7 @@ class AvatarsBonusMixin:
 
         scale = self._scale_bonus(level)
         tier = (avatar.get("tier") or "").lower()
-        if tier == "base":
-            return {"strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0}
+        # base даёт статы но не масштабируется с уровнем
         scale_allowed = tier in {"gold", "diamond", "elite", "premium", "sub", "referral"}
 
         b_str = int(avatar.get("strength", 0))
