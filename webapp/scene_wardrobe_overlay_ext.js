@@ -108,26 +108,34 @@
       addT(cx+46, cy+20, meta.title,  8, colorHex,  true);
       addT(cx+46, cy+30, meta.stars,  8, colorHex);
 
-      // Спецбонус — под иконкой, на всю ширину
+      // Pill-строка статов — середина карточки
+      const pillDefs = [
+        { lbl:`С+${a.strength}`,  val:a.strength,   bg:0x882222, col:"#ff8888" },
+        { lbl:`Л+${a.agility}`,   val:a.agility,    bg:0x115577, col:"#55ddff" },
+        { lbl:`И+${a.intuition}`, val:a.intuition,  bg:0x551188, col:"#cc77ff" },
+        { lbl:`В+${a.endurance}`, val:a.endurance,  bg:0x115533, col:"#55ff99" },
+      ];
+      const pillW = Math.floor((cardW-18) / 4) - 2;
+      pillDefs.forEach((s, si) => {
+        const px = cx+7 + si*(pillW+3), py = cy+46;
+        const pg = this.add.graphics();
+        pg.fillStyle(s.val>0 ? s.bg : 0x222230, s.val>0 ? .9 : .5);
+        pg.fillRoundedRect(px, py, pillW, 16, 4);
+        ctr.add(pg); layer.push(pg);
+        addT(px+pillW/2, py+8, s.lbl, 8, s.val>0?s.col:"#555566", true).setOrigin(0.5);
+      });
+
+      // Спецбонус — под пилюлями
       if (a.special_bonus) {
-        addT(cx+7, cy+44, a.special_bonus.slice(0,34), 8, "#ccccee");
+        addT(cx+7, cy+68, a.special_bonus.slice(0,34), 8, "#ccccee");
       }
 
-      // Разделитель перед кнопкой
+      // Разделитель
       const divG = this.add.graphics();
-      divG.fillStyle(meta.dim, .25); divG.fillRect(cx+7, cy+cardH-30, cardW-14, 1);
+      divG.fillStyle(meta.dim,.25); divG.fillRect(cx+7, cy+cardH-30, cardW-14, 1);
       ctr.add(divG); layer.push(divG);
 
-      // Мини-статы — правый верх, 4 строки
-      const sx = cx+cardW-6;
-      [
-        { lbl:`С+${a.strength}`,  val:a.strength,   col:"#ff5555", dim:"#886666" },
-        { lbl:`Л+${a.agility}`,   val:a.agility,    col:"#00e8ff", dim:"#6699aa" },
-        { lbl:`И+${a.intuition}`, val:a.intuition,  col:"#dd88ff", dim:"#8866aa" },
-        { lbl:`В+${a.endurance}`, val:a.endurance,  col:"#44ff88", dim:"#66aa77" },
-      ].forEach((s,si) => addT(sx, cy+7+si*10, s.lbl, 9, s.val>0?s.col:s.dim, true, "#000000").setOrigin(1,0));
-
-      // Кнопка — всегда у нижнего края
+      // Кнопка — нижний край
       const bx=cx+7, bh=22, bw=cardW-14, by2=cy+cardH-27;
 
       if (a.is_usdt_slot) {
