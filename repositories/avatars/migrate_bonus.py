@@ -12,7 +12,9 @@ _migrated: set = set()
 
 class AvatarsMigrateBonusMixin:
     def ensure_avatar_bonus_applied(self, user_id: int) -> None:
-        """Публичный метод: применить бонус аватара если ещё не применён."""
+        """Публичный метод: применить бонус аватара — ВСЕГДА проверяет по БД,
+        игнорирует in-memory кэш (resync мог сбросить флаг)."""
+        _migrated.discard(user_id)  # сбросить кэш, чтобы _apply проверил БД
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
