@@ -24,21 +24,24 @@ class AvatarsSchemaMixin:
         )
         is_pg = bool(getattr(self, "_pg", False))
         if is_pg:
-            cursor.execute(
-                """SELECT 1
-                   FROM information_schema.columns
-                   WHERE table_name = 'players'
-                     AND column_name = 'equipped_avatar_id'
-                   LIMIT 1"""
-            )
-            has_col = bool(cursor.fetchone())
-            if not has_col:
-                cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
+            for col_name, col_def in [
+                ("equipped_avatar_id", "TEXT"),
+                ("avatar_bonus_applied", "INTEGER DEFAULT 0"),
+            ]:
+                cursor.execute(
+                    "SELECT 1 FROM information_schema.columns"
+                    " WHERE table_name='players' AND column_name=%s LIMIT 1",
+                    (col_name,),
+                )
+                if not bool(cursor.fetchone()):
+                    cursor.execute(f"ALTER TABLE players ADD COLUMN {col_name} {col_def}")
         else:
             cursor.execute("PRAGMA table_info(players)")
             cols = {r[1] for r in cursor.fetchall()}
             if "equipped_avatar_id" not in cols:
                 cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
+            if "avatar_bonus_applied" not in cols:
+                cursor.execute("ALTER TABLE players ADD COLUMN avatar_bonus_applied INTEGER DEFAULT 0")
 
     def _ensure_elite_builds_schema(self, cursor) -> None:
         cursor.execute(

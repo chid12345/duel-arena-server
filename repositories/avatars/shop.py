@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict
 
 from config import PLAYER_START_CRIT, PLAYER_START_ENDURANCE, PLAYER_START_STRENGTH
+
+_log = logging.getLogger(__name__)
 
 
 class AvatarsShopMixin:
@@ -12,10 +15,32 @@ class AvatarsShopMixin:
         avatars = self._avatar_map()
         if avatar_id not in avatars:
             return {"ok": False, "reason": "Образ не найден"}
+
+        # ВАЖНО: _ensure_avatar_rows содержит try/except, которые в PostgreSQL
+        # оставляют транзакцию в состоянии ABORTED даже при пойманном исключении.
+        # Запускаем в отдельном соединении — ошибки инициализации не портят
+        # основной INSERT разблокировки.
+        try:
+            c0 = self.get_connection()
+            cr0 = c0.cursor()
+            try:
+                self._ensure_avatar_rows(cr0, user_id)
+                c0.commit()
+            except Exception as _e0:
+                _log.warning("_ensure_avatar_rows uid=%s: %s", user_id, _e0)
+                try:
+                    c0.rollback()
+                except Exception:
+                    pass
+            finally:
+                c0.close()
+        except Exception:
+            pass
+
+        # Чистая транзакция только для INSERT — никаких предыдущих ошибок
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            self._ensure_avatar_rows(cursor, user_id)
             cursor.execute(
                 """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
                    VALUES (?, ?, ?)
@@ -24,7 +49,11 @@ class AvatarsShopMixin:
             )
             created = int(getattr(cursor, "rowcount", 0) or 0) > 0
             conn.commit()
+            _log.info("unlock_avatar uid=%s avatar=%s created=%s", user_id, avatar_id, created)
             return {"ok": True, "already_unlocked": not created}
+        except Exception as e:
+            _log.error("unlock_avatar INSERT failed uid=%s avatar=%s: %s", user_id, avatar_id, e, exc_info=True)
+            return {"ok": False, "reason": f"db_error: {str(e)[:80]}"}
         finally:
             conn.close()
 
