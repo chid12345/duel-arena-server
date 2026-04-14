@@ -101,6 +101,30 @@ Object.assign(ShopScene.prototype, {
       y += 34;
     }
 
+    // ── Premium (первым — главный продукт) ──
+    if (premPkg) {
+      y = this._gcSection(container, y, W, '👑', 'PREMIUM');
+      this._gcCard(container, 8, y, W - 16, 72, gc.hdrPrem, gc.purple);
+      this._gcBadge(container, 12, y + 3, 'VIP', gc.purple);
+      container.add(txt(this, 40, y + 26, '👑', 18));
+      container.add(txt(this, 60, y + 24, 'Premium подписка', 12, '#c8a0ff', true));
+      container.add(txt(this, 60, y + 38, '+15% XP · ящик · скидки · значок', 9, '#a888dd'));
+      const isPrem = !!(State.player || {}).is_premium;
+      const prLabel = isPrem ? '✅ Активен' : `⭐ ${premPkg.stars}`;
+      this._gcPriceBtn(container, W - 80, y + 52, 66, prLabel, { bg: isPrem ? 0x4a2a8a : gc.purple, text: '#fff' });
+      container.add(txt(this, 12, y + 54, '21 день', 9, '#7755aa'));
+      taps.push({ x: 8, y, w: W - 16, h: 72, fn: () => {
+        showItemDetailPopup(this, {
+          icon: '👑', name: 'Premium подписка',
+          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
+          actionLabel: isPrem ? '✅ Уже активен' : `⭐ ${premPkg.stars} — Купить`,
+          canAct: !isPrem,
+          actionFn: () => { closeItemDetailPopup(this); if (!isPrem) this._buyStars(premPkg); },
+        });
+      }});
+      y += 80;
+    }
+
     // ── Ящики ──
     const onlyBoxes = scrollPkgs.filter(p => (p.scroll_id || '').startsWith('box_'));
     if (onlyBoxes.length > 0) {
@@ -186,30 +210,6 @@ Object.assign(ShopScene.prototype, {
     });
     y += 78;
 
-    // ── Premium ──
-    if (premPkg) {
-      y = this._gcSection(container, y, W, '👑', 'PREMIUM');
-      this._gcCard(container, 8, y, W - 16, 72, gc.hdrPrem, gc.purple);
-      this._gcBadge(container, 12, y + 3, 'VIP', gc.purple);
-      container.add(txt(this, 40, y + 26, '👑', 18));
-      container.add(txt(this, 60, y + 24, 'Premium подписка', 12, '#c8a0ff', true));
-      container.add(txt(this, 60, y + 38, '+15% XP · ящик · скидки · значок', 9, '#a888dd'));
-      const isPrem = !!(State.player || {}).is_premium;
-      const prLabel = isPrem ? '✅ Активен' : `⭐ ${premPkg.stars}`;
-      this._gcPriceBtn(container, W - 80, y + 52, 66, prLabel, { bg: isPrem ? 0x4a2a8a : gc.purple, text: '#fff' });
-      container.add(txt(this, 12, y + 54, '21 день', 9, '#7755aa'));
-      taps.push({ x: 8, y, w: W - 16, h: 72, fn: () => {
-        showItemDetailPopup(this, {
-          icon: '👑', name: 'Premium подписка',
-          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
-          actionLabel: isPrem ? '✅ Уже активен' : `⭐ ${premPkg.stars} — Купить`,
-          canAct: !isPrem,
-          actionFn: () => { closeItemDetailPopup(this); if (!isPrem) this._buyStars(premPkg); },
-        });
-      }});
-      y += 80;
-    }
-
     container.add(txt(this, W / 2, y, '⭐ Telegram Stars — моментальная оплата', 10, '#5577aa').setOrigin(0.5));
     y += 20;
     setContentH(y + 10);
@@ -265,6 +265,31 @@ Object.assign(ShopScene.prototype, {
     const onlyScrolls = scrollPkgs.filter(p => !(p.scroll_id || '').startsWith('box_'));
     const onlyBoxes   = scrollPkgs.filter(p => (p.scroll_id || '').startsWith('box_'));
     const iw = (W - 24) / 2;
+
+    // ── Premium (первым — главный продукт) ──
+    const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
+    if (cpPrem) {
+      y = this._gcSection(container, y, W, '👑', 'PREMIUM');
+      this._gcCard(container, 8, y, W - 16, 72, gc.hdrPrem, gc.purple);
+      this._gcBadge(container, 12, y + 3, 'VIP', gc.purple);
+      container.add(txt(this, 40, y + 26, '👑', 18));
+      container.add(txt(this, 60, y + 24, 'Premium подписка', 12, '#c8a0ff', true));
+      container.add(txt(this, 60, y + 38, '+15% XP · ящик · скидки · значок', 9, '#a888dd'));
+      const isPremC = !!(State.player || {}).is_premium;
+      const prLabelC = isPremC ? '✅ Активен' : `${cpPrem.usdt} USDT`;
+      this._gcPriceBtn(container, W - 86, y + 52, 72, prLabelC, { bg: isPremC ? 0x4a2a8a : gc.purple, text: '#fff' });
+      container.add(txt(this, 12, y + 54, '21 день', 9, '#7755aa'));
+      taps.push({ x: 8, y, w: W - 16, h: 72, fn: () => {
+        showItemDetailPopup(this, {
+          icon: '👑', name: 'Premium подписка',
+          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
+          actionLabel: isPremC ? '✅ Уже активен' : `${cpPrem.usdt} USDT — Купить`,
+          canAct: !isPremC,
+          actionFn: () => { closeItemDetailPopup(this); if (!isPremC) this._buyCrypto(cpPrem); },
+        });
+      }});
+      y += 80;
+    }
 
     // ── Ящики ──
     if (onlyBoxes.length > 0) {
@@ -347,31 +372,6 @@ Object.assign(ShopScene.prototype, {
       }});
     });
     y += 78;
-
-    // ── Premium ──
-    const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
-    if (cpPrem) {
-      y = this._gcSection(container, y, W, '👑', 'PREMIUM');
-      this._gcCard(container, 8, y, W - 16, 72, gc.hdrPrem, gc.purple);
-      this._gcBadge(container, 12, y + 3, 'VIP', gc.purple);
-      container.add(txt(this, 40, y + 26, '👑', 18));
-      container.add(txt(this, 60, y + 24, 'Premium подписка', 12, '#c8a0ff', true));
-      container.add(txt(this, 60, y + 38, '+15% XP · ящик · скидки · значок', 9, '#a888dd'));
-      const isPremC = !!(State.player || {}).is_premium;
-      const prLabelC = isPremC ? '✅ Активен' : `${cpPrem.usdt} USDT`;
-      this._gcPriceBtn(container, W - 86, y + 52, 72, prLabelC, { bg: isPremC ? 0x4a2a8a : gc.purple, text: '#fff' });
-      container.add(txt(this, 12, y + 54, '21 день', 9, '#7755aa'));
-      taps.push({ x: 8, y, w: W - 16, h: 72, fn: () => {
-        showItemDetailPopup(this, {
-          icon: '👑', name: 'Premium подписка',
-          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
-          actionLabel: isPremC ? '✅ Уже активен' : `${cpPrem.usdt} USDT — Купить`,
-          canAct: !isPremC,
-          actionFn: () => { closeItemDetailPopup(this); if (!isPremC) this._buyCrypto(cpPrem); },
-        });
-      }});
-      y += 80;
-    }
 
     // ── Сброс ──
     const cpReset = cryptoPkgs.find(pkg => pkg.full_reset);
