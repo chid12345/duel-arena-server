@@ -93,10 +93,11 @@ class AvatarScene extends Phaser.Scene {
   }
 
   shutdown() {
+    if (this._scrollTimer) { this._scrollTimer.destroy(); this._scrollTimer = null; }
     this._layer.forEach(o => { try { o.destroy(); } catch(_) {} });
-    if (this._ctr) this._ctr.destroy();
-    if (this._mGfx) this._mGfx.destroy();
-    if (this._scrZ) this._scrZ.destroy();
+    if (this._ctr) { try { this._ctr.clearMask(); } catch(_) {} this._ctr.destroy(); this._ctr = null; }
+    if (this._mGfx) { this._mGfx.destroy(); this._mGfx = null; }
+    if (this._scrZ) { this._scrZ.destroy(); this._scrZ = null; }
     closeItemDetailPopup(this);
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }

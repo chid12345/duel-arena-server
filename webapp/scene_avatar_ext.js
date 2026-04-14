@@ -7,9 +7,10 @@ Object.assign(AvatarScene.prototype, {
   _renderList() {
     this._layer.forEach(o => { try { o.destroy(); } catch(_) {} });
     this._layer = []; this._tapAreas = [];
+    if (this._scrollTimer) { this._scrollTimer.destroy(); this._scrollTimer = null; }
     if (this._scrZ) { this._scrZ.destroy(); this._scrZ = null; }
+    if (this._ctr) { try { this._ctr.clearMask(); } catch(_) {} this._ctr.destroy(); this._ctr = null; }
     if (this._mGfx) { this._mGfx.destroy(); this._mGfx = null; }
-    if (this._ctr) { this._ctr.destroy(); this._ctr = null; }
 
     const W = this.W, H = this.H;
     const cards = this._filterAvatars();
@@ -25,9 +26,10 @@ Object.assign(AvatarScene.prototype, {
 
     const ctr = this.add.container(0, areaTop).setDepth(5);
     this._ctr = ctr;
-    const mGfx = this.add.graphics();
+    // Маска через make.graphics({ add: false }) — объект НЕ добавляется в display list,
+    // но stencil buffer записывается корректно (fix: setVisible(false) ломал WebGL stencil).
+    const mGfx = this.make.graphics({ add: false });
     mGfx.fillStyle(0xffffff, 1); mGfx.fillRect(0, areaTop, W, viewH);
-    mGfx.setVisible(false);
     ctr.setMask(mGfx.createGeometryMask());
     this._mGfx = mGfx;
 
@@ -145,7 +147,7 @@ Object.assign(AvatarScene.prototype, {
         }
       }
     });
-    this.time.addEvent({ delay: 16, loop: true, callback: () => {
+    this._scrollTimer = this.time.addEvent({ delay: 16, loop: true, callback: () => {
       if (active || Math.abs(vel) < 0.5) return;
       scrollY = clamp(scrollY + vel); vel *= 0.88; ctr.setY(areaTop - scrollY);
     }});
