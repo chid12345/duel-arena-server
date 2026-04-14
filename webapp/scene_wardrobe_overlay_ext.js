@@ -111,9 +111,12 @@
         { lbl: `В+${a.endurance}`, val: a.endurance, col: "#44ff88", dim: "#66aa77" },
       ];
       statDefs.forEach((s, si) => {
-        const sy = y + 8 + si * 11;
+        const sy = y + 7 + si * 12;
         const col = s.val > 0 ? s.col : s.dim;
-        layer.push(txt(this, sx, sy, s.lbl, 8, col, true).setOrigin(1, 0).setDepth(124));
+        layer.push(
+          txt(this, sx, sy, s.lbl, 10, col, true, "#000000")
+            .setOrigin(1, 0).setDepth(125)
+        );
       });
 
       // Статы — под иконкой, адаптивно до кнопки
