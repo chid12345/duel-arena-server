@@ -19,14 +19,19 @@ class AvatarsMigrateBonusMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            # Добавить колонку если вдруг не существует
+            # Добавить колонку если вдруг не существует.
+            # ВАЖНО: в PostgreSQL упавший ALTER TABLE переводит транзакцию в ABORTED-состояние,
+            # поэтому при ошибке нужен rollback — иначе последующий SELECT тоже упадёт.
             try:
                 cursor.execute(
                     "ALTER TABLE players ADD COLUMN avatar_bonus_applied INTEGER DEFAULT 0"
                 )
                 conn.commit()
             except Exception:
-                pass  # Колонка уже есть — OK
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass  # Колонка уже есть — транзакция сброшена, продолжаем
 
             # Читаем актуальное состояние из БД
             cursor.execute(
