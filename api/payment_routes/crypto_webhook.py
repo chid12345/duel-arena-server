@@ -85,6 +85,11 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 if unlock.get("ok"):
                     if not unlock.get("already_unlocked"):
                         db.track_purchase(uid, avatar_id, "usdt", 0)
+                        if asset == "USDT":
+                            try:
+                                db.process_referral_vip_shop_purchase(uid, usdt=float(amount_str))
+                            except Exception as _ve:
+                                logger.error("vip_shop avatar usdt uid=%s: %s", uid, _ve)
                     _cache_invalidate(uid)
                     await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
                     await _send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
@@ -114,6 +119,11 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             elif is_full_reset:
                 await _notify_paid_full_reset(uid)
             else:
+                if asset == "USDT":
+                    try:
+                        db.process_referral_vip_shop_purchase(uid, usdt=float(amount_str))
+                    except Exception as _ve:
+                        logger.error("vip_shop diamonds usdt uid=%s: %s", uid, _ve)
                 await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})
                 await _send_tg_message(uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
         else:

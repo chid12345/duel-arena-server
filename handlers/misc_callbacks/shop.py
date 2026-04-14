@@ -69,7 +69,6 @@ async def handle_shop_purchase(query, player, item_key: str):
             purchase_ok = True
             hp_r = result["hp_restored"]
             msg = f"✅ HP восстановлен! +{hp_r} HP (−30 золота)" if hp_r > 0 else "❤️ HP уже полный! −30 золота"
-            ref_r = db.process_referral_vip_shop_purchase(uid, gold=30)
         else:
             msg = f"❌ {result['reason']}"
     elif item_key == "xp_boost":
@@ -77,7 +76,6 @@ async def handle_shop_purchase(query, player, item_key: str):
         msg = f"✅ XP-буст: +5 зарядов куплено! (−100 золота)" if result["ok"] else f"❌ {result['reason']}"
         if result.get("ok"):
             purchase_ok = True
-            ref_r = db.process_referral_vip_shop_purchase(uid, gold=100)
     elif item_key == "stat_reset":
         result = db.buy_stat_reset(uid)
         msg = (
@@ -87,7 +85,6 @@ async def handle_shop_purchase(query, player, item_key: str):
         )
         if result.get("ok"):
             purchase_ok = True
-            ref_r = db.process_referral_vip_shop_purchase(uid, diamonds=RESET_STATS_COST_DIAMONDS)
     else:
         msg = "❌ Товар не найден"
     await query.answer(msg, show_alert=True)

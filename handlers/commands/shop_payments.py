@@ -102,6 +102,10 @@ class BotHandlersShopPayments:
                 if unlock.get("ok"):
                     if not unlock.get("already_unlocked"):
                         db.track_purchase(user.id, avatar_id, "stars", stars)
+                        try:
+                            db.process_referral_vip_shop_purchase(user.id, stars=stars)
+                        except Exception as _ve:
+                            logger.error("vip_shop avatar stars uid=%s: %s", user.id, _ve)
                     if unlock.get("already_unlocked"):
                         msg = "✅ Оплата подтверждена! Этот образ уже есть у вас. ⚔️ Duel Arena"
                     else:
@@ -120,6 +124,11 @@ class BotHandlersShopPayments:
             return
 
         if not payload.startswith("diamonds_"):
+            # Stars-свиток, ящик или другие Stars-покупки
+            try:
+                db.process_referral_vip_shop_purchase(user.id, stars=stars)
+            except Exception as _ve:
+                logger.error("vip_shop other stars uid=%s: %s", user.id, _ve)
             await tg_api_call(
                 update.message.reply_text,
                 "✅ Оплата получена. Если начисление не пришло — напишите в поддержку.",

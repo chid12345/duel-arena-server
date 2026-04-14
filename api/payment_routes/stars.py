@@ -33,7 +33,12 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
         scroll_pkg = _find_stars_scroll(body.package_id)
         if scroll_pkg:
             scroll_id = scroll_pkg["scroll_id"]
+            scroll_stars = scroll_pkg["stars"]
             db.add_to_inventory(uid, scroll_id)
+            try:
+                db.process_referral_vip_shop_purchase(uid, stars=scroll_stars)
+            except Exception as _ve:
+                logger.error("vip_shop scroll stars uid=%s: %s", uid, _ve)
             is_box = scroll_id.startswith("box_")
             await manager.send(uid, {"event": "scroll_received", "scroll_id": scroll_id, "source": "stars"})
             label = scroll_pkg["label"]
@@ -90,6 +95,10 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             }
 
         result = db.confirm_stars_payment(uid, body.package_id, diamonds, stars)
+        try:
+            db.process_referral_vip_shop_purchase(uid, stars=stars)
+        except Exception as _ve:
+            logger.error("vip_shop diamonds stars uid=%s: %s", uid, _ve)
         if result.get("ok") and diamonds > 0:
             await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "stars"})
             await _send_tg_message(uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через Telegram Stars подтверждена.\n\n⚔️ Duel Arena")
