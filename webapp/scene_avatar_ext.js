@@ -1,10 +1,10 @@
 /* ═══════════════════════════════════════════════════════════
-   AvatarScene ext — сетка карточек + скролл
+   AvatarScene ext — рендер крупных карточек + скролл
    ═══════════════════════════════════════════════════════════ */
 
 Object.assign(AvatarScene.prototype, {
 
-  _renderGrid() {
+  _renderList() {
     this._layer.forEach(o => { try { o.destroy(); } catch(_) {} });
     this._layer = []; this._tapAreas = [];
     if (this._scrZ) { this._scrZ.destroy(); this._scrZ = null; }
@@ -13,16 +13,13 @@ Object.assign(AvatarScene.prototype, {
 
     const W = this.W, H = this.H;
     const cards = this._filterAvatars();
-    const cols = 2, gap = 8, pad = 10;
-    const cardW = Math.floor((W - pad * 2 - gap) / cols);
-    const cardH = 110;
-    const areaTop = 104, areaBot = H - 8, viewH = areaBot - areaTop;
-    const rows = Math.ceil(cards.length / cols);
-    const totalH = rows * (cardH + gap) - gap;
+    const pad = 10, cardH = 130, gap = 8, cardW = W - pad * 2;
+    const areaTop = 104, viewH = H - areaTop - 6;
+    const totalH = cards.length * (cardH + gap) - gap;
     const maxScroll = Math.max(0, totalH - viewH);
 
     if (!cards.length) {
-      const e = txt(this, W / 2, areaTop + 40, 'Нет образов', 13, '#666').setOrigin(0.5);
+      const e = txt(this, W / 2, areaTop + 50, 'Нет образов', 14, '#666').setOrigin(0.5);
       this._layer.push(e); return;
     }
 
@@ -34,57 +31,75 @@ Object.assign(AvatarScene.prototype, {
     ctr.setMask(mGfx.createGeometryMask());
     this._mGfx = mGfx;
 
-    cards.forEach((av, i) => {
-      const col = i % cols, row = Math.floor(i / cols);
-      this._drawCard(ctr, pad + col * (cardW + gap), row * (cardH + gap), cardW, cardH, av);
-    });
-
+    cards.forEach((av, i) => this._drawBigCard(ctr, pad, i * (cardH + gap), cardW, cardH, av));
     this._setupScroll(areaTop, viewH, maxScroll, ctr);
   },
 
-  _drawCard(ctr, cx, cy, w, h, av) {
-    const rclr = _AV_RARITY_CLR[av.rarity] || _AV_RARITY_CLR.common;
+  _drawBigCard(ctr, cx, cy, w, h, av) {
+    const tier = _AV_TIER[av.rarity] || _AV_TIER.common;
     const isEq = av.equipped, isUn = av.unlocked;
 
+    // Card background
     const g = this.add.graphics();
-    g.fillStyle(rclr.bg, 0.95); g.fillRoundedRect(cx, cy, w, h, 10);
-    g.lineStyle(isEq ? 2 : 1.5, isEq ? 0x3cc864 : rclr.border, isEq ? 1 : 0.6);
-    g.strokeRoundedRect(cx, cy, w, h, 10);
+    g.fillStyle(tier.bg, 0.96); g.fillRoundedRect(cx, cy, w, h, 14);
+    g.lineStyle(isEq ? 2 : 1.5, isEq ? 0x3cc864 : tier.border, isEq ? 1 : 0.5);
+    g.strokeRoundedRect(cx, cy, w, h, 14);
     ctr.add(g); this._layer.push(g);
+
+    // Shine accent
+    const sg = this.add.graphics();
+    sg.fillStyle(tier.border, 0.04);
+    sg.fillRoundedRect(cx + w * 0.5, cy, w * 0.5, h * 0.6, { tr: 14, br: 0, tl: 0, bl: 0 });
+    ctr.add(sg); this._layer.push(sg);
 
     const addT = (x, y, s, sz, col, bold) => {
       const t = txt(this, x, y, s, sz, col, bold); ctr.add(t); this._layer.push(t); return t;
     };
 
-    addT(cx + 8, cy + 6, av.badge || '?', 18, '#ffffff');
+    // Badge + Name + Rarity
+    addT(cx + 12, cy + 8, av.badge || '?', 28, '#ffffff');
     const name = (av.name || av.id).replace(/^[^\s]+\s/, '');
-    addT(cx + 32, cy + 8, name.length > 14 ? name.slice(0, 13) + '…' : name, 10, rclr.text, true);
+    addT(cx + 48, cy + 10, name, 13, '#ffffff', true);
+    addT(cx + 48, cy + 27, tier.label, 9, tier.lc, true);
 
-    // Stats pills
+    // Description
+    addT(cx + 12, cy + 48, (av.description || '').slice(0, 45), 10, 'rgba(255,255,255,0.75)');
+
+    // Stat bars
     const stats = [
-      { l: `С${av.effective_strength || 0}`, c: '#ff8888', v: av.effective_strength },
-      { l: `Л${av.effective_endurance || 0}`, c: '#55ddff', v: av.effective_endurance },
-      { l: `И${av.effective_crit || 0}`, c: '#cc77ff', v: av.effective_crit },
-      { l: `В${av.effective_hp_flat || 0}`, c: '#55ff99', v: av.effective_hp_flat },
+      { l: 'СИЛА',  v: av.effective_strength || 0, c: 0xff6b6b, tc: '#ff8888' },
+      { l: 'ЛОВК',  v: av.effective_endurance || 0, c: 0x4ecdc4, tc: '#55ddff' },
+      { l: 'ИНТУ',  v: av.effective_crit || 0,      c: 0xb45aff, tc: '#cc77ff' },
+      { l: 'ВЫНОС', v: av.effective_hp_flat || 0,    c: 0x4ade80, tc: '#55ff99' },
     ];
-    const pw = Math.floor((w - 20) / 4) - 2;
+    const barW = Math.floor((w - 36) / 4) - 4;
+    const barY = cy + 65;
     stats.forEach((s, si) => {
-      const px = cx + 6 + si * (pw + 3), py = cy + 30;
-      const pg = this.add.graphics();
-      pg.fillStyle(s.v > 0 ? 0x222244 : 0x181828, 0.9);
-      pg.fillRoundedRect(px, py, pw, 16, 4);
-      ctr.add(pg); this._layer.push(pg);
-      addT(px + pw / 2, py + 8, s.l, 9, s.v > 0 ? s.c : '#555').setOrigin(0.5);
+      const bx = cx + 10 + si * (barW + 6);
+      addT(bx, barY, s.l, 8, 'rgba(255,255,255,0.55)', true);
+      // Track
+      const tg = this.add.graphics();
+      tg.fillStyle(0x000000, 0.3); tg.fillRoundedRect(bx, barY + 12, barW, 5, 3);
+      ctr.add(tg); this._layer.push(tg);
+      // Fill
+      const maxStat = 14;
+      const fillW = Math.max(2, Math.round(barW * Math.min(1, s.v / maxStat)));
+      const fg = this.add.graphics();
+      fg.fillStyle(s.c, 0.9); fg.fillRoundedRect(bx, barY + 12, fillW, 5, 3);
+      ctr.add(fg); this._layer.push(fg);
+      // Value
+      addT(bx, barY + 20, `+${s.v}`, 10, s.tc, true);
     });
 
-    addT(cx + 8, cy + 52, (av.description || '').slice(0, 30), 8, 'rgba(255,255,255,0.5)');
-
-    if (isEq) addT(cx + 8, cy + h - 26, '✓ Экипирован', 10, '#3cc864', true);
-    else if (isUn) addT(cx + 8, cy + h - 26, '🔓 Доступен', 10, '#7ab4ff', true);
-    else addT(cx + 8, cy + h - 26, '🔒 ' + this._priceText(av), 10, rclr.text, true);
-
-    const rLabels = { common: 'C', rare: 'R', epic: 'E', legendary: 'L' };
-    addT(cx + w - 16, cy + 8, rLabels[av.rarity] || '?', 9, rclr.text, true).setOrigin(0.5);
+    // Bottom: price or status
+    const pl = this._priceLabel(av);
+    if (isEq) {
+      addT(cx + 12, cy + h - 22, '✓ Экипирован', 11, '#3cc864', true);
+    } else if (isUn) {
+      addT(cx + 12, cy + h - 22, '🔓 Доступен — нажми чтобы надеть', 10, '#7ab4ff', true);
+    } else {
+      addT(cx + 12, cy + h - 22, '🔒 ' + pl.text, 11, pl.color, true);
+    }
 
     this._tapAreas.push({ x: cx, y: cy, w, h, avatar: av });
   },
@@ -108,9 +123,9 @@ Object.assign(AvatarScene.prototype, {
       if (!active) return; active = false;
       if (Math.abs(p.y - sy0) < 8) {
         const relY = p.y - areaTop + scrollY, relX = p.x;
-        for (const area of this._tapAreas) {
-          if (relX >= area.x && relX <= area.x + area.w && relY >= area.y && relY <= area.y + area.h) {
-            this._onAvatarTap(area.avatar); return;
+        for (const a of this._tapAreas) {
+          if (relX >= a.x && relX <= a.x + a.w && relY >= a.y && relY <= a.y + a.h) {
+            this._onAvatarTap(a.avatar); return;
           }
         }
       }
@@ -120,5 +135,4 @@ Object.assign(AvatarScene.prototype, {
       scrollY = clamp(scrollY + vel); vel *= 0.88; ctr.setY(areaTop - scrollY);
     }});
   },
-
 });

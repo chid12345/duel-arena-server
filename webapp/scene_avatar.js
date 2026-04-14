@@ -1,20 +1,20 @@
 /* ═══════════════════════════════════════════════════════════
-   AvatarScene — каталог образов с табами и скроллом
+   AvatarScene — «Витрина RPG»: крупные карточки + прогресс-бары
    ═══════════════════════════════════════════════════════════ */
 const _AV_TABS = [
   { key: 'all',     label: 'Все' },
   { key: 'mine',    label: 'Мои' },
-  { key: 'base',    label: '🆓' },
-  { key: 'gold',    label: '💰' },
-  { key: 'diamond', label: '💎' },
-  { key: 'premium', label: '⭐' },
+  { key: 'base',    label: '🆓 Free' },
+  { key: 'gold',    label: '💰 Gold' },
+  { key: 'diamond', label: '💎 Epic' },
+  { key: 'premium', label: '⭐ Legend' },
 ];
 
-const _AV_RARITY_CLR = {
-  common:    { bg: 0x22223a, border: 0x555566, text: '#aaaacc' },
-  rare:      { bg: 0x1a2844, border: 0x3366aa, text: '#7ab4ff' },
-  epic:      { bg: 0x2a1844, border: 0x7733bb, text: '#b45aff' },
-  legendary: { bg: 0x2a2210, border: 0xaa8822, text: '#ffc83c' },
+const _AV_TIER = {
+  common:    { bg: 0x1e1e3a, bg2: 0x2a2a50, border: 0x444466, label: 'COMMON',    lc: '#8888aa', grad: 0x44446622 },
+  rare:      { bg: 0x0f2040, bg2: 0x1a3868, border: 0x3377bb, label: 'RARE',      lc: '#7ab4ff', grad: 0x3377bb22 },
+  epic:      { bg: 0x200a3a, bg2: 0x3a1868, border: 0x8844cc, label: 'EPIC',      lc: '#b45aff', grad: 0x8844cc22 },
+  legendary: { bg: 0x2a1800, bg2: 0x4a3515, border: 0xcc8822, label: 'LEGENDARY', lc: '#ffc83c', grad: 0xcc882222 },
 };
 
 class AvatarScene extends Phaser.Scene {
@@ -24,22 +24,21 @@ class AvatarScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     this._tab = (data && data.tab) || 'all';
-    this._scrollY = 0;
     this._layer = [];
     this._tapAreas = [];
 
     _extraBg(this, W, H);
-    _extraHeader(this, W, '🎭', 'ОБРАЗЫ', 'Выбери стиль — бонусы к статам');
+    _extraHeader(this, W, '🏛️', 'ГАЛЕРЕЯ ОБРАЗОВ', 'Выбери свой путь воина');
     _extraBack(this);
 
-    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 13, '#888').setOrigin(0.5);
+    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#aaa').setOrigin(0.5);
     this._loadData();
   }
 
   async _loadData() {
     try {
       const j = await get('/api/avatars');
-      if (!j.ok) throw new Error(j.reason || 'error');
+      if (!j.ok) throw new Error(j.reason || 'err');
       this._avatars = j.avatars || [];
       this._equipped = j.equipped_avatar_id || 'base_neutral';
     } catch (e) {
@@ -48,55 +47,54 @@ class AvatarScene extends Phaser.Scene {
     }
     if (this._loading) { this._loading.destroy(); this._loading = null; }
     this._buildTabs();
-    this._renderGrid();
+    this._renderList();
   }
 
   _buildTabs() {
-    const W = this.W;
-    const tabW = Math.floor((W - 16) / _AV_TABS.length) - 4;
-    const ty = 72;
+    const W = this.W, ty = 72;
+    const tw = Math.floor((W - 12) / _AV_TABS.length) - 3;
     _AV_TABS.forEach((t, i) => {
-      const tx = 10 + i * (tabW + 4);
-      const active = this._tab === t.key;
+      const tx = 8 + i * (tw + 3), active = this._tab === t.key;
       const bg = this.add.graphics();
-      bg.fillStyle(active ? 0x3366aa : 0x1a1830, active ? 0.9 : 0.85);
-      bg.fillRoundedRect(tx, ty, tabW, 26, 8);
-      if (active) { bg.lineStyle(1.5, 0x7ab4ff, 1); bg.strokeRoundedRect(tx, ty, tabW, 26, 8); }
-      const lbl = txt(this, tx + tabW / 2, ty + 13, t.label, 10, active ? '#ffffff' : '#888', active);
-      lbl.setOrigin(0.5);
-      this.add.zone(tx + tabW / 2, ty + 13, tabW, 26).setInteractive({ useHandCursor: true })
+      if (active) {
+        bg.fillStyle(0x2a1040, 0.95); bg.fillRoundedRect(tx, ty, tw, 26, 8);
+        bg.lineStyle(1.5, 0x9955ee, 0.9); bg.strokeRoundedRect(tx, ty, tw, 26, 8);
+      } else {
+        bg.fillStyle(0x161430, 0.85); bg.fillRoundedRect(tx, ty, tw, 26, 8);
+      }
+      txt(this, tx + tw / 2, ty + 13, t.label, 9, active ? '#fff' : '#777', active).setOrigin(0.5);
+      this.add.zone(tx + tw / 2, ty + 13, tw, 26).setInteractive({ useHandCursor: true })
         .on('pointerup', () => {
           if (this._tab === t.key) return;
-          Sound.click();
-          this.scene.restart({ tab: t.key });
+          Sound.click(); this.scene.restart({ tab: t.key });
         });
     });
   }
 
   _filterAvatars() {
-    const tab = this._tab;
-    if (tab === 'all') return this._avatars;
-    if (tab === 'mine') return this._avatars.filter(a => a.unlocked);
-    return this._avatars.filter(a => a.tier === tab);
+    const t = this._tab;
+    if (t === 'all') return this._avatars;
+    if (t === 'mine') return this._avatars.filter(a => a.unlocked);
+    return this._avatars.filter(a => a.tier === t);
   }
 
-  _priceText(av) {
-    if (av.currency === 'free') return 'Бесплатно';
-    if (av.currency === 'gold') return `${av.price} 💰`;
-    if (av.currency === 'diamonds') return `${av.price} 💎`;
-    if (av.currency === 'stars') return `${av.price} ⭐ / $${av.usdt_price || '1'}`;
-    if (av.currency === 'subscription') return 'Premium';
-    if (av.currency === 'referral') return '5+ рефералов';
-    if (av.currency === 'usdt_stars') return `590 ⭐ / $11.99`;
-    return '';
+  _priceLabel(av) {
+    if (av.currency === 'free') return { text: 'Бесплатно', color: '#4ade80' };
+    if (av.currency === 'gold') return { text: `${av.price} 💰`, color: '#ffc83c' };
+    if (av.currency === 'diamonds') return { text: `${av.price} 💎`, color: '#b45aff' };
+    if (av.currency === 'stars') return { text: `${av.price} ⭐ / $${av.usdt_price||'1'}`, color: '#ffc83c' };
+    if (av.currency === 'subscription') return { text: 'Premium подписка', color: '#ff6b9d' };
+    if (av.currency === 'referral') return { text: '5+ рефералов', color: '#4ade80' };
+    if (av.currency === 'usdt_stars') return { text: '590 ⭐ / $11.99', color: '#ffd700' };
+    return { text: '', color: '#888' };
   }
 
   shutdown() {
     this._layer.forEach(o => { try { o.destroy(); } catch(_) {} });
-    this._layer = [];
-    if (this._ctr) { this._ctr.destroy(); }
-    if (this._mGfx) { this._mGfx.destroy(); }
-    if (this._scrZ) { this._scrZ.destroy(); }
+    if (this._ctr) this._ctr.destroy();
+    if (this._mGfx) this._mGfx.destroy();
+    if (this._scrZ) this._scrZ.destroy();
+    closeItemDetailPopup(this);
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 }
