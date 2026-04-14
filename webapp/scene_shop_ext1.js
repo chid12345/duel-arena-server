@@ -50,9 +50,9 @@ Object.assign(ShopScene.prototype, {
         { id: 'exchange_small',  icon: '💱', name: '5💎 → 350🪙',       price: 5,   currency: 'diamonds', desc: 'Обмен алмазы → золото' },
         { id: 'exchange_medium', icon: '💱', name: '15💎 → 1100🪙',     price: 15,  currency: 'diamonds', desc: 'Лучший курс' },
         { id: 'exchange_large',  icon: '💱', name: '50💎 → 4000🪙',     price: 50,  currency: 'diamonds', desc: 'Максимальный курс' },
-        { id: 'box_common',      icon: '📦', name: 'Обычный ящик',       price: 150, currency: 'gold',     desc: '2–4 свитка, 5% алмазный' },
-        { id: 'box_rare',        icon: '🟦', name: 'Редкий ящик',        price: 50,  currency: 'diamonds', desc: '3–6 алмазных, 3% Premium' },
-        { id: 'box_rare_c',      icon: '🟪', name: 'Редкий ящик+',       price: 80,  currency: 'diamonds', desc: '2 гарант + бонусы, 5% джекпот' },
+        { id: 'box_common',      icon: '📦', name: 'Обычный ящик',       price: 150, currency: 'gold',     desc: '2–4 свитка · шанс на алмазный' },
+        { id: 'box_rare',        icon: '🟦', name: 'Редкий ящик',        price: 50,  currency: 'diamonds', desc: '3–6 алмазных свитков' },
+        { id: 'box_rare_c',      icon: '🟪', name: 'Редкий ящик+',       price: 80,  currency: 'diamonds', desc: '2+ алмазных · шанс 300💎 и Premium' },
       ];
     }
     return [];

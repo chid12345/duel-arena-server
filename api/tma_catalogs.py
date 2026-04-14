@@ -53,11 +53,11 @@ SHOP_CATALOG = {
     "exchange_large":  {"name": "50💎 → 4000🪙",        "price": 50,  "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 4000 золота"},
 
     # ── Лут-боксы ─────────────────────────────────────────────
-    "box_common":      {"name": "Обычный ящик",         "price": 150, "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "2–4 свитка, 5% алмазный, 3% бонус 💎", "inventory": True},
-    "box_rare":        {"name": "Редкий ящик",          "price": 50,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков, 3% Premium", "inventory": True},
-    "box_rare_c":      {"name": "Редкий ящик+",         "price": 80,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2 гарант + до 4 бонус, 5% джекпот 300💎", "inventory": True},
-    "box_epic_e2":     {"name": "Эпический: Удача",     "price": 0,   "currency": "diamonds", "icon": "🔮", "tab": "boxes", "desc": "USDT-свиток + 2–4 алмазных, 20% Титан", "inventory": True},
-    "box_epic_e3":     {"name": "Эпический: Набор воина","price": 0,  "currency": "diamonds", "icon": "⚔️", "tab": "boxes", "desc": "USDT-свиток + XP×2 + 2 свитка, 10% Титан", "inventory": True},
+    "box_common":      {"name": "Обычный ящик",         "price": 150, "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "2–4 свитка · шанс на алмазный", "inventory": True},
+    "box_rare":        {"name": "Редкий ящик",          "price": 50,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков", "inventory": True},
+    "box_rare_c":      {"name": "Редкий ящик+",         "price": 80,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2+ алмазных · шанс 300💎 и Premium", "inventory": True},
+    "box_epic_e2":     {"name": "Эпический: Удача",     "price": 0,   "currency": "diamonds", "icon": "🔮", "tab": "boxes", "desc": "USDT-свиток + алмазные · шанс Титана", "inventory": True},
+    "box_epic_e3":     {"name": "Эпический: Набор воина","price": 0,  "currency": "diamonds", "icon": "⚔️", "tab": "boxes", "desc": "USDT-свиток + XP×2 + свитки", "inventory": True},
 
     # ── USDT-свитки (только для попапов/инвентаря, не в обычном магазине) ───
     "scroll_str_12":   {"name": "Эликсир силы +12",      "price": 0, "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +12, 5 боёв",         "inventory": True},

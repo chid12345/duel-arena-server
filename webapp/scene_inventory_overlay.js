@@ -37,11 +37,11 @@
     scroll_all_12:  { icon:'✨', name:'Все пассивки +12',      desc:'Сила, Ловк, Инт, Вын +12 · на 5 боёв', tab:'special' },
     scroll_titan:   { icon:'🏔️', name:'Свиток Титана',        desc:'Все статы +15 · на 3 боя', tab:'special' },
     // ── Ящики ──
-    box_common:     { icon:'📦', name:'Обычный ящик',          desc:'2–4 свитка, 5% алмазный', tab:'special' },
-    box_rare:       { icon:'🟦', name:'Редкий ящик',           desc:'3–6 алмазных свитков, 3% Premium', tab:'special' },
-    box_rare_c:     { icon:'🟪', name:'Редкий ящик+',          desc:'2 гарант + бонусы, 5% джекпот 300💎', tab:'special' },
-    box_epic_e2:    { icon:'🔮', name:'Эпический: Удача',      desc:'USDT-свиток + 2–4 алмазных, 20% Титан', tab:'special' },
-    box_epic_e3:    { icon:'⚔️', name:'Эпический: Набор воина',desc:'USDT-свиток + XP×2 + 2 свитка, 10% Титан', tab:'special' },
+    box_common:     { icon:'📦', name:'Обычный ящик',          desc:'2–4 свитка · шанс на алмазный', tab:'special' },
+    box_rare:       { icon:'🟦', name:'Редкий ящик',           desc:'3–6 алмазных свитков', tab:'special' },
+    box_rare_c:     { icon:'🟪', name:'Редкий ящик+',          desc:'2+ алмазных · шанс 300💎 и Premium', tab:'special' },
+    box_epic_e2:    { icon:'🔮', name:'Эпический: Удача',      desc:'USDT-свиток + алмазные · шанс Титана', tab:'special' },
+    box_epic_e3:    { icon:'⚔️', name:'Эпический: Набор воина',desc:'USDT-свиток + XP×2 + свитки', tab:'special' },
     // ── Эликсиры ──
     xp_boost_5:    { icon:'⚡', name:'XP Буст ×1.5',          desc:'Опыт ×1.5 · на 5 боёв', tab:'elixirs' },
     xp_boost_20:   { icon:'⚡', name:'XP Буст ×1.5',          desc:'Опыт ×1.5 · на 20 боёв', tab:'elixirs' },
