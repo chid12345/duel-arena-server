@@ -63,24 +63,31 @@ def attach_avatar_premium(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
     @router.post("/api/avatars/premium/stars_confirm")
     async def prem_stars_confirm(body: AvatarBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        aid = body.avatar_id.strip()
-        if aid not in _PREM_MAP:
-            return {"ok": False, "reason": "Образ не найден"}
-        unlock = db.unlock_avatar(uid, aid, source="stars")
-        if unlock.get("ok") and not unlock.get("already_unlocked"):
-            db.track_purchase(uid, aid, "stars", int(PREMIUM_AVATAR_STARS))
-        _cache_invalidate(uid)
-        state = db.get_player_avatar_state(uid)
-        player = db.get_or_create_player(uid, "")
-        return {
-            "ok": bool(unlock.get("ok")),
-            "already_unlocked": bool(unlock.get("already_unlocked")),
-            "avatar_id": aid,
-            "avatars": state.get("avatars", []),
-            "player": _player_api(dict(player)),
-        }
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            aid = body.avatar_id.strip()
+            logger.info("stars_confirm uid=%s avatar=%s", uid, aid)
+            if aid not in _PREM_MAP:
+                logger.warning("stars_confirm: avatar %s not in PREM_MAP", aid)
+                return {"ok": False, "reason": "Образ не найден"}
+            unlock = db.unlock_avatar(uid, aid, source="stars")
+            logger.info("stars_confirm unlock result uid=%s avatar=%s: %s", uid, aid, unlock)
+            if unlock.get("ok") and not unlock.get("already_unlocked"):
+                db.track_purchase(uid, aid, "stars", int(PREMIUM_AVATAR_STARS))
+            _cache_invalidate(uid)
+            state = db.get_player_avatar_state(uid)
+            player = db.get_or_create_player(uid, "")
+            return {
+                "ok": bool(unlock.get("ok")),
+                "already_unlocked": bool(unlock.get("already_unlocked")),
+                "avatar_id": aid,
+                "avatars": state.get("avatars", []),
+                "player": _player_api(dict(player)),
+            }
+        except Exception as e:
+            logger.error("stars_confirm FAILED uid=? avatar=%s: %s", body.avatar_id, e, exc_info=True)
+            return {"ok": False, "reason": f"internal_error: {str(e)[:100]}"}
 
     @router.post("/api/avatars/premium/crypto_invoice")
     async def prem_crypto_invoice(body: AvatarBody):

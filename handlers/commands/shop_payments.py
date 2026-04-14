@@ -79,14 +79,19 @@ class BotHandlersShopPayments:
 
         if payload.startswith("avatar_"):
             avatar_id = payload[len("avatar_"):]
-            unlock = db.unlock_avatar(user.id, avatar_id, source="stars")
-            if unlock.get("ok"):
-                db.track_purchase(user.id, avatar_id, "stars", stars)
-                if unlock.get("already_unlocked"):
-                    msg = "✅ Оплата подтверждена! Этот образ уже есть у вас. ⚔️ Duel Arena"
+            try:
+                unlock = db.unlock_avatar(user.id, avatar_id, source="stars")
+                if unlock.get("ok"):
+                    db.track_purchase(user.id, avatar_id, "stars", stars)
+                    if unlock.get("already_unlocked"):
+                        msg = "✅ Оплата подтверждена! Этот образ уже есть у вас. ⚔️ Duel Arena"
+                    else:
+                        msg = "✅ <b>Образ получен!</b> Откройте «Аватары» в игре и наденьте его. ⚔️ Duel Arena"
                 else:
-                    msg = "✅ <b>Образ получен!</b> Откройте «Аватары» в игре и наденьте его. ⚔️ Duel Arena"
-            else:
+                    msg = "✅ Оплата получена! Образ будет начислен. Если не появился — напишите в поддержку."
+            except Exception as _e:
+                import logging as _log
+                _log.getLogger(__name__).error("avatar unlock failed uid=%s avatar=%s: %s", user.id, avatar_id, _e, exc_info=True)
                 msg = "✅ Оплата получена! Образ будет начислен. Если не появился — напишите в поддержку."
             await tg_api_call(update.message.reply_text, msg, parse_mode="HTML")
             return

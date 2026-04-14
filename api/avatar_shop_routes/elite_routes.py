@@ -63,21 +63,27 @@ def attach_avatar_elite(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
     @router.post("/api/avatars/elite/stars_confirm")
     async def elite_avatar_stars_confirm(body: EliteAvatarBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        unlock = db.unlock_avatar(uid, ELITE_AVATAR_ID, source="stars")
-        if unlock.get("ok") and not unlock.get("already_unlocked"):
-            db.track_purchase(uid, ELITE_AVATAR_ID, "stars", int(ELITE_AVATAR_STARS))
-        _cache_invalidate(uid)
-        state = db.get_player_avatar_state(uid)
-        player = db.get_or_create_player(uid, "")
-        return {
-            "ok": bool(unlock.get("ok")),
-            "already_unlocked": bool(unlock.get("already_unlocked")),
-            "avatar_id": ELITE_AVATAR_ID,
-            "avatars": state.get("avatars", []),
-            "player": _player_api(dict(player)),
-        }
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            logger.info("elite stars_confirm uid=%s avatar=%s", uid, ELITE_AVATAR_ID)
+            unlock = db.unlock_avatar(uid, ELITE_AVATAR_ID, source="stars")
+            logger.info("elite stars_confirm unlock uid=%s: %s", uid, unlock)
+            if unlock.get("ok") and not unlock.get("already_unlocked"):
+                db.track_purchase(uid, ELITE_AVATAR_ID, "stars", int(ELITE_AVATAR_STARS))
+            _cache_invalidate(uid)
+            state = db.get_player_avatar_state(uid)
+            player = db.get_or_create_player(uid, "")
+            return {
+                "ok": bool(unlock.get("ok")),
+                "already_unlocked": bool(unlock.get("already_unlocked")),
+                "avatar_id": ELITE_AVATAR_ID,
+                "avatars": state.get("avatars", []),
+                "player": _player_api(dict(player)),
+            }
+        except Exception as e:
+            logger.error("elite stars_confirm FAILED: %s", e, exc_info=True)
+            return {"ok": False, "reason": f"internal_error: {str(e)[:100]}"}
 
     @router.post("/api/avatars/elite/crypto_invoice")
     async def elite_avatar_crypto_invoice(body: EliteAvatarBody):

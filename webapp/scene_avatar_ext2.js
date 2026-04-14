@@ -190,19 +190,30 @@ Object.assign(AvatarScene.prototype, {
   async _doBuyStars(av) {
     const isElite = av.currency === 'usdt_stars';
     const url = isElite ? '/api/avatars/elite/stars_invoice' : '/api/avatars/premium/stars_invoice';
+    const cUrl = isElite ? '/api/avatars/elite/stars_confirm' : '/api/avatars/premium/stars_confirm';
     try {
       const j = await post(url, { avatar_id: av.id });
       if (j.ok && j.invoice_url) {
         tg?.openInvoice?.(j.invoice_url, async (status) => {
-          if (status === 'paid') {
-            try {
-              const cUrl = isElite ? '/api/avatars/elite/stars_confirm' : '/api/avatars/premium/stars_confirm';
-              await post(cUrl, { avatar_id: av.id });
-            } catch (_) { /* fallback: бот-хендлер уже разблокировал */ }
+          if (status === 'paid' || status === 'pending') {
+            let confirmed = false;
+            if (status === 'paid') {
+              try {
+                const r = await post(cUrl, { avatar_id: av.id });
+                if (r.ok && r.avatars && r.avatars.length) {
+                  // Применяем ответ сервера напрямую — нет лишнего GET запроса
+                  this._avatars = r.avatars;
+                  if (r.player) State.player = r.player;
+                  confirmed = true;
+                  closeItemDetailPopup(this);
+                  tg?.HapticFeedback?.notificationOccurred('success');
+                  this._renderList();
+                  return;
+                }
+              } catch (_) {}
+            }
+            // fallback: полный рестарт (бот-хендлер должен был разблокировать)
             tg?.HapticFeedback?.notificationOccurred('success');
-            this.scene.restart({ tab: this._tab });
-          } else if (status === 'pending') {
-            // Оплата обрабатывается — перезагружаем для актуального состояния
             this.scene.restart({ tab: this._tab });
           }
         });
