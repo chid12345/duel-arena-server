@@ -9,7 +9,8 @@ class SocialClanMixin:
     """Создание, вступление, поиск, чат клана."""
 
     def create_clan(self, leader_id: int, name: str, tag: str) -> Dict[str, Any]:
-        tag = tag.upper()[:4]
+        name = " ".join((name or "").split())
+        tag = (tag or "").strip().upper()[:4]
         if len(name) < 3 or len(name) > 20:
             return {"ok": False, "reason": "Имя клана: 3–20 символов"}
         if len(tag) < 2 or len(tag) > 4:
@@ -26,6 +27,10 @@ class SocialClanMixin:
         if not gold_row or gold_row["gold"] < self.CLAN_CREATE_COST_GOLD:
             conn.close()
             return {"ok": False, "reason": f"Нужно {self.CLAN_CREATE_COST_GOLD} золота"}
+        cursor.execute("SELECT id FROM clans WHERE LOWER(name) = LOWER(?) OR UPPER(tag) = ?", (name, tag))
+        if cursor.fetchone():
+            conn.close()
+            return {"ok": False, "reason": "Клан с таким именем или тегом уже существует"}
         try:
             if self._pg:
                 cursor.execute(
@@ -47,9 +52,12 @@ class SocialClanMixin:
             conn.commit()
             self.track_purchase(leader_id, "clan_create", "gold", self.CLAN_CREATE_COST_GOLD)
             return {"ok": True, "clan_id": clan_id, "name": name, "tag": tag}
-        except Exception:
+        except Exception as exc:
             conn.rollback()
-            return {"ok": False, "reason": "Клан с таким именем или тегом уже существует"}
+            err = str(exc).lower()
+            if "unique" in err or "duplicate key" in err:
+                return {"ok": False, "reason": "Клан с таким именем или тегом уже существует"}
+            return {"ok": False, "reason": "Не удалось создать клан. Попробуйте еще раз"}
         finally:
             conn.close()
 

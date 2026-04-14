@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.23"
-VERSION_LABEL = "v1.6.23 — fix: unlock_avatar изолирован от PostgreSQL-abort в _ensure_avatar_rows"
+VERSION = "1.6.24"
+VERSION_LABEL = "v1.6.24 — fix: корректная причина ошибки при создании клана"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "4.57"
+GAME_VERSION = "4.58"
