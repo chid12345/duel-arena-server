@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, Callable
 
 from fastapi import FastAPI
 
 from api.tma_models import InitDataHeader
+
+log = logging.getLogger(__name__)
 
 
 def register_tma_player_route(
@@ -39,6 +42,10 @@ def register_tma_player_route(
         usdt_passive = db.get_equipped_usdt_passive(uid)
 
         cached = _cache_get(uid)
+        # Если бонус аватара не применён — сбросить кэш, чтобы миграция отработала
+        if cached is not None and not int(cached.get("avatar_bonus_applied", 0) or 0):
+            _cache_invalidate(uid)
+            cached = None
         if cached is not None:
             # Бафы кешируем отдельно — 1 DB-запрос на 30 сек вместо каждого вызова
             cb = _buffs_cache_get(uid)
@@ -58,8 +65,8 @@ def register_tma_player_route(
                 db.ensure_avatar_bonus_applied(uid)
                 _cache_invalidate(uid)
                 player = db.get_or_create_player(uid, username)
-            except Exception:
-                pass
+            except Exception as exc:
+                log.warning("avatar bonus apply failed uid=%s: %s", uid, exc)
 
         inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
         regen = db.apply_hp_regen_from_player(player, inv)
