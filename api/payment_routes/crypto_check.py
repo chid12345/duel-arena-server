@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
     db = ctx["db"]
     manager = ctx["manager"]
+    _cache_invalidate = ctx["_cache_invalidate"]
     get_user_from_init_data = ctx["get_user_from_init_data"]
     _player_api = ctx["_player_api"]
     _send_tg_message = ctx["_send_tg_message"]
@@ -46,6 +47,17 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 return {"ok": True, "status": status, "paid": False}
 
             custom_payload = inv.get("payload", "")
+            payload_uid = None
+            if custom_payload.startswith("uid:"):
+                parts = custom_payload.split(":")
+                if len(parts) > 1:
+                    try:
+                        payload_uid = int(parts[1])
+                    except Exception:
+                        payload_uid = None
+            if payload_uid is not None and payload_uid != uid:
+                logger.warning("crypto_check invoice %s payload uid mismatch payload=%s init=%s", invoice_id, payload_uid, uid)
+                return {"ok": False, "reason": "invoice_user_mismatch"}
             is_premium = ":premium:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
@@ -71,7 +83,13 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await _send_tg_message(owner_uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
                     return {"ok": True, "paid": True, "scroll_received": True, "scroll_id": usdt_scroll_id}
                 if avatar_id:
-                    db.unlock_avatar(owner_uid, avatar_id, source="usdt")
+                    unlock = db.unlock_avatar(owner_uid, avatar_id, source="usdt")
+                    if not unlock.get("ok"):
+                        logger.error("crypto_check avatar unlock failed uid=%s invoice=%s avatar=%s reason=%s", owner_uid, invoice_id, avatar_id, unlock.get("reason"))
+                        return {"ok": False, "reason": f"unlock_failed:{unlock.get('reason', 'unknown')}"}
+                    if not unlock.get("already_unlocked"):
+                        db.track_purchase(owner_uid, avatar_id, "usdt", 0)
+                    _cache_invalidate(owner_uid)
                     await manager.send(owner_uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
                     await _send_tg_message(owner_uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
                     fresh = db.get_or_create_player(owner_uid, "")
@@ -98,6 +116,22 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 await _send_tg_message(owner_uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
                 return {"ok": True, "paid": True, "diamonds": diamonds}
             if result.get("reason") == "already_paid":
+                if avatar_id:
+                    unlock = db.unlock_avatar(uid, avatar_id, source="usdt")
+                    if unlock.get("ok"):
+                        if not unlock.get("already_unlocked"):
+                            db.track_purchase(uid, avatar_id, "usdt", 0)
+                        _cache_invalidate(uid)
+                        fresh = db.get_or_create_player(uid, "")
+                        return {
+                            "ok": True,
+                            "paid": True,
+                            "already_confirmed": True,
+                            "avatar_unlocked": True,
+                            "avatar_id": avatar_id,
+                            "player": _player_api(dict(fresh)),
+                        }
+                    logger.error("crypto_check already_paid unlock retry failed uid=%s invoice=%s avatar=%s reason=%s", uid, invoice_id, avatar_id, unlock.get("reason"))
                 return {
                     "ok": True, "paid": True, "already_confirmed": True,
                     "profile_reset": is_full_reset,

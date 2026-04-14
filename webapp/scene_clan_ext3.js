@@ -47,6 +47,9 @@ Object.assign(ClanScene.prototype, {
 
   _showLeaderActionConfirm(opts) {
     const { title, subtitle, target, note, confirmText, confirmColor, confirmStroke, onConfirm, W, H } = opts;
+    if (typeof this._leaderActionDestroy === 'function') {
+      this._leaderActionDestroy();
+    }
     const ov = this.add.graphics().setDepth(90);
     ov.fillStyle(0x000000, 0.6); ov.fillRect(0, 0, W, H);
     const pw = W - 48, ph = 170, px = 24, py = Math.round((H - ph) / 2);
@@ -54,15 +57,17 @@ Object.assign(ClanScene.prototype, {
     const bg = this.add.graphics().setDepth(D);
     bg.fillStyle(0x1e3060, 1); bg.fillRoundedRect(px, py, pw, ph, 14);
     bg.lineStyle(2, 0xffc83c, 0.9); bg.strokeRoundedRect(px, py, pw, ph, 14);
-    txt(this, px + pw / 2, py + 22, title, 14, '#ffc83c', true).setOrigin(0.5).setDepth(D);
-    txt(this, px + pw / 2, py + 46, subtitle, 11, '#a8c4ff').setOrigin(0.5).setDepth(D);
-    txt(this, px + pw / 2, py + 68, target, 13, '#f0f0fa', true).setOrigin(0.5).setDepth(D);
-    txt(this, px + pw / 2, py + 90, note, 10, '#cccccc').setOrigin(0.5).setDepth(D);
+    const titleT = txt(this, px + pw / 2, py + 22, title, 14, '#ffc83c', true).setOrigin(0.5).setDepth(D);
+    const subtitleT = txt(this, px + pw / 2, py + 46, subtitle, 11, '#a8c4ff').setOrigin(0.5).setDepth(D);
+    const targetT = txt(this, px + pw / 2, py + 68, target, 13, '#f0f0fa', true).setOrigin(0.5).setDepth(D);
+    const noteT = txt(this, px + pw / 2, py + 90, note, 10, '#cccccc').setOrigin(0.5).setDepth(D);
 
     const destroy = () => {
-      [ov, bg, ...this._leaderActionObjs].forEach(o => { try { o.destroy(); } catch(_) {} });
+      (this._leaderActionObjs || []).forEach(o => { try { o.destroy(); } catch(_) {} });
       this._leaderActionObjs = [];
+      this._leaderActionDestroy = null;
     };
+    this._leaderActionDestroy = destroy;
 
     const cx = px + 8, cw = (pw - 24) / 2, ch = 38, cy = py + 118;
     const cBg = this.add.graphics().setDepth(D);
@@ -81,7 +86,10 @@ Object.assign(ClanScene.prototype, {
 
     const bgZ = this.add.zone(0, 0, W, H).setOrigin(0).setDepth(89).setInteractive()
       .on('pointerup', () => destroy());
-    this._leaderActionObjs = [cBg, cT, cZ, oBg, oT, oZ, bgZ];
+    this._leaderActionObjs = [
+      ov, bg, titleT, subtitleT, targetT, noteT,
+      cBg, cT, cZ, oBg, oT, oZ, bgZ,
+    ];
   },
 
   async _transferLeader(newLeaderId) {

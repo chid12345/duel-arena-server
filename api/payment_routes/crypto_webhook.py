@@ -81,11 +81,22 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
                 await _send_tg_message(uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
             elif avatar_id:
-                db.unlock_avatar(uid, avatar_id, source="usdt")
-                db.track_purchase(uid, avatar_id, "usdt", 0)
-                _cache_invalidate(uid)
-                await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
-                await _send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
+                unlock = db.unlock_avatar(uid, avatar_id, source="usdt")
+                if unlock.get("ok"):
+                    if not unlock.get("already_unlocked"):
+                        db.track_purchase(uid, avatar_id, "usdt", 0)
+                    _cache_invalidate(uid)
+                    await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
+                    await _send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
+                else:
+                    logger.error(
+                        "CRITICAL: avatar unlock failed after paid invoice=%s uid=%s avatar=%s reason=%s",
+                        invoice_id,
+                        uid,
+                        avatar_id,
+                        unlock.get("reason"),
+                    )
+                    await _send_tg_message(uid, "⚠️ Оплата получена, но выдача образа задержалась. Напишите в поддержку и укажите ID платежа.")
             elif is_premium:
                 prem = db.activate_premium(uid, days=21)
                 bonus_d = prem.get("bonus_diamonds", 0)

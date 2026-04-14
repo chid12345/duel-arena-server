@@ -48,6 +48,9 @@ class AvatarScene extends Phaser.Scene {
     if (this._loading) { this._loading.destroy(); this._loading = null; }
     this._buildTabs();
     this._renderList();
+    if (typeof this._resumePendingAvatarCryptoPoll === 'function') {
+      this._resumePendingAvatarCryptoPoll();
+    }
   }
 
   _buildTabs() {
