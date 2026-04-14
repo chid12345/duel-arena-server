@@ -70,8 +70,9 @@
 
     // Контейнер + маска для скролла
     const ctr = this.add.container(0, areaTop).setDepth(122);
-    const mGfx = this.add.graphics().setDepth(121);
+    const mGfx = this.add.graphics();
     mGfx.fillStyle(0xffffff,1); mGfx.fillRect(8, areaTop, W-16, viewH);
+    mGfx.setVisible(false);
     ctr.setMask(mGfx.createGeometryMask());
     layer.push(mGfx);
 
