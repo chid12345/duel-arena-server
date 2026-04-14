@@ -38,6 +38,7 @@ class AvatarsStateMixin:
         cursor = conn.cursor()
         try:
             self._ensure_avatar_schema(cursor)
+            self._ensure_elite_builds_schema(cursor)  # обеспечить таблицу даже если первое соединение упало
             cursor.execute("SELECT level, equipped_avatar_id FROM players WHERE user_id = ?", (user_id,))
             player = cursor.fetchone()
             if not player:

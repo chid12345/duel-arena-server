@@ -167,8 +167,13 @@ Object.assign(AvatarScene.prototype, {
   async _doBuyGold(av) {
     try {
       const j = await post('/api/avatars/buy', { avatar_id: av.id });
-      if (j.ok) { if (j.player) State.player = j.player; tg?.HapticFeedback?.notificationOccurred('success'); this.scene.restart({ tab: this._tab }); }
-      else { tg?.showAlert?.(j.reason || 'Ошибка'); }
+      if (j.ok) {
+        if (j.player) State.player = j.player;
+        if (j.avatars) { State.avatarsCache = { avatars: j.avatars, equipped: this._equipped, at: Date.now() }; }
+        else { State.avatarsCache = null; }
+        tg?.HapticFeedback?.notificationOccurred('success');
+        this.scene.restart({ tab: this._tab });
+      } else { tg?.showAlert?.(j.reason || 'Ошибка'); }
     } catch (_) { tg?.showAlert?.('Ошибка сети'); }
   },
 
@@ -177,6 +182,8 @@ Object.assign(AvatarScene.prototype, {
       const j = await post('/api/avatars/equip', { avatar_id: av.id });
       if (j.ok) {
         if (j.player) State.player = j.player;
+        if (j.avatars) { State.avatarsCache = { avatars: j.avatars, equipped: av.id, at: Date.now() }; }
+        else { State.avatarsCache = null; }
         State.avatarId = av.id;
         try { localStorage.setItem('da_avatar', av.id); } catch(_) {}
         const menu = this.scene.get('Menu');

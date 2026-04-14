@@ -24,17 +24,14 @@ class AvatarsSchemaMixin:
         )
         is_pg = bool(getattr(self, "_pg", False))
         if is_pg:
+            # IF NOT EXISTS — атомарно, нет race condition при конкурентных запросах
             for col_name, col_def in [
                 ("equipped_avatar_id", "TEXT"),
                 ("avatar_bonus_applied", "INTEGER DEFAULT 0"),
             ]:
                 cursor.execute(
-                    "SELECT 1 FROM information_schema.columns"
-                    " WHERE table_name='players' AND column_name=%s LIMIT 1",
-                    (col_name,),
+                    f"ALTER TABLE players ADD COLUMN IF NOT EXISTS {col_name} {col_def}"
                 )
-                if not bool(cursor.fetchone()):
-                    cursor.execute(f"ALTER TABLE players ADD COLUMN {col_name} {col_def}")
         else:
             cursor.execute("PRAGMA table_info(players)")
             cols = {r[1] for r in cursor.fetchall()}

@@ -36,14 +36,32 @@ class AvatarScene extends Phaser.Scene {
   }
 
   async _loadData() {
-    try {
-      const j = await get('/api/avatars');
-      if (!j.ok) throw new Error(j.reason || 'err');
-      this._avatars = j.avatars || [];
-      this._equipped = j.equipped_avatar_id || 'base_neutral';
-    } catch (e) {
-      this._avatars = [];
-      this._equipped = 'base_neutral';
+    const _AVATAR_TTL = 60000; // кэш 60с — переключение вкладок не делает лишних запросов
+    const cached = State.avatarsCache
+      && Array.isArray(State.avatarsCache.avatars)
+      && State.avatarsCache.avatars.length > 0
+      && (Date.now() - (State.avatarsCache.at || 0)) < _AVATAR_TTL;
+
+    if (cached) {
+      this._avatars = State.avatarsCache.avatars;
+      this._equipped = State.avatarsCache.equipped || 'base_neutral';
+    } else {
+      try {
+        const j = await get('/api/avatars');
+        if (!j.ok) throw new Error(j.reason || 'err');
+        this._avatars = j.avatars || [];
+        this._equipped = j.equipped_avatar_id || 'base_neutral';
+        State.avatarsCache = { avatars: this._avatars, equipped: this._equipped, at: Date.now() };
+      } catch (e) {
+        // Если есть устаревший кэш — используем его вместо "Нет образов"
+        if (State.avatarsCache && Array.isArray(State.avatarsCache.avatars)) {
+          this._avatars = State.avatarsCache.avatars;
+          this._equipped = State.avatarsCache.equipped || 'base_neutral';
+        } else {
+          this._avatars = [];
+          this._equipped = 'base_neutral';
+        }
+      }
     }
     if (this._loading) { this._loading.destroy(); this._loading = null; }
     this._buildTabs();
