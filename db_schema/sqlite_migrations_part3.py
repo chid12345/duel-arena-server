@@ -135,4 +135,8 @@ MIGRATIONS_PART3 = [
         # Зачистка осиротевших строк с charges=0 (могли остаться из-за гонки fire-and-forget)
         "DELETE FROM player_buffs WHERE charges IS NOT NULL AND charges <= 0",
     ]),
+    ("2026_04_24_001_warrior_type", [
+        # Тип воина для профиля и боёв: tank/agile/crit/neutral/default
+        "ALTER TABLE players ADD COLUMN warrior_type TEXT DEFAULT 'default'",
+    ]),
 ]

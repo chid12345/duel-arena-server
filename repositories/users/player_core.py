@@ -71,3 +71,14 @@ class UsersPlayerCoreMixin:
         )
         conn.commit()
         conn.close()
+
+    def update_warrior_type(self, user_id: int, warrior_type: str) -> None:
+        """Сохранить выбранный тип воина игрока."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE players SET warrior_type = ?, last_active = CURRENT_TIMESTAMP WHERE user_id = ?",
+            (warrior_type, user_id),
+        )
+        conn.commit()
+        conn.close()

@@ -18,6 +18,7 @@ from fastapi.staticfiles import StaticFiles
 from api.tma_smart_cache import smart_cache_middleware
 from api.tma_wire_features import wire_tma_feature_routes
 from api.tma_wire_inline import wire_tma_inline_routes
+from api.warrior_type_route import register_warrior_type_route
 
 from version import GAME_VERSION
 
@@ -56,6 +57,7 @@ app.middleware("http")(smart_cache_middleware)
 
 wire_tma_inline_routes(app)
 wire_tma_feature_routes(app, app_build_version=APP_BUILD_VERSION)
+register_warrior_type_route(app)
 
 webapp_dir = os.path.join(os.path.dirname(__file__), "webapp")
 

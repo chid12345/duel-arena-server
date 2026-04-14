@@ -102,8 +102,14 @@ Object.assign(MenuScene.prototype, {
     const czY = wrY + wrH + 8, czH = 264;
     const charCY = czY + czH * 0.44;
     const glowG = ca(mkG()); glowG.fillStyle(C.blue, 0.06); glowG.fillEllipse(W / 2, charCY + 62, 160, 28);
-    const warrior = ca(mkI(W / 2, charCY, 'warrior_blue').setScale(1.9).setOrigin(0.5));
+    const _wKey = getWarriorKey(p.warrior_type);
+    const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(1.9).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 9, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Подсказка "нажми для смены"
+    ca(mkT(W / 2, charCY + 72, '✏️  сменить воина', 9, 'rgba(255,255,255,0.28)').setOrigin(0.5));
+    // Зона клика на воина
+    const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
+    wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
     // HP / XP bars
     const hpW = W - PAD * 2, hpH = 13, hpX = PAD, hpY = czY + czH - 28;

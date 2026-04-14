@@ -190,5 +190,6 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
                 )
             )
         ),
+        "warrior_type": (player.get("warrior_type") or "default"),
         **_premium_fields(player),
     }

@@ -43,7 +43,8 @@ Object.assign(BattleScene.prototype, {
       }
     });
 
-    this.warrior1 = this.add.image(W * 0.28, H * 0.35, 'warrior_blue').setScale(1.5).setFlipX(false);
+    const _p1Key = getWarriorKey(State.player?.warrior_type);
+    this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(1.5).setFlipX(false);
     this.warrior2 = this.add.image(W * 0.72, H * 0.35, 'warrior_red').setScale(1.5).setFlipX(true);
 
     // Premium/Elite/Sub — золотая вспышка при входе в бой

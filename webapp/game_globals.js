@@ -64,6 +64,15 @@ const State = {
   avatarId: (() => { try { return parseInt(localStorage.getItem('da_avatar') || '3', 10); } catch(_) { return 3; } })(),
 };
 
+/* Ключ текстуры воина по типу */
+function getWarriorKey(type) {
+  if (type === 'tank')    return 'warrior_tank';
+  if (type === 'agile')   return 'warrior_agile';
+  if (type === 'crit')    return 'warrior_crit';
+  if (type === 'neutral') return 'warrior_neutral';
+  return 'warrior_blue';
+}
+
 function post(path, body = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);

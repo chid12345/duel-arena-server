@@ -22,6 +22,7 @@ class BootScene extends Phaser.Scene {
     this._warrior('warrior_red', '#ff4455', '#cc2233');
     this._warriorFace('warrior_blue_face', '#4488ff', '#2255cc');
     this._warriorFace('warrior_red_face',  '#ff4455', '#cc2233');
+    this._generateWarriorTextures();
     this._hitFx();
     this._critFx();
     this._dodgeFx();
