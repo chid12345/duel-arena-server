@@ -108,6 +108,20 @@ STARS_PACKAGES = [
     {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
 ]
 
+# Stars-свитки/ящики — те же предметы что и USDT, но за Telegram Stars
+# Цены: ~50 Stars ≈ 1 USDT (150 Stars = $2.99 ≈ 100💎)
+STARS_SCROLL_PACKAGES = [
+    {"id": "ss_str_12",  "scroll_id": "scroll_str_12",  "label": "⚔️ Эликсир силы +12",        "stars": 65},
+    {"id": "ss_end_12",  "scroll_id": "scroll_end_12",  "label": "🌀 Эликсир ловкости +12",     "stars": 65},
+    {"id": "ss_stam_12", "scroll_id": "scroll_stam_12", "label": "🛡️ Эликсир выносливости +12", "stars": 65},
+    {"id": "ss_crit_12", "scroll_id": "scroll_crit_12", "label": "🎯 Эликсир интуиции +12",     "stars": 65},
+    {"id": "ss_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",          "stars": 65},
+    {"id": "ss_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "stars": 130},
+    {"id": "ss_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "stars": 200},
+    {"id": "ss_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "stars": 200},
+    {"id": "ss_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "stars": 200},
+]
+
 ELITE_AVATAR_STARS_PACKAGE = {
     "id": "elite_avatar",
     "avatar_id": ELITE_AVATAR_ID,

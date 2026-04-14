@@ -17,13 +17,31 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
     _player_api = ctx["_player_api"]
     _send_tg_message = ctx["_send_tg_message"]
     STARS_PACKAGES = ctx["STARS_PACKAGES"]
+    STARS_SCROLL_PACKAGES = ctx["STARS_SCROLL_PACKAGES"]
     BOT_TOKEN = ctx["BOT_TOKEN"]
     PREMIUM_XP_BONUS_PERCENT = ctx["PREMIUM_XP_BONUS_PERCENT"]
+
+    def _find_stars_scroll(package_id: str):
+        return next((p for p in STARS_SCROLL_PACKAGES if p["id"] == package_id), None)
 
     @router.post("/api/shop/stars_confirm")
     async def stars_confirm(body: StarsConfirmBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
+
+        # Свиток/ящик за Stars
+        scroll_pkg = _find_stars_scroll(body.package_id)
+        if scroll_pkg:
+            scroll_id = scroll_pkg["scroll_id"]
+            db.add_to_inventory(uid, scroll_id)
+            is_box = scroll_id.startswith("box_")
+            await manager.send(uid, {"event": "scroll_received", "scroll_id": scroll_id, "source": "stars"})
+            label = scroll_pkg["label"]
+            kind = "Ящик" if is_box else "Свиток"
+            await _send_tg_message(uid, f"📜 <b>{kind} получен!</b>\n{label}\n\nОткройте «Герой → Моё → Особые» ⚔️ Duel Arena")
+            fresh = db.get_or_create_player(uid, "")
+            return {"ok": True, "scroll_received": True, "scroll_id": scroll_id, "player": _player_api(dict(fresh))}
+
         pkg = next((p for p in STARS_PACKAGES if p["id"] == body.package_id), None)
         if not pkg:
             return {"ok": False, "reason": "Пакет не найден"}
@@ -86,11 +104,37 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
     @router.post("/api/shop/stars_invoice")
     async def stars_invoice(body: StarsInvoiceBody):
         tg_user = get_user_from_init_data(body.init_data)
+        if not BOT_TOKEN:
+            return {"ok": False, "reason": "Бот не настроен (нет BOT_TOKEN)"}
+
+        # Свиток/ящик за Stars
+        scroll_pkg = _find_stars_scroll(body.package_id)
+        if scroll_pkg:
+            stars = scroll_pkg["stars"]
+            scroll_id = scroll_pkg["scroll_id"]
+            is_box = scroll_id.startswith("box_")
+            payload = f"stars_scroll:{scroll_id}"
+            title = scroll_pkg["label"]
+            desc = f"{'Эпический ящик' if is_box else 'Боевой свиток'} в Duel Arena"
+            import httpx
+            try:
+                async with httpx.AsyncClient(timeout=10) as client:
+                    resp = await client.post(
+                        f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink",
+                        json={"title": title, "description": desc, "payload": payload, "currency": "XTR", "prices": [{"label": title, "amount": stars}]},
+                    )
+                    data = resp.json()
+                if data.get("ok"):
+                    return {"ok": True, "invoice_url": data["result"]}
+                logger.error("createInvoiceLink scroll error: %s", data)
+                return {"ok": False, "reason": "Telegram отклонил запрос"}
+            except Exception as e:
+                logger.error("Stars scroll invoice HTTP error: %s", e)
+                return {"ok": False, "reason": "Ошибка соединения с Telegram"}
+
         pkg = next((p for p in STARS_PACKAGES if p["id"] == body.package_id), None)
         if not pkg:
             return {"ok": False, "reason": "Пакет не найден"}
-        if not BOT_TOKEN:
-            return {"ok": False, "reason": "Бот не настроен (нет BOT_TOKEN)"}
 
         if pkg["id"] == "premium":
             payload = "premium_sub"

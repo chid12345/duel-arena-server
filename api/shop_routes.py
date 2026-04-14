@@ -7,7 +7,7 @@ from typing import Any, Dict
 
 from fastapi import APIRouter
 
-from api.tma_catalogs import USDT_SCROLL_PACKAGES
+from api.tma_catalogs import STARS_SCROLL_PACKAGES, USDT_SCROLL_PACKAGES
 from api.shop_loot_box import _open_box_free as _open_loot_box
 from api.tma_models import ShopBuyBody, ShopApplyBody
 from api.shop_buy_handler import shop_buy_inner
@@ -72,6 +72,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
         return {
             "ok": True,
             "stars": STARS_PACKAGES,
+            "stars_scrolls": STARS_SCROLL_PACKAGES,
             "crypto": CRYPTO_PACKAGES,
             "usdt_scrolls": USDT_SCROLL_PACKAGES,
             "premium_stars": PREMIUM_SUBSCRIPTION_STARS,

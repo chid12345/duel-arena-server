@@ -25,6 +25,7 @@ from api.tma_catalogs import (
     ELITE_AVATAR_STARS_PACKAGE,
     SHOP_CATALOG,
     STARS_PACKAGES,
+    STARS_SCROLL_PACKAGES,
     USDT_SCROLL_PACKAGES,
 )
 from api.tma_infra import _cache_invalidate, _cache_set, _rl_check, manager
@@ -120,6 +121,7 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
             "_notify_paid_full_reset": _notify_paid_full_reset,
             "_rl_check": _rl_check,
             "STARS_PACKAGES": STARS_PACKAGES,
+            "STARS_SCROLL_PACKAGES": STARS_SCROLL_PACKAGES,
             "CRYPTO_PACKAGES": CRYPTO_PACKAGES,
             "USDT_SCROLL_PACKAGES": USDT_SCROLL_PACKAGES,
             "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
