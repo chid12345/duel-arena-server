@@ -5,51 +5,31 @@
 Object.assign(MenuScene.prototype, {
 
   /* Рисует аватарку в container по центру (cx,cy) радиусом r.
-     id: 1=Воин, 2=Ранг, 3=Череп(default), 4=Сфера */
-  _drawAvatarPreview(container, cx, cy, r, avatarId, level) {
-    const id = avatarId || 3;
-    const g = this.make.graphics({}, false);
+     Берёт badge и tier из State.player (новая система образов). */
+  _drawAvatarPreview(container, cx, cy, r, _unused, level) {
+    const p = State.player || {};
+    const badge = p.avatar_badge || '💀';
+    const tier = (p.avatar_tier || 'base').toLowerCase();
 
-    if (id === 1) {
-      // Pixel warrior — rounded rect frame
-      g.fillStyle(0x080614, 1); g.fillRoundedRect(cx - r, cy - r, r * 2, r * 2, r * 0.35);
-      g.lineStyle(2, 0x7ab4ff, 0.85); g.strokeRoundedRect(cx - r, cy - r, r * 2, r * 2, r * 0.35);
-      container.add(g);
-      const img = this.make.image({ x: cx, y: cy, key: 'warrior_blue_face' }, false);
-      img.setScale((r * 2) / 56 * 0.85).setOrigin(0.5);
-      container.add(img);
-    } else if (id === 2) {
-      // Rank hexagon
-      const outerPts = [], innerPts = [];
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 - Math.PI / 6;
-        outerPts.push({ x: cx + Math.cos(a) * r,         y: cy + Math.sin(a) * r });
-        innerPts.push({ x: cx + Math.cos(a) * r * 0.72,  y: cy + Math.sin(a) * r * 0.72 });
-      }
-      g.fillStyle(0xffc83c, 1); g.fillPoints(outerPts, true);
-      g.fillStyle(0x12101e, 1); g.fillPoints(innerPts, true);
-      container.add(g);
-      container.add(this.make.text({ x: cx, y: cy, text: String(level || 1),
-        style: { fontSize: `${Math.round(r * 0.9)}px`, fontFamily: 'Arial', fontStyle: 'bold', color: '#ffc83c' },
-      }, false).setOrigin(0.5));
-    } else if (id === 3) {
-      // Skull with fire (default)
-      g.fillStyle(0x0a0608, 1); g.fillCircle(cx, cy, r);
-      g.lineStyle(2, 0xdc3c46, 0.7); g.strokeCircle(cx, cy, r);
-      g.fillStyle(0xff4400, 0.45); g.fillEllipse(cx, cy + r * 0.65, r * 1.1, r * 0.55);
-      container.add(g);
-      container.add(this.make.text({ x: cx, y: cy - r * 0.08, text: '💀',
-        style: { fontSize: `${Math.round(r * 1.15)}px` },
-      }, false).setOrigin(0.5));
-    } else {
-      // Energy orb (id === 4)
-      g.fillStyle(0x3a1080, 1); g.fillCircle(cx, cy, r);
-      g.lineStyle(1.5, 0xb45aff, 0.6); g.strokeCircle(cx, cy, r);
-      g.lineStyle(1, 0xffffff, 0.15); g.strokeCircle(cx, cy, r * 0.75);
-      g.lineStyle(1, 0xb45aff, 0.25); g.strokeCircle(cx, cy, r * 0.5);
-      g.fillStyle(0xffffff, 0.85); g.fillCircle(cx, cy, r * 0.28);
-      container.add(g);
-    }
+    const tierColors = {
+      base:      { fill: 0x1e1e3a, ring: 0x555588 },
+      gold:      { fill: 0x1a2844, ring: 0x3388cc },
+      diamond:   { fill: 0x2a1444, ring: 0x8844cc },
+      premium:   { fill: 0x2a1800, ring: 0xcc8822 },
+      sub:       { fill: 0x2a0a20, ring: 0xff6b9d },
+      referral:  { fill: 0x0a2a1a, ring: 0x44cc66 },
+      elite:     { fill: 0x2a2000, ring: 0xffd700 },
+    };
+    const tc = tierColors[tier] || tierColors.base;
+
+    const g = this.make.graphics({}, false);
+    g.fillStyle(tc.fill, 1); g.fillCircle(cx, cy, r);
+    g.lineStyle(2, tc.ring, 0.9); g.strokeCircle(cx, cy, r);
+    container.add(g);
+
+    container.add(this.make.text({ x: cx, y: cy, text: badge,
+      style: { fontSize: `${Math.round(r * 1.1)}px` },
+    }, false).setOrigin(0.5));
   },
 
   _switchTab(key) {
