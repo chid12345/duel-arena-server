@@ -85,10 +85,7 @@
       // Верхняя полоска
       card.lineStyle(0, 0, 0);
       card.fillStyle(meta.dim, 0.55);
-      card.fillRect(x+10, y, cardW-44, 2);
-      // Угловой треугольник
-      card.fillStyle(meta.dim, 0.32);
-      card.fillTriangle(x+cardW-26, y, x+cardW, y, x+cardW, y+26);
+      card.fillRect(x+10, y, cardW-20, 2);
       layer.push(card);
 
       // Иконка
@@ -99,11 +96,26 @@
       layer.push(txt(this, x+26, y+26, a.icon, 18, "#ffffff").setOrigin(0.5).setDepth(123));
 
       // Название — белый
-      layer.push(txt(this, x+52, y+8,  a.name,      11, "#ffffff", true).setDepth(123));
+      layer.push(txt(this, x+52, y+8,  a.name,     11, "#ffffff", true).setDepth(123));
       // Тип редкости
-      layer.push(txt(this, x+52, y+22, meta.title,  9,  colorHex, true).setDepth(123));
+      layer.push(txt(this, x+52, y+22, meta.title,  9, colorHex, true).setDepth(123));
       // Звёзды
-      layer.push(txt(this, x+52, y+34, meta.stars,  9,  colorHex).setDepth(123));
+      layer.push(txt(this, x+52, y+34, meta.stars,  9, colorHex).setDepth(123));
+
+      // Мини-статы справа вверху: С Л И В
+      const sx = x + cardW - 8; // правый край
+      const statDefs = [
+        { lbl: `С+${a.strength}`,  val: a.strength,  col: "#ff6060", dim: "#552020" },
+        { lbl: `Л+${a.agility}`,   val: a.agility,   col: "#3cc8dc", dim: "#1a4450" },
+        { lbl: `И+${a.intuition}`, val: a.intuition, col: "#c080ff", dim: "#3a2060" },
+        { lbl: `В+${a.endurance}`, val: a.endurance, col: "#3cc864", dim: "#1a4030" },
+      ];
+      statDefs.forEach((s, si) => {
+        const sy = y + 8 + si * 11;
+        const col = s.val > 0 ? s.col : s.dim;
+        const bold = s.val > 0;
+        layer.push(txt(this, sx, sy, s.lbl, 8, col, bold).setOrigin(1, 0).setDepth(124));
+      });
 
       // Статы — под иконкой, адаптивно до кнопки
       const bh = 26, by2 = y + cardH - 32;
