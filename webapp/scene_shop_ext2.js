@@ -49,7 +49,14 @@ Object.assign(ShopScene.prototype, {
     pkgMain.forEach((pkg, i) => {
       const px = 8 + i * (pkgW + 8 / Math.max(1, pkgMain.length));
       this._makeStarsCardC(container, pkg, px, y, pkgW - 4, 80);
-      taps.push({ x: px, y, w: pkgW - 4, h: 80, fn: () => this._buyStars(pkg) });
+      taps.push({ x: px, y, w: pkgW - 4, h: 80, fn: () => {
+        showItemDetailPopup(this, {
+          icon: '💎', name: `${pkg.diamonds} алмазов`,
+          desc: `Мгновенное начисление ${pkg.diamonds} алмазов на ваш счёт.\n\nАлмазы — премиальная валюта для покупки свитков, ящиков и особых предметов.`,
+          actionLabel: `⭐ ${pkg.stars} — Купить`, canAct: true,
+          actionFn: () => { closeItemDetailPopup(this); this._buyStars(pkg); },
+        });
+      }});
     });
     y += 98;
     container.add(txt(this, W/2, y, '⭐ Telegram Stars — простая и быстрая оплата', 11, '#ccccdd').setOrigin(0.5));
@@ -62,9 +69,16 @@ Object.assign(ShopScene.prototype, {
       container.add(txt(this, W-12, y+5, '⭐ Stars', 11, '#ccccdd').setOrigin(1, 0));
       y += 30;
       this._makePremiumCardC(container, premPkg, 8, y, W-16, 52);
-      if (!(State.player || {}).is_premium) {
-        taps.push({ x: 8, y, w: W-16, h: 52, fn: () => this._buyStars(premPkg) });
-      }
+      const isPrem = !!(State.player || {}).is_premium;
+      taps.push({ x: 8, y, w: W-16, h: 52, fn: () => {
+        showItemDetailPopup(this, {
+          icon: '👑', name: 'Premium подписка',
+          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
+          actionLabel: isPrem ? '✅ Уже активен' : `⭐ ${premPkg.stars} — Купить`,
+          canAct: !isPrem,
+          actionFn: () => { closeItemDetailPopup(this); if (!isPrem) this._buyStars(premPkg); },
+        });
+      }});
       y += 62;
       y += 8;
       const perks = [
@@ -138,7 +152,14 @@ Object.assign(ShopScene.prototype, {
         const col = i % 2, row = Math.floor(i / 2);
         const ix = 8 + col * (iw + 8), iy = y + row * 74;
         this._makeUsdtScrollCardC(container, pkg, ix, iy, iw - 4, 68);
-        taps.push({ x: ix, y: iy, w: iw - 4, h: 68, fn: () => this._buyCrypto(pkg) });
+        taps.push({ x: ix, y: iy, w: iw - 4, h: 68, fn: () => {
+          showItemDetailPopup(this, {
+            icon: '📜', name: pkg.label || 'Особый свиток',
+            desc: `Мощный боевой свиток USDT-класса.\nДаёт значительный прирост статов на несколько боёв.\n\nДобавляется в инвентарь → Особые.`,
+            actionLabel: `${pkg.usdt} USDT — Купить`, canAct: true,
+            actionFn: () => { closeItemDetailPopup(this); this._buyCrypto(pkg); },
+          });
+        }});
       });
       y += Math.ceil(scrollPkgs.length / 2) * 74 + 12;
     }
@@ -152,21 +173,43 @@ Object.assign(ShopScene.prototype, {
     cpMain.forEach((pkg, i) => {
       const px = 8 + i * (cpW + 8 / Math.max(1, cpMain.length));
       this._makeCryptoCardC(container, pkg, px, y, cpW - 4, 80);
-      taps.push({ x: px, y, w: cpW - 4, h: 80, fn: () => this._buyCrypto(pkg) });
+      taps.push({ x: px, y, w: cpW - 4, h: 80, fn: () => {
+        showItemDetailPopup(this, {
+          icon: '💎', name: `${pkg.diamonds} алмазов`,
+          desc: `Мгновенное начисление ${pkg.diamonds} алмазов.\n\nОплата через CryptoPay (USDT). Алмазы приходят автоматически после подтверждения.`,
+          actionLabel: `${pkg.usdt} USDT — Купить`, canAct: true,
+          actionFn: () => { closeItemDetailPopup(this); this._buyCrypto(pkg); },
+        });
+      }});
     });
     y += 90;
     const cpReset = cryptoPkgs.find(pkg => pkg.full_reset);
     if (cpReset) {
       this._makeCryptoResetCardC(container, cpReset, 8, y, W-16, 88);
-      taps.push({ x: 8, y, w: W-16, h: 88, fn: () => this._buyCrypto(cpReset) });
+      taps.push({ x: 8, y, w: W-16, h: 88, fn: () => {
+        showItemDetailPopup(this, {
+          icon: '🔄', name: cpReset.label || 'Сброс прогресса',
+          desc: `${cpReset.hint || 'Уровень с нуля; 💰💎 сохраняются'}\n\n⚠️ Действие необратимо! Ваш уровень, статы и боевой опыт будут сброшены. Золото и алмазы сохраняются.`,
+          badge: '⚠️ ОПАСНО', badgeRisk: true,
+          actionLabel: `${cpReset.usdt} USDT — Сбросить`, canAct: true,
+          actionFn: () => { closeItemDetailPopup(this); this._buyCrypto(cpReset); },
+        });
+      }});
       y += 98;
     }
     const cpPrem = cryptoPkgs.find(pkg => pkg.premium);
     if (cpPrem) {
       this._makeCryptoPremiumCardC(container, cpPrem, 8, y, W-16, 52);
-      if (!(State.player || {}).is_premium) {
-        taps.push({ x: 8, y, w: W-16, h: 52, fn: () => this._buyCrypto(cpPrem) });
-      }
+      const isPremC = !!(State.player || {}).is_premium;
+      taps.push({ x: 8, y, w: W-16, h: 52, fn: () => {
+        showItemDetailPopup(this, {
+          icon: '👑', name: 'Premium подписка',
+          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
+          actionLabel: isPremC ? '✅ Уже активен' : `${cpPrem.usdt} USDT — Купить`,
+          canAct: !isPremC,
+          actionFn: () => { closeItemDetailPopup(this); if (!isPremC) this._buyCrypto(cpPrem); },
+        });
+      }});
       y += 62;
     }
     container.add(txt(this, W/2, y+4, '💡 После оплаты товар придёт автоматически', 11, '#ccccdd').setOrigin(0.5));
