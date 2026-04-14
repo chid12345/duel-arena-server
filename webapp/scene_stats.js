@@ -169,6 +169,8 @@ class StatsScene extends Phaser.Scene {
     });
   }
 
+  update() { if (this._wardrobeScrollFn) this._wardrobeScrollFn(); }
+
   shutdown() {
     this.time.removeAllEvents();
     // Явно уничтожаем все объекты сцены — гарантия что ничего не "призраком" остаётся
