@@ -119,20 +119,40 @@ Object.assign(ClanScene.prototype, {
 
   /* ══ ПОИСК ═══════════════════════════════════════════════ */
   _renderSearch(W, H) {
-    makePanel(this, 8, 80, W-16, 48, 10, 0.8);
-    txt(this, 20, 91, '🔍 Введите имя или тег клана:', 11, '#ddddff');
-    this._inputEl = this._makeInput(W, 104, W-32, 32, 'Железный Кулак / ЖК...');
+    // Лейбл над полем
+    txt(this, 16, 86, 'ПОИСК КЛАНА', 9, '#3a4060');
 
+    // Фон под input-поле
+    const inpBg = this.add.graphics();
+    inpBg.fillStyle(0x141720, 1);
+    inpBg.fillRoundedRect(8, 100, W-16, 50, 10);
+    inpBg.lineStyle(1, 0x1e2230, 0.9);
+    inpBg.strokeRoundedRect(8, 100, W-16, 50, 10);
+
+    // HTML input внутри панели (y=110, высота 30)
+    this._inputEl = this._makeInput(W, 110, W-32, 30, 'Железный Кулак / ЖК...', 30);
+
+    // Кнопка поиска
     const sbG = this.add.graphics();
-    sbG.fillStyle(C.blue, 0.9); sbG.fillRoundedRect(16, 140, W-32, 40, 10);
-    txt(this, W/2, 160, '🔍 Найти', 13, '#ffffff', true).setOrigin(0.5);
-    this.add.zone(16, 140, W-32, 40).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { sbG.clear(); sbG.fillStyle(0x1040a0,1); sbG.fillRoundedRect(16,140,W-32,40,10); tg?.HapticFeedback?.impactOccurred('light'); })
-      .on('pointerout',  () => { sbG.clear(); sbG.fillStyle(C.blue,0.9); sbG.fillRoundedRect(16,140,W-32,40,10); })
+    sbG.fillStyle(0x1a2050, 1);
+    sbG.fillRoundedRect(16, 160, W-32, 42, 10);
+    sbG.lineStyle(1, 0x2a3460, 0.9);
+    sbG.strokeRoundedRect(16, 160, W-32, 42, 10);
+    // синяя точка-индикатор
+    sbG.fillStyle(0x5080ff, 1); sbG.fillCircle(W/2 - 32, 181, 4);
+    txt(this, W/2 + 4, 181, 'Найти', 13, '#6080c0', true).setOrigin(0.5);
+    this.add.zone(16, 160, W-32, 42).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { sbG.clear(); sbG.fillStyle(0x0a0e18,1); sbG.fillRoundedRect(16,160,W-32,42,10); tg?.HapticFeedback?.impactOccurred('light'); })
+      .on('pointerout',  () => { sbG.clear(); sbG.fillStyle(0x1a2050,1); sbG.fillRoundedRect(16,160,W-32,42,10); sbG.lineStyle(1,0x2a3460,0.9); sbG.strokeRoundedRect(16,160,W-32,42,10); sbG.fillStyle(0x5080ff,1); sbG.fillCircle(W/2-32,181,4); })
       .on('pointerup', () => this._doSearch(W));
 
-    txt(this, W/2, 192, 'Все кланы:', 11, '#aaaaee').setOrigin(0.5);
-    this._resultsY = 204;
+    // Разделитель + лейбл
+    const divG = this.add.graphics();
+    divG.lineStyle(1, 0x1e2230, 0.8);
+    divG.lineBetween(16, 214, W-16, 214);
+    txt(this, 16, 220, 'ВСЕ КЛАНЫ', 9, '#3a4060');
+
+    this._resultsY = 236;
     this._resultsContainer = this.add.container(0, 0);
     get('/api/clan/top').then(d => this._showSearchResults(d.clans || [], W));
   },
