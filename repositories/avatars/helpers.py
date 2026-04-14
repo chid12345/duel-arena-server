@@ -9,6 +9,7 @@ from config import AVATAR_CATALOG, AVATAR_SCALE_EVERY_LEVELS, AVATAR_SCALE_MAX_B
 
 class AvatarsHelpersMixin:
     _BASE_AVATAR_IDS = (
+        "default_start",
         "base_tank", "base_rogue", "base_crit", "base_neutral",
         "base_berserker", "base_monk", "base_shooter", "base_gladiator",
         "base_shadow", "base_viking", "base_samurai", "base_paladin",

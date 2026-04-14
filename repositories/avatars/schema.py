@@ -165,7 +165,7 @@ class AvatarsSchemaMixin:
         row = cursor.fetchone()
         if row and not self._row_get(row, "equipped_avatar_id"):
             cursor.execute(
-                "UPDATE players SET equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
+                "UPDATE players SET equipped_avatar_id = 'default_start' WHERE user_id = ?",
                 (user_id,),
             )
 

@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.32"
-VERSION_LABEL = "v1.6.32 — feat: bought avatar badge — синяя рамка + бейдж КУПЛЕН для unlocked карточек"
+VERSION = "1.6.33"
+VERSION_LABEL = "v1.6.33 — feat: default_start avatar — стартовый образ без бонусов для новых игроков"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "4.66"
+GAME_VERSION = "4.67"

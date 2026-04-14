@@ -23,6 +23,9 @@ REF_AVATAR_THRESHOLD = 5  # сколько рефералов нужно
 
 # В проекте "agility" = endurance, "intuition" = crit.
 AVATAR_CATALOG = [
+    # ── СТАРТОВЫЙ (нулевой, только визуал) ───────────────────────────
+    {"id": "default_start", "name": "🗡️ Боец",              "tier": "base", "rarity": "common",    "currency": "free", "price": 0, "strength": 0, "endurance": 0, "crit": 0, "hp_flat": 0,  "badge": "🗡️", "description": "Стартовый образ. Без бонусов к характеристикам."},
+
     # ── БЕСПЛАТНЫЕ (base, common, ~10 очков) ─────────────────────────
     {"id": "base_tank",      "name": "🛡️ Страж Бастиона",   "tier": "base", "rarity": "common",    "currency": "free", "price": 0, "strength": 5, "endurance": 5, "crit": 0, "hp_flat": 0,  "badge": "🛡️", "description": "Танк: +5 Сила и +5 Ловкость."},
     {"id": "base_rogue",     "name": "🌪️ Теневой Ловкач",   "tier": "base", "rarity": "common",    "currency": "free", "price": 0, "strength": 0, "endurance": 5, "crit": 0, "hp_flat": 0,  "badge": "🌪️", "description": "Ловкач: +5 Ловкость."},
