@@ -63,6 +63,7 @@ Object.assign(ShopScene.prototype, {
     const pIcon = isDia ? '💎' : '🪙';
     const pCol  = canBuy ? (isDia ? '#3cc8dc' : '#ffc83c') : '#cc8888';
     container.add(txt(this, btnX + btnW / 2, btnY + btnH / 2, `${pIcon} ${item.price}`, 12, pCol, true).setOrigin(0.5));
+    return { btnX, btnY, btnW, btnH };
   },
 
   /* ── Компактная строка (row) ─────────────────────────── */
@@ -84,6 +85,8 @@ Object.assign(ShopScene.prototype, {
     const pIcon = isDia ? '💎' : '🪙';
     const pCol  = canBuy ? (isDia ? '#3cc8dc' : '#ffc83c') : '#cc8888';
     container.add(txt(this, x + w - 8, y + h / 2, `${pIcon}${item.price}`, 11, pCol, true).setOrigin(1, 0.5));
+    const btnX = x + w - 70, btnW = 70, btnY = y, btnH = h;
+    return { btnX, btnY, btnW, btnH };
   },
 
 });
