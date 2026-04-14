@@ -38,8 +38,7 @@ class AvatarScene extends Phaser.Scene {
 
   async _loadData() {
     try {
-      const r = await fetch(`/api/avatars?init_data=${encodeURIComponent(tgInitData)}`);
-      const j = await r.json();
+      const j = await get('/api/avatars');
       if (!j.ok) throw new Error(j.reason || 'error');
       this._avatars = j.avatars || [];
       this._equipped = j.equipped_avatar_id || 'base_neutral';

@@ -40,7 +40,6 @@ Object.assign(AvatarScene.prototype, {
     addT(W / 2, py + 56, sLine, 11, '#ccc').setOrigin(0.5);
     addT(W / 2, py + 80, this._priceText(av), 14, '#ffc83c', true).setOrigin(0.5);
 
-    // Кнопка Купить
     const btnY = py + 105, btnW = 120, btnH = 36, btnX = W / 2 - btnW / 2;
     const btnG = this.add.graphics().setDepth(51);
     btnG.fillStyle(0x3366aa, 1); btnG.fillRoundedRect(btnX, btnY, btnW, btnH, 10);
@@ -54,7 +53,6 @@ Object.assign(AvatarScene.prototype, {
       });
     layer.push(bz);
 
-    // USDT-кнопка для Stars-аватарок
     if (av.currency === 'stars') {
       const uY = btnY + btnH + 8;
       const uG = this.add.graphics().setDepth(51);
@@ -66,7 +64,6 @@ Object.assign(AvatarScene.prototype, {
       layer.push(uz);
     }
 
-    // Отмена
     addT(W / 2, py + ph - 18, 'Отмена', 11, '#888').setOrigin(0.5);
     const cz = this.add.zone(W / 2, py + ph - 18, 100, 24).setInteractive({ useHandCursor: true }).setDepth(53)
       .on('pointerup', () => this._closeOverlay());
@@ -106,11 +103,7 @@ Object.assign(AvatarScene.prototype, {
 
   async _doBuyGold(av) {
     try {
-      const r = await fetch('/api/avatars/buy', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ init_data: tgInitData, avatar_id: av.id }),
-      });
-      const j = await r.json();
+      const j = await post('/api/avatars/buy', { avatar_id: av.id });
       if (j.ok) {
         if (j.player) State.player = j.player;
         tg?.HapticFeedback?.notificationOccurred('success');
@@ -121,11 +114,7 @@ Object.assign(AvatarScene.prototype, {
 
   async _doEquip(av) {
     try {
-      const r = await fetch('/api/avatars/equip', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ init_data: tgInitData, avatar_id: av.id }),
-      });
-      const j = await r.json();
+      const j = await post('/api/avatars/equip', { avatar_id: av.id });
       if (j.ok) {
         if (j.player) State.player = j.player;
         State.avatarId = av.id;
@@ -139,20 +128,12 @@ Object.assign(AvatarScene.prototype, {
   },
 
   async _doBuyStars(av) {
-    const url = '/api/avatars/premium/stars_invoice';
     try {
-      const r = await fetch(url, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ init_data: tgInitData, avatar_id: av.id }),
-      });
-      const j = await r.json();
+      const j = await post('/api/avatars/premium/stars_invoice', { avatar_id: av.id });
       if (j.ok && j.invoice_url) {
         tg?.openInvoice?.(j.invoice_url, async (status) => {
           if (status === 'paid') {
-            await fetch('/api/avatars/premium/stars_confirm', {
-              method: 'POST', headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ init_data: tgInitData, avatar_id: av.id }),
-            });
+            await post('/api/avatars/premium/stars_confirm', { avatar_id: av.id });
             tg?.HapticFeedback?.notificationOccurred('success');
             this.scene.restart({ tab: this._tab });
           }
@@ -163,11 +144,7 @@ Object.assign(AvatarScene.prototype, {
 
   async _doBuyCrypto(av) {
     try {
-      const r = await fetch('/api/avatars/premium/crypto_invoice', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ init_data: tgInitData, avatar_id: av.id }),
-      });
-      const j = await r.json();
+      const j = await post('/api/avatars/premium/crypto_invoice', { avatar_id: av.id });
       if (j.ok && j.invoice_url) { tg?.openLink?.(j.invoice_url); }
       else { tg?.showAlert?.(j.reason || 'Ошибка'); }
     } catch (_) { tg?.showAlert?.('Ошибка сети'); }
