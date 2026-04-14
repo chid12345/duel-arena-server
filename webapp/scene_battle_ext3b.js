@@ -46,6 +46,17 @@ Object.assign(BattleScene.prototype, {
     this.warrior1 = this.add.image(W * 0.28, H * 0.35, 'warrior_blue').setScale(1.5).setFlipX(false);
     this.warrior2 = this.add.image(W * 0.72, H * 0.35, 'warrior_red').setScale(1.5).setFlipX(true);
 
+    // Premium/Elite/Sub — золотая вспышка при входе в бой
+    const _avTier = (State.player?.avatar_tier || '').toLowerCase();
+    if (['premium', 'elite', 'sub'].includes(_avTier)) {
+      const glow = this.add.circle(this.warrior1.x, this.warrior1.y, 12, 0xffc83c, 0.75);
+      this.tweens.add({
+        targets: glow, scaleX: 4, scaleY: 4, alpha: 0,
+        duration: 900, ease: 'Cubic.easeOut',
+        onComplete: () => glow.destroy(),
+      });
+    }
+
     [this.warrior1, this.warrior2].forEach(w => {
       this.tweens.add({ targets: w, y: w.y - 4, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     });

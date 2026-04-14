@@ -112,6 +112,34 @@ ACHIEVEMENT_DEFS: list[dict] = [
             {"tier": 9, "target": 250, "gold": 5000, "diamonds": 100, "xp": 25000},
         ],
     },
+    # ── КОЛЛЕКЦИЯ ОБРАЗОВ ───────────────────────────────────────────
+    {
+        "key": "ach_collect_avatar_gold", "label": "🛡️ Коллекция золотых образов",
+        "desc": "Куплено образов за золото", "source": "tracked",
+        "tiers": [
+            {"tier": 1, "target": 1,  "gold": 200,  "diamonds": 1,  "xp": 500},
+            {"tier": 2, "target": 5,  "gold": 500,  "diamonds": 5,  "xp": 2000},
+            {"tier": 3, "target": 10, "gold": 1000, "diamonds": 15, "xp": 5000},
+        ],
+    },
+    {
+        "key": "ach_collect_avatar_dia", "label": "💎 Коллекция алмазных образов",
+        "desc": "Куплено образов за алмазы", "source": "tracked",
+        "tiers": [
+            {"tier": 1, "target": 1,  "gold": 300,  "diamonds": 2,  "xp": 500},
+            {"tier": 2, "target": 5,  "gold": 700,  "diamonds": 5,  "xp": 1500},
+            {"tier": 3, "target": 10, "gold": 1500, "diamonds": 10, "xp": 4000},
+        ],
+    },
+    {
+        "key": "ach_collect_avatar_premium", "label": "🐉 Коллекция премиум образов",
+        "desc": "Куплено образов за USDT/Stars", "source": "tracked",
+        "tiers": [
+            {"tier": 1, "target": 1,  "gold": 400,  "diamonds": 3,  "xp": 600},
+            {"tier": 2, "target": 5,  "gold": 1000, "diamonds": 8,  "xp": 2000},
+            {"tier": 3, "target": 10, "gold": 2000, "diamonds": 15, "xp": 5000},
+        ],
+    },
     {
         "key": "ach_use_potions", "label": "🧪 Мастер эликсиров",
         "desc": "Использовано эликсиров", "source": "tracked",

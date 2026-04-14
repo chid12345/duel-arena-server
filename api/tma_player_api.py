@@ -153,6 +153,7 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
         "xp_pct": int(int(player.get("exp", 0)) / max(1, need_xp) * 100) if need_xp > 0 else 100,
         "max_level": lv >= MAX_LEVEL,
         "equipped_avatar_id": avatar_id,
+        "avatar_tier": avatar.get("tier", "base"),
         "avatar_name": avatar.get("name"),
         "avatar_badge": avatar.get("badge"),
         "stats_base": {

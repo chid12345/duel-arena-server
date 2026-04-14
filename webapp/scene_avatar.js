@@ -1,119 +1,103 @@
 /* ═══════════════════════════════════════════════════════════
-   AvatarScene — выбор аватарки
+   AvatarScene — каталог образов с табами и скроллом
    ═══════════════════════════════════════════════════════════ */
+const _AV_TABS = [
+  { key: 'all',     label: 'Все' },
+  { key: 'mine',    label: 'Мои' },
+  { key: 'base',    label: '🆓' },
+  { key: 'gold',    label: '💰' },
+  { key: 'diamond', label: '💎' },
+  { key: 'premium', label: '⭐' },
+];
+
+const _AV_RARITY_CLR = {
+  common:    { bg: 0x22223a, border: 0x555566, text: '#aaaacc' },
+  rare:      { bg: 0x1a2844, border: 0x3366aa, text: '#7ab4ff' },
+  epic:      { bg: 0x2a1844, border: 0x7733bb, text: '#b45aff' },
+  legendary: { bg: 0x2a2210, border: 0xaa8822, text: '#ffc83c' },
+};
+
 class AvatarScene extends Phaser.Scene {
   constructor() { super('Avatar'); }
 
-  create() {
+  create(data) {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
+    this._tab = (data && data.tab) || 'all';
+    this._scrollY = 0;
+    this._layer = [];
+    this._tapAreas = [];
 
     _extraBg(this, W, H);
-    _extraHeader(this, W, '🎭', 'АВАТАРКИ', 'Выбери стиль — отображается в профиле');
+    _extraHeader(this, W, '🎭', 'ОБРАЗЫ', 'Выбери стиль — бонусы к статам');
     _extraBack(this);
 
-    this._buildGrid(W, H);
+    this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 13, '#888').setOrigin(0.5);
+    this._loadData();
   }
 
-  _buildGrid(W, H) {
-    const AVATARS = [
-      { id: 1, label: 'Воин',  sub: 'Пиксельный воин' },
-      { id: 2, label: 'Ранг',  sub: 'Ранговый шестиугольник' },
-      { id: 3, label: 'Череп', sub: 'По умолчанию' },
-      { id: 4, label: 'Сфера', sub: 'Энергетическая сфера' },
-    ];
+  async _loadData() {
+    try {
+      const r = await fetch(`/api/avatars?init_data=${encodeURIComponent(tgInitData)}`);
+      const j = await r.json();
+      if (!j.ok) throw new Error(j.reason || 'error');
+      this._avatars = j.avatars || [];
+      this._equipped = j.equipped_avatar_id || 'base_neutral';
+    } catch (e) {
+      this._avatars = [];
+      this._equipped = 'base_neutral';
+    }
+    if (this._loading) { this._loading.destroy(); this._loading = null; }
+    this._buildTabs();
+    this._renderGrid();
+  }
 
-    const PAD = 12;
-    const cols = 2;
-    const gap  = 10;
-    const cw   = Math.floor((W - PAD * 2 - gap) / cols);
-    const ch   = 140;
-    const startY = 82;
-    const p = State.player;
-
-    AVATARS.forEach((av, i) => {
-      const col = i % cols;
-      const row = Math.floor(i / cols);
-      const cx  = PAD + col * (cw + gap);
-      const cy  = startY + row * (ch + gap);
-      const acx = cx + cw / 2;
-      const active = (State.avatarId || 3) === av.id;
-
+  _buildTabs() {
+    const W = this.W;
+    const tabW = Math.floor((W - 16) / _AV_TABS.length) - 4;
+    const ty = 72;
+    _AV_TABS.forEach((t, i) => {
+      const tx = 10 + i * (tabW + 4);
+      const active = this._tab === t.key;
       const bg = this.add.graphics();
-      bg.fillStyle(active ? C.blue : C.bgPanel, active ? 0.18 : 0.92);
-      bg.fillRoundedRect(cx, cy, cw, ch, 16);
-      bg.lineStyle(2, active ? C.blue : C.dark, active ? 1 : 0.5);
-      bg.strokeRoundedRect(cx, cy, cw, ch, 16);
-
-      // Предпросмотр аватарки — центр карточки
-      this._drawAvatar(acx, cy + 60, 36, av.id, p?.level || 1);
-
-      // Лейбл
-      txt(this, acx, cy + ch - 36, av.label, 14, active ? '#7ab4ff' : '#f0f0fa', active).setOrigin(0.5);
-      txt(this, acx, cy + ch - 18, av.sub, 9,
-        active ? 'rgba(122,180,255,0.7)' : 'rgba(255,255,255,0.35)').setOrigin(0.5);
-
-      if (active) {
-        const badgeG = this.add.graphics();
-        badgeG.fillStyle(C.blue, 1); badgeG.fillCircle(cx + cw - 14, cy + 14, 12);
-        txt(this, cx + cw - 14, cy + 14, '✓', 11, '#ffffff', true).setOrigin(0.5);
-      }
-
-      this.add.zone(cx + cw / 2, cy + ch / 2, cw, ch)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => { bg.setAlpha(0.7); })
-        .on('pointerout',  () => { bg.setAlpha(1); })
-        .on('pointerup',   () => {
-          bg.setAlpha(1);
-          if ((State.avatarId || 3) === av.id) return;
-          State.avatarId = av.id;
-          try { localStorage.setItem('da_avatar', String(av.id)); } catch(_) {}
-          tg?.HapticFeedback?.selectionChanged();
+      bg.fillStyle(active ? 0x3366aa : 0x1a1830, active ? 0.9 : 0.85);
+      bg.fillRoundedRect(tx, ty, tabW, 26, 8);
+      if (active) { bg.lineStyle(1.5, 0x7ab4ff, 1); bg.strokeRoundedRect(tx, ty, tabW, 26, 8); }
+      const lbl = txt(this, tx + tabW / 2, ty + 13, t.label, 10, active ? '#ffffff' : '#888', active);
+      lbl.setOrigin(0.5);
+      this.add.zone(tx + tabW / 2, ty + 13, tabW, 26).setInteractive({ useHandCursor: true })
+        .on('pointerup', () => {
+          if (this._tab === t.key) return;
           Sound.click();
-          // Сбросить профиль-панель чтобы пересоздалась при возврате
-          const menu = this.scene.get('Menu');
-          if (menu?._panels?.profile) { menu._panels.profile.destroy(); menu._panels.profile = null; }
-          this.scene.restart();
+          this.scene.restart({ tab: t.key });
         });
     });
   }
 
-  _drawAvatar(cx, cy, r, avatarId, level) {
-    const id = avatarId || 3;
-    const g  = this.add.graphics();
+  _filterAvatars() {
+    const tab = this._tab;
+    if (tab === 'all') return this._avatars;
+    if (tab === 'mine') return this._avatars.filter(a => a.unlocked);
+    return this._avatars.filter(a => a.tier === tab);
+  }
 
-    if (id === 1) {
-      g.fillStyle(0x080614, 1); g.fillRoundedRect(cx - r, cy - r, r * 2, r * 2, r * 0.35);
-      g.lineStyle(2, 0x7ab4ff, 0.85); g.strokeRoundedRect(cx - r, cy - r, r * 2, r * 2, r * 0.35);
-      const img = this.add.image(cx, cy, 'warrior_blue_face');
-      img.setScale((r * 2) / 56 * 0.85).setOrigin(0.5);
-    } else if (id === 2) {
-      const outerPts = [], innerPts = [];
-      for (let i = 0; i < 6; i++) {
-        const a = (i / 6) * Math.PI * 2 - Math.PI / 6;
-        outerPts.push({ x: cx + Math.cos(a) * r,        y: cy + Math.sin(a) * r });
-        innerPts.push({ x: cx + Math.cos(a) * r * 0.72, y: cy + Math.sin(a) * r * 0.72 });
-      }
-      g.fillStyle(0xffc83c, 1); g.fillPoints(outerPts, true);
-      g.fillStyle(0x12101e, 1); g.fillPoints(innerPts, true);
-      txt(this, cx, cy, String(level || 1),
-        Math.round(r * 0.9), '#ffc83c', true).setOrigin(0.5);
-    } else if (id === 3) {
-      g.fillStyle(0x0a0608, 1); g.fillCircle(cx, cy, r);
-      g.lineStyle(2, 0xdc3c46, 0.7); g.strokeCircle(cx, cy, r);
-      g.fillStyle(0xff4400, 0.45); g.fillEllipse(cx, cy + r * 0.65, r * 1.1, r * 0.55);
-      txt(this, cx, cy - r * 0.08, '💀',
-        Math.round(r * 1.15)).setOrigin(0.5);
-    } else {
-      g.fillStyle(0x3a1080, 1); g.fillCircle(cx, cy, r);
-      g.lineStyle(1.5, 0xb45aff, 0.6); g.strokeCircle(cx, cy, r);
-      g.lineStyle(1, 0xffffff, 0.15); g.strokeCircle(cx, cy, r * 0.75);
-      g.lineStyle(1, 0xb45aff, 0.25); g.strokeCircle(cx, cy, r * 0.5);
-      g.fillStyle(0xffffff, 0.85); g.fillCircle(cx, cy, r * 0.28);
-    }
+  _priceText(av) {
+    if (av.currency === 'free') return 'Бесплатно';
+    if (av.currency === 'gold') return `${av.price} 💰`;
+    if (av.currency === 'diamonds') return `${av.price} 💎`;
+    if (av.currency === 'stars') return `${av.price} ⭐ / $${av.usdt_price || '1'}`;
+    if (av.currency === 'subscription') return 'Premium';
+    if (av.currency === 'referral') return '5+ рефералов';
+    if (av.currency === 'usdt_stars') return `590 ⭐ / $11.99`;
+    return '';
   }
 
   shutdown() {
+    this._layer.forEach(o => { try { o.destroy(); } catch(_) {} });
+    this._layer = [];
+    if (this._ctr) { this._ctr.destroy(); }
+    if (this._mGfx) { this._mGfx.destroy(); }
+    if (this._scrZ) { this._scrZ.destroy(); }
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 }

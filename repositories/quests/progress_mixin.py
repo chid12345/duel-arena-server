@@ -119,6 +119,13 @@ class QuestsProgressMixin:
             elif currency in ("stars", "usdt"):
                 self.add_task_progress(user_id, "ach_buy_premium", 1)
                 self._incr_daily_shop_buys(user_id)
+            # Коллекция образов
+            if item_id.startswith("gold_"):
+                self.add_task_progress(user_id, "ach_collect_avatar_gold", 1)
+            elif item_id.startswith("dia_"):
+                self.add_task_progress(user_id, "ach_collect_avatar_dia", 1)
+            elif item_id.startswith("prem_"):
+                self.add_task_progress(user_id, "ach_collect_avatar_premium", 1)
         except Exception as e:
             log.warning("track_purchase error: %s", e)
 

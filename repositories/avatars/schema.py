@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import Any, Dict, Optional
 
-from config import ELITE_AVATAR_ID, ELITE_AVATAR_STARS, ELITE_AVATAR_USDT
+from config import ELITE_AVATAR_ID, ELITE_AVATAR_STARS, ELITE_AVATAR_USDT, SUB_AVATAR_ID, REF_AVATAR_ID, REF_AVATAR_THRESHOLD
 
 
 class AvatarsSchemaMixin:
@@ -126,6 +126,38 @@ class AvatarsSchemaMixin:
                    ON CONFLICT (user_id, avatar_id) DO NOTHING""",
                 (user_id, aid),
             )
+        # Реферальный образ — авто-разблокировка при ≥5 рефералах
+        try:
+            cursor.execute(
+                "SELECT COUNT(*) AS cnt FROM referrals WHERE referrer_id = ?", (user_id,),
+            )
+            ref_row = cursor.fetchone()
+            if ref_row and int(self._row_get(ref_row, "cnt", 0) or 0) >= REF_AVATAR_THRESHOLD:
+                cursor.execute(
+                    """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
+                       VALUES (?, ?, 'referral')
+                       ON CONFLICT (user_id, avatar_id) DO NOTHING""",
+                    (user_id, REF_AVATAR_ID),
+                )
+        except Exception:
+            pass  # таблица referrals может не существовать в тестах
+
+        # Подписочный образ — разблокируется при первой активации Premium
+        try:
+            cursor.execute(
+                "SELECT premium_until FROM players WHERE user_id = ?", (user_id,),
+            )
+            prem_row = cursor.fetchone()
+            if prem_row and self._row_get(prem_row, "premium_until"):
+                cursor.execute(
+                    """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
+                       VALUES (?, ?, 'subscription')
+                       ON CONFLICT (user_id, avatar_id) DO NOTHING""",
+                    (user_id, SUB_AVATAR_ID),
+                )
+        except Exception:
+            pass
+
         cursor.execute("SELECT equipped_avatar_id FROM players WHERE user_id = ?", (user_id,))
         row = cursor.fetchone()
         if row and not self._row_get(row, "equipped_avatar_id"):

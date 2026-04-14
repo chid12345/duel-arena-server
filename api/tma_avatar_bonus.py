@@ -17,7 +17,7 @@ def _avatar_effective_bonus(level: int, avatar_id: str) -> dict:
     cap = max(0, int(AVATAR_SCALE_MAX_BONUS))
     scale = min(cap, max(0, int(level)) // step)
     tier = (avatar.get("tier") or "").lower()
-    scale_allowed = tier in {"gold", "diamond", "elite"}
+    scale_allowed = tier in {"gold", "diamond", "elite", "premium", "sub", "referral"}
     b_str = int(avatar.get("strength", 0) or 0)
     b_end = int(avatar.get("endurance", 0) or 0)
     b_crit = int(avatar.get("crit", 0) or 0)

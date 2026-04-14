@@ -8,7 +8,12 @@ from config import AVATAR_CATALOG, AVATAR_SCALE_EVERY_LEVELS, AVATAR_SCALE_MAX_B
 
 
 class AvatarsHelpersMixin:
-    _BASE_AVATAR_IDS = ("base_tank", "base_rogue", "base_crit", "base_neutral")
+    _BASE_AVATAR_IDS = (
+        "base_tank", "base_rogue", "base_crit", "base_neutral",
+        "base_berserker", "base_monk", "base_shooter", "base_gladiator",
+        "base_shadow", "base_viking", "base_samurai", "base_paladin",
+        "base_ranger", "base_nomad",
+    )
     _ELITE_FREE_POINTS = 19
     _ELITE_FIXED_ENDURANCE = 5
 
