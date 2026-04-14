@@ -156,32 +156,27 @@ class ShopScene extends Phaser.Scene {
       if (!this._canAfford(item)) { this._toastNoMoney(item); return; }
       this._doBuy(item);
     };
+    const detailItem = (item) => () => this._showItemDetail(item);
+
+    // Хелпер: регистрирует 2 зоны — кнопка цены (покупка) + остальное (попап)
+    const pushSplit = (item, y, h, isFeatured) => {
+      const btn = isFeatured
+        ? this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2)
+        : this._renderRowCard(container, item, PAD, y, W - PAD * 2);
+      taps.push({ x: btn.btnX, y: btn.btnY, w: btn.btnW, h: btn.btnH, fn: tapItem(item) });
+      taps.push({ x: PAD, y, w: btn.btnX - PAD, h, fn: detailItem(item) });
+    };
 
     if (this._tab === 'consumables') {
       const items = this._getItems();
       const featured = items.slice(0, 2);
       const rest = items.slice(2);
-      const detailItem = (item) => () => this._showItemDetail(item);
       // Featured
       y = this._renderSectionLabel(container, PAD, y, W, '⭐  РЕКОМЕНДУЕМ');
-      featured.forEach(item => {
-        const btn = this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
-        // Кнопка цены → прямая покупка
-        taps.push({ x: btn.btnX, y: btn.btnY, w: btn.btnW, h: btn.btnH, fn: tapItem(item) });
-        // Остальная карточка → попап
-        taps.push({ x: PAD, y, w: W - PAD * 2 - btn.btnW - 10, h: 66, fn: detailItem(item) });
-        y += 74;
-      });
+      featured.forEach(item => { pushSplit(item, y, 66, true); y += 74; });
       // Rest
       y = this._renderSectionLabel(container, PAD, y, W, '🧪  ВСЕ ЗЕЛЬЯ И БУСТЫ');
-      rest.forEach(item => {
-        const btn = this._renderRowCard(container, item, PAD, y, W - PAD * 2);
-        // Кнопка цены → прямая покупка
-        taps.push({ x: btn.btnX, y: btn.btnY, w: btn.btnW, h: btn.btnH, fn: tapItem(item) });
-        // Остальная карточка → попап
-        taps.push({ x: PAD, y, w: btn.btnX - PAD, h: 38, fn: detailItem(item) });
-        y += 42;
-      });
+      rest.forEach(item => { pushSplit(item, y, 38, false); y += 42; });
     } else if (this._tab === 'scrolls') {
       const items = this._getItems();
       const gold = items.filter(i => i.currency === 'gold');
@@ -189,47 +184,23 @@ class ShopScene extends Phaser.Scene {
       // Gold scrolls — featured top 2
       y = this._renderSectionLabel(container, PAD, y, W, '🪙  ЗОЛОТЫЕ СВИТКИ · 1 бой');
       const goldFeat = gold.slice(0, 2), goldRest = gold.slice(2);
-      goldFeat.forEach(item => {
-        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
-        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
-        y += 74;
-      });
-      goldRest.forEach(item => {
-        this._renderRowCard(container, item, PAD, y, W - PAD * 2);
-        taps.push({ x: PAD, y, w: W - PAD * 2, h: 38, fn: tapItem(item) });
-        y += 42;
-      });
+      goldFeat.forEach(item => { pushSplit(item, y, 66, true); y += 74; });
+      goldRest.forEach(item => { pushSplit(item, y, 38, false); y += 42; });
       // Diamond scrolls
       y += 4;
       y = this._renderSectionLabel(container, PAD, y, W, '💎  АЛМАЗНЫЕ СВИТКИ · 3 боя');
       const diaFeat = dia.slice(0, 2), diaRest = dia.slice(2);
-      diaFeat.forEach(item => {
-        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
-        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
-        y += 74;
-      });
-      diaRest.forEach(item => {
-        this._renderRowCard(container, item, PAD, y, W - PAD * 2);
-        taps.push({ x: PAD, y, w: W - PAD * 2, h: 38, fn: tapItem(item) });
-        y += 42;
-      });
+      diaFeat.forEach(item => { pushSplit(item, y, 66, true); y += 74; });
+      diaRest.forEach(item => { pushSplit(item, y, 38, false); y += 42; });
     } else if (this._tab === 'boxes') {
       const items = this._getItems();
       const exchanges = items.filter(i => i.id.startsWith('exchange'));
       const boxes = items.filter(i => i.id.startsWith('box'));
       y = this._renderSectionLabel(container, PAD, y, W, '💱  ОБМЕН ВАЛЮТ');
-      exchanges.forEach(item => {
-        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
-        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
-        y += 74;
-      });
+      exchanges.forEach(item => { pushSplit(item, y, 66, true); y += 74; });
       y += 4;
       y = this._renderSectionLabel(container, PAD, y, W, '📦  ЯЩИКИ');
-      boxes.forEach(item => {
-        this._renderFeaturedCard(container, item, PAD, y, W - PAD * 2);
-        taps.push({ x: PAD, y, w: W - PAD * 2, h: 66, fn: tapItem(item) });
-        y += 74;
-      });
+      boxes.forEach(item => { pushSplit(item, y, 66, true); y += 74; });
     }
     setContentH(y + 10);
   }

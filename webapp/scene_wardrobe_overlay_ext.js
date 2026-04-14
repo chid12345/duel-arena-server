@@ -152,6 +152,8 @@
         ctr.add(g2); layer.push(g2);
         addT(ex+equipW/2, by2+bh/2, a.equipped?"Снять":"Надеть", 8, "#ffffff", true).setOrigin(.5);
         tapAreas.push({ x:ex, y:by2, w:equipW, h:bh, fn:() => this._avatarAction(a.equipped?"unequip":"equip",a,wp) });
+        // Тап на карточку (вне кнопок) → попап
+        tapAreas.push({ x:cx, y:cy, w:cardW, h:cardH-30, fn:() => this._showWardrobeDetail(a) });
       } else {
         let label="Надеть", action="equip";
         if (a.is_buy_card)   { label="🔥 11.99 USDT"; action="buy_usdt"; }
@@ -171,6 +173,8 @@
         ctr.add(btn); layer.push(btn);
         addT(bx+bw/2, by2+bh/2, label, 9, btnTxt, true).setOrigin(.5);
         tapAreas.push({ x:bx, y:by2, w:bw, h:bh, fn:() => this._avatarAction(action,a,wp) });
+        // Тап на карточку (вне кнопки) → попап
+        tapAreas.push({ x:cx, y:cy, w:cardW, h:cardH-30, fn:() => this._showWardrobeDetail(a) });
       }
     });
 
@@ -230,6 +234,29 @@
       } else { this._showToast(`❌ ${res?.message||res?.reason||"Ошибка"}`); }
     } catch { this._showToast("❌ Ошибка сети"); }
     this._avatarBusy=false;
+  };
+
+  StatsScene.prototype._showWardrobeDetail = function(a) {
+    const stats = [
+      { label:`⚔️ Сила +${a.strength}`,  bg:0x882222, color:'#ff8888' },
+      { label:`🏃 Ловк +${a.agility}`,   bg:0x115577, color:'#55ddff' },
+      { label:`💥 Инт +${a.intuition}`,   bg:0x551188, color:'#cc77ff' },
+      { label:`🛡 Вын +${a.endurance}`,   bg:0x115533, color:'#55ff99' },
+    ].filter(s => {
+      const v = parseInt(s.label.match(/\+(\d+)/)?.[1] || '0');
+      return v > 0;
+    });
+    const desc = a.special_bonus || '';
+    const meta = TYPE_META[a.class_type] || TYPE_META.free;
+    showItemDetailPopup(this, {
+      icon: a.icon,
+      name: a.name,
+      desc: desc ? `${meta.title} · ${meta.stars}\n\n${desc}` : `${meta.title} · ${meta.stars}`,
+      stats,
+      depthBase: 250,
+      actionLabel: a.owned ? (a.equipped ? '✅ Надет' : 'ℹ️ Закрыть') : null,
+      actionFn: () => closeItemDetailPopup(this),
+    });
   };
 
   StatsScene.prototype._closeAvatarOverlay = function() {

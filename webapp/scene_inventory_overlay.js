@@ -218,6 +218,17 @@
         ov.push(bg2, txt(this, bx+bw/2, by+12, btnLabel, 10, btnTxt, true).setOrigin(.5).setDepth(134));
         const z = this.add.zone(bx+bw/2, by+12, bw, 24).setInteractive({useHandCursor:true}).setDepth(135);
         z.on('pointerdown', () => this._applyInventoryItem(it.item_id)); ov.push(z);
+        // Тап на карточку (вне кнопки) → попап с описанием
+        const cardZ = this.add.zone(16 + (cardW - bw - 6) / 2, y + cardH / 2, cardW - bw - 6, cardH)
+          .setInteractive({ useHandCursor: true }).setDepth(135);
+        cardZ.on('pointerdown', () => {
+          showItemDetailPopup(this, {
+            icon: meta.icon, name: meta.name, desc: meta.desc,
+            actionLabel: btnLabel,
+            depthBase: 250,
+            actionFn: () => { closeItemDetailPopup(this); this._applyInventoryItem(it.item_id); },
+          });
+        }); ov.push(cardZ);
       });
     }
 
