@@ -141,19 +141,18 @@ Object.assign(ShopScene.prototype, {
       y += 40;
     }
 
-    // ── Секция: USDT свитки ──
-    if (scrollPkgs.length > 0) {
-      container.add(makePanel(this, 8, y, W-16, 22, 8, 0.6));
-      container.add(txt(this, 20, y+5, '📜  ОСОБЫЕ СВИТКИ', 12, '#3cc8dc', true));
-      container.add(txt(this, W-12, y+5, 'USDT', 11, '#ccccdd').setOrigin(1, 0));
-      y += 30;
-      const iw = (W - 32) / 2;
-      scrollPkgs.forEach((pkg, i) => {
+    // Разделяем свитки и ящики
+    const onlyScrolls = scrollPkgs.filter(p => !(p.scroll_id || '').startsWith('box_'));
+    const onlyBoxes   = scrollPkgs.filter(p => (p.scroll_id || '').startsWith('box_'));
+    const iw = (W - 32) / 2;
+
+    const _renderPkgGrid = (pkgs, isBox) => {
+      pkgs.forEach((pkg, i) => {
         const col = i % 2, row = Math.floor(i / 2);
         const ix = 8 + col * (iw + 8), iy = y + row * 74;
-        this._makeUsdtScrollCardC(container, pkg, ix, iy, iw - 4, 68);
+        if (isBox) this._makeUsdtBoxCardC(container, pkg, ix, iy, iw - 4, 68);
+        else       this._makeUsdtScrollCardC(container, pkg, ix, iy, iw - 4, 68);
         taps.push({ x: ix, y: iy, w: iw - 4, h: 68, fn: () => {
-          const isBox = (pkg.scroll_id || '').startsWith('box_');
           const desc = isBox
             ? `Эпический ящик с множеством наград.\nВнутри: USDT-свитки, алмазные свитки, шанс на Титана и Premium.\n\nДобавляется в инвентарь → Особые.`
             : `Мощный боевой свиток USDT-класса.\nДаёт значительный прирост статов на несколько боёв.\n\nДобавляется в инвентарь → Особые.`;
@@ -165,7 +164,25 @@ Object.assign(ShopScene.prototype, {
           });
         }});
       });
-      y += Math.ceil(scrollPkgs.length / 2) * 74 + 12;
+      y += Math.ceil(pkgs.length / 2) * 74 + 12;
+    };
+
+    // ── Секция: Эпические ящики (первыми — привлекают внимание) ──
+    if (onlyBoxes.length > 0) {
+      container.add(makePanel(this, 8, y, W-16, 22, 8, 0.6));
+      container.add(txt(this, 20, y+5, '🎲  ЭПИЧЕСКИЕ ЯЩИКИ', 12, '#ffaa00', true));
+      container.add(txt(this, W-12, y+5, 'USDT', 11, '#ccccdd').setOrigin(1, 0));
+      y += 30;
+      _renderPkgGrid(onlyBoxes, true);
+    }
+
+    // ── Секция: USDT свитки ──
+    if (onlyScrolls.length > 0) {
+      container.add(makePanel(this, 8, y, W-16, 22, 8, 0.6));
+      container.add(txt(this, 20, y+5, '📜  ОСОБЫЕ СВИТКИ', 12, '#3cc8dc', true));
+      container.add(txt(this, W-12, y+5, 'USDT', 11, '#ccccdd').setOrigin(1, 0));
+      y += 30;
+      _renderPkgGrid(onlyScrolls, false);
     }
 
     // ── Секция: Алмазы / Premium / Сброс ──

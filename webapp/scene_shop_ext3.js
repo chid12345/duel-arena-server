@@ -177,6 +177,18 @@ Object.assign(ShopScene.prototype, {
     c.add(txt(this, ix+iw/2, iy+ih-14, `${pkg.usdt} USDT`, 11, '#3ce8ff', true).setOrigin(0.5));
   },
 
+  _makeUsdtBoxCardC(c, pkg, ix, iy, iw, ih) {
+    const bg = this.add.graphics();
+    bg.fillStyle(0x2a1e08, 0.95); bg.fillRoundedRect(ix, iy, iw, ih, 10);
+    bg.lineStyle(1.5, 0xffaa00, 0.7); bg.strokeRoundedRect(ix, iy, iw, ih, 10);
+    c.add(bg);
+    c.add(txt(this, ix+iw/2, iy+18, pkg.label, 10, '#ffffff', true).setOrigin(0.5).setWordWrapWidth(iw-8));
+    const btnG = this.add.graphics();
+    btnG.fillStyle(0x7a5000, 1); btnG.fillRoundedRect(ix+4, iy+ih-22, iw-8, 17, 5);
+    c.add(btnG);
+    c.add(txt(this, ix+iw/2, iy+ih-14, `${pkg.usdt} USDT`, 11, '#ffdd88', true).setOrigin(0.5));
+  },
+
   /* ── Покупки ─────────────────────────────────────────── */
   async _buyStars(pkg) {
     if (this._buying) return;
