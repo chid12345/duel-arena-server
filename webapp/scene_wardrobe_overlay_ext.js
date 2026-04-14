@@ -91,30 +91,43 @@
       card.lineStyle(0,0,0); card.fillStyle(meta.dim,.55); card.fillRect(cx+10,cy,cardW-20,2);
       ctr.add(card); layer.push(card);
 
+      // Иконка — левый верх
       const ig = this.add.graphics();
-      ig.fillStyle(meta.dim,.2); ig.fillRoundedRect(cx+6,cy+6,28,28,7);
+      ig.fillStyle(meta.dim,.22); ig.fillRoundedRect(cx+7,cy+7,32,32,8);
       ctr.add(ig); layer.push(ig);
 
       const addT = (x,y,s,sz,col,bold,stroke) => {
         const t = txt(this,x,y,s,sz,col,bold,stroke);
         ctr.add(t); layer.push(t); return t;
       };
-      addT(cx+20, cy+20, a.icon,    15, "#ffffff").setOrigin(0.5);
-      addT(cx+42, cy+5,  a.name,    10, "#ffffff", true);
-      addT(cx+42, cy+17, meta.title, 8, colorHex,  true);
-      addT(cx+42, cy+27, meta.stars, 8, colorHex);
+      addT(cx+23, cy+23, a.icon, 16, "#ffffff").setOrigin(0.5);
 
-      // Мини-статы справа
+      // Имя / тип / звёзды — правее иконки
+      addT(cx+46, cy+7,  a.name,     10, "#ffffff", true);
+      addT(cx+46, cy+20, meta.title,  8, colorHex,  true);
+      addT(cx+46, cy+30, meta.stars,  8, colorHex);
+
+      // Спецбонус — под иконкой, на всю ширину
+      if (a.special_bonus) {
+        addT(cx+7, cy+44, a.special_bonus.slice(0,34), 8, "#ccccee");
+      }
+
+      // Разделитель перед кнопкой
+      const divG = this.add.graphics();
+      divG.fillStyle(meta.dim, .25); divG.fillRect(cx+7, cy+cardH-30, cardW-14, 1);
+      ctr.add(divG); layer.push(divG);
+
+      // Мини-статы — правый верх, 4 строки
       const sx = cx+cardW-6;
       [
         { lbl:`С+${a.strength}`,  val:a.strength,   col:"#ff5555", dim:"#886666" },
         { lbl:`Л+${a.agility}`,   val:a.agility,    col:"#00e8ff", dim:"#6699aa" },
         { lbl:`И+${a.intuition}`, val:a.intuition,  col:"#dd88ff", dim:"#8866aa" },
         { lbl:`В+${a.endurance}`, val:a.endurance,  col:"#44ff88", dim:"#66aa77" },
-      ].forEach((s,si) => addT(sx, cy+5+si*10, s.lbl, 9, s.val>0?s.col:s.dim, true, "#000000").setOrigin(1,0));
+      ].forEach((s,si) => addT(sx, cy+7+si*10, s.lbl, 9, s.val>0?s.col:s.dim, true, "#000000").setOrigin(1,0));
 
-      // Кнопки (тапы через tapAreas)
-      const bx=cx+8, bh=22, bw=cardW-16, by2=cy+cardH-26;
+      // Кнопка — всегда у нижнего края
+      const bx=cx+7, bh=22, bw=cardW-14, by2=cy+cardH-27;
 
       if (a.is_usdt_slot) {
         const openW = Math.floor(bw*.55), equipW = bw-openW-4;
