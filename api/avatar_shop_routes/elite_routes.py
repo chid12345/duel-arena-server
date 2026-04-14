@@ -66,6 +66,8 @@ def attach_avatar_elite(router: APIRouter, ctx: Dict[str, Any]) -> None:
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         unlock = db.unlock_avatar(uid, ELITE_AVATAR_ID, source="stars")
+        if unlock.get("ok") and not unlock.get("already_unlocked"):
+            db.track_purchase(uid, ELITE_AVATAR_ID, "stars", int(ELITE_AVATAR_STARS))
         _cache_invalidate(uid)
         state = db.get_player_avatar_state(uid)
         player = db.get_or_create_player(uid, "")

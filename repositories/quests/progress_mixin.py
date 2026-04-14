@@ -124,7 +124,7 @@ class QuestsProgressMixin:
                 self.add_task_progress(user_id, "ach_collect_avatar_gold", 1)
             elif item_id.startswith("dia_"):
                 self.add_task_progress(user_id, "ach_collect_avatar_dia", 1)
-            elif item_id.startswith("prem_"):
+            elif item_id.startswith("prem_") or item_id.startswith("elite_"):
                 self.add_task_progress(user_id, "ach_collect_avatar_premium", 1)
         except Exception as e:
             log.warning("track_purchase error: %s", e)
