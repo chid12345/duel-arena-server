@@ -42,14 +42,13 @@ class UsersPlayerCoreMixin:
             player = cursor.fetchone()
             # Стартовый набор новичка
             self.add_starter_kit(user_id)
-        # Одноразовое применение бонуса образа (если ещё не было)
-        try:
-            self._apply_initial_avatar_bonus(cursor, user_id)
-            conn.commit()
-            cursor.execute("SELECT * FROM players WHERE user_id = ?", (user_id,))
-            player = cursor.fetchone()
-        except Exception:
-            pass
+        # Одноразовое применение бонуса образа (отдельное соединение — безопасно)
+        self._apply_initial_avatar_bonus(cursor, user_id)
+        # Перечитать player (миграция могла изменить статы)
+        cursor.execute("SELECT * FROM players WHERE user_id = ?", (user_id,))
+        fresh = cursor.fetchone()
+        if fresh:
+            player = fresh
         conn.close()
         return dict(player)
 
