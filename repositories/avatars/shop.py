@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Dict
 
+from config import PLAYER_START_CRIT, PLAYER_START_ENDURANCE, PLAYER_START_STRENGTH
+
 
 class AvatarsShopMixin:
     def unlock_avatar(self, user_id: int, avatar_id: str, source: str = "shop") -> Dict[str, Any]:
@@ -109,9 +111,9 @@ class AvatarsShopMixin:
             d_crit = int(new_b["crit"]) - int(cur_b["crit"])
             d_hp = int(new_b["hp_flat"]) - int(cur_b["hp_flat"])
 
-            new_strength = max(1, int(p["strength"]) + d_str)
-            new_endurance = max(1, int(p["endurance"]) + d_end)
-            new_crit = max(1, int(p["crit"]) + d_crit)
+            new_strength = max(PLAYER_START_STRENGTH, int(p["strength"]) + d_str)
+            new_endurance = max(PLAYER_START_ENDURANCE, int(p["endurance"]) + d_end)
+            new_crit = max(PLAYER_START_CRIT, int(p["crit"]) + d_crit)
             new_max_hp = max(1, int(p["max_hp"]) + d_hp)
             new_current_hp = min(new_max_hp, max(1, int(p["current_hp"]) + d_hp))
 

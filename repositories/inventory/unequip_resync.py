@@ -19,8 +19,7 @@ _PG_UNEQUIP_SQL = """UPDATE players
        endurance = GREATEST(1, endurance - ?),
        crit      = GREATEST(1, crit      - ?),
        max_hp = ?, current_hp = ?,
-       current_class = NULL, current_class_type = NULL,
-       equipped_avatar_id = 'base_neutral'
+       current_class = NULL, current_class_type = NULL
    WHERE user_id = ?"""
 
 _SQ_UNEQUIP_SQL = """UPDATE players
@@ -28,8 +27,7 @@ _SQ_UNEQUIP_SQL = """UPDATE players
        endurance = CASE WHEN (endurance - ?) < 1 THEN 1 ELSE (endurance - ?) END,
        crit      = CASE WHEN (crit      - ?) < 1 THEN 1 ELSE (crit      - ?) END,
        max_hp = ?, current_hp = ?,
-       current_class = NULL, current_class_type = NULL,
-       equipped_avatar_id = 'base_neutral'
+       current_class = NULL, current_class_type = NULL
    WHERE user_id = ?"""
 
 
@@ -70,7 +68,7 @@ class InventoryUnequipResyncMixin:
                          vec["crit"], vec["crit"], new_max_hp, new_current_hp, user_id))
             else:
                 cursor.execute(
-                    "UPDATE players SET current_class = NULL, current_class_type = NULL, equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
+                    "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
                     (user_id,),
                 )
 
@@ -161,7 +159,7 @@ class InventoryUnequipResyncMixin:
             new_chp = min(new_mhp, max(1, int(round(old_chp / old_mhp * new_mhp))))
 
             cursor.execute(
-                "UPDATE players SET strength = ?, endurance = ?, crit = ?, max_hp = ?, current_hp = ? WHERE user_id = ?",
+                "UPDATE players SET strength = ?, endurance = ?, crit = ?, max_hp = ?, current_hp = ?, avatar_bonus_applied = 0 WHERE user_id = ?",
                 (int(new_str), int(new_agi), int(new_int), int(new_mhp), int(new_chp), user_id),
             )
             if own_conn and not _in_tx:
