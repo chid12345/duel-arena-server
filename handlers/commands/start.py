@@ -34,11 +34,21 @@ class BotHandlersStart:
         if context.args:
             ref_code = context.args[0]
             if ref_code.startswith("ref_"):
-                ok_ref, referrer_uid = db.register_referral(user.id, ref_code)
-                if ok_ref and referrer_uid is not None:
-                    from handlers.commands import BotHandlers
+                try:
+                    ok_ref, referrer_uid = db.register_referral(user.id, ref_code)
+                    logger.info(
+                        "event=register_referral user_id=%s ref_code=%s ok=%s referrer=%s",
+                        user.id, ref_code, ok_ref, referrer_uid,
+                    )
+                    if ok_ref and referrer_uid is not None:
+                        from handlers.commands import BotHandlers
 
-                    await BotHandlers.notify_referrer_join(context.bot, referrer_uid, user)
+                        await BotHandlers.notify_referrer_join(context.bot, referrer_uid, user)
+                except Exception as _ref_exc:
+                    logger.error(
+                        "event=register_referral_error user_id=%s ref_code=%s error=%s",
+                        user.id, ref_code, _ref_exc,
+                    )
 
         endurance_inv = stamina_stats_invested(
             player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1)

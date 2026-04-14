@@ -21,9 +21,14 @@ class SocialReferralCryptoStarsMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT first_premium_at FROM players WHERE user_id = ?", (buyer_id,))
+            cursor.execute("SELECT first_premium_at, referral_tier FROM players WHERE user_id = ?", (buyer_id,))
             row = cursor.fetchone()
             if row and row["first_premium_at"]:
+                # Продление — только обновляем is_premium, без повторных наград
+                cursor.execute("UPDATE players SET is_premium = 1 WHERE user_id = ?", (buyer_id,))
+                conn.commit()
+                out["ok"] = True
+                out["renewal"] = True
                 return out
             cursor.execute(
                 "SELECT COUNT(*) AS c FROM referrals r INNER JOIN players p ON p.user_id = r.referred_id "
@@ -36,7 +41,14 @@ class SocialReferralCryptoStarsMixin:
                 if rank <= 10
                 else (REFERRAL_PCT_SUB_RANK_11_30 if rank <= 30 else REFERRAL_PCT_SUB_RANK_31_PLUS)
             )
+            tier = "vip" if rank >= 31 else "early"
+            now = datetime.utcnow().isoformat()
             reward_usdt = round(usdt_paid * pct / 100, 4)
+            # Фиксируем первую покупку — чтобы игрок считался "платящим" в статистике
+            cursor.execute(
+                "UPDATE players SET is_premium = 1, first_premium_at = ?, referral_subscriber_rank = ?, referral_tier = ? WHERE user_id = ?",
+                (now, rank, tier, buyer_id),
+            )
             if reward_usdt > 0:
                 cursor.execute(
                     "UPDATE players SET referral_usdt_balance = COALESCE(referral_usdt_balance, 0) + ? WHERE user_id = ?",
@@ -47,7 +59,7 @@ class SocialReferralCryptoStarsMixin:
                 (referrer_id, buyer_id, pct, reward_usdt),
             )
             conn.commit()
-            out.update({"ok": True, "referrer_id": referrer_id, "reward_usdt": reward_usdt, "rank": rank, "percent": pct})
+            out.update({"ok": True, "referrer_id": referrer_id, "reward_usdt": reward_usdt, "rank": rank, "percent": pct, "tier": tier})
             return out
         finally:
             conn.close()
