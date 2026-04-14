@@ -45,4 +45,6 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_11_003_premium_box_claimed",
     "2026_04_25_001_task_system",
     "2026_04_25_002_daily_quests_tracking",
+    "2026_04_26_001_perf_indexes",
+    "2026_04_27_001_avatar_bonus_applied",
 )

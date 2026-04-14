@@ -100,4 +100,9 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_players_username ON players (username)",
     "CREATE INDEX IF NOT EXISTS idx_season_stats_user ON season_stats (user_id)",
     "CREATE INDEX IF NOT EXISTS idx_daily_quests_user ON daily_quests (user_id)",
+    # Система образов (аватарок)
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS equipped_avatar_id TEXT",
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS avatar_bonus_applied INTEGER DEFAULT 0",
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS current_class TEXT",
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS current_class_type TEXT",
 )
