@@ -1,6 +1,6 @@
 /* ============================================================
    Inventory Overlay — ext1: _applyInventoryItem, _showReplaceDialog,
-     _closeInvOverlay, _showBoxReveal
+     _closeInvOverlay, _showBoxReveal (мульти-дроп)
    ============================================================ */
 
 (() => {
@@ -15,7 +15,6 @@
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-        // Обновляем инвентарь локально — без второго GET-запроса
         if (this._invData?.inventory) {
           const idx = this._invData.inventory.findIndex(i => i.item_id === itemId);
           if (idx !== -1) {
@@ -67,7 +66,6 @@
         const res = await post('/api/shop/apply', { item_id: newItemId, replace: true });
         if (res?.ok) {
           if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-          // Обновляем локально — без лишнего GET
           if (this._invData?.inventory) {
             const idx = this._invData.inventory.findIndex(i => i.item_id === newItemId);
             if (idx !== -1) {
@@ -95,59 +93,91 @@
   StatsScene.prototype._closeInvOverlay = function() {
     (this._invOverlay || []).forEach(o => { try { o.destroy(); } catch {} });
     this._invOverlay = null;
-    this._refreshBuffDisplay(); // синхронизировать статы после закрытия
+    this._refreshBuffDisplay();
   };
 
-  /* ── Красивый попап при открытии ящика ─────────────────── */
+  /* ── Попап открытия ящика — мульти-дроп ─────────────────── */
   StatsScene.prototype._showBoxReveal = function(res) {
     const { W, H } = this;
-    const icon = res.item_icon || '🎁';
-    const name = res.item_name || 'Предмет';
-    const isEpic = (res.item_id || '').includes('12') || (res.item_id || '').includes('titan') || (res.item_id || '').includes('500');
-    const glowColor = isEpic ? 0xffaa00 : 0x55cc66;
-    const glowHex   = isEpic ? '#ffaa00' : '#55cc66';
+    const items = res.items || [{ item_id: res.item_id, icon: res.item_icon, name: res.item_name }];
+    const hasEpic = items.some(i =>
+      (i.item_id || '').includes('12') || (i.item_id || '').includes('titan')
+      || (i.item_id || '').includes('500') || i.item_id === '_premium' || i.item_id === '_diamonds'
+    );
+    const glowColor = hasEpic ? 0xffaa00 : 0x55cc66;
+    const glowHex   = hasEpic ? '#ffaa00' : '#55cc66';
     const rvl = [];
 
     // Затемнение
     rvl.push(this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.85).setDepth(160));
 
-    // Карточка
-    const cW = W - 64, cH = 220, cX = 32, cY = H/2 - cH/2;
+    // Размер карточки зависит от количества предметов
+    const rowH = 32;
+    const headerH = 50;
+    const footerH = 54;
+    const listH = Math.min(items.length, 8) * rowH;
+    const cH = headerH + listH + footerH;
+    const cW = W - 48, cX = 24, cY = Math.max(40, H/2 - cH/2);
+
     const bg = this.add.graphics().setDepth(161);
     bg.fillStyle(0x12101e, 0.98); bg.fillRoundedRect(cX, cY, cW, cH, 16);
     bg.lineStyle(2.5, glowColor, 0.9); bg.strokeRoundedRect(cX, cY, cW, cH, 16);
     rvl.push(bg);
 
-    // Лучи (статичные линии вместо анимации — просто)
+    // Лучи
     const rg = this.add.graphics().setDepth(161);
-    rg.lineStyle(1, glowColor, 0.18);
+    rg.lineStyle(1, glowColor, 0.15);
     for (let a = 0; a < 360; a += 30) {
       const rad = a * Math.PI / 180;
-      rg.lineBetween(W/2, H/2, W/2 + Math.cos(rad)*140, H/2 + Math.sin(rad)*140);
+      rg.lineBetween(W/2, cY + headerH/2, W/2 + Math.cos(rad)*120, cY + headerH/2 + Math.sin(rad)*120);
     }
     rvl.push(rg);
 
-    rvl.push(txt(this, W/2, cY + 22, '🎲 ИЗ ЯЩИКА ВЫПАЛО', 11, glowHex, true).setOrigin(0.5).setDepth(162));
-    rvl.push(txt(this, W/2, cY + 70, icon, 44).setOrigin(0.5).setDepth(162));
-    rvl.push(txt(this, W/2, cY + 120, name, 15, '#ffffff', true).setOrigin(0.5).setDepth(162));
-    rvl.push(txt(this, W/2, cY + 142, '→ добавлено в инвентарь', 10, '#ddddff').setOrigin(0.5).setDepth(162));
+    // Заголовок
+    const countTxt = items.length > 1 ? ` (${items.length} шт.)` : '';
+    rvl.push(txt(this, W/2, cY + 16, `🎲 ИЗ ЯЩИКА ВЫПАЛО${countTxt}`, 12, glowHex, true).setOrigin(0.5).setDepth(162));
 
-    if (isEpic) rvl.push(txt(this, W/2, cY + 158, '⭐ РЕДКИЙ ПРЕДМЕТ ⭐', 11, '#ffcc44', true).setOrigin(0.5).setDepth(162));
+    // Разделитель
+    const sepG = this.add.graphics().setDepth(162);
+    sepG.lineStyle(1, glowColor, 0.3);
+    sepG.lineBetween(cX + 16, cY + 34, cX + cW - 16, cY + 34);
+    rvl.push(sepG);
+
+    // Список предметов
+    items.slice(0, 8).forEach((item, i) => {
+      const iy = cY + headerH + i * rowH;
+      const isSpecial = (item.item_id || '').includes('12') || (item.item_id || '').includes('titan')
+        || item.item_id === '_premium' || item.item_id === '_diamonds';
+      const nameCol = isSpecial ? '#ffcc44' : '#e8e8ff';
+
+      rvl.push(txt(this, cX + 20, iy + rowH/2, item.icon || '🎁', 16).setOrigin(0, 0.5).setDepth(162));
+      rvl.push(txt(this, cX + 44, iy + rowH/2, item.name || item.item_id, 11, nameCol, isSpecial).setOrigin(0, 0.5).setDepth(162));
+      if (isSpecial) {
+        rvl.push(txt(this, cX + cW - 16, iy + rowH/2, '⭐', 10).setOrigin(1, 0.5).setDepth(162));
+      }
+    });
+    if (items.length > 8) {
+      rvl.push(txt(this, W/2, cY + headerH + 8 * rowH + 4, `... и ещё ${items.length - 8}`, 10, '#aaaacc').setOrigin(0.5).setDepth(162));
+    }
+
+    // Надпись
+    rvl.push(txt(this, W/2, cY + cH - footerH + 2, '→ всё добавлено в инвентарь', 9, '#aaccff').setOrigin(0.5).setDepth(162));
 
     // Кнопка OK
-    const okY = cY + cH - 44, okW = cW - 48;
+    const okY = cY + cH - 42, okW = cW - 48;
     const okG = this.add.graphics().setDepth(162);
     okG.fillStyle(glowColor === 0xffaa00 ? 0x7a5000 : 0x1a4a2a, 1);
-    okG.fillRoundedRect(cX + 24, okY, okW, 36, 10);
+    okG.fillRoundedRect(cX + 24, okY, okW, 34, 10);
     okG.lineStyle(1.5, glowColor, 0.9);
-    okG.strokeRoundedRect(cX + 24, okY, okW, 36, 10);
-    rvl.push(okG, txt(this, W/2, okY + 18, '✅ Отлично!', 13, '#ffffff', true).setOrigin(0.5).setDepth(163));
-    const okZ = this.add.zone(W/2, okY + 18, okW, 36).setInteractive({useHandCursor:true}).setDepth(164);
+    okG.strokeRoundedRect(cX + 24, okY, okW, 34, 10);
+    rvl.push(okG, txt(this, W/2, okY + 17, '✅ Отлично!', 13, '#ffffff', true).setOrigin(0.5).setDepth(163));
+    const okZ = this.add.zone(W/2, okY + 17, okW, 34).setInteractive({useHandCursor:true}).setDepth(164);
     okZ.on('pointerdown', () => {
       rvl.forEach(o => { try { o.destroy(); } catch {} });
       this._renderInvOverlay();
     });
     rvl.push(okZ);
+    tg?.HapticFeedback?.notificationOccurred('success');
     this._invOverlay = (this._invOverlay || []).concat(rvl);
   };
 })();

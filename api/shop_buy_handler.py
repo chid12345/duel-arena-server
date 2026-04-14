@@ -65,7 +65,7 @@ async def shop_buy_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_C
         return r
 
     # === Лут-боксы → в инвентарь ===
-    if iid in ("box_common", "box_rare"):
+    if iid in ("box_common", "box_rare", "box_rare_c"):
         r = _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
         if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
         return r

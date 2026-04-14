@@ -53,9 +53,11 @@ SHOP_CATALOG = {
     "exchange_large":  {"name": "50💎 → 4000🪙",        "price": 50,  "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 4000 золота"},
 
     # ── Лут-боксы ─────────────────────────────────────────────
-    "box_common":      {"name": "Обычный ящик",         "price": 150, "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "Случайный предмет"},
-    "box_rare":        {"name": "Редкий ящик",          "price": 50,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "Ценный предмет, 5% шанс особого"},
-    "box_epic":        {"name": "Эпический ящик",       "price": 0,   "currency": "diamonds", "icon": "🟣", "tab": "boxes", "desc": "Особый предмет USDT-уровня",   "inventory": True},
+    "box_common":      {"name": "Обычный ящик",         "price": 150, "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "2–4 свитка, 5% алмазный, 3% бонус 💎", "inventory": True},
+    "box_rare":        {"name": "Редкий ящик",          "price": 50,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков, 3% Premium", "inventory": True},
+    "box_rare_c":      {"name": "Редкий ящик+",         "price": 80,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2 гарант + до 4 бонус, 5% джекпот 300💎", "inventory": True},
+    "box_epic_e2":     {"name": "Эпический: Удача",     "price": 0,   "currency": "diamonds", "icon": "🔮", "tab": "boxes", "desc": "USDT-свиток + 2–4 алмазных, 20% Титан", "inventory": True},
+    "box_epic_e3":     {"name": "Эпический: Набор воина","price": 0,  "currency": "diamonds", "icon": "⚔️", "tab": "boxes", "desc": "USDT-свиток + XP×2 + 2 свитка, 10% Титан", "inventory": True},
 
     # ── USDT-свитки (только для попапов/инвентаря, не в обычном магазине) ───
     "scroll_str_12":   {"name": "Эликсир силы +12",      "price": 0, "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +12, 5 боёв",         "inventory": True},
@@ -122,7 +124,8 @@ USDT_SCROLL_PACKAGES = [
     {"id": "us_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",          "usdt": "1"},
     {"id": "us_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "usdt": "2"},
     {"id": "us_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "usdt": "3"},
-    {"id": "us_box",     "scroll_id": "box_epic",        "label": "🟣 Эпический ящик",            "usdt": "2"},
+    {"id": "us_box_e2",  "scroll_id": "box_epic_e2",      "label": "🔮 Эпический: Удача",           "usdt": "3"},
+    {"id": "us_box_e3",  "scroll_id": "box_epic_e3",      "label": "⚔️ Эпический: Набор воина",    "usdt": "3"},
 ]
 
 CRYPTO_PACKAGES = [

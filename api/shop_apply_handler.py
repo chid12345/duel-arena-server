@@ -60,7 +60,8 @@ async def shop_apply_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP
         return {"ok": True, "msg": "📚 Охота за опытом активирована на 24 ч!", "player": _player_api(dict(player))}
 
     # Ящики из инвентаря (открываются без списания валюты — уже куплены)
-    if iid in ("box_common", "box_rare", "box_epic"):
+    from api.shop_loot_box import ALL_BOX_IDS
+    if iid in ALL_BOX_IDS:
         if not db.has_item(uid, iid):
             return {"ok": False, "reason": "Предмет не найден в инвентаре"}
         db.remove_from_inventory(uid, iid)
