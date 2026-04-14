@@ -121,15 +121,34 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
       container.add(txt(this, cx, y + 68, parts[1] || '', 8, rwCol).setOrigin(0.5));
     }
 
-    // Пульсация + тап для текущего дня
+    // Пульсация для текущего дня
     if (isCurrent) {
       const pulse = this.add.graphics();
       pulse.fillStyle(0xffc83c, 0.12);
       pulse.fillRoundedRect(dx + 1, y + 1, cellW - 2, cellH - 2, 6);
       container.add(pulse);
       this.tweens.add({ targets: pulse, alpha: 0, duration: 800, yoyo: true, repeat: -1 });
-      const ty = y, tx = dx + 1, tw = cellW - 2;
-      taps.push({ y: ty + 1, h: cellH - 2, x: tx, w: tw, fn: () => this._claimStreakDay(dn) });
+    }
+    // Тап на ячейку → попап с наградой дня
+    {
+      const ty = y, tx = dx + 1, tw = cellW - 2, _dn = dn, _rw = rw;
+      const _isCur = isCurrent, _isCl = isClaimed;
+      taps.push({ y: ty + 1, h: cellH - 2, x: tx, w: tw, fn: () => {
+        const rwParts = [];
+        if (_rw.gold > 0)     rwParts.push(`+${_rw.gold} 💰`);
+        if (_rw.diamonds > 0) rwParts.push(`+${_rw.diamonds} 💎`);
+        if (_rw.xp > 0)       rwParts.push(`+${_rw.xp} ⭐`);
+        if (_rw.item)         rwParts.push(`📦 ${_rw.item}`);
+        const status = _isCl ? '✅ Получено' : _isCur ? '▶️ Сегодня!' : '🔒 Заходи каждый день';
+        showItemDetailPopup(this, {
+          icon: _isCl ? '✅' : _isCur ? '🎁' : '🔒',
+          name: `День ${_dn} из 7`,
+          desc: `${status}\n\nНаграда:\n${rwParts.join('\n')}${_rw.item ? '\n\n📦 Предмет добавится в инвентарь' : ''}`,
+          actionLabel: _isCur ? '🎁 Забрать награду' : null,
+          canAct: _isCur,
+          actionFn: _isCur ? () => { closeItemDetailPopup(this); this._claimStreakDay(_dn); } : null,
+        });
+      }});
     }
   }
   y += cellH + 10;
@@ -174,6 +193,24 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
     // Замок/галочка справа (кроме статус-иконки)
     if (isLk2) container.add(txt(this, W - PAD - 8, y + rowH/2, '🔒', 10).setOrigin(1, 0.5));
 
+    // Тап на строку → попап
+    {
+      const _y = y, _dn2 = dn2, _rw2 = rw2, _isCl2 = isCl2, _isCur2 = isCur2;
+      taps.push({ y: _y, h: rowH, fn: () => {
+        const rp = [];
+        if (_rw2.gold > 0)     rp.push(`+${_rw2.gold} 💰`);
+        if (_rw2.diamonds > 0) rp.push(`+${_rw2.diamonds} 💎`);
+        if (_rw2.xp > 0)       rp.push(`+${_rw2.xp} ⭐`);
+        if (_rw2.item)         rp.push(`📦 ${_rw2.item}`);
+        const st = _isCl2 ? '✅ Получено' : _isCur2 ? '▶️ Сегодня!' : '🔒 Заходи каждый день';
+        showItemDetailPopup(this, {
+          icon: _isCl2 ? '✅' : _isCur2 ? '🎁' : '🔒',
+          name: `День ${_dn2} из 7`, desc: `${st}\n\n${rp.join('\n')}`,
+          actionLabel: _isCur2 ? '🎁 Забрать' : null, canAct: _isCur2,
+          actionFn: _isCur2 ? () => { closeItemDetailPopup(this); this._claimStreakDay(_dn2); } : null,
+        });
+      }});
+    }
     y += rowH + 3;
   }
 
