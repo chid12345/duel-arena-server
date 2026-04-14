@@ -59,7 +59,7 @@
       : allCards.filter(x => !x.is_usdt_slot);
     const layer = []; this._avatarCardsLayer = layer;
 
-    const cardH   = 140;
+    const cardH   = 112;
     const cardW   = Math.floor((W-40)/2);
     const areaTop = panelY + 42;
     const areaBot = panelY + panelH - 4;
@@ -92,43 +92,43 @@
       ctr.add(card); layer.push(card);
 
       const ig = this.add.graphics();
-      ig.fillStyle(meta.dim,.2); ig.fillRoundedRect(cx+8,cy+8,36,36,8);
+      ig.fillStyle(meta.dim,.2); ig.fillRoundedRect(cx+6,cy+6,28,28,7);
       ctr.add(ig); layer.push(ig);
 
       const addT = (x,y,s,sz,col,bold,stroke) => {
         const t = txt(this,x,y,s,sz,col,bold,stroke);
         ctr.add(t); layer.push(t); return t;
       };
-      addT(cx+26, cy+26, a.icon,    18, "#ffffff");
-      addT(cx+52, cy+8,  a.name,    11, "#ffffff", true);
-      addT(cx+52, cy+22, meta.title, 9, colorHex,  true);
-      addT(cx+52, cy+34, meta.stars, 9, colorHex);
+      addT(cx+20, cy+20, a.icon,    15, "#ffffff").setOrigin(0.5);
+      addT(cx+42, cy+5,  a.name,    10, "#ffffff", true);
+      addT(cx+42, cy+17, meta.title, 8, colorHex,  true);
+      addT(cx+42, cy+27, meta.stars, 8, colorHex);
 
       // Мини-статы справа
-      const sx = cx+cardW-8;
+      const sx = cx+cardW-6;
       [
         { lbl:`С+${a.strength}`,  val:a.strength,   col:"#ff5555", dim:"#886666" },
         { lbl:`Л+${a.agility}`,   val:a.agility,    col:"#00e8ff", dim:"#6699aa" },
         { lbl:`И+${a.intuition}`, val:a.intuition,  col:"#dd88ff", dim:"#8866aa" },
         { lbl:`В+${a.endurance}`, val:a.endurance,  col:"#44ff88", dim:"#66aa77" },
-      ].forEach((s,si) => addT(sx, cy+7+si*12, s.lbl, 10, s.val>0?s.col:s.dim, true, "#000000").setOrigin(1,0));
+      ].forEach((s,si) => addT(sx, cy+5+si*10, s.lbl, 9, s.val>0?s.col:s.dim, true, "#000000").setOrigin(1,0));
 
       // Кнопки (тапы через tapAreas)
-      const bx=cx+8, bh=26, bw=cardW-16, by2=cy+cardH-32;
+      const bx=cx+8, bh=22, bw=cardW-16, by2=cy+cardH-26;
 
       if (a.is_usdt_slot) {
         const openW = Math.floor(bw*.55), equipW = bw-openW-4;
         const g1 = this.add.graphics();
         g1.fillStyle(0x8040e0,.95); g1.fillRoundedRect(bx,by2,openW,bh,8);
         ctr.add(g1); layer.push(g1);
-        addT(bx+openW/2, by2+bh/2, "Открыть →", 9, "#ffffff", true).setOrigin(.5);
+        addT(bx+openW/2, by2+bh/2, "Открыть →", 8, "#ffffff", true).setOrigin(.5);
         tapAreas.push({ x:bx, y:by2, w:openW, h:bh, fn:() => this._avatarAction("open_detail",a,wp) });
 
         const ex = bx+openW+4;
         const g2 = this.add.graphics();
         g2.fillStyle(a.equipped?0xcc4422:0x256830,.95); g2.fillRoundedRect(ex,by2,equipW,bh,8);
         ctr.add(g2); layer.push(g2);
-        addT(ex+equipW/2, by2+bh/2, a.equipped?"Снять":"Надеть", 9, "#ffffff", true).setOrigin(.5);
+        addT(ex+equipW/2, by2+bh/2, a.equipped?"Снять":"Надеть", 8, "#ffffff", true).setOrigin(.5);
         tapAreas.push({ x:ex, y:by2, w:equipW, h:bh, fn:() => this._avatarAction(a.equipped?"unequip":"equip",a,wp) });
       } else {
         let label="Надеть", action="equip";
@@ -147,7 +147,7 @@
         btn.fillStyle(btnBg,.95); btn.fillRoundedRect(bx,by2,bw,bh,8);
         btn.lineStyle(1,btnBdr,.6); btn.strokeRoundedRect(bx,by2,bw,bh,8);
         ctr.add(btn); layer.push(btn);
-        addT(bx+bw/2, by2+bh/2, label, 10, btnTxt, true).setOrigin(.5);
+        addT(bx+bw/2, by2+bh/2, label, 9, btnTxt, true).setOrigin(.5);
         tapAreas.push({ x:bx, y:by2, w:bw, h:bh, fn:() => this._avatarAction(action,a,wp) });
       }
     });
