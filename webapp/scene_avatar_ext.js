@@ -20,8 +20,22 @@ Object.assign(AvatarScene.prototype, {
     const maxScroll = Math.max(0, totalH - viewH);
 
     if (!cards.length) {
-      const e = txt(this, W / 2, areaTop + 50, 'Нет образов', 14, '#666').setOrigin(0.5);
-      this._layer.push(e); return;
+      const errMsg = this._loadError ? `Ошибка: ${this._loadError.slice(0, 60)}` : 'Нет образов';
+      const e = txt(this, W / 2, areaTop + 50, errMsg, 12, this._loadError ? '#ff6666' : '#666').setOrigin(0.5);
+      this._layer.push(e);
+      if (this._loadError) {
+        // Кнопка "Повторить"
+        const rb = this.add.graphics();
+        rb.fillStyle(0x2a1040, 0.9); rb.fillRoundedRect(W/2 - 55, areaTop + 72, 110, 30, 8);
+        rb.lineStyle(1.5, 0x9955ee, 0.8); rb.strokeRoundedRect(W/2 - 55, areaTop + 72, 110, 30, 8);
+        this._layer.push(rb);
+        const rt = txt(this, W/2, areaTop + 87, '🔄 Повторить', 12, '#cc99ff', true).setOrigin(0.5);
+        this._layer.push(rt);
+        const rz = this.add.zone(W/2, areaTop + 87, 110, 30).setInteractive({ useHandCursor: true });
+        rz.on('pointerup', () => { State.avatarsCache = null; this.scene.restart({ tab: this._tab }); });
+        this._layer.push(rz);
+      }
+      return;
     }
 
     const ctr = this.add.container(0, areaTop).setDepth(5);

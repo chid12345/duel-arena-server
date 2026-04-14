@@ -51,12 +51,16 @@ class AvatarScene extends Phaser.Scene {
         if (!j.ok) throw new Error(j.reason || 'err');
         this._avatars = j.avatars || [];
         this._equipped = j.equipped_avatar_id || 'base_neutral';
-        State.avatarsCache = { avatars: this._avatars, equipped: this._equipped, at: Date.now() };
+        if (this._avatars.length > 0) {
+          State.avatarsCache = { avatars: this._avatars, equipped: this._equipped, at: Date.now() };
+        }
       } catch (e) {
-        // Если есть устаревший кэш — используем его вместо "Нет образов"
-        if (State.avatarsCache && Array.isArray(State.avatarsCache.avatars)) {
+        this._loadError = String(e?.message || e || 'network');
+        // Если есть устаревший кэш — используем его вместо пустого экрана
+        if (State.avatarsCache && Array.isArray(State.avatarsCache.avatars) && State.avatarsCache.avatars.length > 0) {
           this._avatars = State.avatarsCache.avatars;
           this._equipped = State.avatarsCache.equipped || 'base_neutral';
+          this._loadError = null;
         } else {
           this._avatars = [];
           this._equipped = 'base_neutral';
