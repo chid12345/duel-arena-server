@@ -191,6 +191,7 @@ def _apply_drops(db, uid: int, drops: List[Dict]) -> Dict[str, Any]:
                 "item_id": iid,
                 "icon": info.get("icon", "🎁"),
                 "name": info.get("name", iid),
+                "desc": info.get("desc", ""),
             })
         elif drop["type"] == "diamonds":
             amt = drop["amount"]
