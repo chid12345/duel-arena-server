@@ -79,20 +79,27 @@ class BotHandlersShopPayments:
 
         if payload.startswith("avatar_"):
             avatar_id = payload[len("avatar_"):]
+            import logging as _log
+            _bot_log = _log.getLogger(__name__)
             try:
                 unlock = db.unlock_avatar(user.id, avatar_id, source="stars")
                 if unlock.get("ok"):
-                    db.track_purchase(user.id, avatar_id, "stars", stars)
+                    if not unlock.get("already_unlocked"):
+                        db.track_purchase(user.id, avatar_id, "stars", stars)
                     if unlock.get("already_unlocked"):
                         msg = "✅ Оплата подтверждена! Этот образ уже есть у вас. ⚔️ Duel Arena"
                     else:
                         msg = "✅ <b>Образ получен!</b> Откройте «Аватары» в игре и наденьте его. ⚔️ Duel Arena"
                 else:
-                    msg = "✅ Оплата получена! Образ будет начислен. Если не появился — напишите в поддержку."
+                    # КРИТИЧНО: деньги списаны, но образ не выдан — логируем для ручного разбора
+                    _bot_log.error(
+                        "CRITICAL avatar not unlocked after Stars payment uid=%s avatar=%s reason=%s stars=%s",
+                        user.id, avatar_id, unlock.get("reason"), stars,
+                    )
+                    msg = "⚠️ Оплата получена, но выдача образа задержалась. Напишите в поддержку, укажите свой Telegram ID. ⚔️ Duel Arena"
             except Exception as _e:
-                import logging as _log
-                _log.getLogger(__name__).error("avatar unlock failed uid=%s avatar=%s: %s", user.id, avatar_id, _e, exc_info=True)
-                msg = "✅ Оплата получена! Образ будет начислен. Если не появился — напишите в поддержку."
+                _bot_log.error("avatar unlock EXCEPTION uid=%s avatar=%s: %s", user.id, avatar_id, _e, exc_info=True)
+                msg = "⚠️ Оплата получена, но выдача образа задержалась. Напишите в поддержку, укажите свой Telegram ID. ⚔️ Duel Arena"
             await tg_api_call(update.message.reply_text, msg, parse_mode="HTML")
             return
 

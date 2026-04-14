@@ -28,6 +28,8 @@ def attach_avatar_elite(router: APIRouter, ctx: Dict[str, Any]) -> None:
     BOT_TOKEN = ctx["BOT_TOKEN"]
     CRYPTOPAY_TOKEN = ctx["CRYPTOPAY_TOKEN"]
     CRYPTOPAY_API_BASE = ctx["CRYPTOPAY_API_BASE"]
+    manager = ctx.get("manager")
+    _send_tg_message = ctx.get("_send_tg_message")
 
     @router.post("/api/avatars/elite/stars_invoice")
     async def elite_avatar_stars_invoice(body: EliteAvatarBody):
@@ -72,8 +74,20 @@ def attach_avatar_elite(router: APIRouter, ctx: Dict[str, Any]) -> None:
             if unlock.get("ok") and not unlock.get("already_unlocked"):
                 db.track_purchase(uid, ELITE_AVATAR_ID, "stars", int(ELITE_AVATAR_STARS))
             _cache_invalidate(uid)
-            state = db.get_player_avatar_state(uid)
+            # get_or_create_player ПЕРЕД get_player_avatar_state — иначе avatars=[] если игрок не существует
             player = db.get_or_create_player(uid, "")
+            state = db.get_player_avatar_state(uid)
+            # WS-уведомление — фронт обновится даже если ответ не дошёл
+            if unlock.get("ok") and manager:
+                try:
+                    import asyncio
+                    asyncio.ensure_future(manager.send(uid, {
+                        "event": "avatar_unlocked",
+                        "avatar_id": ELITE_AVATAR_ID,
+                        "source": "stars",
+                    }))
+                except Exception as _ws_e:
+                    logger.warning("elite stars_confirm ws notify failed uid=%s: %s", uid, _ws_e)
             return {
                 "ok": bool(unlock.get("ok")),
                 "already_unlocked": bool(unlock.get("already_unlocked")),

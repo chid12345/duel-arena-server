@@ -74,6 +74,8 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
             "BOT_TOKEN": BOT_TOKEN,
             "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
             "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
+            "manager": manager,
+            "_send_tg_message": _send_tg_message,
         },
     )
     register_wardrobe_routes(
