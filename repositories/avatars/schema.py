@@ -165,3 +165,6 @@ class AvatarsSchemaMixin:
                 "UPDATE players SET equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
                 (user_id,),
             )
+
+        # Одноразовое применение бонуса образа к статам
+        self._apply_initial_avatar_bonus(cursor, user_id)

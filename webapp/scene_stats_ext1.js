@@ -32,7 +32,7 @@ Object.assign(StatsScene.prototype, {
     /* ── Верхняя строка: иконка + название ──── */
     const ROW1_Y = y + 18;
     txt(this, x + 18, ROW1_Y, s.icon, 14).setOrigin(0.5);
-    txt(this, x + 32, ROW1_Y, s.label, 11, 'rgba(255,255,255,0.45)').setOrigin(0, 0.5);
+    txt(this, x + 32, ROW1_Y, s.label, 11, '#ffffff').setOrigin(0, 0.5);
 
     /* ── Кнопка +1 (фиксированные размеры) ─── */
     const btnW = 40;
@@ -79,7 +79,7 @@ Object.assign(StatsScene.prototype, {
     const baseVal   = this._statBase(p, s.key);
     const bonusVal  = this._statBonus(p, s.key);
     const breakdownTxt = txt(this, barX, barY + barH + 4,
-      `база ${baseVal} | бонусы +${bonusVal}`, 8, '#2a2848');
+      `база ${baseVal} | бонусы +${bonusVal}`, 9, '#aaaacc');
 
     /* ── Интерактив ────────────────────────── */
     const zone = this.add.zone(btnX + btnW / 2, btnY + btnH / 2, btnW, btnH);
@@ -151,7 +151,7 @@ Object.assign(StatsScene.prototype, {
         sepL.lineStyle(1, 0x1a2a50, 0.5);
         sepL.lineBetween(8 + cellW * i, cellY + 6, 8 + cellW * i, cellY + cellH - 6);
       }
-      txt(this, cx, cellY + 12, c.label, 8, '#2a4878').setOrigin(0.5);
+      txt(this, cx, cellY + 12, c.label, 9, '#bbccee').setOrigin(0.5);
       const valT = txt(this, cx, cellY + 32, c.valFn(p), 15, c.hex, true).setOrigin(0.5);
       this._combatCells[c.key] = { t: valT, fn: c.valFn, origColor: c.hex };
     });
