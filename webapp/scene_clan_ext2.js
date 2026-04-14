@@ -119,40 +119,44 @@ Object.assign(ClanScene.prototype, {
 
   /* ══ ПОИСК ═══════════════════════════════════════════════ */
   _renderSearch(W, H) {
-    // Лейбл над полем
-    txt(this, 16, 86, 'ПОИСК КЛАНА', 9, '#3a4060');
+    // Панель поиска: input + кнопка в одну строку
+    const panelY = 84, panelH = 60;
+    const panelG = this.add.graphics();
+    panelG.fillStyle(0x141720, 1);
+    panelG.fillRoundedRect(8, panelY, W-16, panelH, 10);
+    panelG.lineStyle(1, 0x1e2230, 0.9);
+    panelG.strokeRoundedRect(8, panelY, W-16, panelH, 10);
 
-    // Фон под input-поле
-    const inpBg = this.add.graphics();
-    inpBg.fillStyle(0x141720, 1);
-    inpBg.fillRoundedRect(8, 100, W-16, 50, 10);
-    inpBg.lineStyle(1, 0x1e2230, 0.9);
-    inpBg.strokeRoundedRect(8, 100, W-16, 50, 10);
+    // Input занимает левую часть, кнопка — правая 78px
+    const btnW = 78, gap = 8;
+    const inpW = W - 32 - gap - btnW;   // 16 отступ слева + inpW + gap + btnW + 16
+    const rowY = panelY + 12;
+    const rowH = 36;
 
-    // HTML input внутри панели (y=110, высота 30)
-    this._inputEl = this._makeInput(W, 110, W-32, 30, 'Железный Кулак / ЖК...', 30);
+    // HTML input — позиционируем через gameX
+    this._inputEl = this._makeInput(W, rowY, inpW, rowH, 'Железный Кулак / ЖК...', 30, 16);
 
-    // Кнопка поиска
+    // Кнопка «Найти» справа от поля
+    const bx = 16 + inpW + gap;
     const sbG = this.add.graphics();
     sbG.fillStyle(0x1a2050, 1);
-    sbG.fillRoundedRect(16, 160, W-32, 42, 10);
+    sbG.fillRoundedRect(bx, rowY, btnW, rowH, 8);
     sbG.lineStyle(1, 0x2a3460, 0.9);
-    sbG.strokeRoundedRect(16, 160, W-32, 42, 10);
-    // синяя точка-индикатор
-    sbG.fillStyle(0x5080ff, 1); sbG.fillCircle(W/2 - 32, 181, 4);
-    txt(this, W/2 + 4, 181, 'Найти', 13, '#6080c0', true).setOrigin(0.5);
-    this.add.zone(16, 160, W-32, 42).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { sbG.clear(); sbG.fillStyle(0x0a0e18,1); sbG.fillRoundedRect(16,160,W-32,42,10); tg?.HapticFeedback?.impactOccurred('light'); })
-      .on('pointerout',  () => { sbG.clear(); sbG.fillStyle(0x1a2050,1); sbG.fillRoundedRect(16,160,W-32,42,10); sbG.lineStyle(1,0x2a3460,0.9); sbG.strokeRoundedRect(16,160,W-32,42,10); sbG.fillStyle(0x5080ff,1); sbG.fillCircle(W/2-32,181,4); })
+    sbG.strokeRoundedRect(bx, rowY, btnW, rowH, 8);
+    txt(this, bx + btnW/2, rowY + rowH/2, 'Найти', 12, '#6080c0', true).setOrigin(0.5);
+    this.add.zone(bx, rowY, btnW, rowH).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { sbG.clear(); sbG.fillStyle(0x0a0e18,1); sbG.fillRoundedRect(bx,rowY,btnW,rowH,8); tg?.HapticFeedback?.impactOccurred('light'); })
+      .on('pointerout',  () => { sbG.clear(); sbG.fillStyle(0x1a2050,1); sbG.fillRoundedRect(bx,rowY,btnW,rowH,8); sbG.lineStyle(1,0x2a3460,0.9); sbG.strokeRoundedRect(bx,rowY,btnW,rowH,8); })
       .on('pointerup', () => this._doSearch(W));
 
-    // Разделитель + лейбл
+    // Разделитель + заголовок списка
+    const listHdrY = panelY + panelH + 12;
     const divG = this.add.graphics();
-    divG.lineStyle(1, 0x1e2230, 0.8);
-    divG.lineBetween(16, 214, W-16, 214);
-    txt(this, 16, 220, 'ВСЕ КЛАНЫ', 9, '#3a4060');
+    divG.lineStyle(1, 0x1e2230, 0.7);
+    divG.lineBetween(16, listHdrY, W-16, listHdrY);
+    txt(this, 16, listHdrY + 6, 'ВСЕ КЛАНЫ', 9, '#3a4060');
 
-    this._resultsY = 236;
+    this._resultsY = listHdrY + 22;
     this._resultsContainer = this.add.container(0, 0);
     get('/api/clan/top').then(d => this._showSearchResults(d.clans || [], W));
   },
