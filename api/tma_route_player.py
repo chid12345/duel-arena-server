@@ -51,6 +51,16 @@ def register_tma_player_route(
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "cached": True}
 
         player = db.get_or_create_player(uid, username)
+
+        # Миграция бонуса аватара: если ещё не применён — применить сейчас
+        if not int(player.get("avatar_bonus_applied", 0) or 0):
+            try:
+                db.ensure_avatar_bonus_applied(uid)
+                _cache_invalidate(uid)
+                player = db.get_or_create_player(uid, username)
+            except Exception:
+                pass
+
         inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
         regen = db.apply_hp_regen_from_player(player, inv)
         if regen:

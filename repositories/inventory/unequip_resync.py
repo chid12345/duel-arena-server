@@ -154,12 +154,20 @@ class InventoryUnequipResyncMixin:
             new_int = PLAYER_START_CRIT + alloc[2]
             base_hp = int(expected_max_hp_from_level(lv))
             new_mhp = max(1, base_hp + alloc[3] * int(STAMINA_PER_FREE_STAT))
+
+            # Добавляем бонус base_neutral (аватар сброшен в base_neutral выше)
+            av_bonus = self._effective_avatar_bonus("base_neutral", lv)
+            new_str += int(av_bonus.get("strength", 0))
+            new_agi += int(av_bonus.get("endurance", 0))
+            new_int += int(av_bonus.get("crit", 0))
+            new_mhp += int(av_bonus.get("hp_flat", 0))
+
             old_mhp = max(1, cur_mhp)
             old_chp = max(1, int(self._row_get(p, "current_hp", old_mhp) or old_mhp))
             new_chp = min(new_mhp, max(1, int(round(old_chp / old_mhp * new_mhp))))
 
             cursor.execute(
-                "UPDATE players SET strength = ?, endurance = ?, crit = ?, max_hp = ?, current_hp = ?, avatar_bonus_applied = 0 WHERE user_id = ?",
+                "UPDATE players SET strength = ?, endurance = ?, crit = ?, max_hp = ?, current_hp = ?, avatar_bonus_applied = 1 WHERE user_id = ?",
                 (int(new_str), int(new_agi), int(new_int), int(new_mhp), int(new_chp), user_id),
             )
             if own_conn and not _in_tx:

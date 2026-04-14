@@ -92,12 +92,17 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     title = (player.get("display_title") or "").strip()
     avatar_id = (player.get("equipped_avatar_id") or "base_neutral").strip()
     avatar = AVATAR_BY_ID.get(avatar_id) or {}
-    avb = _avatar_effective_bonus(lv, avatar_id)
+    _ab = int(player.get("avatar_bonus_applied", 0) or 0)
 
-    bonus_strength = int(avb.get("strength", 0))
-    bonus_agility = int(avb.get("endurance", 0))
-    bonus_intuition = int(avb.get("crit", 0))
-    bonus_stamina = int(avb.get("hp_flat", 0) or 0) // max(1, int(STAMINA_PER_FREE_STAT))
+    # Бонус аватара показываем только если он реально вбит в статы в БД
+    if _ab:
+        avb = _avatar_effective_bonus(lv, avatar_id)
+        bonus_strength = int(avb.get("strength", 0))
+        bonus_agility = int(avb.get("endurance", 0))
+        bonus_intuition = int(avb.get("crit", 0))
+        bonus_stamina = int(avb.get("hp_flat", 0) or 0) // max(1, int(STAMINA_PER_FREE_STAT))
+    else:
+        bonus_strength = bonus_agility = bonus_intuition = bonus_stamina = 0
 
     cls_id = (player.get("current_class") or "").strip()
     cls_type = (player.get("current_class_type") or "").strip()
@@ -117,7 +122,6 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
         bonus_stamina += int(class_info.get("bonus_endurance", 0) or 0)
 
     # Если бонус образа ещё не применён к статам в БД — не вычитать
-    _ab = int(player.get("avatar_bonus_applied", 0) or 0)
     _sub = 1 if _ab else 0
     base_strength = max(1, s - bonus_strength * _sub)
     base_agility = max(1, agi - bonus_agility * _sub)

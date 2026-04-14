@@ -11,6 +11,16 @@ _migrated: set = set()
 
 
 class AvatarsMigrateBonusMixin:
+    def ensure_avatar_bonus_applied(self, user_id: int) -> None:
+        """Публичный метод: применить бонус аватара если ещё не применён."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            self._apply_initial_avatar_bonus(cursor, user_id)
+            conn.commit()
+        finally:
+            conn.close()
+
     def _apply_initial_avatar_bonus(self, cursor, user_id: int) -> None:
         """Одноразовое: добавить бонус образа к статам.
         Колонка avatar_bonus_applied создаётся миграцией в sqlite_migrations_part4."""
