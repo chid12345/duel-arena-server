@@ -63,42 +63,42 @@ Object.assign(AvatarScene.prototype, {
     addT(cx + 48, cy + 27, tier.label, 9, tier.lc, true);
 
     // Description
-    addT(cx + 12, cy + 48, (av.description || '').slice(0, 45), 10, 'rgba(255,255,255,0.75)');
+    addT(cx + 12, cy + 48, (av.description || '').slice(0, 45), 11, '#ffffff', true);
 
     // Stat bars
     const stats = [
-      { l: 'СИЛА',  v: av.effective_strength || 0, c: 0xff6b6b, tc: '#ff8888' },
-      { l: 'ЛОВК',  v: av.effective_endurance || 0, c: 0x4ecdc4, tc: '#55ddff' },
-      { l: 'ИНТУ',  v: av.effective_crit || 0,      c: 0xb45aff, tc: '#cc77ff' },
-      { l: 'ВЫНОС', v: av.effective_hp_flat || 0,    c: 0x4ade80, tc: '#55ff99' },
+      { l: 'СИЛА',  v: av.effective_strength || 0, c: 0xff6b6b, tc: '#ffaaaa' },
+      { l: 'ЛОВК',  v: av.effective_endurance || 0, c: 0x4ecdc4, tc: '#88eeff' },
+      { l: 'ИНТУ',  v: av.effective_crit || 0,      c: 0xb45aff, tc: '#dd99ff' },
+      { l: 'ВЫНОС', v: av.effective_hp_flat || 0,    c: 0x4ade80, tc: '#88ffbb' },
     ];
     const barW = Math.floor((w - 36) / 4) - 4;
-    const barY = cy + 65;
+    const barY = cy + 66;
     stats.forEach((s, si) => {
       const bx = cx + 10 + si * (barW + 6);
-      addT(bx, barY, s.l, 8, 'rgba(255,255,255,0.55)', true);
+      addT(bx, barY, s.l, 9, '#ffffff', true);
       // Track
       const tg = this.add.graphics();
-      tg.fillStyle(0x000000, 0.3); tg.fillRoundedRect(bx, barY + 12, barW, 5, 3);
+      tg.fillStyle(0x000000, 0.35); tg.fillRoundedRect(bx, barY + 13, barW, 6, 3);
       ctr.add(tg); this._layer.push(tg);
       // Fill
       const maxStat = 14;
       const fillW = Math.max(2, Math.round(barW * Math.min(1, s.v / maxStat)));
       const fg = this.add.graphics();
-      fg.fillStyle(s.c, 0.9); fg.fillRoundedRect(bx, barY + 12, fillW, 5, 3);
+      fg.fillStyle(s.c, 1); fg.fillRoundedRect(bx, barY + 13, fillW, 6, 3);
       ctr.add(fg); this._layer.push(fg);
       // Value
-      addT(bx, barY + 20, `+${s.v}`, 10, s.tc, true);
+      addT(bx, barY + 22, `+${s.v}`, 11, s.tc, true);
     });
 
     // Bottom: price or status
     const pl = this._priceLabel(av);
     if (isEq) {
-      addT(cx + 12, cy + h - 22, '✓ Экипирован', 11, '#3cc864', true);
+      addT(cx + 12, cy + h - 20, '✓ Экипирован', 12, '#55ff88', true);
     } else if (isUn) {
-      addT(cx + 12, cy + h - 22, '🔓 Доступен — нажми чтобы надеть', 10, '#7ab4ff', true);
+      addT(cx + 12, cy + h - 20, '🔓 Доступен — нажми чтобы надеть', 11, '#99ccff', true);
     } else {
-      addT(cx + 12, cy + h - 22, '🔒 ' + pl.text, 11, pl.color, true);
+      addT(cx + 12, cy + h - 20, '🔒 ' + pl.text, 12, pl.color, true);
     }
 
     this._tapAreas.push({ x: cx, y: cy, w, h, avatar: av });

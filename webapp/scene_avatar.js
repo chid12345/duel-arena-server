@@ -11,10 +11,10 @@ const _AV_TABS = [
 ];
 
 const _AV_TIER = {
-  common:    { bg: 0x1e1e3a, bg2: 0x2a2a50, border: 0x444466, label: 'COMMON',    lc: '#8888aa', grad: 0x44446622 },
-  rare:      { bg: 0x0f2040, bg2: 0x1a3868, border: 0x3377bb, label: 'RARE',      lc: '#7ab4ff', grad: 0x3377bb22 },
-  epic:      { bg: 0x200a3a, bg2: 0x3a1868, border: 0x8844cc, label: 'EPIC',      lc: '#b45aff', grad: 0x8844cc22 },
-  legendary: { bg: 0x2a1800, bg2: 0x4a3515, border: 0xcc8822, label: 'LEGENDARY', lc: '#ffc83c', grad: 0xcc882222 },
+  common:    { bg: 0x1e1e3a, bg2: 0x2a2a50, border: 0x444466, label: 'COMMON',    lc: '#ccccee', grad: 0x44446622 },
+  rare:      { bg: 0x0f2040, bg2: 0x1a3868, border: 0x3377bb, label: 'RARE',      lc: '#99ccff', grad: 0x3377bb22 },
+  epic:      { bg: 0x200a3a, bg2: 0x3a1868, border: 0x8844cc, label: 'EPIC',      lc: '#cc88ff', grad: 0x8844cc22 },
+  legendary: { bg: 0x2a1800, bg2: 0x4a3515, border: 0xcc8822, label: 'LEGENDARY', lc: '#ffdd66', grad: 0xcc882222 },
 };
 
 class AvatarScene extends Phaser.Scene {
