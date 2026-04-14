@@ -59,7 +59,7 @@
       : allCards.filter(x => !x.is_usdt_slot);
     const layer = []; this._avatarCardsLayer = layer;
 
-    const cardH   = 112;
+    const cardH   = 128;
     const cardW   = Math.floor((W-40)/2);
     const areaTop = panelY + 42;
     const areaBot = panelY + panelH - 4;
