@@ -75,36 +75,69 @@
     const inventory = data.inventory || [];
     const activeBuffs = data.active_buffs || [];
     const { W, H } = this, ov = [], panelY = 56, panelH = H - 112;
-    ov.push(this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.75).setDepth(130));
-    const bg = makePanel(this, 8, panelY, W-16, panelH, 12, 0.98); if (bg?.setDepth) bg.setDepth(131);
+
+    // Затемнение
+    ov.push(this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.82).setDepth(130));
+
+    // Фон панели — тёмно-коричневый RPG
+    const bg = this.add.graphics().setDepth(131);
+    bg.fillStyle(0x150a04, 0.99);
+    bg.fillRoundedRect(8, panelY, W-16, panelH, 12);
+    bg.lineStyle(2, 0x6a4520, 0.9);
+    bg.strokeRoundedRect(8, panelY, W-16, panelH, 12);
+    // Золотая полоса-шапка
+    bg.fillStyle(0xc88030, 0.15);
+    bg.fillRoundedRect(8, panelY, W-16, 32, 12);
     ov.push(bg);
-    ov.push(txt(this, W/2, panelY+14, '📦 Инвентарь', 14, '#d0ffd8', true).setOrigin(0.5).setDepth(132));
+
+    // Заголовок
+    ov.push(txt(this, W/2, panelY+15, '📜 Инвентарь', 14, '#ffe888', true)
+      .setOrigin(0.5).setDepth(132));
 
     // Кнопка закрыть
     const cg = this.add.graphics().setDepth(132);
-    cg.fillStyle(0x3a2030,1); cg.fillRoundedRect(W-44,panelY+8,28,24,7);
-    cg.lineStyle(1,0xff6688,.9); cg.strokeRoundedRect(W-44,panelY+8,28,24,7);
-    ov.push(cg, txt(this, W-30, panelY+20, '✕', 12, '#ffd8e0', true).setOrigin(0.5).setDepth(133));
-    const cz = this.add.zone(W-30, panelY+20, 28, 24).setInteractive({useHandCursor:true}).setDepth(134);
+    cg.fillStyle(0x5a1a10, 1);
+    cg.fillRoundedRect(W-44, panelY+8, 28, 22, 6);
+    cg.lineStyle(1, 0xcc4422, 0.9);
+    cg.strokeRoundedRect(W-44, panelY+8, 28, 22, 6);
+    ov.push(cg, txt(this, W-30, panelY+19, '✕', 11, '#ffaa88', true).setOrigin(0.5).setDepth(133));
+    const cz = this.add.zone(W-30, panelY+19, 28, 22).setInteractive({useHandCursor:true}).setDepth(134);
     cz.on('pointerdown', () => this._closeInvOverlay()); ov.push(cz);
 
-    // Подвкладки
+    // Разделитель под заголовком
+    const div1 = this.add.graphics().setDepth(132);
+    div1.lineStyle(1, 0x7a5028, 0.6);
+    div1.beginPath(); div1.moveTo(18, panelY+32); div1.lineTo(W-18, panelY+32); div1.strokePath();
+    ov.push(div1);
+
+    // Вкладки
     const tabW = Math.floor((W - 28) / TABS.length);
     TABS.forEach((tab, i) => {
       const active = this._invTab === tab.key;
       const tx = 12 + i * (tabW + 2);
       const g = this.add.graphics().setDepth(132);
-      g.fillStyle(active ? 0x1e4a2a : 0x2a2840, active ? .95 : .85);
-      g.fillRoundedRect(tx, panelY+34, tabW, 20, 6);
-      g.lineStyle(1, active ? 0x55cc66 : 0x4a4870, .85);
-      g.strokeRoundedRect(tx, panelY+34, tabW, 20, 6);
-      ov.push(g, txt(this, tx+tabW/2, panelY+44, tab.label, 9, active ? '#d0ffd8' : '#c8c8e8', true).setOrigin(.5).setDepth(133));
-      const z = this.add.zone(tx+tabW/2, panelY+44, tabW, 20).setInteractive({useHandCursor:true}).setDepth(134);
+      if (active) {
+        g.fillStyle(0x3a1e08, 0.95);
+        g.fillRoundedRect(tx, panelY+36, tabW, 22, 5);
+        g.lineStyle(1, 0xc8903c, 0.9);
+        g.strokeRoundedRect(tx, panelY+36, tabW, 22, 5);
+        // Нижняя золотая черта
+        g.fillStyle(0xd4a040, 1);
+        g.fillRect(tx+8, panelY+57, tabW-16, 2);
+      } else {
+        g.fillStyle(0x1e1006, 0.7);
+        g.fillRoundedRect(tx, panelY+36, tabW, 22, 5);
+        g.lineStyle(1, 0x4a2e10, 0.6);
+        g.strokeRoundedRect(tx, panelY+36, tabW, 22, 5);
+      }
+      ov.push(g, txt(this, tx+tabW/2, panelY+47, tab.label, 9,
+        active ? '#ffe478' : '#b08848', active).setOrigin(.5).setDepth(133));
+      const z = this.add.zone(tx+tabW/2, panelY+47, tabW, 22).setInteractive({useHandCursor:true}).setDepth(134);
       z.on('pointerdown', () => { this._invTab = tab.key; this._renderInvOverlay(); }); ov.push(z);
     });
 
-    // ── Блок активных бафов (под вкладками) ─────────────────────────────
-    const buffCardY = panelY + 58;
+    // ── Блок активных бафов ─────────────────────────────
+    const buffCardY = panelY + 63;
     let buffCardH = 0;
     if (activeBuffs.length > 0) {
       const chargeBased = activeBuffs.filter(b => b.charges != null);
@@ -114,13 +147,12 @@
         const parts = chargeBased.map(b => `${BUFF_LABEL[b.buff_type] || b.buff_type}+${b.value}`);
         const ch = chargeBased[0].charges;
         const chWord = ch === 1 ? 'бой' : ch < 5 ? 'боя' : 'боёв';
-        // Разбить на строки по 2 стата чтобы не переполнять строку
         for (let i = 0; i < parts.length; i += 2) {
           const chunk = parts.slice(i, i + 2).join('   ');
           const isLast = i + 2 >= parts.length;
-          lines.push({ text: isLast ? `${chunk}   · ${ch} ${chWord}` : chunk, color: '#ffffff' });
+          lines.push({ text: isLast ? `${chunk}   · ${ch} ${chWord}` : chunk, color: '#fff8d0' });
         }
-        lines.push({ text: `Натиск / Башня Титанов = 1 заряд за заход`, color: '#aaccff' });
+        lines.push({ text: `Натиск / Башня Титанов = 1 заряд за заход`, color: '#d4b870' });
       }
       timeBased.forEach(b => {
         const msLeft = Math.max(0, new Date(b.expires_at + 'Z') - Date.now());
@@ -128,51 +160,62 @@
         const mLeft  = Math.floor((msLeft % 3600000) / 60000);
         const timeStr = hLeft > 0 ? `${hLeft}ч ${mLeft}м` : `${mLeft}м`;
         const label = BUFF_LABEL[b.buff_type] || b.buff_type;
-        lines.push({ text: `${label}+${b.value}%   · ${timeStr}`, color: '#ffc83c' });
+        lines.push({ text: `${label}+${b.value}%   · ${timeStr}`, color: '#ffe04a' });
       });
       buffCardH = 18 + lines.length * 17 + 4;
       const bcg = this.add.graphics().setDepth(132);
-      bcg.fillStyle(0x0a1a30, 0.97);
-      bcg.fillRoundedRect(12, buffCardY, W-24, buffCardH, 8);
-      bcg.lineStyle(1.5, 0x4488cc, 0.8);
-      bcg.strokeRoundedRect(12, buffCardY, W-24, buffCardH, 8);
+      bcg.fillStyle(0x3c1e0a, 0.95);
+      bcg.fillRoundedRect(12, buffCardY, W-24, buffCardH, 7);
+      bcg.lineStyle(1.5, 0x8c5a1e, 0.8);
+      bcg.strokeRoundedRect(12, buffCardY, W-24, buffCardH, 7);
+      // Левый золотой акцент
+      bcg.fillStyle(0xc8903c, 1);
+      bcg.fillRoundedRect(12, buffCardY, 3, buffCardH, 2);
       ov.push(bcg);
-      ov.push(txt(this, 20, buffCardY + 9, '🧪 Активный баф:', 9, '#88ccff', true).setDepth(133));
+      ov.push(txt(this, 22, buffCardY + 9, '✦ Активный баф:', 9, '#e0b870', true).setDepth(133));
       lines.forEach((line, i) => {
-        ov.push(txt(this, 20, buffCardY + 19 + i * 17, line.text, 10, line.color, true).setDepth(133));
+        ov.push(txt(this, 22, buffCardY + 19 + i * 17, line.text, 10, line.color, true).setDepth(133));
       });
     }
 
-    // Список предметов текущей вкладки (предметы без ITEM_META пропускаем — они применяются сразу при покупке)
+    // Список предметов
     const items = inventory.filter(it => ITEM_META[it.item_id] && ITEM_META[it.item_id].tab === this._invTab);
-    const listY = buffCardY + (buffCardH > 0 ? buffCardH + 4 : 2);
+    const listY = buffCardY + (buffCardH > 0 ? buffCardH + 5 : 2);
     const listH = panelY + panelH - listY - 10;
     const cardH = 56, cardW = W - 32;
 
     if (items.length === 0) {
-      ov.push(txt(this, W/2, listY + listH/2, 'Пусто. Загляни в Магазин!', 11, '#bbbbcc', true).setOrigin(.5).setDepth(133));
+      ov.push(txt(this, W/2, listY + listH/2, 'Пусто. Загляни в Магазин!', 11, '#a07848', true).setOrigin(.5).setDepth(133));
     } else {
       const maxVisible = Math.floor(listH / (cardH + 6));
       items.slice(0, maxVisible).forEach((it, i) => {
         const meta = ITEM_META[it.item_id] || { icon:'📦', name: it.item_id, desc: '', tab: 'scrolls' };
         const y = listY + i * (cardH + 6);
         const crd = this.add.graphics().setDepth(132);
-        crd.fillStyle(0x1b1a30,.96); crd.fillRoundedRect(16, y, cardW, cardH, 8);
-        crd.lineStyle(1, 0x3a3a60,.8); crd.strokeRoundedRect(16, y, cardW, cardH, 8);
+        // Фон карточки
+        crd.fillStyle(0x190f05, 0.97);
+        crd.fillRoundedRect(16, y, cardW, cardH, 7);
+        crd.lineStyle(1, 0x5a3a18, 0.75);
+        crd.strokeRoundedRect(16, y, cardW, cardH, 7);
+        // Левый золотой акцент
+        crd.fillStyle(0xc8903c, 0.75);
+        crd.fillRoundedRect(16, y, 3, cardH, 2);
         ov.push(crd);
-        ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#f0f0fa', true).setDepth(133));
-        ov.push(txt(this, 28, y+28, meta.desc, 9, '#ddddff').setDepth(133));
-        ov.push(txt(this, 28, y+42, `Кол-во: ${it.quantity}`, 9, '#ffc83c').setDepth(133));
+        ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#fff8d0', true).setDepth(133));
+        ov.push(txt(this, 28, y+27, meta.desc, 9, '#c8a878').setDepth(133));
+        ov.push(txt(this, 28, y+41, `Кол-во: ${it.quantity}`, 9, '#ffe04a').setDepth(133));
         const isBox = it.item_id.startsWith('box_');
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;
         const bg2 = this.add.graphics().setDepth(133);
-        const btnColor = isBox ? 0x7a3800 : 0x2a6040;
-        const btnBorder = isBox ? 0xffaa33 : 0x55cc66;
-        const btnLabel = isBox ? '🎲 Открыть' : 'Применить';
-        const btnTxtColor = isBox ? '#ffe0aa' : '#d0ffd8';
-        bg2.fillStyle(btnColor,.95); bg2.fillRoundedRect(bx, by, bw, 24, 7);
-        bg2.lineStyle(1, btnBorder,.8); bg2.strokeRoundedRect(bx, by, bw, 24, 7);
-        ov.push(bg2, txt(this, bx+bw/2, by+12, btnLabel, 10, btnTxtColor, true).setOrigin(.5).setDepth(134));
+        const btnColor  = isBox ? 0x7a3800 : 0x6e4810;
+        const btnBorder = isBox ? 0xffaa33 : 0xdca028;
+        const btnLabel  = isBox ? '🎲 Открыть' : 'Применить';
+        const btnTxt    = isBox ? '#ffe0aa' : '#ffe878';
+        bg2.fillStyle(btnColor, 0.95);
+        bg2.fillRoundedRect(bx, by, bw, 24, 6);
+        bg2.lineStyle(1, btnBorder, 0.85);
+        bg2.strokeRoundedRect(bx, by, bw, 24, 6);
+        ov.push(bg2, txt(this, bx+bw/2, by+12, btnLabel, 10, btnTxt, true).setOrigin(.5).setDepth(134));
         const z = this.add.zone(bx+bw/2, by+12, bw, 24).setInteractive({useHandCursor:true}).setDepth(135);
         z.on('pointerdown', () => this._applyInventoryItem(it.item_id)); ov.push(z);
       });
