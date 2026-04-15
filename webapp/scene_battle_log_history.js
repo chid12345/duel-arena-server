@@ -41,6 +41,11 @@
     document.head.appendChild(s);
     el = document.createElement('div');
     el.id = 'bl-history';
+    // Поглощаем ВСЕ события — они не должны проваливаться на canvas/Phaser
+    ['pointerdown','pointerup','touchstart','touchend','mousedown','mouseup','click'].forEach(ev => {
+      el.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, { passive: false });
+    });
+    // Закрытие по ✕
     el.addEventListener('click', e => {
       if (e.target.classList.contains('blh-close') ||
           e.target.closest?.('.blh-close')) BattleLog.hideHistory();
@@ -81,7 +86,16 @@
       el.scrollTop = el.scrollHeight;
     },
     hideHistory() {
-      if (el) el.style.display = 'none';
+      if (!el) return;
+      el.style.display = 'none';
+      // Phaser слушает события напрямую на canvas — ставим временный щит
+      const canvas = document.querySelector('canvas');
+      if (canvas) {
+        const shield = document.createElement('div');
+        shield.style.cssText = 'position:fixed;inset:0;z-index:299;pointer-events:all;';
+        document.body.appendChild(shield);
+        setTimeout(() => shield.remove(), 250);
+      }
     },
   });
 })();
