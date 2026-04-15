@@ -32,7 +32,10 @@ class CallbackHandlersBattleDisplay:
 
     @staticmethod
     def _battle_message_html_for_user(user_id: int):
-        """Полный HTML сообщения боя (лог + экран) и галочки для клавиатуры."""
+        """Полный HTML сообщения боя (лог + экран) и галочки для клавиатуры.
+
+        Возвращает (text, pending_attack, pending_defense, log_expanded).
+        """
         ctx = battle_system.get_battle_ui_context(user_id)
         if not ctx:
             return None
@@ -41,19 +44,23 @@ class CallbackHandlersBattleDisplay:
         if not battle:
             return None
         prefix = battle.get("ui_message_prefix") or ""
+        log_expanded = battle.get("log_expanded", False)
         parts = []
         clog_lines = battle.get("combat_log_lines") or []
         if clog_lines:
-            clog = "\n\n".join(clog_lines)
+            if log_expanded:
+                clog = "\n\n".join(clog_lines)
+            else:
+                clog = clog_lines[-1]  # только последний раунд
             parts.append(f"📜 <b>Лог боя</b>\n{clog}")
         parts.append(CallbackHandlersBattleDisplay._build_battle_screen_html(ctx))
         body = "\n\n".join(parts)
         text = f"{prefix}{body}" if prefix else body
-        return text, ctx.get("pending_attack"), ctx.get("pending_defense")
+        return text, ctx.get("pending_attack"), ctx.get("pending_defense"), log_expanded
 
     @staticmethod
-    def _battle_inline_markup(sel_attack=None, sel_defense=None):
-        """✅ на выбранных зонах; третья строка — автоход."""
+    def _battle_inline_markup(sel_attack=None, sel_defense=None, log_expanded=False):
+        """✅ на выбранных зонах; третья строка — управление + лог."""
         keys = (("HEAD", "Голова"), ("TORSO", "Тело"), ("LEGS", "Ноги"))
         row1 = [
             InlineKeyboardButton(
@@ -69,9 +76,14 @@ class CallbackHandlersBattleDisplay:
             )
             for k, lab in keys
         ]
+        log_btn = InlineKeyboardButton(
+            "📜 Свернуть" if log_expanded else "📜 Лог",
+            callback_data="battle_log_collapse" if log_expanded else "battle_log_expand",
+        )
         row3 = [
             InlineKeyboardButton("👁️ Разведка", callback_data="battle_opponent_stats"),
             InlineKeyboardButton("🔄", callback_data="battle_refresh"),
+            log_btn,
             InlineKeyboardButton("🎲 Авто", callback_data="battle_auto"),
         ]
         return InlineKeyboardMarkup([row1, row2, row3])

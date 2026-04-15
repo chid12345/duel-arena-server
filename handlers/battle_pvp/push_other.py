@@ -25,11 +25,11 @@ async def _pvp_push_other(bot, triggering_uid: int, round_result: dict) -> None:
         packed = CallbackHandlers._battle_message_html_for_user(other_uid)
         if not packed:
             return
-        text, pa, pd = packed
+        text, pa, pd, log_exp = packed
         await tg_api_call(
             bot.edit_message_text,
             chat_id=other_um['chat_id'], message_id=other_um['message_id'],
-            text=text, reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
+            text=text, reply_markup=CallbackHandlers._battle_inline_markup(pa, pd, log_exp),
             parse_mode='HTML',
         )
     elif status in ('battle_ended', 'battle_ended_afk'):

@@ -25,6 +25,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         or callback_data == "battle_auto"
         or callback_data == "battle_opponent_stats"
         or callback_data == "battle_refresh"
+        or callback_data == "battle_log_expand"
+        or callback_data == "battle_log_collapse"
     )
     if not is_battle_cb:
         try:
@@ -162,6 +164,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await CallbackHandlers.show_battle_opponent_stats(query, user.id)
         elif callback_data == "battle_refresh":
             await CallbackHandlers.handle_battle_refresh(query, user.id)
+        elif callback_data == "battle_log_expand":
+            await CallbackHandlers.handle_battle_log_expand(query, user.id)
+        elif callback_data == "battle_log_collapse":
+            await CallbackHandlers.handle_battle_log_collapse(query, user.id)
         elif callback_data == "battle_auto":
             await CallbackHandlers.handle_battle_auto(query, user.id)
         elif callback_data.startswith("attack_"):

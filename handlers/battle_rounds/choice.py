@@ -29,10 +29,10 @@ async def handle_battle_choice(query, user_id, callback_data):
             if result.get('status') == 'partial_choice_saved':
                 packed = CallbackHandlers._battle_message_html_for_user(user_id)
                 if packed:
-                    text, pa, pd = packed
+                    text, pa, pd, log_exp = packed
                     chat_id, mid = await CallbackHandlers._callback_set_message(
                         query, text,
-                        reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
+                        reply_markup=CallbackHandlers._battle_inline_markup(pa, pd, log_exp),
                         parse_mode='HTML',
                     )
                     CallbackHandlers._sync_battle_ui_pointer(user_id, chat_id, mid)

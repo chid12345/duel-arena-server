@@ -64,10 +64,10 @@ async def find_battle(query, player):
         if not packed:
             await CallbackHandlers._callback_set_message(query, "❌ Ошибка старта боя.")
             return
-        text1, pa1, pd1 = packed
+        text1, pa1, pd1, log_exp1 = packed
         chat_id, mid = await CallbackHandlers._callback_set_message(
             query, text1,
-            reply_markup=CallbackHandlers._battle_inline_markup(pa1, pd1),
+            reply_markup=CallbackHandlers._battle_inline_markup(pa1, pd1, log_exp1),
             parse_mode='HTML',
         )
         battle_system.set_battle_ui_message(uid, chat_id, mid)
@@ -79,8 +79,8 @@ async def find_battle(query, player):
 
         packed2 = CallbackHandlers._battle_message_html_for_user(opp_uid)
         if packed2:
-            text2, pa2, pd2 = packed2
-            markup2 = CallbackHandlers._battle_inline_markup(pa2, pd2)
+            text2, pa2, pd2, log_exp2 = packed2
+            markup2 = CallbackHandlers._battle_inline_markup(pa2, pd2, log_exp2)
             # 1) Редактируем старое сообщение P2
             if opp_msg_id:
                 try:

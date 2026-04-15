@@ -62,10 +62,10 @@ async def handle_battle_refresh(query, user_id):
         if not packed:
             await CallbackHandlers._resolve_stale_battle_message(query, user_id)
             return
-        text, pa, pd = packed
+        text, pa, pd, log_exp = packed
         chat_id, mid = await CallbackHandlers._callback_set_message(
             query, text,
-            reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
+            reply_markup=CallbackHandlers._battle_inline_markup(pa, pd, log_exp),
             parse_mode='HTML',
         )
         CallbackHandlers._sync_battle_ui_pointer(user_id, chat_id, mid)

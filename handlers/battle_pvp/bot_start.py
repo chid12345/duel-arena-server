@@ -28,10 +28,10 @@ async def _start_bot_battle(query, player):
     if not packed:
         await CallbackHandlers._callback_set_message(query, "❌ Ошибка старта боя.")
         return
-    battle_ui, pa, pd = packed
+    battle_ui, pa, pd, log_exp = packed
     chat_id, mid = await CallbackHandlers._callback_set_message(
         query, battle_ui,
-        reply_markup=CallbackHandlers._battle_inline_markup(pa, pd),
+        reply_markup=CallbackHandlers._battle_inline_markup(pa, pd, log_exp),
         parse_mode='HTML',
     )
     battle_system.set_battle_ui_message(uid, chat_id, mid)

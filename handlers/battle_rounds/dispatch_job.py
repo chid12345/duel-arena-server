@@ -13,8 +13,8 @@ async def dispatch_round_result_from_job(bot, chat_id: int, message_id: int, use
     if round_result.get('status') == 'round_completed':
         packed = CallbackHandlers._battle_message_html_for_user(user_id)
         if packed:
-            text, pa, pd = packed
-            markup = CallbackHandlers._battle_inline_markup(pa, pd)
+            text, pa, pd, log_exp = packed
+            markup = CallbackHandlers._battle_inline_markup(pa, pd, log_exp)
         else:
             ex = round_result.get('exchange_text') or ''
             clog = round_result.get('combat_log_html') or ''
