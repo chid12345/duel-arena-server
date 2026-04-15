@@ -74,20 +74,43 @@ async def find_battle(query, player):
 
         opp_chat_id = pvp_entry["chat_id"]
         opp_msg_id = pvp_entry.get("message_id")
-        if opp_msg_id:
-            packed2 = CallbackHandlers._battle_message_html_for_user(opp_uid)
-            if packed2:
-                text2, pa2, pd2 = packed2
+        bot = query.get_bot()
+        p2_ui_set = False
+
+        packed2 = CallbackHandlers._battle_message_html_for_user(opp_uid)
+        if packed2:
+            text2, pa2, pd2 = packed2
+            markup2 = CallbackHandlers._battle_inline_markup(pa2, pd2)
+            # 1) Редактируем старое сообщение P2
+            if opp_msg_id:
                 try:
-                    await query.get_bot().edit_message_text(
+                    await bot.edit_message_text(
                         chat_id=opp_chat_id, message_id=opp_msg_id,
-                        text=text2,
-                        reply_markup=CallbackHandlers._battle_inline_markup(pa2, pd2),
-                        parse_mode='HTML',
+                        text=text2, reply_markup=markup2, parse_mode='HTML',
                     )
                     battle_system.set_battle_p2_ui_message(opp_uid, opp_chat_id, opp_msg_id)
-                except Exception as e:
-                    logger.warning("PvP: не удалось уведомить P2 opp_uid=%s: %s", opp_uid, e)
+                    p2_ui_set = True
+                except Exception as e_edit:
+                    logger.warning("PvP: edit P2 failed opp_uid=%s: %s — fallback send_message", opp_uid, e_edit)
+            # 2) Fallback: шлём P2 новое сообщение
+            if not p2_ui_set:
+                try:
+                    sent2 = await bot.send_message(
+                        chat_id=opp_chat_id,
+                        text=text2, reply_markup=markup2, parse_mode='HTML',
+                    )
+                    battle_system.set_battle_p2_ui_message(opp_uid, opp_chat_id, sent2.message_id)
+                    p2_ui_set = True
+                    logger.info("PvP: sent new message to P2 opp_uid=%s msg_id=%s", opp_uid, sent2.message_id)
+                except Exception as e_send:
+                    logger.warning("PvP: send_message P2 also failed opp_uid=%s: %s — immediate AFK end", opp_uid, e_send)
+
+        if not p2_ui_set:
+            # P2 полностью недоступен — мгновенная AFK-победа P1, не ждём раундов таймера
+            logger.info("PvP: P2 unreachable opp_uid=%s — ending battle_id=%s immediately", opp_uid, battle_id)
+            result = await battle_system._end_battle_by_afk(battle_id, uid)
+            await CallbackHandlers.dispatch_round_result_from_job(bot, chat_id, mid, uid, result)
+            return
 
         battle_system.schedule_turn_timer(battle_id)
         return
