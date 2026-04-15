@@ -111,23 +111,10 @@ Object.assign(MenuScene.prototype, {
     const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(1.9).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 9, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-    // Бейдж типа воина и его бонус
-    const _wtInfo = {
-      tank:    { name: 'Берсерк',       bonus: '⚔️ +12% урон',        col: 0x5c1a10, tcol: '#ff9980' },
-      agile:   { name: 'Теневой Вихрь', bonus: '💨 +12% уворот',      col: 0x0d2e1a, tcol: '#00ff88' },
-      crit:    { name: 'Хаос-Рыцарь',   bonus: '💥 крит ×1.85',       col: 0x2a0d40, tcol: '#cc66ff' },
-      neutral: { name: 'Легионер',       bonus: '🛡 -10% вх. урон',    col: 0x2a2010, tcol: '#ccbb88' },
-    };
-    const _wt = _wtInfo[p.warrior_type] || _wtInfo.neutral;
-    const badgeW = 148, badgeH = 22, badgeX = W / 2 - badgeW / 2, badgeY = charCY + 54;
-    const badgeG = ca(mkG());
-    badgeG.fillStyle(_wt.col, 0.92); badgeG.fillRoundedRect(badgeX, badgeY, badgeW, badgeH, 8);
-    badgeG.lineStyle(1, 0xffffff, 0.12); badgeG.strokeRoundedRect(badgeX, badgeY, badgeW, badgeH, 8);
-    ca(mkT(W / 2, badgeY + badgeH / 2, `${_wt.name}  ·  ${_wt.bonus}`, 10, _wt.tcol, true).setOrigin(0.5));
     // Подсказка "нажми для смены"
-    ca(mkT(W / 2, badgeY + badgeH + 8, '✏️  сменить', 9, 'rgba(255,255,255,0.22)').setOrigin(0.5));
+    ca(mkT(W / 2, charCY + 68, '✏️  сменить воина', 9, 'rgba(255,255,255,0.25)').setOrigin(0.5));
     // Зона клика на воина
-    const wZone = ca(mkZ(W / 2, charCY + 20, 160, 110).setInteractive({ useHandCursor: true }));
+    const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
     // HP / XP bars

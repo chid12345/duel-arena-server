@@ -157,6 +157,24 @@ Object.assign(StatsScene.prototype, {
     });
 
     this._refreshBuffDisplay();
+
+    /* ── Воин-бейдж ────────────────────────────────────────── */
+    const _wtMap = {
+      tank:    { name: 'Берсерк',       bonus: '+12% урон в бою',   icon: '⚔️', col: 0x4a1208, tcol: '#ff9977' },
+      agile:   { name: 'Теневой Вихрь', bonus: '+12% уворот',       icon: '💨', col: 0x0a2e18, tcol: '#44ff99' },
+      crit:    { name: 'Хаос-Рыцарь',   bonus: 'крит ×1.85',        icon: '💥', col: 0x220a3a, tcol: '#cc77ff' },
+      neutral: { name: 'Легионер',       bonus: '-10% вх. урон',     icon: '🛡', col: 0x1e1a08, tcol: '#ccbb77' },
+    };
+    const _wt = _wtMap[p.warrior_type] || _wtMap.neutral;
+    const wbY = cellY + cellH + 7;
+    const wbH = 28;
+    const wbG = this.add.graphics();
+    wbG.fillStyle(_wt.col, 0.95);
+    wbG.fillRoundedRect(8, wbY, W - 16, wbH, 8);
+    wbG.lineStyle(1, 0xffffff, 0.08);
+    wbG.strokeRoundedRect(8, wbY, W - 16, wbH, 8);
+    txt(this, W / 2, wbY + wbH / 2,
+      `${_wt.icon}  ${_wt.name}  ·  ${_wt.bonus}`, 11, _wt.tcol, true).setOrigin(0.5);
   },
 
 });
