@@ -77,7 +77,7 @@ class BattleDamageMixin:
                 return self._apply_incoming_damage(dmg, defender), "pierce_crit", debuff
             # Частичный блок (вскользь)
             if random.random() < PARTIAL_BLOCK_CHANCE:
-                dmg = max(1, int(base_dmg * 0.30))
+                dmg = max(1, int(base_dmg * PARTIAL_BLOCK_DAMAGE_MULT))
                 return self._apply_incoming_damage(dmg, defender), "partial", debuff
             return 0, "block", ""
 
