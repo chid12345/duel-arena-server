@@ -53,9 +53,12 @@ class BattleDamageMixin:
             base_dmg = int(base_dmg * ZONE_LEGS_MULT)
             debuff = "legs"
 
-        # Бонус воина-типа: Берсерк +12% урон
-        if attacker.get("warrior_type") == "tank":
-            base_dmg = min(dmg_cap, int(base_dmg * 1.12))
+        # Вариант Б: бонус/штраф атакующего по типу воина
+        wt_atk = attacker.get("warrior_type") or "default"
+        if wt_atk == "tank":
+            base_dmg = min(dmg_cap, int(base_dmg * 1.15))   # Берсерк +15% урон
+        elif wt_atk == "neutral":
+            base_dmg = min(dmg_cap, int(base_dmg * 0.95))   # Легионер -5% урон (трейдофф)
 
         # Промах (снижается бафом accuracy у атакующего)
         eff_miss = max(0.0, MISS_CHANCE - attacker.get("_buff_accuracy", 0) / 100.0)
@@ -84,9 +87,12 @@ class BattleDamageMixin:
             atk_agi = max(1, self._safe_int_field(attacker, "endurance", PLAYER_START_ENDURANCE))
             dodge_ch = min(DODGE_MAX_CHANCE, def_agi / (def_agi + atk_agi) * DODGE_MAX_CHANCE)
             dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + defender.get("_buff_dodge_pct", 0) / 100.0)
-            # Бонус воина-типа: Теневой Вихрь +12% уворот
-            if defender.get("warrior_type") == "agile":
-                dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + 0.12)
+            # Вариант Б: бонус/штраф защитника по типу воина
+            wt_def = defender.get("warrior_type") or "default"
+            if wt_def == "agile":
+                dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + 0.08)   # Теневой Вихрь +8% уворот
+            elif wt_def == "tank":
+                dodge_ch = max(0.0, dodge_ch - 0.08)                 # Берсерк -8% уворот (трейдофф)
             if random.random() < dodge_ch:
                 # Двойной удар атакующего при уклоне
                 atk_agi_inv = stamina_stats_invested(
@@ -108,8 +114,10 @@ class BattleDamageMixin:
         usdt = (attacker.get("usdt_passive_type") or "").strip()
         is_crit = random.random() < crit_ch
 
-        # Бонус воина-типа: Хаос-Рыцарь крит ×1.85 вместо ×1.5
-        _crit_mult = 1.85 if attacker.get("warrior_type") == "crit" else 1.5
+        # Вариант Б: Хаос-Рыцарь +8% крит-шанс + крит ×1.85
+        if (attacker.get("warrior_type") or "default") == "crit":
+            crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.08)
+        _crit_mult = 1.85 if (attacker.get("warrior_type") or "default") == "crit" else 1.5
         damage = int(base_dmg * (_crit_mult if is_crit else 1.0))
         if usdt == "damage_pct":
             damage = int(damage * 1.08)

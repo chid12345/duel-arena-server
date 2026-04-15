@@ -87,6 +87,20 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     dmg = max(5, int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (_s**STRENGTH_DAMAGE_POWER)))
     _eff_mhp = mhp + int(_cb.get("hp_bonus", 0)) + int(_cb.get("stamina", 0)) * STAMINA_PER_FREE_STAT
 
+    # Вариант Б: воин-тип меняет отображаемые статы (то же что в бою)
+    _wt = (player.get("warrior_type") or "default")
+    if _wt == "tank":
+        dmg     = int(dmg * 1.15)
+        dodge_p = max(0, dodge_p - 8)
+    elif _wt == "agile":
+        dodge_p = min(50, dodge_p + 8)
+        armor_p = round(armor_p * 0.90, 1)
+    elif _wt == "crit":
+        crit_p   = min(50, crit_p + 8)
+        _eff_mhp = max(1, int(_eff_mhp * 0.90))
+    elif _wt == "neutral":
+        dmg = max(5, int(dmg * 0.95))
+
     need_xp = exp_needed_for_next_level(lv)
 
     title = (player.get("display_title") or "").strip()

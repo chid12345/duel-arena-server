@@ -37,8 +37,10 @@ class BattleStartMixin:
 
         # Применяем активные бафы из player_buffs к статам игроков
         self._apply_player_buffs_to_stats(player1)
+        self._apply_warrior_type_to_stats(player1)
         if not is_bot2:
             self._apply_player_buffs_to_stats(p2_store)
+            self._apply_warrior_type_to_stats(p2_store)
 
         battle_data = {
             'battle_id': battle_id,
@@ -82,6 +84,16 @@ class BattleStartMixin:
             self.clear_battle_end_ui(player2['user_id'])
         
         return battle_id
+
+    def _apply_warrior_type_to_stats(self, player: dict) -> None:
+        """Вариант Б: пассивный HP-трейдофф Хаос-Рыцаря (-10% HP в бою)."""
+        wt = (player.get("warrior_type") or "default")
+        if wt == "crit":
+            old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
+            old_cur = int(player.get("current_hp", old_max))
+            new_max = max(1, int(old_max * 0.90))
+            player["max_hp"]     = new_max
+            player["current_hp"] = min(new_max, int(old_cur * 0.90))
 
     def _apply_player_buffs_to_stats(self, player: dict) -> None:
         """Применить активные бафы к статам игрока перед боем (мутирует dict)."""

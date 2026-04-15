@@ -39,10 +39,10 @@ Object.assign(MenuScene.prototype, {
     });
 
     const types = [
-      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', bonus: '+12% урон в бою'    },
-      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#00ff88', bonus: '+12% уворот'         },
-      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', bonus: 'крит ×1.85 вместо ×1.5' },
-      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ccbb88', bonus: '-10% вх. урон'       },
+      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', bonus: '+15% урон / -8% уворот'     },
+      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#00ff88', bonus: '+8% уворот / -10% броня'     },
+      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', bonus: '+8% крит / ×1.85 / -10% HP'  },
+      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ccbb88', bonus: '-10% вх.урон / -5% урон'      },
     ];
 
     const curType = State.player?.warrior_type || 'default';

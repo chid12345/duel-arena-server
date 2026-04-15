@@ -160,10 +160,10 @@ Object.assign(StatsScene.prototype, {
 
     /* ── Воин-бейдж ────────────────────────────────────────── */
     const _wtMap = {
-      tank:    { name: 'Берсерк',       bonus: '+12% урон в бою',   icon: '⚔️', col: 0x4a1208, tcol: '#ff9977' },
-      agile:   { name: 'Теневой Вихрь', bonus: '+12% уворот',       icon: '💨', col: 0x0a2e18, tcol: '#44ff99' },
-      crit:    { name: 'Хаос-Рыцарь',   bonus: 'крит ×1.85',        icon: '💥', col: 0x220a3a, tcol: '#cc77ff' },
-      neutral: { name: 'Легионер',       bonus: '-10% вх. урон',     icon: '🛡', col: 0x1e1a08, tcol: '#ccbb77' },
+      tank:    { name: 'Берсерк',       bonus: '+15% урон  ·  -8% уворот',       icon: '⚔️', col: 0x4a1208, tcol: '#ff9977' },
+      agile:   { name: 'Теневой Вихрь', bonus: '+8% уворот  ·  -10% броня',      icon: '💨', col: 0x0a2e18, tcol: '#44ff99' },
+      crit:    { name: 'Хаос-Рыцарь',   bonus: '+8% крит  ·  ×1.85  ·  -10% HP', icon: '💥', col: 0x220a3a, tcol: '#cc77ff' },
+      neutral: { name: 'Легионер',       bonus: '-10% вх.урон  ·  -5% урон',     icon: '🛡', col: 0x1e1a08, tcol: '#ccbb77' },
     };
     const _wt = _wtMap[p.warrior_type] || _wtMap.neutral;
     const wbY = cellY + cellH + 7;
