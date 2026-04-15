@@ -52,8 +52,6 @@ class BattleStartMixin:
             'mode': mode or "normal",
             'mode_meta': dict(mode_meta or {}),
             'current_round': 0,
-            'player1_afk_count': 0,
-            'player2_afk_count': 0,
             'player1_consecutive_afk': 0,
             'player2_consecutive_afk': 0,
             'turn_serial': 0,

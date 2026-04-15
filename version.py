@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.59"
-VERSION_LABEL = "v1.6.59 — fix: защита от отрицательного золота при поражении (max(0,...) в afk_end + end_battle_finish)"
+VERSION = "1.6.60"
+VERSION_LABEL = "v1.6.60 — fix: убрана дублирующая AFK-переменная afk_count из execute.py, единственный счётчик — consecutive_afk в timer.py"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "4.93"
+GAME_VERSION = "4.94"

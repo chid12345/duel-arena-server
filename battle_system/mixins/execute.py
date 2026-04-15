@@ -35,21 +35,11 @@ class BattleExecuteMixin:
             p2_choices = self._get_bot_choice(player2, player1)
             battle['player2_choices'] = p2_choices
         
-        # Проверяем AFK
+        # Дефолтный выбор если игрок не успел (AFK-счёт ведёт timer.py через player*_consecutive_afk)
         if not p1_choices:
-            battle['player1_afk_count'] += 1
             p1_choices = {'attack': 'ТУЛОВИЩЕ', 'defense': 'ТУЛОВИЩЕ'}
-            
-            if battle['player1_afk_count'] >= AFK_ROUNDS_TO_DEFEAT:
-                wid = player2.get('user_id') or player2.get('bot_id')
-                return await self._end_battle_by_afk(battle_id, wid)
-        
         if not p2_choices:
-            battle['player2_afk_count'] += 1
             p2_choices = {'attack': 'ТУЛОВИЩЕ', 'defense': 'ТУЛОВИЩЕ'}
-            
-            if battle['player2_afk_count'] >= AFK_ROUNDS_TO_DEFEAT:
-                return await self._end_battle_by_afk(battle_id, player1['user_id'])
         
         # Рассчитываем урон (детально — для текста размена + дебаффы на следующий раунд)
         p1_debuffs = battle.get('player1_debuffs', {}) or {}
