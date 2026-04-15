@@ -21,7 +21,7 @@ Object.assign(MenuScene.prototype, {
     bdg.fillRect(0, 0, W, H);
 
     // Панель (увеличена по высоте для строки бонуса в карточке)
-    const pw = W - 24, ph = 356, px = 12, py = (H - ph) / 2;
+    const pw = W - 24, ph = 376, px = 12, py = (H - ph) / 2;
     const panel = at(this.add.graphics().setDepth(D + 1));
     panel.fillStyle(0x1a1830, 1);
     panel.fillRoundedRect(px, py, pw, ph, 16);
@@ -39,14 +39,14 @@ Object.assign(MenuScene.prototype, {
     });
 
     const types = [
-      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', bonus: '+15% урон / -8% уворот'     },
-      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#00ff88', bonus: '+8% уворот / -10% броня'     },
-      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', bonus: '+8% крит / ×1.85 / -10% HP'  },
-      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ccbb88', bonus: '-10% вх.урон / -5% урон'      },
+      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', plus: '+15% урон',        minus: '-8% уворот'   },
+      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#44ff99', plus: '+8% уворот',       minus: '-10% броня'   },
+      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', plus: '+8% крит · ×1.85', minus: '-10% HP'      },
+      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ddcc88', plus: '-10% вх.урон',     minus: '-5% урон'     },
     ];
 
     const curType = State.player?.warrior_type || 'default';
-    const cw = (pw - 24) / 2, ch = 114, gap = 8;
+    const cw = (pw - 24) / 2, ch = 122, gap = 8;
 
     types.forEach((t, i) => {
       const col = i % 2, row = Math.floor(i / 2);
@@ -60,10 +60,11 @@ Object.assign(MenuScene.prototype, {
       cbg.lineStyle(sel ? 2 : 1, sel ? 0x5096ff : 0x2e2a50, 1);
       cbg.strokeRoundedRect(cx, cy, cw, ch, 10);
 
-      at(this.add.image(cx + cw / 2, cy + 28, t.face).setScale(1.0).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 62, t.name,  11, t.col,    true).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 76, t.stat,   9, '#9999bb').setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 92, t.bonus,  8, '#ffdd66').setOrigin(0.5).setDepth(D + 3));
+      at(this.add.image(cx + cw / 2, cy + 27, t.face).setScale(1.0).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 60, t.name,  11, t.col,    true).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 74, t.stat,   9, '#e0ddff').setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 88, t.plus,   9, '#66ff99', true).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 102, t.minus, 9, '#ff8877').setOrigin(0.5).setDepth(D + 3));
       if (sel) at(txt(this, cx + cw - 6, cy + 6, '✓', 13, '#5096ff', true).setOrigin(1, 0).setDepth(D + 3));
 
       // Зона карточки — глубина выше backdrop → получает ввод первой
