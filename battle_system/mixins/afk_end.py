@@ -60,9 +60,15 @@ class BattleAfkEndMixin:
         # Меньшие награды за победу по AFK (в тестовом бою не начисляются)
         gold_reward = 0 if is_test else (VICTORY_GOLD // 2)
         defeat_gold = 0 if is_test else max(1, int(gold_reward * 0.10))
-        # Половина табличного XP за победу (как обычная победа, но из той же xp_per_win)
+        # XP с поправкой на участие: snap_dmg_r = max(0.4, winner_dmg / total_dmg)
+        # Минимум 40% XP — даже если победитель не ударил ни разу (противник сам ушёл в AFK)
+        human_won = winner_id == player1['user_id']
+        _p1d, _p2d  = self._battle_damage_totals(battle)
+        _winner_dmg = _p1d if human_won else _p2d
+        _total_dmg  = _p1d + _p2d
+        snap_dmg_r  = max(0.4, _winner_dmg / _total_dmg) if _total_dmg > 0 else 0.4
         bx = victory_xp_for_player_level(int(winner_live.get('level', PLAYER_START_LEVEL)))
-        exp_reward = 0 if is_test else (max(1, bx // 2) if bx else 0)
+        exp_reward = 0 if is_test else (max(1, int(bx * snap_dmg_r)) if bx else 0)
         did_level_afk = False
         level_up_level = None
 
@@ -140,9 +146,8 @@ class BattleAfkEndMixin:
             'details':   {'reason': 'AFK defeat', 'mode': battle_mode, 'mode_meta': mode_meta}
         }
 
-        human_won = winner_id == player1['user_id']
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
-        dmg_to_opp, dmg_to_you = self._battle_damage_totals(battle)
+        dmg_to_opp, dmg_to_you = _p1d, _p2d  # уже вычислено выше для snap_dmg_r
         result = {
             'status': 'battle_ended_afk',
             'winner': self._entity_name(winner),
