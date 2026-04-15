@@ -129,6 +129,14 @@ def _build_app(bot_count: int) -> Application:
             time=dt_time(hour=12, minute=0),
             name="daily_bonus_reminder",
         )
+        async def _pvp_clear_stale_job(context):
+            deleted = db.pvp_clear_stale(older_than_seconds=300)
+            if deleted:
+                logger.info("pvp_clear_stale: удалено %s устаревших записей", deleted)
+        application.job_queue.run_repeating(
+            _pvp_clear_stale_job, interval=120, first=120,
+            name="pvp_clear_stale",
+        )
 
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
