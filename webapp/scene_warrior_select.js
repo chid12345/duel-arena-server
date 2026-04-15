@@ -20,8 +20,8 @@ Object.assign(MenuScene.prototype, {
     bdg.fillStyle(0x000000, 0.75);
     bdg.fillRect(0, 0, W, H);
 
-    // Панель
-    const pw = W - 24, ph = 330, px = 12, py = (H - ph) / 2;
+    // Панель (увеличена по высоте для строки бонуса в карточке)
+    const pw = W - 24, ph = 356, px = 12, py = (H - ph) / 2;
     const panel = at(this.add.graphics().setDepth(D + 1));
     panel.fillStyle(0x1a1830, 1);
     panel.fillRoundedRect(px, py, pw, ph, 16);
@@ -29,7 +29,7 @@ Object.assign(MenuScene.prototype, {
     panel.strokeRoundedRect(px, py, pw, ph, 16);
 
     at(txt(this, W / 2, py + 22, '⚔️  ВЫБЕРИ ВОИНА', 15, '#ffc83c', true).setOrigin(0.5).setDepth(D + 2));
-    at(txt(this, W / 2, py + 40, 'Он появится в профиле и боях', 10, '#7777aa').setOrigin(0.5).setDepth(D + 2));
+    at(txt(this, W / 2, py + 40, 'Тип воина влияет на бой', 10, '#7777aa').setOrigin(0.5).setDepth(D + 2));
 
     // Зона-фон: закрывает только при клике вне панели
     const bdZone = at(this.add.zone(0, 0, W, H).setOrigin(0).setDepth(D).setInteractive());
@@ -39,14 +39,14 @@ Object.assign(MenuScene.prototype, {
     });
 
     const types = [
-      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655' },
-      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#00ff88' },
-      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff' },
-      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ccbb88' },
+      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', bonus: '+12% урон в бою'    },
+      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#00ff88', bonus: '+12% уворот'         },
+      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', bonus: 'крит ×1.85 вместо ×1.5' },
+      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ccbb88', bonus: '-10% вх. урон'       },
     ];
 
     const curType = State.player?.warrior_type || 'default';
-    const cw = (pw - 24) / 2, ch = 104, gap = 8;
+    const cw = (pw - 24) / 2, ch = 114, gap = 8;
 
     types.forEach((t, i) => {
       const col = i % 2, row = Math.floor(i / 2);
@@ -60,9 +60,10 @@ Object.assign(MenuScene.prototype, {
       cbg.lineStyle(sel ? 2 : 1, sel ? 0x5096ff : 0x2e2a50, 1);
       cbg.strokeRoundedRect(cx, cy, cw, ch, 10);
 
-      at(this.add.image(cx + cw / 2, cy + 30, t.face).setScale(1.05).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 66, t.name,  12, t.col,    true).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 82, t.stat,  10, '#9999bb').setOrigin(0.5).setDepth(D + 3));
+      at(this.add.image(cx + cw / 2, cy + 28, t.face).setScale(1.0).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 62, t.name,  11, t.col,    true).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 76, t.stat,   9, '#9999bb').setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 92, t.bonus,  8, '#ffdd66').setOrigin(0.5).setDepth(D + 3));
       if (sel) at(txt(this, cx + cw - 6, cy + 6, '✓', 13, '#5096ff', true).setOrigin(1, 0).setDepth(D + 3));
 
       // Зона карточки — глубина выше backdrop → получает ввод первой
@@ -75,7 +76,7 @@ Object.assign(MenuScene.prototype, {
       });
       zone.on('pointerup', () => {
         Sound.click();
-        this._selectWarriorType(t.key);
+        this._selectWarriorType(t.key, t.name);
         this._closeWarriorSelect();
       });
     });
@@ -99,13 +100,16 @@ Object.assign(MenuScene.prototype, {
     this._warriorSelectOverlay = null;
   },
 
-  async _selectWarriorType(type) {
+  async _selectWarriorType(type, name) {
     if (!State.player) return;
     State.player.warrior_type = type;
     // Перестроить панель профиля с новым воином
     if (this._panels.profile) { this._panels.profile.destroy(); this._panels.profile = null; }
     this._buildProfilePanel();
     if (this._activeTab === 'profile') this._switchTab('profile');
+    // Фидбек пользователю
+    const label = name || type;
+    this._toast(`⚔️ Воин выбран: ${label}`);
     // Сохранить на сервер (fire-and-forget)
     post('/api/warrior-type', { warrior_type: type }).catch(() => null);
   },
