@@ -12,7 +12,9 @@ Object.assign(MenuScene.prototype, {
 
       const buffs = d?.ok ? (d.active_buffs || []) : [];
       if (pd?.ok && pd.player) {
+        const _wt = State.player?.warrior_type; // сохраняем локальный выбор (сервер может ещё не сохранил)
         State.player = pd.player;
+        if (_wt) State.player.warrior_type = _wt; // не даём гонке откатить выбор воина
         const p = pd.player;
         if (this._liveHp?.t)
           this._liveHp.t.setText(`${p.current_hp} / ${p.max_hp_effective ?? p.max_hp} HP`);
