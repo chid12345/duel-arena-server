@@ -24,4 +24,7 @@ class BattleDamageArmorMixin:
         buff_armor = defender.get("_buff_armor_pct", 0)
         if buff_armor:
             m = max(0.0, m - buff_armor / 100.0)
+        # Бонус воина-типа: Легионер -10% входящего урона
+        if defender.get("warrior_type") == "neutral":
+            m = max(0.0, m - 0.10)
         return max(1, int(raw * m))

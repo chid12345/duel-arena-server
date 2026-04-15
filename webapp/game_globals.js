@@ -70,7 +70,7 @@ function getWarriorKey(type) {
   if (type === 'agile')   return 'warrior_agile';
   if (type === 'crit')    return 'warrior_crit';
   if (type === 'neutral') return 'warrior_neutral';
-  return 'warrior_blue';
+  return 'warrior_neutral';
 }
 
 function post(path, body = {}, timeoutMs = 15000) {
