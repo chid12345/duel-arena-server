@@ -33,14 +33,14 @@ api/task_routes.py                    — /api/tasks/* эндпоинты
 ## Типы заданий
 
 ### 📅 Ежедневные (7 шт.)
-Сброс каждый день. Трекаются через `daily_quests` (battles, wins, bot_wins, endless_wins, shop_buys)
+Сброс каждый день. Трекаются через `daily_quests` (battles, wins, pvp_wins, bot_wins, endless_wins, shop_buys)
 и `players.win_streak`. Каждое забирается отдельно.
 
 | Ключ | Цель | Трек |
 |------|------|------|
 | dq_play1 | 1 бой | battles |
 | dq_play5 | 5 боёв | battles |
-| dq_win3 | 3 победы | wins |
+| dq_win3 | 3 победы в PvP | pvp_wins |
 | dq_streak3 | серия 3 | streak |
 | dq_bot2 | 2 победы над ботами | bot_wins |
 | dq_buy1 | 1 покупка | shop_buys |
