@@ -55,7 +55,12 @@ class ResultScene extends Phaser.Scene {
     let endlessStatus = null;
     try {
       const fresh = await post('/api/player');
-      if (fresh.ok) { State.player = fresh.player; State.playerLoadedAt = Date.now(); }
+      if (fresh.ok) {
+        const _wt = State.player?.warrior_type; // сохраняем локальный выбор воина
+        State.player = fresh.player;
+        if (_wt) State.player.warrior_type = _wt;
+        State.playerLoadedAt = Date.now();
+      }
     } catch (_) {}
     if (isEndless) {
       try { endlessStatus = await get('/api/endless/status'); } catch (_) {}

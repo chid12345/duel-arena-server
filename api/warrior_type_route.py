@@ -5,7 +5,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 
 from api.tma_auth import get_user_from_init_data
-from api.tma_infra import _cache_invalidate, _rl_check
+from api.tma_infra import _cache_get, _cache_invalidate, _cache_set, _rl_check
 from database import db
 
 VALID_WARRIOR_TYPES = {"default", "tank", "agile", "crit", "neutral"}
@@ -26,5 +26,11 @@ def register_warrior_type_route(app: FastAPI) -> None:
         if wt not in VALID_WARRIOR_TYPES:
             return {"ok": False, "reason": "invalid_type"}
         db.update_warrior_type(uid, wt)
-        _cache_invalidate(uid)
+        # Обновляем кеш немедленно — иначе гонка: параллельный /api/player
+        # может вернуть старый warrior_type из кеша до его инвалидации
+        cached = _cache_get(uid)
+        if cached:
+            _cache_set(uid, {**cached, "warrior_type": wt})
+        else:
+            _cache_invalidate(uid)
         return {"ok": True, "warrior_type": wt}
