@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 
 from api.tma_player_api import _player_api
+
+log = logging.getLogger(__name__)
 
 
 # Количество зарядов xp_boost для каждого item_id
@@ -85,7 +88,12 @@ def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str) -> 
     if rows_affected == 0:
         symbol = "🪙 золота" if currency == "gold" else "💎 алмазов"
         return {"ok": False, "reason": f"Нужно {price} {symbol}"}
-    db.add_to_inventory(uid, item_id)
+    # Валюта уже списана — add_to_inventory не должна упасть молча
+    try:
+        db.add_to_inventory(uid, item_id)
+    except Exception as e:
+        log.critical("add_to_inventory failed uid=%s item=%s: %s", uid, item_id, e)
+        return {"ok": False, "reason": "Ошибка выдачи предмета. Средства будут возвращены — обратитесь в поддержку"}
     player = db.get_or_create_player(uid, "")
     from api.tma_catalogs import SHOP_CATALOG
     info = SHOP_CATALOG.get(item_id, {})
@@ -117,7 +125,12 @@ def _buy_xp_boost_item(db, uid: int, item_id: str, charges: int, mult: float) ->
     if rows_affected == 0:
         symbol = "🪙 золота" if currency == "gold" else "💎 алмазов"
         return {"ok": False, "reason": f"Нужно {price} {symbol}"}
-    db.add_to_inventory(uid, item_id)
+    # Валюта уже списана — add_to_inventory не должна упасть молча
+    try:
+        db.add_to_inventory(uid, item_id)
+    except Exception as e:
+        log.critical("add_to_inventory(xp_boost) failed uid=%s item=%s: %s", uid, item_id, e)
+        return {"ok": False, "reason": "Ошибка выдачи предмета. Средства будут возвращены — обратитесь в поддержку"}
     player = db.get_or_create_player(uid, "")
     return {"ok": True, "added_to_inventory": True, "item_id": item_id,
             "charges": charges, "player": _player_api(dict(player))}
