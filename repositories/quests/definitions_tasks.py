@@ -15,8 +15,8 @@ DAILY_QUEST_DEFS: list[dict] = [
     },
     {
         "key": "dq_win3", "label": "🏆 Победитель",
-        "desc": "Одержать 3 победы", "target": 3,
-        "track": "wins", "difficulty": "medium", "frequency": "daily",
+        "desc": "Одержать 3 победы в PvP", "target": 3,
+        "track": "pvp_wins", "difficulty": "medium", "frequency": "daily",
     },
     {
         "key": "dq_streak3", "label": "🔥 Серия",

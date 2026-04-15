@@ -16,9 +16,11 @@ class BattlesDailyQuestsMixin:
             (user_id, today),
         )
         bot_inc = 1 if (won_battle and is_bot) else 0
+        pvp_inc = 1 if (won_battle and not is_bot) else 0
         cursor.execute(
-            "UPDATE daily_quests SET battles_played=battles_played+1, battles_won=battles_won+?, bot_wins=bot_wins+? WHERE user_id=? AND quest_date=?",
-            (1 if won_battle else 0, bot_inc, user_id, today),
+            "UPDATE daily_quests SET battles_played=battles_played+1, battles_won=battles_won+?, "
+            "bot_wins=bot_wins+?, pvp_wins=pvp_wins+? WHERE user_id=? AND quest_date=?",
+            (1 if won_battle else 0, bot_inc, pvp_inc, user_id, today),
         )
         conn.commit()
         conn.close()

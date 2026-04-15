@@ -280,7 +280,7 @@ class QuestsProgressMixin:
         cur = conn.cursor()
         try:
             cur.execute(
-                "SELECT battles_played, battles_won, endless_wins, bot_wins, shop_buys "
+                "SELECT battles_played, battles_won, endless_wins, bot_wins, shop_buys, pvp_wins "
                 "FROM daily_quests WHERE user_id=? AND quest_date=?",
                 (user_id, today),
             )
@@ -308,6 +308,7 @@ class QuestsProgressMixin:
         track_map = {
             "battles": int(p.get("battles_played") or 0),
             "wins": int(p.get("battles_won") or 0),
+            "pvp_wins": int(p.get("pvp_wins") or 0),
             "endless": int(p.get("endless_wins") or 0),
             "bot_wins": int(p.get("bot_wins") or 0),
             "shop_buys": int(p.get("shop_buys") or 0),

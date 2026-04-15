@@ -2,6 +2,9 @@
 from __future__ import annotations
 
 MIGRATIONS_PART5 = [
+    ("2026_04_16_000_pvp_wins", [
+        "ALTER TABLE daily_quests ADD COLUMN pvp_wins INTEGER DEFAULT 0",
+    ]),
     ("2026_04_16_001_battle_stats", [
         """CREATE TABLE IF NOT EXISTS battle_stats (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
