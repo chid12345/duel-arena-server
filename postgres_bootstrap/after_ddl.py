@@ -107,4 +107,6 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS current_class_type TEXT",
     # Реферальная система: UNIQUE constraint мог отсутствовать если таблица создана раньше
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_referrals_referred_id ON referrals (referred_id)",
+    # Тип воина (выбор персонажа)
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS warrior_type TEXT DEFAULT 'default'",
 )
