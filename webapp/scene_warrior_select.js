@@ -29,7 +29,7 @@ Object.assign(MenuScene.prototype, {
     panel.strokeRoundedRect(px, py, pw, ph, 16);
 
     at(txt(this, W / 2, py + 22, '⚔️  ВЫБЕРИ ВОИНА', 15, '#ffc83c', true).setOrigin(0.5).setDepth(D + 2));
-    at(txt(this, W / 2, py + 40, 'Тип воина влияет на бой', 10, '#7777aa').setOrigin(0.5).setDepth(D + 2));
+    at(txt(this, W / 2, py + 40, 'Тип воина влияет на бой', 10, '#bbbbdd').setOrigin(0.5).setDepth(D + 2));
 
     // Зона-фон: закрывает только при клике вне панели
     const bdZone = at(this.add.zone(0, 0, W, H).setOrigin(0).setDepth(D).setInteractive());
@@ -61,10 +61,10 @@ Object.assign(MenuScene.prototype, {
       cbg.strokeRoundedRect(cx, cy, cw, ch, 10);
 
       at(this.add.image(cx + cw / 2, cy + 27, t.face).setScale(1.0).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 60, t.name,  11, t.col,    true).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 74, t.stat,   9, '#e0ddff').setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 88, t.plus,   9, '#66ff99', true).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 102, t.minus, 9, '#ff8877').setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 60, t.name,   12, '#ffffff',  true).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 74, t.stat,   10, '#ffffff').setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 88, t.plus,   10, '#44ff88',  true).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 103, t.minus, 10, '#ff6655').setOrigin(0.5).setDepth(D + 3));
       if (sel) at(txt(this, cx + cw - 6, cy + 6, '✓', 13, '#5096ff', true).setOrigin(1, 0).setDepth(D + 3));
 
       // Зона карточки — глубина выше backdrop → получает ввод первой
