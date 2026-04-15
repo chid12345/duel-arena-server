@@ -112,8 +112,14 @@ Object.assign(MenuScene.prototype, {
     this._toast(`⚔️ Воин выбран: ${label}`);
     // Сохранить на сервер
     post('/api/warrior-type', { warrior_type: type })
-      .then(r => { if (!r.ok) this._toast(`⚠️ Не удалось сохранить воина: ${r.reason || r.detail || 'err'}`); })
-      .catch(() => this._toast('⚠️ Воин не сохранён — нет связи'));
+      .then(r => {
+        if (!r.ok) {
+          const why = r.reason || r.detail || r._httpStatus || 'err';
+          console.warn('[warrior-type] save failed:', r);
+          this._toast(`⚠️ Не сохранён (${why})`);
+        }
+      })
+      .catch(e => { console.warn('[warrior-type] network error:', e); this._toast('⚠️ Воин не сохранён — нет связи'); });
   },
 
 });
