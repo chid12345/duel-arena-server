@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.67"
-VERSION_LABEL = "v1.6.67 — fix: legs debuff теперь работает, AGI/INT bonus в бою, UI синхрон"
+VERSION = "1.6.68"
+VERSION_LABEL = "v1.6.68 — fix: классы free/gold/diamonds теперь реально дают статы в бою"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.01"
+GAME_VERSION = "5.02"
