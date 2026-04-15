@@ -2,6 +2,8 @@
    WarriorSelect — оверлей выбора воина (открывается из MenuScene)
    MenuScene получает: _openWarriorSelect, _closeWarriorSelect,
                        _selectWarriorType
+   Объекты создаются напрямую в сцене с setDepth (не контейнер),
+   иначе Phaser 3 ненадёжно пробрасывает ввод через Container.
    ============================================================ */
 
 Object.assign(MenuScene.prototype, {
@@ -9,27 +11,32 @@ Object.assign(MenuScene.prototype, {
   _openWarriorSelect() {
     if (this._warriorSelectOverlay) return;
     const { W, H } = this;
+    const D  = 100;
+    const objs = [];
+    const at = o => { objs.push(o); return o; };
 
-    const overlay = this.add.container(0, 0).setDepth(100);
-    this._warriorSelectOverlay = overlay;
-
-    // Тёмный фон
-    const backdrop = this.add.graphics();
-    backdrop.fillStyle(0x000000, 0.75);
-    backdrop.fillRect(0, 0, W, H);
-    backdrop.setInteractive(new Phaser.Geom.Rectangle(0, 0, W, H), Phaser.Geom.Rectangle.Contains);
-    backdrop.on('pointerup', () => this._closeWarriorSelect());
-    overlay.add(backdrop);
+    // Полупрозрачный фон
+    const bdg = at(this.add.graphics().setDepth(D));
+    bdg.fillStyle(0x000000, 0.75);
+    bdg.fillRect(0, 0, W, H);
 
     // Панель
     const pw = W - 24, ph = 330, px = 12, py = (H - ph) / 2;
-    const panel = this.add.graphics();
-    panel.fillStyle(0x1a1830, 1); panel.fillRoundedRect(px, py, pw, ph, 16);
-    panel.lineStyle(1.5, 0x5096ff, 0.5); panel.strokeRoundedRect(px, py, pw, ph, 16);
-    overlay.add(panel);
+    const panel = at(this.add.graphics().setDepth(D + 1));
+    panel.fillStyle(0x1a1830, 1);
+    panel.fillRoundedRect(px, py, pw, ph, 16);
+    panel.lineStyle(1.5, 0x5096ff, 0.5);
+    panel.strokeRoundedRect(px, py, pw, ph, 16);
 
-    overlay.add(txt(this, W / 2, py + 22, '⚔️  ВЫБЕРИ ВОИНА', 15, '#ffc83c', true).setOrigin(0.5));
-    overlay.add(txt(this, W / 2, py + 40, 'Он появится в профиле и боях', 10, '#7777aa').setOrigin(0.5));
+    at(txt(this, W / 2, py + 22, '⚔️  ВЫБЕРИ ВОИНА', 15, '#ffc83c', true).setOrigin(0.5).setDepth(D + 2));
+    at(txt(this, W / 2, py + 40, 'Он появится в профиле и боях', 10, '#7777aa').setOrigin(0.5).setDepth(D + 2));
+
+    // Зона-фон: закрывает только при клике вне панели
+    const bdZone = at(this.add.zone(0, 0, W, H).setOrigin(0).setDepth(D).setInteractive());
+    bdZone.on('pointerup', ptr => {
+      if (ptr.x < px || ptr.x > px + pw || ptr.y < py || ptr.y > py + ph)
+        this._closeWarriorSelect();
+    });
 
     const types = [
       { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655' },
@@ -47,20 +54,20 @@ Object.assign(MenuScene.prototype, {
       const cy = py + 56 + row * (ch + gap);
       const sel = t.key === curType;
 
-      const cbg = this.add.graphics();
+      const cbg = at(this.add.graphics().setDepth(D + 2));
       cbg.fillStyle(sel ? 0x1a2e44 : 0x141220, 1);
       cbg.fillRoundedRect(cx, cy, cw, ch, 10);
       cbg.lineStyle(sel ? 2 : 1, sel ? 0x5096ff : 0x2e2a50, 1);
       cbg.strokeRoundedRect(cx, cy, cw, ch, 10);
-      overlay.add(cbg);
 
-      const faceImg = this.add.image(cx + cw / 2, cy + 30, t.face).setScale(1.05).setOrigin(0.5);
-      overlay.add(faceImg);
-      overlay.add(txt(this, cx + cw / 2, cy + 66, t.name,  12, t.col,    true).setOrigin(0.5));
-      overlay.add(txt(this, cx + cw / 2, cy + 82, t.stat,  10, '#9999bb').setOrigin(0.5));
-      if (sel) overlay.add(txt(this, cx + cw - 6, cy + 6, '✓', 13, '#5096ff', true).setOrigin(1, 0));
+      at(this.add.image(cx + cw / 2, cy + 30, t.face).setScale(1.05).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 66, t.name,  12, t.col,    true).setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 82, t.stat,  10, '#9999bb').setOrigin(0.5).setDepth(D + 3));
+      if (sel) at(txt(this, cx + cw - 6, cy + 6, '✓', 13, '#5096ff', true).setOrigin(1, 0).setDepth(D + 3));
 
-      const zone = this.add.zone(cx + cw / 2, cy + ch / 2, cw - 2, ch - 2).setInteractive({ useHandCursor: true });
+      // Зона карточки — глубина выше backdrop → получает ввод первой
+      const zone = at(this.add.zone(cx, cy, cw - 2, ch - 2).setOrigin(0).setDepth(D + 4)
+        .setInteractive({ useHandCursor: true }));
       zone.on('pointerdown', () => {
         cbg.clear();
         cbg.fillStyle(0x1a3050, 1); cbg.fillRoundedRect(cx, cy, cw, ch, 10);
@@ -71,23 +78,24 @@ Object.assign(MenuScene.prototype, {
         this._selectWarriorType(t.key);
         this._closeWarriorSelect();
       });
-      overlay.add(zone);
     });
 
     // Кнопка закрытия
     const closeY = py + ph - 42;
-    const cbg2 = this.add.graphics();
-    cbg2.fillStyle(0x28243c, 1); cbg2.fillRoundedRect(px + 12, closeY, pw - 24, 32, 10);
-    overlay.add(cbg2);
-    overlay.add(txt(this, W / 2, closeY + 16, 'Закрыть', 12, '#777799').setOrigin(0.5));
-    const closeZone = this.add.zone(W / 2, closeY + 16, pw - 24, 32).setInteractive({ useHandCursor: true });
+    const cbg2 = at(this.add.graphics().setDepth(D + 2));
+    cbg2.fillStyle(0x28243c, 1);
+    cbg2.fillRoundedRect(px + 12, closeY, pw - 24, 32, 10);
+    at(txt(this, W / 2, closeY + 16, 'Закрыть', 12, '#777799').setOrigin(0.5).setDepth(D + 3));
+    const closeZone = at(this.add.zone(px + 12, closeY, pw - 24, 32).setOrigin(0)
+      .setDepth(D + 4).setInteractive({ useHandCursor: true }));
     closeZone.on('pointerup', () => this._closeWarriorSelect());
-    overlay.add(closeZone);
+
+    this._warriorSelectOverlay = objs;
   },
 
   _closeWarriorSelect() {
     if (!this._warriorSelectOverlay) return;
-    this._warriorSelectOverlay.destroy(true);
+    this._warriorSelectOverlay.forEach(o => { try { o.destroy(); } catch(_) {} });
     this._warriorSelectOverlay = null;
   },
 
