@@ -37,24 +37,29 @@ def _buy_hp(db, uid: int, price: int, pct: float) -> dict:
     if not row:
         conn.close()
         return {"ok": False, "reason": "Игрок не найден"}
-    if (row["gold"] or 0) < price:
-        conn.close()
-        return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
     max_hp = int(row["max_hp"] or 100)
     cur_hp = int(row["current_hp"]) if row["current_hp"] is not None else max_hp
     if cur_hp >= max_hp:
         conn.close()
         return {"ok": False, "reason": "HP уже полное!"}
+    if (row["gold"] or 0) < price:
+        conn.close()
+        return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
     if pct >= 1.0:
         new_hp = max_hp
     else:
         new_hp = min(max_hp, cur_hp + max(1, int(max_hp * pct)))
+    # Атомарное списание: WHERE gold >= price AND current_hp < max_hp защищает от race condition
     cursor.execute(
-        "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ? WHERE user_id = ?",
-        (price, new_hp, datetime.utcnow().isoformat(), uid),
+        "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ? "
+        "WHERE user_id = ? AND gold >= ? AND current_hp < max_hp",
+        (price, new_hp, datetime.utcnow().isoformat(), uid, price),
     )
+    rows_affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if rows_affected == 0:
+        return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
     player = db.get_or_create_player(uid, "")
     return {"ok": True, "hp_restored": new_hp - cur_hp, "new_hp": new_hp, "max_hp": max_hp,
             "player": _player_api(dict(player))}
@@ -63,22 +68,23 @@ def _buy_hp(db, uid: int, price: int, pct: float) -> dict:
 def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str) -> dict:
     conn = db.get_connection()
     cursor = conn.cursor()
+    # Атомарное списание: rowcount == 0 → недостаточно средств
     if currency == "gold":
-        cursor.execute("SELECT gold FROM players WHERE user_id = ?", (uid,))
-        row = cursor.fetchone()
-        if not row or (row["gold"] or 0) < price:
-            conn.close()
-            return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
-        cursor.execute("UPDATE players SET gold = gold - ? WHERE user_id = ?", (price, uid))
+        cursor.execute(
+            "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
+            (price, uid, price),
+        )
     else:
-        cursor.execute("SELECT diamonds FROM players WHERE user_id = ?", (uid,))
-        row = cursor.fetchone()
-        if not row or (row["diamonds"] or 0) < price:
-            conn.close()
-            return {"ok": False, "reason": f"Нужно {price} 💎 алмазов"}
-        cursor.execute("UPDATE players SET diamonds = diamonds - ? WHERE user_id = ?", (price, uid))
+        cursor.execute(
+            "UPDATE players SET diamonds = diamonds - ? WHERE user_id = ? AND diamonds >= ?",
+            (price, uid, price),
+        )
+    rows_affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if rows_affected == 0:
+        symbol = "🪙 золота" if currency == "gold" else "💎 алмазов"
+        return {"ok": False, "reason": f"Нужно {price} {symbol}"}
     db.add_to_inventory(uid, item_id)
     player = db.get_or_create_player(uid, "")
     from api.tma_catalogs import SHOP_CATALOG
@@ -94,22 +100,23 @@ def _buy_xp_boost_item(db, uid: int, item_id: str, charges: int, mult: float) ->
     currency = item["currency"]
     conn = db.get_connection()
     cursor = conn.cursor()
+    # Атомарное списание: rowcount == 0 → недостаточно средств
     if currency == "gold":
-        cursor.execute("SELECT gold FROM players WHERE user_id = ?", (uid,))
-        row = cursor.fetchone()
-        if not row or (row["gold"] or 0) < price:
-            conn.close()
-            return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
-        cursor.execute("UPDATE players SET gold = gold - ? WHERE user_id = ?", (price, uid))
+        cursor.execute(
+            "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
+            (price, uid, price),
+        )
     else:
-        cursor.execute("SELECT diamonds FROM players WHERE user_id = ?", (uid,))
-        row = cursor.fetchone()
-        if not row or (row["diamonds"] or 0) < price:
-            conn.close()
-            return {"ok": False, "reason": f"Нужно {price} 💎 алмазов"}
-        cursor.execute("UPDATE players SET diamonds = diamonds - ? WHERE user_id = ?", (price, uid))
+        cursor.execute(
+            "UPDATE players SET diamonds = diamonds - ? WHERE user_id = ? AND diamonds >= ?",
+            (price, uid, price),
+        )
+    rows_affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if rows_affected == 0:
+        symbol = "🪙 золота" if currency == "gold" else "💎 алмазов"
+        return {"ok": False, "reason": f"Нужно {price} {symbol}"}
     db.add_to_inventory(uid, item_id)
     player = db.get_or_create_player(uid, "")
     return {"ok": True, "added_to_inventory": True, "item_id": item_id,
@@ -119,16 +126,15 @@ def _buy_xp_boost_item(db, uid: int, item_id: str, charges: int, mult: float) ->
 def _exchange_diamonds(db, uid: int, cost_diamonds: int, gold_gain: int) -> dict:
     conn = db.get_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT diamonds FROM players WHERE user_id = ?", (uid,))
-    row = cursor.fetchone()
-    if not row or (row["diamonds"] or 0) < cost_diamonds:
-        conn.close()
-        return {"ok": False, "reason": f"Нужно {cost_diamonds} 💎 алмазов"}
+    # Атомарное списание: rowcount == 0 → недостаточно алмазов
     cursor.execute(
-        "UPDATE players SET diamonds = diamonds - ?, gold = gold + ? WHERE user_id = ?",
-        (cost_diamonds, gold_gain, uid),
+        "UPDATE players SET diamonds = diamonds - ?, gold = gold + ? WHERE user_id = ? AND diamonds >= ?",
+        (cost_diamonds, gold_gain, uid, cost_diamonds),
     )
+    rows_affected = cursor.rowcount
     conn.commit()
     conn.close()
+    if rows_affected == 0:
+        return {"ok": False, "reason": f"Нужно {cost_diamonds} 💎 алмазов"}
     player = db.get_or_create_player(uid, "")
     return {"ok": True, "gold_gained": gold_gain, "player": _player_api(dict(player))}

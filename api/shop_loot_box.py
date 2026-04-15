@@ -239,14 +239,16 @@ def open_box(box_id: str, db, user_id: int) -> Dict[str, Any]:
     conn = db.get_connection()
     cursor = conn.cursor()
     col = "gold" if currency == "gold" else "diamonds"
-    cursor.execute(f"SELECT {col} FROM players WHERE user_id = ?", (user_id,))
-    row = cursor.fetchone()
-    if not row or (row[col] or 0) < price:
-        conn.close()
+    # Атомарное списание: rowcount == 0 → недостаточно средств (защита от race condition)
+    cursor.execute(
+        f"UPDATE players SET {col} = {col} - ? WHERE user_id = ? AND {col} >= ?",
+        (price, user_id, price),
+    )
+    rows_affected = cursor.rowcount
+    conn.commit(); conn.close()
+    if rows_affected == 0:
         sym = "🪙" if currency == "gold" else "💎"
         return {"ok": False, "reason": f"Нужно {price} {sym}"}
-    cursor.execute(f"UPDATE players SET {col} = {col} - ? WHERE user_id = ?", (price, user_id))
-    conn.commit(); conn.close()
 
     db.track_purchase(user_id, box_id, currency, price)
 
