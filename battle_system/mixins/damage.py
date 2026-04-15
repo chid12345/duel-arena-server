@@ -56,12 +56,20 @@ class BattleDamageMixin:
         # Бонус атакующего по типу воина + USDT damage_pct (кап: суммарно ≤ +20%)
         wt_atk = attacker.get("warrior_type") or "default"
         usdt = (attacker.get("usdt_passive_type") or "").strip()
+        cls_id = (attacker.get("current_class") or "").strip()
         dmg_bonus = 1.0
         if wt_atk == "tank":
             dmg_bonus = 1.12   # Берсерк +12%
         if usdt == "damage_pct":
             dmg_bonus = min(1.20, dmg_bonus * 1.08)  # кап: суммарный бонус ≤ +20%
         base_dmg = min(dmg_cap, int(base_dmg * dmg_bonus))
+
+        # Спецэффект Gold/Diamond: ярость при низком HP
+        _hp_pct = attacker.get("current_hp", 1) / max(1, attacker.get("max_hp", 1))
+        if cls_id == "berserker_gold" and _hp_pct < 0.30:
+            base_dmg = min(dmg_cap, int(base_dmg * 1.04))   # +4% при HP < 30%
+        elif cls_id == "dragonknight_diamonds" and _hp_pct < 0.40:
+            base_dmg = min(dmg_cap, int(base_dmg * 1.06))   # +6% при HP < 40%
 
         # Промах (снижается бафом accuracy у атакующего)
         eff_miss = max(0.0, MISS_CHANCE - attacker.get("_buff_accuracy", 0) / 100.0)
@@ -132,6 +140,12 @@ class BattleDamageMixin:
         damage = int(base_dmg * (_crit_mult if is_crit else 1.0))
         if usdt == "crit_dmg_pct" and is_crit:
             damage = int(damage * 1.08)
+        # Спецэффект Gold/Diamond: бонус крит-урона
+        if is_crit:
+            if cls_id == "mage_gold":
+                damage = int(damage * 1.04)       # Крит+: крит. урон +4%
+            elif cls_id == "archmage_diamonds":
+                damage = int(damage * 1.06)       # Крит++: крит. урон +6%
 
         # Двойной удар (из наступления)
         atk_agi_inv = stamina_stats_invested(
@@ -143,6 +157,11 @@ class BattleDamageMixin:
                      * DODGE_DOUBLE_STRIKE_PCT_PER_STEP)
         if usdt == "double_hit":
             dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.08)
+        # Спецэффект Gold/Diamond: бонус двойного удара
+        if cls_id == "assassin_gold":
+            dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.04)   # Ловкач+: +4%
+        elif cls_id == "shadowdancer_diamonds":
+            dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.06)   # Ловкач++: +6%
         dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + attacker.get("_buff_double_pct", 0) / 100.0)
         is_double = random.random() < dbl_ch
         if is_double:
