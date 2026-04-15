@@ -110,8 +110,10 @@ Object.assign(MenuScene.prototype, {
     // Фидбек пользователю
     const label = name || type;
     this._toast(`⚔️ Воин выбран: ${label}`);
-    // Сохранить на сервер (fire-and-forget)
-    post('/api/warrior-type', { warrior_type: type }).catch(() => null);
+    // Сохранить на сервер
+    post('/api/warrior-type', { warrior_type: type })
+      .then(r => { if (!r.ok) this._toast(`⚠️ Не удалось сохранить воина: ${r.reason || r.detail || 'err'}`); })
+      .catch(() => this._toast('⚠️ Воин не сохранён — нет связи'));
   },
 
 });
