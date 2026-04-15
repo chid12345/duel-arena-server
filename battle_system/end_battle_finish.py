@@ -81,7 +81,7 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     loser_stats = None
     if not is_test and loser_user_id is not None and not loser_locked:
         loser_pl = dict(loser_live)
-        loser_pl["gold"] = loser_pl.get("gold", 0) + defeat_gold
+        loser_pl["gold"] = max(0, loser_pl.get("gold", 0) + defeat_gold)
         loser_exp_patch, _ = bs._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)
         loser_stats = {
             "losses": loser_live.get("losses", 0) + 1,

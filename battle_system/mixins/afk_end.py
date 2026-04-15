@@ -112,7 +112,7 @@ class BattleAfkEndMixin:
                 'losses': loser_live.get('losses', 0) + 1,
                 'win_streak': 0,
                 'rating': max(100, int(loser_live.get('rating', 1000)) + (afk_elo_delta_l if not is_test else 0)),
-                'gold': int(loser_live.get('gold', 0)) + defeat_gold,
+                'gold': max(0, int(loser_live.get('gold', 0)) + defeat_gold),
             }
             if battle.get('is_bot2'):
                 loser_stats['current_hp'] = int(loser.get('max_hp', PLAYER_START_MAX_HP))

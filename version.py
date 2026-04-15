@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.58"
-VERSION_LABEL = "v1.6.58 — fix: atomic shop purchase — race condition fixed in shop_helpers + loot_box"
+VERSION = "1.6.59"
+VERSION_LABEL = "v1.6.59 — fix: защита от отрицательного золота при поражении (max(0,...) в afk_end + end_battle_finish)"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "4.92"
+GAME_VERSION = "4.93"
