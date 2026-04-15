@@ -126,8 +126,8 @@ CRIT_BLOCK_PIERCE_DAMAGE_MULT = 0.70
 # Ловкость: шанс второго удара в тот же размен (чем больше вложений в ловкость, тем выше)
 DODGE_DOUBLE_STRIKE_STEP = 25
 DODGE_DOUBLE_STRIKE_PCT_PER_STEP = 0.01
-DODGE_DOUBLE_STRIKE_MAX_CHANCE = 0.12
-DODGE_DOUBLE_STRIKE_DAMAGE_MULT = 0.60
+DODGE_DOUBLE_STRIKE_MAX_CHANCE = 0.08
+DODGE_DOUBLE_STRIKE_DAMAGE_MULT = 0.40
 
 # Выносливость/танк: шанс «поглощения» — входящий урон режется вдвое.
 TANK_GUARD_STEP = 25

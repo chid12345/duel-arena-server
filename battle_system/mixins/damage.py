@@ -53,12 +53,15 @@ class BattleDamageMixin:
             base_dmg = int(base_dmg * ZONE_LEGS_MULT)
             debuff = "legs"
 
-        # Вариант Б: бонус/штраф атакующего по типу воина
+        # Бонус атакующего по типу воина + USDT damage_pct (кап: суммарно ≤ +20%)
         wt_atk = attacker.get("warrior_type") or "default"
+        usdt = (attacker.get("usdt_passive_type") or "").strip()
+        dmg_bonus = 1.0
         if wt_atk == "tank":
-            base_dmg = min(dmg_cap, int(base_dmg * 1.15))   # Берсерк +15% урон
-        elif wt_atk == "neutral":
-            base_dmg = min(dmg_cap, int(base_dmg * 0.95))   # Легионер -5% урон (трейдофф)
+            dmg_bonus = 1.12   # Берсерк +12%
+        if usdt == "damage_pct":
+            dmg_bonus = min(1.20, dmg_bonus * 1.08)  # кап: суммарный бонус ≤ +20%
+        base_dmg = min(dmg_cap, int(base_dmg * dmg_bonus))
 
         # Промах (снижается бафом accuracy у атакующего)
         eff_miss = max(0.0, MISS_CHANCE - attacker.get("_buff_accuracy", 0) / 100.0)
@@ -111,16 +114,13 @@ class BattleDamageMixin:
         atk_crit = self._safe_int_field(attacker, "crit", PLAYER_START_CRIT)
         def_crit = self._safe_int_field(defender, "crit", PLAYER_START_CRIT)
         crit_ch = min(CRIT_MAX_CHANCE, atk_crit / (atk_crit + def_crit + 1) * CRIT_MAX_CHANCE)
-        usdt = (attacker.get("usdt_passive_type") or "").strip()
-        is_crit = random.random() < crit_ch
 
-        # Вариант Б: Хаос-Рыцарь +8% крит-шанс + крит ×1.85
-        if (attacker.get("warrior_type") or "default") == "crit":
-            crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.08)
-        _crit_mult = 1.85 if (attacker.get("warrior_type") or "default") == "crit" else 1.5
+        # Хаос-Рыцарь +5% крит-шанс + крит ×1.65
+        if wt_atk == "crit":
+            crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.05)
+        _crit_mult = 1.65 if wt_atk == "crit" else 1.5
+        is_crit = random.random() < crit_ch
         damage = int(base_dmg * (_crit_mult if is_crit else 1.0))
-        if usdt == "damage_pct":
-            damage = int(damage * 1.08)
         if usdt == "crit_dmg_pct" and is_crit:
             damage = int(damage * 1.08)
 

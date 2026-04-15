@@ -33,6 +33,7 @@ from api.tma_notify import _notify_paid_full_reset, _send_tg_message
 from api.tma_player_api import _player_api, _premium_fields
 from api.tma_startup import attach_tma_startup
 from api.admin_purchases import register_admin_purchases
+from api.stats_routes import register_stats_routes
 from api.tma_weekly_quests import _iso_week_key, _weekly_quests_status
 
 from battle_system import battle_system
@@ -198,6 +199,7 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
         },
     )
     register_admin_purchases(app, db=db)
+    register_stats_routes(app, db=db)
     register_task_routes(
         app,
         {

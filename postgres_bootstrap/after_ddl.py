@@ -109,4 +109,18 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "CREATE UNIQUE INDEX IF NOT EXISTS idx_referrals_referred_id ON referrals (referred_id)",
     # Тип воина (выбор персонажа)
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS warrior_type TEXT DEFAULT 'default'",
+    # Миграция: нейтральный класс упразднён → переводим в default
+    "UPDATE players SET warrior_type = 'default' WHERE warrior_type = 'neutral'",
+    # Статистика боёв для балансирования
+    """CREATE TABLE IF NOT EXISTS battle_stats (
+        id BIGSERIAL PRIMARY KEY,
+        battle_type TEXT NOT NULL,
+        winner_wtype TEXT NOT NULL DEFAULT 'default',
+        loser_wtype TEXT NOT NULL DEFAULT 'default',
+        winner_uid BIGINT,
+        loser_uid BIGINT,
+        turns INTEGER DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_battle_stats_type_date ON battle_stats (battle_type, created_at)",
 )

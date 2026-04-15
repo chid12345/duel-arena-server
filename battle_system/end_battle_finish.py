@@ -10,6 +10,7 @@ from config import STREAK_BONUS_EVERY, STREAK_BONUS_GOLD
 
 from battle_system.end_battle_finish_modes import run_titan_endless_progress
 from battle_system.end_battle_finish_result import build_battle_ended_result
+from stats.battle_stats import log_battle as _log_battle_stat
 
 logger = logging.getLogger(__name__)
 
@@ -178,6 +179,21 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     if not battle["is_bot2"] and player2.get("user_id") in bs.battle_queue:
         del bs.battle_queue[player2["user_id"]]
     del bs.active_battles[battle_id]
+
+    # Статистика боёв для балансирования (fire-and-forget, не блокирует)
+    if not is_test:
+        from database import db as _db
+        _log_battle_stat(
+            loop=loop,
+            db=_db,
+            mode=battle_mode,
+            is_bot2=bool(battle.get("is_bot2")),
+            winner_wtype=(winner.get("warrior_type") or "default"),
+            loser_wtype=(loser.get("warrior_type") or "default"),
+            winner_uid=winner_user_id,
+            loser_uid=loser_user_id,
+            turns=n_rounds,
+        )
 
     event_name = "battle_test_ended" if is_test else "battle_ended"
     logger.info("event=%s winner_id=%s rounds=%s duration_ms=%s", event_name, winner_id, n_rounds, duration_ms)
