@@ -44,6 +44,11 @@ class BattleExecuteMixin:
         # Рассчитываем урон (детально — для текста размена + дебаффы на следующий раунд)
         p1_debuffs = battle.get('player1_debuffs', {}) or {}
         p2_debuffs = battle.get('player2_debuffs', {}) or {}
+        # Применяем дебаффы прошлого раунда к защитникам (legs → -уворот)
+        if p2_debuffs.get('legs'):
+            player2['_debuff_legs'] = True
+        if p1_debuffs.get('legs'):
+            player1['_debuff_legs'] = True
         p1_damage, o1, debuff_to_p2 = self._calculate_damage_detailed(
             player1,
             player2,

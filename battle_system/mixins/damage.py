@@ -90,12 +90,18 @@ class BattleDamageMixin:
             atk_agi = max(1, self._safe_int_field(attacker, "endurance", PLAYER_START_ENDURANCE))
             dodge_ch = min(DODGE_MAX_CHANCE, def_agi / (def_agi + atk_agi) * DODGE_MAX_CHANCE)
             dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + defender.get("_buff_dodge_pct", 0) / 100.0)
-            # Вариант Б: бонус/штраф защитника по типу воина
+            # Бонус/штраф защитника по типу воина
             wt_def = defender.get("warrior_type") or "default"
             if wt_def == "agile":
                 dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + 0.08)   # Теневой Вихрь +8% уворот
             elif wt_def == "tank":
                 dodge_ch = max(0.0, dodge_ch - 0.08)                 # Берсерк -8% уворот (трейдофф)
+            # Бонус уворота от вложений в Ловкость (AGI_BONUS) — синхрон с UI
+            def_agi_inv = max(0, self._safe_int_field(defender, "endurance", PLAYER_START_ENDURANCE) - PLAYER_START_ENDURANCE)
+            dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + (def_agi_inv // max(1, AGI_BONUS_STEP)) * AGI_BONUS_PCT_PER_STEP)
+            # Дебафф ног: удар в ноги в прошлом раунде → -15% уворот сейчас
+            if defender.get("_debuff_legs"):
+                dodge_ch = max(0.0, dodge_ch - ZONE_LEGS_DODGE_PENALTY)
             if random.random() < dodge_ch:
                 # Двойной удар атакующего при уклоне
                 atk_agi_inv = stamina_stats_invested(
@@ -115,6 +121,9 @@ class BattleDamageMixin:
         def_crit = self._safe_int_field(defender, "crit", PLAYER_START_CRIT)
         crit_ch = min(CRIT_MAX_CHANCE, atk_crit / (atk_crit + def_crit + 1) * CRIT_MAX_CHANCE)
 
+        # Бонус крит-шанса от вложений в Интуицию (INT_BONUS) — синхрон с UI
+        atk_int_inv = max(0, atk_crit - PLAYER_START_CRIT)
+        crit_ch = min(CRIT_MAX_CHANCE, crit_ch + (atk_int_inv // max(1, INT_BONUS_STEP)) * INT_BONUS_PCT_PER_STEP)
         # Хаос-Рыцарь +5% крит-шанс + крит ×1.65
         if wt_atk == "crit":
             crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.05)
