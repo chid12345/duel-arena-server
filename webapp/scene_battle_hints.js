@@ -91,7 +91,7 @@ const BattleHints = (() => {
   }
 
   /* ── Стрелка по Phaser-координатам ──────────────────────── */
-  const ARROW_CHARS = { up: '⬇️', down: '⬆️', left: '➡️', right: '⬅️' };
+  const ARROW_CHARS = { up: '⬆️', down: '⬇️', left: '⬅️', right: '➡️' };
 
   function _showArrow(arrowDef) {
     if (!_arrow || !arrowDef) { _hideArrow(); return; }
