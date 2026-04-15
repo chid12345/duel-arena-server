@@ -97,6 +97,8 @@ const BattleLog = (() => {
     hide() {
       if (!overlay) return;
       overlay.style.display = 'none';
+      overlay.style.pointerEvents = 'none';
+      overlay.onclick = null;
       _shown = false;
     },
     clear() {

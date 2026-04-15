@@ -41,9 +41,13 @@
     document.head.appendChild(s);
     el = document.createElement('div');
     el.id = 'bl-history';
-    // Поглощаем ВСЕ события — они не должны проваливаться на canvas/Phaser
-    ['pointerdown','pointerup','touchstart','touchend','mousedown','mouseup','click'].forEach(ev => {
+    // pointer/mouse события — полностью поглощаем (не проваливаем на Phaser canvas)
+    ['pointerdown','pointerup','mousedown','mouseup','click'].forEach(ev => {
       el.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, { passive: false });
+    });
+    // touch — только stopPropagation, без preventDefault: иначе сломается нативный скролл
+    ['touchstart','touchend','touchmove'].forEach(ev => {
+      el.addEventListener(ev, e => e.stopPropagation(), { passive: true });
     });
     // Закрытие по ✕
     el.addEventListener('click', e => {
