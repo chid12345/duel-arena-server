@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.52"
-VERSION_LABEL = "v1.6.52 — fix: warrior_type PostgreSQL migration — ADD COLUMN IF NOT EXISTS in POSTGRES_AFTER_DDL"
+VERSION = "1.6.53"
+VERSION_LABEL = "v1.6.53 — feat: warrior badge in profile — shows name + bonus under character"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "4.86"
+GAME_VERSION = "4.87"
