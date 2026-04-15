@@ -82,7 +82,7 @@ def stamina_stats_invested(max_hp: int, level: int) -> int:
 
 
 # Первые N завершённых боёв (победа или поражение) — бот ослаблен (статы и HP × ONBOARDING_BOT_STAT_MULT)
-ONBOARDING_BATTLES_EASY = 3
+ONBOARDING_BATTLES_EASY = 5
 ONBOARDING_BOT_STAT_MULT = 0.6  # «слабее на 40%» относительно обычного бота
 DISPLAY_NAME_MAX_LEN = 18
 

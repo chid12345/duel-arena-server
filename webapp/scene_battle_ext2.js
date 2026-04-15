@@ -120,6 +120,11 @@ Object.assign(BattleScene.prototype, {
     const log = b.combat_log || [];
     BattleLog.update(log);
 
+    // Подсказки для новичков после раунда
+    if (typeof BattleHints !== 'undefined' && log.length > 0) {
+      BattleHints.onRoundEnd(this, log.length);
+    }
+
     if ((myDelta > 0 || oppDelta > 0) && log.length) {
       const lastLog = log[log.length - 1].replace(/<[^>]+>/g, '').toLowerCase();
       const isCrit  = lastLog.includes('крит');

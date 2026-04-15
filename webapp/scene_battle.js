@@ -146,5 +146,8 @@ class BattleScene extends Phaser.Scene {
     this._updateFromState(State.battle);
     this._setupWSBattle();
     this._startTimer();
+
+    // Подсказки для новичков (первые 5 боёв)
+    if (typeof BattleHints !== 'undefined') BattleHints.onBattleStart(this);
   }
 }

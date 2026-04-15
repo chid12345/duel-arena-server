@@ -98,6 +98,7 @@ Object.assign(BattleScene.prototype, {
 
   shutdown() {
     BattleLog.hide();
+    if (typeof BattleHints !== 'undefined') BattleHints.hide();
     this.time.removeAllEvents();
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   },

@@ -8,6 +8,7 @@ from fastapi import FastAPI
 
 from api.tma_infra import manager
 from api.tma_models import FindBattleBody
+from config.battle_constants import ONBOARDING_BATTLES_EASY
 
 
 def register_find_battle_route(
@@ -88,7 +89,7 @@ def register_find_battle_route(
             return {"ok": False, "reason": "no_opponent"}
 
         completed = player.get("wins", 0) + player.get("losses", 0)
-        if completed < 3:
+        if completed < ONBOARDING_BATTLES_EASY:
             opponent = battle_system.apply_onboarding_bot(opponent)
 
         battle_id = await battle_system.start_battle(player, opponent, is_bot2=True)
