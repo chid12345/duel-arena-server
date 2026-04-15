@@ -46,6 +46,8 @@ SHOP_CATALOG = {
     "scroll_predator": {"name": "Хищник",               "price": 35,  "currency": "diamonds", "icon": "🐍", "tab": "scrolls", "desc": "Крит+5, Двойн+8%, 3 боя",  "inventory": True},
     "scroll_berserker":{"name": "Берсерк",              "price": 40,  "currency": "diamonds", "icon": "🔥", "tab": "scrolls", "desc": "Сила+8, Броня-5%, 3 боя",   "inventory": True},
     "scroll_accuracy": {"name": "Свиток точности",      "price": 20,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Точность +15%, 3 боя",      "inventory": True},
+    "scroll_vampire_g":{"name": "Свиток Вампира",      "price": 140, "currency": "gold",     "icon": "🩸", "tab": "scrolls", "desc": "Вампиризм 9%, 1 бой",       "inventory": True},
+    "scroll_vampire_d":{"name": "Свиток Вампира+",     "price": 40,  "currency": "diamonds", "icon": "🧛", "tab": "scrolls", "desc": "Вампиризм 15%, 3 боя",      "inventory": True},
 
     # ── Обмен алмазы → золото ─────────────────────────────────
     "exchange_small":  {"name": "5💎 → 350🪙",          "price": 5,   "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 350 золота"},
@@ -91,6 +93,8 @@ SCROLL_EFFECTS = {
     "scroll_predator": [("crit",        5,   3), ("double_pct", 8,  3)],
     "scroll_berserker":[("strength",    8,   3), ("armor_pct",  -5, 3)],
     "scroll_accuracy": [("accuracy",    15,  3)],
+    "scroll_vampire_g":[("lifesteal_pct", 9,  1)],
+    "scroll_vampire_d":[("lifesteal_pct", 15, 3)],
     # USDT
     "scroll_str_12":   [("strength",    12,  5)],
     "scroll_end_12":   [("endurance",   12,  5)],
