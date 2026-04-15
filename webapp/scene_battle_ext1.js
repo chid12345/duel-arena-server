@@ -176,6 +176,7 @@ Object.assign(BattleScene.prototype, {
     const logY = Math.round(H * 0.6 - logH - 4);
     BattleLog.clear();
     BattleLog.show(this.game.canvas, 4, logY, W - 8, logH);
+    BattleLog.setClickable(() => BattleLog.showHistory(this.game.canvas, State.battle?.combat_log || []));
   },
 
 });

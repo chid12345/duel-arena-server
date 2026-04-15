@@ -107,6 +107,13 @@ const BattleLog = (() => {
       if (!_shown || !entries || !entries.length) return;
       _render(entries[entries.length - 1]);
     },
+    setClickable(cb) {
+      _init();
+      overlay.style.pointerEvents = 'auto';
+      overlay.style.cursor = 'pointer';
+      overlay.onclick = cb;
+    },
+    styleMarker: _styleMarker,  // expose for scene_battle_log_history.js
   };
 })();
 
