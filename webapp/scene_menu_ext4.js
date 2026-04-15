@@ -17,7 +17,11 @@ Object.assign(MenuScene.prototype, {
       if (stroke) { style.stroke = stroke; style.strokeThickness = Math.max(2, Math.round(sz * 0.22)); }
       return this.make.text({ x, y, text: String(s), style }, false);
     };
-    const mkZ = (x, y, w, h) => this.make.zone({ x, y, width: w, height: h }, false);
+    const mkZ = (x, y, w, h) => {
+      const z = this.add.zone(x, y, w, h);
+      try { z.removeFromDisplayList(); } catch(_) {}
+      return z;
+    };
     const mkI = (x, y, key)  => this.make.image({ x, y, key }, false);
     const mkBar = (x, y, w, h, pct, fillColor, bgColor = C.dark, r = 4) => {
       const g = mkG();
@@ -47,7 +51,8 @@ Object.assign(MenuScene.prototype, {
     // Avatar block — нажатие открывает вкладку Образы
     const avX = PAD + 8, avY = 18, avS = 42;
     this._drawAvatarPreview(c, avX + avS / 2, avY + avS / 2, avS / 2, null, p.level);
-    const avZ = this.make.zone({ x: avX + avS / 2, y: avY + avS / 2, width: avS + 8, height: avS + 8 }, false);
+    const avZ = this.add.zone(avX + avS / 2, avY + avS / 2, avS + 8, avS + 8);
+    try { avZ.removeFromDisplayList(); } catch(_) {}
     avZ.setInteractive({ useHandCursor: true });
     avZ.on('pointerup', () => { Sound.click(); this.scene.start('Avatar'); });
     c.add(avZ);
