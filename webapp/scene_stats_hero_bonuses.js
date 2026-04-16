@@ -1,197 +1,198 @@
 /* ============================================================
-   StatsScene — расширение: раскрывающийся бейдж воина
-   с полной панелью бонусов (класс / свитки / эликсиры / скоро)
+   StatsScene — раскрывающийся бейдж воина с панелью бонусов
+   (класс / свитки / эликсиры / скоро) + drag-скролл + click-outside
    ============================================================ */
 
 (() => {
 
   const WT = {
-    tank:  { name: 'Берсерк',       icon: '⚔️', col: 0x4a1208, tcol: '#ff9977',
-             rows: [ {i:'⚔️', n:'Урон',   v:'+12%', neg:false},
-                     {i:'🤸', n:'Уворот', v:'−8%',  neg:true } ] },
-    agile: { name: 'Теневой Вихрь', icon: '💨', col: 0x0a2e18, tcol: '#44ff99',
-             rows: [ {i:'🤸', n:'Уворот', v:'+8%',  neg:false},
-                     {i:'🛡', n:'Броня',  v:'−10%', neg:true } ] },
-    crit:  { name: 'Хаос-Рыцарь',   icon: '💥', col: 0x220a3a, tcol: '#cc77ff',
-             rows: [ {i:'💥', n:'Шанс крита',    v:'+5%',   neg:false},
-                     {i:'⚡', n:'Множитель крита', v:'×1.65', neg:false},
-                     {i:'❤️', n:'Здоровье',      v:'−10%',  neg:true } ] },
+    tank:  { name:'Берсерк',       icon:'⚔️', col:0x4a1208, tcol:'#ff9977',
+             rows:[{i:'⚔️',n:'Урон',v:'+12%',neg:false},{i:'🤸',n:'Уворот',v:'−8%',neg:true}] },
+    agile: { name:'Теневой Вихрь', icon:'💨', col:0x0a2e18, tcol:'#44ff99',
+             rows:[{i:'🤸',n:'Уворот',v:'+8%',neg:false},{i:'🛡',n:'Броня',v:'−10%',neg:true}] },
+    crit:  { name:'Хаос-Рыцарь',   icon:'💥', col:0x220a3a, tcol:'#cc77ff',
+             rows:[{i:'💥',n:'Шанс крита',v:'+5%',neg:false},{i:'⚡',n:'Множитель крита',v:'×1.65',neg:false},{i:'❤️',n:'Здоровье',v:'−10%',neg:true}] },
   };
-
   const BUFF_LBL = {
     strength:'⚔️ Сила', endurance:'🌀 Ловкость', stamina:'🛡 Выносливость',
     crit:'🎯 Интуиция', armor_pct:'🔰 Броня', dodge_pct:'💨 Уворот',
     hp_bonus:'❤️ HP', double_pct:'⚡ Двойной', accuracy:'👁 Точность',
     lifesteal_pct:'🩸 Вампир', gold_pct:'💰 Золото', xp_pct:'📚 Опыт',
   };
-
+  const UPCOMING = [
+    { i:'🔮', n:'Руны',        v:'скоро' },
+    { i:'👥', n:'Ауры клана',  v:'скоро' },
+    { i:'🎽', n:'Сеты брони',  v:'скоро' },
+  ];
   const timeLeft = (iso) => {
     const ms = Math.max(0, new Date(iso + 'Z') - Date.now());
-    const h = Math.floor(ms / 3600000);
-    const m = Math.floor((ms % 3600000) / 60000);
+    const h = Math.floor(ms / 3600000), m = Math.floor((ms % 3600000) / 60000);
     return h > 0 ? `${h}ч ${m}м` : `${m}м`;
   };
 
 Object.assign(StatsScene.prototype, {
 
-  /* Рисует интерактивный бейдж воина + сохраняет данные для раскрытия */
   _buildWarriorBadge(W, wbY) {
     const p = State.player;
-    const _wt = WT[p.warrior_type] || WT.tank;
+    const wt = WT[p.warrior_type] || WT.tank;
     const wbH = 28;
-    const ref = { open:false, refs:[], panelRefs:[], wt:_wt, W, wbY, wbH };
-    this._heroBonuses = ref;
+    this._heroBonuses = { open:false, wt, W, wbY, wbH, refs:[] };
+    const R = this._heroBonuses;
 
     const g = this.add.graphics().setDepth(2);
-    g.fillStyle(_wt.col, 0.95);
-    g.fillRoundedRect(8, wbY, W - 16, wbH, 8);
-    g.lineStyle(1, 0xffffff, 0.08);
-    g.strokeRoundedRect(8, wbY, W - 16, wbH, 8);
-    ref.refs.push(g);
+    // более светлый фон (фолбэк если IntegerToColor недоступен)
+    let bgCol = wt.col;
+    try { bgCol = Phaser.Display.Color.IntegerToColor(wt.col).brighten(25).color; } catch(_){}
+    g.fillStyle(bgCol, 1);
+    g.fillRoundedRect(8, wbY, W-16, wbH, 8);
+    g.lineStyle(1.5, wt.col, 1);
+    g.strokeRoundedRect(8, wbY, W-16, wbH, 8);
 
-    // счётчик "+N бонусов"
-    const nClass = _wt.rows.length;
-    const buffs = this._invData?.active_buffs || [];
-    const summary = `+${nClass + buffs.length} бонус${buffs.length+nClass===1?'':'ов'}`;
+    const cy = wbY + wbH/2;
+    const nClass = wt.rows.length, nBuffs = (this._invData?.active_buffs || []).length;
+    const total = nClass + nBuffs;
+    const sum = `+${total} бонус${total===1?'':(total<5?'а':'ов')}`;
+    // Белый текст с тёмной обводкой — читается на любом фоне
+    txt(this, 18, cy, `${wt.icon}  ${wt.name}`, 13, '#ffffff', true, '#000000').setOrigin(0, 0.5).setDepth(2);
+    txt(this, W-42, cy, sum, 11, '#ffe888', true, '#000000').setOrigin(1, 0.5).setDepth(2);
 
-    const cy = wbY + wbH / 2;
-    ref.refs.push(txt(this, 18, cy, `${_wt.icon}  ${_wt.name}`, 11, _wt.tcol, true).setOrigin(0, 0.5));
-    const sumT = txt(this, W - 40, cy, summary, 10, '#d8c6ef', true).setOrigin(1, 0.5);
-    ref.sumT = sumT;
-    ref.refs.push(sumT);
-
-    // шеврон
     const chevBg = this.add.graphics().setDepth(2);
-    chevBg.fillStyle(0xffffff, 0.08);
-    chevBg.fillCircle(W - 22, cy, 9);
-    ref.refs.push(chevBg);
-    const chev = txt(this, W - 22, cy, '▾', 10, _wt.tcol, true).setOrigin(0.5);
-    ref.chev = chev;
-    ref.refs.push(chev);
+    chevBg.fillStyle(0xffffff, 0.22); chevBg.fillCircle(W-22, cy, 10);
+    chevBg.lineStyle(1, 0xffffff, 0.4); chevBg.strokeCircle(W-22, cy, 10);
+    R.chev = txt(this, W-22, cy, '▾', 12, '#ffffff', true).setOrigin(0.5).setDepth(2);
 
-    // hit-zone на всю ширину бейджа
-    const z = this.add.zone(W/2, cy, W - 16, wbH).setInteractive({ useHandCursor: true });
+    const z = this.add.zone(W/2, cy, W-16, wbH).setInteractive({ useHandCursor:true });
     z.on('pointerdown', () => { try { tg?.HapticFeedback?.selectionChanged(); } catch(_){} });
     z.on('pointerup', () => this._toggleHeroBonuses());
-    ref.refs.push(z);
   },
 
   _toggleHeroBonuses() {
-    const r = this._heroBonuses; if (!r) return;
-    if (r.open) return this._closeHeroBonuses();
-    this._openHeroBonuses();
+    const R = this._heroBonuses; if (!R) return;
+    R.open ? this._closeHeroBonuses() : this._openHeroBonuses();
   },
 
   _closeHeroBonuses() {
-    const r = this._heroBonuses; if (!r) return;
-    r.panelRefs.forEach(x => { try { x.destroy(); } catch(_){} });
-    r.panelRefs = [];
-    r.open = false;
-    if (r.chev) r.chev.setText('▾');
+    const R = this._heroBonuses; if (!R) return;
+    if (R.updFn) { this.events.off('update', R.updFn); R.updFn = null; }
+    R.refs.forEach(x => { try { x.destroy(); } catch(_){} });
+    R.refs = []; R.open = false;
+    if (R.chev) R.chev.setText('▾');
   },
 
   async _openHeroBonuses() {
-    const r = this._heroBonuses; if (!r) return;
-    // Подгрузим инвентарь, если ещё нет — для актуальных свитков/эликсиров
+    const R = this._heroBonuses; if (!R) return;
     if (!this._invData) {
       try { const d = await get('/api/shop/inventory'); if (d?.ok) this._invData = d; } catch(_){}
       if (!this.scene?.isActive()) return;
     }
-    r.open = true;
-    if (r.chev) r.chev.setText('▴');
+    R.open = true; if (R.chev) R.chev.setText('▴');
     this._renderHeroBonusesPanel();
   },
 
   _renderHeroBonusesPanel() {
-    const r = this._heroBonuses; if (!r || !r.open) return;
-    r.panelRefs.forEach(x => { try { x.destroy(); } catch(_){} });
-    r.panelRefs = [];
+    const R = this._heroBonuses; if (!R || !R.open) return;
+    R.refs.forEach(x => { try { x.destroy(); } catch(_){} }); R.refs = [];
 
-    const { W, wbY, wbH, wt } = r;
-    const { H } = this;
-    const bottomGuard = H * 0.935 - 8;
-    const panelX = 8;
-    const panelY = wbY + wbH + 4;
-    const panelW = W - 16;
-    const maxH = Math.max(160, bottomGuard - panelY);
+    const { W, wbY, wbH, wt } = R, { H } = this;
+    const panelX = 8, panelY = wbY + wbH + 4, panelW = W - 16;
+    const maxH = Math.max(160, H * 0.935 - panelY - 8);
 
-    // собрать секции
-    const buffs = this._invData?.active_buffs || [];
-    const chargeBuffs = buffs.filter(b => b.charges != null);
-    const timeBuffs   = buffs.filter(b => b.expires_at != null);
+    // backdrop-zone (клик вне панели = закрыть)
+    const back = this.add.zone(W/2, H/2, W, H).setInteractive().setDepth(2);
+    back.on('pointerup', () => this._closeHeroBonuses());
+    R.refs.push(back);
 
-    const sections = [];
-    sections.push({ title:'⚔️ Класс воина',
-      rows: wt.rows.map(r => ({ i:r.i, n:r.n, v:r.v, neg:r.neg })) });
-
-    if (chargeBuffs.length) {
-      sections.push({ title:'📜 Свитки',
-        rows: chargeBuffs.map(b => ({
-          i:'📜', n:BUFF_LBL[b.buff_type] || b.buff_type,
-          v:`+${b.value}${b.buff_type.endsWith('_pct')?'%':''} · ${b.charges} боёв`, neg:false })) });
-    } else {
-      sections.push({ title:'📜 Свитки', empty:'нет активных · купите в магазине' });
-    }
-
-    if (timeBuffs.length) {
-      sections.push({ title:'🧪 Эликсиры',
-        rows: timeBuffs.map(b => ({
-          i:'🧪', n:BUFF_LBL[b.buff_type] || b.buff_type,
-          v:`+${b.value}% · ${timeLeft(b.expires_at)}`, neg:false })) });
-    } else {
-      sections.push({ title:'🧪 Эликсиры', empty:'нет активных · купите в магазине' });
-    }
-
-    sections.push({ title:'🔜 В разработке', empty:'руны · ауры клана · сеты брони' });
-
-    // отрисовка
-    const rowH = 20, sectH = 18, padT = 8, padB = 8, gap = 4;
-    let totalH = padT + padB;
-    sections.forEach(s => {
-      totalH += sectH + gap;
-      if (s.rows) totalH += s.rows.length * rowH;
-      else totalH += rowH;
-      totalH += gap;
-    });
-    const h = Math.min(maxH, totalH);
-
+    // панель
     const bg = this.add.graphics().setDepth(3);
-    bg.fillStyle(0x0d0a1c, 0.98);
-    bg.fillRoundedRect(panelX, panelY, panelW, h, 10);
-    bg.lineStyle(1, wt.col, 0.6);
-    bg.strokeRoundedRect(panelX, panelY, panelW, h, 10);
-    r.panelRefs.push(bg);
+    bg.fillStyle(0x0d0a1c, 0.98); bg.fillRoundedRect(panelX, panelY, panelW, maxH, 10);
+    bg.lineStyle(1, wt.col, 0.6); bg.strokeRoundedRect(panelX, panelY, panelW, maxH, 10);
+    R.refs.push(bg);
 
-    let y = panelY + padT;
-    sections.forEach(sec => {
-      // заголовок секции
-      const tc = '#8a7db3';
-      r.panelRefs.push(txt(this, panelX + 10, y + sectH/2, sec.title, 10, tc, true).setOrigin(0, 0.5).setDepth(4));
-      const line = this.add.graphics().setDepth(4);
-      line.lineStyle(1, wt.col, 0.25);
-      line.lineBetween(panelX + 140, y + sectH/2, panelX + panelW - 10, y + sectH/2);
-      r.panelRefs.push(line);
+    // секции
+    const buffs = this._invData?.active_buffs || [];
+    const charge = buffs.filter(b => b.charges != null);
+    const timed  = buffs.filter(b => b.expires_at != null);
+    const secs = [
+      { title:'⚔️ Класс воина', rows: wt.rows },
+      charge.length
+        ? { title:'📜 Свитки', rows: charge.map(b => ({
+            i:'📜', n:BUFF_LBL[b.buff_type] || b.buff_type,
+            v:`+${b.value}${b.buff_type.endsWith('_pct')?'%':''} · ${b.charges} боёв`, neg:false })) }
+        : { title:'📜 Свитки', empty:'нет активных · купите в магазине' },
+      timed.length
+        ? { title:'🧪 Эликсиры', rows: timed.map(b => ({
+            i:'🧪', n:BUFF_LBL[b.buff_type] || b.buff_type,
+            v:`+${b.value}% · ${timeLeft(b.expires_at)}`, neg:false })) }
+        : { title:'🧪 Эликсиры', empty:'нет активных · купите в магазине' },
+      { title:'🔜 В разработке', rows: UPCOMING.map(u => ({ i:u.i, n:u.n, v:u.v, neg:false, soon:true })) },
+    ];
+
+    // содержимое в container — для скролла
+    const cont = this.add.container(panelX, panelY + 8).setDepth(4);
+    R.refs.push(cont);
+    const viewH = maxH - 16;
+    const maskG = this.make.graphics({ x:0, y:0, add:false });
+    maskG.fillStyle(0xffffff, 1); maskG.fillRect(panelX, panelY + 8, panelW, viewH);
+    cont.setMask(maskG.createGeometryMask());
+    R.refs.push(maskG);
+
+    const rowH = 20, sectH = 18, gap = 4;
+    let y = 0;
+    const add = (o) => cont.add(o);
+    secs.forEach(sec => {
+      add(txt(this, 10, y + sectH/2, sec.title, 10, '#8a7db3', true).setOrigin(0, 0.5));
+      const ln = this.add.graphics();
+      ln.lineStyle(1, wt.col, 0.25);
+      ln.lineBetween(140, y + sectH/2, panelW - 10, y + sectH/2);
+      add(ln);
       y += sectH + gap;
-
       if (sec.empty) {
-        r.panelRefs.push(txt(this, panelX + panelW/2, y + rowH/2, sec.empty, 10, '#55506e').setOrigin(0.5).setDepth(4));
+        add(txt(this, panelW/2, y + rowH/2, sec.empty, 10, '#55506e').setOrigin(0.5));
         y += rowH;
       } else {
         sec.rows.forEach((row, i) => {
           if (i % 2 === 1) {
-            const sg = this.add.graphics().setDepth(3);
-            sg.fillStyle(0xffffff, 0.025);
-            sg.fillRoundedRect(panelX + 4, y, panelW - 8, rowH, 4);
-            r.panelRefs.push(sg);
+            const sg = this.add.graphics();
+            sg.fillStyle(0xffffff, 0.025); sg.fillRoundedRect(4, y, panelW - 8, rowH, 4);
+            add(sg);
           }
-          r.panelRefs.push(txt(this, panelX + 14, y + rowH/2, row.i, 12).setOrigin(0, 0.5).setDepth(4));
-          r.panelRefs.push(txt(this, panelX + 34, y + rowH/2, row.n, 11, '#dcd8ef').setOrigin(0, 0.5).setDepth(4));
-          r.panelRefs.push(txt(this, panelX + panelW - 12, y + rowH/2, row.v, 11, row.neg?'#ff7e7e':'#66dd99', true).setOrigin(1, 0.5).setDepth(4));
+          add(txt(this, 14, y + rowH/2, row.i, 12).setOrigin(0, 0.5));
+          add(txt(this, 34, y + rowH/2, row.n, 11, row.soon ? '#7a728f' : '#dcd8ef').setOrigin(0, 0.5));
+          const vc = row.soon ? '#8a7db3' : (row.neg ? '#ff7e7e' : '#66dd99');
+          add(txt(this, panelW - 12, y + rowH/2, row.v, 11, vc, true).setOrigin(1, 0.5));
           y += rowH;
         });
       }
       y += gap;
     });
+    const contentH = y;
+
+    // drag-скролл с инерцией (как в магазине)
+    const scrollZ = this.add.zone(panelX, panelY, panelW, maxH).setOrigin(0)
+      .setInteractive().setDepth(5);
+    R.refs.push(scrollZ);
+    let baseY = 0, sy = 0, dragY = 0, vel = 0, lastY = 0, lastT = 0, active = false, moved = false;
+    const clamp = v => Math.min(0, Math.max(-(Math.max(0, contentH - viewH)), v));
+    scrollZ.on('pointerdown', p => { sy = p.y; dragY = baseY; vel = 0; active = true; moved = false; lastY = p.y; lastT = this.game.loop.now; });
+    scrollZ.on('pointermove', p => {
+      if (!active) return;
+      const dy = p.y - sy;
+      if (Math.abs(dy) > 6) moved = true;
+      const now = this.game.loop.now, dt = now - lastT;
+      if (dt > 0) vel = (p.y - lastY) / dt * 16;
+      lastY = p.y; lastT = now;
+      baseY = clamp(dragY + dy); cont.setY(panelY + 8 + baseY);
+    });
+    scrollZ.on('pointerup', p => {
+      if (!active) return; active = false;
+      if (!moved) this._closeHeroBonuses();
+    });
+    scrollZ.on('pointerout', () => { active = false; });
+    R.updFn = () => {
+      if (Math.abs(vel) < 0.15) { vel = 0; return; }
+      baseY = clamp(baseY + vel); vel *= 0.88; cont.setY(panelY + 8 + baseY);
+    };
+    this.events.on('update', R.updFn);
   },
 });
 
