@@ -10,32 +10,43 @@ Object.assign(ClanScene.prototype, {
     let y = 84;
     const trunc = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s || '');
 
-    const cardH = 72;
+    const EM = {
+      light:   { i: '☀️', name: 'СВЕТ',         c: 0xffd166, hex: '#ffd166' },
+      dark:    { i: '🌑', name: 'ТЬМА',         c: 0xa06bff, hex: '#a06bff' },
+      neutral: { i: '⚖️', name: 'НЕЙТРАЛИТЕТ',  c: 0x7ec8ff, hex: '#7ec8ff' },
+    };
+    const em = EM[clan.emblem] || EM.neutral;
+    const cardH = 84;
     const cardG = this.add.graphics();
     cardG.fillStyle(0x161920, 1);
     cardG.fillRoundedRect(8, y, W - 16, cardH, 12);
-    cardG.lineStyle(1, 0x1e2230, 0.9);
+    cardG.lineStyle(2, em.c, 0.85);
     cardG.strokeRoundedRect(8, y, W - 16, cardH, 12);
-    const avS = 46, avX = 16, avY = y + (cardH - avS) / 2;
+    const avS = 56, avX = 16, avY = y + (cardH - avS) / 2;
     cardG.fillStyle(0x1e2240, 1);
     cardG.fillRoundedRect(avX, avY, avS, avS, 12);
-    cardG.lineStyle(1, 0x2a3050, 0.9);
+    cardG.lineStyle(1.5, em.c, 0.9);
     cardG.strokeRoundedRect(avX, avY, avS, avS, 12);
-    txt(this, avX + avS / 2, avY + avS / 2, '🏰', 22).setOrigin(0.5);
+    txt(this, avX + avS / 2, avY + avS / 2 - 4, em.i, 24).setOrigin(0.5);
+    txt(this, avX + avS / 2, avY + avS - 8, em.name, 7, em.hex, true).setOrigin(0.5);
     const infoX = avX + avS + 10;
-    txt(this, infoX, y + 14, `[ ${clan.tag} ]  ·  УР.${clan.level}`, 9, '#3a5080');
-    txt(this, infoX, y + 29, trunc(clan.name, 18), 15, '#e8ecff', true);
-    const pillY = y + 50;
+    txt(this, infoX, y + 10, `[${clan.tag}]`, 10, '#ffc83c', true);
+    txt(this, infoX + 38, y + 10, `Ур.${clan.level}`, 10, '#ffffff', true);
+    txt(this, infoX, y + 26, trunc(clan.name, 18), 16, '#ffffff', true);
+    const desc = (clan.description || '').trim();
+    if (desc) txt(this, infoX, y + 48, desc.slice(0, 36), 10, '#a8b4d8');
+    const pillY = y + cardH - 22;
     const pillG = this.add.graphics();
+    let pillX = infoX;
     if (isLeader) {
-      pillG.fillStyle(0x1e2a10, 1); pillG.fillRoundedRect(infoX, pillY, 52, 14, 7);
-      pillG.lineStyle(1, 0x303a20, 0.9); pillG.strokeRoundedRect(infoX, pillY, 52, 14, 7);
-      txt(this, infoX + 26, pillY + 7, '👑 Лидер', 8, '#608050').setOrigin(0.5);
+      pillG.fillStyle(0x1e2a10, 1); pillG.fillRoundedRect(pillX, pillY, 56, 16, 7);
+      pillG.lineStyle(1, 0x303a20, 0.9); pillG.strokeRoundedRect(pillX, pillY, 56, 16, 7);
+      txt(this, pillX + 28, pillY + 8, '👑 Лидер', 9, '#a0e0a0', true).setOrigin(0.5);
+      pillX += 62;
     }
-    const winPillX = isLeader ? infoX + 58 : infoX;
-    pillG.fillStyle(0x181b24, 1); pillG.fillRoundedRect(winPillX, pillY, 60, 14, 7);
-    pillG.lineStyle(1, 0x252a38, 0.9); pillG.strokeRoundedRect(winPillX, pillY, 60, 14, 7);
-    txt(this, winPillX + 30, pillY + 7, `🏆 ${clan.wins} побед`, 8, '#5070a0').setOrigin(0.5);
+    pillG.fillStyle(0x181b24, 1); pillG.fillRoundedRect(pillX, pillY, 70, 16, 7);
+    pillG.lineStyle(1, 0x252a38, 0.9); pillG.strokeRoundedRect(pillX, pillY, 70, 16, 7);
+    txt(this, pillX + 35, pillY + 8, `🏆 ${clan.wins}`, 9, '#ffffff', true).setOrigin(0.5);
     y += cardH + 8;
 
     const sbW = Math.floor((W - 32 - 12) / 3), sbH = 52;
@@ -48,11 +59,11 @@ Object.assign(ClanScene.prototype, {
       const sbg = this.add.graphics();
       sbg.fillStyle(0x141720, 1); sbg.fillRoundedRect(sx, y, sbW, sbH, 10);
       sbg.lineStyle(1, 0x1e2230, 0.9); sbg.strokeRoundedRect(sx, y, sbW, sbH, 10);
-      txt(this, sx + sbW / 2, y + 18, s.val, 16, '#e8ecff', true).setOrigin(0.5);
-      txt(this, sx + sbW / 2, y + 38, s.lbl, 8, '#3a4060').setOrigin(0.5);
+      txt(this, sx + sbW / 2, y + 18, s.val, 17, '#ffffff', true).setOrigin(0.5);
+      txt(this, sx + sbW / 2, y + 38, s.lbl, 9, '#a8b4d8', true).setOrigin(0.5);
     });
     y += sbH + 10;
-    txt(this, 16, y, `УЧАСТНИКИ  ${members.length}/20`, 9, '#3a4060');
+    txt(this, 16, y, `УЧАСТНИКИ  ${members.length}/20`, 10, '#a8b4d8', true);
     y += 18;
 
     const rowH = 44;
@@ -66,8 +77,8 @@ Object.assign(ClanScene.prototype, {
       bg.lineStyle(1, isLdr ? 0x252a40 : 0x1c2030, 0.9);
       bg.strokeRoundedRect(8, ry, W - 16, rowH - 3, 8);
       txt(this, 22, ry + (rowH - 3) / 2, isLdr ? '👑' : '⚔️', 13).setOrigin(0, 0.5);
-      txt(this, 42, ry + 10, trunc(m.username || `User${m.user_id}`, 17), 13, isLdr ? '#e0e8ff' : '#c0c8e8', isLdr);
-      txt(this, 42, ry + 27, `Ур.${m.level}  ·  ${m.wins} побед`, 11, '#3a4060');
+      txt(this, 42, ry + 10, trunc(m.username || `User${m.user_id}`, 17), 13, '#ffffff', true);
+      txt(this, 42, ry + 27, `Ур.${m.level}  ·  ${m.wins} побед`, 11, '#a8b4d8');
 
       if (isLdr) {
         const bw = 52, bx = W - 12 - bw, bh = 18, by = ry + (rowH - 3) / 2 - 9;
@@ -103,7 +114,7 @@ Object.assign(ClanScene.prototype, {
     });
 
     if (members.length > maxShow) {
-      txt(this, W / 2, y + maxShow * rowH + 6, `+ ещё ${members.length - maxShow} участников`, 11, '#3a4060').setOrigin(0.5);
+      txt(this, W / 2, y + maxShow * rowH + 6, `+ ещё ${members.length - maxShow} участников`, 11, '#a8b4d8').setOrigin(0.5);
     }
 
     const btnZone = H - 56;
