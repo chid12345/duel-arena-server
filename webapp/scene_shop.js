@@ -21,6 +21,7 @@ class ShopScene extends Phaser.Scene {
     _extraBg(this, W, H);
     _extraHeader(this, W, '🛍️', 'МАГАЗИН', 'Зелья · Свитки · Ящики · Особые');
     _extraBack(this);
+    this._buildInventoryBtn(W);
     this._buildTabBar(W, H);
 
     try {

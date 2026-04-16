@@ -82,6 +82,7 @@ Object.assign(ShopScene.prototype, {
         if (res.hp_restored > 0) msg = `❤️ +${res.hp_restored} HP восстановлено!`;
         if (res.gold_gained)     msg = `💰 +${res.gold_gained} золота!`;
         if (res.added_to_inventory) msg = `📦 ${item.icon} ${item.name} → в инвентарь (открой в «Моё»)`;
+        if (res.added_to_inventory) this._bumpInvBadge();
         this._toast(msg);
         this._goldTxt?.setText(`🪙 ${State.player?.gold || 0}`);
         this._diaTxt?.setText(`💎 ${State.player?.diamonds || 0}`);

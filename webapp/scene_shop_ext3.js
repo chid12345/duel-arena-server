@@ -25,6 +25,7 @@ Object.assign(ShopScene.prototype, {
               if (confirm.player) State.player = confirm.player;
               if (confirm.scroll_received) {
                 const isBox = (confirm.scroll_id || '').startsWith('box_');
+                this._bumpInvBadge();
                 this._toast(isBox ? '✅ Ящик получен! Герой → Моё → Особые' : '✅ Свиток получен! Герой → Моё → Особые');
               } else if (confirm.premium_activated) {
                 this._toast(`👑 Premium активирован!`);
@@ -94,6 +95,7 @@ Object.assign(ShopScene.prototype, {
     Sound.levelUp?.();
     localStorage.removeItem('cryptoPendingInvoice');
     const isBox = (scrollId || '').startsWith('box_');
+    this._bumpInvBadge();
     this._toast(isBox ? '✅ Ящик получен! Герой → Моё → Особые' : '✅ Свиток получен! Герой → Моё → Особые');
     post('/api/player').then(d => {
       if (d.ok && d.player) State.player = d.player;

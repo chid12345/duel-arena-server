@@ -34,6 +34,11 @@ class StatsScene extends Phaser.Scene {
       this._renderAvatarOverlay(d.wardrobePayload);
       if (d.toast) this._showToast(d.toast);
     }
+    // Авто-открытие инвентаря из кнопки «🎒 Моё» в магазине
+    if (d.openInventory) {
+      try { localStorage.removeItem('shop_inv_new_count'); } catch(_) {}
+      this.time.delayedCall(80, () => this._openInventoryPanel?.());
+    }
   }
 
   /* ── Фон ─────────────────────────────────────────────── */
