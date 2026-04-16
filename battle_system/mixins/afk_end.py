@@ -169,6 +169,7 @@ class BattleAfkEndMixin:
             'level_up_level': level_up_level if not is_test else None,
             'duration_ms': duration_ms,
             'combat_log_html': combat_log_html,
+            'webapp_log': list(battle.get('webapp_log', [])),
             'is_test_battle': is_test,
             'p2_gold_reward': defeat_gold if human_won else gold_reward,
             'p2_exp_reward': 0 if human_won else exp_reward,

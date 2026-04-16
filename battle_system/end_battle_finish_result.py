@@ -66,6 +66,7 @@ def build_battle_ended_result(
         "duration_ms": duration_ms,
         "exchange_text": exchange_text,
         "combat_log_html": combat_log_html,
+        "webapp_log": list(battle.get("webapp_log", [])),
         "is_test_battle": is_test,
         "p2_gold_reward": (defeat_gold if is_winner_p1 else gold_reward) if not loser_locked else 0,
         "p2_exp_reward": 0

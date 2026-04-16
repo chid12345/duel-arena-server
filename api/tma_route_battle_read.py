@@ -49,6 +49,7 @@ def register_tma_battle_read_routes(
             "mode": mine.get("mode", "normal"),
             "mode_meta": mine.get("mode_meta") or {},
             "titan_progress": mine.get("titan_progress"),
+            "webapp_log": mine.get("webapp_log", []),
             "result": {
                 "gold": mine.get("gold_reward", 0),
                 "exp": mine.get("exp_reward", 0),

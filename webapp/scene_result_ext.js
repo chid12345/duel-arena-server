@@ -170,8 +170,22 @@ Object.assign(ResultScene.prototype, {
       this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
     }
 
+    // 📼 Реплей — есть в любом исходе, чтобы игрок мог разобрать раунды
+    const replayLog = Array.isArray(res?.webapp_log) ? res.webapp_log : [];
+    if (replayLog.length > 0) {
+      const replayY = won ? H * 0.935 : H * 0.955;
+      const replayLabel = won ? '📼 Реплей боя' : '📼 Разобрать бой (реплей)';
+      const replayCol = won ? '#ccddff' : '#ffc83c';
+      txt(this, W / 2, replayY, replayLabel, 12, replayCol, true).setOrigin(0.5);
+      const zr = this.add.zone(W / 2, replayY, 240, 26).setInteractive({ useHandCursor: true });
+      zr.on('pointerup', () => {
+        tg?.HapticFeedback?.impactOccurred('light');
+        try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {}
+      });
+    }
+
     if (won) {
-      const shareY = H * 0.96;
+      const shareY = H * 0.975;
       const shareT = txt(this, W / 2, shareY, '📤 Поделиться победой', 11, '#ddddff').setOrigin(0.5);
       const shareZ = this.add.zone(W / 2, shareY, 200, 24).setInteractive({ useHandCursor: true });
       shareZ.on('pointerup', () => {

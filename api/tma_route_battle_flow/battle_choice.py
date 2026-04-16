@@ -79,6 +79,7 @@ def register_battle_choice_route(
                     "mode_meta": mine.get("mode_meta") or {},
                     "titan_progress": mine.get("titan_progress"),
                     "endless_progress": mine.get("endless_progress"),
+                    "webapp_log": mine.get("webapp_log", []),
                     "result": {
                         "gold": mine.get("gold_reward", 0),
                         "exp": mine.get("exp_reward", 0),
@@ -116,6 +117,7 @@ def register_battle_choice_route(
                             "mode": opp.get("mode", "normal"),
                             "mode_meta": opp.get("mode_meta") or {},
                             "titan_progress": opp.get("titan_progress"),
+                            "webapp_log": opp.get("webapp_log", []),
                             "result": {
                                 "gold": opp.get("gold_reward", 0),
                                 "exp": opp.get("exp_reward", 0),
@@ -137,6 +139,7 @@ def register_battle_choice_route(
                 "mode_meta": mine.get("mode_meta") or {},
                 "titan_progress": mine.get("titan_progress"),
                 "endless_progress": mine.get("endless_progress"),
+                "webapp_log": mine.get("webapp_log", []),
                 "result": {
                     "gold": mine.get("gold_reward", 0),
                     "exp": mine.get("exp_reward", 0),
