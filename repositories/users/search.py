@@ -32,7 +32,7 @@ class UsersSearchMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT user_id, username, level, rating FROM players "
+            "SELECT user_id, username, level, rating, current_hp, max_hp FROM players "
             "WHERE username IS NOT NULL AND LOWER(username) LIKE ? "
             "ORDER BY CASE WHEN LOWER(username) = ? THEN 0 ELSE 1 END, rating DESC LIMIT ?",
             (f"%{q}%", q, int(limit)),

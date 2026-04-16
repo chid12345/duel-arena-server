@@ -89,8 +89,34 @@ Object.assign(MenuScene.prototype, {
         tg?.showAlert?.('📭 У вас нет активных/последних вызовов.');
         return;
       }
-      const lines = list.map((c, i) => `${i + 1}. @${c.target_username || 'Боец'} · ${c.status}`);
-      tg?.showAlert?.(`📨 Мои вызовы:\n${lines.join('\n')}`);
+      const now = Math.floor(Date.now() / 1000);
+      const statusRu = { pending: '⏳ ждёт', accepted: '✅ принят', declined: '🚫 отклонён', expired: '⌛ истёк' };
+      const lines = list.map((c, i) => {
+        const st = statusRu[c.status] || c.status;
+        const left = c.status === 'pending' ? Math.max(0, (c.expires_at || 0) - now) : 0;
+        const tail = left > 0 ? ` · ${Math.ceil(left / 60)}мин` : '';
+        return `${i + 1}. @${c.target_username || 'Боец'} · ${st}${tail}`;
+      });
+      const firstPending = list.find(c => c.status === 'pending' && (c.expires_at || 0) > now);
+      const body = `📨 Мои вызовы:\n${lines.join('\n')}`;
+      if (firstPending && tg?.showPopup) {
+        tg.showPopup({
+          title: '📨 Мои вызовы',
+          message: body,
+          buttons: [
+            { id: 'cancel', type: 'destructive', text: 'Отменить последний' },
+            { id: 'close', type: 'cancel', text: 'Закрыть' },
+          ],
+        }, async (btnId) => {
+          if (btnId !== 'cancel') return;
+          try {
+            const r = await post('/api/battle/challenge/cancel', { challenge_id: firstPending.id });
+            this._toast(r?.ok ? '🚫 Вызов отменён' : '❌ Не удалось отменить');
+          } catch (_) { this._toast('❌ Нет соединения'); }
+        });
+      } else {
+        tg?.showAlert?.(body);
+      }
     } catch (_) {
       this._toast('❌ Нет соединения');
     }
