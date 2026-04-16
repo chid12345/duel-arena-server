@@ -66,27 +66,57 @@ def attach_social_referral_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
     @router.get("/api/clan/top")
     async def clan_top():
-        conn = db.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            """SELECT c.id, c.name, c.tag, c.level, c.wins,
-                      (SELECT COUNT(*) FROM clan_members WHERE clan_id = c.id) as member_count
-               FROM clans c ORDER BY c.wins DESC, member_count DESC LIMIT 20"""
-        )
-        rows = [dict(r) for r in cursor.fetchall()]
-        conn.close()
-        return {"ok": True, "clans": rows}
+        return {"ok": True, "clans": db.top_clans(limit=20)}
 
     @router.get("/api/clan/search")
     async def clan_search(q: str = "", init_data: str = ""):
         results = db.search_clans(q.strip(), limit=10)
+        # обогатим эмблемой/онлайном через top_clans (по id)
+        ids = {int(r["id"]) for r in results}
+        if ids:
+            top = {int(c["id"]): c for c in db.top_clans(limit=200)}
+            for r in results:
+                ext = top.get(int(r["id"]))
+                if ext:
+                    r["emblem"] = ext.get("emblem", "neutral")
+                    r["online_count"] = ext.get("online_count", 0)
+                    r["weekly_wins"] = ext.get("weekly_wins", 0)
+                    r["closed"] = ext.get("closed", 0)
+                    r["description"] = ext.get("description", "")
+                else:
+                    r["emblem"] = "neutral"
+                    r["online_count"] = 0
+                    r["weekly_wins"] = 0
+                    r["closed"] = 0
+                    r["description"] = ""
         return {"ok": True, "clans": results}
+
+    @router.get("/api/clan/preview")
+    async def clan_preview(clan_id: int, init_data: str = ""):
+        info = db.preview_clan(int(clan_id))
+        if not info:
+            return {"ok": False, "reason": "Клан не найден"}
+        # узнаем мой clan_id (если есть) — чтобы UI мог показать "Это мой клан"
+        my_clan = None
+        try:
+            tg_user = get_user_from_init_data(init_data) if init_data else None
+            if tg_user:
+                p = db.get_or_create_player(int(tg_user["id"]), "")
+                my_clan = p.get("clan_id")
+        except Exception:
+            my_clan = None
+        return {"ok": True, "clan": info["clan"], "members": info["members"],
+                "online_count": info["online_count"], "my_clan_id": my_clan}
 
     @router.post("/api/clan/create")
     async def clan_create(body: ClanCreateBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        result = db.create_clan(uid, body.name.strip(), body.tag.strip())
+        result = db.create_clan(
+            uid, body.name.strip(), body.tag.strip(),
+            emblem=body.emblem, description=body.description,
+            min_level=body.min_level, closed=body.closed,
+        )
         if result.get("ok"):
             player = db.get_or_create_player(uid, "")
             result["player"] = _player_api(dict(player))

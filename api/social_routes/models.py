@@ -7,6 +7,10 @@ class ClanCreateBody(BaseModel):
     init_data: str
     name: str
     tag: str
+    emblem: str = "neutral"
+    description: str = ""
+    min_level: int = 1
+    closed: int = 0
 
 
 class ClanJoinBody(BaseModel):

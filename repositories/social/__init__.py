@@ -3,6 +3,7 @@
 """
 
 from repositories.social.clans import SocialClanMixin
+from repositories.social.clans_v2 import SocialClanV2Mixin
 from repositories.social.clan_chat import SocialClanChatMixin
 from repositories.social.clan_management import SocialClanManagementMixin
 from repositories.social.payments import SocialPaymentsMixin
@@ -17,6 +18,7 @@ class SocialMixin(
     SocialReferralWithdrawMixin,
     SocialReferralCoreMixin,
     SocialClanMixin,
+    SocialClanV2Mixin,
     SocialClanChatMixin,
     SocialClanManagementMixin,
 ):
