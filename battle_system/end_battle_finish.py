@@ -66,6 +66,10 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         # HP победителя: при левелапе — полное восстановление, иначе — боевое HP
         battle_hp = max(0, int(winner.get("current_hp", 0)))
         winner_hp = exp_patch["current_hp"] if did_level else min(battle_hp, exp_patch["max_hp"])
+        logger.info(
+            "winner_hp_calc uid=%s battle_hp=%s max_hp=%s did_level=%s → winner_hp=%s exp_reward=%s",
+            winner_user_id, battle_hp, exp_patch["max_hp"], did_level, winner_hp, exp_reward,
+        )
         winner_stats = {
             "wins": winner_live.get("wins", 0) + 1,
             "gold": exp_patch["gold"],
@@ -220,5 +224,16 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         n_rounds,
         duration_ms,
     )
+
+    # Принудительная инвалидация TMA-кэша после persist
+    # (дублирует battle_choice, но гарантирует сброс при любом пути завершения боя)
+    try:
+        from api.tma_infra import _cache_invalidate
+        if winner_user_id is not None:
+            _cache_invalidate(int(winner_user_id))
+        if loser_user_id is not None:
+            _cache_invalidate(int(loser_user_id))
+    except Exception:
+        pass
 
     return result

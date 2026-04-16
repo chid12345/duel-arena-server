@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Dict
 
@@ -52,6 +53,8 @@ class UsersPlayerCoreMixin:
                 (user_id, imp_type),
             )
 
+    _log = logging.getLogger(__name__)
+
     def update_player_stats(self, user_id: int, stats_update: Dict):
         """При смене current_hp — сбрасываем last_hp_regen (точка отсчёта регена)."""
         # Clamp: current_hp не может быть больше max_hp (бафы боя — временные)
@@ -71,12 +74,13 @@ class UsersPlayerCoreMixin:
             values.append(datetime.utcnow().isoformat())
             set_clauses.append("hp_full_notified = 0")
         values.append(user_id)
-        cursor.execute(
-            f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?",
-            values,
-        )
+        sql = f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?"
+        cursor.execute(sql, values)
+        affected = cursor.rowcount
         conn.commit()
         conn.close()
+        if affected == 0:
+            self._log.warning("update_player_stats: 0 rows affected uid=%s", user_id)
 
     def update_warrior_type(self, user_id: int, warrior_type: str) -> None:
         """Сохранить выбранный тип воина игрока."""

@@ -212,4 +212,14 @@ class BattleAfkEndMixin:
             winner_id, n_rounds, duration_ms,
         )
 
+        # Принудительная инвалидация TMA-кэша
+        try:
+            from api.tma_infra import _cache_invalidate
+            if winner_user_id is not None:
+                _cache_invalidate(int(winner_user_id))
+            if loser_user_id is not None:
+                _cache_invalidate(int(loser_user_id))
+        except Exception:
+            pass
+
         return result
