@@ -49,4 +49,13 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_27_001_avatar_bonus_applied",
     "2026_04_24_001_warrior_type",
     "2026_04_16_000_pvp_wins",
+    # Clan v2
+    "2026_04_17_001_clan_v2_fields",
+    "2026_04_17_002_clan_members_active",
+    "2026_04_17_003_clan_join_requests",
+    "2026_04_17_004_clan_achievements",
+    "2026_04_17_005_clan_history",
+    "2026_04_17_006_clan_wars",
+    "2026_04_17_007_clan_seasons",
+    "2026_04_17_008_clan_tasks",
 )
