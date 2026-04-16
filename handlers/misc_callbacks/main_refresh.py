@@ -24,17 +24,15 @@ CallbackHandlers.back = staticmethod(back)
 
 
 async def refresh_main(query, player):
-    """Обновить главный экран — применить реген HP и перерисовать."""
+    """Обновить главный экран — загрузить свежие данные из БД, применить реген HP."""
     uid = player["user_id"]
     un = player.get("username") or ""
-    endurance_inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
-    regen_result = db.apply_hp_regen(uid, endurance_inv)
-    if regen_result:
-        player = dict(player)
-        player["current_hp"] = regen_result["current_hp"]
     fresh = db.get_or_create_player(uid, un)
     fresh = dict(fresh)
-    fresh["current_hp"] = player["current_hp"]
+    endurance_inv = stamina_stats_invested(fresh.get("max_hp", PLAYER_START_MAX_HP), fresh.get("level", 1))
+    regen_result = db.apply_hp_regen(uid, endurance_inv)
+    if regen_result:
+        fresh["current_hp"] = regen_result["current_hp"]
 
     if battle_system.get_battle_status(uid):
         extra = (

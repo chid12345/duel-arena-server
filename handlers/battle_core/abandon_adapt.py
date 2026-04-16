@@ -136,7 +136,17 @@ def _battle_end_summary(player: dict, round_result: dict) -> str:
         elif total_battles == 5:
             s += "\n\n💡 Ежедневные квесты /quests — 40 💰 и 1 💎 в день!"
     else:
-        s = "💀 <b>Поражение.</b>  Наград нет."
+        gb = round_result.get("gold_reward", 0)
+        expb = round_result.get("exp_reward", 0)
+        if gb > 0 or expb > 0:
+            parts = []
+            if gb > 0:
+                parts.append(f"+{gb} 💰")
+            if expb > 0:
+                parts.append(f"+{expb} ⭐")
+            s = f"💀 <b>Поражение.</b>  {' '.join(parts)}"
+        else:
+            s = "💀 <b>Поражение.</b>  Наград нет."
         total_battles = player.get("wins", 0) + player.get("losses", 0)
         if total_battles <= 5:
             s += "  Атакуй и защищай ТУЛОВИЩЕ — самая большая зона."
