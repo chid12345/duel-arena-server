@@ -6,11 +6,11 @@
 (() => {
 
   const WT = {
-    tank:  { name:'Берсерк',       icon:'⚔️', col:0x4a1208, tcol:'#ff9977',
+    tank:  { name:'Берсерк',       icon:'⚔️', col:0x8a2818, tcol:'#ffbba0',
              rows:[{i:'⚔️',n:'Урон',v:'+12%',neg:false},{i:'🤸',n:'Уворот',v:'−8%',neg:true}] },
-    agile: { name:'Теневой Вихрь', icon:'💨', col:0x0a2e18, tcol:'#44ff99',
+    agile: { name:'Теневой Вихрь', icon:'💨', col:0x1a6840, tcol:'#7affb8',
              rows:[{i:'🤸',n:'Уворот',v:'+8%',neg:false},{i:'🛡',n:'Броня',v:'−10%',neg:true}] },
-    crit:  { name:'Хаос-Рыцарь',   icon:'💥', col:0x220a3a, tcol:'#cc77ff',
+    crit:  { name:'Хаос-Рыцарь',   icon:'💥', col:0x5a2890, tcol:'#e0b8ff',
              rows:[{i:'💥',n:'Шанс крита',v:'+5%',neg:false},{i:'⚡',n:'Множитель крита',v:'×1.65',neg:false},{i:'❤️',n:'Здоровье',v:'−10%',neg:true}] },
   };
   const BUFF_LBL = {
@@ -35,17 +35,14 @@ Object.assign(StatsScene.prototype, {
   _buildWarriorBadge(W, wbY) {
     const p = State.player;
     const wt = WT[p.warrior_type] || WT.tank;
-    const wbH = 28;
+    const wbH = 32;
     this._heroBonuses = { open:false, wt, W, wbY, wbH, refs:[] };
     const R = this._heroBonuses;
 
     const g = this.add.graphics().setDepth(2);
-    // более светлый фон (фолбэк если IntegerToColor недоступен)
-    let bgCol = wt.col;
-    try { bgCol = Phaser.Display.Color.IntegerToColor(wt.col).brighten(25).color; } catch(_){}
-    g.fillStyle(bgCol, 1);
+    g.fillStyle(wt.col, 1);
     g.fillRoundedRect(8, wbY, W-16, wbH, 8);
-    g.lineStyle(1.5, wt.col, 1);
+    g.lineStyle(2, 0xffffff, 0.35);
     g.strokeRoundedRect(8, wbY, W-16, wbH, 8);
 
     const cy = wbY + wbH/2;
@@ -53,13 +50,13 @@ Object.assign(StatsScene.prototype, {
     const total = nClass + nBuffs;
     const sum = `+${total} бонус${total===1?'':(total<5?'а':'ов')}`;
     // Белый текст с тёмной обводкой — читается на любом фоне
-    txt(this, 18, cy, `${wt.icon}  ${wt.name}`, 13, '#ffffff', true, '#000000').setOrigin(0, 0.5).setDepth(2);
-    txt(this, W-42, cy, sum, 11, '#ffe888', true, '#000000').setOrigin(1, 0.5).setDepth(2);
+    txt(this, 18, cy, `${wt.icon}  ${wt.name}`, 14, '#ffffff', true, '#000000').setOrigin(0, 0.5).setDepth(2);
+    txt(this, W-42, cy, sum, 12, '#ffe888', true, '#000000').setOrigin(1, 0.5).setDepth(2);
 
     const chevBg = this.add.graphics().setDepth(2);
-    chevBg.fillStyle(0xffffff, 0.22); chevBg.fillCircle(W-22, cy, 10);
-    chevBg.lineStyle(1, 0xffffff, 0.4); chevBg.strokeCircle(W-22, cy, 10);
-    R.chev = txt(this, W-22, cy, '▾', 12, '#ffffff', true).setOrigin(0.5).setDepth(2);
+    chevBg.fillStyle(0x000000, 0.45); chevBg.fillCircle(W-22, cy, 11);
+    chevBg.lineStyle(1.5, 0xffffff, 0.55); chevBg.strokeCircle(W-22, cy, 11);
+    R.chev = txt(this, W-22, cy, '▾', 13, '#ffffff', true).setOrigin(0.5).setDepth(2);
 
     const z = this.add.zone(W/2, cy, W-16, wbH).setInteractive({ useHandCursor:true });
     z.on('pointerdown', () => { try { tg?.HapticFeedback?.selectionChanged(); } catch(_){} });
