@@ -90,6 +90,19 @@ def register_tma_player_route(
         except Exception:
             pass
 
+        # Resync: если XP накопился без пересчёта уровня — пересчитать сейчас
+        try:
+            from config import exp_needed_for_next_level
+            p_exp = int(player.get("exp", 0) or 0)
+            p_lv = int(player.get("level", 1) or 1)
+            if p_exp >= exp_needed_for_next_level(p_lv) and p_lv < 100:
+                r = db.grant_exp_with_levelup(uid, 0)
+                if r.get("leveled"):
+                    _cache_invalidate(uid)
+                    player = db.get_or_create_player(uid, username)
+        except Exception:
+            pass
+
         cb = db.get_combined_buffs(uid)
         _cache_set(uid, player)
         _buffs_cache_set(uid, cb)

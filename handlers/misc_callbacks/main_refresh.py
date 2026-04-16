@@ -4,6 +4,7 @@ from battle_system import battle_system
 
 from handlers.ui_helpers import CallbackHandlers
 from config import *
+from config import exp_needed_for_next_level
 from database import db
 
 
@@ -27,6 +28,16 @@ async def refresh_main(query, player):
     """Обновить главный экран — загрузить свежие данные из БД, применить реген HP."""
     uid = player["user_id"]
     un = player.get("username") or ""
+    # Resync: если XP накопился без пересчёта уровня — пересчитать
+    try:
+        tmp = db.get_or_create_player(uid, un)
+        p_exp = int(tmp.get("exp", 0) or 0)
+        p_lv = int(tmp.get("level", 1) or 1)
+        if p_exp >= exp_needed_for_next_level(p_lv) and p_lv < MAX_LEVEL:
+            db.grant_exp_with_levelup(uid, 0)
+    except Exception:
+        pass
+
     fresh = db.get_or_create_player(uid, un)
     fresh = dict(fresh)
     endurance_inv = stamina_stats_invested(fresh.get("max_hp", PLAYER_START_MAX_HP), fresh.get("level", 1))

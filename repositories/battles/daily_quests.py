@@ -80,10 +80,9 @@ class BattlesDailyQuestsMixin:
         if cursor.rowcount == 0:
             conn.close()
             return {"ok": False, "reason": "Награда уже получена"}
-        cursor.execute(
-            "UPDATE players SET gold = gold + ?, exp = exp + ? WHERE user_id = ?",
-            (gold_reward, xp_reward, user_id),
-        )
         conn.commit()
         conn.close()
-        return {"ok": True, "gold": gold_reward, "xp": xp_reward}
+        result = self.grant_exp_with_levelup(user_id, xp_reward, gold_add=gold_reward)
+        return {"ok": True, "gold": gold_reward, "xp": xp_reward,
+                "leveled": result.get("leveled", False),
+                "new_level": result.get("new_level")}

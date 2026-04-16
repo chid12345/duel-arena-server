@@ -257,19 +257,17 @@ class QuestsProgressMixin:
             return {"ok": False, "reason": "Не выполнено"}
         if not self.add_task_claim(user_id, claim_key):
             return {"ok": False, "reason": "Уже получено"}
-        conn = self.get_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "UPDATE players SET gold=gold+?, diamonds=diamonds+?, exp=exp+? WHERE user_id=?",
-            (tier_def["gold"], tier_def["diamonds"], tier_def["xp"], user_id),
+        result = self.grant_exp_with_levelup(
+            user_id, tier_def["xp"], gold_add=tier_def["gold"],
+            diamonds_add=tier_def["diamonds"],
         )
-        conn.commit()
-        conn.close()
         return {
             "ok": True,
             "gold": tier_def["gold"],
             "diamonds": tier_def["diamonds"],
             "xp": tier_def["xp"],
+            "leveled": result.get("leveled", False),
+            "new_level": result.get("new_level"),
         }
 
     # ── Ежедневные задания (1 подключение) ────────────────────────────
@@ -341,16 +339,14 @@ class QuestsProgressMixin:
             return {"ok": False, "reason": "Не выполнено"}
         if not self.add_task_claim(user_id, claim_key):
             return {"ok": False, "reason": "Уже получено"}
-        conn = self.get_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "UPDATE players SET gold=gold+?, diamonds=diamonds+?, exp=exp+? WHERE user_id=?",
-            (task["reward_gold"], task["reward_diamonds"], task["reward_xp"], user_id),
+        result = self.grant_exp_with_levelup(
+            user_id, task["reward_xp"], gold_add=task["reward_gold"],
+            diamonds_add=task["reward_diamonds"],
         )
-        conn.commit()
-        conn.close()
         return {"ok": True, "gold": task["reward_gold"],
-                "diamonds": task["reward_diamonds"], "xp": task["reward_xp"]}
+                "diamonds": task["reward_diamonds"], "xp": task["reward_xp"],
+                "leveled": result.get("leveled", False),
+                "new_level": result.get("new_level")}
 
     # ── Дополнительные недельные задания (1 подключение) ──────────────
 
@@ -409,13 +405,11 @@ class QuestsProgressMixin:
             return {"ok": False, "reason": "Не выполнено"}
         if not self.add_task_claim(user_id, claim_key):
             return {"ok": False, "reason": "Уже получено"}
-        conn = self.get_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "UPDATE players SET gold=gold+?, diamonds=diamonds+?, exp=exp+? WHERE user_id=?",
-            (task["reward_gold"], task["reward_diamonds"], task["reward_xp"], user_id),
+        result = self.grant_exp_with_levelup(
+            user_id, task["reward_xp"], gold_add=task["reward_gold"],
+            diamonds_add=task["reward_diamonds"],
         )
-        conn.commit()
-        conn.close()
         return {"ok": True, "gold": task["reward_gold"],
-                "diamonds": task["reward_diamonds"], "xp": task["reward_xp"]}
+                "diamonds": task["reward_diamonds"], "xp": task["reward_xp"],
+                "leveled": result.get("leveled", False),
+                "new_level": result.get("new_level")}

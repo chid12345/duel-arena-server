@@ -71,13 +71,12 @@ class ShopBattlePassMixin:
             "UPDATE battle_pass SET endless_tier_claimed = ? WHERE user_id = ? AND season_id = ?",
             (tier, user_id, sid),
         )
-        cursor.execute(
-            "UPDATE players SET gold = gold + ?, diamonds = diamonds + ?, exp = exp + ? WHERE user_id = ?",
-            (gold, diamonds, xp, user_id),
-        )
         conn.commit()
         conn.close()
-        return {"ok": True, "gold": gold, "diamonds": diamonds, "xp": xp, "tier": tier}
+        result = self.grant_exp_with_levelup(user_id, xp, gold_add=gold, diamonds_add=diamonds)
+        return {"ok": True, "gold": gold, "diamonds": diamonds, "xp": xp, "tier": tier,
+                "leveled": result.get("leveled", False),
+                "new_level": result.get("new_level")}
 
     def claim_battle_pass_tier(self, user_id: int, tier: int) -> Dict[str, Any]:
         s = self.get_active_season()
@@ -103,10 +102,9 @@ class ShopBattlePassMixin:
             "UPDATE battle_pass SET last_claimed_tier = ? WHERE user_id = ? AND season_id = ?",
             (tier, user_id, sid),
         )
-        cursor.execute(
-            "UPDATE players SET diamonds = diamonds + ?, gold = gold + ?, exp = exp + ? WHERE user_id = ?",
-            (total_d, total_g, total_xp, user_id),
-        )
         conn.commit()
         conn.close()
-        return {"ok": True, "diamonds": total_d, "gold": total_g, "xp": total_xp}
+        result = self.grant_exp_with_levelup(user_id, total_xp, gold_add=total_g, diamonds_add=total_d)
+        return {"ok": True, "diamonds": total_d, "gold": total_g, "xp": total_xp,
+                "leveled": result.get("leveled", False),
+                "new_level": result.get("new_level")}
