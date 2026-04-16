@@ -121,6 +121,13 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
             _cache_invalidate(uid)
         return result
 
+    @router.get("/api/daily/status")
+    def daily_status(init_data: str):
+        tg_user = get_user_from_init_data(init_data)
+        uid = int(tg_user["id"])
+        status = db.get_daily_bonus_status(uid)
+        return {"ok": True, **status}
+
     @router.get("/api/quests")
     def get_quests(init_data: str):
         tg_user = get_user_from_init_data(init_data)

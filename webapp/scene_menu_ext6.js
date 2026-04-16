@@ -53,6 +53,7 @@ Object.assign(MenuScene.prototype, {
       }
     });
     if (key === 'profile') this._loadProfileBuffs();
+    if (this._dailyBonusOverlay) this._dailyBonusOverlay.setVisible(key === 'profile');
     const inactiveCol = '#ccccee';
     const activeCol   = '#ffc83c';
     Object.entries(this._tabBtns).forEach(([k, btn]) => {

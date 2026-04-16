@@ -104,6 +104,7 @@ class MenuScene extends Phaser.Scene {
           this._switchTab(this._returnTab || 'profile');
           this._setupWS();
           this._startRegenTick();
+          this._loadDailyBonusCard();
         } catch(buildErr) {
           console.error('UI build error:', buildErr);
           this._showError('Ошибка UI: ' + (buildErr?.message || buildErr));
