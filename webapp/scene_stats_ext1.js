@@ -158,8 +158,8 @@ Object.assign(StatsScene.prototype, {
 
     this._refreshBuffDisplay();
 
-    /* ── Воин-бейдж (раскрывающаяся панель бонусов) ─ */
-    this._buildWarriorBadge(W, cellY + cellH + 7);
+    /* ── Боевая статистика (Победы/Пораж./Винрейт/Серия) ─ */
+    this._buildBattleStats(W, cellY + cellH + 7);
   },
 
 });

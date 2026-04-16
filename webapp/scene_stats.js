@@ -20,8 +20,10 @@ class StatsScene extends Phaser.Scene {
 
     this._drawBg(W, H);
     this._buildHeader(W);
-    this._buildBattleStats(W);
+    // Бейдж воина — наверху (раскрывается полной панелью бонусов)
+    this._buildWarriorBadge(W, 74);
     this._buildStatRows(W, H);
+    // Боевая статистика (Победы/Пораж./Винрейт/Серия) переехала вниз
     this._buildCombatPreview(W, H);
     this._buildAvatarBtn(W, H);
     this._buildBackBtn(W, H);
@@ -96,8 +98,8 @@ class StatsScene extends Phaser.Scene {
     return { bg, label };
   }
 
-  /* ── Боевая статистика (под заголовком) ──────────────── */
-  _buildBattleStats(W) {
+  /* ── Боевая статистика (Победы/Пораж./Винрейт/Серия) ─── */
+  _buildBattleStats(W, y = 74) {
     const p     = State.player;
     const wins  = p.wins   || 0;
     const losses= p.losses || 0;
@@ -105,7 +107,6 @@ class StatsScene extends Phaser.Scene {
     const wr    = total > 0 ? Math.round(wins / total * 100) : 0;
     const streak= p.win_streak || 0;
 
-    const y = 74;
     makePanel(this, 8, y, W - 16, 34, 8, 0.85);
 
     const cols = [
