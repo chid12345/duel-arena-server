@@ -148,6 +148,12 @@ def _build_app(bot_count: int) -> Application:
             battles_cleanup_job, interval=3600, first=60,
             name="battles_cleanup",
         )
+        # Авто-кик неактивных участников клана (30+ дней без боя), раз в сутки.
+        from jobs.clan_inactive_kick import clan_inactive_kick_job
+        application.job_queue.run_repeating(
+            clan_inactive_kick_job, interval=86400, first=300,
+            name="clan_inactive_kick",
+        )
 
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
