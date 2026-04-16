@@ -8,44 +8,30 @@ from typing import Any, Dict
 
 from config import STREAK_BONUS_EVERY, STREAK_BONUS_GOLD
 
+from battle_system.end_battle_finalize import (
+    cleanup_queue_and_active, invalidate_tma_cache, log_stat, remember_ui,
+)
 from battle_system.end_battle_finish_modes import run_titan_endless_progress
 from battle_system.end_battle_finish_result import build_battle_ended_result
 from repositories.social.clan_bonus import apply_clan_win_bonus
-from stats.battle_stats import log_battle as _log_battle_stat
 
 logger = logging.getLogger(__name__)
 
 
 async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[str, Any]:
-    loop = ctx["loop"]
-    battle_id = ctx["battle_id"]
-    winner_id = ctx["winner_id"]
-    exchange_text = ctx["exchange_text"]
-    battle = ctx["battle"]
-    duration_ms = ctx["duration_ms"]
-    player1 = ctx["player1"]
-    player2 = ctx["player2"]
-    is_winner_p1 = ctx["is_winner_p1"]
-    winner = ctx["winner"]
-    loser = ctx["loser"]
+    loop, battle_id, winner_id = ctx["loop"], ctx["battle_id"], ctx["winner_id"]
+    exchange_text, battle, duration_ms = ctx["exchange_text"], ctx["battle"], ctx["duration_ms"]
+    player1, player2, is_winner_p1 = ctx["player1"], ctx["player2"], ctx["is_winner_p1"]
+    winner, loser = ctx["winner"], ctx["loser"]
     winner_user_id, loser_user_id = ctx["winner_user_id"], ctx["loser_user_id"]
-    is_test = ctx["is_test"]
-    battle_mode = ctx["battle_mode"]
-    mode_meta = ctx["mode_meta"]
-    winner_live = ctx["winner_live"]
-    loser_live = ctx["loser_live"]
-    xp_boosted = ctx["xp_boosted"]
-    pvp_repeat_factor = ctx["pvp_repeat_factor"]
-    winner_locked = ctx["winner_locked"]
-    loser_locked = ctx["loser_locked"]
-    winner_dmg = ctx["winner_dmg"]
-    loser_dmg = ctx["loser_dmg"]
-    gold_reward = ctx["gold_reward"]
-    exp_reward = ctx["exp_reward"]
-    loser_exp = ctx["loser_exp"]
+    is_test, battle_mode, mode_meta = ctx["is_test"], ctx["battle_mode"], ctx["mode_meta"]
+    winner_live, loser_live = ctx["winner_live"], ctx["loser_live"]
+    xp_boosted, pvp_repeat_factor = ctx["xp_boosted"], ctx["pvp_repeat_factor"]
+    winner_locked, loser_locked = ctx["winner_locked"], ctx["loser_locked"]
+    winner_dmg, loser_dmg = ctx["winner_dmg"], ctx["loser_dmg"]
+    gold_reward, exp_reward, loser_exp = ctx["gold_reward"], ctx["exp_reward"], ctx["loser_exp"]
     combat_log_html = ctx["combat_log_html"]
-    elo_delta_w = ctx["elo_delta_w"]
-    elo_delta_l = ctx["elo_delta_l"]
+    elo_delta_w, elo_delta_l = ctx["elo_delta_w"], ctx["elo_delta_l"]
 
     streak_bonus_gold = 0
     new_win_streak = 0
@@ -186,63 +172,21 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
 
     result["battle_id"] = battle_id  # нужен фронтенду для защиты от "старых" WS-событий
 
-    if battle.get("is_bot2") and player1.get("user_id") is not None:
-        bs.remember_battle_end_ui(player1["user_id"], result)
-    elif not battle.get("is_bot2"):
-        if player1.get("user_id") is not None:
-            bs.remember_battle_end_ui(player1["user_id"], result)
-        if player2.get("user_id") is not None:
-            bs.remember_battle_end_ui(player2["user_id"], result)
-
-    if player1["user_id"] in bs.battle_queue:
-        del bs.battle_queue[player1["user_id"]]
-    if not battle["is_bot2"] and player2.get("user_id") in bs.battle_queue:
-        del bs.battle_queue[player2["user_id"]]
-    del bs.active_battles[battle_id]
-
-    # Статистика боёв для балансирования (fire-and-forget, не блокирует)
-    if not is_test:
-        from database import db as _db
-        _log_battle_stat(
-            loop=loop,
-            db=_db,
-            mode=battle_mode,
-            is_bot2=bool(battle.get("is_bot2")),
-            winner_wtype=(winner.get("warrior_type") or "default"),
-            loser_wtype=(loser.get("warrior_type") or "default"),
-            winner_uid=winner_user_id,
-            loser_uid=loser_user_id,
-            turns=n_rounds,
-        )
+    remember_ui(bs, battle, player1, player2, result)
+    cleanup_queue_and_active(bs, battle, battle_id, player1, player2)
+    log_stat(loop, is_test=is_test, battle=battle, winner=winner, loser=loser,
+             winner_user_id=winner_user_id, loser_user_id=loser_user_id,
+             battle_mode=battle_mode, n_rounds=n_rounds)
 
     event_name = "battle_test_ended" if is_test else "battle_ended"
     logger.info("event=%s winner_id=%s rounds=%s duration_ms=%s", event_name, winner_id, n_rounds, duration_ms)
     # await вместо fire-and-forget: БД обновляется ДО ответа пользователю,
     # иначе профиль показывает старые данные (XP/уровень не сохранялись вовремя).
     await bs._persist_battle_writes(
-        winner_user_id,
-        loser_user_id,
-        winner_stats,
-        loser_stats,
-        winner_locked,
-        loser_locked,
-        battle_data,
-        battle_mode,
-        is_test,
-        winner_id,
-        n_rounds,
-        duration_ms,
+        winner_user_id, loser_user_id, winner_stats, loser_stats,
+        winner_locked, loser_locked, battle_data, battle_mode,
+        is_test, winner_id, n_rounds, duration_ms,
     )
 
-    # Принудительная инвалидация TMA-кэша после persist
-    # (дублирует battle_choice, но гарантирует сброс при любом пути завершения боя)
-    try:
-        from api.tma_infra import _cache_invalidate
-        if winner_user_id is not None:
-            _cache_invalidate(int(winner_user_id))
-        if loser_user_id is not None:
-            _cache_invalidate(int(loser_user_id))
-    except Exception:
-        pass
-
+    invalidate_tma_cache(winner_user_id, loser_user_id)
     return result
