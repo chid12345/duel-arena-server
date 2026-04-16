@@ -8,6 +8,7 @@ class ClanScene extends Phaser.Scene {
 
   init(data) {
     this._subview = (data && data.sub) ? data.sub : 'main';
+    this._previewClanId = (data && data.clanId) ? data.clanId : null;
     this._busy = false;
   }
 
@@ -31,6 +32,14 @@ class ClanScene extends Phaser.Scene {
       }
     }
     this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
+    if (this._subview === 'preview' && this._previewClanId) {
+      get('/api/clan/preview', { clan_id: this._previewClanId }).then(d => {
+        this._loading?.destroy();
+        if (!d.ok) { txt(this, W/2, H/2, '❌ '+(d.reason||'Ошибка'), 13, '#dc3c46').setOrigin(0.5); return; }
+        this._renderPreview(d, W, H);
+      }).catch(() => { this._loading?.setText('❌ Нет соединения'); });
+      return;
+    }
     get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });

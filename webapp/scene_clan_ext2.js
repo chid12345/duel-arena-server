@@ -50,24 +50,37 @@ Object.assign(ClanScene.prototype, {
   _renderTop(W, H) {
     txt(this, W/2, 86, '🏆 ТОП КЛАНОВ', 14, '#ffc83c', true).setOrigin(0.5);
     const load2 = txt(this, W/2, 140, 'Загрузка...', 13, '#a8c4ff').setOrigin(0.5);
+    const EM = { light:{i:'☀️',c:0xffd166}, dark:{i:'🌑',c:0xa06bff}, neutral:{i:'⚖️',c:0x7ec8ff} };
     get('/api/clan/top').then(d => {
       load2.destroy();
       const clans = d.clans || [];
       if (!clans.length) { txt(this, W/2, 140, '😔 Кланов пока нет', 13, '#a8c4ff').setOrigin(0.5); return; }
       let y = 112;
-      const rowH = 50;
+      const rowH = 56;
       clans.slice(0, Math.floor((H - 160) / rowH)).forEach((c, i) => {
         const isTop = i < 3;
+        const em = EM[c.emblem] || EM.neutral;
         const bg = this.add.graphics();
         bg.fillStyle(isTop ? 0x2a2010 : C.bgPanel, 0.92);
         bg.fillRoundedRect(8, y, W-16, rowH-3, 10);
-        if (isTop) { bg.lineStyle(1.5, C.gold, 0.6); bg.strokeRoundedRect(8,y,W-16,rowH-3,10); }
+        bg.lineStyle(isTop ? 2 : 1.5, isTop ? C.gold : em.c, isTop ? 0.7 : 0.45);
+        bg.strokeRoundedRect(8,y,W-16,rowH-3,10);
         const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-        txt(this, 20, y + (rowH-3)/2, medal, isTop?17:13, '#ffc83c').setOrigin(0, 0.5);
+        txt(this, 18, y + (rowH-3)/2, medal, isTop?17:13, '#ffc83c').setOrigin(0, 0.5);
+        txt(this, 44, y + (rowH-3)/2, em.i, 16).setOrigin(0, 0.5);
         const ttr = (s, n) => s && s.length > n ? s.slice(0, n) + '…' : (s || '');
-        txt(this, 48, y+10, `[${c.tag}] ${ttr(c.name, 16)}`, 13, isTop?'#ffc83c':'#ffffff', true);
-        txt(this, 48, y+27, `🏆 ${c.wins} побед  ·  👥 ${c.member_count}чел`, 11, '#a8b4d8');
-        txt(this, W-18, y + (rowH-3)/2, `Ур.${c.level}`, 12, '#ffffff', true).setOrigin(1, 0.5);
+        txt(this, 70, y+8,  `[${c.tag}]`, 11, '#ffc83c', true);
+        txt(this, 110, y+8, ttr(c.name, 14), 13, '#ffffff', true);
+        txt(this, 70, y+28, `🏆 ${c.wins}  ·  👥 ${c.member_count}/20  ·  🟢 ${c.online_count||0}`, 10, '#a8b4d8');
+        // Кнопка 👁 справа
+        const eyeW = 30, eyeH = 26, eyeX = W-12-eyeW, eyeY = y + (rowH-3)/2 - 13;
+        const eyeG = this.add.graphics();
+        eyeG.fillStyle(0x1c2238, 1); eyeG.fillRoundedRect(eyeX, eyeY, eyeW, eyeH, 6);
+        eyeG.lineStyle(1, 0x2a3460, 0.9); eyeG.strokeRoundedRect(eyeX, eyeY, eyeW, eyeH, 6);
+        txt(this, eyeX+eyeW/2, eyeY+eyeH/2, '👁', 13, '#a8c4ff').setOrigin(0.5);
+        this.add.zone(eyeX, eyeY, eyeW, eyeH).setOrigin(0).setInteractive({ useHandCursor: true })
+          .on('pointerup', () => this.scene.restart({ sub: 'preview', clanId: c.id }));
+        txt(this, eyeX-6, y+8, `Ур.${c.level}`, 11, '#ffffff', true).setOrigin(1, 0);
         y += rowH;
       });
     }).catch(() => load2.setText('❌ Ошибка'));
