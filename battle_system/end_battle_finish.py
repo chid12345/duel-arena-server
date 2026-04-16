@@ -10,6 +10,7 @@ from config import STREAK_BONUS_EVERY, STREAK_BONUS_GOLD
 
 from battle_system.end_battle_finish_modes import run_titan_endless_progress
 from battle_system.end_battle_finish_result import build_battle_ended_result
+from repositories.social.clan_bonus import apply_clan_win_bonus
 from stats.battle_stats import log_battle as _log_battle_stat
 
 logger = logging.getLogger(__name__)
@@ -54,6 +55,9 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     winner_stats = None
     if not is_test and winner_user_id is not None and not winner_locked:
         new_win_streak = winner_live.get("win_streak", 0) + 1
+        # Бафф клана: +5% к золоту победителю + bump activity + clan progress
+        from database import db as _db
+        gold_reward = apply_clan_win_bonus(_db, winner_user_id, gold_reward)
         total_gold = winner_live.get("gold", 0) + gold_reward
         if new_win_streak > 0 and new_win_streak % STREAK_BONUS_EVERY == 0:
             streak_bonus_gold = STREAK_BONUS_GOLD
