@@ -136,7 +136,8 @@ function showItemDetailPopup(scene, opts) {
     const barW = pW - 60, barX = pX + 30;
     const done = pCur >= pMax;
     layer.push(makeBar(scene, barX, cy, barW, 7, pPct, done ? C.green : C.blue, C.dark, 4).setDepth(dB + 2));
-    const progLabel = done ? `✅ ${pCur} / ${pMax}` : `${pCur} / ${pMax}`;
+    const pctInt = Math.round(pPct * 100);
+    const progLabel = done ? `✅ ${pCur} / ${pMax}` : `${pCur} / ${pMax}  ·  ${pctInt}%`;
     layer.push(txt(scene, cx, cy + 10, progLabel, 10, done ? '#88ff88' : '#aaccff', true)
       .setOrigin(0.5, 0).setDepth(dB + 3));
     cy += 26;

@@ -77,7 +77,8 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     const name = q.label.replace(/^[^ ]+ /, '');
     container.add(txt(this, PAD + 18, y + 20, icon, 18).setOrigin(0.5));
     container.add(txt(this, PAD + 34, y + 11, name, 11, done ? '#55bbff' : '#ffffff', done).setOrigin(0, 0));
-    container.add(txt(this, PAD + 34, y + 26, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
+    const dPct = Math.round(Math.min(1, cur / Math.max(1, max)) * 100);
+    container.add(txt(this, PAD + 34, y + 26, `${cur} / ${max}  ·  ${dPct}%`, 10, done ? '#ffd700' : '#ffe888', true).setOrigin(0, 0));
     container.add(makeBar(this, PAD + 34, y + 40, W - 120, 5, Math.min(1, cur / max), done ? 0x44aaee : C.blue, 0x1a1a3a, 3));
     container.add(txt(this, W - PAD - 4, y + 12, done ? '🎁' : '🔒', 16).setOrigin(1, 0));
     const rwTxt = `+${q.reward_gold}💰${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
@@ -138,8 +139,9 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     container.add(txt(this, PAD + 18, y + 22, icon2, 18).setOrigin(0.5));
     container.add(txt(this, PAD + 34, y + 9, name2, 11, done ? '#55bbff' : '#ffffff', done).setOrigin(0, 0));
     if (q.desc) container.add(txt(this, PAD + 34, y + 23, q.desc, 9, '#ccddff').setOrigin(0, 0));
-    container.add(txt(this, PAD + 34, y + 36, `${cur} / ${max}`, 10, '#ffffff', true).setOrigin(0, 0));
-    container.add(makeBar(this, PAD + 80, y + 38, W - 140, 4, Math.min(1, cur / max), done ? 0x44aaee : C.gold, 0x1a1a3a, 3));
+    const wPct = Math.round(Math.min(1, cur / Math.max(1, max)) * 100);
+    container.add(txt(this, PAD + 34, y + 36, `${cur} / ${max}  ·  ${wPct}%`, 10, done ? '#ffd700' : '#ffe888', true).setOrigin(0, 0));
+    container.add(makeBar(this, PAD + 34, y + 52, W - 124, 4, Math.min(1, cur / max), done ? 0x44aaee : C.gold, 0x1a1a3a, 3));
     container.add(txt(this, W - PAD - 4, y + 9, done ? '🎁' : '🔒', 16).setOrigin(1, 0));
     const rwTxt = `+${q.reward_gold}💰${q.reward_diamonds ? ' +' + q.reward_diamonds + '💎' : ''}`;
     container.add(txt(this, W - PAD - 4, y + 44, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
