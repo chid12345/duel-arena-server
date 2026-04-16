@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.88"
-VERSION_LABEL = "v1.6.88 — fix: HP 100% после боя — 0 or max_hp восстанавливал мёртвого"
+VERSION = "1.6.89"
+VERSION_LABEL = "v1.6.89 — fix: AFK-бой восстанавливал HP до 100%, await persist race condition"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.22"
+GAME_VERSION = "5.23"

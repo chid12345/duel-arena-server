@@ -100,6 +100,9 @@ class BattleAfkEndMixin:
             else:
                 afk_elo_delta_w = 0 if battle_mode == "titan" else 5
                 afk_elo_delta_l = 0
+            # HP победителя: при левелапе — полное, иначе — боевое HP
+            winner_battle_hp = max(0, int(winner.get('current_hp', 0)))
+            winner_hp = exp_patch['current_hp'] if did_level_afk else min(winner_battle_hp, exp_patch['max_hp'])
             winner_stats = {
                 'wins':           winner_live.get('wins', 0) + 1,
                 'gold':           exp_patch['gold'],
@@ -108,20 +111,22 @@ class BattleAfkEndMixin:
                 'free_stats':     exp_patch['free_stats'],
                 'exp_milestones': exp_patch['exp_milestones'],
                 'max_hp':         exp_patch['max_hp'],
-                'current_hp':     int(exp_patch['max_hp']) if battle.get('is_bot2') else exp_patch['current_hp'],
+                'current_hp':     winner_hp,
                 'rating':         int(winner_live.get('rating', 1000)) + afk_elo_delta_w,
                 'win_streak':     new_ws_afk,
             }
 
         if not is_test and loser_user_id is not None and not loser_locked:
+            # HP проигравшего: боевое HP (обычно 0 при смерти)
+            loser_battle_hp = max(0, int(loser.get('current_hp', 0)))
             loser_stats = {
                 'losses': loser_live.get('losses', 0) + 1,
                 'win_streak': 0,
                 'rating': max(100, int(loser_live.get('rating', 1000)) + (afk_elo_delta_l if not is_test else 0)),
                 'gold': max(0, int(loser_live.get('gold', 0)) + defeat_gold),
+                'current_hp': loser_battle_hp,
+                'max_hp': int(loser_live.get('max_hp', PLAYER_START_MAX_HP)),
             }
-            if battle.get('is_bot2'):
-                loser_stats['current_hp'] = int(loser.get('max_hp', PLAYER_START_MAX_HP))
 
         titan_progress = await run_titan_progress_afk(
             loop,
@@ -197,12 +202,14 @@ class BattleAfkEndMixin:
 
         event_name = 'battle_test_ended_afk' if is_test else 'battle_ended_afk'
         logger.info("event=%s winner_id=%s rounds=%s duration_ms=%s", event_name, winner_id, n_rounds, duration_ms)
-        asyncio.create_task(self._persist_battle_writes(
+        # await вместо create_task: БД обновляется ДО ответа,
+        # иначе профиль показывает старые HP/XP (race condition).
+        await self._persist_battle_writes(
             winner_user_id, loser_user_id,
             winner_stats, loser_stats,
             winner_locked, loser_locked,
             battle_data, battle_mode, is_test,
             winner_id, n_rounds, duration_ms,
-        ))
+        )
 
         return result

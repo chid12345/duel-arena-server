@@ -163,7 +163,8 @@ class InventoryUnequipResyncMixin:
             new_mhp += int(av_bonus.get("hp_flat", 0))
 
             old_mhp = max(1, cur_mhp)
-            old_chp = max(1, int(self._row_get(p, "current_hp", old_mhp) or old_mhp))
+            _raw_chp = self._row_get(p, "current_hp", old_mhp)
+            old_chp = max(1, old_mhp if _raw_chp is None else int(_raw_chp))
             new_chp = min(new_mhp, max(1, int(round(old_chp / old_mhp * new_mhp))))
 
             cursor.execute(

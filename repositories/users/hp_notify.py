@@ -66,7 +66,7 @@ class UsersHpNotifyMixin:
     def is_hp_full_now(player: Dict) -> bool:
         """Проверить: HP должен быть полным по времени?"""
         max_hp = int(player.get("max_hp") or PLAYER_START_MAX_HP)
-        current_hp = int(player.get("current_hp") or max_hp)
+        current_hp = max_hp if player.get("current_hp") is None else int(player["current_hp"])
         if current_hp >= max_hp:
             return True
         last_regen_str = player.get("last_hp_regen")
