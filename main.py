@@ -154,6 +154,12 @@ def _build_app(bot_count: int) -> Application:
             clan_inactive_kick_job, interval=86400, first=300,
             name="clan_inactive_kick",
         )
+        # Ротация сезона клана (7д) — раз в час: закрывает просроченный + новый.
+        from jobs.clan_season_rotate import clan_season_rotate_job
+        application.job_queue.run_repeating(
+            clan_season_rotate_job, interval=3600, first=120,
+            name="clan_season_rotate",
+        )
 
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
