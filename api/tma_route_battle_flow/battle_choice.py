@@ -19,6 +19,7 @@ def register_battle_choice_route(
     _rl_check: Callable[..., None],
     _battle_state_api: Callable[[int], dict | None],
     _adapt_battle_result_for_user: Callable[[dict, int], dict],
+    _cache_invalidate: Callable[[int], None],
 ) -> None:
     @app.post("/api/battle/choice")
     async def battle_choice(body: BattleChoiceBody):
@@ -54,6 +55,15 @@ def register_battle_choice_route(
             return {"ok": True, "status": "round_completed", "battle": state_p1}
 
         if result.get("status") in ("battle_ended", "battle_ended_afk"):
+            # Сбросить кэш профиля для обоих игроков — иначе /api/player
+            # отдаёт старые HP/XP/уровень из кэша (TTL 20 сек).
+            _cache_invalidate(uid)
+            pvp_p1 = result.get("pvp_p1_user_id")
+            pvp_p2 = result.get("pvp_p2_user_id")
+            if pvp_p1 is not None and pvp_p2 is not None:
+                opp = pvp_p2 if uid == pvp_p1 else pvp_p1
+                if opp and opp != uid:
+                    _cache_invalidate(opp)
             mine = _adapt_battle_result_for_user(result, uid)
             winner_id = mine.get("winner_id")
             human_won = bool(mine.get("human_won", winner_id == uid))

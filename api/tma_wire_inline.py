@@ -58,6 +58,7 @@ def wire_tma_inline_routes(app: FastAPI) -> None:
         _rl_check=_rl_check,
         _battle_state_api=_battle_state_api,
         _adapt_battle_result_for_user=_adapt_battle_result_for_user,
+        _cache_invalidate=_cache_invalidate,
         PLAYER_START_MAX_HP=PLAYER_START_MAX_HP,
         PLAYER_START_LEVEL=PLAYER_START_LEVEL,
         HP_MIN_BATTLE_PCT=HP_MIN_BATTLE_PCT,

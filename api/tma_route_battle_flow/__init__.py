@@ -19,6 +19,7 @@ def register_tma_battle_flow_routes(
     _rl_check: Callable[..., None],
     _battle_state_api: Callable[[int], dict | None],
     _adapt_battle_result_for_user: Callable[[dict, int], dict],
+    _cache_invalidate: Callable[[int], None],
     PLAYER_START_MAX_HP: int,
     PLAYER_START_LEVEL: int,
     HP_MIN_BATTLE_PCT: int,
@@ -48,4 +49,5 @@ def register_tma_battle_flow_routes(
         _rl_check=_rl_check,
         _battle_state_api=_battle_state_api,
         _adapt_battle_result_for_user=_adapt_battle_result_for_user,
+        _cache_invalidate=_cache_invalidate,
     )
