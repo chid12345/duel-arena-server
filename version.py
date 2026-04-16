@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.98"
-VERSION_LABEL = "v1.6.98 — shop inv badge server-side (inventory_unseen column, cross-device sync)"
+VERSION = "1.6.99"
+VERSION_LABEL = "v1.6.99 — shop inv onboarding: one-time arrow+tooltip after first purchase"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.32"
+GAME_VERSION = "5.33"

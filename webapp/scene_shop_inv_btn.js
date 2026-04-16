@@ -7,6 +7,7 @@
 Object.assign(ShopScene.prototype, {
 
   _INV_KEY: 'shop_inv_new_count',
+  _INV_ONBOARD_KEY: 'shop_inv_onboarded',
 
   _readInvCount() {
     // Приоритет: серверное поле State.player.inventory_unseen
@@ -32,6 +33,39 @@ Object.assign(ShopScene.prototype, {
     }
     this._updateInvBadgeText(this._readInvCount());
     this._pulseInvBtn();
+    this._showInvOnboardingOnce();
+  },
+
+  _showInvOnboardingOnce() {
+    try { if (localStorage.getItem(this._INV_ONBOARD_KEY) === '1') return; } catch(_) {}
+    if (!this._invBtn || this._invHintGroup) return;
+    try { localStorage.setItem(this._INV_ONBOARD_KEY, '1'); } catch(_) {}
+
+    const cx = this._invBtn.x, cy = this._invBtn.y;
+    // Подсказка под кнопкой: стрелочка + текст «Смотри сюда!»
+    const hintY = cy + 30;
+    const arrow = txt(this, cx, hintY, '▲', 14, '#ffc83c', true).setOrigin(0.5).setDepth(8);
+    const bubble = this.add.graphics().setDepth(7);
+    const label = txt(this, cx, hintY + 20, 'Твои покупки тут!', 10, '#ffe9a0', true).setOrigin(1, 0.5).setDepth(8);
+    // Пузырь — под текстом (правый край у края кнопки, чтобы не уезжал за экран)
+    const lblW = label.width + 16, lblH = 18, lblX = cx + 14 - lblW, lblY = hintY + 11;
+    bubble.fillStyle(0x1a2030, 0.95); bubble.fillRoundedRect(lblX, lblY, lblW, lblH, 8);
+    bubble.lineStyle(1.5, C.gold, 0.7); bubble.strokeRoundedRect(lblX, lblY, lblW, lblH, 8);
+    label.setX(lblX + lblW - 8);
+
+    this._invHintGroup = [arrow, bubble, label];
+    this.tweens.add({ targets: arrow, y: hintY + 4, duration: 420, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Авто-закрытие через 4с
+    this.time.delayedCall(4000, () => this._hideInvOnboarding());
+  },
+
+  _hideInvOnboarding() {
+    if (!this._invHintGroup) return;
+    const group = this._invHintGroup; this._invHintGroup = null;
+    this.tweens.add({
+      targets: group, alpha: 0, duration: 300,
+      onComplete: () => group.forEach(o => { try { o.destroy(); } catch(_) {} }),
+    });
   },
 
   _updateInvBadgeText(n) {
@@ -85,6 +119,7 @@ Object.assign(ShopScene.prototype, {
       .on('pointerup', () => {
         tg?.HapticFeedback?.impactOccurred('light');
         Sound?.click?.();
+        this._hideInvOnboarding();
         // Счётчик обнулится внутри StatsScene при авто-открытии инвентаря
         this.scene.start('Stats', { player: State.player, openInventory: true });
       });
