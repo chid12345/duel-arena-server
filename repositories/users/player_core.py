@@ -55,6 +55,9 @@ class UsersPlayerCoreMixin:
 
     _log = logging.getLogger(__name__)
 
+    # Кэш: есть ли столбец hp_full_notified (может отсутствовать в PostgreSQL)
+    _hp_notified_col: bool | None = None
+
     def update_player_stats(self, user_id: int, stats_update: Dict):
         """При смене current_hp — сбрасываем last_hp_regen (точка отсчёта регена)."""
         # Clamp: current_hp не может быть больше max_hp (бафы боя — временные)
@@ -72,10 +75,23 @@ class UsersPlayerCoreMixin:
         if "current_hp" in stats_update:
             set_clauses.append("last_hp_regen = ?")
             values.append(datetime.utcnow().isoformat())
-            set_clauses.append("hp_full_notified = 0")
+            if self._hp_notified_col is not False:
+                set_clauses.append("hp_full_notified = 0")
         values.append(user_id)
         sql = f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?"
-        cursor.execute(sql, values)
+        try:
+            cursor.execute(sql, values)
+        except Exception as e:
+            if "hp_full_notified" in str(e):
+                # Столбец не существует — повторить без него
+                self._log.warning("hp_full_notified column missing, retrying without it")
+                UsersPlayerCoreMixin._hp_notified_col = False
+                conn.rollback()
+                set_clauses = [c for c in set_clauses if "hp_full_notified" not in c]
+                sql = f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?"
+                cursor.execute(sql, values)
+            else:
+                raise
         affected = cursor.rowcount
         conn.commit()
         conn.close()
