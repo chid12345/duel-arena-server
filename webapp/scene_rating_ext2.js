@@ -152,7 +152,7 @@ const config = {
   backgroundColor: C._name === 'light' ? '#f0f2ff' : '#12121c',
   parent: document.body,
   scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
-          QuestsScene, SummaryScene, TitanTopScene, BattlePassScene, ClanScene, ShopScene, NatiskScene,
+          QuestsScene, SummaryScene, TitanTopScene, ClanScene, ShopScene, NatiskScene,
           TasksScene, TasksWeeklyScene, AvatarScene, GuideScene],
   scale: {
     mode: Phaser.Scale.FIT,

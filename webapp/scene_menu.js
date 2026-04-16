@@ -105,7 +105,6 @@ class MenuScene extends Phaser.Scene {
           this._setupWS();
           this._startRegenTick();
           this._loadDailyBonusCard();
-          this._loadBattlePassBadge();
         } catch(buildErr) {
           console.error('UI build error:', buildErr);
           this._showError('Ошибка UI: ' + (buildErr?.message || buildErr));

@@ -74,11 +74,6 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await CallbackHandlers.claim_daily_quest(query, player)
         elif callback_data == "season_info":
             await CallbackHandlers.show_season_info(query, player)
-        elif callback_data == "battle_pass":
-            await CallbackHandlers.show_battle_pass(query, player)
-        elif callback_data.startswith("bp_claim_"):
-            tier = int(callback_data.split("_")[-1])
-            await CallbackHandlers.claim_battle_pass_tier(query, player, tier)
         elif callback_data == "clan_menu":
             await CallbackHandlers.show_clan_menu(query, player)
         elif callback_data == "clan_create_prompt":

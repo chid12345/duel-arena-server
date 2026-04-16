@@ -23,7 +23,6 @@ def register_all(app):
     app.add_handler(CommandHandler("clan", BotHandlers.clan_command))
     app.add_handler(CommandHandler("season", BotHandlers.season_command))
     app.add_handler(CommandHandler("end_season", BotHandlers.end_season_command))
-    app.add_handler(CommandHandler("pass", BotHandlers.pass_command))
     app.add_handler(CommandHandler("buy", BotHandlers.buy_command))
     app.add_handler(CommandHandler("invite", BotHandlers.invite_command))
     app.add_handler(CommandHandler("health", BotHandlers.health_command))

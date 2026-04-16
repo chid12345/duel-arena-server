@@ -5,7 +5,6 @@ from typing import Any, Dict
 from fastapi import APIRouter
 from pydantic import BaseModel
 
-from reward_calculator import calc_reward
 from api.tma_player_api import _player_api
 from api.tma_infra import _global_cache_get, _global_cache_set, get_user_lock
 
@@ -15,51 +14,8 @@ class WeeklyClaimBody(BaseModel):
     claim_key: str
 
 
-class BattlePassClaimBody(BaseModel):
-    init_data: str
-    tier: int
-
-
 class ClaimQuestBody(BaseModel):
     init_data: str
-
-
-def _make_endless_bp_tiers() -> list:
-    tiers_def = [
-        {
-            "tier": 1, "needed": 5, "difficulty": "easy", "frequency": "once",
-            "label": "🩸 Первая кровь",
-            "desc": "Натиск начинается с первого шага. Одержите 5 побед в режиме Натиск.",
-        },
-        {
-            "tier": 2, "needed": 15, "difficulty": "medium", "frequency": "once",
-            "label": "🛡️ Ветеран волн",
-            "desc": "Пятнадцать побед — это мастерство. Победите 15 раз в Натиске и докажите свой класс.",
-        },
-        {
-            "tier": 3, "needed": 30, "difficulty": "hard", "frequency": "once",
-            "label": "👑 Легенда Натиска",
-            "desc": "Тридцать побед. Имена таких бойцов вырезают в камне. Победите 30 раз в Натиске.",
-        },
-    ]
-    result = []
-    for t in tiers_def:
-        gold, diamonds, xp = calc_reward(t["difficulty"], t["frequency"])
-        result.append(
-            {
-                "tier": t["tier"],
-                "needed": t["needed"],
-                "gold": gold,
-                "diamonds": diamonds,
-                "xp": xp,
-                "label": t["label"],
-                "desc": t["desc"],
-            }
-        )
-    return result
-
-
-ENDLESS_BP_TIERS = _make_endless_bp_tiers()
 
 
 def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
@@ -87,41 +43,6 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         my_pos = next((i + 1 for i, r in enumerate(lb) if r["user_id"] == uid), None)
         my_stat = next((r for r in lb if r["user_id"] == uid), None)
         return {"ok": True, "season": dict(season), "leaderboard": lb, "my_stats": my_stat, "my_pos": my_pos}
-
-    @router.get("/api/battlepass")
-    def get_battlepass(init_data: str):
-        tg_user = get_user_from_init_data(init_data)
-        uid = int(tg_user["id"])
-        bp = db.get_battle_pass(uid)
-        tiers = [
-            {"tier": i + 1, "battles_needed": t[0], "wins_needed": t[1], "diamonds": t[2], "gold": t[3]}
-            for i, t in enumerate(db.BATTLE_PASS_TIERS)
-        ]
-        return {
-            "ok": True,
-            "bp": dict(bp),
-            "tiers": tiers,
-            "endless_tiers": ENDLESS_BP_TIERS,
-            "endless_done": int((bp or {}).get("endless_done") or 0),
-            "endless_tier_claimed": int((bp or {}).get("endless_tier_claimed") or 0),
-        }
-
-    @router.post("/api/battlepass/claim")
-    async def claim_battlepass(body: BattlePassClaimBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        async with get_user_lock(uid):
-            return db.claim_battle_pass_tier(uid, body.tier)
-
-    @router.post("/api/battlepass/claim_endless")
-    async def claim_battlepass_endless(body: BattlePassClaimBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        async with get_user_lock(uid):
-            result = db.claim_battle_pass_endless_tier(uid, body.tier)
-            if result.get("ok"):
-                _cache_invalidate(uid)
-            return result
 
     @router.get("/api/daily/status")
     def daily_status(init_data: str):

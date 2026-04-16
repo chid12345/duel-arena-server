@@ -65,19 +65,17 @@ class BattlePersistMixin:
                     if isinstance(r, Exception):
                         logger.error("CRITICAL persist_stats FAIL [%d]: %s", i, r, exc_info=r)
 
-        # ── Фаза 2: побочные записи (квесты, BP, сезон) — параллельно ──
+        # ── Фаза 2: побочные записи (квесты, сезон) — параллельно ──
         side = []
         if not is_test:
             if winner_uid is not None and winner_stats is not None:
                 side.append(loop.run_in_executor(None, db.update_daily_quest_progress, winner_uid, True, _is_bot_battle))
                 if battle_mode != "titan":
                     side.append(loop.run_in_executor(None, db.update_season_stats, winner_uid, True))
-                side.append(loop.run_in_executor(None, db.update_battle_pass, winner_uid, True))
             if loser_uid is not None and loser_stats is not None:
                 side.append(loop.run_in_executor(None, db.update_daily_quest_progress, loser_uid, False, False))
                 if battle_mode != "titan":
                     side.append(loop.run_in_executor(None, db.update_season_stats, loser_uid, False))
-                side.append(loop.run_in_executor(None, db.update_battle_pass, loser_uid, False))
             if not (winner_locked or loser_locked):
                 side.append(loop.run_in_executor(None, db.save_battle, battle_data))
 
