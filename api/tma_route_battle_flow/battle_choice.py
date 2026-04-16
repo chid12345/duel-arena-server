@@ -87,6 +87,7 @@ def register_battle_choice_route(
                         "rounds": mine.get("rounds", 0),
                         "rating_change": mine.get("rating_change", 0),
                         "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
+                        "opponent_name": mine.get("opponent_name") or "",
                     },
                 },
             )
@@ -123,6 +124,7 @@ def register_battle_choice_route(
                                 "rounds": opp.get("rounds", 0),
                                 "rating_change": opp.get("rating_change", 0),
                                 "pvp_repeat_factor": opp.get("pvp_repeat_factor", 1.0),
+                                "opponent_name": opp.get("opponent_name") or "",
                             },
                         },
                     )
@@ -145,6 +147,7 @@ def register_battle_choice_route(
                     "win_streak": mine.get("win_streak", 0) if human_won else 0,
                     "rating_change": mine.get("rating_change", 0),
                     "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
+                    "opponent_name": mine.get("opponent_name") or "",
                 },
             }
 

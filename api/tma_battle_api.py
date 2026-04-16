@@ -78,6 +78,7 @@ def _adapt_battle_result_for_user(result: dict, user_id: int) -> dict:
     if p1_uid is None or user_id == p1_uid:
         r = dict(result)
         r["human_won"] = winner_id == user_id
+        r["opponent_name"] = result.get("loser") if r["human_won"] else result.get("winner")
         return r
     r = dict(result)
     r["human_won"] = winner_id == user_id
@@ -90,4 +91,5 @@ def _adapt_battle_result_for_user(result: dict, user_id: int) -> dict:
     r["win_streak"] = result.get("p2_win_streak", 0)
     r["level_up"] = result.get("p2_level_up", False)
     r["level_up_level"] = result.get("p2_level_up_level", None)
+    r["opponent_name"] = result.get("loser") if r["human_won"] else result.get("winner")
     return r

@@ -49,6 +49,17 @@ class ResultScene extends Phaser.Scene {
       .setOrigin(0.5).setScale(0).setAlpha(0);
     this.tweens.add({ targets: title, scale: 1, alpha: 1, duration: 550, ease: 'Back.easeOut' });
 
+    // Ник противника — строка под заголовком.
+    const rawOpp = (r.opponent_name || '').toString().trim();
+    if (rawOpp && !isTitan && !isEndless) {
+      const oppShort = rawOpp.length > 22 ? rawOpp.slice(0, 20) + '…' : rawOpp;
+      const oppLine = won ? `победил(а) над  ${oppShort}` : `проиграл(а)  ${oppShort}`;
+      const oppCol  = won ? '#c9d4ff' : '#ffb8a8';
+      const opp = txt(this, W / 2, H * 0.225, oppLine, 13, oppCol, true)
+        .setOrigin(0.5).setAlpha(0);
+      this.tweens.add({ targets: opp, alpha: 1, duration: 400, delay: 250 });
+    }
+
     this._buildResultPanel(W, H, won, r, isAfk, isEndless, isTitan, endlessWave, titanFloor, res);
 
     State.playerLoadedAt = 0;

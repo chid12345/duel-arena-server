@@ -68,7 +68,9 @@ def _adapt_result_for_user(result: dict, user_id: int) -> dict:
         return result
     p1_uid = result.get("pvp_p1_user_id")
     if p1_uid is not None and user_id == p1_uid:
-        return result
+        r = dict(result)
+        r["opponent_name"] = result.get("loser") if result.get("human_won") else result.get("winner")
+        return r
     r = dict(result)
     r["human_won"] = winner_id == user_id
     r["damage_to_opponent"] = result.get("damage_to_you")
@@ -80,6 +82,7 @@ def _adapt_result_for_user(result: dict, user_id: int) -> dict:
     r["win_streak"] = result.get("p2_win_streak", 0)
     r["level_up"] = result.get("p2_level_up", False)
     r["level_up_level"] = result.get("p2_level_up_level", None)
+    r["opponent_name"] = result.get("loser") if r["human_won"] else result.get("winner")
     return r
 
 
@@ -107,6 +110,11 @@ CallbackHandlers._battle_end_stats_html = staticmethod(_battle_end_stats_html)
 def _battle_end_summary(player: dict, round_result: dict) -> str:
     """Краткий итог боя (caption для карточки профиля)."""
     stats = CallbackHandlers._battle_end_stats_html(round_result)
+    opp_name_raw = (round_result.get("opponent_name") or "").strip()
+    if not opp_name_raw:
+        opp_name_raw = (round_result.get("loser") if round_result.get("human_won") else round_result.get("winner")) or ""
+    opp_name = html_escape(str(opp_name_raw).strip()) if opp_name_raw else ""
+    opp_line = f"\n🛡 Противник: <b>{opp_name}</b>" if opp_name else ""
     if round_result.get("is_test_battle"):
         rnd = int(round_result.get("rounds") or 0)
         if round_result.get("human_won"):
@@ -115,13 +123,14 @@ def _battle_end_summary(player: dict, round_result: dict) -> str:
             s = "💀 <b>Поражение</b> в тестовом бою. Награды не изменились."
         if not stats:
             s += f" Раундов: {rnd}."
-        return s + stats
+        return s + opp_line + stats
     if round_result.get("human_won"):
         gb = round_result.get("gold_reward", 0)
         expb = round_result.get("exp_reward", 0)
         sb = round_result.get("streak_bonus_gold", 0)
         ws = round_result.get("win_streak", 0)
-        s = f"🏁 <b>Победа!</b>  +{gb} 💰"
+        head = f"🏁 <b>Победа над {opp_name}!</b>" if opp_name else "🏁 <b>Победа!</b>"
+        s = f"{head}  +{gb} 💰"
         if round_result.get("xp_boosted"):
             s += f"  +{expb} ⭐ (XP-буст!)"
         else:
@@ -138,15 +147,16 @@ def _battle_end_summary(player: dict, round_result: dict) -> str:
     else:
         gb = round_result.get("gold_reward", 0)
         expb = round_result.get("exp_reward", 0)
+        head = f"💀 <b>Поражение от {opp_name}.</b>" if opp_name else "💀 <b>Поражение.</b>"
         if gb > 0 or expb > 0:
             parts = []
             if gb > 0:
                 parts.append(f"+{gb} 💰")
             if expb > 0:
                 parts.append(f"+{expb} ⭐")
-            s = f"💀 <b>Поражение.</b>  {' '.join(parts)}"
+            s = f"{head}  {' '.join(parts)}"
         else:
-            s = "💀 <b>Поражение.</b>  Наград нет."
+            s = f"{head}  Наград нет."
         total_battles = player.get("wins", 0) + player.get("losses", 0)
         if total_battles <= 5:
             s += "  Атакуй и защищай ТУЛОВИЩЕ — самая большая зона."

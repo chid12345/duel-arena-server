@@ -58,6 +58,7 @@ def register_tma_battle_read_routes(
                 "win_streak": mine.get("win_streak", 0) if human_won else 0,
                 "rating_change": mine.get("rating_change", 0),
                 "pvp_repeat_factor": mine.get("pvp_repeat_factor", 1.0),
+                "opponent_name": mine.get("opponent_name") or "",
             },
             "player": _player_api(dict(player)),
         }
