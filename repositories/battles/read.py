@@ -35,16 +35,20 @@ def _parse_battle_data(raw: Any) -> Dict[str, Any]:
 class BattlesReadMixin:
     def get_recent_battles(self, user_id: int, limit: int = 20) -> List[Dict[str, Any]]:
         """Список последних боёв игрока (player1 или player2), от новых к старым.
-        Возвращает короткую карточку — без полного webapp_log (для списка не нужен).
+        Фильтр: только бои, у которых реально есть сохранённый webapp_log
+        (старые бои до деплоя этой фичи — без реплея — не показываем).
         """
         conn = self.get_connection()
         cursor = conn.cursor()
         ph = "%s" if self._pg else "?"
+        # Берём с запасом (×3), потом фильтруем — чтобы при удалении «пустых» всё равно
+        # вернуть до `limit` валидных карточек.
+        cap = min(200, max(int(limit) * 3, int(limit)))
         cursor.execute(
             f"SELECT battle_id, player1_id, player2_id, is_bot1, is_bot2, "
-            f"winner_id, battle_result, rounds_played, created_at "
+            f"winner_id, battle_result, rounds_played, battle_data, created_at "
             f"FROM battles WHERE player1_id = {ph} OR player2_id = {ph} "
-            f"ORDER BY created_at DESC, battle_id DESC LIMIT {int(limit)}",
+            f"ORDER BY created_at DESC, battle_id DESC LIMIT {cap}",
             (user_id, user_id),
         )
         rows = cursor.fetchall() or []
@@ -54,6 +58,10 @@ class BattlesReadMixin:
             d = dict(r) if hasattr(r, "keys") else {}
             if not d:
                 continue
+            details = _parse_battle_data(d.get("battle_data"))
+            webapp_log = details.get("webapp_log") or []
+            if not isinstance(webapp_log, list) or not webapp_log:
+                continue  # нет реплея — в список не включаем
             p1 = d.get("player1_id")
             is_p1 = (p1 == user_id)
             opp_id = d.get("player2_id") if is_p1 else d.get("player1_id")
@@ -68,6 +76,8 @@ class BattlesReadMixin:
                 "opp_is_bot": opp_is_bot,
                 "created_at": str(d.get("created_at") or ""),
             })
+            if len(out) >= int(limit):
+                break
         return out
 
     def get_battle_replay(self, battle_id: int, user_id: int) -> Optional[Dict[str, Any]]:
