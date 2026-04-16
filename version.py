@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.7.18"
-VERSION_LABEL = "v1.7.18 — Clan v2 step 3: API /preview, top_clans с emblem+online+weekly, create с эмблемой"
+VERSION = "1.7.19"
+VERSION_LABEL = "v1.7.19 — Clan v2 step 4: UI создания клана с эмблемой, описанием, min_level и закрытым режимом"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.52"
+GAME_VERSION = "5.53"

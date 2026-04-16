@@ -44,32 +44,7 @@ Object.assign(ClanScene.prototype, {
     get('/api/clan/top').then(d => this._showSearchResults(d.clans || [], W));
   },
 
-  /* ══ СОЗДАНИЕ ════════════════════════════════════════════ */
-  _renderCreate(W, H) {
-    txt(this, W/2, 86, '➕ СОЗДАТЬ КЛАН', 14, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W/2, 104, 'Стоимость: 200 🪙  ·  Максимум 20 участников', 11, '#a8b4d8').setOrigin(0.5);
-
-    makePanel(this, 8, 118, W-16, 152, 12);
-    txt(this, 20, 128, 'Название клана', 12, '#ffffff', true);
-    txt(this, 20, 144, '3–20 символов, например: Железный Кулак', 11, '#a8b4d8');
-    this._nameEl = this._makeInput(W, 158, W-32, 36, 'Железный Кулак', 20);
-
-    txt(this, 20, 204, 'Тег клана', 12, '#ffffff', true);
-    txt(this, 20, 220, '2–4 символа, например: ЖК', 11, '#a8b4d8');
-    this._tagEl  = this._makeInput(W, 232, (W-32)/2, 36, 'ЖК', 4);
-
-    const btnY = 280;
-    const bgC  = this.add.graphics();
-    bgC.fillStyle(C.purple, 0.9); bgC.fillRoundedRect(16, btnY, W-32, 48, 12);
-    bgC.fillStyle(0xffffff, 0.08); bgC.fillRoundedRect(18, btnY+2, W-36, 22, 10);
-    const btnT = txt(this, W/2, btnY+24, '⚔️  Основать клан  (200 🪙)', 14, '#ffffff', true).setOrigin(0.5);
-    this.add.zone(16, btnY, W-32, 48).setOrigin(0).setInteractive({ useHandCursor: true })
-      .on('pointerdown', () => { bgC.clear(); bgC.fillStyle(0x6600cc,1); bgC.fillRoundedRect(16,btnY,W-32,48,12); tg?.HapticFeedback?.impactOccurred('heavy'); })
-      .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,btnY,W-32,48,12); })
-      .on('pointerup',   () => this._doCreate(btnT));
-
-    txt(this, W/2, btnY+60, 'Имя и тег должны быть уникальны', 11, '#a8b4d8').setOrigin(0.5);
-  },
+  /* _renderCreate перенесён в scene_clan_create.js */
 
   /* ══ ТОП КЛАНОВ ══════════════════════════════════════════ */
   _renderTop(W, H) {
