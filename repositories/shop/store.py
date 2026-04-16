@@ -35,9 +35,10 @@ class ShopStoreMixin:
             conn.close()
             return {"ok": False, "reason": "HP уже полное!"}
         new_hp = min(max_hp, current_hp + int(max_hp * 0.30))
+        notify_flag = 1 if new_hp >= max_hp else 0
         cursor.execute(
-            "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ? WHERE user_id = ?",
-            (COST, new_hp, datetime.utcnow().isoformat(), user_id),
+            "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ?, hp_full_notified = ? WHERE user_id = ?",
+            (COST, new_hp, datetime.utcnow().isoformat(), notify_flag, user_id),
         )
         conn.commit()
         conn.close()

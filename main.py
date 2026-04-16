@@ -137,6 +137,11 @@ def _build_app(bot_count: int) -> Application:
             _pvp_clear_stale_job, interval=120, first=120,
             name="pvp_clear_stale",
         )
+        from jobs.hp_full_notify import hp_full_notify_job
+        application.job_queue.run_repeating(
+            hp_full_notify_job, interval=90, first=90,
+            name="hp_full_notify",
+        )
 
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 

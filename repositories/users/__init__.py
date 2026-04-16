@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from repositories.users.chat_id import UsersChatMixin
 from repositories.users.daily_bonus import UsersDailyBonusMixin
+from repositories.users.hp_notify import UsersHpNotifyMixin
 from repositories.users.hp_regen import UsersHpRegenMixin
 from repositories.users.improvements import UsersImprovementsMixin
 from repositories.users.metrics import UsersMetricsMixin
@@ -16,6 +17,7 @@ from repositories.users.wipe_leaderboard import UsersWipeLeaderboardMixin
 class UsersMixin(
     UsersPlayerCoreMixin,
     UsersHpRegenMixin,
+    UsersHpNotifyMixin,
     UsersWipeLeaderboardMixin,
     UsersDailyBonusMixin,
     UsersImprovementsMixin,

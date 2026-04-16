@@ -64,6 +64,7 @@ class UsersPlayerCoreMixin:
         if "current_hp" in stats_update:
             set_clauses.append("last_hp_regen = ?")
             values.append(datetime.utcnow().isoformat())
+            set_clauses.append("hp_full_notified = 0")
         values.append(user_id)
         cursor.execute(
             f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?",

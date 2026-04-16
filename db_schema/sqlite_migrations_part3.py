@@ -139,4 +139,8 @@ MIGRATIONS_PART3 = [
         # Тип воина для профиля и боёв: tank/agile/crit/neutral/default
         "ALTER TABLE players ADD COLUMN warrior_type TEXT DEFAULT 'default'",
     ]),
+    ("2026_04_26_001_hp_full_notified", [
+        # Флаг: 0 = нужно уведомить когда HP станет полным, 1 = уже уведомлен / не нужно
+        "ALTER TABLE players ADD COLUMN hp_full_notified INTEGER DEFAULT 1",
+    ]),
 ]

@@ -53,10 +53,11 @@ def _buy_hp(db, uid: int, price: int, pct: float) -> dict:
     else:
         new_hp = min(max_hp, cur_hp + max(1, int(max_hp * pct)))
     # Атомарное списание: WHERE gold >= price AND current_hp < max_hp защищает от race condition
+    notify_flag = 1 if new_hp >= max_hp else 0
     cursor.execute(
-        "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ? "
+        "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ?, hp_full_notified = ? "
         "WHERE user_id = ? AND gold >= ? AND current_hp < max_hp",
-        (price, new_hp, datetime.utcnow().isoformat(), uid, price),
+        (price, new_hp, datetime.utcnow().isoformat(), notify_flag, uid, price),
     )
     rows_affected = cursor.rowcount
     conn.commit()
