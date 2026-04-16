@@ -143,4 +143,8 @@ MIGRATIONS_PART3 = [
         # Флаг: 0 = нужно уведомить когда HP станет полным, 1 = уже уведомлен / не нужно
         "ALTER TABLE players ADD COLUMN hp_full_notified INTEGER DEFAULT 1",
     ]),
+    ("2026_04_27_001_inventory_unseen", [
+        # Счётчик «новых» покупок для бейджа 🎒 в магазине. Сбрасывается при открытии инвентаря.
+        "ALTER TABLE players ADD COLUMN inventory_unseen INTEGER DEFAULT 0",
+    ]),
 ]

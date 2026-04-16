@@ -203,5 +203,6 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
             )
         ),
         "warrior_type": (player.get("warrior_type") or "default"),
+        "inventory_unseen": int(player.get("inventory_unseen", 0) or 0),
         **_premium_fields(player),
     }

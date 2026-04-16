@@ -61,6 +61,7 @@
     this._invBusy = true;
     // Сброс счётчика "новых покупок" магазина при любом входе в инвентарь
     try { localStorage.removeItem('shop_inv_new_count'); } catch(_) {}
+    if (State?.player) State.player.inventory_unseen = 0;
     let data;
     try { data = await get('/api/shop/inventory'); }
     catch { this._invBusy = false; this._showToast('❌ Нет соединения'); return; }

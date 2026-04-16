@@ -47,7 +47,10 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             uid = int(tg_user["id"])
             items = db.get_inventory(uid)
             buffs = db.get_raw_buffs(uid)
-            return {"ok": True, "inventory": items, "active_buffs": buffs}
+            # Сброс счётчика «новых покупок» — игрок открыл инвентарь, всё увидел
+            try: db.reset_inventory_unseen(uid)
+            except Exception: pass
+            return {"ok": True, "inventory": items, "active_buffs": buffs, "inventory_unseen": 0}
         except Exception as exc:
             import traceback; traceback.print_exc()
             return {"ok": False, "reason": f"Ошибка: {type(exc).__name__}: {exc}"}

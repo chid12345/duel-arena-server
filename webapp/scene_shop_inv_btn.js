@@ -9,6 +9,10 @@ Object.assign(ShopScene.prototype, {
   _INV_KEY: 'shop_inv_new_count',
 
   _readInvCount() {
+    // Приоритет: серверное поле State.player.inventory_unseen
+    const sv = State?.player?.inventory_unseen;
+    if (typeof sv === 'number') return Math.max(0, sv | 0);
+    // Fallback: localStorage (старые клиенты / оффлайн-бамп)
     try { return parseInt(localStorage.getItem(this._INV_KEY) || '0', 10) || 0; }
     catch(_) { return 0; }
   },
@@ -19,9 +23,14 @@ Object.assign(ShopScene.prototype, {
   },
 
   _bumpInvBadge() {
-    const n = this._readInvCount() + 1;
-    this._writeInvCount(n);
-    this._updateInvBadgeText(n);
+    // Сервер уже инкрементил счётчик в add_to_inventory и вернул новый State.player.
+    // Локальный localStorage бампим как fallback (на случай отсутствия поля).
+    const hasSv = typeof State?.player?.inventory_unseen === 'number';
+    if (!hasSv) {
+      const n = this._readInvCount() + 1;
+      this._writeInvCount(n);
+    }
+    this._updateInvBadgeText(this._readInvCount());
     this._pulseInvBtn();
   },
 

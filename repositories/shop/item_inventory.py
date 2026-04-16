@@ -30,8 +30,11 @@ class ShopItemInventoryMixin:
         conn.close()
         return row is not None and (row["quantity"] or 0) > 0
 
-    def add_to_inventory(self, user_id: int, item_id: str, quantity: int = 1) -> None:
-        """Добавить предмет (или увеличить количество)."""
+    def add_to_inventory(self, user_id: int, item_id: str, quantity: int = 1,
+                          bump_unseen: bool = True) -> None:
+        """Добавить предмет (или увеличить количество).
+        bump_unseen=False используется для стартового набора — чтобы новичок
+        не видел сразу красный бейдж «N новых»."""
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -49,6 +52,23 @@ class ShopItemInventoryMixin:
                 "INSERT INTO player_inventory (user_id, item_id, quantity) VALUES (?,?,?)",
                 (user_id, item_id, quantity),
             )
+        if bump_unseen:
+            cursor.execute(
+                "UPDATE players SET inventory_unseen = COALESCE(inventory_unseen, 0) + ? "
+                "WHERE user_id = ?",
+                (quantity, user_id),
+            )
+        conn.commit()
+        conn.close()
+
+    def reset_inventory_unseen(self, user_id: int) -> None:
+        """Сбросить счётчик «новых» покупок (при открытии инвентаря)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE players SET inventory_unseen = 0 WHERE user_id = ?",
+            (user_id,),
+        )
         conn.commit()
         conn.close()
 
@@ -86,4 +106,4 @@ class ShopItemInventoryMixin:
         for item_id, qty in STARTER:
             existing = self.has_item(user_id, item_id)
             if not existing:
-                self.add_to_inventory(user_id, item_id, qty)
+                self.add_to_inventory(user_id, item_id, qty, bump_unseen=False)

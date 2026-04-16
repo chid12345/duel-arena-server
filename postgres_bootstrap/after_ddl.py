@@ -126,4 +126,6 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_battle_stats_type_date ON battle_stats (battle_type, created_at)",
     # HP push-уведомление: флаг «нужно уведомить, когда HP станет полным»
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS hp_full_notified INTEGER DEFAULT 1",
+    # Счётчик «новых» покупок для бейджа 🎒 в магазине
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS inventory_unseen INTEGER DEFAULT 0",
 )
