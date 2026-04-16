@@ -67,6 +67,9 @@ class BattlesReadMixin:
             opp_id = d.get("player2_id") if is_p1 else d.get("player1_id")
             opp_is_bot = bool(d.get("is_bot2") if is_p1 else d.get("is_bot1"))
             won = (d.get("winner_id") == user_id)
+            # Имя противника — из сохранённого opponent_names (положили при save_battle).
+            opp_names = details.get("opponent_names") or {}
+            opp_name = opp_names.get("p2") if is_p1 else opp_names.get("p1")
             out.append({
                 "battle_id": int(d.get("battle_id", 0)),
                 "won": won,
@@ -74,6 +77,7 @@ class BattlesReadMixin:
                 "rounds": int(d.get("rounds_played") or 0),
                 "opp_id": opp_id,
                 "opp_is_bot": opp_is_bot,
+                "opp_name": (opp_name or "").strip(),
                 "created_at": str(d.get("created_at") or ""),
             })
             if len(out) >= int(limit):

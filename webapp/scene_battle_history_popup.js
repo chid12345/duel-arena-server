@@ -90,7 +90,11 @@
     const rows = items.map(it => {
       const cls = it.won ? 'bhl-win' : 'bhl-lose';
       const ico = it.won ? '🏆' : '💀';
-      const opp = it.opp_is_bot ? 'Бот' : `ID ${it.opp_id ?? '?'}`;
+      // Имя противника: из БД (opp_name), fallback — «Бот» / «Игрок»
+      let opp = (it.opp_name || '').trim();
+      if (!opp) opp = it.opp_is_bot ? 'Бот' : 'Игрок';
+      // Ограничим длину чтобы не ломать лейаут
+      if (opp.length > 18) opp = opp.slice(0, 16) + '…';
       const ago = _fmtAgo(it.created_at);
       return `<div class="bhl-row" data-id="${it.battle_id}">
         <span class="bhl-res ${cls}">${ico}</span>

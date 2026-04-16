@@ -142,6 +142,12 @@ def _build_app(bot_count: int) -> Application:
             hp_full_notify_job, interval=90, first=90,
             name="hp_full_notify",
         )
+        # Очистка боёв без реплея (старый формат до фичи replay) — раз в час, пачками.
+        from jobs.battles_cleanup import battles_cleanup_job
+        application.job_queue.run_repeating(
+            battles_cleanup_job, interval=3600, first=60,
+            name="battles_cleanup",
+        )
 
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
