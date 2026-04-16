@@ -6,6 +6,7 @@ from repositories.social.clans import SocialClanMixin
 from repositories.social.clans_v2 import SocialClanV2Mixin
 from repositories.social.clan_chat import SocialClanChatMixin
 from repositories.social.clan_management import SocialClanManagementMixin
+from repositories.social.clan_join_requests import SocialClanJoinReqMixin
 from repositories.social.payments import SocialPaymentsMixin
 from repositories.social.referrals_core import SocialReferralCoreMixin
 from repositories.social.referrals_process import SocialReferralProcessMixin
@@ -21,6 +22,7 @@ class SocialMixin(
     SocialClanV2Mixin,
     SocialClanChatMixin,
     SocialClanManagementMixin,
+    SocialClanJoinReqMixin,
 ):
     """Mixin: кланы, рефералы, платежи."""
 

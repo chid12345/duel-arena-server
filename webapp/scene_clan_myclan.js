@@ -118,16 +118,30 @@ Object.assign(ClanScene.prototype, {
     }
 
     const btnZone = H - 56;
-    const leftW = Math.round((W - 40) / 2);
-    const rightW = W - 32 - leftW - 8;
+    /* Лидер закрытого клана: 3 кнопки (Чат / Заявки / Распустить) */
+    const isClosed = (clan.closed|0) === 1;
+    const threeBtns = isLeader && isClosed;
+    const slotW = threeBtns ? Math.floor((W - 48) / 3) : Math.round((W - 40) / 2);
+    const leftW  = slotW;
+    const midW   = threeBtns ? slotW : 0;
+    const rightW = threeBtns ? (W - 48 - leftW - midW) : (W - 32 - leftW - 8);
     const chatBg = this.add.graphics();
     chatBg.fillStyle(0x161a28, 1); chatBg.fillRoundedRect(16, btnZone, leftW, 42, 10);
     chatBg.lineStyle(1, 0x222840, 0.9); chatBg.strokeRoundedRect(16, btnZone, leftW, 42, 10);
-    txt(this, 16 + leftW / 2, btnZone + 21, '💬 Чат клана', 13, '#6080c0', true).setOrigin(0.5);
+    txt(this, 16 + leftW / 2, btnZone + 21, '💬 Чат', 13, '#a8c4ff', true).setOrigin(0.5);
     this.add.zone(16, btnZone, leftW, 42).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this.scene.restart({ sub: 'chat' }));
+    if (threeBtns) {
+      const mx = 16 + leftW + 8;
+      const mBg = this.add.graphics();
+      mBg.fillStyle(0x2a2010, 1); mBg.fillRoundedRect(mx, btnZone, midW, 42, 10);
+      mBg.lineStyle(1, 0xffc83c, 0.8); mBg.strokeRoundedRect(mx, btnZone, midW, 42, 10);
+      txt(this, mx + midW / 2, btnZone + 21, '📨 Заявки', 13, '#ffc83c', true).setOrigin(0.5);
+      this.add.zone(mx, btnZone, midW, 42).setOrigin(0).setInteractive({ useHandCursor: true })
+        .on('pointerup', () => this.scene.restart({ sub: 'requests' }));
+    }
 
-    const rx = 16 + leftW + 8;
+    const rx = threeBtns ? (16 + leftW + 8 + midW + 8) : (16 + leftW + 8);
     const rightBg = this.add.graphics();
     if (isLeader) {
       rightBg.fillStyle(0x2a1416, 1); rightBg.fillRoundedRect(rx, btnZone, rightW, 42, 10);

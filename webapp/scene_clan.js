@@ -62,6 +62,9 @@ class ClanScene extends Phaser.Scene {
         this._renderCreate(W, H);
       } else if (this._subview === 'top') {
         this._renderTop(W, H);
+      } else if (this._subview === 'requests') {
+        if (data.is_leader) this._renderRequests(W, H);
+        else this._renderMyClan(data, W, H);
       } else {
         this._renderNoClan(W, H);
       }

@@ -110,7 +110,7 @@ Object.assign(ClanScene.prototype, {
       const t2 = txt(this, W/2, btnY+btnH/2, label, 13, labelCol, true).setOrigin(0.5);
       this.add.zone(16, btnY, W-32, btnH).setOrigin(0).setInteractive({ useHandCursor: true })
         .on('pointerup', () => isClosed
-          ? this._toast('🔒 Заявки появятся в ближайшем обновлении')
+          ? this._submitJoinRequest(clan.id, t2)
           : this._joinClan(clan.id, clan.name, t2));
     }
 

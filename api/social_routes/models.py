@@ -41,5 +41,23 @@ class ClanDisbandBody(BaseModel):
     init_data: str
 
 
+class ClanJoinReqBody(BaseModel):
+    init_data: str
+    clan_id: int
+
+
+class ClanJoinReqDecideBody(BaseModel):
+    init_data: str
+    request_id: int
+
+
+class ClanMetaBody(BaseModel):
+    init_data: str
+    description: str | None = None
+    emblem: str | None = None
+    min_level: int | None = None
+    closed: int | None = None
+
+
 class ReferralWithdrawBody(BaseModel):
     init_data: str
