@@ -23,6 +23,7 @@ class UsersHpRegenMixin:
                 return {}
             max_hp = int(row["max_hp"] or PLAYER_START_MAX_HP)
             current_hp = max_hp if row["current_hp"] is None else int(row["current_hp"])
+            current_hp = min(current_hp, max_hp)  # clamp: buff HP не сохраняется
             now = datetime.utcnow()
             if current_hp < max_hp:
                 last_regen_str = row["last_hp_regen"]
@@ -50,6 +51,7 @@ class UsersHpRegenMixin:
             return {}
         max_hp = int(player.get("max_hp") or PLAYER_START_MAX_HP)
         current_hp = max_hp if player.get("current_hp") is None else int(player["current_hp"])
+        current_hp = min(current_hp, max_hp)  # clamp: buff HP не сохраняется
         last_regen_str = player.get("last_hp_regen")
         now = datetime.utcnow()
         if current_hp < max_hp:

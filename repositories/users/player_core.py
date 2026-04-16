@@ -54,6 +54,11 @@ class UsersPlayerCoreMixin:
 
     def update_player_stats(self, user_id: int, stats_update: Dict):
         """При смене current_hp — сбрасываем last_hp_regen (точка отсчёта регена)."""
+        # Clamp: current_hp не может быть больше max_hp (бафы боя — временные)
+        if "current_hp" in stats_update and "max_hp" in stats_update:
+            stats_update["current_hp"] = min(
+                int(stats_update["current_hp"]), int(stats_update["max_hp"]),
+            )
         conn = self.get_connection()
         cursor = conn.cursor()
         set_clauses = []

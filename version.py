@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.6.86"
-VERSION_LABEL = "v1.6.86 — fix: XP/level stuck — квесты/tasks/BP копили exp без пересчёта уровня"
+VERSION = "1.6.87"
+VERSION_LABEL = "v1.6.87 — fix: HP clamp — current_hp не может быть > max_hp (бафы временные)"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.20"
+GAME_VERSION = "5.21"
