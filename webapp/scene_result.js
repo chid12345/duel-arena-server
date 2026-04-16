@@ -53,16 +53,21 @@ class ResultScene extends Phaser.Scene {
 
     State.playerLoadedAt = 0;
     let endlessStatus = null;
+    let _diagTxt = '';
     try {
       const fresh = await post('/api/player');
-      console.log('[ResultScene] /api/player →', '_sv:', fresh._sv, '_db_hp:', fresh._db_hp, '/', fresh._db_mhp, '_db_exp:', fresh._db_exp, 'cached:', fresh.cached, 'hp_pct:', fresh.player?.hp_pct);
+      _diagTxt = `sv:${fresh._sv||'?'} hp:${fresh._db_hp||'?'}/${fresh._db_mhp||'?'} exp:${fresh._db_exp||'?'} c:${fresh.cached?1:0}`;
       if (fresh.ok) {
-        const _wt = State.player?.warrior_type; // сохраняем локальный выбор воина
+        const _wt = State.player?.warrior_type;
         State.player = fresh.player;
         if (_wt) State.player.warrior_type = _wt;
         State.playerLoadedAt = Date.now();
       }
-    } catch (_) {}
+    } catch (e) { _diagTxt = 'ERR:' + e.message; }
+    // Временная диагностика — показать версию сервера и сырые HP/XP из БД
+    if (_diagTxt) {
+      txt(this, W / 2, H * 0.96, _diagTxt, 9, '#555555').setOrigin(0.5);
+    }
     if (isEndless) {
       try { endlessStatus = await get('/api/endless/status'); } catch (_) {}
     }
