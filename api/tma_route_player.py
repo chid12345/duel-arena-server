@@ -32,6 +32,7 @@ def register_tma_player_route(
     stamina_stats_invested: Callable[..., int],
     expected_max_hp_from_level: Callable[[int], int],
 ) -> None:
+    from version import VERSION
     @app.post("/api/player")
     def get_player(body: InitDataHeader):
         tg_user = get_user_from_init_data(body.init_data)
@@ -55,7 +56,7 @@ def register_tma_player_route(
             if usdt_passive:
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
-            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "cached": True}
+            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "cached": True, "_sv": VERSION}
 
         player = db.get_or_create_player(uid, username)
 
@@ -109,4 +110,11 @@ def register_tma_player_route(
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
-        return {"ok": True, "player": _player_api(player, combined_buffs=cb)}
+        return {
+            "ok": True,
+            "player": _player_api(player, combined_buffs=cb),
+            "_sv": VERSION,
+            "_db_hp": int(player.get("current_hp", 0)),
+            "_db_mhp": int(player.get("max_hp", 0)),
+            "_db_exp": int(player.get("exp", 0)),
+        }

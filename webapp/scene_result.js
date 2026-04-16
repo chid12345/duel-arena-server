@@ -55,6 +55,7 @@ class ResultScene extends Phaser.Scene {
     let endlessStatus = null;
     try {
       const fresh = await post('/api/player');
+      console.log('[ResultScene] /api/player →', '_sv:', fresh._sv, '_db_hp:', fresh._db_hp, '/', fresh._db_mhp, '_db_exp:', fresh._db_exp, 'cached:', fresh.cached, 'hp_pct:', fresh.player?.hp_pct);
       if (fresh.ok) {
         const _wt = State.player?.warrior_type; // сохраняем локальный выбор воина
         State.player = fresh.player;
