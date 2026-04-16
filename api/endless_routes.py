@@ -10,6 +10,8 @@ _ENDLESS_SESSION_TTL = 60  # секунд — сессия Натиска ист
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from api.tma_infra import get_user_lock
+
 logger = logging.getLogger(__name__)
 
 
@@ -151,30 +153,48 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
     async def endless_buy_attempt(body: BuyAttemptBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        username = tg_user.get("username") or ""
-        player = db.get_or_create_player(uid, username)
         kind = body.kind
 
-        if kind == "gold":
-            attempts_data = db.endless_get_attempts(uid)
-            if attempts_data["extra_gold"] > 0:
-                return {"ok": False, "reason": "Уже куплена попытка за золото сегодня"}
-            gold = int(player.get("gold", 0))
-            if gold < ENDLESS_GOLD_COST:
-                return {"ok": False, "reason": f"Нужно {ENDLESS_GOLD_COST} 🪙"}
-            db.update_player_stats(uid, {"gold": gold - ENDLESS_GOLD_COST})
-            db.endless_add_extra(uid, "gold", 1)
-            db.track_purchase(uid, "endless_extra", "gold", ENDLESS_GOLD_COST)
-            return {"ok": True, "bought": 1, "cost": ENDLESS_GOLD_COST}
-        if kind == "diamond":
-            diamonds = int(player.get("diamonds", 0))
-            if diamonds < ENDLESS_DIAMOND_COST:
-                return {"ok": False, "reason": f"Нужно {ENDLESS_DIAMOND_COST} 💎"}
-            db.update_player_stats(uid, {"diamonds": diamonds - ENDLESS_DIAMOND_COST})
-            db.endless_add_extra(uid, "diamond", ENDLESS_DIAMOND_COUNT)
-            db.track_purchase(uid, "endless_extra", "diamonds", ENDLESS_DIAMOND_COST)
-            return {"ok": True, "bought": ENDLESS_DIAMOND_COUNT, "cost": ENDLESS_DIAMOND_COST}
-        return {"ok": False, "reason": "Неверный тип"}
+        async with get_user_lock(uid):
+            username = tg_user.get("username") or ""
+            player = db.get_or_create_player(uid, username)
+
+            if kind == "gold":
+                attempts_data = db.endless_get_attempts(uid)
+                if attempts_data["extra_gold"] > 0:
+                    return {"ok": False, "reason": "Уже куплена попытка за золото сегодня"}
+                # Атомарное списание
+                conn = db.get_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
+                    (ENDLESS_GOLD_COST, uid, ENDLESS_GOLD_COST),
+                )
+                ok = cursor.rowcount > 0
+                conn.commit()
+                conn.close()
+                if not ok:
+                    return {"ok": False, "reason": f"Нужно {ENDLESS_GOLD_COST} 🪙"}
+                db.endless_add_extra(uid, "gold", 1)
+                db.track_purchase(uid, "endless_extra", "gold", ENDLESS_GOLD_COST)
+                return {"ok": True, "bought": 1, "cost": ENDLESS_GOLD_COST}
+            if kind == "diamond":
+                # Атомарное списание
+                conn = db.get_connection()
+                cursor = conn.cursor()
+                cursor.execute(
+                    "UPDATE players SET diamonds = diamonds - ? WHERE user_id = ? AND diamonds >= ?",
+                    (ENDLESS_DIAMOND_COST, uid, ENDLESS_DIAMOND_COST),
+                )
+                ok = cursor.rowcount > 0
+                conn.commit()
+                conn.close()
+                if not ok:
+                    return {"ok": False, "reason": f"Нужно {ENDLESS_DIAMOND_COST} 💎"}
+                db.endless_add_extra(uid, "diamond", ENDLESS_DIAMOND_COUNT)
+                db.track_purchase(uid, "endless_extra", "diamonds", ENDLESS_DIAMOND_COST)
+                return {"ok": True, "bought": ENDLESS_DIAMOND_COUNT, "cost": ENDLESS_DIAMOND_COST}
+            return {"ok": False, "reason": "Неверный тип"}
 
     @router.post("/api/endless/abandon")
     async def endless_abandon(body: TitanStartBody):

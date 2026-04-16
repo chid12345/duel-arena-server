@@ -78,21 +78,20 @@ class AvatarsShopMixin:
             if cursor.fetchone():
                 return {"ok": False, "reason": "Образ уже куплен"}
 
-            cursor.execute("SELECT gold, diamonds FROM players WHERE user_id = ?", (user_id,))
-            p = cursor.fetchone()
-            if not p:
-                return {"ok": False, "reason": "Игрок не найден"}
-            gold = int(self._row_get(p, "gold", 0) or 0)
-            dia = int(self._row_get(p, "diamonds", 0) or 0)
-            if currency == "gold" and gold < price:
-                return {"ok": False, "reason": f"Нужно {price} золота"}
-            if currency == "diamonds" and dia < price:
-                return {"ok": False, "reason": f"Нужно {price} алмазов"}
-
+            # Атомарное списание: WHERE currency >= price защищает от race condition
             if currency == "gold":
-                cursor.execute("UPDATE players SET gold = gold - ? WHERE user_id = ?", (price, user_id))
+                cursor.execute(
+                    "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
+                    (price, user_id, price),
+                )
             else:
-                cursor.execute("UPDATE players SET diamonds = diamonds - ? WHERE user_id = ?", (price, user_id))
+                cursor.execute(
+                    "UPDATE players SET diamonds = diamonds - ? WHERE user_id = ? AND diamonds >= ?",
+                    (price, user_id, price),
+                )
+            if cursor.rowcount == 0:
+                symbol = "золота" if currency == "gold" else "алмазов"
+                return {"ok": False, "reason": f"Нужно {price} {symbol}"}
 
             cursor.execute(
                 """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)

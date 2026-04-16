@@ -230,6 +230,7 @@ TasksScene.prototype._buildStreakTab = function(streak, W, H, startY) {
 };
 
 TasksScene.prototype._claimStreakDay = function(dayNum) {
+  if (_globalCooldown('claim')) return;
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/tasks/claim_streak', { day_num: dayNum })

@@ -87,6 +87,16 @@ function post(path, body = {}, timeoutMs = 15000) {
   }).catch(e => { clearTimeout(t); throw e; });
 }
 
+/** Глобальный cooldown: блокирует повторный claim/buy 1.5с после последнего запроса */
+function _globalCooldown(key, ms) {
+  const now = Date.now();
+  const k = '_lock_' + key;
+  if (State[k] && now - State[k] < (ms || 1500)) return true;
+  State[k] = now;
+  return false;
+}
+function _globalCooldownReset(key) { State['_lock_' + key] = 0; }
+
 function get(path, params = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);

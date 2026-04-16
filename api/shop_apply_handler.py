@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from api.tma_infra import get_user_lock
 from api.shop_helpers import _XP_BOOST_CHARGES
 from api.tma_catalogs import SCROLL_EFFECTS
 from api.tma_player_api import _player_api
@@ -10,10 +11,14 @@ from api.tma_player_api import _player_api
 async def shop_apply_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_CATALOG) -> dict:
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
-    _rl_check(uid, "shop_apply", max_hits=10, window_sec=60)
+    _rl_check(uid, "shop_apply", max_hits=3, window_sec=5)
 
-    iid = body.item_id
+    # Per-user lock: два параллельных запроса не дублируют предмет
+    async with get_user_lock(uid):
+        return _do_apply(db, uid, body.item_id, body, SHOP_CATALOG)
 
+
+def _do_apply(db, uid: int, iid: str, body, SHOP_CATALOG: dict) -> dict:
     # XP буст: перевести из инвентаря в xp_boost_charges
     if iid in _XP_BOOST_CHARGES:
         if not db.has_item(uid, iid):

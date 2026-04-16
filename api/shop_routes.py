@@ -8,6 +8,7 @@ from typing import Any, Dict
 from fastapi import APIRouter
 
 from api.tma_catalogs import STARS_SCROLL_PACKAGES, USDT_SCROLL_PACKAGES
+from api.tma_infra import get_user_lock
 from api.shop_loot_box import _open_box_free as _open_loot_box
 from api.tma_models import ShopBuyBody, ShopApplyBody
 from api.shop_buy_handler import shop_buy_inner
@@ -86,25 +87,28 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
         """Бесплатный ящик для Premium-игроков (1 раз в день)."""
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        prem = db.get_premium_status(uid)
-        if not prem.get("is_active"):
-            return {"ok": False, "reason": "Требуется Premium"}
-        today = datetime.utcnow().date().isoformat()
-        conn = db.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT premium_box_claimed FROM players WHERE user_id = ?", (uid,))
-        row = cursor.fetchone()
-        conn.close()
-        if row and row["premium_box_claimed"] == today:
-            return {"ok": False, "reason": "Ящик уже получен сегодня. Возвращайтесь завтра!"}
-        conn = db.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("UPDATE players SET premium_box_claimed = ? WHERE user_id = ?", (today, uid))
-        conn.commit()
-        conn.close()
-        result = _open_loot_box("box_common", db, uid)
-        result["free"] = True
-        result["box_opened"] = True
-        return result
+        _rl_check(uid, "premium_box", max_hits=2, window_sec=10)
+        async with get_user_lock(uid):
+            prem = db.get_premium_status(uid)
+            if not prem.get("is_active"):
+                return {"ok": False, "reason": "Требуется Premium"}
+            today = datetime.utcnow().date().isoformat()
+            # Атомарный UPDATE: WHERE premium_box_claimed != today защищает от дублей
+            conn = db.get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "UPDATE players SET premium_box_claimed = ? "
+                "WHERE user_id = ? AND (premium_box_claimed IS NULL OR premium_box_claimed != ?)",
+                (today, uid, today),
+            )
+            rows = cursor.rowcount
+            conn.commit()
+            conn.close()
+            if rows == 0:
+                return {"ok": False, "reason": "Ящик уже получен сегодня. Возвращайтесь завтра!"}
+            result = _open_loot_box("box_common", db, uid)
+            result["free"] = True
+            result["box_opened"] = True
+            return result
 
     app.include_router(router)

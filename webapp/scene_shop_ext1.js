@@ -68,6 +68,7 @@ Object.assign(ShopScene.prototype, {
 
   /* ── Покупка ─────────────────────────────────────────── */
   async _doBuy(item) {
+    if (_globalCooldown('shop_buy')) return;
     if (this._buying) return;
     this._buying = true;
     try {
@@ -76,6 +77,7 @@ Object.assign(ShopScene.prototype, {
         tg?.HapticFeedback?.notificationOccurred('success');
         Sound.buy();
         if (res.player) State.player = res.player;
+        _globalCooldown('shop_buy'); // обновляем cooldown после успеха
         let msg = `✅ Куплено: ${item.name}`;
         if (res.hp_restored > 0) msg = `❤️ +${res.hp_restored} HP восстановлено!`;
         if (res.gold_gained)     msg = `💰 +${res.gold_gained} золота!`;
@@ -89,10 +91,12 @@ Object.assign(ShopScene.prototype, {
         const detail = res._httpStatus ? ` (HTTP ${res._httpStatus})` : '';
         this._toast(`❌ ${res.reason || res.detail || 'Ошибка'}${detail}`);
         this._buying = false;
+        _globalCooldownReset('shop_buy');
       }
     } catch(e) {
       this._toast(`❌ Сеть: ${e.message || 'нет соединения'}`);
       this._buying = false;
+      _globalCooldownReset('shop_buy');
     }
   },
 

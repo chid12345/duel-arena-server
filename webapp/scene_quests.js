@@ -142,6 +142,7 @@ class QuestsScene extends Phaser.Scene {
       clZ.on('pointerdown', () => { _drawCl(true); tg?.HapticFeedback?.impactOccurred('heavy'); });
       clZ.on('pointerout',  () => _drawCl(false));
       clZ.on('pointerup',   () => {
+        if (_globalCooldown('claim')) return;
         if (this._claimBusy) return;
         this._claimBusy = true;
         clZ.disableInteractive();

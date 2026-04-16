@@ -1,7 +1,8 @@
-"""Инфраструктура TMA API: rate limit, кэш профиля, WebSocket-менеджер."""
+"""Инфраструктура TMA API: rate limit, кэш профиля, WebSocket-менеджер, user-lock."""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from typing import Any, Dict
@@ -49,6 +50,36 @@ def _rl_check(uid: int, endpoint: str, max_hits: int, window_sec: int) -> None:
 
 def rate_limiter_cleanup() -> None:
     _rl.cleanup()
+
+
+# ── Per-user asyncio lock (защита от параллельных покупок одного юзера) ──
+class _UserLock:
+    """Один asyncio.Lock на каждого uid — гарантирует строго последовательную обработку."""
+
+    def __init__(self) -> None:
+        self._locks: dict[int, asyncio.Lock] = {}
+
+    def get(self, uid: int) -> asyncio.Lock:
+        lock = self._locks.get(uid)
+        if lock is None:
+            lock = asyncio.Lock()
+            self._locks[uid] = lock
+        return lock
+
+    def cleanup(self) -> None:
+        self._locks = {k: v for k, v in self._locks.items() if v.locked()}
+
+
+_user_locks = _UserLock()
+
+
+def get_user_lock(uid: int) -> asyncio.Lock:
+    """Вернуть asyncio.Lock для данного uid (для использования через `async with`)."""
+    return _user_locks.get(uid)
+
+
+def user_lock_cleanup() -> None:
+    _user_locks.cleanup()
 
 
 _PLAYER_CACHE_TTL = 20.0   # было 3 с → 20 с (безопасно: инвалидируем при мутациях)

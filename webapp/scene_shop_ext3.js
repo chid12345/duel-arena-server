@@ -6,6 +6,7 @@ Object.assign(ShopScene.prototype, {
 
   /* ── Покупки ─────────────────────────────────────────── */
   async _buyStars(pkg) {
+    if (_globalCooldown('shop_buy')) return;
     if (this._buying) return;
     this._buying = true;
     this._toast('⏳ Открываем оплату...');
@@ -43,6 +44,7 @@ Object.assign(ShopScene.prototype, {
   },
 
   async _buyCrypto(pkg) {
+    if (_globalCooldown('shop_buy')) return;
     if (this._buying) return;
     this._buying = true;
     this._toast('⏳ Создаём счёт...');

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from api.tma_infra import get_user_lock
 from api.shop_helpers import (
     _XP_BOOST_CHARGES,
     _EXCHANGE_GOLD,
@@ -16,14 +17,18 @@ from api.shop_helpers import (
 async def shop_buy_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_CATALOG) -> dict:
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
-    _rl_check(uid, "shop_buy", max_hits=5, window_sec=30)
+    _rl_check(uid, "shop_buy", max_hits=2, window_sec=3)
 
     item = SHOP_CATALOG.get(body.item_id)
     if not item:
         return {"ok": False, "reason": "Товар не найден"}
 
-    iid = body.item_id
+    # Per-user lock: два параллельных запроса не списывают валюту одновременно
+    async with get_user_lock(uid):
+        return _do_buy(db, uid, body.item_id, item)
 
+
+def _do_buy(db, uid: int, iid: str, item: dict) -> dict:
     # === HP зелья (сразу) ===
     if iid == "hp_small":
         r = _buy_hp(db, uid, price=12, pct=0.30)

@@ -144,6 +144,7 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
 
 /* ── Клейм достижения ──────────────────────────────────────── */
 TasksScene.prototype._claimAchievement = function(questKey, tier) {
+  if (_globalCooldown('claim')) return;
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/tasks/claim_achievement', { quest_key: questKey, tier })

@@ -6,6 +6,7 @@ from typing import Any, Dict
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from api.tma_infra import get_user_lock
 from api.tma_player_api import _player_api
 
 
@@ -102,48 +103,52 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": str(e)}
 
     @router.post("/api/tasks/claim_daily")
-    def claim_daily(body: TaskClaimBody):
+    async def claim_daily(body: TaskClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
-        result = db.claim_daily_task(uid, body.task_key)
-        if result.get("ok"):
-            invalidate(uid)
-            player = db.get_or_create_player(uid, "")
-            result["player"] = _player_api(dict(player))
-        return result
+        async with get_user_lock(uid):
+            result = db.claim_daily_task(uid, body.task_key)
+            if result.get("ok"):
+                invalidate(uid)
+                player = db.get_or_create_player(uid, "")
+                result["player"] = _player_api(dict(player))
+            return result
 
     @router.post("/api/tasks/claim_weekly_extra")
-    def claim_weekly_extra(body: TaskClaimBody):
+    async def claim_weekly_extra(body: TaskClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
-        result = db.claim_weekly_extra(uid, body.task_key, _iso_week())
-        if result.get("ok"):
-            invalidate(uid)
-            player = db.get_or_create_player(uid, "")
-            result["player"] = _player_api(dict(player))
-        return result
+        async with get_user_lock(uid):
+            result = db.claim_weekly_extra(uid, body.task_key, _iso_week())
+            if result.get("ok"):
+                invalidate(uid)
+                player = db.get_or_create_player(uid, "")
+                result["player"] = _player_api(dict(player))
+            return result
 
     @router.post("/api/tasks/claim_achievement")
-    def claim_achievement(body: AchClaimBody):
+    async def claim_achievement(body: AchClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
-        result = db.claim_achievement_tier(uid, body.quest_key, body.tier)
-        if result.get("ok"):
-            invalidate(uid)
-            player = db.get_or_create_player(uid, "")
-            result["player"] = _player_api(dict(player))
-        return result
+        async with get_user_lock(uid):
+            result = db.claim_achievement_tier(uid, body.quest_key, body.tier)
+            if result.get("ok"):
+                invalidate(uid)
+                player = db.get_or_create_player(uid, "")
+                result["player"] = _player_api(dict(player))
+            return result
 
     @router.post("/api/tasks/claim_streak")
-    def claim_streak(body: StreakClaimBody):
+    async def claim_streak(body: StreakClaimBody):
         tg = get_user(body.init_data)
         uid = int(tg["id"])
-        result = db.claim_streak_day(uid, body.day_num)
-        if result.get("ok"):
-            invalidate(uid)
-            player = db.get_or_create_player(uid, "")
-            result["player"] = _player_api(dict(player))
-            result["streak"] = db.get_login_streak_status(uid)
-        return result
+        async with get_user_lock(uid):
+            result = db.claim_streak_day(uid, body.day_num)
+            if result.get("ok"):
+                invalidate(uid)
+                player = db.get_or_create_player(uid, "")
+                result["player"] = _player_api(dict(player))
+                result["streak"] = db.get_login_streak_status(uid)
+            return result
 
     app.include_router(router)
