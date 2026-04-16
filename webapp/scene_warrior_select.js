@@ -39,10 +39,10 @@ Object.assign(MenuScene.prototype, {
     });
 
     const types = [
-      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', plus: '+15% урон',        minus: '-8% уворот'   },
-      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#44ff99', plus: '+8% уворот',       minus: '-10% броня'   },
-      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', plus: '+8% крит · ×1.85', minus: '-10% HP'      },
-      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ddcc88', plus: '-10% вх.урон',     minus: '-5% урон'     },
+      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', plus: '+15% урон',        minus: '⚖️ уворот ↓8%'   },
+      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#44ff99', plus: '+8% уворот',       minus: '⚖️ броня ↓10%'   },
+      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', plus: '+8% крит · ×1.85', minus: '⚖️ HP ↓10%'      },
+      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ddcc88', plus: '−10% вх.урон',     minus: '⚖️ урон ↓5%'     },
     ];
 
     const curType = State.player?.warrior_type || 'default';
@@ -64,7 +64,7 @@ Object.assign(MenuScene.prototype, {
       at(txt(this, cx + cw / 2, cy + 60, t.name,   12, '#ffffff',  true).setOrigin(0.5).setDepth(D + 3));
       at(txt(this, cx + cw / 2, cy + 74, t.stat,   10, '#ffffff').setOrigin(0.5).setDepth(D + 3));
       at(txt(this, cx + cw / 2, cy + 88, t.plus,   10, '#44ff88',  true).setOrigin(0.5).setDepth(D + 3));
-      at(txt(this, cx + cw / 2, cy + 103, t.minus, 10, '#ff6655').setOrigin(0.5).setDepth(D + 3));
+      at(txt(this, cx + cw / 2, cy + 103, t.minus, 10, '#ccaa66').setOrigin(0.5).setDepth(D + 3));
       if (sel) at(txt(this, cx + cw - 6, cy + 6, '✓', 13, '#5096ff', true).setOrigin(1, 0).setDepth(D + 3));
 
       // Зона карточки — глубина выше backdrop → получает ввод первой
