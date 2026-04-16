@@ -36,7 +36,8 @@ Object.assign(QuestsScene.prototype, {
                    q.key.includes('endless') ? '🔥' : q.key.includes('streak') ? '🔥' : '📌';
       txt(this, 22, qy+32, icon, 18).setOrigin(0.5);
       txt(this, 40, qy+9,  q.label, 11, done ? (isEndless ? '#ff8855' : '#3cc864') : '#ccccee', done);
-      txt(this, 40, qy+24, `${Math.min(q.current, q.target)} / ${q.target}`, 9, '#ddddff', true);
+      const qPct = Math.round(Math.min(1, q.current / Math.max(1, q.target)) * 100);
+      txt(this, 40, qy+24, `${Math.min(q.current, q.target)} / ${q.target}  ·  ${qPct}%`, 9, done ? '#ffd700' : '#ffe888', true);
       makeBar(this, 40, qy+38, W-160, 4, Math.min(1, q.current/q.target),
         isEndless ? 0xdc3c46 : (done ? C.green : C.blue), C.dark, 3);
 

@@ -98,7 +98,8 @@ class QuestsScene extends Phaser.Scene {
       bg.strokeRoundedRect(tx, ty2, tw, th, 10);
       txt(this, tx+18, ty2+th/2, task.icon, 19).setOrigin(0.5);
       txt(this, tx+36, ty2+9,  task.label, 12, ok ? '#3cc864' : '#ccccee', ok);
-      txt(this, tx+36, ty2+24, `${Math.min(task.cur,task.max)} / ${task.max}`, 10, '#ddddff', true);
+      const tPct = Math.round(Math.min(1, task.cur / Math.max(1, task.max)) * 100);
+      txt(this, tx+36, ty2+24, `${Math.min(task.cur,task.max)} / ${task.max}  ·  ${tPct}%`, 10, ok ? '#ffd700' : '#ffe888', true);
       makeBar(this, tx+36, ty2+40, tw-80, 4, Math.min(1, task.cur/task.max), task.color, C.dark, 3);
       txt(this, tw, ty2+th/2, ok ? '✅' : '🔒', 15).setOrigin(1, 0.5);
     });
@@ -114,7 +115,8 @@ class QuestsScene extends Phaser.Scene {
     eBg.strokeRoundedRect(8, y, W-16, 52, 10);
     txt(this, 22, y+26, '🔥', 18).setOrigin(0.5);
     txt(this, 38, y+9, 'Победи 3 врага в Натиске', 12, eDone ? '#ff8855' : '#ccccee', eDone);
-    txt(this, 38, y+23, `${Math.min(eWins,3)} / 3`, 10, '#ddddff', true);
+    const ePct = Math.round(Math.min(1, eWins / 3) * 100);
+    txt(this, 38, y+23, `${Math.min(eWins,3)} / 3  ·  ${ePct}%`, 10, eDone ? '#ffd700' : '#ffe888', true);
     makeBar(this, 38, y+38, W-98, 4, Math.min(1, eWins/3), 0xdc3c46, C.dark, 3);
     txt(this, W-14, y+24, eDone ? '✅' : '🔒', 15).setOrigin(1, 0.5);
     if (eDone) txt(this, W-14, y+8, '+80🪙 +1💎', 9, '#ff8855', true).setOrigin(1, 0);
