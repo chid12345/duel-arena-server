@@ -26,6 +26,7 @@ class UsersExpLevelMixin:
 
         Возвращает {"ok": True, "leveled": bool, "new_level": int, ...}.
         Используется квестами/заданиями/battle pass вместо прямого UPDATE exp=exp+?.
+        При exp_add=0 и без левелапа — НЕ пишет в БД (safe для resync-проверок).
         """
         conn = self.get_connection()
         try:
@@ -38,14 +39,15 @@ class UsersExpLevelMixin:
             row = cur.fetchone()
             if not row:
                 return {"ok": False}
-            level = max(1, int(row["level"] or PLAYER_START_LEVEL))
+            orig_level = max(1, int(row["level"] or PLAYER_START_LEVEL))
+            level = orig_level
             exp = int(row["exp"] or 0) + int(exp_add)
             mask = int(row["exp_milestones"] or 0)
             free_stats = int(row["free_stats"] or 0)
             gold = int(row["gold"] or 0) + int(gold_add)
             diamonds = int(row["diamonds"] or 0) + int(diamonds_add)
             max_hp = int(row["max_hp"] or PLAYER_START_MAX_HP)
-            current_hp = int(row["current_hp"] or max_hp)
+            current_hp = max_hp if row["current_hp"] is None else int(row["current_hp"])
 
             leveled = False
             while level < MAX_LEVEL:
@@ -75,14 +77,20 @@ class UsersExpLevelMixin:
                 free_stats += stats_when_reaching_level(level)
                 diamonds += diamonds_when_reaching_level(level)
 
-            cur.execute(
-                "UPDATE players SET level=?, exp=?, exp_milestones=?, free_stats=?, "
-                "gold=?, diamonds=?, max_hp=?, current_hp=?, last_hp_regen=?, "
-                "last_active=CURRENT_TIMESTAMP WHERE user_id=?",
-                (level, exp, mask, free_stats, gold, diamonds, max_hp, current_hp,
-                 datetime.utcnow().isoformat(), user_id),
+            # Пишем в БД только если что-то реально изменилось
+            has_changes = (
+                exp_add > 0 or gold_add > 0 or diamonds_add > 0
+                or leveled or level != orig_level
             )
-            conn.commit()
+            if has_changes:
+                cur.execute(
+                    "UPDATE players SET level=?, exp=?, exp_milestones=?, free_stats=?, "
+                    "gold=?, diamonds=?, max_hp=?, current_hp=?, last_hp_regen=?, "
+                    "last_active=CURRENT_TIMESTAMP WHERE user_id=?",
+                    (level, exp, mask, free_stats, gold, diamonds, max_hp, current_hp,
+                     datetime.utcnow().isoformat(), user_id),
+                )
+                conn.commit()
             return {"ok": True, "leveled": leveled, "new_level": level,
                     "gold": gold, "diamonds": diamonds, "xp": exp}
         finally:
