@@ -26,6 +26,8 @@ class StatsScene extends Phaser.Scene {
     this._buildAvatarBtn(W, H);
     this._buildBackBtn(W, H);
 
+    if (typeof ScreenHints !== 'undefined') ScreenHints.show('stats');
+
     // После restart от wardrobe-действия — открыть гардероб заново
     const d = this._initData;
     if (d.reopenWardrobe && d.wardrobePayload) {

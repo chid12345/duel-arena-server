@@ -23,6 +23,7 @@ class TasksScene extends Phaser.Scene {
     this._buildTabBar(W);
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     this._loadData();
+    if (typeof ScreenHints !== 'undefined') ScreenHints.show('tasks');
   }
 
   async _loadData() {

@@ -30,6 +30,7 @@ class ShopScene extends Phaser.Scene {
 
     this._buildBalance(W);
     this._buildItems(W, H);
+    if (typeof ScreenHints !== 'undefined') ScreenHints.show('shop');
   }
 
   /* ── Вкладки ─────────────────────────────────────────── */

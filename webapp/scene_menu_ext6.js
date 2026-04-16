@@ -63,6 +63,7 @@ Object.assign(MenuScene.prototype, {
       btn.labelTxt.setStyle({ color: active ? activeCol : inactiveCol });
     });
     this._activeTab = key;
+    if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);
   },
 
 });

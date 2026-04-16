@@ -27,6 +27,8 @@ class RatingScene extends Phaser.Scene {
 
     this._buildTabBar(W);
 
+    if (typeof ScreenHints !== 'undefined') ScreenHints.show('rating');
+
     if (this._tab === 'pvp') {
       await this._buildPvpTab(W, H);
     } else if (this._tab === 'natisk') {
