@@ -59,5 +59,15 @@ class ClanMetaBody(BaseModel):
     closed: int | None = None
 
 
+class ClanWarChallengeBody(BaseModel):
+    init_data: str
+    target_clan_id: int
+
+
+class ClanWarDecideBody(BaseModel):
+    init_data: str
+    war_id: int
+
+
 class ReferralWithdrawBody(BaseModel):
     init_data: str

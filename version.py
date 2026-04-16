@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.7.28"
-VERSION_LABEL = "v1.7.28 — refactor: распил end_battle_finish.py 248→192 (вынесены cleanup/persist/log/cache в end_battle_finalize)"
+VERSION = "1.7.29"
+VERSION_LABEL = "v1.7.29 — Clan v2 step 14 (FINAL): клан-войны (вызов клана→24ч→200🪙+2💎 каждому победителю)"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.62"
+GAME_VERSION = "5.63"

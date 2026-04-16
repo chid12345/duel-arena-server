@@ -160,6 +160,12 @@ def _build_app(bot_count: int) -> Application:
             clan_season_rotate_job, interval=3600, first=120,
             name="clan_season_rotate",
         )
+        # Финализация клан-войн (24ч ends_at) — раз в 10 минут
+        from jobs.clan_wars_finalize import clan_wars_finalize_job
+        application.job_queue.run_repeating(
+            clan_wars_finalize_job, interval=600, first=180,
+            name="clan_wars_finalize",
+        )
 
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 

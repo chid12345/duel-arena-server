@@ -49,18 +49,19 @@ Object.assign(ClanScene.prototype, {
     txt(this, pillX + 35, pillY + 8, `🏆 ${clan.wins}`, 9, '#ffffff', true).setOrigin(0.5);
     y += cardH + 8;
 
-    /* Навигация: Сезон / Ачивки / История */
-    const navH = 30, navW = Math.floor((W - 32 - 12) / 3);
+    /* Навигация: Сезон / Войны / Награды / История (2x2) */
+    const navH = 28, navW = Math.floor((W - 32 - 18) / 4);
     [
       { lbl: '🏆 Сезон',   sub: 'season',       fill: 0x2a2010, stroke: 0xffc83c, col: '#ffc83c' },
+      { lbl: '⚔️ Войны',   sub: 'wars',         fill: 0x2a1416, stroke: 0xc06870, col: '#ffd166' },
       { lbl: '🏅 Награды', sub: 'achievements', fill: 0x1c2238, stroke: 0xffd166, col: '#ffd166' },
       { lbl: '📜 История', sub: 'history',      fill: 0x141720, stroke: 0x4a5070, col: '#a8c4ff' },
     ].forEach((b, i) => {
       const nx = 16 + i * (navW + 6);
       const ng = this.add.graphics();
-      ng.fillStyle(b.fill, 1); ng.fillRoundedRect(nx, y, navW, navH, 8);
-      ng.lineStyle(1, b.stroke, 0.7); ng.strokeRoundedRect(nx, y, navW, navH, 8);
-      txt(this, nx + navW/2, y + navH/2, b.lbl, 11, b.col, true).setOrigin(0.5);
+      ng.fillStyle(b.fill, 1); ng.fillRoundedRect(nx, y, navW, navH, 7);
+      ng.lineStyle(1, b.stroke, 0.7); ng.strokeRoundedRect(nx, y, navW, navH, 7);
+      txt(this, nx + navW/2, y + navH/2, b.lbl, 10, b.col, true).setOrigin(0.5);
       this.add.zone(nx, y, navW, navH).setOrigin(0).setInteractive({ useHandCursor: true })
         .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.restart({ sub: b.sub }); });
     });

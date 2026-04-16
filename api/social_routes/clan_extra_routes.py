@@ -1,10 +1,12 @@
-"""Доп-эндпоинты клана: сезон, достижения, история."""
+"""Доп-эндпоинты клана: сезон, достижения, история, войны."""
 
 from __future__ import annotations
 
 from typing import Any, Dict
 
 from fastapi import APIRouter
+
+from api.social_routes.models import ClanWarChallengeBody, ClanWarDecideBody
 
 
 def attach_social_clan_extra(router: APIRouter, ctx: Dict[str, Any]) -> None:
@@ -45,3 +47,27 @@ def attach_social_clan_extra(router: APIRouter, ctx: Dict[str, Any]) -> None:
         if not cid:
             return {"ok": False, "reason": "no clan"}
         return {"ok": True, "events": db.get_clan_history(cid, limit=int(limit))}
+
+    @router.get("/api/clan/war")
+    async def clan_war_info(init_data: str):
+        tg_user = get_user_from_init_data(init_data)
+        p = db.get_or_create_player(int(tg_user["id"]), "")
+        cid = int(p.get("clan_id") or 0)
+        if not cid:
+            return {"ok": False, "reason": "no clan"}
+        return {"ok": True, "war": db.get_active_war_for_clan(cid), "my_clan_id": cid}
+
+    @router.post("/api/clan/war/challenge")
+    async def clan_war_challenge(body: ClanWarChallengeBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        return db.challenge_clan_to_war(int(tg_user["id"]), int(body.target_clan_id))
+
+    @router.post("/api/clan/war/accept")
+    async def clan_war_accept(body: ClanWarDecideBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        return db.accept_clan_war(int(tg_user["id"]), int(body.war_id))
+
+    @router.post("/api/clan/war/decline")
+    async def clan_war_decline(body: ClanWarDecideBody):
+        tg_user = get_user_from_init_data(body.init_data)
+        return db.decline_clan_war(int(tg_user["id"]), int(body.war_id))
