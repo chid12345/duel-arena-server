@@ -129,8 +129,11 @@ class SocialClanMixin:
             return {"ok": False, "reason": "Клан полон (макс. 20 человек)"}
         cursor.execute("INSERT INTO clan_members (user_id, clan_id) VALUES (?, ?)", (user_id, clan_id))
         cursor.execute("UPDATE players SET clan_id = ? WHERE user_id = ?", (clan_id, user_id))
-        conn.commit()
-        conn.close()
+        cursor.execute("SELECT username FROM players WHERE user_id = ?", (user_id,))
+        uname = (cursor.fetchone() or {}).get("username") or f"User{user_id}"
+        conn.commit(); conn.close()
+        try: self.log_clan_event(int(clan_id), "join", actor_id=user_id, actor_name=uname)
+        except Exception: pass
         return {"ok": True, "clan_name": clan["name"]}
 
     def leave_clan(self, user_id: int) -> Dict[str, Any]:
@@ -147,10 +150,13 @@ class SocialClanMixin:
         if clan and clan["leader_id"] == user_id:
             conn.close()
             return {"ok": False, "reason": "Лидер не может покинуть клан. Сначала передайте лидерство."}
+        cursor.execute("SELECT username FROM players WHERE user_id = ?", (user_id,))
+        uname = (cursor.fetchone() or {}).get("username") or f"User{user_id}"
         cursor.execute("DELETE FROM clan_members WHERE user_id = ?", (user_id,))
         cursor.execute("UPDATE players SET clan_id = NULL WHERE user_id = ?", (user_id,))
-        conn.commit()
-        conn.close()
+        conn.commit(); conn.close()
+        try: self.log_clan_event(int(clan_id), "leave", actor_id=user_id, actor_name=uname)
+        except Exception: pass
         return {"ok": True}
 
     def get_clan_info(self, clan_id: int) -> Optional[Dict[str, Any]]:

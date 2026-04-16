@@ -45,6 +45,16 @@ class ClanScene extends Phaser.Scene {
       this._renderSeason(W, H);
       return;
     }
+    if (this._subview === 'achievements') {
+      this._loading?.destroy();
+      this._renderAchievements(W, H);
+      return;
+    }
+    if (this._subview === 'history') {
+      this._loading?.destroy();
+      this._renderHistory(W, H);
+      return;
+    }
     get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });

@@ -55,6 +55,11 @@ def apply_clan_win_bonus(db: Any, user_id: int | None, base_gold: int) -> int:
         )
         conn.commit()
         conn.close()
+        # Проверка достижений (отдельная транзакция, не критично если упадёт)
+        try:
+            db.check_clan_achievements(int(clan_id))
+        except Exception:
+            pass
         bonus = (base_gold * CLAN_GOLD_BONUS_PCT) // 100
         return base_gold + max(1, bonus) if bonus > 0 else base_gold + 1
     except Exception as exc:
