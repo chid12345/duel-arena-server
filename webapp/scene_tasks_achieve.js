@@ -102,7 +102,9 @@ TasksScene.prototype._buildAchieveTab = function(achievements, W, H, startY) {
       const pct = Math.min(1, Math.max(0, (a.current - a.prev_target) / Math.max(1, a.next_target - a.prev_target)));
 
       container.add(txt(this, rcCX, y + 12, `Ур. ${a.claimed_tier}/${a.max_tier}`, 9, '#ddddff').setOrigin(0.5, 0));
-      container.add(txt(this, PAD + 6, y + 28, `${dispCur} / ${a.next_target}`, 10, '#ffffff', true).setOrigin(0, 0));
+      const pctInt = Math.round(pct * 100);
+      const cntColor = canClaim ? '#ffd700' : '#ffe888';
+      container.add(txt(this, PAD + 6, y + 28, `${dispCur} / ${a.next_target}  ·  ${pctInt}%`, 11, cntColor, true).setOrigin(0, 0));
       container.add(txt(this, rcCX, y + 28, `+${a.next_gold}💰`, 11, canClaim ? '#ffd700' : '#ddddff', true).setOrigin(0.5, 0));
       container.add(makeBar(this, PAD + 6, y + 44, barW, 6, pct, canClaim ? 0x44aaee : C.gold, 0x1a1a3a, 3));
       container.add(txt(this, PAD + 6, y + 68, a.desc, 9, '#7799bb').setOrigin(0, 0));
