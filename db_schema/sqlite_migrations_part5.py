@@ -19,7 +19,6 @@ MIGRATIONS_PART5 = [
         "CREATE INDEX IF NOT EXISTS idx_battle_stats_type_date ON battle_stats (battle_type, created_at)",
     ]),
     ("2026_04_16_002_migrate_neutral_to_default", [
-        # neutral теперь полноценный класс (Легионер) — миграция больше не нужна
-        "SELECT 1",
+        "UPDATE players SET warrior_type = 'default' WHERE warrior_type = 'neutral'",
     ]),
 ]

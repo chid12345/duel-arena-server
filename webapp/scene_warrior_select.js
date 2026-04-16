@@ -39,10 +39,9 @@ Object.assign(MenuScene.prototype, {
     });
 
     const types = [
-      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', plus: '+15% урон',        minus: '⚖️ уворот ↓8%'   },
+      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', plus: '+12% урон',        minus: '⚖️ уворот ↓8%'   },
       { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#44ff99', plus: '+8% уворот',       minus: '⚖️ броня ↓10%'   },
-      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', plus: '+8% крит · ×1.85', minus: '⚖️ HP ↓10%'      },
-      { key: 'neutral', face: 'warrior_neutral_face', name: 'Легионер',     stat: '🛡 Нейтрал',  col: '#ddcc88', plus: '−10% вх.урон',     minus: '⚖️ урон ↓5%'     },
+      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', plus: '+5% крит · ×1.65', minus: '⚖️ HP ↓10%'      },
     ];
 
     const curType = State.player?.warrior_type || 'default';

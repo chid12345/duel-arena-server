@@ -26,7 +26,7 @@ def register_stats_routes(app: Any, db: Any) -> None:
         error = report.pop("_error", None)
 
         TYPE_LABELS = {"pvp": "PvP", "pve": "Бот", "endless": "Натиск", "titan": "Башня Титанов"}
-        WTYPE_LABELS = {"tank": "Берсерк", "agile": "Тень", "crit": "Хаос-Рыцарь", "neutral": "Легионер", "default": "Без класса"}
+        WTYPE_LABELS = {"tank": "Берсерк", "agile": "Тень", "crit": "Хаос-Рыцарь", "default": "Без класса"}
 
         rows_html = ""
         for btype in ("pvp", "pve", "endless", "titan"):

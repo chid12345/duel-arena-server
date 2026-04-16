@@ -160,12 +160,11 @@ Object.assign(StatsScene.prototype, {
 
     /* ── Воин-бейдж ────────────────────────────────────────── */
     const _wtMap = {
-      tank:    { name: 'Берсерк',       bonus: 'урон ↑15%  ⚖️ уворот ↓8%',        icon: '⚔️', col: 0x4a1208, tcol: '#ff9977' },
+      tank:    { name: 'Берсерк',       bonus: 'урон ↑12%  ⚖️ уворот ↓8%',        icon: '⚔️', col: 0x4a1208, tcol: '#ff9977' },
       agile:   { name: 'Теневой Вихрь', bonus: 'уворот ↑8%  ⚖️ броня ↓10%',      icon: '💨', col: 0x0a2e18, tcol: '#44ff99' },
-      crit:    { name: 'Хаос-Рыцарь',   bonus: 'крит ↑8% · ×1.85  ⚖️ HP ↓10%',  icon: '💥', col: 0x220a3a, tcol: '#cc77ff' },
-      neutral: { name: 'Легионер',       bonus: 'вх.урон ↓10%  ⚖️ урон ↓5%',     icon: '🛡', col: 0x1e1a08, tcol: '#ccbb77' },
+      crit:    { name: 'Хаос-Рыцарь',   bonus: 'крит ↑5% · ×1.65  ⚖️ HP ↓10%',  icon: '💥', col: 0x220a3a, tcol: '#cc77ff' },
     };
-    const _wt = _wtMap[p.warrior_type] || _wtMap.neutral;
+    const _wt = _wtMap[p.warrior_type] || _wtMap.tank;
     const wbY = cellY + cellH + 7;
     const wbH = 28;
     const wbG = this.add.graphics();
