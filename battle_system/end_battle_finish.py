@@ -63,6 +63,9 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         exp_patch, did_level = bs._exp_progression_updates(pl, exp_reward, max_level_ups=1)
         if did_level:
             level_up_level = exp_patch["level"]
+        # HP победителя: при левелапе — полное восстановление, иначе — боевое HP
+        battle_hp = max(0, int(winner.get("current_hp", 0)))
+        winner_hp = exp_patch["current_hp"] if did_level else min(battle_hp, exp_patch["max_hp"])
         winner_stats = {
             "wins": winner_live.get("wins", 0) + 1,
             "gold": exp_patch["gold"],
@@ -72,7 +75,7 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
             "free_stats": exp_patch["free_stats"],
             "exp_milestones": exp_patch["exp_milestones"],
             "max_hp": exp_patch["max_hp"],
-            "current_hp": exp_patch["current_hp"],
+            "current_hp": winner_hp,
             "rating": int(winner_live.get("rating", 1000)) + elo_delta_w,
             "win_streak": new_win_streak,
         }
@@ -80,14 +83,18 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     defeat_gold = 0 if is_test else max(1, int(gold_reward * 0.10))
 
     loser_stats = None
+    loser_did_level = False
     if not is_test and loser_user_id is not None and not loser_locked:
         loser_pl = dict(loser_live)
         loser_pl["gold"] = max(0, loser_pl.get("gold", 0) + defeat_gold)
-        loser_exp_patch, _ = bs._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)
+        loser_exp_patch, loser_did_level = bs._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)
+        # HP проигравшего: при левелапе — полное восстановление, иначе — боевое HP
+        loser_battle_hp = max(0, int(loser.get("current_hp", 0)))
+        loser_hp = loser_exp_patch["current_hp"] if loser_did_level else loser_battle_hp
         loser_stats = {
             "losses": loser_live.get("losses", 0) + 1,
             "win_streak": 0,
-            "current_hp": max(0, int(loser.get("current_hp", 0))),
+            "current_hp": loser_hp,
             "rating": max(100, int(loser_live.get("rating", 1000)) + elo_delta_l),
             "exp": loser_exp_patch["exp"],
             "exp_milestones": loser_exp_patch["exp_milestones"],
@@ -197,21 +204,21 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
 
     event_name = "battle_test_ended" if is_test else "battle_ended"
     logger.info("event=%s winner_id=%s rounds=%s duration_ms=%s", event_name, winner_id, n_rounds, duration_ms)
-    asyncio.create_task(
-        bs._persist_battle_writes(
-            winner_user_id,
-            loser_user_id,
-            winner_stats,
-            loser_stats,
-            winner_locked,
-            loser_locked,
-            battle_data,
-            battle_mode,
-            is_test,
-            winner_id,
-            n_rounds,
-            duration_ms,
-        )
+    # await вместо fire-and-forget: БД обновляется ДО ответа пользователю,
+    # иначе профиль показывает старые данные (XP/уровень не сохранялись вовремя).
+    await bs._persist_battle_writes(
+        winner_user_id,
+        loser_user_id,
+        winner_stats,
+        loser_stats,
+        winner_locked,
+        loser_locked,
+        battle_data,
+        battle_mode,
+        is_test,
+        winner_id,
+        n_rounds,
+        duration_ms,
     )
 
     return result
