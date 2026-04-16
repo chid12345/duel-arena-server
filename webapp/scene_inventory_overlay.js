@@ -59,6 +59,8 @@
   StatsScene.prototype._openInventoryPanel = async function() {
     if (this._invBusy) return;
     this._invBusy = true;
+    // Сброс счётчика "новых покупок" магазина при любом входе в инвентарь
+    try { localStorage.removeItem('shop_inv_new_count'); } catch(_) {}
     let data;
     try { data = await get('/api/shop/inventory'); }
     catch { this._invBusy = false; this._showToast('❌ Нет соединения'); return; }
