@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.7.02"
-VERSION_LABEL = "v1.7.02 — legacy quests: counter with pct% to match new task cards"
+VERSION = "1.7.03"
+VERSION_LABEL = "v1.7.03 — hero tab: expandable warrior badge with full bonuses panel"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.36"
+GAME_VERSION = "5.37"

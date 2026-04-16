@@ -158,22 +158,8 @@ Object.assign(StatsScene.prototype, {
 
     this._refreshBuffDisplay();
 
-    /* ── Воин-бейдж ────────────────────────────────────────── */
-    const _wtMap = {
-      tank:    { name: 'Берсерк',       bonus: 'урон ↑12%  ⚖️ уворот ↓8%',        icon: '⚔️', col: 0x4a1208, tcol: '#ff9977' },
-      agile:   { name: 'Теневой Вихрь', bonus: 'уворот ↑8%  ⚖️ броня ↓10%',      icon: '💨', col: 0x0a2e18, tcol: '#44ff99' },
-      crit:    { name: 'Хаос-Рыцарь',   bonus: 'крит ↑5% · ×1.65  ⚖️ HP ↓10%',  icon: '💥', col: 0x220a3a, tcol: '#cc77ff' },
-    };
-    const _wt = _wtMap[p.warrior_type] || _wtMap.tank;
-    const wbY = cellY + cellH + 7;
-    const wbH = 28;
-    const wbG = this.add.graphics();
-    wbG.fillStyle(_wt.col, 0.95);
-    wbG.fillRoundedRect(8, wbY, W - 16, wbH, 8);
-    wbG.lineStyle(1, 0xffffff, 0.08);
-    wbG.strokeRoundedRect(8, wbY, W - 16, wbH, 8);
-    txt(this, W / 2, wbY + wbH / 2,
-      `${_wt.icon}  ${_wt.name}  ·  ${_wt.bonus}`, 11, _wt.tcol, true).setOrigin(0.5);
+    /* ── Воин-бейдж (раскрывающаяся панель бонусов) ─ */
+    this._buildWarriorBadge(W, cellY + cellH + 7);
   },
 
 });
