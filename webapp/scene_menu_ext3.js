@@ -17,11 +17,13 @@ Object.assign(MenuScene.prototype, {
         return;
       }
       if (msg.event === 'challenge_incoming') {
+        this._drawChallengesBadge(true);
         this._showIncomingChallenge(msg.challenge);
         return;
       }
       if (msg.event === 'challenge_declined') {
         this._toast('🚫 Вызов отклонён');
+        this._refreshChallengesBadge();
         return;
       }
       if (msg.event === 'level_up') {
@@ -81,7 +83,9 @@ Object.assign(MenuScene.prototype, {
   async _checkIncomingChallenge() {
     try {
       const r = await get('/api/battle/challenge/pending');
-      if (r.ok && r.pending && r.challenge) this._showIncomingChallenge(r.challenge);
+      const has = !!(r && r.ok && r.pending);
+      this._drawChallengesBadge(has);
+      if (has && r.challenge) this._showIncomingChallenge(r.challenge);
     } catch (_) {}
   },
 
@@ -92,6 +96,7 @@ Object.assign(MenuScene.prototype, {
     const respond = async (accept) => {
       try {
         const res = await post('/api/battle/challenge/respond', { challenge_id: ch.id, accept: !!accept });
+        this._drawChallengesBadge(false);
         if (!res.ok) { this._toast('❌ Вызов устарел или недоступен'); return; }
         if (!accept) { this._toast('🚫 Вызов отклонён'); return; }
         if (res.battle) {
@@ -118,21 +123,22 @@ Object.assign(MenuScene.prototype, {
     }
   },
 
-  async _onChallengeByNick() {
-    const nickRaw = window.prompt('Введите ник соперника (без @):', '');
-    if (nickRaw == null) return;
-    const nickname = (nickRaw || '').trim().replace(/^@+/, '');
-    if (!nickname) {
-      this._toast('❌ Ник не указан');
-      return;
-    }
+  _onChallengeByNick() {
+    this._promptNickname((raw) => {
+      if (raw == null) return;
+      const nickname = (raw || '').trim().replace(/^@+/, '');
+      if (!nickname) { this._toast('❌ Ник не указан'); return; }
+      this._sendChallengeByNick(nickname);
+    });
+  },
+
+  async _sendChallengeByNick(nickname) {
     this._toast('📨 Отправляем вызов...');
     try {
       const res = await post('/api/battle/challenge/send', { nickname });
       if (!res.ok) {
         if (res.reason === 'multiple_candidates' && Array.isArray(res.candidates) && res.candidates.length) {
-          const list = res.candidates.slice(0, 5).map(c => `@${c.username} (ур.${c.level}, ⭐${c.rating})`).join('\n');
-          tg?.showAlert?.(`Найдено несколько игроков:\n${list}\n\nВведи точный ник.`);
+          this._showCandidatesPopup(res.candidates, (picked) => this._sendChallengeByNick(picked));
           return;
         }
         const m = {
