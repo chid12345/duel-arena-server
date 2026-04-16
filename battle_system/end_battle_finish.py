@@ -133,8 +133,13 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         "details": {
             "rounds": [vars(r) for r in battle["rounds"]],
             "battle_log": battle["battle_log"],
+            "webapp_log": list(battle.get("webapp_log", [])),
             "mode": battle_mode,
             "mode_meta": mode_meta,
+            "opponent_names": {
+                "p1": bs._entity_name(battle["player1"]),
+                "p2": bs._entity_name(battle["player2"]),
+            },
         },
     }
 

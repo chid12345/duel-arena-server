@@ -6,6 +6,7 @@ from typing import Any, Callable
 
 from fastapi import FastAPI
 
+from api.tma_battle_api import _invert_webapp_log
 from api.tma_weekly_quests import _iso_week_key
 
 
@@ -63,6 +64,28 @@ def register_tma_battle_read_routes(
             },
             "player": _player_api(dict(player)),
         }
+
+    @app.get("/api/battle/history")
+    async def battle_history(init_data: str, limit: int = 20):
+        """Список последних боёв игрока (карточки для UI-истории)."""
+        tg_user = get_user_from_init_data(init_data)
+        uid = int(tg_user["id"])
+        lim = max(1, min(50, int(limit)))
+        items = db.get_recent_battles(uid, limit=lim)
+        return {"ok": True, "items": items}
+
+    @app.get("/api/battle/replay/{battle_id}")
+    async def battle_replay(battle_id: int, init_data: str):
+        """Полный реплей боя (webapp_log) — только если игрок был участником."""
+        tg_user = get_user_from_init_data(init_data)
+        uid = int(tg_user["id"])
+        replay = db.get_battle_replay(int(battle_id), uid)
+        if not replay:
+            return {"ok": False, "reason": "not_found_or_forbidden"}
+        # webapp_log хранится от лица P1. Для P2 — инвертируем «Вы/Враг».
+        if not replay.get("is_p1"):
+            replay["webapp_log"] = _invert_webapp_log(replay.get("webapp_log") or [])
+        return {"ok": True, "replay": replay}
 
     @app.get("/api/pvp/top")
     async def pvp_top(limit: int = 30):

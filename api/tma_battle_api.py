@@ -2,10 +2,28 @@
 
 from __future__ import annotations
 
+import re
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from api.tma_player_api import _premium_fields
+
+# Строки webapp_log всегда пишутся от лица P1: "Р{n} Вы→{p1_zone} {p1_mark} · Враг→{p2_zone} {p2_mark}".
+# Для P2 нужно поменять "Вы" и "Враг" местами.
+_RE_WEBAPP_ROUND = re.compile(r"^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$")
+
+
+def _invert_webapp_log(lines: List[str]) -> List[str]:
+    """Инверсия «Вы/Враг» в webapp_log — для показа с перспективы P2."""
+    out: List[str] = []
+    for line in lines or []:
+        m = _RE_WEBAPP_ROUND.match(str(line))
+        if not m:
+            out.append(line)
+            continue
+        rn, z1, mark1, z2, mark2 = m.groups()
+        out.append(f"Р{rn} Вы→{z2} {mark2.strip()} · Враг→{z1} {mark1.strip()}")
+    return out
 
 
 def _battle_state_api(user_id: int) -> Optional[dict]:
@@ -62,9 +80,19 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),
-        "combat_log": (b.get("webapp_log") or b.get("combat_log_lines", []) if b else [])[-6:],
+        "combat_log": _combat_log_for_user(b, is_p1)[-6:],
         "deadline_sec": deadline_sec,
     }
+
+
+def _combat_log_for_user(b, is_p1: bool) -> List[str]:
+    """webapp_log для игрока: P1 — как есть, P2 — с инверсией Вы/Враг."""
+    if not b:
+        return []
+    log = b.get("webapp_log") or b.get("combat_log_lines", []) or []
+    if is_p1:
+        return list(log)
+    return _invert_webapp_log(log)
 
 
 def _adapt_battle_result_for_user(result: dict, user_id: int) -> dict:
@@ -82,6 +110,9 @@ def _adapt_battle_result_for_user(result: dict, user_id: int) -> dict:
         return r
     r = dict(result)
     r["human_won"] = winner_id == user_id
+    # P2 → инверсия Вы/Враг в webapp_log
+    if "webapp_log" in r:
+        r["webapp_log"] = _invert_webapp_log(r.get("webapp_log") or [])
     r["damage_to_opponent"] = result.get("damage_to_you")
     r["damage_to_you"] = result.get("damage_to_opponent")
     r["gold_reward"] = result.get("p2_gold_reward", 0)

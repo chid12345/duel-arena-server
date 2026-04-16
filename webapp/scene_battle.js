@@ -43,6 +43,7 @@ const BattleLog = (() => {
       .bl-crit      { color: #ffcc00; font-weight: 700; }
       .bl-dodge-col { color: #2ecc71; }
       .bl-miss-col  { color: #cccccc; }
+      .bl-hp-left   { color: #88bbaa; font-size: 9px; font-weight: 600; margin-left: 3px; opacity: 0.85; }
     `;
     document.head.appendChild(style);
     overlay = document.createElement('div');
@@ -54,15 +55,24 @@ const BattleLog = (() => {
   }
 
   function _styleMarker(m, side) {
-    if (!m || m === '—' || m === '0') return `<span class="bl-miss-col">—</span>`;
-    if (m.startsWith('⏱'))  return `<span class="bl-miss-col">⏱</span>`;
-    if (m.startsWith('✕'))  return `<span class="bl-miss-col">✕мимо</span>`;
-    if (m.includes('💨'))   return `<span class="bl-dodge-col">💨уклон</span>`;
-    if (m.includes('🛡'))   return `<span class="${side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy'}">🛡блок</span>`;
-    if (m.includes('⚡') || m.includes('💥')) return `<span class="bl-crit">${m}</span>`;
-    if (m.startsWith('−') || m.startsWith('-'))
-      return `<span class="${side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy'}">${m}</span>`;
-    return `<span class="bl-miss-col">${m}</span>`;
+    // Суффикс "❤N" — HP цели после удара (добавляется бэком).
+    let hpTail = '';
+    const hpM = (m || '').match(/❤(\d+)\s*$/);
+    if (hpM) {
+      hpTail = `<span class="bl-hp-left">❤${hpM[1]}</span>`;
+      m = m.slice(0, hpM.index).trim();
+    }
+    let core;
+    if (!m || m === '—' || m === '0') core = `<span class="bl-miss-col">—</span>`;
+    else if (m.startsWith('⏱'))  core = `<span class="bl-miss-col">⏱</span>`;
+    else if (m.startsWith('✕'))  core = `<span class="bl-miss-col">✕мимо</span>`;
+    else if (m.includes('💨'))   core = `<span class="bl-dodge-col">💨уклон</span>`;
+    else if (m.includes('🛡'))   core = `<span class="${side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy'}">🛡блок</span>`;
+    else if (m.includes('⚡') || m.includes('💥')) core = `<span class="bl-crit">${m}</span>`;
+    else if (m.startsWith('−') || m.startsWith('-'))
+      core = `<span class="${side === 'you' ? 'bl-dmg-you' : 'bl-dmg-enemy'}">${m}</span>`;
+    else core = `<span class="bl-miss-col">${m}</span>`;
+    return core + hpTail;
   }
 
   function _render(raw) {

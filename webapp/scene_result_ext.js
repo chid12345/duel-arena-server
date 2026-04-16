@@ -170,30 +170,16 @@ Object.assign(ResultScene.prototype, {
       this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
     }
 
-    // 📼 Реплей — есть в любом исходе, чтобы игрок мог разобрать раунды
+    // 📼 История боя (этот) + 📚 Все 20 прошлых — в рамках (стиль _mainBtn), вертикально
     const replayLog = Array.isArray(res?.webapp_log) ? res.webapp_log : [];
     if (replayLog.length > 0) {
-      const replayY = won ? H * 0.935 : H * 0.955;
-      const replayLabel = won ? '📼 Реплей боя' : '📼 Разобрать бой (реплей)';
-      const replayCol = won ? '#ccddff' : '#ffc83c';
-      txt(this, W / 2, replayY, replayLabel, 12, replayCol, true).setOrigin(0.5);
-      const zr = this.add.zone(W / 2, replayY, 240, 26).setInteractive({ useHandCursor: true });
-      zr.on('pointerup', () => {
-        tg?.HapticFeedback?.impactOccurred('light');
+      this._mainBtn(W / 2, H * 0.935, '📼  История боя', () => {
         try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {}
       });
     }
-
-    if (won) {
-      const shareY = H * 0.975;
-      const shareT = txt(this, W / 2, shareY, '📤 Поделиться победой', 11, '#ddddff').setOrigin(0.5);
-      const shareZ = this.add.zone(W / 2, shareY, 200, 24).setInteractive({ useHandCursor: true });
-      shareZ.on('pointerup', () => {
-        const p = State.player;
-        const text = `🏆 Победил в Duel Arena! Ур.${p?.level || '?'} · ★${p?.rating || '?'}\nЗаходи: https://t.me/ZenDuelArena_bot`;
-        tg?.switchInlineQuery ? tg.switchInlineQuery(text) : null;
-      });
-    }
+    this._mainBtn(W / 2, H * 0.975, '📚  Все мои бои (20)', () => {
+      try { BattleHistory.open(this.game.canvas); } catch (_) {}
+    });
   },
 
 });

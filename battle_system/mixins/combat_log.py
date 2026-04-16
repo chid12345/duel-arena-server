@@ -127,6 +127,7 @@ class BattleCombatLogMixin:
             self._webapp_log_line(
                 round_num, out1, out2, p1_damage, p2_damage,
                 p1_choices['attack'], p2_choices['attack'],
+                hp_target1_after=hp2_after, hp_target2_after=hp1_after,
             )
         )
 
@@ -139,6 +140,8 @@ class BattleCombatLogMixin:
         dmg2: int,
         atk_zone1: str = "ТУЛОВИЩЕ",
         atk_zone2: str = "ТУЛОВИЩЕ",
+        hp_target1_after: int | None = None,
+        hp_target2_after: int | None = None,
     ) -> str:
         """
         2 строки для WebApp DOM-лога.
@@ -174,4 +177,10 @@ class BattleCombatLogMixin:
         z2 = _ZONE_SHORT.get(atk_zone2, atk_zone2[:3])
         m1 = _marker(out1, dmg1)
         m2 = _marker(out2, dmg2)
+        # Суффикс ❤{hp} — сколько HP осталось у цели ПОСЛЕ этого удара.
+        # Фронт (_styleMarker) разбирает его и рендерит отдельным маленьким тегом.
+        if hp_target1_after is not None:
+            m1 = f"{m1}❤{int(hp_target1_after)}"
+        if hp_target2_after is not None:
+            m2 = f"{m2}❤{int(hp_target2_after)}"
         return f"Р{round_num} Вы→{z1} {m1} · Враг→{z2} {m2}"

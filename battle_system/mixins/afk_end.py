@@ -148,7 +148,16 @@ class BattleAfkEndMixin:
             'winner_id': winner_id,
             'result':    'afk_defeat',
             'rounds':    n_rounds,
-            'details':   {'reason': 'AFK defeat', 'mode': battle_mode, 'mode_meta': mode_meta}
+            'details':   {
+                'reason': 'AFK defeat',
+                'mode': battle_mode,
+                'mode_meta': mode_meta,
+                'webapp_log': list(battle.get('webapp_log', [])),
+                'opponent_names': {
+                    'p1': self._entity_name(battle['player1']),
+                    'p2': self._entity_name(battle['player2']),
+                },
+            }
         }
 
         combat_log_html = '\n\n'.join(battle.get('combat_log_lines', []))
