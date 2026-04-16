@@ -54,10 +54,12 @@ class InventoryUnequipResyncMixin:
                 vec = vec_to_subtract
                 cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
                 hp_row = cursor.fetchone()
-                new_max_hp = max(1, int(self._row_get(hp_row, "max_hp", 1) or 1) - int(vec["max_hp"]))
+                _raw_mhp = self._row_get(hp_row, "max_hp", 1)
+                new_max_hp = max(1, int(1 if _raw_mhp is None else _raw_mhp) - int(vec["max_hp"]))
+                _raw_chp = self._row_get(hp_row, "current_hp", new_max_hp)
                 new_current_hp = min(
                     new_max_hp,
-                    max(1, int(self._row_get(hp_row, "current_hp", new_max_hp) or new_max_hp) - int(vec["max_hp"])),
+                    max(1, (new_max_hp if _raw_chp is None else int(_raw_chp)) - int(vec["max_hp"])),
                 )
                 if bool(getattr(self, "_pg", False)):
                     cursor.execute(_PG_UNEQUIP_SQL,

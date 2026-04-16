@@ -53,8 +53,10 @@ class AvatarsMigrateBonusMixin:
             d_crit = int(bonus.get("crit", 0))
             d_hp = int(bonus.get("hp_flat", 0))
 
-            old_mhp = int(self._row_get(row, "max_hp", 60) or 60)
-            old_chp = int(self._row_get(row, "current_hp", old_mhp) or old_mhp)
+            _raw_mhp = self._row_get(row, "max_hp", 60)
+            old_mhp = int(60 if _raw_mhp is None else _raw_mhp)
+            _raw_chp = self._row_get(row, "current_hp", old_mhp)
+            old_chp = old_mhp if _raw_chp is None else int(_raw_chp)
             new_mhp = old_mhp + d_hp
             new_chp = min(new_mhp, old_chp + d_hp)
 
@@ -110,8 +112,10 @@ class AvatarsMigrateBonusMixin:
 
             if d_str or d_end or d_crit or d_hp:
                 # HP считаем в Python — MIN() не работает как скалярная функция в PostgreSQL
-                old_mhp = int(self._row_get(row, "max_hp", 60) or 60)
-                old_chp = int(self._row_get(row, "current_hp", old_mhp) or old_mhp)
+                _raw_mhp2 = self._row_get(row, "max_hp", 60)
+                old_mhp = int(60 if _raw_mhp2 is None else _raw_mhp2)
+                _raw_chp2 = self._row_get(row, "current_hp", old_mhp)
+                old_chp = old_mhp if _raw_chp2 is None else int(_raw_chp2)
                 new_mhp = old_mhp + d_hp
                 new_chp = min(new_mhp, old_chp + d_hp)
                 cursor.execute(
