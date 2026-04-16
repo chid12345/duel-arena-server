@@ -75,7 +75,7 @@
        <div class="bhl-empty">Загрузка…</div>`;
     let items = [];
     try {
-      const res = await get('/api/battle/history?limit=20');
+      const res = await get('/api/battle/history', { limit: 20 });
       if (res?.ok) items = res.items || [];
     } catch (_) {}
     const header =

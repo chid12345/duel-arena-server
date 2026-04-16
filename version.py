@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.7.08"
-VERSION_LABEL = "v1.7.08 — battle history: DB persist + sliding 20, HP suffix, P2 invert, replay hints popup"
+VERSION = "1.7.09"
+VERSION_LABEL = "v1.7.09 — fix: history popup used double '?' in URL → 422, now passes limit via params"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.42"
+GAME_VERSION = "5.43"
