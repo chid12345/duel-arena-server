@@ -59,7 +59,9 @@ class BattleDamageMixin:
         cls_id = (attacker.get("current_class") or "").strip()
         dmg_bonus = 1.0
         if wt_atk == "tank":
-            dmg_bonus = 1.12   # Берсерк +12%
+            dmg_bonus = 1.15   # Берсерк +15%
+        elif wt_atk == "neutral":
+            dmg_bonus = 0.95   # Легионер -5% урон (трейдофф за стойкость)
         if usdt == "damage_pct":
             dmg_bonus = min(1.20, dmg_bonus * 1.08)  # кап: суммарный бонус ≤ +20%
         base_dmg = min(dmg_cap, int(base_dmg * dmg_bonus))
@@ -132,10 +134,10 @@ class BattleDamageMixin:
         # Бонус крит-шанса от вложений в Интуицию (INT_BONUS) — синхрон с UI
         atk_int_inv = max(0, atk_crit - PLAYER_START_CRIT)
         crit_ch = min(CRIT_MAX_CHANCE, crit_ch + (atk_int_inv // max(1, INT_BONUS_STEP)) * INT_BONUS_PCT_PER_STEP)
-        # Хаос-Рыцарь +5% крит-шанс + крит ×1.65
+        # Хаос-Рыцарь +8% крит-шанс + крит ×1.85
         if wt_atk == "crit":
-            crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.05)
-        _crit_mult = 1.65 if wt_atk == "crit" else 1.5
+            crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.08)
+        _crit_mult = 1.85 if wt_atk == "crit" else 1.5
         is_crit = random.random() < crit_ch
         damage = int(base_dmg * (_crit_mult if is_crit else 1.0))
         if usdt == "crit_dmg_pct" and is_crit:

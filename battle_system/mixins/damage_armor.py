@@ -28,6 +28,8 @@ class BattleDamageArmorMixin:
         wt = (defender.get("warrior_type") or "default")
         if wt == "agile":
             m = min(1.0, m + 0.10)   # Теневой Вихрь -10% броня (трейдофф за уклон)
+        elif wt == "neutral":
+            m = max(0.0, m - 0.10)   # Легионер -10% входящего урона
         # Спецэффект Gold: паладин -3% входящего урона
         if (defender.get("current_class") or "").strip() == "paladin_gold":
             m = max(0.0, m - 0.03)
