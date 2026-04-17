@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from html import escape as html_escape
 from typing import Any, Dict
 
 from fastapi import APIRouter
@@ -28,6 +29,7 @@ def attach_social_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
     db = ctx["db"]
     get_user_from_init_data = ctx["get_user_from_init_data"]
     _rl_check = ctx["_rl_check"]
+    _send_tg_message = ctx.get("_send_tg_message")
 
     @router.get("/api/clan")
     async def get_clan(init_data: str):
@@ -46,9 +48,14 @@ def attach_social_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
             return {"ok": True, "clan": None, "is_leader": False}
         is_leader = info["clan"].get("leader_id") == uid
         username = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
+        pending_requests = 0
+        if is_leader:
+            try: pending_requests = len(db.list_join_requests(uid))
+            except Exception: pass
         return {
             "ok": True, "clan": info["clan"], "members": info["members"],
             "is_leader": is_leader, "my_user_id": uid, "my_username": username,
+            "pending_requests": pending_requests,
         }
 
     @router.get("/api/clan/top")
@@ -170,7 +177,28 @@ def attach_social_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
     @router.post("/api/clan/request_join")
     async def clan_request_join(body: ClanJoinReqBody):
         tg_user = get_user_from_init_data(body.init_data)
-        return db.submit_join_request(int(tg_user["id"]), int(body.clan_id))
+        uid = int(tg_user["id"])
+        result = db.submit_join_request(uid, int(body.clan_id))
+        if result.get("ok") and _send_tg_message:
+            try:
+                conn = db.get_connection()
+                cursor = conn.cursor()
+                cursor.execute("SELECT leader_id FROM clans WHERE id = ?", (int(body.clan_id),))
+                row = cursor.fetchone()
+                conn.close()
+                if row:
+                    leader_id = (row.get("leader_id") if hasattr(row, "get") else row[0])
+                    if leader_id and int(leader_id) != uid:
+                        uname = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
+                        await _send_tg_message(
+                            int(leader_id),
+                            f"📨 <b>Новая заявка в клан!</b>\n"
+                            f"Игрок <b>{html_escape(str(uname))}</b> хочет вступить.\n"
+                            f"Откройте «Клан → Заявки» чтобы принять или отклонить.\n\n⚔️ Duel Arena",
+                        )
+            except Exception as exc:
+                logger.warning("clan request notify failed: %s", exc)
+        return result
 
     @router.get("/api/clan/requests")
     async def clan_requests(init_data: str):

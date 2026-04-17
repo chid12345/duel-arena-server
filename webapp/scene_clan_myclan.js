@@ -154,6 +154,13 @@ Object.assign(ClanScene.prototype, {
       mBg.fillStyle(0x2a2010, 1); mBg.fillRoundedRect(mx, btnZone, midW, 42, 10);
       mBg.lineStyle(1, 0xffc83c, 0.8); mBg.strokeRoundedRect(mx, btnZone, midW, 42, 10);
       txt(this, mx + midW / 2, btnZone + 21, '📨 Заявки', 13, '#ffc83c', true).setOrigin(0.5);
+      const pendingCnt = data.pending_requests || 0;
+      if (pendingCnt > 0) {
+        const badgeG = this.add.graphics();
+        badgeG.fillStyle(0xdc3c46, 1); badgeG.fillCircle(mx + midW - 8, btnZone + 8, 9);
+        txt(this, mx + midW - 8, btnZone + 8, String(pendingCnt > 9 ? '9+' : pendingCnt),
+            9, '#ffffff', true).setOrigin(0.5);
+      }
       this.add.zone(mx, btnZone, midW, 42).setOrigin(0).setInteractive({ useHandCursor: true })
         .on('pointerup', () => this.scene.restart({ sub: 'requests' }));
     }
