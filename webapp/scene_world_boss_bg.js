@@ -36,11 +36,13 @@ Object.assign(WorldBossScene.prototype, {
     // Останавливаем предыдущую пульсацию если была.
     try { this._bossBgTween?.stop?.(); this._bossBgTween = null; } catch(_) {}
 
+    // Уровень 0 = цвет типа босса (fire/ice/...); 1–3 — общая тревожная палитра.
+    const typeHex = (this._state?.active?.boss_bg_hex | 0) || 0x4a3a5a;
     const presets = {
-      0: { color: 0x102040, alpha: 0.00 }, // прозрачно, чистый градиент
-      1: { color: 0xd4a530, alpha: 0.10 }, // тревожный жёлтый
-      2: { color: 0xd4642a, alpha: 0.16 }, // опасный оранж
-      3: { color: 0xd8202c, alpha: 0.22 }, // ярость красный
+      0: { color: typeHex,  alpha: 0.10 }, // амбиент по типу босса
+      1: { color: 0xd4a530, alpha: 0.12 }, // тревожный жёлтый
+      2: { color: 0xd4642a, alpha: 0.18 }, // опасный оранж
+      3: { color: 0xd8202c, alpha: 0.24 }, // ярость красный
     };
     const p = presets[lvl] || presets[0];
     try {

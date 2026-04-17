@@ -89,6 +89,7 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
             "boss_type": _bt.get("type"),
             "boss_emoji": _bt.get("emoji"),
             "boss_type_label": _bt.get("label"),
+            "boss_bg_hex": int(_bt.get("bg_tint_hex") or 0x4a3a5a),
             "current_hp": int(active.get("current_hp") or 0),
             "max_hp": int(active.get("max_hp") or 0),
             "stat_profile": active.get("stat_profile") or {},
