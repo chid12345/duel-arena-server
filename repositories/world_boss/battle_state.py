@@ -1,0 +1,74 @@
+"""Mixin: состояние боя (HP босса, коронные флаги, ответка босса)."""
+from __future__ import annotations
+
+import logging
+from typing import Optional
+
+log = logging.getLogger(__name__)
+
+
+class WorldBossBattleStateMixin:
+
+    def apply_damage_to_boss(self, spawn_id: int, damage: int) -> Optional[int]:
+        """Атомарно вычитает damage из current_hp.
+        Возвращает новое значение HP, либо None если рейд уже не активен.
+        Обрезает current_hp до 0 (не уходит в минус) — нужно для корректного last-hit.
+        """
+        if damage <= 0:
+            return None
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_spawns "
+            "SET current_hp = MAX(0, current_hp - ?) "
+            "WHERE spawn_id=? AND status='active' AND current_hp > 0",
+            (int(damage), int(spawn_id)),
+        )
+        conn.commit()
+        cur.execute(
+            "SELECT current_hp FROM world_boss_spawns WHERE spawn_id=?",
+            (int(spawn_id),),
+        )
+        row = cur.fetchone()
+        conn.close()
+        return int(row["current_hp"]) if row else None
+
+    def wb_try_trigger_crown(self, spawn_id: int, flag_bit: int) -> bool:
+        """Атомарно поднимает бит в crown_flags. True — если это был первый раз.
+        Используется чтобы коронный удар сработал ровно 1 раз за рейд.
+        """
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_spawns "
+            "SET crown_flags = COALESCE(crown_flags, 0) | ? "
+            "WHERE spawn_id=? AND status='active' "
+            "AND (COALESCE(crown_flags, 0) & ?)=0",
+            (int(flag_bit), int(spawn_id), int(flag_bit)),
+        )
+        changed = cur.rowcount > 0
+        conn.commit()
+        conn.close()
+        return bool(changed)
+
+    def wb_try_mark_boss_attacked(
+        self, spawn_id: int, cooldown_sec: int
+    ) -> bool:
+        """Атомарно ставит last_boss_attack_at=now если прошло ≥ cooldown_sec.
+        True — если ответка «сработала» (т.е. сейчас можно бить).
+        Защита от двойного тика если job пересёкся.
+        """
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_spawns "
+            "SET last_boss_attack_at=CURRENT_TIMESTAMP "
+            "WHERE spawn_id=? AND status='active' "
+            "AND (last_boss_attack_at IS NULL "
+            "     OR last_boss_attack_at <= datetime('now', ?))",
+            (int(spawn_id), f"-{int(cooldown_sec)} seconds"),
+        )
+        changed = cur.rowcount > 0
+        conn.commit()
+        conn.close()
+        return bool(changed)

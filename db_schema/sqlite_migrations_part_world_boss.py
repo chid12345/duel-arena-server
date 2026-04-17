@@ -103,4 +103,10 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_17_104_wb_reminder_flag", [
         "ALTER TABLE players ADD COLUMN wb_reminder_opt_in INTEGER DEFAULT 0",
     ]),
+
+    # 6. Состояние боя: коронные удары (битовая маска) и время последней ответки.
+    ("2026_04_17_105_wb_battle_state", [
+        "ALTER TABLE world_boss_spawns ADD COLUMN crown_flags INTEGER DEFAULT 0",
+        "ALTER TABLE world_boss_spawns ADD COLUMN last_boss_attack_at TIMESTAMP",
+    ]),
 ]

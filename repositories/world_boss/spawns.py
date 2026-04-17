@@ -140,31 +140,6 @@ class WorldBossSpawnsMixin:
         conn.commit()
         conn.close()
 
-    def apply_damage_to_boss(self, spawn_id: int, damage: int) -> Optional[int]:
-        """Атомарно вычитает damage из current_hp.
-        Возвращает новое значение HP, либо None если рейд уже не активен.
-        Обрезает current_hp до 0 (не уходит в минус) — нужно для корректного last-hit.
-        """
-        if damage <= 0:
-            return None
-        conn = self.get_connection()
-        cur = conn.cursor()
-        # Атомарный UPDATE — current_hp не уйдёт ниже 0.
-        cur.execute(
-            "UPDATE world_boss_spawns "
-            "SET current_hp = MAX(0, current_hp - ?) "
-            "WHERE spawn_id=? AND status='active' AND current_hp > 0",
-            (int(damage), int(spawn_id)),
-        )
-        conn.commit()
-        cur.execute(
-            "SELECT current_hp FROM world_boss_spawns WHERE spawn_id=?",
-            (int(spawn_id),),
-        )
-        row = cur.fetchone()
-        conn.close()
-        return int(row["current_hp"]) if row else None
-
     @staticmethod
     def _wb_spawn_row_to_dict(row: Any) -> Dict[str, Any]:
         d = dict(row)

@@ -166,6 +166,12 @@ def _build_app(bot_count: int) -> Application:
             world_boss_scheduler_job, interval=60, first=30,
             name="world_boss_scheduler",
         )
+        # Мировой босс — боевой тик (1 сек): ответка, коронные, окно уязвимости.
+        from jobs.world_boss_battle_tick import world_boss_battle_tick_job
+        application.job_queue.run_repeating(
+            world_boss_battle_tick_job, interval=1, first=10,
+            name="world_boss_battle_tick",
+        )
         # Финализация клан-войн (24ч ends_at) — раз в 10 минут
         from jobs.clan_wars_finalize import clan_wars_finalize_job
         application.job_queue.run_repeating(

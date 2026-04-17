@@ -27,6 +27,19 @@ WB_HP_MIN: int = 10_000
 # "Онлайн" = активность за последние N минут (по players.last_active).
 WB_ONLINE_WINDOW_MIN: int = 10
 
+# Пороги коронных ударов (доля оставшегося HP → dmg%).
+# Каждый срабатывает 1 раз за рейд (битовая маска crown_flags).
+WB_CROWN_THRESHOLDS: tuple = (
+    # (hp_pct, dmg_pct_of_max, flag_bit, label)
+    (0.75, 0.03, 0b001, "75%"),
+    (0.50, 0.05, 0b010, "50%"),
+    (0.25, 0.08, 0b100, "25%"),  # + эффект "Хаос" 10с (на UI)
+)
+
+# Окно уязвимости босса: x3 урон от игроков, длится 5 сек, каждые 60 сек.
+WB_VULN_WINDOW_SEC: int = 5
+WB_VULN_INTERVAL_SEC: int = 60
+
 # 10 имён босса — рандом при спавне.
 WB_BOSS_NAMES: List[str] = [
     "Гоблин-Король",
@@ -64,3 +77,10 @@ def next_spawn_time_utc(now: datetime) -> datetime:
 def calc_boss_hp(online: int) -> int:
     """HP босса от онлайна."""
     return max(WB_HP_MIN, WB_HP_PER_ONLINE * int(online))
+
+
+def is_vulnerability_window(elapsed_sec: float) -> bool:
+    """Каждые 60 сек открывается окно x3 урона на 5 сек."""
+    if elapsed_sec < 0:
+        return False
+    return int(elapsed_sec) % WB_VULN_INTERVAL_SEC < WB_VULN_WINDOW_SEC
