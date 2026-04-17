@@ -9,6 +9,7 @@ from .battle_state import WorldBossBattleStateMixin
 from .hits import WorldBossHitsMixin
 from .player_state import WorldBossPlayerStateMixin
 from .player_state_aoe import WorldBossPlayerStateAoeMixin
+from .raid_scroll_apply import WorldBossRaidScrollApplyMixin
 from .rewards import WorldBossRewardsMixin
 
 
@@ -18,6 +19,7 @@ class WorldBossMixin(
     WorldBossHitsMixin,
     WorldBossPlayerStateMixin,
     WorldBossPlayerStateAoeMixin,
+    WorldBossRaidScrollApplyMixin,
     WorldBossRewardsMixin,
 ):
     """Объединённый Mixin для всей системы Мирового босса."""
