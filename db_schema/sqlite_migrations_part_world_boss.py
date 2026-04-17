@@ -120,4 +120,9 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_17_107_wb_announce_5min", [
         "ALTER TABLE world_boss_spawns ADD COLUMN announced_5min INTEGER DEFAULT 0",
     ]),
+
+    # 9. Флаг «индивидуальные пуши за 5 мин отправлены» — анти-дубль.
+    ("2026_04_17_108_wb_reminders_sent_5min", [
+        "ALTER TABLE world_boss_spawns ADD COLUMN reminders_sent_5min INTEGER DEFAULT 0",
+    ]),
 ]

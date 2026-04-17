@@ -178,6 +178,12 @@ def _build_app(bot_count: int) -> Application:
             world_boss_announce_5min_job, interval=60, first=45,
             name="world_boss_announce_5min",
         )
+        # Мировой босс — индивидуальные пуши подписчикам за 5 мин до рейда.
+        from jobs.world_boss_remind import world_boss_reminder_push_job
+        application.job_queue.run_repeating(
+            world_boss_reminder_push_job, interval=60, first=50,
+            name="world_boss_reminder_push",
+        )
         # Финализация клан-войн (24ч ends_at) — раз в 10 минут
         from jobs.clan_wars_finalize import clan_wars_finalize_job
         application.job_queue.run_repeating(

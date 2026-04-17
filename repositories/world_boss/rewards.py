@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 log = logging.getLogger(__name__)
 
@@ -110,12 +110,14 @@ class WorldBossRewardsMixin:
         conn.commit()
         conn.close()
 
-    def get_wb_reminder_users(self) -> List[int]:
+    def get_wb_reminder_users(self) -> List[Tuple[int, int]]:
+        """Подписчики на пуш за 5 мин до рейда: (user_id, chat_id). Только те, у кого есть chat_id."""
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT user_id FROM players WHERE wb_reminder_opt_in=1"
+            "SELECT user_id, chat_id FROM players "
+            "WHERE wb_reminder_opt_in=1 AND chat_id IS NOT NULL"
         )
         rows = cur.fetchall()
         conn.close()
-        return [int(r["user_id"]) for r in rows]
+        return [(int(r["user_id"]), int(r["chat_id"])) for r in rows]
