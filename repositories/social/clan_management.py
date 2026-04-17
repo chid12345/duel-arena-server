@@ -75,11 +75,27 @@ class SocialClanManagementMixin:
             if not clan_row:
                 return {"ok": False, "reason": "Только лидер может распустить клан"}
             clan_id = int(clan_row["id"])
-            cursor.execute("DELETE FROM clan_messages WHERE clan_id = ?", (clan_id,))
-            cursor.execute("DELETE FROM clan_members WHERE clan_id = ?", (clan_id,))
-            cursor.execute("UPDATE players SET clan_id = NULL WHERE clan_id = ?", (clan_id,))
-            cursor.execute("DELETE FROM clans WHERE id = ?", (clan_id,))
+            self._purge_clan_rows(cursor, clan_id)
             conn.commit()
             return {"ok": True}
         finally:
             conn.close()
+
+    def _purge_clan_rows(self, cursor, clan_id: int) -> None:
+        """Полное удаление клана и всех связанных записей.
+        Используется и disband_clan, и админ-скриптом delete_clan."""
+        cursor.execute("UPDATE players SET clan_id = NULL WHERE clan_id = ?", (clan_id,))
+        for tbl in (
+            "clan_messages", "clan_members", "clan_join_requests",
+            "clan_achievements", "clan_history", "clan_tasks",
+        ):
+            try: cursor.execute(f"DELETE FROM {tbl} WHERE clan_id = ?", (clan_id,))
+            except Exception: pass
+        try:
+            cursor.execute(
+                "DELETE FROM clan_wars WHERE clan_a = ? OR clan_b = ?",
+                (clan_id, clan_id),
+            )
+        except Exception:
+            pass
+        cursor.execute("DELETE FROM clans WHERE id = ?", (clan_id,))
