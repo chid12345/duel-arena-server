@@ -119,7 +119,15 @@ def _finish_expired_or_dead_spawn(db) -> None:
         "world_boss_scheduler: закрыт рейд id=%s, victory=%s, participants=%s, top=%s, last=%s",
         spawn_id, is_victory, participants, top_uid, last_hit_uid,
     )
-    # TODO (Шаг 1.13): рассчитать и выдать награды всем участникам (create_wb_reward).
+    # Рассчёт и выдача наград всем участникам (идемпотентно по spawn_id+user_id).
+    try:
+        from repositories.world_boss.rewards_calc import compute_and_create_rewards
+        created = compute_and_create_rewards(db, spawn_id, is_victory)
+        logger.info("world_boss_scheduler: награды рейда id=%s — создано/найдено %d",
+                    spawn_id, created)
+    except Exception as e:
+        logger.warning("world_boss_scheduler: ошибка расчёта наград spawn=%s: %s",
+                       spawn_id, e)
 
 
 async def world_boss_scheduler_job(context) -> None:  # noqa: ARG001

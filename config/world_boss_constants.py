@@ -40,6 +40,22 @@ WB_CROWN_THRESHOLDS: tuple = (
 WB_VULN_WINDOW_SEC: int = 5
 WB_VULN_INTERVAL_SEC: int = 60
 
+# ── Награды ─────────────────────────────────────────────────
+# Базовые значения на весь рейд; каждому выдаётся база × множитель × contribution_pct.
+WB_BASE_GOLD: int = 1000
+WB_BASE_EXP: int = 500
+# Алмазы — фиксированный бонус только топ-3 и last-hit (не пропорционально вкладу).
+WB_DIAMONDS_TOP1: int = 15
+WB_DIAMONDS_TOP2: int = 10
+WB_DIAMONDS_TOP3: int = 7
+WB_DIAMONDS_LAST_HIT: int = 5
+# Множители gold/exp от contribution.
+WB_REWARD_MULT_VICTORY: float = 2.0
+WB_REWARD_MULT_DEFEAT: float = 0.3
+# Сундуки (chest_type в world_boss_rewards).
+WB_CHEST_LAST_HIT: str = "wb_gold_chest"    # обычный (золотой)
+WB_CHEST_TOP_DAMAGE: str = "wb_diamond_chest"  # редкий (алмазный)
+
 # 10 имён босса — рандом при спавне.
 WB_BOSS_NAMES: List[str] = [
     "Гоблин-Король",

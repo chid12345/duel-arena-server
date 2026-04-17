@@ -106,6 +106,20 @@ class WorldBossHitsMixin:
         conn.close()
         return int(row["c"]) if row else 0
 
+    def get_wb_all_participants_damage(self, spawn_id: int) -> List[Dict[str, Any]]:
+        """Все участники рейда с их суммарным уроном (для расчёта наград по вкладу)."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT user_id, SUM(damage) AS total_damage "
+            "FROM world_boss_hits WHERE spawn_id=? "
+            "GROUP BY user_id",
+            (int(spawn_id),),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
     def wb_try_record_hit(
         self, spawn_id: int, user_id: int, now_ms: int, cooldown_ms: int
     ) -> bool:
