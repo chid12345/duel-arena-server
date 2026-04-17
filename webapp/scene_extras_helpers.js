@@ -5,98 +5,96 @@
 
 /**
  * _rewardAnim(scene, rewards, onDone)
- * Анимация получения награды: вспышка + всплывающие монеты / кристаллы / XP.
+ * Overlay-панель с наградами: затемнение + pop-in карточка + конфетти.
  * rewards: { gold, diamonds, xp }   — нулевые поля пропускаются.
- * onDone:  callback через ~900ms.
+ * onDone:  callback через ~1300ms.
+ * Работает одинаково на мобиле и ПК.
  */
 function _rewardAnim(scene, rewards = {}, onDone) {
   const W  = scene.W || scene.game.canvas.width;
   const H  = scene.H || scene.game.canvas.height;
   const cx = W / 2;
-  const cy = Math.round(H * 0.48);
+  const cy = Math.round(H / 2);
 
-  /* 1. Фоновая вспышка */
-  const flash = scene.add.graphics().setDepth(88);
-  flash.fillStyle(0xffc83c, 0.16);
-  flash.fillRect(0, 0, W, H);
-  scene.tweens.add({ targets: flash, alpha: 0, duration: 500, onComplete: () => flash.destroy() });
+  const items = [];
+  if ((rewards.gold     || 0) > 0) items.push({ icon: '🪙', n: rewards.gold,    color: '#ffd166' });
+  if ((rewards.diamonds || 0) > 0) items.push({ icon: '💎', n: rewards.diamonds, color: '#5dd8f0' });
+  if ((rewards.xp       || 0) > 0) items.push({ icon: '⭐', n: rewards.xp,       color: '#ffe066' });
+  if (!items.length)               items.push({ icon: '🎁', n: 0,                color: '#ffd166' });
 
-  /* 2. Взрыв конфетти-кружков */
-  const COLS = [0xffc83c, 0x3cc8dc, 0xb45aff, 0x3cc864, 0xff4488, 0xff8800, 0x5096ff];
-  for (let i = 0; i < 22; i++) {
-    const angle = (i / 22) * Math.PI * 2;
-    const dist  = Phaser.Math.Between(55, 130);
-    const r     = Phaser.Math.Between(3, 8);
+  /* 1. Тёмное затемнение всего экрана */
+  const dim = scene.add.graphics().setDepth(90);
+  dim.fillStyle(0x000000, 0.65);
+  dim.fillRect(0, 0, W, H);
+  dim.setAlpha(0);
+  scene.tweens.add({ targets: dim, alpha: 1, duration: 180 });
+
+  /* 2. Панель-карточка по центру */
+  const panW = Math.min(W - 48, 280), panH = 140;
+  const panX = cx - panW / 2, panY = cy - panH / 2 - 10;
+  const panel = scene.add.graphics().setDepth(91).setScale(0.6).setAlpha(0);
+  panel.fillStyle(0x1a1f30, 1);
+  panel.fillRoundedRect(panX, panY, panW, panH, 16);
+  panel.lineStyle(2, 0xffd166, 0.9);
+  panel.strokeRoundedRect(panX, panY, panW, panH, 16);
+  scene.tweens.add({ targets: panel, scale: 1, alpha: 1, duration: 260, ease: 'Back.easeOut' });
+
+  /* 3. «✅ Получено!» */
+  const titleT = txt(scene, cx, panY + 26, '✅  Получено!', 16, '#ffffff', true)
+    .setOrigin(0.5).setDepth(92).setAlpha(0);
+  scene.tweens.add({ targets: titleT, alpha: 1, duration: 200, delay: 120 });
+
+  /* 4. Иконки наград в ряд */
+  const gap = Math.min(72, (panW - 24) / items.length);
+  const startX = cx - (items.length - 1) * gap / 2;
+  items.forEach((item, i) => {
+    const ix = startX + i * gap;
+    const iconT = txt(scene, ix, panY + 62, item.icon, 28)
+      .setOrigin(0.5).setDepth(92).setScale(0).setAlpha(0);
+    scene.tweens.add({ targets: iconT, scale: 1, alpha: 1, duration: 220, delay: 160 + i * 60, ease: 'Back.easeOut' });
+    if (item.n > 0) {
+      const amtT = txt(scene, ix, panY + 98, `+${item.n}`, 14, item.color, true)
+        .setOrigin(0.5).setDepth(92).setAlpha(0);
+      scene.tweens.add({ targets: amtT, alpha: 1, duration: 180, delay: 240 + i * 60 });
+    }
+  });
+
+  /* 5. Конфетти вокруг панели */
+  const COLS = [0xffc83c, 0x3cc8dc, 0xb45aff, 0x3cc864, 0xff4488, 0x5096ff];
+  for (let i = 0; i < 18; i++) {
+    const angle = (i / 18) * Math.PI * 2;
+    const dist  = Phaser.Math.Between(60, 120);
+    const r     = Phaser.Math.Between(3, 7);
     const col   = Phaser.Utils.Array.GetRandom(COLS);
-    const c     = scene.add.circle(cx, cy, r, col, 0.9).setDepth(89);
+    const c     = scene.add.circle(cx, cy, r, col, 0.9).setDepth(93).setScale(0);
     scene.tweens.add({
       targets: c,
       x: cx + Math.cos(angle) * dist,
       y: cy + Math.sin(angle) * dist,
-      alpha: 0, scaleX: 0.15, scaleY: 0.15,
-      duration: Phaser.Math.Between(420, 750),
-      delay:    Phaser.Math.Between(0, 120),
-      ease: 'Quad.easeOut',
-      onComplete: () => c.destroy(),
-    });
-  }
-
-  /* 3. Иконки наград */
-  const items = [];
-  if ((rewards.gold     || 0) > 0) items.push({ icon: '🪙', n: rewards.gold,     color: '#ffc83c' });
-  if ((rewards.diamonds || 0) > 0) items.push({ icon: '💎', n: rewards.diamonds,  color: '#3cc8dc' });
-  if ((rewards.xp       || 0) > 0) items.push({ icon: '⭐', n: rewards.xp,        color: '#ffe066' });
-  if (!items.length)               items.push({ icon: '🎁', n: 0,                 color: '#ffc83c' });
-
-  const gap = Math.min(80, (W - 40) / Math.max(items.length, 1));
-  const startX = cx - (items.length - 1) * gap / 2;
-
-  items.forEach((item, i) => {
-    const ix  = startX + i * gap;
-    const iy  = cy;
-
-    /* Большая иконка: pop-in → плавно вверх-исчезает */
-    const iconT = txt(scene, ix, iy, item.icon, 38).setOrigin(0.5).setDepth(92).setScale(0);
-    scene.tweens.add({
-      targets: iconT, scale: 1.15, duration: 280, ease: 'Back.easeOut',
+      scaleX: 1, scaleY: 1,
+      duration: 200, delay: 80, ease: 'Back.easeOut',
       onComplete: () => {
-        scene.tweens.add({ targets: iconT, scale: 1, duration: 80 });
         scene.tweens.add({
-          targets: iconT, y: iy - 72, alpha: 0,
-          duration: 650, delay: 380, ease: 'Quad.easeIn',
-          onComplete: () => iconT.destroy(),
+          targets: c, alpha: 0, scaleX: 0.1, scaleY: 0.1,
+          duration: Phaser.Math.Between(300, 600), delay: 200,
+          ease: 'Quad.easeIn', onComplete: () => c.destroy(),
         });
       },
     });
+  }
 
-    /* Сумма под иконкой */
-    if (item.n > 0) {
-      const amtT = txt(scene, ix, iy + 32, `+${item.n}`, 17, item.color, true)
-        .setOrigin(0.5).setDepth(93).setAlpha(0);
-      scene.tweens.add({
-        targets: amtT, alpha: 1, y: iy + 24, duration: 220, delay: 120,
-        onComplete: () => {
-          scene.tweens.add({
-            targets: amtT, y: iy - 44, alpha: 0,
-            duration: 600, delay: 380, ease: 'Quad.easeIn',
-            onComplete: () => amtT.destroy(),
-          });
-        },
-      });
-    }
-  });
-
-  /* 4. Надпись «Получено!» */
-  const label = txt(scene, cx, cy - 44, '✅  Получено!', 15, '#ffffff', true)
-    .setOrigin(0.5).setDepth(93).setAlpha(0);
+  /* 6. Fade-out всей панели + onDone */
+  const all = [dim, panel, titleT];
   scene.tweens.add({
-    targets: label, alpha: 1, y: label.y - 6, duration: 260, delay: 60,
-    onComplete: () => {
-      scene.tweens.add({ targets: label, alpha: 0, duration: 400, delay: 500, onComplete: () => label.destroy() });
-    },
+    targets: all, alpha: 0, duration: 350, delay: 900,
+    onComplete: () => all.forEach(o => { try { o.destroy(); } catch(_) {} }),
   });
 
-  if (onDone) scene.time.delayedCall(920, onDone);
+  /* Двойной запуск onDone: game-таймер + window.setTimeout (fallback для ПК) */
+  let _called = false;
+  const _call = () => { if (_called) return; _called = true; if (onDone) onDone(); };
+  if (scene.time) scene.time.delayedCall(1260, _call);
+  setTimeout(_call, 1400);
 }
 
 function _extraBg(scene, W, H) {
