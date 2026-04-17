@@ -311,6 +311,7 @@ class QuestsProgressMixin:
             "bot_wins": int(p.get("bot_wins") or 0),
             "shop_buys": int(p.get("shop_buys") or 0),
             "streak": streak,
+            "wb_hits": self.get_wb_hits_today_count(user_id),
         }
         result = []
         for dq in DAILY_QUEST_DEFS:

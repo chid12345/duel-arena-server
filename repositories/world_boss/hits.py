@@ -106,6 +106,19 @@ class WorldBossHitsMixin:
         conn.close()
         return int(row["c"]) if row else 0
 
+    def get_wb_hits_today_count(self, user_id: int) -> int:
+        """Сколько ударов игрок нанёс боссу сегодня (UTC). Для daily-квеста dq_wb_hit1."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM world_boss_hits "
+            "WHERE user_id=? AND DATE(created_at) = DATE('now')",
+            (int(user_id),),
+        )
+        row = cur.fetchone()
+        conn.close()
+        return int(row["c"]) if row else 0
+
     def get_wb_all_participants_damage(self, spawn_id: int) -> List[Dict[str, Any]]:
         """Все участники рейда с их суммарным уроном (для расчёта наград по вкладу)."""
         conn = self.get_connection()

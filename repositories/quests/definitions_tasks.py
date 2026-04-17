@@ -38,6 +38,11 @@ DAILY_QUEST_DEFS: list[dict] = [
         "desc": "3 победы в режиме Натиск", "target": 3,
         "track": "endless", "difficulty": "hard", "frequency": "daily",
     },
+    {
+        "key": "dq_wb_hit1", "label": "🐉 Удар по боссу",
+        "desc": "Нанести 1 удар мировому боссу", "target": 1,
+        "track": "wb_hits", "difficulty": "easy", "frequency": "daily",
+    },
 ]
 
 # ── Дополнительные недельные задания (к существующим 5) ───────────────────────
