@@ -78,16 +78,43 @@ class WorldBossSpawnsMixin:
         conn.close()
         return self._wb_spawn_row_to_dict(row) if row else None
 
-    def start_wb_spawn(self, spawn_id: int, online_at_start: int) -> None:
+    def start_wb_spawn(
+        self, spawn_id: int, online_at_start: int, max_hp: int
+    ) -> None:
+        """Переводит scheduled→active и пересчитывает HP под реальный онлайн."""
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "UPDATE world_boss_spawns SET status='active', started_at=CURRENT_TIMESTAMP, "
-            "online_at_start=? WHERE spawn_id=? AND status='scheduled'",
-            (int(online_at_start), int(spawn_id)),
+            "UPDATE world_boss_spawns "
+            "SET status='active', started_at=CURRENT_TIMESTAMP, "
+            "online_at_start=?, max_hp=?, current_hp=? "
+            "WHERE spawn_id=? AND status='scheduled'",
+            (int(online_at_start), int(max_hp), int(max_hp), int(spawn_id)),
         )
         conn.commit()
         conn.close()
+
+    def wb_count_online_players(self, window_minutes: int = 10) -> int:
+        """Онлайн = количество игроков с last_active за последние N минут."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM players "
+            "WHERE last_active >= datetime('now', ?)",
+            (f"-{int(window_minutes)} minutes",),
+        )
+        row = cur.fetchone()
+        conn.close()
+        return int(row["c"]) if row else 0
+
+    def get_wb_active_or_expired(self) -> Optional[Dict[str, Any]]:
+        """Активный рейд, если он есть и ещё не истёк по времени.
+        Возвращает dict с полем is_expired=True если пора закрывать.
+        """
+        row = self.get_wb_active_spawn()
+        if not row:
+            return None
+        return row
 
     def finish_wb_spawn(
         self,

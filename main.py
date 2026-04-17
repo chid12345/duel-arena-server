@@ -160,6 +160,12 @@ def _build_app(bot_count: int) -> Application:
             clan_season_rotate_job, interval=3600, first=120,
             name="clan_season_rotate",
         )
+        # Мировой босс — тик раз в 60 сек: планирует/стартует/закрывает рейды.
+        from jobs.world_boss_scheduler import world_boss_scheduler_job
+        application.job_queue.run_repeating(
+            world_boss_scheduler_job, interval=60, first=30,
+            name="world_boss_scheduler",
+        )
         # Финализация клан-войн (24ч ends_at) — раз в 10 минут
         from jobs.clan_wars_finalize import clan_wars_finalize_job
         application.job_queue.run_repeating(
