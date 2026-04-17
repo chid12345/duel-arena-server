@@ -83,4 +83,24 @@ Object.assign(WorldBossScene.prototype, {
     } catch(_) {}
   },
 
+  // История последних 5 рейдов — на вкладке «Ожидание» под подсказками.
+  _renderRecentRaids(s, W, y) {
+    const list = s.recent_raids || [];
+    if (!list.length) return;
+    this._addText(16, y, '📜 Последние рейды:', 11, '#aaddff', true);
+    y += 18;
+    list.slice(0, 5).forEach((r, i) => {
+      const ry = y + i * 22;
+      this._addPanel(8, ry, W - 16, 20);
+      const win = r.status === 'won';
+      const ico = win ? '🏆' : '💀';
+      const em  = r.boss_emoji || '🐉';
+      const pct = Math.round((r.contribution_pct || 0) * 100);
+      const part = pct > 0 ? `вклад ${pct}%` : 'не участвовал';
+      this._addText(14, ry + 4, `${ico} ${em} ${r.boss_name || 'Босс'}`, 10, '#ddddff');
+      const col = pct > 0 ? (win ? '#3cff8c' : '#ff9966') : '#888899';
+      this._addText(W - 16, ry + 4, part, 10, col).setOrigin(1, 0);
+    });
+  },
+
 });

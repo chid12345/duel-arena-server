@@ -27,6 +27,8 @@ Object.assign(WorldBossScene.prototype, {
      'Смерть в бою → свиток воскрешения.'].forEach((l, i) => {
       this._addText(W/2, y + i*16, l, 11, '#ddddff').setOrigin(0.5);
     });
+    y += 56;
+    this._renderRecentRaids?.(s, W, y);
   },
 
   _renderIdle(W, H) {

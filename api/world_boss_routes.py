@@ -73,6 +73,7 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
                 "raid_scroll_2": ps.get("raid_scroll_2"),
             }
 
+    recent = db.get_wb_recent_finished_with_user(uid, limit=5)
     inv_rows = db.get_inventory(uid)
     inv = {r["item_id"]: int(r["quantity"]) for r in inv_rows}
     raid_scrolls_inv = {sid: inv.get(sid, 0) for sid in _RAID_SCROLL_IDS}
@@ -111,6 +112,20 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
             "status": last.get("status"),
             "ended_at": last.get("ended_at"),
         } if last else None,
+        "recent_raids": [
+            (lambda _bt: {
+                "spawn_id": int(r["spawn_id"]),
+                "boss_name": r.get("boss_name"),
+                "boss_emoji": _bt.get("emoji"),
+                "status": r.get("status"),
+                "ended_at": r.get("ended_at"),
+                "contribution_pct": float(r.get("contribution_pct") or 0.0),
+                "gold": int(r.get("gold") or 0),
+                "exp": int(r.get("exp") or 0),
+                "diamonds": int(r.get("diamonds") or 0),
+                "chest_type": r.get("chest_type"),
+            })(_get_boss_type(r.get("boss_type"))) for r in recent
+        ],
         "player_state": player_state,
         "raid_scrolls_inv": raid_scrolls_inv,
         "res_scrolls_inv": res_scrolls_inv,
