@@ -87,15 +87,31 @@ def attach_social_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
         if not info:
             return {"ok": False, "reason": "Клан не найден"}
         my_clan = None
+        my_pending_request = False
         try:
             tg_user = get_user_from_init_data(init_data) if init_data else None
             if tg_user:
-                p = db.get_or_create_player(int(tg_user["id"]), "")
+                uid = int(tg_user["id"])
+                p = db.get_or_create_player(uid, "")
                 my_clan = p.get("clan_id")
+                # Проверяем есть ли уже pending-заявка от этого игрока
+                try:
+                    conn = db.get_connection()
+                    cursor = conn.cursor()
+                    cursor.execute(
+                        "SELECT id FROM clan_join_requests "
+                        "WHERE clan_id = ? AND user_id = ? AND status = 'pending'",
+                        (int(clan_id), uid),
+                    )
+                    my_pending_request = cursor.fetchone() is not None
+                    conn.close()
+                except Exception:
+                    pass
         except Exception:
             my_clan = None
         return {"ok": True, "clan": info["clan"], "members": info["members"],
-                "online_count": info["online_count"], "my_clan_id": my_clan}
+                "online_count": info["online_count"], "my_clan_id": my_clan,
+                "my_pending_request": my_pending_request}
 
     @router.post("/api/clan/create")
     async def clan_create(body: ClanCreateBody):

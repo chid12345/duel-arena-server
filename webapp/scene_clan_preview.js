@@ -11,6 +11,7 @@ Object.assign(ClanScene.prototype, {
     const onlineCount = data.online_count || 0;
     const myClanId = data.my_clan_id || null;
     const isMine = myClanId && Number(myClanId) === Number(clan.id);
+    const myPendingRequest = !!data.my_pending_request;
 
     const EM = {
       light:   { i: '☀️', name: 'СВЕТ',         c: 0xffd166, hex: '#ffd166' },
@@ -100,6 +101,11 @@ Object.assign(ClanScene.prototype, {
       bg2.fillStyle(0x1c2238, 1); bg2.fillRoundedRect(16, btnY, W-32, btnH, 10);
       bg2.lineStyle(1, 0x2a3460, 0.9); bg2.strokeRoundedRect(16, btnY, W-32, btnH, 10);
       txt(this, W/2, btnY+btnH/2, '🏰 Это ваш клан', 13, '#ffc83c', true).setOrigin(0.5);
+    } else if (myPendingRequest) {
+      bg2.fillStyle(0x1a1e2a, 1); bg2.fillRoundedRect(16, btnY, W-32, btnH, 10);
+      bg2.lineStyle(1.5, 0x3a3050, 0.9); bg2.strokeRoundedRect(16, btnY, W-32, btnH, 10);
+      txt(this, W/2, btnY+btnH/2, '📨 Заявка уже подана', 13, '#a8b4d8', true).setOrigin(0.5);
+      txt(this, W/2, btnY+btnH/2+14, 'ожидайте решения лидера', 9, '#55506e').setOrigin(0.5);
     } else {
       const fill = isClosed ? 0x2a2010 : 0x1e3028;
       const stroke = isClosed ? 0xffc83c : 0x304838;
