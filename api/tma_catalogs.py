@@ -73,6 +73,10 @@ SHOP_CATALOG = {
     "box_epic_e2":     {"name": "Эпический: Удача",     "price": 0,   "currency": "diamonds", "icon": "🔮", "tab": "boxes", "desc": "USDT-свиток + алмазные · шанс Титана", "inventory": True},
     "box_epic_e3":     {"name": "Эпический: Набор воина","price": 0,  "currency": "diamonds", "icon": "⚔️", "tab": "boxes", "desc": "USDT-свиток + XP×2 + свитки", "inventory": True},
 
+    # ── Сундуки Мирового босса (не покупаются, дропают за рейд) ──────────
+    "wb_gold_chest":   {"name": "Золотой сундук рейда", "price": 0, "currency": "gold",     "icon": "🏆", "tab": "boxes", "desc": "Награда за последний удар · 2–4 свитка · шанс на алмазы", "inventory": True},
+    "wb_diamond_chest":{"name": "Алмазный сундук рейда","price": 0, "currency": "diamonds", "icon": "💠", "tab": "boxes", "desc": "Награда за топ урона · 3–5 премиум свитков · шанс на USDT-свиток и +100💎", "inventory": True},
+
     # ── USDT-свитки (только для попапов/инвентаря, не в обычном магазине) ───
     "scroll_str_12":   {"name": "Эликсир силы +12",      "price": 0, "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +12, 5 боёв",         "inventory": True},
     "scroll_end_12":   {"name": "Эликсир ловкости +12",  "price": 0, "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +12, 5 боёв",      "inventory": True},

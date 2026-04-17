@@ -16,6 +16,7 @@ from api.titan_training_routes import register_titan_training_routes
 from api.wardrobe_routes import register_wardrobe_routes
 from api.world_boss_routes import register_world_boss_routes
 from api.world_boss_ws import register_world_boss_ws_routes
+from api import world_boss_chests as _wb_chests  # noqa: F401 — side-effect: регистрация WB-сундуков в ALL_BOX_IDS
 
 from api.tma_auth import get_user_from_init_data
 from api.tma_battle_api import _battle_state_api
