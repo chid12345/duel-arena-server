@@ -6,27 +6,54 @@
 
 Object.assign(ClanScene.prototype, {
 
-  /* gameX — x-координата в игровых пикселях; если null — центрирует */
+  /* gameX — x-координата в игровых пикселях; если null — центрирует.
+     Позиция/размер пересчитываются при resize canvas и visualViewport
+     (когда на мобиле открывается клавиатура). font-size:16px — иначе iOS
+     автоматически зумит страницу и ломает вёрстку. */
   _makeInput(W, y, w, h, placeholder, maxLen = 20, gameX = null) {
     const el = document.createElement('input');
     el.type = 'text'; el.placeholder = placeholder; el.maxLength = maxLen;
-    const rect = this.game.canvas.getBoundingClientRect();
-    const scaleX = rect.width / W;
-    const scaleY = rect.height / this.H;
-    const left = gameX !== null
-      ? Math.round(rect.left + gameX * scaleX)
-      : Math.round(rect.left + (W - w) / 2 * scaleX);
-    const top  = Math.round(rect.top + y * scaleY);
-    const pw   = Math.round(w * scaleX);
-    const ph   = Math.round(h * scaleY);
-    el.style.cssText = `position:fixed;left:${left}px;top:${top}px;width:${pw}px;height:${ph}px;
+    el.autocomplete = 'off'; el.autocapitalize = 'off'; el.spellcheck = false;
+    el.style.cssText = `position:fixed;left:0;top:0;width:0;height:0;
       padding:0 12px;background:#1e3878;color:#f0f0fa;border:2px solid #5096ffaa;
-      border-radius:10px;font-size:14px;outline:none;z-index:999;
+      border-radius:10px;font-size:16px;outline:none;z-index:999;
       overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      box-sizing:border-box;`;
+      box-sizing:border-box;-webkit-appearance:none;`;
+    el.addEventListener('keydown', (e) => { if (e.key === 'Enter') el.blur(); });
     document.body.appendChild(el);
-    this.events.once('shutdown', () => el.remove());
-    this.events.once('destroy',  () => el.remove());
+
+    const scene = this;
+    const reposition = () => {
+      if (!el.isConnected) return;
+      const rect = scene.game.canvas.getBoundingClientRect();
+      const sx = rect.width / W;
+      const sy = rect.height / scene.H;
+      const left = gameX !== null
+        ? Math.round(rect.left + gameX * sx)
+        : Math.round(rect.left + (W - w) / 2 * sx);
+      const top  = Math.round(rect.top + y * sy);
+      el.style.left   = left + 'px';
+      el.style.top    = top  + 'px';
+      el.style.width  = Math.round(w * sx) + 'px';
+      el.style.height = Math.round(h * sy) + 'px';
+    };
+    reposition();
+
+    const vp = window.visualViewport;
+    window.addEventListener('resize', reposition);
+    window.addEventListener('orientationchange', reposition);
+    vp?.addEventListener('resize', reposition);
+    vp?.addEventListener('scroll', reposition);
+
+    const cleanup = () => {
+      window.removeEventListener('resize', reposition);
+      window.removeEventListener('orientationchange', reposition);
+      vp?.removeEventListener('resize', reposition);
+      vp?.removeEventListener('scroll', reposition);
+      el.remove();
+    };
+    this.events.once('shutdown', cleanup);
+    this.events.once('destroy',  cleanup);
     return el;
   },
 

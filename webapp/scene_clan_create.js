@@ -26,16 +26,16 @@ Object.assign(ClanScene.prototype, {
     /* Тег */
     txt(this, 16, y, 'Тег', 12, '#ffffff', true);
     txt(this, 16, y+15, '2–4 символа', 10, '#a8b4d8');
-    this._tagEl = this._makeInput(W, y+30, 90, 32, 'ЖК', 4);
+    this._tagEl = this._makeInput(W, y+30, 86, 32, 'ЖК', 4, 16);
 
     /* Минимальный уровень — справа от тега */
-    txt(this, 120, y, 'Мин. уровень', 12, '#ffffff', true);
-    txt(this, 120, y+15, 'Кто может вступать', 10, '#a8b4d8');
-    this._minLvlEl = this._makeInput(W, y+30, 60, 32, '1', 2, 120);
+    txt(this, 116, y, 'Мин. ур.', 12, '#ffffff', true);
+    txt(this, 116, y+15, 'Ограничение', 10, '#a8b4d8');
+    this._minLvlEl = this._makeInput(W, y+30, 60, 32, '1', 2, 116);
 
     /* Закрытый клан — чекбокс справа */
     this._closedFlag = 0;
-    const cbX = 200, cbY = y+30, cbS = 32;
+    const cbX = 190, cbY = y+30, cbS = 32;
     const cbG = this.add.graphics();
     const drawCb = () => {
       cbG.clear();
@@ -81,7 +81,7 @@ Object.assign(ClanScene.prototype, {
         cardG.clear();
         cardG.fillStyle(sel ? 0x1c2238 : 0x141720, 1);
         cardG.fillRoundedRect(cx, y, cardW, cardH, 10);
-        cardG.lineStyle(sel ? 2 : 1, sel ? em.stroke : 0x252a38, sel ? 1 : 0.85);
+        cardG.lineStyle(2, sel ? em.stroke : 0x252a38, sel ? 1 : 0.6);
         cardG.strokeRoundedRect(cx, y, cardW, cardH, 10);
       };
       draw(em.key === this._selectedEmblem);
@@ -101,10 +101,15 @@ Object.assign(ClanScene.prototype, {
     bgC.fillStyle(C.purple, 0.9); bgC.fillRoundedRect(16, y, W-32, btnH, 12);
     bgC.fillStyle(0xffffff, 0.08); bgC.fillRoundedRect(18, y+2, W-36, 22, 10);
     const btnT = txt(this, W/2, y+btnH/2, '⚔️  Основать клан  (800 🪙)', 14, '#ffffff', true).setOrigin(0.5);
+    const btnRestore = () => {
+      bgC.clear();
+      bgC.fillStyle(C.purple, 0.9); bgC.fillRoundedRect(16, y, W-32, btnH, 12);
+      bgC.fillStyle(0xffffff, 0.08); bgC.fillRoundedRect(18, y+2, W-36, 22, 10);
+    };
     this.add.zone(16, y, W-32, btnH).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { bgC.clear(); bgC.fillStyle(0x6600cc,1); bgC.fillRoundedRect(16,y,W-32,btnH,12); tg?.HapticFeedback?.impactOccurred('heavy'); })
-      .on('pointerout',  () => { bgC.clear(); bgC.fillStyle(C.purple,0.9); bgC.fillRoundedRect(16,y,W-32,btnH,12); })
-      .on('pointerup',   () => this._doCreateV2(btnT));
+      .on('pointerout',  btnRestore)
+      .on('pointerup',   () => { btnRestore(); this._doCreateV2(btnT); });
 
     txt(this, W/2, y+btnH+10, 'Имя и тег должны быть уникальны', 10, '#a8b4d8').setOrigin(0.5);
   },
