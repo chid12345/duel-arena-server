@@ -30,6 +30,7 @@ from repositories.social import SocialMixin
 from repositories.avatars import AvatarsMixin
 from repositories.inventory import InventoryMixin
 from repositories.quests import QuestsMixin
+from repositories.world_boss import WorldBossMixin
 
 
 class Database(
@@ -46,6 +47,7 @@ class Database(
     AvatarsMixin,
     InventoryMixin,
     QuestsMixin,
+    WorldBossMixin,
 ):
     def __init__(self):
         DBCore.__init__(self)
