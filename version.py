@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.7.37"
-VERSION_LABEL = "v1.7.37 — keyboard shift (инпут над клавой), /admin_delete_clan команда, cron auto-heal, mobile debug 3-tap"
+VERSION = "1.7.38"
+VERSION_LABEL = "v1.7.38 — chat клана: кнопка «Назад» не прячется при клаве (pin только инпут), drag-scroll сообщений с инерцией"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "5.71"
+GAME_VERSION = "5.72"

@@ -63,7 +63,7 @@ Object.assign(ClanScene.prototype, {
     this.add.zone(W-50, 12, 38, 34).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerup', () => this._chatLoad(msgAreaY, msgAreaH, W));
 
-    /* ── Область сообщений ── */
+    /* ── Область сообщений со скроллом ── */
     const msgAreaY = hdrH + 6;
     const msgAreaH = inputY - 6 - msgAreaY - 6;
 
@@ -71,46 +71,78 @@ Object.assign(ClanScene.prototype, {
     msgsG.fillStyle(C.bgPanel, 0.4);
     msgsG.fillRoundedRect(8, msgAreaY, W-16, msgAreaH, 8);
 
-    this._msgObjs = [];
+    /* Контейнер с маской — сообщения прокручиваются внутри msgArea */
+    const msgC = this.add.container(0, 0);
+    const maskG = this.make.graphics({ x: 0, y: 0, add: false });
+    maskG.fillStyle(0xffffff);
+    maskG.fillRect(8, msgAreaY, W - 16, msgAreaH);
+    msgC.setMask(maskG.createGeometryMask());
+
+    let baseY = 0, contentH = 0, vel = 0;
+    const clampY = y => {
+      const maxUp = Math.max(0, contentH - msgAreaH);
+      if (y > 0) return 0;
+      if (y < -maxUp) return -maxUp;
+      return y;
+    };
+    /* Drag-скролл с инерцией (аналог магазина) */
+    const dragZ = this.add.zone(8, msgAreaY, W-16, msgAreaH).setOrigin(0).setInteractive();
+    let sy = 0, dragBase = 0, active = false, lastY = 0, lastT = 0;
+    dragZ.on('pointerdown', p => {
+      sy = p.y; dragBase = baseY; vel = 0;
+      lastY = p.y; lastT = this.game.loop.now; active = true;
+    });
+    dragZ.on('pointermove', p => {
+      if (!active) return;
+      const dy = p.y - sy;
+      const now = this.game.loop.now, dt = now - lastT;
+      if (dt > 0) vel = (p.y - lastY) / dt * 16;
+      lastY = p.y; lastT = now;
+      baseY = clampY(dragBase + dy);
+      msgC.setY(baseY);
+    });
+    dragZ.on('pointerup',  () => { active = false; });
+    dragZ.on('pointerout', () => { active = false; });
+    this._chatScrollFn = () => {
+      if (Math.abs(vel) < 0.15) { vel = 0; return; }
+      baseY = clampY(baseY + vel); vel *= 0.88;
+      msgC.setY(baseY);
+    };
 
     this._chatLoad = (aY, aH, cW) => {
-      this._msgObjs.forEach(o => { try { o.destroy(); } catch(_){} });
-      this._msgObjs = [];
+      msgC.removeAll(true);
       const spin = txt(this, cW/2, aY+aH/2, '⏳ Загрузка...', 12, '#bbbbff').setOrigin(0.5);
-      this._msgObjs.push(spin);
-
+      msgC.add(spin);
       get('/api/clan/chat').then(d => {
-        spin.destroy();
-        this._msgObjs = this._msgObjs.filter(o => o !== spin);
+        msgC.removeAll(true);
         const msgs = d.messages || [];
-
         if (!msgs.length) {
-          const e = txt(this, cW/2, aY+aH/2, '💬 Напишите первым!', 12, '#aaaaff').setOrigin(0.5);
-          this._msgObjs.push(e); return;
+          msgC.add(txt(this, cW/2, aY+aH/2, '💬 Напишите первым!', 12, '#aaaaff').setOrigin(0.5));
+          contentH = 0; baseY = 0; msgC.setY(0); return;
         }
-
         const lineH = 40;
-        const maxL  = Math.floor(aH / lineH);
-        msgs.slice(-maxL).forEach((m, i) => {
+        const startY = aY + aH - msgs.length * lineH;  /* низ последнего = aY+aH */
+        const maxMsgCh = Math.floor((cW - 32) / 7);
+        msgs.forEach((m, i) => {
           const isMe = (m.user_id === this._chatMyId);
-          const my   = aY + aH - (Math.min(msgs.length, maxL) - i) * lineH;
+          const my   = Math.max(aY, startY) + i * lineH;
           const bg   = this.add.graphics();
           bg.fillStyle(isMe ? 0x1a3a7a : 0x1e1c34, 0.95);
           bg.fillRoundedRect(10, my+2, cW-20, lineH-4, 8);
           const nc = isMe ? '#7ab4ff' : '#ffc83c';
-          const maxMsgCh = Math.floor((cW - 32) / 7);
-          const nameStr  = isMe ? 'Вы' : (m.username||'Игрок').slice(0, 14);
-          const msgStr   = (m.message||'').slice(0, maxMsgCh);
-          const t1 = txt(this, 20, my+10, nameStr, 12, nc, true);
-          const t2 = txt(this, 20, my+24, msgStr,  12, '#e8e8ff');
-          const t3 = txt(this, cW-14, my+10, m.time_str||'', 11, '#a8b4d8').setOrigin(1, 0);
-          this._msgObjs.push(bg, t1, t2, t3);
+          const nameStr = isMe ? 'Вы' : (m.username||'Игрок').slice(0, 14);
+          const msgStr  = (m.message||'').slice(0, maxMsgCh);
+          msgC.add([ bg,
+            txt(this, 20, my+10, nameStr, 12, nc, true),
+            txt(this, 20, my+24, msgStr,  12, '#e8e8ff'),
+            txt(this, cW-14, my+10, m.time_str||'', 11, '#a8b4d8').setOrigin(1, 0),
+          ]);
         });
-      }).catch(() => { spin.setText('❌ Нет соединения'); });
+        contentH = msgs.length * lineH;
+        baseY = 0; msgC.setY(0);
+      }).catch(() => {});
     };
-
     this._chatLoad(msgAreaY, msgAreaH, W);
-
     this._chatTimer = this.time.addEvent({
       delay: 20000, loop: true,
       callback: () => this._chatLoad(msgAreaY, msgAreaH, W),

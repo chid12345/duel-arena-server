@@ -31,14 +31,16 @@ Object.assign(ClanScene.prototype, {
       if (rect.width < 50 || rect.height < 50) return;
       const sx = rect.width / W;
       const sy = rect.height / scene.H;
+      el.style.width  = Math.round(w * sx) + 'px';
+      el.style.height = Math.round(h * sy) + 'px';
+      /* При _pinned инпут закреплён над клавиатурой — трогаем только размер */
+      if (el._pinned) return;
       const left = gameX !== null
         ? Math.round(rect.left + gameX * sx)
         : Math.round(rect.left + (W - w) / 2 * sx);
       const top  = Math.round(rect.top + y * sy);
       el.style.left   = left + 'px';
       el.style.top    = top  + 'px';
-      el.style.width  = Math.round(w * sx) + 'px';
-      el.style.height = Math.round(h * sy) + 'px';
     };
     /* Phaser пересчитывает canvas асинхронно (после window.resize), поэтому
        getBoundingClientRect сразу после resize может вернуть старые размеры.
@@ -61,29 +63,26 @@ Object.assign(ClanScene.prototype, {
     vp?.addEventListener('resize', reposition);
     vp?.addEventListener('scroll', reposition);
 
-    /* Сдвиг canvas вверх если инпут под клавиатурой. Общий state через
-       window._kbdShift — несколько инпутов работают согласованно.
-       reposition() после transform — getBoundingClientRect вернёт новые
-       координаты, инпут плавно уйдёт за canvas. */
-    const shiftCanvas = (px) => {
-      if (window._kbdShift === px) return;
-      window._kbdShift = px;
-      canvas.style.transition = 'transform 0.2s ease-out';
-      canvas.style.transform  = px ? `translateY(${-px}px)` : '';
-      reposition();
-    };
+    /* При фокусе: если инпут под клавиатурой — закрепляем его прямо над
+       visualViewport.bottom. Canvas НЕ трогаем, чтобы кнопка «Назад» и
+       шапка остались видны. При blur — возвращаем на canvas-coords. */
     el.addEventListener('focus', () => {
       setTimeout(() => {
         if (!vp) return;
         const r = el.getBoundingClientRect();
         const viewBottom = (vp.offsetTop || 0) + vp.height;
-        const diff = Math.round(r.bottom - viewBottom + 16);
-        if (diff > 0) shiftCanvas(diff);
+        const diff = Math.round(r.bottom - viewBottom + 12);
+        if (diff > 0) {
+          el._pinned = true;
+          const curTop = parseFloat(el.style.top) || 0;
+          el.style.top = Math.round(curTop - diff) + 'px';
+        }
       }, 300);
     });
     el.addEventListener('blur', () => {
       setTimeout(() => {
-        if (!(document.activeElement instanceof HTMLInputElement)) shiftCanvas(0);
+        if (document.activeElement instanceof HTMLInputElement) return;
+        if (el._pinned) { el._pinned = false; reposition(); }
       }, 150);
     });
 
@@ -94,7 +93,6 @@ Object.assign(ClanScene.prototype, {
       vp?.removeEventListener('resize', reposition);
       vp?.removeEventListener('scroll', reposition);
       el.remove();
-      if (window._kbdShift) shiftCanvas(0);
     };
     this.events.once('shutdown', cleanup);
     this.events.once('destroy',  cleanup);
