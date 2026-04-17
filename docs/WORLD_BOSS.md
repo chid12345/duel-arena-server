@@ -13,11 +13,13 @@
 | Расписание спавна | 6 раз/день: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 (UTC) |
 | Длительность боя | 10 минут |
 | HP босса | `500 × онлайн_игроков`, минимум 10 000 |
-| Босс универсальный | да, с рандомом ±10% статов (сила/ловкость/интуиция) |
-| Имя босса | одно из 10 вариантов, рандом при спавне |
+| Типы босса (Фаза 2.2) | 5: universal / fire / ice / poison / shadow — у каждого свой `stat_profile_base` и пул имён |
+| Рандом статов при спавне | base × uniform(0.9..1.1) по `str/agi/int` |
+| Имя босса | рандом из `name_pool` выбранного типа |
 | Ответка босса | каждые 6 сек, 8% HP случайного из **топ-5 по урону** |
-| Коронные удары | 75% HP → -3% всем, 50% → -5%, 25% → -8% |
+| Коронные удары | 75% HP → -3% всем, 50% → -5% + **ярость (stage=2, stat_profile ×1.2)**, 25% → -8% + «Хаос» 10с |
 | Окно уязвимости | раз в 60 сек, длится 5 сек, урон **x3** |
+| Динамический фон (Фаза 2.1) | 4 уровня тревоги по HP-доле: 75% / 50% / 25%, на 25% — пульсация |
 | Награды победы | +200% (база × вклад%) |
 | Награды поражения | 30% (утешительные) |
 | Сундук «последний удар» | за золото (обычный) |
@@ -32,17 +34,20 @@
 
 | Слой | Пакет / файл |
 |---|---|
-| Схема БД (миграции, вкл. 107/108 announce_5min, reminders_sent_5min) | `db_schema/sqlite_migrations_part_world_boss.py` |
+| Схема БД (миграции, вкл. 107/108 announce_5min/reminders, 109 stage) | `db_schema/sqlite_migrations_part_world_boss.py` |
 | Репозиторий | `repositories/world_boss/` |
 | Расчёт наград (чистая функция) | `repositories/world_boss/rewards_calc.py` |
+| Типы боссов (5 штук: universal/fire/ice/poison/shadow) | `config/world_boss/` (`types.py` + `__init__.py`) |
+| Константы (HP, ответка, коронные, `WB_ENRAGE_MULT`) | `config/world_boss_constants.py` |
 | Планировщик спавна + финализация | `jobs/world_boss_scheduler.py` |
 | Анонс в чат за 5 мин (job) | `jobs/world_boss_announce.py` (env `WB_ANNOUNCE_CHAT_ID`) |
 | Персональный пуш за 5 мин (job) | `jobs/world_boss_remind.py` (по `wb_reminder_opt_in=1`) |
-| Логика боя (тик, коронные удары) | `battle_system/world_boss/` |
+| Боевой тик (ответка, коронные, ярость) | `jobs/world_boss_battle_tick.py` |
 | REST API | `api/world_boss_routes.py` |
-| WebSocket | `api/world_boss_realtime.py` |
-| UI (Mini App) | `webapp/scene_world_boss.js` (+ `_ext`, `_ui`, `_fx`) |
-| UI-эффекты (shake/flash/«Хаос») | `webapp/scene_world_boss_fx.js` |
+| WebSocket | `api/world_boss_ws.py` |
+| UI (Mini App) | `webapp/scene_world_boss.js` (+ `_ext`, `_ui`, `_fx`, `_bg`) |
+| UI-эффекты (shake/flash/«Хаос»/ярость) | `webapp/scene_world_boss_fx.js` |
+| UI — динамический фон по HP | `webapp/scene_world_boss_bg.js` |
 | UI магазина — рейд-свитки | `webapp/scene_shop_raid.js` |
 | Дейлик | `repositories/quests/definitions_tasks.py` (`dq_wb_hit1`, track=`wb_hits`) |
 | Достижение | `repositories/quests/definitions_achieve_wb.py` (`ach_wb_wins`, compute=`wb_wins`) |
@@ -54,7 +59,7 @@
 
 | Таблица | Что хранит |
 |---|---|
-| `world_boss_spawns` | Один рейд = одна запись. HP, имя, статы-профиль (JSON), статус, победители сундуков |
+| `world_boss_spawns` | Один рейд = одна запись. HP, имя, `boss_type`, `stage`, статы-профиль (JSON), статус, победители сундуков |
 | `world_boss_hits` | Каждый удар игрока (damage, crit, окно-уязвимости) — для подсчёта вклада |
 | `world_boss_player_state` | HP игрока в рейде + 2 слота активных рейд-свитков + `is_dead` |
 | `world_boss_rewards` | Непрочитанные награды (gold/exp/diamonds/сундук, `claimed`) |
@@ -101,10 +106,14 @@ HP = max(10_000, 500 * online)
 ```
 
 ### Рандом-статы босса (при спавне)
-```json
-{"str": 0.9..1.1, "agi": 0.9..1.1, "int": 0.9..1.1}
 ```
-Множители от базовых статов босса. Игрок **не знает** расклад заранее.
+stat_profile = stat_profile_base × uniform(0.9, 1.1)  # по каждому из str/agi/int
+```
+`stat_profile_base` зависит от типа (Фаза 2.2): `fire` сильнее по str, `ice` по agi, `shadow` баланс, и т.д.
+Игрок **не знает** расклад заранее — видит только эмодзи + метку типа.
+
+### Ярость (stage 2, Фаза 2.3)
+Вместе с коронным ударом 50% HP босс атомарно переходит в `stage=2`: `stat_profile *= WB_ENRAGE_MULT` (1.2). Следующие ответки сильнее. Идемпотентно (`UPDATE ... WHERE stage<2`). UI получает `stage` в `/state` и WS `wb_tick` → при переходе 1→2 показывает анонс «⚡ БОСС РАЗЪЯРЁН ⚡» + heavy shake.
 
 ### Удар игрока по боссу (сервер считает сам — анти-чит)
 ```
@@ -173,7 +182,13 @@ dmg_to_player = 8% * player.max_hp * boss.stat_profile.str / (1 + player.defense
 
 ---
 
-## Что НЕ делаем в MVP
+## Что сделано в Фазе 2
+
+- **2.1 Динамический фон по HP** — `scene_world_boss_bg.js`, 4 уровня тревоги, пульсация на 25%.
+- **2.2 Типы боссов** — 5 типов (universal/fire/ice/poison/shadow), у каждого `stat_profile_base` и `name_pool`. Рандом по `roll_boss_type()`, в `/state` отдаётся `boss_type/boss_emoji/boss_type_label`.
+- **2.3 2-я стадия (ярость)** — при 50% HP `stage=2`, `stat_profile ×1.2`. Атомарный `wb_try_enrage`, UI-анонс «⚡ БОСС РАЗЪЯРЁН ⚡».
+
+## Что НЕ делаем (пока)
 
 - Heatmap ударов (куда бьют) — переусложнение.
 - Скролл к голове босса — ломает мобильный UX.
@@ -181,9 +196,6 @@ dmg_to_player = 8% * player.max_hp * boss.stat_profile.str / (1 + player.defense
 - `/buff @username` через Reply — Фаза 3.
 - Общий сундук с «бросить кубик» — Фаза 3.
 - Emoji Status участника — Фаза 3.
-- Типы боссов (ледяной/огненный) — Фаза 2. В MVP **один универсальный** с рандом-статами.
-- Динамический фон по HP — Фаза 2.
-- Вторая стадия босса на 50% HP — Фаза 2.
 
 ---
 
