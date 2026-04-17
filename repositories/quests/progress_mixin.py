@@ -186,6 +186,7 @@ class QuestsProgressMixin:
             "tower_best": int(t.get("best_floor") or 0),
             "endless_best": int(e.get("best_wave") or 0),
             "referrals": int(r.get("cnt") or 0),
+            "wb_wins": self.get_wb_wins_count(user_id),
         }
 
     def get_achievements_status(self, user_id: int) -> list[dict]:

@@ -85,6 +85,21 @@ class WorldBossRewardsMixin:
         conn.close()
         return dict(row) if row else None
 
+    def get_wb_wins_count(self, user_id: int) -> int:
+        """Количество побед игрока в рейдах Мирового босса (для ach_wb_wins).
+        Считаем уникальные spawn_id, где была создана запись is_victory=1.
+        """
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(DISTINCT spawn_id) AS c FROM world_boss_rewards "
+            "WHERE user_id=? AND is_victory=1",
+            (int(user_id),),
+        )
+        row = cur.fetchone()
+        conn.close()
+        return int(row["c"]) if row else 0
+
     def get_wb_reward_by_spawn(
         self, spawn_id: int, user_id: int
     ) -> Optional[Dict[str, Any]]:

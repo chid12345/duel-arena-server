@@ -1,6 +1,8 @@
 """Определения многоуровневых достижений (achievements)."""
 from __future__ import annotations
 
+from repositories.quests.definitions_achieve_wb import WB_ACHIEVEMENT_DEFS
+
 # source: "computed" — значение берётся из существующих колонок БД (wins, level…)
 # source: "tracked"  — значение накапливается в task_progress через хуки
 
@@ -206,6 +208,9 @@ ACHIEVEMENT_DEFS: list[dict] = [
         ],
     },
 ]
+
+# Достижения Мирового босса (отдельный модуль по Закону 9).
+ACHIEVEMENT_DEFS.extend(WB_ACHIEVEMENT_DEFS)
 
 # Быстрый поиск по ключу
 ACHIEVEMENT_BY_KEY: dict[str, dict] = {a["key"]: a for a in ACHIEVEMENT_DEFS}
