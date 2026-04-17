@@ -31,11 +31,11 @@ Object.assign(ClanScene.prototype, {
     /* Минимальный уровень — справа от тега */
     txt(this, 116, y, 'Мин. ур.', 12, '#ffffff', true);
     txt(this, 116, y+15, 'Ограничение', 10, '#a8b4d8');
-    this._minLvlEl = this._makeInput(W, y+30, 60, 32, '1', 2, 116);
+    this._minLvlEl = this._makeInput(W, y+30, 72, 32, '1', 2, 116);
 
     /* Закрытый клан — чекбокс справа */
     this._closedFlag = 0;
-    const cbX = 190, cbY = y+30, cbS = 32;
+    const cbX = 200, cbY = y+30, cbS = 32;
     const cbG = this.add.graphics();
     const drawCb = () => {
       cbG.clear();

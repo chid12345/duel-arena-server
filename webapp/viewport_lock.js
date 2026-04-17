@@ -8,22 +8,39 @@
    ============================================================ */
 (function () {
   const tg = window.Telegram?.WebApp;
-  function applyH(h) {
-    if (!h || h < 100) return;
-    document.documentElement.style.height = h + 'px';
-    document.body.style.height = h + 'px';
+  let maxH = 0;
+  function candidateH() {
+    return Math.max(
+      tg?.viewportStableHeight || 0,
+      tg?.viewportHeight || 0,
+      window.innerHeight || 0,
+    );
   }
-  function stableH() {
-    return tg?.viewportStableHeight || tg?.viewportHeight || window.innerHeight;
+  function apply() {
+    const h = candidateH();
+    if (h < 100) return;
+    if (h > maxH) maxH = h;
+    document.documentElement.style.height = maxH + 'px';
+    document.body.style.height = maxH + 'px';
+    /* Для отладки — можно открыть в eruda/vConsole */
+    window.__viewport_debug = {
+      stable: tg?.viewportStableHeight,
+      current: tg?.viewportHeight,
+      inner: window.innerHeight,
+      applied: maxH,
+    };
   }
   if (tg) {
     try { tg.ready(); tg.expand(); } catch (_) {}
-    applyH(stableH());
-    tg.onEvent('viewportChanged', () => applyH(stableH()));
+    /* Серия попыток — Telegram expand асинхронный, первые значения могут
+       быть малыми. Берём МАКСИМУМ из всех увиденных. */
+    [0, 100, 300, 700, 1500].forEach(d => setTimeout(apply, d));
+    tg.onEvent('viewportChanged', apply);
   } else {
-    window.addEventListener('load', () => applyH(window.innerHeight));
+    window.addEventListener('load', apply);
   }
   window.addEventListener('orientationchange', () => {
-    setTimeout(() => applyH(stableH()), 400);
+    maxH = 0;
+    setTimeout(apply, 400);
   });
 })();
