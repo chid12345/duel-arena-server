@@ -77,6 +77,8 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
     raid_scrolls_inv = {sid: inv.get(sid, 0) for sid in _RAID_SCROLL_IDS}
     res_scrolls_inv = {sid: inv.get(sid, 0) for sid in _RES_SCROLL_IDS}
     unclaimed = db.get_wb_unclaimed_rewards(uid)
+    player_row = db.get_or_create_player(uid, "")
+    reminder_opt_in = bool(int(player_row.get("wb_reminder_opt_in") or 0))
 
     return {
         "ok": True,
@@ -103,6 +105,7 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
         "player_state": player_state,
         "raid_scrolls_inv": raid_scrolls_inv,
         "res_scrolls_inv": res_scrolls_inv,
+        "reminder_opt_in": reminder_opt_in,
         "unclaimed_rewards": [
             {
                 "reward_id": int(r["reward_id"]),
