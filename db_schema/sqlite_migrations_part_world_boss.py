@@ -109,4 +109,10 @@ MIGRATIONS_PART_WORLD_BOSS = [
         "ALTER TABLE world_boss_spawns ADD COLUMN crown_flags INTEGER DEFAULT 0",
         "ALTER TABLE world_boss_spawns ADD COLUMN last_boss_attack_at TIMESTAMP",
     ]),
+
+    # 7. Cooldown 300 мс между ударами игрока — требует ms-точности
+    # (SQLite CURRENT_TIMESTAMP округляет до секунды).
+    ("2026_04_17_106_wb_hit_cooldown_ms", [
+        "ALTER TABLE world_boss_player_state ADD COLUMN last_hit_ms INTEGER DEFAULT 0",
+    ]),
 ]

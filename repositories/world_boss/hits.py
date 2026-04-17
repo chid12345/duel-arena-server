@@ -106,15 +106,23 @@ class WorldBossHitsMixin:
         conn.close()
         return int(row["c"]) if row else 0
 
-    def get_wb_last_hit_time(self, spawn_id: int, user_id: int) -> Optional[str]:
-        """Время последнего удара игрока — для кулдауна 300 мс (анти-чит)."""
+    def wb_try_record_hit(
+        self, spawn_id: int, user_id: int, now_ms: int, cooldown_ms: int
+    ) -> bool:
+        """Атомарный кулдаун 300 мс: UPDATE проходит только если прошло cooldown_ms.
+
+        Возвращает True если удар разрешён (и last_hit_ms обновлён на now_ms),
+        False если ещё не прошёл кулдаун.
+        """
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT created_at FROM world_boss_hits "
-            "WHERE spawn_id=? AND user_id=? ORDER BY hit_id DESC LIMIT 1",
-            (int(spawn_id), int(user_id)),
+            "UPDATE world_boss_player_state SET last_hit_ms=? "
+            "WHERE spawn_id=? AND user_id=? "
+            "AND (last_hit_ms = 0 OR last_hit_ms <= ?)",
+            (int(now_ms), int(spawn_id), int(user_id), int(now_ms - cooldown_ms)),
         )
-        row = cur.fetchone()
+        ok = cur.rowcount > 0
+        conn.commit()
         conn.close()
-        return row["created_at"] if row else None
+        return ok

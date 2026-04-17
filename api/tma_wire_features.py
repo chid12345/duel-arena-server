@@ -14,6 +14,7 @@ from api.social_routes import register_social_routes
 from api.system_realtime_routes import register_system_realtime_routes
 from api.titan_training_routes import register_titan_training_routes
 from api.wardrobe_routes import register_wardrobe_routes
+from api.world_boss_routes import register_world_boss_routes
 
 from api.tma_auth import get_user_from_init_data
 from api.tma_battle_api import _battle_state_api
@@ -200,6 +201,13 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
     )
     register_admin_purchases(app, db=db)
     register_stats_routes(app, db=db)
+    register_world_boss_routes(
+        app,
+        {
+            "db": db,
+            "get_user_from_init_data": get_user_from_init_data,
+        },
+    )
     register_task_routes(
         app,
         {
