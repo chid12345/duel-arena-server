@@ -93,4 +93,10 @@ def _do_buy(db, uid: int, iid: str, item: dict) -> dict:
         if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
         return r
 
+    # === Рейд-свитки (1 заряд = 1 рейд, применяются вручную в слот) ===
+    if iid in ("damage_25", "power_10", "defense_20", "dodge_10", "crit_10"):
+        r = _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
+        if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
+        return r
+
     return {"ok": False, "reason": "Покупка недоступна"}
