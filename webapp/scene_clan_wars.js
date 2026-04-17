@@ -9,7 +9,7 @@ Object.assign(ClanScene.prototype, {
 
   _renderWars(W, H) {
     txt(this, W/2, 80, '⚔️ КЛАН-ВОЙНЫ', 14, '#ffc83c', true).setOrigin(0.5);
-    txt(this, W/2, 100, '24ч · победа в любом бою = +1 очко · награда: 200🪙 +2💎 каждому', 9, '#a8b4d8').setOrigin(0.5);
+    txt(this, W/2, 100, '24ч · победа в любом бою = +1 очко · награда: 200🪙 +2💎 каждому', 9, '#c8d4f0').setOrigin(0.5);
     const load = txt(this, W/2, 150, 'Загрузка...', 12, '#a8c4ff').setOrigin(0.5);
 
     Promise.all([get('/api/clan/war'), get('/api/clan')]).then(([wd, cd]) => {
@@ -51,7 +51,7 @@ Object.assign(ClanScene.prototype, {
             this.add.zone(32+bw, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true })
               .on('pointerup', () => this._warDecide('decline', war.id));
           } else {
-            txt(this, W/2, y+78, incoming ? 'Только лидер может ответить' : 'Жди ответа лидера соперника', 10, '#a8b4d8').setOrigin(0.5);
+            txt(this, W/2, y+78, incoming ? 'Только лидер может ответить' : 'Жди ответа лидера соперника', 10, '#c8d4f0').setOrigin(0.5);
           }
         } else {
           // active
@@ -66,7 +66,7 @@ Object.assign(ClanScene.prototype, {
         y += cardH + 12;
       } else if (isLeader) {
         // Нет войны — лидер может вызвать клан из топа
-        txt(this, W/2, y+10, 'ВЫЗВАТЬ КЛАН НА ВОЙНУ', 11, '#a8b4d8', true).setOrigin(0.5);
+        txt(this, W/2, y+10, 'ВЫЗВАТЬ КЛАН НА ВОЙНУ', 11, '#c8d4f0', true).setOrigin(0.5);
         y += 32;
         get('/api/clan/top').then(d => {
           (d.clans||[]).filter(c => c.id !== myCid).slice(0,5).forEach(c => {
@@ -87,8 +87,8 @@ Object.assign(ClanScene.prototype, {
           });
         });
       } else {
-        txt(this, W/2, y+20, '😴 Войн нет', 13, '#a8b4d8').setOrigin(0.5);
-        txt(this, W/2, y+40, 'Только лидер может бросить вызов', 10, '#666b80').setOrigin(0.5);
+        txt(this, W/2, y+20, '😴 Войн нет', 13, '#c8d4f0').setOrigin(0.5);
+        txt(this, W/2, y+40, 'Только лидер может бросить вызов', 10, '#9aa0b8').setOrigin(0.5);
       }
     }).catch(() => load.setText('❌ Нет соединения'));
 

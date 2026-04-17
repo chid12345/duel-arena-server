@@ -34,7 +34,7 @@ Object.assign(ClanScene.prototype, {
     txt(this, infoX + 38, y + 10, `Ур.${clan.level}`, 10, '#ffffff', true);
     txt(this, infoX, y + 26, trunc(clan.name, 18), 16, '#ffffff', true);
     const desc = (clan.description || '').trim();
-    if (desc) txt(this, infoX, y + 48, desc.slice(0, 36), 10, '#a8b4d8');
+    if (desc) txt(this, infoX, y + 48, desc.slice(0, 36), 10, '#c8d4f0');
     const pillY = y + cardH - 22;
     const pillG = this.add.graphics();
     let pillX = infoX;
@@ -77,10 +77,10 @@ Object.assign(ClanScene.prototype, {
       sbg.fillStyle(0x141720, 1); sbg.fillRoundedRect(sx, y, sbW, sbH, 10);
       sbg.lineStyle(1, 0x1e2230, 0.9); sbg.strokeRoundedRect(sx, y, sbW, sbH, 10);
       txt(this, sx + sbW / 2, y + 18, s.val, 17, '#ffffff', true).setOrigin(0.5);
-      txt(this, sx + sbW / 2, y + 38, s.lbl, 9, '#a8b4d8', true).setOrigin(0.5);
+      txt(this, sx + sbW / 2, y + 38, s.lbl, 9, '#c8d4f0', true).setOrigin(0.5);
     });
     y += sbH + 10;
-    txt(this, 16, y, `УЧАСТНИКИ  ${members.length}/20`, 10, '#a8b4d8', true);
+    txt(this, 16, y, `УЧАСТНИКИ  ${members.length}/20`, 10, '#c8d4f0', true);
     y += 18;
 
     const rowH = 44;
@@ -95,14 +95,14 @@ Object.assign(ClanScene.prototype, {
       bg.strokeRoundedRect(8, ry, W - 16, rowH - 3, 8);
       txt(this, 22, ry + (rowH - 3) / 2, isLdr ? '👑' : '⚔️', 13).setOrigin(0, 0.5);
       txt(this, 42, ry + 10, trunc(m.username || `User${m.user_id}`, 17), 13, '#ffffff', true);
-      txt(this, 42, ry + 27, `Ур.${m.level}  ·  ${m.wins} побед`, 11, '#a8b4d8');
+      txt(this, 42, ry + 27, `Ур.${m.level}  ·  ${m.wins} побед`, 11, '#c8d4f0');
 
       if (isLdr) {
         const bw = 52, bx = W - 12 - bw, bh = 18, by = ry + (rowH - 3) / 2 - 9;
         const rbg = this.add.graphics();
         rbg.fillStyle(0x1e2a10, 1); rbg.fillRoundedRect(bx, by, bw, bh, 5);
         rbg.lineStyle(1, 0x303a20, 0.9); rbg.strokeRoundedRect(bx, by, bw, bh, 5);
-        txt(this, bx + bw / 2, by + bh / 2, 'ЛИДЕР', 8, '#608050').setOrigin(0.5);
+        txt(this, bx + bw / 2, by + bh / 2, 'ЛИДЕР', 8, '#80c060').setOrigin(0.5);
       } else if (isLeader) {
         const kickW = 34, transferW = 70, gap = 6, bh = 22;
         const totalW = transferW + gap + kickW;
@@ -110,7 +110,7 @@ Object.assign(ClanScene.prototype, {
         const tBg = this.add.graphics();
         tBg.fillStyle(0x181b24, 1); tBg.fillRoundedRect(bx, by, transferW, bh, 6);
         tBg.lineStyle(1, 0x2a3050, 0.9); tBg.strokeRoundedRect(bx, by, transferW, bh, 6);
-        txt(this, bx + transferW / 2, by + bh / 2, '👑 Передать', 9, '#5070a0').setOrigin(0.5);
+        txt(this, bx + transferW / 2, by + bh / 2, '👑 Передать', 9, '#7090d0').setOrigin(0.5);
         this.add.zone(bx, by, transferW, bh).setOrigin(0).setInteractive({ useHandCursor: true })
           .on('pointerup', () => this._showTransferConfirm(m, W, H));
 
@@ -126,12 +126,12 @@ Object.assign(ClanScene.prototype, {
         const rbg = this.add.graphics();
         rbg.fillStyle(0x181b24, 1); rbg.fillRoundedRect(bx, by, bw, bh, 5);
         rbg.lineStyle(1, 0x252a38, 0.9); rbg.strokeRoundedRect(bx, by, bw, bh, 5);
-        txt(this, bx + bw / 2, by + bh / 2, 'БОЕЦ', 8, '#5070a0').setOrigin(0.5);
+        txt(this, bx + bw / 2, by + bh / 2, 'БОЕЦ', 8, '#7090d0').setOrigin(0.5);
       }
     });
 
     if (members.length > maxShow) {
-      txt(this, W / 2, y + maxShow * rowH + 6, `+ ещё ${members.length - maxShow} участников`, 11, '#a8b4d8').setOrigin(0.5);
+      txt(this, W / 2, y + maxShow * rowH + 6, `+ ещё ${members.length - maxShow} участников`, 11, '#c8d4f0').setOrigin(0.5);
     }
 
     const btnZone = H - 56;
@@ -176,7 +176,7 @@ Object.assign(ClanScene.prototype, {
     } else {
       rightBg.fillStyle(0x1a1214, 1); rightBg.fillRoundedRect(rx, btnZone, rightW, 42, 10);
       rightBg.lineStyle(1, 0x2a1818, 0.9); rightBg.strokeRoundedRect(rx, btnZone, rightW, 42, 10);
-      txt(this, rx + rightW / 2, btnZone + 21, '🚪 Выйти', 13, '#805060', true).setOrigin(0.5);
+      txt(this, rx + rightW / 2, btnZone + 21, '🚪 Выйти', 13, '#c07090', true).setOrigin(0.5);
       this.add.zone(rx, btnZone, rightW, 42).setOrigin(0).setInteractive({ useHandCursor: true })
         .on('pointerup', () => this._leaveClan());
     }

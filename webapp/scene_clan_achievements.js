@@ -17,7 +17,7 @@ Object.assign(ClanScene.prototype, {
       const items = d.achievements || [];
       const unlocked = items.filter(i => i.unlocked).length;
       const total = items.length;
-      txt(this, W/2, 100, `Открыто: ${unlocked} / ${total}`, 11, '#a8b4d8').setOrigin(0.5);
+      txt(this, W/2, 100, `Открыто: ${unlocked} / ${total}`, 11, '#c8d4f0').setOrigin(0.5);
 
       let y = 124;
       const rowH = 56;
@@ -38,10 +38,10 @@ Object.assign(ClanScene.prototype, {
         txt(this, 32, y+26, it.icon || '🏅', 18).setOrigin(0.5);
         // Название + описание
         txt(this, 58, y+10, it.name, 13, open ? '#ffd166' : '#a8b4d8', true);
-        txt(this, 58, y+28, it.description, 10, '#a8b4d8');
+        txt(this, 58, y+28, it.description, 10, '#c8d4f0');
         // Порог справа
         txt(this, W-16, y+18, open ? '✓ Открыто' : `≥ ${it.threshold}`,
-          11, open ? '#a0e0a0' : '#666b80', true).setOrigin(1, 0.5);
+          11, open ? '#a0e0a0' : '#9aa0b8', true).setOrigin(1, 0.5);
         y += rowH;
       });
     }).catch(() => load.setText('❌ Нет соединения'));

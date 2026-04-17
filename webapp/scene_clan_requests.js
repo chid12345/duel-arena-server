@@ -38,7 +38,7 @@ Object.assign(ClanScene.prototype, {
       const reqs = d.requests || [];
       if (!reqs.length) {
         txt(this, W/2, 140, '✨ Заявок пока нет', 13, '#a8c4ff').setOrigin(0.5);
-        txt(this, W/2, 162, 'Игроки увидят клан в поиске и подадут заявку', 10, '#a8b4d8').setOrigin(0.5);
+        txt(this, W/2, 162, 'Игроки увидят клан в поиске и подадут заявку', 10, '#c8d4f0').setOrigin(0.5);
         return;
       }
       let y = 110; const rowH = 56;
@@ -48,7 +48,7 @@ Object.assign(ClanScene.prototype, {
         bg.lineStyle(1.2, 0x2a3460, 0.85); bg.strokeRoundedRect(8, y, W-16, rowH-4, 9);
 
         txt(this, 16, y+8, (r.username||`User${r.user_id}`).slice(0,18), 13, '#ffffff', true);
-        txt(this, 16, y+28, `Ур.${r.level}  ·  🏆 ${r.wins}`, 11, '#a8b4d8');
+        txt(this, 16, y+28, `Ур.${r.level}  ·  🏆 ${r.wins}`, 11, '#c8d4f0');
 
         // Кнопки ✓ / ✕
         const bw = 36, bh = 28, gap = 6;

@@ -4,7 +4,7 @@
 
 const HIST_EVENT_META = {
   join:          { icon: '🚪', text: 'вступил в клан',       col: '#a0e0a0' },
-  leave:         { icon: '🚶', text: 'покинул клан',         col: '#a8b4d8' },
+  leave:         { icon: '🚶', text: 'покинул клан',         col: '#c8d4f0' },
   kick:          { icon: '⛔', text: 'исключён',              col: '#c06870' },
   autokick:      { icon: '⏰', text: 'авто-кик (неактив 30д)', col: '#c06870' },
   transfer:      { icon: '👑', text: 'стал лидером',          col: '#ffd166' },
@@ -40,13 +40,13 @@ Object.assign(ClanScene.prototype, {
       }
       const events = d.events || [];
       if (!events.length) {
-        txt(this, W/2, 130, '✨ Событий пока нет', 13, '#a8b4d8').setOrigin(0.5);
+        txt(this, W/2, 130, '✨ Событий пока нет', 13, '#c8d4f0').setOrigin(0.5);
         return;
       }
       let y = 110; const rowH = 44;
       const maxShow = Math.min(events.length, Math.floor((H - y - 60) / rowH));
       events.slice(0, maxShow).forEach(ev => {
-        const meta = HIST_EVENT_META[ev.event_type] || { icon:'•', text: ev.event_type, col:'#a8b4d8' };
+        const meta = HIST_EVENT_META[ev.event_type] || { icon:'•', text: ev.event_type, col:'#c8d4f0' };
         const bg = this.add.graphics();
         bg.fillStyle(0x141720, 0.95); bg.fillRoundedRect(8, y, W-16, rowH-3, 8);
         bg.lineStyle(1, 0x1e2230, 0.8); bg.strokeRoundedRect(8, y, W-16, rowH-3, 8);
@@ -55,8 +55,8 @@ Object.assign(ClanScene.prototype, {
         const line = who ? `${who} — ${meta.text}` : meta.text;
         txt(this, 44, y + 8, line, 12, meta.col, true);
         const extra = (ev.extra || '').slice(0, 28);
-        if (extra) txt(this, 44, y + 24, extra, 9, '#a8b4d8');
-        txt(this, W-14, y + (rowH-3)/2, _formatHistTime(ev.created_at), 9, '#666b80').setOrigin(1, 0.5);
+        if (extra) txt(this, 44, y + 24, extra, 9, '#c8d4f0');
+        txt(this, W-14, y + (rowH-3)/2, _formatHistTime(ev.created_at), 9, '#9aa0b8').setOrigin(1, 0.5);
         y += rowH;
       });
     }).catch(() => load.setText('❌ Нет соединения'));

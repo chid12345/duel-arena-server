@@ -36,18 +36,18 @@ Object.assign(ClanScene.prototype, {
       const cg = this.add.graphics();
       cg.fillStyle(0x161920, 1); cg.fillRoundedRect(8, cardY, W-16, cardH, 12);
       cg.lineStyle(2, 0xffc83c, 0.8); cg.strokeRoundedRect(8, cardY, W-16, cardH, 12);
-      txt(this, 18, cardY+10, '⏱️ ДО КОНЦА СЕЗОНА', 9, '#a8b4d8', true);
+      txt(this, 18, cardY+10, '⏱️ ДО КОНЦА СЕЗОНА', 9, '#c8d4f0', true);
       txt(this, 18, cardY+24, this._formatTimeLeft(season.ends_at), 18, '#ffffff', true);
-      txt(this, 18, cardY+52, 'НАГРАДЫ ЗА МЕСТО (КАЖДОМУ В КЛАНЕ)', 8, '#a8b4d8', true);
+      txt(this, 18, cardY+52, 'НАГРАДЫ ЗА МЕСТО (КАЖДОМУ В КЛАНЕ)', 8, '#c8d4f0', true);
       txt(this, 18, cardY+66, '🥇 500🪙 +5💎   🥈 300🪙 +3💎   🥉 150🪙 +1💎', 10, '#ffd166', true);
 
       // Топ кланов сезона
       let y = cardY + cardH + 14;
-      txt(this, 16, y, 'ТОП СЕЗОНА', 9, '#a8b4d8', true);
+      txt(this, 16, y, 'ТОП СЕЗОНА', 9, '#c8d4f0', true);
       y += 18;
       const EM = { light:{i:'☀️',c:0xffd166}, dark:{i:'🌑',c:0xa06bff}, neutral:{i:'⚖️',c:0x7ec8ff} };
       if (!top.length) {
-        txt(this, W/2, y+20, '😔 Никто пока не набрал очков', 12, '#a8b4d8').setOrigin(0.5);
+        txt(this, W/2, y+20, '😔 Никто пока не набрал очков', 12, '#c8d4f0').setOrigin(0.5);
       } else {
         const rowH = 46;
         const maxShow = Math.min(top.length, Math.floor((H - y - 80) / rowH));
@@ -66,7 +66,7 @@ Object.assign(ClanScene.prototype, {
           const ttr = (s,n)=>s&&s.length>n?s.slice(0,n)+'…':(s||'');
           txt(this, 70, ry+8, `[${c.tag}]`, 10, '#ffc83c', true);
           txt(this, 110, ry+8, ttr(c.name, 14), 13, '#ffffff', true);
-          txt(this, 70, ry+25, `👥 ${c.member_count}/20  ·  Ур.${c.level}`, 10, '#a8b4d8');
+          txt(this, 70, ry+25, `👥 ${c.member_count}/20  ·  Ур.${c.level}`, 10, '#c8d4f0');
           txt(this, W-14, ry + (rowH-3)/2, `${c.season_score} оч`, 13, '#ffd166', true).setOrigin(1, 0.5);
         });
       }
