@@ -32,15 +32,21 @@
 
 | Слой | Пакет / файл |
 |---|---|
-| Схема БД (миграция) | `db_schema/sqlite_migrations_part_world_boss.py` |
+| Схема БД (миграции, вкл. 107/108 announce_5min, reminders_sent_5min) | `db_schema/sqlite_migrations_part_world_boss.py` |
 | Репозиторий | `repositories/world_boss/` |
-| Планировщик спавна | `jobs/world_boss_scheduler.py` |
+| Расчёт наград (чистая функция) | `repositories/world_boss/rewards_calc.py` |
+| Планировщик спавна + финализация | `jobs/world_boss_scheduler.py` |
+| Анонс в чат за 5 мин (job) | `jobs/world_boss_announce.py` (env `WB_ANNOUNCE_CHAT_ID`) |
+| Персональный пуш за 5 мин (job) | `jobs/world_boss_remind.py` (по `wb_reminder_opt_in=1`) |
 | Логика боя (тик, коронные удары) | `battle_system/world_boss/` |
 | REST API | `api/world_boss_routes.py` |
 | WebSocket | `api/world_boss_realtime.py` |
-| UI (Mini App) | `webapp/scene_world_boss.js` (+ `_ext*`) |
+| UI (Mini App) | `webapp/scene_world_boss.js` (+ `_ext`, `_ui`, `_fx`) |
+| UI-эффекты (shake/flash/«Хаос») | `webapp/scene_world_boss_fx.js` |
 | UI магазина — рейд-свитки | `webapp/scene_shop_raid.js` |
-| Анонс в чат | `handlers/world_boss_announce.py` |
+| Дейлик | `repositories/quests/definitions_tasks.py` (`dq_wb_hit1`, track=`wb_hits`) |
+| Достижение | `repositories/quests/definitions_achieve_wb.py` (`ach_wb_wins`, compute=`wb_wins`) |
+| Smoke-тесты | `tests/test_world_boss.py` |
 
 ---
 
@@ -181,6 +187,21 @@ dmg_to_player = 8% * player.max_hp * boss.stat_profile.str / (1 + player.defense
 
 ---
 
+## Идемпотентность фоновых джоб
+
+Анонс и персональный пуш бегут каждые 60 сек и смотрят в окно `(0, WB_ANNOUNCE_LEAD_SEC]` до `scheduled_at`. Чтобы не задвоить отправку при рестарте/пересечении тиков, используется **атомарный UPDATE с rowcount>0**:
+
+```sql
+UPDATE world_boss_spawns SET announced_5min=1
+ WHERE spawn_id=? AND (announced_5min IS NULL OR announced_5min=0)
+```
+
+Если `rowcount == 0` — другая реплика/тик уже отправил, текущий просто выходит. Метод в репозитории: `wb_try_mark_announced_5min(spawn_id) -> bool`, аналогично `wb_try_mark_reminders_sent_5min`.
+
+Награды: `create_wb_reward` идемпотентен по `(spawn_id, user_id)` — повторный вызов возвращает существующий `reward_id`. `claim_wb_reward` — атомарный `UPDATE ... WHERE reward_id=? AND claimed=0`, второй вызов → `None`.
+
+---
+
 ## Чеклист при правках системы
 
 1. Миграция БД → `db_schema/sqlite_migrations_part_world_boss.py`.
@@ -190,4 +211,5 @@ dmg_to_player = 8% * player.max_hp * boss.stat_profile.str / (1 + player.defense
 5. Атомарность last-hit: `UPDATE ... WHERE current_hp > 0 RETURNING current_hp`.
 6. Рестарт сервера посреди рейда — состояние в БД, не в памяти.
 7. Рейд-свиток вне рейда — **игнор, не тратить**.
-8. Версии + коммит + пуш (Закон 10).
+8. Новые фоновые эффекты (анонс/пуш) — через `wb_try_mark_*` флаги.
+9. Версии + коммит + пуш (Закон 10).
