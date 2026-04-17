@@ -61,6 +61,7 @@ class WorldBossScene extends Phaser.Scene {
 
   _onWsTick(p) {
     if (!this._state?.active) { this._refresh(); return; }
+    try { this._applyWsEffects?.(p); } catch(_) {}
     this._state.active.current_hp = p.boss.hp;
     this._state.active.max_hp = p.boss.max_hp;
     this._state.active.crown_flags = p.boss.crown_flags;
