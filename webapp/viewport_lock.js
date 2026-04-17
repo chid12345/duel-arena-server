@@ -43,4 +43,27 @@
     maxH = 0;
     setTimeout(apply, 400);
   });
+
+  /* Debug: тройной тап в правом верхнем углу → alert с диагностикой */
+  let _tapCnt = 0, _tapTimer = null;
+  document.addEventListener('click', (e) => {
+    const w = window.innerWidth, h = window.innerHeight;
+    if (e.clientX < w - 60 || e.clientY > 60) { _tapCnt = 0; return; }
+    _tapCnt++;
+    clearTimeout(_tapTimer);
+    _tapTimer = setTimeout(() => { _tapCnt = 0; }, 800);
+    if (_tapCnt >= 3) {
+      _tapCnt = 0;
+      const d = window.__viewport_debug || {};
+      const canvas = document.querySelector('canvas');
+      const r = canvas?.getBoundingClientRect();
+      alert(
+        `viewport_debug:\n` +
+        `stable=${d.stable} current=${d.current} inner=${d.inner} applied=${d.applied}\n` +
+        `body=${document.body.offsetWidth}x${document.body.offsetHeight}\n` +
+        `canvas=${r ? Math.round(r.width) + 'x' + Math.round(r.height) : '?'}\n` +
+        `window=${w}x${h}`
+      );
+    }
+  });
 })();

@@ -60,8 +60,32 @@ Object.assign(ClanScene.prototype, {
     window.addEventListener('orientationchange', reposition);
     vp?.addEventListener('resize', reposition);
     vp?.addEventListener('scroll', reposition);
-    el.addEventListener('focus', reposition);
-    el.addEventListener('blur',  reposition);
+
+    /* Сдвиг canvas вверх если инпут под клавиатурой. Общий state через
+       window._kbdShift — несколько инпутов работают согласованно.
+       reposition() после transform — getBoundingClientRect вернёт новые
+       координаты, инпут плавно уйдёт за canvas. */
+    const shiftCanvas = (px) => {
+      if (window._kbdShift === px) return;
+      window._kbdShift = px;
+      canvas.style.transition = 'transform 0.2s ease-out';
+      canvas.style.transform  = px ? `translateY(${-px}px)` : '';
+      reposition();
+    };
+    el.addEventListener('focus', () => {
+      setTimeout(() => {
+        if (!vp) return;
+        const r = el.getBoundingClientRect();
+        const viewBottom = (vp.offsetTop || 0) + vp.height;
+        const diff = Math.round(r.bottom - viewBottom + 16);
+        if (diff > 0) shiftCanvas(diff);
+      }, 300);
+    });
+    el.addEventListener('blur', () => {
+      setTimeout(() => {
+        if (!(document.activeElement instanceof HTMLInputElement)) shiftCanvas(0);
+      }, 150);
+    });
 
     const cleanup = () => {
       ro?.disconnect();
@@ -70,6 +94,7 @@ Object.assign(ClanScene.prototype, {
       vp?.removeEventListener('resize', reposition);
       vp?.removeEventListener('scroll', reposition);
       el.remove();
+      if (window._kbdShift) shiftCanvas(0);
     };
     this.events.once('shutdown', cleanup);
     this.events.once('destroy',  cleanup);

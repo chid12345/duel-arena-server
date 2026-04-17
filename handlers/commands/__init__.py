@@ -4,6 +4,7 @@ from handlers.commands.start import BotHandlersStart
 from handlers.commands.help_stats import BotHandlersHelpStats
 from handlers.commands.quests_admin import BotHandlersQuestsAdmin
 from handlers.commands.clan import BotHandlersClan
+from handlers.commands.clan_admin import BotHandlersClanAdmin
 from handlers.commands.season_pass import BotHandlersSeasonPass
 from handlers.commands.shop_payments import BotHandlersShopPayments
 from handlers.commands.referral_notify import BotHandlersReferralNotify
@@ -15,6 +16,7 @@ class BotHandlers(
     BotHandlersShopPayments,
     BotHandlersReferralNotify,
     BotHandlersSeasonPass,
+    BotHandlersClanAdmin,
     BotHandlersClan,
     BotHandlersQuestsAdmin,
     BotHandlersHelpStats,

@@ -166,6 +166,12 @@ def _build_app(bot_count: int) -> Application:
             clan_wars_finalize_job, interval=600, first=180,
             name="clan_wars_finalize",
         )
+        # Авто-healing кланов (мёртвый лидер → передача или роспуск), раз в сутки.
+        from jobs.clan_heal import clan_heal_job
+        application.job_queue.run_repeating(
+            clan_heal_job, interval=86400, first=600,
+            name="clan_heal",
+        )
 
     app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
 
@@ -182,6 +188,8 @@ def _build_app(bot_count: int) -> Application:
     app.add_handler(CommandHandler("health",     BotHandlers.health_command))
     app.add_handler(CommandHandler("wipe_me",    BotHandlers.wipe_me_command))
     app.add_handler(CommandHandler("agent_code", BotHandlers.agent_code_command))
+    app.add_handler(CommandHandler("admin_list_clans",  BotHandlers.admin_list_clans_command))
+    app.add_handler(CommandHandler("admin_delete_clan", BotHandlers.admin_delete_clan_command))
     app.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, BotHandlers.successful_payment_handler))
     app.add_handler(CallbackQueryHandler(CallbackHandlers.handle_callback))
