@@ -5,6 +5,7 @@
 from __future__ import annotations
 
 from .spawns import WorldBossSpawnsMixin
+from .spawns_lifecycle import WorldBossSpawnsLifecycleMixin
 from .battle_state import WorldBossBattleStateMixin
 from .hits import WorldBossHitsMixin
 from .player_state import WorldBossPlayerStateMixin
@@ -15,6 +16,7 @@ from .rewards import WorldBossRewardsMixin
 
 class WorldBossMixin(
     WorldBossSpawnsMixin,
+    WorldBossSpawnsLifecycleMixin,
     WorldBossBattleStateMixin,
     WorldBossHitsMixin,
     WorldBossPlayerStateMixin,
