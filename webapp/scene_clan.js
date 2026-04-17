@@ -14,7 +14,33 @@ class ClanScene extends Phaser.Scene {
 
   shutdown() {
     try { this.tweens.killAll(); } catch(_) {}
+    if (this._autoRefreshEvent) { this._autoRefreshEvent.remove(false); this._autoRefreshEvent = null; }
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+  }
+
+  _startAutoRefresh(snapshot) {
+    if (this._autoRefreshEvent) { this._autoRefreshEvent.remove(false); this._autoRefreshEvent = null; }
+    const sub = this._subview || 'main';
+    this._autoRefreshEvent = this.time.addEvent({
+      delay: 20000,
+      loop: true,
+      callback: async () => {
+        if (!this.scene?.isActive('Clan')) return;
+        try {
+          const d = await get('/api/clan');
+          if (!d?.ok || !d.clan) return;
+          const membersNow = (d.members || []).length;
+          const membersBefore = (snapshot.members || []).length;
+          const reqNow = d.pending_requests || 0;
+          const reqBefore = snapshot.pending_requests || 0;
+          const winsNow = d.clan?.wins || 0;
+          const winsBefore = snapshot.clan?.wins || 0;
+          if (membersNow !== membersBefore || reqNow !== reqBefore || winsNow !== winsBefore) {
+            this.scene.restart({ sub });
+          }
+        } catch(_) {}
+      },
+    });
   }
 
   update() { if (this._chatScrollFn) this._chatScrollFn(); }
@@ -78,8 +104,8 @@ class ClanScene extends Phaser.Scene {
     try {
       if (data.clan) {
         if (this._subview === 'chat') this._renderChat(data, W, H);
-        else if (this._subview === 'requests' && data.is_leader) this._renderRequests(W, H);
-        else this._renderMyClan(data, W, H);
+        else if (this._subview === 'requests' && data.is_leader) { this._renderRequests(W, H); this._startAutoRefresh(data); }
+        else { this._renderMyClan(data, W, H); this._startAutoRefresh(data); }
       } else if (this._subview === 'search') {
         this._renderSearch(W, H);
       } else if (this._subview === 'create') {
