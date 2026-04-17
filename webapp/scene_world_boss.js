@@ -12,7 +12,7 @@ class WorldBossScene extends Phaser.Scene {
     try { this._ws?.close?.(); } catch(_) {}
     try { this._timer?.remove?.(); } catch(_) {}
     try { this._clearBossBg?.(); } catch(_) {}
-    this._ws = null; this._timer = null;
+    this._ws = null; this._timer = null; this._enrageShown = false;
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 
@@ -68,6 +68,7 @@ class WorldBossScene extends Phaser.Scene {
     this._state.active.crown_flags = p.boss.crown_flags;
     this._state.active.seconds_left = p.boss.seconds_left;
     this._state.active.vulnerable = p.boss.vulnerable;
+    this._state.active.stage = p.boss.stage || 1;
     if (p.player) this._state.player_state = p.player;
     if (p.top) this._state.top = p.top;
     this._updateFightingHUD();

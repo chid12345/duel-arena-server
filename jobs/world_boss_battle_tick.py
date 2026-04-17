@@ -14,8 +14,11 @@ import logging
 import random
 from datetime import datetime, timezone
 
+import json
+
 from config.world_boss_constants import (
     WB_CROWN_THRESHOLDS,
+    WB_ENRAGE_MULT,
     is_vulnerability_window,
 )
 from repositories.world_boss.damage_calc import (
@@ -65,8 +68,27 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
     )
 
 
-def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int) -> None:
-    """Срабатывает 0/1/2/3 коронных ударов (атомарно, по одному за тик)."""
+def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict) -> None:
+    """Вместе с короной 50% переводим босса в stage=2 (ярость).
+    Множим stat_profile на WB_ENRAGE_MULT → ответка усиливается.
+    Идемпотентно (UPDATE ... WHERE stage<2).
+    """
+    try:
+        new_profile = {
+            k: round(float(v) * WB_ENRAGE_MULT, 3)
+            for k, v in (stat_profile or {}).items()
+        }
+        if db.wb_try_enrage(spawn_id, json.dumps(new_profile)):
+            logger.info("wb battle: ⚡ ENRAGE spawn=%s profile→%s", spawn_id, new_profile)
+    except Exception as e:
+        logger.warning("wb battle: enrage error spawn=%s: %s", spawn_id, e)
+
+
+def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int,
+                         stat_profile: dict) -> None:
+    """Срабатывает 0/1/2/3 коронных ударов (атомарно, по одному за тик).
+    На пороге 50% (flag_bit=0b010) дополнительно триггерит ярость (stage=2).
+    """
     if max_hp <= 0:
         return
     hp_pct = current_hp / max_hp
@@ -77,6 +99,8 @@ def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int) -> Non
                 "wb battle: crown strike %s (dmg_pct=%.2f) — killed=%d",
                 label, dmg_pct, len(killed),
             )
+            if flag_bit == 0b010:
+                _try_enrage_on_50(db, spawn_id, stat_profile)
 
 
 async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
@@ -97,7 +121,7 @@ async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
 
             # 2. Коронные удары — по текущему HP.
             if current_hp > 0:
-                _check_crown_strikes(db, spawn_id, current_hp, max_hp)
+                _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
 
             # 3. Vulnerability window — чисто для лога (эффект применяется при ударе игрока).
             try:

@@ -95,6 +95,7 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
             "seconds_left": seconds_left,
             "vulnerable": vulnerable,
             "crown_flags": int(active.get("crown_flags") or 0),
+            "stage": int(active.get("stage") or 1),
         })(_get_boss_type(active.get("boss_type"))) if active else None,
         "next_scheduled": (lambda _bt: {
             "scheduled_at": next_sched.get("scheduled_at"),

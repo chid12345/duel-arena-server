@@ -51,6 +51,25 @@ class WorldBossBattleStateMixin:
         conn.close()
         return bool(changed)
 
+    def wb_try_enrage(self, spawn_id: int, new_stat_profile_json: str) -> bool:
+        """Атомарный переход в стадию 2 (ярость). Фаза 2.3.
+        True — если это сработало впервые; False если стадия уже 2.
+        Одновременно перезаписывает stat_profile (обычно умноженный на 1.2).
+        """
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_spawns "
+            "SET stage=2, stat_profile=? "
+            "WHERE spawn_id=? AND status='active' "
+            "AND (stage IS NULL OR stage < 2)",
+            (new_stat_profile_json, int(spawn_id)),
+        )
+        changed = cur.rowcount > 0
+        conn.commit()
+        conn.close()
+        return bool(changed)
+
     def wb_try_mark_boss_attacked(
         self, spawn_id: int, cooldown_sec: int
     ) -> bool:

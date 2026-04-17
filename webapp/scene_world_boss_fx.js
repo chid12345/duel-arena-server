@@ -37,6 +37,32 @@ Object.assign(WorldBossScene.prototype, {
         && newPs.current_hp < prevPs.current_hp && this._plHpT) {
       this._fxFlashText(this._plHpT);
     }
+
+    // 4) Переход 1→2 стадия (ярость на 50% HP) → анонс + тяжёлый shake.
+    const prevStage = (prevA.stage | 0) || 1;
+    const newStage  = (newA.stage  | 0) || 1;
+    if (newStage >= 2 && prevStage < 2) {
+      this._fxEnrageAnnounce();
+    }
+  },
+
+  _fxEnrageAnnounce() {
+    if (this._enrageShown) return;
+    this._enrageShown = true;
+    try { this._fxShake('heavy'); } catch(_) {}
+    try { tg?.HapticFeedback?.notificationOccurred?.('warning'); } catch(_) {}
+    try {
+      const W = this.W, H = this.H;
+      const lbl = txt(this, W/2, H/2, '⚡ БОСС РАЗЪЯРЁН ⚡', 22, '#ff6a30')
+                    .setOrigin(0.5).setDepth(10001);
+      lbl.setStroke('#200000', 5);
+      this.tweens.add({
+        targets: lbl, alpha: { from: 1, to: 0 },
+        scale: { from: 1.0, to: 1.6 },
+        duration: 1800, ease: 'Sine.easeOut',
+        onComplete: () => { try { lbl.destroy(); } catch(_) {} },
+      });
+    } catch(_) {}
   },
 
   _fxShake(intensity) {

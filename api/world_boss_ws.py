@@ -83,6 +83,7 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
         "crown_flags": int(active.get("crown_flags") or 0),
         "seconds_left": seconds_left,
         "vulnerable": vulnerable,
+        "stage": int(active.get("stage") or 1),
     }
 
 

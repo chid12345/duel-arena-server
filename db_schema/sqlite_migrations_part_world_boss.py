@@ -125,4 +125,9 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_17_108_wb_reminders_sent_5min", [
         "ALTER TABLE world_boss_spawns ADD COLUMN reminders_sent_5min INTEGER DEFAULT 0",
     ]),
+
+    # 10. Стадия рейда: 1 = обычная, 2 = ярость (триггер на 50% HP). Фаза 2.3.
+    ("2026_04_17_109_wb_stage", [
+        "ALTER TABLE world_boss_spawns ADD COLUMN stage INTEGER DEFAULT 1",
+    ]),
 ]
