@@ -37,8 +37,12 @@ def attach_social_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
         clan_id = player.get("clan_id")
         if not clan_id:
             return {"ok": True, "clan": None, "is_leader": False}
+        try: db.heal_clan_leadership(int(clan_id))
+        except Exception as exc: logger.warning("heal_clan_leadership failed: %s", exc)
         info = db.get_clan_info(int(clan_id))
         if not info:
+            try: db.clear_orphan_clan_link(uid)
+            except Exception: pass
             return {"ok": True, "clan": None, "is_leader": False}
         is_leader = info["clan"].get("leader_id") == uid
         username = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
