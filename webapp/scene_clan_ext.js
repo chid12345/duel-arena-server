@@ -1,61 +1,11 @@
 /* ============================================================
-   ClanScene — расширение: _makeInput, _sendChatMsg,
-   _doSearch, _showSearchResults, _joinClan, _doCreate, _leaveClan
+   ClanScene — расширение: _sendChatMsg, _doSearch,
+   _showSearchResults, _joinClan, _doCreate, _leaveClan
+   _makeInput вынесен в scene_clan_input.js
    Продолжение: scene_clan_ext3.js
    ============================================================ */
 
 Object.assign(ClanScene.prototype, {
-
-  /* gameX — x-координата в игровых пикселях; если null — центрирует.
-     Позиция/размер пересчитываются при resize canvas и visualViewport
-     (когда на мобиле открывается клавиатура). font-size:16px — иначе iOS
-     автоматически зумит страницу и ломает вёрстку. */
-  _makeInput(W, y, w, h, placeholder, maxLen = 20, gameX = null) {
-    const el = document.createElement('input');
-    el.type = 'text'; el.placeholder = placeholder; el.maxLength = maxLen;
-    el.autocomplete = 'off'; el.autocapitalize = 'off'; el.spellcheck = false;
-    el.style.cssText = `position:fixed;left:0;top:0;width:0;height:0;
-      padding:0 12px;background:#1e3878;color:#f0f0fa;border:2px solid #5096ffaa;
-      border-radius:10px;font-size:16px;outline:none;z-index:999;
-      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-      box-sizing:border-box;-webkit-appearance:none;`;
-    el.addEventListener('keydown', (e) => { if (e.key === 'Enter') el.blur(); });
-    document.body.appendChild(el);
-
-    const scene = this;
-    const reposition = () => {
-      if (!el.isConnected) return;
-      const rect = scene.game.canvas.getBoundingClientRect();
-      const sx = rect.width / W;
-      const sy = rect.height / scene.H;
-      const left = gameX !== null
-        ? Math.round(rect.left + gameX * sx)
-        : Math.round(rect.left + (W - w) / 2 * sx);
-      const top  = Math.round(rect.top + y * sy);
-      el.style.left   = left + 'px';
-      el.style.top    = top  + 'px';
-      el.style.width  = Math.round(w * sx) + 'px';
-      el.style.height = Math.round(h * sy) + 'px';
-    };
-    reposition();
-
-    const vp = window.visualViewport;
-    window.addEventListener('resize', reposition);
-    window.addEventListener('orientationchange', reposition);
-    vp?.addEventListener('resize', reposition);
-    vp?.addEventListener('scroll', reposition);
-
-    const cleanup = () => {
-      window.removeEventListener('resize', reposition);
-      window.removeEventListener('orientationchange', reposition);
-      vp?.removeEventListener('resize', reposition);
-      vp?.removeEventListener('scroll', reposition);
-      el.remove();
-    };
-    this.events.once('shutdown', cleanup);
-    this.events.once('destroy',  cleanup);
-    return el;
-  },
 
   async _sendChatMsg(msgAreaY, msgAreaH, W) {
     if (this._busy) return;
