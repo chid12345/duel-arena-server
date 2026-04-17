@@ -42,16 +42,6 @@ Object.assign(WorldBossScene.prototype, {
     });
   },
 
-  _renderUnclaimed(s, W, H) {
-    if (!s.unclaimed_rewards || !s.unclaimed_rewards.length) return;
-    const r = s.unclaimed_rewards[0];
-    const y = H - 120;
-    this._addPanel(8, y, W-16, 52);
-    this._addText(16, y+8,  '🎁 Непойманная награда', 11, '#ffc83c', true);
-    this._addText(16, y+26, `💰${r.gold} ⭐${r.exp} 💎${r.diamonds}`, 11, '#ffffff');
-    this._bigBtn(W-106, y+12, 98, 32, 0x3a8e4a, 'Забрать', () => this._claimReward(r.reward_id));
-  },
-
   _renderResurrectRow(s, W, y) {
     const scrolls = s.res_scrolls_inv || {};
     const items = [['res_30', '30%'], ['res_60', '60%'], ['res_100', '100%']];

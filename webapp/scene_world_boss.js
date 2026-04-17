@@ -89,7 +89,7 @@ class WorldBossScene extends Phaser.Scene {
     else if (s.next_scheduled) { this._renderWaiting(s, W, H); }
     else { this._renderIdle(W, H); }
 
-    this._renderUnclaimed(s, W, H);
+    this._renderResultsOverlay(s, W, H);
   }
 
   _renderFighting(s, W, H) {

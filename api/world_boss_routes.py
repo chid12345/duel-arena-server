@@ -116,17 +116,20 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
         "res_scrolls_inv": res_scrolls_inv,
         "reminder_opt_in": reminder_opt_in,
         "unclaimed_rewards": [
-            {
+            (lambda _bt: {
                 "reward_id": int(r["reward_id"]),
                 "spawn_id": int(r["spawn_id"]),
                 "boss_name": r.get("boss_name"),
+                "boss_type": _bt.get("type"),
+                "boss_emoji": _bt.get("emoji"),
+                "boss_type_label": _bt.get("label"),
                 "gold": int(r.get("gold") or 0),
                 "exp": int(r.get("exp") or 0),
                 "diamonds": int(r.get("diamonds") or 0),
                 "chest_type": r.get("chest_type"),
                 "contribution_pct": float(r.get("contribution_pct") or 0.0),
                 "is_victory": bool(r.get("is_victory")),
-            } for r in unclaimed
+            })(_get_boss_type(r.get("boss_type"))) for r in unclaimed
         ],
     }
 

@@ -49,7 +49,7 @@ class WorldBossRewardsMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT r.*, s.boss_name, s.ended_at "
+            "SELECT r.*, s.boss_name, s.boss_type, s.ended_at "
             "FROM world_boss_rewards r "
             "JOIN world_boss_spawns s ON s.spawn_id = r.spawn_id "
             "WHERE r.user_id=? AND r.claimed=0 "
