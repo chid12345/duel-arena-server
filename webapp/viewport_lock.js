@@ -10,15 +10,18 @@
   const tg = window.Telegram?.WebApp;
   let maxH = 0;
   function candidateH() {
-    return Math.max(
-      tg?.viewportStableHeight || 0,
-      tg?.viewportHeight || 0,
-      window.innerHeight || 0,
-    );
+    // Берём stableHeight как базу — он не сжимается от клавиатуры.
+    // window.innerHeight не используем: на Android он может вырасти выше
+    // реального viewport и тогда CENTER_BOTH сдвинет canvas вниз.
+    const stable = tg?.viewportStableHeight || 0;
+    const current = tg?.viewportHeight || window.innerHeight || 0;
+    return stable > 100 ? stable : current;
   }
   function apply() {
     const h = candidateH();
     if (h < 100) return;
+    // maxH только растёт, но не выше текущего реального viewport.
+    // Это предотвращает сдвиг canvas вниз при CENTER_HORIZONTALLY.
     if (h > maxH) maxH = h;
     document.documentElement.style.height = maxH + 'px';
     document.body.style.height = maxH + 'px';
