@@ -46,7 +46,8 @@ Object.assign(StatsScene.prototype, {
 
     const cy = wbY + wbH/2;
     const nClass = wt.rows.length, nBuffs = (this._invData?.active_buffs || []).length;
-    const total = nClass + nBuffs;
+    const nClan = (this._invData?.clan_bonus?.perks || []).length;
+    const total = nClass + nBuffs + nClan;
     const sum = `+${total} бонус${total===1?'':(total<5?'а':'ов')}`;
     // Белый текст с тёмной обводкой — читается на любом фоне
     txt(this, 18, cy, `${wt.icon}  ${wt.name}`, 14, '#ffffff', true, '#000000').setOrigin(0, 0.5).setDepth(2);
@@ -120,6 +121,12 @@ Object.assign(StatsScene.prototype, {
             i:'🧪', n:BUFF_LBL[b.buff_type] || b.buff_type,
             v:`+${b.value}% · ${timeLeft(b.expires_at)}`, neg:false })) }
         : { title:'🧪 Эликсиры', empty:'нет активных · купите в магазине' },
+      (() => {
+        const cb = this._invData?.clan_bonus;
+        if (!cb) return { title:'🏰 Клан', empty:'нет клана · вступите для бонусов' };
+        const title = cb.clan_name ? `🏰 Клан · ${cb.clan_name}` : '🏰 Клан';
+        return { title, rows: cb.perks.map(p => ({ i:p.icon, n:p.label, v:p.value, neg:false })) };
+      })(),
       { title:'🔜 В разработке', rows: UPCOMING.map(u => ({ i:u.i, n:u.n, v:u.v, neg:false, soon:true })) },
     ];
 

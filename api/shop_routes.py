@@ -43,6 +43,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
     @router.get("/api/shop/inventory")
     async def shop_inventory(init_data: str):
         try:
+            from repositories.social.clan_bonus import CLAN_GOLD_BONUS_PCT
             tg_user = get_user_from_init_data(init_data)
             uid = int(tg_user["id"])
             items = db.get_inventory(uid)
@@ -50,7 +51,24 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             # Сброс счётчика «новых покупок» — игрок открыл инвентарь, всё увидел
             try: db.reset_inventory_unseen(uid)
             except Exception: pass
-            return {"ok": True, "inventory": items, "active_buffs": buffs, "inventory_unseen": 0}
+            # Бонусы клана для отображения в панели оснащения
+            clan_bonus = None
+            try:
+                player = db.get_or_create_player(uid, "")
+                clan_id = (player or {}).get("clan_id")
+                if clan_id:
+                    info = db.get_clan_info(int(clan_id))
+                    if info and info.get("clan"):
+                        clan_bonus = {
+                            "clan_name": info["clan"].get("name", ""),
+                            "perks": [
+                                {"icon": "💰", "label": "Золото", "value": f"+{CLAN_GOLD_BONUS_PCT}%"},
+                            ],
+                        }
+            except Exception:
+                pass
+            return {"ok": True, "inventory": items, "active_buffs": buffs,
+                    "inventory_unseen": 0, "clan_bonus": clan_bonus}
         except Exception as exc:
             import traceback; traceback.print_exc()
             return {"ok": False, "reason": f"Ошибка: {type(exc).__name__}: {exc}"}
