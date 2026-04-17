@@ -115,4 +115,9 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_17_106_wb_hit_cooldown_ms", [
         "ALTER TABLE world_boss_player_state ADD COLUMN last_hit_ms INTEGER DEFAULT 0",
     ]),
+
+    # 8. Флаг «анонс в чат за 5 мин отправлен» — анти-дубль (идемпотентность).
+    ("2026_04_17_107_wb_announce_5min", [
+        "ALTER TABLE world_boss_spawns ADD COLUMN announced_5min INTEGER DEFAULT 0",
+    ]),
 ]

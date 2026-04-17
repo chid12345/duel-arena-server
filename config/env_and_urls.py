@@ -91,3 +91,19 @@ def _webapp_public_url() -> str:
 
 
 WEBAPP_PUBLIC_URL = _webapp_public_url()
+
+
+def _wb_announce_chat_id() -> int:
+    """Chat ID общего чата для анонсов Мирового босса (за 5 мин до рейда).
+    Если не задан — анонс не шлём.
+    """
+    raw = (os.getenv("WB_ANNOUNCE_CHAT_ID") or "").strip()
+    if not raw:
+        return 0
+    try:
+        return int(raw)
+    except ValueError:
+        return 0
+
+
+WB_ANNOUNCE_CHAT_ID = _wb_announce_chat_id()

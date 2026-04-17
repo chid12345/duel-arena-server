@@ -140,6 +140,20 @@ class WorldBossSpawnsMixin:
         conn.commit()
         conn.close()
 
+    def wb_try_mark_announced_5min(self, spawn_id: int) -> bool:
+        """Атомарно ставит announced_5min=1. True только если поставили мы (анти-дубль)."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_spawns SET announced_5min=1 "
+            "WHERE spawn_id=? AND (announced_5min IS NULL OR announced_5min=0)",
+            (int(spawn_id),),
+        )
+        ok = cur.rowcount > 0
+        conn.commit()
+        conn.close()
+        return ok
+
     @staticmethod
     def _wb_spawn_row_to_dict(row: Any) -> Dict[str, Any]:
         d = dict(row)
