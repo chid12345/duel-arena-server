@@ -13,6 +13,7 @@ class ClanScene extends Phaser.Scene {
   }
 
   shutdown() {
+    try { this.tweens.killAll(); } catch(_) {}
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 

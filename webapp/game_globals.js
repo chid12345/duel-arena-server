@@ -100,7 +100,7 @@ function get(path, params = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
   const q = new URLSearchParams({ init_data: State.initData, ...params });
-  return fetch(`${API}${path}?${q}`, { signal: ctrl.signal })
+  return fetch(`${API}${path}?${q}`, { signal: ctrl.signal, cache: 'no-store' })
     .then(r => {
       clearTimeout(t);
       return r.json().catch(() => ({ ok: false, _httpStatus: r.status }));
