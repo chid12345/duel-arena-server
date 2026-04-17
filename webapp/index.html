@@ -151,6 +151,9 @@ setTimeout(function(){
 <script src="phaser.min.js"></script>
 <!-- Telegram WebApp SDK -->
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Viewport lock: высота body = tg.viewportStableHeight, чтобы
+     клавиатура не сжимала Phaser canvas на Android -->
+<script src="viewport_lock.js?v=__BUILD_VERSION__"></script>
 <!-- Звук (до игры) -->
 <script src="sound.js?v=__BUILD_VERSION__"></script>
 <!-- Глобальные константы, утилиты, State -->
