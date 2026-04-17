@@ -77,6 +77,7 @@ class ClanScene extends Phaser.Scene {
     try {
       if (data.clan) {
         if (this._subview === 'chat') this._renderChat(data, W, H);
+        else if (this._subview === 'requests' && data.is_leader) this._renderRequests(W, H);
         else this._renderMyClan(data, W, H);
       } else if (this._subview === 'search') {
         this._renderSearch(W, H);
