@@ -23,6 +23,11 @@ SHOP_CATALOG = {
     "xp_hunt":       {"name": "Охота за опытом",       "price": 20,  "currency": "diamonds", "icon": "📚", "tab": "consumables", "desc": "+50% опыта за бой, 24 ч",  "inventory": True},
     "stat_reset":    {"name": "Сброс статов",          "price": 200, "currency": "diamonds", "icon": "🔄", "tab": "consumables", "desc": "Сбросить все статы"},
 
+    # ── Свитки воскрешения (для рейда Мирового босса, 10 зарядов в пачке) ───
+    "res_30":        {"name": "Свиток воскрешения +30%",  "price": 500, "currency": "gold",     "icon": "🕯️", "tab": "resurrection", "desc": "10 воскрешений с 30% HP (рейд босса)", "inventory": True},
+    "res_60":        {"name": "Свиток воскрешения +60%",  "price": 40,  "currency": "diamonds", "icon": "🔮", "tab": "resurrection", "desc": "10 воскрешений с 60% HP (рейд босса)", "inventory": True},
+    "res_100":       {"name": "Свиток воскрешения 100%",  "price": 80,  "currency": "diamonds", "icon": "✨", "tab": "resurrection", "desc": "10 воскрешений со 100% HP (рейд босса)", "inventory": True},
+
     # ── Свитки — золото (1 бой, дёшево) ───────────────────────
     "scroll_str_3":    {"name": "Эликсир силы +3",      "price": 60,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила +3, 1 бой",          "inventory": True},
     "scroll_end_3":    {"name": "Эликсир ловкости +3",  "price": 60,  "currency": "gold",     "icon": "🌀", "tab": "scrolls", "desc": "Уворот +3, 1 бой",        "inventory": True},

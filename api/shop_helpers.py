@@ -69,7 +69,8 @@ def _buy_hp(db, uid: int, price: int, pct: float) -> dict:
             "player": _player_api(dict(player))}
 
 
-def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str) -> dict:
+def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str,
+                      quantity: int = 1) -> dict:
     conn = db.get_connection()
     cursor = conn.cursor()
     # Атомарное списание: rowcount == 0 → недостаточно средств
@@ -91,7 +92,7 @@ def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str) -> 
         return {"ok": False, "reason": f"Нужно {price} {symbol}"}
     # Валюта уже списана — add_to_inventory не должна упасть молча
     try:
-        db.add_to_inventory(uid, item_id)
+        db.add_to_inventory(uid, item_id, quantity=int(quantity))
     except Exception as e:
         log.critical("add_to_inventory failed uid=%s item=%s: %s", uid, item_id, e)
         return {"ok": False, "reason": "Ошибка выдачи предмета. Средства будут возвращены — обратитесь в поддержку"}
@@ -99,7 +100,8 @@ def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str) -> 
     from api.tma_catalogs import SHOP_CATALOG
     info = SHOP_CATALOG.get(item_id, {})
     return {"ok": True, "added_to_inventory": True, "item_id": item_id,
-            "item_name": info.get("name", item_id), "player": _player_api(dict(player))}
+            "item_name": info.get("name", item_id), "quantity": int(quantity),
+            "player": _player_api(dict(player))}
 
 
 def _buy_xp_boost_item(db, uid: int, item_id: str, charges: int, mult: float) -> dict:
