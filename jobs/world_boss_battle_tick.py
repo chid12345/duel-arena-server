@@ -81,32 +81,35 @@ def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int) -> Non
 
 async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
     """Один тик боя (1 сек). Быстро, без IO наружу."""
+    from api.world_boss_ws import wb_broadcast_tick
     from database import db
     try:
         active = db.get_wb_active_spawn()
-        if not active:
-            return
-        spawn_id = int(active["spawn_id"])
-        current_hp = int(active.get("current_hp") or 0)
-        max_hp = int(active.get("max_hp") or 0)
-        stat_profile = active.get("stat_profile") or {}
+        if active:
+            spawn_id = int(active["spawn_id"])
+            current_hp = int(active.get("current_hp") or 0)
+            max_hp = int(active.get("max_hp") or 0)
+            stat_profile = active.get("stat_profile") or {}
 
-        # 1. Ответка: пытаемся «занять» слот ответки (раз в 6 сек).
-        if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
-            _do_boss_counter_attack(db, spawn_id, stat_profile)
+            # 1. Ответка: пытаемся «занять» слот ответки (раз в 6 сек).
+            if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
+                _do_boss_counter_attack(db, spawn_id, stat_profile)
 
-        # 2. Коронные удары — по текущему HP.
-        if current_hp > 0:
-            _check_crown_strikes(db, spawn_id, current_hp, max_hp)
+            # 2. Коронные удары — по текущему HP.
+            if current_hp > 0:
+                _check_crown_strikes(db, spawn_id, current_hp, max_hp)
 
-        # 3. Vulnerability window — чисто для лога (эффект применяется при ударе игрока).
-        try:
-            started_at = _parse_ts(active["started_at"])
-            elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
-            if is_vulnerability_window(elapsed) and int(elapsed) % 10 == 0:
-                logger.debug("wb battle: vulnerability window OPEN (elapsed=%ds)", int(elapsed))
-        except Exception:
-            pass
+            # 3. Vulnerability window — чисто для лога (эффект применяется при ударе игрока).
+            try:
+                started_at = _parse_ts(active["started_at"])
+                elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+                if is_vulnerability_window(elapsed) and int(elapsed) % 10 == 0:
+                    logger.debug("wb battle: vulnerability window OPEN (elapsed=%ds)", int(elapsed))
+            except Exception:
+                pass
+
+        # 4. WS-бродкаст подписчикам (работает даже без активного рейда — event=wb_idle).
+        await wb_broadcast_tick(db)
 
     except Exception as e:
         logger.warning("world_boss_battle_tick: ошибка тика: %s", e)

@@ -1,0 +1,161 @@
+"""WebSocket-канал рейда Мирового босса: /ws/world_boss/{user_id}.
+
+Подписка живёт только пока открыта вкладка «⚔️ Босс» в Mini App.
+Каждую секунду `world_boss_battle_tick_job` вызывает `wb_broadcast_tick`,
+который строит общий payload + персонализирует HP игрока для каждого uid.
+
+Payload:
+  {
+    event: "wb_tick",
+    ts: <unix_ms>,
+    active: true|false,
+    boss: {hp, max_hp, crown_flags, seconds_left, vulnerable},
+    player: {current_hp, max_hp, is_dead},         # персональное
+    top: [{user_id, total_damage}, ...],           # топ-3
+  }
+
+Когда рейда нет — шлём {event:"wb_idle"} раз в сек, клиент сам закроется.
+"""
+from __future__ import annotations
+
+import asyncio
+import logging
+import time
+from datetime import datetime, timezone
+from typing import Any, Dict, Optional
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from config.world_boss_constants import WB_DURATION_SEC, is_vulnerability_window
+
+logger = logging.getLogger(__name__)
+
+
+def _parse_ts(value) -> datetime:
+    if isinstance(value, datetime):
+        return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+    s = str(value).replace("T", " ").split(".")[0]
+    return datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+
+class WBConnectionManager:
+    """Держит сокеты подписчиков вкладки «Босс» (отдельно от общего /ws/{uid})."""
+
+    def __init__(self) -> None:
+        self.connections: Dict[int, WebSocket] = {}
+
+    async def connect(self, user_id: int, ws: WebSocket) -> None:
+        await ws.accept()
+        self.connections[int(user_id)] = ws
+
+    def disconnect(self, user_id: int) -> None:
+        self.connections.pop(int(user_id), None)
+
+    async def send(self, user_id: int, data: dict) -> None:
+        ws = self.connections.get(int(user_id))
+        if not ws:
+            return
+        try:
+            await ws.send_json(data)
+        except Exception:
+            self.disconnect(user_id)
+
+    def subscribers(self) -> list[int]:
+        return list(self.connections.keys())
+
+
+wb_manager = WBConnectionManager()
+
+
+def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
+    seconds_left = None
+    vulnerable = False
+    try:
+        started_at = _parse_ts(active["started_at"])
+        elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+        seconds_left = max(0, int(WB_DURATION_SEC - elapsed))
+        vulnerable = is_vulnerability_window(elapsed)
+    except Exception:
+        pass
+    return {
+        "hp": int(active.get("current_hp") or 0),
+        "max_hp": int(active.get("max_hp") or 0),
+        "crown_flags": int(active.get("crown_flags") or 0),
+        "seconds_left": seconds_left,
+        "vulnerable": vulnerable,
+    }
+
+
+def _build_top_block(db, spawn_id: int) -> list:
+    top = db.get_wb_top_damagers(spawn_id, limit=3)
+    return [
+        {"user_id": int(r["user_id"]), "total_damage": int(r.get("total_damage") or 0)}
+        for r in top
+    ]
+
+
+async def wb_broadcast_tick(db) -> None:
+    """Вызывается из battle_tick_job — бродкаст раз в секунду всем подписчикам."""
+    subs = wb_manager.subscribers()
+    if not subs:
+        return
+    active = db.get_wb_active_spawn()
+    ts_ms = int(time.time() * 1000)
+
+    if not active:
+        payload = {"event": "wb_idle", "ts": ts_ms, "active": False}
+        await asyncio.gather(
+            *(wb_manager.send(uid, payload) for uid in subs),
+            return_exceptions=True,
+        )
+        return
+
+    spawn_id = int(active["spawn_id"])
+    boss = _build_boss_block(active)
+    top = _build_top_block(db, spawn_id)
+
+    # Персонализируем HP игрока для каждого подписчика.
+    async def _send_one(uid: int) -> None:
+        ps = db.get_wb_player_state(spawn_id, uid)
+        player_block: Optional[Dict[str, Any]] = None
+        if ps:
+            player_block = {
+                "current_hp": int(ps.get("current_hp") or 0),
+                "max_hp": int(ps.get("max_hp") or 100),
+                "is_dead": bool(int(ps.get("is_dead") or 0)),
+                "total_damage": int(ps.get("total_damage") or 0),
+            }
+        await wb_manager.send(uid, {
+            "event": "wb_tick",
+            "ts": ts_ms,
+            "active": True,
+            "spawn_id": spawn_id,
+            "boss": boss,
+            "player": player_block,
+            "top": top,
+        })
+
+    await asyncio.gather(*(_send_one(uid) for uid in subs), return_exceptions=True)
+
+
+def register_world_boss_ws_routes(app) -> None:
+    router = APIRouter()
+
+    @app.websocket("/ws/world_boss/{user_id}")
+    async def wb_websocket(ws: WebSocket, user_id: int):
+        await wb_manager.connect(user_id, ws)
+        logger.info("WB WS connected uid=%s (subs=%d)", user_id, len(wb_manager.connections))
+        try:
+            while True:
+                # Держим соединение — payload шлёт batter_tick_job.
+                # Клиент может слать любой текст (ping) — читаем и игнорим.
+                await ws.receive_text()
+        except WebSocketDisconnect:
+            pass
+        except Exception as e:
+            logger.warning("WB WS error uid=%s: %s", user_id, e)
+        finally:
+            wb_manager.disconnect(user_id)
+            logger.info("WB WS disconnected uid=%s (subs=%d)", user_id, len(wb_manager.connections))
+
+    app.include_router(router)
