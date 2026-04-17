@@ -11,6 +11,7 @@ class WorldBossScene extends Phaser.Scene {
   shutdown() {
     try { this._ws?.close?.(); } catch(_) {}
     try { this._timer?.remove?.(); } catch(_) {}
+    try { this._clearBossBg?.(); } catch(_) {}
     this._ws = null; this._timer = null;
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
@@ -70,6 +71,10 @@ class WorldBossScene extends Phaser.Scene {
     if (p.player) this._state.player_state = p.player;
     if (p.top) this._state.top = p.top;
     this._updateFightingHUD();
+    try {
+      const mx = Math.max(1, p.boss.max_hp || 1);
+      this._updateBossBg?.(Math.max(0, p.boss.hp) / mx);
+    } catch(_) {}
   }
 
   _render() {
@@ -88,6 +93,10 @@ class WorldBossScene extends Phaser.Scene {
 
   _renderFighting(s, W, H) {
     const a = s.active, ps = s.player_state;
+    try {
+      const mx = Math.max(1, a.max_hp || 1);
+      this._updateBossBg?.(Math.max(0, a.current_hp) / mx);
+    } catch(_) {}
     let y = 88;
 
     this._addPanel(8, y, W-16, 62);
