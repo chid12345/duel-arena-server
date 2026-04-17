@@ -28,6 +28,7 @@ from api.world_boss_actions import (
     world_boss_use_scroll_inner,
 )
 from config.world_boss_constants import WB_DURATION_SEC, is_vulnerability_window
+from config.world_boss import get_boss_type as _get_boss_type
 
 log = logging.getLogger(__name__)
 
@@ -82,20 +83,26 @@ def _wb_state_payload(db, uid: int) -> Dict[str, Any]:
 
     return {
         "ok": True,
-        "active": {
+        "active": (lambda _bt: {
             "spawn_id": int(active["spawn_id"]),
             "boss_name": active.get("boss_name"),
+            "boss_type": _bt.get("type"),
+            "boss_emoji": _bt.get("emoji"),
+            "boss_type_label": _bt.get("label"),
             "current_hp": int(active.get("current_hp") or 0),
             "max_hp": int(active.get("max_hp") or 0),
             "stat_profile": active.get("stat_profile") or {},
             "seconds_left": seconds_left,
             "vulnerable": vulnerable,
             "crown_flags": int(active.get("crown_flags") or 0),
-        } if active else None,
-        "next_scheduled": {
+        })(_get_boss_type(active.get("boss_type"))) if active else None,
+        "next_scheduled": (lambda _bt: {
             "scheduled_at": next_sched.get("scheduled_at"),
             "boss_name": next_sched.get("boss_name"),
-        } if next_sched else None,
+            "boss_type": _bt.get("type"),
+            "boss_emoji": _bt.get("emoji"),
+            "boss_type_label": _bt.get("label"),
+        })(_get_boss_type(next_sched.get("boss_type"))) if next_sched else None,
         "last_finished": {
             "spawn_id": int(last.get("spawn_id")),
             "boss_name": last.get("boss_name"),

@@ -9,7 +9,9 @@ Object.assign(WorldBossScene.prototype, {
     let y = 92;
     const next = s.next_scheduled;
     this._addPanel(8, y, W-16, 70);
-    this._addText(W/2, y+16, '⏳ Следующий рейд', 12, '#aaddff').setOrigin(0.5);
+    const _em = next.boss_emoji || '⏳';
+    const _hint = next.boss_type_label ? `${_em} Следующий: ${next.boss_type_label}` : '⏳ Следующий рейд';
+    this._addText(W/2, y+16, _hint, 12, '#aaddff').setOrigin(0.5);
     this._countdownTxt = this._addText(W/2, y+40, this._fmtCountdown(next.scheduled_at), 22, '#ffc83c', true).setOrigin(0.5);
     this._nextSchedAt = next.scheduled_at;
     y += 80;

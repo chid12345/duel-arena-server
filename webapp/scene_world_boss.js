@@ -100,7 +100,9 @@ class WorldBossScene extends Phaser.Scene {
     let y = 88;
 
     this._addPanel(8, y, W-16, 62);
-    this._bossNameT = this._addText(16, y+8, `🐉 ${a.boss_name || 'Titan'}`, 13, '#ffc83c', true);
+    const _em = a.boss_emoji || '🐉';
+    const _tpl = a.boss_type_label ? ` · ${a.boss_type_label}` : '';
+    this._bossNameT = this._addText(16, y+8, `${_em} ${a.boss_name || 'Titan'}${_tpl}`, 13, '#ffc83c', true);
     this._vulnIndT  = this._addText(W-16, y+10, a.vulnerable ? '⚡ УЯЗВИМ x3' : '🛡 защита', 10,
       a.vulnerable ? '#3cff8c' : '#ddddff', true).setOrigin(1, 0);
     this._bossHpBar = this._addBarPair(16, y+28, W-32, 14, a.current_hp, a.max_hp, 0xdc3c46);

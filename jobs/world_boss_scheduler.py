@@ -18,6 +18,7 @@ from config.world_boss_constants import (
     calc_boss_hp,
     next_spawn_time_utc,
 )
+from config.world_boss import roll_boss_type
 from repositories.world_boss.damage_calc import roll_boss_stat_profile
 
 logger = logging.getLogger(__name__)
@@ -44,18 +45,23 @@ def _ensure_next_scheduled(db) -> None:
     if active:
         return  # пока активный идёт, следующий создадим после закрытия
     scheduled_at = next_spawn_time_utc(_now_utc())
-    boss_name = random.choice(WB_BOSS_NAMES)
-    stat_profile = roll_boss_stat_profile()
+    btype = roll_boss_type()
+    # Имя — из пула типа (если есть), иначе общий список WB_BOSS_NAMES.
+    pool = btype.get("name_pool") or WB_BOSS_NAMES
+    boss_name = random.choice(pool)
+    stat_profile = roll_boss_stat_profile(base=btype.get("stat_profile_base"))
     # HP поставим минимальный-прогнозный, при старте пересчитаем под онлайн.
     db.create_wb_spawn(
         scheduled_at=scheduled_at.strftime("%Y-%m-%d %H:%M:%S"),
         boss_name=boss_name,
         stat_profile=stat_profile,
         max_hp=calc_boss_hp(0),
+        boss_type=btype.get("type", "universal"),
     )
     logger.info(
-        "world_boss_scheduler: запланирован рейд '%s' на %s",
-        boss_name, scheduled_at.isoformat(),
+        "world_boss_scheduler: запланирован '%s %s' (%s) на %s",
+        btype.get("emoji", ""), boss_name, btype.get("type"),
+        scheduled_at.isoformat(),
     )
 
 

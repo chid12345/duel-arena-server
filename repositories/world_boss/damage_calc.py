@@ -111,11 +111,20 @@ def calc_boss_attack_damage(
     })
 
 
-def roll_boss_stat_profile(rng: Optional[random.Random] = None) -> Dict[str, float]:
-    """Рандом ±10% по 3 статам. Игрок не знает расклад заранее."""
+def roll_boss_stat_profile(
+    rng: Optional[random.Random] = None,
+    base: Optional[Dict[str, float]] = None,
+) -> Dict[str, float]:
+    """Рандом ±10% по 3 статам, умноженный на базовый профиль типа (если задан).
+
+    Без base — сбалансированный universal (совместимо со старым вызовом).
+    С base (например fire {str:1.15, int:0.85}) — рандом вокруг него:
+    итоговый str ≈ 1.15 × uniform(0.9,1.1).
+    """
     rng = rng or random
+    b = base or {"str": 1.0, "agi": 1.0, "int": 1.0}
     return {
-        "str": round(rng.uniform(0.9, 1.1), 3),
-        "agi": round(rng.uniform(0.9, 1.1), 3),
-        "int": round(rng.uniform(0.9, 1.1), 3),
+        "str": round(float(b.get("str", 1.0)) * rng.uniform(0.9, 1.1), 3),
+        "agi": round(float(b.get("agi", 1.0)) * rng.uniform(0.9, 1.1), 3),
+        "int": round(float(b.get("int", 1.0)) * rng.uniform(0.9, 1.1), 3),
     }
