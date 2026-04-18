@@ -103,6 +103,7 @@ class WorldBossScene extends Phaser.Scene {
   _onWsTick(p) {
     if (!this._state?.active) { this._refresh(); return; }
     try { this._applyWsEffects?.(p); } catch(_) {}
+    const _wasDeadBefore = !!this._state.player_state?.is_dead;
     this._state.active.current_hp = p.boss.hp;
     this._state.active.max_hp = p.boss.max_hp;
     this._state.active.crown_flags = p.boss.crown_flags;
@@ -111,7 +112,13 @@ class WorldBossScene extends Phaser.Scene {
     this._state.active.stage = p.boss.stage || 1;
     if (p.player) this._state.player_state = p.player;
     if (p.top) this._state.top = p.top;
-    this._updateFightingHUD();
+    const _isDeadNow = !!this._state.player_state?.is_dead;
+    // Смена состояния живой↔мёртвый — перерисовываем полностью (меняется кнопка)
+    if (_isDeadNow !== _wasDeadBefore) {
+      try { this._render(); } catch(_) {}
+    } else {
+      this._updateFightingHUD();
+    }
     try {
       const mx = Math.max(1, p.boss.max_hp || 1);
       this._updateBossBg?.(Math.max(0, p.boss.hp) / mx);
