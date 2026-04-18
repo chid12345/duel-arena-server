@@ -40,7 +40,7 @@ Object.assign(WorldBossScene.prototype, {
     this._nextSchedAt = d.toISOString();
     this._addPanel(8, y, W-16, 70);
     this._addText(W/2, y+16, '⏳ Следующий рейд', 12, '#aaddff').setOrigin(0.5);
-    this._countdownTxt = this._addText(W/2, y+40, this._fmtCountdown(iso), 22, '#ffc83c', true).setOrigin(0.5);
+    this._countdownTxt = this._addText(W/2, y+40, this._fmtCountdown(this._nextSchedAt), 22, '#ffc83c', true).setOrigin(0.5);
     y += 82;
     this._renderScrollShop(s, W, y);
   },
