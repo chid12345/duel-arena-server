@@ -13,8 +13,21 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from typing import Any, Dict
 
+import logging
+
 from config.world_boss_constants import WB_DURATION_SEC, is_vulnerability_window
 from config.world_boss import get_boss_type as _get_boss_type
+
+_log = logging.getLogger(__name__)
+
+
+def _warn_if_null(row: dict, field: str, ctx: str):
+    """Возвращает значение поля; логирует warning если оно None (сигнал о порче БД)."""
+    val = row.get(field)
+    if val is None:
+        _log.warning("wb_state: %s.%s is NULL (spawn_id=%s) — fallback to universal",
+                     ctx, field, row.get("spawn_id"))
+    return val
 
 
 _RAID_SCROLL_IDS = ("damage_25", "power_10", "defense_20", "dodge_10", "crit_10")
@@ -83,7 +96,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
             "vulnerable": vulnerable,
             "crown_flags": int(active.get("crown_flags") or 0),
             "stage": int(active.get("stage") or 1),
-        })(_get_boss_type(active.get("boss_type"))) if active else None,
+        })(_get_boss_type(_warn_if_null(active, "boss_type", "active_spawn"))) if active else None,
         "next_scheduled": (lambda _bt: {
             "scheduled_at": next_sched.get("scheduled_at"),
             "boss_name": next_sched.get("boss_name"),

@@ -58,7 +58,7 @@ async def world_boss_reminder_push_job(context) -> None:
 
         subs = db.get_wb_reminder_users()
         if not subs:
-            logger.info("wb_remind: нет подписчиков для рейда id=%s", spawn_id)
+            logger.warning("wb_remind: нет подписчиков для рейда id=%s (никто не включил уведомления или нет chat_id)", spawn_id)
             return
 
         boss_name = nxt.get("boss_name") or "Титан"

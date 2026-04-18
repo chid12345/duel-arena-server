@@ -13,8 +13,14 @@ import logging
 from typing import Any, Dict, Optional
 
 from .player_state import VALID_RAID_SCROLLS
+from .damage_calc import RAID_SCROLL_EFFECTS
 
 log = logging.getLogger(__name__)
+
+# Гарантируем что каждый свиток из VALID_RAID_SCROLLS имеет эффект в damage_calc.
+# Если кто-то добавит свиток в одно место и забудет про другое — упадёт при старте.
+_missing = VALID_RAID_SCROLLS - set(RAID_SCROLL_EFFECTS)
+assert not _missing, f"Нет эффектов для рейд-свитков: {_missing}. Добавь в RAID_SCROLL_EFFECTS."
 
 
 class WorldBossRaidScrollApplyMixin:
