@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.8.08"
-VERSION_LABEL = "v1.8.08 — fix: telegram-web-app.js async + watchdog 25s"
+VERSION = "1.8.09"
+VERSION_LABEL = "v1.8.09 — fix: world boss refresh busy guard (no more freeze)"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "6.42"
+GAME_VERSION = "6.43"

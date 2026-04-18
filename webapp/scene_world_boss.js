@@ -14,6 +14,7 @@ class WorldBossScene extends Phaser.Scene {
     try { this._pollTimer?.remove?.(); } catch(_) {}
     try { this._clearBossBg?.(); } catch(_) {}
     this._ws = null; this._timer = null; this._pollTimer = null; this._enrageShown = false;
+    this._refreshBusy = false;
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 
@@ -34,6 +35,8 @@ class WorldBossScene extends Phaser.Scene {
   }
 
   async _refresh() {
+    if (this._refreshBusy) return;
+    this._refreshBusy = true;
     try {
       const d = await get('/api/world_boss/state');
       if (!this.scene?.isActive?.()) return;
@@ -42,6 +45,8 @@ class WorldBossScene extends Phaser.Scene {
       this._openWS();
     } catch(_) {
       if (this._loading) this._loading.setText('❌ Нет соединения');
+    } finally {
+      this._refreshBusy = false;
     }
   }
 
