@@ -38,8 +38,12 @@ def _parse_ts(value) -> datetime:
 
 
 def _is_slot_valid(sched_at: datetime) -> bool:
-    """Проверяет что scheduled_at совпадает с текущим расписанием WB_SPAWN_HOURS_UTC."""
+    """Проверяет что scheduled_at совпадает с текущим расписанием WB_SPAWN_HOURS_UTC.
+    Ручные/тестовые спавны (старт ≤15 мин от сейчас) считаем валидными — иначе
+    тик шедулера убивал бы их как «устаревший слот»."""
     from config.world_boss_constants import WB_SPAWN_MINUTE_UTC  # noqa: PLC0415
+    if (sched_at - _now_utc()).total_seconds() <= 15 * 60:
+        return True
     return sched_at.hour in WB_SPAWN_HOURS_UTC and sched_at.minute == WB_SPAWN_MINUTE_UTC
 
 
