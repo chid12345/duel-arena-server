@@ -40,7 +40,16 @@ class WorldBossRewardsMixin:
              chest_type, float(contribution_pct), 1 if is_victory else 0),
         )
         conn.commit()
-        rid = cur.lastrowid
+        if not self._pg:
+            rid = cur.lastrowid
+        else:
+            cur.execute(
+                "SELECT reward_id FROM world_boss_rewards WHERE spawn_id=? AND user_id=? "
+                "ORDER BY reward_id DESC LIMIT 1",
+                (int(spawn_id), int(user_id)),
+            )
+            row = cur.fetchone()
+            rid = row["reward_id"] if row else 0
         conn.close()
         return int(rid)
 

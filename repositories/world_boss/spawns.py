@@ -33,7 +33,15 @@ class WorldBossSpawnsMixin:
              json.dumps(stat_profile), "scheduled", scheduled_at),
         )
         conn.commit()
-        spawn_id = cur.lastrowid
+        if not self._pg:
+            spawn_id = cur.lastrowid
+        else:
+            cur.execute(
+                "SELECT spawn_id FROM world_boss_spawns "
+                "WHERE status='scheduled' ORDER BY spawn_id DESC LIMIT 1"
+            )
+            row = cur.fetchone()
+            spawn_id = row["spawn_id"] if row else 0
         conn.close()
         return int(spawn_id)
 

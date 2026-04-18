@@ -27,7 +27,16 @@ class WorldBossHitsMixin:
              1 if is_crit else 0, 1 if is_vulnerability_window else 0),
         )
         conn.commit()
-        hit_id = cur.lastrowid
+        if not self._pg:
+            hit_id = cur.lastrowid
+        else:
+            cur.execute(
+                "SELECT hit_id FROM world_boss_hits WHERE spawn_id=? AND user_id=? "
+                "ORDER BY hit_id DESC LIMIT 1",
+                (int(spawn_id), int(user_id)),
+            )
+            row = cur.fetchone()
+            hit_id = row["hit_id"] if row else 0
         conn.close()
         return int(hit_id)
 
