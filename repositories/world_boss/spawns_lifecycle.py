@@ -31,12 +31,13 @@ class WorldBossSpawnsLifecycleMixin:
 
     def wb_count_online_players(self, window_minutes: int = 10) -> int:
         """Онлайн = количество игроков с last_active за последние N минут."""
+        from datetime import datetime, timedelta, timezone
+        cutoff = (datetime.now(timezone.utc) - timedelta(minutes=int(window_minutes))).strftime("%Y-%m-%d %H:%M:%S")
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT COUNT(*) AS c FROM players "
-            "WHERE last_active >= datetime('now', ?)",
-            (f"-{int(window_minutes)} minutes",),
+            "SELECT COUNT(*) AS c FROM players WHERE last_active >= ?",
+            (cutoff,),
         )
         row = cur.fetchone()
         conn.close()
