@@ -28,13 +28,21 @@ Object.assign(WorldBossScene.prototype, {
       this._addText(W/2, y + i*16, l, 11, '#ddddff').setOrigin(0.5);
     });
     y += 56;
+    this._renderScrollShop(s, W, y); y += 185;
     this._renderRecentRaids?.(s, W, y);
   },
 
-  _renderIdle(W, H) {
-    this._addText(W/2, H/2 - 20, '🐉', 48, '#888899').setOrigin(0.5);
-    this._addText(W/2, H/2 + 30, 'Нет активного рейда', 14, '#ddddff').setOrigin(0.5);
-    this._addText(W/2, H/2 + 50, 'Следующий скоро будет', 11, '#aaaacc').setOrigin(0.5);
+  _renderIdle(s, W, H) {
+    let y = 92;
+    const S = [0,4,8,12,16,20], n = new Date(), h = n.getUTCHours() + n.getUTCMinutes()/60;
+    const d = new Date(n), nH = S.find(v => v > h);
+    if (nH != null) { d.setUTCHours(nH,0,0,0); } else { d.setUTCDate(d.getUTCDate()+1); d.setUTCHours(0,0,0,0); }
+    this._nextSchedAt = d.toISOString();
+    this._addPanel(8, y, W-16, 70);
+    this._addText(W/2, y+16, '⏳ Следующий рейд', 12, '#aaddff').setOrigin(0.5);
+    this._countdownTxt = this._addText(W/2, y+40, this._fmtCountdown(iso), 22, '#ffc83c', true).setOrigin(0.5);
+    y += 82;
+    this._renderScrollShop(s, W, y);
   },
 
   _renderTop(top, W, y) {
@@ -71,8 +79,35 @@ Object.assign(WorldBossScene.prototype, {
     const inv = this._state?.raid_scrolls_inv || {};
     const ids = Object.keys(inv).filter(k => (inv[k] || 0) > 0);
     if (!ids.length) { this._toast('Нет свитков в инвентаре'); return; }
-    const pickId = ids[0];
-    this._useScroll(pickId, slot);
+    this._useScroll(ids[0], slot);
+  },
+
+  _renderScrollShop(s, W, y) {
+    const SCROLLS = [
+      { id: 'damage_25',  icon: '⚔️', short: '+25% урон',   price: 60 },
+      { id: 'power_10',   icon: '💪', short: '+10% урон',   price: 30 },
+      { id: 'defense_20', icon: '🛡', short: '+20% защита', price: 45 },
+      { id: 'dodge_10',   icon: '💨', short: '+10% уворот', price: 35 },
+      { id: 'crit_10',    icon: '🎯', short: '+10% крит',   price: 40 },
+    ];
+    const inv = s?.raid_scrolls_inv || {};
+    this._addText(16, y, '📜 Свитки рейда', 11, '#aaddff', true); y += 18;
+    const bw = Math.floor((W - 32 - 8) / 2);
+    SCROLLS.forEach((sc, i) => {
+      const isLast = i === SCROLLS.length - 1 && SCROLLS.length % 2 === 1;
+      const xItem = isLast ? 16 + Math.floor((W - 32 - bw) / 2) : 16 + (i % 2) * (bw + 8);
+      const yItem = y + Math.floor(i / 2) * 50;
+      const qty = inv[sc.id] || 0;
+      const bg = this.add.graphics(); bg._wbChild = true;
+      bg.fillStyle(0x2a1a4a, 0.95); bg.fillRoundedRect(xItem, yItem, bw, 42, 8);
+      bg.lineStyle(1, qty > 0 ? 0x7a4aaa : 0x333355, 0.8);
+      bg.strokeRoundedRect(xItem, yItem, bw, 42, 8);
+      this._addText(xItem + bw/2, yItem + 13, `${sc.icon} ${sc.short}`, 10, '#ffffff', true).setOrigin(0.5);
+      this._addText(xItem + bw/2, yItem + 29, `${sc.price}💎  ×${qty}`, 10, qty > 0 ? '#ffc83c' : '#8888aa').setOrigin(0.5);
+      const z = this.add.zone(xItem, yItem, bw, 42).setOrigin(0).setInteractive({ useHandCursor: true });
+      z._wbChild = true;
+      z.on('pointerup', () => this._buyScroll(sc.id));
+    });
   },
 
   // ==== Actions ====
@@ -124,8 +159,19 @@ Object.assign(WorldBossScene.prototype, {
     } catch(_) {}
   },
 
+  async _buyScroll(iid) {
+    if (this._buying) return;
+    this._buying = true;
+    try {
+      const r = await post('/api/shop/buy', { item_id: iid });
+      if (r.ok) { tg?.HapticFeedback?.notificationOccurred('success'); this._toast('📦 Свиток → инвентарь'); this._refresh(); }
+      else this._toast('❌ ' + (r.reason || r.detail || 'Ошибка'));
+    } catch(_) { this._toast('❌ Ошибка сети'); }
+    this._buying = false;
+  },
+
   _tickSecond() {
-    if (this._state?.next_scheduled && this._countdownTxt) {
+    if (this._nextSchedAt && this._countdownTxt) {
       this._countdownTxt.setText(this._fmtCountdown(this._nextSchedAt));
     }
     if (this._state?.active?.seconds_left != null) {
