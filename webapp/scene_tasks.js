@@ -106,14 +106,17 @@ class TasksScene extends Phaser.Scene {
     const inBounds = p => p.y >= startY && p.y <= startY + viewH;
 
     // Все события через глобальный input — zone-based ввод ненадёжен на мобиле
-    this.input.on('pointerdown', p => {
+    // ВАЖНО: сохраняем ссылки чтобы удалить в shutdown() — иначе при scene.restart()
+    // старые обработчики накапливаются и конфликтуют (баги с клеймом и табами)
+    const _onDown = p => {
       if (!inBounds(p)) return;
+      if (this._itemDetailLayer) return; // попап открыт — не перехватываем тап
       sx = p.x; sy = p.y; dragY = baseY; vel = 0;
       lastY = p.y; lastT = this.game.loop.now;
       active = true; hSwipe = false;
-    });
+    };
 
-    this.input.on('pointermove', p => {
+    const _onMove = p => {
       if (!active) return;
       const dx = p.x - sx, dy = p.y - sy;
       const adx = Math.abs(dx), ady = Math.abs(dy);
@@ -125,9 +128,9 @@ class TasksScene extends Phaser.Scene {
       baseY = clamp(dragY + dy);
       container.setY(startY + baseY);
       if (opts.onScroll) opts.onScroll(-baseY);
-    });
+    };
 
-    this.input.on('pointerup', p => {
+    const _onUp = p => {
       if (!active) return; active = false;
       const dx = p.x - sx, dy = p.y - sy;
       const adx = Math.abs(dx), ady = Math.abs(dy);
@@ -141,7 +144,15 @@ class TasksScene extends Phaser.Scene {
         opts.onTap(p.y - container.y, p.x);
         return;
       }
-    });
+    };
+
+    this.input.on('pointerdown', _onDown);
+    this.input.on('pointermove', _onMove);
+    this.input.on('pointerup',   _onUp);
+
+    // Регистрируем для очистки в shutdown()
+    if (!this._scrollHandlers) this._scrollHandlers = [];
+    this._scrollHandlers.push({ _onDown, _onMove, _onUp });
 
     this._scrollFn = () => {
       if (Math.abs(vel) < 0.15) { vel = 0; return; }
@@ -169,6 +180,17 @@ class TasksScene extends Phaser.Scene {
   }
 
   shutdown() {
+    // Удаляем глобальные input-обработчики чтобы они не накапливались при scene.restart()
+    if (this._scrollHandlers) {
+      this._scrollHandlers.forEach(({ _onDown, _onMove, _onUp }) => {
+        this.input.off('pointerdown', _onDown);
+        this.input.off('pointermove', _onMove);
+        this.input.off('pointerup',   _onUp);
+      });
+      this._scrollHandlers = null;
+    }
+    this._scrollFn = null;
+    this._claimBusy = false;
     this.time.removeAllEvents();
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }

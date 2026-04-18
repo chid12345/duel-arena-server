@@ -191,7 +191,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
 // ── Клеймы ────────────────────────────────────────────────
 
 TasksScene.prototype._claimDaily = function(taskKey) {
-  if (_globalCooldown('claim')) return;
+  if (_globalCooldown('claim')) { this._toast('⏳ Подождите...'); return; }
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/tasks/claim_daily', { task_key: taskKey })
@@ -206,7 +206,7 @@ TasksScene.prototype._claimDaily = function(taskKey) {
 
 
 TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey) {
-  if (_globalCooldown('claim')) return;
+  if (_globalCooldown('claim')) { this._toast('⏳ Подождите...'); return; }
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/tasks/claim_weekly_extra', { task_key: taskKey })
@@ -220,7 +220,7 @@ TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey) {
 };
 
 TasksScene.prototype._claimWeeklyOld = function(key) {
-  if (_globalCooldown('claim')) return;
+  if (_globalCooldown('claim')) { this._toast('⏳ Подождите...'); return; }
   if (this._claimBusy) return;
   this._claimBusy = true;
   post('/api/quests/weekly_claim', { claim_key: key })
