@@ -107,71 +107,59 @@ def _build_top_block(db, spawn_id: int) -> list:
     ]
 
 
-async def wb_broadcast_tick(db) -> None:
-    """Вызывается из battle_tick_job — бродкаст раз в секунду всем подписчикам."""
-    subs = wb_manager.subscribers()
-    if not subs:
-        return
+def _load_tick_data(db, subs: list) -> dict:
+    """Sync: все DB-запросы для тика. Запускается через asyncio.to_thread — не блокирует event loop."""
     active = db.get_wb_active_spawn()
     ts_ms = int(time.time() * 1000)
-
     if not active:
-        # Фаза подготовки: за WB_PREP_SEC до старта шлём wb_preparing
         next_sched = db.get_wb_next_scheduled()
         reg_count = 0
+        prep_left = None
         if next_sched:
             try:
                 reg_count = db.wb_registration_count(int(next_sched["spawn_id"]))
-                sched_at = _parse_ts(next_sched["scheduled_at"])
-                until_start = (sched_at - datetime.now(timezone.utc)).total_seconds()
+                until_start = (_parse_ts(next_sched["scheduled_at"]) - datetime.now(timezone.utc)).total_seconds()
                 if 0 < until_start <= WB_PREP_SEC:
-                    prep_payload = {
-                        "event": "wb_preparing",
-                        "ts": ts_ms,
-                        "active": False,
-                        "prep_seconds_left": int(until_start),
-                        "registrants_count": reg_count,
-                    }
-                    await asyncio.gather(
-                        *(wb_manager.send(uid, prep_payload) for uid in subs),
-                        return_exceptions=True,
-                    )
-                    return
+                    prep_left = int(until_start)
             except Exception:
                 pass
-        payload = {"event": "wb_idle", "ts": ts_ms, "active": False, "registrants_count": reg_count}
-        await asyncio.gather(
-            *(wb_manager.send(uid, payload) for uid in subs),
-            return_exceptions=True,
-        )
-        return
-
+        return {"kind": "idle", "ts": ts_ms, "reg_count": reg_count, "prep_left": prep_left}
     spawn_id = int(active["spawn_id"])
     boss = _build_boss_block(active)
     top = _build_top_block(db, spawn_id)
-
-    # Персонализируем HP игрока для каждого подписчика.
-    async def _send_one(uid: int) -> None:
+    players = {}
+    for uid in subs:
         ps = db.get_wb_player_state(spawn_id, uid)
-        player_block: Optional[Dict[str, Any]] = None
         if ps:
-            player_block = {
+            players[uid] = {
                 "current_hp": int(ps.get("current_hp") or 0),
                 "max_hp": int(ps.get("max_hp") or 100),
                 "is_dead": bool(int(ps.get("is_dead") or 0)),
                 "total_damage": int(ps.get("total_damage") or 0),
             }
-        await wb_manager.send(uid, {
-            "event": "wb_tick",
-            "ts": ts_ms,
-            "active": True,
-            "spawn_id": spawn_id,
-            "boss": boss,
-            "player": player_block,
-            "top": top,
-        })
+    return {"kind": "active", "ts": ts_ms, "spawn_id": spawn_id, "boss": boss, "top": top, "players": players}
 
-    await asyncio.gather(*(_send_one(uid) for uid in subs), return_exceptions=True)
+
+async def wb_broadcast_tick(db) -> None:
+    """Вызывается из battle_tick_job — бродкаст раз в секунду всем подписчикам.
+    DB-чтение выполняется в потоке (to_thread) — event loop не блокируется."""
+    subs = wb_manager.subscribers()
+    if not subs:
+        return
+    data = await asyncio.to_thread(_load_tick_data, db, subs)
+    if data["kind"] == "idle":
+        if data["prep_left"] is not None:
+            payload = {"event": "wb_preparing", "ts": data["ts"], "active": False,
+                       "prep_seconds_left": data["prep_left"], "registrants_count": data["reg_count"]}
+        else:
+            payload = {"event": "wb_idle", "ts": data["ts"], "active": False, "registrants_count": data["reg_count"]}
+        await asyncio.gather(*(wb_manager.send(uid, payload) for uid in subs), return_exceptions=True)
+        return
+    ts, spawn_id, boss, top, players = data["ts"], data["spawn_id"], data["boss"], data["top"], data["players"]
+    await asyncio.gather(*(wb_manager.send(uid, {
+        "event": "wb_tick", "ts": ts, "active": True,
+        "spawn_id": spawn_id, "boss": boss, "player": players.get(uid), "top": top,
+    }) for uid in subs), return_exceptions=True)
 
 
 def register_world_boss_ws_routes(app) -> None:

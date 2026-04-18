@@ -9,6 +9,7 @@ class WorldBossScene extends Phaser.Scene {
   constructor() { super('WorldBoss'); }
 
   shutdown() {
+    this._alive = false;
     try { this._ws?.close?.(); } catch(_) {}
     try { this._timer?.remove?.(); } catch(_) {}
     try { this._pollTimer?.remove?.(); } catch(_) {}
@@ -21,6 +22,7 @@ class WorldBossScene extends Phaser.Scene {
   create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
+    this._alive = true;
     _extraBg(this, W, H);
     _extraHeader(this, W, '🐉', 'МИРОВОЙ БОСС', 'Общий рейд каждые 4 часа');
     _extraBack(this, 'Menu', 'more');
@@ -39,13 +41,13 @@ class WorldBossScene extends Phaser.Scene {
     this._refreshBusy = true;
     try {
       const d = await get('/api/world_boss/state');
-      if (!this.scene?.isActive?.()) return;
+      if (!this._alive) return;
       this._state = d;
       this._render();
       this._openWS();
     } catch(_) {
       if (this._loading) this._loading.setText('❌ Нет соединения\n(повтор через 5с)');
-      setTimeout(() => { if (this.scene?.isActive?.()) this._refresh(); }, 5000);
+      setTimeout(() => { if (this._alive) this._refresh(); }, 5000);
     } finally {
       this._refreshBusy = false;
     }

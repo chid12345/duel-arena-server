@@ -28,14 +28,43 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
+def _sync_battle_tick(db) -> None:
+    """Синхронная боевая логика тика (ответки, короны). Запускается в потоке."""
+    from jobs.world_boss_battle_tick import (
+        _check_crown_strikes, _do_boss_counter_attack,
+        _parse_ts as _bt_parse_ts, is_vulnerability_window,
+    )
+    from config.world_boss_constants import WB_DURATION_SEC
+    from repositories.world_boss.damage_calc import BOSS_ATTACK_COOLDOWN_SEC
+    from datetime import datetime, timezone
+    import logging
+    _log = logging.getLogger(__name__)
+    try:
+        active = db.get_wb_active_spawn()
+        if not active:
+            return
+        spawn_id = int(active["spawn_id"])
+        current_hp = int(active.get("current_hp") or 0)
+        max_hp = int(active.get("max_hp") or 0)
+        stat_profile = active.get("stat_profile") or {}
+        if current_hp > 0:
+            stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
+        if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
+            _do_boss_counter_attack(db, spawn_id, stat_profile)
+    except Exception as e:
+        logging.getLogger(__name__).warning("_sync_battle_tick: %s", e)
+
+
 async def _wb_tick_loop() -> None:
     """Боевой тик WB — в процессе uvicorn, чтобы wb_broadcast_tick видел WS-соединения.
-    main.py (PTB) держит только scheduler (scheduled→active); broadcast живёт здесь."""
-    from jobs.world_boss_battle_tick import world_boss_battle_tick_job
+    Синхронные DB-операции вынесены в поток → event loop не блокируется."""
+    from api.world_boss_ws import wb_broadcast_tick
+    from database import db
     while True:
         await asyncio.sleep(1)
         try:
-            await world_boss_battle_tick_job(None)
+            await asyncio.to_thread(_sync_battle_tick, db)
+            await wb_broadcast_tick(db)
         except Exception as e:
             logger.warning("wb_tick_loop: %s", e)
 
