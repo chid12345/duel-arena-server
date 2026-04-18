@@ -42,6 +42,12 @@ class WorldBossScene extends Phaser.Scene {
     try {
       const d = await get('/api/world_boss/state');
       if (!this._alive) return;
+      if (d && d.ok === false) {
+        // Сервер ответил 200 но с ошибкой внутри — показываем и повторяем
+        if (this._loading) { try { this._loading.setText('⚠️ Ошибка сервера\n(повтор через 5с)'); } catch(_) {} }
+        setTimeout(() => { if (this._alive) this._refresh(); }, 5000);
+        return;
+      }
       this._state = d;
       try { this._render(); } catch(e) { console.warn('WB render error:', e); }
       this._openWS();

@@ -93,7 +93,11 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
     inv = {r["item_id"]: int(r["quantity"]) for r in inv_rows}
     raid_scrolls_inv = {sid: inv.get(sid, 0) for sid in _RAID_SCROLL_IDS}
     res_scrolls_inv = {sid: inv.get(sid, 0) for sid in _RES_SCROLL_IDS}
-    unclaimed = db.get_wb_unclaimed_rewards(uid)
+    try:
+        unclaimed = db.get_wb_unclaimed_rewards(uid)
+    except Exception as _e:
+        _log.warning("get_wb_unclaimed_rewards uid=%s: %s", uid, _e)
+        unclaimed = []
     player_row = db.get_or_create_player(uid, "")
     reminder_opt_in = bool(int(player_row.get("wb_reminder_opt_in") or 0))
 
