@@ -196,13 +196,12 @@ Object.assign(WorldBossScene.prototype, {
     if (this._testBusy) return;
     this._testBusy = true;
     try {
-      const r = await fetch('/api/admin/wb_test_schedule?in_minutes=2');
-      const d = await r.json();
+      const d = await get('/api/admin/wb_test_schedule', { in_minutes: 2 });
       if (d.ok) {
         this._toast('✅ Рейд через ~2 мин! Босс: ' + (d.boss_name || ''));
         setTimeout(() => this._refresh(), 1500);
       } else { this._toast('❌ ' + (d.reason || 'Ошибка')); }
-    } catch (_) { this._toast('❌ Нет соединения'); }
+    } catch (e) { this._toast('❌ ' + (e?.message || 'Нет соединения')); }
     this._testBusy = false;
   },
 
