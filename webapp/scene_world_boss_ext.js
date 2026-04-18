@@ -29,6 +29,7 @@ Object.assign(WorldBossScene.prototype, {
     });
     y += 56;
     this._renderScrollShop(s, W, y); y += 185;
+    this._renderResShop(s, W, y); y += 74;
     this._renderRecentRaids?.(s, W, y);
   },
 
@@ -42,7 +43,8 @@ Object.assign(WorldBossScene.prototype, {
     this._addText(W/2, y+16, '⏳ Следующий рейд', 12, '#aaddff').setOrigin(0.5);
     this._countdownTxt = this._addText(W/2, y+40, this._fmtCountdown(this._nextSchedAt), 22, '#ffc83c', true).setOrigin(0.5);
     y += 82;
-    this._renderScrollShop(s, W, y);
+    this._renderScrollShop(s, W, y); y += 185;
+    this._renderResShop(s, W, y);
   },
 
   _renderTop(top, W, y) {
