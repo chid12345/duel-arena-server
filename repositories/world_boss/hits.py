@@ -117,12 +117,14 @@ class WorldBossHitsMixin:
 
     def get_wb_hits_today_count(self, user_id: int) -> int:
         """Сколько ударов игрок нанёс боссу сегодня (UTC). Для daily-квеста dq_wb_hit1."""
+        from datetime import datetime, timezone
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
             "SELECT COUNT(*) AS c FROM world_boss_hits "
-            "WHERE user_id=? AND DATE(created_at) = DATE('now')",
-            (int(user_id),),
+            "WHERE user_id=? AND created_at >= ?",
+            (int(user_id), today + " 00:00:00"),
         )
         row = cur.fetchone()
         conn.close()

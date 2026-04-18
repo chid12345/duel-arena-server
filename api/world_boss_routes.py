@@ -175,4 +175,21 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             log.error("wb_test_schedule error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
+    @router.get("/api/admin/wb_debug")
+    def wb_debug():
+        """Диагностика: текущее состояние world_boss_spawns (последние 5 записей)."""
+        try:
+            from datetime import datetime, timezone
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT spawn_id, boss_name, status, scheduled_at, started_at, ended_at "
+                "FROM world_boss_spawns ORDER BY spawn_id DESC LIMIT 5"
+            )
+            rows = [dict(r) for r in cur.fetchall()]
+            conn.close()
+            return {"ok": True, "now_utc": datetime.now(timezone.utc).isoformat(), "spawns": rows}
+        except Exception as e:
+            return {"ok": False, "reason": str(e)}
+
     app.include_router(router)

@@ -11,8 +11,9 @@ class WorldBossScene extends Phaser.Scene {
   shutdown() {
     try { this._ws?.close?.(); } catch(_) {}
     try { this._timer?.remove?.(); } catch(_) {}
+    try { this._pollTimer?.remove?.(); } catch(_) {}
     try { this._clearBossBg?.(); } catch(_) {}
-    this._ws = null; this._timer = null; this._enrageShown = false;
+    this._ws = null; this._timer = null; this._pollTimer = null; this._enrageShown = false;
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 
@@ -26,6 +27,10 @@ class WorldBossScene extends Phaser.Scene {
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     this._refresh();
     this._timer = this.time.addEvent({ delay: 1000, loop: true, callback: () => this._tickSecond() });
+    // Авто-рефреш каждые 30с если WS мёртв — подхватывает смену Waiting→Fighting
+    this._pollTimer = this.time.addEvent({ delay: 30000, loop: true, callback: () => {
+      if (!this._ws || this._ws.readyState !== WebSocket.OPEN) this._refresh();
+    }});
   }
 
   async _refresh() {
