@@ -61,7 +61,7 @@ class WorldBossRewardsMixin:
             "SELECT r.*, s.boss_name, s.boss_type, s.ended_at "
             "FROM world_boss_rewards r "
             "JOIN world_boss_spawns s ON s.spawn_id = r.spawn_id "
-            "WHERE r.user_id=? AND r.claimed=0 "
+            "WHERE r.user_id=? AND r.claimed<1 "
             "ORDER BY r.reward_id DESC",
             (int(user_id),),
         )
@@ -79,7 +79,7 @@ class WorldBossRewardsMixin:
         cur.execute(
             "UPDATE world_boss_rewards "
             "SET claimed=1, claimed_at=CURRENT_TIMESTAMP "
-            "WHERE reward_id=? AND user_id=? AND claimed=0",
+            "WHERE reward_id=? AND user_id=? AND claimed<1",
             (int(reward_id), int(user_id)),
         )
         conn.commit()
