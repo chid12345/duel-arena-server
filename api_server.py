@@ -9,7 +9,6 @@ FastAPI сервер для Duel Arena TMA (Telegram Mini App).
 import asyncio
 import logging
 import os
-from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -40,18 +39,7 @@ async def _wb_tick_loop() -> None:
             logger.warning("wb_tick_loop: %s", e)
 
 
-@asynccontextmanager
-async def lifespan(app):  # noqa: ARG001
-    task = asyncio.create_task(_wb_tick_loop())
-    yield
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
-
-
-app = FastAPI(title="Duel Arena TMA API", version="1.0", lifespan=lifespan)
+app = FastAPI(title="Duel Arena TMA API", version="1.0")
 
 APP_BUILD_VERSION = (
     GAME_VERSION
@@ -86,6 +74,13 @@ wire_tma_feature_routes(app, app_build_version=APP_BUILD_VERSION)
 register_warrior_type_route(app)
 
 webapp_dir = os.path.join(os.path.dirname(__file__), "webapp")
+
+
+async def _startup_wb_tick() -> None:
+    asyncio.create_task(_wb_tick_loop())
+
+
+app.add_event_handler("startup", _startup_wb_tick)
 
 
 @app.get("/", response_class=HTMLResponse, include_in_schema=False)
