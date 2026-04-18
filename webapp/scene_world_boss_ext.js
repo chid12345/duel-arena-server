@@ -126,7 +126,7 @@ Object.assign(WorldBossScene.prototype, {
     if (this._hitBusy) return;
     this._hitBusy = true;
     try {
-      const r = await post('/api/world_boss/hit', { init_data: tg?.initData || '' });
+      const r = await post('/api/world_boss/hit');
       if (r.ok) {
         tg?.HapticFeedback?.impactOccurred(r.is_crit ? 'heavy' : 'light');
         this._toast(`-${r.damage}${r.is_crit ? ' 💥' : ''}${r.vulnerable ? ' x3' : ''}`);
@@ -141,14 +141,14 @@ Object.assign(WorldBossScene.prototype, {
   async _toggleReminder() {
     const cur = !!this._state?.reminder_opt_in;
     try {
-      const r = await post('/api/world_boss/reminder_toggle', { init_data: tg?.initData || '', enabled: !cur });
+      const r = await post('/api/world_boss/reminder_toggle', { enabled: !cur });
       if (r.ok) { this._state.reminder_opt_in = r.enabled; this._render(); }
     } catch(_) {}
   },
 
   async _claimReward(reward_id) {
     try {
-      const r = await post('/api/world_boss/claim_reward', { init_data: tg?.initData || '', reward_id });
+      const r = await post('/api/world_boss/claim_reward', { reward_id });
       if (r.ok) { this._toast(`✅ +💰${r.gold} +⭐${r.exp} +💎${r.diamonds}`); this._refresh(); }
       else this._toast('❌ ' + r.reason);
     } catch(_) {}
@@ -156,7 +156,7 @@ Object.assign(WorldBossScene.prototype, {
 
   async _resurrect(scroll_id) {
     try {
-      const r = await post('/api/world_boss/resurrect', { init_data: tg?.initData || '', scroll_id });
+      const r = await post('/api/world_boss/resurrect', { scroll_id });
       if (r.ok) { this._toast('✨ Воскрешение!'); this._refresh(); }
       else this._toast('❌ ' + r.reason);
     } catch(_) {}
@@ -164,7 +164,7 @@ Object.assign(WorldBossScene.prototype, {
 
   async _useScroll(scroll_name, slot) {
     try {
-      const r = await post('/api/world_boss/use_scroll', { init_data: tg?.initData || '', scroll_name, slot });
+      const r = await post('/api/world_boss/use_scroll', { scroll_name, slot });
       if (r.ok) { this._toast('📜 Свиток активен'); this._refresh(); }
       else this._toast('❌ ' + r.reason);
     } catch(_) {}
