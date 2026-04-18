@@ -130,7 +130,13 @@ Object.assign(WorldBossScene.prototype, {
       if (r.ok) {
         tg?.HapticFeedback?.impactOccurred(r.is_crit ? 'heavy' : 'light');
         this._toast(`-${r.damage}${r.is_crit ? ' 💥' : ''}${r.vulnerable ? ' x3' : ''}`);
-        if (this._state?.active) { this._state.active.current_hp = r.boss_hp; this._updateFightingHUD(); }
+        if (this._state?.active) this._state.active.current_hp = r.boss_hp;
+        if (!this._state?.player_state) {
+          // Первый вход в рейд — нужен полный рефреш чтобы показать УДАРИТЬ + HP игрока
+          setTimeout(() => { if (this._alive) this._refresh(); }, 400);
+        } else {
+          this._updateFightingHUD();
+        }
       } else if (r.reason !== 'Слишком быстро') {
         this._toast('❌ ' + r.reason);
       }
