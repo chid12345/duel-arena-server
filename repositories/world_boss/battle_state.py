@@ -79,13 +79,15 @@ class WorldBossBattleStateMixin:
         """
         conn = self.get_connection()
         cur = conn.cursor()
+        from datetime import datetime, timedelta, timezone
+        cutoff = (datetime.now(timezone.utc) - timedelta(seconds=int(cooldown_sec))).strftime("%Y-%m-%d %H:%M:%S")
         cur.execute(
             "UPDATE world_boss_spawns "
             "SET last_boss_attack_at=CURRENT_TIMESTAMP "
             "WHERE spawn_id=? AND status='active' "
             "AND (last_boss_attack_at IS NULL "
-            "     OR last_boss_attack_at <= datetime('now', ?))",
-            (int(spawn_id), f"-{int(cooldown_sec)} seconds"),
+            "     OR last_boss_attack_at <= ?)",
+            (int(spawn_id), cutoff),
         )
         changed = cur.rowcount > 0
         conn.commit()

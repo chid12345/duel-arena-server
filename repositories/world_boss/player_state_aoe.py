@@ -28,11 +28,12 @@ class WorldBossPlayerStateAoeMixin:
             "WHERE spawn_id=? AND is_dead=0 AND current_hp<=0",
             (int(spawn_id),),
         )
+        from datetime import datetime, timedelta, timezone
+        cutoff = (datetime.now(timezone.utc) - timedelta(seconds=10)).strftime("%Y-%m-%d %H:%M:%S")
         cur.execute(
             "SELECT user_id FROM world_boss_player_state "
-            "WHERE spawn_id=? AND is_dead=1 "
-            "AND died_at>=datetime('now','-10 seconds')",
-            (int(spawn_id),),
+            "WHERE spawn_id=? AND is_dead=1 AND died_at >= ?",
+            (int(spawn_id), cutoff),
         )
         killed = [dict(r) for r in cur.fetchall()]
         conn.commit()
