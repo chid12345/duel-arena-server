@@ -68,10 +68,11 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
     )
 
 
-def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict) -> None:
+def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict) -> dict | None:
     """Вместе с короной 50% переводим босса в stage=2 (ярость).
     Множим stat_profile на WB_ENRAGE_MULT → ответка усиливается.
     Идемпотентно (UPDATE ... WHERE stage<2).
+    Возвращает новый профиль если ярость сработала, иначе None.
     """
     try:
         new_profile = {
@@ -80,17 +81,20 @@ def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict) -> None:
         }
         if db.wb_try_enrage(spawn_id, json.dumps(new_profile)):
             logger.info("wb battle: ⚡ ENRAGE spawn=%s profile→%s", spawn_id, new_profile)
+            return new_profile
     except Exception as e:
         logger.warning("wb battle: enrage error spawn=%s: %s", spawn_id, e)
+    return None
 
 
 def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int,
-                         stat_profile: dict) -> None:
+                         stat_profile: dict) -> dict:
     """Срабатывает 0/1/2/3 коронных ударов (атомарно, по одному за тик).
     На пороге 50% (flag_bit=0b010) дополнительно триггерит ярость (stage=2).
+    Возвращает актуальный stat_profile (обновлённый если произошла ярость).
     """
     if max_hp <= 0:
-        return
+        return stat_profile
     hp_pct = current_hp / max_hp
     for threshold_pct, dmg_pct, flag_bit, label in WB_CROWN_THRESHOLDS:
         if hp_pct <= threshold_pct and db.wb_try_trigger_crown(spawn_id, flag_bit):
@@ -100,7 +104,10 @@ def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int,
                 label, dmg_pct, len(killed),
             )
             if flag_bit == 0b010:
-                _try_enrage_on_50(db, spawn_id, stat_profile)
+                enraged_profile = _try_enrage_on_50(db, spawn_id, stat_profile)
+                if enraged_profile:
+                    stat_profile = enraged_profile
+    return stat_profile
 
 
 async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
@@ -115,13 +122,13 @@ async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
             max_hp = int(active.get("max_hp") or 0)
             stat_profile = active.get("stat_profile") or {}
 
-            # 1. Ответка: пытаемся «занять» слот ответки (раз в 6 сек).
+            # 1. Коронные удары — сначала, чтобы ярость обновила профиль до ответки.
+            if current_hp > 0:
+                stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
+
+            # 2. Ответка: уже с актуальным профилем (с учётом возможной ярости).
             if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
                 _do_boss_counter_attack(db, spawn_id, stat_profile)
-
-            # 2. Коронные удары — по текущему HP.
-            if current_hp > 0:
-                _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
 
             # 3. Vulnerability window — чисто для лога (эффект применяется при ударе игрока).
             try:
