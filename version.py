@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.7.82"
-VERSION_LABEL = "v1.7.82 — fix(world_boss): crit/dodge/endurance из профиля игрока, PvP-формулы"
+VERSION = "1.7.83"
+VERSION_LABEL = "v1.7.83 — fix(world_boss): WS-менеджер asyncio.Lock + закрытие старого сокета"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "6.16"
+GAME_VERSION = "6.17"

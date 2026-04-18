@@ -43,24 +43,36 @@ class WBConnectionManager:
 
     def __init__(self) -> None:
         self.connections: Dict[int, WebSocket] = {}
+        self._lock = asyncio.Lock()
 
     async def connect(self, user_id: int, ws: WebSocket) -> None:
         await ws.accept()
-        self.connections[int(user_id)] = ws
+        async with self._lock:
+            old = self.connections.get(int(user_id))
+            if old is not None:
+                # Закрываем старый сокет — игрок переоткрыл вкладку
+                try:
+                    await old.close()
+                except Exception:
+                    pass
+            self.connections[int(user_id)] = ws
 
-    def disconnect(self, user_id: int) -> None:
-        self.connections.pop(int(user_id), None)
+    async def disconnect(self, user_id: int) -> None:
+        async with self._lock:
+            self.connections.pop(int(user_id), None)
 
     async def send(self, user_id: int, data: dict) -> None:
-        ws = self.connections.get(int(user_id))
+        async with self._lock:
+            ws = self.connections.get(int(user_id))
         if not ws:
             return
         try:
             await ws.send_json(data)
         except Exception:
-            self.disconnect(user_id)
+            await self.disconnect(user_id)
 
     def subscribers(self) -> list[int]:
+        # Снапшот под lock не нужен — list() на dict атомарен в CPython
         return list(self.connections.keys())
 
 
@@ -156,7 +168,7 @@ def register_world_boss_ws_routes(app) -> None:
         except Exception as e:
             logger.warning("WB WS error uid=%s: %s", user_id, e)
         finally:
-            wb_manager.disconnect(user_id)
+            await wb_manager.disconnect(user_id)
             logger.info("WB WS disconnected uid=%s (subs=%d)", user_id, len(wb_manager.connections))
 
     app.include_router(router)
