@@ -35,8 +35,7 @@ class WorldBossScene extends Phaser.Scene {
 
   async _refresh() {
     try {
-      const init = tg?.initData || '';
-      const d = await get('/api/world_boss/state?init_data=' + encodeURIComponent(init));
+      const d = await get('/api/world_boss/state');
       if (!this.scene?.isActive?.()) return;
       this._state = d;
       this._render();
