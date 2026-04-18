@@ -58,4 +58,16 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_17_006_clan_wars",
     "2026_04_17_007_clan_seasons",
     "2026_04_17_008_clan_tasks",
+    # World Boss
+    "2026_04_17_100_wb_spawns",
+    "2026_04_17_101_wb_hits",
+    "2026_04_17_102_wb_player_state",
+    "2026_04_17_103_wb_rewards",
+    "2026_04_17_104_wb_reminder_flag",
+    "2026_04_17_105_wb_battle_state",
+    "2026_04_17_106_wb_hit_cooldown_ms",
+    "2026_04_17_107_wb_announce_5min",
+    "2026_04_17_108_wb_reminders_sent_5min",
+    "2026_04_17_109_wb_stage",
+    "2026_04_18_110_wb_player_combat_stats",
 )
