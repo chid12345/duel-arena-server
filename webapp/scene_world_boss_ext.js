@@ -64,12 +64,20 @@ Object.assign(WorldBossScene.prototype, {
   _renderResurrectRow(s, W, y) {
     const scrolls = s.res_scrolls_inv || {};
     const items = [['res_30', '30%'], ['res_60', '60%'], ['res_100', '100%']];
+    const hasAny = items.some(([id]) => (scrolls[id] || 0) > 0);
+    if (!hasAny) {
+      // Нет свитков — чёткое сообщение вместо трёх серых кнопок
+      this._addPanel(16, y, W - 32, 38);
+      this._addText(W / 2, y + 11, '🕯️ Свитков воскрешения нет', 11, '#888899').setOrigin(0.5);
+      this._addText(W / 2, y + 26, 'Купить можно до рейда в магазине', 9, '#555577').setOrigin(0.5);
+      return;
+    }
     const bw = (W - 32 - 16) / 3;
     items.forEach(([id, label], i) => {
       const x = 16 + i * (bw + 8);
       const n = scrolls[id] || 0;
-      const col = n > 0 ? 0x5096ff : 0x3a3a4a;
-      this._bigBtn(x, y, bw, 44, col, `${label} (${n})`, () => this._resurrect(id));
+      const col = n > 0 ? 0x5096ff : 0x2a2a3a;
+      this._bigBtn(x, y, bw, 44, col, `${label} (${n})`, n > 0 ? () => this._resurrect(id) : null);
     });
   },
 
