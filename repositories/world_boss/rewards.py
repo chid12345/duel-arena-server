@@ -78,9 +78,9 @@ class WorldBossRewardsMixin:
         cur = conn.cursor()
         cur.execute(
             "UPDATE world_boss_rewards "
-            "SET claimed=1, claimed_at=CURRENT_TIMESTAMP "
+            "SET claimed=?, claimed_at=CURRENT_TIMESTAMP "
             "WHERE reward_id=? AND user_id=? AND claimed<1",
-            (int(reward_id), int(user_id)),
+            (True, int(reward_id), int(user_id)),
         )
         conn.commit()
         if cur.rowcount == 0:

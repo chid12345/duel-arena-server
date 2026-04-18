@@ -157,4 +157,10 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_19_112_wb_rewards_claimed_boolean", [
         "ALTER TABLE world_boss_rewards ALTER COLUMN claimed TYPE BOOLEAN USING claimed::boolean",
     ]),
+
+    # 14. Retry: 112 мог быть помечен как применённый даже при сбое транзакции.
+    #     Новый ключ гарантирует повторную попытку. Идемпотентно — повторный ALTER не ломает.
+    ("2026_04_19_113_wb_claimed_bool_retry2", [
+        "ALTER TABLE world_boss_rewards ALTER COLUMN claimed TYPE BOOLEAN USING claimed::boolean",
+    ]),
 ]
