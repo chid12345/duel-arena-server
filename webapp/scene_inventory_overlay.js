@@ -48,12 +48,23 @@
     xp_boost_x2:   { icon:'🚀', name:'XP Буст ×2.0',          desc:'Опыт ×2.0 · на 10 боёв', tab:'elixirs' },
     gold_hunt:     { icon:'💰', name:'Охота за золотом',       desc:'+20% золота за бой · 24 часа', tab:'elixirs' },
     xp_hunt:       { icon:'📚', name:'Охота за опытом',        desc:'+50% опыта за бой · 24 часа', tab:'elixirs' },
+    // ── Мировой Босс: свитки рейда (применяются в слоты во вкладке ⚔️ Босс) ──
+    damage_25:     { icon:'⚔️', name:'+25% урон',             desc:'Урон ×1.25 весь рейд · применить в слот', tab:'boss' },
+    power_10:      { icon:'💪', name:'+10% урон',             desc:'Урон ×1.10 весь рейд · применить в слот', tab:'boss' },
+    defense_20:    { icon:'🛡️', name:'+20% защита',           desc:'Защита ×1.20 весь рейд · применить в слот', tab:'boss' },
+    dodge_10:      { icon:'💨', name:'+10% уворот',           desc:'Уворот +10% весь рейд · применить в слот', tab:'boss' },
+    crit_10:       { icon:'🎯', name:'+10% крит',             desc:'Крит +10% весь рейд · применить в слот', tab:'boss' },
+    // ── Мировой Босс: свитки воскрешения (применяются при смерти в рейде) ──
+    res_30:        { icon:'🕯️', name:'Воскрешение 30% HP',    desc:'Воскреснуть с 30% HP · только в рейде босса', tab:'boss' },
+    res_60:        { icon:'🔮', name:'Воскрешение 60% HP',    desc:'Воскреснуть с 60% HP · только в рейде босса', tab:'boss' },
+    res_100:       { icon:'✨', name:'Воскрешение 100% HP',   desc:'Воскреснуть со 100% HP · только в рейде босса', tab:'boss' },
   };
 
   const TABS = [
     { key: 'scrolls', label: '📜 Свитки' },
     { key: 'elixirs', label: '⚗️ Элексиры' },
     { key: 'special', label: '🏆 Особые' },
+    { key: 'boss',    label: '⚔️ Рейд' },
   ];
 
   StatsScene.prototype._openInventoryPanel = async function() {
@@ -214,20 +225,24 @@
         ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#fff8d0', true).setDepth(133));
         ov.push(txt(this, 28, y+27, meta.desc, 9, '#c8a878').setDepth(133));
         ov.push(txt(this, 28, y+41, `Кол-во: ${it.quantity}`, 9, '#ffe04a').setDepth(133));
-        const isBox = it.item_id.startsWith('box_');
+        const isBox  = it.item_id.startsWith('box_');
+        const isBoss = meta.tab === 'boss';
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;
         const bg2 = this.add.graphics().setDepth(133);
-        const btnColor  = isBox ? 0x7a3800 : 0x6e4810;
-        const btnBorder = isBox ? 0xffaa33 : 0xdca028;
-        const btnLabel  = isBox ? '🎲 Открыть' : 'Применить';
-        const btnTxt    = isBox ? '#ffe0aa' : '#ffe878';
+        const btnColor  = isBoss ? 0x1a2a4a : (isBox ? 0x7a3800 : 0x6e4810);
+        const btnBorder = isBoss ? 0x5096ff : (isBox ? 0xffaa33 : 0xdca028);
+        const btnLabel  = isBoss ? '⚔️ В рейде' : (isBox ? '🎲 Открыть' : 'Применить');
+        const btnTxt    = isBoss ? '#aaddff'    : (isBox ? '#ffe0aa'    : '#ffe878');
         bg2.fillStyle(btnColor, 0.95);
         bg2.fillRoundedRect(bx, by, bw, 24, 6);
         bg2.lineStyle(1, btnBorder, 0.85);
         bg2.strokeRoundedRect(bx, by, bw, 24, 6);
         ov.push(bg2, txt(this, bx+bw/2, by+12, btnLabel, 10, btnTxt, true).setOrigin(.5).setDepth(134));
         const z = this.add.zone(bx+bw/2, by+12, bw, 24).setInteractive({useHandCursor:true}).setDepth(135);
-        z.on('pointerdown', () => this._applyInventoryItem(it.item_id)); ov.push(z);
+        z.on('pointerdown', () => isBoss
+          ? this._showToast('Переходи в ⚔️ Мировой Босс — там применишь')
+          : this._applyInventoryItem(it.item_id));
+        ov.push(z);
         // Тап на карточку (вне кнопки) → попап с описанием
         const cardZ = this.add.zone(16 + (cardW - bw - 6) / 2, y + cardH / 2, cardW - bw - 6, cardH)
           .setInteractive({ useHandCursor: true }).setDepth(135);

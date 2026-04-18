@@ -52,12 +52,22 @@ class WorldBossScene extends Phaser.Scene {
         try {
           const p = JSON.parse(m.data);
           if (p.event === 'wb_tick') this._onWsTick(p);
-          else if (p.event === 'wb_idle' && this._state?.active) this._refresh();
+          else if (p.event === 'wb_preparing') this._onWsPreparing(p);
+          else if (p.event === 'wb_idle' && (this._state?.active || (this._state?.prep_seconds_left || 0) > 0)) this._refresh();
         } catch(_) {}
       };
       this._ws.onerror = () => { try { this._ws?.close?.(); } catch(_) {} this._ws = null; };
       this._ws.onclose = () => { this._ws = null; };
     } catch(_) { this._ws = null; }
+  }
+
+  _onWsPreparing(p) {
+    if (this._state?.active) return;
+    if (!this._state) this._state = {};
+    const wasPrep = (this._state.prep_seconds_left || 0) > 0;
+    this._state.prep_seconds_left = p.prep_seconds_left;
+    if (this._prepCountT) this._prepCountT.setText(`Старт через ${p.prep_seconds_left} сек`);
+    else if (!wasPrep) this._render();
   }
 
   _onWsTick(p) {
@@ -86,6 +96,7 @@ class WorldBossScene extends Phaser.Scene {
     const W = this.W, H = this.H;
 
     if (s.active) { this._renderFighting(s, W, H); }
+    else if ((s.prep_seconds_left || 0) > 0) { this._renderPrepPhase(s, W, H); }
     else if (s.next_scheduled) { this._renderWaiting(s, W, H); }
     else { this._renderIdle(s, W, H); }
 

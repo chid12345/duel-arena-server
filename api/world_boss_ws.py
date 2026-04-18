@@ -26,7 +26,7 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from config.world_boss_constants import WB_DURATION_SEC, is_vulnerability_window
+from config.world_boss_constants import WB_DURATION_SEC, WB_PREP_SEC, is_vulnerability_window
 
 logger = logging.getLogger(__name__)
 
@@ -116,6 +116,26 @@ async def wb_broadcast_tick(db) -> None:
     ts_ms = int(time.time() * 1000)
 
     if not active:
+        # Фаза подготовки: за WB_PREP_SEC до старта шлём wb_preparing
+        next_sched = db.get_wb_next_scheduled()
+        if next_sched:
+            try:
+                sched_at = _parse_ts(next_sched["scheduled_at"])
+                until_start = (sched_at - datetime.now(timezone.utc)).total_seconds()
+                if 0 < until_start <= WB_PREP_SEC:
+                    prep_payload = {
+                        "event": "wb_preparing",
+                        "ts": ts_ms,
+                        "active": False,
+                        "prep_seconds_left": int(until_start),
+                    }
+                    await asyncio.gather(
+                        *(wb_manager.send(uid, prep_payload) for uid in subs),
+                        return_exceptions=True,
+                    )
+                    return
+            except Exception:
+                pass
         payload = {"event": "wb_idle", "ts": ts_ms, "active": False}
         await asyncio.gather(
             *(wb_manager.send(uid, payload) for uid in subs),

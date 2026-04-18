@@ -15,7 +15,7 @@ from typing import Any, Dict
 
 import logging
 
-from config.world_boss_constants import WB_DURATION_SEC, is_vulnerability_window
+from config.world_boss_constants import WB_DURATION_SEC, WB_PREP_SEC, is_vulnerability_window
 from config.world_boss import get_boss_type as _get_boss_type
 
 _log = logging.getLogger(__name__)
@@ -71,6 +71,16 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                 "raid_scroll_2": ps.get("raid_scroll_2"),
             }
 
+    prep_seconds_left = 0
+    if not active and next_sched:
+        try:
+            sched_at = _parse_ts(next_sched["scheduled_at"])
+            until_start = (sched_at - datetime.now(timezone.utc)).total_seconds()
+            if 0 < until_start <= WB_PREP_SEC:
+                prep_seconds_left = int(until_start)
+        except Exception:
+            pass
+
     recent = db.get_wb_recent_finished_with_user(uid, limit=5)
     inv_rows = db.get_inventory(uid)
     inv = {r["item_id"]: int(r["quantity"]) for r in inv_rows}
@@ -82,6 +92,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
 
     return {
         "ok": True,
+        "prep_seconds_left": prep_seconds_left,
         "active": (lambda _bt: {
             "spawn_id": int(active["spawn_id"]),
             "boss_name": active.get("boss_name"),

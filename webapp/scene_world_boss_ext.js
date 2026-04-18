@@ -28,6 +28,7 @@ Object.assign(WorldBossScene.prototype, {
       this._addText(W/2, y + i*16, l, 11, '#ddddff').setOrigin(0.5);
     });
     y += 56;
+    const msh = this._renderMyScrollsSummary?.(s, W, y) || 0; y += msh;
     this._renderScrollShop(s, W, y); y += 185;
     this._renderResShop(s, W, y); y += 74;
     this._renderRecentRaids?.(s, W, y);
@@ -71,17 +72,19 @@ Object.assign(WorldBossScene.prototype, {
     [['raid_scroll_1', 1], ['raid_scroll_2', 2]].forEach(([k, slot], i) => {
       const x = 16 + i * (sw + 8);
       const v = ps[k];
-      const label = v ? `📜 ${v}` : `+ свиток в слот ${slot}`;
-      const col = v ? 0x4a3a6a : 0x2a2a3a;
+      const meta = v ? (typeof RAID_SCROLL_META !== 'undefined' ? RAID_SCROLL_META[v] : null) : null;
+      const label = meta ? `${meta.icon} ${meta.label}` : (v ? `📜 ${v}` : `+ слот ${slot}`);
+      const col = v ? 0x1a3a1a : 0x2a2a3a;
       this._bigBtn(x, y, sw, 42, col, label, () => v ? null : this._openScrollPicker(slot));
     });
   },
 
   _openScrollPicker(slot) {
     const inv = this._state?.raid_scrolls_inv || {};
-    const ids = Object.keys(inv).filter(k => (inv[k] || 0) > 0);
-    if (!ids.length) { this._toast('Нет свитков в инвентаре'); return; }
-    this._useScroll(ids[0], slot);
+    const available = Object.entries(inv).filter(([, qty]) => qty > 0);
+    if (!available.length) { this._toast('Нет свитков рейда в инвентаре'); return; }
+    if (available.length === 1) { this._useScroll(available[0][0], slot); return; }
+    this._showScrollPickerPopup?.(slot, available);
   },
 
   _renderScrollShop(s, W, y) {
@@ -180,6 +183,7 @@ Object.assign(WorldBossScene.prototype, {
       this._state.active.seconds_left = Math.max(0, this._state.active.seconds_left - 1);
       if (this._secLeftT) this._secLeftT.setText(`⏱ ${this._fmtSec(this._state.active.seconds_left)}`);
     }
+    this._tickPrep?.();
   },
 
   _updateFightingHUD() {

@@ -20,6 +20,9 @@ WB_DURATION_SEC: int = 10 * 60
 # За сколько секунд до старта слать анонс в чат + пуш-напоминалку.
 WB_ANNOUNCE_LEAD_SEC: int = 5 * 60
 
+# Окно подготовки перед стартом (WS шлёт wb_preparing, фронт показывает экран).
+WB_PREP_SEC: int = 30
+
 # Формула HP босса: max(min, per_online × онлайн).
 WB_HP_PER_ONLINE: int = 500
 WB_HP_MIN: int = 10_000
