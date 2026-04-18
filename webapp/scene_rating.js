@@ -22,7 +22,7 @@ class RatingScene extends Phaser.Scene {
     this._alive = true;
 
     _extraBg(this, W, H);
-    _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня Титанов · Сезон');
+    _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня · Натиск · Сезон · Босс');
     _extraBack(this, 'Menu', 'profile');
 
     this._buildTabBar(W);
@@ -35,6 +35,8 @@ class RatingScene extends Phaser.Scene {
       this._buildNatiskTab(W, H);
     } else if (this._tab === 'season') {
       await this._buildSeasonTab(W, H);
+    } else if (this._tab === 'boss') {
+      await this._buildBossTab(W, H);
     } else {
       this._buildTitansTab(W, H);
     }
@@ -51,6 +53,7 @@ class RatingScene extends Phaser.Scene {
       { key: 'titans', label: '🗿 Башня'  },
       { key: 'natisk', label: '🔥 Натиск' },
       { key: 'season', label: '🌟 Сезон'  },
+      { key: 'boss',   label: '☠️ Босс'   },
     ];
     const tw  = (W - 24) / tabs.length;
     const ty  = 76;

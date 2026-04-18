@@ -88,4 +88,44 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             log.error("wb_reminder_toggle error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
+    @router.get("/api/rating/world_boss")
+    def wb_rating(init_data: str):
+        try:
+            tg = get_user(init_data)
+            uid = int(tg["id"])
+            spawn = db.get_wb_last_finished()
+            if not spawn:
+                return {"ok": True, "spawn": None, "top": [], "my_pos": None, "my_damage": 0}
+            sid = spawn["spawn_id"]
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT ps.user_id, p.username, ps.total_damage, ps.hits_count, ps.is_dead "
+                "FROM world_boss_player_state ps "
+                "JOIN players p ON p.user_id = ps.user_id "
+                "WHERE ps.spawn_id=? ORDER BY ps.total_damage DESC LIMIT 10",
+                (sid,),
+            )
+            top = [dict(r) for r in cur.fetchall()]
+            cur.execute(
+                "SELECT total_damage FROM world_boss_player_state WHERE spawn_id=? AND user_id=?",
+                (sid, uid),
+            )
+            my_row = cur.fetchone()
+            my_dmg = int(my_row["total_damage"]) if my_row else 0
+            my_pos = None
+            if my_row:
+                cur.execute(
+                    "SELECT COUNT(*)+1 AS pos FROM world_boss_player_state "
+                    "WHERE spawn_id=? AND total_damage>?",
+                    (sid, my_dmg),
+                )
+                pos_row = cur.fetchone()
+                my_pos = int(pos_row["pos"]) if pos_row else None
+            conn.close()
+            return {"ok": True, "spawn": spawn, "top": top, "my_pos": my_pos, "my_damage": my_dmg}
+        except Exception as e:
+            log.error("wb_rating error: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)}
+
     app.include_router(router)
