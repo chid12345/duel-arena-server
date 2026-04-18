@@ -118,8 +118,10 @@ async def wb_broadcast_tick(db) -> None:
     if not active:
         # Фаза подготовки: за WB_PREP_SEC до старта шлём wb_preparing
         next_sched = db.get_wb_next_scheduled()
+        reg_count = 0
         if next_sched:
             try:
+                reg_count = db.wb_registration_count(int(next_sched["spawn_id"]))
                 sched_at = _parse_ts(next_sched["scheduled_at"])
                 until_start = (sched_at - datetime.now(timezone.utc)).total_seconds()
                 if 0 < until_start <= WB_PREP_SEC:
@@ -128,6 +130,7 @@ async def wb_broadcast_tick(db) -> None:
                         "ts": ts_ms,
                         "active": False,
                         "prep_seconds_left": int(until_start),
+                        "registrants_count": reg_count,
                     }
                     await asyncio.gather(
                         *(wb_manager.send(uid, prep_payload) for uid in subs),
@@ -136,7 +139,7 @@ async def wb_broadcast_tick(db) -> None:
                     return
             except Exception:
                 pass
-        payload = {"event": "wb_idle", "ts": ts_ms, "active": False}
+        payload = {"event": "wb_idle", "ts": ts_ms, "active": False, "registrants_count": reg_count}
         await asyncio.gather(
             *(wb_manager.send(uid, payload) for uid in subs),
             return_exceptions=True,

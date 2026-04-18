@@ -94,4 +94,16 @@ POSTGRES_DDL_05_WORLD_BOSS: tuple[str, ...] = (
 
     # 5. Флаг напоминания в players
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS wb_reminder_opt_in INTEGER DEFAULT 0",
+
+    # 6. Предварительная регистрация на рейд
+    """
+    CREATE TABLE IF NOT EXISTS world_boss_registrations (
+        id SERIAL PRIMARY KEY,
+        spawn_id INTEGER NOT NULL REFERENCES world_boss_spawns (spawn_id),
+        user_id BIGINT NOT NULL REFERENCES players (user_id),
+        registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(spawn_id, user_id)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_wb_reg_spawn ON world_boss_registrations (spawn_id)",
 )

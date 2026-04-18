@@ -28,6 +28,7 @@ Object.assign(WorldBossScene.prototype, {
       this._addText(W/2, y + i*16, l, 11, '#ddddff').setOrigin(0.5);
     });
     y += 56;
+    const rh = this._renderRegistrationBtn?.(s, W, y) || 0; y += rh;
     const msh = this._renderMyScrollsSummary?.(s, W, y) || 0; y += msh;
     this._renderScrollShop(s, W, y); y += 185;
     this._renderResShop(s, W, y); y += 74;

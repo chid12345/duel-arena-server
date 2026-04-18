@@ -53,7 +53,7 @@ class WorldBossScene extends Phaser.Scene {
           const p = JSON.parse(m.data);
           if (p.event === 'wb_tick') this._onWsTick(p);
           else if (p.event === 'wb_preparing') this._onWsPreparing(p);
-          else if (p.event === 'wb_idle' && (this._state?.active || (this._state?.prep_seconds_left || 0) > 0)) this._refresh();
+          else if (p.event === 'wb_idle') this._onWsIdle(p);
         } catch(_) {}
       };
       this._ws.onerror = () => { try { this._ws?.close?.(); } catch(_) {} this._ws = null; };
@@ -66,8 +66,18 @@ class WorldBossScene extends Phaser.Scene {
     if (!this._state) this._state = {};
     const wasPrep = (this._state.prep_seconds_left || 0) > 0;
     this._state.prep_seconds_left = p.prep_seconds_left;
+    if (p.registrants_count != null) this._state.registrants_count = p.registrants_count;
     if (this._prepCountT) this._prepCountT.setText(`Старт через ${p.prep_seconds_left} сек`);
-    else if (!wasPrep) this._render();
+    if (this._regCountT) this._regCountT.setText(`👥 ${p.registrants_count || 0} в рейде`);
+    if (!wasPrep) this._render();
+  }
+
+  _onWsIdle(p) {
+    if (this._state?.active) { this._refresh(); return; }
+    if (p.registrants_count != null && this._state) {
+      this._state.registrants_count = p.registrants_count;
+      if (this._regCountT) this._regCountT.setText(`👥 ${p.registrants_count} в рейде`);
+    }
   }
 
   _onWsTick(p) {
@@ -123,10 +133,13 @@ class WorldBossScene extends Phaser.Scene {
 
     this._crownRow = this._addCrownRow(16, y, W-32, a.crown_flags || 0); y += 24;
 
-    if (ps && !ps.is_dead) {
+    if (!ps) {
+      this._hitBtn = this._bigBtn(16, y, W-32, 64, 0x1a4a1a, '⚔️ Войти в бой!', () => this._onHit());
+      y += 74;
+    } else if (!ps.is_dead) {
       this._hitBtn = this._bigBtn(16, y, W-32, 64, 0xaa1a1a, '⚔️  УДАРИТЬ', () => this._onHit());
       y += 74;
-    } else if (ps) {
+    } else {
       this._addPanel(16, y, W-32, 48);
       this._addText(W/2, y+24, '💀 Вы мертвы', 13, '#ff6672', true).setOrigin(0.5);
       y += 58;

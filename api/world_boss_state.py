@@ -72,12 +72,19 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
             }
 
     prep_seconds_left = 0
+    seconds_until_raid = None
+    is_registered = False
+    registrants_count = 0
     if not active and next_sched:
         try:
             sched_at = _parse_ts(next_sched["scheduled_at"])
             until_start = (sched_at - datetime.now(timezone.utc)).total_seconds()
+            seconds_until_raid = max(0, int(until_start))
             if 0 < until_start <= WB_PREP_SEC:
                 prep_seconds_left = int(until_start)
+            next_spawn_id = int(next_sched["spawn_id"])
+            is_registered = db.wb_is_registered(next_spawn_id, uid)
+            registrants_count = db.wb_registration_count(next_spawn_id)
         except Exception:
             pass
 
@@ -93,6 +100,9 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
     return {
         "ok": True,
         "prep_seconds_left": prep_seconds_left,
+        "seconds_until_raid": seconds_until_raid,
+        "is_registered": is_registered,
+        "registrants_count": registrants_count,
         "active": (lambda _bt: {
             "spawn_id": int(active["spawn_id"]),
             "boss_name": active.get("boss_name"),

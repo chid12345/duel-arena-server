@@ -39,6 +39,10 @@ class ReminderToggleBody(BaseModel):
     enabled: bool
 
 
+class RegisterBody(BaseModel):
+    init_data: str
+
+
 async def world_boss_use_scroll_inner(body: UseScrollBody, *, db, get_user_from_init_data) -> dict:
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
@@ -125,3 +129,29 @@ async def world_boss_reminder_toggle_inner(body: ReminderToggleBody, *, db, get_
     uid = int(tg_user["id"])
     db.set_wb_reminder_opt_in(uid, bool(body.enabled))
     return {"ok": True, "enabled": bool(body.enabled)}
+
+
+async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_init_data) -> dict:
+    """Toggle регистрации на следующий рейд (вкл/выкл)."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+
+    if db.get_wb_active_spawn():
+        return {"ok": False, "reason": "Рейд уже идёт — просто бей босса!"}
+
+    nxt = db.get_wb_next_scheduled()
+    if not nxt:
+        return {"ok": False, "reason": "Нет запланированного рейда"}
+
+    spawn_id = int(nxt["spawn_id"])
+    is_reg = db.wb_is_registered(spawn_id, uid)
+
+    if is_reg:
+        db.wb_unregister(spawn_id, uid)
+        is_reg = False
+    else:
+        db.wb_register(spawn_id, uid)
+        is_reg = True
+
+    count = db.wb_registration_count(spawn_id)
+    return {"ok": True, "is_registered": is_reg, "registrants_count": count, "spawn_id": spawn_id}

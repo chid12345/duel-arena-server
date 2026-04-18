@@ -80,8 +80,9 @@ Object.assign(WorldBossScene.prototype, {
   _renderPrepPhase(s, W, H) {
     let y = 92;
     this._addPanel(8, y, W - 16, 68);
-    this._addText(W / 2, y + 14, '⚔️ ПОДГОТОВКА К РЕЙДУ', 13, '#ffc83c', true).setOrigin(0.5);
-    this._prepCountT = this._addText(W / 2, y + 42, `Старт через ${s.prep_seconds_left || 0} сек`, 15, '#ff8888', true).setOrigin(0.5);
+    this._addText(W / 2, y + 12, '⚔️ ПОДГОТОВКА К РЕЙДУ', 13, '#ffc83c', true).setOrigin(0.5);
+    this._prepCountT = this._addText(W / 2, y + 34, `Старт через ${s.prep_seconds_left || 0} сек`, 15, '#ff8888', true).setOrigin(0.5);
+    this._regCountT = this._addText(W / 2, y + 56, `👥 ${s.registrants_count || 0} игроков записалось`, 10, '#88cc88').setOrigin(0.5);
     y += 80;
 
     this._addText(W / 2, y, '📌 Свитки применяй в слоты после первого удара по боссу', 9, '#aaaacc').setOrigin(0.5);
@@ -157,6 +158,54 @@ Object.assign(WorldBossScene.prototype, {
     this._addText(20, y + 9, '📦 Мои запасы:', 10, '#88cc88', true);
     this._addText(20, y + 25, parts.join('  '), 10, '#ccffcc');
     return 48;
+  },
+
+  // ─── Кнопка регистрации на рейд (за 5 мин до старта) ───────────────────
+
+  _renderRegistrationBtn(s, W, y) {
+    const until = s.seconds_until_raid;
+    if (until == null || until > 300) return 0;
+
+    const isReg = !!s.is_registered;
+    const count = s.registrants_count || 0;
+
+    const btnH = 56, totalH = btnH + 32;
+    const btnCol = isReg ? 0x1a4a1a : 0x1a2a5a;
+    const btnBorder = isReg ? 0x3caa5c : 0x5096ff;
+    const btnLabel = isReg ? '✅ Ты в рейде! (нажми чтобы отменить)' : '⚔️ Участвую в рейде!';
+    const btnTxt   = isReg ? '#88ff88' : '#aaddff';
+
+    const bg = this.add.graphics(); bg._wbChild = true;
+    bg.fillStyle(btnCol, 0.15);
+    bg.fillRoundedRect(16, y, W - 32, totalH, 8);
+    bg.lineStyle(1.5, btnBorder, 0.7);
+    bg.strokeRoundedRect(16, y, W - 32, totalH, 8);
+
+    this._bigBtn(16, y, W - 32, btnH, btnCol, btnLabel, () => this._registerForRaid());
+    const btnT = this._addText(W - 32, y + btnH + 8, `👥 ${count} игроков записалось`, 10, '#aaaacc');
+    btnT.setOrigin(1, 0);
+    this._regCountT = btnT;
+    return totalH + 8;
+  },
+
+  async _registerForRaid() {
+    if (this._regBusy) return;
+    this._regBusy = true;
+    try {
+      const r = await post('/api/world_boss/register', { init_data: tg?.initData || '' });
+      if (r.ok) {
+        tg?.HapticFeedback?.notificationOccurred('success');
+        if (this._state) {
+          this._state.is_registered = r.is_registered;
+          this._state.registrants_count = r.registrants_count;
+        }
+        this._toast(r.is_registered ? '✅ Записался в рейд!' : '↩️ Запись отменена');
+        this._render();
+      } else {
+        this._toast('❌ ' + (r.reason || 'Ошибка'));
+      }
+    } catch (_) { this._toast('❌ Нет соединения'); }
+    this._regBusy = false;
   },
 
   // ─── Тик обратного отсчёта подготовки ───────────────────────────────────

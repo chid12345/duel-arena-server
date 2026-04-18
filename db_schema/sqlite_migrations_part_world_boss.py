@@ -137,4 +137,17 @@ MIGRATIONS_PART_WORLD_BOSS = [
         "ALTER TABLE world_boss_player_state ADD COLUMN endurance INTEGER DEFAULT 3",
         "ALTER TABLE world_boss_player_state ADD COLUMN crit INTEGER DEFAULT 3",
     ]),
+
+    # 12. Предварительная регистрация на рейд (за 5 мин до старта).
+    ("2026_04_18_111_wb_registrations", [
+        """CREATE TABLE IF NOT EXISTS world_boss_registrations (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            spawn_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(spawn_id, user_id),
+            FOREIGN KEY (spawn_id) REFERENCES world_boss_spawns (spawn_id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_wb_reg_spawn ON world_boss_registrations (spawn_id)",
+    ]),
 ]
