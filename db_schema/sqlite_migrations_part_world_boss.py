@@ -150,4 +150,11 @@ MIGRATIONS_PART_WORLD_BOSS = [
         )""",
         "CREATE INDEX IF NOT EXISTS idx_wb_reg_spawn ON world_boss_registrations (spawn_id)",
     ]),
+
+    # 13. Тип claimed в PostgreSQL: INTEGER → BOOLEAN.
+    #     sql_adapt.py конвертирует claimed=0 → claimed=FALSE, поэтому тип должен быть BOOLEAN.
+    #     SQLite тихо пропускает ALTER COLUMN TYPE (не поддерживает), оставляет INTEGER — это норм.
+    ("2026_04_19_112_wb_rewards_claimed_boolean", [
+        "ALTER TABLE world_boss_rewards ALTER COLUMN claimed TYPE BOOLEAN USING claimed::boolean",
+    ]),
 ]
