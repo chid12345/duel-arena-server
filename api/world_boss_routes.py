@@ -139,8 +139,8 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": str(e)}
 
     @router.get("/api/admin/wb_test_schedule")
-    def wb_test_schedule(in_minutes: int = 2):
-        """Тест: отменить все scheduled-спавны и создать новый через in_minutes минут."""
+    def wb_test_schedule(in_minutes: int = 0):
+        """Тест: отменить все спавны и стартовать немедленно (in_minutes=0) или через N минут."""
         try:
             from datetime import datetime, timezone, timedelta
             import random
@@ -157,20 +157,36 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             conn.commit()
             conn.close()
 
-            spawn_at = datetime.now(timezone.utc) + timedelta(minutes=max(1, in_minutes))
             btype = roll_boss_type()
             pool = btype.get("name_pool") or WB_BOSS_NAMES
             boss_name = random.choice(pool)
             stat_profile = roll_boss_stat_profile(base=btype.get("stat_profile_base"))
-            db.create_wb_spawn(
-                scheduled_at=spawn_at.strftime("%Y-%m-%d %H:%M:%S"),
-                boss_name=boss_name,
-                stat_profile=stat_profile,
-                max_hp=calc_boss_hp(0),
-                boss_type=btype.get("type", "universal"),
-            )
-            return {"ok": True, "scheduled_at_utc": spawn_at.isoformat(), "boss_name": boss_name,
-                    "in_minutes": in_minutes}
+
+            if in_minutes <= 0:
+                # Мгновенный старт: создаём scheduled → сразу переводим в active
+                spawn_at = datetime.now(timezone.utc)
+                online = db.wb_count_online_players(window_minutes=10)
+                max_hp = calc_boss_hp(online)
+                spawn_id = db.create_wb_spawn(
+                    scheduled_at=spawn_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    boss_name=boss_name,
+                    stat_profile=stat_profile,
+                    max_hp=max_hp,
+                    boss_type=btype.get("type", "universal"),
+                )
+                db.start_wb_spawn(spawn_id=spawn_id, online_at_start=online, max_hp=max_hp)
+                return {"ok": True, "started": True, "boss_name": boss_name, "in_minutes": 0}
+            else:
+                spawn_at = datetime.now(timezone.utc) + timedelta(minutes=in_minutes)
+                db.create_wb_spawn(
+                    scheduled_at=spawn_at.strftime("%Y-%m-%d %H:%M:%S"),
+                    boss_name=boss_name,
+                    stat_profile=stat_profile,
+                    max_hp=calc_boss_hp(0),
+                    boss_type=btype.get("type", "universal"),
+                )
+                return {"ok": True, "started": False, "scheduled_at_utc": spawn_at.isoformat(),
+                        "boss_name": boss_name, "in_minutes": in_minutes}
         except Exception as e:
             log.error("wb_test_schedule error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}

@@ -44,7 +44,8 @@ class WorldBossScene extends Phaser.Scene {
       this._render();
       this._openWS();
     } catch(_) {
-      if (this._loading) this._loading.setText('❌ Нет соединения');
+      if (this._loading) this._loading.setText('❌ Нет соединения\n(повтор через 5с)');
+      setTimeout(() => { if (this.scene?.isActive?.()) this._refresh(); }, 5000);
     } finally {
       this._refreshBusy = false;
     }
