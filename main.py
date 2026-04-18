@@ -157,12 +157,6 @@ def _build_app(bot_count: int) -> Application:
             world_boss_scheduler_job, interval=60, first=5,
             name="world_boss_scheduler",
         )
-        # Мировой босс — боевой тик (1 сек): ответка, коронные, окно уязвимости.
-        from jobs.world_boss_battle_tick import world_boss_battle_tick_job
-        application.job_queue.run_repeating(
-            world_boss_battle_tick_job, interval=1, first=10,
-            name="world_boss_battle_tick",
-        )
         # Мировой босс — анонс в общий чат за 5 мин до рейда (раз в 60 сек, идемпотентно).
         from jobs.world_boss_announce import world_boss_announce_5min_job
         application.job_queue.run_repeating(

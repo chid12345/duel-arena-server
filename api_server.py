@@ -6,8 +6,10 @@ FastAPI сервер для Duel Arena TMA (Telegram Mini App).
 Прод: см. Dockerfile + scripts/start_web_and_bot.sh и DEPLOY_TMA.md
 """
 
+import asyncio
 import logging
 import os
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -25,7 +27,31 @@ from version import GAME_VERSION
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-app = FastAPI(title="Duel Arena TMA API", version="1.0")
+
+async def _wb_tick_loop() -> None:
+    """Боевой тик WB — в процессе uvicorn, чтобы wb_broadcast_tick видел WS-соединения.
+    main.py (PTB) держит только scheduler (scheduled→active); broadcast живёт здесь."""
+    from jobs.world_boss_battle_tick import world_boss_battle_tick_job
+    while True:
+        await asyncio.sleep(1)
+        try:
+            await world_boss_battle_tick_job(None)
+        except Exception as e:
+            logger.warning("wb_tick_loop: %s", e)
+
+
+@asynccontextmanager
+async def lifespan(app):  # noqa: ARG001
+    task = asyncio.create_task(_wb_tick_loop())
+    yield
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        pass
+
+
+app = FastAPI(title="Duel Arena TMA API", version="1.0", lifespan=lifespan)
 
 APP_BUILD_VERSION = (
     GAME_VERSION
