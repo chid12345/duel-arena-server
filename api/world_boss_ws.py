@@ -107,8 +107,31 @@ def _build_top_block(db, spawn_id: int) -> list:
     ]
 
 
+def _run_battle_tick(db) -> None:
+    """Боевая логика тика: ответка босса + коронные удары.
+    Вызывается внутри _load_tick_data (уже в потоке) — не нужен отдельный to_thread."""
+    try:
+        from jobs.world_boss_battle_tick import _check_crown_strikes, _do_boss_counter_attack
+        from repositories.world_boss.damage_calc import BOSS_ATTACK_COOLDOWN_SEC
+        active = db.get_wb_active_spawn()
+        if not active:
+            return
+        spawn_id = int(active["spawn_id"])
+        current_hp = int(active.get("current_hp") or 0)
+        max_hp = int(active.get("max_hp") or 0)
+        stat_profile = active.get("stat_profile") or {}
+        if current_hp > 0:
+            stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
+        if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
+            _do_boss_counter_attack(db, spawn_id, stat_profile)
+    except Exception as e:
+        logger.warning("_run_battle_tick: %s", e)
+
+
 def _load_tick_data(db, subs: list) -> dict:
-    """Sync: все DB-запросы для тика. Запускается через asyncio.to_thread — не блокирует event loop."""
+    """Sync: боевой тик + загрузка данных для WS.
+    Запускается через asyncio.to_thread — ОДИН поток на тик, event loop не блокируется."""
+    _run_battle_tick(db)
     active = db.get_wb_active_spawn()
     ts_ms = int(time.time() * 1000)
     if not active:
@@ -141,12 +164,12 @@ def _load_tick_data(db, subs: list) -> dict:
 
 
 async def wb_broadcast_tick(db) -> None:
-    """Вызывается из battle_tick_job — бродкаст раз в секунду всем подписчикам.
-    DB-чтение выполняется в потоке (to_thread) — event loop не блокируется."""
+    """Боевой тик + бродкаст подписчикам.
+    ОДИН asyncio.to_thread на тик: бой и загрузка данных совмещены."""
     subs = wb_manager.subscribers()
-    if not subs:
-        return
     data = await asyncio.to_thread(_load_tick_data, db, subs)
+    if not subs:
+        return  # бой уже сработал в потоке — бродкаст не нужен
     if data["kind"] == "idle":
         if data["prep_left"] is not None:
             payload = {"event": "wb_preparing", "ts": data["ts"], "active": False,
