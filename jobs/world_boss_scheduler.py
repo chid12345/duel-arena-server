@@ -15,6 +15,7 @@ from config.world_boss_constants import (
     WB_BOSS_NAMES,
     WB_DURATION_SEC,
     WB_ONLINE_WINDOW_MIN,
+    WB_SPAWN_HOURS_UTC,
     calc_boss_hp,
     next_spawn_time_utc,
 )
@@ -36,11 +37,43 @@ def _parse_ts(value) -> datetime:
     return datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
 
+def _is_slot_valid(sched_at: datetime) -> bool:
+    """Проверяет что scheduled_at совпадает с текущим расписанием WB_SPAWN_HOURS_UTC."""
+    from config.world_boss_constants import WB_SPAWN_MINUTE_UTC  # noqa: PLC0415
+    minute = WB_SPAWN_MINUTE_UTC if hasattr(__import__("config.world_boss_constants",
+                                                        fromlist=["WB_SPAWN_MINUTE_UTC"]),
+                                            "WB_SPAWN_MINUTE_UTC") else 0
+    return sched_at.hour in WB_SPAWN_HOURS_UTC and sched_at.minute == minute
+
+
+def _cancel_spawn(db, spawn_id: int) -> None:
+    """Помечает scheduled-спавн как отменённый (cancelled) чтобы освободить слот."""
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE world_boss_spawns SET status='cancelled', ended_at=CURRENT_TIMESTAMP "
+        "WHERE spawn_id=? AND status='scheduled'",
+        (int(spawn_id),),
+    )
+    conn.commit()
+    conn.close()
+
+
 def _ensure_next_scheduled(db) -> None:
-    """Создаёт запись на следующий слот, если её нет."""
+    """Создаёт запись на следующий слот, если её нет.
+    Если существующий scheduled-спавн не совпадает с расписанием — перепланирует."""
     nxt = db.get_wb_next_scheduled()
     if nxt:
-        return
+        try:
+            sched_at = _parse_ts(nxt["scheduled_at"])
+            if not _is_slot_valid(sched_at):
+                _cancel_spawn(db, int(nxt["spawn_id"]))
+                logger.info("world_boss_scheduler: отменён устаревший спавн id=%s (%s), пересоздаю",
+                            nxt["spawn_id"], sched_at.isoformat())
+            else:
+                return
+        except Exception:
+            return
     active = db.get_wb_active_spawn()
     if active:
         return  # пока активный идёт, следующий создадим после закрытия

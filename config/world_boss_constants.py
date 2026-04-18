@@ -12,7 +12,9 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 
 # Расписание: 6 спавнов/день каждые 4 часа (UTC).
-WB_SPAWN_HOURS_UTC: tuple = (0, 4, 8, 12, 16, 20)
+# ⚠️ ТЕСТ: временно 13:20 — вернуть (0,4,8,12,16,20) и MINUTE=0 после тестов
+WB_SPAWN_HOURS_UTC: tuple = (13,)
+WB_SPAWN_MINUTE_UTC: int = 20
 
 # Длительность одного рейда.
 WB_DURATION_SEC: int = 10 * 60
@@ -80,21 +82,19 @@ WB_BOSS_NAMES: List[str] = [
 
 
 def next_spawn_time_utc(now: datetime) -> datetime:
-    """Возвращает ближайшее время следующего спавна (UTC), строго в будущем.
-    Сейчас 03:47 → 04:00. Сейчас 04:00 → 08:00.
-    """
+    """Возвращает ближайшее время следующего спавна (UTC), строго в будущем."""
     now = now.astimezone(timezone.utc) if now.tzinfo else now.replace(tzinfo=timezone.utc)
+    minute = globals().get("WB_SPAWN_MINUTE_UTC", 0)
     today_slots = [
-        now.replace(hour=h, minute=0, second=0, microsecond=0)
+        now.replace(hour=h, minute=minute, second=0, microsecond=0)
         for h in WB_SPAWN_HOURS_UTC
     ]
     future = [t for t in today_slots if t > now]
     if future:
         return future[0]
-    # Завтра первый слот (00:00).
     tomorrow = now + timedelta(days=1)
     return tomorrow.replace(
-        hour=WB_SPAWN_HOURS_UTC[0], minute=0, second=0, microsecond=0
+        hour=WB_SPAWN_HOURS_UTC[0], minute=minute, second=0, microsecond=0
     )
 
 
