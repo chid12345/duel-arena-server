@@ -40,10 +40,7 @@ def _parse_ts(value) -> datetime:
 def _is_slot_valid(sched_at: datetime) -> bool:
     """Проверяет что scheduled_at совпадает с текущим расписанием WB_SPAWN_HOURS_UTC."""
     from config.world_boss_constants import WB_SPAWN_MINUTE_UTC  # noqa: PLC0415
-    minute = WB_SPAWN_MINUTE_UTC if hasattr(__import__("config.world_boss_constants",
-                                                        fromlist=["WB_SPAWN_MINUTE_UTC"]),
-                                            "WB_SPAWN_MINUTE_UTC") else 0
-    return sched_at.hour in WB_SPAWN_HOURS_UTC and sched_at.minute == minute
+    return sched_at.hour in WB_SPAWN_HOURS_UTC and sched_at.minute == WB_SPAWN_MINUTE_UTC
 
 
 def _cancel_spawn(db, spawn_id: int) -> None:
