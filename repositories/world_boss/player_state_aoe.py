@@ -31,7 +31,7 @@ class WorldBossPlayerStateAoeMixin:
         cur.execute(
             "SELECT user_id FROM world_boss_player_state "
             "WHERE spawn_id=? AND is_dead=1 "
-            "AND died_at>=datetime('now','-2 seconds')",
+            "AND died_at>=datetime('now','-10 seconds')",
             (int(spawn_id),),
         )
         killed = [dict(r) for r in cur.fetchall()]
