@@ -22,6 +22,9 @@ Object.assign(WorldBossScene.prototype, {
       () => this._toggleReminder());
     y += 60;
 
+    this._bigBtn(16, y, W-32, 36, 0x2a1a00, '🔧 Тест: старт через 2 мин', () => this._wbTestSchedule());
+    y += 46;
+
     ['Рейд длится 10 минут.',
      'Бей босса → получи долю награды.',
      'Смерть в бою → свиток воскрешения.'].forEach((l, i) => {
@@ -185,6 +188,20 @@ Object.assign(WorldBossScene.prototype, {
       if (this._secLeftT) this._secLeftT.setText(`⏱ ${this._fmtSec(this._state.active.seconds_left)}`);
     }
     this._tickPrep?.();
+  },
+
+  async _wbTestSchedule() {
+    if (this._testBusy) return;
+    this._testBusy = true;
+    try {
+      const r = await fetch('/api/admin/wb_test_schedule?in_minutes=2');
+      const d = await r.json();
+      if (d.ok) {
+        this._toast('✅ Рейд через ~2 мин! Босс: ' + (d.boss_name || ''));
+        setTimeout(() => this._refresh(), 1500);
+      } else { this._toast('❌ ' + (d.reason || 'Ошибка')); }
+    } catch (_) { this._toast('❌ Нет соединения'); }
+    this._testBusy = false;
   },
 
   _updateFightingHUD() {

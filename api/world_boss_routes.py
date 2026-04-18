@@ -138,7 +138,7 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             log.error("wb_rating error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
-    @router.post("/api/admin/wb_test_schedule")
+    @router.get("/api/admin/wb_test_schedule")
     def wb_test_schedule(in_minutes: int = 2):
         """Тест: отменить все scheduled-спавны и создать новый через in_minutes минут."""
         from datetime import datetime, timezone, timedelta
