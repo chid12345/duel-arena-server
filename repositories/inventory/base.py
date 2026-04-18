@@ -14,6 +14,8 @@ from config import (
 
 
 class InventoryBaseMixin:
+    _inventory_schema_ensured: bool = False
+
     @staticmethod
     def _row_get(row: Any, key: str, default: Any = None) -> Any:
         if row is None:
@@ -44,7 +46,9 @@ class InventoryBaseMixin:
         return None
 
     def _ensure_inventory_schema(self, cursor) -> None:
-        """Safety net: гарантирует наличие user_inventory и полей классов в players."""
+        """Safety net: гарантирует наличие user_inventory и полей классов в players. Runs once per instance."""
+        if InventoryBaseMixin._inventory_schema_ensured:
+            return
         is_pg = bool(getattr(self, "_pg", False))
         if is_pg:
             cursor.execute(
@@ -145,6 +149,8 @@ class InventoryBaseMixin:
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN passive_type TEXT")
             if "stats_applied" not in inv_cols:
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN stats_applied INTEGER DEFAULT 0")
+
+        InventoryBaseMixin._inventory_schema_ensured = True
 
     @staticmethod
     def _class_stat_vector(class_info: Optional[Dict]) -> Dict[str, int]:

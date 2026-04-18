@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any, Awaitable, Callable, Dict
 
@@ -31,12 +32,14 @@ def attach_wardrobe_core(
             tg_user = get_user_from_init_data(init_data)
             uid = int(tg_user["id"])
             username = tg_user.get("username") or tg_user.get("first_name") or ""
-            db.get_or_create_player(uid, username)
-            available_classes = db.get_available_classes_for_user(uid)
-            equipped_class = db.get_equipped_class(uid)
-            inventory = db.get_user_inventory(uid)
+            await asyncio.to_thread(db.get_or_create_player, uid, username)
+            available_classes, equipped_class, inventory, reset_cost = await asyncio.gather(
+                asyncio.to_thread(db.get_available_classes_for_user, uid),
+                asyncio.to_thread(db.get_equipped_class, uid),
+                asyncio.to_thread(db.get_user_inventory, uid),
+                asyncio.to_thread(db.get_reset_stats_cost, uid),
+            )
             usdt_items = [item for item in inventory if item["class_type"] == "usdt"]
-            reset_cost = db.get_reset_stats_cost(uid)
             return {
                 "ok": True,
                 "available_classes": available_classes,
@@ -60,18 +63,18 @@ def attach_wardrobe_core(
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         username = tg_user.get("username") or tg_user.get("first_name") or ""
-        db.get_or_create_player(uid, username)
+        await asyncio.to_thread(db.get_or_create_player, uid, username)
         class_id = body.class_id.strip()
         ci = db.get_class_info(class_id)
-        success, message = db.purchase_class(uid, class_id)
+        success, message = await asyncio.to_thread(db.purchase_class, uid, class_id)
         result = {"ok": success, "message": message}
         if success and ci:
             pg = int(ci.get("price_gold") or 0)
             pd = int(ci.get("price_diamonds") or 0)
-            if pg > 0: db.track_purchase(uid, class_id, "gold", pg)
-            if pd > 0: db.track_purchase(uid, class_id, "diamonds", pd)
+            if pg > 0: await asyncio.to_thread(db.track_purchase, uid, class_id, "gold", pg)
+            if pd > 0: await asyncio.to_thread(db.track_purchase, uid, class_id, "diamonds", pd)
             _cache_invalidate(uid)
-            player = db.get_or_create_player(uid, "")
+            player = await asyncio.to_thread(db.get_or_create_player, uid, "")
             result["player"] = _player_api(dict(player))
             result.update(await wardrobe(body.init_data))
         return result
@@ -81,12 +84,12 @@ def attach_wardrobe_core(
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         username = tg_user.get("username") or tg_user.get("first_name") or ""
-        db.get_or_create_player(uid, username)
-        success, message = db.switch_class(uid, body.class_id.strip())
+        await asyncio.to_thread(db.get_or_create_player, uid, username)
+        success, message = await asyncio.to_thread(db.switch_class, uid, body.class_id.strip())
         result = {"ok": success, "message": message}
         if success:
             _cache_invalidate(uid)
-            player = db.get_or_create_player(uid, "")
+            player = await asyncio.to_thread(db.get_or_create_player, uid, "")
             result["player"] = _player_api(dict(player))
             result.update(await wardrobe(body.init_data))
         return result
@@ -96,12 +99,12 @@ def attach_wardrobe_core(
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         username = tg_user.get("username") or tg_user.get("first_name") or ""
-        db.get_or_create_player(uid, username)
-        success, message = db.unequip_class(uid)
+        await asyncio.to_thread(db.get_or_create_player, uid, username)
+        success, message = await asyncio.to_thread(db.unequip_class, uid)
         result = {"ok": bool(success), "message": message}
         if success:
             _cache_invalidate(uid)
-            player = db.get_or_create_player(uid, "")
+            player = await asyncio.to_thread(db.get_or_create_player, uid, "")
             result["player"] = _player_api(dict(player))
             result.update(await wardrobe(body.init_data))
         return result
@@ -111,12 +114,12 @@ def attach_wardrobe_core(
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         username = tg_user.get("username") or tg_user.get("first_name") or ""
-        db.get_or_create_player(uid, username)
-        success, message = db.resync_player_stats(uid)
+        await asyncio.to_thread(db.get_or_create_player, uid, username)
+        success, message = await asyncio.to_thread(db.resync_player_stats, uid)
         result = {"ok": bool(success), "message": message}
         if success:
             _cache_invalidate(uid)
-            player = db.get_or_create_player(uid, "")
+            player = await asyncio.to_thread(db.get_or_create_player, uid, "")
             result["player"] = _player_api(dict(player))
             result.update(await wardrobe(body.init_data))
         return result
