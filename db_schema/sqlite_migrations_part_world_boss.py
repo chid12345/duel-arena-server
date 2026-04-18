@@ -130,4 +130,11 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_17_109_wb_stage", [
         "ALTER TABLE world_boss_spawns ADD COLUMN stage INTEGER DEFAULT 1",
     ]),
+
+    # 11. Статы игрока для расчёта уворота (endurance) и крита (crit) в рейде —
+    #     снимаются при входе в рейд, хранятся локально чтобы battle_tick не лез в players.
+    ("2026_04_18_110_wb_player_combat_stats", [
+        "ALTER TABLE world_boss_player_state ADD COLUMN endurance INTEGER DEFAULT 3",
+        "ALTER TABLE world_boss_player_state ADD COLUMN crit INTEGER DEFAULT 3",
+    ]),
 ]

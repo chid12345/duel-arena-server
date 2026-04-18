@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from pydantic import BaseModel
 
 from api.tma_infra import get_user_lock
+from config.battle_constants import PLAYER_START_CRIT, PLAYER_START_ENDURANCE
 from config.world_boss_constants import is_vulnerability_window
 from repositories.world_boss.damage_calc import (
     PLAYER_HIT_COOLDOWN_MS,
@@ -51,7 +52,11 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         # Автоподключение к рейду при первом ударе
         player = db.get_or_create_player(uid, "")
         player_max_hp = int(player.get("max_hp", 100))
-        ps = db.wb_join_raid(spawn_id, uid, max_hp=player_max_hp)
+        ps = db.wb_join_raid(
+            spawn_id, uid, max_hp=player_max_hp,
+            endurance=int(player.get("endurance") or PLAYER_START_ENDURANCE),
+            crit=int(player.get("crit") or PLAYER_START_CRIT),
+        )
         if int(ps.get("is_dead") or 0):
             return {"ok": False, "reason": "Вы мертвы — нужен свиток воскрешения"}
 
@@ -68,10 +73,10 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         except Exception:
             vuln = False
 
-        # Расчёт урона на сервере
+        # Расчёт урона на сервере — статы из профиля игрока
         player_stats = {
             "strength": int(player.get("strength", 10)),
-            "crit_chance": 0.05,
+            "crit": int(player.get("crit") or PLAYER_START_CRIT),
         }
         stat_profile = active.get("stat_profile") or {}
         dmg, is_crit, _dbg = calc_player_damage_to_boss(

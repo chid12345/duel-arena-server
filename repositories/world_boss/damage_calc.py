@@ -8,6 +8,15 @@ from __future__ import annotations
 import random
 from typing import Any, Dict, Optional, Tuple
 
+from config.battle_constants import (
+    AGI_BONUS_PCT_PER_STEP,
+    AGI_BONUS_STEP,
+    CRIT_MAX_CHANCE,
+    DODGE_MAX_CHANCE,
+    PLAYER_START_CRIT,
+    PLAYER_START_ENDURANCE,
+)
+
 # Множители рейд-свитков (docs/WORLD_BOSS.md).
 RAID_SCROLL_EFFECTS = {
     "damage_25":  {"damage_mult": 1.25},
@@ -56,10 +65,15 @@ def calc_player_damage_to_boss(
     """
     rng = rng or random
     base = max(1, int(player_stats.get("strength", 10)))
-    crit_base = float(player_stats.get("crit_chance", 0.05))
+    atk_crit = int(player_stats.get("crit", PLAYER_START_CRIT))
+    # Крит по PvP-формуле: игрок vs интеллект босса (масштабируем int 0.8–1.2 → ~30)
+    boss_int_eff = PLAYER_START_CRIT * 10 * float(boss_stat_profile.get("int", 1.0))
+    crit_base = min(CRIT_MAX_CHANCE, atk_crit / (atk_crit + boss_int_eff + 1) * CRIT_MAX_CHANCE)
+    crit_inv = max(0, atk_crit - PLAYER_START_CRIT)
+    crit_base = min(CRIT_MAX_CHANCE, crit_base + (crit_inv // max(1, AGI_BONUS_STEP)) * AGI_BONUS_PCT_PER_STEP)
 
     mults = _collect_raid_mults(scroll_1, scroll_2)
-    crit_chance = min(0.9, crit_base + mults["crit_chance_bonus"])
+    crit_chance = min(CRIT_MAX_CHANCE, crit_base + mults["crit_chance_bonus"])
     is_crit = rng.random() < crit_chance
 
     # Босс гасит часть урона ловкостью (из stat_profile).
@@ -95,9 +109,13 @@ def calc_boss_attack_damage(
     max_hp = int(player_state.get("max_hp", 100))
     mults = _collect_raid_mults(scroll_1, scroll_2)
 
-    # Уворот от ответки.
-    dodge_base = float(player_state.get("dodge_chance", 0.05))
-    dodge = min(0.8, dodge_base + mults["dodge_bonus"])
+    # Уворот по PvP-формуле: ловкость (endurance) игрока vs ловкость босса (~30)
+    def_end = int(player_state.get("endurance", PLAYER_START_ENDURANCE))
+    boss_agi_eff = PLAYER_START_ENDURANCE * 10 * float(boss_stat_profile.get("agi", 1.0))
+    dodge_base = min(DODGE_MAX_CHANCE, def_end / (def_end + boss_agi_eff) * DODGE_MAX_CHANCE)
+    end_inv = max(0, def_end - PLAYER_START_ENDURANCE)
+    dodge_base = min(DODGE_MAX_CHANCE, dodge_base + (end_inv // max(1, AGI_BONUS_STEP)) * AGI_BONUS_PCT_PER_STEP)
+    dodge = min(DODGE_MAX_CHANCE, dodge_base + mults["dodge_bonus"])
     if rng.random() < dodge:
         return (0, True, {"dodged": True, "dodge_chance": dodge})
 

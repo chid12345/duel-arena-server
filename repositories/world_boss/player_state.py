@@ -12,9 +12,13 @@ VALID_RAID_SCROLLS = {"damage_25", "defense_20", "dodge_10", "power_10", "crit_1
 
 class WorldBossPlayerStateMixin:
 
-    def wb_join_raid(self, spawn_id: int, user_id: int, max_hp: int) -> Dict[str, Any]:
+    def wb_join_raid(
+        self, spawn_id: int, user_id: int, max_hp: int,
+        endurance: int = 3, crit: int = 3,
+    ) -> Dict[str, Any]:
         """Инициализирует запись игрока в рейде (идемпотентно).
         Если игрок уже присоединён — возвращает текущее состояние.
+        endurance и crit снимаются из профиля при первом входе и хранятся локально.
         """
         conn = self.get_connection()
         cur = conn.cursor()
@@ -28,8 +32,10 @@ class WorldBossPlayerStateMixin:
             return dict(row)
         cur.execute(
             """INSERT INTO world_boss_player_state
-                  (spawn_id, user_id, current_hp, max_hp) VALUES (?,?,?,?)""",
-            (int(spawn_id), int(user_id), int(max_hp), int(max_hp)),
+                  (spawn_id, user_id, current_hp, max_hp, endurance, crit)
+                  VALUES (?,?,?,?,?,?)""",
+            (int(spawn_id), int(user_id), int(max_hp), int(max_hp),
+             int(endurance), int(crit)),
         )
         conn.commit()
         cur.execute(
