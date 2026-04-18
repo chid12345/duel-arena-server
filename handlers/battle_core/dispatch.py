@@ -1,5 +1,6 @@
 """Диспетчер callback-кнопок."""
 
+import asyncio
 import logging
 
 from telegram import Update
@@ -41,7 +42,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             pass
         return
 
-    player = db.get_or_create_player(user.id, user.username)
+    player = await asyncio.to_thread(db.get_or_create_player, user.id, user.username)
 
     try:
         if callback_data == "find_battle":

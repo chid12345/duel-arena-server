@@ -55,16 +55,7 @@ async def error_handler(update: object, context):
 
 async def daily_bonus_reminder(context):
     """Push-уведомление: напоминание о ежедневном бонусе (запускается в 12:00)."""
-    players = db.get_players_with_chat_id(limit=5000)
-    for p in players:
-        try:
-            bonus = db.check_daily_bonus(p['user_id'])
-            # check_daily_bonus возвращает can_claim=True и сразу начисляет — нам нужна проверка БЕЗ начисления
-            # Поэтому просто шлём напоминание всем кто давно не заходил
-            pass
-        except Exception:
-            pass
-    # Просто шлём всем у кого есть chat_id и кто не заходил 20+ часов
+    # Шлём всем у кого есть chat_id и кто не заходил 20+ часов
     conn = db.get_connection()
     cursor = conn.cursor()
     if DATABASE_URL:

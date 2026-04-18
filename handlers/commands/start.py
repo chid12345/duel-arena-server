@@ -1,5 +1,6 @@
 """Команда /start."""
 
+import asyncio
 import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -26,7 +27,7 @@ class BotHandlersStart:
         logger.info("event=command_start user_id=%s", user.id)
         db.log_metric_event("command_start", user.id)
 
-        player = db.get_or_create_player(user.id, user.username)
+        player = await asyncio.to_thread(db.get_or_create_player, user.id, user.username)
 
         if update.effective_chat:
             db.update_chat_id(user.id, update.effective_chat.id)
@@ -53,12 +54,12 @@ class BotHandlersStart:
         endurance_inv = stamina_stats_invested(
             player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1)
         )
-        regen_result = db.apply_hp_regen(user.id, endurance_inv)
+        regen_result = await asyncio.to_thread(db.apply_hp_regen, user.id, endurance_inv)
         if regen_result:
             player = dict(player)
             player["current_hp"] = regen_result["current_hp"]
 
-        daily_bonus = db.check_daily_bonus(user.id)
+        daily_bonus = await asyncio.to_thread(db.check_daily_bonus, user.id)
 
         if not battle_system.get_battle_status(user.id):
             pending = battle_system.peek_battle_end_ui(user.id)

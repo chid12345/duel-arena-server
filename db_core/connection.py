@@ -11,6 +11,33 @@ from config import DATABASE_URL, DB_NAME
 from db_core.sql_adapt import _adapt_sql_pg
 
 
+class _CachedSQLiteConn:
+    """SQLite-соединение с no-op close() — переиспользуется между запросами."""
+
+    def __init__(self, raw: Any):
+        self._raw = raw
+
+    def cursor(self):
+        return self._raw.cursor()
+
+    def commit(self):
+        return self._raw.commit()
+
+    def rollback(self):
+        return self._raw.rollback()
+
+    def execute(self, sql: str, params=None):
+        if params is None:
+            return self._raw.execute(sql)
+        return self._raw.execute(sql, params)
+
+    def close(self):
+        pass  # Не закрываем — соединение переиспользуется
+
+    def __getattr__(self, name: str):
+        return getattr(self._raw, name)
+
+
 class _PatchedCursor:
     """Для PostgreSQL: плейсхолдеры и отличия диалекта от SQLite."""
 
@@ -74,6 +101,7 @@ class DBCore:
         self.db_name = DB_NAME
         self._pool: Any = None
         self._pool_lock = threading.Lock()
+        self._sqlite_conn: Any = None  # Кешированное SQLite-соединение
 
     def _get_pool(self) -> Any:
         if self._pool is not None:
@@ -96,11 +124,15 @@ class DBCore:
             pool = self._get_pool()
             raw = pool.getconn()
             return _PooledConn(raw, pool)
-        # SQLite: WAL-режим + page-cache + sync=NORMAL → в 2–5× быстрее
-        conn = sqlite3.connect(self.db_name, timeout=15, check_same_thread=False)
-        conn.row_factory = sqlite3.Row
-        conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA cache_size=-32768")   # 32 МБ кеша страниц
-        conn.execute("PRAGMA synchronous=NORMAL")
-        conn.execute("PRAGMA temp_store=memory")
-        return conn
+        # SQLite: кешируем соединение — WAL/PRAGMA устанавливаются один раз
+        if self._sqlite_conn is None:
+            with self._pool_lock:
+                if self._sqlite_conn is None:
+                    conn = sqlite3.connect(self.db_name, timeout=15, check_same_thread=False)
+                    conn.row_factory = sqlite3.Row
+                    conn.execute("PRAGMA journal_mode=WAL")
+                    conn.execute("PRAGMA cache_size=-32768")   # 32 МБ кеша страниц
+                    conn.execute("PRAGMA synchronous=NORMAL")
+                    conn.execute("PRAGMA temp_store=memory")
+                    self._sqlite_conn = conn
+        return _CachedSQLiteConn(self._sqlite_conn)
