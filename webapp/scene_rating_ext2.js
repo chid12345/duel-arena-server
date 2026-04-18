@@ -181,22 +181,30 @@ function _launchPhaser() {
   }
 }
 
-if (tg) {
-  tg.ready();
-  tg.expand();
-
-  tg.onEvent('viewportChanged', function _onVp() {
-    if (tg.viewportHeight > 100) {
-      tg.offEvent('viewportChanged', _onVp);
+function _initTgAndLaunch() {
+  // Перечитываем window.Telegram.WebApp — SDK мог загрузиться async после game_globals
+  const tgNow = window.Telegram?.WebApp || tg;
+  if (tgNow) {
+    try { tgNow.ready(); tgNow.expand(); } catch(_) {}
+    tgNow.onEvent('viewportChanged', function _onVp() {
+      if (tgNow.viewportHeight > 100) {
+        tgNow.offEvent('viewportChanged', _onVp);
+        _launchPhaser();
+      }
+    });
+    if (tgNow.isExpanded && tgNow.viewportHeight > 100) {
       _launchPhaser();
+    } else {
+      setTimeout(_launchPhaser, 700);
     }
-  });
-
-  if (tg.isExpanded && tg.viewportHeight > 100) {
-    _launchPhaser();
   } else {
-    setTimeout(_launchPhaser, 700);
+    _launchPhaser();
   }
+}
+
+// Если SDK ещё не загрузился — подождём до 1.5с (он async)
+if (window.Telegram?.WebApp || tg) {
+  _initTgAndLaunch();
 } else {
-  _launchPhaser();
+  setTimeout(function() { _initTgAndLaunch(); }, 1500);
 }

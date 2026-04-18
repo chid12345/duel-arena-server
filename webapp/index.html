@@ -129,7 +129,8 @@
   </div>
 </div>
 <script>
-// Watchdog: если loading screen не убран за 10с — показываем ошибку
+// Watchdog: если loading screen не убран за 25с — показываем ошибку
+// 25с = запас на холодный старт Render + загрузку SDK
 setTimeout(function(){
   var ls = document.getElementById('loading-screen');
   var sub = document.getElementById('loading-sub');
@@ -137,7 +138,7 @@ setTimeout(function(){
     sub.textContent = '❌ Не удалось загрузить. Закройте и откройте заново.';
     sub.style.color = '#dc3c46';
   }
-}, 10000);
+}, 25000);
 </script>
 
 <!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
@@ -149,8 +150,8 @@ setTimeout(function(){
 
 <!-- Phaser 3 (локальная копия — CDN может быть недоступен в Telegram WebView) -->
 <script src="phaser.min.js"></script>
-<!-- Telegram WebApp SDK -->
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<!-- Telegram WebApp SDK — async чтобы не блокировать загрузку локальных скриптов -->
+<script src="https://telegram.org/js/telegram-web-app.js" async></script>
 <!-- Viewport lock: высота body = tg.viewportStableHeight, чтобы
      клавиатура не сжимала Phaser canvas на Android -->
 <script src="viewport_lock.js?v=__BUILD_VERSION__"></script>
