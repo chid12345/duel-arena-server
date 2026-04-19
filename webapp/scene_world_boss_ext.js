@@ -137,7 +137,8 @@ Object.assign(WorldBossScene.prototype, {
       const r = await post('/api/world_boss/hit');
       if (r.ok) {
         tg?.HapticFeedback?.impactOccurred(r.is_crit ? 'heavy' : 'light');
-        this._toast(`-${r.damage}${r.is_crit ? ' 💥' : ''}${r.vulnerable ? ' x3' : ''}`);
+        const _dmgSuffix = (r.is_crit ? ' 💥' : '') + (r.vulnerable ? ' x3' : '');
+        this._toast(`⚔️ ${r.damage}${_dmgSuffix}`);
         if (this._state?.active) this._state.active.current_hp = r.boss_hp;
         if (!this._state?.player_state) {
           // Первый вход в рейд — нужен полный рефреш чтобы показать УДАРИТЬ + HP игрока
