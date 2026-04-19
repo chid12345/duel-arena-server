@@ -110,6 +110,7 @@ class WorldBossScene extends Phaser.Scene {
     this._state.active.seconds_left = p.boss.seconds_left;
     this._state.active.vulnerable = p.boss.vulnerable;
     this._state.active.stage = p.boss.stage || 1;
+    if (p.boss.boss_bg_hex) this._state.active.boss_bg_hex = p.boss.boss_bg_hex;
     if (p.player) this._state.player_state = p.player;
     if (p.top) this._state.top = p.top;
     const _isDeadNow = !!this._state.player_state?.is_dead;
@@ -147,6 +148,14 @@ class WorldBossScene extends Phaser.Scene {
       this._updateBossBg?.(Math.max(0, a.current_hp) / mx);
     } catch(_) {}
     let y = 88;
+
+    // Портрет босса — медальон с эмодзи перед панелью с HP
+    const _portH = this._renderBossPortrait?.(
+      W, y,
+      a.boss_emoji || '🐉',
+      (a.boss_bg_hex || 0x4a3a5a)
+    ) || 0;
+    y += _portH;
 
     this._addPanel(8, y, W-16, 62);
     const _em = a.boss_emoji || '🐉';

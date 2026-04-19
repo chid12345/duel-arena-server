@@ -76,4 +76,46 @@ Object.assign(WorldBossScene.prototype, {
     this._bossBgLevel = undefined;
   },
 
+  /* ── Портрет босса — медальон с эмодзи ─────────────────────── */
+  _renderBossPortrait(W, y, emoji, typeHex) {
+    const cx = W / 2;
+    const R  = 38;
+    const cy = y + R + 8;
+
+    // Мягкое свечение цвета типа босса
+    const glw = this.add.graphics().setDepth(2);
+    glw.fillStyle(typeHex, 0.18);
+    glw.fillCircle(cx, cy, R + 14);
+    glw._wbChild = true;
+
+    // Цветное кольцо
+    const ring = this.add.graphics().setDepth(3);
+    ring.lineStyle(2, typeHex, 0.80);
+    ring.strokeCircle(cx, cy, R + 3);
+    ring._wbChild = true;
+
+    // Тёмный круг-фон
+    const bg = this.add.graphics().setDepth(3);
+    bg.fillStyle(0x0d0b1e, 0.97);
+    bg.fillCircle(cx, cy, R);
+    bg._wbChild = true;
+
+    // Большой эмодзи босса
+    const et = this.add.text(cx, cy, emoji, { fontSize: '52px', resolution: 2 })
+                  .setOrigin(0.5).setDepth(4);
+    et._wbChild = true;
+
+    // Пульсация кольца при уязвимости
+    try {
+      if (this._state?.active?.vulnerable) {
+        this.tweens.add({
+          targets: ring, alpha: { from: 0.5, to: 1.0 },
+          duration: 450, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        });
+      }
+    } catch(_) {}
+
+    return (R + 8) * 2 + 6; // высота блока
+  },
+
 });

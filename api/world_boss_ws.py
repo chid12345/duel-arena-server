@@ -89,6 +89,8 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
         vulnerable = is_vulnerability_window(elapsed)
     except Exception:
         pass
+    from config.world_boss import get_boss_type
+    _bt = get_boss_type(active.get("boss_type"))
     return {
         "hp": int(active.get("current_hp") or 0),
         "max_hp": int(active.get("max_hp") or 0),
@@ -96,6 +98,7 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
         "seconds_left": seconds_left,
         "vulnerable": vulnerable,
         "stage": int(active.get("stage") or 1),
+        "boss_bg_hex": int(_bt.get("bg_tint_hex") or 0x4a3a5a),
     }
 
 
