@@ -30,8 +30,8 @@ class WorldBossScene extends Phaser.Scene {
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     this._refresh();
     this._timer = this.time.addEvent({ delay: 1000, loop: true, callback: () => this._tickSecond() });
-    // Авто-рефреш каждые 30с если WS мёртв — подхватывает смену Waiting→Fighting
-    this._pollTimer = this.time.addEvent({ delay: 30000, loop: true, callback: () => {
+    // Авто-рефреш каждые 5с если WS мёртв — подхватывает смену Waiting→Fighting
+    this._pollTimer = this.time.addEvent({ delay: 5000, loop: true, callback: () => {
       if (!this._ws || this._ws.readyState !== WebSocket.OPEN) this._refresh();
     }});
   }

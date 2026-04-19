@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.8.24"
-VERSION_LABEL = "v1.8.24 — fix: DROP DEFAULT перед ALTER TYPE BOOLEAN (claimed)"
+VERSION = "1.8.25"
+VERSION_LABEL = "v1.8.25 — fix: wb авто-рефреш при отсчёт→0, poll 30s→5s"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "6.58"
+GAME_VERSION = "6.59"

@@ -198,6 +198,11 @@ Object.assign(WorldBossScene.prototype, {
   _tickSecond() {
     if (this._nextSchedAt && this._countdownTxt) {
       this._countdownTxt.setText(this._fmtCountdown(this._nextSchedAt));
+      // Отсчёт до 0 и бой ещё не стартовал — рефреш (WS мог умереть)
+      if (!this._state?.active && !this._refreshBusy) {
+        const msLeft = new Date(this._nextSchedAt).getTime() - Date.now();
+        if (msLeft < 2000) this._refresh();
+      }
     }
     if (this._state?.active?.seconds_left != null) {
       this._state.active.seconds_left = Math.max(0, this._state.active.seconds_left - 1);
