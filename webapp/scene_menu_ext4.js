@@ -266,28 +266,31 @@ Object.assign(MenuScene.prototype, {
     const actY = Math.min(CH - 110, regenY + extrasH + 6);
     const actW = W - PAD * 2, actH = 54;
 
-    // В БОЙ — slot-style with sword icon + gradient
-    const fGlow = ca(mkG());
-    fGlow.fillStyle(0x7c3aed, 0.2); fGlow.fillRoundedRect(PAD - 4, actY - 4, actW + 8, actH + 8, 20);
-    this.tweens.add({ targets: fGlow, alpha: 0, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    const fBg = ca(mkG());
-    fBg.fillGradientStyle(0xa29bfe, 0xa29bfe, 0x6c5ce7, 0x6c5ce7, 1);
-    fBg.fillRoundedRect(PAD, actY, actW, actH, 16);
-    fBg.lineStyle(1.5, 0xc4b5fd, 0.35); fBg.strokeRoundedRect(PAD, actY, actW, actH, 16);
-    const fShine = ca(mkG());
-    fShine.fillStyle(0xffffff, 0.18); fShine.fillRoundedRect(PAD + 2, actY + 2, actW - 4, actH * 0.42, 14);
-    // Sword icon before text
-    const fiG = ca(mkG()); const fix = W / 2 - 46, fiy = actY + actH / 2;
-    fiG.fillStyle(0xf0eeff, 0.92);
-    fiG.beginPath(); fiG.moveTo(fix+6,fiy-8); fiG.lineTo(fix+9,fiy-5); fiG.lineTo(fix-2,fiy+7); fiG.lineTo(fix-5,fiy+7); fiG.lineTo(fix-5,fiy+4); fiG.closePath(); fiG.fillPath();
-    fiG.fillStyle(0xffffff, 0.25); fiG.beginPath(); fiG.moveTo(fix+6,fiy-7); fiG.lineTo(fix+8,fiy-5); fiG.lineTo(fix-1,fiy+6); fiG.lineTo(fix-2,fiy+5); fiG.closePath(); fiG.fillPath();
-    fiG.lineStyle(3, 0xfde68a, 0.9); fiG.lineBetween(fix-3,fiy+2, fix-8,fiy+7);
-    fiG.fillStyle(0xfde68a, 1); fiG.fillCircle(fix-9,fiy+8, 2.5);
-    ca(mkT(W / 2 + 8, actY + actH / 2, 'В БОЙ', 20, '#ffffff', true)).setOrigin(0.5);
-    const fZ = ca(mkZ(W / 2, actY + actH / 2, actW, actH).setInteractive({ useHandCursor: true }));
-    fZ.on('pointerdown', () => { fBg.clear(); fBg.fillStyle(0x3730a3, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 16); tg?.HapticFeedback?.impactOccurred('medium'); });
-    fZ.on('pointerout',  () => { fBg.clear(); fBg.fillGradientStyle(0xa29bfe, 0xa29bfe, 0x6c5ce7, 0x6c5ce7, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 16); fBg.lineStyle(1.5, 0xc4b5fd, 0.35); fBg.strokeRoundedRect(PAD, actY, actW, actH, 16); });
-    fZ.on('pointerup',   () => { fBg.clear(); fBg.fillGradientStyle(0xa29bfe, 0xa29bfe, 0x6c5ce7, 0x6c5ce7, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 16); fBg.lineStyle(1.5, 0xc4b5fd, 0.35); fBg.strokeRoundedRect(PAD, actY, actW, actH, 16); this._switchTab('battle'); });
+    // В БОЙ — живая кнопка: тень·пульс·шиммер·перелив
+    const fDrop=ca(mkG()); fDrop.fillStyle(0x6d28d9,0.45); fDrop.fillEllipse(W/2,actY+actH+6,actW*0.78,14);
+    this.tweens.add({targets:fDrop,scaleX:1.18,alpha:0.12,duration:1100,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+    const fGlow=ca(mkG()); fGlow.fillStyle(0x7c3aed,0.22); fGlow.fillRoundedRect(PAD-6,actY-6,actW+12,actH+12,22);
+    this.tweens.add({targets:fGlow,alpha:0.04,duration:1600,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
+    const fHalo=ca(mkG()); fHalo.fillStyle(0xa78bfa,0.12); fHalo.fillRoundedRect(PAD-2,actY-2,actW+4,actH+4,18);
+    this.tweens.add({targets:fHalo,alpha:0.02,duration:900,yoyo:true,repeat:-1,ease:'Sine.easeInOut',delay:350});
+    const fBg=ca(mkG()); fBg.fillGradientStyle(0xc4b5fd,0xa29bfe,0x7c3aed,0x6d28d9,1); fBg.fillRoundedRect(PAD,actY,actW,actH,16);
+    const fShine=ca(mkG()); fShine.fillStyle(0xffffff,0.22); fShine.fillRoundedRect(PAD+2,actY+2,actW-4,actH*0.42,14);
+    // Shimmer sweep — диагональный блик, маскирован по форме кнопки
+    const _mG=this.make.graphics({},false); _mG.fillStyle(0xffffff,1); _mG.fillRoundedRect(PAD,actY,actW,actH,16); c.add(_mG); _mG.setVisible(false);
+    const shimG=this.make.graphics({},false); shimG.fillStyle(0xffffff,0.2); shimG.beginPath(); shimG.moveTo(-18,actY-2); shimG.lineTo(18,actY-2); shimG.lineTo(8,actY+actH+2); shimG.lineTo(-26,actY+actH+2); shimG.closePath(); shimG.fillPath(); shimG.setMask(_mG.createGeometryMask()); c.add(shimG);
+    this.tweens.add({targets:shimG,x:{from:PAD-25,to:PAD+actW+35},duration:2300,repeat:-1,repeatDelay:1900,ease:'Quad.easeIn'});
+    const fBdr=ca(mkG()); fBdr.lineStyle(2,0xe9d5ff,0.9); fBdr.strokeRoundedRect(PAD,actY,actW,actH,16);
+    this.tweens.add({targets:fBdr,alpha:0.2,duration:1000,yoyo:true,repeat:-1,ease:'Sine.easeInOut',delay:200});
+    const fiG=ca(mkG()); const fix=W/2-46,fiy=actY+actH/2;
+    fiG.fillStyle(0xf0eeff,0.92); fiG.beginPath(); fiG.moveTo(fix+6,fiy-8); fiG.lineTo(fix+9,fiy-5); fiG.lineTo(fix-2,fiy+7); fiG.lineTo(fix-5,fiy+7); fiG.lineTo(fix-5,fiy+4); fiG.closePath(); fiG.fillPath();
+    fiG.fillStyle(0xffffff,0.25); fiG.beginPath(); fiG.moveTo(fix+6,fiy-7); fiG.lineTo(fix+8,fiy-5); fiG.lineTo(fix-1,fiy+6); fiG.lineTo(fix-2,fiy+5); fiG.closePath(); fiG.fillPath();
+    fiG.lineStyle(3,0xfde68a,0.9); fiG.lineBetween(fix-3,fiy+2,fix-8,fiy+7); fiG.fillStyle(0xfde68a,1); fiG.fillCircle(fix-9,fiy+8,2.5);
+    const fTxt=ca(mkT(W/2+8,actY+actH/2,'В БОЙ',20,'#ffffff',true)).setOrigin(0.5);
+    this.tweens.add({targets:fTxt,scaleX:1.04,scaleY:1.04,duration:1300,yoyo:true,repeat:-1,ease:'Sine.easeInOut',delay:600});
+    const fZ=ca(mkZ(W/2,actY+actH/2,actW,actH).setInteractive({useHandCursor:true}));
+    fZ.on('pointerdown',()=>{fBg.clear();fBg.fillStyle(0x3730a3,1);fBg.fillRoundedRect(PAD,actY,actW,actH,16);tg?.HapticFeedback?.impactOccurred('medium');});
+    fZ.on('pointerout', ()=>{fBg.clear();fBg.fillGradientStyle(0xc4b5fd,0xa29bfe,0x7c3aed,0x6d28d9,1);fBg.fillRoundedRect(PAD,actY,actW,actH,16);});
+    fZ.on('pointerup',  ()=>{fBg.clear();fBg.fillGradientStyle(0xc4b5fd,0xa29bfe,0x7c3aed,0x6d28d9,1);fBg.fillRoundedRect(PAD,actY,actW,actH,16);this._switchTab('battle');});
 
     // Магазин + Задания — slot-style, two half-width
     const btn2Y = actY + actH + 8, b2H = 46, b2W = (actW - 8) / 2;
