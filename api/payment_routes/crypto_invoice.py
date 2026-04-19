@@ -32,7 +32,7 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
     async def _crypto_invoice_inner(body: CryptoInvoiceBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid_rl = int(tg_user["id"])
-        _rl_check(uid_rl, "crypto_invoice", max_hits=3, window_sec=30)
+        _rl_check(uid_rl, "crypto_invoice", max_hits=10, window_sec=60)
         uid = int(tg_user["id"])
 
         if not CRYPTOPAY_TOKEN:
