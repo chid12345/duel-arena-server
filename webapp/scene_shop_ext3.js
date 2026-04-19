@@ -98,7 +98,10 @@ Object.assign(ShopScene.prototype, {
       if (r.ok && r.paid) {
         if (r.scroll_received) this._onScrollReceived(r.scroll_id, invoiceId);
         else this._onCryptoPaid(r.diamonds || 0, invoiceId, r.premium_activated, r.bonus_diamonds || 0, !!r.profile_reset);
-      } else { this._toast('⏳ Оплата ещё не подтверждена'); }
+      } else {
+        this._toast('⏳ Ждём подтверждения CryptoPay...');
+        this._startCryptoPolling(invoiceId, null);
+      }
     } catch(_) { this._toast('❌ Нет соединения'); }
   },
 
