@@ -76,11 +76,14 @@ class WorldBossRewardsMixin:
         """
         conn = self.get_connection()
         cur = conn.cursor()
+        # claimed=TRUE: адаптер НЕ матчит (паттерн claimed\s*=\s*1\b), не конвертирует.
+        # SQLite: TRUE == 1 → INTEGER колонка принимает.
+        # PostgreSQL: после миграции 113 колонка BOOLEAN → TRUE корректен.
         cur.execute(
             "UPDATE world_boss_rewards "
-            "SET claimed=?, claimed_at=CURRENT_TIMESTAMP "
+            "SET claimed=TRUE, claimed_at=CURRENT_TIMESTAMP "
             "WHERE reward_id=? AND user_id=? AND claimed<1",
-            (True, int(reward_id), int(user_id)),
+            (int(reward_id), int(user_id)),
         )
         conn.commit()
         if cur.rowcount == 0:
