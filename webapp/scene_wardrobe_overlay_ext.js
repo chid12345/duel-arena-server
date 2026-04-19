@@ -221,7 +221,7 @@
       if (action==="unequip")  res=await post("/api/wardrobe/unequip",{});
       if (action==="buy_usdt") {
         res=await post("/api/wardrobe/usdt/buy-invoice",{});
-        if (res?.ok&&res.invoice_url) { res.invoice_url.includes('startapp=') ? tg?.openLink?.(res.invoice_url) : tg?.openTelegramLink?.(res.invoice_url); this._showToast("💳 Счёт открыт — оплатите и вернитесь"); }
+        if (res?.ok&&res.invoice_url) { const _uo=res.invoice_url||''; if(res.web_app_url) tg?.openLink?.(res.web_app_url); else if(_uo.includes('startapp=')) tg?.openLink?.(_uo); else tg?.openTelegramLink?.(_uo); this._showToast("💳 Счёт открыт — оплатите и вернитесь"); }
         else this._showToast(`❌ ${res?.reason||"Ошибка"}`);
         this._avatarBusy=false; return;
       }

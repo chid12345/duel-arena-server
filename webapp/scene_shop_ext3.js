@@ -63,9 +63,13 @@ Object.assign(ShopScene.prototype, {
         return;
       }
       localStorage.setItem('cryptoPendingInvoice', String(res.invoice_id));
-      // mini_app_invoice_url (startapp=) → openLink держит мини-апп живым
-      // bot_invoice_url (testnet/fallback) → openTelegramLink открывает прямо в Telegram
-      res.invoice_url.includes('startapp=') ? tg?.openLink?.(res.invoice_url) : tg?.openTelegramLink?.(res.invoice_url);
+      // web_app_url (https://) → openLink (надёжнее всего, держит мини-апп живым)
+      // mini_app_invoice_url (startapp=) → openLink
+      // bot_invoice_url → openTelegramLink
+      const _url = res.invoice_url || '';
+      if (res.web_app_url) tg?.openLink?.(res.web_app_url);
+      else if (_url.includes('startapp=')) tg?.openLink?.(_url);
+      else tg?.openTelegramLink?.(_url);
       this._toast('💳 Счёт открыт — оплатите и вернитесь');
       this._buying = false;
       this._startCryptoPolling(res.invoice_id, pkg);

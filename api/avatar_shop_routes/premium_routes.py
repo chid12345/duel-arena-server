@@ -140,7 +140,8 @@ def attach_avatar_premium(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", str(PREMIUM_AVATAR_USDT), payload=f"uid:{uid}:avatar:{aid}")
                 return {
                     "ok": True,
-                    "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
+                    "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url") or inv.get("web_app_invoice_url"),
+                    "web_app_url": inv.get("web_app_invoice_url"),
                     "invoice_id": inv["invoice_id"],
                     "avatar_id": aid,
                 }

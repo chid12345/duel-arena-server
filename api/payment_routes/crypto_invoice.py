@@ -57,8 +57,11 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     data = resp.json()
                 if data.get("ok"):
                     inv = data["result"]
+                    logger.info("CryptoPay scroll invoice #%s mini_app=%s bot=%s web=%s",
+                                inv.get("invoice_id"), inv.get("mini_app_invoice_url"), inv.get("bot_invoice_url"), inv.get("web_app_invoice_url"))
                     db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", amount, payload=payload_str)
-                    return {"ok": True, "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"), "invoice_id": inv["invoice_id"]}
+                    url = inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url") or inv.get("web_app_invoice_url")
+                    return {"ok": True, "invoice_url": url, "web_app_url": inv.get("web_app_invoice_url"), "invoice_id": inv["invoice_id"]}
                 err = data.get("error") or {}
                 return {"ok": False, "reason": f"CryptoPay [{err.get('code', '?')}] {err.get('name', 'UNKNOWN')}"}
             except Exception as e:
@@ -104,8 +107,11 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 data = resp.json()
             if data.get("ok"):
                 inv = data["result"]
+                logger.info("CryptoPay pkg invoice #%s mini_app=%s bot=%s web=%s",
+                            inv.get("invoice_id"), inv.get("mini_app_invoice_url"), inv.get("bot_invoice_url"), inv.get("web_app_invoice_url"))
                 db.create_crypto_invoice(uid, inv["invoice_id"], pkg["diamonds"], "USDT", amount, payload=payload_str)
-                return {"ok": True, "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"), "invoice_id": inv["invoice_id"]}
+                url = inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url") or inv.get("web_app_invoice_url")
+                return {"ok": True, "invoice_url": url, "web_app_url": inv.get("web_app_invoice_url"), "invoice_id": inv["invoice_id"]}
             err = data.get("error") or {}
             code = err.get("code", "?")
             name = err.get("name", "UNKNOWN")

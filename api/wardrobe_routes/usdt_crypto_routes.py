@@ -51,7 +51,8 @@ def attach_wardrobe_usdt_crypto(
             db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", amount, payload=payload_str)
             return {
                 "ok": True,
-                "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url"),
+                "invoice_url": inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url") or inv.get("web_app_invoice_url"),
+                "web_app_url": inv.get("web_app_invoice_url"),
                 "invoice_id": inv["invoice_id"],
             }
         err = data.get("error") or {}

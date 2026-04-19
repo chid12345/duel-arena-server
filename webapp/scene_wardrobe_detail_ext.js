@@ -71,7 +71,10 @@ StatsScene.prototype._usdtDetailAction = async function(action, item, wp) {
     } else if (action === "reset_invoice") {
       const res = await post("/api/wardrobe/usdt/reset-invoice", { class_id: item.class_id });
       if (res?.ok && res.invoice_url) {
-        res.invoice_url.includes('startapp=') ? tg?.openLink?.(res.invoice_url) : tg?.openTelegramLink?.(res.invoice_url);
+        const _uw = res.invoice_url || '';
+        if (res.web_app_url) tg?.openLink?.(res.web_app_url);
+        else if (_uw.includes('startapp=')) tg?.openLink?.(_uw);
+        else tg?.openTelegramLink?.(_uw);
         if (res.invoice_id) {
           this._pendingResetInvoice = { class_id: item.class_id, invoice_id: res.invoice_id };
         }
