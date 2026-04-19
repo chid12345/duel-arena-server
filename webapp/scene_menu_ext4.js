@@ -36,16 +36,23 @@ Object.assign(MenuScene.prototype, {
     const ca = o => { c.add(o); return o; };
 
     /* ── 1. PROFILE CARD (glass) ─────────────────────────── */
-    const CARD_H = 112, CARD_R = 16;
+    const CARD_H = 120, CARD_R = 18;
+    // Outer purple glow behind card
+    const cardGlowOuter = ca(mkG());
+    cardGlowOuter.fillStyle(0x7c3aed, 0.18); cardGlowOuter.fillRoundedRect(PAD - 3, 3, W - PAD * 2 + 6, CARD_H + 6, CARD_R + 2);
     const cardBg = ca(mkG());
-    cardBg.fillStyle(0x13101e, 0.95); cardBg.fillRoundedRect(PAD, 6, W - PAD * 2, CARD_H, CARD_R);
-    cardBg.lineStyle(1, 0x2a2050, 1); cardBg.strokeRoundedRect(PAD, 6, W - PAD * 2, CARD_H, CARD_R);
-    const cardGlow = ca(mkG()); cardGlow.fillStyle(0x7c3aed, 0.07); cardGlow.fillEllipse(W - PAD - 40, 6, 200, 100);
+    cardBg.fillGradientStyle(0x1a1030, 0x130e28, 0x0f0c20, 0x0d0a1e, 1);
+    cardBg.fillRoundedRect(PAD, 6, W - PAD * 2, CARD_H, CARD_R);
+    cardBg.lineStyle(1.5, 0x6d28d9, 0.8); cardBg.strokeRoundedRect(PAD, 6, W - PAD * 2, CARD_H, CARD_R);
+    // Top shine line
+    const cardShine = ca(mkG());
+    cardShine.lineStyle(1, 0xffffff, 0.12); cardShine.lineBetween(PAD + CARD_R, 6, W - PAD - CARD_R, 6);
 
     // Avatar ring + preview
-    const avX = PAD + 14, avY = 20, avS = 44;
+    const avX = PAD + 14, avY = 22, avS = 52;
     const avRing = ca(mkG());
-    avRing.lineStyle(2, 0x8b5cf6, 0.7); avRing.strokeCircle(avX + avS / 2, avY + avS / 2, avS / 2 + 3);
+    avRing.fillStyle(0x7c3aed, 0.15); avRing.fillCircle(avX + avS / 2, avY + avS / 2, avS / 2 + 5);
+    avRing.lineStyle(2.5, 0xa78bfa, 0.9); avRing.strokeCircle(avX + avS / 2, avY + avS / 2, avS / 2 + 3);
     this._drawAvatarPreview(c, avX + avS / 2, avY + avS / 2, avS / 2, null, p.level);
     const avZ = this.add.zone(avX + avS / 2, avY + avS / 2, avS + 8, avS + 8);
     try { avZ.removeFromDisplayList(); } catch(_) {}
@@ -57,7 +64,7 @@ Object.assign(MenuScene.prototype, {
     const niX = avX + avS + 12;
     const crown = p.is_premium ? '👑 ' : '';
     const uname = (p.username || '?').length > 13 ? (p.username || '?').slice(0, 12) + '…' : (p.username || '?');
-    ca(mkT(niX, avY + 3, crown + uname, 16, p.is_premium ? '#c8a0ff' : '#ffffff', true));
+    ca(mkT(niX, avY + 2, crown + uname, 17, p.is_premium ? '#c4b5fd' : '#ffffff', true));
     if (p.is_premium) {
       const pBg = ca(mkG());
       pBg.fillStyle(0x78350f, 0.85); pBg.fillRoundedRect(niX, avY + 23, 80, 16, 5);
@@ -123,7 +130,7 @@ Object.assign(MenuScene.prototype, {
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
     // HP bar — neon
-    const hpW = W - PAD * 2, hpH = 11, hpX = PAD, hpY = czY + czH - 28;
+    const hpW = W - PAD * 2, hpH = 13, hpX = PAD, hpY = czY + czH - 30;
     const hpPct = (p.hp_pct || 0) / 100;
     const hpCol = (p.hp_pct || 0) > 50 ? 0x22c55e : (p.hp_pct || 0) > 25 ? 0xf59e0b : 0xef4444;
     const hpBg = ca(mkBar(hpX, hpY, hpW, hpH, hpPct, hpCol, 5));
@@ -166,9 +173,9 @@ Object.assign(MenuScene.prototype, {
     const sbRH = 22, sbGap = 6;
     const attrH = 16 + STATS.length * (sbRH + sbGap) + 4;
     const attrBg = ca(mkG());
-    attrBg.fillStyle(0x0f0c1a, 0.92); attrBg.fillRoundedRect(PAD, attrY, W - PAD * 2, attrH, 12);
-    attrBg.lineStyle(1, 0x2a2050, 1); attrBg.strokeRoundedRect(PAD, attrY, W - PAD * 2, attrH, 12);
-    ca(mkT(W / 2, attrY + 9, 'ХАРАКТЕРИСТИКИ', 8, 'rgba(255,255,255,0.2)')).setOrigin(0.5);
+    attrBg.fillStyle(0x0f0c1a, 0.95); attrBg.fillRoundedRect(PAD, attrY, W - PAD * 2, attrH, 12);
+    attrBg.lineStyle(1.5, 0x4c1d95, 0.9); attrBg.strokeRoundedRect(PAD, attrY, W - PAD * 2, attrH, 12);
+    ca(mkT(W / 2, attrY + 9, '— ХАРАКТЕРИСТИКИ —', 8, '#7c3aed')).setOrigin(0.5);
 
     const maxV = Math.max(1, 3 + p.level * 2);
     const nameW = 66, trkX = PAD + 22 + nameW + 4;
@@ -212,13 +219,15 @@ Object.assign(MenuScene.prototype, {
     const actY = Math.min(CH - 58, regenY + extrasH + 6);
     const actH = 52, halfW = (W - PAD * 2 - 8) / 2;
 
-    // Fight — bright purple gradient
+    // Fight — bright purple gradient + outer glow
+    const fGlowBg = ca(mkG());
+    fGlowBg.fillStyle(0x7c3aed, 0.22); fGlowBg.fillRoundedRect(PAD - 3, actY - 3, halfW + 6, actH + 6, 17);
     const fBg = ca(mkG());
-    fBg.fillGradientStyle(0x9333ea, 0x7c3aed, 0x6d28d9, 0x4f46e5, 1);
+    fBg.fillGradientStyle(0xa855f7, 0x8b5cf6, 0x7c3aed, 0x6d28d9, 1);
     fBg.fillRoundedRect(PAD, actY, halfW, actH, 14);
     const fShine = ca(mkG());
-    fShine.fillStyle(0xffffff, 0.08); fShine.fillRoundedRect(PAD + 2, actY + 2, halfW - 4, actH / 2 - 2, 12);
-    ca(mkT(PAD + halfW / 2, actY + actH / 2, '⚔️  В БОЙ', 16, '#ffffff', true)).setOrigin(0.5);
+    fShine.fillStyle(0xffffff, 0.12); fShine.fillRoundedRect(PAD + 2, actY + 2, halfW - 4, actH / 2 - 2, 12);
+    ca(mkT(PAD + halfW / 2, actY + actH / 2, '⚔️  В БОЙ', 17, '#ffffff', true)).setOrigin(0.5);
     const fZ = ca(mkZ(PAD + halfW / 2, actY + actH / 2, halfW, actH).setInteractive({ useHandCursor: true }));
     fZ.on('pointerdown', () => { fBg.clear(); fBg.fillStyle(0x3730a3, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); tg?.HapticFeedback?.impactOccurred('medium'); });
     fZ.on('pointerout',  () => { fBg.clear(); fBg.fillGradientStyle(0x9333ea, 0x7c3aed, 0x6d28d9, 0x4f46e5, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); });
