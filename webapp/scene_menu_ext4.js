@@ -37,6 +37,18 @@ Object.assign(MenuScene.prototype, {
       g.fillStyle(0xffffff, 0.14); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), r);
       return g;
     };
+    const mkBarGlow = (x, y, w, h, pct, c1, c2, glowC) => {
+      const rr = Math.ceil(h / 2) + 2;
+      const safe = Math.max(0, Math.min(1, isNaN(pct) ? 0 : pct));
+      const g = mkG();
+      g.fillStyle(0x000000, 0.72); g.fillRoundedRect(x, y, w, h, rr);
+      g.lineStyle(1, glowC, 0.12); g.strokeRoundedRect(x, y, w, h, rr);
+      const fw = Math.max(rr * 2, Math.round(w * safe));
+      g.fillStyle(glowC, 0.22); g.fillRoundedRect(x, y - 1, fw, h + 2, rr);
+      g.fillGradientStyle(c1, c2, c1, c2, 1); g.fillRoundedRect(x, y, fw, h, rr);
+      g.fillStyle(0xffffff, 0.18); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), rr);
+      return g;
+    };
     const ca = o => { c.add(o); return o; };
 
     /* ── 1. PROFILE CARD (glass) ─────────────────────────── */
@@ -84,9 +96,10 @@ Object.assign(MenuScene.prototype, {
     ca(mkT(nameX, avY + 2, uname, 17, p.is_premium ? '#c4b5fd' : '#ffffff', true));
     if (p.is_premium) {
       const pBg = ca(mkG());
-      pBg.fillStyle(0x78350f, 0.85); pBg.fillRoundedRect(niX, avY + 23, 80, 16, 5);
-      pBg.lineStyle(1, 0xfbbf24, 0.4); pBg.strokeRoundedRect(niX, avY + 23, 80, 16, 5);
-      ca(mkT(niX + 40, avY + 31, `⭐ Premium · ${p.premium_days_left}д`, 9, '#fde68a', true)).setOrigin(0.5);
+      pBg.fillGradientStyle(0xb45309, 0xd97706, 0xb45309, 0xd97706, 1);
+      pBg.fillRoundedRect(niX, avY + 23, 84, 17, 6);
+      pBg.lineStyle(1.5, 0xfbbf24, 0.65); pBg.strokeRoundedRect(niX, avY + 23, 84, 17, 6);
+      ca(mkT(niX + 42, avY + 31, `⭐ Premium · ${p.premium_days_left}д`, 9, '#fff8e7', true)).setOrigin(0.5);
     } else {
       ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.4)'));
     }
@@ -136,8 +149,8 @@ Object.assign(MenuScene.prototype, {
     const scW = (W - PAD * 2) / 4;
     [
       { v: String(wins),             sub: 'Победы',  col: '#4ade80' },
-      { v: String(losses),           sub: 'Пораж.',  col: '#f87171' },
-      { v: `${wr}%`,                 sub: 'Винрейт', col: '#a78bfa' },
+      { v: String(losses),           sub: 'Топчик',  col: '#f87171' },
+      { v: `${wr}%`,                 sub: 'Выигрыш', col: '#a78bfa' },
       { v: String(p.win_streak || 0), sub: 'Серия',   col: '#fb923c' },
     ].forEach((d, i) => {
       const wx = PAD + i * scW;
@@ -179,7 +192,7 @@ Object.assign(MenuScene.prototype, {
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
     // HP / XP — inline layout: [icon] [LABEL] [====bar====] [value]
-    const hpX = PAD, hpH = 6;
+    const hpX = PAD, hpH = 8;
     const hpSepY = czY + czH - 56;
     { const sG = ca(mkG()); sG.lineStyle(1, 0xffffff, 0.06); sG.lineBetween(PAD, hpSepY, W - PAD, hpSepY); }
 
@@ -196,7 +209,7 @@ Object.assign(MenuScene.prototype, {
     const hpValStr = `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp}`;
     const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 9, 'rgba(255,255,255,0.5)')).setOrigin(1, 0);
     const hpBX = hpX + 36, hpBW = W - PAD * 2 - 36 - 76;
-    const hpBg = ca(mkBar(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, 0x166534, 10, 0x86efac));
+    const hpBg = ca(mkBarGlow(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, 0x15803d, 0x86efac, 0x4ade80));
     this._liveHp = { g: hpBg, t: hpValTxt, x: hpBX, y: hpRowCY - Math.ceil(hpH / 2), w: hpBW, h: hpH };
 
     const xpRowCY = hpRowCY + 22;
@@ -211,7 +224,7 @@ Object.assign(MenuScene.prototype, {
       ca(mkT(hpX + 18, xpRowCY - 5, 'XP', 9, '#a78bfa'));
       const xpValStr = `${p.exp} / ${p.exp_needed}`;
       ca(mkT(W - PAD, xpRowCY - 5, xpValStr, 9, 'rgba(255,255,255,0.35)')).setOrigin(1, 0);
-      ca(mkBar(hpBX, xpRowCY - Math.ceil(hpH / 2), hpBW, hpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x1d4ed8, 10, 0x38bdf8));
+      ca(mkBarGlow(hpBX, xpRowCY - Math.ceil(hpH / 2), hpBW, hpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x4c1d95, 0xa855f7, 0xa855f7));
     } else {
       ca(mkT(W / 2, xpRowCY, '⭐ Макс. уровень', 10, '#fbbf24', true)).setOrigin(0.5);
     }

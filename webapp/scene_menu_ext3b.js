@@ -22,9 +22,13 @@ Object.assign(MenuScene.prototype, {
           const { g, t, x, y, w, h } = this._liveHp;
           const col = sp.hp_pct > 50 ? C.green : sp.hp_pct > 25 ? C.gold : C.red;
           g.clear();
-          g.fillStyle(0x16122a, 1); g.fillRoundedRect(x, y, w, h, 4);
-          const fw = Math.max(8, Math.round(w * sp.hp_pct / 100));
-          g.fillStyle(col, 1);      g.fillRoundedRect(x, y, fw, h, 4);
+          const rr2 = Math.ceil(h / 2) + 2;
+          g.fillStyle(0x000000, 0.72); g.fillRoundedRect(x, y, w, h, rr2);
+          const fw = Math.max(rr2 * 2, Math.round(w * sp.hp_pct / 100));
+          g.fillStyle(0x4ade80, 0.22); g.fillRoundedRect(x, y - 1, fw, h + 2, rr2);
+          g.fillGradientStyle(0x15803d, 0x86efac, 0x15803d, 0x86efac, 1);
+          g.fillRoundedRect(x, y, fw, h, rr2);
+          g.fillStyle(0xffffff, 0.18); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), rr2);
           t.setText(`${sp.current_hp} / ${effMax} HP`);
         }
       },

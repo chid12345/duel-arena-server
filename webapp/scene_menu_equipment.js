@@ -9,12 +9,12 @@ const _EQ_RIGHT = [{ slot: 'shield' }, { slot: 'armor' }, { slot: 'ring1' }];
 
 // Inset glow color per slot type — matches icon palette
 const _EQ_SLOT_GLOW = {
-  weapon: { c: 0xf59e0b, a: 0.22 },
-  belt:   { c: 0xd97706, a: 0.18 },
-  boots:  { c: 0x92400e, a: 0.16 },
-  shield: { c: 0x3b82f6, a: 0.25 },
-  armor:  { c: 0x9ca3af, a: 0.18 },
-  ring1:  { c: 0xf59e0b, a: 0.2  },
+  weapon: { c: 0xf59e0b, a: 0.09 },
+  belt:   { c: 0xd97706, a: 0.07 },
+  boots:  { c: 0x92400e, a: 0.06 },
+  shield: { c: 0x3b82f6, a: 0.10 },
+  armor:  { c: 0x9ca3af, a: 0.07 },
+  ring1:  { c: 0xf59e0b, a: 0.09 },
 };
 
 const _EQ_SLOT_LABELS = {
@@ -73,7 +73,7 @@ Object.assign(MenuScene.prototype, {
       const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
       const igG = mkG(); igG.fillStyle(sg.c, sg.a); igG.fillRoundedRect(x + 4, y + 4, w - 8, h - 8, r - 2); c.add(igG);
       // icon glow halo — same color
-      const haloG = mkG(); haloG.fillStyle(sg.c, 0.12); haloG.fillCircle(cx, cy - 2, 20); c.add(haloG);
+      const haloG = mkG(); haloG.fillStyle(sg.c, 0.05); haloG.fillCircle(cx, cy - 2, 18); c.add(haloG);
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
       const dG = mkG(); dG.fillStyle(sg.c, 0.6); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     }
