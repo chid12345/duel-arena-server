@@ -76,24 +76,31 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     logger.warning("crypto_check invoice %s user mismatch db=%s init=%s", invoice_id, owner_uid, uid)
                     return {"ok": False, "reason": "invoice_user_mismatch"}
                 if is_usdt_scroll and usdt_scroll_id:
+                    _scroll_ok = False
                     try:
                         db.add_to_inventory(owner_uid, usdt_scroll_id)
+                        _scroll_ok = True
                     except Exception as _e:
                         logger.error("CRITICAL: add_to_inventory failed after confirm uid=%s scroll=%s invoice=%s err=%s", owner_uid, usdt_scroll_id, invoice_id, _e)
                     await manager.send(owner_uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
                     from api.tma_catalogs import SHOP_CATALOG
                     scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})
                     await _send_tg_message(owner_uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
+                    if _scroll_ok:
+                        db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "scroll_received": True, "scroll_id": usdt_scroll_id}
                 if is_usdt_slot:
                     ok2, msg2, new_class_id = db.create_usdt_class(owner_uid)
                     await manager.send(owner_uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
                     await _send_tg_message(owner_uid, f"💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+                    if ok2:
+                        db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "usdt_slot_created": True, "class_id": new_class_id}
                 if is_usdt_reset and usdt_reset_class_id:
                     db.reset_usdt_slot_stats(owner_uid, usdt_reset_class_id)
                     await manager.send(owner_uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
                     await _send_tg_message(owner_uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+                    db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
                 if avatar_id:
                     unlock = db.unlock_avatar(owner_uid, avatar_id, source="usdt")
@@ -105,6 +112,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     _cache_invalidate(owner_uid)
                     await manager.send(owner_uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
                     await _send_tg_message(owner_uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
+                    db.mark_items_delivered(invoice_id)
                     fresh = db.get_or_create_player(owner_uid, "")
                     return {"ok": True, "paid": True, "status": "paid", "avatar_unlocked": True, "avatar_id": avatar_id, "player": _player_api(dict(fresh))}
                 if is_premium:
@@ -121,12 +129,15 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await manager.send(owner_uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
                     bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
                     await _send_tg_message(owner_uid, f"👑 <b>Premium подписка активирована!</b>\nСрок действия: <b>{days_left} дней</b>{bonus_txt}\n📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\nСпасибо за покупку! ⚔️ Duel Arena")
+                    db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "diamonds": bonus_d, "premium_activated": True, "premium_days_left": days_left, "bonus_diamonds": bonus_d}
                 if is_full_reset:
                     await _notify_paid_full_reset(owner_uid)
+                    db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "profile_reset": True}
                 await manager.send(owner_uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})
                 await _send_tg_message(owner_uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
+                db.mark_items_delivered(invoice_id)
                 return {"ok": True, "paid": True, "diamonds": diamonds}
             if result.get("reason") == "already_paid":
                 if avatar_id:
@@ -135,6 +146,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                         if not unlock.get("already_unlocked"):
                             db.track_purchase(uid, avatar_id, "usdt", 0)
                         _cache_invalidate(uid)
+                        db.mark_items_delivered(invoice_id)
                         fresh = db.get_or_create_player(uid, "")
                         return {
                             "ok": True,
@@ -150,10 +162,12 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     bonus_d = prem.get("bonus_diamonds", 0)
                     days_left = prem.get("days_left", 21)
                     await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
+                    db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "already_confirmed": True, "premium_activated": True, "premium_days_left": days_left}
                 if is_usdt_reset and usdt_reset_class_id:
                     db.reset_usdt_slot_stats(uid, usdt_reset_class_id)
                     await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
+                    db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "already_confirmed": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
                 return {
                     "ok": True, "paid": True, "already_confirmed": True,

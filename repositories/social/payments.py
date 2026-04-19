@@ -107,6 +107,33 @@ class SocialPaymentsMixin:
         finally:
             conn.close()
 
+    def mark_items_delivered(self, invoice_id: int) -> None:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE crypto_invoices SET items_delivered = 1 WHERE invoice_id = ?",
+                (invoice_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_paid_undelivered_invoices(self, min_age_seconds: int = 60) -> List[Dict]:
+        """Инвойсы оплачены, но вторичная награда ещё не выдана."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT invoice_id, user_id, diamonds, asset, amount, payload, paid_at FROM crypto_invoices "
+                "WHERE status = 'paid' AND items_delivered = 0 "
+                "AND paid_at < datetime('now', ? || ' seconds') ORDER BY paid_at ASC LIMIT 50",
+                (f"-{min_age_seconds}",),
+            )
+            return [dict(r) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
     def get_pending_crypto_invoices_older_than(self, seconds: int) -> List[Dict]:
         conn = self.get_connection()
         cursor = conn.cursor()

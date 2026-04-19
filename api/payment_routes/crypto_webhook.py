@@ -64,22 +64,29 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, usdt_scroll_id, asset, invoice_id)
             if is_usdt_scroll and usdt_scroll_id:
+                _scroll_ok = False
                 try:
                     db.add_to_inventory(uid, usdt_scroll_id)
+                    _scroll_ok = True
                 except Exception as _e:
                     logger.error("CRITICAL: add_to_inventory failed after confirm uid=%s scroll=%s invoice=%s err=%s", uid, usdt_scroll_id, invoice_id, _e)
                 await manager.send(uid, {"event": "scroll_received", "scroll_id": usdt_scroll_id})
                 from api.tma_catalogs import SHOP_CATALOG
                 scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})
                 await _send_tg_message(uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
+                if _scroll_ok:
+                    db.mark_items_delivered(int(invoice_id))
             elif is_usdt_slot:
                 ok2, msg2, new_class_id = db.create_usdt_class(uid)
                 await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
                 await _send_tg_message(uid, f"💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+                if ok2:
+                    db.mark_items_delivered(int(invoice_id))
             elif is_usdt_reset and usdt_reset_class_id:
                 db.reset_usdt_slot_stats(uid, usdt_reset_class_id)
                 await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
                 await _send_tg_message(uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+                db.mark_items_delivered(int(invoice_id))
             elif avatar_id:
                 unlock = db.unlock_avatar(uid, avatar_id, source="usdt")
                 if unlock.get("ok"):
@@ -93,6 +100,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     _cache_invalidate(uid)
                     await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
                     await _send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
+                    db.mark_items_delivered(int(invoice_id))
                 else:
                     logger.error(
                         "CRITICAL: avatar unlock failed after paid invoice=%s uid=%s avatar=%s reason=%s",
@@ -116,8 +124,10 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
                 bonus_txt = f"\n💎 Бонус при покупке: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
                 await _send_tg_message(uid, f"👑 <b>Premium подписка активирована!</b>\nСрок действия: <b>{days_left} дней</b>{bonus_txt}\n📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\nСпасибо за покупку! ⚔️ Duel Arena")
+                db.mark_items_delivered(int(invoice_id))
             elif is_full_reset:
                 await _notify_paid_full_reset(uid)
+                db.mark_items_delivered(int(invoice_id))
             else:
                 if asset == "USDT":
                     try:
@@ -126,6 +136,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                         logger.error("vip_shop diamonds usdt uid=%s: %s", uid, _ve)
                 await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})
                 await _send_tg_message(uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
+                db.mark_items_delivered(int(invoice_id))
         else:
             logger.warning("CryptoPay confirm_invoice %s: %s", invoice_id, result.get("reason"))
         return {"ok": True}

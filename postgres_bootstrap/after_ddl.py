@@ -70,6 +70,9 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE titan_progress ADD COLUMN IF NOT EXISTS run_active INTEGER DEFAULT 0",
     # crypto_invoices: payload добавлен позже (для USDT-свитков)
     "ALTER TABLE crypto_invoices ADD COLUMN IF NOT EXISTS payload TEXT NOT NULL DEFAULT ''",
+    # crypto_invoices: флаг доставки вторичной награды (аватар/свиток/слот/премиум)
+    "ALTER TABLE crypto_invoices ADD COLUMN IF NOT EXISTS items_delivered INTEGER NOT NULL DEFAULT 0",
+    "CREATE INDEX IF NOT EXISTS idx_crypto_invoices_undelivered ON crypto_invoices (status, items_delivered, paid_at)",
     # ── Система заданий v2 ─────────────────────────────────────
     "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS bot_wins INTEGER DEFAULT 0",
     "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS shop_buys INTEGER DEFAULT 0",
