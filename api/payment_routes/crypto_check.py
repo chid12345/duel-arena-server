@@ -61,7 +61,10 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             is_premium = ":premium:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
+            is_usdt_slot = ":usdt_slot:" in custom_payload
+            is_usdt_reset = ":usdt_reset:" in custom_payload
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
+            usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
             result = db.confirm_crypto_invoice(int(invoice_id))
             if result.get("ok"):
@@ -82,6 +85,16 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     scroll_info = SHOP_CATALOG.get(usdt_scroll_id, {})
                     await _send_tg_message(owner_uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
                     return {"ok": True, "paid": True, "scroll_received": True, "scroll_id": usdt_scroll_id}
+                if is_usdt_slot:
+                    ok2, msg2, new_class_id = db.create_usdt_class(owner_uid)
+                    await manager.send(owner_uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
+                    await _send_tg_message(owner_uid, f"💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+                    return {"ok": True, "paid": True, "usdt_slot_created": True, "class_id": new_class_id}
+                if is_usdt_reset and usdt_reset_class_id:
+                    db.reset_usdt_slot_stats(owner_uid, usdt_reset_class_id)
+                    await manager.send(owner_uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
+                    await _send_tg_message(owner_uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+                    return {"ok": True, "paid": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
                 if avatar_id:
                     unlock = db.unlock_avatar(owner_uid, avatar_id, source="usdt")
                     if not unlock.get("ok"):
@@ -132,11 +145,22 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                             "player": _player_api(dict(fresh)),
                         }
                     logger.error("crypto_check already_paid unlock retry failed uid=%s invoice=%s avatar=%s reason=%s", uid, invoice_id, avatar_id, unlock.get("reason"))
+                if is_premium:
+                    prem = db.activate_premium(uid, days=21)
+                    bonus_d = prem.get("bonus_diamonds", 0)
+                    days_left = prem.get("days_left", 21)
+                    await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
+                    return {"ok": True, "paid": True, "already_confirmed": True, "premium_activated": True, "premium_days_left": days_left}
+                if is_usdt_reset and usdt_reset_class_id:
+                    db.reset_usdt_slot_stats(uid, usdt_reset_class_id)
+                    await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
+                    return {"ok": True, "paid": True, "already_confirmed": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
                 return {
                     "ok": True, "paid": True, "already_confirmed": True,
                     "profile_reset": is_full_reset,
                     "scroll_received": is_usdt_scroll,
                     "scroll_id": usdt_scroll_id if is_usdt_scroll else None,
+                    "usdt_slot_created": is_usdt_slot,
                 }
             return {"ok": False, "reason": result.get("reason")}
         except Exception as e:

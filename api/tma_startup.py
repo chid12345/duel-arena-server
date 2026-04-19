@@ -111,13 +111,65 @@ def attach_tma_startup(
                 uid = int(result["user_id"])
                 payload = str(inv.get("payload") or "")
                 logger.info("invoice recovery: confirmed invoice=%s uid=%s payload=%s", inv_id, uid, payload)
-                if ":usdt_scroll:" in payload and manager is not None:
+                if ":usdt_scroll:" in payload:
                     scroll_id = payload.split(":usdt_scroll:", 1)[1].strip()
                     try:
                         await loop.run_in_executor(None, db.add_to_inventory, uid, scroll_id)
                     except Exception as _e:
                         logger.error("CRITICAL: recovery add_to_inventory failed uid=%s scroll=%s invoice=%s err=%s", uid, scroll_id, inv_id, _e)
-                    await manager.send(uid, {"event": "scroll_received", "scroll_id": scroll_id})
+                    if manager is not None:
+                        await manager.send(uid, {"event": "scroll_received", "scroll_id": scroll_id})
+                    await _send_tg_message(uid, f"📜 <b>Свиток получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
+                elif ":usdt_slot:" in payload:
+                    try:
+                        ok2, _msg2, new_class_id = await loop.run_in_executor(None, db.create_usdt_class, uid)
+                        if manager is not None:
+                            await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
+                        await _send_tg_message(uid, f"💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+                    except Exception as _e:
+                        logger.error("CRITICAL: recovery create_usdt_class failed uid=%s invoice=%s err=%s", uid, inv_id, _e)
+                elif ":usdt_reset:" in payload:
+                    class_id = payload.split(":usdt_reset:", 1)[1].strip()
+                    try:
+                        await loop.run_in_executor(None, db.reset_usdt_slot_stats, uid, class_id)
+                        if manager is not None:
+                            await manager.send(uid, {"event": "usdt_slot_reset", "class_id": class_id})
+                        await _send_tg_message(uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+                    except Exception as _e:
+                        logger.error("CRITICAL: recovery reset_usdt_slot_stats failed uid=%s class=%s invoice=%s err=%s", uid, class_id, inv_id, _e)
+                elif ":avatar:" in payload:
+                    avatar_id = payload.split(":avatar:", 1)[1].strip()
+                    try:
+                        unlock = await loop.run_in_executor(None, db.unlock_avatar, uid, avatar_id, "usdt")
+                        if unlock.get("ok"):
+                            if not unlock.get("already_unlocked"):
+                                await loop.run_in_executor(None, db.track_purchase, uid, avatar_id, "usdt", 0)
+                            _cache_invalidate(uid)
+                            if manager is not None:
+                                await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
+                            await _send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
+                        else:
+                            logger.error("CRITICAL: recovery unlock_avatar failed uid=%s avatar=%s invoice=%s reason=%s", uid, avatar_id, inv_id, unlock.get("reason"))
+                            await _send_tg_message(uid, "⚠️ Оплата получена, но выдача образа задержалась. Напишите в поддержку и укажите ID платежа.")
+                    except Exception as _e:
+                        logger.error("CRITICAL: recovery unlock_avatar exc uid=%s avatar=%s invoice=%s err=%s", uid, avatar_id, inv_id, _e)
+                elif ":premium:" in payload:
+                    try:
+                        prem = await loop.run_in_executor(None, db.activate_premium, uid, 21)
+                        bonus_d = prem.get("bonus_diamonds", 0)
+                        days_left = prem.get("days_left", 21)
+                        if manager is not None:
+                            await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
+                        bonus_txt = f"\n💎 Бонус: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
+                        await _send_tg_message(uid, f"👑 <b>Premium подписка активирована!</b>\nСрок действия: <b>{days_left} дней</b>{bonus_txt}\n\nСпасибо за покупку! ⚔️ Duel Arena")
+                    except Exception as _e:
+                        logger.error("CRITICAL: recovery activate_premium failed uid=%s invoice=%s err=%s", uid, inv_id, _e)
+                else:
+                    diamonds = int(result.get("diamonds") or 0)
+                    if manager is not None and diamonds > 0:
+                        await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})
+                    if diamonds > 0:
+                        await _send_tg_message(uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
         except Exception as exc:
             logger.warning("invoice recovery failed: %s", exc)
 
