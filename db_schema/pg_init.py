@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import logging
-import time
 from typing import Any
 
 _log = logging.getLogger(__name__)
@@ -13,39 +12,24 @@ def init_database_postgres(db: Any) -> None:
 
     conn = db.get_connection()
     cursor = conn.cursor()
-    schema_lock_held = False
-    init_lock_held = False
     try:
-        # try_advisory_lock + retry — не зависаем если предыдущий инстанс не отпустил
-        for attempt in range(8):
-            cursor.execute(
-                "SELECT pg_try_advisory_lock(%s, %s)",
-                (db._ADV_PG_SCHEMA_K1, db._ADV_PG_SCHEMA_K2),
-            )
-            row = cursor.fetchone()
-            if row and next(iter(row.values())):
-                schema_lock_held = True
-                break
-            _log.info("pg_init: schema lock busy, retry %d/8...", attempt + 1)
-            time.sleep(3)
+        # Блокирующий lock — второй инстанс ждёт, а не запускает DDL параллельно.
+        # Session-level: автоматически снимается при закрытии соединения (сбой = safe).
+        cursor.execute(
+            "SELECT pg_advisory_lock(%s, %s)",
+            (db._ADV_PG_SCHEMA_K1, db._ADV_PG_SCHEMA_K2),
+        )
 
-        if not schema_lock_held:
-            _log.warning("pg_init: schema lock not acquired after retries, proceeding anyway")
-
-        # bootstrap всегда — CREATE IF NOT EXISTS безопасен без lock
         bootstrap_postgres_schema(cursor)
         conn.commit()
 
-        # Unlock schema lock
-        if schema_lock_held:
-            cursor.execute(
-                "SELECT pg_advisory_unlock(%s, %s)",
-                (db._ADV_PG_SCHEMA_K1, db._ADV_PG_SCHEMA_K2),
-            )
-            conn.commit()
-            schema_lock_held = False
+        cursor.execute(
+            "SELECT pg_advisory_unlock(%s, %s)",
+            (db._ADV_PG_SCHEMA_K1, db._ADV_PG_SCHEMA_K2),
+        )
+        conn.commit()
 
-        # Init lock для ботов — только один инстанс
+        # Init lock — только один инстанс заполняет ботов
         cursor.execute(
             "SELECT pg_try_advisory_lock(%s, %s)",
             (db._ADV_PG_INIT_K1, db._ADV_PG_INIT_K2),
@@ -55,23 +39,13 @@ def init_database_postgres(db: Any) -> None:
         if init_lock_held:
             db.create_initial_bots(conn)
             db.rebalance_all_bots(conn)
+            cursor.execute(
+                "SELECT pg_advisory_unlock(%s, %s)",
+                (db._ADV_PG_INIT_K1, db._ADV_PG_INIT_K2),
+            )
+            conn.commit()
+    except Exception as e:
+        _log.error("pg_init error: %s", e)
+        raise
     finally:
-        if schema_lock_held:
-            try:
-                cursor.execute(
-                    "SELECT pg_advisory_unlock(%s, %s)",
-                    (db._ADV_PG_SCHEMA_K1, db._ADV_PG_SCHEMA_K2),
-                )
-                conn.commit()
-            except Exception:
-                pass
-        if init_lock_held:
-            try:
-                cursor.execute(
-                    "SELECT pg_advisory_unlock(%s, %s)",
-                    (db._ADV_PG_INIT_K1, db._ADV_PG_INIT_K2),
-                )
-                conn.commit()
-            except Exception:
-                pass
         conn.close()
