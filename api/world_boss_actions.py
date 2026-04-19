@@ -110,15 +110,31 @@ async def world_boss_claim_reward_inner(body: ClaimRewardBody, *, db, get_user_f
             conn.commit()
             conn.close()
         chest = row.get("chest_type")
+        chest_added = False
+        chest_error = None
         if chest:
             try:
                 db.add_to_inventory(uid, chest, quantity=1)
+                chest_added = True
+                log.info("claim_reward: chest %s added to uid=%s", chest, uid)
             except Exception as e:
-                log.warning("claim_reward: failed add chest %s to uid=%s: %s", chest, uid, e)
+                chest_error = str(e)
+                log.warning("claim_reward: FAILED add chest %s to uid=%s: %s", chest, uid, e)
+                # Повторная попытка с новым соединением
+                try:
+                    db.add_to_inventory(uid, chest, quantity=1)
+                    chest_added = True
+                    log.info("claim_reward: chest %s added to uid=%s (retry ok)", chest, uid)
+                    chest_error = None
+                except Exception as e2:
+                    log.warning("claim_reward: retry FAILED chest %s uid=%s: %s", chest, uid, e2)
+                    chest_error = str(e2)
         return {
             "ok": True, "reward_id": int(body.reward_id),
             "gold": gold, "exp": exp, "diamonds": diamonds,
             "chest_type": chest,
+            "chest_added": chest_added,
+            "chest_error": chest_error,
             "contribution_pct": float(row.get("contribution_pct") or 0.0),
             "is_victory": bool(row.get("is_victory")),
         }

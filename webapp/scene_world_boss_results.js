@@ -44,7 +44,7 @@ Object.assign(WorldBossScene.prototype, {
     const tb = txt(this, W/2, cy + 88, bossLbl, 12, '#ddddff').setOrigin(0.5).setDepth(1002);
     tb._wbChild = true;
 
-    const pct = Math.round((r.contribution_pct || 0) * 100);
+    const pct = Math.round(r.contribution_pct || 0);
     const tc = txt(this, W/2, cy + 110, `Ваш вклад: ${pct}%`, 13, '#aaddff', true).setOrigin(0.5).setDepth(1002);
     tc._wbChild = true;
 
@@ -95,7 +95,7 @@ Object.assign(WorldBossScene.prototype, {
       const win = r.status === 'won';
       const ico = win ? '🏆' : '💀';
       const em  = r.boss_emoji || '🐉';
-      const pct = Math.round((r.contribution_pct || 0) * 100);
+      const pct = Math.round(r.contribution_pct || 0);
       const part = pct > 0 ? `вклад ${pct}%` : 'не участвовал';
       this._addText(14, ry + 4, `${ico} ${em} ${r.boss_name || 'Босс'}`, 10, '#ddddff');
       const col = pct > 0 ? (win ? '#3cff8c' : '#ff9966') : '#888899';

@@ -164,8 +164,20 @@ Object.assign(WorldBossScene.prototype, {
   async _claimReward(reward_id) {
     try {
       const r = await post('/api/world_boss/claim_reward', { reward_id });
-      if (r.ok) { this._toast(`✅ +💰${r.gold} +⭐${r.exp} +💎${r.diamonds}`); this._refresh(); }
-      else this._toast('❌ ' + r.reason);
+      if (r.ok) {
+        let msg = `✅ +💰${r.gold} +⭐${r.exp}`;
+        if (r.diamonds) msg += ` +💎${r.diamonds}`;
+        if (r.chest_type) {
+          const chIcon = r.chest_type === 'wb_diamond_chest' ? '💠' : '🏆';
+          msg += r.chest_added
+            ? `\n${chIcon} Сундук → Инвентарь → вкладка ⚔️ Рейд`
+            : `\n❌ Сундук не добавлен (${r.chest_error || 'ошибка'})`;
+        }
+        this._toast(msg);
+        this._refresh();
+      } else {
+        this._toast('❌ ' + r.reason);
+      }
     } catch(_) {}
   },
 

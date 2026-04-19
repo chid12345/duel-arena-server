@@ -29,6 +29,13 @@ class WorldBossRewardsMixin:
         )
         row = cur.fetchone()
         if row:
+            # Если запись уже есть, но chest_type был NULL — обновим его (идемпотентно).
+            if chest_type is not None:
+                cur.execute(
+                    "UPDATE world_boss_rewards SET chest_type=? WHERE reward_id=? AND chest_type IS NULL",
+                    (chest_type, int(row["reward_id"])),
+                )
+                conn.commit()
             conn.close()
             return int(row["reward_id"])
         cur.execute(
