@@ -101,7 +101,7 @@ class DBCore:
         self.db_name = DB_NAME
         self._pool: Any = None
         self._pool_lock = threading.Lock()
-        self._sqlite_conn: Any = None  # Кешированное SQLite-соединение
+        self._local = threading.local()  # per-thread SQLite connections
 
     def _get_pool(self) -> Any:
         if self._pool is not None:
@@ -119,20 +119,21 @@ class DBCore:
                 )
         return self._pool
 
+    def _make_sqlite_conn(self) -> Any:
+        conn = sqlite3.connect(self.db_name, timeout=30, check_same_thread=False)
+        conn.row_factory = sqlite3.Row
+        conn.execute("PRAGMA journal_mode=WAL")
+        conn.execute("PRAGMA cache_size=-32768")
+        conn.execute("PRAGMA synchronous=NORMAL")
+        conn.execute("PRAGMA temp_store=memory")
+        return conn
+
     def get_connection(self):
         if self._pg:
             pool = self._get_pool()
             raw = pool.getconn()
             return _PooledConn(raw, pool)
-        # SQLite: кешируем соединение — WAL/PRAGMA устанавливаются один раз
-        if self._sqlite_conn is None:
-            with self._pool_lock:
-                if self._sqlite_conn is None:
-                    conn = sqlite3.connect(self.db_name, timeout=15, check_same_thread=False)
-                    conn.row_factory = sqlite3.Row
-                    conn.execute("PRAGMA journal_mode=WAL")
-                    conn.execute("PRAGMA cache_size=-32768")   # 32 МБ кеша страниц
-                    conn.execute("PRAGMA synchronous=NORMAL")
-                    conn.execute("PRAGMA temp_store=memory")
-                    self._sqlite_conn = conn
-        return _CachedSQLiteConn(self._sqlite_conn)
+        # SQLite: per-thread connection — несколько тредов не блокируют друг друга
+        if not getattr(self._local, 'conn', None):
+            self._local.conn = self._make_sqlite_conn()
+        return _CachedSQLiteConn(self._local.conn)
