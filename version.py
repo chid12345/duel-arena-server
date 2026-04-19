@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.8.57"
-VERSION_LABEL = "v1.8.57 — feat: bolder glass card — glow border, bigger avatar, fatter bars, brighter btn"
+VERSION = "1.8.58"
+VERSION_LABEL = "v1.8.58 — feat: eq card bg label, full-width fight btn, shop+tasks row"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "6.91"
+GAME_VERSION = "6.92"
