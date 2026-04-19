@@ -17,4 +17,4 @@ services:
       - key: CRYPTOPAY_TOKEN
         sync: false
       - key: CRYPTOPAY_TESTNET
-        value: "1"
+        sync: false

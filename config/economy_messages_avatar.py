@@ -77,7 +77,7 @@ HP_MIN_BATTLE_PCT = 0.15          # нельзя начать бой если т
 # Дефолт = тестовый токен (@CryptoTestnetBot). Боевой прописать в CRYPTOPAY_TOKEN на Render.
 CRYPTOPAY_TOKEN = os.getenv("CRYPTOPAY_TOKEN", "56515:AAThe6SQhjz10EDpboEUulYqaaQKo47xFLF")
 # 1 = тестовая сеть, 0 = боевая. Менять вместе с токеном.
-CRYPTOPAY_TESTNET = os.getenv("CRYPTOPAY_TESTNET", "1") == "1"
+CRYPTOPAY_TESTNET = os.getenv("CRYPTOPAY_TESTNET", "0") == "1"
 # Полный сброс аккаунта через CryptoPay Mini App (только USDT)
 FULL_RESET_CRYPTO_USDT = (os.getenv("FULL_RESET_CRYPTO_USDT") or "11.99").strip()
 
