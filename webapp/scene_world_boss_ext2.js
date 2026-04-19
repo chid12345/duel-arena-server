@@ -42,17 +42,21 @@ Object.assign(WorldBossScene.prototype, {
   async _buyResScroll(iid) {
     if (this._buying) return;
     this._buying = true;
+    let ok = false;
     try {
       const r = await post('/api/shop/buy', { item_id: iid });
       if (r.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         this._toast('🕯️ Свитки → инвентарь');
         this._refresh();
+        ok = true;
       } else {
         this._toast('❌ ' + (r.reason || r.detail || 'Ошибка'));
       }
     } catch (_) { this._toast('❌ Ошибка сети'); }
-    this._buying = false;
+    // После успешной покупки держим блокировку пока refresh не завершится (~1.5с)
+    if (ok) { setTimeout(() => { this._buying = false; }, 1500); }
+    else { this._buying = false; }
   },
 
 });
