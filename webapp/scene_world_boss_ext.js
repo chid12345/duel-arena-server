@@ -27,9 +27,17 @@ Object.assign(WorldBossScene.prototype, {
     y += _timerPanelH + 12;
 
     const optIn = !!s.reminder_opt_in;
-    this._bigBtn(16, y, W-32, 44, optIn ? 0x2a0050 : 0x0d0030,
-      optIn ? '🔔 Напомню за 5 мин (вкл)' : '🔕 Напомни за 5 мин',
-      () => this._toggleReminder());
+    const _remBg = this.add.graphics(); _remBg._wbChild = true;
+    _remBg.fillStyle(optIn ? 0x2a0050 : 0x0d0028, 0.97);
+    _remBg.fillRoundedRect(16, y, W-32, 44, 6);
+    _remBg.lineStyle(1.5, optIn ? 0xff0088 : 0x6633aa, 0.9);
+    _remBg.strokeRoundedRect(16, y, W-32, 44, 6);
+    const _remT = this._addText(W/2, y+22, optIn ? '🔔 Напомню за 5 мин (вкл)' : '🔕 Напомни за 5 мин',
+      13, optIn ? '#ffffff' : '#cc99ff', true).setOrigin(0.5);
+    const _remZ = this.add.zone(16, y, W-32, 44).setOrigin(0).setInteractive({ useHandCursor: true });
+    _remZ._wbChild = true;
+    _remZ.on('pointerdown', () => tg?.HapticFeedback?.impactOccurred('medium'));
+    _remZ.on('pointerup', () => this._toggleReminder());
     y += 56;
 
     this._bigBtn(16, y, W-32, 34, 0x0a0020, '🔧 Тест: старт сейчас', () => this._wbTestSchedule());
@@ -38,9 +46,9 @@ Object.assign(WorldBossScene.prototype, {
     ['★ Рейд длится 10 минут.',
      '★ Бей босса → получи долю награды.',
      '★ Смерть в бою → свиток воскрешения.'].forEach((l, i) => {
-      this._addText(W/2, y + i*16, l, 10, '#aa99cc').setOrigin(0.5);
+      this._addText(W/2, y + i*18, l, 11, '#ddccff').setOrigin(0.5);
     });
-    y += 56;
+    y += 62;
     const rh = this._renderRegistrationBtn?.(s, W, y) || 0; y += rh;
     const msh = this._renderMyScrollsSummary?.(s, W, y) || 0; y += msh;
     this._renderScrollShop(s, W, y); y += 185;
