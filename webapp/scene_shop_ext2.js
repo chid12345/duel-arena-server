@@ -405,6 +405,12 @@ Object.assign(ShopScene.prototype, {
       container.add(txt(this, W / 2, y + 10, '🔄 Проверить оплату', 11, '#3cc8dc', true).setOrigin(0.5));
       taps.push({ x: 8, y, w: W - 16, h: 32, fn: () => this._checkPendingInvoice(pendingId) });
       y += 40;
+      // Авто-проверка при загрузке вкладки — если пользователь заплатил и вернулся
+      this.time.delayedCall(1500, () => {
+        if (this.scene?.isActive?.('Shop') && this._tab === 'special') {
+          this._checkPendingInvoice(pendingId);
+        }
+      });
     }
     setContentH(y + 10);
   },

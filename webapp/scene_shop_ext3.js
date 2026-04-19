@@ -57,13 +57,16 @@ Object.assign(ShopScene.prototype, {
     try {
       const res = await post('/api/shop/crypto_invoice', { package_id: pkg.id });
       if (!res.ok) { this._toast(`❌ ${res.reason || res.detail || 'Ошибка'}`); this._buying = false; return; }
+      if (!res.invoice_url) {
+        this._toast('❌ CryptoPay не вернул ссылку — проверьте токен');
+        this._buying = false;
+        return;
+      }
       localStorage.setItem('cryptoPendingInvoice', String(res.invoice_id));
-      if (res.invoice_url) {
-        if (typeof tg?.openTelegramLink === 'function') {
-          tg.openTelegramLink(res.invoice_url);
-        } else {
-          tg?.openLink?.(res.invoice_url);
-        }
+      if (typeof tg?.openTelegramLink === 'function') {
+        tg.openTelegramLink(res.invoice_url);
+      } else {
+        tg?.openLink?.(res.invoice_url);
       }
       this._toast('💳 Счёт открыт — оплатите и вернитесь');
       this._buying = false;
