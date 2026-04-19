@@ -266,46 +266,67 @@ Object.assign(MenuScene.prototype, {
     const actY = Math.min(CH - 110, regenY + extrasH + 6);
     const actW = W - PAD * 2, actH = 54;
 
-    // В БОЙ — full width, горящий градиент + многослойное свечение
-    const fGlow2 = ca(mkG());
-    fGlow2.fillStyle(0x9333ea, 0.22); fGlow2.fillRoundedRect(PAD - 7, actY - 6, actW + 14, actH + 12, 22);
+    // В БОЙ — slot-style with sword icon + gradient
     const fGlow = ca(mkG());
-    fGlow.fillStyle(0xd946ef, 0.38); fGlow.fillRoundedRect(PAD - 3, actY - 3, actW + 6, actH + 6, 17);
+    fGlow.fillStyle(0x7c3aed, 0.2); fGlow.fillRoundedRect(PAD - 4, actY - 4, actW + 8, actH + 8, 20);
     this.tweens.add({ targets: fGlow, alpha: 0, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const fBg = ca(mkG());
     fBg.fillGradientStyle(0xa29bfe, 0xa29bfe, 0x6c5ce7, 0x6c5ce7, 1);
-    fBg.fillRoundedRect(PAD, actY, actW, actH, 14);
+    fBg.fillRoundedRect(PAD, actY, actW, actH, 16);
+    fBg.lineStyle(1.5, 0xc4b5fd, 0.35); fBg.strokeRoundedRect(PAD, actY, actW, actH, 16);
     const fShine = ca(mkG());
-    fShine.fillStyle(0xffffff, 0.2); fShine.fillRoundedRect(PAD + 2, actY + 2, actW - 4, actH / 2 - 2, 12);
-    ca(mkT(W / 2, actY + actH / 2, 'В БОЙ', 20, '#ffffff', true)).setOrigin(0.5);
+    fShine.fillStyle(0xffffff, 0.18); fShine.fillRoundedRect(PAD + 2, actY + 2, actW - 4, actH * 0.42, 14);
+    // Sword icon before text
+    const fiG = ca(mkG()); const fix = W / 2 - 46, fiy = actY + actH / 2;
+    fiG.fillStyle(0xf0eeff, 0.92);
+    fiG.beginPath(); fiG.moveTo(fix+6,fiy-8); fiG.lineTo(fix+9,fiy-5); fiG.lineTo(fix-2,fiy+7); fiG.lineTo(fix-5,fiy+7); fiG.lineTo(fix-5,fiy+4); fiG.closePath(); fiG.fillPath();
+    fiG.fillStyle(0xffffff, 0.25); fiG.beginPath(); fiG.moveTo(fix+6,fiy-7); fiG.lineTo(fix+8,fiy-5); fiG.lineTo(fix-1,fiy+6); fiG.lineTo(fix-2,fiy+5); fiG.closePath(); fiG.fillPath();
+    fiG.lineStyle(3, 0xfde68a, 0.9); fiG.lineBetween(fix-3,fiy+2, fix-8,fiy+7);
+    fiG.fillStyle(0xfde68a, 1); fiG.fillCircle(fix-9,fiy+8, 2.5);
+    ca(mkT(W / 2 + 8, actY + actH / 2, 'В БОЙ', 20, '#ffffff', true)).setOrigin(0.5);
     const fZ = ca(mkZ(W / 2, actY + actH / 2, actW, actH).setInteractive({ useHandCursor: true }));
-    fZ.on('pointerdown', () => { fBg.clear(); fBg.fillStyle(0x3730a3, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 14); tg?.HapticFeedback?.impactOccurred('medium'); });
-    fZ.on('pointerout',  () => { fBg.clear(); fBg.fillGradientStyle(0xa855f7, 0x8b5cf6, 0x7c3aed, 0x6d28d9, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 14); });
-    fZ.on('pointerup',   () => { fBg.clear(); fBg.fillGradientStyle(0xa855f7, 0x8b5cf6, 0x7c3aed, 0x6d28d9, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 14); this._switchTab('battle'); });
+    fZ.on('pointerdown', () => { fBg.clear(); fBg.fillStyle(0x3730a3, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 16); tg?.HapticFeedback?.impactOccurred('medium'); });
+    fZ.on('pointerout',  () => { fBg.clear(); fBg.fillGradientStyle(0xa29bfe, 0xa29bfe, 0x6c5ce7, 0x6c5ce7, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 16); fBg.lineStyle(1.5, 0xc4b5fd, 0.35); fBg.strokeRoundedRect(PAD, actY, actW, actH, 16); });
+    fZ.on('pointerup',   () => { fBg.clear(); fBg.fillGradientStyle(0xa29bfe, 0xa29bfe, 0x6c5ce7, 0x6c5ce7, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 16); fBg.lineStyle(1.5, 0xc4b5fd, 0.35); fBg.strokeRoundedRect(PAD, actY, actW, actH, 16); this._switchTab('battle'); });
 
-    // Магазин + Задания — two half-width buttons below
-    const btn2Y = actY + actH + 8, b2H = 44, b2W = (actW - 8) / 2;
+    // Магазин + Задания — slot-style, two half-width
+    const btn2Y = actY + actH + 8, b2H = 46, b2W = (actW - 8) / 2;
+    const _drawSlotBtn = (bx, by, bw, bh, borderC, borderA) => {
+      const g = mkG();
+      g.fillStyle(0x1a1828, 1); g.fillRoundedRect(bx, by, bw, bh, 12);
+      g.lineStyle(1.5, borderC, borderA); g.strokeRoundedRect(bx, by, bw, bh, 12);
+      return g;
+    };
 
-    // Shop
-    const sBg = ca(mkG());
-    sBg.fillStyle(0x1a1530, 1); sBg.fillRoundedRect(PAD, btn2Y, b2W, b2H, 12);
-    sBg.lineStyle(1.5, 0x7c3aed, 0.5); sBg.strokeRoundedRect(PAD, btn2Y, b2W, b2H, 12);
-    ca(mkT(PAD + b2W / 2, btn2Y + b2H / 2, 'Магазин', 14, '#c084fc', true)).setOrigin(0.5);
+    // Shop button
+    const sBg = ca(_drawSlotBtn(PAD, btn2Y, b2W, b2H, 0x7c3aed, 0.5));
+    // Bag icon
+    const siG = ca(mkG()); const six = PAD + b2W / 2 - 34, siy = btn2Y + b2H / 2;
+    siG.fillStyle(0xc084fc, 0.85); siG.fillRoundedRect(six-7,siy-5,14,11,2);
+    siG.lineStyle(1.5,0xc084fc,0.9); siG.strokeRoundedRect(six-7,siy-5,14,11,2);
+    siG.lineStyle(2,0xc084fc,0.8); siG.strokeArc(six,siy-5,4,180,360,false);
+    siG.fillStyle(0x1a1828,1); siG.fillRect(six-5,siy-5,10,3);
+    ca(mkT(PAD + b2W / 2 + 8, btn2Y + b2H / 2, 'Магазин', 14, '#c084fc', true)).setOrigin(0.5);
     const sZ = ca(mkZ(PAD + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
-    sZ.on('pointerdown', () => { sBg.clear(); sBg.fillStyle(0x2d2460, 1); sBg.fillRoundedRect(PAD, btn2Y, b2W, b2H, 12); sBg.lineStyle(1.5, 0x7c3aed, 1); sBg.strokeRoundedRect(PAD, btn2Y, b2W, b2H, 12); });
-    sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0x1a1530, 1); sBg.fillRoundedRect(PAD, btn2Y, b2W, b2H, 12); sBg.lineStyle(1.5, 0x7c3aed, 0.5); sBg.strokeRoundedRect(PAD, btn2Y, b2W, b2H, 12); });
-    sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0x1a1530, 1); sBg.fillRoundedRect(PAD, btn2Y, b2W, b2H, 12); sBg.lineStyle(1.5, 0x7c3aed, 0.5); sBg.strokeRoundedRect(PAD, btn2Y, b2W, b2H, 12); this.scene.start('Shop'); });
+    sZ.on('pointerdown', () => { sBg.clear(); sBg.fillStyle(0x2a1f40,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,1); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); });
+    sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0x1a1828,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,0.5); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); });
+    sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0x1a1828,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,0.5); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); this.scene.start('Shop'); });
 
-    // Tasks
+    // Tasks button
     const tasksX = PAD + b2W + 8;
-    const tBg = ca(mkG());
-    tBg.fillStyle(0x0e1a2e, 1); tBg.fillRoundedRect(tasksX, btn2Y, b2W, b2H, 12);
-    tBg.lineStyle(1.5, 0x3b82f6, 0.5); tBg.strokeRoundedRect(tasksX, btn2Y, b2W, b2H, 12);
-    ca(mkT(tasksX + b2W / 2, btn2Y + b2H / 2, 'Задания', 14, '#93c5fd', true)).setOrigin(0.5);
+    const tBg = ca(_drawSlotBtn(tasksX, btn2Y, b2W, b2H, 0x3b82f6, 0.5));
+    // Document icon
+    const tiG = ca(mkG()); const tix = tasksX + b2W / 2 - 34, tiy = btn2Y + b2H / 2;
+    tiG.fillStyle(0x93c5fd,0.15); tiG.fillRoundedRect(tix-7,tiy-8,13,16,2);
+    tiG.lineStyle(1.5,0x93c5fd,0.85); tiG.strokeRoundedRect(tix-7,tiy-8,13,16,2);
+    tiG.lineStyle(1.2,0x93c5fd,0.7); tiG.lineBetween(tix-4,tiy-4,tix+3,tiy-4);
+    tiG.lineBetween(tix-4,tiy-1,tix+3,tiy-1);
+    tiG.lineBetween(tix-4,tiy+2,tix+1,tiy+2);
+    ca(mkT(tasksX + b2W / 2 + 8, btn2Y + b2H / 2, 'Задания', 14, '#93c5fd', true)).setOrigin(0.5);
     const tskZ = ca(mkZ(tasksX + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
-    tskZ.on('pointerdown', () => { tBg.clear(); tBg.fillStyle(0x1a2d40, 1); tBg.fillRoundedRect(tasksX, btn2Y, b2W, b2H, 12); tBg.lineStyle(1.5, 0x3b82f6, 1); tBg.strokeRoundedRect(tasksX, btn2Y, b2W, b2H, 12); });
-    tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x0e1a2e, 1); tBg.fillRoundedRect(tasksX, btn2Y, b2W, b2H, 12); tBg.lineStyle(1.5, 0x3b82f6, 0.5); tBg.strokeRoundedRect(tasksX, btn2Y, b2W, b2H, 12); });
-    tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x0e1a2e, 1); tBg.fillRoundedRect(tasksX, btn2Y, b2W, b2H, 12); tBg.lineStyle(1.5, 0x3b82f6, 0.5); tBg.strokeRoundedRect(tasksX, btn2Y, b2W, b2H, 12); this._switchTab('quests'); });
+    tskZ.on('pointerdown', () => { tBg.clear(); tBg.fillStyle(0x1a2d40,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,1); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
+    tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
+    tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this._switchTab('quests'); });
 
     this._addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca);
     this._panels.profile = c;
