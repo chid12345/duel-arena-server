@@ -168,37 +168,42 @@ Object.assign(MenuScene.prototype, {
     const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
-    // HP — label + value above thin bar
-    const hpW = W - PAD * 2, hpH = 8, hpX = PAD;
-    const hpLabelY = czY + czH - 68;
-    const hpBarY   = hpLabelY + 15;
-    const hpPct    = Math.max(0, Math.min(1, (p.hp_pct || 0) / 100));
-    const hpCol    = (p.hp_pct || 0) > 50 ? 0x22c55e : (p.hp_pct || 0) > 25 ? 0xf59e0b : 0xef4444;
-    // HP heart icon (drawn)
-    { const hrtG = ca(mkG()); const hic = hpX + 6, hiy = hpLabelY + 5;
-      hrtG.fillStyle(hpCol, 0.9); hrtG.fillCircle(hic - 2.5, hiy - 1, 3.5); hrtG.fillCircle(hic + 2.5, hiy - 1, 3.5);
-      hrtG.fillTriangle(hic - 6, hiy, hic + 6, hiy, hic, hiy + 7); }
-    ca(mkT(hpX + 15, hpLabelY, 'HP', 9, hpCol === 0x22c55e ? '#4ade80' : hpCol === 0xf59e0b ? '#fbbf24' : '#f87171'));
-    const hpValTxt = ca(mkT(W - PAD, hpLabelY, `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp}`, 9, 'rgba(255,255,255,0.55)')).setOrigin(1, 0);
-    const hpBg = ca(mkBar(hpX, hpBarY, hpW, hpH, hpPct, hpCol, 4));
-    this._liveHp = { g: hpBg, t: hpValTxt, x: hpX, y: hpBarY, w: hpW, h: hpH };
+    // HP / XP — inline layout: [icon] [LABEL] [====bar====] [value]
+    const hpX = PAD, hpH = 7;
+    const hpSepY = czY + czH - 56;
+    { const sG = ca(mkG()); sG.lineStyle(1, 0xffffff, 0.06); sG.lineBetween(PAD, hpSepY, W - PAD, hpSepY); }
 
-    // XP — label + value above thin bar
-    const xpLabelY = hpBarY + hpH + 10, xpBarY = xpLabelY + 15, xpH = 8;
+    const hpPct   = Math.max(0, Math.min(1, (p.hp_pct || 0) / 100));
+    const hpCol   = (p.hp_pct || 0) > 50 ? 0x22c55e : (p.hp_pct || 0) > 25 ? 0xf59e0b : 0xef4444;
+    const hpColStr = hpCol === 0x22c55e ? '#4ade80' : hpCol === 0xf59e0b ? '#fbbf24' : '#f87171';
+
+    const hpRowCY = hpSepY + 15;
+    { const hrtG = ca(mkG()); const hic = hpX + 8, hiy = hpRowCY;
+      hrtG.fillStyle(hpCol, 0.9);
+      hrtG.fillCircle(hic - 2.5, hiy - 1.5, 3); hrtG.fillCircle(hic + 2.5, hiy - 1.5, 3);
+      hrtG.fillTriangle(hic - 5, hiy, hic + 5, hiy, hic, hiy + 6); }
+    ca(mkT(hpX + 18, hpRowCY - 5, 'HP', 9, hpColStr));
+    const hpValStr = `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp}`;
+    const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 9, 'rgba(255,255,255,0.5)')).setOrigin(1, 0);
+    const hpBX = hpX + 36, hpBW = W - PAD * 2 - 36 - 76;
+    const hpBg = ca(mkBar(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, hpCol, 3));
+    this._liveHp = { g: hpBg, t: hpValTxt, x: hpBX, y: hpRowCY - Math.ceil(hpH / 2), w: hpBW, h: hpH };
+
+    const xpRowCY = hpRowCY + 22;
     if (!p.max_level) {
-      // XP star icon (drawn 4-pointed)
-      { const stG = ca(mkG()); const six = hpX + 6, siy = xpLabelY + 5;
+      { const stG = ca(mkG()); const six = hpX + 8, siy = xpRowCY;
         stG.fillStyle(0xa855f7, 0.9);
-        stG.fillTriangle(six, siy-6, six-2.5, siy-1, six+2.5, siy-1);
-        stG.fillTriangle(six, siy+6, six-2.5, siy+1, six+2.5, siy+1);
-        stG.fillTriangle(six-6, siy, six-1, siy-2.5, six-1, siy+2.5);
-        stG.fillTriangle(six+6, siy, six+1, siy-2.5, six+1, siy+2.5);
-        stG.fillStyle(0xc4b5fd, 0.6); stG.fillCircle(six, siy, 2); }
-      ca(mkT(hpX + 15, xpLabelY, 'XP', 9, '#a78bfa'));
-      ca(mkT(W - PAD, xpLabelY, `${p.xp_pct}%  ·  ${p.exp}/${p.exp_needed}`, 9, 'rgba(255,255,255,0.35)')).setOrigin(1, 0);
-      ca(mkBar(hpX, xpBarY, hpW, xpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x818cf8, 4));
+        stG.fillTriangle(six, siy-5, six-2, siy-1, six+2, siy-1);
+        stG.fillTriangle(six, siy+5, six-2, siy+1, six+2, siy+1);
+        stG.fillTriangle(six-5, siy, six-1, siy-2, six-1, siy+2);
+        stG.fillTriangle(six+5, siy, six+1, siy-2, six+1, siy+2);
+        stG.fillStyle(0xc4b5fd, 0.5); stG.fillCircle(six, siy, 1.5); }
+      ca(mkT(hpX + 18, xpRowCY - 5, 'XP', 9, '#a78bfa'));
+      const xpValStr = `${p.exp} / ${p.exp_needed}`;
+      ca(mkT(W - PAD, xpRowCY - 5, xpValStr, 9, 'rgba(255,255,255,0.35)')).setOrigin(1, 0);
+      ca(mkBar(hpBX, xpRowCY - Math.ceil(hpH / 2), hpBW, hpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x818cf8, 3));
     } else {
-      ca(mkT(W / 2, xpLabelY + 8, '⭐ Макс. уровень', 10, '#fbbf24', true)).setOrigin(0.5);
+      ca(mkT(W / 2, xpRowCY, '⭐ Макс. уровень', 10, '#fbbf24', true)).setOrigin(0.5);
     }
 
     // Free stats badge (below equipment card)
