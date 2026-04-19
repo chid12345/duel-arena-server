@@ -307,7 +307,7 @@ Object.assign(MenuScene.prototype, {
     const siG = ca(mkG()); const six = PAD + b2W / 2 - 34, siy = btn2Y + b2H / 2;
     siG.fillStyle(0xc084fc, 0.85); siG.fillRoundedRect(six-7,siy-5,14,11,2);
     siG.lineStyle(1.5,0xc084fc,0.9); siG.strokeRoundedRect(six-7,siy-5,14,11,2);
-    siG.lineStyle(2,0xc084fc,0.8); siG.strokeArc(six,siy-5,4,180,360,false);
+    siG.lineStyle(2,0xc084fc,0.8); siG.beginPath(); siG.arc(six,siy-5,4,Math.PI,Math.PI*2,false); siG.strokePath();
     siG.fillStyle(0x1a1828,1); siG.fillRect(six-5,siy-5,10,3);
     ca(mkT(PAD + b2W / 2 + 8, btn2Y + b2H / 2, 'Магазин', 14, '#c084fc', true)).setOrigin(0.5);
     const sZ = ca(mkZ(PAD + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
