@@ -5,8 +5,7 @@
    ============================================================ */
 
 const _EQ_LEFT  = [{ slot: 'weapon' }, { slot: 'belt' }, { slot: 'boots' }];
-const _EQ_RIGHT = [{ slot: 'shield' }, { slot: 'armor' }];
-const _EQ_RINGS = ['ring1', 'ring2'];
+const _EQ_RIGHT = [{ slot: 'shield' }, { slot: 'armor' }, { slot: 'ring1' }];
 
 const _EQ_SLOT_LABELS = {
   weapon: 'Меч', belt: 'Пояс', boots: 'Сапоги',
@@ -19,7 +18,6 @@ Object.assign(MenuScene.prototype, {
   _addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca) {
     const eq = State.equipment || {};
     const SW = 56, SH = 60;
-    const RW = 22, RH = 36;
 
     const sTop = czY + 12;
     const sMid = czY + Math.round(czH * 0.38);
@@ -30,12 +28,8 @@ Object.assign(MenuScene.prototype, {
       this._drawEqSlot(c, lx, [sTop, sMid, sBot][i], SW, SH, s.slot, eq[s.slot], mkG, mkT, mkZ, ca, false);
     });
     _EQ_RIGHT.forEach((s, i) => {
-      this._drawEqSlot(c, rx, [sTop, sMid][i], SW, SH, s.slot, eq[s.slot], mkG, mkT, mkZ, ca, false);
+      this._drawEqSlot(c, rx, [sTop, sMid, sBot][i], SW, SH, s.slot, eq[s.slot], mkG, mkT, mkZ, ca, false);
     });
-
-    const ringsY = sBot;
-    this._drawEqSlot(c, W - RW * 2 - 5, ringsY, RW, RH, 'ring1', eq['ring1'], mkG, mkT, mkZ, ca, true);
-    this._drawEqSlot(c, W - RW - 3,     ringsY, RW, RH, 'ring2', eq['ring2'], mkG, mkT, mkZ, ca, true);
   },
 
   _drawEqSlot(c, x, y, w, h, slot, item, mkG, mkT, mkZ, ca, small) {
