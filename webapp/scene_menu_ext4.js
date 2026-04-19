@@ -62,9 +62,22 @@ Object.assign(MenuScene.prototype, {
 
     // Name row
     const niX = avX + avS + 12;
-    const crown = p.is_premium ? '👑 ' : '';
     const uname = (p.username || '?').length > 13 ? (p.username || '?').slice(0, 12) + '…' : (p.username || '?');
-    ca(mkT(niX, avY + 2, crown + uname, 17, p.is_premium ? '#c4b5fd' : '#ffffff', true));
+    let nameX = niX;
+    if (p.is_premium) {
+      const crG = ca(mkG());
+      crG.fillStyle(0xf59e0b, 1);
+      crG.fillTriangle(niX,      avY+15, niX+2,    avY+7, niX+5,    avY+15);
+      crG.fillTriangle(niX+5.5,  avY+15, niX+7.5,  avY+4, niX+9.5,  avY+15);
+      crG.fillTriangle(niX+10,   avY+15, niX+12,   avY+7, niX+15,   avY+15);
+      crG.fillRect(niX, avY+13, 15, 4);
+      crG.fillStyle(0xfde68a, 1);
+      crG.fillCircle(niX+2,   avY+7, 1.5);
+      crG.fillCircle(niX+7.5, avY+4, 1.5);
+      crG.fillCircle(niX+13,  avY+7, 1.5);
+      nameX = niX + 18;
+    }
+    ca(mkT(nameX, avY + 2, uname, 17, p.is_premium ? '#c4b5fd' : '#ffffff', true));
     if (p.is_premium) {
       const pBg = ca(mkG());
       pBg.fillStyle(0x78350f, 0.85); pBg.fillRoundedRect(niX, avY + 23, 80, 16, 5);
@@ -74,14 +87,28 @@ Object.assign(MenuScene.prototype, {
       ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.4)'));
     }
 
-    // Resource chips
+    // Resource chips — рисованные иконки (монета + кристалл)
     let cx = niX;
-    [['💰', p.gold, 0xfbbf24], ['💎', p.diamonds, 0x60a5fa]].forEach(([ico, val, border]) => {
-      const cw = Math.min(82, String(val).length * 6 + 26);
+    [
+      { val: p.gold,     border: 0xfbbf24, col: '#fde68a', type: 'coin' },
+      { val: p.diamonds, border: 0x60a5fa, col: '#93c5fd', type: 'gem'  },
+    ].forEach(({ val, border, col, type }) => {
+      const cw = Math.min(82, String(val).length * 6 + 32);
       const chipBg = ca(mkG());
       chipBg.fillStyle(0x000000, 0.4); chipBg.fillRoundedRect(cx, avY + 44, cw, 18, 5);
       chipBg.lineStyle(1, border, 0.4); chipBg.strokeRoundedRect(cx, avY + 44, cw, 18, 5);
-      ca(mkT(cx + cw / 2, avY + 53, `${ico} ${val}`, 9, border === 0xfbbf24 ? '#fde68a' : '#93c5fd', true)).setOrigin(0.5);
+      const iG = ca(mkG()); const ix = cx + 8, iy = avY + 53;
+      if (type === 'coin') {
+        iG.fillStyle(0xd97706, 1); iG.fillCircle(ix, iy, 5.5);
+        iG.fillStyle(0xfbbf24, 1); iG.fillCircle(ix, iy, 4);
+        iG.fillStyle(0xfde68a, 1); iG.fillCircle(ix, iy, 2.8);
+        iG.fillStyle(0x92400e, 0.7); iG.fillRect(ix-2, iy-0.6, 4, 1.2); iG.fillRect(ix-0.6, iy-2, 1.2, 4);
+      } else {
+        iG.fillStyle(0x3b82f6, 0.9); iG.fillTriangle(ix, iy-6, ix-5, iy, ix+5, iy);
+        iG.fillStyle(0x93c5fd, 0.7); iG.fillTriangle(ix, iy-6, ix-4.5, iy, ix, iy-3);
+        iG.fillStyle(0x1d4ed8, 0.9); iG.fillTriangle(ix-5, iy, ix+5, iy, ix, iy+4);
+      }
+      ca(mkT(cx + cw / 2 + 5, avY + 53, String(val), 9, col, true)).setOrigin(0.5);
       cx += cw + 5;
     });
 
@@ -107,13 +134,19 @@ Object.assign(MenuScene.prototype, {
       { v: String(wins),             sub: 'Победы',  col: '#4ade80' },
       { v: String(losses),           sub: 'Пораж.',  col: '#f87171' },
       { v: `${wr}%`,                 sub: 'Винрейт', col: '#a78bfa' },
-      { v: `${p.win_streak || 0}🔥`, sub: 'Серия',   col: '#fb923c' },
+      { v: String(p.win_streak || 0), sub: 'Серия',   col: '#fb923c' },
     ].forEach((d, i) => {
       const wx = PAD + i * scW;
       if (i > 0) { const sep = ca(mkG()); sep.lineStyle(1, 0xffffff, 0.06); sep.lineBetween(wx, sY + 4, wx, sY + 34); }
       ca(mkT(wx + scW / 2, sY + 11, d.v, 15, d.col, true)).setOrigin(0.5);
       ca(mkT(wx + scW / 2, sY + 27, d.sub, 8, 'rgba(255,255,255,0.35)')).setOrigin(0.5);
     });
+    // Flame icon next to streak number
+    { const fx = PAD + 3 * scW + scW * 0.68, fy = sY + 11;
+      const fG = ca(mkG());
+      fG.fillStyle(0xf97316, 0.85); fG.fillEllipse(fx, fy, 7, 12);
+      fG.fillStyle(0xfbbf24, 0.9); fG.fillEllipse(fx, fy + 1.5, 4, 7);
+      fG.fillStyle(0xfef9c3, 0.5); fG.fillCircle(fx, fy + 2, 1.5); }
 
     /* ── 2. EQUIPMENT CARD ────────────────────────────────── */
     const czY = 6 + CARD_H + 10, czH = 330;
@@ -131,7 +164,7 @@ Object.assign(MenuScene.prototype, {
     const _wKey = getWarriorKey(p.warrior_type);
     const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(2.45).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 9, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    ca(mkT(W / 2, charCY + 70, '✏️  сменить воина', 9, 'rgba(255,255,255,0.22)').setOrigin(0.5));
+    ca(mkT(W / 2, charCY + 70, 'сменить воина', 9, 'rgba(255,255,255,0.22)').setOrigin(0.5));
     const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
@@ -141,7 +174,11 @@ Object.assign(MenuScene.prototype, {
     const hpBarY   = hpLabelY + 15;
     const hpPct    = Math.max(0, Math.min(1, (p.hp_pct || 0) / 100));
     const hpCol    = (p.hp_pct || 0) > 50 ? 0x22c55e : (p.hp_pct || 0) > 25 ? 0xf59e0b : 0xef4444;
-    ca(mkT(hpX, hpLabelY, '❤️ HP', 9, 'rgba(255,255,255,0.55)'));
+    // HP heart icon (drawn)
+    { const hrtG = ca(mkG()); const hic = hpX + 6, hiy = hpLabelY + 5;
+      hrtG.fillStyle(hpCol, 0.9); hrtG.fillCircle(hic - 2.5, hiy - 1, 3.5); hrtG.fillCircle(hic + 2.5, hiy - 1, 3.5);
+      hrtG.fillTriangle(hic - 6, hiy, hic + 6, hiy, hic, hiy + 7); }
+    ca(mkT(hpX + 15, hpLabelY, 'HP', 9, hpCol === 0x22c55e ? '#4ade80' : hpCol === 0xf59e0b ? '#fbbf24' : '#f87171'));
     const hpValTxt = ca(mkT(W - PAD, hpLabelY, `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp}`, 9, 'rgba(255,255,255,0.55)')).setOrigin(1, 0);
     const hpBg = ca(mkBar(hpX, hpBarY, hpW, hpH, hpPct, hpCol, 4));
     this._liveHp = { g: hpBg, t: hpValTxt, x: hpX, y: hpBarY, w: hpW, h: hpH };
@@ -149,7 +186,15 @@ Object.assign(MenuScene.prototype, {
     // XP — label + value above thin bar
     const xpLabelY = hpBarY + hpH + 10, xpBarY = xpLabelY + 15, xpH = 8;
     if (!p.max_level) {
-      ca(mkT(hpX, xpLabelY, '✨ XP', 9, 'rgba(255,255,255,0.45)'));
+      // XP star icon (drawn 4-pointed)
+      { const stG = ca(mkG()); const six = hpX + 6, siy = xpLabelY + 5;
+        stG.fillStyle(0xa855f7, 0.9);
+        stG.fillTriangle(six, siy-6, six-2.5, siy-1, six+2.5, siy-1);
+        stG.fillTriangle(six, siy+6, six-2.5, siy+1, six+2.5, siy+1);
+        stG.fillTriangle(six-6, siy, six-1, siy-2.5, six-1, siy+2.5);
+        stG.fillTriangle(six+6, siy, six+1, siy-2.5, six+1, siy+2.5);
+        stG.fillStyle(0xc4b5fd, 0.6); stG.fillCircle(six, siy, 2); }
+      ca(mkT(hpX + 15, xpLabelY, 'XP', 9, '#a78bfa'));
       ca(mkT(W - PAD, xpLabelY, `${p.xp_pct}%  ·  ${p.exp}/${p.exp_needed}`, 9, 'rgba(255,255,255,0.35)')).setOrigin(1, 0);
       ca(mkBar(hpX, xpBarY, hpW, xpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x818cf8, 4));
     } else {
@@ -202,7 +247,7 @@ Object.assign(MenuScene.prototype, {
     fBg.fillRoundedRect(PAD, actY, actW, actH, 14);
     const fShine = ca(mkG());
     fShine.fillStyle(0xffffff, 0.12); fShine.fillRoundedRect(PAD + 2, actY + 2, actW - 4, actH / 2 - 2, 12);
-    ca(mkT(W / 2, actY + actH / 2, '⚔️  В БОЙ', 20, '#ffffff', true)).setOrigin(0.5);
+    ca(mkT(W / 2, actY + actH / 2, 'В БОЙ', 20, '#ffffff', true)).setOrigin(0.5);
     const fZ = ca(mkZ(W / 2, actY + actH / 2, actW, actH).setInteractive({ useHandCursor: true }));
     fZ.on('pointerdown', () => { fBg.clear(); fBg.fillStyle(0x3730a3, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 14); tg?.HapticFeedback?.impactOccurred('medium'); });
     fZ.on('pointerout',  () => { fBg.clear(); fBg.fillGradientStyle(0xa855f7, 0x8b5cf6, 0x7c3aed, 0x6d28d9, 1); fBg.fillRoundedRect(PAD, actY, actW, actH, 14); });
@@ -215,7 +260,7 @@ Object.assign(MenuScene.prototype, {
     const sBg = ca(mkG());
     sBg.fillStyle(0x1a1530, 1); sBg.fillRoundedRect(PAD, btn2Y, b2W, b2H, 12);
     sBg.lineStyle(1.5, 0x7c3aed, 0.5); sBg.strokeRoundedRect(PAD, btn2Y, b2W, b2H, 12);
-    ca(mkT(PAD + b2W / 2, btn2Y + b2H / 2, '🏪  Магазин', 14, '#c084fc', true)).setOrigin(0.5);
+    ca(mkT(PAD + b2W / 2, btn2Y + b2H / 2, 'Магазин', 14, '#c084fc', true)).setOrigin(0.5);
     const sZ = ca(mkZ(PAD + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
     sZ.on('pointerdown', () => { sBg.clear(); sBg.fillStyle(0x2d2460, 1); sBg.fillRoundedRect(PAD, btn2Y, b2W, b2H, 12); sBg.lineStyle(1.5, 0x7c3aed, 1); sBg.strokeRoundedRect(PAD, btn2Y, b2W, b2H, 12); });
     sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0x1a1530, 1); sBg.fillRoundedRect(PAD, btn2Y, b2W, b2H, 12); sBg.lineStyle(1.5, 0x7c3aed, 0.5); sBg.strokeRoundedRect(PAD, btn2Y, b2W, b2H, 12); });
@@ -226,7 +271,7 @@ Object.assign(MenuScene.prototype, {
     const tBg = ca(mkG());
     tBg.fillStyle(0x0e1a2e, 1); tBg.fillRoundedRect(tasksX, btn2Y, b2W, b2H, 12);
     tBg.lineStyle(1.5, 0x3b82f6, 0.5); tBg.strokeRoundedRect(tasksX, btn2Y, b2W, b2H, 12);
-    ca(mkT(tasksX + b2W / 2, btn2Y + b2H / 2, '📋  Задания', 14, '#93c5fd', true)).setOrigin(0.5);
+    ca(mkT(tasksX + b2W / 2, btn2Y + b2H / 2, 'Задания', 14, '#93c5fd', true)).setOrigin(0.5);
     const tskZ = ca(mkZ(tasksX + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
     tskZ.on('pointerdown', () => { tBg.clear(); tBg.fillStyle(0x1a2d40, 1); tBg.fillRoundedRect(tasksX, btn2Y, b2W, b2H, 12); tBg.lineStyle(1.5, 0x3b82f6, 1); tBg.strokeRoundedRect(tasksX, btn2Y, b2W, b2H, 12); });
     tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x0e1a2e, 1); tBg.fillRoundedRect(tasksX, btn2Y, b2W, b2H, 12); tBg.lineStyle(1.5, 0x3b82f6, 0.5); tBg.strokeRoundedRect(tasksX, btn2Y, b2W, b2H, 12); });

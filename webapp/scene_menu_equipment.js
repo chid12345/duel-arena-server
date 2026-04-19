@@ -1,94 +1,137 @@
 /* ============================================================
    MenuScene — equipment: слоты экипировки на профиле
-   Левая колонка: Меч / Пояс / Ботинки
+   Левая колонка: Меч / Пояс / Сапоги
    Правая колонка: Щит / Броня / Кольцо1 + Кольцо2
    ============================================================ */
 
-const _EQ_LEFT  = [
-  { slot: 'weapon', icon: '🗡️' },
-  { slot: 'belt',   icon: '🪢' },
-  { slot: 'boots',  icon: '👟' },
-];
-const _EQ_RIGHT = [
-  { slot: 'shield', icon: '🛡️' },
-  { slot: 'armor',  icon: '🥋' },
-];
+const _EQ_LEFT  = [{ slot: 'weapon' }, { slot: 'belt' }, { slot: 'boots' }];
+const _EQ_RIGHT = [{ slot: 'shield' }, { slot: 'armor' }];
 const _EQ_RINGS = ['ring1', 'ring2'];
 
-const _EQ_RARITY_COLOR = {
-  common:  0x667799,
-  rare:    0x3399ee,
-  epic:    0xaa55ff,
+const _EQ_SLOT_LABELS = {
+  weapon: 'Меч', belt: 'Пояс', boots: 'Сапоги',
+  shield: 'Щит', armor: 'Броня', ring1: 'Кольцо', ring2: 'Кольцо',
 };
-const _EQ_EMPTY_COLOR = 0x303050;
-const _EQ_EMPTY_BORDER = 0x444466;
+const _EQ_RARITY_COLOR = { common: 0x667799, rare: 0x3399ee, epic: 0xaa55ff };
 
 Object.assign(MenuScene.prototype, {
 
   _addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca) {
-    const eq    = State.equipment || {};
-    const SW    = 40, SH = 44;  // slot size
-    const RW    = 18, RH = 32;  // ring size
+    const eq = State.equipment || {};
+    const SW = 56, SH = 60;
+    const RW = 22, RH = 36;
 
-    // Vertical positions: top / mid / bottom within character area
-    const sTop = czY + 10;
+    const sTop = czY + 12;
     const sMid = czY + Math.round(czH * 0.38);
-    const sBot = czY + czH - SH - 38;  // above HP bar
+    const sBot = czY + czH - SH - 40;
+    const lx = 6, rx = W - SW - 6;
 
-    // LEFT column x
-    const lx = 2;
-    // RIGHT column x
-    const rx = W - SW - 2;
-
-    // Draw each main slot
     _EQ_LEFT.forEach((s, i) => {
-      const sy = [sTop, sMid, sBot][i];
-      this._drawEqSlot(c, lx, sy, SW, SH, s.slot, s.icon, eq[s.slot], mkG, mkT, mkZ, ca);
+      this._drawEqSlot(c, lx, [sTop, sMid, sBot][i], SW, SH, s.slot, eq[s.slot], mkG, mkT, mkZ, ca, false);
     });
     _EQ_RIGHT.forEach((s, i) => {
-      const sy = [sTop, sMid][i];
-      this._drawEqSlot(c, rx, sy, SW, SH, s.slot, s.icon, eq[s.slot], mkG, mkT, mkZ, ca);
+      this._drawEqSlot(c, rx, [sTop, sMid][i], SW, SH, s.slot, eq[s.slot], mkG, mkT, mkZ, ca, false);
     });
 
-    // Rings: two small slots side by side at bottom right
     const ringsY = sBot;
-    const r1x = W - RW * 2 - 4;
-    const r2x = W - RW - 2;
-    this._drawEqSlot(c, r1x, ringsY, RW, RH, 'ring1', '💍', eq['ring1'], mkG, mkT, mkZ, ca, true);
-    this._drawEqSlot(c, r2x, ringsY, RW, RH, 'ring2', '💍', eq['ring2'], mkG, mkT, mkZ, ca, true);
+    this._drawEqSlot(c, W - RW * 2 - 5, ringsY, RW, RH, 'ring1', eq['ring1'], mkG, mkT, mkZ, ca, true);
+    this._drawEqSlot(c, W - RW - 3,     ringsY, RW, RH, 'ring2', eq['ring2'], mkG, mkT, mkZ, ca, true);
   },
 
-  _drawEqSlot(c, x, y, w, h, slot, icon, item, mkG, mkT, mkZ, ca, small = false) {
-    const g = mkG();
-    const r = small ? 6 : 8;
+  _drawEqSlot(c, x, y, w, h, slot, item, mkG, mkT, mkZ, ca, small) {
+    const g  = mkG();
+    const r  = small ? 7 : 10;
+    const cx = x + w / 2, cy = y + h / 2 - (small ? 1 : 4);
 
     if (item) {
-      const bc = _EQ_RARITY_COLOR[item.rarity] || _EQ_EMPTY_BORDER;
-      // Glow background
-      g.fillStyle(bc, 0.18); g.fillRoundedRect(x, y, w, h, r);
+      const bc = _EQ_RARITY_COLOR[item.rarity] || 0x6677aa;
+      g.fillStyle(bc, 0.22); g.fillRoundedRect(x, y, w, h, r);
       g.lineStyle(1.5, bc, 0.9); g.strokeRoundedRect(x, y, w, h, r);
       c.add(g);
-      // Item emoji
-      const fontSize = small ? 13 : 19;
-      ca(mkT(x + w / 2, y + h / 2, item.emoji, fontSize)).setOrigin(0.5);
+      ca(mkT(cx, cy, item.emoji, small ? 13 : 20)).setOrigin(0.5);
+      const dG = mkG(); dG.fillStyle(bc, 1); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     } else {
-      // Empty slot — dashed border look
-      g.fillStyle(_EQ_EMPTY_COLOR, 0.7); g.fillRoundedRect(x, y, w, h, r);
-      g.lineStyle(1, _EQ_EMPTY_BORDER, 0.6); g.strokeRoundedRect(x, y, w, h, r);
+      g.fillStyle(0xffffff, 0.05); g.fillRoundedRect(x, y, w, h, r);
+      g.lineStyle(1, 0xffffff, 0.12); g.strokeRoundedRect(x, y, w, h, r);
       c.add(g);
-      const fontSize = small ? 11 : 16;
-      const ict = mkT(x + w / 2, y + h / 2, icon, fontSize);
-      ict.setOrigin(0.5).setAlpha(0.28);
-      c.add(ict);
+      this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
+      const dG = mkG(); dG.fillStyle(0xffffff, 0.12); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     }
 
-    // Tap zone → open equipment scene
+    if (!small) {
+      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 7, 'rgba(255,255,255,0.38)')).setOrigin(0.5);
+    }
+
     const zone = mkZ(x + w / 2, y + h / 2, w + 4, h + 4).setInteractive({ useHandCursor: true });
-    zone.on('pointerup', () => {
-      Sound.click();
-      this.scene.start('Equipment', { slot });
-    });
+    zone.on('pointerup', () => { Sound.click(); this.scene.start('Equipment', { slot }); });
     c.add(zone);
+  },
+
+  _drawSlotIcon(c, cx, cy, slot, mkG, ca, small) {
+    const g = mkG();
+    const s = small ? 0.65 : 1;
+    switch (slot) {
+      case 'weapon':
+        g.lineStyle(3.5 * s, 0xb8cadf, 0.82); g.lineBetween(cx + 10 * s, cy - 13 * s, cx - 6 * s, cy + 8 * s);
+        g.lineStyle(1.2 * s, 0xffffff, 0.32); g.lineBetween(cx + 9 * s, cy - 12 * s, cx - 5 * s, cy + 7 * s);
+        g.lineStyle(3 * s, 0xf59e0b, 0.9); g.lineBetween(cx - 2 * s, cy - 2 * s, cx - 10 * s, cy + 6 * s);
+        g.fillStyle(0xf59e0b, 1); g.fillCircle(cx - 9 * s, cy + 9 * s, 4 * s);
+        g.fillStyle(0xfde68a, 0.55); g.fillCircle(cx - 8 * s, cy + 8 * s, 1.8 * s);
+        break;
+      case 'belt':
+        g.fillStyle(0x78350f, 0.88); g.fillRoundedRect(cx - 12 * s, cy - 4 * s, 24 * s, 8 * s, 2 * s);
+        g.lineStyle(1, 0xd97706, 0.8); g.strokeRoundedRect(cx - 12 * s, cy - 4 * s, 24 * s, 8 * s, 2 * s);
+        g.fillStyle(0xfbbf24, 1); g.fillRoundedRect(cx - 3.5 * s, cy - 6 * s, 7 * s, 12 * s, 2 * s);
+        g.fillStyle(0x92400e, 1); g.fillRoundedRect(cx - 2 * s, cy - 4 * s, 4 * s, 8 * s, 1 * s);
+        g.fillStyle(0x0d0a1e, 1); g.fillRect(cx - 0.6 * s, cy - 4 * s, 1.2 * s, 8 * s);
+        break;
+      case 'boots':
+        g.fillStyle(0x78350f, 0.9);
+        g.fillRect(cx - 8 * s, cy - 13 * s, 11 * s, 15 * s);
+        g.fillRect(cx - 8 * s, cy + 1 * s, 15 * s, 7 * s);
+        g.fillStyle(0x1c0a03, 1); g.fillRect(cx - 9 * s, cy + 7 * s, 17 * s, 3.5 * s);
+        g.fillStyle(0xd97706, 1); g.fillRect(cx - 9 * s, cy - 3 * s, 12 * s, 2.5 * s);
+        g.lineStyle(1.2, 0xffffff, 0.1); g.lineBetween(cx - 5 * s, cy - 12 * s, cx - 5 * s, cy);
+        break;
+      case 'shield':
+        g.fillStyle(0x1d4ed8, 0.9);
+        g.beginPath(); g.moveTo(cx - 11 * s, cy - 12 * s); g.lineTo(cx + 11 * s, cy - 12 * s);
+        g.lineTo(cx + 11 * s, cy + 1 * s); g.lineTo(cx, cy + 14 * s); g.lineTo(cx - 11 * s, cy + 1 * s);
+        g.closePath(); g.fillPath();
+        g.lineStyle(1.5, 0x60a5fa, 0.85);
+        g.beginPath(); g.moveTo(cx - 11 * s, cy - 12 * s); g.lineTo(cx + 11 * s, cy - 12 * s);
+        g.lineTo(cx + 11 * s, cy + 1 * s); g.lineTo(cx, cy + 14 * s); g.lineTo(cx - 11 * s, cy + 1 * s);
+        g.closePath(); g.strokePath();
+        g.lineStyle(1, 0xffffff, 0.2); g.lineBetween(cx - 11 * s, cy - 12 * s, cx - 11 * s, cy + 1 * s);
+        g.fillStyle(0x7c3aed, 1); g.fillCircle(cx, cy - 2 * s, 5.5 * s);
+        g.fillStyle(0xc4b5fd, 0.5); g.fillCircle(cx - 1 * s, cy - 3 * s, 2.2 * s);
+        break;
+      case 'armor':
+        g.fillStyle(0x6b7280, 0.9);
+        g.beginPath(); g.moveTo(cx - 11 * s, cy - 9 * s); g.lineTo(cx + 11 * s, cy - 9 * s);
+        g.lineTo(cx + 11 * s, cy + 8 * s); g.lineTo(cx + 7 * s, cy + 12 * s);
+        g.lineTo(cx - 7 * s, cy + 12 * s); g.lineTo(cx - 11 * s, cy + 8 * s);
+        g.closePath(); g.fillPath();
+        g.fillStyle(0xe5e7eb, 0.18); g.fillRect(cx - 9 * s, cy - 8 * s, 18 * s, 8 * s);
+        g.lineStyle(1.2, 0xd1d5db, 0.75);
+        g.beginPath(); g.moveTo(cx - 11 * s, cy - 9 * s); g.lineTo(cx + 11 * s, cy - 9 * s);
+        g.lineTo(cx + 11 * s, cy + 8 * s); g.lineTo(cx + 7 * s, cy + 12 * s);
+        g.lineTo(cx - 7 * s, cy + 12 * s); g.lineTo(cx - 11 * s, cy + 8 * s);
+        g.closePath(); g.strokePath();
+        g.lineStyle(1, 0xf3f4f6, 0.35); g.lineBetween(cx, cy - 9 * s, cx, cy + 12 * s);
+        g.fillStyle(0x7c3aed, 0.9); g.fillEllipse(cx, cy - 1 * s, 8 * s, 7 * s);
+        g.fillStyle(0xc4b5fd, 0.5); g.fillCircle(cx - 1 * s, cy - 2 * s, 2 * s);
+        break;
+      case 'ring1': case 'ring2': {
+        const rr = 6 * s;
+        g.lineStyle(3.5 * s, 0xf59e0b, 0.9); g.strokeCircle(cx, cy + 2 * s, rr);
+        g.fillStyle(0x7c3aed, 1); g.fillCircle(cx, cy - rr, 4.5 * s);
+        g.fillStyle(0xa855f7, 1); g.fillCircle(cx, cy - rr, 3 * s);
+        g.fillStyle(0xc4b5fd, 0.55); g.fillCircle(cx - 0.8 * s, cy - rr - 0.8 * s, 1.3 * s);
+        break;
+      }
+    }
+    c.add(g);
   },
 
 });
