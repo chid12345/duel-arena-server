@@ -12,7 +12,7 @@ Object.assign(ShopScene.prototype, {
     this._toast('⏳ Открываем оплату...');
     try {
       const res = await post('/api/shop/stars_invoice', { package_id: pkg.id });
-      if (!res.ok) { this._toast(`❌ ${res.reason}`); this._buying = false; return; }
+      if (!res.ok) { this._toast(`❌ ${res.reason || res.detail || 'Ошибка'}`); this._buying = false; return; }
       if (typeof tg?.openInvoice !== 'function') {
         this._toast('❌ Оплата Stars недоступна — откройте через Telegram');
         this._buying = false;
@@ -56,7 +56,7 @@ Object.assign(ShopScene.prototype, {
     this._toast('⏳ Создаём счёт...');
     try {
       const res = await post('/api/shop/crypto_invoice', { package_id: pkg.id });
-      if (!res.ok) { this._toast(`❌ ${res.reason}`); this._buying = false; return; }
+      if (!res.ok) { this._toast(`❌ ${res.reason || res.detail || 'Ошибка'}`); this._buying = false; return; }
       localStorage.setItem('cryptoPendingInvoice', String(res.invoice_id));
       if (res.invoice_url) {
         if (typeof tg?.openTelegramLink === 'function') {

@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from api.payment_routes.models import StarsConfirmBody, StarsInvoiceBody
 
@@ -26,6 +26,15 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
     @router.post("/api/shop/stars_confirm")
     async def stars_confirm(body: StarsConfirmBody):
+        try:
+            return await _stars_confirm_inner(body)
+        except HTTPException as e:
+            return {"ok": False, "reason": e.detail}
+        except Exception as e:
+            logger.error("stars_confirm unhandled: %s", e)
+            return {"ok": False, "reason": f"Ошибка сервера: {type(e).__name__}"}
+
+    async def _stars_confirm_inner(body: StarsConfirmBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
 
@@ -112,6 +121,15 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
     @router.post("/api/shop/stars_invoice")
     async def stars_invoice(body: StarsInvoiceBody):
+        try:
+            return await _stars_invoice_inner(body)
+        except HTTPException as e:
+            return {"ok": False, "reason": e.detail}
+        except Exception as e:
+            logger.error("stars_invoice unhandled: %s", e)
+            return {"ok": False, "reason": f"Ошибка сервера: {type(e).__name__}"}
+
+    async def _stars_invoice_inner(body: StarsInvoiceBody):
         tg_user = get_user_from_init_data(body.init_data)
         if not BOT_TOKEN:
             return {"ok": False, "reason": "Бот не настроен (нет BOT_TOKEN)"}

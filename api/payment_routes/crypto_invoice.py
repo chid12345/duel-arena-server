@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from api.payment_routes.models import CryptoInvoiceBody
 
@@ -21,6 +21,15 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
 
     @router.post("/api/shop/crypto_invoice")
     async def crypto_invoice(body: CryptoInvoiceBody):
+        try:
+            return await _crypto_invoice_inner(body)
+        except HTTPException as e:
+            return {"ok": False, "reason": e.detail}
+        except Exception as e:
+            logger.error("crypto_invoice unhandled: %s", e)
+            return {"ok": False, "reason": f"Ошибка сервера: {type(e).__name__}"}
+
+    async def _crypto_invoice_inner(body: CryptoInvoiceBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid_rl = int(tg_user["id"])
         _rl_check(uid_rl, "crypto_invoice", max_hits=3, window_sec=30)
