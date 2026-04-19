@@ -42,7 +42,7 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
     _inner_ctx = dict(db=db, get_user_from_init_data=get_user)
 
     @router.get("/api/world_boss/state")
-    def wb_state(init_data: str):
+    async def wb_state(init_data: str):
         try:
             tg = get_user(init_data)
             return build_wb_state_payload(db, int(tg["id"]))
@@ -99,7 +99,7 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": str(e)}
 
     @router.get("/api/rating/world_boss")
-    def wb_rating(init_data: str):
+    async def wb_rating(init_data: str):
         try:
             tg = get_user(init_data)
             uid = int(tg["id"])

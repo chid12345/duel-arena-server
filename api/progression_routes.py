@@ -26,7 +26,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
     _weekly_quests_status = ctx["_weekly_quests_status"]
 
     @router.get("/api/season")
-    def get_season_info(init_data: str):
+    async def get_season_info(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         # Глобальный кеш лидерборда (60 сек) — одинаков для всех пользователей
@@ -45,14 +45,14 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         return {"ok": True, "season": dict(season), "leaderboard": lb, "my_stats": my_stat, "my_pos": my_pos}
 
     @router.get("/api/daily/status")
-    def daily_status(init_data: str):
+    async def daily_status(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         status = db.get_daily_bonus_status(uid)
         return {"ok": True, **status}
 
     @router.get("/api/quests")
-    def get_quests(init_data: str):
+    async def get_quests(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         quest = db.get_daily_quest_status(uid)
