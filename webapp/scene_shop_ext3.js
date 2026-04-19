@@ -63,8 +63,9 @@ Object.assign(ShopScene.prototype, {
         return;
       }
       localStorage.setItem('cryptoPendingInvoice', String(res.invoice_id));
-      // CryptoPay: mini_app_invoice_url открывается через openLink (официальная рекомендация CryptoPay)
-      tg?.openLink?.(res.invoice_url);
+      // mini_app_invoice_url (startapp=) → openLink держит мини-апп живым
+      // bot_invoice_url (testnet/fallback) → openTelegramLink открывает прямо в Telegram
+      res.invoice_url.includes('startapp=') ? tg?.openLink?.(res.invoice_url) : tg?.openTelegramLink?.(res.invoice_url);
       this._toast('💳 Счёт открыт — оплатите и вернитесь');
       this._buying = false;
       this._startCryptoPolling(res.invoice_id, pkg);

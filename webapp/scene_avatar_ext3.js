@@ -60,7 +60,7 @@ Object.assign(AvatarScene.prototype, {
         localStorage.setItem('avatarPendingInvoice', String(j.invoice_id));
         localStorage.setItem('avatarPendingId', String(av.id));
       } catch (_) {}
-      tg?.openLink?.(j.invoice_url);
+      j.invoice_url.includes('startapp=') ? tg?.openLink?.(j.invoice_url) : tg?.openTelegramLink?.(j.invoice_url);
       this._startAvatarCryptoPolling(j.invoice_id, av.id);
     } catch (_) {
       tg?.showAlert?.('Ошибка сети');

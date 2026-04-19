@@ -234,7 +234,7 @@ Object.assign(AvatarScene.prototype, {
     try {
       const j = await post(url, { avatar_id: av.id });
       if (j.ok && j.invoice_url) {
-        tg?.openLink?.(j.invoice_url);
+        j.invoice_url.includes('startapp=') ? tg?.openLink?.(j.invoice_url) : tg?.openTelegramLink?.(j.invoice_url);
         // Подписываемся на WS-событие avatar_unlocked: обновим сцену когда придёт
         const _prevHandler = State.ws?.onmessage;
         if (State.ws) {
