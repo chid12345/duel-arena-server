@@ -55,7 +55,7 @@ Object.assign(WorldBossScene.prototype, {
 
       const nt = this._addText(32, iy + 12, `${meta.icon} ${meta.label}`, 12, '#ff44cc', true);
       nt.setDepth(52); pop.push(nt);
-      const dt = this._addText(32, iy + 30, meta.desc, 10, '#660088');
+      const dt = this._addText(32, iy + 30, meta.desc, 10, '#bb88ee');
       dt.setDepth(52); pop.push(dt);
       const qt = this._addText(W - 28, iy + 14, `×${qty}`, 11, '#ffee00', true);
       qt.setOrigin(1, 0).setDepth(52); pop.push(qt);
@@ -132,8 +132,8 @@ Object.assign(WorldBossScene.prototype, {
 
     if (!ownedRaid.length && !ownedRes.length) {
       this._addPanel(16, y, W - 32, 58);
-      this._addText(W / 2, y + 18, '🛒 Нет свитков', 12, '#440066', true).setOrigin(0.5);
-      this._addText(W / 2, y + 38, 'Купить можно между рейдами в разделах ниже', 10, '#2a0044').setOrigin(0.5);
+      this._addText(W / 2, y + 18, '🛒 Нет свитков', 12, '#cc88ff', true).setOrigin(0.5);
+      this._addText(W / 2, y + 38, 'Купить можно между рейдами в разделах ниже', 10, '#9977bb').setOrigin(0.5);
     }
   },
 

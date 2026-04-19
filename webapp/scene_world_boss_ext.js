@@ -22,7 +22,7 @@ Object.assign(WorldBossScene.prototype, {
     const _hint = next.boss_type_label ? `★ СЛЕДУЮЩИЙ: ${next.boss_type_label} ★` : '★ СЛЕДУЮЩИЙ РЕЙД ★';
     this._addText(W/2, y+14, _hint, 10, '#cc44ff', true).setOrigin(0.5);
     this._countdownTxt = this._addText(W/2, y+54, this._fmtCountdown(next.scheduled_at), 32, '#ffee00', true).setOrigin(0.5);
-    this._addText(W/2, y+80, '▶ INSERT COIN TO PLAY ◀', 9, '#440066').setOrigin(0.5);
+    this._addText(W/2, y+80, '▶ INSERT COIN TO PLAY ◀', 9, '#8855cc').setOrigin(0.5);
     this._nextSchedAt = next.scheduled_at;
     y += _timerPanelH + 12;
 
@@ -38,7 +38,7 @@ Object.assign(WorldBossScene.prototype, {
     ['★ Рейд длится 10 минут.',
      '★ Бей босса → получи долю награды.',
      '★ Смерть в бою → свиток воскрешения.'].forEach((l, i) => {
-      this._addText(W/2, y + i*16, l, 10, '#440066').setOrigin(0.5);
+      this._addText(W/2, y + i*16, l, 10, '#aa99cc').setOrigin(0.5);
     });
     y += 56;
     const rh = this._renderRegistrationBtn?.(s, W, y) || 0; y += rh;
@@ -59,7 +59,7 @@ Object.assign(WorldBossScene.prototype, {
     _tpBg2.lineStyle(2, 0xff0088, 0.7); _tpBg2.strokeRoundedRect(8, y, W-16, 80, 6);
     this._addText(W/2, y+14, '★ СЛЕДУЮЩИЙ РЕЙД ★', 10, '#cc44ff', true).setOrigin(0.5);
     this._countdownTxt = this._addText(W/2, y+50, this._fmtCountdown(this._nextSchedAt), 32, '#ffee00', true).setOrigin(0.5);
-    this._addText(W/2, y+72, '▶ INSERT COIN TO PLAY ◀', 8, '#440066').setOrigin(0.5);
+    this._addText(W/2, y+72, '▶ INSERT COIN TO PLAY ◀', 8, '#8855cc').setOrigin(0.5);
     y += 92;
     this._bigBtn(16, y, W-32, 34, 0x0a0020, '🔧 Тест: старт сейчас', () => this._wbTestSchedule());
     y += 44;
@@ -80,8 +80,8 @@ Object.assign(WorldBossScene.prototype, {
     const hasAny = items.some(([id]) => (scrolls[id] || 0) > 0);
     if (!hasAny) {
       this._addPanel(16, y, W - 32, 38);
-      this._addText(W / 2, y + 11, '🕯️ Свитков воскрешения нет', 11, '#440066').setOrigin(0.5);
-      this._addText(W / 2, y + 26, 'Купить можно до рейда в магазине', 9, '#2a0044').setOrigin(0.5);
+      this._addText(W / 2, y + 11, '🕯️ Свитков воскрешения нет', 11, '#cc88ff').setOrigin(0.5);
+      this._addText(W / 2, y + 26, 'Купить можно до рейда в магазине', 9, '#9977bb').setOrigin(0.5);
       return;
     }
     const bw = (W - 32 - 16) / 3;
@@ -133,8 +133,8 @@ Object.assign(WorldBossScene.prototype, {
       bg.fillStyle(qty > 0 ? 0x150025 : 0x080018, 0.97); bg.fillRoundedRect(xItem, yItem, bw, 42, 6);
       bg.lineStyle(qty > 0 ? 2 : 1, qty > 0 ? 0xff0088 : 0x220044, qty > 0 ? 0.9 : 0.7);
       bg.strokeRoundedRect(xItem, yItem, bw, 42, 6);
-      this._addText(xItem + bw/2, yItem + 13, `${sc.icon} ${sc.short}`, 10, qty > 0 ? '#ff44cc' : '#660088', true).setOrigin(0.5);
-      this._addText(xItem + bw/2, yItem + 29, `${sc.price}💎  ×${qty}`, 10, qty > 0 ? '#ffee00' : '#330055').setOrigin(0.5);
+      this._addText(xItem + bw/2, yItem + 13, `${sc.icon} ${sc.short}`, 10, qty > 0 ? '#ff44cc' : '#bb88ee', true).setOrigin(0.5);
+      this._addText(xItem + bw/2, yItem + 29, `${sc.price}💎  ×${qty}`, 10, qty > 0 ? '#ffee00' : '#9977cc').setOrigin(0.5);
       const z = this.add.zone(xItem, yItem, bw, 42).setOrigin(0).setInteractive({ useHandCursor: true });
       z._wbChild = true;
       z.on('pointerup', () => this._buyScroll(sc.id));

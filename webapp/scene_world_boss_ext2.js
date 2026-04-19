@@ -27,11 +27,11 @@ Object.assign(WorldBossScene.prototype, {
       bg.lineStyle(qty > 0 ? 2 : 1, qty > 0 ? 0x880022 : 0x220044, qty > 0 ? 0.9 : 0.7);
       bg.strokeRoundedRect(x, y, bw, 48, 6);
 
-      this._addText(x + bw / 2, y + 11, `${sc.icon} ${sc.label}`, 10, qty > 0 ? '#ff44cc' : '#550055', true).setOrigin(0.5);
+      this._addText(x + bw / 2, y + 11, `${sc.icon} ${sc.label}`, 10, qty > 0 ? '#ff44cc' : '#bb88ee', true).setOrigin(0.5);
       this._addText(x + bw / 2, y + 25, `${sc.price}${sc.cur}`, 10,
-        qty > 0 ? '#ffee00' : '#330044').setOrigin(0.5);
+        qty > 0 ? '#ffee00' : '#9977cc').setOrigin(0.5);
       this._addText(x + bw / 2, y + 38, `×${qty}`, 9,
-        qty > 0 ? '#ff0088' : '#220033').setOrigin(0.5);
+        qty > 0 ? '#ff0088' : '#8866aa').setOrigin(0.5);
 
       const z = this.add.zone(x, y, bw, 48).setOrigin(0).setInteractive({ useHandCursor: true });
       z._wbChild = true;
