@@ -84,7 +84,7 @@ POSTGRES_DDL_05_WORLD_BOSS: tuple[str, ...] = (
         chest_type TEXT,
         contribution_pct DOUBLE PRECISION NOT NULL DEFAULT 0.0,
         is_victory INTEGER NOT NULL DEFAULT 0,
-        claimed INTEGER NOT NULL DEFAULT 0,
+        claimed BOOLEAN NOT NULL DEFAULT FALSE,
         claimed_at TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(spawn_id, user_id)

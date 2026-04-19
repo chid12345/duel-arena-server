@@ -128,4 +128,16 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS hp_full_notified INTEGER DEFAULT 1",
     # Счётчик «новых» покупок для бейджа 🎒 в магазине
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS inventory_unseen INTEGER DEFAULT 0",
+    # world_boss_rewards.claimed: INTEGER → BOOLEAN (если ещё не BOOLEAN)
+    """
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='world_boss_rewards' AND column_name='claimed' AND data_type='integer'
+      ) THEN
+        ALTER TABLE world_boss_rewards ALTER COLUMN claimed TYPE BOOLEAN USING claimed::boolean;
+      END IF;
+    END $$;
+    """,
 )
