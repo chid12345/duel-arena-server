@@ -1,3 +1,5 @@
+import asyncio
+
 from handlers.ui_helpers import CallbackHandlers
 from database import db
 from battle_system import battle_system
@@ -49,7 +51,7 @@ async def _handle_round_submitted(query, user_id, round_result):
         return
 
     if round_result.get('status') in ('battle_ended', 'battle_ended_afk'):
-        player = db.get_or_create_player(user_id, query.from_user.username or "")
+        player = await asyncio.to_thread(db.get_or_create_player, user_id, query.from_user.username or "")
         adapted = CallbackHandlers._adapt_result_for_user(round_result, user_id)
         delivered = await CallbackHandlers._show_battle_end(query, player, adapted)
         if delivered:

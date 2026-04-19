@@ -1,3 +1,4 @@
+import asyncio
 import logging
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup
@@ -21,10 +22,10 @@ async def find_battle(query, player):
         return
     uid = player['user_id']
     un = query.from_user.username or ""
-    player = db.get_or_create_player(uid, un)
+    player = await asyncio.to_thread(db.get_or_create_player, uid, un)
 
     endurance_inv = stamina_stats_invested(player.get('max_hp', PLAYER_START_MAX_HP), player.get('level', 1))
-    regen_result = db.apply_hp_regen(uid, endurance_inv)
+    regen_result = await asyncio.to_thread(db.apply_hp_regen, uid, endurance_inv)
     if regen_result:
         player = dict(player)
         player['current_hp'] = regen_result['current_hp']
@@ -52,11 +53,11 @@ async def find_battle(query, player):
     logger.info("event=battle_search user_id=%s level=%s", uid, player.get("level"))
     db.log_metric_event("battle_search", uid)
 
-    pvp_entry = db.pvp_find_opponent(uid, int(player.get("level", PLAYER_START_LEVEL)))
+    pvp_entry = await asyncio.to_thread(db.pvp_find_opponent, uid, int(player.get("level", PLAYER_START_LEVEL)))
     if pvp_entry:
         opp_uid = pvp_entry["user_id"]
-        db.pvp_dequeue(opp_uid)
-        opp_player = db.get_or_create_player(opp_uid, "")
+        await asyncio.to_thread(db.pvp_dequeue, opp_uid)
+        opp_player = await asyncio.to_thread(db.get_or_create_player, opp_uid, "")
 
         battle_id = await battle_system.start_battle(player, opp_player, is_bot2=False)
 
@@ -124,7 +125,7 @@ async def find_battle(query, player):
         ]),
         parse_mode='HTML',
     )
-    db.pvp_enqueue(uid, int(player.get("level", PLAYER_START_LEVEL)), chat_id, mid)
+    await asyncio.to_thread(db.pvp_enqueue, uid, int(player.get("level", PLAYER_START_LEVEL)), chat_id, mid)
 
 
 CallbackHandlers.find_battle = staticmethod(find_battle)

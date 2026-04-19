@@ -1,5 +1,7 @@
 """Навигация «назад» / обновление главного экрана и ежедневный квест."""
 
+import asyncio
+
 from battle_system import battle_system
 
 from handlers.ui_helpers import CallbackHandlers
@@ -30,18 +32,18 @@ async def refresh_main(query, player):
     un = player.get("username") or ""
     # Resync: если XP накопился без пересчёта уровня — пересчитать
     try:
-        tmp = db.get_or_create_player(uid, un)
+        tmp = await asyncio.to_thread(db.get_or_create_player, uid, un)
         p_exp = int(tmp.get("exp", 0) or 0)
         p_lv = int(tmp.get("level", 1) or 1)
         if p_exp >= exp_needed_for_next_level(p_lv) and p_lv < MAX_LEVEL:
-            db.grant_exp_with_levelup(uid, 0)
+            await asyncio.to_thread(db.grant_exp_with_levelup, uid, 0)
     except Exception:
         pass
 
-    fresh = db.get_or_create_player(uid, un)
+    fresh = await asyncio.to_thread(db.get_or_create_player, uid, un)
     fresh = dict(fresh)
     endurance_inv = stamina_stats_invested(fresh.get("max_hp", PLAYER_START_MAX_HP), fresh.get("level", 1))
-    regen_result = db.apply_hp_regen(uid, endurance_inv)
+    regen_result = await asyncio.to_thread(db.apply_hp_regen, uid, endurance_inv)
     if regen_result:
         fresh["current_hp"] = regen_result["current_hp"]
 
@@ -84,7 +86,7 @@ CallbackHandlers.refresh_main = staticmethod(refresh_main)
 
 async def claim_daily_quest(query, player):
     """Забрать награду за ежедневный квест."""
-    result = db.claim_daily_quest_reward(player["user_id"])
+    result = await asyncio.to_thread(db.claim_daily_quest_reward, player["user_id"])
     if not result.get("ok"):
         await query.answer(f"❌ {result.get('reason', 'Не удалось получить награду')}", show_alert=False)
         return

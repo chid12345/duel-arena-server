@@ -1,3 +1,5 @@
+import asyncio
+
 from handlers.ui_helpers import CallbackHandlers
 from config import *
 from database import db
@@ -7,7 +9,7 @@ from battle_system import battle_system
 async def _start_bot_battle(query, player):
     """Запустить бой с ботом (PvE)."""
     uid = player['user_id']
-    opponent = db.find_suitable_opponent(player["level"])
+    opponent = await asyncio.to_thread(db.find_suitable_opponent, player["level"])
     if not opponent:
         await CallbackHandlers._callback_set_message(query, "😔 Не удалось найти противника. Попробуйте позже.")
         return
