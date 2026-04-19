@@ -17,12 +17,18 @@ Object.assign(MenuScene.prototype, {
 
   _addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca) {
     const eq = State.equipment || {};
-    const SW = 56, SH = 60;
+    const SW = 60, SH = 64;
 
-    const sTop = czY + 12;
-    const sMid = czY + Math.round(czH * 0.38);
-    const sBot = czY + czH - SH - 40;
-    const lx = 6, rx = W - SW - 6;
+    // 1fr / 2fr / 1fr grid — same math as CSS Grid in the HTML mockup
+    const colW = Math.round((W - PAD * 2) / 4);
+    const lx   = PAD + Math.round((colW - SW) / 2);
+    const rx   = W - PAD - colW + Math.round((colW - SW) / 2);
+
+    // 3 slots spaced across column height, clear of HP/XP bars
+    const slotZoneH = czH - 80;   // leave 80px for HP/XP at bottom
+    const sTop = czY + 14;
+    const sMid = czY + Math.round((slotZoneH - SH) / 2);
+    const sBot = czY + slotZoneH - SH;
 
     _EQ_LEFT.forEach((s, i) => {
       this._drawEqSlot(c, lx, [sTop, sMid, sBot][i], SW, SH, s.slot, eq[s.slot], mkG, mkT, mkZ, ca, false);
