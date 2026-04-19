@@ -34,9 +34,9 @@ Object.assign(MenuScene.prototype, {
 
     // Фон карточки
     const bg = this.add.graphics();
-    bg.fillStyle(0xffffff, 1);
+    bg.fillStyle(0x1e1535, 1);
     bg.fillRoundedRect(PAD, cardY, cardW, cardH, 12);
-    bg.lineStyle(1.5, C.gold, 0.7);
+    bg.lineStyle(1.5, C.gold, 0.8);
     bg.strokeRoundedRect(PAD, cardY, cardW, cardH, 12);
     oc.add(bg);
 
@@ -53,13 +53,13 @@ Object.assign(MenuScene.prototype, {
     // Заголовок
     const streakDay = info.streak || 1;
     oc.add(txt(this, PAD + 46, cardY + 14,
-      `Ежедневный бонус! День ${streakDay}`, 12, '#8a6000', true).setOrigin(0, 0));
+      `Ежедневный бонус! День ${streakDay}`, 12, '#fbbf24', true).setOrigin(0, 0));
 
     // Награда
     const rewardStr = info.diamonds_bonus > 0
       ? `+${info.bonus} 💰  +${info.diamonds_bonus} 💎`
       : `+${info.bonus} 💰`;
-    oc.add(txt(this, PAD + 46, cardY + 34, rewardStr, 10, '#666688').setOrigin(0, 0));
+    oc.add(txt(this, PAD + 46, cardY + 34, rewardStr, 10, 'rgba(255,255,255,0.65)').setOrigin(0, 0));
 
     // Кнопка "Забрать"
     const btnW = 80, btnH = 28;

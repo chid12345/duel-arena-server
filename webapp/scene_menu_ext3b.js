@@ -22,7 +22,7 @@ Object.assign(MenuScene.prototype, {
           const { g, t, x, y, w, h } = this._liveHp;
           const col = sp.hp_pct > 50 ? C.green : sp.hp_pct > 25 ? C.gold : C.red;
           g.clear();
-          g.fillStyle(0xe0e4f8, 1); g.fillRoundedRect(x, y, w, h, 4);
+          g.fillStyle(0x16122a, 1); g.fillRoundedRect(x, y, w, h, 4);
           const fw = Math.max(8, Math.round(w * sp.hp_pct / 100));
           g.fillStyle(col, 1);      g.fillRoundedRect(x, y, fw, h, 4);
           t.setText(`${sp.current_hp} / ${effMax} HP`);

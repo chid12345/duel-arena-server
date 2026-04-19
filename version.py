@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.8.52"
-VERSION_LABEL = "v1.8.52 — style: profile tab clean light iOS theme"
+VERSION = "1.8.53"
+VERSION_LABEL = "v1.8.53 — style: dark modern profile — deep purple/navy, glowing bars, stars"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "6.86"
+GAME_VERSION = "6.87"

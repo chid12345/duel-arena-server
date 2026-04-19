@@ -122,8 +122,25 @@ class MenuScene extends Phaser.Scene {
 
   _drawBg(W, H) {
     const g = this.add.graphics();
-    g.fillGradientStyle(0xf2f4fb, 0xf2f4fb, 0xe8eaf5, 0xe8eaf5, 1);
+    g.fillGradientStyle(0x0d0820, 0x0d0820, 0x060412, 0x060412, 1);
     g.fillRect(0, 0, W, H);
+    // Атмосферное фиолетовое свечение сверху
+    const glow = this.add.graphics();
+    glow.fillStyle(0x3b0d8f, 0.18);
+    glow.fillEllipse(W / 2, 0, W * 1.4, 260);
+    // Звёзды
+    for (let i = 0; i < 55; i++) {
+      const x = Phaser.Math.Between(0, W);
+      const y = Phaser.Math.Between(0, H * 0.75);
+      const r = Phaser.Math.FloatBetween(0.4, 1.6);
+      const a = Phaser.Math.FloatBetween(0.08, 0.5);
+      const star = this.add.circle(x, y, r, 0xffffff, a);
+      this.tweens.add({
+        targets: star, alpha: a * 3, duration: Phaser.Math.Between(1500, 4000),
+        yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+        delay: Phaser.Math.Between(0, 3000),
+      });
+    }
   }
 
   _buildTabBar() {
@@ -145,9 +162,9 @@ class MenuScene extends Phaser.Scene {
     ];
 
     const bg = _track(this.add.graphics());
-    bg.fillStyle(0xffffff, 1);
+    bg.fillStyle(0x0d0820, 1);
     bg.fillRect(0, H - TAB_H, W, TAB_H);
-    bg.lineStyle(1, 0xdde0f0, 1);
+    bg.lineStyle(1, 0x2a2050, 1);
     bg.lineBetween(0, H - TAB_H, W, H - TAB_H);
 
     const tabW = W / tabs.length;
@@ -156,10 +173,10 @@ class MenuScene extends Phaser.Scene {
       const tabTop = H - TAB_H;
 
       const activeBg = _track(this.add.graphics());
-      activeBg.fillStyle(0x4f8ef7, 0.1);
+      activeBg.fillStyle(0x7c3aed, 0.15);
       activeBg.fillRoundedRect(tabW * i + 5, tabTop + 5, tabW - 10, TAB_H - 10, 12);
       const activeBar = _track(this.add.graphics());
-      activeBar.fillStyle(0x4f8ef7, 1);
+      activeBar.fillStyle(0x7c3aed, 1);
       activeBar.fillRoundedRect(tabW * i + tabW * 0.2, tabTop + 1, tabW * 0.6, 3, 2);
       activeBg.setVisible(false);
       activeBar.setVisible(false);
