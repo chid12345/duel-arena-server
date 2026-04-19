@@ -116,11 +116,13 @@ Object.assign(MenuScene.prototype, {
     });
 
     /* ── 2. EQUIPMENT CARD ────────────────────────────────── */
-    const czY = 6 + CARD_H + 10, czH = 258;
+    const czY = 6 + CARD_H + 10, czH = 268;
     const eqBg = ca(mkG());
-    eqBg.fillStyle(0x0f0c1a, 0.95); eqBg.fillRoundedRect(PAD, czY, W - PAD * 2, czH, 16);
-    eqBg.lineStyle(1.5, 0x4c1d95, 0.9); eqBg.strokeRoundedRect(PAD, czY, W - PAD * 2, czH, 16);
-    ca(mkT(W / 2, czY + 10, 'ЭКИПИРОВКА ПЕРСОНАЖА', 8, '#7c3aed')).setOrigin(0.5);
+    eqBg.fillStyle(0x0f0c1a, 0.97); eqBg.fillRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
+    eqBg.lineStyle(2, 0x5b21b6, 1); eqBg.strokeRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
+    // top accent line
+    const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
+    ca(mkT(W / 2, czY + 11, 'ЭКИПИРОВКА ПЕРСОНАЖА', 9, 'rgba(167,139,250,0.8)', true)).setOrigin(0.5);
     const charCY = czY + czH * 0.43;
     const aura1 = ca(mkG()); aura1.fillStyle(0x7c3aed, 0.1); aura1.fillEllipse(W / 2, charCY, 170, 170);
     const aura2 = ca(mkG()); aura2.fillStyle(0xec4899, 0.05); aura2.fillEllipse(W / 2, charCY + 8, 110, 110);
@@ -133,28 +135,30 @@ Object.assign(MenuScene.prototype, {
     const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
-    // HP bar — neon
-    const hpW = W - PAD * 2, hpH = 13, hpX = PAD, hpY = czY + czH - 30;
-    const hpPct = (p.hp_pct || 0) / 100;
-    const hpCol = (p.hp_pct || 0) > 50 ? 0x22c55e : (p.hp_pct || 0) > 25 ? 0xf59e0b : 0xef4444;
-    const hpBg = ca(mkBar(hpX, hpY, hpW, hpH, hpPct, hpCol, 5));
-    const hpTxt = ca(mkT(W / 2, hpY + hpH / 2,
-      `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp} HP`, 10, '#ffffff', true)).setOrigin(0.5);
-    this._liveHp = { g: hpBg, t: hpTxt, x: hpX, y: hpY, w: hpW, h: hpH };
+    // HP — label + value above thin bar
+    const hpW = W - PAD * 2, hpH = 8, hpX = PAD;
+    const hpLabelY = czY + czH - 68;
+    const hpBarY   = hpLabelY + 15;
+    const hpPct    = Math.max(0, Math.min(1, (p.hp_pct || 0) / 100));
+    const hpCol    = (p.hp_pct || 0) > 50 ? 0x22c55e : (p.hp_pct || 0) > 25 ? 0xf59e0b : 0xef4444;
+    ca(mkT(hpX, hpLabelY, '❤️ HP', 9, 'rgba(255,255,255,0.55)'));
+    const hpValTxt = ca(mkT(W - PAD, hpLabelY, `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp}`, 9, 'rgba(255,255,255,0.55)')).setOrigin(1, 0);
+    const hpBg = ca(mkBar(hpX, hpBarY, hpW, hpH, hpPct, hpCol, 4));
+    this._liveHp = { g: hpBg, t: hpValTxt, x: hpX, y: hpBarY, w: hpW, h: hpH };
 
-    // XP bar — neon purple
-    const xpY = hpY + hpH + 5, xpH = 9;
+    // XP — label + value above thin bar
+    const xpLabelY = hpBarY + hpH + 10, xpBarY = xpLabelY + 15, xpH = 8;
     if (!p.max_level) {
-      ca(mkBar(hpX, xpY, hpW, xpH, (p.xp_pct || 0) / 100, 0x818cf8, 4));
-      ca(mkT(W / 2, xpY + xpH / 2,
-        `✨ ${p.xp_pct}%  ·  ${p.exp} / ${p.exp_needed} XP`, 9, 'rgba(200,180,255,0.8)', true)).setOrigin(0.5);
+      ca(mkT(hpX, xpLabelY, '✨ XP', 9, 'rgba(255,255,255,0.45)'));
+      ca(mkT(W - PAD, xpLabelY, `${p.xp_pct}%  ·  ${p.exp}/${p.exp_needed}`, 9, 'rgba(255,255,255,0.35)')).setOrigin(1, 0);
+      ca(mkBar(hpX, xpBarY, hpW, xpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x818cf8, 4));
     } else {
-      ca(mkT(W / 2, xpY + 5, '⭐ Макс. уровень', 10, '#fbbf24', true)).setOrigin(0.5);
+      ca(mkT(W / 2, xpLabelY + 8, '⭐ Макс. уровень', 10, '#fbbf24', true)).setOrigin(0.5);
     }
 
-    // Free stats badge
+    // Free stats badge (below equipment card)
     if (p.free_stats > 0) {
-      const fsByXp = xpY + xpH + 5;
+      const fsByXp = czY + czH + 4;
       const fsG = ca(mkG());
       fsG.fillStyle(0x2d1a5e, 1); fsG.fillRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
       fsG.lineStyle(1.5, 0x7c3aed, 0.9); fsG.strokeRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
@@ -175,18 +179,19 @@ Object.assign(MenuScene.prototype, {
     const fsBadgeH = p.free_stats > 0 ? 30 : 0;
     const attrY = czY + czH + fsBadgeH + 8;
     const sbRH = 22, sbGap = 6;
-    const attrH = 16 + STATS.length * (sbRH + sbGap) + 4;
+    const attrH = 28 + STATS.length * (sbRH + sbGap) + 4;
     const attrBg = ca(mkG());
-    attrBg.fillStyle(0x0f0c1a, 0.95); attrBg.fillRoundedRect(PAD, attrY, W - PAD * 2, attrH, 12);
-    attrBg.lineStyle(1.5, 0x4c1d95, 0.9); attrBg.strokeRoundedRect(PAD, attrY, W - PAD * 2, attrH, 12);
-    ca(mkT(W / 2, attrY + 9, '— ХАРАКТЕРИСТИКИ —', 8, '#7c3aed')).setOrigin(0.5);
+    attrBg.fillStyle(0x0f0c1a, 0.97); attrBg.fillRoundedRect(PAD, attrY, W - PAD * 2, attrH, 14);
+    attrBg.lineStyle(2, 0x5b21b6, 1); attrBg.strokeRoundedRect(PAD, attrY, W - PAD * 2, attrH, 14);
+    const atLine = ca(mkG()); atLine.lineStyle(2, 0x8b5cf6, 0.5); atLine.lineBetween(PAD + 14, attrY, W - PAD - 14, attrY);
+    ca(mkT(W / 2, attrY + 11, 'ХАРАКТЕРИСТИКИ', 9, 'rgba(167,139,250,0.8)', true)).setOrigin(0.5);
 
     const maxV = Math.max(1, 3 + p.level * 2);
     const nameW = 66, trkX = PAD + 22 + nameW + 4;
     const valW = 28, pctW = 46, trkW = W - trkX - valW - pctW - PAD - 4;
     this._profileStatSubs = [];
     STATS.forEach((s, i) => {
-      const ry = attrY + 16 + i * (sbRH + sbGap);
+      const ry = attrY + 26 + i * (sbRH + sbGap);
       ca(mkT(PAD,      ry + sbRH / 2, s.icon,  13)).setOrigin(0, 0.5);
       ca(mkT(PAD + 22, ry + sbRH / 2, s.label, 10, 'rgba(255,255,255,0.6)')).setOrigin(0, 0.5);
       const pct = Math.min(1, (s.val || 0) / maxV);
