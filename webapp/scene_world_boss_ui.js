@@ -8,8 +8,8 @@ Object.assign(WorldBossScene.prototype, {
 
   _addPanel(x, y, w, h) {
     const g = this.add.graphics();
-    g.fillStyle(0x1a1828, 0.92); g.fillRoundedRect(x, y, w, h, 10);
-    g.lineStyle(1, 0x333344, 0.8); g.strokeRoundedRect(x, y, w, h, 10);
+    g.fillStyle(0x080018, 0.95); g.fillRoundedRect(x, y, w, h, 8);
+    g.lineStyle(1, 0x2a0055, 0.9); g.strokeRoundedRect(x, y, w, h, 8);
     g._wbChild = true; return g;
   },
 
@@ -20,7 +20,7 @@ Object.assign(WorldBossScene.prototype, {
 
   _addBarPair(x, y, w, h, cur, max, col) {
     const bg = this.add.graphics();
-    bg.fillStyle(0x222233, 1); bg.fillRoundedRect(x, y, w, h, 4);
+    bg.fillStyle(0x0a0020, 1); bg.fillRoundedRect(x, y, w, h, 4);
     bg._wbChild = true;
     const fg = this.add.graphics(); fg._wbChild = true;
     const lbl = txt(this, x + w/2, y + h/2, `${cur}/${max}`, 9, '#ffffff', true).setOrigin(0.5);
@@ -52,7 +52,7 @@ Object.assign(WorldBossScene.prototype, {
 
   _bigBtn(x, y, w, h, color, label, cb) {
     const g = this.add.graphics(); g._wbChild = true;
-    g.fillStyle(color, 0.95); g.fillRoundedRect(x, y, w, h, 10);
+    g.fillStyle(color, 0.97); g.fillRoundedRect(x, y, w, h, 6);
     const lt = txt(this, x + w/2, y + h/2, label, 13, '#ffffff', true).setOrigin(0.5);
     lt._wbChild = true;
     const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
@@ -81,8 +81,8 @@ Object.assign(WorldBossScene.prototype, {
     const h = pad * 2 + lines.length * lineH;
     const y = this.H / 2 - h / 2;
     const bg = this.add.graphics().setDepth(500);
-    bg.fillStyle(0x0d1a0d, 0.96); bg.fillRoundedRect(20, y, W - 40, h, 10);
-    bg.lineStyle(2, 0x3cff8c, 0.7); bg.strokeRoundedRect(20, y, W - 40, h, 10);
+    bg.fillStyle(0x0d0020, 0.97); bg.fillRoundedRect(20, y, W - 40, h, 8);
+    bg.lineStyle(2, 0xff0088, 0.8); bg.strokeRoundedRect(20, y, W - 40, h, 8);
     const texts = lines.map((l, i) => {
       const t = txt(this, W / 2, y + pad + i * lineH + lineH / 2, l.text, l.size || 12,
                     l.color || '#ffffff', !!l.bold).setOrigin(0.5).setDepth(501);

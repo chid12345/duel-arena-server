@@ -28,7 +28,13 @@ class WorldBossScene extends Phaser.Scene {
     this.W = W; this.H = H;
     this._alive = true;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '🐉', 'МИРОВОЙ БОСС', 'Общий рейд каждые 4 часа');
+    // Neon Arcade overlay
+    const _arcBg = this.add.graphics();
+    _arcBg.fillGradientStyle(0x0d0020, 0x0d0020, 0x050015, 0x050015, 1);
+    _arcBg.fillRect(0, 0, W, H);
+    // Hot-pink top strip
+    _arcBg.fillStyle(0xff0088, 1); _arcBg.fillRect(0, 0, W, 3);
+    _extraHeader(this, W, '👾', 'МИРОВОЙ БОСС', 'Общий рейд каждые 4 часа');
     // Back: во время боя (живой) — заблокировано; иначе — в меню
     makeBackBtn(this, 'Назад', () => {
       const ps = this._state?.player_state;
@@ -185,10 +191,10 @@ class WorldBossScene extends Phaser.Scene {
     this._crownRow = this._addCrownRow(16, y, W-32, a.crown_flags || 0); y += 24;
 
     if (!ps) {
-      this._hitBtn = this._bigBtn(16, y, W-32, 64, 0x1a4a1a, '⚔️ Войти в бой!', () => this._onHit());
+      this._hitBtn = this._bigBtn(16, y, W-32, 64, 0xbb0066, '⚔️ Войти в бой!', () => this._onHit());
       y += 74;
     } else if (!ps.is_dead) {
-      this._hitBtn = this._bigBtn(16, y, W-32, 64, 0xaa1a1a, '⚔️  УДАРИТЬ', () => this._onHit());
+      this._hitBtn = this._bigBtn(16, y, W-32, 64, 0xcc0055, '⚔️  УДАРИТЬ', () => this._onHit());
       y += 74;
     } else {
       this._addPanel(16, y, W-32, 48);
@@ -196,7 +202,7 @@ class WorldBossScene extends Phaser.Scene {
       y += 58;
       this._renderResurrectRow(s, W, y); y += 54;
       // Кнопка "Покинуть бой" — только когда мёртв
-      this._bigBtn(16, y, W-32, 36, 0x2a2a3a, '🚪 Покинуть бой',
+      this._bigBtn(16, y, W-32, 36, 0x1a0030, '🚪 Покинуть бой',
         () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu', { returnTab: 'more' }); });
       y += 46;
     }

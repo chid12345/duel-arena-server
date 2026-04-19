@@ -23,15 +23,15 @@ Object.assign(WorldBossScene.prototype, {
     const cy = Math.max(60, H/2 - cardH/2);
 
     const bg = this.add.graphics().setDepth(1001);
-    bg.fillStyle(0x1e1a32, 0.98); bg.fillRoundedRect(cx, cy, cardW, cardH, 14);
-    bg.lineStyle(2, r.is_victory ? 0xffc83c : 0x883a3a, 1);
+    bg.fillStyle(0x0d0020, 0.99); bg.fillRoundedRect(cx, cy, cardW, cardH, 10);
+    bg.lineStyle(2, r.is_victory ? 0xffee00 : 0xff0088, 1);
     bg.strokeRoundedRect(cx, cy, cardW, cardH, 14);
     bg._wbChild = true;
 
     const win = !!r.is_victory;
     const titleIcon = win ? '🏆' : '💀';
     const titleTxt  = win ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ';
-    const titleCol  = win ? '#ffc83c' : '#ff6672';
+    const titleCol  = win ? '#ffee00' : '#ff0088';
 
     const t1 = txt(this, W/2, cy + 26, titleIcon, 32, titleCol).setOrigin(0.5).setDepth(1002);
     t1._wbChild = true;
@@ -45,7 +45,7 @@ Object.assign(WorldBossScene.prototype, {
     tb._wbChild = true;
 
     const pct = Math.round(r.contribution_pct || 0);
-    const tc = txt(this, W/2, cy + 110, `Ваш вклад: ${pct}%`, 13, '#aaddff', true).setOrigin(0.5).setDepth(1002);
+    const tc = txt(this, W/2, cy + 110, `Ваш вклад: ${pct}%`, 13, '#cc44ff', true).setOrigin(0.5).setDepth(1002);
     tc._wbChild = true;
 
     // Награды: gold / exp / diamonds — одной строкой.
@@ -74,7 +74,7 @@ Object.assign(WorldBossScene.prototype, {
     // Кнопка забрать.
     const btnY = cy + cardH - 58;
     const btn = this._bigBtn(cx + 16, btnY, cardW - 32, 44,
-                             win ? 0x3a8e4a : 0x5a5a6a,
+                             win ? 0xbb0066 : 0x440044,
                              '🎁 Забрать награду',
                              () => this._claimReward(r.reward_id));
     // Поднимем глубину кнопки над overlay.
@@ -87,7 +87,7 @@ Object.assign(WorldBossScene.prototype, {
   _renderRecentRaids(s, W, y) {
     const list = s.recent_raids || [];
     if (!list.length) return;
-    this._addText(16, y, '📜 Последние рейды:', 11, '#aaddff', true);
+    this._addText(16, y, '★ HALL OF RAIDS — ПОСЛЕДНИЕ РЕЙДЫ ★', 11, '#cc44ff', true);
     y += 18;
     list.slice(0, 5).forEach((r, i) => {
       const ry = y + i * 22;
@@ -97,8 +97,8 @@ Object.assign(WorldBossScene.prototype, {
       const em  = r.boss_emoji || '🐉';
       const pct = Math.round(r.contribution_pct || 0);
       const part = pct > 0 ? `вклад ${pct}%` : 'не участвовал';
-      this._addText(14, ry + 4, `${ico} ${em} ${r.boss_name || 'Босс'}`, 10, '#ddddff');
-      const col = pct > 0 ? (win ? '#3cff8c' : '#ff9966') : '#888899';
+      this._addText(14, ry + 4, `${ico} ${em} ${r.boss_name || 'Босс'}`, 10, '#aa44ff');
+      const col = pct > 0 ? (win ? '#ffee00' : '#ff0088') : '#330044';
       this._addText(W - 16, ry + 4, part, 10, col).setOrigin(1, 0);
     });
   },

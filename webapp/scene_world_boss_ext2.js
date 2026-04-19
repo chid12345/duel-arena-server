@@ -13,7 +13,7 @@ Object.assign(WorldBossScene.prototype, {
     ];
     const inv = s?.res_scrolls_inv || {};
 
-    this._addText(16, y, '🕯️ Свитки воскрешения', 11, '#ffaaaa', true);
+    this._addText(16, y, '★ 1-UP SCROLLS — ВОСКРЕШЕНИЕ ★', 11, '#ff4488', true);
     y += 18;
 
     const bw = Math.floor((W - 32 - 16) / 3);
@@ -22,16 +22,16 @@ Object.assign(WorldBossScene.prototype, {
       const qty = inv[sc.id] || 0;
 
       const bg = this.add.graphics(); bg._wbChild = true;
-      bg.fillStyle(qty > 0 ? 0x3a1a1a : 0x1a1a2a, 0.95);
-      bg.fillRoundedRect(x, y, bw, 48, 8);
-      bg.lineStyle(1, qty > 0 ? 0xcc4444 : 0x333355, 0.8);
-      bg.strokeRoundedRect(x, y, bw, 48, 8);
+      bg.fillStyle(qty > 0 ? 0x1a0010 : 0x080018, 0.97);
+      bg.fillRoundedRect(x, y, bw, 48, 6);
+      bg.lineStyle(qty > 0 ? 2 : 1, qty > 0 ? 0x880022 : 0x220044, qty > 0 ? 0.9 : 0.7);
+      bg.strokeRoundedRect(x, y, bw, 48, 6);
 
-      this._addText(x + bw / 2, y + 11, `${sc.icon} ${sc.label}`, 10, '#ffffff', true).setOrigin(0.5);
+      this._addText(x + bw / 2, y + 11, `${sc.icon} ${sc.label}`, 10, qty > 0 ? '#ff44cc' : '#550055', true).setOrigin(0.5);
       this._addText(x + bw / 2, y + 25, `${sc.price}${sc.cur}`, 10,
-        qty > 0 ? '#ffc83c' : '#8888aa').setOrigin(0.5);
+        qty > 0 ? '#ffee00' : '#330044').setOrigin(0.5);
       this._addText(x + bw / 2, y + 38, `×${qty}`, 9,
-        qty > 0 ? '#ff8888' : '#555577').setOrigin(0.5);
+        qty > 0 ? '#ff0088' : '#220033').setOrigin(0.5);
 
       const z = this.add.zone(x, y, bw, 48).setOrigin(0).setInteractive({ useHandCursor: true });
       z._wbChild = true;
