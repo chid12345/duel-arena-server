@@ -23,7 +23,7 @@ Object.assign(MenuScene.prototype, {
       return z;
     };
     const mkI = (x, y, key)  => this.make.image({ x, y, key }, false);
-    const mkBar = (x, y, w, h, pct, fillColor, bgColor = C.dark, r = 4) => {
+    const mkBar = (x, y, w, h, pct, fillColor, bgColor = 0xe0e4f8, r = 4) => {
       const g = mkG();
       g.fillStyle(bgColor, 1); g.fillRoundedRect(x, y, w, h, r);
       const fw = Math.max(r * 2, Math.round(w * Math.min(1, Math.max(0, pct))));
@@ -35,17 +35,17 @@ Object.assign(MenuScene.prototype, {
     /* ── BANNER ─────────────────────────────────────────── */
     const BNH = 116;
     const bnBg = ca(mkG());
-    bnBg.fillGradientStyle(0x1a1040, 0x2a1060, 0x1040a0, 0x0e0c1c, 1);
+    bnBg.fillGradientStyle(0x4f8ef7, 0x5a80f5, 0x6b5ff8, 0x4a80f5, 1);
     bnBg.fillRect(0, 0, W, BNH);
-    // Stars
-    for (let i = 0; i < 24; i++) {
+    // Stars — белые точки на синем, ненавязчиво
+    for (let i = 0; i < 18; i++) {
       const sx = (i * 97 + 17) % W, sy = (i * 53 + 9) % (BNH - 20);
-      const sg = ca(mkG()); sg.fillStyle(0xffffff, 0.08 + (i % 4) * 0.07);
+      const sg = ca(mkG()); sg.fillStyle(0xffffff, 0.1 + (i % 3) * 0.08);
       sg.fillCircle(sx, sy, 0.5 + (i % 3) * 0.5);
     }
-    const trGlow = ca(mkG()); trGlow.fillStyle(0x5096ff, 0.08); trGlow.fillCircle(W, 0, 110);
+    const trGlow = ca(mkG()); trGlow.fillStyle(0xffffff, 0.06); trGlow.fillCircle(W, 0, 100);
     const bnFade = ca(mkG());
-    bnFade.fillGradientStyle(0x12121c, 0x12121c, 0x12121c, 0x12121c, 0, 0, 1, 1);
+    bnFade.fillGradientStyle(0xf2f4fb, 0xf2f4fb, 0xf2f4fb, 0xf2f4fb, 0, 0, 1, 1);
     bnFade.fillRect(0, BNH - 26, W, 26);
 
     // Avatar block — нажатие открывает вкладку Образы
@@ -67,11 +67,11 @@ Object.assign(MenuScene.prototype, {
 
     // Resource badges
     const bads = [`💰 ${p.gold}`, `💎 ${p.diamonds}`, `УР.${p.level}`];
-    const badCols = ['#ffc83c', '#3cc8dc', '#ffffff'];
+    const badCols = ['#b07000', '#0080a0', '#ffffff'];
     let bx = niX;
     bads.forEach((bd, i) => {
       const bw = i === 2 ? 42 : 56;
-      const bbg = ca(mkG()); bbg.fillStyle(0xffffff, 0.1); bbg.fillRoundedRect(bx, avY + 46, bw, 20, 6);
+      const bbg = ca(mkG()); bbg.fillStyle(0xffffff, 0.25); bbg.fillRoundedRect(bx, avY + 46, bw, 20, 6);
       ca(mkT(bx + bw / 2, avY + 56, bd, 10, badCols[i], true)).setOrigin(0.5);
       bx += bw + 5;
     });
@@ -97,10 +97,10 @@ Object.assign(MenuScene.prototype, {
     wrData.forEach((d, i) => {
       const wx = PAD + i * (wcW + 6);
       const wbg = ca(mkG());
-      wbg.fillStyle(0x1a1c24, 1); wbg.fillRoundedRect(wx, wrY, wcW, wrH, 10);
-      wbg.lineStyle(1, 0xffffff, 0.05); wbg.strokeRoundedRect(wx, wrY, wcW, wrH, 10);
+      wbg.fillStyle(0xffffff, 1); wbg.fillRoundedRect(wx, wrY, wcW, wrH, 10);
+      wbg.lineStyle(1, 0xe0e4f4, 1); wbg.strokeRoundedRect(wx, wrY, wcW, wrH, 10);
       ca(mkT(wx + wcW / 2, wrY + 13, d.v, 15, d.col, true)).setOrigin(0.5);
-      ca(mkT(wx + wcW / 2, wrY + 31, d.sub, 9, '#bbbbcc')).setOrigin(0.5);
+      ca(mkT(wx + wcW / 2, wrY + 31, d.sub, 9, '#8888a8')).setOrigin(0.5);
     });
 
     /* ── CHARACTER ───────────────────────────────────────── */
@@ -112,7 +112,7 @@ Object.assign(MenuScene.prototype, {
     this.tweens.add({ targets: warrior, y: charCY - 9, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     // Подсказка "нажми для смены"
-    ca(mkT(W / 2, charCY + 68, '✏️  сменить воина', 9, 'rgba(255,255,255,0.25)').setOrigin(0.5));
+    ca(mkT(W / 2, charCY + 68, '✏️  сменить воина', 9, 'rgba(20,30,100,0.3)').setOrigin(0.5));
     // Зона клика на воина
     const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
@@ -123,25 +123,25 @@ Object.assign(MenuScene.prototype, {
     const hpCol = p.hp_pct > 50 ? C.green : p.hp_pct > 25 ? C.gold : C.red;
     const hpBg  = ca(mkBar(hpX, hpY, hpW, hpH, hpPct, hpCol));
     const hpTxt = ca(mkT(W / 2, hpY + hpH / 2,
-      `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp} HP`, 10, '#ffffff', true, '#00000088')).setOrigin(0.5);
+      `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp} HP`, 10, '#1a1d2e', true, '#ffffff88')).setOrigin(0.5);
     this._liveHp = { g: hpBg, t: hpTxt, x: hpX, y: hpY, w: hpW, h: hpH };
     const xpY = hpY + hpH + 5, xpH = 11;
     if (!p.max_level) {
-      ca(mkBar(hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, C.dark, 4));
+      ca(mkBar(hpX, xpY, hpW, xpH, p.xp_pct / 100, C.blue, 0xe0e4f8, 4));
       ca(mkT(W / 2, xpY + xpH / 2,
-        `⭐ ${p.xp_pct}%  ·  ${p.exp} / ${p.exp_needed} XP`, 9, '#ffffff', true, '#00000088')).setOrigin(0.5);
+        `⭐ ${p.xp_pct}%  ·  ${p.exp} / ${p.exp_needed} XP`, 9, '#3a4880', true)).setOrigin(0.5);
     } else {
-      ca(mkT(W / 2, xpY + 5, '⭐ Макс. уровень', 10, '#ffc83c', true)).setOrigin(0.5);
+      ca(mkT(W / 2, xpY + 5, '⭐ Макс. уровень', 10, '#c08000', true)).setOrigin(0.5);
     }
 
     // Free stats badge — прямо под XP-баром
     if (p.free_stats > 0) {
       const fsByXp = xpY + xpH + 5;
       const fsG = ca(mkG());
-      fsG.fillStyle(0x5520a0, 0.88); fsG.fillRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
-      fsG.lineStyle(1.5, C.purple, 0.8); fsG.strokeRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
+      fsG.fillStyle(0xe8f0ff, 1); fsG.fillRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
+      fsG.lineStyle(1.5, 0x4f8ef7, 0.8); fsG.strokeRoundedRect(PAD, fsByXp, W - PAD * 2, 24, 8);
       ca(mkT(W / 2, fsByXp + 12,
-        `⚡ ${p.free_stats} своб. очка — нажми чтобы улучшить!`, 11, '#ffc83c', true)).setOrigin(0.5);
+        `⚡ ${p.free_stats} своб. очка — нажми чтобы улучшить!`, 11, '#2d60f0', true)).setOrigin(0.5);
       this.tweens.add({ targets: fsG, alpha: 0.55, duration: 700, yoyo: true, repeat: -1 });
       const fsZ = ca(mkZ(W / 2, fsByXp + 12, W - PAD * 2, 24).setInteractive({ useHandCursor: true }));
       fsZ.on('pointerup', () => this.scene.start('Stats', { player: State.player }));
@@ -163,13 +163,13 @@ Object.assign(MenuScene.prototype, {
     STATS.forEach((s, i) => {
       const ry = sbY0 + i * (sbRH + sbGap);
       ca(mkT(PAD,        ry + sbRH / 2, s.icon,  14)).setOrigin(0, 0.5);
-      ca(mkT(PAD + 22,   ry + sbRH / 2, s.label, 11, 'rgba(255,255,255,0.45)')).setOrigin(0, 0.5);
+      ca(mkT(PAD + 22,   ry + sbRH / 2, s.label, 11, 'rgba(20,30,80,0.55)')).setOrigin(0, 0.5);
       const tbg = ca(mkG());
-      tbg.fillStyle(0xffffff, 0.07); tbg.fillRoundedRect(trkX, ry + 8, trkW, 8, 4);
+      tbg.fillStyle(0xe0e4f8, 1); tbg.fillRoundedRect(trkX, ry + 8, trkW, 8, 4);
       const pct = Math.min(1, s.val / maxV);
-      tbg.fillStyle(s.color, 0.9); tbg.fillRoundedRect(trkX, ry + 8, Math.max(8, trkW * pct), 8, 4);
+      tbg.fillStyle(s.color, 0.85); tbg.fillRoundedRect(trkX, ry + 8, Math.max(8, trkW * pct), 8, 4);
       ca(mkT(trkX + trkW + 6, ry + sbRH / 2, String(s.val), 13, s.hex, true)).setOrigin(0, 0.5);
-      const subT = ca(mkT(W - PAD, ry + sbRH / 2, s.sub, 10, 'rgba(255,255,255,0.35)')).setOrigin(1, 0.5);
+      const subT = ca(mkT(W - PAD, ry + sbRH / 2, s.sub, 10, 'rgba(20,30,80,0.4)')).setOrigin(1, 0.5);
       this._profileStatSubs[i] = subT;
     });
 
@@ -201,22 +201,22 @@ Object.assign(MenuScene.prototype, {
     const actH = 52, halfW = (W - PAD * 2 - 8) / 2;
 
     const fBg = ca(mkG());
-    fBg.fillStyle(0xdc3c46, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14);
+    fBg.fillGradientStyle(0x4f8ef7, 0x6b5ff8, 0x4f8ef7, 0x6b5ff8, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14);
     ca(mkT(PAD + halfW / 2, actY + actH / 2, '⚔️  В БОЙ', 16, '#ffffff', true)).setOrigin(0.5);
     const fZ = ca(mkZ(PAD + halfW / 2, actY + actH / 2, halfW, actH).setInteractive({ useHandCursor: true }));
-    fZ.on('pointerdown', () => { fBg.clear(); fBg.fillStyle(0xaa2030, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); tg?.HapticFeedback?.impactOccurred('medium'); });
-    fZ.on('pointerout',  () => { fBg.clear(); fBg.fillStyle(0xdc3c46, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); });
-    fZ.on('pointerup',   () => { fBg.clear(); fBg.fillStyle(0xdc3c46, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); this._switchTab('battle'); });
+    fZ.on('pointerdown', () => { fBg.clear(); fBg.fillStyle(0x3a70d0, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); tg?.HapticFeedback?.impactOccurred('medium'); });
+    fZ.on('pointerout',  () => { fBg.clear(); fBg.fillGradientStyle(0x4f8ef7, 0x6b5ff8, 0x4f8ef7, 0x6b5ff8, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); });
+    fZ.on('pointerup',   () => { fBg.clear(); fBg.fillGradientStyle(0x4f8ef7, 0x6b5ff8, 0x4f8ef7, 0x6b5ff8, 1); fBg.fillRoundedRect(PAD, actY, halfW, actH, 14); this._switchTab('battle'); });
 
     const shopX = PAD + halfW + 8;
     const sBg = ca(mkG());
-    sBg.fillStyle(0x1e3060, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14);
-    sBg.lineStyle(1.5, C.blue, 0.4); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14);
-    ca(mkT(shopX + halfW / 2, actY + actH / 2, '🏪  Магазин', 15, '#7ab4ff', true)).setOrigin(0.5);
+    sBg.fillStyle(0xffffff, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14);
+    sBg.lineStyle(1.5, 0x4f8ef7, 0.6); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14);
+    ca(mkT(shopX + halfW / 2, actY + actH / 2, '🏪  Магазин', 15, '#4f8ef7', true)).setOrigin(0.5);
     const sZ = ca(mkZ(shopX + halfW / 2, actY + actH / 2, halfW, actH).setInteractive({ useHandCursor: true }));
-    sZ.on('pointerdown', () => { sBg.clear(); sBg.fillStyle(0x142040, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); });
-    sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0x1e3060, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); sBg.lineStyle(1.5, C.blue, 0.4); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14); });
-    sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0x1e3060, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); sBg.lineStyle(1.5, C.blue, 0.4); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14); this.scene.start('Shop'); });
+    sZ.on('pointerdown', () => { sBg.clear(); sBg.fillStyle(0xeef2ff, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); sBg.lineStyle(1.5, 0x4f8ef7, 0.8); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14); });
+    sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0xffffff, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); sBg.lineStyle(1.5, 0x4f8ef7, 0.6); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14); });
+    sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0xffffff, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); sBg.lineStyle(1.5, 0x4f8ef7, 0.6); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14); this.scene.start('Shop'); });
 
     this._addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca);
     this._panels.profile = c;

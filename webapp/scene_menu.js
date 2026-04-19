@@ -122,17 +122,8 @@ class MenuScene extends Phaser.Scene {
 
   _drawBg(W, H) {
     const g = this.add.graphics();
-    g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
+    g.fillGradientStyle(0xf2f4fb, 0xf2f4fb, 0xe8eaf5, 0xe8eaf5, 1);
     g.fillRect(0, 0, W, H);
-    const starAlpha = C._name === 'light' ? 0.08 : 0.5;
-    for (let i = 0; i < 55; i++) {
-      const x = Phaser.Math.Between(0, W);
-      const y = Phaser.Math.Between(0, H * 0.85);
-      this.add.circle(x, y,
-        Phaser.Math.FloatBetween(0.4, 1.8),
-        C._name === 'light' ? C.blue : 0xffffff,
-        Phaser.Math.FloatBetween(0.05, starAlpha));
-    }
   }
 
   _buildTabBar() {
@@ -154,10 +145,9 @@ class MenuScene extends Phaser.Scene {
     ];
 
     const bg = _track(this.add.graphics());
-    const tabBgCol = C._name === 'light' ? 0xe8ecff : 0x0e0d1a;
-    bg.fillStyle(tabBgCol, 1);
+    bg.fillStyle(0xffffff, 1);
     bg.fillRect(0, H - TAB_H, W, TAB_H);
-    bg.lineStyle(1.5, C.gold, C._name === 'light' ? 0.35 : 0.22);
+    bg.lineStyle(1, 0xdde0f0, 1);
     bg.lineBetween(0, H - TAB_H, W, H - TAB_H);
 
     const tabW = W / tabs.length;
@@ -166,16 +156,16 @@ class MenuScene extends Phaser.Scene {
       const tabTop = H - TAB_H;
 
       const activeBg = _track(this.add.graphics());
-      activeBg.fillStyle(C.gold, 0.12);
+      activeBg.fillStyle(0x4f8ef7, 0.1);
       activeBg.fillRoundedRect(tabW * i + 5, tabTop + 5, tabW - 10, TAB_H - 10, 12);
       const activeBar = _track(this.add.graphics());
-      activeBar.fillStyle(C.gold, 1);
+      activeBar.fillStyle(0x4f8ef7, 1);
       activeBar.fillRoundedRect(tabW * i + tabW * 0.2, tabTop + 1, tabW * 0.6, 3, 2);
       activeBg.setVisible(false);
       activeBar.setVisible(false);
 
-      const iconTxt  = _track(txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.85));
-      const labelTxt = _track(txt(this, cx, tabTop + 52, tab.label, 10, '#ccccee').setOrigin(0.5));
+      const iconTxt  = _track(txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.7));
+      const labelTxt = _track(txt(this, cx, tabTop + 52, tab.label, 10, '#9090b0').setOrigin(0.5));
 
       // Красный бейдж с числом незабранных наград на табе Задания
       if (tab.key === 'tasks' && this._tasksBadgeCount > 0) {
