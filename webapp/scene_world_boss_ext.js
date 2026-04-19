@@ -208,6 +208,10 @@ Object.assign(WorldBossScene.prototype, {
     if (this._state?.active?.seconds_left != null) {
       this._state.active.seconds_left = Math.max(0, this._state.active.seconds_left - 1);
       if (this._secLeftT) this._secLeftT.setText(`⏱ ${this._fmtSec(this._state.active.seconds_left)}`);
+      // Бой должен закончиться (HP=0 или время=0) — рефрешим пока сервер не подтвердит
+      const _shouldEnd = this._state.active.seconds_left === 0
+                      || (this._state.active.current_hp || 0) <= 0;
+      if (_shouldEnd && !this._refreshBusy) this._refresh();
     }
     this._tickPrep?.();
   },

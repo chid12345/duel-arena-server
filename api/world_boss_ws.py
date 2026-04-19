@@ -111,7 +111,7 @@ def _build_top_block(db, spawn_id: int) -> list:
 
 
 def _run_battle_tick(db) -> None:
-    """Боевая логика тика: ответка босса + коронные удары.
+    """Боевая логика тика: ответка босса + коронные удары + завершение рейда.
     Вызывается внутри _load_tick_data (уже в потоке) — не нужен отдельный to_thread."""
     try:
         from jobs.world_boss_battle_tick import _check_crown_strikes, _do_boss_counter_attack
@@ -123,6 +123,18 @@ def _run_battle_tick(db) -> None:
         current_hp = int(active.get("current_hp") or 0)
         max_hp = int(active.get("max_hp") or 0)
         stat_profile = active.get("stat_profile") or {}
+
+        # Завершаем рейд из WS-тика если scheduler (бот) недоступен.
+        # Проверяем: HP=0 или время вышло.
+        try:
+            from jobs.world_boss_scheduler import _finish_expired_or_dead_spawn
+            _finish_expired_or_dead_spawn(db)
+            # Если рейд только что завершили — active уже не active, выходим
+            if not db.get_wb_active_spawn():
+                return
+        except Exception as _fe:
+            logger.debug("_run_battle_tick finish check: %s", _fe)
+
         if current_hp > 0:
             stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
         if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
