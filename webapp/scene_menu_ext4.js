@@ -116,7 +116,7 @@ Object.assign(MenuScene.prototype, {
     });
 
     /* ── 2. EQUIPMENT CARD ────────────────────────────────── */
-    const czY = 6 + CARD_H + 10, czH = 268;
+    const czY = 6 + CARD_H + 10, czH = 330;
     const eqBg = ca(mkG());
     eqBg.fillStyle(0x0f0c1a, 0.97); eqBg.fillRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
     eqBg.lineStyle(2, 0x5b21b6, 1); eqBg.strokeRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
@@ -129,7 +129,7 @@ Object.assign(MenuScene.prototype, {
     const floorG = ca(mkG()); floorG.fillStyle(0x7c3aed, 0.3); floorG.fillEllipse(W / 2, charCY + 62, 158, 20);
     const ringG = ca(mkG()); ringG.lineStyle(1, 0x8b5cf6, 0.22); ringG.strokeEllipse(W / 2, charCY + 58, 138, 38);
     const _wKey = getWarriorKey(p.warrior_type);
-    const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(1.9).setOrigin(0.5));
+    const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(2.45).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 9, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     ca(mkT(W / 2, charCY + 70, '✏️  сменить воина', 9, 'rgba(255,255,255,0.22)').setOrigin(0.5));
     const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
@@ -169,44 +169,9 @@ Object.assign(MenuScene.prototype, {
       fsZ.on('pointerup', () => this.scene.start('Stats', { player: State.player }));
     }
 
-    /* ── 3. ATTRIBUTES CARD ──────────────────────────────── */
-    const STATS = [
-      { icon: '💪', label: 'Сила',     color: 0xef4444, hex: '#f87171', val: p.strength_effective  ?? p.strength,   sub: `~${p.dmg}ур`     },
-      { icon: '🤸', label: 'Ловкость', color: 0x22d3ee, hex: '#67e8f9', val: p.agility_effective   ?? p.agility,    sub: `${p.dodge_pct}%` },
-      { icon: '💥', label: 'Интуиция', color: 0xa855f7, hex: '#c084fc', val: p.intuition_effective ?? p.intuition,  sub: `${p.crit_pct}%`  },
-      { icon: '🛡', label: 'Выносл.',  color: 0x22c55e, hex: '#4ade80', val: p.stamina_effective   ?? p.stamina,    sub: `${p.armor_pct}%` },
-    ];
-    const fsBadgeH = p.free_stats > 0 ? 30 : 0;
-    const attrY = czY + czH + fsBadgeH + 8;
-    const sbRH = 22, sbGap = 6;
-    const attrH = 28 + STATS.length * (sbRH + sbGap) + 4;
-    const attrBg = ca(mkG());
-    attrBg.fillStyle(0x0f0c1a, 0.97); attrBg.fillRoundedRect(PAD, attrY, W - PAD * 2, attrH, 14);
-    attrBg.lineStyle(2, 0x5b21b6, 1); attrBg.strokeRoundedRect(PAD, attrY, W - PAD * 2, attrH, 14);
-    const atLine = ca(mkG()); atLine.lineStyle(2, 0x8b5cf6, 0.5); atLine.lineBetween(PAD + 14, attrY, W - PAD - 14, attrY);
-    ca(mkT(W / 2, attrY + 11, 'ХАРАКТЕРИСТИКИ', 9, 'rgba(167,139,250,0.8)', true)).setOrigin(0.5);
-
-    const maxV = Math.max(1, 3 + p.level * 2);
-    const nameW = 66, trkX = PAD + 22 + nameW + 4;
-    const valW = 28, pctW = 46, trkW = W - trkX - valW - pctW - PAD - 4;
-    this._profileStatSubs = [];
-    STATS.forEach((s, i) => {
-      const ry = attrY + 26 + i * (sbRH + sbGap);
-      ca(mkT(PAD,      ry + sbRH / 2, s.icon,  13)).setOrigin(0, 0.5);
-      ca(mkT(PAD + 22, ry + sbRH / 2, s.label, 10, 'rgba(255,255,255,0.6)')).setOrigin(0, 0.5);
-      const pct = Math.min(1, (s.val || 0) / maxV);
-      const fw  = Math.max(8, Math.round(trkW * pct));
-      const tbg = ca(mkG());
-      tbg.fillStyle(0x0d0a1e, 1);   tbg.fillRoundedRect(trkX, ry + 8, trkW, 7, 3);
-      tbg.fillStyle(s.color, 0.9);  tbg.fillRoundedRect(trkX, ry + 8, fw, 7, 3);
-      tbg.fillStyle(s.color, 0.22); tbg.fillRoundedRect(trkX, ry + 7, fw, 9, 3);
-      tbg.fillStyle(0xffffff, 0.15);tbg.fillRoundedRect(trkX, ry + 8, fw, 3, 3);
-      ca(mkT(trkX + trkW + 5, ry + sbRH / 2, String(s.val), 13, s.hex, true)).setOrigin(0, 0.5);
-      this._profileStatSubs[i] = ca(mkT(W - PAD, ry + sbRH / 2, s.sub, 10, 'rgba(255,255,255,0.4)')).setOrigin(1, 0.5);
-    });
-
     /* ── HP REGEN ────────────────────────────────────────── */
-    const regenY = attrY + attrH + 3;
+    const fsBadgeH = p.free_stats > 0 ? 30 : 0;
+    const regenY = czY + czH + fsBadgeH + 8;
     if (p.current_hp < p.max_hp) {
       const rate = p.regen_per_min || 0;
       let secsLeft = p.regen_secs_to_full || 0;

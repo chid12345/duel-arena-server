@@ -25,10 +25,6 @@ Object.assign(MenuScene.prototype, {
       for (const b of buffs) B[b.buff_type] = (B[b.buff_type] || 0) + b.value;
       const p = State.player;
 
-      if (B.strength   && this._profileStatSubs?.[0]) this._profileStatSubs[0].setText(`~${p.dmg}🧪`).setStyle({ color: '#ffaa66' });
-      if (B.endurance  && this._profileStatSubs?.[1]) this._profileStatSubs[1].setText(`${p.dodge_pct}%🧪`).setStyle({ color: '#88ffcc' });
-      if (B.crit       && this._profileStatSubs?.[2]) this._profileStatSubs[2].setText(`${p.crit_pct}%🧪`).setStyle({ color: '#cc88ff' });
-      if (B.stamina    && this._profileStatSubs?.[3]) this._profileStatSubs[3].setText(`${p.armor_pct}%🧪`).setStyle({ color: '#aaffaa' });
     } catch {}
   },
 
