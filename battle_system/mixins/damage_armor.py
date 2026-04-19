@@ -31,4 +31,8 @@ class BattleDamageArmorMixin:
         # Спецэффект Gold: паладин -3% входящего урона
         if (defender.get("current_class") or "").strip() == "paladin_gold":
             m = max(0.0, m - 0.03)
+        # Бонус брони от экипировки
+        eq_def = float(defender.get("_eq_def_pct", 0) or 0)
+        if eq_def:
+            m = max(0.0, m - eq_def)
         return max(1, int(raw * m))

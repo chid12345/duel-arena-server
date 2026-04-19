@@ -39,10 +39,12 @@ class BattleStartMixin:
         self._apply_player_buffs_to_stats(player1)
         self._apply_class_bonuses_to_stats(player1)
         self._apply_warrior_type_to_stats(player1)
+        self._apply_equipment_stats(player1)
         if not is_bot2:
             self._apply_player_buffs_to_stats(p2_store)
             self._apply_class_bonuses_to_stats(p2_store)
             self._apply_warrior_type_to_stats(p2_store)
+            self._apply_equipment_stats(p2_store)
 
         battle_data = {
             'battle_id': battle_id,
@@ -170,6 +172,25 @@ class BattleStartMixin:
         player["_buff_double_pct"]   = combined.get("double_pct",   0)
         player["_buff_accuracy"]     = combined.get("accuracy",     0)
         player["_buff_lifesteal_pct"] = combined.get("lifesteal_pct", 0)
+
+    def _apply_equipment_stats(self, player: dict) -> None:
+        """Применить бонусы от надетой экипировки к статам перед боем."""
+        uid = player.get("user_id")
+        if not uid:
+            return
+        try:
+            stats = db.get_equipment_stats(int(uid))
+        except Exception:
+            return
+        player["_eq_atk_bonus"] = stats.get("atk_bonus", 0)
+        player["_eq_def_pct"]   = stats.get("def_pct", 0.0)
+        if stats.get("hp_bonus", 0):
+            old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
+            old_cur = int(player.get("current_hp", old_max))
+            player["max_hp"]     = old_max + stats["hp_bonus"]
+            player["current_hp"] = min(player["max_hp"], old_cur + stats["hp_bonus"])
+        if stats.get("crit_bonus", 0):
+            player["crit"] = max(0, int(player.get("crit", PLAYER_START_CRIT)) + stats["crit_bonus"])
 
     def set_battle_ui_message(self, user_id: int, chat_id: int, message_id: int) -> None:
         """Сообщение с клавиатурой боя — для таймера и обновления без callback."""

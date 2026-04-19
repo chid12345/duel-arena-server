@@ -170,6 +170,21 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await CallbackHandlers.handle_battle_choice(query, user.id, callback_data)
         elif callback_data.startswith("defend_"):
             await CallbackHandlers.handle_battle_choice(query, user.id, callback_data)
+        elif callback_data == "equipment_menu":
+            from handlers.ui_helpers.equipment_ui import handle_equipment_menu
+            await handle_equipment_menu(query, user.id)
+        elif callback_data.startswith("equip_slot:"):
+            slot = callback_data.split(":", 1)[1]
+            from handlers.ui_helpers.equipment_ui import handle_equip_slot
+            await handle_equip_slot(query, user.id, slot)
+        elif callback_data.startswith("equip_buy:"):
+            _, item_id, slot = callback_data.split(":")
+            from handlers.ui_helpers.equipment_ui import handle_equip_buy
+            await handle_equip_buy(query, user.id, item_id, slot)
+        elif callback_data.startswith("equip_remove:"):
+            slot = callback_data.split(":", 1)[1]
+            from handlers.ui_helpers.equipment_ui import handle_equip_remove
+            await handle_equip_remove(query, user.id, slot)
         else:
             await CallbackHandlers._callback_set_message(query, "❌ Неизвестное действие")
 

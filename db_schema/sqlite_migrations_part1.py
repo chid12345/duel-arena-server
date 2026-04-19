@@ -189,4 +189,15 @@ MIGRATIONS_PART1 = [
     ("2026_04_11_003_premium_box_claimed", [
         "ALTER TABLE players ADD COLUMN premium_box_claimed DATE",
     ]),
+    ("2026_04_19_001_equipment", [
+        """CREATE TABLE IF NOT EXISTS player_equipment (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+            slot        TEXT NOT NULL,
+            item_id     TEXT NOT NULL,
+            equipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, slot)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_equip_uid ON player_equipment(user_id)",
+    ]),
 ]
