@@ -152,24 +152,30 @@ Object.assign(MenuScene.prototype, {
       fG.fillStyle(0xfbbf24, 0.9); fG.fillEllipse(fx, fy + 1.5, 4, 7);
       fG.fillStyle(0xfef9c3, 0.5); fG.fillCircle(fx, fy + 2, 1.5); }
 
-    /* ── 2. EQUIPMENT CARD ────────────────────────────────── */
+    /* ── 2. EQUIPMENT CARD — radial gradient bg, premium ── */
     const czY = 6 + CARD_H + 10, czH = 330;
+    // Radial gradient background simulation (center lighter, edges darker)
     const eqBg = ca(mkG());
-    eqBg.fillStyle(0x0f0c1a, 0.97); eqBg.fillRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
-    eqBg.lineStyle(2, 0x5b21b6, 1); eqBg.strokeRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
+    eqBg.fillGradientStyle(0x130f22, 0x130f22, 0x07060f, 0x07060f, 1);
+    eqBg.fillRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
+    eqBg.lineStyle(1.5, 0x5b21b6, 0.85); eqBg.strokeRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
+    // inner radial glow (central light pool)
+    const eqGlow = ca(mkG()); eqGlow.fillStyle(0x6d28d9, 0.08); eqGlow.fillEllipse(W / 2, czY + czH * 0.4, W * 0.7, czH * 0.7);
     // top accent line
     const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
     ca(mkT(W / 2, czY + 11, 'ЭКИПИРОВКА ПЕРСОНАЖА', 9, 'rgba(167,139,250,0.8)', true)).setOrigin(0.5);
-    const charCY = czY + czH * 0.43;
-    const aura1 = ca(mkG()); aura1.fillStyle(0x7c3aed, 0.1); aura1.fillEllipse(W / 2, charCY, 170, 170);
-    const aura2 = ca(mkG()); aura2.fillStyle(0xec4899, 0.05); aura2.fillEllipse(W / 2, charCY + 8, 110, 110);
-    const floorG = ca(mkG()); floorG.fillStyle(0x7c3aed, 0.3); floorG.fillEllipse(W / 2, charCY + 62, 158, 20);
-    const ringG = ca(mkG()); ringG.lineStyle(1, 0x8b5cf6, 0.22); ringG.strokeEllipse(W / 2, charCY + 58, 138, 38);
+    const charCY = czY + czH * 0.42;
+    // Softer, more contained aura — no bleed into slots
+    const aura1 = ca(mkG()); aura1.fillStyle(0x7c3aed, 0.08); aura1.fillEllipse(W / 2, charCY, 120, 120);
+    const aura2 = ca(mkG()); aura2.fillStyle(0xec4899, 0.04); aura2.fillEllipse(W / 2, charCY + 6, 80, 80);
+    const floorG = ca(mkG()); floorG.fillStyle(0x7c3aed, 0.28); floorG.fillEllipse(W / 2, charCY + 52, 110, 14);
+    const ringG = ca(mkG()); ringG.lineStyle(1, 0x8b5cf6, 0.2); ringG.strokeEllipse(W / 2, charCY + 48, 96, 26);
     const _wKey = getWarriorKey(p.warrior_type);
-    const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(2.45).setOrigin(0.5));
-    this.tweens.add({ targets: warrior, y: charCY - 9, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    ca(mkT(W / 2, charCY + 70, 'сменить воина', 9, 'rgba(255,255,255,0.22)').setOrigin(0.5));
-    const wZone = ca(mkZ(W / 2, charCY, 90, 130).setInteractive({ useHandCursor: true }));
+    // Scale reduced: 2.45 → 1.85, matches 130px mockup char-img
+    const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(1.85).setOrigin(0.5));
+    this.tweens.add({ targets: warrior, y: charCY - 7, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    ca(mkT(W / 2, charCY + 60, 'сменить воина', 9, 'rgba(255,255,255,0.25)').setOrigin(0.5));
+    const wZone = ca(mkZ(W / 2, charCY, 82, 110).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
     // HP / XP — inline layout: [icon] [LABEL] [====bar====] [value]
