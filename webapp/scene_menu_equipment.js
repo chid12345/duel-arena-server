@@ -55,16 +55,21 @@ Object.assign(MenuScene.prototype, {
       ca(mkT(cx, cy, item.emoji, small ? 13 : 20)).setOrigin(0.5);
       const dG = mkG(); dG.fillStyle(bc, 1); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     } else {
-      // outer glow (dim purple)
-      const glG = mkG(); glG.fillStyle(0x5b21b6, 0.18); glG.fillRoundedRect(x - 2, y - 2, w + 4, h + 4, r + 2); c.add(glG);
-      // slot body — deep dark with purple tint
-      g.fillStyle(0x13102a, 0.95); g.fillRoundedRect(x, y, w, h, r);
-      g.lineStyle(1.5, 0x5b21b6, 0.5); g.strokeRoundedRect(x, y, w, h, r);
+      // outer glow — matches CSS box-shadow
+      const glG = mkG(); glG.fillStyle(0x4834d4, 0.14); glG.fillRoundedRect(x - 2, y - 2, w + 4, h + 4, r + 2); c.add(glG);
+      // slot body — linear-gradient(145deg, #1a1a2e, #16213e)
+      g.fillGradientStyle(0x1a1a2e, 0x1a1a2e, 0x16213e, 0x16213e, 0.97);
+      g.fillRoundedRect(x, y, w, h, r);
+      g.lineStyle(1.5, 0x4834d4, 0.65); g.strokeRoundedRect(x, y, w, h, r);
       c.add(g);
-      // glass top highlight (inner light)
-      const hlG = mkG(); hlG.fillStyle(0xffffff, 0.07); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
+      // inset glow — rgba(72,52,212,0.3) equivalent
+      const igG = mkG(); igG.fillStyle(0x4834d4, 0.18); igG.fillRoundedRect(x + 3, y + 3, w - 6, h - 6, r - 2); c.add(igG);
+      // glass top highlight
+      const hlG = mkG(); hlG.fillStyle(0xffffff, 0.07); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.38), r - 1); c.add(hlG);
+      // icon glow halo
+      const haloG = mkG(); haloG.fillStyle(0x7c3aed, 0.1); haloG.fillCircle(cx, cy - 2, 18); c.add(haloG);
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
-      const dG = mkG(); dG.fillStyle(0x6d28d9, 0.45); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
+      const dG = mkG(); dG.fillStyle(0x4834d4, 0.55); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     }
 
     if (!small) {

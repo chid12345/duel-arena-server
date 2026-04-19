@@ -250,7 +250,7 @@ Object.assign(MenuScene.prototype, {
     fGlow.fillStyle(0xd946ef, 0.38); fGlow.fillRoundedRect(PAD - 3, actY - 3, actW + 6, actH + 6, 17);
     this.tweens.add({ targets: fGlow, alpha: 0, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const fBg = ca(mkG());
-    fBg.fillGradientStyle(0xe040fb, 0x7c3aed, 0xc026d3, 0x4c1d95, 1);
+    fBg.fillGradientStyle(0x6c5ce7, 0xa29bfe, 0x6c5ce7, 0xa29bfe, 1);
     fBg.fillRoundedRect(PAD, actY, actW, actH, 14);
     const fShine = ca(mkG());
     fShine.fillStyle(0xffffff, 0.2); fShine.fillRoundedRect(PAD + 2, actY + 2, actW - 4, actH / 2 - 2, 12);
