@@ -22,15 +22,19 @@ Object.assign(MenuScene.prototype, {
       return z;
     };
     const mkI = (x, y, key) => this.make.image({ x, y, key }, false);
-    const mkBar = (x, y, w, h, pct, fillColor, r) => {
+    const mkBar = (x, y, w, h, pct, fillColor, r, fillColor2) => {
       r = r || 4;
       const safe = Math.max(0, Math.min(1, isNaN(pct) ? 0 : pct));
       const g = mkG();
-      g.fillStyle(0x0d0a1e, 1); g.fillRoundedRect(x, y, w, h, r);
+      g.fillStyle(0x07050f, 1); g.fillRoundedRect(x, y, w, h, r);
       const fw = Math.max(r * 2, Math.round(w * safe));
-      g.fillStyle(fillColor, 1);    g.fillRoundedRect(x, y, fw, h, r);
-      g.fillStyle(fillColor, 0.22); g.fillRoundedRect(x, y - 1, fw, h + 2, r);
-      g.fillStyle(0xffffff,  0.16); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), r);
+      if (fillColor2) {
+        g.fillGradientStyle(fillColor, fillColor2, fillColor, fillColor2, 1);
+      } else {
+        g.fillStyle(fillColor, 1);
+      }
+      g.fillRoundedRect(x, y, fw, h, r);
+      g.fillStyle(0xffffff, 0.14); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), r);
       return g;
     };
     const ca = o => { c.add(o); return o; };
@@ -169,7 +173,7 @@ Object.assign(MenuScene.prototype, {
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
     // HP / XP — inline layout: [icon] [LABEL] [====bar====] [value]
-    const hpX = PAD, hpH = 5;
+    const hpX = PAD, hpH = 6;
     const hpSepY = czY + czH - 56;
     { const sG = ca(mkG()); sG.lineStyle(1, 0xffffff, 0.06); sG.lineBetween(PAD, hpSepY, W - PAD, hpSepY); }
 
@@ -186,7 +190,7 @@ Object.assign(MenuScene.prototype, {
     const hpValStr = `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp}`;
     const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 9, 'rgba(255,255,255,0.5)')).setOrigin(1, 0);
     const hpBX = hpX + 36, hpBW = W - PAD * 2 - 36 - 76;
-    const hpBg = ca(mkBar(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, hpCol, 10));
+    const hpBg = ca(mkBar(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, 0x166534, 10, 0x86efac));
     this._liveHp = { g: hpBg, t: hpValTxt, x: hpBX, y: hpRowCY - Math.ceil(hpH / 2), w: hpBW, h: hpH };
 
     const xpRowCY = hpRowCY + 22;
@@ -201,7 +205,7 @@ Object.assign(MenuScene.prototype, {
       ca(mkT(hpX + 18, xpRowCY - 5, 'XP', 9, '#a78bfa'));
       const xpValStr = `${p.exp} / ${p.exp_needed}`;
       ca(mkT(W - PAD, xpRowCY - 5, xpValStr, 9, 'rgba(255,255,255,0.35)')).setOrigin(1, 0);
-      ca(mkBar(hpBX, xpRowCY - Math.ceil(hpH / 2), hpBW, hpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x818cf8, 10));
+      ca(mkBar(hpBX, xpRowCY - Math.ceil(hpH / 2), hpBW, hpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x1d4ed8, 10, 0x38bdf8));
     } else {
       ca(mkT(W / 2, xpRowCY, '⭐ Макс. уровень', 10, '#fbbf24', true)).setOrigin(0.5);
     }
@@ -250,7 +254,7 @@ Object.assign(MenuScene.prototype, {
     fGlow.fillStyle(0xd946ef, 0.38); fGlow.fillRoundedRect(PAD - 3, actY - 3, actW + 6, actH + 6, 17);
     this.tweens.add({ targets: fGlow, alpha: 0, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const fBg = ca(mkG());
-    fBg.fillGradientStyle(0x6c5ce7, 0xa29bfe, 0x6c5ce7, 0xa29bfe, 1);
+    fBg.fillGradientStyle(0xa29bfe, 0xa29bfe, 0x6c5ce7, 0x6c5ce7, 1);
     fBg.fillRoundedRect(PAD, actY, actW, actH, 14);
     const fShine = ca(mkG());
     fShine.fillStyle(0xffffff, 0.2); fShine.fillRoundedRect(PAD + 2, actY + 2, actW - 4, actH / 2 - 2, 12);
