@@ -91,63 +91,221 @@ Object.assign(MenuScene.prototype, {
     const g = mkG();
     const s = small ? 0.65 : 1;
     switch (slot) {
-      case 'weapon':
-        g.lineStyle(3.5 * s, 0xb8cadf, 0.82); g.lineBetween(cx + 10 * s, cy - 13 * s, cx - 6 * s, cy + 8 * s);
-        g.lineStyle(1.2 * s, 0xffffff, 0.32); g.lineBetween(cx + 9 * s, cy - 12 * s, cx - 5 * s, cy + 7 * s);
-        g.lineStyle(3 * s, 0xf59e0b, 0.9); g.lineBetween(cx - 2 * s, cy - 2 * s, cx - 10 * s, cy + 6 * s);
-        g.fillStyle(0xf59e0b, 1); g.fillCircle(cx - 9 * s, cy + 9 * s, 4 * s);
-        g.fillStyle(0xfde68a, 0.55); g.fillCircle(cx - 8 * s, cy + 8 * s, 1.8 * s);
-        break;
-      case 'belt':
-        g.fillStyle(0x78350f, 0.88); g.fillRoundedRect(cx - 12 * s, cy - 4 * s, 24 * s, 8 * s, 2 * s);
-        g.lineStyle(1, 0xd97706, 0.8); g.strokeRoundedRect(cx - 12 * s, cy - 4 * s, 24 * s, 8 * s, 2 * s);
-        g.fillStyle(0xfbbf24, 1); g.fillRoundedRect(cx - 3.5 * s, cy - 6 * s, 7 * s, 12 * s, 2 * s);
-        g.fillStyle(0x92400e, 1); g.fillRoundedRect(cx - 2 * s, cy - 4 * s, 4 * s, 8 * s, 1 * s);
-        g.fillStyle(0x0d0a1e, 1); g.fillRect(cx - 0.6 * s, cy - 4 * s, 1.2 * s, 8 * s);
-        break;
-      case 'boots':
-        g.fillStyle(0x78350f, 0.9);
-        g.fillRect(cx - 8 * s, cy - 13 * s, 11 * s, 15 * s);
-        g.fillRect(cx - 8 * s, cy + 1 * s, 15 * s, 7 * s);
-        g.fillStyle(0x1c0a03, 1); g.fillRect(cx - 9 * s, cy + 7 * s, 17 * s, 3.5 * s);
-        g.fillStyle(0xd97706, 1); g.fillRect(cx - 9 * s, cy - 3 * s, 12 * s, 2.5 * s);
-        g.lineStyle(1.2, 0xffffff, 0.1); g.lineBetween(cx - 5 * s, cy - 12 * s, cx - 5 * s, cy);
-        break;
-      case 'shield':
-        g.fillStyle(0x1d4ed8, 0.9);
-        g.beginPath(); g.moveTo(cx - 11 * s, cy - 12 * s); g.lineTo(cx + 11 * s, cy - 12 * s);
-        g.lineTo(cx + 11 * s, cy + 1 * s); g.lineTo(cx, cy + 14 * s); g.lineTo(cx - 11 * s, cy + 1 * s);
+
+      case 'weapon': {
+        // Blade body (silver polygon)
+        g.fillStyle(0xd4dce8, 0.92);
+        g.beginPath();
+        g.moveTo(cx + 8*s,  cy - 12*s);
+        g.lineTo(cx + 12*s, cy - 8*s);
+        g.lineTo(cx - 3*s,  cy + 10*s);
+        g.lineTo(cx - 7*s,  cy + 10*s);
         g.closePath(); g.fillPath();
+        // Shine strip
+        g.fillStyle(0xffffff, 0.28);
+        g.beginPath();
+        g.moveTo(cx + 8*s,  cy - 11*s);
+        g.lineTo(cx + 10*s, cy - 9*s);
+        g.lineTo(cx - 3*s,  cy + 8*s);
+        g.lineTo(cx - 4*s,  cy + 7*s);
+        g.closePath(); g.fillPath();
+        // Cross-guard
+        g.lineStyle(4*s, 0xf59e0b, 0.95);
+        g.lineBetween(cx - 7*s, cy + 4*s, cx + 4*s, cy - 5*s);
+        // Handle
+        g.lineStyle(3.5*s, 0x7c2d12, 1);
+        g.lineBetween(cx - 5*s, cy + 6*s, cx - 8*s, cy + 12*s);
+        // Pommel
+        g.fillStyle(0xf59e0b, 1); g.fillCircle(cx - 9*s, cy + 13*s, 3*s);
+        g.fillStyle(0xffffff, 0.5); g.fillCircle(cx - 9.5*s, cy + 12.3*s, 1.2*s);
+        break;
+      }
+
+      case 'belt': {
+        // Strap
+        g.fillStyle(0x7c2d12, 1);
+        g.fillRoundedRect(cx - 14*s, cy - 4*s, 28*s, 9*s, 3*s);
+        // Top highlight
+        g.fillStyle(0xffffff, 0.1);
+        g.fillRoundedRect(cx - 14*s, cy - 4*s, 28*s, 3*s, 2*s);
+        // Gold buckle
+        g.fillStyle(0xf59e0b, 1);
+        g.fillRoundedRect(cx - 5*s, cy - 6*s, 10*s, 13*s, 2.5*s);
+        // Buckle inner
+        g.fillStyle(0x92400e, 1);
+        g.fillRoundedRect(cx - 3.5*s, cy - 4.5*s, 7*s, 10*s, 1.5*s);
+        // Pin bar
+        g.fillStyle(0xf59e0b, 1);
+        g.fillRoundedRect(cx - 3.5*s, cy - 0.5*s, 7*s, 2*s, 1*s);
+        // Buckle shine
+        g.lineStyle(0.8, 0xffffff, 0.4);
+        g.lineBetween(cx - 4*s, cy - 5.5*s, cx + 4*s, cy - 5.5*s);
+        break;
+      }
+
+      case 'boots': {
+        // Shaft
+        g.fillStyle(0x7c2d12, 1);
+        g.fillRoundedRect(cx - 5*s, cy - 13*s, 10*s, 16*s, 2*s);
+        // Front face lighter
+        g.fillStyle(0xffffff, 0.08);
+        g.fillRect(cx - 5*s, cy - 12*s, 2*s, 14*s);
+        // Toe/foot
+        g.fillStyle(0x6b1a07, 1);
+        g.fillRoundedRect(cx - 8*s, cy + 2*s, 16*s, 6*s, 2*s);
+        // Sole
+        g.fillStyle(0x1c0a03, 1);
+        g.fillRoundedRect(cx - 9*s, cy + 7*s, 18*s, 3*s, 1.5*s);
+        // Strap
+        g.fillStyle(0xd97706, 1);
+        g.fillRoundedRect(cx - 5*s, cy - 2*s, 10*s, 2.5*s, 1.2*s);
+        // Buckle
+        g.fillStyle(0xfde68a, 1);
+        g.fillRoundedRect(cx + 0.5*s, cy - 3.5*s, 3.5*s, 4.5*s, 1*s);
+        g.fillStyle(0x92400e, 1);
+        g.fillRoundedRect(cx + 0.5*s, cy - 3*s, 2.5*s, 3.5*s, 0.6*s);
+        break;
+      }
+
+      case 'shield': {
+        // Shield body (heater shape)
+        g.fillStyle(0x2563eb, 1);
+        g.beginPath();
+        g.moveTo(cx,        cy - 14*s);
+        g.lineTo(cx - 12*s, cy - 8*s);
+        g.lineTo(cx - 12*s, cy + 2*s);
+        g.lineTo(cx,        cy + 15*s);
+        g.lineTo(cx + 12*s, cy + 2*s);
+        g.lineTo(cx + 12*s, cy - 8*s);
+        g.closePath(); g.fillPath();
+        // Rim
         g.lineStyle(1.5, 0x60a5fa, 0.85);
-        g.beginPath(); g.moveTo(cx - 11 * s, cy - 12 * s); g.lineTo(cx + 11 * s, cy - 12 * s);
-        g.lineTo(cx + 11 * s, cy + 1 * s); g.lineTo(cx, cy + 14 * s); g.lineTo(cx - 11 * s, cy + 1 * s);
+        g.beginPath();
+        g.moveTo(cx,        cy - 14*s);
+        g.lineTo(cx - 12*s, cy - 8*s);
+        g.lineTo(cx - 12*s, cy + 2*s);
+        g.lineTo(cx,        cy + 15*s);
+        g.lineTo(cx + 12*s, cy + 2*s);
+        g.lineTo(cx + 12*s, cy - 8*s);
         g.closePath(); g.strokePath();
-        g.lineStyle(1, 0xffffff, 0.2); g.lineBetween(cx - 11 * s, cy - 12 * s, cx - 11 * s, cy + 1 * s);
-        g.fillStyle(0x7c3aed, 1); g.fillCircle(cx, cy - 2 * s, 5.5 * s);
-        g.fillStyle(0xc4b5fd, 0.5); g.fillCircle(cx - 1 * s, cy - 3 * s, 2.2 * s);
-        break;
-      case 'armor':
-        g.fillStyle(0x6b7280, 0.9);
-        g.beginPath(); g.moveTo(cx - 11 * s, cy - 9 * s); g.lineTo(cx + 11 * s, cy - 9 * s);
-        g.lineTo(cx + 11 * s, cy + 8 * s); g.lineTo(cx + 7 * s, cy + 12 * s);
-        g.lineTo(cx - 7 * s, cy + 12 * s); g.lineTo(cx - 11 * s, cy + 8 * s);
+        // Top shine
+        g.lineStyle(1.2, 0xffffff, 0.25);
+        g.lineBetween(cx - 8*s, cy - 10*s, cx + 8*s, cy - 10*s);
+        // Star emblem
+        g.fillStyle(0xbfdbfe, 0.9);
+        g.beginPath();
+        g.moveTo(cx,        cy - 7.25*s);
+        g.lineTo(cx + 1.5*s, cy - 2.75*s);
+        g.lineTo(cx + 6*s,   cy - 2.75*s);
+        g.lineTo(cx + 2.5*s, cy + 0.25*s);
+        g.lineTo(cx + 3.5*s, cy + 4.75*s);
+        g.lineTo(cx,         cy + 2.25*s);
+        g.lineTo(cx - 3.5*s, cy + 4.75*s);
+        g.lineTo(cx - 2.5*s, cy + 0.25*s);
+        g.lineTo(cx - 6*s,   cy - 2.75*s);
+        g.lineTo(cx - 1.5*s, cy - 2.75*s);
         g.closePath(); g.fillPath();
-        g.fillStyle(0xe5e7eb, 0.18); g.fillRect(cx - 9 * s, cy - 8 * s, 18 * s, 8 * s);
-        g.lineStyle(1.2, 0xd1d5db, 0.75);
-        g.beginPath(); g.moveTo(cx - 11 * s, cy - 9 * s); g.lineTo(cx + 11 * s, cy - 9 * s);
-        g.lineTo(cx + 11 * s, cy + 8 * s); g.lineTo(cx + 7 * s, cy + 12 * s);
-        g.lineTo(cx - 7 * s, cy + 12 * s); g.lineTo(cx - 11 * s, cy + 8 * s);
-        g.closePath(); g.strokePath();
-        g.lineStyle(1, 0xf3f4f6, 0.35); g.lineBetween(cx, cy - 9 * s, cx, cy + 12 * s);
-        g.fillStyle(0x7c3aed, 0.9); g.fillEllipse(cx, cy - 1 * s, 8 * s, 7 * s);
-        g.fillStyle(0xc4b5fd, 0.5); g.fillCircle(cx - 1 * s, cy - 2 * s, 2 * s);
+        // Star inner highlight
+        g.fillStyle(0xffffff, 0.45);
+        g.beginPath();
+        g.moveTo(cx,        cy - 5.5*s);
+        g.lineTo(cx + 1*s,   cy - 2.5*s);
+        g.lineTo(cx + 4*s,   cy - 2.5*s);
+        g.lineTo(cx + 1.8*s, cy - 0.7*s);
+        g.lineTo(cx + 2.5*s, cy + 2.3*s);
+        g.lineTo(cx,         cy + 0.8*s);
+        g.lineTo(cx - 2.5*s, cy + 2.3*s);
+        g.lineTo(cx - 1.8*s, cy - 0.7*s);
+        g.lineTo(cx - 4*s,   cy - 2.5*s);
+        g.lineTo(cx - 1*s,   cy - 2.5*s);
+        g.closePath(); g.fillPath();
         break;
+      }
+
+      case 'armor': {
+        // Shoulders
+        g.fillStyle(0xc0c8d4, 0.9);
+        g.fillEllipse(cx - 9*s, cy - 5*s, 10*s, 8*s);
+        g.fillEllipse(cx + 9*s, cy - 5*s, 10*s, 8*s);
+        g.lineStyle(1, 0xffffff, 0.4);
+        g.lineBetween(cx - 13*s, cy - 7*s, cx - 7*s, cy - 7*s);
+        g.lineBetween(cx + 7*s,  cy - 7*s, cx + 13*s, cy - 7*s);
+        // Chest body
+        g.fillStyle(0xc0c8d4, 0.9);
+        g.beginPath();
+        g.moveTo(cx - 7*s, cy - 7*s);
+        g.lineTo(cx + 7*s, cy - 7*s);
+        g.lineTo(cx + 7*s, cy + 10*s);
+        g.lineTo(cx + 5*s, cy + 12*s);
+        g.lineTo(cx - 5*s, cy + 12*s);
+        g.lineTo(cx - 7*s, cy + 10*s);
+        g.closePath(); g.fillPath();
+        // Center ridge
+        g.fillStyle(0xffffff, 0.15);
+        g.fillRect(cx - 1*s, cy - 7*s, 2*s, 19*s);
+        // Pec lines
+        g.lineStyle(1.2, 0xffffff, 0.2);
+        g.lineBetween(cx - 7*s, cy - 2*s, cx - 1*s, cy - 3*s);
+        g.lineBetween(cx + 7*s, cy - 2*s, cx + 1*s, cy - 3*s);
+        // Belly plates
+        g.lineStyle(1.5, 0x000000, 0.3);
+        g.lineBetween(cx - 6*s, cy + 4*s,  cx + 6*s, cy + 4*s);
+        g.lineStyle(1.2, 0x000000, 0.22);
+        g.lineBetween(cx - 6*s, cy + 8*s,  cx + 6*s, cy + 8*s);
+        // Purple gem
+        g.fillStyle(0x9333ea, 1); g.fillCircle(cx, cy - 0.5*s, 3*s);
+        g.fillStyle(0xffffff, 0.5); g.fillCircle(cx - 0.8*s, cy - 1.3*s, 1.2*s);
+        // Top shine
+        g.lineStyle(1, 0xffffff, 0.22);
+        g.lineBetween(cx - 6*s, cy - 6*s, cx + 6*s, cy - 6*s);
+        break;
+      }
+
       case 'ring1': case 'ring2': {
-        const rr = 6 * s;
-        g.lineStyle(3.5 * s, 0xf59e0b, 0.9); g.strokeCircle(cx, cy + 2 * s, rr);
-        g.fillStyle(0x7c3aed, 1); g.fillCircle(cx, cy - rr, 4.5 * s);
-        g.fillStyle(0xa855f7, 1); g.fillCircle(cx, cy - rr, 3 * s);
-        g.fillStyle(0xc4b5fd, 0.55); g.fillCircle(cx - 0.8 * s, cy - rr - 0.8 * s, 1.3 * s);
+        // Gold band ellipse
+        g.lineStyle(3.5*s, 0xfbbf24, 0.9);
+        g.strokeEllipse(cx, cy + 5*s, 16*s, 12*s);
+        // Inner shadow
+        g.lineStyle(1*s, 0x000000, 0.35);
+        g.strokeEllipse(cx, cy + 5*s, 12*s, 8.4*s);
+        // Band top shine
+        g.lineStyle(1, 0xffffff, 0.4);
+        g.lineBetween(cx - 5*s, cy + 2*s, cx + 5*s, cy + 2*s);
+        // Gem setting (amber star base)
+        g.fillStyle(0xb45309, 1);
+        g.beginPath();
+        g.moveTo(cx,        cy - 11*s);
+        g.lineTo(cx + 3*s,  cy - 6*s);
+        g.lineTo(cx + 7*s,  cy - 6*s);
+        g.lineTo(cx + 4*s,  cy - 2*s);
+        g.lineTo(cx + 5*s,  cy + 3*s);
+        g.lineTo(cx,        cy + 0);
+        g.lineTo(cx - 5*s,  cy + 3*s);
+        g.lineTo(cx - 4*s,  cy - 2*s);
+        g.lineTo(cx - 7*s,  cy - 6*s);
+        g.lineTo(cx - 3*s,  cy - 6*s);
+        g.closePath(); g.fillPath();
+        // Gem (red faceted)
+        g.fillStyle(0xfb7185, 0.9);
+        g.beginPath();
+        g.moveTo(cx,        cy - 10*s);
+        g.lineTo(cx + 2.5*s, cy - 6*s);
+        g.lineTo(cx + 6*s,   cy - 6*s);
+        g.lineTo(cx + 3.5*s, cy - 3*s);
+        g.lineTo(cx + 4.5*s, cy + 1*s);
+        g.lineTo(cx,         cy - 1.5*s);
+        g.lineTo(cx - 4.5*s, cy + 1*s);
+        g.lineTo(cx - 3.5*s, cy - 3*s);
+        g.lineTo(cx - 6*s,   cy - 6*s);
+        g.lineTo(cx - 2.5*s, cy - 6*s);
+        g.closePath(); g.fillPath();
+        // Facet lines
+        g.lineStyle(0.7, 0xff9da8, 0.4);
+        g.lineBetween(cx, cy - 10*s, cx, cy - 1.5*s);
+        g.lineBetween(cx - 6*s, cy - 6*s, cx + 6*s, cy - 6*s);
+        // Gem highlight
+        g.fillStyle(0xffffff, 0.6);
+        g.fillEllipse(cx - 1.5*s, cy - 7.5*s, 3*s, 2*s);
         break;
       }
     }
