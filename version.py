@@ -4,7 +4,7 @@ version.py — текущая версия проекта Duel Arena.
 """
 
 VERSION = "1.8.32"
-VERSION_LABEL = "v1.8.32 — fix: payment routes try/except + undefined error toast"
+VERSION_LABEL = "v1.8.32 — fix: wb claim splash-toast + payment fixes"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).

@@ -165,20 +165,38 @@ Object.assign(WorldBossScene.prototype, {
     try {
       const r = await post('/api/world_boss/claim_reward', { reward_id });
       if (r.ok) {
-        let msg = `✅ +💰${r.gold} +⭐${r.exp}`;
-        if (r.diamonds) msg += ` +💎${r.diamonds}`;
+        tg?.HapticFeedback?.notificationOccurred('success');
+        // Закрываем overlay немедленно (убираем reward из стейта)
+        if (this._state?.unclaimed_rewards) {
+          this._state.unclaimed_rewards = this._state.unclaimed_rewards.filter(
+            rw => rw.reward_id !== reward_id
+          );
+        }
+        this._render();  // Перерисовываем без overlay
+
+        // Строим сплэш-тост (3.5с, не убивается render)
+        const lines = [
+          { text: r.is_victory ? '🏆 Награда за победу!' : '💀 Утешительная награда', size: 13, bold: true, color: r.is_victory ? '#ffc83c' : '#ff8888' },
+          { text: `💰 ${r.gold}   ⭐ ${r.exp}${r.diamonds ? '   💎 ' + r.diamonds : ''}`, size: 12, color: '#ffffff' },
+        ];
         if (r.chest_type) {
           const chIcon = r.chest_type === 'wb_diamond_chest' ? '💠' : '🏆';
-          msg += r.chest_added
-            ? `\n${chIcon} Сундук → Инвентарь → вкладка ⚔️ Рейд`
-            : `\n❌ Сундук не добавлен (${r.chest_error || 'ошибка'})`;
+          const chName = r.chest_type === 'wb_diamond_chest' ? 'Алмазный сундук' : 'Золотой сундук';
+          if (r.chest_added) {
+            lines.push({ text: `${chIcon} ${chName} добавлен!`, size: 12, bold: true, color: '#3cff8c' });
+            lines.push({ text: 'Инвентарь → вкладка ⚔️ Рейд', size: 10, color: '#aaddff' });
+          } else {
+            lines.push({ text: `❌ Сундук не выдан`, size: 11, color: '#ff6666' });
+            if (r.chest_error) lines.push({ text: r.chest_error.slice(0, 50), size: 9, color: '#ff4444' });
+          }
         }
-        this._toast(msg);
-        this._refresh();
+        this._toastSplash(lines);
+        // Refresh через 3с — после прочтения сплэша
+        setTimeout(() => { if (this._alive) this._refresh(); }, 3000);
       } else {
         this._toast('❌ ' + r.reason);
       }
-    } catch(_) {}
+    } catch(_) { this._toast('❌ Ошибка сети'); }
   },
 
   async _resurrect(scroll_id) {

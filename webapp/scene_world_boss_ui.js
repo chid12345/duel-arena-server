@@ -68,6 +68,35 @@ Object.assign(WorldBossScene.prototype, {
     this.time.delayedCall(1500, () => { try { t.destroy(); } catch(_){} });
   },
 
+  // Большой постоянный тост — НЕ уничтожается render(), живёт 3.5с.
+  // Используется для важных событий: клейм награды, сундук и т.п.
+  _toastSplash(lines) {
+    // Убираем предыдущий если есть
+    if (this._splashEl) {
+      this._splashEl.forEach(o => { try { o.destroy(); } catch(_){} });
+      this._splashEl = null;
+    }
+    const W = this.W;
+    const lineH = 22, pad = 14;
+    const h = pad * 2 + lines.length * lineH;
+    const y = this.H / 2 - h / 2;
+    const bg = this.add.graphics().setDepth(500);
+    bg.fillStyle(0x0d1a0d, 0.96); bg.fillRoundedRect(20, y, W - 40, h, 10);
+    bg.lineStyle(2, 0x3cff8c, 0.7); bg.strokeRoundedRect(20, y, W - 40, h, 10);
+    const texts = lines.map((l, i) => {
+      const t = txt(this, W / 2, y + pad + i * lineH + lineH / 2, l.text, l.size || 12,
+                    l.color || '#ffffff', !!l.bold).setOrigin(0.5).setDepth(501);
+      return t;
+    });
+    this._splashEl = [bg, ...texts];
+    this.time.delayedCall(3500, () => {
+      if (this._splashEl) {
+        this._splashEl.forEach(o => { try { o.destroy(); } catch(_){} });
+        this._splashEl = null;
+      }
+    });
+  },
+
   _fmtSec(s) {
     if (s == null || s < 0) return '—';
     const mm = Math.floor(s / 60), ss = s % 60;

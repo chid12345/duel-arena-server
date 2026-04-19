@@ -16,6 +16,10 @@ class WorldBossScene extends Phaser.Scene {
     try { this._clearBossBg?.(); } catch(_) {}
     this._ws = null; this._timer = null; this._pollTimer = null; this._enrageShown = false;
     this._refreshBusy = false;
+    if (this._splashEl) {
+      this._splashEl.forEach(o => { try { o.destroy(); } catch(_) {} });
+      this._splashEl = null;
+    }
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 
