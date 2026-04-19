@@ -218,6 +218,7 @@ Object.assign(MenuScene.prototype, {
     sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0x1e3060, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); sBg.lineStyle(1.5, C.blue, 0.4); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14); });
     sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0x1e3060, 1); sBg.fillRoundedRect(shopX, actY, halfW, actH, 14); sBg.lineStyle(1.5, C.blue, 0.4); sBg.strokeRoundedRect(shopX, actY, halfW, actH, 14); this.scene.start('Shop'); });
 
+    this._addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca);
     this._panels.profile = c;
     this._loadProfileBuffs();
   },

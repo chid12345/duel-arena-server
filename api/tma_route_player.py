@@ -56,7 +56,16 @@ def register_tma_player_route(
             if usdt_passive:
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
-            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "cached": True, "_sv": VERSION}
+            try:
+                eq_raw = db.get_equipment(uid)
+                equipment = {
+                    slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"],
+                           "rarity": it["rarity"], "desc": it.get("desc", "")}
+                    for slot, it in eq_raw.items()
+                }
+            except Exception:
+                equipment = {}
+            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "equipment": equipment, "cached": True, "_sv": VERSION}
 
         player = db.get_or_create_player(uid, username)
 
@@ -110,9 +119,19 @@ def register_tma_player_route(
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
+        try:
+            eq_raw = db.get_equipment(uid)
+            equipment = {
+                slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"],
+                       "rarity": it["rarity"], "desc": it.get("desc", "")}
+                for slot, it in eq_raw.items()
+            }
+        except Exception:
+            equipment = {}
         return {
             "ok": True,
             "player": _player_api(player, combined_buffs=cb),
+            "equipment": equipment,
             "_sv": VERSION,
             "_db_hp": int(player.get("current_hp", 0)),
             "_db_mhp": int(player.get("max_hp", 0)),

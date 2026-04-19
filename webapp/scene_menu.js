@@ -65,6 +65,7 @@ class MenuScene extends Phaser.Scene {
         const playerRes = await post('/api/player');
         if (playerRes.ok) {
           State.player = playerRes.player;
+          State.equipment = playerRes.equipment || {};
           State.playerLoadedAt = Date.now();
           playerOk = true;
 
