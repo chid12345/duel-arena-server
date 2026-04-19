@@ -13,7 +13,12 @@ Object.assign(ShopScene.prototype, {
     try {
       const res = await post('/api/shop/stars_invoice', { package_id: pkg.id });
       if (!res.ok) { this._toast(`❌ ${res.reason}`); this._buying = false; return; }
-      tg?.openInvoice(res.invoice_url, async (status) => {
+      if (typeof tg?.openInvoice !== 'function') {
+        this._toast('❌ Оплата Stars недоступна — откройте через Telegram');
+        this._buying = false;
+        return;
+      }
+      tg.openInvoice(res.invoice_url, async (status) => {
         this._buying = false;
         if (status === 'paid') {
           tg?.HapticFeedback?.notificationOccurred('success');
@@ -53,7 +58,13 @@ Object.assign(ShopScene.prototype, {
       const res = await post('/api/shop/crypto_invoice', { package_id: pkg.id });
       if (!res.ok) { this._toast(`❌ ${res.reason}`); this._buying = false; return; }
       localStorage.setItem('cryptoPendingInvoice', String(res.invoice_id));
-      if (res.invoice_url) tg?.openLink?.(res.invoice_url);
+      if (res.invoice_url) {
+        if (typeof tg?.openTelegramLink === 'function') {
+          tg.openTelegramLink(res.invoice_url);
+        } else {
+          tg?.openLink?.(res.invoice_url);
+        }
+      }
       this._toast('💳 Счёт открыт — оплатите и вернитесь');
       this._buying = false;
       this._startCryptoPolling(res.invoice_id, pkg);
