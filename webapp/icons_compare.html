@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duel Arena — Варианты иконок</title>
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #07050f;
+  font-family: system-ui, sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 20px;
+  gap: 24px;
+}
+h1 { font-size: 18px; font-weight: 700; color: #c4b5fd; letter-spacing: .5px; }
+.compare-row {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.variant { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.variant-label {
+  font-size: 12px; font-weight: 700; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(196,181,253,.7);
+}
+.card {
+  background: #0f0c1a;
+  border: 1.5px solid rgba(91,33,182,.85);
+  border-radius: 16px;
+  position: relative;
+  overflow: hidden;
+  width: 300px;
+}
+.card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 14px; right: 14px; height: 1.5px;
+  background: rgba(139,92,246,.5);
+}
+.eq-card {
+  padding: 0;
+  background: radial-gradient(ellipse at 50% 30%, #130f22 0%, #07060f 100%);
+}
+.eq-label {
+  text-align: center;
+  font-size: 9px; font-weight: 700; letter-spacing: 1.5px;
+  color: rgba(167,139,250,.75); text-transform: uppercase;
+  padding: 10px 0 8px;
+}
+.eq-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
+  padding: 0 12px;
+  min-height: 200px;
+}
+.eq-col { display: flex; flex-direction: column; justify-content: space-between; padding: 4px 0; }
+.eq-col-right { align-items: flex-end; }
+.slot {
+  width: 58px; height: 58px;
+  background: #1a1828;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 12px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; position: relative; flex-shrink: 0;
+}
+.slot-ico { width: 36px; height: 36px; }
+.slot-lbl { font-size: 7px; color: rgba(255,255,255,.38); font-weight: 500; white-space: nowrap; }
+.slot-dot { position: absolute; bottom: 4px; right: 4px; width: 5px; height: 5px; border-radius: 50%; }
+.dot-on  { background: #7c3aed; }
+.dot-off { background: rgba(255,255,255,.15); }
+
+/* Per-slot glow */
+.slot-sword  { box-shadow: inset 0 0 14px rgba(200,220,255,.12), 0 2px 8px rgba(0,0,0,.5); border-color: rgba(200,220,255,.18); }
+.slot-belt   { box-shadow: inset 0 0 12px rgba(217,119,6,.15),  0 2px 8px rgba(0,0,0,.5); }
+.slot-boots  { box-shadow: inset 0 0 10px rgba(146,64,14,.12),  0 2px 8px rgba(0,0,0,.5); }
+.slot-shield { box-shadow: inset 0 0 14px rgba(59,130,246,.2),  0 2px 8px rgba(0,0,0,.5); border-color: rgba(59,130,246,.25); }
+.slot-armor  { box-shadow: inset 0 0 12px rgba(156,163,175,.15),0 2px 8px rgba(0,0,0,.5); }
+.slot-ring   { box-shadow: inset 0 0 14px rgba(251,191,36,.18), 0 2px 8px rgba(0,0,0,.5); border-color: rgba(251,191,36,.2); }
+
+.eq-center {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 6px; position: relative; padding: 8px 4px;
+}
+.char-aura {
+  position: absolute; width: 130px; height: 130px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(124,58,237,.15) 0%, transparent 70%);
+}
+.char-img { position: relative; z-index: 1; width: 110px; height: 110px; }
+.char-floor {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%);
+  width: 70px; height: 6px;
+  background: rgba(124,58,237,.25); border-radius: 50%; filter: blur(4px);
+}
+.change-btn {
+  font-size: 8px; color: rgba(255,255,255,.22);
+  letter-spacing: .8px; text-transform: uppercase;
+}
+
+/* HP/XP bars */
+.hp-xp {
+  padding: 10px 14px 12px;
+  border-top: 1px solid rgba(255,255,255,.05);
+  display: flex; flex-direction: column; gap: 6px;
+}
+.bar-row { display: flex; align-items: center; gap: 8px; }
+.bar-ico { width: 14px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.bar-lbl { font-size: 9px; font-weight: 600; width: 18px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 7px; background: rgba(7,5,15,1); border-radius: 10px; overflow: hidden; }
+.bar-fill  { height: 100%; border-radius: 10px; }
+.bar-val   { font-size: 9px; color: rgba(255,255,255,.38); width: 60px; text-align: right; flex-shrink: 0; }
+
+/* ══ VARIANT A bars (current) ══ */
+.va-hp { background: linear-gradient(90deg, #166534, #86efac); }
+.va-xp { background: linear-gradient(90deg, #1d4ed8, #38bdf8); }
+
+/* ══ VARIANT B bars (new style) ══ */
+.vb-hp {
+  background: linear-gradient(90deg, #15803d, #4ade80, #86efac);
+  box-shadow: 0 0 8px rgba(74,222,128,.6);
+}
+.vb-xp {
+  background: linear-gradient(90deg, #4c1d95, #7c3aed, #a855f7);
+  box-shadow: 0 0 8px rgba(124,58,237,.6);
+}
+.bar-track-b {
+  flex: 1; height: 8px;
+  background: rgba(0,0,0,.7);
+  border-radius: 10px; overflow: visible;
+  border: 1px solid rgba(255,255,255,.06);
+}
+</style>
+</head>
+<body>
+
+<h1>Варианты иконок экипировки</h1>
+
+<div class="compare-row">
+
+  <!-- ══════════ VARIANT A — Детализированный ══════════ -->
+  <div class="variant">
+    <div class="variant-label">Вариант А — Детальный</div>
+    <div class="card eq-card">
+      <div class="eq-label">Экипировка персонажа</div>
+      <div class="eq-grid">
+
+        <!-- LEFT -->
+        <div class="eq-col">
+          <!-- SWORD A -->
+          <div class="slot slot-sword">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="a-sw-b" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#6b7280"/><stop offset="35%" stop-color="#f8fafc"/><stop offset="55%" stop-color="#e2e8f0"/><stop offset="100%" stop-color="#475569"/></linearGradient>
+                <linearGradient id="a-sw-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#b45309"/></linearGradient>
+              </defs>
+              <path d="M22 3 L26 7 L11 25 L8 25 L8 22 Z" fill="url(#a-sw-b)"/>
+              <line x1="21" y1="5" x2="10" y2="23" stroke="rgba(30,40,80,.35)" stroke-width="1.2"/>
+              <line x1="23" y1="4" x2="25" y2="6" stroke="rgba(255,255,255,.7)" stroke-width="1"/>
+              <path d="M13 18 L7 12" stroke="url(#a-sw-g)" stroke-width="3" stroke-linecap="round"/>
+              <path d="M11 21 L7 27" stroke="#7c2d12" stroke-width="3" stroke-linecap="round"/>
+              <path d="M10.5 22 L8.5 24" stroke="rgba(251,191,36,.4)" stroke-width=".9"/>
+              <path d="M9.8 24 L7.8 26" stroke="rgba(251,191,36,.4)" stroke-width=".9"/>
+              <circle cx="6" cy="27.5" r="2.8" fill="url(#a-sw-g)"/>
+              <circle cx="5.4" cy="26.8" r="1.1" fill="rgba(255,255,255,.45)"/>
+              <circle cx="20" cy="9" r=".9" fill="#93c5fd" opacity=".8"/>
+            </svg>
+            <span class="slot-lbl">Меч</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- BELT A -->
+          <div class="slot slot-belt">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="a-belt" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#92400e"/><stop offset="100%" stop-color="#451a03"/></linearGradient>
+                <linearGradient id="a-bkl" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
+              </defs>
+              <rect x="2" y="13" width="28" height="7" rx="2" fill="url(#a-belt)"/>
+              <rect x="2" y="13" width="28" height="2" rx="1" fill="rgba(255,255,255,.08)"/>
+              <circle cx="8" cy="16.5" r=".7" fill="rgba(0,0,0,.5)"/>
+              <circle cx="24" cy="16.5" r=".7" fill="rgba(0,0,0,.5)"/>
+              <rect x="12.5" y="11" width="7" height="11" rx="1.5" fill="url(#a-bkl)"/>
+              <rect x="14" y="12.5" width="4" height="8" rx="1" fill="#92400e"/>
+              <rect x="13.5" y="15.5" width="5" height="1.5" rx=".7" fill="url(#a-bkl)"/>
+              <path d="M13.5 12 Q16 11.5 19 12" stroke="rgba(255,255,255,.35)" stroke-width=".7" fill="none"/>
+            </svg>
+            <span class="slot-lbl">Пояс</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- BOOTS A -->
+          <div class="slot slot-boots">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="a-boot" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#7c2d12"/><stop offset="100%" stop-color="#3b0f05"/></linearGradient>
+              </defs>
+              <path d="M10 4 Q9 4 9 6 L9 20 Q9 21 10 21 L19 21 Q20 21 20 20 L20 6 Q20 4 19 4 Z" fill="url(#a-boot)"/>
+              <path d="M10 5 L12 5 L12 19 L10 19 Z" fill="rgba(255,255,255,.1)"/>
+              <path d="M9 20 Q8 21 7 23 Q6 25 8 26 L22 26 Q24 25 23 23 Q22 21 20 20 Z" fill="#6b1a07"/>
+              <rect x="7" y="25.5" width="16" height="2.5" rx="1.2" fill="#1c0a03"/>
+              <rect x="9" y="10" width="11" height="2" rx="1" fill="#d97706"/>
+              <rect x="9" y="15" width="11" height="2" rx="1" fill="#b45309"/>
+              <rect x="14.5" y="9.5" width="3" height="3" rx=".7" fill="#fde68a"/>
+              <rect x="15" y="10" width="2" height="2" rx=".4" fill="#92400e"/>
+            </svg>
+            <span class="slot-lbl">Сапоги</span><span class="slot-dot dot-off"></span>
+          </div>
+        </div>
+
+        <!-- CENTER -->
+        <div class="eq-center">
+          <div class="char-aura"></div>
+          <div class="char-img">
+            <svg viewBox="0 0 120 120" fill="none">
+              <path d="M60 8L36 54h48L60 8Z" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+              <ellipse cx="60" cy="55" rx="26" ry="7" fill="#5b21b6"/>
+              <circle cx="60" cy="70" r="18" fill="#fde68a"/>
+              <circle cx="53" cy="68" r="2.5" fill="#1e1b4b"/>
+              <circle cx="67" cy="68" r="2.5" fill="#1e1b4b"/>
+              <circle cx="54" cy="67" r="1" fill="#fff"/>
+              <circle cx="68" cy="67" r="1" fill="#fff"/>
+              <path d="M54 75 Q60 80 66 75" stroke="#92400e" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M34 110 Q38 88 60 86 Q82 88 86 110Z" fill="#6d28d9"/>
+              <path d="M60 90 Q40 92 32 100" stroke="#5b21b6" stroke-width="10" stroke-linecap="round"/>
+              <path d="M60 90 Q80 92 90 98" stroke="#5b21b6" stroke-width="10" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="char-floor"></div>
+          <div class="change-btn">✎ Сменить воина</div>
+        </div>
+
+        <!-- RIGHT -->
+        <div class="eq-col eq-col-right">
+          <!-- SHIELD A -->
+          <div class="slot slot-shield">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="a-sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#1e40af"/><stop offset="100%" stop-color="#0f172a"/></linearGradient>
+                <linearGradient id="a-sh-ri" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#60a5fa"/><stop offset="50%" stop-color="#bfdbfe"/><stop offset="100%" stop-color="#3b82f6"/></linearGradient>
+              </defs>
+              <path d="M16 2 L5 7 L5 17 Q5 26 16 30 Q27 26 27 17 L27 7 Z" fill="url(#a-sh)"/>
+              <path d="M16 2 L5 7 L5 17 Q5 26 16 30 Q27 26 27 17 L27 7 Z" stroke="url(#a-sh-ri)" stroke-width="1.5" fill="none"/>
+              <circle cx="16" cy="16" r="7" fill="none" stroke="#3b82f6" stroke-width="1.2" opacity=".6"/>
+              <circle cx="16" cy="16" r="5" fill="#7c3aed" opacity=".9"/>
+              <ellipse cx="14.5" cy="14.2" rx="1.8" ry="1.2" fill="rgba(255,255,255,.38)" transform="rotate(-20 14.5 14.2)"/>
+              <path d="M10 7 Q16 5 22 7" stroke="rgba(255,255,255,.18)" stroke-width="1" fill="none"/>
+            </svg>
+            <span class="slot-lbl">Щит</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- ARMOR A -->
+          <div class="slot slot-armor">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="a-ar" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#9ca3af"/><stop offset="40%" stop-color="#e5e7eb"/><stop offset="100%" stop-color="#374151"/></linearGradient>
+                <linearGradient id="a-ar-m" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#4b5563"/><stop offset="50%" stop-color="#f3f4f6"/><stop offset="100%" stop-color="#4b5563"/></linearGradient>
+              </defs>
+              <ellipse cx="7" cy="11" rx="4.5" ry="3.5" fill="url(#a-ar)" transform="rotate(-10 7 11)"/>
+              <ellipse cx="25" cy="11" rx="4.5" ry="3.5" fill="url(#a-ar)" transform="rotate(10 25 11)"/>
+              <path d="M4 9 Q7 7.5 10 9" stroke="rgba(255,255,255,.35)" stroke-width=".8" fill="none"/>
+              <path d="M22 9 Q25 7.5 28 9" stroke="rgba(255,255,255,.35)" stroke-width=".8" fill="none"/>
+              <path d="M9 10 Q8 10 8 12 L8 24 Q8 26 10 27 L22 27 Q24 26 24 24 L24 12 Q24 10 23 10 Z" fill="url(#a-ar)"/>
+              <rect x="15" y="10" width="2" height="17" fill="url(#a-ar-m)" opacity=".55"/>
+              <ellipse cx="16" cy="15" rx="3" ry="2.5" fill="#7c3aed" opacity=".9"/>
+              <ellipse cx="15" cy="14" rx="1.2" ry=".9" fill="rgba(255,255,255,.45)"/>
+            </svg>
+            <span class="slot-lbl">Броня</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- RING A -->
+          <div class="slot slot-ring">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="a-rng" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#b45309"/></linearGradient>
+                <linearGradient id="a-gem" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f87171"/><stop offset="100%" stop-color="#991b1b"/></linearGradient>
+              </defs>
+              <path d="M9 22 Q9 29 16 29 Q23 29 23 22" stroke="url(#a-rng)" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+              <path d="M9 22 Q9 15 16 15 Q23 15 23 22" stroke="#d97706" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M10.5 22 Q10.5 27.5 16 27.5 Q21.5 27.5 21.5 22" stroke="rgba(0,0,0,.3)" stroke-width="1" fill="none"/>
+              <path d="M10 20 Q13 17 16 16.5" stroke="rgba(255,255,255,.35)" stroke-width=".9" fill="none"/>
+              <path d="M12 14 L14 8 L18 8 L20 14 L16 12 Z" fill="#b45309"/>
+              <path d="M13.5 13 L16 7 L18.5 13 L16 11.5 Z" fill="url(#a-gem)"/>
+              <ellipse cx="15" cy="8.5" rx="1.1" ry=".8" fill="rgba(255,255,255,.55)" transform="rotate(-20 15 8.5)"/>
+            </svg>
+            <span class="slot-lbl">Кольцо</span><span class="slot-dot dot-off"></span>
+          </div>
+        </div>
+
+      </div><!-- eq-grid -->
+
+      <!-- HP/XP A -->
+      <div class="hp-xp">
+        <div class="bar-row">
+          <div class="bar-ico"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 14C8 14 2 10 2 5.5A3.5 3.5 0 018 3.8a3.5 3.5 0 016 1.7C14 10 8 14 8 14Z" fill="#4ade80"/></svg></div>
+          <span class="bar-lbl" style="color:#4ade80">HP</span>
+          <div class="bar-track"><div class="bar-fill va-hp" style="width:100%"></div></div>
+          <span class="bar-val">804 / 804</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-ico"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 4.5H14L10.5 9l1.5 4.5L8 11l-4 2.5L5.5 9 2 6.5h4.5L8 2Z" fill="#818cf8"/></svg></div>
+          <span class="bar-lbl" style="color:#818cf8">XP</span>
+          <div class="bar-track"><div class="bar-fill va-xp" style="width:65%"></div></div>
+          <span class="bar-val">947 / 1450</span>
+        </div>
+      </div>
+    </div><!-- card -->
+  </div><!-- variant A -->
+
+
+  <!-- ══════════ VARIANT B — Игровой стиль ══════════ -->
+  <div class="variant">
+    <div class="variant-label">Вариант Б — Игровой</div>
+    <div class="card eq-card">
+      <div class="eq-label">Экипировка персонажа</div>
+      <div class="eq-grid">
+
+        <!-- LEFT B -->
+        <div class="eq-col">
+          <!-- SWORD B -->
+          <div class="slot slot-sword">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="b-sw" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#94a3b8"/><stop offset="50%" stop-color="#f1f5f9"/><stop offset="100%" stop-color="#64748b"/></linearGradient>
+              </defs>
+              <!-- Clean blade -->
+              <path d="M24 4 L28 8 L13 26 L9 26 L9 22 Z" fill="url(#b-sw)"/>
+              <!-- Simple shine strip -->
+              <path d="M24 5 L26 7 L13 24 L12 23 Z" fill="rgba(255,255,255,.28)"/>
+              <!-- Bold cross-guard -->
+              <rect x="8" y="14" width="13" height="3.5" rx="1.8" fill="#f59e0b" transform="rotate(-45 14.5 15.8)"/>
+              <!-- Handle -->
+              <path d="M11 22 L8 28" stroke="#7c2d12" stroke-width="3.5" stroke-linecap="round"/>
+              <!-- Pommel -->
+              <circle cx="7" cy="28.5" r="3" fill="#f59e0b"/>
+              <circle cx="6.5" cy="27.8" r="1.2" fill="rgba(255,255,255,.5)"/>
+            </svg>
+            <span class="slot-lbl">Меч</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- BELT B -->
+          <div class="slot slot-belt">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <!-- Bold leather strap -->
+              <rect x="2" y="12" width="28" height="9" rx="3" fill="#7c2d12"/>
+              <!-- Top highlight -->
+              <rect x="2" y="12" width="28" height="3" rx="2" fill="rgba(255,255,255,.1)"/>
+              <!-- Gold buckle -->
+              <rect x="11" y="10" width="10" height="13" rx="2.5" fill="#f59e0b"/>
+              <rect x="12.5" y="11.5" width="7" height="10" rx="1.5" fill="#92400e"/>
+              <!-- Buckle pin -->
+              <rect x="12.5" y="15.5" width="7" height="2" rx="1" fill="#f59e0b"/>
+              <!-- Buckle shine -->
+              <path d="M12 11 Q16 10 20 11" stroke="rgba(255,255,255,.4)" stroke-width=".8" fill="none"/>
+            </svg>
+            <span class="slot-lbl">Пояс</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- BOOTS B -->
+          <div class="slot slot-boots">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <!-- Shaft -->
+              <path d="M11 3 L19 3 Q20 3 20 5 L20 19 L22 22 Q24 26 21 27 L9 27 Q6 26 8 22 L10 19 L10 5 Q10 3 11 3 Z" fill="#7c2d12"/>
+              <!-- Shaft front face lighter -->
+              <path d="M11 3 L13 3 L13 19 L11 19 Z" fill="rgba(255,255,255,.08)"/>
+              <!-- Toe -->
+              <path d="M8 22 Q7 25 9 26 L21 26 Q23 25 22 22" fill="#6b1a07"/>
+              <!-- Sole -->
+              <rect x="7" y="26" width="17" height="3" rx="1.5" fill="#1c0a03"/>
+              <!-- Strap -->
+              <rect x="10" y="11" width="10" height="2.5" rx="1.2" fill="#d97706"/>
+              <!-- Buckle -->
+              <rect x="14" y="10" width="3.5" height="4.5" rx="1" fill="#fde68a"/>
+              <rect x="14.5" y="10.5" width="2.5" height="3.5" rx=".6" fill="#92400e"/>
+            </svg>
+            <span class="slot-lbl">Сапоги</span><span class="slot-dot dot-off"></span>
+          </div>
+        </div>
+
+        <!-- CENTER B (same character) -->
+        <div class="eq-center">
+          <div class="char-aura"></div>
+          <div class="char-img">
+            <svg viewBox="0 0 120 120" fill="none">
+              <path d="M60 8L36 54h48L60 8Z" fill="#7c3aed" stroke="#a78bfa" stroke-width="1.5"/>
+              <ellipse cx="60" cy="55" rx="26" ry="7" fill="#5b21b6"/>
+              <circle cx="60" cy="70" r="18" fill="#fde68a"/>
+              <circle cx="53" cy="68" r="2.5" fill="#1e1b4b"/>
+              <circle cx="67" cy="68" r="2.5" fill="#1e1b4b"/>
+              <circle cx="54" cy="67" r="1" fill="#fff"/>
+              <circle cx="68" cy="67" r="1" fill="#fff"/>
+              <path d="M54 75 Q60 80 66 75" stroke="#92400e" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+              <path d="M34 110 Q38 88 60 86 Q82 88 86 110Z" fill="#6d28d9"/>
+              <path d="M60 90 Q40 92 32 100" stroke="#5b21b6" stroke-width="10" stroke-linecap="round"/>
+              <path d="M60 90 Q80 92 90 98" stroke="#5b21b6" stroke-width="10" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div class="char-floor"></div>
+          <div class="change-btn">✎ Сменить воина</div>
+        </div>
+
+        <!-- RIGHT B -->
+        <div class="eq-col eq-col-right">
+          <!-- SHIELD B -->
+          <div class="slot slot-shield">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="b-sh" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#1e3a8a"/></linearGradient>
+              </defs>
+              <!-- Shield shape — bold, clean -->
+              <path d="M16 2 L4 8 L4 18 Q4 27 16 31 Q28 27 28 18 L28 8 Z" fill="url(#b-sh)"/>
+              <!-- Rim highlight -->
+              <path d="M16 2 L4 8 L4 18 Q4 27 16 31 Q28 27 28 18 L28 8 Z" stroke="#60a5fa" stroke-width="1.5" fill="none"/>
+              <!-- Inner top shine -->
+              <path d="M9 9 Q16 6.5 23 9" stroke="rgba(255,255,255,.25)" stroke-width="1.2" fill="none"/>
+              <!-- Center emblem: star -->
+              <path d="M16 9 L17.5 13.5 L22 13.5 L18.5 16.5 L19.5 21 L16 18.5 L12.5 21 L13.5 16.5 L10 13.5 L14.5 13.5 Z" fill="#bfdbfe" opacity=".9"/>
+              <path d="M16 10.5 L17 13.5 L20 13.5 L17.8 15.3 L18.5 18.3 L16 16.8 L13.5 18.3 L14.2 15.3 L12 13.5 L15 13.5 Z" fill="white" opacity=".55"/>
+            </svg>
+            <span class="slot-lbl">Щит</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- ARMOR B -->
+          <div class="slot slot-armor">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="b-ar" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#d1d5db"/><stop offset="100%" stop-color="#4b5563"/></linearGradient>
+              </defs>
+              <!-- Shoulders bold -->
+              <ellipse cx="7" cy="11" rx="5" ry="4" fill="url(#b-ar)" transform="rotate(-8 7 11)"/>
+              <ellipse cx="25" cy="11" rx="5" ry="4" fill="url(#b-ar)" transform="rotate(8 25 11)"/>
+              <path d="M4 8.5 Q7 7 10 8.5" stroke="rgba(255,255,255,.4)" stroke-width="1" fill="none"/>
+              <path d="M22 8.5 Q25 7 28 8.5" stroke="rgba(255,255,255,.4)" stroke-width="1" fill="none"/>
+              <!-- Chest body bold -->
+              <path d="M9 9 L9 26 Q9 28 11 28 L21 28 Q23 28 23 26 L23 9 Z" fill="url(#b-ar)"/>
+              <!-- Center crease -->
+              <rect x="15" y="9" width="2" height="19" fill="rgba(255,255,255,.15)"/>
+              <!-- Pec lines -->
+              <path d="M9 14 Q12 11.5 15 13" stroke="rgba(255,255,255,.2)" stroke-width="1.2" fill="none"/>
+              <path d="M23 14 Q20 11.5 17 13" stroke="rgba(255,255,255,.2)" stroke-width="1.2" fill="none"/>
+              <!-- Belly plates -->
+              <path d="M10 20 Q16 18.5 22 20" stroke="rgba(0,0,0,.3)" stroke-width="1.5"/>
+              <path d="M10 24 Q16 22.5 22 24" stroke="rgba(0,0,0,.25)" stroke-width="1.2"/>
+              <!-- Gem -->
+              <circle cx="16" cy="15.5" r="3" fill="#9333ea"/>
+              <circle cx="15.2" cy="14.7" r="1.2" fill="rgba(255,255,255,.5)"/>
+              <!-- Top shine -->
+              <path d="M10 10 Q16 8.5 22 10" stroke="rgba(255,255,255,.25)" stroke-width="1" fill="none"/>
+            </svg>
+            <span class="slot-lbl">Броня</span><span class="slot-dot dot-on"></span>
+          </div>
+          <!-- RING B -->
+          <div class="slot slot-ring">
+            <svg class="slot-ico" viewBox="0 0 32 32" fill="none">
+              <defs>
+                <linearGradient id="b-rng" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="100%" stop-color="#d97706"/></linearGradient>
+                <linearGradient id="b-gem" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fb7185"/><stop offset="100%" stop-color="#be123c"/></linearGradient>
+              </defs>
+              <!-- Ring band - bold clean oval -->
+              <ellipse cx="16" cy="22" rx="8" ry="6" stroke="url(#b-rng)" stroke-width="3.5" fill="none"/>
+              <!-- Inner shadow -->
+              <ellipse cx="16" cy="22" rx="6" ry="4.2" stroke="rgba(0,0,0,.35)" stroke-width="1" fill="none"/>
+              <!-- Band top shine -->
+              <path d="M10 19 Q13 16.5 16 16.5 Q19 16.5 22 19" stroke="rgba(255,255,255,.4)" stroke-width="1" fill="none"/>
+              <!-- Gem setting -->
+              <polygon points="16,5 19,10 23,10 20,14 21,19 16,16 11,19 12,14 9,10 13,10" fill="#b45309"/>
+              <!-- Gem faceted -->
+              <polygon points="16,6 18.5,10 22,10 19.5,13 20.5,17 16,14.5 11.5,17 12.5,13 10,10 13.5,10" fill="url(#b-gem)"/>
+              <!-- Gem inner lines -->
+              <line x1="16" y1="6" x2="16" y2="14.5" stroke="rgba(255,150,160,.4)" stroke-width=".7"/>
+              <line x1="10" y1="10" x2="22" y2="10" stroke="rgba(255,150,160,.35)" stroke-width=".7"/>
+              <!-- Gem shine -->
+              <ellipse cx="14.5" cy="8.5" rx="1.5" ry="1" fill="rgba(255,255,255,.6)" transform="rotate(-25 14.5 8.5)"/>
+            </svg>
+            <span class="slot-lbl">Кольцо</span><span class="slot-dot dot-off"></span>
+          </div>
+        </div>
+
+      </div><!-- eq-grid -->
+
+      <!-- HP/XP B — styled glow bars -->
+      <div class="hp-xp">
+        <div class="bar-row">
+          <div class="bar-ico"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 14C8 14 2 10 2 5.5A3.5 3.5 0 018 3.8a3.5 3.5 0 016 1.7C14 10 8 14 8 14Z" fill="#4ade80" filter="url(#glow-hp)"/></svg></div>
+          <span class="bar-lbl" style="color:#4ade80">HP</span>
+          <div class="bar-track-b">
+            <div class="bar-fill vb-hp" style="width:100%; height:8px; border-radius:10px;"></div>
+          </div>
+          <span class="bar-val">804 / 804</span>
+        </div>
+        <div class="bar-row">
+          <div class="bar-ico"><svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2l1.5 4.5H14L10.5 9l1.5 4.5L8 11l-4 2.5L5.5 9 2 6.5h4.5L8 2Z" fill="#a855f7"/></svg></div>
+          <span class="bar-lbl" style="color:#a855f7">XP</span>
+          <div class="bar-track-b">
+            <div class="bar-fill vb-xp" style="width:65%; height:8px; border-radius:10px;"></div>
+          </div>
+          <span class="bar-val">947 / 1450</span>
+        </div>
+      </div>
+    </div><!-- card B -->
+  </div><!-- variant B -->
+
+</div><!-- compare-row -->
+
+<p style="color:rgba(255,255,255,.3); font-size:11px; margin-top:8px;">Скажи какой вариант нравится — доработаем</p>
+
+</body>
+</html>
