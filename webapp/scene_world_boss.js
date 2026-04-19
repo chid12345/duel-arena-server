@@ -25,7 +25,18 @@ class WorldBossScene extends Phaser.Scene {
     this._alive = true;
     _extraBg(this, W, H);
     _extraHeader(this, W, '🐉', 'МИРОВОЙ БОСС', 'Общий рейд каждые 4 часа');
-    _extraBack(this, 'Menu', 'more');
+    // Back: во время боя (живой) — заблокировано; иначе — в меню
+    makeBackBtn(this, 'Назад', () => {
+      const ps = this._state?.player_state;
+      const inFight = !!this._state?.active;
+      if (inFight && ps && !ps.is_dead) {
+        this._toast('⚔️ Нельзя покинуть бой — ты ещё жив!');
+        tg?.HapticFeedback?.notificationOccurred('warning');
+        return;
+      }
+      tg?.HapticFeedback?.impactOccurred('light');
+      this.scene.start('Menu', { returnTab: 'more' });
+    });
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     this._refresh();
@@ -180,6 +191,10 @@ class WorldBossScene extends Phaser.Scene {
       this._addText(W/2, y+24, '💀 Вы мертвы', 13, '#ff6672', true).setOrigin(0.5);
       y += 58;
       this._renderResurrectRow(s, W, y); y += 54;
+      // Кнопка "Покинуть бой" — только когда мёртв
+      this._bigBtn(16, y, W-32, 36, 0x2a2a3a, '🚪 Покинуть бой',
+        () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu', { returnTab: 'more' }); });
+      y += 46;
     }
 
     if (ps) {
