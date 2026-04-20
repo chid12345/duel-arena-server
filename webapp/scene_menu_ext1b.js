@@ -10,7 +10,6 @@ Object.assign(MenuScene.prototype, {
     const rmdl = o => { try { o.removeFromDisplayList(); } catch(_) {} return o; };
 
     const items = [
-      { icon: '🛍️', label: 'Магазин',   cb: () => this.scene.start('Shop')      },
       { icon: '⚔️', label: 'Клан',      cb: () => this.scene.start('Clan')      },
       { icon: '🐉', label: 'Босс',      cb: () => this.scene.start('WorldBoss') },
       { icon: '🎭', label: 'Аватарки',  cb: () => this.scene.start('Avatar')    },

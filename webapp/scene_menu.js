@@ -50,6 +50,7 @@ class MenuScene extends Phaser.Scene {
           if (cnt !== this._tasksBadgeCount) {
             this._tasksBadgeCount = cnt;
             if (this._tabBarObjs) this._buildTabBar();
+            this._updateProfileTasksBadge?.();
           }
         });
         get('/api/version').catch(() => null).then(versionRes => {
@@ -86,6 +87,7 @@ class MenuScene extends Phaser.Scene {
               const cnt = taskRes.claimable_count || 0;
               this._tasksBadgeCount = cnt;
               if (this._tabBarObjs) this._buildTabBar();
+              this._updateProfileTasksBadge?.();
               if (cnt > 0) {
                 this.time.delayedCall(800, () =>
                   this._toast(`📋 Есть награды в Заданиях! (${cnt})`)
@@ -156,7 +158,6 @@ class MenuScene extends Phaser.Scene {
       { key: 'profile', icon: '🏠', label: 'Профиль' },
       { key: 'battle',  icon: '⚔️',  label: 'Бой'     },
       { key: 'stats',   icon: '🗡️',  label: 'Герой'   },
-      { key: 'tasks',   icon: '📋',  label: 'Задания'  },
       { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
       { key: 'more',    icon: '☰',   label: 'Меню'    },
     ];
@@ -183,15 +184,6 @@ class MenuScene extends Phaser.Scene {
 
       const iconTxt  = _track(txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.7));
       const labelTxt = _track(txt(this, cx, tabTop + 52, tab.label, 10, '#9090b0').setOrigin(0.5));
-
-      // Красный бейдж с числом незабранных наград на табе Задания
-      if (tab.key === 'tasks' && this._tasksBadgeCount > 0) {
-        const bx = cx + 11, by = tabTop + 12;
-        const bdgBg = _track(this.add.graphics());
-        bdgBg.fillStyle(0xe03030, 1);
-        bdgBg.fillCircle(bx, by, 8);
-        _track(txt(this, bx, by, String(this._tasksBadgeCount), 9, '#ffffff', true).setOrigin(0.5));
-      }
 
       this._tabBtns[tab.key] = { activeBg, activeBar, iconTxt, labelTxt };
 

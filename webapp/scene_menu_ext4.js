@@ -333,9 +333,30 @@ Object.assign(MenuScene.prototype, {
     tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
     tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this.scene.start('Tasks'); });
 
+    // Badge on Tasks button in profile
+    const pfBdgBg  = ca(this.add.graphics());
+    const pfBdgTxt = ca(this.add.text(0, 0, '', { fontFamily: 'Arial', fontSize: '9px', color: '#ffffff', fontStyle: 'bold' }).setOrigin(0.5));
+    this._profileTasksBadgeObjs = { bg: pfBdgBg, txt: pfBdgTxt, bx: tasksX + b2W - 12, by: btn2Y + 10 };
+    this._updateProfileTasksBadge();
+
     this._addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca);
     this._panels.profile = c;
     this._loadProfileBuffs();
+  },
+
+  _updateProfileTasksBadge() {
+    const b = this._profileTasksBadgeObjs;
+    if (!b) return;
+    b.bg.clear();
+    if ((this._tasksBadgeCount || 0) > 0) {
+      b.bg.fillStyle(0xe03030, 1);
+      b.bg.fillCircle(b.bx, b.by, 8);
+      b.txt.setText(String(this._tasksBadgeCount));
+      b.txt.setPosition(b.bx, b.by);
+      b.txt.setVisible(true);
+    } else {
+      b.txt.setVisible(false);
+    }
   },
 
 });
