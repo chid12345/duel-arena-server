@@ -81,8 +81,12 @@
       if (action === 'buy_usdt') {
         res = await post('/api/wardrobe/usdt/buy-invoice', {});
         if (res?.ok && res.invoice_url) {
-          tg?.openTelegramLink?.(res.invoice_url);
+          const _url = res.invoice_url || '';
+          if (res.web_app_url) tg?.openLink?.(res.web_app_url);
+          else if (_url.includes('startapp=')) tg?.openLink?.(_url);
+          else tg?.openTelegramLink?.(_url);
           scene._showToast?.('💳 Счёт открыт — оплатите и вернитесь');
+          if (res.invoice_id) _pollUsdtSlot(scene, res.invoice_id, 0);
         } else { scene._showToast?.(`❌ ${res?.reason || 'Ошибка'}`); }
         scene._wardrobeHtmlBusy = false; return;
       }
@@ -188,6 +192,27 @@
   function refresh(scene, wp) {
     const view = scene._wardrobeView || 'all';
     _renderView(scene, wp, view);
+  }
+
+  /* ── USDT polling after CryptoPay ── */
+  async function _pollUsdtSlot(scene, invoiceId, attempt) {
+    if (attempt >= 24 || !document.getElementById('wd-root')) return;
+    setTimeout(async () => {
+      try {
+        const r = await get(`/api/shop/crypto_check/${invoiceId}`);
+        if (r?.ok && r.paid && r.usdt_slot_created) {
+          scene._showToast?.('🎉 Легендарный образ получен!');
+          tg?.HapticFeedback?.notificationOccurred('success');
+          try {
+            const wp = await get('/api/wardrobe');
+            if (wp?.ok) WardrobeHTML.refresh(scene, wp);
+          } catch (_) {}
+          return;
+        }
+        if (r?.ok && r.paid) return; // оплачен, но создание ещё в процессе
+      } catch (_) {}
+      if (document.getElementById('wd-root')) _pollUsdtSlot(scene, invoiceId, attempt + 1);
+    }, 5000);
   }
 
   Object.assign(WardrobeHTML, { open, close, refresh });
