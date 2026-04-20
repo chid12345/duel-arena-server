@@ -18,6 +18,16 @@ class StatsScene extends Phaser.Scene {
     this._busy = false;
     this._statRows = {};
 
+    const d = this._initData;
+
+    // Режим прямого открытия гардероба из профиля — Stats-UI не строим
+    if (d.openWardrobe) {
+      this._openedFromProfile = true;
+      this._drawBg(W, H);
+      this._openAvatarPanel();
+      return;
+    }
+
     this._drawBg(W, H);
     this._buildHeader(W);
     // Бейдж воина — наверху (раскрывается полной панелью бонусов)
@@ -31,14 +41,9 @@ class StatsScene extends Phaser.Scene {
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('stats');
 
     // После restart от wardrobe-действия — открыть гардероб заново
-    const d = this._initData;
     if (d.reopenWardrobe && d.wardrobePayload) {
       this._renderAvatarOverlay(d.wardrobePayload);
       if (d.toast) this._showToast(d.toast);
-    }
-    // Открыть броню из профиля
-    if (d.openWardrobe) {
-      this.time.delayedCall(80, () => this._openAvatarPanel?.());
     }
     // Авто-открытие инвентаря из кнопки «🎒 Моё» в магазине
     // (сброс счётчика происходит внутри _openInventoryPanel)

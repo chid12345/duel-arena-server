@@ -229,7 +229,13 @@
         if (res.player) { State.player=res.player; State.playerLoadedAt=Date.now(); }
         const msg=action==="buy"?"✅ Броня получена":action==="unequip"?"✅ Броня снята":"✅ Броня надета";
         this._avatarBusy=false;
-        this.scene.restart({player:State.player,reopenWardrobe:true,wardrobePayload:res,toast:msg});
+        if (this._openedFromProfile) {
+          // Из профиля — просто перерисовываем оверлей, без перезапуска сцены
+          this._renderAvatarOverlay(res);
+          this._showToast?.(msg);
+        } else {
+          this.scene.restart({player:State.player,reopenWardrobe:true,wardrobePayload:res,toast:msg});
+        }
         return;
       } else { this._showToast(`❌ ${res?.message||res?.reason||"Ошибка"}`); }
     } catch { this._showToast("❌ Ошибка сети"); }
@@ -285,5 +291,10 @@
     (this._avatarOverlay||[]).forEach(o=>{ try{o.destroy();}catch{} });
     this._avatarOverlay=null;
     this._closeUsdtDetail?.();
+    // Если открыто из профиля — возвращаемся в профиль
+    if (this._openedFromProfile) {
+      this._openedFromProfile = false;
+      this.scene.start('Menu', { returnTab: 'profile' });
+    }
   };
 })();
