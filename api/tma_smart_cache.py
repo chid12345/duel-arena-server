@@ -45,7 +45,7 @@ async def smart_cache_middleware(request: Request, call_next):
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     elif has_version and path.endswith((".js", ".css")):
-        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        response.headers["Cache-Control"] = "no-cache"
     elif path.endswith((".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico", ".gif")):
         response.headers["Cache-Control"] = "public, max-age=604800"
 
