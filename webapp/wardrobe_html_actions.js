@@ -100,7 +100,7 @@
   function _attachEvents(scene, wp, items) {
     const grid = document.getElementById('wd-grid');
     if (!grid) return;
-    grid.addEventListener('click', e => {
+    grid.onclick = e => {
       const btn  = e.target.closest('[data-act]');
       const card = e.target.closest('.wd-card');
       if (btn) {
@@ -113,7 +113,7 @@
         const a = items.find(x => x.id === card.dataset.id);
         if (a) _openModal(scene, a, wp);
       }
-    });
+    };
   }
 
   /* ── build items from payload ── */
@@ -126,7 +126,7 @@
 
     return W.ARMORS_DATA.map(a => ({
       ...a,
-      owned:    owned.has(a.id) || a.type === 'free',
+      owned:    owned.has(a.id),
       equipped: a.id === eqId || !!(wp?.inventory||[]).find(i => i.class_id === a.id && i.equipped),
     }));
   }

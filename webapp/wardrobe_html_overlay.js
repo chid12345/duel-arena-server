@@ -185,9 +185,9 @@ const ARMORS_DATA = [
   { id:'assassin_gold', r:'rare',   name:'Золотой Оплот',       stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:7,int:0,end:0, bonus:'Выковано из чистейшего золота.\nДвойной удар: 4%',                 type:'gold',     price:'💰 5000' },
   { id:'mage_gold',     r:'rare',   name:'Латы Завоевателя',    stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:0,int:7,end:0, bonus:'Выковано из чистейшего золота.\nКрит урон: +4%',                   type:'gold',     price:'💰 5000' },
   { id:'paladin_gold',  r:'rare',   name:'Позолоченная Броня',  stars:'★★☆☆', tier:'ЗОЛОТО',  str:4,agi:0,int:4,end:4, bonus:'Выковано из чистейшего золота.\nВходящий урон: -3%',               type:'gold',     price:'💰 5000' },
-  { id:'dragonknight',  r:'epic',   name:'Доспех Ледяного Духа',stars:'★★★☆', tier:'АЛМАЗЫ',  str:9,agi:0,int:5,end:9, bonus:'Кристаллы поглощают часть урона.\nУрон +6% при HP < 40%',         type:'diamonds', price:'💎 100' },
-  { id:'shadowdancer',  r:'epic',   name:'Нагрудник Бездны',    stars:'★★★☆', tier:'АЛМАЗЫ',  str:0,agi:9,int:5,end:0, bonus:'Кристаллы поглощают часть урона.\nДвойной удар: 6%',               type:'diamonds', price:'💎 100' },
-  { id:'archmage',      r:'epic',   name:'Латы Теневого Мага',  stars:'★★★☆', tier:'АЛМАЗЫ',  str:0,agi:0,int:9,end:6, bonus:'Кристаллы поглощают часть урона.\nКрит урон: +5%',                type:'diamonds', price:'💎 100' },
+  { id:'dragonknight_diamonds', r:'epic', name:'Доспех Ледяного Духа',stars:'★★★☆', tier:'АЛМАЗЫ', str:9,agi:0,int:5,end:9, bonus:'Кристаллы поглощают часть урона.\nУрон +6% при HP < 40%',  type:'diamonds', price:'💎 100' },
+  { id:'shadowdancer_diamonds', r:'epic', name:'Нагрудник Бездны',    stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:9,int:5,end:0, bonus:'Кристаллы поглощают часть урона.\nДвойной удар: 6%',            type:'diamonds', price:'💎 100' },
+  { id:'archmage_diamonds',     r:'epic', name:'Латы Теневого Мага',  stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:0,int:9,end:6, bonus:'Кристаллы поглощают часть урона.\nКрит урон: +5%',             type:'diamonds', price:'💎 100' },
   { id:'legendary_usdt',r:'mythic', name:'Сердце Дракона',      stars:'★★★★', tier:'ЛЕГЕНДА', str:0,agi:0,int:0,end:0, bonus:'Чешуя, пропитанная яростью лавы.\n+19 свободных статов\nСброс сборки — 5.99 USDT', type:'usdt', price:'🔥 11.99 USDT' },
 ];
 
