@@ -52,7 +52,7 @@ const CSS = `
 /* ── Image area ── */
 .wd-img-area{position:relative;width:100%;height:140px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.3)}
 .wd-card-img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
-.wd-card-img.mythic-crop{object-position:center 22%;transform:scale(1.65) translateY(7%);transform-origin:center center}
+.wd-card-img.mythic-crop{object-position:center 15%;transform:scale(1.1) translateY(4%);transform-origin:center center}
 /* gradient fade bottom of image into card body */
 .wd-img-fade{position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(transparent,var(--cbg,rgba(10,6,24,.97)));pointer-events:none}
 
