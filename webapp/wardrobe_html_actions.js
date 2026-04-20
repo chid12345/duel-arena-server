@@ -82,12 +82,16 @@
         res = await post('/api/wardrobe/usdt/buy-invoice', {});
         if (res?.ok && res.invoice_url) {
           const _url = res.invoice_url || '';
-          if (res.web_app_url) tg?.openLink?.(res.web_app_url);
-          else if (_url.includes('startapp=')) tg?.openLink?.(_url);
-          else tg?.openTelegramLink?.(_url);
+          if (_url.startsWith('https://t.me/') || _url.startsWith('tg://'))
+            tg?.openTelegramLink?.(_url);
+          else
+            tg?.openLink?.(_url);
           scene._showToast?.('💳 Счёт открыт — оплатите и вернитесь');
           if (res.invoice_id) _pollUsdtSlot(scene, res.invoice_id, 0);
-        } else { scene._showToast?.(`❌ ${res?.reason || 'Ошибка'}`); }
+        } else {
+          const errMsg = res?.reason || res?.message || 'Ошибка создания счёта';
+          tg?.showAlert?.(errMsg) || scene._showToast?.(`❌ ${errMsg}`);
+        }
         scene._wardrobeHtmlBusy = false; return;
       }
       if (res?.ok) {
