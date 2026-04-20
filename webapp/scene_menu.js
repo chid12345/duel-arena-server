@@ -158,6 +158,7 @@ class MenuScene extends Phaser.Scene {
       { key: 'profile', icon: '🏠', label: 'Профиль' },
       { key: 'battle',  icon: '⚔️',  label: 'Бой'     },
       { key: 'stats',   icon: '🗡️',  label: 'Герой'   },
+      { key: 'boss',    icon: '🐉',  label: 'Босс'    },
       { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
       { key: 'more',    icon: '☰',   label: 'Меню'    },
     ];
@@ -192,6 +193,7 @@ class MenuScene extends Phaser.Scene {
         Sound.tab();
         tg?.HapticFeedback?.selectionChanged();
         if (tab.key === 'stats')  { this.scene.start('Stats',  { player: State.player }); return; }
+        if (tab.key === 'boss')   { this.scene.start('WorldBoss'); return; }
         if (tab.key === 'rating') { this.scene.start('Rating'); return; }
         if (tab.key === 'tasks')  { this.scene.start('Tasks'); return; }
         this._switchTab(tab.key);
