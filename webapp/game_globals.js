@@ -72,6 +72,14 @@ function getWarriorKey(type) {
   return 'warrior_tank';
 }
 
+/* PNG-скин воина для главного экрана */
+function getWarriorDisplayKey(type) {
+  if (type === 'tank')  return 'warrior_tank_png';
+  if (type === 'agile') return 'warrior_agile_png';
+  if (type === 'crit')  return 'warrior_crit_png';
+  return 'warrior_tank_png';
+}
+
 function post(path, body = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);

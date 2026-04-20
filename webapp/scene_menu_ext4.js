@@ -178,17 +178,19 @@ Object.assign(MenuScene.prototype, {
     const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
     ca(mkT(W / 2, czY + 11, 'ЭКИПИРОВКА ПЕРСОНАЖА', 9, 'rgba(167,139,250,0.8)', true)).setOrigin(0.5);
     const charCY = czY + czH * 0.42;
-    // Softer, more contained aura — no bleed into slots
-    const aura1 = ca(mkG()); aura1.fillStyle(0x7c3aed, 0.08); aura1.fillEllipse(W / 2, charCY, 120, 120);
-    const aura2 = ca(mkG()); aura2.fillStyle(0xec4899, 0.04); aura2.fillEllipse(W / 2, charCY + 6, 80, 80);
-    const floorG = ca(mkG()); floorG.fillStyle(0x7c3aed, 0.28); floorG.fillEllipse(W / 2, charCY + 52, 110, 14);
-    const ringG = ca(mkG()); ringG.lineStyle(1, 0x8b5cf6, 0.2); ringG.strokeEllipse(W / 2, charCY + 48, 96, 26);
-    const _wKey = getWarriorKey(p.warrior_type);
-    // Scale reduced: 2.45 → 1.85, matches 130px mockup char-img
-    const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(1.85).setOrigin(0.5));
+    // Aura colour per warrior class
+    const _auraCols = { tank: 0xff5522, agile: 0x00cc55, crit: 0x7c3aed };
+    const _auraCol  = _auraCols[p.warrior_type] || 0x7c3aed;
+    const aura1 = ca(mkG()); aura1.fillStyle(_auraCol, 0.1);  aura1.fillEllipse(W / 2, charCY, 150, 150);
+    const aura2 = ca(mkG()); aura2.fillStyle(_auraCol, 0.05); aura2.fillEllipse(W / 2, charCY + 8, 90, 90);
+    const floorG = ca(mkG()); floorG.fillStyle(_auraCol, 0.32); floorG.fillEllipse(W / 2, charCY + 52, 120, 16);
+    const ringG = ca(mkG()); ringG.lineStyle(1, _auraCol, 0.28); ringG.strokeEllipse(W / 2, charCY + 48, 104, 28);
+    const _wKey = getWarriorDisplayKey(p.warrior_type);
+    // PNG 832×1248 at scale 0.18 → displayed ~150×225px
+    const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(0.18).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 7, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    ca(mkT(W / 2, charCY + 60, 'сменить воина', 9, 'rgba(255,255,255,0.25)').setOrigin(0.5));
-    const wZone = ca(mkZ(W / 2, charCY, 82, 110).setInteractive({ useHandCursor: true }));
+    ca(mkT(W / 2, charCY + 68, 'сменить воина', 9, 'rgba(255,255,255,0.25)').setOrigin(0.5));
+    const wZone = ca(mkZ(W / 2, charCY, 140, 210).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
     // HP / XP — inline layout: [icon] [LABEL] [====bar====] [value]
