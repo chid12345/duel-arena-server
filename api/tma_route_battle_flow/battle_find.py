@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import Any, Callable
 
+import asyncio
+
 from fastapi import FastAPI
 
 from api.tma_infra import manager
@@ -33,8 +35,8 @@ def register_find_battle_route(
         _rl_check(uid, "battle_find", max_hits=5, window_sec=15)
         username = tg_user.get("username") or ""
 
-        player = db.get_or_create_player(uid, username)
-        usdt_passive = db.get_equipped_usdt_passive(uid)
+        player = await asyncio.to_thread(db.get_or_create_player, uid, username)
+        usdt_passive = await asyncio.to_thread(db.get_equipped_usdt_passive, uid)
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
@@ -59,12 +61,12 @@ def register_find_battle_route(
             }
 
         if not body.prefer_bot:
-            pvp_entry = db.pvp_find_opponent(uid, int(player.get("level", PLAYER_START_LEVEL)))
+            pvp_entry = await asyncio.to_thread(db.pvp_find_opponent, uid, int(player.get("level", PLAYER_START_LEVEL)))
             if pvp_entry:
                 opp_uid = pvp_entry["user_id"]
-                db.pvp_dequeue(opp_uid)
-                opp_player = db.get_or_create_player(opp_uid, "")
-                opp_passive = db.get_equipped_usdt_passive(opp_uid)
+                await asyncio.to_thread(db.pvp_dequeue, opp_uid)
+                opp_player = await asyncio.to_thread(db.get_or_create_player, opp_uid, "")
+                opp_passive = await asyncio.to_thread(db.get_equipped_usdt_passive, opp_uid)
                 if opp_passive:
                     opp_player = dict(opp_player)
                     opp_player["usdt_passive_type"] = opp_passive
@@ -81,10 +83,10 @@ def register_find_battle_route(
                 return {"ok": True, "status": "pvp_started", "battle": _battle_state_api(uid)}
 
             if body.queue_only:
-                db.pvp_enqueue(uid, int(player.get("level", PLAYER_START_LEVEL)), chat_id=0, message_id=None)
+                await asyncio.to_thread(db.pvp_enqueue, uid, int(player.get("level", PLAYER_START_LEVEL)), chat_id=0, message_id=None)
                 return {"ok": True, "status": "queued"}
 
-        opponent = db.find_suitable_opponent(player["level"])
+        opponent = await asyncio.to_thread(db.find_suitable_opponent, player["level"])
         if not opponent:
             return {"ok": False, "reason": "no_opponent"}
 

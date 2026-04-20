@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Callable
 
 from fastapi import FastAPI
@@ -36,13 +37,13 @@ def register_tma_battle_read_routes(
         uid = int(tg_user["id"])
         snap = battle_system.pop_battle_end_ui(uid)
         if not snap:
-            player = db.get_or_create_player(uid, "")
+            player = await asyncio.to_thread(db.get_or_create_player, uid, "")
             return {"ok": False, "reason": "no_recent_result", "player": _player_api(dict(player))}
         mine = _adapt_battle_result_for_user(snap, uid)
         human_won = bool(mine.get("human_won", mine.get("winner_id") == uid))
         afk_loss = mine.get("status") == "battle_ended_afk" and not human_won
         _cache_invalidate(uid)
-        player = db.get_or_create_player(uid, "")
+        player = await asyncio.to_thread(db.get_or_create_player, uid, "")
         return {
             "ok": True,
             "human_won": human_won,
@@ -71,7 +72,7 @@ def register_tma_battle_read_routes(
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         lim = max(1, min(50, int(limit)))
-        items = db.get_recent_battles(uid, limit=lim)
+        items = await asyncio.to_thread(db.get_recent_battles, uid, lim)
         return {"ok": True, "items": items}
 
     @app.get("/api/battle/replay/{battle_id}")
@@ -79,7 +80,7 @@ def register_tma_battle_read_routes(
         """Полный реплей боя (webapp_log) — только если игрок был участником."""
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
-        replay = db.get_battle_replay(int(battle_id), uid)
+        replay = await asyncio.to_thread(db.get_battle_replay, int(battle_id), uid)
         if not replay:
             return {"ok": False, "reason": "not_found_or_forbidden"}
         # webapp_log хранится от лица P1. Для P2 — инвертируем «Вы/Враг».
@@ -89,8 +90,8 @@ def register_tma_battle_read_routes(
 
     @app.get("/api/pvp/top")
     async def pvp_top(limit: int = 30):
-        rows = db.get_pvp_weekly_top(limit=min(100, max(5, int(limit))))
-        elo_top = db.get_pvp_elo_top(limit=20)
+        rows = await asyncio.to_thread(db.get_pvp_weekly_top, limit=min(100, max(5, int(limit))))
+        elo_top = await asyncio.to_thread(db.get_pvp_elo_top, limit=20)
         rewards = [
             {"rank": 1, "diamonds": 120, "title": "Легенда PvP"},
             {"rank": 2, "diamonds": 80, "title": "Мастер PvP"},
