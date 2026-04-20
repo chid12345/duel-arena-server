@@ -123,7 +123,7 @@ class DBCore:
         conn = sqlite3.connect(self.db_name, timeout=30, check_same_thread=False)
         conn.row_factory = sqlite3.Row
         conn.execute("PRAGMA journal_mode=WAL")
-        conn.execute("PRAGMA cache_size=-32768")
+        conn.execute("PRAGMA cache_size=-1024")  # 1 МБ на тред (экономия RAM на Hobby 512MB)
         conn.execute("PRAGMA synchronous=NORMAL")
         conn.execute("PRAGMA temp_store=memory")
         return conn
