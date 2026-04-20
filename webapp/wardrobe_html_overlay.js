@@ -40,11 +40,7 @@ const CSS = `
 .wd-card.rarity-mythic{--rc:rgba(249,115,22,.62);--rg:rgba(249,115,22,.28);--cbg:rgba(22,6,0,.98)}
 @keyframes epicCardBorder{0%,100%{border-color:rgba(168,85,247,.45);box-shadow:0 6px 22px rgba(0,0,0,.4),0 0 10px rgba(168,85,247,.22)}50%{border-color:rgba(200,140,255,.88);box-shadow:0 6px 22px rgba(0,0,0,.4),0 0 22px rgba(168,85,247,.52),0 0 6px rgba(200,140,255,.3) inset}}
 
-/* Mythic — full width hero */
-.wd-card.mythic-full{grid-column:1/-1}
-.wd-card.mythic-full .wd-img-area{height:180px}
-.wd-card.mythic-full .wd-card-body{padding:12px 16px 14px;align-items:center;text-align:center}
-.wd-card.mythic-full .wd-pills{justify-content:center}
+/* Mythic — стандартный размер как все карточки */
 
 /* Equipped badge */
 .wd-eq-badge{position:absolute;top:8px;left:8px;z-index:5;background:rgba(21,128,61,.85);border:1px solid rgba(34,197,94,.6);color:#86efac;font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.5px;backdrop-filter:blur(4px)}
@@ -210,7 +206,7 @@ function _btnHtml(a) {
 function _cardHtml(a) {
   const nc  = a.r === 'epic' ? ' epic' : a.r === 'mythic' ? ' mythic' : '';
   const rc  = RARITY_COLOR[a.r] || '#aaa';
-  const fullCls = a.r === 'mythic' ? ' mythic-full' : '';
+  const fullCls = '';
   const eqBadge = a.equipped ? '<div class="wd-eq-badge">✅ Надета</div>' : '';
   return `<div class="wd-card rarity-${a.r}${fullCls}${a.equipped?' equipped':''}" data-id="${a.id}">
     ${eqBadge}
