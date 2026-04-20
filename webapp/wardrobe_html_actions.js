@@ -3,54 +3,58 @@
    ============================================================ */
 (() => {
   const W = WardrobeHTML;
+
   const MODAL_CFG = {
-    common:  { mc:'rgba(156,163,175,.5)', mg:'rgba(156,163,175,.25)', bg:'rgba(75,85,99,.35)'   },
-    rare:    { mc:'rgba(96,165,250,.55)',  mg:'rgba(59,130,246,.35)',  bg:'rgba(30,64,175,.4)'   },
-    epic:    { mc:'rgba(192,132,252,.6)',  mg:'rgba(168,85,247,.4)',   bg:'rgba(88,28,160,.45)'  },
-    mythic:  { mc:'rgba(251,146,60,.6)',   mg:'rgba(249,115,22,.45)',  bg:'rgba(120,45,0,.45)'   },
+    common:  { mc:'rgba(156,163,175,.55)', mg:'rgba(156,163,175,.25)' },
+    rare:    { mc:'rgba(96,165,250,.6)',   mg:'rgba(59,130,246,.32)'  },
+    epic:    { mc:'rgba(192,132,252,.65)', mg:'rgba(168,85,247,.38)'  },
+    mythic:  { mc:'rgba(251,146,60,.65)',  mg:'rgba(249,115,22,.42)'  },
   };
-  const RC = { common:'#9ca3af', rare:'#60a5fa', epic:'#c084fc', mythic:'#fb923c' };
-  const RL = { common:'Обычная', rare:'Редкая', epic:'Эпическая', mythic:'Мифическая' };
 
   /* ── modal ── */
   function _openModal(scene, a, wp) {
     const bg = document.getElementById('wd-modal-bg');
     if (!bg) return;
-    const mc = MODAL_CFG[a.r] || MODAL_CFG.common;
-    const rc = RC[a.r] || '#aaa';
+    const mc  = MODAL_CFG[a.r] || MODAL_CFG.common;
+    const rc  = W.RARITY_COLOR[a.r] || '#aaa';
+    const img = W.RARITY_IMG[a.r] || '';
+    const nc  = a.r === 'epic' ? ' epic' : a.r === 'mythic' ? ' mythic' : '';
+    const cropCls = a.r === 'mythic' ? ' mythic-crop' : '';
+    const lava    = a.r === 'mythic' ? '<div class="wd-lava-overlay"></div><div class="wd-neck-mask"></div>' : '';
+
     let mbCls = 'wd-m-btn ';
     let mbTxt = '';
-    if (a.equipped)              { mbCls += 'mb-uneq'; mbTxt = '✅ Надет — Снять'; }
-    else if (a.owned)            { mbCls += 'mb-eq';   mbTxt = 'Надеть броню'; }
-    else if (a.type === 'free')  { mbCls += 'mb-free'; mbTxt = 'Выбрать бесплатно'; }
-    else if (a.type === 'gold')  { mbCls += 'mb-gold'; mbTxt = `Купить — ${a.price}`; }
-    else if (a.type === 'diamonds') { mbCls += 'mb-dia'; mbTxt = `Купить — ${a.price}`; }
-    else                         { mbCls += 'mb-usdt'; mbTxt = `Купить — ${a.price}`; }
+    if (a.equipped)              { mbCls += 'mb-uneq'; mbTxt = '✅ Надета — Снять'; }
+    else if (a.owned)            { mbCls += 'mb-eq';   mbTxt = '⚔️ Надеть броню'; }
+    else if (a.type === 'free')  { mbCls += 'mb-free'; mbTxt = '🆓 Выбрать бесплатно'; }
+    else if (a.type === 'gold')  { mbCls += 'mb-gold'; mbTxt = `💰 Купить — ${a.price}`; }
+    else if (a.type === 'diamonds') { mbCls += 'mb-dia'; mbTxt = `💎 Купить — ${a.price}`; }
+    else                         { mbCls += 'mb-usdt'; mbTxt = `🔥 Купить — ${a.price}`; }
 
-    bg.innerHTML = `<div class="wd-modal" style="--mc:${mc.mc};--mg:${mc.mg}">
-      <button class="wd-m-close" id="wd-m-cls">✕</button>
-      <div class="wd-m-icon">
-        <div class="wd-m-icon-bg" style="background:${mc.bg}">
-          ${a.r==='mythic'
-            ? `<img src="${W.ARMORS_DATA.find?.(()=>true),'armor_mythic.png'||''}" class="mythic" style="width:100%;height:100%;object-fit:cover;object-position:center 22%;transform:scale(1.6) translateY(7%);transform-origin:center"><div class="wd-m-neck"></div>`
-            : `<img src="armor_${a.r==='rare'?'gold':a.r==='epic'?'epic':'common'}.png" style="width:100%;height:100%;object-fit:cover;object-position:center top" />`
-          }
+    bg.innerHTML = `
+      <div class="wd-modal" style="--mc:${mc.mc};--mg:${mc.mg}">
+        <button class="wd-m-close" id="wd-m-cls">✕</button>
+        <div class="wd-m-img-wrap">
+          <img src="${img}" class="${cropCls.trim()}" />
+          <div class="wd-m-img-fade"></div>
+          ${lava}
         </div>
-      </div>
-      <div class="wd-m-name">${a.name}</div>
-      <div class="wd-m-rarity" style="color:${rc}">${RL[a.r]} · ${a.tier}</div>
-      <div class="wd-m-stars" style="color:${rc}">${a.stars}</div>
-      <div class="wd-m-div"></div>
-      <div class="wd-m-pills">
-        ${a.str>0?`<span class="wd-m-pill p-s">⚔️ Сила +${a.str}</span>`:''}
-        ${a.agi>0?`<span class="wd-m-pill p-a">🏃 Ловкость +${a.agi}</span>`:''}
-        ${a.int>0?`<span class="wd-m-pill p-i">💥 Интуиция +${a.int}</span>`:''}
-        ${a.end>0?`<span class="wd-m-pill p-e">🛡 Выносл. +${a.end}</span>`:''}
-        ${!(a.str||a.agi||a.int||a.end)?`<span style="color:#6b7280;font-size:11px">Особые характеристики</span>`:''}
-      </div>
-      <div class="wd-m-bonus">${a.bonus||'—'}</div>
-      <button class="${mbCls}" id="wd-m-act">${mbTxt}</button>
-    </div>`;
+        <div class="wd-m-body">
+          <div class="wd-m-name${nc}">${a.name}</div>
+          <div class="wd-m-rarity" style="color:${rc}">${W.RARITY_LABEL[a.r]} · ${a.tier}</div>
+          <div class="wd-m-stars" style="color:${rc}">${a.stars}</div>
+          <div class="wd-m-div"></div>
+          <div class="wd-m-pills">
+            ${a.str>0?`<span class="wd-m-pill p-s">⚔️ Сила +${a.str}</span>`:''}
+            ${a.agi>0?`<span class="wd-m-pill p-a">🏃 Ловкость +${a.agi}</span>`:''}
+            ${a.int>0?`<span class="wd-m-pill p-i">💥 Интуиция +${a.int}</span>`:''}
+            ${a.end>0?`<span class="wd-m-pill p-e">🛡 Выносл. +${a.end}</span>`:''}
+            ${!(a.str||a.agi||a.int||a.end)?`<span style="color:#6b7280;font-size:11px">Особые характеристики</span>`:''}
+          </div>
+          <div class="wd-m-bonus">${a.bonus||'—'}</div>
+          <button class="${mbCls}" id="wd-m-act">${mbTxt}</button>
+        </div>
+      </div>`;
 
     bg.style.display = 'flex';
     bg.querySelector('#wd-m-cls').onclick = () => { bg.style.display = 'none'; bg.innerHTML = ''; };
@@ -58,10 +62,10 @@
     const actBtn = bg.querySelector('#wd-m-act');
     if (actBtn) actBtn.onclick = () => {
       bg.style.display = 'none'; bg.innerHTML = '';
-      if (a.equipped)            _doAction(scene, 'unequip', a, wp);
-      else if (a.owned)          _doAction(scene, 'equip',   a, wp);
-      else if (a.type==='usdt')  _doAction(scene, 'buy_usdt',a, wp);
-      else                       _doAction(scene, 'buy',     a, wp);
+      if (a.equipped)            _doAction(scene, 'unequip',  a, wp);
+      else if (a.owned)          _doAction(scene, 'equip',    a, wp);
+      else if (a.type === 'usdt') _doAction(scene, 'buy_usdt', a, wp);
+      else                        _doAction(scene, 'buy',      a, wp);
     };
   }
 
@@ -73,7 +77,7 @@
       let res = null;
       if (action === 'buy')     res = await post('/api/wardrobe/buy',    { class_id: item.id });
       if (action === 'equip')   res = await post('/api/wardrobe/equip',  { class_id: item.id });
-      if (action === 'unequip') res = await post('/api/wardrobe/unequip',{});
+      if (action === 'unequip') res = await post('/api/wardrobe/unequip', {});
       if (action === 'buy_usdt') {
         res = await post('/api/wardrobe/usdt/buy-invoice', {});
         if (res?.ok && res.invoice_url) {
@@ -84,7 +88,7 @@
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-        const msg = action==='buy'?'✅ Броня получена':action==='unequip'?'✅ Броня снята':'✅ Броня надета';
+        const msg = action==='buy' ? '✅ Броня получена' : action==='unequip' ? '✅ Броня снята' : '✅ Броня надета';
         scene._showToast?.(msg);
         WardrobeHTML.refresh(scene, res);
       } else { scene._showToast?.(`❌ ${res?.message || res?.reason || 'Ошибка'}`); }
@@ -97,8 +101,8 @@
     const grid = document.getElementById('wd-grid');
     if (!grid) return;
     grid.addEventListener('click', e => {
-      const card = e.target.closest('.wd-card');
       const btn  = e.target.closest('[data-act]');
+      const card = e.target.closest('.wd-card');
       if (btn) {
         e.stopPropagation();
         const a = items.find(x => x.id === btn.dataset.id);
@@ -153,7 +157,7 @@
           <button class="wd-close" id="wd-close-btn">✕</button>
         </div>
         <div class="wd-tabs">
-          <div class="wd-tab${view==='all'?' active':''}"  id="wd-tab-all"><span>⚔️ Вся броня</span></div>
+          <div class="wd-tab${view==='all'?' active':''}"   id="wd-tab-all"><span>⚔️ Вся броня</span></div>
           <div class="wd-tab${view==='owned'?' active':''}" id="wd-tab-owned"><span>🎒 Арсенал</span></div>
         </div>
         <div class="wd-grid" id="wd-grid"></div>
@@ -163,7 +167,7 @@
 
     _renderView(scene, wp, view);
 
-    const switchTab = (v) => {
+    const switchTab = v => {
       view = v; scene._wardrobeView = v;
       document.querySelectorAll('.wd-tab').forEach(t => t.classList.remove('active'));
       document.getElementById(`wd-tab-${v}`)?.classList.add('active');

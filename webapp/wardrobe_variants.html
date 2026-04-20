@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Броня — превью</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:#06030f;min-height:100vh;font-family:'Segoe UI',Arial,sans-serif}
+/* stub для State/post/tg чтобы overlay не упал */
+</style>
+</head>
+<body>
+
+<!-- Stubs чтобы wardrobe_html_overlay.js не упал без игры -->
+<script>
+window.State = { player: null };
+window.tg = null;
+async function post(url, data) { console.log('post', url, data); return { ok: false, reason: 'preview' }; }
+/* Заглушка сцены */
+const mockScene = {
+  _wardrobeView: 'all',
+  _wardrobeHtmlBusy: false,
+  _showToast(msg) { const t=document.createElement('div'); t.textContent=msg; t.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#1f2937;color:#fff;padding:8px 18px;border-radius:10px;font-size:13px;z-index:99999;pointer-events:none'; document.body.appendChild(t); setTimeout(()=>t.remove(),2500); },
+  _closeAvatarOverlay() { WardrobeHTML.close(); },
+};
+/* Мок payload — нет надетой и нет купленной брони */
+const mockWp = {
+  equipped_class: null,
+  available_classes: { free:[], gold:[], diamonds:[] },
+  inventory: [],
+};
+</script>
+
+<script src="wardrobe_html_overlay.js"></script>
+<script src="wardrobe_html_actions.js"></script>
+
+<script>
+  // Открываем оверлей сразу при загрузке страницы
+  document.addEventListener('DOMContentLoaded', () => {
+    WardrobeHTML.open(mockScene, mockWp);
+  });
+</script>
+</body>
+</html>
