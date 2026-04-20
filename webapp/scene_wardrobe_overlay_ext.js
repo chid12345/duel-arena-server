@@ -56,7 +56,7 @@
 
     const cards = this._wardrobeView === "owned"
       ? allCards.filter(x => x.owned || x.is_usdt_slot)
-      : allCards.filter(x => !x.is_usdt_slot && x.class_type === 'free');
+      : allCards.filter(x => !x.is_usdt_slot);
     const layer = []; this._avatarCardsLayer = layer;
 
     const cardH   = 128;
