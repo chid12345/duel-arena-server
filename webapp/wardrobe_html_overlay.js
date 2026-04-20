@@ -62,11 +62,13 @@ const CSS = `
 .wd-eq-badge{position:absolute;top:8px;left:8px;z-index:5;background:rgba(21,128,61,.85);border:1px solid rgba(34,197,94,.6);color:#86efac;font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.5px;backdrop-filter:blur(4px)}
 
 /* ── Image area ── */
-.wd-img-area{position:relative;width:100%;height:140px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.3)}
+.wd-img-area{position:relative;width:100%;height:112px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.3)}
 .wd-card-img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
 .wd-card-img.mythic-crop{object-position:center 15%;transform:scale(1.1) translateY(4%);transform-origin:center center}
 /* gradient fade bottom of image into card body */
 .wd-img-fade{position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(transparent,var(--cbg,rgba(10,6,24,.97)));pointer-events:none}
+/* мягкое радиальное свечение за броней — «объём» */
+.wd-img-area::before{content:'';position:absolute;bottom:10%;left:50%;translate:-50% 0;width:85%;height:65%;background:radial-gradient(ellipse at center,var(--rg,rgba(120,70,220,.2)),transparent 70%);filter:blur(10px);pointer-events:none;z-index:1}
 
 /* Lava overlay for mythic */
 .wd-lava-overlay{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;animation:lavaPulse 2.6s ease-in-out infinite;border-radius:inherit}
@@ -75,37 +77,41 @@ const CSS = `
 .wd-neck-mask{position:absolute;top:0;left:0;right:0;height:36%;background:linear-gradient(180deg,var(--cbg,rgba(22,6,0,.98)) 0%,rgba(22,6,0,.85) 30%,transparent 100%);pointer-events:none}
 
 /* ── Card body ── */
-.wd-card-body{padding:8px 10px 10px;min-height:0}
+.wd-card-body{padding:6px 10px 8px;min-height:0}
 
 /* Name */
-.wd-name{font-size:12.5px;font-weight:800;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px}
+.wd-name{font-size:14px;font-weight:900;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.2px;margin-bottom:2px}
 .wd-name.epic{background:linear-gradient(90deg,#a5f3fc,#818cf8,#c084fc,#818cf8,#a5f3fc);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:epicText 3s linear infinite}
 .wd-name.mythic{font-size:16px;font-weight:900;background:linear-gradient(90deg,#fdba74,#f97316,#fbbf24,#ef4444,#f97316,#fdba74);background-size:260% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:mythicText 2.6s linear infinite;filter:drop-shadow(0 0 5px rgba(249,115,22,.55))}
 @keyframes epicText{0%{background-position:0% center}100%{background-position:200% center}}
 @keyframes mythicText{0%{background-position:0% center}100%{background-position:260% center}}
 
 /* Rarity line */
-.wd-rarity-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px}
-.wd-rarity-badge{font-size:9px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--rc,#aaa)}
-.wd-stars{font-size:9px;color:var(--rc,#aaa)}
+.wd-rarity-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.wd-rarity-badge{font-size:7.5px;font-weight:800;letter-spacing:.9px;text-transform:uppercase;color:var(--rc,#aaa);opacity:.85}
+.wd-stars{font-size:8px;color:var(--rc,#aaa)}
 
 /* Pills */
-.wd-pills{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:4px;min-height:14px}
+.wd-pills{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:3px;min-height:14px}
 .wd-pill{padding:2px 6px;border-radius:6px;font-size:8px;font-weight:800;letter-spacing:.3px}
 .p-s{background:rgba(136,34,34,.88);color:#fca5a5}.p-a{background:rgba(17,85,119,.88);color:#7dd3fc}.p-i{background:rgba(80,17,136,.88);color:#d8b4fe}.p-e{background:rgba(17,85,51,.88);color:#86efac}
 
 /* ── Buttons ── */
-.wd-btn{position:relative;overflow:hidden;width:100%;padding:8px 4px;border-radius:11px;font-size:11px;font-weight:800;cursor:pointer;border:1.5px solid transparent;text-align:center;transition:all .22s;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:5px}
-.wd-btn::after{content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.14),transparent);transform:skewX(-15deg)}
-.wd-btn:hover::after{animation:shimmer .5s ease forwards}
+.wd-btn{position:relative;overflow:hidden;width:100%;padding:6px 4px;border-radius:10px;font-size:10.5px;font-weight:800;cursor:pointer;border:1.5px solid transparent;text-align:center;transition:all .22s;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:5px}
+.wd-btn::after{content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-15deg)}
+.wd-btn:hover::after,.wd-btn:active::after{animation:shimmer .4s ease forwards}
 @keyframes shimmer{to{left:150%}}
 
-.btn-free{background:rgba(45,52,68,.35);border-color:rgba(156,163,175,.3);color:#d1d5db}
-.btn-eq{background:linear-gradient(135deg,rgba(21,100,50,.35),rgba(22,128,61,.5));border-color:rgba(34,197,94,.5);color:#86efac;animation:pulseEq 2.4s ease-in-out infinite}
+.btn-free{background:linear-gradient(135deg,rgba(45,52,68,.4),rgba(60,68,85,.55));border-color:rgba(156,163,175,.35);color:#d1d5db}
+.btn-eq{background:linear-gradient(135deg,rgba(16,90,45,.5),rgba(22,128,61,.65));border-color:rgba(34,197,94,.55);color:#86efac;animation:pulseEq 2.4s ease-in-out infinite}
 @keyframes pulseEq{0%,100%{box-shadow:0 0 7px rgba(34,197,94,.2);border-color:rgba(34,197,94,.42)}50%{box-shadow:0 0 16px rgba(34,197,94,.55),0 0 4px rgba(34,197,94,.28) inset;border-color:rgba(34,197,94,.88)}}
-.btn-uneq{background:linear-gradient(135deg,rgba(180,30,30,.3),rgba(220,38,38,.2));border-color:rgba(239,68,68,.5);color:#fca5a5}
-.btn-gold{background:linear-gradient(135deg,#78350f,#92400e,#78350f);border-color:rgba(251,191,36,.55);color:#fde68a;background-image:linear-gradient(135deg,#6b2e08,#92400e,#a16207)}
-.btn-dia{background:linear-gradient(135deg,#4c1d95,#5b21b6,#4c1d95);border-color:rgba(167,139,250,.55);color:#ede9fe}
+.btn-uneq{background:linear-gradient(135deg,rgba(180,30,30,.4),rgba(220,38,38,.3));border-color:rgba(239,68,68,.5);color:#fca5a5}
+/* Золото — постоянный шиммер */
+.btn-gold{background:linear-gradient(135deg,#6b2e08,#92400e,#a16207);border-color:rgba(251,191,36,.6);color:#fde68a}
+.btn-gold::after{animation:shimmer 2.2s ease-in-out infinite!important}
+/* Алмазы — постоянный шиммер */
+.btn-dia{background:linear-gradient(135deg,#4c1d95,#5b21b6,#7c3aed);border-color:rgba(167,139,250,.6);color:#ede9fe}
+.btn-dia::after{animation:shimmer 2s ease-in-out infinite!important}
 
 /* Mythic USDT button — fullwidth animated */
 .btn-mythic{background:linear-gradient(135deg,#7c2d12,#c2410c,#d97706,#c2410c,#7c2d12);background-size:300% 100%;border-color:rgba(251,191,36,.7);color:#fff;font-weight:900;font-size:13px;text-shadow:0 1px 5px rgba(0,0,0,.65);animation:mythicFlow 2.6s linear infinite,mythicPulse 2.1s ease-in-out infinite;padding:12px 4px}
