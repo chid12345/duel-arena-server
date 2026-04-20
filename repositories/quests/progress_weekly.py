@@ -11,31 +11,33 @@ class ProgressWeeklyMixin:
 
     def get_weekly_extra_status(self, user_id: int, week_key: str) -> list[dict]:
         conn = self.get_connection()
-        cur = conn.cursor()
-        cur.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
-        _wr = cur.fetchone()
-        streak = int(_wr["win_streak"] if _wr else 0)
-        # Прогресс недельных треков одним запросом
-        wq_keys = [f"{wq['track']}_{week_key}" for wq in WEEKLY_EXTRA_DEFS
-                   if wq["track"] != "streak"]
-        if wq_keys:
-            placeholders = ",".join(["?" for _ in wq_keys])
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
+            _wr = cur.fetchone()
+            streak = int(_wr["win_streak"] if _wr else 0)
+            # Прогресс недельных треков одним запросом
+            wq_keys = [f"{wq['track']}_{week_key}" for wq in WEEKLY_EXTRA_DEFS
+                       if wq["track"] != "streak"]
+            if wq_keys:
+                placeholders = ",".join(["?" for _ in wq_keys])
+                cur.execute(
+                    f"SELECT task_key, value FROM task_progress WHERE user_id=? AND task_key IN ({placeholders})",
+                    (user_id, *wq_keys),
+                )
+                prog = {r["task_key"]: int(r["value"]) for r in cur.fetchall()}
+            else:
+                prog = {}
+            # Клеймы одним запросом
+            claim_keys = [f"{wq['key']}_{week_key}" for wq in WEEKLY_EXTRA_DEFS]
+            placeholders2 = ",".join(["?" for _ in claim_keys])
             cur.execute(
-                f"SELECT task_key, value FROM task_progress WHERE user_id=? AND task_key IN ({placeholders})",
-                (user_id, *wq_keys),
+                f"SELECT claim_key FROM task_claims WHERE user_id=? AND claim_key IN ({placeholders2})",
+                (user_id, *claim_keys),
             )
-            prog = {r["task_key"]: int(r["value"]) for r in cur.fetchall()}
-        else:
-            prog = {}
-        # Клеймы одним запросом
-        claim_keys = [f"{wq['key']}_{week_key}" for wq in WEEKLY_EXTRA_DEFS]
-        placeholders2 = ",".join(["?" for _ in claim_keys])
-        cur.execute(
-            f"SELECT claim_key FROM task_claims WHERE user_id=? AND claim_key IN ({placeholders2})",
-            (user_id, *claim_keys),
-        )
-        claimed_set = {r["claim_key"] for r in cur.fetchall()}
-        conn.close()
+            claimed_set = {r["claim_key"] for r in cur.fetchall()}
+        finally:
+            conn.close()
 
         result = []
         for wq in WEEKLY_EXTRA_DEFS:

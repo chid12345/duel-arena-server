@@ -83,8 +83,12 @@ class _PooledConn(_PatchedConn):
     def __init__(self, raw: Any, pool: Any):
         super().__init__(raw, True)
         self._pool = pool
+        self._returned = False  # защита от двойного возврата
 
     def close(self):
+        if self._returned:
+            return
+        self._returned = True
         try:
             if self._raw.info.transaction_status != 0:  # IDLE=0
                 self._raw.rollback()
@@ -96,6 +100,15 @@ class _PooledConn(_PatchedConn):
                 pass
             return
         self._pool.putconn(self._raw)
+
+    def __del__(self):
+        # Страховочная сетка: если close() не вызвали (exception без finally),
+        # вернуть соединение в пул при сборке мусора.
+        if not self._returned:
+            try:
+                self._pool.putconn(self._raw)
+            except Exception:
+                pass
 
 
 class DBCore:
