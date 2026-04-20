@@ -39,9 +39,9 @@ Object.assign(MenuScene.prototype, {
     });
 
     const types = [
-      { key: 'tank',    face: 'warrior_tank_face',    name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', plus: '+12% урон',        minus: '⚖️ уворот ↓8%'   },
-      { key: 'agile',   face: 'warrior_agile_face',   name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#44ff99', plus: '+8% уворот',       minus: '⚖️ броня ↓10%'   },
-      { key: 'crit',    face: 'warrior_crit_face',    name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', plus: '+5% крит · ×1.65', minus: '⚖️ HP ↓10%'      },
+      { key: 'tank',  face: 'warrior_tank_png',  name: 'Берсерк',      stat: '💪 Сила',     col: '#ff6655', plus: '+12% урон',        minus: '⚖️ уворот ↓8%'   },
+      { key: 'agile', face: 'warrior_agile_png', name: 'Теневой Вихрь',stat: '🤸 Ловкость', col: '#44ff99', plus: '+8% уворот',       minus: '⚖️ броня ↓10%'   },
+      { key: 'crit',  face: 'warrior_crit_png',  name: 'Хаос-Рыцарь',  stat: '💥 Интуиция', col: '#cc66ff', plus: '+5% крит · ×1.65', minus: '⚖️ HP ↓10%'      },
     ];
 
     const curType = State.player?.warrior_type || 'default';
@@ -59,7 +59,7 @@ Object.assign(MenuScene.prototype, {
       cbg.lineStyle(sel ? 2 : 1, sel ? 0x5096ff : 0x2e2a50, 1);
       cbg.strokeRoundedRect(cx, cy, cw, ch, 10);
 
-      at(this.add.image(cx + cw / 2, cy + 27, t.face).setScale(1.0).setOrigin(0.5).setDepth(D + 3));
+      at(this.add.image(cx + cw / 2, cy + 30, t.face).setScale(0.062).setOrigin(0.5, 0.38).setDepth(D + 3));
       at(txt(this, cx + cw / 2, cy + 60, t.name,   12, '#ffffff',  true).setOrigin(0.5).setDepth(D + 3));
       at(txt(this, cx + cw / 2, cy + 74, t.stat,   10, '#ffffff').setOrigin(0.5).setDepth(D + 3));
       at(txt(this, cx + cw / 2, cy + 88, t.plus,   10, '#44ff88',  true).setOrigin(0.5).setDepth(D + 3));

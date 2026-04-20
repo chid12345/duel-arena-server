@@ -24,7 +24,7 @@ Object.assign(BattleScene.prototype, {
   _animDodge(warrior) {
     const origX = warrior.x;
     const dir   = warrior === this.warrior2 ? 1 : -1;
-    const ghost = this.add.image(origX, warrior.y, warrior === this.warrior2 ? 'warrior_red' : 'warrior_blue')
+    const ghost = this.add.image(origX, warrior.y, warrior.texture.key)
       .setScale(warrior.scaleX).setFlipX(warrior.flipX).setAlpha(0.35).setTint(0x3cc8dc);
     this.tweens.add({ targets: ghost, alpha: 0, duration: 380, onComplete: () => ghost.destroy() });
     this.tweens.add({

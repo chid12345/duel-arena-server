@@ -43,9 +43,11 @@ Object.assign(BattleScene.prototype, {
       }
     });
 
-    const _p1Key = getWarriorKey(State.player?.warrior_type);
-    this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(1.5).setFlipX(false);
-    this.warrior2 = this.add.image(W * 0.72, H * 0.35, 'warrior_red').setScale(1.5).setFlipX(true);
+    const _p1Key  = getWarriorDisplayKey(State.player?.warrior_type);
+    const _p2Type = State.battle?.opp_warrior_type || 'tank';
+    const _p2Key  = getWarriorDisplayKey(_p2Type);
+    this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(0.15).setFlipX(false);
+    this.warrior2 = this.add.image(W * 0.72, H * 0.35, _p2Key).setScale(0.15).setFlipX(true);
 
     // Premium/Elite/Sub — золотая вспышка при входе в бой
     const _avTier = (State.player?.avatar_tier || '').toLowerCase();

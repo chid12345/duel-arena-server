@@ -35,7 +35,9 @@ Object.assign(BattleScene.prototype, {
           { icon: '💥', label: 'Интуиция', val: b.opp_intuition || 0, col: '#b45aff' },
           { icon: '🛡', label: 'Выносл.',  val: b.opp_stamina   || 0, col: '#3cc864' },
         ];
-    const spriteKey = isMe ? 'warrior_blue' : 'warrior_red';
+    const spriteKey = isMe
+      ? getWarriorDisplayKey(State.player?.warrior_type)
+      : getWarriorDisplayKey(State.battle?.opp_warrior_type || 'tank');
     const typeStr   = isMe ? '🧑 Вы'        : (isBot ? '🤖 Бот' : '⚔️ Игрок');
     const typeCol   = isMe ? '#5096ff'       : (isBot ? '#ccccee' : '#3cc864');
     const borderCol = isPrem ? 0xffc83c : (isMe ? 0x5096ff : 0x444466);
@@ -94,7 +96,7 @@ Object.assign(BattleScene.prototype, {
     con.add(divG);
 
     const spr = this.add.image(cx + 58, cy + 128, spriteKey)
-      .setScale(1.4).setFlipX(!isMe);
+      .setScale(0.135).setFlipX(!isMe);
     con.add(spr);
     this.tweens.add({ targets: spr, y: cy + 122, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
