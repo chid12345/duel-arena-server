@@ -37,12 +37,10 @@ class BattleStartMixin:
 
         # Применяем активные бафы из player_buffs к статам игроков
         self._apply_player_buffs_to_stats(player1)
-        self._apply_class_bonuses_to_stats(player1)
         self._apply_warrior_type_to_stats(player1)
         self._apply_equipment_stats(player1)
         if not is_bot2:
             self._apply_player_buffs_to_stats(p2_store)
-            self._apply_class_bonuses_to_stats(p2_store)
             self._apply_warrior_type_to_stats(p2_store)
             self._apply_equipment_stats(p2_store)
 
@@ -96,37 +94,6 @@ class BattleStartMixin:
             new_max = max(1, int(old_max * 0.90))
             player["max_hp"]     = new_max
             player["current_hp"] = min(new_max, int(old_cur * 0.90))
-
-    def _apply_class_bonuses_to_stats(self, player: dict) -> None:
-        """Применяет бонусы выбранного класса (free/gold/diamonds) к статам перед боем."""
-        cls_id   = (player.get("current_class") or "").strip()
-        cls_type = (player.get("current_class_type") or "").strip()
-        if not cls_id or cls_type not in ("free", "gold", "diamonds"):
-            return
-        if cls_type == "free":
-            class_info = FREE_CLASSES.get(cls_id)
-        elif cls_type == "gold":
-            class_info = GOLD_CLASSES.get(cls_id)
-        else:
-            class_info = DIAMONDS_CLASSES.get(cls_id)
-        if not class_info:
-            return
-        bs = int(class_info.get("bonus_strength",   0) or 0)
-        ba = int(class_info.get("bonus_agility",    0) or 0)  # → player["endurance"] (dodge)
-        bi = int(class_info.get("bonus_intuition",  0) or 0)  # → player["crit"]
-        be = int(class_info.get("bonus_endurance",  0) or 0)  # → HP (выносливость = stamina)
-        if bs:
-            player["strength"]  = max(1, int(player.get("strength",  PLAYER_START_STRENGTH))  + bs)
-        if ba:
-            player["endurance"] = max(1, int(player.get("endurance", PLAYER_START_ENDURANCE)) + ba)
-        if bi:
-            player["crit"]      = max(0, int(player.get("crit",      PLAYER_START_CRIT))      + bi)
-        if be:
-            hp_add = be * STAMINA_PER_FREE_STAT
-            old_max = max(1, int(player.get("max_hp",      PLAYER_START_MAX_HP)))
-            old_cur =        int(player.get("current_hp",  old_max))
-            player["max_hp"]     = old_max + hp_add
-            player["current_hp"] = min(player["max_hp"], old_cur + hp_add)
 
     def _apply_player_buffs_to_stats(self, player: dict) -> None:
         """Применить активные бафы к статам игрока перед боем (мутирует dict)."""
