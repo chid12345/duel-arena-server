@@ -56,14 +56,13 @@ Object.assign(MenuScene.prototype, {
     if (this._dailyBonusOverlay) this._dailyBonusOverlay.setVisible(key === 'profile');
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
       const active = k === key;
-      btn.activeBg.setVisible(active);
-      btn.glowBar?.setVisible(active);
-      btn.pressGlow?.setVisible(false);
+      btn.activeBubble?.setVisible(active);
       if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
-        TAB_ICONS[btn.iconName](btn.iconG, 0, 0, active ? 0xffffff : 0x5a5a90, active ? 2 : 1.5);
+        const col = active ? (btn.tabCol || 0x22d3ee) : 0x2e2b50;
+        TAB_ICONS[btn.iconName](btn.iconG, 0, 0, col, active ? 2 : 1.5);
       }
-      btn.labelTxt.setStyle({ color: active ? '#c4b5fd' : '#4a4a78' });
+      btn.labelTxt.setStyle({ color: active ? (btn.hexCol || '#c4b5fd') : '#2e2b50' });
     });
     this._activeTab = key;
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);

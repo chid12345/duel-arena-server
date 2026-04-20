@@ -151,73 +151,82 @@ class MenuScene extends Phaser.Scene {
     }
     this._tabBarObjs = [];
     const _t = (o) => { this._tabBarObjs.push(o); return o; };
-
     const { W, H, TAB_H } = this;
+    // Палитра: каждая вкладка — свой неоновый цвет
     const tabs = [
-      { key: 'profile', label: 'Профиль', icon: 'profile' },
-      { key: 'clan',    label: 'Клан',    icon: 'clan'    },
-      { key: 'stats',   label: 'Герой',   icon: 'stats'   },
-      { key: 'boss',    label: 'Босс',    icon: 'boss'    },
-      { key: 'rating',  label: 'Рейтинг', icon: 'rating'  },
-      { key: 'more',    label: 'Меню',    icon: 'more'    },
+      { key:'profile', label:'Профиль', icon:'profile', col:0x22d3ee },
+      { key:'clan',    label:'Клан',    icon:'clan',    col:0xfb7185 },
+      { key:'stats',   label:'Герой',   icon:'stats',   col:0x818cf8 },
+      { key:'boss',    label:'Босс',    icon:'boss',    col:0xfb923c },
+      { key:'rating',  label:'Рейтинг', icon:'rating',  col:0xfbbf24 },
+      { key:'more',    label:'Меню',    icon:'more',    col:0xa78bfa },
     ];
     const tabW = W / tabs.length;
     const tabTop = H - TAB_H;
 
-    const bg = _t(this.add.graphics());
-    bg.fillStyle(0x080618, 1);
-    bg.fillRect(0, tabTop, W, TAB_H);
-    bg.lineStyle(1, 0x2a2050, 0.8);
-    bg.lineBetween(0, tabTop, W, tabTop);
+    // === Glassmorphism панель ===
+    const panel = _t(this.add.graphics());
+    panel.fillStyle(0x07041a, 0.96);
+    panel.fillRect(0, tabTop, W, TAB_H);
+    // Внутренний отблеск стекла сверху
+    panel.fillGradientStyle(0x6d28d9,0x6d28d9,0x07041a,0x07041a, 0.14,0.14,0,0);
+    panel.fillRect(0, tabTop, W, 18);
+    // Бликовая линия (стекло)
+    panel.lineStyle(1, 0xffffff, 0.1);
+    panel.lineBetween(0, tabTop, W, tabTop);
+    // Неоновая фиолетовая линия под бликом
+    panel.lineStyle(1, 0x7c3aed, 0.5);
+    panel.lineBetween(0, tabTop+1, W, tabTop+1);
 
     tabs.forEach((tab, i) => {
       const cx = tabW * i + tabW / 2;
-      const iy = tabTop + 27;
+      const iy = tabTop + 25;
+      const hexCol = '#' + tab.col.toString(16).padStart(6,'0');
 
-      const activeBg = _t(this.add.graphics());
-      activeBg.fillStyle(0x7c3aed, 0.1);
-      activeBg.fillRoundedRect(tabW*i+4, tabTop+4, tabW-8, TAB_H-8, 10);
-      activeBg.setVisible(false);
+      // Активный пузырь (цвет вкладки)
+      const activeBubble = _t(this.add.graphics());
+      activeBubble.fillStyle(tab.col, 0.07); activeBubble.fillCircle(cx, iy, 26);
+      activeBubble.fillStyle(tab.col, 0.13); activeBubble.fillCircle(cx, iy, 18);
+      activeBubble.fillStyle(tab.col, 0.17);
+      activeBubble.fillRoundedRect(tabW*i+4, tabTop+3, tabW-8, TAB_H-7, 12);
+      activeBubble.lineStyle(1, tab.col, 0.4);
+      activeBubble.strokeRoundedRect(tabW*i+4, tabTop+3, tabW-8, TAB_H-7, 12);
+      // Нeon-бар сверху (3 слоя)
+      activeBubble.fillStyle(tab.col, 0.22); activeBubble.fillRect(tabW*i+5, tabTop, tabW-10, 5);
+      activeBubble.fillStyle(tab.col, 0.55); activeBubble.fillRect(tabW*i+7, tabTop, tabW-14, 3);
+      activeBubble.fillStyle(0xffffff,  0.8); activeBubble.fillRect(tabW*i+9, tabTop, tabW-18, 1);
+      activeBubble.setVisible(false);
 
-      // 3-layer neon bar at top edge
-      const glowBar = _t(this.add.graphics());
-      glowBar.fillStyle(0x7c3aed, 0.2); glowBar.fillRect(tabW*i+4,  tabTop,   tabW-8,  5);
-      glowBar.fillStyle(0xa855f7, 0.5); glowBar.fillRect(tabW*i+6,  tabTop,   tabW-12, 3);
-      glowBar.fillStyle(0xddd6fe, 1);   glowBar.fillRect(tabW*i+8,  tabTop,   tabW-16, 2);
-      glowBar.setVisible(false);
-
-      // Glow halo behind icon on press
-      const pressGlow = _t(this.add.graphics());
-      pressGlow.fillStyle(0x7c3aed, 0.18); pressGlow.fillCircle(cx, iy, 22);
-      pressGlow.fillStyle(0x9b5de5, 0.09); pressGlow.fillCircle(cx, iy, 28);
-      pressGlow.setVisible(false);
-
-      // Icon in container for scale tween
+      // Иконка в контейнере (для scale-tween)
       const iconG = this.add.graphics();
-      TAB_ICONS[tab.icon](iconG, 0, 0, 0x5a5a90, 1.5);
+      TAB_ICONS[tab.icon](iconG, 0, 0, 0x2e2b50, 1.5);
       const iconContainer = _t(this.add.container(cx, iy, [iconG]));
 
-      const labelTxt = _t(txt(this, cx, tabTop+55, tab.label, 10, '#4a4a78').setOrigin(0.5));
+      const labelTxt = _t(txt(this, cx, tabTop+56, tab.label, 9, '#2e2b50').setOrigin(0.5));
 
-      this._tabBtns[tab.key] = { activeBg, glowBar, pressGlow, iconContainer, iconG, labelTxt, iconName: tab.icon };
+      this._tabBtns[tab.key] = { activeBubble, iconContainer, iconG, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
 
       const zone = _t(this.add.zone(cx, tabTop+TAB_H/2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
 
       zone.on('pointerdown', () => {
-        pressGlow.setVisible(true);
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, 0xc4b5fd, 2.2);
+        // Ripple-эффект
+        const rg = this.add.graphics();
+        rg.fillStyle(tab.col, 0.35); rg.fillCircle(0, 0, 12);
+        const ripple = this.add.container(cx, iy, [rg]);
+        this.tweens.add({ targets: ripple, scaleX: 3.6, scaleY: 3.6, alpha: 0,
+          duration: 420, ease: 'Quad.easeOut', onComplete: () => ripple.destroy() });
+        // Scale + смена цвета на акцент
+        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 2.2);
         this.tweens.killTweensOf(iconContainer);
-        this.tweens.add({ targets: iconContainer, scaleX: 1.32, scaleY: 1.32, duration: 85, ease: 'Back.easeOut' });
+        this.tweens.add({ targets: iconContainer, scaleX: 1.3, scaleY: 1.3, duration: 80, ease: 'Back.easeOut' });
       });
       zone.on('pointerout', () => {
-        pressGlow.setVisible(false);
         this.tweens.killTweensOf(iconContainer);
         this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 130, ease: 'Sine.easeOut' });
         const isActive = this._activeTab === tab.key;
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, isActive ? 0xffffff : 0x5a5a90, isActive ? 2 : 1.5);
+        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, isActive ? tab.col : 0x2e2b50, isActive ? 2 : 1.5);
       });
       zone.on('pointerup', () => {
-        pressGlow.setVisible(false);
         this.tweens.killTweensOf(iconContainer);
         this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
         Sound.tab(); tg?.HapticFeedback?.selectionChanged();
