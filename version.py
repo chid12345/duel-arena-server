@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.8.95"
-VERSION_LABEL = "v1.8.95 — fix: броня не выкидывает — internal flag в _closeAvatarOverlay"
+VERSION = "1.8.96"
+VERSION_LABEL = "v1.8.96 — feat: броня HTML-оверлей — glassmorphism, анимации, реальные фото"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "7.29"
+GAME_VERSION = "7.30"
