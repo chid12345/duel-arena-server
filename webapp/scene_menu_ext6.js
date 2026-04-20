@@ -54,14 +54,16 @@ Object.assign(MenuScene.prototype, {
     });
     if (key === 'profile') this._loadProfileBuffs();
     if (this._dailyBonusOverlay) this._dailyBonusOverlay.setVisible(key === 'profile');
-    const inactiveCol = '#ccccee';
-    const activeCol   = '#ffc83c';
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
       const active = k === key;
       btn.activeBg.setVisible(active);
-      btn.activeBar?.setVisible(active);
-      btn.iconTxt.setAlpha(active ? 1 : 0.85);
-      btn.labelTxt.setStyle({ color: active ? activeCol : inactiveCol });
+      btn.glowBar?.setVisible(active);
+      btn.pressGlow?.setVisible(false);
+      if (btn.iconG && btn.iconName) {
+        btn.iconG.clear();
+        TAB_ICONS[btn.iconName](btn.iconG, 0, 0, active ? 0xffffff : 0x5a5a90, active ? 2 : 1.5);
+      }
+      btn.labelTxt.setStyle({ color: active ? '#c4b5fd' : '#4a4a78' });
     });
     this._activeTab = key;
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);

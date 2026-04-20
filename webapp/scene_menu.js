@@ -146,53 +146,82 @@ class MenuScene extends Phaser.Scene {
   }
 
   _buildTabBar() {
-    // Уничтожить старые элементы таб-бара при перерисовке
     if (this._tabBarObjs) {
       this._tabBarObjs.forEach(o => { try { o.destroy(); } catch(_) {} });
     }
     this._tabBarObjs = [];
-    const _track = (o) => { this._tabBarObjs.push(o); return o; };
+    const _t = (o) => { this._tabBarObjs.push(o); return o; };
 
     const { W, H, TAB_H } = this;
     const tabs = [
-      { key: 'profile', icon: '🏠', label: 'Профиль' },
-      { key: 'clan',    icon: '⚔️',  label: 'Клан'    },
-      { key: 'stats',   icon: '🗡️',  label: 'Герой'   },
-      { key: 'boss',    icon: '🐉',  label: 'Босс'    },
-      { key: 'rating',  icon: '🏆',  label: 'Рейтинг' },
-      { key: 'more',    icon: '☰',   label: 'Меню'    },
+      { key: 'profile', label: 'Профиль', icon: 'profile' },
+      { key: 'clan',    label: 'Клан',    icon: 'clan'    },
+      { key: 'stats',   label: 'Герой',   icon: 'stats'   },
+      { key: 'boss',    label: 'Босс',    icon: 'boss'    },
+      { key: 'rating',  label: 'Рейтинг', icon: 'rating'  },
+      { key: 'more',    label: 'Меню',    icon: 'more'    },
     ];
-
-    const bg = _track(this.add.graphics());
-    bg.fillStyle(0x0d0820, 1);
-    bg.fillRect(0, H - TAB_H, W, TAB_H);
-    bg.lineStyle(1, 0x2a2050, 1);
-    bg.lineBetween(0, H - TAB_H, W, H - TAB_H);
-
     const tabW = W / tabs.length;
+    const tabTop = H - TAB_H;
+
+    const bg = _t(this.add.graphics());
+    bg.fillStyle(0x080618, 1);
+    bg.fillRect(0, tabTop, W, TAB_H);
+    bg.lineStyle(1, 0x2a2050, 0.8);
+    bg.lineBetween(0, tabTop, W, tabTop);
+
     tabs.forEach((tab, i) => {
       const cx = tabW * i + tabW / 2;
-      const tabTop = H - TAB_H;
+      const iy = tabTop + 27;
 
-      const activeBg = _track(this.add.graphics());
-      activeBg.fillStyle(0x7c3aed, 0.15);
-      activeBg.fillRoundedRect(tabW * i + 5, tabTop + 5, tabW - 10, TAB_H - 10, 12);
-      const activeBar = _track(this.add.graphics());
-      activeBar.fillStyle(0x7c3aed, 1);
-      activeBar.fillRoundedRect(tabW * i + tabW * 0.2, tabTop + 1, tabW * 0.6, 3, 2);
+      const activeBg = _t(this.add.graphics());
+      activeBg.fillStyle(0x7c3aed, 0.1);
+      activeBg.fillRoundedRect(tabW*i+4, tabTop+4, tabW-8, TAB_H-8, 10);
       activeBg.setVisible(false);
-      activeBar.setVisible(false);
 
-      const iconTxt  = _track(txt(this, cx, tabTop + 22, tab.icon, 20).setOrigin(0.5).setAlpha(0.7));
-      const labelTxt = _track(txt(this, cx, tabTop + 52, tab.label, 10, '#9090b0').setOrigin(0.5));
+      // 3-layer neon bar at top edge
+      const glowBar = _t(this.add.graphics());
+      glowBar.fillStyle(0x7c3aed, 0.2); glowBar.fillRect(tabW*i+4,  tabTop,   tabW-8,  5);
+      glowBar.fillStyle(0xa855f7, 0.5); glowBar.fillRect(tabW*i+6,  tabTop,   tabW-12, 3);
+      glowBar.fillStyle(0xddd6fe, 1);   glowBar.fillRect(tabW*i+8,  tabTop,   tabW-16, 2);
+      glowBar.setVisible(false);
 
-      this._tabBtns[tab.key] = { activeBg, activeBar, iconTxt, labelTxt };
+      // Glow halo behind icon on press
+      const pressGlow = _t(this.add.graphics());
+      pressGlow.fillStyle(0x7c3aed, 0.18); pressGlow.fillCircle(cx, iy, 22);
+      pressGlow.fillStyle(0x9b5de5, 0.09); pressGlow.fillCircle(cx, iy, 28);
+      pressGlow.setVisible(false);
 
-      const zone = _track(this.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
+      // Icon in container for scale tween
+      const iconG = this.add.graphics();
+      TAB_ICONS[tab.icon](iconG, 0, 0, 0x5a5a90, 1.5);
+      const iconContainer = _t(this.add.container(cx, iy, [iconG]));
+
+      const labelTxt = _t(txt(this, cx, tabTop+55, tab.label, 10, '#4a4a78').setOrigin(0.5));
+
+      this._tabBtns[tab.key] = { activeBg, glowBar, pressGlow, iconContainer, iconG, labelTxt, iconName: tab.icon };
+
+      const zone = _t(this.add.zone(cx, tabTop+TAB_H/2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
+
+      zone.on('pointerdown', () => {
+        pressGlow.setVisible(true);
+        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, 0xc4b5fd, 2.2);
+        this.tweens.killTweensOf(iconContainer);
+        this.tweens.add({ targets: iconContainer, scaleX: 1.32, scaleY: 1.32, duration: 85, ease: 'Back.easeOut' });
+      });
+      zone.on('pointerout', () => {
+        pressGlow.setVisible(false);
+        this.tweens.killTweensOf(iconContainer);
+        this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 130, ease: 'Sine.easeOut' });
+        const isActive = this._activeTab === tab.key;
+        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, isActive ? 0xffffff : 0x5a5a90, isActive ? 2 : 1.5);
+      });
       zone.on('pointerup', () => {
-        Sound.tab();
-        tg?.HapticFeedback?.selectionChanged();
-        if (tab.key === 'stats')  { this.scene.start('Stats',  { player: State.player }); return; }
+        pressGlow.setVisible(false);
+        this.tweens.killTweensOf(iconContainer);
+        this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
+        Sound.tab(); tg?.HapticFeedback?.selectionChanged();
+        if (tab.key === 'stats')  { this.scene.start('Stats', { player: State.player }); return; }
         if (tab.key === 'clan')   { this.scene.start('Clan'); return; }
         if (tab.key === 'boss')   { this.scene.start('WorldBoss'); return; }
         if (tab.key === 'rating') { this.scene.start('Rating'); return; }
