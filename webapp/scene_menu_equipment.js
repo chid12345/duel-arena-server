@@ -83,7 +83,15 @@ Object.assign(MenuScene.prototype, {
     }
 
     const zone = mkZ(x + w / 2, y + h / 2, w + 4, h + 4).setInteractive({ useHandCursor: true });
-    zone.on('pointerup', () => { Sound.click(); this.scene.start('Equipment', { slot }); });
+    zone.on('pointerup', () => {
+      Sound.click();
+      if (slot === 'armor') {
+        // Броня → открываем гардероб (выбор класса/образа)
+        this.scene.start('Stats', { player: State.player, openWardrobe: true });
+      } else {
+        this.scene.start('Equipment', { slot });
+      }
+    });
     c.add(zone);
   },
 
