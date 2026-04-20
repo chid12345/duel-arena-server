@@ -36,9 +36,13 @@ const CSS = `
 /* Rarity variables */
 .wd-card.rarity-common{--rc:rgba(156,163,175,.4);--rg:rgba(156,163,175,.16);--cbg:rgba(10,8,22,.97)}
 .wd-card.rarity-rare{--rc:rgba(59,130,246,.5);--rg:rgba(59,130,246,.2);--cbg:rgba(6,14,34,.97)}
-.wd-card.rarity-epic{--rc:rgba(168,85,247,.58);--rg:rgba(168,85,247,.24);--cbg:rgba(14,6,34,.97);animation:epicCardBorder 3s ease-in-out infinite}
+.wd-card.rarity-epic{--rc:rgba(168,85,247,.58);--rg:rgba(168,85,247,.24);--cbg:rgba(14,6,34,.97);border-color:transparent!important}
+/* Огонёк, бегущий по контуру эпик-карточки */
+.wd-card.rarity-epic::before{content:'';position:absolute;width:160%;aspect-ratio:1;top:50%;left:50%;translate:-50% -50%;background:conic-gradient(transparent 280deg,rgba(130,60,255,.35) 300deg,rgba(192,132,252,1) 335deg,rgba(240,200,255,.9) 350deg,transparent 360deg);animation:epicRun 3s linear infinite;z-index:0;pointer-events:none}
+.wd-card.rarity-epic::after{content:'';position:absolute;inset:2px;background:var(--cbg,rgba(14,6,34,.97));border-radius:16px;z-index:1;pointer-events:none}
+@keyframes epicRun{to{transform:rotate(360deg)}}
+.wd-card.rarity-epic .wd-img-area,.wd-card.rarity-epic .wd-card-body,.wd-card.rarity-epic .wd-eq-badge{position:relative;z-index:2}
 .wd-card.rarity-mythic{--rc:rgba(249,115,22,.62);--rg:rgba(249,115,22,.28);--cbg:rgba(22,6,0,.98)}
-@keyframes epicCardBorder{0%,100%{border-color:rgba(168,85,247,.45);box-shadow:0 6px 22px rgba(0,0,0,.4),0 0 10px rgba(168,85,247,.22)}50%{border-color:rgba(200,140,255,.88);box-shadow:0 6px 22px rgba(0,0,0,.4),0 0 22px rgba(168,85,247,.52),0 0 6px rgba(200,140,255,.3) inset}}
 
 /* Mythic — стандартный размер как все карточки */
 
