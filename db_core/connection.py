@@ -89,7 +89,12 @@ class _PooledConn(_PatchedConn):
             if self._raw.info.transaction_status != 0:  # IDLE=0
                 self._raw.rollback()
         except Exception:
-            pass
+            # Соединение сломано — закрываем напрямую, пул создаст новое
+            try:
+                self._raw.close()
+            except Exception:
+                pass
+            return
         self._pool.putconn(self._raw)
 
 
@@ -112,9 +117,18 @@ class DBCore:
                 from psycopg.rows import dict_row
                 self._pool = ConnectionPool(
                     DATABASE_URL,
-                    kwargs={"row_factory": dict_row, "prepare_threshold": None},
+                    kwargs={
+                        "row_factory": dict_row,
+                        "prepare_threshold": None,
+                        "keepalives": 1,         # TCP keepalive — не даёт Render закрыть соединение
+                        "keepalives_idle": 60,   # keepalive через 60с простоя
+                        "keepalives_interval": 10,
+                        "keepalives_count": 5,
+                    },
                     min_size=2,
                     max_size=10,
+                    max_idle=240,  # закрывать простаивающее соединение через 4 мин (Render убивает через 5)
+                    reconnect_timeout=30,
                     open=True,
                 )
         return self._pool
