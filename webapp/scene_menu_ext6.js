@@ -59,10 +59,9 @@ Object.assign(MenuScene.prototype, {
       btn.activeBubble?.setVisible(active);
       if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
-        const col = active ? (btn.tabCol || 0x22d3ee) : 0x8888bb;
-        TAB_ICONS[btn.iconName](btn.iconG, 0, 0, col, active ? 2 : 1.5);
+        TAB_ICONS[btn.iconName](btn.iconG, 0, 0, btn.tabCol || 0x22d3ee, active ? 2 : 1.4);
       }
-      btn.labelTxt.setStyle({ color: active ? (btn.hexCol || '#c4b5fd') : '#8888bb' });
+      btn.labelTxt.setStyle({ color: btn.hexCol || '#c4b5fd' });
     });
     this._activeTab = key;
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);

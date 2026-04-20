@@ -198,10 +198,10 @@ class MenuScene extends Phaser.Scene {
 
       // Иконка в контейнере (для scale-tween)
       const iconG = this.add.graphics();
-      TAB_ICONS[tab.icon](iconG, 0, 0, 0x8888bb, 1.5);
+      TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 1.4);
       const iconContainer = _t(this.add.container(cx, iy, [iconG]));
 
-      const labelTxt = _t(txt(this, cx, tabTop+57, tab.label, 9, '#8888bb').setOrigin(0.5));
+      const labelTxt = _t(txt(this, cx, tabTop+57, tab.label, 9, hexCol).setOrigin(0.5));
 
       this._tabBtns[tab.key] = { activeBubble, iconContainer, iconG, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
 
@@ -223,7 +223,7 @@ class MenuScene extends Phaser.Scene {
         this.tweens.killTweensOf(iconContainer);
         this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 130, ease: 'Sine.easeOut' });
         const isActive = this._activeTab === tab.key;
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, isActive ? tab.col : 0x8888bb, isActive ? 2 : 1.5);
+        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, isActive ? 2 : 1.4);
       });
       zone.on('pointerup', () => {
         this.tweens.killTweensOf(iconContainer);
