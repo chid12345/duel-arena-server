@@ -69,6 +69,23 @@
     };
   }
 
+  /* ── HTML-уведомление внутри оверлея (видно поверх canvas) ── */
+  function _notify(msg, ok = true) {
+    let el = document.getElementById('wd-notify');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'wd-notify';
+      el.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:9px 18px;border-radius:12px;font-size:13px;font-weight:700;pointer-events:none;transition:opacity .3s;max-width:300px;text-align:center';
+      document.body.appendChild(el);
+    }
+    el.textContent = msg;
+    el.style.background = ok ? 'rgba(21,128,61,.92)' : 'rgba(185,28,28,.92)';
+    el.style.color = ok ? '#86efac' : '#fca5a5';
+    el.style.opacity = '1';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.opacity = '0'; }, 2800);
+  }
+
   /* ── api actions ── */
   async function _doAction(scene, action, item, wp) {
     if (scene._wardrobeHtmlBusy) return;
@@ -79,6 +96,7 @@
       if (action === 'equip')   res = await post('/api/wardrobe/equip',  { class_id: item.id });
       if (action === 'unequip') res = await post('/api/wardrobe/unequip', {});
       if (action === 'buy_usdt') {
+        _notify('⏳ Создаём счёт…', true);
         res = await post('/api/wardrobe/usdt/buy-invoice', {});
         if (res?.ok && res.invoice_url) {
           const _url = res.invoice_url || '';
@@ -86,21 +104,22 @@
             tg?.openTelegramLink?.(_url);
           else
             tg?.openLink?.(_url);
-          scene._showToast?.('💳 Счёт открыт — оплатите и вернитесь');
+          _notify('💳 Счёт открыт — оплатите и вернитесь');
           if (res.invoice_id) _pollUsdtSlot(scene, res.invoice_id, 0);
         } else {
           const errMsg = res?.reason || res?.message || 'Ошибка создания счёта';
-          tg?.showAlert?.(errMsg) || scene._showToast?.(`❌ ${errMsg}`);
+          _notify('❌ ' + errMsg, false);
+          tg?.showAlert?.(errMsg);
         }
         scene._wardrobeHtmlBusy = false; return;
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
         const msg = action==='buy' ? '✅ Броня получена' : action==='unequip' ? '✅ Броня снята' : '✅ Броня надета';
-        scene._showToast?.(msg);
+        _notify(msg);
         WardrobeHTML.refresh(scene, res);
-      } else { scene._showToast?.(`❌ ${res?.message || res?.reason || 'Ошибка'}`); }
-    } catch { scene._showToast?.('❌ Ошибка сети'); }
+      } else { _notify('❌ ' + (res?.message || res?.reason || 'Ошибка'), false); }
+    } catch { _notify('❌ Ошибка сети', false); }
     scene._wardrobeHtmlBusy = false;
   }
 
