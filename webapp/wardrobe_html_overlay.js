@@ -40,17 +40,17 @@ const CSS = `
 .wd-card.rarity-mythic{--rc:rgba(249,115,22,.62);--rg:rgba(249,115,22,.28);--cbg:rgba(22,6,0,.98)}
 
 /* Серебристый огонёк — обычная */
-.wd-card.rarity-common::before{content:'';position:absolute;width:160%;aspect-ratio:1;top:50%;left:50%;translate:-50% -50%;background:conic-gradient(transparent 280deg,rgba(140,148,165,.3) 305deg,rgba(210,215,230,1) 338deg,rgba(240,242,248,.85) 352deg,transparent 360deg);animation:borderRun 4s linear infinite;z-index:0;pointer-events:none}
+.wd-card.rarity-common::before{content:'';position:absolute;width:160%;aspect-ratio:1;top:50%;left:50%;translate:-50% -50%;background:conic-gradient(transparent 340deg,rgba(140,148,165,.3) 348deg,rgba(210,215,230,1) 356deg,rgba(240,242,248,.9) 359deg,transparent 360deg);animation:borderRun 4s linear infinite;z-index:0;pointer-events:none}
 .wd-card.rarity-common::after{content:'';position:absolute;inset:2px;background:var(--cbg,rgba(10,8,22,.97));border-radius:16px;z-index:1;pointer-events:none}
 .wd-card.rarity-common .wd-img-area,.wd-card.rarity-common .wd-card-body,.wd-card.rarity-common .wd-eq-badge{position:relative;z-index:2}
 
 /* Золотой огонёк — редкая */
-.wd-card.rarity-rare::before{content:'';position:absolute;width:160%;aspect-ratio:1;top:50%;left:50%;translate:-50% -50%;background:conic-gradient(transparent 280deg,rgba(180,130,0,.35) 305deg,rgba(251,191,36,1) 338deg,rgba(255,230,120,.9) 352deg,transparent 360deg);animation:borderRun 3.5s linear infinite;z-index:0;pointer-events:none}
+.wd-card.rarity-rare::before{content:'';position:absolute;width:160%;aspect-ratio:1;top:50%;left:50%;translate:-50% -50%;background:conic-gradient(transparent 340deg,rgba(180,130,0,.35) 348deg,rgba(251,191,36,1) 356deg,rgba(255,235,130,.9) 359deg,transparent 360deg);animation:borderRun 3.5s linear infinite;z-index:0;pointer-events:none}
 .wd-card.rarity-rare::after{content:'';position:absolute;inset:2px;background:var(--cbg,rgba(10,8,4,.97));border-radius:16px;z-index:1;pointer-events:none}
 .wd-card.rarity-rare .wd-img-area,.wd-card.rarity-rare .wd-card-body,.wd-card.rarity-rare .wd-eq-badge{position:relative;z-index:2}
 
 /* Фиолетовый огонёк — эпическая */
-.wd-card.rarity-epic::before{content:'';position:absolute;width:160%;aspect-ratio:1;top:50%;left:50%;translate:-50% -50%;background:conic-gradient(transparent 280deg,rgba(130,60,255,.35) 305deg,rgba(192,132,252,1) 338deg,rgba(240,200,255,.9) 352deg,transparent 360deg);animation:borderRun 3s linear infinite;z-index:0;pointer-events:none}
+.wd-card.rarity-epic::before{content:'';position:absolute;width:160%;aspect-ratio:1;top:50%;left:50%;translate:-50% -50%;background:conic-gradient(transparent 340deg,rgba(130,60,255,.35) 348deg,rgba(192,132,252,1) 356deg,rgba(240,200,255,.9) 359deg,transparent 360deg);animation:borderRun 3s linear infinite;z-index:0;pointer-events:none}
 .wd-card.rarity-epic::after{content:'';position:absolute;inset:2px;background:var(--cbg,rgba(14,6,34,.97));border-radius:16px;z-index:1;pointer-events:none}
 .wd-card.rarity-epic .wd-img-area,.wd-card.rarity-epic .wd-card-body,.wd-card.rarity-epic .wd-eq-badge{position:relative;z-index:2}
 
