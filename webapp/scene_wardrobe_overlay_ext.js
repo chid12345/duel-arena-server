@@ -13,7 +13,7 @@
   };
 
   StatsScene.prototype._renderAvatarOverlay = function(wp) {
-    this._closeAvatarOverlay();
+    this._closeAvatarOverlay(true);
     const allCards = this._wardrobeCardsFromPayload(wp);
     if (!this._wardrobeView) this._wardrobeView = "all";
     const { W, H } = this, overlay = [], panelY = 56, panelH = H - 112;
@@ -284,15 +284,15 @@
     });
   };
 
-  StatsScene.prototype._closeAvatarOverlay = function() {
+  StatsScene.prototype._closeAvatarOverlay = function(internal = false) {
     this._wardrobeScrollFn=null;
     (this._avatarCardsLayer||[]).forEach(o=>{ try{o.destroy();}catch{} });
     this._avatarCardsLayer=null;
     (this._avatarOverlay||[]).forEach(o=>{ try{o.destroy();}catch{} });
     this._avatarOverlay=null;
     this._closeUsdtDetail?.();
-    // Если открыто из профиля — возвращаемся в профиль
-    if (this._openedFromProfile) {
+    // Возвращаемся в профиль только при явном закрытии (не при внутренней очистке)
+    if (this._openedFromProfile && !internal) {
       this._openedFromProfile = false;
       this.scene.start('Menu', { returnTab: 'profile' });
     }
