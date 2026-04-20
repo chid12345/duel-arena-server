@@ -18,6 +18,7 @@ Object.assign(BootScene.prototype, {
   },
 
   _wtDraw(key, bc, sc, type) {
+    if (this.textures.exists(key)) return; // PNG already loaded — skip pixel-art generation
     const rt = this.add.renderTexture(0, 0, 80, 120).setVisible(false);
     const g  = this.add.graphics().setVisible(false);
 

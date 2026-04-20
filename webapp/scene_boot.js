@@ -7,9 +7,9 @@ class BootScene extends Phaser.Scene {
 
   preload() {
     const bar = document.getElementById('loading-bar');
-    this.load.image('warrior_tank_png',  'warriors/warrior_tank.png');
-    this.load.image('warrior_agile_png', 'warriors/warrior_agile.png');
-    this.load.image('warrior_crit_png',  'warriors/warrior_crit.png');
+    this.load.image('warrior_tank',  'warriors/warrior_tank.png');
+    this.load.image('warrior_agile', 'warriors/warrior_agile.png');
+    this.load.image('warrior_crit',  'warriors/warrior_crit.png');
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('complete', () => {
       try {
