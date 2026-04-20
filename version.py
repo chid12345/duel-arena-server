@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.9.10"
-VERSION_LABEL = "v1.9.10 — fix: wardrobe — HTML _notify вместо canvas toast (видимые уведомления)"
+VERSION = "1.9.11"
+VERSION_LABEL = "v1.9.11 — fix: USDT — window.open fallback если tg.openLink не работает"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "7.44"
+GAME_VERSION = "7.45"

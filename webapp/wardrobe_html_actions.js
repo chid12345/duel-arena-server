@@ -100,10 +100,13 @@
         res = await post('/api/wardrobe/usdt/buy-invoice', {});
         if (res?.ok && res.invoice_url) {
           const _url = res.invoice_url || '';
-          if (_url.startsWith('https://t.me/') || _url.startsWith('tg://'))
-            tg?.openTelegramLink?.(_url);
-          else
-            tg?.openLink?.(_url);
+          try {
+            if (_url.startsWith('https://t.me/') || _url.startsWith('tg://'))
+              window.Telegram?.WebApp?.openTelegramLink?.(_url);
+            else
+              window.Telegram?.WebApp?.openLink?.(_url);
+          } catch (_) {}
+          if (_url && !_url.startsWith('tg://')) window.open(_url, '_blank');
           _notify('💳 Счёт открыт — оплатите и вернитесь');
           if (res.invoice_id) _pollUsdtSlot(scene, res.invoice_id, 0);
         } else {
