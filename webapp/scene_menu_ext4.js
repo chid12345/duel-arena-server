@@ -177,6 +177,17 @@ Object.assign(MenuScene.prototype, {
     // top accent line
     const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
     ca(mkT(W / 2, czY + 11, 'ЭКИПИРОВКА ПЕРСОНАЖА', 9, 'rgba(167,139,250,0.8)', true)).setOrigin(0.5);
+
+    // Кнопка Броня — открывает выбор образа/оснащения
+    const brnX = W - PAD - 72, brnY = czY + 3, brnW = 72, brnH = 22;
+    const brnBg = ca(mkG());
+    brnBg.fillStyle(0x1a1030, 1); brnBg.fillRoundedRect(brnX, brnY, brnW, brnH, 8);
+    brnBg.lineStyle(1.5, 0x6d28d9, 0.8); brnBg.strokeRoundedRect(brnX, brnY, brnW, brnH, 8);
+    ca(mkT(brnX + brnW / 2, brnY + brnH / 2, '🛡 Броня', 9, '#c084fc', true)).setOrigin(0.5);
+    const brnZ = ca(mkZ(brnX + brnW / 2, brnY + brnH / 2, brnW, brnH).setInteractive({ useHandCursor: true }));
+    brnZ.on('pointerdown', () => { brnBg.clear(); brnBg.fillStyle(0x3a1a60, 1); brnBg.fillRoundedRect(brnX, brnY, brnW, brnH, 8); brnBg.lineStyle(1.5, 0x9f40ff, 1); brnBg.strokeRoundedRect(brnX, brnY, brnW, brnH, 8); tg?.HapticFeedback?.selectionChanged(); });
+    brnZ.on('pointerout',  () => { brnBg.clear(); brnBg.fillStyle(0x1a1030, 1); brnBg.fillRoundedRect(brnX, brnY, brnW, brnH, 8); brnBg.lineStyle(1.5, 0x6d28d9, 0.8); brnBg.strokeRoundedRect(brnX, brnY, brnW, brnH, 8); });
+    brnZ.on('pointerup',   () => { brnBg.clear(); brnBg.fillStyle(0x1a1030, 1); brnBg.fillRoundedRect(brnX, brnY, brnW, brnH, 8); brnBg.lineStyle(1.5, 0x6d28d9, 0.8); brnBg.strokeRoundedRect(brnX, brnY, brnW, brnH, 8); Sound.click(); this.scene.start('Stats', { player: State.player, openWardrobe: true }); });
     const charCY = czY + czH * 0.42;
     // Aura colour per warrior class
     const _auraCols = { tank: 0xff5522, agile: 0x00cc55, crit: 0x7c3aed };

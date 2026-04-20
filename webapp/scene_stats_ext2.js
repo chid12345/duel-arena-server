@@ -154,61 +154,33 @@ Object.assign(StatsScene.prototype, {
   },
 
   _buildAvatarBtn(W, H) {
-    const y = H * 0.935, h = 38, gap = 8;
+    const y = H * 0.935, h = 38;
     const totalW = Math.min(W - 32, 320);
-    const btnW = Math.floor((totalW - gap) / 2);
     const x0 = (W - totalW) / 2;
-    const x1 = x0 + btnW + gap;
 
-    // Гардероб
-    const g1 = this.add.graphics();
-    g1.fillStyle(0x0e0c20, 0.97);
-    g1.fillRoundedRect(x0, y, btnW, h, 10);
-    g1.lineStyle(1.5, C.blue, 0.5);
-    g1.strokeRoundedRect(x0, y, btnW, h, 10);
-    txt(this, x0 + btnW / 2, y + h / 2, '⚔️ Оснащение', 13, '#7ab4ff', true).setOrigin(0.5);
-    const z1 = this.add.zone(x0 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
-    z1.on('pointerdown', () => {
-      g1.clear();
-      g1.fillStyle(C.blue, 0.15); g1.fillRoundedRect(x0, y, btnW, h, 10);
-      g1.lineStyle(1.5, C.blue, 0.9); g1.strokeRoundedRect(x0, y, btnW, h, 10);
-      tg?.HapticFeedback?.selectionChanged();
-    });
-    z1.on('pointerout', () => {
-      g1.clear();
-      g1.fillStyle(0x0e0c20, 0.97); g1.fillRoundedRect(x0, y, btnW, h, 10);
-      g1.lineStyle(1.5, C.blue, 0.5); g1.strokeRoundedRect(x0, y, btnW, h, 10);
-    });
-    z1.on('pointerup', () => {
-      g1.clear();
-      g1.fillStyle(0x0e0c20, 0.97); g1.fillRoundedRect(x0, y, btnW, h, 10);
-      g1.lineStyle(1.5, C.blue, 0.5); g1.strokeRoundedRect(x0, y, btnW, h, 10);
-      this._openAvatarPanel();
-    });
-
-    // Моё
+    // Рюкзак — полная ширина
     const g2 = this.add.graphics();
     g2.fillStyle(0x081410, 0.97);
-    g2.fillRoundedRect(x1, y, btnW, h, 10);
+    g2.fillRoundedRect(x0, y, totalW, h, 10);
     g2.lineStyle(1.5, C.green, 0.45);
-    g2.strokeRoundedRect(x1, y, btnW, h, 10);
-    txt(this, x1 + btnW / 2, y + h / 2, '📦 Инвентарь', 13, '#60cc80', true).setOrigin(0.5);
-    const z2 = this.add.zone(x1 + btnW / 2, y + h / 2, btnW, h).setInteractive({ useHandCursor: true });
+    g2.strokeRoundedRect(x0, y, totalW, h, 10);
+    txt(this, x0 + totalW / 2, y + h / 2, '🎒 Рюкзак', 13, '#60cc80', true).setOrigin(0.5);
+    const z2 = this.add.zone(x0 + totalW / 2, y + h / 2, totalW, h).setInteractive({ useHandCursor: true });
     z2.on('pointerdown', () => {
       g2.clear();
-      g2.fillStyle(C.green, 0.15); g2.fillRoundedRect(x1, y, btnW, h, 10);
-      g2.lineStyle(1.5, C.green, 0.9); g2.strokeRoundedRect(x1, y, btnW, h, 10);
+      g2.fillStyle(C.green, 0.15); g2.fillRoundedRect(x0, y, totalW, h, 10);
+      g2.lineStyle(1.5, C.green, 0.9); g2.strokeRoundedRect(x0, y, totalW, h, 10);
       tg?.HapticFeedback?.selectionChanged();
     });
     z2.on('pointerout', () => {
       g2.clear();
-      g2.fillStyle(0x081410, 0.97); g2.fillRoundedRect(x1, y, btnW, h, 10);
-      g2.lineStyle(1.5, C.green, 0.45); g2.strokeRoundedRect(x1, y, btnW, h, 10);
+      g2.fillStyle(0x081410, 0.97); g2.fillRoundedRect(x0, y, totalW, h, 10);
+      g2.lineStyle(1.5, C.green, 0.45); g2.strokeRoundedRect(x0, y, totalW, h, 10);
     });
     z2.on('pointerup', () => {
       g2.clear();
-      g2.fillStyle(0x081410, 0.97); g2.fillRoundedRect(x1, y, btnW, h, 10);
-      g2.lineStyle(1.5, C.green, 0.45); g2.strokeRoundedRect(x1, y, btnW, h, 10);
+      g2.fillStyle(0x081410, 0.97); g2.fillRoundedRect(x0, y, totalW, h, 10);
+      g2.lineStyle(1.5, C.green, 0.45); g2.strokeRoundedRect(x0, y, totalW, h, 10);
       this._openInventoryPanel();
     });
   },

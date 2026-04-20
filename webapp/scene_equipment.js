@@ -65,9 +65,10 @@ class EquipmentScene extends Phaser.Scene {
     _extraBg(this, W, H);
     const sl = _EQ_SLOT_LABEL[this._slot] || { icon: '⚙️', name: 'Экипировка' };
     _extraHeader(this, W, sl.icon, sl.name.toUpperCase(), 'Выберите предмет');
-    _extraBack(this, () => {
-      State.playerLoadedAt = 0; // force refresh
-      this.scene.start('Menu');
+    makeBackBtn(this, 'Назад', () => {
+      tg?.HapticFeedback?.impactOccurred('light');
+      State.playerLoadedAt = 0;
+      this.scene.start('Menu', { returnTab: 'profile' });
     });
     this._build();
   }

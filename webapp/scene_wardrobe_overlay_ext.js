@@ -26,7 +26,7 @@
     bg.lineStyle(1.5, 0x5020a0, 0.55);
     bg.strokeRoundedRect(8, panelY, W-16, panelH, 14);
     overlay.push(bg);
-    overlay.push(txt(this, W/2, panelY+16, "⚔️ Оснащение", 14, "#ffffff", true).setOrigin(0.5).setDepth(122));
+    overlay.push(txt(this, W/2, panelY+16, "🛡 Броня", 14, "#ffffff", true).setOrigin(0.5).setDepth(122));
 
     const cg = this.add.graphics().setDepth(122);
     cg.fillStyle(0x3a2030,1); cg.fillRoundedRect(W-44,panelY+8,28,24,7);
@@ -51,12 +51,12 @@
       z.on("pointerdown", () => { if (this._wardrobeView===mode) return; this._wardrobeView=mode; this._renderAvatarOverlay(wp); });
       overlay.push(g, t, z);
     };
-    mkTab(14, "Магазин", "all");
+    mkTab(14, "Классы", "all");
     mkTab(128, "Мой инвентарь", "owned");
 
     const cards = this._wardrobeView === "owned"
       ? allCards.filter(x => x.owned || x.is_usdt_slot)
-      : allCards.filter(x => !x.is_usdt_slot);
+      : allCards.filter(x => !x.is_usdt_slot && x.class_type === 'free');
     const layer = []; this._avatarCardsLayer = layer;
 
     const cardH   = 128;
@@ -227,7 +227,7 @@
       }
       if (res?.ok) {
         if (res.player) { State.player=res.player; State.playerLoadedAt=Date.now(); }
-        const msg=action==="buy"?"✅ Образ получен":action==="unequip"?"✅ Образ снят":"✅ Образ надет";
+        const msg=action==="buy"?"✅ Броня получена":action==="unequip"?"✅ Броня снята":"✅ Броня надета";
         this._avatarBusy=false;
         this.scene.restart({player:State.player,reopenWardrobe:true,wardrobePayload:res,toast:msg});
         return;
