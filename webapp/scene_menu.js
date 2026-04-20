@@ -164,45 +164,44 @@ class MenuScene extends Phaser.Scene {
     const tabW = W / tabs.length;
     const tabTop = H - TAB_H;
 
-    // === Glassmorphism панель ===
+    // === Crystal Glass панель ===
     const panel = _t(this.add.graphics());
     panel.fillStyle(0x07041a, 0.96);
     panel.fillRect(0, tabTop, W, TAB_H);
-    // Внутренний отблеск стекла сверху
-    panel.fillGradientStyle(0x6d28d9,0x6d28d9,0x07041a,0x07041a, 0.14,0.14,0,0);
-    panel.fillRect(0, tabTop, W, 18);
-    // Бликовая линия (стекло)
+    // Бликовая линия сверху
     panel.lineStyle(1, 0xffffff, 0.1);
     panel.lineBetween(0, tabTop, W, tabTop);
-    // Неоновая фиолетовая линия под бликом
-    panel.lineStyle(1, 0x7c3aed, 0.5);
-    panel.lineBetween(0, tabTop+1, W, tabTop+1);
 
     tabs.forEach((tab, i) => {
       const cx = tabW * i + tabW / 2;
-      const iy = tabTop + 25;
+      const iy = tabTop + 26;
       const hexCol = '#' + tab.col.toString(16).padStart(6,'0');
 
-      // Активный пузырь (цвет вкладки)
+      // === Crystal Glass активная таблетка ===
       const activeBubble = _t(this.add.graphics());
-      activeBubble.fillStyle(tab.col, 0.07); activeBubble.fillCircle(cx, iy, 26);
-      activeBubble.fillStyle(tab.col, 0.13); activeBubble.fillCircle(cx, iy, 18);
-      activeBubble.fillStyle(tab.col, 0.17);
-      activeBubble.fillRoundedRect(tabW*i+4, tabTop+3, tabW-8, TAB_H-7, 12);
-      activeBubble.lineStyle(1, tab.col, 0.4);
-      activeBubble.strokeRoundedRect(tabW*i+4, tabTop+3, tabW-8, TAB_H-7, 12);
-      // Нeon-бар сверху (3 слоя)
-      activeBubble.fillStyle(tab.col, 0.22); activeBubble.fillRect(tabW*i+5, tabTop, tabW-10, 5);
-      activeBubble.fillStyle(tab.col, 0.55); activeBubble.fillRect(tabW*i+7, tabTop, tabW-14, 3);
-      activeBubble.fillStyle(0xffffff,  0.8); activeBubble.fillRect(tabW*i+9, tabTop, tabW-18, 1);
+      const px = tabW*i+5, py = tabTop+4, pw = tabW-10, ph = TAB_H-8, pr = 13;
+      // Внешний ореол (3 слоя размытия)
+      activeBubble.lineStyle(10, tab.col, 0.12); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
+      activeBubble.lineStyle(5,  tab.col, 0.25); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
+      activeBubble.lineStyle(2,  tab.col, 0.18); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
+      // Заливка таблетки
+      activeBubble.fillStyle(tab.col, 0.30); activeBubble.fillRoundedRect(px,py,pw,ph,pr);
+      // Внутренний блик сверху
+      activeBubble.fillStyle(0xffffff, 0.08); activeBubble.fillRoundedRect(px+2,py+2,pw-4,14,{tl:11,tr:11,bl:0,br:0});
+      // Яркий бордер
+      activeBubble.lineStyle(2, tab.col, 0.95); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
+      // Точка-индикатор сверху
+      activeBubble.fillStyle(tab.col, 0.4);  activeBubble.fillCircle(cx, tabTop+6, 5);
+      activeBubble.fillStyle(tab.col, 1.0);  activeBubble.fillCircle(cx, tabTop+6, 3);
+      activeBubble.fillStyle(0xffffff, 0.85); activeBubble.fillCircle(cx, tabTop+6, 1.5);
       activeBubble.setVisible(false);
 
       // Иконка в контейнере (для scale-tween)
       const iconG = this.add.graphics();
-      TAB_ICONS[tab.icon](iconG, 0, 0, 0x2e2b50, 1.5);
+      TAB_ICONS[tab.icon](iconG, 0, 0, 0x8888bb, 1.5);
       const iconContainer = _t(this.add.container(cx, iy, [iconG]));
 
-      const labelTxt = _t(txt(this, cx, tabTop+56, tab.label, 9, '#2e2b50').setOrigin(0.5));
+      const labelTxt = _t(txt(this, cx, tabTop+57, tab.label, 9, '#8888bb').setOrigin(0.5));
 
       this._tabBtns[tab.key] = { activeBubble, iconContainer, iconG, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
 
@@ -224,7 +223,7 @@ class MenuScene extends Phaser.Scene {
         this.tweens.killTweensOf(iconContainer);
         this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 130, ease: 'Sine.easeOut' });
         const isActive = this._activeTab === tab.key;
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, isActive ? tab.col : 0x2e2b50, isActive ? 2 : 1.5);
+        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, isActive ? tab.col : 0x8888bb, isActive ? 2 : 1.5);
       });
       zone.on('pointerup', () => {
         this.tweens.killTweensOf(iconContainer);

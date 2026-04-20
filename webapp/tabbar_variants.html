@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duel Arena — TabBar Variants</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+
+body {
+  background: radial-gradient(ellipse at 30% 20%, #1a0a2e 0%, #07050f 60%);
+  font-family: 'Inter', system-ui, sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  padding: 40px 20px 60px;
+}
+
+h1 {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  color: #f0eeff;
+  margin-bottom: 8px;
+  letter-spacing: -.5px;
+}
+.subtitle {
+  text-align: center;
+  color: rgba(196,181,253,.5);
+  font-size: 13px;
+  margin-bottom: 48px;
+}
+
+.grid {
+  display: flex;
+  gap: 32px;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+
+.variant-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.variant-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(196,181,253,.5);
+}
+.variant-name {
+  font-size: 18px;
+  font-weight: 800;
+  color: #f0eeff;
+  text-align: center;
+}
+.variant-desc {
+  font-size: 12px;
+  color: rgba(196,181,253,.45);
+  text-align: center;
+  max-width: 220px;
+  line-height: 1.5;
+}
+
+/* ─── Phone shell ─── */
+.phone {
+  width: 320px;
+  background: #0d0b1a;
+  border-radius: 28px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid rgba(109,40,217,.35);
+  box-shadow: 0 0 60px rgba(109,40,217,.18), 0 24px 64px rgba(0,0,0,.9);
+}
+
+.phone-content {
+  height: 220px;
+  background: linear-gradient(180deg, #0f0c20 0%, #0a0815 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.phone-content svg { opacity: .15; }
+.phone-hint {
+  font-size: 11px;
+  color: rgba(255,255,255,.2);
+  letter-spacing: .5px;
+}
+
+/* ════════════════════════════════════════
+   VARIANT 1 — "NEON BUBBLE"
+   Активная вкладка: плавающий пузырь
+   с градиентом цвета вкладки
+════════════════════════════════════════ */
+.tb1 {
+  height: 72px;
+  background: linear-gradient(180deg, #080614 0%, #0c0a1e 100%);
+  border-top: 1px solid rgba(255,255,255,.06);
+  display: flex;
+  flex-shrink: 0;
+  position: relative;
+}
+.tb1::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139,92,246,.4), rgba(59,130,246,.3), rgba(139,92,246,.4), transparent);
+}
+
+.tb1 .t {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  position: relative;
+  padding-top: 2px;
+  transition: all .2s;
+}
+.tb1 .t svg {
+  width: 22px; height: 22px;
+  transition: all .25s;
+  filter: none;
+  opacity: .55;
+}
+.tb1 .t .lbl {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,.45);
+  transition: all .25s;
+  letter-spacing: .3px;
+}
+
+/* Active bubble */
+.tb1 .t.act::after {
+  content: '';
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--tc);
+  opacity: .12;
+  filter: blur(12px);
+}
+.tb1 .t.act::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--tc), transparent);
+  opacity: .18;
+}
+.tb1 .t.act .bubble {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--tc);
+  opacity: .45;
+  box-shadow: 0 0 12px var(--tc), inset 0 0 8px rgba(255,255,255,.04);
+  animation: pulse1 2.5s ease-in-out infinite;
+}
+@keyframes pulse1 {
+  0%,100%{ opacity:.4; transform:translateX(-50%) scale(1); }
+  50%{ opacity:.65; transform:translateX(-50%) scale(1.06); }
+}
+.tb1 .t.act svg { opacity: 1; filter: drop-shadow(0 0 6px var(--tc)); }
+.tb1 .t.act .lbl { color: var(--tc); font-weight: 700; }
+
+/* CSS vars per tab */
+.tb1 [data-k="profile"] { --tc: #22d3ee; }
+.tb1 [data-k="clan"]    { --tc: #fb7185; }
+.tb1 [data-k="hero"]    { --tc: #818cf8; }
+.tb1 [data-k="boss"]    { --tc: #fb923c; }
+.tb1 [data-k="rating"]  { --tc: #fbbf24; }
+.tb1 [data-k="menu"]    { --tc: #a78bfa; }
+
+
+/* ════════════════════════════════════════
+   VARIANT 2 — "FORGE" (RPG metal)
+   Активная вкладка: полоска снизу + залитый
+   фон с металлическим блеском
+════════════════════════════════════════ */
+.tb2 {
+  height: 68px;
+  background: linear-gradient(180deg, #12101f 0%, #0e0c1a 100%);
+  border-top: 2px solid transparent;
+  border-image: linear-gradient(90deg, #1a0a2e, #7c3aed55, #fbbf2455, #fb923c55, #7c3aed55, #1a0a2e) 1;
+  display: flex;
+  flex-shrink: 0;
+  position: relative;
+}
+.tb2 .t {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  position: relative;
+  transition: all .2s;
+  overflow: hidden;
+}
+.tb2 .t svg { opacity: .55;
+  width: 21px; height: 21px;
+  opacity: .28;
+  transition: all .2s;
+}
+.tb2 .t .lbl {
+  font-size: 8px;
+  font-weight: 600;
+  color: rgba(255,255,255,.45);
+  transition: all .2s;
+  letter-spacing: .3px;
+}
+/* Active state */
+.tb2 .t.act {
+  background: linear-gradient(180deg, transparent, var(--tc-dim) 100%);
+}
+.tb2 .t.act::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 15%; right: 15%;
+  height: 2.5px;
+  background: var(--tc);
+  border-radius: 2px 2px 0 0;
+  box-shadow: 0 0 10px var(--tc), 0 0 20px var(--tc);
+}
+.tb2 .t.act svg { opacity: 1; filter: drop-shadow(0 0 5px var(--tc)); transform: translateY(-1px); }
+.tb2 .t.act .lbl { color: var(--tc); font-weight: 700; }
+/* Shimmer on active */
+.tb2 .t.act::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 60%; height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.04), transparent);
+  animation: shimmer2 3s ease-in-out infinite;
+}
+@keyframes shimmer2 {
+  0%{ left: -100%; }
+  100%{ left: 200%; }
+}
+
+.tb2 [data-k="profile"] { --tc: #22d3ee; --tc-dim: rgba(34,211,238,.07); }
+.tb2 [data-k="clan"]    { --tc: #fb7185; --tc-dim: rgba(251,113,133,.07); }
+.tb2 [data-k="hero"]    { --tc: #818cf8; --tc-dim: rgba(129,140,248,.07); }
+.tb2 [data-k="boss"]    { --tc: #fb923c; --tc-dim: rgba(251,146,60,.07); }
+.tb2 [data-k="rating"]  { --tc: #fbbf24; --tc-dim: rgba(251,191,36,.07); }
+.tb2 [data-k="menu"]    { --tc: #a78bfa; --tc-dim: rgba(167,139,250,.07); }
+
+
+/* ════════════════════════════════════════
+   VARIANT 3 — "CRYSTAL GLASS"
+   Активная вкладка: стеклянная таблетка
+   с цветным градиентом внутри
+════════════════════════════════════════ */
+.tb3 {
+  height: 76px;
+  background: rgba(10,8,22,.92);
+  backdrop-filter: blur(20px);
+  border-top: 1px solid rgba(255,255,255,.07);
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 0 6px;
+  gap: 2px;
+  position: relative;
+}
+.tb3::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+}
+
+.tb3 .t {
+  flex: 1;
+  height: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  border-radius: 14px;
+  transition: all .25s cubic-bezier(.34,1.56,.64,1);
+  position: relative;
+  overflow: hidden;
+}
+.tb3 .t svg {
+  width: 22px; height: 22px;
+  opacity: .6;
+  transition: all .25s;
+}
+.tb3 .t .lbl {
+  font-size: 8.5px;
+  font-weight: 600;
+  color: rgba(255,255,255,.55);
+  transition: all .25s;
+}
+/* Active pill */
+.tb3 .t.act {
+  background: linear-gradient(145deg, var(--tc-bg), rgba(255,255,255,.08));
+  border: 2px solid var(--tc-border);
+  box-shadow: 0 0 32px var(--tc-glow), 0 0 12px var(--tc-glow2), 0 0 4px var(--tc-glow2), inset 0 1px 0 rgba(255,255,255,.2);
+  transform: scale(1.06);
+}
+.tb3 .t.act svg { opacity: 1; filter: drop-shadow(0 0 10px var(--tc)) drop-shadow(0 0 4px var(--tc)) brightness(1.2); }
+.tb3 .t.act .lbl { color: var(--tc); font-weight: 800; font-size: 9px; text-shadow: 0 0 10px var(--tc), 0 0 20px var(--tc); }
+/* Dot indicator */
+.tb3 .t.act .dot {
+  display: block;
+  position: absolute;
+  top: 6px;
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--tc);
+  box-shadow: 0 0 10px var(--tc), 0 0 20px var(--tc), 0 0 4px #fff;
+}
+
+.tb3 [data-k="profile"] { --tc: #22d3ee; --tc-bg: rgba(34,211,238,.32); --tc-border: rgba(34,211,238,.9); --tc-glow: rgba(34,211,238,.4); --tc-glow2: rgba(34,211,238,.7); }
+.tb3 [data-k="clan"]    { --tc: #ff4d6d; --tc-bg: rgba(255,77,109,.32); --tc-border: rgba(255,77,109,.9); --tc-glow: rgba(255,77,109,.4); --tc-glow2: rgba(255,77,109,.7); }
+.tb3 [data-k="hero"]    { --tc: #818cf8; --tc-bg: rgba(129,140,248,.32); --tc-border: rgba(129,140,248,.9); --tc-glow: rgba(129,140,248,.4); --tc-glow2: rgba(129,140,248,.7); }
+.tb3 [data-k="boss"]    { --tc: #ff6b1a; --tc-bg: rgba(255,107,26,.32); --tc-border: rgba(255,107,26,.9); --tc-glow: rgba(255,107,26,.4); --tc-glow2: rgba(255,107,26,.7); }
+.tb3 [data-k="rating"]  { --tc: #ffd700; --tc-bg: rgba(255,215,0,.32); --tc-border: rgba(255,215,0,.9); --tc-glow: rgba(255,215,0,.4); --tc-glow2: rgba(255,215,0,.7); }
+.tb3 [data-k="menu"]    { --tc: #b57bff; --tc-bg: rgba(181,123,255,.32); --tc-border: rgba(181,123,255,.9); --tc-glow: rgba(181,123,255,.4); --tc-glow2: rgba(181,123,255,.7); }
+
+/* ── dot hidden by default ── */
+.dot { display: none; }
+</style>
+</head>
+<body>
+
+<h1>Duel Arena — TabBar Variants</h1>
+<p class="subtitle">Кликай по вкладкам для переключения активной</p>
+
+<div class="grid">
+
+  <!-- ═══ VARIANT 1 ═══ -->
+  <div class="variant-wrap">
+    <span class="variant-label">Вариант 1</span>
+    <span class="variant-name">Neon Bubble</span>
+    <span class="variant-desc">Плавающий светящийся пузырь над иконкой</span>
+    <div class="phone">
+      <div class="phone-content">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M8 20L24 8l16 12v18a2 2 0 01-2 2H10a2 2 0 01-2-2V20Z" fill="rgba(139,92,246,.4)" stroke="#a78bfa" stroke-width="2"/>
+          <path d="M18 38V28h12v10" stroke="#a78bfa" stroke-width="2"/>
+        </svg>
+        <span class="phone-hint">ЭКРАН ИГРЫ</span>
+      </div>
+
+      <div class="tb1" id="tb1">
+        <div class="t act" data-k="profile" onclick="activate('tb1',this)">
+          <span class="bubble"></span>
+          <!-- Shield+person icon -->
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L4 6v5c0 4.8 3.4 9.3 8 10.4C17.6 20.3 21 15.8 21 11V6L12 2Z" fill="rgba(34,211,238,.18)" stroke="#22d3ee" stroke-width="1.5"/>
+            <circle cx="12" cy="10" r="2.5" fill="#22d3ee"/>
+            <path d="M7.5 16.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#22d3ee" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">Профиль</span>
+        </div>
+
+        <div class="t" data-k="clan" onclick="activate('tb1',this)">
+          <span class="bubble"></span>
+          <!-- Two swords / clan -->
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M14.5 3L21 9.5l-7 7-1.5-1.5 5-5L15 7.5 9.5 13 8 11.5l6.5-8.5Z" fill="rgba(251,113,133,.18)" stroke="#fb7185" stroke-width="1.3"/>
+            <path d="M9.5 13l-5 5a1.5 1.5 0 002 2l5-5" stroke="#fb7185" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M9.5 3L3 9.5l7 7 1.5-1.5-5-5 2.5-2.5 5.5 5.5 1.5-1.5L9.5 3Z" fill="rgba(251,113,133,.18)" stroke="#fb7185" stroke-width="1.3"/>
+            <path d="M14.5 13l5 5a1.5 1.5 0 01-2 2l-5-5" stroke="#fb7185" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">Клан</span>
+        </div>
+
+        <div class="t" data-k="hero" onclick="activate('tb1',this)">
+          <span class="bubble"></span>
+          <!-- Helmet -->
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M5 13C5 8.6 8.1 5 12 5c3.9 0 7 3.6 7 8" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M4 13h16v2a4 4 0 01-4 4H8a4 4 0 01-4-4v-2Z" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.5"/>
+            <path d="M15 19v1.5M9 19v1.5" stroke="#818cf8" stroke-width="1.3" stroke-linecap="round"/>
+            <path d="M19 13c0-1.7 1-3 2-3" stroke="#818cf8" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">Герой</span>
+        </div>
+
+        <div class="t" data-k="boss" onclick="activate('tb1',this)">
+          <span class="bubble"></span>
+          <!-- Skull -->
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 3C7.6 3 4 6.6 4 11c0 2.5 1.1 4.7 2.9 6.2L7 19h10l.1-1.8C18.9 15.7 20 13.5 20 11c0-4.4-3.6-8-8-8Z" fill="rgba(251,146,60,.18)" stroke="#fb923c" stroke-width="1.5"/>
+            <path d="M7 19v2h10v-2" stroke="#fb923c" stroke-width="1.3"/>
+            <circle cx="9.5" cy="11" r="1.8" fill="#fb923c"/>
+            <circle cx="14.5" cy="11" r="1.8" fill="#fb923c"/>
+            <path d="M10.5 17v-2h3v2" stroke="#fb923c" stroke-width="1.2" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">Босс</span>
+        </div>
+
+        <div class="t" data-k="rating" onclick="activate('tb1',this)">
+          <span class="bubble"></span>
+          <!-- Crown -->
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M3 18h18M3 18L5 7l4.5 5L12 3l2.5 9L19 7l2 11" fill="rgba(251,191,36,.18)" stroke="#fbbf24" stroke-width="1.4" stroke-linejoin="round"/>
+            <circle cx="5" cy="7" r="1.5" fill="#fbbf24"/>
+            <circle cx="12" cy="3" r="1.5" fill="#fbbf24"/>
+            <circle cx="19" cy="7" r="1.5" fill="#fbbf24"/>
+            <rect x="3" y="18" width="18" height="2.5" rx="1.25" fill="#fbbf24"/>
+          </svg>
+          <span class="lbl">Рейтинг</span>
+        </div>
+
+        <div class="t" data-k="menu" onclick="activate('tb1',this)">
+          <span class="bubble"></span>
+          <!-- Scroll -->
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M7 3a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5H7Z" fill="rgba(167,139,250,.18)" stroke="#a78bfa" stroke-width="1.5"/>
+            <path d="M13 3v5h5" stroke="#a78bfa" stroke-width="1.3"/>
+            <path d="M8.5 12h7M8.5 15.5h5" stroke="#a78bfa" stroke-width="1.3" stroke-linecap="round"/>
+          </svg>
+          <span class="lbl">Меню</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- variant 1 -->
+
+
+  <!-- ═══ VARIANT 2 ═══ -->
+  <div class="variant-wrap">
+    <span class="variant-label">Вариант 2</span>
+    <span class="variant-name">Forge</span>
+    <span class="variant-desc">Нижняя светящаяся полоска + цвет фона вкладки</span>
+    <div class="phone">
+      <div class="phone-content">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M8 20L24 8l16 12v18a2 2 0 01-2 2H10a2 2 0 01-2-2V20Z" fill="rgba(139,92,246,.4)" stroke="#a78bfa" stroke-width="2"/>
+          <path d="M18 38V28h12v10" stroke="#a78bfa" stroke-width="2"/>
+        </svg>
+        <span class="phone-hint">ЭКРАН ИГРЫ</span>
+      </div>
+
+      <div class="tb2" id="tb2">
+        <div class="t act" data-k="profile" onclick="activate('tb2',this)">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v5c0 4.8 3.4 9.3 8 10.4C17.6 20.3 21 15.8 21 11V6L12 2Z" fill="rgba(34,211,238,.18)" stroke="#22d3ee" stroke-width="1.5"/><circle cx="12" cy="10" r="2.5" fill="#22d3ee"/><path d="M7.5 16.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#22d3ee" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Профиль</span>
+        </div>
+        <div class="t" data-k="clan" onclick="activate('tb2',this)">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 3L21 9.5l-7 7-1.5-1.5 5-5L15 7.5 9.5 13 8 11.5l6.5-8.5Z" fill="rgba(251,113,133,.18)" stroke="#fb7185" stroke-width="1.3"/><path d="M9.5 13l-5 5a1.5 1.5 0 002 2l5-5" stroke="#fb7185" stroke-width="1.3" stroke-linecap="round"/><path d="M9.5 3L3 9.5l7 7 1.5-1.5-5-5 2.5-2.5 5.5 5.5 1.5-1.5L9.5 3Z" fill="rgba(251,113,133,.18)" stroke="#fb7185" stroke-width="1.3"/><path d="M14.5 13l5 5a1.5 1.5 0 01-2 2l-5-5" stroke="#fb7185" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Клан</span>
+        </div>
+        <div class="t" data-k="hero" onclick="activate('tb2',this)">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 13C5 8.6 8.1 5 12 5c3.9 0 7 3.6 7 8" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M4 13h16v2a4 4 0 01-4 4H8a4 4 0 01-4-4v-2Z" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.5"/><path d="M15 19v1.5M9 19v1.5" stroke="#818cf8" stroke-width="1.3" stroke-linecap="round"/><path d="M19 13c0-1.7 1-3 2-3" stroke="#818cf8" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Герой</span>
+        </div>
+        <div class="t" data-k="boss" onclick="activate('tb2',this)">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C7.6 3 4 6.6 4 11c0 2.5 1.1 4.7 2.9 6.2L7 19h10l.1-1.8C18.9 15.7 20 13.5 20 11c0-4.4-3.6-8-8-8Z" fill="rgba(251,146,60,.18)" stroke="#fb923c" stroke-width="1.5"/><path d="M7 19v2h10v-2" stroke="#fb923c" stroke-width="1.3"/><circle cx="9.5" cy="11" r="1.8" fill="#fb923c"/><circle cx="14.5" cy="11" r="1.8" fill="#fb923c"/><path d="M10.5 17v-2h3v2" stroke="#fb923c" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <span class="lbl">Босс</span>
+        </div>
+        <div class="t" data-k="rating" onclick="activate('tb2',this)">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 18h18M3 18L5 7l4.5 5L12 3l2.5 9L19 7l2 11" fill="rgba(251,191,36,.18)" stroke="#fbbf24" stroke-width="1.4" stroke-linejoin="round"/><circle cx="5" cy="7" r="1.5" fill="#fbbf24"/><circle cx="12" cy="3" r="1.5" fill="#fbbf24"/><circle cx="19" cy="7" r="1.5" fill="#fbbf24"/><rect x="3" y="18" width="18" height="2.5" rx="1.25" fill="#fbbf24"/></svg>
+          <span class="lbl">Рейтинг</span>
+        </div>
+        <div class="t" data-k="menu" onclick="activate('tb2',this)">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 3a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5H7Z" fill="rgba(167,139,250,.18)" stroke="#a78bfa" stroke-width="1.5"/><path d="M13 3v5h5" stroke="#a78bfa" stroke-width="1.3"/><path d="M8.5 12h7M8.5 15.5h5" stroke="#a78bfa" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Меню</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- variant 2 -->
+
+
+  <!-- ═══ VARIANT 3 ═══ -->
+  <div class="variant-wrap">
+    <span class="variant-label">Вариант 3</span>
+    <span class="variant-name">Crystal Glass</span>
+    <span class="variant-desc">Стеклянная таблетка с цветным бордером и точкой</span>
+    <div class="phone">
+      <div class="phone-content">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <path d="M8 20L24 8l16 12v18a2 2 0 01-2 2H10a2 2 0 01-2-2V20Z" fill="rgba(139,92,246,.4)" stroke="#a78bfa" stroke-width="2"/>
+          <path d="M18 38V28h12v10" stroke="#a78bfa" stroke-width="2"/>
+        </svg>
+        <span class="phone-hint">ЭКРАН ИГРЫ</span>
+      </div>
+
+      <div class="tb3" id="tb3">
+        <div class="t act" data-k="profile" onclick="activate('tb3',this)">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v5c0 4.8 3.4 9.3 8 10.4C17.6 20.3 21 15.8 21 11V6L12 2Z" fill="rgba(34,211,238,.18)" stroke="#22d3ee" stroke-width="1.5"/><circle cx="12" cy="10" r="2.5" fill="#22d3ee"/><path d="M7.5 16.5c0-2.5 2-4 4.5-4s4.5 1.5 4.5 4" stroke="#22d3ee" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Профиль</span>
+        </div>
+        <div class="t" data-k="clan" onclick="activate('tb3',this)">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M14.5 3L21 9.5l-7 7-1.5-1.5 5-5L15 7.5 9.5 13 8 11.5l6.5-8.5Z" fill="rgba(251,113,133,.18)" stroke="#fb7185" stroke-width="1.3"/><path d="M9.5 13l-5 5a1.5 1.5 0 002 2l5-5" stroke="#fb7185" stroke-width="1.3" stroke-linecap="round"/><path d="M9.5 3L3 9.5l7 7 1.5-1.5-5-5 2.5-2.5 5.5 5.5 1.5-1.5L9.5 3Z" fill="rgba(251,113,133,.18)" stroke="#fb7185" stroke-width="1.3"/><path d="M14.5 13l5 5a1.5 1.5 0 01-2 2l-5-5" stroke="#fb7185" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Клан</span>
+        </div>
+        <div class="t" data-k="hero" onclick="activate('tb3',this)">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 13C5 8.6 8.1 5 12 5c3.9 0 7 3.6 7 8" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.5" stroke-linecap="round"/><path d="M4 13h16v2a4 4 0 01-4 4H8a4 4 0 01-4-4v-2Z" fill="rgba(129,140,248,.18)" stroke="#818cf8" stroke-width="1.5"/><path d="M15 19v1.5M9 19v1.5" stroke="#818cf8" stroke-width="1.3" stroke-linecap="round"/><path d="M19 13c0-1.7 1-3 2-3" stroke="#818cf8" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Герой</span>
+        </div>
+        <div class="t" data-k="boss" onclick="activate('tb3',this)">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M12 3C7.6 3 4 6.6 4 11c0 2.5 1.1 4.7 2.9 6.2L7 19h10l.1-1.8C18.9 15.7 20 13.5 20 11c0-4.4-3.6-8-8-8Z" fill="rgba(251,146,60,.18)" stroke="#fb923c" stroke-width="1.5"/><path d="M7 19v2h10v-2" stroke="#fb923c" stroke-width="1.3"/><circle cx="9.5" cy="11" r="1.8" fill="#fb923c"/><circle cx="14.5" cy="11" r="1.8" fill="#fb923c"/><path d="M10.5 17v-2h3v2" stroke="#fb923c" stroke-width="1.2" stroke-linecap="round"/></svg>
+          <span class="lbl">Босс</span>
+        </div>
+        <div class="t" data-k="rating" onclick="activate('tb3',this)">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M3 18h18M3 18L5 7l4.5 5L12 3l2.5 9L19 7l2 11" fill="rgba(251,191,36,.18)" stroke="#fbbf24" stroke-width="1.4" stroke-linejoin="round"/><circle cx="5" cy="7" r="1.5" fill="#fbbf24"/><circle cx="12" cy="3" r="1.5" fill="#fbbf24"/><circle cx="19" cy="7" r="1.5" fill="#fbbf24"/><rect x="3" y="18" width="18" height="2.5" rx="1.25" fill="#fbbf24"/></svg>
+          <span class="lbl">Рейтинг</span>
+        </div>
+        <div class="t" data-k="menu" onclick="activate('tb3',this)">
+          <span class="dot"></span>
+          <svg viewBox="0 0 24 24" fill="none"><path d="M7 3a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V8l-5-5H7Z" fill="rgba(167,139,250,.18)" stroke="#a78bfa" stroke-width="1.5"/><path d="M13 3v5h5" stroke="#a78bfa" stroke-width="1.3"/><path d="M8.5 12h7M8.5 15.5h5" stroke="#a78bfa" stroke-width="1.3" stroke-linecap="round"/></svg>
+          <span class="lbl">Меню</span>
+        </div>
+      </div>
+    </div>
+  </div><!-- variant 3 -->
+
+</div><!-- .grid -->
+
+<script>
+function activate(barId, el) {
+  document.querySelectorAll('#' + barId + ' .t').forEach(t => t.classList.remove('act'));
+  el.classList.add('act');
+}
+</script>
+</body>
+</html>
