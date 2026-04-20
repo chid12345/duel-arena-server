@@ -62,13 +62,21 @@ const CSS = `
 .wd-eq-badge{position:absolute;top:8px;left:8px;z-index:5;background:rgba(21,128,61,.85);border:1px solid rgba(34,197,94,.6);color:#86efac;font-size:9px;font-weight:800;padding:2px 7px;border-radius:6px;letter-spacing:.5px;backdrop-filter:blur(4px)}
 
 /* ── Image area ── */
-.wd-img-area{position:relative;width:100%;height:112px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.3)}
-.wd-card-img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
-.wd-card-img.mythic-crop{object-position:center 15%;transform:scale(1.1) translateY(4%);transform-origin:center center}
+.wd-img-area{position:relative;width:100%;height:148px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.0);display:flex;align-items:center;justify-content:center}
+.wd-card-img{width:84%;height:84%;object-fit:contain;display:block;animation:breathe 4s ease-in-out infinite;position:relative;z-index:2}
+.wd-card-img.mythic-crop{width:90%;height:90%}
 /* gradient fade bottom of image into card body */
-.wd-img-fade{position:absolute;bottom:0;left:0;right:0;height:55%;background:linear-gradient(transparent,var(--cbg,rgba(10,6,24,.97)));pointer-events:none}
-/* мягкое радиальное свечение за броней — «объём» */
-.wd-img-area::before{content:'';position:absolute;bottom:10%;left:50%;translate:-50% 0;width:85%;height:65%;background:radial-gradient(ellipse at center,var(--rg,rgba(120,70,220,.2)),transparent 70%);filter:blur(10px);pointer-events:none;z-index:1}
+.wd-img-fade{position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,var(--cbg,rgba(10,6,24,.97)));pointer-events:none;z-index:3}
+/* мягкое радиальное свечение под броней */
+.wd-img-area::before{content:'';position:absolute;bottom:5%;left:50%;translate:-50% 0;width:80%;height:60%;background:radial-gradient(ellipse at center,var(--rg,rgba(120,70,220,.25)),transparent 70%);filter:blur(14px);pointer-events:none;z-index:1}
+/* дыхание предмета */
+@keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+/* мифик — на всю ширину */
+.wd-card.mythic-full{grid-column:1/-1}
+.wd-card.mythic-full .wd-img-area{height:200px}
+.wd-card.mythic-full .wd-card-body{align-items:center;text-align:center}
+.wd-card.mythic-full .wd-name{font-size:16px}
+.wd-card.mythic-full .wd-pills{justify-content:center}
 
 /* Lava overlay for mythic */
 .wd-lava-overlay{position:absolute;inset:0;pointer-events:none;mix-blend-mode:screen;animation:lavaPulse 2.6s ease-in-out infinite;border-radius:inherit}
@@ -100,6 +108,7 @@ const CSS = `
 .wd-btn{position:relative;overflow:hidden;width:100%;padding:6px 4px;border-radius:10px;font-size:10.5px;font-weight:800;cursor:pointer;border:1.5px solid transparent;text-align:center;transition:all .22s;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:5px}
 .wd-btn::after{content:'';position:absolute;top:0;left:-100%;width:55%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:skewX(-15deg)}
 .wd-btn:hover::after,.wd-btn:active::after{animation:shimmer .4s ease forwards}
+.wd-btn:active{transform:scale(.95)}
 @keyframes shimmer{to{left:150%}}
 
 .btn-free{background:linear-gradient(135deg,rgba(45,52,68,.4),rgba(60,68,85,.55));border-color:rgba(156,163,175,.35);color:#d1d5db}
@@ -168,18 +177,18 @@ const RARITY_COLOR = { common:'#9ca3af', rare:'#60a5fa', epic:'#c084fc', mythic:
 const RARITY_LABEL = { common:'Обычная', rare:'Редкая', epic:'Эпическая', mythic:'Мифическая' };
 
 const ARMORS_DATA = [
-  { id:'tank_free',     r:'common', name:'Кираса Гвардейца',     stars:'★☆☆☆', tier:'БЕСПЛ.',  str:5,agi:0,int:0,end:5, bonus:'Надёжная сталь для первых сражений.\nБроня: +2% к защите',                    type:'free' },
-  { id:'agile_free',    r:'common', name:'Доспех Рекрута',        stars:'★☆☆☆', tier:'БЕСПЛ.',  str:0,agi:5,int:2,end:0, bonus:'Надёжная сталь для первых сражений.\nУклонение: +2%',                         type:'free' },
-  { id:'crit_free',     r:'common', name:'Кираса Гвардейца',     stars:'★☆☆☆', tier:'БЕСПЛ.',  str:0,agi:0,int:6,end:5, bonus:'Надёжная сталь для первых сражений.\nКрит урон: +3%',                         type:'free' },
-  { id:'universal_free',r:'common', name:'Доспех Рекрута',        stars:'★☆☆☆', tier:'БЕСПЛ.',  str:2,agi:2,int:2,end:2, bonus:'Надёжная сталь для первых сражений.\nМакс. HP: +1%',                          type:'free' },
-  { id:'berserker_gold',r:'rare',   name:'Панцирь Короля',        stars:'★★☆☆', tier:'ЗОЛОТО',  str:7,agi:0,int:0,end:7, bonus:'Выковано из чистейшего золота.\nУрон +4% при HP < 30%',                      type:'gold',     price:'💰 5000' },
-  { id:'assassin_gold', r:'rare',   name:'Золотой Оплот',         stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:7,int:0,end:0, bonus:'Выковано из чистейшего золота.\nДвойной удар: 4%',                           type:'gold',     price:'💰 5000' },
-  { id:'mage_gold',     r:'rare',   name:'Панцирь Короля',        stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:0,int:7,end:0, bonus:'Выковано из чистейшего золота.\nКрит урон: +4%',                             type:'gold',     price:'💰 5000' },
-  { id:'paladin_gold',  r:'rare',   name:'Золотой Оплот',         stars:'★★☆☆', tier:'ЗОЛОТО',  str:4,agi:0,int:4,end:4, bonus:'Выковано из чистейшего золота.\nВходящий урон: -3%',                        type:'gold',     price:'💰 5000' },
-  { id:'dragonknight',  r:'epic',   name:'Доспех Ледяного Духа',  stars:'★★★☆', tier:'АЛМАЗЫ',  str:9,agi:0,int:5,end:9, bonus:'Кристаллы поглощают часть урона.\nУрон +6% при HP < 40%',                   type:'diamonds', price:'💎 100' },
-  { id:'shadowdancer',  r:'epic',   name:'Нагрудник Бездны',      stars:'★★★☆', tier:'АЛМАЗЫ',  str:0,agi:9,int:5,end:0, bonus:'Кристаллы поглощают часть урона.\nДвойной удар: 6%',                        type:'diamonds', price:'💎 100' },
-  { id:'archmage',      r:'epic',   name:'Доспех Ледяного Духа',  stars:'★★★☆', tier:'АЛМАЗЫ',  str:0,agi:0,int:9,end:6, bonus:'Кристаллы поглощают часть урона.\nКрит урон: +5%',                          type:'diamonds', price:'💎 100' },
-  { id:'legendary_usdt',r:'mythic', name:'Сердце Дракона',        stars:'★★★★', tier:'ЛЕГЕНДА', str:0,agi:0,int:0,end:0, bonus:'Чешуя, пропитанная яростью лавы.\n+19 свободных статов\nСброс сборки — 5.99 USDT', type:'usdt', price:'🔥 11.99 USDT' },
+  { id:'tank_free',     r:'common', name:'Кираса Гвардейца',   stars:'★☆☆☆', tier:'БЕСПЛ.',  str:5,agi:0,int:0,end:5, bonus:'Надёжная сталь для первых сражений.\nБроня: +2% к защите',          type:'free' },
+  { id:'agile_free',    r:'common', name:'Доспех Рекрута',      stars:'★☆☆☆', tier:'БЕСПЛ.',  str:0,agi:5,int:2,end:0, bonus:'Надёжная сталь для первых сражений.\nУклонение: +2%',               type:'free' },
+  { id:'crit_free',     r:'common', name:'Латы Пограничника',   stars:'★☆☆☆', tier:'БЕСПЛ.',  str:0,agi:0,int:6,end:5, bonus:'Надёжная сталь для первых сражений.\nКрит урон: +3%',               type:'free' },
+  { id:'universal_free',r:'common', name:'Броня Ополченца',     stars:'★☆☆☆', tier:'БЕСПЛ.',  str:2,agi:2,int:2,end:2, bonus:'Надёжная сталь для первых сражений.\nМакс. HP: +1%',                type:'free' },
+  { id:'berserker_gold',r:'rare',   name:'Панцирь Короля',      stars:'★★☆☆', tier:'ЗОЛОТО',  str:7,agi:0,int:0,end:7, bonus:'Выковано из чистейшего золота.\nУрон +4% при HP < 30%',            type:'gold',     price:'💰 5000' },
+  { id:'assassin_gold', r:'rare',   name:'Золотой Оплот',       stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:7,int:0,end:0, bonus:'Выковано из чистейшего золота.\nДвойной удар: 4%',                 type:'gold',     price:'💰 5000' },
+  { id:'mage_gold',     r:'rare',   name:'Латы Завоевателя',    stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:0,int:7,end:0, bonus:'Выковано из чистейшего золота.\nКрит урон: +4%',                   type:'gold',     price:'💰 5000' },
+  { id:'paladin_gold',  r:'rare',   name:'Позолоченная Броня',  stars:'★★☆☆', tier:'ЗОЛОТО',  str:4,agi:0,int:4,end:4, bonus:'Выковано из чистейшего золота.\nВходящий урон: -3%',               type:'gold',     price:'💰 5000' },
+  { id:'dragonknight',  r:'epic',   name:'Доспех Ледяного Духа',stars:'★★★☆', tier:'АЛМАЗЫ',  str:9,agi:0,int:5,end:9, bonus:'Кристаллы поглощают часть урона.\nУрон +6% при HP < 40%',         type:'diamonds', price:'💎 100' },
+  { id:'shadowdancer',  r:'epic',   name:'Нагрудник Бездны',    stars:'★★★☆', tier:'АЛМАЗЫ',  str:0,agi:9,int:5,end:0, bonus:'Кристаллы поглощают часть урона.\nДвойной удар: 6%',               type:'diamonds', price:'💎 100' },
+  { id:'archmage',      r:'epic',   name:'Латы Теневого Мага',  stars:'★★★☆', tier:'АЛМАЗЫ',  str:0,agi:0,int:9,end:6, bonus:'Кристаллы поглощают часть урона.\nКрит урон: +5%',                type:'diamonds', price:'💎 100' },
+  { id:'legendary_usdt',r:'mythic', name:'Сердце Дракона',      stars:'★★★★', tier:'ЛЕГЕНДА', str:0,agi:0,int:0,end:0, bonus:'Чешуя, пропитанная яростью лавы.\n+19 свободных статов\nСброс сборки — 5.99 USDT', type:'usdt', price:'🔥 11.99 USDT' },
 ];
 
 function _injectCSS() {
@@ -200,13 +209,9 @@ function _pills(a) {
 
 function _imgAreaHtml(a) {
   const img = RARITY_IMG[a.r] || '';
-  const isMythic = a.r === 'mythic';
-  const cropCls = isMythic ? ' mythic-crop' : '';
-  const lava    = isMythic ? '<div class="wd-lava-overlay"></div><div class="wd-neck-mask"></div>' : '';
   return `<div class="wd-img-area">
-    <img src="${img}" class="wd-card-img${cropCls}" />
+    <img src="${img}" class="wd-card-img" />
     <div class="wd-img-fade"></div>
-    ${lava}
   </div>`;
 }
 
