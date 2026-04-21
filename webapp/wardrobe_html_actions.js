@@ -24,12 +24,14 @@
 
     let mbCls = 'wd-m-btn ';
     let mbTxt = '';
-    if (a.equipped)              { mbCls += 'mb-uneq'; mbTxt = '✅ Надета — Снять'; }
-    else if (a.owned)            { mbCls += 'mb-eq';   mbTxt = '⚔️ Надеть броню'; }
-    else if (a.type === 'free')  { mbCls += 'mb-free'; mbTxt = '🆓 Выбрать бесплатно'; }
-    else if (a.type === 'gold')  { mbCls += 'mb-gold'; mbTxt = `💰 Купить — ${a.price}`; }
-    else if (a.type === 'diamonds') { mbCls += 'mb-dia'; mbTxt = `💎 Купить — ${a.price}`; }
-    else                         { mbCls += 'mb-usdt'; mbTxt = `🔥 Купить — ${a.price}`; }
+    // USDT-слот (купленный): кнопка открывает редактор статов, не equip
+    if (a.type === 'usdt' && a.owned) { mbCls += 'mb-usdt'; mbTxt = '⚙️ Настроить статы'; }
+    else if (a.equipped)              { mbCls += 'mb-uneq'; mbTxt = '✅ Надета — Снять'; }
+    else if (a.owned)                 { mbCls += 'mb-eq';   mbTxt = '⚔️ Надеть броню'; }
+    else if (a.type === 'free')       { mbCls += 'mb-free'; mbTxt = '🆓 Выбрать бесплатно'; }
+    else if (a.type === 'gold')       { mbCls += 'mb-gold'; mbTxt = `💰 Купить — ${a.price}`; }
+    else if (a.type === 'diamonds')   { mbCls += 'mb-dia';  mbTxt = `💎 Купить — ${a.price}`; }
+    else                              { mbCls += 'mb-usdt'; mbTxt = `🔥 Купить — ${a.price}`; }
 
     bg.innerHTML = `
       <div class="wd-modal" style="--mc:${mc.mc};--mg:${mc.mg}">
@@ -62,10 +64,11 @@
     const actBtn = bg.querySelector('#wd-m-act');
     if (actBtn) actBtn.onclick = () => {
       bg.style.display = 'none'; bg.innerHTML = '';
-      if (a.equipped)            _doAction(scene, 'unequip',  a, wp);
-      else if (a.owned)          _doAction(scene, 'equip',    a, wp);
-      else if (a.type === 'usdt') _doAction(scene, 'buy_usdt', a, wp);
-      else                        _doAction(scene, 'buy',      a, wp);
+      if (a.type === 'usdt' && a.owned) _doAction(scene, 'open_detail', a, wp);
+      else if (a.equipped)              _doAction(scene, 'unequip',  a, wp);
+      else if (a.owned)                 _doAction(scene, 'equip',    a, wp);
+      else if (a.type === 'usdt')       _doAction(scene, 'buy_usdt', a, wp);
+      else                              _doAction(scene, 'buy',      a, wp);
     };
   }
 
@@ -88,6 +91,27 @@
 
   /* ── api actions ── */
   async function _doAction(scene, action, item, wp) {
+    // Открытие редактора статов USDT-слота — не требует API, открывает Phaser-экран
+    if (action === 'open_detail') {
+      WardrobeHTML.close();
+      const rawItem = (wp?.usdt_items || []).find(i => i.class_id === item._realId)
+        || (wp?.usdt_items || [])[0]
+        || (wp?.inventory || []).find(i => i.class_type === 'usdt');
+      if (rawItem && scene._openUsdtDetail) {
+        scene._openUsdtDetail({
+          name:         rawItem.custom_name || 'Легендарный образ',
+          class_id:     rawItem.class_id,
+          class_type:   'usdt',
+          equipped:     !!rawItem.equipped,
+          icon:         '💠',
+          is_usdt_slot: true,
+          _raw:         rawItem,
+        }, wp);
+      } else {
+        _notify('❌ Редактор недоступен', false);
+      }
+      return;
+    }
     if (scene._wardrobeHtmlBusy) return;
     scene._wardrobeHtmlBusy = true;
     try {
