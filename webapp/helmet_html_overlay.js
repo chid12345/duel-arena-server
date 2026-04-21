@@ -68,7 +68,7 @@ function _pills(h) {
   if (h.atk  > 0) s += `<span class="wd-pill p-s">+${h.atk} атк</span>`;
   if (h.crit > 0) s += `<span class="wd-pill p-i">+${h.crit} крит</span>`;
   if (h.hp   > 0) s += `<span class="wd-pill p-e">+${h.hp} HP</span>`;
-  if (h.def  > 0) s += `<span class="wd-pill p-a">-${h.def}% урон</span>`;
+  if (h.def  > 0) s += `<span class="wd-pill p-a">-${h.def}% урона врага</span>`;
   if (h.pen  > 0) s += `<span class="wd-pill p-s">+${h.pen}% пробой</span>`;
   return s;
 }

@@ -20,9 +20,9 @@ const _EQ_CATALOG = {
   ],
   shield: [],
   armor: [
-    { id: 'armor_leather', emoji:'🥋', name:'Кожаная броня',  rarity:'common', price_gold:350,  price_diamonds:0,  desc:'-2% урона, +30 HP' },
-    { id: 'armor_chain',   emoji:'⛓️', name:'Кольчуга',        rarity:'rare',   price_gold:1400, price_diamonds:0,  desc:'-5% урона, +80 HP' },
-    { id: 'armor_dragon',  emoji:'🐉', name:'Броня Дракона',   rarity:'epic',   price_gold:0,    price_diamonds:30, desc:'-10% урона, +180 HP' },
+    { id: 'armor_leather', emoji:'🥋', name:'Кожаная броня',  rarity:'common', price_gold:350,  price_diamonds:0,  desc:'-2% урона врага, +30 HP' },
+    { id: 'armor_chain',   emoji:'⛓️', name:'Кольчуга',        rarity:'rare',   price_gold:1400, price_diamonds:0,  desc:'-5% урона врага, +80 HP' },
+    { id: 'armor_dragon',  emoji:'🐉', name:'Броня Дракона',   rarity:'epic',   price_gold:0,    price_diamonds:30, desc:'-10% урона врага, +180 HP' },
   ],
   belt:  [],
   boots: [],

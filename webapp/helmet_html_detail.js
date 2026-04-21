@@ -101,7 +101,7 @@ function _pillsHtml(h) {
   if (h.atk  > 0) s += `<span class="wd-pill p-s">+${h.atk} атк</span>`;
   if (h.crit > 0) s += `<span class="wd-pill p-i">+${h.crit} крит</span>`;
   if (h.hp   > 0) s += `<span class="wd-pill p-e">+${h.hp} HP</span>`;
-  if (h.def  > 0) s += `<span class="wd-pill p-a">-${h.def}% урон</span>`;
+  if (h.def  > 0) s += `<span class="wd-pill p-a">-${h.def}% урона врага</span>`;
   if (h.pen  > 0) s += `<span class="wd-pill p-s">+${h.pen}% пробой</span>`;
   return s;
 }
@@ -111,7 +111,7 @@ function _statLine(h) {
   if (h.atk  > 0) p.push(`Атака: +${h.atk}`);
   if (h.crit > 0) p.push(`Крит-стат: +${h.crit}`);
   if (h.hp   > 0) p.push(`HP: +${h.hp}`);
-  if (h.def  > 0) p.push(`Защита: -${h.def}%`);
+  if (h.def  > 0) p.push(`Урон врага: -${h.def}%`);
   if (h.pen  > 0) p.push(`Пробой: +${h.pen}%`);
   return p.join(' · ');
 }
