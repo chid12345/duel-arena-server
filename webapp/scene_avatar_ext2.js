@@ -201,7 +201,17 @@ Object.assign(AvatarScene.prototype, {
     try {
       const j = await post(url, { avatar_id: av.id });
       if (j.ok && j.invoice_url) {
-        tg?.openInvoice?.(j.invoice_url, async (status) => {
+        if (typeof tg?.openInvoice !== 'function') {
+          const _au = j.invoice_url || '';
+          try {
+            if (_au.startsWith('https://t.me/') || _au.startsWith('tg://')) tg?.openTelegramLink?.(_au);
+            else tg?.openLink?.(_au);
+          } catch(_) {}
+          if (_au) try { window.open(_au, '_blank'); } catch(_) {}
+          tg?.showAlert?.('⭐ Счёт Stars открыт — оплатите и вернитесь');
+          return;
+        }
+        tg.openInvoice(j.invoice_url, async (status) => {
           if (status === 'paid' || status === 'pending') {
             let confirmed = false;
             if (status === 'paid') {

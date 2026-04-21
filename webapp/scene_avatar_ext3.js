@@ -13,7 +13,17 @@ Object.assign(AvatarScene.prototype, {
         tg?.showAlert?.(j.reason || 'Ошибка');
         return;
       }
-      tg?.openInvoice?.(j.invoice_url, async (status) => {
+      if (typeof tg?.openInvoice !== 'function') {
+        const _a3u = j.invoice_url || '';
+        try {
+          if (_a3u.startsWith('https://t.me/') || _a3u.startsWith('tg://')) tg?.openTelegramLink?.(_a3u);
+          else tg?.openLink?.(_a3u);
+        } catch(_) {}
+        if (_a3u) try { window.open(_a3u, '_blank'); } catch(_) {}
+        tg?.showAlert?.('⭐ Счёт Stars открыт — оплатите и вернитесь');
+        return;
+      }
+      tg.openInvoice(j.invoice_url, async (status) => {
         if (status === 'cancelled') return;
         if (status === 'pending') {
           tg?.showAlert?.('Платеж в обработке. Если Stars списались, проверьте образы через несколько секунд.');

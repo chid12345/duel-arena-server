@@ -14,7 +14,14 @@ Object.assign(ShopScene.prototype, {
       const res = await post('/api/shop/stars_invoice', { package_id: pkg.id });
       if (!res.ok) { this._toast(`❌ ${res.reason || res.detail || 'Ошибка'}`); this._buying = false; return; }
       if (typeof tg?.openInvoice !== 'function') {
-        this._toast('❌ Оплата Stars недоступна — откройте через Telegram');
+        // Fallback: Desktop/браузер — открываем ссылку
+        const _su = res.invoice_url || '';
+        try {
+          if (_su.startsWith('https://t.me/') || _su.startsWith('tg://')) tg?.openTelegramLink?.(_su);
+          else tg?.openLink?.(_su);
+        } catch(_) {}
+        if (_su) try { window.open(_su, '_blank'); } catch(_) {}
+        this._toast('⭐ Счёт Stars открыт — оплатите и вернитесь');
         this._buying = false;
         return;
       }
@@ -67,9 +74,12 @@ Object.assign(ShopScene.prototype, {
       // mini_app_invoice_url (startapp=) → openLink
       // bot_invoice_url → openTelegramLink
       const _url = res.invoice_url || '';
-      if (res.web_app_url) tg?.openLink?.(res.web_app_url);
-      else if (_url.includes('startapp=')) tg?.openLink?.(_url);
-      else tg?.openTelegramLink?.(_url);
+      try {
+        if (res.web_app_url) tg?.openLink?.(res.web_app_url);
+        else if (_url.includes('startapp=')) tg?.openLink?.(_url);
+        else tg?.openTelegramLink?.(_url);
+      } catch(_) {}
+      if (_url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
       this._toast('💳 Счёт открыт — оплатите и вернитесь');
       this._buying = false;
       this._startCryptoPolling(res.invoice_id, pkg);
