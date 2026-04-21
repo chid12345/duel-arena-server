@@ -93,7 +93,7 @@
     try {
       let res = null;
       if (action === 'buy')     res = await post('/api/wardrobe/buy',    { class_id: item.id });
-      if (action === 'equip')   res = await post('/api/wardrobe/equip',  { class_id: item.id });
+      if (action === 'equip')   res = await post('/api/wardrobe/equip',  { class_id: item._realId || item.id });
       if (action === 'unequip') res = await post('/api/wardrobe/unequip', {});
       if (action === 'buy_usdt') {
         _notify('⏳ Создаём счёт…', true);
@@ -154,11 +154,26 @@
     ['free','gold','diamonds'].forEach(t => (avail[t]||[]).forEach(c => { if (c.owned) owned.add(c.class_id); }));
     (wp?.inventory || []).forEach(i => owned.add(i.class_id));
 
-    return W.ARMORS_DATA.map(a => ({
-      ...a,
-      owned:    owned.has(a.id),
-      equipped: a.id === eqId || !!(wp?.inventory||[]).find(i => i.class_id === a.id && i.equipped),
-    }));
+    // USDT слот: бэкенд создаёт usdt_custom_{uid}_{n}, фронтенд показывает legendary_usdt
+    const usdtItem = (wp?.usdt_items || []).length > 0
+      ? wp.usdt_items[0]
+      : (wp?.inventory || []).find(i => i.class_type === 'usdt');
+
+    return W.ARMORS_DATA.map(a => {
+      if (a.id === 'legendary_usdt') {
+        return {
+          ...a,
+          owned:    !!usdtItem,
+          equipped: !!usdtItem && (!!usdtItem.equipped || usdtItem.class_id === eqId),
+          _realId:  usdtItem?.class_id || a.id,
+        };
+      }
+      return {
+        ...a,
+        owned:    owned.has(a.id),
+        equipped: a.id === eqId || !!(wp?.inventory||[]).find(i => i.class_id === a.id && i.equipped),
+      };
+    });
   }
 
   /* ── render view ── */
@@ -227,8 +242,8 @@
       try {
         const r = await get(`/api/shop/crypto_check/${invoiceId}`);
         if (r?.ok && r.paid && r.usdt_slot_created) {
-          scene._showToast?.('🎉 Легендарный образ получен!');
-          tg?.HapticFeedback?.notificationOccurred('success');
+          _notify('🎉 Легендарный образ получен!');
+          window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
           try {
             const wp = await get('/api/wardrobe');
             if (wp?.ok) WardrobeHTML.refresh(scene, wp);
