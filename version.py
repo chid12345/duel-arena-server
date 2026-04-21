@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.9.38"
-VERSION_LABEL = "v1.9.38 — rename: belt slot label Пояс → Шлем"
+VERSION = "1.9.39"
+VERSION_LABEL = "v1.9.39 — fix: Stars/USDT payment fallback for Desktop+browser"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "7.72"
+GAME_VERSION = "7.73"

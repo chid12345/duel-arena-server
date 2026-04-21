@@ -140,42 +140,56 @@ async function _doAction(scene, action, item) {
   try {
     // ── Stars (мифическое оружие) ──────────────────────────────
     if (action === 'buy_stars') {
-      _notify('⏳ Создаём счёт...', true, true);
+      _notify('⏳ Создаём счёт Stars...', true, true);
       const invRes = await post('/api/equipment/weapon_stars_invoice', {item_id: item.id});
       if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._weaponBusy=false; return; }
-      if (typeof tg?.openInvoice !== 'function') {
-        _notify('❌ Откройте через Telegram', false); scene._weaponBusy=false; return;
+      const starsUrl = invRes.invoice_url || '';
+      if (typeof tg?.openInvoice === 'function') {
+        // Mobile Telegram — нативная оплата с коллбэком
+        tg.openInvoice(starsUrl, async (status) => {
+          if (status === 'paid') {
+            _notify('⏳ Активируем...', true, true);
+            try {
+              const conf = await post('/api/equipment/weapon_stars_confirm', {item_id: item.id});
+              if (conf?.ok) {
+                if (conf.player)        { State.player=conf.player; State.playerLoadedAt=Date.now(); }
+                if (conf.equipment)     State.equipment=conf.equipment;
+                if (conf.owned_weapons) State.ownedWeapons=conf.owned_weapons;
+                tg?.HapticFeedback?.notificationOccurred('success');
+                _notify('✅ Мифическое оружие получено!');
+                const activeTab = document.querySelector('#wn-root ._wn-view.active');
+                _render(scene, activeTab?.dataset?.wv||'all');
+              } else { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
+            } catch(_) { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
+          } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
+          scene._weaponBusy = false;
+        });
+        return;
       }
-      tg.openInvoice(invRes.invoice_url, async (status) => {
-        if (status === 'paid') {
-          _notify('⏳ Активируем...', true, true);
-          try {
-            const conf = await post('/api/equipment/weapon_stars_confirm', {item_id: item.id});
-            if (conf?.ok) {
-              if (conf.player)    { State.player=conf.player; State.playerLoadedAt=Date.now(); }
-              if (conf.equipment) State.equipment=conf.equipment;
-              if (conf.owned_weapons) State.ownedWeapons=conf.owned_weapons;
-              tg?.HapticFeedback?.notificationOccurred('success');
-              _notify('✅ Мифическое оружие получено!');
-              const activeTab = document.querySelector('#wn-root ._wn-view.active');
-              _render(scene, activeTab?.dataset?.wv||'all');
-            } else { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
-          } catch(_) { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
-        } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
-        scene._weaponBusy = false;
-      });
-      return; // busy сбросится в callback
+      // Fallback: Telegram Desktop / браузер — открываем ссылку
+      try {
+        if (starsUrl.startsWith('https://t.me/') || starsUrl.startsWith('tg://'))
+          tg?.openTelegramLink?.(starsUrl);
+        else tg?.openLink?.(starsUrl);
+      } catch(_) {}
+      if (starsUrl) try { window.open(starsUrl, '_blank'); } catch(_) {}
+      _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
+      scene._weaponBusy = false;
+      return;
     }
     // ── USDT (мифическое оружие) ───────────────────────────────
     if (action === 'buy_usdt') {
-      _notify('⏳ Создаём счёт...', true, true);
+      _notify('⏳ Создаём счёт USDT...', true, true);
       const invRes = await post('/api/equipment/weapon_crypto_invoice', {item_id: item.id});
       if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._weaponBusy=false; return; }
       const _url = invRes.invoice_url || '';
-      if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
-      else if (_url.includes('startapp=')) tg?.openLink?.(_url);
-      else tg?.openTelegramLink?.(_url);
-      _notify('💳 Счёт открыт — оплатите и вернитесь');
+      try {
+        if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
+        else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) tg?.openTelegramLink?.(_url);
+        else tg?.openLink?.(_url);
+      } catch(_) {}
+      if (_url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
+      _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
       scene._weaponBusy = false;
       return;
     }
