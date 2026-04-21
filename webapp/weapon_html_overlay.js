@@ -213,6 +213,7 @@ function refresh() {
 
 function open(scene) {
   _currentScene = scene;
+  scene._weaponBusy = false; // сбрасываем при каждом открытии оверлея
   if (typeof WardrobeHTML!=='undefined') WardrobeHTML._injectCSS();
   close();
   const wrap=document.createElement('div');
@@ -240,8 +241,9 @@ function open(scene) {
   });
   document.getElementById('wn-close').onclick=()=>{
     close(); tg?.HapticFeedback?.impactOccurred('light');
-    State.playerLoadedAt=0;
-    scene.scene.start('Menu',{returnTab:'profile'});
+    // Не сбрасываем playerLoadedAt — данные уже свежие после equip/buy.
+    // Принудительный returnTab:'profile' чтобы всегда возвращаться в профиль.
+    _currentScene.scene.start('Menu',{returnTab:'profile'});
   };
   wrap.addEventListener('touchmove',e=>e.stopPropagation(),{passive:false});
 }
