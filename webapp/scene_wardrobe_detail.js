@@ -62,7 +62,12 @@
     cg.lineStyle(1,0xff6688,.9); cg.strokeRoundedRect(W-44, pY+6, 28, 22, 7);
     layer.push(cg, txt(this, W-30, pY+17, "✕", 12, "#ffd8e0", true).setOrigin(0.5).setDepth(133));
     const cz = this.add.zone(W-30, pY+17, 28, 22).setInteractive({useHandCursor:true}).setDepth(134);
-    cz.on("pointerdown", () => { this._closeUsdtDetail(); this._openAvatarPanel(); });
+    cz.on("pointerdown", () => {
+      const cachedWp = this._usdtDetailWp;
+      this._closeUsdtDetail();
+      if (cachedWp) this._renderAvatarOverlay(cachedWp);
+      else this._openAvatarPanel();
+    });
     layer.push(cz);
 
     // Status badge
