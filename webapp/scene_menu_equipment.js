@@ -21,7 +21,7 @@ const _EQ_SLOT_LABELS = {
   weapon: 'Оружие', belt: 'Пояс', boots: 'Сапоги',
   shield: 'Щит', armor: 'Броня', ring1: 'Кольцо', ring2: 'Кольцо',
 };
-const _EQ_RARITY_COLOR = { common: 0x667799, rare: 0x3399ee, epic: 0xaa55ff, mythic: 0xfb923c };
+const _EQ_RARITY_COLOR = { common: 0xa0aec0, rare: 0xfbbf24, epic: 0xc084fc, mythic: 0xff6b2b };
 
 Object.assign(MenuScene.prototype, {
 
@@ -61,16 +61,16 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // ambient halo (самый внешний, мягкий)
-      const haG = mkG(); haG.fillStyle(bc, 0.12); haG.fillRoundedRect(x - 5, y - 5, w + 10, h + 10, r + 4); c.add(haG);
-      // outer glow ring
-      const glG = mkG(); glG.lineStyle(1.5, bc, 0.55); glG.strokeRoundedRect(x - 3, y - 3, w + 6, h + 6, r + 3); c.add(glG);
+      // ambient halo — широкое мягкое свечение вокруг
+      const haG = mkG(); haG.fillStyle(bc, 0.22); haG.fillRoundedRect(x - 7, y - 7, w + 14, h + 14, r + 5); c.add(haG);
+      // outer glow ring — чёткое кольцо
+      const glG = mkG(); glG.lineStyle(2.5, bc, 0.85); glG.strokeRoundedRect(x - 4, y - 4, w + 8, h + 8, r + 4); c.add(glG);
       // card fill + border
-      g.fillStyle(bc, 0.22); g.fillRoundedRect(x, y, w, h, r);
-      g.lineStyle(2.5, bc, 1); g.strokeRoundedRect(x, y, w, h, r);
+      g.fillStyle(bc, 0.28); g.fillRoundedRect(x, y, w, h, r);
+      g.lineStyle(3, bc, 1); g.strokeRoundedRect(x, y, w, h, r);
       c.add(g);
       // glass top highlight
-      const hlG = mkG(); hlG.fillStyle(0xffffff, 0.14); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
+      const hlG = mkG(); hlG.fillStyle(0xffffff, 0.18); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
 
       // Броня: показываем реальное изображение из wardrobeEquipped
       // Оружие: показываем реальное изображение по item_id
