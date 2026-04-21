@@ -60,13 +60,14 @@ class EquipmentMixin:
     def get_equipment_stats(self, user_id: int) -> Dict[str, float]:
         """Суммарные бонусы от всей экипировки."""
         equipped = self.get_equipment(user_id)
-        total = {"atk_bonus": 0, "def_pct": 0.0, "hp_bonus": 0, "crit_bonus": 0}
+        total = {"atk_bonus": 0, "def_pct": 0.0, "hp_bonus": 0, "crit_bonus": 0, "pen_pct": 0.0}
         for slot, item in equipped.items():
             stats = get_item_stats(item["item_id"])
-            total["atk_bonus"] += stats["atk_bonus"]
-            total["def_pct"] += stats["def_pct"]
-            total["hp_bonus"] += stats["hp_bonus"]
+            total["atk_bonus"]  += stats["atk_bonus"]
+            total["def_pct"]    += stats["def_pct"]
+            total["hp_bonus"]   += stats["hp_bonus"]
             total["crit_bonus"] += stats["crit_bonus"]
+            total["pen_pct"]    += stats.get("pen_pct", 0.0)
         return total
 
     def _resolve_ring_slot(self, user_id: int, slot: str, item_id: str) -> Optional[str]:

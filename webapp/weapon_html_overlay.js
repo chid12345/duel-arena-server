@@ -41,6 +41,8 @@ const WEAPONS_DATA = [
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
 const RL = {common:'Обычный',rare:'Редкий',epic:'Эпический',mythic:'Мифическое'};
 
+let _currentScene = null;
+
 function _removeDarkBg(img) {
   const c = document.createElement('canvas');
   c.width = img.naturalWidth; c.height = img.naturalHeight;
@@ -203,7 +205,14 @@ function _render(scene, view) {
   };
 }
 
+function refresh() {
+  if (!_currentScene || !document.getElementById('wn-root')) return;
+  const view = document.querySelector('#wn-root ._wn-view.active')?._wv || 'all';
+  _render(_currentScene, view);
+}
+
 function open(scene) {
+  _currentScene = scene;
   if (typeof WardrobeHTML!=='undefined') WardrobeHTML._injectCSS();
   close();
   const wrap=document.createElement('div');
@@ -239,5 +248,5 @@ function open(scene) {
 
 function close() { document.getElementById('wn-root')?.remove(); }
 
-window.WeaponHTML = { open, close, _removeDarkBg };
+window.WeaponHTML = { open, close, _removeDarkBg, refresh };
 })();
