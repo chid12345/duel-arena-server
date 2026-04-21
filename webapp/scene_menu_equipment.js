@@ -112,6 +112,8 @@ Object.assign(MenuScene.prototype, {
         this.scene.start('Stats', { player: State.player, openWardrobe: true });
       } else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') {
         WeaponHTML.open(this);
+      } else if (slot === 'belt' && typeof HelmetHTML !== 'undefined') {
+        HelmetHTML.open(this);
       } else {
         this.scene.start('Equipment', { slot });
       }
