@@ -248,10 +248,17 @@ function _render(scene, view) {
   });
   grid.onclick = e=>{
     const btn=e.target.closest('[data-act]');
-    if (!btn) return;
-    e.stopPropagation();
-    const w=items.find(x=>x.id===btn.dataset.id);
-    if (w) _doAction(scene,btn.dataset.act,w);
+    if (btn) {
+      e.stopPropagation();
+      const w=items.find(x=>x.id===btn.dataset.id);
+      if (w) _doAction(scene,btn.dataset.act,w);
+      return;
+    }
+    const card=e.target.closest('.wd-card');
+    if (card && typeof WeaponHTMLDetail!=='undefined') {
+      const w=items.find(x=>x.id===card.dataset.id);
+      if (w) WeaponHTMLDetail.show(scene,w,(act,item)=>_doAction(scene,act,item));
+    }
   };
 }
 
