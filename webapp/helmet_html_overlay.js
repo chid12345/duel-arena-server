@@ -16,26 +16,26 @@ const HELMET_IMG = {
 };
 
 const HELMETS_DATA = [
-  // ── Бесплатные
-  {id:'helmet_free1',  r:'common', ht:'⛑️ Шлем', name:'Кожаный шлем',      stars:'★☆☆☆', atk:0,  crit:0,  hp:25,  def:0,   type:'free'},
-  {id:'helmet_free2',  r:'common', ht:'⛑️ Шлем', name:'Железный шлем',     stars:'★☆☆☆', atk:0,  crit:0,  hp:15,  def:1,   type:'free'},
-  {id:'helmet_free3',  r:'common', ht:'⛑️ Шлем', name:'Медный шлем',       stars:'★☆☆☆', atk:4,  crit:0,  hp:0,   def:0,   type:'free'},
-  {id:'helmet_free4',  r:'common', ht:'⛑️ Шлем', name:'Шлем рекрута',      stars:'★☆☆☆', atk:0,  crit:2,  hp:0,   def:0,   type:'free'},
-  // ── Золото
-  {id:'helmet_gold1',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем стражника',    stars:'★★☆☆', atk:0,  crit:0,  hp:60,  def:3,   type:'gold',     price:'800'},
-  {id:'helmet_gold2',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем берсерка',     stars:'★★☆☆', atk:12, crit:3,  hp:0,   def:0,   type:'gold',     price:'1200'},
-  {id:'helmet_gold3',  r:'rare',   ht:'⛑️ Шлем', name:'Боевой шлем',       stars:'★★☆☆', atk:0,  crit:0,  hp:50,  def:4,   type:'gold',     price:'1500'},
-  {id:'helmet_gold4',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем рыцаря',       stars:'★★☆☆', atk:8,  crit:2,  hp:40,  def:2,   type:'gold',     price:'2000'},
-  // ── Алмазы
-  {id:'helmet_dia1',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем тени',         stars:'★★★☆', atk:22, crit:5,  hp:0,   def:0,   type:'diamonds', price:'20'},
-  {id:'helmet_dia2',   r:'epic',   ht:'⛑️ Шлем', name:'Титановый шлем',    stars:'★★★☆', atk:0,  crit:0,  hp:110, def:7,   type:'diamonds', price:'30'},
-  {id:'helmet_dia3',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем провидца',     stars:'★★★☆', atk:0,  crit:4,  hp:80,  def:5,   type:'diamonds', price:'45'},
-  {id:'helmet_dia4',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем завоевателя',  stars:'★★★☆', atk:30, crit:0,  hp:0,   def:3,   type:'diamonds', price:'60'},
-  // ── Мифические
-  {id:'helmet_mythic1',r:'mythic', ht:'⛑️ Шлем', name:'Шлем Дракона',      stars:'★★★★', atk:35, crit:0,  hp:130, def:8,   type:'mythic'},
-  {id:'helmet_mythic2',r:'mythic', ht:'⛑️ Шлем', name:'Корона Воителя',    stars:'★★★★', atk:28, crit:12, hp:0,   def:5,   type:'mythic'},
-  {id:'helmet_mythic3',r:'mythic', ht:'⛑️ Шлем', name:'Маска Смерти',      stars:'★★★★', atk:40, crit:10, hp:0,   def:0,   type:'mythic'},
-  {id:'helmet_mythic4',r:'mythic', ht:'⛑️ Шлем', name:'Шлем Богов',        stars:'★★★★', atk:0,  crit:8,  hp:200, def:12,  type:'mythic'},
+  // ── Бесплатные — каждый = одна чистая роль
+  {id:'helmet_free1',  r:'common', ht:'⛑️ Шлем', name:'Шлем Танка',        stars:'★☆☆☆', atk:0,  crit:0,  hp:60,  def:0,  pen:0, type:'free'},
+  {id:'helmet_free2',  r:'common', ht:'⛑️ Шлем', name:'Шлем Стража',       stars:'★☆☆☆', atk:0,  crit:0,  hp:0,   def:3,  pen:0, type:'free'},
+  {id:'helmet_free3',  r:'common', ht:'⛑️ Шлем', name:'Шлем Охотника',     stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   def:0,  pen:0, type:'free'},
+  {id:'helmet_free4',  r:'common', ht:'⛑️ Шлем', name:'Шлем Дуэлянта',    stars:'★☆☆☆', atk:0,  crit:4,  hp:0,   def:0,  pen:0, type:'free'},
+  // ── Золото — двойные синергии
+  {id:'helmet_gold1',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Берсерка',     stars:'★★☆☆', atk:18, crit:5,  hp:0,   def:0,  pen:0, type:'gold',     price:'1200'},
+  {id:'helmet_gold2',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Крепости',     stars:'★★☆☆', atk:0,  crit:0,  hp:90,  def:6,  pen:0, type:'gold',     price:'1500'},
+  {id:'helmet_gold3',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Снайпера',     stars:'★★☆☆', atk:14, crit:9,  hp:0,   def:0,  pen:0, type:'gold',     price:'1800'},
+  {id:'helmet_gold4',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Паладина',     stars:'★★☆☆', atk:10, crit:0,  hp:55,  def:4,  pen:0, type:'gold',     price:'2200'},
+  // ── Алмазы — мощные или уникальные комбо
+  {id:'helmet_dia1',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Демона',       stars:'★★★☆', atk:30, crit:10, hp:0,   def:0,  pen:0, type:'diamonds', price:'25'},
+  {id:'helmet_dia2',   r:'epic',   ht:'⛑️ Шлем', name:'Стальная Крепость', stars:'★★★☆', atk:0,  crit:0,  hp:150, def:9,  pen:0, type:'diamonds', price:'35'},
+  {id:'helmet_dia3',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Арканы',       stars:'★★★☆', atk:0,  crit:14, hp:0,   def:5,  pen:0, type:'diamonds', price:'50'},
+  {id:'helmet_dia4',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Разрушителя',  stars:'★★★☆', atk:38, crit:0,  hp:70,  def:0,  pen:2, type:'diamonds', price:'70'},
+  // ── Мифические — каждый = уникальный стиль игры
+  {id:'helmet_mythic1',r:'mythic', ht:'⛑️ Шлем', name:'Шлем Дракона',      stars:'★★★★', atk:42, crit:0,  hp:160, def:10, pen:0, type:'mythic'},
+  {id:'helmet_mythic2',r:'mythic', ht:'⛑️ Шлем', name:'Корона Воителя',    stars:'★★★★', atk:35, crit:16, hp:0,   def:6,  pen:0, type:'mythic'},
+  {id:'helmet_mythic3',r:'mythic', ht:'⛑️ Шлем', name:'Маска Смерти',      stars:'★★★★', atk:50, crit:14, hp:0,   def:0,  pen:3, type:'mythic'},
+  {id:'helmet_mythic4',r:'mythic', ht:'⛑️ Шлем', name:'Шлем Богов',        stars:'★★★★', atk:0,  crit:12, hp:280, def:15, pen:0, type:'mythic'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
@@ -69,6 +69,7 @@ function _pills(h) {
   if (h.crit > 0) s += `<span class="wd-pill p-i">+${h.crit} крит</span>`;
   if (h.hp   > 0) s += `<span class="wd-pill p-e">+${h.hp} HP</span>`;
   if (h.def  > 0) s += `<span class="wd-pill p-a">-${h.def}% урон</span>`;
+  if (h.pen  > 0) s += `<span class="wd-pill p-s">+${h.pen}% пробой</span>`;
   return s;
 }
 
