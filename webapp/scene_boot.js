@@ -30,6 +30,22 @@ class BootScene extends Phaser.Scene {
     this.load.image('weapon_gs_rare',      'weapon_gs_rare.png');
     this.load.image('weapon_gs_epic',      'weapon_gs_epic.png');
     this.load.image('weapon_gs_mythic',    'weapon_gs_mythic.png');
+    this.load.image('helmet_free1',   'helmet_free1.png');
+    this.load.image('helmet_free2',   'helmet_free2.png');
+    this.load.image('helmet_free3',   'helmet_free3.png');
+    this.load.image('helmet_free4',   'helmet_free4.png');
+    this.load.image('helmet_gold1',   'helmet_gold1.png');
+    this.load.image('helmet_gold2',   'helmet_gold2.png');
+    this.load.image('helmet_gold3',   'helmet_gold3.png');
+    this.load.image('helmet_gold4',   'helmet_gold4.png');
+    this.load.image('helmet_dia1',    'helmet_dia1.png');
+    this.load.image('helmet_dia2',    'helmet_dia2.png');
+    this.load.image('helmet_dia3',    'helmet_dia3.png');
+    this.load.image('helmet_dia4',    'helmet_dia4.png');
+    this.load.image('helmet_mythic1', 'helmet_mythic1.png');
+    this.load.image('helmet_mythic2', 'helmet_mythic2.png');
+    this.load.image('helmet_mythic3', 'helmet_mythic3.png');
+    this.load.image('helmet_mythic4', 'helmet_mythic4.png');
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('complete', () => {
       try {

@@ -56,6 +56,7 @@ Object.assign(MenuScene.prototype, {
     // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
     const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
     const weaponTexKey = slot === 'weapon' && item ? getWeaponTextureKey(item.item_id) : null;
+    const helmetTexKey = slot === 'belt'   && item ? getHelmetTextureKey(item.item_id)  : null;
     const displayRarity = wardrobeEq ? wardrobeEq.rarity : item?.rarity;
     const hasDisplay = wardrobeEq || item;
 
@@ -72,16 +73,34 @@ Object.assign(MenuScene.prototype, {
       // glass top highlight
       const hlG = mkG(); hlG.fillStyle(0xffffff, 0.12); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
 
-      // Броня: показываем реальное изображение из wardrobeEquipped
-      // Оружие: показываем реальное изображение по item_id
+      // Броня: wardrobeEquipped | Оружие: weapon texture | Шлем: helmet texture
       const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
         ? wardrobeEq.textureKey
-        : (weaponTexKey && this.textures.exists(weaponTexKey)) ? weaponTexKey : null;
+        : (weaponTexKey && this.textures.exists(weaponTexKey)) ? weaponTexKey
+        : (helmetTexKey && this.textures.exists(helmetTexKey)) ? helmetTexKey
+        : null;
       if (imgKey) {
         const imgSize = small ? 36 : 46;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
         ca(img);
+        // Пульсирующее свечение под шлемом (по теме редкости)
+        if (slot === 'belt' && !small) {
+          try {
+            this.tweens.add({
+              targets: haG,
+              alpha: { from: 0.08, to: 0.22 },
+              duration: 1800,
+              yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+            });
+            this.tweens.add({
+              targets: glG,
+              alpha: { from: 0.35, to: 0.85 },
+              duration: 1800,
+              yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+            });
+          } catch(_) {}
+        }
       } else {
         // Остальные слоты или fallback — emoji
         const emoji = item?.emoji || { common:'🛡', rare:'⚔️', epic:'💜', mythic:'🔥' }[displayRarity] || '🛡';
