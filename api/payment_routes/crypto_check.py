@@ -79,12 +79,13 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     return {"ok": False, "reason": "invoice_user_mismatch"}
                 if is_weapon_equip and weapon_equip_id:
                     db.equip_item(owner_uid, "weapon", weapon_equip_id)
+                    db.add_owned_weapon(owner_uid, weapon_equip_id)
                     _cache_invalidate(owner_uid)
                     db.mark_items_delivered(invoice_id)
                     await manager.send(owner_uid, {"event": "weapon_equipped", "weapon_id": weapon_equip_id, "source": "cryptopay_confirm"})
                     eq_raw = db.get_equipment(owner_uid)
                     eq_resp = {s: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"]} for s, it in eq_raw.items()}
-                    ow = db.get_owned_weapons(owner_uid) if hasattr(db, "get_owned_weapons") else None
+                    ow = db.get_owned_weapons(owner_uid)
                     fresh = db.get_or_create_player(owner_uid, "")
                     return {"ok": True, "paid": True, "weapon_equipped": True, "weapon_id": weapon_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if is_usdt_scroll and usdt_scroll_id:
@@ -154,10 +155,12 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             if result.get("reason") == "already_paid":
                 if is_weapon_equip and weapon_equip_id:
                     db.equip_item(uid, "weapon", weapon_equip_id)
+                    db.add_owned_weapon(uid, weapon_equip_id)
+                    db.mark_items_delivered(invoice_id)
                     _cache_invalidate(uid)
                     eq_raw = db.get_equipment(uid)
                     eq_resp = {s: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"]} for s, it in eq_raw.items()}
-                    ow = db.get_owned_weapons(uid) if hasattr(db, "get_owned_weapons") else None
+                    ow = db.get_owned_weapons(uid)
                     fresh = db.get_or_create_player(uid, "")
                     return {"ok": True, "paid": True, "already_confirmed": True, "weapon_equipped": True, "weapon_id": weapon_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if avatar_id:

@@ -95,6 +95,7 @@ def register_weapon_payment_routes(app: FastAPI) -> None:
             return {"ok": False, "reason": "Предмет не найден"}
 
         db.equip_item(uid, "weapon", body.item_id)
+        db.add_owned_weapon(uid, body.item_id)
         _cache_invalidate(uid)
         return {"ok": True, "equipment": _eq_response(uid), "player": _player_response(uid)}
 

@@ -66,13 +66,17 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             weapon_equip_id = custom_payload.split(":weapon_equip:", 1)[1].strip() if is_weapon_equip else None
             logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, usdt_scroll_id, asset, invoice_id)
             if is_weapon_equip and weapon_equip_id:
+                _equip_ok = False
                 try:
                     db.equip_item(uid, "weapon", weapon_equip_id)
+                    db.add_owned_weapon(uid, weapon_equip_id)
                     _cache_invalidate(uid)
-                    db.mark_items_delivered(int(invoice_id))
+                    _equip_ok = True
                 except Exception as _e:
                     logger.error("CRITICAL: weapon equip failed after payment uid=%s weapon=%s invoice=%s err=%s",
                                  uid, weapon_equip_id, invoice_id, _e)
+                if _equip_ok:
+                    db.mark_items_delivered(int(invoice_id))
                 await manager.send(uid, {"event": "weapon_equipped", "weapon_id": weapon_equip_id, "source": "cryptopay"})
                 await _send_tg_message(uid, f"⚔️ <b>Мифическое оружие получено!</b>\nОткройте раздел «Меч» в профиле и наденьте его.\n\n⚔️ Duel Arena")
             elif is_usdt_scroll and usdt_scroll_id:

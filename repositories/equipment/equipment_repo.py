@@ -70,6 +70,29 @@ class EquipmentMixin:
             total["pen_pct"]    += stats.get("pen_pct", 0.0)
         return total
 
+    def add_owned_weapon(self, user_id: int, item_id: str) -> None:
+        """Добавляет оружие в player_owned_weapons (идемпотентно)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                (user_id, item_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_owned_weapons(self, user_id: int):
+        """Возвращает список item_id оружия в арсенале."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (user_id,))
+            return [r["item_id"] for r in cursor.fetchall()]
+        finally:
+            conn.close()
+
     def _resolve_ring_slot(self, user_id: int, slot: str, item_id: str) -> Optional[str]:
         """Для кольца: ring1 если свободен, иначе ring2. Для остальных — слот напрямую."""
         if slot not in (SLOT_RING1, SLOT_RING2):

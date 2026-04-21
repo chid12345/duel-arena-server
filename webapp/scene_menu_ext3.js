@@ -84,7 +84,7 @@ Object.assign(MenuScene.prototype, {
           if (!d?.ok) return;
           if (d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); }
           if (d.equipment) State.equipment = d.equipment;
-          // Обновить оверлей оружия если открыт
+          if (Array.isArray(d.owned_weapons)) State.ownedWeapons = d.owned_weapons;
           if (typeof WeaponHTML !== 'undefined') WeaponHTML.refresh?.();
         }).catch(() => {});
       }
