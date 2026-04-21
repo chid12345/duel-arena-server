@@ -243,10 +243,18 @@ function _render(scene, view) {
   });
   grid.onclick = e=>{
     const btn=e.target.closest('[data-act]');
-    if (!btn) return;
-    e.stopPropagation();
-    const h=items.find(x=>x.id===btn.dataset.id);
-    if (h) _doAction(scene,btn.dataset.act,h);
+    if (btn) {
+      e.stopPropagation();
+      const h=items.find(x=>x.id===btn.dataset.id);
+      if (h) _doAction(scene,btn.dataset.act,h);
+      return;
+    }
+    const card=e.target.closest('.wd-card');
+    if (card) {
+      const h=items.find(x=>x.id===card.dataset.id);
+      if (h && typeof HelmetHTMLDetail!=='undefined')
+        HelmetHTMLDetail.show(scene, h, (act,item)=>_doAction(scene,act,item));
+    }
   };
 }
 

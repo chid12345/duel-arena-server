@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Helmet Test</title>
+<style>body{background:#12121c;margin:0;font-family:sans-serif}</style>
+</head>
+<body>
+<script>
+window.State={equipment:{belt:null},ownedWeapons:[],player:{}};
+window.post=()=>Promise.resolve({ok:false});
+window.get=()=>Promise.resolve({ok:false});
+window.tg=null;
+</script>
+<script src="wardrobe_html_overlay.js"></script>
+<script src="helmet_html_overlay.js"></script>
+<script src="helmet_html_detail.js"></script>
+<script>
+HelmetHTML.open({
+  _helmetBusy:false,
+  input:{enabled:true},
+  _panels:{},
+  _buildProfilePanel:()=>{},
+  _switchTab:()=>{}
+});
+</script>
+</body>
+</html>
