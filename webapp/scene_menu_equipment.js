@@ -61,13 +61,16 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // outer glow
-      const glG = mkG(); glG.fillStyle(bc, 0.2); glG.fillRoundedRect(x - 2, y - 2, w + 4, h + 4, r + 2); c.add(glG);
-      g.fillStyle(bc, 0.18); g.fillRoundedRect(x, y, w, h, r);
-      g.lineStyle(2, bc, 1); g.strokeRoundedRect(x, y, w, h, r);
+      // ambient halo (самый внешний, мягкий)
+      const haG = mkG(); haG.fillStyle(bc, 0.12); haG.fillRoundedRect(x - 5, y - 5, w + 10, h + 10, r + 4); c.add(haG);
+      // outer glow ring
+      const glG = mkG(); glG.lineStyle(1.5, bc, 0.55); glG.strokeRoundedRect(x - 3, y - 3, w + 6, h + 6, r + 3); c.add(glG);
+      // card fill + border
+      g.fillStyle(bc, 0.22); g.fillRoundedRect(x, y, w, h, r);
+      g.lineStyle(2.5, bc, 1); g.strokeRoundedRect(x, y, w, h, r);
       c.add(g);
       // glass top highlight
-      const hlG = mkG(); hlG.fillStyle(0xffffff, 0.12); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
+      const hlG = mkG(); hlG.fillStyle(0xffffff, 0.14); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
 
       // Броня: показываем реальное изображение из wardrobeEquipped
       // Оружие: показываем реальное изображение по item_id
