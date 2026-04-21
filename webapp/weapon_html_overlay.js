@@ -42,16 +42,24 @@ const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
 const RL = {common:'Обычный',rare:'Редкий',epic:'Эпический',mythic:'Мифическое'};
 
 let _currentScene = null;
+const _imgCache = new Map(); // origSrc → dataUrl, живёт на всё время сессии
 
 function _removeDarkBg(img) {
+  if (img._bgDone) return;
+  img._bgDone = true;
+  const origSrc = img.src;
+  if (_imgCache.has(origSrc)) { img.src = _imgCache.get(origSrc); return; }
   const c = document.createElement('canvas');
-  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  c.width = img.naturalWidth || 64; c.height = img.naturalHeight || 64;
   const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
   try {
     const d = ctx.getImageData(0, 0, c.width, c.height);
     for (let i = 0; i < d.data.length; i += 4)
       if (d.data[i] < 40 && d.data[i+1] < 40 && d.data[i+2] < 40) d.data[i+3] = 0;
-    ctx.putImageData(d, 0, 0); img.src = c.toDataURL();
+    ctx.putImageData(d, 0, 0);
+    const dataUrl = c.toDataURL();
+    _imgCache.set(origSrc, dataUrl);
+    img.src = dataUrl;
   } catch(_) {}
 }
 
@@ -108,17 +116,22 @@ function _card(w) {
   </div>`;
 }
 
-function _notify(msg, ok=true) {
+function _notify(msg, ok=true, persist=false) {
   let el = document.getElementById('wd-notify');
   if (!el) {
     el = Object.assign(document.createElement('div'),{id:'wd-notify'});
-    el.style.cssText='position:fixed;bottom:80px;left:50%;transform:translateX(-50%);z-index:9999;padding:9px 18px;border-radius:12px;font-size:13px;font-weight:700;pointer-events:none;transition:opacity .3s;max-width:300px;text-align:center';
+    el.style.cssText='position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(16px);z-index:10000;padding:10px 20px;border-radius:14px;font-size:13px;font-weight:700;pointer-events:none;transition:opacity .22s,transform .22s;max-width:290px;text-align:center;box-shadow:0 4px 24px rgba(0,0,0,.55);opacity:0';
     document.body.appendChild(el);
   }
-  el.textContent=msg; el.style.opacity='1';
-  el.style.background=ok?'rgba(21,128,61,.92)':'rgba(185,28,28,.92)';
-  el.style.color=ok?'#86efac':'#fca5a5';
-  clearTimeout(el._t); el._t=setTimeout(()=>{el.style.opacity='0';},2800);
+  clearTimeout(el._t);
+  el.textContent=msg;
+  el.style.background=ok?'rgba(16,120,55,.97)':'rgba(180,25,25,.97)';
+  el.style.color=ok?'#a7f3c0':'#fecaca';
+  el.style.opacity='1';
+  el.style.transform='translateX(-50%) translateY(0)';
+  if (!persist) el._t=setTimeout(()=>{
+    el.style.opacity='0'; el.style.transform='translateX(-50%) translateY(16px)';
+  }, 2800);
 }
 
 async function _doAction(scene, action, item) {
@@ -127,6 +140,7 @@ async function _doAction(scene, action, item) {
   try {
     // ── Stars (мифическое оружие) ──────────────────────────────
     if (action === 'buy_stars') {
+      _notify('⏳ Создаём счёт...', true, true);
       const invRes = await post('/api/equipment/weapon_stars_invoice', {item_id: item.id});
       if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._weaponBusy=false; return; }
       if (typeof tg?.openInvoice !== 'function') {
@@ -134,15 +148,17 @@ async function _doAction(scene, action, item) {
       }
       tg.openInvoice(invRes.invoice_url, async (status) => {
         if (status === 'paid') {
-          _notify('⏳ Активируем...');
+          _notify('⏳ Активируем...', true, true);
           try {
             const conf = await post('/api/equipment/weapon_stars_confirm', {item_id: item.id});
             if (conf?.ok) {
               if (conf.player)    { State.player=conf.player; State.playerLoadedAt=Date.now(); }
               if (conf.equipment) State.equipment=conf.equipment;
+              if (conf.owned_weapons) State.ownedWeapons=conf.owned_weapons;
               tg?.HapticFeedback?.notificationOccurred('success');
               _notify('✅ Мифическое оружие получено!');
-              _render(scene, document.querySelector('#wn-root ._wn-view')?._wv||'all');
+              const activeTab = document.querySelector('#wn-root ._wn-view.active');
+              _render(scene, activeTab?.dataset?.wv||'all');
             } else { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
           } catch(_) { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
         } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
@@ -152,6 +168,7 @@ async function _doAction(scene, action, item) {
     }
     // ── USDT (мифическое оружие) ───────────────────────────────
     if (action === 'buy_usdt') {
+      _notify('⏳ Создаём счёт...', true, true);
       const invRes = await post('/api/equipment/weapon_crypto_invoice', {item_id: item.id});
       if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._weaponBusy=false; return; }
       const _url = invRes.invoice_url || '';
@@ -163,6 +180,7 @@ async function _doAction(scene, action, item) {
       return;
     }
     // ── Стандартное надевание/снятие (free/gold/diamonds) ──────
+    _notify(action==='unequip'?'⏳ Снимаем...':'⏳ Надеваем...', true, true);
     const res = await post(
       action==='unequip' ? '/api/equipment/unequip' : '/api/equipment/equip',
       action==='unequip' ? {slot:'weapon'} : {item_id:item.id,slot:'weapon'}
@@ -172,7 +190,7 @@ async function _doAction(scene, action, item) {
       if (res.equipment)     State.equipment=res.equipment;
       if (res.owned_weapons) State.ownedWeapons=res.owned_weapons;
       tg?.HapticFeedback?.notificationOccurred('success');
-      _notify(action==='unequip'?'✅ Оружие снято':'✅ Оружие надето');
+      _notify(action==='unequip'?'✅ Оружие снято':'✅ Оружие надето!');
       const activeTab = document.querySelector('#wn-root ._wn-view.active');
       _render(scene, activeTab?.dataset?.wv||'all');
     } else { _notify('❌ '+(res?.reason||res?.detail||'Ошибка'),false); }
@@ -183,6 +201,7 @@ async function _doAction(scene, action, item) {
 function _render(scene, view) {
   const grid = document.getElementById('wn-grid');
   if (!grid) return;
+  const scrollTop = grid.scrollTop;
   const eqId = (State.equipment?.weapon||{}).item_id||'';
   const ownedSet = new Set(State.ownedWeapons||[]);
   const items = WEAPONS_DATA.map(w=>({
@@ -202,6 +221,7 @@ function _render(scene, view) {
             <div class="wd-card-group">${gl.map(_card).join('')}</div>`;
   }).join('') || `<div class="wd-empty">Нет оружия</div>`;
 
+  grid.scrollTop = scrollTop;
   grid.querySelectorAll('.wd-card-img').forEach(img=>{
     if (img.complete&&img.naturalWidth) _removeDarkBg(img);
   });
