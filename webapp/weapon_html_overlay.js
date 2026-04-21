@@ -54,8 +54,11 @@ function _removeDarkBg(img) {
   const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
   try {
     const d = ctx.getImageData(0, 0, c.width, c.height);
-    for (let i = 0; i < d.data.length; i += 4)
-      if (d.data[i] < 40 && d.data[i+1] < 40 && d.data[i+2] < 40) d.data[i+3] = 0;
+    for (let i = 0; i < d.data.length; i += 4) {
+      const r=d.data[i], g=d.data[i+1], b=d.data[i+2];
+      const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
+      if (mx < 72 && mx - mn < 28) d.data[i+3] = 0;
+    }
     ctx.putImageData(d, 0, 0);
     const dataUrl = c.toDataURL();
     _imgCache.set(origSrc, dataUrl);
