@@ -14,6 +14,22 @@ class BootScene extends Phaser.Scene {
     this.load.image('armor_gold',    'armor_gold.png');
     this.load.image('armor_epic',    'armor_epic.png');
     this.load.image('armor_mythic',  'armor_mythic.png');
+    this.load.image('weapon_sword_free',   'weapon_sword_free.png');
+    this.load.image('weapon_sword_rare',   'weapon_sword_rare.png');
+    this.load.image('weapon_sword_epic',   'weapon_sword_epic.png');
+    this.load.image('weapon_sword_mythic', 'weapon_sword_mythic.png');
+    this.load.image('weapon_axe_free',     'weapon_axe_free.png');
+    this.load.image('weapon_axe_rare',     'weapon_axe_rare.png');
+    this.load.image('weapon_axe_epic',     'weapon_axe_epic.png');
+    this.load.image('weapon_axe_mythic',   'weapon_axe_mythic.png');
+    this.load.image('weapon_club_free',    'weapon_club_free.png');
+    this.load.image('weapon_club_rare',    'weapon_club_rare.png');
+    this.load.image('weapon_club_epic',    'weapon_club_epic.png');
+    this.load.image('weapon_club_mythic',  'weapon_club_mythic.png');
+    this.load.image('weapon_gs_free',      'weapon_gs_free.png');
+    this.load.image('weapon_gs_rare',      'weapon_gs_rare.png');
+    this.load.image('weapon_gs_epic',      'weapon_gs_epic.png');
+    this.load.image('weapon_gs_mythic',    'weapon_gs_mythic.png');
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('complete', () => {
       try {

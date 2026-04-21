@@ -55,6 +55,7 @@ Object.assign(MenuScene.prototype, {
 
     // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
     const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
+    const weaponTexKey = slot === 'weapon' && item ? getWeaponTextureKey(item.item_id) : null;
     const displayRarity = wardrobeEq ? wardrobeEq.rarity : item?.rarity;
     const hasDisplay = wardrobeEq || item;
 
@@ -69,9 +70,13 @@ Object.assign(MenuScene.prototype, {
       const hlG = mkG(); hlG.fillStyle(0xffffff, 0.12); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
 
       // Броня: показываем реальное изображение из wardrobeEquipped
-      if (wardrobeEq && this.textures.exists(wardrobeEq.textureKey)) {
+      // Оружие: показываем реальное изображение по item_id
+      const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
+        ? wardrobeEq.textureKey
+        : (weaponTexKey && this.textures.exists(weaponTexKey)) ? weaponTexKey : null;
+      if (imgKey) {
         const imgSize = small ? 36 : 46;
-        const img = this.make.image({ x: cx, y: cy - 2, key: wardrobeEq.textureKey }, false);
+        const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
         ca(img);
       } else {

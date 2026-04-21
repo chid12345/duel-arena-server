@@ -82,6 +82,19 @@ function getArmorTextureKey(rarity) {
   return 'armor_common';
 }
 
+/* Ключ Phaser-текстуры оружия по item_id */
+const _WEAPON_TEXTURE_MAP = {
+  sword_free:'weapon_sword_free', sword_gold:'weapon_sword_rare',
+  sword_diamond:'weapon_sword_epic', sword_mythic:'weapon_sword_mythic',
+  axe_free:'weapon_axe_free', axe_gold:'weapon_axe_rare',
+  axe_diamond:'weapon_axe_epic', axe_mythic:'weapon_axe_mythic',
+  club_free:'weapon_club_free', club_gold:'weapon_club_rare',
+  club_diamond:'weapon_club_epic', club_mythic:'weapon_club_mythic',
+  gs_free:'weapon_gs_free', gs_gold:'weapon_gs_rare',
+  gs_diamond:'weapon_gs_epic', gs_mythic:'weapon_gs_mythic',
+};
+function getWeaponTextureKey(item_id) { return _WEAPON_TEXTURE_MAP[item_id] || null; }
+
 /* Ключ текстуры воина по типу */
 function getWarriorKey(type) {
   if (type === 'tank')    return 'warrior_tank';
