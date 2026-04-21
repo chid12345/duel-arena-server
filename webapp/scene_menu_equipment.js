@@ -18,7 +18,7 @@ const _EQ_SLOT_GLOW = {
 };
 
 const _EQ_SLOT_LABELS = {
-  weapon: 'Меч', belt: 'Пояс', boots: 'Сапоги',
+  weapon: 'Оружие', belt: 'Пояс', boots: 'Сапоги',
   shield: 'Щит', armor: 'Броня', ring1: 'Кольцо', ring2: 'Кольцо',
 };
 const _EQ_RARITY_COLOR = { common: 0x667799, rare: 0x3399ee, epic: 0xaa55ff, mythic: 0xfb923c };

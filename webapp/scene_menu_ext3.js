@@ -79,7 +79,7 @@ Object.assign(MenuScene.prototype, {
       }
       if (msg.event === 'weapon_equipped') {
         tg?.HapticFeedback?.notificationOccurred('success');
-        Notif.push('⚔️', 'Мифическое оружие получено! Открой раздел «Меч»', '#fb923c', 4500);
+        Notif.push('⚔️', 'Мифическое оружие получено! Открой раздел «Оружие»', '#fb923c', 4500);
         post('/api/player').then(d => {
           if (!d?.ok) return;
           if (d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); }
