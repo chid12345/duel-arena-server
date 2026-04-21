@@ -63,8 +63,9 @@ const CSS = `
 
 /* ── Image area ── */
 .wd-img-area{position:relative;width:100%;height:148px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.0);display:flex;align-items:center;justify-content:center}
-.wd-card-img{width:84%;height:84%;object-fit:contain;display:block;animation:breathe 4s ease-in-out infinite;position:relative;z-index:2}
-.wd-card-img.mythic-crop{width:90%;height:90%}
+/* Обёртка анимируется — не img. Фиксирует GPU-слой на мобильных. */
+.wd-img-wrap{display:flex;align-items:center;justify-content:center;width:84%;height:84%;position:relative;z-index:2;animation:breathe 4s ease-in-out infinite;will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.wd-card-img{width:100%;height:100%;object-fit:contain;display:block;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 /* gradient fade bottom of image into card body */
 .wd-img-fade{position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,var(--cbg,rgba(10,6,24,.97)));pointer-events:none;z-index:3}
 /* мягкое радиальное свечение под броней */
@@ -209,8 +210,12 @@ function _pills(a) {
 
 function _imgAreaHtml(a) {
   const img = RARITY_IMG[a.r] || '';
+  const fallbackEmoji = { common:'🛡', rare:'⚔️', epic:'💜', mythic:'🔥' }[a.r] || '🛡';
   return `<div class="wd-img-area">
-    <img src="${img}" class="wd-card-img" />
+    <div class="wd-img-wrap">
+      <img src="${img}" class="wd-card-img" loading="eager" decoding="async"
+        onerror="this.style.display='none';this.parentNode.querySelector('.wd-img-fb')||Object.assign(this.parentNode.appendChild(document.createElement('span')),{className:'wd-img-fb',textContent:'${fallbackEmoji}',style:'font-size:52px;line-height:1;display:block'})" />
+    </div>
     <div class="wd-img-fade"></div>
   </div>`;
 }
