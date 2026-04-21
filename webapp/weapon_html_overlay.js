@@ -296,7 +296,7 @@ function open(scene) {
   try {
     const pi = parseInt(localStorage.getItem('weaponPendingInvoice') || '0', 10);
     const pid = localStorage.getItem('weaponPendingItemId') || '';
-    if (pi > 0 && pid) _startWeaponCryptoPolling(scene, pi, pid);
+    if (pi > 0 && pid) _startWeaponCryptoPolling(scene, pi, pid, true);
   } catch(_) {}
   wrap.querySelectorAll('._wn-view').forEach(t=>t.onclick=()=>{
     view=t.dataset.wv;
@@ -328,7 +328,7 @@ function open(scene) {
   wrap.addEventListener('touchmove',e=>e.stopPropagation(),{passive:false});
 }
 
-function _startWeaponCryptoPolling(scene, invoiceId, itemId) {
+function _startWeaponCryptoPolling(scene, invoiceId, itemId, immediate = false) {
   let attempts = 0;
   const poll = async () => {
     attempts++;
@@ -336,29 +336,28 @@ function _startWeaponCryptoPolling(scene, invoiceId, itemId) {
       const r = await get(`/api/shop/crypto_check/${invoiceId}`);
       if (r.ok && r.paid) {
         try { localStorage.removeItem('weaponPendingInvoice'); localStorage.removeItem('weaponPendingItemId'); } catch(_) {}
-        // Обновляем глобальный стейт (работает даже если оверлей закрыт)
         if (r.weapon_equipped) {
-          if (r.player)        { State.player = r.player; State.playerLoadedAt = Date.now(); }
-          if (r.equipment)     State.equipment = r.equipment;
+          if (r.player)    { State.player = r.player; State.playerLoadedAt = Date.now(); }
+          if (r.equipment) State.equipment = r.equipment;
         } else {
           try {
             const pd = await post('/api/player');
             if (Array.isArray(pd?.owned_weapons)) State.ownedWeapons = pd.owned_weapons;
-            if (pd?.equipment)     State.equipment = pd.equipment;
-            if (pd?.player)        { State.player = pd.player; State.playerLoadedAt = Date.now(); }
+            if (pd?.equipment) State.equipment = pd.equipment;
+            if (pd?.player)    { State.player = pd.player; State.playerLoadedAt = Date.now(); }
           } catch(_) {}
         }
         tg?.HapticFeedback?.notificationOccurred('success');
         _notify('✅ Мифическое оружие получено!');
-        // Обновляем оверлей если открыт
         const activeTab = document.querySelector('#wn-root ._wn-view.active');
         if (activeTab) _render(scene, activeTab.dataset?.wv || 'all');
         return;
       }
     } catch(_) {}
-    if (attempts < 24) scene.time.delayedCall(5000, poll);
+    if (attempts < 30) setTimeout(poll, 5000);
   };
-  scene.time.delayedCall(4000, poll);
+  // immediate=true — проверяем сразу (resume после оплаты), иначе ждём 4с
+  setTimeout(poll, immediate ? 800 : 4000);
 }
 
 function close() { document.getElementById('wn-root')?.remove(); }
