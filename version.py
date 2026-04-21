@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.9.19"
-VERSION_LABEL = "v1.9.19 — fix: броня в магазине (armor_leather/chain/dragon) + canvas-фикс чёрного фона оружия в preview"
+VERSION = "1.9.20"
+VERSION_LABEL = "v1.9.20 — feat: weapon_html_overlay — HTML-оверлей для оружия по аналогу wardrobe"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "7.53"
+GAME_VERSION = "7.54"

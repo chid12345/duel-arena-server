@@ -102,6 +102,8 @@ Object.assign(MenuScene.prototype, {
       Sound.click();
       if (slot === 'armor') {
         this.scene.start('Stats', { player: State.player, openWardrobe: true });
+      } else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') {
+        WeaponHTML.open(this);
       } else {
         this.scene.start('Equipment', { slot });
       }
