@@ -1,4 +1,4 @@
-"""Сериализация игрока и premium-поля для TMA API."""
+﻿"""Сериализация игрока и premium-поля для TMA API."""
 
 from __future__ import annotations
 
@@ -108,6 +108,9 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_regen    = int(_eq.get("regen_bonus", 0) or 0)
     _eq_lifesteal = int(_eq.get("lifesteal_pct", 0) or 0)
     _eq_crit_resist = int(_eq.get("crit_resist_pct", 0) or 0)
+    _eq_str  = int(_eq.get("str_bonus", 0) or 0)
+    _eq_agi  = int(_eq.get("agi_bonus", 0) or 0)
+    _eq_intu = int(_eq.get("intu_bonus", 0) or 0)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
     if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
@@ -231,8 +234,11 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "pen_pct":      round(_eq_pen * 100, 1),
             "dodge_bonus":  _eq_dodge,
             "regen_bonus":  _eq_regen,
-            "lifesteal_pct": _eq_lifesteal,
+            "lifesteal_pct":   _eq_lifesteal,
             "crit_resist_pct": _eq_crit_resist,
+            "str_bonus":  _eq_str,
+            "agi_bonus":  _eq_agi,
+            "intu_bonus": _eq_intu,
         },
         **_premium_fields(player),
     }

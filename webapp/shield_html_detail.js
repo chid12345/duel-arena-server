@@ -101,6 +101,9 @@ function _pillsHtml(h) {
   if (h.def > 0)         s += `<span class="wd-pill p-a">-${h.def}% урона врага</span>`;
   if (h.hp > 0)          s += `<span class="wd-pill p-e">+${h.hp} HP</span>`;
   if (h.crit_resist > 0) s += `<span class="wd-pill p-i">-${h.crit_resist}% крит-урон врага</span>`;
+  if (h.str > 0)         s += `<span class="wd-pill p-s">+${h.str} Сила</span>`;
+  if (h.agi > 0)         s += `<span class="wd-pill p-s">+${h.agi} Ловкость</span>`;
+  if (h.intu > 0)        s += `<span class="wd-pill p-s">+${h.intu} Интуиция</span>`;
   return s;
 }
 
@@ -109,6 +112,9 @@ function _statLine(h) {
   if (h.def > 0)         p.push(`Защита: -${h.def}% урона`);
   if (h.hp > 0)          p.push(`HP: +${h.hp}`);
   if (h.crit_resist > 0) p.push(`Крит-сопр.: -${h.crit_resist}%`);
+  if (h.str > 0)         p.push(`Сила: +${h.str}`);
+  if (h.agi > 0)         p.push(`Ловкость: +${h.agi}`);
+  if (h.intu > 0)        p.push(`Интуиция: +${h.intu}`);
   return p.join(' · ');
 }
 

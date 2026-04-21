@@ -17,25 +17,25 @@ const SHIELD_IMG = {
 
 const SHIELD_DATA = [
   // Бесплатные
-  {id:'shield_free1', r:'common', ht:'🛡️ Щит', name:'Щит Ополченца',       stars:'★☆☆☆', def:3,  hp:0,   crit_resist:0,  type:'free'},
-  {id:'shield_free2', r:'common', ht:'🛡️ Щит', name:'Щит Стойкости',        stars:'★☆☆☆', def:0,  hp:50,  crit_resist:0,  type:'free'},
-  {id:'shield_free3', r:'common', ht:'🛡️ Щит', name:'Щит Закалённого',      stars:'★☆☆☆', def:0,  hp:0,   crit_resist:10, type:'free'},
-  {id:'shield_free4', r:'common', ht:'🛡️ Щит', name:'Щит Дружинника',       stars:'★☆☆☆', def:2,  hp:30,  crit_resist:0,  type:'free'},
+  {id:'shield_free1', r:'common', ht:'🛡️ Щит', name:'Щит Ополченца',       stars:'★☆☆☆', def:3,  hp:0,   crit_resist:0,  str:2, agi:0, intu:0, type:'free'},
+  {id:'shield_free2', r:'common', ht:'🛡️ Щит', name:'Щит Стойкости',        stars:'★☆☆☆', def:0,  hp:50,  crit_resist:0,  str:0, agi:2, intu:0, type:'free'},
+  {id:'shield_free3', r:'common', ht:'🛡️ Щит', name:'Щит Закалённого',      stars:'★☆☆☆', def:0,  hp:0,   crit_resist:10, str:0, agi:0, intu:2, type:'free'},
+  {id:'shield_free4', r:'common', ht:'🛡️ Щит', name:'Щит Дружинника',       stars:'★☆☆☆', def:2,  hp:30,  crit_resist:0,  str:2, agi:0, intu:0, type:'free'},
   // Золото
-  {id:'shield_gold1', r:'rare',   ht:'🛡️ Щит', name:'Рыцарский Щит',        stars:'★★☆☆', def:6,  hp:0,   crit_resist:0,  type:'gold',     price:'1200'},
-  {id:'shield_gold2', r:'rare',   ht:'🛡️ Щит', name:'Щит Великана',         stars:'★★☆☆', def:0,  hp:110, crit_resist:0,  type:'gold',     price:'1400'},
-  {id:'shield_gold3', r:'rare',   ht:'🛡️ Щит', name:'Щит Паладина',         stars:'★★☆☆', def:0,  hp:0,   crit_resist:18, type:'gold',     price:'1700'},
-  {id:'shield_gold4', r:'rare',   ht:'🛡️ Щит', name:'Щит Хранителя',        stars:'★★☆☆', def:4,  hp:60,  crit_resist:8,  type:'gold',     price:'2000'},
+  {id:'shield_gold1', r:'rare',   ht:'🛡️ Щит', name:'Рыцарский Щит',        stars:'★★☆☆', def:6,  hp:0,   crit_resist:0,  str:1, agi:1, intu:1, type:'gold',     price:'1200'},
+  {id:'shield_gold2', r:'rare',   ht:'🛡️ Щит', name:'Щит Великана',         stars:'★★☆☆', def:0,  hp:110, crit_resist:0,  str:1, agi:1, intu:1, type:'gold',     price:'1400'},
+  {id:'shield_gold3', r:'rare',   ht:'🛡️ Щит', name:'Щит Паладина',         stars:'★★☆☆', def:0,  hp:0,   crit_resist:18, str:1, agi:1, intu:1, type:'gold',     price:'1700'},
+  {id:'shield_gold4', r:'rare',   ht:'🛡️ Щит', name:'Щит Хранителя',        stars:'★★☆☆', def:4,  hp:60,  crit_resist:8,  str:1, agi:1, intu:1, type:'gold',     price:'2000'},
   // Алмазы
-  {id:'shield_dia1',  r:'epic',   ht:'🛡️ Щит', name:'Щит Дракона',          stars:'★★★☆', def:10, hp:0,   crit_resist:0,  type:'diamonds', price:'25'},
-  {id:'shield_dia2',  r:'epic',   ht:'🛡️ Щит', name:'Щит Колосса',          stars:'★★★☆', def:0,  hp:200, crit_resist:0,  type:'diamonds', price:'35'},
-  {id:'shield_dia3',  r:'epic',   ht:'🛡️ Щит', name:'Щит Непоколебимого',   stars:'★★★☆', def:0,  hp:0,   crit_resist:25, type:'diamonds', price:'50'},
-  {id:'shield_dia4',  r:'epic',   ht:'🛡️ Щит', name:'Щит Арканы',           stars:'★★★☆', def:7,  hp:90,  crit_resist:12, type:'diamonds', price:'70'},
+  {id:'shield_dia1',  r:'epic',   ht:'🛡️ Щит', name:'Щит Дракона',          stars:'★★★☆', def:10, hp:0,   crit_resist:0,  str:2, agi:2, intu:2, type:'diamonds', price:'25'},
+  {id:'shield_dia2',  r:'epic',   ht:'🛡️ Щит', name:'Щит Колосса',          stars:'★★★☆', def:0,  hp:200, crit_resist:0,  str:2, agi:2, intu:2, type:'diamonds', price:'35'},
+  {id:'shield_dia3',  r:'epic',   ht:'🛡️ Щит', name:'Щит Непоколебимого',   stars:'★★★☆', def:0,  hp:0,   crit_resist:25, str:2, agi:2, intu:2, type:'diamonds', price:'50'},
+  {id:'shield_dia4',  r:'epic',   ht:'🛡️ Щит', name:'Щит Арканы',           stars:'★★★☆', def:7,  hp:90,  crit_resist:12, str:2, agi:2, intu:2, type:'diamonds', price:'70'},
   // Мифические
-  {id:'shield_mythic1',r:'mythic',ht:'🛡️ Щит', name:'Щит Судьбы',           stars:'★★★★', def:14, hp:160, crit_resist:0,  type:'mythic'},
-  {id:'shield_mythic2',r:'mythic',ht:'🛡️ Щит', name:'Щит Бессмертного',     stars:'★★★★', def:0,  hp:300, crit_resist:20, type:'mythic'},
-  {id:'shield_mythic3',r:'mythic',ht:'🛡️ Щит', name:'Щит Рока',             stars:'★★★★', def:8,  hp:0,   crit_resist:30, type:'mythic'},
-  {id:'shield_mythic4',r:'mythic',ht:'🛡️ Щит', name:'Щит Богов',            stars:'★★★★', def:10, hp:120, crit_resist:18, type:'mythic'},
+  {id:'shield_mythic1',r:'mythic',ht:'🛡️ Щит', name:'Щит Судьбы',           stars:'★★★★', def:14, hp:160, crit_resist:0,  str:4, agi:4, intu:4, type:'mythic'},
+  {id:'shield_mythic2',r:'mythic',ht:'🛡️ Щит', name:'Щит Бессмертного',     stars:'★★★★', def:0,  hp:300, crit_resist:20, str:4, agi:4, intu:4, type:'mythic'},
+  {id:'shield_mythic3',r:'mythic',ht:'🛡️ Щит', name:'Щит Рока',             stars:'★★★★', def:8,  hp:0,   crit_resist:30, str:4, agi:4, intu:4, type:'mythic'},
+  {id:'shield_mythic4',r:'mythic',ht:'🛡️ Щит', name:'Щит Богов',            stars:'★★★★', def:10, hp:120, crit_resist:18, str:4, agi:4, intu:4, type:'mythic'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
@@ -85,6 +85,9 @@ function _pills(h) {
   if (h.def > 0)         s += `<span class="wd-pill p-a">-${h.def}% урона врага</span>`;
   if (h.hp > 0)          s += `<span class="wd-pill p-e">+${h.hp} HP</span>`;
   if (h.crit_resist > 0) s += `<span class="wd-pill p-i">-${h.crit_resist}% крит-урон врага</span>`;
+  if (h.str > 0)         s += `<span class="wd-pill p-s">+${h.str} Сила</span>`;
+  if (h.agi > 0)         s += `<span class="wd-pill p-s">+${h.agi} Ловкость</span>`;
+  if (h.intu > 0)        s += `<span class="wd-pill p-s">+${h.intu} Интуиция</span>`;
   return s;
 }
 

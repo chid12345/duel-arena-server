@@ -120,6 +120,9 @@ Object.assign(StatsScene.prototype, {
       _eq.regen_bonus    > 0 && { i:'💚', n:'Регенерация', v:`+${_eq.regen_bonus} HP/раунд`, neg:false },
       _eq.lifesteal_pct  > 0 && { i:'🩸', n:'Вампиризм',   v:`+${_eq.lifesteal_pct}%`,       neg:false },
       _eq.crit_resist_pct > 0 && { i:'🛡️', n:'Крит-сопр.', v:`-${_eq.crit_resist_pct}% крит-урон`, neg:false },
+      _eq.str_bonus  > 0 && { i:'⚔️', n:'Сила (щит)',      v:`+${_eq.str_bonus}`,  neg:false },
+      _eq.agi_bonus  > 0 && { i:'🤸', n:'Ловкость (щит)',  v:`+${_eq.agi_bonus}`,  neg:false },
+      _eq.intu_bonus > 0 && { i:'💥', n:'Интуиция (щит)',  v:`+${_eq.intu_bonus}`, neg:false },
     ].filter(Boolean);
     const secs = [
       { title:'⚔️ Класс воина', rows: wt.rows },

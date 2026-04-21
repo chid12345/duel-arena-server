@@ -154,8 +154,14 @@ class BattleStartMixin:
         player["_eq_pen_pct"]      = stats.get("pen_pct", 0.0)
         player["_eq_dodge_bonus"]  = int(stats.get("dodge_bonus", 0))
         player["_eq_regen_bonus"]  = int(stats.get("regen_bonus", 0))
-        player["_eq_lifesteal_pct"] = int(stats.get("lifesteal_pct", 0))
+        player["_eq_lifesteal_pct"]   = int(stats.get("lifesteal_pct", 0))
         player["_eq_crit_resist_pct"] = int(stats.get("crit_resist_pct", 0))
+        if stats.get("str_bonus", 0):
+            player["strength"] = max(1, int(player.get("strength", PLAYER_START_STRENGTH)) + stats["str_bonus"])
+        if stats.get("agi_bonus", 0):
+            player["endurance"] = max(1, int(player.get("endurance", PLAYER_START_ENDURANCE)) + stats["agi_bonus"])
+        if stats.get("intu_bonus", 0):
+            player["crit"] = max(0, int(player.get("crit", PLAYER_START_CRIT)) + stats["intu_bonus"])
         if stats.get("hp_bonus", 0):
             old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
             old_cur = int(player.get("current_hp", old_max))
