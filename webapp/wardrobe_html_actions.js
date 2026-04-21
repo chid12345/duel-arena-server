@@ -94,9 +94,11 @@
     // Открытие редактора статов USDT-слота — не требует API, открывает Phaser-экран
     if (action === 'open_detail') {
       WardrobeHTML.close();
-      const rawItem = (wp?.usdt_items || []).find(i => i.class_id === item._realId)
-        || (wp?.usdt_items || [])[0]
-        || (wp?.inventory || []).find(i => i.class_type === 'usdt');
+      const usdtItems = wp?.usdt_items || (wp?.inventory || []).filter(i => i.class_type === 'usdt');
+      // Ищем нужный слот по ID; если не нашли — берём незаблокированный (свежий), иначе последний
+      const rawItem = usdtItems.find(i => i.class_id === item._realId)
+        || usdtItems.find(i => !i.stats_applied)
+        || usdtItems[usdtItems.length - 1];
       if (rawItem && scene._openUsdtDetail) {
         scene._openUsdtDetail({
           name:         rawItem.custom_name || 'Легендарный образ',
@@ -178,10 +180,13 @@
     ['free','gold','diamonds'].forEach(t => (avail[t]||[]).forEach(c => { if (c.owned) owned.add(c.class_id); }));
     (wp?.inventory || []).forEach(i => owned.add(i.class_id));
 
-    // USDT слот: бэкенд создаёт usdt_custom_{uid}_{n}, фронтенд показывает legendary_usdt
-    const usdtItem = (wp?.usdt_items || []).length > 0
-      ? wp.usdt_items[0]
-      : (wp?.inventory || []).find(i => i.class_type === 'usdt');
+    // USDT слот: предпочитаем экипированный или незаблокированный (новый пустой), иначе первый
+    const allUsdt = (wp?.usdt_items || []).length > 0
+      ? wp.usdt_items
+      : (wp?.inventory || []).filter(i => i.class_type === 'usdt');
+    const usdtItem = allUsdt.find(i => i.equipped)
+      || allUsdt.find(i => !i.stats_applied)
+      || allUsdt[0];
 
     return W.ARMORS_DATA.map(a => {
       if (a.id === 'legendary_usdt') {

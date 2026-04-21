@@ -34,8 +34,12 @@ class InventoryUsdtMixin:
 
             cursor.execute(
                 """INSERT INTO user_inventory
-                   (user_id, class_id, class_type, custom_name, equipped, free_stats_saved, purchased_at)
-                   VALUES (?, ?, 'usdt', ?, FALSE, 19, CURRENT_TIMESTAMP)""",
+                   (user_id, class_id, class_type, custom_name, equipped,
+                    free_stats_saved, strength_saved, agility_saved, intuition_saved,
+                    endurance_saved, stamina_saved, max_hp_saved, current_hp_saved,
+                    stats_applied, purchased_at)
+                   VALUES (?, ?, 'usdt', ?, FALSE,
+                    19, 0, 0, 0, 0, 0, 0, 0, 0, CURRENT_TIMESTAMP)""",
                 (user_id, class_id, display_name),
             )
 
