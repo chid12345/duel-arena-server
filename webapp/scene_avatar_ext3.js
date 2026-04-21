@@ -19,7 +19,7 @@ Object.assign(AvatarScene.prototype, {
           if (_a3u.startsWith('https://t.me/') || _a3u.startsWith('tg://')) tg?.openTelegramLink?.(_a3u);
           else tg?.openLink?.(_a3u);
         } catch(_) {}
-        if (_a3u) try { window.open(_a3u, '_blank'); } catch(_) {}
+        if (!tg && _a3u) try { window.open(_a3u, '_blank'); } catch(_) {}
         tg?.showAlert?.('⭐ Счёт Stars открыт — оплатите и вернитесь');
         return;
       }

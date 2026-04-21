@@ -172,7 +172,7 @@ async function _doAction(scene, action, item) {
           tg?.openTelegramLink?.(starsUrl);
         else tg?.openLink?.(starsUrl);
       } catch(_) {}
-      if (starsUrl) try { window.open(starsUrl, '_blank'); } catch(_) {}
+      if (!tg && starsUrl) try { window.open(starsUrl, '_blank'); } catch(_) {}
       _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
       scene._weaponBusy = false;
       return;
@@ -188,9 +188,10 @@ async function _doAction(scene, action, item) {
         else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) tg?.openTelegramLink?.(_url);
         else tg?.openLink?.(_url);
       } catch(_) {}
-      if (_url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
+      if (!tg && _url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
       _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
       scene._weaponBusy = false;
+      if (invRes.invoice_id) _startWeaponCryptoPolling(scene, invRes.invoice_id, item.id);
       return;
     }
     // ── Стандартное надевание/снятие (free/gold/diamonds) ──────
@@ -315,6 +316,40 @@ function open(scene) {
     }
   };
   wrap.addEventListener('touchmove',e=>e.stopPropagation(),{passive:false});
+}
+
+function _startWeaponCryptoPolling(scene, invoiceId, itemId) {
+  let attempts = 0;
+  const poll = async () => {
+    attempts++;
+    try {
+      const r = await get(`/api/shop/crypto_check/${invoiceId}`);
+      if (r.ok && r.paid) {
+        try {
+          const conf = await post('/api/equipment/equip', { item_id: itemId, slot: 'weapon' });
+          if (conf?.ok) {
+            if (conf.player)        { State.player = conf.player; State.playerLoadedAt = Date.now(); }
+            if (conf.equipment)     State.equipment = conf.equipment;
+            if (conf.owned_weapons) State.ownedWeapons = conf.owned_weapons;
+          } else {
+            const pd = await post('/api/player');
+            if (pd?.ok && pd.player) { State.player = pd.player; State.playerLoadedAt = Date.now(); }
+            if (pd?.equipment)     State.equipment = pd.equipment;
+            if (pd?.owned_weapons) State.ownedWeapons = pd.owned_weapons;
+          }
+        } catch(_) {}
+        tg?.HapticFeedback?.notificationOccurred('success');
+        _notify('✅ Мифическое оружие получено!');
+        const activeTab = document.querySelector('#wn-root ._wn-view.active');
+        _render(scene, activeTab?.dataset?.wv || 'all');
+        return;
+      }
+    } catch(_) {}
+    if (attempts < 24 && document.getElementById('wn-root')) {
+      scene.time.delayedCall(5000, poll);
+    }
+  };
+  scene.time.delayedCall(5000, poll);
 }
 
 function close() { document.getElementById('wn-root')?.remove(); }

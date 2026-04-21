@@ -79,7 +79,7 @@ Object.assign(ShopScene.prototype, {
         else if (_url.includes('startapp=')) tg?.openLink?.(_url);
         else tg?.openTelegramLink?.(_url);
       } catch(_) {}
-      if (_url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
+      if (!tg && _url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
       this._toast('💳 Счёт открыт — оплатите и вернитесь');
       this._buying = false;
       this._startCryptoPolling(res.invoice_id, pkg);

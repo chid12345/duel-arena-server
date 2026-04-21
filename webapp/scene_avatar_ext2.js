@@ -207,7 +207,7 @@ Object.assign(AvatarScene.prototype, {
             if (_au.startsWith('https://t.me/') || _au.startsWith('tg://')) tg?.openTelegramLink?.(_au);
             else tg?.openLink?.(_au);
           } catch(_) {}
-          if (_au) try { window.open(_au, '_blank'); } catch(_) {}
+          if (!tg && _au) try { window.open(_au, '_blank'); } catch(_) {}
           tg?.showAlert?.('⭐ Счёт Stars открыт — оплатите и вернитесь');
           return;
         }
