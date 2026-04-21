@@ -213,9 +213,9 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     },
     "boots_free4": {
         "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
-        "name": "Сапоги Дозорного", "emoji": "👟",
-        "dodge_bonus": 4,
-        "desc": "+4% уворот — острее реакция",
+        "name": "Кровавый след", "emoji": "👟",
+        "lifesteal_pct": 3,
+        "desc": "+3% вампиризм — 3% урона возвращается как HP",
     },
     # За золото — двойные синергии
     "boots_gold1": {
@@ -238,9 +238,9 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     },
     "boots_gold4": {
         "slot": SLOT_BOOTS, "rarity": RARITY_RARE,
-        "name": "Сапоги Фантома", "emoji": "👟",
-        "dodge_bonus": 8, "regen_bonus": 10, "price_gold": 2000,
-        "desc": "+8% уворот, +10 HP/раунд",
+        "name": "Сапоги Кровопийцы", "emoji": "👟",
+        "lifesteal_pct": 5, "price_gold": 2000,
+        "desc": "+5% вампиризм — 5% урона возвращается как HP",
     },
     # За алмазы — мощные комбо
     "boots_dia1": {
@@ -263,9 +263,9 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     },
     "boots_dia4": {
         "slot": SLOT_BOOTS, "rarity": RARITY_EPIC,
-        "name": "Сапоги Бессмертного", "emoji": "👟",
-        "dodge_bonus": 6, "regen_bonus": 36, "price_gold": 0, "price_diamonds": 70,
-        "desc": "+6% уворот, +36 HP/раунд — не умирает",
+        "name": "Поступь Вампира", "emoji": "👟",
+        "lifesteal_pct": 7, "price_gold": 0, "price_diamonds": 70,
+        "desc": "+7% вампиризм — 7% урона возвращается как HP",
     },
     # Мифические — топ-тир
     "boots_mythic1": {
@@ -291,10 +291,10 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     },
     "boots_mythic4": {
         "slot": SLOT_BOOTS, "rarity": "mythic",
-        "name": "Абсолютный Шаг", "emoji": "⚡",
-        "dodge_bonus": 12, "regen_bonus": 42,
+        "name": "Сапоги Владыки Крови", "emoji": "🩸",
+        "lifesteal_pct": 10,
         "price_stars": 590,
-        "desc": "+12% уворот, +42 HP/раунд — идеальный баланс",
+        "desc": "+10% вампиризм — каждые 100 урона = +10 HP обратно",
     },
 }
 
@@ -319,11 +319,12 @@ def get_item_stats(item_id: str) -> dict:
     """Возвращает только боевые бонусы предмета."""
     item = EQUIPMENT_CATALOG.get(item_id, {})
     return {
-        "atk_bonus":   item.get("atk_bonus", 0),
-        "def_pct":     item.get("def_pct", 0.0),
-        "hp_bonus":    item.get("hp_bonus", 0),
-        "crit_bonus":  item.get("crit_bonus", 0),
-        "pen_pct":     item.get("pen_pct", 0.0),
-        "dodge_bonus": item.get("dodge_bonus", 0),
-        "regen_bonus": item.get("regen_bonus", 0),
+        "atk_bonus":    item.get("atk_bonus", 0),
+        "def_pct":      item.get("def_pct", 0.0),
+        "hp_bonus":     item.get("hp_bonus", 0),
+        "crit_bonus":   item.get("crit_bonus", 0),
+        "pen_pct":      item.get("pen_pct", 0.0),
+        "dodge_bonus":  item.get("dodge_bonus", 0),
+        "regen_bonus":  item.get("regen_bonus", 0),
+        "lifesteal_pct": item.get("lifesteal_pct", 0),
     }

@@ -20,22 +20,22 @@ const BOOTS_DATA = [
   {id:'boots_free1', r:'common', ht:'👟 Сапоги', name:'Сапоги Скорохода',        stars:'★☆☆☆', dodge:3,  regen:0,  type:'free'},
   {id:'boots_free2', r:'common', ht:'👟 Сапоги', name:'Сапоги Выносливого',       stars:'★☆☆☆', dodge:0,  regen:12, type:'free'},
   {id:'boots_free3', r:'common', ht:'👟 Сапоги', name:'Сапоги Тени',              stars:'★☆☆☆', dodge:2,  regen:8,  type:'free'},
-  {id:'boots_free4', r:'common', ht:'👟 Сапоги', name:'Сапоги Дозорного',         stars:'★☆☆☆', dodge:4,  regen:0,  type:'free'},
+  {id:'boots_free4', r:'common', ht:'👟 Сапоги', name:'Кровавый след',             stars:'★☆☆☆', dodge:0,  regen:0,  lifesteal:3,  type:'free'},
   // ── Золото
   {id:'boots_gold1', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Вихря',             stars:'★★☆☆', dodge:7,  regen:0,  type:'gold',     price:'1100'},
   {id:'boots_gold2', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Живучести',          stars:'★★☆☆', dodge:0,  regen:28, type:'gold',     price:'1400'},
   {id:'boots_gold3', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Ветра',             stars:'★★☆☆', dodge:5,  regen:16, type:'gold',     price:'1700'},
-  {id:'boots_gold4', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Фантома',           stars:'★★☆☆', dodge:8,  regen:10, type:'gold',     price:'2000'},
+  {id:'boots_gold4', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Кровопийцы',        stars:'★★☆☆', dodge:0,  regen:0,  lifesteal:5,  type:'gold',     price:'2000'},
   // ── Алмазы
   {id:'boots_dia1',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Призрака',          stars:'★★★☆', dodge:13, regen:0,  type:'diamonds', price:'25'},
   {id:'boots_dia2',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Жизненной Силы',    stars:'★★★☆', dodge:0,  regen:48, type:'diamonds', price:'35'},
   {id:'boots_dia3',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Ловчего',           stars:'★★★☆', dodge:9,  regen:22, type:'diamonds', price:'50'},
-  {id:'boots_dia4',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Бессмертного',      stars:'★★★☆', dodge:6,  regen:36, type:'diamonds', price:'70'},
+  {id:'boots_dia4',  r:'epic',   ht:'👟 Сапоги', name:'Поступь Вампира',           stars:'★★★☆', dodge:0,  regen:0,  lifesteal:7,  type:'diamonds', price:'70'},
   // ── Мифические
   {id:'boots_mythic1',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Дракона',           stars:'★★★★', dodge:16, regen:22, type:'mythic'},
   {id:'boots_mythic2',r:'mythic',ht:'👟 Сапоги', name:'Поступь Бессмертия',       stars:'★★★★', dodge:5,  regen:65, type:'mythic'},
   {id:'boots_mythic3',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Призрака Смерти',   stars:'★★★★', dodge:20, regen:0,  type:'mythic'},
-  {id:'boots_mythic4',r:'mythic',ht:'👟 Сапоги', name:'Абсолютный Шаг',           stars:'★★★★', dodge:12, regen:42, type:'mythic'},
+  {id:'boots_mythic4',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Владыки Крови',     stars:'★★★★', dodge:0,  regen:0,  lifesteal:10, type:'mythic'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
@@ -82,8 +82,9 @@ function _removeDarkBg(img) {
 
 function _pills(h) {
   let s = '';
-  if (h.dodge > 0) s += `<span class="wd-pill p-i">+${h.dodge}% уворот</span>`;
-  if (h.regen > 0) s += `<span class="wd-pill p-e">+${h.regen} HP/раунд</span>`;
+  if (h.dodge > 0)     s += `<span class="wd-pill p-i">+${h.dodge}% уворот</span>`;
+  if (h.regen > 0)     s += `<span class="wd-pill p-e">+${h.regen} HP/раунд</span>`;
+  if (h.lifesteal > 0) s += `<span class="wd-pill p-s">+${h.lifesteal}% вампиризм</span>`;
   return s;
 }
 

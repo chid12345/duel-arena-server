@@ -199,7 +199,7 @@ class BattleDamageMixin:
         is_break = random.random() < break_ch
 
         # Вампиризм атакующего (lifesteal_pct buff) — лечение до применения брони защитника
-        _lifesteal = attacker.get("_buff_lifesteal_pct", 0)
+        _lifesteal = attacker.get("_buff_lifesteal_pct", 0) + attacker.get("_eq_lifesteal_pct", 0)
         if _lifesteal and damage > 0:
             _heal = max(1, int(damage * _lifesteal / 100))
             attacker["current_hp"] = min(

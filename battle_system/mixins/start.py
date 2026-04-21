@@ -149,11 +149,12 @@ class BattleStartMixin:
             stats = db.get_equipment_stats(int(uid))
         except Exception:
             return
-        player["_eq_atk_bonus"]   = stats.get("atk_bonus", 0)
-        player["_eq_def_pct"]     = stats.get("def_pct", 0.0)
-        player["_eq_pen_pct"]     = stats.get("pen_pct", 0.0)
-        player["_eq_dodge_bonus"] = int(stats.get("dodge_bonus", 0))
-        player["_eq_regen_bonus"] = int(stats.get("regen_bonus", 0))
+        player["_eq_atk_bonus"]    = stats.get("atk_bonus", 0)
+        player["_eq_def_pct"]      = stats.get("def_pct", 0.0)
+        player["_eq_pen_pct"]      = stats.get("pen_pct", 0.0)
+        player["_eq_dodge_bonus"]  = int(stats.get("dodge_bonus", 0))
+        player["_eq_regen_bonus"]  = int(stats.get("regen_bonus", 0))
+        player["_eq_lifesteal_pct"] = int(stats.get("lifesteal_pct", 0))
         if stats.get("hp_bonus", 0):
             old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
             old_cur = int(player.get("current_hp", old_max))

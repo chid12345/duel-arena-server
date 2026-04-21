@@ -103,9 +103,10 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_def  = float(_eq.get("def_pct", 0.0) or 0.0)
     _eq_hp   = int(_eq.get("hp_bonus", 0) or 0)
     _eq_crit = int(_eq.get("crit_bonus", 0) or 0)
-    _eq_pen   = float(_eq.get("pen_pct", 0.0) or 0.0)
-    _eq_dodge = int(_eq.get("dodge_bonus", 0) or 0)
-    _eq_regen = int(_eq.get("regen_bonus", 0) or 0)
+    _eq_pen      = float(_eq.get("pen_pct", 0.0) or 0.0)
+    _eq_dodge    = int(_eq.get("dodge_bonus", 0) or 0)
+    _eq_regen    = int(_eq.get("regen_bonus", 0) or 0)
+    _eq_lifesteal = int(_eq.get("lifesteal_pct", 0) or 0)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
     if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
@@ -222,13 +223,14 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "warrior_type": (player.get("warrior_type") or "default"),
         "inventory_unseen": int(player.get("inventory_unseen", 0) or 0),
         "eq_stats": {
-            "atk_bonus":   _eq_atk,
-            "def_pct":     round(_eq_def * 100, 1),
-            "hp_bonus":    _eq_hp,
-            "crit_bonus":  _eq_crit,
-            "pen_pct":     round(_eq_pen * 100, 1),
-            "dodge_bonus": _eq_dodge,
-            "regen_bonus": _eq_regen,
+            "atk_bonus":    _eq_atk,
+            "def_pct":      round(_eq_def * 100, 1),
+            "hp_bonus":     _eq_hp,
+            "crit_bonus":   _eq_crit,
+            "pen_pct":      round(_eq_pen * 100, 1),
+            "dodge_bonus":  _eq_dodge,
+            "regen_bonus":  _eq_regen,
+            "lifesteal_pct": _eq_lifesteal,
         },
         **_premium_fields(player),
     }
