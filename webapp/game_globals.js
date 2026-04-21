@@ -62,7 +62,25 @@ const State = {
   ws: null,
   appVersion: '...',
   avatarId: (() => { try { return parseInt(localStorage.getItem('da_avatar') || '3', 10); } catch(_) { return 3; } })(),
+  wardrobeEquipped: (() => { try { const s = localStorage.getItem('da_wardrobe_eq'); return s ? JSON.parse(s) : null; } catch(_) { return null; } })(),
 };
+
+/* Сохраняет экипированную броню в State + localStorage */
+function setWardrobeEquipped(v) {
+  State.wardrobeEquipped = v;
+  try {
+    if (v) localStorage.setItem('da_wardrobe_eq', JSON.stringify(v));
+    else    localStorage.removeItem('da_wardrobe_eq');
+  } catch(_) {}
+}
+
+/* Ключ Phaser-текстуры по редкости брони */
+function getArmorTextureKey(rarity) {
+  if (rarity === 'rare')   return 'armor_gold';
+  if (rarity === 'epic')   return 'armor_epic';
+  if (rarity === 'mythic') return 'armor_mythic';
+  return 'armor_common';
+}
 
 /* Ключ текстуры воина по типу */
 function getWarriorKey(type) {

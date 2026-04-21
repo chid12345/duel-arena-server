@@ -10,6 +10,10 @@ class BootScene extends Phaser.Scene {
     this.load.image('warrior_tank',  'warriors/warrior_tank.png');
     this.load.image('warrior_agile', 'warriors/warrior_agile.png');
     this.load.image('warrior_crit',  'warriors/warrior_crit.png');
+    this.load.image('armor_common',  'armor_common.png');
+    this.load.image('armor_gold',    'armor_gold.png');
+    this.load.image('armor_epic',    'armor_epic.png');
+    this.load.image('armor_mythic',  'armor_mythic.png');
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('complete', () => {
       try {

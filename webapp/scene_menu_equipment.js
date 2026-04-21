@@ -21,7 +21,7 @@ const _EQ_SLOT_LABELS = {
   weapon: 'Меч', belt: 'Пояс', boots: 'Сапоги',
   shield: 'Щит', armor: 'Броня', ring1: 'Кольцо', ring2: 'Кольцо',
 };
-const _EQ_RARITY_COLOR = { common: 0x667799, rare: 0x3399ee, epic: 0xaa55ff };
+const _EQ_RARITY_COLOR = { common: 0x667799, rare: 0x3399ee, epic: 0xaa55ff, mythic: 0xfb923c };
 
 Object.assign(MenuScene.prototype, {
 
@@ -53,8 +53,13 @@ Object.assign(MenuScene.prototype, {
     const r  = small ? 7 : 10;
     const cx = x + w / 2, cy = y + h / 2 - (small ? 1 : 4);
 
-    if (item) {
-      const bc = _EQ_RARITY_COLOR[item.rarity] || 0x6677aa;
+    // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
+    const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
+    const displayRarity = wardrobeEq ? wardrobeEq.rarity : item?.rarity;
+    const hasDisplay = wardrobeEq || item;
+
+    if (hasDisplay) {
+      const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
       // outer glow
       const glG = mkG(); glG.fillStyle(bc, 0.2); glG.fillRoundedRect(x - 2, y - 2, w + 4, h + 4, r + 2); c.add(glG);
       g.fillStyle(bc, 0.18); g.fillRoundedRect(x, y, w, h, r);
@@ -62,17 +67,27 @@ Object.assign(MenuScene.prototype, {
       c.add(g);
       // glass top highlight
       const hlG = mkG(); hlG.fillStyle(0xffffff, 0.12); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
-      ca(mkT(cx, cy, item.emoji, small ? 13 : 20)).setOrigin(0.5);
+
+      // Броня: показываем реальное изображение из wardrobeEquipped
+      if (wardrobeEq && this.textures.exists(wardrobeEq.textureKey)) {
+        const imgSize = small ? 36 : 46;
+        const img = this.make.image({ x: cx, y: cy - 2, key: wardrobeEq.textureKey }, false);
+        img.setDisplaySize(imgSize, imgSize);
+        ca(img);
+      } else {
+        // Остальные слоты или fallback — emoji
+        const emoji = item?.emoji || { common:'🛡', rare:'⚔️', epic:'💜', mythic:'🔥' }[displayRarity] || '🛡';
+        ca(mkT(cx, cy, emoji, small ? 13 : 20)).setOrigin(0.5);
+      }
+
       const dG = mkG(); dG.fillStyle(bc, 1); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     } else {
-      // slot body — solid #1c1c2e + thin white border
+      // Пустой слот — стандартный вид
       g.fillStyle(0x1c1c2e, 0.98); g.fillRoundedRect(x, y, w, h, r);
       g.lineStyle(1, 0xffffff, 0.1); g.strokeRoundedRect(x, y, w, h, r);
       c.add(g);
-      // inset glow in slot's icon color
       const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
       const igG = mkG(); igG.fillStyle(sg.c, sg.a); igG.fillRoundedRect(x + 4, y + 4, w - 8, h - 8, r - 2); c.add(igG);
-      // icon glow halo — same color
       const haloG = mkG(); haloG.fillStyle(sg.c, 0.05); haloG.fillCircle(cx, cy - 2, 18); c.add(haloG);
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
       const dG = mkG(); dG.fillStyle(sg.c, 0.6); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
@@ -86,7 +101,6 @@ Object.assign(MenuScene.prototype, {
     zone.on('pointerup', () => {
       Sound.click();
       if (slot === 'armor') {
-        // Броня → открываем гардероб (выбор класса/образа)
         this.scene.start('Stats', { player: State.player, openWardrobe: true });
       } else {
         this.scene.start('Equipment', { slot });

@@ -144,6 +144,12 @@
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
+        // Обновляем State.wardrobeEquipped для слота брони в профиле
+        if (action === 'unequip') {
+          setWardrobeEquipped(null);
+        } else if ((action === 'equip' || action === 'buy') && item.r) {
+          setWardrobeEquipped({ rarity: item.r, textureKey: getArmorTextureKey(item.r) });
+        }
         const msg = action==='buy' ? '✅ Броня получена' : action==='unequip' ? '✅ Броня снята' : '✅ Броня надета';
         _notify(msg);
         WardrobeHTML.refresh(scene, res);
@@ -217,6 +223,15 @@
 
   /* ── open ── */
   function open(scene, wp) {
+    // Синхронизируем wardrobeEquipped с данными сервера при каждом открытии
+    const eqId = wp?.equipped_class?.class_id || '';
+    if (eqId) {
+      const match = W.ARMORS_DATA.find(a => a.id === eqId) || (eqId.includes('usdt') ? { r: 'mythic' } : null);
+      if (match) setWardrobeEquipped({ rarity: match.r, textureKey: getArmorTextureKey(match.r) });
+    } else {
+      setWardrobeEquipped(null);
+    }
+
     W._injectCSS();
     close();
     let view = scene._wardrobeView || 'all';
