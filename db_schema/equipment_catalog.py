@@ -67,25 +67,6 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
         "atk_bonus": 40, "price_gold": 0, "price_diamonds": 25,
         "desc": "+40 к урону",
     },
-    # ── ЩИТ ─────────────────────────────────────────────────
-    "shield_wood": {
-        "slot": SLOT_SHIELD, "rarity": RARITY_COMMON,
-        "name": "Деревянный щит", "emoji": "🛡️",
-        "def_pct": 0.03, "price_gold": 250,
-        "desc": "-3% входящего урона",
-    },
-    "shield_iron": {
-        "slot": SLOT_SHIELD, "rarity": RARITY_RARE,
-        "name": "Железный щит", "emoji": "🛡️",
-        "def_pct": 0.06, "price_gold": 1000,
-        "desc": "-6% входящего урона",
-    },
-    "shield_aegis": {
-        "slot": SLOT_SHIELD, "rarity": RARITY_EPIC,
-        "name": "Эгида Стража", "emoji": "✨",
-        "def_pct": 0.12, "price_gold": 0, "price_diamonds": 20,
-        "desc": "-12% входящего урона",
-    },
     # ── БРОНЯ ────────────────────────────────────────────────
     "armor_leather": {
         "slot": SLOT_ARMOR, "rarity": RARITY_COMMON,
@@ -104,63 +85,6 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
         "name": "Броня Дракона", "emoji": "🐉",
         "def_pct": 0.10, "hp_bonus": 180, "price_gold": 0, "price_diamonds": 30,
         "desc": "-10% урона, +180 HP",
-    },
-    # ── ПОЯС ─────────────────────────────────────────────────
-    "belt_cloth": {
-        "slot": SLOT_BELT, "rarity": RARITY_COMMON,
-        "name": "Тканевый пояс", "emoji": "🪢",
-        "hp_bonus": 25, "price_gold": 200,
-        "desc": "+25 HP",
-    },
-    "belt_leather": {
-        "slot": SLOT_BELT, "rarity": RARITY_RARE,
-        "name": "Кожаный пояс", "emoji": "🪢",
-        "hp_bonus": 65, "price_gold": 800,
-        "desc": "+65 HP",
-    },
-    "belt_titan": {
-        "slot": SLOT_BELT, "rarity": RARITY_EPIC,
-        "name": "Пояс Титана", "emoji": "💠",
-        "hp_bonus": 150, "price_gold": 0, "price_diamonds": 18,
-        "desc": "+150 HP",
-    },
-    # ── БОТИНКИ ──────────────────────────────────────────────
-    "boots_cloth": {
-        "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
-        "name": "Тканевые ботинки", "emoji": "👟",
-        "atk_bonus": 4, "price_gold": 200,
-        "desc": "+4 к урону",
-    },
-    "boots_leather": {
-        "slot": SLOT_BOOTS, "rarity": RARITY_RARE,
-        "name": "Кожаные ботинки", "emoji": "👢",
-        "atk_bonus": 12, "price_gold": 750,
-        "desc": "+12 к урону",
-    },
-    "boots_shadow": {
-        "slot": SLOT_BOOTS, "rarity": RARITY_EPIC,
-        "name": "Ботинки Тени", "emoji": "🌑",
-        "atk_bonus": 25, "price_gold": 0, "price_diamonds": 15,
-        "desc": "+25 к урону",
-    },
-    # ── КОЛЬЦО ───────────────────────────────────────────────
-    "ring_copper": {
-        "slot": SLOT_RING1, "rarity": RARITY_COMMON,
-        "name": "Медное кольцо", "emoji": "💍",
-        "crit_bonus": 3, "price_gold": 250,
-        "desc": "+3 к интуиции (крит)",
-    },
-    "ring_silver": {
-        "slot": SLOT_RING1, "rarity": RARITY_RARE,
-        "name": "Серебряное кольцо", "emoji": "💍",
-        "crit_bonus": 8, "price_gold": 900,
-        "desc": "+8 к интуиции (крит)",
-    },
-    "ring_arcane": {
-        "slot": SLOT_RING1, "rarity": RARITY_EPIC,
-        "name": "Магическое кольцо", "emoji": "🔮",
-        "crit_bonus": 18, "price_gold": 0, "price_diamonds": 20,
-        "desc": "+18 к интуиции (крит)",
     },
 }
 

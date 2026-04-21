@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.9.47"
-VERSION_LABEL = "v1.9.47 — feat: replace belt slot icon with helmet in equipment UI"
+VERSION = "1.9.48"
+VERSION_LABEL = "v1.9.48 — feat: remove items from shield/helmet/boots/ring slots"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "7.81"
+GAME_VERSION = "7.82"

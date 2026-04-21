@@ -18,36 +18,16 @@ const _EQ_CATALOG = {
     { id: 'sword_steel', emoji:'⚔️', name:'Стальной меч',   rarity:'rare',   price_gold:1200, price_diamonds:0,  desc:'+20 к урону' },
     { id: 'sword_chaos', emoji:'🌀', name:'Клинок Хаоса',   rarity:'epic',   price_gold:0,    price_diamonds:25, desc:'+40 к урону' },
   ],
-  shield: [
-    { id: 'shield_wood', emoji:'🛡️', name:'Деревянный щит', rarity:'common', price_gold:250,  price_diamonds:0,  desc:'-3% входящего урона' },
-    { id: 'shield_iron', emoji:'🛡️', name:'Железный щит',   rarity:'rare',   price_gold:1000, price_diamonds:0,  desc:'-6% входящего урона' },
-    { id: 'shield_aegis',emoji:'✨', name:'Эгида Стража',    rarity:'epic',   price_gold:0,    price_diamonds:20, desc:'-12% входящего урона' },
-  ],
+  shield: [],
   armor: [
     { id: 'armor_leather', emoji:'🥋', name:'Кожаная броня',  rarity:'common', price_gold:350,  price_diamonds:0,  desc:'-2% урона, +30 HP' },
     { id: 'armor_chain',   emoji:'⛓️', name:'Кольчуга',        rarity:'rare',   price_gold:1400, price_diamonds:0,  desc:'-5% урона, +80 HP' },
     { id: 'armor_dragon',  emoji:'🐉', name:'Броня Дракона',   rarity:'epic',   price_gold:0,    price_diamonds:30, desc:'-10% урона, +180 HP' },
   ],
-  belt: [
-    { id: 'belt_cloth',  emoji:'🪢', name:'Тканевый пояс',   rarity:'common', price_gold:200,  price_diamonds:0,  desc:'+25 HP' },
-    { id: 'belt_leather',emoji:'🪢', name:'Кожаный пояс',    rarity:'rare',   price_gold:800,  price_diamonds:0,  desc:'+65 HP' },
-    { id: 'belt_titan',  emoji:'💠', name:'Пояс Титана',      rarity:'epic',   price_gold:0,    price_diamonds:18, desc:'+150 HP' },
-  ],
-  boots: [
-    { id: 'boots_cloth',  emoji:'👟', name:'Тканевые ботинки', rarity:'common', price_gold:200, price_diamonds:0,  desc:'+4 к урону' },
-    { id: 'boots_leather',emoji:'👢', name:'Кожаные ботинки',  rarity:'rare',   price_gold:750, price_diamonds:0,  desc:'+12 к урону' },
-    { id: 'boots_shadow', emoji:'🌑', name:'Ботинки Тени',      rarity:'epic',   price_gold:0,   price_diamonds:15, desc:'+25 к урону' },
-  ],
-  ring1: [
-    { id: 'ring_copper', emoji:'💍', name:'Медное кольцо',    rarity:'common', price_gold:250,  price_diamonds:0,  desc:'+3 к интуиции' },
-    { id: 'ring_silver', emoji:'💍', name:'Серебряное кольцо', rarity:'rare',  price_gold:900,  price_diamonds:0,  desc:'+8 к интуиции' },
-    { id: 'ring_arcane', emoji:'🔮', name:'Магическое кольцо', rarity:'epic',  price_gold:0,    price_diamonds:20, desc:'+18 к интуиции' },
-  ],
-  ring2: [
-    { id: 'ring_copper', emoji:'💍', name:'Медное кольцо',    rarity:'common', price_gold:250,  price_diamonds:0,  desc:'+3 к интуиции' },
-    { id: 'ring_silver', emoji:'💍', name:'Серебряное кольцо', rarity:'rare',  price_gold:900,  price_diamonds:0,  desc:'+8 к интуиции' },
-    { id: 'ring_arcane', emoji:'🔮', name:'Магическое кольцо', rarity:'epic',  price_gold:0,    price_diamonds:20, desc:'+18 к интуиции' },
-  ],
+  belt:  [],
+  boots: [],
+  ring1: [],
+  ring2: [],
 };
 
 const _EQ_RC = { common: 0x667799, rare: 0x3399ee, epic: 0xaa55ff };
