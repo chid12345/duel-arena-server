@@ -223,6 +223,8 @@ function refresh() {
 function open(scene) {
   _currentScene = scene;
   scene._weaponBusy = false; // сбрасываем при каждом открытии оверлея
+  // Блокируем Phaser input — иначе зоны таббара реагируют на тапы сквозь оверлей
+  try { scene.input.enabled = false; } catch(_) {}
   if (typeof WardrobeHTML!=='undefined') WardrobeHTML._injectCSS();
   close();
   const wrap=document.createElement('div');
@@ -249,10 +251,25 @@ function open(scene) {
     _render(scene,view);
   });
   document.getElementById('wn-close').onclick=()=>{
-    close(); tg?.HapticFeedback?.impactOccurred('light');
-    // Не сбрасываем playerLoadedAt — данные уже свежие после equip/buy.
-    // Принудительный returnTab:'profile' чтобы всегда возвращаться в профиль.
-    _currentScene.scene.start('Menu',{returnTab:'profile'});
+    tg?.HapticFeedback?.impactOccurred('light');
+    close();
+    // Перестраиваем слот профиля на месте (без перезапуска сцены).
+    // Перезапуск сцены создаёт race-condition: зоны таббара успевают поймать
+    // тап до завершения shutdown и бросают на случайную вкладку.
+    try {
+      const sc = _currentScene;
+      if (sc._panels?.profile) {
+        try { sc._panels.profile.destroy(true); } catch(_) {}
+        sc._panels.profile = null;
+      }
+      sc._buildProfilePanel();
+      try { sc.input.enabled = true; } catch(_) {}
+      sc._switchTab('profile');
+    } catch(_) {
+      // fallback: полный перезапуск
+      try { _currentScene.input.enabled = true; } catch(_2) {}
+      _currentScene.scene.start('Menu',{returnTab:'profile'});
+    }
   };
   wrap.addEventListener('touchmove',e=>e.stopPropagation(),{passive:false});
 }
