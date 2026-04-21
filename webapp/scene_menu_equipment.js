@@ -57,6 +57,7 @@ Object.assign(MenuScene.prototype, {
     const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
     const weaponTexKey = slot === 'weapon' && item ? getWeaponTextureKey(item.item_id) : null;
     const helmetTexKey = slot === 'belt'   && item ? getHelmetTextureKey(item.item_id)  : null;
+    const bootsTexKey  = slot === 'boots'  && item ? getBootsTextureKey(item.item_id)   : null;
     const displayRarity = wardrobeEq ? wardrobeEq.rarity : item?.rarity;
     const hasDisplay = wardrobeEq || item;
 
@@ -73,19 +74,20 @@ Object.assign(MenuScene.prototype, {
       // glass top highlight
       const hlG = mkG(); hlG.fillStyle(0xffffff, 0.12); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
 
-      // Броня: wardrobeEquipped | Оружие: weapon texture | Шлем: helmet texture
+      // Броня: wardrobeEquipped | Оружие: weapon texture | Шлем: helmet texture | Сапоги: boots texture
       const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
         ? wardrobeEq.textureKey
         : (weaponTexKey && this.textures.exists(weaponTexKey)) ? weaponTexKey
         : (helmetTexKey && this.textures.exists(helmetTexKey)) ? helmetTexKey
+        : (bootsTexKey  && this.textures.exists(bootsTexKey))  ? bootsTexKey
         : null;
       if (imgKey) {
         const imgSize = small ? 36 : 46;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
         ca(img);
-        // Пульсирующее свечение под шлемом (по теме редкости)
-        if (slot === 'belt' && !small) {
+        // Пульсирующее свечение под шлемом/сапогами (по теме редкости)
+        if ((slot === 'belt' || slot === 'boots') && !small) {
           try {
             this.tweens.add({
               targets: haG,
@@ -133,6 +135,8 @@ Object.assign(MenuScene.prototype, {
         WeaponHTML.open(this);
       } else if (slot === 'belt' && typeof HelmetHTML !== 'undefined') {
         HelmetHTML.open(this);
+      } else if (slot === 'boots' && typeof BootsHTML !== 'undefined') {
+        BootsHTML.open(this);
       } else {
         this.scene.start('Equipment', { slot });
       }

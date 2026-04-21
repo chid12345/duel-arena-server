@@ -108,6 +108,19 @@ const _HELMET_TEXTURE_MAP = {
 };
 function getHelmetTextureKey(item_id) { return _HELMET_TEXTURE_MAP[item_id] || null; }
 
+/* Ключ Phaser-текстуры сапог по item_id */
+const _BOOTS_TEXTURE_MAP = {
+  boots_free1:'boots_free1', boots_free2:'boots_free2',
+  boots_free3:'boots_free3', boots_free4:'boots_free4',
+  boots_gold1:'boots_gold1', boots_gold2:'boots_gold2',
+  boots_gold3:'boots_gold3', boots_gold4:'boots_gold4',
+  boots_dia1:'boots_dia1',   boots_dia2:'boots_dia2',
+  boots_dia3:'boots_dia3',   boots_dia4:'boots_dia4',
+  boots_mythic1:'boots_mythic1', boots_mythic2:'boots_mythic2',
+  boots_mythic3:'boots_mythic3', boots_mythic4:'boots_mythic4',
+};
+function getBootsTextureKey(item_id) { return _BOOTS_TEXTURE_MAP[item_id] || null; }
+
 /* Ключ текстуры воина по типу */
 function getWarriorKey(type) {
   if (type === 'tank')    return 'warrior_tank';

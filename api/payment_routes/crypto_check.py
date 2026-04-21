@@ -65,11 +65,13 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             is_usdt_reset = ":usdt_reset:" in custom_payload
             is_weapon_equip = ":weapon_equip:" in custom_payload
             is_helmet_equip = ":helmet_equip:" in custom_payload
+            is_boots_equip  = ":boots_equip:"  in custom_payload
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
             weapon_equip_id = custom_payload.split(":weapon_equip:", 1)[1].strip() if is_weapon_equip else None
             helmet_equip_id = custom_payload.split(":helmet_equip:", 1)[1].strip() if is_helmet_equip else None
+            boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
             result = db.confirm_crypto_invoice(int(invoice_id))
             if result.get("ok"):
                 diamonds = result["diamonds"]
@@ -101,6 +103,17 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     ow = db.get_owned_weapons(owner_uid)
                     fresh = db.get_or_create_player(owner_uid, "")
                     return {"ok": True, "paid": True, "helmet_equipped": True, "helmet_id": helmet_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
+                if is_boots_equip and boots_equip_id:
+                    db.equip_item(owner_uid, "boots", boots_equip_id)
+                    db.add_owned_weapon(owner_uid, boots_equip_id)
+                    _cache_invalidate(owner_uid)
+                    db.mark_items_delivered(invoice_id)
+                    await manager.send(owner_uid, {"event": "boots_equipped", "boots_id": boots_equip_id, "source": "cryptopay_confirm"})
+                    eq_raw = db.get_equipment(owner_uid)
+                    eq_resp = {s: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"]} for s, it in eq_raw.items()}
+                    ow = db.get_owned_weapons(owner_uid)
+                    fresh = db.get_or_create_player(owner_uid, "")
+                    return {"ok": True, "paid": True, "boots_equipped": True, "boots_id": boots_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if is_usdt_scroll and usdt_scroll_id:
                     _scroll_ok = False
                     try:
@@ -186,6 +199,16 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     ow = db.get_owned_weapons(uid)
                     fresh = db.get_or_create_player(uid, "")
                     return {"ok": True, "paid": True, "already_confirmed": True, "helmet_equipped": True, "helmet_id": helmet_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
+                if is_boots_equip and boots_equip_id:
+                    db.equip_item(uid, "boots", boots_equip_id)
+                    db.add_owned_weapon(uid, boots_equip_id)
+                    db.mark_items_delivered(invoice_id)
+                    _cache_invalidate(uid)
+                    eq_raw = db.get_equipment(uid)
+                    eq_resp = {s: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"]} for s, it in eq_raw.items()}
+                    ow = db.get_owned_weapons(uid)
+                    fresh = db.get_or_create_player(uid, "")
+                    return {"ok": True, "paid": True, "already_confirmed": True, "boots_equipped": True, "boots_id": boots_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if avatar_id:
                     unlock = db.unlock_avatar(uid, avatar_id, source="usdt")
                     if unlock.get("ok"):

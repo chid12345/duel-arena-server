@@ -191,6 +191,111 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
         "price_stars": 590,
         "desc": "-15% урона врага, +280 HP, +12 крит — неубиваемый",
     },
+    # ── САПОГИ (boots slot) ──────────────────────────────────
+    # Бесплатные — каждый = одна роль, чистый стат
+    "boots_free1": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
+        "name": "Сапоги Танка", "emoji": "👟",
+        "hp_bonus": 50,
+        "desc": "+50 HP — запас прочности",
+    },
+    "boots_free2": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
+        "name": "Сапоги Стража", "emoji": "👟",
+        "def_pct": 0.03,
+        "desc": "-3% урона врага",
+    },
+    "boots_free3": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
+        "name": "Сапоги Охотника", "emoji": "👟",
+        "atk_bonus": 8,
+        "desc": "+8 к урону",
+    },
+    "boots_free4": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
+        "name": "Сапоги Дуэлянта", "emoji": "👟",
+        "crit_bonus": 4,
+        "desc": "+4 крит — для крит-билдов",
+    },
+    # За золото — двойные синергии
+    "boots_gold1": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_RARE,
+        "name": "Сапоги Берсерка", "emoji": "👟",
+        "atk_bonus": 16, "crit_bonus": 5, "price_gold": 1100,
+        "desc": "+16 урона, +5 крит",
+    },
+    "boots_gold2": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_RARE,
+        "name": "Сапоги Крепости", "emoji": "👟",
+        "def_pct": 0.06, "hp_bonus": 85, "price_gold": 1400,
+        "desc": "-6% урона врага, +85 HP",
+    },
+    "boots_gold3": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_RARE,
+        "name": "Сапоги Снайпера", "emoji": "👟",
+        "crit_bonus": 9, "atk_bonus": 12, "price_gold": 1700,
+        "desc": "+9 крит, +12 урона",
+    },
+    "boots_gold4": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_RARE,
+        "name": "Сапоги Паладина", "emoji": "👟",
+        "atk_bonus": 8, "def_pct": 0.04, "hp_bonus": 50, "price_gold": 2000,
+        "desc": "+8 урона, -4% урона врага, +50 HP",
+    },
+    # За алмазы — мощные или уникальные комбо
+    "boots_dia1": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_EPIC,
+        "name": "Сапоги Демона", "emoji": "👟",
+        "atk_bonus": 28, "crit_bonus": 10, "price_gold": 0, "price_diamonds": 25,
+        "desc": "+28 урона, +10 крит — чистый урон",
+    },
+    "boots_dia2": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_EPIC,
+        "name": "Стальные Сапоги", "emoji": "👟",
+        "def_pct": 0.09, "hp_bonus": 140, "price_gold": 0, "price_diamonds": 35,
+        "desc": "-9% урона врага, +140 HP — монолит защиты",
+    },
+    "boots_dia3": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_EPIC,
+        "name": "Сапоги Арканы", "emoji": "👟",
+        "crit_bonus": 13, "def_pct": 0.05, "price_gold": 0, "price_diamonds": 50,
+        "desc": "+13 крит, -5% урона врага — крит + выживание",
+    },
+    "boots_dia4": {
+        "slot": SLOT_BOOTS, "rarity": RARITY_EPIC,
+        "name": "Сапоги Разрушителя", "emoji": "👟",
+        "atk_bonus": 36, "hp_bonus": 65, "pen_pct": 0.02, "price_gold": 0, "price_diamonds": 70,
+        "desc": "+36 урона, +65 HP, +2% пробой брони",
+    },
+    # Мифические — топ-тир, каждый = уникальный стиль игры
+    "boots_mythic1": {
+        "slot": SLOT_BOOTS, "rarity": "mythic",
+        "name": "Сапоги Дракона", "emoji": "🐲",
+        "atk_bonus": 40, "def_pct": 0.10, "hp_bonus": 150,
+        "price_stars": 590,
+        "desc": "+40 урона, -10% урона врага, +150 HP — универсал",
+    },
+    "boots_mythic2": {
+        "slot": SLOT_BOOTS, "rarity": "mythic",
+        "name": "Поступь Воителя", "emoji": "⚡",
+        "atk_bonus": 33, "crit_bonus": 15, "def_pct": 0.06,
+        "price_stars": 590,
+        "desc": "+33 урона, +15 крит, -6% урона врага — для агрессоров",
+    },
+    "boots_mythic3": {
+        "slot": SLOT_BOOTS, "rarity": "mythic",
+        "name": "Сапоги Смерти", "emoji": "💀",
+        "atk_bonus": 48, "crit_bonus": 13, "pen_pct": 0.03,
+        "price_stars": 590,
+        "desc": "+48 урона, +13 крит, +3% пробой — максимальный дамаг",
+    },
+    "boots_mythic4": {
+        "slot": SLOT_BOOTS, "rarity": "mythic",
+        "name": "Сапоги Богов", "emoji": "🌟",
+        "def_pct": 0.14, "hp_bonus": 260, "crit_bonus": 11,
+        "price_stars": 590,
+        "desc": "-14% урона врага, +260 HP, +11 крит — неубиваемый",
+    },
 }
 
 

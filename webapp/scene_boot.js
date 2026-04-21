@@ -46,6 +46,22 @@ class BootScene extends Phaser.Scene {
     this.load.image('helmet_mythic2', 'helmet_mythic2.png');
     this.load.image('helmet_mythic3', 'helmet_mythic3.png');
     this.load.image('helmet_mythic4', 'helmet_mythic4.png');
+    this.load.image('boots_free1',   'boots_free1.png');
+    this.load.image('boots_free2',   'boots_free2.png');
+    this.load.image('boots_free3',   'boots_free3.png');
+    this.load.image('boots_free4',   'boots_free4.jpeg');
+    this.load.image('boots_gold1',   'boots_gold1.png');
+    this.load.image('boots_gold2',   'boots_gold2.jpg');
+    this.load.image('boots_gold3',   'boots_gold3.jpg');
+    this.load.image('boots_gold4',   'boots_gold4.jpg');
+    this.load.image('boots_dia1',    'boots_dia1.jpg');
+    this.load.image('boots_dia2',    'boots_dia2.jpg');
+    this.load.image('boots_dia3',    'boots_dia3.jpg');
+    this.load.image('boots_dia4',    'boots_dia4.jpg');
+    this.load.image('boots_mythic1', 'boots_mythic1.jpeg');
+    this.load.image('boots_mythic2', 'boots_mythic2.jpeg');
+    this.load.image('boots_mythic3', 'boots_mythic3.jpeg');
+    this.load.image('boots_mythic4', 'boots_mythic4.jpeg');
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('complete', () => {
       try {
