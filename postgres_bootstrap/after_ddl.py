@@ -131,6 +131,16 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS hp_full_notified INTEGER DEFAULT 1",
     # Счётчик «новых» покупок для бейджа 🎒 в магазине
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS inventory_unseen INTEGER DEFAULT 0",
+    # Экипировка оружия (16 видов)
+    """CREATE TABLE IF NOT EXISTS player_equipment (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+        slot TEXT NOT NULL,
+        item_id TEXT NOT NULL,
+        equipped_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, slot)
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_equip_uid ON player_equipment(user_id)",
     # world_boss_rewards.claimed: INTEGER → BOOLEAN (если ещё не BOOLEAN)
     # DEFAULT 0 нельзя кастовать автоматически → дропаем, меняем тип, ставим новый DEFAULT.
     """

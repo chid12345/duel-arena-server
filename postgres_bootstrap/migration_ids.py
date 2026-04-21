@@ -70,4 +70,5 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_17_108_wb_reminders_sent_5min",
     "2026_04_17_109_wb_stage",
     "2026_04_18_110_wb_player_combat_stats",
+    "2026_04_19_001_equipment",
 )
