@@ -236,14 +236,13 @@ function _render(scene, view) {
 
 function refresh() {
   if (!_currentScene || !document.getElementById('wn-root')) return;
-  const view = document.querySelector('#wn-root ._wn-view.active')?._wv || 'all';
+  const view = document.querySelector('#wn-root ._wn-view.active')?.dataset?.wv || 'all';
   _render(_currentScene, view);
 }
 
 function open(scene) {
   _currentScene = scene;
-  scene._weaponBusy = false; // сбрасываем при каждом открытии оверлея
-  // Блокируем Phaser input — иначе зоны таббара реагируют на тапы сквозь оверлей
+  scene._weaponBusy = false;
   try { scene.input.enabled = false; } catch(_) {}
   if (typeof WardrobeHTML!=='undefined') WardrobeHTML._injectCSS();
   close();
@@ -264,6 +263,16 @@ function open(scene) {
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
+  // Если owned_weapons ещё не загружены (null) — тихо подтягиваем с сервера
+  if (State.ownedWeapons == null) {
+    post('/api/player', {}).then(res => {
+      if (!document.getElementById('wn-root')) return; // оверлей закрыт
+      if (res?.owned_weapons) State.ownedWeapons = res.owned_weapons;
+      if (res?.equipment)     State.equipment = res.equipment;
+      if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
+      refresh();
+    }).catch(() => {});
+  }
   wrap.querySelectorAll('._wn-view').forEach(t=>t.onclick=()=>{
     view=t.dataset.wv;
     wrap.querySelectorAll('._wn-view').forEach(x=>x.classList.remove('active'));
