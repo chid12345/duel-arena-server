@@ -105,6 +105,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_def  = float(_eq.get("def_pct", 0.0) or 0.0)
     _eq_hp   = int(_eq.get("hp_bonus", 0) or 0)
     _eq_crit = int(_eq.get("crit_bonus", 0) or 0)
+    _eq_pen  = float(_eq.get("pen_pct", 0.0) or 0.0)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
     if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
@@ -224,6 +225,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "def_pct":    round(_eq_def * 100, 1),
             "hp_bonus":   _eq_hp,
             "crit_bonus": _eq_crit,
+            "pen_pct":    round(_eq_pen * 100, 1),
         },
         **_premium_fields(player),
     }
