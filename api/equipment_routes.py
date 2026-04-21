@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from api.tma_auth import get_user_from_init_data
 from api.tma_infra import _rl_check, _cache_invalidate
 from api.tma_models import InitDataHeader
+from api.tma_player_api import _player_api
 from database import db
 from db_schema.equipment_catalog import get_item
 
@@ -20,6 +21,14 @@ def _eq_response(uid: int) -> dict:
                    "rarity": it["rarity"], "desc": it.get("desc", "")}
             for slot, it in eq_raw.items()
         }
+    except Exception:
+        return {}
+
+
+def _player_response(uid: int) -> dict:
+    try:
+        p = db.get_or_create_player(uid, "")
+        return _player_api(dict(p))
     except Exception:
         return {}
 
@@ -44,6 +53,10 @@ def register_equipment_routes(app: FastAPI) -> None:
         item = get_item(body.item_id)
         if not item:
             return {"ok": False, "reason": "Предмет не найден"}
+
+        # Мифическое оружие (price_stars) — только через отдельный роут оплаты
+        if int(item.get("price_stars", 0)) > 0:
+            return {"ok": False, "reason": "Мифическое оружие покупается за Stars или USDT — используйте кнопки ⭐ или 💳"}
 
         player = db.get_or_create_player(uid, tg_user.get("username") or "")
         gold = int(player.get("gold", 0))
@@ -77,7 +90,7 @@ def register_equipment_routes(app: FastAPI) -> None:
 
         db.equip_item(uid, body.slot, body.item_id)
         _cache_invalidate(uid)
-        return {"ok": True, "equipment": _eq_response(uid)}
+        return {"ok": True, "equipment": _eq_response(uid), "player": _player_response(uid)}
 
     @app.post("/api/equipment/unequip")
     def unequip_item(body: _UnequipBody):
@@ -87,4 +100,4 @@ def register_equipment_routes(app: FastAPI) -> None:
 
         db.unequip_item(uid, body.slot)
         _cache_invalidate(uid)
-        return {"ok": True, "equipment": _eq_response(uid)}
+        return {"ok": True, "equipment": _eq_response(uid), "player": _player_response(uid)}

@@ -121,7 +121,44 @@ async function _doAction(scene, action, item) {
   if (scene._weaponBusy) return;
   scene._weaponBusy = true;
   try {
-    if (action==='buy_usdt'||action==='buy_stars') { _notify('⏳ Скоро доступно'); scene._weaponBusy=false; return; }
+    // ── Stars (мифическое оружие) ──────────────────────────────
+    if (action === 'buy_stars') {
+      const invRes = await post('/api/equipment/weapon_stars_invoice', {item_id: item.id});
+      if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._weaponBusy=false; return; }
+      if (typeof tg?.openInvoice !== 'function') {
+        _notify('❌ Откройте через Telegram', false); scene._weaponBusy=false; return;
+      }
+      tg.openInvoice(invRes.invoice_url, async (status) => {
+        if (status === 'paid') {
+          _notify('⏳ Активируем...');
+          try {
+            const conf = await post('/api/equipment/weapon_stars_confirm', {item_id: item.id});
+            if (conf?.ok) {
+              if (conf.player)    { State.player=conf.player; State.playerLoadedAt=Date.now(); }
+              if (conf.equipment) State.equipment=conf.equipment;
+              tg?.HapticFeedback?.notificationOccurred('success');
+              _notify('✅ Мифическое оружие получено!');
+              _render(scene, document.querySelector('#wn-root ._wn-view')?._wv||'all');
+            } else { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
+          } catch(_) { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
+        } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
+        scene._weaponBusy = false;
+      });
+      return; // busy сбросится в callback
+    }
+    // ── USDT (мифическое оружие) ───────────────────────────────
+    if (action === 'buy_usdt') {
+      const invRes = await post('/api/equipment/weapon_crypto_invoice', {item_id: item.id});
+      if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._weaponBusy=false; return; }
+      const _url = invRes.invoice_url || '';
+      if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
+      else if (_url.includes('startapp=')) tg?.openLink?.(_url);
+      else tg?.openTelegramLink?.(_url);
+      _notify('💳 Счёт открыт — оплатите и вернитесь');
+      scene._weaponBusy = false;
+      return;
+    }
+    // ── Стандартное надевание/снятие (free/gold/diamonds) ──────
     const res = await post(
       action==='unequip' ? '/api/equipment/unequip' : '/api/equipment/equip',
       action==='unequip' ? {slot:'weapon'} : {item_id:item.id,slot:'weapon'}
