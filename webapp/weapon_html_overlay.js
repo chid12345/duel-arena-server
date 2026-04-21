@@ -171,7 +171,7 @@ async function _doAction(scene, action, item) {
       tg?.HapticFeedback?.notificationOccurred('success');
       _notify(action==='unequip'?'✅ Оружие снято':'✅ Оружие надето');
       _render(scene, document.querySelector('#wn-root ._wn-view')?._wv||'all');
-    } else { _notify('❌ '+(res?.reason||'Ошибка'),false); }
+    } else { _notify('❌ '+(res?.reason||res?.detail||'Ошибка'),false); }
   } catch(_) { _notify('❌ Ошибка сети',false); }
   scene._weaponBusy=false;
 }
