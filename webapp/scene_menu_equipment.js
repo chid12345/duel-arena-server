@@ -10,7 +10,7 @@ const _EQ_RIGHT = [{ slot: 'shield' }, { slot: 'armor' }, { slot: 'ring1' }];
 // Inset glow color per slot type — matches icon palette
 const _EQ_SLOT_GLOW = {
   weapon: { c: 0xf59e0b, a: 0.09 },
-  belt:   { c: 0xd97706, a: 0.07 },
+  belt:   { c: 0x6b7280, a: 0.09 },
   boots:  { c: 0x92400e, a: 0.06 },
   shield: { c: 0x3b82f6, a: 0.10 },
   armor:  { c: 0x9ca3af, a: 0.07 },
@@ -154,24 +154,24 @@ Object.assign(MenuScene.prototype, {
       }
 
       case 'belt': {
-        // Strap
-        g.fillStyle(0x7c2d12, 1);
-        g.fillRoundedRect(cx - 14*s, cy - 4*s, 28*s, 9*s, 3*s);
-        // Top highlight
-        g.fillStyle(0xffffff, 0.1);
-        g.fillRoundedRect(cx - 14*s, cy - 4*s, 28*s, 3*s, 2*s);
-        // Gold buckle
+        // Dome top
+        g.fillStyle(0x6b7280, 1);
+        g.fillEllipse(cx, cy - 5*s, 26*s, 18*s);
+        // Gold rim band
         g.fillStyle(0xf59e0b, 1);
-        g.fillRoundedRect(cx - 5*s, cy - 6*s, 10*s, 13*s, 2.5*s);
-        // Buckle inner
-        g.fillStyle(0x92400e, 1);
-        g.fillRoundedRect(cx - 3.5*s, cy - 4.5*s, 7*s, 10*s, 1.5*s);
-        // Pin bar
-        g.fillStyle(0xf59e0b, 1);
-        g.fillRoundedRect(cx - 3.5*s, cy - 0.5*s, 7*s, 2*s, 1*s);
-        // Buckle shine
-        g.lineStyle(0.8, 0xffffff, 0.4);
-        g.lineBetween(cx - 4*s, cy - 5.5*s, cx + 4*s, cy - 5.5*s);
+        g.fillRoundedRect(cx - 13*s, cy + 2*s, 26*s, 5*s, 1.5*s);
+        // Dome highlight
+        g.fillStyle(0xffffff, 0.12);
+        g.fillEllipse(cx - 3*s, cy - 9*s, 10*s, 7*s);
+        // Visor slit
+        g.fillStyle(0x111827, 1);
+        g.fillRoundedRect(cx - 8*s, cy - 3*s, 16*s, 3.5*s, 1*s);
+        // Nose guard
+        g.fillStyle(0x9ca3af, 1);
+        g.fillRoundedRect(cx - 1.5*s, cy - 3*s, 3*s, 9*s, 1*s);
+        // Rim shine
+        g.lineStyle(0.8*s, 0xfde68a, 0.5);
+        g.lineBetween(cx - 12*s, cy + 2.5*s, cx + 12*s, cy + 2.5*s);
         break;
       }
 
