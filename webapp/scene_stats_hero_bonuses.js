@@ -109,8 +109,18 @@ Object.assign(StatsScene.prototype, {
     const buffs = this._invData?.active_buffs || [];
     const charge = buffs.filter(b => b.charges != null);
     const timed  = buffs.filter(b => b.expires_at != null);
+    const _eq = State.player?.eq_stats || {};
+    const eqRows = [
+      _eq.atk_bonus  > 0 && { i:'⚔️', n:'Урон',     v:`+${_eq.atk_bonus}`,     neg:false },
+      _eq.hp_bonus   > 0 && { i:'❤️', n:'HP',        v:`+${_eq.hp_bonus}`,      neg:false },
+      _eq.def_pct    > 0 && { i:'🛡',  n:'Броня',    v:`+${_eq.def_pct}%`,      neg:false },
+      _eq.crit_bonus > 0 && { i:'💥', n:'Крит-стат', v:`+${_eq.crit_bonus}`,    neg:false },
+    ].filter(Boolean);
     const secs = [
       { title:'⚔️ Класс воина', rows: wt.rows },
+      eqRows.length
+        ? { title:'🪖 Экипировка', rows: eqRows }
+        : { title:'🪖 Экипировка', empty:'нет бонусов · наденьте снаряжение' },
       charge.length
         ? { title:'📜 Свитки', rows: charge.map(b => ({
             i:'📜', n:BUFF_LBL[b.buff_type] || b.buff_type,

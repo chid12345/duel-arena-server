@@ -48,7 +48,7 @@ def _premium_fields(player: dict) -> dict:
         return {"is_premium": False, "premium_until": None, "premium_days_left": 0}
 
 
-def _player_api(player: dict, combined_buffs: dict = None) -> dict:
+def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None) -> dict:
     """Сериализовать игрока для API."""
     lv = int(player.get("level", 1))
     mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
@@ -98,6 +98,21 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
     elif _wt == "crit":
         crit_p   = min(50, crit_p + 5)  # +5% (было +8%)
         _eff_mhp = max(1, int(_eff_mhp * 0.90))
+
+    # Бонусы экипировки (поверх воин-типа, синхрон с battle_system/mixins/start.py)
+    _eq = eq_stats or {}
+    _eq_atk  = int(_eq.get("atk_bonus", 0) or 0)
+    _eq_def  = float(_eq.get("def_pct", 0.0) or 0.0)
+    _eq_hp   = int(_eq.get("hp_bonus", 0) or 0)
+    _eq_crit = int(_eq.get("crit_bonus", 0) or 0)
+    if _eq_atk:  dmg       = dmg + _eq_atk
+    if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
+    if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
+    if _eq_crit:
+        _intu_eq = _intu + _eq_crit
+        _int_inv_eq = max(0, _intu_eq - PLAYER_START_CRIT)
+        crit_p_eq = int(min(CRIT_MAX_CHANCE, _intu_eq / (_intu_eq + avg_intu) * CRIT_MAX_CHANCE + (_int_inv_eq // INT_BONUS_STEP) * INT_BONUS_PCT_PER_STEP) * 100)
+        crit_p = min(50, crit_p + max(0, crit_p_eq - crit_p))
 
     need_xp = exp_needed_for_next_level(lv)
 
@@ -204,5 +219,11 @@ def _player_api(player: dict, combined_buffs: dict = None) -> dict:
         ),
         "warrior_type": (player.get("warrior_type") or "default"),
         "inventory_unseen": int(player.get("inventory_unseen", 0) or 0),
+        "eq_stats": {
+            "atk_bonus":  _eq_atk,
+            "def_pct":    round(_eq_def * 100, 1),
+            "hp_bonus":   _eq_hp,
+            "crit_bonus": _eq_crit,
+        },
         **_premium_fields(player),
     }

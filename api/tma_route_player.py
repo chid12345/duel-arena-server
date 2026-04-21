@@ -75,7 +75,11 @@ def register_tma_player_route(
                     conn.close()
             except Exception:
                 owned_weapons = []
-            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "equipment": equipment,
+            try:
+                eq_stats_cached = db.get_equipment_stats(uid)
+            except Exception:
+                eq_stats_cached = {}
+            return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
                     "owned_weapons": owned_weapons, "cached": True, "_sv": VERSION}
 
         player = db.get_or_create_player(uid, username)
@@ -149,9 +153,13 @@ def register_tma_player_route(
                 conn.close()
         except Exception:
             owned_weapons = []
+        try:
+            eq_stats_fresh = db.get_equipment_stats(uid)
+        except Exception:
+            eq_stats_fresh = {}
         return {
             "ok": True,
-            "player": _player_api(player, combined_buffs=cb),
+            "player": _player_api(player, combined_buffs=cb, eq_stats=eq_stats_fresh),
             "equipment": equipment,
             "owned_weapons": owned_weapons,
             "_sv": VERSION,
