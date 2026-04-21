@@ -6,7 +6,7 @@ const _EQ_SLOT_LABEL = {
   weapon: { icon: '🗡️', name: 'Оружие' },
   shield: { icon: '🛡️', name: 'Щит' },
   armor:  { icon: '🥋', name: 'Броня' },
-  belt:   { icon: '🪢', name: 'Пояс' },
+  belt:   { icon: '🪖', name: 'Шлем' },
   boots:  { icon: '👟', name: 'Ботинки' },
   ring1:  { icon: '💍', name: 'Кольцо 1' },
   ring2:  { icon: '💍', name: 'Кольцо 2' },
