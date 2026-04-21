@@ -43,7 +43,9 @@ def register_equipment_routes(app: FastAPI) -> None:
             if not item:
                 return {"ok": False, "reason": "Предмет не найден"}
             if int(item.get("price_stars", 0)) > 0:
-                return {"ok": False, "reason": "Мифическое оружие покупается за Stars или USDT — используйте кнопки ⭐ или 💳"}
+                # Разрешаем надеть если уже куплено
+                if body.item_id not in db.get_owned_weapons(uid):
+                    return {"ok": False, "reason": "Мифическое оружие покупается за Stars или USDT — используйте кнопки ⭐ или 💳"}
 
             gold_cost = int(item.get("price_gold", 0))
             diamond_cost = int(item.get("price_diamonds", 0))
