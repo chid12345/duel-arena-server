@@ -325,19 +325,19 @@ function _startWeaponCryptoPolling(scene, invoiceId, itemId) {
     try {
       const r = await get(`/api/shop/crypto_check/${invoiceId}`);
       if (r.ok && r.paid) {
-        try {
-          const conf = await post('/api/equipment/equip', { item_id: itemId, slot: 'weapon' });
-          if (conf?.ok) {
-            if (conf.player)        { State.player = conf.player; State.playerLoadedAt = Date.now(); }
-            if (conf.equipment)     State.equipment = conf.equipment;
-            if (conf.owned_weapons) State.ownedWeapons = conf.owned_weapons;
-          } else {
+        if (r.weapon_equipped) {
+          if (r.player)        { State.player = r.player; State.playerLoadedAt = Date.now(); }
+          if (r.equipment)     State.equipment = r.equipment;
+          if (r.owned_weapons) State.ownedWeapons = r.owned_weapons;
+        } else {
+          // Вебхук уже экипировал — перечитываем стейт
+          try {
             const pd = await post('/api/player');
             if (pd?.ok && pd.player) { State.player = pd.player; State.playerLoadedAt = Date.now(); }
             if (pd?.equipment)     State.equipment = pd.equipment;
             if (pd?.owned_weapons) State.ownedWeapons = pd.owned_weapons;
-          }
-        } catch(_) {}
+          } catch(_) {}
+        }
         tg?.HapticFeedback?.notificationOccurred('success');
         _notify('✅ Мифическое оружие получено!');
         const activeTab = document.querySelector('#wn-root ._wn-view.active');
