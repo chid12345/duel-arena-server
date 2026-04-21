@@ -203,7 +203,14 @@ class BattleDamageMixin:
                 int(attacker.get("current_hp", 1)) + _heal,
             )
 
+        # Пробой брони: pen_pct атакующего снижает eq_def_pct защитника на время этого удара
+        pen = float(attacker.get("_eq_pen_pct", 0) or 0)
+        _orig_def = float(defender.get("_eq_def_pct", 0) or 0)
+        if pen:
+            defender["_eq_def_pct"] = max(0.0, _orig_def - pen)
         damage = self._apply_incoming_damage(damage, defender)
+        if pen:
+            defender["_eq_def_pct"] = _orig_def  # восстановить
         if is_break:
             damage = max(1, damage + int(damage * STRENGTH_ARMOR_BREAK_IGNORE_PCT))
 

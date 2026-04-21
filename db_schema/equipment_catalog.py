@@ -1,6 +1,8 @@
 """Каталог предметов экипировки. Слоты: weapon/shield/armor/belt/boots/ring1/ring2."""
 from __future__ import annotations
 
+from db_schema.weapon_catalog import WEAPON_CATALOG
+
 # Редкости
 RARITY_COMMON  = "common"
 RARITY_RARE    = "rare"
@@ -163,6 +165,10 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
 }
 
 
+# Merge weapon catalog (16 items: 4 types × 4 tiers)
+EQUIPMENT_CATALOG.update(WEAPON_CATALOG)
+
+
 def get_item(item_id: str) -> dict | None:
     return EQUIPMENT_CATALOG.get(item_id)
 
@@ -179,8 +185,9 @@ def get_item_stats(item_id: str) -> dict:
     """Возвращает только боевые бонусы предмета."""
     item = EQUIPMENT_CATALOG.get(item_id, {})
     return {
-        "atk_bonus": item.get("atk_bonus", 0),
-        "def_pct":   item.get("def_pct", 0.0),
-        "hp_bonus":  item.get("hp_bonus", 0),
+        "atk_bonus":  item.get("atk_bonus", 0),
+        "def_pct":    item.get("def_pct", 0.0),
+        "hp_bonus":   item.get("hp_bonus", 0),
         "crit_bonus": item.get("crit_bonus", 0),
+        "pen_pct":    item.get("pen_pct", 0.0),
     }
