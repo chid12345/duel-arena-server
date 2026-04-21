@@ -61,6 +61,14 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _s = s + int(_cb.get("strength", 0))
     _agi = agi + int(_cb.get("endurance", 0))  # endurance buff → ловкость/уворот в бою
     _intu = intu + int(_cb.get("crit", 0))
+    # Стат-бонусы экипировки (щит) применяем до расчёта dmg/dodge/crit
+    _eq_early = eq_stats or {}
+    _eq_str  = int(_eq_early.get("str_bonus", 0) or 0)
+    _eq_agi  = int(_eq_early.get("agi_bonus", 0) or 0)
+    _eq_intu = int(_eq_early.get("intu_bonus", 0) or 0)
+    _s    += _eq_str
+    _agi  += _eq_agi
+    _intu += _eq_intu
     vyn = stamina_stats_invested(mhp, lv)
     _vyn = vyn + int(_cb.get("stamina", 0))  # stamina buff → симулирует вложения → +броня
     tf = total_free_stats_at_level(lv)
@@ -108,9 +116,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_regen    = int(_eq.get("regen_bonus", 0) or 0)
     _eq_lifesteal = int(_eq.get("lifesteal_pct", 0) or 0)
     _eq_crit_resist = int(_eq.get("crit_resist_pct", 0) or 0)
-    _eq_str  = int(_eq.get("str_bonus", 0) or 0)
-    _eq_agi  = int(_eq.get("agi_bonus", 0) or 0)
-    _eq_intu = int(_eq.get("intu_bonus", 0) or 0)
+    # _eq_str/agi/intu уже определены выше (ранняя фаза)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
     if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
@@ -204,10 +210,10 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "stamina": base_stamina,
         },
         "stats_bonus_total": {
-            "strength": bonus_strength,
-            "agility": bonus_agility,
-            "intuition": bonus_intuition,
-            "stamina": bonus_stamina,
+            "strength":  bonus_strength + _eq_str,
+            "agility":   bonus_agility  + _eq_agi,
+            "intuition": bonus_intuition + _eq_intu,
+            "stamina":   bonus_stamina,
         },
         "regen_per_min": round(
             mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS) * 60,
