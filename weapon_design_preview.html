@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Duel Arena — 20 Мечей (Дизайн)</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#080a14; color:#e0e0e0; font-family:'Segoe UI',sans-serif; padding:20px 16px; }
+
+h1 { text-align:center; font-size:24px; color:#fff; margin-bottom:4px; }
+.subtitle { text-align:center; color:#555; font-size:12px; margin-bottom:24px; }
+
+/* TIER SECTIONS */
+.tier { margin-bottom:32px; }
+.tier-header { display:flex; align-items:center; gap:10px; margin-bottom:14px; padding-bottom:8px; border-bottom:2px solid; }
+.tier-free   .tier-header { border-color:#4a5568; }
+.tier-gold   .tier-header { border-color:#d97706; }
+.tier-diamond .tier-header { border-color:#06b6d4; }
+.tier-mythic .tier-header { border-color:#f97316; }
+.tier-usdt   .tier-header { border-color:#10b981; }
+
+.badge { padding:3px 12px; border-radius:20px; font-size:11px; font-weight:800; letter-spacing:1px; text-transform:uppercase; }
+.tier-free   .badge { background:#1e2433; color:#7b8fa8; }
+.tier-gold   .badge { background:#3d2200; color:#fbbf24; }
+.tier-diamond .badge { background:#00202e; color:#22d3ee; }
+.tier-mythic .badge { background:#2d1200; color:#fb923c; }
+.tier-usdt   .badge { background:#002820; color:#34d399; }
+
+.tier-name { font-size:17px; font-weight:700; color:#fff; }
+.tier-note { margin-left:auto; font-size:11px; color:#444; }
+
+/* GRID */
+.grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+@media(max-width:700px) { .grid { grid-template-columns:repeat(2,1fr); } }
+
+/* CARD */
+.card {
+  position:relative; border-radius:16px; overflow:hidden; cursor:pointer;
+  background:rgba(10,6,24,.97); border:1.5px solid transparent;
+  transition:transform .2s, box-shadow .2s;
+  box-shadow: 0 4px 16px rgba(0,0,0,.5);
+}
+.card:hover { transform:translateY(-4px); }
+
+/* Animated border by rarity */
+.card::before {
+  content:''; position:absolute; width:180%; aspect-ratio:1;
+  top:50%; left:50%; translate:-50% -50%;
+  animation:spin 4s linear infinite; z-index:0; pointer-events:none;
+}
+.card::after {
+  content:''; position:absolute; inset:2px;
+  border-radius:14px; z-index:1; pointer-events:none;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* common — silver */
+.r-common::before { background:conic-gradient(transparent 340deg,rgba(140,148,165,.3) 348deg,rgba(210,215,230,1) 356deg,rgba(240,242,248,.9) 359deg,transparent 360deg); }
+.r-common::after  { background:rgba(10,8,22,.97); }
+/* rare — gold */
+.r-rare::before   { background:conic-gradient(transparent 340deg,rgba(180,130,0,.35) 348deg,rgba(251,191,36,1) 356deg,rgba(255,235,130,.9) 359deg,transparent 360deg); animation-duration:3.5s; }
+.r-rare::after    { background:rgba(10,8,4,.97); }
+/* epic — purple */
+.r-epic::before   { background:conic-gradient(transparent 340deg,rgba(130,60,255,.35) 348deg,rgba(192,132,252,1) 356deg,rgba(240,200,255,.9) 359deg,transparent 360deg); animation-duration:3s; }
+.r-epic::after    { background:rgba(14,6,34,.97); }
+/* mythic — orange */
+.r-mythic::before { background:conic-gradient(transparent 340deg,rgba(200,80,0,.4) 348deg,rgba(249,115,22,1) 356deg,rgba(255,180,100,.9) 359deg,transparent 360deg); animation-duration:2.5s; }
+.r-mythic::after  { background:rgba(22,6,0,.98); }
+/* legendary — teal */
+.r-legendary::before { background:conic-gradient(transparent 330deg,rgba(0,160,100,.4) 342deg,rgba(16,185,129,1) 354deg,rgba(100,255,200,.9) 359deg,transparent 360deg); animation-duration:2s; }
+.r-legendary::after  { background:rgba(0,18,14,.98); }
+
+.card-inner { position:relative; z-index:2; padding:12px; }
+
+/* IMAGE AREA */
+.img-area {
+  width:100%; height:120px; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden; margin-bottom:10px; border-radius:10px;
+  background:transparent;
+}
+/* glow теперь через .weapon-glow div — без ::before */
+
+.img-wrap {
+  display:flex; align-items:center; justify-content:center;
+  width:80%; height:80%; position:relative; z-index:2;
+  animation:breathe 4s ease-in-out infinite;
+}
+@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
+.img-wrap img {
+  width:100%; height:100%; object-fit:contain;
+  filter: drop-shadow(0 0 15px rgba(255,140,0,.55));
+}
+
+/* Универсальное свечение под оружием — парящий эффект */
+.weapon-glow {
+  position:absolute; bottom:8%; left:50%; translate:-50% 0;
+  width:65%; height:45%; border-radius:50%;
+  filter:blur(18px); pointer-events:none; z-index:1;
+}
+.r-common   .weapon-glow { background:radial-gradient(ellipse,rgba(180,190,210,.22),transparent 70%); }
+.r-rare     .weapon-glow { background:radial-gradient(ellipse,rgba(251,191,36,.32),transparent 70%); }
+.r-epic     .weapon-glow { background:radial-gradient(ellipse,rgba(168,85,247,.38),transparent 70%); }
+.r-mythic   .weapon-glow { background:radial-gradient(ellipse,rgba(249,115,22,.42),transparent 70%); }
+.r-legendary .weapon-glow { background:radial-gradient(ellipse,rgba(16,185,129,.42),transparent 70%); }
+.img-fade { position:absolute; bottom:0; left:0; right:0; height:35%; z-index:3; pointer-events:none; }
+.r-common   .img-fade { background:linear-gradient(transparent,rgba(10,8,22,.97)); }
+.r-rare     .img-fade { background:linear-gradient(transparent,rgba(10,8,4,.97)); }
+.r-epic     .img-fade { background:linear-gradient(transparent,rgba(14,6,34,.97)); }
+.r-mythic   .img-fade { background:linear-gradient(transparent,rgba(22,6,0,.98)); }
+.r-legendary .img-fade { background:linear-gradient(transparent,rgba(0,18,14,.98)); }
+
+/* CARD BODY */
+.wtype { font-size:9px; color:#ffffff; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.wname { font-size:13px; font-weight:700; color:#fff; line-height:1.2; margin-bottom:6px; }
+
+.pills { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+.pill { font-size:9px; font-weight:700; padding:2px 7px; border-radius:8px; }
+.pill-atk  { background:rgba(239,68,68,.15); color:#f87171; border:1px solid rgba(239,68,68,.25); }
+.pill-crit { background:rgba(250,204,21,.12); color:#fbbf24; border:1px solid rgba(250,204,21,.2); }
+.pill-hp   { background:rgba(34,197,94,.12); color:#4ade80; border:1px solid rgba(34,197,94,.2); }
+.pill-pen  { background:rgba(249,115,22,.15); color:#fb923c; border:1px solid rgba(249,115,22,.25); }
+
+.card-price { font-size:11px; font-weight:700; padding-top:8px; border-top:1px solid rgba(255,255,255,.06); }
+.tier-free   .card-price { color:#7b8fa8; }
+.tier-gold   .card-price { color:#fbbf24; }
+.tier-diamond .card-price { color:#22d3ee; }
+.tier-mythic .card-price { color:#fb923c; }
+.tier-usdt   .card-price { color:#34d399; }
+
+.tap-hint { position:absolute; top:8px; right:8px; font-size:9px; color:#333; z-index:5; }
+
+/* ===== MODAL ===== */
+.modal-bg {
+  display:none; position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,.85); backdrop-filter:blur(8px);
+  align-items:flex-end; justify-content:center;
+}
+.modal-bg.open { display:flex; }
+.modal {
+  width:100%; max-width:430px; border-radius:24px 24px 0 0;
+  background:rgba(8,4,20,.98); border-top:1px solid rgba(255,255,255,.08);
+  padding:0 0 40px; animation:slideUp .32s cubic-bezier(.22,.68,0,1.2);
+  position:relative; overflow:hidden;
+}
+@keyframes slideUp { from{transform:translateY(80px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+/* верхнее ambient свечение по редкости */
+.modal::before {
+  content:''; position:absolute; top:-60px; left:50%; translate:-50% 0;
+  width:280px; height:200px; border-radius:50%;
+  background:radial-gradient(circle, var(--mg,rgba(120,70,220,.22)), transparent 65%);
+  filter:blur(30px); pointer-events:none; z-index:0;
+}
+
+.modal-close {
+  position:absolute; top:16px; right:16px; z-index:10;
+  width:32px; height:32px; border-radius:9px;
+  background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1);
+  color:#999; font-size:15px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  transition:background .15s, color .15s;
+}
+.modal-close:hover { background:rgba(220,50,80,.25); color:#fca5a5; }
+
+/* ── ЗОНА ИЗОБРАЖЕНИЯ ── */
+.modal-img-area {
+  width:100%; height:200px; display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+
+/* Spotlight — акцентный свет из центра */
+.modal-spotlight {
+  position:absolute; top:50%; left:50%; translate:-50% -50%;
+  width:260px; height:260px; border-radius:50%; pointer-events:none; z-index:1;
+  background:radial-gradient(circle, var(--mg,rgba(120,70,220,.28)) 0%, transparent 65%);
+  filter:blur(8px);
+}
+
+/* Нижнее свечение-отражение */
+.modal-img-area::after {
+  content:''; position:absolute; bottom:-10px; left:50%; translate:-50% 0;
+  width:55%; height:40px; border-radius:50%;
+  background:radial-gradient(ellipse, var(--mg,rgba(120,70,220,.35)), transparent 70%);
+  filter:blur(12px); pointer-events:none; z-index:1;
+}
+
+/* Float анимация — меч парит */
+@keyframes float {
+  0%,100% { transform:translateY(0px) scale(1); }
+  50%      { transform:translateY(-8px) scale(1.02); }
+}
+.modal-img {
+  max-height:155px; max-width:55%; object-fit:contain;
+  position:relative; z-index:2;
+  mix-blend-mode:screen;
+  animation:float 3.5s ease-in-out infinite;
+  filter:
+    drop-shadow(0 0 18px var(--mg,rgba(120,70,220,.6)))
+    drop-shadow(0 4px 8px rgba(0,0,0,.5));
+}
+
+/* ── КОНТЕНТ ── */
+.modal-content { padding:20px 20px 0; position:relative; z-index:2; }
+
+.modal-rarity-bar {
+  width:100%; height:2px; border-radius:1px; margin-bottom:16px;
+  background:linear-gradient(90deg, var(--bc1,#5b21b6), var(--bc2,#7c3aed), transparent);
+  opacity:.8;
+}
+.modal-name { font-size:22px; font-weight:800; color:#fff; margin-bottom:3px; letter-spacing:.3px; }
+.modal-sub  { font-size:11px; color:#444; margin-bottom:18px; text-transform:uppercase; letter-spacing:1px; }
+
+/* Glassmorphism стат-боксы */
+.modal-stats { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:14px; }
+.stat-box {
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:14px; padding:12px 14px;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  position:relative; overflow:hidden;
+}
+/* блик сверху у стат-боксов */
+.stat-box::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.15), transparent);
+}
+.stat-box .sv { font-size:22px; font-weight:800; line-height:1; }
+.stat-box .sl { font-size:10px; color:#555; margin-top:4px; }
+.stat-atk .sv  { color:#f87171; }
+.stat-crit .sv { color:#fbbf24; }
+.stat-hp .sv   { color:#4ade80; }
+.stat-pen .sv  { color:#fb923c; }
+
+.modal-desc {
+  font-size:12px; color:#5a6070; line-height:1.7; margin-bottom:20px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px; padding:11px 14px;
+  backdrop-filter:blur(4px);
+}
+
+/* Кнопка с бликом */
+.modal-btn {
+  width:100%; padding:15px; border-radius:16px; border:none; cursor:pointer;
+  font-size:15px; font-weight:800; color:#fff; letter-spacing:.5px;
+  background:linear-gradient(160deg, var(--bc1,#5b21b6) 0%, var(--bc2,#7c3aed) 100%);
+  box-shadow:
+    0 6px 24px var(--bs,rgba(124,58,237,.45)),
+    0 1px 0 rgba(255,255,255,.12) inset;
+  position:relative; overflow:hidden;
+  transition:transform .12s, box-shadow .12s;
+}
+/* блик на кнопке */
+.modal-btn::before {
+  content:''; position:absolute; top:0; left:-100%; width:60%; height:100%;
+  background:linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+  transform:skewX(-20deg);
+  transition:left .4s ease;
+}
+.modal-btn:hover { transform:translateY(-1px); box-shadow:0 8px 28px var(--bs,rgba(124,58,237,.55)), 0 1px 0 rgba(255,255,255,.12) inset; }
+.modal-btn:hover::before { left:140%; }
+.modal-btn:active { transform:translateY(1px); }
+
+/* Кнопки выбора оплаты */
+.pay-choice { display:flex; gap:10px; width:100%; }
+.pay-choice .modal-btn { flex:1; font-size:13px; padding:14px 8px; }
+.pay-btn-usdt {
+  background:linear-gradient(160deg,#065f46,#10b981) !important;
+  box-shadow:0 6px 20px rgba(16,185,129,.4), 0 1px 0 rgba(255,255,255,.12) inset !important;
+}
+.pay-btn-stars {
+  background:linear-gradient(160deg,#92400e,#f59e0b) !important;
+  box-shadow:0 6px 20px rgba(245,158,11,.4), 0 1px 0 rgba(255,255,255,.12) inset !important;
+}
+
+/* SUMMARY TABLE */
+.summary { background:#0d0f1a; border:1px solid #1a1d2e; border-radius:14px; padding:18px; margin-top:28px; overflow-x:auto; }
+.summary h3 { color:#fff; font-size:15px; margin-bottom:14px; }
+table { width:100%; border-collapse:collapse; font-size:11px; }
+th { color:#444; padding:6px 10px; text-align:left; border-bottom:1px solid #1a1d2e; }
+td { padding:6px 10px; border-bottom:1px solid #0d0f1a; }
+tr:hover td { background:#111320; }
+.tc-free { color:#7b8fa8; } .tc-gold { color:#fbbf24; }
+.tc-diamond { color:#22d3ee; } .tc-mythic { color:#fb923c; } .tc-usdt { color:#34d399; }
+.ta { color:#f87171; font-weight:700; } .tc { color:#fbbf24; font-weight:700; }
+.th { color:#4ade80; font-weight:700; } .tp { color:#fb923c; font-weight:700; }
+</style>
+</head>
+<body>
+
+<h1>⚔️ Duel Arena — Оружие</h1>
+<p class="subtitle">Дизайн · 4 типа × 5 тиров = 20 мечей · Нажми на карточку для просмотра</p>
+
+<!-- ═══ FREE ═══ -->
+<div class="tier tier-free">
+  <div class="tier-header">
+    <span class="badge">Бесплатно</span>
+    <span class="tier-name">Стартовое оружие</span>
+    <span class="tier-note">🆓 Выдаётся бесплатно</span>
+  </div>
+  <div class="grid">
+    <div class="card r-common" onclick="openModal(this)" data-id="sword_free">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч/бесплатный.png" onerror="this.src='';this.parentNode.innerHTML='⚔️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">⚔️ Меч</div>
+        <div class="wname">Деревянный меч</div>
+        <div class="pills"><span class="pill pill-atk">+5 атк</span><span class="pill pill-crit">+1 крит</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">🆓 Бесплатно</div>
+    </div>
+    <div class="card r-common" onclick="openModal(this)" data-id="axe_free">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/топор/бесплатный.png" onerror="this.src='';this.parentNode.innerHTML='🪓'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🪓 Топор</div>
+        <div class="wname">Каменный топор</div>
+        <div class="pills"><span class="pill pill-atk">+8 атк</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">🆓 Бесплатно</div>
+    </div>
+    <div class="card r-common" onclick="openModal(this)" data-id="club_free">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/дубина/бесплатная.png" onerror="this.src='';this.parentNode.innerHTML='🏏'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🏏 Дубина</div>
+        <div class="wname">Дубовая дубина</div>
+        <div class="pills"><span class="pill pill-atk">+4 атк</span><span class="pill pill-hp">+25 HP</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">🆓 Бесплатно</div>
+    </div>
+    <div class="card r-common" onclick="openModal(this)" data-id="gs_free">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч для крит/бесплатный.png" onerror="this.src='';this.parentNode.innerHTML='🗡️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🗡️ Большой меч</div>
+        <div class="wname">Охотничий нож</div>
+        <div class="pills"><span class="pill pill-atk">+3 атк</span><span class="pill pill-crit">+6 крит</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">🆓 Бесплатно</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GOLD ═══ -->
+<div class="tier tier-gold">
+  <div class="tier-header">
+    <span class="badge">Золото</span>
+    <span class="tier-name">Оружие кузнеца</span>
+    <span class="tier-note">💰 Фармится в игре</span>
+  </div>
+  <div class="grid">
+    <div class="card r-rare" onclick="openModal(this)" data-id="sword_gold">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч/золото.png" onerror="this.src='';this.parentNode.innerHTML='⚔️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">⚔️ Меч</div>
+        <div class="wname">Стальной меч</div>
+        <div class="pills"><span class="pill pill-atk">+16 атк</span><span class="pill pill-crit">+3 крит</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💰 800 золота</div>
+    </div>
+    <div class="card r-rare" onclick="openModal(this)" data-id="axe_gold">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/топор/золото.png" onerror="this.src='';this.parentNode.innerHTML='🪓'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🪓 Топор</div>
+        <div class="wname">Боевой топор</div>
+        <div class="pills"><span class="pill pill-atk">+22 атк</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💰 950 золота</div>
+    </div>
+    <div class="card r-rare" onclick="openModal(this)" data-id="club_gold">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/дубина/золото.png" onerror="this.src='';this.parentNode.innerHTML='🏏'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🏏 Дубина</div>
+        <div class="wname">Окованная дубина</div>
+        <div class="pills"><span class="pill pill-atk">+12 атк</span><span class="pill pill-hp">+60 HP</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💰 800 золота</div>
+    </div>
+    <div class="card r-rare" onclick="openModal(this)" data-id="gs_gold">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч для крит/золото.png" onerror="this.src='';this.parentNode.innerHTML='🗡️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🗡️ Большой меч</div>
+        <div class="wname">Кинжал тени</div>
+        <div class="pills"><span class="pill pill-atk">+9 атк</span><span class="pill pill-crit">+14 крит</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💰 850 золота</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DIAMOND ═══ -->
+<div class="tier tier-diamond">
+  <div class="tier-header">
+    <span class="badge">Алмазы</span>
+    <span class="tier-name">Оружие мастера</span>
+    <span class="tier-note">💎 + Пробитие брони +1%</span>
+  </div>
+  <div class="grid">
+    <div class="card r-epic" onclick="openModal(this)" data-id="sword_diamond">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч/алмазы.png" onerror="this.src='';this.parentNode.innerHTML='⚔️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">⚔️ Меч</div>
+        <div class="wname">Серебряный клинок</div>
+        <div class="pills"><span class="pill pill-atk">+30 атк</span><span class="pill pill-crit">+7 крит</span><span class="pill pill-pen">+1% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💎 20 алмазов</div>
+    </div>
+    <div class="card r-epic" onclick="openModal(this)" data-id="axe_diamond">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/топор/алмазы.png" onerror="this.src='';this.parentNode.innerHTML='🪓'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🪓 Топор</div>
+        <div class="wname">Топор берсерка</div>
+        <div class="pills"><span class="pill pill-atk">+42 атк</span><span class="pill pill-pen">+1% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💎 25 алмазов</div>
+    </div>
+    <div class="card r-epic" onclick="openModal(this)" data-id="club_diamond">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/дубина/алмазы.png" onerror="this.src='';this.parentNode.innerHTML='🏏'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🏏 Дубина</div>
+        <div class="wname">Дубина голема</div>
+        <div class="pills"><span class="pill pill-atk">+22 атк</span><span class="pill pill-hp">+120 HP</span><span class="pill pill-pen">+1% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💎 22 алмаза</div>
+    </div>
+    <div class="card r-epic" onclick="openModal(this)" data-id="gs_diamond">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч для крит/алмазы.png" onerror="this.src='';this.parentNode.innerHTML='🗡️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🗡️ Большой меч</div>
+        <div class="wname">Клинок убийцы</div>
+        <div class="pills"><span class="pill pill-atk">+16 атк</span><span class="pill pill-crit">+25 крит</span><span class="pill pill-pen">+1% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">💎 22 алмаза</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ MYTHIC ═══ -->
+<div class="tier tier-mythic">
+  <div class="tier-header">
+    <span class="badge">🔥 Мифическое</span>
+    <span class="tier-name">Элитное оружие</span>
+    <span class="tier-note">$11.99 USDT или 590 ⭐ звёзд · +3% пробитие</span>
+  </div>
+  <div class="grid">
+    <div class="card r-mythic" onclick="openModal(this)" data-id="sword_mythic">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч/за usdt.png" onerror="this.src='';this.parentNode.innerHTML='⚔️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">⚔️ Меч</div>
+        <div class="wname">Пламенный клинок</div>
+        <div class="pills"><span class="pill pill-atk">+45 атк</span><span class="pill pill-crit">+10 крит</span><span class="pill pill-pen">+3% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">$11.99 или 590 ⭐</div>
+    </div>
+    <div class="card r-mythic" onclick="openModal(this)" data-id="axe_mythic">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/топор/за ustd.png" onerror="this.src='';this.parentNode.innerHTML='🪓'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🪓 Топор</div>
+        <div class="wname">Топор хаоса</div>
+        <div class="pills"><span class="pill pill-atk">+58 атк</span><span class="pill pill-pen">+3% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">$11.99 или 590 ⭐</div>
+    </div>
+    <div class="card r-mythic" onclick="openModal(this)" data-id="club_mythic">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/дубина/за usdt.png" onerror="this.src='';this.parentNode.innerHTML='🏏'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🏏 Дубина</div>
+        <div class="wname">Молот колосса</div>
+        <div class="pills"><span class="pill pill-atk">+32 атк</span><span class="pill pill-hp">+170 HP</span><span class="pill pill-pen">+3% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">$11.99 или 590 ⭐</div>
+    </div>
+    <div class="card r-mythic" onclick="openModal(this)" data-id="gs_mythic">
+
+      <div class="card-inner">
+        <div class="img-area">
+          <div class="img-wrap"><img src="foto/оружие/меч для крит/за usdt.png" onerror="this.src='';this.parentNode.innerHTML='🗡️'" alt=""></div>
+          <div class="weapon-glow"></div>
+          <div class="img-fade"></div>
+        </div>
+        <div class="wtype">🗡️ Большой меч</div>
+        <div class="wname">Тень смерти</div>
+        <div class="pills"><span class="pill pill-atk">+20 атк</span><span class="pill pill-crit">+35 крит</span><span class="pill pill-pen">+3% пробой</span></div>
+      </div>
+      <div class="card-price" style="padding:0 12px 12px">$11.99 или 590 ⭐</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SUMMARY TABLE -->
+<div class="summary">
+  <h3>📊 Все 20 мечей — сводная таблица</h3>
+  <table>
+    <thead><tr><th>Тир</th><th>Тип</th><th>Название</th><th>Атк</th><th>Крит</th><th>HP</th><th>Пробитие</th><th>Цена</th></tr></thead>
+    <tbody>
+      <tr><td class="tc-free">Бесплатно</td><td>⚔️ Меч</td><td>Деревянный меч</td><td class="ta">+5</td><td class="tc">+1</td><td>—</td><td>—</td><td>🆓</td></tr>
+      <tr><td class="tc-free">Бесплатно</td><td>🪓 Топор</td><td>Каменный топор</td><td class="ta">+8</td><td>—</td><td>—</td><td>—</td><td>🆓</td></tr>
+      <tr><td class="tc-free">Бесплатно</td><td>🏏 Дубина</td><td>Дубовая дубина</td><td class="ta">+4</td><td>—</td><td class="th">+25</td><td>—</td><td>🆓</td></tr>
+      <tr><td class="tc-free">Бесплатно</td><td>🗡️ Б.меч</td><td>Охотничий нож</td><td class="ta">+3</td><td class="tc">+6</td><td>—</td><td>—</td><td>🆓</td></tr>
+      <tr><td class="tc-gold">💰 Золото</td><td>⚔️ Меч</td><td>Стальной меч</td><td class="ta">+16</td><td class="tc">+3</td><td>—</td><td>—</td><td>800💰</td></tr>
+      <tr><td class="tc-gold">💰 Золото</td><td>🪓 Топор</td><td>Боевой топор</td><td class="ta">+22</td><td>—</td><td>—</td><td>—</td><td>950💰</td></tr>
+      <tr><td class="tc-gold">💰 Золото</td><td>🏏 Дубина</td><td>Окованная дубина</td><td class="ta">+12</td><td>—</td><td class="th">+60</td><td>—</td><td>800💰</td></tr>
+      <tr><td class="tc-gold">💰 Золото</td><td>🗡️ Б.меч</td><td>Кинжал тени</td><td class="ta">+9</td><td class="tc">+14</td><td>—</td><td>—</td><td>850💰</td></tr>
+      <tr><td class="tc-diamond">💎 Алмазы</td><td>⚔️ Меч</td><td>Серебряный клинок</td><td class="ta">+30</td><td class="tc">+7</td><td>—</td><td class="tp">+1%</td><td>20💎</td></tr>
+      <tr><td class="tc-diamond">💎 Алмазы</td><td>🪓 Топор</td><td>Топор берсерка</td><td class="ta">+42</td><td>—</td><td>—</td><td class="tp">+1%</td><td>25💎</td></tr>
+      <tr><td class="tc-diamond">💎 Алмазы</td><td>🏏 Дубина</td><td>Дубина голема</td><td class="ta">+22</td><td>—</td><td class="th">+120</td><td class="tp">+1%</td><td>22💎</td></tr>
+      <tr><td class="tc-diamond">💎 Алмазы</td><td>🗡️ Б.меч</td><td>Клинок убийцы</td><td class="ta">+16</td><td class="tc">+25</td><td>—</td><td class="tp">+1%</td><td>22💎</td></tr>
+      <tr><td class="tc-mythic">✨ Мифик</td><td>⚔️ Меч</td><td>Пламенный клинок</td><td class="ta">+45</td><td class="tc">+10</td><td>—</td><td class="tp">+2%</td><td>$11.99/590⭐</td></tr>
+      <tr><td class="tc-mythic">✨ Мифик</td><td>🪓 Топор</td><td>Топор хаоса</td><td class="ta">+58</td><td>—</td><td>—</td><td class="tp">+2%</td><td>$11.99/590⭐</td></tr>
+      <tr><td class="tc-mythic">✨ Мифик</td><td>🏏 Дубина</td><td>Молот колосса</td><td class="ta">+32</td><td>—</td><td class="th">+170</td><td class="tp">+2%</td><td>$11.99/590⭐</td></tr>
+      <tr><td class="tc-mythic">✨ Мифик</td><td>🗡️ Б.меч</td><td>Тень смерти</td><td class="ta">+20</td><td class="tc">+35</td><td>—</td><td class="tp">+2%</td><td>$11.99/590⭐</td></tr>
+      <tr><td class="tc-usdt">⭐ USDT</td><td>⚔️ Меч</td><td>Клинок Архонта</td><td class="ta">+55</td><td class="tc">+12</td><td>—</td><td class="tp">+3%</td><td>$11.99 / 590⭐</td></tr>
+      <tr><td class="tc-usdt">⭐ USDT</td><td>🪓 Топор</td><td>Топор разрушителя</td><td class="ta">+70</td><td>—</td><td>—</td><td class="tp">+3%</td><td>$11.99 / 590⭐</td></tr>
+      <tr><td class="tc-usdt">⭐ USDT</td><td>🏏 Дубина</td><td>Молот титана</td><td class="ta">+38</td><td>—</td><td class="th">+220</td><td class="tp">+3%</td><td>$11.99 / 590⭐</td></tr>
+      <tr><td class="tc-usdt">⭐ USDT</td><td>🗡️ Б.меч</td><td>Клинок рока</td><td class="ta">+25</td><td class="tc">+45</td><td>—</td><td class="tp">+3%</td><td>$11.99 / 590⭐</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modalBg" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal" style="--mg:rgba(120,70,220,.2);--bc1:#5b21b6;--bc2:#7c3aed;--bs:rgba(124,58,237,.4)">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-img-area">
+      <div class="modal-spotlight" id="mSpotlight"></div>
+      <img class="modal-img" id="mImg" src="" alt="">
+    </div>
+    <div class="modal-content">
+      <div class="modal-rarity-bar" id="mBar"></div>
+      <div class="modal-name" id="mName"></div>
+      <div class="modal-sub" id="mSub"></div>
+      <div class="modal-stats" id="mStats"></div>
+      <div class="modal-desc" id="mDesc"></div>
+      <div id="mBtnWrap"><button class="modal-btn" id="mBtn">💰 Купить</button></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const WEAPONS = {
+  sword_free:    { name:'Деревянный меч', type:'⚔️ Меч', rarity:'common', price:'🆓 Бесплатно', img:'foto/оружие/меч/бесплатный.png', atk:5, crit:1, hp:0, pen:0, desc:'Первое оружие воина. Прост в обращении, сбалансирован. Хорош для освоения боевой механики.' },
+  axe_free:      { name:'Каменный топор', type:'🪓 Топор', rarity:'common', price:'🆓 Бесплатно', img:'foto/оружие/топор/бесплатный.png', atk:8, crit:0, hp:0, pen:0, desc:'Грубая сила без изысков. Наносит больший базовый урон, чем меч того же уровня.' },
+  club_free:     { name:'Дубовая дубина', type:'🏏 Дубина', rarity:'common', price:'🆓 Бесплатно', img:'foto/оружие/дубина/бесплатная.png', atk:4, crit:0, hp:25, pen:0, desc:'Тяжёлая и надёжная. Добавляет HP — ты живёшь дольше, но бьёшь тише.' },
+  gs_free:       { name:'Охотничий нож', type:'🗡️ Большой меч', rarity:'common', price:'🆓 Бесплатно', img:'foto/оружие/меч для крит/бесплатный.png', atk:3, crit:6, hp:0, pen:0, desc:'Быстрый и точный. Низкий базовый урон, но высокий шанс критического удара.' },
+  sword_gold:    { name:'Стальной меч', type:'⚔️ Меч', rarity:'rare', price:'💰 800 золота', img:'foto/оружие/меч/золото.png', atk:16, crit:3, hp:0, pen:0, desc:'Проверен сотнями боёв. Добротная сталь, хорошая рукоять. Универсальное оружие среднего уровня.' },
+  axe_gold:      { name:'Боевой топор', type:'🪓 Топор', rarity:'rare', price:'💰 950 золота', img:'foto/оружие/топор/золото.png', atk:22, crit:0, hp:0, pen:0, desc:'Ужас пехоты. Лучший урон среди золотых оружий. Нет крита, нет HP — только сила.' },
+  club_gold:     { name:'Окованная дубина', type:'🏏 Дубина', rarity:'rare', price:'💰 800 золота', img:'foto/оружие/дубина/золото.png', atk:12, crit:0, hp:60, pen:0, desc:'Железные обручи усиливают каждый удар. Ты крепче и опаснее.' },
+  gs_gold:       { name:'Кинжал тени', type:'🗡️ Большой меч', rarity:'rare', price:'💰 850 золота', img:'foto/оружие/меч для крит/золото.png', atk:9, crit:14, hp:0, pen:0, desc:'Удар в темноте смертелен. Мало атаки, но крит-сборка начинает ощущаться.' },
+  sword_diamond: { name:'Серебряный клинок', type:'⚔️ Меч', rarity:'epic', price:'💎 20 алмазов', img:'foto/оружие/меч/алмазы.png', atk:30, crit:7, hp:0, pen:1, desc:'Откован лучшим мастером. Отличный баланс атаки и крита. Пробитие брони игнорирует 1% защиты врага.' },
+  axe_diamond:   { name:'Топор берсерка', type:'🪓 Топор', rarity:'epic', price:'💎 25 алмазов', img:'foto/оружие/топор/алмазы.png', atk:42, crit:0, hp:0, pen:1, desc:'Ярость не знает пощады. Самый высокий чистый урон среди алмазных оружий. +1% пробитие брони.' },
+  club_diamond:  { name:'Дубина голема', type:'🏏 Дубина', rarity:'epic', price:'💎 22 алмаза', img:'foto/оружие/дубина/алмазы.png', atk:22, crit:0, hp:120, pen:1, desc:'Вес разрушает любую броню. Огромный HP бонус делает тебя настоящим танком с атакой.' },
+  gs_diamond:    { name:'Клинок убийцы', type:'🗡️ Большой меч', rarity:'epic', price:'💎 22 алмаза', img:'foto/оружие/меч для крит/алмазы.png', atk:16, crit:25, hp:0, pen:1, desc:'Один удар — одна смерть. Максимальный крит среди алмазных. Пробивает 1% брони врага.' },
+  sword_mythic:  { name:'Пламенный клинок', type:'⚔️ Меч', rarity:'mythic', price:'paid', img:'foto/оружие/меч/за usdt.png', atk:45, crit:10, hp:0, pen:3, desc:'Закалён в пламени древних кузниц. +3% пробитие — враги с защитой чувствуют разницу.' },
+  axe_mythic:    { name:'Топор хаоса', type:'🪓 Топор', rarity:'mythic', price:'paid', img:'foto/оружие/топор/за ustd.png', atk:58, crit:0, hp:0, pen:3, desc:'Хаос заключён в каждом ударе. Максимальный урон. +3% пробитие — любая броня слабее.' },
+  club_mythic:   { name:'Молот колосса', type:'🏏 Дубина', rarity:'mythic', price:'paid', img:'foto/оружие/дубина/за usdt.png', atk:32, crit:0, hp:170, pen:3, desc:'Колосс не знает усталости. Огромная живучесть + сильный удар. +3% пробитие брони.' },
+  gs_mythic:     { name:'Тень смерти', type:'🗡️ Большой меч', rarity:'mythic', price:'paid', img:'foto/оружие/меч для крит/за usdt.png', atk:20, crit:35, hp:0, pen:3, desc:'Тень — не видна, не слышна. +3% пробитие — крит ещё больнее.' },
+  sword_usdt:    { name:'Клинок Архонта', type:'⚔️ Меч', rarity:'legendary', price:'$11.99 USDT или 590 ⭐', img:'foto/оружие/меч/за usdt.png', atk:55, crit:12, hp:0, pen:3, desc:'Дарован богами войны. Идеальный баланс всех характеристик. 3% пробитие — лучшее в классе.' },
+  axe_usdt:      { name:'Топор разрушителя', type:'🪓 Топор', rarity:'legendary', price:'$11.99 USDT или 590 ⭐', img:'foto/оружие/топор/за ustd.png', atk:70, crit:0, hp:0, pen:3, desc:'Раскалывает горы. Максимальный урон в игре. +3% пробитие делает его убийцей даже тяжёлой брони.' },
+  club_usdt:     { name:'Молот титана', type:'🏏 Дубина', rarity:'legendary', price:'$11.99 USDT или 590 ⭐', img:'foto/оружие/дубина/за usdt.png', atk:38, crit:0, hp:220, pen:3, desc:'Нерушимый. Смертоносный. +220 HP делает тебя крепостью. +3% пробитие — броня врага не спасёт.' },
+  gs_usdt:       { name:'Клинок рока', type:'🗡️ Большой меч', rarity:'legendary', price:'$11.99 USDT или 590 ⭐', img:'foto/оружие/меч для крит/за usdt.png', atk:25, crit:45, hp:0, pen:3, desc:'Судьба врага решена заранее. Самый высокий крит в игре. 3% пробитие — критический удар + игнор брони.' },
+};
+
+const RARITY_THEME = {
+  common:    { bc1:'#374151', bc2:'#4b5563', bs:'rgba(75,85,99,.4)',   mg:'rgba(140,148,165,.2)' },
+  rare:      { bc1:'#92400e', bc2:'#d97706', bs:'rgba(217,119,6,.4)',  mg:'rgba(251,191,36,.25)' },
+  epic:      { bc1:'#5b21b6', bc2:'#7c3aed', bs:'rgba(124,58,237,.4)',mg:'rgba(168,85,247,.3)'  },
+  mythic:    { bc1:'#c2410c', bc2:'#f97316', bs:'rgba(249,115,22,.4)',  mg:'rgba(249,115,22,.3)'  },
+  legendary: { bc1:'#065f46', bc2:'#10b981', bs:'rgba(16,185,129,.4)', mg:'rgba(16,185,129,.3)'  },
+};
+
+function openModal(card) {
+  const id = card.dataset.id;
+  const w = WEAPONS[id]; if (!w) return;
+  const th = RARITY_THEME[w.rarity] || RARITY_THEME.epic;
+  const m = document.getElementById('modal');
+  m.style.setProperty('--mg', th.mg);
+  m.style.setProperty('--bc1', th.bc1);
+  m.style.setProperty('--bc2', th.bc2);
+  m.style.setProperty('--bs', th.bs);
+  document.getElementById('mSpotlight').style.background =
+    `radial-gradient(circle, ${th.mg.replace(/[\d.]+\)$/, '0.35)')} 0%, transparent 60%)`;
+  document.getElementById('mImg').src = w.img;
+  document.getElementById('mImg').style.filter =
+    `drop-shadow(0 0 18px ${th.mg.replace(/[\d.]+\)$/, '0.7)')}) drop-shadow(0 4px 8px rgba(0,0,0,.5))`;
+  document.getElementById('mName').textContent = w.name;
+  document.getElementById('mSub').textContent = w.type + ' · ' + w.rarity.toUpperCase();
+  document.getElementById('mDesc').textContent = w.desc;
+
+  // Кнопка оплаты — для платных показываем выбор USDT / Звёзды
+  const btnWrap = document.getElementById('mBtnWrap');
+  if (w.price === 'paid') {
+    btnWrap.innerHTML = `
+      <div class="pay-choice">
+        <button class="modal-btn pay-btn-usdt" onclick="closeModal()">💳 $11.99 USDT</button>
+        <button class="modal-btn pay-btn-stars" onclick="closeModal()">⭐ 590 Звёзд</button>
+      </div>`;
+  } else {
+    btnWrap.innerHTML = `<button class="modal-btn" id="mBtn" style="background:linear-gradient(160deg,${th.bc1},${th.bc2})">${w.price}</button>`;
+  }
+
+  const stats = [];
+  if (w.atk)  stats.push(`<div class="stat-box stat-atk"><div class="sv">+${w.atk}</div><div class="sl">⚔️ Атака</div></div>`);
+  if (w.crit) stats.push(`<div class="stat-box stat-crit"><div class="sv">+${w.crit}</div><div class="sl">✨ Крит</div></div>`);
+  if (w.hp)   stats.push(`<div class="stat-box stat-hp"><div class="sv">+${w.hp}</div><div class="sl">❤️ HP</div></div>`);
+  if (w.pen)  stats.push(`<div class="stat-box stat-pen"><div class="sv">+${w.pen}%</div><div class="sl">🔥 Пробитие брони</div></div>`);
+  document.getElementById('mStats').innerHTML = stats.join('');
+
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+
+// Убираем чёрный фон из PNG через Canvas
+function removeDarkBg(img) {
+  const c = document.createElement('canvas');
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
+  const ctx = c.getContext('2d');
+  ctx.drawImage(img, 0, 0);
+  try {
+    const d = ctx.getImageData(0, 0, c.width, c.height);
+    for (let i = 0; i < d.data.length; i += 4) {
+      if (d.data[i] < 40 && d.data[i+1] < 40 && d.data[i+2] < 40)
+        d.data[i+3] = 0;
+    }
+    ctx.putImageData(d, 0, 0);
+    img.src = c.toDataURL();
+  } catch(e) {}
+}
+document.querySelectorAll('.img-wrap img').forEach(img => {
+  if (img.complete && img.naturalWidth) removeDarkBg(img);
+  else img.addEventListener('load', () => removeDarkBg(img));
+});
+</script>
+</body>
+</html>
