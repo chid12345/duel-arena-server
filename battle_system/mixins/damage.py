@@ -142,6 +142,9 @@ class BattleDamageMixin:
             crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.05)
         _crit_mult = 1.65 if wt_atk == "crit" else 1.5
         is_crit = random.random() < crit_ch
+        _cr = int(defender.get("_eq_crit_resist_pct", 0))
+        if is_crit and _cr:
+            _crit_mult = max(1.05, _crit_mult * (1.0 - _cr / 100.0))
         damage = int(base_dmg * (_crit_mult if is_crit else 1.0))
         if usdt == "crit_dmg_pct" and is_crit:
             damage = int(damage * 1.08)

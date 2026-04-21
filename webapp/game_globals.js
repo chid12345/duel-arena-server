@@ -121,6 +121,19 @@ const _BOOTS_TEXTURE_MAP = {
 };
 function getBootsTextureKey(item_id) { return _BOOTS_TEXTURE_MAP[item_id] || null; }
 
+/* Ключ Phaser-текстуры щита по item_id */
+const _SHIELD_TEXTURE_MAP = {
+  shield_free1:'shield_free1', shield_free2:'shield_free2',
+  shield_free3:'shield_free3', shield_free4:'shield_free4',
+  shield_gold1:'shield_gold1', shield_gold2:'shield_gold2',
+  shield_gold3:'shield_gold3', shield_gold4:'shield_gold4',
+  shield_dia1:'shield_dia1',   shield_dia2:'shield_dia2',
+  shield_dia3:'shield_dia3',   shield_dia4:'shield_dia4',
+  shield_mythic1:'shield_mythic1', shield_mythic2:'shield_mythic2',
+  shield_mythic3:'shield_mythic3', shield_mythic4:'shield_mythic4',
+};
+function getShieldTextureKey(item_id) { return _SHIELD_TEXTURE_MAP[item_id] || null; }
+
 /* Ключ текстуры воина по типу */
 function getWarriorKey(type) {
   if (type === 'tank')    return 'warrior_tank';

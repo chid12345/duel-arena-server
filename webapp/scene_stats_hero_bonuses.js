@@ -119,6 +119,7 @@ Object.assign(StatsScene.prototype, {
       _eq.dodge_bonus > 0 && { i:'💨', n:'Уворот',   v:`+${_eq.dodge_bonus}%`, neg:false },
       _eq.regen_bonus    > 0 && { i:'💚', n:'Регенерация', v:`+${_eq.regen_bonus} HP/раунд`, neg:false },
       _eq.lifesteal_pct  > 0 && { i:'🩸', n:'Вампиризм',   v:`+${_eq.lifesteal_pct}%`,       neg:false },
+      _eq.crit_resist_pct > 0 && { i:'🛡️', n:'Крит-сопр.', v:`-${_eq.crit_resist_pct}% крит-урон`, neg:false },
     ].filter(Boolean);
     const secs = [
       { title:'⚔️ Класс воина', rows: wt.rows },

@@ -58,6 +58,7 @@ Object.assign(MenuScene.prototype, {
     const weaponTexKey = slot === 'weapon' && item ? getWeaponTextureKey(item.item_id) : null;
     const helmetTexKey = slot === 'belt'   && item ? getHelmetTextureKey(item.item_id)  : null;
     const bootsTexKey  = slot === 'boots'  && item ? getBootsTextureKey(item.item_id)   : null;
+    const shieldTexKey = slot === 'shield' && item ? getShieldTextureKey(item.item_id) : null;
     const displayRarity = wardrobeEq ? wardrobeEq.rarity : item?.rarity;
     const hasDisplay = wardrobeEq || item;
 
@@ -80,6 +81,7 @@ Object.assign(MenuScene.prototype, {
         : (weaponTexKey && this.textures.exists(weaponTexKey)) ? weaponTexKey
         : (helmetTexKey && this.textures.exists(helmetTexKey)) ? helmetTexKey
         : (bootsTexKey  && this.textures.exists(bootsTexKey))  ? bootsTexKey
+        : (shieldTexKey && this.textures.exists(shieldTexKey)) ? shieldTexKey
         : null;
       if (imgKey) {
         const imgSize = small ? 36 : 46;
@@ -87,7 +89,7 @@ Object.assign(MenuScene.prototype, {
         img.setDisplaySize(imgSize, imgSize);
         ca(img);
         // Пульсирующее свечение под шлемом/сапогами (по теме редкости)
-        if ((slot === 'belt' || slot === 'boots') && !small) {
+        if ((slot === 'belt' || slot === 'boots' || slot === 'shield') && !small) {
           try {
             this.tweens.add({
               targets: haG,
@@ -137,6 +139,8 @@ Object.assign(MenuScene.prototype, {
         HelmetHTML.open(this);
       } else if (slot === 'boots' && typeof BootsHTML !== 'undefined') {
         BootsHTML.open(this);
+      } else if (slot === 'shield' && typeof ShieldHTML !== 'undefined') {
+        ShieldHTML.open(this);
       } else {
         this.scene.start('Equipment', { slot });
       }

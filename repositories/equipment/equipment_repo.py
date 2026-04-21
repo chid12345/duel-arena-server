@@ -61,7 +61,8 @@ class EquipmentMixin:
         """Суммарные бонусы от всей экипировки."""
         equipped = self.get_equipment(user_id)
         total = {"atk_bonus": 0, "def_pct": 0.0, "hp_bonus": 0, "crit_bonus": 0,
-                 "pen_pct": 0.0, "dodge_bonus": 0, "regen_bonus": 0, "lifesteal_pct": 0}
+                 "pen_pct": 0.0, "dodge_bonus": 0, "regen_bonus": 0, "lifesteal_pct": 0,
+                 "crit_resist_pct": 0}
         for slot, item in equipped.items():
             stats = get_item_stats(item["item_id"])
             total["atk_bonus"]    += stats["atk_bonus"]
@@ -72,6 +73,7 @@ class EquipmentMixin:
             total["dodge_bonus"]  += stats.get("dodge_bonus", 0)
             total["regen_bonus"]  += stats.get("regen_bonus", 0)
             total["lifesteal_pct"] += stats.get("lifesteal_pct", 0)
+            total["crit_resist_pct"] += stats.get("crit_resist_pct", 0)
         return total
 
     def add_owned_weapon(self, user_id: int, item_id: str) -> None:
