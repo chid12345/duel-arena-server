@@ -47,17 +47,30 @@ const _imgCache = new Map();
 function _removeDarkBg(img) {
   if (img._bgDone) return;
   img._bgDone = true;
+  if (!img.naturalWidth || !img.naturalHeight) return;
   const origSrc = img.src;
-  if (_imgCache.has(origSrc)) { img.src = _imgCache.get(origSrc); return; }
+  if (_imgCache.has(origSrc)) {
+    const cached = _imgCache.get(origSrc);
+    if (cached !== origSrc) img.src = cached;
+    return;
+  }
   const c = document.createElement('canvas');
-  c.width = img.naturalWidth || 64; c.height = img.naturalHeight || 64;
+  c.width = img.naturalWidth; c.height = img.naturalHeight;
   const ctx = c.getContext('2d'); ctx.drawImage(img, 0, 0);
   try {
     const d = ctx.getImageData(0, 0, c.width, c.height);
+    const W = c.width, H = c.height;
+    let darkCorners = 0;
+    [[0,0],[W-1,0],[0,H-1],[W-1,H-1]].forEach(([x,y]) => {
+      const i=(y*W+x)*4;
+      const mx=Math.max(d.data[i],d.data[i+1],d.data[i+2]);
+      const mn=Math.min(d.data[i],d.data[i+1],d.data[i+2]);
+      if (d.data[i+3]>10 && mx<80 && mx-mn<30) darkCorners++;
+    });
+    if (darkCorners < 2) { _imgCache.set(origSrc, origSrc); return; }
     for (let i = 0; i < d.data.length; i += 4) {
       const r=d.data[i], g=d.data[i+1], b=d.data[i+2];
       const mx=Math.max(r,g,b), mn=Math.min(r,g,b);
-      // Тёмный (mx<72) + малонасыщенный (mx-mn<28) → фон JPEG/PNG
       if (mx < 72 && mx - mn < 28) d.data[i+3] = 0;
     }
     ctx.putImageData(d, 0, 0);

@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "1.9.58"
-VERSION_LABEL = "v1.9.58 — feat: boots dodge+regen bonuses wired across battle, UI, API"
+VERSION = "1.9.59"
+VERSION_LABEL = "v1.9.59 — fix: _removeDarkBg corner-sampling prevents stripping item pixels"
 
 # Игровая версия для UI (бот / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "7.92"
+GAME_VERSION = "7.93"
