@@ -65,7 +65,18 @@ def register_tma_player_route(
                 }
             except Exception:
                 equipment = {}
-            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "equipment": equipment, "cached": True, "_sv": VERSION}
+            try:
+                conn = db.get_connection()
+                try:
+                    cur = conn.cursor()
+                    cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
+                    owned_weapons = [r["item_id"] for r in cur.fetchall()]
+                finally:
+                    conn.close()
+            except Exception:
+                owned_weapons = []
+            return {"ok": True, "player": _player_api(cached, combined_buffs=cb), "equipment": equipment,
+                    "owned_weapons": owned_weapons, "cached": True, "_sv": VERSION}
 
         player = db.get_or_create_player(uid, username)
 
@@ -128,10 +139,21 @@ def register_tma_player_route(
             }
         except Exception:
             equipment = {}
+        try:
+            conn = db.get_connection()
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
+                owned_weapons = [r["item_id"] for r in cur.fetchall()]
+            finally:
+                conn.close()
+        except Exception:
+            owned_weapons = []
         return {
             "ok": True,
             "player": _player_api(player, combined_buffs=cb),
             "equipment": equipment,
+            "owned_weapons": owned_weapons,
             "_sv": VERSION,
             "_db_hp": int(player.get("current_hp", 0)),
             "_db_mhp": int(player.get("max_hp", 0)),

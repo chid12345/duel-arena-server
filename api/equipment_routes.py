@@ -16,12 +16,9 @@ from db_schema.equipment_catalog import get_item
 _log = logging.getLogger(__name__)
 
 
-def _eq_dict(eq_raw: dict) -> dict:
-    return {
-        slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"],
-               "rarity": it["rarity"], "desc": it.get("desc", "")}
-        for slot, it in eq_raw.items()
-    }
+def _item_dict(item_id: str, item: dict) -> dict:
+    return {"item_id": item_id, "name": item["name"], "emoji": item["emoji"],
+            "rarity": item["rarity"], "desc": item.get("desc", "")}
 
 
 class _EquipBody(InitDataHeader):
@@ -45,30 +42,43 @@ def register_equipment_routes(app: FastAPI) -> None:
             item = get_item(body.item_id)
             if not item:
                 return {"ok": False, "reason": "Предмет не найден"}
-
-            # Мифическое оружие — только через отдельный роут оплаты
             if int(item.get("price_stars", 0)) > 0:
                 return {"ok": False, "reason": "Мифическое оружие покупается за Stars или USDT — используйте кнопки ⭐ или 💳"}
 
             gold_cost = int(item.get("price_gold", 0))
             diamond_cost = int(item.get("price_diamonds", 0))
 
-            # Один запрос к БД: получаем игрока + текущую экипировку
             conn = db.get_connection()
             try:
                 cur = conn.cursor()
-                cur.execute("SELECT gold, diamonds FROM players WHERE user_id = ?", (uid,))
+
+                # Один SELECT: всё что нужно знать о игроке
+                cur.execute("SELECT * FROM players WHERE user_id = ?", (uid,))
                 prow = cur.fetchone()
                 if not prow:
                     return {"ok": False, "reason": "Игрок не найден"}
+
                 gold = int(prow["gold"] or 0)
                 diamonds = int(prow["diamonds"] or 0)
 
-                cur.execute("SELECT slot, item_id FROM player_equipment WHERE user_id = ?", (uid,))
-                current = {r["slot"]: r["item_id"] for r in cur.fetchall()}
-                already_equipped = current.get(body.slot) == body.item_id
+                # Текущая экипировка в слоте
+                cur.execute(
+                    "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = ?",
+                    (uid, body.slot),
+                )
+                eq_row = cur.fetchone()
+                already_equipped = eq_row and eq_row["item_id"] == body.item_id
 
-                if not already_equipped:
+                # Проверяем наличие в коллекции (для платных предметов)
+                already_owned = False
+                if (gold_cost > 0 or diamond_cost > 0) and not already_equipped:
+                    cur.execute(
+                        "SELECT 1 FROM player_owned_weapons WHERE user_id = ? AND item_id = ?",
+                        (uid, body.item_id),
+                    )
+                    already_owned = cur.fetchone() is not None
+
+                if not already_equipped and not already_owned:
                     if gold_cost > 0:
                         if gold < gold_cost:
                             return {"ok": False, "reason": f"Недостаточно золота. Нужно {gold_cost}"}
@@ -78,6 +88,11 @@ def register_equipment_routes(app: FastAPI) -> None:
                         )
                         if cur.rowcount == 0:
                             return {"ok": False, "reason": "Недостаточно золота"}
+                        gold -= gold_cost
+                        cur.execute(
+                            "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                            (uid, body.item_id),
+                        )
                     elif diamond_cost > 0:
                         if diamonds < diamond_cost:
                             return {"ok": False, "reason": f"Недостаточно алмазов. Нужно {diamond_cost}"}
@@ -87,33 +102,53 @@ def register_equipment_routes(app: FastAPI) -> None:
                         )
                         if cur.rowcount == 0:
                             return {"ok": False, "reason": "Недостаточно алмазов"}
+                        diamonds -= diamond_cost
+                        cur.execute(
+                            "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                            (uid, body.item_id),
+                        )
 
-                # UPSERT weapon slot
+                # Экипируем
                 cur.execute(
                     """INSERT INTO player_equipment (user_id, slot, item_id)
                        VALUES (?, ?, ?)
                        ON CONFLICT(user_id, slot) DO UPDATE SET item_id=excluded.item_id, equipped_at=CURRENT_TIMESTAMP""",
                     (uid, body.slot, body.item_id),
                 )
+
+                # Получаем все owned_weapons для ответа
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
+                owned_ids = [r["item_id"] for r in cur.fetchall()]
+
+                # Все слоты экипировки для ответа
+                cur.execute("SELECT slot, item_id FROM player_equipment WHERE user_id = ?", (uid,))
+                all_eq = {r["slot"]: r["item_id"] for r in cur.fetchall()}
+                # Добавляем только что экипированное (может не попасть в fetchall если только что вставлено)
+                all_eq[body.slot] = body.item_id
+
                 conn.commit()
             finally:
                 conn.close()
 
             _cache_invalidate(uid)
 
-            # Собираем ответ одним запросом
+            # Строим eq_resp из каталога (без лишних DB-вызовов)
+            eq_resp = {}
+            for slot, iid in all_eq.items():
+                it = get_item(iid)
+                if it:
+                    eq_resp[slot] = _item_dict(iid, it)
+
+            # Строим player_resp из уже загруженных данных
             try:
-                eq_raw = db.get_equipment(uid)
-                eq_resp = _eq_dict(eq_raw)
-            except Exception:
-                eq_resp = {}
-            try:
-                p = db.get_or_create_player(uid, "")
-                player_resp = _player_api(dict(p))
+                pd = dict(prow)
+                pd["gold"] = gold
+                pd["diamonds"] = diamonds
+                player_resp = _player_api(pd)
             except Exception:
                 player_resp = {}
 
-            return {"ok": True, "equipment": eq_resp, "player": player_resp}
+            return {"ok": True, "equipment": eq_resp, "player": player_resp, "owned_weapons": owned_ids}
 
         except Exception as e:
             _log.error("equip_item error: %s", e, exc_info=True)
@@ -133,24 +168,23 @@ def register_equipment_routes(app: FastAPI) -> None:
                     "DELETE FROM player_equipment WHERE user_id = ? AND slot = ?",
                     (uid, body.slot),
                 )
+                cur.execute("SELECT slot, item_id FROM player_equipment WHERE user_id = ?", (uid,))
+                all_eq = {r["slot"]: r["item_id"] for r in cur.fetchall()}
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
+                owned_ids = [r["item_id"] for r in cur.fetchall()]
                 conn.commit()
             finally:
                 conn.close()
 
             _cache_invalidate(uid)
 
-            try:
-                eq_raw = db.get_equipment(uid)
-                eq_resp = _eq_dict(eq_raw)
-            except Exception:
-                eq_resp = {}
-            try:
-                p = db.get_or_create_player(uid, "")
-                player_resp = _player_api(dict(p))
-            except Exception:
-                player_resp = {}
+            eq_resp = {}
+            for slot, iid in all_eq.items():
+                it = get_item(iid)
+                if it:
+                    eq_resp[slot] = _item_dict(iid, it)
 
-            return {"ok": True, "equipment": eq_resp, "player": player_resp}
+            return {"ok": True, "equipment": eq_resp, "owned_weapons": owned_ids}
 
         except Exception as e:
             _log.error("unequip_item error: %s", e, exc_info=True)

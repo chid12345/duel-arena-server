@@ -67,6 +67,8 @@ function _pills(w) {
 function _btn(w) {
   if (w.equipped)
     return `<button class="wd-btn btn-uneq" data-act="unequip" data-id="${w.id}">✅ Снять</button>`;
+  if (w.owned && w.type !== 'free')
+    return `<button class="wd-btn btn-free" data-act="buy" data-id="${w.id}">⚔️ Надеть</button>`;
   if (w.type === 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${w.id}">🆓 Выбрать</button>`;
   if (w.type === 'gold')
@@ -166,11 +168,13 @@ async function _doAction(scene, action, item) {
       action==='unequip' ? {slot:'weapon'} : {item_id:item.id,slot:'weapon'}
     );
     if (res?.ok) {
-      if (res.player)    { State.player=res.player; State.playerLoadedAt=Date.now(); }
-      if (res.equipment) State.equipment=res.equipment;
+      if (res.player)        { State.player=res.player; State.playerLoadedAt=Date.now(); }
+      if (res.equipment)     State.equipment=res.equipment;
+      if (res.owned_weapons) State.ownedWeapons=res.owned_weapons;
       tg?.HapticFeedback?.notificationOccurred('success');
       _notify(action==='unequip'?'✅ Оружие снято':'✅ Оружие надето');
-      _render(scene, document.querySelector('#wn-root ._wn-view')?._wv||'all');
+      const activeTab = document.querySelector('#wn-root ._wn-view.active');
+      _render(scene, activeTab?.dataset?.wv||'all');
     } else { _notify('❌ '+(res?.reason||res?.detail||'Ошибка'),false); }
   } catch(_) { _notify('❌ Ошибка сети',false); }
   scene._weaponBusy=false;
@@ -180,8 +184,13 @@ function _render(scene, view) {
   const grid = document.getElementById('wn-grid');
   if (!grid) return;
   const eqId = (State.equipment?.weapon||{}).item_id||'';
-  const items = WEAPONS_DATA.map(w=>({...w,equipped:w.id===eqId}));
-  const list  = view==='owned' ? items.filter(w=>w.equipped) : items;
+  const ownedSet = new Set(State.ownedWeapons||[]);
+  const items = WEAPONS_DATA.map(w=>({
+    ...w,
+    equipped: w.id===eqId,
+    owned: ownedSet.has(w.id),
+  }));
+  const list = view==='owned' ? items.filter(w=>w.equipped||w.owned) : items;
 
   const groups = [
     {k:'common',l:'ОБЫЧНОЕ'},{k:'rare',l:'РЕДКОЕ'},{k:'epic',l:'ЭПИЧЕСКОЕ'},{k:'mythic',l:'МИФИЧЕСКОЕ'}

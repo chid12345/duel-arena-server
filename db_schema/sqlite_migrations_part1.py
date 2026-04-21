@@ -200,4 +200,13 @@ MIGRATIONS_PART1 = [
         )""",
         "CREATE INDEX IF NOT EXISTS idx_equip_uid ON player_equipment(user_id)",
     ]),
+    ("2026_04_21_001_owned_weapons", [
+        """CREATE TABLE IF NOT EXISTS player_owned_weapons (
+            user_id     INTEGER NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+            item_id     TEXT NOT NULL,
+            purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY(user_id, item_id)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_owned_weapons_uid ON player_owned_weapons(user_id)",
+    ]),
 ]

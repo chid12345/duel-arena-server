@@ -141,6 +141,14 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
         UNIQUE(user_id, slot)
     )""",
     "CREATE INDEX IF NOT EXISTS idx_equip_uid ON player_equipment(user_id)",
+    # Купленное оружие (персистентная принадлежность)
+    """CREATE TABLE IF NOT EXISTS player_owned_weapons (
+        user_id BIGINT NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+        item_id TEXT NOT NULL,
+        purchased_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, item_id)
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_owned_weapons_uid ON player_owned_weapons(user_id)",
     # world_boss_rewards.claimed: INTEGER → BOOLEAN (если ещё не BOOLEAN)
     # DEFAULT 0 нельзя кастовать автоматически → дропаем, меняем тип, ставим новый DEFAULT.
     """

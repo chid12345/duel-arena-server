@@ -67,6 +67,7 @@ class MenuScene extends Phaser.Scene {
         if (playerRes.ok) {
           State.player = playerRes.player;
           State.equipment = playerRes.equipment || {};
+          State.ownedWeapons = playerRes.owned_weapons || [];
           State.playerLoadedAt = Date.now();
           playerOk = true;
 
