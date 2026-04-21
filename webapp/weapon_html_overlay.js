@@ -6,9 +6,9 @@
 (() => {
 
 const WEAPON_IMG = {
-  common:  'foto/оружие/меч/бесплатный.png',
-  rare:    'foto/оружие/меч/золото.png',
-  epic:    'foto/оружие/меч/алмазы.png',
+  common:  'weapon_common.png',
+  rare:    'weapon_rare.png',
+  epic:    'weapon_epic.png',
 };
 
 const WEAPONS_DATA = [
