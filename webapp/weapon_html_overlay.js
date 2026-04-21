@@ -191,7 +191,13 @@ async function _doAction(scene, action, item) {
       if (!tg && _url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
       _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
       scene._weaponBusy = false;
-      if (invRes.invoice_id) _startWeaponCryptoPolling(scene, invRes.invoice_id, item.id);
+      if (invRes.invoice_id) {
+        try {
+          localStorage.setItem('weaponPendingInvoice', String(invRes.invoice_id));
+          localStorage.setItem('weaponPendingItemId', item.id);
+        } catch(_) {}
+        _startWeaponCryptoPolling(scene, invRes.invoice_id, item.id);
+      }
       return;
     }
     // ── Стандартное надевание/снятие (free/gold/diamonds) ──────
@@ -278,16 +284,20 @@ function open(scene) {
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
-  // Если owned_weapons ещё не загружены (null) — тихо подтягиваем с сервера
-  if (State.ownedWeapons == null) {
-    post('/api/player', {}).then(res => {
-      if (!document.getElementById('wn-root')) return; // оверлей закрыт
-      if (res?.owned_weapons) State.ownedWeapons = res.owned_weapons;
-      if (res?.equipment)     State.equipment = res.equipment;
-      if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
-      refresh();
-    }).catch(() => {});
-  }
+  // Всегда перечитываем стейт при открытии (нужно после оплаты)
+  post('/api/player', {}).then(res => {
+    if (!document.getElementById('wn-root')) return;
+    if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+    if (res?.equipment)     State.equipment = res.equipment;
+    if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
+    refresh();
+  }).catch(() => {});
+  // Pending USDT invoice — возобновляем поллинг (если оверлей закрылся во время оплаты)
+  try {
+    const pi = parseInt(localStorage.getItem('weaponPendingInvoice') || '0', 10);
+    const pid = localStorage.getItem('weaponPendingItemId') || '';
+    if (pi > 0 && pid) _startWeaponCryptoPolling(scene, pi, pid);
+  } catch(_) {}
   wrap.querySelectorAll('._wn-view').forEach(t=>t.onclick=()=>{
     view=t.dataset.wv;
     wrap.querySelectorAll('._wn-view').forEach(x=>x.classList.remove('active'));
@@ -325,31 +335,30 @@ function _startWeaponCryptoPolling(scene, invoiceId, itemId) {
     try {
       const r = await get(`/api/shop/crypto_check/${invoiceId}`);
       if (r.ok && r.paid) {
+        try { localStorage.removeItem('weaponPendingInvoice'); localStorage.removeItem('weaponPendingItemId'); } catch(_) {}
+        // Обновляем глобальный стейт (работает даже если оверлей закрыт)
         if (r.weapon_equipped) {
           if (r.player)        { State.player = r.player; State.playerLoadedAt = Date.now(); }
           if (r.equipment)     State.equipment = r.equipment;
-          if (r.owned_weapons) State.ownedWeapons = r.owned_weapons;
         } else {
-          // Вебхук уже экипировал — перечитываем стейт
           try {
             const pd = await post('/api/player');
-            if (pd?.ok && pd.player) { State.player = pd.player; State.playerLoadedAt = Date.now(); }
+            if (Array.isArray(pd?.owned_weapons)) State.ownedWeapons = pd.owned_weapons;
             if (pd?.equipment)     State.equipment = pd.equipment;
-            if (pd?.owned_weapons) State.ownedWeapons = pd.owned_weapons;
+            if (pd?.player)        { State.player = pd.player; State.playerLoadedAt = Date.now(); }
           } catch(_) {}
         }
         tg?.HapticFeedback?.notificationOccurred('success');
         _notify('✅ Мифическое оружие получено!');
+        // Обновляем оверлей если открыт
         const activeTab = document.querySelector('#wn-root ._wn-view.active');
-        _render(scene, activeTab?.dataset?.wv || 'all');
+        if (activeTab) _render(scene, activeTab.dataset?.wv || 'all');
         return;
       }
     } catch(_) {}
-    if (attempts < 24 && document.getElementById('wn-root')) {
-      scene.time.delayedCall(5000, poll);
-    }
+    if (attempts < 24) scene.time.delayedCall(5000, poll);
   };
-  scene.time.delayedCall(5000, poll);
+  scene.time.delayedCall(4000, poll);
 }
 
 function close() { document.getElementById('wn-root')?.remove(); }
