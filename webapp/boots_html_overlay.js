@@ -16,26 +16,26 @@ const BOOTS_IMG = {
 };
 
 const BOOTS_DATA = [
-  // ── Бесплатные — одна чистая роль
-  {id:'boots_free1', r:'common', ht:'👟 Сапоги', name:'Сапоги Танка',      stars:'★☆☆☆', atk:0,  crit:0,  hp:50,  def:0,  pen:0, type:'free'},
-  {id:'boots_free2', r:'common', ht:'👟 Сапоги', name:'Сапоги Стража',     stars:'★☆☆☆', atk:0,  crit:0,  hp:0,   def:3,  pen:0, type:'free'},
-  {id:'boots_free3', r:'common', ht:'👟 Сапоги', name:'Сапоги Охотника',   stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   def:0,  pen:0, type:'free'},
-  {id:'boots_free4', r:'common', ht:'👟 Сапоги', name:'Сапоги Дуэлянта',   stars:'★☆☆☆', atk:0,  crit:4,  hp:0,   def:0,  pen:0, type:'free'},
-  // ── Золото — двойные синергии
-  {id:'boots_gold1', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Берсерка',   stars:'★★☆☆', atk:16, crit:5,  hp:0,   def:0,  pen:0, type:'gold',     price:'1100'},
-  {id:'boots_gold2', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Крепости',   stars:'★★☆☆', atk:0,  crit:0,  hp:85,  def:6,  pen:0, type:'gold',     price:'1400'},
-  {id:'boots_gold3', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Снайпера',   stars:'★★☆☆', atk:12, crit:9,  hp:0,   def:0,  pen:0, type:'gold',     price:'1700'},
-  {id:'boots_gold4', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Паладина',   stars:'★★☆☆', atk:8,  crit:0,  hp:50,  def:4,  pen:0, type:'gold',     price:'2000'},
-  // ── Алмазы — мощные комбо
-  {id:'boots_dia1',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Демона',     stars:'★★★☆', atk:28, crit:10, hp:0,   def:0,  pen:0, type:'diamonds', price:'25'},
-  {id:'boots_dia2',  r:'epic',   ht:'👟 Сапоги', name:'Стальные Сапоги',   stars:'★★★☆', atk:0,  crit:0,  hp:140, def:9,  pen:0, type:'diamonds', price:'35'},
-  {id:'boots_dia3',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Арканы',     stars:'★★★☆', atk:0,  crit:13, hp:0,   def:5,  pen:0, type:'diamonds', price:'50'},
-  {id:'boots_dia4',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Разрушителя',stars:'★★★☆', atk:36, crit:0,  hp:65,  def:0,  pen:2, type:'diamonds', price:'70'},
-  // ── Мифические — каждый = уникальный стиль
-  {id:'boots_mythic1',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Дракона',    stars:'★★★★', atk:40, crit:0,  hp:150, def:10, pen:0, type:'mythic'},
-  {id:'boots_mythic2',r:'mythic',ht:'👟 Сапоги', name:'Поступь Воителя',   stars:'★★★★', atk:33, crit:15, hp:0,   def:6,  pen:0, type:'mythic'},
-  {id:'boots_mythic3',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Смерти',     stars:'★★★★', atk:48, crit:13, hp:0,   def:0,  pen:3, type:'mythic'},
-  {id:'boots_mythic4',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Богов',      stars:'★★★★', atk:0,  crit:11, hp:260, def:14, pen:0, type:'mythic'},
+  // ── Бесплатные — уворот и регенерация
+  {id:'boots_free1', r:'common', ht:'👟 Сапоги', name:'Сапоги Скорохода',        stars:'★☆☆☆', dodge:3,  regen:0,  type:'free'},
+  {id:'boots_free2', r:'common', ht:'👟 Сапоги', name:'Сапоги Выносливого',       stars:'★☆☆☆', dodge:0,  regen:12, type:'free'},
+  {id:'boots_free3', r:'common', ht:'👟 Сапоги', name:'Сапоги Тени',              stars:'★☆☆☆', dodge:2,  regen:8,  type:'free'},
+  {id:'boots_free4', r:'common', ht:'👟 Сапоги', name:'Сапоги Дозорного',         stars:'★☆☆☆', dodge:4,  regen:0,  type:'free'},
+  // ── Золото
+  {id:'boots_gold1', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Вихря',             stars:'★★☆☆', dodge:7,  regen:0,  type:'gold',     price:'1100'},
+  {id:'boots_gold2', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Живучести',          stars:'★★☆☆', dodge:0,  regen:28, type:'gold',     price:'1400'},
+  {id:'boots_gold3', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Ветра',             stars:'★★☆☆', dodge:5,  regen:16, type:'gold',     price:'1700'},
+  {id:'boots_gold4', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Фантома',           stars:'★★☆☆', dodge:8,  regen:10, type:'gold',     price:'2000'},
+  // ── Алмазы
+  {id:'boots_dia1',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Призрака',          stars:'★★★☆', dodge:13, regen:0,  type:'diamonds', price:'25'},
+  {id:'boots_dia2',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Жизненной Силы',    stars:'★★★☆', dodge:0,  regen:48, type:'diamonds', price:'35'},
+  {id:'boots_dia3',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Ловчего',           stars:'★★★☆', dodge:9,  regen:22, type:'diamonds', price:'50'},
+  {id:'boots_dia4',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Бессмертного',      stars:'★★★☆', dodge:6,  regen:36, type:'diamonds', price:'70'},
+  // ── Мифические
+  {id:'boots_mythic1',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Дракона',           stars:'★★★★', dodge:16, regen:22, type:'mythic'},
+  {id:'boots_mythic2',r:'mythic',ht:'👟 Сапоги', name:'Поступь Бессмертия',       stars:'★★★★', dodge:5,  regen:65, type:'mythic'},
+  {id:'boots_mythic3',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Призрака Смерти',   stars:'★★★★', dodge:20, regen:0,  type:'mythic'},
+  {id:'boots_mythic4',r:'mythic',ht:'👟 Сапоги', name:'Абсолютный Шаг',           stars:'★★★★', dodge:12, regen:42, type:'mythic'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
@@ -68,11 +68,8 @@ function _removeDarkBg(img) {
 
 function _pills(h) {
   let s = '';
-  if (h.atk  > 0) s += `<span class="wd-pill p-s">+${h.atk} атк</span>`;
-  if (h.crit > 0) s += `<span class="wd-pill p-i">+${h.crit} крит</span>`;
-  if (h.hp   > 0) s += `<span class="wd-pill p-e">+${h.hp} HP</span>`;
-  if (h.def  > 0) s += `<span class="wd-pill p-a">-${h.def}% урона врага</span>`;
-  if (h.pen  > 0) s += `<span class="wd-pill p-s">+${h.pen}% пробой</span>`;
+  if (h.dodge > 0) s += `<span class="wd-pill p-i">+${h.dodge}% уворот</span>`;
+  if (h.regen > 0) s += `<span class="wd-pill p-e">+${h.regen} HP/раунд</span>`;
   return s;
 }
 

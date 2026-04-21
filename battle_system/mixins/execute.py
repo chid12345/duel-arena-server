@@ -74,6 +74,13 @@ class BattleExecuteMixin:
 
             player1['current_hp'] = max(0, player1['current_hp'] - p2_damage)
             player2['current_hp'] = max(0, player2['current_hp'] - p1_damage)
+            # Регенерация от сапог (regen_bonus HP за раунд, только живым)
+            p1_regen = int(battle['player1'].get('_eq_regen_bonus', 0))
+            if p1_regen > 0 and player1['current_hp'] > 0:
+                player1['current_hp'] = min(player1['max_hp'], player1['current_hp'] + p1_regen)
+            p2_regen = int(battle['player2'].get('_eq_regen_bonus', 0))
+            if p2_regen > 0 and player2['current_hp'] > 0:
+                player2['current_hp'] = min(player2['max_hp'], player2['current_hp'] + p2_regen)
 
             self._append_combat_log_round(
                 battle,

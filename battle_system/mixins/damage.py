@@ -108,6 +108,10 @@ class BattleDamageMixin:
             # Бонус уворота от вложений в Ловкость (AGI_BONUS) — синхрон с UI
             def_agi_inv = max(0, self._safe_int_field(defender, "endurance", PLAYER_START_ENDURANCE) - PLAYER_START_ENDURANCE)
             dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + (def_agi_inv // max(1, AGI_BONUS_STEP)) * AGI_BONUS_PCT_PER_STEP)
+            # Бонус уворота от сапог (dodge_bonus в %)
+            eq_dodge = int(defender.get("_eq_dodge_bonus", 0))
+            if eq_dodge:
+                dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + eq_dodge / 100.0)
             # Дебафф ног: удар в ноги в прошлом раунде → -15% уворот сейчас
             if defender.get("_debuff_legs"):
                 dodge_ch = max(0.0, dodge_ch - ZONE_LEGS_DODGE_PENALTY)

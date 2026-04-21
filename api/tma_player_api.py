@@ -69,13 +69,11 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     avg_intu = max(1, PLAYER_START_CRIT + tf // 4)
     agi_inv = max(0, _agi - PLAYER_START_ENDURANCE)
     int_inv = max(0, _intu - PLAYER_START_CRIT)
-    dodge_p = int(
-        min(
-            DODGE_MAX_CHANCE,
-            _agi / (_agi + avg_agi) * DODGE_MAX_CHANCE + (agi_inv // AGI_BONUS_STEP) * AGI_BONUS_PCT_PER_STEP,
-        )
-        * 100
+    _dodge_base = min(
+        DODGE_MAX_CHANCE,
+        _agi / (_agi + avg_agi) * DODGE_MAX_CHANCE + (agi_inv // AGI_BONUS_STEP) * AGI_BONUS_PCT_PER_STEP,
     )
+    dodge_p = int(_dodge_base * 100)
     crit_p = int(
         min(
             CRIT_MAX_CHANCE,
@@ -105,10 +103,13 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_def  = float(_eq.get("def_pct", 0.0) or 0.0)
     _eq_hp   = int(_eq.get("hp_bonus", 0) or 0)
     _eq_crit = int(_eq.get("crit_bonus", 0) or 0)
-    _eq_pen  = float(_eq.get("pen_pct", 0.0) or 0.0)
+    _eq_pen   = float(_eq.get("pen_pct", 0.0) or 0.0)
+    _eq_dodge = int(_eq.get("dodge_bonus", 0) or 0)
+    _eq_regen = int(_eq.get("regen_bonus", 0) or 0)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
     if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
+    if _eq_dodge: dodge_p  = int(min(DODGE_MAX_CHANCE * 100, dodge_p + _eq_dodge))
     if _eq_crit:
         _intu_eq = _intu + _eq_crit
         _int_inv_eq = max(0, _intu_eq - PLAYER_START_CRIT)
@@ -221,11 +222,13 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "warrior_type": (player.get("warrior_type") or "default"),
         "inventory_unseen": int(player.get("inventory_unseen", 0) or 0),
         "eq_stats": {
-            "atk_bonus":  _eq_atk,
-            "def_pct":    round(_eq_def * 100, 1),
-            "hp_bonus":   _eq_hp,
-            "crit_bonus": _eq_crit,
-            "pen_pct":    round(_eq_pen * 100, 1),
+            "atk_bonus":   _eq_atk,
+            "def_pct":     round(_eq_def * 100, 1),
+            "hp_bonus":    _eq_hp,
+            "crit_bonus":  _eq_crit,
+            "pen_pct":     round(_eq_pen * 100, 1),
+            "dodge_bonus": _eq_dodge,
+            "regen_bonus": _eq_regen,
         },
         **_premium_fields(player),
     }
