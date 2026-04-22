@@ -8,6 +8,8 @@ class StatsScene extends Phaser.Scene {
 
   init(data) {
     this._initData = data || {};
+    this._sceneGen = (this._sceneGen || 0) + 1;
+    this._avatarBusy = false;
     if (data && data.player) State.player = data.player;
   }
 

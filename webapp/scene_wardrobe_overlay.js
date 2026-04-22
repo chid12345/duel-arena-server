@@ -85,10 +85,12 @@
   StatsScene.prototype._openAvatarPanel = async function() {
     if (this._avatarBusy) return;
     this._avatarBusy = true;
+    const gen = this._sceneGen;
     let data;
     try   { data = await get("/api/wardrobe"); }
     catch { this._avatarBusy = false; this._showToast("❌ Гардероб: нет соединения"); return; }
     this._avatarBusy = false;
+    if (this._sceneGen !== gen) return;
     if (!data?.ok) {
       this._showToast(`❌ ${data?.reason || (data?._httpStatus ? `HTTP ${data._httpStatus}` : "Ошибка гардероба")}`);
       return;
