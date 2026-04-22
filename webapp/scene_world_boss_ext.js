@@ -146,6 +146,10 @@ Object.assign(WorldBossScene.prototype, {
   async _onHit() {
     if (this._hitBusy) return;
     this._hitBusy = true;
+    // Снимок «был ли player_state ДО запроса» — WS-тик может добавить ps
+    // параллельно, и тогда проверка `!this._state?.player_state` после await
+    // соврёт, рефреш не стартует и кнопка навсегда остаётся «Войти в бой!».
+    const hadPsBefore = !!this._state?.player_state;
     try {
       const r = await post('/api/world_boss/hit');
       if (r.ok) {
@@ -153,7 +157,7 @@ Object.assign(WorldBossScene.prototype, {
         const _dmgSuffix = (r.is_crit ? ' 💥' : '') + (r.vulnerable ? ' x3' : '');
         this._toast(`⚔️ ${r.damage}${_dmgSuffix}`);
         if (this._state?.active) this._state.active.current_hp = r.boss_hp;
-        if (!this._state?.player_state) {
+        if (!hadPsBefore) {
           // Первый вход в рейд — нужен полный рефреш чтобы показать УДАРИТЬ + HP игрока
           setTimeout(() => { if (this._alive) this._refresh(); }, 400);
         } else {
