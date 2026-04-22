@@ -129,8 +129,10 @@
   </div>
 </div>
 <script>
-// Watchdog: если loading screen не убран за 25с — показываем ошибку
-// 25с = запас на холодный старт Render + загрузку SDK
+// Watchdog: если loading screen не убран за 60с — показываем ошибку.
+// 60с = запас на Render cold start (до 60с) + медленный мобильный интернет.
+// Причина увеличения с 25с: на телефоне Telegram WebView дольше грузит
+// ~80 скриптов, и Render free-tier просыпается 30-60 сек после idle.
 setTimeout(function(){
   var ls = document.getElementById('loading-screen');
   var sub = document.getElementById('loading-sub');
@@ -138,7 +140,7 @@ setTimeout(function(){
     sub.textContent = '❌ Не удалось загрузить. Закройте и откройте заново.';
     sub.style.color = '#dc3c46';
   }
-}, 25000);
+}, 60000);
 </script>
 
 <!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
