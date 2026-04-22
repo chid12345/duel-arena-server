@@ -17,25 +17,25 @@ const RING_IMG = {
 
 const RING_DATA = [
   // Бесплатные
-  {id:'ring_free1', r:'common', ht:'💍 Кольцо', name:'Кольцо Удачи',    stars:'★☆☆☆', double_pct:2, gold_pct:0,  xp_pct:0,  type:'free'},
-  {id:'ring_free2', r:'common', ht:'💍 Кольцо', name:'Кольцо Мудрости', stars:'★☆☆☆', double_pct:0, gold_pct:0,  xp_pct:5,  type:'free'},
-  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Богатства', stars:'★☆☆☆', double_pct:0, gold_pct:5,  xp_pct:0,  type:'free'},
-  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Воина',    stars:'★☆☆☆', double_pct:1, gold_pct:3,  xp_pct:0,  type:'free'},
+  {id:'ring_free1', r:'common', ht:'💍 Кольцо', name:'Кольцо Меткости',      stars:'★☆☆☆', acc:3,  anti_dodge:0, silence:0, slow:0, type:'free'},
+  {id:'ring_free2', r:'common', ht:'💍 Кольцо', name:'Кольцо Охотника',      stars:'★☆☆☆', acc:0,  anti_dodge:5, silence:0, slow:0, type:'free'},
+  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Безмолвия',     stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:5, slow:0, type:'free'},
+  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Оков',          stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:0, slow:5, type:'free'},
   // Золото
-  {id:'ring_gold1', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Берсерка',  stars:'★★☆☆', double_pct:5, gold_pct:0,  xp_pct:0,  type:'gold',     price:'1100'},
-  {id:'ring_gold2', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Знания',    stars:'★★☆☆', double_pct:0, gold_pct:0,  xp_pct:12, type:'gold',     price:'1400'},
-  {id:'ring_gold3', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Казначея',  stars:'★★☆☆', double_pct:0, gold_pct:12, xp_pct:0,  type:'gold',     price:'1700'},
-  {id:'ring_gold4', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Ветерана',  stars:'★★☆☆', double_pct:3, gold_pct:7,  xp_pct:0,  type:'gold',     price:'2000'},
+  {id:'ring_gold1', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Снайпера',       stars:'★★☆☆', acc:7,  anti_dodge:0,  silence:0,  slow:0,  type:'gold',     price:'1100'},
+  {id:'ring_gold2', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Преследователя', stars:'★★☆☆', acc:0,  anti_dodge:12, silence:0,  slow:0,  type:'gold',     price:'1400'},
+  {id:'ring_gold3', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Тишины',         stars:'★★☆☆', acc:0,  anti_dodge:0,  silence:12, slow:0,  type:'gold',     price:'1700'},
+  {id:'ring_gold4', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Замедления',     stars:'★★☆☆', acc:0,  anti_dodge:0,  silence:0,  slow:12, type:'gold',     price:'2000'},
   // Алмазы
-  {id:'ring_dia1',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Хаоса',    stars:'★★★☆', double_pct:9, gold_pct:0,  xp_pct:0,  type:'diamonds', price:'25'},
-  {id:'ring_dia2',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Провидца', stars:'★★★☆', double_pct:0, gold_pct:0,  xp_pct:22, type:'diamonds', price:'35'},
-  {id:'ring_dia3',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Торговца', stars:'★★★☆', double_pct:0, gold_pct:22, xp_pct:0,  type:'diamonds', price:'50'},
-  {id:'ring_dia4',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Легенды',  stars:'★★★☆', double_pct:5, gold_pct:12, xp_pct:0,  type:'diamonds', price:'70'},
+  {id:'ring_dia1',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Ясновидца',     stars:'★★★☆', acc:12, anti_dodge:0,  silence:0,  slow:0,  type:'diamonds', price:'25'},
+  {id:'ring_dia2',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Неизбежности',  stars:'★★★☆', acc:0,  anti_dodge:20, silence:0,  slow:0,  type:'diamonds', price:'35'},
+  {id:'ring_dia3',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Молчания',      stars:'★★★☆', acc:0,  anti_dodge:0,  silence:20, slow:0,  type:'diamonds', price:'50'},
+  {id:'ring_dia4',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Оцепенения',    stars:'★★★☆', acc:0,  anti_dodge:0,  silence:0,  slow:20, type:'diamonds', price:'70'},
   // Мифические
-  {id:'ring_mythic1',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Разрушителя', stars:'★★★★', double_pct:15, gold_pct:0,  xp_pct:0,  type:'mythic'},
-  {id:'ring_mythic2',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Оракула',     stars:'★★★★', double_pct:0,  gold_pct:0,  xp_pct:35, type:'mythic'},
-  {id:'ring_mythic3',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Мидаса',      stars:'★★★★', double_pct:0,  gold_pct:35, xp_pct:0,  type:'mythic'},
-  {id:'ring_mythic4',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Вечности',    stars:'★★★★', double_pct:8,  gold_pct:20, xp_pct:10, type:'mythic'},
+  {id:'ring_mythic1',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Провидца',          stars:'★★★★', acc:18, anti_dodge:0,  silence:0,  slow:0,  type:'mythic'},
+  {id:'ring_mythic2',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Рока',               stars:'★★★★', acc:0,  anti_dodge:30, silence:0,  slow:0,  type:'mythic'},
+  {id:'ring_mythic3',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Вечного Безмолвия', stars:'★★★★', acc:0,  anti_dodge:0,  silence:30, slow:0,  type:'mythic'},
+  {id:'ring_mythic4',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Паралича',          stars:'★★★★', acc:0,  anti_dodge:0,  silence:0,  slow:30, type:'mythic'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
@@ -82,9 +82,10 @@ function _removeDarkBg(img) {
 
 function _pills(h) {
   let s = '';
-  if (h.double_pct > 0) s += `<span class="wd-pill p-s">+${h.double_pct}% двойной удар</span>`;
-  if (h.gold_pct   > 0) s += `<span class="wd-pill p-a">+${h.gold_pct}% золото</span>`;
-  if (h.xp_pct     > 0) s += `<span class="wd-pill p-e">+${h.xp_pct}% опыт</span>`;
+  if (h.acc        > 0) s += `<span class="wd-pill p-a">+${h.acc}% точность</span>`;
+  if (h.anti_dodge > 0) s += `<span class="wd-pill p-i">-${h.anti_dodge}% уворот врага</span>`;
+  if (h.silence    > 0) s += `<span class="wd-pill p-s">${h.silence}% тишина</span>`;
+  if (h.slow       > 0) s += `<span class="wd-pill p-e">${h.slow}% замедление</span>`;
   return s;
 }
 

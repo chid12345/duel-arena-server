@@ -119,6 +119,11 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_double = int(_eq_early.get("double_pct", 0) or 0)
     _eq_gold   = int(_eq_early.get("gold_pct", 0) or 0)
     _eq_xp     = int(_eq_early.get("xp_pct", 0) or 0)
+    _eq_accuracy    = int(_eq_early.get("accuracy", 0) or 0)
+    _eq_anti_dodge  = int(_eq_early.get("anti_dodge_pct", 0) or 0)
+    _eq_silence     = int(_eq_early.get("silence_pct", 0) or 0)
+    _eq_slow        = int(_eq_early.get("slow_pct", 0) or 0)
+    _eq_regen_speed = int(_eq_early.get("regen_speed_pct", 0) or 0)
     # _eq_str/agi/intu уже определены выше (ранняя фаза)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
@@ -219,7 +224,8 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "stamina":   bonus_stamina,
         },
         "regen_per_min": round(
-            mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS) * 60,
+            mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS) * 60
+            * (1.0 + _eq_regen_speed / 100.0),
             1,
         ),
         "regen_secs_to_full": (
@@ -229,7 +235,8 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
                 (mhp - chp)
                 / max(
                     0.001,
-                    mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS),
+                    mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
+                    * (1.0 + _eq_regen_speed / 100.0),
                 )
             )
         ),
@@ -251,6 +258,11 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "double_pct": _eq_double,
             "gold_pct":   _eq_gold,
             "xp_pct":     _eq_xp,
+            "accuracy":        _eq_accuracy,
+            "anti_dodge_pct":  _eq_anti_dodge,
+            "silence_pct":     _eq_silence,
+            "slow_pct":        _eq_slow,
+            "regen_speed_pct": _eq_regen_speed,
         },
         **_premium_fields(player),
     }

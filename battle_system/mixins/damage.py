@@ -72,8 +72,8 @@ class BattleDamageMixin:
         elif cls_id == "dragonknight_diamonds" and _hp_pct < 0.40:
             base_dmg = min(dmg_cap, int(base_dmg * 1.06))   # +6% при HP < 40%
 
-        # Промах (снижается бафом accuracy у атакующего)
-        eff_miss = max(0.0, MISS_CHANCE - attacker.get("_buff_accuracy", 0) / 100.0)
+        # Промах (снижается бафом accuracy и кольцом accuracy атакующего)
+        eff_miss = max(0.0, MISS_CHANCE - attacker.get("_buff_accuracy", 0) / 100.0 - attacker.get("_eq_accuracy", 0) / 100.0)
         if not is_afk and random.random() < eff_miss:
             return 0, "miss", ""
 
@@ -115,6 +115,10 @@ class BattleDamageMixin:
             # Дебафф ног: удар в ноги в прошлом раунде → -15% уворот сейчас
             if defender.get("_debuff_legs"):
                 dodge_ch = max(0.0, dodge_ch - ZONE_LEGS_DODGE_PENALTY)
+            # Антиуклон атакующего снижает уворот защитника
+            _anti_dodge = attacker.get("_eq_anti_dodge_pct", 0)
+            if _anti_dodge:
+                dodge_ch = max(0.0, dodge_ch - _anti_dodge / 100.0)
             if random.random() < dodge_ch:
                 # Двойной удар атакующего при уклоне
                 atk_agi_inv = stamina_stats_invested(
@@ -124,6 +128,9 @@ class BattleDamageMixin:
                 dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE,
                              (atk_agi_inv // max(1, DODGE_DOUBLE_STRIKE_STEP))
                              * DODGE_DOUBLE_STRIKE_PCT_PER_STEP)
+                _slow = defender.get("_eq_slow_pct", 0)
+                if _slow:
+                    dbl_ch = max(0.0, dbl_ch - _slow / 100.0)
                 if random.random() < dbl_ch:
                     d2 = max(1, int(base_dmg * DODGE_DOUBLE_STRIKE_DAMAGE_MULT))
                     return self._apply_incoming_damage(d2, defender), "double", debuff
@@ -142,6 +149,10 @@ class BattleDamageMixin:
             crit_ch = min(CRIT_MAX_CHANCE, crit_ch + 0.05)
         _crit_mult = 1.65 if wt_atk == "crit" else 1.5
         is_crit = random.random() < crit_ch
+        # Silence: кольцо защитника глушит крит атакующего
+        if is_crit and defender.get("_eq_silence_pct", 0):
+            if random.random() < defender["_eq_silence_pct"] / 100.0:
+                is_crit = False
         _cr = int(defender.get("_eq_crit_resist_pct", 0))
         if is_crit and _cr:
             _crit_mult = max(1.05, _crit_mult * (1.0 - _cr / 100.0))
@@ -171,6 +182,9 @@ class BattleDamageMixin:
         elif cls_id == "shadowdancer_diamonds":
             dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.06)   # Ловкач++: +6%
         dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + attacker.get("_buff_double_pct", 0) / 100.0 + attacker.get("_eq_double_pct", 0) / 100.0)
+        _slow = defender.get("_eq_slow_pct", 0)
+        if _slow:
+            dbl_ch = max(0.0, dbl_ch - _slow / 100.0)
         is_double = random.random() < dbl_ch
         if is_double:
             damage += max(1, int(damage * DODGE_DOUBLE_STRIKE_DAMAGE_MULT))

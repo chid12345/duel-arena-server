@@ -123,9 +123,11 @@ Object.assign(StatsScene.prototype, {
       _eq.str_bonus  > 0 && { i:'⚔️', n:'Сила (щит)',      v:`+${_eq.str_bonus}`,  neg:false },
       _eq.agi_bonus  > 0 && { i:'🤸', n:'Ловкость (щит)',  v:`+${_eq.agi_bonus}`,  neg:false },
       _eq.intu_bonus > 0 && { i:'💥', n:'Интуиция (щит)',  v:`+${_eq.intu_bonus}`, neg:false },
-      _eq.double_pct > 0 && { i:'⚡', n:'Двойной удар',    v:`+${_eq.double_pct}%`, neg:false },
-      _eq.gold_pct   > 0 && { i:'💰', n:'Золото',          v:`+${_eq.gold_pct}%`,  neg:false },
-      _eq.xp_pct     > 0 && { i:'📚', n:'Опыт',            v:`+${_eq.xp_pct}%`,   neg:false },
+      _eq.accuracy      > 0 && { i:'👁', n:'Точность',       v:`+${_eq.accuracy}%`,                        neg:false },
+      _eq.anti_dodge_pct > 0 && { i:'🎯', n:'Антиуклон',   v:`-${_eq.anti_dodge_pct}% уворот врага`,     neg:false },
+      _eq.silence_pct   > 0 && { i:'🔇', n:'Тишина',       v:`${_eq.silence_pct}% глушит крит`,          neg:false },
+      _eq.slow_pct      > 0 && { i:'⏱', n:'Замедление',   v:`-${_eq.slow_pct}% двойной врага`,          neg:false },
+      _eq.regen_speed_pct > 0 && { i:'⚡', n:'Регенерация', v:`+${_eq.regen_speed_pct}% скорость`,       neg:false },
     ].filter(Boolean);
     const secs = [
       { title:'⚔️ Класс воина', rows: wt.rows },
