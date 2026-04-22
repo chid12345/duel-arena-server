@@ -208,6 +208,23 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     "shield_mythic2": {"slot": SLOT_SHIELD, "rarity": "mythic", "name": "Щит Бессмертного",     "emoji": "🛡️", "hp_bonus": 300, "crit_resist_pct": 20, "str_bonus": 4, "agi_bonus": 4, "intu_bonus": 4, "price_stars": 590, "desc": "+300 HP, -20% крит-урон, +4 ко всем статам"},
     "shield_mythic3": {"slot": SLOT_SHIELD, "rarity": "mythic", "name": "Щит Рока",             "emoji": "🛡️", "def_pct": 0.08, "crit_resist_pct": 30, "str_bonus": 4, "agi_bonus": 4, "intu_bonus": 4, "price_stars": 590, "desc": "-8% урона, -30% крит-урон, +4 ко всем статам"},
     "shield_mythic4": {"slot": SLOT_SHIELD, "rarity": "mythic", "name": "Щит Богов",            "emoji": "🛡️", "def_pct": 0.10, "hp_bonus": 120, "crit_resist_pct": 18, "str_bonus": 4, "agi_bonus": 4, "intu_bonus": 4, "price_stars": 590, "desc": "-10% урона, +120 HP, -18% крит, +4 ко всем статам"},
+    # ── КОЛЬЦА (ring1/ring2 slot) ────────────────────────────
+    "ring_free1": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Удачи",      "emoji": "💍", "double_pct": 2, "desc": "+2% двойной удар"},
+    "ring_free2": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Мудрости",   "emoji": "💍", "xp_pct": 5,    "desc": "+5% опыт"},
+    "ring_free3": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Богатства",  "emoji": "💍", "gold_pct": 5,  "desc": "+5% золото"},
+    "ring_free4": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Воина",      "emoji": "💍", "double_pct": 1, "gold_pct": 3, "desc": "+1% двойной удар, +3% золото"},
+    "ring_gold1": {"slot": SLOT_RING1, "rarity": RARITY_RARE, "name": "Кольцо Берсерка",     "emoji": "💍", "double_pct": 5,  "price_gold": 1100, "desc": "+5% двойной удар"},
+    "ring_gold2": {"slot": SLOT_RING1, "rarity": RARITY_RARE, "name": "Кольцо Знания",       "emoji": "💍", "xp_pct": 12,    "price_gold": 1400, "desc": "+12% опыт"},
+    "ring_gold3": {"slot": SLOT_RING1, "rarity": RARITY_RARE, "name": "Кольцо Казначея",     "emoji": "💍", "gold_pct": 12,  "price_gold": 1700, "desc": "+12% золото"},
+    "ring_gold4": {"slot": SLOT_RING1, "rarity": RARITY_RARE, "name": "Кольцо Ветерана",     "emoji": "💍", "double_pct": 3, "gold_pct": 7, "price_gold": 2000, "desc": "+3% двойной удар, +7% золото"},
+    "ring_dia1":  {"slot": SLOT_RING1, "rarity": RARITY_EPIC, "name": "Кольцо Хаоса",        "emoji": "💍", "double_pct": 9,  "price_gold": 0, "price_diamonds": 25, "desc": "+9% двойной удар"},
+    "ring_dia2":  {"slot": SLOT_RING1, "rarity": RARITY_EPIC, "name": "Кольцо Провидца",     "emoji": "💍", "xp_pct": 22,    "price_gold": 0, "price_diamonds": 35, "desc": "+22% опыт"},
+    "ring_dia3":  {"slot": SLOT_RING1, "rarity": RARITY_EPIC, "name": "Кольцо Торговца",     "emoji": "💍", "gold_pct": 22,  "price_gold": 0, "price_diamonds": 50, "desc": "+22% золото"},
+    "ring_dia4":  {"slot": SLOT_RING1, "rarity": RARITY_EPIC, "name": "Кольцо Легенды",      "emoji": "💍", "double_pct": 5, "gold_pct": 12, "price_gold": 0, "price_diamonds": 70, "desc": "+5% двойной удар, +12% золото"},
+    "ring_mythic1": {"slot": SLOT_RING1, "rarity": "mythic", "name": "Кольцо Разрушителя",   "emoji": "💍", "double_pct": 15, "price_stars": 490, "desc": "+15% двойной удар"},
+    "ring_mythic2": {"slot": SLOT_RING1, "rarity": "mythic", "name": "Кольцо Оракула",       "emoji": "💍", "xp_pct": 35,    "price_stars": 490, "desc": "+35% опыт"},
+    "ring_mythic3": {"slot": SLOT_RING1, "rarity": "mythic", "name": "Кольцо Мидаса",        "emoji": "💍", "gold_pct": 35,  "price_stars": 490, "desc": "+35% золото"},
+    "ring_mythic4": {"slot": SLOT_RING1, "rarity": "mythic", "name": "Кольцо Вечности",      "emoji": "💍", "double_pct": 8, "gold_pct": 20, "xp_pct": 10, "price_stars": 490, "desc": "+8% двойной удар, +20% золото, +10% опыт"},
     # ── САПОГИ (boots slot) ──────────────────────────────────
     # Бесплатные — уворот и регенерация (новая механика, кардинально отличается от шлемов)
     "boots_free1": {
@@ -348,4 +365,7 @@ def get_item_stats(item_id: str) -> dict:
         "str_bonus":  item.get("str_bonus", 0),
         "agi_bonus":  item.get("agi_bonus", 0),
         "intu_bonus": item.get("intu_bonus", 0),
+        "double_pct": item.get("double_pct", 0),
+        "gold_pct":   item.get("gold_pct", 0),
+        "xp_pct":     item.get("xp_pct", 0),
     }

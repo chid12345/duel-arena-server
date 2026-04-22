@@ -170,7 +170,7 @@ class BattleDamageMixin:
             dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.04)   # Ловкач+: +4%
         elif cls_id == "shadowdancer_diamonds":
             dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.06)   # Ловкач++: +6%
-        dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + attacker.get("_buff_double_pct", 0) / 100.0)
+        dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + attacker.get("_buff_double_pct", 0) / 100.0 + attacker.get("_eq_double_pct", 0) / 100.0)
         is_double = random.random() < dbl_ch
         if is_double:
             damage += max(1, int(damage * DODGE_DOUBLE_STRIKE_DAMAGE_MULT))

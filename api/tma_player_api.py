@@ -116,6 +116,9 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_regen    = int(_eq.get("regen_bonus", 0) or 0)
     _eq_lifesteal = int(_eq.get("lifesteal_pct", 0) or 0)
     _eq_crit_resist = int(_eq.get("crit_resist_pct", 0) or 0)
+    _eq_double = int(_eq_early.get("double_pct", 0) or 0)
+    _eq_gold   = int(_eq_early.get("gold_pct", 0) or 0)
+    _eq_xp     = int(_eq_early.get("xp_pct", 0) or 0)
     # _eq_str/agi/intu уже определены выше (ранняя фаза)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
@@ -245,6 +248,9 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "str_bonus":  _eq_str,
             "agi_bonus":  _eq_agi,
             "intu_bonus": _eq_intu,
+            "double_pct": _eq_double,
+            "gold_pct":   _eq_gold,
+            "xp_pct":     _eq_xp,
         },
         **_premium_fields(player),
     }

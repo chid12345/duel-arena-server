@@ -141,6 +141,8 @@ Object.assign(MenuScene.prototype, {
         BootsHTML.open(this);
       } else if (slot === 'shield' && typeof ShieldHTML !== 'undefined') {
         ShieldHTML.open(this);
+      } else if ((slot === 'ring1' || slot === 'ring2') && typeof RingHTML !== 'undefined') {
+        RingHTML.open(this);
       } else {
         this.scene.start('Equipment', { slot });
       }

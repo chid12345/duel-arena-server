@@ -134,6 +134,19 @@ const _SHIELD_TEXTURE_MAP = {
 };
 function getShieldTextureKey(item_id) { return _SHIELD_TEXTURE_MAP[item_id] || null; }
 
+/* Ключ Phaser-текстуры кольца по item_id */
+const _RING_TEXTURE_MAP = {
+  ring_free1:'ring_free1', ring_free2:'ring_free2',
+  ring_free3:'ring_free3', ring_free4:'ring_free4',
+  ring_gold1:'ring_gold1', ring_gold2:'ring_gold2',
+  ring_gold3:'ring_gold3', ring_gold4:'ring_gold4',
+  ring_dia1:'ring_dia1',   ring_dia2:'ring_dia2',
+  ring_dia3:'ring_dia3',   ring_dia4:'ring_dia4',
+  ring_mythic1:'ring_mythic1', ring_mythic2:'ring_mythic2',
+  ring_mythic3:'ring_mythic3', ring_mythic4:'ring_mythic4',
+};
+function getRingTextureKey(item_id) { return _RING_TEXTURE_MAP[item_id] || null; }
+
 /* Ключ текстуры воина по типу */
 function getWarriorKey(type) {
   if (type === 'tank')    return 'warrior_tank';

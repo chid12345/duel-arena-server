@@ -78,6 +78,22 @@ class BootScene extends Phaser.Scene {
     this.load.image('shield_mythic2','shield_mythic2.png');
     this.load.image('shield_mythic3','shield_mythic3.png');
     this.load.image('shield_mythic4','shield_mythic4.png');
+    this.load.image('ring_free1',   'ring_free1.png');
+    this.load.image('ring_free2',   'ring_free2.png');
+    this.load.image('ring_free3',   'ring_free3.png');
+    this.load.image('ring_free4',   'ring_free4.png');
+    this.load.image('ring_gold1',   'ring_gold1.png');
+    this.load.image('ring_gold2',   'ring_gold2.png');
+    this.load.image('ring_gold3',   'ring_gold3.png');
+    this.load.image('ring_gold4',   'ring_gold4.png');
+    this.load.image('ring_dia1',    'ring_dia1.png');
+    this.load.image('ring_dia2',    'ring_dia2.png');
+    this.load.image('ring_dia3',    'ring_dia3.png');
+    this.load.image('ring_dia4',    'ring_dia4.png');
+    this.load.image('ring_mythic1', 'ring_mythic1.png');
+    this.load.image('ring_mythic2', 'ring_mythic2.png');
+    this.load.image('ring_mythic3', 'ring_mythic3.png');
+    this.load.image('ring_mythic4', 'ring_mythic4.png');
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('complete', () => {
       try {

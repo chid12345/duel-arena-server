@@ -157,7 +157,7 @@ class BattleEndBattleMixin:
             exp_reward = 0
             loser_exp = 0
 
-        # gold_pct / xp_pct buff (gold_hunt / xp_hunt: +% за 24h)
+        # gold_pct / xp_pct buff (gold_hunt / xp_hunt: +% за 24h) + equipment rings
         if not is_test and winner_user_id:
             try:
                 _combined = db.get_combined_buffs(int(winner_user_id))
@@ -167,6 +167,16 @@ class BattleEndBattleMixin:
                 _xp_pct = _combined.get("xp_pct", 0)
                 if _xp_pct and exp_reward > 0:
                     exp_reward = int(exp_reward * (1.0 + _xp_pct / 100.0))
+            except Exception:
+                pass
+            try:
+                _eq_stats = db.get_equipment_stats(int(winner_user_id))
+                _eq_gold_pct = int(_eq_stats.get("gold_pct", 0))
+                if _eq_gold_pct and gold_reward > 0:
+                    gold_reward = int(gold_reward * (1.0 + _eq_gold_pct / 100.0))
+                _eq_xp_pct = int(_eq_stats.get("xp_pct", 0))
+                if _eq_xp_pct and exp_reward > 0:
+                    exp_reward = int(exp_reward * (1.0 + _eq_xp_pct / 100.0))
             except Exception:
                 pass
 

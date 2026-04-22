@@ -156,6 +156,9 @@ class BattleStartMixin:
         player["_eq_regen_bonus"]  = int(stats.get("regen_bonus", 0))
         player["_eq_lifesteal_pct"]   = int(stats.get("lifesteal_pct", 0))
         player["_eq_crit_resist_pct"] = int(stats.get("crit_resist_pct", 0))
+        player["_eq_double_pct"] = int(stats.get("double_pct", 0))
+        player["_eq_gold_pct"]   = int(stats.get("gold_pct", 0))
+        player["_eq_xp_pct"]     = int(stats.get("xp_pct", 0))
         if stats.get("str_bonus", 0):
             player["strength"] = max(1, int(player.get("strength", PLAYER_START_STRENGTH)) + stats["str_bonus"])
         if stats.get("agi_bonus", 0):

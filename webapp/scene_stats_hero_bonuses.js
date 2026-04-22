@@ -123,6 +123,9 @@ Object.assign(StatsScene.prototype, {
       _eq.str_bonus  > 0 && { i:'⚔️', n:'Сила (щит)',      v:`+${_eq.str_bonus}`,  neg:false },
       _eq.agi_bonus  > 0 && { i:'🤸', n:'Ловкость (щит)',  v:`+${_eq.agi_bonus}`,  neg:false },
       _eq.intu_bonus > 0 && { i:'💥', n:'Интуиция (щит)',  v:`+${_eq.intu_bonus}`, neg:false },
+      _eq.double_pct > 0 && { i:'⚡', n:'Двойной удар',    v:`+${_eq.double_pct}%`, neg:false },
+      _eq.gold_pct   > 0 && { i:'💰', n:'Золото',          v:`+${_eq.gold_pct}%`,  neg:false },
+      _eq.xp_pct     > 0 && { i:'📚', n:'Опыт',            v:`+${_eq.xp_pct}%`,   neg:false },
     ].filter(Boolean);
     const secs = [
       { title:'⚔️ Класс воина', rows: wt.rows },
