@@ -8,31 +8,9 @@ from telegram import Update
 
 from database import db
 from handlers.common import tg_api_call
+from handlers.commands.shop_equip_stars import handle_stars_equip_payload
 
 logger = logging.getLogger(__name__)
-
-
-# Stars-payload префикс → слот в player_equipment.
-# Именно таким payload сервер создаёт createInvoiceLink (см. api/*_payment_routes.py).
-# Шлем исторически лежит в слоте "belt" (см. crypto_check.py, helmet_html_overlay.js).
-_STARS_EQUIP_SLOT = {
-    "weapon_equip_stars": "weapon",
-    "shield_equip_stars": "shield",
-    "helmet_equip_stars": "belt",
-    "boots_equip_stars":  "boots",
-    "ring_equip_stars":   "ring1",
-}
-
-
-def _parse_stars_equip_payload(payload: str):
-    """Парсит `{type}_equip_stars:{uid}:{item_id}` → (slot, item_id) | None."""
-    for prefix, slot in _STARS_EQUIP_SLOT.items():
-        if payload.startswith(prefix + ":"):
-            parts = payload.split(":", 2)
-            if len(parts) == 3 and parts[2]:
-                return slot, parts[2]
-            break
-    return None
 
 
 class BotHandlersShopPayments:
@@ -116,30 +94,12 @@ class BotHandlersShopPayments:
             )
             return
 
-        # Мифическое снаряжение за Stars (weapon / shield / helmet / boots / ring).
-        # Критично: выдаём предмет ИМЕННО здесь, не полагаясь на callback openInvoice
-        # в mini app. Если Telegram свернул mini app на момент оплаты — callback не
-        # сработает, и пользователь остался бы без покупки (и думал бы что "игра закрылась").
-        eq_parse = _parse_stars_equip_payload(payload)
-        if eq_parse:
-            slot, item_id = eq_parse
-            try:
-                db.equip_item(user.id, slot, item_id)
-                db.add_owned_weapon(user.id, item_id)
-                msg = (
-                    "✅ <b>Мифический предмет получен и надет!</b>\n"
-                    "Откройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena"
-                )
-            except Exception as _e:
-                logger.error(
-                    "CRITICAL: Stars equip failed uid=%s slot=%s item=%s stars=%s err=%s",
-                    user.id, slot, item_id, stars, _e,
-                )
-                msg = (
-                    "⚠️ Оплата получена, но выдача предмета задержалась.\n"
-                    "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena"
-                )
-            await tg_api_call(update.message.reply_text, msg, parse_mode="HTML")
+        # Мифическое снаряжение за Stars (weapon/shield/helmet/boots/ring) →
+        # выделено в handlers/commands/shop_equip_stars.py. Критично: выдаём здесь,
+        # не полагаясь на openInvoice callback в mini app (при свёрнутом app — теряется).
+        equip_msg = handle_stars_equip_payload(user.id, payload, stars)
+        if equip_msg is not None:
+            await tg_api_call(update.message.reply_text, equip_msg, parse_mode="HTML")
             return
 
         if payload.startswith("avatar_"):

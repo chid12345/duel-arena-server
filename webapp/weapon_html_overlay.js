@@ -166,18 +166,26 @@ async function _doAction(scene, action, item) {
         tg.openInvoice(starsUrl, async (status) => {
           if (status === 'paid') {
             _notify('⏳ Активируем...', true, true);
-            try {
-              const conf = await post('/api/equipment/weapon_stars_confirm', {item_id: item.id});
-              if (conf?.ok) {
-                if (conf.player)        { State.player=conf.player; State.playerLoadedAt=Date.now(); }
-                if (conf.equipment)     State.equipment=conf.equipment;
-                if (conf.owned_weapons) State.ownedWeapons=conf.owned_weapons;
-                tg?.HapticFeedback?.notificationOccurred('success');
-                _notify('✅ Мифическое оружие получено!');
-                const activeTab = document.querySelector('#wn-root ._wn-view.active');
-                _render(scene, activeTab?.dataset?.wv||'all');
-              } else { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
-            } catch(_) { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
+            // Сервер (weapon_stars_confirm) read-only: ждёт до 3с пока бот
+            // обработает successful_payment. Если не успел — reason:"processing".
+            // Ретраим до 3 раз × 2с: серверу даём до 9с на race condition.
+            let conf = null;
+            for (let i = 0; i < 3; i++) {
+              try { conf = await post('/api/equipment/weapon_stars_confirm', {item_id: item.id}); }
+              catch(_) { conf = null; }
+              if (conf?.ok) break;
+              if (conf?.reason !== 'processing') break;
+              await new Promise(r => setTimeout(r, 2000));
+            }
+            if (conf?.ok) {
+              if (conf.player)        { State.player=conf.player; State.playerLoadedAt=Date.now(); }
+              if (conf.equipment)     State.equipment=conf.equipment;
+              if (conf.owned_weapons) State.ownedWeapons=conf.owned_weapons;
+              tg?.HapticFeedback?.notificationOccurred('success');
+              _notify('✅ Мифическое оружие получено!');
+              const activeTab = document.querySelector('#wn-root ._wn-view.active');
+              _render(scene, activeTab?.dataset?.wv||'all');
+            } else { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
           } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
           scene._weaponBusy = false;
         });
