@@ -58,7 +58,9 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
         return None
     slot, item_id = parse
     try:
-        db.equip_item(user_id, slot, item_id)
+        # force=True: для кольца — точно в ring1 (мини-апп показывает только ring1;
+        # без force резолвер мог бы положить в ring2, и покупка «потерялась бы» в UI).
+        db.equip_item(user_id, slot, item_id, force=True)
         db.add_owned_weapon(user_id, item_id)
     except Exception as exc:  # pragma: no cover — логируем критично для разбора
         logger.error(

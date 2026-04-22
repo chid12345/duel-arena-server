@@ -27,9 +27,12 @@ class EquipmentMixin:
                 result[slot] = {"item_id": item_id, **item}
         return result
 
-    def equip_item(self, user_id: int, slot: str, item_id: str) -> bool:
-        """Надеть предмет в слот (UPSERT). Для кольца — заполняет ring1, потом ring2."""
-        target_slot = self._resolve_ring_slot(user_id, slot, item_id)
+    def equip_item(self, user_id: int, slot: str, item_id: str, force: bool = False) -> bool:
+        """Надеть предмет в слот (UPSERT). Для кольца — по умолчанию заполняет ring1, потом ring2.
+        force=True — писать точно в переданный slot без ring-логики (для платных покупок Stars/USDT:
+        мини-апп показывает только ring1, и купленное кольцо должно туда и попадать).
+        """
+        target_slot = slot if force else self._resolve_ring_slot(user_id, slot, item_id)
         if target_slot is None:
             return False
         conn = self.get_connection()

@@ -90,7 +90,9 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     _handled_equip = True
                     _equip_ok = False
                     try:
-                        db.equip_item(uid, _slot, _item_id)
+                        # force=True: кольцо пишем точно в ring1, а не в ring2
+                        # (мини-апп профиля рендерит только ring1).
+                        db.equip_item(uid, _slot, _item_id, force=True)
                         db.add_owned_weapon(uid, _item_id)
                         _cache_invalidate(uid)
                         _equip_ok = True

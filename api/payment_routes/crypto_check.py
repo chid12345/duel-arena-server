@@ -130,7 +130,8 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     except Exception: pass
                     return {"ok": True, "paid": True, "shield_equipped": True, "shield_id": shield_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if is_ring_equip and ring_equip_id:
-                    db.equip_item(owner_uid, "ring1", ring_equip_id)
+                    # force=True: купленное кольцо всегда в ring1 (UI профиля показывает только ring1).
+                    db.equip_item(owner_uid, "ring1", ring_equip_id, force=True)
                     db.add_owned_weapon(owner_uid, ring_equip_id)
                     _cache_invalidate(owner_uid)
                     db.mark_items_delivered(invoice_id)
@@ -245,7 +246,8 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     fresh = db.get_or_create_player(uid, "")
                     return {"ok": True, "paid": True, "already_confirmed": True, "shield_equipped": True, "shield_id": shield_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if is_ring_equip and ring_equip_id:
-                    db.equip_item(uid, "ring1", ring_equip_id)
+                    # force=True: купленное кольцо всегда в ring1 (UI профиля показывает только ring1).
+                    db.equip_item(uid, "ring1", ring_equip_id, force=True)
                     db.add_owned_weapon(uid, ring_equip_id)
                     db.mark_items_delivered(invoice_id)
                     _cache_invalidate(uid)
