@@ -169,6 +169,13 @@ class BattleEndBattleMixin:
                     exp_reward = int(exp_reward * (1.0 + _xp_pct / 100.0))
             except Exception:
                 pass
+            # Бонусы кольц (+gold_pct / +xp_pct от экипировки)
+            _eq_gold = int(winner.get("_eq_gold_pct", 0) or 0)
+            _eq_xp   = int(winner.get("_eq_xp_pct",   0) or 0)
+            if _eq_gold and gold_reward > 0:
+                gold_reward = int(gold_reward * (1.0 + _eq_gold / 100.0))
+            if _eq_xp and exp_reward > 0:
+                exp_reward = int(exp_reward * (1.0 + _eq_xp / 100.0))
 
         combat_log_html = "\n\n".join(battle.get("combat_log_lines", []))
 
