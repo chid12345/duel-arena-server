@@ -277,8 +277,9 @@ function _render(scene, view) {
     const card=e.target.closest('.wd-card');
     if (card) {
       const h=items.find(x=>x.id===card.dataset.id);
+      const eq=items.find(x=>x.equipped);
       if (h && typeof HelmetHTMLDetail!=='undefined')
-        HelmetHTMLDetail.show(scene, h, (act,item)=>_doAction(scene,act,item));
+        HelmetHTMLDetail.show(scene, h, (act,item)=>_doAction(scene,act,item), eq);
     }
   };
 }

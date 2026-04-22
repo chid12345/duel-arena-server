@@ -116,7 +116,7 @@ function _statLine(h) {
   return p.join(' · ');
 }
 
-function show(scene, h, onAction) {
+function show(scene, h, onAction, eq) {
   _injectCSS();
   document.getElementById('hnd-backdrop')?.remove();
 
@@ -148,6 +148,7 @@ function show(scene, h, onAction) {
         <div class="hnd-stars" style="color:${RC[h.r]}">${h.stars}</div>
         <div class="hnd-pills">${_pillsHtml(h)}</div>
         <div class="hnd-stat-line">${_statLine(h)}</div>
+        ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'atk',label:'Атака',suf:''},{k:'crit',label:'Крит',suf:''},{k:'hp',label:'HP',suf:''},{k:'pen',label:'Пробой',suf:'%'}]):'')}
         <div class="hnd-desc">${HELMET_DESC[h.id] || ''}</div>
         <div class="hnd-btn-wrap">${_btnHtml(h)}</div>
       </div>
