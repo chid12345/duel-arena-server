@@ -118,7 +118,7 @@ function _statLine(h) {
   return p.join(' · ');
 }
 
-function show(scene, h, onAction) {
+function show(scene, h, onAction, eq) {
   _injectCSS();
   document.getElementById('shd-backdrop')?.remove();
 
@@ -150,6 +150,7 @@ function show(scene, h, onAction) {
         <div class="shd-stars" style="color:${RC[h.r]}">${h.stars}</div>
         <div class="shd-pills">${_pillsHtml(h)}</div>
         <div class="shd-stat-line">${_statLine(h)}</div>
+        ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'hp',label:'HP',suf:''},{k:'str',label:'Сила',suf:''},{k:'agi',label:'Ловкость',suf:''},{k:'intu',label:'Интуиция',suf:''}]):'')}
         <div class="shd-desc">${SHIELD_DESC[h.id] || ''}</div>
         <div class="shd-btn-wrap">${_btnHtml(h)}</div>
       </div>

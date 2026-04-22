@@ -114,7 +114,7 @@ function _statLine(w) {
   return parts.join(' · ');
 }
 
-function show(scene, w, onAction) {
+function show(scene, w, onAction, eq) {
   _injectCSS();
   document.getElementById('wnd-backdrop')?.remove();
 
@@ -146,6 +146,7 @@ function show(scene, w, onAction) {
         <div class="wnd-stars2" style="color:${RC[w.r]}">${w.stars}</div>
         <div class="wnd-pills2">${_pillsHtml(w)}</div>
         <div class="wnd-stat-line">${_statLine(w)}</div>
+        ${(typeof DetailCompare!=='undefined'?DetailCompare.html(w,eq,[{k:'atk',label:'Атака',suf:''},{k:'crit',label:'Крит',suf:''},{k:'hp',label:'HP',suf:''},{k:'pen',label:'Пробой',suf:'%'}]):'')}
         <div class="wnd-desc2">${WEAPON_DESC[w.id] || ''}</div>
         <div class="wnd-btn-wrap">${_btnHtml(w)}</div>
       </div>

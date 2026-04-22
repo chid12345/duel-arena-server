@@ -282,7 +282,8 @@ function _render(scene, view) {
     const card=e.target.closest('.wd-card');
     if (card && typeof WeaponHTMLDetail!=='undefined') {
       const w=items.find(x=>x.id===card.dataset.id);
-      if (w) WeaponHTMLDetail.show(scene,w,(act,item)=>_doAction(scene,act,item));
+      const eq=items.find(x=>x.equipped);
+      if (w) WeaponHTMLDetail.show(scene,w,(act,item)=>_doAction(scene,act,item),eq);
     }
   };
 }

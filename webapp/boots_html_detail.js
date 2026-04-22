@@ -112,7 +112,7 @@ function _statLine(h) {
   return p.join(' · ');
 }
 
-function show(scene, h, onAction) {
+function show(scene, h, onAction, eq) {
   _injectCSS();
   document.getElementById('bnd-backdrop')?.remove();
 
@@ -144,6 +144,7 @@ function show(scene, h, onAction) {
         <div class="bnd-stars" style="color:${RC[h.r]}">${h.stars}</div>
         <div class="bnd-pills">${_pillsHtml(h)}</div>
         <div class="bnd-stat-line">${_statLine(h)}</div>
+        ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'dodge',label:'Уворот',suf:'%'},{k:'regen',label:'Реген',suf:''},{k:'lifesteal',label:'Вампиризм',suf:'%'}]):'')}
         <div class="bnd-desc">${BOOTS_DESC[h.id] || ''}</div>
         <div class="bnd-btn-wrap">${_btnHtml(h)}</div>
       </div>

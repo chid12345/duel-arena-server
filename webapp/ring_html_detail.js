@@ -120,7 +120,7 @@ function _statLine(h) {
   return p.join(' · ');
 }
 
-function show(scene, h, onAction) {
+function show(scene, h, onAction, eq) {
   _injectCSS();
   document.getElementById('rgd-backdrop')?.remove();
 
@@ -152,6 +152,7 @@ function show(scene, h, onAction) {
         <div class="rgd-stars" style="color:${RC[h.r]}">${h.stars}</div>
         <div class="rgd-pills">${_pillsHtml(h)}</div>
         <div class="rgd-stat-line">${_statLine(h)}</div>
+        ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'acc',label:'Точность',suf:'%'},{k:'anti_dodge',label:'Антиуклон',suf:'%'},{k:'silence',label:'Тишина',suf:'%'},{k:'slow',label:'Замедление',suf:'%'},{k:'regen',label:'Реген HP',suf:'%'},{k:'gold',label:'Золото',suf:'%'},{k:'xp',label:'Опыт',suf:'%'}]):'')}
         <div class="rgd-desc">${RING_DESC[h.id] || ''}</div>
         <div class="rgd-btn-wrap">${_btnHtml(h)}</div>
       </div>
