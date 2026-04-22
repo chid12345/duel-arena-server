@@ -65,13 +65,11 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // ambient halo — широкое мягкое свечение вокруг слота
-      const haG = mkG(); haG.fillStyle(bc, 0.13); haG.fillRoundedRect(x - 5, y - 5, w + 10, h + 10, r + 4); c.add(haG);
-      // outer glow ring — рамка редкости без заливки (предмет парит)
-      const glG = mkG(); glG.lineStyle(2, bc, 0.85); glG.strokeRoundedRect(x, y, w, h, r); c.add(glG);
-      // точечное свечение под предметом (spot glow)
-      const sgG = mkG(); sgG.fillStyle(bc, 0.22); sgG.fillCircle(cx, cy, Math.round(w * 0.42)); c.add(sgG);
-      c.add(g); // placeholder — g не используется как заливка
+      // тонкий halo вокруг слота (очень слабый)
+      const haG = mkG(); haG.fillStyle(bc, 0.07); haG.fillRoundedRect(x - 3, y - 3, w + 6, h + 6, r + 3); c.add(haG);
+      // рамка редкости
+      const glG = mkG(); glG.lineStyle(1.5, bc, 0.7); glG.strokeRoundedRect(x, y, w, h, r); c.add(glG);
+      c.add(g); // placeholder
 
       // Броня: wardrobeEquipped | Оружие: weapon texture | Шлем: helmet texture | Сапоги: boots texture
       const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -89,23 +87,6 @@ Object.assign(MenuScene.prototype, {
         // SCREEN blend mode убирает чёрные пиксели PNG → предмет парит без фона
         try { img.setBlendMode(Phaser.BlendModes.SCREEN); } catch(_) {}
         ca(img);
-        // Пульсирующее свечение под шлемом/сапогами (по теме редкости)
-        if ((slot === 'belt' || slot === 'boots' || slot === 'shield' || slot === 'ring1' || slot === 'ring2') && !small) {
-          try {
-            this.tweens.add({
-              targets: haG,
-              alpha: { from: 0.08, to: 0.22 },
-              duration: 1800,
-              yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-            });
-            this.tweens.add({
-              targets: glG,
-              alpha: { from: 0.35, to: 0.85 },
-              duration: 1800,
-              yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-            });
-          } catch(_) {}
-        }
       } else {
         // Остальные слоты или fallback — emoji
         const emoji = item?.emoji || { common:'🛡', rare:'⚔️', epic:'💜', mythic:'🔥' }[displayRarity] || '🛡';
