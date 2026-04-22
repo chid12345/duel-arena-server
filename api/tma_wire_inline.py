@@ -19,6 +19,7 @@ from api.helmet_payment_routes import register_helmet_payment_routes
 from api.boots_payment_routes import register_boots_payment_routes
 from api.shield_payment_routes import register_shield_payment_routes
 from api.ring_payment_routes import register_ring_payment_routes
+from api.armor_payment_routes import register_armor_payment_routes
 
 from battle_system import battle_system
 from config import (
@@ -43,6 +44,7 @@ def wire_tma_inline_routes(app: FastAPI) -> None:
     register_boots_payment_routes(app)
     register_shield_payment_routes(app)
     register_ring_payment_routes(app)
+    register_armor_payment_routes(app)
     register_tma_player_route(
         app,
         db=db,

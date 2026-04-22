@@ -173,23 +173,43 @@ const CSS = `
 .mb-usdt::after{content:'';position:absolute;top:0;left:-80%;width:45%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-20deg);animation:mythicShine 2.6s ease-in-out infinite}
 `;
 
-const RARITY_IMG   = { common:'armor_common.png', rare:'armor_gold.png', epic:'armor_epic.png', mythic:'armor_mythic.png' };
+const ARMOR_IMG = {
+  tank_free:'armor_free1.png',      agile_free:'armor_free2.png',
+  crit_free:'armor_free3.png',      universal_free:'armor_free4.png',
+  berserker_gold:'armor_gold1.png', assassin_gold:'armor_gold2.png',
+  mage_gold:'armor_gold3.png',      paladin_gold:'armor_gold4.png',
+  dragonknight_diamonds:'armor_dia1.png', shadowdancer_diamonds:'armor_dia2.png',
+  archmage_diamonds:'armor_dia3.png',     universal_diamonds:'armor_dia4.png',
+  berserker_mythic:'armor_mythic1.png',   assassin_mythic:'armor_mythic2.png',
+  archmage_mythic:'armor_mythic3.png',    legendary_usdt:'armor_mythic4.png',
+};
 const RARITY_COLOR = { common:'#9ca3af', rare:'#60a5fa', epic:'#c084fc', mythic:'#fb923c' };
 const RARITY_LABEL = { common:'Обычная', rare:'Редкая', epic:'Эпическая', mythic:'Мифическая' };
 
 const ARMORS_DATA = [
-  { id:'tank_free',     r:'common', name:'Кираса Гвардейца',   stars:'★☆☆☆', tier:'БЕСПЛ.',  str:5,agi:0,int:0,end:5, bonus:'Надёжная сталь для первых сражений.\nБроня: +2% к защите',          type:'free' },
-  { id:'agile_free',    r:'common', name:'Доспех Рекрута',      stars:'★☆☆☆', tier:'БЕСПЛ.',  str:0,agi:5,int:0,end:5, bonus:'Надёжная сталь для первых сражений.\nУклонение: +2%',               type:'free' },
-  { id:'crit_free',     r:'common', name:'Латы Пограничника',   stars:'★☆☆☆', tier:'БЕСПЛ.',  str:0,agi:0,int:5,end:5, bonus:'Надёжная сталь для первых сражений.\nКрит урон: +3%',               type:'free' },
-  { id:'universal_free',r:'common', name:'Броня Ополченца',     stars:'★☆☆☆', tier:'БЕСПЛ.',  str:2,agi:2,int:2,end:2, bonus:'Надёжная сталь для первых сражений.\nМакс. HP: +1%',                type:'free' },
-  { id:'berserker_gold',r:'rare',   name:'Панцирь Короля',      stars:'★★☆☆', tier:'ЗОЛОТО',  str:7,agi:0,int:0,end:7, bonus:'Выковано из чистейшего золота.\nУрон +4% при HP < 30%',            type:'gold',     price:'💰 5000' },
-  { id:'assassin_gold', r:'rare',   name:'Золотой Оплот',       stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:7,int:0,end:7, bonus:'Выковано из чистейшего золота.\nДвойной удар: 4%',                 type:'gold',     price:'💰 5000' },
-  { id:'mage_gold',     r:'rare',   name:'Латы Завоевателя',    stars:'★★☆☆', tier:'ЗОЛОТО',  str:0,agi:0,int:7,end:7, bonus:'Выковано из чистейшего золота.\nКрит урон: +4%',                   type:'gold',     price:'💰 5000' },
-  { id:'paladin_gold',  r:'rare',   name:'Позолоченная Броня',  stars:'★★☆☆', tier:'ЗОЛОТО',  str:4,agi:4,int:4,end:4, bonus:'Выковано из чистейшего золота.\nВходящий урон: -3%',               type:'gold',     price:'💰 5000' },
-  { id:'dragonknight_diamonds', r:'epic', name:'Доспех Ледяного Духа',stars:'★★★☆', tier:'АЛМАЗЫ', str:9,agi:0,int:0,end:9, bonus:'Кристаллы поглощают часть урона.\nУрон +6% при HP < 40%',  type:'diamonds', price:'💎 100' },
-  { id:'shadowdancer_diamonds', r:'epic', name:'Нагрудник Бездны',    stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:9,int:0,end:9, bonus:'Кристаллы поглощают часть урона.\nДвойной удар: 6%',            type:'diamonds', price:'💎 100' },
-  { id:'archmage_diamonds',     r:'epic', name:'Латы Теневого Мага',  stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:0,int:9,end:9, bonus:'Кристаллы поглощают часть урона.\nКрит урон: +5%',             type:'diamonds', price:'💎 100' },
-  { id:'legendary_usdt',r:'mythic', name:'Сердце Дракона',      stars:'★★★★', tier:'ЛЕГЕНДА', str:0,agi:0,int:0,end:0, bonus:'Чешуя, пропитанная яростью лавы.\n+19 свободных статов\nСброс сборки — 5.99 USDT', type:'usdt', price:'🔥 11.99 USDT' },
+  // Бесплатные — 4
+  { id:'tank_free',      r:'common', name:'Кираса Ополченца', stars:'★☆☆☆', tier:'БЕСПЛ.', str:5,agi:0,int:0,end:5, extra:'+30 HP',       bonus:'«Бронированный»\n+2% к защите.\nБазовая броня для первых боёв.', type:'free' },
+  { id:'agile_free',     r:'common', name:'Жилет Следопыта',  stars:'★☆☆☆', tier:'БЕСПЛ.', str:0,agi:5,int:0,end:5, extra:'+2% уклон',    bonus:'«Гибкий»\n+2% уклонение.\nЛёгкий доспех для разведчиков.',      type:'free' },
+  { id:'crit_free',      r:'common', name:'Роба Ученика',     stars:'★☆☆☆', tier:'БЕСПЛ.', str:0,agi:0,int:5,end:5, extra:'+5% крит.ур', bonus:'«Острый глаз»\n+5% крит. урон.\nМантия начинающего мага.',       type:'free' },
+  { id:'universal_free', r:'common', name:'Плащ Странника',   stars:'★☆☆☆', tier:'БЕСПЛ.', str:2,agi:2,int:2,end:2, extra:'+1% макс.HP', bonus:'«Сбалансирован»\n+1% к макс. HP.\nУниверсальный плащ для новичка.', type:'free' },
+
+  // Золото — 4
+  { id:'berserker_gold', r:'rare', name:'Панцирь Берсерка',  stars:'★★☆☆', tier:'ЗОЛОТО', str:7,agi:0,int:0,end:7, extra:'+50 HP',       bonus:'«Берсерк»\n+4% урона при HP < 30%.\nЯрость выкованной стали.',         type:'gold',     price:'💰 5000' },
+  { id:'assassin_gold',  r:'rare', name:'Кольчуга Теней',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:7,int:0,end:7, extra:'+3% уклон',    bonus:'«Теневой удар»\n+4% шанс двойного удара.\nБесшумная кольчуга.',      type:'gold',     price:'💰 5000' },
+  { id:'mage_gold',      r:'rare', name:'Мантия Чародея',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:0,int:7,end:7, extra:'+3% крит.ур', bonus:'«Чародей»\n+4% к крит. урону.\nВышита магическими рунами.',         type:'gold',     price:'💰 5000' },
+  { id:'paladin_gold',   r:'rare', name:'Броня Стража',      stars:'★★☆☆', tier:'ЗОЛОТО', str:4,agi:4,int:4,end:4, extra:'+3% защита',   bonus:'«Страж»\n−3% к входящему урону.\nБаланс стали и света.',              type:'gold',     price:'💰 5000' },
+
+  // Алмазы — 4
+  { id:'dragonknight_diamonds', r:'epic', name:'Латы Кровавого Вождя',  stars:'★★★☆', tier:'АЛМАЗЫ', str:9,agi:0,int:0,end:9, extra:'+80 HP',       bonus:'«Ярость Вождя»\n+6% урона при HP < 40%.\nЗакалены в крови дракона.',  type:'diamonds', price:'💎 100' },
+  { id:'shadowdancer_diamonds', r:'epic', name:'Плащ Ночного Клинка',   stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:9,int:0,end:9, extra:'+4% уклон',    bonus:'«Ночной Клинок»\n+6% шанс двойного удара.\nСплетён из лунных нитей.', type:'diamonds', price:'💎 100' },
+  { id:'archmage_diamonds',     r:'epic', name:'Одеяние Архимага',      stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:0,int:9,end:9, extra:'+4% крит.ур', bonus:'«Архимаг»\n+6% к крит. урону.\nПропитано эфирным пеплом.',           type:'diamonds', price:'💎 100' },
+  { id:'universal_diamonds',    r:'epic', name:'Латы Паладина Зари',    stars:'★★★☆', tier:'АЛМАЗЫ', str:6,agi:6,int:6,end:6, extra:'+6% защита',   bonus:'«Заря»\n−6% к входящему урону.\nСвященные латы рассвета.',            type:'diamonds', price:'💎 100' },
+
+  // Мифические — 4
+  { id:'berserker_mythic', r:'mythic', name:'Доспех Пламенного Титана',    stars:'★★★★', tier:'МИФИК', str:12,agi:0,int:0,end:12, extra:'+120 HP',      bonus:'«Пламя Ярости»\n+12% урона при HP < 30%.\nВыкован в сердце вулкана.',   type:'mythic', price:'11.99' },
+  { id:'assassin_mythic',  r:'mythic', name:'Облачение Призрака Ветров',   stars:'★★★★', tier:'МИФИК', str:0,agi:12,int:0,end:12, extra:'+6% уклон',    bonus:'«Ветра»\n+9% шанс двойного удара.\nСотканы из дыхания бури.',           type:'mythic', price:'11.99' },
+  { id:'archmage_mythic',  r:'mythic', name:'Регалии Повелителя Молний',   stars:'★★★★', tier:'МИФИК', str:0,agi:0,int:12,end:12, extra:'+6% крит.ур', bonus:'«Повелитель Молний»\n+18% к крит. урону.\nПронизаны грозовой силой.',  type:'mythic', price:'11.99' },
+  { id:'legendary_usdt',   r:'mythic', name:'Доспех Светоносного Бога',    stars:'★★★★', tier:'ЛЕГЕНДА', str:0,agi:0,int:0,end:0, extra:'+19 своб.ст', bonus:'«Свет»\n+19 свободных статов\nПассивка на выбор · сброс 5.99 USDT',   type:'usdt',   price:'11.99' },
 ];
 
 function _injectCSS() {
@@ -201,15 +221,18 @@ function _injectCSS() {
 
 function _pills(a) {
   let h = '';
+  // Архетип — основной стат (первые 2 пилла)
   if (a.str > 0) h += `<span class="wd-pill p-s">С+${a.str}</span>`;
   if (a.agi > 0) h += `<span class="wd-pill p-a">Л+${a.agi}</span>`;
   if (a.int > 0) h += `<span class="wd-pill p-i">И+${a.int}</span>`;
   if (a.end > 0) h += `<span class="wd-pill p-e">В+${a.end}</span>`;
+  // 3-й пилл — численник (производный от статов, для красоты)
+  if (a.extra) h += `<span class="wd-pill p-g">${a.extra}</span>`;
   return h || `<span style="color:#4b5563;font-size:8px">Особые статы</span>`;
 }
 
 function _imgAreaHtml(a) {
-  const img = RARITY_IMG[a.r] || '';
+  const img = ARMOR_IMG[a.id] || '';
   const fallbackEmoji = { common:'🛡', rare:'⚔️', epic:'💜', mythic:'🔥' }[a.r] || '🛡';
   return `<div class="wd-img-area">
     <div class="wd-img-wrap">
@@ -231,8 +254,14 @@ function _btnHtml(a) {
     return `<button class="wd-btn btn-gold" data-act="buy" data-id="${a.id}">💰 Купить — ${a.price.replace('💰 ','')}</button>`;
   if (a.type === 'diamonds')
     return `<button class="wd-btn btn-dia" data-act="buy" data-id="${a.id}">💎 Купить — ${a.price.replace('💎 ','')}</button>`;
-  // usdt/mythic
-  return `<div class="wd-smoke-wrap"><div class="wd-smoke"></div><button class="wd-btn btn-mythic" data-act="buy_usdt" data-id="${a.id}">🔥 КУПИТЬ — ${a.price}</button></div>`;
+  // mythic-фикс (новые 3) — Stars + USDT
+  if (a.type === 'mythic')
+    return `<div style="display:flex;gap:6px">
+      <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_armor_usdt" data-id="${a.id}">💳 $${a.price}</button>
+      <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_armor_stars" data-id="${a.id}">⭐ 590</button>
+    </div>`;
+  // usdt/legendary (кастомный слот)
+  return `<div class="wd-smoke-wrap"><div class="wd-smoke"></div><button class="wd-btn btn-mythic" data-act="buy_usdt" data-id="${a.id}">🔥 КУПИТЬ — ${a.price} USDT</button></div>`;
 }
 
 function _cardHtml(a) {
@@ -281,7 +310,7 @@ window.WardrobeHTML = {
   _imgAreaHtml,
   _pills,
   _btnHtml,
-  RARITY_IMG,
+  ARMOR_IMG,
   RARITY_COLOR,
   RARITY_LABEL,
 };

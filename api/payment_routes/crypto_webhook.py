@@ -65,6 +65,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_helmet_equip = ":helmet_equip:" in custom_payload
             is_boots_equip  = ":boots_equip:"  in custom_payload
             is_ring_equip   = ":ring_equip:"   in custom_payload
+            is_armor_class  = ":armor_class:"  in custom_payload
             usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             weapon_equip_id = custom_payload.split(":weapon_equip:", 1)[1].strip() if is_weapon_equip else None
@@ -72,6 +73,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             helmet_equip_id = custom_payload.split(":helmet_equip:", 1)[1].strip() if is_helmet_equip else None
             boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
             ring_equip_id   = custom_payload.split(":ring_equip:",   1)[1].strip() if is_ring_equip   else None
+            armor_class_id  = custom_payload.split(":armor_class:",  1)[1].strip() if is_armor_class  else None
             logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, usdt_scroll_id, asset, invoice_id)
             # --- Мифическое снаряжение за USDT (weapon/shield/helmet/boots/ring)
             # Раньше обрабатывался только weapon; для остальных предметы выдавались
@@ -106,6 +108,24 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     break
             if _handled_equip:
                 pass  # handled above
+            elif is_armor_class and armor_class_id:
+                # Мифическая броня (класс) — покупаем класс целиком через purchase_class.
+                # Идемпотентно: повторная оплата вернёт "уже есть" и не создаст дубликат.
+                _armor_ok = False
+                try:
+                    ok2, msg2 = db.purchase_class(uid, armor_class_id)
+                    _armor_ok = bool(ok2) or ("уже есть" in (msg2 or ""))
+                    if not _armor_ok:
+                        logger.error("CRITICAL: mythic armor purchase failed uid=%s class=%s invoice=%s msg=%s",
+                                     uid, armor_class_id, invoice_id, msg2)
+                except Exception as _e:
+                    logger.error("CRITICAL: mythic armor exception uid=%s class=%s invoice=%s err=%s",
+                                 uid, armor_class_id, invoice_id, _e)
+                _cache_invalidate(uid)
+                await manager.send(uid, {"event": "armor_class_purchased", "class_id": armor_class_id, "source": "cryptopay"})
+                await _send_tg_message(uid, "🛡 <b>Мифическая броня получена!</b>\nОткройте «Гардероб» и наденьте её.\n\n⚔️ Duel Arena")
+                if _armor_ok:
+                    db.mark_items_delivered(int(invoice_id))
             elif is_usdt_scroll and usdt_scroll_id:
                 _scroll_ok = False
                 try:

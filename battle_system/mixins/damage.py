@@ -65,12 +65,14 @@ class BattleDamageMixin:
             dmg_bonus = min(1.20, dmg_bonus * 1.08)  # кап: суммарный бонус ≤ +20%
         base_dmg = min(dmg_cap, int(base_dmg * dmg_bonus))
 
-        # Спецэффект Gold/Diamond: ярость при низком HP
+        # Спецэффект Gold/Diamond/Mythic: ярость при низком HP
         _hp_pct = attacker.get("current_hp", 1) / max(1, attacker.get("max_hp", 1))
         if cls_id == "berserker_gold" and _hp_pct < 0.30:
             base_dmg = min(dmg_cap, int(base_dmg * 1.04))   # +4% при HP < 30%
         elif cls_id == "dragonknight_diamonds" and _hp_pct < 0.40:
             base_dmg = min(dmg_cap, int(base_dmg * 1.06))   # +6% при HP < 40%
+        elif cls_id == "berserker_mythic" and _hp_pct < 0.30:
+            base_dmg = min(dmg_cap, int(base_dmg * 1.12))   # Пламя Ярости: +12% при HP < 30%
 
         # Промах (снижается бафом accuracy и кольцом accuracy атакующего)
         eff_miss = max(0.0, MISS_CHANCE - attacker.get("_buff_accuracy", 0) / 100.0 - attacker.get("_eq_accuracy", 0) / 100.0)
@@ -159,12 +161,14 @@ class BattleDamageMixin:
         damage = int(base_dmg * (_crit_mult if is_crit else 1.0))
         if usdt == "crit_dmg_pct" and is_crit:
             damage = int(damage * 1.08)
-        # Спецэффект Gold/Diamond: бонус крит-урона
+        # Спецэффект Gold/Diamond/Mythic: бонус крит-урона
         if is_crit:
             if cls_id == "mage_gold":
-                damage = int(damage * 1.04)       # Крит+: крит. урон +4%
+                damage = int(damage * 1.04)       # Чародей: крит. урон +4%
             elif cls_id == "archmage_diamonds":
-                damage = int(damage * 1.06)       # Крит++: крит. урон +6%
+                damage = int(damage * 1.06)       # Архимаг: крит. урон +6%
+            elif cls_id == "archmage_mythic":
+                damage = int(damage * 1.18)       # Повелитель Молний: крит. урон +18%
 
         # Двойной удар (из наступления)
         atk_agi_inv = stamina_stats_invested(
@@ -176,11 +180,13 @@ class BattleDamageMixin:
                      * DODGE_DOUBLE_STRIKE_PCT_PER_STEP)
         if usdt == "double_hit":
             dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.08)
-        # Спецэффект Gold/Diamond: бонус двойного удара
+        # Спецэффект Gold/Diamond/Mythic: бонус двойного удара
         if cls_id == "assassin_gold":
-            dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.04)   # Ловкач+: +4%
+            dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.04)   # Теневой удар: +4%
         elif cls_id == "shadowdancer_diamonds":
-            dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.06)   # Ловкач++: +6%
+            dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.06)   # Ночной Клинок: +6%
+        elif cls_id == "assassin_mythic":
+            dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + 0.09)   # Ветра: +9%
         dbl_ch = min(DODGE_DOUBLE_STRIKE_MAX_CHANCE, dbl_ch + attacker.get("_buff_double_pct", 0) / 100.0 + attacker.get("_eq_double_pct", 0) / 100.0)
         _slow = defender.get("_eq_slow_pct", 0)
         if _slow:

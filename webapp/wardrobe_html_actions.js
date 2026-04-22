@@ -17,13 +17,15 @@
     if (!bg) return;
     const mc  = MODAL_CFG[a.r] || MODAL_CFG.common;
     const rc  = W.RARITY_COLOR[a.r] || '#aaa';
-    const img = W.RARITY_IMG[a.r] || '';
+    const img = W.ARMOR_IMG[a.id] || '';
     const nc  = a.r === 'epic' ? ' epic' : a.r === 'mythic' ? ' mythic' : '';
     const cropCls = a.r === 'mythic' ? ' mythic-crop' : '';
     const lava    = a.r === 'mythic' ? '<div class="wd-lava-overlay"></div><div class="wd-neck-mask"></div>' : '';
 
     let mbCls = 'wd-m-btn ';
     let mbTxt = '';
+    // Mythic-фикс (3 новых: berserker/assassin/archmage) — две кнопки Stars+USDT
+    const isMythicFix = a.type === 'mythic' && !a.owned && !a.equipped;
     // USDT-слот (купленный): кнопка открывает редактор статов, не equip
     if (a.type === 'usdt' && a.owned) { mbCls += 'mb-usdt'; mbTxt = '⚙️ Настроить статы'; }
     else if (a.equipped)              { mbCls += 'mb-uneq'; mbTxt = '✅ Надета — Снять'; }
@@ -31,7 +33,8 @@
     else if (a.type === 'free')       { mbCls += 'mb-free'; mbTxt = '🆓 Выбрать бесплатно'; }
     else if (a.type === 'gold')       { mbCls += 'mb-gold'; mbTxt = `💰 Купить — ${a.price}`; }
     else if (a.type === 'diamonds')   { mbCls += 'mb-dia';  mbTxt = `💎 Купить — ${a.price}`; }
-    else                              { mbCls += 'mb-usdt'; mbTxt = `🔥 Купить — ${a.price}`; }
+    else if (a.type === 'mythic')     { mbCls += 'mb-usdt'; mbTxt = `💳 Купить — $${a.price}`; }
+    else                              { mbCls += 'mb-usdt'; mbTxt = `🔥 Купить — ${a.price} USDT`; }
 
     bg.innerHTML = `
       <div class="wd-modal" style="--mc:${mc.mc};--mg:${mc.mg}">
@@ -54,7 +57,12 @@
             ${!(a.str||a.agi||a.int||a.end)?`<span style="color:#6b7280;font-size:11px">Особые характеристики</span>`:''}
           </div>
           <div class="wd-m-bonus">${a.bonus||'—'}</div>
-          <button class="${mbCls}" id="wd-m-act">${mbTxt}</button>
+          ${isMythicFix
+            ? `<div style="display:flex;gap:8px">
+                 <button class="wd-m-btn mb-usdt" id="wd-m-act-usdt" style="flex:1">💳 USDT $${a.price}</button>
+                 <button class="wd-m-btn mb-gold" id="wd-m-act-stars" style="flex:1;background:linear-gradient(135deg,#44240e,#92400e)">⭐ Stars 590</button>
+               </div>`
+            : `<button class="${mbCls}" id="wd-m-act">${mbTxt}</button>`}
         </div>
       </div>`;
 
@@ -68,8 +76,13 @@
       else if (a.equipped)              _doAction(scene, 'unequip',  a, wp);
       else if (a.owned)                 _doAction(scene, 'equip',    a, wp);
       else if (a.type === 'usdt')       _doAction(scene, 'buy_usdt', a, wp);
+      else if (a.type === 'mythic')     _doAction(scene, 'buy_armor_usdt', a, wp);
       else                              _doAction(scene, 'buy',      a, wp);
     };
+    const actUsdt = bg.querySelector('#wd-m-act-usdt');
+    if (actUsdt) actUsdt.onclick = () => { bg.style.display='none'; bg.innerHTML=''; _doAction(scene, 'buy_armor_usdt', a, wp); };
+    const actStars = bg.querySelector('#wd-m-act-stars');
+    if (actStars) actStars.onclick = () => { bg.style.display='none'; bg.innerHTML=''; _doAction(scene, 'buy_armor_stars', a, wp); };
   }
 
   /* ── HTML-уведомление внутри оверлея (видно поверх canvas) ── */
@@ -140,6 +153,46 @@
           _notify('❌ ' + errMsg, false);
           tg?.showAlert?.(errMsg);
         }
+        scene._wardrobeHtmlBusy = false; return;
+      }
+      if (action === 'buy_armor_usdt') {
+        _notify('⏳ Создаём счёт USDT...', true);
+        const invRes = await post('/api/wardrobe/armor_crypto_invoice', {class_id: item.id});
+        if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._wardrobeHtmlBusy = false; return; }
+        const _url = invRes.invoice_url || '';
+        try {
+          if (invRes.web_app_url) window.Telegram?.WebApp?.openLink?.(invRes.web_app_url);
+          else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) window.Telegram?.WebApp?.openTelegramLink?.(_url);
+          else window.Telegram?.WebApp?.openLink?.(_url);
+        } catch(_) {}
+        _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
+        scene._wardrobeHtmlBusy = false; return;
+      }
+      if (action === 'buy_armor_stars') {
+        _notify('⏳ Создаём счёт Stars...', true);
+        const invRes = await post('/api/wardrobe/armor_stars_invoice', {class_id: item.id});
+        if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._wardrobeHtmlBusy = false; return; }
+        const starsUrl = invRes.invoice_url || '';
+        if (typeof tg?.openInvoice === 'function') {
+          tg.openInvoice(starsUrl, async (status) => {
+            if (status === 'paid') {
+              _notify('✅ Мифическая броня получена!');
+              window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+              try {
+                const wpFresh = await get('/api/wardrobe');
+                if (wpFresh?.ok) WardrobeHTML.refresh(scene, wpFresh);
+              } catch(_) {}
+            } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
+            scene._wardrobeHtmlBusy = false;
+          });
+          return;
+        }
+        try {
+          if (starsUrl.startsWith('https://t.me/') || starsUrl.startsWith('tg://'))
+            window.Telegram?.WebApp?.openTelegramLink?.(starsUrl);
+          else window.Telegram?.WebApp?.openLink?.(starsUrl);
+        } catch(_) {}
+        _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
         scene._wardrobeHtmlBusy = false; return;
       }
       if (res?.ok) {

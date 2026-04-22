@@ -53,6 +53,29 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
     Возвращает None, если payload не про снаряжение — вызывающий код идёт дальше
     по остальным веткам диспетчера платежей.
     """
+    # Мифическая броня (класс) — выдаём класс целиком через purchase_class.
+    # Идемпотентно: purchase_class вернёт (False,"У вас уже есть этот класс")
+    # при повторной оплате — игрок не потеряет деньги впустую, но и дубликата не будет.
+    if payload.startswith("armor_class_stars:"):
+        parts = payload.split(":", 2)
+        class_id = parts[2] if len(parts) == 3 else ""
+        if not class_id:
+            return None
+        try:
+            ok, msg = db.purchase_class(user_id, class_id)
+            if not ok and "уже есть" not in msg:
+                logger.error("Stars mythic armor purchase failed uid=%s class=%s stars=%s msg=%s",
+                             user_id, class_id, stars, msg)
+                return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
+                        "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
+        except Exception as exc:
+            logger.error("CRITICAL: Stars mythic armor exception uid=%s class=%s err=%s",
+                         user_id, class_id, exc)
+            return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
+                    "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
+        return ("✅ <b>Мифическая броня получена!</b>\n"
+                "Откройте «Гардероб» и наденьте её.\n\n⚔️ Duel Arena")
+
     parse = _parse(payload)
     if parse is None:
         return None

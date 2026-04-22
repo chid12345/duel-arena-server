@@ -28,9 +28,12 @@ class BattleDamageArmorMixin:
         wt = (defender.get("warrior_type") or "default")
         if wt == "agile":
             m = min(1.0, m + 0.10)   # Теневой Вихрь -10% броня (трейдофф за уклон)
-        # Спецэффект Gold: паладин -3% входящего урона
-        if (defender.get("current_class") or "").strip() == "paladin_gold":
-            m = max(0.0, m - 0.03)
+        # Спецэффект Gold/Diamond: универсалы снижают входящий урон
+        _cls_def = (defender.get("current_class") or "").strip()
+        if _cls_def == "paladin_gold":
+            m = max(0.0, m - 0.03)   # Страж: -3%
+        elif _cls_def == "universal_diamonds":
+            m = max(0.0, m - 0.06)   # Заря: -6%
         # Бонус брони от экипировки
         eq_def = float(defender.get("_eq_def_pct", 0) or 0)
         if eq_def:

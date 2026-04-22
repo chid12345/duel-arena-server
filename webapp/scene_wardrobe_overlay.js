@@ -24,6 +24,10 @@
     dragonknight_diamonds:  "🐉",
     shadowdancer_diamonds:  "🌑",
     archmage_diamonds:      "🔮",
+    universal_diamonds:     "🌅",
+    berserker_mythic:       "🔥",
+    assassin_mythic:        "🌪️",
+    archmage_mythic:        "⚡",
   };
 
   function _toCard(cls, classType, equippedId) {

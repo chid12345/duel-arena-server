@@ -74,12 +74,27 @@ function setWardrobeEquipped(v) {
   } catch(_) {}
 }
 
-/* Ключ Phaser-текстуры по редкости брони */
-function getArmorTextureKey(rarity) {
-  if (rarity === 'rare')   return 'armor_gold';
-  if (rarity === 'epic')   return 'armor_epic';
-  if (rarity === 'mythic') return 'armor_mythic';
-  return 'armor_common';
+/* Ключ Phaser-текстуры брони по class_id (fallback — по rarity) */
+const _ARMOR_TEXTURE_MAP = {
+  tank_free:'armor_free1',      agile_free:'armor_free2',
+  crit_free:'armor_free3',      universal_free:'armor_free4',
+  berserker_gold:'armor_gold1', assassin_gold:'armor_gold2',
+  mage_gold:'armor_gold3',      paladin_gold:'armor_gold4',
+  dragonknight_diamonds:'armor_dia1', shadowdancer_diamonds:'armor_dia2',
+  archmage_diamonds:'armor_dia3',     universal_diamonds:'armor_dia4',
+  berserker_mythic:'armor_mythic1',   assassin_mythic:'armor_mythic2',
+  archmage_mythic:'armor_mythic3',    legendary_usdt:'armor_mythic4',
+};
+function getArmorTextureKey(classIdOrRarity) {
+  const key = String(classIdOrRarity || '').trim();
+  if (_ARMOR_TEXTURE_MAP[key]) return _ARMOR_TEXTURE_MAP[key];
+  // fallback по rarity → первая картинка соотв. тира
+  if (key === 'rare')   return 'armor_gold1';
+  if (key === 'epic')   return 'armor_dia1';
+  if (key === 'mythic') return 'armor_mythic1';
+  // usdt_custom_* → 4-й мифик
+  if (key.startsWith('usdt_custom_')) return 'armor_mythic4';
+  return 'armor_free1';
 }
 
 /* Ключ Phaser-текстуры оружия по item_id */
