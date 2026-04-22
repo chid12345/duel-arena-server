@@ -3,6 +3,7 @@ Duel Arena Bot - Главная точка входа
 Портативный сервер для быстрых PvP боев в Telegram
 """
 
+import asyncio
 import logging
 import sys
 import time as _time
@@ -248,6 +249,9 @@ def main():
     attempt = 0
     while True:
         try:
+            # PTB закрывает event loop внутри run_polling → на retry нужен свежий.
+            # Без этого вторая попытка падает с RuntimeError: Event loop is closed.
+            asyncio.set_event_loop(asyncio.new_event_loop())
             _force_steal_polling_session()
             _time.sleep(3)  # дать Telegram зарегистрировать смену владельца сессии
             logger.info("⚔️ Запуск бота (попытка %d)...", attempt + 1)
