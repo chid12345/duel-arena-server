@@ -176,7 +176,14 @@ Object.assign(MenuScene.prototype, {
     const eqGlow = ca(mkG()); eqGlow.fillStyle(0x6d28d9, 0.08); eqGlow.fillEllipse(W / 2, czY + czH * 0.4, W * 0.7, czH * 0.7);
     // top accent line
     const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
-    ca(mkT(W / 2, czY + 11, 'ЭКИПИРОВКА ПЕРСОНАЖА', 9, 'rgba(167,139,250,0.8)', true)).setOrigin(0.5);
+    // Power badge (replaces "ЭКИПИРОВКА ПЕРСОНАЖА" title)
+    const _strVal = p.strength || 0;
+    const _pwW = 138, _pwH = 22;
+    const _pwX = Math.round(W / 2 - _pwW / 2), _pwY = czY - Math.round(_pwH / 2) + 1;
+    const pwBg = ca(mkG());
+    pwBg.fillStyle(0x1b1c33, 1); pwBg.fillRoundedRect(_pwX, _pwY, _pwW, _pwH, 11);
+    pwBg.lineStyle(1.2, 0x7c3aed, 0.9); pwBg.strokeRoundedRect(_pwX, _pwY, _pwW, _pwH, 11);
+    ca(mkT(W / 2, _pwY + _pwH / 2 - 5, `⚔  ${_strVal}  ·  СИЛА`, 11, '#ffd062', true)).setOrigin(0.5);
     const charCY = czY + czH * 0.42;
     // Aura colour per warrior class
     const _auraCols = { tank: 0xff5522, agile: 0x00cc55, crit: 0x7c3aed };
