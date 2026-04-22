@@ -153,7 +153,8 @@ class WorldBossScene extends Phaser.Scene {
     this.children.getAll().filter(o => o._wbChild).forEach(o => { try { o.destroy(); } catch(_){} });
 
     const s = this._state || {};
-    const W = this.W, H = this.H;
+    // Рабочая высота контента = высота canvas минус нижний таббар.
+    const W = this.W, H = this.H - TabBar.HEIGHT;
 
     if (s.active) { this._renderFighting(s, W, H); }
     else if ((s.prep_seconds_left || 0) > 0) { this._renderPrepPhase(s, W, H); }

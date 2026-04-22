@@ -62,35 +62,38 @@ class ClanScene extends Phaser.Scene {
     }
     this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     if (this._subview !== 'chat') TabBar.build(this, { activeKey: 'clan' });
+    // Рабочая высота для рендеров контента = H минус нижний таббар.
+    // В подвиде chat таббара нет — используем полную высоту.
+    const H_UI = (this._subview === 'chat') ? H : (H - TabBar.HEIGHT);
     if (this._subview === 'preview' && this._previewClanId) {
       get('/api/clan/preview', { clan_id: this._previewClanId }).then(d => {
         this._loading?.destroy();
         if (!d.ok) { txt(this, W/2, H/2, '❌ '+(d.reason||'Ошибка'), 13, '#dc3c46').setOrigin(0.5); return; }
-        this._renderPreview(d, W, H);
+        this._renderPreview(d, W, H_UI);
       }).catch(() => { this._loading?.setText('❌ Нет соединения'); });
       return;
     }
     if (this._subview === 'season') {
       this._loading?.destroy();
-      this._renderSeason(W, H);
+      this._renderSeason(W, H_UI);
       return;
     }
     if (this._subview === 'achievements') {
       this._loading?.destroy();
-      this._renderAchievements(W, H);
+      this._renderAchievements(W, H_UI);
       return;
     }
     if (this._subview === 'history') {
       this._loading?.destroy();
-      this._renderHistory(W, H);
+      this._renderHistory(W, H_UI);
       return;
     }
     if (this._subview === 'wars') {
       this._loading?.destroy();
-      this._renderWars(W, H);
+      this._renderWars(W, H_UI);
       return;
     }
-    get('/api/clan').then(d => this._route(d, W, H)).catch(() => {
+    get('/api/clan').then(d => this._route(d, W, H_UI)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
   }

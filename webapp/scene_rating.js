@@ -29,16 +29,18 @@ class RatingScene extends Phaser.Scene {
 
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('rating');
 
+    // Рабочая высота контента = H минус нижний таббар.
+    const H_UI = H - TabBar.HEIGHT;
     if (this._tab === 'pvp') {
-      await this._buildPvpTab(W, H);
+      await this._buildPvpTab(W, H_UI);
     } else if (this._tab === 'natisk') {
-      this._buildNatiskTab(W, H);
+      this._buildNatiskTab(W, H_UI);
     } else if (this._tab === 'season') {
-      await this._buildSeasonTab(W, H);
+      await this._buildSeasonTab(W, H_UI);
     } else if (this._tab === 'boss') {
-      await this._buildBossTab(W, H);
+      await this._buildBossTab(W, H_UI);
     } else {
-      this._buildTitansTab(W, H);
+      this._buildTitansTab(W, H_UI);
     }
     TabBar.build(this, { activeKey: 'rating' });
   }
@@ -142,7 +144,7 @@ class RatingScene extends Phaser.Scene {
       const myIdx  = players.findIndex(p => p.user_id === myUid);
       const myRank = myIdx >= 0 ? myIdx + 1 : null;
       if (!myRank || myRank > 10) {
-        const myBY = H - 108 - TabBar.HEIGHT;
+        const myBY = H - 108;
         const myBG = this.add.graphics();
         myBG.fillStyle(0x161426, 0.97);
         myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
