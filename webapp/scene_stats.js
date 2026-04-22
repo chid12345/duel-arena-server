@@ -32,10 +32,12 @@ class StatsScene extends Phaser.Scene {
     this._buildHeader(W);
     // Бейдж воина — наверху (раскрывается полной панелью бонусов)
     this._buildWarriorBadge(W, 74);
-    this._buildStatRows(W, H);
+    // Рабочая высота контента = H минус нижний таббар (76px)
+    const H_UI = H - TabBar.HEIGHT;
+    this._buildStatRows(W, H_UI);
     // Боевая статистика (Победы/Пораж./Винрейт/Серия) переехала вниз
-    this._buildCombatPreview(W, H);
-    this._buildAvatarBtn(W, H);
+    this._buildCombatPreview(W, H_UI);
+    this._buildAvatarBtn(W, H_UI);
     this._buildBackBtn(W, H);
     TabBar.build(this, { activeKey: 'stats' });
 
