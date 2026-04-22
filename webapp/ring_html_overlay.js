@@ -224,9 +224,15 @@ async function _doAction(scene, action, item) {
       return;
     }
     _notify(action==='unequip'?'⏳ Снимаем...':'⏳ Надеваем...', true, true);
+    // Снять: определяем слот по item_id — кольцо может сидеть в ring2 (legacy до фикса).
+    // Надеть: всегда в ring1 (сервер при этом чистит ring2 от дублей).
+    const _eq = State.equipment || {};
+    const _ringSlot = (_eq.ring1||{}).item_id === item.id ? 'ring1'
+                    : (_eq.ring2||{}).item_id === item.id ? 'ring2'
+                    : 'ring1';
     const res = await post(
       action==='unequip' ? '/api/equipment/unequip' : '/api/equipment/equip',
-      action==='unequip' ? {slot:'ring1'} : {item_id:item.id,slot:'ring1'}
+      action==='unequip' ? {slot:_ringSlot} : {item_id:item.id,slot:'ring1'}
     );
     if (res?.ok) {
       if (res.player)        { State.player=res.player; State.playerLoadedAt=Date.now(); }

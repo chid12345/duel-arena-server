@@ -117,6 +117,14 @@ def register_equipment_routes(app: FastAPI) -> None:
                        ON CONFLICT(user_id, slot) DO UPDATE SET item_id=excluded.item_id, equipped_at=CURRENT_TIMESTAMP""",
                     (uid, body.slot, body.item_id),
                 )
+                # UI профиля показывает только ring1. Чтобы не накапливались дубли
+                # от legacy-логики (когда второе кольцо уходило в ring2) — при
+                # надевании любого кольца в ring1 сразу чистим ring2.
+                if body.slot == "ring1":
+                    cur.execute(
+                        "DELETE FROM player_equipment WHERE user_id = ? AND slot = 'ring2'",
+                        (uid,),
+                    )
 
                 # Получаем все owned_weapons для ответа
                 cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
@@ -170,6 +178,23 @@ def register_equipment_routes(app: FastAPI) -> None:
                     "DELETE FROM player_equipment WHERE user_id = ? AND slot = ?",
                     (uid, body.slot),
                 )
+                # Если сняли ring1 и в ring2 что-то есть (legacy до фикса _resolve_ring_slot) —
+                # продвигаем ring2 → ring1, чтобы UI профиля показывал актуальное кольцо.
+                if body.slot == "ring1":
+                    cur.execute(
+                        "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = 'ring2'",
+                        (uid,),
+                    )
+                    _r2 = cur.fetchone()
+                    if _r2:
+                        cur.execute(
+                            "INSERT INTO player_equipment (user_id, slot, item_id) VALUES (?, 'ring1', ?)",
+                            (uid, _r2["item_id"]),
+                        )
+                        cur.execute(
+                            "DELETE FROM player_equipment WHERE user_id = ? AND slot = 'ring2'",
+                            (uid,),
+                        )
                 cur.execute("SELECT slot, item_id FROM player_equipment WHERE user_id = ?", (uid,))
                 all_eq = {r["slot"]: r["item_id"] for r in cur.fetchall()}
                 cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))

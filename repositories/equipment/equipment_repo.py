@@ -43,6 +43,13 @@ class EquipmentMixin:
                ON CONFLICT(user_id, slot) DO UPDATE SET item_id=excluded.item_id, equipped_at=CURRENT_TIMESTAMP""",
             (user_id, target_slot, item_id),
         )
+        # Платные покупки (force=True, slot=ring1) — снимаем legacy ring2, если остался.
+        # UI профиля рендерит только ring1; дубль в ring2 даёт фантомные статы.
+        if force and target_slot == SLOT_RING1:
+            cursor.execute(
+                "DELETE FROM player_equipment WHERE user_id = ? AND slot = ?",
+                (user_id, SLOT_RING2),
+            )
         conn.commit()
         conn.close()
         return True
