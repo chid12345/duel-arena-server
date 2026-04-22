@@ -74,7 +74,8 @@ Object.assign(MenuScene.prototype, {
     verBg.lineStyle(1.5, C.gold, 0.35);
     verBg.strokeRoundedRect(W / 2 - 90, verY - 14, 180, 28, 8);
     c.add(verBg);
-    c.add(rmdl(txt(this, W / 2, verY, `⚔️  Duel Arena  v${State.appVersion || '1.01'}`, 13, '#ffc83c', true).setOrigin(0.5)));
+    this._verTxt = rmdl(txt(this, W / 2, verY, `⚔️  Duel Arena  v${State.appVersion || '1.01'}`, 13, '#ffc83c', true).setOrigin(0.5));
+    c.add(this._verTxt);
     c.add(rmdl(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#ddddff').setOrigin(0.5)));
 
     this._panels.more = c;

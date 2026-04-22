@@ -55,11 +55,11 @@ class MenuScene extends Phaser.Scene {
         });
         get('/api/version').catch(() => null).then(versionRes => {
           if (versionRes?.ok && versionRes.version) {
-            State.appVersion = String(versionRes.version);
-            if (this._panels?.more) { this._panels.more.destroy(); this._panels.more = null; }
-            this._buildMorePanel();
-            if (this._activeTab === 'more') this._switchTab('more');
-            else if (this._panels?.more) this.sys.displayList.remove(this._panels.more);
+            const newV = String(versionRes.version);
+            if (newV !== State.appVersion) {
+              State.appVersion = newV;
+              if (this._verTxt?.active) this._verTxt.setText(`⚔️  Duel Arena  v${newV}`);
+            }
           }
         });
       } else {
@@ -73,11 +73,11 @@ class MenuScene extends Phaser.Scene {
 
           get('/api/version').catch(() => null).then(versionRes => {
             if (versionRes?.ok && versionRes.version) {
-              State.appVersion = String(versionRes.version);
-              if (this._panels?.more) { this._panels.more.destroy(); this._panels.more = null; }
-              this._buildMorePanel();
-              if (this._activeTab === 'more') this._switchTab('more');
-              else if (this._panels?.more) this.sys.displayList.remove(this._panels.more);
+              const newV = String(versionRes.version);
+              if (newV !== State.appVersion) {
+                State.appVersion = newV;
+                if (this._verTxt?.active) this._verTxt.setText(`⚔️  Duel Arena  v${newV}`);
+              }
             }
           });
 
