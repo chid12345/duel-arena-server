@@ -1,11 +1,11 @@
 /* ============================================================
    MenuScene — equipment: слоты экипировки на профиле
-   Левая колонка: Меч / Шлем / Сапоги
-   Правая колонка: Щит / Броня / Кольцо1 + Кольцо2
+   Левая колонка:  Голова / Тело / Ноги
+   Правая колонка: Оружие / Щит / Кольцо
    ============================================================ */
 
-const _EQ_LEFT  = [{ slot: 'weapon' }, { slot: 'belt' }, { slot: 'boots' }];
-const _EQ_RIGHT = [{ slot: 'shield' }, { slot: 'armor' }, { slot: 'ring1' }];
+const _EQ_LEFT  = [{ slot: 'belt' }, { slot: 'armor' }, { slot: 'boots' }];
+const _EQ_RIGHT = [{ slot: 'weapon' }, { slot: 'shield' }, { slot: 'ring1' }];
 
 // Inset glow color per slot type — matches icon palette
 const _EQ_SLOT_GLOW = {
@@ -18,8 +18,8 @@ const _EQ_SLOT_GLOW = {
 };
 
 const _EQ_SLOT_LABELS = {
-  weapon: 'Оружие', belt: 'Шлем', boots: 'Сапоги',
-  shield: 'Щит', armor: 'Броня', ring1: 'Кольцо', ring2: 'Кольцо',
+  weapon: 'ОРУЖИЕ', belt: 'ГОЛОВА', boots: 'НОГИ',
+  shield: 'ЩИТ',    armor: 'ТЕЛО',  ring1: 'КОЛЬЦО', ring2: 'КОЛЬЦО',
 };
 const _EQ_RARITY_COLOR = { common: 0xa0aec0, rare: 0xfbbf24, epic: 0xc084fc, mythic: 0xff6b2b };
 
@@ -127,7 +127,7 @@ Object.assign(MenuScene.prototype, {
     }
 
     if (!small) {
-      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 7, 'rgba(255,255,255,0.38)')).setOrigin(0.5);
+      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 9, 'rgba(210,215,235,0.9)', true)).setOrigin(0.5);
     }
 
     const zone = mkZ(x + w / 2, y + h / 2, w + 4, h + 4).setInteractive({ useHandCursor: true });
