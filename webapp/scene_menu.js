@@ -150,94 +150,13 @@ class MenuScene extends Phaser.Scene {
     if (this._tabBarObjs) {
       this._tabBarObjs.forEach(o => { try { o.destroy(); } catch(_) {} });
     }
-    this._tabBarObjs = [];
-    const _t = (o) => { this._tabBarObjs.push(o); return o; };
-    const { W, H, TAB_H } = this;
-    // Палитра: каждая вкладка — свой неоновый цвет
-    const tabs = [
-      { key:'profile', label:'Профиль', icon:'profile', col:0x22d3ee },
-      { key:'clan',    label:'Клан',    icon:'clan',    col:0xfb7185 },
-      { key:'stats',   label:'Герой',   icon:'stats',   col:0x818cf8 },
-      { key:'boss',    label:'Босс',    icon:'boss',    col:0xfb923c },
-      { key:'rating',  label:'Рейтинг', icon:'rating',  col:0xfbbf24 },
-      { key:'more',    label:'Меню',    icon:'more',    col:0xa78bfa },
-    ];
-    const tabW = W / tabs.length;
-    const tabTop = H - TAB_H;
-
-    // === Crystal Glass панель ===
-    const panel = _t(this.add.graphics());
-    panel.fillStyle(0x07041a, 0.96);
-    panel.fillRect(0, tabTop, W, TAB_H);
-    // Бликовая линия сверху
-    panel.lineStyle(1, 0xffffff, 0.1);
-    panel.lineBetween(0, tabTop, W, tabTop);
-
-    tabs.forEach((tab, i) => {
-      const cx = tabW * i + tabW / 2;
-      const iy = tabTop + 26;
-      const hexCol = '#' + tab.col.toString(16).padStart(6,'0');
-
-      // === Crystal Glass активная таблетка ===
-      const activeBubble = _t(this.add.graphics());
-      const px = tabW*i+5, py = tabTop+4, pw = tabW-10, ph = TAB_H-8, pr = 13;
-      // Внешний ореол (3 слоя размытия)
-      activeBubble.lineStyle(10, tab.col, 0.12); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
-      activeBubble.lineStyle(5,  tab.col, 0.25); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
-      activeBubble.lineStyle(2,  tab.col, 0.18); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
-      // Заливка таблетки
-      activeBubble.fillStyle(tab.col, 0.30); activeBubble.fillRoundedRect(px,py,pw,ph,pr);
-      // Внутренний блик сверху
-      activeBubble.fillStyle(0xffffff, 0.08); activeBubble.fillRoundedRect(px+2,py+2,pw-4,14,{tl:11,tr:11,bl:0,br:0});
-      // Яркий бордер
-      activeBubble.lineStyle(2, tab.col, 0.95); activeBubble.strokeRoundedRect(px,py,pw,ph,pr);
-      // Точка-индикатор сверху
-      activeBubble.fillStyle(tab.col, 0.4);  activeBubble.fillCircle(cx, tabTop+6, 5);
-      activeBubble.fillStyle(tab.col, 1.0);  activeBubble.fillCircle(cx, tabTop+6, 3);
-      activeBubble.fillStyle(0xffffff, 0.85); activeBubble.fillCircle(cx, tabTop+6, 1.5);
-      activeBubble.setVisible(false);
-
-      // Иконка в контейнере (для scale-tween)
-      const iconG = this.add.graphics();
-      TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 1.4);
-      const iconContainer = _t(this.add.container(cx, iy, [iconG]));
-
-      const labelTxt = _t(txt(this, cx, tabTop+57, tab.label, 9, hexCol).setOrigin(0.5));
-
-      this._tabBtns[tab.key] = { activeBubble, iconContainer, iconG, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
-
-      const zone = _t(this.add.zone(cx, tabTop+TAB_H/2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
-
-      zone.on('pointerdown', () => {
-        // Ripple-эффект
-        const rg = this.add.graphics();
-        rg.fillStyle(tab.col, 0.35); rg.fillCircle(0, 0, 12);
-        const ripple = this.add.container(cx, iy, [rg]);
-        this.tweens.add({ targets: ripple, scaleX: 3.6, scaleY: 3.6, alpha: 0,
-          duration: 420, ease: 'Quad.easeOut', onComplete: () => ripple.destroy() });
-        // Scale + смена цвета на акцент
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 2.2);
-        this.tweens.killTweensOf(iconContainer);
-        this.tweens.add({ targets: iconContainer, scaleX: 1.3, scaleY: 1.3, duration: 80, ease: 'Back.easeOut' });
-      });
-      zone.on('pointerout', () => {
-        this.tweens.killTweensOf(iconContainer);
-        this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 130, ease: 'Sine.easeOut' });
-        const isActive = this._activeTab === tab.key;
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, isActive ? 2 : 1.4);
-      });
-      zone.on('pointerup', () => {
-        this.tweens.killTweensOf(iconContainer);
-        this.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
-        Sound.tab(); tg?.HapticFeedback?.selectionChanged();
-        if (tab.key === 'stats')  { this.scene.start('Stats', { player: State.player }); return; }
-        if (tab.key === 'clan')   { this.scene.start('Clan'); return; }
-        if (tab.key === 'boss')   { this.scene.start('WorldBoss'); return; }
-        if (tab.key === 'rating') { this.scene.start('Rating'); return; }
-        if (tab.key === 'tasks')  { this.scene.start('Tasks'); return; }
-        this._switchTab(tab.key);
-      });
+    const { objs, btns } = TabBar.build(this, {
+      activeKey: this._activeTab,
+      depth: 0,
+      onInternal: (key) => this._switchTab(key),
     });
+    this._tabBarObjs = objs;
+    this._tabBtns = btns;
   }
 
 }

@@ -37,6 +37,7 @@ class StatsScene extends Phaser.Scene {
     this._buildCombatPreview(W, H);
     this._buildAvatarBtn(W, H);
     this._buildBackBtn(W, H);
+    TabBar.build(this, { activeKey: 'stats' });
 
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('stats');
 
