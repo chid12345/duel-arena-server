@@ -48,7 +48,7 @@ const CSS = `
 .bnd-img-area{width:100%;height:190px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .bnd-img-area::before{content:'';position:absolute;bottom:5%;left:50%;translate:-50% 0;width:80%;height:60%;background:radial-gradient(ellipse at center,var(--bg,rgba(120,70,220,.3)),transparent 70%);filter:blur(14px);z-index:1;pointer-events:none}
 .bnd-img-wrap{width:70%;height:80%;position:relative;z-index:2;animation:breathe 4s ease-in-out infinite;will-change:transform}
-.bnd-img-wrap img{width:100%;height:100%;object-fit:contain}
+.bnd-img-wrap img{width:100%;height:100%;object-fit:contain;mix-blend-mode:screen}
 .bnd-img-fade{position:absolute;bottom:0;inset-x:0;height:45%;background:linear-gradient(transparent,rgba(10,6,24,.97));z-index:3;pointer-events:none}
 .bnd-body{padding:12px 18px 18px;display:flex;flex-direction:column;gap:5px}
 .bnd-wtype{font-size:9px;color:#7a6aaa;text-transform:uppercase;letter-spacing:1.2px;font-weight:700}

@@ -65,7 +65,7 @@ const CSS = `
 .wd-img-area{position:relative;width:100%;height:148px;overflow:hidden;flex-shrink:0;background:rgba(0,0,0,.0);display:flex;align-items:center;justify-content:center}
 /* Обёртка анимируется — не img. Фиксирует GPU-слой на мобильных. */
 .wd-img-wrap{display:flex;align-items:center;justify-content:center;width:84%;height:84%;position:relative;z-index:2;animation:breathe 4s ease-in-out infinite;will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.wd-card-img{width:100%;height:100%;object-fit:contain;display:block;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.wd-card-img{width:100%;height:100%;object-fit:contain;display:block;mix-blend-mode:screen;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 /* gradient fade bottom of image into card body */
 .wd-img-fade{position:absolute;bottom:0;left:0;right:0;height:40%;background:linear-gradient(transparent,var(--cbg,rgba(10,6,24,.97)));pointer-events:none;z-index:3}
 /* мягкое радиальное свечение под броней */

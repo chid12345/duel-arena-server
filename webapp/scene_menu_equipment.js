@@ -65,16 +65,13 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // ambient halo — широкое мягкое свечение вокруг
-      const haG = mkG(); haG.fillStyle(bc, 0.12); haG.fillRoundedRect(x - 5, y - 5, w + 10, h + 10, r + 4); c.add(haG);
-      // outer glow ring — чёткое кольцо
-      const glG = mkG(); glG.lineStyle(1.5, bc, 0.55); glG.strokeRoundedRect(x - 3, y - 3, w + 6, h + 6, r + 3); c.add(glG);
-      // card fill + border
-      g.fillStyle(bc, 0.18); g.fillRoundedRect(x, y, w, h, r);
-      g.lineStyle(2, bc, 1); g.strokeRoundedRect(x, y, w, h, r);
-      c.add(g);
-      // glass top highlight
-      const hlG = mkG(); hlG.fillStyle(0xffffff, 0.12); hlG.fillRoundedRect(x + 2, y + 2, w - 4, Math.floor(h * 0.4), r - 1); c.add(hlG);
+      // ambient halo — широкое мягкое свечение вокруг слота
+      const haG = mkG(); haG.fillStyle(bc, 0.13); haG.fillRoundedRect(x - 5, y - 5, w + 10, h + 10, r + 4); c.add(haG);
+      // outer glow ring — рамка редкости без заливки (предмет парит)
+      const glG = mkG(); glG.lineStyle(2, bc, 0.85); glG.strokeRoundedRect(x, y, w, h, r); c.add(glG);
+      // точечное свечение под предметом (spot glow)
+      const sgG = mkG(); sgG.fillStyle(bc, 0.22); sgG.fillCircle(cx, cy, Math.round(w * 0.42)); c.add(sgG);
+      c.add(g); // placeholder — g не используется как заливка
 
       // Броня: wardrobeEquipped | Оружие: weapon texture | Шлем: helmet texture | Сапоги: boots texture
       const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -86,9 +83,11 @@ Object.assign(MenuScene.prototype, {
         : (ringTexKey   && this.textures.exists(ringTexKey))   ? ringTexKey
         : null;
       if (imgKey) {
-        const imgSize = small ? 36 : 46;
+        const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
+        // SCREEN blend mode убирает чёрные пиксели PNG → предмет парит без фона
+        try { img.setBlendMode(Phaser.BlendModes.SCREEN); } catch(_) {}
         ca(img);
         // Пульсирующее свечение под шлемом/сапогами (по теме редкости)
         if ((slot === 'belt' || slot === 'boots' || slot === 'shield' || slot === 'ring1' || slot === 'ring2') && !small) {
