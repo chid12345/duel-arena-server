@@ -103,7 +103,7 @@ const CSS = `
 /* Pills */
 .wd-pills{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:3px;min-height:14px}
 .wd-pill{padding:2px 6px;border-radius:6px;font-size:8px;font-weight:800;letter-spacing:.3px}
-.p-s{background:rgba(136,34,34,.88);color:#fca5a5}.p-a{background:rgba(17,85,119,.88);color:#7dd3fc}.p-i{background:rgba(80,17,136,.88);color:#d8b4fe}.p-e{background:rgba(17,85,51,.88);color:#86efac}
+.p-s{background:rgba(136,34,34,.88);color:#fca5a5}.p-a{background:rgba(17,85,119,.88);color:#7dd3fc}.p-i{background:rgba(80,17,136,.88);color:#d8b4fe}.p-e{background:rgba(17,85,51,.88);color:#86efac}.p-r{background:rgba(17,100,100,.88);color:#5eead4}.p-g{background:rgba(110,75,0,.88);color:#fcd34d}.p-x{background:rgba(55,90,0,.88);color:#bef264}
 
 /* ── Buttons ── */
 .wd-btn{position:relative;overflow:hidden;width:100%;padding:6px 4px;border-radius:10px;font-size:10.5px;font-weight:800;cursor:pointer;border:1.5px solid transparent;text-align:center;transition:all .22s;letter-spacing:.4px;display:flex;align-items:center;justify-content:center;gap:5px}

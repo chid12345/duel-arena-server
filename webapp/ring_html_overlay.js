@@ -103,7 +103,10 @@ function _btn(h) {
     return `<button class="wd-btn btn-gold" data-act="buy" data-id="${h.id}">💰 ${h.price}</button>`;
   if (h.type === 'diamonds')
     return `<button class="wd-btn btn-dia" data-act="buy" data-id="${h.id}">💎 ${h.price}</button>`;
-  return `<button class="wd-btn btn-gold" style="background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${h.id}">⭐ 490</button>`;
+  return `<div style="display:flex;gap:6px">
+    <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_usdt" data-id="${h.id}">💳 $11.99</button>
+    <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${h.id}">⭐ 490</button>
+  </div>`;
 }
 
 function _card(h) {
@@ -188,6 +191,28 @@ async function _doAction(scene, action, item) {
       if (!tg && starsUrl) try { window.open(starsUrl, '_blank'); } catch(_) {}
       _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
       scene._ringBusy = false;
+      return;
+    }
+    if (action === 'buy_usdt') {
+      _notify('⏳ Создаём счёт USDT...', true, true);
+      const invRes = await post('/api/equipment/ring_crypto_invoice', {item_id: item.id});
+      if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._ringBusy=false; return; }
+      const _url = invRes.invoice_url || '';
+      try {
+        if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
+        else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) tg?.openTelegramLink?.(_url);
+        else tg?.openLink?.(_url);
+      } catch(_) {}
+      if (!tg && _url && !_url.startsWith('tg://')) try { window.open(_url, '_blank'); } catch(_) {}
+      _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
+      scene._ringBusy = false;
+      if (invRes.invoice_id) {
+        try {
+          localStorage.setItem('ringPendingInvoice', String(invRes.invoice_id));
+          localStorage.setItem('ringPendingItemId', item.id);
+        } catch(_) {}
+        _startRingCryptoPolling(scene, invRes.invoice_id, item.id);
+      }
       return;
     }
     _notify(action==='unequip'?'⏳ Снимаем...':'⏳ Надеваем...', true, true);
@@ -291,6 +316,11 @@ function open(scene) {
     if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
     refresh();
   }).catch(() => {});
+  try {
+    const pi = parseInt(localStorage.getItem('ringPendingInvoice') || '0', 10);
+    const pid = localStorage.getItem('ringPendingItemId') || '';
+    if (pi > 0 && pid) _startRingCryptoPolling(scene, pi, pid, true);
+  } catch(_) {}
   wrap.querySelectorAll('._rg-view').forEach(t=>t.onclick=()=>{
     view=t.dataset.sv;
     wrap.querySelectorAll('._rg-view').forEach(x=>x.classList.remove('active'));
