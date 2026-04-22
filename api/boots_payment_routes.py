@@ -1,6 +1,7 @@
 """Маршруты оплаты мифических сапог за Stars и USDT."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import httpx
@@ -85,19 +86,24 @@ def register_boots_payment_routes(app: FastAPI) -> None:
             return {"ok": False, "reason": "Ошибка соединения"}
 
     @app.post("/api/equipment/boots_stars_confirm")
-    def boots_stars_confirm(body: _BootsPayBody):
+    async def boots_stars_confirm(body: _BootsPayBody):
+        """Read-only: ждём пока бот обработает successful_payment и выдаст ботинки.
+        Выдачу делает handlers/commands/shop_payments.py — здесь НЕ выдаём сами
+        (иначе уязвимость: любой юзер мог бы получать мифические ботинки бесплатно)."""
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        _rl_check(uid, "boots_pay", max_hits=5, window_sec=60)
+        _rl_check(uid, "boots_pay", max_hits=10, window_sec=60)
 
         item = get_item(body.item_id)
         if not item or item.get("rarity") != "mythic":
             return {"ok": False, "reason": "Предмет не найден"}
 
-        db.equip_item(uid, "boots", body.item_id)
-        db.add_owned_weapon(uid, body.item_id)
-        _cache_invalidate(uid)
-        return {"ok": True, "equipment": _eq_response(uid), "player": _player_response(uid)}
+        for _ in range(6):  # 6 × 500мс = до 3 сек на race condition
+            if body.item_id in db.get_owned_weapons(uid):
+                _cache_invalidate(uid)
+                return {"ok": True, "equipment": _eq_response(uid), "player": _player_response(uid)}
+            await asyncio.sleep(0.5)
+        return {"ok": False, "reason": "processing"}
 
     @app.post("/api/equipment/boots_crypto_invoice")
     async def boots_crypto_invoice(body: _BootsPayBody):

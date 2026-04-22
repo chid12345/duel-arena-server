@@ -61,24 +61,49 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_usdt_reset = ":usdt_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
             is_weapon_equip = ":weapon_equip:" in custom_payload
+            is_shield_equip = ":shield_equip:" in custom_payload
+            is_helmet_equip = ":helmet_equip:" in custom_payload
+            is_boots_equip  = ":boots_equip:"  in custom_payload
+            is_ring_equip   = ":ring_equip:"   in custom_payload
             usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             weapon_equip_id = custom_payload.split(":weapon_equip:", 1)[1].strip() if is_weapon_equip else None
+            shield_equip_id = custom_payload.split(":shield_equip:", 1)[1].strip() if is_shield_equip else None
+            helmet_equip_id = custom_payload.split(":helmet_equip:", 1)[1].strip() if is_helmet_equip else None
+            boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
+            ring_equip_id   = custom_payload.split(":ring_equip:",   1)[1].strip() if is_ring_equip   else None
             logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, usdt_scroll_id, asset, invoice_id)
-            if is_weapon_equip and weapon_equip_id:
-                _equip_ok = False
-                try:
-                    db.equip_item(uid, "weapon", weapon_equip_id)
-                    db.add_owned_weapon(uid, weapon_equip_id)
-                    _cache_invalidate(uid)
-                    _equip_ok = True
-                except Exception as _e:
-                    logger.error("CRITICAL: weapon equip failed after payment uid=%s weapon=%s invoice=%s err=%s",
-                                 uid, weapon_equip_id, invoice_id, _e)
-                if _equip_ok:
-                    db.mark_items_delivered(int(invoice_id))
-                await manager.send(uid, {"event": "weapon_equipped", "weapon_id": weapon_equip_id, "source": "cryptopay"})
-                await _send_tg_message(uid, f"⚔️ <b>Мифическое оружие получено!</b>\nОткройте раздел «Меч» в профиле и наденьте его.\n\n⚔️ Duel Arena")
+            # --- Мифическое снаряжение за USDT (weapon/shield/helmet/boots/ring)
+            # Раньше обрабатывался только weapon; для остальных предметы выдавались
+            # только через polling /api/shop/crypto_check из живого mini app.
+            # Если mini app закрылся — покупка терялась.
+            _equip_map = [
+                (is_weapon_equip, weapon_equip_id, "weapon", "weapon_equipped", "weapon_id", "⚔️ Мифическое оружие",   "Меч"),
+                (is_shield_equip, shield_equip_id, "shield", "shield_equipped", "shield_id", "🛡 Мифический щит",       "Щит"),
+                (is_helmet_equip, helmet_equip_id, "belt",   "helmet_equipped", "helmet_id", "⛑ Мифический шлем",      "Шлем"),
+                (is_boots_equip,  boots_equip_id,  "boots",  "boots_equipped",  "boots_id",  "🥾 Мифические ботинки",   "Ботинки"),
+                (is_ring_equip,   ring_equip_id,   "ring1",  "ring_equipped",   "ring_id",   "💍 Мифическое кольцо",    "Кольцо"),
+            ]
+            _handled_equip = False
+            for _flag, _item_id, _slot, _evt, _id_key, _title, _section in _equip_map:
+                if _flag and _item_id:
+                    _handled_equip = True
+                    _equip_ok = False
+                    try:
+                        db.equip_item(uid, _slot, _item_id)
+                        db.add_owned_weapon(uid, _item_id)
+                        _cache_invalidate(uid)
+                        _equip_ok = True
+                    except Exception as _e:
+                        logger.error("CRITICAL: %s equip failed after payment uid=%s item=%s invoice=%s err=%s",
+                                     _slot, uid, _item_id, invoice_id, _e)
+                    if _equip_ok:
+                        db.mark_items_delivered(int(invoice_id))
+                    await manager.send(uid, {"event": _evt, _id_key: _item_id, "source": "cryptopay"})
+                    await _send_tg_message(uid, f"{_title} <b>получено!</b>\nОткройте раздел «{_section}» в профиле — предмет уже надет.\n\n⚔️ Duel Arena")
+                    break
+            if _handled_equip:
+                pass  # handled above
             elif is_usdt_scroll and usdt_scroll_id:
                 _scroll_ok = False
                 try:

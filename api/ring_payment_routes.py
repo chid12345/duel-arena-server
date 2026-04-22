@@ -1,6 +1,7 @@
 """Маршруты оплаты мифических колец за Stars и USDT."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
 import httpx
@@ -85,19 +86,29 @@ def register_ring_payment_routes(app: FastAPI) -> None:
             return {"ok": False, "reason": "Ошибка соединения"}
 
     @app.post("/api/equipment/ring_stars_confirm")
-    def ring_stars_confirm(body: _RingPayBody):
+    async def ring_stars_confirm(body: _RingPayBody):
+        """Read-only: ждём пока бот обработает successful_payment и выдаст кольцо.
+
+        Выдачу делает handlers/commands/shop_payments.py::successful_payment_handler —
+        здесь НЕ выдаём сами (иначе уязвимость: любой юзер мог бы бесплатно получать
+        мифические кольца прямым POST'ом с валидным init_data).
+        Poll до 3 сек — достаточно для race condition между openInvoice('paid')
+        callback и обработкой successful_payment на стороне бота.
+        """
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        _rl_check(uid, "ring_pay", max_hits=5, window_sec=60)
+        _rl_check(uid, "ring_pay", max_hits=10, window_sec=60)
 
         item = get_item(body.item_id)
         if not item or item.get("rarity") != "mythic":
             return {"ok": False, "reason": "Предмет не найден"}
 
-        db.equip_item(uid, "ring1", body.item_id)
-        db.add_owned_weapon(uid, body.item_id)
-        _cache_invalidate(uid)
-        return {"ok": True, "equipment": _eq_response(uid), "player": _player_response(uid)}
+        for _ in range(6):  # 6 × 500мс = до 3 сек
+            if body.item_id in db.get_owned_weapons(uid):
+                _cache_invalidate(uid)
+                return {"ok": True, "equipment": _eq_response(uid), "player": _player_response(uid)}
+            await asyncio.sleep(0.5)
+        return {"ok": False, "reason": "processing"}
 
     @app.post("/api/equipment/ring_crypto_invoice")
     async def ring_crypto_invoice(body: _RingPayBody):
