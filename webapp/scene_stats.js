@@ -60,6 +60,7 @@ class StatsScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillGradientStyle(0x05040e, 0x05040e, 0x0c0a1c, 0x0c0a1c, 1);
     g.fillRect(0, 0, W, H);
+    try { g.setScrollFactor?.(0); } catch(_) {}
   }
 
   /* ── Шапка ───────────────────────────────────────────── */

@@ -28,12 +28,12 @@ class WorldBossScene extends Phaser.Scene {
     this.W = W; this.H = H;
     this._alive = true;
     _extraBg(this, W, H);
-    // Neon Arcade overlay
+    // Neon Arcade overlay — фиксируется, чтобы не уезжал при скролле.
     const _arcBg = this.add.graphics();
     _arcBg.fillGradientStyle(0x0d0020, 0x0d0020, 0x050015, 0x050015, 1);
     _arcBg.fillRect(0, 0, W, H);
-    // Hot-pink top strip
     _arcBg.fillStyle(0xff0088, 1); _arcBg.fillRect(0, 0, W, 3);
+    try { _arcBg.setScrollFactor?.(0); } catch(_) {}
     _extraHeader(this, W, '👾', 'МИРОВОЙ БОСС', 'Общий рейд каждые 4 часа');
     // Back: во время боя (живой) — заблокировано; иначе — в меню
     makeBackBtn(this, 'Назад', () => {

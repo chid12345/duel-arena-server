@@ -41,14 +41,7 @@ Object.assign(WorldBossScene.prototype, {
     y += 56;
 
     this._bigBtn(16, y, W-32, 34, 0x0a0020, '🔧 Тест: старт сейчас', () => this._wbTestSchedule());
-    y += 44;
-
-    ['★ Рейд длится 10 минут.',
-     '★ Бей босса → получи долю награды.',
-     '★ Смерть в бою → свиток воскрешения.'].forEach((l, i) => {
-      this._addText(W/2, y + i*18, l, 11, '#ddccff').setOrigin(0.5);
-    });
-    y += 62;
+    y += 60;
     const rh = this._renderRegistrationBtn?.(s, W, y) || 0; y += rh;
     const msh = this._renderMyScrollsSummary?.(s, W, y) || 0; y += msh;
     this._renderScrollShop(s, W, y); y += 185;

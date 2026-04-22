@@ -101,7 +101,8 @@ function _extraBg(scene, W, H) {
   const g = scene.add.graphics();
   g.fillGradientStyle(C.bg, C.bg, C.bgMid, C.bgMid, 1);
   g.fillRect(0, 0, W, H);
-  /* Сетка убрана: 50+ lineBetween при opacity 0.03 давали лишние draw-call */
+  // Фон зафиксирован — при drag-скролле контента не уезжает за край.
+  try { g.setScrollFactor?.(0); } catch(_) {}
 }
 
 function _extraBack(scene, dest = 'Menu', returnTab = 'more') {
@@ -112,10 +113,12 @@ function _extraBack(scene, dest = 'Menu', returnTab = 'more') {
 }
 
 function _extraHeader(scene, W, icon, title, sub) {
-  makePanel(scene, 8, 8, W - 16, 64, 12);
+  const panel = makePanel(scene, 8, 8, W - 16, 64, 12);
   /* Левые 46px = зона кнопки «‹»; текст начинается с x=60 */
   const maxCh  = Math.floor((W - 72) / 9);   // ~9px на символ при font-size 15
   const trunc  = (s, n) => s && s.length > n ? s.slice(0, n - 1) + '…' : (s || '');
-  txt(scene, 60, 20, icon + '  ' + trunc(title, maxCh), 15, '#ffc83c', true);
-  if (sub) txt(scene, 60, 44, trunc(sub, Math.floor((W - 72) / 6.5)), 10, '#ddddff');
+  const t1 = txt(scene, 60, 20, icon + '  ' + trunc(title, maxCh), 15, '#ffc83c', true);
+  const t2 = sub ? txt(scene, 60, 44, trunc(sub, Math.floor((W - 72) / 6.5)), 10, '#ddddff') : null;
+  // Шапка зафиксирована на экране — не уезжает при drag-скролле.
+  try { panel.setScrollFactor?.(0); t1.setScrollFactor?.(0); t2?.setScrollFactor?.(0); } catch(_) {}
 }
