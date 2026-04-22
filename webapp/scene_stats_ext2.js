@@ -71,7 +71,7 @@ Object.assign(StatsScene.prototype, {
         const row = this._statRows[rk]; if (!row) continue;
         const base = this._statBase(p, rk);
         const perm = this._statBonus(p, rk);
-        row.valTxt.setText(String(row.s.valFn(p) + bonus)).setColor('#88ffbb');
+        row.valTxt.setText(String(row.s.valFn(p))).setColor('#88ffbb');
         row.breakdownTxt.setText(`база ${base} | +${perm} вложено | 🧪 +${bonus} свиток`);
       }
       // ── endurance buff → уворот пересчитан сервером ──

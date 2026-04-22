@@ -142,15 +142,15 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     avatar = AVATAR_BY_ID.get(avatar_id) or {}
     _ab = int(player.get("avatar_bonus_applied", 0) or 0)
 
-    # Бонус аватара показываем только если он реально вбит в статы в БД
+    # Бонус аватара (вшит в DB только при _ab=1)
     if _ab:
         avb = _avatar_effective_bonus(lv, avatar_id)
-        bonus_strength = int(avb.get("strength", 0))
-        bonus_agility = int(avb.get("endurance", 0))
-        bonus_intuition = int(avb.get("crit", 0))
-        bonus_stamina = int(avb.get("hp_flat", 0) or 0) // max(1, int(STAMINA_PER_FREE_STAT))
+        avt_str  = int(avb.get("strength", 0))
+        avt_agi  = int(avb.get("endurance", 0))
+        avt_intu = int(avb.get("crit", 0))
+        avt_sta  = int(avb.get("hp_flat", 0) or 0) // max(1, int(STAMINA_PER_FREE_STAT))
     else:
-        bonus_strength = bonus_agility = bonus_intuition = bonus_stamina = 0
+        avt_str = avt_agi = avt_intu = avt_sta = 0
 
     cls_id = (player.get("current_class") or "").strip()
     cls_type = (player.get("current_class_type") or "").strip()
@@ -163,18 +163,23 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         else:
             class_info = DIAMONDS_CLASSES.get(cls_id)
 
-    if class_info:
-        bonus_strength += int(class_info.get("bonus_strength", 0) or 0)
-        bonus_agility += int(class_info.get("bonus_agility", 0) or 0)
-        bonus_intuition += int(class_info.get("bonus_intuition", 0) or 0)
-        bonus_stamina += int(class_info.get("bonus_endurance", 0) or 0)
+    # Бонусы класса (всегда вшиты в DB при экипировке класса)
+    cls_str_b  = int(class_info.get("bonus_strength",  0) or 0) if class_info else 0
+    cls_agi_b  = int(class_info.get("bonus_agility",   0) or 0) if class_info else 0
+    cls_intu_b = int(class_info.get("bonus_intuition", 0) or 0) if class_info else 0
+    cls_sta_b  = int(class_info.get("bonus_endurance", 0) or 0) if class_info else 0
 
-    # Если бонус образа ещё не применён к статам в БД — не вычитать
-    _sub = 1 if _ab else 0
-    base_strength = max(1, s - bonus_strength * _sub)
-    base_agility = max(1, agi - bonus_agility * _sub)
-    base_intuition = max(1, intu - bonus_intuition * _sub)
-    base_stamina = max(0, vyn - bonus_stamina * _sub)
+    # Итоговые бонусы для отображения = аватар (если вшит) + класс + экипировка
+    bonus_strength  = avt_str  + cls_str_b
+    bonus_agility   = avt_agi  + cls_agi_b
+    bonus_intuition = avt_intu + cls_intu_b
+    bonus_stamina   = avt_sta  + cls_sta_b
+
+    # База = DB минус всё вшитое (аватар + класс) → чистые вложения игрока
+    base_strength  = max(1, s   - cls_str_b  - avt_str)
+    base_agility   = max(1, agi - cls_agi_b  - avt_agi)
+    base_intuition = max(1, intu - cls_intu_b - avt_intu)
+    base_stamina   = max(0, vyn - cls_sta_b  - avt_sta)
     return {
         "user_id": player.get("user_id"),
         "username": player.get("username") or "Боец",
