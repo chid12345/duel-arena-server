@@ -51,11 +51,25 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
 
         # Автоподключение к рейду при первом ударе
         player = db.get_or_create_player(uid, "")
-        player_max_hp = int(player.get("max_hp", 100))
+        # Бонусы экипировки (зеркало PvP `_apply_equipment_stats`):
+        # hp_bonus → max_hp, str_bonus+atk_bonus → strength, crit_bonus+intu_bonus → crit.
+        try:
+            eq = db.get_equipment_stats(uid) or {}
+        except Exception:
+            eq = {}
+        eff_max_hp   = int(player.get("max_hp", 100)) + int(eq.get("hp_bonus", 0) or 0)
+        eff_strength = int(player.get("strength", 10)) \
+                       + int(eq.get("str_bonus", 0) or 0) \
+                       + int(eq.get("atk_bonus", 0) or 0)
+        eff_crit     = int(player.get("crit") or PLAYER_START_CRIT) \
+                       + int(eq.get("crit_bonus", 0) or 0) \
+                       + int(eq.get("intu_bonus", 0) or 0)
+        eff_endur    = int(player.get("endurance") or PLAYER_START_ENDURANCE) \
+                       + int(eq.get("agi_bonus", 0) or 0)
         ps = db.wb_join_raid(
-            spawn_id, uid, max_hp=player_max_hp,
-            endurance=int(player.get("endurance") or PLAYER_START_ENDURANCE),
-            crit=int(player.get("crit") or PLAYER_START_CRIT),
+            spawn_id, uid, max_hp=eff_max_hp,
+            endurance=eff_endur,
+            crit=eff_crit,
         )
         if int(ps.get("is_dead") or 0):
             return {"ok": False, "reason": "Вы мертвы — нужен свиток воскрешения"}
@@ -73,10 +87,10 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         except Exception:
             vuln = False
 
-        # Расчёт урона на сервере — статы из профиля игрока
+        # Расчёт урона на сервере — статы с учётом экипировки
         player_stats = {
-            "strength": int(player.get("strength", 10)),
-            "crit": int(player.get("crit") or PLAYER_START_CRIT),
+            "strength": max(1, eff_strength),
+            "crit": max(0, eff_crit),
         }
         stat_profile = active.get("stat_profile") or {}
         dmg, is_crit, _dbg = calc_player_damage_to_boss(
