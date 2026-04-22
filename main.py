@@ -35,9 +35,10 @@ logger.info("Прогрессия: %s", progression_loader.describe_progression_
 async def error_handler(update: object, context):
     """Глобальный обработчик ошибок Telegram."""
     # Conflict во время работы = конкурирующий инстанс (Render zero-downtime deploy).
-    # Останавливаем приложение → while-loop в main() сделает force_steal и перезапустит.
+    # Ставим флаг и останавливаем → while-loop в main() увидит флаг и сделает retry.
     if isinstance(context.error, TelegramConflict):
         logger.warning("⚠️ Conflict во время polling — останавливаю приложение для рестарта...")
+        context.application.bot_data["__conflict_retry"] = True
         context.application.stop_running()
         return
 
@@ -252,6 +253,19 @@ def main():
             logger.info("⚔️ Запуск бота (попытка %d)...", attempt + 1)
             app = _build_app(bot_count)
             app.run_polling(drop_pending_updates=True)
+            # error_handler ловит Conflict и вызывает stop_running → run_polling
+            # возвращается БЕЗ исключения. Проверяем флаг чтобы отличить Conflict от
+            # штатного выхода (Ctrl-C / SIGTERM).
+            if app.bot_data.get("__conflict_retry"):
+                attempt += 1
+                wait = min(60, 15 * attempt)   # 15 → 30 → 45 → 60 → 60 → … сек
+                logger.warning(
+                    "⚠️ Telegram Conflict — другой экземпляр бота ещё активен. "
+                    "Жду %ds перед повтором (попытка %d)...",
+                    wait, attempt + 1,
+                )
+                _time.sleep(wait)
+                continue
             logger.info("✅ Бот завершил работу штатно")
             break
 
