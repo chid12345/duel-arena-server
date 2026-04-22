@@ -144,7 +144,13 @@ class RatingScene extends Phaser.Scene {
       const myIdx  = players.findIndex(p => p.user_id === myUid);
       const myRank = myIdx >= 0 ? myIdx + 1 : null;
       if (!myRank || myRank > 10) {
-        const myBY = H - 108;
+        // Прижимаем плашку "Ваш ELO" вплотную к последнему контенту,
+        // чтобы при коротком топе не было пустоты (void) в центре.
+        const rowsShown = Math.max(0, players.slice(listFrom, listFrom + 8).length);
+        const adaptY = (rowsShown > 0)
+          ? (listY + rowsShown * rowH + 20)
+          : (players.length >= 3 ? startY + 168 : startY + 30);
+        const myBY = Math.min(H - 108, adaptY);
         const myBG = this.add.graphics();
         myBG.fillStyle(0x161426, 0.97);
         myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
