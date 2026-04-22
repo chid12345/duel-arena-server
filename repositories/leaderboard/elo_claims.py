@@ -13,7 +13,7 @@ class LeaderboardEloClaimsMixin:
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT user_id, username, rating, wins, losses FROM players "
+                "SELECT user_id, username, rating, wins, losses, level FROM players "
                 "WHERE wins + losses > 0 ORDER BY rating DESC LIMIT ?",
                 (int(limit),),
             )

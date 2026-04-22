@@ -135,7 +135,7 @@ Object.assign(RatingScene.prototype, {
       txt(this, px, baseY - ph - 8, name, 10, isMe ? '#88ccff' : '#f0f0fa', isMe).setOrigin(0.5);
       // Рейтинг и уровень внутри колонки
       txt(this, px, baseY - ph + 18, `★ ${p.rating}`, 13, '#ffc83c', true).setOrigin(0.5);
-      txt(this, px, baseY - ph + 34, `Ур.${p.level}`, 9, '#ddddff').setOrigin(0.5);
+      txt(this, px, baseY - ph + 34, `Ур.${p.level ?? '—'}`, 9, '#ddddff').setOrigin(0.5);
     });
 
     // Награды под платформой
