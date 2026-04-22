@@ -49,6 +49,7 @@ class WorldBossScene extends Phaser.Scene {
     });
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
+    TabBar.build(this, { activeKey: 'boss' });
     this._refresh();
     this._timer = this.time.addEvent({ delay: 1000, loop: true, callback: () => this._tickSecond() });
     // Авто-рефреш каждые 5с если WS мёртв — подхватывает смену Waiting→Fighting

@@ -40,6 +40,7 @@ class RatingScene extends Phaser.Scene {
     } else {
       this._buildTitansTab(W, H);
     }
+    TabBar.build(this, { activeKey: 'rating' });
   }
 
   shutdown() {
@@ -141,7 +142,7 @@ class RatingScene extends Phaser.Scene {
       const myIdx  = players.findIndex(p => p.user_id === myUid);
       const myRank = myIdx >= 0 ? myIdx + 1 : null;
       if (!myRank || myRank > 10) {
-        const myBY = H - 108;
+        const myBY = H - 108 - TabBar.HEIGHT;
         const myBG = this.add.graphics();
         myBG.fillStyle(0x161426, 0.97);
         myBG.fillRoundedRect(10, myBY, W - 20, 44, 10);
