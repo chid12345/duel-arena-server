@@ -291,5 +291,7 @@ function makeBackBtn(scene, label, onClick) {
   z.on('pointerdown', () => { _draw(true);  tg?.HapticFeedback?.impactOccurred('light'); });
   z.on('pointerup',   () => { _draw(false); onClick(); });
   z.on('pointerout',  () => _draw(false));
+  // Back-кнопка зафиксирована на экране — не уезжает при drag-скролле.
+  try { bg.setScrollFactor?.(0); t.setScrollFactor?.(0); z.setScrollFactor?.(0); } catch(_) {}
   return { bg, t, z };
 }

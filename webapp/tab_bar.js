@@ -118,6 +118,61 @@ window.TabBar = {
       });
     });
 
+    // TabBar объекты не скроллятся вместе с контентом — зафиксированы камерой.
+    objs.forEach(o => { try { o.setScrollFactor?.(0); } catch(_) {} });
+    // Сбрасываем scrollY камеры при каждой пересборке таббара (смена таба/сцены).
+    try { scene.cameras.main.setScroll(0, 0); } catch(_) {}
+    // Пальцевый/колёсиком скролл контента (если контент не влезает).
+    TabBar._enableScroll(scene);
+
     return { objs, btns };
+  },
+
+  // Включает drag/wheel-скролл камеры для контента. Идемпотентно (вешается 1 раз на сцену).
+  // maxScroll пересчитывается динамически по getBounds детей на каждом pointerdown/wheel.
+  _enableScroll(scene) {
+    if (scene._tbScrollOn) return;
+    scene._tbScrollOn = true;
+    const H = scene.game.canvas.height;
+    const viewH = H - TABBAR_H;
+    const cam = scene.cameras.main;
+    let startY = 0, startScroll = 0, dragging = false, maxScroll = 0;
+
+    const recomputeMax = () => {
+      let contentMaxY = 0;
+      scene.children.list.forEach(o => {
+        if (o.scrollFactorY === 0) return;
+        try {
+          const b = o.getBounds?.();
+          if (b && b.bottom > contentMaxY) contentMaxY = b.bottom;
+        } catch(_) {}
+      });
+      maxScroll = Math.max(0, contentMaxY - viewH + 16);
+    };
+
+    scene.input.on('pointerdown', (pointer, over) => {
+      if (over && over.length > 0) return;          // started over interactive → skip
+      if (pointer.y > H - TABBAR_H) return;          // on tab bar → skip
+      recomputeMax();
+      if (maxScroll <= 0) return;
+      startY = pointer.y;
+      startScroll = cam.scrollY;
+      dragging = true;
+    });
+    scene.input.on('pointermove', (pointer) => {
+      if (!dragging || !pointer.isDown) return;
+      const next = Phaser.Math.Clamp(startScroll + (startY - pointer.y), 0, maxScroll);
+      cam.setScroll(0, next);
+    });
+    const stop = () => { dragging = false; };
+    scene.input.on('pointerup', stop);
+    scene.input.on('pointerupoutside', stop);
+
+    scene.input.on('wheel', (_p, _go, _dx, dy) => {
+      recomputeMax();
+      if (maxScroll <= 0) return;
+      const next = Phaser.Math.Clamp(cam.scrollY + dy * 0.5, 0, maxScroll);
+      cam.setScroll(0, next);
+    });
   },
 };

@@ -127,10 +127,12 @@ class MenuScene extends Phaser.Scene {
     const g = this.add.graphics();
     g.fillGradientStyle(0x0d0820, 0x0d0820, 0x060412, 0x060412, 1);
     g.fillRect(0, 0, W, H);
+    try { g.setScrollFactor?.(0); } catch(_) {}
     // Атмосферное фиолетовое свечение сверху
     const glow = this.add.graphics();
     glow.fillStyle(0x3b0d8f, 0.18);
     glow.fillEllipse(W / 2, 0, W * 1.4, 260);
+    try { glow.setScrollFactor?.(0); } catch(_) {}
     // Звёзды
     for (let i = 0; i < 55; i++) {
       const x = Phaser.Math.Between(0, W);
@@ -138,6 +140,7 @@ class MenuScene extends Phaser.Scene {
       const r = Phaser.Math.FloatBetween(0.4, 1.6);
       const a = Phaser.Math.FloatBetween(0.08, 0.5);
       const star = this.add.circle(x, y, r, 0xffffff, a);
+      try { star.setScrollFactor?.(0); } catch(_) {}
       this.tweens.add({
         targets: star, alpha: a * 3, duration: Phaser.Math.Between(1500, 4000),
         yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
