@@ -1,6 +1,7 @@
 """Страница /admin/purchases — все покупки USDT и Stars."""
 from __future__ import annotations
 
+import asyncio
 import os
 from typing import Any, Dict
 
@@ -19,8 +20,10 @@ def register_admin_purchases(app: Any, db: Any) -> None:
         if ADMIN_TOKEN and token != ADMIN_TOKEN:
             return HTMLResponse("<h2>403 Forbidden</h2><p>Неверный токен.</p>", status_code=403)
 
-        usdt_rows = db.get_purchases_usdt(500)
-        stars_rows = db.get_purchases_stars(500)
+        usdt_rows, stars_rows = await asyncio.gather(
+            asyncio.to_thread(db.get_purchases_usdt, 500),
+            asyncio.to_thread(db.get_purchases_stars, 500),
+        )
 
         # Суммарная статистика
         usdt_paid = [r for r in usdt_rows if r["status"] == "paid"]

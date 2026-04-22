@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from datetime import datetime
 from typing import Any, Dict
 
 from fastapi import APIRouter
+
+logger = logging.getLogger(__name__)
 
 from api.tma_catalogs import STARS_SCROLL_PACKAGES, USDT_SCROLL_PACKAGES
 from api.tma_infra import get_user_lock
@@ -70,7 +73,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": True, "inventory": items, "active_buffs": buffs,
                     "inventory_unseen": 0, "clan_bonus": clan_bonus}
         except Exception as exc:
-            import traceback; traceback.print_exc()
+            logger.exception("shop error:")
             return {"ok": False, "reason": f"Ошибка: {type(exc).__name__}: {exc}"}
 
     @router.post("/api/shop/buy")
@@ -78,7 +81,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
         try:
             return await shop_buy_inner(body, **_buy_ctx)
         except Exception as exc:
-            import traceback; traceback.print_exc()
+            logger.exception("shop error:")
             return {"ok": False, "reason": f"Серверная ошибка: {type(exc).__name__}: {exc}"}
 
     @router.post("/api/shop/apply")
@@ -86,7 +89,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
         try:
             return await shop_apply_inner(body, **_buy_ctx)
         except Exception as exc:
-            import traceback; traceback.print_exc()
+            logger.exception("shop error:")
             return {"ok": False, "reason": f"Ошибка: {type(exc).__name__}: {exc}"}
 
     @router.get("/api/shop/packages")

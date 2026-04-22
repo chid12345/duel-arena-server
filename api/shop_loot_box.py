@@ -196,9 +196,12 @@ def _apply_drops(db, uid: int, drops: List[Dict]) -> Dict[str, Any]:
         elif drop["type"] == "diamonds":
             amt = drop["amount"]
             conn = db.get_connection()
-            cur = conn.cursor()
-            cur.execute("UPDATE players SET diamonds=diamonds+? WHERE user_id=?", (amt, uid))
-            conn.commit(); conn.close()
+            try:
+                cur = conn.cursor()
+                cur.execute("UPDATE players SET diamonds=diamonds+? WHERE user_id=?", (amt, uid))
+                conn.commit()
+            finally:
+                conn.close()
             result_items.append({"item_id": "_diamonds", "icon": "💎", "name": f"+{amt} алмазов"})
         elif drop["type"] == "premium":
             days = drop["days"]
@@ -237,15 +240,18 @@ def open_box(box_id: str, db, user_id: int) -> Dict[str, Any]:
     price = box["price"]
 
     conn = db.get_connection()
-    cursor = conn.cursor()
-    col = "gold" if currency == "gold" else "diamonds"
-    # Атомарное списание: rowcount == 0 → недостаточно средств (защита от race condition)
-    cursor.execute(
-        f"UPDATE players SET {col} = {col} - ? WHERE user_id = ? AND {col} >= ?",
-        (price, user_id, price),
-    )
-    rows_affected = cursor.rowcount
-    conn.commit(); conn.close()
+    try:
+        cursor = conn.cursor()
+        col = "gold" if currency == "gold" else "diamonds"
+        # Атомарное списание: rowcount == 0 → недостаточно средств (защита от race condition)
+        cursor.execute(
+            f"UPDATE players SET {col} = {col} - ? WHERE user_id = ? AND {col} >= ?",
+            (price, user_id, price),
+        )
+        rows_affected = cursor.rowcount
+        conn.commit()
+    finally:
+        conn.close()
     if rows_affected == 0:
         sym = "🪙" if currency == "gold" else "💎"
         return {"ok": False, "reason": f"Нужно {price} {sym}"}

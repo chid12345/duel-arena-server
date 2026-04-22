@@ -208,18 +208,29 @@ def attach_tma_startup(
                 )
                 logger.info("keepalive ping ok → %s", health_url)
             except Exception as exc:
-                logger.debug("keepalive ping failed: %s", exc)
+                logger.warning("keepalive ping failed: %s", exc)
             rate_limiter_cleanup()
             await _run_weekly_leaderboard_payouts()
             await _run_season_rotation()
             await _recover_pending_invoices()
             await asyncio.sleep(600)
 
+    def _on_task_done(task: asyncio.Task) -> None:
+        try:
+            task.result()
+        except asyncio.CancelledError:
+            pass
+        except Exception as exc:
+            logger.error("background task %s failed: %s", task.get_name(), exc)
+
     @app.on_event("startup")
     async def _start_keepalive() -> None:
-        asyncio.create_task(_run_weekly_leaderboard_payouts())
-        asyncio.create_task(_recover_pending_invoices())
+        t1 = asyncio.create_task(_run_weekly_leaderboard_payouts(), name="weekly_payouts")
+        t2 = asyncio.create_task(_recover_pending_invoices(), name="invoice_recovery")
+        t1.add_done_callback(_on_task_done)
+        t2.add_done_callback(_on_task_done)
         render_url = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
         if render_url:
-            asyncio.create_task(_keepalive_loop(f"{render_url}/api/health"))
+            t3 = asyncio.create_task(_keepalive_loop(f"{render_url}/api/health"), name="keepalive")
+            t3.add_done_callback(_on_task_done)
             logger.info("keepalive task started → %s/api/health (every 10 min)", render_url)
