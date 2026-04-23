@@ -264,4 +264,7 @@
     dimZ.on('pointerdown', () => {}); ov.push(dimZ);
     this._invOverlay = ov;
   };
+
+  // Экспортируем ITEM_META / TABS, чтобы HTML-оверлей "Герой→Рюкзак" не дублировал таблицу.
+  window.INVENTORY_META = { ITEM_META, TABS, BUFF_LABEL };
 })();

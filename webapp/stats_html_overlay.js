@@ -53,6 +53,18 @@ const CSS = `
 .st-bon .em{padding:14px 8px;text-align:center;color:#5a4e78;font-size:11px}
 .st-invbtn{margin:0 10px;padding:14px;border-radius:12px;background:linear-gradient(135deg,rgba(255,59,168,.14),rgba(168,85,247,.08));border:1px solid #ff3ba8;box-shadow:0 0 12px rgba(255,59,168,.35);display:flex;align-items:center;justify-content:center;gap:10px;font-size:13px;font-weight:800;color:#fff;cursor:pointer;text-shadow:0 0 6px #ff3ba8;user-select:none}
 .st-invbtn:active{opacity:.8}
+.st-invtabs{margin:0 10px 8px;padding:3px;background:rgba(10,5,25,.92);border:1px solid rgba(0,240,255,.4);border-radius:10px;box-shadow:0 0 8px rgba(0,240,255,.15);display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.st-invtabs .it{padding:7px 2px;text-align:center;font-size:9.5px;font-weight:800;color:#80c8ff;border-radius:8px;cursor:pointer;user-select:none;letter-spacing:.3px}
+.st-invtabs .it.on{background:linear-gradient(135deg,#00f0ff,#0088a8);color:#05020f;text-shadow:none;box-shadow:0 0 10px rgba(0,240,255,.5)}
+.st-it{margin:0 10px 6px;padding:9px 10px;border-radius:11px;background:linear-gradient(90deg,rgba(15,5,30,.88),rgba(5,5,15,.88));border:1px solid rgba(0,240,255,.3);display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;box-shadow:0 0 6px rgba(0,240,255,.08)}
+.st-it-ic{font-size:22px;text-align:center;filter:drop-shadow(0 0 4px currentColor);color:#ffd166}
+.st-it-bd{min-width:0}
+.st-it-n{font-size:12px;font-weight:800;color:#fff;text-shadow:0 0 4px #00f0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-it-d{font-size:9.5px;color:#80c8ff;opacity:.85;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.st-it-q{font-size:9px;color:#ffd166;margin-top:2px;font-weight:700}
+.st-it-b{padding:7px 9px;border-radius:8px;background:linear-gradient(135deg,#ff3ba8,#a01e6e);color:#fff;font-size:10px;font-weight:800;cursor:pointer;user-select:none;box-shadow:0 0 8px rgba(255,59,168,.45);white-space:nowrap}
+.st-it-b:active{transform:scale(.94)}
+.st-it-b.boss{background:linear-gradient(135deg,#00aaff,#0055a8);box-shadow:0 0 8px rgba(0,170,255,.5)}
 `;
 
 const WT = {
@@ -99,14 +111,13 @@ function _statsHTML(p){
     <div class="cc"><div class="v" style="color:#9cffa8">${p.armor_pct|0}%</div><div class="l">🛡 Бр.</div></div>
     <div class="cc"><div class="v" style="color:#00f0ff">${p.dodge_pct|0}%</div><div class="l">💨 Ув.</div></div>
     <div class="cc"><div class="v" style="color:#a06bff">${p.crit_pct|0}%</div><div class="l">✦ Крит</div></div>
-  </div>
-  <div class="st-wrd" data-act="wardrobe">🎭 Сменить воина / Экипировка</div>`;
+  </div>`;
 }
 
 function _bonusHTML(p, inv){
   const wt=WT[p.warrior_type]||WT.tank;
   const classRows=(CLASS_BONUS[p.warrior_type]||[]).map(r=>`<div class="r"><span class="k">${r.k}</span><span class="v${r.neg?' neg':''}">${r.v}</span></div>`).join('');
-  const eq=p.eq_stats||{};
+  const eq=inv?.eq_stats||p.eq_stats||{};
   const eqList=[
     eq.atk_bonus&&['Урон',`+${eq.atk_bonus}`],eq.hp_bonus&&['HP',`+${eq.hp_bonus}`],
     eq.def_pct&&['Броня',`+${eq.def_pct}%`],eq.crit_bonus&&['Крит-стат',`+${eq.crit_bonus}`],
@@ -124,18 +135,37 @@ function _bonusHTML(p, inv){
     <div class="st-bon"><div class="t">${clanTitle}</div>${clanHtml}</div>`;
 }
 
+const INV_TABS = [
+  { key:'scrolls', label:'📜 Свитки' },
+  { key:'elixirs', label:'🧪 Эликсиры' },
+  { key:'special', label:'🎁 Особые' },
+  { key:'boss',    label:'⚔ Рейд' },
+];
 function _invHTML(inv){
-  const buffs=inv?.active_buffs||[];
-  if(!buffs.length) return `<div class="st-bon"><div class="t">🎒 Рюкзак</div><div class="em">Пусто. Загляни в Магазин!</div></div>
-    <div class="st-invbtn" data-act="shop">🛒 Открыть магазин</div>`;
-  const rows=buffs.map(b=>{
+  const META=(window.INVENTORY_META?.ITEM_META)||{};
+  const buffs=inv?.active_buffs||[], items=inv?.inventory||[];
+  const tabBar=`<div class="st-invtabs">${INV_TABS.map(t=>`<div class="it${_invSubTab===t.key?' on':''}" data-itab="${t.key}">${_esc(t.label)}</div>`).join('')}</div>`;
+  // Активные баффы: компактная плашка сверху
+  const buffsRows=buffs.map(b=>{
     const lbl=BUFF_LBL[b.buff_type]||b.buff_type;
     const val=`+${b.value}${b.buff_type.endsWith('_pct')?'%':''}`;
     const tail=b.charges!=null?`· ${b.charges} боёв`:(b.expires_at?'· ⏳':'');
     return `<div class="r"><span class="k">${_esc(lbl)} ${tail}</span><span class="v">${_esc(val)}</span></div>`;
   }).join('');
-  return `<div class="st-bon"><div class="t">🎒 Активные бонусы</div>${rows}</div>
-    <div class="st-invbtn" data-act="shop">🛒 Открыть магазин</div>`;
+  const buffsCard=buffsRows?`<div class="st-bon"><div class="t">✦ Активные</div>${buffsRows}</div>`:'';
+  // Предметы текущей подвкладки
+  const curItems=items.filter(it=>(META[it.item_id]?.tab||'scrolls')===_invSubTab);
+  const itemsHtml=curItems.length
+    ? curItems.map(it=>{
+        const m=META[it.item_id]||{icon:'📦',name:it.item_id,desc:''};
+        const isBox=it.item_id.startsWith('box_'), isBoss=m.tab==='boss';
+        const btn=isBoss?'⚔ В рейде':(isBox?'🎲 Открыть':'Применить');
+        return `<div class="st-it"><div class="st-it-ic">${m.icon||'📦'}</div>
+          <div class="st-it-bd"><div class="st-it-n">${_esc(m.name||it.item_id)}</div><div class="st-it-d">${_esc(m.desc||'')}</div><div class="st-it-q">×${it.quantity}</div></div>
+          <div class="st-it-b${isBoss?' boss':''}" data-act="apply" data-item="${_esc(it.item_id)}">${btn}</div></div>`;
+      }).join('')
+    : `<div class="st-bon"><div class="em">Пусто в этой категории</div></div>`;
+  return `${buffsCard}${tabBar}${itemsHtml}<div class="st-invbtn" data-act="shop">🛒 Открыть магазин</div>`;
 }
 
 function _rateHTML(p){
@@ -147,7 +177,7 @@ function _rateHTML(p){
     <div class="r"><span class="k">Серия побед</span><span class="v" style="color:#fb923c">${streak} 🔥</span></div></div>`;
 }
 
-let _scene=null, _inv=null, _currentTab='st';
+let _scene=null, _inv=null, _currentTab='st', _invSubTab='scrolls';
 
 function _render(){
   const p=State.player, wt=WT[p.warrior_type]||WT.tank;
@@ -177,22 +207,52 @@ function _render(){
 }
 
 async function _onClick(e){
-  const el=e.target.closest('[data-act],[data-tab]'); if(!el) return;
+  const el=e.target.closest('[data-act],[data-tab],[data-itab]'); if(!el) return;
   try{window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');}catch(_){}
   if(el.dataset.tab){ _currentTab=el.dataset.tab; _render(); return; }
+  if(el.dataset.itab){ _invSubTab=el.dataset.itab; _render(); return; }
   const act=el.dataset.act;
-  if(act==='back'){ close(); _scene?.scene?.start('Menu'); return; }
-  if(act==='wardrobe'){ try{ await _scene?._openAvatarPanel?.(); }catch(_){} return; }
-  if(act==='shop'){ close(); _scene?.scene?.start('Shop'); return; }
+  // Захватываем ссылку на сцену ДО close() — иначе _scene=null и scene.start не отработает.
+  const scn=_scene;
+  if(act==='back'){ close(); scn?.scene?.start('Menu', { returnTab:'profile' }); return; }
+  if(act==='wardrobe'){ try{ await scn?._openAvatarPanel?.(); }catch(_){} return; }
+  if(act==='shop'){ close(); scn?.scene?.start('Shop'); return; }
   if(act==='train'){
     const key=el.dataset.stat; if(!key) return;
-    const res=await _scene?._trainFromHTML?.(key);
+    const res=await scn?._trainFromHTML?.(key);
     if(res?.ok){
       try{ await _refreshInv(); }catch(_){}
       _render();
     } else if(res?.reason){
-      _scene?._showToast?.(res.reason==='no_free_stats'?'❌ Нет свободных статов':'❌ Ошибка');
+      scn?._showToast?.(res.reason==='no_free_stats'?'❌ Нет свободных статов':'❌ Ошибка');
     }
+    return;
+  }
+  if(act==='apply'){
+    const itemId=el.dataset.item; if(!itemId) return;
+    await _applyItem(itemId, false);
+    return;
+  }
+}
+
+async function _applyItem(itemId, replace){
+  try{
+    const res=await post('/api/shop/apply', { item_id:itemId, replace:!!replace });
+    if(res?.conflict){
+      const ok=window.confirm(`Уже активен свиток «${res.active_buff_type}» (${res.active_charges??'?'} боёв). Заменить?`);
+      if(ok) await _applyItem(itemId, true);
+      return;
+    }
+    if(res?.ok){
+      if(res.player){ State.player=res.player; State.playerLoadedAt=Date.now(); }
+      await _refreshInv();
+      _render();
+      try{ _scene?._showToast?.(res.msg||'✅ Применено'); }catch(_){}
+    } else {
+      _scene?._showToast?.(`❌ ${res?.reason||'Ошибка'}`);
+    }
+  } catch(_){
+    _scene?._showToast?.('❌ Нет соединения');
   }
 }
 

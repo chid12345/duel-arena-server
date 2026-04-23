@@ -151,6 +151,11 @@ def register_titan_training_routes(app, ctx: Dict[str, Any]) -> None:
             fresh = dict(fresh)
             fresh["current_hp"] = regen["current_hp"]
         _cache_set(uid, fresh)
-        return {"ok": True, "message": result_msg, "player": _player_api(fresh)}
+        # eq_stats обязательно пробрасываем, иначе после train бонусы экипировки обнуляются
+        try:
+            eq_stats_fresh = db.get_equipment_stats(uid)
+        except Exception:
+            eq_stats_fresh = {}
+        return {"ok": True, "message": result_msg, "player": _player_api(fresh, eq_stats=eq_stats_fresh)}
 
     app.include_router(router)

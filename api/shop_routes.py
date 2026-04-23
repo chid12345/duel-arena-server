@@ -70,8 +70,13 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                         }
             except Exception:
                 pass
+            # eq_stats нужны HTML-оверлею «Герой→Бонусы» как источник истины
+            try:
+                eq_stats = db.get_equipment_stats(uid)
+            except Exception:
+                eq_stats = {}
             return {"ok": True, "inventory": items, "active_buffs": buffs,
-                    "inventory_unseen": 0, "clan_bonus": clan_bonus}
+                    "inventory_unseen": 0, "clan_bonus": clan_bonus, "eq_stats": eq_stats}
         except Exception as exc:
             logger.exception("shop error:")
             return {"ok": False, "reason": f"Ошибка: {type(exc).__name__}: {exc}"}

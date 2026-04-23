@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.0.22"
-VERSION_LABEL = "v2.0.22 — Hero tab: segmented neon UI (СТАТЫ/БОНУСЫ/РЮКЗАК/РЕЙТИНГ)"
+VERSION = "2.0.23"
+VERSION_LABEL = "v2.0.23 — Hero fixes: бонусы не обнуляются после train, РЮКЗАК→apply, чистим WardrobeHTML при входе"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "8.56"
+GAME_VERSION = "8.57"
