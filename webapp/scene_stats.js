@@ -196,6 +196,9 @@ class StatsScene extends Phaser.Scene {
 
   shutdown() {
     this.time.removeAllEvents();
+    // HTML-оверлей гардероба (wd-root) живёт в DOM вне Phaser — иначе остаётся
+    // висеть поверх следующих сцен: переход Stats→Rating→Stats снова показывал гардероб.
+    try { WardrobeHTML?.close?.(); } catch(_) {}
     // Явно уничтожаем все объекты сцены — гарантия что ничего не "призраком" остаётся
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
