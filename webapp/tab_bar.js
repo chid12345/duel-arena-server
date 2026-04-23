@@ -20,19 +20,15 @@ window.TabBar = {
   ],
 
   navigate(scene, key, onInternal) {
-    // Гард: блокируем повторные переходы, пока текущий ещё не завершился.
-    // Без него мелкий touchup после pointerup ловит соседнюю зону → «открывается не та вкладка».
-    if (scene._tabNavGuard) return;
-    scene._tabNavGuard = true;
-
+    // Внутренние табы: синхронная смена панели, гонок нет — гардить не нужно.
     if (onInternal && (key === 'profile' || key === 'more' || key === 'battle')) {
       onInternal(key);
-      // Внутренние табы не перезапускают сцену — сбросить гард на следующем кадре.
-      try { scene.time.delayedCall(50, () => { scene._tabNavGuard = false; }); } catch(_) { scene._tabNavGuard = false; }
       return;
     }
-    // Внешние табы: сцена перезапустится — новая сцена приходит с чистым флагом.
-    // Чтобы pending touchup старой сцены не кинул ещё один scene.start — сразу глушим input.
+    // Внешние табы: гардим, чтобы touchup той же сцены не кинул второй scene.start.
+    // Гард сбросит TabBar.build новой сцены на next create().
+    if (scene._tabNavGuard) return;
+    scene._tabNavGuard = true;
     try { scene.input.enabled = false; } catch(_) {}
 
     if (key === 'profile' || key === 'more') { scene.scene.start('Menu', { returnTab: key }); return; }
@@ -55,6 +51,13 @@ window.TabBar = {
   },
 
   build(scene, opts = {}) {
+    // Сцена переиспользуется Phaser'ом между scene.start — свойства экземпляра
+    // (в т.ч. _tabNavGuard) выживают shutdown. Сбрасываем на каждый build,
+    // иначе гард из прошлой жизни сцены заблокирует табы после возврата.
+    scene._tabNavGuard = false;
+    scene._tabPressKey = null;
+    try { scene.input.enabled = true; } catch(_) {}
+
     const activeKey  = opts.activeKey || null;
     const onInternal = opts.onInternal || null;
     const depth      = (opts.depth != null) ? opts.depth : 100;
