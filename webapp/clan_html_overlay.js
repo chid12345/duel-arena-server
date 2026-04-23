@@ -27,6 +27,10 @@ const CSS = `
 .cl-pills{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
 .cl-pill{padding:3px 10px;font-size:10px;font-weight:700;border-radius:10px;background:#0a0518;border:1px solid #ff3ba8;color:#ff7acb;box-shadow:0 0 8px rgba(255,59,168,.3)}
 .cl-pill.wins{border-color:#ffd166;color:#ffe08a;box-shadow:0 0 8px rgba(255,209,102,.3)}
+.cl-pill.closed{border-color:#ff3ba8;color:#ffa8d8;box-shadow:0 0 8px rgba(255,59,168,.35)}
+.cl-pill.open{border-color:#00f0ff;color:#80e8ff;box-shadow:0 0 8px rgba(0,240,255,.3)}
+.cl-pill.clickable{cursor:pointer;user-select:none;transition:transform .1s}
+.cl-pill.clickable:active{transform:scale(.93)}
 .cl-nav{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 12px 6px}
 .cl-navb{height:34px;border-radius:10px;display:grid;place-items:center;font-size:10.5px;font-weight:700;cursor:pointer;background:rgba(10,5,25,.8);border:1px solid rgba(0,240,255,.35);color:#80e8ff;text-shadow:0 0 4px currentColor;user-select:none;transition:all .15s}
 .cl-navb.hot{border-color:#ff3ba8;color:#ffa8d8}
@@ -147,6 +151,10 @@ function openMyClan(scene, data) {
         <div class="cl-pills">
           ${isLeader?'<span class="cl-pill">👑 Лидер</span>':''}
           <span class="cl-pill wins">🏆 ${clan.wins|0}</span>
+          ${isLeader
+            ? `<span class="cl-pill ${isClosed?'closed':'open'} clickable" data-act="toggle-closed">${isClosed?'🔒 Закрыт':'🔓 Открыт'}</span>`
+            : `<span class="cl-pill ${isClosed?'closed':'open'}">${isClosed?'🔒 Закрыт':'🔓 Открыт'}</span>`
+          }
         </div>
       </div>
     </div>
@@ -181,6 +189,19 @@ function openMyClan(scene, data) {
     if (act === 'nav')       { const sub = el.dataset.sub; close(); scene.scene.restart({ sub }); return; }
     if (act === 'chat')      { close(); scene.scene.restart({ sub: 'chat' }); return; }
     if (act === 'requests')  { close(); scene.scene.restart({ sub: 'requests' }); return; }
+    if (act === 'toggle-closed') {
+      const next = isClosed ? 0 : 1;
+      post('/api/clan/meta', { closed: next }).then(res => {
+        if (res?.ok) {
+          try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
+          window.ClanHTML._toast?.(next ? '🔒 Клан закрыт — вступление по заявке' : '🔓 Клан открыт — вступление свободное');
+          setTimeout(() => { close(); scene.scene.restart({ sub: 'main' }); }, 500);
+        } else {
+          window.ClanHTML._toast?.('❌ ' + (res?.reason || 'Ошибка'), false);
+        }
+      }).catch(() => window.ClanHTML._toast?.('❌ Нет соединения', false));
+      return;
+    }
     if (act === 'disband')   { window.ClanHTML.confirmDisband?.(scene); return; }
     if (act === 'leave')     { window.ClanHTML.confirmLeave?.(scene); return; }
     if (act === 'transfer')  {
