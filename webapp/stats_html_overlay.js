@@ -18,10 +18,25 @@ const CSS = `
 .st-pts{padding:6px 10px;border-radius:8px;font-size:10px;font-weight:800;background:rgba(255,59,168,.12);color:#ff3ba8;border:1px solid #ff3ba8;text-shadow:0 0 4px currentColor;box-shadow:0 0 8px rgba(255,59,168,.4);white-space:nowrap;animation:stPulse 1.4s ease-in-out infinite;cursor:default}
 .st-pts.zero{animation:none;background:rgba(156,220,254,.08);color:#9cffa8;border-color:#9cffa8;box-shadow:0 0 6px rgba(156,255,168,.3)}
 @keyframes stPulse{0%,100%{box-shadow:0 0 6px rgba(255,59,168,.35)}50%{box-shadow:0 0 14px rgba(255,59,168,.7)}}
-.st-seg{margin:0 10px 10px;padding:3px;background:rgba(10,5,25,.92);border:1px solid rgba(0,240,255,.4);border-radius:12px;box-shadow:0 0 10px rgba(0,240,255,.15);display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
-.st-seg .s{padding:8px 2px;text-align:center;font-size:10px;font-weight:800;color:#80c8ff;border-radius:9px;cursor:pointer;letter-spacing:.4px;user-select:none;transition:all .15s}
-.st-seg .s.on{background:linear-gradient(135deg,#ff3ba8,#a01e6e);color:#fff;box-shadow:0 0 12px rgba(255,59,168,.6),inset 0 0 6px rgba(255,255,255,.15);text-shadow:0 0 4px rgba(0,0,0,.4)}
-.st-seg .s .em{display:block;font-size:14px;margin-bottom:2px;filter:drop-shadow(0 0 4px currentColor)}
+.st-seg{margin:0 8px 10px;padding:0;background:transparent;border:none;box-shadow:none;display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.st-seg .s{position:relative;padding:4px 0 6px;text-align:center;cursor:pointer;user-select:none;transition:transform .15s}
+.st-seg .s:active{transform:scale(.94)}
+.st-seg .s .sk{display:block;width:56px;height:56px;margin:0 auto 3px;background-repeat:no-repeat;background-position:center;background-size:contain;transition:filter .25s, transform .25s}
+.st-seg .s .lb{font-size:9.5px;font-weight:800;letter-spacing:.5px;color:#80c8ff;text-shadow:0 0 4px rgba(0,240,255,.25);transition:color .25s, text-shadow .25s}
+.st-seg .s[data-tab="st"] .sk{filter:drop-shadow(0 0 4px rgba(255,59,168,.45)) drop-shadow(0 1px 1px rgba(0,0,0,.55))}
+.st-seg .s[data-tab="bo"] .sk{filter:drop-shadow(0 0 4px rgba(255,190,70,.5))  drop-shadow(0 1px 1px rgba(0,0,0,.55))}
+.st-seg .s[data-tab="in"] .sk{filter:drop-shadow(0 0 4px rgba(0,240,255,.5))   drop-shadow(0 1px 1px rgba(0,0,0,.55))}
+.st-seg .s[data-tab="ra"] .sk{filter:drop-shadow(0 0 4px rgba(130,180,255,.55)) drop-shadow(0 1px 1px rgba(0,0,0,.55))}
+.st-seg .s.on .sk{animation:stSkinPulse 1.7s ease-in-out infinite}
+.st-seg .s[data-tab="st"].on .sk{filter:drop-shadow(0 0 10px rgba(255,59,168,.95)) drop-shadow(0 0 22px rgba(255,59,168,.5))}
+.st-seg .s[data-tab="bo"].on .sk{filter:drop-shadow(0 0 10px rgba(255,200,80,1))   drop-shadow(0 0 22px rgba(255,170,40,.55))}
+.st-seg .s[data-tab="in"].on .sk{filter:drop-shadow(0 0 10px rgba(0,240,255,.95)) drop-shadow(0 0 22px rgba(0,240,255,.5))}
+.st-seg .s[data-tab="ra"].on .sk{filter:drop-shadow(0 0 10px rgba(130,180,255,1)) drop-shadow(0 0 22px rgba(80,140,255,.55))}
+.st-seg .s[data-tab="st"].on .lb{color:#ff5ec0;text-shadow:0 0 6px currentColor}
+.st-seg .s[data-tab="bo"].on .lb{color:#ffcc44;text-shadow:0 0 6px currentColor}
+.st-seg .s[data-tab="in"].on .lb{color:#33f0ff;text-shadow:0 0 6px currentColor}
+.st-seg .s[data-tab="ra"].on .lb{color:#9bbfff;text-shadow:0 0 6px currentColor}
+@keyframes stSkinPulse{0%,100%{transform:scale(1.05)}50%{transform:scale(1.13)}}
 .st-page{display:none}
 .st-page.on{display:block}
 .st-srow{margin:0 10px 8px;padding:10px 12px;border-radius:12px;background:linear-gradient(90deg,rgba(15,5,30,.88),rgba(5,5,15,.88));border:1px solid rgba(0,240,255,.35);display:grid;grid-template-columns:28px 1fr auto 36px;gap:10px;align-items:center}
@@ -182,6 +197,7 @@ let _scene=null, _inv=null, _currentTab='st', _invSubTab='scrolls';
 function _render(){
   const p=State.player, wt=WT[p.warrior_type]||WT.tank;
   const root=document.getElementById('st-root'); if(!root) return;
+  const _bv=window.BUILD_VERSION||'0';
   const name=_esc((p.username||'Герой').slice(0,16));
   const sub=`УР.${p.level} · ★ ${p.rating||0} · ${_esc(wt.name)}`;
   const fs=p.free_stats|0;
@@ -194,10 +210,10 @@ function _render(){
       <div class="st-pts${fs>0?'':' zero'}">${ptsTxt}</div>
     </div>
     <div class="st-seg">
-      <div class="s${_currentTab==='st'?' on':''}" data-tab="st"><span class="em">⚔</span>СТАТЫ</div>
-      <div class="s${_currentTab==='bo'?' on':''}" data-tab="bo"><span class="em">✨</span>БОНУСЫ</div>
-      <div class="s${_currentTab==='in'?' on':''}" data-tab="in"><span class="em">🎒</span>РЮКЗАК</div>
-      <div class="s${_currentTab==='ra'?' on':''}" data-tab="ra"><span class="em">🏆</span>РЕЙТИНГ</div>
+      <div class="s${_currentTab==='st'?' on':''}" data-tab="st"><span class="sk" style="background-image:url('hero_tab_stats.png?v=${_bv}')"></span><div class="lb">СТАТЫ</div></div>
+      <div class="s${_currentTab==='bo'?' on':''}" data-tab="bo"><span class="sk" style="background-image:url('hero_tab_bonus.png?v=${_bv}')"></span><div class="lb">БОНУСЫ</div></div>
+      <div class="s${_currentTab==='in'?' on':''}" data-tab="in"><span class="sk" style="background-image:url('hero_tab_inv.png?v=${_bv}')"></span><div class="lb">РЮКЗАК</div></div>
+      <div class="s${_currentTab==='ra'?' on':''}" data-tab="ra"><span class="sk" style="background-image:url('hero_tab_rate.png?v=${_bv}')"></span><div class="lb">РЕЙТИНГ</div></div>
     </div>
     <div class="st-page${_currentTab==='st'?' on':''}" data-p="st">${_currentTab==='st'?_statsHTML(p):''}</div>
     <div class="st-page${_currentTab==='bo'?' on':''}" data-p="bo">${_currentTab==='bo'?_bonusHTML(p,_inv):''}</div>
