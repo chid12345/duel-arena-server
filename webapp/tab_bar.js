@@ -29,7 +29,14 @@ window.TabBar = {
     // Гард сбросит TabBar.build новой сцены на next create().
     if (scene._tabNavGuard) return;
     scene._tabNavGuard = true;
-    try { scene.input.enabled = false; } catch(_) {}
+    // Fallback: если scene.start по какой-то причине не дошёл до TabBar.build
+    // (ошибка, неизвестный ключ), разблокируем гард через 1.5с, чтобы игра не
+    // застряла намертво. Нормальный путь: build() сбросит гард раньше таймера.
+    if (scene._tabNavGuardTimer) { clearTimeout(scene._tabNavGuardTimer); }
+    scene._tabNavGuardTimer = setTimeout(() => {
+      scene._tabNavGuard = false;
+      scene._tabNavGuardTimer = null;
+    }, 1500);
 
     if (key === 'profile' || key === 'more') { scene.scene.start('Menu', { returnTab: key }); return; }
     if (key === 'clan')   { scene.scene.start('Clan');      return; }
@@ -59,6 +66,7 @@ window.TabBar = {
     // иначе гард из прошлой жизни сцены заблокирует табы после возврата.
     scene._tabNavGuard = false;
     scene._tabPressKey = null;
+    if (scene._tabNavGuardTimer) { clearTimeout(scene._tabNavGuardTimer); scene._tabNavGuardTimer = null; }
     try { scene.input.enabled = true; } catch(_) {}
 
     const activeKey  = opts.activeKey || null;
