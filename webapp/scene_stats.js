@@ -91,12 +91,24 @@ class StatsScene extends Phaser.Scene {
     });
   }
 
-  update() { if (this._wardrobeScrollFn) this._wardrobeScrollFn(); }
+  update() { try { this._wardrobeScrollFn?.(); } catch(_) {} }
 
   shutdown() {
-    this.time.removeAllEvents();
+    // Порядок важен: сперва гасим обновления/таймеры/кастомные колбеки,
+    // затем закрываем HTML-оверлеи, и только потом бьём Phaser-объекты.
+    try { this.time?.removeAllEvents?.(); } catch(_) {}
+    try { this.tweens?.killAll?.(); } catch(_) {}
+    this._wardrobeScrollFn = null;
+    this._invOverlay = null;
+    this._invData = null;
+    this._busy = false;
+    this._invBusy = false;
     try { StatsHTML?.close?.(); } catch(_) {}
     try { WardrobeHTML?.close?.(); } catch(_) {}
-    this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+    // Снимок детей: destroy() удаляет объект из children.getAll(), живой итератор
+    // пропустил бы половину — и часть объектов пережила бы shutdown, появляясь
+    // призраками в следующей сцене (частая причина «зависания» на выходе).
+    const kids = this.children?.getAll?.().slice() || [];
+    kids.forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 }
