@@ -60,8 +60,9 @@ const CSS = `
 .cl-abtn.chat{color:#00f0ff}
 .cl-abtn.req{color:#ffd166}
 .cl-abtn.danger{color:#ff3ba8}
-.cl-bi{width:56px;height:56px;border-radius:16px;object-fit:cover;filter:drop-shadow(0 0 10px currentColor) drop-shadow(0 0 4px rgba(0,0,0,.7));flex-shrink:0}
-.cl-bi-em{width:56px;height:56px;display:grid;place-items:center;font-size:30px;text-shadow:0 0 12px currentColor,0 0 4px rgba(0,0,0,.8)}
+.cl-bi{width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 12px currentColor) drop-shadow(0 0 4px rgba(0,0,0,.6));flex-shrink:0;transition:filter .18s,transform .18s}
+.cl-abtn:active .cl-bi{filter:drop-shadow(0 0 18px currentColor) drop-shadow(0 0 6px rgba(0,0,0,.6));transform:scale(.94)}
+.cl-bi-em{width:72px;height:72px;display:grid;place-items:center;font-size:38px;text-shadow:0 0 14px currentColor,0 0 5px rgba(0,0,0,.8)}
 .cl-bt{font-size:10.5px;font-weight:800;color:currentColor;text-shadow:0 0 6px currentColor;letter-spacing:.3px;margin-top:1px;white-space:nowrap}
 .cl-reqdot{position:absolute;top:-2px;right:2px;background:#dc3c46;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;padding:0 5px;display:grid;place-items:center;box-shadow:0 0 10px rgba(220,60,70,.85);z-index:2}
 `;
@@ -115,10 +116,10 @@ function openMyClan(scene, data) {
   root.id = 'cl-root';
   root.className = 'cl-overlay';
   const rightBtn = isLeader
-    ? `<div class="cl-abtn danger" data-act="disband"><img src="clan_btn_disband.jpg" class="cl-bi" alt=""><div class="cl-bt">Распустить</div></div>`
+    ? `<div class="cl-abtn danger" data-act="disband"><img src="clan_btn_disband.png" class="cl-bi" alt=""><div class="cl-bt">Распустить</div></div>`
     : `<div class="cl-abtn danger" data-act="leave"><div class="cl-bi-em">🚪</div><div class="cl-bt">Выйти</div></div>`;
   const midBtn = threeBtns
-    ? `<div class="cl-abtn req" data-act="requests"><img src="clan_btn_req.jpg" class="cl-bi" alt=""><div class="cl-bt">Заявки</div>${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
+    ? `<div class="cl-abtn req" data-act="requests"><img src="clan_btn_req.png" class="cl-bi" alt=""><div class="cl-bt">Заявки</div>${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
     : '';
 
   root.innerHTML = `
@@ -167,7 +168,7 @@ function openMyClan(scene, data) {
     <div class="cl-mlist">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>
   </div>
   <div class="cl-actions ${threeBtns?'three':'two'}">
-    <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.jpg" class="cl-bi" alt=""><div class="cl-bt">Чат</div></div>
+    <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.png" class="cl-bi" alt=""><div class="cl-bt">Чат</div></div>
     ${midBtn}
     ${rightBtn}
   </div>`;
