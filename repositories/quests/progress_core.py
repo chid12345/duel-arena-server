@@ -61,6 +61,9 @@ class ProgressCoreMixin:
         return result
 
     def add_task_claim(self, user_id: int, claim_key: str) -> bool:
+        """Атомарно «застолбить» клейм. True только если реально ВСТАВИЛИ —
+        второй параллельный запрос получит False, иначе одна награда
+        выдавалась бы дважды (race check-then-act в claim_daily_task)."""
         conn = self.get_connection()
         cur = conn.cursor()
         try:
@@ -71,11 +74,9 @@ class ProgressCoreMixin:
             else:
                 cur.execute("INSERT OR IGNORE INTO task_claims (user_id, claim_key) VALUES (?,?)",
                             (user_id, claim_key))
+            inserted = cur.rowcount > 0
             conn.commit()
-            ph = "%s" if getattr(self, "_pg", False) else "?"
-            cur.execute(f"SELECT 1 FROM task_claims WHERE user_id={ph} AND claim_key={ph}",
-                        (user_id, claim_key))
-            return cur.fetchone() is not None
+            return inserted
         except Exception as e:
             log.warning("add_task_claim error: %s", e)
             return False

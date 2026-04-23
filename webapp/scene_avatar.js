@@ -116,6 +116,14 @@ class AvatarScene extends Phaser.Scene {
 
   shutdown() {
     if (this._scrollTimer) { this._scrollTimer.destroy(); this._scrollTimer = null; }
+    // Возвращаем WS-handler (ставится в _doBuyCrypto), иначе ссылка
+    // на мёртвую сцену останется глобально и будет дёргать restart.
+    try {
+      if (State.ws && this._wsMyHandler && State.ws.onmessage === this._wsMyHandler) {
+        State.ws.onmessage = this._wsPrevHandler || null;
+      }
+    } catch(_) {}
+    this._wsMyHandler = null; this._wsPrevHandler = null;
     this._layer.forEach(o => { try { o.destroy(); } catch(_) {} });
     if (this._ctr) { try { this._ctr.clearMask(); } catch(_) {} this._ctr.destroy(); this._ctr = null; }
     if (this._mGfx) { this._mGfx.destroy(); this._mGfx = null; }

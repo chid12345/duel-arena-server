@@ -60,25 +60,31 @@ Object.assign(ClanScene.prototype, {
         okG.fillStyle(0x1e3028, 1); okG.fillRoundedRect(okX, by, bw, bh, 7);
         okG.lineStyle(1, 0x304838, 0.9); okG.strokeRoundedRect(okX, by, bw, bh, 7);
         txt(this, okX+bw/2, by+bh/2, '✓', 16, '#a0e0a0', true).setOrigin(0.5);
-        this.add.zone(okX, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerup', async () => {
-            tg?.HapticFeedback?.impactOccurred('medium');
-            const res = await post('/api/clan/request_accept', { request_id: r.id });
-            if (res.ok) { this._toast('✅ Принят!'); this.time.delayedCall(400, () => this.scene.restart({sub:'requests'})); }
-            else this._toast('❌ '+res.reason);
-          });
+        const okZ = this.add.zone(okX, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true });
+        okZ.on('pointerup', async () => {
+          if (this._reqBusy) return;
+          this._reqBusy = true;
+          try { okZ.disableInteractive(); } catch(_) {}
+          tg?.HapticFeedback?.impactOccurred('medium');
+          const res = await post('/api/clan/request_accept', { request_id: r.id }).catch(() => ({ ok: false, reason: 'Нет соединения' }));
+          if (res.ok) { this._toast('✅ Принят!'); this.time.delayedCall(400, () => this.scene.restart({sub:'requests'})); }
+          else { this._toast('❌ '+res.reason); this._reqBusy = false; try { okZ.setInteractive({ useHandCursor: true }); } catch(_) {} }
+        });
 
         const noG = this.add.graphics();
         noG.fillStyle(0x2a1416, 1); noG.fillRoundedRect(noX, by, bw, bh, 7);
         noG.lineStyle(1, 0x4a2024, 0.9); noG.strokeRoundedRect(noX, by, bw, bh, 7);
         txt(this, noX+bw/2, by+bh/2, '✕', 14, '#c06870', true).setOrigin(0.5);
-        this.add.zone(noX, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true })
-          .on('pointerup', async () => {
-            tg?.HapticFeedback?.impactOccurred('light');
-            const res = await post('/api/clan/request_reject', { request_id: r.id });
-            if (res.ok) { this._toast('❌ Отклонено'); this.time.delayedCall(300, () => this.scene.restart({sub:'requests'})); }
-            else this._toast('❌ '+res.reason);
-          });
+        const noZ = this.add.zone(noX, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true });
+        noZ.on('pointerup', async () => {
+          if (this._reqBusy) return;
+          this._reqBusy = true;
+          try { noZ.disableInteractive(); } catch(_) {}
+          tg?.HapticFeedback?.impactOccurred('light');
+          const res = await post('/api/clan/request_reject', { request_id: r.id }).catch(() => ({ ok: false, reason: 'Нет соединения' }));
+          if (res.ok) { this._toast('❌ Отклонено'); this.time.delayedCall(300, () => this.scene.restart({sub:'requests'})); }
+          else { this._toast('❌ '+res.reason); this._reqBusy = false; try { noZ.setInteractive({ useHandCursor: true }); } catch(_) {} }
+        });
         y += rowH;
       });
     }).catch(() => load.setText('❌ Нет соединения'));
