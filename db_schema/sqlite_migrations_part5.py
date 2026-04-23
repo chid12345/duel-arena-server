@@ -21,4 +21,9 @@ MIGRATIONS_PART5 = [
     ("2026_04_16_002_migrate_neutral_to_default", [
         "UPDATE players SET warrior_type = 'default' WHERE warrior_type = 'neutral'",
     ]),
+    # Составной индекс для еженедельного PvP-лидерборда: фильтр по is_bot2=0
+    # + диапазон created_at. Без него на 100k+ боёв скан всего набора.
+    ("2026_04_23_001_battles_pvp_weekly_idx", [
+        "CREATE INDEX IF NOT EXISTS idx_battles_pvp_weekly ON battles (is_bot2, created_at)",
+    ]),
 ]

@@ -13,9 +13,10 @@
 from __future__ import annotations
 
 import logging
+import os
 from typing import Any, Dict
 
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from api.world_boss_hit import HitBody, world_boss_hit_inner
 from api.world_boss_actions import (
@@ -138,9 +139,16 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             log.error("wb_rating error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
+    def _check_admin_token(token: str) -> None:
+        # Пустой ADMIN_TOKEN = запрет всем (ни dev, ни prod не должны быть открыты миру).
+        admin_token = os.getenv("ADMIN_TOKEN", "")
+        if not admin_token or token != admin_token:
+            raise HTTPException(status_code=403, detail="forbidden")
+
     @router.get("/api/admin/wb_test_schedule")
-    def wb_test_schedule(in_minutes: int = 0):
+    def wb_test_schedule(in_minutes: int = 0, token: str = ""):
         """Тест: отменить все спавны и стартовать немедленно (in_minutes=0) или через N минут."""
+        _check_admin_token(token)
         try:
             from datetime import datetime, timezone, timedelta
             import random
@@ -192,8 +200,9 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": str(e)}
 
     @router.get("/api/admin/wb_debug")
-    def wb_debug():
+    def wb_debug(token: str = ""):
         """Диагностика: текущее состояние world_boss_spawns (последние 5 записей)."""
+        _check_admin_token(token)
         try:
             from datetime import datetime, timezone
             conn = db.get_connection()

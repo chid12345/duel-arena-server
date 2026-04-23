@@ -269,7 +269,9 @@ function connectWS(userId, onMessage) {
 
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   const host  = API.replace(/^https?:/, '') || `//${location.host}`;
-  const url   = `${proto}:${host}/ws/${userId}`;
+  // Без init_data бэк теперь закрывает сокет с code 1008 — передаём подпись Telegram.
+  const q     = State.initData ? `?init_data=${encodeURIComponent(State.initData)}` : '';
+  const url   = `${proto}:${host}/ws/${userId}${q}`;
   const ws    = new WebSocket(url);
   ws.onmessage = e => onMessage(JSON.parse(e.data));
   ws.onclose   = () => {

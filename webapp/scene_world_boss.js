@@ -89,7 +89,9 @@ class WorldBossScene extends Phaser.Scene {
     if (!uid) return;
     try {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      this._ws = new WebSocket(`${proto}://${location.host}/ws/world_boss/${uid}`);
+      // init_data обязателен — бэк закрывает сокет с code 1008 без подписи.
+      const q = State.initData ? `?init_data=${encodeURIComponent(State.initData)}` : '';
+      this._ws = new WebSocket(`${proto}://${location.host}/ws/world_boss/${uid}${q}`);
       this._ws.onmessage = (m) => {
         try {
           const p = JSON.parse(m.data);
