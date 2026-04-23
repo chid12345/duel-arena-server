@@ -57,7 +57,9 @@ Object.assign(MenuScene.prototype, {
     Object.entries(this._tabBtns).forEach(([k, btn]) => {
       const active = k === key;
       btn.activeBubble?.setVisible(active);
-      if (btn.iconG && btn.iconName) {
+      if (btn.iconImg) {
+        btn.iconImg.setAlpha(active ? 1 : 0.85);
+      } else if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
         TAB_ICONS[btn.iconName](btn.iconG, 0, 0, btn.tabCol || 0x22d3ee, active ? 2 : 1.4);
       }

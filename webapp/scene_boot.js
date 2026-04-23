@@ -14,6 +14,7 @@ class BootScene extends Phaser.Scene {
     this.load.image('warrior_tank',  'warriors/warrior_tank.png');
     this.load.image('warrior_agile', 'warriors/warrior_agile.png');
     this.load.image('warrior_crit',  'warriors/warrior_crit.png');
+    this.load.image('clan_emblem',   'clan_emblem.png');
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('loaderror', f => console.warn('[Boot] loaderror:', f?.key, f?.src));
     this.load.on('complete', () => {

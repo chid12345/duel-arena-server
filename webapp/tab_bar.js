@@ -12,7 +12,7 @@ window.TabBar = {
 
   TABS: [
     { key: 'profile', label: 'Профиль', icon: 'profile', col: 0x22d3ee },
-    { key: 'clan',    label: 'Клан',    icon: 'clan',    col: 0xfb7185 },
+    { key: 'clan',    label: 'Клан',    icon: 'clan',    col: 0xfb7185, imgKey: 'clan_emblem' },
     { key: 'stats',   label: 'Герой',   icon: 'stats',   col: 0x818cf8 },
     { key: 'boss',    label: 'Босс',    icon: 'boss',    col: 0xfb923c },
     { key: 'rating',  label: 'Рейтинг', icon: 'rating',  col: 0xfbbf24 },
@@ -42,7 +42,9 @@ window.TabBar = {
     Object.entries(btns).forEach(([k, btn]) => {
       const active = k === activeKey;
       btn.activeBubble?.setVisible(active);
-      if (btn.iconG && btn.iconName) {
+      if (btn.iconImg) {
+        btn.iconImg.setAlpha(active ? 1 : 0.85);
+      } else if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
         TAB_ICONS[btn.iconName](btn.iconG, 0, 0, btn.tabCol || 0x22d3ee, active ? 2 : 1.4);
       }
@@ -98,13 +100,21 @@ window.TabBar = {
       activeBubble.fillStyle(0xffffff, 0.85); activeBubble.fillCircle(cx, tabTop + 6, 1.5);
       activeBubble.setVisible(isActive);
 
-      const iconG = scene.add.graphics();
-      TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, isActive ? 2 : 1.4);
-      const iconContainer = _t(scene.add.container(cx, iy, [iconG]));
+      const useImg = tab.imgKey && scene.textures.exists(tab.imgKey);
+      let iconG = null, iconImg = null, iconContainer;
+      if (useImg) {
+        iconImg = scene.add.image(0, 0, tab.imgKey).setDisplaySize(28, 28);
+        iconImg.setAlpha(isActive ? 1 : 0.85);
+        iconContainer = _t(scene.add.container(cx, iy, [iconImg]));
+      } else {
+        iconG = scene.add.graphics();
+        TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, isActive ? 2 : 1.4);
+        iconContainer = _t(scene.add.container(cx, iy, [iconG]));
+      }
 
       const labelTxt = _t(txt(scene, cx, tabTop + 57, tab.label, 9, hexCol).setOrigin(0.5));
 
-      btns[tab.key] = { activeBubble, iconContainer, iconG, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
+      btns[tab.key] = { activeBubble, iconContainer, iconG, iconImg, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
 
       const zone = _t(scene.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
 
@@ -116,7 +126,8 @@ window.TabBar = {
         rg.fillStyle(tab.col, 0.35); rg.fillCircle(0, 0, 12);
         const ripple = scene.add.container(cx, iy, [rg]).setDepth(depth);
         scene.tweens.add({ targets: ripple, scaleX: 3.6, scaleY: 3.6, alpha: 0, duration: 420, ease: 'Quad.easeOut', onComplete: () => ripple.destroy() });
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 2.2);
+        if (iconG) { iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 2.2); }
+        if (iconImg) iconImg.setAlpha(1);
         scene.tweens.killTweensOf(iconContainer);
         scene.tweens.add({ targets: iconContainer, scaleX: 1.3, scaleY: 1.3, duration: 80, ease: 'Back.easeOut' });
       });
@@ -124,7 +135,8 @@ window.TabBar = {
         scene.tweens.killTweensOf(iconContainer);
         scene.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 130, ease: 'Sine.easeOut' });
         const a = tab.key === activeKey;
-        iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, a ? 2 : 1.4);
+        if (iconG) { iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, a ? 2 : 1.4); }
+        if (iconImg) iconImg.setAlpha(a ? 1 : 0.85);
       });
       zone.on('pointerup', () => {
         scene.tweens.killTweensOf(iconContainer);
