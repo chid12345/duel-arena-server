@@ -1,6 +1,7 @@
 /* ============================================================
-   StatsScene — распределение свободных статов
-   Открывается из MenuScene: this.scene.start('Stats')
+   StatsScene — «Герой» (segmented neon UI через StatsHTML)
+   Тонкая оболочка: рисуем фон, открываем HTML-оверлей, строим TabBar.
+   Прокачка стата → _trainFromHTML → /api/player/train → refresh overlay.
    ============================================================ */
 
 class StatsScene extends Phaser.Scene {
@@ -15,43 +16,33 @@ class StatsScene extends Phaser.Scene {
 
   create() {
     const { width: W, height: H } = this.game.canvas;
-    this.W = W;
-    this.H = H;
+    this.W = W; this.H = H;
     this._busy = false;
-    this._statRows = {};
 
     const d = this._initData;
 
-    // Режим прямого открытия гардероба из профиля — Stats-UI не строим
+    // Режим прямого открытия гардероба из профиля — Hero-UI не строим
     if (d.openWardrobe) {
       this._openedFromProfile = true;
       this._drawBg(W, H);
-      this._openAvatarPanel();
+      this._openAvatarPanel?.();
       return;
     }
 
     this._drawBg(W, H);
-    this._buildHeader(W);
-    // Бейдж воина — наверху (раскрывается полной панелью бонусов)
-    this._buildWarriorBadge(W, 74);
-    // Рабочая высота контента = H минус нижний таббар (76px)
-    const H_UI = H - TabBar.HEIGHT;
-    this._buildStatRows(W, H_UI);
-    // Боевая статистика (Победы/Пораж./Винрейт/Серия) переехала вниз
-    this._buildCombatPreview(W, H_UI);
-    this._buildAvatarBtn(W, H_UI);
-    this._buildBackBtn(W, H);
     TabBar.build(this, { activeKey: 'stats' });
+
+    // HTML-оверлей строит шапку, сегментированное меню и 4 под-вкладки
+    try { StatsHTML?.open?.(this); } catch(e) { console.warn('[Stats] StatsHTML.open failed', e); }
 
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('stats');
 
     // После restart от wardrobe-действия — открыть гардероб заново
     if (d.reopenWardrobe && d.wardrobePayload) {
-      this._renderAvatarOverlay(d.wardrobePayload);
+      this._renderAvatarOverlay?.(d.wardrobePayload);
       if (d.toast) this._showToast(d.toast);
     }
     // Авто-открытие инвентаря из кнопки «🎒 Моё» в магазине
-    // (сброс счётчика происходит внутри _openInventoryPanel)
     if (d.openInventory) {
       this.time.delayedCall(80, () => this._openInventoryPanel?.());
     }
@@ -65,130 +56,35 @@ class StatsScene extends Phaser.Scene {
     try { g.setScrollFactor?.(0); } catch(_) {}
   }
 
-  /* ── Шапка ───────────────────────────────────────────── */
-  _buildHeader(W) {
-    const p = State.player;
-    makePanel(this, 8, 8, W - 16, 62, 12);
-
-    /* Кнопка «‹» занимает x=10..54 — контент начинаем с x=60 */
-    // Бейдж уровня (сдвинут вправо от кнопки «‹»)
-    const bg = this.add.graphics();
-    bg.fillStyle(C.gold, 1);
-    bg.fillRoundedRect(60, 18, 52, 26, 7);
-    txt(this, 86, 31, `УР.${p.level}`, 13, '#1a1a28', true).setOrigin(0.5);
-
-    const uname = (p.username || '').slice(0, 14);
-    txt(this, 122, 20, uname, 14, '#f0f0fa', true);
-    txt(this, 122, 38, `★ ${p.rating}  ·  ГЕРОЙ`, 10, '#ffc83c');
-
-    // Счётчик свободных статов
-    this._fsBadge = this._makeFsBadge(W, p.free_stats);
+  /* ── Прокачка через HTML-кнопку: API + обновление State ─ */
+  async _trainFromHTML(statKey) {
+    if (this._busy) return { ok:false, reason:'busy' };
+    if ((State.player.free_stats|0) <= 0) return { ok:false, reason:'no_free_stats' };
+    this._busy = true;
+    try {
+      try { tg?.HapticFeedback?.impactOccurred('medium'); } catch(_) {}
+      const res = await post('/api/player/train', { stat: statKey });
+      if (res?.ok) {
+        State.player = res.player;
+        State.playerLoadedAt = Date.now();
+        try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
+      }
+      return res || { ok:false, reason:'unknown' };
+    } catch(_) {
+      return { ok:false, reason:'network' };
+    } finally {
+      this._busy = false;
+    }
   }
 
-  _makeFsBadge(W, count) {
-    if (this._fsBadgeObjs) {
-      this._fsBadgeObjs.forEach(o => o.destroy());
-    }
-    const active = count > 0;
-    const bx = W - 16;
-    const bg = this.add.graphics();
-    bg.fillStyle(active ? C.purple : C.dark, active ? 0.85 : 0.5);
-    bg.fillRoundedRect(bx - 78, 19, 78, 30, 9);
-    if (active) {
-      bg.lineStyle(1.5, C.purple, 0.7);
-      bg.strokeRoundedRect(bx - 78, 19, 78, 30, 9);
-    }
-    const label = txt(this, bx - 39, 34,
-      active ? `⚡ ${count} свободн.` : '✅ все вложены',
-      10, active ? '#f0f0fa' : '#ddddff', active
-    ).setOrigin(0.5);
-
-    if (active) {
-      this.tweens.add({
-        targets: bg, alpha: 0.55,
-        duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
-      });
-    }
-    this._fsBadgeObjs = [bg, label];
-    return { bg, label };
-  }
-
-  /* ── Боевая статистика (Победы/Пораж./Винрейт/Серия) ─── */
-  _buildBattleStats(W, y = 74) {
-    const p     = State.player;
-    const wins  = p.wins   || 0;
-    const losses= p.losses || 0;
-    const total = wins + losses;
-    const wr    = total > 0 ? Math.round(wins / total * 100) : 0;
-    const streak= p.win_streak || 0;
-
-    makePanel(this, 8, y, W - 16, 34, 8, 0.85);
-
-    const cols = [
-      { v: String(wins),   sub: 'Победы',   col: '#3cc864' },
-      { v: String(losses), sub: 'Пораж.',   col: '#dc3c46' },
-      { v: `${wr}%`,       sub: 'Винрейт',  col: '#ffc83c' },
-      { v: String(streak), sub: 'Серия 🔥', col: '#ff8844' },
-    ];
-    const cw = (W - 16) / cols.length;
-    cols.forEach((c, i) => {
-      const cx = 8 + cw * (i + 0.5);
-      txt(this, cx, y + 10, c.v,   13, c.col, true).setOrigin(0.5);
-      txt(this, cx, y + 24, c.sub,  8, '#ddddff').setOrigin(0.5);
-    });
-  }
-
-  /* ── Строки статов ───────────────────────────────────── */
-  _buildStatRows(W, H) {
-    const p = State.player;
-
-    const STATS = [
-      {
-        key:      'strength',
-        icon:     '💪',
-        label:    'Сила',
-        color:    C.red,
-        valFn:    q => q.strength_effective ?? q.strength,
-        effectFn: q => `~${q.dmg} урона`,
-        desc:     'Увеличивает урон по противнику',
-      },
-      {
-        key:      'agility',
-        icon:     '🤸',
-        label:    'Ловкость',
-        color:    C.cyan,
-        valFn:    q => q.agility_effective ?? q.agility,
-        effectFn: q => `${q.dodge_pct}% уворот`,
-        desc:     'Шанс уклониться от удара',
-      },
-      {
-        key:      'intuition',
-        icon:     '💥',
-        label:    'Интуиция',
-        color:    C.purple,
-        valFn:    q => q.intuition_effective ?? q.intuition,
-        effectFn: q => `${q.crit_pct}% крит`,
-        desc:     'Шанс нанести критический удар',
-      },
-      {
-        key:      'stamina',
-        icon:     '🛡',
-        label:    'Выносливость',
-        color:    C.green,
-        valFn:    q => q.stamina_effective ?? q.stamina,
-        effectFn: q => `${q.armor_pct}% броня`,
-        desc:     '+2 HP за каждое вложение',
-      },
-    ];
-
-    // Область: от 116px (после панели боевой статистики) до начала combat preview
-    const areaTop = 116;
-    const areaBot = H * 0.72;
-    const rowH    = (areaBot - areaTop) / STATS.length;
-
-    STATS.forEach((s, i) => {
-      const y = areaTop + i * rowH;
-      this._statRows[s.key] = this._buildStatRow(s, 8, y, W - 16, rowH - 5, p);
+  /* ── Toast (ошибки из HTML-оверлея) ──────────────────── */
+  _showToast(msg) {
+    const t = txt(this, this.W / 2, this.H - 88, msg, 12, '#ff4455', true)
+      .setOrigin(0.5).setAlpha(0).setDepth(10000);
+    this.tweens.add({
+      targets: t, alpha: 1,
+      duration: 200, hold: 1400, yoyo: true,
+      onComplete: () => t.destroy(),
     });
   }
 
@@ -196,10 +92,8 @@ class StatsScene extends Phaser.Scene {
 
   shutdown() {
     this.time.removeAllEvents();
-    // HTML-оверлей гардероба (wd-root) живёт в DOM вне Phaser — иначе остаётся
-    // висеть поверх следующих сцен: переход Stats→Rating→Stats снова показывал гардероб.
+    try { StatsHTML?.close?.(); } catch(_) {}
     try { WardrobeHTML?.close?.(); } catch(_) {}
-    // Явно уничтожаем все объекты сцены — гарантия что ничего не "призраком" остаётся
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 }
