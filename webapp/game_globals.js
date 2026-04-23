@@ -109,6 +109,14 @@ const _WEAPON_TEXTURE_MAP = {
   gs_diamond:'weapon_gs_epic', gs_mythic:'weapon_gs_mythic',
 };
 function getWeaponTextureKey(item_id) { return _WEAPON_TEXTURE_MAP[item_id] || null; }
+/* Фолбэк по rarity: если item_id не в карте (legacy/новые ID) — показываем PNG нужного тира */
+function getWeaponTextureKeyByRarity(rarity) {
+  const r = String(rarity || '').toLowerCase();
+  if (r === 'rare')   return 'weapon_sword_rare';
+  if (r === 'epic')   return 'weapon_sword_epic';
+  if (r === 'mythic') return 'weapon_sword_mythic';
+  return 'weapon_sword_free';
+}
 
 /* Ключ Phaser-текстуры шлема по item_id */
 const _HELMET_TEXTURE_MAP = {
@@ -122,6 +130,13 @@ const _HELMET_TEXTURE_MAP = {
   helmet_mythic3:'helmet_mythic3', helmet_mythic4:'helmet_mythic4',
 };
 function getHelmetTextureKey(item_id) { return _HELMET_TEXTURE_MAP[item_id] || null; }
+function getHelmetTextureKeyByRarity(rarity) {
+  const r = String(rarity || '').toLowerCase();
+  if (r === 'rare')   return 'helmet_gold1';
+  if (r === 'epic')   return 'helmet_dia1';
+  if (r === 'mythic') return 'helmet_mythic1';
+  return 'helmet_free1';
+}
 
 /* Ключ Phaser-текстуры сапог по item_id */
 const _BOOTS_TEXTURE_MAP = {
@@ -135,6 +150,13 @@ const _BOOTS_TEXTURE_MAP = {
   boots_mythic3:'boots_mythic3', boots_mythic4:'boots_mythic4',
 };
 function getBootsTextureKey(item_id) { return _BOOTS_TEXTURE_MAP[item_id] || null; }
+function getBootsTextureKeyByRarity(rarity) {
+  const r = String(rarity || '').toLowerCase();
+  if (r === 'rare')   return 'boots_gold1';
+  if (r === 'epic')   return 'boots_dia1';
+  if (r === 'mythic') return 'boots_mythic1';
+  return 'boots_free1';
+}
 
 /* Ключ Phaser-текстуры щита по item_id */
 const _SHIELD_TEXTURE_MAP = {
@@ -148,6 +170,13 @@ const _SHIELD_TEXTURE_MAP = {
   shield_mythic3:'shield_mythic3', shield_mythic4:'shield_mythic4',
 };
 function getShieldTextureKey(item_id) { return _SHIELD_TEXTURE_MAP[item_id] || null; }
+function getShieldTextureKeyByRarity(rarity) {
+  const r = String(rarity || '').toLowerCase();
+  if (r === 'rare')   return 'shield_gold1';
+  if (r === 'epic')   return 'shield_dia1';
+  if (r === 'mythic') return 'shield_mythic1';
+  return 'shield_free1';
+}
 
 /* Ключ Phaser-текстуры кольца по item_id */
 const _RING_TEXTURE_MAP = {
@@ -161,6 +190,13 @@ const _RING_TEXTURE_MAP = {
   ring_mythic3:'ring_mythic3', ring_mythic4:'ring_mythic4',
 };
 function getRingTextureKey(item_id) { return _RING_TEXTURE_MAP[item_id] || null; }
+function getRingTextureKeyByRarity(rarity) {
+  const r = String(rarity || '').toLowerCase();
+  if (r === 'rare')   return 'ring_gold1';
+  if (r === 'epic')   return 'ring_dia1';
+  if (r === 'mythic') return 'ring_mythic1';
+  return 'ring_free1';
+}
 
 /* Ключ текстуры воина по типу */
 function getWarriorKey(type) {

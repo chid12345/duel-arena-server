@@ -55,11 +55,16 @@ Object.assign(MenuScene.prototype, {
 
     // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
     const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
-    const weaponTexKey = slot === 'weapon' && item ? getWeaponTextureKey(item.item_id) : null;
-    const helmetTexKey = slot === 'belt'   && item ? getHelmetTextureKey(item.item_id)  : null;
-    const bootsTexKey  = slot === 'boots'  && item ? getBootsTextureKey(item.item_id)   : null;
-    const shieldTexKey = slot === 'shield' && item ? getShieldTextureKey(item.item_id) : null;
-    const ringTexKey   = (slot === 'ring1' || slot === 'ring2') && item ? getRingTextureKey(item.item_id) : null;
+    // Фолбэк по rarity: если item_id отсутствует в карте текстур (legacy/новые ID) —
+    // показываем PNG нужного тира, а не emoji. Решает "пропадание скина" в профиле.
+    const _rar = item?.rarity;
+    const weaponTexKey = slot === 'weapon' && item ? (getWeaponTextureKey(item.item_id) || getWeaponTextureKeyByRarity(_rar)) : null;
+    const helmetTexKey = slot === 'belt'   && item ? (getHelmetTextureKey(item.item_id) || getHelmetTextureKeyByRarity(_rar)) : null;
+    const bootsTexKey  = slot === 'boots'  && item ? (getBootsTextureKey(item.item_id)  || getBootsTextureKeyByRarity(_rar))  : null;
+    const shieldTexKey = slot === 'shield' && item ? (getShieldTextureKey(item.item_id) || getShieldTextureKeyByRarity(_rar)) : null;
+    const ringTexKey   = (slot === 'ring1' || slot === 'ring2') && item ? (getRingTextureKey(item.item_id) || getRingTextureKeyByRarity(_rar)) : null;
+    // Для слота брони: если косметика не надета — показываем статовую броню по rarity (PNG, не emoji)
+    const armorTexKey  = slot === 'armor' && !wardrobeEq && item ? getArmorTextureKey(_rar) : null;
     const displayRarity = wardrobeEq ? wardrobeEq.rarity : item?.rarity;
     const hasDisplay = wardrobeEq || item;
 
@@ -71,9 +76,10 @@ Object.assign(MenuScene.prototype, {
       const glG = mkG(); glG.lineStyle(1.5, bc, 0.7); glG.strokeRoundedRect(x, y, w, h, r); c.add(glG);
       c.add(g); // placeholder
 
-      // Броня: wardrobeEquipped | Оружие: weapon texture | Шлем: helmet texture | Сапоги: boots texture
+      // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
         ? wardrobeEq.textureKey
+        : (armorTexKey  && this.textures.exists(armorTexKey))  ? armorTexKey
         : (weaponTexKey && this.textures.exists(weaponTexKey)) ? weaponTexKey
         : (helmetTexKey && this.textures.exists(helmetTexKey)) ? helmetTexKey
         : (bootsTexKey  && this.textures.exists(bootsTexKey))  ? bootsTexKey
