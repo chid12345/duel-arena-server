@@ -11,12 +11,12 @@ window.TabBar = {
   HEIGHT: TABBAR_H,
 
   TABS: [
-    { key: 'profile', label: 'Профиль', icon: 'profile', col: 0x22d3ee },
-    { key: 'clan',    label: 'Клан',    icon: 'clan',    col: 0xfb7185, imgKey: 'clan_emblem' },
-    { key: 'stats',   label: 'Герой',   icon: 'stats',   col: 0x818cf8 },
-    { key: 'boss',    label: 'Босс',    icon: 'boss',    col: 0xfb923c },
-    { key: 'rating',  label: 'Рейтинг', icon: 'rating',  col: 0xfbbf24 },
-    { key: 'more',    label: 'Меню',    icon: 'more',    col: 0xa78bfa },
+    { key: 'profile', label: 'Профиль', icon: 'profile', col: 0x22d3ee, imgKey: 'tab_profile' },
+    { key: 'clan',    label: 'Клан',    icon: 'clan',    col: 0xfb7185, imgKey: 'tab_clan'    },
+    { key: 'stats',   label: 'Герой',   icon: 'stats',   col: 0x818cf8, imgKey: 'tab_stats'   },
+    { key: 'boss',    label: 'Босс',    icon: 'boss',    col: 0xfb923c, imgKey: 'tab_boss'    },
+    { key: 'rating',  label: 'Рейтинг', icon: 'rating',  col: 0xfbbf24, imgKey: 'tab_rating'  },
+    { key: 'more',    label: 'Меню',    icon: 'more',    col: 0xa78bfa, imgKey: 'tab_more'    },
   ],
 
   navigate(scene, key, onInternal) {
@@ -44,6 +44,7 @@ window.TabBar = {
       btn.activeBubble?.setVisible(active);
       if (btn.iconImg) {
         btn.iconImg.setAlpha(active ? 1 : 0.85);
+        if (btn.glowFx) btn.glowFx.outerStrength = active ? 6 : 2;
       } else if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
         TAB_ICONS[btn.iconName](btn.iconG, 0, 0, btn.tabCol || 0x22d3ee, active ? 2 : 1.4);
@@ -87,24 +88,19 @@ window.TabBar = {
       const hexCol = '#' + tab.col.toString(16).padStart(6, '0');
       const isActive = tab.key === activeKey;
 
+      // Активное состояние: без рамки, только 3 точки-индикатор сверху + glow на иконке.
       const activeBubble = _t(scene.add.graphics());
-      const px = tabW * i + 5, py = tabTop + 4, pw = tabW - 10, ph = TAB_H - 8, pr = 13;
-      activeBubble.lineStyle(10, tab.col, 0.12); activeBubble.strokeRoundedRect(px, py, pw, ph, pr);
-      activeBubble.lineStyle(5,  tab.col, 0.25); activeBubble.strokeRoundedRect(px, py, pw, ph, pr);
-      activeBubble.lineStyle(2,  tab.col, 0.18); activeBubble.strokeRoundedRect(px, py, pw, ph, pr);
-      activeBubble.fillStyle(tab.col, 0.30); activeBubble.fillRoundedRect(px, py, pw, ph, pr);
-      activeBubble.fillStyle(0xffffff, 0.08); activeBubble.fillRoundedRect(px + 2, py + 2, pw - 4, 14, { tl: 11, tr: 11, bl: 0, br: 0 });
-      activeBubble.lineStyle(2, tab.col, 0.95); activeBubble.strokeRoundedRect(px, py, pw, ph, pr);
       activeBubble.fillStyle(tab.col, 0.4);   activeBubble.fillCircle(cx, tabTop + 6, 5);
       activeBubble.fillStyle(tab.col, 1.0);   activeBubble.fillCircle(cx, tabTop + 6, 3);
       activeBubble.fillStyle(0xffffff, 0.85); activeBubble.fillCircle(cx, tabTop + 6, 1.5);
       activeBubble.setVisible(isActive);
 
       const useImg = tab.imgKey && scene.textures.exists(tab.imgKey);
-      let iconG = null, iconImg = null, iconContainer;
+      let iconG = null, iconImg = null, iconContainer, glowFx = null;
       if (useImg) {
-        iconImg = scene.add.image(0, 0, tab.imgKey).setDisplaySize(28, 28);
+        iconImg = scene.add.image(0, 0, tab.imgKey).setDisplaySize(42, 42);
         iconImg.setAlpha(isActive ? 1 : 0.85);
+        try { glowFx = iconImg.preFX?.addGlow(tab.col, isActive ? 6 : 2, 0, false, 0.1, 16); } catch(_) {}
         iconContainer = _t(scene.add.container(cx, iy, [iconImg]));
       } else {
         iconG = scene.add.graphics();
@@ -114,7 +110,7 @@ window.TabBar = {
 
       const labelTxt = _t(txt(scene, cx, tabTop + 57, tab.label, 9, hexCol).setOrigin(0.5));
 
-      btns[tab.key] = { activeBubble, iconContainer, iconG, iconImg, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
+      btns[tab.key] = { activeBubble, iconContainer, iconG, iconImg, glowFx, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
 
       const zone = _t(scene.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
 
