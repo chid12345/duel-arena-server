@@ -117,6 +117,24 @@
     border-radius: 3px;
     transition: width 0.3s;
   }
+  /* На тач-устройствах (Telegram mobile) :hover «залипает» после тапа —
+     карточка остаётся приподнятой, кнопка остаётся красной и т.д.
+     Отключаем все hover-эффекты глобально на устройствах без настоящего hover,
+     чтобы PC (мышь) и mobile (тач) выглядели одинаково после взаимодействия. */
+  @media (hover: none) {
+    *:hover { transform: none !important; }
+    .wd-card:hover,
+    .wd-close:hover,
+    .wd-btn:hover,
+    .wd-m-btn:hover,
+    .wnd-x:hover,
+    .bhl-row:hover,
+    #bh-list .bhl-row:hover {
+      background: initial;
+      box-shadow: none;
+      animation: none;
+    }
+  }
 </style>
 </head>
 <body>
