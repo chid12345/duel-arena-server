@@ -77,7 +77,21 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @app.websocket("/ws/{user_id}")
-    async def websocket_endpoint(ws: WebSocket, user_id: int):
+    async def websocket_endpoint(ws: WebSocket, user_id: int, init_data: str = ""):
+        # Без валидации init_data любой мог бы открыть /ws/<чужой_uid> и:
+        #  а) слушать события другого игрока;
+        #  б) вытеснить его сокет (manager.connect закрывает старый).
+        # Поэтому доверяем ТОЛЬКО user_id из подписанного initData.
+        try:
+            tg_user = get_user_from_init_data(init_data) if init_data else None
+        except Exception:
+            tg_user = None
+        if not tg_user or int(tg_user.get("id", 0)) != int(user_id):
+            try:
+                await ws.close(code=1008)  # policy violation
+            except Exception:
+                pass
+            return
         ping_task = None
         await manager.connect(user_id, ws)
         logger.info("WS connected user_id=%s", user_id)

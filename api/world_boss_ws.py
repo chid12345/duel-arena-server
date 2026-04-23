@@ -202,9 +202,22 @@ async def wb_broadcast_tick(db) -> None:
 
 def register_world_boss_ws_routes(app) -> None:
     router = APIRouter()
+    # Импорт здесь, чтобы избежать циклов при старте (tma_auth тянет db).
+    from api.tma_auth import get_user_from_init_data
 
     @app.websocket("/ws/world_boss/{user_id}")
-    async def wb_websocket(ws: WebSocket, user_id: int):
+    async def wb_websocket(ws: WebSocket, user_id: int, init_data: str = ""):
+        # См. /ws/{user_id}: без валидации любой мог подменить user_id в URL.
+        try:
+            tg_user = get_user_from_init_data(init_data) if init_data else None
+        except Exception:
+            tg_user = None
+        if not tg_user or int(tg_user.get("id", 0)) != int(user_id):
+            try:
+                await ws.close(code=1008)
+            except Exception:
+                pass
+            return
         await wb_manager.connect(user_id, ws)
         logger.info("WB WS connected uid=%s (subs=%d)", user_id, len(wb_manager.connections))
         try:

@@ -29,6 +29,7 @@ def register_tma_battle_queue_routes(
     async def join_queue(body: InitDataHeader):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
+        _rl_check(uid, "battle_queue", max_hits=10, window_sec=60)
         player = db.get_or_create_player(uid, "")
         db.pvp_enqueue(uid, int(player.get("level", 1)), chat_id=0, message_id=None)
         return {"ok": True, "status": "queued"}
@@ -37,6 +38,7 @@ def register_tma_battle_queue_routes(
     async def cancel_queue(body: InitDataHeader):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
+        _rl_check(uid, "battle_cancel_queue", max_hits=15, window_sec=60)
         db.pvp_dequeue(uid)
         return {"ok": True}
 
@@ -154,6 +156,7 @@ def register_tma_battle_queue_routes(
     async def cancel_challenge(body: ChallengeCancelBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
+        _rl_check(uid, "challenge_cancel", max_hits=20, window_sec=60)
         ok = db.cancel_pvp_challenge(body.challenge_id, uid)
         return {"ok": bool(ok)}
 
@@ -161,6 +164,7 @@ def register_tma_battle_queue_routes(
     async def respond_challenge(body: ChallengeRespondBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
+        _rl_check(uid, "challenge_respond", max_hits=20, window_sec=60)
         resp = db.respond_pvp_challenge(int(body.challenge_id), uid, bool(body.accept))
         if not resp:
             return {"ok": False, "reason": "challenge_not_found_or_expired"}

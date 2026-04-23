@@ -30,4 +30,6 @@ POSTGRES_DDL_03: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_players_username ON players (username)",
     "CREATE INDEX IF NOT EXISTS idx_season_stats_user ON season_stats (user_id)",
     "CREATE INDEX IF NOT EXISTS idx_daily_quests_user ON daily_quests (user_id)",
+    # Еженедельный PvP-лидерборд: is_bot2=FALSE + created_at range.
+    "CREATE INDEX IF NOT EXISTS idx_battles_pvp_weekly ON battles (is_bot2, created_at)",
 )
