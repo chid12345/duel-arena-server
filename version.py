@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.0.07"
-VERSION_LABEL = "v2.0.07 — feat: Clan chat cyberpunk (HTML overlay, native input)"
+VERSION = "2.0.08"
+VERSION_LABEL = "v2.0.08 — fix: chat overlay full viewport (no TabBar in chat)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "8.41"
+GAME_VERSION = "8.42"
