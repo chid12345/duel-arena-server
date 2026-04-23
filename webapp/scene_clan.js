@@ -10,12 +10,25 @@ class ClanScene extends Phaser.Scene {
     this._subview = (data && data.sub) ? data.sub : 'main';
     this._previewClanId = (data && data.clanId) ? data.clanId : null;
     this._busy = false;
+    // HTML-заглушка перекрывает Phaser canvas сразу, до первой отрисовки сцены.
+    // Убирается в конце openMyClan/openNoClan/openChat/_shell, когда готов реальный оверлей.
+    const HTML_SUBS = ['main','chat','requests','search','create','top','season','wars','achievements','history'];
+    if (HTML_SUBS.includes(this._subview) && !document.getElementById('cl-placeholder')) {
+      const ph = document.createElement('div');
+      ph.id = 'cl-placeholder';
+      const bottom = this._subview === 'chat' ? 0 : 76;
+      ph.style.cssText = `position:fixed;top:0;left:${0};right:0;bottom:${bottom}px;z-index:8999;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;pointer-events:none`;
+      document.body.appendChild(ph);
+    }
   }
 
   shutdown() {
     try { this.tweens.killAll(); } catch(_) {}
     if (this._autoRefreshEvent) { this._autoRefreshEvent.remove(false); this._autoRefreshEvent = null; }
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
+    // Заглушку сносим — если сцена рестартится, init() сразу же добавит свежую.
+    // Если уходим из клана — чтобы заглушка не осталась на Menu.
+    document.getElementById('cl-placeholder')?.remove();
   }
 
   _startAutoRefresh(snapshot) {

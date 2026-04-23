@@ -112,6 +112,7 @@ function openChat(scene, data) {
       </div>
     </div>`;
   document.body.appendChild(root);
+  document.getElementById('cl-placeholder')?.remove();
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
 
   const list = root.querySelector('#cc-list');
@@ -130,7 +131,7 @@ function openChat(scene, data) {
     if (!el) return;
     const act = el.dataset.act;
     try { tg?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
-    if (act === 'back')   { close(); scene.scene.restart({ sub: 'main' }); return; }
+    if (act === 'back')   { scene.scene.restart({ sub: 'main' }); return; }
     if (act === 'reload') { _loadChat(list, myId); return; }
     if (act === 'send')   { _sendMessage(inp, list, myId, sendBtn); return; }
   });

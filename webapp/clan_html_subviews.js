@@ -65,10 +65,10 @@ function _shell(scene, iconEmoji, title, bodyHTML, sub) {
     <div id="cl-sub-body">${bodyHTML}</div>
   </div>`;
   document.body.appendChild(root);
+  document.getElementById('cl-placeholder')?.remove();
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
   root.querySelector('[data-act="back"]').onclick = () => {
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
-    window.ClanHTML.close();
     scene.scene.restart({ sub: 'main' });
   };
   return root;

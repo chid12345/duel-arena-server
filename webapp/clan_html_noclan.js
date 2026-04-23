@@ -67,6 +67,7 @@ function openNoClan(scene) {
       </div>
     </div>`;
   document.body.appendChild(root);
+  document.getElementById('cl-placeholder')?.remove();
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
 
   root.addEventListener('click', e => {
@@ -75,7 +76,7 @@ function openNoClan(scene) {
     try { tg?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
     if (el.dataset.act === 'back') { close(); scene.scene.start('Menu', { target: 'more' }); return; }
     const sub = el.dataset.sub;
-    if (sub) { close(); scene.scene.restart({ sub }); }
+    if (sub) scene.scene.restart({ sub });
   });
 }
 

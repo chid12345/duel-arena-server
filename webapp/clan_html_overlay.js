@@ -172,6 +172,7 @@ function openMyClan(scene, data) {
     ${rightBtn}
   </div>`;
   document.body.appendChild(root);
+  document.getElementById('cl-placeholder')?.remove();
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
 
   root.addEventListener('click', e => {
@@ -180,16 +181,16 @@ function openMyClan(scene, data) {
     const act = el.dataset.act;
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
     if (act === 'back')      { close(); scene.scene.start('Menu', { target: 'more' }); return; }
-    if (act === 'nav')       { const sub = el.dataset.sub; close(); scene.scene.restart({ sub }); return; }
-    if (act === 'chat')      { close(); scene.scene.restart({ sub: 'chat' }); return; }
-    if (act === 'requests')  { close(); scene.scene.restart({ sub: 'requests' }); return; }
+    if (act === 'nav')       { scene.scene.restart({ sub: el.dataset.sub }); return; }
+    if (act === 'chat')      { scene.scene.restart({ sub: 'chat' }); return; }
+    if (act === 'requests')  { scene.scene.restart({ sub: 'requests' }); return; }
     if (act === 'toggle-closed') {
       const next = isClosed ? 0 : 1;
       post('/api/clan/meta', { closed: next }).then(res => {
         if (res?.ok) {
           try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
           window.ClanHTML._toast?.(next ? '🔒 Клан закрыт — вступление по заявке' : '🔓 Клан открыт — вступление свободное');
-          setTimeout(() => { close(); scene.scene.restart({ sub: 'main' }); }, 500);
+          setTimeout(() => scene.scene.restart({ sub: 'main' }), 500);
         } else {
           window.ClanHTML._toast?.('❌ ' + (res?.reason || 'Ошибка'), false);
         }
