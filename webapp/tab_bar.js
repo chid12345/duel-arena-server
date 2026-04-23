@@ -20,9 +20,21 @@ window.TabBar = {
   ],
 
   navigate(scene, key, onInternal) {
+    // Гард: блокируем повторные переходы, пока текущий ещё не завершился.
+    // Без него мелкий touchup после pointerup ловит соседнюю зону → «открывается не та вкладка».
+    if (scene._tabNavGuard) return;
+    scene._tabNavGuard = true;
+
     if (onInternal && (key === 'profile' || key === 'more' || key === 'battle')) {
-      onInternal(key); return;
+      onInternal(key);
+      // Внутренние табы не перезапускают сцену — сбросить гард на следующем кадре.
+      try { scene.time.delayedCall(50, () => { scene._tabNavGuard = false; }); } catch(_) { scene._tabNavGuard = false; }
+      return;
     }
+    // Внешние табы: сцена перезапустится — новая сцена приходит с чистым флагом.
+    // Чтобы pending touchup старой сцены не кинул ещё один scene.start — сразу глушим input.
+    try { scene.input.enabled = false; } catch(_) {}
+
     if (key === 'profile' || key === 'more') { scene.scene.start('Menu', { returnTab: key }); return; }
     if (key === 'clan')   { scene.scene.start('Clan');      return; }
     if (key === 'stats')  { scene.scene.start('Stats');     return; }
@@ -94,6 +106,9 @@ window.TabBar = {
       const zone = _t(scene.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
 
       zone.on('pointerdown', () => {
+        // Запоминаем, на какой вкладке начался тап. Нав разрешаем только если pointerup
+        // произошёл на той же вкладке — защита от «жирного пальца» / свайпа по таббару.
+        scene._tabPressKey = tab.key;
         const rg = scene.add.graphics();
         rg.fillStyle(tab.col, 0.35); rg.fillCircle(0, 0, 12);
         const ripple = scene.add.container(cx, iy, [rg]).setDepth(depth);
@@ -111,6 +126,10 @@ window.TabBar = {
       zone.on('pointerup', () => {
         scene.tweens.killTweensOf(iconContainer);
         scene.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
+        // Нав только если pointerdown и pointerup на одной вкладке. Если палец «съехал» —
+        // игнорируем: уверенность пользователя недостаточна, лучше не открывать ничего.
+        if (scene._tabPressKey !== tab.key) { scene._tabPressKey = null; return; }
+        scene._tabPressKey = null;
         if (typeof Sound !== 'undefined' && Sound.tab) Sound.tab();
         if (typeof tg !== 'undefined') tg?.HapticFeedback?.selectionChanged();
         if (tab.key === activeKey) return;
