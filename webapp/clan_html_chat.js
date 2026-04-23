@@ -4,7 +4,7 @@
    ============================================================ */
 (() => {
 const CSS = `
-.cc-overlay{position:fixed;inset:0;z-index:9000;display:flex;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;color:#e6f7ff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+.cc-overlay{position:absolute;top:0;left:0;right:0;height:100%;z-index:9000;display:flex;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;color:#e6f7ff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
 .cc-overlay::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,220,.025) 3px 4px);pointer-events:none;z-index:1}
 .cc-overlay::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
 .cc-panel{width:100%;max-width:430px;position:relative;z-index:2;display:flex;flex-direction:column;height:100%}
