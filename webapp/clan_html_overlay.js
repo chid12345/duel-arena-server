@@ -14,9 +14,8 @@ const CSS = `
 .cl-hdr-title{font-size:16px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cl-hdr-sub{font-size:10px;color:#00e0ff;opacity:.75;margin-top:1px}
 .cl-card{margin:4px 12px;padding:12px;border-radius:14px;display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(20,0,30,.95),rgba(5,5,15,.95));border:1px solid #ff3ba8;box-shadow:0 0 24px rgba(255,59,168,.25),inset 0 0 20px rgba(255,59,168,.05)}
-.cl-av{width:58px;height:58px;border-radius:14px;display:grid;place-items:center;flex-shrink:0;position:relative;background:linear-gradient(135deg,#1a0433,#0a0222);border:1px solid #00f0ff;box-shadow:0 0 16px rgba(0,240,255,.45)}
-.cl-av-em{font-size:26px;line-height:1;filter:drop-shadow(0 0 6px rgba(0,240,255,.8));animation:clHolo 3s ease-in-out infinite}
-.cl-av-nm{position:absolute;bottom:3px;font-size:7px;font-weight:700;letter-spacing:.5px;width:100%;text-align:center;color:#00f0ff;text-shadow:0 0 4px currentColor}
+.cl-av{width:62px;height:62px;border-radius:14px;display:grid;place-items:center;flex-shrink:0;position:relative;background:linear-gradient(135deg,#1a0433,#0a0222);border:1px solid #00f0ff;box-shadow:0 0 16px rgba(0,240,255,.45);overflow:hidden}
+.cl-av-img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(0,240,255,.8));animation:clHolo 3s ease-in-out infinite}
 @keyframes clHolo{0%,100%{opacity:1;transform:translateY(0)}50%{opacity:.75;transform:translateY(-1px)}}
 .cl-info{flex:1;min-width:0}
 .cl-tagrow{display:flex;gap:6px;align-items:center;font-size:11px;font-weight:700}
@@ -56,19 +55,14 @@ const CSS = `
 .cl-actions{position:fixed;left:0;right:0;bottom:calc(76px + 10px);padding:0 12px;display:grid;gap:6px;z-index:9100;max-width:430px;margin:0 auto}
 .cl-actions.three{grid-template-columns:1fr 1fr 1fr}
 .cl-actions.two{grid-template-columns:1fr 1fr}
-.cl-abtn{height:44px;border-radius:12px;display:grid;place-items:center;font-size:13px;font-weight:700;cursor:pointer;background:rgba(10,5,25,.92);backdrop-filter:blur(6px);border:1px solid currentColor;box-shadow:0 0 12px currentColor;position:relative;user-select:none;transition:transform .1s}
+.cl-abtn{height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer;background:rgba(10,5,25,.92);backdrop-filter:blur(6px);border:1px solid currentColor;box-shadow:0 0 12px currentColor;position:relative;user-select:none;transition:transform .1s}
 .cl-abtn:active{transform:scale(.96)}
 .cl-abtn.chat{color:#00f0ff}
 .cl-abtn.req{color:#ffd166}
 .cl-abtn.danger{color:#ff3ba8}
+.cl-bi{width:26px;height:26px;border-radius:6px;object-fit:cover;flex-shrink:0;box-shadow:0 0 6px currentColor;border:1px solid currentColor}
 .cl-reqdot{position:absolute;top:4px;right:6px;background:#dc3c46;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;padding:0 5px;display:grid;place-items:center;box-shadow:0 0 8px rgba(220,60,70,.7)}
 `;
-
-const EM = {
-  light:   { i: '☀️', name: 'СВЕТ',        hex: '#ffd166' },
-  dark:    { i: '🌑', name: 'ТЬМА',        hex: '#a06bff' },
-  neutral: { i: '⚖️', name: 'НЕЙТРАЛИТЕТ', hex: '#7ec8ff' },
-};
 
 function _injectCSS() {
   if (document.getElementById('cl-style')) return;
@@ -112,7 +106,6 @@ function openMyClan(scene, data) {
   const members = data.members || [];
   const isLeader = !!data.is_leader;
   const isClosed = (clan.closed|0) === 1;
-  const em = EM[clan.emblem] || EM.neutral;
   const pending = data.pending_requests || 0;
   const threeBtns = isLeader && isClosed;
 
@@ -120,10 +113,10 @@ function openMyClan(scene, data) {
   root.id = 'cl-root';
   root.className = 'cl-overlay';
   const rightBtn = isLeader
-    ? `<div class="cl-abtn danger" data-act="disband">🧨 Распустить</div>`
+    ? `<div class="cl-abtn danger" data-act="disband"><img src="clan_btn_disband.jpg" class="cl-bi" alt="">Распустить</div>`
     : `<div class="cl-abtn danger" data-act="leave">🚪 Выйти</div>`;
   const midBtn = threeBtns
-    ? `<div class="cl-abtn req" data-act="requests">📨 Заявки${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
+    ? `<div class="cl-abtn req" data-act="requests"><img src="clan_btn_req.jpg" class="cl-bi" alt="">Заявки${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
     : '';
 
   root.innerHTML = `
@@ -138,8 +131,7 @@ function openMyClan(scene, data) {
     </div>
     <div class="cl-card">
       <div class="cl-av">
-        <div class="cl-av-em">${em.i}</div>
-        <div class="cl-av-nm" style="color:${em.hex};text-shadow:0 0 4px ${em.hex}">${em.name}</div>
+        <img class="cl-av-img" src="clan_em_${clan.emblem||'neutral'}.png" alt="">
       </div>
       <div class="cl-info">
         <div class="cl-tagrow">
@@ -173,7 +165,7 @@ function openMyClan(scene, data) {
     <div class="cl-mlist">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>
   </div>
   <div class="cl-actions ${threeBtns?'three':'two'}">
-    <div class="cl-abtn chat" data-act="chat">💬 Чат</div>
+    <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.jpg" class="cl-bi" alt="">Чат</div>
     ${midBtn}
     ${rightBtn}
   </div>`;

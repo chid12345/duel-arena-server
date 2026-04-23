@@ -317,5 +317,5 @@ function _bind(scene, handler) {
   });
 }
 
-Object.assign(window.ClanHTML, { openRequests, openSeason, openWars, openAchievements, openHistory });
+Object.assign(window.ClanHTML, { openRequests, openSeason, openWars, openAchievements, openHistory, _shell, _setBody, _bind, _esc, _trunc });
 })();

@@ -110,25 +110,6 @@ Object.assign(ClanScene.prototype, {
     this._busy = false;
   },
 
-  async _doCreate(btnT) {
-    if (this._busy) return;
-    const name = this._nameEl?.value?.trim() || '';
-    const tag  = this._tagEl?.value?.trim()  || '';
-    if (name.length < 3) { this._toast('❌ Название минимум 3 символа'); return; }
-    if (tag.length  < 2) { this._toast('❌ Тег минимум 2 символа'); return; }
-    this._busy = true; btnT?.setText('Создаём...');
-    try {
-      const res = await post('/api/clan/create', { name, tag });
-      if (res.ok) {
-        tg?.HapticFeedback?.notificationOccurred('success'); Sound.levelUp();
-        if (res.player) State.player = res.player;
-        this._toast(`🏰 Клан [${res.tag}] ${res.name} основан!`);
-        this.time.delayedCall(700, () => this.scene.restart());
-      } else { this._toast(`❌ ${res.reason}`); btnT?.setText('⚔️  Основать клан  (200 🪙)'); }
-    } catch(_) { this._toast('❌ Нет соединения'); btnT?.setText('⚔️  Основать клан  (200 🪙)'); }
-    this._busy = false;
-  },
-
   async _leaveClan() {
     if (this._busy) return; this._busy = true;
     try {
