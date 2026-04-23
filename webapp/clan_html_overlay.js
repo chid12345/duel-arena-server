@@ -7,7 +7,7 @@ const CSS = `
 .cl-overlay{position:fixed;top:0;left:0;right:0;bottom:76px;z-index:9000;display:flex;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;color:#e6f7ff;overflow-y:auto;overflow-x:hidden;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
 .cl-overlay::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,220,.025) 3px 4px);pointer-events:none;z-index:1}
 .cl-overlay::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
-.cl-panel{width:100%;max-width:430px;position:relative;z-index:2;padding:0 0 70px}
+.cl-panel{width:100%;max-width:430px;position:relative;z-index:2;padding:0 0 100px}
 .cl-hdr{padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
 .cl-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:4px 8px;opacity:.7;user-select:none}
 .cl-hdr-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px;background:linear-gradient(135deg,#1a0533,#2a0a40);border:1px solid #ff3ba8;box-shadow:0 0 12px rgba(255,59,168,.5),inset 0 0 8px rgba(255,59,168,.2)}
@@ -52,16 +52,18 @@ const CSS = `
 .cl-mact .cl-mbadge:active{opacity:.7}
 .cl-mact .danger{background:rgba(220,60,90,.15);color:#ff8ea0;border-color:#ff5a7a;box-shadow:0 0 8px rgba(220,60,90,.35)}
 .cl-more{text-align:center;padding:8px;font-size:10px;color:#80c8ff;opacity:.75}
-.cl-actions{position:fixed;left:0;right:0;bottom:calc(76px + 10px);padding:0 12px;display:grid;gap:6px;z-index:9100;max-width:430px;margin:0 auto}
+.cl-actions{position:fixed;left:0;right:0;bottom:calc(76px + 8px);padding:0 12px;display:grid;gap:10px;z-index:9100;max-width:430px;margin:0 auto;justify-items:center}
 .cl-actions.three{grid-template-columns:1fr 1fr 1fr}
 .cl-actions.two{grid-template-columns:1fr 1fr}
-.cl-abtn{height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:7px;font-size:13px;font-weight:700;cursor:pointer;background:rgba(10,5,25,.92);backdrop-filter:blur(6px);border:1px solid currentColor;box-shadow:0 0 12px currentColor;position:relative;user-select:none;transition:transform .1s}
-.cl-abtn:active{transform:scale(.96)}
+.cl-abtn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;background:none;border:none;padding:2px 4px;user-select:none;position:relative;transition:transform .12s}
+.cl-abtn:active{transform:scale(.92)}
 .cl-abtn.chat{color:#00f0ff}
 .cl-abtn.req{color:#ffd166}
 .cl-abtn.danger{color:#ff3ba8}
-.cl-bi{width:26px;height:26px;border-radius:6px;object-fit:cover;flex-shrink:0;box-shadow:0 0 6px currentColor;border:1px solid currentColor}
-.cl-reqdot{position:absolute;top:4px;right:6px;background:#dc3c46;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;padding:0 5px;display:grid;place-items:center;box-shadow:0 0 8px rgba(220,60,70,.7)}
+.cl-bi{width:56px;height:56px;border-radius:16px;object-fit:cover;filter:drop-shadow(0 0 10px currentColor) drop-shadow(0 0 4px rgba(0,0,0,.7));flex-shrink:0}
+.cl-bi-em{width:56px;height:56px;display:grid;place-items:center;font-size:30px;text-shadow:0 0 12px currentColor,0 0 4px rgba(0,0,0,.8)}
+.cl-bt{font-size:10.5px;font-weight:800;color:currentColor;text-shadow:0 0 6px currentColor;letter-spacing:.3px;margin-top:1px;white-space:nowrap}
+.cl-reqdot{position:absolute;top:-2px;right:2px;background:#dc3c46;color:#fff;font-size:9px;font-weight:800;min-width:16px;height:16px;border-radius:8px;padding:0 5px;display:grid;place-items:center;box-shadow:0 0 10px rgba(220,60,70,.85);z-index:2}
 `;
 
 function _injectCSS() {
@@ -113,10 +115,10 @@ function openMyClan(scene, data) {
   root.id = 'cl-root';
   root.className = 'cl-overlay';
   const rightBtn = isLeader
-    ? `<div class="cl-abtn danger" data-act="disband"><img src="clan_btn_disband.jpg" class="cl-bi" alt="">Распустить</div>`
-    : `<div class="cl-abtn danger" data-act="leave">🚪 Выйти</div>`;
+    ? `<div class="cl-abtn danger" data-act="disband"><img src="clan_btn_disband.jpg" class="cl-bi" alt=""><div class="cl-bt">Распустить</div></div>`
+    : `<div class="cl-abtn danger" data-act="leave"><div class="cl-bi-em">🚪</div><div class="cl-bt">Выйти</div></div>`;
   const midBtn = threeBtns
-    ? `<div class="cl-abtn req" data-act="requests"><img src="clan_btn_req.jpg" class="cl-bi" alt="">Заявки${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
+    ? `<div class="cl-abtn req" data-act="requests"><img src="clan_btn_req.jpg" class="cl-bi" alt=""><div class="cl-bt">Заявки</div>${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
     : '';
 
   root.innerHTML = `
@@ -165,7 +167,7 @@ function openMyClan(scene, data) {
     <div class="cl-mlist">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>
   </div>
   <div class="cl-actions ${threeBtns?'three':'two'}">
-    <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.jpg" class="cl-bi" alt="">Чат</div>
+    <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.jpg" class="cl-bi" alt=""><div class="cl-bt">Чат</div></div>
     ${midBtn}
     ${rightBtn}
   </div>`;
