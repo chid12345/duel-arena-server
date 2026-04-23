@@ -129,41 +129,11 @@ class ClanScene extends Phaser.Scene {
   }
 
   _renderNoClan(W, H) {
-    const iconS = 64, iconX = W / 2 - iconS / 2, iconY = 86;
-    const iconG = this.add.graphics();
-    iconG.fillStyle(0x141720, 1);
-    iconG.fillRoundedRect(iconX, iconY, iconS, iconS, 18);
-    iconG.lineStyle(1, 0x1e2230, 0.9);
-    iconG.strokeRoundedRect(iconX, iconY, iconS, iconS, 18);
-    txt(this, W / 2, iconY + iconS / 2, '🏰', 32).setOrigin(0.5);
-
-    txt(this, W / 2, 165, 'Вы не в клане', 14, '#e8ecff', true).setOrigin(0.5);
-    txt(this, W / 2, 184, 'Вступайте и участвуйте в клановых войнах', 11, '#3a4060').setOrigin(0.5);
-
-    const btns = [
-      { label: 'Найти клан', bgCol: 0x1a2050, border: 0x2a3460, textCol: '#a8c4ff', sub: 'search', dot: 0x5080ff },
-      { label: '＋ Создать клан', bgCol: 0x1e1040, border: 0x2a1e50, textCol: '#c8a0ff', sub: 'create' },
-      { label: '🏆 Топ кланов', bgCol: 0x141720, border: 0x252a38, textCol: '#ffc83c', sub: 'top' },
-      { label: '🏆 Сезон (7 дней)', bgCol: 0x2a2010, border: 0xffc83c, textCol: '#ffd166', sub: 'season' },
-    ];
-    btns.forEach((b, i) => {
-      const by = 204 + i * 54, bh = 46;
-      const bg = this.add.graphics();
-      bg.fillStyle(b.bgCol, 0.95);
-      bg.fillRoundedRect(16, by, W - 32, bh, 10);
-      bg.lineStyle(1, b.border, 0.85);
-      bg.strokeRoundedRect(16, by, W - 32, bh, 10);
-      if (b.dot) {
-        bg.fillStyle(b.dot, 1);
-        bg.fillCircle(W / 2 - 52, by + bh / 2, 4);
-      }
-      txt(this, W / 2, by + bh / 2, b.label, 13, b.textCol, true).setOrigin(0.5);
-      this.add.zone(16, by, W - 32, bh).setOrigin(0)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x0a0e18, 1); bg.fillRoundedRect(16, by, W - 32, bh, 10); tg?.HapticFeedback?.impactOccurred('light'); })
-        .on('pointerout', () => { bg.clear(); bg.fillStyle(b.bgCol, 0.95); bg.fillRoundedRect(16, by, W - 32, bh, 10); bg.lineStyle(1, b.border, 0.85); bg.strokeRoundedRect(16, by, W - 32, bh, 10); })
-        .on('pointerup', () => this.scene.restart({ sub: b.sub }));
-    });
-    txt(this, W / 2, 204 + 4 * 54 + 8, 'Создание клана стоит 800 🪙', 10, '#a8b4d8').setOrigin(0.5);
+    this.W = W; this.H = H;
+    this._loading?.destroy();
+    if (window.ClanHTML?.openNoClan) {
+      window.ClanHTML.openNoClan(this);
+      this.events.once('shutdown', () => { try { window.ClanHTML.close(); } catch(_) {} });
+    }
   }
 }
