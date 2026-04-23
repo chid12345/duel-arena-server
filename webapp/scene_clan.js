@@ -93,6 +93,11 @@ class ClanScene extends Phaser.Scene {
       this._renderWars(W, H_UI);
       return;
     }
+    // Эти подвиды не требуют /api/clan — рендерим HTML-оверлей сразу,
+    // чтобы не мелькал "старый дизайн" Phaser на время ожидания сети.
+    if (this._subview === 'search') { this._loading?.destroy(); this._renderSearch(W, H_UI); return; }
+    if (this._subview === 'create') { this._loading?.destroy(); this._renderCreate(W, H_UI); return; }
+    if (this._subview === 'top')    { this._loading?.destroy(); this._renderTop(W, H_UI);    return; }
     get('/api/clan').then(d => this._route(d, W, H_UI)).catch(() => {
       this._loading?.setText('❌ Нет соединения');
     });
