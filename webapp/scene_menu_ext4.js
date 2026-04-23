@@ -196,7 +196,7 @@ Object.assign(MenuScene.prototype, {
     // PNG 832×1248 at scale 0.18 → displayed ~150×225px
     const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(0.18).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 7, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    ca(mkT(W / 2, charCY + 68, 'сменить воина', 9, 'rgba(255,255,255,0.25)').setOrigin(0.5));
+    ca(mkT(W / 2, charCY + 68, '✎ сменить воина', 10, 'rgba(156,220,254,0.85)', true).setOrigin(0.5));
     const wZone = ca(mkZ(W / 2, charCY, 140, 210).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 

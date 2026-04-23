@@ -11,19 +11,23 @@ class BootScene extends Phaser.Scene {
     // ленив в MenuScene._lazyLoadEquipmentTextures() ПОСЛЕ старта меню,
     // чтобы на мобильном WebView не зависать на экране загрузки.
     const bar = document.getElementById('loading-bar');
-    this.load.image('warrior_tank',  'warriors/warrior_tank.png');
-    this.load.image('warrior_agile', 'warriors/warrior_agile.png');
-    this.load.image('warrior_crit',  'warriors/warrior_crit.png');
-    this.load.image('clan_emblem',   'clan_emblem.png');
-    this.load.image('clan_em_light',   'clan_em_light.png');
-    this.load.image('clan_em_dark',    'clan_em_dark.png');
-    this.load.image('clan_em_neutral', 'clan_em_neutral.png');
-    this.load.image('tab_profile',   'tab_profile.png');
-    this.load.image('tab_clan',      'tab_clan.png');
-    this.load.image('tab_stats',     'tab_stats.png');
-    this.load.image('tab_boss',      'tab_boss.png');
-    this.load.image('tab_rating',    'tab_rating.png');
-    this.load.image('tab_more',      'tab_more.png');
+    // Cache-bust: Telegram WebView агрессивно кэширует PNG. При смене ассета без v=
+    // пользователь увидит СТАРУЮ картинку ещё долго (и это выглядит как «сломанный»
+    // оранжевый квадрат на активном табе, пока не придёт новая версия).
+    const V = (typeof window !== 'undefined' && window.BUILD_VERSION) ? `?v=${window.BUILD_VERSION}` : '';
+    this.load.image('warrior_tank',  `warriors/warrior_tank.png${V}`);
+    this.load.image('warrior_agile', `warriors/warrior_agile.png${V}`);
+    this.load.image('warrior_crit',  `warriors/warrior_crit.png${V}`);
+    this.load.image('clan_emblem',   `clan_emblem.png${V}`);
+    this.load.image('clan_em_light',   `clan_em_light.png${V}`);
+    this.load.image('clan_em_dark',    `clan_em_dark.png${V}`);
+    this.load.image('clan_em_neutral', `clan_em_neutral.png${V}`);
+    this.load.image('tab_profile',   `tab_profile.png${V}`);
+    this.load.image('tab_clan',      `tab_clan.png${V}`);
+    this.load.image('tab_stats',     `tab_stats.png${V}`);
+    this.load.image('tab_boss',      `tab_boss.png${V}`);
+    this.load.image('tab_rating',    `tab_rating.png${V}`);
+    this.load.image('tab_more',      `tab_more.png${V}`);
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
     this.load.on('loaderror', f => console.warn('[Boot] loaderror:', f?.key, f?.src));
     this.load.on('complete', () => {
