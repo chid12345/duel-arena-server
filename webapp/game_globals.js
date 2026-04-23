@@ -339,9 +339,19 @@ function makeBackBtn(scene, label, onClick) {
   const z = scene.add.zone(cx, cy, bW, bH)
     .setInteractive({ useHandCursor: true })
     .setDepth(D + 2);   // zone выше всего — гарантирует перехват тапов
-  z.on('pointerdown', () => { _draw(true);  tg?.HapticFeedback?.impactOccurred('light'); });
-  z.on('pointerup',   () => { _draw(false); onClick(); });
-  z.on('pointerout',  () => _draw(false));
+  // Защита от ghost-tap: pointerup после перехода сцен мог прилететь сюда
+  // с pointerdown'ом от другого элемента старой сцены.
+  let _pressed = false;
+  const _createdAt = Date.now();
+  z.on('pointerdown', () => { _pressed = true; _draw(true); tg?.HapticFeedback?.impactOccurred('light'); });
+  z.on('pointerup',   () => {
+    _draw(false);
+    if (!_pressed) return;
+    if (Date.now() - _createdAt < 200) return;
+    _pressed = false;
+    onClick();
+  });
+  z.on('pointerout',  () => { _pressed = false; _draw(false); });
   // Back-кнопка зафиксирована на экране — не уезжает при drag-скролле.
   try { bg.setScrollFactor?.(0); t.setScrollFactor?.(0); z.setScrollFactor?.(0); } catch(_) {}
   return { bg, t, z };

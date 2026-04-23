@@ -57,8 +57,18 @@ Object.assign(WorldBossScene.prototype, {
     lt._wbChild = true;
     const z = this.add.zone(x, y, w, h).setOrigin(0).setInteractive({ useHandCursor: true });
     z._wbChild = true;
-    z.on('pointerdown', () => tg?.HapticFeedback?.impactOccurred('medium'));
-    z.on('pointerup', cb);
+    // Защита от ghost-tap: pointerup после перехода сцен мог прилететь сюда
+    // с pointerdown'ом от другого объекта (таббар старой сцены) → случайный удар.
+    let _pressed = false;
+    const _createdAt = Date.now();
+    z.on('pointerdown', () => { _pressed = true; tg?.HapticFeedback?.impactOccurred('medium'); });
+    z.on('pointerout',  () => { _pressed = false; });
+    z.on('pointerup',   () => {
+      if (!_pressed) return;                           // pointerdown был не на этой кнопке
+      if (Date.now() - _createdAt < 200) return;       // кнопка слишком свежая — игнорим ghost-tap
+      _pressed = false;
+      if (typeof cb === 'function') cb();
+    });
     return { g, lt, z };
   },
 
