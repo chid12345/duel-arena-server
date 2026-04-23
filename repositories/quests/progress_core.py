@@ -51,6 +51,37 @@ class ProgressCoreMixin:
         conn.close()
         return int(row["value"]) if row else amount
 
+    def _add_task_progress_batch(self, user_id: int, items: list) -> None:
+        """Батч-обновление прогресса в одном connection.
+        items = [(task_key, amount), ...].  Используется track_purchase,
+        иначе одна покупка = 5 open/close."""
+        if not items:
+            return
+        conn = self.get_connection()
+        cur = conn.cursor()
+        try:
+            if getattr(self, "_pg", False):
+                for task_key, amount in items:
+                    cur.execute(
+                        "INSERT INTO task_progress (user_id, task_key, value) VALUES (%s,%s,%s) "
+                        "ON CONFLICT (user_id, task_key) DO UPDATE SET value=task_progress.value+%s, updated_at=CURRENT_TIMESTAMP",
+                        (user_id, task_key, amount, amount),
+                    )
+            else:
+                for task_key, amount in items:
+                    cur.execute(
+                        "INSERT OR IGNORE INTO task_progress (user_id, task_key, value) VALUES (?,?,0)",
+                        (user_id, task_key),
+                    )
+                    cur.execute(
+                        "UPDATE task_progress SET value=value+?, updated_at=CURRENT_TIMESTAMP "
+                        "WHERE user_id=? AND task_key=?",
+                        (amount, user_id, task_key),
+                    )
+            conn.commit()
+        finally:
+            conn.close()
+
     def has_task_claim(self, user_id: int, claim_key: str) -> bool:
         conn = self.get_connection()
         cur = conn.cursor()
@@ -100,26 +131,26 @@ class ProgressCoreMixin:
 
     def track_purchase(self, user_id: int, item_id: str, currency: str, price: int) -> None:
         try:
+            batch: list = []
             if currency == "gold" and price > 0:
-                self.add_task_progress(user_id, "ach_buy_gold", 1)
-                self.add_task_progress(user_id, "ach_spend_gold", price)
-                self.add_task_progress(user_id, f"wq_buy_gold_{_ISO_WEEK()}", 1)
-                self.add_task_progress(user_id, f"wq_spend_gold_{_ISO_WEEK()}", price)
-                self._incr_daily_shop_buys(user_id)
+                w = _ISO_WEEK()
+                batch += [("ach_buy_gold", 1), ("ach_spend_gold", price),
+                          (f"wq_buy_gold_{w}", 1), (f"wq_spend_gold_{w}", price)]
             elif currency == "diamonds" and price > 0:
-                self.add_task_progress(user_id, "ach_buy_diamonds", 1)
-                self.add_task_progress(user_id, "ach_spend_diamonds", price)
-                self._incr_daily_shop_buys(user_id)
+                batch += [("ach_buy_diamonds", 1), ("ach_spend_diamonds", price)]
             elif currency in ("stars", "usdt"):
-                self.add_task_progress(user_id, "ach_buy_premium", 1)
-                self._incr_daily_shop_buys(user_id)
+                batch += [("ach_buy_premium", 1)]
             # Коллекция образов
             if item_id.startswith("gold_"):
-                self.add_task_progress(user_id, "ach_collect_avatar_gold", 1)
+                batch.append(("ach_collect_avatar_gold", 1))
             elif item_id.startswith("dia_"):
-                self.add_task_progress(user_id, "ach_collect_avatar_dia", 1)
+                batch.append(("ach_collect_avatar_dia", 1))
             elif item_id.startswith("prem_") or item_id.startswith("elite_"):
-                self.add_task_progress(user_id, "ach_collect_avatar_premium", 1)
+                batch.append(("ach_collect_avatar_premium", 1))
+            # Один connection на всю пачку вместо open/close на каждый ключ.
+            self._add_task_progress_batch(user_id, batch)
+            if currency in ("gold", "diamonds", "stars", "usdt") and (price > 0 or currency in ("stars", "usdt")):
+                self._incr_daily_shop_buys(user_id)
         except Exception as e:
             log.warning("track_purchase error: %s", e)
 

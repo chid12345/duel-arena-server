@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import Any, Callable
 
 from fastapi import FastAPI
@@ -94,7 +95,9 @@ def register_battle_choice_route(
             )
             if human_won:
                 try:
-                    qs = db.get_daily_quest_status(uid)
+                    # Синхронный SQL в async — через to_thread, иначе
+                    # event loop блокируется на ~50-200ms на каждую победу.
+                    qs = await asyncio.to_thread(db.get_daily_quest_status, uid)
                     if qs.get("is_completed") and not qs.get("reward_claimed"):
                         await manager.send(uid, {"event": "quest_complete"})
                 except Exception:
