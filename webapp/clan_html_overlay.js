@@ -211,5 +211,5 @@ function openMyClan(scene, data) {
 
 function close() { document.getElementById('cl-root')?.remove(); }
 
-window.ClanHTML = { openMyClan, close };
+window.ClanHTML = { openMyClan, close, _injectCSS };
 })();
