@@ -6,9 +6,8 @@
 Object.assign(ClanScene.prototype, {
   _renderMyClan(data, W, H) {
     this.W = W; this.H = H;
-    /* Убираем Phaser-элементы (header/tabbar) чтобы не просвечивало под оверлеем */
-    try { this.children.getAll().forEach(o => { if (o !== this._loading) o.destroy(); }); } catch(_) {}
     this._loading?.destroy();
+    /* Phaser-TabBar остаётся видимым снизу (overlay не закрывает нижние 76px) */
 
     if (window.ClanHTML && typeof ClanHTML.openMyClan === 'function') {
       ClanHTML.openMyClan(this, data);

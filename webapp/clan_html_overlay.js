@@ -4,10 +4,10 @@
    ============================================================ */
 (() => {
 const CSS = `
-.cl-overlay{position:fixed;inset:0;z-index:9000;display:flex;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;color:#e6f7ff;overflow-y:auto;overflow-x:hidden;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
-.cl-overlay::before{content:"";position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,220,.025) 3px 4px);pointer-events:none;z-index:1}
-.cl-overlay::after{content:"";position:fixed;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
-.cl-panel{width:100%;max-width:430px;position:relative;z-index:2;padding:0 0 110px}
+.cl-overlay{position:fixed;top:0;left:0;right:0;bottom:76px;z-index:9000;display:flex;justify-content:center;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;color:#e6f7ff;overflow-y:auto;overflow-x:hidden;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+.cl-overlay::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,220,.025) 3px 4px);pointer-events:none;z-index:1}
+.cl-overlay::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
+.cl-panel{width:100%;max-width:430px;position:relative;z-index:2;padding:0 0 70px}
 .cl-hdr{padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
 .cl-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:4px 8px;opacity:.7;user-select:none}
 .cl-hdr-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px;background:linear-gradient(135deg,#1a0533,#2a0a40);border:1px solid #ff3ba8;box-shadow:0 0 12px rgba(255,59,168,.5),inset 0 0 8px rgba(255,59,168,.2)}
@@ -49,7 +49,7 @@ const CSS = `
 .cl-mact .cl-mbadge:active{opacity:.7}
 .cl-mact .danger{background:rgba(220,60,90,.15);color:#ff8ea0;border-color:#ff5a7a;box-shadow:0 0 8px rgba(220,60,90,.35)}
 .cl-more{text-align:center;padding:8px;font-size:10px;color:#80c8ff;opacity:.75}
-.cl-actions{position:fixed;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));padding:0 12px;display:grid;gap:6px;z-index:10;max-width:430px;margin:0 auto}
+.cl-actions{position:fixed;left:0;right:0;bottom:calc(76px + 10px);padding:0 12px;display:grid;gap:6px;z-index:9100;max-width:430px;margin:0 auto}
 .cl-actions.three{grid-template-columns:1fr 1fr 1fr}
 .cl-actions.two{grid-template-columns:1fr 1fr}
 .cl-abtn{height:44px;border-radius:12px;display:grid;place-items:center;font-size:13px;font-weight:700;cursor:pointer;background:rgba(10,5,25,.92);backdrop-filter:blur(6px);border:1px solid currentColor;box-shadow:0 0 12px currentColor;position:relative;user-select:none;transition:transform .1s}
@@ -181,18 +181,16 @@ function openMyClan(scene, data) {
     if (act === 'nav')       { const sub = el.dataset.sub; close(); scene.scene.restart({ sub }); return; }
     if (act === 'chat')      { close(); scene.scene.restart({ sub: 'chat' }); return; }
     if (act === 'requests')  { close(); scene.scene.restart({ sub: 'requests' }); return; }
-    if (act === 'disband')   { scene._showDisbandConfirm?.(scene.W, scene.H); return; }
-    if (act === 'leave')     { scene._leaveClan?.(); return; }
+    if (act === 'disband')   { window.ClanHTML.confirmDisband?.(scene); return; }
+    if (act === 'leave')     { window.ClanHTML.confirmLeave?.(scene); return; }
     if (act === 'transfer')  {
-      const uid = +el.dataset.uid;
-      const m = members.find(x => x.user_id === uid);
-      if (m) scene._showTransferConfirm?.(m, scene.W, scene.H);
+      const m = members.find(x => x.user_id === +el.dataset.uid);
+      if (m) window.ClanHTML.confirmTransfer?.(scene, m);
       return;
     }
     if (act === 'kick') {
-      const uid = +el.dataset.uid;
-      const m = members.find(x => x.user_id === uid);
-      if (m) scene._showKickConfirm?.(m, scene.W, scene.H);
+      const m = members.find(x => x.user_id === +el.dataset.uid);
+      if (m) window.ClanHTML.confirmKick?.(scene, m);
       return;
     }
   });

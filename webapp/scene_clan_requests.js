@@ -1,7 +1,7 @@
 /* ============================================================
-   ClanScene — заявки на вступление:
-   - подача заявки в закрытый клан (через превью)
-   - список заявок для лидера (отдельный сабвью 'requests')
+   ClanScene — заявки: тонкая обёртка над HTML-оверлеем
+   Реализация — clan_html_subviews.js (ClanHTML.openRequests)
+   Сабмит заявки в закрытый клан остаётся здесь (вызывается из превью)
    ============================================================ */
 
 Object.assign(ClanScene.prototype, {
@@ -13,86 +13,27 @@ Object.assign(ClanScene.prototype, {
       const res = await post('/api/clan/request_join', { clan_id: clanId });
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
-        this._toast('📨 Заявка отправлена!');
+        (window.ClanHTML?._toast || this._toast.bind(this))('📨 Заявка отправлена!');
         btnT?.setText('✔ Заявка отправлена');
       } else {
-        this._toast('❌ ' + (res.reason||'Ошибка'));
+        (window.ClanHTML?._toast || this._toast.bind(this))('❌ ' + (res.reason||'Ошибка'), false);
         btnT?.setText('🔒 Подать заявку');
       }
     } catch(_) {
-      this._toast('❌ Нет соединения');
+      (window.ClanHTML?._toast || this._toast.bind(this))('❌ Нет соединения', false);
       btnT?.setText('🔒 Подать заявку');
     }
     this._busy = false;
   },
 
   _renderRequests(W, H) {
-    txt(this, W/2, 80, '📨 ЗАЯВКИ В КЛАН', 13, '#ffc83c', true).setOrigin(0.5);
-    const load = txt(this, W/2, 140, 'Загрузка...', 12, '#a8c4ff').setOrigin(0.5);
-    get('/api/clan/requests').then(d => {
-      load.destroy();
-      if (!d.ok) {
-        txt(this, W/2, 140, '❌ '+(d.reason||'Ошибка'), 12, '#dc3c46').setOrigin(0.5);
-        return;
-      }
-      const reqs = d.requests || [];
-      if (!reqs.length) {
-        txt(this, W/2, 140, '✨ Заявок пока нет', 13, '#a8c4ff').setOrigin(0.5);
-        txt(this, W/2, 162, 'Игроки увидят клан в поиске и подадут заявку', 10, '#c8d4f0').setOrigin(0.5);
-        return;
-      }
-      let y = 110; const rowH = 56;
-      reqs.slice(0, Math.floor((H-200)/rowH)).forEach((r) => {
-        const bg = this.add.graphics();
-        bg.fillStyle(0x141720, 1); bg.fillRoundedRect(8, y, W-16, rowH-4, 9);
-        bg.lineStyle(1.2, 0x2a3460, 0.85); bg.strokeRoundedRect(8, y, W-16, rowH-4, 9);
-
-        txt(this, 16, y+8, (r.username||`User${r.user_id}`).slice(0,18), 13, '#ffffff', true);
-        txt(this, 16, y+28, `Ур.${r.level}  ·  🏆 ${r.wins}`, 11, '#c8d4f0');
-
-        // Кнопки ✓ / ✕
-        const bw = 36, bh = 28, gap = 6;
-        const okX = W - 14 - bw;
-        const noX = okX - gap - bw;
-        const by = y + (rowH-4)/2 - 14;
-
-        const okG = this.add.graphics();
-        okG.fillStyle(0x1e3028, 1); okG.fillRoundedRect(okX, by, bw, bh, 7);
-        okG.lineStyle(1, 0x304838, 0.9); okG.strokeRoundedRect(okX, by, bw, bh, 7);
-        txt(this, okX+bw/2, by+bh/2, '✓', 16, '#a0e0a0', true).setOrigin(0.5);
-        const okZ = this.add.zone(okX, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true });
-        okZ.on('pointerup', async () => {
-          if (this._reqBusy) return;
-          this._reqBusy = true;
-          try { okZ.disableInteractive(); } catch(_) {}
-          tg?.HapticFeedback?.impactOccurred('medium');
-          const res = await post('/api/clan/request_accept', { request_id: r.id }).catch(() => ({ ok: false, reason: 'Нет соединения' }));
-          if (res.ok) { this._toast('✅ Принят!'); this.time.delayedCall(400, () => this.scene.restart({sub:'requests'})); }
-          else { this._toast('❌ '+res.reason); this._reqBusy = false; try { okZ.setInteractive({ useHandCursor: true }); } catch(_) {} }
-        });
-
-        const noG = this.add.graphics();
-        noG.fillStyle(0x2a1416, 1); noG.fillRoundedRect(noX, by, bw, bh, 7);
-        noG.lineStyle(1, 0x4a2024, 0.9); noG.strokeRoundedRect(noX, by, bw, bh, 7);
-        txt(this, noX+bw/2, by+bh/2, '✕', 14, '#c06870', true).setOrigin(0.5);
-        const noZ = this.add.zone(noX, by, bw, bh).setOrigin(0).setInteractive({ useHandCursor: true });
-        noZ.on('pointerup', async () => {
-          if (this._reqBusy) return;
-          this._reqBusy = true;
-          try { noZ.disableInteractive(); } catch(_) {}
-          tg?.HapticFeedback?.impactOccurred('light');
-          const res = await post('/api/clan/request_reject', { request_id: r.id }).catch(() => ({ ok: false, reason: 'Нет соединения' }));
-          if (res.ok) { this._toast('❌ Отклонено'); this.time.delayedCall(300, () => this.scene.restart({sub:'requests'})); }
-          else { this._toast('❌ '+res.reason); this._reqBusy = false; try { noZ.setInteractive({ useHandCursor: true }); } catch(_) {} }
-        });
-        y += rowH;
-      });
-    }).catch(() => load.setText('❌ Нет соединения'));
-
-    makeBackBtn(this, '← Назад', () => {
-      tg?.HapticFeedback?.impactOccurred('light');
-      this.scene.restart({ sub: 'main' });
-    });
+    this.W = W; this.H = H;
+    this._loading?.destroy();
+    if (window.ClanHTML?.openRequests) {
+      window.ClanHTML.openRequests(this);
+      this.events.once('shutdown', () => { try { window.ClanHTML.close(); } catch(_) {} });
+    } else {
+      txt(this, W/2, H/2, '⚠️ UI не загружен', 12, '#dc3c46').setOrigin(0.5);
+    }
   },
-
 });
