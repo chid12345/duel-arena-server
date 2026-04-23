@@ -57,6 +57,25 @@ class WorldBossPlayerStateMixin:
         conn.close()
         return dict(row) if row else None
 
+    def get_wb_player_states(self, spawn_id: int, user_ids: List[int]) -> Dict[int, Dict[str, Any]]:
+        """Батч-загрузка состояний игроков рейда: 1 SQL вместо N.
+        Используется в WS-тике мирового босса — без этого 100 подписчиков
+        = 100 open/close соединений каждую секунду."""
+        if not user_ids:
+            return {}
+        uids = [int(u) for u in user_ids]
+        conn = self.get_connection()
+        cur = conn.cursor()
+        ph = ",".join(["?"] * len(uids))
+        cur.execute(
+            f"SELECT * FROM world_boss_player_state "
+            f"WHERE spawn_id=? AND user_id IN ({ph})",
+            (int(spawn_id), *uids),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return {int(r["user_id"]): dict(r) for r in rows}
+
     def wb_add_player_damage(
         self, spawn_id: int, user_id: int, damage: int
     ) -> None:

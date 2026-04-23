@@ -165,16 +165,16 @@ def _load_tick_data(db, subs: list) -> dict:
     spawn_id = int(active["spawn_id"])
     boss = _build_boss_block(active)
     top = _build_top_block(db, spawn_id)
+    # Батч: один SQL вместо N open/close при 100+ подписчиках.
+    states = db.get_wb_player_states(spawn_id, subs)
     players = {}
-    for uid in subs:
-        ps = db.get_wb_player_state(spawn_id, uid)
-        if ps:
-            players[uid] = {
-                "current_hp": int(ps.get("current_hp") or 0),
-                "max_hp": int(ps.get("max_hp") or 100),
-                "is_dead": bool(int(ps.get("is_dead") or 0)),
-                "total_damage": int(ps.get("total_damage") or 0),
-            }
+    for uid, ps in states.items():
+        players[uid] = {
+            "current_hp": int(ps.get("current_hp") or 0),
+            "max_hp": int(ps.get("max_hp") or 100),
+            "is_dead": bool(int(ps.get("is_dead") or 0)),
+            "total_damage": int(ps.get("total_damage") or 0),
+        }
     return {"kind": "active", "ts": ts_ms, "spawn_id": spawn_id, "boss": boss, "top": top, "players": players}
 
 
