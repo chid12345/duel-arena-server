@@ -14,8 +14,8 @@ const CSS = `
 .cl-hdr-title{font-size:16px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cl-hdr-sub{font-size:10px;color:#00e0ff;opacity:.75;margin-top:1px}
 .cl-card{margin:4px 12px;padding:12px;border-radius:14px;display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(20,0,30,.95),rgba(5,5,15,.95));border:1px solid #ff3ba8;box-shadow:0 0 24px rgba(255,59,168,.25),inset 0 0 20px rgba(255,59,168,.05)}
-.cl-av{width:62px;height:62px;border-radius:14px;display:grid;place-items:center;flex-shrink:0;position:relative;background:linear-gradient(135deg,#1a0433,#0a0222);border:1px solid #00f0ff;box-shadow:0 0 16px rgba(0,240,255,.45);overflow:hidden}
-.cl-av-img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(0,240,255,.8));animation:clHolo 3s ease-in-out infinite}
+.cl-av{width:72px;height:72px;display:grid;place-items:center;flex-shrink:0;position:relative;background:none;border:none;box-shadow:none}
+.cl-av-img{width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(0,240,255,.65)) drop-shadow(0 0 5px rgba(0,240,255,.45));animation:clHolo 3s ease-in-out infinite}
 @keyframes clHolo{0%,100%{opacity:1;transform:translateY(0)}50%{opacity:.75;transform:translateY(-1px)}}
 .cl-info{flex:1;min-width:0}
 .cl-tagrow{display:flex;gap:6px;align-items:center;font-size:11px;font-weight:700}

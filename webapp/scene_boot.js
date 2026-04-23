@@ -15,6 +15,9 @@ class BootScene extends Phaser.Scene {
     this.load.image('warrior_agile', 'warriors/warrior_agile.png');
     this.load.image('warrior_crit',  'warriors/warrior_crit.png');
     this.load.image('clan_emblem',   'clan_emblem.png');
+    this.load.image('clan_em_light',   'clan_em_light.png');
+    this.load.image('clan_em_dark',    'clan_em_dark.png');
+    this.load.image('clan_em_neutral', 'clan_em_neutral.png');
     this.load.image('tab_profile',   'tab_profile.png');
     this.load.image('tab_clan',      'tab_clan.png');
     this.load.image('tab_stats',     'tab_stats.png');

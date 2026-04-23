@@ -9,8 +9,8 @@ const CSS = `
 .ct-row.top3{border-color:#ffd166;box-shadow:0 0 12px rgba(255,209,102,.35);background:linear-gradient(90deg,rgba(40,25,5,.85),rgba(15,10,5,.88))}
 .ct-rank{width:34px;text-align:center;font-size:18px;font-weight:800;color:#ffd166;text-shadow:0 0 8px currentColor;flex-shrink:0}
 .ct-rank.num{font-size:14px;color:#80c8ff;text-shadow:none}
-.ct-em{width:42px;height:42px;border-radius:11px;display:grid;place-items:center;flex-shrink:0;background:linear-gradient(135deg,#1a0433,#0a0222);border:1px solid #00f0ff;box-shadow:0 0 8px rgba(0,240,255,.35);overflow:hidden}
-.ct-em img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(0,240,255,.6))}
+.ct-em{width:46px;height:46px;display:grid;place-items:center;flex-shrink:0;background:none;border:none;box-shadow:none}
+.ct-em img{width:46px;height:46px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(0,240,255,.6)) drop-shadow(0 0 3px rgba(0,240,255,.4))}
 .ct-body{flex:1;min-width:0}
 .ct-tagrow{display:flex;gap:5px;align-items:center;font-size:11px;font-weight:700}
 .ct-tag{color:#00f0ff;text-shadow:0 0 5px currentColor}

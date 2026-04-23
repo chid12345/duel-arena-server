@@ -13,8 +13,8 @@ const CSS = `
 .cs-clan{margin:0 12px 8px;padding:10px 12px;border-radius:12px;display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(15,5,30,.88),rgba(5,5,15,.88));border:1px solid rgba(0,240,255,.3);cursor:pointer;user-select:none;transition:transform .1s}
 .cs-clan:active{transform:scale(.99)}
 .cs-clan.top3{border-color:#ffd166;box-shadow:0 0 12px rgba(255,209,102,.3)}
-.cs-em{width:46px;height:46px;border-radius:12px;display:grid;place-items:center;flex-shrink:0;background:linear-gradient(135deg,#1a0433,#0a0222);border:1px solid #00f0ff;box-shadow:0 0 10px rgba(0,240,255,.4);overflow:hidden}
-.cs-em img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(0,240,255,.6))}
+.cs-em{width:52px;height:52px;display:grid;place-items:center;flex-shrink:0;background:none;border:none;box-shadow:none}
+.cs-em img{width:52px;height:52px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(0,240,255,.6)) drop-shadow(0 0 4px rgba(0,240,255,.4))}
 .cs-cbody{flex:1;min-width:0}
 .cs-ctag{font-size:11px;font-weight:800;color:#00f0ff;text-shadow:0 0 6px currentColor}
 .cs-cnm{font-size:13px;font-weight:800;color:#fff;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

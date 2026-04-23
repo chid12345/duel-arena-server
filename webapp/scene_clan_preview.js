@@ -30,12 +30,18 @@ Object.assign(ClanScene.prototype, {
     g.fillStyle(0x161920, 1); g.fillRoundedRect(8, y, W-16, cardH, 12);
     g.lineStyle(2, em.c, 0.9); g.strokeRoundedRect(8, y, W-16, cardH, 12);
 
-    /* Эмблема (большой квадрат) */
+    /* Эмблема (парит, без рамки) */
     const emS = 60, emX = 18, emY = y + (cardH-emS)/2;
-    g.fillStyle(0x1e2240, 1); g.fillRoundedRect(emX, emY, emS, emS, 12);
-    g.lineStyle(1.5, em.c, 0.9); g.strokeRoundedRect(emX, emY, emS, emS, 12);
-    txt(this, emX+emS/2, emY+emS/2-2, em.i, 28).setOrigin(0.5);
-    txt(this, emX+emS/2, emY+emS-8, em.name, 7, em.hex, true).setOrigin(0.5);
+    const emKey = clan.emblem === 'light' ? 'clan_em_light'
+                : clan.emblem === 'dark'  ? 'clan_em_dark'
+                : 'clan_em_neutral';
+    if (this.textures.exists(emKey)) {
+      const emImg = this.add.image(emX+emS/2, emY+emS/2, emKey).setDisplaySize(emS, emS);
+      try { emImg.preFX?.addGlow(em.c, 6, 0, false, 0.1, 16); } catch(_) {}
+    } else {
+      txt(this, emX+emS/2, emY+emS/2-2, em.i, 28).setOrigin(0.5);
+    }
+    txt(this, emX+emS/2, emY+emS+2, em.name, 7, em.hex, true).setOrigin(0.5);
 
     const tx = emX + emS + 12;
     txt(this, tx, y+10, `[${clan.tag}]`, 11, '#ffc83c', true);
