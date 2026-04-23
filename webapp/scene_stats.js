@@ -37,8 +37,10 @@ class StatsScene extends Phaser.Scene {
     this._drawBg(W, H);
     TabBar.build(this, { activeKey: 'stats' });
 
-    // HTML-оверлей строит шапку, сегментированное меню и 4 под-вкладки
-    try { StatsHTML?.open?.(this); } catch(e) { console.warn('[Stats] StatsHTML.open failed', e); }
+    // HTML-оверлей строит шапку, сегментированное меню и 4 под-вкладки.
+    // Если пришли из магазина по кнопке «🎒 Моё» — сразу открываем РЮКЗАК.
+    const initTab = d.openInventory ? 'in' : 'st';
+    try { StatsHTML?.open?.(this, { tab: initTab }); } catch(e) { console.warn('[Stats] StatsHTML.open failed', e); }
 
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('stats');
 
@@ -46,10 +48,6 @@ class StatsScene extends Phaser.Scene {
     if (d.reopenWardrobe && d.wardrobePayload) {
       this._renderAvatarOverlay?.(d.wardrobePayload);
       if (d.toast) this._showToast(d.toast);
-    }
-    // Авто-открытие инвентаря из кнопки «🎒 Моё» в магазине
-    if (d.openInventory) {
-      this.time.delayedCall(80, () => this._openInventoryPanel?.());
     }
   }
 

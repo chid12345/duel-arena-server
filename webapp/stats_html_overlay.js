@@ -260,19 +260,48 @@ async function _refreshInv(){
   try{ const d=await get('/api/shop/inventory'); if(d?.ok) _inv=d; }catch(_){}
 }
 
-async function open(scene){
+function _fitToCanvas(root){
+  // Привязываем оверлей к canvas, а не к viewport: при FIT-скейле canvas может не
+  // заполнять высоту окна, тогда `bottom:76px` съедает TabBar и меню «пропадает».
+  try{
+    const c=document.querySelector('canvas');
+    if(!c) return;
+    const r=c.getBoundingClientRect();
+    const canvasH=c.height||700;
+    const tabBarCss=(r.height*76)/canvasH;
+    root.style.top=r.top+'px';
+    root.style.left=r.left+'px';
+    root.style.width=r.width+'px';
+    root.style.right='auto';
+    root.style.bottom='auto';
+    root.style.height=Math.max(0,r.height-tabBarCss)+'px';
+  }catch(_){}
+}
+
+async function open(scene, opts){
   _injectCSS();
   close();
-  _scene=scene; _currentTab='st';
+  _scene=scene;
+  const initTab=(opts?.tab)||'st';
+  _currentTab=['st','bo','in','ra'].includes(initTab)?initTab:'st';
   await _refreshInv();
   if(!scene.scene?.isActive()) return;
   const root=document.createElement('div'); root.id='st-root'; root.className='st-overlay';
   document.body.appendChild(root);
+  _fitToCanvas(root);
+  const onResize=()=>_fitToCanvas(root);
+  window.addEventListener('resize', onResize);
+  root._onResize=onResize;
   root.addEventListener('click', _onClick);
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive:true });
   _render();
 }
-function close(){ document.getElementById('st-root')?.remove(); _scene=null; }
+function close(){
+  const r=document.getElementById('st-root');
+  if(r?._onResize){ try{ window.removeEventListener('resize', r._onResize); }catch(_){} }
+  r?.remove();
+  _scene=null;
+}
 
 window.StatsHTML = { open, close, refresh:_render };
 })();
