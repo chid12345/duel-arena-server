@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.0.02"
-VERSION_LABEL = "v2.0.02 — fix: wardrobe HTML overlay leak across scenes (Hero tab)"
+VERSION = "2.0.03"
+VERSION_LABEL = "v2.0.03 — fix: mobile WebApp loading timeout (lazy equipment textures)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "8.36"
+GAME_VERSION = "8.37"

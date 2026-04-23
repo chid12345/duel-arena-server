@@ -22,6 +22,9 @@ class MenuScene extends Phaser.Scene {
 
     this._drawBg(W, H);
     this._loadPlayer();
+    // Фоновая подгрузка PNG экипировки (~50 МБ) — не блокирует UI.
+    // До завершения слот рендерится emoji-фолбэком (см. _drawEqSlot).
+    this._lazyLoadEquipmentTextures?.();
   }
 
   async _loadPlayer() {

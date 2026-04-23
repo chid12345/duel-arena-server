@@ -147,10 +147,10 @@
   </div>
 </div>
 <script>
-// Watchdog: если loading screen не убран за 60с — показываем ошибку.
-// 60с = запас на Render cold start (до 60с) + медленный мобильный интернет.
-// Причина увеличения с 25с: на телефоне Telegram WebView дольше грузит
-// ~80 скриптов, и Render free-tier просыпается 30-60 сек после idle.
+// Watchdog: если loading screen не убран за 90с — показываем ошибку.
+// Boot теперь грузит только 3 PNG воинов (~200 КБ) → старт ~5с даже на 3G.
+// Тяжёлые PNG экипировки (~50 МБ) подкачиваются ленив в MenuScene в фоне.
+// Запас 90с = Render cold start (до 60с) + медленный 3G + ~80 JS-файлов.
 setTimeout(function(){
   var ls = document.getElementById('loading-screen');
   var sub = document.getElementById('loading-sub');
@@ -158,7 +158,7 @@ setTimeout(function(){
     sub.textContent = '❌ Не удалось загрузить. Закройте и откройте заново.';
     sub.style.color = '#dc3c46';
   }
-}, 60000);
+}, 90000);
 </script>
 
 <!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
@@ -288,6 +288,8 @@ setTimeout(function(){
 <script src="scene_menu_ext5b.js?v=__BUILD_VERSION__"></script>
 <script src="scene_menu_ext6.js?v=__BUILD_VERSION__"></script>
 <script src="scene_menu_challenge.js?v=__BUILD_VERSION__"></script>
+<!-- Lazy-load PNG экипировки в фоне (после старта меню) -->
+<script src="scene_menu_lazy_assets.js?v=__BUILD_VERSION__"></script>
 <!-- Equipment scene -->
 <script src="scene_equipment.js?v=__BUILD_VERSION__"></script>
 <!-- Warrior select overlay (после всех menu ext, чтобы MenuScene уже был определён) -->
