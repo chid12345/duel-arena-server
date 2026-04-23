@@ -90,12 +90,28 @@ def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str,
     if rows_affected == 0:
         symbol = "🪙 золота" if currency == "gold" else "💎 алмазов"
         return {"ok": False, "reason": f"Нужно {price} {symbol}"}
-    # Валюта уже списана — add_to_inventory не должна упасть молча
+    # Валюта уже списана — если add_to_inventory упадёт, деньги игрока пропадут.
+    # Поэтому при ошибке — пытаемся авто-рефанд (атомарное +N), и только
+    # если он тоже упал, просим поддержку.
     try:
         db.add_to_inventory(uid, item_id, quantity=int(quantity))
     except Exception as e:
         log.critical("add_to_inventory failed uid=%s item=%s: %s", uid, item_id, e)
-        return {"ok": False, "reason": "Ошибка выдачи предмета. Средства будут возвращены — обратитесь в поддержку"}
+        refunded = False
+        try:
+            c2 = db.get_connection(); cur2 = c2.cursor()
+            if currency == "gold":
+                cur2.execute("UPDATE players SET gold = gold + ? WHERE user_id = ?", (price, uid))
+            else:
+                cur2.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (price, uid))
+            c2.commit(); c2.close()
+            refunded = True
+        except Exception as e2:
+            log.critical("REFUND FAILED uid=%s price=%s cur=%s: %s", uid, price, currency, e2)
+        reason = ("Ошибка выдачи предмета — средства возвращены"
+                  if refunded else
+                  "Ошибка выдачи предмета. Обратитесь в поддержку")
+        return {"ok": False, "reason": reason}
     player = db.get_or_create_player(uid, "")
     from api.tma_catalogs import SHOP_CATALOG
     info = SHOP_CATALOG.get(item_id, {})
@@ -128,12 +144,26 @@ def _buy_xp_boost_item(db, uid: int, item_id: str, charges: int, mult: float) ->
     if rows_affected == 0:
         symbol = "🪙 золота" if currency == "gold" else "💎 алмазов"
         return {"ok": False, "reason": f"Нужно {price} {symbol}"}
-    # Валюта уже списана — add_to_inventory не должна упасть молча
+    # Валюта уже списана — при падении add_to_inventory пытаемся авто-рефанд.
     try:
         db.add_to_inventory(uid, item_id)
     except Exception as e:
         log.critical("add_to_inventory(xp_boost) failed uid=%s item=%s: %s", uid, item_id, e)
-        return {"ok": False, "reason": "Ошибка выдачи предмета. Средства будут возвращены — обратитесь в поддержку"}
+        refunded = False
+        try:
+            c2 = db.get_connection(); cur2 = c2.cursor()
+            if currency == "gold":
+                cur2.execute("UPDATE players SET gold = gold + ? WHERE user_id = ?", (price, uid))
+            else:
+                cur2.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (price, uid))
+            c2.commit(); c2.close()
+            refunded = True
+        except Exception as e2:
+            log.critical("REFUND FAILED uid=%s price=%s cur=%s: %s", uid, price, currency, e2)
+        reason = ("Ошибка выдачи предмета — средства возвращены"
+                  if refunded else
+                  "Ошибка выдачи предмета. Обратитесь в поддержку")
+        return {"ok": False, "reason": reason}
     player = db.get_or_create_player(uid, "")
     return {"ok": True, "added_to_inventory": True, "item_id": item_id,
             "charges": charges, "player": _player_api(dict(player))}

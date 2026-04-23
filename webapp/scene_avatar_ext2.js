@@ -248,14 +248,25 @@ Object.assign(AvatarScene.prototype, {
         if (j.web_app_url) tg?.openLink?.(j.web_app_url);
         else if (_u2.includes('startapp=')) tg?.openLink?.(_u2);
         else tg?.openTelegramLink?.(_u2);
-        // Подписываемся на WS-событие avatar_unlocked: обновим сцену когда придёт
+        // Подписываемся на WS-событие avatar_unlocked: обновим сцену когда придёт.
+        // Сохраняем _prevHandler на сцене, чтобы shutdown() мог вернуть его,
+        // если пользователь закрыл Avatar до прихода события (иначе наш handler
+        // останется на State.ws и будет дёргать restart мёртвой сцены).
         const _prevHandler = State.ws?.onmessage;
         if (State.ws) {
-          State.ws.onmessage = (e) => {
+          this._wsPrevHandler = _prevHandler;
+          const _myHandler = (e) => {
+            // Сцена shutdown'нулась — отпускаем WS и делегируем обратно.
+            if (!this.scene?.isActive?.('Avatar')) {
+              try { State.ws.onmessage = _prevHandler; } catch(_) {}
+              if (_prevHandler) _prevHandler(e);
+              return;
+            }
             try {
               const msg = JSON.parse(e.data);
               if (msg.event === 'avatar_unlocked') {
                 State.ws.onmessage = _prevHandler;
+                this._wsPrevHandler = null;
                 tg?.HapticFeedback?.notificationOccurred('success');
                 this.scene.restart({ tab: this._tab });
                 return;
@@ -263,6 +274,8 @@ Object.assign(AvatarScene.prototype, {
             } catch (_) {}
             if (_prevHandler) _prevHandler(e);
           };
+          this._wsMyHandler = _myHandler;
+          State.ws.onmessage = _myHandler;
         }
       } else { tg?.showAlert?.(j.reason || 'Ошибка'); }
     } catch (_) { tg?.showAlert?.('Ошибка сети'); }
