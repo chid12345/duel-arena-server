@@ -61,6 +61,7 @@ Object.assign(MenuScene.prototype, {
 
   _showError(msg) {
     const { W, H } = this;
+    if (this._loadingTxt) { try { this._loadingTxt.destroy(); } catch(_) {} this._loadingTxt = null; }
     txt(this, W / 2, H / 2 - 48, '⚠️', 32, '#ff4455').setOrigin(0.5);
     txt(this, W / 2, H / 2,      msg, 15, '#ff4455', true).setOrigin(0.5);
 
