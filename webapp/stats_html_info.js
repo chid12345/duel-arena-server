@@ -88,6 +88,10 @@ function _close(){
 
 function showStatInfo(key, player){
   const info = STAT_INFO[key]; if (!info) return;
+  // Базовые .hi-mdl/.hi-x/.hi-ic/.hi-t/.hi-d/.hi-btns/.hi-b стили лежат в
+  // stats_html_items.js. Без предварительного захода в Рюкзак они не были
+  // инжектированы, и попап стата рендерился без рамки/отступов (ломаный вид).
+  window.StatsHTMLItems?.injectCSS?.();
   _injectCSS();
   _close();
   const effHtml = info.effects.map(([ic,txt]) => `<div class="er"><div class="ei">${_esc(ic)}</div><div class="et">${txt}</div></div>`).join('');

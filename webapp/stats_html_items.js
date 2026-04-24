@@ -151,5 +151,5 @@ function showReplaceDialog({ newItemId, newMeta, activeBuff, onConfirm }){
   _mount(html, (act) => { _close(); if (act === 'ok') onConfirm?.(); });
 }
 
-window.StatsHTMLItems = { showItemDetail, showReplaceDialog, close: _close };
+window.StatsHTMLItems = { showItemDetail, showReplaceDialog, close: _close, injectCSS: _injectCSS };
 })();
