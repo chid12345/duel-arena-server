@@ -173,7 +173,9 @@ function _launchPhaser() {
   if (_gameStarted) return;
   _gameStarted = true;
   try {
-    new Phaser.Game(config);
+    const game = new Phaser.Game(config);
+    // В dev-режиме выставляем инстанс на window для ИИ-верификации (scene.start, eval сцен)
+    if (window.__DEV_MODE__) window.__game = game;
   } catch(e) {
     console.error('Phaser.Game init error:', e);
     const sub = document.querySelector('#loading-screen .sub');
