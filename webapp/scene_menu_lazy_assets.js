@@ -143,9 +143,9 @@ Object.assign(MenuScene.prototype, {
     const _queueRest = () => {
       if (!restTodo.length) return;
       for (const [k, p] of restTodo) this.load.image(k, p);
-      // Второй ребилд после фоновой партии: на случай, если по item_id
-      // текстуры нет и использовался rarity-фолбэк не совпадающего варианта.
-      this.load.once('complete', () => this._rebuildProfileAfterLazy());
+      // Без второго ребилда профиля: приоритетная партия уже содержит
+      // оба варианта ключей (item_id + rarity-фолбэк) для надетых вещей.
+      // Остальные ~90 текстур нужны только в Рюкзаке/Equipment.
       this.load.start();
     };
 
