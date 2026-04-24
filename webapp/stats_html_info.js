@@ -78,7 +78,13 @@ const STAT_INFO = {
   },
 };
 
-function _close(){ document.getElementById('hi-bg')?.remove(); }
+function _cvs(){ return document.querySelector('canvas'); }
+
+function _close(){
+  document.getElementById('hi-bg')?.remove();
+  // Возвращаем canvas в интерактивный режим после закрытия оверлея.
+  try{ _cvs().style.pointerEvents = ''; }catch(_){}
+}
 
 function showStatInfo(key, player){
   const info = STAT_INFO[key]; if (!info) return;
@@ -102,9 +108,10 @@ function showStatInfo(key, player){
   bg.id = 'hi-bg'; bg.className = 'hi-bg';
   bg.innerHTML = html;
   document.body.appendChild(bg);
-  // stopPropagation: тач не просачивается к canvas Phaser под оверлеем.
+  // Пока попап открыт — canvas не должен ловить тапы (он рисует поверх HTML,
+  // и без этой блокировки тап по TabBar под попапом уходит в Phaser).
+  try{ _cvs().style.pointerEvents = 'none'; }catch(_){}
   bg.addEventListener('touchstart', e => e.stopPropagation(), { passive:true });
-  // Инфо-попап без опасных действий — любой тап закрывает.
   bg.addEventListener('click', () => {
     try{ window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); }catch(_){}
     _close();

@@ -63,7 +63,12 @@ const BUFF_ICON = {
   accuracy:'👁', lifesteal_pct:'🩸', gold_pct:'💰', xp_pct:'📚',
 };
 
-function _close(){ document.getElementById('hi-bg')?.remove(); }
+function _cvs(){ return document.querySelector('canvas'); }
+
+function _close(){
+  document.getElementById('hi-bg')?.remove();
+  try{ _cvs().style.pointerEvents = ''; }catch(_){}
+}
 
 function _mount(html, onClick){
   _injectCSS();
@@ -72,7 +77,8 @@ function _mount(html, onClick){
   bg.id = 'hi-bg'; bg.className = 'hi-bg';
   bg.innerHTML = html;
   document.body.appendChild(bg);
-  // stopPropagation на touchstart: не даём тач-событиям просочиться к canvas Phaser.
+  // Пока попап открыт — canvas не должен ловить тапы.
+  try{ _cvs().style.pointerEvents = 'none'; }catch(_){}
   bg.addEventListener('touchstart', e => e.stopPropagation(), { passive:true });
   bg.addEventListener('click', e => {
     if (e.target === bg){ _close(); return; }

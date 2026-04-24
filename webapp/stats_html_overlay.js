@@ -151,6 +151,9 @@ async function open(scene, opts){
   _render();
 }
 function close(){
+  // Закрываем item/stat попапы и восстанавливаем canvas до смены сцены.
+  try{ window.StatsHTMLInfo?.close?.(); }catch(_){}
+  try{ window.StatsHTMLItems?.close?.(); }catch(_){}
   const r=document.getElementById('st-root');
   if(r?._onResize){ try{ window.removeEventListener('resize', r._onResize); }catch(_){} }
   r?.remove();
