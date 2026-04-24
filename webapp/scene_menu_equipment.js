@@ -96,8 +96,8 @@ Object.assign(MenuScene.prototype, {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // SCREEN blend mode убирает чёрные пиксели PNG → предмет парит без фона
-        try { img.setBlendMode(Phaser.BlendModes.SCREEN); } catch(_) {}
+        // PNG скинов теперь без фона (прозрачные) — blend-mode не нужен,
+        // раньше SCREEN использовался как костыль для чёрного фона.
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
