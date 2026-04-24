@@ -25,6 +25,12 @@ class MenuScene extends Phaser.Scene {
     try { window._closeAllTabOverlays?.(); } catch(_) {}
 
     this._drawBg(W, H);
+    // TabBar строим ДО _loadPlayer(): если сервер медленный/перезапускается,
+    // игрок всё равно видит нижнее меню и может уйти на другую вкладку.
+    // Без этого при долгом ответе API экран — чёрное небо без навигации.
+    // _panels пуст → _switchTab безопасно пройдёт пустым циклом.
+    this._activeTab = this._returnTab || 'profile';
+    this._buildTabBar();
     this._loadPlayer();
     // Фоновая подгрузка PNG экипировки (~50 МБ) — не блокирует UI.
     // До завершения слот рендерится emoji-фолбэком (см. _drawEqSlot).
