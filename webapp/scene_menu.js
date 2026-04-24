@@ -35,9 +35,11 @@ class MenuScene extends Phaser.Scene {
     // «⏳ Загрузка…» вместо пустого неба. Убираем в _loadPlayer перед панелями.
     this._loadingTxt = txt(this, W / 2, H / 2, '⏳ Загрузка…', 16, '#aaaaff', true).setOrigin(0.5);
     this._loadPlayer();
-    // Фоновая подгрузка PNG экипировки (~50 МБ) — не блокирует UI.
-    // До завершения слот рендерится emoji-фолбэком (см. _drawEqSlot).
-    this._lazyLoadEquipmentTextures?.();
+    // Lazy-загрузка PNG экипировки запускается ВНУТРИ _loadPlayer после
+    // _buildProfilePanel — когда State.equipment уже заполнен. Это даёт
+    // приоритет надетым предметам (~3МБ) вместо 50МБ всего набора —
+    // на мобильном WebView это разница между «всё показалось за 2с» и
+    // «30-60с emoji-фолбэка».
   }
 
   async _loadPlayer() {
@@ -139,6 +141,9 @@ class MenuScene extends Phaser.Scene {
           this._setupWS();
           this._startRegenTick();
           this._loadDailyBonusCard();
+          // Lazy-load PNG экипировки: приоритет надетым вещам (~6 шт, ~3МБ),
+          // остальное (~96 шт, ~50МБ) фоном для инвентаря/Рюкзака.
+          this._lazyLoadEquipmentTextures?.();
         } catch(buildErr) {
           console.error('UI build error:', buildErr);
           this._showError('Ошибка UI: ' + (buildErr?.message || buildErr));
