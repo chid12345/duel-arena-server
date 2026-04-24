@@ -20,6 +20,10 @@ class MenuScene extends Phaser.Scene {
     this._tabBtns = {};
     this._activeTab = null;
 
+    // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок,
+    // если shutdown() не успел их закрыть (гонка, exception).
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
+
     this._drawBg(W, H);
     this._loadPlayer();
     // Фоновая подгрузка PNG экипировки (~50 МБ) — не блокирует UI.

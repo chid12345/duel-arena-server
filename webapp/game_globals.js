@@ -358,3 +358,25 @@ function makeBackBtn(scene, label, onClick) {
   try { bg.setScrollFactor?.(0); t.setScrollFactor?.(0); z.setScrollFactor?.(0); } catch(_) {}
   return { bg, t, z };
 }
+
+/* ════════════════════════════════════════════════════════════
+   Zombie-overlay страховка.
+   HTML-оверлеи (ClanHTML/StatsHTML/WardrobeHTML/*_html_overlay) имеют
+   z-index:9000 и покрывают весь canvas кроме TabBar. Если предыдущая
+   сцена не закрыла свой оверлей (exception в shutdown, гонка при
+   scene.start во время анимации, модалка покупки над оверлеем),
+   новый экран получает «чёрное небо + нижнее меню» — ровно то, что
+   чинили в v2.0.38–v2.0.40, но точечно по одному overlay за раз.
+   Этот helper — единая страховка: вызывается в create() КАЖДОЙ
+   TabBar-сцены. Закрытие overlay'а, которого нет — безопасный no-op.
+   ════════════════════════════════════════════════════════════ */
+window._closeAllTabOverlays = function() {
+  try { window.ClanHTML?.close?.(); } catch(_) {}
+  try { window.StatsHTML?.close?.(); } catch(_) {}
+  try { window.WardrobeHTML?.close?.(); } catch(_) {}
+  try { window.WeaponHTML?.close?.(); } catch(_) {}
+  try { window.HelmetHTML?.close?.(); } catch(_) {}
+  try { window.BootsHTML?.close?.(); } catch(_) {}
+  try { window.ShieldHTML?.close?.(); } catch(_) {}
+  try { window.RingHTML?.close?.(); } catch(_) {}
+};

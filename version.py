@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.0.41"
-VERSION_LABEL = "v2.0.41 — perf: defer на всех <script> в index.html — старт TMA на 30-50% быстрее (парсинг HTML больше не блокируется загрузкой 140+ JS)"
+VERSION = "2.0.42"
+VERSION_LABEL = "v2.0.42 — fix: zombie-overlay при смене TabBar-вкладок (пустое небо + нижнее меню) — универсальная страховка _closeAllTabOverlays в create() всех 5 сцен"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "8.75"
+GAME_VERSION = "8.76"

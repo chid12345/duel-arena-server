@@ -30,6 +30,9 @@ class WorldBossScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     this._alive = true;
+    // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок
+    // (ClanHTML/StatsHTML/WardrobeHTML) — иначе они перекроют WorldBoss.
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     _extraBg(this, W, H);
     // Neon Arcade overlay — фиксируется, чтобы не уезжал при скролле.
     const _arcBg = this.add.graphics();

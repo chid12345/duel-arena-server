@@ -21,6 +21,9 @@ class RatingScene extends Phaser.Scene {
     this.W = W; this.H = H;
     this._alive = true;
 
+    // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок.
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
+
     _extraBg(this, W, H);
     _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня · Натиск · Сезон · Босс');
     _extraBack(this, 'Menu', 'profile');
