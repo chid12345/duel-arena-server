@@ -31,6 +31,9 @@ class MenuScene extends Phaser.Scene {
     // _panels пуст → _switchTab безопасно пройдёт пустым циклом.
     this._activeTab = this._returnTab || 'profile';
     this._buildTabBar();
+    // Индикатор загрузки — пока _loadPlayer ждёт ответа сервера, игрок видит
+    // «⏳ Загрузка…» вместо пустого неба. Убираем в _loadPlayer перед панелями.
+    this._loadingTxt = txt(this, W / 2, H / 2, '⏳ Загрузка…', 16, '#aaaaff', true).setOrigin(0.5);
     this._loadPlayer();
     // Фоновая подгрузка PNG экипировки (~50 МБ) — не блокирует UI.
     // До завершения слот рендерится emoji-фолбэком (см. _drawEqSlot).
@@ -122,6 +125,7 @@ class MenuScene extends Phaser.Scene {
         // создавая осиротевшие объекты и незакрытые WebSocket-ы.
         if (!this.scene?.isActive('Menu')) return;
         try {
+          if (this._loadingTxt) { try { this._loadingTxt.destroy(); } catch(_) {} this._loadingTxt = null; }
           this._buildTabBar();
           this._buildProfilePanel();
           this._buildBattlePanel();
