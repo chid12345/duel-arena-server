@@ -48,6 +48,7 @@ class MenuScene extends Phaser.Scene {
       if (cached) {
         playerOk = true;
         get('/api/tasks/status').catch(() => null).then(taskRes => {
+          if (!this.scene?.isActive('Menu')) return;
           if (!taskRes?.ok) return;
           const cnt = taskRes.claimable_count || 0;
           if (cnt !== this._tasksBadgeCount) {
@@ -57,6 +58,7 @@ class MenuScene extends Phaser.Scene {
           }
         });
         get('/api/version').catch(() => null).then(versionRes => {
+          if (!this.scene?.isActive('Menu')) return;
           if (versionRes?.ok && versionRes.version) {
             const newV = String(versionRes.version);
             if (newV !== State.appVersion) {
@@ -75,6 +77,7 @@ class MenuScene extends Phaser.Scene {
           playerOk = true;
 
           get('/api/version').catch(() => null).then(versionRes => {
+            if (!this.scene?.isActive('Menu')) return;
             if (versionRes?.ok && versionRes.version) {
               const newV = String(versionRes.version);
               if (newV !== State.appVersion) {
@@ -87,6 +90,7 @@ class MenuScene extends Phaser.Scene {
           this._tasksBadgeCount = 0;
 
           get('/api/tasks/status').catch(() => null).then(taskRes => {
+            if (!this.scene?.isActive('Menu')) return;
             if (taskRes?.ok) {
               const cnt = taskRes.claimable_count || 0;
               this._tasksBadgeCount = cnt;
@@ -103,6 +107,10 @@ class MenuScene extends Phaser.Scene {
       }
 
       if (playerOk) {
+        // Guard: если пользователь ушёл до ответа API — сцена мертва.
+        // Без проверки _buildTabBar() и _setupWS() запустятся на мёртвой сцене,
+        // создавая осиротевшие объекты и незакрытые WebSocket-ы.
+        if (!this.scene?.isActive('Menu')) return;
         try {
           this._buildTabBar();
           this._buildProfilePanel();
