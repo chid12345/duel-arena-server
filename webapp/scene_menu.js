@@ -60,6 +60,11 @@ class MenuScene extends Phaser.Scene {
 
       if (cached) {
         playerOk = true;
+        // Уступаем control event loop'у, чтобы create() успел вернуться и статус
+        // сцены стал RUNNING. Иначе в cached-ветке мы синхронно доходим до
+        // isActive('Menu') ниже — а при status=CREATING он возвращает false,
+        // билд профиля молча пропускается, и лоадер зависает навсегда.
+        await new Promise(r => setTimeout(r, 0));
         get('/api/tasks/status').catch(() => null).then(taskRes => {
           if (!this.scene?.isActive('Menu')) return;
           if (!taskRes?.ok) return;
