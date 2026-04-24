@@ -93,10 +93,26 @@ Object.assign(MenuScene.prototype, {
   },
 
   shutdown() {
-    this.time.removeAllEvents();
-    // Явно уничтожаем все панели вместе с их make.* дочерними объектами
-    Object.values(this._panels || {}).forEach(c => { try { c?.destroy(true); } catch(_){} });
+    // Порядок как в Stats/Rating/WorldBoss: сначала события/tween/таймеры,
+    // затем panels и все остальные дети сцены. Без killAll + полной зачистки
+    // детей между вкладками копятся tween-и (55 звёзд × repeat:-1 на каждый
+    // create) и осиротевшие графики → UI зависает к 3–4-му переключению.
+    try { this.time.removeAllEvents(); } catch(_) {}
+    try { this.tweens.killAll(); } catch(_) {}
+    Object.values(this._panels || {}).forEach(c => { try { c?.destroy(true); } catch(_) {} });
     this._panels = {};
+    this._tabBarObjs = null;
+    this._tabBtns = {};
+    this._dailyBonusOverlay = null;
+    this._liveHp = null;
+    this._verTxt = null;
+    // _tbScrollOn сбрасываем: Phaser на shutdown очищает input-listeners,
+    // флаг без сброса заблокировал бы повторное навешивание скролла.
+    this._tbScrollOn = false;
+    // Snapshot: destroy() выкидывает объект из children.list, живой итератор
+    // пропустил бы половину, часть детей пережила бы shutdown.
+    const kids = this.children?.getAll?.().slice() || [];
+    kids.forEach(o => { try { o.destroy(); } catch(_) {} });
   },
 
 });
