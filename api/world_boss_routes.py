@@ -146,9 +146,16 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             raise HTTPException(status_code=403, detail="forbidden")
 
     @router.get("/api/admin/wb_test_schedule")
-    def wb_test_schedule(in_minutes: int = 0, token: str = ""):
+    def wb_test_schedule(in_minutes: int = 0, init_data: str = "", token: str = ""):
         """Тест: отменить все спавны и стартовать немедленно (in_minutes=0) или через N минут."""
-        _check_admin_token(token)
+        # Принимаем либо init_data (Telegram-подпись, фронтенд), либо token (curl/cli).
+        if init_data:
+            try:
+                get_user(init_data)
+            except Exception:
+                raise HTTPException(status_code=403, detail="invalid init_data")
+        else:
+            _check_admin_token(token)
         try:
             from datetime import datetime, timezone, timedelta
             import random
