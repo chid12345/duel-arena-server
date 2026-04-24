@@ -69,6 +69,11 @@ async function _onClick(e){
     await _applyItem(itemId, false);
     return;
   }
+  if(act==='stat_info'){
+    const key=el.dataset.stat; if(!key) return;
+    window.StatsHTMLInfo?.showStatInfo(key, State.player);
+    return;
+  }
   if(act==='card'){
     const itemId=el.dataset.item; if(!itemId) return;
     const META=(window.INVENTORY_META?.ITEM_META)||{};
