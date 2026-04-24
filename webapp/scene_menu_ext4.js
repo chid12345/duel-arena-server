@@ -176,14 +176,6 @@ Object.assign(MenuScene.prototype, {
     const eqGlow = ca(mkG()); eqGlow.fillStyle(0x6d28d9, 0.08); eqGlow.fillEllipse(W / 2, czY + czH * 0.4, W * 0.7, czH * 0.7);
     // top accent line
     const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
-    // Power badge (replaces "ЭКИПИРОВКА ПЕРСОНАЖА" title)
-    const _strVal = p.strength || 0;
-    const _pwW = 138, _pwH = 22;
-    const _pwX = Math.round(W / 2 - _pwW / 2), _pwY = czY - Math.round(_pwH / 2) + 1;
-    const pwBg = ca(mkG());
-    pwBg.fillStyle(0x1b1c33, 1); pwBg.fillRoundedRect(_pwX, _pwY, _pwW, _pwH, 11);
-    pwBg.lineStyle(1.2, 0x7c3aed, 0.9); pwBg.strokeRoundedRect(_pwX, _pwY, _pwW, _pwH, 11);
-    ca(mkT(W / 2, _pwY + _pwH / 2 - 5, `⚔  ${_strVal}  ·  СИЛА`, 11, '#ffd062', true)).setOrigin(0.5);
     const charCY = czY + czH * 0.42;
     // Aura colour per warrior class
     const _auraCols = { tank: 0xff5522, agile: 0x00cc55, crit: 0x7c3aed };
@@ -196,7 +188,6 @@ Object.assign(MenuScene.prototype, {
     // PNG 832×1248 at scale 0.18 → displayed ~150×225px
     const warrior = ca(mkI(W / 2, charCY, _wKey).setScale(0.18).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 7, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-    ca(mkT(W / 2, charCY + 68, '✎ сменить воина', 10, 'rgba(156,220,254,0.85)', true).setOrigin(0.5));
     const wZone = ca(mkZ(W / 2, charCY, 140, 210).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
