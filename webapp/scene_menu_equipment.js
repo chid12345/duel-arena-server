@@ -83,7 +83,7 @@ Object.assign(MenuScene.prototype, {
       c.add(g); // подложка
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
-      const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
+      const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
         ? wardrobeEq.textureKey
         : (armorTexKey  && this.textures.exists(armorTexKey))  ? armorTexKey
         : (weaponTexKey && this.textures.exists(weaponTexKey)) ? weaponTexKey
@@ -92,12 +92,14 @@ Object.assign(MenuScene.prototype, {
         : (shieldTexKey && this.textures.exists(shieldTexKey)) ? shieldTexKey
         : (ringTexKey   && this.textures.exists(ringTexKey))   ? ringTexKey
         : null;
+      // Чистим чёрный фон у скинов один раз через canvas (аналог _removeDarkBg
+      // из оверлеев). Работает для PNG/JPG/JPEG — результат кэшируется в Phaser.
+      const imgKey = rawKey && typeof cleanEquipmentTexture === 'function'
+        ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // PNG скинов теперь без фона (прозрачные) — blend-mode не нужен,
-        // раньше SCREEN использовался как костыль для чёрного фона.
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡

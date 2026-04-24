@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.0.51"
-VERSION_LABEL = "v2.0.51 — UI: снят SCREEN blend-mode со всех слотов экипировки и карточек деталей (weapon/shield/helmet/boots/ring/armor/wardrobe) — PNG скинов теперь без фона, костыль не нужен"
+VERSION = "2.0.52"
+VERSION_LABEL = "v2.0.52 — UI: canvas-чистка чёрного фона скинов в слотах профиля (Phaser) — аналог _removeDarkBg из оверлеев; работает для PNG/JPG/JPEG, не зависит от формата файла"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "8.85"
+GAME_VERSION = "8.86"
