@@ -6,6 +6,7 @@
    ============================================================ */
 (() => {
 const CSS = `
+.hi-bg{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center}
 .hi-mdl.st1{border-color:#ff3ba8;box-shadow:0 0 36px rgba(255,59,168,.35),0 24px 60px rgba(0,0,0,.7)}
 .hi-mdl.st2{border-color:#00f0ff;box-shadow:0 0 36px rgba(0,240,255,.35),0 24px 60px rgba(0,0,0,.7)}
 .hi-mdl.st3{border-color:#a06bff;box-shadow:0 0 36px rgba(160,107,255,.35),0 24px 60px rgba(0,0,0,.7)}
@@ -101,9 +102,10 @@ function showStatInfo(key, player){
   bg.id = 'hi-bg'; bg.className = 'hi-bg';
   bg.innerHTML = html;
   document.body.appendChild(bg);
-  bg.addEventListener('click', e => {
-    if (e.target === bg){ _close(); return; }
-    const el = e.target.closest('[data-hi]'); if (!el) return;
+  // stopPropagation: тач не просачивается к canvas Phaser под оверлеем.
+  bg.addEventListener('touchstart', e => e.stopPropagation(), { passive:true });
+  // Инфо-попап без опасных действий — любой тап закрывает.
+  bg.addEventListener('click', () => {
     try{ window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); }catch(_){}
     _close();
   });
