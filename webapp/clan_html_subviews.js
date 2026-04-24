@@ -65,6 +65,12 @@ function _shell(scene, iconEmoji, title, bodyHTML, sub) {
     <div id="cl-sub-body">${bodyHTML}</div>
   </div>`;
   document.body.appendChild(root);
+  if (window.ClanHTML?._fitToCanvas) {
+    window.ClanHTML._fitToCanvas(root);
+    const onResize = () => window.ClanHTML._fitToCanvas(root);
+    window.addEventListener('resize', onResize);
+    root._onResize = onResize;
+  }
   document.getElementById('cl-placeholder')?.remove();
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
   root.querySelector('[data-act="back"]').onclick = () => {

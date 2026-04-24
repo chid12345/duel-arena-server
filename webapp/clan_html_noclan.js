@@ -67,6 +67,12 @@ function openNoClan(scene) {
       </div>
     </div>`;
   document.body.appendChild(root);
+  if (window.ClanHTML?._fitToCanvas) {
+    window.ClanHTML._fitToCanvas(root);
+    const onResize = () => window.ClanHTML._fitToCanvas(root);
+    window.addEventListener('resize', onResize);
+    root._onResize = onResize;
+  }
   document.getElementById('cl-placeholder')?.remove();
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
 
@@ -80,7 +86,11 @@ function openNoClan(scene) {
   });
 }
 
-function close() { document.getElementById('nc-root')?.remove(); }
+function close() {
+  const r = document.getElementById('nc-root');
+  if (r?._onResize) { try { window.removeEventListener('resize', r._onResize); } catch(_) {} }
+  r?.remove();
+}
 
 Object.assign(window.ClanHTML = window.ClanHTML || {}, { openNoClan });
 const _origClose = window.ClanHTML.close;
