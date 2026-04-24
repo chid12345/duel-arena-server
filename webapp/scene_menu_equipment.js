@@ -72,9 +72,15 @@ Object.assign(MenuScene.prototype, {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
       // тонкий halo вокруг слота (очень слабый)
       const haG = mkG(); haG.fillStyle(bc, 0.07); haG.fillRoundedRect(x - 3, y - 3, w + 6, h + 6, r + 3); c.add(haG);
+      // Непрозрачная подложка — даже если текстура предмета не прогрузилась,
+      // слот виден как кликабельная кнопка (раньше был только тонкий stroke
+      // → на мобилке слот «пропадал» при битой текстуре или фоновой догрузке).
+      g.fillStyle(0x1c1c2e, 0.98); g.fillRoundedRect(x, y, w, h, r);
+      // Слабый внутренний оттенок под цвет редкости — делает слот живым
+      const tintG = mkG(); tintG.fillStyle(bc, 0.08); tintG.fillRoundedRect(x + 2, y + 2, w - 4, h - 4, r - 2); c.add(tintG);
       // рамка редкости
       const glG = mkG(); glG.lineStyle(1.5, bc, 0.7); glG.strokeRoundedRect(x, y, w, h, r); c.add(glG);
-      c.add(g); // placeholder
+      c.add(g); // подложка
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const imgKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))

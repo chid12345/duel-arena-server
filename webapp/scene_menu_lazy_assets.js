@@ -78,20 +78,18 @@ Object.assign(MenuScene.prototype, {
     this.load.on('loaderror', f => console.warn('[LazyEq] loaderror:', f?.key, f?.src));
 
     this.load.once('complete', () => {
-      // Перерисовать профильную панель только если игрок до сих пор её видит,
-      // и не открыт никакой HTML-overlay (wardrobe/weapon/etc.) — иначе ребилд
-      // под открытым оверлеем создаст визуальный мусор.
+      // Перерисовать профильную панель. Если игрок сейчас на другой вкладке,
+      // всё равно ребилдим — но без _switchTab, чтобы не дёргать visibility.
+      // Раньше был early return → слоты оставались emoji-фолбэком навсегда
+      // после возврата на profile. Также это убирает мобильное "пропадание".
       try {
-        if (this._activeTab !== 'profile') return;
         if (!this.scene?.isActive?.()) return;
         if (this._panels?.profile) {
           this._panels.profile.destroy(true);
           this._panels.profile = null;
         }
         this._buildProfilePanel();
-        // _switchTab убрать не нужно — _buildProfilePanel добавляет панель
-        // в displayList только если она активна. Но на всякий случай:
-        if (typeof this._switchTab === 'function') {
+        if (this._activeTab === 'profile' && typeof this._switchTab === 'function') {
           this._switchTab('profile');
         }
       } catch(e) {
