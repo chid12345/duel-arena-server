@@ -66,6 +66,64 @@ const _LAZY_EQUIPMENT_ASSETS = [
 
 Object.assign(MenuScene.prototype, {
 
+  /* Собирает ключи текстур для НАДЕТЫХ предметов — чтобы грузить их
+     в приоритетной (первой) партии. Берём и item_id-специфичный ключ,
+     и rarity-фолбэк: карта рендеринга (_drawEqSlot) пробует по очереди. */
+  _getEquippedTextureKeys() {
+    const keys = new Set();
+    const eq = State.equipment || {};
+    // Броня: wardrobe-косметика или статовая-по-rarity
+    if (State.wardrobeEquipped?.textureKey) keys.add(State.wardrobeEquipped.textureKey);
+    if (eq.armor?.rarity && typeof getArmorTextureKey === 'function') {
+      const k = getArmorTextureKey(eq.armor.rarity);
+      if (k) keys.add(k);
+    }
+    // Оружие
+    if (eq.weapon && typeof getWeaponTextureKey === 'function') {
+      const k = getWeaponTextureKey(eq.weapon.item_id) || getWeaponTextureKeyByRarity(eq.weapon.rarity);
+      if (k) keys.add(k);
+    }
+    // Шлем (belt)
+    if (eq.belt && typeof getHelmetTextureKey === 'function') {
+      const k = getHelmetTextureKey(eq.belt.item_id) || getHelmetTextureKeyByRarity(eq.belt.rarity);
+      if (k) keys.add(k);
+    }
+    // Сапоги
+    if (eq.boots && typeof getBootsTextureKey === 'function') {
+      const k = getBootsTextureKey(eq.boots.item_id) || getBootsTextureKeyByRarity(eq.boots.rarity);
+      if (k) keys.add(k);
+    }
+    // Щит
+    if (eq.shield && typeof getShieldTextureKey === 'function') {
+      const k = getShieldTextureKey(eq.shield.item_id) || getShieldTextureKeyByRarity(eq.shield.rarity);
+      if (k) keys.add(k);
+    }
+    // Кольца
+    for (const slot of ['ring1', 'ring2']) {
+      if (eq[slot] && typeof getRingTextureKey === 'function') {
+        const k = getRingTextureKey(eq[slot].item_id) || getRingTextureKeyByRarity(eq[slot].rarity);
+        if (k) keys.add(k);
+      }
+    }
+    return keys;
+  },
+
+  _rebuildProfileAfterLazy() {
+    try {
+      if (!this.scene?.isActive?.()) return;
+      if (this._panels?.profile) {
+        this._panels.profile.destroy(true);
+        this._panels.profile = null;
+      }
+      this._buildProfilePanel();
+      if (this._activeTab === 'profile' && typeof this._switchTab === 'function') {
+        this._switchTab('profile');
+      }
+    } catch(e) {
+      console.warn('[LazyEq] rebuild profile failed:', e);
+    }
+  },
+
   _lazyLoadEquipmentTextures() {
     if (this._lazyEqStarted) return;
     this._lazyEqStarted = true;
@@ -73,32 +131,35 @@ Object.assign(MenuScene.prototype, {
     const todo = _LAZY_EQUIPMENT_ASSETS.filter(([k]) => !this.textures.exists(k));
     if (!todo.length) return;
 
-    for (const [k, p] of todo) this.load.image(k, p);
+    // Приоритет: текстуры надетых предметов грузим ПЕРВОЙ партией.
+    // На мобильной сети 50МБ всего набора — это 30-60с emoji-фолбэка,
+    // а 6 надетых (~3МБ) успевают за 1-2с → игрок сразу видит свой профиль.
+    const priorityKeys = this._getEquippedTextureKeys();
+    const priorityTodo = todo.filter(([k]) => priorityKeys.has(k));
+    const restTodo     = todo.filter(([k]) => !priorityKeys.has(k));
 
     this.load.on('loaderror', f => console.warn('[LazyEq] loaderror:', f?.key, f?.src));
 
-    this.load.once('complete', () => {
-      // Перерисовать профильную панель. Если игрок сейчас на другой вкладке,
-      // всё равно ребилдим — но без _switchTab, чтобы не дёргать visibility.
-      // Раньше был early return → слоты оставались emoji-фолбэком навсегда
-      // после возврата на profile. Также это убирает мобильное "пропадание".
-      try {
-        if (!this.scene?.isActive?.()) return;
-        if (this._panels?.profile) {
-          this._panels.profile.destroy(true);
-          this._panels.profile = null;
-        }
-        this._buildProfilePanel();
-        if (this._activeTab === 'profile' && typeof this._switchTab === 'function') {
-          this._switchTab('profile');
-        }
-      } catch(e) {
-        console.warn('[LazyEq] rebuild profile failed:', e);
-      }
-    });
+    const _queueRest = () => {
+      if (!restTodo.length) return;
+      for (const [k, p] of restTodo) this.load.image(k, p);
+      // Второй ребилд после фоновой партии: на случай, если по item_id
+      // текстуры нет и использовался rarity-фолбэк не совпадающего варианта.
+      this.load.once('complete', () => this._rebuildProfileAfterLazy());
+      this.load.start();
+    };
 
-    // Запускаем загрузку (after create — Phaser поддерживает динамическое добавление файлов)
-    this.load.start();
+    if (priorityTodo.length) {
+      for (const [k, p] of priorityTodo) this.load.image(k, p);
+      this.load.once('complete', () => {
+        this._rebuildProfileAfterLazy();
+        _queueRest();
+      });
+      this.load.start();
+    } else {
+      // Всё надетое уже закэшировано Phaser — сразу фоновая догрузка
+      _queueRest();
+    }
   },
 
 });
