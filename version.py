@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.0.39"
-VERSION_LABEL = "v2.0.39 — fix: clan overlay _fitToCanvas — позиционирование по canvas, а не по viewport — TabBar доступен на высоких экранах"
+VERSION = "2.0.40"
+VERSION_LABEL = "v2.0.40 — fix: race condition — isActive guard в ClanScene и MenuScene, zombie-оверлей больше не блокирует все вкладки"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "8.73"
+GAME_VERSION = "8.74"

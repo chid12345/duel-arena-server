@@ -113,8 +113,14 @@ class ClanScene extends Phaser.Scene {
     if (this._subview === 'search') { this._loading?.destroy(); this._renderSearch(W, H_UI); return; }
     if (this._subview === 'create') { this._loading?.destroy(); this._renderCreate(W, H_UI); return; }
     if (this._subview === 'top')    { this._loading?.destroy(); this._renderTop(W, H_UI);    return; }
-    get('/api/clan').then(d => this._route(d, W, H_UI)).catch(() => {
-      this._loading?.setText('❌ Нет соединения');
+    get('/api/clan').then(d => {
+      // Guard: если пользователь ушёл до ответа API — сцена мертва.
+      // Без проверки _route() откроет HTML-оверлей после shutdown() —
+      // зомби-оверлей z-index:9000 перекроет все следующие сцены.
+      if (!this.scene?.isActive('Clan')) return;
+      this._route(d, W, H_UI);
+    }).catch(() => {
+      if (this.scene?.isActive('Clan')) this._loading?.setText('❌ Нет соединения');
     });
   }
 
