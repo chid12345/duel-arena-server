@@ -103,11 +103,12 @@
   border:2px solid rgba(255,0,200,.8);bottom:50%;left:50%;transform:translate(-50%,50%) scale(0);opacity:0;}
 .wb-wave.on{animation:wb-wv .5s ease-out forwards;}
 @keyframes wb-wv{0%{transform:translate(-50%,50%) scale(.5);opacity:.9}100%{transform:translate(-50%,50%) scale(3);opacity:0}}
-.wb-dfloat{position:absolute;right:10px;top:30%;z-index:20;pointer-events:none;
-  font-size:18px;font-weight:900;color:#ff3366;text-shadow:0 0 10px rgba(255,0,100,.8);opacity:0;}
-.wb-dfloat.crit{color:#ffcc00;font-size:22px;text-shadow:0 0 14px rgba(255,200,0,.9);}
-.wb-dfloat.show{animation:wb-dr .8s ease-out forwards;}
-@keyframes wb-dr{0%{opacity:1;transform:translateY(0)}100%{opacity:0;transform:translateY(-50px)}}
+.wb-dfloat{position:absolute;right:8px;top:20%;z-index:20;pointer-events:none;
+  font-size:26px;font-weight:900;color:#ff3366;text-shadow:0 0 14px rgba(255,0,100,.9),0 0 28px rgba(255,0,100,.5);opacity:0;
+  letter-spacing:1px;white-space:nowrap;}
+.wb-dfloat.crit{color:#ffcc00;font-size:34px;text-shadow:0 0 18px rgba(255,200,0,1),0 0 40px rgba(255,200,0,.6);}
+.wb-dfloat.show{animation:wb-dr 1.1s ease-out forwards;}
+@keyframes wb-dr{0%{opacity:1;transform:translateY(0) scale(1.2)}30%{transform:translateY(-16px) scale(1)}100%{opacity:0;transform:translateY(-60px) scale(.9)}}
 .wb-shake{animation:wb-shk .3s ease-out!important;}
 @keyframes wb-shk{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(3px)}}
 .wb-blog-wrap{margin:5px 14px 5px;border-radius:12px;overflow:hidden;
@@ -118,7 +119,8 @@
 .wb-blog-tab.on{color:#fff;background:rgba(255,255,255,.04);}
 .wb-blog-tab.on::after{content:"";position:absolute;bottom:0;left:15%;right:15%;height:1px;
   background:linear-gradient(90deg,transparent,#ff00cc,transparent);}
-.wb-blog-p{display:none;padding:8px 12px;max-height:80px;overflow-y:auto;scroll-behavior:smooth;}
+.wb-blog-p{display:none;padding:8px 12px;min-height:72px;max-height:110px;overflow-y:auto;scroll-behavior:smooth;}
+.wb-blog-empty{font-size:9px;color:#334;text-align:center;padding:18px 0;letter-spacing:1px;}
 .wb-blog-p::-webkit-scrollbar{width:2px;}
 .wb-blog-p::-webkit-scrollbar-thumb{background:rgba(255,0,200,.3);border-radius:2px;}
 .wb-blog-p.on{display:block;}
@@ -228,15 +230,9 @@
       `<div class="wb-cp-pin${(cr&bit)?'':' done'}" style="left:${p}%"><div class="cpi">👑</div><div class="cpd"></div></div>`).join('');
     const top3 = (s.top || []).slice(0,3);
     const lavs = top3.map((t,i) => `<div class="wb-lav atk" data-pid="${i}" style="animation-delay:${i*.3}s">${['🧙','⚔️','🛡️'][i]}</div>`).join('');
-    const extra = Math.max(0,(s.registrants_count||0)-3);
+    const _rcnt = Math.max(s.registrants_count||0, s.player_state ? 1 : 0);
+    const extra = Math.max(0,_rcnt-3);
     const isDead = ps?.is_dead;
-
-    const chatLines = [
-      {n:'Александр',m:'уязвимое окно! все бьём!'},
-      {n:'Мария',m:'иду с критом 🔥'},
-      {n:'Виктор',m:'держусь, свиток кончился'},
-      {n:'Александр',m:'25% осталось, добиваем!'},
-    ].map(l=>`<div class="wb-chat-l"><span class="cn">${_esc(l.n)}:</span> <span class="cm">${_esc(l.m)}</span></div>`).join('');
 
     const actZone = isDead ? `
       <div class="wb-dead">
@@ -273,7 +269,7 @@
 <div class="wb-live">
   <div style="display:flex;align-items:center;gap:8px">
     <div class="wb-ldots"><div class="wb-ldot"></div><div class="wb-ldot"></div><div class="wb-ldot"></div></div>
-    <div class="wb-ltext" id="wb-live-cnt">${s.registrants_count||0} <span>игроков в рейде</span></div>
+    <div class="wb-ltext" id="wb-live-cnt">${_rcnt} <span>игроков в рейде</span></div>
   </div>
   <div class="wb-lavs">${lavs}${extra>0?`<div class="wb-lmore">+${extra}</div>`:''}</div>
 </div>
@@ -312,11 +308,9 @@
   <div class="wb-blog-tabs">
     <div class="wb-blog-tab on" data-blog="mine">⚔️ МОЙ УРОН</div>
     <div class="wb-blog-tab" data-blog="world">🌍 ОБЩИЙ</div>
-    <div class="wb-blog-tab" data-blog="chat">💬 ЧАТ</div>
   </div>
-  <div class="wb-blog-p on" id="wb-log-mine"></div>
-  <div class="wb-blog-p" id="wb-log-world"></div>
-  <div class="wb-blog-p" id="wb-log-chat">${chatLines}</div>
+  <div class="wb-blog-p on" id="wb-log-mine"><div class="wb-blog-empty">⚔️ Бей босса — здесь появится твой урон</div></div>
+  <div class="wb-blog-p" id="wb-log-world"><div class="wb-blog-empty">🌍 Сводный урон всех участников рейда</div></div>
 </div>
 <div class="wb-act-z">${actZone}</div>
 <div class="wb-pcard-ov" id="wb-pcov"><div class="wb-pcard" id="wb-pc">
@@ -368,6 +362,8 @@
       else if (act==='res') sc?._resurrect?.(el.dataset.t);
       else if (act==='back') { window.WBHtml.close(); sc?.scene?.start?.('Menu',{returnTab:'more'}); }
       else if (act==='show-dmg') window.WBHtml.toast(`🗡 Твой урон: ${(s.player_state?.total_damage||0).toLocaleString('ru')}`);
+      else if (act==='use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
+      else if (act==='show-boosts') window.WBHtml._htmlBoostShop?.(s, sc);
     });
   }
 
@@ -412,15 +408,25 @@
       const ph = document.getElementById('wb-pl-hp'); if(ph) ph.textContent=`${ps.current_hp}/${ps.max_hp} HP`;
     }
     const lc = document.getElementById('wb-live-cnt');
-    if(lc) lc.innerHTML = `${state.registrants_count||0} <span>игроков в рейде</span>`;
+    if(lc) { const rc=Math.max(state.registrants_count||0,state.player_state?1:0); lc.innerHTML=`${rc} <span>игроков в рейде</span>`; }
   }
 
   function addHitLog(dmg, isCrit) {
+    // Показываем цифру урона на экране
+    const df = document.getElementById('wb-dfloat');
+    if (df) {
+      df.className = 'wb-dfloat' + (isCrit ? ' crit' : '');
+      void df.offsetWidth;
+      df.textContent = (isCrit ? '💥 ' : '⚔️ ') + dmg.toLocaleString('ru');
+      df.classList.add('show');
+    }
+    // Добавляем в лог
     const line = document.createElement('div'); line.className='wb-ll';
-    line.innerHTML = isCrit ? `💥 КРИТ! Нанесено <span class="c">${dmg.toLocaleString('ru')}</span> урона!`
-                            : `⚔️ Ты нанёс <span class="d">${dmg.toLocaleString('ru')}</span> урона`;
+    line.innerHTML = isCrit ? `💥 КРИТ! <span class="c">${dmg.toLocaleString('ru')}</span> урона!`
+                            : `⚔️ <span class="d">${dmg.toLocaleString('ru')}</span> урона`;
     ['wb-log-mine','wb-log-world'].forEach(id=>{
       const p=document.getElementById(id); if(!p) return;
+      p.querySelector('.wb-blog-empty')?.remove();
       const cl=line.cloneNode(true); p.appendChild(cl); p.scrollTop=p.scrollHeight;
     });
   }
