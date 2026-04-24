@@ -77,6 +77,30 @@ function _injectCSS() {
 function _trunc(s, n) { return s && s.length > n ? s.slice(0, n) + '…' : (s || ''); }
 function _esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
+function _fitToCanvas(root) {
+  try {
+    const c = document.querySelector('canvas');
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    const canvasH = c.height || 700;
+    const tabBarH = (r.height * 76) / canvasH;
+    root.style.top = r.top + 'px';
+    root.style.left = r.left + 'px';
+    root.style.width = r.width + 'px';
+    root.style.right = 'auto';
+    root.style.bottom = 'auto';
+    root.style.height = Math.max(0, r.height - tabBarH) + 'px';
+    const actions = root.querySelector('.cl-actions');
+    if (actions) {
+      const actBottom = (window.innerHeight - r.bottom) + tabBarH + 8;
+      actions.style.bottom = actBottom + 'px';
+      actions.style.left = r.left + 'px';
+      actions.style.right = 'auto';
+      actions.style.width = r.width + 'px';
+    }
+  } catch(_) {}
+}
+
 function _memberRow(m, isLeader) {
   const isLdr = m.role === 'leader';
   const name = _esc(_trunc(m.username || `User${m.user_id}`, 17));
@@ -173,6 +197,10 @@ function openMyClan(scene, data) {
     ${rightBtn}
   </div>`;
   document.body.appendChild(root);
+  _fitToCanvas(root);
+  const onResize = () => _fitToCanvas(root);
+  window.addEventListener('resize', onResize);
+  root._onResize = onResize;
   document.getElementById('cl-placeholder')?.remove();
   root.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
 
@@ -213,7 +241,11 @@ function openMyClan(scene, data) {
   });
 }
 
-function close() { document.getElementById('cl-root')?.remove(); }
+function close() {
+  const r = document.getElementById('cl-root');
+  if (r?._onResize) { try { window.removeEventListener('resize', r._onResize); } catch(_) {} }
+  r?.remove();
+}
 
-window.ClanHTML = { openMyClan, close, _injectCSS };
+window.ClanHTML = { openMyClan, close, _injectCSS, _fitToCanvas };
 })();
