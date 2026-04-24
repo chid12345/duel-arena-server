@@ -62,13 +62,15 @@ Object.assign(WorldBossScene.prototype, {
     let _pressed = false;
     const _createdAt = Date.now();
     z.on('pointerdown', () => { _pressed = true; tg?.HapticFeedback?.impactOccurred('medium'); });
-    z.on('pointerout',  () => { _pressed = false; });
+    // pointerout НЕ сбрасываем — на мобильном лёгкое скольжение пальца
+    // вызывает pointerout до pointerup и кнопка «молчит».
     z.on('pointerup',   () => {
       if (!_pressed) return;                           // pointerdown был не на этой кнопке
       if (Date.now() - _createdAt < 200) return;       // кнопка слишком свежая — игнорим ghost-tap
       _pressed = false;
       if (typeof cb === 'function') cb();
     });
+    z.on('pointercancel', () => { _pressed = false; }); // настоящая отмена (напр. входящий звонок)
     return { g, lt, z };
   },
 
