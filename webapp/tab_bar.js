@@ -65,7 +65,6 @@ window.TabBar = {
     // (в т.ч. _tabNavGuard) выживают shutdown. Сбрасываем на каждый build,
     // иначе гард из прошлой жизни сцены заблокирует табы после возврата.
     scene._tabNavGuard = false;
-    scene._tabPressKey = null;
     if (scene._tabNavGuardTimer) { clearTimeout(scene._tabNavGuardTimer); scene._tabNavGuardTimer = null; }
     try { scene.input.enabled = true; } catch(_) {}
 
@@ -123,9 +122,6 @@ window.TabBar = {
       const zone = _t(scene.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
 
       zone.on('pointerdown', () => {
-        // Запоминаем, на какой вкладке начался тап. Нав разрешаем только если pointerup
-        // произошёл на той же вкладке — защита от «жирного пальца» / свайпа по таббару.
-        scene._tabPressKey = tab.key;
         const rg = scene.add.graphics();
         rg.fillStyle(tab.col, 0.35); rg.fillCircle(0, 0, 12);
         const ripple = scene.add.container(cx, iy, [rg]).setDepth(depth);
@@ -142,13 +138,14 @@ window.TabBar = {
         if (iconG) { iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, a ? 2 : 1.4); }
         if (iconImg) iconImg.setAlpha(a ? 1 : 0.85);
       });
-      zone.on('pointerup', () => {
+      zone.on('pointerup', (pointer) => {
         scene.tweens.killTweensOf(iconContainer);
         scene.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
-        // Нав только если pointerdown и pointerup на одной вкладке. Если палец «съехал» —
-        // игнорируем: уверенность пользователя недостаточна, лучше не открывать ничего.
-        if (scene._tabPressKey !== tab.key) { scene._tabPressKey = null; return; }
-        scene._tabPressKey = null;
+        // Отличаем тап от свайпа по расстоянию, а не по совпадению зон pointerdown/up.
+        // Раньше было «только если pointerdown и pointerup на одной вкладке», но из-за
+        // мелкого дёргания пальца на мобилке pointerdown часто попадал на соседнюю зону,
+        // и тап пропадал «раз через два». 20px — щадящий порог для тач-экранов.
+        try { if (pointer?.getDistance?.() > 20) return; } catch (_) {}
         if (typeof Sound !== 'undefined' && Sound.tab) Sound.tab();
         if (typeof tg !== 'undefined') tg?.HapticFeedback?.selectionChanged();
         if (tab.key === activeKey) return;
