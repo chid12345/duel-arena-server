@@ -25,12 +25,11 @@ class ClanScene extends Phaser.Scene {
   shutdown() {
     try { this.tweens.killAll(); } catch(_) {}
     if (this._autoRefreshEvent) { this._autoRefreshEvent.remove(false); this._autoRefreshEvent = null; }
-    // Сбрасываем: иначе TabBar._enableScroll при повторном входе пропустит
-    // навеску pointerdown/wheel (считает, что уже навешено) — скролл умирает.
     this._tbScrollOn = false;
+    // ClanHTML z-index:9000 перекрывает canvas следующей сцены и глотает все тапы —
+    // обязательно закрываем здесь, а не только по кнопке «Назад» внутри оверлея.
+    try { window.ClanHTML?.close?.(); } catch(_) {}
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
-    // Заглушку сносим — если сцена рестартится, init() сразу же добавит свежую.
-    // Если уходим из клана — чтобы заглушка не осталась на Menu.
     document.getElementById('cl-placeholder')?.remove();
   }
 
