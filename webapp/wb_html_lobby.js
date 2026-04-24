@@ -104,7 +104,7 @@ window.WBHtml = (() => {
 .bc-ic{font-size:20px;margin-bottom:5px;filter:drop-shadow(0 0 5px rgba(255,0,200,.5));}
 .bc-nm{font-size:9px;font-weight:800;letter-spacing:.8px;color:#cc88ff;margin-bottom:2px;}
 .bc-vl{font-size:16px;font-weight:900;color:#ff00cc;text-shadow:0 0 8px currentColor;}
-.bc-pr{font-size:9px;color:#553366;margin-top:3px;}
+.bc-pr{font-size:11px;font-weight:800;color:#ffdd44;text-shadow:0 0 6px rgba(255,210,0,.45);margin-top:4px;letter-spacing:.3px;}
 .bc-ow{position:absolute;top:7px;right:8px;font-size:9px;font-weight:800;color:#00e5ff;
   background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:1px 7px;border-radius:5px;}
 .wb-rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:8px 14px 14px;}
@@ -118,8 +118,10 @@ window.WBHtml = (() => {
 .wb-rb{padding:8px;text-align:center;}
 .wb-rb-cnt{font-size:16px;font-weight:900;color:#00e5ff;text-shadow:0 0 6px currentColor;}
 .wb-rb-lbl{font-size:8px;color:#446688;letter-spacing:1px;margin-bottom:6px;}
-.wb-rbtn{width:100%;padding:6px 0;border-radius:8px;font-size:9px;font-weight:800;text-align:center;
-  background:rgba(255,80,180,.08);border:1px solid rgba(255,80,180,.25);color:#ff88cc;cursor:pointer;}
+.wb-rbtn{width:100%;padding:7px 0;border-radius:8px;font-size:13px;font-weight:900;text-align:center;
+  background:linear-gradient(135deg,rgba(255,200,0,.13),rgba(255,160,0,.07));
+  border:1px solid rgba(255,200,0,.45);color:#ffdd44;
+  text-shadow:0 0 8px rgba(255,200,0,.5);cursor:pointer;letter-spacing:.3px;}
 .wb-hist{padding:6px 14px 14px;display:flex;flex-direction:column;gap:6px;}
 .wb-hc{border-radius:13px;overflow:hidden;background:rgba(8,0,18,.75);
   border:1px solid rgba(255,0,200,.12);border-left:2px solid rgba(255,0,200,.35);}
@@ -172,11 +174,11 @@ window.WBHtml = (() => {
 
   function _scrollMeta() {
     return {
-      damage_25: { icon:'⚔️', name:'УРОН', val:'+25%', price:'60 💠' },
-      power_10:  { icon:'🐲', name:'УРОН', val:'+10%', price:'30 💠' },
-      defense_20:{ icon:'🛡️', name:'ЗАЩИТА', val:'+20%', price:'45 💠' },
-      dodge_10:  { icon:'💨', name:'УВОРОТ', val:'+10%', price:'35 💠' },
-      crit_10:   { icon:'🎯', name:'КРИТ', val:'+10%', price:'40 💠' },
+      damage_25: { icon:'⚔️', name:'УРОН', val:'+25%', price:'60 🪙' },
+      power_10:  { icon:'🐲', name:'УРОН', val:'+10%', price:'30 🪙' },
+      defense_20:{ icon:'🛡️', name:'ЗАЩИТА', val:'+20%', price:'45 🪙' },
+      dodge_10:  { icon:'💨', name:'УВОРОТ', val:'+10%', price:'35 🪙' },
+      crit_10:   { icon:'🎯', name:'КРИТ', val:'+10%', price:'40 🪙' },
     };
   }
 
@@ -200,9 +202,9 @@ window.WBHtml = (() => {
     }).join('');
 
     const resItems = [
-      { id:'res_30',  icon:'💊', pct:'30%', price:'500 🔥', qty: res.res_30 || 0, gold:true },
-      { id:'res_60',  icon:'💉', pct:'60%', price:'40 💠',  qty: res.res_60 || 0 },
-      { id:'res_100', icon:'✨', pct:'100%',price:'80 💠',  qty: res.res_100 || 0, gold2:true },
+      { id:'res_30',  icon:'💊', pct:'30%', price:'500 🪙', qty: res.res_30 || 0, gold:true },
+      { id:'res_60',  icon:'💉', pct:'60%', price:'1500 🪙', qty: res.res_60 || 0 },
+      { id:'res_100', icon:'✨', pct:'100%',price:'3000 🪙', qty: res.res_100 || 0, gold2:true },
     ];
     const resHTML = resItems.map(r => `
       <div class="wb-rc" data-act="buy-res" data-id="${r.id}">
