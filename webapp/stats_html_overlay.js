@@ -175,7 +175,7 @@ function _invHTML(inv){
         const m=META[it.item_id]||{icon:'📦',name:it.item_id,desc:''};
         const isBox=it.item_id.startsWith('box_'), isBoss=m.tab==='boss';
         const btn=isBoss?'⚔ В рейде':(isBox?'🎲 Открыть':'Применить');
-        return `<div class="st-it"><div class="st-it-ic">${m.icon||'📦'}</div>
+        return `<div class="st-it" data-act="card" data-item="${_esc(it.item_id)}"><div class="st-it-ic">${m.icon||'📦'}</div>
           <div class="st-it-bd"><div class="st-it-n">${_esc(m.name||it.item_id)}</div><div class="st-it-d">${_esc(m.desc||'')}</div><div class="st-it-q">×${it.quantity}</div></div>
           <div class="st-it-b${isBoss?' boss':''}" data-act="apply" data-item="${_esc(it.item_id)}">${btn}</div></div>`;
       }).join('')
@@ -249,14 +249,27 @@ async function _onClick(e){
     await _applyItem(itemId, false);
     return;
   }
+  if(act==='card'){
+    const itemId=el.dataset.item; if(!itemId) return;
+    const META=(window.INVENTORY_META?.ITEM_META)||{};
+    const meta=META[itemId]; if(!meta) return;
+    const qty=(_inv?.inventory||[]).find(x=>x.item_id===itemId)?.quantity||0;
+    window.StatsHTMLItems?.showItemDetail({ itemId, meta, qty,
+      onApply: ()=>_applyItem(itemId, false) });
+    return;
+  }
 }
 
 async function _applyItem(itemId, replace){
   try{
     const res=await post('/api/shop/apply', { item_id:itemId, replace:!!replace });
     if(res?.conflict){
-      const ok=window.confirm(`Уже активен свиток «${res.active_buff_type}» (${res.active_charges??'?'} боёв). Заменить?`);
-      if(ok) await _applyItem(itemId, true);
+      const META=(window.INVENTORY_META?.ITEM_META)||{};
+      window.StatsHTMLItems?.showReplaceDialog({
+        newItemId:itemId, newMeta:META[itemId],
+        activeBuff:{ type:res.active_buff_type, charges:res.active_charges },
+        onConfirm:()=>_applyItem(itemId, true),
+      });
       return;
     }
     if(res?.ok){
