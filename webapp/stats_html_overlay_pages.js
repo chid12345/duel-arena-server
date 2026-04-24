@@ -41,7 +41,7 @@ const _val = (p,k) => Number(p?.[k+'_effective'] ?? p?.[k] ?? 0);
 function statsHTML(p){
   return STAT_META.map(s=>{
     const base=_base(p,s.key), bon=_bonus(p,s.key), v=_val(p,s.key), free=p.free_stats>0;
-    return `<div class="st-srow ${s.cls}" data-stat="${s.key}">
+    return `<div class="st-srow ${s.cls}" data-act="stat_info" data-stat="${s.key}">
       <div class="ic">${s.icon}</div>
       <div class="mid"><div class="n">${s.label}</div><div class="sv">база ${base} · бонус +${bon} · ${s.eff(p)}</div></div>
       <div class="val">${v}</div>
