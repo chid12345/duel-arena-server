@@ -157,11 +157,12 @@ Object.assign(WorldBossScene.prototype, {
         const _dmgSuffix = (r.is_crit ? ' 💥' : '') + (r.vulnerable ? ' x3' : '');
         this._toast(`⚔️ ${r.damage}${_dmgSuffix}`);
         if (this._state?.active) this._state.active.current_hp = r.boss_hp;
+        try { window.WBHtml?.addHitLog(r.damage, r.is_crit); } catch(_) {}
         if (!hadPsBefore) {
           // Первый вход в рейд — нужен полный рефреш чтобы показать УДАРИТЬ + HP игрока
           setTimeout(() => { if (this._alive) this._refresh(); }, 400);
         } else {
-          this._updateFightingHUD();
+          try { window.WBHtml?.updateHUD(this._state); } catch(_) {}
         }
       } else if (r.reason !== 'Слишком быстро') {
         this._toast('❌ ' + r.reason);

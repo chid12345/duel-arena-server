@@ -14,6 +14,7 @@ class WorldBossScene extends Phaser.Scene {
     try { this._timer?.remove?.(); } catch(_) {}
     try { this._pollTimer?.remove?.(); } catch(_) {}
     try { this._clearBossBg?.(); } catch(_) {}
+    try { window.WBHtml?.close(); } catch(_) {}
     this._ws = null; this._timer = null; this._pollTimer = null; this._enrageShown = false;
     this._refreshBusy = false;
     // Сбрасываем, иначе TabBar._enableScroll при повторном входе увидит
@@ -119,6 +120,7 @@ class WorldBossScene extends Phaser.Scene {
     if (p.registrants_count != null) this._state.registrants_count = p.registrants_count;
     if (this._prepCountT) this._prepCountT.setText(`Старт через ${p.prep_seconds_left} сек`);
     if (this._regCountT) this._regCountT.setText(`👥 ${p.registrants_count || 0} в рейде`);
+    try { window.WBHtml?.updateHUD(this._state); } catch(_) {}
     if (!wasPrep) this._render();
   }
 
@@ -151,7 +153,7 @@ class WorldBossScene extends Phaser.Scene {
     if (_isDeadNow !== _wasDeadBefore || _hasPsNow !== _hadPsBefore) {
       try { this._render(); } catch(_) {}
     } else {
-      this._updateFightingHUD();
+      try { window.WBHtml?.updateHUD(this._state); } catch(_) {}
     }
     try {
       const mx = Math.max(1, p.boss.max_hp || 1);
@@ -162,17 +164,7 @@ class WorldBossScene extends Phaser.Scene {
   _render() {
     if (this._loading) { try { this._loading.destroy(); } catch(_){} this._loading = null; }
     this.children.getAll().filter(o => o._wbChild).forEach(o => { try { o.destroy(); } catch(_){} });
-
-    const s = this._state || {};
-    // Рабочая высота контента = высота canvas минус нижний таббар.
-    const W = this.W, H = this.H - TabBar.HEIGHT;
-
-    if (s.active) { this._renderFighting(s, W, H); }
-    else if ((s.prep_seconds_left || 0) > 0) { this._renderPrepPhase(s, W, H); }
-    else if (s.next_scheduled) { this._renderWaiting(s, W, H); }
-    else { this._renderIdle(s, W, H); }
-
-    this._renderResultsOverlay(s, W, H);
+    try { window.WBHtml?.render(this, this._state); } catch(e) { console.warn('WBHtml render error:', e); }
   }
 
   _renderFighting(s, W, H) {
