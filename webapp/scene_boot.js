@@ -8,7 +8,8 @@ class BootScene extends Phaser.Scene {
   preload() {
     // CRITICAL ASSETS ONLY: только то, без чего меню/бой не отрисуются.
     // Картинки экипировки (armor/weapon/helmet/boots/shield/ring — ~50 МБ) грузим
-    // ленив в MenuScene._lazyLoadEquipmentTextures() ПОСЛЕ старта меню,
+    // ленив в MenuScene._preloadEquippedTextures() (6 надетых PNG до показа
+    // профиля) + _lazyLoadRestTextures() (остальные фоном для Рюкзака),
     // чтобы на мобильном WebView не зависать на экране загрузки.
     const bar = document.getElementById('loading-bar');
     // Cache-bust: Telegram WebView агрессивно кэширует PNG. При смене ассета без v=
