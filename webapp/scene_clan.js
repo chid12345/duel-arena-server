@@ -25,6 +25,9 @@ class ClanScene extends Phaser.Scene {
   shutdown() {
     try { this.tweens.killAll(); } catch(_) {}
     if (this._autoRefreshEvent) { this._autoRefreshEvent.remove(false); this._autoRefreshEvent = null; }
+    // Сбрасываем: иначе TabBar._enableScroll при повторном входе пропустит
+    // навеску pointerdown/wheel (считает, что уже навешено) — скролл умирает.
+    this._tbScrollOn = false;
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
     // Заглушку сносим — если сцена рестартится, init() сразу же добавит свежую.
     // Если уходим из клана — чтобы заглушка не осталась на Menu.

@@ -112,7 +112,14 @@ function showStatInfo(key, player){
   // и без этой блокировки тап по TabBar под попапом уходит в Phaser).
   try{ _cvs().style.pointerEvents = 'none'; }catch(_){}
   bg.addEventListener('touchstart', e => e.stopPropagation(), { passive:true });
-  bg.addEventListener('click', () => {
+  // Закрываем ТОЛЬКО по backdrop или кнопке data-hi="close". Раньше закрывалось
+  // на любой клик по модалке — случайное касание текста/иконки сразу гасило
+  // попап, и игрок воспринимал это как «карточка не работает».
+  bg.addEventListener('click', (e) => {
+    const el = e.target.closest('[data-hi]');
+    const isBackdrop = e.target === bg;
+    if (!isBackdrop && !el) return;
+    if (el && el.dataset.hi !== 'close' && el.dataset.hi !== 'cancel') return;
     try{ window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); }catch(_){}
     _close();
   });

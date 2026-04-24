@@ -47,6 +47,9 @@ class RatingScene extends Phaser.Scene {
 
   shutdown() {
     this._alive = false;
+    // Сбрасываем, иначе TabBar._enableScroll при повторном входе в Rating
+    // пропустит регистрацию pointerdown/wheel — скролл умирает.
+    this._tbScrollOn = false;
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 

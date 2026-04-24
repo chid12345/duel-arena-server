@@ -16,6 +16,9 @@ class WorldBossScene extends Phaser.Scene {
     try { this._clearBossBg?.(); } catch(_) {}
     this._ws = null; this._timer = null; this._pollTimer = null; this._enrageShown = false;
     this._refreshBusy = false;
+    // Сбрасываем, иначе TabBar._enableScroll при повторном входе увидит
+    // _tbScrollOn=true и не навесит pointerdown/wheel — жесты не проходят.
+    this._tbScrollOn = false;
     if (this._splashEl) {
       this._splashEl.forEach(o => { try { o.destroy(); } catch(_) {} });
       this._splashEl = null;
