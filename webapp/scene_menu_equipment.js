@@ -100,9 +100,20 @@ Object.assign(MenuScene.prototype, {
         try { img.setBlendMode(Phaser.BlendModes.SCREEN); } catch(_) {}
         ca(img);
       } else {
-        // Остальные слоты или fallback — emoji
-        const emoji = item?.emoji || { common:'🛡', rare:'⚔️', epic:'💜', mythic:'🔥' }[displayRarity] || '🛡';
-        ca(mkT(cx, cy, emoji, small ? 13 : 20)).setOrigin(0.5);
+        // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
+        // рисуем тот же векторный значок, что и в пустых слотах — визуально
+        // консистентно с остальным UI, на фоне рамки цвета редкости читается
+        // как «предмет надет, картинка подгружается».
+        this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
+        // Мягкий pulse (0.65↔1.0) — коммуницирует «идёт загрузка»,
+        // без него переход emoji→PNG читался как «глитч».
+        const iconG = c.list[c.list.length - 1];
+        if (iconG && this.tweens) {
+          try {
+            this.tweens.add({ targets: iconG, alpha: 0.65, duration: 1100,
+              yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          } catch(_) {}
+        }
       }
 
       const dG = mkG(); dG.fillStyle(bc, 1); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
