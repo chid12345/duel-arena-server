@@ -121,4 +121,20 @@
   window.WebSocket.OPEN       = 1;
   window.WebSocket.CLOSING    = 2;
   window.WebSocket.CLOSED     = 3;
+
+  // --- 6. Watchdog: форс-старт Menu ---------------------------------------
+  // В preview-среде Boot.create → scene.start('Menu') иногда не срабатывает
+  // (не успевает Phaser-тик). Если через 3 сек после создания game Menu
+  // всё ещё не активна — стартуем вручную. В Telegram/проде ветка не нужна.
+  const _tryForceMenu = () => {
+    const g = window.__game;
+    if (!g) return false;
+    const menu = g.scene.getScene('Menu');
+    if (!menu) return false;
+    if (menu.sys.settings.status >= 3) return true; // уже стартовала
+    console.log('[DevMode] Menu не стартовала — форсим scene.start("Menu")');
+    try { g.scene.start('Menu'); } catch (e) { console.warn('[DevMode] force-start err:', e); }
+    return true;
+  };
+  setTimeout(() => { if (!_tryForceMenu()) setTimeout(_tryForceMenu, 2000); }, 3000);
 })();
