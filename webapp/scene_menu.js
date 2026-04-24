@@ -132,6 +132,17 @@ class MenuScene extends Phaser.Scene {
         // создавая осиротевшие объекты и незакрытые WebSocket-ы.
         if (!this.scene?.isActive('Menu')) return;
         try {
+          // Ждём PNG надетых вещей (~6 шт, ~3МБ) ДО показа профиля.
+          // Цена — +1-2с к лоадеру на мобиле, выгода — профиль открывается
+          // сразу со ВСЕМИ картинками, без уродливого перехода emoji→PNG.
+          // Fail-safe: 5с лимит внутри _preloadEquippedTextures.
+          if (this._loadingTxt?.setText) {
+            try { this._loadingTxt.setText('⏳ Загрузка экипировки…'); } catch(_) {}
+          }
+          if (typeof this._preloadEquippedTextures === 'function') {
+            await this._preloadEquippedTextures();
+          }
+          if (!this.scene?.isActive('Menu')) return;
           if (this._loadingTxt) { try { this._loadingTxt.destroy(); } catch(_) {} this._loadingTxt = null; }
           this._buildTabBar();
           this._buildProfilePanel();
@@ -141,9 +152,9 @@ class MenuScene extends Phaser.Scene {
           this._setupWS();
           this._startRegenTick();
           this._loadDailyBonusCard();
-          // Lazy-load PNG экипировки: приоритет надетым вещам (~6 шт, ~3МБ),
-          // остальное (~96 шт, ~50МБ) фоном для инвентаря/Рюкзака.
-          this._lazyLoadEquipmentTextures?.();
+          // Фоновая догрузка остальных PNG (~50МБ) — для Рюкзака/Equipment,
+          // не блокирует профиль.
+          this._lazyLoadRestTextures?.();
         } catch(buildErr) {
           console.error('UI build error:', buildErr);
           this._showError('Ошибка UI: ' + (buildErr?.message || buildErr));

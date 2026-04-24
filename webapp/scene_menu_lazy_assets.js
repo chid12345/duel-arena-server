@@ -124,42 +124,54 @@ Object.assign(MenuScene.prototype, {
     }
   },
 
-  _lazyLoadEquipmentTextures() {
-    if (this._lazyEqStarted) return;
-    this._lazyEqStarted = true;
+  /* Awaitable: грузит ТОЛЬКО надетые предметы (6 PNG, ~3МБ).
+     Используется перед _buildProfilePanel, чтобы профиль сразу
+     открылся с реальными картинками — без emoji/вектор-фолбэка.
+     Таймаут 5с: если сеть совсем плохая, не держим загрузкой навсегда —
+     показываем профиль с вектор-фолбэком, а когда PNG всё-таки придут,
+     делаем ребилд панели. */
+  _preloadEquippedTextures() {
+    const priorityKeys = this._getEquippedTextureKeys();
+    const todo = _LAZY_EQUIPMENT_ASSETS
+      .filter(([k]) => priorityKeys.has(k) && !this.textures.exists(k));
+    if (!todo.length) return Promise.resolve();
 
-    const todo = _LAZY_EQUIPMENT_ASSETS.filter(([k]) => !this.textures.exists(k));
+    return new Promise(resolve => {
+      let resolvedAt = 0;
+      const _resolveOnce = () => { if (resolvedAt) return; resolvedAt = Date.now(); resolve(); };
+
+      for (const [k, p] of todo) this.load.image(k, p);
+      this.load.once('complete', () => {
+        // Если таймаут уже отрезолвил (>100ms назад) — профиль построен
+        // с вектор-фолбэком, теперь перерисовываем с настоящими PNG.
+        if (resolvedAt && Date.now() - resolvedAt > 100) {
+          this._rebuildProfileAfterLazy();
+        }
+        _resolveOnce();
+      });
+      this.load.on('loaderror', f => console.warn('[LazyEq] priority loaderror:', f?.key, f?.src));
+      this.load.start();
+
+      // Fail-safe: 5с лимит. Лучше показать профиль с вектор-фолбэком,
+      // чем держать игрока на «Загрузка…» при слабой/отвалившейся сети.
+      setTimeout(_resolveOnce, 5000);
+    });
+  },
+
+  /* Фоновая догрузка остальных текстур (для Рюкзака/Equipment).
+     Запускается ПОСЛЕ показа профиля — не блокирует UI. */
+  _lazyLoadRestTextures() {
+    if (this._lazyRestStarted) return;
+    this._lazyRestStarted = true;
+
+    const priorityKeys = this._getEquippedTextureKeys();
+    const todo = _LAZY_EQUIPMENT_ASSETS
+      .filter(([k]) => !priorityKeys.has(k) && !this.textures.exists(k));
     if (!todo.length) return;
 
-    // Приоритет: текстуры надетых предметов грузим ПЕРВОЙ партией.
-    // На мобильной сети 50МБ всего набора — это 30-60с emoji-фолбэка,
-    // а 6 надетых (~3МБ) успевают за 1-2с → игрок сразу видит свой профиль.
-    const priorityKeys = this._getEquippedTextureKeys();
-    const priorityTodo = todo.filter(([k]) => priorityKeys.has(k));
-    const restTodo     = todo.filter(([k]) => !priorityKeys.has(k));
-
-    this.load.on('loaderror', f => console.warn('[LazyEq] loaderror:', f?.key, f?.src));
-
-    const _queueRest = () => {
-      if (!restTodo.length) return;
-      for (const [k, p] of restTodo) this.load.image(k, p);
-      // Без второго ребилда профиля: приоритетная партия уже содержит
-      // оба варианта ключей (item_id + rarity-фолбэк) для надетых вещей.
-      // Остальные ~90 текстур нужны только в Рюкзаке/Equipment.
-      this.load.start();
-    };
-
-    if (priorityTodo.length) {
-      for (const [k, p] of priorityTodo) this.load.image(k, p);
-      this.load.once('complete', () => {
-        this._rebuildProfileAfterLazy();
-        _queueRest();
-      });
-      this.load.start();
-    } else {
-      // Всё надетое уже закэшировано Phaser — сразу фоновая догрузка
-      _queueRest();
-    }
+    this.load.on('loaderror', f => console.warn('[LazyEq] rest loaderror:', f?.key, f?.src));
+    for (const [k, p] of todo) this.load.image(k, p);
+    this.load.start();
   },
 
 });
