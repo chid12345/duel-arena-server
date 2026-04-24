@@ -63,6 +63,10 @@ class ClanScene extends Phaser.Scene {
   create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
+    // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок
+    // (StatsHTML/WardrobeHTML/...), если shutdown не успел их закрыть.
+    // Свой ClanHTML откроется ниже — его close здесь не мешает.
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     _extraBg(this, W, H);
     if (this._subview !== 'chat') {
       _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');

@@ -23,8 +23,8 @@ class StatsScene extends Phaser.Scene {
 
     // Зачищаем любые HTML-оверлеи из прошлых сцен, иначе старый гардероб может «повиснуть»
     // поверх и казаться, будто вкладка Герой открывает Броню.
-    try { WardrobeHTML?.close?.(); } catch(_) {}
-    try { StatsHTML?.close?.(); } catch(_) {}
+    // Универсальная страховка: закрываем ВСЕ TabBar-оверлеи (вкл. ClanHTML и др.).
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
 
     // Режим прямого открытия гардероба из профиля — Hero-UI не строим
     if (d.openWardrobe) {
