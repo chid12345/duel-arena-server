@@ -5,7 +5,7 @@
    ============================================================ */
 (() => {
 const CSS = `
-.hi-bg{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.82);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;animation:hiFade .18s ease}
+.hi-bg{position:fixed;inset:0;z-index:9500;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;animation:hiFade .18s ease}
 @keyframes hiFade{from{opacity:0}to{opacity:1}}
 .hi-mdl{width:300px;max-width:calc(100vw - 32px);border-radius:18px;padding:18px 16px 14px;background:linear-gradient(135deg,rgba(20,0,35,.98),rgba(5,5,18,.98));border:1.5px solid #00f0ff;box-shadow:0 0 36px rgba(0,240,255,.35),0 24px 60px rgba(0,0,0,.7);animation:hiPop .22s cubic-bezier(.34,1.56,.64,1);position:relative}
 .hi-mdl.warn{border-color:#ffaa33;box-shadow:0 0 36px rgba(255,170,51,.35),0 24px 60px rgba(0,0,0,.7)}
@@ -72,6 +72,8 @@ function _mount(html, onClick){
   bg.id = 'hi-bg'; bg.className = 'hi-bg';
   bg.innerHTML = html;
   document.body.appendChild(bg);
+  // stopPropagation на touchstart: не даём тач-событиям просочиться к canvas Phaser.
+  bg.addEventListener('touchstart', e => e.stopPropagation(), { passive:true });
   bg.addEventListener('click', e => {
     if (e.target === bg){ _close(); return; }
     const el = e.target.closest('[data-hi]'); if (!el) return;
