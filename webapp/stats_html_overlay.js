@@ -154,6 +154,9 @@ function close(){
   // Закрываем item/stat попапы и восстанавливаем canvas до смены сцены.
   try{ window.StatsHTMLInfo?.close?.(); }catch(_){}
   try{ window.StatsHTMLItems?.close?.(); }catch(_){}
+  // Страховка: если попап попал в DOM другим путём (или был удалён без _close),
+  // canvas мог остаться с pointerEvents:'none' — и Phaser перестал ловить тапы.
+  try{ const c=document.querySelector('canvas'); if(c) c.style.pointerEvents=''; }catch(_){}
   const r=document.getElementById('st-root');
   if(r?._onResize){ try{ window.removeEventListener('resize', r._onResize); }catch(_){} }
   r?.remove();

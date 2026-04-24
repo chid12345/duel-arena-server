@@ -103,6 +103,10 @@ class StatsScene extends Phaser.Scene {
     this._invData = null;
     this._busy = false;
     this._invBusy = false;
+    // Без сброса TabBar._enableScroll при повторном входе в Stats видит
+    // _tbScrollOn=true и НЕ навешивает pointerdown/pointermove/wheel —
+    // скролл ломается, часть жестов уходит «в никуда» (эффект «зависания»).
+    this._tbScrollOn = false;
     try { StatsHTML?.close?.(); } catch(_) {}
     try { WardrobeHTML?.close?.(); } catch(_) {}
     // Снимок детей: destroy() удаляет объект из children.getAll(), живой итератор
