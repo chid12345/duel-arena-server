@@ -40,12 +40,14 @@
     const btn = document.getElementById('wb-ultra-btn');
     if (!btn?.classList.contains('ready')) return false;
     _shake();
+    const sc = window.WBHtml._scene;
     for (let i = 0; i < 8; i++) {
       setTimeout(() => {
         const dmg = Math.round(30000 + Math.random() * 20000);
         _spawnBurst(`💜 ${dmg.toLocaleString('ru')}`, '#BF00FF', 22 + Math.random() * 10);
       }, i * 80);
     }
+    for (let i = 0; i < 5; i++) setTimeout(() => sc?._onHit?.(), i * 320);
     _state.ultra = 0;
     const fill = document.getElementById('wb-ultra-fill');
     if (fill) fill.style.width = '0%';
@@ -97,10 +99,12 @@
         clearInterval(iv); ov.remove();
         if (count >= 5) {
           _shake();
+          const sc = window.WBHtml._scene;
           for (let i = 0; i < 5; i++) setTimeout(() => {
             const dmg = Math.round(60000 + Math.random() * 20000);
             _spawnBurst(`⚡ СТАН! ${dmg.toLocaleString('ru')}`, '#FFD700', 24);
           }, i * 100);
+          for (let i = 0; i < 5; i++) setTimeout(() => sc?._onHit?.(), i * 320);
         }
       }
     }, 100);
