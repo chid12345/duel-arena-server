@@ -74,21 +74,21 @@ window.WBLobbyCSS = (() => {
 @keyframes wb-bf{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 
 /* ── Кнопка Участвую ── */
-.wb-join-btn{display:flex;align-items:center;gap:12px;margin:8px 14px 0;padding:13px 16px;
-  border-radius:14px;cursor:pointer;transition:all .2s;
+.wb-join-btn{display:flex;align-items:center;gap:10px;margin:6px 14px 0;padding:9px 14px;
+  border-radius:12px;cursor:pointer;transition:all .2s;
   background:linear-gradient(135deg,rgba(10,0,30,.95),rgba(5,0,20,.95));
   border:1.5px solid rgba(255,0,200,.4);
-  box-shadow:0 0 16px rgba(255,0,200,.08);}
+  box-shadow:0 0 14px rgba(255,0,200,.08);}
 .wb-join-btn.joined{border-color:rgba(0,255,136,.5);background:linear-gradient(135deg,rgba(0,20,10,.95),rgba(0,10,6,.95));
-  box-shadow:0 0 16px rgba(0,255,136,.1);}
+  box-shadow:0 0 14px rgba(0,255,136,.1);}
 .wb-join-btn:active{transform:scale(.98);}
-.wb-join-ico{font-size:26px;flex-shrink:0;}
+.wb-join-ico{font-size:22px;flex-shrink:0;}
 .wb-join-txt{flex:1;min-width:0;}
 .wb-join-main{font-size:12px;font-weight:800;color:#ff88cc;letter-spacing:.3px;}
 .wb-join-btn.joined .wb-join-main{color:#00ff88;}
-.wb-join-sub{font-size:9px;color:#446688;margin-top:3px;}
+.wb-join-sub{font-size:9px;color:#446688;margin-top:2px;}
 .wb-join-btn.joined .wb-join-sub{color:#339966;}
-.wb-join-arr{font-size:16px;color:#440066;flex-shrink:0;}
+.wb-join-arr{font-size:15px;color:#440066;flex-shrink:0;}
 .wb-join-btn.joined .wb-join-arr{color:#00aa44;}
 
 /* ── Enter-кнопка (бой идёт) ── */
@@ -115,17 +115,25 @@ window.WBLobbyCSS = (() => {
 
 /* ── Категории ── */
 .wb-cats{display:flex;margin:8px 14px 0;border-radius:12px;background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,0,200,.15);overflow:hidden;}
-.wb-cat{flex:1;padding:9px 0;text-align:center;font-size:10px;font-weight:800;letter-spacing:.5px;
-  color:#664477;cursor:pointer;transition:all .2s;position:relative;}
-.wb-cat.on{background:linear-gradient(135deg,rgba(255,0,200,.1),rgba(0,100,200,.08));
-  color:#fff;text-shadow:0 0 8px rgba(255,0,200,.5);}
-.wb-cat.on::after{content:"";position:absolute;bottom:0;left:10%;right:10%;height:1px;
+  border:1px solid rgba(255,0,200,.2);overflow:hidden;}
+.wb-cat{flex:1;padding:8px 0 7px;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+.wb-cat-ic{font-size:18px;display:block;filter:grayscale(.7) brightness(.5);}
+.wb-cat-lb{font-size:8px;font-weight:800;letter-spacing:.8px;color:#443355;display:block;margin-top:3px;transition:all .2s;}
+.wb-cat.on .wb-cat-ic{filter:grayscale(0) drop-shadow(0 0 6px rgba(255,0,200,.7));}
+.wb-cat.on .wb-cat-lb{color:#ff88dd;text-shadow:0 0 8px rgba(255,0,200,.6);}
+.wb-cat.on{background:linear-gradient(135deg,rgba(255,0,200,.1),rgba(0,100,200,.06));}
+.wb-cat.on::after{content:"";position:absolute;bottom:0;left:10%;right:10%;height:1.5px;
   background:linear-gradient(90deg,transparent,#ff00cc,transparent);}
 .wb-cp{display:none;}.wb-cp.on{display:block;}
 
 /* ── Карточки бустов (−30% размер) ── */
 .wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px 14px 8px;}
+.wb-bc.last{grid-column:1/-1;display:flex;align-items:center;gap:10px;}
+.wb-bc.last .bc-ic{font-size:16px;margin-bottom:0;}
+.wb-bc.last .bc-nm,.wb-bc.last .bc-vl,.wb-bc.last .bc-desc,.wb-bc.last .bc-pr{display:inline;margin:0;}
+.wb-bc.last .bc-nm{margin-right:6px;}
+.wb-bc.last .bc-vl{margin-right:4px;}
+.wb-bc.last-wrap{display:flex;flex-direction:column;flex:1;gap:1px;}
 .wb-bc{padding:7px 7px 8px;border-radius:11px;cursor:pointer;position:relative;overflow:hidden;
   background:linear-gradient(135deg,rgba(20,0,38,.97),rgba(5,4,18,.97));
   border:1px solid rgba(255,0,200,.25);transition:all .2s;}
