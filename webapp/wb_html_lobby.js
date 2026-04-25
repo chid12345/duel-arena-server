@@ -86,20 +86,23 @@ window.WBHtml = (() => {
   <div class="wb-hdr-icon">💀</div>
   <div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ОБЩИЙ РЕЙД · КАЖДЫЕ 4 ЧАСА</div></div>
 </div>
-<div class="wb-timer-hero">
-  <div class="wb-timer-lbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
-  <div class="wb-cnt" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
-  <div class="wb-insert">▶ INSERT COIN TO PLAY ◀</div>
-</div>
 <div class="wb-boss-card" data-act="boss-card">
-  <div class="wb-boss-card-l">
-    <div class="wb-boss-type-badge">${bossLabel?bossLabel.toUpperCase()+' · ':''}СЛЕДУЮЩИЙ БОСС</div>
-    <div class="wb-boss-card-name">${bossEmoji} ${_esc(bossName)}</div>
-    <div class="wb-boss-card-hint">Нажми — характеристики босса →</div>
+  <div class="wb-bc-top">
+    <div class="wb-timer-lbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+    <div class="wb-cnt" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
+    <div class="wb-insert">▶ INSERT COIN TO PLAY ◀</div>
   </div>
-  <div class="wb-hero-r">
-    <div class="wb-hero-aura"></div>
-    <img class="wb-hero-img" src="bosses/boss3.png" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=wb-hero-emoji>${bossEmoji}</div>')"/>
+  <div class="wb-bc-div"></div>
+  <div class="wb-bc-bot">
+    <div class="wb-boss-card-l">
+      <div class="wb-boss-type-badge">${bossLabel?bossLabel.toUpperCase()+' · ':''}СЛЕДУЮЩИЙ БОСС</div>
+      <div class="wb-boss-card-name">${bossEmoji} ${_esc(bossName)}</div>
+      <div class="wb-boss-card-hint">Нажми — характеристики босса →</div>
+    </div>
+    <div class="wb-hero-r">
+      <div class="wb-hero-aura"></div>
+      <img class="wb-hero-img" src="bosses/boss3.png" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=wb-hero-emoji>${bossEmoji}</div>')"/>
+    </div>
   </div>
 </div>
 <div class="wb-enter" id="wb-enter-btn" data-act="enter">
