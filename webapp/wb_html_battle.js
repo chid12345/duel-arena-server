@@ -135,6 +135,7 @@ ${isDead ? deadHTML : ''}
     });
     root.addEventListener('click', e => {
       const el = e.target.closest('[data-act]'); if (!el) return;
+      window.WBHtml._lastTap = { x: e.clientX, y: e.clientY };
       const act = el.dataset.act;
       if (act === 'hit')        _onHit(root, sc);
       else if (act === 'res')   sc?._resurrect?.(el.dataset.t);
@@ -255,6 +256,8 @@ ${isDead ? deadHTML : ''}
   function addHitLog(dmg, isCrit, tx, ty) {
     const zone = document.getElementById('wb-boss-zone'); if (!zone) return;
     const r = zone.getBoundingClientRect();
+    const lt = window.WBHtml._lastTap;
+    if (tx == null && lt) { tx = lt.x; ty = lt.y; }
     const x = (tx != null ? tx - r.left : r.width/2) + (Math.random()-.5)*60;
     const y = (ty != null ? ty - r.top  : r.height/2) + (Math.random()-.5)*30;
     const el = document.createElement('div');

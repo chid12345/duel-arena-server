@@ -213,6 +213,38 @@ window.WBBattleCSS = (() => {
 .wb-shake{animation:wb-shake .45s ease-in-out;}
 @keyframes wb-shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
 
+/* ── MVP RAID — итоги рейда ── */
+.wb-mvp-ov{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .35s;}
+.wb-mvp-ov.open{opacity:1;pointer-events:all;}
+.wb-mvp{width:100%;max-width:340px;text-align:center;padding:24px 18px;
+  background:radial-gradient(ellipse at center,rgba(40,30,0,.4) 0%,transparent 70%);
+  transform:scale(.9);transition:transform .35s cubic-bezier(.32,1.4,.5,1);}
+.wb-mvp-ov.open .wb-mvp{transform:scale(1);}
+.wb-mvp-bdg{font-size:13px;font-weight:900;letter-spacing:5px;color:#FFD700;
+  text-transform:uppercase;margin-bottom:14px;text-shadow:0 0 20px #FFD700;
+  animation:wb-mvp-shine 1s ease-in-out infinite;}
+@keyframes wb-mvp-shine{0%,100%{text-shadow:0 0 20px #FFD700}50%{text-shadow:0 0 40px #FFD700,0 0 80px rgba(255,215,0,.5)}}
+.wb-mvp-av{width:80px;height:80px;border-radius:50%;margin:0 auto 14px;
+  border:3px solid #FFD700;box-shadow:0 0 30px rgba(255,215,0,.5);
+  display:flex;align-items:center;justify-content:center;font-size:40px;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);}
+.wb-mvp-ov.lose .wb-mvp-av{border-color:#ff4466;box-shadow:0 0 30px rgba(255,68,102,.5);}
+.wb-mvp-ov.lose .wb-mvp-bdg{color:#ff4466;text-shadow:0 0 20px #ff4466;}
+.wb-mvp-name{font-size:24px;font-weight:900;color:#fff;margin-bottom:8px;}
+.wb-mvp-sub{font-size:11px;font-weight:700;letter-spacing:2px;color:#FF0055;
+  text-transform:uppercase;margin-bottom:14px;text-shadow:0 0 10px rgba(255,0,85,.5);}
+.wb-mvp-dmg{font-size:14px;color:rgba(255,255,255,.7);margin-bottom:8px;}
+.wb-mvp-dmg span{color:#00FF9F;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 8px #00FF9F;}
+.wb-mvp-rew{font-size:13px;color:#fff;margin-bottom:6px;font-weight:700;}
+.wb-mvp-chest{font-size:11px;color:#ffdd66;margin-bottom:14px;}
+.wb-mvp-btn{display:block;width:100%;margin-top:18px;padding:14px;border-radius:10px;
+  background:linear-gradient(135deg,#FF0055,#cc0044);border:none;color:#fff;
+  font-size:13px;font-weight:900;letter-spacing:2px;cursor:pointer;
+  box-shadow:0 0 25px rgba(255,0,85,.5);transition:all .15s;}
+.wb-mvp-btn:active{transform:scale(.96);box-shadow:0 0 15px rgba(255,0,85,.7);}
+
 /* ── Тост ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
   background:rgba(10,0,25,.95);border:1px solid rgba(255,0,200,.5);border-radius:10px;

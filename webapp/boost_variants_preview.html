@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Boost Variants Preview</title>
+<style>
+:root {
+  --bg: #050508;
+  --accent: #FF0055;
+  --energy: #00FF9F;
+  --text: #E0E0E0;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --neon-blue: #00BFFF;
+  --neon-purple: #BF00FF;
+  --neon-pink: #FF00CC;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body {
+  width:100%; height:100%;
+  background:#08080f;
+  font-family:'Inter','Montserrat',-apple-system,sans-serif;
+  color:var(--text);
+  overflow:hidden;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+}
+
+/* ── Layout: two phones side by side ── */
+#stage {
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+  gap:24px;
+  padding:16px 12px;
+  height:100%;
+  overflow-y:auto;
+  scrollbar-width:none;
+}
+#stage::-webkit-scrollbar { display:none; }
+
+/* ── Phone wrapper ── */
+.phone {
+  width:340px;
+  min-width:340px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:0;
+}
+
+.phone-label {
+  font-size:10px;
+  letter-spacing:2.5px;
+  font-weight:800;
+  text-transform:uppercase;
+  margin-bottom:8px;
+  padding:5px 14px;
+  border-radius:20px;
+}
+.phone-label.v1 { background:rgba(0,191,255,0.1); border:1px solid rgba(0,191,255,0.3); color:var(--neon-blue); }
+.phone-label.v2 { background:rgba(0,255,159,0.1); border:1px solid rgba(0,255,159,0.3); color:var(--energy); }
+
+.phone-screen {
+  width:340px;
+  background:var(--bg);
+  border-radius:28px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,0.08);
+  box-shadow:0 0 40px rgba(0,0,0,0.5);
+  display:flex;
+  flex-direction:column;
+  position:relative;
+}
+
+/* Scanlines */
+.phone-screen::before {
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:100;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.2) 2px,rgba(0,0,0,0.2) 4px);
+  opacity:0.2; border-radius:28px;
+}
+
+/* ── Shared header ── */
+.ph-header {
+  padding:14px 16px 12px;
+  background:linear-gradient(180deg,rgba(10,5,20,0.98) 0%,rgba(5,5,10,0.9) 100%);
+  border-bottom:1px solid rgba(255,0,204,0.12);
+  display:flex; align-items:center; gap:10px;
+}
+.ph-back { width:28px;height:28px;border-radius:7px;display:grid;place-items:center;background:rgba(255,0,204,0.07);border:1px solid rgba(255,0,204,0.2);font-size:14px;color:var(--neon-pink); }
+.ph-icon { font-size:20px; }
+.ph-title { font-size:13px;font-weight:900;letter-spacing:2px;background:linear-gradient(90deg,#ff00cc,#00e5ff);-webkit-background-clip:text;background-clip:text;color:transparent; }
+.ph-sub { font-size:8px;color:rgba(255,255,255,0.25);letter-spacing:1px; }
+
+/* ── Boss mini strip ── */
+.boss-strip {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 14px;
+  background:linear-gradient(135deg,rgba(20,0,40,0.8),rgba(0,8,28,0.8));
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.boss-emo { font-size:32px; filter:drop-shadow(0 0 10px rgba(255,0,204,0.5)); animation:bf 3s ease-in-out infinite; }
+@keyframes bf{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.boss-info { flex:1; }
+.boss-name { font-size:13px;font-weight:800;color:#fff; }
+.boss-type { font-size:8px;color:rgba(85,204,255,0.6);letter-spacing:1px;margin-top:2px; }
+.boss-timer { text-align:right; }
+.boss-timer-val { font-family:'Courier New',monospace;font-size:18px;font-weight:900;color:var(--neon-blue);text-shadow:0 0 8px var(--neon-blue); }
+.boss-timer-lbl { font-size:7px;color:rgba(255,255,255,0.25);letter-spacing:1px; }
+
+/* ── Section header ── */
+.sec-hdr { display:flex;align-items:center;gap:8px;padding:12px 14px 8px; }
+.sec-line { flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent); }
+.sec-title { font-size:8px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,0.25);white-space:nowrap; }
+
+/* ── Go to battle button ── */
+.go-btn {
+  margin:10px 14px 14px;
+  padding:13px;
+  border-radius:14px;
+  text-align:center;
+  font-size:14px;
+  font-weight:900;
+  letter-spacing:2px;
+  cursor:pointer;
+  border:none;
+  transition:all 0.15s;
+}
+.go-btn:active { transform:scale(0.97); }
+.go-btn.ready {
+  background:linear-gradient(135deg,#FF0055,#FF4400);
+  color:#fff;
+  box-shadow:0 0 20px rgba(255,0,85,0.4),0 4px 20px rgba(255,0,85,0.3);
+  animation:go-pulse 1.5s ease-in-out infinite;
+}
+@keyframes go-pulse{0%,100%{box-shadow:0 0 20px rgba(255,0,85,0.4)}50%{box-shadow:0 0 40px rgba(255,0,85,0.6),0 0 60px rgba(255,0,85,0.2)}}
+.go-btn.disabled {
+  background:rgba(255,255,255,0.05);
+  color:rgba(255,255,255,0.2);
+  border:1px solid rgba(255,255,255,0.06);
+  cursor:not-allowed;
+}
+
+/* ═══════════════════════════════════════
+   ВАРИАНТ 1: Слоты экипировки
+═══════════════════════════════════════ */
+
+/* Слоты */
+#v1-slots {
+  padding:0 14px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
+}
+
+.slot {
+  border-radius:12px;
+  aspect-ratio:1;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  cursor:pointer;
+  transition:all 0.2s;
+  position:relative;
+  overflow:hidden;
+}
+
+.slot.empty {
+  background:rgba(255,255,255,0.02);
+  border:1.5px dashed rgba(255,255,255,0.1);
+}
+.slot.empty:hover { border-color:rgba(255,255,255,0.2); background:rgba(255,255,255,0.04); }
+
+.slot.filled {
+  background:rgba(0,255,159,0.06);
+  border:1.5px solid rgba(0,255,159,0.35);
+  box-shadow:0 0 12px rgba(0,255,159,0.1);
+  animation:slot-glow 2s ease-in-out infinite;
+}
+@keyframes slot-glow{0%,100%{box-shadow:0 0 10px rgba(0,255,159,0.1)}50%{box-shadow:0 0 20px rgba(0,255,159,0.25)}}
+
+.slot.filled::before {
+  content:''; position:absolute; top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,159,0.4),transparent);
+}
+
+.slot-num {
+  position:absolute; top:5px; left:7px;
+  font-size:7px; color:rgba(255,255,255,0.2); font-weight:700; letter-spacing:1px;
+}
+
+.slot-icon { font-size:24px; line-height:1; }
+.slot.empty .slot-icon { font-size:20px; opacity:0.2; }
+
+.slot-val {
+  font-size:10px; font-weight:900; font-family:'Courier New',monospace;
+  color:var(--energy); text-shadow:0 0 6px rgba(0,255,159,0.5);
+}
+.slot.empty .slot-val { display:none; }
+
+.slot-name {
+  font-size:7px; letter-spacing:1px; color:rgba(255,255,255,0.35); text-transform:uppercase;
+}
+.slot.empty .slot-name { color:rgba(255,255,255,0.15); }
+
+.slot-remove {
+  position:absolute; top:4px; right:5px;
+  font-size:9px; color:rgba(255,80,80,0.5);
+  display:none;
+}
+.slot.filled .slot-remove { display:block; }
+
+/* Inventory grid for v1 */
+#v1-inv {
+  padding:0 14px;
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:7px;
+}
+
+.inv-card {
+  border-radius:10px;
+  padding:10px 10px 8px;
+  cursor:pointer;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+  display:flex; align-items:center; gap:9px;
+  transition:all 0.12s;
+  position:relative;
+}
+.inv-card:hover { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); }
+.inv-card:active { transform:scale(0.96); }
+.inv-card.used { opacity:0.3; pointer-events:none; }
+.inv-card.used::after { content:'В слоте'; position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:8px;color:rgba(0,255,159,0.6);letter-spacing:1px;background:rgba(0,0,0,0.3);border-radius:10px; }
+
+.ic-icon { font-size:20px; flex-shrink:0; }
+.ic-text { flex:1; min-width:0; }
+.ic-name { font-size:7.5px;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,0.35); }
+.ic-val { font-size:14px;font-weight:900;color:var(--energy);font-family:'Courier New',monospace; }
+.ic-own { font-size:8px;color:rgba(255,255,255,0.2); }
+
+/* V1 hint */
+#v1-hint {
+  margin:6px 14px 0;
+  padding:7px 12px;
+  border-radius:8px;
+  background:rgba(0,191,255,0.05);
+  border:1px solid rgba(0,191,255,0.1);
+  font-size:9px;
+  color:rgba(0,191,255,0.5);
+  text-align:center;
+  line-height:1.5;
+}
+
+/* ═══════════════════════════════════════
+   ВАРИАНТ 2: Авто-применение
+═══════════════════════════════════════ */
+
+/* Список свитков для авто */
+#v2-scrolls {
+  padding:0 14px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.auto-row {
+  display:flex; align-items:center; gap:10px;
+  padding:9px 12px;
+  border-radius:10px;
+  background:var(--glass);
+  border:1px solid var(--glass-border);
+}
+.ar-icon { font-size:20px; flex-shrink:0; }
+.ar-text { flex:1; }
+.ar-name { font-size:10px;font-weight:700;color:rgba(255,255,255,0.6); }
+.ar-val { font-size:12px;font-weight:900;color:var(--energy);font-family:'Courier New',monospace;text-shadow:0 0 6px rgba(0,255,159,0.4); }
+.ar-own { font-size:8px;color:rgba(255,255,255,0.25);margin-top:1px; }
+.ar-badge {
+  font-size:8px; padding:2px 7px; border-radius:5px; font-weight:700; letter-spacing:0.5px;
+  background:rgba(0,255,159,0.08); border:1px solid rgba(0,255,159,0.2); color:rgba(0,255,159,0.6);
+  white-space:nowrap;
+}
+.ar-badge.zero {
+  background:rgba(255,255,255,0.03); border-color:rgba(255,255,255,0.06); color:rgba(255,255,255,0.2);
+}
+
+/* V2 info box */
+#v2-info {
+  margin:8px 14px 0;
+  padding:10px 12px;
+  border-radius:10px;
+  background:rgba(0,255,159,0.04);
+  border:1px solid rgba(0,255,159,0.12);
+  display:flex; gap:10px; align-items:flex-start;
+}
+#v2-info-icon { font-size:18px; flex-shrink:0; margin-top:1px; }
+#v2-info-text { font-size:9px; color:rgba(255,255,255,0.35); line-height:1.6; }
+#v2-info-text b { color:rgba(0,255,159,0.7); }
+
+/* ── BATTLE START OVERLAY (V2) ── */
+#v2-battle-overlay {
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.92);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  z-index:200;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s;
+  border-radius:28px;
+}
+#v2-battle-overlay.active {
+  opacity:1;
+  pointer-events:all;
+}
+
+#overlay-title {
+  font-size:10px; letter-spacing:3px; color:rgba(255,255,255,0.3); text-transform:uppercase; margin-bottom:4px;
+}
+
+.buff-item {
+  display:flex; align-items:center; gap:12px;
+  padding:10px 20px;
+  border-radius:12px;
+  width:260px;
+  background:rgba(255,255,255,0.03);
+  border:1px solid rgba(255,255,255,0.05);
+  opacity:0;
+  transform:translateX(-20px);
+  transition:all 0.35s ease;
+}
+.buff-item.appear {
+  opacity:1; transform:translateX(0);
+}
+.buff-item.active {
+  background:rgba(0,255,159,0.08);
+  border-color:rgba(0,255,159,0.3);
+  box-shadow:0 0 15px rgba(0,255,159,0.08);
+}
+
+.bi-icon { font-size:22px; }
+.bi-text { flex:1; }
+.bi-name { font-size:10px;color:rgba(255,255,255,0.5); }
+.bi-val { font-size:15px;font-weight:900;color:var(--energy);font-family:'Courier New',monospace; }
+.bi-check {
+  font-size:16px;
+  opacity:0;
+  transition:opacity 0.3s;
+  color:var(--energy);
+}
+.buff-item.active .bi-check { opacity:1; }
+
+#overlay-launch {
+  margin-top:8px;
+  padding:10px 28px;
+  border-radius:10px;
+  background:linear-gradient(135deg,#FF0055,#FF4400);
+  color:#fff;
+  font-size:13px;
+  font-weight:900;
+  letter-spacing:2px;
+  cursor:pointer;
+  opacity:0;
+  transition:opacity 0.4s;
+  border:none;
+  box-shadow:0 0 20px rgba(255,0,85,0.4);
+}
+#overlay-launch.show { opacity:1; }
+
+/* ── V1 EQUIP OVERLAY ── */
+#v1-equip-overlay {
+  position:absolute;
+  inset:0;
+  background:rgba(0,0,0,0.85);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  z-index:200;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 0.3s;
+  border-radius:28px;
+}
+#v1-equip-overlay.active { opacity:1; pointer-events:all; }
+#v1-eq-title { font-size:11px;letter-spacing:3px;color:rgba(255,255,255,0.3);text-transform:uppercase; }
+#v1-eq-icon { font-size:52px; animation:eq-pop 0.4s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+@keyframes eq-pop { 0%{transform:scale(0.5);opacity:0} 100%{transform:scale(1);opacity:1} }
+#v1-eq-val { font-size:28px;font-weight:900;color:var(--energy);font-family:'Courier New',monospace;text-shadow:0 0 20px var(--energy); }
+#v1-eq-sub { font-size:10px;color:rgba(255,255,255,0.3);letter-spacing:1px; }
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <!-- ══════════ ВАРИАНТ 1 ══════════ -->
+  <div class="phone">
+    <div class="phone-label v1">Вариант 1 — Слоты</div>
+    <div class="phone-screen" style="min-height:620px;">
+
+      <!-- V1 Equip overlay -->
+      <div id="v1-equip-overlay">
+        <div id="v1-eq-title">ЭКИПИРОВАНО</div>
+        <div id="v1-eq-icon">⚔️</div>
+        <div id="v1-eq-val">+25%</div>
+        <div id="v1-eq-sub">АКТИВИРУЕТСЯ В БОЮ</div>
+      </div>
+
+      <div class="ph-header">
+        <div class="ph-back">‹</div>
+        <div class="ph-icon">💀</div>
+        <div>
+          <div class="ph-title">ПОДГОТОВКА</div>
+          <div class="ph-sub">СОБЕРИ НАБОР ДО БОЯ</div>
+        </div>
+      </div>
+
+      <div class="boss-strip">
+        <div class="boss-emo">🦑</div>
+        <div class="boss-info">
+          <div class="boss-name">Кракен Льда</div>
+          <div class="boss-type">❄️ ЛЕДЯНОЙ · СЛАБОСТЬ: ОГОНЬ</div>
+        </div>
+        <div class="boss-timer">
+          <div class="boss-timer-val" id="v1-timer">01:42</div>
+          <div class="boss-timer-lbl">до боя</div>
+        </div>
+      </div>
+
+      <!-- Slots -->
+      <div class="sec-hdr">
+        <div class="sec-title">⚡ АКТИВНЫЕ СЛОТЫ</div>
+        <div class="sec-line"></div>
+        <div style="font-size:8px;color:rgba(255,255,255,0.2);" id="v1-slot-count">0/3</div>
+      </div>
+
+      <div id="v1-slots">
+        <div class="slot empty" id="slot-0" data-idx="0">
+          <div class="slot-num">01</div>
+          <div class="slot-icon">＋</div>
+          <div class="slot-name">Пусто</div>
+          <div class="slot-val"></div>
+          <div class="slot-remove">✕</div>
+        </div>
+        <div class="slot empty" id="slot-1" data-idx="1">
+          <div class="slot-num">02</div>
+          <div class="slot-icon">＋</div>
+          <div class="slot-name">Пусто</div>
+          <div class="slot-val"></div>
+          <div class="slot-remove">✕</div>
+        </div>
+        <div class="slot empty" id="slot-2" data-idx="2">
+          <div class="slot-num">03</div>
+          <div class="slot-icon">＋</div>
+          <div class="slot-name">Пусто</div>
+          <div class="slot-val"></div>
+          <div class="slot-remove">✕</div>
+        </div>
+      </div>
+
+      <div id="v1-hint">👆 Нажми свиток ниже — он встанет в слот</div>
+
+      <!-- Inventory -->
+      <div class="sec-hdr" style="padding-top:10px;">
+        <div class="sec-title">МОИ СВИТКИ</div>
+        <div class="sec-line"></div>
+      </div>
+
+      <div id="v1-inv">
+        <div class="inv-card" data-icon="⚔️" data-name="УРОН" data-val="+25%" data-own="2">
+          <div class="ic-icon">⚔️</div>
+          <div class="ic-text">
+            <div class="ic-name">УРОН</div>
+            <div class="ic-val">+25%</div>
+            <div class="ic-own">×2 в запасе</div>
+          </div>
+        </div>
+        <div class="inv-card" data-icon="🐲" data-name="УРОН" data-val="+10%" data-own="0">
+          <div class="ic-icon">🐲</div>
+          <div class="ic-text">
+            <div class="ic-name">УРОН</div>
+            <div class="ic-val">+10%</div>
+            <div class="ic-own">×0 в запасе</div>
+          </div>
+        </div>
+        <div class="inv-card" data-icon="🛡️" data-name="ЗАЩИТА" data-val="+20%" data-own="1">
+          <div class="ic-icon">🛡️</div>
+          <div class="ic-text">
+            <div class="ic-name">ЗАЩИТА</div>
+            <div class="ic-val">+20%</div>
+            <div class="ic-own">×1 в запасе</div>
+          </div>
+        </div>
+        <div class="inv-card" data-icon="🎯" data-name="КРИТ" data-val="+10%" data-own="1">
+          <div class="ic-icon">🎯</div>
+          <div class="ic-text">
+            <div class="ic-name">КРИТ</div>
+            <div class="ic-val">+10%</div>
+            <div class="ic-own">×1 в запасе</div>
+          </div>
+        </div>
+        <div class="inv-card" data-icon="💨" data-name="УВОРОТ" data-val="+10%" data-own="0">
+          <div class="ic-icon">💨</div>
+          <div class="ic-text">
+            <div class="ic-name">УВОРОТ</div>
+            <div class="ic-val">+10%</div>
+            <div class="ic-own">×0 в запасе</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="go-btn disabled" id="v1-go-btn" style="margin-top:10px;">⚔️ В БОЙ</button>
+
+    </div>
+  </div>
+
+  <!-- ══════════ ВАРИАНТ 2 ══════════ -->
+  <div class="phone">
+    <div class="phone-label v2">Вариант 2 — Авто</div>
+    <div class="phone-screen" style="min-height:620px;">
+
+      <!-- V2 Battle overlay -->
+      <div id="v2-battle-overlay">
+        <div id="overlay-title">⚡ БУСТЫ АКТИВИРУЮТСЯ ⚡</div>
+        <div id="buff-list"></div>
+        <button id="overlay-launch">⚔️ НАЧАТЬ БОЙ!</button>
+      </div>
+
+      <div class="ph-header">
+        <div class="ph-back">‹</div>
+        <div class="ph-icon">💀</div>
+        <div>
+          <div class="ph-title">ГОТОВНОСТЬ</div>
+          <div class="ph-sub">ВСЁ ПРИМЕНИТСЯ АВТОМАТИЧЕСКИ</div>
+        </div>
+      </div>
+
+      <div class="boss-strip">
+        <div class="boss-emo">🦑</div>
+        <div class="boss-info">
+          <div class="boss-name">Кракен Льда</div>
+          <div class="boss-type">❄️ ЛЕДЯНОЙ · СЛАБОСТЬ: ОГОНЬ</div>
+        </div>
+        <div class="boss-timer">
+          <div class="boss-timer-val" id="v2-timer">01:42</div>
+          <div class="boss-timer-lbl">до боя</div>
+        </div>
+      </div>
+
+      <!-- Info box -->
+      <div id="v2-info">
+        <div id="v2-info-icon">🤖</div>
+        <div id="v2-info-text">
+          Все свитки из твоего инвентаря <b>применяются автоматически</b> при старте боя.
+          Свитки с ×0 — недоступны. Купи их ниже.
+        </div>
+      </div>
+
+      <!-- Auto scroll list -->
+      <div class="sec-hdr">
+        <div class="sec-title">⚡ ПРИМЕНИТСЯ В БОЮ</div>
+        <div class="sec-line"></div>
+      </div>
+
+      <div id="v2-scrolls">
+        <div class="auto-row">
+          <div class="ar-icon">⚔️</div>
+          <div class="ar-text">
+            <div class="ar-name">Свиток урона</div>
+            <div class="ar-val">+25%</div>
+          </div>
+          <div class="ar-own">×2</div>
+          <div class="ar-badge">ГОТОВ</div>
+        </div>
+        <div class="auto-row">
+          <div class="ar-icon">🛡️</div>
+          <div class="ar-text">
+            <div class="ar-name">Свиток защиты</div>
+            <div class="ar-val">+20%</div>
+          </div>
+          <div class="ar-own">×1</div>
+          <div class="ar-badge">ГОТОВ</div>
+        </div>
+        <div class="auto-row">
+          <div class="ar-icon">🎯</div>
+          <div class="ar-text">
+            <div class="ar-name">Свиток крита</div>
+            <div class="ar-val">+10%</div>
+          </div>
+          <div class="ar-own">×1</div>
+          <div class="ar-badge">ГОТОВ</div>
+        </div>
+        <div class="auto-row" style="opacity:0.4;">
+          <div class="ar-icon">🐲</div>
+          <div class="ar-text">
+            <div class="ar-name">Свиток урона</div>
+            <div class="ar-val" style="color:rgba(255,255,255,0.3);">+10%</div>
+          </div>
+          <div class="ar-own">×0</div>
+          <div class="ar-badge zero">НЕТ</div>
+        </div>
+        <div class="auto-row" style="opacity:0.4;">
+          <div class="ar-icon">💨</div>
+          <div class="ar-text">
+            <div class="ar-name">Свиток уворота</div>
+            <div class="ar-val" style="color:rgba(255,255,255,0.3);">+10%</div>
+          </div>
+          <div class="ar-own">×0</div>
+          <div class="ar-badge zero">НЕТ</div>
+        </div>
+      </div>
+
+      <!-- Total bonus -->
+      <div style="margin:8px 14px 0;padding:10px 14px;border-radius:10px;background:rgba(255,0,85,0.05);border:1px solid rgba(255,0,85,0.15);display:flex;align-items:center;gap:10px;">
+        <div style="font-size:9px;color:rgba(255,255,255,0.3);flex:1;">ИТОГО БОНУС К УРОНУ:</div>
+        <div style="font-family:'Courier New',monospace;font-size:18px;font-weight:900;color:var(--accent);text-shadow:0 0 10px var(--accent);">+55%</div>
+      </div>
+
+      <button class="go-btn ready" id="v2-go-btn" style="margin-top:6px;">⚔️ В БОЙ</button>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Shared timer ──
+let secs = 1*3600 + 42*60;
+function fmtTime(s) {
+  const h=Math.floor(s/3600), m=Math.floor((s%3600)/60), ss=s%60;
+  return h>0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(ss).padStart(2,'0')}`;
+}
+setInterval(() => {
+  secs = Math.max(0, secs-1);
+  document.getElementById('v1-timer').textContent = fmtTime(secs);
+  document.getElementById('v2-timer').textContent = fmtTime(secs);
+}, 1000);
+
+// ═══════════════════════════
+// ВАРИАНТ 1: Слоты
+// ═══════════════════════════
+const slots = [null, null, null];
+const slotEls = [
+  document.getElementById('slot-0'),
+  document.getElementById('slot-1'),
+  document.getElementById('slot-2'),
+];
+const goBtnV1 = document.getElementById('v1-go-btn');
+
+function updateSlotCount() {
+  const filled = slots.filter(s=>s!==null).length;
+  document.getElementById('v1-slot-count').textContent = `${filled}/3`;
+  goBtnV1.className = filled > 0 ? 'go-btn ready' : 'go-btn disabled';
+}
+
+function renderSlot(idx) {
+  const el = slotEls[idx];
+  const data = slots[idx];
+  if (!data) {
+    el.className = 'slot empty';
+    el.querySelector('.slot-icon').textContent = '＋';
+    el.querySelector('.slot-name').textContent = 'Пусто';
+    el.querySelector('.slot-val').textContent = '';
+  } else {
+    el.className = 'slot filled';
+    el.querySelector('.slot-icon').textContent = data.icon;
+    el.querySelector('.slot-name').textContent = data.name;
+    el.querySelector('.slot-val').textContent = data.val;
+  }
+}
+
+// Slot click → remove
+slotEls.forEach((el, idx) => {
+  el.addEventListener('click', () => {
+    if (!slots[idx]) return;
+    // find the inv-card and un-used it
+    document.querySelectorAll('#v1-inv .inv-card').forEach(card => {
+      if (card.dataset.icon === slots[idx].icon && card.dataset.val === slots[idx].val) {
+        card.classList.remove('used');
+      }
+    });
+    slots[idx] = null;
+    renderSlot(idx);
+    updateSlotCount();
+  });
+});
+
+// Inv card click → put in slot
+document.querySelectorAll('#v1-inv .inv-card').forEach(card => {
+  card.addEventListener('click', () => {
+    if (card.classList.contains('used')) return;
+    const own = parseInt(card.dataset.own);
+    if (own === 0) return; // no stock
+
+    // Find empty slot
+    const emptyIdx = slots.findIndex(s => s === null);
+    if (emptyIdx === -1) return; // no empty slots
+
+    const data = { icon: card.dataset.icon, name: card.dataset.name, val: card.dataset.val };
+    slots[emptyIdx] = data;
+    card.classList.add('used');
+    renderSlot(emptyIdx);
+    updateSlotCount();
+
+    // Show equip flash overlay
+    const ov = document.getElementById('v1-equip-overlay');
+    document.getElementById('v1-eq-icon').textContent = data.icon;
+    document.getElementById('v1-eq-val').textContent = data.val;
+    ov.classList.add('active');
+    setTimeout(() => ov.classList.remove('active'), 900);
+  });
+});
+
+// V1 Go btn
+goBtnV1.addEventListener('click', () => {
+  if (goBtnV1.classList.contains('disabled')) return;
+  // Brief flash
+  goBtnV1.textContent = '✅ НАЧИНАЕМ...';
+  setTimeout(() => { goBtnV1.textContent = '⚔️ В БОЙ'; }, 1500);
+});
+
+// ═══════════════════════════
+// ВАРИАНТ 2: Авто-применение
+// ═══════════════════════════
+const buffs = [
+  { icon:'⚔️', name:'Свиток урона',   val:'+25%' },
+  { icon:'🛡️', name:'Свиток защиты', val:'+20%' },
+  { icon:'🎯', name:'Свиток крита',   val:'+10%' },
+];
+
+document.getElementById('v2-go-btn').addEventListener('click', () => {
+  const overlay = document.getElementById('v2-battle-overlay');
+  const buffList = document.getElementById('buff-list');
+  const launchBtn = document.getElementById('overlay-launch');
+
+  // Build buff items
+  buffList.innerHTML = '';
+  buffs.forEach(b => {
+    const div = document.createElement('div');
+    div.className = 'buff-item';
+    div.innerHTML = `
+      <div class="bi-icon">${b.icon}</div>
+      <div class="bi-text">
+        <div class="bi-name">${b.name}</div>
+        <div class="bi-val">${b.val}</div>
+      </div>
+      <div class="bi-check">✓</div>
+    `;
+    buffList.appendChild(div);
+  });
+
+  overlay.classList.add('active');
+  launchBtn.classList.remove('show');
+
+  // Animate buff items appearing one by one
+  const items = buffList.querySelectorAll('.buff-item');
+  items.forEach((item, i) => {
+    setTimeout(() => {
+      item.classList.add('appear');
+      setTimeout(() => item.classList.add('active'), 200);
+    }, i * 350);
+  });
+
+  // Show launch button after all buffs shown
+  setTimeout(() => {
+    launchBtn.classList.add('show');
+  }, buffs.length * 350 + 400);
+});
+
+document.getElementById('overlay-launch').addEventListener('click', () => {
+  document.getElementById('v2-battle-overlay').classList.remove('active');
+  // Reset for demo
+  document.getElementById('buff-list').innerHTML = '';
+  document.getElementById('overlay-launch').classList.remove('show');
+  document.querySelectorAll('.buff-item').forEach(i => {
+    i.classList.remove('appear','active');
+  });
+});
+</script>
+</body>
+</html>

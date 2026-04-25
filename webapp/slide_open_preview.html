@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Slide Up Preview</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body {
+  width:100%; height:100%; background:#08080f;
+  font-family:'Inter',-apple-system,sans-serif;
+  color:#e0e0e0; overflow:hidden;
+  -webkit-tap-highlight-color:transparent; user-select:none;
+}
+
+#phone { display:flex; justify-content:center; align-items:center; width:100%; height:100%; }
+#app   { position:relative; width:390px; height:844px; overflow:hidden; border-radius:40px;
+         box-shadow:0 0 60px rgba(0,191,255,0.1); }
+
+/* ── Игровой фон ── */
+#game-bg {
+  position:absolute; inset:0;
+  background:radial-gradient(ellipse at 50% 30%,#1a0a2e 0%,#050510 60%),#050510;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:14px;
+}
+#game-bg::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background-image:
+    radial-gradient(1px 1px at 20% 30%,rgba(255,255,255,.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 60% 70%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 80% 20%,rgba(255,255,255,.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 40% 80%,rgba(255,255,255,.2) 0%,transparent 100%),
+    radial-gradient(2px 2px at 10% 60%,rgba(255,255,255,.3) 0%,transparent 100%),
+    radial-gradient(2px 2px at 90% 40%,rgba(255,255,255,.3) 0%,transparent 100%);
+}
+.game-label { font-size:11px; letter-spacing:2px; color:rgba(255,255,255,.15); text-transform:uppercase; }
+.game-menu  { display:flex; flex-direction:column; align-items:center; gap:10px; width:280px; }
+.gmb {
+  width:100%; padding:14px; border-radius:12px; text-align:center;
+  font-size:13px; font-weight:700; letter-spacing:1px; cursor:pointer;
+  background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+  color:rgba(255,255,255,.4); transition:all .15s;
+}
+.gmb:active { transform:scale(.97); }
+.gmb.boss {
+  background:linear-gradient(135deg,rgba(255,0,85,.12),rgba(255,68,0,.08));
+  border-color:rgba(255,0,85,.35); color:rgba(255,200,200,.8);
+  animation:bpulse 2s ease-in-out infinite;
+}
+@keyframes bpulse{0%,100%{box-shadow:0 0 18px rgba(255,0,85,.08)}50%{box-shadow:0 0 32px rgba(255,0,85,.22)}}
+
+/* ── Backdrop ── */
+#backdrop {
+  position:absolute; inset:0;
+  background:rgba(0,0,0,0); backdrop-filter:blur(0px); -webkit-backdrop-filter:blur(0px);
+  transition:background .4s ease,backdrop-filter .4s,-webkit-backdrop-filter .4s;
+  pointer-events:none; z-index:10;
+}
+#backdrop.active {
+  background:rgba(0,0,0,.55); backdrop-filter:blur(4px); -webkit-backdrop-filter:blur(4px);
+  pointer-events:all;
+}
+
+/* ── Lobby sheet ── */
+#lobby {
+  position:absolute; left:0; right:0; bottom:0; height:90%;
+  background:linear-gradient(180deg,#09070f 0%,#050508 100%);
+  border-radius:24px 24px 0 0;
+  border-top:1px solid rgba(255,0,204,.22);
+  box-shadow:0 -20px 60px rgba(0,0,0,.8),0 -2px 0 rgba(255,0,204,.12);
+  transform:translateY(100%);
+  transition:transform .45s cubic-bezier(.34,1.1,.64,1);
+  z-index:20; display:flex; flex-direction:column; overflow:hidden;
+}
+#lobby.open { transform:translateY(0); }
+#lobby::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.18) 2px,rgba(0,0,0,.18) 4px);
+  opacity:.15; border-radius:24px 24px 0 0;
+}
+
+#drag-handle {
+  width:36px; height:4px; border-radius:2px;
+  background:rgba(255,255,255,.1); margin:10px auto 0; flex-shrink:0;
+}
+
+/* ── Header ── */
+#lhdr {
+  padding:10px 16px 10px; border-bottom:1px solid rgba(255,0,204,.1);
+  display:flex; align-items:center; gap:10px; flex-shrink:0; position:relative; z-index:1;
+  background:linear-gradient(180deg,rgba(15,5,25,.98) 0%,rgba(8,6,15,.9) 100%);
+}
+#lclose {
+  width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+  background:rgba(255,0,204,.07); border:1px solid rgba(255,0,204,.2);
+  font-size:14px; color:#ff00cc; cursor:pointer; flex-shrink:0;
+}
+#licon {
+  width:36px; height:36px; border-radius:10px; display:grid; place-items:center; font-size:20px;
+  background:linear-gradient(135deg,#1a0033,#002a30);
+  border:1px solid #ff00cc; box-shadow:0 0 14px rgba(255,0,204,.5);
+  animation:ipulse 3s ease-in-out infinite; flex-shrink:0;
+}
+@keyframes ipulse{0%,100%{box-shadow:0 0 12px rgba(255,0,204,.4)}50%{box-shadow:0 0 24px rgba(255,0,204,.8)}}
+#ltitle {
+  font-size:14px; font-weight:900; letter-spacing:2px;
+  background:linear-gradient(90deg,#ff00cc,#00e5ff);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+#lsub { font-size:8px; color:rgba(0,229,255,.45); letter-spacing:1.5px; margin-top:2px; }
+#llive {
+  margin-left:auto; display:flex; align-items:center; gap:4px;
+  background:rgba(0,255,159,.06); border:1px solid rgba(0,255,159,.2); border-radius:6px; padding:4px 8px;
+}
+.ldot { width:5px; height:5px; border-radius:50%; background:#00FF9F; box-shadow:0 0 5px #00FF9F; animation:blink 1s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+#livenum { font-family:'Courier New',monospace; font-size:11px; font-weight:700; color:#00FF9F; }
+
+/* ── Scroll body ── */
+#lbody {
+  flex:1; overflow-y:auto; overflow-x:hidden; display:flex; flex-direction:column;
+  scrollbar-width:none; position:relative; z-index:1;
+}
+#lbody::-webkit-scrollbar { display:none; }
+
+/* ── Boss card ── */
+#bcard {
+  margin:10px 14px 0; border-radius:16px; overflow:hidden;
+  display:flex; align-items:stretch; cursor:pointer; position:relative;
+  background:linear-gradient(135deg,rgba(20,0,40,.97),rgba(0,8,28,.97));
+  border:1px solid rgba(255,0,204,.35);
+  animation:bglow 2.5s ease-in-out infinite;
+}
+@keyframes bglow{
+  0%,100%{box-shadow:0 0 14px rgba(255,0,204,.1);border-color:rgba(255,0,204,.3)}
+  50%{box-shadow:0 0 34px rgba(255,0,204,.4);border-color:rgba(255,0,204,.7)}
+}
+#bcard::before { content:''; position:absolute; top:0;left:0;right:0;height:1px; background:linear-gradient(90deg,transparent,rgba(255,0,204,.6),transparent); }
+#bcl { flex:1; padding:12px 8px 12px 14px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; }
+.btlbl { font-size:8px; font-weight:800; letter-spacing:2px; color:#cc44ff; margin-bottom:3px; }
+#btval {
+  font-size:30px; font-weight:900; letter-spacing:2px; font-family:'Courier New',monospace;
+  background:linear-gradient(180deg,#00ffee,#00aacc); -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:tglow 1s ease-in-out infinite;
+}
+@keyframes tglow{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
+.btsub { font-size:6px; letter-spacing:2px; color:#ff00cc; opacity:.4; margin-top:2px; animation:blink 1.2s step-end infinite; }
+.btype { font-size:8px; font-weight:800; letter-spacing:2px; color:#ff00cc; margin-bottom:3px; }
+.bname { font-size:14px; font-weight:900; margin-bottom:3px; background:linear-gradient(90deg,#fff,#ff88cc); -webkit-background-clip:text; background-clip:text; color:transparent; }
+.bhint { font-size:8px; color:rgba(255,255,255,.3); }
+#bcr {
+  width:82px; flex-shrink:0; display:flex; flex-direction:column; overflow:hidden;
+  border-radius:0 15px 15px 0; border-left:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg,rgba(5,20,60,.97),rgba(3,10,30,.97));
+}
+.bcrt { padding:5px 4px 4px; text-align:center; font-size:7px; font-weight:900; letter-spacing:1.5px; color:#55ccff; border-bottom:1px solid rgba(255,255,255,.07); }
+.bcrem { flex:1; display:flex; align-items:center; justify-content:center; padding:6px 0; }
+#bemo { font-size:44px; line-height:1; animation:fl 3s ease-in-out infinite; filter:drop-shadow(0 0 14px rgba(85,204,255,.6)); }
+@keyframes fl{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.bcrf { padding:5px 0; text-align:center; font-size:6px; font-weight:800; letter-spacing:2px; color:rgba(255,255,255,.2); border-top:1px solid rgba(255,255,255,.06); background:rgba(0,0,0,.2); }
+
+/* ── Prize strip ── */
+#prize {
+  margin:8px 14px 0; padding:10px 14px; border-radius:12px;
+  background:rgba(255,215,0,.04); border:1px solid rgba(255,215,0,.1);
+  display:flex; align-items:center; gap:12px;
+}
+.pz-left { flex:1; }
+.pz-lbl { font-size:8px; letter-spacing:2px; color:rgba(255,215,0,.4); margin-bottom:3px; }
+.pz-val { font-size:19px; font-weight:900; font-family:'Courier New',monospace; color:#FFD700; text-shadow:0 0 10px rgba(255,215,0,.4); }
+.pz-sub { font-size:8px; color:rgba(255,215,0,.3); margin-top:2px; }
+.pz-right { text-align:right; }
+.pz-cnt { font-family:'Courier New',monospace; font-size:20px; font-weight:900; color:#00BFFF; text-shadow:0 0 8px #00BFFF; }
+.pz-lbl2 { font-size:7px; color:rgba(0,191,255,.4); letter-spacing:1px; }
+
+/* ── Join ── */
+#join {
+  margin:8px 14px 0; padding:12px 16px; border-radius:14px; cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+  background:linear-gradient(135deg,rgba(255,0,85,.1),rgba(255,68,0,.07));
+  border:1.5px solid rgba(255,0,85,.35);
+  animation:jpulse 2s ease-in-out infinite; transition:all .15s;
+}
+@keyframes jpulse{0%,100%{box-shadow:0 0 16px rgba(255,0,85,.07)}50%{box-shadow:0 0 30px rgba(255,0,85,.18)}}
+#join:active { transform:scale(.97); }
+#join.on { background:linear-gradient(135deg,rgba(0,255,136,.08),rgba(0,200,80,.05)); border-color:rgba(0,255,136,.3); animation:none; }
+.jico { font-size:22px; flex-shrink:0; }
+.jtxt { flex:1; }
+.jmain { font-size:13px; font-weight:800; color:#FF0055; }
+#join.on .jmain { color:#00FF9F; }
+.jsub  { font-size:9px; color:rgba(255,255,255,.25); margin-top:2px; }
+.jarr  { font-size:20px; color:rgba(255,0,85,.4); font-weight:700; }
+#join.on .jarr { color:rgba(0,255,136,.5); }
+
+/* ── Section header ── */
+.shdr { display:flex; align-items:center; gap:8px; padding:12px 14px 8px; }
+.sline { flex:1; height:1px; background:linear-gradient(90deg,rgba(255,255,255,.08),transparent); }
+.stitle { font-size:8px; font-weight:800; letter-spacing:2.5px; color:rgba(255,255,255,.25); white-space:nowrap; }
+
+/* ── Shop grid ── */
+#shop { padding:0 14px; display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+.sc {
+  border-radius:12px; padding:12px 12px 10px; cursor:pointer; position:relative;
+  background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07);
+  display:flex; flex-direction:column; gap:6px;
+  transition:all .15s; overflow:hidden;
+}
+.sc::before { content:''; position:absolute; top:0;left:0;right:0;height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent); }
+.sc:not(.bought):hover  { border-color:rgba(255,255,255,.15); background:rgba(255,255,255,.05); }
+.sc:not(.bought):active { transform:scale(.96); }
+
+/* bought state */
+.sc.bought {
+  background:rgba(0,255,159,.04);
+  border-color:rgba(0,255,159,.25);
+  pointer-events:none;
+}
+.sc.bought::after {
+  content:''; position:absolute; top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,255,159,.4),transparent);
+}
+
+.sc-top { display:flex; align-items:flex-start; justify-content:space-between; }
+.sc-icon { font-size:22px; line-height:1; }
+.sc-own {
+  font-size:8px; padding:2px 6px; border-radius:4px;
+  background:rgba(0,191,255,.08); border:1px solid rgba(0,191,255,.2); color:rgba(0,191,255,.6);
+}
+.sc.bought .sc-own { display:none; }
+
+.sc-name { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.35); }
+.sc-val  { font-size:20px; font-weight:900; font-family:'Courier New',monospace; color:#00FF9F; text-shadow:0 0 8px rgba(0,255,159,.4); }
+.sc.bought .sc-val { color:rgba(0,255,159,.5); }
+
+/* buy button */
+.sc-buy {
+  margin-top:2px; padding:6px; border-radius:8px; text-align:center;
+  font-size:10px; font-weight:800; letter-spacing:.5px;
+  background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.5); transition:all .15s;
+}
+.sc:not(.bought):hover .sc-buy  { background:rgba(255,215,0,.1); border-color:rgba(255,215,0,.3); color:#FFD700; }
+.sc:not(.bought):active .sc-buy { background:rgba(255,215,0,.15); }
+
+/* bought button */
+.sc-bought-lbl {
+  display:none; margin-top:2px; padding:6px; border-radius:8px; text-align:center;
+  font-size:10px; font-weight:800; letter-spacing:.5px;
+  background:rgba(0,255,159,.08); border:1px solid rgba(0,255,159,.2); color:rgba(0,255,159,.7);
+}
+.sc.bought .sc-buy       { display:none; }
+.sc.bought .sc-bought-lbl{ display:block; }
+
+/* wide card (last odd) */
+.sc.wide { grid-column:1/-1; flex-direction:row; align-items:center; padding:10px 12px; gap:12px; }
+.sc.wide .sc-top  { flex-direction:column; align-items:flex-start; gap:4px; }
+.sc.wide .sc-mid  { flex:1; display:flex; flex-direction:column; gap:2px; }
+.sc.wide .sc-val  { font-size:16px; }
+.sc.wide .sc-buy  { margin-top:0; white-space:nowrap; padding:7px 14px; }
+.sc.wide .sc-bought-lbl { margin-top:0; white-space:nowrap; padding:7px 14px; }
+
+/* ── Toast flash ── */
+#toast {
+  position:absolute; bottom:90px; left:50%; transform:translateX(-50%);
+  background:rgba(0,255,159,.1); border:1px solid rgba(0,255,159,.35); border-radius:10px;
+  padding:9px 18px; font-size:12px; font-weight:800; color:#00FF9F;
+  pointer-events:none; opacity:0; white-space:nowrap; z-index:50;
+  transition:opacity .2s;
+}
+#toast.show { opacity:1; }
+
+/* ── В БОЙ ── */
+#gobtn {
+  margin:12px 14px 20px; padding:14px; border-radius:14px; cursor:pointer;
+  text-align:center; font-size:14px; font-weight:900; letter-spacing:2px;
+  background:linear-gradient(135deg,#FF0055,#FF4400); color:#fff; border:none;
+  box-shadow:0 0 24px rgba(255,0,85,.4); animation:gopulse 1.5s ease-in-out infinite;
+  transition:transform .12s;
+}
+#gobtn:active { transform:scale(.97); }
+@keyframes gopulse{0%,100%{box-shadow:0 0 20px rgba(255,0,85,.35)}50%{box-shadow:0 0 40px rgba(255,0,85,.65)}}
+</style>
+</head>
+<body>
+<div id="phone">
+<div id="app">
+
+  <!-- Игровой фон -->
+  <div id="game-bg">
+    <div class="game-label">🎮 Duel Arena</div>
+    <div class="game-menu">
+      <div class="gmb">⚔️ ДУЭЛЬ</div>
+      <div class="gmb">🏆 РЕЙТИНГ</div>
+      <div class="gmb boss" id="openboss">💀 МИРОВОЙ БОСС</div>
+      <div class="gmb">🛍️ МАГАЗИН</div>
+    </div>
+    <div class="game-label" style="font-size:8px;opacity:.4;">↑ нажми МИРОВОЙ БОСС</div>
+  </div>
+
+  <!-- Backdrop -->
+  <div id="backdrop" onclick="closeLobby()"></div>
+
+  <!-- Lobby -->
+  <div id="lobby">
+    <div id="drag-handle"></div>
+
+    <!-- Header -->
+    <div id="lhdr">
+      <div id="lclose" onclick="closeLobby()">✕</div>
+      <div id="licon">💀</div>
+      <div>
+        <div id="ltitle">МИРОВОЙ БОСС</div>
+        <div id="lsub">ОБЩИЙ РЕЙД · КАЖДЫЕ 4 ЧАСА</div>
+      </div>
+      <div id="llive"><div class="ldot"></div><div id="livenum">247</div></div>
+    </div>
+
+    <!-- Body -->
+    <div id="lbody">
+
+      <!-- Boss card -->
+      <div id="bcard">
+        <div id="bcl">
+          <div>
+            <div class="btlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+            <div id="btval">01:42:15</div>
+            <div class="btsub">▶ INSERT COIN TO PLAY ◀</div>
+          </div>
+          <div>
+            <div class="btype">ЛЕДЯНОЙ · СЛЕДУЮЩИЙ БОСС</div>
+            <div class="bname">❄️ Кракен Льда</div>
+            <div class="bhint">Нажми — характеристики →</div>
+          </div>
+        </div>
+        <div id="bcr">
+          <div class="bcrt">ЛЕДЯНОЙ</div>
+          <div class="bcrem"><div id="bemo">🦑</div></div>
+          <div class="bcrf">НАЖМИ →</div>
+        </div>
+      </div>
+
+      <!-- Prize -->
+      <div id="prize">
+        <div class="pz-left">
+          <div class="pz-lbl">⚡ ПРИЗОВОЙ ФОНД</div>
+          <div class="pz-val">128,450 🪙</div>
+          <div class="pz-sub">+520 за каждого участника</div>
+        </div>
+        <div class="pz-right">
+          <div class="pz-cnt" id="pcnt">247</div>
+          <div class="pz-lbl2">игроков</div>
+        </div>
+      </div>
+
+      <!-- Join -->
+      <div id="join">
+        <div class="jico" id="jico">⚔️</div>
+        <div class="jtxt">
+          <div class="jmain" id="jmain">Участвую + напомни за 5 мин</div>
+          <div class="jsub">247 игроков уже записались</div>
+        </div>
+        <div class="jarr" id="jarr">›</div>
+      </div>
+
+      <!-- Shop -->
+      <div class="shdr">
+        <div class="stitle">🛒 МАГАЗИН БОЯ</div>
+        <div class="sline"></div>
+        <div id="bought-count" style="font-size:8px;color:rgba(255,255,255,.2);">куплено: 0</div>
+      </div>
+
+      <div id="shop">
+        <!-- каждый свиток — 1 раз за рейд -->
+        <div class="sc" data-id="dmg25" data-price="60">
+          <div class="sc-top">
+            <div class="sc-icon">⚔️</div>
+            <div class="sc-own">×2</div>
+          </div>
+          <div class="sc-name">УРОН</div>
+          <div class="sc-val">+25%</div>
+          <div class="sc-buy">60 🪙 — Купить</div>
+          <div class="sc-bought-lbl">✓ КУПЛЕНО</div>
+        </div>
+
+        <div class="sc" data-id="def20" data-price="45">
+          <div class="sc-top">
+            <div class="sc-icon">🛡️</div>
+            <div class="sc-own">×1</div>
+          </div>
+          <div class="sc-name">ЗАЩИТА</div>
+          <div class="sc-val">+20%</div>
+          <div class="sc-buy">45 🪙 — Купить</div>
+          <div class="sc-bought-lbl">✓ КУПЛЕНО</div>
+        </div>
+
+        <div class="sc" data-id="crit10" data-price="40">
+          <div class="sc-top">
+            <div class="sc-icon">🎯</div>
+            <div class="sc-own">×1</div>
+          </div>
+          <div class="sc-name">КРИТ</div>
+          <div class="sc-val">+10%</div>
+          <div class="sc-buy">40 🪙 — Купить</div>
+          <div class="sc-bought-lbl">✓ КУПЛЕНО</div>
+        </div>
+
+        <div class="sc" data-id="dmg10" data-price="30">
+          <div class="sc-top">
+            <div class="sc-icon">🐲</div>
+            <div class="sc-own">×0</div>
+          </div>
+          <div class="sc-name">УРОН</div>
+          <div class="sc-val" style="color:rgba(255,255,255,.25);">+10%</div>
+          <div class="sc-buy" style="opacity:.35;pointer-events:none;">нет в запасе</div>
+          <div class="sc-bought-lbl">✓ КУПЛЕНО</div>
+        </div>
+
+        <!-- wide: воскрешение -->
+        <div class="sc wide" data-id="res30" data-price="500">
+          <div class="sc-top">
+            <div class="sc-icon">💊</div>
+            <div class="sc-own">×3</div>
+          </div>
+          <div class="sc-mid">
+            <div class="sc-name">ВОСКРЕШЕНИЕ</div>
+            <div class="sc-val">30% HP</div>
+          </div>
+          <div>
+            <div class="sc-buy">500 🪙 — Купить</div>
+            <div class="sc-bought-lbl">✓ КУПЛЕНО</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- В БОЙ -->
+      <div id="gobtn">⚔️ В БОЙ</div>
+
+    </div><!-- /lbody -->
+
+    <!-- Toast -->
+    <div id="toast"></div>
+
+  </div><!-- /lobby -->
+
+</div>
+</div>
+
+<script>
+// ── Open/close ──
+document.getElementById('openboss').addEventListener('click', openLobby);
+function openLobby() {
+  document.getElementById('backdrop').classList.add('active');
+  setTimeout(() => document.getElementById('lobby').classList.add('open'), 20);
+}
+function closeLobby() {
+  document.getElementById('lobby').classList.remove('open');
+  document.getElementById('backdrop').classList.remove('active');
+}
+
+// ── Timer ──
+let secs = 6135;
+const tv = document.getElementById('btval');
+setInterval(() => {
+  secs = Math.max(0, secs - 1);
+  const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60;
+  tv.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}, 1000);
+
+// ── Join ──
+let joined = false;
+document.getElementById('join').addEventListener('click', () => {
+  joined = !joined;
+  document.getElementById('join').classList.toggle('on', joined);
+  document.getElementById('jico').textContent  = joined ? '✅' : '⚔️';
+  document.getElementById('jmain').textContent = joined ? 'Ты участвуешь · Напоминание вкл.' : 'Участвую + напомни за 5 мин';
+  document.getElementById('jarr').textContent  = joined ? '✓' : '›';
+});
+
+// ── Shop: купить 1 раз ──
+let boughtCount = 0;
+document.querySelectorAll('.sc').forEach(card => {
+  card.addEventListener('click', () => {
+    if (card.classList.contains('bought')) return;
+    const own = parseInt(card.querySelector('.sc-own')?.textContent?.replace('×','') || '1');
+    if (own === 0) return;
+    card.classList.add('bought');
+    boughtCount++;
+    document.getElementById('bought-count').textContent = `куплено: ${boughtCount}`;
+    // toast
+    const name = card.querySelector('.sc-name').textContent;
+    const val  = card.querySelector('.sc-val').textContent;
+    showToast(`${name} ${val} — активируется в бою`);
+  });
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._to);
+  t._to = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+// ── В БОЙ ──
+document.getElementById('gobtn').addEventListener('click', () => {
+  closeLobby();
+  // demo: через секунду сбросить покупки (как будто бой закончился)
+  setTimeout(() => {
+    document.querySelectorAll('.sc.bought').forEach(c => c.classList.remove('bought'));
+    boughtCount = 0;
+    document.getElementById('bought-count').textContent = 'куплено: 0';
+  }, 1000);
+});
+
+// ── Live drift ──
+let live = 247;
+setInterval(() => {
+  live += Math.floor(Math.random()*3)-1;
+  if (live < 240) live = 240;
+  document.getElementById('livenum').textContent = live;
+  document.getElementById('pcnt').textContent = live;
+}, 3000);
+</script>
+</body>
+</html>

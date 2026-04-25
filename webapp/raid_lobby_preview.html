@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RAID LOBBY — Cyberpunk Preview</title>
+<style>
+:root {
+  --bg: #050508;
+  --accent: #FF0055;
+  --energy: #00FF9F;
+  --text: #E0E0E0;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --neon-blue: #00BFFF;
+  --neon-purple: #BF00FF;
+  --neon-pink: #FF00CC;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html,body { width:100%; height:100%; background:#0a0a10; overflow:hidden;
+  font-family:'Inter','Montserrat',-apple-system,sans-serif; color:var(--text);
+  -webkit-tap-highlight-color:transparent; user-select:none; }
+
+/* ── Phone frame ── */
+#phone { display:flex; justify-content:center; align-items:center; width:100%; height:100%; }
+#app {
+  position:relative; width:390px; height:844px;
+  background:var(--bg); overflow:hidden; display:flex; flex-direction:column;
+  box-shadow:0 0 60px rgba(0,191,255,0.12), 0 0 120px rgba(255,0,204,0.06);
+}
+
+/* Scanlines */
+#app::before {
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:100;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.25) 2px,rgba(0,0,0,0.25) 4px);
+  opacity:0.2;
+}
+
+/* Ambient glow blobs */
+.glow-blob {
+  position:absolute; border-radius:50%; pointer-events:none; z-index:0;
+  filter:blur(60px); opacity:0.07;
+}
+
+/* ── STICKY HEADER ── */
+#header {
+  position:relative; z-index:10; flex-shrink:0;
+  padding:12px 16px 10px;
+  background:linear-gradient(180deg,rgba(5,5,8,0.98) 0%,rgba(5,5,8,0.85) 100%);
+  border-bottom:1px solid rgba(255,0,204,0.15);
+}
+
+#header-row { display:flex; align-items:center; gap:10px; }
+
+#back-btn {
+  width:32px; height:32px; border-radius:8px; display:grid; place-items:center;
+  background:rgba(255,0,204,0.07); border:1px solid rgba(255,0,204,0.25);
+  font-size:16px; color:var(--neon-pink); cursor:pointer; flex-shrink:0;
+}
+
+#header-icon {
+  width:38px; height:38px; border-radius:11px; display:grid; place-items:center; font-size:22px;
+  background:linear-gradient(135deg,#1a0033,#002a30);
+  border:1px solid var(--neon-pink);
+  box-shadow:0 0 16px rgba(255,0,204,0.5),inset 0 0 10px rgba(255,0,204,0.1);
+  animation:icon-pulse 3s ease-in-out infinite; flex-shrink:0;
+}
+@keyframes icon-pulse {
+  0%,100%{box-shadow:0 0 14px rgba(255,0,204,0.4)}
+  50%{box-shadow:0 0 28px rgba(255,0,204,0.8)}
+}
+
+#header-text { flex:1; }
+#header-title {
+  font-size:14px; font-weight:900; letter-spacing:2.5px;
+  background:linear-gradient(90deg,#ff00cc,#00e5ff);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+#header-sub { font-size:8px; color:rgba(0,229,255,0.5); letter-spacing:1.5px; margin-top:2px; }
+
+#header-live {
+  display:flex; align-items:center; gap:5px;
+  background:rgba(0,255,159,0.06); border:1px solid rgba(0,255,159,0.2);
+  border-radius:6px; padding:4px 8px;
+}
+#live-dot { width:5px; height:5px; border-radius:50%; background:var(--energy); box-shadow:0 0 5px var(--energy); animation:blink 1s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+#live-count { font-family:'Courier New',monospace; font-size:12px; font-weight:700; color:var(--energy); }
+#live-label { font-size:8px; color:rgba(0,255,159,0.5); }
+
+/* ── SCROLLABLE BODY ── */
+#body {
+  flex:1; overflow-y:auto; overflow-x:hidden;
+  display:flex; flex-direction:column; gap:0;
+  scrollbar-width:none; position:relative; z-index:1;
+}
+#body::-webkit-scrollbar { display:none; }
+
+/* ── BOSS SHOWCASE ── */
+#boss-showcase {
+  position:relative; margin:10px 14px 0; border-radius:18px; overflow:hidden;
+  background:linear-gradient(135deg,rgba(20,0,40,0.97),rgba(0,8,28,0.97));
+  border:1px solid rgba(255,0,204,0.4);
+  animation:boss-glow 2.5s ease-in-out infinite;
+  cursor:pointer;
+}
+@keyframes boss-glow {
+  0%,100%{box-shadow:0 0 16px rgba(255,0,204,0.12),inset 0 0 14px rgba(255,0,204,0.04);border-color:rgba(255,0,204,0.3);}
+  50%{box-shadow:0 0 40px rgba(255,0,204,0.45),0 0 80px rgba(255,0,204,0.1),inset 0 0 24px rgba(255,0,204,0.07);border-color:rgba(255,0,204,0.75);}
+}
+
+/* Top line accent */
+#boss-showcase::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,0,204,0.7),transparent);
+}
+
+/* Corner brackets */
+#boss-showcase::after {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:
+    linear-gradient(135deg,rgba(255,0,204,0.15) 0%,transparent 20%) 0 0 / 20px 20px no-repeat,
+    linear-gradient(225deg,rgba(0,229,255,0.1) 0%,transparent 20%) 100% 0 / 20px 20px no-repeat;
+}
+
+#boss-layout { display:flex; align-items:stretch; }
+
+/* Left: timer + name */
+#boss-left {
+  flex:1; padding:14px 10px 14px 16px;
+  display:flex; flex-direction:column; justify-content:space-between; gap:12px;
+}
+
+#timer-block {}
+#timer-label { font-size:8px; font-weight:800; letter-spacing:2px; color:#cc44ff; text-shadow:0 0 8px rgba(200,0,255,0.4); margin-bottom:4px; }
+#timer-val {
+  font-size:34px; font-weight:900; letter-spacing:2px; font-variant-numeric:tabular-nums;
+  background:linear-gradient(180deg,#00ffee,#00aacc);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 0 10px rgba(0,230,255,0.7));
+  animation:timer-glow 1s ease-in-out infinite; font-family:'Courier New',monospace;
+}
+@keyframes timer-glow{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,0.6))}50%{filter:drop-shadow(0 0 20px rgba(0,230,255,1))}}
+#timer-sub { font-size:7px; letter-spacing:2.5px; color:var(--neon-pink); opacity:0.45; margin-top:3px; animation:subtick 1.2s step-end infinite; }
+@keyframes subtick{0%,100%{opacity:0.45}50%{opacity:0.1}}
+
+#boss-info {}
+#boss-type { font-size:8px; font-weight:800; letter-spacing:2px; color:var(--neon-pink); text-shadow:0 0 8px currentColor; margin-bottom:4px; }
+#boss-name {
+  font-size:15px; font-weight:900; margin-bottom:4px;
+  background:linear-gradient(90deg,#fff,#ff88cc);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+}
+#boss-hint { font-size:9px; color:rgba(255,255,255,0.35); }
+
+/* Right: boss image column */
+#boss-right {
+  width:90px; flex-shrink:0;
+  display:flex; flex-direction:column; overflow:hidden;
+  border-radius:0 17px 17px 0;
+  border-left:1px solid rgba(255,255,255,0.06);
+}
+#boss-right-label {
+  padding:6px 4px 5px; text-align:center;
+  font-size:7px; font-weight:900; letter-spacing:1.5px;
+  color:#ff88cc; text-shadow:0 0 6px currentColor;
+  border-bottom:1px solid rgba(255,255,255,0.07);
+  background:rgba(30,0,50,0.97);
+}
+#boss-emoji-wrap {
+  flex:1; display:flex; align-items:center; justify-content:center;
+  padding:8px 0;
+}
+#boss-emoji { font-size:52px; line-height:1; animation:boss-float 3s ease-in-out infinite; filter:drop-shadow(0 0 18px rgba(255,0,204,0.7)); }
+@keyframes boss-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#boss-right-foot {
+  padding:5px 0; text-align:center; font-size:6px; font-weight:800; letter-spacing:2px;
+  color:rgba(255,255,255,0.2); border-top:1px solid rgba(255,255,255,0.06); background:rgba(0,0,0,0.25);
+}
+
+/* ── PRIZE POOL BANNER ── */
+#prize-pool {
+  margin:8px 14px 0; padding:10px 14px; border-radius:12px;
+  background:linear-gradient(135deg,rgba(255,215,0,0.05),rgba(255,140,0,0.05));
+  border:1px solid rgba(255,215,0,0.15);
+  display:flex; align-items:center; gap:12px;
+}
+#prize-icon { font-size:22px; flex-shrink:0; }
+#prize-text { flex:1; }
+#prize-label { font-size:8px; letter-spacing:2px; color:rgba(255,215,0,0.5); text-transform:uppercase; margin-bottom:2px; }
+#prize-val {
+  font-size:20px; font-weight:900; font-family:'Courier New',monospace;
+  color:#FFD700; text-shadow:0 0 12px rgba(255,215,0,0.5);
+  animation:prize-shimmer 2s ease-in-out infinite;
+}
+@keyframes prize-shimmer{0%,100%{text-shadow:0 0 12px rgba(255,215,0,0.4)}50%{text-shadow:0 0 24px rgba(255,215,0,0.8)}}
+#prize-per { font-size:8px; color:rgba(255,215,0,0.4); margin-top:1px; }
+#prize-players { text-align:right; }
+#players-count { font-family:'Courier New',monospace; font-size:22px; font-weight:900; color:var(--neon-blue); text-shadow:0 0 10px var(--neon-blue); }
+#players-label { font-size:7px; color:rgba(0,191,255,0.4); letter-spacing:1px; }
+
+/* Player avatars strip */
+#players-strip {
+  margin:6px 14px 0; display:flex; align-items:center; gap:6px;
+}
+.p-avatar {
+  width:26px; height:26px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.12);
+  display:flex; align-items:center; justify-content:center; font-size:13px;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);
+  flex-shrink:0;
+}
+#players-more { font-size:9px; color:rgba(255,255,255,0.3); margin-left:4px; }
+
+/* ── RECONNAISSANCE BUTTON ── */
+#recon-btn {
+  margin:8px 14px 0; padding:10px 16px; border-radius:12px; cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+  background:rgba(0,191,255,0.05); border:1px solid rgba(0,191,255,0.2);
+  transition:all 0.15s;
+}
+#recon-btn:active { transform:scale(0.98); }
+#recon-btn:hover { border-color:rgba(0,191,255,0.4); background:rgba(0,191,255,0.08); }
+#recon-icon { font-size:22px; flex-shrink:0; }
+#recon-text { flex:1; }
+#recon-title { font-size:12px; font-weight:700; color:var(--neon-blue); letter-spacing:0.5px; }
+#recon-sub { font-size:9px; color:rgba(0,191,255,0.4); margin-top:2px; }
+#recon-arr { font-size:18px; color:rgba(0,191,255,0.4); }
+
+/* ── JOIN BUTTON ── */
+#join-btn {
+  margin:8px 14px 0; padding:13px 16px; border-radius:14px; cursor:pointer;
+  display:flex; align-items:center; gap:12px;
+  transition:all 0.15s;
+  background:linear-gradient(135deg,rgba(255,0,85,0.12),rgba(255,68,0,0.08));
+  border:1.5px solid rgba(255,0,85,0.4);
+  box-shadow:0 0 20px rgba(255,0,85,0.08);
+  animation:join-pulse 2s ease-in-out infinite;
+}
+@keyframes join-pulse{0%,100%{box-shadow:0 0 20px rgba(255,0,85,0.08)}50%{box-shadow:0 0 40px rgba(255,0,85,0.2)}}
+#join-btn:active { transform:scale(0.97); }
+#join-btn.joined {
+  background:linear-gradient(135deg,rgba(0,255,136,0.1),rgba(0,200,80,0.06));
+  border-color:rgba(0,255,136,0.4); box-shadow:0 0 20px rgba(0,255,136,0.06);
+  animation:none;
+}
+#join-ico { font-size:26px; flex-shrink:0; }
+#join-text { flex:1; }
+#join-main { font-size:13px; font-weight:800; color:var(--accent); letter-spacing:0.3px; }
+#join-btn.joined #join-main { color:var(--energy); }
+#join-sub { font-size:9px; color:rgba(255,255,255,0.3); margin-top:2px; }
+#join-arr { font-size:22px; color:rgba(255,0,85,0.5); font-weight:700; }
+#join-btn.joined #join-arr { color:rgba(0,255,136,0.5); }
+
+/* Closed message */
+#join-closed {
+  margin:8px 14px 0; padding:9px 14px; border-radius:10px;
+  background:rgba(255,255,255,0.02); border:1px solid rgba(255,255,255,0.05);
+  text-align:center; font-size:9px; color:rgba(255,255,255,0.2); letter-spacing:0.5px;
+}
+
+/* ── SECTION HEADER ── */
+.sec-hdr {
+  display:flex; align-items:center; gap:8px;
+  padding:14px 16px 8px;
+}
+.sec-line { flex:1; height:1px; background:linear-gradient(90deg,rgba(255,255,255,0.08),transparent); }
+.sec-title { font-size:9px; font-weight:800; letter-spacing:2.5px; color:rgba(255,255,255,0.25); white-space:nowrap; }
+
+/* ── TABS ── */
+#tabs {
+  display:flex; gap:6px; padding:0 14px; flex-shrink:0;
+}
+
+.tab-btn {
+  flex:1; padding:8px 0; border-radius:10px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  background:var(--glass); border:1px solid var(--glass-border);
+  color:rgba(255,255,255,0.3); transition:all 0.15s;
+}
+.tab-btn.active {
+  background:rgba(255,0,85,0.1); border-color:rgba(255,0,85,0.35);
+  color:var(--accent); box-shadow:0 0 12px rgba(255,0,85,0.08);
+}
+.tab-btn:active { transform:scale(0.97); }
+
+/* ── TAB PANELS ── */
+.tab-panel { display:none; padding:0 14px 14px; }
+.tab-panel.active { display:block; }
+
+/* ── BOOST GRID ── */
+#boost-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+
+.boost-card {
+  border-radius:12px; padding:12px 12px 10px; cursor:pointer;
+  background:var(--glass); border:1px solid var(--glass-border);
+  display:flex; flex-direction:column; gap:4px;
+  transition:all 0.12s; position:relative; overflow:hidden;
+}
+.boost-card:active { transform:scale(0.97); }
+.boost-card:hover { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.06); }
+.boost-card::before { content:''; position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(255,255,255,0.1),transparent); }
+
+.boost-card.wide { grid-column:1/-1; flex-direction:row; align-items:center; padding:10px 12px; }
+
+.bc-icon { font-size:24px; line-height:1; }
+.bc-wide-icon { font-size:22px; flex-shrink:0; }
+.bc-name { font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-top:2px; }
+.bc-val { font-size:18px; font-weight:900; color:var(--energy); text-shadow:0 0 8px rgba(0,255,159,0.5); font-family:'Courier New',monospace; }
+.bc-price { font-size:10px; color:rgba(255,255,255,0.4); }
+.bc-own { position:absolute; top:8px; right:10px; font-size:9px; color:rgba(255,255,255,0.25); background:rgba(255,255,255,0.06); border-radius:4px; padding:1px 5px; }
+
+.bc-wide-text { flex:1; }
+.bc-wide-name { font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.4); }
+.bc-wide-val { font-size:16px; font-weight:900; color:var(--energy); text-shadow:0 0 8px rgba(0,255,159,0.4); }
+.bc-wide-price { margin-left:auto; text-align:right; }
+.bc-wide-p { font-size:11px; color:rgba(255,255,255,0.5); }
+.bc-wide-own { font-size:8px; color:rgba(255,255,255,0.25); }
+
+/* ── REVIVAL GRID ── */
+#rev-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+
+.rev-card {
+  border-radius:12px; overflow:hidden; cursor:pointer;
+  background:var(--glass); border:1px solid var(--glass-border);
+  display:flex; flex-direction:column;
+  transition:all 0.12s;
+}
+.rev-card:active { transform:scale(0.97); }
+.rev-card.gold { border-color:rgba(255,215,0,0.2); }
+
+.rev-head {
+  padding:12px 0 8px; text-align:center;
+  border-bottom:1px solid var(--glass-border);
+}
+.rev-icon { font-size:28px; }
+.rev-pct { font-size:16px; font-weight:900; color:var(--energy); font-family:'Courier New',monospace; margin-top:4px; }
+.rev-card.gold .rev-pct { color:#FFD700; }
+
+.rev-body { flex:1; padding:8px; display:flex; flex-direction:column; gap:4px; }
+.rev-own { font-size:18px; font-weight:900; text-align:center; color:rgba(255,255,255,0.7); font-family:'Courier New',monospace; }
+.rev-own-lbl { font-size:7px; text-align:center; color:rgba(255,255,255,0.25); letter-spacing:1px; }
+.rev-desc { font-size:7.5px; color:rgba(255,255,255,0.3); text-align:center; line-height:1.4; }
+.rev-buy { margin-top:auto; padding:5px; text-align:center; border-radius:6px; font-size:9px; font-weight:700; background:rgba(0,255,159,0.08); border:1px solid rgba(0,255,159,0.2); color:rgba(0,255,159,0.7); cursor:pointer; }
+.rev-card.gold .rev-buy { background:rgba(255,215,0,0.08); border-color:rgba(255,215,0,0.2); color:rgba(255,215,0,0.8); }
+
+/* ── HISTORY ── */
+#hist-list { display:flex; flex-direction:column; gap:6px; }
+
+.hist-row {
+  display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px;
+  background:var(--glass); border:1px solid var(--glass-border);
+}
+.hist-rank { font-size:16px; width:24px; text-align:center; flex-shrink:0; }
+.hist-info { flex:1; min-width:0; }
+.hist-name { font-size:12px; font-weight:700; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.hist-meta { font-size:9px; color:rgba(255,255,255,0.3); margin-top:2px; }
+.hist-badge {
+  padding:2px 8px; border-radius:5px; font-size:8px; font-weight:700; letter-spacing:0.5px; white-space:nowrap;
+}
+.hist-badge.full { background:rgba(0,255,159,0.1); border:1px solid rgba(0,255,159,0.3); color:var(--energy); }
+.hist-badge.part { background:rgba(0,191,255,0.08); border:1px solid rgba(0,191,255,0.2); color:var(--neon-blue); }
+
+/* ── INVENTORY CHIPS ── */
+#inv-section { padding:0 14px; }
+#inv-chips { display:flex; flex-wrap:wrap; gap:6px; }
+.inv-chip {
+  display:flex; align-items:center; gap:4px; padding:4px 9px; border-radius:6px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  font-size:10px; color:rgba(255,255,255,0.5);
+}
+.inv-chip b { color:var(--energy); }
+
+/* ── AUTO-BATTLE TOGGLE ── */
+#auto-row {
+  margin:6px 14px 0; padding:10px 14px; border-radius:12px; cursor:pointer;
+  display:flex; align-items:center; gap:10px;
+  background:rgba(0,255,159,0.04); border:1px solid rgba(0,255,159,0.12);
+}
+#auto-text { flex:1; }
+#auto-title { font-size:11px; font-weight:700; color:rgba(0,255,159,0.7); }
+#auto-sub { font-size:8px; color:rgba(255,255,255,0.25); margin-top:2px; }
+#auto-toggle {
+  width:40px; height:22px; border-radius:11px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+  position:relative; cursor:pointer; transition:all 0.2s; flex-shrink:0;
+}
+#auto-toggle.on { background:rgba(0,255,159,0.2); border-color:rgba(0,255,159,0.4); }
+#auto-knob {
+  width:16px; height:16px; border-radius:50%; background:rgba(255,255,255,0.3);
+  position:absolute; top:2px; left:2px; transition:all 0.2s;
+}
+#auto-toggle.on #auto-knob { left:20px; background:var(--energy); box-shadow:0 0 6px var(--energy); }
+
+/* ── BOTTOM PADDING ── */
+#bottom-pad { height:20px; flex-shrink:0; }
+</style>
+</head>
+<body>
+<div id="phone">
+<div id="app">
+
+  <!-- Ambient blobs -->
+  <div class="glow-blob" style="width:300px;height:300px;background:#ff00cc;top:-100px;left:-100px;"></div>
+  <div class="glow-blob" style="width:250px;height:250px;background:#00bfff;bottom:100px;right:-80px;"></div>
+
+  <!-- HEADER -->
+  <div id="header">
+    <div id="header-row">
+      <div id="back-btn">‹</div>
+      <div id="header-icon">💀</div>
+      <div id="header-text">
+        <div id="header-title">МИРОВОЙ БОСС</div>
+        <div id="header-sub">ОБЩИЙ РЕЙД · КАЖДЫЕ 4 ЧАСА</div>
+      </div>
+      <div id="header-live">
+        <div id="live-dot"></div>
+        <div id="live-count" id="live-num">247</div>
+        <div id="live-label">онлайн</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCROLLABLE BODY -->
+  <div id="body">
+
+    <!-- BOSS SHOWCASE -->
+    <div id="boss-showcase">
+      <div id="boss-layout">
+        <div id="boss-left">
+          <div id="timer-block">
+            <div id="timer-label">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+            <div id="timer-val">01:42:15</div>
+            <div id="timer-sub">▶ INSERT COIN TO PLAY ◀</div>
+          </div>
+          <div id="boss-info">
+            <div id="boss-type">ЛЕДЯНОЙ · СЛЕДУЮЩИЙ БОСС</div>
+            <div id="boss-name">❄️ Кракен Льда</div>
+            <div id="boss-hint">Нажми — характеристики →</div>
+          </div>
+        </div>
+        <div id="boss-right">
+          <div id="boss-right-label" style="color:#55ccff;">ЛЕДЯНОЙ</div>
+          <div id="boss-emoji-wrap">
+            <div id="boss-emoji">🦑</div>
+          </div>
+          <div id="boss-right-foot">НАЖМИ →</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRIZE POOL -->
+    <div id="prize-pool">
+      <div id="prize-icon">💰</div>
+      <div id="prize-text">
+        <div id="prize-label">⚡ Общий призовой фонд</div>
+        <div id="prize-val">128,450 🪙</div>
+        <div id="prize-per">+520 за каждого участника</div>
+      </div>
+      <div id="prize-players">
+        <div id="players-count">247</div>
+        <div id="players-label">игроков</div>
+      </div>
+    </div>
+
+    <!-- PLAYER AVATARS -->
+    <div id="players-strip">
+      <div class="p-avatar">⚔️</div>
+      <div class="p-avatar">🛡️</div>
+      <div class="p-avatar">🔮</div>
+      <div class="p-avatar">🐉</div>
+      <div class="p-avatar">⚡</div>
+      <div class="p-avatar">🗡️</div>
+      <div class="p-avatar">🔥</div>
+      <div id="players-more">+240 участников</div>
+    </div>
+
+    <!-- RECONNAISSANCE -->
+    <div id="recon-btn">
+      <div id="recon-icon">🔍</div>
+      <div id="recon-text">
+        <div id="recon-title">Разведка босса</div>
+        <div id="recon-sub">Узнай слабые места и стихию — +15% эффективность</div>
+      </div>
+      <div id="recon-arr">›</div>
+    </div>
+
+    <!-- AUTO-BATTLE -->
+    <div id="auto-row">
+      <div>🤖</div>
+      <div id="auto-text">
+        <div id="auto-title">Авто-бой (50% эффективности)</div>
+        <div id="auto-sub">Атакует автоматически — не пропустишь награду</div>
+      </div>
+      <div id="auto-toggle"><div id="auto-knob"></div></div>
+    </div>
+
+    <!-- JOIN BUTTON -->
+    <div id="join-btn">
+      <div id="join-ico">⚔️</div>
+      <div id="join-text">
+        <div id="join-main">Участвую + напомни за 5 мин</div>
+        <div id="join-sub">247 игроков уже записались</div>
+      </div>
+      <div id="join-arr">›</div>
+    </div>
+
+    <!-- INVENTORY SECTION -->
+    <div id="inv-section" style="display:flex;flex-direction:column;gap:0;">
+      <div class="sec-hdr">
+        <div class="sec-title">★ МОИ ЗАПАСЫ</div>
+        <div class="sec-line"></div>
+      </div>
+      <div id="inv-chips">
+        <div class="inv-chip">⚔️ <b>×2</b></div>
+        <div class="inv-chip">🛡️ <b>×1</b></div>
+        <div class="inv-chip">💊 <b>×3</b></div>
+        <div class="inv-chip">🎯 <b>×1</b></div>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="sec-hdr" style="padding-bottom:6px;">
+      <div class="sec-title">МАГАЗИН БОЯ</div>
+      <div class="sec-line"></div>
+    </div>
+    <div id="tabs">
+      <div class="tab-btn active" data-tab="boosts">⚔️ БУСТЫ</div>
+      <div class="tab-btn" data-tab="revival">💊 ВОСКРЕШЕНИЕ</div>
+      <div class="tab-btn" data-tab="history">📜 ИСТОРИЯ</div>
+    </div>
+
+    <!-- TAB: BOOSTS -->
+    <div class="tab-panel active" id="tab-boosts" style="padding-top:10px;">
+      <div id="boost-grid">
+        <div class="boost-card">
+          <div class="bc-own">×2</div>
+          <div class="bc-icon">⚔️</div>
+          <div class="bc-name">УРОН</div>
+          <div class="bc-val">+25%</div>
+          <div class="bc-price">60 🪙</div>
+        </div>
+        <div class="boost-card">
+          <div class="bc-own">×0</div>
+          <div class="bc-icon">🐲</div>
+          <div class="bc-name">УРОН</div>
+          <div class="bc-val">+10%</div>
+          <div class="bc-price">30 🪙</div>
+        </div>
+        <div class="boost-card">
+          <div class="bc-own">×1</div>
+          <div class="bc-icon">🛡️</div>
+          <div class="bc-name">ЗАЩИТА</div>
+          <div class="bc-val">+20%</div>
+          <div class="bc-price">45 🪙</div>
+        </div>
+        <div class="boost-card">
+          <div class="bc-own">×0</div>
+          <div class="bc-icon">💨</div>
+          <div class="bc-name">УВОРОТ</div>
+          <div class="bc-val">+10%</div>
+          <div class="bc-price">35 🪙</div>
+        </div>
+        <!-- wide card -->
+        <div class="boost-card wide">
+          <div class="bc-wide-icon">🎯</div>
+          <div class="bc-wide-text">
+            <div class="bc-wide-name">КРИТ ШАНС</div>
+            <div class="bc-wide-val">+10%</div>
+          </div>
+          <div class="bc-wide-price">
+            <div class="bc-wide-p">40 🪙</div>
+            <div class="bc-wide-own">×1 в запасе</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: REVIVAL -->
+    <div class="tab-panel" id="tab-revival" style="padding-top:10px;">
+      <div id="rev-grid">
+        <div class="rev-card">
+          <div class="rev-head">
+            <div class="rev-icon">💊</div>
+            <div class="rev-pct">30%</div>
+          </div>
+          <div class="rev-body">
+            <div class="rev-own">3</div>
+            <div class="rev-own-lbl">В ЗАПАСЕ</div>
+            <div class="rev-desc">Восстанавливает 30% HP после гибели</div>
+            <div class="rev-buy">500 🪙</div>
+          </div>
+        </div>
+        <div class="rev-card">
+          <div class="rev-head">
+            <div class="rev-icon">💉</div>
+            <div class="rev-pct">60%</div>
+          </div>
+          <div class="rev-body">
+            <div class="rev-own">0</div>
+            <div class="rev-own-lbl">В ЗАПАСЕ</div>
+            <div class="rev-desc">Восстанавливает 60% HP после гибели</div>
+            <div class="rev-buy">1500 🪙</div>
+          </div>
+        </div>
+        <div class="rev-card gold">
+          <div class="rev-head">
+            <div class="rev-icon">✨</div>
+            <div class="rev-pct">100%</div>
+          </div>
+          <div class="rev-body">
+            <div class="rev-own">1</div>
+            <div class="rev-own-lbl">В ЗАПАСЕ</div>
+            <div class="rev-desc">Полное воскрешение с 100% HP</div>
+            <div class="rev-buy" style="background:rgba(255,215,0,0.08);border-color:rgba(255,215,0,0.2);color:rgba(255,215,0,0.8);">3000 🪙</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: HISTORY -->
+    <div class="tab-panel" id="tab-history" style="padding-top:10px;">
+      <div id="hist-list">
+        <div class="hist-row">
+          <div class="hist-rank">🥇</div>
+          <div class="hist-info">
+            <div class="hist-name">@Ivan_War</div>
+            <div class="hist-meta">Ур.45 · ⚔️ 1,247,380 урона</div>
+          </div>
+          <div class="hist-badge full">100%</div>
+        </div>
+        <div class="hist-row">
+          <div class="hist-rank">🥈</div>
+          <div class="hist-info">
+            <div class="hist-name">@Shadow_Dragon</div>
+            <div class="hist-meta">Ур.38 · ⚔️ 987,220 урона</div>
+          </div>
+          <div class="hist-badge full">100%</div>
+        </div>
+        <div class="hist-row">
+          <div class="hist-rank">🥉</div>
+          <div class="hist-info">
+            <div class="hist-name">@Маша_Воин</div>
+            <div class="hist-meta">Ур.32 · ⚔️ 654,100 урона</div>
+          </div>
+          <div class="hist-badge part">78%</div>
+        </div>
+        <div class="hist-row">
+          <div class="hist-rank">4️⃣</div>
+          <div class="hist-info">
+            <div class="hist-name">@KingSlayer</div>
+            <div class="hist-meta">Ур.29 · ⚔️ 421,000 урона</div>
+          </div>
+          <div class="hist-badge part">52%</div>
+        </div>
+        <div class="hist-row">
+          <div class="hist-rank">5️⃣</div>
+          <div class="hist-info">
+            <div class="hist-name">@NightWalker</div>
+            <div class="hist-meta">Ур.25 · ⚔️ 318,700 урона</div>
+          </div>
+          <div class="hist-badge part">38%</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="bottom-pad"></div>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── Tabs ──
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ── Auto toggle ──
+const autoToggle = document.getElementById('auto-toggle');
+autoToggle.addEventListener('click', () => {
+  autoToggle.classList.toggle('on');
+});
+
+// ── Join button ──
+const joinBtn = document.getElementById('join-btn');
+let joined = false;
+joinBtn.addEventListener('click', () => {
+  joined = !joined;
+  joinBtn.classList.toggle('joined', joined);
+  joinBtn.querySelector('#join-ico').textContent = joined ? '✅' : '⚔️';
+  joinBtn.querySelector('#join-main').textContent = joined ? 'Ты участвуешь · Напоминание вкл.' : 'Участвую + напомни за 5 мин';
+  joinBtn.querySelector('#join-arr').textContent = joined ? '✓' : '›';
+  if (joined) {
+    const count = document.getElementById('players-count');
+    count.textContent = parseInt(count.textContent.replace(/,/g,'')) + 1;
+  }
+});
+
+// ── Boss card click ──
+document.getElementById('boss-showcase').addEventListener('click', () => {
+  if (window.Telegram?.WebApp?.HapticFeedback)
+    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+});
+
+// ── Recon button ──
+document.getElementById('recon-btn').addEventListener('click', () => {
+  if (window.Telegram?.WebApp?.HapticFeedback)
+    window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+});
+
+// ── Boost cards ──
+document.querySelectorAll('.boost-card,.rev-buy').forEach(card => {
+  card.addEventListener('click', () => {
+    if (window.Telegram?.WebApp?.HapticFeedback)
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+  });
+});
+
+// ── Timer countdown ──
+let totalSecs = 1 * 3600 + 42 * 60 + 15;
+const timerEl = document.getElementById('timer-val');
+const timerInterval = setInterval(() => {
+  totalSecs = Math.max(0, totalSecs - 1);
+  const h = Math.floor(totalSecs / 3600);
+  const m = Math.floor((totalSecs % 3600) / 60);
+  const s = totalSecs % 60;
+  timerEl.textContent = h > 0
+    ? `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
+    : `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  if (totalSecs <= 0) clearInterval(timerInterval);
+}, 1000);
+
+// ── Live players counter drift (demo) ──
+let liveCount = 247;
+setInterval(() => {
+  liveCount += Math.floor(Math.random() * 3) - 1;
+  if (liveCount < 240) liveCount = 240;
+  document.getElementById('live-count').textContent = liveCount;
+}, 3000);
+
+// ── Prize pool grows (demo) ──
+let prize = 128450;
+setInterval(() => {
+  prize += 520;
+  document.getElementById('prize-val').textContent = prize.toLocaleString('ru') + ' 🪙';
+}, 8000);
+</script>
+</body>
+</html>

@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BOSS RAID — Cyberpunk Preview</title>
+<style>
+:root {
+  --bg: #050505;
+  --accent: #FF0055;
+  --energy: #00FF9F;
+  --text: #E0E0E0;
+  --glass: rgba(255,255,255,0.04);
+  --glass-border: rgba(255,255,255,0.08);
+  --neon-blue: #00BFFF;
+  --neon-purple: #BF00FF;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  font-family: 'Inter', 'Montserrat', -apple-system, sans-serif;
+  color: var(--text);
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* ── Phone frame wrapper ── */
+#phone-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0f;
+}
+
+#app {
+  position: relative;
+  width: 390px;
+  height: 844px;
+  background: var(--bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 60px rgba(0, 191, 255, 0.15), 0 0 120px rgba(255, 0, 85, 0.05);
+}
+
+/* Scanlines overlay */
+#app::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.3) 2px,
+    rgba(0,0,0,0.3) 4px
+  );
+  pointer-events: none;
+  z-index: 100;
+  opacity: 0.25;
+}
+
+/* Background glow */
+#app::after {
+  content: '';
+  position: absolute;
+  top: -100px; left: -100px;
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, rgba(0,191,255,0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── STICKY HEADER ── */
+#header {
+  position: relative;
+  z-index: 10;
+  padding: 12px 16px 8px;
+  background: linear-gradient(180deg, rgba(5,5,5,0.98) 0%, rgba(5,5,5,0.9) 100%);
+  border-bottom: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+#header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+#boss-title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-transform: uppercase;
+  text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent);
+  animation: glitch 4s infinite;
+}
+
+@keyframes glitch {
+  0%,95%,100% { transform: none; text-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent); }
+  96% { transform: translateX(-2px) skewX(-5deg); text-shadow: 2px 0 var(--neon-blue), -2px 0 var(--accent); }
+  97% { transform: translateX(2px) skewX(3deg); text-shadow: -2px 0 var(--neon-purple); }
+  98% { transform: none; }
+}
+
+#timer-box {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+
+#timer-box .dot {
+  width: 6px; height: 6px;
+  background: var(--energy);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--energy);
+  animation: blink 1s infinite;
+}
+
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+#timer-val {
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--energy);
+  text-shadow: 0 0 8px var(--energy);
+}
+
+#timer-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* HP Bar */
+#hp-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#hp-label {
+  font-size: 9px;
+  color: rgba(255,255,255,0.4);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+#hp-bar-track {
+  flex: 1;
+  height: 8px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+#hp-bar-fill {
+  height: 100%;
+  width: 73%;
+  background: linear-gradient(90deg, #FF0055, #FF4400);
+  border-radius: 4px;
+  box-shadow: 0 0 8px rgba(255,0,85,0.8);
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+#hp-bar-fill::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 60%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+#hp-segments {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding: 0 2px;
+}
+
+.hp-seg { width: 1px; height: 60%; background: rgba(0,0,0,0.5); }
+
+#hp-val {
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+/* Phase badge */
+#phase-badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255,0,85,0.15);
+  border: 1px solid rgba(255,0,85,0.4);
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ── ACTIVITY TICKER ── */
+#ticker {
+  position: relative;
+  z-index: 5;
+  background: rgba(0,191,255,0.05);
+  border-bottom: 1px solid rgba(0,191,255,0.1);
+  padding: 5px 0;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+#ticker-inner {
+  display: flex;
+  gap: 40px;
+  white-space: nowrap;
+  animation: scroll-ticker 18s linear infinite;
+  font-size: 10px;
+  color: rgba(224,224,224,0.6);
+  padding: 0 16px;
+}
+
+.tick-item { display: inline-flex; align-items: center; gap: 4px; }
+.tick-item .nick { color: var(--neon-blue); }
+.tick-item .dmg { color: var(--energy); font-family: monospace; font-weight: 700; }
+.tick-item .clan { color: var(--neon-purple); }
+
+@keyframes scroll-ticker {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ── BOSS ZONE ── */
+#boss-zone {
+  position: relative;
+  flex: 1;
+  overflow: hidden;
+  cursor: crosshair;
+  min-height: 0;
+}
+
+#boss-bg-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 80% 60% at 50% 60%, rgba(0,191,255,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+#boss-image {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 260px;
+  height: 260px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 20px rgba(0,191,255,0.3)) drop-shadow(0 0 40px rgba(255,0,85,0.15));
+  animation: boss-breathe 3s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes boss-breathe {
+  0%,100% { transform: translate(-50%,-50%) scale(1); filter: drop-shadow(0 0 20px rgba(0,191,255,0.3)) drop-shadow(0 0 40px rgba(255,0,85,0.15)); }
+  50% { transform: translate(-50%,-50%) scale(1.03); filter: drop-shadow(0 0 30px rgba(0,191,255,0.5)) drop-shadow(0 0 50px rgba(255,0,85,0.25)); }
+}
+
+/* Boss hit flash */
+#boss-image.hit {
+  animation: boss-hit 0.15s ease forwards, boss-breathe 3s ease-in-out infinite 0.15s;
+}
+
+@keyframes boss-hit {
+  0% { filter: brightness(1) drop-shadow(0 0 20px rgba(0,191,255,0.3)); }
+  50% { filter: brightness(3) drop-shadow(0 0 30px var(--accent)) saturate(0); }
+  100% { filter: brightness(1) drop-shadow(0 0 20px rgba(0,191,255,0.3)); }
+}
+
+/* Weak point indicators */
+.weak-point {
+  position: absolute;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--energy);
+  box-shadow: 0 0 10px var(--energy), inset 0 0 6px rgba(0,255,159,0.3);
+  animation: pulse-weak 1.5s ease-in-out infinite;
+  cursor: crosshair;
+}
+
+@keyframes pulse-weak {
+  0%,100% { transform: scale(1); opacity:0.8; }
+  50% { transform: scale(1.2); opacity:1; }
+}
+
+.weak-point::after {
+  content: '+';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--energy);
+  font-weight: 700;
+}
+
+/* Ghost avatars */
+.ghost {
+  position: absolute;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border: 1px solid rgba(0,191,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  opacity: 0;
+  animation: ghost-fly 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes ghost-fly {
+  0% { opacity:0; transform: translateY(20px) translateX(0); }
+  20% { opacity:0.4; }
+  80% { opacity:0.3; }
+  100% { opacity:0; transform: translateY(-30px) translateX(20px); }
+}
+
+/* Damage numbers pool */
+.dmg-number {
+  position: absolute;
+  font-family: 'Courier New', monospace;
+  font-weight: 900;
+  pointer-events: none;
+  z-index: 20;
+  animation: dmg-fly 0.9s ease-out forwards;
+  text-shadow: 0 0 10px currentColor;
+  white-space: nowrap;
+}
+
+@keyframes dmg-fly {
+  0% { opacity: 1; transform: translateY(0) scale(1); }
+  20% { opacity: 1; transform: translateY(-20px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-70px) scale(0.7); }
+}
+
+/* Rage mode vignette */
+#rage-vignette {
+  position: absolute;
+  inset: 0;
+  border: 0px solid var(--accent);
+  box-shadow: inset 0 0 0px var(--accent);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 5;
+  border-radius: 0;
+}
+
+#rage-vignette.active {
+  opacity: 1;
+  animation: rage-pulse 0.5s ease-in-out infinite;
+}
+
+@keyframes rage-pulse {
+  0%,100% { box-shadow: inset 0 0 40px rgba(255,0,85,0.4); }
+  50% { box-shadow: inset 0 0 80px rgba(255,0,85,0.7); }
+}
+
+/* Click hint */
+#click-hint {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 10px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  pointer-events: none;
+  animation: fade-hint 2s ease-in-out infinite;
+}
+
+@keyframes fade-hint {
+  0%,100%{opacity:0.3} 50%{opacity:0.7}
+}
+
+/* ── COLLECTIVE ULTRA ── */
+#ultra-section {
+  position: relative;
+  z-index: 5;
+  padding: 6px 16px;
+  background: var(--glass);
+  border-top: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+#ultra-label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.4);
+  white-space: nowrap;
+}
+
+#ultra-bar-track {
+  flex: 1;
+  height: 6px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+#ultra-bar-fill {
+  height: 100%;
+  width: 62%;
+  background: linear-gradient(90deg, var(--neon-blue), var(--neon-purple));
+  border-radius: 3px;
+  box-shadow: 0 0 6px var(--neon-blue);
+  transition: width 0.4s ease;
+}
+
+#ultra-btn {
+  padding: 5px 12px;
+  background: linear-gradient(135deg, rgba(191,0,255,0.2), rgba(0,191,255,0.2));
+  border: 1px solid rgba(191,0,255,0.5);
+  border-radius: 6px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.5);
+  cursor: not-allowed;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+#ultra-btn.ready {
+  color: #fff;
+  border-color: var(--neon-purple);
+  box-shadow: 0 0 12px var(--neon-purple);
+  cursor: pointer;
+  animation: ultra-pulse 0.8s ease-in-out infinite;
+}
+
+@keyframes ultra-pulse {
+  0%,100% { box-shadow: 0 0 12px var(--neon-purple); }
+  50% { box-shadow: 0 0 25px var(--neon-purple), 0 0 40px var(--neon-blue); }
+}
+
+/* ── SKILLS PANEL ── */
+#skills-panel {
+  position: relative;
+  z-index: 10;
+  padding: 10px 12px 16px;
+  background: linear-gradient(0deg, rgba(5,5,5,0.98) 0%, rgba(5,5,5,0.9) 100%);
+  border-top: 1px solid var(--glass-border);
+  flex-shrink: 0;
+}
+
+#skills-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.skill-btn {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.skill-btn:active:not(.on-cd) {
+  transform: scale(0.93);
+}
+
+.skill-btn:not(.on-cd) {
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+}
+
+.skill-btn:not(.on-cd):hover {
+  border-color: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.07);
+}
+
+.skill-btn .icon {
+  font-size: 22px;
+  line-height: 1;
+  filter: drop-shadow(0 0 4px currentColor);
+}
+
+.skill-btn .name {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.5);
+}
+
+.skill-btn .cd-ring {
+  position: absolute;
+  inset: -1px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.1s;
+}
+
+.skill-btn.on-cd .cd-ring { opacity: 1; }
+
+.skill-btn .cd-val {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.7);
+}
+
+/* Skill-specific colors */
+.skill-btn[data-skill="attack"] { border-color: rgba(255,0,85,0.3); }
+.skill-btn[data-skill="attack"]:not(.on-cd) { box-shadow: 0 0 12px rgba(255,0,85,0.15); }
+.skill-btn[data-skill="attack"] .icon { color: var(--accent); }
+
+.skill-btn[data-skill="shield"] { border-color: rgba(0,191,255,0.3); }
+.skill-btn[data-skill="shield"]:not(.on-cd) { box-shadow: 0 0 12px rgba(0,191,255,0.15); }
+.skill-btn[data-skill="shield"] .icon { color: var(--neon-blue); }
+
+.skill-btn[data-skill="ult"] { border-color: rgba(191,0,255,0.4); }
+.skill-btn[data-skill="ult"]:not(.on-cd) {
+  box-shadow: 0 0 14px rgba(191,0,255,0.2);
+  animation: ult-glow 2s ease-in-out infinite;
+}
+.skill-btn[data-skill="ult"] .icon { color: var(--neon-purple); }
+
+@keyframes ult-glow {
+  0%,100% { box-shadow: 0 0 14px rgba(191,0,255,0.2); }
+  50% { box-shadow: 0 0 24px rgba(191,0,255,0.4); }
+}
+
+.skill-btn[data-skill="auto"] { border-color: rgba(0,255,159,0.3); }
+.skill-btn[data-skill="auto"]:not(.on-cd) { box-shadow: 0 0 12px rgba(0,255,159,0.15); }
+.skill-btn[data-skill="auto"] .icon { color: var(--energy); }
+
+/* Progress ring on skill */
+.skill-btn .progress-ring {
+  position: absolute;
+  inset: 3px;
+  border-radius: 10px;
+  border: 2px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.skill-btn.on-cd .progress-ring {
+  border-color: rgba(255,255,255,0.2);
+  animation: cd-spin 1s linear infinite;
+}
+
+/* ── QTE OVERLAY ── */
+#qte-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+#qte-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#qte-title {
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 12px;
+}
+
+#qte-btn {
+  width: 140px; height: 140px;
+  border-radius: 50%;
+  border: 3px solid var(--energy);
+  box-shadow: 0 0 30px var(--energy), inset 0 0 30px rgba(0,255,159,0.1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  animation: qte-pulse 0.5s ease-in-out infinite;
+  background: rgba(0,255,159,0.05);
+}
+
+@keyframes qte-pulse {
+  0%,100% { transform: scale(1); box-shadow: 0 0 30px var(--energy); }
+  50% { transform: scale(1.06); box-shadow: 0 0 60px var(--energy); }
+}
+
+#qte-btn .qte-label { font-size: 11px; letter-spacing: 2px; color: var(--energy); }
+#qte-btn .qte-icon { font-size: 36px; margin: 4px 0; }
+#qte-bar-wrap { margin-top: 16px; width: 200px; }
+#qte-bar-label { font-size: 9px; text-align: center; color: rgba(255,255,255,0.4); margin-bottom: 4px; }
+#qte-progress { height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; }
+#qte-progress-fill { height: 100%; width: 100%; background: var(--energy); border-radius: 2px; transition: width 0.1s linear; }
+
+/* ── MVP RESULT OVERLAY ── */
+#result-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 60;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s;
+}
+
+#result-overlay.active {
+  opacity: 1;
+  pointer-events: all;
+}
+
+#mvp-badge {
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #FFD700;
+  text-shadow: 0 0 20px #FFD700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  animation: mvp-shine 1s ease-in-out infinite;
+}
+
+@keyframes mvp-shine {
+  0%,100% { text-shadow: 0 0 20px #FFD700; }
+  50% { text-shadow: 0 0 40px #FFD700, 0 0 80px rgba(255,215,0,0.5); }
+}
+
+#mvp-avatar {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  border: 3px solid #FFD700;
+  box-shadow: 0 0 30px rgba(255,215,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  margin-bottom: 12px;
+}
+
+#mvp-name { font-size: 20px; font-weight: 800; color: #fff; margin-bottom: 4px; }
+#mvp-dmg { font-family: monospace; font-size: 13px; color: var(--energy); margin-bottom: 16px; }
+#mvp-title { font-size: 10px; letter-spacing: 2px; color: rgba(255,215,0,0.7); text-transform: uppercase; margin-bottom: 20px; }
+
+#close-result {
+  padding: 10px 28px;
+  background: linear-gradient(135deg, var(--accent), #ff4400);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(255,0,85,0.4);
+}
+
+/* Phase threshold flash */
+@keyframes threshold-flash {
+  0% { background: rgba(255,68,0,0); }
+  20% { background: rgba(255,68,0,0.25); }
+  100% { background: rgba(255,68,0,0); }
+}
+
+/* Screen shake */
+@keyframes screen-shake {
+  0%,100% { transform: none; }
+  15% { transform: translate(-3px, 2px) rotate(-0.5deg); }
+  30% { transform: translate(3px, -2px) rotate(0.5deg); }
+  45% { transform: translate(-2px, -1px); }
+  60% { transform: translate(2px, 1px); }
+  75% { transform: translate(-1px, 2px); }
+}
+
+#app.shake {
+  animation: screen-shake 0.4s cubic-bezier(.36,.07,.19,.97);
+}
+</style>
+</head>
+<body>
+<div id="phone-wrapper">
+<div id="app">
+
+  <!-- STICKY HEADER -->
+  <div id="header">
+    <div id="header-top">
+      <div id="boss-title">⚡ BOSS RAID</div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div id="phase-badge">ФАЗА 2</div>
+        <div id="timer-box">
+          <div class="dot"></div>
+          <div>
+            <div id="timer-val">00:42</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="hp-section">
+      <div id="hp-label">HP</div>
+      <div id="hp-bar-track">
+        <div id="hp-bar-fill"></div>
+        <div id="hp-segments"></div>
+      </div>
+      <div id="hp-val">365K / 500K</div>
+    </div>
+  </div>
+
+  <!-- ACTIVITY TICKER -->
+  <div id="ticker">
+    <div id="ticker-inner">
+      <span class="tick-item">⚔️ <span class="nick">@Ivan_War</span> нанёс <span class="dmg">+47.2K</span> крит!</span>
+      <span class="tick-item">🏰 <span class="clan">Dragon Clan</span> активировал усиление +15%</span>
+      <span class="tick-item">⚡ <span class="nick">@Shadow_X</span> нанёс <span class="dmg">+31.8K</span></span>
+      <span class="tick-item">🔥 <span class="nick">@Маша</span> активировала ульту!</span>
+      <span class="tick-item">💀 Осталось 73% HP! Ярость босса растёт...</span>
+      <span class="tick-item">⚔️ <span class="nick">@Ivan_War</span> нанёс <span class="dmg">+47.2K</span> крит!</span>
+      <span class="tick-item">🏰 <span class="clan">Dragon Clan</span> активировал усиление +15%</span>
+      <span class="tick-item">⚡ <span class="nick">@Shadow_X</span> нанёс <span class="dmg">+31.8K</span></span>
+    </div>
+  </div>
+
+  <!-- BOSS ZONE (click area) -->
+  <div id="boss-zone">
+    <div id="boss-bg-glow"></div>
+    <div id="rage-vignette"></div>
+
+    <!-- Boss image — используем bosses/boss1.png если есть -->
+    <img id="boss-image" src="bosses/boss1.png"
+         onerror="this.onerror=null; this.src=''; this.style.cssText='position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:200px;height:200px;display:flex;align-items:center;justify-content:center;font-size:120px;pointer-events:none;'; this.outerHTML='<div id=boss-emoji style=\'position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:120px;pointer-events:none;filter:drop-shadow(0 0 20px rgba(0,191,255,0.5));animation:boss-breathe 3s ease-in-out infinite\'>👹</div>';"
+         alt="boss">
+
+    <!-- Weak points -->
+    <div class="weak-point" style="left:42%;top:28%;animation-delay:0s"></div>
+    <div class="weak-point" style="left:58%;top:45%;animation-delay:0.7s"></div>
+    <div class="weak-point" style="left:35%;top:55%;animation-delay:1.4s"></div>
+
+    <!-- Ghost avatars -->
+    <div class="ghost" style="left:8%;top:30%;animation-delay:0s;animation-duration:3.5s">⚔️</div>
+    <div class="ghost" style="left:78%;top:20%;animation-delay:1.2s;animation-duration:4s">🛡️</div>
+    <div class="ghost" style="left:15%;top:60%;animation-delay:2.3s;animation-duration:3.2s">🔮</div>
+    <div class="ghost" style="left:72%;top:55%;animation-delay:0.8s;animation-duration:4.5s">⚡</div>
+    <div class="ghost" style="left:50%;top:15%;animation-delay:1.8s;animation-duration:3.8s">🔥</div>
+
+    <div id="click-hint">⚡ ТАП — УДАР ⚡</div>
+  </div>
+
+  <!-- COLLECTIVE ULTRA -->
+  <div id="ultra-section">
+    <div id="ultra-label">УЛЬТА</div>
+    <div id="ultra-bar-track">
+      <div id="ultra-bar-fill"></div>
+    </div>
+    <div id="ultra-btn">УДАР</div>
+  </div>
+
+  <!-- SKILLS PANEL -->
+  <div id="skills-panel">
+    <div id="skills-row">
+      <div class="skill-btn" data-skill="attack" data-cd="3">
+        <div class="icon">⚔️</div>
+        <div class="name">Атака</div>
+        <div class="cd-ring"><span class="cd-val">3</span></div>
+      </div>
+      <div class="skill-btn" data-skill="shield" data-cd="0">
+        <div class="icon">🛡️</div>
+        <div class="name">Щит</div>
+        <div class="cd-ring"><span class="cd-val">0</span></div>
+      </div>
+      <div class="skill-btn" data-skill="ult" data-cd="0">
+        <div class="icon">💥</div>
+        <div class="name">Ульта</div>
+        <div class="cd-ring"><span class="cd-val">0</span></div>
+      </div>
+      <div class="skill-btn" data-skill="auto" data-cd="0">
+        <div class="icon">🤖</div>
+        <div class="name">Авто</div>
+        <div class="cd-ring"><span class="cd-val">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QTE OVERLAY -->
+  <div id="qte-overlay">
+    <div id="qte-title">⚡ КОЛЛЕКТИВНЫЙ УДАР ⚡</div>
+    <div id="qte-btn">
+      <div class="qte-label">ВСЕ ЖМУТ</div>
+      <div class="qte-icon">💥</div>
+      <div class="qte-label" id="qte-count">0 / 10</div>
+    </div>
+    <div id="qte-bar-wrap">
+      <div id="qte-bar-label">ОСТАЛОСЬ: <span id="qte-timer">5</span>с</div>
+      <div id="qte-progress"><div id="qte-progress-fill"></div></div>
+    </div>
+  </div>
+
+  <!-- RESULT OVERLAY -->
+  <div id="result-overlay">
+    <div id="mvp-badge">👑 MVP RAID</div>
+    <div id="mvp-avatar">⚔️</div>
+    <div id="mvp-name">@Ivan_War</div>
+    <div id="mvp-title">⚡ РАЗРУШИТЕЛЬ БОССОВ ⚡</div>
+    <div id="mvp-dmg">Урон: <span style="color:var(--energy)">1,247,380</span></div>
+    <button id="close-result">ПОЛУЧИТЬ НАГРАДУ</button>
+  </div>
+
+</div>
+</div>
+
+<script>
+// ── State ──
+const state = {
+  hp: 365000, hpMax: 500000,
+  ultraEnergy: 0.62,
+  combos: 0,
+  rageCombo: 0,
+  timer: 42,
+  phase: 2,
+  dmgPool: [], // object pool
+  poolSize: 30,
+  lastThreshold: 75,
+};
+
+// ── Elements ──
+const app = document.getElementById('app');
+const bossZone = document.getElementById('boss-zone');
+const hpFill = document.getElementById('hp-bar-fill');
+const hpVal = document.getElementById('hp-val');
+const ultraFill = document.getElementById('ultra-bar-fill');
+const ultraBtn = document.getElementById('ultra-btn');
+const rageVignette = document.getElementById('rage-vignette');
+const phaseBadge = document.getElementById('phase-badge');
+const timerVal = document.getElementById('timer-val');
+
+// Build HP segments
+const segContainer = document.getElementById('hp-segments');
+for (let i = 0; i < 24; i++) {
+  const s = document.createElement('div');
+  s.className = 'hp-seg';
+  segContainer.appendChild(s);
+}
+
+// ── Object Pool: damage numbers ──
+const poolContainer = bossZone;
+const pool = [];
+for (let i = 0; i < state.poolSize; i++) {
+  const el = document.createElement('div');
+  el.className = 'dmg-number';
+  el.style.display = 'none';
+  poolContainer.appendChild(el);
+  pool.push(el);
+}
+
+let poolIdx = 0;
+function getFromPool() {
+  const el = pool[poolIdx % state.poolSize];
+  poolIdx++;
+  el.style.display = 'none';
+  void el.offsetWidth; // force reflow to reset animation
+  return el;
+}
+
+// ── Damage number spawn (throttled via rAF) ──
+let pendingDmg = [];
+let rafScheduled = false;
+
+function scheduleDmgRender() {
+  if (rafScheduled) return;
+  rafScheduled = true;
+  requestAnimationFrame(() => {
+    rafScheduled = false;
+    if (!pendingDmg.length) return;
+    // batch: process up to 5 at once
+    const batch = pendingDmg.splice(0, 5);
+    batch.forEach(({ x, y, dmg, isCrit }) => {
+      const el = getFromPool();
+      const fontSize = isCrit ? `${20 + Math.random()*12}px` : `${13 + Math.random()*8}px`;
+      const color = isCrit ? '#FFD700' : (state.rageCombo > 5 ? '#FF4400' : '#FF6680');
+      el.style.cssText = `
+        display:block; left:${x}px; top:${y}px; font-size:${fontSize};
+        color:${color}; transform-origin:center;
+        text-shadow: 0 0 8px ${color};
+      `;
+      el.textContent = isCrit ? `💥 ${dmg.toLocaleString()}!` : `+${dmg.toLocaleString()}`;
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'dmg-fly 0.9s ease-out forwards';
+      setTimeout(() => { el.style.display = 'none'; }, 900);
+    });
+  });
+}
+
+function spawnDamage(x, y) {
+  const isCrit = Math.random() < 0.25;
+  const base = isCrit ? 8000 + Math.random()*40000 : 2000 + Math.random()*15000;
+  const dmg = Math.round(base);
+  // spread x slightly
+  const sx = x + (Math.random()-0.5)*60;
+  const sy = y + (Math.random()-0.5)*30;
+  pendingDmg.push({ x: sx, y: sy, dmg, isCrit });
+  scheduleDmgRender();
+  return dmg;
+}
+
+// ── HP update ──
+function updateHP(dmg) {
+  state.hp = Math.max(0, state.hp - dmg);
+  const pct = state.hp / state.hpMax;
+  hpFill.style.width = (pct * 100) + '%';
+  hpVal.textContent = `${Math.round(state.hp/1000)}K / ${state.hpMax/1000}K`;
+
+  // Phase thresholds
+  const thresholds = [75, 50, 25];
+  const curPct = Math.round(pct * 100);
+  for (const t of thresholds) {
+    if (state.lastThreshold > t && curPct <= t) {
+      state.lastThreshold = t;
+      triggerThreshold(t);
+    }
+  }
+
+  // Color shift
+  if (pct < 0.25) hpFill.style.background = 'linear-gradient(90deg,#FF0000,#FF2200)';
+  else if (pct < 0.5) hpFill.style.background = 'linear-gradient(90deg,#FF4400,#FF6600)';
+  else hpFill.style.background = 'linear-gradient(90deg,#FF0055,#FF4400)';
+
+  if (state.hp <= 0) triggerVictory();
+}
+
+function triggerThreshold(pct) {
+  // Screen shake
+  app.classList.remove('shake');
+  void app.offsetWidth;
+  app.classList.add('shake');
+  setTimeout(() => app.classList.remove('shake'), 450);
+
+  // Flash bg
+  app.style.animation = 'threshold-flash 0.8s ease forwards';
+  setTimeout(() => app.style.animation = '', 800);
+
+  phaseBadge.textContent = `ФАЗА ${pct <= 25 ? 3 : pct <= 50 ? 2 : 1}`;
+  state.phase = pct <= 25 ? 3 : pct <= 50 ? 2 : 1;
+
+  // Spawn QTE at 50%
+  if (pct === 50) triggerQTE();
+}
+
+// ── Ultra energy ──
+function addUltraEnergy(amount) {
+  state.ultraEnergy = Math.min(1, state.ultraEnergy + amount);
+  ultraFill.style.width = (state.ultraEnergy * 100) + '%';
+  if (state.ultraEnergy >= 1) {
+    ultraBtn.classList.add('ready');
+    ultraBtn.textContent = '⚡ УДАР!';
+  }
+}
+
+ultraBtn.addEventListener('click', () => {
+  if (!ultraBtn.classList.contains('ready')) return;
+  // Ultra effect
+  app.classList.remove('shake');
+  void app.offsetWidth;
+  app.classList.add('shake');
+  setTimeout(() => app.classList.remove('shake'), 450);
+
+  // Big damage burst
+  const bossBB = bossZone.getBoundingClientRect();
+  const appBB = app.getBoundingClientRect();
+  for (let i = 0; i < 8; i++) {
+    setTimeout(() => {
+      const x = 80 + Math.random() * 220;
+      const y = 40 + Math.random() * 160;
+      const el = getFromPool();
+      el.style.cssText = `display:block;left:${x}px;top:${y}px;font-size:${22+Math.random()*10}px;color:#BF00FF;text-shadow:0 0 15px #BF00FF;`;
+      el.textContent = `💜 ${Math.round(30000+Math.random()*20000).toLocaleString()}`;
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = 'dmg-fly 1.1s ease-out forwards';
+      setTimeout(() => el.style.display='none', 1100);
+      updateHP(30000 + Math.random()*20000);
+    }, i * 80);
+  }
+
+  state.ultraEnergy = 0;
+  ultraFill.style.width = '0%';
+  ultraBtn.classList.remove('ready');
+  ultraBtn.textContent = 'УДАР';
+});
+
+// ── Rage mode ──
+function updateRage(combo) {
+  if (combo > 8) {
+    rageVignette.classList.add('active');
+  } else {
+    rageVignette.classList.remove('active');
+  }
+}
+
+// ── Boss click ──
+let lastTap = 0;
+function onBossClick(e) {
+  const rect = bossZone.getBoundingClientRect();
+  const appRect = app.getBoundingClientRect();
+  const x = (e.touches ? e.touches[0].clientX : e.clientX) - appRect.left;
+  const y = (e.touches ? e.touches[0].clientY : e.clientY) - appRect.top;
+
+  // Double-tap guard (debounce rapid fire to ~60fps)
+  const now = Date.now();
+  if (now - lastTap < 16) return;
+  lastTap = now;
+
+  const dmg = spawnDamage(x, y);
+  updateHP(dmg);
+  addUltraEnergy(0.04 + Math.random()*0.02);
+
+  // Combo
+  state.rageCombo++;
+  clearTimeout(state.rageTimer);
+  state.rageTimer = setTimeout(() => {
+    state.rageCombo = 0;
+    updateRage(0);
+  }, 2000);
+  updateRage(state.rageCombo);
+
+  // Boss hit flash
+  const bossImg = document.getElementById('boss-image') || document.getElementById('boss-emoji');
+  if (bossImg) {
+    bossImg.classList.remove('hit');
+    void bossImg.offsetWidth;
+    bossImg.classList.add('hit');
+    setTimeout(() => bossImg.classList.remove('hit'), 150);
+  }
+
+  // Haptic (Telegram API)
+  if (window.Telegram?.WebApp?.HapticFeedback) {
+    window.Telegram.WebApp.HapticFeedback.impactOccurred(dmg > 10000 ? 'medium' : 'light');
+  }
+}
+
+bossZone.addEventListener('click', onBossClick);
+bossZone.addEventListener('touchstart', onBossClick, { passive: true });
+
+// ── Skill cooldowns ──
+document.querySelectorAll('.skill-btn').forEach(btn => {
+  const cdTime = parseInt(btn.dataset.cd) || 0;
+  const cdEl = btn.querySelector('.cd-val');
+
+  if (cdTime > 0) {
+    btn.classList.add('on-cd');
+    let remaining = cdTime;
+    cdEl.textContent = remaining;
+    const iv = setInterval(() => {
+      remaining--;
+      cdEl.textContent = remaining;
+      if (remaining <= 0) {
+        clearInterval(iv);
+        btn.classList.remove('on-cd');
+      }
+    }, 1000);
+  }
+
+  btn.addEventListener('click', () => {
+    if (btn.classList.contains('on-cd')) return;
+
+    const skill = btn.dataset.skill;
+    const cds = { attack: 4, shield: 8, ult: 15, auto: 0 };
+    const dmgMap = { attack: 15000, shield: 0, ult: 50000, auto: 5000 };
+    const cdSeconds = cds[skill];
+
+    // deal damage
+    if (dmgMap[skill] > 0) {
+      const rect = app.getBoundingClientRect();
+      const x = 120 + Math.random()*140;
+      const y = 100 + Math.random()*120;
+      spawnDamage(x, y);
+      updateHP(dmgMap[skill] + Math.random()*5000);
+      addUltraEnergy(0.06);
+    }
+
+    if (cdSeconds > 0) {
+      btn.classList.add('on-cd');
+      let remaining = cdSeconds;
+      cdEl.textContent = remaining;
+      const iv = setInterval(() => {
+        remaining--;
+        cdEl.textContent = remaining;
+        if (remaining <= 0) {
+          clearInterval(iv);
+          btn.classList.remove('on-cd');
+        }
+      }, 1000);
+    }
+  });
+});
+
+// ── QTE ──
+let qteActive = false, qteCount = 0, qteInterval = null;
+
+function triggerQTE() {
+  if (qteActive) return;
+  qteActive = true;
+  qteCount = 0;
+  const overlay = document.getElementById('qte-overlay');
+  const qteCountEl = document.getElementById('qte-count');
+  const qteTimerEl = document.getElementById('qte-timer');
+  const qteProgressEl = document.getElementById('qte-progress-fill');
+  overlay.classList.add('active');
+
+  let timeLeft = 5;
+  qteTimerEl.textContent = timeLeft;
+
+  qteInterval = setInterval(() => {
+    timeLeft -= 0.1;
+    qteTimerEl.textContent = timeLeft.toFixed(1);
+    qteProgressEl.style.width = (timeLeft / 5 * 100) + '%';
+    if (timeLeft <= 0) {
+      clearInterval(qteInterval);
+      overlay.classList.remove('active');
+      qteActive = false;
+      // If enough taps — deal massive damage
+      if (qteCount >= 5) {
+        app.classList.remove('shake');
+        void app.offsetWidth;
+        app.classList.add('shake');
+        setTimeout(() => app.classList.remove('shake'), 450);
+        for (let i = 0; i < 5; i++) {
+          setTimeout(() => {
+            const x = 80 + Math.random()*220; const y = 40+Math.random()*120;
+            const el = getFromPool();
+            el.style.cssText = `display:block;left:${x}px;top:${y}px;font-size:24px;color:#FFD700;text-shadow:0 0 20px #FFD700;`;
+            el.textContent = `⚡ СТАН! ${Math.round(60000+Math.random()*20000).toLocaleString()}`;
+            el.style.animation='none'; void el.offsetWidth;
+            el.style.animation='dmg-fly 1.2s ease-out forwards';
+            setTimeout(()=>el.style.display='none',1200);
+            updateHP(60000+Math.random()*20000);
+          }, i*100);
+        }
+      }
+    }
+  }, 100);
+
+  document.getElementById('qte-btn').onclick = () => {
+    qteCount = Math.min(qteCount + 1, 10);
+    qteCountEl.textContent = `${qteCount} / 10`;
+    if (window.Telegram?.WebApp?.HapticFeedback) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+  };
+}
+
+// ── Timer ──
+const timerInterval = setInterval(() => {
+  if (state.timer <= 0) { clearInterval(timerInterval); return; }
+  state.timer--;
+  const m = Math.floor(state.timer / 60).toString().padStart(2,'0');
+  const s = (state.timer % 60).toString().padStart(2,'0');
+  timerVal.textContent = `${m}:${s}`;
+}, 1000);
+
+// ── Victory ──
+function triggerVictory() {
+  clearInterval(timerInterval);
+  setTimeout(() => {
+    document.getElementById('result-overlay').classList.add('active');
+  }, 600);
+}
+
+document.getElementById('close-result').addEventListener('click', () => {
+  document.getElementById('result-overlay').classList.remove('active');
+  // Reset for demo
+  state.hp = state.hpMax;
+  state.lastThreshold = 75;
+  state.ultraEnergy = 0.62;
+  state.rageCombo = 0;
+  state.timer = 42;
+  updateHP(0);
+  ultraFill.style.width = '62%';
+  ultraBtn.classList.remove('ready');
+  ultraBtn.textContent = 'УДАР';
+  hpFill.style.background = 'linear-gradient(90deg,#FF0055,#FF4400)';
+});
+
+// ── Simulate incoming activity (for demo) ──
+let autoSimInterval = null;
+function startAutoSim() {
+  autoSimInterval = setInterval(() => {
+    if (Math.random() < 0.3) {
+      const x = 80 + Math.random()*220;
+      const y = 50 + Math.random()*150;
+      const dmg = Math.round(500 + Math.random()*3000);
+      // Silent background update - no DOM spam from "other players"
+      state.hp = Math.max(0, state.hp - dmg);
+      const pct = state.hp / state.hpMax;
+      hpFill.style.width = (pct*100)+'%';
+      hpVal.textContent = `${Math.round(state.hp/1000)}K / ${state.hpMax/1000}K`;
+      addUltraEnergy(0.005);
+      if (state.hp <= 0) { clearInterval(autoSimInterval); triggerVictory(); }
+    }
+  }, 800);
+}
+startAutoSim();
+</script>
+</body>
+</html>

@@ -251,8 +251,8 @@ window.WBHtml = (() => {
   }
 
   function render(scene, state) {
-    _scene = scene; _state = state;
-    window.WBHtml._scene = scene;
+    _scene = scene; _state = state; window.WBHtml._scene = scene;
+    if (state?.unclaimed_rewards?.length) { window.WBBattleCSS?.inject(); window.WBHtml.showMvpResult?.(state, scene); }
     window.WBLobbyCSS?.inject();
     try { window._closeAllTabOverlays?.(); } catch(_) {}
     const s = state || {};

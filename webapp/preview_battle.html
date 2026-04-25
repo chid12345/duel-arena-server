@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>WB Battle Preview</title>
+<style>
+body{margin:0;background:#000;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;}
+#frame{width:390px;height:780px;position:relative;border:1px solid #222;background:#050508;overflow:hidden;}
+</style>
+<script src="wb_html_battle_css.js"></script>
+</head>
+<body>
+<div id="frame">
+  <div id="wb-root" style="position:absolute;inset:0;display:flex;flex-direction:column;"></div>
+</div>
+<script>
+window.WBBattleCSS?.inject();
+window.WBHtml = window.WBHtml || {};
+
+const a = { current_hp: 427000, max_hp: 500000, seconds_left: 30, boss_emoji:'🐉' };
+const tickContent = `<span>⚔ <span class="wb-tn">@Shado</span> нанёс <span class="wb-td">2.4K</span> крит!</span><span style="color:rgba(255,255,255,.1)">◆</span><span>🔥 <span class="wb-tcl">Dragon Clan</span> активировал усиление <span class="wb-td">+15%</span></span><span style="color:rgba(255,255,255,.1)">◆</span><span>⚔ <span class="wb-tn">@Storm</span> нанёс <span class="wb-td">1.8K</span></span>`;
+
+const fmtHp = v => v >= 1000 ? Math.round(v/1000)+'K' : String(v||0);
+const pct = Math.round(a.current_hp / a.max_hp * 100);
+const phase = pct > 50 ? 'ФАЗА 1' : pct > 20 ? 'ФАЗА 2 🔥' : 'ФИНАЛ ☠️';
+const ghosts = [['⚔️','left:12%;bottom:55%'],['🛡️','left:72%;bottom:60%'],['🧙','left:35%;bottom:75%']]
+  .map(([e,pos],i)=>`<div class="wb-ghost" style="${pos};animation-delay:${i*1.3}s">${e}</div>`).join('');
+const fixedGhosts = [['5%','38%','×'],['87%','27%','⚡'],['18%','68%','🔥'],['78%','62%','💧'],['55%','16%','◈'],['32%','78%','✦']]
+  .map(([l,t,e])=>`<div class="wb-ghost-fixed" style="left:${l};top:${t}">${e}</div>`).join('');
+
+document.getElementById('wb-root').innerHTML = `
+<div class="wb-bhdr2">
+  <div class="wb-bhdr2-top">
+    <div class="wb-bhdr2-l">
+      <div class="wb-back2">←</div>
+      <div class="wb-bhdr2-title">⚡ BOSS RAID</div>
+    </div>
+    <div class="wb-bhdr2-r">
+      <div class="wb-phase">${phase}</div>
+      <div class="wb-btimer2"><div class="wb-tdot"></div><div class="wb-tval">0:30</div></div>
+    </div>
+  </div>
+  <div class="wb-hp2-sec">
+    <div class="wb-hp2-lbl">HP</div>
+    <div class="wb-hp2-track"><div class="wb-hp2-fill" style="width:${pct}%"></div></div>
+    <div class="wb-hp2-nums">${fmtHp(a.current_hp)} / ${fmtHp(a.max_hp)}</div>
+  </div>
+</div>
+<div class="wb-ticker"><div class="wb-ticker-in">${tickContent}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${tickContent}</div></div>
+<div class="wb-boss-zone">
+  <div class="wb-rage2"></div>
+  ${ghosts}
+  ${fixedGhosts}
+  <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:160px;filter:drop-shadow(0 0 24px rgba(255,80,0,.5));pointer-events:none;">👹</div>
+  <div class="wb-wp" style="top:22%;left:52%"></div>
+  <div class="wb-wp" style="top:40%;left:63%"></div>
+  <div class="wb-wp" style="top:55%;left:38%"></div>
+  <div class="wb-tap-hint">⚡ ТАП — УДАР ⚡</div>
+</div>
+<div class="wb-ultra">
+  <div class="wb-ultra-lbl">УЛЬТА</div>
+  <div class="wb-ultra-track"><div class="wb-ultra-fill" style="width:78%"></div></div>
+  <div class="wb-ultra-btn">УДАР</div>
+</div>
+<div class="wb-skills">
+  <div class="wb-skill atk">
+    <div class="ws-icon">⚔️</div><div class="ws-name">АТАКА</div>
+    <div class="wb-cd-ov" style="opacity:0"></div>
+  </div>
+  <div class="wb-skill shld">
+    <div class="ws-icon">🛡️</div><div class="ws-name">ЩИТ</div>
+    <div class="wb-cd-ov" style="opacity:0"></div>
+  </div>
+  <div class="wb-skill ult cd">
+    <div class="ws-icon">💥</div><div class="ws-name">УЛЬТА</div>
+    <div class="wb-cd-ov"><div class="wb-cd-num">2</div></div>
+  </div>
+  <div class="wb-skill auto">
+    <div class="ws-icon">🤖</div><div class="ws-name">АВТО</div>
+    <div class="wb-cd-ov" style="opacity:0"></div>
+  </div>
+</div>`;
+</script>
+</body>
+</html>
