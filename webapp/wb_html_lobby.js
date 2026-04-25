@@ -9,7 +9,8 @@ window.WBHtml = (() => {
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function _fmtCountdown(iso) {
     try {
-      const d = Math.max(0, Math.floor((new Date(iso) - Date.now()) / 1000));
+      const ts = new Date(iso).getTime(); if (!ts || isNaN(ts)) return '—';
+      const d = Math.max(0, Math.floor((ts - Date.now()) / 1000));
       const h = Math.floor(d/3600), m = Math.floor((d%3600)/60), s = d%60;
       return h>0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
                  : `${m}:${String(s).padStart(2,'0')}`;
@@ -46,15 +47,29 @@ window.WBHtml = (() => {
     const reminded  = s.reminder_opt_in || false;
     const joinedAndReminded = joined && reminded;
 
-    const boostsHTML = Object.entries(SCROLL_META).map(([id,m]) =>
-      `<div class="wb-bc" data-act="buy-scroll" data-id="${id}">
+    const boostEntries = Object.entries(SCROLL_META);
+    const boostsHTML = boostEntries.map(([id,m], i) => {
+      const isLast = i === boostEntries.length - 1 && boostEntries.length % 2 === 1;
+      if (isLast) return `<div class="wb-bc last" data-act="buy-scroll" data-id="${id}">
+        <div class="bc-ic">${m.icon}</div>
+        <div class="last-wrap">
+          <div style="display:flex;align-items:baseline;gap:6px;">
+            <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div>
+            <div class="bc-pr" style="margin-left:auto;">${m.price}</div>
+            <div class="bc-ow" style="position:static;">×${inv[id]||0}</div>
+          </div>
+          <div class="bc-desc">${m.desc}</div>
+        </div>
+      </div>`;
+      return `<div class="wb-bc" data-act="buy-scroll" data-id="${id}">
         <div class="bc-ow">×${inv[id]||0}</div>
         <div class="bc-ic">${m.icon}</div>
         <div class="bc-nm">${m.name}</div>
         <div class="bc-vl">${m.val}</div>
         <div class="bc-desc">${m.desc}</div>
         <div class="bc-pr">${m.price}</div>
-      </div>`).join('');
+      </div>`;
+    }).join('');
 
     const resHTML = RES_META.map(r => {
       const g = r.gold ? ' style="border-color:rgba(255,200,0,.15)"' : '';
@@ -122,9 +137,9 @@ window.WBHtml = (() => {
   <div class="wb-chips" id="wb-inv-chips"></div>
 </div>
 <div class="wb-cats">
-  <div class="wb-cat on" data-cat="boosts">⚔️ БУСТЫ</div>
-  <div class="wb-cat" data-cat="revival">💊 ВОСКРЕШЕНИЕ</div>
-  <div class="wb-cat" data-cat="history">📜 ИСТОРИЯ</div>
+  <div class="wb-cat on" data-cat="boosts"><span class="wb-cat-ic">⚔️</span><span class="wb-cat-lb">БУСТЫ</span></div>
+  <div class="wb-cat" data-cat="revival"><span class="wb-cat-ic">💊</span><span class="wb-cat-lb">ВОСКРЕШЕНИЕ</span></div>
+  <div class="wb-cat" data-cat="history"><span class="wb-cat-ic">📜</span><span class="wb-cat-lb">ИСТОРИЯ</span></div>
 </div>
 <div class="wb-cp on" data-cp="boosts"><div class="wb-bgrid">${boostsHTML}</div></div>
 <div class="wb-cp" data-cp="revival"><div class="wb-rgrid">${resHTML}</div></div>
