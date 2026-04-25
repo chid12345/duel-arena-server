@@ -68,10 +68,10 @@ window.WBHtml = (() => {
     const boostsHTML = boostEntries.map(([id,m]) => {
       const isBought = bought.includes(id);
       const bCls = isBought ? ' bought' : '';
-      return `<div class="wb-bc${bCls}" data-act="buy-scroll" data-id="${id}">
+      return `<div class="wb-bc${bCls}" data-act="boost-info" data-id="${id}">
         <div class="bc-top"><div class="bc-ic">${m.icon}</div><div class="bc-ow">×${inv[id]||0}</div></div>
         <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div>
-        <div class="bc-buy">${m.price} — Купить</div>
+        <div class="bc-buy">${m.price}</div>
         <div class="bc-bought-lbl">✓ КУПЛЕНО</div>
       </div>`;
     }).join('');
@@ -98,9 +98,8 @@ window.WBHtml = (() => {
 
     const top5 = (s.top||[]).slice(0,6);
     const DEF_EM = ['⚔️','🛡️','🔮','🐉','⚡','🗡️','🔥'];
-    const avEmojis = top5.length > 0 ? top5.map(t=>t.emoji||'⚔️') : DEF_EM.slice(0, Math.min(regCnt||7, 7));
+    const avEmojis = top5.length > 0 ? top5.map(t=>t.emoji||'⚔️') : DEF_EM.slice(0,7);
     const avatarsHTML = avEmojis.map(em=>`<div class="wb-av">${em}</div>`).join('');
-    const extra = Math.max(0, (regCnt||0) - avEmojis.length);
 
     return `
 <div class="wb-hdr">
@@ -129,7 +128,7 @@ window.WBHtml = (() => {
     <div class="wb-prize-players">игроков</div>
   </div>
 </div>
-<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-av-more">+${extra} участников</span>`:''}</div>
+<div class="wb-avstrip">${avatarsHTML}<span class="wb-av-more">${regCnt||0} участников</span></div>
 <div class="wb-recon" data-act="boss-card">
   <div class="wb-recon-ic">🔍</div>
   <div class="wb-recon-txt">
@@ -215,10 +214,9 @@ window.WBHtml = (() => {
       }
       else if (act==='boss-card')    { window.WBHtml.showBossCard?.(_state); }
       else if (act==='auto-toggle')  { document.getElementById('wb-auto-toggle')?.classList.toggle('on'); }
-      else if (act==='buy-scroll') {
+      else if (act==='boost-info') {
         if (el.classList.contains('bought')) return;
-        _markBought(el.dataset.id); el.classList.add('bought');
-        _scene?._buyScroll?.(el.dataset.id);
+        window.WBHtml.showBoostInfo?.(el.dataset.id, _state, _scene, SCROLL_META, _markBought);
       }
       else if (act==='buy-res') { _scene?._buyResScroll?.(el.dataset.id); }
       else if (act==='test')    { get('/api/admin/wb_test_schedule').then(()=>_scene?._refresh?.()).catch(()=>{}); }

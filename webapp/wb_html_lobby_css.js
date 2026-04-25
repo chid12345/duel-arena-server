@@ -138,9 +138,12 @@ window.WBLobbyCSS = (() => {
 .wb-cat.on .wb-cat-lb{color:#ff4488;text-shadow:0 0 6px rgba(255,0,100,.5);}
 .wb-cp{display:none;}.wb-cp.on{display:block;}
 
-/* ── Бусты (карточки) — компактные ── */
-.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px 14px 8px;}
-.wb-bc{padding:5px 6px 4px;border-radius:8px;cursor:pointer;position:relative;overflow:hidden;
+/* ── Бусты (горизонтальный скролл) ── */
+.wb-bgrid{display:flex;overflow-x:auto;gap:5px;padding:3px 14px 8px;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;}
+.wb-bgrid::-webkit-scrollbar{display:none;}
+.wb-bc{flex-shrink:0;width:74px;scroll-snap-align:start;
+  padding:6px 5px 5px;border-radius:8px;cursor:pointer;position:relative;overflow:hidden;
   display:flex;flex-direction:column;gap:1px;
   background:linear-gradient(135deg,rgba(20,0,38,.97),rgba(5,4,18,.97));
   border:1px solid rgba(255,0,200,.2);transition:all .2s;}
@@ -152,7 +155,7 @@ window.WBLobbyCSS = (() => {
 .bc-nm{font-size:7px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.4);text-transform:uppercase;}
 .bc-vl{font-family:'Courier New',monospace;font-size:11px;font-weight:900;color:#00FF9F;
   text-shadow:0 0 6px rgba(0,255,159,.5);line-height:1.1;}
-.bc-buy{margin-top:3px;padding:3px 0;border-radius:5px;font-size:8px;font-weight:800;
+.bc-buy{margin-top:3px;padding:3px 0;border-radius:5px;font-size:7px;font-weight:800;
   text-align:center;color:#FF0055;border:1px solid rgba(255,0,85,.35);
   background:rgba(255,0,85,.08);letter-spacing:.2px;}
 .bc-bought-lbl{display:none;margin-top:3px;font-size:7px;font-weight:800;letter-spacing:.5px;
@@ -194,6 +197,32 @@ window.WBLobbyCSS = (() => {
 .wb-hbdg{font-size:8px;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.5px;flex-shrink:0;}
 .wb-hbdg.f{background:rgba(0,229,255,.12);color:#00e5ff;border:1px solid rgba(0,229,255,.28);}
 .wb-hbdg.p{background:rgba(255,200,0,.1);color:#ffcc44;border:1px solid rgba(255,200,0,.25);}
+
+/* ── Инфо-попап буста ── */
+.wb-binfo-ov{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);
+  backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s;
+  display:flex;align-items:flex-end;justify-content:center;}
+.wb-binfo-ov.open{opacity:1;pointer-events:all;}
+.wb-binfo{width:100%;max-width:390px;border-radius:20px 20px 0 0;padding:0 0 22px;
+  background:linear-gradient(180deg,#0d0020 0%,#05030f 100%);
+  border:1px solid rgba(255,0,200,.3);border-bottom:none;
+  box-shadow:0 -8px 40px rgba(255,0,200,.15);
+  transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1.2,.5,1);}
+.wb-binfo-ov.open .wb-binfo{transform:translateY(0);}
+.wb-binfo-hdl{display:flex;justify-content:center;padding:9px 0 5px;}
+.wb-binfo-hdl::before{content:"";width:32px;height:3px;border-radius:2px;background:rgba(255,0,200,.3);}
+.wb-binfo-ic{font-size:38px;text-align:center;padding:6px 0 4px;
+  filter:drop-shadow(0 0 10px rgba(255,0,200,.5));}
+.wb-binfo-title{font-size:16px;font-weight:900;color:#fff;text-align:center;padding:0 18px 4px;letter-spacing:1px;}
+.wb-binfo-val{font-family:'Courier New',monospace;font-size:22px;font-weight:900;
+  color:#00FF9F;text-align:center;text-shadow:0 0 8px rgba(0,255,159,.5);padding-bottom:8px;}
+.wb-binfo-desc{font-size:11px;color:rgba(255,255,255,.6);text-align:center;padding:0 22px 10px;line-height:1.5;}
+.wb-binfo-own{font-size:9px;font-weight:800;color:#00BFFF;text-align:center;padding-bottom:10px;letter-spacing:.5px;}
+.wb-binfo-buy{margin:0 14px;padding:12px;border-radius:12px;text-align:center;cursor:pointer;
+  background:linear-gradient(135deg,rgba(255,0,85,.3),rgba(180,0,55,.3));
+  border:1px solid rgba(255,0,85,.4);font-size:13px;font-weight:800;letter-spacing:1px;color:#fff;
+  transition:background .15s;}
+.wb-binfo-buy:active{background:linear-gradient(135deg,rgba(255,0,85,.5),rgba(180,0,55,.5));}
 
 /* ── Тост + подготовка ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
