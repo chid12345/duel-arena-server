@@ -215,10 +215,15 @@ ${showJoin ? `
     });
   }
 
+  function _setTabBar(visible) {
+    try { _scene?._tabBarResult?.objs?.forEach(o => o.setVisible?.(visible)); } catch(_) {}
+  }
+
   function render(scene, state) {
     _scene = scene; _state = state;
     window.WBLobbyCSS?.inject();
     try { window._closeAllTabOverlays?.(); } catch(_) {}
+    _setTabBar(false);
     const s = state || {};
     const root = _root();
     if (s.active) { window.WBHtml._renderBattle?.(root, s); return; }
@@ -251,6 +256,7 @@ ${showJoin ? `
   function close() {
     clearInterval(window._wbTimer);
     document.getElementById(ID)?.remove();
+    _setTabBar(true);
   }
 
   return { render, toast, close, _log, _wlog };
