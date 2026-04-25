@@ -105,6 +105,9 @@ ${isDead ? deadHTML : ''}
     <div class="wb-cd-ov" style="opacity:0"></div>
   </div>
 </div>
+<div style="text-align:right;padding:2px 12px 4px">
+  <span style="font-size:9px;color:#330011;cursor:pointer;letter-spacing:.5px;" data-act="wb-end-test">⚡ завершить бой (dev)</span>
+</div>
 <div class="wb-pcard-ov" id="wb-pcov">
   <div class="wb-pcard" id="wb-pc">
     <div class="wb-pc-hdl"></div>
