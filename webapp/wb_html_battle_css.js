@@ -133,28 +133,28 @@ window.WBBattleCSS = (() => {
 .wb-ultra-btn:active.ready{transform:scale(.96);}
 
 /* ── Кнопки скиллов ── */
-.wb-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;
-  padding:5px 12px 10px;background:linear-gradient(0deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
-  border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;}
-.wb-skill{border-radius:8px;padding:5px 3px 4px;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative;overflow:hidden;
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+.wb-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+  padding:6px 10px 10px;background:linear-gradient(0deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
+  border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
+.wb-skill{border-radius:10px;padding:8px 4px 7px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;cursor:pointer;position:relative;overflow:hidden;
+  background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);
   transition:all .12s;-webkit-tap-highlight-color:transparent;}
 .wb-skill:active:not(.cd){transform:scale(.93);}
-.wb-skill.atk{border-color:rgba(255,0,85,.25);box-shadow:0 0 6px rgba(255,0,85,.1);}
-.wb-skill.shld{border-color:rgba(0,191,255,.25);box-shadow:0 0 6px rgba(0,191,255,.1);}
-.wb-skill.ult{border-color:rgba(191,0,255,.3);animation:wb-ug 2s ease-in-out infinite;}
-@keyframes wb-ug{0%,100%{box-shadow:0 0 6px rgba(191,0,255,.15)}50%{box-shadow:0 0 14px rgba(191,0,255,.35)}}
-.wb-skill.auto{border-color:rgba(0,255,159,.25);box-shadow:0 0 6px rgba(0,255,159,.1);}
-.wb-skill.auto.auto-on{border-color:rgba(0,255,159,.7);box-shadow:0 0 12px rgba(0,255,159,.4);
+.wb-skill.atk{border-color:rgba(255,0,85,.55);box-shadow:0 0 10px rgba(255,0,85,.2),inset 0 0 8px rgba(255,0,85,.05);}
+.wb-skill.shld{border-color:rgba(0,191,255,.55);box-shadow:0 0 10px rgba(0,191,255,.2),inset 0 0 8px rgba(0,191,255,.05);}
+.wb-skill.ult{border-color:rgba(191,0,255,.6);animation:wb-ug 2s ease-in-out infinite;}
+@keyframes wb-ug{0%,100%{box-shadow:0 0 8px rgba(191,0,255,.2)}50%{box-shadow:0 0 20px rgba(191,0,255,.5),0 0 35px rgba(191,0,255,.2)}}
+.wb-skill.auto{border-color:rgba(0,255,159,.55);box-shadow:0 0 10px rgba(0,255,159,.2),inset 0 0 8px rgba(0,255,159,.05);}
+.wb-skill.auto.auto-on{border-color:rgba(0,255,159,.85);box-shadow:0 0 16px rgba(0,255,159,.5);
   background:rgba(0,255,159,.08);animation:wb-ug 1.5s ease-in-out infinite;}
-.ws-icon{font-size:15px;line-height:1;}
-.ws-name{font-size:6px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.4);}
-.wb-skill.cd .ws-icon,.wb-skill.cd .ws-name{opacity:.3;}
-.wb-cd-ov{position:absolute;inset:0;border-radius:8px;background:rgba(0,0,0,.7);
+.ws-icon{font-size:22px;line-height:1;}
+.ws-name{font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:700;}
+.wb-skill.cd .ws-icon,.wb-skill.cd .ws-name{opacity:.25;}
+.wb-cd-ov{position:absolute;inset:0;border-radius:10px;background:rgba(0,0,0,.72);
   display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s;}
 .wb-skill.cd .wb-cd-ov{opacity:1;}
-.wb-cd-num{font-family:'Courier New',monospace;font-size:14px;font-weight:900;color:rgba(255,255,255,.6);}
+.wb-cd-num{font-family:'Courier New',monospace;font-size:20px;font-weight:900;color:rgba(255,255,255,.75);}
 
 /* ── Инфо-попап скилла ── */
 .wb-sinfo-ov{position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,.55);

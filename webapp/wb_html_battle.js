@@ -66,8 +66,7 @@
 <div class="wb-boss-zone" id="wb-boss-zone" data-act="hit">
   <div class="wb-rage2" id="wb-rage2"${pct<50?' class="wb-rage2 on"':''}></div>
   ${ghosts}
-  <div class="wb-ghost-fixed" style="left:8%;top:42%">🛡</div>
-  <div class="wb-ghost-fixed" style="right:8%;top:30%">⚡</div>
+  ${[['5%','38%','×'],['87%','27%','⚡'],['18%','68%','🔥'],['78%','62%','💧'],['55%','16%','◈'],['32%','78%','✦']].map(([l,t,e])=>`<div class="wb-ghost-fixed" style="left:${l};top:${t}">${e}</div>`).join('')}
   <img class="wb-bimg2" id="wb-bimg" src="bosses/boss3.png"
     onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'wb-bem2\\' id=\\'wb-bem\\'>${_esc(a.boss_emoji||'🐉')}</div>')"/>
   <div class="wb-wp" style="top:22%;left:52%" data-act="hit"></div>
