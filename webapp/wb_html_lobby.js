@@ -60,7 +60,7 @@ window.WBHtml = (() => {
     const showJoin  = until != null && until <= 3600;
     const joined    = s.is_registered || false;
     const reminded  = s.reminder_opt_in || false;
-    const joinedAll = joined && reminded;
+    const joinedAll = joined; // показываем joined если зарегистрирован (не ждём reminder)
     const prizePool = (regCnt * 520).toLocaleString('ru');
 
     const bought = _getBought();
@@ -148,7 +148,7 @@ window.WBHtml = (() => {
 <div class="wb-join-btn${joinedAll?' joined':''}" data-act="join">
   <div class="wb-join-ico">${joinedAll?'✅':'⚔️'}</div>
   <div class="wb-join-txt">
-    <div class="wb-join-main">${joinedAll?'Ты участвуешь · Напоминание включено':'Участвую + напомни за 5 мин'}</div>
+    <div class="wb-join-main">${joinedAll?(reminded?'Ты участвуешь · Напоминание вкл.':'Ты участвуешь'):'Участвую + напомни за 5 мин'}</div>
     <div class="wb-join-sub">${regCnt>0?`${regCnt} игроков уже записались`:'Зарегистрируйся и получи уведомление'}</div>
   </div>
   <div class="wb-join-arr">${joinedAll?'✓':'›'}</div>
