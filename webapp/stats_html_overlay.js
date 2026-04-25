@@ -11,7 +11,7 @@
    ============================================================ */
 (() => {
 const _esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let _scene=null, _inv=null, _currentTab='st', _invSubTab='scrolls';
+let _scene=null, _inv=null, _currentTab='st', _invSubTab='scrolls', _openGen=0;
 
 function _render(){
   const P = window.StatsHTMLPages;
@@ -136,10 +136,12 @@ async function open(scene, opts){
   window.StatsHTMLCSS?.inject();
   close();
   _scene=scene;
+  const _myGen = ++_openGen;
   const initTab=(opts?.tab)||'st';
   _currentTab=['st','bo','in','ra'].includes(initTab)?initTab:'st';
   await _refreshInv();
-  if(!scene.scene?.isActive()) return;
+  // Если close() вызвали пока _refreshInv ждал (смена сцены) — не открываем
+  if(_myGen !== _openGen || !scene.scene?.isActive()) return;
   const root=document.createElement('div'); root.id='st-root'; root.className='st-overlay';
   document.body.appendChild(root);
   _fitToCanvas(root);
@@ -151,6 +153,7 @@ async function open(scene, opts){
   _render();
 }
 function close(){
+  ++_openGen;  // инвалидирует любой pending open()
   // Закрываем item/stat попапы и восстанавливаем canvas до смены сцены.
   try{ window.StatsHTMLInfo?.close?.(); }catch(_){}
   try{ window.StatsHTMLItems?.close?.(); }catch(_){}
