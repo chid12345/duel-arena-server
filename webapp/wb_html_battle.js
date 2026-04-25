@@ -7,7 +7,7 @@
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
   function _renderBattle(root, s) {
-    _seenSkills.clear();
+    _seenSkills.clear(); window.WBHtml.resetBattleLogic?.();
     window.WBBattleCSS?.inject();
     const a = s.active, ps = s.player_state;
     const pct  = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
@@ -53,7 +53,6 @@
     <div class="wb-bhdr2-r">
       <div class="wb-phase">${phase}</div>
       <div class="wb-btimer2"><div class="wb-tdot"></div><div class="wb-tval" id="wb-bl-timer">${_fmtSec(a.seconds_left)}</div></div>
-      <span style="font-size:8px;color:rgba(255,0,136,.3);cursor:pointer;padding:2px 4px;" data-act="test-hit">⚡t</span>
     </div>
   </div>
   <div class="wb-hp2-sec">
@@ -97,9 +96,6 @@ ${isDead ? deadHTML : ''}
     <div class="ws-icon">🤖</div><div class="ws-name">АВТО</div>
     <div class="wb-cd-ov" style="opacity:0"></div>
   </div>
-</div>
-<div style="text-align:right;padding:2px 12px 4px">
-  <span style="font-size:9px;color:#330011;cursor:pointer;letter-spacing:.5px;" data-act="wb-end-test">⚡ завершить бой (dev)</span>
 </div>
 <div class="wb-pcard-ov" id="wb-pcov">
   <div class="wb-pcard" id="wb-pc">
@@ -147,16 +143,8 @@ ${isDead ? deadHTML : ''}
       else if (act === 'shield')     window.WBHtml.toast?.('🛡 Блок активирован');
       else if (act === 'ult')        window.WBHtml.toast?.('💥 Ульта не готова');
       else if (act === 'skill-info') _showSkillInfo(el.dataset.sk, sc, s);
-      else if (act === 'wb-end-test') {
-        get('/api/admin/wb_end').then(() => { window.WBHtml.toast('✅ Бой завершён'); setTimeout(() => sc?._refresh?.(), 800); })
-          .catch(() => window.WBHtml.toast('❌ Ошибка'));
-      }
-      else if (act === 'test-hit') {
-        const d = Math.floor(Math.random() * 800 + 200), cr = Math.random() > .7;
-        addHitLog(d, cr);
-        sc?._onHit?.();
-      }
     });
+    document.getElementById('wb-ultra-btn')?.addEventListener('click', () => window.WBHtml.fireUltra?.());
   }
 
   function _onHit(root, sc) {
@@ -185,10 +173,11 @@ ${isDead ? deadHTML : ''}
   };
 
   function _useSkillDirect(info, sc, s) {
-    const root = document.getElementById('wb-root');
-    if (info.act === 'hit') _onHit(root, sc);
-    else if (info.act === 'shield') window.WBHtml.toast?.('🛡 Блок активирован');
-    else if (info.act === 'ult')   window.WBHtml.toast?.('💥 Ульта не готова');
+    const root = document.getElementById('wb-root'), W = window.WBHtml;
+    if (W.isSkillOnCD?.(info.act==='hit'?'atk':info.act==='shield'?'shld':info.act==='ult'?'ult':'')) { W.toast?.('⏱ Перезарядка'); return; }
+    if (info.act === 'hit') { _onHit(root, sc); W.startSkillCD?.('atk'); }
+    else if (info.act === 'shield') { W.toast?.('🛡 Блок активирован'); W.startSkillCD?.('shld'); }
+    else if (info.act === 'ult')   { if (W.fireUltra?.()) W.startSkillCD?.('ult'); else W.toast?.('💥 Ульта не готова'); }
     else if (info.act === 'auto-toggle') {
       const btn = root?.querySelector('.wb-skill.auto');
       const on = btn?.classList.toggle('auto-on');
@@ -246,6 +235,7 @@ ${isDead ? deadHTML : ''}
     const a = state?.active; if (!a) return;
     const pct = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
     const bar  = document.getElementById('wb-boss-bar');  if (bar)  bar.style.width = pct + '%';
+    window.WBHtml.checkQteTrigger?.(pct);
     const nums = document.getElementById('wb-boss-nums');
     if (nums) nums.textContent = `${(a.current_hp||0).toLocaleString('ru')} / ${(a.max_hp||0).toLocaleString('ru')} · ${pct}%`;
     const timer = document.getElementById('wb-bl-timer'); if (timer) timer.textContent = _fmtSec(a.seconds_left);
@@ -262,14 +252,20 @@ ${isDead ? deadHTML : ''}
     if (rage) rage.classList.toggle('on', pct < 50);
   }
 
-  function addHitLog(dmg, isCrit) {
+  function addHitLog(dmg, isCrit, tx, ty) {
     const zone = document.getElementById('wb-boss-zone'); if (!zone) return;
+    const r = zone.getBoundingClientRect();
+    const x = (tx != null ? tx - r.left : r.width/2) + (Math.random()-.5)*60;
+    const y = (ty != null ? ty - r.top  : r.height/2) + (Math.random()-.5)*30;
     const el = document.createElement('div');
     el.className = 'wb-dmg-num' + (isCrit ? ' crit' : '');
     el.textContent = isCrit ? `💥 ${dmg.toLocaleString('ru')}!` : `+${dmg.toLocaleString('ru')}`;
-    el.style.cssText = `left:50%;top:50%;color:${isCrit?'#ffcc00':'#00FF9F'};font-size:${isCrit?'24px':'18px'};`;
+    const fs = isCrit ? (20+Math.random()*12) : (13+Math.random()*8);
+    const cl = isCrit ? '#FFD700' : '#FF6680';
+    el.style.cssText = `left:${x}px;top:${y}px;font-size:${fs}px;color:${cl};text-shadow:0 0 8px ${cl};`;
     zone.appendChild(el);
     setTimeout(() => el.remove(), 950);
+    window.WBHtml.addUltraEnergy?.(.04 + Math.random() * .02);
   }
 
   function setUltraFill(pct) {

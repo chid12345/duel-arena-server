@@ -209,6 +209,10 @@ window.WBBattleCSS = (() => {
 .wb-qte-bar-fill{height:100%;border-radius:2px;
   background:linear-gradient(90deg,#00FF9F,#00BFFF);transition:width .1s linear;}
 
+/* ── Screen shake (ульта/QTE) ── */
+.wb-shake{animation:wb-shake .45s ease-in-out;}
+@keyframes wb-shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
+
 /* ── Тост ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
   background:rgba(10,0,25,.95);border:1px solid rgba(255,0,200,.5);border-radius:10px;
