@@ -99,6 +99,8 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
         "vulnerable": vulnerable,
         "stage": int(active.get("stage") or 1),
         "boss_bg_hex": int(_bt.get("bg_tint_hex") or 0x4a3a5a),
+        "boss_sprite": _bt.get("sprite", "boss_lich.png"),
+        "boss_glow": _bt.get("glow_color", "#9b30ff"),
     }
 
 

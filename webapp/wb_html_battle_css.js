@@ -65,14 +65,23 @@ window.WBBattleCSS = (() => {
 /* ── Зона босса ── */
 .wb-boss-zone{position:relative;flex:1;overflow:hidden;cursor:crosshair;
   min-height:380px;background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(0,191,255,.05) 0%,transparent 70%);}
-.wb-bimg2{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+.wb-bimg2{position:absolute;left:50%;top:50%;
+  --boss-glow:#9b30ff;
+  transform:translate(-50%,-52%);
   width:300px;height:300px;object-fit:contain;
-  filter:drop-shadow(0 0 20px rgba(0,191,255,.3)) drop-shadow(0 0 40px rgba(255,0,85,.15));
-  animation:wb-bfloat 3s ease-in-out infinite;pointer-events:none;}
-@keyframes wb-bfloat{0%,100%{transform:translate(-50%,-50%) scale(1)}
-  50%{transform:translate(-50%,-50%) scale(1.03)}}
-.wb-bimg2.wb-hit{animation:wb-bhit .15s ease forwards,wb-bfloat 3s ease-in-out infinite .15s;}
-@keyframes wb-bhit{0%{filter:brightness(1)}50%{filter:brightness(3) saturate(0)}100%{filter:brightness(1)}}
+  animation:wb-bfloat 3.2s ease-in-out infinite, wb-boss-glow 2s ease-in-out infinite;
+  pointer-events:none;}
+@keyframes wb-bfloat{
+  0%,100%{transform:translate(-50%,-52%) scale(1) rotate(0deg)}
+  30%{transform:translate(-50%,-55%) scale(1.02) rotate(.4deg)}
+  60%{transform:translate(-50%,-50%) scale(1.03) rotate(-.3deg)}}
+@keyframes wb-boss-glow{
+  0%,100%{filter:drop-shadow(0 0 12px var(--boss-glow)) drop-shadow(0 0 28px var(--boss-glow)) brightness(1.0)}
+  50%{filter:drop-shadow(0 0 28px var(--boss-glow)) drop-shadow(0 0 60px var(--boss-glow)) drop-shadow(0 0 90px var(--boss-glow)) brightness(1.12)}}
+.wb-bimg2.wb-hit{animation:wb-bhit .18s ease forwards,wb-bfloat 3.2s ease-in-out infinite .18s,wb-boss-glow 2s ease-in-out infinite .18s;}
+@keyframes wb-bhit{0%{filter:brightness(1) drop-shadow(0 0 12px var(--boss-glow))}
+  40%{filter:brightness(4) saturate(0) drop-shadow(0 0 40px #fff)}
+  100%{filter:brightness(1) drop-shadow(0 0 12px var(--boss-glow))}}
 .wb-bem2{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
   font-size:140px;animation:wb-bfloat 3s ease-in-out infinite;pointer-events:none;
   filter:drop-shadow(0 0 24px rgba(0,191,255,.5));}

@@ -68,7 +68,8 @@
   <div class="wb-rage2" id="wb-rage2"${pct<50?' class="wb-rage2 on"':''}></div>
   ${ghosts}
   ${[['5%','38%','×',0.4,4.2],['87%','27%','⚡',1.2,3.8],['18%','68%','🔥',2.1,4.6],['78%','62%','💧',0.9,3.5],['55%','16%','◈',1.7,4.4],['32%','78%','✦',2.6,3.9]].map(([l,t,e,d,du])=>`<div class="wb-ghost" style="left:${l};top:${t};animation-delay:${d}s;animation-duration:${du}s">${e}</div>`).join('')}
-  <img class="wb-bimg2" id="wb-bimg" src="bosses/boss3.png"
+  <img class="wb-bimg2" id="wb-bimg" src="bosses/${_esc(a.boss_sprite||'boss_lich.png')}"
+    data-glow="${_esc(a.boss_glow||'#9b30ff')}"
     onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'wb-bem2\\' id=\\'wb-bem\\'>${_esc(a.boss_emoji||'🐉')}</div>')"/>
   <div class="wb-wp" style="top:22%;left:52%" data-act="hit"></div>
   <div class="wb-wp" style="top:40%;left:63%" data-act="hit"></div>
@@ -123,6 +124,11 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   </div>
 </div>`;
     _bindBattle(root, s);
+    // Apply boss glow color as CSS variable for animated drop-shadow
+    requestAnimationFrame(() => {
+      const img = document.getElementById('wb-bimg');
+      if (img) img.style.setProperty('--boss-glow', a.boss_glow || '#9b30ff');
+    });
   }
 
   function _bindBattle(root, s) {
