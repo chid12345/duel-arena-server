@@ -65,17 +65,14 @@ window.WBHtml = (() => {
 
     const bought = _getBought();
     const boostEntries = Object.entries(SCROLL_META);
-    const boostsHTML = boostEntries.map(([id,m], i) => {
+    const boostsHTML = boostEntries.map(([id,m]) => {
       const isBought = bought.includes(id);
       const bCls = isBought ? ' bought' : '';
-      const isLast = i === boostEntries.length - 1 && boostEntries.length % 2 === 1;
-      if (isLast) return `<div class="wb-bc last${bCls}" data-act="buy-scroll" data-id="${id}">
-        <div class="bc-ow">×${inv[id]||0}</div><div class="bc-ic">${m.icon}</div>
-        <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div><div class="bc-pr">${m.price}</div>
-      </div>`;
       return `<div class="wb-bc${bCls}" data-act="buy-scroll" data-id="${id}">
-        <div class="bc-ow">×${inv[id]||0}</div><div class="bc-ic">${m.icon}</div>
-        <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div><div class="bc-pr">${m.price}</div>
+        <div class="bc-top"><div class="bc-ic">${m.icon}</div><div class="bc-ow">×${inv[id]||0}</div></div>
+        <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div>
+        <div class="bc-buy">${m.price} — Купить</div>
+        <div class="bc-bought-lbl">✓ КУПЛЕНО</div>
       </div>`;
     }).join('');
 
@@ -124,12 +121,13 @@ window.WBHtml = (() => {
 </div>
 <div class="wb-prize">
   <div class="wb-prize-l">
-    <div class="wb-prize-lbl">⚡ ОБЩИЙ ПРИЗОВОЙ ФОНД</div>
-    <div class="wb-prize-sub">+520 за каждого участника</div>
+    <div class="wb-prize-lbl">⚡ ПРИЗОВОЙ ФОНД</div>
+    <div class="wb-prize-coins">🪙 ${prizePool}</div>
+    <div class="wb-prize-sub">+520 за участника</div>
   </div>
   <div class="wb-prize-r">
-    <div class="wb-prize-coins">🪙 ${prizePool}</div>
-    <div class="wb-prize-cnt">${regCnt} игроков</div>
+    <div class="wb-prize-cnt">${regCnt}</div>
+    <div class="wb-prize-players">игроков</div>
   </div>
 </div>
 ${avatarsHTML?`<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-av-more">+${extra} участников</span>`:''}</div>`:''}
@@ -158,7 +156,7 @@ ${showJoin ? `
   </div>
   <div class="wb-join-arr">${joinedAll?'✓':'›'}</div>
 </div>` : `<div style="margin:6px 14px 0;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:9px;color:#445566;text-align:center;letter-spacing:.5px;">⏳ Запись откроется за 1 час до боя</div>`}
-<div class="wb-shop-hdr">МАГАЗИН БОЯ</div>
+<div class="wb-shop-hdr"><span>🛒 МАГАЗИН БОЯ</span><div class="wb-shop-line"></div></div>
 <div class="wb-cats">
   <div class="wb-cat on" data-cat="boosts"><span class="wb-cat-ic">⚔️</span><span class="wb-cat-lb">БУСТЫ</span></div>
   <div class="wb-cat" data-cat="revival"><span class="wb-cat-ic">💊</span><span class="wb-cat-lb">ВОСКРЕШЕНИЕ</span></div>

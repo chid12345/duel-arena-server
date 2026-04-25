@@ -10,10 +10,10 @@ window.WBBattleCSS = (() => {
 #wb-root>*{position:relative;z-index:1;}
 
 /* ── Шапка боя ── */
-.wb-bhdr2{display:flex;align-items:center;justify-content:space-between;
-  padding:10px 14px 8px;position:sticky;top:0;z-index:10;
+.wb-bhdr2{display:block;padding:10px 14px 8px;position:sticky;top:0;z-index:10;
   background:linear-gradient(180deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
   border-bottom:1px solid rgba(255,0,85,.15);}
+.wb-bhdr2-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
 .wb-bhdr2-l{display:flex;align-items:center;gap:8px;}
 .wb-back2{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;
   background:rgba(255,0,85,.07);border:1px solid rgba(255,0,85,.2);
@@ -22,7 +22,7 @@ window.WBBattleCSS = (() => {
   color:#FF0055;text-shadow:0 0 10px #FF0055,0 0 20px #FF0055;
   animation:wb-glitch 5s infinite;}
 @keyframes wb-glitch{0%,94%,100%{transform:none}
-  95%{transform:translateX(-2px) skewX(-5deg);text-shadow:2px 0 #00BFFF,-2px 0 #FF0055}
+  95%{transform:translateX(-2px) skewX(-5deg);text-shadow:2px 0 #00FF9F,-2px 0 #FF0055}
   97%{transform:translateX(2px) skewX(3deg);text-shadow:-2px 0 #BF00FF}
   98%{transform:none}}
 .wb-bhdr2-r{display:flex;align-items:center;gap:8px;}
@@ -30,20 +30,19 @@ window.WBBattleCSS = (() => {
   padding:3px 8px;border-radius:6px;
   background:rgba(255,0,85,.15);border:1px solid rgba(255,0,85,.4);color:#FF0055;}
 .wb-btimer2{display:flex;align-items:center;gap:5px;
-  background:rgba(0,191,255,.07);border:1px solid rgba(0,191,255,.25);
+  background:rgba(0,255,159,.07);border:1px solid rgba(0,255,159,.25);
   border-radius:7px;padding:4px 9px;}
-.wb-tdot{width:5px;height:5px;border-radius:50%;background:#00BFFF;
-  box-shadow:0 0 5px #00BFFF;animation:wb-blink 1s infinite;}
+.wb-tdot{width:5px;height:5px;border-radius:50%;background:#00FF9F;
+  box-shadow:0 0 5px #00FF9F;animation:wb-blink 1s infinite;}
 @keyframes wb-blink{0%,100%{opacity:1}50%{opacity:.2}}
 .wb-tval{font-family:'Courier New',monospace;font-size:15px;font-weight:700;
-  color:#00BFFF;text-shadow:0 0 8px #00BFFF;}
+  color:#00FF9F;text-shadow:0 0 8px #00FF9F;}
 
-/* ── HP секция ── */
-.wb-hp2-sec{padding:6px 14px 4px;}
-.wb-hp2-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
-.wb-hp2-lbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#FF0055;text-shadow:0 0 5px currentColor;}
-.wb-hp2-nums{font-family:'Courier New',monospace;font-size:10px;color:rgba(255,255,255,.45);font-weight:700;}
-.wb-hp2-track{height:10px;border-radius:5px;background:rgba(255,255,255,.06);
+/* ── HP секция (inline в шапке) ── */
+.wb-hp2-sec{display:flex;align-items:center;gap:8px;padding:4px 0 0;}
+.wb-hp2-lbl{font-size:9px;color:rgba(255,255,255,.4);letter-spacing:1px;white-space:nowrap;}
+.wb-hp2-nums{font-family:'Courier New',monospace;font-size:11px;color:#FF0055;font-weight:700;white-space:nowrap;}
+.wb-hp2-track{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.06);
   border:1px solid rgba(255,0,85,.2);overflow:hidden;position:relative;}
 .wb-hp2-fill{height:100%;border-radius:5px;
   background:linear-gradient(90deg,#880033,#cc0055,#ff3377);
@@ -135,8 +134,8 @@ window.WBBattleCSS = (() => {
 .wb-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
   padding:8px 12px 14px;background:linear-gradient(0deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
   border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;}
-.wb-skill{border-radius:10px;padding:8px 4px 7px;display:flex;flex-direction:column;
-  align-items:center;gap:3px;cursor:pointer;position:relative;overflow:hidden;
+.wb-skill{border-radius:10px;padding:8px 4px 7px;aspect-ratio:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative;overflow:hidden;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   transition:all .12s;-webkit-tap-highlight-color:transparent;}
 .wb-skill:active:not(.cd){transform:scale(.93);}

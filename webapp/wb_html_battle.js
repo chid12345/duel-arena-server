@@ -41,23 +41,24 @@
         <div style="margin-top:8px;cursor:pointer;font-size:10px;color:#556;padding:7px;border:1px solid rgba(255,255,255,.07);border-radius:8px;" data-act="back">🚪 Покинуть бой</div>
       </div>`;
 
+    const fmtHp = v => v >= 1000 ? Math.round(v/1000)+'K' : String(v||0);
     root.innerHTML = `
 <div class="wb-bhdr2">
-  <div class="wb-bhdr2-l">
-    <div class="wb-back2" data-act="back">←</div>
-    <div class="wb-bhdr2-title">BOSS RAID</div>
+  <div class="wb-bhdr2-top">
+    <div class="wb-bhdr2-l">
+      <div class="wb-back2" data-act="back">←</div>
+      <div class="wb-bhdr2-title">⚡ BOSS RAID</div>
+    </div>
+    <div class="wb-bhdr2-r">
+      <div class="wb-phase">${phase}</div>
+      <div class="wb-btimer2"><div class="wb-tdot"></div><div class="wb-tval" id="wb-bl-timer">${_fmtSec(a.seconds_left)}</div></div>
+    </div>
   </div>
-  <div class="wb-bhdr2-r">
-    <div class="wb-phase">${phase}</div>
-    <div class="wb-btimer2"><div class="wb-tdot"></div><div class="wb-tval" id="wb-bl-timer">${_fmtSec(a.seconds_left)}</div></div>
+  <div class="wb-hp2-sec">
+    <div class="wb-hp2-lbl">HP</div>
+    <div class="wb-hp2-track"><div class="wb-hp2-fill" id="wb-boss-bar" style="width:${pct}%"></div></div>
+    <div class="wb-hp2-nums" id="wb-boss-nums">${fmtHp(a.current_hp)} / ${fmtHp(a.max_hp)}</div>
   </div>
-</div>
-<div class="wb-hp2-sec">
-  <div class="wb-hp2-hdr">
-    <div class="wb-hp2-lbl">★ HP БОССА — ${_esc(a.boss_emoji||'💀')} ${_esc(a.boss_name||'Мировой Босс')}</div>
-    <div class="wb-hp2-nums" id="wb-boss-nums">${(a.current_hp||0).toLocaleString('ru')} / ${(a.max_hp||0).toLocaleString('ru')} · ${pct}%</div>
-  </div>
-  <div class="wb-hp2-track"><div class="wb-hp2-fill" id="wb-boss-bar" style="width:${pct}%"></div></div>
 </div>
 <div class="wb-ticker"><div class="wb-ticker-in">${tickContent}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${tickContent}</div></div>
 <div class="wb-boss-zone" id="wb-boss-zone" data-act="hit">
@@ -85,7 +86,7 @@ ${isDead ? deadHTML : ''}
 <div class="wb-ultra">
   <div class="wb-ultra-lbl">УЛЬТА</div>
   <div class="wb-ultra-track"><div class="wb-ultra-fill" id="wb-ultra-fill" style="width:0%"></div></div>
-  <div class="wb-ultra-btn" id="wb-ultra-btn">УЛЬТА</div>
+  <div class="wb-ultra-btn" id="wb-ultra-btn">УДАР</div>
 </div>
 <div class="wb-skills">
   <div class="wb-skill atk" data-act="hit">

@@ -53,12 +53,13 @@ window.WBLobbyCSS = (() => {
 .wb-prize{margin:6px 14px 0;padding:10px 12px;border-radius:12px;
   background:rgba(255,160,0,.06);border:1px solid rgba(255,160,0,.2);
   display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.wb-prize-l{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
+.wb-prize-l{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
 .wb-prize-lbl{font-size:8px;font-weight:800;letter-spacing:1.5px;color:#ffdd44;text-shadow:0 0 5px rgba(255,210,0,.4);}
-.wb-prize-sub{font-size:8px;color:rgba(255,255,255,.3);}
-.wb-prize-r{flex-shrink:0;text-align:right;}
 .wb-prize-coins{font-size:20px;font-weight:900;color:#ffdd44;text-shadow:0 0 10px rgba(255,200,0,.6);white-space:nowrap;}
-.wb-prize-cnt{font-size:9px;font-weight:700;color:#00FF9F;white-space:nowrap;margin-top:2px;}
+.wb-prize-sub{font-size:8px;color:rgba(255,255,255,.3);}
+.wb-prize-r{flex-shrink:0;text-align:center;}
+.wb-prize-cnt{font-size:28px;font-weight:900;color:#00BFFF;text-shadow:0 0 10px rgba(0,191,255,.6);line-height:1;}
+.wb-prize-players{font-size:9px;color:rgba(255,255,255,.35);margin-top:1px;white-space:nowrap;}
 
 /* ── Аватары участников ── */
 .wb-avstrip{display:flex;align-items:center;gap:4px;padding:5px 14px 2px;overflow:hidden;}
@@ -93,18 +94,16 @@ window.WBLobbyCSS = (() => {
 /* ── Участвовать ── */
 .wb-join-btn{display:flex;align-items:center;gap:10px;margin:6px 14px 0;padding:10px 14px;
   border-radius:12px;cursor:pointer;transition:all .2s;
-  background:linear-gradient(135deg,#7a0030,#bb004a,#990038);
-  border:1px solid rgba(255,80,120,.4);box-shadow:0 0 18px rgba(180,0,60,.2);}
-.wb-join-btn.joined{background:linear-gradient(135deg,rgba(0,20,10,.95),rgba(0,10,6,.95));
-  border-color:rgba(0,255,136,.4);box-shadow:0 0 14px rgba(0,255,136,.1);}
+  background:rgba(255,0,85,.1);border:1px solid rgba(255,0,85,.35);}
+.wb-join-btn.joined{background:rgba(0,255,136,.07);border-color:rgba(0,255,136,.35);}
 .wb-join-btn:active{transform:scale(.98);}
 .wb-join-ico{font-size:22px;flex-shrink:0;}
 .wb-join-txt{flex:1;min-width:0;}
-.wb-join-main{font-size:12px;font-weight:800;color:#fff;letter-spacing:.3px;}
+.wb-join-main{font-size:12px;font-weight:800;color:#FF0055;letter-spacing:.3px;}
 .wb-join-btn.joined .wb-join-main{color:#00ff88;}
-.wb-join-sub{font-size:9px;color:rgba(255,200,220,.45);margin-top:2px;}
+.wb-join-sub{font-size:9px;color:rgba(255,100,120,.45);margin-top:2px;}
 .wb-join-btn.joined .wb-join-sub{color:#339966;}
-.wb-join-arr{font-size:16px;color:rgba(255,200,220,.4);flex-shrink:0;}
+.wb-join-arr{font-size:16px;color:rgba(255,0,85,.5);flex-shrink:0;}
 .wb-join-btn.joined .wb-join-arr{color:#00aa44;}
 
 /* ── Войти в бой (активный рейд) ── */
@@ -129,7 +128,9 @@ window.WBLobbyCSS = (() => {
 .wb-chip b{color:#00e5ff;font-weight:900;}
 
 /* ── Магазин: заголовок + категории ── */
-.wb-shop-hdr{padding:10px 14px 5px;font-size:8px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.3);}
+.wb-shop-hdr{padding:10px 14px 5px;font-size:9px;font-weight:800;letter-spacing:2px;color:rgba(255,255,255,.5);
+  display:flex;align-items:center;gap:10px;}
+.wb-shop-line{flex:1;height:1px;background:rgba(255,255,255,.08);}
 .wb-cats{display:flex;margin:0 14px;gap:5px;}
 .wb-cat{flex:1;padding:7px 6px;border-radius:9px;display:flex;align-items:center;justify-content:center;
   gap:5px;cursor:pointer;transition:all .2s;
@@ -142,38 +143,31 @@ window.WBLobbyCSS = (() => {
 .wb-cp{display:none;}.wb-cp.on{display:block;}
 
 /* ── Бусты (карточки) ── */
-.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px 14px 10px;}
-.wb-bc{padding:5px 6px 4px;border-radius:8px;cursor:pointer;position:relative;overflow:hidden;
-  display:flex;flex-direction:column;gap:1px;
+.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 14px 10px;}
+.wb-bc{padding:8px 8px 7px;border-radius:10px;cursor:pointer;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:2px;
   background:linear-gradient(135deg,rgba(20,0,38,.97),rgba(5,4,18,.97));
   border:1px solid rgba(255,0,200,.2);transition:all .2s;}
-.wb-bc:hover,.wb-bc:active{border-color:rgba(255,0,200,.55);box-shadow:0 0 8px rgba(255,0,200,.2);}
-.bc-ic{font-size:14px;line-height:1;filter:drop-shadow(0 0 4px rgba(255,0,200,.4));}
-.bc-nm{font-size:7px;font-weight:800;letter-spacing:.6px;color:#cc88ff;text-transform:uppercase;margin-top:1px;}
-.bc-vl{font-size:11px;font-weight:900;color:#ff00cc;text-shadow:0 0 5px currentColor;line-height:1.1;}
-.bc-pr{font-size:7px;font-weight:800;color:#ffdd44;margin-top:1px;}
-.bc-ow{position:absolute;top:3px;right:4px;font-size:7px;font-weight:800;color:#00e5ff;
-  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:1px 3px;border-radius:3px;}
-
-/* ── Карточка БОНУС (такой же размер, пульсирующая рамка) ── */
-.wb-bc.last{border-color:rgba(0,255,159,.35);
-  background:linear-gradient(135deg,rgba(0,25,15,.97),rgba(0,12,8,.97));
-  animation:wb-feat 2.5s ease-in-out infinite;}
-@keyframes wb-feat{0%,100%{box-shadow:0 0 8px rgba(0,255,159,.07);border-color:rgba(0,255,159,.3);}
-  50%{box-shadow:0 0 16px rgba(0,255,159,.2);border-color:rgba(0,255,159,.6);}}
-.wb-bc.last::before{content:"★";position:absolute;top:3px;right:5px;
-  font-size:7px;font-weight:800;color:#00ff88;}
-.wb-bc.last .bc-ic{filter:drop-shadow(0 0 6px rgba(0,255,159,.6));}
-.wb-bc.last .bc-vl{color:#00ff88;text-shadow:0 0 6px rgba(0,255,136,.5);}
-.wb-bc.last .bc-nm{color:#00cc66;}
+.wb-bc:active{border-color:rgba(255,0,200,.55);box-shadow:0 0 8px rgba(255,0,200,.2);}
+.bc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
+.bc-ic{font-size:22px;line-height:1;filter:drop-shadow(0 0 5px rgba(255,0,200,.4));}
+.bc-ow{font-size:8px;font-weight:800;color:#00BFFF;
+  background:rgba(0,191,255,.12);border:1px solid rgba(0,191,255,.3);padding:1px 4px;border-radius:4px;}
+.bc-nm{font-size:8px;font-weight:800;letter-spacing:.8px;color:rgba(255,255,255,.4);text-transform:uppercase;}
+.bc-vl{font-family:'Courier New',monospace;font-size:20px;font-weight:900;color:#00FF9F;
+  text-shadow:0 0 8px rgba(0,255,159,.5);line-height:1.1;}
+.bc-buy{margin-top:4px;padding:5px 0;border-radius:7px;font-size:10px;font-weight:800;
+  text-align:center;color:#FF0055;border:1px solid rgba(255,0,85,.35);
+  background:rgba(255,0,85,.08);letter-spacing:.3px;}
+.bc-bought-lbl{display:none;margin-top:4px;font-size:8px;font-weight:800;letter-spacing:.5px;
+  color:#00FF9F;text-align:center;}
 
 /* ── Куплено ── */
-.wb-bc.bought{pointer-events:none;border-color:rgba(0,255,159,.2)!important;
+.wb-bc.bought{pointer-events:none;border-color:rgba(0,255,159,.25)!important;
   background:linear-gradient(135deg,rgba(0,20,12,.97),rgba(0,10,8,.97))!important;}
-.wb-bc.bought::after{content:"✓ КУПЛЕНО";position:absolute;bottom:6px;right:7px;
-  font-size:7px;font-weight:800;letter-spacing:.5px;color:#00ff88;}
-.wb-bc.bought .bc-pr{display:none;}
-.wb-bc.bought .bc-vl{color:#00ff88!important;text-shadow:0 0 5px rgba(0,255,136,.3)!important;}
+.wb-bc.bought .bc-buy{display:none;}
+.wb-bc.bought .bc-bought-lbl{display:block;}
+.wb-bc.bought .bc-vl{color:#00FF9F!important;}
 
 /* ── Воскрешения ── */
 .wb-rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:6px 14px 14px;}
