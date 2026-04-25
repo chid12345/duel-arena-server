@@ -180,6 +180,31 @@ window.WBBattleCSS = (() => {
   transition:background .15s;}
 .wb-sinfo-use:active{background:linear-gradient(135deg,rgba(255,0,85,.5),rgba(180,0,60,.5));}
 
+/* ── QTE: Коллективный удар ── */
+.wb-qte-ov{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;
+  background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+  opacity:0;pointer-events:none;transition:opacity .2s;}
+.wb-qte-ov.open{opacity:1;pointer-events:all;}
+.wb-qte-title{font-size:13px;font-weight:900;letter-spacing:2.5px;color:#00FF9F;
+  text-shadow:0 0 12px #00FF9F;animation:wb-glitch 4s infinite;}
+.wb-qte-btn{width:130px;height:130px;border-radius:50%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:4px;cursor:pointer;
+  background:radial-gradient(circle,rgba(0,255,159,.15) 0%,rgba(0,80,50,.6) 100%);
+  border:3px solid #00FF9F;box-shadow:0 0 30px #00FF9F,inset 0 0 20px rgba(0,255,159,.15);
+  animation:wb-qte-pulse 0.6s ease-in-out infinite;-webkit-tap-highlight-color:transparent;}
+@keyframes wb-qte-pulse{0%,100%{box-shadow:0 0 20px #00FF9F,inset 0 0 10px rgba(0,255,159,.15)}
+  50%{box-shadow:0 0 45px #00FF9F,0 0 70px rgba(0,255,159,.4),inset 0 0 25px rgba(0,255,159,.25)}}
+.wb-qte-btn:active{transform:scale(.92);}
+.wb-qte-lbl{font-size:11px;font-weight:800;letter-spacing:2px;color:#00FF9F;}
+.wb-qte-ic{font-size:32px;}
+.wb-qte-cnt{font-size:11px;font-weight:800;color:rgba(0,255,159,.7);}
+.wb-qte-bar-wrap{width:180px;text-align:center;}
+.wb-qte-bar-lbl{font-size:8px;font-weight:800;letter-spacing:1.5px;color:rgba(255,255,255,.45);margin-bottom:4px;}
+.wb-qte-bar{height:4px;border-radius:2px;background:rgba(255,255,255,.1);overflow:hidden;}
+.wb-qte-bar-fill{height:100%;border-radius:2px;
+  background:linear-gradient(90deg,#00FF9F,#00BFFF);transition:width .1s linear;}
+
 /* ── Тост ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
   background:rgba(10,0,25,.95);border:1px solid rgba(255,0,200,.5);border-radius:10px;

@@ -7,6 +7,7 @@
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
   function _renderBattle(root, s) {
+    _seenSkills.clear();
     window.WBBattleCSS?.inject();
     const a = s.active, ps = s.player_state;
     const pct  = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
@@ -170,6 +171,8 @@ ${isDead ? deadHTML : ''}
     if (zone) { zone.style.transform='scale(.98)'; setTimeout(() => zone.style.transform='', 100); }
   }
 
+  const _seenSkills = new Set();
+
   const _SKILL_INFO = {
     atk:  { icon:'⚔️', name:'АТАКА',  cd:'3 сек',      act:'hit',        tip:'Базовый урон',
              desc:'Наносит урон боссу. Урон зависит от характеристики «Сила» и экипировки.',
@@ -185,8 +188,18 @@ ${isDead ? deadHTML : ''}
              tipTxt:'Активируй и спокойно выбирай свитки — авто-удары не прекратятся.' },
   };
 
+  function _useSkillDirect(info, sc, s) {
+    const root = document.getElementById('wb-root');
+    if (info.act === 'hit') _onHit(root, sc);
+    else if (info.act === 'shield') window.WBHtml.toast?.('🛡 Блок активирован');
+    else if (info.act === 'ult')   window.WBHtml.toast?.('💥 Ульта не готова');
+    else if (info.act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
+  }
+
   function _showSkillInfo(sk, sc, s) {
     const info = _SKILL_INFO[sk]; if (!info) return;
+    if (_seenSkills.has(sk)) { _useSkillDirect(info, sc, s); return; }
+    _seenSkills.add(sk);
     document.getElementById('wb-sinfo-ov')?.remove();
     const ov = document.createElement('div'); ov.id = 'wb-sinfo-ov'; ov.className = 'wb-sinfo-ov';
     ov.innerHTML = `<div class="wb-sinfo">
@@ -206,12 +219,7 @@ ${isDead ? deadHTML : ''}
     const close = () => { ov.classList.remove('open'); setTimeout(() => ov.remove(), 250); };
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     document.getElementById('wb-sinfo-use')?.addEventListener('click', () => {
-      close();
-      const root = document.getElementById('wb-root');
-      if (info.act === 'hit') _onHit(root, sc);
-      else if (info.act === 'shield') window.WBHtml.toast?.('🛡 Блок активирован');
-      else if (info.act === 'ult')   window.WBHtml.toast?.('💥 Ульта не готова');
-      else if (info.act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
+      close(); _useSkillDirect(info, sc, s);
     });
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
   }
@@ -264,7 +272,25 @@ ${isDead ? deadHTML : ''}
     df.classList.add('show');
   }
 
-  Object.assign(window.WBHtml, { _renderBattle, updateHUD, addHitLog });
+  function setUltraFill(pct) {
+    const fill = document.getElementById('wb-ultra-fill');
+    if (fill) fill.style.width = Math.min(100, Math.max(0, pct)) + '%';
+    const btn = document.getElementById('wb-ultra-btn');
+    if (!btn) return;
+    const ready = pct >= 100;
+    btn.classList.toggle('ready', ready);
+    btn.innerHTML = ready ? '⚡ УДАР!' : 'УДАР';
+  }
+
+  function setSkillCooldown(sk, seconds) {
+    const el = document.querySelector(`.wb-skill.${sk}`);
+    if (!el) return;
+    el.classList.toggle('cd', seconds > 0);
+    const num = el.querySelector('.wb-cd-num');
+    if (num) num.textContent = seconds > 0 ? seconds : '—';
+  }
+
+  Object.assign(window.WBHtml, { _renderBattle, updateHUD, addHitLog, setUltraFill, setSkillCooldown });
   Object.defineProperty(window.WBHtml, '_scene', {
     get() { return window.WBHtml.__scene; },
     set(v) { window.WBHtml.__scene = v; },
