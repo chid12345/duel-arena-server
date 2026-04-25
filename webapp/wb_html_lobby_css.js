@@ -28,33 +28,42 @@ window.WBLobbyCSS = (() => {
   background:linear-gradient(90deg,#ff00cc,#00e5ff);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .wb-sub{font-size:9px;color:#00e5ff;opacity:.65;letter-spacing:1.5px;margin-top:1px;}
 
-/* ── Большой таймер ── */
-.wb-timer-hero{text-align:center;padding:16px 14px 8px;}
+/* ── Таймер (внутри карточки босса) ── */
 .wb-timer-lbl{font-size:9px;font-weight:800;letter-spacing:2.5px;color:#cc44ff;
   text-shadow:0 0 8px rgba(200,0,255,.4);margin-bottom:6px;}
 .wb-cnt{font-size:44px;font-weight:900;letter-spacing:3px;font-variant-numeric:tabular-nums;
   background:linear-gradient(180deg,#00ffee,#00aacc);-webkit-background-clip:text;background-clip:text;color:transparent;
   filter:drop-shadow(0 0 12px rgba(0,230,255,.7));animation:wb-cp 1s ease-in-out infinite;}
 @keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 10px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 20px rgba(0,230,255,1))}}
-.wb-insert{font-size:7px;letter-spacing:3px;color:#ff00cc;opacity:.6;margin-top:6px;animation:wb-blink 1.2s step-end infinite;}
+.wb-insert{font-size:7px;letter-spacing:3px;color:#ff00cc;opacity:.6;margin-top:4px;animation:wb-blink 1.2s step-end infinite;}
 @keyframes wb-blink{0%,100%{opacity:.6}50%{opacity:.1}}
 
-/* ── Карточка босса (кликабельная) ── */
+/* ── Карточка босса (объединённая: таймер + имя, кликабельная) ── */
 .wb-boss-card{margin:8px 14px 0;border-radius:16px;overflow:hidden;position:relative;
-  display:flex;align-items:stretch;min-height:110px;cursor:pointer;
+  display:flex;flex-direction:column;cursor:pointer;
   background:linear-gradient(135deg,rgba(20,0,40,.97),rgba(0,8,28,.97));
-  border:1px solid rgba(255,0,200,.4);
-  box-shadow:0 0 24px rgba(255,0,200,.1),inset 0 0 20px rgba(255,0,200,.04);
-  transition:transform .12s,box-shadow .12s;}
-.wb-boss-card:active{transform:scale(.98);box-shadow:0 0 32px rgba(255,0,200,.25);}
+  border:1px solid rgba(255,0,200,.45);
+  animation:wb-boss-glow 2.5s ease-in-out infinite;
+  transition:transform .12s;}
+@keyframes wb-boss-glow{
+  0%,100%{box-shadow:0 0 18px rgba(255,0,200,.15),inset 0 0 16px rgba(255,0,200,.04);border-color:rgba(255,0,200,.35);}
+  50%{box-shadow:0 0 40px rgba(255,0,200,.45),0 0 80px rgba(255,0,200,.1),inset 0 0 28px rgba(255,0,200,.09);border-color:rgba(255,0,200,.8);}
+}
+.wb-boss-card:active{transform:scale(.99);}
 .wb-boss-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,0,200,.6),transparent);}
-.wb-boss-card-l{flex:1;padding:14px 10px 14px 16px;display:flex;flex-direction:column;justify-content:center;}
+  background:linear-gradient(90deg,transparent,rgba(255,0,200,.7),transparent);}
+/* верх карточки — таймер */
+.wb-bc-top{text-align:center;padding:14px 14px 10px;}
+/* разделитель */
+.wb-bc-div{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,200,.35),transparent);margin:0 16px;}
+/* низ карточки — имя + изображение */
+.wb-bc-bot{display:flex;align-items:stretch;min-height:95px;}
+.wb-boss-card-l{flex:1;padding:11px 10px 12px 16px;display:flex;flex-direction:column;justify-content:center;}
 .wb-boss-type-badge{font-size:8px;font-weight:800;letter-spacing:2px;color:#ff00cc;
-  text-shadow:0 0 8px currentColor;margin-bottom:8px;}
-.wb-boss-card-name{font-size:15px;font-weight:900;margin-bottom:6px;
+  text-shadow:0 0 8px currentColor;margin-bottom:7px;}
+.wb-boss-card-name{font-size:15px;font-weight:900;margin-bottom:5px;
   background:linear-gradient(90deg,#fff,#ff88cc);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.wb-boss-card-hint{font-size:9px;color:#664477;letter-spacing:.5px;}
+.wb-boss-card-hint{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.5px;}
 .wb-hero-r{width:110px;flex-shrink:0;position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;}
 .wb-hero-aura{position:absolute;width:130px;height:130px;border-radius:50%;bottom:-40px;left:50%;transform:translateX(-50%);
   background:radial-gradient(ellipse,rgba(255,0,200,.2) 0%,transparent 70%);
@@ -118,19 +127,19 @@ window.WBLobbyCSS = (() => {
   background:linear-gradient(90deg,transparent,#ff00cc,transparent);}
 .wb-cp{display:none;}.wb-cp.on{display:block;}
 
-/* ── Карточки бустов ── */
-.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 14px 10px;}
-.wb-bc{padding:10px;border-radius:13px;cursor:pointer;position:relative;overflow:hidden;
+/* ── Карточки бустов (−30% размер) ── */
+.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px 14px 8px;}
+.wb-bc{padding:7px 7px 8px;border-radius:11px;cursor:pointer;position:relative;overflow:hidden;
   background:linear-gradient(135deg,rgba(20,0,38,.97),rgba(5,4,18,.97));
   border:1px solid rgba(255,0,200,.25);transition:all .2s;}
-.wb-bc:hover,.wb-bc:active{border-color:rgba(255,0,200,.55);box-shadow:0 0 18px rgba(255,0,200,.2);}
-.bc-ic{font-size:18px;margin-bottom:3px;filter:drop-shadow(0 0 5px rgba(255,0,200,.5));}
-.bc-nm{font-size:9px;font-weight:800;letter-spacing:.8px;color:#cc88ff;margin-bottom:1px;}
-.bc-vl{font-size:15px;font-weight:900;color:#ff00cc;text-shadow:0 0 8px currentColor;}
-.bc-desc{font-size:8px;color:#7a5a8a;margin:2px 0 3px;line-height:1.3;}
-.bc-pr{font-size:11px;font-weight:800;color:#ffdd44;text-shadow:0 0 6px rgba(255,210,0,.45);letter-spacing:.3px;}
-.bc-ow{position:absolute;top:6px;right:7px;font-size:9px;font-weight:800;color:#00e5ff;
-  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:1px 6px;border-radius:5px;}
+.wb-bc:hover,.wb-bc:active{border-color:rgba(255,0,200,.6);box-shadow:0 0 14px rgba(255,0,200,.3);}
+.bc-ic{font-size:13px;margin-bottom:2px;filter:drop-shadow(0 0 5px rgba(255,0,200,.5));}
+.bc-nm{font-size:8px;font-weight:800;letter-spacing:.8px;color:#cc88ff;margin-bottom:1px;}
+.bc-vl{font-size:11px;font-weight:900;color:#ff00cc;text-shadow:0 0 8px currentColor;}
+.bc-desc{font-size:8px;color:rgba(255,255,255,.6);margin:2px 0 3px;line-height:1.35;}
+.bc-pr{font-size:9px;font-weight:800;color:#ffdd44;text-shadow:0 0 6px rgba(255,210,0,.45);letter-spacing:.3px;}
+.bc-ow{position:absolute;top:5px;right:6px;font-size:8px;font-weight:800;color:#00e5ff;
+  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:1px 5px;border-radius:4px;}
 
 /* ── Карточки воскрешения ── */
 .wb-rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:6px 14px 14px;}
@@ -144,7 +153,7 @@ window.WBLobbyCSS = (() => {
 .wb-rb{padding:7px 6px;text-align:center;}
 .wb-rb-cnt{font-size:16px;font-weight:900;color:#00e5ff;text-shadow:0 0 6px currentColor;}
 .wb-rb-lbl{font-size:7px;color:#446688;letter-spacing:1px;margin-bottom:5px;}
-.wb-rb-desc{font-size:7px;color:#664477;margin-bottom:5px;line-height:1.3;}
+.wb-rb-desc{font-size:7px;color:rgba(255,255,255,.55);margin-bottom:5px;line-height:1.3;}
 .wb-rbtn{width:100%;padding:6px 0;border-radius:8px;font-size:12px;font-weight:900;text-align:center;
   background:linear-gradient(135deg,rgba(255,200,0,.13),rgba(255,160,0,.07));
   border:1px solid rgba(255,200,0,.45);color:#ffdd44;
