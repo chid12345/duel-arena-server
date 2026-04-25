@@ -183,9 +183,9 @@ ${isDead ? deadHTML : ''}
     ult:  { icon:'💥', name:'УЛЬТА',  cd:'По шкале',   act:'ult',        tip:'Суперудар',
              desc:'Мощный удар — тройной урон от обычной атаки. Шкала наполняется с каждым ударом.',
              tipTxt:'Бей чаще — шкала наполняется быстрее. Выпускай ульту на финальной фазе.' },
-    auto: { icon:'🤖', name:'АВТО',   cd:'Пассивно',   act:'use-scroll', tip:'Автоатака',
-             desc:'Атакует автоматически каждые 3 секунды. Использует свиток рейда если он экипирован.',
-             tipTxt:'Активируй и спокойно выбирай свитки — авто-удары не прекратятся.' },
+    auto: { icon:'🤖', name:'АВТО',   cd:'Пассивно',   act:'auto-toggle', tip:'Автоатака',
+             desc:'Атакует автоматически каждые 3 секунды. Включи и не отвлекайся — удары не прекратятся.',
+             tipTxt:'Авто-бой наносит 50% от обычного урона, но зато ты не пропустишь награду.' },
   };
 
   function _useSkillDirect(info, sc, s) {
@@ -193,7 +193,12 @@ ${isDead ? deadHTML : ''}
     if (info.act === 'hit') _onHit(root, sc);
     else if (info.act === 'shield') window.WBHtml.toast?.('🛡 Блок активирован');
     else if (info.act === 'ult')   window.WBHtml.toast?.('💥 Ульта не готова');
-    else if (info.act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
+    else if (info.act === 'auto-toggle') {
+      const btn = root?.querySelector('.wb-skill.auto');
+      const on = btn?.classList.toggle('auto-on');
+      sc?._setAutoAttack?.(on);
+      window.WBHtml.toast?.(on ? '🤖 Авто-бой включён' : '🤖 Авто-бой выключен');
+    }
   }
 
   function _showSkillInfo(sk, sc, s) {

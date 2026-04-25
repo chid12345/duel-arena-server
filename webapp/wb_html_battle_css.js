@@ -144,6 +144,8 @@ window.WBBattleCSS = (() => {
 .wb-skill.ult{border-color:rgba(191,0,255,.3);animation:wb-ug 2s ease-in-out infinite;}
 @keyframes wb-ug{0%,100%{box-shadow:0 0 6px rgba(191,0,255,.15)}50%{box-shadow:0 0 14px rgba(191,0,255,.35)}}
 .wb-skill.auto{border-color:rgba(0,255,159,.25);box-shadow:0 0 6px rgba(0,255,159,.1);}
+.wb-skill.auto.auto-on{border-color:rgba(0,255,159,.7);box-shadow:0 0 12px rgba(0,255,159,.4);
+  background:rgba(0,255,159,.08);animation:wb-ug 1.5s ease-in-out infinite;}
 .ws-icon{font-size:15px;line-height:1;}
 .ws-name{font-size:6px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.4);}
 .wb-skill.cd .ws-icon,.wb-skill.cd .ws-name{opacity:.3;}
