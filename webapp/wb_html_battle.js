@@ -58,7 +58,7 @@
   </div>
   <div class="wb-hp2-sec">
     <div class="wb-hp2-lbl">HP</div>
-    <div class="wb-hp2-track"><div class="wb-hp2-fill" id="wb-boss-bar" style="width:${pct}%"></div></div>
+    <div class="wb-hp2-track"><div class="wb-hp2-fill" id="wb-boss-bar" style="width:${pct}%"></div><div class="wb-hp2-segs">${'<i></i>'.repeat(24)}</div></div>
     <div class="wb-hp2-nums" id="wb-boss-nums">${fmtHp(a.current_hp)} / ${fmtHp(a.max_hp)}</div>
   </div>
 </div>
@@ -236,8 +236,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   function updateHUD(state) {
     const a = state?.active; if (!a) return;
     const pct = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
-    const bar  = document.getElementById('wb-boss-bar');  if (bar)  bar.style.width = pct + '%';
-    window.WBHtml.checkQteTrigger?.(pct);
+    const bar  = document.getElementById('wb-boss-bar'); if (bar) { bar.style.width = pct+'%'; bar.style.background = pct<25?'linear-gradient(90deg,#FF0000,#FF2200)':pct<50?'linear-gradient(90deg,#FF4400,#FF6600)':'linear-gradient(90deg,#880033,#cc0055,#ff3377)'; }
+    window.WBHtml.checkQteTrigger?.(pct); window.WBHtml.checkPhaseTransition?.(pct);
     const nums = document.getElementById('wb-boss-nums');
     if (nums) nums.textContent = `${(a.current_hp||0).toLocaleString('ru')} / ${(a.max_hp||0).toLocaleString('ru')} · ${pct}%`;
     const timer = document.getElementById('wb-bl-timer'); if (timer) timer.textContent = _fmtSec(a.seconds_left);
@@ -265,11 +265,12 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     el.className = 'wb-dmg-num' + (isCrit ? ' crit' : '');
     el.textContent = isCrit ? `💥 ${dmg.toLocaleString('ru')}!` : `+${dmg.toLocaleString('ru')}`;
     const fs = isCrit ? (20+Math.random()*12) : (13+Math.random()*8);
-    const cl = isCrit ? '#FFD700' : '#FF6680';
+    const cl = isCrit ? '#FFD700' : ((window.WBHtml.getCombo?.()||0) > 5 ? '#FF4400' : '#FF6680');
     el.style.cssText = `left:${x}px;top:${y}px;font-size:${fs}px;color:${cl};text-shadow:0 0 8px ${cl};`;
     zone.appendChild(el);
     setTimeout(() => el.remove(), 950);
     window.WBHtml.addUltraEnergy?.(.04 + Math.random() * .02);
+    window.WBHtml.bumpCombo?.();
   }
 
   function setUltraFill(pct) {

@@ -77,8 +77,9 @@ window.WBBattleCSS = (() => {
   font-size:140px;animation:wb-bfloat 3s ease-in-out infinite;pointer-events:none;
   filter:drop-shadow(0 0 24px rgba(0,191,255,.5));}
 .wb-rage2{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;}
-.wb-rage2.on{opacity:1;animation:wb-rage 0.5s ease-in-out infinite;}
-@keyframes wb-rage{0%,100%{box-shadow:inset 0 0 40px rgba(255,0,85,.35)}50%{box-shadow:inset 0 0 70px rgba(255,0,85,.65)}}
+.wb-rage2.on,.wb-rage2.rage{opacity:1;animation:wb-rage 0.5s ease-in-out infinite;}@keyframes wb-rage{0%,100%{box-shadow:inset 0 0 40px rgba(255,0,85,.35)}50%{box-shadow:inset 0 0 80px rgba(255,0,85,.7)}}
+.wb-flash{animation:wb-flash .8s ease forwards;}@keyframes wb-flash{0%{background-color:transparent}20%{background-color:rgba(255,68,0,.25)}100%{background-color:transparent}}
+.wb-hp2-segs{position:absolute;inset:0;display:flex;gap:0;align-items:center;padding:0 1px;pointer-events:none}.wb-hp2-segs>i{flex:1;height:60%;border-right:1px solid rgba(0,0,0,.5)}.wb-hp2-segs>i:last-child{border:none}
 .wb-wp{position:absolute;width:26px;height:26px;border-radius:50%;
   border:2px solid #00FF9F;box-shadow:0 0 9px #00FF9F,inset 0 0 5px rgba(0,255,159,.3);
   animation:wb-wpp 1.5s ease-in-out infinite;cursor:crosshair;display:flex;align-items:center;justify-content:center;}
@@ -137,23 +138,21 @@ window.WBBattleCSS = (() => {
 .wb-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
   padding:6px 10px 10px;background:linear-gradient(0deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
   border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
-.wb-skill{border-radius:10px;padding:8px 4px 7px;display:flex;flex-direction:column;
+.wb-skill{aspect-ratio:1;border-radius:10px;padding:8px 4px 7px;display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:4px;cursor:pointer;position:relative;overflow:hidden;
   background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);
   transition:all .12s;-webkit-tap-highlight-color:transparent;}
+.wb-skill.atk .ws-icon{color:#FF0055;filter:drop-shadow(0 0 4px #FF0055)}.wb-skill.shld .ws-icon{color:#00BFFF;filter:drop-shadow(0 0 4px #00BFFF)}.wb-skill.ult .ws-icon{color:#BF00FF;filter:drop-shadow(0 0 4px #BF00FF)}.wb-skill.auto .ws-icon{color:#00FF9F;filter:drop-shadow(0 0 4px #00FF9F)}
 .wb-skill:active:not(.cd){transform:scale(.93);}
 .wb-skill.atk{border-color:rgba(255,0,85,.55);box-shadow:0 0 10px rgba(255,0,85,.2),inset 0 0 8px rgba(255,0,85,.05);}
 .wb-skill.shld{border-color:rgba(0,191,255,.55);box-shadow:0 0 10px rgba(0,191,255,.2),inset 0 0 8px rgba(0,191,255,.05);}
 .wb-skill.ult{border-color:rgba(191,0,255,.6);animation:wb-ug 2s ease-in-out infinite;}
 @keyframes wb-ug{0%,100%{box-shadow:0 0 8px rgba(191,0,255,.2)}50%{box-shadow:0 0 20px rgba(191,0,255,.5),0 0 35px rgba(191,0,255,.2)}}
 .wb-skill.auto{border-color:rgba(0,255,159,.55);box-shadow:0 0 10px rgba(0,255,159,.2),inset 0 0 8px rgba(0,255,159,.05);}
-.wb-skill.auto.auto-on{border-color:rgba(0,255,159,.85);box-shadow:0 0 16px rgba(0,255,159,.5);
-  background:rgba(0,255,159,.08);animation:wb-ug 1.5s ease-in-out infinite;}
-.ws-icon{font-size:22px;line-height:1;}
-.ws-name{font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:700;}
+.wb-skill.auto.auto-on{border-color:rgba(0,255,159,.85);box-shadow:0 0 16px rgba(0,255,159,.5);background:rgba(0,255,159,.08);animation:wb-ug 1.5s ease-in-out infinite;}
+.ws-icon{font-size:22px;line-height:1;}.ws-name{font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:700;}
 .wb-skill.cd .ws-icon,.wb-skill.cd .ws-name{opacity:.25;}
-.wb-cd-ov{position:absolute;inset:0;border-radius:10px;background:rgba(0,0,0,.72);
-  display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s;}
+.wb-cd-ov{position:absolute;inset:0;border-radius:10px;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s;}
 .wb-skill.cd .wb-cd-ov{opacity:1;}
 .wb-cd-num{font-family:'Courier New',monospace;font-size:20px;font-weight:900;color:rgba(255,255,255,.75);}
 

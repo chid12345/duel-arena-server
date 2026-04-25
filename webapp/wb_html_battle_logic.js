@@ -6,7 +6,7 @@
    - HP-бар меняет цвет на 25/50% */
 (() => {
   const CD = { atk: 4, shld: 8, ult: 15, auto: 0 };
-  const _state = { ultra: 0, qteShown: false, lastPct: 100, cdTimers: {} };
+  const _state = { ultra: 0, qteShown: false, lastPct: 100, cdTimers: {}, combo: 0, comboTimer: null, lastThreshold: 100 };
 
   function _bossZone() { return document.getElementById('wb-boss-zone'); }
   function _shake() {
@@ -68,6 +68,33 @@
   }
   function isSkillOnCD(sk) { return !!_state.cdTimers[sk]; }
 
+  function bumpCombo() {
+    _state.combo++;
+    if (_state.comboTimer) clearTimeout(_state.comboTimer);
+    _state.comboTimer = setTimeout(() => { _state.combo = 0; _updateRage(); }, 2000);
+    _updateRage();
+  }
+  function getCombo() { return _state.combo; }
+  function _updateRage() {
+    const v = document.getElementById('wb-rage2');
+    if (v) v.classList.toggle('rage', _state.combo > 8);
+  }
+
+  function checkPhaseTransition(pct) {
+    const thresholds = [75, 50, 25];
+    for (const t of thresholds) {
+      if (_state.lastThreshold > t && pct <= t) {
+        _state.lastThreshold = t;
+        _shake();
+        const root = document.getElementById('wb-root');
+        if (root) { root.classList.remove('wb-flash'); void root.offsetWidth; root.classList.add('wb-flash');
+          setTimeout(() => root.classList.remove('wb-flash'), 800); }
+        const ph = document.querySelector('.wb-phase');
+        if (ph) ph.textContent = t === 25 ? 'ФИНАЛ ☠️' : t === 50 ? 'ФАЗА 2 🔥' : 'ФАЗА 1';
+      }
+    }
+  }
+
   function checkQteTrigger(curPct) {
     if (_state.qteShown) return;
     if (_state.lastPct > 50 && curPct <= 50) {
@@ -125,9 +152,10 @@
     if (on) _state.autoTimer = setInterval(() => window.WBHtml._scene?._onHit?.(), 1000);
   }
 
-  function reset() { _state.ultra = 0; _state.qteShown = false; _state.lastPct = 100;
+  function reset() { _state.ultra = 0; _state.qteShown = false; _state.lastPct = 100; _state.combo = 0; _state.lastThreshold = 100;
+    if (_state.comboTimer) { clearTimeout(_state.comboTimer); _state.comboTimer = null; }
     Object.values(_state.cdTimers).forEach(t => t && clearInterval(t)); _state.cdTimers = {};
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; } }
 
-  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, fireUltSkill, startSkillCD, isSkillOnCD, checkQteTrigger, setAutoAttack, resetBattleLogic: reset });
+  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, fireUltSkill, startSkillCD, isSkillOnCD, checkQteTrigger, checkPhaseTransition, bumpCombo, getCombo, setAutoAttack, resetBattleLogic: reset });
 })();
