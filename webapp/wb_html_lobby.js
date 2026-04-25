@@ -196,6 +196,13 @@ ${avatarsHTML?`<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-
       if (act==='back')       { close(); _scene?.scene?.start?.('Menu',{returnTab:'more'}); }
       else if (act==='enter') { close(); _scene?.scene?.restart?.(); }
       else if (act==='join')  {
+        const isJoined = el.classList.toggle('joined');
+        const ico  = el.querySelector('.wb-join-ico');
+        const main = el.querySelector('.wb-join-main');
+        const arr  = el.querySelector('.wb-join-arr');
+        if (ico)  ico.textContent  = isJoined ? '✅' : '⚔️';
+        if (main) main.textContent = isJoined ? 'Ты участвуешь · Напоминание вкл.' : 'Участвую + напомни за 5 мин';
+        if (arr)  arr.textContent  = isJoined ? '✓' : '›';
         (async () => {
           if (!_scene) return;
           const wasReg = !!_state?.is_registered;
