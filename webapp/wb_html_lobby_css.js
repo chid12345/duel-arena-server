@@ -166,19 +166,19 @@ window.WBLobbyCSS = (() => {
 .wb-bc.bought .bc-vl{color:#00FF9F!important;}
 
 /* ── Воскрешения ── */
-.wb-rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:6px 14px 14px;}
-.wb-rc{border-radius:14px;overflow:hidden;cursor:pointer;transition:all .2s;
+.wb-rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;padding:4px 14px 10px;}
+.wb-rc{border-radius:10px;overflow:hidden;cursor:pointer;transition:all .2s;
   background:linear-gradient(135deg,rgba(25,0,20,.97),rgba(10,0,12,.97));border:1px solid rgba(255,80,180,.2);}
-.wb-rc:hover{border-color:rgba(255,80,180,.5);box-shadow:0 0 16px rgba(255,80,180,.2);}
-.wb-rh{padding:10px 8px 8px;text-align:center;
+.wb-rc:hover{border-color:rgba(255,80,180,.5);box-shadow:0 0 12px rgba(255,80,180,.2);}
+.wb-rh{padding:6px 6px 5px;text-align:center;
   background:linear-gradient(135deg,rgba(255,0,150,.08),rgba(200,0,100,.04));border-bottom:1px solid rgba(255,80,180,.12);}
-.wb-ri{font-size:22px;filter:drop-shadow(0 0 6px rgba(255,80,180,.6));}
-.wb-rh-pct{font-size:13px;font-weight:900;color:#ff66bb;text-shadow:0 0 6px currentColor;margin-top:3px;}
-.wb-rb{padding:7px 6px;text-align:center;}
-.wb-rb-cnt{font-size:16px;font-weight:900;color:#00e5ff;text-shadow:0 0 6px currentColor;}
-.wb-rb-lbl{font-size:7px;color:#446688;letter-spacing:1px;margin-bottom:4px;}
-.wb-rb-desc{font-size:7px;color:rgba(255,255,255,.55);margin-bottom:5px;line-height:1.3;}
-.wb-rbtn{padding:5px 0;border-radius:8px;font-size:11px;font-weight:900;text-align:center;
+.wb-ri{font-size:17px;filter:drop-shadow(0 0 5px rgba(255,80,180,.6));}
+.wb-rh-pct{font-size:11px;font-weight:900;color:#ff66bb;text-shadow:0 0 5px currentColor;margin-top:2px;}
+.wb-rb{padding:5px 5px;text-align:center;}
+.wb-rb-cnt{font-size:13px;font-weight:900;color:#00e5ff;text-shadow:0 0 5px currentColor;}
+.wb-rb-lbl{font-size:6px;color:#446688;letter-spacing:1px;margin-bottom:3px;}
+.wb-rb-desc{font-size:6px;color:rgba(255,255,255,.55);margin-bottom:4px;line-height:1.3;}
+.wb-rbtn{padding:4px 0;border-radius:6px;font-size:10px;font-weight:900;text-align:center;
   background:linear-gradient(135deg,rgba(255,200,0,.13),rgba(255,160,0,.07));
   border:1px solid rgba(255,200,0,.45);color:#ffdd44;cursor:pointer;letter-spacing:.3px;}
 

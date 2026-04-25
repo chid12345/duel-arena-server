@@ -89,19 +89,19 @@ ${isDead ? deadHTML : ''}
   <div class="wb-ultra-btn" id="wb-ultra-btn">УДАР</div>
 </div>
 <div class="wb-skills">
-  <div class="wb-skill atk" data-act="hit">
+  <div class="wb-skill atk" data-act="skill-info" data-sk="atk">
     <div class="ws-icon">⚔️</div><div class="ws-name">АТАКА</div>
     <div class="wb-cd-ov"><div class="wb-cd-num" id="wb-cd-atk">—</div></div>
   </div>
-  <div class="wb-skill shld" data-act="shield">
+  <div class="wb-skill shld" data-act="skill-info" data-sk="shld">
     <div class="ws-icon">🛡️</div><div class="ws-name">ЩИТ</div>
     <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
   </div>
-  <div class="wb-skill ult" data-act="ult">
-    <div class="ws-icon">✨</div><div class="ws-name">УЛЬТА</div>
+  <div class="wb-skill ult" data-act="skill-info" data-sk="ult">
+    <div class="ws-icon">💥</div><div class="ws-name">УЛЬТА</div>
     <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
   </div>
-  <div class="wb-skill auto" data-act="use-scroll">
+  <div class="wb-skill auto" data-act="skill-info" data-sk="auto">
     <div class="ws-icon">🤖</div><div class="ws-name">АВТО</div>
     <div class="wb-cd-ov" style="opacity:0"></div>
   </div>
@@ -154,6 +154,7 @@ ${isDead ? deadHTML : ''}
       else if (act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
       else if (act === 'shield')     window.WBHtml.toast?.('🛡 Блок активирован');
       else if (act === 'ult')        window.WBHtml.toast?.('💥 Ульта не готова');
+      else if (act === 'skill-info') _showSkillInfo(el.dataset.sk, sc, s);
       else if (act === 'wb-end-test') {
         get('/api/admin/wb_end').then(() => { window.WBHtml.toast('✅ Бой завершён'); setTimeout(() => sc?._refresh?.(), 800); })
           .catch(() => window.WBHtml.toast('❌ Ошибка'));
@@ -167,6 +168,52 @@ ${isDead ? deadHTML : ''}
     if (bimg) { bimg.classList.remove('wb-hit'); void bimg.offsetWidth; bimg.classList.add('wb-hit'); }
     const zone = document.getElementById('wb-boss-zone');
     if (zone) { zone.style.transform='scale(.98)'; setTimeout(() => zone.style.transform='', 100); }
+  }
+
+  const _SKILL_INFO = {
+    atk:  { icon:'⚔️', name:'АТАКА',  cd:'3 сек',      act:'hit',        tip:'Базовый урон',
+             desc:'Наносит урон боссу. Урон зависит от характеристики «Сила» и экипировки.',
+             tipTxt:'Усиль Силу → больше урона. Используй свиток «+Урон» для буста.' },
+    shld: { icon:'🛡️', name:'ЩИТ',   cd:'8 сек',      act:'shield',     tip:'Защита',
+             desc:'Снижает входящий урон на 30% на 2 секунды. Помогает выжить в финальных фазах.',
+             tipTxt:'Используй когда у босса менее 20% HP — финальная фаза наносит x2 урон.' },
+    ult:  { icon:'💥', name:'УЛЬТА',  cd:'По шкале',   act:'ult',        tip:'Суперудар',
+             desc:'Мощный удар — тройной урон от обычной атаки. Шкала наполняется с каждым ударом.',
+             tipTxt:'Бей чаще — шкала наполняется быстрее. Выпускай ульту на финальной фазе.' },
+    auto: { icon:'🤖', name:'АВТО',   cd:'Пассивно',   act:'use-scroll', tip:'Автоатака',
+             desc:'Атакует автоматически каждые 3 секунды. Использует свиток рейда если он экипирован.',
+             tipTxt:'Активируй и спокойно выбирай свитки — авто-удары не прекратятся.' },
+  };
+
+  function _showSkillInfo(sk, sc, s) {
+    const info = _SKILL_INFO[sk]; if (!info) return;
+    document.getElementById('wb-sinfo-ov')?.remove();
+    const ov = document.createElement('div'); ov.id = 'wb-sinfo-ov'; ov.className = 'wb-sinfo-ov';
+    ov.innerHTML = `<div class="wb-sinfo">
+      <div class="wb-sinfo-hdl"></div>
+      <div class="wb-sinfo-ic">${info.icon}</div>
+      <div class="wb-sinfo-title">${info.name}</div>
+      <div class="wb-sinfo-cd">⏱ ПЕРЕЗАРЯДКА: ${info.cd}</div>
+      <div class="wb-sinfo-desc">${info.desc}</div>
+      <div class="wb-sinfo-tip">
+        <div class="wb-sinfo-tip-t">💡 СОВЕТ</div>
+        <div class="wb-sinfo-tip-v">${info.tipTxt}</div>
+      </div>
+      <div class="wb-sinfo-use" id="wb-sinfo-use">ИСПОЛЬЗОВАТЬ</div>
+    </div>`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('open'));
+    const close = () => { ov.classList.remove('open'); setTimeout(() => ov.remove(), 250); };
+    ov.addEventListener('click', e => { if (e.target === ov) close(); });
+    document.getElementById('wb-sinfo-use')?.addEventListener('click', () => {
+      close();
+      const root = document.getElementById('wb-root');
+      if (info.act === 'hit') _onHit(root, sc);
+      else if (info.act === 'shield') window.WBHtml.toast?.('🛡 Блок активирован');
+      else if (info.act === 'ult')   window.WBHtml.toast?.('💥 Ульта не готова');
+      else if (info.act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
+    });
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
   }
 
   function _openCard(p, s) {

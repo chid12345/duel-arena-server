@@ -97,8 +97,10 @@ window.WBHtml = (() => {
       </div></div>`).join('') || '<div style="padding:14px;text-align:center;font-size:11px;color:#445;letter-spacing:1px;">История пуста</div>';
 
     const top5 = (s.top||[]).slice(0,6);
-    const avatarsHTML = top5.map(t=>`<div class="wb-av">${t.emoji||'⚔️'}</div>`).join('');
-    const extra = Math.max(0, regCnt - top5.length);
+    const DEF_EM = ['⚔️','🛡️','🔮','🐉','⚡','🗡️','🔥'];
+    const avEmojis = top5.length > 0 ? top5.map(t=>t.emoji||'⚔️') : DEF_EM.slice(0, Math.min(regCnt||7, 7));
+    const avatarsHTML = avEmojis.map(em=>`<div class="wb-av">${em}</div>`).join('');
+    const extra = Math.max(0, (regCnt||0) - avEmojis.length);
 
     return `
 <div class="wb-hdr">
@@ -127,7 +129,7 @@ window.WBHtml = (() => {
     <div class="wb-prize-players">игроков</div>
   </div>
 </div>
-${avatarsHTML?`<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-av-more">+${extra} участников</span>`:''}</div>`:''}
+<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-av-more">+${extra} участников</span>`:''}</div>
 <div class="wb-recon" data-act="boss-card">
   <div class="wb-recon-ic">🔍</div>
   <div class="wb-recon-txt">

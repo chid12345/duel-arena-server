@@ -130,27 +130,55 @@ window.WBBattleCSS = (() => {
 @keyframes wb-up{0%,100%{box-shadow:0 0 10px #BF00FF}50%{box-shadow:0 0 22px #BF00FF,0 0 35px #00BFFF}}
 .wb-ultra-btn:active.ready{transform:scale(.96);}
 
-/* ── Кнопки скиллов (меньше) ── */
-.wb-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
-  padding:8px 12px 14px;background:linear-gradient(0deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
+/* ── Кнопки скиллов ── */
+.wb-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;
+  padding:5px 12px 10px;background:linear-gradient(0deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
   border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;}
-.wb-skill{border-radius:10px;padding:8px 4px 7px;aspect-ratio:1;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;gap:3px;cursor:pointer;position:relative;overflow:hidden;
+.wb-skill{border-radius:8px;padding:5px 3px 4px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;cursor:pointer;position:relative;overflow:hidden;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
   transition:all .12s;-webkit-tap-highlight-color:transparent;}
 .wb-skill:active:not(.cd){transform:scale(.93);}
-.wb-skill.atk{border-color:rgba(255,0,85,.25);box-shadow:0 0 8px rgba(255,0,85,.1);}
-.wb-skill.shld{border-color:rgba(0,191,255,.25);box-shadow:0 0 8px rgba(0,191,255,.1);}
+.wb-skill.atk{border-color:rgba(255,0,85,.25);box-shadow:0 0 6px rgba(255,0,85,.1);}
+.wb-skill.shld{border-color:rgba(0,191,255,.25);box-shadow:0 0 6px rgba(0,191,255,.1);}
 .wb-skill.ult{border-color:rgba(191,0,255,.3);animation:wb-ug 2s ease-in-out infinite;}
-@keyframes wb-ug{0%,100%{box-shadow:0 0 8px rgba(191,0,255,.15)}50%{box-shadow:0 0 16px rgba(191,0,255,.35)}}
-.wb-skill.auto{border-color:rgba(0,255,159,.25);box-shadow:0 0 8px rgba(0,255,159,.1);}
-.ws-icon{font-size:18px;line-height:1;}
-.ws-name{font-size:7px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.4);}
+@keyframes wb-ug{0%,100%{box-shadow:0 0 6px rgba(191,0,255,.15)}50%{box-shadow:0 0 14px rgba(191,0,255,.35)}}
+.wb-skill.auto{border-color:rgba(0,255,159,.25);box-shadow:0 0 6px rgba(0,255,159,.1);}
+.ws-icon{font-size:15px;line-height:1;}
+.ws-name{font-size:6px;letter-spacing:.5px;text-transform:uppercase;color:rgba(255,255,255,.4);}
 .wb-skill.cd .ws-icon,.wb-skill.cd .ws-name{opacity:.3;}
-.wb-cd-ov{position:absolute;inset:0;border-radius:10px;background:rgba(0,0,0,.7);
+.wb-cd-ov{position:absolute;inset:0;border-radius:8px;background:rgba(0,0,0,.7);
   display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s;}
 .wb-skill.cd .wb-cd-ov{opacity:1;}
-.wb-cd-num{font-family:'Courier New',monospace;font-size:16px;font-weight:900;color:rgba(255,255,255,.6);}
+.wb-cd-num{font-family:'Courier New',monospace;font-size:14px;font-weight:900;color:rgba(255,255,255,.6);}
+
+/* ── Инфо-попап скилла ── */
+.wb-sinfo-ov{position:fixed;inset:0;z-index:9995;background:rgba(0,0,0,.55);
+  backdrop-filter:blur(3px);opacity:0;pointer-events:none;transition:opacity .2s;
+  display:flex;align-items:flex-end;justify-content:center;}
+.wb-sinfo-ov.open{opacity:1;pointer-events:all;}
+.wb-sinfo{width:100%;max-width:390px;border-radius:20px 20px 0 0;padding:0 0 20px;
+  background:linear-gradient(180deg,#0d0020 0%,#05030f 100%);
+  border:1px solid rgba(255,0,85,.25);border-bottom:none;
+  box-shadow:0 -8px 40px rgba(255,0,85,.12);
+  transform:translateY(100%);transition:transform .28s cubic-bezier(.32,1.2,.5,1);}
+.wb-sinfo-ov.open .wb-sinfo{transform:translateY(0);}
+.wb-sinfo-hdl{display:flex;justify-content:center;padding:9px 0 5px;}
+.wb-sinfo-hdl::before{content:"";width:32px;height:3px;border-radius:2px;background:rgba(255,0,85,.3);}
+.wb-sinfo-ic{font-size:36px;text-align:center;padding:6px 0 4px;
+  filter:drop-shadow(0 0 10px rgba(255,0,85,.5));}
+.wb-sinfo-title{font-size:15px;font-weight:900;letter-spacing:1px;color:#fff;text-align:center;padding:0 18px 3px;}
+.wb-sinfo-cd{font-size:9px;font-weight:800;letter-spacing:1.5px;color:#FF0055;text-align:center;margin-bottom:10px;}
+.wb-sinfo-desc{font-size:11px;color:rgba(255,255,255,.6);text-align:center;padding:0 22px 10px;line-height:1.5;}
+.wb-sinfo-tip{margin:0 14px 10px;padding:8px 12px;border-radius:10px;
+  background:rgba(0,191,255,.05);border:1px solid rgba(0,191,255,.15);}
+.wb-sinfo-tip-t{font-size:7px;font-weight:800;letter-spacing:2px;color:#00BFFF;margin-bottom:3px;}
+.wb-sinfo-tip-v{font-size:10px;color:rgba(255,255,255,.55);line-height:1.4;}
+.wb-sinfo-use{margin:0 14px;padding:11px;border-radius:12px;text-align:center;cursor:pointer;
+  background:linear-gradient(135deg,rgba(255,0,85,.3),rgba(180,0,60,.3));
+  border:1px solid rgba(255,0,85,.4);font-size:12px;font-weight:800;letter-spacing:1px;color:#fff;
+  transition:background .15s;}
+.wb-sinfo-use:active{background:linear-gradient(135deg,rgba(255,0,85,.5),rgba(180,0,60,.5));}
 
 /* ── Тост ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
