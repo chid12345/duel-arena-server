@@ -72,16 +72,7 @@
   <div class="wb-wp" style="top:22%;left:52%" data-act="hit"></div>
   <div class="wb-wp" style="top:40%;left:63%" data-act="hit"></div>
   <div class="wb-wp" style="top:55%;left:38%" data-act="hit"></div>
-  <div id="wb-dfloat" class="wb-dmg" style="left:50%;bottom:30%;transform:translateX(-50%)"></div>
-  <div class="wb-tap-hint">← TAP — УДАР →</div>
-</div>
-<div style="display:flex;align-items:center;gap:8px;padding:4px 14px 2px">
-  <div style="font-size:8px;letter-spacing:1px;color:#00BFFF;flex-shrink:0">ВЫ</div>
-  <div style="flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,.06);overflow:hidden">
-    <div id="wb-pl-bar" style="height:100%;width:${ppct}%;background:linear-gradient(90deg,#004488,#0088ff);transition:width .3s"></div>
-  </div>
-  <div id="wb-pl-hp" style="font-size:9px;color:rgba(255,255,255,.35)">${ps?`${ps.current_hp}/${ps.max_hp}`:'—'}</div>
-  <div id="wb-live-cnt" style="font-size:9px;font-weight:700;color:#00FF9F">${rcnt}👥</div>
+  <div class="wb-tap-hint">⚡ ТАП — УДАР ⚡</div>
 </div>
 ${isDead ? deadHTML : ''}
 <div class="wb-ultra">
@@ -267,14 +258,13 @@ ${isDead ? deadHTML : ''}
   }
 
   function addHitLog(dmg, isCrit) {
-    const df = document.getElementById('wb-dfloat');
-    if (!df) return;
-    df.className = 'wb-dmg' + (isCrit ? ' crit' : '');
-    df.style.color = isCrit ? '#ffcc00' : '#00FF9F';
-    df.style.fontSize = isCrit ? '22px' : '18px';
-    void df.offsetWidth;
-    df.textContent = (isCrit ? '💥 КРИТ! ' : '') + dmg.toLocaleString('ru');
-    df.classList.add('show');
+    const zone = document.getElementById('wb-boss-zone'); if (!zone) return;
+    const el = document.createElement('div');
+    el.className = 'wb-dmg-num' + (isCrit ? ' crit' : '');
+    el.textContent = isCrit ? `💥 ${dmg.toLocaleString('ru')}!` : `+${dmg.toLocaleString('ru')}`;
+    el.style.cssText = `left:50%;top:50%;color:${isCrit?'#ffcc00':'#00FF9F'};font-size:${isCrit?'24px':'18px'};`;
+    zone.appendChild(el);
+    setTimeout(() => el.remove(), 950);
   }
 
   function setUltraFill(pct) {

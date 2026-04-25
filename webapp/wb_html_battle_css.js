@@ -89,12 +89,14 @@ window.WBBattleCSS = (() => {
   display:flex;align-items:center;justify-content:center;font-size:12px;
   opacity:0;animation:wb-gh 4s ease-in-out infinite;pointer-events:none;}
 @keyframes wb-gh{0%{opacity:0;transform:translateY(15px)}20%{opacity:.35}80%{opacity:.25}100%{opacity:0;transform:translateY(-25px) translateX(15px)}}
-.wb-dmg{position:absolute;font-family:'Courier New',monospace;font-weight:900;
-  pointer-events:none;z-index:20;opacity:0;text-shadow:0 0 8px currentColor;}
-.wb-dmg.show{animation:wb-dmgfly .9s ease-out forwards;}
-@keyframes wb-dmgfly{0%{opacity:1;transform:translateY(0) scale(1)}
-  20%{opacity:1;transform:translateY(-18px) scale(1.15)}
-  100%{opacity:0;transform:translateY(-60px) scale(.7)}}
+.wb-dmg-num{position:absolute;font-family:'Courier New',monospace;font-weight:900;
+  pointer-events:none;z-index:20;text-shadow:0 0 10px currentColor;white-space:nowrap;
+  animation:wb-dmgfly2 .9s ease-out forwards;}
+.wb-dmg-num.crit{text-shadow:0 0 16px #ffcc00,0 0 32px #ff8800;}
+@keyframes wb-dmgfly2{
+  0%  {opacity:1;transform:translateX(-50%) translateY(0)     scale(1)   }
+  20% {opacity:1;transform:translateX(-50%) translateY(-20px) scale(1.15)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-70px) scale(.7)  }}
 .wb-tap-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
   font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;
   pointer-events:none;white-space:nowrap;
