@@ -53,6 +53,7 @@
     <div class="wb-bhdr2-r">
       <div class="wb-phase">${phase}</div>
       <div class="wb-btimer2"><div class="wb-tdot"></div><div class="wb-tval" id="wb-bl-timer">${_fmtSec(a.seconds_left)}</div></div>
+      <span style="font-size:8px;color:rgba(255,0,136,.3);cursor:pointer;padding:2px 4px;" data-act="test-hit">⚡t</span>
     </div>
   </div>
   <div class="wb-hp2-sec">
@@ -150,6 +151,11 @@ ${isDead ? deadHTML : ''}
       else if (act === 'wb-end-test') {
         get('/api/admin/wb_end').then(() => { window.WBHtml.toast('✅ Бой завершён'); setTimeout(() => sc?._refresh?.(), 800); })
           .catch(() => window.WBHtml.toast('❌ Ошибка'));
+      }
+      else if (act === 'test-hit') {
+        const d = Math.floor(Math.random() * 800 + 200), cr = Math.random() > .7;
+        addHitLog(d, cr);
+        sc?._onHit?.();
       }
     });
   }
