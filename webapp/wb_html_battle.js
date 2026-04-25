@@ -139,7 +139,7 @@ ${isDead ? deadHTML : ''}
       const act = el.dataset.act;
       if (act === 'hit')        _onHit(root, sc);
       else if (act === 'res')   sc?._resurrect?.(el.dataset.t);
-      else if (act === 'back')  { window.WBHtml.close(); sc?.scene?.start?.('Menu', {returnTab:'more'}); }
+      else if (act === 'back')  { try { if (s.player_state?.is_dead && s.active?.spawn_id) localStorage.setItem('wb_left_raid', String(s.active.spawn_id)); } catch(_) {} window.WBHtml.close(); sc?.scene?.start?.('Menu', {returnTab:'more'}); }
       else if (act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
       else if (act === 'shield')     window.WBHtml.toast?.('🛡 Блок активирован');
       else if (act === 'ult')        window.WBHtml.toast?.('💥 Ульта не готова');

@@ -257,10 +257,10 @@ window.WBHtml = (() => {
     try { window._closeAllTabOverlays?.(); } catch(_) {}
     const s = state || {};
     const root = _root();
-    if (s.active) {
-      _setTabBar(false);
-      root.style.cssText = '';
-      window.WBHtml._renderBattle?.(root, s); return;
+    const _leftSid = (() => { try { return localStorage.getItem('wb_left_raid'); } catch(_) { return null; } })();
+    if (s.active && !(s.player_state?.is_dead && _leftSid === String(s.active.spawn_id))) {
+      if (_leftSid && _leftSid !== String(s.active.spawn_id)) try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
+      _setTabBar(false); root.style.cssText = ''; window.WBHtml._renderBattle?.(root, s); return;
     }
     _setTabBar(true);
     _fitToCanvas(root);
