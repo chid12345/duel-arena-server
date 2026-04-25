@@ -179,7 +179,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     if (W.isSkillOnCD?.(info.act==='hit'?'atk':info.act==='shield'?'shld':info.act==='ult'?'ult':'')) { W.toast?.('⏱ Перезарядка'); return; }
     if (info.act === 'hit') { _onHit(root, sc); W.startSkillCD?.('atk'); }
     else if (info.act === 'shield') { W.toast?.('🛡 Блок активирован'); W.startSkillCD?.('shld'); }
-    else if (info.act === 'ult')   { if (W.fireUltra?.()) W.startSkillCD?.('ult'); else W.toast?.('💥 Ульта не готова'); }
+    else if (info.act === 'ult')   { W.fireUltSkill?.(); W.startSkillCD?.('ult'); }
     else if (info.act === 'auto-toggle') {
       const btn = root?.querySelector('.wb-skill.auto');
       const on = btn?.classList.toggle('auto-on');

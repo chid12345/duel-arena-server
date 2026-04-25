@@ -110,6 +110,16 @@
     }, 100);
   }
 
+  function fireUltSkill() {
+    _shake();
+    const sc = window.WBHtml._scene;
+    for (let i = 0; i < 5; i++) setTimeout(() => {
+      const dmg = Math.round(20000 + Math.random() * 15000);
+      _spawnBurst(`💥 ${dmg.toLocaleString('ru')}`, '#BF00FF', 22);
+    }, i * 90);
+    for (let i = 0; i < 3; i++) setTimeout(() => sc?._onHit?.(), i * 320);
+  }
+
   function setAutoAttack(on) {
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
     if (on) _state.autoTimer = setInterval(() => window.WBHtml._scene?._onHit?.(), 1000);
@@ -119,5 +129,5 @@
     Object.values(_state.cdTimers).forEach(t => t && clearInterval(t)); _state.cdTimers = {};
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; } }
 
-  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, startSkillCD, isSkillOnCD, checkQteTrigger, setAutoAttack, resetBattleLogic: reset });
+  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, fireUltSkill, startSkillCD, isSkillOnCD, checkQteTrigger, setAutoAttack, resetBattleLogic: reset });
 })();
