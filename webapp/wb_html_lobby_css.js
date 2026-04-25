@@ -81,7 +81,7 @@ window.WBLobbyCSS = (() => {
   border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);}
 .wb-auto-ic{font-size:20px;flex-shrink:0;}
 .wb-auto-txt{flex:1;min-width:0;}
-.wb-auto-main{font-size:11px;font-weight:700;color:#e0e0e0;}
+.wb-auto-main{font-size:11px;font-weight:700;color:#fff;}
 .wb-auto-sub{font-size:9px;color:#446688;margin-top:1px;}
 .wb-toggle{width:36px;height:20px;border-radius:10px;background:rgba(255,255,255,.1);
   border:1px solid rgba(255,255,255,.15);position:relative;cursor:pointer;flex-shrink:0;transition:all .25s;}
