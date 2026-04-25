@@ -195,7 +195,7 @@ window.WBHtml = (() => {
       try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
       const act = el.dataset.act;
       if (act==='back')       { close(); _scene?.scene?.start?.('Menu',{returnTab:'more'}); }
-      else if (act==='enter') { close(); _scene?.scene?.restart?.(); }
+      else if (act==='enter') { try { localStorage.removeItem('wb_left_raid'); } catch(_) {} close(); _scene?.scene?.restart?.(); }
       else if (act==='join')  {
         const isJoined = el.classList.toggle('joined');
         const ico  = el.querySelector('.wb-join-ico');
@@ -258,8 +258,8 @@ window.WBHtml = (() => {
     const s = state || {};
     const root = _root();
     const _leftSid = (() => { try { return localStorage.getItem('wb_left_raid'); } catch(_) { return null; } })();
-    if (s.active && !(s.player_state?.is_dead && _leftSid === String(s.active.spawn_id))) {
-      if (_leftSid && _leftSid !== String(s.active.spawn_id)) try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
+    if (s.active && _leftSid !== String(s.active.spawn_id)) {
+      if (_leftSid) try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
       _setTabBar(false); root.style.cssText = ''; window.WBHtml._renderBattle?.(root, s); return;
     }
     _setTabBar(true);

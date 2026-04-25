@@ -113,6 +113,11 @@ window.WBBattleCSS = (() => {
 .wb-res-b:active{transform:scale(.96);}
 .ri{display:block;font-size:18px;margin-bottom:2px;}
 
+/* ── Player HP ── */
+.wb-plhp{display:flex;align-items:center;gap:8px;padding:4px 14px 2px;flex-shrink:0;}
+.wb-plhp-i{font-size:12px}.wb-plhp-v{font-size:10px;font-family:'Courier New',monospace;color:#00BFFF;font-weight:700;white-space:nowrap;}
+.wb-plhp-tr{flex:1;height:6px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;border:1px solid rgba(0,191,255,.2);}.wb-plhp-f{height:100%;background:linear-gradient(90deg,#0033ff,#00BFFF);border-radius:3px;transition:width .3s;box-shadow:0 0 6px rgba(0,191,255,.5);}
+
 /* ── Ульта ── */
 .wb-ultra{display:flex;align-items:center;gap:8px;padding:6px 14px;
   background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;}
@@ -206,8 +211,7 @@ window.WBBattleCSS = (() => {
   background:linear-gradient(90deg,#00FF9F,#00BFFF);transition:width .1s linear;}
 
 /* ── Screen shake (ульта/QTE) ── */
-.wb-shake{animation:wb-shake .45s ease-in-out;}
-@keyframes wb-shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
+.wb-shake{animation:wb-shake .45s ease-in-out;}@keyframes wb-shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
 
 /* ── MVP RAID — итоги рейда ── */
 .wb-mvp-ov{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);

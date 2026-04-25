@@ -8,6 +8,7 @@
 
   function _renderBattle(root, s) {
     _seenSkills.clear(); window.WBHtml.resetBattleLogic?.();
+    try { Object.keys(sessionStorage).filter(k=>k.startsWith('wb_bought_')).forEach(k=>sessionStorage.removeItem(k)); } catch(_) {}
     window.WBBattleCSS?.inject();
     const a = s.active, ps = s.player_state;
     const pct  = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
@@ -73,7 +74,7 @@
   <div class="wb-wp" style="top:55%;left:38%" data-act="hit"></div>
   <div class="wb-tap-hint">⚡ ТАП — УДАР ⚡</div>
 </div>
-${isDead ? deadHTML : ''}
+${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️</span><div class="wb-plhp-tr"><div class="wb-plhp-f" id="wb-pl-bar" style="width:${ppct}%"></div></div><span class="wb-plhp-v" id="wb-pl-hp">${ps.current_hp||0}/${ps.max_hp||100}</span></div>` : '')}
 <div class="wb-ultra">
   <div class="wb-ultra-lbl">УЛЬТА</div>
   <div class="wb-ultra-track"><div class="wb-ultra-fill" id="wb-ultra-fill" style="width:0%"></div></div>
@@ -139,7 +140,7 @@ ${isDead ? deadHTML : ''}
       const act = el.dataset.act;
       if (act === 'hit')        _onHit(root, sc);
       else if (act === 'res')   sc?._resurrect?.(el.dataset.t);
-      else if (act === 'back')  { try { if (s.player_state?.is_dead && s.active?.spawn_id) localStorage.setItem('wb_left_raid', String(s.active.spawn_id)); } catch(_) {} window.WBHtml.close(); sc?.scene?.start?.('Menu', {returnTab:'more'}); }
+      else if (act === 'back')  { try { if (s.active?.spawn_id) localStorage.setItem('wb_left_raid', String(s.active.spawn_id)); } catch(_) {} window.WBHtml.close(); sc?.scene?.start?.('Menu', {returnTab:'more'}); }
       else if (act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
       else if (act === 'shield')     window.WBHtml.toast?.('🛡 Блок активирован');
       else if (act === 'ult')        window.WBHtml.toast?.('💥 Ульта не готова');
