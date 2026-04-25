@@ -35,12 +35,22 @@ window.WBHtml = (() => {
     { id:'res_100', icon:'✨', pct:'100%', price:'3000 🪙', desc:'Полное воскрешение с 100% HP', gold:true },
   ];
 
+  const BOSS_TYPE_STYLE = {
+    universal: { hdr:'rgba(60,20,90,.97)',  border:'rgba(150,80,255,.55)', badge:'#cc88ff', label:'УНИВЕРСАЛЬНЫЙ' },
+    fire:      { hdr:'rgba(90,15,5,.97)',   border:'rgba(255,80,20,.6)',   badge:'#ff8844', label:'ОГНЕННЫЙ' },
+    ice:       { hdr:'rgba(5,25,75,.97)',   border:'rgba(30,160,255,.6)',  badge:'#55ccff', label:'ЛЕДЯНОЙ' },
+    poison:    { hdr:'rgba(5,45,10,.97)',   border:'rgba(60,210,60,.55)',  badge:'#88ff88', label:'ЯДОВИТЫЙ' },
+    shadow:    { hdr:'rgba(15,5,35,.97)',   border:'rgba(130,60,200,.55)', badge:'#bb88ff', label:'ТЕНЕВОЙ' },
+  };
+
   function _lobbyHTML(s) {
     const inv = s.raid_scrolls_inv || {}, res = s.res_scrolls_inv || {};
     const ns = s.next_scheduled || {};
     const bossName  = ns.boss_name  || s.boss_name  || 'Мировой Босс';
     const bossEmoji = ns.boss_emoji || s.boss_emoji || '💀';
+    const bossType  = ns.boss_type  || s.boss_type  || 'universal';
     const bossLabel = ns.boss_type_label || '';
+    const bst       = BOSS_TYPE_STYLE[bossType] || BOSS_TYPE_STYLE.universal;
     const schedAt   = ns.scheduled_at;
     const regCnt    = s.registrants_count || 0;
     const joined    = s.is_registered || false;
@@ -114,9 +124,12 @@ window.WBHtml = (() => {
       <div class="wb-boss-card-hint">Нажми — характеристики →</div>
     </div>
   </div>
-  <div class="wb-hero-r">
-    <div class="wb-hero-aura"></div>
-    <img class="wb-hero-img" src="bosses/boss3.png" onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=wb-hero-emoji>${bossEmoji}</div>')"/>
+  <div class="wb-bmc" style="background:linear-gradient(180deg,${bst.hdr} 0%,rgba(5,3,12,.97) 100%);box-shadow:inset -1px 0 0 ${bst.border};">
+    <div class="wb-bmc-hdr" style="background:${bst.hdr};color:${bst.badge};">${bst.label}</div>
+    <div class="wb-bmc-body">
+      <div class="wb-bmc-em" style="filter:drop-shadow(0 0 16px ${bst.border}) drop-shadow(0 0 6px ${bst.border});">${bossEmoji}</div>
+    </div>
+    <div class="wb-bmc-foot">НАЖМИ →</div>
   </div>
 </div>
 <div class="wb-enter" id="wb-enter-btn" data-act="enter">
