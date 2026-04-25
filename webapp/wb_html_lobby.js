@@ -110,23 +110,12 @@ window.WBHtml = (() => {
   <div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ОБЩИЙ РЕЙД · КАЖДЫЕ 4 ЧАСА</div></div>
   ${regCnt>0?`<div class="wb-online">${regCnt} онлайн</div>`:''}
 </div>
-<div class="wb-boss-card" data-act="boss-card">
-  <div class="wb-boss-card-l">
-    <div class="wb-boss-timer-block">
-      <div class="wb-timer-lbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
-      <div class="wb-cnt" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
-    </div>
-    <div class="wb-boss-info-block">
-      <div class="wb-boss-type-badge">${bossLabel?bossLabel.toUpperCase()+' · ':''}СЛЕДУЮЩИЙ БОСС</div>
-      <div class="wb-boss-card-name">${bossEmoji} ${_esc(bossName)}</div>
-      <div class="wb-boss-card-hint">Нажми — характеристики →</div>
-    </div>
+<div class="wb-timer-card" data-act="boss-card">
+  <div>
+    <div class="wb-timer-lbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+    <div class="wb-cnt" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
   </div>
-  <div class="wb-bmc" style="background:linear-gradient(180deg,${bst.hdr} 0%,rgba(5,3,12,.97) 100%);box-shadow:inset -1px 0 0 ${bst.border};">
-    <div class="wb-bmc-hdr" style="background:${bst.hdr};color:${bst.badge};">${bst.label}</div>
-    <div class="wb-bmc-body"><div class="wb-bmc-em" style="filter:drop-shadow(0 0 16px ${bst.border});">${bossEmoji}</div></div>
-    <div class="wb-bmc-foot">НАЖМИ →</div>
-  </div>
+  <div class="wb-type-pill" style="color:${bst.badge};border-color:${bst.border};background:${bst.hdr};">${bst.label}</div>
 </div>
 <div class="wb-enter" id="wb-enter-btn" data-act="enter">
   <div class="wb-enter-in"><div class="wb-enter-icon">⚔️</div>

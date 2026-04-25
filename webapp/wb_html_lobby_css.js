@@ -36,44 +36,29 @@ window.WBLobbyCSS = (() => {
   filter:drop-shadow(0 0 10px rgba(0,230,255,.7));animation:wb-cp 1s ease-in-out infinite;}
 @keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
 
-/* ── Карточка босса ── */
-.wb-boss-card{margin:8px 14px 0;border-radius:16px;overflow:hidden;position:relative;
-  display:flex;align-items:stretch;cursor:pointer;
+/* ── Компактный таймер (дышащий) ── */
+.wb-timer-card{margin:8px 14px 0;border-radius:14px;padding:12px 16px;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;
   background:linear-gradient(135deg,rgba(20,0,40,.97),rgba(0,8,28,.97));
-  border:1px solid rgba(255,0,200,.45);
+  border:1px solid rgba(255,0,200,.35);
   animation:wb-boss-glow 2.5s ease-in-out infinite;transition:transform .12s;}
 @keyframes wb-boss-glow{
-  0%,100%{box-shadow:0 0 16px rgba(255,0,200,.15);border-color:rgba(255,0,200,.35);}
-  50%{box-shadow:0 0 36px rgba(255,0,200,.5);border-color:rgba(255,0,200,.8);}}
-.wb-boss-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,0,200,.7),transparent);}
-.wb-boss-card-l{flex:1;padding:10px 8px 10px 14px;display:flex;flex-direction:column;justify-content:center;gap:6px;}
-.wb-boss-timer-block{display:flex;flex-direction:column;}
-.wb-boss-info-block{display:flex;flex-direction:column;}
-.wb-boss-type-badge{font-size:8px;font-weight:800;letter-spacing:2px;color:#ff00cc;
-  text-shadow:0 0 8px currentColor;margin-bottom:4px;}
-.wb-boss-card-name{font-size:14px;font-weight:900;margin-bottom:3px;
-  background:linear-gradient(90deg,#fff,#ff88cc);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.wb-boss-card-hint{font-size:8px;color:rgba(255,255,255,.45);letter-spacing:.5px;}
-.wb-bmc{width:82px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;
-  border-radius:0 15px 15px 0;border-left:1px solid rgba(255,255,255,.06);}
-.wb-bmc-hdr{padding:5px 4px 4px;text-align:center;font-size:7px;font-weight:900;letter-spacing:1.5px;
-  color:#fff;border-bottom:1px solid rgba(255,255,255,.08);}
-.wb-bmc-body{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0;}
-.wb-bmc-em{font-size:46px;line-height:1;animation:wb-bf 3s ease-in-out infinite;}
-@keyframes wb-bf{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-.wb-bmc-foot{padding:5px 0;text-align:center;font-size:6px;font-weight:800;letter-spacing:2px;
-  color:rgba(255,255,255,.25);border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.25);}
+  0%,100%{box-shadow:0 0 12px rgba(255,0,200,.12),inset 0 0 20px rgba(255,0,200,.03);border-color:rgba(255,0,200,.3);}
+  50%{box-shadow:0 0 32px rgba(255,0,200,.45),inset 0 0 30px rgba(255,0,200,.06);border-color:rgba(255,0,200,.75);}}
+.wb-timer-card:active{transform:scale(.99);}
+.wb-type-pill{font-size:9px;font-weight:900;letter-spacing:1.5px;padding:5px 10px;
+  border-radius:8px;border:1px solid;flex-shrink:0;}
 
 /* ── Призовой фонд ── */
 .wb-prize{margin:6px 14px 0;padding:10px 12px;border-radius:12px;
   background:rgba(255,160,0,.06);border:1px solid rgba(255,160,0,.2);
-  display:flex;justify-content:space-between;align-items:center;}
-.wb-prize-l{display:flex;flex-direction:column;gap:3px;}
+  display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.wb-prize-l{display:flex;flex-direction:column;gap:3px;flex:1;min-width:0;}
 .wb-prize-lbl{font-size:8px;font-weight:800;letter-spacing:1.5px;color:#ffdd44;text-shadow:0 0 5px rgba(255,210,0,.4);}
 .wb-prize-sub{font-size:8px;color:rgba(255,255,255,.3);}
-.wb-prize-coins{font-size:20px;font-weight:900;color:#ffdd44;text-shadow:0 0 10px rgba(255,200,0,.6);text-align:right;}
-.wb-prize-cnt{font-size:9px;font-weight:700;color:#00FF9F;text-align:right;margin-top:1px;}
+.wb-prize-r{flex-shrink:0;text-align:right;}
+.wb-prize-coins{font-size:20px;font-weight:900;color:#ffdd44;text-shadow:0 0 10px rgba(255,200,0,.6);white-space:nowrap;}
+.wb-prize-cnt{font-size:9px;font-weight:700;color:#00FF9F;white-space:nowrap;margin-top:2px;}
 
 /* ── Аватары участников ── */
 .wb-avstrip{display:flex;align-items:center;gap:4px;padding:5px 14px 2px;overflow:hidden;}
