@@ -206,6 +206,29 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             log.error("wb_test_schedule error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
+    @router.get("/api/admin/wb_end")
+    def wb_end(init_data: str = "", token: str = ""):
+        """Тест: принудительно завершить активный бой (статус → ended)."""
+        if init_data:
+            try:
+                get_user(init_data)
+            except Exception:
+                raise HTTPException(status_code=403, detail="invalid init_data")
+        else:
+            _check_admin_token(token)
+        try:
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "UPDATE world_boss_spawns SET status='ended', ended_at=CURRENT_TIMESTAMP "
+                "WHERE status='active'"
+            )
+            conn.commit()
+            conn.close()
+            return {"ok": True}
+        except Exception as e:
+            return {"ok": False, "reason": str(e)}
+
     @router.get("/api/admin/wb_debug")
     def wb_debug(token: str = ""):
         """Диагностика: текущее состояние world_boss_spawns (последние 5 записей)."""

@@ -245,6 +245,7 @@
         </div>
         <div style="margin-top:10px;cursor:pointer;font-size:10px;color:#556;padding:8px;border:1px solid rgba(255,255,255,.08);border-radius:8px;" data-act="back">🚪 Покинуть бой</div>
       </div>` : `
+      <div style="margin-bottom:6px;padding:7px 12px;border-radius:10px;text-align:center;font-size:10px;font-weight:800;color:#ff4444;border:1px solid rgba(255,40,40,.25);background:rgba(30,0,0,.5);cursor:pointer;letter-spacing:.5px;" data-act="wb-end-test">🛑 ЗАВЕРШИТЬ БОЙ (тест)</div>`+`
       <div class="wb-atk-btn" data-act="hit">
         <div class="wb-atk-ico">⚔️</div>
         <div><div class="wb-atk-ml">АТАКОВАТЬ</div><div class="wb-atk-sl">НАЖМИ ДЛЯ УДАРА</div></div>
@@ -364,6 +365,9 @@
       else if (act==='show-dmg') window.WBHtml.toast(`🗡 Твой урон: ${(s.player_state?.total_damage||0).toLocaleString('ru')}`);
       else if (act==='use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
       else if (act==='show-boosts') window.WBHtml._htmlBoostShop?.(s, sc);
+      else if (act==='wb-end-test') {
+        get('/api/admin/wb_end').then(()=>{ window.WBHtml.toast('✅ Бой завершён'); setTimeout(()=>sc?._refresh?.(),800); }).catch(()=>window.WBHtml.toast('❌ Ошибка'));
+      }
     });
   }
 
