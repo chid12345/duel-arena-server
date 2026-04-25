@@ -183,8 +183,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     else if (info.act === 'auto-toggle') {
       const btn = root?.querySelector('.wb-skill.auto');
       const on = btn?.classList.toggle('auto-on');
-      sc?._setAutoAttack?.(on);
-      window.WBHtml.toast?.(on ? '🤖 Авто-бой включён' : '🤖 Авто-бой выключен');
+      W.setAutoAttack?.(on);
+      W.toast?.(on ? '🤖 Авто-бой включён (1 удар/сек)' : '🤖 Авто-бой выключен');
     }
   }
 

@@ -110,8 +110,14 @@
     }, 100);
   }
 
-  function reset() { _state.ultra = 0; _state.qteShown = false; _state.lastPct = 100;
-    Object.values(_state.cdTimers).forEach(t => t && clearInterval(t)); _state.cdTimers = {}; }
+  function setAutoAttack(on) {
+    if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
+    if (on) _state.autoTimer = setInterval(() => window.WBHtml._scene?._onHit?.(), 1000);
+  }
 
-  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, startSkillCD, isSkillOnCD, checkQteTrigger, resetBattleLogic: reset });
+  function reset() { _state.ultra = 0; _state.qteShown = false; _state.lastPct = 100;
+    Object.values(_state.cdTimers).forEach(t => t && clearInterval(t)); _state.cdTimers = {};
+    if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; } }
+
+  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, startSkillCD, isSkillOnCD, checkQteTrigger, setAutoAttack, resetBattleLogic: reset });
 })();
