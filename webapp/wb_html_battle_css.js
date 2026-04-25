@@ -65,18 +65,18 @@ window.WBBattleCSS = (() => {
 
 /* ── Зона босса ── */
 .wb-boss-zone{position:relative;flex:1;overflow:hidden;cursor:crosshair;
-  min-height:220px;background:radial-gradient(ellipse 80% 60% at 50% 60%,rgba(0,191,255,.04) 0%,transparent 70%);}
+  min-height:380px;background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(0,191,255,.05) 0%,transparent 70%);}
 .wb-bimg2{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  width:220px;height:220px;object-fit:contain;
-  filter:drop-shadow(0 0 16px rgba(0,191,255,.25)) drop-shadow(0 0 30px rgba(255,0,85,.12));
+  width:300px;height:300px;object-fit:contain;
+  filter:drop-shadow(0 0 20px rgba(0,191,255,.3)) drop-shadow(0 0 40px rgba(255,0,85,.15));
   animation:wb-bfloat 3s ease-in-out infinite;pointer-events:none;}
 @keyframes wb-bfloat{0%,100%{transform:translate(-50%,-50%) scale(1)}
   50%{transform:translate(-50%,-50%) scale(1.03)}}
 .wb-bimg2.wb-hit{animation:wb-bhit .15s ease forwards,wb-bfloat 3s ease-in-out infinite .15s;}
 @keyframes wb-bhit{0%{filter:brightness(1)}50%{filter:brightness(3) saturate(0)}100%{filter:brightness(1)}}
 .wb-bem2{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
-  font-size:110px;animation:wb-bfloat 3s ease-in-out infinite;pointer-events:none;
-  filter:drop-shadow(0 0 20px rgba(0,191,255,.4));}
+  font-size:140px;animation:wb-bfloat 3s ease-in-out infinite;pointer-events:none;
+  filter:drop-shadow(0 0 24px rgba(0,191,255,.5));}
 .wb-rage2{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .3s;}
 .wb-rage2.on{opacity:1;animation:wb-rage 0.5s ease-in-out infinite;}
 @keyframes wb-rage{0%,100%{box-shadow:inset 0 0 40px rgba(255,0,85,.35)}50%{box-shadow:inset 0 0 70px rgba(255,0,85,.65)}}
@@ -97,9 +97,14 @@ window.WBBattleCSS = (() => {
   20%{opacity:1;transform:translateY(-18px) scale(1.15)}
   100%{opacity:0;transform:translateY(-60px) scale(.7)}}
 .wb-tap-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
-  font-size:9px;color:rgba(255,255,255,.2);letter-spacing:2px;text-transform:uppercase;
-  pointer-events:none;animation:wb-hint 2s ease-in-out infinite;}
-@keyframes wb-hint{0%,100%{opacity:.25}50%{opacity:.6}}
+  font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;
+  pointer-events:none;white-space:nowrap;
+  animation:wb-hint 2s ease-in-out infinite;}
+@keyframes wb-hint{0%,100%{opacity:.25}50%{opacity:.7}}
+.wb-ghost-fixed{position:absolute;width:28px;height:28px;border-radius:50%;
+  background:rgba(0,191,255,.08);border:1px solid rgba(0,191,255,.3);
+  display:flex;align-items:center;justify-content:center;font-size:13px;
+  opacity:.45;pointer-events:none;}
 
 /* ── Мёртв ── */
 .wb-dead{margin:12px 14px;padding:16px;border-radius:14px;text-align:center;

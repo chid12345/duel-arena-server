@@ -63,11 +63,15 @@
 <div class="wb-boss-zone" id="wb-boss-zone" data-act="hit">
   <div class="wb-rage2" id="wb-rage2"${pct<50?' class="wb-rage2 on"':''}></div>
   ${ghosts}
+  <div class="wb-ghost-fixed" style="left:8%;top:42%">🛡</div>
+  <div class="wb-ghost-fixed" style="right:8%;top:30%">⚡</div>
   <img class="wb-bimg2" id="wb-bimg" src="bosses/boss3.png"
     onerror="this.style.display='none';this.insertAdjacentHTML('afterend','<div class=\\'wb-bem2\\' id=\\'wb-bem\\'>${_esc(a.boss_emoji||'🐉')}</div>')"/>
-  <div class="wb-wp" style="top:28%;left:62%" data-act="hit"></div>
-  <div id="wb-dfloat" class="wb-dmg" style="left:50%;bottom:35%;transform:translateX(-50%)"></div>
-  <div class="wb-tap-hint">TAP TO ATTACK</div>
+  <div class="wb-wp" style="top:22%;left:52%" data-act="hit"></div>
+  <div class="wb-wp" style="top:40%;left:63%" data-act="hit"></div>
+  <div class="wb-wp" style="top:55%;left:38%" data-act="hit"></div>
+  <div id="wb-dfloat" class="wb-dmg" style="left:50%;bottom:30%;transform:translateX(-50%)"></div>
+  <div class="wb-tap-hint">← TAP — УДАР →</div>
 </div>
 <div style="display:flex;align-items:center;gap:8px;padding:4px 14px 2px">
   <div style="font-size:8px;letter-spacing:1px;color:#00BFFF;flex-shrink:0">ВЫ</div>
@@ -85,19 +89,19 @@ ${isDead ? deadHTML : ''}
 </div>
 <div class="wb-skills">
   <div class="wb-skill atk" data-act="hit">
-    <div class="ws-icon">⚔️</div><div class="ws-name">УДАР</div>
+    <div class="ws-icon">⚔️</div><div class="ws-name">АТАКА</div>
     <div class="wb-cd-ov"><div class="wb-cd-num" id="wb-cd-atk">—</div></div>
   </div>
   <div class="wb-skill shld" data-act="shield">
-    <div class="ws-icon">🛡</div><div class="ws-name">БЛОК</div>
+    <div class="ws-icon">🛡️</div><div class="ws-name">ЩИТ</div>
     <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
   </div>
   <div class="wb-skill ult" data-act="ult">
-    <div class="ws-icon">💥</div><div class="ws-name">УЛЬТА</div>
+    <div class="ws-icon">✨</div><div class="ws-name">УЛЬТА</div>
     <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
   </div>
   <div class="wb-skill auto" data-act="use-scroll">
-    <div class="ws-icon">💊</div><div class="ws-name">СВИТОК</div>
+    <div class="ws-icon">🤖</div><div class="ws-name">АВТО</div>
     <div class="wb-cd-ov" style="opacity:0"></div>
   </div>
 </div>
