@@ -158,10 +158,6 @@ ${showJoin ? `
   </div>
   <div class="wb-join-arr">${joinedAll?'✓':'›'}</div>
 </div>` : `<div style="margin:6px 14px 0;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:9px;color:#445566;text-align:center;letter-spacing:.5px;">⏳ Запись откроется за 1 час до боя</div>`}
-<div class="wb-inv-sec">
-  <div class="wb-inv-lbl">★ МОИ ЗАПАСЫ</div>
-  <div class="wb-chips" id="wb-inv-chips"></div>
-</div>
 <div class="wb-shop-hdr">МАГАЗИН БОЯ</div>
 <div class="wb-cats">
   <div class="wb-cat on" data-cat="boosts"><span class="wb-cat-ic">⚔️</span><span class="wb-cat-lb">БУСТЫ</span></div>
