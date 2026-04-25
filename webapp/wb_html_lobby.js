@@ -71,7 +71,7 @@ window.WBHtml = (() => {
       const isLast = i === boostEntries.length - 1 && boostEntries.length % 2 === 1;
       if (isLast) return `<div class="wb-bc last${bCls}" data-act="buy-scroll" data-id="${id}">
         <div class="bc-ow">×${inv[id]||0}</div><div class="bc-ic">${m.icon}</div>
-        <div class="last-body"><div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div><div class="bc-pr">${m.price}</div></div>
+        <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div><div class="bc-pr">${m.price}</div>
       </div>`;
       return `<div class="wb-bc${bCls}" data-act="buy-scroll" data-id="${id}">
         <div class="bc-ow">×${inv[id]||0}</div><div class="bc-ic">${m.icon}</div>
