@@ -7,6 +7,11 @@ window.WBHtml = (() => {
   const _log = [], _wlog = [];
 
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  // Bought-state: 1 покупка за рейд, ключ = scheduled_at
+  function _boughtKey() { return 'wb_bought_' + (_state?.next_scheduled?.scheduled_at || 'now'); }
+  function _getBought() { try { return JSON.parse(sessionStorage.getItem(_boughtKey()) || '[]'); } catch(_) { return []; } }
+  function _markBought(id) { try { const b=_getBought(); if(!b.includes(id)){b.push(id);sessionStorage.setItem(_boughtKey(),JSON.stringify(b));} } catch(_) {} }
   function _fmtCountdown(iso) {
     try {
       const ts = new Date(iso).getTime(); if (!ts || isNaN(ts)) return '—';
@@ -60,9 +65,12 @@ window.WBHtml = (() => {
     const joinedAndReminded = joined && reminded;
 
     const boostEntries = Object.entries(SCROLL_META);
+    const bought = _getBought();
     const boostsHTML = boostEntries.map(([id,m], i) => {
+      const isBought = bought.includes(id);
+      const bCls = isBought ? ' bought' : '';
       const isLast = i === boostEntries.length - 1 && boostEntries.length % 2 === 1;
-      if (isLast) return `<div class="wb-bc last" data-act="buy-scroll" data-id="${id}">
+      if (isLast) return `<div class="wb-bc last${bCls}" data-act="buy-scroll" data-id="${id}">
         <div class="bc-ic">${m.icon}</div>
         <div class="last-wrap">
           <div style="display:flex;align-items:baseline;gap:6px;">
@@ -73,7 +81,7 @@ window.WBHtml = (() => {
           <div class="bc-desc">${m.desc}</div>
         </div>
       </div>`;
-      return `<div class="wb-bc" data-act="buy-scroll" data-id="${id}">
+      return `<div class="wb-bc${bCls}" data-act="buy-scroll" data-id="${id}">
         <div class="bc-ow">×${inv[id]||0}</div>
         <div class="bc-ic">${m.icon}</div>
         <div class="bc-nm">${m.name}</div>
@@ -209,7 +217,12 @@ ${showJoin ? `
         })();
       }
       else if (act==='boss-card') { window.WBHtml.showBossCard?.(_state); }
-      else if (act==='buy-scroll') { _scene?._buyScroll?.(el.dataset.id); }
+      else if (act==='buy-scroll') {
+        if (el.classList.contains('bought')) return;
+        _markBought(el.dataset.id);
+        el.classList.add('bought');
+        _scene?._buyScroll?.(el.dataset.id);
+      }
       else if (act==='buy-res')    { _scene?._buyResScroll?.(el.dataset.id); }
       else if (act==='test')  { get('/api/admin/wb_test_schedule').then(()=>_scene?._refresh?.()).catch(()=>{}); }
     });

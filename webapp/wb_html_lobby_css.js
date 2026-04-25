@@ -136,25 +136,39 @@ window.WBLobbyCSS = (() => {
   background:linear-gradient(90deg,transparent,#ff00cc,transparent);}
 .wb-cp{display:none;}.wb-cp.on{display:block;}
 
-/* ── Карточки бустов (−30% размер) ── */
-.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px 14px 8px;}
-.wb-bc.last{grid-column:1/-1;display:flex;align-items:center;gap:10px;}
-.wb-bc.last .bc-ic{font-size:16px;margin-bottom:0;}
+/* ── Карточки бустов (компактные) ── */
+.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px 14px 8px;}
+.wb-bc{padding:5px 6px 6px;border-radius:10px;cursor:pointer;position:relative;overflow:hidden;
+  background:linear-gradient(135deg,rgba(20,0,38,.97),rgba(5,4,18,.97));
+  border:1px solid rgba(255,0,200,.25);transition:all .2s;}
+.wb-bc:hover,.wb-bc:active{border-color:rgba(255,0,200,.6);box-shadow:0 0 10px rgba(255,0,200,.3);}
+.bc-ic{font-size:11px;margin-bottom:1px;filter:drop-shadow(0 0 4px rgba(255,0,200,.5));}
+.bc-nm{font-size:7px;font-weight:800;letter-spacing:.8px;color:#cc88ff;margin-bottom:1px;}
+.bc-vl{font-size:10px;font-weight:900;color:#ff00cc;text-shadow:0 0 6px currentColor;}
+.bc-desc{font-size:7px;color:rgba(255,255,255,.6);margin:1px 0 2px;line-height:1.3;}
+.bc-pr{font-size:8px;font-weight:800;color:#ffdd44;text-shadow:0 0 5px rgba(255,210,0,.45);letter-spacing:.3px;}
+.bc-ow{position:absolute;top:4px;right:5px;font-size:7px;font-weight:800;color:#00e5ff;
+  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:1px 4px;border-radius:3px;}
+
+/* ── Широкая карточка (выделенная) ── */
+.wb-bc.last{grid-column:1/-1;display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(0,30,20,.97),rgba(0,15,10,.97));
+  border:1px solid rgba(0,255,159,.35);
+  box-shadow:0 0 16px rgba(0,255,159,.08);
+  animation:wb-feat 2.5s ease-in-out infinite;}
+@keyframes wb-feat{0%,100%{box-shadow:0 0 12px rgba(0,255,159,.07);border-color:rgba(0,255,159,.3);}
+  50%{box-shadow:0 0 24px rgba(0,255,159,.2);border-color:rgba(0,255,159,.6);}}
+.wb-bc.last::before{content:"★ БОНУС";position:absolute;top:6px;right:8px;
+  font-size:7px;font-weight:800;letter-spacing:1px;color:#00ff88;
+  text-shadow:0 0 6px rgba(0,255,136,.5);}
+.wb-bc.last .bc-ic{font-size:18px;margin-bottom:0;filter:drop-shadow(0 0 8px rgba(0,255,159,.6));}
+.wb-bc.last .bc-vl{font-size:14px;color:#00ff88;text-shadow:0 0 8px rgba(0,255,136,.5);}
+.wb-bc.last .bc-nm{font-size:7px;color:#00cc66;}
 .wb-bc.last .bc-nm,.wb-bc.last .bc-vl,.wb-bc.last .bc-desc,.wb-bc.last .bc-pr{display:inline;margin:0;}
 .wb-bc.last .bc-nm{margin-right:6px;}
 .wb-bc.last .bc-vl{margin-right:4px;}
 .wb-bc.last-wrap{display:flex;flex-direction:column;flex:1;gap:1px;}
-.wb-bc{padding:7px 7px 8px;border-radius:11px;cursor:pointer;position:relative;overflow:hidden;
-  background:linear-gradient(135deg,rgba(20,0,38,.97),rgba(5,4,18,.97));
-  border:1px solid rgba(255,0,200,.25);transition:all .2s;}
-.wb-bc:hover,.wb-bc:active{border-color:rgba(255,0,200,.6);box-shadow:0 0 14px rgba(255,0,200,.3);}
-.bc-ic{font-size:13px;margin-bottom:2px;filter:drop-shadow(0 0 5px rgba(255,0,200,.5));}
-.bc-nm{font-size:8px;font-weight:800;letter-spacing:.8px;color:#cc88ff;margin-bottom:1px;}
-.bc-vl{font-size:11px;font-weight:900;color:#ff00cc;text-shadow:0 0 8px currentColor;}
-.bc-desc{font-size:8px;color:rgba(255,255,255,.6);margin:2px 0 3px;line-height:1.35;}
-.bc-pr{font-size:9px;font-weight:800;color:#ffdd44;text-shadow:0 0 6px rgba(255,210,0,.45);letter-spacing:.3px;}
-.bc-ow{position:absolute;top:5px;right:6px;font-size:8px;font-weight:800;color:#00e5ff;
-  background:rgba(0,229,255,.1);border:1px solid rgba(0,229,255,.25);padding:1px 5px;border-radius:4px;}
 
 /* ── Карточки воскрешения ── */
 .wb-rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:6px 14px 14px;}
@@ -187,6 +201,16 @@ window.WBLobbyCSS = (() => {
 .wb-hbdg{font-size:8px;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.5px;white-space:nowrap;flex-shrink:0;}
 .wb-hbdg.f{background:rgba(0,229,255,.12);color:#00e5ff;border:1px solid rgba(0,229,255,.28);}
 .wb-hbdg.p{background:rgba(255,200,0,.1);color:#ffcc44;border:1px solid rgba(255,200,0,.25);}
+
+/* ── Свиток куплен (1 раз за рейд) ── */
+.wb-bc.bought{pointer-events:none;border-color:rgba(0,255,159,.25)!important;
+  background:linear-gradient(135deg,rgba(0,20,12,.97),rgba(0,10,8,.97))!important;}
+.wb-bc.bought .bc-pr{display:none;}
+.wb-bc.bought::before{content:"✓ КУПЛЕНО";position:absolute;bottom:6px;right:7px;
+  font-size:8px;font-weight:800;letter-spacing:.5px;color:#00ff88;
+  text-shadow:0 0 6px rgba(0,255,136,.5);}
+.wb-bc.bought .bc-vl{color:#00ff88;text-shadow:0 0 6px rgba(0,255,136,.4);}
+.wb-bc.bought .bc-ic{filter:drop-shadow(0 0 6px rgba(0,255,136,.5));}
 
 /* ── Тост ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
