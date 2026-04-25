@@ -53,6 +53,8 @@ window.WBHtml = (() => {
     const bst       = BOSS_TYPE_STYLE[bossType] || BOSS_TYPE_STYLE.universal;
     const schedAt   = ns.scheduled_at;
     const regCnt    = s.registrants_count || 0;
+    const until     = s.seconds_until_raid;
+    const showJoin  = until != null && until <= 3600;  // показываем только за 1 час
     const joined    = s.is_registered || false;
     const reminded  = s.reminder_opt_in || false;
     const joinedAndReminded = joined && reminded;
@@ -137,6 +139,7 @@ window.WBHtml = (() => {
     <div class="wb-enter-lbl">ВОЙТИ В РЕЙ<span class="wb-enter-sub">РЕЙД УЖЕ ИДЁТ · НАЖМИ!</span></div>
   </div>
 </div>
+${showJoin ? `
 <div class="wb-join-btn${joinedAndReminded?' joined':''}" data-act="join">
   <div class="wb-join-ico">${joinedAndReminded?'✅':'⚔️'}</div>
   <div class="wb-join-txt">
@@ -144,7 +147,7 @@ window.WBHtml = (() => {
     <div class="wb-join-sub">${regCnt>0?`${regCnt} игрок${regCnt===1?'':regCnt<5?'а':'ов'} уже записались`:'Зарегистрируйся и получи уведомление'}</div>
   </div>
   <div class="wb-join-arr">${joinedAndReminded?'✓':'›'}</div>
-</div>
+</div>` : `<div style="margin:6px 14px 0;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:9px;color:#445566;text-align:center;letter-spacing:.5px;">⏳ Запись откроется за 1 час до боя</div>`}
 <div class="wb-inv-sec">
   <div class="wb-inv-lbl">★ МОИ ЗАПАСЫ</div>
   <div class="wb-chips" id="wb-inv-chips"></div>
@@ -166,10 +169,19 @@ window.WBHtml = (() => {
     const inv = s.raid_scrolls_inv||{}, res = s.res_scrolls_inv||{};
     const chips = [];
     for (const [id,m] of Object.entries(SCROLL_META)) { const q=inv[id]||0; if(q>0) chips.push(`<div class="wb-chip">${m.icon} <b>×${q}</b></div>`); }
-    chips.push(`<div class="wb-chip">💊 <b>×${res.res_30||0}</b></div>`);
-    chips.push(`<div class="wb-chip">💉 <b>×${res.res_60||0}</b></div>`);
-    chips.push(`<div class="wb-chip">✨ <b>×${res.res_100||0}</b></div>`);
+    if ((res.res_30||0)>0)  chips.push(`<div class="wb-chip">💊 <b>×${res.res_30}</b></div>`);
+    if ((res.res_60||0)>0)  chips.push(`<div class="wb-chip">💉 <b>×${res.res_60}</b></div>`);
+    if ((res.res_100||0)>0) chips.push(`<div class="wb-chip">✨ <b>×${res.res_100}</b></div>`);
     return chips.join('');
+  }
+
+  function _updateInvSection(root, s) {
+    const el = root.querySelector('#wb-inv-chips');
+    if (!el) return;
+    const html = _buildInvChips(s);
+    el.innerHTML = html;
+    const sec = root.querySelector('.wb-inv-sec');
+    if (sec) sec.style.display = html ? '' : 'none';
   }
 
   function _bind(root) {
@@ -215,7 +227,7 @@ window.WBHtml = (() => {
       _bind(root); return;
     }
     root.innerHTML = _lobbyHTML(s);
-    root.querySelector('#wb-inv-chips').innerHTML = _buildInvChips(s);
+    _updateInvSection(root, s);
     if (s.active) root.querySelector('#wb-enter-btn')?.classList.add('active');
     _bind(root);
     _startTimer();
