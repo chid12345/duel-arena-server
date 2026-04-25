@@ -204,6 +204,15 @@ window.WBHtml = (() => {
         if (ico)  ico.textContent  = isJoined ? '✅' : '⚔️';
         if (main) main.textContent = isJoined ? 'Ты участвуешь · Напоминание вкл.' : 'Участвую + напомни за 5 мин';
         if (arr)  arr.textContent  = isJoined ? '✓' : '›';
+        // оптимистичное обновление счётчика
+        const avMore = root.querySelector('.wb-av-more');
+        const prizeCnt = root.querySelector('.wb-prize-cnt');
+        const joinSub = el.querySelector('.wb-join-sub');
+        const cur = parseInt(avMore?.textContent) || 0;
+        const next = Math.max(0, cur + (isJoined ? 1 : -1));
+        if (avMore)   avMore.textContent = next + ' участников';
+        if (prizeCnt) prizeCnt.textContent = next;
+        if (joinSub)  joinSub.textContent = next > 0 ? `${next} игроков уже записались` : 'Зарегистрируйся и получи уведомление';
         (async () => {
           if (!_scene) return;
           const wasReg = !!_state?.is_registered;
