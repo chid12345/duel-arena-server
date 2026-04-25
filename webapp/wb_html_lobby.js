@@ -105,14 +105,26 @@ window.WBHtml = (() => {
   <div class="wb-back" data-act="back">‹</div>
   <div class="wb-hdr-icon">💀</div>
   <div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ОБЩИЙ РЕЙД · КАЖДЫЕ 4 ЧАСА</div></div>
-  ${regCnt>0?`<div class="wb-online">${regCnt} онлайн</div>`:''}
+  <div class="wb-live"><div class="wb-ldot"></div><div class="wb-livenum">${regCnt||0}</div></div>
 </div>
-<div class="wb-timer-card" data-act="boss-card">
-  <div>
-    <div class="wb-timer-lbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
-    <div class="wb-cnt" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
+<div class="wb-bcard2" data-act="boss-card">
+  <div class="wb-bc2-l">
+    <div>
+      <div class="wb-bc2-tlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+      <div class="wb-bc2-tval" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
+      <div class="wb-bc2-tsub">▶ INSERT COIN TO PLAY ◀</div>
+    </div>
+    <div>
+      <div class="wb-bc2-btype" style="color:${bst.badge}">${bst.label.toUpperCase()} · СЛЕДУЮЩИЙ БОСС</div>
+      <div class="wb-bc2-bname">${_esc(bossName)}</div>
+      <div class="wb-bc2-bhint">Нажми — характеристики →</div>
+    </div>
   </div>
-  <div class="wb-type-pill" style="color:${bst.badge};border-color:${bst.border};background:${bst.hdr};">${bst.label}</div>
+  <div class="wb-bc2-r">
+    <div class="wb-bc2-rt" style="color:${bst.badge}">${bst.label.toUpperCase()}</div>
+    <div class="wb-bc2-rem"><div class="wb-bc2-em">${bossEmoji}</div></div>
+    <div class="wb-bc2-rf">НАЖМИ →</div>
+  </div>
 </div>
 <div class="wb-enter" id="wb-enter-btn" data-act="enter">
   <div class="wb-enter-in"><div class="wb-enter-icon">⚔️</div>
@@ -139,13 +151,13 @@ ${avatarsHTML?`<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-
   </div>
   <div class="wb-recon-arr">›</div>
 </div>
-<div class="wb-auto-row">
+<div class="wb-auto-row" data-act="auto-toggle">
   <div class="wb-auto-ic">🤖</div>
   <div class="wb-auto-txt">
     <div class="wb-auto-main">Авто-бой (50% эффективности)</div>
     <div class="wb-auto-sub">Атакует автоматически — не пропустишь награду</div>
   </div>
-  <div class="wb-toggle" id="wb-auto-toggle" data-act="auto-toggle"></div>
+  <div class="wb-toggle" id="wb-auto-toggle"></div>
 </div>
 ${showJoin ? `
 <div class="wb-join-btn${joinedAll?' joined':''}" data-act="join">
@@ -209,7 +221,7 @@ ${showJoin ? `
         })();
       }
       else if (act==='boss-card')    { window.WBHtml.showBossCard?.(_state); }
-      else if (act==='auto-toggle')  { el.classList.toggle('on'); }
+      else if (act==='auto-toggle')  { document.getElementById('wb-auto-toggle')?.classList.toggle('on'); }
       else if (act==='buy-scroll') {
         if (el.classList.contains('bought')) return;
         _markBought(el.dataset.id); el.classList.add('bought');

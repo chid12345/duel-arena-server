@@ -25,29 +25,43 @@ window.WBLobbyCSS = (() => {
 .wb-title{font-size:15px;font-weight:900;letter-spacing:2px;
   background:linear-gradient(90deg,#ff00cc,#00e5ff);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .wb-sub{font-size:8px;color:#00e5ff;opacity:.65;letter-spacing:1.5px;margin-top:1px;}
-.wb-online{margin-left:auto;font-size:9px;font-weight:800;letter-spacing:.5px;color:#00FF9F;
-  background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);padding:3px 8px;border-radius:8px;flex-shrink:0;}
+.wb-live{margin-left:auto;display:flex;align-items:center;gap:4px;flex-shrink:0;
+  background:rgba(0,255,159,.06);border:1px solid rgba(0,255,159,.2);border-radius:6px;padding:4px 8px;}
+.wb-ldot{width:5px;height:5px;border-radius:50%;background:#00FF9F;box-shadow:0 0 5px #00FF9F;animation:wb-blink 1s infinite;}
+.wb-livenum{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#00FF9F;}
 
-/* ── Таймер ── */
-.wb-timer-lbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#cc44ff;
-  text-shadow:0 0 8px rgba(200,0,255,.4);margin-bottom:4px;}
-.wb-cnt{font-size:32px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums;
-  background:linear-gradient(180deg,#00ffee,#00aacc);-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 10px rgba(0,230,255,.7));animation:wb-cp 1s ease-in-out infinite;}
-@keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
-
-/* ── Компактный таймер (дышащий) ── */
-.wb-timer-card{margin:8px 14px 0;border-radius:14px;padding:12px 16px;cursor:pointer;
-  display:flex;align-items:center;justify-content:space-between;
+/* ── Карточка босса (2-колонки) ── */
+.wb-bcard2{margin:10px 14px 0;border-radius:16px;overflow:hidden;
+  display:flex;align-items:stretch;cursor:pointer;position:relative;
   background:linear-gradient(135deg,rgba(20,0,40,.97),rgba(0,8,28,.97));
-  border:1px solid rgba(255,0,200,.35);
+  border:1px solid rgba(255,0,204,.35);
   animation:wb-boss-glow 2.5s ease-in-out infinite;transition:transform .12s;}
 @keyframes wb-boss-glow{
-  0%,100%{box-shadow:0 0 12px rgba(255,0,200,.12),inset 0 0 20px rgba(255,0,200,.03);border-color:rgba(255,0,200,.3);}
-  50%{box-shadow:0 0 32px rgba(255,0,200,.45),inset 0 0 30px rgba(255,0,200,.06);border-color:rgba(255,0,200,.75);}}
-.wb-timer-card:active{transform:scale(.99);}
-.wb-type-pill{font-size:9px;font-weight:900;letter-spacing:1.5px;padding:5px 10px;
-  border-radius:8px;border:1px solid;flex-shrink:0;}
+  0%,100%{box-shadow:0 0 14px rgba(255,0,204,.1);border-color:rgba(255,0,204,.3);}
+  50%{box-shadow:0 0 34px rgba(255,0,204,.4);border-color:rgba(255,0,204,.7);}}
+.wb-bcard2:active{transform:scale(.99);}
+.wb-bc2-l{flex:1;padding:12px 8px 12px 14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;}
+.wb-bc2-tlbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#cc44ff;margin-bottom:3px;}
+.wb-bc2-tval{font-size:28px;font-weight:900;letter-spacing:2px;font-family:'Courier New',monospace;
+  background:linear-gradient(180deg,#00ffee,#00aacc);-webkit-background-clip:text;background-clip:text;color:transparent;
+  animation:wb-cp 1s ease-in-out infinite;}
+@keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
+.wb-bc2-tsub{font-size:6px;letter-spacing:2px;color:#ff00cc;opacity:.4;margin-top:2px;animation:wb-blink 1.2s step-end infinite;}
+.wb-bc2-btype{font-size:8px;font-weight:800;letter-spacing:2px;margin-bottom:3px;}
+.wb-bc2-bname{font-size:14px;font-weight:900;margin-bottom:3px;
+  background:linear-gradient(90deg,#fff,#ff88cc);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.wb-bc2-bhint{font-size:8px;color:rgba(255,255,255,.3);}
+.wb-bc2-r{width:82px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;
+  border-radius:0 15px 15px 0;border-left:1px solid rgba(255,255,255,.06);
+  background:linear-gradient(180deg,rgba(5,20,60,.97),rgba(3,10,30,.97));}
+.wb-bc2-rt{padding:5px 4px 4px;text-align:center;font-size:7px;font-weight:900;letter-spacing:1.5px;
+  border-bottom:1px solid rgba(255,255,255,.07);}
+.wb-bc2-rem{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0;}
+.wb-bc2-em{font-size:44px;line-height:1;animation:wb-bfloat 3s ease-in-out infinite;
+  filter:drop-shadow(0 0 14px rgba(85,204,255,.6));}
+@keyframes wb-bfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+.wb-bc2-rf{padding:5px 0;text-align:center;font-size:6px;font-weight:800;letter-spacing:2px;
+  color:rgba(255,255,255,.2);border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2);}
 
 /* ── Призовой фонд ── */
 .wb-prize{margin:6px 14px 0;padding:10px 12px;border-radius:12px;
@@ -82,7 +96,7 @@ window.WBLobbyCSS = (() => {
   border-radius:11px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);}
 .wb-auto-ic{font-size:20px;flex-shrink:0;}
 .wb-auto-txt{flex:1;min-width:0;}
-.wb-auto-main{font-size:11px;font-weight:700;color:#fff;}
+.wb-auto-main{font-size:11px;font-weight:700;color:#00FF9F;}
 .wb-auto-sub{font-size:9px;color:#446688;margin-top:1px;}
 .wb-toggle{width:36px;height:20px;border-radius:10px;background:rgba(255,255,255,.1);
   border:1px solid rgba(255,255,255,.15);position:relative;cursor:pointer;flex-shrink:0;transition:all .25s;}

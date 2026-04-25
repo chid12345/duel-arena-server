@@ -110,7 +110,7 @@
     _inject();
     document.getElementById('wb-bcard-ov')?.remove();
 
-    const src = state?.active || state?.next_scheduled;
+    const src = state?.active || state?.next_scheduled || state;
     if (!src) { window.WBHtml?.toast?.('Нет данных о боссе'); return; }
 
     const type  = src.boss_type || 'universal';
