@@ -28,42 +28,39 @@ window.WBLobbyCSS = (() => {
   background:linear-gradient(90deg,#ff00cc,#00e5ff);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .wb-sub{font-size:9px;color:#00e5ff;opacity:.65;letter-spacing:1.5px;margin-top:1px;}
 
-/* ── Таймер (внутри карточки босса) ── */
-.wb-timer-lbl{font-size:9px;font-weight:800;letter-spacing:2.5px;color:#cc44ff;
-  text-shadow:0 0 8px rgba(200,0,255,.4);margin-bottom:6px;}
-.wb-cnt{font-size:44px;font-weight:900;letter-spacing:3px;font-variant-numeric:tabular-nums;
+/* ── Таймер (левая колонка внутри карточки босса) ── */
+.wb-timer-lbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#cc44ff;
+  text-shadow:0 0 8px rgba(200,0,255,.4);margin-bottom:4px;}
+.wb-cnt{font-size:32px;font-weight:900;letter-spacing:2px;font-variant-numeric:tabular-nums;
   background:linear-gradient(180deg,#00ffee,#00aacc);-webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 0 12px rgba(0,230,255,.7));animation:wb-cp 1s ease-in-out infinite;}
-@keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 10px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 20px rgba(0,230,255,1))}}
-.wb-insert{font-size:7px;letter-spacing:3px;color:#ff00cc;opacity:.6;margin-top:4px;animation:wb-blink 1.2s step-end infinite;}
-@keyframes wb-blink{0%,100%{opacity:.6}50%{opacity:.1}}
+  filter:drop-shadow(0 0 10px rgba(0,230,255,.7));animation:wb-cp 1s ease-in-out infinite;}
+@keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
+.wb-insert{font-size:6px;letter-spacing:2.5px;color:#ff00cc;opacity:.5;margin-top:3px;animation:wb-blink 1.2s step-end infinite;}
+@keyframes wb-blink{0%,100%{opacity:.5}50%{opacity:.1}}
 
-/* ── Карточка босса (объединённая: таймер + имя, кликабельная) ── */
+/* ── Карточка босса (горизонтальная: [таймер+имя слева] | [картинка справа]) ── */
 .wb-boss-card{margin:8px 14px 0;border-radius:16px;overflow:hidden;position:relative;
-  display:flex;flex-direction:column;cursor:pointer;
+  display:flex;align-items:stretch;cursor:pointer;
   background:linear-gradient(135deg,rgba(20,0,40,.97),rgba(0,8,28,.97));
   border:1px solid rgba(255,0,200,.45);
   animation:wb-boss-glow 2.5s ease-in-out infinite;
   transition:transform .12s;}
 @keyframes wb-boss-glow{
-  0%,100%{box-shadow:0 0 18px rgba(255,0,200,.15),inset 0 0 16px rgba(255,0,200,.04);border-color:rgba(255,0,200,.35);}
-  50%{box-shadow:0 0 40px rgba(255,0,200,.45),0 0 80px rgba(255,0,200,.1),inset 0 0 28px rgba(255,0,200,.09);border-color:rgba(255,0,200,.8);}
+  0%,100%{box-shadow:0 0 16px rgba(255,0,200,.15),inset 0 0 14px rgba(255,0,200,.04);border-color:rgba(255,0,200,.35);}
+  50%{box-shadow:0 0 36px rgba(255,0,200,.5),0 0 70px rgba(255,0,200,.12),inset 0 0 24px rgba(255,0,200,.08);border-color:rgba(255,0,200,.8);}
 }
 .wb-boss-card:active{transform:scale(.99);}
 .wb-boss-card::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent,rgba(255,0,200,.7),transparent);}
-/* верх карточки — таймер */
-.wb-bc-top{text-align:center;padding:14px 14px 10px;}
-/* разделитель */
-.wb-bc-div{height:1px;background:linear-gradient(90deg,transparent,rgba(255,0,200,.35),transparent);margin:0 16px;}
-/* низ карточки — имя + изображение */
-.wb-bc-bot{display:flex;align-items:stretch;min-height:95px;}
-.wb-boss-card-l{flex:1;padding:11px 10px 12px 16px;display:flex;flex-direction:column;justify-content:center;}
+/* левая колонка: таймер сверху + имя босса снизу */
+.wb-boss-card-l{flex:1;padding:10px 8px 10px 14px;display:flex;flex-direction:column;justify-content:center;gap:6px;}
+.wb-boss-timer-block{display:flex;flex-direction:column;}
+.wb-boss-info-block{display:flex;flex-direction:column;}
 .wb-boss-type-badge{font-size:8px;font-weight:800;letter-spacing:2px;color:#ff00cc;
-  text-shadow:0 0 8px currentColor;margin-bottom:7px;}
-.wb-boss-card-name{font-size:15px;font-weight:900;margin-bottom:5px;
+  text-shadow:0 0 8px currentColor;margin-bottom:4px;}
+.wb-boss-card-name{font-size:14px;font-weight:900;margin-bottom:3px;
   background:linear-gradient(90deg,#fff,#ff88cc);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.wb-boss-card-hint{font-size:9px;color:rgba(255,255,255,.5);letter-spacing:.5px;}
+.wb-boss-card-hint{font-size:8px;color:rgba(255,255,255,.45);letter-spacing:.5px;}
 .wb-hero-r{width:110px;flex-shrink:0;position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;}
 .wb-hero-aura{position:absolute;width:130px;height:130px;border-radius:50%;bottom:-40px;left:50%;transform:translateX(-50%);
   background:radial-gradient(ellipse,rgba(255,0,200,.2) 0%,transparent 70%);
