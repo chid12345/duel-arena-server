@@ -227,14 +227,33 @@ window.WBHtml = (() => {
     try { _scene?._tabBarResult?.objs?.forEach(o => o.setVisible?.(visible)); } catch(_) {}
   }
 
+  function _fitToCanvas(root) {
+    try {
+      const c = document.querySelector('canvas'); if (!c) return;
+      const r = c.getBoundingClientRect();
+      const tabBarH = Math.round((r.height * 76) / (c.height || 700));
+      root.style.top    = r.top  + 'px';
+      root.style.left   = r.left + 'px';
+      root.style.right  = 'auto';
+      root.style.bottom = 'auto';
+      root.style.width  = r.width + 'px';
+      root.style.height = Math.max(0, r.height - tabBarH) + 'px';
+    } catch(_) {}
+  }
+
   function render(scene, state) {
     _scene = scene; _state = state;
     window.WBLobbyCSS?.inject();
     try { window._closeAllTabOverlays?.(); } catch(_) {}
-    _setTabBar(false);
     const s = state || {};
     const root = _root();
-    if (s.active) { window.WBHtml._renderBattle?.(root, s); return; }
+    if (s.active) {
+      _setTabBar(false);
+      root.style.cssText = '';
+      window.WBHtml._renderBattle?.(root, s); return;
+    }
+    _setTabBar(true);
+    _fitToCanvas(root);
     if ((s.prep_seconds_left||0) > 0) {
       root.innerHTML = `<div class="wb-hdr"><div class="wb-back" data-act="back">‹</div><div class="wb-hdr-icon">💀</div><div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ПОДГОТОВКА К РЕЙДУ</div></div></div><div class="wb-prep"><div class="wb-prep-t" id="wb-prep-cnt">Старт через ${s.prep_seconds_left} сек</div><div class="wb-prep-s">Свитки применяй в слоты после первого удара</div></div>`;
       _bind(root); return;
