@@ -84,11 +84,11 @@ window.WBBattleCSS = (() => {
   animation:wb-wpp 1.5s ease-in-out infinite;cursor:crosshair;display:flex;align-items:center;justify-content:center;}
 @keyframes wb-wpp{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.2);opacity:1}}
 .wb-wp::after{content:'+';font-size:11px;color:#00FF9F;font-weight:700;}
-.wb-ghost{position:absolute;width:24px;height:24px;border-radius:50%;
-  background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(0,191,255,.25);
-  display:flex;align-items:center;justify-content:center;font-size:12px;
+.wb-ghost{position:absolute;width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(0,191,255,.3);
+  display:flex;align-items:center;justify-content:center;font-size:14px;
   opacity:0;animation:wb-gh 4s ease-in-out infinite;pointer-events:none;}
-@keyframes wb-gh{0%{opacity:0;transform:translateY(15px)}20%{opacity:.35}80%{opacity:.25}100%{opacity:0;transform:translateY(-25px) translateX(15px)}}
+@keyframes wb-gh{0%{opacity:0;transform:translateY(20px) translateX(0)}20%{opacity:.4}80%{opacity:.3}100%{opacity:0;transform:translateY(-30px) translateX(20px)}}
 .wb-dmg-num{position:absolute;font-family:'Courier New',monospace;font-weight:900;
   pointer-events:none;z-index:20;text-shadow:0 0 10px currentColor;white-space:nowrap;
   animation:wb-dmgfly2 .9s ease-out forwards;}
@@ -102,10 +102,6 @@ window.WBBattleCSS = (() => {
   pointer-events:none;white-space:nowrap;
   animation:wb-hint 2s ease-in-out infinite;}
 @keyframes wb-hint{0%,100%{opacity:.25}50%{opacity:.7}}
-.wb-ghost-fixed{position:absolute;width:28px;height:28px;border-radius:50%;
-  background:rgba(0,191,255,.08);border:1px solid rgba(0,191,255,.3);
-  display:flex;align-items:center;justify-content:center;font-size:13px;
-  opacity:.45;pointer-events:none;}
 
 /* ── Мёртв ── */
 .wb-dead{margin:12px 14px;padding:16px;border-radius:14px;text-align:center;
