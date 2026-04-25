@@ -30,9 +30,8 @@ window.WBLobbyCSS = (() => {
 .wb-ldot{width:5px;height:5px;border-radius:50%;background:#00FF9F;box-shadow:0 0 5px #00FF9F;animation:wb-blink 1s infinite;}
 .wb-livenum{font-family:'Courier New',monospace;font-size:11px;font-weight:700;color:#00FF9F;}
 
-/* ── Карточка босса (2-колонки) ── */
-.wb-bcard2{margin:10px 14px 0;border-radius:16px;overflow:hidden;
-  display:flex;align-items:stretch;cursor:pointer;position:relative;
+/* ── Карточка таймера босса (компактная, пульсирует) ── */
+.wb-bcard2{margin:8px 14px 0;border-radius:12px;padding:10px 14px;cursor:pointer;position:relative;
   background:linear-gradient(135deg,rgba(20,0,40,.97),rgba(0,8,28,.97));
   border:1px solid rgba(255,0,204,.35);
   animation:wb-boss-glow 2.5s ease-in-out infinite;transition:transform .12s;}
@@ -40,28 +39,11 @@ window.WBLobbyCSS = (() => {
   0%,100%{box-shadow:0 0 14px rgba(255,0,204,.1);border-color:rgba(255,0,204,.3);}
   50%{box-shadow:0 0 34px rgba(255,0,204,.4);border-color:rgba(255,0,204,.7);}}
 .wb-bcard2:active{transform:scale(.99);}
-.wb-bc2-l{flex:1;padding:12px 8px 12px 14px;display:flex;flex-direction:column;justify-content:space-between;gap:10px;}
-.wb-bc2-tlbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#cc44ff;margin-bottom:3px;}
+.wb-bc2-tlbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#cc44ff;margin-bottom:4px;}
 .wb-bc2-tval{font-size:28px;font-weight:900;letter-spacing:2px;font-family:'Courier New',monospace;
   background:linear-gradient(180deg,#00ffee,#00aacc);-webkit-background-clip:text;background-clip:text;color:transparent;
   animation:wb-cp 1s ease-in-out infinite;}
 @keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
-.wb-bc2-tsub{font-size:6px;letter-spacing:2px;color:#ff00cc;opacity:.4;margin-top:2px;animation:wb-blink 1.2s step-end infinite;}
-.wb-bc2-btype{font-size:8px;font-weight:800;letter-spacing:2px;margin-bottom:3px;}
-.wb-bc2-bname{font-size:14px;font-weight:900;margin-bottom:3px;
-  background:linear-gradient(90deg,#fff,#ff88cc);-webkit-background-clip:text;background-clip:text;color:transparent;}
-.wb-bc2-bhint{font-size:8px;color:rgba(255,255,255,.3);}
-.wb-bc2-r{width:82px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;
-  border-radius:0 15px 15px 0;border-left:1px solid rgba(255,255,255,.06);
-  background:linear-gradient(180deg,rgba(5,20,60,.97),rgba(3,10,30,.97));}
-.wb-bc2-rt{padding:5px 4px 4px;text-align:center;font-size:7px;font-weight:900;letter-spacing:1.5px;
-  border-bottom:1px solid rgba(255,255,255,.07);}
-.wb-bc2-rem{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0;}
-.wb-bc2-em{font-size:44px;line-height:1;animation:wb-bfloat 3s ease-in-out infinite;
-  filter:drop-shadow(0 0 14px rgba(85,204,255,.6));}
-@keyframes wb-bfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
-.wb-bc2-rf{padding:5px 0;text-align:center;font-size:6px;font-weight:800;letter-spacing:2px;
-  color:rgba(255,255,255,.2);border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.2);}
 
 /* ── Призовой фонд ── */
 .wb-prize{margin:6px 14px 0;padding:10px 12px;border-radius:12px;
@@ -156,24 +138,24 @@ window.WBLobbyCSS = (() => {
 .wb-cat.on .wb-cat-lb{color:#ff4488;text-shadow:0 0 6px rgba(255,0,100,.5);}
 .wb-cp{display:none;}.wb-cp.on{display:block;}
 
-/* ── Бусты (карточки) ── */
-.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:6px 14px 10px;}
-.wb-bc{padding:8px 8px 7px;border-radius:10px;cursor:pointer;position:relative;overflow:hidden;
-  display:flex;flex-direction:column;gap:2px;
+/* ── Бусты (карточки) — компактные ── */
+.wb-bgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:3px 14px 8px;}
+.wb-bc{padding:5px 6px 4px;border-radius:8px;cursor:pointer;position:relative;overflow:hidden;
+  display:flex;flex-direction:column;gap:1px;
   background:linear-gradient(135deg,rgba(20,0,38,.97),rgba(5,4,18,.97));
   border:1px solid rgba(255,0,200,.2);transition:all .2s;}
-.wb-bc:active{border-color:rgba(255,0,200,.55);box-shadow:0 0 8px rgba(255,0,200,.2);}
-.bc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:2px;}
-.bc-ic{font-size:22px;line-height:1;filter:drop-shadow(0 0 5px rgba(255,0,200,.4));}
-.bc-ow{font-size:8px;font-weight:800;color:#00BFFF;
-  background:rgba(0,191,255,.12);border:1px solid rgba(0,191,255,.3);padding:1px 4px;border-radius:4px;}
-.bc-nm{font-size:8px;font-weight:800;letter-spacing:.8px;color:rgba(255,255,255,.4);text-transform:uppercase;}
-.bc-vl{font-family:'Courier New',monospace;font-size:20px;font-weight:900;color:#00FF9F;
-  text-shadow:0 0 8px rgba(0,255,159,.5);line-height:1.1;}
-.bc-buy{margin-top:4px;padding:5px 0;border-radius:7px;font-size:10px;font-weight:800;
+.wb-bc:active{border-color:rgba(255,0,200,.55);box-shadow:0 0 6px rgba(255,0,200,.2);}
+.bc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:1px;}
+.bc-ic{font-size:13px;line-height:1;filter:drop-shadow(0 0 4px rgba(255,0,200,.4));}
+.bc-ow{font-size:7px;font-weight:800;color:#00BFFF;
+  background:rgba(0,191,255,.12);border:1px solid rgba(0,191,255,.3);padding:1px 3px;border-radius:3px;}
+.bc-nm{font-size:7px;font-weight:800;letter-spacing:.6px;color:rgba(255,255,255,.4);text-transform:uppercase;}
+.bc-vl{font-family:'Courier New',monospace;font-size:11px;font-weight:900;color:#00FF9F;
+  text-shadow:0 0 6px rgba(0,255,159,.5);line-height:1.1;}
+.bc-buy{margin-top:3px;padding:3px 0;border-radius:5px;font-size:8px;font-weight:800;
   text-align:center;color:#FF0055;border:1px solid rgba(255,0,85,.35);
-  background:rgba(255,0,85,.08);letter-spacing:.3px;}
-.bc-bought-lbl{display:none;margin-top:4px;font-size:8px;font-weight:800;letter-spacing:.5px;
+  background:rgba(255,0,85,.08);letter-spacing:.2px;}
+.bc-bought-lbl{display:none;margin-top:3px;font-size:7px;font-weight:800;letter-spacing:.5px;
   color:#00FF9F;text-align:center;}
 
 /* ── Куплено ── */

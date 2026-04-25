@@ -108,23 +108,8 @@ window.WBHtml = (() => {
   <div class="wb-live"><div class="wb-ldot"></div><div class="wb-livenum">${regCnt||0}</div></div>
 </div>
 <div class="wb-bcard2" data-act="boss-card">
-  <div class="wb-bc2-l">
-    <div>
-      <div class="wb-bc2-tlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
-      <div class="wb-bc2-tval" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
-      <div class="wb-bc2-tsub">▶ INSERT COIN TO PLAY ◀</div>
-    </div>
-    <div>
-      <div class="wb-bc2-btype" style="color:${bst.badge}">${bst.label.toUpperCase()} · СЛЕДУЮЩИЙ БОСС</div>
-      <div class="wb-bc2-bname">${_esc(bossName)}</div>
-      <div class="wb-bc2-bhint">Нажми — характеристики →</div>
-    </div>
-  </div>
-  <div class="wb-bc2-r">
-    <div class="wb-bc2-rt" style="color:${bst.badge}">${bst.label.toUpperCase()}</div>
-    <div class="wb-bc2-rem"><div class="wb-bc2-em">${bossEmoji}</div></div>
-    <div class="wb-bc2-rf">НАЖМИ →</div>
-  </div>
+  <div class="wb-bc2-tlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+  <div class="wb-bc2-tval" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
 </div>
 <div class="wb-enter" id="wb-enter-btn" data-act="enter">
   <div class="wb-enter-in"><div class="wb-enter-icon">⚔️</div>
@@ -159,7 +144,6 @@ ${avatarsHTML?`<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-
   </div>
   <div class="wb-toggle" id="wb-auto-toggle"></div>
 </div>
-${showJoin ? `
 <div class="wb-join-btn${joinedAll?' joined':''}" data-act="join">
   <div class="wb-join-ico">${joinedAll?'✅':'⚔️'}</div>
   <div class="wb-join-txt">
@@ -167,7 +151,7 @@ ${showJoin ? `
     <div class="wb-join-sub">${regCnt>0?`${regCnt} игроков уже записались`:'Зарегистрируйся и получи уведомление'}</div>
   </div>
   <div class="wb-join-arr">${joinedAll?'✓':'›'}</div>
-</div>` : `<div style="margin:6px 14px 0;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:9px;color:#445566;text-align:center;letter-spacing:.5px;">⏳ Запись откроется за 1 час до боя</div>`}
+</div>
 <div class="wb-shop-hdr"><span>🛒 МАГАЗИН БОЯ</span><div class="wb-shop-line"></div></div>
 <div class="wb-cats">
   <div class="wb-cat on" data-cat="boosts"><span class="wb-cat-ic">⚔️</span><span class="wb-cat-lb">БУСТЫ</span></div>
