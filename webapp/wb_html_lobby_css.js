@@ -61,17 +61,27 @@ window.WBLobbyCSS = (() => {
 .wb-boss-card-name{font-size:14px;font-weight:900;margin-bottom:3px;
   background:linear-gradient(90deg,#fff,#ff88cc);-webkit-background-clip:text;background-clip:text;color:transparent;}
 .wb-boss-card-hint{font-size:8px;color:rgba(255,255,255,.45);letter-spacing:.5px;}
-.wb-hero-r{width:110px;flex-shrink:0;position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;}
-.wb-hero-aura{position:absolute;width:130px;height:130px;border-radius:50%;bottom:-40px;left:50%;transform:translateX(-50%);
+/* ── hero-r: оставляем для battle-сцены ── */
+.wb-hero-r{width:100px;flex-shrink:0;position:relative;display:flex;align-items:flex-end;justify-content:center;overflow:hidden;}
+.wb-hero-aura{position:absolute;width:120px;height:120px;border-radius:50%;bottom:-40px;left:50%;transform:translateX(-50%);
   background:radial-gradient(ellipse,rgba(255,0,200,.2) 0%,transparent 70%);
   animation:wb-ap 2.5s ease-in-out infinite;}
 @keyframes wb-ap{0%,100%{opacity:.6;transform:translateX(-50%) scale(.9)}50%{opacity:1;transform:translateX(-50%) scale(1.1)}}
-.wb-hero-img{width:100px;height:120px;object-fit:contain;position:relative;z-index:1;
-  filter:drop-shadow(0 0 14px rgba(255,0,200,.7)) drop-shadow(0 0 28px rgba(0,200,255,.3));
-  animation:wb-bf 3s ease-in-out infinite;}
+.wb-hero-img{width:90px;height:110px;object-fit:contain;position:relative;z-index:1;
+  filter:drop-shadow(0 0 14px rgba(255,0,200,.7));animation:wb-bf 3s ease-in-out infinite;}
 .wb-hero-emoji{font-size:64px;position:relative;z-index:1;animation:wb-bf 3s ease-in-out infinite;
   filter:drop-shadow(0 0 20px rgba(255,0,200,.6));}
 @keyframes wb-bf{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ── Мини-карточка босса (shop-style, правая часть boss card) ── */
+.wb-bmc{width:82px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden;
+  border-radius:0 15px 15px 0;border-left:1px solid rgba(255,255,255,.06);}
+.wb-bmc-hdr{padding:5px 4px 4px;text-align:center;font-size:7px;font-weight:900;letter-spacing:1.5px;
+  color:#fff;text-shadow:0 0 6px currentColor;border-bottom:1px solid rgba(255,255,255,.08);}
+.wb-bmc-body{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0;}
+.wb-bmc-em{font-size:46px;line-height:1;animation:wb-bf 3s ease-in-out infinite;}
+.wb-bmc-foot{padding:5px 0;text-align:center;font-size:6px;font-weight:800;letter-spacing:2px;
+  color:rgba(255,255,255,.25);border-top:1px solid rgba(255,255,255,.06);background:rgba(0,0,0,.25);}
 
 /* ── Кнопка Участвую ── */
 .wb-join-btn{display:flex;align-items:center;gap:10px;margin:6px 14px 0;padding:9px 14px;
