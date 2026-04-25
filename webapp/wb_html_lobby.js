@@ -1,4 +1,4 @@
-/* wb_html_lobby.js — HyperPunk lobby overlay (waiting / idle / prep)
+/* wb_html_lobby.js — лобби Мирового Босса
    Exposes window.WBHtml — расширяется в wb_html_battle.js / wb_html_actions.js / wb_html_boss_card.js
    Вызов: WBHtml.render(scene, state) / .close() / .toast(msg) */
 window.WBHtml = (() => {
@@ -8,14 +8,13 @@ window.WBHtml = (() => {
 
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  // Bought-state: 1 покупка за рейд, ключ = scheduled_at
   function _boughtKey() { return 'wb_bought_' + (_state?.next_scheduled?.scheduled_at || 'now'); }
   function _getBought() { try { return JSON.parse(sessionStorage.getItem(_boughtKey()) || '[]'); } catch(_) { return []; } }
   function _markBought(id) { try { const b=_getBought(); if(!b.includes(id)){b.push(id);sessionStorage.setItem(_boughtKey(),JSON.stringify(b));} } catch(_) {} }
+
   function _fmtCountdown(iso) {
     try {
-      const ts = new Date(iso).getTime(); if (!ts || isNaN(ts)) return '—';
-      const d = Math.max(0, Math.floor((ts - Date.now()) / 1000));
+      const d = Math.max(0, Math.floor((new Date(iso).getTime() - Date.now()) / 1000));
       const h = Math.floor(d/3600), m = Math.floor((d%3600)/60), s = d%60;
       return h>0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
                  : `${m}:${String(s).padStart(2,'0')}`;
@@ -28,18 +27,17 @@ window.WBHtml = (() => {
   }
 
   const SCROLL_META = {
-    damage_25:  { icon:'⚔️', name:'УРОН',    val:'+25%', price:'60 🪙',  desc:'Усиливает твой урон по боссу на весь бой' },
-    power_10:   { icon:'🐲', name:'УРОН',    val:'+10%', price:'30 🪙',  desc:'Лёгкий бонус урона на весь бой' },
-    defense_20: { icon:'🛡️', name:'ЗАЩИТА',  val:'+20%', price:'45 🪙',  desc:'Снижает входящий урон от босса на весь бой' },
-    dodge_10:   { icon:'💨', name:'УВОРОТ',  val:'+10%', price:'35 🪙',  desc:'Повышает шанс уклонения от атак босса' },
-    crit_10:    { icon:'🎯', name:'КРИТ',    val:'+10%', price:'40 🪙',  desc:'Увеличивает шанс критического удара' },
+    damage_25:  { icon:'⚔️', name:'УРОН',   val:'+25%', price:'60 🪙' },
+    power_10:   { icon:'🐲', name:'УРОН',   val:'+10%', price:'30 🪙' },
+    defense_20: { icon:'🛡️', name:'ЗАЩИТА', val:'+20%', price:'45 🪙' },
+    dodge_10:   { icon:'💨', name:'УВОРОТ', val:'+10%', price:'35 🪙' },
+    crit_10:    { icon:'🎯', name:'КРИТ ШАНС', val:'+10%', price:'40 🪙' },
   };
   const RES_META = [
     { id:'res_30',  icon:'💊', pct:'30%',  price:'500 🪙',  desc:'Восстанавливает 30% HP после гибели' },
-    { id:'res_60',  icon:'💉', pct:'60%',  price:'1500 🪙', desc:'Восстанавливает 60% HP после гибели' },
-    { id:'res_100', icon:'✨', pct:'100%', price:'3000 🪙', desc:'Полное воскрешение с 100% HP', gold:true },
+    { id:'res_60',  icon:'💉', pct:'60%',  price:'1 500 🪙', desc:'Восстанавливает 60% HP после гибели' },
+    { id:'res_100', icon:'✨', pct:'100%', price:'3 000 🪙', desc:'Полное воскрешение с 100% HP', gold:true },
   ];
-
   const BOSS_TYPE_STYLE = {
     universal: { hdr:'rgba(60,20,90,.97)',  border:'rgba(150,80,255,.55)', badge:'#cc88ff', label:'УНИВЕРСАЛЬНЫЙ' },
     fire:      { hdr:'rgba(90,15,5,.97)',   border:'rgba(255,80,20,.6)',   badge:'#ff8844', label:'ОГНЕННЫЙ' },
@@ -59,50 +57,36 @@ window.WBHtml = (() => {
     const schedAt   = ns.scheduled_at;
     const regCnt    = s.registrants_count || 0;
     const until     = s.seconds_until_raid;
-    const showJoin  = until != null && until <= 3600;  // показываем только за 1 час
+    const showJoin  = until != null && until <= 3600;
     const joined    = s.is_registered || false;
     const reminded  = s.reminder_opt_in || false;
-    const joinedAndReminded = joined && reminded;
+    const joinedAll = joined && reminded;
+    const prizePool = (regCnt * 520).toLocaleString('ru');
 
-    const boostEntries = Object.entries(SCROLL_META);
     const bought = _getBought();
+    const boostEntries = Object.entries(SCROLL_META);
     const boostsHTML = boostEntries.map(([id,m], i) => {
       const isBought = bought.includes(id);
       const bCls = isBought ? ' bought' : '';
       const isLast = i === boostEntries.length - 1 && boostEntries.length % 2 === 1;
       if (isLast) return `<div class="wb-bc last${bCls}" data-act="buy-scroll" data-id="${id}">
-        <div class="bc-ic">${m.icon}</div>
-        <div class="last-wrap">
-          <div style="display:flex;align-items:baseline;gap:6px;">
-            <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div>
-            <div class="bc-pr" style="margin-left:auto;">${m.price}</div>
-            <div class="bc-ow" style="position:static;">×${inv[id]||0}</div>
-          </div>
-          <div class="bc-desc">${m.desc}</div>
-        </div>
+        <div class="bc-ow">×${inv[id]||0}</div><div class="bc-ic">${m.icon}</div>
+        <div class="last-body"><div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div><div class="bc-pr">${m.price}</div></div>
       </div>`;
       return `<div class="wb-bc${bCls}" data-act="buy-scroll" data-id="${id}">
-        <div class="bc-ow">×${inv[id]||0}</div>
-        <div class="bc-ic">${m.icon}</div>
-        <div class="bc-nm">${m.name}</div>
-        <div class="bc-vl">${m.val}</div>
-        <div class="bc-desc">${m.desc}</div>
-        <div class="bc-pr">${m.price}</div>
+        <div class="bc-ow">×${inv[id]||0}</div><div class="bc-ic">${m.icon}</div>
+        <div class="bc-nm">${m.name}</div><div class="bc-vl">${m.val}</div><div class="bc-pr">${m.price}</div>
       </div>`;
     }).join('');
 
     const resHTML = RES_META.map(r => {
-      const g = r.gold ? ' style="border-color:rgba(255,200,0,.15)"' : '';
       const gc = r.gold ? ' style="color:#ffdd44"' : '';
       return `<div class="wb-rc" data-act="buy-res" data-id="${r.id}">
-        <div class="wb-rh"${g}><div class="wb-ri">${r.icon}</div>
+        <div class="wb-rh"${r.gold?' style="border-color:rgba(255,200,0,.15)"':''}><div class="wb-ri">${r.icon}</div>
           <div class="wb-rh-pct"${gc}>${r.pct}</div></div>
-        <div class="wb-rb">
-          <div class="wb-rb-cnt"${gc}>${res[r.id]||0}</div>
-          <div class="wb-rb-lbl">В ЗАПАСЕ</div>
-          <div class="wb-rb-desc">${r.desc}</div>
-          <div class="wb-rbtn"${gc}>${r.price}</div>
-        </div>
+        <div class="wb-rb"><div class="wb-rb-cnt"${gc}>${res[r.id]||0}</div>
+          <div class="wb-rb-lbl">В ЗАПАСЕ</div><div class="wb-rb-desc">${r.desc}</div>
+          <div class="wb-rbtn"${gc}>${r.price}</div></div>
       </div>`;
     }).join('');
 
@@ -115,18 +99,22 @@ window.WBHtml = (() => {
         <div class="wb-hbdg ${t.contribution>=100?'f':'p'}">${t.contribution>=100?'100%':`${t.contribution||0}%`}</div>
       </div></div>`).join('') || '<div style="padding:14px;text-align:center;font-size:11px;color:#445;letter-spacing:1px;">История пуста</div>';
 
+    const top5 = (s.top||[]).slice(0,6);
+    const avatarsHTML = top5.map(t=>`<div class="wb-av">${t.emoji||'⚔️'}</div>`).join('');
+    const extra = Math.max(0, regCnt - top5.length);
+
     return `
 <div class="wb-hdr">
   <div class="wb-back" data-act="back">‹</div>
   <div class="wb-hdr-icon">💀</div>
   <div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ОБЩИЙ РЕЙД · КАЖДЫЕ 4 ЧАСА</div></div>
+  ${regCnt>0?`<div class="wb-online">${regCnt} онлайн</div>`:''}
 </div>
 <div class="wb-boss-card" data-act="boss-card">
   <div class="wb-boss-card-l">
     <div class="wb-boss-timer-block">
       <div class="wb-timer-lbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
       <div class="wb-cnt" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
-      <div class="wb-insert">▶ INSERT COIN TO PLAY ◀</div>
     </div>
     <div class="wb-boss-info-block">
       <div class="wb-boss-type-badge">${bossLabel?bossLabel.toUpperCase()+' · ':''}СЛЕДУЮЩИЙ БОСС</div>
@@ -136,9 +124,7 @@ window.WBHtml = (() => {
   </div>
   <div class="wb-bmc" style="background:linear-gradient(180deg,${bst.hdr} 0%,rgba(5,3,12,.97) 100%);box-shadow:inset -1px 0 0 ${bst.border};">
     <div class="wb-bmc-hdr" style="background:${bst.hdr};color:${bst.badge};">${bst.label}</div>
-    <div class="wb-bmc-body">
-      <div class="wb-bmc-em" style="filter:drop-shadow(0 0 16px ${bst.border}) drop-shadow(0 0 6px ${bst.border});">${bossEmoji}</div>
-    </div>
+    <div class="wb-bmc-body"><div class="wb-bmc-em" style="filter:drop-shadow(0 0 16px ${bst.border});">${bossEmoji}</div></div>
     <div class="wb-bmc-foot">НАЖМИ →</div>
   </div>
 </div>
@@ -147,19 +133,47 @@ window.WBHtml = (() => {
     <div class="wb-enter-lbl">ВОЙТИ В РЕЙ<span class="wb-enter-sub">РЕЙД УЖЕ ИДЁТ · НАЖМИ!</span></div>
   </div>
 </div>
-${showJoin ? `
-<div class="wb-join-btn${joinedAndReminded?' joined':''}" data-act="join">
-  <div class="wb-join-ico">${joinedAndReminded?'✅':'⚔️'}</div>
-  <div class="wb-join-txt">
-    <div class="wb-join-main">${joinedAndReminded?'Ты участвуешь · Напоминание включено':'Участвую + напомни за 5 мин'}</div>
-    <div class="wb-join-sub">${regCnt>0?`${regCnt} игрок${regCnt===1?'':regCnt<5?'а':'ов'} уже записались`:'Зарегистрируйся и получи уведомление'}</div>
+<div class="wb-prize">
+  <div class="wb-prize-l">
+    <div class="wb-prize-lbl">⚡ ОБЩИЙ ПРИЗОВОЙ ФОНД</div>
+    <div class="wb-prize-sub">+520 за каждого участника</div>
   </div>
-  <div class="wb-join-arr">${joinedAndReminded?'✓':'›'}</div>
+  <div class="wb-prize-r">
+    <div class="wb-prize-coins">🪙 ${prizePool}</div>
+    <div class="wb-prize-cnt">${regCnt} игроков</div>
+  </div>
+</div>
+${avatarsHTML?`<div class="wb-avstrip">${avatarsHTML}${extra>0?`<span class="wb-av-more">+${extra} участников</span>`:''}</div>`:''}
+<div class="wb-recon" data-act="boss-card">
+  <div class="wb-recon-ic">🔍</div>
+  <div class="wb-recon-txt">
+    <div class="wb-recon-main">Разведка босса</div>
+    <div class="wb-recon-sub">Узнай слабые места и стику — +15% эффективность</div>
+  </div>
+  <div class="wb-recon-arr">›</div>
+</div>
+<div class="wb-auto-row">
+  <div class="wb-auto-ic">🤖</div>
+  <div class="wb-auto-txt">
+    <div class="wb-auto-main">Авто-бой (50% эффективности)</div>
+    <div class="wb-auto-sub">Атакует автоматически — не пропустишь награду</div>
+  </div>
+  <div class="wb-toggle" id="wb-auto-toggle" data-act="auto-toggle"></div>
+</div>
+${showJoin ? `
+<div class="wb-join-btn${joinedAll?' joined':''}" data-act="join">
+  <div class="wb-join-ico">${joinedAll?'✅':'⚔️'}</div>
+  <div class="wb-join-txt">
+    <div class="wb-join-main">${joinedAll?'Ты участвуешь · Напоминание включено':'Участвую + напомни за 5 мин'}</div>
+    <div class="wb-join-sub">${regCnt>0?`${regCnt} игроков уже записались`:'Зарегистрируйся и получи уведомление'}</div>
+  </div>
+  <div class="wb-join-arr">${joinedAll?'✓':'›'}</div>
 </div>` : `<div style="margin:6px 14px 0;padding:8px 14px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);font-size:9px;color:#445566;text-align:center;letter-spacing:.5px;">⏳ Запись откроется за 1 час до боя</div>`}
 <div class="wb-inv-sec">
   <div class="wb-inv-lbl">★ МОИ ЗАПАСЫ</div>
   <div class="wb-chips" id="wb-inv-chips"></div>
 </div>
+<div class="wb-shop-hdr">МАГАЗИН БОЯ</div>
 <div class="wb-cats">
   <div class="wb-cat on" data-cat="boosts"><span class="wb-cat-ic">⚔️</span><span class="wb-cat-lb">БУСТЫ</span></div>
   <div class="wb-cat" data-cat="revival"><span class="wb-cat-ic">💊</span><span class="wb-cat-lb">ВОСКРЕШЕНИЕ</span></div>
@@ -169,7 +183,7 @@ ${showJoin ? `
 <div class="wb-cp" data-cp="revival"><div class="wb-rgrid">${resHTML}</div></div>
 <div class="wb-cp" data-cp="history"><div class="wb-hist">${topRows}</div></div>
 <div style="text-align:right;padding:4px 16px 16px;">
-  <span style="font-size:9px;color:#330022;cursor:pointer;" data-act="test">⚡ dev·test</span>
+  <span style="font-size:9px;color:#220011;cursor:pointer;" data-act="test">⚡ dev·test</span>
 </div>`;
   }
 
@@ -184,12 +198,9 @@ ${showJoin ? `
   }
 
   function _updateInvSection(root, s) {
-    const el = root.querySelector('#wb-inv-chips');
-    if (!el) return;
-    const html = _buildInvChips(s);
-    el.innerHTML = html;
-    const sec = root.querySelector('.wb-inv-sec');
-    if (sec) sec.style.display = html ? '' : 'none';
+    const el = root.querySelector('#wb-inv-chips'); if (!el) return;
+    const html = _buildInvChips(s); el.innerHTML = html;
+    const sec = root.querySelector('.wb-inv-sec'); if (sec) sec.style.display = html ? '' : 'none';
   }
 
   function _bind(root) {
@@ -198,8 +209,7 @@ ${showJoin ? `
       if (ct) {
         root.querySelectorAll('.wb-cat').forEach(x=>x.classList.remove('on')); ct.classList.add('on');
         root.querySelectorAll('.wb-cp').forEach(x=>x.classList.remove('on'));
-        root.querySelector(`[data-cp="${ct.dataset.cat}"]`)?.classList.add('on');
-        return;
+        root.querySelector(`[data-cp="${ct.dataset.cat}"]`)?.classList.add('on'); return;
       }
       const el = e.target.closest('[data-act]'); if (!el) return;
       try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
@@ -211,20 +221,19 @@ ${showJoin ? `
           if (!_scene) return;
           const wasReg = !!_state?.is_registered;
           await _scene._registerForRaid?.();
-          // auto-sync reminder: enable on join, disable on cancel
           if (!wasReg && _state?.is_registered && !_state?.reminder_opt_in) await _scene._toggleReminder?.();
           if (wasReg && !_state?.is_registered && _state?.reminder_opt_in) await _scene._toggleReminder?.();
         })();
       }
-      else if (act==='boss-card') { window.WBHtml.showBossCard?.(_state); }
+      else if (act==='boss-card')    { window.WBHtml.showBossCard?.(_state); }
+      else if (act==='auto-toggle')  { el.classList.toggle('on'); }
       else if (act==='buy-scroll') {
         if (el.classList.contains('bought')) return;
-        _markBought(el.dataset.id);
-        el.classList.add('bought');
+        _markBought(el.dataset.id); el.classList.add('bought');
         _scene?._buyScroll?.(el.dataset.id);
       }
-      else if (act==='buy-res')    { _scene?._buyResScroll?.(el.dataset.id); }
-      else if (act==='test')  { get('/api/admin/wb_test_schedule').then(()=>_scene?._refresh?.()).catch(()=>{}); }
+      else if (act==='buy-res') { _scene?._buyResScroll?.(el.dataset.id); }
+      else if (act==='test')    { get('/api/admin/wb_test_schedule').then(()=>_scene?._refresh?.()).catch(()=>{}); }
     });
   }
 
