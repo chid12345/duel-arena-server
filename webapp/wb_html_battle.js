@@ -10,6 +10,7 @@
     _seenSkills.clear(); window.WBHtml.resetBattleLogic?.();
     try { Object.keys(sessionStorage).filter(k=>k.startsWith('wb_bought_')).forEach(k=>sessionStorage.removeItem(k)); } catch(_) {}
     window.WBBattleCSS?.inject();
+    if (s.active && (s.active.current_hp||0) <= 0) { root.innerHTML = `<div class="wb-victwait"><div class="wb-victwait-em">🏆</div><div class="wb-victwait-t">ПОБЕДА!</div><div class="wb-victwait-s">Ожидание расчёта наград...</div></div>`; return; }
     const a = s.active, ps = s.player_state;
     const pct  = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
     const ppct = ps?.max_hp > 0 ? Math.round(ps.current_hp / ps.max_hp * 100) : 85;
@@ -236,8 +237,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   function updateHUD(state) {
     const a = state?.active; if (!a) return;
     const pct = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
-    const bar  = document.getElementById('wb-boss-bar'); if (bar) { bar.style.width = pct+'%'; bar.style.background = pct<25?'linear-gradient(90deg,#FF0000,#FF2200)':pct<50?'linear-gradient(90deg,#FF4400,#FF6600)':'linear-gradient(90deg,#880033,#cc0055,#ff3377)'; }
-    window.WBHtml.checkQteTrigger?.(pct); window.WBHtml.checkPhaseTransition?.(pct);
+    const bar=document.getElementById('wb-boss-bar'); if (bar) { bar.style.width=pct+'%'; bar.style.background=pct<25?'linear-gradient(90deg,#FF0000,#FF2200)':pct<50?'linear-gradient(90deg,#FF4400,#FF6600)':'linear-gradient(90deg,#880033,#cc0055,#ff3377)'; } window.WBHtml.checkQteTrigger?.(pct); window.WBHtml.checkPhaseTransition?.(pct);
     const nums = document.getElementById('wb-boss-nums');
     if (nums) nums.textContent = `${(a.current_hp||0).toLocaleString('ru')} / ${(a.max_hp||0).toLocaleString('ru')} · ${pct}%`;
     const timer = document.getElementById('wb-bl-timer'); if (timer) timer.textContent = _fmtSec(a.seconds_left);

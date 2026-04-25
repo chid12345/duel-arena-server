@@ -149,7 +149,11 @@
 
   function setAutoAttack(on) {
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
-    if (on) _state.autoTimer = setInterval(() => window.WBHtml._scene?._onHit?.(), 1000);
+    if (on) _state.autoTimer = setInterval(() => {
+      const sc = window.WBHtml._scene; const hp = sc?._state?.active?.current_hp;
+      if (hp != null && hp <= 0) { setAutoAttack(false); return; }
+      sc?._onHit?.();
+    }, 1000);
   }
 
   function reset() { _state.ultra = 0; _state.qteShown = false; _state.lastPct = 100; _state.combo = 0; _state.lastThreshold = 100;

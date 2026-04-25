@@ -212,6 +212,7 @@ window.WBBattleCSS = (() => {
 /* ── Screen shake (ульта/QTE) ── */
 .wb-shake{animation:wb-shake .45s ease-in-out;}@keyframes wb-shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-4px)}20%,40%,60%,80%{transform:translateX(4px)}}
 
+.wb-victwait{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:radial-gradient(circle,rgba(60,40,0,.4) 0%,#000 70%)}.wb-victwait-em{font-size:90px;filter:drop-shadow(0 0 30px #FFD700);animation:wb-mvp-shine 1.2s ease-in-out infinite}.wb-victwait-t{font-size:28px;font-weight:900;letter-spacing:8px;color:#FFD700;text-shadow:0 0 20px #FFD700}.wb-victwait-s{font-size:11px;color:rgba(255,255,255,.5);letter-spacing:1.5px}
 /* ── MVP RAID — итоги рейда ── */
 .wb-mvp-ov{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.88);
   display:flex;align-items:center;justify-content:center;padding:20px;
