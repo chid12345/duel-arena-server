@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.0.58"
-VERSION_LABEL = "v2.0.58 — WB: кнопка завершить бой (тест) + /api/admin/wb_end"
+VERSION = "2.0.59"
+VERSION_LABEL = "v2.0.59 — fix: Stats overlay поверх WB боя (z-index + race condition)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "8.92"
+GAME_VERSION = "8.93"

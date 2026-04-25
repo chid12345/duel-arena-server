@@ -10,7 +10,7 @@ window.WBHtml = (() => {
 
   /* ── CSS ── */
   const CSS = `
-#wb-root{position:fixed;inset:0;z-index:8500;overflow-y:auto;overflow-x:hidden;
+#wb-root{position:fixed;inset:0;z-index:9500;overflow-y:auto;overflow-x:hidden;
   background:radial-gradient(ellipse at 50% -5%,#1d0035 0%,#04030a 55%),#000;
   font-family:-apple-system,"Segoe UI",Roboto,sans-serif;color:#ddeeff;
   scrollbar-width:none;}
@@ -304,6 +304,8 @@ window.WBHtml = (() => {
   function render(scene, state) {
     _scene = scene;
     _css();
+    // Закрываем zombie-оверлеи предыдущих сцен (Stats/Clan/Wardrobe и т.д.)
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     const s = state || {};
     const root = _root();
     if (s.active || (s.prep_seconds_left > 0 && s.active)) {
