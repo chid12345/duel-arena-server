@@ -197,7 +197,14 @@
           startSkillCD('shld');
           _autoLast.shld = now;
           _flashSkillBtn('shld');
-          window.WBHtml?.toast?.('🛡 ЩИТ (авто)');
+          // Дополнительный индикатор «щит активен» — мерцает 2 сек.
+          const shldBtn = document.querySelector('.wb-skill.shld');
+          if (shldBtn) {
+            shldBtn.classList.remove('shield-active'); void shldBtn.offsetWidth;
+            shldBtn.classList.add('shield-active');
+            setTimeout(() => shldBtn.classList.remove('shield-active'), 2000);
+          }
+          window.WBHtml?.toast?.('🛡 ЩИТ АКТИВЕН (2 сек)');
         }
       } catch(_) {}
     }, 1000);
