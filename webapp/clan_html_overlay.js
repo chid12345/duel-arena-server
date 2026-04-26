@@ -162,7 +162,12 @@ function _showMembersPanel(members, isLeader, scene) {
     if (!el) return;
     const act = el.dataset.act;
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
-    if (act === 'mem-back') { panel.remove(); return; }
+    if (act === 'mem-back') {
+      panel.remove();
+      const root = document.getElementById('cl-root');
+      if (root) { root.style.pointerEvents = 'none'; setTimeout(() => { root.style.pointerEvents = ''; }, 350); }
+      return;
+    }
     if (act === 'transfer') {
       const m = members.find(x => x.user_id === +el.dataset.uid);
       if (m) window.ClanHTML.confirmTransfer?.(scene, m);
