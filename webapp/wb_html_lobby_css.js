@@ -216,7 +216,10 @@ window.WBLobbyCSS = (() => {
 .wb-binfo-title{font-size:16px;font-weight:900;color:#fff;text-align:center;padding:0 18px 4px;letter-spacing:1px;}
 .wb-binfo-val{font-family:'Courier New',monospace;font-size:22px;font-weight:900;
   color:#00FF9F;text-align:center;text-shadow:0 0 8px rgba(0,255,159,.5);padding-bottom:8px;}
-.wb-binfo-desc{font-size:11px;color:rgba(255,255,255,.6);text-align:center;padding:0 22px 10px;line-height:1.5;}
+.wb-binfo-desc{font-size:11px;color:rgba(255,255,255,.6);text-align:center;padding:0 22px 8px;line-height:1.5;}
+.wb-binfo-note{font-size:10px;font-weight:700;color:#ffb84d;text-align:center;
+  margin:0 18px 10px;padding:6px 10px;border-radius:8px;
+  background:rgba(255,140,0,.08);border:1px solid rgba(255,140,0,.25);letter-spacing:.3px;}
 .wb-binfo-own{font-size:9px;font-weight:800;color:#00BFFF;text-align:center;padding-bottom:10px;letter-spacing:.5px;}
 .wb-binfo-buy{margin:0 14px;padding:12px;border-radius:12px;text-align:center;cursor:pointer;
   background:linear-gradient(135deg,rgba(255,0,85,.3),rgba(180,0,55,.3));

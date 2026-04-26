@@ -21,6 +21,7 @@
       <div class="wb-binfo-title">${m.name}</div>
       <div class="wb-binfo-val">${m.val}</div>
       <div class="wb-binfo-desc">${BOOST_DESC[id]||'Боевой свиток для рейда.'}</div>
+      <div class="wb-binfo-note">⚔️ Действует только в бою с боссом · на 1 рейд</div>
       <div class="wb-binfo-own">В запасе: <b>${owned}</b></div>
       <div class="wb-binfo-buy" id="wb-binfo-buy">${m.price} — КУПИТЬ</div>
     </div>`;
