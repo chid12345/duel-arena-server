@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390,initial-scale=1">
+<title>WB · Боевая сцена · ДРЕВНИЙ СТРАЖ</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#020005;color:#e0e0e0;font:14px -apple-system,Segoe UI,Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:18px;}
+  .row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px;}
+
+  .scene{position:relative;width:390px;height:680px;border-radius:14px;overflow:hidden;
+    background:#08020c;border:1px solid rgba(191,0,255,.35);
+    box-shadow:0 0 60px rgba(150,0,220,.3);}
+
+  /* ── 1. ФОН — улей с коконами, медленный «зум» 1-2% ── */
+  .bg{position:absolute;inset:0;z-index:1;
+    background-image:url('bosses/bg/spider.png');
+    background-size:100% auto;background-position:center bottom;background-repeat:no-repeat;
+    animation:bg-breathe 6s ease-in-out infinite;}
+  @keyframes bg-breathe{
+    0%,100%{background-size:100% auto;filter:brightness(.92) saturate(1.05)}
+    50%   {background-size:103% auto;filter:brightness(1.08) saturate(1.2)}}
+  .bg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:36%;
+    background:linear-gradient(to top,
+      rgba(15,0,30,.85) 0%, rgba(40,5,60,.5) 35%,
+      rgba(40,5,60,.15) 70%, transparent 100%);
+    pointer-events:none;}
+
+  /* ── 2. БОСС — чуть ниже центра, ноги на «органических венах» ── */
+  .boss-wrap{position:absolute;left:50%;bottom:9%;z-index:5;
+    transform:translateX(-50%);pointer-events:none;
+    height:64%;}
+  .boss{height:100%;width:auto;display:block;
+    -webkit-mask-image:linear-gradient(to bottom,
+      black 0%, black 82%, rgba(0,0,0,.55) 92%, transparent 100%);
+    mask-image:linear-gradient(to bottom,
+      black 0%, black 82%, rgba(0,0,0,.55) 92%, transparent 100%);
+    /* float + glow (синхронно с фоном 6s) + vibrate (быстро) */
+    animation:boss-breathe 3.2s ease-in-out infinite,
+              boss-glow 6s ease-in-out infinite,
+              boss-vibrate .14s linear infinite;}
+  @keyframes boss-breathe{
+    0%,100%{transform:scale(1)    translateY(0)}
+    50%   {transform:scale(1.025) translateY(-3px)}}
+  @keyframes boss-glow{
+    0%,100%{filter:
+      drop-shadow(0 0 12px rgba(191,0,255,.7))
+      drop-shadow(0 0 24px rgba(150,0,220,.5))
+      brightness(1)
+      saturate(1.1);}
+    50%{filter:
+      drop-shadow(0 0 22px rgba(220,80,255,.95))
+      drop-shadow(0 0 42px rgba(180,40,240,.8))
+      brightness(1.15)
+      saturate(1.3);}}
+  @keyframes boss-vibrate{
+    0%  {margin-left:0; margin-top:0}
+    25% {margin-left:.5px; margin-top:-.4px}
+    50% {margin-left:-.4px; margin-top:.4px}
+    75% {margin-left:.4px; margin-top:.4px}
+    100%{margin-left:-.5px; margin-top:-.4px}}
+
+  /* ── 3. СЛОЙ СЛИЗИ — фиолетовые капли падают, перед боссом (z:7) ── */
+  .slime{position:absolute;inset:0;z-index:7;pointer-events:none;overflow:hidden;}
+  .drip{position:absolute;top:-20px;width:3px;height:14px;
+    border-radius:50% 50% 50% 50% / 30% 30% 70% 70%;
+    background:linear-gradient(180deg, rgba(180,40,255,.8), rgba(120,20,200,.95));
+    box-shadow:0 0 6px rgba(191,0,255,.6);
+    animation:drip-fall 5s linear infinite;}
+  .drip.s1{left:12%;animation-delay:.0s}
+  .drip.s2{left:28%;animation-delay:1.5s;animation-duration:6s}
+  .drip.s3{left:46%;animation-delay:.7s;animation-duration:4.5s}
+  .drip.s4{left:64%;animation-delay:2.2s;animation-duration:5.5s}
+  .drip.s5{left:82%;animation-delay:1.0s;animation-duration:6.5s}
+  .drip.s6{left:38%;animation-delay:3.5s;animation-duration:5s}
+  .drip.s7{left:72%;animation-delay:4.2s;animation-duration:5.8s}
+  .drip.s8{left:18%;animation-delay:3.0s;animation-duration:6.2s}
+  @keyframes drip-fall{
+    0%{transform:translateY(0) scaleY(1);opacity:0}
+    10%{opacity:.95}
+    85%{opacity:.7}
+    100%{transform:translateY(800px) scaleY(1.4);opacity:0}}
+
+  /* ── ЧАСТИЦЫ парящие фиолетовые ── */
+  .vfx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;}
+  .p{position:absolute;width:5px;height:5px;border-radius:50%;
+    background:#cc66ff;
+    box-shadow:0 0 10px #cc66ff,0 0 20px #aa44ff;
+    opacity:0;animation:p-up 5.5s linear infinite;}
+  .p.s2{width:3px;height:3px;animation-duration:7s}
+  .p.s3{width:7px;height:7px;animation-duration:6.5s;opacity:.6}
+  @keyframes p-up{
+    0%{transform:translateY(0) scale(.3);opacity:0}
+    10%{opacity:.95}85%{opacity:.6}
+    100%{transform:translateY(-440px) scale(1);opacity:0}}
+  .p:nth-child(1){left:8%;bottom:8%;animation-delay:.0s}
+  .p:nth-child(2){left:24%;bottom:8%;animation-delay:1.4s}
+  .p:nth-child(3){left:40%;bottom:6%;animation-delay:.7s}
+  .p:nth-child(4){left:56%;bottom:8%;animation-delay:2.1s}
+  .p:nth-child(5){left:72%;bottom:6%;animation-delay:.3s}
+  .p:nth-child(6){left:88%;bottom:8%;animation-delay:1.8s}
+  .p:nth-child(7){left:16%;bottom:7%;animation-delay:3.0s}
+  .p:nth-child(8){left:48%;bottom:7%;animation-delay:3.7s}
+  .p:nth-child(9){left:80%;bottom:7%;animation-delay:2.5s}
+  .p:nth-child(10){left:32%;bottom:6%;animation-delay:4.0s}
+
+  .title{position:absolute;top:14px;left:14px;right:14px;z-index:10;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;font-weight:800;letter-spacing:2px;color:#cc66ff;
+    text-shadow:0 0 8px rgba(180,40,240,.7);text-transform:uppercase;}
+  .title .hp{font-family:'Courier New',monospace;color:#ff4488;}
+
+  .legend{max-width:340px;font-size:12px;line-height:1.6;color:#ddbbee;}
+  .legend h3{color:#cc66ff;font-size:14px;margin-bottom:10px;letter-spacing:1px;}
+  .legend code{background:rgba(180,40,255,.1);padding:1px 5px;border-radius:3px;color:#eebbff;font-size:11px;}
+  .legend ul{padding-left:18px;margin:6px 0;}
+  .legend li{margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="scene">
+    <div class="bg"></div>
+    <div class="title">
+      <span>🕷️ ДРЕВНИЙ СТРАЖ</span>
+      <span class="hp">HP 10 800 / 15 500</span>
+    </div>
+    <div class="boss-wrap">
+      <img class="boss" src="bosses/boss_spider.png" alt="Spider">
+    </div>
+    <div class="vfx">
+      <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+      <div class="p s2"></div><div class="p"></div><div class="p s3"></div><div class="p s2"></div>
+      <div class="p"></div><div class="p s3"></div>
+    </div>
+    <div class="slime">
+      <div class="drip s1"></div><div class="drip s2"></div><div class="drip s3"></div>
+      <div class="drip s4"></div><div class="drip s5"></div><div class="drip s6"></div>
+      <div class="drip s7"></div><div class="drip s8"></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <h3>📋 Древний Страж — что собрано</h3>
+    <ul>
+      <li><b>Фон-улей</b> — пещера с фиолетовыми коконами и венами</li>
+      <li><b>Дыхание фона</b> — медленный зум 100→103% за 6с,
+        яркость ±15% (органическая жизнь улья)</li>
+      <li><b>Босс чуть ниже</b> — bottom 9%, лапы на «венах» пола</li>
+      <li><b>Bio-luminescence</b> — <code>drop-shadow #bf00ff</code>
+        пульсирует синхронно с фоном (6с цикл)</li>
+      <li><b>Микро-вибрация</b> — лёгкое дрожание ±0.5px каждые 0.14с
+        (ощущение насекомого с напряжёнными лапами)</li>
+      <li><b>Маска лап</b> — нижние 18% растворяются в пол</li>
+      <li><b>Слой слизи</b> <code>z:7</code> — 8 фиолетовых капель
+        падают сверху на фоне босса, разные скорости 4.5–6.5с</li>
+      <li><b>10 парящих частиц</b> — фиолетовая пыльца снизу вверх</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

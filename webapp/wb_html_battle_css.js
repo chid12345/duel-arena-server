@@ -85,6 +85,44 @@ window.WBBattleCSS = (() => {
     rgba(0,0,0,.85) 0%, rgba(15,5,35,.55) 35%,
     rgba(15,5,35,.15) 70%, transparent 100%);}
 
+/* Древний Страж — улей с фиолетовыми коконами. Bio-luminescence:
+   фон медленно «дышит» зумом + коконы пульсируют синхронно с боссом. */
+.wb-boss-zone.bt-spider{
+  background-image:url('bosses/bg/spider.png');
+  background-size:cover;background-position:center bottom;background-color:#08020c;
+  /* Медленный зум 1-2% — органическое дыхание улья */
+  animation:wb-spider-bg-breathe 6s ease-in-out infinite;}
+@keyframes wb-spider-bg-breathe{
+  0%,100%{background-size:100% auto;filter:brightness(.92) saturate(1.05)}
+  50%   {background-size:103% auto;filter:brightness(1.08) saturate(1.2)}}
+/* Тёмный туман с фиолетовым отливом — органические вены на полу */
+.wb-boss-zone.bt-spider::before{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:36%;pointer-events:none;z-index:1;
+  background:linear-gradient(to top,
+    rgba(15,0,30,.85) 0%, rgba(40,5,60,.5) 35%,
+    rgba(40,5,60,.15) 70%, transparent 100%);}
+/* Слой слизи — фиолетовые капли падают сверху, перед боссом (z-index: 7).
+   По умолчанию скрыт — показывается только под .bt-spider */
+.wb-spider-slime{position:absolute;inset:0;pointer-events:none;z-index:7;overflow:hidden;display:none;}
+.wb-boss-zone.bt-spider .wb-spider-slime{display:block;}
+.wb-spider-slime .drip{position:absolute;top:-20px;width:3px;height:14px;border-radius:50% 50% 50% 50% / 30% 30% 70% 70%;
+  background:linear-gradient(180deg, rgba(180,40,255,.8), rgba(120,20,200,.95));
+  box-shadow:0 0 6px rgba(191,0,255,.6);
+  animation:wb-spider-drip 5s linear infinite;}
+.wb-spider-slime .drip.s1{left:12%;animation-delay:.0s}
+.wb-spider-slime .drip.s2{left:28%;animation-delay:1.5s;animation-duration:6s}
+.wb-spider-slime .drip.s3{left:46%;animation-delay:.7s;animation-duration:4.5s}
+.wb-spider-slime .drip.s4{left:64%;animation-delay:2.2s;animation-duration:5.5s}
+.wb-spider-slime .drip.s5{left:82%;animation-delay:1.0s;animation-duration:6.5s}
+.wb-spider-slime .drip.s6{left:38%;animation-delay:3.5s;animation-duration:5s}
+.wb-spider-slime .drip.s7{left:72%;animation-delay:4.2s;animation-duration:5.8s}
+.wb-spider-slime .drip.s8{left:18%;animation-delay:3.0s;animation-duration:6.2s}
+@keyframes wb-spider-drip{
+  0%{transform:translateY(0) scaleY(1);opacity:0}
+  10%{opacity:.95}
+  85%{opacity:.7}
+  100%{transform:translateY(800px) scaleY(1.4);opacity:0}}
+
 /* Каменный Голем — алтарь с зелёным кристаллом-резонатором.
    Кристалл за боссом «дышит» в такт с боссом — эффект резонанса. */
 .wb-boss-zone.bt-poison{
@@ -153,6 +191,35 @@ window.WBBattleCSS = (() => {
 .wb-boss-zone.bt-lich .wb-bimg2{
   -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);}
+
+/* Древний Страж: фиолетовое bio-luminescence свечение + быстрая вибрация
+   конечностей (насекомое). Свечение пульсирует синхронно с фоном-ульем. */
+.wb-boss-zone.bt-spider .wb-bimg2{
+  --boss-glow:#bf00ff;
+  -webkit-mask-image:linear-gradient(to bottom, black 0%, black 82%, rgba(0,0,0,.55) 92%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 0%, black 82%, rgba(0,0,0,.55) 92%, transparent 100%);
+  /* float (плавно вверх-вниз) + glow (синхронно с фоном 6s) + vibrate (быстро) */
+  animation:wb-bfloat 3.2s ease-in-out infinite,
+            wb-spider-glow 6s ease-in-out infinite,
+            wb-spider-vibrate .14s linear infinite;}
+@keyframes wb-spider-glow{
+  0%,100%{filter:
+    drop-shadow(0 0 12px rgba(191,0,255,.7))
+    drop-shadow(0 0 24px rgba(150,0,220,.5))
+    brightness(1)
+    saturate(1.1);}
+  50%{filter:
+    drop-shadow(0 0 22px rgba(220,80,255,.95))
+    drop-shadow(0 0 42px rgba(180,40,240,.8))
+    brightness(1.15)
+    saturate(1.3);}}
+/* Микро-вибрация конечностей — лёгкое дрожание ±0.5px очень быстро */
+@keyframes wb-spider-vibrate{
+  0%  {margin-left:0; margin-top:0}
+  25% {margin-left:.5px; margin-top:-.4px}
+  50% {margin-left:-.4px; margin-top:.4px}
+  75% {margin-left:.4px; margin-top:.4px}
+  100%{margin-left:-.5px; margin-top:-.4px}}
 
 /* Каменный Голем: ярко-зелёное свечение + дыхание в резонанс с кристаллом */
 .wb-boss-zone.bt-poison .wb-bimg2{
