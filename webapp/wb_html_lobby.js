@@ -194,7 +194,7 @@ window.WBHtml = (() => {
       const el = e.target.closest('[data-act]'); if (!el) return;
       try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
       const act = el.dataset.act;
-      if (act==='back')       { close(); _scene?.scene?.start?.('Menu',{returnTab:'more'}); }
+      if (act==='back')       { close(); _scene?.scene?.start?.('WorldBoss'); }
       else if (act==='enter') { try { localStorage.removeItem('wb_left_raid'); } catch(_) {} close(); _scene?.scene?.restart?.(); }
       else if (act==='join')  {
         const isJoined = el.classList.toggle('joined');
