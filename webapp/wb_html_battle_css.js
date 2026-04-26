@@ -85,6 +85,32 @@ window.WBBattleCSS = (() => {
     rgba(0,0,0,.85) 0%, rgba(15,5,35,.55) 35%,
     rgba(15,5,35,.15) 70%, transparent 100%);}
 
+/* Каменный Голем — алтарь с зелёным кристаллом-резонатором.
+   Кристалл за боссом «дышит» в такт с боссом — эффект резонанса. */
+.wb-boss-zone.bt-poison{
+  background-image:url('bosses/bg/poison.png');
+  background-size:cover;background-position:center bottom;background-color:#020a05;
+  animation:wb-poison-bg-pulse 3.6s ease-in-out infinite;}
+@keyframes wb-poison-bg-pulse{
+  0%,100%{filter:brightness(.95) saturate(1.05)}
+  50%   {filter:brightness(1.12) saturate(1.25)}}
+/* Тёмный туман у пола — алтарь и ноги растворяются в тенях */
+.wb-boss-zone.bt-poison::before{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:38%;pointer-events:none;z-index:1;
+  background:linear-gradient(to top,
+    rgba(0,0,0,.85) 0%, rgba(5,25,12,.55) 35%,
+    rgba(5,25,12,.15) 70%, transparent 100%);}
+/* Густая контактная тень под ногами голема — он «прилипает» к полу */
+.wb-boss-zone.bt-poison::after{content:"";position:absolute;left:50%;bottom:7%;
+  transform:translateX(-50%);width:42%;height:20px;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%,
+    rgba(0,0,0,.95) 0%, rgba(0,0,0,.55) 45%, transparent 80%);
+  filter:blur(7px);
+  animation:wb-poison-shadow-breathe 3.6s ease-in-out infinite;}
+@keyframes wb-poison-shadow-breathe{
+  0%,100%{transform:translateX(-50%) scale(1)  }
+  50%   {transform:translateX(-50%) scale(.93)}}
+
 /* Огненный Колосс — крепость в лаве, ноги в потоке расплавленного металла */
 .wb-boss-zone.bt-fire{
   background-image:url('bosses/bg/fire.png');
@@ -127,6 +153,26 @@ window.WBBattleCSS = (() => {
 .wb-boss-zone.bt-lich .wb-bimg2{
   -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);}
+
+/* Каменный Голем: ярко-зелёное свечение + дыхание в резонанс с кристаллом */
+.wb-boss-zone.bt-poison .wb-bimg2{
+  --boss-glow:#22ff66;
+  -webkit-mask-image:linear-gradient(to bottom, black 0%, black 80%, rgba(0,0,0,.55) 92%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 0%, black 80%, rgba(0,0,0,.55) 92%, transparent 100%);
+  /* Усиленное зелёное свечение синхронно с пульсом кристалла на фоне (3.6s) */
+  animation:wb-bfloat 3.6s ease-in-out infinite,
+            wb-poison-glow 3.6s ease-in-out infinite;}
+@keyframes wb-poison-glow{
+  0%,100%{filter:
+    drop-shadow(0 0 10px rgba(34,255,102,.7))
+    drop-shadow(0 0 22px rgba(0,200,80,.55))
+    brightness(1)
+    saturate(1.1);}
+  50%{filter:
+    drop-shadow(0 0 18px rgba(80,255,140,.95))
+    drop-shadow(0 0 38px rgba(20,220,90,.8))
+    brightness(1.15)
+    saturate(1.3);}}
 
 /* Огненный Колосс: оранжевое мощное свечение + пульсация ядра + маска ног в лаву */
 .wb-boss-zone.bt-fire .wb-bimg2{
