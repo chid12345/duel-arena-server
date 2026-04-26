@@ -197,13 +197,11 @@
         } catch(_) {}
       }
 
-      // 3. ЩИТ — HP игрока < 50% И прошло ≥AUTO_SHLD_MS с прошлого щита.
-      // Серверный вызов /api/world_boss/shield реально снижает входящий
-      // урон на 30% на 2 секунды.
+      // 3. ЩИТ — автоматически каждые AUTO_SHLD_MS (8 сек). Премиум-фича:
+      // постоянная защита, не зависит от HP. Игрок видит регулярные
+      // активации каждые 8 сек (видна вспышка + CD таймер).
       try {
-        const ps = sc?._state?.player_state;
-        const phpPct = ps && ps.max_hp > 0 ? (ps.current_hp / ps.max_hp) : 1;
-        if (phpPct < 0.5 && (now - _autoLast.shld) >= AUTO_SHLD_MS) {
+        if ((now - _autoLast.shld) >= AUTO_SHLD_MS) {
           _autoLast.shld = now;
           startSkillCD('shld');
           _flashSkillBtn('shld');
