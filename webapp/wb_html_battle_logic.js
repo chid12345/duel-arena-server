@@ -128,12 +128,8 @@
           _shake();
           const sc = window.WBHtml._scene;
           // 10 ударов с интервалом 320мс (> 300мс кулдаун сервера)
+          // Числа урона показывает addHitLog при каждом реальном ударе
           for (let i = 0; i < 10; i++) setTimeout(() => sc?._onHit?.(), i * 320);
-          // Визуальные числа
-          for (let i = 0; i < 10; i++) setTimeout(() => {
-            const dmg = Math.round(60000 + Math.random() * 20000);
-            _spawnBurst(`⚡ ${dmg.toLocaleString('ru')}`, '#FFD700', 24);
-          }, i * 100);
           // Бонусный удар +15% через сервер (после всех 10 ударов)
           setTimeout(() => {
             fetch(API + '/api/world_boss/qte_bonus', {
@@ -143,10 +139,13 @@
             }).then(r => r.json()).then(d => {
               if (d.ok && d.bonus_damage) {
                 _shake();
+                try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
                 _spawnBurst(`⚡ +15%  ${d.bonus_damage.toLocaleString('ru')}`, '#FF8C00', 30);
               }
             }).catch(() => {});
           }, 3500);
+          // Визуальные числа — показываем реальные числа из _onHit через addHitLog
+          // Фейковые 60K убраны: игрок видит настоящий урон в зоне босса
         } else {
           _spawnBurst(`❌ ${count}/10 — МИМО!`, '#ff4444', 24);
         }

@@ -123,6 +123,28 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
     except Exception:
         is_premium = False
 
+    # Топ-3 для тикера в бою — заполняем сразу, не ждём первого WS-тика.
+    wb_top = []
+    if active:
+        try:
+            _raw_top = db.get_wb_top_damagers(int(active["spawn_id"]), limit=3)
+            wb_top = [
+                {
+                    "user_id": int(r["user_id"]),
+                    "name": r.get("username") or "Игрок",
+                    "level": int(r.get("level") or 1),
+                    "damage": int(r.get("total_damage") or 0),
+                    "total_damage": int(r.get("total_damage") or 0),
+                    "atk": int(r.get("strength") or 10),
+                    "crits": int(r.get("crits_count") or 0),
+                    "hp": int(r.get("current_hp") or 0),
+                    "max_hp": int(r.get("max_hp") or 100),
+                }
+                for r in _raw_top
+            ]
+        except Exception as _e:
+            _log.warning("wb_state top block uid=%s: %s", uid, _e)
+
     return {
         "ok": True,
         "is_premium": is_premium,
@@ -175,6 +197,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                 "chest_type": r.get("chest_type"),
             })(_get_boss_type(r.get("boss_type"))) for r in recent
         ],
+        "top": wb_top,
         "player_state": player_state,
         "raid_scrolls_inv": raid_scrolls_inv,
         "res_scrolls_inv": res_scrolls_inv,

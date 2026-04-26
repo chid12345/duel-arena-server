@@ -71,7 +71,9 @@ Object.assign(WorldBossScene.prototype, {
   _renderTop(top, W, y) {
     this._addText(16, y, '★ ТОП-3 ПО УРОНУ:', 11, '#cc44ff', true);
     top.slice(0, 3).forEach((t, i) => {
-      this._addText(16, y+18+i*16, `${i+1}. uid${t.user_id} — ${t.total_damage}`, 10, '#ff44cc');
+      const name = t.name || `Игрок ${i+1}`;
+      const dmg = (t.damage || t.total_damage || 0).toLocaleString('ru');
+      this._addText(16, y+18+i*16, `${i+1}. ${name} — ${dmg}`, 10, '#ff44cc');
     });
   },
 
@@ -154,8 +156,6 @@ Object.assign(WorldBossScene.prototype, {
       const r = await post('/api/world_boss/hit');
       if (r.ok) {
         tg?.HapticFeedback?.impactOccurred(r.is_crit ? 'heavy' : 'light');
-        const _dmgSuffix = (r.is_crit ? ' 💥' : '') + (r.vulnerable ? ' x3' : '');
-        this._toast(`⚔️ ${r.damage}${_dmgSuffix}`);
         if (this._state?.active) this._state.active.current_hp = r.boss_hp;
         try { window.WBHtml?.addHitLog(r.damage, r.is_crit); } catch(_) {}
         if (!hadPsBefore) {

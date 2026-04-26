@@ -107,7 +107,17 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
 def _build_top_block(db, spawn_id: int) -> list:
     top = db.get_wb_top_damagers(spawn_id, limit=3)
     return [
-        {"user_id": int(r["user_id"]), "total_damage": int(r.get("total_damage") or 0)}
+        {
+            "user_id": int(r["user_id"]),
+            "name": r.get("username") or "Игрок",
+            "level": int(r.get("level") or 1),
+            "damage": int(r.get("total_damage") or 0),
+            "total_damage": int(r.get("total_damage") or 0),
+            "atk": int(r.get("strength") or 10),
+            "crits": int(r.get("crits_count") or 0),
+            "hp": int(r.get("current_hp") or 0),
+            "max_hp": int(r.get("max_hp") or 100),
+        }
         for r in top
     ]
 

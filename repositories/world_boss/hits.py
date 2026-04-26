@@ -64,14 +64,22 @@ class WorldBossHitsMixin:
         return int(row["d"]) if row else 0
 
     def get_wb_top_damagers(self, spawn_id: int, limit: int = 3) -> List[Dict[str, Any]]:
-        """Топ-N игроков по суммарному урону в рейде (для отображения и сундука)."""
+        """Топ-N игроков по суммарному урону + имя/уровень/криты для UI."""
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT user_id, SUM(damage) AS total_damage, COUNT(*) AS hits "
-            "FROM world_boss_hits WHERE spawn_id=? "
-            "GROUP BY user_id ORDER BY total_damage DESC LIMIT ?",
-            (int(spawn_id), int(limit)),
+            "SELECT ps.user_id, p.username, p.level, p.strength, "
+            "ps.total_damage, ps.hits_count, ps.current_hp, ps.max_hp, "
+            "COALESCE(cr.crits_count, 0) AS crits_count "
+            "FROM world_boss_player_state ps "
+            "JOIN players p ON p.user_id = ps.user_id "
+            "LEFT JOIN ("
+            "  SELECT user_id, COUNT(*) AS crits_count FROM world_boss_hits "
+            "  WHERE spawn_id=? AND is_crit=1 GROUP BY user_id"
+            ") cr ON cr.user_id = ps.user_id "
+            "WHERE ps.spawn_id=? "
+            "ORDER BY ps.total_damage DESC LIMIT ?",
+            (int(spawn_id), int(spawn_id), int(limit)),
         )
         rows = cur.fetchall()
         conn.close()

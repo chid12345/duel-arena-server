@@ -48,9 +48,9 @@
           <div class="wb-dead-t">💀 Вы пали в бою</div>
           <div style="font-size:10px;color:#667;margin-bottom:4px">Используй свиток воскрешения или дождись окончания рейда</div>
           <div class="wb-res-row">
-            <div class="wb-res-b" data-act="res" data-t="res_30"><span class="ri">💊</span>30% HP<br><small style="color:#666">500 🔥</small></div>
-            <div class="wb-res-b" data-act="res" data-t="res_60"><span class="ri">💉</span>60% HP<br><small style="color:#666">40 💠</small></div>
-            <div class="wb-res-b" data-act="res" data-t="res_100"><span class="ri">✨</span>100% HP<br><small style="color:#666">80 💠</small></div>
+            <div class="wb-res-b" data-act="res" data-t="res_30"><span class="ri">💊</span>30% HP<br><small style="color:#666">500 🪙</small></div>
+            <div class="wb-res-b" data-act="res" data-t="res_60"><span class="ri">💉</span>60% HP<br><small style="color:#666">1 500 🪙</small></div>
+            <div class="wb-res-b" data-act="res" data-t="res_100"><span class="ri">✨</span>100% HP<br><small style="color:#666">3 000 🪙</small></div>
           </div>
           <div style="margin-top:8px;font-size:10px;color:#aaa;padding:7px;border:1px solid rgba(255,200,0,.15);border-radius:8px;background:rgba(255,200,0,.04);text-align:center;">⏳ До окончания рейда: <span id="wb-dead-timer">${_fmtSec(a.seconds_left)}</span> · окно свернётся через 20с</div>
         </div>
