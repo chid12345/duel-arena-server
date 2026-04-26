@@ -158,35 +158,48 @@
     setTimeout(() => btn.classList.remove('firing'), 350);
   }
 
+  // Таймстемпы последних авто-применений (надёжнее чем isSkillOnCD —
+  // не зависит от состояния setInterval-таймера).
+  const _autoLast = { shld: 0, ult: 0 };
+
   function setAutoAttack(on) {
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
-    if (on) _state.autoTimer = setInterval(() => {
+    if (!on) return;
+    // Сброс таймстемпов при включении авто — чтобы не блокировать первый каст.
+    _autoLast.shld = 0; _autoLast.ult = 0;
+    _state.autoTimer = setInterval(() => {
       const sc = window.WBHtml._scene; const hp = sc?._state?.active?.current_hp;
       if (hp != null && hp <= 0) { setAutoAttack(false); return; }
 
-      // 1. Базовый удар (как АТАКА — это и есть _onHit). Визуально подсвечиваем АТАКУ.
+      const now = Date.now();
+
+      // 1. АТАКА — каждый тик (1 сек), визуальный пульс.
       sc?._onHit?.();
       _flashSkillBtn('atk');
 
-      // 2. УЛЬТА — если шкала готова и не на КД, выпускаем + визуальный пульс.
-      if (_state.ultra >= 1 && !isSkillOnCD('ult')) {
-        try { fireUltSkill(); startSkillCD('ult'); _state.ultra = 0;
+      // 2. УЛЬТА — когда шкала ≥100% и прошло >= 15 сек с прошлой ульты.
+      if (_state.ultra >= 1 && (now - _autoLast.ult) > 15000) {
+        try {
+          fireUltSkill(); startSkillCD('ult'); _state.ultra = 0;
+          _autoLast.ult = now;
           const fill = document.getElementById('wb-ultra-fill');
           if (fill) fill.style.width = '0%';
-          const btn = document.getElementById('wb-ultra-btn');
-          if (btn) { btn.classList.remove('ready'); btn.innerHTML = 'УДАР'; }
+          const ubtn = document.getElementById('wb-ultra-btn');
+          if (ubtn) { ubtn.classList.remove('ready'); ubtn.innerHTML = 'УДАР'; }
           _flashSkillBtn('ult');
+          window.WBHtml?.toast?.('💥 УЛЬТА (авто)!');
         } catch(_) {}
       }
 
-      // 3. ЩИТ — авто-кастуем если HP игрока < 50% и не на КД + пульс кнопки.
+      // 3. ЩИТ — HP игрока < 50% И прошло ≥8 сек с прошлого щита.
       try {
         const ps = sc?._state?.player_state;
         const phpPct = ps && ps.max_hp > 0 ? (ps.current_hp / ps.max_hp) : 1;
-        if (phpPct < 0.5 && !isSkillOnCD('shld')) {
-          window.WBHtml?.toast?.('🛡 Блок активирован (авто)');
+        if (phpPct < 0.5 && (now - _autoLast.shld) > 8000) {
           startSkillCD('shld');
+          _autoLast.shld = now;
           _flashSkillBtn('shld');
+          window.WBHtml?.toast?.('🛡 ЩИТ (авто)');
         }
       } catch(_) {}
     }, 1000);
@@ -195,7 +208,8 @@
   function reset() { _state.ultra = 0; _state.qteShown = false; _state.lastPct = 100; _state.combo = 0; _state.lastThreshold = 100;
     if (_state.comboTimer) { clearTimeout(_state.comboTimer); _state.comboTimer = null; }
     Object.values(_state.cdTimers).forEach(t => t && clearInterval(t)); _state.cdTimers = {};
-    if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; } }
+    if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
+    _autoLast.shld = 0; _autoLast.ult = 0; }
 
   Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, fireUltSkill, startSkillCD, isSkillOnCD, checkQteTrigger, checkPhaseTransition, bumpCombo, getCombo, setAutoAttack, resetBattleLogic: reset });
 })();
