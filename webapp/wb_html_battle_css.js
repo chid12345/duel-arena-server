@@ -99,17 +99,14 @@ window.WBBattleCSS = (() => {
   display:flex;align-items:center;justify-content:center;font-size:14px;
   opacity:0;animation:wb-gh 4s ease-in-out infinite;pointer-events:none;}
 @keyframes wb-gh{0%{opacity:0;transform:translateY(20px) translateX(0)}20%{opacity:.4}80%{opacity:.3}100%{opacity:0;transform:translateY(-30px) translateX(20px)}}
-.wb-dmg-num{position:absolute;font-family:'Impact','Arial Black',sans-serif;font-weight:900;
-  pointer-events:none;z-index:30;white-space:nowrap;letter-spacing:1px;
-  -webkit-text-stroke:2px #000;
-  text-shadow:0 0 12px currentColor,0 0 24px currentColor,0 2px 3px rgba(0,0,0,.85);
-  animation:wb-dmgfly2 .7s cubic-bezier(.25,.8,.4,1) forwards;}
-.wb-dmg-num.crit{-webkit-text-stroke:2.5px #4a2400;
-  text-shadow:0 0 16px #ffcc00,0 0 32px #ff8800,0 2px 3px rgba(0,0,0,.85);}
+.wb-dmg-num{position:absolute;font-family:'Courier New',monospace;font-weight:900;
+  pointer-events:none;z-index:20;text-shadow:0 0 10px currentColor;white-space:nowrap;
+  animation:wb-dmgfly2 .9s ease-out forwards;}
+.wb-dmg-num.crit{text-shadow:0 0 16px #ffcc00,0 0 32px #ff8800;}
 @keyframes wb-dmgfly2{
-  0%  {opacity:0;transform:translateX(-50%) translateY(6px)   scale(.7) }
-  15% {opacity:1;transform:translateX(-50%) translateY(-6px)  scale(1.1)}
-  100%{opacity:0;transform:translateX(-50%) translateY(-65px) scale(.9) }}
+  0%  {opacity:1;transform:translateX(-50%) translateY(0)     scale(1)   }
+  20% {opacity:1;transform:translateX(-50%) translateY(-20px) scale(1.15)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-70px) scale(.7)  }}
 .wb-tap-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
   font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;
   pointer-events:none;white-space:nowrap;
