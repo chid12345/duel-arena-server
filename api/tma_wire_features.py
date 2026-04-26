@@ -11,6 +11,7 @@ from fastapi import FastAPI
 
 from api.task_routes import register_task_routes
 from api.system_realtime_routes import register_system_realtime_routes
+from api.active_session_route import register_active_session_route
 from api.world_boss_routes import register_world_boss_routes
 from api.world_boss_ws import register_world_boss_ws_routes
 from api import world_boss_chests as _wb_chests  # noqa: F401 — side-effect: регистрация WB-сундуков в ALL_BOX_IDS
@@ -56,6 +57,11 @@ def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
             "db": db,
             "get_user_from_init_data": get_user_from_init_data,
         },
+    )
+    register_active_session_route(
+        app,
+        db=db,
+        get_user_from_init_data=get_user_from_init_data,
     )
     register_world_boss_ws_routes(app)
     register_task_routes(

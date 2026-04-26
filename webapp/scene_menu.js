@@ -20,6 +20,17 @@ class MenuScene extends Phaser.Scene {
     this._tabBtns = {};
     this._activeTab = null;
 
+    // Анти-эксплойт: если игрок открыл Menu, но на сервере он сейчас в активном
+    // бою (рейд/PvP/натиск/башня) — сразу возвращаем в нужную сцену.
+    // Не даёт «пройти» в меню после refresh во время боя.
+    try {
+      const sess = await post('/api/player/active_session', {});
+      if (sess?.ok && sess.scene && sess.scene !== 'Menu') {
+        this.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : undefined);
+        return;
+      }
+    } catch(_) {}
+
     // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок,
     // если shutdown() не успел их закрыть (гонка, exception).
     try { window._closeAllTabOverlays?.(); } catch(_) {}
