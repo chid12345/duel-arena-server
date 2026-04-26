@@ -201,7 +201,7 @@ Object.assign(WorldBossScene.prototype, {
           const isScroll = r.chest_type === 'scroll_all_12';
           const chIcon = isScroll ? '✨' : '💠';
           const chName = isScroll ? 'Свиток: +12 ко всем пассивкам' : 'Алмазный сундук';
-          const chHint = isScroll ? 'Инвентарь → Свитки' : 'Инвентарь → вкладка ⚔️ Рейд';
+          const chHint = isScroll ? 'Инвентарь → 🏆 Особые' : 'Инвентарь → 🏆 Особые → 🎲 Открыть';
           if (r.chest_added) {
             lines.push({ text: `${chIcon} ${chName}!`, size: 12, bold: true, color: '#3cff8c' });
             lines.push({ text: chHint, size: 10, color: '#aaddff' });

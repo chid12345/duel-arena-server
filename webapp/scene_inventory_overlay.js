@@ -59,8 +59,8 @@
     res_60:        { icon:'🔮', name:'Воскрешение 60% HP',    desc:'Воскреснуть с 60% HP · только в рейде босса', tab:'boss' },
     res_100:       { icon:'✨', name:'Воскрешение 100% HP',   desc:'Воскреснуть со 100% HP · только в рейде босса', tab:'boss' },
     // ── Мировой Босс: сундуки наград (выдаются за топ-урон / последний удар) ──
-    wb_gold_chest:    { icon:'🏆', name:'Золотой сундук рейда',   desc:'За последний удар по боссу · открыть в магазине', tab:'boss' },
-    wb_diamond_chest: { icon:'💠', name:'Алмазный сундук рейда',  desc:'За топ урон в рейде · открыть в магазине', tab:'boss' },
+    wb_gold_chest:    { icon:'🏆', name:'Золотой сундук рейда',   desc:'3-4 базовых свитка · нажми «Открыть»', tab:'special' },
+    wb_diamond_chest: { icon:'💠', name:'Алмазный сундук рейда',  desc:'3-5 премиум-свитков, шанс +100💎 и USDT-свитка · нажми «Открыть»', tab:'special' },
   };
 
   // Вкладка 'boss' убрана — рейд-предметы (бусты, свитки воскрешения,
@@ -231,7 +231,7 @@
         ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#fff8d0', true).setDepth(133));
         ov.push(txt(this, 28, y+27, meta.desc, 9, '#c8a878').setDepth(133));
         ov.push(txt(this, 28, y+41, `Кол-во: ${it.quantity}`, 9, '#ffe04a').setDepth(133));
-        const isBox  = it.item_id.startsWith('box_');
+        const isBox  = it.item_id.startsWith('box_') || it.item_id.endsWith('_chest');
         const isBoss = meta.tab === 'boss';
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;
         const bg2 = this.add.graphics().setDepth(133);
