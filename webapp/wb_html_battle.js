@@ -79,7 +79,7 @@
   </div>
 </div>
 <div class="wb-ticker"><div class="wb-ticker-in">${tickContent}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;${tickContent}</div></div>
-<div class="wb-boss-zone" id="wb-boss-zone" data-act="hit">
+<div class="wb-boss-zone bt-${_esc(a.boss_type||'universal')}" id="wb-boss-zone" data-act="hit">
   <div class="wb-rage2" id="wb-rage2"${pct<50?' class="wb-rage2 on"':''}></div>
   ${ghosts}
   ${[['5%','38%','×',0.4,4.2],['87%','27%','⚡',1.2,3.8],['18%','68%','🔥',2.1,4.6],['78%','62%','💧',0.9,3.5],['55%','16%','◈',1.7,4.4],['32%','78%','✦',2.6,3.9]].map(([l,t,e,d,du])=>`<div class="wb-ghost" style="left:${l};top:${t};animation-delay:${d}s;animation-duration:${du}s">${e}</div>`).join('')}
