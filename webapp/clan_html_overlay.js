@@ -135,18 +135,27 @@ function _memberRow(m, isLeader) {
   </div>`;
 }
 
-function _showMembersPanel(root, members, isLeader, scene) {
-  root.querySelector('#cl-mem-panel')?.remove();
+function _showMembersPanel(members, isLeader, scene) {
+  document.getElementById('cl-mem-panel')?.remove();
   const panel = document.createElement('div');
   panel.id = 'cl-mem-panel';
   panel.className = 'cl-mem-panel';
+  // Самостоятельный fixed-слой поверх всего (z-index выше root)
+  try {
+    const c = document.querySelector('canvas');
+    if (c) {
+      const r = c.getBoundingClientRect();
+      panel.style.cssText = `position:fixed;top:${r.top}px;left:${r.left}px;width:${r.width}px;height:${r.height}px;z-index:9200;overflow-y:auto;animation:clSlide .18s ease`;
+    }
+  } catch(_) {}
   panel.innerHTML = `
     <div class="cl-mem-hdr">
       <span class="cl-mem-hdr-back" data-act="mem-back">‹</span>
       <div class="cl-mem-hdr-title">УЧАСТНИКИ ${members.length}/20</div>
     </div>
     <div class="cl-mlist" style="padding:8px 12px 100px">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>`;
-  root.appendChild(panel);
+  document.body.appendChild(panel);
+  panel.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
   panel.addEventListener('click', e => {
     e.stopPropagation();
     const el = e.target.closest('[data-act]');
@@ -253,7 +262,7 @@ function openMyClan(scene, data) {
     const act = el.dataset.act;
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
     if (act === 'back')      { close(); scene.scene.start('Menu', { target: 'more' }); return; }
-    if (act === 'members')   { _showMembersPanel(root, members, isLeader, scene); return; }
+    if (act === 'members')   { _showMembersPanel(members, isLeader, scene); return; }
     if (act === 'nav')       { scene.scene.restart({ sub: el.dataset.sub }); return; }
     if (act === 'chat')      { scene.scene.restart({ sub: 'chat' }); return; }
     if (act === 'requests')  { scene.scene.restart({ sub: 'requests' }); return; }
