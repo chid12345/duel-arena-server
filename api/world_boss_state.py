@@ -179,6 +179,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                 "chest_type": r.get("chest_type"),
                 "contribution_pct": float(r.get("contribution_pct") or 0.0),
                 "is_victory": bool(r.get("is_victory")),
+                "total_damage": int(r.get("total_damage") or 0),
             })(_get_boss_type(r.get("boss_type"))) for r in unclaimed
         ],
     }

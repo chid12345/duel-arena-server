@@ -17,7 +17,7 @@
     const tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
     const name = ps.name || tgu.username || tgu.first_name || 'Игрок';
     const avatar = ps.emoji || ps.avatar || '⚔️';
-    const dmg = ps.total_damage || ps.damage || r.player_damage || 0;
+    const dmg = r.total_damage || ps.total_damage || ps.damage || r.player_damage || 0;
     const win = !!r.is_victory;
     const head = win ? '👑 MVP RAID' : '💀 БОЙ ОКОНЧЕН';
     const sub = _subtitle(r.contribution_pct||0, win);

@@ -61,13 +61,18 @@ class WorldBossRewardsMixin:
         return int(rid)
 
     def get_wb_unclaimed_rewards(self, user_id: int) -> List[Dict[str, Any]]:
-        """Все незабранные награды игрока (может быть несколько, если не забирал)."""
+        """Все незабранные награды игрока (может быть несколько, если не забирал).
+        Подтягиваем total_damage из player_state, чтобы экран MVP RAID
+        показывал реальный урон даже после завершения рейда."""
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT r.*, s.boss_name, s.boss_type, s.ended_at "
+            "SELECT r.*, s.boss_name, s.boss_type, s.ended_at, "
+            "       COALESCE(ps.total_damage, 0) AS total_damage "
             "FROM world_boss_rewards r "
             "JOIN world_boss_spawns s ON s.spawn_id = r.spawn_id "
+            "LEFT JOIN world_boss_player_state ps "
+            "       ON ps.spawn_id = r.spawn_id AND ps.user_id = r.user_id "
             "WHERE r.user_id=? AND r.claimed=FALSE "
             "ORDER BY r.reward_id DESC",
             (int(user_id),),

@@ -7,7 +7,7 @@
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
   function _renderBattle(root, s) {
-    _seenSkills.clear(); window.WBHtml.resetBattleLogic?.();
+    window.WBHtml.resetBattleLogic?.();
     try { Object.keys(sessionStorage).filter(k=>k.startsWith('wb_bought_')).forEach(k=>sessionStorage.removeItem(k)); } catch(_) {}
     window.WBBattleCSS?.inject();
     if (s.active && (s.active.current_hp||0) <= 0) { root.innerHTML = `<div class="wb-victwait"><div class="wb-victwait-em">🏆</div><div class="wb-victwait-t">ПОБЕДА!</div><div class="wb-victwait-s">Ожидание расчёта наград...</div></div>`; return; }
@@ -171,7 +171,15 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     if (zone) { zone.style.transform='scale(.98)'; setTimeout(() => zone.style.transform='', 100); }
   }
 
-  const _seenSkills = new Set();
+  // Запоминаем какие скиллы уже видел игрок навсегда — не показываем
+  // обучающий попап после первого знакомства.
+  const _SEEN_KEY = 'wb_seen_skill_';
+  function _hasSeenSkill(sk) {
+    try { return localStorage.getItem(_SEEN_KEY + sk) === '1'; } catch(_) { return false; }
+  }
+  function _markSkillSeen(sk) {
+    try { localStorage.setItem(_SEEN_KEY + sk, '1'); } catch(_) {}
+  }
 
   const _SKILL_INFO = {
     atk:  { icon:'⚔️', name:'АТАКА',  cd:'3 сек',      act:'hit',        tip:'Базовый урон',
@@ -204,8 +212,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
 
   function _showSkillInfo(sk, sc, s) {
     const info = _SKILL_INFO[sk]; if (!info) return;
-    if (_seenSkills.has(sk)) { _useSkillDirect(info, sc, s); return; }
-    _seenSkills.add(sk);
+    if (_hasSeenSkill(sk)) { _useSkillDirect(info, sc, s); return; }
+    _markSkillSeen(sk);
     document.getElementById('wb-sinfo-ov')?.remove();
     const ov = document.createElement('div'); ov.id = 'wb-sinfo-ov'; ov.className = 'wb-sinfo-ov';
     ov.innerHTML = `<div class="wb-sinfo">
