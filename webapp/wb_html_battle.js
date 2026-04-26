@@ -244,13 +244,6 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
           const r = await post('/api/world_boss/shield', {});
           if (r?.ok) {
             W.startSkillCD?.('shld');
-            // Визуальная подсветка кнопки на 2 сек.
-            const sBtn = document.querySelector('.wb-skill.shld');
-            if (sBtn) {
-              sBtn.classList.remove('shield-active'); void sBtn.offsetWidth;
-              sBtn.classList.add('shield-active');
-              setTimeout(() => sBtn.classList.remove('shield-active'), 2000);
-            }
           } else {
             W.toast?.('❌ ' + (r?.reason || 'Не удалось активировать'));
           }

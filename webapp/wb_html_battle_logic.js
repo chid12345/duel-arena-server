@@ -201,12 +201,6 @@
           _autoLast.shld = now;
           startSkillCD('shld');
           _flashSkillBtn('shld');
-          const shldBtn = document.querySelector('.wb-skill.shld');
-          if (shldBtn) {
-            shldBtn.classList.remove('shield-active'); void shldBtn.offsetWidth;
-            shldBtn.classList.add('shield-active');
-            setTimeout(() => shldBtn.classList.remove('shield-active'), 2000);
-          }
           // Серверная активация (асинхронно — не блокирует тик).
           // Без тоста — игрок видит вспышку + 2-сек мерцание + CD таймер.
           fetch(API + '/api/world_boss/shield', {
