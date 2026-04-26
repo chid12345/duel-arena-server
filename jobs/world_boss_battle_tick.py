@@ -36,17 +36,22 @@ def _parse_ts(value) -> datetime:
     return datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
 
-def _pick_target(top_alive: list) -> dict | None:
-    """Случайный из топ-5 живых (рандом равномерный)."""
-    if not top_alive:
+def _pick_target(top_alive: list, all_alive: list) -> dict | None:
+    """Выбор цели: 60% — топ-5 по урону (драматизм), 40% — случайный из ВСЕХ
+    живых (закрывает эксплойт 'не бью → не получаю урон').
+    Если живых нет — None."""
+    if not all_alive and not top_alive:
         return None
-    return random.choice(top_alive)
+    use_top = top_alive and random.random() < 0.6
+    pool = top_alive if use_top else (all_alive or top_alive)
+    return random.choice(pool) if pool else None
 
 
 def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
-    """Ответка: берём топ-5 живых, бьём случайного на 8% его HP."""
+    """Ответка: 60% — топ-5 по урону, 40% — случайный из всех живых."""
     top = db.wb_get_top_alive(spawn_id, limit=5)
-    target = _pick_target(top)
+    all_alive = db.wb_get_any_alive(spawn_id)
+    target = _pick_target(top, all_alive)
     if not target:
         return
     user_id = int(target["user_id"])

@@ -189,6 +189,21 @@ class WorldBossPlayerStateMixin:
         conn.close()
         return [dict(r) for r in rows]
 
+    def wb_get_any_alive(self, spawn_id: int) -> List[Dict[str, Any]]:
+        """ВСЕ живые игроки рейда (для рандом-выбора цели — анти-эксплойт
+        'не бью, не получаю урон')."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT user_id, current_hp, max_hp, total_damage "
+            "FROM world_boss_player_state "
+            "WHERE spawn_id=? AND is_dead=0",
+            (int(spawn_id),),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
     def wb_get_all_alive_ids(self, spawn_id: int) -> List[int]:
         """user_id всех живых игроков — для коронного AOE-удара."""
         conn = self.get_connection()
