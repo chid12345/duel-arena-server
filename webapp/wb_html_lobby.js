@@ -348,5 +348,25 @@ window.WBHtml = (() => {
     _setTabBar(true);
   }
 
-  return { render, toast, close, _log, _wlog };
+  // ДИАГНОСТИКА — видимое окошко на 6 сек с ответом сервера регистрации.
+  function _showDebugBox(resp, err) {
+    try {
+      document.getElementById('wb-debug-box')?.remove();
+      const d = document.createElement('div');
+      d.id = 'wb-debug-box';
+      d.style.cssText = 'position:fixed;top:8px;left:8px;right:8px;z-index:99999;'+
+        'background:rgba(0,0,30,.95);color:#0ff;border:2px solid #0ff;'+
+        'border-radius:8px;padding:8px 10px;font:11px/1.4 monospace;'+
+        'box-shadow:0 0 20px rgba(0,255,255,.4);max-height:40vh;overflow:auto;';
+      let txt = '🔍 DEBUG /register response:\n';
+      if (err) txt += 'ERROR: ' + (err.message || String(err));
+      else if (!resp) txt += 'NO RESPONSE';
+      else txt += JSON.stringify(resp, null, 2);
+      d.textContent = txt;
+      document.body.appendChild(d);
+      setTimeout(() => d.remove(), 6000);
+    } catch(_) {}
+  }
+
+  return { render, toast, close, _log, _wlog, _showDebugBox };
 })();

@@ -193,24 +193,28 @@ Object.assign(WorldBossScene.prototype, {
   async _registerForRaid() {
     if (this._regBusy) return;
     this._regBusy = true;
+    let _r = null, _err = null;
     try {
-      const r = await post('/api/world_boss/register', { init_data: tg?.initData || '' });
-      if (r.ok) {
+      _r = await post('/api/world_boss/register', { init_data: tg?.initData || '' });
+      if (_r.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         if (this._state) {
-          this._state.is_registered = r.is_registered;
-          this._state.registrants_count = r.registrants_count;
+          this._state.is_registered = _r.is_registered;
+          this._state.registrants_count = _r.registrants_count;
         }
-        this._toast(r.is_registered ? '✅ Записался в рейд!' : '↩️ Запись отменена');
+        this._toast(_r.is_registered ? '✅ Записался в рейд!' : '↩️ Запись отменена');
         this._render();
       } else {
-        this._toast('❌ ' + (r.reason || 'Ошибка'));
-        this._render(); // откатываем оптимистичный UI к актуальному состоянию
+        this._toast('❌ ' + (_r.reason || 'Ошибка'));
+        this._render();
       }
-    } catch (_) {
+    } catch (e) {
+      _err = e;
       this._toast('❌ Нет соединения');
-      this._render(); // тот же откат
+      this._render();
     }
+    // ДИАГНОСТИКА: видимое окошко с ответом сервера на 6 секунд.
+    try { window.WBHtml?._showDebugBox?.(_r, _err); } catch(_) {}
     this._regBusy = false;
   },
 
