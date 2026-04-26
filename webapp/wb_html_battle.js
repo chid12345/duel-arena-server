@@ -391,8 +391,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     const el = document.createElement('div');
     el.className = 'wb-dmg-num' + (isCrit ? ' crit' : '');
     el.textContent = isCrit ? `💥 ${dmg.toLocaleString('ru')}!` : dmg.toLocaleString('ru');
-    // Размер: норм 26-36, крит 36-50. Цвет: норм ярко-розовый/красный, крит золотой.
-    const fs = isCrit ? (36 + Math.random() * 14) : (26 + Math.random() * 10);
+    // Размер: норм 22-30, крит 30-42. Цвет: норм ярко-розовый/красный, крит золотой.
+    const fs = isCrit ? (30 + Math.random() * 12) : (22 + Math.random() * 8);
     const combo = window.WBHtml.getCombo?.() || 0;
     const cl = isCrit ? '#FFE040' : (combo > 5 ? '#FF2200' : '#FF1188');
     el.style.cssText = `left:${x}px;top:${y}px;font-size:${fs}px;color:${cl};`;

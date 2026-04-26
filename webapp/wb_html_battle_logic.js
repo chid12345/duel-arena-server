@@ -127,9 +127,19 @@
         if (count >= 10) {
           _shake();
           const sc = window.WBHtml._scene;
-          // 10 ударов с интервалом 320мс (> 300мс кулдаун сервера)
-          // Числа урона показывает addHitLog при каждом реальном ударе
+          // 10 РЕАЛЬНЫХ ударов с интервалом 320мс (> 300мс серверный кулдаун).
+          // Каждый удар через addHitLog нарисует настоящий урон возле босса.
           for (let i = 0; i < 10; i++) setTimeout(() => sc?._onHit?.(), i * 320);
+          // ВИЗУАЛЬНЫЙ ВЗРЫВ — 14 жёлтых «✦» на весь экран зоны босса.
+          // Это flair-эффект (не цифры урона, а декоративные искры) —
+          // делает суперудар реально красивым «лавиной». Тряска экрана
+          // на 1-й, 4-й и 8-й волне для веса.
+          for (let i = 0; i < 14; i++) setTimeout(() => {
+            const sym = ['✦','⚡','💥','✨','★'][i % 5];
+            _spawnBurst(sym, '#FFE040', 28 + Math.random() * 18);
+          }, i * 90);
+          setTimeout(() => _shake(), 360);
+          setTimeout(() => _shake(), 800);
           // Бонусный удар +15% через сервер (после всех 10 ударов)
           setTimeout(() => {
             fetch(API + '/api/world_boss/qte_bonus', {
@@ -140,12 +150,16 @@
               if (d.ok && d.bonus_damage) {
                 _shake();
                 try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
-                _spawnBurst(`⚡ +15%  ${d.bonus_damage.toLocaleString('ru')}`, '#FF8C00', 30);
+                // Бонус — большая оранжевая цифра с +15% подписью.
+                _spawnBurst(`⚡ +15%  ${d.bonus_damage.toLocaleString('ru')}`, '#FF8C00', 36);
+                // ещё 5 оранжевых эхо для эффекта
+                for (let j = 0; j < 5; j++) setTimeout(() => {
+                  _spawnBurst(`+${Math.round(d.bonus_damage * (.15 + Math.random() * .1)).toLocaleString('ru')}`,
+                              '#FFA040', 22 + Math.random() * 8);
+                }, j * 90 + 100);
               }
             }).catch(() => {});
           }, 3500);
-          // Визуальные числа — показываем реальные числа из _onHit через addHitLog
-          // Фейковые 60K убраны: игрок видит настоящий урон в зоне босса
         } else {
           _spawnBurst(`❌ ${count}/10 — МИМО!`, '#ff4444', 24);
         }
