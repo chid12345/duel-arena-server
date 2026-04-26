@@ -72,10 +72,15 @@ class WorldBossRegistrationMixin:
         rows = cur.fetchall()
         created = 0
         for r in rows:
+            # sqlite3.Row не поддерживает .get() — обращаемся через [].
+            # На Postgres (dict_row) тоже работает.
             uid = int(r["user_id"])
-            mhp = int(r.get("max_hp") or 100)
-            end_ = int(r.get("endurance") or 3)
-            crt = int(r.get("crit") or 3)
+            try: mhp = int(r["max_hp"] or 100)
+            except (KeyError, TypeError): mhp = 100
+            try: end_ = int(r["endurance"] or 3)
+            except (KeyError, TypeError): end_ = 3
+            try: crt = int(r["crit"] or 3)
+            except (KeyError, TypeError): crt = 3
             # Идемпотентно — если уже есть player_state, не дублируем.
             cur.execute(
                 "SELECT 1 FROM world_boss_player_state WHERE spawn_id=? AND user_id=?",
@@ -120,7 +125,8 @@ class WorldBossRegistrationMixin:
         total = 0
         for r in rows:
             uid = int(r["user_id"])
-            strength = int(r.get("strength") or 10)
+            try: strength = int(r["strength"] or 10)
+            except (KeyError, TypeError): strength = 10
             dmg = max(1, int(strength * 0.30))
             try:
                 self.log_wb_hit(spawn_id, uid, dmg, is_crit=False)
