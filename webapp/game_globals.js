@@ -370,6 +370,23 @@ function makeBackBtn(scene, label, onClick) {
    Этот helper — единая страховка: вызывается в create() КАЖДОЙ
    TabBar-сцены. Закрытие overlay'а, которого нет — безопасный no-op.
    ════════════════════════════════════════════════════════════ */
+/**
+ * Анти-эксплойт: если игрок в активном бою (рейд/PvP/натиск/башня) и
+ * пытается зайти на не-боевую сцену — возвращаем в нужную сцену.
+ * Возвращает Promise<boolean>: true если был редирект, false если можно
+ * остаться. Используется в начале create() каждой TabBar-сцены.
+ */
+window._redirectIfInBattle = async function(scene) {
+  try {
+    const sess = await post('/api/player/active_session', {});
+    if (sess?.ok && sess.scene && sess.scene !== scene.scene.key) {
+      scene.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : undefined);
+      return true;
+    }
+  } catch(_) {}
+  return false;
+};
+
 window._closeAllTabOverlays = function() {
   try { window.ClanHTML?.close?.(); } catch(_) {}
   try { window.StatsHTML?.close?.(); } catch(_) {}

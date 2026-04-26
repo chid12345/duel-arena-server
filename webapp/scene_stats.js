@@ -14,10 +14,13 @@ class StatsScene extends Phaser.Scene {
     if (data && data.player) State.player = data.player;
   }
 
-  create() {
+  async create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     this._busy = false;
+
+    // Анти-эксплойт refresh: если в активном бою — назад в бой.
+    if (await window._redirectIfInBattle?.(this)) return;
 
     const d = this._initData;
 

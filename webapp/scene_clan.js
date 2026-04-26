@@ -60,9 +60,11 @@ class ClanScene extends Phaser.Scene {
 
   update() { if (this._chatScrollFn) this._chatScrollFn(); }
 
-  create() {
+  async create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
+    // Анти-эксплойт refresh: если в активном бою — назад в бой.
+    if (await window._redirectIfInBattle?.(this)) return;
     // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок
     // (StatsHTML/WardrobeHTML/...), если shutdown не успел их закрыть.
     // Свой ClanHTML откроется ниже — его close здесь не мешает.

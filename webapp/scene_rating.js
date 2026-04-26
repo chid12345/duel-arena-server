@@ -21,6 +21,9 @@ class RatingScene extends Phaser.Scene {
     this.W = W; this.H = H;
     this._alive = true;
 
+    // Анти-эксплойт refresh: если в активном бою — назад в бой.
+    if (await window._redirectIfInBattle?.(this)) return;
+
     // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок.
     try { window._closeAllTabOverlays?.(); } catch(_) {}
 
