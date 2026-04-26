@@ -148,7 +148,10 @@ async def world_boss_reminder_toggle_inner(body: ReminderToggleBody, *, db, get_
 
 
 async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_init_data) -> dict:
-    """Toggle регистрации на следующий рейд (вкл/выкл)."""
+    """Toggle регистрации на следующий рейд (вкл/выкл).
+    Само-исцеление: если scheduled-спавна нет (scheduler ещё не отработал
+    после рестарта), создаём его на ближайший слот прямо здесь. Иначе
+    юзер зависал бы на «Нет запланированного рейда»."""
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
 
@@ -157,7 +160,14 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
 
     nxt = db.get_wb_next_scheduled()
     if not nxt:
-        return {"ok": False, "reason": "Нет запланированного рейда"}
+        try:
+            from jobs.world_boss_scheduler import _ensure_next_scheduled
+            _ensure_next_scheduled(db)
+            nxt = db.get_wb_next_scheduled()
+        except Exception:
+            pass
+        if not nxt:
+            return {"ok": False, "reason": "Не удалось запланировать рейд — попробуй позже"}
 
     spawn_id = int(nxt["spawn_id"])
     is_reg = db.wb_is_registered(spawn_id, uid)

@@ -134,6 +134,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
             "stage": int(active.get("stage") or 1),
         })(_get_boss_type(_warn_if_null(active, "boss_type", "active_spawn"))) if active else None,
         "next_scheduled": (lambda _bt: {
+            "spawn_id": int(next_sched["spawn_id"]),
             "scheduled_at": next_sched.get("scheduled_at"),
             "boss_name": next_sched.get("boss_name"),
             "boss_type": _bt.get("type"),
