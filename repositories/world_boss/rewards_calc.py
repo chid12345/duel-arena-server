@@ -29,7 +29,6 @@ from typing import Any, Optional
 
 from config.world_boss_constants import (
     WB_CHEST_TOP_DAMAGE,
-    WB_DIAMONDS_LAST_HIT,
     WB_DIAMONDS_TOP1,
     WB_DIAMONDS_TOP2,
     WB_DIAMONDS_TOP3,
@@ -119,8 +118,6 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         tiers = [WB_DIAMONDS_TOP1, WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3]
         for i, row in enumerate(top3[:3]):
             diamonds_by_rank[int(row["user_id"])] = tiers[i]
-    last_hit_uid: Optional[int] = db.get_wb_last_hitter(int(spawn_id)) if is_victory else None
-
     # Редкая удача: 3% шанс на весь рейд, что один случайный участник
     # (не топ-1) получит свиток scroll_all_12. Часто никто не получает —
     # это «заманушка-редкость» (~1 свиток на 30 рейдов).
@@ -147,8 +144,6 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         exp = max(0, int((guaranteed_xp + contrib_xp) * mult * bot_penalty))
 
         diamonds = int(diamonds_by_rank.get(uid, 0))
-        if last_hit_uid and uid == last_hit_uid:
-            diamonds += WB_DIAMONDS_LAST_HIT
 
         # Сундук: только топ-1 по урону при победе → 💠 алмазный.
         # Свиток scroll_all_12: один случайный счастливчик за рейд (3% боёв),

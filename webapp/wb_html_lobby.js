@@ -114,17 +114,18 @@ window.WBHtml = (() => {
 <div class="wb-bcard2" data-act="boss-card">
   <div class="wb-bc2-tlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
   <div class="wb-bc2-tval" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
+  <div class="wb-bc2-hint">👁 ИНФО О БОССЕ</div>
 </div>
 <div class="wb-enter" id="wb-enter-btn" data-act="enter">
   <div class="wb-enter-in"><div class="wb-enter-icon">⚔️</div>
     <div class="wb-enter-lbl">ВОЙТИ В РЕЙ<span class="wb-enter-sub">РЕЙД УЖЕ ИДЁТ · НАЖМИ!</span></div>
   </div>
 </div>
-<div class="wb-prize">
+<div class="wb-prize" data-act="rewards-info">
   <div class="wb-prize-l">
     <div class="wb-prize-lbl">⚡ ПРИЗОВОЙ ФОНД</div>
     <div class="wb-prize-coins">🪙 ${prizePool}</div>
-    <div class="wb-prize-sub">+30 гарантия · пул делится по урону</div>
+    <div class="wb-prize-sub">👆 что получишь?</div>
   </div>
   <div class="wb-prize-r">
     <div class="wb-prize-cnt">${regCnt}</div>
@@ -132,14 +133,6 @@ window.WBHtml = (() => {
   </div>
 </div>
 <div class="wb-avstrip">${avatarsHTML}<span class="wb-av-more">${regCnt||0} участников</span></div>
-<div class="wb-recon" data-act="boss-card">
-  <div class="wb-recon-ic">🔍</div>
-  <div class="wb-recon-txt">
-    <div class="wb-recon-main">Разведка босса</div>
-    <div class="wb-recon-sub">Узнай слабые места и стику — +15% эффективность</div>
-  </div>
-  <div class="wb-recon-arr">›</div>
-</div>
 <div class="wb-auto-row" data-act="auto-toggle">
   <div class="wb-auto-ic">🤖</div>
   <div class="wb-auto-txt">
@@ -252,6 +245,7 @@ window.WBHtml = (() => {
         })();
       }
       else if (act==='boss-card')    { window.WBHtml.showBossCard?.(_state); }
+      else if (act==='rewards-info') { window.WBHtml.showRewardsInfo?.(_state); }
       else if (act==='auto-toggle')  {
         // Тогл «авто-бой из лобби»: бот зайдёт за тебя если будешь офлайн.
         const tg = document.getElementById('wb-auto-toggle');

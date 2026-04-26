@@ -44,15 +44,20 @@ window.WBLobbyCSS = (() => {
   background:linear-gradient(180deg,#00ffee,#00aacc);-webkit-background-clip:text;background-clip:text;color:transparent;
   animation:wb-cp 1s ease-in-out infinite;}
 @keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
+.wb-bc2-hint{margin-top:6px;font-size:9px;font-weight:800;letter-spacing:1.5px;
+  color:#ff88dd;text-align:center;text-transform:uppercase;
+  text-shadow:0 0 8px rgba(255,80,200,.4);opacity:.85;}
 
 /* ── Призовой фонд ── */
-.wb-prize{margin:6px 14px 0;padding:10px 12px;border-radius:12px;
+.wb-prize{margin:6px 14px 0;padding:10px 12px;border-radius:12px;cursor:pointer;
   background:rgba(255,160,0,.06);border:1px solid rgba(255,160,0,.2);
-  display:flex;justify-content:space-between;align-items:center;gap:8px;}
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  transition:transform .12s,background .15s;}
+.wb-prize:active{transform:scale(.99);background:rgba(255,160,0,.1);}
 .wb-prize-l{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
 .wb-prize-lbl{font-size:8px;font-weight:800;letter-spacing:1.5px;color:#ffdd44;text-shadow:0 0 5px rgba(255,210,0,.4);}
 .wb-prize-coins{font-size:20px;font-weight:900;color:#ffdd44;text-shadow:0 0 10px rgba(255,200,0,.6);white-space:nowrap;}
-.wb-prize-sub{font-size:8px;color:rgba(255,255,255,.3);}
+.wb-prize-sub{font-size:9px;color:#ffaa44;font-weight:700;letter-spacing:.5px;}
 .wb-prize-r{flex-shrink:0;text-align:center;}
 .wb-prize-cnt{font-size:28px;font-weight:900;color:#00BFFF;text-shadow:0 0 10px rgba(0,191,255,.6);line-height:1;}
 .wb-prize-players{font-size:9px;color:rgba(255,255,255,.35);margin-top:1px;white-space:nowrap;}
