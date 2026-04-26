@@ -39,16 +39,19 @@
       return `<div class="wb-ghost" style="${pos};animation-delay:${i*1.3}s">${['⚔️','🛡️','🧙'][i]}</div>`;
     }).join('');
 
+    // Когда мёртв в активном рейде — кнопки «Покинуть бой» нет.
+    // Из рейда выходить нельзя: уход = поражение. Игрок ждёт окончания
+    // рейда (или воскрешается). Награда выдастся автоматически после.
     const deadHTML = `
       <div class="wb-dead">
         <div class="wb-dead-t">💀 Вы пали в бою</div>
-        <div style="font-size:10px;color:#667;margin-bottom:4px">Используй свиток воскрешения</div>
+        <div style="font-size:10px;color:#667;margin-bottom:4px">Используй свиток воскрешения или дождись окончания рейда</div>
         <div class="wb-res-row">
           <div class="wb-res-b" data-act="res" data-t="res_30"><span class="ri">💊</span>30% HP<br><small style="color:#666">500 🔥</small></div>
           <div class="wb-res-b" data-act="res" data-t="res_60"><span class="ri">💉</span>60% HP<br><small style="color:#666">40 💠</small></div>
           <div class="wb-res-b" data-act="res" data-t="res_100"><span class="ri">✨</span>100% HP<br><small style="color:#666">80 💠</small></div>
         </div>
-        <div style="margin-top:8px;cursor:pointer;font-size:10px;color:#556;padding:7px;border:1px solid rgba(255,255,255,.07);border-radius:8px;" data-act="back">🚪 Покинуть бой</div>
+        <div style="margin-top:8px;font-size:10px;color:#aaa;padding:7px;border:1px solid rgba(255,200,0,.15);border-radius:8px;background:rgba(255,200,0,.04);text-align:center;">⏳ До окончания рейда: <span id="wb-dead-timer">${_fmtSec(a.seconds_left)}</span></div>
       </div>`;
 
     const fmtHp = v => v >= 1000 ? Math.round(v/1000)+'K' : String(v||0);
@@ -291,6 +294,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     const nums = document.getElementById('wb-boss-nums');
     if (nums) nums.textContent = `${(a.current_hp||0).toLocaleString('ru')} / ${(a.max_hp||0).toLocaleString('ru')} · ${pct}%`;
     const timer = document.getElementById('wb-bl-timer'); if (timer) timer.textContent = _fmtSec(a.seconds_left);
+    const dt = document.getElementById('wb-dead-timer'); if (dt) dt.textContent = _fmtSec(a.seconds_left);
     const ps = state.player_state;
     if (ps) {
       const ppct = ps.max_hp > 0 ? Math.round(ps.current_hp / ps.max_hp * 100) : 0;
