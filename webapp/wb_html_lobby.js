@@ -202,12 +202,20 @@ window.WBHtml = (() => {
       const el = e.target.closest('[data-act]'); if (!el) return;
       try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
       const act = el.dataset.act;
-      if (act==='back')       { close(); _scene?.scene?.start?.('WorldBoss'); }
+      if (act==='back')       { close(); _scene?.scene?.start?.('Menu',{returnTab:'more'}); }
       else if (act==='enter') { try { localStorage.removeItem('wb_left_raid'); } catch(_) {} close(); _scene?.scene?.restart?.(); }
       else if (act==='join')  {
         // Защита от двойного клика — если уже идёт запрос, игнорируем.
         if (el.classList.contains('busy')) return;
         el.classList.add('busy');
+        // Мгновенный визуальный feedback: меняем иконку на «...»
+        const _ico = el.querySelector('.wb-join-ico');
+        const _arr = el.querySelector('.wb-join-arr');
+        const _icoOrig = _ico?.textContent;
+        const _arrOrig = _arr?.textContent;
+        if (_ico) _ico.textContent = '⏳';
+        if (_arr) _arr.textContent = '…';
+        try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
         (async () => {
           try {
             if (!_scene) return;
@@ -216,6 +224,9 @@ window.WBHtml = (() => {
             if (!wasReg && _state?.is_registered && !_state?.reminder_opt_in) await _scene._toggleReminder?.();
             if (wasReg && !_state?.is_registered && _state?.reminder_opt_in) await _scene._toggleReminder?.();
           } finally {
+            // Если по какой-то причине _render не пересоздал DOM — возвращаем визуал.
+            if (_ico && _ico.isConnected && _ico.textContent === '⏳') _ico.textContent = _icoOrig || '⚔️';
+            if (_arr && _arr.isConnected && _arr.textContent === '…') _arr.textContent = _arrOrig || '›';
             el.classList.remove('busy');
           }
         })();

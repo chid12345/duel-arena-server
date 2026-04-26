@@ -379,4 +379,5 @@ window._closeAllTabOverlays = function() {
   try { window.BootsHTML?.close?.(); } catch(_) {}
   try { window.ShieldHTML?.close?.(); } catch(_) {}
   try { window.RingHTML?.close?.(); } catch(_) {}
+  try { window.WBHtml?.close?.(); } catch(_) {}
 };

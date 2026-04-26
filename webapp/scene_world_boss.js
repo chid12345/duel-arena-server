@@ -52,6 +52,7 @@ class WorldBossScene extends Phaser.Scene {
         return;
       }
       tg?.HapticFeedback?.impactOccurred('light');
+      try { window.WBHtml?.close?.(); } catch(_) {}
       this.scene.start('Menu', { returnTab: 'more' });
     });
 
