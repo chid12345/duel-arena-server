@@ -85,6 +85,38 @@ window.WBBattleCSS = (() => {
     rgba(0,0,0,.85) 0%, rgba(15,5,35,.55) 35%,
     rgba(15,5,35,.15) 70%, transparent 100%);}
 
+/* Лавовый Титан — лавовый водопад в каньоне.
+   Rim light: за спиной босса яркий свет, ему нужно сильное оранжевое
+   контурное свечение. Heat haze глобально — горячий воздух плавает. */
+.wb-boss-zone.bt-lava{
+  background-image:url('bosses/bg/lava.png');
+  background-size:cover;background-position:center bottom;background-color:#1a0500;
+  /* Лавовый водопад мерцает яркостью — медленнее, более «текучий» */
+  animation:wb-lava-bg-flicker 3.2s ease-in-out infinite;}
+@keyframes wb-lava-bg-flicker{
+  0%,100%{filter:brightness(.95) saturate(1.05) hue-rotate(0deg)}
+  35%   {filter:brightness(1.15) saturate(1.2)  hue-rotate(-3deg)}
+  60%   {filter:brightness(.92) saturate(1.1)  hue-rotate(2deg)}}
+/* Тёмный туман с оранжевым отблеском у пола */
+.wb-boss-zone.bt-lava::before{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:34%;pointer-events:none;z-index:1;
+  background:linear-gradient(to top,
+    rgba(40,5,0,.85) 0%, rgba(80,15,0,.5) 30%,
+    rgba(80,15,0,.15) 65%, transparent 100%);}
+/* Heat haze — глобальное дрожание горячего воздуха поверх ВСЕЙ сцены.
+   Слабое skew + смещение, маска снизу вверх для растворения края. */
+.wb-boss-zone.bt-lava::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:8;
+  backdrop-filter:blur(.7px);
+  -webkit-backdrop-filter:blur(.7px);
+  -webkit-mask-image:linear-gradient(to top, black 0%, black 70%, transparent 100%);
+  mask-image:linear-gradient(to top, black 0%, black 70%, transparent 100%);
+  animation:wb-lava-haze 4s ease-in-out infinite;}
+@keyframes wb-lava-haze{
+  0%,100%{transform:translate(0,0) skewX(0)}
+  25%   {transform:translate(-2px,1px) skewX(.5deg)}
+  50%   {transform:translate(1.5px,-1px) skewX(-.4deg)}
+  75%   {transform:translate(-1px,1px) skewX(.3deg)}}
+
 /* Древний Страж — улей с фиолетовыми коконами. Bio-luminescence:
    фон медленно «дышит» зумом + коконы пульсируют синхронно с боссом. */
 .wb-boss-zone.bt-spider{
@@ -191,6 +223,28 @@ window.WBBattleCSS = (() => {
 .wb-boss-zone.bt-lich .wb-bimg2{
   -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);}
+
+/* Лавовый Титан: rim light от водопада сзади + медленное дыхание.
+   Сильное оранжевое drop-shadow создаёт контурный свет на каменной броне. */
+.wb-boss-zone.bt-lava .wb-bimg2{
+  --boss-glow:#ff5520;
+  -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
+  animation:wb-bfloat 4.2s ease-in-out infinite,
+            wb-lava-rim 3.2s ease-in-out infinite;}
+/* Rim light: 2 слоя — яркий контур от водопада + общий тёплый glow.
+   Анимация мерцает синхронно с фоном-водопадом (3.2s). */
+@keyframes wb-lava-rim{
+  0%,100%{filter:
+    drop-shadow(0 0 12px rgba(255,90,20,.85))
+    drop-shadow(0 0 26px rgba(220,50,0,.6))
+    brightness(1)
+    saturate(1.15);}
+  50%{filter:
+    drop-shadow(0 0 22px rgba(255,160,40,1))
+    drop-shadow(0 0 44px rgba(255,80,0,.85))
+    brightness(1.15)
+    saturate(1.35);}}
 
 /* Древний Страж: фиолетовое bio-luminescence свечение + быстрая вибрация
    конечностей (насекомое). Свечение пульсирует синхронно с фоном-ульем. */
