@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390,initial-scale=1">
+<title>WB · Боевая сцена · ОГНЕННЫЙ КОЛОСС</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#020005;color:#e0e0e0;font:14px -apple-system,Segoe UI,Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:18px;}
+  .row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px;}
+
+  .scene{position:relative;width:390px;height:680px;border-radius:14px;overflow:hidden;
+    background:#1a0500;border:1px solid rgba(255,100,0,.4);
+    box-shadow:0 0 60px rgba(255,80,0,.3);}
+
+  /* ── 1. ФОН ── (с пульсом затемнения) */
+  .bg{position:absolute;inset:0;z-index:1;
+    background-image:url('bosses/bg/fire.png');
+    background-size:cover;background-position:center bottom;
+    animation:bg-pulse 2.6s ease-in-out infinite;}
+  @keyframes bg-pulse{
+    0%,100%{filter:brightness(1.0)  saturate(1.05)}
+    50%   {filter:brightness(.78)   saturate(1.15)}}
+  /* Лава у ног — оранжевое свечение */
+  .bg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:46%;
+    background:linear-gradient(to top,
+      rgba(255,90,0,.45) 0%, rgba(220,60,0,.25) 35%,
+      rgba(180,40,0,.10) 70%, transparent 100%);
+    mix-blend-mode:screen;pointer-events:none;}
+
+  /* Heat haze — дрожание воздуха */
+  .haze{position:absolute;left:0;right:0;bottom:0;height:55%;z-index:3;
+    pointer-events:none;backdrop-filter:blur(.6px);
+    -webkit-backdrop-filter:blur(.6px);
+    animation:haze-shimmer 5s ease-in-out infinite;}
+  @keyframes haze-shimmer{
+    0%,100%{transform:translateX(0) skewX(0)}
+    25%   {transform:translateX(-1.5px) skewX(.4deg)}
+    75%   {transform:translateX(1.5px) skewX(-.4deg)}}
+
+  /* ── 2. БОСС ── */
+  .boss-wrap{position:absolute;left:50%;bottom:13%;z-index:5;
+    transform:translateX(-50%);pointer-events:none;
+    height:67%;}
+  .boss{height:100%;width:auto;display:block;
+    -webkit-mask-image:linear-gradient(to bottom,
+      black 0%, black 74%, rgba(0,0,0,.6) 88%, transparent 100%);
+    mask-image:linear-gradient(to bottom,
+      black 0%, black 74%, rgba(0,0,0,.6) 88%, transparent 100%);
+    animation:boss-breathe 3.2s ease-in-out infinite,
+              boss-glow 2.6s ease-in-out infinite;}
+  @keyframes boss-breathe{
+    0%,100%{transform:scale(1)    translateY(0)}
+    50%   {transform:scale(1.025) translateY(-3px)}}
+  /* Пульсация ядра — drop-shadow становится ярче в такт с фоном (синхронно). */
+  @keyframes boss-glow{
+    0%,100%{filter:
+      drop-shadow(0 0 14px rgba(255,120,30,.7))
+      drop-shadow(0 0 32px rgba(255,80,0,.55))
+      drop-shadow(0 0 60px rgba(220,40,0,.4))
+      brightness(1)
+      saturate(1.1);}
+    50%{filter:
+      drop-shadow(0 0 28px rgba(255,180,60,.95))
+      drop-shadow(0 0 60px rgba(255,100,0,.85))
+      drop-shadow(0 0 110px rgba(255,60,0,.65))
+      brightness(1.18)
+      saturate(1.3);}}
+
+  /* ── 3. ИСКРЫ ── много, медленно вверх */
+  .vfx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;}
+  .p{position:absolute;width:5px;height:5px;border-radius:50%;
+    background:#ff8833;
+    box-shadow:0 0 10px #ff8833,0 0 20px #ff5500;
+    opacity:0;animation:p-up 6s linear infinite;}
+  .p.s2{width:3px;height:3px;animation-duration:8s;background:#ffcc44;
+    box-shadow:0 0 8px #ffcc44,0 0 18px #ffaa00;}
+  .p.s3{width:7px;height:7px;animation-duration:7s;opacity:.7;background:#ff5500;
+    box-shadow:0 0 12px #ff5500,0 0 22px #cc2200;}
+  @keyframes p-up{
+    0%{transform:translateY(0) scale(.3);opacity:0}
+    8%{opacity:1}
+    88%{opacity:.7}
+    100%{transform:translateY(-460px) scale(1.1);opacity:0}}
+  /* 22 искры */
+  .p:nth-child(1){left:6%; bottom:8%; animation-delay:.0s}
+  .p:nth-child(2){left:14%;bottom:6%; animation-delay:1.0s}
+  .p:nth-child(3){left:22%;bottom:8%; animation-delay:.5s}
+  .p:nth-child(4){left:30%;bottom:6%; animation-delay:2.0s}
+  .p:nth-child(5){left:38%;bottom:8%; animation-delay:.3s}
+  .p:nth-child(6){left:46%;bottom:6%; animation-delay:1.5s}
+  .p:nth-child(7){left:54%;bottom:8%; animation-delay:1.1s}
+  .p:nth-child(8){left:62%;bottom:6%; animation-delay:2.4s}
+  .p:nth-child(9){left:70%;bottom:8%; animation-delay:.9s}
+  .p:nth-child(10){left:78%;bottom:6%;animation-delay:3.0s}
+  .p:nth-child(11){left:86%;bottom:8%;animation-delay:.7s}
+  .p:nth-child(12){left:94%;bottom:6%;animation-delay:1.7s}
+  .p:nth-child(13){left:10%;bottom:8%;animation-delay:3.3s}
+  .p:nth-child(14){left:34%;bottom:7%;animation-delay:4.0s}
+  .p:nth-child(15){left:58%;bottom:8%;animation-delay:3.5s}
+  .p:nth-child(16){left:82%;bottom:7%;animation-delay:4.4s}
+  .p:nth-child(17){left:18%;bottom:7%;animation-delay:2.7s}
+  .p:nth-child(18){left:50%;bottom:6%;animation-delay:.4s}
+  .p:nth-child(19){left:66%;bottom:7%;animation-delay:3.7s}
+  .p:nth-child(20){left:42%;bottom:8%;animation-delay:5.0s}
+  .p:nth-child(21){left:74%;bottom:7%;animation-delay:5.5s}
+  .p:nth-child(22){left:26%;bottom:6%;animation-delay:4.7s}
+
+  .title{position:absolute;top:14px;left:14px;right:14px;z-index:10;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;font-weight:800;letter-spacing:2px;color:#ff8833;
+    text-shadow:0 0 8px rgba(255,100,0,.7);text-transform:uppercase;}
+  .title .hp{font-family:'Courier New',monospace;color:#ff4488;}
+
+  .quake-btn{position:absolute;left:50%;bottom:24px;z-index:25;
+    transform:translateX(-50%);padding:11px 22px;border-radius:30px;
+    background:linear-gradient(135deg,#ff5500,#bb2200);color:#fff;
+    border:none;font-size:11px;font-weight:900;letter-spacing:2px;
+    cursor:pointer;box-shadow:0 0 20px rgba(255,80,0,.5);}
+  .scene.shake{animation:quake .55s ease-out;}
+  @keyframes quake{
+    0%,100%{transform:translate(0,0)}
+    10%{transform:translate(-3px,2px)}
+    25%{transform:translate(4px,-3px)}
+    40%{transform:translate(-3px,-2px)}
+    55%{transform:translate(2px,3px)}
+    70%{transform:translate(-2px,1px)}
+    85%{transform:translate(2px,-1px)}}
+
+  .legend{max-width:340px;font-size:12px;line-height:1.6;color:#ffaa88;}
+  .legend h3{color:#ff8833;font-size:14px;margin-bottom:10px;letter-spacing:1px;}
+  .legend code{background:rgba(255,100,0,.1);padding:1px 5px;border-radius:3px;color:#ffcc88;font-size:11px;}
+  .legend ul{padding-left:18px;margin:6px 0;}
+  .legend li{margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="scene" id="scene">
+    <div class="bg"></div>
+    <div class="title">
+      <span>🔥 ОГНЕННЫЙ КОЛОСС</span>
+      <span class="hp">HP 11 800 / 16 000</span>
+    </div>
+    <div class="boss-wrap">
+      <img class="boss" src="bosses/boss_fire.png" alt="Fire">
+    </div>
+    <div class="haze"></div>
+    <div class="vfx">
+      <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+      <div class="p s2"></div><div class="p"></div><div class="p s3"></div><div class="p"></div>
+      <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+      <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+      <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+      <div class="p"></div><div class="p"></div>
+    </div>
+    <button class="quake-btn" id="quake">⚔ АТАКА БОССА</button>
+  </div>
+
+  <div class="legend">
+    <h3>📋 Огненный Колосс — что собрано</h3>
+    <ul>
+      <li><b>Фон</b> — крепость в лаве с цепями (<code>bg/fire.png</code>)</li>
+      <li><b>Фон пульсирует</b> — синхронно затемняется на 22% за 2.6с,
+        акцентирует раскалённое ядро</li>
+      <li><b>Лава у ног</b> — оранжевый градиент 46% высоты с <code>mix-blend-mode:screen</code></li>
+      <li><b>Heat haze</b> — backdrop-filter blur(.6px) + skew, дрожит 5с</li>
+      <li><b>Босс</b> высота 67%, маска лап растворяет нижние 26% в лаву</li>
+      <li><b>Свечение</b> — 3-слойный <code>drop-shadow #ff6600</code>,
+        пульсирует синхронно с фоном (ядро в груди «горит»)</li>
+      <li><b>Искры</b> — 22 шт., 3 размера (мелкие/средние/крупные),
+        оранжевые/жёлтые/красные, 6–8с цикл</li>
+      <li><b>Тряска</b> — нажми ⚔ АТАКА чтобы увидеть тяжёлую тряску.
+        В реальной игре сработает на coronation strikes (75/50/25%)</li>
+    </ul>
+  </div>
+</div>
+<script>
+  document.getElementById('quake').addEventListener('click', () => {
+    const sc = document.getElementById('scene');
+    sc.classList.remove('shake'); void sc.offsetWidth;
+    sc.classList.add('shake');
+  });
+</script>
+</body>
+</html>

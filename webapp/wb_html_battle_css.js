@@ -84,6 +84,35 @@ window.WBBattleCSS = (() => {
   background:linear-gradient(to top,
     rgba(0,0,0,.85) 0%, rgba(15,5,35,.55) 35%,
     rgba(15,5,35,.15) 70%, transparent 100%);}
+
+/* Огненный Колосс — крепость в лаве, ноги в потоке расплавленного металла */
+.wb-boss-zone.bt-fire{
+  background-image:url('bosses/bg/fire.png');
+  background-size:cover;background-position:center bottom;background-color:#1a0500;
+  /* Лёгкое «дыхание» фона: он слегка темнеет в такт с пульсом ядра босса.
+     Затемнение акцентирует раскалённое ядро в груди. */
+  animation:wb-fire-bg-pulse 2.6s ease-in-out infinite;}
+@keyframes wb-fire-bg-pulse{
+  0%,100%{filter:brightness(1.0)   saturate(1.05)}
+  50%   {filter:brightness(.78)    saturate(1.15)}}
+/* Лава у ног — оранжевый туман-свечение, ступни тонут в потоке. */
+.wb-boss-zone.bt-fire::before{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:46%;pointer-events:none;z-index:1;
+  background:linear-gradient(to top,
+    rgba(255,90,0,.45) 0%, rgba(220,60,0,.25) 35%,
+    rgba(180,40,0,.10) 70%, transparent 100%);
+  mix-blend-mode:screen;}
+/* Heat haze — лёгкое дрожание воздуха над лавой через wavy mask.
+   blur+animate-skew создаёт ощущение горячего воздуха. */
+.wb-boss-zone.bt-fire::after{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:55%;pointer-events:none;z-index:3;
+  backdrop-filter:blur(.6px);
+  -webkit-backdrop-filter:blur(.6px);
+  animation:wb-fire-haze 5s ease-in-out infinite;}
+@keyframes wb-fire-haze{
+  0%,100%{transform:translateX(0) skewX(0)}
+  25%   {transform:translateX(-1.5px) skewX(.4deg)}
+  75%   {transform:translateX(1.5px) skewX(-.4deg)}}
 .wb-bimg2{position:absolute;left:50%;top:50%;
   --boss-glow:#9b30ff;
   transform:translate(-50%,-52%);
@@ -95,6 +124,33 @@ window.WBBattleCSS = (() => {
 .wb-boss-zone.bt-lich .wb-bimg2{
   -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);}
+
+/* Огненный Колосс: оранжевое мощное свечение + пульсация ядра + маска ног в лаву */
+.wb-boss-zone.bt-fire .wb-bimg2{
+  --boss-glow:#ff6600;
+  -webkit-mask-image:linear-gradient(to bottom, black 0%, black 74%, rgba(0,0,0,.6) 88%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 0%, black 74%, rgba(0,0,0,.6) 88%, transparent 100%);
+  /* Усиленное оранжевое drop-shadow + пульсация ядра в груди.
+     Анимация wb-bcore-pulse даёт «горячее» дыхание реактора. */
+  animation:wb-bfloat 3.2s ease-in-out infinite,
+            wb-fire-glow 2.6s ease-in-out infinite;}
+/* Кастомное мощное свечение для огненного — ярче и насыщеннее */
+@keyframes wb-fire-glow{
+  0%,100%{filter:
+    drop-shadow(0 0 14px rgba(255,120,30,.7))
+    drop-shadow(0 0 32px rgba(255,80,0,.55))
+    drop-shadow(0 0 60px rgba(220,40,0,.4))
+    brightness(1)
+    saturate(1.1);}
+  50%{filter:
+    drop-shadow(0 0 28px rgba(255,180,60,.95))
+    drop-shadow(0 0 60px rgba(255,100,0,.85))
+    drop-shadow(0 0 110px rgba(255,60,0,.65))
+    brightness(1.18)
+    saturate(1.3);}}
+/* Контактная тень-лужа лавы под ногами */
+.wb-boss-zone.bt-fire .wb-bimg2 + .wb-fire-puddle,
+.wb-boss-zone.bt-fire::after{}
 
 /* Теневой Страж: бирюзовое свечение глаз + анимация «рывка» каждые 4.5с.
    Маска снизу — лапы в чёрные камни. */
@@ -120,6 +176,26 @@ window.WBBattleCSS = (() => {
   0%,55%,72%,100%{transform:translate(-50%,-52%) scale(1)}
   60%{transform:translate(calc(-50% + 7px),-52%) scale(1.04)}
   66%{transform:translate(calc(-50% - 4px),-52%) scale(1)}}
+
+/* Усиленная тряска для огненного типа — более «тяжёлая» при атаке */
+.wb-boss-zone.bt-fire.wb-shake,
+#wb-root.wb-shake .wb-boss-zone.bt-fire{
+  animation:wb-fire-quake .55s ease-out;}
+@keyframes wb-fire-quake{
+  0%,100%{transform:translate(0,0)}
+  10%{transform:translate(-3px,2px)}
+  25%{transform:translate(4px,-3px)}
+  40%{transform:translate(-3px,-2px)}
+  55%{transform:translate(2px,3px)}
+  70%{transform:translate(-2px,1px)}
+  85%{transform:translate(2px,-1px)}}
+
+/* Дополнительные искры для огненного — много мелких частиц снизу вверх.
+   Включается через ::before на отдельном слое .wb-fire-sparks. */
+.wb-boss-zone.bt-fire .wb-ghost{
+  /* Перекрашиваем эмодзи-духов в оранжевые искры */
+  filter:hue-rotate(-50deg) saturate(2) brightness(1.3);
+  color:#ffaa44;}
 @keyframes wb-bfloat{
   0%,100%{transform:translate(-50%,-52%) scale(1) rotate(0deg)}
   30%{transform:translate(-50%,-55%) scale(1.02) rotate(.4deg)}
