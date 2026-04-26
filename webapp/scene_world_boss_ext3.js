@@ -205,8 +205,12 @@ Object.assign(WorldBossScene.prototype, {
         this._render();
       } else {
         this._toast('❌ ' + (r.reason || 'Ошибка'));
+        this._render(); // откатываем оптимистичный UI к актуальному состоянию
       }
-    } catch (_) { this._toast('❌ Нет соединения'); }
+    } catch (_) {
+      this._toast('❌ Нет соединения');
+      this._render(); // тот же откат
+    }
     this._regBusy = false;
   },
 

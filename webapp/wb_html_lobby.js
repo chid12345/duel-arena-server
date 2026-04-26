@@ -205,29 +205,38 @@ window.WBHtml = (() => {
       if (act==='back')       { close(); _scene?.scene?.start?.('Menu',{returnTab:'more'}); }
       else if (act==='enter') { try { localStorage.removeItem('wb_left_raid'); } catch(_) {} close(); _scene?.scene?.restart?.(); }
       else if (act==='join')  {
-        // Защита от двойного клика — если уже идёт запрос, игнорируем.
+        // Защита от двойного клика.
         if (el.classList.contains('busy')) return;
         el.classList.add('busy');
-        // Мгновенный визуальный feedback: меняем иконку на «...»
-        const _ico = el.querySelector('.wb-join-ico');
-        const _arr = el.querySelector('.wb-join-arr');
-        const _icoOrig = _ico?.textContent;
-        const _arrOrig = _arr?.textContent;
-        if (_ico) _ico.textContent = '⏳';
-        if (_arr) _arr.textContent = '…';
+        // Оптимистично переключаем UI — пользователь сразу видит результат.
+        // Если API не подтвердит — _render() в _registerForRaid вернёт правильный вид.
+        const willJoin = !el.classList.contains('joined');
+        el.classList.toggle('joined', willJoin);
+        const ico  = el.querySelector('.wb-join-ico');
+        const main = el.querySelector('.wb-join-main');
+        const arr  = el.querySelector('.wb-join-arr');
+        const sub  = el.querySelector('.wb-join-sub');
+        if (ico)  ico.textContent  = willJoin ? '✅' : '⚔️';
+        if (main) main.textContent = willJoin ? 'Ты участвуешь · Напоминание вкл.' : 'Участвую + напомни за 5 мин';
+        if (arr)  arr.textContent  = willJoin ? '✓' : '›';
+        // Счётчик игроков — оптимистично.
+        const avMore = root.querySelector('.wb-av-more');
+        const prizeCnt = root.querySelector('.wb-prize-cnt');
+        const cur = parseInt(avMore?.textContent) || 0;
+        const next = Math.max(0, cur + (willJoin ? 1 : -1));
+        if (avMore)   avMore.textContent = next + ' участников';
+        if (prizeCnt) prizeCnt.textContent = next;
+        if (sub)      sub.textContent = next > 0 ? `${next} игроков уже записались` : 'Зарегистрируйся и получи уведомление';
         try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
         (async () => {
           try {
             if (!_scene) return;
             const wasReg = !!_state?.is_registered;
-            await _scene._registerForRaid?.(); // _registerForRaid сам обновит _state и вызовет _render → лобби перерисуется
+            await _scene._registerForRaid?.(); // обновит _state и сделает _render
             if (!wasReg && _state?.is_registered && !_state?.reminder_opt_in) await _scene._toggleReminder?.();
             if (wasReg && !_state?.is_registered && _state?.reminder_opt_in) await _scene._toggleReminder?.();
           } finally {
-            // Если по какой-то причине _render не пересоздал DOM — возвращаем визуал.
-            if (_ico && _ico.isConnected && _ico.textContent === '⏳') _ico.textContent = _icoOrig || '⚔️';
-            if (_arr && _arr.isConnected && _arr.textContent === '…') _arr.textContent = _arrOrig || '›';
-            el.classList.remove('busy');
+            if (el.isConnected) el.classList.remove('busy');
           }
         })();
       }
