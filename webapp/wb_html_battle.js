@@ -40,18 +40,23 @@
     }).join('');
 
     // Когда мёртв в активном рейде — кнопки «Покинуть бой» нет.
-    // Из рейда выходить нельзя: уход = поражение. Игрок ждёт окончания
-    // рейда (или воскрешается). Награда выдастся автоматически после.
+    // Через 20 сек окно сжимается до тонкой полоски, чтобы не загораживать
+    // продолжающийся бой. Кликом на полоску можно развернуть обратно.
     const deadHTML = `
-      <div class="wb-dead">
-        <div class="wb-dead-t">💀 Вы пали в бою</div>
-        <div style="font-size:10px;color:#667;margin-bottom:4px">Используй свиток воскрешения или дождись окончания рейда</div>
-        <div class="wb-res-row">
-          <div class="wb-res-b" data-act="res" data-t="res_30"><span class="ri">💊</span>30% HP<br><small style="color:#666">500 🔥</small></div>
-          <div class="wb-res-b" data-act="res" data-t="res_60"><span class="ri">💉</span>60% HP<br><small style="color:#666">40 💠</small></div>
-          <div class="wb-res-b" data-act="res" data-t="res_100"><span class="ri">✨</span>100% HP<br><small style="color:#666">80 💠</small></div>
+      <div class="wb-dead" id="wb-dead">
+        <div class="wb-dead-full">
+          <div class="wb-dead-t">💀 Вы пали в бою</div>
+          <div style="font-size:10px;color:#667;margin-bottom:4px">Используй свиток воскрешения или дождись окончания рейда</div>
+          <div class="wb-res-row">
+            <div class="wb-res-b" data-act="res" data-t="res_30"><span class="ri">💊</span>30% HP<br><small style="color:#666">500 🔥</small></div>
+            <div class="wb-res-b" data-act="res" data-t="res_60"><span class="ri">💉</span>60% HP<br><small style="color:#666">40 💠</small></div>
+            <div class="wb-res-b" data-act="res" data-t="res_100"><span class="ri">✨</span>100% HP<br><small style="color:#666">80 💠</small></div>
+          </div>
+          <div style="margin-top:8px;font-size:10px;color:#aaa;padding:7px;border:1px solid rgba(255,200,0,.15);border-radius:8px;background:rgba(255,200,0,.04);text-align:center;">⏳ До окончания рейда: <span id="wb-dead-timer">${_fmtSec(a.seconds_left)}</span> · окно свернётся через 20с</div>
         </div>
-        <div style="margin-top:8px;font-size:10px;color:#aaa;padding:7px;border:1px solid rgba(255,200,0,.15);border-radius:8px;background:rgba(255,200,0,.04);text-align:center;">⏳ До окончания рейда: <span id="wb-dead-timer">${_fmtSec(a.seconds_left)}</span></div>
+        <div class="wb-dead-mini" data-act="dead-expand">
+          💀 Ты пал · ⏳ <span id="wb-dead-timer-mini">${_fmtSec(a.seconds_left)}</span> · 🕯️ воскреситься
+        </div>
       </div>`;
 
     const fmtHp = v => v >= 1000 ? Math.round(v/1000)+'K' : String(v||0);
@@ -134,6 +139,14 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   </div>
 </div>`;
     _bindBattle(root, s);
+    // Авто-сжатие dead-окна через 20 сек чтобы не загораживало бой.
+    // Идемпотентно — на каждом ререндере reset'им и снова стартуем 20с.
+    if (isDead) {
+      try { clearTimeout(window.WBHtml._deadCollapseTimer); } catch(_) {}
+      window.WBHtml._deadCollapseTimer = setTimeout(() => {
+        document.getElementById('wb-dead')?.classList.add('compact');
+      }, 20000);
+    }
     // Apply boss glow color as CSS variable for animated drop-shadow
     requestAnimationFrame(() => {
       const img = document.getElementById('wb-bimg');
@@ -169,6 +182,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       else if (act === 'shield')     window.WBHtml.toast?.('🛡 Блок активирован');
       else if (act === 'ult')        window.WBHtml.toast?.('💥 Ульта не готова');
       else if (act === 'skill-info') _showSkillInfo(el.dataset.sk, sc, s);
+      else if (act === 'dead-expand') document.getElementById('wb-dead')?.classList.remove('compact');
     });
     document.getElementById('wb-ultra-btn')?.addEventListener('click', () => window.WBHtml.fireUltra?.());
   }
@@ -295,6 +309,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     if (nums) nums.textContent = `${(a.current_hp||0).toLocaleString('ru')} / ${(a.max_hp||0).toLocaleString('ru')} · ${pct}%`;
     const timer = document.getElementById('wb-bl-timer'); if (timer) timer.textContent = _fmtSec(a.seconds_left);
     const dt = document.getElementById('wb-dead-timer'); if (dt) dt.textContent = _fmtSec(a.seconds_left);
+    const dtm = document.getElementById('wb-dead-timer-mini'); if (dtm) dtm.textContent = _fmtSec(a.seconds_left);
     const ps = state.player_state;
     if (ps) {
       const ppct = ps.max_hp > 0 ? Math.round(ps.current_hp / ps.max_hp * 100) : 0;

@@ -115,7 +115,14 @@ window.WBBattleCSS = (() => {
 
 /* ── Мёртв ── */
 .wb-dead{margin:12px 14px;padding:16px;border-radius:14px;text-align:center;
-  background:rgba(30,0,0,.6);border:1px solid rgba(255,40,40,.3);}
+  background:rgba(30,0,0,.6);border:1px solid rgba(255,40,40,.3);transition:padding .25s,margin .25s;}
+.wb-dead .wb-dead-mini{display:none;}
+.wb-dead.compact{padding:8px 12px;margin:6px 14px;cursor:pointer;
+  background:rgba(40,10,10,.7);border-color:rgba(255,80,80,.4);}
+.wb-dead.compact .wb-dead-full{display:none;}
+.wb-dead.compact .wb-dead-mini{display:block;font-size:11px;font-weight:700;
+  color:#ff8888;letter-spacing:.5px;}
+.wb-dead.compact .wb-dead-mini:active{transform:scale(.97);}
 .wb-dead-t{font-size:18px;font-weight:900;color:#ff4444;margin-bottom:6px;}
 .wb-res-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;}
 .wb-res-b{padding:8px 4px;border-radius:10px;cursor:pointer;text-align:center;
