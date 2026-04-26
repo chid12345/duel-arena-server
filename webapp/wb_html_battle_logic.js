@@ -147,32 +147,46 @@
     for (let i = 0; i < 3; i++) setTimeout(() => sc?._onHit?.(), i * 320);
   }
 
+  function _flashSkillBtn(cls) {
+    // Визуальный feedback: подсвечиваем кнопку скилла когда авто-режим
+    // её «нажимает». Без этого пользователь не понимает что бот применяет
+    // АТАКА/ЩИТ/УЛЬТА — кнопки выглядят неактивными.
+    const btn = document.querySelector('.wb-skill.' + cls);
+    if (!btn) return;
+    btn.classList.remove('firing'); void btn.offsetWidth;
+    btn.classList.add('firing');
+    setTimeout(() => btn.classList.remove('firing'), 350);
+  }
+
   function setAutoAttack(on) {
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
     if (on) _state.autoTimer = setInterval(() => {
       const sc = window.WBHtml._scene; const hp = sc?._state?.active?.current_hp;
       if (hp != null && hp <= 0) { setAutoAttack(false); return; }
 
-      // 1. Базовый удар (как АТАКА — это и есть _onHit).
+      // 1. Базовый удар (как АТАКА — это и есть _onHit). Визуально подсвечиваем АТАКУ.
       sc?._onHit?.();
+      _flashSkillBtn('atk');
 
-      // 2. УЛЬТА — если шкала готова и не на КД, выпускаем.
+      // 2. УЛЬТА — если шкала готова и не на КД, выпускаем + визуальный пульс.
       if (_state.ultra >= 1 && !isSkillOnCD('ult')) {
         try { fireUltSkill(); startSkillCD('ult'); _state.ultra = 0;
           const fill = document.getElementById('wb-ultra-fill');
           if (fill) fill.style.width = '0%';
           const btn = document.getElementById('wb-ultra-btn');
           if (btn) { btn.classList.remove('ready'); btn.innerHTML = 'УДАР'; }
+          _flashSkillBtn('ult');
         } catch(_) {}
       }
 
-      // 3. ЩИТ — авто-кастуем если HP игрока < 50% и не на КД.
+      // 3. ЩИТ — авто-кастуем если HP игрока < 50% и не на КД + пульс кнопки.
       try {
         const ps = sc?._state?.player_state;
         const phpPct = ps && ps.max_hp > 0 ? (ps.current_hp / ps.max_hp) : 1;
         if (phpPct < 0.5 && !isSkillOnCD('shld')) {
           window.WBHtml?.toast?.('🛡 Блок активирован (авто)');
           startSkillCD('shld');
+          _flashSkillBtn('shld');
         }
       } catch(_) {}
     }, 1000);

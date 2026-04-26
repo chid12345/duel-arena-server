@@ -166,6 +166,15 @@ window.WBBattleCSS = (() => {
 @keyframes wb-ug{0%,100%{box-shadow:0 0 8px rgba(191,0,255,.2)}50%{box-shadow:0 0 20px rgba(191,0,255,.5),0 0 35px rgba(191,0,255,.2)}}
 .wb-skill.auto{border-color:rgba(0,255,159,.55);box-shadow:0 0 10px rgba(0,255,159,.2),inset 0 0 8px rgba(0,255,159,.05);}
 .wb-skill.auto.auto-on{border-color:rgba(0,255,159,.85);box-shadow:0 0 16px rgba(0,255,159,.5);background:rgba(0,255,159,.08);animation:wb-ug 1.5s ease-in-out infinite;}
+/* Визуальный feedback когда AUTO выпускает скилл — яркая вспышка */
+.wb-skill.firing{animation:wb-skill-fire .35s ease-out;}
+@keyframes wb-skill-fire{
+  0%{transform:scale(1);box-shadow:0 0 10px currentColor;}
+  35%{transform:scale(1.18);box-shadow:0 0 32px currentColor,0 0 56px currentColor,inset 0 0 16px rgba(255,255,255,.4);}
+  100%{transform:scale(1);box-shadow:0 0 10px currentColor;}}
+.wb-skill.atk.firing{color:#FF0055;}
+.wb-skill.shld.firing{color:#00BFFF;}
+.wb-skill.ult.firing{color:#BF00FF;}
 .ws-icon{font-size:22px;line-height:1;}.ws-name{font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:rgba(255,255,255,.55);font-weight:700;}
 .wb-skill.cd .ws-icon,.wb-skill.cd .ws-name{opacity:.25;}
 .wb-cd-ov{position:absolute;inset:0;border-radius:10px;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .1s;}
