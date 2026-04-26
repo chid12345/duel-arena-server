@@ -47,39 +47,43 @@ def register_active_session_route(
         except Exception as e:
             log.warning("active_session WB check: %s", e)
 
-        # 2. PvP / бой с ботом — battle_queue.
+        # 2. PvP / бой с ботом / Натиск / Башня — все используют battle_system.
+        # battle_queue говорит «в каком бою сейчас живой in-memory state».
+        # Если он есть — игрока редиректим в Battle scene (тип определяется по mode).
+        in_memory_battle = False
         try:
             from battle_system import battle_system
             bid = battle_system.battle_queue.get(uid)
             if bid and bid in battle_system.active_battles:
                 b = battle_system.active_battles[bid]
                 if b.get("battle_active"):
+                    in_memory_battle = True
                     return {"ok": True, "type": "pvp", "scene": "Battle", "battle_id": bid}
         except Exception as e:
-            log.warning("active_session PvP check: %s", e)
+            log.warning("active_session battle check: %s", e)
 
-        # 3. Натиск (endless) — is_active=True в endless_progress_run.
+        # 3. Если в памяти боя нет, НО БД говорит active (is_active=1 в endless
+        # или run_active=1 в titan) — бой «потерян» (рестарт сервера / зомби-флаг).
+        # Авто-проигрыш + cleanup, чтобы игрок не мог через 4 часа вернуться и
+        # продолжить.
         try:
-            from repositories.endless.progress_run import EndlessProgressRunMixin  # noqa: F401
-            run = None
-            if hasattr(db, "get_endless_run_active"):
-                run = db.get_endless_run_active(uid)
-            elif hasattr(db, "get_endless_run"):
-                r = db.get_endless_run(uid)
-                if r and (r.get("is_active") if isinstance(r, dict) else False):
-                    run = r
-            if run:
-                return {"ok": True, "type": "natisk", "scene": "Natisk"}
+            r = db.get_endless_progress(uid) if hasattr(db, "get_endless_progress") else None
+            if r and isinstance(r, dict) and r.get("is_active") and int(r.get("current_wave") or 0) > 0:
+                if not in_memory_battle:
+                    log.info("active_session: closing zombie endless run uid=%s wave=%s",
+                             uid, r.get("current_wave"))
+                    try: db.endless_on_loss(uid, int(r.get("current_wave") or 0))
+                    except Exception as e: log.warning("endless_on_loss zombie: %s", e)
         except Exception as e:
-            log.debug("active_session Natisk check: %s", e)
+            log.debug("active_session Natisk zombie check: %s", e)
 
-        # 4. Башня Титанов — run_active=1 в titan_progress.
         try:
             prog = db.get_titan_progress(uid)
-            if prog and int((prog.get("run_active") or 0)) == 1:
-                # Башня открывается через Stats scene → titan tab.
-                return {"ok": True, "type": "titan", "scene": "Stats", "openTab": "titan"}
+            if prog and int((prog.get("run_active") or 0)) == 1 and not in_memory_battle:
+                log.info("active_session: closing zombie titan run uid=%s", uid)
+                try: db.titan_set_run_active(uid, 0)
+                except Exception as e: log.warning("titan_set_run_active zombie: %s", e)
         except Exception as e:
-            log.debug("active_session Titan check: %s", e)
+            log.debug("active_session Titan zombie check: %s", e)
 
         return {"ok": True, "type": None, "scene": None}
