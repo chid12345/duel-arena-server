@@ -49,6 +49,20 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
 
         now_utc = datetime.now(timezone.utc)
 
+        # Анти-эксплойт «вход после 8й минуты»: если у игрока ещё нет
+        # player_state и прошло > WB_LATE_JOIN_WINDOW_SEC — отказ.
+        # Уже подключившиеся (player_state есть) бьют как обычно.
+        existing_ps = db.get_wb_player_state(spawn_id, uid)
+        if not existing_ps:
+            from config.world_boss_constants import WB_LATE_JOIN_WINDOW_SEC
+            try:
+                started_at = _parse_ts(active["started_at"])
+                elapsed = (now_utc - started_at).total_seconds()
+                if elapsed > WB_LATE_JOIN_WINDOW_SEC:
+                    return {"ok": False, "reason": "Вход в рейд закрыт — осталось меньше 2 минут"}
+            except Exception:
+                pass
+
         # Автоподключение к рейду при первом ударе
         player = db.get_or_create_player(uid, "")
         # Бонусы экипировки (зеркало PvP `_apply_equipment_stats`):
