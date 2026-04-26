@@ -186,14 +186,10 @@
       }
 
       // 2. УЛЬТА — когда шкала ≥100%, выпускаем ШКАЛЬНЫЙ ультимейт (fireUltra,
-      // 8 ударов с тряской). Кнопки УЛЬТА в нижнем ряду нет, единственная
-      // ультимейта — через шкалу.
+      // 8 ударов с тряской). Без тоста — игрок видит тряску и burst-числа.
       if (_state.ultra >= 1 && (now - _autoLast.ult) >= AUTO_ULT_MS) {
         try {
-          if (fireUltra()) {
-            _autoLast.ult = now;
-            window.WBHtml?.toast?.('💥 УЛЬТА (авто)!');
-          }
+          if (fireUltra()) _autoLast.ult = now;
         } catch(_) {}
       }
 
@@ -212,12 +208,12 @@
             setTimeout(() => shldBtn.classList.remove('shield-active'), 2000);
           }
           // Серверная активация (асинхронно — не блокирует тик).
+          // Без тоста — игрок видит вспышку + 2-сек мерцание + CD таймер.
           fetch(API + '/api/world_boss/shield', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ init_data: State.initData }),
           }).catch(() => {});
-          window.WBHtml?.toast?.('🛡 ЩИТ АКТИВЕН (-30%, 2 сек)');
         }
       } catch(_) {}
     }, 1000);
