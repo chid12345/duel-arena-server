@@ -39,14 +39,14 @@ window.WBLobbyCSS = (() => {
   0%,100%{box-shadow:0 0 14px rgba(255,0,204,.1);border-color:rgba(255,0,204,.3);}
   50%{box-shadow:0 0 34px rgba(255,0,204,.4);border-color:rgba(255,0,204,.7);}}
 .wb-bcard2:active{transform:scale(.99);}
-.wb-bc2-tlbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#cc44ff;margin-bottom:4px;}
+.wb-bc2-tlbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#cc44ff;}
 .wb-bc2-tval{font-size:28px;font-weight:900;letter-spacing:2px;font-family:'Courier New',monospace;
   background:linear-gradient(180deg,#00ffee,#00aacc);-webkit-background-clip:text;background-clip:text;color:transparent;
   animation:wb-cp 1s ease-in-out infinite;}
 @keyframes wb-cp{0%,100%{filter:drop-shadow(0 0 8px rgba(0,230,255,.6))}50%{filter:drop-shadow(0 0 18px rgba(0,230,255,1))}}
-.wb-bc2-hint{margin-top:6px;font-size:9px;font-weight:800;letter-spacing:1.5px;
-  color:#ff88dd;text-align:center;text-transform:uppercase;
-  text-shadow:0 0 8px rgba(255,80,200,.4);opacity:.85;}
+.wb-bc2-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;}
+.wb-bc2-hint{font-size:9px;font-weight:800;letter-spacing:1px;color:#ff88dd;
+  text-shadow:0 0 8px rgba(255,80,200,.4);white-space:nowrap;opacity:.9;}
 .wb-unclaimed{margin:8px 14px 0;padding:11px 14px;border-radius:11px;cursor:pointer;
   background:linear-gradient(135deg,rgba(255,180,40,.18),rgba(255,80,180,.15));
   border:1.5px solid rgba(255,200,80,.5);
@@ -66,8 +66,11 @@ window.WBLobbyCSS = (() => {
   transition:transform .12s,background .15s;}
 .wb-prize:active{transform:scale(.99);background:rgba(255,160,0,.1);}
 .wb-prize-l{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.wb-prize-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .wb-prize-lbl{font-size:8px;font-weight:800;letter-spacing:1.5px;color:#ffdd44;text-shadow:0 0 5px rgba(255,210,0,.4);}
-.wb-prize-coins{font-size:20px;font-weight:900;color:#ffdd44;text-shadow:0 0 10px rgba(255,200,0,.6);white-space:nowrap;}
+.wb-prize-hint{font-size:9px;color:#ffaa44;font-weight:700;letter-spacing:.3px;
+  white-space:nowrap;text-shadow:0 0 6px rgba(255,160,0,.4);opacity:.9;}
+.wb-prize-coins{font-size:20px;font-weight:900;color:#ffdd44;text-shadow:0 0 10px rgba(255,200,0,.6);white-space:nowrap;margin-top:2px;}
 .wb-prize-sub{font-size:9px;color:#ffaa44;font-weight:700;letter-spacing:.5px;}
 .wb-prize-r{flex-shrink:0;text-align:center;}
 .wb-prize-cnt{font-size:28px;font-weight:900;color:#00BFFF;text-shadow:0 0 10px rgba(0,191,255,.6);line-height:1;}

@@ -117,9 +117,11 @@ window.WBHtml = (() => {
 </div>
 ${unclaimedBanner}
 <div class="wb-bcard2" data-act="boss-card">
-  <div class="wb-bc2-tlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+  <div class="wb-bc2-row">
+    <div class="wb-bc2-tlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
+    <div class="wb-bc2-hint">👁 инфо о боссе</div>
+  </div>
   <div class="wb-bc2-tval" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
-  <div class="wb-bc2-hint">👁 ИНФО О БОССЕ</div>
 </div>
 <div class="wb-enter" id="wb-enter-btn" data-act="enter">
   <div class="wb-enter-in"><div class="wb-enter-icon">⚔️</div>
@@ -128,9 +130,11 @@ ${unclaimedBanner}
 </div>
 <div class="wb-prize" data-act="rewards-info">
   <div class="wb-prize-l">
-    <div class="wb-prize-lbl">⚡ ПРИЗОВОЙ ФОНД</div>
+    <div class="wb-prize-row">
+      <div class="wb-prize-lbl">⚡ ПРИЗОВОЙ ФОНД</div>
+      <div class="wb-prize-hint">👆 что получишь?</div>
+    </div>
     <div class="wb-prize-coins">🪙 ${prizePool}</div>
-    <div class="wb-prize-sub">👆 что получишь?</div>
   </div>
   <div class="wb-prize-r">
     <div class="wb-prize-cnt">${regCnt}</div>
