@@ -35,6 +35,7 @@ from api.world_boss_actions import (
     world_boss_shield_inner,
     world_boss_use_scroll_inner,
 )
+from api.world_boss_qte import QteBonusBody, world_boss_qte_bonus_inner
 from api.world_boss_state import build_wb_state_payload
 
 log = logging.getLogger(__name__)
@@ -109,6 +110,14 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return await world_boss_auto_bot_toggle_inner(body, **_inner_ctx)
         except Exception as e:
             log.error("wb_toggle_auto_bot error: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)}
+
+    @router.post("/api/world_boss/qte_bonus")
+    async def wb_qte_bonus(body: QteBonusBody):
+        try:
+            return await world_boss_qte_bonus_inner(body, **_inner_ctx)
+        except Exception as e:
+            log.error("wb_qte_bonus error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
     @router.post("/api/world_boss/shield")

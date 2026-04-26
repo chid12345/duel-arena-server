@@ -116,7 +116,7 @@
     ov.querySelector('.wb-qte-btn').addEventListener('click', () => {
       count = Math.min(count + 1, 10);
       ov.querySelector('#wbq-cnt').textContent = count + ' / 10';
-      try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
+      try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('medium'); } catch(_) {}
     });
     const iv = setInterval(() => {
       timeLeft -= 0.1;
@@ -124,14 +124,31 @@
       ov.querySelector('#wbq-bar').style.width = (timeLeft / 5 * 100) + '%';
       if (timeLeft <= 0) {
         clearInterval(iv); ov.remove();
-        if (count >= 5) {
+        if (count >= 10) {
           _shake();
           const sc = window.WBHtml._scene;
-          for (let i = 0; i < 5; i++) setTimeout(() => {
+          // 10 ударов с интервалом 320мс (> 300мс кулдаун сервера)
+          for (let i = 0; i < 10; i++) setTimeout(() => sc?._onHit?.(), i * 320);
+          // Визуальные числа
+          for (let i = 0; i < 10; i++) setTimeout(() => {
             const dmg = Math.round(60000 + Math.random() * 20000);
-            _spawnBurst(`⚡ СТАН! ${dmg.toLocaleString('ru')}`, '#FFD700', 24);
+            _spawnBurst(`⚡ ${dmg.toLocaleString('ru')}`, '#FFD700', 24);
           }, i * 100);
-          for (let i = 0; i < 5; i++) setTimeout(() => sc?._onHit?.(), i * 320);
+          // Бонусный удар +15% через сервер (после всех 10 ударов)
+          setTimeout(() => {
+            fetch(API + '/api/world_boss/qte_bonus', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ init_data: State.initData }),
+            }).then(r => r.json()).then(d => {
+              if (d.ok && d.bonus_damage) {
+                _shake();
+                _spawnBurst(`⚡ +15%  ${d.bonus_damage.toLocaleString('ru')}`, '#FF8C00', 30);
+              }
+            }).catch(() => {});
+          }, 3500);
+        } else {
+          _spawnBurst(`❌ ${count}/10 — МИМО!`, '#ff4444', 24);
         }
       }
     }, 100);
