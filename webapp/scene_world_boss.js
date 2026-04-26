@@ -172,7 +172,17 @@ class WorldBossScene extends Phaser.Scene {
   _render() {
     if (this._loading) { try { this._loading.destroy(); } catch(_){} this._loading = null; }
     this.children.getAll().filter(o => o._wbChild).forEach(o => { try { o.destroy(); } catch(_){} });
-    try { window.WBHtml?.render(this, this._state); } catch(e) { console.warn('WBHtml render error:', e); }
+    try {
+      window.WBHtml?.render(this, this._state);
+    } catch(e) {
+      console.error('WBHtml render error:', e);
+      // Показываем видимое сообщение вместо чёрного экрана
+      try {
+        const root = document.getElementById('wb-root') || (() => { const r = document.createElement('div'); r.id = 'wb-root'; document.body.appendChild(r); return r; })();
+        root.style.cssText = 'position:fixed;inset:0;z-index:9500;background:#050508;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:24px;text-align:center;font-family:sans-serif;color:#fff';
+        root.innerHTML = '<div style="font-size:32px">⚠️</div><div style="font-size:15px;font-weight:700">Ошибка отображения</div><div style="font-size:12px;color:#aaa">Закрой и открой вкладку Босс заново</div>';
+      } catch(_) {}
+    }
   }
 
   _renderFighting(s, W, H) {
