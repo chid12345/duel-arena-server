@@ -39,6 +39,11 @@ class ReminderToggleBody(BaseModel):
     enabled: bool
 
 
+class AutoBotToggleBody(BaseModel):
+    init_data: str
+    enabled: bool
+
+
 class RegisterBody(BaseModel):
     init_data: str
 
@@ -145,6 +150,23 @@ async def world_boss_reminder_toggle_inner(body: ReminderToggleBody, *, db, get_
     uid = int(tg_user["id"])
     db.set_wb_reminder_opt_in(uid, bool(body.enabled))
     return {"ok": True, "enabled": bool(body.enabled)}
+
+
+async def world_boss_auto_bot_toggle_inner(body: AutoBotToggleBody, *, db, get_user_from_init_data) -> dict:
+    """Тогл «авто-бой из лобби» — бот зайдёт в рейд если игрок офлайн.
+    Записывается в players.wb_auto_bot_pending. Сбрасывается при старте рейда."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    enabled = bool(body.enabled)
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE players SET wb_auto_bot_pending=? WHERE user_id=?",
+        (1 if enabled else 0, uid),
+    )
+    conn.commit()
+    conn.close()
+    return {"ok": True, "enabled": enabled}
 
 
 async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_init_data) -> dict:

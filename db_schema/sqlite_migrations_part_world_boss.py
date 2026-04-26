@@ -163,4 +163,12 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_19_113_wb_claimed_bool_retry2", [
         "ALTER TABLE world_boss_rewards ALTER COLUMN claimed TYPE BOOLEAN USING claimed::boolean",
     ]),
+
+    # 15. Авто-бой из лобби: бот заходит в рейд если игрок офлайн.
+    #     wb_auto_bot_pending — флаг «включил тогл в лобби», сбрасывается при старте рейда.
+    #     auto_bot — у конкретного player_state, означает что этот участник — бот (награда ×0.5).
+    ("2026_04_27_114_wb_auto_bot", [
+        "ALTER TABLE players ADD COLUMN wb_auto_bot_pending INTEGER DEFAULT 0",
+        "ALTER TABLE world_boss_player_state ADD COLUMN auto_bot INTEGER DEFAULT 0",
+    ]),
 ]

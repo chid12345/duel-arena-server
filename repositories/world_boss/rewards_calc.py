@@ -86,6 +86,22 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     total_damage = sum(by_uid.values())
     levels = _get_player_levels(db, list(by_uid.keys()))
 
+    # Авто-боты: получают пенальти ×0.5 к итоговой награде.
+    auto_bots: set[int] = set()
+    try:
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT user_id FROM world_boss_player_state "
+            "WHERE spawn_id=? AND auto_bot=1",
+            (int(spawn_id),),
+        )
+        for r in cur.fetchall():
+            auto_bots.add(int(r["user_id"] if not isinstance(r, tuple) else r[0]))
+        conn.close()
+    except Exception as e:
+        logger.warning("wb_rewards_calc: ошибка чтения auto-bots spawn=%s: %s", spawn_id, e)
+
     mult = WB_REWARD_MULT_VICTORY if is_victory else WB_REWARD_MULT_DEFEAT
     pool_gold = WB_GOLD_CONTRIB_PER_PLAYER * n_participants
 
@@ -101,16 +117,18 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     created = 0
     for uid, dmg in by_uid.items():
         contribution_pct = (dmg / total_damage) if total_damage else 0.0
+        # Пенальти за авто-бой (бот в лобби — игрок офлайн).
+        bot_penalty = 0.5 if uid in auto_bots else 1.0
 
         # ЗОЛОТО: гарантия + (пул × вклад%) × mult.
-        gold = max(0, int((WB_GOLD_GUARANTEED + pool_gold * contribution_pct) * mult))
+        gold = max(0, int((WB_GOLD_GUARANTEED + pool_gold * contribution_pct) * mult * bot_penalty))
 
         # ОПЫТ: от уровня игрока, как 1v1, + бонус по вкладу.
         lvl = levels.get(uid, 1)
         base_1v1 = victory_xp_for_player_level(lvl)
         guaranteed_xp = base_1v1 * WB_XP_GUARANTEED_PCT
         contrib_xp = base_1v1 * WB_XP_CONTRIB_MULT * contribution_pct
-        exp = max(0, int((guaranteed_xp + contrib_xp) * mult))
+        exp = max(0, int((guaranteed_xp + contrib_xp) * mult * bot_penalty))
 
         diamonds = int(diamonds_by_rank.get(uid, 0))
         if last_hit_uid and uid == last_hit_uid:

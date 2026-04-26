@@ -20,11 +20,13 @@ from fastapi import APIRouter, HTTPException
 
 from api.world_boss_hit import HitBody, world_boss_hit_inner
 from api.world_boss_actions import (
+    AutoBotToggleBody,
     ClaimRewardBody,
     RegisterBody,
     ReminderToggleBody,
     ResurrectBody,
     UseScrollBody,
+    world_boss_auto_bot_toggle_inner,
     world_boss_claim_reward_inner,
     world_boss_register_inner,
     world_boss_reminder_toggle_inner,
@@ -97,6 +99,14 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return await world_boss_register_inner(body, **_inner_ctx)
         except Exception as e:
             log.error("wb_register error: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)}
+
+    @router.post("/api/world_boss/toggle_auto_bot")
+    async def wb_toggle_auto_bot(body: AutoBotToggleBody):
+        try:
+            return await world_boss_auto_bot_toggle_inner(body, **_inner_ctx)
+        except Exception as e:
+            log.error("wb_toggle_auto_bot error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
     @router.get("/api/rating/world_boss")

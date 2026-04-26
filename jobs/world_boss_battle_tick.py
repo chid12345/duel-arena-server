@@ -139,6 +139,15 @@ async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
             except Exception:
                 pass
 
+            # 3.5. Авто-боты бьют раз в 10 сек (по elapsed).
+            try:
+                if int(elapsed) % 10 == 0 and current_hp > 0:
+                    total_bot_dmg = db.wb_auto_bots_strike(spawn_id)
+                    if total_bot_dmg:
+                        logger.debug("wb battle: auto-bots dealt %s dmg", total_bot_dmg)
+            except Exception as e:
+                logger.warning("wb battle: auto-bots tick error: %s", e)
+
         # 4. WS-бродкаст подписчикам (работает даже без активного рейда — event=wb_idle).
         await wb_broadcast_tick(db)
 

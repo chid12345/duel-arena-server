@@ -56,6 +56,90 @@ class WorldBossRegistrationMixin:
         conn.close()
         return found
 
+    def wb_create_auto_bot_states(self, spawn_id: int) -> int:
+        """При старте рейда создаёт player_state для всех зарегистрированных
+        игроков с флагом wb_auto_bot_pending=1. Помечает их auto_bot=1.
+        Сбрасывает wb_auto_bot_pending. Возвращает число созданных ботов."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT r.user_id, p.max_hp, p.endurance, p.crit "
+            "FROM world_boss_registrations r "
+            "JOIN players p ON p.user_id = r.user_id "
+            "WHERE r.spawn_id=? AND COALESCE(p.wb_auto_bot_pending, 0)=1",
+            (int(spawn_id),),
+        )
+        rows = cur.fetchall()
+        created = 0
+        for r in rows:
+            uid = int(r["user_id"])
+            mhp = int(r.get("max_hp") or 100)
+            end_ = int(r.get("endurance") or 3)
+            crt = int(r.get("crit") or 3)
+            # Идемпотентно — если уже есть player_state, не дублируем.
+            cur.execute(
+                "SELECT 1 FROM world_boss_player_state WHERE spawn_id=? AND user_id=?",
+                (int(spawn_id), uid),
+            )
+            if cur.fetchone():
+                continue
+            cur.execute(
+                """INSERT INTO world_boss_player_state
+                      (spawn_id, user_id, current_hp, max_hp, endurance, crit, auto_bot)
+                      VALUES (?,?,?,?,?,?,1)""",
+                (int(spawn_id), uid, mhp, mhp, end_, crt),
+            )
+            created += 1
+        # Сбрасываем флаг у всех зарегистрированных на этот спавн.
+        cur.execute(
+            "UPDATE players SET wb_auto_bot_pending=0 WHERE user_id IN ("
+            "SELECT user_id FROM world_boss_registrations WHERE spawn_id=?)",
+            (int(spawn_id),),
+        )
+        conn.commit()
+        conn.close()
+        return created
+
+    def wb_auto_bots_strike(self, spawn_id: int) -> int:
+        """Тик авто-ботов: каждый живой бот наносит 30% от своей strength.
+        Возвращает суммарный нанесённый урон.
+        """
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT ps.user_id, p.strength "
+            "FROM world_boss_player_state ps "
+            "JOIN players p ON p.user_id = ps.user_id "
+            "WHERE ps.spawn_id=? AND ps.auto_bot=1 AND ps.is_dead=0",
+            (int(spawn_id),),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        if not rows:
+            return 0
+        total = 0
+        for r in rows:
+            uid = int(r["user_id"])
+            strength = int(r.get("strength") or 10)
+            dmg = max(1, int(strength * 0.30))
+            try:
+                self.log_wb_hit(spawn_id, uid, dmg, is_crit=False)
+                self.apply_damage_to_boss(int(spawn_id), int(dmg))
+                # Обновляем total_damage в player_state.
+                conn2 = self.get_connection()
+                cur2 = conn2.cursor()
+                cur2.execute(
+                    "UPDATE world_boss_player_state SET total_damage = total_damage + ?, "
+                    "hits_count = hits_count + 1 WHERE spawn_id=? AND user_id=?",
+                    (int(dmg), int(spawn_id), uid),
+                )
+                conn2.commit()
+                conn2.close()
+                total += dmg
+            except Exception as e:
+                log.warning("wb_auto_bots_strike: ошибка удара uid=%s: %s", uid, e)
+        return total
+
     def wb_registration_count(self, spawn_id: int) -> int:
         conn = self.get_connection()
         cur = conn.cursor()

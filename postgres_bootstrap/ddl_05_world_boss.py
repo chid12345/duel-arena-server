@@ -106,4 +106,8 @@ POSTGRES_DDL_05_WORLD_BOSS: tuple[str, ...] = (
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_wb_reg_spawn ON world_boss_registrations (spawn_id)",
+
+    # 7. Авто-бой из лобби: тогл «бот заходит за меня».
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS wb_auto_bot_pending INTEGER DEFAULT 0",
+    "ALTER TABLE world_boss_player_state ADD COLUMN IF NOT EXISTS auto_bot INTEGER DEFAULT 0",
 )

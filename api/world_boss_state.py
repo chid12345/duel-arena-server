@@ -109,6 +109,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
         unclaimed = []
     player_row = db.get_or_create_player(uid, "")
     reminder_opt_in = bool(int(player_row.get("wb_reminder_opt_in") or 0))
+    auto_bot_pending = bool(int(player_row.get("wb_auto_bot_pending") or 0))
     # Премиум-статус нужен фронту: кнопка АВТО в бою — премиум-фича.
     try:
         is_premium = bool(db.get_premium_status(uid).get("is_active"))
@@ -171,6 +172,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
         "raid_scrolls_inv": raid_scrolls_inv,
         "res_scrolls_inv": res_scrolls_inv,
         "reminder_opt_in": reminder_opt_in,
+        "auto_bot_pending": auto_bot_pending,
         "unclaimed_rewards": [
             (lambda _bt: {
                 "reward_id": int(r["reward_id"]),

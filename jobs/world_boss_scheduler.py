@@ -114,15 +114,24 @@ def _start_due_spawn(db) -> None:
         return  # ещё не пора
     online = db.wb_count_online_players(window_minutes=WB_ONLINE_WINDOW_MIN)
     max_hp = calc_boss_hp(online)
+    spawn_id = int(nxt["spawn_id"])
     db.start_wb_spawn(
-        spawn_id=int(nxt["spawn_id"]),
+        spawn_id=spawn_id,
         online_at_start=online,
         max_hp=max_hp,
     )
     logger.info(
         "world_boss_scheduler: стартовал рейд '%s' id=%s, online=%s, HP=%s",
-        nxt.get("boss_name"), nxt["spawn_id"], online, max_hp,
+        nxt.get("boss_name"), spawn_id, online, max_hp,
     )
+    # Авто-бои: для всех зарегистрированных с флагом wb_auto_bot_pending
+    # создаём player_state с auto_bot=1 — они начнут получать урон/награду.
+    try:
+        bots = db.wb_create_auto_bot_states(spawn_id)
+        if bots:
+            logger.info("world_boss_scheduler: создано авто-ботов: %s", bots)
+    except Exception as e:
+        logger.warning("world_boss_scheduler: ошибка создания авто-ботов: %s", e)
 
 
 def _finish_expired_or_dead_spawn(db) -> None:
