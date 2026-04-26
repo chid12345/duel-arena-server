@@ -97,14 +97,10 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   <div class="wb-ultra-track"><div class="wb-ultra-fill" id="wb-ultra-fill" style="width:0%"></div></div>
   <div class="wb-ultra-btn" id="wb-ultra-btn">УДАР</div>
 </div>
-<div class="wb-skills wb-skills-3">
+<div class="wb-skills wb-skills-2">
   <div class="wb-skill atk" data-act="skill-info" data-sk="atk">
-    <div class="ws-icon">⚔️</div><div class="ws-name">АТАКА</div>
+    <div class="ws-icon">⚔️</div><div class="ws-name">АТАКА ×2</div>
     <div class="wb-cd-ov"><div class="wb-cd-num" id="wb-cd-atk">—</div></div>
-  </div>
-  <div class="wb-skill shld" data-act="skill-info" data-sk="shld">
-    <div class="ws-icon">🛡️</div><div class="ws-name">ЩИТ</div>
-    <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
   </div>
   <div class="wb-skill auto" data-act="skill-info" data-sk="auto">
     <div class="ws-icon">🤖</div><div class="ws-name">АВТО</div>
@@ -213,12 +209,9 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   }
 
   const _SKILL_INFO = {
-    atk:  { icon:'⚔️', name:'АТАКА',  cd:'3 сек',      act:'hit',        tip:'Базовый урон',
-             desc:'Наносит урон боссу. Урон зависит от характеристики «Сила» и экипировки.',
-             tipTxt:'Усиль Силу → больше урона. Используй свиток «+Урон» для буста.' },
-    shld: { icon:'🛡️', name:'ЩИТ',   cd:'8 сек',      act:'shield',     tip:'Защита',
-             desc:'Снижает входящий урон на 30% на 2 секунды. Помогает выжить в финальных фазах.',
-             tipTxt:'Используй когда у босса менее 20% HP — финальная фаза наносит x2 урон.' },
+    atk:  { icon:'⚔️', name:'АТАКА ×2',  cd:'4 сек',      act:'hit',        tip:'Двойной удар',
+             desc:'Наносит ДВА удара по боссу подряд (×2 урона). Зависит от Силы и экипировки.',
+             tipTxt:'Самая выгодная кнопка для прокачки урона. Используй каждый раз когда КД спал.' },
     ult:  { icon:'💥', name:'УЛЬТА',  cd:'По шкале',   act:'ult',        tip:'Суперудар',
              desc:'Мощный удар — тройной урон от обычной атаки. Шкала наполняется с каждым ударом.',
              tipTxt:'Бей чаще — шкала наполняется быстрее. Выпускай ульту на финальной фазе.' },
@@ -230,8 +223,13 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   function _useSkillDirect(info, sc, s) {
     const root = document.getElementById('wb-root'), W = window.WBHtml;
     if (W.isSkillOnCD?.(info.act==='hit'?'atk':info.act==='shield'?'shld':info.act==='ult'?'ult':'')) { W.toast?.('⏱ Перезарядка'); return; }
-    if (info.act === 'hit') { _onHit(root, sc); W.startSkillCD?.('atk'); }
-    else if (info.act === 'shield') { W.toast?.('🛡 Блок активирован'); W.startSkillCD?.('shld'); }
+    if (info.act === 'hit') {
+      // АТАКА скилл = 2 удара подряд (×2 урон). Серверный кулдаун 300мс,
+      // поэтому второй вызов через 350мс гарантированно зайдёт.
+      _onHit(root, sc);
+      setTimeout(() => sc?._onHit?.(), 350);
+      W.startSkillCD?.('atk');
+    }
     else if (info.act === 'ult')   { W.fireUltSkill?.(); W.startSkillCD?.('ult'); }
     else if (info.act === 'auto-toggle') {
       // Премиум-гейт: АВТО доступен только подписчикам.

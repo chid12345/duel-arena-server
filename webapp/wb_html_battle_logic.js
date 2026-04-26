@@ -176,9 +176,10 @@
 
       const now = Date.now();
 
-      // 1. АТАКА — раз в 4 секунды (а не каждый тик), как и в ручном режиме CD.
+      // 1. АТАКА ×2 — раз в 4 секунды, два удара подряд (как ручная кнопка).
       if ((now - _autoLast.atk) >= AUTO_ATK_MS) {
         sc?._onHit?.();
+        setTimeout(() => sc?._onHit?.(), 350);
         _autoLast.atk = now;
         _flashSkillBtn('atk');
         startSkillCD('atk');
@@ -196,24 +197,7 @@
         } catch(_) {}
       }
 
-      // 3. ЩИТ — HP игрока < 50% И прошло ≥AUTO_SHLD_MS с прошлого щита.
-      try {
-        const ps = sc?._state?.player_state;
-        const phpPct = ps && ps.max_hp > 0 ? (ps.current_hp / ps.max_hp) : 1;
-        if (phpPct < 0.5 && (now - _autoLast.shld) >= AUTO_SHLD_MS) {
-          startSkillCD('shld');
-          _autoLast.shld = now;
-          _flashSkillBtn('shld');
-          // Дополнительный индикатор «щит активен» — мерцает 2 сек.
-          const shldBtn = document.querySelector('.wb-skill.shld');
-          if (shldBtn) {
-            shldBtn.classList.remove('shield-active'); void shldBtn.offsetWidth;
-            shldBtn.classList.add('shield-active');
-            setTimeout(() => shldBtn.classList.remove('shield-active'), 2000);
-          }
-          window.WBHtml?.toast?.('🛡 ЩИТ АКТИВЕН (2 сек)');
-        }
-      } catch(_) {}
+      // ЩИТ убран — функционала не было, кнопки больше нет.
     }, 1000);
   }
 
