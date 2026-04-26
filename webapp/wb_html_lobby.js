@@ -249,6 +249,37 @@ window.WBHtml = (() => {
     } catch(_) {}
   }
 
+  // Auto-refit при resize окна / viewport Telegram / scale Phaser.
+  // Без этого после смены ориентации, появления клавиатуры или развёртывания
+  // header'а Telegram оверлей закрывает таб-бар → клики на нижнем меню не доходят.
+  let _fitTeardown = null;
+  function _setupFitObservers(root) {
+    if (_fitTeardown) return; // уже стоит
+    const refit = () => _fitToCanvas(root);
+    const onResize = () => requestAnimationFrame(refit);
+    window.addEventListener('resize', onResize);
+    window.addEventListener('orientationchange', onResize);
+    let ro = null;
+    try {
+      const c = document.querySelector('canvas');
+      if (c && typeof ResizeObserver !== 'undefined') {
+        ro = new ResizeObserver(onResize); ro.observe(c);
+      }
+    } catch(_) {}
+    let tgOff = null;
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (tg?.onEvent) { tg.onEvent('viewportChanged', onResize); tgOff = () => tg.offEvent?.('viewportChanged', onResize); }
+    } catch(_) {}
+    _fitTeardown = () => {
+      window.removeEventListener('resize', onResize);
+      window.removeEventListener('orientationchange', onResize);
+      try { ro?.disconnect(); } catch(_) {}
+      try { tgOff?.(); } catch(_) {}
+      _fitTeardown = null;
+    };
+  }
+
   function render(scene, state) {
     _scene = scene; _state = state; window.WBHtml._scene = scene;
     if (state?.unclaimed_rewards?.length) { window.WBBattleCSS?.inject(); window.WBHtml.showMvpResult?.(state, scene); }
@@ -263,6 +294,7 @@ window.WBHtml = (() => {
     }
     _setTabBar(true);
     _fitToCanvas(root);
+    _setupFitObservers(root);
     if ((s.prep_seconds_left||0) > 0) {
       root.innerHTML = `<div class="wb-hdr"><div class="wb-back" data-act="back">‹</div><div class="wb-hdr-icon">💀</div><div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ПОДГОТОВКА К РЕЙДУ</div></div></div><div class="wb-prep"><div class="wb-prep-t" id="wb-prep-cnt">Старт через ${s.prep_seconds_left} сек</div><div class="wb-prep-s">Свитки применяй в слоты после первого удара</div></div>`;
       _bind(root); return;
@@ -291,6 +323,7 @@ window.WBHtml = (() => {
 
   function close() {
     clearInterval(window._wbTimer);
+    try { _fitTeardown?.(); } catch(_) {}
     document.getElementById(ID)?.remove();
     _setTabBar(true);
   }
