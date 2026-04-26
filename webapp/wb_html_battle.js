@@ -368,15 +368,28 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     const zone = document.getElementById('wb-boss-zone'); if (!zone) return;
     const r = zone.getBoundingClientRect();
     const lt = window.WBHtml._lastTap;
-    if (tx == null && lt) { tx = lt.x; ty = lt.y; }
-    const x = (tx != null ? tx - r.left : r.width/2) + (Math.random()-.5)*60;
-    const y = (ty != null ? ty - r.top  : r.height/2) + (Math.random()-.5)*30;
+    // Если тап был вне зоны босса (например, кнопка скилла внизу) — игнорим,
+    // показываем число прямо НА боссе. Иначе цифра улетит под кнопками.
+    let useTap = false;
+    if (tx == null && lt) {
+      const inside = lt.y >= r.top && lt.y <= r.bottom && lt.x >= r.left && lt.x <= r.right;
+      if (inside) { tx = lt.x; ty = lt.y; useTap = true; }
+    } else if (tx != null) {
+      useTap = true;
+    }
+    // Дефолтная позиция — центр босса (чуть выше середины зоны).
+    const cx = useTap ? (tx - r.left) : (r.width / 2);
+    const cy = useTap ? (ty - r.top)  : (r.height * 0.4);
+    const x = cx + (Math.random() - .5) * 80;
+    const y = cy + (Math.random() - .5) * 40;
     const el = document.createElement('div');
     el.className = 'wb-dmg-num' + (isCrit ? ' crit' : '');
-    el.textContent = isCrit ? `💥 ${dmg.toLocaleString('ru')}!` : `+${dmg.toLocaleString('ru')}`;
-    const fs = isCrit ? (20+Math.random()*12) : (13+Math.random()*8);
-    const cl = isCrit ? '#FFD700' : ((window.WBHtml.getCombo?.()||0) > 5 ? '#FF4400' : '#FF6680');
-    el.style.cssText = `left:${x}px;top:${y}px;font-size:${fs}px;color:${cl};text-shadow:0 0 8px ${cl};`;
+    el.textContent = isCrit ? `💥 ${dmg.toLocaleString('ru')}!` : dmg.toLocaleString('ru');
+    // Размер: норм 26-36, крит 36-50. Цвет: норм ярко-розовый/красный, крит золотой.
+    const fs = isCrit ? (36 + Math.random() * 14) : (26 + Math.random() * 10);
+    const combo = window.WBHtml.getCombo?.() || 0;
+    const cl = isCrit ? '#FFE040' : (combo > 5 ? '#FF2200' : '#FF1188');
+    el.style.cssText = `left:${x}px;top:${y}px;font-size:${fs}px;color:${cl};`;
     zone.appendChild(el);
     setTimeout(() => el.remove(), 950);
     window.WBHtml.addUltraEnergy?.(.04 + Math.random() * .02);
