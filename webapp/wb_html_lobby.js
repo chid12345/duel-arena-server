@@ -61,7 +61,10 @@ window.WBHtml = (() => {
     const joined    = s.is_registered || false;
     const reminded  = s.reminder_opt_in || false;
     const joinedAll = joined; // показываем joined если зарегистрирован (не ждём reminder)
-    const prizePool = (regCnt * 520).toLocaleString('ru');
+    // Призовой фонд = пул за вклад (50/игрока). Каждому ещё +30 гарантия.
+    const _GOLD_GUARANTEED = 30;
+    const _GOLD_PER_PLAYER = 50;
+    const prizePool = (regCnt * _GOLD_PER_PLAYER).toLocaleString('ru');
 
     const bought = _getBought();
     const boostEntries = Object.entries(SCROLL_META);
@@ -121,7 +124,7 @@ window.WBHtml = (() => {
   <div class="wb-prize-l">
     <div class="wb-prize-lbl">⚡ ПРИЗОВОЙ ФОНД</div>
     <div class="wb-prize-coins">🪙 ${prizePool}</div>
-    <div class="wb-prize-sub">+520 за участника</div>
+    <div class="wb-prize-sub">+30 гарантия · пул делится по урону</div>
   </div>
   <div class="wb-prize-r">
     <div class="wb-prize-cnt">${regCnt}</div>

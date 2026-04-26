@@ -1,14 +1,24 @@
 """Расчёт наград рейда Мирового босса (см. docs/WORLD_BOSS.md §Награды).
 
-Вход: spawn_id + is_victory. Выход — записи в world_boss_rewards
-(claimed=0; игрок забирает через /api/world_boss/claim_reward).
+Вход: spawn_id + is_victory. Выход — записи в world_boss_rewards.
 
-Формула:
-  base_gold × множитель × contribution_pct (вклад игрока в общий урон)
-  множитель = 2.0 (победа) | 0.3 (поражение)
+Формула (Вариант Б — гарантия + пул по вкладу):
+  ЗОЛОТО:
+    guaranteed = 30 (фикс)
+    pool       = 50 × N_участников
+    итого      = (guaranteed + pool × вклад%) × mult
+  ОПЫТ:
+    база       = victory_xp_for_player_level(уровень_игрока)
+    guaranteed = база × 0.3
+    contrib    = база × 3.0 × вклад%
+    итого      = (guaranteed + contrib) × mult
 
-Алмазы — фиксированные бонусы топ-3 и last-hit (не пропорционально).
-Сундуки — по одному: last-hit (wb_gold_chest) и top-damage (wb_diamond_chest).
+Множитель mult = 2.0 победа | 0.3 поражение.
+Участник = ударивший ИЛИ зарегистрированный (зарегистрированный без удара получит
+только guaranteed-часть).
+
+Алмазы — фиксированные бонусы топ-3 и last-hit (только при победе).
+Сундуки — last-hit (золотой) и top-damage (алмазный).
 """
 from __future__ import annotations
 
@@ -16,74 +26,100 @@ import logging
 from typing import Any, Optional
 
 from config.world_boss_constants import (
-    WB_BASE_EXP,
-    WB_BASE_GOLD,
     WB_CHEST_LAST_HIT,
     WB_CHEST_TOP_DAMAGE,
     WB_DIAMONDS_LAST_HIT,
     WB_DIAMONDS_TOP1,
     WB_DIAMONDS_TOP2,
     WB_DIAMONDS_TOP3,
+    WB_GOLD_GUARANTEED,
+    WB_GOLD_CONTRIB_PER_PLAYER,
     WB_REWARD_MULT_DEFEAT,
     WB_REWARD_MULT_VICTORY,
-    WB_TEST_FLAT_GOLD,
+    WB_XP_GUARANTEED_PCT,
+    WB_XP_CONTRIB_MULT,
 )
+from progression_loader import victory_xp_for_player_level
 
 logger = logging.getLogger(__name__)
+
+
+def _get_player_levels(db: Any, user_ids: list[int]) -> dict[int, int]:
+    """Уровень для каждого игрока (по умолчанию 1)."""
+    if not user_ids:
+        return {}
+    placeholders = ",".join("?" * len(user_ids))
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        f"SELECT user_id, level FROM players WHERE user_id IN ({placeholders})",
+        [int(u) for u in user_ids],
+    )
+    out: dict[int, int] = {}
+    for r in cur.fetchall():
+        if isinstance(r, dict):
+            out[int(r["user_id"])] = int(r.get("level") or 1)
+        else:
+            out[int(r[0])] = int(r[1] or 1)
+    conn.close()
+    return out
 
 
 def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     """Создаёт записи world_boss_rewards для всех участников рейда.
 
     Идемпотентно через create_wb_reward (UNIQUE spawn_id+user_id).
-    Возвращает число созданных/найденных записей.
     """
-    participants = db.get_wb_all_participants_damage(int(spawn_id))
-    # ТЕСТ: добавляем зарегистрированных (даже если не били) — иначе им не падает золото.
-    by_uid = {int(p["user_id"]): int(p.get("total_damage") or 0) for p in participants}
+    # Участники = все кто бил + все кто зарегистрировался.
+    hits = db.get_wb_all_participants_damage(int(spawn_id))
+    by_uid = {int(p["user_id"]): int(p.get("total_damage") or 0) for p in hits}
     try:
-        conn = db.get_connection(); cur = conn.cursor()
-        cur.execute("SELECT user_id FROM world_boss_registrations WHERE spawn_id=?", (int(spawn_id),))
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT user_id FROM world_boss_registrations WHERE spawn_id=?",
+            (int(spawn_id),),
+        )
         for r in cur.fetchall():
             uid = int(r[0] if not isinstance(r, dict) else r["user_id"])
             by_uid.setdefault(uid, 0)
         conn.close()
     except Exception as e:
         logger.warning("wb_rewards_calc: ошибка чтения регистраций spawn=%s: %s", spawn_id, e)
+
     if not by_uid:
         return 0
-    participants = [{"user_id": u, "total_damage": d} for u, d in by_uid.items()]
 
-    total_damage = sum(int(p.get("total_damage") or 0) for p in participants)
-    # В тест-режиме допускаем total_damage=0 (раздаём 50 золота плоско).
-    if not WB_TEST_FLAT_GOLD and total_damage <= 0:
-        return 0
+    n_participants = len(by_uid)
+    total_damage = sum(by_uid.values())
+    levels = _get_player_levels(db, list(by_uid.keys()))
 
     mult = WB_REWARD_MULT_VICTORY if is_victory else WB_REWARD_MULT_DEFEAT
+    pool_gold = WB_GOLD_CONTRIB_PER_PLAYER * n_participants
 
     top3 = db.get_wb_top_damagers(int(spawn_id), limit=3)
     top_uid = int(top3[0]["user_id"]) if top3 else None
-    # Алмазы — только при победе (топ-3 + last-hit). На поражении — утешительные gold/exp.
     diamonds_by_rank: dict[int, int] = {}
     if is_victory:
         tiers = [WB_DIAMONDS_TOP1, WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3]
         for i, row in enumerate(top3[:3]):
             diamonds_by_rank[int(row["user_id"])] = tiers[i]
-
     last_hit_uid: Optional[int] = db.get_wb_last_hitter(int(spawn_id)) if is_victory else None
 
     created = 0
-    for p in participants:
-        uid = int(p["user_id"])
-        dmg = int(p.get("total_damage") or 0)
+    for uid, dmg in by_uid.items():
         contribution_pct = (dmg / total_damage) if total_damage else 0.0
-        if WB_TEST_FLAT_GOLD:
-            # ТЕСТ: 50 золота плоско каждому участнику (вне зависимости от вклада).
-            gold = WB_BASE_GOLD
-            exp = max(0, int(WB_BASE_EXP * mult * (contribution_pct or 0.5)))
-        else:
-            gold = max(0, int(WB_BASE_GOLD * mult * contribution_pct))
-            exp = max(0, int(WB_BASE_EXP * mult * contribution_pct))
+
+        # ЗОЛОТО: гарантия + (пул × вклад%) × mult.
+        gold = max(0, int((WB_GOLD_GUARANTEED + pool_gold * contribution_pct) * mult))
+
+        # ОПЫТ: от уровня игрока, как 1v1, + бонус по вкладу.
+        lvl = levels.get(uid, 1)
+        base_1v1 = victory_xp_for_player_level(lvl)
+        guaranteed_xp = base_1v1 * WB_XP_GUARANTEED_PCT
+        contrib_xp = base_1v1 * WB_XP_CONTRIB_MULT * contribution_pct
+        exp = max(0, int((guaranteed_xp + contrib_xp) * mult))
+
         diamonds = int(diamonds_by_rank.get(uid, 0))
         if last_hit_uid and uid == last_hit_uid:
             diamonds += WB_DIAMONDS_LAST_HIT
@@ -92,9 +128,7 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         if is_victory and last_hit_uid and uid == last_hit_uid:
             chest_type = WB_CHEST_LAST_HIT
         if is_victory and top_uid and uid == top_uid:
-            # Топ-1 имеет приоритет над last_hit на сундук (алмазный > золотой);
-            # если один и тот же игрок — оставляем алмазный (редкий).
-            chest_type = WB_CHEST_TOP_DAMAGE
+            chest_type = WB_CHEST_TOP_DAMAGE  # топ-1 приоритет (алмазный > золотой)
 
         try:
             db.create_wb_reward(
