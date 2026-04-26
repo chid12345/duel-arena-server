@@ -45,8 +45,14 @@
     if (r.gold)     rewards.push(`💰 ${r.gold}`);
     if (r.exp)      rewards.push(`⭐ ${r.exp}`);
     if (r.diamonds) rewards.push(`💎 ${r.diamonds}`);
-    const chest = r.chest_type
-      ? `<div class="wb-mvp-chest">${r.chest_type==='wb_diamond_chest'?'💠 Алмазный':'🏆 Золотой'} сундук рейда</div>` : '';
+    let chest = '';
+    if (r.chest_type === 'wb_diamond_chest') {
+      chest = `<div class="wb-mvp-chest">💠 Алмазный сундук рейда · топ-1 по урону</div>`;
+    } else if (r.chest_type === 'scroll_all_12') {
+      chest = `<div class="wb-mvp-chest">✨ Свиток «+12 ко всем пассивкам» · удача 3%!</div>`;
+    } else if (r.chest_type) {
+      chest = `<div class="wb-mvp-chest">🎁 ${_esc(r.chest_type)}</div>`;
+    }
 
     ov.innerHTML = `<div class="wb-mvp">
       <div class="wb-mvp-bdg">${head}</div>

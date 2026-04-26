@@ -198,13 +198,15 @@ Object.assign(WorldBossScene.prototype, {
           { text: `💰 ${r.gold}   ⭐ ${r.exp}${r.diamonds ? '   💎 ' + r.diamonds : ''}`, size: 12, color: '#ffffff' },
         ];
         if (r.chest_type) {
-          const chIcon = r.chest_type === 'wb_diamond_chest' ? '💠' : '🏆';
-          const chName = r.chest_type === 'wb_diamond_chest' ? 'Алмазный сундук' : 'Золотой сундук';
+          const isScroll = r.chest_type === 'scroll_all_12';
+          const chIcon = isScroll ? '✨' : '💠';
+          const chName = isScroll ? 'Свиток: +12 ко всем пассивкам' : 'Алмазный сундук';
+          const chHint = isScroll ? 'Инвентарь → Свитки' : 'Инвентарь → вкладка ⚔️ Рейд';
           if (r.chest_added) {
-            lines.push({ text: `${chIcon} ${chName} добавлен!`, size: 12, bold: true, color: '#3cff8c' });
-            lines.push({ text: 'Инвентарь → вкладка ⚔️ Рейд', size: 10, color: '#aaddff' });
+            lines.push({ text: `${chIcon} ${chName}!`, size: 12, bold: true, color: '#3cff8c' });
+            lines.push({ text: chHint, size: 10, color: '#aaddff' });
           } else {
-            lines.push({ text: `❌ Сундук не выдан`, size: 11, color: '#ff6666' });
+            lines.push({ text: `❌ Награда не выдана`, size: 11, color: '#ff6666' });
             if (r.chest_error) lines.push({ text: r.chest_error.slice(0, 50), size: 9, color: '#ff4444' });
           }
         }

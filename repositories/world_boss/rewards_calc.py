@@ -18,15 +18,16 @@
 наград не даёт — иначе можно «фармить» XP, просто заходя в рейд.
 
 Алмазы — фиксированные бонусы топ-3 и last-hit (только при победе).
-Сундуки — last-hit (золотой) и top-damage (алмазный).
+Сундуки — top-1 по урону (алмазный) при победе.
+Свитки — 3% шанс scroll_all_12 для остальных при победе.
 """
 from __future__ import annotations
 
 import logging
+import random
 from typing import Any, Optional
 
 from config.world_boss_constants import (
-    WB_CHEST_LAST_HIT,
     WB_CHEST_TOP_DAMAGE,
     WB_DIAMONDS_LAST_HIT,
     WB_DIAMONDS_TOP1,
@@ -40,6 +41,11 @@ from config.world_boss_constants import (
     WB_XP_CONTRIB_MULT,
 )
 from progression_loader import victory_xp_for_player_level
+
+# 3% шанс свитка «✨ Все пассивки +12» (scroll_all_12) для участников победы,
+# которые не получили алмазный сундук (т.е. не топ-1). В магазине стоит 130⭐/$2.
+WB_VICTORY_SCROLL_DROP_CHANCE: float = 0.03
+WB_VICTORY_SCROLL_ITEM_ID: str = "scroll_all_12"
 
 logger = logging.getLogger(__name__)
 
@@ -134,11 +140,14 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         if last_hit_uid and uid == last_hit_uid:
             diamonds += WB_DIAMONDS_LAST_HIT
 
+        # Сундук: только топ-1 по урону при победе → 💠 алмазный.
+        # Остальные при победе: 3% шанс свитка scroll_all_12 (130⭐/$2 в магазине).
+        # Поражение: ничего сверх утешительного золота/опыта.
         chest_type = None
-        if is_victory and last_hit_uid and uid == last_hit_uid:
-            chest_type = WB_CHEST_LAST_HIT
         if is_victory and top_uid and uid == top_uid:
-            chest_type = WB_CHEST_TOP_DAMAGE  # топ-1 приоритет (алмазный > золотой)
+            chest_type = WB_CHEST_TOP_DAMAGE
+        elif is_victory and random.random() < WB_VICTORY_SCROLL_DROP_CHANCE:
+            chest_type = WB_VICTORY_SCROLL_ITEM_ID
 
         try:
             db.create_wb_reward(

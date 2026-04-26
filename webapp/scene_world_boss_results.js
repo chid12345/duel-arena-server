@@ -59,12 +59,12 @@ Object.assign(WorldBossScene.prototype, {
 
     // Сундук (если есть).
     if (r.chest_type) {
-      const chestIcon = r.chest_type === 'wb_diamond_chest' ? '💠' : '🏆';
-      const chestLbl = r.chest_type === 'wb_diamond_chest'
-        ? 'Алмазный сундук рейда'
-        : 'Золотой сундук рейда';
-      const reason = r.chest_type === 'wb_diamond_chest'
-        ? '(за топ урона)' : '(за последний удар)';
+      const isScroll = r.chest_type === 'scroll_all_12';
+      const chestIcon = isScroll ? '✨' : '💠';
+      const chestLbl = isScroll
+        ? 'Свиток «+12 пассивки»'
+        : 'Алмазный сундук рейда';
+      const reason = isScroll ? '(удача 3%!)' : '(за топ урона)';
       const ch = txt(this, W/2, cy + 180, `${chestIcon} ${chestLbl}`, 12, '#ffdd66', true).setOrigin(0.5).setDepth(1002);
       ch._wbChild = true;
       const chr = txt(this, W/2, cy + 200, `${reason} → в инвентарь`, 10, '#aaaacc').setOrigin(0.5).setDepth(1002);
