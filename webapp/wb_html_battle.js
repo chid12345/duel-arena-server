@@ -97,17 +97,13 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   <div class="wb-ultra-track"><div class="wb-ultra-fill" id="wb-ultra-fill" style="width:0%"></div></div>
   <div class="wb-ultra-btn" id="wb-ultra-btn">УДАР</div>
 </div>
-<div class="wb-skills">
+<div class="wb-skills wb-skills-3">
   <div class="wb-skill atk" data-act="skill-info" data-sk="atk">
     <div class="ws-icon">⚔️</div><div class="ws-name">АТАКА</div>
     <div class="wb-cd-ov"><div class="wb-cd-num" id="wb-cd-atk">—</div></div>
   </div>
   <div class="wb-skill shld" data-act="skill-info" data-sk="shld">
     <div class="ws-icon">🛡️</div><div class="ws-name">ЩИТ</div>
-    <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
-  </div>
-  <div class="wb-skill ult" data-act="skill-info" data-sk="ult">
-    <div class="ws-icon">💥</div><div class="ws-name">УЛЬТА</div>
     <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
   </div>
   <div class="wb-skill auto" data-act="skill-info" data-sk="auto">

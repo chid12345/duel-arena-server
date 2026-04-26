@@ -151,7 +151,7 @@ window.WBBattleCSS = (() => {
 .wb-ultra-btn:active.ready{transform:scale(.96);}
 
 /* ── Кнопки скиллов ── */
-.wb-skills{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;
+.wb-skills{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;
   padding:6px 10px 10px;background:linear-gradient(0deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.85) 100%);
   border-top:1px solid rgba(255,255,255,.08);flex-shrink:0;}
 .wb-skill{aspect-ratio:1;border-radius:10px;padding:8px 4px 7px;display:flex;flex-direction:column;

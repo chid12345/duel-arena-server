@@ -177,17 +177,15 @@
       sc?._onHit?.();
       _flashSkillBtn('atk');
 
-      // 2. УЛЬТА — когда шкала ≥100% и прошло >= 15 сек с прошлой ульты.
+      // 2. УЛЬТА — когда шкала ≥100%, выпускаем ШКАЛЬНЫЙ ультимейт (fireUltra,
+      // 8 ударов с тряской — мощнее одиночного скилла). Кнопки УЛЬТА в нижнем
+      // ряду больше нет, единственная ультимейта — через шкалу.
       if (_state.ultra >= 1 && (now - _autoLast.ult) > 15000) {
         try {
-          fireUltSkill(); startSkillCD('ult'); _state.ultra = 0;
-          _autoLast.ult = now;
-          const fill = document.getElementById('wb-ultra-fill');
-          if (fill) fill.style.width = '0%';
-          const ubtn = document.getElementById('wb-ultra-btn');
-          if (ubtn) { ubtn.classList.remove('ready'); ubtn.innerHTML = 'УДАР'; }
-          _flashSkillBtn('ult');
-          window.WBHtml?.toast?.('💥 УЛЬТА (авто)!');
+          if (fireUltra()) {
+            _autoLast.ult = now;
+            window.WBHtml?.toast?.('💥 УЛЬТА (авто)!');
+          }
         } catch(_) {}
       }
 
