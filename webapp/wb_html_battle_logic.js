@@ -245,5 +245,17 @@
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
     _autoLast.shld = 0; _autoLast.ult = 0; }
 
-  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, fireUltSkill, startSkillCD, isSkillOnCD, checkQteTrigger, checkPhaseTransition, bumpCombo, getCombo, setAutoAttack, resetBattleLogic: reset });
+  // Геттер шкалы ульты — нужен чтобы ВОССТАНОВИТЬ её после ререндера UI.
+  // Без этого каждый _refresh (раз в 8 сек) обнулял width в DOM, хотя
+  // логика _state.ultra сохранялась — получался визуальный «глюк».
+  function getUltraPct() { return Math.round((_state.ultra || 0) * 100); }
+
+  // Геттеры остатков КД скиллов — их интервалы продолжают тикать после
+  // ререндера (1 раз в сек), но первая секунда после ререндера показывает
+  // «—». Геттер позволяет сразу восстановить корректное число.
+  function getSkillCdSec(sk) {
+    return _state.cdTimers[sk] ? null : 0; // null = тикает (точное число знает интервал), 0 = свободен
+  }
+
+  Object.assign(window.WBHtml, { addUltraEnergy, fireUltra, fireUltSkill, startSkillCD, isSkillOnCD, checkQteTrigger, checkPhaseTransition, bumpCombo, getCombo, setAutoAttack, getUltraPct, getSkillCdSec, resetBattleLogic: reset });
 })();

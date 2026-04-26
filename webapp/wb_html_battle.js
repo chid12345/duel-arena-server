@@ -139,6 +139,12 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     if (window.WBHtml._autoOn) {
       document.querySelector('.wb-skill.auto')?.classList.add('auto-on');
     }
+    // Восстанавливаем шкалу ульты — без этого _refresh (раз в 8 сек)
+    // обнулял её визуально хотя логика _state.ultra сохранялась.
+    try {
+      const upct = window.WBHtml.getUltraPct?.() || 0;
+      if (upct > 0) setUltraFill(upct);
+    } catch(_) {}
     // Авто-сжатие dead-окна через 20 сек чтобы не загораживало бой.
     // Идемпотентно — на каждом ререндере reset'им и снова стартуем 20с.
     if (isDead) {
