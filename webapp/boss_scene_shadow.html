@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390,initial-scale=1">
+<title>WB · Боевая сцена · ТЕНЕВОЙ СТРАЖ</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#020005;color:#e0e0e0;font:14px -apple-system,Segoe UI,Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:18px;}
+  .row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px;}
+
+  .scene{position:relative;width:390px;height:680px;border-radius:14px;overflow:hidden;
+    background:#02000a;border:1px solid rgba(34,221,255,.3);
+    box-shadow:0 0 60px rgba(34,221,255,.25);}
+
+  /* ── 1. ФОН ── */
+  .bg{position:absolute;inset:0;z-index:1;
+    background-image:url('bosses/bg/shadow.png');
+    background-size:cover;background-position:center bottom;
+    filter:brightness(.95) saturate(1.1);}
+  /* Густой тёмный туман у пола */
+  .bg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;
+    background:linear-gradient(to top,
+      rgba(0,0,0,.85) 0%, rgba(15,5,35,.55) 35%,
+      rgba(15,5,35,.15) 70%, transparent 100%);
+    pointer-events:none;}
+
+  /* ── 2. БОСС ── */
+  .boss-wrap{position:absolute;left:50%;bottom:13%;z-index:5;
+    transform:translateX(-50%);pointer-events:none;
+    height:65%;}
+  .boss{height:100%;width:auto;display:block;
+    -webkit-mask-image:linear-gradient(to bottom,
+      black 0%, black 76%, rgba(0,0,0,.5) 90%, transparent 100%);
+    mask-image:linear-gradient(to bottom,
+      black 0%, black 76%, rgba(0,0,0,.5) 90%, transparent 100%);
+    /* Бирюзовое drop-shadow свечение глаз и тела */
+    filter:
+      drop-shadow(0 0 14px rgba(34,221,255,.7))
+      drop-shadow(0 0 32px rgba(34,221,255,.5))
+      drop-shadow(0 6px 12px rgba(0,0,0,.85));
+    animation:boss-breathe 3.6s ease-in-out infinite,
+              boss-jerk 4.5s ease-in-out infinite;}
+  /* Дыхание + рывок одновременно */
+  @keyframes boss-breathe{
+    0%,100%{transform:scale(1)    translateY(0)}
+    50%   {transform:scale(1.025) translateY(-3px)}}
+  @keyframes boss-jerk{
+    0%,55%,72%,100%{margin-left:0}
+    60%{margin-left:8px;transform:scale(1.04)}
+    66%{margin-left:-4px}}
+
+  /* Густая чёрная тень под лапами */
+  .boss-shadow{position:absolute;left:50%;bottom:12%;z-index:4;
+    width:42%;height:18px;
+    transform:translateX(-50%);pointer-events:none;
+    background:radial-gradient(ellipse 50% 50% at 50% 50%,
+      rgba(0,0,0,.95) 0%, rgba(0,0,0,.55) 45%, transparent 80%);
+    filter:blur(6px);
+    animation:shadow-breathe 3.6s ease-in-out infinite;}
+  @keyframes shadow-breathe{
+    0%,100%{transform:translateX(-50%) scale(1) }
+    50%   {transform:translateX(-50%) scale(.92)}}
+
+  /* ── 3. ЧАСТИЦЫ ── */
+  .vfx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;}
+  .p{position:absolute;width:5px;height:5px;border-radius:50%;
+    background:#22ddff;
+    box-shadow:0 0 10px #22ddff,0 0 20px #00aaff;
+    opacity:0;animation:p-up 5.5s linear infinite;}
+  .p.s2{width:3px;height:3px;animation-duration:7s;}
+  .p.s3{width:7px;height:7px;animation-duration:6.5s;opacity:.6;background:#aa66ff;
+    box-shadow:0 0 10px #aa66ff,0 0 20px #cc88ff;}
+  @keyframes p-up{
+    0%{transform:translateY(0) scale(.3);opacity:0}
+    10%{opacity:.95}
+    85%{opacity:.6}
+    100%{transform:translateY(-440px) scale(1);opacity:0}}
+  .p:nth-child(1){left:8%; bottom:8%; animation-delay:.0s}
+  .p:nth-child(2){left:20%;bottom:8%; animation-delay:1.4s}
+  .p:nth-child(3){left:32%;bottom:6%; animation-delay:.7s}
+  .p:nth-child(4){left:44%;bottom:8%; animation-delay:2.1s}
+  .p:nth-child(5){left:56%;bottom:6%; animation-delay:.3s}
+  .p:nth-child(6){left:68%;bottom:8%; animation-delay:1.8s}
+  .p:nth-child(7){left:80%;bottom:8%; animation-delay:1.1s}
+  .p:nth-child(8){left:92%;bottom:6%; animation-delay:2.5s}
+  .p:nth-child(9){left:14%;bottom:7%; animation-delay:3.2s}
+  .p:nth-child(10){left:38%;bottom:8%;animation-delay:4.0s}
+  .p:nth-child(11){left:62%;bottom:7%;animation-delay:3.5s}
+  .p:nth-child(12){left:86%;bottom:6%;animation-delay:.6s}
+  .p:nth-child(13){left:26%;bottom:8%;animation-delay:2.7s}
+  .p:nth-child(14){left:74%;bottom:7%;animation-delay:.5s}
+  .p:nth-child(15){left:50%;bottom:6%;animation-delay:3.7s}
+  .p:nth-child(16){left:18%;bottom:7%;animation-delay:5.0s}
+
+  .title{position:absolute;top:14px;left:14px;right:14px;z-index:10;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;font-weight:800;letter-spacing:2px;color:#22ddff;
+    text-shadow:0 0 8px rgba(34,221,255,.7);text-transform:uppercase;}
+  .title .hp{font-family:'Courier New',monospace;color:#ff4488;}
+
+  .legend{max-width:340px;font-size:12px;line-height:1.6;color:#aabbdd;}
+  .legend h3{color:#22ddff;font-size:14px;margin-bottom:10px;letter-spacing:1px;}
+  .legend code{background:rgba(34,221,255,.1);padding:1px 5px;border-radius:3px;color:#aaeeff;font-size:11px;}
+  .legend ul{padding-left:18px;margin:6px 0;}
+  .legend li{margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="scene">
+    <div class="bg"></div>
+    <div class="title">
+      <span>🌑 ТЕНЕВОЙ СТРАЖ</span>
+      <span class="hp">HP 9 200 / 14 000</span>
+    </div>
+    <div class="boss-shadow"></div>
+    <div class="boss-wrap">
+      <img class="boss" src="bosses/boss_shadow.png" alt="Shadow">
+    </div>
+    <div class="vfx">
+      <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+      <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+      <div class="p s2"></div><div class="p"></div><div class="p"></div><div class="p s3"></div>
+      <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p"></div>
+    </div>
+  </div>
+
+  <div class="legend">
+    <h3>📋 Теневой Страж — что собрано</h3>
+    <ul>
+      <li><b>Фон</b> — пещера с бирюзовой молнией и фиолетовыми кристаллами</li>
+      <li><b>Туман у пола</b> — почти чёрный градиент, 42% высоты</li>
+      <li><b>Тень-контакт</b> — густое чёрное пятно <code>blur:6px</code></li>
+      <li><b>Босс</b> высота 65%, центр</li>
+      <li>Маска лап: растворяет нижние 24% спрайта в туман</li>
+      <li><b>Бирюзовое свечение</b> — <code>drop-shadow #22ddff</code> (глаза + аура)</li>
+      <li><b>Анимация дыхания</b> <code>scale 1→1.025</code> 3.6с</li>
+      <li><b>Анимация рывка</b> — 1 толчок вперёд + откат за 4.5с цикл</li>
+      <li><b>Частицы</b> — 16 шт., бирюзовые + фиолетовые</li>
+    </ul>
+    <p style="margin-top:12px;font-size:11px;opacity:.7;">
+      В реальной игре это активируется, когда тип босса = <code>shadow</code>
+      (CSS-класс <code>bt-shadow</code> на <code>.wb-boss-zone</code>).
+    </p>
+  </div>
+</div>
+</body>
+</html>

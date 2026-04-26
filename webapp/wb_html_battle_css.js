@@ -65,17 +65,25 @@ window.WBBattleCSS = (() => {
 /* ── Зона босса ── */
 .wb-boss-zone{position:relative;flex:1;overflow:hidden;cursor:crosshair;
   min-height:380px;background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(0,191,255,.05) 0%,transparent 70%);}
-/* Кастомный фон только для Лича. Для остальных боссов — стандартный градиент.
-   Когда у босса добавится свой фон — пропишем .wb-boss-zone.bt-fire и т.д. */
+/* Кастомные фоны под отдельных боссов. У остальных — старый радиальный градиент. */
 .wb-boss-zone.bt-lich{
   background-image:url('bosses/bg/lich.png');
   background-size:cover;background-position:center bottom;background-color:#02000a;}
-/* Туман у пола только для боссов с фоном — ноги утопают в нём */
 .wb-boss-zone.bt-lich::before{content:"";position:absolute;left:0;right:0;bottom:0;
   height:38%;pointer-events:none;z-index:1;
   background:linear-gradient(to top,
     rgba(40,8,70,.7) 0%, rgba(40,8,70,.35) 35%,
     rgba(40,8,70,.10) 70%, transparent 100%);}
+
+/* Теневой Страж — пещера с бирюзовой молнией и фиолетовыми кристаллами */
+.wb-boss-zone.bt-shadow{
+  background-image:url('bosses/bg/shadow.png');
+  background-size:cover;background-position:center bottom;background-color:#02000c;}
+.wb-boss-zone.bt-shadow::before{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:42%;pointer-events:none;z-index:1;
+  background:linear-gradient(to top,
+    rgba(0,0,0,.85) 0%, rgba(15,5,35,.55) 35%,
+    rgba(15,5,35,.15) 70%, transparent 100%);}
 .wb-bimg2{position:absolute;left:50%;top:50%;
   --boss-glow:#9b30ff;
   transform:translate(-50%,-52%);
@@ -87,6 +95,31 @@ window.WBBattleCSS = (() => {
 .wb-boss-zone.bt-lich .wb-bimg2{
   -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);}
+
+/* Теневой Страж: бирюзовое свечение глаз + анимация «рывка» каждые 4.5с.
+   Маска снизу — лапы в чёрные камни. */
+.wb-boss-zone.bt-shadow .wb-bimg2{
+  --boss-glow:#22ddff;
+  -webkit-mask-image:linear-gradient(to bottom, black 0%, black 76%, rgba(0,0,0,.5) 90%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 0%, black 76%, rgba(0,0,0,.5) 90%, transparent 100%);
+  animation:wb-bfloat 3.2s ease-in-out infinite,
+            wb-boss-glow 2s ease-in-out infinite,
+            wb-bjerk-shadow 4.5s ease-in-out infinite;}
+/* Контактная густая чёрная тень под лапами теневого волка */
+.wb-boss-zone.bt-shadow::after{content:"";position:absolute;left:50%;bottom:8%;
+  transform:translateX(-50%);width:42%;height:18px;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse 50% 50% at 50% 50%,
+    rgba(0,0,0,.95) 0%, rgba(0,0,0,.55) 45%, transparent 80%);
+  filter:blur(6px);
+  animation:wb-shadow-breathe 3.2s ease-in-out infinite;}
+@keyframes wb-shadow-breathe{
+  0%,100%{transform:translateX(-50%) scale(1)}
+  50%   {transform:translateX(-50%) scale(.92)}}
+/* Рывок: лёгкий вперёд-назад, 1 раз за цикл (на 60–66%) */
+@keyframes wb-bjerk-shadow{
+  0%,55%,72%,100%{transform:translate(-50%,-52%) scale(1)}
+  60%{transform:translate(calc(-50% + 7px),-52%) scale(1.04)}
+  66%{transform:translate(calc(-50% - 4px),-52%) scale(1)}}
 @keyframes wb-bfloat{
   0%,100%{transform:translate(-50%,-52%) scale(1) rotate(0deg)}
   30%{transform:translate(-50%,-55%) scale(1.02) rotate(.4deg)}
