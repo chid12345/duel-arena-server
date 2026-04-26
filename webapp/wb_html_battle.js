@@ -230,14 +230,18 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     _markSkillSeen(sk);
     document.getElementById('wb-sinfo-ov')?.remove();
     const ov = document.createElement('div'); ov.id = 'wb-sinfo-ov'; ov.className = 'wb-sinfo-ov';
-    // Особый кейс: АВТО без премиума — показываем «Купить подписку» вместо «ИСПОЛЬЗОВАТЬ».
+    // Особый кейс: АВТО без премиума — показываем инфо-окно «Только для подписчиков».
+    // Кнопка ЗАКРЫТЬ (НЕ выкидывает в магазин: из боя выходить нельзя — это поражение).
     const isPremium = !!(s?.is_premium || _lastBattleState?.is_premium);
     const isAutoLocked = sk === 'auto' && !isPremium;
-    const btnLabel = isAutoLocked ? '👑 КУПИТЬ ПОДПИСКУ' : 'ИСПОЛЬЗОВАТЬ';
-    const cdLabel = isAutoLocked ? '🔒 ЗАБЛОКИРОВАНО' : `⏱ ПЕРЕЗАРЯДКА: ${info.cd}`;
+    const btnLabel = isAutoLocked ? 'ПОНЯТНО' : 'ИСПОЛЬЗОВАТЬ';
+    const cdLabel = isAutoLocked ? '🔒 ТОЛЬКО ДЛЯ ПОДПИСЧИКОВ' : `⏱ ПЕРЕЗАРЯДКА: ${info.cd}`;
     const descTxt = isAutoLocked
-      ? 'АВТО — премиум-фича. С подпиской: бьёт за тебя обычными ударами, применяет бусты из инвентаря, без штрафа к награде.'
+      ? 'АВТО — премиум-фича. С подпиской: бьёт за тебя обычными ударами, выпускает УЛЬТУ и активирует ЩИТ автоматически. Без штрафа к награде.'
       : info.desc;
+    const tipTxt = isAutoLocked
+      ? 'Купи подписку в магазине ПОСЛЕ рейда. Из боя выходить нельзя — это будет засчитано как поражение.'
+      : info.tipTxt;
     ov.innerHTML = `<div class="wb-sinfo">
       <div class="wb-sinfo-hdl"></div>
       <div class="wb-sinfo-ic">${info.icon}</div>
@@ -245,8 +249,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       <div class="wb-sinfo-cd">${cdLabel}</div>
       <div class="wb-sinfo-desc">${descTxt}</div>
       <div class="wb-sinfo-tip">
-        <div class="wb-sinfo-tip-t">💡 СОВЕТ</div>
-        <div class="wb-sinfo-tip-v">${info.tipTxt}</div>
+        <div class="wb-sinfo-tip-t">${isAutoLocked ? '⚠️ ВНИМАНИЕ' : '💡 СОВЕТ'}</div>
+        <div class="wb-sinfo-tip-v">${tipTxt}</div>
       </div>
       <div class="wb-sinfo-use" id="wb-sinfo-use">${btnLabel}</div>
     </div>`;
@@ -256,14 +260,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     document.getElementById('wb-sinfo-use')?.addEventListener('click', () => {
       close();
-      if (isAutoLocked) {
-        // Открываем магазин с подпиской: закрываем WB-оверлей и стартуем Shop scene.
-        try { window.WBHtml?.close?.(); } catch(_) {}
-        try { sc?.scene?.start?.('Shop'); } catch(_) {
-          window.WBHtml?.toast?.('👑 Открой магазин и купи подписку');
-        }
-        return;
-      }
+      // Если АВТО заблокирован (нет премиума) — просто закрываем попап, НЕ выходим из боя.
+      if (isAutoLocked) return;
       _useSkillDirect(info, sc, s);
     });
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
