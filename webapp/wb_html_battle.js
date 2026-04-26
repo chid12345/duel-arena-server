@@ -91,6 +91,7 @@
   <div class="wb-wp" style="top:55%;left:38%" data-act="hit"></div>
   <div class="wb-tap-hint">⚡ ТАП — УДАР ⚡</div>
   <div class="wb-spider-slime"><div class="drip s1"></div><div class="drip s2"></div><div class="drip s3"></div><div class="drip s4"></div><div class="drip s5"></div><div class="drip s6"></div><div class="drip s7"></div><div class="drip s8"></div></div>
+  <div class="wb-demon-blood"><div class="drop b1"></div><div class="drop b2"></div><div class="drop b3"></div><div class="drop b4"></div><div class="drop b5"></div><div class="drop b6"></div></div>
 </div>
 ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️</span><div class="wb-plhp-tr"><div class="wb-plhp-f" id="wb-pl-bar" style="width:${ppct}%"></div></div><span class="wb-plhp-v" id="wb-pl-hp">${ps.current_hp||0}/${ps.max_hp||100}</span></div>` : '')}
 <div class="wb-ultra">

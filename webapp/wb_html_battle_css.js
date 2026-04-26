@@ -85,6 +85,56 @@ window.WBBattleCSS = (() => {
     rgba(0,0,0,.85) 0%, rgba(15,5,35,.55) 35%,
     rgba(15,5,35,.15) 70%, transparent 100%);}
 
+/* Кровавый Демон — храм с красным туманом и лучом света.
+   Стоит ногами в тумане, тяжёлое дыхание, при атаке фон алой вспышки. */
+.wb-boss-zone.bt-demon{
+  background-image:url('bosses/bg/demon.png');
+  background-size:cover;background-position:center bottom;background-color:#0a0000;
+  /* Туман медленно «дышит» — пульсация яркости 4.4с (тяжелее) */
+  animation:wb-demon-bg-breathe 4.4s ease-in-out infinite;}
+@keyframes wb-demon-bg-breathe{
+  0%,100%{filter:brightness(.92) saturate(1.05)}
+  50%   {filter:brightness(1.10) saturate(1.2)}}
+/* Красный туман у ног — снизу подсвечивает босса (как от тумана на фоне) */
+.wb-boss-zone.bt-demon::before{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:42%;pointer-events:none;z-index:1;
+  background:linear-gradient(to top,
+    rgba(180,20,20,.55) 0%, rgba(140,10,10,.35) 30%,
+    rgba(100,5,5,.15) 65%, transparent 100%);
+  mix-blend-mode:screen;
+  animation:wb-demon-fog-pulse 4.4s ease-in-out infinite;}
+@keyframes wb-demon-fog-pulse{
+  0%,100%{opacity:.85}
+  50%   {opacity:1}}
+/* Алая вспышка фона при атаке босса (.wb-flash-rage) — кратковременная заливка */
+.wb-boss-zone.bt-demon.wb-flash-rage::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:9;
+  background:radial-gradient(ellipse at center,rgba(255,40,40,.45) 0%,rgba(180,10,10,.2) 60%,transparent 100%);
+  animation:wb-demon-rage-flash .35s ease-out forwards;}
+@keyframes wb-demon-rage-flash{
+  0%{opacity:0}
+  20%{opacity:1}
+  100%{opacity:0}}
+
+/* Слой капель крови — стекают с меча/наплечников вниз в туман.
+   Скрыт по умолчанию, активен только под .bt-demon */
+.wb-demon-blood{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:hidden;display:none;}
+.wb-boss-zone.bt-demon .wb-demon-blood{display:block;}
+.wb-demon-blood .drop{position:absolute;width:3px;height:10px;border-radius:50% 50% 50% 50% / 30% 30% 70% 70%;
+  background:linear-gradient(180deg, rgba(220,30,30,.95), rgba(140,5,5,.9));
+  box-shadow:0 0 5px rgba(220,30,30,.6);
+  animation:wb-demon-drip 4.5s ease-in infinite;}
+.wb-demon-blood .drop.b1{left:38%;top:38%;animation-delay:.0s}
+.wb-demon-blood .drop.b2{left:42%;top:42%;animation-delay:1.2s;animation-duration:5s}
+.wb-demon-blood .drop.b3{left:58%;top:36%;animation-delay:.6s;animation-duration:4.2s}
+.wb-demon-blood .drop.b4{left:62%;top:40%;animation-delay:2.0s;animation-duration:5.3s}
+.wb-demon-blood .drop.b5{left:46%;top:48%;animation-delay:3.0s;animation-duration:4.7s}
+.wb-demon-blood .drop.b6{left:54%;top:44%;animation-delay:1.6s;animation-duration:5.2s}
+@keyframes wb-demon-drip{
+  0%{transform:translateY(0) scaleY(1);opacity:0}
+  10%{opacity:.95}
+  85%{opacity:.85}
+  100%{transform:translateY(420px) scaleY(1.6);opacity:0}}
+
 /* Лавовый Титан — лавовый водопад в каньоне.
    Rim light: за спиной босса яркий свет, ему нужно сильное оранжевое
    контурное свечение. Heat haze глобально — горячий воздух плавает. */
@@ -223,6 +273,35 @@ window.WBBattleCSS = (() => {
 .wb-boss-zone.bt-lich .wb-bimg2{
   -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);}
+
+/* Кровавый Демон: стоит ногами в тумане, мощное красное свечение,
+   тяжёлое медленное дыхание. При атаке — алая вспышка фона. */
+.wb-boss-zone.bt-demon .wb-bimg2{
+  --boss-glow:#ff2030;
+  /* Анкер к полу как у лавового — Мясник стоит ногами в тумане */
+  top:auto;bottom:-2%;
+  transform:translateX(-50%);
+  transform-origin:50% 100%;
+  width:auto;height:72%;
+  -webkit-mask-image:linear-gradient(to bottom, black 0%, black 80%, rgba(0,0,0,.6) 92%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 0%, black 80%, rgba(0,0,0,.6) 92%, transparent 100%);
+  /* Тяжёлое дыхание (4.4s) + красный glow синхронно */
+  animation:wb-demon-stand 4.4s ease-in-out infinite,
+            wb-demon-glow 4.4s ease-in-out infinite;}
+@keyframes wb-demon-stand{
+  0%,100%{transform:translateX(-50%) scale(1)}
+  50%   {transform:translateX(-50%) scale(1.03)}}
+@keyframes wb-demon-glow{
+  0%,100%{filter:
+    drop-shadow(0 0 12px rgba(255,40,40,.85))
+    drop-shadow(0 0 26px rgba(180,10,10,.6))
+    brightness(1)
+    saturate(1.15);}
+  50%{filter:
+    drop-shadow(0 0 22px rgba(255,80,60,1))
+    drop-shadow(0 0 44px rgba(220,20,20,.85))
+    brightness(1.12)
+    saturate(1.35);}}
 
 /* Лавовый Титан: rim light от водопада сзади + медленное дыхание.
    ВАЖНО: лавовый стоит ногами на полу — НЕ парит.

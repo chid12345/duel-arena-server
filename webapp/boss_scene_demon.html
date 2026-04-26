@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390,initial-scale=1">
+<title>WB · Боевая сцена · КРОВАВЫЙ ДЕМОН</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:#020005;color:#e0e0e0;font:14px -apple-system,Segoe UI,Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:18px;}
+  .row{display:flex;flex-wrap:wrap;align-items:flex-start;gap:18px;}
+
+  .scene{position:relative;width:390px;height:680px;border-radius:14px;overflow:hidden;
+    background:#0a0000;border:1px solid rgba(255,40,40,.4);
+    box-shadow:0 0 60px rgba(220,20,20,.35);}
+
+  /* ── 1. ФОН — храм с красным туманом и лучом света ── */
+  .bg{position:absolute;inset:0;z-index:1;
+    background-image:url('bosses/bg/demon.png');
+    background-size:cover;background-position:center bottom;
+    animation:bg-breathe 4.4s ease-in-out infinite;}
+  @keyframes bg-breathe{
+    0%,100%{filter:brightness(.92) saturate(1.05)}
+    50%   {filter:brightness(1.10) saturate(1.2)}}
+  /* Красный туман у пола — снизу подсвечивает босса */
+  .bg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:42%;
+    background:linear-gradient(to top,
+      rgba(180,20,20,.55) 0%, rgba(140,10,10,.35) 30%,
+      rgba(100,5,5,.15) 65%, transparent 100%);
+    mix-blend-mode:screen;pointer-events:none;
+    animation:fog-pulse 4.4s ease-in-out infinite;}
+  @keyframes fog-pulse{
+    0%,100%{opacity:.85}
+    50%   {opacity:1}}
+
+  /* Алая вспышка при атаке босса */
+  .scene.flash::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:9;
+    background:radial-gradient(ellipse at center,rgba(255,40,40,.45) 0%,rgba(180,10,10,.2) 60%,transparent 100%);
+    animation:flash-rage .35s ease-out forwards;}
+  @keyframes flash-rage{
+    0%{opacity:0}
+    20%{opacity:1}
+    100%{opacity:0}}
+
+  /* ── 2. БОСС — стоит ногами в красном тумане ── */
+  .boss-wrap{position:absolute;left:50%;bottom:-2%;z-index:5;
+    transform:translateX(-50%);pointer-events:none;
+    transform-origin:50% 100%;
+    height:72%;}
+  .boss{height:100%;width:auto;display:block;
+    -webkit-mask-image:linear-gradient(to bottom,
+      black 0%, black 80%, rgba(0,0,0,.6) 92%, transparent 100%);
+    mask-image:linear-gradient(to bottom,
+      black 0%, black 80%, rgba(0,0,0,.6) 92%, transparent 100%);
+    transform-origin:50% 100%;
+    /* Тяжёлое дыхание + красный glow синхронно (4.4s) */
+    animation:boss-stand 4.4s ease-in-out infinite,
+              boss-glow 4.4s ease-in-out infinite;}
+  @keyframes boss-stand{
+    0%,100%{transform:scale(1)}
+    50%   {transform:scale(1.03)}}
+  @keyframes boss-glow{
+    0%,100%{filter:
+      drop-shadow(0 0 12px rgba(255,40,40,.85))
+      drop-shadow(0 0 26px rgba(180,10,10,.6))
+      brightness(1)
+      saturate(1.15);}
+    50%{filter:
+      drop-shadow(0 0 22px rgba(255,80,60,1))
+      drop-shadow(0 0 44px rgba(220,20,20,.85))
+      brightness(1.12)
+      saturate(1.35);}}
+
+  /* ── 3. КАПЛИ КРОВИ — стекают с меча/наплечников ── */
+  .blood{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;}
+  .drop{position:absolute;width:3px;height:10px;border-radius:50% 50% 50% 50% / 30% 30% 70% 70%;
+    background:linear-gradient(180deg, rgba(220,30,30,.95), rgba(140,5,5,.9));
+    box-shadow:0 0 5px rgba(220,30,30,.6);
+    animation:drip 4.5s ease-in infinite;}
+  .drop.b1{left:38%;top:38%;animation-delay:.0s}
+  .drop.b2{left:42%;top:42%;animation-delay:1.2s;animation-duration:5s}
+  .drop.b3{left:58%;top:36%;animation-delay:.6s;animation-duration:4.2s}
+  .drop.b4{left:62%;top:40%;animation-delay:2.0s;animation-duration:5.3s}
+  .drop.b5{left:46%;top:48%;animation-delay:3.0s;animation-duration:4.7s}
+  .drop.b6{left:54%;top:44%;animation-delay:1.6s;animation-duration:5.2s}
+  @keyframes drip{
+    0%{transform:translateY(0) scaleY(1);opacity:0}
+    10%{opacity:.95}
+    85%{opacity:.85}
+    100%{transform:translateY(420px) scaleY(1.6);opacity:0}}
+
+  /* ── ИСКРЫ ─── малиновые угольки */
+  .vfx{position:absolute;inset:0;z-index:6;pointer-events:none;overflow:hidden;}
+  .p{position:absolute;width:5px;height:5px;border-radius:50%;
+    background:#ff4444;
+    box-shadow:0 0 10px #ff4444,0 0 20px #cc2020;
+    opacity:0;animation:p-up 6s linear infinite;}
+  .p.s2{width:3px;height:3px;animation-duration:8s}
+  @keyframes p-up{
+    0%{transform:translateY(0) scale(.3);opacity:0}
+    10%{opacity:.95}85%{opacity:.6}
+    100%{transform:translateY(-460px) scale(1);opacity:0}}
+  .p:nth-child(1){left:8%;bottom:8%;animation-delay:.0s}
+  .p:nth-child(2){left:24%;bottom:8%;animation-delay:1.4s}
+  .p:nth-child(3){left:40%;bottom:6%;animation-delay:.7s}
+  .p:nth-child(4){left:56%;bottom:8%;animation-delay:2.1s}
+  .p:nth-child(5){left:72%;bottom:6%;animation-delay:.3s}
+  .p:nth-child(6){left:88%;bottom:8%;animation-delay:1.8s}
+  .p:nth-child(7){left:16%;bottom:7%;animation-delay:3.0s}
+  .p:nth-child(8){left:48%;bottom:7%;animation-delay:3.7s}
+  .p:nth-child(9){left:80%;bottom:7%;animation-delay:2.5s}
+  .p:nth-child(10){left:32%;bottom:6%;animation-delay:4.0s}
+
+  .title{position:absolute;top:14px;left:14px;right:14px;z-index:10;
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:11px;font-weight:800;letter-spacing:2px;color:#ff3344;
+    text-shadow:0 0 8px rgba(220,20,20,.8);text-transform:uppercase;}
+  .title .hp{font-family:'Courier New',monospace;color:#ff4488;}
+
+  .test-btn{position:absolute;left:50%;bottom:18px;z-index:25;
+    transform:translateX(-50%);padding:10px 20px;border-radius:24px;
+    background:linear-gradient(135deg,#cc0033,#770022);color:#fff;
+    border:none;font-size:11px;font-weight:900;letter-spacing:2px;
+    cursor:pointer;box-shadow:0 0 20px rgba(255,30,30,.5);}
+
+  .legend{max-width:340px;font-size:12px;line-height:1.6;color:#ffaaaa;}
+  .legend h3{color:#ff3344;font-size:14px;margin-bottom:10px;letter-spacing:1px;}
+  .legend code{background:rgba(255,40,40,.1);padding:1px 5px;border-radius:3px;color:#ffbbbb;font-size:11px;}
+  .legend ul{padding-left:18px;margin:6px 0;}
+  .legend li{margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="row">
+  <div class="scene" id="scene">
+    <div class="bg"></div>
+    <div class="title">
+      <span>👹 КРОВАВЫЙ ДЕМОН</span>
+      <span class="hp">HP 13 800 / 18 500</span>
+    </div>
+    <div class="boss-wrap">
+      <img class="boss" src="bosses/boss_demon.png" alt="Demon">
+    </div>
+    <div class="vfx">
+      <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s2"></div>
+      <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s2"></div>
+      <div class="p"></div><div class="p s2"></div>
+    </div>
+    <div class="blood">
+      <div class="drop b1"></div><div class="drop b2"></div><div class="drop b3"></div>
+      <div class="drop b4"></div><div class="drop b5"></div><div class="drop b6"></div>
+    </div>
+    <button class="test-btn" id="rage">⚔ АТАКА БОССА</button>
+  </div>
+
+  <div class="legend">
+    <h3>📋 Кровавый Демон — что собрано</h3>
+    <ul>
+      <li><b>Фон-храм</b> — красный туман и луч света сверху</li>
+      <li><b>Тяжёлое дыхание фона</b> — brightness 0.92→1.10 за 4.4с</li>
+      <li><b>Красный туман у ног</b> — gradient + <code>mix-blend-mode:screen</code>,
+        пульсирует синхронно — подсвечивает босса снизу</li>
+      <li><b>Босс анкер к полу</b> — <code>bottom:-2%</code>, <code>height:72%</code>,
+        ноги стоят в тумане</li>
+      <li><b>Тяжёлое дыхание</b> — scale 1→1.03 за 4.4с (синхронно с фоном)</li>
+      <li><b>Красное свечение</b> — 2-слойный <code>drop-shadow #ff2030</code>
+        пульсирует синхронно (тоже 4.4с)</li>
+      <li><b>Капли крови</b> — 6 капель стекают с меча/наплечников
+        <code>z:6</code>, скорости 4.2–5.3с в туман</li>
+      <li><b>Алая вспышка</b> — нажми ⚔ АТАКА. В реальной игре сработает
+        автоматически когда босс наносит урон игроку</li>
+    </ul>
+  </div>
+</div>
+<script>
+  document.getElementById('rage').addEventListener('click', () => {
+    const sc = document.getElementById('scene');
+    sc.classList.remove('flash'); void sc.offsetWidth;
+    sc.classList.add('flash');
+    setTimeout(() => sc.classList.remove('flash'), 400);
+  });
+</script>
+</body>
+</html>

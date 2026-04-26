@@ -34,8 +34,17 @@ Object.assign(WorldBossScene.prototype, {
     // 3) Игроку прилетел урон → красная вспышка по HP-тексту.
     if (newPs && typeof newPs.current_hp === 'number'
         && typeof prevPs.current_hp === 'number'
-        && newPs.current_hp < prevPs.current_hp && this._plHpT) {
-      this._fxFlashText(this._plHpT);
+        && newPs.current_hp < prevPs.current_hp) {
+      if (this._plHpT) this._fxFlashText(this._plHpT);
+      // Кровавый Демон: при ударе босса фон вспыхивает алым
+      try {
+        const z = document.getElementById('wb-boss-zone');
+        if (z && z.classList.contains('bt-demon')) {
+          z.classList.remove('wb-flash-rage'); void z.offsetWidth;
+          z.classList.add('wb-flash-rage');
+          setTimeout(() => z.classList.remove('wb-flash-rage'), 400);
+        }
+      } catch(_) {}
     }
 
     // 4) Переход 1→2 стадия (ярость на 50% HP) → анонс + тяжёлый shake.
