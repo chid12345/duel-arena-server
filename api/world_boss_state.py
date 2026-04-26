@@ -69,6 +69,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                 "hits_count": int(ps.get("hits_count") or 0),
                 "raid_scroll_1": ps.get("raid_scroll_1"),
                 "raid_scroll_2": ps.get("raid_scroll_2"),
+                "auto_bot": bool(int(ps.get("auto_bot") or 0)),
             }
 
     prep_seconds_left = 0

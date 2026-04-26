@@ -38,11 +38,14 @@ def register_active_session_route(
             return {"ok": False, "reason": str(e)}
 
         # 1. Мировой Босс — у игрока есть player_state в активном спавне.
+        # ВАЖНО: если auto_bot=1 (юзер включил «Авто-бой 50%» в лобби),
+        # НЕ редиректим — смысл авто-бота как раз в том что игрок не хочет
+        # участвовать вручную, бот дерётся за него. Пусть гуляет по игре.
         try:
             active = db.get_wb_active_spawn()
             if active:
                 ps = db.get_wb_player_state(int(active["spawn_id"]), uid)
-                if ps:
+                if ps and not int(ps.get("auto_bot") or 0):
                     return {"ok": True, "type": "world_boss", "scene": "WorldBoss"}
         except Exception as e:
             log.warning("active_session WB check: %s", e)

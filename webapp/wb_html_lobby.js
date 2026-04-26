@@ -203,7 +203,18 @@ window.WBHtml = (() => {
       try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
       const act = el.dataset.act;
       if (act==='back')       { close(); _scene?.scene?.start?.('Menu',{returnTab:'more'}); }
-      else if (act==='enter') { try { localStorage.removeItem('wb_left_raid'); } catch(_) {} close(); _scene?.scene?.restart?.(); }
+      else if (act==='enter') {
+        // Явный «вход в рейд» — запоминаем spawn_id чтобы при ререндере
+        // переключиться в боевой экран. Без этого лобби «затягивает» всех
+        // кто просто открыл вкладку Босс во время активного рейда.
+        try {
+          localStorage.removeItem('wb_left_raid');
+          if (_state?.active?.spawn_id) {
+            localStorage.setItem('wb_entered_raid', String(_state.active.spawn_id));
+          }
+        } catch(_) {}
+        close(); _scene?.scene?.restart?.();
+      }
       else if (act==='join')  {
         // Защита от двойного клика.
         if (el.classList.contains('busy')) return;
@@ -333,11 +344,19 @@ window.WBHtml = (() => {
     const s = state || {};
     const root = _root();
     const _leftSid = (() => { try { return localStorage.getItem('wb_left_raid'); } catch(_) { return null; } })();
-    // Если у игрока УЖЕ есть player_state в активном рейде — он в бою.
-    // Никакой refresh/закрытие/wb_left_raid не должны выпускать. Анти-эксплойт:
-    // 'обновил страницу → гуляю по игре пока рейд идёт'.
-    const lockedInBattle = s.active && s.player_state;
-    if (s.active && (lockedInBattle || _leftSid !== String(s.active.spawn_id))) {
+    const _enteredSid = (() => { try { return localStorage.getItem('wb_entered_raid'); } catch(_) { return null; } })();
+    // Авто-бот: если включил «Авто-бой 50%» в лобби — НЕ форсим в бой,
+    // бот сам дерётся, игрок занимается чем хочет.
+    const isAutoBotMe = !!s.player_state?.auto_bot;
+    // Боевой экран только если ИГРОК явно вошёл в рейд:
+    //  1) уже бил (есть player_state без auto_bot) — он в бою
+    //  2) тапнул «ВОЙТИ В РЕЙД» (wb_entered_raid совпадает с активным spawn_id)
+    // Иначе показываем лобби с кнопкой «ВОЙТИ В РЕЙД» — даже во время активного рейда.
+    // Это исправляет «затянуло в бой» когда я просто открыл вкладку Босс
+    // во время чужого рейда.
+    const hasJoinedActive = s.active && s.player_state && !isAutoBotMe;
+    const tappedEnter = s.active && _enteredSid === String(s.active.spawn_id);
+    if (hasJoinedActive || (tappedEnter && _leftSid !== String(s.active.spawn_id))) {
       if (_leftSid) try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
       _setTabBar(false); root.style.cssText = ''; window.WBHtml._renderBattle?.(root, s); return;
     }
