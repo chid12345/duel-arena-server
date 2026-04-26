@@ -40,6 +40,15 @@ const CSS = `
 .cl-st-l{font-size:9px;font-weight:700;color:#ff7acb;margin-top:4px;letter-spacing:.5px}
 .cl-mlabel{font-size:10px;font-weight:700;padding:4px 16px;color:#00f0ff;letter-spacing:.5px;opacity:.85}
 .cl-mlist{padding:0 12px;display:flex;flex-direction:column;gap:4px}
+.cl-st.btn{cursor:pointer;user-select:none;transition:all .15s;border-color:rgba(0,240,255,.7);box-shadow:0 0 14px rgba(0,240,255,.2)}
+.cl-st.btn:active{transform:scale(.93);box-shadow:0 0 20px rgba(0,240,255,.45)}
+.cl-st-arr{font-size:9px;color:#00f0ff;margin-top:3px;opacity:.75;letter-spacing:.5px}
+.cl-my-label{font-size:10px;font-weight:700;padding:4px 16px;color:#ff7acb;letter-spacing:.5px;opacity:.85}
+.cl-mem-panel{position:absolute;inset:0;z-index:200;background:linear-gradient(160deg,rgba(14,2,26,.98),rgba(4,4,14,.98));border-radius:0;overflow-y:auto;animation:clSlide .18s ease}
+@keyframes clSlide{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.cl-mem-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;border-bottom:1px solid rgba(0,240,255,.18);position:sticky;top:0;background:rgba(10,2,20,.97);z-index:2}
+.cl-mem-hdr-title{font-size:13px;font-weight:800;color:#00f0ff;text-shadow:0 0 8px currentColor;letter-spacing:.5px}
+.cl-mem-hdr-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:2px 8px;opacity:.75;user-select:none}
 .cl-mrow{padding:8px 10px;border-radius:10px;display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(15,5,30,.8),rgba(5,5,15,.8));border:1px solid rgba(0,240,255,.2)}
 .cl-mrow.leader{border-color:#ffd166;box-shadow:0 0 12px rgba(255,209,102,.25)}
 .cl-mic{font-size:15px;width:22px;text-align:center}
@@ -126,15 +135,48 @@ function _memberRow(m, isLeader) {
   </div>`;
 }
 
+function _showMembersPanel(root, members, isLeader, scene) {
+  root.querySelector('#cl-mem-panel')?.remove();
+  const panel = document.createElement('div');
+  panel.id = 'cl-mem-panel';
+  panel.className = 'cl-mem-panel';
+  panel.innerHTML = `
+    <div class="cl-mem-hdr">
+      <span class="cl-mem-hdr-back" data-act="mem-back">‹</span>
+      <div class="cl-mem-hdr-title">УЧАСТНИКИ ${members.length}/20</div>
+    </div>
+    <div class="cl-mlist" style="padding:8px 12px 100px">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>`;
+  root.appendChild(panel);
+  panel.addEventListener('click', e => {
+    const el = e.target.closest('[data-act]');
+    if (!el) return;
+    const act = el.dataset.act;
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
+    if (act === 'mem-back') { panel.remove(); return; }
+    if (act === 'transfer') {
+      const m = members.find(x => x.user_id === +el.dataset.uid);
+      if (m) window.ClanHTML.confirmTransfer?.(scene, m);
+      return;
+    }
+    if (act === 'kick') {
+      const m = members.find(x => x.user_id === +el.dataset.uid);
+      if (m) window.ClanHTML.confirmKick?.(scene, m);
+      return;
+    }
+  });
+}
+
 function openMyClan(scene, data) {
   _injectCSS();
   close();
   const clan = data.clan || {};
   const members = data.members || [];
   const isLeader = !!data.is_leader;
+  const myUserId = data.my_user_id;
   const isClosed = (clan.closed|0) === 1;
   const pending = data.pending_requests || 0;
   const threeBtns = isLeader && isClosed;
+  const myMember = members.find(m => m.user_id === myUserId) || members[0];
 
   const root = document.createElement('div');
   root.id = 'cl-root';
@@ -184,12 +226,12 @@ function openMyClan(scene, data) {
       <div class="cl-navb" data-act="nav" data-sub="history">📜 История</div>
     </div>
     <div class="cl-stats">
-      <div class="cl-st"><div class="cl-st-v">${members.length}/20</div><div class="cl-st-l">БОЙЦОВ</div></div>
+      <div class="cl-st btn" data-act="members"><div class="cl-st-v">${members.length}/20</div><div class="cl-st-l">БОЙЦОВ</div><div class="cl-st-arr">▼ список</div></div>
       <div class="cl-st"><div class="cl-st-v">${clan.wins|0}</div><div class="cl-st-l">ПОБЕД</div></div>
       <div class="cl-st"><div class="cl-st-v">Ур.${clan.level|0}</div><div class="cl-st-l">УРОВЕНЬ</div></div>
     </div>
-    <div class="cl-mlabel">УЧАСТНИКИ ${members.length}/20</div>
-    <div class="cl-mlist">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>
+    <div class="cl-my-label">ВЫ В КЛАНЕ</div>
+    <div class="cl-mlist">${myMember ? _memberRow(myMember, isLeader) : ''}</div>
   </div>
   <div class="cl-actions ${threeBtns?'three':'two'}">
     <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.png" class="cl-bi" alt=""><div class="cl-bt">Чат</div></div>
@@ -210,6 +252,7 @@ function openMyClan(scene, data) {
     const act = el.dataset.act;
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
     if (act === 'back')      { close(); scene.scene.start('Menu', { target: 'more' }); return; }
+    if (act === 'members')   { _showMembersPanel(root, members, isLeader, scene); return; }
     if (act === 'nav')       { scene.scene.restart({ sub: el.dataset.sub }); return; }
     if (act === 'chat')      { scene.scene.restart({ sub: 'chat' }); return; }
     if (act === 'requests')  { scene.scene.restart({ sub: 'requests' }); return; }
