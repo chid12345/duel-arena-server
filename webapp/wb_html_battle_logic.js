@@ -158,29 +158,36 @@
     setTimeout(() => btn.classList.remove('firing'), 350);
   }
 
-  // Таймстемпы последних авто-применений (надёжнее чем isSkillOnCD —
-  // не зависит от состояния setInterval-таймера).
-  const _autoLast = { shld: 0, ult: 0 };
+  // Таймстемпы последних авто-применений. Интервалы по стандартным CD:
+  //   ATK 4 сек, SHLD 8 сек, ULT 15 сек.
+  const _autoLast = { atk: 0, shld: 0, ult: 0 };
+  const AUTO_ATK_MS  = 4000;
+  const AUTO_SHLD_MS = 8000;
+  const AUTO_ULT_MS  = 15000;
 
   function setAutoAttack(on) {
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
     if (!on) return;
     // Сброс таймстемпов при включении авто — чтобы не блокировать первый каст.
-    _autoLast.shld = 0; _autoLast.ult = 0;
+    _autoLast.atk = 0; _autoLast.shld = 0; _autoLast.ult = 0;
     _state.autoTimer = setInterval(() => {
       const sc = window.WBHtml._scene; const hp = sc?._state?.active?.current_hp;
       if (hp != null && hp <= 0) { setAutoAttack(false); return; }
 
       const now = Date.now();
 
-      // 1. АТАКА — каждый тик (1 сек), визуальный пульс.
-      sc?._onHit?.();
-      _flashSkillBtn('atk');
+      // 1. АТАКА — раз в 4 секунды (а не каждый тик), как и в ручном режиме CD.
+      if ((now - _autoLast.atk) >= AUTO_ATK_MS) {
+        sc?._onHit?.();
+        _autoLast.atk = now;
+        _flashSkillBtn('atk');
+        startSkillCD('atk');
+      }
 
       // 2. УЛЬТА — когда шкала ≥100%, выпускаем ШКАЛЬНЫЙ ультимейт (fireUltra,
-      // 8 ударов с тряской — мощнее одиночного скилла). Кнопки УЛЬТА в нижнем
-      // ряду больше нет, единственная ультимейта — через шкалу.
-      if (_state.ultra >= 1 && (now - _autoLast.ult) > 15000) {
+      // 8 ударов с тряской). Кнопки УЛЬТА в нижнем ряду нет, единственная
+      // ультимейта — через шкалу.
+      if (_state.ultra >= 1 && (now - _autoLast.ult) >= AUTO_ULT_MS) {
         try {
           if (fireUltra()) {
             _autoLast.ult = now;
@@ -189,11 +196,11 @@
         } catch(_) {}
       }
 
-      // 3. ЩИТ — HP игрока < 50% И прошло ≥8 сек с прошлого щита.
+      // 3. ЩИТ — HP игрока < 50% И прошло ≥AUTO_SHLD_MS с прошлого щита.
       try {
         const ps = sc?._state?.player_state;
         const phpPct = ps && ps.max_hp > 0 ? (ps.current_hp / ps.max_hp) : 1;
-        if (phpPct < 0.5 && (now - _autoLast.shld) > 8000) {
+        if (phpPct < 0.5 && (now - _autoLast.shld) >= AUTO_SHLD_MS) {
           startSkillCD('shld');
           _autoLast.shld = now;
           _flashSkillBtn('shld');
