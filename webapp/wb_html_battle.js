@@ -175,8 +175,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       else if (act === 'res')   sc?._resurrect?.(el.dataset.t);
       else if (act === 'back')  { try { if (s.active?.spawn_id) localStorage.setItem('wb_left_raid', String(s.active.spawn_id)); } catch(_) {} window.WBHtml.close(); sc?.scene?.start?.('WorldBoss'); }
       else if (act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
-      else if (act === 'shield')     window.WBHtml.toast?.('🛡 Блок активирован');
-      else if (act === 'ult')        window.WBHtml.toast?.('💥 Ульта не готова');
+      else if (act === 'shield')     {}
+      else if (act === 'ult')        {};
       else if (act === 'skill-info') _showSkillInfo(el.dataset.sk, sc, s);
       else if (act === 'dead-expand') {
         // Раскрываем dead-окно и сразу запускаем новый 20-сек таймер автосжатия,
@@ -243,7 +243,6 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
         try {
           const r = await post('/api/world_boss/shield', {});
           if (r?.ok) {
-            W.toast?.('🛡 ЩИТ АКТИВЕН (-30% урона, 2 сек)');
             W.startSkillCD?.('shld');
             // Визуальная подсветка кнопки на 2 сек.
             const sBtn = document.querySelector('.wb-skill.shld');
