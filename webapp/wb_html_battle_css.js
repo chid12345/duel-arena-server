@@ -64,13 +64,24 @@ window.WBBattleCSS = (() => {
 
 /* ── Зона босса ── */
 .wb-boss-zone{position:relative;flex:1;overflow:hidden;cursor:crosshair;
-  min-height:380px;background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(0,191,255,.05) 0%,transparent 70%);}
+  min-height:380px;
+  background-image:url('bosses/bg/lich.png');
+  background-size:cover;background-position:center bottom;background-color:#02000a;}
+/* Туман у пола поверх фона — ноги босса утопают в нём */
+.wb-boss-zone::before{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:38%;pointer-events:none;z-index:1;
+  background:linear-gradient(to top,
+    rgba(40,8,70,.7) 0%, rgba(40,8,70,.35) 35%,
+    rgba(40,8,70,.10) 70%, transparent 100%);}
 .wb-bimg2{position:absolute;left:50%;top:50%;
   --boss-glow:#9b30ff;
   transform:translate(-50%,-52%);
   width:300px;height:300px;object-fit:contain;
+  /* Маска ног — растворяет нижние 22% спрайта в туман */
+  -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
+  mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   animation:wb-bfloat 3.2s ease-in-out infinite, wb-boss-glow 2s ease-in-out infinite;
-  pointer-events:none;}
+  pointer-events:none;z-index:2;}
 @keyframes wb-bfloat{
   0%,100%{transform:translate(-50%,-52%) scale(1) rotate(0deg)}
   30%{transform:translate(-50%,-55%) scale(1.02) rotate(.4deg)}

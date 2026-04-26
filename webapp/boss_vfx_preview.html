@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=390,initial-scale=1">
+<title>WB Boss VFX — превью «парящей магии»</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#050508;color:#e0e0e0;font:14px -apple-system,Segoe UI,Roboto,sans-serif;
+    min-height:100vh;padding:20px;}
+  h1{font-size:18px;margin-bottom:6px;color:#ff0088;letter-spacing:2px;
+    text-shadow:0 0 10px #ff0088;}
+  .sub{font-size:11px;color:#88a;margin-bottom:18px;letter-spacing:1px;}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));
+    gap:16px;max-width:1200px;}
+
+  .card{position:relative;border-radius:14px;overflow:hidden;
+    background:linear-gradient(180deg,#0a0014 0%,#050008 100%);
+    border:1px solid rgba(255,0,200,.25);
+    box-shadow:0 4px 30px rgba(255,0,200,.1);}
+  .card-h{padding:10px 14px;font-size:11px;letter-spacing:2px;font-weight:800;
+    color:#ff88dd;text-transform:uppercase;border-bottom:1px solid rgba(255,0,200,.15);
+    display:flex;justify-content:space-between;align-items:center;}
+  .card-h .typ{font-size:9px;color:#88aacc;letter-spacing:1px;font-weight:700;}
+
+  .scene{position:relative;height:380px;overflow:hidden;
+    background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(0,191,255,.05) 0%,transparent 70%);}
+
+  /* ── Босс ── */
+  .bimg{position:absolute;left:50%;top:50%;
+    --boss-glow:#9b30ff;
+    transform:translate(-50%,-52%);
+    width:280px;height:280px;object-fit:contain;
+    /* Маска: затемнить низ изображения чтобы скрыть «землю» под боссом */
+    -webkit-mask-image:linear-gradient(to bottom,
+      black 0%, black 70%, rgba(0,0,0,.5) 88%, transparent 100%);
+    mask-image:linear-gradient(to bottom,
+      black 0%, black 70%, rgba(0,0,0,.5) 88%, transparent 100%);
+    animation:bfloat 3.2s ease-in-out infinite, bglow 2s ease-in-out infinite;
+    pointer-events:none;}
+  @keyframes bfloat{
+    0%,100%{transform:translate(-50%,-52%) scale(1) rotate(0)}
+    30%{transform:translate(-50%,-55%) scale(1.02) rotate(.4deg)}
+    60%{transform:translate(-50%,-50%) scale(1.03) rotate(-.3deg)}}
+  @keyframes bglow{
+    0%,100%{filter:drop-shadow(0 0 12px var(--boss-glow)) drop-shadow(0 0 28px var(--boss-glow)) brightness(1)}
+    50%{filter:drop-shadow(0 0 28px var(--boss-glow)) drop-shadow(0 0 60px var(--boss-glow)) brightness(1.12)}}
+
+  /* ── VFX слой парящей магии ── */
+  .vfx{position:absolute;inset:0;pointer-events:none;overflow:hidden;}
+
+  /* Туман — мягкий радиальный градиент, дрейфует */
+  .vfx-fog{position:absolute;inset:0;
+    background:radial-gradient(ellipse 65% 55% at 50% 65%,
+      color-mix(in srgb, var(--boss-glow,#9b30ff) 22%, transparent) 0%,
+      transparent 70%);
+    animation:fog-drift 9s ease-in-out infinite alternate;mix-blend-mode:screen;}
+  @keyframes fog-drift{
+    0%{opacity:.5;transform:scale(1) translateX(-12px)}
+    100%{opacity:.85;transform:scale(1.1) translateX(12px)}}
+
+  /* Частицы — поднимаются вверх с разными задержками */
+  .p{position:absolute;width:5px;height:5px;border-radius:50%;
+    background:var(--boss-glow,#9b30ff);
+    box-shadow:0 0 8px var(--boss-glow,#9b30ff),0 0 16px var(--boss-glow,#9b30ff);
+    opacity:0;animation:p-up 5s linear infinite;}
+  @keyframes p-up{
+    0%{transform:translateY(0) scale(.3);opacity:0}
+    10%{opacity:.9}
+    85%{opacity:.7}
+    100%{transform:translateY(-300px) scale(1);opacity:0}}
+
+  .p.s2{width:3px;height:3px;animation-duration:7s;}
+  .p.s3{width:7px;height:7px;animation-duration:6s;opacity:.7;}
+
+  /* 16 частиц с разными left/delay */
+  .p:nth-child(1){left:8%; bottom:-10px;animation-delay:.0s}
+  .p:nth-child(2){left:18%;bottom:-10px;animation-delay:1.4s}
+  .p:nth-child(3){left:28%;bottom:-10px;animation-delay:.7s}
+  .p:nth-child(4){left:38%;bottom:-10px;animation-delay:2.1s}
+  .p:nth-child(5){left:48%;bottom:-10px;animation-delay:.3s}
+  .p:nth-child(6){left:58%;bottom:-10px;animation-delay:1.8s}
+  .p:nth-child(7){left:68%;bottom:-10px;animation-delay:1.1s}
+  .p:nth-child(8){left:78%;bottom:-10px;animation-delay:2.5s}
+  .p:nth-child(9){left:88%;bottom:-10px;animation-delay:.9s}
+  .p:nth-child(10){left:13%;bottom:-10px;animation-delay:3.2s}
+  .p:nth-child(11){left:33%;bottom:-10px;animation-delay:4.0s}
+  .p:nth-child(12){left:53%;bottom:-10px;animation-delay:3.5s}
+  .p:nth-child(13){left:73%;bottom:-10px;animation-delay:4.4s}
+  .p:nth-child(14){left:23%;bottom:-10px;animation-delay:2.7s}
+  .p:nth-child(15){left:63%;bottom:-10px;animation-delay:.5s}
+  .p:nth-child(16){left:83%;bottom:-10px;animation-delay:3.7s}
+
+  /* Boss-specific glow tint */
+  .b-universal{--boss-glow:#9b30ff}
+  .b-fire     {--boss-glow:#ff5520}
+  .b-ice      {--boss-glow:#30bbff}
+  .b-poison   {--boss-glow:#3cdd44}
+  .b-shadow   {--boss-glow:#aa44ff}
+  .b-lich     {--boss-glow:#88ff66}
+  .b-demon    {--boss-glow:#ff3344}
+  .b-divine   {--boss-glow:#ffe040}
+
+  .info{padding:8px 14px;font-size:10px;color:#88aacc;border-top:1px solid rgba(255,0,200,.1);
+    display:flex;justify-content:space-between;}
+
+  .legend{margin:24px 0 8px;padding:14px;border-radius:10px;
+    background:rgba(150,80,255,.05);border:1px solid rgba(150,80,255,.2);
+    font-size:12px;line-height:1.6;color:#aabbdd;max-width:1200px;}
+  .legend b{color:#fff;}
+</style>
+</head>
+<body>
+  <h1>⚔️ WB BOSS VFX — ПРЕВЬЮ «ПАРЯЩЕЙ МАГИИ»</h1>
+  <div class="sub">парящие частицы + туман + срез «земли» под боссом · цвет частиц подстраивается под тип босса</div>
+
+  <div class="grid">
+
+    <div class="card">
+      <div class="card-h">🐉 ЛИЧ <span class="typ">universal · #9b30ff</span></div>
+      <div class="scene b-universal">
+        <div class="vfx">
+          <div class="vfx-fog"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p s2"></div><div class="p"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p"></div>
+        </div>
+        <img class="bimg" src="bosses/boss_lich.png" alt="">
+      </div>
+      <div class="info"><span>фиолетовые искры</span><span>5 сек цикл</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">🔥 ОГНЕННЫЙ <span class="typ">fire · #ff5520</span></div>
+      <div class="scene b-fire">
+        <div class="vfx">
+          <div class="vfx-fog"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p s2"></div><div class="p"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p"></div>
+        </div>
+        <img class="bimg" src="bosses/boss_fire.png" alt="">
+      </div>
+      <div class="info"><span>оранжевые искры</span><span>как пепел в потоке</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">❄️ ЛЕДЯНОЙ <span class="typ">ice · #30bbff</span></div>
+      <div class="scene b-ice">
+        <div class="vfx">
+          <div class="vfx-fog"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p s2"></div><div class="p"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p"></div>
+        </div>
+        <img class="bimg" src="bosses/boss_celestial.png" alt="">
+      </div>
+      <div class="info"><span>голубые снежинки</span><span>морозный туман</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">☠️ ЯДОВИТЫЙ <span class="typ">poison · #3cdd44</span></div>
+      <div class="scene b-poison">
+        <div class="vfx">
+          <div class="vfx-fog"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p s2"></div><div class="p"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p"></div>
+        </div>
+        <img class="bimg" src="bosses/boss_poison.png" alt="">
+      </div>
+      <div class="info"><span>зелёные споры</span><span>токсичный туман</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">🕯️ ТЕНЕВОЙ <span class="typ">shadow · #aa44ff</span></div>
+      <div class="scene b-shadow">
+        <div class="vfx">
+          <div class="vfx-fog"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p s2"></div><div class="p"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p"></div>
+        </div>
+        <img class="bimg" src="bosses/boss_shadow.png" alt="">
+      </div>
+      <div class="info"><span>фиолетовые тени</span><span>тёмная аура</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h">😈 ДЕМОН <span class="typ">demon · #ff3344</span></div>
+      <div class="scene b-demon">
+        <div class="vfx">
+          <div class="vfx-fog"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p s3"></div><div class="p"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p s2"></div><div class="p"></div><div class="p"></div><div class="p s3"></div>
+          <div class="p"></div><div class="p s2"></div><div class="p"></div><div class="p"></div>
+        </div>
+        <img class="bimg" src="bosses/boss_demon.png" alt="">
+      </div>
+      <div class="info"><span>багровые искры</span><span>адское свечение</span></div>
+    </div>
+
+  </div>
+
+  <div class="legend">
+    <b>Что меняется в боевом экране:</b><br>
+    1. Над боссом — слой <b>16 частиц</b> разного размера, плывут вверх (5–7 сек цикл)<br>
+    2. <b>Туман</b> — мягкий радиальный градиент, дрейфует влево-вправо (9 сек)<br>
+    3. <b>Цвет</b> подстраивается под <code>boss_glow</code> каждого типа автоматически<br>
+    4. <b>Срез «земли»</b> — нижние 30% изображения босса плавно становятся прозрачными
+       через CSS <code>mask-image</code> — больше нет нелепой подставки внизу.<br><br>
+
+    <b>Производительность:</b> только CSS-анимации (никакого JS-цикла), GPU-ускорение через
+    transform/opacity. Нагрузка минимальная — даже на слабых телефонах не будет лагов.
+  </div>
+</body>
+</html>
