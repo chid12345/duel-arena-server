@@ -255,6 +255,12 @@ window.WBBattleCSS = (() => {
 .wb-mvp-dmg span{color:#00FF9F;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 8px #00FF9F;}
 .wb-mvp-rew{font-size:13px;color:#fff;margin-bottom:6px;font-weight:700;}
 .wb-mvp-chest{font-size:11px;color:#ffdd66;margin-bottom:14px;}
+.wb-mvp-msg{font-size:11px;color:rgba(255,255,255,.65);font-style:italic;
+  margin:8px 14px 14px;padding:10px 12px;border-radius:10px;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  line-height:1.5;text-align:center;}
+.wb-mvp-ov.lose .wb-mvp-msg{color:rgba(255,180,180,.7);
+  background:rgba(255,80,80,.06);border-color:rgba(255,80,80,.15);}
 .wb-mvp-btn{display:block;width:100%;margin-top:18px;padding:14px;border-radius:10px;
   background:linear-gradient(135deg,#FF0055,#cc0044);border:none;color:#fff;
   font-size:13px;font-weight:900;letter-spacing:2px;cursor:pointer;

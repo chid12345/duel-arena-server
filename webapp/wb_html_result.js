@@ -3,11 +3,25 @@
 (() => {
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
   function _subtitle(pct, win) {
-    if (!win) return '⚰️ ПОПЫТКА УЧТЕНА';
+    if (!win) {
+      if (pct >= 25) return '💔 ПОЧТИ ПОЛУЧИЛОСЬ';
+      if (pct >= 10) return '⚔️ ХРАБРЫЙ БОЕЦ';
+      return '💀 ПОПЫТКА УЧТЕНА';
+    }
     if (pct >= 50) return '⚡ РАЗРУШИТЕЛЬ БОССОВ ⚡';
     if (pct >= 25) return '⚔️ ВОИН РЕЙДА ⚔️';
     if (pct >= 10) return '🛡️ ВЕТЕРАН РЕЙДА 🛡️';
     return '🌟 УЧАСТНИК РЕЙДА 🌟';
+  }
+  function _bottomMsg(pct, win) {
+    if (!win) {
+      if (pct >= 25) return 'Босс был сильнее... но ты дрался достойно. В следующий раз — точно повезёт! 💪';
+      if (pct >= 10) return 'Не сдавайся! Каждый удар приближает к победе. До встречи в рейде ⚔️';
+      return 'Поражение — это шаг к победе. Точи меч и возвращайся! 🗡️';
+    }
+    if (pct >= 50) return '👑 Босс пал от твоей руки! Легендарный воин!';
+    if (pct >= 25) return 'Без тебя победа была бы невозможна! 🏆';
+    return 'Вместе мы победили! Каждый удар важен ⚔️';
   }
 
   function showMvpResult(state, scene) {
@@ -19,8 +33,9 @@
     const avatar = ps.emoji || ps.avatar || '⚔️';
     const dmg = r.total_damage || ps.total_damage || ps.damage || r.player_damage || 0;
     const win = !!r.is_victory;
-    const head = win ? '👑 MVP RAID' : '💀 БОЙ ОКОНЧЕН';
+    const head = win ? '👑 MVP RAID' : '💀 ПОРАЖЕНИЕ';
     const sub = _subtitle(r.contribution_pct||0, win);
+    const msg = _bottomMsg(r.contribution_pct||0, win);
 
     document.getElementById('wb-mvp-ov')?.remove();
     const ov = document.createElement('div');
@@ -41,6 +56,7 @@
       <div class="wb-mvp-dmg">Урон: <span>${(dmg||0).toLocaleString('ru')}</span></div>
       ${rewards.length ? `<div class="wb-mvp-rew">${rewards.join('   ')}</div>` : ''}
       ${chest}
+      <div class="wb-mvp-msg">${msg}</div>
       <button class="wb-mvp-btn" id="wb-mvp-claim">ПОЛУЧИТЬ НАГРАДУ</button>
     </div>`;
     document.body.appendChild(ov);
