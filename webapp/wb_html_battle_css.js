@@ -225,13 +225,23 @@ window.WBBattleCSS = (() => {
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);}
 
 /* Лавовый Титан: rim light от водопада сзади + медленное дыхание.
-   Сильное оранжевое drop-shadow создаёт контурный свет на каменной броне. */
+   ВАЖНО: лавовый стоит ногами на полу — НЕ парит.
+   Привязка к bottom + transform-origin внизу + анимация только scale. */
 .wb-boss-zone.bt-lava .wb-bimg2{
   --boss-glow:#ff5520;
+  /* Перебиваем дефолтное центрирование: top:50% → bottom-anchor */
+  top:auto;bottom:-2%;
+  transform:translateX(-50%);
+  transform-origin:50% 100%;
+  width:auto;height:74%;
   -webkit-mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
   mask-image:linear-gradient(to bottom, black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
-  animation:wb-bfloat 4.2s ease-in-out infinite,
+  /* Только scale + glow, никакого translateY — ноги на месте */
+  animation:wb-lava-stand 4.2s ease-in-out infinite,
             wb-lava-rim 3.2s ease-in-out infinite;}
+@keyframes wb-lava-stand{
+  0%,100%{transform:translateX(-50%) scale(1)}
+  50%   {transform:translateX(-50%) scale(1.025)}}
 /* Rim light: 2 слоя — яркий контур от водопада + общий тёплый glow.
    Анимация мерцает синхронно с фоном-водопадом (3.2s). */
 @keyframes wb-lava-rim{

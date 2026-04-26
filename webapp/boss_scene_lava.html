@@ -30,21 +30,25 @@
       rgba(80,15,0,.15) 65%, transparent 100%);
     pointer-events:none;}
 
-  /* ── 2. БОСС — на камнях, перед лавопадом ── */
-  .boss-wrap{position:absolute;left:50%;bottom:8%;z-index:5;
+  /* ── 2. БОСС — на камнях, перед лавопадом, ноги на полу ── */
+  .boss-wrap{position:absolute;left:50%;bottom:-2%;z-index:5;
     transform:translateX(-50%);pointer-events:none;
-    height:68%;}
+    height:74%;
+    /* transform-origin: bottom — масштабирование «дыхания» идёт ОТ НОГ
+       вверх, ноги остаются на месте, корпус слегка вырастает. */
+    transform-origin:50% 100%;}
   .boss{height:100%;width:auto;display:block;
     -webkit-mask-image:linear-gradient(to bottom,
       black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
     mask-image:linear-gradient(to bottom,
       black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
-    /* Медленное дыхание + rim light синхронно с фоном */
+    transform-origin:50% 100%;
+    /* Только scale, без translateY — ноги привязаны к полу */
     animation:boss-breathe 4.2s ease-in-out infinite,
               boss-rim 3.2s ease-in-out infinite;}
   @keyframes boss-breathe{
-    0%,100%{transform:scale(1)    translateY(0)}
-    50%   {transform:scale(1.03)  translateY(-4px)}}
+    0%,100%{transform:scale(1)}
+    50%   {transform:scale(1.025)}}
   /* Rim light — контурное свечение от водопада сзади */
   @keyframes boss-rim{
     0%,100%{filter:
