@@ -109,6 +109,11 @@ window.WBLobbyCSS = (() => {
   box-shadow:0 0 40px rgba(255,0,130,.5);}
 @keyframes wb-eg{0%,100%{box-shadow:0 0 35px rgba(255,0,130,.5)}50%{box-shadow:0 0 55px rgba(255,0,130,.85)}}
 .wb-enter.active{display:block;}
+.wb-enter.locked{display:block;cursor:not-allowed;background:rgba(80,80,80,.3);
+  border-color:rgba(120,120,120,.4);box-shadow:none;animation:none;}
+.wb-enter.locked .wb-enter-icon{animation:none;opacity:.6;}
+.wb-enter.locked .wb-enter-lbl{color:rgba(255,255,255,.4);}
+.wb-enter.locked .wb-enter-sub{color:rgba(255,255,255,.3);}
 .wb-enter-in{display:flex;align-items:center;justify-content:center;gap:10px;height:100%;position:relative;z-index:2;}
 .wb-enter-icon{font-size:22px;animation:wb-eis .4s ease-in-out infinite alternate;}
 @keyframes wb-eis{0%{transform:rotate(-5deg) scale(1)}100%{transform:rotate(5deg) scale(1.1)}}

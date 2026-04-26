@@ -343,8 +343,26 @@ window.WBHtml = (() => {
     try { window._closeAllTabOverlays?.(); } catch(_) {}
     const s = state || {};
     const root = _root();
+    // Cleanup флагов localStorage когда рейд закончился — иначе они копятся
+    // и ломают логику следующих рейдов.
+    if (!s.active) {
+      try {
+        localStorage.removeItem('wb_left_raid');
+        localStorage.removeItem('wb_entered_raid');
+      } catch(_) {}
+    }
     const _leftSid = (() => { try { return localStorage.getItem('wb_left_raid'); } catch(_) { return null; } })();
-    const _enteredSid = (() => { try { return localStorage.getItem('wb_entered_raid'); } catch(_) { return null; } })();
+    let _enteredSid = (() => { try { return localStorage.getItem('wb_entered_raid'); } catch(_) { return null; } })();
+    // Если тапнул ENTER но 2-минутное окно входа закрылось, и удара ещё
+    // не было (нет player_state) — чистим флаг чтобы не показать боевой
+    // экран без возможности участвовать.
+    if (s.active && !s.player_state && _enteredSid === String(s.active.spawn_id)) {
+      const elapsed = 600 - (s.active.seconds_left || 600);
+      if (elapsed > 120) {
+        try { localStorage.removeItem('wb_entered_raid'); } catch(_) {}
+        _enteredSid = null;
+      }
+    }
     // Авто-бот: если включил «Авто-бой 50%» в лобби — НЕ форсим в бой,
     // бот сам дерётся, игрок занимается чем хочет.
     const isAutoBotMe = !!s.player_state?.auto_bot;
@@ -369,7 +387,23 @@ window.WBHtml = (() => {
     }
     root.innerHTML = _lobbyHTML(s);
     _updateInvSection(root, s);
-    if (s.active) root.querySelector('#wb-enter-btn')?.classList.add('active');
+    if (s.active) {
+      // Вход в рейд открыт только первые 2 минуты после старта.
+      // После — кнопка «ВХОД ЗАКРЫТ», тап ничего не делает.
+      const elapsed = 600 - (s.active.seconds_left || 600); // WB_DURATION_SEC = 600
+      const lateClosed = elapsed > 120;
+      const btn = root.querySelector('#wb-enter-btn');
+      if (btn) {
+        if (lateClosed) {
+          btn.classList.add('locked');
+          btn.removeAttribute('data-act'); // отключаем клик
+          const lbl = btn.querySelector('.wb-enter-lbl');
+          if (lbl) lbl.innerHTML = '🔒 ВХОД ЗАКРЫТ<span class="wb-enter-sub">Прошло больше 2 минут с начала</span>';
+        } else {
+          btn.classList.add('active');
+        }
+      }
+    }
     _bind(root);
     _startTimer();
   }
