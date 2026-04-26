@@ -389,7 +389,8 @@ window.WBHtml = (() => {
     _updateInvSection(root, s);
     if (s.active) {
       // Вход в рейд открыт только первые 2 минуты после старта.
-      // После — кнопка «ВХОД ЗАКРЫТ», тап ничего не делает.
+      // После — кнопка «ВХОД ЗАКРЫТ», тап ничего не делает + плашка ниже
+      // с дружелюбным текстом «дождись окончания».
       const elapsed = 600 - (s.active.seconds_left || 600); // WB_DURATION_SEC = 600
       const lateClosed = elapsed > 120;
       const btn = root.querySelector('#wb-enter-btn');
@@ -398,7 +399,13 @@ window.WBHtml = (() => {
           btn.classList.add('locked');
           btn.removeAttribute('data-act'); // отключаем клик
           const lbl = btn.querySelector('.wb-enter-lbl');
-          if (lbl) lbl.innerHTML = '🔒 ВХОД ЗАКРЫТ<span class="wb-enter-sub">Прошло больше 2 минут с начала</span>';
+          if (lbl) lbl.innerHTML = '🔒 ВХОД ЗАКРЫТ<span class="wb-enter-sub">Можно зайти только в первые 2 минуты</span>';
+          // Дружелюбная плашка под кнопкой.
+          const note = document.createElement('div');
+          note.className = 'wb-enter-note';
+          const mins = Math.ceil((s.active.seconds_left || 0) / 60);
+          note.innerHTML = `⏳ Бой ещё идёт · осталось ~${mins} мин<br><span style="opacity:.7">Дождись окончания — после рейда сразу будет следующий через 4 часа</span>`;
+          btn.insertAdjacentElement('afterend', note);
         } else {
           btn.classList.add('active');
         }

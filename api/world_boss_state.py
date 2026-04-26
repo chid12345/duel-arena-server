@@ -91,10 +91,16 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
     elif active:
         # Если рейд уже идёт — проверяем регистрацию против активного спавна,
         # чтобы UI всё ещё показывал «ты участвуешь».
+        # Счётчик: показываем РЕАЛЬНОЕ число бойцов (тех кто хоть раз ударил),
+        # не просто зарегистрированных. Это даёт правдивую картину «кто бьёт босса».
         try:
             active_spawn_id = int(active["spawn_id"])
             is_registered = db.wb_is_registered(active_spawn_id, uid)
-            registrants_count = db.wb_registration_count(active_spawn_id)
+            fighters = db.get_wb_participants_count(active_spawn_id)
+            regs = db.wb_registration_count(active_spawn_id)
+            # Показываем максимум: либо все реальные бойцы (если их больше),
+            # либо все зарегистрированные (если бой только начался).
+            registrants_count = max(fighters, regs)
         except Exception:
             pass
 
