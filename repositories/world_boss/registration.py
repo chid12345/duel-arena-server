@@ -59,10 +59,17 @@ class WorldBossRegistrationMixin:
     def wb_registration_count(self, spawn_id: int) -> int:
         conn = self.get_connection()
         cur = conn.cursor()
+        # AS c — иначе на Postgres (dict_row) row['count'], на SQLite row[0].
+        # С алиасом обе БД отдают строку с ключом 'c'.
         cur.execute(
-            "SELECT COUNT(*) FROM world_boss_registrations WHERE spawn_id=?",
+            "SELECT COUNT(*) AS c FROM world_boss_registrations WHERE spawn_id=?",
             (int(spawn_id),),
         )
         row = cur.fetchone()
         conn.close()
-        return int(row[0]) if row else 0
+        if not row:
+            return 0
+        try:
+            return int(row["c"])
+        except (KeyError, TypeError):
+            return int(row[0])  # fallback для SQLite если row — tuple
