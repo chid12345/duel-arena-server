@@ -103,11 +103,14 @@ window.WBBattleCSS = (() => {
     rgba(180,40,0,.10) 70%, transparent 100%);
   mix-blend-mode:screen;}
 /* Heat haze — лёгкое дрожание воздуха над лавой через wavy mask.
-   blur+animate-skew создаёт ощущение горячего воздуха. */
+   Маска снизу→вверх растворяет границу blur'а, иначе виден прямоугольный
+   stop там где заканчивается ::after. */
 .wb-boss-zone.bt-fire::after{content:"";position:absolute;left:0;right:0;bottom:0;
   height:55%;pointer-events:none;z-index:3;
   backdrop-filter:blur(.6px);
   -webkit-backdrop-filter:blur(.6px);
+  -webkit-mask-image:linear-gradient(to top, black 0%, black 60%, transparent 100%);
+  mask-image:linear-gradient(to top, black 0%, black 60%, transparent 100%);
   animation:wb-fire-haze 5s ease-in-out infinite;}
 @keyframes wb-fire-haze{
   0%,100%{transform:translateX(0) skewX(0)}
@@ -134,18 +137,17 @@ window.WBBattleCSS = (() => {
      Анимация wb-bcore-pulse даёт «горячее» дыхание реактора. */
   animation:wb-bfloat 3.2s ease-in-out infinite,
             wb-fire-glow 2.6s ease-in-out infinite;}
-/* Кастомное мощное свечение для огненного — ярче и насыщеннее */
+/* Кастомное мощное свечение для огненного — ярче и насыщеннее.
+   Blur ограничен 45px, чтобы не было «прямоугольного гало» по габаритам. */
 @keyframes wb-fire-glow{
   0%,100%{filter:
-    drop-shadow(0 0 14px rgba(255,120,30,.7))
-    drop-shadow(0 0 32px rgba(255,80,0,.55))
-    drop-shadow(0 0 60px rgba(220,40,0,.4))
+    drop-shadow(0 0 10px rgba(255,120,30,.75))
+    drop-shadow(0 0 22px rgba(255,80,0,.55))
     brightness(1)
     saturate(1.1);}
   50%{filter:
-    drop-shadow(0 0 28px rgba(255,180,60,.95))
-    drop-shadow(0 0 60px rgba(255,100,0,.85))
-    drop-shadow(0 0 110px rgba(255,60,0,.65))
+    drop-shadow(0 0 18px rgba(255,180,60,.95))
+    drop-shadow(0 0 42px rgba(255,100,0,.75))
     brightness(1.18)
     saturate(1.3);}}
 /* Контактная тень-лужа лавы под ногами */
@@ -201,8 +203,8 @@ window.WBBattleCSS = (() => {
   30%{transform:translate(-50%,-55%) scale(1.02) rotate(.4deg)}
   60%{transform:translate(-50%,-50%) scale(1.03) rotate(-.3deg)}}
 @keyframes wb-boss-glow{
-  0%,100%{filter:drop-shadow(0 0 12px var(--boss-glow)) drop-shadow(0 0 28px var(--boss-glow)) brightness(1.0)}
-  50%{filter:drop-shadow(0 0 28px var(--boss-glow)) drop-shadow(0 0 60px var(--boss-glow)) drop-shadow(0 0 90px var(--boss-glow)) brightness(1.12)}}
+  0%,100%{filter:drop-shadow(0 0 10px var(--boss-glow)) drop-shadow(0 0 22px var(--boss-glow)) brightness(1.0)}
+  50%{filter:drop-shadow(0 0 18px var(--boss-glow)) drop-shadow(0 0 38px var(--boss-glow)) brightness(1.12)}}
 .wb-bimg2.wb-hit{animation:wb-bhit .18s ease forwards,wb-bfloat 3.2s ease-in-out infinite .18s,wb-boss-glow 2s ease-in-out infinite .18s;}
 @keyframes wb-bhit{0%{filter:brightness(1) drop-shadow(0 0 12px var(--boss-glow))}
   40%{filter:brightness(4) saturate(0) drop-shadow(0 0 40px #fff)}

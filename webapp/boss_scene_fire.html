@@ -29,10 +29,13 @@
       rgba(180,40,0,.10) 70%, transparent 100%);
     mix-blend-mode:screen;pointer-events:none;}
 
-  /* Heat haze — дрожание воздуха */
+  /* Heat haze — дрожание воздуха. Маска сверху чтобы blur плавно сходил
+     на нет, иначе виден горизонтальный «прямоугольный край» */
   .haze{position:absolute;left:0;right:0;bottom:0;height:55%;z-index:3;
     pointer-events:none;backdrop-filter:blur(.6px);
     -webkit-backdrop-filter:blur(.6px);
+    -webkit-mask-image:linear-gradient(to top, black 0%, black 60%, transparent 100%);
+    mask-image:linear-gradient(to top, black 0%, black 60%, transparent 100%);
     animation:haze-shimmer 5s ease-in-out infinite;}
   @keyframes haze-shimmer{
     0%,100%{transform:translateX(0) skewX(0)}
@@ -53,18 +56,17 @@
   @keyframes boss-breathe{
     0%,100%{transform:scale(1)    translateY(0)}
     50%   {transform:scale(1.025) translateY(-3px)}}
-  /* Пульсация ядра — drop-shadow становится ярче в такт с фоном (синхронно). */
+  /* Пульсация ядра — drop-shadow становится ярче в такт с фоном (синхронно).
+     Blur до 45px чтобы не было прямоугольного гало. */
   @keyframes boss-glow{
     0%,100%{filter:
-      drop-shadow(0 0 14px rgba(255,120,30,.7))
-      drop-shadow(0 0 32px rgba(255,80,0,.55))
-      drop-shadow(0 0 60px rgba(220,40,0,.4))
+      drop-shadow(0 0 10px rgba(255,120,30,.75))
+      drop-shadow(0 0 22px rgba(255,80,0,.55))
       brightness(1)
       saturate(1.1);}
     50%{filter:
-      drop-shadow(0 0 28px rgba(255,180,60,.95))
-      drop-shadow(0 0 60px rgba(255,100,0,.85))
-      drop-shadow(0 0 110px rgba(255,60,0,.65))
+      drop-shadow(0 0 18px rgba(255,180,60,.95))
+      drop-shadow(0 0 42px rgba(255,100,0,.75))
       brightness(1.18)
       saturate(1.3);}}
 
