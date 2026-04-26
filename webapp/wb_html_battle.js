@@ -131,17 +131,24 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     });
   }
 
+  // Храним последнее состояние для root-listener (биндим только один раз).
+  let _lastBattleState = null;
   function _bindBattle(root, s) {
+    _lastBattleState = s;
     const sc = window.WBHtml._scene;
     (s.top || []).forEach((t, i) => {
-      root.querySelectorAll('.wb-ghost')[i]?.addEventListener('click', () => _openCard(t, s));
+      root.querySelectorAll('.wb-ghost')[i]?.addEventListener('click', () => _openCard(t, _lastBattleState || s));
     });
     document.getElementById('wb-pc-x')?.addEventListener('click', () =>
       document.getElementById('wb-pcov')?.classList.remove('open'));
     document.getElementById('wb-pcov')?.addEventListener('click', e => {
       if (e.target === e.currentTarget) e.currentTarget.classList.remove('open');
     });
+    if (root.__wbBattleBound) return;
+    root.__wbBattleBound = true;
     root.addEventListener('click', e => {
+      const s = _lastBattleState || {};
+      const sc = window.WBHtml._scene;  // всегда актуальная сцена
       const el = e.target.closest('[data-act]'); if (!el) return;
       window.WBHtml._lastTap = { x: e.clientX, y: e.clientY };
       const act = el.dataset.act;

@@ -187,6 +187,11 @@ window.WBHtml = (() => {
   }
 
   function _bind(root) {
+    // Защита от дубликатов: каждый _render() вызывает _bind, но listener на root
+    // переживает innerHTML. Без флага получаем 2-3-N обработчиков → join-toggle
+    // срабатывает дважды и отменяет себя. Биндим только один раз на root.
+    if (root.__wbBound) return;
+    root.__wbBound = true;
     root.addEventListener('click', e => {
       const ct = e.target.closest('[data-cat]');
       if (ct) {
