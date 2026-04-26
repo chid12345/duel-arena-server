@@ -14,8 +14,8 @@
     итого      = (guaranteed + contrib) × mult
 
 Множитель mult = 2.0 победа | 0.3 поражение.
-Участник = ударивший ИЛИ зарегистрированный (зарегистрированный без удара получит
-только guaranteed-часть).
+Участник = ТОЛЬКО ударивший (нанёсший >0 урона). Регистрация без удара
+наград не даёт — иначе можно «фармить» XP, просто заходя в рейд.
 
 Алмазы — фиксированные бонусы топ-3 и last-hit (только при победе).
 Сундуки — last-hit (золотой) и top-damage (алмазный).
@@ -70,22 +70,14 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
 
     Идемпотентно через create_wb_reward (UNIQUE spawn_id+user_id).
     """
-    # Участники = все кто бил + все кто зарегистрировался.
+    # Участники = ТОЛЬКО те, кто реально нанёс урон (>0).
+    # Зарегистрировался без удара → 0 наград (нет фарма XP за «зашёл»).
     hits = db.get_wb_all_participants_damage(int(spawn_id))
-    by_uid = {int(p["user_id"]): int(p.get("total_damage") or 0) for p in hits}
-    try:
-        conn = db.get_connection()
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT user_id FROM world_boss_registrations WHERE spawn_id=?",
-            (int(spawn_id),),
-        )
-        for r in cur.fetchall():
-            uid = int(r[0] if not isinstance(r, dict) else r["user_id"])
-            by_uid.setdefault(uid, 0)
-        conn.close()
-    except Exception as e:
-        logger.warning("wb_rewards_calc: ошибка чтения регистраций spawn=%s: %s", spawn_id, e)
+    by_uid = {
+        int(p["user_id"]): int(p.get("total_damage") or 0)
+        for p in hits
+        if int(p.get("total_damage") or 0) > 0
+    }
 
     if not by_uid:
         return 0
