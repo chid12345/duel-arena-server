@@ -207,7 +207,20 @@ class BootScene extends Phaser.Scene {
   create() {
     const ls = document.getElementById('loading-screen');
     if (ls) { ls.style.opacity = '0'; setTimeout(() => ls.remove(), 500); }
-    this.scene.start('Menu');
+    // Анти-эксплойт: если игрок refresh/перезашёл во время активного рейда
+    // и у него уже есть player_state в нём — сразу в WorldBoss scene
+    // (вернётся в бой). Игнорируем wb_left_raid.
+    (async () => {
+      try {
+        const d = await get('/api/world_boss/state');
+        if (d?.active && d?.player_state) {
+          try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
+          this.scene.start('WorldBoss');
+          return;
+        }
+      } catch(_) {}
+      this.scene.start('Menu');
+    })();
   }
 }
 

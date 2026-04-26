@@ -333,7 +333,11 @@ window.WBHtml = (() => {
     const s = state || {};
     const root = _root();
     const _leftSid = (() => { try { return localStorage.getItem('wb_left_raid'); } catch(_) { return null; } })();
-    if (s.active && _leftSid !== String(s.active.spawn_id)) {
+    // Если у игрока УЖЕ есть player_state в активном рейде — он в бою.
+    // Никакой refresh/закрытие/wb_left_raid не должны выпускать. Анти-эксплойт:
+    // 'обновил страницу → гуляю по игре пока рейд идёт'.
+    const lockedInBattle = s.active && s.player_state;
+    if (s.active && (lockedInBattle || _leftSid !== String(s.active.spawn_id))) {
       if (_leftSid) try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
       _setTabBar(false); root.style.cssText = ''; window.WBHtml._renderBattle?.(root, s); return;
     }

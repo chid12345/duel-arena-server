@@ -182,7 +182,18 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       else if (act === 'shield')     window.WBHtml.toast?.('🛡 Блок активирован');
       else if (act === 'ult')        window.WBHtml.toast?.('💥 Ульта не готова');
       else if (act === 'skill-info') _showSkillInfo(el.dataset.sk, sc, s);
-      else if (act === 'dead-expand') document.getElementById('wb-dead')?.classList.remove('compact');
+      else if (act === 'dead-expand') {
+        // Раскрываем dead-окно и сразу запускаем новый 20-сек таймер автосжатия,
+        // чтобы оно не висело перед глазами вечно.
+        const el = document.getElementById('wb-dead');
+        if (el) {
+          el.classList.remove('compact');
+          try { clearTimeout(window.WBHtml._deadCollapseTimer); } catch(_) {}
+          window.WBHtml._deadCollapseTimer = setTimeout(() => {
+            document.getElementById('wb-dead')?.classList.add('compact');
+          }, 20000);
+        }
+      }
     });
     document.getElementById('wb-ultra-btn')?.addEventListener('click', () => window.WBHtml.fireUltra?.());
   }
