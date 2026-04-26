@@ -167,12 +167,18 @@
 
   function setAutoAttack(on) {
     if (_state.autoTimer) { clearInterval(_state.autoTimer); _state.autoTimer = null; }
+    window.WBHtml._autoOn = !!on; // сохраняем состояние чтобы кнопка восстановилась после ре-рендера
     if (!on) return;
     // Сброс таймстемпов при включении авто — чтобы не блокировать первый каст.
     _autoLast.atk = 0; _autoLast.shld = 0; _autoLast.ult = 0;
     _state.autoTimer = setInterval(() => {
-      const sc = window.WBHtml._scene; const hp = sc?._state?.active?.current_hp;
+      const sc = window.WBHtml._scene;
+      // Если сцена умерла — останавливаем авто
+      if (!sc || sc._alive === false) { setAutoAttack(false); return; }
+      const hp = sc?._state?.active?.current_hp;
       if (hp != null && hp <= 0) { setAutoAttack(false); return; }
+      // Игрок мёртв — анимации не нужны, ждём воскрешения
+      if (sc?._state?.player_state?.is_dead) return;
 
       const now = Date.now();
 
