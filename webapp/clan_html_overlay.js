@@ -137,14 +137,15 @@ function _memberRow(m, isLeader) {
   </div>`;
 }
 
+// Глушим ghost-tap в Phaser/cl-root: блокируем все типы событий в capture-фазе на 500мс
 function _closeMemPanel(panel) {
-  // Глушим ghost-click: панель остаётся в DOM на время fade-out, ловит синтетические события;
-  // глобальный capture-blocker дополнительно гасит любой click/touchend/mousedown.
+  if (panel.dataset.closing) return;
+  panel.dataset.closing = '1';
   panel.classList.add('closing');
-  const evs = ['click','touchend','mousedown'];
+  const evs = ['click','touchstart','touchend','mousedown','mouseup','pointerdown','pointerup'];
   const blocker = ev => { ev.stopPropagation(); ev.preventDefault(); };
   evs.forEach(e => document.addEventListener(e, blocker, true));
-  setTimeout(() => { panel.remove(); evs.forEach(e => document.removeEventListener(e, blocker, true)); }, 400);
+  setTimeout(() => { panel.remove(); evs.forEach(e => document.removeEventListener(e, blocker, true)); }, 500);
 }
 
 function _showMembersPanel(members, isLeader, scene) {
@@ -153,11 +154,8 @@ function _showMembersPanel(members, isLeader, scene) {
   panel.id = 'cl-mem-panel';
   panel.className = 'cl-mem-panel';
   let css = 'position:fixed;inset:0;z-index:9200;overflow-y:auto;animation:clSlide .18s ease';
-  try {
-    const c = document.querySelector('canvas');
-    if (c) { const r = c.getBoundingClientRect();
-      css = `position:fixed;top:${r.top}px;left:${r.left}px;width:${r.width}px;height:${r.height}px;z-index:9200;overflow-y:auto;animation:clSlide .18s ease`; }
-  } catch(_) {}
+  try { const c = document.querySelector('canvas'); if (c) { const r = c.getBoundingClientRect();
+    css = `position:fixed;top:${r.top}px;left:${r.left}px;width:${r.width}px;height:${r.height}px;z-index:9200;overflow-y:auto;animation:clSlide .18s ease`; } } catch(_) {}
   panel.style.cssText = css;
   panel.innerHTML = `
     <div class="cl-mem-hdr">
@@ -167,12 +165,16 @@ function _showMembersPanel(members, isLeader, scene) {
     <div class="cl-mlist" style="padding:8px 12px 100px">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>`;
   document.body.appendChild(panel);
   panel.addEventListener('touchmove', e => e.stopPropagation(), { passive: true });
+  const onBack = e => { e.preventDefault(); e.stopPropagation(); _closeMemPanel(panel); };
+  const bb = panel.querySelector('.cl-mem-hdr-back');
+  bb.addEventListener('touchstart', onBack, { passive: false }); // блокирует синтез mouse/click
+  bb.addEventListener('click', onBack);
   panel.addEventListener('click', e => {
     e.stopPropagation();
     const el = e.target.closest('[data-act]'); if (!el) return;
     const act = el.dataset.act;
+    if (act === 'mem-back') return; // обрабатывается отдельно
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
-    if (act === 'mem-back') { _closeMemPanel(panel); return; }
     const m = members.find(x => x.user_id === +el.dataset.uid);
     if (act === 'transfer' && m) window.ClanHTML.confirmTransfer?.(scene, m);
     else if (act === 'kick' && m) window.ClanHTML.confirmKick?.(scene, m);
@@ -284,7 +286,6 @@ function openMyClan(scene, data) {
     }
     if (act === 'disband')   { window.ClanHTML.confirmDisband?.(scene); return; }
     if (act === 'leave')     { window.ClanHTML.confirmLeave?.(scene); return; }
-    // transfer/kick происходят только из панели участников (_showMembersPanel)
   });
 }
 
