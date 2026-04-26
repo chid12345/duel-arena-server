@@ -42,10 +42,10 @@ from config.world_boss_constants import (
 )
 from progression_loader import victory_xp_for_player_level
 
-# 3% шанс на ВЕСЬ рейд, что один случайный игрок (не топ-1) получит свиток
+# 5% шанс на ВЕСЬ рейд, что один случайный игрок (не топ-1) получит свиток
 # «✨ Все пассивки +12» (scroll_all_12, 130⭐/$2 в магазине). Часто никто
-# не получает — это «заманушка-редкость», ~1 свиток на 30 рейдов.
-WB_VICTORY_SCROLL_DROP_CHANCE: float = 0.03
+# не получает — это «заманушка-редкость», ~1 свиток на 20 рейдов.
+WB_VICTORY_SCROLL_DROP_CHANCE: float = 0.05
 WB_VICTORY_SCROLL_ITEM_ID: str = "scroll_all_12"
 
 logger = logging.getLogger(__name__)

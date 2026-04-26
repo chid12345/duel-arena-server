@@ -64,7 +64,7 @@ Object.assign(WorldBossScene.prototype, {
       const chestLbl = isScroll
         ? 'Свиток «+12 пассивки»'
         : 'Алмазный сундук рейда';
-      const reason = isScroll ? '(удача 3%!)' : '(за топ урона)';
+      const reason = isScroll ? '(удача 5%!)' : '(за топ урона)';
       const ch = txt(this, W/2, cy + 180, `${chestIcon} ${chestLbl}`, 12, '#ffdd66', true).setOrigin(0.5).setDepth(1002);
       ch._wbChild = true;
       const chr = txt(this, W/2, cy + 200, `${reason} → в инвентарь`, 10, '#aaaacc').setOrigin(0.5).setDepth(1002);

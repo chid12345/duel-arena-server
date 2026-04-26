@@ -49,7 +49,7 @@
     if (r.chest_type === 'wb_diamond_chest') {
       chest = `<div class="wb-mvp-chest">💠 Алмазный сундук рейда · топ-1 по урону</div>`;
     } else if (r.chest_type === 'scroll_all_12') {
-      chest = `<div class="wb-mvp-chest">✨ Свиток «+12 ко всем пассивкам» · удача 3%!</div>`;
+      chest = `<div class="wb-mvp-chest">✨ Свиток «+12 ко всем пассивкам» · удача 5%!</div>`;
     } else if (r.chest_type) {
       chest = `<div class="wb-mvp-chest">🎁 ${_esc(r.chest_type)}</div>`;
     }
@@ -111,7 +111,7 @@
       const more = d.scroll_winners.length > 5 ? ` и ещё ${d.scroll_winners.length - 5}` : '';
       parts.push(`<div class="wb-mvp-sum-row scroll">
         <span class="wb-mvp-sum-ic">✨</span>
-        <span class="wb-mvp-sum-lbl">Свиток выпал (3%):</span>
+        <span class="wb-mvp-sum-lbl">Свиток выпал (5%):</span>
         <span class="wb-mvp-sum-val">${names}${more}</span>
       </div>`);
     }
