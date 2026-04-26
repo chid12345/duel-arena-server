@@ -191,9 +191,9 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     ult:  { icon:'💥', name:'УЛЬТА',  cd:'По шкале',   act:'ult',        tip:'Суперудар',
              desc:'Мощный удар — тройной урон от обычной атаки. Шкала наполняется с каждым ударом.',
              tipTxt:'Бей чаще — шкала наполняется быстрее. Выпускай ульту на финальной фазе.' },
-    auto: { icon:'🤖', name:'АВТО',   cd:'Пассивно',   act:'auto-toggle', tip:'Автоатака',
-             desc:'Атакует автоматически каждые 3 секунды. Включи и не отвлекайся — удары не прекратятся.',
-             tipTxt:'Авто-бой наносит 50% от обычного урона, но зато ты не пропустишь награду.' },
+    auto: { icon:'🤖', name:'АВТО',   cd:'👑 Premium',   act:'auto-toggle', tip:'Автоатака',
+             desc:'Только для подписчиков. Тапает за тебя обычными ударами и применяет бусты из инвентаря. Без штрафа к награде.',
+             tipTxt:'QTE «10/10» и уворот от сильного удара — нажимай сам, бот их не делает.' },
   };
 
   function _useSkillDirect(info, sc, s) {
@@ -203,10 +203,17 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     else if (info.act === 'shield') { W.toast?.('🛡 Блок активирован'); W.startSkillCD?.('shld'); }
     else if (info.act === 'ult')   { W.fireUltSkill?.(); W.startSkillCD?.('ult'); }
     else if (info.act === 'auto-toggle') {
+      // Премиум-гейт: АВТО доступен только подписчикам.
+      const isPremium = !!(s?.is_premium || _lastBattleState?.is_premium);
+      if (!isPremium) {
+        W.toast?.('👑 АВТО доступен только подписчикам');
+        try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('warning'); } catch(_) {}
+        return;
+      }
       const btn = root?.querySelector('.wb-skill.auto');
       const on = btn?.classList.toggle('auto-on');
       W.setAutoAttack?.(on);
-      W.toast?.(on ? '🤖 Авто-бой включён (1 удар/сек)' : '🤖 Авто-бой выключен');
+      W.toast?.(on ? '🤖 Авто-бой включён · бусты применяются' : '🤖 Авто-бой выключен');
     }
   }
 
@@ -216,24 +223,41 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     _markSkillSeen(sk);
     document.getElementById('wb-sinfo-ov')?.remove();
     const ov = document.createElement('div'); ov.id = 'wb-sinfo-ov'; ov.className = 'wb-sinfo-ov';
+    // Особый кейс: АВТО без премиума — показываем «Купить подписку» вместо «ИСПОЛЬЗОВАТЬ».
+    const isPremium = !!(s?.is_premium || _lastBattleState?.is_premium);
+    const isAutoLocked = sk === 'auto' && !isPremium;
+    const btnLabel = isAutoLocked ? '👑 КУПИТЬ ПОДПИСКУ' : 'ИСПОЛЬЗОВАТЬ';
+    const cdLabel = isAutoLocked ? '🔒 ЗАБЛОКИРОВАНО' : `⏱ ПЕРЕЗАРЯДКА: ${info.cd}`;
+    const descTxt = isAutoLocked
+      ? 'АВТО — премиум-фича. С подпиской: бьёт за тебя обычными ударами, применяет бусты из инвентаря, без штрафа к награде.'
+      : info.desc;
     ov.innerHTML = `<div class="wb-sinfo">
       <div class="wb-sinfo-hdl"></div>
       <div class="wb-sinfo-ic">${info.icon}</div>
       <div class="wb-sinfo-title">${info.name}</div>
-      <div class="wb-sinfo-cd">⏱ ПЕРЕЗАРЯДКА: ${info.cd}</div>
-      <div class="wb-sinfo-desc">${info.desc}</div>
+      <div class="wb-sinfo-cd">${cdLabel}</div>
+      <div class="wb-sinfo-desc">${descTxt}</div>
       <div class="wb-sinfo-tip">
         <div class="wb-sinfo-tip-t">💡 СОВЕТ</div>
         <div class="wb-sinfo-tip-v">${info.tipTxt}</div>
       </div>
-      <div class="wb-sinfo-use" id="wb-sinfo-use">ИСПОЛЬЗОВАТЬ</div>
+      <div class="wb-sinfo-use" id="wb-sinfo-use">${btnLabel}</div>
     </div>`;
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('open'));
     const close = () => { ov.classList.remove('open'); setTimeout(() => ov.remove(), 250); };
     ov.addEventListener('click', e => { if (e.target === ov) close(); });
     document.getElementById('wb-sinfo-use')?.addEventListener('click', () => {
-      close(); _useSkillDirect(info, sc, s);
+      close();
+      if (isAutoLocked) {
+        // Открываем магазин с подпиской: закрываем WB-оверлей и стартуем Shop scene.
+        try { window.WBHtml?.close?.(); } catch(_) {}
+        try { sc?.scene?.start?.('Shop'); } catch(_) {
+          window.WBHtml?.toast?.('👑 Открой магазин и купи подписку');
+        }
+        return;
+      }
+      _useSkillDirect(info, sc, s);
     });
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
   }

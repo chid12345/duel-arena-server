@@ -109,9 +109,15 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
         unclaimed = []
     player_row = db.get_or_create_player(uid, "")
     reminder_opt_in = bool(int(player_row.get("wb_reminder_opt_in") or 0))
+    # Премиум-статус нужен фронту: кнопка АВТО в бою — премиум-фича.
+    try:
+        is_premium = bool(db.get_premium_status(uid).get("is_active"))
+    except Exception:
+        is_premium = False
 
     return {
         "ok": True,
+        "is_premium": is_premium,
         "prep_seconds_left": prep_seconds_left,
         "seconds_until_raid": seconds_until_raid,
         "is_registered": is_registered,
