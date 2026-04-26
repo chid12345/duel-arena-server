@@ -44,6 +44,10 @@ class AutoBotToggleBody(BaseModel):
     enabled: bool
 
 
+class ShieldBody(BaseModel):
+    init_data: str
+
+
 class RegisterBody(BaseModel):
     init_data: str
 
@@ -150,6 +154,31 @@ async def world_boss_reminder_toggle_inner(body: ReminderToggleBody, *, db, get_
     uid = int(tg_user["id"])
     db.set_wb_reminder_opt_in(uid, bool(body.enabled))
     return {"ok": True, "enabled": bool(body.enabled)}
+
+
+async def world_boss_shield_inner(body: ShieldBody, *, db, get_user_from_init_data) -> dict:
+    """Активирует щит игрока на 2 секунды (-30% входящего урона).
+    Серверный CD 8 сек проверяется на основе предыдущего shield_until_ms."""
+    import time
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+    active = db.get_wb_active_spawn()
+    if not active:
+        return {"ok": False, "reason": "Нет активного рейда"}
+    spawn_id = int(active["spawn_id"])
+    ps = db.get_wb_player_state(spawn_id, uid)
+    if not ps:
+        return {"ok": False, "reason": "Сначала ударь босса хотя бы раз"}
+    now_ms = int(time.time() * 1000)
+    prev_until = int(ps.get("shield_until_ms") or 0)
+    # CD 8 сек: щит снова можно активировать через 8 сек после прошлого start
+    # (т.е. through 6 сек после окончания 2-сек активной фазы).
+    prev_start = prev_until - 2000
+    if now_ms - prev_start < 8000:
+        wait = (8000 - (now_ms - prev_start)) // 1000 + 1
+        return {"ok": False, "reason": f"Перезарядка ещё {wait} сек"}
+    end_ms = db.wb_activate_shield(spawn_id, uid, duration_ms=2000)
+    return {"ok": True, "shield_until_ms": end_ms, "duration_ms": 2000}
 
 
 async def world_boss_auto_bot_toggle_inner(body: AutoBotToggleBody, *, db, get_user_from_init_data) -> dict:

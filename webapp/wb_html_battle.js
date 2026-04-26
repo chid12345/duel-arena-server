@@ -97,10 +97,14 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
   <div class="wb-ultra-track"><div class="wb-ultra-fill" id="wb-ultra-fill" style="width:0%"></div></div>
   <div class="wb-ultra-btn" id="wb-ultra-btn">УДАР</div>
 </div>
-<div class="wb-skills wb-skills-2">
+<div class="wb-skills">
   <div class="wb-skill atk" data-act="skill-info" data-sk="atk">
     <div class="ws-icon">⚔️</div><div class="ws-name">АТАКА ×2</div>
     <div class="wb-cd-ov"><div class="wb-cd-num" id="wb-cd-atk">—</div></div>
+  </div>
+  <div class="wb-skill shld" data-act="skill-info" data-sk="shld">
+    <div class="ws-icon">🛡️</div><div class="ws-name">ЩИТ −30%</div>
+    <div class="wb-cd-ov"><div class="wb-cd-num">—</div></div>
   </div>
   <div class="wb-skill auto" data-act="skill-info" data-sk="auto">
     <div class="ws-icon">🤖</div><div class="ws-name">АВТО</div>
@@ -212,6 +216,9 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     atk:  { icon:'⚔️', name:'АТАКА ×2',  cd:'4 сек',      act:'hit',        tip:'Двойной удар',
              desc:'Наносит ДВА удара по боссу подряд (×2 урона). Зависит от Силы и экипировки.',
              tipTxt:'Самая выгодная кнопка для прокачки урона. Используй каждый раз когда КД спал.' },
+    shld: { icon:'🛡️', name:'ЩИТ −30%', cd:'8 сек',      act:'shield',     tip:'Защита 2 сек',
+             desc:'Снижает входящий урон от босса на 30% на 2 секунды. После — 8 сек перезарядка.',
+             tipTxt:'Используй перед коронным ударом 75/50/25% или в финальной фазе когда босс бьёт сильнее.' },
     ult:  { icon:'💥', name:'УЛЬТА',  cd:'По шкале',   act:'ult',        tip:'Суперудар',
              desc:'Мощный удар — тройной урон от обычной атаки. Шкала наполняется с каждым ударом.',
              tipTxt:'Бей чаще — шкала наполняется быстрее. Выпускай ульту на финальной фазе.' },
@@ -229,6 +236,27 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       _onHit(root, sc);
       setTimeout(() => sc?._onHit?.(), 350);
       W.startSkillCD?.('atk');
+    }
+    else if (info.act === 'shield') {
+      // ЩИТ — серверная активация на 2 сек, реально снижает урон −30%.
+      (async () => {
+        try {
+          const r = await post('/api/world_boss/shield', {});
+          if (r?.ok) {
+            W.toast?.('🛡 ЩИТ АКТИВЕН (-30% урона, 2 сек)');
+            W.startSkillCD?.('shld');
+            // Визуальная подсветка кнопки на 2 сек.
+            const sBtn = document.querySelector('.wb-skill.shld');
+            if (sBtn) {
+              sBtn.classList.remove('shield-active'); void sBtn.offsetWidth;
+              sBtn.classList.add('shield-active');
+              setTimeout(() => sBtn.classList.remove('shield-active'), 2000);
+            }
+          } else {
+            W.toast?.('❌ ' + (r?.reason || 'Не удалось активировать'));
+          }
+        } catch(_) { W.toast?.('❌ Нет соединения'); }
+      })();
     }
     else if (info.act === 'ult')   { W.fireUltSkill?.(); W.startSkillCD?.('ult'); }
     else if (info.act === 'auto-toggle') {

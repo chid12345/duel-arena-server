@@ -66,6 +66,15 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
     if dodged:
         logger.debug("wb battle: boss hit user=%s dodged", user_id)
         return
+    # Щит игрока (-30% урона) если активен.
+    try:
+        import time as _time
+        shield_until = int(ps.get("shield_until_ms") or 0)
+        if shield_until > int(_time.time() * 1000):
+            dmg = int(dmg * 0.7)
+            logger.debug("wb battle: shield active uid=%s dmg→%s", user_id, dmg)
+    except Exception:
+        pass
     new_hp, is_dead = db.wb_apply_damage_to_player(spawn_id, user_id, dmg)
     logger.debug(
         "wb battle: boss hit user=%s dmg=%s → hp=%s dead=%s",

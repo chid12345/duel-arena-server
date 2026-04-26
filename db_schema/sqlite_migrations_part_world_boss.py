@@ -171,4 +171,10 @@ MIGRATIONS_PART_WORLD_BOSS = [
         "ALTER TABLE players ADD COLUMN wb_auto_bot_pending INTEGER DEFAULT 0",
         "ALTER TABLE world_boss_player_state ADD COLUMN auto_bot INTEGER DEFAULT 0",
     ]),
+
+    # 16. Щит игрока в рейде: timestamp в мс когда заканчивается активный щит.
+    #     Если now_ms < shield_until_ms → boss damage × 0.7 (-30%).
+    ("2026_04_28_115_wb_shield", [
+        "ALTER TABLE world_boss_player_state ADD COLUMN shield_until_ms INTEGER DEFAULT 0",
+    ]),
 ]

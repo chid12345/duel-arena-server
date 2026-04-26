@@ -92,6 +92,23 @@ class WorldBossPlayerStateMixin:
         conn.commit()
         conn.close()
 
+    def wb_activate_shield(self, spawn_id: int, user_id: int, duration_ms: int = 2000) -> int:
+        """Активирует щит игроку: записывает timestamp окончания (now + duration_ms).
+        В битве `_do_boss_counter_attack` проверит этот timestamp и если он
+        в будущем — снизит урон на 30%. Возвращает timestamp окончания."""
+        import time
+        end_ms = int(time.time() * 1000) + int(duration_ms)
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_player_state SET shield_until_ms=? "
+            "WHERE spawn_id=? AND user_id=?",
+            (end_ms, int(spawn_id), int(user_id)),
+        )
+        conn.commit()
+        conn.close()
+        return end_ms
+
     def wb_apply_damage_to_player(
         self, spawn_id: int, user_id: int, damage: int
     ) -> Tuple[int, bool]:

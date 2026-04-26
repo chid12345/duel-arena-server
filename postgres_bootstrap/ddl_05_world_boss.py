@@ -110,4 +110,7 @@ POSTGRES_DDL_05_WORLD_BOSS: tuple[str, ...] = (
     # 7. Авто-бой из лобби: тогл «бот заходит за меня».
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS wb_auto_bot_pending INTEGER DEFAULT 0",
     "ALTER TABLE world_boss_player_state ADD COLUMN IF NOT EXISTS auto_bot INTEGER DEFAULT 0",
+
+    # 8. Щит игрока (-30% урона на 2 сек). Timestamp в мс окончания.
+    "ALTER TABLE world_boss_player_state ADD COLUMN IF NOT EXISTS shield_until_ms BIGINT DEFAULT 0",
 )

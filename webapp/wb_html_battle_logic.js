@@ -197,7 +197,31 @@
         } catch(_) {}
       }
 
-      // ЩИТ убран — функционала не было, кнопки больше нет.
+      // 3. ЩИТ — HP игрока < 50% И прошло ≥AUTO_SHLD_MS с прошлого щита.
+      // Серверный вызов /api/world_boss/shield реально снижает входящий
+      // урон на 30% на 2 секунды.
+      try {
+        const ps = sc?._state?.player_state;
+        const phpPct = ps && ps.max_hp > 0 ? (ps.current_hp / ps.max_hp) : 1;
+        if (phpPct < 0.5 && (now - _autoLast.shld) >= AUTO_SHLD_MS) {
+          _autoLast.shld = now;
+          startSkillCD('shld');
+          _flashSkillBtn('shld');
+          const shldBtn = document.querySelector('.wb-skill.shld');
+          if (shldBtn) {
+            shldBtn.classList.remove('shield-active'); void shldBtn.offsetWidth;
+            shldBtn.classList.add('shield-active');
+            setTimeout(() => shldBtn.classList.remove('shield-active'), 2000);
+          }
+          // Серверная активация (асинхронно — не блокирует тик).
+          fetch(API + '/api/world_boss/shield', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ init_data: State.initData }),
+          }).catch(() => {});
+          window.WBHtml?.toast?.('🛡 ЩИТ АКТИВЕН (-30%, 2 сек)');
+        }
+      } catch(_) {}
     }, 1000);
   }
 

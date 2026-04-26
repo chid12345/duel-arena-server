@@ -25,12 +25,14 @@ from api.world_boss_actions import (
     RegisterBody,
     ReminderToggleBody,
     ResurrectBody,
+    ShieldBody,
     UseScrollBody,
     world_boss_auto_bot_toggle_inner,
     world_boss_claim_reward_inner,
     world_boss_register_inner,
     world_boss_reminder_toggle_inner,
     world_boss_resurrect_inner,
+    world_boss_shield_inner,
     world_boss_use_scroll_inner,
 )
 from api.world_boss_state import build_wb_state_payload
@@ -107,6 +109,14 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return await world_boss_auto_bot_toggle_inner(body, **_inner_ctx)
         except Exception as e:
             log.error("wb_toggle_auto_bot error: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)}
+
+    @router.post("/api/world_boss/shield")
+    async def wb_shield(body: ShieldBody):
+        try:
+            return await world_boss_shield_inner(body, **_inner_ctx)
+        except Exception as e:
+            log.error("wb_shield error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
     @router.get("/api/rating/world_boss")
