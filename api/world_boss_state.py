@@ -87,6 +87,15 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
             registrants_count = db.wb_registration_count(next_spawn_id)
         except Exception:
             pass
+    elif active:
+        # Если рейд уже идёт — проверяем регистрацию против активного спавна,
+        # чтобы UI всё ещё показывал «ты участвуешь».
+        try:
+            active_spawn_id = int(active["spawn_id"])
+            is_registered = db.wb_is_registered(active_spawn_id, uid)
+            registrants_count = db.wb_registration_count(active_spawn_id)
+        except Exception:
+            pass
 
     recent = db.get_wb_recent_finished_with_user(uid, limit=5)
     inv_rows = db.get_inventory(uid)

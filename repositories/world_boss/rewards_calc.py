@@ -26,6 +26,7 @@ from config.world_boss_constants import (
     WB_DIAMONDS_TOP3,
     WB_REWARD_MULT_DEFEAT,
     WB_REWARD_MULT_VICTORY,
+    WB_TEST_FLAT_GOLD,
 )
 
 logger = logging.getLogger(__name__)
@@ -38,11 +39,24 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     Возвращает число созданных/найденных записей.
     """
     participants = db.get_wb_all_participants_damage(int(spawn_id))
-    if not participants:
+    # ТЕСТ: добавляем зарегистрированных (даже если не били) — иначе им не падает золото.
+    by_uid = {int(p["user_id"]): int(p.get("total_damage") or 0) for p in participants}
+    try:
+        conn = db.get_connection(); cur = conn.cursor()
+        cur.execute("SELECT user_id FROM world_boss_registrations WHERE spawn_id=?", (int(spawn_id),))
+        for r in cur.fetchall():
+            uid = int(r[0] if not isinstance(r, dict) else r["user_id"])
+            by_uid.setdefault(uid, 0)
+        conn.close()
+    except Exception as e:
+        logger.warning("wb_rewards_calc: ошибка чтения регистраций spawn=%s: %s", spawn_id, e)
+    if not by_uid:
         return 0
+    participants = [{"user_id": u, "total_damage": d} for u, d in by_uid.items()]
 
     total_damage = sum(int(p.get("total_damage") or 0) for p in participants)
-    if total_damage <= 0:
+    # В тест-режиме допускаем total_damage=0 (раздаём 50 золота плоско).
+    if not WB_TEST_FLAT_GOLD and total_damage <= 0:
         return 0
 
     mult = WB_REWARD_MULT_VICTORY if is_victory else WB_REWARD_MULT_DEFEAT
@@ -63,8 +77,13 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         uid = int(p["user_id"])
         dmg = int(p.get("total_damage") or 0)
         contribution_pct = (dmg / total_damage) if total_damage else 0.0
-        gold = max(0, int(WB_BASE_GOLD * mult * contribution_pct))
-        exp = max(0, int(WB_BASE_EXP * mult * contribution_pct))
+        if WB_TEST_FLAT_GOLD:
+            # ТЕСТ: 50 золота плоско каждому участнику (вне зависимости от вклада).
+            gold = WB_BASE_GOLD
+            exp = max(0, int(WB_BASE_EXP * mult * (contribution_pct or 0.5)))
+        else:
+            gold = max(0, int(WB_BASE_GOLD * mult * contribution_pct))
+            exp = max(0, int(WB_BASE_EXP * mult * contribution_pct))
         diamonds = int(diamonds_by_rank.get(uid, 0))
         if last_hit_uid and uid == last_hit_uid:
             diamonds += WB_DIAMONDS_LAST_HIT
