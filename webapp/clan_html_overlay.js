@@ -148,6 +148,7 @@ function _showMembersPanel(root, members, isLeader, scene) {
     <div class="cl-mlist" style="padding:8px 12px 100px">${members.map(m=>_memberRow(m,isLeader)).join('')}</div>`;
   root.appendChild(panel);
   panel.addEventListener('click', e => {
+    e.stopPropagation();
     const el = e.target.closest('[data-act]');
     if (!el) return;
     const act = el.dataset.act;
