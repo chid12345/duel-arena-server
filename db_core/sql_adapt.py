@@ -44,6 +44,10 @@ _PG_EXACT: List[Tuple[str, str]] = [
         "INSERT OR IGNORE INTO endless_attempts (user_id, attempt_date, attempts_used, extra_gold, extra_diamond) VALUES (?,?,0,0,0)",
         "INSERT INTO endless_attempts (user_id, attempt_date, attempts_used, extra_gold, extra_diamond) VALUES (%s, %s, 0, 0, 0) ON CONFLICT (user_id, attempt_date) DO NOTHING",
     ),
+    (
+        "INSERT OR IGNORE INTO world_boss_registrations (spawn_id, user_id) VALUES (?,?)",
+        "INSERT INTO world_boss_registrations (spawn_id, user_id) VALUES (%s, %s) ON CONFLICT (spawn_id, user_id) DO NOTHING",
+    ),
 ]
 
 
