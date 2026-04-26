@@ -47,6 +47,17 @@ window.WBLobbyCSS = (() => {
 .wb-bc2-hint{margin-top:6px;font-size:9px;font-weight:800;letter-spacing:1.5px;
   color:#ff88dd;text-align:center;text-transform:uppercase;
   text-shadow:0 0 8px rgba(255,80,200,.4);opacity:.85;}
+.wb-unclaimed{margin:8px 14px 0;padding:11px 14px;border-radius:11px;cursor:pointer;
+  background:linear-gradient(135deg,rgba(255,180,40,.18),rgba(255,80,180,.15));
+  border:1.5px solid rgba(255,200,80,.5);
+  font-size:12px;font-weight:800;color:#ffe080;text-align:center;
+  text-shadow:0 0 10px rgba(255,200,80,.5);
+  animation:wb-unclaimed-pulse 1.6s ease-in-out infinite;
+  transition:transform .12s;}
+.wb-unclaimed:active{transform:scale(.98);}
+@keyframes wb-unclaimed-pulse{
+  0%,100%{box-shadow:0 0 12px rgba(255,200,80,.25);}
+  50%{box-shadow:0 0 26px rgba(255,200,80,.55);}}
 
 /* ── Призовой фонд ── */
 .wb-prize{margin:6px 14px 0;padding:10px 12px;border-radius:12px;cursor:pointer;

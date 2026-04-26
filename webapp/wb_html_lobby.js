@@ -104,6 +104,10 @@ window.WBHtml = (() => {
     const avEmojis = top5.length > 0 ? top5.map(t=>t.emoji||'⚔️') : DEF_EM.slice(0,7);
     const avatarsHTML = avEmojis.map(em=>`<div class="wb-av">${em}</div>`).join('');
 
+    const hasUnclaimed = (s.unclaimed_rewards||[]).length > 0;
+    const unclaimedBanner = hasUnclaimed
+      ? `<div class="wb-unclaimed" data-act="show-rewards">🎁 У тебя есть незабранная награда — нажми</div>`
+      : '';
     return `
 <div class="wb-hdr">
   <div class="wb-back" data-act="back">‹</div>
@@ -111,6 +115,7 @@ window.WBHtml = (() => {
   <div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ОБЩИЙ РЕЙД · КАЖДЫЕ 4 ЧАСА</div></div>
   <div class="wb-live"><div class="wb-ldot"></div><div class="wb-livenum">${regCnt||0}</div></div>
 </div>
+${unclaimedBanner}
 <div class="wb-bcard2" data-act="boss-card">
   <div class="wb-bc2-tlbl">⏱ БОЙ НАЧНЁТСЯ ЧЕРЕЗ</div>
   <div class="wb-bc2-tval" id="wb-timer">${schedAt?_fmtCountdown(schedAt):'—'}</div>
@@ -246,6 +251,10 @@ window.WBHtml = (() => {
       }
       else if (act==='boss-card')    { window.WBHtml.showBossCard?.(_state); }
       else if (act==='rewards-info') { window.WBHtml.showRewardsInfo?.(_state); }
+      else if (act==='show-rewards') {
+        // Игрок закрыл MVP-попап и хочет открыть его снова — force=true.
+        window.WBHtml.showMvpResult?.(_state, _scene, { force: true });
+      }
       else if (act==='auto-toggle')  {
         // Тогл «авто-бой из лобби»: бот зайдёт за тебя если будешь офлайн.
         const tg = document.getElementById('wb-auto-toggle');

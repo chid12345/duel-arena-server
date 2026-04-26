@@ -24,9 +24,18 @@
     return 'Вместе мы победили! Каждый удар важен ⚔️';
   }
 
-  function showMvpResult(state, scene) {
+  // Set «уже показывали этот reward» — без него поп-ап всплывал заново
+  // на каждом _refresh (раз в 8 сек) пока награду не забрали.
+  // Хранится в модуле — сбрасывается на полный reload страницы.
+  // Если игрок закрыл — может вернуться через кнопку в лобби (force=true).
+  const _shownRewards = new Set();
+
+  function showMvpResult(state, scene, opts) {
     if (!state?.unclaimed_rewards?.length) return;
     const r = state.unclaimed_rewards[0];
+    const force = opts && opts.force;
+    if (!force && _shownRewards.has(r.reward_id)) return;
+    _shownRewards.add(r.reward_id);
     const ps = state.player_state || {};
     const tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
     const name = ps.name || tgu.username || tgu.first_name || 'Игрок';
@@ -55,6 +64,7 @@
     }
 
     ov.innerHTML = `<div class="wb-mvp">
+      <div class="wb-mvp-x" id="wb-mvp-x" title="Закрыть">×</div>
       <div class="wb-mvp-bdg">${head}</div>
       <div class="wb-mvp-av">${avatar}</div>
       <div class="wb-mvp-name">@${_esc(name)}</div>
@@ -74,10 +84,14 @@
       _loadRaidSummary(r.spawn_id);
     }
 
-    document.getElementById('wb-mvp-claim').addEventListener('click', () => {
-      try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
+    const _close = () => {
       ov.classList.remove('open');
       setTimeout(() => ov.remove(), 300);
+    };
+    document.getElementById('wb-mvp-x')?.addEventListener('click', _close);
+    document.getElementById('wb-mvp-claim').addEventListener('click', () => {
+      try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
+      _close();
       scene?._claimReward?.(r.reward_id);
     });
   }
