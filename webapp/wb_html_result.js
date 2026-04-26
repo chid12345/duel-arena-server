@@ -62,11 +62,17 @@
       <div class="wb-mvp-dmg">Урон: <span>${(dmg||0).toLocaleString('ru')}</span></div>
       ${rewards.length ? `<div class="wb-mvp-rew">${rewards.join('   ')}</div>` : ''}
       ${chest}
+      <div id="wb-mvp-summary" class="wb-mvp-summary" style="display:none"></div>
       <div class="wb-mvp-msg">${msg}</div>
       <button class="wb-mvp-btn" id="wb-mvp-claim">ПОЛУЧИТЬ НАГРАДУ</button>
     </div>`;
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('open'));
+
+    // Подгружаем итоги рейда (победитель + везунчики свитка) и показываем.
+    if (r.spawn_id) {
+      _loadRaidSummary(r.spawn_id);
+    }
 
     document.getElementById('wb-mvp-claim').addEventListener('click', () => {
       try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
@@ -74,6 +80,54 @@
       setTimeout(() => ov.remove(), 300);
       scene?._claimReward?.(r.reward_id);
     });
+  }
+
+  async function _loadRaidSummary(spawn_id) {
+    try {
+      const initData = window.State?.initData || '';
+      const url = `/api/world_boss/raid_summary?spawn_id=${spawn_id}&init_data=${encodeURIComponent(initData)}`;
+      const resp = await fetch(url);
+      const d = await resp.json();
+      if (!d?.ok) return;
+      _renderRaidSummary(d);
+    } catch(_) {}
+  }
+
+  function _renderRaidSummary(d) {
+    const box = document.getElementById('wb-mvp-summary');
+    if (!box) return;
+    const parts = [];
+    parts.push(`<div class="wb-mvp-sum-h">📜 ИТОГИ РЕЙДА</div>`);
+    if (d.winner) {
+      parts.push(`<div class="wb-mvp-sum-row gold">
+        <span class="wb-mvp-sum-ic">💠</span>
+        <span class="wb-mvp-sum-lbl">Топ-1 урон:</span>
+        <span class="wb-mvp-sum-val">@${_esc(d.winner.name)}</span>
+        <span class="wb-mvp-sum-pct">${(d.winner.contribution_pct||0).toFixed(1)}%</span>
+      </div>`);
+    }
+    if (d.scroll_winners && d.scroll_winners.length) {
+      const names = d.scroll_winners.slice(0, 5).map(w => `@${_esc(w.name)}`).join(', ');
+      const more = d.scroll_winners.length > 5 ? ` и ещё ${d.scroll_winners.length - 5}` : '';
+      parts.push(`<div class="wb-mvp-sum-row scroll">
+        <span class="wb-mvp-sum-ic">✨</span>
+        <span class="wb-mvp-sum-lbl">Свиток выпал (3%):</span>
+        <span class="wb-mvp-sum-val">${names}${more}</span>
+      </div>`);
+    }
+    if (d.top3 && d.top3.length) {
+      const medals = ['🥇', '🥈', '🥉'];
+      const rows = d.top3.map((t, i) =>
+        `<div class="wb-mvp-sum-row top3">
+          <span class="wb-mvp-sum-ic">${medals[i]}</span>
+          <span class="wb-mvp-sum-val">@${_esc(t.name)}</span>
+          <span class="wb-mvp-sum-pct">⚔️ ${(t.damage||0).toLocaleString('ru')}</span>
+        </div>`
+      ).join('');
+      parts.push(rows);
+    }
+    box.innerHTML = parts.join('');
+    box.style.display = '';
   }
 
   Object.assign(window.WBHtml = window.WBHtml || {}, { showMvpResult });

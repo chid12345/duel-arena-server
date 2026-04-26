@@ -287,6 +287,24 @@ window.WBBattleCSS = (() => {
 .wb-mvp-dmg span{color:#00FF9F;font-family:'Courier New',monospace;font-weight:900;text-shadow:0 0 8px #00FF9F;}
 .wb-mvp-rew{font-size:13px;color:#fff;margin-bottom:6px;font-weight:700;}
 .wb-mvp-chest{font-size:11px;color:#ffdd66;margin-bottom:14px;}
+.wb-mvp-summary{margin:10px 14px 6px;padding:10px 12px;border-radius:10px;
+  background:linear-gradient(135deg,rgba(150,80,255,.08),rgba(255,0,150,.06));
+  border:1px solid rgba(255,200,80,.18);text-align:left;}
+.wb-mvp-sum-h{font-size:10px;font-weight:900;letter-spacing:2px;color:#ffc83c;
+  text-align:center;margin-bottom:8px;text-transform:uppercase;
+  text-shadow:0 0 8px rgba(255,200,60,.4);}
+.wb-mvp-sum-row{display:flex;align-items:center;gap:8px;font-size:11px;
+  color:#fff;padding:5px 0;border-bottom:1px dashed rgba(255,255,255,.06);}
+.wb-mvp-sum-row:last-child{border-bottom:none;}
+.wb-mvp-sum-row.gold{color:#ffd700;font-weight:700;}
+.wb-mvp-sum-row.scroll{color:#cc88ff;}
+.wb-mvp-sum-row.top3{color:rgba(255,255,255,.85);}
+.wb-mvp-sum-ic{font-size:14px;flex-shrink:0;}
+.wb-mvp-sum-lbl{color:rgba(255,255,255,.6);font-size:10px;}
+.wb-mvp-sum-val{flex:1;font-weight:600;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;}
+.wb-mvp-sum-pct{color:#00FF9F;font-family:'Courier New',monospace;font-size:10px;
+  font-weight:700;flex-shrink:0;}
 .wb-mvp-msg{font-size:11px;color:rgba(255,255,255,.65);font-style:italic;
   margin:8px 14px 14px;padding:10px 12px;border-radius:10px;
   background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);

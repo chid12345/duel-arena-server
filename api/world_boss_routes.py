@@ -37,6 +37,7 @@ from api.world_boss_actions import (
 )
 from api.world_boss_qte import QteBonusBody, world_boss_qte_bonus_inner
 from api.world_boss_state import build_wb_state_payload
+from api.world_boss_summary import register_world_boss_summary_route
 
 log = logging.getLogger(__name__)
 
@@ -276,4 +277,5 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
         except Exception as e:
             return {"ok": False, "reason": str(e)}
 
+    register_world_boss_summary_route(router, _inner_ctx)
     app.include_router(router)
