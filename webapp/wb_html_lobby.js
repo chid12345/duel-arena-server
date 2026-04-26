@@ -437,5 +437,31 @@ window.WBHtml = (() => {
     _setTabBar(true);
   }
 
-  return { render, toast, close, _log, _wlog };
+  // Live-обновление счётчиков без перерисовки всего лобби.
+  // Вызывается из WS-handler'ов (wb_idle / wb_tick) — счётчики и пул растут
+  // у всех клиентов одновременно, не нужно ждать заход-выход.
+  function updateLobbyCounters(s) {
+    const root = document.getElementById(ID);
+    if (!root) return;
+    if (_state) {
+      if (s.registrants_count != null) _state.registrants_count = s.registrants_count;
+      if (s.fighters_count != null) _state.registrants_count = Math.max(_state.registrants_count || 0, s.fighters_count);
+    }
+    const cnt = (s.fighters_count != null ? Math.max(s.fighters_count, s.registrants_count || 0) : (s.registrants_count || 0));
+    const live = root.querySelector('.wb-livenum');
+    if (live) live.textContent = cnt;
+    const prizeCnt = root.querySelector('.wb-prize-cnt');
+    if (prizeCnt) prizeCnt.textContent = cnt;
+    const coins = root.querySelector('.wb-prize-coins');
+    if (coins) coins.textContent = '🪙 ' + (cnt * 50).toLocaleString('ru');
+    const avMore = root.querySelector('.wb-av-more');
+    if (avMore) avMore.textContent = cnt + ' участников';
+    const sub = root.querySelector('.wb-join-sub');
+    const joined = root.querySelector('.wb-join-btn.joined');
+    if (sub && !joined) {
+      sub.textContent = cnt > 0 ? `${cnt} игроков уже записались` : 'Зарегистрируйся и получи уведомление';
+    }
+  }
+
+  return { render, toast, close, updateLobbyCounters, _log, _wlog };
 })();

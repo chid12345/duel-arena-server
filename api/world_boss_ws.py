@@ -177,7 +177,14 @@ def _load_tick_data(db, subs: list) -> dict:
             "is_dead": bool(int(ps.get("is_dead") or 0)),
             "total_damage": int(ps.get("total_damage") or 0),
         }
-    return {"kind": "active", "ts": ts_ms, "spawn_id": spawn_id, "boss": boss, "top": top, "players": players}
+    # Live-счётчики для лобби (если игрок ещё не зашёл в бой).
+    try:
+        fighters = db.get_wb_participants_count(spawn_id)
+        regs = db.wb_registration_count(spawn_id)
+    except Exception:
+        fighters = 0; regs = 0
+    return {"kind": "active", "ts": ts_ms, "spawn_id": spawn_id, "boss": boss, "top": top,
+            "players": players, "fighters_count": fighters, "registrants_count": regs}
 
 
 async def wb_broadcast_tick(db) -> None:
@@ -196,9 +203,12 @@ async def wb_broadcast_tick(db) -> None:
         await asyncio.gather(*(wb_manager.send(uid, payload) for uid in subs), return_exceptions=True)
         return
     ts, spawn_id, boss, top, players = data["ts"], data["spawn_id"], data["boss"], data["top"], data["players"]
+    fighters_count = data.get("fighters_count", 0)
+    regs_count = data.get("registrants_count", 0)
     await asyncio.gather(*(wb_manager.send(uid, {
         "event": "wb_tick", "ts": ts, "active": True,
         "spawn_id": spawn_id, "boss": boss, "player": players.get(uid), "top": top,
+        "fighters_count": fighters_count, "registrants_count": regs_count,
     }) for uid in subs), return_exceptions=True)
 
 

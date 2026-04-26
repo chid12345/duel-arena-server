@@ -131,10 +131,17 @@ class WorldBossScene extends Phaser.Scene {
       this._state.registrants_count = p.registrants_count;
       if (this._regCountT) this._regCountT.setText(`👥 ${p.registrants_count} в рейде`);
     }
+    // Live-обновление счётчиков в HTML лобби (без перерисовки всего экрана).
+    try { window.WBHtml?.updateLobbyCounters?.({ registrants_count: p.registrants_count }); } catch(_) {}
   }
 
   _onWsTick(p) {
     if (!this._state?.active) { this._refresh(); return; }
+    // Live-обновление счётчиков в HTML-лобби (если игрок наблюдает а не бьёт).
+    try { window.WBHtml?.updateLobbyCounters?.({
+      registrants_count: p.registrants_count,
+      fighters_count: p.fighters_count,
+    }); } catch(_) {}
     try { this._applyWsEffects?.(p); } catch(_) {}
     const _wasDeadBefore = !!this._state.player_state?.is_dead;
     const _hadPsBefore = !!this._state.player_state;
