@@ -175,8 +175,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       else if (act === 'res')   sc?._resurrect?.(el.dataset.t);
       else if (act === 'back')  { try { if (s.active?.spawn_id) localStorage.setItem('wb_left_raid', String(s.active.spawn_id)); } catch(_) {} window.WBHtml.close(); sc?.scene?.start?.('WorldBoss'); }
       else if (act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
-      else if (act === 'shield')     {}
-      else if (act === 'ult')        {};
+      else if (act === 'shield')     { /* handled by _useSkillDirect */ }
+      else if (act === 'ult')        { /* handled by _useSkillDirect */ }
       else if (act === 'skill-info') _showSkillInfo(el.dataset.sk, sc, s);
       else if (act === 'dead-expand') {
         // Раскрываем dead-окно и сразу запускаем новый 20-сек таймер автосжатия,
