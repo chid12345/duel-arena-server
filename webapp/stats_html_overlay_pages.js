@@ -31,7 +31,6 @@ const INV_TABS = [
   { key:'scrolls', label:'📜 Свитки' },
   { key:'elixirs', label:'🧪 Эликсиры' },
   { key:'special', label:'🎁 Особые' },
-  { key:'boss',    label:'⚔ Рейд' },
 ];
 const _esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const _base = (p,k) => Number(p?.stats_base?.[k] ?? p?.[k] ?? 0);
