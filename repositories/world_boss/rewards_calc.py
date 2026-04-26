@@ -42,8 +42,9 @@ from config.world_boss_constants import (
 )
 from progression_loader import victory_xp_for_player_level
 
-# 3% шанс свитка «✨ Все пассивки +12» (scroll_all_12) для участников победы,
-# которые не получили алмазный сундук (т.е. не топ-1). В магазине стоит 130⭐/$2.
+# 3% шанс на ВЕСЬ рейд, что один случайный игрок (не топ-1) получит свиток
+# «✨ Все пассивки +12» (scroll_all_12, 130⭐/$2 в магазине). Часто никто
+# не получает — это «заманушка-редкость», ~1 свиток на 30 рейдов.
 WB_VICTORY_SCROLL_DROP_CHANCE: float = 0.03
 WB_VICTORY_SCROLL_ITEM_ID: str = "scroll_all_12"
 
@@ -120,6 +121,15 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
             diamonds_by_rank[int(row["user_id"])] = tiers[i]
     last_hit_uid: Optional[int] = db.get_wb_last_hitter(int(spawn_id)) if is_victory else None
 
+    # Редкая удача: 3% шанс на весь рейд, что один случайный участник
+    # (не топ-1) получит свиток scroll_all_12. Часто никто не получает —
+    # это «заманушка-редкость» (~1 свиток на 30 рейдов).
+    scroll_lucky_uid: Optional[int] = None
+    if is_victory and random.random() < WB_VICTORY_SCROLL_DROP_CHANCE:
+        candidates = [u for u in by_uid.keys() if u != top_uid]
+        if candidates:
+            scroll_lucky_uid = random.choice(candidates)
+
     created = 0
     for uid, dmg in by_uid.items():
         contribution_pct = (dmg / total_damage) if total_damage else 0.0
@@ -141,12 +151,13 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
             diamonds += WB_DIAMONDS_LAST_HIT
 
         # Сундук: только топ-1 по урону при победе → 💠 алмазный.
-        # Остальные при победе: 3% шанс свитка scroll_all_12 (130⭐/$2 в магазине).
+        # Свиток scroll_all_12: один случайный счастливчик за рейд (3% боёв),
+        # выбран до цикла в scroll_lucky_uid. 130⭐/$2 в магазине.
         # Поражение: ничего сверх утешительного золота/опыта.
         chest_type = None
         if is_victory and top_uid and uid == top_uid:
             chest_type = WB_CHEST_TOP_DAMAGE
-        elif is_victory and random.random() < WB_VICTORY_SCROLL_DROP_CHANCE:
+        elif scroll_lucky_uid and uid == scroll_lucky_uid:
             chest_type = WB_VICTORY_SCROLL_ITEM_ID
 
         try:
