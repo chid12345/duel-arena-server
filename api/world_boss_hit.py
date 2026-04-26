@@ -71,15 +71,25 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             eq = db.get_equipment_stats(uid) or {}
         except Exception:
             eq = {}
-        eff_max_hp   = int(player.get("max_hp", 100)) + int(eq.get("hp_bonus", 0) or 0)
+        # Активные свитки/эликсиры — те же что в PvP. Списываются один раз
+        # в конце рейда (см. world_boss_scheduler._finish_expired_or_dead_spawn).
+        try:
+            buffs = db.get_combined_buffs(uid) or {}
+        except Exception:
+            buffs = {}
+        eff_max_hp   = int(player.get("max_hp", 100)) + int(eq.get("hp_bonus", 0) or 0) \
+                       + int(buffs.get("hp_bonus", 0) or 0)
         eff_strength = int(player.get("strength", 10)) \
                        + int(eq.get("str_bonus", 0) or 0) \
-                       + int(eq.get("atk_bonus", 0) or 0)
+                       + int(eq.get("atk_bonus", 0) or 0) \
+                       + int(buffs.get("strength", 0) or 0)
         eff_crit     = int(player.get("crit") or PLAYER_START_CRIT) \
                        + int(eq.get("crit_bonus", 0) or 0) \
-                       + int(eq.get("intu_bonus", 0) or 0)
+                       + int(eq.get("intu_bonus", 0) or 0) \
+                       + int(buffs.get("crit", 0) or 0)
         eff_endur    = int(player.get("endurance") or PLAYER_START_ENDURANCE) \
-                       + int(eq.get("agi_bonus", 0) or 0)
+                       + int(eq.get("agi_bonus", 0) or 0) \
+                       + int(buffs.get("endurance", 0) or 0)
         ps = db.wb_join_raid(
             spawn_id, uid, max_hp=eff_max_hp,
             endurance=eff_endur,

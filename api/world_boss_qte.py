@@ -59,13 +59,19 @@ async def world_boss_qte_bonus_inner(body: QteBonusBody, *, db, get_user_from_in
             eq = db.get_equipment_stats(uid) or {}
         except Exception:
             eq = {}
+        try:
+            buffs = db.get_combined_buffs(uid) or {}
+        except Exception:
+            buffs = {}
         player = db.get_or_create_player(uid, "")
         eff_strength = (int(player.get("strength", 10))
                         + int(eq.get("str_bonus", 0) or 0)
-                        + int(eq.get("atk_bonus", 0) or 0))
+                        + int(eq.get("atk_bonus", 0) or 0)
+                        + int(buffs.get("strength", 0) or 0))
         eff_crit = (int(player.get("crit") or PLAYER_START_CRIT)
                     + int(eq.get("crit_bonus", 0) or 0)
-                    + int(eq.get("intu_bonus", 0) or 0))
+                    + int(eq.get("intu_bonus", 0) or 0)
+                    + int(buffs.get("crit", 0) or 0))
 
         now_utc = datetime.now(timezone.utc)
         try:

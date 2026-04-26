@@ -155,6 +155,13 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         elif scroll_lucky_uid and uid == scroll_lucky_uid:
             chest_type = WB_VICTORY_SCROLL_ITEM_ID
 
+        # Списываем заряды активных свитков как в PvP/Натиске/Титанах:
+        # рейд = 1 «бой» с точки зрения charge-based бафов.
+        try:
+            db.consume_charges(uid)
+        except Exception as _ce:
+            logger.warning("wb_rewards_calc: consume_charges uid=%s: %s", uid, _ce)
+
         try:
             db.create_wb_reward(
                 spawn_id=int(spawn_id),
