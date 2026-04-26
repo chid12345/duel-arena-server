@@ -59,7 +59,7 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
                 started_at = _parse_ts(active["started_at"])
                 elapsed = (now_utc - started_at).total_seconds()
                 if elapsed > WB_LATE_JOIN_WINDOW_SEC:
-                    return {"ok": False, "reason": "Вход в рейд закрыт — осталось меньше 2 минут"}
+                    return {"ok": False, "reason": "Вход в рейд закрыт — присоединиться можно только в первые 2 минуты"}
             except Exception:
                 pass
 
