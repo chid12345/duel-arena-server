@@ -236,6 +236,12 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       _onHit(root, sc);
       setTimeout(() => sc?._onHit?.(), 350);
       W.startSkillCD?.('atk');
+      const aBtn = document.querySelector('.wb-skill.atk');
+      if (aBtn) {
+        aBtn.classList.remove('firing'); void aBtn.offsetWidth;
+        aBtn.classList.add('firing');
+        setTimeout(() => aBtn.classList.remove('firing'), 350);
+      }
     }
     else if (info.act === 'shield') {
       // ЩИТ — серверная активация на 2 сек, реально снижает урон −30%.
@@ -244,6 +250,12 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
           const r = await post('/api/world_boss/shield', {});
           if (r?.ok) {
             W.startSkillCD?.('shld');
+            const sBtn = document.querySelector('.wb-skill.shld');
+            if (sBtn) {
+              sBtn.classList.remove('shield-active'); void sBtn.offsetWidth;
+              sBtn.classList.add('shield-active');
+              setTimeout(() => sBtn.classList.remove('shield-active'), 2000);
+            }
           } else {
             W.toast?.('❌ ' + (r?.reason || 'Не удалось активировать'));
           }
