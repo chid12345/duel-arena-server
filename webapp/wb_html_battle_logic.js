@@ -152,7 +152,29 @@
     if (on) _state.autoTimer = setInterval(() => {
       const sc = window.WBHtml._scene; const hp = sc?._state?.active?.current_hp;
       if (hp != null && hp <= 0) { setAutoAttack(false); return; }
+
+      // 1. Базовый удар (как АТАКА — это и есть _onHit).
       sc?._onHit?.();
+
+      // 2. УЛЬТА — если шкала готова и не на КД, выпускаем.
+      if (_state.ultra >= 1 && !isSkillOnCD('ult')) {
+        try { fireUltSkill(); startSkillCD('ult'); _state.ultra = 0;
+          const fill = document.getElementById('wb-ultra-fill');
+          if (fill) fill.style.width = '0%';
+          const btn = document.getElementById('wb-ultra-btn');
+          if (btn) { btn.classList.remove('ready'); btn.innerHTML = 'УДАР'; }
+        } catch(_) {}
+      }
+
+      // 3. ЩИТ — авто-кастуем если HP игрока < 50% и не на КД.
+      try {
+        const ps = sc?._state?.player_state;
+        const phpPct = ps && ps.max_hp > 0 ? (ps.current_hp / ps.max_hp) : 1;
+        if (phpPct < 0.5 && !isSkillOnCD('shld')) {
+          window.WBHtml?.toast?.('🛡 Блок активирован (авто)');
+          startSkillCD('shld');
+        }
+      } catch(_) {}
     }, 1000);
   }
 

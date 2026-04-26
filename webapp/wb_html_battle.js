@@ -7,8 +7,15 @@
   function _esc(v) { return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
 
   function _renderBattle(root, s) {
-    window.WBHtml.resetBattleLogic?.();
-    try { Object.keys(sessionStorage).filter(k=>k.startsWith('wb_bought_')).forEach(k=>sessionStorage.removeItem(k)); } catch(_) {}
+    // Resetим бой только при ВХОДЕ в новый рейд (смена spawn_id), а не на каждый
+    // ререндер — иначе шкала ульты обнуляется на каждом обновлении state и в auto-режиме
+    // никогда не доходит до 100%.
+    const sid = s?.active?.spawn_id || null;
+    if (window.WBHtml._lastBattleSpawnId !== sid) {
+      window.WBHtml._lastBattleSpawnId = sid;
+      window.WBHtml.resetBattleLogic?.();
+      try { Object.keys(sessionStorage).filter(k=>k.startsWith('wb_bought_')).forEach(k=>sessionStorage.removeItem(k)); } catch(_) {}
+    }
     window.WBBattleCSS?.inject();
     if (s.active && (s.active.current_hp||0) <= 0) { root.innerHTML = `<div class="wb-victwait"><div class="wb-victwait-em">🏆</div><div class="wb-victwait-t">ПОБЕДА!</div><div class="wb-victwait-s">Ожидание расчёта наград...</div></div>`; return; }
     const a = s.active, ps = s.player_state;
