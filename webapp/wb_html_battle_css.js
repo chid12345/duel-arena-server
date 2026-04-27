@@ -283,14 +283,15 @@ window.WBBattleCSS = (() => {
   transform:translate(-50%,-52%);
   width:300px;height:300px;object-fit:contain;
   pointer-events:none;z-index:2;
-  /* СТРОГО по инструкции:
+  /* СТРОГО:
      - background:none !important + border:none — никаких фоновых блоков
      - filter:drop-shadow на самом img (не box-shadow на контейнере)
-     - mask-image на img: transparent 0%, black 20% */
+     - mask-image на img: transparent 0%, black 20%
+     - Тугое 5px свечение — не заполняет промежутки между ног/рук → нет квадрата */
   background:none !important;border:none;
   -webkit-mask-image:linear-gradient(to top, transparent 0%, black 20%);
   mask-image:linear-gradient(to top, transparent 0%, black 20%);
-  filter:drop-shadow(0 0 15px var(--boss-glow));
+  filter:drop-shadow(0 0 5px var(--boss-glow));
   animation:wb-bfloat 3.2s ease-in-out infinite;}
 /* Лич — использует глобальную маску ног. Цвет свечения по умолчанию #9b30ff. */
 

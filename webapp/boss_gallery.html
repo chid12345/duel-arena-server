@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<title>WB · Галерея 7 боссов</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#020005;color:#e0e0e0;
+    font:13px -apple-system,Segoe UI,Roboto,sans-serif;padding:14px;}
+  h1{font-size:16px;letter-spacing:2px;color:#ff0088;margin-bottom:10px;
+    text-shadow:0 0 10px #ff0088;}
+  .sub{font-size:11px;color:#88a;margin-bottom:18px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;max-width:1400px;}
+  iframe{width:100%;height:520px;border:none;border-radius:10px;
+    background:#0a0a14;display:block;}
+  .card{position:relative;}
+  .label{position:absolute;top:8px;left:8px;z-index:10;padding:4px 9px;
+    border-radius:6px;background:rgba(0,0,0,.7);
+    font-size:10px;font-weight:800;letter-spacing:1.5px;color:#fff;
+    backdrop-filter:blur(6px);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<h1>⚔ ВСЕ 7 БОССОВ — ТЕКУЩИЙ ВИД</h1>
+<div class="sub">каждое окно загружает реальный preview (тот же что в боевом экране) · drop-shadow 4-6px · без квадратного гало</div>
+
+<div class="grid">
+  <div class="card"><div class="label" style="color:#9b30ff">🦴 ЛИЧ</div>
+    <iframe src="boss_scene_preview.html"></iframe></div>
+
+  <div class="card"><div class="label" style="color:#22ddff">🌑 ТЕНЬ</div>
+    <iframe src="boss_scene_shadow.html"></iframe></div>
+
+  <div class="card"><div class="label" style="color:#ff6600">🔥 ОГОНЬ</div>
+    <iframe src="boss_scene_fire.html"></iframe></div>
+
+  <div class="card"><div class="label" style="color:#00ff00">☠️ ГОЛЕМ</div>
+    <iframe src="boss_scene_poison.html"></iframe></div>
+
+  <div class="card"><div class="label" style="color:#bf00ff">🕷 ПАУК</div>
+    <iframe src="boss_scene_spider.html"></iframe></div>
+
+  <div class="card"><div class="label" style="color:#ff5520">🌋 ЛАВА</div>
+    <iframe src="boss_scene_lava.html"></iframe></div>
+
+  <div class="card"><div class="label" style="color:#ff2030">👹 ДЕМОН</div>
+    <iframe src="boss_scene_demon.html"></iframe></div>
+</div>
+
+</body></html>

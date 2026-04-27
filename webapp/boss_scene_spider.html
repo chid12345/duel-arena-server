@@ -44,17 +44,10 @@
   @keyframes boss-breathe{
     0%,100%{transform:scale(1)    translateY(0)}
     50%   {transform:scale(1.025) translateY(-3px)}}
+  /* Тугое bio-luminescence свечение 4-6px без квадратного гало */
   @keyframes boss-glow{
-    0%,100%{filter:
-      drop-shadow(0 0 12px rgba(191,0,255,.7))
-      drop-shadow(0 0 24px rgba(150,0,220,.5))
-      brightness(1)
-      saturate(1.1);}
-    50%{filter:
-      drop-shadow(0 0 22px rgba(220,80,255,.95))
-      drop-shadow(0 0 42px rgba(180,40,240,.8))
-      brightness(1.15)
-      saturate(1.3);}}
+    0%,100%{filter:drop-shadow(0 0 4px rgba(191,0,255,.65)) brightness(1) saturate(1.1);}
+    50%   {filter:drop-shadow(0 0 6px rgba(220,80,255,.95)) brightness(1.12) saturate(1.3);}}
   @keyframes boss-vibrate{
     0%  {margin-left:0; margin-top:0}
     25% {margin-left:.5px; margin-top:-.4px}

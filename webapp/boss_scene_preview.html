@@ -44,11 +44,10 @@
       black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
     mask-image:linear-gradient(to bottom,
       black 0%, black 78%, rgba(0,0,0,.55) 90%, transparent 100%);
-    /* VFX свечение — фиолетовое, связывает с молниями фона */
+    /* Тугое фиолетовое свечение 4-6px без квадратного гало */
     filter:
-      drop-shadow(0 0 16px rgba(170,60,255,.6))
-      drop-shadow(0 0 38px rgba(140,40,255,.45))
-      drop-shadow(0 4px 12px rgba(0,0,0,.7));
+      drop-shadow(0 0 5px rgba(170,60,255,.7))
+      drop-shadow(0 4px 8px rgba(0,0,0,.7));
     animation:boss-breathe 3.6s ease-in-out infinite;}
   /* Дыхание — лёгкая пульсация, чувствуется но не отвлекает */
   @keyframes boss-breathe{
