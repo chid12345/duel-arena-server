@@ -126,6 +126,12 @@
         clearInterval(iv); ov.remove();
         if (count >= 10) {
           _shake();
+          // Виброотклик при успехе QTE 10/10 — heavy + success notification.
+          // Каждый последующий удар тоже даёт лёгкий impact (через _onHit).
+          try {
+            window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
+            window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('heavy');
+          } catch(_) {}
           const sc = window.WBHtml._scene;
           // 10 РЕАЛЬНЫХ ударов с интервалом 320мс (> 300мс серверный кулдаун).
           for (let i = 0; i < 10; i++) setTimeout(() => sc?._onHit?.(), i * 320);
