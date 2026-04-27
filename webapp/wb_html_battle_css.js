@@ -266,70 +266,55 @@ window.WBBattleCSS = (() => {
   --boss-glow:#9b30ff;
   transform:translate(-50%,-52%);
   width:300px;height:300px;object-fit:contain;
-  animation:wb-bfloat 3.2s ease-in-out infinite, wb-boss-glow 2s ease-in-out infinite;
   pointer-events:none;z-index:2;
-  /* Универсальная маска: нижние 35% растворяются в туман пола.
-     Применяется ко всем боссам — стирает «родную землю» под ногами,
-     чтобы спрайт сливался с фоном без видимой границы. */
-  -webkit-mask-image:linear-gradient(to top, transparent 8%, black 35%);
-  mask-image:linear-gradient(to top, transparent 8%, black 35%);
-  background:transparent;}
+  /* СТРОГО по инструкции:
+     - background:none !important + border:none — никаких фоновых блоков
+     - filter:drop-shadow на самом img (не box-shadow на контейнере)
+     - mask-image на img: transparent 0%, black 20% */
+  background:none !important;border:none;
+  -webkit-mask-image:linear-gradient(to top, transparent 0%, black 20%);
+  mask-image:linear-gradient(to top, transparent 0%, black 20%);
+  filter:drop-shadow(0 0 15px var(--boss-glow));
+  animation:wb-bfloat 3.2s ease-in-out infinite;}
 /* Лич — использует глобальную маску ног. Цвет свечения по умолчанию #9b30ff. */
 
 /* Кровавый Демон: стоит ногами в тумане, мощное красное свечение,
    тяжёлое медленное дыхание. При атаке — алая вспышка фона. */
 .wb-boss-zone.bt-demon .wb-bimg2{
   --boss-glow:#ff2030;
-  /* Анкер к полу как у лавового — Мясник стоит ногами в тумане.
-     Маска ног — глобальная. */
+  /* Анкер к полу: Мясник стоит ногами в тумане */
   top:auto;bottom:-2%;
   transform:translateX(-50%);
   transform-origin:50% 100%;
   width:auto;height:72%;
-  animation:wb-demon-stand 4.4s ease-in-out infinite,
-            wb-demon-glow 4.4s ease-in-out infinite;}
+  /* Только scale-дыхание, свечение — статичное 15px на базе */
+  animation:wb-demon-stand 4.4s ease-in-out infinite;}
 @keyframes wb-demon-stand{
   0%,100%{transform:translateX(-50%) scale(1)}
   50%   {transform:translateX(-50%) scale(1.03)}}
-/* Кровавое свечение — единое drop-shadow без квадратного гало */
-@keyframes wb-demon-glow{
-  0%,100%{filter:drop-shadow(0 0 14px var(--boss-glow)) brightness(1)}
-  50%   {filter:drop-shadow(0 0 26px var(--boss-glow)) brightness(1.12)}}
 
 /* Лавовый Титан: rim light от водопада сзади + медленное дыхание.
    ВАЖНО: лавовый стоит ногами на полу — НЕ парит.
    Привязка к bottom + transform-origin внизу + анимация только scale. */
 .wb-boss-zone.bt-lava .wb-bimg2{
   --boss-glow:#ff5520;
-  /* Перебиваем дефолтное центрирование: top:50% → bottom-anchor */
+  /* Анкер к полу: top:auto + bottom + transform-origin внизу */
   top:auto;bottom:-2%;
   transform:translateX(-50%);
   transform-origin:50% 100%;
   width:auto;height:74%;
-  /* Только scale + glow, никакого translateY — ноги на месте.
-     Маска ног — глобальная (linear-gradient to top, transparent 5%, black 25%) */
-  animation:wb-lava-stand 4.2s ease-in-out infinite,
-            wb-lava-rim 3.2s ease-in-out infinite;}
+  /* Только scale-дыхание, без translateY — ноги на месте.
+     Свечение — статичное 15px на .wb-bimg2 базе. */
+  animation:wb-lava-stand 4.2s ease-in-out infinite;}
 @keyframes wb-lava-stand{
   0%,100%{transform:translateX(-50%) scale(1)}
   50%   {transform:translateX(-50%) scale(1.025)}}
-/* Rim light от водопада сзади — единое drop-shadow без квадратного гало.
-   Синхронно с фоном-водопадом (3.2s). */
-@keyframes wb-lava-rim{
-  0%,100%{filter:drop-shadow(0 0 14px var(--boss-glow)) brightness(1)}
-  50%   {filter:drop-shadow(0 0 28px var(--boss-glow)) brightness(1.15)}}
 
-/* Древний Страж: фиолетовое bio-luminescence свечение + быстрая вибрация
-   конечностей (насекомое). Свечение синхронно с фоном-ульем (6s).
-   Глобальная маска лап + одноразрядное drop-shadow. */
+/* Древний Страж: фиолетовый через --boss-glow + микро-вибрация лап */
 .wb-boss-zone.bt-spider .wb-bimg2{
   --boss-glow:#bf00ff;
   animation:wb-bfloat 3.2s ease-in-out infinite,
-            wb-spider-glow 6s ease-in-out infinite,
             wb-spider-vibrate .14s linear infinite;}
-@keyframes wb-spider-glow{
-  0%,100%{filter:drop-shadow(0 0 14px var(--boss-glow)) brightness(1)}
-  50%   {filter:drop-shadow(0 0 26px var(--boss-glow)) brightness(1.12)}}
 /* Микро-вибрация конечностей — лёгкое дрожание ±0.5px очень быстро */
 @keyframes wb-spider-vibrate{
   0%  {margin-left:0; margin-top:0}
@@ -338,35 +323,23 @@ window.WBBattleCSS = (() => {
   75% {margin-left:.4px; margin-top:.4px}
   100%{margin-left:-.5px; margin-top:-.4px}}
 
-/* Каменный Голем: ярко-зелёное свечение + дыхание в резонанс с кристаллом.
-   Глобальная маска ног + одноразрядное drop-shadow без квадратного гало. */
+/* Каменный Голем: чистый зелёный через --boss-glow */
 .wb-boss-zone.bt-poison .wb-bimg2{
   --boss-glow:#00ff00;
-  animation:wb-bfloat 3.6s ease-in-out infinite,
-            wb-poison-glow 3.6s ease-in-out infinite;}
-@keyframes wb-poison-glow{
-  0%,100%{filter:drop-shadow(0 0 14px var(--boss-glow)) brightness(1)}
-  50%   {filter:drop-shadow(0 0 24px var(--boss-glow)) brightness(1.12)}}
+  animation:wb-bfloat 3.6s ease-in-out infinite;}
 
-/* Огненный Колосс: оранжевое свечение + пульсация ядра. Глобальная маска. */
+/* Огненный Колосс: оранжевое свечение через --boss-glow */
 .wb-boss-zone.bt-fire .wb-bimg2{
   --boss-glow:#ff6600;
-  animation:wb-bfloat 3.2s ease-in-out infinite,
-            wb-fire-glow 2.6s ease-in-out infinite;}
-/* Свечение огненного — синхронно с фоном (2.6s), без квадратного гало */
-@keyframes wb-fire-glow{
-  0%,100%{filter:drop-shadow(0 0 14px var(--boss-glow)) brightness(1)}
-  50%   {filter:drop-shadow(0 0 26px var(--boss-glow)) brightness(1.12)}}
+  animation:wb-bfloat 3.2s ease-in-out infinite;}
 /* Контактная тень-лужа лавы под ногами */
 .wb-boss-zone.bt-fire .wb-bimg2 + .wb-fire-puddle,
 .wb-boss-zone.bt-fire::after{}
 
-/* Теневой Страж: бирюзовое свечение глаз + анимация «рывка» каждые 4.5с.
-   Глобальная маска ног + глобальное свечение с переопределением цвета. */
+/* Теневой Страж: бирюзовое свечение через --boss-glow + рывок 4.5с */
 .wb-boss-zone.bt-shadow .wb-bimg2{
   --boss-glow:#22ddff;
   animation:wb-bfloat 3.2s ease-in-out infinite,
-            wb-boss-glow 2s ease-in-out infinite,
             wb-bjerk-shadow 4.5s ease-in-out infinite;}
 /* Контактная густая чёрная тень под лапами теневого волка */
 .wb-boss-zone.bt-shadow::after{content:"";position:absolute;left:50%;bottom:8%;
