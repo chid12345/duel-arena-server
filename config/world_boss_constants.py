@@ -36,7 +36,7 @@ WB_LATE_JOIN_WINDOW_SEC: int = 2 * 60
 WB_ANNOUNCE_LEAD_SEC: int = 5 * 60
 
 # Окно подготовки перед стартом (WS шлёт wb_preparing, фронт показывает экран).
-WB_PREP_SEC: int = 30
+WB_PREP_SEC: int = 60
 
 # Формула HP босса: max(min, per_online × онлайн).
 WB_HP_PER_ONLINE: int = 500
