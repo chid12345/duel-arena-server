@@ -40,8 +40,6 @@ Object.assign(WorldBossScene.prototype, {
     _remZ.on('pointerup', () => this._toggleReminder());
     y += 56;
 
-    this._bigBtn(16, y, W-32, 34, 0x0a0020, '🔧 Тест: старт сейчас', () => this._wbTestSchedule());
-    y += 60;
     const rh = this._renderRegistrationBtn?.(s, W, y) || 0; y += rh;
     const msh = this._renderMyScrollsSummary?.(s, W, y) || 0; y += msh;
     this._renderScrollShop(s, W, y); y += 185;
@@ -62,8 +60,6 @@ Object.assign(WorldBossScene.prototype, {
     this._countdownTxt = this._addText(W/2, y+50, this._fmtCountdown(this._nextSchedAt), 32, '#ffee00', true).setOrigin(0.5);
     this._addText(W/2, y+72, '▶ INSERT COIN TO PLAY ◀', 8, '#8855cc').setOrigin(0.5);
     y += 92;
-    this._bigBtn(16, y, W-32, 34, 0x0a0020, '🔧 Тест: старт сейчас', () => this._wbTestSchedule());
-    y += 44;
     this._renderScrollShop(s, W, y); y += 185;
     this._renderResShop(s, W, y);
   },

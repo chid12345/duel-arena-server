@@ -166,10 +166,7 @@ ${unclaimedBanner}
 </div>
 <div class="wb-cp on" data-cp="boosts"><div class="wb-bgrid">${boostsHTML}</div></div>
 <div class="wb-cp" data-cp="revival"><div class="wb-rgrid">${resHTML}</div></div>
-<div class="wb-cp" data-cp="history"><div class="wb-hist">${topRows}</div></div>
-<div style="text-align:right;padding:4px 16px 16px;">
-  <span style="font-size:9px;color:#220011;cursor:pointer;" data-act="test">⚡ dev·test</span>
-</div>`;
+<div class="wb-cp" data-cp="history"><div class="wb-hist">${topRows}</div></div>`;
   }
 
   function _buildInvChips(s) {
