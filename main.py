@@ -153,10 +153,11 @@ def _build_app(bot_count: int) -> Application:
             clan_season_rotate_job, interval=3600, first=120,
             name="clan_season_rotate",
         )
-        # Мировой босс — тик раз в 60 сек: планирует/стартует/закрывает рейды.
+        # Мировой босс — тик раз в 10 сек (расписание 10 мин: рейды
+        # стартуют/закрываются точно по слотам, без задержки до минуты).
         from jobs.world_boss_scheduler import world_boss_scheduler_job
         application.job_queue.run_repeating(
-            world_boss_scheduler_job, interval=60, first=5,
+            world_boss_scheduler_job, interval=10, first=5,
             name="world_boss_scheduler",
         )
         # Мировой босс — анонс в общий чат за 5 мин до рейда (раз в 60 сек, идемпотентно).
