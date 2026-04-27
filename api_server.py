@@ -41,15 +41,38 @@ async def _wb_tick_loop() -> None:
             logger.warning("wb_tick_loop: %s", e)
 
 
+async def _wb_scheduler_loop() -> None:
+    """Резервный планировщик рейдов прямо в uvicorn (раз в 10 сек).
+    Дублирует main.py-шедулер: если бот упал/спит, рейды всё равно
+    стартуют/закрываются. _finish/_start_due/_ensure идемпотентны,
+    двойной вызов из main.py + uvicorn безопасен."""
+    from jobs.world_boss_scheduler import (
+        _finish_expired_or_dead_spawn, _start_due_spawn, _ensure_next_scheduled,
+    )
+    from database import db
+    # Старт через 5с чтобы не сталкиваться с main.py (тот тикает first=5)
+    await asyncio.sleep(8)
+    while True:
+        try:
+            _finish_expired_or_dead_spawn(db)
+            _start_due_spawn(db)
+            _ensure_next_scheduled(db)
+        except Exception as e:
+            logger.warning("wb_scheduler_loop: %s", e)
+        await asyncio.sleep(10)
+
+
 @asynccontextmanager
 async def _lifespan(app):  # noqa: ARG001
-    task = asyncio.create_task(_wb_tick_loop())
+    tick_task = asyncio.create_task(_wb_tick_loop())
+    sched_task = asyncio.create_task(_wb_scheduler_loop())
     yield
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
+    for t in (tick_task, sched_task):
+        t.cancel()
+        try:
+            await t
+        except asyncio.CancelledError:
+            pass
 
 
 app = FastAPI(title="Duel Arena TMA API", version="1.0", lifespan=_lifespan)
