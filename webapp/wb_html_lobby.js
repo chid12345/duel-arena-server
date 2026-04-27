@@ -396,6 +396,8 @@ ${gatherBtn}
     const _gatherSid = (() => { try { return sessionStorage.getItem('wb_in_gather'); } catch(_) { return null; } })();
     if (s.gather?.is_open && _gatherSid && _gatherSid === String(s.next_scheduled?.spawn_id)) {
       _setTabBar(false); root.style.cssText = '';
+      // ОБЯЗАТЕЛЬНО инжектим стили боевого экрана — там же CSS .wb-gth-*
+      window.WBBattleCSS?.inject();
       if (window.WBHtml.renderGather) {
         try { window.WBHtml.renderGather(root, s); return; } catch(_) {}
       }

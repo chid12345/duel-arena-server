@@ -16,6 +16,28 @@
     return _AVATARS[Math.abs((uid|0)) % _AVATARS.length];
   }
 
+  // Локальный таймер для отсчёта в 1-сек шагом, не ждём refresh раз в 8 сек
+  let _gatherTickInterval = null;
+  function _stopLocalTick() {
+    if (_gatherTickInterval) { clearInterval(_gatherTickInterval); _gatherTickInterval = null; }
+  }
+  function _startLocalTick(initialSec) {
+    _stopLocalTick();
+    let remaining = initialSec;
+    _gatherTickInterval = setInterval(() => {
+      remaining = Math.max(0, remaining - 1);
+      const el = document.getElementById('wb-gth-cnt');
+      if (!el) { _stopLocalTick(); return; }
+      el.textContent = _fmtCountdown(remaining);
+      if (remaining <= 0) {
+        _stopLocalTick();
+        // Время вышло — форсим refresh, чтобы клиент увидел active рейд и
+        // ушёл в боевой экран
+        try { window.WBHtml._scene?._refresh?.(); } catch(_) {}
+      }
+    }, 1000);
+  }
+
   function renderGather(root, s) {
     // Если рейд уже стартанул — клиент должен переключиться на бой автоматически
     // (логика в wb_html_lobby.js: state.active → _renderBattle).
@@ -74,6 +96,8 @@
       });
     }
     window.WBHtml._lastGatherState = s;
+    // Запускаем локальный отсчёт сразу после рендера
+    _startLocalTick(sec);
   }
 
   function _showGatherCard(p) {
@@ -97,10 +121,12 @@
     });
   }
 
-  // Обновление таймера без перерисовки всего ростера (вызывается из _refresh / _onWsTick)
+  // Обновление таймера без перерисовки всего ростера (вызывается из _refresh / _onWsTick).
+  // Также пересинхронизируем локальный тикер с актуальным значением сервера.
   function updateGatherTimer(sec) {
     const el = document.getElementById('wb-gth-cnt');
     if (el) el.textContent = _fmtCountdown(sec);
+    if (sec > 0) _startLocalTick(sec); // ресинк
   }
 
   Object.assign(window.WBHtml = window.WBHtml || {}, { renderGather, updateGatherTimer });
