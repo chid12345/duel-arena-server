@@ -422,14 +422,29 @@ window.WBBattleCSS = (() => {
   display:flex;align-items:center;justify-content:center;font-size:14px;
   opacity:0;animation:wb-gh 4s ease-in-out infinite;pointer-events:none;}
 @keyframes wb-gh{0%{opacity:0;transform:translateY(20px) translateX(0)}20%{opacity:.4}80%{opacity:.3}100%{opacity:0;transform:translateY(-30px) translateX(20px)}}
-.wb-dmg-num{position:absolute;font-family:'Courier New',monospace;font-weight:900;
-  pointer-events:none;z-index:20;text-shadow:0 0 10px currentColor;white-space:nowrap;
-  animation:wb-dmgfly2 .9s ease-out forwards;}
-.wb-dmg-num.crit{text-shadow:0 0 16px #ffcc00,0 0 32px #ff8800;}
+/* Цифры урона: чёткие (обводка вместо размытой тени), держатся 1.6с */
+.wb-dmg-num{position:absolute;font-family:'Impact','Arial Black',sans-serif;font-weight:900;
+  pointer-events:none;z-index:20;white-space:nowrap;letter-spacing:.5px;
+  -webkit-text-stroke:1.5px rgba(0,0,0,.85);
+  text-shadow:0 0 4px currentColor, 0 2px 4px rgba(0,0,0,.85);
+  animation:wb-dmgfly2 1.6s cubic-bezier(.2,.7,.3,1) forwards;}
+.wb-dmg-num.crit{-webkit-text-stroke:2px rgba(64,32,0,.9);
+  text-shadow:0 0 6px #ffcc00, 0 0 14px #ff8800, 0 2px 4px rgba(0,0,0,.85);}
 @keyframes wb-dmgfly2{
-  0%  {opacity:1;transform:translateX(-50%) translateY(0)     scale(1)   }
-  20% {opacity:1;transform:translateX(-50%) translateY(-20px) scale(1.15)}
-  100%{opacity:0;transform:translateX(-50%) translateY(-70px) scale(.7)  }}
+  0%  {opacity:0;transform:translateX(-50%) translateY(8px)   scale(.6) }
+  10% {opacity:1;transform:translateX(-50%) translateY(-6px)  scale(1.15)}
+  25% {opacity:1;transform:translateX(-50%) translateY(-16px) scale(1)   }
+  75% {opacity:1;transform:translateX(-50%) translateY(-44px) scale(.95) }
+  100%{opacity:0;transform:translateX(-50%) translateY(-72px) scale(.85) }}
+/* Лёгкое мгновенное «эхо» при тапе — пока сервер не ответил */
+.wb-tap-echo{position:absolute;width:34px;height:34px;border-radius:50%;
+  border:2px solid var(--theme,#fff);
+  pointer-events:none;z-index:18;
+  transform:translate(-50%,-50%);
+  animation:wb-tap-echo .5s ease-out forwards;}
+@keyframes wb-tap-echo{
+  0%  {opacity:.85;transform:translate(-50%,-50%) scale(.6)}
+  100%{opacity:0;transform:translate(-50%,-50%) scale(2.2)}}
 .wb-tap-hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);
   font-size:9px;color:rgba(255,255,255,.3);letter-spacing:2px;text-transform:uppercase;
   pointer-events:none;white-space:nowrap;

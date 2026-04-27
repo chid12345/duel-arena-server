@@ -220,6 +220,22 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     if (bimg) { bimg.classList.remove('wb-hit'); void bimg.offsetWidth; bimg.classList.add('wb-hit'); }
     const zone = document.getElementById('wb-boss-zone');
     if (zone) { zone.style.transform='scale(.98)'; setTimeout(() => zone.style.transform='', 100); }
+    // Мгновенное «эхо» на месте тапа — пока сервер летит туда-обратно,
+    // игрок видит круг и понимает что удар зарегистрирован.
+    try {
+      const lt = window.WBHtml._lastTap;
+      if (zone && lt) {
+        const r = zone.getBoundingClientRect();
+        if (lt.x >= r.left && lt.x <= r.right && lt.y >= r.top && lt.y <= r.bottom) {
+          const echo = document.createElement('div');
+          echo.className = 'wb-tap-echo';
+          echo.style.left = (lt.x - r.left) + 'px';
+          echo.style.top  = (lt.y - r.top) + 'px';
+          zone.appendChild(echo);
+          setTimeout(() => echo.remove(), 500);
+        }
+      }
+    } catch(_) {}
   }
 
   // Запоминаем какие скиллы уже видел игрок навсегда — не показываем
@@ -394,7 +410,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     const cl = isCrit ? '#FFD700' : ((window.WBHtml.getCombo?.()||0) > 5 ? '#FF4400' : '#FF6680');
     el.style.cssText = `left:${x}px;top:${y}px;font-size:${fs}px;color:${cl};text-shadow:0 0 8px ${cl};`;
     zone.appendChild(el);
-    setTimeout(() => el.remove(), 950);
+    setTimeout(() => el.remove(), 1700);
     window.WBHtml.addUltraEnergy?.(.04 + Math.random() * .02);
     window.WBHtml.bumpCombo?.();
   }
