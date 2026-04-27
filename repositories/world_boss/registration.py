@@ -170,9 +170,10 @@ class WorldBossRegistrationMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT r.user_id, p.username, p.level, p.strength "
+            "SELECT r.user_id, COALESCE(p.username,'Игрок') AS username, "
+            "COALESCE(p.level,1) AS level, p.strength "
             "FROM world_boss_registrations r "
-            "JOIN players p ON p.user_id = r.user_id "
+            "LEFT JOIN players p ON p.user_id = r.user_id "
             "WHERE r.spawn_id=? "
             "ORDER BY r.created_at ASC LIMIT ?",
             (int(spawn_id), int(limit)),
