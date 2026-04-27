@@ -14,6 +14,7 @@
     if (window.WBHtml._lastBattleSpawnId !== sid) {
       window.WBHtml._lastBattleSpawnId = sid;
       window.WBHtml.resetBattleLogic?.();
+      try { window.WBHtml._resetBattleLog?.(sid); } catch(_) {}
       try { Object.keys(sessionStorage).filter(k=>k.startsWith('wb_bought_')).forEach(k=>sessionStorage.removeItem(k)); } catch(_) {}
     }
     window.WBBattleCSS?.inject();

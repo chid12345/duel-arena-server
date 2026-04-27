@@ -31,11 +31,12 @@ Object.assign(WorldBossScene.prototype, {
       else this._fxShake('light');
     }
 
-    // 3) Игроку прилетел урон → красная вспышка по HP-тексту.
+    // 3) Игроку прилетел урон → красная вспышка по HP-тексту + лог в историю.
     if (newPs && typeof newPs.current_hp === 'number'
         && typeof prevPs.current_hp === 'number'
         && newPs.current_hp < prevPs.current_hp) {
       if (this._plHpT) this._fxFlashText(this._plHpT);
+      try { window.WBHtml?.checkBossHit?.(prevPs.current_hp, newPs.current_hp); } catch(_) {}
       // Кровавый Демон: при ударе босса фон вспыхивает алым
       try {
         const z = document.getElementById('wb-boss-zone');

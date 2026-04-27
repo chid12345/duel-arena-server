@@ -97,13 +97,21 @@
     };
     document.getElementById('wb-mvp-x')?.addEventListener('click', _close);
     document.getElementById('wb-mvp-log')?.addEventListener('click', () => {
-      _showBattleLog({
-        name, avatar, win,
-        damage: dmg||0, hits, avg: avgDmg, crits: ps.crits||0,
-        received: recHp, hp_left: ps.current_hp||0, max_hp: ps.max_hp||0, hp_pct: hpPct,
-        contribution: r.contribution_pct||0,
-        gold: r.gold||0, exp: r.exp||0, diamonds: r.diamonds||0,
-      });
+      // Новый пораундовый лог из клиентского трекера wb_html_battle_log.js
+      // (показывает каждый удар: твой/босса с временем). Если трекер пустой —
+      // fallback на старый агрегат-попап.
+      const tracker = window.WBHtml?.getBattleLog?.() || [];
+      if (tracker.length > 0 && window.WBHtml?.showBattleHistory) {
+        window.WBHtml.showBattleHistory();
+      } else {
+        _showBattleLog({
+          name, avatar, win,
+          damage: dmg||0, hits, avg: avgDmg, crits: ps.crits||0,
+          received: recHp, hp_left: ps.current_hp||0, max_hp: ps.max_hp||0, hp_pct: hpPct,
+          contribution: r.contribution_pct||0,
+          gold: r.gold||0, exp: r.exp||0, diamonds: r.diamonds||0,
+        });
+      }
     });
     document.getElementById('wb-mvp-claim').addEventListener('click', () => {
       try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
