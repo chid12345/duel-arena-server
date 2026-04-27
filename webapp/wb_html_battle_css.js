@@ -268,10 +268,12 @@ window.WBBattleCSS = (() => {
   width:300px;height:300px;object-fit:contain;
   animation:wb-bfloat 3.2s ease-in-out infinite, wb-boss-glow 2s ease-in-out infinite;
   pointer-events:none;z-index:2;
-  /* Универсальная маска: нижние 25% растворяются в туман пола.
-     Применяется ко всем боссам — скрывает остатки земли/тени под ногами. */
-  -webkit-mask-image:linear-gradient(to top, transparent 5%, black 25%);
-  mask-image:linear-gradient(to top, transparent 5%, black 25%);}
+  /* Универсальная маска: нижние 35% растворяются в туман пола.
+     Применяется ко всем боссам — стирает «родную землю» под ногами,
+     чтобы спрайт сливался с фоном без видимой границы. */
+  -webkit-mask-image:linear-gradient(to top, transparent 8%, black 35%);
+  mask-image:linear-gradient(to top, transparent 8%, black 35%);
+  background:transparent;}
 /* Лич — использует глобальную маску ног. Цвет свечения по умолчанию #9b30ff. */
 
 /* Кровавый Демон: стоит ногами в тумане, мощное красное свечение,
@@ -339,7 +341,7 @@ window.WBBattleCSS = (() => {
 /* Каменный Голем: ярко-зелёное свечение + дыхание в резонанс с кристаллом.
    Глобальная маска ног + одноразрядное drop-shadow без квадратного гало. */
 .wb-boss-zone.bt-poison .wb-bimg2{
-  --boss-glow:#22ff66;
+  --boss-glow:#00ff00;
   animation:wb-bfloat 3.6s ease-in-out infinite,
             wb-poison-glow 3.6s ease-in-out infinite;}
 @keyframes wb-poison-glow{
