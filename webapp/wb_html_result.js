@@ -63,6 +63,12 @@
       chest = `<div class="wb-mvp-chest">🎁 ${_esc(r.chest_type)}</div>`;
     }
 
+    // Статы боя — что показать в логе при клике на «📜 Лог боя».
+    const hits = ps.hits_count || 0;
+    const avgDmg = hits ? Math.round((dmg||0) / hits) : 0;
+    const recHp = (ps.max_hp || 0) - (ps.current_hp || 0);
+    const hpPct = ps.max_hp ? Math.round(((ps.current_hp||0) / ps.max_hp) * 100) : 0;
+
     ov.innerHTML = `<div class="wb-mvp">
       <div class="wb-mvp-x" id="wb-mvp-x" title="Закрыть">×</div>
       <div class="wb-mvp-bdg">${head}</div>
@@ -73,6 +79,7 @@
       ${rewards.length ? `<div class="wb-mvp-rew">${rewards.join('   ')}</div>` : ''}
       ${chest}
       <div id="wb-mvp-summary" class="wb-mvp-summary" style="display:none"></div>
+      <div class="wb-mvp-log-btn" id="wb-mvp-log">📜 Лог боя</div>
       <div class="wb-mvp-msg">${msg}</div>
       <button class="wb-mvp-btn" id="wb-mvp-claim">ПОЛУЧИТЬ НАГРАДУ</button>
     </div>`;
@@ -89,10 +96,53 @@
       setTimeout(() => ov.remove(), 300);
     };
     document.getElementById('wb-mvp-x')?.addEventListener('click', _close);
+    document.getElementById('wb-mvp-log')?.addEventListener('click', () => {
+      _showBattleLog({
+        name, avatar, win,
+        damage: dmg||0, hits, avg: avgDmg, crits: ps.crits||0,
+        received: recHp, hp_left: ps.current_hp||0, max_hp: ps.max_hp||0, hp_pct: hpPct,
+        contribution: r.contribution_pct||0,
+        gold: r.gold||0, exp: r.exp||0, diamonds: r.diamonds||0,
+      });
+    });
     document.getElementById('wb-mvp-claim').addEventListener('click', () => {
       try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
       _close();
       scene?._claimReward?.(r.reward_id);
+    });
+  }
+
+  // ── Лог боя (статы за один рейд) ─────────────────────────────────
+  function _showBattleLog(s) {
+    document.getElementById('wb-blog-ov')?.remove();
+    const ov = document.createElement('div');
+    ov.id = 'wb-blog-ov'; ov.className = 'wb-blog-ov';
+    ov.innerHTML = `<div class="wb-blog">
+      <div class="wb-blog-x" id="wb-blog-x">×</div>
+      <div class="wb-blog-h">📜 ЛОГ БОЯ</div>
+      <div class="wb-blog-sub">@${_esc(s.name)} ${s.avatar}  ·  ${s.win ? '✅ ПОБЕДА' : '❌ ПОРАЖЕНИЕ'}</div>
+
+      <div class="wb-blog-grid">
+        <div class="wb-blog-row good"><span class="ic">⚔️</span><span class="lbl">Нанёс урон</span><span class="val">${s.damage.toLocaleString('ru')}</span></div>
+        <div class="wb-blog-row"><span class="ic">🎯</span><span class="lbl">Ударов</span><span class="val">${s.hits}</span></div>
+        <div class="wb-blog-row"><span class="ic">📊</span><span class="lbl">Средний урон</span><span class="val">${s.avg.toLocaleString('ru')}</span></div>
+        ${s.crits ? `<div class="wb-blog-row"><span class="ic">💥</span><span class="lbl">Критов</span><span class="val">${s.crits}</span></div>` : ''}
+        <div class="wb-blog-row bad"><span class="ic">🩸</span><span class="lbl">Получил урона</span><span class="val">${s.received.toLocaleString('ru')}</span></div>
+        <div class="wb-blog-row"><span class="ic">❤️</span><span class="lbl">HP в конце</span><span class="val">${s.hp_left}/${s.max_hp} (${s.hp_pct}%)</span></div>
+        <div class="wb-blog-row"><span class="ic">🏆</span><span class="lbl">Вклад в победу</span><span class="val">${(s.contribution).toFixed(1)}%</span></div>
+      </div>
+
+      <div class="wb-blog-rew">
+        ${s.gold ? `💰 ${s.gold}` : ''} ${s.exp ? `⭐ ${s.exp}` : ''} ${s.diamonds ? `💎 ${s.diamonds}` : ''}
+      </div>
+
+      <div class="wb-blog-ok" id="wb-blog-ok">ПОНЯТНО</div>
+    </div>`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('open'));
+    const close = () => { ov.classList.remove('open'); setTimeout(() => ov.remove(), 220); };
+    ov.addEventListener('click', e => {
+      if (e.target === ov || e.target.id === 'wb-blog-x' || e.target.id === 'wb-blog-ok') close();
     });
   }
 

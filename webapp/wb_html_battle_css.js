@@ -663,6 +663,51 @@ window.WBBattleCSS = (() => {
   box-shadow:0 0 25px rgba(255,0,85,.5);transition:all .15s;}
 .wb-mvp-btn:active{transform:scale(.96);box-shadow:0 0 15px rgba(255,0,85,.7);}
 
+/* ── Кнопка «📜 Лог боя» в MVP-окне ── */
+.wb-mvp-log-btn{display:inline-block;margin:8px 0 4px;padding:7px 16px;border-radius:18px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(0,191,255,.4);color:#aaddff;
+  font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;
+  transition:all .12s;}
+.wb-mvp-log-btn:active{transform:scale(.96);background:rgba(0,191,255,.15);}
+
+/* ── Лог боя (popup со статистикой) ── */
+.wb-blog-ov{position:fixed;inset:0;z-index:10001;background:rgba(0,0,0,.85);
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;pointer-events:none;transition:opacity .22s;}
+.wb-blog-ov.open{opacity:1;pointer-events:all;}
+.wb-blog{width:100%;max-width:340px;border-radius:16px;padding:18px 14px;position:relative;
+  background:linear-gradient(180deg,#14001f 0%,#06030f 100%);
+  border:1px solid rgba(0,191,255,.3);
+  box-shadow:0 8px 50px rgba(0,191,255,.18);
+  transform:scale(.92);opacity:0;transition:transform .25s cubic-bezier(.32,1.2,.5,1),opacity .22s;}
+.wb-blog-ov.open .wb-blog{transform:scale(1);opacity:1;}
+.wb-blog-x{position:absolute;top:8px;right:10px;width:26px;height:26px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:14px;color:rgba(255,255,255,.55);line-height:1;}
+.wb-blog-h{font-size:14px;font-weight:900;letter-spacing:2px;color:#00BFFF;
+  text-align:center;margin-bottom:4px;text-shadow:0 0 10px rgba(0,191,255,.45);}
+.wb-blog-sub{font-size:10px;color:rgba(255,255,255,.55);text-align:center;
+  letter-spacing:1px;margin-bottom:14px;}
+.wb-blog-grid{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.wb-blog-row{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:9px;
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.05);
+  font-size:12px;color:rgba(255,255,255,.85);}
+.wb-blog-row .ic{font-size:16px;flex-shrink:0;}
+.wb-blog-row .lbl{flex:1;color:rgba(255,255,255,.65);font-size:11px;}
+.wb-blog-row .val{font-weight:900;color:#fff;font-family:'Courier New',monospace;}
+.wb-blog-row.good{background:rgba(0,255,159,.06);border-color:rgba(0,255,159,.18);}
+.wb-blog-row.good .val{color:#00FF9F;}
+.wb-blog-row.bad{background:rgba(255,80,80,.06);border-color:rgba(255,80,80,.18);}
+.wb-blog-row.bad .val{color:#ff5577;}
+.wb-blog-rew{text-align:center;font-size:13px;font-weight:700;color:#ffdd66;
+  margin-bottom:14px;letter-spacing:1px;}
+.wb-blog-ok{padding:11px;border-radius:11px;text-align:center;cursor:pointer;
+  background:linear-gradient(135deg,#0066ff,#003ba3);color:#fff;
+  font-size:12px;font-weight:900;letter-spacing:1.5px;
+  box-shadow:0 0 18px rgba(0,100,255,.35);transition:transform .12s;}
+.wb-blog-ok:active{transform:scale(.97);}
+
 /* ── Тост ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
   background:rgba(10,0,25,.95);border:1px solid rgba(255,0,200,.5);border-radius:10px;

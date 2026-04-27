@@ -81,9 +81,8 @@ def _ensure_next_scheduled(db) -> None:
                 return
         except Exception:
             return
-    active = db.get_wb_active_spawn()
-    if active:
-        return  # пока активный идёт, следующий создадим после закрытия
+    # Создаём следующий слот ЗАРАНЕЕ — даже во время активного рейда.
+    # Это даёт таймер «до следующего боя» в лобби даже когда сейчас идёт текущий.
     scheduled_at = next_spawn_time_utc(_now_utc())
     btype = roll_boss_type()
     # Имя — из пула типа (если есть), иначе общий список WB_BOSS_NAMES.

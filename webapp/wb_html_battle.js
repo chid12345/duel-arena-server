@@ -72,7 +72,6 @@
 <div class="wb-bhdr2">
   <div class="wb-bhdr2-top">
     <div class="wb-bhdr2-l">
-      <div class="wb-back2" data-act="back">←</div>
       <div class="wb-bhdr2-title">⚡ BOSS RAID</div>
     </div>
     <div class="wb-bhdr2-r">

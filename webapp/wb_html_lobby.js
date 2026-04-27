@@ -14,11 +14,7 @@ window.WBHtml = (() => {
 
   function _fmtCountdown(iso) {
     try {
-      const ms = new Date(iso).getTime() - Date.now();
-      // Когда уже время старта или прошло — показываем «СТАРТУЕТ...»
-      // вместо 0:00, чтобы было понятно что бой запускается, а не завис.
-      if (ms <= 0) return 'СТАРТУЕТ…';
-      const d = Math.floor(ms / 1000);
+      const d = Math.max(0, Math.floor((new Date(iso).getTime() - Date.now()) / 1000));
       const h = Math.floor(d/3600), m = Math.floor((d%3600)/60), s = d%60;
       return h>0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
                  : `${m}:${String(s).padStart(2,'0')}`;
