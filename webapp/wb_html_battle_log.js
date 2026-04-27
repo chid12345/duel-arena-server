@@ -2,7 +2,7 @@
    Хранит timeline всех ударов (твоих и босса) пока ты в бою.
    Live-показ во время боя + полный лог в MVP-окне после. */
 (() => {
-  // Каждый item: {ts, kind:'me'|'boss'|'crit', dmg, hp_after?, note?}
+  // Каждый item: {ts, kind:'me'|'boss'|'crit', dmg, boss_hp_after?, hp_after?}
   const _log = [];
   let _lastSpawnId = null;
   let _lastPlayerHp = null;
@@ -16,17 +16,17 @@
   }
 
   // Удар игрока по боссу (вызывается из scene._onHit при ответе сервера).
-  function logMyHit(dmg, isCrit) {
+  function logMyHit(dmg, isCrit, boss_hp_after) {
     _log.push({
       ts: Date.now(),
       kind: isCrit ? 'crit' : 'me',
       dmg: dmg|0,
+      boss_hp_after: boss_hp_after != null ? (boss_hp_after|0) : null,
     });
     _trim();
   }
 
   // Удар босса по игроку — детектим по падению current_hp в WS-тике.
-  // Вызываем из scene_world_boss_fx._applyWsEffects.
   function checkBossHit(prev_hp, new_hp) {
     if (typeof prev_hp !== 'number' || typeof new_hp !== 'number') return;
     if (new_hp >= prev_hp) return;
@@ -41,70 +41,76 @@
   }
 
   function _trim() {
-    // Лимит 200 событий, чтобы не раздуть память за 10 мин боя
     if (_log.length > 200) _log.splice(0, _log.length - 200);
   }
 
   function getLog() { return _log.slice(); }
   function clearLog() { _log.length = 0; _lastPlayerHp = null; }
 
-  // Рендерим popup с историей (вызывается из MVP-окна или панели «Лог боя»)
+  function _fmt(n) { return (n|0).toLocaleString('ru'); }
+
   function showBattleHistory() {
     const log = getLog();
     document.getElementById('wb-bhist-ov')?.remove();
     const ov = document.createElement('div');
     ov.id = 'wb-bhist-ov'; ov.className = 'wb-bhist-ov';
 
-    // Группируем по 5-секундным «раундам» для компактности
+    // Группируем по 5-секундным раундам
     const rounds = [];
-    let currentRound = null;
+    let cur = null;
     log.forEach(it => {
       const r = Math.floor((it.ts - (log[0]?.ts || it.ts)) / 5000);
-      if (!currentRound || currentRound.idx !== r) {
-        currentRound = { idx: r, items: [] };
-        rounds.push(currentRound);
-      }
-      currentRound.items.push(it);
+      if (!cur || cur.idx !== r) { cur = { idx: r, items: [] }; rounds.push(cur); }
+      cur.items.push(it);
     });
 
-    let totalMe = 0, totalBoss = 0, hits = 0, crits = 0;
+    let totalMe = 0, totalBoss = 0, hits = 0, crits = 0, bossHits = 0;
     log.forEach(it => {
-      if (it.kind === 'me' || it.kind === 'crit') { totalMe += it.dmg; hits++; if (it.kind === 'crit') crits++; }
-      else if (it.kind === 'boss') totalBoss += it.dmg;
+      if (it.kind === 'me' || it.kind === 'crit') {
+        totalMe += it.dmg; hits++;
+        if (it.kind === 'crit') crits++;
+      } else if (it.kind === 'boss') { totalBoss += it.dmg; bossHits++; }
     });
 
     const rowsHtml = rounds.map((r, i) => {
-      const myItems  = r.items.filter(it => it.kind === 'me' || it.kind === 'crit');
-      const bossItems = r.items.filter(it => it.kind === 'boss');
-      const myHtml   = myItems.map(it =>
-        `<span class="ev${it.kind==='crit'?' crit':' me'}">⚔️<span class="n">${it.dmg.toLocaleString('ru')}</span></span>`
-      ).join('');
-      const bossHtml = bossItems.map(it =>
-        `<span class="ev boss">🩸<span class="n">${it.dmg}</span></span>`
-      ).join('');
-      return `<div class="wb-bhist-row">
-        <div class="wb-bhist-r">ROUND ${i+1}</div>
-        <div class="wb-bhist-mirror">
-          <div class="wb-bhist-col me">${myHtml}</div>
-          <div class="wb-bhist-vsep"></div>
-          <div class="wb-bhist-col boss">${bossHtml}</div>
-        </div>
-      </div>`;
+      const evHtml = r.items.map(it => {
+        let tagCls, tagTxt, dmgCls, hpIco, hpVal;
+        if (it.kind === 'me')   { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; hpVal=it.boss_hp_after; }
+        if (it.kind === 'crit') { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; hpVal=it.boss_hp_after; }
+        if (it.kind === 'boss') { tagCls='boss'; tagTxt='БОСС';   dmgCls='boss'; hpIco='❤️'; hpVal=it.hp_after; }
+        const hpHtml = hpVal != null
+          ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval">${_fmt(hpVal)}</span></div>`
+          : '';
+        return `<div class="wb-bhist-ev">
+          <span class="wb-bhist-tag ${tagCls}">${tagTxt}</span>
+          <span class="wb-bhist-arr">▶</span>
+          <span class="wb-bhist-dmg ${dmgCls}">−${_fmt(it.dmg)}</span>
+          ${hpHtml}
+        </div>`;
+      }).join('');
+      return `<div class="wb-bhist-rsep">ROUND ${i+1}</div>${evHtml}`;
     }).join('');
 
     ov.innerHTML = `<div class="wb-bhist">
       <div class="wb-bhist-x" id="wb-bhist-x">×</div>
-      <div class="wb-bhist-h">📜 ИСТОРИЯ БОЯ <span class="cnt">(${rounds.length})</span></div>
-      <div class="wb-bhist-stats">
-        <span class="me">⚔️ ${totalMe.toLocaleString('ru')}</span>
-        <span class="dot">·</span>
-        <span class="hits">${hits} уд.${crits?` · ${crits}💥`:''}</span>
-        <span class="dot">·</span>
-        <span class="boss">🩸 −${totalBoss}</span>
+      <div class="wb-bhist-h">⚔ ИСТОРИЯ БОЯ <span class="wb-bhist-cnt">/ ${rounds.length} раундов</span></div>
+      <div class="wb-bhist-totals">
+        <div class="wb-bhist-tme">
+          <div class="wb-bhist-tlbl">⚔ МОЙ УРОН</div>
+          <div class="wb-bhist-tval me">${_fmt(totalMe)}</div>
+          <div class="wb-bhist-tsub">${hits} уд${crits ? ` · ${crits} крита` : ''}</div>
+        </div>
+        <div class="wb-bhist-tsep"></div>
+        <div class="wb-bhist-tboss">
+          <div class="wb-bhist-tlbl">🩸 БОСС ПО МНЕ</div>
+          <div class="wb-bhist-tval boss">${_fmt(totalBoss)}</div>
+          <div class="wb-bhist-tsub">${bossHits} удар${bossHits===1?'':'а'}</div>
+        </div>
       </div>
       <div class="wb-bhist-list">${rowsHtml || '<div class="wb-bhist-empty">Нет данных. Зайди в бой и побей босса!</div>'}</div>
       <div class="wb-bhist-ok" id="wb-bhist-ok">ПОНЯТНО</div>
     </div>`;
+
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('open'));
     const close = () => { ov.classList.remove('open'); setTimeout(() => ov.remove(), 220); };

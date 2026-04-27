@@ -154,7 +154,7 @@ Object.assign(WorldBossScene.prototype, {
         tg?.HapticFeedback?.impactOccurred(r.is_crit ? 'heavy' : 'light');
         if (this._state?.active) this._state.active.current_hp = r.boss_hp;
         try { window.WBHtml?.addHitLog(r.damage, r.is_crit); } catch(_) {}
-        try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit); } catch(_) {}
+        try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit, r.boss_hp); } catch(_) {}
         if (!hadPsBefore) {
           // Первый вход в рейд — нужен полный рефреш чтобы показать УДАРИТЬ + HP игрока
           setTimeout(() => { if (this._alive) this._refresh(); }, 400);
