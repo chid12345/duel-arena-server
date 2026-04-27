@@ -39,12 +39,22 @@ def _parse_ts(value) -> datetime:
 
 def _is_slot_valid(sched_at: datetime) -> bool:
     """Проверяет что scheduled_at совпадает с текущим расписанием.
-    Ручные/тестовые спавны (старт ≤15 мин от сейчас) считаем валидными — иначе
-    тик шедулера убивал бы их как «устаревший слот»."""
+    Слот валиден если:
+    - в будущем ≤15 мин (близкий ручной/тестовый старт), ИЛИ
+    - кратен WB_SPAWN_INTERVAL_MIN от 00:00 UTC, ИЛИ
+    - попадает на час из WB_SPAWN_HOURS_UTC + WB_SPAWN_MINUTE_UTC.
+    Слоты в прошлом БОЛЬШЕ 2 минут — считаем устаревшими (пересоздадим).
+    Это защита от «застывших» спавнов которые никогда не активировались
+    (бот падал, scheduler не тикал и т.п.)."""
     from config.world_boss_constants import (  # noqa: PLC0415
         WB_SPAWN_MINUTE_UTC, WB_SPAWN_INTERVAL_MIN,
     )
-    if (sched_at - _now_utc()).total_seconds() <= 15 * 60:
+    diff = (sched_at - _now_utc()).total_seconds()
+    # Просроченный слот (>2 мин в прошлом) — невалиден, пусть пересоздадут.
+    if diff < -120:
+        return False
+    # Близкое будущее (или в пределах 2-мин окошка) — валидно безусловно.
+    if diff <= 15 * 60:
         return True
     # Интервальное расписание: слот валиден если кратен интервалу от 00:00.
     if WB_SPAWN_INTERVAL_MIN and WB_SPAWN_INTERVAL_MIN > 0:
@@ -105,7 +115,10 @@ def _ensure_next_scheduled(db) -> None:
 
 
 def _start_due_spawn(db) -> None:
-    """Если scheduled_at <= now — стартуем рейд."""
+    """Если scheduled_at <= now — стартуем рейд.
+    Защита: если уже есть активный рейд (не expired) — не запускаем второй.
+    Другая защита: если scheduled_at просрочен на > 2 минуты — игнорим (это
+    «зависший» слот, _ensure_next_scheduled его пересоздаст)."""
     nxt = db.get_wb_next_scheduled()
     if not nxt:
         return
@@ -117,6 +130,23 @@ def _start_due_spawn(db) -> None:
         return
     if sched_at > _now_utc():
         return  # ещё не пора
+    # Защита от очень старых слотов (бот стоял, шедулер не тикал)
+    if (_now_utc() - sched_at).total_seconds() > 120:
+        # Слот просрочен на > 2 мин — отменяем, _ensure создаст новый
+        logger.warning("world_boss_scheduler: слот id=%s просрочен на %ds, отменяю",
+                       nxt.get("spawn_id"), int((_now_utc() - sched_at).total_seconds()))
+        try: _cancel_spawn(db, int(nxt["spawn_id"]))
+        except Exception: pass
+        return
+    # Если активный рейд ещё идёт — ждём пока _finish его закроет.
+    active = db.get_wb_active_spawn()
+    if active:
+        try:
+            a_started = _parse_ts(active["started_at"])
+            if (_now_utc() - a_started).total_seconds() < WB_DURATION_SEC:
+                return  # активный ещё не закончился
+        except Exception:
+            pass
     online = db.wb_count_online_players(window_minutes=WB_ONLINE_WINDOW_MIN)
     max_hp = calc_boss_hp(online)
     spawn_id = int(nxt["spawn_id"])
