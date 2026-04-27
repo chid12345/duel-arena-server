@@ -199,15 +199,14 @@ async def world_boss_auto_bot_toggle_inner(body: AutoBotToggleBody, *, db, get_u
 
 
 async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_init_data) -> dict:
-    """Toggle регистрации на следующий рейд (вкл/выкл).
-    Само-исцеление: если scheduled-спавна нет (scheduler ещё не отработал
-    после рестарта), создаём его на ближайший слот прямо здесь. Иначе
-    юзер зависал бы на «Нет запланированного рейда»."""
+    """Toggle регистрации на СЛЕДУЮЩИЙ рейд (вкл/выкл).
+    Регистрация на следующий scheduled-спавн работает ВСЕГДА — даже
+    если сейчас идёт активный бой (актуально для расписания 10 мин,
+    где рейды непрерывные). Активный рейд игрок входит через «ВОЙТИ В
+    РЕЙД», регистрация — это пуш-напоминалка о ближайшем будущем слоте.
+    Само-исцеление: если scheduled-спавна нет, создаём его прямо здесь."""
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
-
-    if db.get_wb_active_spawn():
-        return {"ok": False, "reason": "Рейд уже идёт — просто бей босса!"}
 
     nxt = db.get_wb_next_scheduled()
     if not nxt:
