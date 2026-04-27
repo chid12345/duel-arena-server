@@ -444,10 +444,18 @@ ${gatherBtn}
 
   function _startTimer() {
     clearInterval(window._wbTimer);
+    let _zeroTs = 0;
     window._wbTimer = setInterval(() => {
       const el = document.getElementById('wb-timer'); if (!el) { clearInterval(window._wbTimer); return; }
       const sa = _state?.next_scheduled?.scheduled_at;
-      if (sa) el.textContent = _fmtCountdown(sa);
+      if (!sa) return;
+      const msLeft = new Date(sa).getTime() - Date.now();
+      el.textContent = _fmtCountdown(sa);
+      // Когда таймер на нуле и нет активного боя — поллим каждые 2с пока не стартует
+      if (msLeft < 1000 && !_state?.active && Date.now() - _zeroTs > 2000) {
+        _zeroTs = Date.now();
+        try { _scene?._refresh?.(); } catch(_) {}
+      }
     }, 1000);
   }
 

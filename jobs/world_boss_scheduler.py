@@ -92,8 +92,19 @@ def _ensure_next_scheduled(db) -> None:
         except Exception:
             return
     # Создаём следующий слот ЗАРАНЕЕ — даже во время активного рейда.
-    # Это даёт таймер «до следующего боя» в лобби даже когда сейчас идёт текущий.
-    scheduled_at = next_spawn_time_utc(_now_utc())
+    # Если рейд активен — считаем время от конца боя, иначе следующий слот окажется
+    # ДО конца текущего рейда и после боя таймер будет показывать 0:00.
+    active = db.get_wb_active_spawn()
+    if active:
+        try:
+            started_at = _parse_ts(active["started_at"])
+            fight_end = started_at + timedelta(seconds=WB_DURATION_SEC)
+            reference_time = max(_now_utc(), fight_end)
+        except Exception:
+            reference_time = _now_utc()
+    else:
+        reference_time = _now_utc()
+    scheduled_at = next_spawn_time_utc(reference_time)
     btype = roll_boss_type()
     # Имя — из пула типа (если есть), иначе общий список WB_BOSS_NAMES.
     pool = btype.get("name_pool") or WB_BOSS_NAMES
