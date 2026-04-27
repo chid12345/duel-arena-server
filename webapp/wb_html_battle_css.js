@@ -709,7 +709,7 @@ window.WBBattleCSS = (() => {
 .wb-blog-ok:active{transform:scale(.97);}
 
 /* ── Комната ожидания (gather) ── */
-.wb-gth{position:fixed;inset:0;z-index:9500;background:#000;
+.wb-gth{position:fixed!important;inset:0!important;z-index:9500;background:#000;
   font-family:-apple-system,"Segoe UI",Roboto,sans-serif;color:#e0e0e0;
   overflow:hidden;}
 .wb-gth-bg{position:absolute;inset:0;z-index:1;
