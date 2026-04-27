@@ -1,5 +1,8 @@
 /* wb_html_battle_css.js — CSS экрана боя (киберпанк). Инжектируется один раз. */
 window.WBBattleCSS = (() => {
+  // Cache-busting: добавляется к URL картинок боссов и фонов.
+  // Бампать при обновлении любого asset'а в bosses/ или bosses/bg/.
+  const ASV = 'a10';
   const CSS = `
 #wb-root{position:fixed;inset:0;z-index:9500;overflow-y:auto;overflow-x:hidden;
   background:#050508;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -83,7 +86,7 @@ window.WBBattleCSS = (() => {
   min-height:380px;background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(0,191,255,.05) 0%,transparent 70%);}
 /* Кастомные фоны под отдельных боссов. У остальных — старый радиальный градиент. */
 .wb-boss-zone.bt-lich{
-  background-image:url('bosses/bg/lich.png');
+  background-image:url('bosses/bg/lich.png?v=${ASV}');
   background-size:cover;background-position:center bottom;background-color:#02000a;}
 .wb-boss-zone.bt-lich::before{content:"";position:absolute;left:0;right:0;bottom:0;
   height:38%;pointer-events:none;z-index:1;
@@ -93,7 +96,7 @@ window.WBBattleCSS = (() => {
 
 /* Теневой Страж — пещера с бирюзовой молнией и фиолетовыми кристаллами */
 .wb-boss-zone.bt-shadow{
-  background-image:url('bosses/bg/shadow.png');
+  background-image:url('bosses/bg/shadow.png?v=${ASV}');
   background-size:cover;background-position:center bottom;background-color:#02000c;}
 .wb-boss-zone.bt-shadow::before{content:"";position:absolute;left:0;right:0;bottom:0;
   height:42%;pointer-events:none;z-index:1;
@@ -104,7 +107,7 @@ window.WBBattleCSS = (() => {
 /* Кровавый Демон — храм с красным туманом и лучом света.
    Стоит ногами в тумане, тяжёлое дыхание, при атаке фон алой вспышки. */
 .wb-boss-zone.bt-demon{
-  background-image:url('bosses/bg/demon.png');
+  background-image:url('bosses/bg/demon.png?v=${ASV}');
   background-size:cover;background-position:center bottom;background-color:#0a0000;
   /* Туман медленно «дышит» — пульсация яркости 4.4с (тяжелее) */
   animation:wb-demon-bg-breathe 4.4s ease-in-out infinite;}
@@ -155,7 +158,7 @@ window.WBBattleCSS = (() => {
    Rim light: за спиной босса яркий свет, ему нужно сильное оранжевое
    контурное свечение. Heat haze глобально — горячий воздух плавает. */
 .wb-boss-zone.bt-lava{
-  background-image:url('bosses/bg/lava.png');
+  background-image:url('bosses/bg/lava.png?v=${ASV}');
   background-size:cover;background-position:center bottom;background-color:#1a0500;
   /* Лавовый водопад мерцает яркостью — медленнее, более «текучий» */
   animation:wb-lava-bg-flicker 3.2s ease-in-out infinite;}
@@ -186,7 +189,7 @@ window.WBBattleCSS = (() => {
 /* Древний Страж — улей с фиолетовыми коконами. Bio-luminescence:
    фон медленно «дышит» зумом + коконы пульсируют синхронно с боссом. */
 .wb-boss-zone.bt-spider{
-  background-image:url('bosses/bg/spider.png');
+  background-image:url('bosses/bg/spider.png?v=${ASV}');
   background-size:cover;background-position:center bottom;background-color:#08020c;
   /* Медленный зум 1-2% — органическое дыхание улья */
   animation:wb-spider-bg-breathe 6s ease-in-out infinite;}
@@ -224,7 +227,7 @@ window.WBBattleCSS = (() => {
 /* Каменный Голем — алтарь с зелёным кристаллом-резонатором.
    Кристалл за боссом «дышит» в такт с боссом — эффект резонанса. */
 .wb-boss-zone.bt-poison{
-  background-image:url('bosses/bg/poison.png');
+  background-image:url('bosses/bg/poison.png?v=${ASV}');
   background-size:cover;background-position:center bottom;background-color:#020a05;
   animation:wb-poison-bg-pulse 3.6s ease-in-out infinite;}
 @keyframes wb-poison-bg-pulse{
@@ -249,7 +252,7 @@ window.WBBattleCSS = (() => {
 
 /* Огненный Колосс — крепость в лаве, ноги в потоке расплавленного металла */
 .wb-boss-zone.bt-fire{
-  background-image:url('bosses/bg/fire.png');
+  background-image:url('bosses/bg/fire.png?v=${ASV}');
   background-size:cover;background-position:center bottom;background-color:#1a0500;
   /* Лёгкое «дыхание» фона: он слегка темнеет в такт с пульсом ядра босса.
      Затемнение акцентирует раскалённое ядро в груди. */
