@@ -24,8 +24,10 @@
   function _startLocalTick(initialSec) {
     _stopLocalTick();
     let remaining = initialSec;
+    let _ticks = 0;
     _gatherTickInterval = setInterval(() => {
       remaining = Math.max(0, remaining - 1);
+      _ticks++;
       const el = document.getElementById('wb-gth-cnt');
       if (!el) { _stopLocalTick(); return; }
       el.textContent = _fmtCountdown(remaining);
@@ -33,6 +35,9 @@
         _stopLocalTick();
         // Время вышло — форсим refresh, чтобы клиент увидел active рейд и
         // ушёл в боевой экран
+        try { window.WBHtml._scene?._refresh?.(); } catch(_) {}
+      } else if (_ticks % 10 === 0) {
+        // Каждые 10 сек обновляем список игроков в ростере
         try { window.WBHtml._scene?._refresh?.(); } catch(_) {}
       }
     }, 1000);
