@@ -18,6 +18,14 @@
     }
     window.WBBattleCSS?.inject();
     if (s.active && (s.active.current_hp||0) <= 0) { root.innerHTML = `<div class="wb-victwait"><div class="wb-victwait-em">🏆</div><div class="wb-victwait-t">ПОБЕДА!</div><div class="wb-victwait-s">Ожидание расчёта наград...</div></div>`; return; }
+    // Тема босса каскадно цветит весь UI боевого экрана через --theme.
+    // Удаляем старый bt-*, ставим новый — на #wb-root, чтобы переменная
+    // достигла HP-бара, кнопок скиллов, ульты и эффектов.
+    try {
+      const _bt = (s.active?.boss_type || 'lich').replace(/[^a-z]/g,'');
+      Array.from(root.classList).forEach(c => { if (c.startsWith('bt-')) root.classList.remove(c); });
+      root.classList.add('bt-' + _bt);
+    } catch(_) {}
     const a = s.active, ps = s.player_state;
     const pct  = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
     const ppct = ps?.max_hp > 0 ? Math.round(ps.current_hp / ps.max_hp * 100) : 85;

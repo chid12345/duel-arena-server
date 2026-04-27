@@ -45,8 +45,11 @@ window.WBBattleCSS = (() => {
 .wb-hp2-track{flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.06);
   border:1px solid rgba(255,0,85,.2);overflow:hidden;position:relative;}
 .wb-hp2-fill{height:100%;border-radius:5px;
-  background:linear-gradient(90deg,#880033,#cc0055,#ff3377);
-  box-shadow:0 0 10px rgba(255,0,100,.5);transition:width .4s;}
+  background:linear-gradient(90deg,
+    rgba(var(--theme-rgb),.5),
+    var(--theme),
+    rgba(var(--theme-rgb),.95));
+  box-shadow:0 0 10px rgba(var(--theme-rgb),.5);transition:width .4s;}
 .wb-hp2-fill::after{content:"";position:absolute;inset:0;
   background:repeating-linear-gradient(90deg,transparent 0 10px,rgba(255,255,255,.05) 10px 11px);
   animation:wb-flow 1.2s linear infinite;}
@@ -63,6 +66,19 @@ window.WBBattleCSS = (() => {
 .wb-tcl{color:#BF00FF;}
 
 /* ── Зона босса ── */
+/* ── ДИНАМИЧЕСКИЕ ТЕМЫ ПО ТИПУ БОССА ──
+   Цвет UI (HP-бар, кнопки скиллов, ульта, искры) подстраивается
+   под текущего босса через CSS-переменные --theme и --theme-rgb.
+   Класс bt-{type} ставится на #wb-root в _renderBattle. */
+#wb-root{--theme:#cc0055;--theme-rgb:204,0,85;}
+#wb-root.bt-lich   {--theme:#9b30ff;--theme-rgb:155,48,255;}
+#wb-root.bt-shadow {--theme:#22ddff;--theme-rgb:34,221,255;}
+#wb-root.bt-fire   {--theme:#ff6600;--theme-rgb:255,102,0;}
+#wb-root.bt-poison {--theme:#00ff00;--theme-rgb:0,255,0;}
+#wb-root.bt-spider {--theme:#bf00ff;--theme-rgb:191,0,255;}
+#wb-root.bt-lava   {--theme:#ff5520;--theme-rgb:255,85,32;}
+#wb-root.bt-demon  {--theme:#ff2030;--theme-rgb:255,32,48;}
+
 .wb-boss-zone{position:relative;flex:1;overflow:hidden;cursor:crosshair;
   min-height:380px;background:radial-gradient(ellipse 70% 55% at 50% 55%,rgba(0,191,255,.05) 0%,transparent 70%);}
 /* Кастомные фоны под отдельных боссов. У остальных — старый радиальный градиент. */
@@ -443,14 +459,15 @@ window.WBBattleCSS = (() => {
   background:rgba(255,255,255,.03);border-top:1px solid rgba(255,255,255,.06);flex-shrink:0;}
 .wb-ultra-lbl{font-size:8px;letter-spacing:1.5px;color:rgba(255,255,255,.35);white-space:nowrap;text-transform:uppercase;}
 .wb-ultra-track{flex:1;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden;}
-.wb-ultra-fill{height:100%;width:0%;background:linear-gradient(90deg,#00BFFF,#BF00FF);
-  border-radius:3px;box-shadow:0 0 5px #00BFFF;transition:width .3s;}
+.wb-ultra-fill{height:100%;width:0%;
+  background:linear-gradient(90deg,#00BFFF,var(--theme,#BF00FF));
+  border-radius:3px;box-shadow:0 0 5px var(--theme,#00BFFF);transition:width .3s;}
 .wb-ultra-btn{padding:5px 11px;border-radius:7px;font-size:9px;font-weight:700;letter-spacing:.8px;
-  cursor:not-allowed;border:1px solid rgba(191,0,255,.3);color:rgba(255,255,255,.4);
-  background:rgba(191,0,255,.1);white-space:nowrap;transition:all .2s;}
-.wb-ultra-btn.ready{color:#fff;border-color:#BF00FF;cursor:pointer;
-  box-shadow:0 0 10px #BF00FF;animation:wb-up .8s ease-in-out infinite;}
-@keyframes wb-up{0%,100%{box-shadow:0 0 10px #BF00FF}50%{box-shadow:0 0 22px #BF00FF,0 0 35px #00BFFF}}
+  cursor:not-allowed;border:1px solid rgba(var(--theme-rgb,191,0,255),.3);color:rgba(255,255,255,.4);
+  background:rgba(var(--theme-rgb,191,0,255),.1);white-space:nowrap;transition:all .2s;}
+.wb-ultra-btn.ready{color:#fff;border-color:var(--theme,#BF00FF);cursor:pointer;
+  box-shadow:0 0 10px var(--theme,#BF00FF);animation:wb-up .8s ease-in-out infinite;}
+@keyframes wb-up{0%,100%{box-shadow:0 0 10px var(--theme,#BF00FF)}50%{box-shadow:0 0 22px var(--theme,#BF00FF),0 0 35px var(--theme,#BF00FF)}}
 .wb-ultra-btn:active.ready{transform:scale(.96);}
 
 /* ── Кнопки скиллов ── */
@@ -461,12 +478,13 @@ window.WBBattleCSS = (() => {
   align-items:center;justify-content:center;gap:4px;cursor:pointer;position:relative;overflow:hidden;
   background:rgba(255,255,255,.04);border:1.5px solid rgba(255,255,255,.1);
   transition:all .12s;-webkit-tap-highlight-color:transparent;}
-.wb-skill.atk .ws-icon{color:#FF0055;filter:drop-shadow(0 0 4px #FF0055)}.wb-skill.shld .ws-icon{color:#00BFFF;filter:drop-shadow(0 0 4px #00BFFF)}.wb-skill.ult .ws-icon{color:#BF00FF;filter:drop-shadow(0 0 4px #BF00FF)}.wb-skill.auto .ws-icon{color:#00FF9F;filter:drop-shadow(0 0 4px #00FF9F)}
+.wb-skill.atk .ws-icon{color:var(--theme,#FF0055);filter:drop-shadow(0 0 4px var(--theme,#FF0055))}.wb-skill.shld .ws-icon{color:#00BFFF;filter:drop-shadow(0 0 4px #00BFFF)}.wb-skill.ult .ws-icon{color:var(--theme,#BF00FF);filter:drop-shadow(0 0 4px var(--theme,#BF00FF))}.wb-skill.auto .ws-icon{color:#00FF9F;filter:drop-shadow(0 0 4px #00FF9F)}
 .wb-skill:active:not(.cd){transform:scale(.93);}
-.wb-skill.atk{border-color:rgba(255,0,85,.55);box-shadow:0 0 10px rgba(255,0,85,.2),inset 0 0 8px rgba(255,0,85,.05);}
+/* АТАКА и УЛЬТА — цвет босса. ЩИТ синий (защита), АВТО зелёный (премиум) */
+.wb-skill.atk{border-color:rgba(var(--theme-rgb,255,0,85),.55);box-shadow:0 0 10px rgba(var(--theme-rgb,255,0,85),.2),inset 0 0 8px rgba(var(--theme-rgb,255,0,85),.05);}
 .wb-skill.shld{border-color:rgba(0,191,255,.55);box-shadow:0 0 10px rgba(0,191,255,.2),inset 0 0 8px rgba(0,191,255,.05);}
-.wb-skill.ult{border-color:rgba(191,0,255,.6);animation:wb-ug 2s ease-in-out infinite;}
-@keyframes wb-ug{0%,100%{box-shadow:0 0 8px rgba(191,0,255,.2)}50%{box-shadow:0 0 20px rgba(191,0,255,.5),0 0 35px rgba(191,0,255,.2)}}
+.wb-skill.ult{border-color:rgba(var(--theme-rgb,191,0,255),.6);animation:wb-ug 2s ease-in-out infinite;}
+@keyframes wb-ug{0%,100%{box-shadow:0 0 8px rgba(var(--theme-rgb,191,0,255),.2)}50%{box-shadow:0 0 20px rgba(var(--theme-rgb,191,0,255),.5),0 0 35px rgba(var(--theme-rgb,191,0,255),.2)}}
 .wb-skill.auto{border-color:rgba(0,255,159,.55);box-shadow:0 0 10px rgba(0,255,159,.2),inset 0 0 8px rgba(0,255,159,.05);}
 /* АВТО включено — яркая зелёная подсветка чтобы было однозначно видно */
 .wb-skill.auto.auto-on{

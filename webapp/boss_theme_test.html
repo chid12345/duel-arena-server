@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<title>Theme Test</title>
+</head>
+<body style="background:#050508;color:#fff;font:14px sans-serif;padding:18px;">
+<h2>Тест динамических тем UI боссов</h2>
+<p>Кнопки переключают bt-* класс на #wb-root. HP-бар и УЛЬТА должны менять цвет.</p>
+<div style="margin:14px 0">
+  <button onclick="swap('lich')">Лич</button>
+  <button onclick="swap('shadow')">Тень</button>
+  <button onclick="swap('fire')">Огонь</button>
+  <button onclick="swap('poison')">Голем</button>
+  <button onclick="swap('spider')">Паук</button>
+  <button onclick="swap('lava')">Лава</button>
+  <button onclick="swap('demon')">Демон</button>
+</div>
+<div id="wb-root" class="bt-lich" style="position:relative;width:380px;background:#0a0a14;padding:14px;border-radius:10px;">
+  <div class="wb-bhdr2"><div class="wb-hp2-sec">
+    <div class="wb-hp2-lbl">HP</div>
+    <div class="wb-hp2-track"><div class="wb-hp2-fill" style="width:75%"></div></div>
+  </div></div>
+  <div class="wb-ultra"><div class="wb-ultra-lbl">УЛЬТА</div>
+    <div class="wb-ultra-track"><div class="wb-ultra-fill" style="width:80%"></div></div>
+    <div class="wb-ultra-btn ready">УДАР!</div>
+  </div>
+  <div class="wb-skills" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">
+    <div class="wb-skill atk" style="aspect-ratio:1;border-radius:10px;padding:8px"><div class="ws-icon">⚔️</div><div class="ws-name">АТАКА</div></div>
+    <div class="wb-skill shld" style="aspect-ratio:1;border-radius:10px;padding:8px"><div class="ws-icon">🛡️</div><div class="ws-name">ЩИТ</div></div>
+    <div class="wb-skill ult" style="aspect-ratio:1;border-radius:10px;padding:8px"><div class="ws-icon">💥</div><div class="ws-name">УЛЬТА</div></div>
+  </div>
+  <div id="info" style="margin-top:14px;font:12px monospace;color:#aabbdd"></div>
+</div>
+<script>
+  // Загружаем боевой CSS
+  const tag = document.createElement('script');
+  tag.src = '/wb_html_battle_css.js';
+  tag.onload = () => { window.WBBattleCSS?.inject(); update(); };
+  document.head.appendChild(tag);
+
+  function swap(t) {
+    const r = document.getElementById('wb-root');
+    Array.from(r.classList).forEach(c => { if (c.startsWith('bt-')) r.classList.remove(c); });
+    r.classList.add('bt-' + t);
+    update();
+  }
+  function update() {
+    const r = document.getElementById('wb-root');
+    const cs = getComputedStyle(r);
+    const t = cs.getPropertyValue('--theme').trim();
+    const rgb = cs.getPropertyValue('--theme-rgb').trim();
+    document.getElementById('info').textContent = `class: ${r.className} | --theme: ${t} | --theme-rgb: ${rgb}`;
+  }
+</script>
+</body></html>
