@@ -11,10 +11,16 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 from typing import List
 
-# Расписание: 6 спавнов/день каждые 4 часа (UTC).
-# ⚠️ ТЕСТ: временно 13:20 — вернуть (0,4,8,12,16,20) и MINUTE=0 после тестов
-WB_SPAWN_HOURS_UTC: tuple = (13,)
-WB_SPAWN_MINUTE_UTC: int = 20
+# ── РАСПИСАНИЕ ──
+# Боевой режим: каждые 10 минут круглосуточно (144 рейда/день).
+# Если WB_SPAWN_INTERVAL_MIN > 0 — используется он, иначе фолбек
+# на старый список часов WB_SPAWN_HOURS_UTC.
+WB_SPAWN_INTERVAL_MIN: int = 10
+
+# Legacy / резервное расписание (не используется когда INTERVAL > 0).
+# Оригинал прода: каждые 4 часа: (0, 4, 8, 12, 16, 20) MINUTE=0
+WB_SPAWN_HOURS_UTC: tuple = (0, 4, 8, 12, 16, 20)
+WB_SPAWN_MINUTE_UTC: int = 0
 
 # Длительность одного рейда.
 WB_DURATION_SEC: int = 10 * 60
@@ -103,8 +109,25 @@ WB_BOSS_NAMES: List[str] = [
 
 
 def next_spawn_time_utc(now: datetime) -> datetime:
-    """Возвращает ближайшее время следующего спавна (UTC), строго в будущем."""
+    """Возвращает ближайшее время следующего спавна (UTC), строго в будущем.
+
+    Если задан WB_SPAWN_INTERVAL_MIN > 0 — расписание кратное N минутам
+    от 00:00 (например, 10 мин → :00, :10, :20, :30, :40, :50).
+    Иначе — старый список фиксированных часов WB_SPAWN_HOURS_UTC.
+    """
     now = now.astimezone(timezone.utc) if now.tzinfo else now.replace(tzinfo=timezone.utc)
+    interval = globals().get("WB_SPAWN_INTERVAL_MIN", 0)
+    if interval and interval > 0:
+        # Округляем «вверх» до ближайшего интервала; «+1» гарантирует строгое future
+        cur_min_of_day = now.hour * 60 + now.minute
+        next_total = (cur_min_of_day // interval + 1) * interval
+        day_total = 24 * 60
+        if next_total >= day_total:
+            base = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            return base + timedelta(minutes=next_total - day_total)
+        base = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        return base + timedelta(minutes=next_total)
+    # Legacy: фиксированные часы + одна минута
     minute = globals().get("WB_SPAWN_MINUTE_UTC", 0)
     today_slots = [
         now.replace(hour=h, minute=minute, second=0, microsecond=0)
