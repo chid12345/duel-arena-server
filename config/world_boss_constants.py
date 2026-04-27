@@ -12,10 +12,10 @@ from datetime import datetime, timedelta, timezone
 from typing import List
 
 # ── РАСПИСАНИЕ ──
-# Боевой режим: каждые 10 минут круглосуточно (144 рейда/день).
-# Если WB_SPAWN_INTERVAL_MIN > 0 — используется он, иначе фолбек
-# на старый список часов WB_SPAWN_HOURS_UTC.
-WB_SPAWN_INTERVAL_MIN: int = 10
+# Тестовый режим: каждые 20 минут (слоты :00, :20, :40 каждого часа).
+# 72 рейда/день. Если WB_SPAWN_INTERVAL_MIN > 0 — используется он,
+# иначе фолбек на старый список часов WB_SPAWN_HOURS_UTC.
+WB_SPAWN_INTERVAL_MIN: int = 20
 
 # Legacy / резервное расписание (не используется когда INTERVAL > 0).
 # Оригинал прода: каждые 4 часа: (0, 4, 8, 12, 16, 20) MINUTE=0
