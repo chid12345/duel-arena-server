@@ -134,5 +134,12 @@
     if (sec > 0) _startLocalTick(sec); // ресинк
   }
 
-  Object.assign(window.WBHtml = window.WBHtml || {}, { renderGather, updateGatherTimer });
+  // Обновляет только счётчик «В БОЮ N» без перерисовки всего ростера.
+  // Вызывается из _onWsIdle при получении registrants_count.
+  function updateGatherCount(count) {
+    const el = document.querySelector('.wb-gth-roster-h .cnt');
+    if (el) el.textContent = count;
+  }
+
+  Object.assign(window.WBHtml = window.WBHtml || {}, { renderGather, updateGatherTimer, updateGatherCount });
 })();

@@ -135,8 +135,9 @@ class WorldBossScene extends Phaser.Scene {
       this._state.registrants_count = p.registrants_count;
       if (this._regCountT) this._regCountT.setText(`👥 ${p.registrants_count} в рейде`);
     }
-    // Live-обновление счётчиков в HTML лобби (без перерисовки всего экрана).
+    // Live-обновление счётчиков в HTML лобби и комнате ожидания.
     try { window.WBHtml?.updateLobbyCounters?.({ registrants_count: p.registrants_count }); } catch(_) {}
+    try { window.WBHtml?.updateGatherCount?.(p.registrants_count || 0); } catch(_) {}
   }
 
   _onWsTick(p) {
