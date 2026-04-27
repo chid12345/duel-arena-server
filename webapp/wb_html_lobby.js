@@ -12,9 +12,15 @@ window.WBHtml = (() => {
   function _getBought() { try { return JSON.parse(sessionStorage.getItem(_boughtKey()) || '[]'); } catch(_) { return []; } }
   function _markBought(id) { try { const b=_getBought(); if(!b.includes(id)){b.push(id);sessionStorage.setItem(_boughtKey(),JSON.stringify(b));} } catch(_) {} }
 
+  function _toUtcIso(s) {
+    if (!s || typeof s !== 'string') return s;
+    // SQLite stores "YYYY-MM-DD HH:MM:SS" without timezone — JS parses as local → wrong timer.
+    // Force UTC by appending Z (skip if already has timezone info).
+    return (s.includes('Z') || s.includes('+')) ? s : s.replace(' ', 'T') + 'Z';
+  }
   function _fmtCountdown(iso) {
     try {
-      const d = Math.max(0, Math.floor((new Date(iso).getTime() - Date.now()) / 1000));
+      const d = Math.max(0, Math.floor((new Date(_toUtcIso(iso)).getTime() - Date.now()) / 1000));
       const h = Math.floor(d/3600), m = Math.floor((d%3600)/60), s = d%60;
       return h>0 ? `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`
                  : `${m}:${String(s).padStart(2,'0')}`;
@@ -449,7 +455,7 @@ ${gatherBtn}
       const el = document.getElementById('wb-timer'); if (!el) { clearInterval(window._wbTimer); return; }
       const sa = _state?.next_scheduled?.scheduled_at;
       if (!sa) return;
-      const msLeft = new Date(sa).getTime() - Date.now();
+      const msLeft = new Date(_toUtcIso(sa)).getTime() - Date.now();
       el.textContent = _fmtCountdown(sa);
       // Когда таймер на нуле и нет активного боя — поллим каждые 2с пока не стартует
       if (msLeft < 1000 && !_state?.active && Date.now() - _zeroTs > 2000) {
