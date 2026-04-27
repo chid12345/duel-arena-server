@@ -108,6 +108,15 @@ window.WBHtml = (() => {
     const unclaimedBanner = hasUnclaimed
       ? `<div class="wb-unclaimed" data-act="show-rewards">🎁 У тебя есть незабранная награда — нажми</div>`
       : '';
+    // Зелёная кнопка «ВОЙТИ В БОЙ» — за 5 мин до рейда.
+    // Тапнул → sessionStorage флаг + переключение на gather-экран.
+    const gatherBtn = (s.gather?.is_open && !s.active)
+      ? `<div class="wb-enter wb-gather-cta active" data-act="enter-gather">
+          <div class="wb-enter-in"><div class="wb-enter-icon">⚔</div>
+            <div class="wb-enter-lbl">ВОЙТИ В БОЙ<span class="wb-enter-sub">КОМНАТА ОЖИДАНИЯ ОТКРЫТА · ${s.gather.count||0} В БОЮ</span></div>
+          </div>
+        </div>`
+      : '';
     return `
 <div class="wb-hdr">
   <div class="wb-back" data-act="back">‹</div>
@@ -128,6 +137,7 @@ ${unclaimedBanner}
     <div class="wb-enter-lbl">ВОЙТИ В РЕЙ<span class="wb-enter-sub">РЕЙД УЖЕ ИДЁТ · НАЖМИ!</span></div>
   </div>
 </div>
+${gatherBtn}
 <div class="wb-prize" data-act="rewards-info">
   <div class="wb-prize-l">
     <div class="wb-prize-row">
@@ -248,6 +258,21 @@ ${unclaimedBanner}
         // Игрок закрыл MVP-попап и хочет открыть его снова — force=true.
         window.WBHtml.showMvpResult?.(_state, _scene, { force: true });
       }
+      else if (act==='enter-gather') {
+        // Войти в комнату ожидания. Регистрируемся (если ещё нет) +
+        // ставим sessionStorage флаг, чтобы render показал gather-экран.
+        const sid = _state?.next_scheduled?.spawn_id;
+        if (!sid) return;
+        try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
+        try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
+        (async () => {
+          if (!_state?.is_registered && _scene?._registerForRaid) {
+            try { await _scene._registerForRaid(); } catch(_) {}
+          }
+          // Перезапуск сцены — render подхватит флаг и нарисует gather.
+          _scene?.scene?.restart?.();
+        })();
+      }
       else if (act==='boost-info') {
         if (el.classList.contains('bought')) return;
         window.WBHtml.showBoostInfo?.(el.dataset.id, _state, _scene, SCROLL_META, _markBought);
@@ -365,6 +390,25 @@ ${unclaimedBanner}
     if ((s.prep_seconds_left||0) > 0) {
       root.innerHTML = `<div class="wb-hdr"><div class="wb-back" data-act="back">‹</div><div class="wb-hdr-icon">💀</div><div><div class="wb-title">МИРОВОЙ БОСС</div><div class="wb-sub">ПОДГОТОВКА К РЕЙДУ</div></div></div><div class="wb-prep"><div class="wb-prep-t" id="wb-prep-cnt">Старт через ${s.prep_seconds_left} сек</div><div class="wb-prep-s">Свитки применяй в слоты после первого удара</div></div>`;
       _bind(root); return;
+    }
+    // Комната ожидания: за 5 мин до старта, если игрок тапнул «ВОЙТИ В БОЙ»
+    // (sessionStorage флаг wb_in_gather=spawn_id), показываем gather-экран.
+    const _gatherSid = (() => { try { return sessionStorage.getItem('wb_in_gather'); } catch(_) { return null; } })();
+    if (s.gather?.is_open && _gatherSid && _gatherSid === String(s.next_scheduled?.spawn_id)) {
+      _setTabBar(false); root.style.cssText = '';
+      if (window.WBHtml.renderGather) {
+        try { window.WBHtml.renderGather(root, s); return; } catch(_) {}
+      }
+    }
+    // Если рейд уже стартовал и игрок был в комнате ожидания — автоматом в бой.
+    if (s.active && _gatherSid && _gatherSid === String(s.active.spawn_id)) {
+      try {
+        sessionStorage.removeItem('wb_in_gather');
+        localStorage.setItem('wb_entered_raid', String(s.active.spawn_id));
+      } catch(_) {}
+      // Перезапустим render — попадём в боевой блок выше.
+      _scene?.scene?.restart?.();
+      return;
     }
     root.innerHTML = _lobbyHTML(s);
     _updateInvSection(root, s);

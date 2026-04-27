@@ -15,7 +15,10 @@ from typing import Any, Dict
 
 import logging
 
-from config.world_boss_constants import WB_DURATION_SEC, WB_PREP_SEC, is_vulnerability_window
+from config.world_boss_constants import (
+    WB_DURATION_SEC, WB_PREP_SEC, WB_GATHER_OPEN_SEC,
+    is_vulnerability_window,
+)
 from config.world_boss import get_boss_type as _get_boss_type
 
 _log = logging.getLogger(__name__)
@@ -76,6 +79,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
     seconds_until_raid = None
     is_registered = False
     registrants_count = 0
+    gather = None  # комната ожидания: открывается за WB_GATHER_OPEN_SEC до старта
     if not active and next_sched:
         try:
             sched_at = _parse_ts(next_sched["scheduled_at"])
@@ -86,6 +90,27 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
             next_spawn_id = int(next_sched["spawn_id"])
             is_registered = db.wb_is_registered(next_spawn_id, uid)
             registrants_count = db.wb_registration_count(next_spawn_id)
+            # Комната ожидания: за 5 мин до старта в state шлём список
+            # зарегистрированных с ник/уровень — фронт покажет ростер.
+            if 0 < until_start <= WB_GATHER_OPEN_SEC:
+                try:
+                    _raw = db.wb_list_registered_with_info(next_spawn_id, limit=100)
+                    players = [
+                        {
+                            "user_id": int(r["user_id"]),
+                            "name": r.get("username") or "Игрок",
+                            "level": int(r.get("level") or 1),
+                        }
+                        for r in _raw
+                    ]
+                except Exception:
+                    players = []
+                gather = {
+                    "is_open": True,
+                    "seconds_left": int(until_start),
+                    "players": players,
+                    "count": len(players),
+                }
         except Exception:
             pass
     elif active:
@@ -152,6 +177,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
         "seconds_until_raid": seconds_until_raid,
         "is_registered": is_registered,
         "registrants_count": registrants_count,
+        "gather": gather,
         "active": (lambda _bt: {
             "spawn_id": int(active["spawn_id"]),
             "boss_name": active.get("boss_name"),

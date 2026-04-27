@@ -708,6 +708,93 @@ window.WBBattleCSS = (() => {
   box-shadow:0 0 18px rgba(0,100,255,.35);transition:transform .12s;}
 .wb-blog-ok:active{transform:scale(.97);}
 
+/* ── Комната ожидания (gather) ── */
+.wb-gth{position:fixed;inset:0;z-index:9500;background:#000;
+  font-family:-apple-system,"Segoe UI",Roboto,sans-serif;color:#e0e0e0;
+  overflow:hidden;}
+.wb-gth-bg{position:absolute;inset:0;z-index:1;
+  background-size:cover;background-position:center;
+  animation:wb-gth-fade 24s ease-in-out infinite;}
+.wb-gth-bg.b1{background-image:url('bosses/gather/1.png?v=a10');animation-delay:0s;}
+.wb-gth-bg.b2{background-image:url('bosses/gather/2.png?v=a10');animation-delay:12s;}
+@keyframes wb-gth-fade{
+  0%,40%   {opacity:1}
+  50%,90%  {opacity:0}
+  100%     {opacity:1}}
+.wb-gth-vignette{position:absolute;inset:0;z-index:2;pointer-events:none;
+  background:radial-gradient(ellipse 90% 80% at 50% 50%,
+    transparent 0%, rgba(0,0,0,.45) 70%, rgba(0,0,0,.85) 100%);}
+.wb-gth-top{position:absolute;top:14px;left:14px;right:14px;z-index:10;}
+.wb-gth-head{font-size:11px;font-weight:900;letter-spacing:2px;color:#ff88dd;
+  text-shadow:0 0 10px rgba(255,80,200,.6);text-transform:uppercase;}
+.wb-gth-sub{font-size:9px;color:rgba(255,255,255,.55);margin-top:2px;letter-spacing:1.5px;}
+.wb-gth-timer{position:absolute;left:0;right:158px;top:42%;z-index:5;text-align:center;}
+.wb-gth-timer-lbl{font-size:9px;letter-spacing:2px;color:#cc88ff;
+  text-shadow:0 0 8px rgba(180,80,255,.4);margin-bottom:4px;text-transform:uppercase;}
+.wb-gth-timer-val{font-size:64px;font-weight:900;font-family:'Courier New',monospace;
+  background:linear-gradient(180deg,#ffee00,#ff8800);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:3px;
+  filter:drop-shadow(0 0 12px rgba(255,200,0,.6));
+  animation:wb-gth-pulse 1.6s ease-in-out infinite;}
+@keyframes wb-gth-pulse{
+  0%,100%{filter:drop-shadow(0 0 8px rgba(255,200,0,.5))}
+  50%   {filter:drop-shadow(0 0 22px rgba(255,200,0,.9))}}
+.wb-gth-roster{position:absolute;right:10px;top:14px;bottom:60px;z-index:8;
+  width:138px;border-radius:11px;
+  background:rgba(10,5,20,.8);backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,80,200,.3);
+  box-shadow:0 4px 18px rgba(0,0,0,.6);
+  overflow:hidden;display:flex;flex-direction:column;}
+.wb-gth-roster-h{padding:8px 10px;font-size:9px;font-weight:900;letter-spacing:1.5px;
+  color:#ff88dd;text-align:center;text-transform:uppercase;
+  border-bottom:1px solid rgba(255,80,200,.2);
+  background:rgba(255,80,200,.06);}
+.wb-gth-roster-h .cnt{color:#fff;font-family:'Courier New',monospace;}
+.wb-gth-roster-list{flex:1;overflow-y:auto;padding:4px 0;
+  scrollbar-width:thin;scrollbar-color:rgba(255,80,200,.3) transparent;}
+.wb-gth-roster-list::-webkit-scrollbar{width:4px;}
+.wb-gth-roster-list::-webkit-scrollbar-thumb{background:rgba(255,80,200,.4);border-radius:2px;}
+.wb-gth-row{display:flex;align-items:center;gap:6px;padding:6px 9px;cursor:pointer;
+  border-radius:6px;margin:0 4px;transition:background .12s;}
+.wb-gth-row:active{background:rgba(255,80,200,.18);}
+.wb-gth-row .av{font-size:13px;flex-shrink:0;}
+.wb-gth-row .nm{flex:1;font-size:11px;color:#fff;font-weight:600;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.wb-gth-row .lv{font-size:9px;color:rgba(255,255,255,.4);font-family:'Courier New',monospace;flex-shrink:0;}
+.wb-gth-empty{padding:20px 12px;text-align:center;font-size:10px;color:rgba(255,255,255,.4);}
+.wb-gth-leave{position:absolute;left:14px;right:158px;bottom:14px;z-index:10;
+  padding:11px;border-radius:10px;text-align:center;cursor:pointer;
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
+  font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.6);}
+.wb-gth-leave:active{background:rgba(255,255,255,.08);}
+
+/* Карточка игрока (попап от тапа на ник) */
+.wb-gth-pcard-ov{position:fixed;inset:0;z-index:9999;
+  background:rgba(0,0,0,.78);backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;}
+.wb-gth-pcard-ov.open{opacity:1;pointer-events:all;}
+.wb-gth-pcard{position:relative;width:280px;border-radius:18px;padding:22px 18px;
+  background:linear-gradient(180deg,#180630 0%,#06030f 100%);
+  border:1px solid rgba(255,80,200,.4);
+  box-shadow:0 8px 50px rgba(255,80,200,.25);
+  transform:scale(.92);opacity:0;
+  transition:transform .25s cubic-bezier(.32,1.2,.5,1),opacity .2s;
+  text-align:center;}
+.wb-gth-pcard-ov.open .wb-gth-pcard{transform:scale(1);opacity:1;}
+.wb-gth-pcard-x{position:absolute;top:8px;right:10px;width:26px;height:26px;border-radius:50%;
+  background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;cursor:pointer;
+  font-size:14px;color:rgba(255,255,255,.6);}
+.wb-gth-pcard-av{font-size:50px;line-height:1;margin-bottom:8px;}
+.wb-gth-pcard-name{font-size:16px;font-weight:900;color:#fff;letter-spacing:1px;}
+.wb-gth-pcard-lv{font-size:11px;color:#cc88ff;margin-top:4px;letter-spacing:1px;}
+.wb-gth-pcard-msg{font-size:11px;color:rgba(255,255,255,.5);margin-top:14px;
+  padding:9px 12px;border-radius:9px;background:rgba(0,255,159,.06);
+  border:1px solid rgba(0,255,159,.2);}
+
 /* ── Тост ── */
 .wb-toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:9999;
   background:rgba(10,0,25,.95);border:1px solid rgba(255,0,200,.5);border-radius:10px;

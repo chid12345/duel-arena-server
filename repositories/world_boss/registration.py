@@ -163,3 +163,20 @@ class WorldBossRegistrationMixin:
             return int(row["c"])
         except (KeyError, TypeError):
             return int(row[0])  # fallback для SQLite если row — tuple
+
+    def wb_list_registered_with_info(self, spawn_id: int, limit: int = 100) -> list:
+        """Список зарегистрированных юзеров с ник/уровень/эмодзи для комнаты
+        ожидания. Сортировка по дате регистрации (кто раньше — первый)."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT r.user_id, p.username, p.level, p.strength "
+            "FROM world_boss_registrations r "
+            "JOIN players p ON p.user_id = r.user_id "
+            "WHERE r.spawn_id=? "
+            "ORDER BY r.created_at ASC LIMIT ?",
+            (int(spawn_id), int(limit)),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
