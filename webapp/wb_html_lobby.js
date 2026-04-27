@@ -142,14 +142,6 @@ ${unclaimedBanner}
   </div>
 </div>
 <div class="wb-avstrip">${avatarsHTML}<span class="wb-av-more">${regCnt||0} участников</span></div>
-<div class="wb-auto-row" data-act="auto-toggle">
-  <div class="wb-auto-ic">🤖</div>
-  <div class="wb-auto-txt">
-    <div class="wb-auto-main">Авто-бой (50% эффективности)</div>
-    <div class="wb-auto-sub">Бот зайдёт за тебя — даже если ты офлайн</div>
-  </div>
-  <div class="wb-toggle${s.auto_bot_pending?' on':''}" id="wb-auto-toggle"></div>
-</div>
 <div class="wb-join-btn${joinedAll?' joined':''}" data-act="join">
   <div class="wb-join-ico">${joinedAll?'✅':'⚔️'}</div>
   <div class="wb-join-txt">
@@ -256,32 +248,6 @@ ${unclaimedBanner}
         // Игрок закрыл MVP-попап и хочет открыть его снова — force=true.
         window.WBHtml.showMvpResult?.(_state, _scene, { force: true });
       }
-      else if (act==='auto-toggle')  {
-        // Тогл «авто-бой из лобби»: бот зайдёт за тебя если будешь офлайн.
-        const tg = document.getElementById('wb-auto-toggle');
-        if (!tg || tg.classList.contains('busy')) return;
-        tg.classList.add('busy');
-        const willOn = !tg.classList.contains('on');
-        tg.classList.toggle('on', willOn);
-        try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('light'); } catch(_) {}
-        (async () => {
-          try {
-            const r = await post('/api/world_boss/toggle_auto_bot', { enabled: willOn });
-            if (r && r.ok) {
-              if (_state) _state.auto_bot_pending = !!r.enabled;
-              window.WBHtml?.toast?.(r.enabled ? '🤖 Авто-бой включён · бот зайдёт за тебя' : '🤖 Авто-бой выключен');
-            } else {
-              tg.classList.toggle('on', !willOn); // откат
-              window.WBHtml?.toast?.('❌ ' + (r?.reason || 'Ошибка'));
-            }
-          } catch(_) {
-            tg.classList.toggle('on', !willOn);
-            window.WBHtml?.toast?.('❌ Нет соединения');
-          } finally {
-            tg.classList.remove('busy');
-          }
-        })();
-      }
       else if (act==='boost-info') {
         if (el.classList.contains('bought')) return;
         window.WBHtml.showBoostInfo?.(el.dataset.id, _state, _scene, SCROLL_META, _markBought);
@@ -367,8 +333,8 @@ ${unclaimedBanner}
         _enteredSid = null;
       }
     }
-    // Авто-бот: если включил «Авто-бой 50%» в лобби — НЕ форсим в бой,
-    // бот сам дерётся, игрок занимается чем хочет.
+    // Legacy auto-bot флаг (тогл из лобби убран). Если в БД есть player_state
+    // c auto_bot=1 (старые рейды) — НЕ форсим игрока в бой, бот сам дерётся.
     const isAutoBotMe = !!s.player_state?.auto_bot;
     // Боевой экран только если ИГРОК явно вошёл в рейд:
     //  1) уже бил (есть player_state без auto_bot) — он в бою
