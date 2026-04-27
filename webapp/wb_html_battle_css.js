@@ -419,11 +419,9 @@ window.WBBattleCSS = (() => {
 .wb-rage2.on,.wb-rage2.rage{opacity:1;animation:wb-rage 0.5s ease-in-out infinite;}@keyframes wb-rage{0%,100%{box-shadow:inset 0 0 40px rgba(255,0,85,.35)}50%{box-shadow:inset 0 0 80px rgba(255,0,85,.7)}}
 .wb-flash{animation:wb-flash .8s ease forwards;}@keyframes wb-flash{0%{background-color:transparent}20%{background-color:rgba(255,68,0,.25)}100%{background-color:transparent}}
 .wb-hp2-segs{position:absolute;inset:0;display:flex;gap:0;align-items:center;padding:0 1px;pointer-events:none}.wb-hp2-segs>i{flex:1;height:60%;border-right:1px solid rgba(0,0,0,.5)}.wb-hp2-segs>i:last-child{border:none}
-.wb-wp{position:absolute;width:26px;height:26px;border-radius:50%;
-  border:2px solid #00FF9F;box-shadow:0 0 9px #00FF9F,inset 0 0 5px rgba(0,255,159,.3);
-  animation:wb-wpp 1.5s ease-in-out infinite;cursor:crosshair;display:flex;align-items:center;justify-content:center;}
-@keyframes wb-wpp{0%,100%{transform:scale(1);opacity:.8}50%{transform:scale(1.2);opacity:1}}
-.wb-wp::after{content:'+';font-size:11px;color:#00FF9F;font-weight:700;}
+/* Зелёные точки удара (.wb-wp) скрыты — отвлекали от босса.
+   Клик-зона работает через data-act="hit" на всей .wb-boss-zone. */
+.wb-wp{display:none;}
 .wb-ghost{position:absolute;width:28px;height:28px;border-radius:50%;
   background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(0,191,255,.3);
   display:flex;align-items:center;justify-content:center;font-size:14px;
