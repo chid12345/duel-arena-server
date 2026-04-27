@@ -795,16 +795,16 @@ window.WBBattleCSS = (() => {
   padding:9px 12px;border-radius:9px;background:rgba(0,255,159,.06);
   border:1px solid rgba(0,255,159,.2);}
 
-/* ── История боя (timeline по раундам) ── */
+/* ── История боя (зеркало: слева мой урон, справа урон босса) ── */
 .wb-bhist-ov{position:fixed;inset:0;z-index:10005;background:rgba(0,0,0,.88);
   display:flex;align-items:center;justify-content:center;padding:18px;
   opacity:0;pointer-events:none;transition:opacity .22s;}
 .wb-bhist-ov.open{opacity:1;pointer-events:all;}
 .wb-bhist{width:100%;max-width:360px;max-height:84vh;overflow:hidden;
   border-radius:14px;padding:16px 14px;position:relative;
-  background:linear-gradient(180deg,#0a0014 0%,#06030f 100%);
-  border:1px solid rgba(0,191,255,.3);
-  box-shadow:0 8px 50px rgba(0,191,255,.18);
+  background:#04020a;
+  border:1px solid rgba(0,229,255,.2);
+  box-shadow:0 8px 50px rgba(0,229,255,.12);
   display:flex;flex-direction:column;gap:10px;
   transform:scale(.92);opacity:0;transition:transform .25s cubic-bezier(.32,1.2,.5,1),opacity .22s;}
 .wb-bhist-ov.open .wb-bhist{transform:scale(1);opacity:1;}
@@ -812,32 +812,34 @@ window.WBBattleCSS = (() => {
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
   display:flex;align-items:center;justify-content:center;cursor:pointer;
   font-size:14px;color:rgba(255,255,255,.6);}
-.wb-bhist-h{font-size:13px;font-weight:900;letter-spacing:2px;color:#00BFFF;
-  text-align:center;text-shadow:0 0 10px rgba(0,191,255,.45);}
-.wb-bhist-h .cnt{color:rgba(255,255,255,.5);font-weight:600;}
+.wb-bhist-h{font-size:13px;font-weight:900;letter-spacing:2px;color:#00E5FF;
+  text-align:center;text-shadow:0 0 10px rgba(0,229,255,.4);}
+.wb-bhist-h .cnt{color:rgba(255,255,255,.4);font-weight:600;}
 .wb-bhist-stats{display:flex;justify-content:center;gap:6px;font-size:10px;
   color:rgba(255,255,255,.7);font-family:'Courier New',monospace;
   padding:6px 10px;border-radius:8px;
   background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);}
-.wb-bhist-stats .me{color:#00FF9F;font-weight:700;}
-.wb-bhist-stats .boss{color:#ff5577;font-weight:700;}
+.wb-bhist-stats .me{color:#00E5FF;font-weight:700;}
+.wb-bhist-stats .boss{color:#FF00CC;font-weight:700;}
 .wb-bhist-stats .dot{color:rgba(255,255,255,.2);}
-.wb-bhist-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;
-  scrollbar-width:thin;scrollbar-color:rgba(0,191,255,.3) transparent;}
-.wb-bhist-list::-webkit-scrollbar{width:4px;}
-.wb-bhist-list::-webkit-scrollbar-thumb{background:rgba(0,191,255,.3);border-radius:2px;}
-.wb-bhist-row{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;
-  border-radius:7px;background:rgba(255,255,255,.025);
-  border:1px solid rgba(255,255,255,.04);font-size:11px;}
-.wb-bhist-r{flex-shrink:0;font-weight:900;color:#cc88ff;
-  font-family:'Courier New',monospace;font-size:10px;letter-spacing:.5px;
-  min-width:24px;}
-.wb-bhist-evs{flex:1;display:flex;flex-wrap:wrap;gap:4px 8px;}
-.wb-bhist-evs .ev{font-family:'Courier New',monospace;font-size:11px;
-  font-weight:700;white-space:nowrap;}
-.wb-bhist-evs .ev.me{color:#00FF9F;}
-.wb-bhist-evs .ev.crit{color:#FFD700;}
-.wb-bhist-evs .ev.boss{color:#ff5577;}
+.wb-bhist-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;
+  scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.25) transparent;}
+.wb-bhist-list::-webkit-scrollbar{width:3px;}
+.wb-bhist-list::-webkit-scrollbar-thumb{background:rgba(0,229,255,.25);border-radius:2px;}
+.wb-bhist-row{display:flex;flex-direction:column;gap:4px;padding:7px 4px;
+  border-bottom:1px solid rgba(255,255,255,.07);}
+.wb-bhist-row:last-child{border-bottom:none;}
+.wb-bhist-r{font-size:9px;font-weight:700;letter-spacing:1px;
+  color:rgba(255,255,255,.3);font-family:'Courier New',monospace;margin-bottom:2px;}
+.wb-bhist-mirror{display:flex;align-items:flex-start;min-height:20px;}
+.wb-bhist-col{flex:1;display:flex;flex-wrap:wrap;gap:3px 5px;}
+.wb-bhist-vsep{width:1px;background:rgba(255,255,255,.1);margin:0 8px;align-self:stretch;flex-shrink:0;}
+.wb-bhist-col .ev{font-family:'Courier New',monospace;font-size:11px;
+  font-weight:700;white-space:nowrap;display:inline-flex;align-items:center;gap:1px;}
+.wb-bhist-col .ev .n{font-size:14px;font-weight:900;}
+.wb-bhist-col .ev.me{color:#00E5FF;}
+.wb-bhist-col .ev.crit{color:#00FFAA;}
+.wb-bhist-col .ev.boss{color:#FF00CC;}
 .wb-bhist-empty{padding:40px 12px;text-align:center;font-size:11px;
   color:rgba(255,255,255,.4);}
 .wb-bhist-ok{padding:11px;border-radius:11px;text-align:center;cursor:pointer;

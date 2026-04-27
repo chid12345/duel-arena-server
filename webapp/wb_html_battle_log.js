@@ -74,15 +74,21 @@
     });
 
     const rowsHtml = rounds.map((r, i) => {
-      const itemsHtml = r.items.map(it => {
-        if (it.kind === 'me') return `<span class="ev me">⚔️ −${it.dmg.toLocaleString('ru')}</span>`;
-        if (it.kind === 'crit') return `<span class="ev crit">💥 −${it.dmg.toLocaleString('ru')} КРИТ</span>`;
-        if (it.kind === 'boss') return `<span class="ev boss">🩸 ты −${it.dmg}${it.hp_after!=null?` (HP ${it.hp_after})`:''}</span>`;
-        return '';
-      }).join('');
+      const myItems  = r.items.filter(it => it.kind === 'me' || it.kind === 'crit');
+      const bossItems = r.items.filter(it => it.kind === 'boss');
+      const myHtml   = myItems.map(it =>
+        `<span class="ev${it.kind==='crit'?' crit':' me'}">⚔️<span class="n">${it.dmg.toLocaleString('ru')}</span></span>`
+      ).join('');
+      const bossHtml = bossItems.map(it =>
+        `<span class="ev boss">🩸<span class="n">${it.dmg}</span></span>`
+      ).join('');
       return `<div class="wb-bhist-row">
-        <span class="wb-bhist-r">P${i+1}</span>
-        <span class="wb-bhist-evs">${itemsHtml}</span>
+        <div class="wb-bhist-r">ROUND ${i+1}</div>
+        <div class="wb-bhist-mirror">
+          <div class="wb-bhist-col me">${myHtml}</div>
+          <div class="wb-bhist-vsep"></div>
+          <div class="wb-bhist-col boss">${bossHtml}</div>
+        </div>
       </div>`;
     }).join('');
 
@@ -92,7 +98,7 @@
       <div class="wb-bhist-stats">
         <span class="me">⚔️ ${totalMe.toLocaleString('ru')}</span>
         <span class="dot">·</span>
-        <span class="hits">${hits} ударов${crits?` (${crits}💥)`:''}</span>
+        <span class="hits">${hits} уд.${crits?` · ${crits}💥`:''}</span>
         <span class="dot">·</span>
         <span class="boss">🩸 −${totalBoss}</span>
       </div>
