@@ -86,9 +86,10 @@ async def world_boss_reminder_push_job(context) -> None:
                 logger.debug("wb_remind: ошибка пуша uid=%s chat=%s: %s",
                              uid, chat_id, e)
 
+        reset_cnt = db.reset_wb_reminder_opt_in()
         logger.info(
-            "wb_remind: рейд id=%s ('%s') — отправлено %d, ошибок %d",
-            spawn_id, boss_name, sent, failed,
+            "wb_remind: рейд id=%s ('%s') — отправлено %d, ошибок %d, сброшено opt-in %d",
+            spawn_id, boss_name, sent, failed, reset_cnt,
         )
     except Exception as e:
         logger.warning("wb_remind: ошибка тика: %s", e)

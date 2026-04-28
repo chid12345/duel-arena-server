@@ -160,3 +160,13 @@ class WorldBossRewardsMixin:
         rows = cur.fetchall()
         conn.close()
         return [(int(r["user_id"]), int(r["chat_id"])) for r in rows]
+
+    def reset_wb_reminder_opt_in(self) -> int:
+        """Сбрасывает wb_reminder_opt_in=0 для всех игроков. Вызывается после отправки напоминаний."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute("UPDATE players SET wb_reminder_opt_in=0 WHERE wb_reminder_opt_in=1")
+        changed = cur.rowcount
+        conn.commit()
+        conn.close()
+        return changed
