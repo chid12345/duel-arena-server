@@ -797,56 +797,56 @@ window.WBBattleCSS = (() => {
 
 /* ── История боя (terminal-стиль: лента событий) ── */
 .wb-bhist-ov{position:fixed;inset:0;z-index:10005;background:rgba(0,0,0,.88);
-  display:flex;align-items:center;justify-content:center;padding:18px;
+  display:flex;align-items:center;justify-content:center;padding:10px;
   opacity:0;pointer-events:none;transition:opacity .22s;}
 .wb-bhist-ov.open{opacity:1;pointer-events:all;}
-.wb-bhist{width:100%;max-width:340px;max-height:84vh;overflow:hidden;
-  border-radius:14px;padding:16px 14px;position:relative;
+.wb-bhist{width:100%;max-width:340px;max-height:94vh;overflow:hidden;
+  border-radius:14px;padding:12px 12px 10px;position:relative;
   background:#05020f;border:1px solid rgba(0,229,255,.22);
   box-shadow:0 8px 50px rgba(0,229,255,.07);
-  display:flex;flex-direction:column;gap:9px;
+  display:flex;flex-direction:column;gap:6px;
   transform:scale(.92);opacity:0;transition:transform .25s cubic-bezier(.32,1.2,.5,1),opacity .22s;}
 .wb-bhist-ov.open .wb-bhist{transform:scale(1);opacity:1;}
-.wb-bhist-x{position:absolute;top:8px;right:10px;width:26px;height:26px;border-radius:50%;
+.wb-bhist-x{position:absolute;top:8px;right:8px;width:22px;height:22px;border-radius:50%;
   background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);
   display:flex;align-items:center;justify-content:center;cursor:pointer;
-  font-size:14px;color:#fff;}
-.wb-bhist-h{font-size:12px;font-weight:900;letter-spacing:3px;color:#00E5FF;
-  text-align:center;text-shadow:0 0 14px rgba(0,229,255,.6);}
+  font-size:13px;color:#fff;}
+.wb-bhist-h{font-size:11px;font-weight:900;letter-spacing:2px;color:#00E5FF;
+  text-align:center;text-shadow:0 0 14px rgba(0,229,255,.6);padding-right:20px;}
 .wb-bhist-cnt{color:#fff;font-size:9px;font-weight:700;}
-.wb-bhist-totals{display:flex;align-items:stretch;border-radius:8px;overflow:hidden;
-  border:1px solid rgba(255,255,255,.07);}
-.wb-bhist-tme{flex:1;padding:8px 11px;background:rgba(0,229,255,.07);}
+.wb-bhist-totals{display:flex;align-items:stretch;border-radius:7px;overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);flex-shrink:0;}
+.wb-bhist-tme{flex:1;padding:5px 10px;background:rgba(0,229,255,.07);}
 .wb-bhist-tsep{width:1px;background:rgba(255,255,255,.09);}
-.wb-bhist-tboss{flex:1;padding:8px 11px;background:rgba(255,0,204,.06);text-align:right;}
-.wb-bhist-tlbl{font-size:8px;letter-spacing:2px;color:#fff;font-weight:700;margin-bottom:3px;}
-.wb-bhist-tval{font-family:'Courier New',monospace;font-size:15px;font-weight:900;}
+.wb-bhist-tboss{flex:1;padding:5px 10px;background:rgba(255,0,204,.06);text-align:right;}
+.wb-bhist-tlbl{font-size:7px;letter-spacing:2px;color:#fff;font-weight:700;margin-bottom:2px;}
+.wb-bhist-tval{font-family:'Courier New',monospace;font-size:14px;font-weight:900;}
 .wb-bhist-tval.me  {color:#00E5FF;text-shadow:0 0 10px rgba(0,229,255,.7);}
 .wb-bhist-tval.boss{color:#FF00CC;text-shadow:0 0 10px rgba(255,0,204,.7);}
-.wb-bhist-tsub{font-size:8px;color:#fff;font-weight:700;margin-top:2px;}
+.wb-bhist-tsub{font-size:7px;color:#fff;font-weight:700;margin-top:1px;}
 .wb-bhist-list{flex:1;overflow-y:auto;display:flex;flex-direction:column;
   scrollbar-width:thin;scrollbar-color:rgba(0,229,255,.2) transparent;}
 .wb-bhist-list::-webkit-scrollbar{width:3px;}
 .wb-bhist-list::-webkit-scrollbar-thumb{background:rgba(0,229,255,.2);border-radius:2px;}
-.wb-bhist-rsep{font-size:9px;letter-spacing:3px;color:#fff;font-weight:700;
-  padding:6px 0 3px;display:flex;align-items:center;gap:6px;}
+.wb-bhist-rsep{font-size:8px;letter-spacing:2px;color:#fff;font-weight:700;
+  padding:4px 0 2px;display:flex;align-items:center;gap:5px;}
 .wb-bhist-rsep::after{content:'';flex:1;height:1px;background:rgba(255,255,255,.15);}
-.wb-bhist-ev{display:flex;align-items:center;gap:7px;padding:4px 0;}
-.wb-bhist-tag{font-size:8px;font-weight:700;letter-spacing:.5px;padding:3px 7px;
-  border-radius:4px;flex-shrink:0;width:52px;text-align:center;color:#fff;}
+.wb-bhist-ev{display:flex;align-items:center;gap:6px;padding:2px 0;}
+.wb-bhist-tag{font-size:7px;font-weight:700;letter-spacing:.5px;padding:2px 5px;
+  border-radius:4px;flex-shrink:0;width:46px;text-align:center;color:#fff;}
 .wb-bhist-tag.me  {background:rgba(0,229,255,.22);border:1px solid rgba(0,229,255,.5);}
 .wb-bhist-tag.crit{background:rgba(0,255,160,.2); border:1px solid rgba(0,255,160,.5);}
 .wb-bhist-tag.boss{background:rgba(255,0,204,.18);border:1px solid rgba(255,0,204,.45);}
-.wb-bhist-arr{font-size:11px;color:#fff;font-weight:700;flex-shrink:0;}
-.wb-bhist-dmg{font-family:'Courier New',monospace;font-size:20px;font-weight:900;line-height:1;flex-shrink:0;}
+.wb-bhist-arr{font-size:10px;color:#fff;font-weight:700;flex-shrink:0;}
+.wb-bhist-dmg{font-family:'Courier New',monospace;font-size:18px;font-weight:900;line-height:1;flex-shrink:0;}
 .wb-bhist-dmg.me  {color:#00E5FF;text-shadow:0 0 10px rgba(0,229,255,.8),0 0 20px rgba(0,229,255,.3);}
 .wb-bhist-dmg.crit{color:#00FFB0;text-shadow:0 0 12px rgba(0,255,176,.9),0 0 24px rgba(0,255,176,.4);}
 .wb-bhist-dmg.boss{color:#FF00CC;text-shadow:0 0 10px rgba(255,0,204,.8),0 0 20px rgba(255,0,204,.3);}
-.wb-bhist-hp{display:flex;align-items:center;gap:3px;margin-left:auto;flex-shrink:0;}
-.wb-bhist-hpico{font-size:11px;}
-.wb-bhist-hpval{font-size:12px;font-weight:700;color:#fff;}
-.wb-bhist-empty{padding:40px 12px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);}
-.wb-bhist-ok{padding:11px;border-radius:10px;text-align:center;cursor:pointer;
+.wb-bhist-hp{display:flex;align-items:center;gap:2px;margin-left:auto;flex-shrink:0;}
+.wb-bhist-hpico{font-size:10px;}
+.wb-bhist-hpval{font-size:11px;font-weight:700;color:#fff;}
+.wb-bhist-empty{padding:30px 12px;text-align:center;font-size:11px;color:rgba(255,255,255,.4);}
+.wb-bhist-ok{padding:9px;border-radius:9px;text-align:center;cursor:pointer;flex-shrink:0;
   font-family:'Courier New',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#fff;
   background:linear-gradient(135deg,rgba(0,229,255,.18),rgba(0,80,255,.25));
   border:1px solid rgba(0,229,255,.3);box-shadow:0 0 16px rgba(0,229,255,.12);}
