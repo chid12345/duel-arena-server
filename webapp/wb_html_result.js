@@ -98,10 +98,17 @@
     document.getElementById('wb-mvp-x')?.addEventListener('click', _close);
     document.getElementById('wb-mvp-log')?.addEventListener('click', () => {
       // Новый пораундовый лог из клиентского трекера wb_html_battle_log.js
-      // (показывает каждый удар: твой/босса с временем). Если трекер пустой —
-      // fallback на старый агрегат-попап.
-      const tracker = window.WBHtml?.getBattleLog?.() || [];
+      // (показывает каждый удар: твой/босса с временем). Лог хранится в LS
+      // по spawn_id и переживает закрытие webapp. Fallback — только если
+      // действительно нет данных (например, открыли MVP с другого устройства).
+      const fromLS = window.WBHtml?.getBattleLogForSpawn?.(r.spawn_id) || [];
+      const inMem  = window.WBHtml?.getBattleLog?.() || [];
+      const tracker = fromLS.length ? fromLS : inMem;
       if (tracker.length > 0 && window.WBHtml?.showBattleHistory) {
+        // Подменяем in-memory лог на LS-копию, чтобы showBattleHistory её увидел.
+        if (fromLS.length && !inMem.length && window.WBHtml._battleLog) {
+          window.WBHtml._battleLog.push(...fromLS);
+        }
         window.WBHtml.showBattleHistory();
       } else {
         _showBattleLog({
@@ -121,23 +128,30 @@
   }
 
   // ── Лог боя (статы за один рейд) ─────────────────────────────────
+  // Fallback показывается ТОЛЬКО если новый пораундовый трекер пуст
+  // (например, рейд из другого устройства / очень редкая ситуация).
+  // Не показываем строки с нулями — лучше скрыть, чем вводить в заблуждение.
   function _showBattleLog(s) {
     document.getElementById('wb-blog-ov')?.remove();
     const ov = document.createElement('div');
     ov.id = 'wb-blog-ov'; ov.className = 'wb-blog-ov';
+    const rows = [];
+    rows.push(`<div class="wb-blog-row good"><span class="ic">⚔️</span><span class="lbl">Нанёс урон</span><span class="val">${s.damage.toLocaleString('ru')}</span></div>`);
+    if (s.hits > 0) {
+      rows.push(`<div class="wb-blog-row"><span class="ic">🎯</span><span class="lbl">Ударов</span><span class="val">${s.hits}</span></div>`);
+      rows.push(`<div class="wb-blog-row"><span class="ic">📊</span><span class="lbl">Средний урон</span><span class="val">${s.avg.toLocaleString('ru')}</span></div>`);
+    }
+    if (s.crits) rows.push(`<div class="wb-blog-row"><span class="ic">💥</span><span class="lbl">Критов</span><span class="val">${s.crits}</span></div>`);
+    if (s.received > 0) rows.push(`<div class="wb-blog-row bad"><span class="ic">🩸</span><span class="lbl">Получил урона</span><span class="val">${s.received.toLocaleString('ru')}</span></div>`);
+    if (s.max_hp > 0) rows.push(`<div class="wb-blog-row"><span class="ic">❤️</span><span class="lbl">HP в конце</span><span class="val">${s.hp_left}/${s.max_hp} (${s.hp_pct}%)</span></div>`);
+    rows.push(`<div class="wb-blog-row"><span class="ic">🏆</span><span class="lbl">Вклад в победу</span><span class="val">${(s.contribution).toFixed(1)}%</span></div>`);
     ov.innerHTML = `<div class="wb-blog">
       <div class="wb-blog-x" id="wb-blog-x">×</div>
       <div class="wb-blog-h">📜 ЛОГ БОЯ</div>
       <div class="wb-blog-sub">@${_esc(s.name)} ${s.avatar}  ·  ${s.win ? '✅ ПОБЕДА' : '❌ ПОРАЖЕНИЕ'}</div>
 
       <div class="wb-blog-grid">
-        <div class="wb-blog-row good"><span class="ic">⚔️</span><span class="lbl">Нанёс урон</span><span class="val">${s.damage.toLocaleString('ru')}</span></div>
-        <div class="wb-blog-row"><span class="ic">🎯</span><span class="lbl">Ударов</span><span class="val">${s.hits}</span></div>
-        <div class="wb-blog-row"><span class="ic">📊</span><span class="lbl">Средний урон</span><span class="val">${s.avg.toLocaleString('ru')}</span></div>
-        ${s.crits ? `<div class="wb-blog-row"><span class="ic">💥</span><span class="lbl">Критов</span><span class="val">${s.crits}</span></div>` : ''}
-        <div class="wb-blog-row bad"><span class="ic">🩸</span><span class="lbl">Получил урона</span><span class="val">${s.received.toLocaleString('ru')}</span></div>
-        <div class="wb-blog-row"><span class="ic">❤️</span><span class="lbl">HP в конце</span><span class="val">${s.hp_left}/${s.max_hp} (${s.hp_pct}%)</span></div>
-        <div class="wb-blog-row"><span class="ic">🏆</span><span class="lbl">Вклад в победу</span><span class="val">${(s.contribution).toFixed(1)}%</span></div>
+        ${rows.join('')}
       </div>
 
       <div class="wb-blog-rew">

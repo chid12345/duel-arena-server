@@ -1,17 +1,53 @@
 /* wb_html_battle_log.js — клиентский трекер истории боя с боссом.
    Хранит timeline всех ударов (твоих и босса) пока ты в бою.
-   Live-показ во время боя + полный лог в MVP-окне после. */
+   Live-показ во время боя + полный лог в MVP-окне после.
+   Persist в localStorage по spawn_id — переживает закрытие webapp. */
 (() => {
   // Каждый item: {ts, kind:'me'|'boss'|'crit', dmg, boss_hp_after?, hp_after?}
   const _log = [];
   let _lastSpawnId = null;
   let _lastPlayerHp = null;
 
+  // Хранилка: при закрытии webapp _log в памяти умирает, поэтому пишем в LS
+  // по spawn_id. При повторном открытии (например, чтобы посмотреть лог в MVP-окне)
+  // лог восстановится без 0/0 в fallback-агрегате.
+  const _LS_KEY = (sid) => `wb_battle_log_${sid}`;
+
+  function _saveToLS(sid) {
+    if (!sid) return;
+    try { localStorage.setItem(_LS_KEY(sid), JSON.stringify(_log)); } catch(_) {}
+  }
+  function _loadFromLS(sid) {
+    if (!sid) return [];
+    try {
+      const raw = localStorage.getItem(_LS_KEY(sid));
+      if (!raw) return [];
+      const arr = JSON.parse(raw);
+      return Array.isArray(arr) ? arr : [];
+    } catch(_) { return []; }
+  }
+  function _cleanupOldLS(keepSid) {
+    // Чистим логи старых рейдов чтобы LS не разрастался.
+    try {
+      const keep = keepSid ? _LS_KEY(keepSid) : null;
+      Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('wb_battle_log_') && k !== keep) {
+          localStorage.removeItem(k);
+        }
+      });
+    } catch(_) {}
+  }
+
   function _resetIfNewSpawn(sid) {
     if (sid && _lastSpawnId !== sid) {
       _lastSpawnId = sid;
       _log.length = 0;
       _lastPlayerHp = null;
+      // Восстанавливаем лог с диска: если игрок зашёл в тот же рейд после
+      // refresh — продолжаем трекать поверх существующего timeline.
+      const restored = _loadFromLS(sid);
+      if (restored.length) _log.push(...restored);
+      _cleanupOldLS(sid);
     }
   }
 
@@ -24,6 +60,7 @@
       boss_hp_after: boss_hp_after != null ? (boss_hp_after|0) : null,
     });
     _trim();
+    _saveToLS(_lastSpawnId);
   }
 
   // Удар босса по игроку — детектим по падению current_hp в WS-тике.
@@ -38,6 +75,7 @@
       hp_after: new_hp,
     });
     _trim();
+    _saveToLS(_lastSpawnId);
   }
 
   function _trim() {
@@ -45,6 +83,12 @@
   }
 
   function getLog() { return _log.slice(); }
+  function getLogForSpawn(sid) {
+    // Геттер с явным spawn_id — для MVP-окна, когда _lastSpawnId уже мог
+    // быть сброшен после закрытия активного рейда.
+    if (sid && _lastSpawnId === sid && _log.length) return _log.slice();
+    return _loadFromLS(sid);
+  }
   function clearLog() { _log.length = 0; _lastPlayerHp = null; }
 
   function _fmt(n) { return (n|0).toLocaleString('ru'); }
@@ -122,7 +166,10 @@
   Object.assign(window.WBHtml = window.WBHtml || {}, {
     _battleLog: _log,
     _resetBattleLog: _resetIfNewSpawn,
-    logMyHit, checkBossHit, getBattleLog: getLog, clearBattleLog: clearLog,
+    logMyHit, checkBossHit,
+    getBattleLog: getLog,
+    getBattleLogForSpawn: getLogForSpawn,
+    clearBattleLog: clearLog,
     showBattleHistory,
   });
 })();
