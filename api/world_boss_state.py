@@ -93,6 +93,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
             # Комната ожидания: за 5 мин до старта в state шлём список
             # зарегистрированных с ник/уровень — фронт покажет ростер.
             if 0 < until_start <= WB_GATHER_OPEN_SEC:
+                players = []
                 try:
                     _raw = db.wb_list_registered_with_info(next_spawn_id, limit=100)
                     players = [
@@ -103,13 +104,23 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                         }
                         for r in _raw
                     ]
-                except Exception:
-                    players = []
+                except Exception as _ge:
+                    import logging as _log
+                    _log.getLogger(__name__).warning(
+                        "gather players error spawn=%s: %s", next_spawn_id, _ge
+                    )
+                # Если список пустой но зарегистрированные есть — показываем
+                # анонимные плашки чтобы не было «пусто» при ошибке JOIN.
+                if not players and registrants_count > 0:
+                    players = [
+                        {"user_id": 0, "name": "Игрок", "level": 1}
+                        for _ in range(registrants_count)
+                    ]
                 gather = {
                     "is_open": True,
                     "seconds_left": int(until_start),
                     "players": players,
-                    "count": len(players),
+                    "count": registrants_count,  # всегда из основного счётчика
                 }
         except Exception:
             pass
