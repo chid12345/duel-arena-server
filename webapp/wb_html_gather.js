@@ -22,9 +22,8 @@
   // не дожидаясь серверной БД. Так же делается в wb_html_result.js.
   function _myTgName() {
     const tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
-    return tgu.username
-      || [tgu.first_name, tgu.last_name].filter(Boolean).join(' ').trim()
-      || '';
+    // @username приоритетнее, иначе только first_name (фамилия не нужна).
+    return tgu.username || tgu.first_name || '';
   }
   function _myTgId() {
     return _uidNum(window.Telegram?.WebApp?.initDataUnsafe?.user?.id);
