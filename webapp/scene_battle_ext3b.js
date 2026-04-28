@@ -27,12 +27,26 @@ Object.assign(BattleScene.prototype, {
 
   _buildArena() {
     const { W, H } = this;
-    const isBot  = !!State.battle?.opp_is_bot;
-    const skinId = (isBot && typeof BotSkinPicker !== 'undefined' &&
-                    this.textures.exists(BotSkinPicker.skinKey(1))) ? BotSkinPicker.pick() : null;
+    const b = State.battle;
+    const isBot = !!b?.opp_is_bot;
+    const mode  = b?.mode || 'normal';
+    // Скины применяем ТОЛЬКО в обычном «Бой с ботом». Натиск (endless) и Титаны (titan) — свои скины будут позже.
+    const allowSkin = isBot && mode === 'normal' && typeof BotSkinPicker !== 'undefined';
+    const skinId = allowSkin ? BotSkinPicker.pick() : null;
+    console.log('[BotSkin]', { isBot, mode, skinId, hasPicker: typeof BotSkinPicker !== 'undefined' });
 
-    const bgKey = skinId ? BotSkinPicker.bgKey(skinId) : 'arena_bg';
-    const bg = this.add.image(W/2, H * 0.36, bgKey).setDisplaySize(W, H * 0.5);
+    const skinKey = skinId ? BotSkinPicker.skinKey(skinId) : null;
+    const bgKey   = skinId ? BotSkinPicker.bgKey(skinId)   : null;
+    const haveBg  = !!bgKey   && this.textures.exists(bgKey);
+    const haveSkn = !!skinKey && this.textures.exists(skinKey);
+
+    const bg = this.add.image(W/2, H * 0.36, haveBg ? bgKey : 'arena_bg').setDisplaySize(W, H * 0.5);
+    // Inline-догрузка фона если preload не успел/не выполнился
+    if (skinId && !haveBg) {
+      this.load.image(bgKey, `bot_skins/bg/${skinId}.${BotSkinPicker.BG_EXT(skinId)}`);
+      this.load.once(`filecomplete-image-${bgKey}`, () => bg.setTexture(bgKey).setDisplaySize(W, H * 0.5));
+      this.load.start();
+    }
 
     [W * 0.12, W * 0.88].forEach(fx => {
       for (let i = 0; i < 3; i++) {
@@ -50,13 +64,26 @@ Object.assign(BattleScene.prototype, {
 
     const _p1Key  = getWarriorKey(State.player?.warrior_type);
     const _p2Type = State.battle?.opp_warrior_type || 'tank';
-    const _p2Key  = skinId ? BotSkinPicker.skinKey(skinId) : getWarriorKey(_p2Type);
+    const _p2Key  = (skinId && haveSkn) ? skinKey : getWarriorKey(_p2Type);
     this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(0.15).setFlipX(false);
-    // Для бота: flipX по FLIP_IDS, scale/nudge из OVERRIDE. Для PvP — как было.
-    const w2Scale = 0.15 * (skinId ? BotSkinPicker.scaleFor(skinId) : 1);
     const w2FlipX = skinId ? BotSkinPicker.shouldFlip(skinId) : true;
-    const w2Y     = H * 0.35 + (skinId ? BotSkinPicker.nudgeFor(skinId) * 0.25 : 0);
-    this.warrior2 = this.add.image(W * 0.72, w2Y, _p2Key).setScale(w2Scale).setFlipX(w2FlipX);
+    this.warrior2 = this.add.image(W * 0.72, H * 0.35, _p2Key).setFlipX(w2FlipX);
+    if (skinId) {
+      // PvE-бот: ноги на уровне ног игрока + единый рост ~22% от высоты экрана
+      const footY = this.warrior1.y + this.warrior1.displayHeight / 2;
+      this.warrior2.setOrigin(0.5, 1).setY(footY + BotSkinPicker.nudgeFor(skinId) * 0.5);
+      this._fitBotSize(this.warrior2, skinId);
+      if (!haveSkn) {
+        this.load.image(skinKey, `bot_skins/${skinId}.png`);
+        this.load.once(`filecomplete-image-${skinKey}`, () => {
+          this.warrior2.setTexture(skinKey);
+          this._fitBotSize(this.warrior2, skinId);
+        });
+        this.load.start();
+      }
+    } else {
+      this.warrior2.setScale(0.15);
+    }
 
     // Premium/Elite/Sub — золотая вспышка при входе в бой
     const _avTier = (State.player?.avatar_tier || '').toLowerCase();
@@ -72,6 +99,14 @@ Object.assign(BattleScene.prototype, {
     [this.warrior1, this.warrior2].forEach(w => {
       this.tweens.add({ targets: w, y: w.y - 4, duration: 1600, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     });
+  },
+
+  _fitBotSize(img, skinId) {
+    const tex = this.textures.get(img.texture.key).getSourceImage();
+    if (!tex || !tex.width) return;
+    const targetH = this.H * 0.22 * BotSkinPicker.scaleFor(skinId);
+    const targetW = targetH * (tex.width / tex.height);
+    img.setDisplaySize(targetW, targetH);
   },
 
   _buildHUDs() {
