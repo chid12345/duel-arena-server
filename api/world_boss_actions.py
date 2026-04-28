@@ -198,13 +198,13 @@ async def world_boss_auto_bot_toggle_inner(body: AutoBotToggleBody, *, db, get_u
     return {"ok": True, "enabled": enabled}
 
 
+WB_ENTRY_FEE = 50  # золото за регистрацию (идёт в призовой фонд)
+
+
 async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_init_data) -> dict:
-    """Toggle регистрации на СЛЕДУЮЩИЙ рейд (вкл/выкл).
-    Регистрация на следующий scheduled-спавн работает ВСЕГДА — даже
-    если сейчас идёт активный бой (актуально для расписания 10 мин,
-    где рейды непрерывные). Активный рейд игрок входит через «ВОЙТИ В
-    РЕЙД», регистрация — это пуш-напоминалка о ближайшем будущем слоте.
-    Само-исцеление: если scheduled-спавна нет, создаём его прямо здесь."""
+    """Регистрация на СЛЕДУЮЩИЙ рейд с оплатой входного взноса.
+    Списывает WB_ENTRY_FEE золота немедленно — отмены нет.
+    Если уже зарегистрирован — возвращает текущий статус без повторного списания."""
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
 
@@ -220,15 +220,63 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
             return {"ok": False, "reason": "Не удалось запланировать рейд — попробуй позже"}
 
     spawn_id = int(nxt["spawn_id"])
-    is_reg = db.wb_is_registered(spawn_id, uid)
 
-    if is_reg:
-        db.wb_unregister(spawn_id, uid)
-        db.set_wb_reminder_opt_in(uid, False)  # отписался от рейда → убираем напоминалку
-        is_reg = False
-    else:
-        db.wb_register(spawn_id, uid)
-        is_reg = True
+    conn = db.get_connection()
+    cur = conn.cursor()
 
-    count = db.wb_registration_count(spawn_id)
-    return {"ok": True, "is_registered": is_reg, "registrants_count": count, "spawn_id": spawn_id}
+    # Уже зарегистрирован — ничего не делаем, просто возвращаем статус
+    cur.execute(
+        "SELECT 1 FROM world_boss_registrations WHERE spawn_id=? AND user_id=?",
+        (spawn_id, uid),
+    )
+    if cur.fetchone():
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM world_boss_registrations WHERE spawn_id=?",
+            (spawn_id,),
+        )
+        count = int(cur.fetchone()["c"])
+        cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+        row = cur.fetchone()
+        gold_left = int(row["gold"]) if row else 0
+        conn.close()
+        return {"ok": True, "is_registered": True, "registrants_count": count,
+                "spawn_id": spawn_id, "gold_left": gold_left}
+
+    # Атомарно списываем взнос (AND gold >= fee предотвращает уход в минус)
+    cur.execute(
+        "SELECT gold FROM players WHERE user_id=?", (uid,)
+    )
+    player = cur.fetchone()
+    if not player:
+        conn.close()
+        return {"ok": False, "reason": "Игрок не найден"}
+
+    cur.execute(
+        "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
+        (WB_ENTRY_FEE, uid, WB_ENTRY_FEE),
+    )
+    if cur.rowcount == 0:
+        gold_have = int(player["gold"])
+        conn.close()
+        return {"ok": False, "reason": f"Нужно {WB_ENTRY_FEE} золота (у тебя {gold_have})"}
+
+    # Регистрируем в том же соединении
+    cur.execute(
+        "INSERT OR IGNORE INTO world_boss_registrations (spawn_id, user_id) VALUES (?,?)",
+        (spawn_id, uid),
+    )
+
+    cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+    gold_left = int(cur.fetchone()["gold"])
+
+    cur.execute(
+        "SELECT COUNT(*) AS c FROM world_boss_registrations WHERE spawn_id=?",
+        (spawn_id,),
+    )
+    count = int(cur.fetchone()["c"])
+
+    conn.commit()
+    conn.close()
+
+    return {"ok": True, "is_registered": True, "registrants_count": count,
+            "spawn_id": spawn_id, "gold_left": gold_left}

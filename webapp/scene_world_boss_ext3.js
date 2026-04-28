@@ -200,8 +200,10 @@ Object.assign(WorldBossScene.prototype, {
         if (this._state) {
           this._state.is_registered = r.is_registered;
           this._state.registrants_count = r.registrants_count;
+          // Обновляем золото игрока после списания взноса
+          if (typeof r.gold_left === 'number') this._state.gold = r.gold_left;
         }
-        this._toast(r.is_registered ? '✅ Записался в рейд!' : '↩️ Запись отменена');
+        this._toast('✅ Записался! 50 🪙 списано в призовой фонд');
         this._render();
       } else {
         this._toast('❌ ' + (r.reason || 'Ошибка'));

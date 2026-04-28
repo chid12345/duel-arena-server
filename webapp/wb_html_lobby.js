@@ -158,11 +158,11 @@ ${gatherBtn}
   </div>
 </div>
 <div class="wb-avstrip">${avatarsHTML}<span class="wb-av-more">${regCnt||0} участников</span></div>
-<div class="wb-join-btn${joinedAll?' joined':''}" data-act="join">
+<div class="wb-join-btn${joinedAll?' joined locked':''}" ${joinedAll?'':'data-act="join"'}>
   <div class="wb-join-ico">${joinedAll?'✅':'⚔️'}</div>
   <div class="wb-join-txt">
-    <div class="wb-join-main">${joinedAll?'Ты участвуешь':'Участвовать в рейде'}</div>
-    <div class="wb-join-sub">${regCnt>0?`${regCnt} игроков уже записались`:'Зарегистрируйся на следующий рейд'}</div>
+    <div class="wb-join-main">${joinedAll?'Ты участвуешь':'Участвовать в рейде — 50 🪙'}</div>
+    <div class="wb-join-sub">${joinedAll?'Взнос списан, удачи в бою!':(regCnt>0?`${regCnt} игроков уже записались`:'Золото списывается сразу, отмена невозможна')}</div>
   </div>
   <div class="wb-join-arr">${joinedAll?'✓':'›'}</div>
 </div>
@@ -199,6 +199,38 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     const sec = root.querySelector('.wb-inv-sec'); if (sec) sec.style.display = html ? '' : 'none';
   }
 
+  function _showJoinConfirm(root, btn, scene) {
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
+    overlay.innerHTML = `
+      <div style="background:#1a1a2e;border:1px solid #c0392b;border-radius:16px;padding:24px 20px;max-width:300px;width:100%;text-align:center">
+        <div style="font-size:28px;margin-bottom:8px">⚔️</div>
+        <div style="font-size:16px;font-weight:700;margin-bottom:8px;color:#fff">Вступить в рейд?</div>
+        <div style="font-size:13px;color:#aaa;margin-bottom:4px">Спишем <b style="color:#f4d03f">50 🪙</b> прямо сейчас</div>
+        <div style="font-size:12px;color:#e74c3c;margin-bottom:20px">Отменить нельзя — даже если не зайдёшь в бой</div>
+        <div style="display:flex;gap:10px;justify-content:center">
+          <button id="_wbCfYes" style="flex:1;padding:12px 0;background:linear-gradient(135deg,#c0392b,#e74c3c);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:700;cursor:pointer">Списать 50 🪙</button>
+          <button id="_wbCfNo" style="flex:1;padding:12px 0;background:#2c2c3e;border:1px solid #444;border-radius:10px;color:#aaa;font-size:14px;cursor:pointer">Отмена</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    overlay.querySelector('#_wbCfNo').onclick = () => overlay.remove();
+    overlay.querySelector('#_wbCfYes').onclick = () => {
+      overlay.remove();
+      if (btn.classList.contains('busy') || btn.classList.contains('locked')) return;
+      btn.classList.add('busy');
+      try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
+      (async () => {
+        try {
+          if (!scene) return;
+          await scene._registerForRaid?.();
+        } finally {
+          if (btn.isConnected) btn.classList.remove('busy');
+        }
+      })();
+    };
+  }
+
   function _bind(root) {
     // Защита от дубликатов: каждый _render() вызывает _bind, но listener на root
     // переживает innerHTML. Без флага получаем 2-3-N обработчиков → join-toggle
@@ -229,37 +261,9 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
         close(); _scene?.scene?.restart?.();
       }
       else if (act==='join')  {
-        // Защита от двойного клика.
-        if (el.classList.contains('busy')) return;
-        el.classList.add('busy');
-        // Оптимистично переключаем UI — пользователь сразу видит результат.
-        // Если API не подтвердит — _render() в _registerForRaid вернёт правильный вид.
-        const willJoin = !el.classList.contains('joined');
-        el.classList.toggle('joined', willJoin);
-        const ico  = el.querySelector('.wb-join-ico');
-        const main = el.querySelector('.wb-join-main');
-        const arr  = el.querySelector('.wb-join-arr');
-        const sub  = el.querySelector('.wb-join-sub');
-        if (ico)  ico.textContent  = willJoin ? '✅' : '⚔️';
-        if (main) main.textContent = willJoin ? 'Ты участвуешь' : 'Участвовать в рейде';
-        if (arr)  arr.textContent  = willJoin ? '✓' : '›';
-        // Счётчик игроков — оптимистично.
-        const avMore = root.querySelector('.wb-av-more');
-        const prizeCnt = root.querySelector('.wb-prize-cnt');
-        const cur = parseInt(avMore?.textContent) || 0;
-        const next = Math.max(0, cur + (willJoin ? 1 : -1));
-        if (avMore)   avMore.textContent = next + ' участников';
-        if (prizeCnt) prizeCnt.textContent = next;
-        if (sub)      sub.textContent = next > 0 ? `${next} игроков уже записались` : 'Зарегистрируйся и получи уведомление';
-        try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
-        (async () => {
-          try {
-            if (!_scene) return;
-            await _scene._registerForRaid?.(); // обновит _state и сделает _render
-          } finally {
-            if (el.isConnected) el.classList.remove('busy');
-          }
-        })();
+        if (el.classList.contains('busy') || el.classList.contains('locked')) return;
+        // Показываем диалог подтверждения перед списанием золота
+        _showJoinConfirm(root, el, _scene);
       }
       else if (act==='remind') {
         if (el.classList.contains('busy')) return;
