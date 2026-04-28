@@ -84,6 +84,7 @@
     // ВРЕМЕННАЯ ОТЛАДКА: видно прямо в UI, что отдаёт Telegram WebApp
     // и что приходит с сервера. Удалить после фикса проблемы с ником.
     const _tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+    const _srvDbg = g._debug || {};
     const _dbg = {
       tg_user_exists: !!_tgu,
       tg_id: _tgu?.id ?? '—',
@@ -94,6 +95,14 @@
       myTgName_computed: _myTgName() || '(пусто)',
       players_uids: players.map(p => p.user_id).join(','),
       players_names: players.map(p => p.name).join('|'),
+      srv_spawn_id: _srvDbg.spawn_id ?? '—',
+      srv_regs_count: _srvDbg.regs_count ?? '—',
+      srv_main_query_rows: _srvDbg.main_query_rows ?? '—',
+      srv_main_query_error: _srvDbg.main_query_error ?? '—',
+      srv_used_fallback_uids: !!_srvDbg.used_fallback_uids,
+      srv_fetch_uids_rowcount: _srvDbg.fetch_uids_rowcount ?? '—',
+      srv_fetch_uids_error: _srvDbg.fetch_uids_error ?? '—',
+      srv_used_anon_placeholders: !!_srvDbg.used_anon_placeholders,
     };
     const _dbgHtml = Object.entries(_dbg)
       .map(([k,v]) => `<div>${k}: ${_esc(String(v))}</div>`).join('');
