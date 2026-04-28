@@ -35,9 +35,11 @@ Object.assign(BattleScene.prototype, {
           { icon: '💥', label: 'Интуиция', val: b.opp_intuition || 0, col: '#b45aff' },
           { icon: '🛡', label: 'Выносл.',  val: b.opp_stamina   || 0, col: '#3cc864' },
         ];
+    const useBotSkin = !isMe && this._currentBotSkinId && typeof BotSkinPicker !== 'undefined';
     const spriteKey = isMe
       ? getWarriorKey(State.player?.warrior_type)
-      : getWarriorKey(State.battle?.opp_warrior_type || 'tank');
+      : (useBotSkin ? BotSkinPicker.skinKey(this._currentBotSkinId)
+                    : getWarriorKey(State.battle?.opp_warrior_type || 'tank'));
     const typeStr   = isMe ? '🧑 Вы'        : (isBot ? '🤖 Бот' : '⚔️ Игрок');
     const typeCol   = isMe ? '#5096ff'       : (isBot ? '#ccccee' : '#3cc864');
     const borderCol = isPrem ? 0xffc83c : (isMe ? 0x5096ff : 0x444466);
@@ -95,8 +97,15 @@ Object.assign(BattleScene.prototype, {
     divG.lineBetween(cx + 12, cy + 68, cx + cw - 12, cy + 68);
     con.add(divG);
 
-    const spr = this.add.image(cx + 58, cy + 128, spriteKey)
-      .setScale(0.14).setFlipX(!isMe);
+    const spr = this.add.image(cx + 58, cy + 128, spriteKey);
+    if (useBotSkin) {
+      const tex = this.textures.get(spriteKey).getSourceImage();
+      const tH = 110;
+      if (tex && tex.width) spr.setDisplaySize(tH * (tex.width / tex.height), tH);
+      spr.setFlipX(BotSkinPicker.shouldFlip(this._currentBotSkinId));
+    } else {
+      spr.setScale(0.14).setFlipX(!isMe);
+    }
     con.add(spr);
     this.tweens.add({ targets: spr, y: cy + 122, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 

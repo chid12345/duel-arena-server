@@ -144,16 +144,19 @@ Object.assign(BattleScene.prototype, {
 
   _drawZoneBtn(g, x, y, BW, BH, selected, selectedColor = C.blue) {
     g.clear();
+    const X = x - BW/2, Y = y - BH/2;
     if (selected) {
-      g.fillStyle(selectedColor, 0.25);
-      g.fillRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
+      g.fillGradientStyle(selectedColor, selectedColor, selectedColor, selectedColor, 0.30, 0.30, 0.18, 0.18);
+      g.fillRoundedRect(X, Y, BW, BH, 10);
       g.lineStyle(2, selectedColor, 1);
-      g.strokeRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
+      g.strokeRoundedRect(X, Y, BW, BH, 10);
     } else {
-      g.fillStyle(C.dark, 0.9);
-      g.fillRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
-      g.lineStyle(1, C.gray, 0.3);
-      g.strokeRoundedRect(x - BW/2, y - BH/2, BW, BH, 10);
+      g.fillGradientStyle(0x3a3a4e, 0x3a3a4e, 0x20202e, 0x20202e, 0.95);
+      g.fillRoundedRect(X, Y, BW, BH, 10);
+      g.lineStyle(1, 0xffffff, 0.18);
+      g.strokeRoundedRect(X, Y + 1, BW, BH, 10);
+      g.lineStyle(1, 0x000000, 0.45);
+      g.strokeRoundedRect(X, Y, BW, BH, 10);
     }
   },
 
