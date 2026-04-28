@@ -2,91 +2,93 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
-<title>Боты — превью 5 вариантов</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Боты — превью 32 вариантов</title>
 <style>
-  body{margin:0;background:#0a0a12;color:#fff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:18px 8px 40px;}
-  h1{font-size:18px;margin:0 0 6px;text-align:center;letter-spacing:.5px;}
-  .sub{text-align:center;color:#8a8aa0;font-size:12px;margin-bottom:18px;}
-  .grid{display:flex;flex-wrap:wrap;gap:18px;justify-content:center;}
-  .card{width:390px;height:560px;border-radius:14px;overflow:hidden;position:relative;border:1px solid #1f1f2e;box-shadow:0 8px 30px rgba(0,0,0,.6);}
-  .bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.78) saturate(1.05);}
-  .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,rgba(0,0,0,.15) 45%,rgba(0,0,0,.55) 100%);}
-  .round{position:absolute;top:14px;left:50%;transform:translateX(-50%);text-align:center;z-index:5;}
-  .round .lbl{font-size:11px;color:#bdbdd6;letter-spacing:2px;}
-  .round .num{font-size:22px;font-weight:800;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,.7);}
-  .vs{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:34px;font-weight:900;color:#fff;text-shadow:0 0 12px rgba(255,80,80,.6),0 2px 4px rgba(0,0,0,.8);z-index:6;letter-spacing:2px;}
-  .stage{position:absolute;inset:0;}
-  .player,.boss{position:absolute;bottom:60px;display:flex;flex-direction:column;align-items:center;}
-  .player{left:6%;width:42%;height:62%;}
-  .boss{right:2%;width:50%;height:78%;bottom:48px;}
-  .player img,.boss img{width:100%;height:100%;object-fit:contain;object-position:bottom;}
-  .player img{filter:drop-shadow(0 0 8px rgba(120,180,255,.25));animation:breath 3.6s ease-in-out infinite;}
-  .boss img{
-    -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 20%);
-            mask-image:linear-gradient(to top,transparent 0%,#000 20%);
+  body{margin:0;background:#0a0a12;color:#fff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:14px 10px 40px;}
+  h1{font-size:18px;margin:0 0 4px;text-align:center;letter-spacing:.5px;}
+  .sub{text-align:center;color:#8a8aa0;font-size:12px;margin-bottom:14px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px;max-width:1500px;margin:0 auto;}
+  .card{aspect-ratio:9/14;border-radius:12px;overflow:hidden;position:relative;border:1px solid #1f1f2e;
+        box-shadow:0 6px 20px rgba(0,0,0,.55);}
+  .bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.8) saturate(1.05);z-index:0;}
+  .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.65) 0%,rgba(0,0,0,.08) 50%,rgba(0,0,0,.5) 100%);}
+  /* Виньетка — фокус света в центре боя */
+  .vignette{position:absolute;inset:0;pointer-events:none;z-index:4;
+            box-shadow:inset 0 0 90px 18px rgba(0,0,0,.85), inset 0 0 28px 4px rgba(0,0,0,.7);}
+  /* Световой ореол за боссом — окрашивается под стихию */
+  .halo{position:absolute;right:6%;bottom:28%;width:55%;height:55%;border-radius:50%;
+        background:radial-gradient(circle, var(--boss-color) 0%, transparent 70%);
+        filter:blur(38px);opacity:.5;pointer-events:none;z-index:1;}
+  .round{position:absolute;top:8px;left:50%;transform:translateX(-50%);text-align:center;z-index:6;}
+  .round .lbl{font-size:9px;color:#bdbdd6;letter-spacing:2px;}
+  .round .num{font-size:18px;font-weight:800;text-shadow:0 2px 4px rgba(0,0,0,.7);}
+  /* VS — дерзкое, цветом босса */
+  .vs{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:5;
+      font-size:54px;font-weight:900;letter-spacing:3px;color:#fff;
+      text-shadow:0 0 22px var(--boss-color),0 0 8px var(--boss-color),0 3px 6px rgba(0,0,0,.9);}
+  /* Посадка на грунт: bottom:0 — низ спрайта касается края карточки */
+  .player,.boss{position:absolute;bottom:0;z-index:2;}
+  .player{left:2%; width:36%; height:58%;}    /* игрок чуть меньше */
+  .boss  {right:-2%;width:60%; height:80%;}   /* босс +30% к игроку */
+  .player img,.boss img{width:100%;height:100%;object-fit:contain;object-position:bottom;
+    -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 15%);
+            mask-image:linear-gradient(to top,transparent 0%,#000 15%);
     -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
     -webkit-mask-size:100% 100%;mask-size:100% 100%;
-    transform-origin:50% 100%;
-  }
-  /* «Приземление» — мягкая радиальная тень под ногами босса */
-  .feet{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);width:78%;height:38px;border-radius:50%;
-        background:radial-gradient(ellipse at center,rgba(0,0,0,.85) 0%,rgba(0,0,0,.55) 35%,rgba(0,0,0,0) 70%);
-        filter:blur(2px);pointer-events:none;}
-  /* стихии: drop-shadow + цвет ауры за боссом */
-  .fire   .boss img{filter:drop-shadow(0 -8px 24px rgba(255,90,30,.65)) drop-shadow(0 0 14px rgba(255,140,30,.45));animation:breath 3.2s ease-in-out infinite;}
-  .abyss  .boss img{filter:drop-shadow(0 -8px 24px rgba(170,80,255,.7))  drop-shadow(0 0 14px rgba(140,60,255,.5));animation:breath 3.6s ease-in-out infinite;}
-  .ice    .boss img{filter:drop-shadow(0 -8px 24px rgba(80,180,255,.7))  drop-shadow(0 0 14px rgba(120,200,255,.5));animation:float 4s ease-in-out infinite;}
-  .poison .boss img{filter:drop-shadow(0 -8px 24px rgba(80,255,120,.65)) drop-shadow(0 0 14px rgba(120,255,140,.45));animation:breath 3.4s ease-in-out infinite;}
-  .light  .boss img{filter:drop-shadow(0 -8px 24px rgba(255,210,90,.7))  drop-shadow(0 0 14px rgba(255,230,140,.55));animation:float 3.8s ease-in-out infinite;}
-  /* световой ореол на фоне за боссом — даёт «объём» */
-  .halo{position:absolute;right:8%;bottom:35%;width:55%;height:55%;border-radius:50%;filter:blur(40px);opacity:.55;pointer-events:none;}
-  .fire   .halo{background:radial-gradient(circle,rgba(255,90,30,.7) 0%,rgba(255,90,30,0) 70%);}
-  .abyss  .halo{background:radial-gradient(circle,rgba(170,80,255,.7) 0%,rgba(170,80,255,0) 70%);}
-  .ice    .halo{background:radial-gradient(circle,rgba(80,180,255,.7) 0%,rgba(80,180,255,0) 70%);}
-  .poison .halo{background:radial-gradient(circle,rgba(80,255,120,.65) 0%,rgba(80,255,120,0) 70%);}
-  .light  .halo{background:radial-gradient(circle,rgba(255,210,90,.75) 0%,rgba(255,210,90,0) 70%);}
-  .tag{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);padding:5px 10px;border-radius:8px;font-size:11px;color:#e8e8ff;border:1px solid rgba(255,255,255,.08);z-index:7;}
-  .elem{position:absolute;right:10px;bottom:10px;font-size:11px;padding:5px 10px;border-radius:8px;backdrop-filter:blur(6px);z-index:7;border:1px solid rgba(255,255,255,.12);}
-  .fire   .elem{background:rgba(255,90,30,.18);color:#ffb98a;}
-  .abyss  .elem{background:rgba(170,80,255,.18);color:#d6b3ff;}
-  .ice    .elem{background:rgba(80,180,255,.18);color:#aee0ff;}
-  .poison .elem{background:rgba(80,255,120,.18);color:#bff7c8;}
-  .light  .elem{background:rgba(255,210,90,.18);color:#ffe9a8;}
-  @keyframes breath{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
-  @keyframes float {0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+    transform-origin:50% 100%;}
+  /* Глубокая тень под ногами — «приземление» */
+  .player img{filter:drop-shadow(0 15px 10px rgba(0,0,0,.8)) drop-shadow(0 0 6px rgba(120,180,255,.2));}
+  .boss   img{filter:drop-shadow(0 15px 10px rgba(0,0,0,.8)) drop-shadow(0 0 20px var(--boss-color));}
+  /* Динамика: breath — на земле, float — летающие */
+  .breath > img{animation:breath 3.4s ease-in-out infinite;}
+  .floatA > img{animation:floatA 4s ease-in-out infinite;}
+  .tag{position:absolute;left:8px;bottom:8px;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);
+       padding:4px 9px;border-radius:7px;font-size:10px;color:#e8e8ff;border:1px solid rgba(255,255,255,.1);z-index:7;}
+  .elem{position:absolute;right:8px;bottom:8px;color:#fff;padding:4px 9px;border-radius:7px;
+        font-size:10px;backdrop-filter:blur(6px);z-index:7;
+        background:color-mix(in srgb, var(--boss-color) 22%, transparent);
+        border:1px solid color-mix(in srgb, var(--boss-color) 45%, transparent);}
+  @keyframes breath{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
+  @keyframes floatA{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 </style>
 </head>
 <body>
-<h1>Боты — превью эффектов сцены боя</h1>
-<div class="sub">5 вариантов: #15 Огонь · #3 Бездна · #20 Лёд · #30 Яд · #10 Свет</div>
+<h1>Боты — финальный шаблон сцены боя (32 варианта)</h1>
+<div class="sub">посадка на грунт · босс +30% · маска ступней 15% · свечение по стихии · виньетка · VS-цвет стихии</div>
 <div class="grid" id="grid"></div>
 <script>
-  const variants = [
-    { id:15, theme:'fire',   name:'Огненный варвар',  bg:'15.png' },
-    { id:3,  theme:'abyss',  name:'Бездна',           bg:'3.png'  },
-    { id:20, theme:'ice',    name:'Ледяной воин',     bg:'20.png' },
-    { id:30, theme:'poison', name:'Ядовитый страж',   bg:'30.jpg' },
-    { id:10, theme:'light',  name:'Светоносный',      bg:'10.png' },
-  ];
-  const elemLabel = { fire:'🔥 Огонь', abyss:'🌌 Бездна', ice:'❄️ Лёд', poison:'☠️ Яд', light:'⚡ Свет' };
+  // спец-привязки от дизайнера + равномерный пул для остальных
+  const SPECIAL = {3:'abyss', 10:'light', 15:'fire', 20:'ice', 30:'poison'};
+  const POOL    = ['shadow','ice','abyss','light','poison','fire'];
+  const COLOR   = {fire:'#ff6a30', abyss:'#b070ff', ice:'#5fb8ff', poison:'#5fff8a', light:'#ffd35a', shadow:'#7a98ff'};
+  const NAME    = {fire:'🔥 Огонь', abyss:'🌌 Бездна', ice:'❄️ Лёд', poison:'☠️ Яд', light:'⚡ Свет', shadow:'🌑 Тень'};
+  const FLOATS  = new Set(['ice','light','abyss']); // парящие — float, остальные — breath
+  const NAMES   = {fire:'Огненный страж', abyss:'Жнец Бездны', ice:'Ледяной воин', poison:'Ядовитый страж',
+                   light:'Светоносный', shadow:'Теневой убийца'};
+  const bgExt = id => id <= 25 ? 'png' : 'jpg';
+  const bots = [];
+  for (let id = 1; id <= 33; id++) {
+    if (id === 19) continue; // пропуск в наборе ассетов
+    const theme = SPECIAL[id] || POOL[(id - 1) % POOL.length];
+    bots.push({ id, theme });
+  }
   const grid = document.getElementById('grid');
-  grid.innerHTML = variants.map((v,i) => `
-    <div class="card ${v.theme}">
-      <div class="bg" style="background-image:url('bot_skins/bg/${v.bg}')"></div>
-      <div class="round"><div class="lbl">РАУНД</div><div class="num">${i+1}</div></div>
+  grid.innerHTML = bots.map(({ id, theme }, i) => {
+    const anim = FLOATS.has(theme) ? 'floatA' : 'breath';
+    return `
+    <div class="card" style="--boss-color:${COLOR[theme]}">
+      <div class="bg" style="background-image:url('bot_skins/bg/${id}.${bgExt(id)}')"></div>
       <div class="halo"></div>
-      <div class="stage">
-        <div class="vs">VS</div>
-        <div class="player"><img src="warriors/warrior_crit.png" alt="player"></div>
-        <div class="boss">
-          <img src="bot_skins/${v.id}.png" alt="bot ${v.id}">
-          <div class="feet"></div>
-        </div>
-      </div>
-      <div class="tag">Бот #${v.id} · ${v.name}</div>
-      <div class="elem">${elemLabel[v.theme]}</div>
-    </div>`).join('');
+      <div class="round"><div class="lbl">РАУНД</div><div class="num">${i + 1}</div></div>
+      <div class="player"><img src="warriors/warrior_crit.png" alt="player"></div>
+      <div class="vs">VS</div>
+      <div class="boss ${anim}"><img src="bot_skins/${id}.png" alt="bot ${id}"></div>
+      <div class="vignette"></div>
+      <div class="tag">Бот #${id} · ${NAMES[theme]}</div>
+      <div class="elem">${NAME[theme]}</div>
+    </div>`;
+  }).join('');
 </script>
 </body>
 </html>
