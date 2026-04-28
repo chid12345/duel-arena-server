@@ -81,6 +81,23 @@
     const count = g.count || players.length || 0;
     const sec = g.seconds_left || 0;
 
+    // ВРЕМЕННАЯ ОТЛАДКА: видно прямо в UI, что отдаёт Telegram WebApp
+    // и что приходит с сервера. Удалить после фикса проблемы с ником.
+    const _tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || null;
+    const _dbg = {
+      tg_user_exists: !!_tgu,
+      tg_id: _tgu?.id ?? '—',
+      tg_username: _tgu?.username ?? '—',
+      tg_first_name: _tgu?.first_name ?? '—',
+      tg_last_name: _tgu?.last_name ?? '—',
+      myTgId_computed: _myTgId(),
+      myTgName_computed: _myTgName() || '(пусто)',
+      players_uids: players.map(p => p.user_id).join(','),
+      players_names: players.map(p => p.name).join('|'),
+    };
+    const _dbgHtml = Object.entries(_dbg)
+      .map(([k,v]) => `<div>${k}: ${_esc(String(v))}</div>`).join('');
+
     const rows = players.map(p =>
       `<div class="wb-gth-row" data-uid="${p.user_id}" data-act="gth-card">
         <span class="av">${_avatarFor(p.user_id)}</span>
@@ -111,6 +128,16 @@
   </div>
 
   <div class="wb-gth-leave" data-act="gth-leave">↩ Выйти из комнаты</div>
+
+  <div style="margin-top:10px;padding:8px;background:rgba(0,0,0,0.6);
+    border:1px solid #ff66aa;border-radius:6px;font-size:10px;
+    color:#ffccff;line-height:1.4;font-family:monospace;
+    word-break:break-all;">
+    <div style="color:#ff66aa;font-weight:700;margin-bottom:4px;">
+      🔧 DEBUG (временно)
+    </div>
+    ${_dbgHtml}
+  </div>
 </div>`;
 
     // Биндинг: тап по нику открывает карточку (как в боевом экране).
