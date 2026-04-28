@@ -170,7 +170,7 @@ class WorldBossRegistrationMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT r.user_id, COALESCE(NULLIF(p.username,''),'Игрок') AS username, "
+            "SELECT r.user_id, NULLIF(p.username,'') AS username, "
             "COALESCE(p.level,1) AS level, COALESCE(p.strength,10) AS strength, "
             "COALESCE(p.max_hp,100) AS max_hp "
             "FROM world_boss_registrations r "

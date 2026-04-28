@@ -99,7 +99,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                     players = [
                         {
                             "user_id": int(r["user_id"]),
-                            "name": r.get("username") or "Игрок",
+                            "name": r.get("username") or f"Воин #{int(r['user_id']) % 10000:04d}",
                             "level": int(r.get("level") or 1),
                             "strength": int(r.get("strength") or 10),
                             "max_hp": int(r.get("max_hp") or 100),
@@ -148,16 +148,16 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                                 pass
                             players.append({
                                 "user_id": int(uid_),
-                                "name": (pp or {}).get("username") or "Игрок",
+                                "name": (pp or {}).get("username") or f"Воин #{int(uid_) % 10000:04d}",
                                 "level": int((pp or {}).get("level") or 1),
                                 "strength": int((pp or {}).get("strength") or 10),
                                 "max_hp": int((pp or {}).get("max_hp") or 100),
                             })
                     else:
                         players = [
-                            {"user_id": 0, "name": "Игрок", "level": 1,
+                            {"user_id": 0, "name": f"Воин #{i+1:04d}", "level": 1,
                              "strength": 10, "max_hp": 100}
-                            for _ in range(registrants_count)
+                            for i in range(registrants_count)
                         ]
                 gather = {
                     "is_open": True,

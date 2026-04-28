@@ -24,6 +24,22 @@ class EnterActiveBody(BaseModel):
     init_data: str
 
 
+def _refresh_username(cur, uid: int, tg_user: dict) -> None:
+    """Подтягиваем актуальный ник из Telegram, если в БД пусто.
+    Не затирает уже сохранённое имя — апдейт только при NULL/'' в players.username."""
+    uname = (tg_user.get("username") or tg_user.get("first_name") or "").strip()
+    if not uname:
+        return
+    try:
+        cur.execute(
+            "UPDATE players SET username=? "
+            "WHERE user_id=? AND (username IS NULL OR username='')",
+            (uname[:64], uid),
+        )
+    except Exception:
+        pass
+
+
 async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_init_data) -> dict:
     """Регистрация на СЛЕДУЮЩИЙ рейд с оплатой входного взноса.
     Списывает WB_ENTRY_FEE золота немедленно — отмены нет.
@@ -47,6 +63,9 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
     conn = db.get_connection()
     cur = conn.cursor()
 
+    # Подтягиваем ник из Telegram (если в БД пусто), чтобы в ростере было имя
+    _refresh_username(cur, uid, tg_user)
+
     # Уже зарегистрирован — ничего не делаем, просто возвращаем статус
     cur.execute(
         "SELECT 1 FROM world_boss_registrations WHERE spawn_id=? AND user_id=?",
@@ -61,6 +80,7 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
         cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
         row = cur.fetchone()
         gold_left = int(row["gold"]) if row else 0
+        conn.commit()
         conn.close()
         return {"ok": True, "is_registered": True, "registrants_count": count,
                 "spawn_id": spawn_id, "gold_left": gold_left}
@@ -132,6 +152,9 @@ async def world_boss_enter_active_inner(body: EnterActiveBody, *, db, get_user_f
     conn = db.get_connection()
     cur = conn.cursor()
 
+    # Подтягиваем ник из Telegram (если в БД пусто), чтобы в ростере было имя
+    _refresh_username(cur, uid, tg_user)
+
     # Уже зарегистрирован (платил раньше) — пропускаем бесплатно
     cur.execute(
         "SELECT 1 FROM world_boss_registrations WHERE spawn_id=? AND user_id=?",
@@ -140,6 +163,7 @@ async def world_boss_enter_active_inner(body: EnterActiveBody, *, db, get_user_f
     if cur.fetchone():
         cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
         row = cur.fetchone()
+        conn.commit()
         conn.close()
         return {"ok": True, "already_paid": True, "gold_left": int(row["gold"]) if row else 0}
 

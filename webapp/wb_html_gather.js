@@ -15,6 +15,13 @@
   function _avatarFor(uid) {
     return _AVATARS[Math.abs((uid|0)) % _AVATARS.length];
   }
+  // Имя по умолчанию если сервер не отдал ник: "Воин #1234" (последние 4 цифры uid)
+  function _nameFor(p) {
+    const n = (p && p.name) || '';
+    if (n && n !== 'Игрок') return n;
+    const uid = Math.abs((p && p.user_id)|0);
+    return `Воин #${String(uid % 10000).padStart(4,'0')}`;
+  }
 
   // Локальный таймер для отсчёта в 1-сек шагом, не ждём refresh раз в 8 сек
   let _gatherTickInterval = null;
@@ -55,7 +62,7 @@
     const rows = players.map(p =>
       `<div class="wb-gth-row" data-uid="${p.user_id}" data-act="gth-card">
         <span class="av">${_avatarFor(p.user_id)}</span>
-        <span class="nm">${_esc(p.name||'Игрок')}</span>
+        <span class="nm">${_esc(_nameFor(p))}</span>
         <span class="lv">${p.level||'?'}</span>
       </div>`
     ).join('');
@@ -115,7 +122,7 @@
     ov.innerHTML = `<div class="wb-gth-pcard">
       <div class="wb-gth-pcard-x">×</div>
       <div class="wb-gth-pcard-av">${_avatarFor(p.user_id)}</div>
-      <div class="wb-gth-pcard-name">@${_esc(p.name||'Игрок')}</div>
+      <div class="wb-gth-pcard-name">${_esc(_nameFor(p))}</div>
       <div class="wb-gth-pcard-lv">Уровень ${lvl}</div>
       <div class="wb-pc-stats" style="padding:14px 0 4px;">
         <div class="wb-pc-st">
