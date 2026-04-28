@@ -98,6 +98,27 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         if int(ps.get("is_dead") or 0):
             return {"ok": False, "reason": "Вы мертвы — нужен свиток воскрешения"}
 
+        # Авто-применение рейд-свитков при ПЕРВОМ входе (existing_ps не было).
+        # Купил до боя → зашёл → сами применились → работают весь рейд → сброс после.
+        if not existing_ps:
+            _RAID_ORDER = ["damage_25", "power_10", "defense_20", "dodge_10", "crit_10"]
+            try:
+                inv_rows = db.get_inventory(uid)
+                inv = {r["item_id"]: int(r["quantity"]) for r in inv_rows
+                       if r["item_id"] in _RAID_ORDER}
+                for scroll_id in _RAID_ORDER:
+                    if inv.get(scroll_id, 0) > 0:
+                        db.wb_apply_raid_scroll(user_id=uid, scroll_name=scroll_id, slot=None)
+                        # Обновляем ps чтобы урон считался уже с учётом свитка
+                        fresh = db.get_wb_player_state(spawn_id, uid)
+                        if fresh:
+                            ps = fresh
+                        # Если оба слота заняты — стоп
+                        if ps.get("raid_scroll_1") and ps.get("raid_scroll_2"):
+                            break
+            except Exception as _ae:
+                log.warning("wb auto-apply scrolls uid=%s: %s", uid, _ae)
+
         # Атомарный кулдаун 300 мс (ms-точность, анти-чит)
         now_ms = int(now_utc.timestamp() * 1000)
         if not db.wb_try_record_hit(spawn_id, uid, now_ms, PLAYER_HIT_COOLDOWN_MS):
