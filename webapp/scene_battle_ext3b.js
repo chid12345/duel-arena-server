@@ -27,7 +27,12 @@ Object.assign(BattleScene.prototype, {
 
   _buildArena() {
     const { W, H } = this;
-    const bg = this.add.image(W/2, H * 0.36, 'arena_bg').setDisplaySize(W, H * 0.5);
+    const isBot  = !!State.battle?.opp_is_bot;
+    const skinId = (isBot && typeof BotSkinPicker !== 'undefined' &&
+                    this.textures.exists(BotSkinPicker.skinKey(1))) ? BotSkinPicker.pick() : null;
+
+    const bgKey = skinId ? BotSkinPicker.bgKey(skinId) : 'arena_bg';
+    const bg = this.add.image(W/2, H * 0.36, bgKey).setDisplaySize(W, H * 0.5);
 
     [W * 0.12, W * 0.88].forEach(fx => {
       for (let i = 0; i < 3; i++) {
@@ -45,9 +50,13 @@ Object.assign(BattleScene.prototype, {
 
     const _p1Key  = getWarriorKey(State.player?.warrior_type);
     const _p2Type = State.battle?.opp_warrior_type || 'tank';
-    const _p2Key  = getWarriorKey(_p2Type);
+    const _p2Key  = skinId ? BotSkinPicker.skinKey(skinId) : getWarriorKey(_p2Type);
     this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(0.15).setFlipX(false);
-    this.warrior2 = this.add.image(W * 0.72, H * 0.35, _p2Key).setScale(0.15).setFlipX(true);
+    // Для бота: flipX по FLIP_IDS, scale/nudge из OVERRIDE. Для PvP — как было.
+    const w2Scale = 0.15 * (skinId ? BotSkinPicker.scaleFor(skinId) : 1);
+    const w2FlipX = skinId ? BotSkinPicker.shouldFlip(skinId) : true;
+    const w2Y     = H * 0.35 + (skinId ? BotSkinPicker.nudgeFor(skinId) * 0.25 : 0);
+    this.warrior2 = this.add.image(W * 0.72, w2Y, _p2Key).setScale(w2Scale).setFlipX(w2FlipX);
 
     // Premium/Elite/Sub — золотая вспышка при входе в бой
     const _avTier = (State.player?.avatar_tier || '').toLowerCase();
