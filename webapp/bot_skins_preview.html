@@ -46,7 +46,8 @@
   .player{left:3%;  width:38%; height:48%;}
   .boss  {right:3%; width:46%; height:56%;
           bottom:calc(30% - var(--boss-nudge, 0px));
-          transform:scale(var(--boss-scale, 1));transform-origin:50% 100%;}
+          transform:scale(calc(var(--boss-scale, 1) * var(--auto-scale, 1)));
+          transform-origin:50% 100%;}
   .player img,.boss img{width:100%;height:100%;object-fit:contain;object-position:bottom;
     -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 12%);
             mask-image:linear-gradient(to top,transparent 0%,#000 12%);
@@ -143,6 +144,20 @@
       <div class="vignette"></div>
     </div>`;
   }).join('');
+
+  // Авто-нормализация роста: компенсирует разные пропорции PNG, чтобы все боссы были одной высоты
+  document.querySelectorAll('.boss img').forEach(img => {
+    const fit = () => {
+      const c = img.closest('.boss');
+      const cw = c.clientWidth, ch = c.clientHeight;
+      if (!cw || !ch || !img.naturalWidth) return;
+      const ir = img.naturalWidth / img.naturalHeight, cr = cw / ch;
+      const realH = ir > cr ? cw / ir : ch;
+      const need = Math.min(1.45, ch * 0.97 / realH);
+      if (need > 1.04) c.style.setProperty('--auto-scale', need.toFixed(3));
+    };
+    img.complete ? fit() : img.addEventListener('load', fit);
+  });
 </script>
 </body>
 </html>
