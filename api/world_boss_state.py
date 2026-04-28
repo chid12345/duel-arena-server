@@ -20,6 +20,7 @@ from config.world_boss_constants import (
     is_vulnerability_window,
 )
 from config.world_boss import get_boss_type as _get_boss_type
+from api.world_boss_state_gather import build_gather_payload
 
 _log = logging.getLogger(__name__)
 
@@ -90,81 +91,12 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
             next_spawn_id = int(next_sched["spawn_id"])
             is_registered = db.wb_is_registered(next_spawn_id, uid)
             registrants_count = db.wb_registration_count(next_spawn_id)
-            # Комната ожидания: за 5 мин до старта в state шлём список
-            # зарегистрированных с ник/уровень — фронт покажет ростер.
+            # Комната ожидания: за 5 мин до старта собираем ростер для фронта.
+            # Логика сборки (с фолбэками) — в api/world_boss_state_gather.py.
             if 0 < until_start <= WB_GATHER_OPEN_SEC:
-                players = []
-                try:
-                    _raw = db.wb_list_registered_with_info(next_spawn_id, limit=100)
-                    players = [
-                        {
-                            "user_id": int(r["user_id"]),
-                            "name": r.get("username") or f"Воин #{int(r['user_id']) % 10000:04d}",
-                            "level": int(r.get("level") or 1),
-                            "strength": int(r.get("strength") or 10),
-                            "max_hp": int(r.get("max_hp") or 100),
-                        }
-                        for r in _raw
-                    ]
-                except Exception as _ge:
-                    import logging as _log
-                    _log.getLogger(__name__).warning(
-                        "gather players error spawn=%s: %s", next_spawn_id, _ge
-                    )
-                # Если список пустой но зарегистрированные есть — показываем
-                # анонимные плашки чтобы не было «пусто» при ошибке JOIN.
-                # Пробуем получить хотя бы user_id (без JOIN с players),
-                # тогда хоть карточки уникальны и можно фолбэкнуть на players по uid.
-                if not players and registrants_count > 0:
-                    try:
-                        conn = db.get_connection()
-                        cur = conn.cursor()
-                        cur.execute(
-                            "SELECT user_id FROM world_boss_registrations WHERE spawn_id=? "
-                            "ORDER BY created_at ASC LIMIT 100",
-                            (int(next_spawn_id),),
-                        )
-                        uids = [int(r["user_id"]) for r in cur.fetchall()]
-                        conn.close()
-                    except Exception:
-                        uids = []
-                    if uids:
-                        players = []
-                        for uid_ in uids:
-                            pp = None
-                            try:
-                                conn2 = db.get_connection()
-                                cur2 = conn2.cursor()
-                                cur2.execute(
-                                    "SELECT username, level, strength, max_hp "
-                                    "FROM players WHERE user_id=?",
-                                    (int(uid_),),
-                                )
-                                row2 = cur2.fetchone()
-                                conn2.close()
-                                if row2:
-                                    pp = dict(row2)
-                            except Exception:
-                                pass
-                            players.append({
-                                "user_id": int(uid_),
-                                "name": (pp or {}).get("username") or f"Воин #{int(uid_) % 10000:04d}",
-                                "level": int((pp or {}).get("level") or 1),
-                                "strength": int((pp or {}).get("strength") or 10),
-                                "max_hp": int((pp or {}).get("max_hp") or 100),
-                            })
-                    else:
-                        players = [
-                            {"user_id": 0, "name": f"Воин #{i+1:04d}", "level": 1,
-                             "strength": 10, "max_hp": 100}
-                            for i in range(registrants_count)
-                        ]
-                gather = {
-                    "is_open": True,
-                    "seconds_left": int(until_start),
-                    "players": players,
-                    "count": registrants_count,  # всегда из основного счётчика
-                }
+                gather = build_gather_payload(
+                    db, next_spawn_id, registrants_count, int(until_start)
+                )
         except Exception:
             pass
     elif active:
