@@ -103,17 +103,17 @@ Object.assign(BattleScene.prototype, {
 
     makePanel(this, 8, panY - 4, W - 16, H - panY - 8, 14);
 
-    txt(this, W/2, panY + 10, 'ВЫБЕРИ АТАКУ', 12, '#ccccee', true).setOrigin(0.5);
-    txt(this, W/2, panY + H * 0.18 + 6, 'ВЫБЕРИ ЗАЩИТУ', 12, '#ccccee', true).setOrigin(0.5);
+    txt(this, W/2, panY + 10, 'ВЫБЕРИ АТАКУ', 11, '#aaccff', true).setOrigin(0.5);
+    txt(this, W/2, panY + 70, 'ВЫБЕРИ ЗАЩИТУ', 11, '#aaccff', true).setOrigin(0.5);
 
     const zones = [
       { key: 'HEAD',  label: '👤 Голова', x: W * 0.18 },
-      { key: 'TORSO', label: '🧥 Тело',   x: W * 0.50 },
+      { key: 'TORSO', label: '🛡 Тело',   x: W * 0.50 },
       { key: 'LEGS',  label: '🦵 Ноги',   x: W * 0.82 },
     ];
 
-    this._attackBtns  = zones.map(z => this._zoneButton(z.x, panY + 36, z.key, z.label, 'attack'));
-    this._defenseBtns = zones.map(z => this._zoneButton(z.x, panY + H * 0.18 + 32, z.key, z.label, 'defense'));
+    this._attackBtns  = zones.map(z => this._zoneButton(z.x, panY + 33, z.key, z.label, 'attack'));
+    this._defenseBtns = zones.map(z => this._zoneButton(z.x, panY + 93, z.key, z.label, 'defense'));
 
     const autoBtnY = H - 34;
     const autoBg = this.add.graphics();
@@ -146,17 +146,19 @@ Object.assign(BattleScene.prototype, {
     g.clear();
     const X = x - BW/2, Y = y - BH/2;
     if (selected) {
-      g.fillGradientStyle(selectedColor, selectedColor, selectedColor, selectedColor, 0.30, 0.30, 0.18, 0.18);
-      g.fillRoundedRect(X, Y, BW, BH, 10);
+      g.fillGradientStyle(selectedColor, selectedColor, selectedColor, selectedColor, 0.34, 0.34, 0.16, 0.16);
+      g.fillRoundedRect(X, Y, BW, BH, 8);
       g.lineStyle(2, selectedColor, 1);
-      g.strokeRoundedRect(X, Y, BW, BH, 10);
+      g.strokeRoundedRect(X, Y, BW, BH, 8);
+      g.lineStyle(1, selectedColor, 0.30);
+      g.strokeRoundedRect(X - 2, Y - 2, BW + 4, BH + 4, 9);
     } else {
-      g.fillGradientStyle(0x3a3a4e, 0x3a3a4e, 0x20202e, 0x20202e, 0.95);
-      g.fillRoundedRect(X, Y, BW, BH, 10);
-      g.lineStyle(1, 0xffffff, 0.18);
-      g.strokeRoundedRect(X, Y + 1, BW, BH, 10);
-      g.lineStyle(1, 0x000000, 0.45);
-      g.strokeRoundedRect(X, Y, BW, BH, 10);
+      g.fillGradientStyle(0x10142a, 0x10142a, 0x05081a, 0x05081a, 0.95);
+      g.fillRoundedRect(X, Y, BW, BH, 8);
+      g.lineStyle(1.5, 0x00d8ff, 0.55);
+      g.strokeRoundedRect(X, Y, BW, BH, 8);
+      g.lineStyle(1, 0xffffff, 0.12);
+      g.lineBetween(X + 5, Y + 1, X + BW - 5, Y + 1);
     }
   },
 
