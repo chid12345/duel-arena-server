@@ -199,7 +199,7 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     const sec = root.querySelector('.wb-inv-sec'); if (sec) sec.style.display = html ? '' : 'none';
   }
 
-  function _showJoinConfirm(root, btn, scene) {
+  function _showJoinConfirm(root, btn, scene, customAction) {
     const overlay = document.createElement('div');
     overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px';
     overlay.innerHTML = `
@@ -217,17 +217,19 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     overlay.querySelector('#_wbCfNo').onclick = () => overlay.remove();
     overlay.querySelector('#_wbCfYes').onclick = () => {
       overlay.remove();
-      if (btn.classList.contains('busy') || btn.classList.contains('locked')) return;
-      btn.classList.add('busy');
+      if (btn && (btn.classList.contains('busy') || btn.classList.contains('locked'))) return;
+      if (btn) btn.classList.add('busy');
       try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
-      (async () => {
-        try {
-          if (!scene) return;
-          await scene._registerForRaid?.();
-        } finally {
-          if (btn.isConnected) btn.classList.remove('busy');
-        }
-      })();
+      if (customAction) {
+        (async () => {
+          try { await customAction(); } finally { if (btn?.isConnected) btn.classList.remove('busy'); }
+        })();
+      } else {
+        (async () => {
+          try { if (scene) await scene._registerForRaid?.(); }
+          finally { if (btn?.isConnected) btn.classList.remove('busy'); }
+        })();
+      }
     };
   }
 
@@ -249,16 +251,34 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
       const act = el.dataset.act;
       if (act==='back')       { close(); _scene?.scene?.start?.('Menu',{returnTab:'more'}); }
       else if (act==='enter') {
-        // Явный «вход в рейд» — запоминаем spawn_id чтобы при ререндере
-        // переключиться в боевой экран. Без этого лобби «затягивает» всех
-        // кто просто открыл вкладку Босс во время активного рейда.
-        try {
-          localStorage.removeItem('wb_left_raid');
-          if (_state?.active?.spawn_id) {
-            localStorage.setItem('wb_entered_raid', String(_state.active.spawn_id));
-          }
-        } catch(_) {}
-        close(); _scene?.scene?.restart?.();
+        const doEnter = () => {
+          try {
+            localStorage.removeItem('wb_left_raid');
+            if (_state?.active?.spawn_id) {
+              localStorage.setItem('wb_entered_raid', String(_state.active.spawn_id));
+            }
+          } catch(_) {}
+          close(); _scene?.scene?.restart?.();
+        };
+        if (_state?.is_registered) {
+          // Уже заплатил — входим бесплатно
+          doEnter();
+        } else {
+          // Первый вход в активный бой — нужно списать взнос
+          _showJoinConfirm(root, el, _scene, async () => {
+            try {
+              const r = await post('/api/world_boss/enter_active', { init_data: window.Telegram?.WebApp?.initData || '' });
+              if (r.ok) {
+                if (_state && typeof r.gold_left === 'number') _state.gold = r.gold_left;
+                doEnter();
+              } else {
+                _scene?._toast?.('❌ ' + (r.reason || 'Ошибка'));
+              }
+            } catch(_) {
+              _scene?._toast?.('❌ Нет соединения');
+            }
+          });
+        }
       }
       else if (act==='join')  {
         if (el.classList.contains('busy') || el.classList.contains('locked')) return;
@@ -284,19 +304,21 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
         window.WBHtml.showMvpResult?.(_state, _scene, { force: true });
       }
       else if (act==='enter-gather') {
-        // Войти в комнату ожидания. Регистрируемся (если ещё нет) +
-        // ставим sessionStorage флаг, чтобы render показал gather-экран.
         const sid = _state?.next_scheduled?.spawn_id;
         if (!sid) return;
-        try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
-        try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
-        (async () => {
-          if (!_state?.is_registered && _scene?._registerForRaid) {
-            try { await _scene._registerForRaid(); } catch(_) {}
-          }
-          // Перезапуск сцены — render подхватит флаг и нарисует gather.
+        if (_state?.is_registered) {
+          // Уже заплатил — входим бесплатно
+          try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
+          try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
           _scene?.scene?.restart?.();
-        })();
+        } else {
+          // Ещё не платил — показываем диалог
+          _showJoinConfirm(root, el, _scene, async () => {
+            try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
+            try { await _scene._registerForRaid?.(); } catch(_) {}
+            _scene?.scene?.restart?.();
+          });
+        }
       }
       else if (act==='boost-info') {
         if (el.classList.contains('bought')) return;

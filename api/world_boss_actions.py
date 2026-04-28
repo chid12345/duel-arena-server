@@ -52,6 +52,10 @@ class RegisterBody(BaseModel):
     init_data: str
 
 
+class EnterActiveBody(BaseModel):
+    init_data: str
+
+
 async def world_boss_use_scroll_inner(body: UseScrollBody, *, db, get_user_from_init_data) -> dict:
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
@@ -280,3 +284,69 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
 
     return {"ok": True, "is_registered": True, "registrants_count": count,
             "spawn_id": spawn_id, "gold_left": gold_left}
+
+
+async def world_boss_enter_active_inner(body: EnterActiveBody, *, db, get_user_from_init_data) -> dict:
+    """Оплата входа в АКТИВНЫЙ рейд (в первые 2 мин). Если уже зарегистрирован — бесплатно."""
+    from datetime import datetime, timezone
+    from config.world_boss_constants import WB_LATE_JOIN_WINDOW_SEC
+
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+
+    active = db.get_wb_active()
+    if not active:
+        return {"ok": False, "reason": "Нет активного рейда"}
+
+    spawn_id = int(active["spawn_id"])
+
+    # Проверка окна входа
+    try:
+        from api.world_boss_hit import _parse_ts
+        started_at = _parse_ts(active["started_at"])
+        elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
+    except Exception:
+        elapsed = 0
+    if elapsed > WB_LATE_JOIN_WINDOW_SEC:
+        return {"ok": False, "reason": "Вход закрыт — заходить можно только в первые 2 минуты"}
+
+    conn = db.get_connection()
+    cur = conn.cursor()
+
+    # Уже зарегистрирован (платил раньше) — пропускаем бесплатно
+    cur.execute(
+        "SELECT 1 FROM world_boss_registrations WHERE spawn_id=? AND user_id=?",
+        (spawn_id, uid),
+    )
+    if cur.fetchone():
+        cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+        row = cur.fetchone()
+        conn.close()
+        return {"ok": True, "already_paid": True, "gold_left": int(row["gold"]) if row else 0}
+
+    # Новый игрок — списываем взнос
+    cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+    player = cur.fetchone()
+    if not player:
+        conn.close()
+        return {"ok": False, "reason": "Игрок не найден"}
+
+    cur.execute(
+        "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
+        (WB_ENTRY_FEE, uid, WB_ENTRY_FEE),
+    )
+    if cur.rowcount == 0:
+        gold_have = int(player["gold"])
+        conn.close()
+        return {"ok": False, "reason": f"Нужно {WB_ENTRY_FEE} золота (у тебя {gold_have})"}
+
+    cur.execute(
+        "INSERT OR IGNORE INTO world_boss_registrations (spawn_id, user_id) VALUES (?,?)",
+        (spawn_id, uid),
+    )
+    cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+    gold_left = int(cur.fetchone()["gold"])
+    conn.commit()
+    conn.close()
+
+    return {"ok": True, "already_paid": False, "gold_left": gold_left}
