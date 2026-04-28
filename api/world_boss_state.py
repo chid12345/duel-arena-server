@@ -144,6 +144,17 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
         _log.warning("get_wb_unclaimed_rewards uid=%s: %s", uid, _e)
         unclaimed = []
     player_row = db.get_or_create_player(uid, real_username)
+    # ВРЕМЕННАЯ ОТЛАДКА: видно в DevTools → Network → state response.
+    # Удалить после фикса проблемы пустого ника в комнате ожидания.
+    _debug_nick = {
+        "code_version": "v2.5.99",
+        "tg_keys": sorted(list((tg_user or {}).keys())),
+        "tg_username": (tg_user or {}).get("username") or "",
+        "tg_first_name": (tg_user or {}).get("first_name") or "",
+        "tg_last_name": (tg_user or {}).get("last_name") or "",
+        "computed_real_username": real_username,
+        "db_username": (player_row or {}).get("username") or "",
+    }
     reminder_opt_in = bool(int(player_row.get("wb_reminder_opt_in") or 0))
     auto_bot_pending = bool(int(player_row.get("wb_auto_bot_pending") or 0))
     # Премиум-статус нужен фронту: кнопка АВТО в бою — премиум-фича.
@@ -176,6 +187,7 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
 
     return {
         "ok": True,
+        "_debug_nick": _debug_nick,
         "is_premium": is_premium,
         "prep_seconds_left": prep_seconds_left,
         "seconds_until_raid": seconds_until_raid,
