@@ -103,8 +103,13 @@ def build_gather_payload(db, spawn_id: int, registrants_count: int,
                        for uid_ in uids]
         else:
             dbg["used_anon_placeholders"] = True
+            # ВРЕМЕННО: пишем debug ПРЯМО В ИМЯ — любой клиент увидит, в чём дело
+            err = (str(dbg.get("main_query_error") or "")[:30]
+                   or str(dbg.get("fetch_uids_error") or "")[:30] or "no_err")
+            dbg_label = (f"sp={spawn_id}|main={dbg.get('main_query_rows','?')}|"
+                         f"uids={dbg.get('fetch_uids_rowcount','?')}|err={err}")
             players = [
-                {"user_id": 0, "name": _fallback_name(i + 1), "level": 1,
+                {"user_id": 0, "name": dbg_label, "level": 1,
                  "strength": 10, "max_hp": 100}
                 for i in range(registrants_count)
             ]
