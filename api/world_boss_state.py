@@ -54,7 +54,17 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
     """
     real_username = ""
     if tg_user:
-        real_username = (tg_user.get("username") or tg_user.get("first_name") or "").strip()
+        # Сначала @username, потом first_name + last_name. Если ничего — пусто.
+        full_name = " ".join(
+            x for x in (tg_user.get("first_name"), tg_user.get("last_name")) if x
+        ).strip()
+        real_username = (tg_user.get("username") or full_name or "").strip()
+        # Диагностика: видно в логах сервера, какие поля реально пришли.
+        if not real_username:
+            _log.warning(
+                "wb_state: empty tg_user fields uid=%s keys=%s",
+                uid, sorted((tg_user or {}).keys())
+            )
     active = db.get_wb_active_spawn()
     next_sched = db.get_wb_next_scheduled()
     last = db.get_wb_last_finished()
