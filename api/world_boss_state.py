@@ -113,11 +113,52 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                     )
                 # Если список пустой но зарегистрированные есть — показываем
                 # анонимные плашки чтобы не было «пусто» при ошибке JOIN.
+                # Пробуем получить хотя бы user_id (без JOIN с players),
+                # тогда хоть карточки уникальны и можно фолбэкнуть на players по uid.
                 if not players and registrants_count > 0:
-                    players = [
-                        {"user_id": 0, "name": "Игрок", "level": 1}
-                        for _ in range(registrants_count)
-                    ]
+                    try:
+                        conn = db.get_connection()
+                        cur = conn.cursor()
+                        cur.execute(
+                            "SELECT user_id FROM world_boss_registrations WHERE spawn_id=? "
+                            "ORDER BY created_at ASC LIMIT 100",
+                            (int(next_spawn_id),),
+                        )
+                        uids = [int(r["user_id"]) for r in cur.fetchall()]
+                        conn.close()
+                    except Exception:
+                        uids = []
+                    if uids:
+                        players = []
+                        for uid_ in uids:
+                            pp = None
+                            try:
+                                conn2 = db.get_connection()
+                                cur2 = conn2.cursor()
+                                cur2.execute(
+                                    "SELECT username, level, strength, max_hp "
+                                    "FROM players WHERE user_id=?",
+                                    (int(uid_),),
+                                )
+                                row2 = cur2.fetchone()
+                                conn2.close()
+                                if row2:
+                                    pp = dict(row2)
+                            except Exception:
+                                pass
+                            players.append({
+                                "user_id": int(uid_),
+                                "name": (pp or {}).get("username") or "Игрок",
+                                "level": int((pp or {}).get("level") or 1),
+                                "strength": int((pp or {}).get("strength") or 10),
+                                "max_hp": int((pp or {}).get("max_hp") or 100),
+                            })
+                    else:
+                        players = [
+                            {"user_id": 0, "name": "Игрок", "level": 1,
+                             "strength": 10, "max_hp": 100}
+                            for _ in range(registrants_count)
+                        ]
                 gather = {
                     "is_open": True,
                     "seconds_left": int(until_start),
