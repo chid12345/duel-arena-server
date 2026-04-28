@@ -392,7 +392,8 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     const tappedEnter = s.active && _enteredSid === String(s.active.spawn_id);
     if (hasJoinedActive || (tappedEnter && _leftSid !== String(s.active.spawn_id))) {
       if (_leftSid) try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
-      _setTabBar(false); root.style.cssText = '';
+      _setTabBar(false);
+      root.style.top='0'; root.style.left='0'; root.style.right='0'; root.style.bottom='0'; root.style.width=''; root.style.height='';
       if (typeof window.WBHtml._renderBattle !== 'function') {
         root.innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;padding:24px;text-align:center"><div style="font-size:32px">⚠️</div><div style="font-size:15px;color:#fff;font-weight:700">Не удалось загрузить экран боя</div><div style="font-size:12px;color:#aaa">Закрой и открой вкладку Босс заново</div><div data-act="back" style="margin-top:8px;padding:12px 24px;background:#ff0055;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;color:#fff">← Назад</div></div>';
         root.addEventListener('click', e => { if (e.target.closest('[data-act="back"]')) { close(); _scene?.scene?.start?.('Menu', { returnTab: 'more' }); } }, { once: true });
@@ -416,12 +417,16 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     // (sessionStorage флаг wb_in_gather=spawn_id), показываем gather-экран.
     const _gatherSid = (() => { try { return sessionStorage.getItem('wb_in_gather'); } catch(_) { return null; } })();
     if (s.gather?.is_open && _gatherSid && _gatherSid === String(s.next_scheduled?.spawn_id)) {
-      _setTabBar(false); root.style.cssText = '';
+      _setTabBar(false);
+      root.style.top='0'; root.style.left='0'; root.style.right='0'; root.style.bottom='0'; root.style.width=''; root.style.height='';
       // ОБЯЗАТЕЛЬНО инжектим стили боевого экрана — там же CSS .wb-gth-*
       window.WBBattleCSS?.inject();
       if (window.WBHtml.renderGather) {
         try { window.WBHtml.renderGather(root, s); return; } catch(_) {}
       }
+      // renderGather не сработал — восстанавливаем таб-бар и показываем лобби
+      _setTabBar(true);
+      _fitToCanvas(root);
     }
     // Если рейд уже стартовал и игрок был в комнате ожидания — автоматом в бой.
     if (s.active && _gatherSid && _gatherSid === String(s.active.spawn_id)) {
@@ -490,6 +495,11 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     clearInterval(window._wbTimer);
     try { _fitTeardown?.(); } catch(_) {}
     document.getElementById(ID)?.remove();
+    // Удаляем все WB-оверлеи прикреплённые к body (не к #wb-root).
+    // Без этого wb-mvp-ov (MVP-результат) остаётся на экране после смены сцены.
+    ['wb-mvp-ov','wb-blog-ov','wb-sinfo-ov','wb-bcard-ov','wb-rewards-ov','wb-gth-pcard'].forEach(id => {
+      try { document.getElementById(id)?.remove(); } catch(_) {}
+    });
     _setTabBar(true);
   }
 
