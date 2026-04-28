@@ -76,11 +76,13 @@ Object.assign(BattleScene.prototype, {
     secs       = Math.max(1, Math.min(15, secs - 1));
 
     this.timerTxt?.setText(secs).setColor('#ffffff');
+    if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.setTimer(secs);
     this._timerEvent = this.time.addEvent({
       delay: 1000, repeat: secs - 1,
       callback: () => {
         secs--;
         this.timerTxt?.setText(Math.max(0, secs));
+        if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.setTimer(Math.max(0, secs));
         if (secs <= 5 && secs > 0) {
           this.timerTxt?.setColor('#ff4455');
           Sound.countdown(secs);

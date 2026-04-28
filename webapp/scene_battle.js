@@ -149,6 +149,18 @@ class BattleScene extends Phaser.Scene {
     this._p2PrevPct  = null;
     this._oppCardOpen = false;
 
+    // PvE «Бой с ботом» (mode=normal + opp_is_bot) → HTML-overlay 1-в-1 как превью.
+    // PvP/Натиск/Титаны идут обычным Phaser-путём.
+    const b0 = State.battle;
+    const isPveBot = !!b0?.opp_is_bot && (b0?.mode || 'normal') === 'normal';
+    if (isPveBot && typeof BotBattleHtml !== 'undefined') {
+      this._htmlMode = true;
+      BotBattleHtml.mount(this);
+      this._setupWSBattle();
+      this._startTimer();
+      return;
+    }
+
     this._buildArena();
     this._buildHUDs();
     this._buildChoicePanel();
@@ -166,6 +178,7 @@ class BattleScene extends Phaser.Scene {
     // висят независимо — убираем вручную, иначе после выхода из боя
     // BattleLog остаётся на экране, а ws.onmessage дёргает мёртвую сцену.
     try { BattleLog.hide(); } catch(_) {}
+    try { if (typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
     try {
       if (State.ws && State.ws.onmessage) {
         // Ставим no-op — следующая сцена (Result/Menu) всё равно вызовет
