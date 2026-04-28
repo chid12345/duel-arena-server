@@ -15,10 +15,28 @@
   function _avatarFor(uid) {
     return _AVATARS[Math.abs((uid|0)) % _AVATARS.length];
   }
+  // Если это сам текущий игрок — берём ник напрямую из Telegram WebApp,
+  // не дожидаясь серверной БД. Так же делается в wb_html_result.js.
+  function _myTgName() {
+    const tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
+    return tgu.username
+      || [tgu.first_name, tgu.last_name].filter(Boolean).join(' ').trim()
+      || '';
+  }
+  function _myTgId() {
+    return window.Telegram?.WebApp?.initDataUnsafe?.user?.id | 0;
+  }
   // Имя по умолчанию если сервер не отдал ник: "Воин #1234" (последние 4 цифры uid)
   function _nameFor(p) {
+    // 1) Если это сам игрок — отдаём имя из Telegram (актуально, не зависит от БД)
+    if (p && (p.user_id|0) === _myTgId()) {
+      const my = _myTgName();
+      if (my) return my;
+    }
+    // 2) Сервер вернул нормальный ник
     const n = (p && p.name) || '';
     if (n && n !== 'Игрок') return n;
+    // 3) Безопасный fallback
     const uid = Math.abs((p && p.user_id)|0);
     return `Воин #${String(uid % 10000).padStart(4,'0')}`;
   }
