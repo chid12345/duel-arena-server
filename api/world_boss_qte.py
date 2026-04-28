@@ -6,7 +6,6 @@
 """
 from __future__ import annotations
 
-import time
 from datetime import datetime, timezone
 
 from pydantic import BaseModel
@@ -16,8 +15,7 @@ from config.battle_constants import PLAYER_START_CRIT, PLAYER_START_ENDURANCE
 from config.world_boss_constants import is_vulnerability_window
 from repositories.world_boss.damage_calc import calc_player_damage_to_boss
 
-_qte_last: dict = {}
-QTE_COOLDOWN_SEC = 60
+QTE_COOLDOWN_MS = 60_000  # 60 секунд в мс
 
 
 class QteBonusBody(BaseModel):
@@ -49,11 +47,10 @@ async def world_boss_qte_bonus_inner(body: QteBonusBody, *, db, get_user_from_in
         if int(ps.get("is_dead") or 0):
             return {"ok": False, "reason": "Вы мертвы"}
 
-        key = (spawn_id, uid)
-        now = time.time()
-        if now - _qte_last.get(key, 0) < QTE_COOLDOWN_SEC:
+        now_utc = datetime.now(timezone.utc)
+        now_ms = int(now_utc.timestamp() * 1000)
+        if not db.wb_try_record_qte(spawn_id, uid, now_ms, QTE_COOLDOWN_MS):
             return {"ok": False, "reason": "QTE недавно использован"}
-        _qte_last[key] = now
 
         try:
             eq = db.get_equipment_stats(uid) or {}
@@ -73,7 +70,6 @@ async def world_boss_qte_bonus_inner(body: QteBonusBody, *, db, get_user_from_in
                     + int(eq.get("intu_bonus", 0) or 0)
                     + int(buffs.get("crit", 0) or 0))
 
-        now_utc = datetime.now(timezone.utc)
         try:
             elapsed = (now_utc - _parse_ts(active["started_at"])).total_seconds()
             vuln = is_vulnerability_window(elapsed)

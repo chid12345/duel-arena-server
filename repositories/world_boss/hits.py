@@ -172,3 +172,24 @@ class WorldBossHitsMixin:
         conn.commit()
         conn.close()
         return ok
+
+    def wb_try_record_qte(
+        self, spawn_id: int, user_id: int, now_ms: int, cooldown_ms: int
+    ) -> bool:
+        """Атомарный кулдаун QTE в БД (переживает рестарт сервера).
+
+        Возвращает True если QTE разрешён (last_qte_ms обновлён),
+        False если кулдаун ещё не истёк.
+        """
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_player_state SET last_qte_ms=? "
+            "WHERE spawn_id=? AND user_id=? "
+            "AND (last_qte_ms = 0 OR last_qte_ms <= ?)",
+            (int(now_ms), int(spawn_id), int(user_id), int(now_ms - cooldown_ms)),
+        )
+        ok = cur.rowcount > 0
+        conn.commit()
+        conn.close()
+        return ok

@@ -64,7 +64,8 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
                 pass
 
         # Автоподключение к рейду при первом ударе
-        player = db.get_or_create_player(uid, "")
+        _uname = tg_user.get("username") or tg_user.get("first_name") or f"User{uid}"
+        player = db.get_or_create_player(uid, _uname)
         # Бонусы экипировки (зеркало PvP `_apply_equipment_stats`):
         # hp_bonus → max_hp, str_bonus+atk_bonus → strength, crit_bonus+intu_bonus → crit.
         try:

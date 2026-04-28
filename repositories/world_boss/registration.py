@@ -170,7 +170,7 @@ class WorldBossRegistrationMixin:
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
-            "SELECT r.user_id, COALESCE(p.username,'Игрок') AS username, "
+            "SELECT r.user_id, COALESCE(NULLIF(p.username,''),'Игрок') AS username, "
             "COALESCE(p.level,1) AS level, p.strength "
             "FROM world_boss_registrations r "
             "LEFT JOIN players p ON p.user_id = r.user_id "

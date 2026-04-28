@@ -177,4 +177,10 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_28_115_wb_shield", [
         "ALTER TABLE world_boss_player_state ADD COLUMN shield_until_ms INTEGER DEFAULT 0",
     ]),
+
+    # 17. QTE-кулдаун в БД (раньше был в памяти — сбрасывался при рестарте).
+    #     last_qte_ms — unix-timestamp в мс последнего успешного QTE.
+    ("2026_04_28_116_wb_qte_cooldown_ms", [
+        "ALTER TABLE world_boss_player_state ADD COLUMN last_qte_ms INTEGER DEFAULT 0",
+    ]),
 ]
