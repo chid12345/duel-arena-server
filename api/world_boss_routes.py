@@ -22,20 +22,22 @@ from api.world_boss_hit import HitBody, world_boss_hit_inner
 from api.world_boss_actions import (
     AutoBotToggleBody,
     ClaimRewardBody,
-    EnterActiveBody,
-    RegisterBody,
     ReminderToggleBody,
     ResurrectBody,
     ShieldBody,
     UseScrollBody,
     world_boss_auto_bot_toggle_inner,
     world_boss_claim_reward_inner,
-    world_boss_enter_active_inner,
-    world_boss_register_inner,
     world_boss_reminder_toggle_inner,
     world_boss_resurrect_inner,
     world_boss_shield_inner,
     world_boss_use_scroll_inner,
+)
+from api.world_boss_entry import (
+    EnterActiveBody,
+    RegisterBody,
+    world_boss_enter_active_inner,
+    world_boss_register_inner,
 )
 from api.world_boss_qte import QteBonusBody, world_boss_qte_bonus_inner
 from api.world_boss_state import build_wb_state_payload
