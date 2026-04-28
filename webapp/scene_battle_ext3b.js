@@ -151,7 +151,13 @@ Object.assign(BattleScene.prototype, {
     this.roundTxt = txt(this, W/2, 76, `РАУНД ${b.round || 1}`, 14, '#ffc83c', true).setOrigin(0.5);
     this.timerTxt = txt(this, W/2, 93, '15', 22, '#ffffff', true).setOrigin(0.5);
 
-    txt(this, W/2, H * 0.32, 'VS', 20, '#ffc83c', true).setOrigin(0.5).setAlpha(0.5);
+    // VS — крупный неон с двумя цветными слоями (розовый+голубой) и пульсом
+    const vsY = H * 0.32;
+    const vsP = txt(this, W/2 - 2, vsY, 'VS', 36, '#ff5fa0', true).setOrigin(0.5).setAlpha(0.85);
+    const vsC = txt(this, W/2 + 2, vsY, 'VS', 36, '#00d8ff', true).setOrigin(0.5).setAlpha(0.85);
+    const vsW = txt(this, W/2,     vsY, 'VS', 36, '#ffffff', true).setOrigin(0.5);
+    this.tweens.add({ targets: [vsP, vsC, vsW], scaleX: 1.12, scaleY: 1.12,
+                      duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
   },
 
   shutdown() {

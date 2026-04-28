@@ -8,10 +8,10 @@
 Object.assign(BattleScene.prototype, {
 
   _hpBar(x, y, w, pct, color) {
-    const h = 10;
+    const h = 12;
     const bg = this.add.graphics();
     bg.fillStyle(C.dark, 1);
-    bg.fillRoundedRect(x, y, w, h, 3);
+    bg.fillRoundedRect(x, y, w, h, 4);
 
     const ghost = this.add.graphics();
     const fill = this.add.graphics();
@@ -39,18 +39,18 @@ Object.assign(BattleScene.prototype, {
     g.clear();
     const fw = Math.max(6, Math.round(w * Math.min(1, Math.max(0, pct))));
     const col = this._hpFillColor(pct, baseColor);
-    g.fillStyle(col, 1);
-    g.fillRoundedRect(x, y, fw, h, 3);
+    g.fillStyle(col, 0.35); g.fillRoundedRect(x - 1, y - 1, fw + 2, h + 2, 5);
+    g.fillStyle(col, 1);    g.fillRoundedRect(x, y, fw, h, 4);
   },
 
   _redrawBar(g, x, y, w, h, pct, color) {
     g.clear();
     g.fillStyle(C.dark, 1);
-    g.fillRoundedRect(x, y, w, h, 3);
+    g.fillRoundedRect(x, y, w, h, 4);
     const fw = Math.max(6, Math.round(w * Math.min(1, Math.max(0, pct))));
     const col = this._hpFillColor(pct, color);
-    g.fillStyle(col, 1);
-    g.fillRoundedRect(x, y, fw, h, 3);
+    g.fillStyle(col, 0.35); g.fillRoundedRect(x - 1, y - 1, fw + 2, h + 2, 5);
+    g.fillStyle(col, 1);    g.fillRoundedRect(x, y, fw, h, 4);
   },
 
   _setGhostHpBar(bar, newPct, prevPct, baseColor) {
@@ -107,9 +107,9 @@ Object.assign(BattleScene.prototype, {
     txt(this, W/2, panY + 70, 'ВЫБЕРИ ЗАЩИТУ', 11, '#aaccff', true).setOrigin(0.5);
 
     const zones = [
-      { key: 'HEAD',  label: '👤 Голова', x: W * 0.18 },
+      { key: 'HEAD',  label: '🪖 Голова', x: W * 0.18 },
       { key: 'TORSO', label: '🛡 Тело',   x: W * 0.50 },
-      { key: 'LEGS',  label: '🦵 Ноги',   x: W * 0.82 },
+      { key: 'LEGS',  label: '👢 Ноги',   x: W * 0.82 },
     ];
 
     this._attackBtns  = zones.map(z => this._zoneButton(z.x, panY + 33, z.key, z.label, 'attack'));
