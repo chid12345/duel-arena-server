@@ -24,6 +24,13 @@ const BotSkinPicker = (() => {
     16: { scale: 1.12, nudge: 8 }, // лавовый гигант: чуть крупнее, опустить
   };
 
+  // Стихии для halo-свечения цветом за ботом (как в превью)
+  const SPECIAL = {3:'abyss', 10:'light', 15:'fire', 16:'fire', 20:'ice', 30:'poison'};
+  const POOL    = ['shadow','ice','abyss','light','poison','fire'];
+  const COLOR_HEX = {fire:0xff4500, abyss:0xb070ff, ice:0x5fb8ff, poison:0x5fff8a, light:0xffd35a, shadow:0x7a98ff};
+  const themeFor = id => SPECIAL[id] || POOL[(id - 1) % POOL.length];
+  const colorFor = id => COLOR_HEX[themeFor(id)];
+
   // Расширение фона: 1..25 — png, 26..33 — jpg
   const BG_EXT = id => id <= 25 ? 'png' : 'jpg';
 
@@ -66,6 +73,9 @@ const BotSkinPicker = (() => {
     nudgeFor:   id => (OVERRIDE[id] && OVERRIDE[id].nudge) || 0,
     bgKey:      id => `bot_bg_${id}`,
     skinKey:    id => `bot_skin_${id}`,
+    themeFor,
+    colorFor,
+    PLAYER_FLIP_X: true,
   };
 })();
 

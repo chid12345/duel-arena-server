@@ -65,7 +65,8 @@ Object.assign(BattleScene.prototype, {
     const _p1Key  = getWarriorKey(State.player?.warrior_type);
     const _p2Type = State.battle?.opp_warrior_type || 'tank';
     const _p2Key  = (skinId && haveSkn) ? skinKey : getWarriorKey(_p2Type);
-    this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(0.15).setFlipX(false);
+    const p1Flip = skinId ? !!BotSkinPicker.PLAYER_FLIP_X : false;
+    this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(0.15).setFlipX(p1Flip);
     const w2FlipX = skinId ? BotSkinPicker.shouldFlip(skinId) : true;
     this.warrior2 = this.add.image(W * 0.72, H * 0.35, _p2Key).setFlipX(w2FlipX);
     if (skinId) {
@@ -81,6 +82,16 @@ Object.assign(BattleScene.prototype, {
         });
         this.load.start();
       }
+      // Платформа-арена + halo по стихии + тень под ногами бота (под спрайтами)
+      const haloColor = BotSkinPicker.colorFor(skinId);
+      const w2W = this.warrior2.displayWidth || (H * 0.22);
+      const w2H = this.warrior2.displayHeight || (H * 0.22);
+      this.add.graphics().setDepth(-1)
+        .fillStyle(0x000000, 0.42).fillEllipse(W/2, footY + 8, W * 0.7, 26);
+      this.add.graphics().setDepth(-1)
+        .fillStyle(haloColor, 0.32).fillCircle(this.warrior2.x, footY - w2H * 0.5, w2H * 0.55);
+      this.add.graphics().setDepth(-1)
+        .fillStyle(0x000000, 0.55).fillEllipse(this.warrior2.x, footY + 11, w2W * 0.55, 13);
     } else {
       this.warrior2.setScale(0.15);
     }
