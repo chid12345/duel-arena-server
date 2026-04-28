@@ -53,7 +53,7 @@
     -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
     -webkit-mask-size:100% 100%;mask-size:100% 100%;
     transform-origin:50% 100%;}
-  .player img{filter:drop-shadow(0 10px 8px rgba(0,0,0,.8));}
+  .player img{filter:drop-shadow(0 10px 8px rgba(0,0,0,.8));transform:scaleX(-1);}
   .boss   img{filter:drop-shadow(0 12px 9px rgba(0,0,0,.85)) drop-shadow(0 0 12px var(--boss-color));}
   .breath > img{animation:breath 3.4s ease-in-out infinite;}
   .floatA > img{animation:floatA 4s ease-in-out infinite;}
@@ -95,7 +95,7 @@
   const NAMES   = {fire:'Огненный страж', abyss:'Жнец Бездны', ice:'Ледяной воин',
                    poison:'Ядовитый страж', light:'Светоносный', shadow:'Теневой убийца'};
   const OVERRIDE = { 16: { scale: 1.12, nudge: 8 } };
-  const FLIP_IDS = new Set([1,2,3,4,5,7,8,9,10,16,17,18,25,26,27,28,29,30,31,32,33]);
+  const FLIP_IDS = new Set([1,2,3,4,5,7,8,9,10,11,13,16,17,18,22,28,29,30]);
   const SKIP = new Set([6, 19]);
   const bgExt = id => id <= 25 ? 'png' : 'jpg';
   const bots = [];
