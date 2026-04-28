@@ -30,13 +30,13 @@
   .hp-block.opp .hp-fill{background:linear-gradient(90deg,#ff0070,#ff5fa0);
            box-shadow:0 0 14px #ff0070, inset 0 0 8px rgba(255,255,255,.45);}
   @keyframes hpFlash{0%,92%,100%{filter:brightness(1)}94%{filter:brightness(2.6) saturate(.4)}96%{filter:brightness(1.3)}}
-  /* Бойцы: босс на 60% крупнее игрока, ноги уходят под панель */
-  .fighter{position:absolute;bottom:5%;display:flex;align-items:flex-end;justify-content:center;}
-  .player{left:-2%;width:38%;height:62%;}
-  .boss  {right:-3%;width:62%;height:100%;bottom:0;}
+  /* Бойцы стоят над панелью (bottom 22%), маска 8% растворяет только пятки */
+  .fighter{position:absolute;bottom:22%;display:flex;align-items:flex-end;justify-content:center;}
+  .player{left:-2%;width:38%;height:48%;}
+  .boss  {right:-3%;width:62%;height:78%;}
   .fighter img{width:100%;height:100%;object-fit:contain;object-position:bottom;
-    -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 20%);
-            mask-image:linear-gradient(to top,transparent 0%,#000 20%);
+    -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 8%);
+            mask-image:linear-gradient(to top,transparent 0%,#000 8%);
     -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
     -webkit-mask-size:100% 100%;mask-size:100% 100%;
     transform-origin:50% 100%;}
