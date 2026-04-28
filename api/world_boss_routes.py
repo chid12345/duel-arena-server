@@ -56,7 +56,7 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
     async def wb_state(init_data: str):
         try:
             tg = get_user(init_data)
-            return build_wb_state_payload(db, int(tg["id"]))
+            return build_wb_state_payload(db, int(tg["id"]), tg_user=tg)
         except Exception as e:
             log.error("wb_state error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}

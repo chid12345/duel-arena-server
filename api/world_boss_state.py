@@ -45,8 +45,16 @@ def _parse_ts(value):
     return datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
 
-def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
-    """Состояние рейда и игрока для UI (читается при входе на вкладку + polling fallback)."""
+def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) -> Dict[str, Any]:
+    """Состояние рейда и игрока для UI (читается при входе на вкладку + polling fallback).
+
+    Если передан `tg_user` — автоматически обновляем `players.username` из
+    Telegram-данных (через get_or_create_player), чтобы ник в комнате
+    ожидания и в топе подтянулся как в остальных экранах игры.
+    """
+    real_username = ""
+    if tg_user:
+        real_username = (tg_user.get("username") or tg_user.get("first_name") or "").strip()
     active = db.get_wb_active_spawn()
     next_sched = db.get_wb_next_scheduled()
     last = db.get_wb_last_finished()
@@ -125,7 +133,7 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
     except Exception as _e:
         _log.warning("get_wb_unclaimed_rewards uid=%s: %s", uid, _e)
         unclaimed = []
-    player_row = db.get_or_create_player(uid, "")
+    player_row = db.get_or_create_player(uid, real_username)
     reminder_opt_in = bool(int(player_row.get("wb_reminder_opt_in") or 0))
     auto_bot_pending = bool(int(player_row.get("wb_auto_bot_pending") or 0))
     # Премиум-статус нужен фронту: кнопка АВТО в бою — премиум-фича.
