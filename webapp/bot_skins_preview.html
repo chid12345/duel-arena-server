@@ -24,20 +24,18 @@
   .vs{position:absolute;top:46%;left:50%;transform:translate(-50%,-50%);z-index:5;
       font-size:54px;font-weight:900;letter-spacing:3px;color:#fff;
       text-shadow:0 0 22px var(--boss-color),0 0 8px var(--boss-color),0 3px 6px rgba(0,0,0,.9);}
-  .player,.boss{position:absolute;z-index:2;overflow:visible;}
-  .player{left:0; width:48%; height:64%; bottom:-5px;}
-  .boss{right:0; width:62%; height:96%;
-        bottom:calc(-5px - var(--boss-nudge, 0px));
-        transform:scale(var(--boss-scale, 1));transform-origin:50% 100%;}
-  /* height:100%; width:auto — все боссы одной высоты, независимо от пропорций PNG */
-  .player img,.boss img{position:absolute;bottom:0;height:100%;width:auto;max-width:none;
+  /* Композиция как в файтинге: игрок слева 38%×60%, босс справа 50%×88%, центр под VS свободен */
+  .player,.boss{position:absolute;bottom:0;z-index:2;}
+  .player{left:1%;  width:38%; height:60%;}
+  .boss  {right:1%; width:50%; height:88%;
+          bottom:calc(0px - var(--boss-nudge, 0px));
+          transform:scale(var(--boss-scale, 1));transform-origin:50% 100%;}
+  .player img,.boss img{width:100%;height:100%;object-fit:contain;object-position:bottom;
     -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 15%);
             mask-image:linear-gradient(to top,transparent 0%,#000 15%);
     -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;
     -webkit-mask-size:100% 100%;mask-size:100% 100%;
     transform-origin:50% 100%;}
-  .boss   img{right:0;}
-  .player img{left:0;}
   .player img{filter:drop-shadow(0 15px 10px rgba(0,0,0,.8)) drop-shadow(0 0 6px rgba(120,180,255,.18));}
   .boss   img{filter:drop-shadow(0 15px 10px rgba(0,0,0,.85)) drop-shadow(0 0 14px var(--boss-color));}
   /* Анимации сохраняют --fx (1 или -1) — позволяет flipX без потери breath/float */
@@ -66,12 +64,12 @@
   const FLOATS  = new Set(['ice','light','abyss']);
   const NAMES   = {fire:'Огненный страж', abyss:'Жнец Бездны', ice:'Ледяной воин',
                    poison:'Ядовитый страж', light:'Светоносный', shadow:'Теневой убийца'};
-  // Индивидуальные правки по id: flip (отзеркалить), scale (масштаб), nudge (опустить, px)
+  // Индивидуальные правки по id: scale (масштаб), nudge (опустить, px)
   const OVERRIDE = {
-    16: { scale: 1.15, flip: true, nudge: 18 }, // лавовый гигант: +15%, лицом к игроку, опустить
+    16: { scale: 1.15, nudge: 12 }, // лавовый гигант: +15%, опустить
   };
-  // Простой список «отзеркалить лицом к игроку»
-  const FLIP_IDS = new Set([1,2,3,4,5,7,8,9,10,17,18,25,26,27,28,29,30,31,32,33]);
+  // «Отзеркалить лицом к игроку» — все боссы должны смотреть ВЛЕВО
+  const FLIP_IDS = new Set([1,2,3,4,5,7,8,9,10,16,17,18,25,26,27,28,29,30,31,32,33]);
   const SKIP = new Set([6, 19]);
   const bgExt = id => id <= 25 ? 'png' : 'jpg';
   const bots = [];
