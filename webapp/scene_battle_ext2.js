@@ -53,6 +53,7 @@ Object.assign(BattleScene.prototype, {
       } else if (res.status === 'battle_ended') {
         State.lastResult = res;
         BattleLog.hide();
+        try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
         this.scene.start('Result');
       } else {
         this._choosing = true;
@@ -76,6 +77,7 @@ Object.assign(BattleScene.prototype, {
   },
 
   _showWait(msg) {
+    if (this._htmlMode) { try { BotBattleHtml.showWait(msg); } catch(_){} return; }
     this._waitTxt.setText(msg).setAlpha(1);
     this.tweens.add({ targets: this._waitTxt, alpha: 1, duration: 200 });
   },
@@ -83,6 +85,7 @@ Object.assign(BattleScene.prototype, {
   _resetChoices() {
     this._selAttack  = null;
     this._selDefense = null;
+    if (this._htmlMode) { try { BotBattleHtml.resetChoices(); } catch(_){} return; }
     this._waitTxt.setAlpha(0);
     this._attackBtns.forEach(b => this._drawZoneBtn(b.g, b.x, b.y, b.BW, b.BH, false));
     this._defenseBtns.forEach(b => this._drawZoneBtn(b.g, b.x, b.y, b.BW, b.BH, false));
@@ -90,6 +93,13 @@ Object.assign(BattleScene.prototype, {
 
   _updateFromState(b) {
     if (!b) return;
+    if (this._htmlMode) {
+      State.battle = b;
+      const md = (this._prevMyHp ?? b.my_hp) - b.my_hp, od = (this._prevOppHp ?? b.opp_hp) - b.opp_hp;
+      this._prevMyHp = b.my_hp; this._prevOppHp = b.opp_hp;
+      try { BotBattleHtml.update(b); if (od > 0) BotBattleHtml.hitFx('opp'); if (md > 0) BotBattleHtml.hitFx('me'); } catch(_){}
+      return;
+    }
 
     const myDelta  = this._prevMyHp  != null ? (this._prevMyHp  - b.my_hp)  : 0;
     const oppDelta = this._prevOppHp != null ? (this._prevOppHp - b.opp_hp) : 0;
