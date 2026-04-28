@@ -224,6 +224,7 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
 
     if is_reg:
         db.wb_unregister(spawn_id, uid)
+        db.set_wb_reminder_opt_in(uid, False)  # отписался от рейда → убираем напоминалку
         is_reg = False
     else:
         db.wb_register(spawn_id, uid)

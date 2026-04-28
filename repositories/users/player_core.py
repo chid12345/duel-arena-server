@@ -43,6 +43,15 @@ class UsersPlayerCoreMixin:
             player = cursor.fetchone()
             # Стартовый набор новичка
             self.add_starter_kit(user_id)
+        elif username and dict(player).get("username", "") != username:
+            # Обновляем ник если изменился (или был пустым)
+            cursor.execute(
+                "UPDATE players SET username=? WHERE user_id=?",
+                (username, user_id),
+            )
+            conn.commit()
+            cursor.execute("SELECT * FROM players WHERE user_id = ?", (user_id,))
+            player = cursor.fetchone()
         conn.close()
         return dict(player)
 

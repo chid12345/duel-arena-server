@@ -161,11 +161,17 @@ ${gatherBtn}
 <div class="wb-join-btn${joinedAll?' joined':''}" data-act="join">
   <div class="wb-join-ico">${joinedAll?'✅':'⚔️'}</div>
   <div class="wb-join-txt">
-    <div class="wb-join-main">${joinedAll?(reminded?'Ты участвуешь · Напоминание вкл.':'Ты участвуешь'):'Участвую + напомни за 5 мин'}</div>
-    <div class="wb-join-sub">${regCnt>0?`${regCnt} игроков уже записались`:'Зарегистрируйся и получи уведомление'}</div>
+    <div class="wb-join-main">${joinedAll?'Ты участвуешь':'Участвовать в рейде'}</div>
+    <div class="wb-join-sub">${regCnt>0?`${regCnt} игроков уже записались`:'Зарегистрируйся на следующий рейд'}</div>
   </div>
   <div class="wb-join-arr">${joinedAll?'✓':'›'}</div>
 </div>
+${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind">
+  <div class="wb-remind-ic">${reminded?'🔔':'🔕'}</div>
+  <div class="wb-remind-lbl">${reminded?'Напоминание за 5 мин — вкл':'Напомнить за 5 мин до рейда'}</div>
+  <div class="wb-remind-arr">${reminded?'✓':'›'}</div>
+</div>`:''}
+
 <div class="wb-shop-hdr"><span>🛒 МАГАЗИН БОЯ</span><div class="wb-shop-line"></div></div>
 <div class="wb-cats">
   <div class="wb-cat on" data-cat="boosts"><span class="wb-cat-ic">⚔️</span><span class="wb-cat-lb">БУСТЫ</span></div>
@@ -235,7 +241,7 @@ ${gatherBtn}
         const arr  = el.querySelector('.wb-join-arr');
         const sub  = el.querySelector('.wb-join-sub');
         if (ico)  ico.textContent  = willJoin ? '✅' : '⚔️';
-        if (main) main.textContent = willJoin ? 'Ты участвуешь · Напоминание вкл.' : 'Участвую + напомни за 5 мин';
+        if (main) main.textContent = willJoin ? 'Ты участвуешь' : 'Участвовать в рейде';
         if (arr)  arr.textContent  = willJoin ? '✓' : '›';
         // Счётчик игроков — оптимистично.
         const avMore = root.querySelector('.wb-av-more');
@@ -249,10 +255,19 @@ ${gatherBtn}
         (async () => {
           try {
             if (!_scene) return;
-            const wasReg = !!_state?.is_registered;
             await _scene._registerForRaid?.(); // обновит _state и сделает _render
-            if (!wasReg && _state?.is_registered && !_state?.reminder_opt_in) await _scene._toggleReminder?.();
-            if (wasReg && !_state?.is_registered && _state?.reminder_opt_in) await _scene._toggleReminder?.();
+          } finally {
+            if (el.isConnected) el.classList.remove('busy');
+          }
+        })();
+      }
+      else if (act==='remind') {
+        if (el.classList.contains('busy')) return;
+        el.classList.add('busy');
+        (async () => {
+          try {
+            if (!_scene) return;
+            await _scene._toggleReminder?.();
           } finally {
             if (el.isConnected) el.classList.remove('busy');
           }

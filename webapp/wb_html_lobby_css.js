@@ -121,6 +121,18 @@ window.WBLobbyCSS = (() => {
 .wb-join-arr{font-size:16px;color:rgba(255,0,85,.5);flex-shrink:0;}
 .wb-join-btn.joined .wb-join-arr{color:#00aa44;}
 
+/* ── Напоминалка (отдельная кнопка под участвовать) ── */
+.wb-remind-toggle{display:flex;align-items:center;gap:10px;margin:6px 14px 0;padding:9px 14px;
+  border-radius:10px;cursor:pointer;transition:all .2s;
+  background:rgba(255,200,0,.06);border:1px solid rgba(255,200,0,.2);}
+.wb-remind-toggle.on{background:rgba(255,200,0,.12);border-color:rgba(255,200,0,.45);}
+.wb-remind-toggle:active{transform:scale(.98);}
+.wb-remind-ic{font-size:18px;flex-shrink:0;}
+.wb-remind-lbl{flex:1;font-size:11px;font-weight:700;color:rgba(255,200,0,.55);letter-spacing:.2px;}
+.wb-remind-toggle.on .wb-remind-lbl{color:#ffcc00;}
+.wb-remind-arr{font-size:14px;color:rgba(255,200,0,.35);flex-shrink:0;}
+.wb-remind-toggle.on .wb-remind-arr{color:#ffcc00;}
+
 /* ── Войти в бой (активный рейд) ── */
 .wb-enter{display:none;margin:8px 14px 0;height:58px;border-radius:14px;overflow:hidden;cursor:pointer;
   background:linear-gradient(135deg,#cc0055,#ff0080,#cc0055);background-size:200% auto;
