@@ -101,6 +101,8 @@ def build_wb_state_payload(db, uid: int) -> Dict[str, Any]:
                             "user_id": int(r["user_id"]),
                             "name": r.get("username") or "Игрок",
                             "level": int(r.get("level") or 1),
+                            "strength": int(r.get("strength") or 10),
+                            "max_hp": int(r.get("max_hp") or 100),
                         }
                         for r in _raw
                     ]

@@ -171,7 +171,8 @@ class WorldBossRegistrationMixin:
         cur = conn.cursor()
         cur.execute(
             "SELECT r.user_id, COALESCE(NULLIF(p.username,''),'Игрок') AS username, "
-            "COALESCE(p.level,1) AS level, p.strength "
+            "COALESCE(p.level,1) AS level, COALESCE(p.strength,10) AS strength, "
+            "COALESCE(p.max_hp,100) AS max_hp "
             "FROM world_boss_registrations r "
             "LEFT JOIN players p ON p.user_id = r.user_id "
             "WHERE r.spawn_id=? "

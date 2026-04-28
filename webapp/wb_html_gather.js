@@ -109,12 +109,29 @@
     document.getElementById('wb-gth-pcard')?.remove();
     const ov = document.createElement('div');
     ov.id = 'wb-gth-pcard'; ov.className = 'wb-gth-pcard-ov';
+    const str = p.strength || '?';
+    const mhp = p.max_hp || '?';
+    const lvl = p.level || '?';
     ov.innerHTML = `<div class="wb-gth-pcard">
       <div class="wb-gth-pcard-x">×</div>
       <div class="wb-gth-pcard-av">${_avatarFor(p.user_id)}</div>
       <div class="wb-gth-pcard-name">@${_esc(p.name||'Игрок')}</div>
-      <div class="wb-gth-pcard-lv">Уровень ${p.level||'?'}</div>
-      <div class="wb-gth-pcard-msg">Готов к бою с боссом</div>
+      <div class="wb-gth-pcard-lv">Уровень ${lvl}</div>
+      <div class="wb-pc-stats" style="padding:14px 0 4px;">
+        <div class="wb-pc-st">
+          <div class="sv" style="color:#ff6680">${str}</div>
+          <div class="sl">СИЛА</div>
+        </div>
+        <div class="wb-pc-st">
+          <div class="sv" style="color:#00ccff">${mhp}</div>
+          <div class="sl">MAX HP</div>
+        </div>
+        <div class="wb-pc-st">
+          <div class="sv" style="color:#ffdd44">${lvl}</div>
+          <div class="sl">УРОВЕНЬ</div>
+        </div>
+      </div>
+      <div class="wb-gth-pcard-msg">⚔️ Готов к бою с боссом</div>
     </div>`;
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('open'));
