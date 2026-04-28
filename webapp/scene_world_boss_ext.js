@@ -69,7 +69,11 @@ Object.assign(WorldBossScene.prototype, {
     top.slice(0, 3).forEach((t, i) => {
       const name = t.name || `Игрок ${i+1}`;
       const dmg = (t.damage || t.total_damage || 0).toLocaleString('ru');
-      this._addText(16, y+18+i*16, `${i+1}. ${name} — ${dmg}`, 10, '#ff44cc');
+      const rowY = y + 18 + i * 16;
+      this._addText(16, rowY, `${i+1}. ${name} — ${dmg}`, 10, '#ff44cc');
+      const z = this.add.zone(16, rowY - 6, W - 32, 18).setOrigin(0).setInteractive({ useHandCursor: true });
+      z._wbChild = true;
+      z.on('pointerup', () => this._showTopPlayerCard(t));
     });
   },
 

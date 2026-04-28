@@ -31,7 +31,12 @@ Object.assign(WorldBossScene.prototype, {
       else this._fxShake('light');
     }
 
-    // 3) Игроку прилетел урон → красная вспышка по HP-тексту + лог в историю.
+    // 3а) Игрок умер → драматический красный экран + вибро.
+    if (newPs?.is_dead && !prevPs?.is_dead) {
+      this._fxDeathFlash();
+    }
+
+    // 3б) Игроку прилетел урон → красная вспышка по HP-тексту + лог в историю.
     if (newPs && typeof newPs.current_hp === 'number'
         && typeof prevPs.current_hp === 'number'
         && newPs.current_hp < prevPs.current_hp) {
@@ -105,6 +110,50 @@ Object.assign(WorldBossScene.prototype, {
       txtObj.setColor('#ff4060');
       this.time.delayedCall(180, () => { try { txtObj.setColor(orig); } catch(_) {} });
     } catch(_) {}
+  },
+
+  _fxDeathFlash() {
+    try { this._fxShake('heavy'); } catch(_) {}
+    try { tg?.HapticFeedback?.notificationOccurred?.('error'); } catch(_) {}
+    const W = this.W, H = this.H;
+    try {
+      const rect = this.add.rectangle(W/2, H/2, W, H, 0x550000, 0.75).setDepth(9998);
+      const lbl = txt(this, W/2, H/2, '💀 ВЫ ПАЛИ В БОЮ', 20, '#ff4444')
+                    .setOrigin(0.5).setDepth(9999);
+      lbl.setStroke('#000000', 6);
+      this.tweens.add({
+        targets: [rect, lbl], alpha: { from: 1, to: 0 },
+        duration: 1500, ease: 'Sine.easeOut', delay: 700,
+        onComplete: () => { try { rect.destroy(); lbl.destroy(); } catch(_) {} },
+      });
+    } catch(_) {}
+  },
+
+  // Карточка игрока из топа — вызывается при тапе по строке топа в бою.
+  _showTopPlayerCard(p) {
+    document.getElementById('wb-top-pcard')?.remove();
+    const _e = s => String(s||'').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const colors = ['#9b30ff','#ff44cc','#00E5FF','#ffaa00','#44ff88'];
+    const bg = colors[((p.user_id||0) % colors.length)];
+    const av = `<div style="width:48px;height:48px;border-radius:50%;background:${bg};display:flex;align-items:center;justify-content:center;font-size:22px;margin:0 auto 6px">⚔</div>`;
+    const ov = document.createElement('div');
+    ov.id = 'wb-top-pcard'; ov.className = 'wb-gth-pcard-ov';
+    ov.innerHTML = `<div class="wb-gth-pcard">
+      <div class="wb-gth-pcard-x">×</div>
+      ${av}
+      <div class="wb-gth-pcard-name">${_e(p.name||'Игрок')}</div>
+      <div class="wb-gth-pcard-lv">Ур. ${p.level||'?'} · Атк ${p.atk||'?'}</div>
+      <div class="wb-gth-pcard-msg">⚔ Урон: ${(p.total_damage||0).toLocaleString('ru')}</div>
+      <div class="wb-gth-pcard-msg">💥 Криты: ${p.crits||0} · ❤️ HP: ${p.hp||0}/${p.max_hp||100}</div>
+    </div>`;
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('open'));
+    ov.addEventListener('click', e => {
+      if (e.target === ov || e.target.classList.contains('wb-gth-pcard-x')) {
+        ov.classList.remove('open');
+        setTimeout(() => ov.remove(), 200);
+      }
+    });
   },
 
   _fxChaosOverlay() {
