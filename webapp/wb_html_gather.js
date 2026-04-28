@@ -10,10 +10,13 @@
     return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
   }
 
-  // Эмодзи-ник: используем хэш от user_id для стабильного эмодзи на игрока
+  // ВАЖНО: реальные Telegram user_id бывают > 2^31, поэтому НИГДЕ
+  // не используем `| 0` (32-битное переполнение). Только Number().
   const _AVATARS = ['⚔️','🛡️','🧙','🐉','⚡','🗡️','🔥','🦅','🐺','🔮','✨','💀','🏹','🪓'];
+  function _uidNum(uid) { return Number(uid) || 0; }
   function _avatarFor(uid) {
-    return _AVATARS[Math.abs((uid|0)) % _AVATARS.length];
+    const u = Math.abs(_uidNum(uid));
+    return _AVATARS[u % _AVATARS.length];
   }
   // Если это сам текущий игрок — берём ник напрямую из Telegram WebApp,
   // не дожидаясь серверной БД. Так же делается в wb_html_result.js.
@@ -24,12 +27,13 @@
       || '';
   }
   function _myTgId() {
-    return window.Telegram?.WebApp?.initDataUnsafe?.user?.id | 0;
+    return _uidNum(window.Telegram?.WebApp?.initDataUnsafe?.user?.id);
   }
   // Имя по умолчанию если сервер не отдал ник: "Воин #1234" (последние 4 цифры uid)
   function _nameFor(p) {
     // 1) Если это сам игрок — отдаём имя из Telegram (актуально, не зависит от БД)
-    if (p && (p.user_id|0) === _myTgId()) {
+    const myId = _myTgId();
+    if (myId && _uidNum(p && p.user_id) === myId) {
       const my = _myTgName();
       if (my) return my;
     }
@@ -37,7 +41,7 @@
     const n = (p && p.name) || '';
     if (n && n !== 'Игрок') return n;
     // 3) Безопасный fallback
-    const uid = Math.abs((p && p.user_id)|0);
+    const uid = Math.abs(_uidNum(p && p.user_id));
     return `Воин #${String(uid % 10000).padStart(4,'0')}`;
   }
 
