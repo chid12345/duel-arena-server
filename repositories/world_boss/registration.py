@@ -176,7 +176,7 @@ class WorldBossRegistrationMixin:
             "FROM world_boss_registrations r "
             "LEFT JOIN players p ON p.user_id = r.user_id "
             "WHERE r.spawn_id=? "
-            "ORDER BY r.created_at ASC LIMIT ?",
+            "ORDER BY r.registered_at ASC LIMIT ?",
             (int(spawn_id), int(limit)),
         )
         rows = cur.fetchall()

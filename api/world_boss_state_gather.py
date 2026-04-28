@@ -32,23 +32,20 @@ def _row_to_player(uid: int, row: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     }
 
 
-def _fetch_registered_uids(db, spawn_id: int, dbg: dict) -> List[int]:
+def _fetch_registered_uids(db, spawn_id: int) -> List[int]:
     """Только список user_id из world_boss_registrations (без JOIN)."""
     try:
         conn = db.get_connection()
         cur = conn.cursor()
         cur.execute(
             "SELECT user_id FROM world_boss_registrations WHERE spawn_id=? "
-            "ORDER BY created_at ASC LIMIT 100",
+            "ORDER BY registered_at ASC LIMIT 100",
             (int(spawn_id),),
         )
-        rows = cur.fetchall()
-        dbg["fetch_uids_rowcount"] = len(rows)
-        uids = [int(r["user_id"]) for r in rows]
+        uids = [int(r["user_id"]) for r in cur.fetchall()]
         conn.close()
         return uids
     except Exception as e:
-        dbg["fetch_uids_error"] = f"{type(e).__name__}: {e}"
         _log.warning("gather _fetch_registered_uids spawn=%s: %s", spawn_id, e)
         return []
 
@@ -80,36 +77,21 @@ def build_gather_payload(db, spawn_id: int, registrants_count: int,
     3. Если совсем не вышло — анонимные плашки 'Воин #0001'..., чтобы счётчик
        'В БОЮ N' не врал относительно списка.
     """
-    dbg: Dict[str, Any] = {"spawn_id": int(spawn_id), "regs_count": int(registrants_count)}
     players: List[Dict[str, Any]] = []
     try:
         _raw = db.wb_list_registered_with_info(spawn_id, limit=100)
-        dbg["main_query_rows"] = len(_raw or [])
-        if _raw:
-            dbg["main_query_first"] = {
-                "user_id": _raw[0].get("user_id"),
-                "username_present": bool(_raw[0].get("username")),
-            }
         players = [_row_to_player(int(r["user_id"]), r) for r in _raw]
-    except Exception as _ge:
-        dbg["main_query_error"] = f"{type(_ge).__name__}: {_ge}"
-        _log.warning("gather players error spawn=%s: %s", spawn_id, _ge)
+    except Exception as e:
+        _log.warning("gather players error spawn=%s: %s", spawn_id, e)
 
     if not players and registrants_count > 0:
-        dbg["used_fallback_uids"] = True
-        uids = _fetch_registered_uids(db, spawn_id, dbg)
+        uids = _fetch_registered_uids(db, spawn_id)
         if uids:
             players = [_row_to_player(uid_, _fetch_player_row(db, uid_))
                        for uid_ in uids]
         else:
-            dbg["used_anon_placeholders"] = True
-            # ВРЕМЕННО: пишем debug ПРЯМО В ИМЯ — любой клиент увидит, в чём дело
-            err = (str(dbg.get("main_query_error") or "")[:30]
-                   or str(dbg.get("fetch_uids_error") or "")[:30] or "no_err")
-            dbg_label = (f"sp={spawn_id}|main={dbg.get('main_query_rows','?')}|"
-                         f"uids={dbg.get('fetch_uids_rowcount','?')}|err={err}")
             players = [
-                {"user_id": 0, "name": dbg_label, "level": 1,
+                {"user_id": 0, "name": _fallback_name(i + 1), "level": 1,
                  "strength": 10, "max_hp": 100}
                 for i in range(registrants_count)
             ]
@@ -119,5 +101,4 @@ def build_gather_payload(db, spawn_id: int, registrants_count: int,
         "seconds_left": int(seconds_left),
         "players": players,
         "count": registrants_count,
-        "_debug": dbg,  # ВРЕМЕННО: видно во фронте, удалить после фикса
     }
