@@ -167,13 +167,17 @@ class BattleStateMixin:
 
     @staticmethod
     def apply_onboarding_bot(bot: Dict) -> Dict:
-        """Пока у игрока меньше ONBOARDING_BATTLES_EASY завершённых боёв — бот слабее (урон и пул HP)."""
+        """Пока у игрока меньше ONBOARDING_BATTLES_EASY завершённых боёв — бот слабее (урон и пул HP).
+
+        Раньше использовалось max(5,...) — на Lv1 бот с STR=4 «усиливался» до STR=5.
+        Теперь умножаем без подъёма до пола — новичок получает реально слабого противника.
+        """
         b = dict(bot)
         m = ONBOARDING_BOT_STAT_MULT
         b["max_hp"] = max(30, int(b.get("max_hp", 100) * m))
         b["current_hp"] = b["max_hp"]
-        b["strength"] = max(5, int(b.get("strength", 10) * m))
-        b["endurance"] = max(5, int(b.get("endurance", 10) * m))
+        b["strength"] = max(1, int(b.get("strength", 10) * m))
+        b["endurance"] = max(1, int(b.get("endurance", 10) * m))
         c0 = b.get("crit") or PLAYER_START_CRIT
         b["crit"] = max(1, int(int(c0) * m))
         return b

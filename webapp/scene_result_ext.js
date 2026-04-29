@@ -67,7 +67,8 @@ Object.assign(ResultScene.prototype, {
       txt(this, W / 2, panY + 24, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
       txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
       txt(this, W / 2, panY + 76, 'Нажимай кнопки быстрее!', 11, '#ccccee').setOrigin(0.5);
-      txt(this, W / 2, panY + 102, `Раундов: ${r.rounds || 0}`, 11, '#ddddff').setOrigin(0.5);
+      // 0 раундов в AFK не должно быть, но защитимся: показываем "—" вместо 0.
+      txt(this, W / 2, panY + 102, `Раундов: ${(r.rounds || 0) > 0 ? r.rounds : '—'}`, 11, '#ddddff').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 120, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
@@ -96,7 +97,8 @@ Object.assign(ResultScene.prototype, {
         const cExp = txt(this, W / 2, panY + 90, '⭐ +0 опыта', 15, '#3366cc', true).setOrigin(0.5);
         this._countUp(cExp, r.exp, '⭐ +', ' опыта', 400);
       }
-      txt(this, W / 2, panY + 114, `Раундов: ${r.rounds || 0}`, 11, '#ddddff').setOrigin(0.5);
+      // Защита от мусорного rounds=0 (race-condition с прошлым боем): показываем "—".
+      txt(this, W / 2, panY + 114, `Раундов: ${(r.rounds || 0) > 0 ? r.rounds : '—'}`, 11, '#ddddff').setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
         const eloSign = r.rating_change > 0 ? '+' : '';
         txt(this, W / 2, panY + 130, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);

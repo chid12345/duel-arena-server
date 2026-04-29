@@ -60,6 +60,23 @@ class ResultScene extends Phaser.Scene {
       this.tweens.add({ targets: opp, alpha: 1, duration: 400, delay: 250 });
     }
 
+    // Мини-карточка: твой воин (скин по warrior_type).
+    // Раньше на Result-сцене не было визуала игрока — показываем спрайт под именем противника.
+    try {
+      const wKey = (typeof getWarriorKey === 'function')
+        ? getWarriorKey(State.player?.warrior_type) : null;
+      if (wKey && this.textures && this.textures.exists(wKey)) {
+        const myAvY = H * 0.255;
+        const ringCol = won ? 0xffc83c : 0xff4455;
+        const ring = this.add.graphics().setAlpha(0);
+        ring.lineStyle(2, ringCol, 0.85).strokeCircle(W / 2, myAvY + 18, 22);
+        ring.fillStyle(0x000000, 0.35).fillCircle(W / 2, myAvY + 18, 21);
+        const av = this.add.image(W / 2, myAvY + 18, wKey)
+          .setScale(0.085).setAlpha(0);
+        this.tweens.add({ targets: [ring, av], alpha: 1, duration: 380, delay: 350 });
+      }
+    } catch (_) {}
+
     this._buildResultPanel(W, H, won, r, isAfk, isEndless, isTitan, endlessWave, titanFloor, res);
 
     State.playerLoadedAt = 0;
