@@ -40,17 +40,45 @@ const BotBattleCard = (() => {
       .bbc-stat-v{font-size:15px;font-weight:700;}
       .bbc-gear{margin-top:10px;border-top:1px dashed #2a2850;padding:8px 14px 12px;}
       .bbc-gear-title{text-align:center;font-size:9px;color:#aaaacc;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
-      .bbc-equip{display:grid;grid-template-columns:64px 1fr 64px;grid-template-rows:64px 1fr 64px;gap:6px;align-items:stretch;justify-items:stretch;}
-      .bbc-equip .bbc-eq-sprite{grid-column:2;grid-row:2;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 60%, rgba(180,90,255,.18), transparent 70%);border-radius:8px;min-height:80px;}
-      .bbc-equip .bbc-eq-sprite img{max-width:100%;max-height:110px;}
-      .bbc-equip .bbc-eq-slot{background:#1a1828;border:1.5px solid #2a2840;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px 2px;text-align:center;min-height:64px;}
+      /* Equip-grid: 3 колонки (левая 76px / центр 1fr / правая 76px), 3 ряда. */
+      .bbc-equip{display:grid;grid-template-columns:76px 1fr 76px;grid-template-rows:repeat(3,76px);gap:8px;align-items:stretch;}
+      .bbc-equip .bbc-eq-sprite{grid-column:2;grid-row:1 / 4;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%, rgba(180,90,255,.20), transparent 70%);border-radius:10px;}
+      .bbc-equip .bbc-eq-sprite img{max-width:100%;max-height:100%;object-fit:contain;}
+      .bbc-equip .bbc-eq-slot{background:linear-gradient(180deg,#1f1d2e,#16142a);border:1.5px solid #2a2840;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:3px 2px 4px;text-align:center;position:relative;overflow:hidden;}
       .bbc-equip .bbc-eq-slot.empty{opacity:.35;border-style:dashed;}
-      .bbc-equip .bbc-eq-icon{font-size:18px;line-height:1.1;}
-      .bbc-equip .bbc-eq-label{font-size:8px;color:#888;margin-top:1px;letter-spacing:.3px;}
-      .bbc-equip .bbc-eq-name{font-size:8px;font-weight:700;margin-top:1px;line-height:1.1;max-width:60px;word-wrap:break-word;}
+      .bbc-equip .bbc-eq-label{font-size:8px;color:#aaaacc;letter-spacing:.5px;font-weight:700;text-transform:uppercase;}
+      .bbc-equip .bbc-eq-img{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:1px 0;}
+      .bbc-equip .bbc-eq-img img{max-width:38px;max-height:38px;object-fit:contain;}
+      .bbc-equip .bbc-eq-emoji{font-size:26px;line-height:1;}
+      .bbc-equip .bbc-eq-name{font-size:8px;font-weight:700;line-height:1.1;max-width:72px;word-wrap:break-word;padding:0 2px;}
       .bbc-empty{text-align:center;font-size:10px;color:#666688;padding:8px;}
     `;
     document.head.appendChild(s);
+  }
+
+  // Маппинг item_id → имя файла в webapp/. Реальные PNG для shield/helmet/boots/ring
+  // совпадают с item_id; для armor/weapon строим по rarity (одна модель на редкость).
+  function _itemImageUrl(it) {
+    const id = it.item_id || '';
+    const slot = it.slot;
+    const rar = it.rarity || 'common';
+    if (slot === 'shield' || slot === 'belt' || slot === 'ring1' || slot === 'boots') {
+      return `${id}.png`;
+    }
+    if (slot === 'armor') {
+      const m = {common:'armor_free1', rare:'armor_gold1', epic:'armor_dia1', mythic:'armor_mythic1'};
+      return `${m[rar] || 'armor_free1'}.png`;
+    }
+    if (slot === 'weapon') {
+      const parts = id.split('_');
+      const wtype = parts[0] || 'sword';
+      const sfx = parts[1] || '';
+      const rcl = (sfx === 'steel' || sfx === 'gold') ? 'rare'
+                : (sfx === 'diamond') ? 'epic'
+                : (sfx === 'mythic') ? 'mythic' : 'free';
+      return `weapon_${wtype}_${rcl}.png`;
+    }
+    return null;
   }
 
   function _spriteHtml(b, who) {
@@ -93,14 +121,14 @@ const BotBattleCard = (() => {
     const hpCol = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
     const nameStr = (isPrem ? '👑 ' : '') + name;
 
-    // Equipment grid: спрайт по центру, 6 слотов вокруг (как в гардеробе игрока).
-    // Индекс по слоту — позиция в 3x3 сетке.
+    // Layout: левая колонка — Шлем/Броня/Сапоги (как кнопки атаки сверху→вниз),
+    // центр — спрайт бота на 3 ряда, правая колонка — Оружие/Щит/Кольцо.
     const SLOT_LAYOUT = {
-      belt:   {row: 1, col: 2, label: 'Шлем'},
-      weapon: {row: 2, col: 1, label: 'Оружие'},
-      shield: {row: 2, col: 3, label: 'Щит'},
+      belt:   {row: 1, col: 1, label: 'Шлем'},
+      armor:  {row: 2, col: 1, label: 'Броня'},
       boots:  {row: 3, col: 1, label: 'Сапоги'},
-      armor:  {row: 3, col: 2, label: 'Броня'},
+      weapon: {row: 1, col: 3, label: 'Оружие'},
+      shield: {row: 2, col: 3, label: 'Щит'},
       ring1:  {row: 3, col: 3, label: 'Кольцо'},
     };
     const itemsBySlot = {};
@@ -110,19 +138,24 @@ const BotBattleCard = (() => {
       const meta = SLOT_LAYOUT[slot];
       if (!meta) return '';
       const style = `grid-row:${meta.row};grid-column:${meta.col};` +
-                    (it ? `border-color:${it.color};` : '');
+                    (it ? `border-color:${it.color};box-shadow:inset 0 0 8px ${it.color}33;` : '');
       const cls = it ? '' : 'empty';
-      const nm = it ? (it.name.length > 14 ? it.name.slice(0, 13) + '…' : it.name) : '—';
+      const nm = it ? (it.name.length > 13 ? it.name.slice(0, 12) + '…' : it.name) : '';
+      // Картинка предмета, fallback — эмодзи если PNG не найден
+      const img = it ? _itemImageUrl(it) : null;
+      const visual = img
+        ? `<div class="bbc-eq-img"><img src="${img}" onerror="this.parentNode.innerHTML='<span class=\\'bbc-eq-emoji\\'>${SLOT_ICON[slot]||'•'}</span>'"></div>`
+        : `<div class="bbc-eq-img"><span class="bbc-eq-emoji">${SLOT_ICON[slot] || '•'}</span></div>`;
       return `<div class="bbc-eq-slot ${cls}" style="${style}">
-        <div class="bbc-eq-icon">${SLOT_ICON[slot] || '•'}</div>
         <div class="bbc-eq-label">${meta.label}</div>
+        ${visual}
         ${it ? `<div class="bbc-eq-name" style="color:${it.color}">${nm}</div>` : ''}
       </div>`;
     };
     const equipHtml = `
       <div class="bbc-equip">
         <div class="bbc-eq-sprite">${_spriteHtml(b, who)}</div>
-        ${['belt','weapon','shield','boots','armor','ring1'].map(renderSlot).join('')}
+        ${['belt','armor','boots','weapon','shield','ring1'].map(renderSlot).join('')}
       </div>`;
     // Equip-grid строим и для бота, и для своей карточки (my_items с бэка).
     const gearBlock = (isBot || isMe)
