@@ -20,10 +20,10 @@ const BotBattleFx = (() => {
       @keyframes bbScrShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,-1px)}}
       @keyframes bbScrShakeBig{0%,100%{transform:translate(0,0)}10%{transform:translate(-8px,4px)}30%{transform:translate(7px,-3px)}50%{transform:translate(-6px,3px)}70%{transform:translate(5px,4px)}90%{transform:translate(-4px,-3px)}}
       @keyframes bbHurt{0%{opacity:0}25%{opacity:.85}100%{opacity:0}}
-      @keyframes bbLungeR{0%{transform:translateX(0)}40%{transform:translateX(50px) scale(1.05)}100%{transform:translateX(0)}}
-      @keyframes bbLungeL{0%{transform:translateX(0)}40%{transform:translateX(-50px) scale(1.05)}100%{transform:translateX(0)}}
-      @keyframes bbKnockL{0%{transform:translateX(0) rotate(0)}40%{transform:translateX(-18px) rotate(-7deg)}100%{transform:translateX(0) rotate(0)}}
-      @keyframes bbKnockR{0%{transform:translateX(0) rotate(0)}40%{transform:translateX(18px) rotate(7deg)}100%{transform:translateX(0) rotate(0)}}
+      @keyframes bbLungeR{0%{transform:translateX(0)}45%{transform:translateX(38px)}100%{transform:translateX(0)}}
+      @keyframes bbLungeL{0%{transform:translateX(0)}45%{transform:translateX(-38px)}100%{transform:translateX(0)}}
+      @keyframes bbKnockL{0%{transform:translateX(0)}30%{transform:translateX(-12px)}100%{transform:translateX(0)}}
+      @keyframes bbKnockR{0%{transform:translateX(0)}30%{transform:translateX(12px)}100%{transform:translateX(0)}}
       #bb-root .hit > img{animation:bbHit .4s ease-out;}
       #bb-root .crit-hit > img{animation:bbHit .55s ease-out, bbShake .3s ease-out 2;}
       #bb-root.scr-shake{animation:bbScrShake .3s ease-out;}
