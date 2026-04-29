@@ -61,6 +61,16 @@ const BotBattleCard = (() => {
   // Маппинг item_id → BASE имя файла (без расширения). В webapp/ файлы лежат
   // с разными расширениями (shield_free*.jpeg, boots_dia*.jpg, helmet_*.png),
   // поэтому фронт пробует .png → .jpg → .jpeg через onerror chain.
+  const _ARMOR_CLASS_MAP = {
+    tank_free:'armor_free1',      agile_free:'armor_free2',
+    crit_free:'armor_free3',      universal_free:'armor_free4',
+    berserker_gold:'armor_gold1', assassin_gold:'armor_gold2',
+    mage_gold:'armor_gold3',      paladin_gold:'armor_gold4',
+    dragonknight_diamonds:'armor_dia1', shadowdancer_diamonds:'armor_dia2',
+    archmage_diamonds:'armor_dia3',     universal_diamonds:'armor_dia4',
+    berserker_mythic:'armor_mythic1',   assassin_mythic:'armor_mythic2',
+    archmage_mythic:'armor_mythic3',    legendary_usdt:'armor_mythic4',
+  };
   function _itemImageBase(it) {
     const id = it.item_id || '';
     const slot = it.slot;
@@ -69,6 +79,9 @@ const BotBattleCard = (() => {
       return id;
     }
     if (slot === 'armor') {
+      // Wardrobe class_id → точная текстура (например assassin_mythic → armor_mythic2)
+      if (_ARMOR_CLASS_MAP[id]) return _ARMOR_CLASS_MAP[id];
+      // Stat armor (armor_leather/chain/dragon) → по редкости
       const m = {common:'armor_free1', rare:'armor_gold1', epic:'armor_dia1', mythic:'armor_mythic1'};
       return m[rar] || 'armor_free1';
     }
@@ -76,10 +89,14 @@ const BotBattleCard = (() => {
       const parts = id.split('_');
       const wtype = parts[0] || 'sword';
       const sfx = parts[1] || '';
-      const rcl = (sfx === 'steel' || sfx === 'gold') ? 'rare'
-                : (sfx === 'diamond') ? 'epic'
-                : (sfx === 'mythic') ? 'mythic' : 'free';
-      return `weapon_${wtype}_${rcl}`;
+      // Новый каталог: _free/_gold/_diamond/_mythic; старый: _iron/_steel/_chaos
+      const sfxMap = {gold:'rare', diamond:'epic', mythic:'mythic', free:'free',
+                      steel:'rare', iron:'free'};
+      const rarMap = {common:'free', rare:'rare', epic:'epic', mythic:'mythic'};
+      const rcl = sfxMap[sfx] || rarMap[rar] || 'free';
+      const types = ['sword','axe','club','gs'];
+      const t = types.includes(wtype) ? wtype : 'sword';
+      return `weapon_${t}_${rcl}`;
     }
     return null;
   }

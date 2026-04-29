@@ -66,6 +66,25 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         eq_dict = _db.get_equipment(int(user_id)) or {}
         items_map = {slot: data.get("item_id") for slot, data in eq_dict.items() if data.get("item_id")}
         my_items = items_for_ui(items_map)
+        # Если стат-брони нет — добавляем косметику из гардероба
+        if not any(it["slot"] == "armor" for it in my_items):
+            equipped_cls = _db.get_equipped_class(int(user_id))
+            if equipped_cls:
+                cls_id = equipped_cls.get("class_id", "")
+                cls_type = equipped_cls.get("class_type", "free")
+                _TYPE_RAR = {"free": "common", "gold": "rare", "diamonds": "epic",
+                             "mythic": "mythic", "usdt": "mythic"}
+                _RAR_COL = {"common": "#9aa0a6", "rare": "#3cc864", "epic": "#b45aff", "mythic": "#ffc83c"}
+                _RAR_LBL = {"common": "Обычное", "rare": "Редкое",
+                            "epic": "Эпическое", "mythic": "Мифическое"}
+                rar = _TYPE_RAR.get(cls_type, "common")
+                cls_info = _db.get_class_info(cls_id) if hasattr(_db, "get_class_info") else {}
+                name = (cls_info or {}).get("name", "Броня")
+                my_items.append({
+                    "slot": "armor", "item_id": cls_id, "name": name,
+                    "rarity": rar, "rarity_label": _RAR_LBL.get(rar, rar),
+                    "color": _RAR_COL.get(rar, "#9aa0a6"),
+                })
     except Exception:
         my_items = []
 

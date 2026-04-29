@@ -201,7 +201,8 @@
         if (action === 'unequip') {
           setWardrobeEquipped(null);
         } else if ((action === 'equip' || action === 'buy') && item.r) {
-          setWardrobeEquipped({ rarity: item.r, textureKey: getArmorTextureKey(item.r) });
+          // item.id = class_id (berserker_mythic и т.п.) → точная текстура конкретной косметики
+          setWardrobeEquipped({ rarity: item.r, textureKey: getArmorTextureKey(item.id || item.r) });
         }
         const msg = action==='buy' ? '✅ Броня получена' : action==='unequip' ? '✅ Броня снята' : '✅ Броня надета';
         _notify(msg);
@@ -280,7 +281,7 @@
     const eqId = wp?.equipped_class?.class_id || '';
     if (eqId) {
       const match = W.ARMORS_DATA.find(a => a.id === eqId) || (eqId.includes('usdt') ? { r: 'mythic' } : null);
-      if (match) setWardrobeEquipped({ rarity: match.r, textureKey: getArmorTextureKey(match.r) });
+      if (match) setWardrobeEquipped({ rarity: match.r, textureKey: getArmorTextureKey(match.id || match.r) });
     } else {
       setWardrobeEquipped(null);
     }
