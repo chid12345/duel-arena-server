@@ -139,6 +139,20 @@ const BotBattleCard = (() => {
 
 if (typeof window !== 'undefined') window.BotBattleCard = BotBattleCard;
 
+// Делегированный обработчик клика по нику в HTML-режиме боя.
+// Дублирует обработчик из bot_battle_html.js — если старый файл закэширован
+// в Telegram WebView и не получил последних правок, эта обвязка всё равно
+// откроет карточку. Безопасно, проверяет что overlay не открыт.
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    if (BotBattleCard.isOpen()) return;
+    const tgt = e.target;
+    if (!tgt || !tgt.closest) return;
+    if (tgt.closest('#bb-p2n')) BotBattleCard.show('opp');
+    else if (tgt.closest('#bb-p1n')) BotBattleCard.show('me');
+  }, true);
+}
+
 // Видимый бейдж версии — игрок сразу понимает «новая у меня сборка или старая».
 // Если этого бейджа нет на экране — Mini App кэшируется, надо закрыть/открыть заново.
 (function _injectBuildBadge() {
