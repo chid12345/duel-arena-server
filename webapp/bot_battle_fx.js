@@ -64,4 +64,22 @@ const BotBattleFx = (() => {
   };
 })();
 
+// Слот-машина для авто-удара: быстрый цикл подсветки иконок, затем фиксация
+BotBattleFx.spinChoice = function(attackBtns, defenseBtns, onDone) {
+  const Z = ['HEAD','TORSO','LEGS'];
+  const a = Z[Math.random()*3|0], d = Z[Math.random()*3|0];
+  const A = Object.values(attackBtns||{}), D = Object.values(defenseBtns||{});
+  let i = 0; const TICKS = 9, STEP = 65;
+  const tk = setInterval(() => {
+    A.forEach(b => b.classList.toggle('spin', b.dataset.key === Z[i%3]));
+    D.forEach(b => b.classList.toggle('spin', b.dataset.key === Z[(i+1)%3]));
+    if (++i >= TICKS) {
+      clearInterval(tk);
+      A.forEach(b => b.classList.remove('spin'));
+      D.forEach(b => b.classList.remove('spin'));
+      onDone && onDone(a, d);
+    }
+  }, STEP);
+};
+
 if (typeof window !== 'undefined') window.BotBattleFx = BotBattleFx;

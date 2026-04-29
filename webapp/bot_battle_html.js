@@ -1,11 +1,6 @@
-/* ============================================================
-   BotBattleHtml — HTML-overlay для PvE «Бой с ботом» (Cyberpunk).
-   Внедрение визуала из bot_battle_redesign.html в реальную игру,
-   но БЕЗ backdrop-filter (тяжело для мобильного WebView).
-     mount(scene) / unmount() — двойной вызов безопасен
-     update(b) / setTimer(s) / resetChoices() / showWait(msg) / hitFx(side)
-   Phaser продолжает обрабатывать WS, timer, scene transitions.
-   ============================================================ */
+/* BotBattleHtml — HTML-overlay для PvE «Бой с ботом». Без backdrop-filter
+   (тяжко для мобайла). Phaser обрабатывает WS, timer, scene transitions.
+   API: mount(s)/update(b)/setTimer(s)/resetChoices()/showWait(m)/dmgFx(s,a,c)/unmount() */
 
 const BotBattleHtml = (() => {
   let scene = null, root = null, mounted = false, clickHandler = null;
@@ -61,17 +56,19 @@ const BotBattleHtml = (() => {
       #bb-root .def-col .ic-btn img{filter:drop-shadow(0 0 5px rgba(80,180,255,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.8));}
       #bb-root .atk-col .ic-btn .nm{color:#ff8ac0;text-shadow:0 0 5px rgba(255,80,160,.7);}
       #bb-root .def-col .ic-btn .nm{color:#8acfff;text-shadow:0 0 5px rgba(80,180,255,.7);}
-      #bb-root .ic-btn .halo{position:absolute;top:0;left:50%;transform:translateX(-50%);width:44px;height:44px;border-radius:50%;pointer-events:none;opacity:0;}
-      #bb-root .atk-col .ic-btn .halo{background:radial-gradient(circle,rgba(255,0,112,.55) 0%,transparent 65%);}
-      #bb-root .def-col .ic-btn .halo{background:radial-gradient(circle,rgba(0,180,255,.55) 0%,transparent 65%);}
-      #bb-root .ic-btn.sel .halo{opacity:1;animation:bbHalo 1.4s ease-in-out infinite;}
-      @keyframes bbHalo{0%,100%{transform:translateX(-50%) scale(1);opacity:.85}50%{transform:translateX(-50%) scale(1.15);opacity:1}}
-      #bb-root .atk-col .ic-btn.sel img{filter:drop-shadow(0 0 14px #ff5fa0) drop-shadow(0 0 6px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.8));}
-      #bb-root .def-col .ic-btn.sel img{filter:drop-shadow(0 0 14px #5fb8ff) drop-shadow(0 0 6px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.8));}
-      #bb-root .ic-btn.sel .nm{color:#fff;}
+      #bb-root .ic-btn .halo{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:56px;height:56px;border-radius:50%;pointer-events:none;opacity:0;}
+      #bb-root .atk-col .ic-btn .halo{background:radial-gradient(circle,rgba(255,0,112,.85) 0%,rgba(255,0,112,.25) 45%,transparent 70%);} #bb-root .def-col .ic-btn .halo{background:radial-gradient(circle,rgba(0,180,255,.85) 0%,rgba(0,180,255,.25) 45%,transparent 70%);}
+      #bb-root .ic-btn.sel .halo{opacity:1;animation:bbHalo 1.2s ease-in-out infinite;}
+      @keyframes bbHalo{0%,100%{transform:translateX(-50%) scale(1);opacity:.95}50%{transform:translateX(-50%) scale(1.2);opacity:1}}
+      #bb-root .ic-btn.sel{border-radius:10px;}
+      #bb-root .atk-col .ic-btn.sel{background:radial-gradient(circle at 50% 35%,rgba(255,80,160,.28) 0%,transparent 70%);box-shadow:0 0 0 2px rgba(255,80,160,.65),0 0 14px rgba(255,80,160,.5);} #bb-root .def-col .ic-btn.sel{background:radial-gradient(circle at 50% 35%,rgba(80,180,255,.28) 0%,transparent 70%);box-shadow:0 0 0 2px rgba(80,180,255,.65),0 0 14px rgba(80,180,255,.5);}
+      @keyframes bbSelPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+      #bb-root .atk-col .ic-btn.sel img{filter:drop-shadow(0 0 16px #ff5fa0) drop-shadow(0 0 8px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.85));animation:bbSelPulse 1s ease-in-out infinite;transform-origin:50% 100%;} #bb-root .def-col .ic-btn.sel img{filter:drop-shadow(0 0 16px #5fb8ff) drop-shadow(0 0 8px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.85));animation:bbSelPulse 1s ease-in-out infinite;transform-origin:50% 100%;}
+      #bb-root .ic-btn.sel .nm{color:#fff;font-weight:900;}
+      #bb-root .ic-btn.spin > img{filter:brightness(2) drop-shadow(0 0 12px #fff) drop-shadow(0 0 6px #ffd35a)!important;}
       #bb-root .action-row{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:9;} #bb-root .confirm-btn{min-width:150px;padding:9px 14px;text-align:center;border-radius:8px;font-family:"Consolas",monospace;font-weight:900;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#fff;text-shadow:0 0 8px #c98aff,0 0 14px #ff5fa0;background:linear-gradient(180deg,rgba(80,40,140,.55),rgba(40,15,80,.85));border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 14px rgba(180,80,255,.4),inset 0 1px 0 rgba(255,255,255,.18);opacity:.45;cursor:not-allowed;transition:opacity .25s;user-select:none;}
-      #bb-root .confirm-btn.ready{opacity:1;cursor:pointer;border-color:#ff5fa0;box-shadow:0 0 18px rgba(255,90,150,.7),0 0 32px rgba(80,180,255,.3),inset 0 1px 0 rgba(255,255,255,.3);animation:cfPulse 1.6s ease-in-out infinite;}
-      @keyframes cfPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+      #bb-root .confirm-btn.ready{opacity:1;cursor:pointer;border-color:#ff5fa0;animation:cfPulse 1.6s ease-in-out infinite;}
+      @keyframes cfPulse{0%,100%{transform:scale(1);box-shadow:0 0 18px rgba(255,90,150,.7),0 0 32px rgba(80,180,255,.3),inset 0 1px 0 rgba(255,255,255,.3);filter:brightness(1)}50%{transform:scale(1.04);box-shadow:0 0 28px rgba(255,90,150,.95),0 0 50px rgba(80,180,255,.55),inset 0 1px 0 rgba(255,255,255,.45);filter:brightness(1.18)}}
       #bb-root .auto-btn{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;background:linear-gradient(135deg,#3a2a08,#1a1004);border:1.5px solid rgba(255,200,80,.6);color:#ffd370;text-shadow:0 0 8px #ffa030;box-shadow:0 0 12px rgba(255,180,40,.45),inset 0 1px 0 rgba(255,200,100,.3);user-select:none;animation:autoGlow 2.4s ease-in-out infinite;}
       @keyframes autoGlow{0%,100%{box-shadow:0 0 12px rgba(255,180,40,.45),inset 0 1px 0 rgba(255,200,100,.3)}50%{box-shadow:0 0 20px rgba(255,200,60,.75),0 0 30px rgba(255,140,40,.4),inset 0 1px 0 rgba(255,220,140,.45)}}
       #bb-root .wait{position:absolute;left:0;right:0;top:55%;text-align:center;color:#ffc83c;font-size:13px;font-weight:700;z-index:9;pointer-events:none;}
@@ -135,7 +132,10 @@ const BotBattleHtml = (() => {
       try { scene._submitChoice(); } catch(_){}
       return;
     }
-    if (e.target.closest('#bb-auto') && scene._onAuto) { try { scene._onAuto(); } catch(_){} }
+    if (e.target.closest('#bb-auto') && typeof BotBattleFx !== 'undefined' && BotBattleFx.spinChoice) BotBattleFx.spinChoice(attackBtns, defenseBtns, (a, d) => {
+      selectedAttack = a; selectedDefense = d; _refresh();
+      setTimeout(() => { if (scene && scene._submitChoice) { scene._selAttack = a; scene._selDefense = d; try { scene._submitChoice(); } catch(_){} } }, 250);
+    });
   }
 
   function _refresh() {
