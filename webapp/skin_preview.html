@@ -90,55 +90,47 @@ html, body { height: 100%; background: #020209; font-family: 'Inter', sans-serif
 /* ══════════ TABS ══════════ */
 .tabs {
   position: relative; z-index: 15;
-  display: flex; gap: 8px;
-  padding: 10px 16px 12px; flex-shrink: 0;
+  display: flex; gap: 0;
+  padding: 6px 16px 10px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(0,240,255,.08);
 }
 .tab-btn {
-  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  padding: 9px 4px 8px;
-  border-radius: 4px;
-  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
-  border: 1px solid rgba(255,255,255,.08);
-  background: rgba(255,255,255,.03);
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 8px 4px 7px;
+  border: none; background: none; border-radius: 0;
   cursor: pointer; transition: all 0.25s ease;
   user-select: none; -webkit-tap-highlight-color: transparent;
+  position: relative;
 }
+/* active bottom bar */
+.tab-btn::after {
+  content: ''; position: absolute; bottom: -1px; left: 20%; right: 20%;
+  height: 2px; border-radius: 2px; opacity: 0;
+  transition: opacity 0.25s ease;
+}
+.tab-btn.str::after { background: #ff5522; box-shadow: 0 0 8px rgba(255,70,20,.8); }
+.tab-btn.agi::after { background: #00ff88; box-shadow: 0 0 8px rgba(0,220,100,.8); }
+.tab-btn.crt::after { background: #cc44ff; box-shadow: 0 0 8px rgba(190,60,255,.8); }
+.tab-btn.active::after { opacity: 1; }
+
+/* SVG icon — no border, no bg */
 .tab-icon {
-  font-size: 18px; line-height: 1;
-  filter: grayscale(0.6) brightness(0.7);
-  transition: all 0.25s ease;
+  width: 38px; height: 38px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; line-height: 1;
+  opacity: 0.35; transition: all 0.25s ease;
+  background: none; border: none;
 }
+.tab-btn.active .tab-icon { opacity: 1; }
+
 .tab-label {
   font-family: 'Orbitron', sans-serif;
-  font-size: 8px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
-  color: rgba(255,255,255,.25); transition: color 0.25s ease;
+  font-size: 7.5px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  color: rgba(255,255,255,.2); transition: color 0.25s ease;
 }
 
-/* str tab */
-.tab-btn.str.active {
-  background: rgba(255,60,10,.14);
-  border-color: rgba(255,80,20,.7);
-  box-shadow: 0 0 16px rgba(255,70,10,.3), inset 0 0 10px rgba(255,60,10,.1);
-}
-.tab-btn.str.active .tab-icon  { filter: none; }
 .tab-btn.str.active .tab-label { color: #ff7733; text-shadow: 0 0 8px rgba(255,100,40,.7); }
-
-/* agi tab */
-.tab-btn.agi.active {
-  background: rgba(0,220,70,.1);
-  border-color: rgba(0,220,80,.7);
-  box-shadow: 0 0 16px rgba(0,210,70,.25), inset 0 0 10px rgba(0,200,60,.1);
-}
-.tab-btn.agi.active .tab-icon  { filter: none; }
 .tab-btn.agi.active .tab-label { color: #00ee77; text-shadow: 0 0 8px rgba(0,220,90,.7); }
-
-/* crt tab */
-.tab-btn.crt.active {
-  background: rgba(160,40,255,.14);
-  border-color: rgba(160,60,255,.7);
-  box-shadow: 0 0 16px rgba(150,50,255,.28), inset 0 0 10px rgba(140,40,255,.1);
-}
-.tab-btn.crt.active .tab-icon  { filter: none; }
 .tab-btn.crt.active .tab-label { color: #cc66ff; text-shadow: 0 0 8px rgba(170,70,255,.7); }
 
 /* ══════════ STAGE ══════════ */
@@ -381,16 +373,37 @@ body.cls-crt .equip-btn { background: linear-gradient(90deg, #4a0099, #cc44ff, #
   <!-- tabs -->
   <div class="tabs">
     <div class="tab-btn str active" onclick="setClass('str')">
-      <div class="tab-icon">👊</div>
+      <div class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <line x1="3" y1="3"  x2="23" y2="23" stroke="#ff5522" stroke-width="2.8" stroke-linecap="round"/>
+          <line x1="23" y1="3" x2="3"  y2="23" stroke="#ff5522" stroke-width="2.8" stroke-linecap="round"/>
+          <circle cx="13" cy="3"  r="2" fill="#ff5522"/>
+          <circle cx="13" cy="23" r="2" fill="#ff5522"/>
+          <circle cx="3"  cy="13" r="2" fill="#ff5522"/>
+          <circle cx="23" cy="13" r="2" fill="#ff5522"/>
+        </svg>
+      </div>
       <div class="tab-label">Сила</div>
     </div>
     <div class="tab-btn agi" onclick="setClass('agi')">
-      <div class="tab-icon">🦅</div>
+      <div class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="13" r="9" stroke="#00ee77" stroke-width="2.2"/>
+          <circle cx="13" cy="13" r="4" fill="#00ee77" opacity="0.5"/>
+          <circle cx="13" cy="13" r="1.5" fill="#00ee77"/>
+        </svg>
+      </div>
       <div class="tab-label">Ловкость</div>
     </div>
     <div class="tab-btn crt" onclick="setClass('crt')">
-      <div class="tab-icon">🎯</div>
-      <div class="tab-label">Крит</div>
+      <div class="tab-icon">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <polygon points="13,2 24,13 13,24 2,13" stroke="#cc44ff" stroke-width="2.2" fill="rgba(180,60,255,0.12)"/>
+          <polygon points="13,7 19,13 13,19 7,13" fill="#cc44ff" opacity="0.55"/>
+          <circle cx="13" cy="13" r="2" fill="#cc44ff"/>
+        </svg>
+      </div>
+      <div class="tab-label">Интуиция</div>
     </div>
   </div>
 
