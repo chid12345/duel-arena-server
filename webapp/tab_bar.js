@@ -38,11 +38,15 @@ window.TabBar = {
       scene._tabNavGuardTimer = null;
     }, 1500);
 
+    // ВАЖНО: всегда передаём явные данные ({}) — Phaser 3 при scene.start без
+    // data сохраняет ПРЕДЫДУЩИЕ данные (settings.data). Без этого: профиль →
+    // Stats(openWardrobe:true) → выход → Профиль → тап Герой → scene.start('Stats')
+    // → init() получает старые {openWardrobe:true} → опять открывается гардероб.
     if (key === 'profile' || key === 'more') { scene.scene.start('Menu', { returnTab: key }); return; }
-    if (key === 'clan')   { scene.scene.start('Clan');      return; }
-    if (key === 'stats')  { scene.scene.start('Stats');     return; }
-    if (key === 'boss')   { scene.scene.start('WorldBoss'); return; }
-    if (key === 'rating') { scene.scene.start('Rating');    return; }
+    if (key === 'clan')   { scene.scene.start('Clan',      {}); return; }
+    if (key === 'stats')  { scene.scene.start('Stats',     {}); return; }
+    if (key === 'boss')   { scene.scene.start('WorldBoss', {}); return; }
+    if (key === 'rating') { scene.scene.start('Rating',    {}); return; }
   },
 
   setActive(btns, activeKey) {
