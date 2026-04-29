@@ -78,7 +78,8 @@ const BotBattleCard = (() => {
     const curHp  = isMe ? (b.my_hp  || 0) : (b.opp_hp  || 0);
     const maxHp  = isMe ? (b.my_max_hp || 1) : (b.opp_max_hp || 1);
     const persona = (!isMe && isBot) ? b.opp_persona : null;
-    const items = (!isMe && isBot) ? (b.opp_items || []) : [];
+    // Для соперника-бота — opp_items, для своей карточки — my_items (надетое на игроке).
+    const items = isMe ? (b.my_items || []) : (isBot ? (b.opp_items || []) : []);
     const meta = persona ? PERSONA_META[persona] : null;
     const head = meta ? `<span style="color:${meta.col}">${meta.emoji} ${meta.label}</span>` :
                  (isMe ? '<span style="color:#5096ff">🧑 Вы</span>' : '<span style="color:#ccccee">🤖 Бот</span>');
@@ -98,9 +99,9 @@ const BotBattleCard = (() => {
       belt:   {row: 1, col: 2, label: 'Шлем'},
       weapon: {row: 2, col: 1, label: 'Оружие'},
       shield: {row: 2, col: 3, label: 'Щит'},
-      ring1:  {row: 3, col: 1, label: 'Кольцо'},
+      boots:  {row: 3, col: 1, label: 'Сапоги'},
       armor:  {row: 3, col: 2, label: 'Броня'},
-      boots:  {row: 3, col: 3, label: 'Сапоги'},
+      ring1:  {row: 3, col: 3, label: 'Кольцо'},
     };
     const itemsBySlot = {};
     items.forEach(it => { itemsBySlot[it.slot] = it; });
@@ -121,9 +122,12 @@ const BotBattleCard = (() => {
     const equipHtml = `
       <div class="bbc-equip">
         <div class="bbc-eq-sprite">${_spriteHtml(b, who)}</div>
-        ${['belt','weapon','shield','ring1','armor','boots'].map(renderSlot).join('')}
+        ${['belt','weapon','shield','boots','armor','ring1'].map(renderSlot).join('')}
       </div>`;
-    const gearBlock = (isBot) ? `<div class="bbc-gear"><div class="bbc-gear-title">🎽 ЧТО ОДЕТО</div>${equipHtml}</div>` : '';
+    // Equip-grid строим и для бота, и для своей карточки (my_items с бэка).
+    const gearBlock = (isBot || isMe)
+      ? `<div class="bbc-gear"><div class="bbc-gear-title">🎽 ЧТО ОДЕТО</div>${equipHtml}</div>`
+      : '';
 
     overlay = document.createElement('div');
     overlay.id = 'bbc-overlay';
@@ -148,7 +152,7 @@ const BotBattleCard = (() => {
               </div>`).join('')}
           </div>
         </div>
-        ${isMe ? `<div style="padding:10px 14px;display:flex;justify-content:center;">${_spriteHtml(b, who)}</div>` : gearBlock}
+        ${gearBlock}
       </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => {

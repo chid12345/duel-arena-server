@@ -222,7 +222,15 @@ function render(){
           <div style="display:flex;flex-direction:column;align-items:center;gap:2px;"><span style="font-size:14px">🛡</span><span style="font-size:13px;font-weight:700;color:#3cc864">${o.sta}</span><span style="font-size:9px;color:#aaaacc">Выносл.</span></div>
         </div>
       </div>
-      ${isMe ? `<div style="padding:10px 14px;display:flex;justify-content:center;font-size:48px;">🧙</div>` :
+      ${isMe ? `<div class="gear-block">
+             <div class="gear-title">🎽 ЧТО ОДЕТО</div>
+             ${renderEquip([
+               {slot:'weapon', name:'Меч паладина',  rarity:'rare',  color:'#3cc864'},
+               {slot:'shield', name:'Щит Великана',  rarity:'rare',  color:'#3cc864'},
+               {slot:'belt',   name:'Шлем Демона',   rarity:'epic',  color:'#b45aff'},
+               {slot:'armor',  name:'Кольчуга',      rarity:'rare',  color:'#3cc864'},
+             ], 'me')}
+           </div>` :
        (hasGear
         ? `<div class="gear-block">
              <div class="gear-title">🎽 ЧТО ОДЕТО</div>
@@ -237,14 +245,16 @@ const SLOT_LAYOUT = {
   belt:   {row:1, col:2, label:'Шлем'},
   weapon: {row:2, col:1, label:'Оружие'},
   shield: {row:2, col:3, label:'Щит'},
-  ring1:  {row:3, col:1, label:'Кольцо'},
+  boots:  {row:3, col:1, label:'Сапоги'},
   armor:  {row:3, col:2, label:'Броня'},
-  boots:  {row:3, col:3, label:'Сапоги'},
+  ring1:  {row:3, col:3, label:'Кольцо'},
 };
 function renderEquip(items, persona){
   const bySlot = {};
   items.forEach(it => bySlot[it.slot] = it);
-  const heroEmoji = persona==='donator' ? '👹' : persona==='major' ? '🦹' : persona==='farmer' ? '🥷' : '🧟';
+  const heroEmoji = persona==='me' ? '🧙' :
+                    persona==='donator' ? '👹' : persona==='major' ? '🦹' :
+                    persona==='farmer' ? '🥷' : '🧟';
   const slotsHtml = ['belt','weapon','shield','ring1','armor','boots'].map(slot => {
     const it = bySlot[slot];
     const meta = SLOT_LAYOUT[slot];

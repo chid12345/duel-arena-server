@@ -57,6 +57,18 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     if opp_entity and not opp_is_bot:
         opp_is_premium = bool(_premium_fields(opp_entity).get("is_premium"))
 
+    # Шмот САМОГО игрока (для своей карточки): тащим из БД через get_equipment.
+    # Формат — тот же что у opp_items: [{slot, item_id, name, rarity, color}].
+    my_items = []
+    try:
+        from database import db as _db
+        from repositories.bots.persona_gear import items_for_ui
+        eq_dict = _db.get_equipment(int(user_id)) or {}
+        items_map = {slot: data.get("item_id") for slot, data in eq_dict.items() if data.get("item_id")}
+        my_items = items_for_ui(items_map)
+    except Exception:
+        my_items = []
+
     # Persona-статус и виртуальный шмот соперника (только для PvE-ботов).
     # Фронт показывает «🌱 Новичок» / «👑 Босс-донатер» рядом с ником,
     # блок «Что одето» с суммой бонусов и список предметов по слотам.
@@ -110,6 +122,7 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "opp_items": opp_items,
         "opp_skin_id": opp_skin_id,
         "opp_win_streak": opp_win_streak,
+        "my_items": my_items,
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),
