@@ -210,7 +210,7 @@ Object.assign(MenuScene.prototype, {
       document.getElementById('ws-conf-cancel').onclick = ev => { ev.stopPropagation(); conf.remove(); };
       document.getElementById('ws-conf-ok').addEventListener('click', ev => {
         ev.stopPropagation(); ev.preventDefault();
-        fadeClose(() => scene._selectWarriorType(key, `${sk.name} (${d.label})`));
+        fadeClose(() => scene._selectWarriorType(key, `${sk.name} (${d.label})`, skin));
       });
     });
 
@@ -245,9 +245,10 @@ Object.assign(MenuScene.prototype, {
     this._switchTab('battle');
   },
 
-  async _selectWarriorType(type, name) {
+  async _selectWarriorType(type, name, skinIdx) {
     if (!State.player) return;
     State.player.warrior_type = type;
+    State.player.warrior_skin_idx = skinIdx || 0;
     const old = this._panels.profile;
     if (old) {
       try { this.sys.displayList.remove(old); } catch(_e) {}
@@ -259,7 +260,7 @@ Object.assign(MenuScene.prototype, {
       this._switchTab('profile');
     } catch(e) { console.warn('[WS] rebuild profile:', e); }
     this._toast(`⚔️ Воин выбран: ${name || type}`);
-    post('/api/warrior-type', { warrior_type: type })
+    post('/api/warrior-type', { warrior_type: type, warrior_skin_idx: State.player.warrior_skin_idx })
       .then(r => { if (!r.ok) this._toast(`⚠️ Не сохранён (${r.reason || r.detail || 'err'})`); })
       .catch(() => this._toast('⚠️ Воин не сохранён — нет связи'));
   },

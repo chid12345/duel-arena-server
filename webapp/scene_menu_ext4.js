@@ -185,7 +185,7 @@ Object.assign(MenuScene.prototype, {
     const floorG = ca(mkG()); floorG.fillStyle(_auraCol, 0.32); floorG.fillEllipse(W / 2, charCY + 52, 120, 16);
     const ringG = ca(mkG()); ringG.lineStyle(1, _auraCol, 0.28); ringG.strokeEllipse(W / 2, charCY + 48, 104, 28);
     const _wKey = getWarriorKey(p.warrior_type);
-    const warrior = ca(mkI(W / 2, charCY, _wKey).setDisplaySize(150, 220).setOrigin(0.5));
+    const warrior = ca(mkI(W / 2, charCY, _wKey).setDisplaySize(170, 250).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 7, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const wZone = ca(mkZ(W / 2, charCY, 140, 210).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
