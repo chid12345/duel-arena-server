@@ -16,9 +16,9 @@ class BootScene extends Phaser.Scene {
     // пользователь увидит СТАРУЮ картинку ещё долго (и это выглядит как «сломанный»
     // оранжевый квадрат на активном табе, пока не придёт новая версия).
     const V = (typeof window !== 'undefined' && window.BUILD_VERSION) ? `?v=${window.BUILD_VERSION}` : '';
-    this.load.image('warrior_tank',  `warriors/warrior_tank.png${V}`);
-    this.load.image('warrior_agile', `warriors/warrior_agile.png${V}`);
-    this.load.image('warrior_crit',  `warriors/warrior_crit.png${V}`);
+    this.load.image('warrior_tank',  `skins/sila/1.png${V}`);
+    this.load.image('warrior_agile', `skins/agility/1.png${V}`);
+    this.load.image('warrior_crit',  `skins/crit/1.png${V}`);
     this.load.image('clan_emblem',   `clan_emblem.png${V}`);
     this.load.image('clan_em_light',   `clan_em_light.png${V}`);
     this.load.image('clan_em_dark',    `clan_em_dark.png${V}`);

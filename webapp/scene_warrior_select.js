@@ -23,7 +23,7 @@ const _WS_CSS = `
 .ws-tab.active .ws-tab-icon{opacity:1}
 .ws-tab-lbl{font-family:'Orbitron',sans-serif;font-size:7.5px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:rgba(255,255,255,.2);transition:color .22s}
 .ws-tab.str.active .ws-tab-lbl{color:#ff7733}.ws-tab.agi.active .ws-tab-lbl{color:#00ee77}.ws-tab.crt.active .ws-tab-lbl{color:#cc66ff}
-.ws-stage{position:relative;height:190px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
+.ws-stage{position:relative;height:220px;display:flex;align-items:flex-end;justify-content:center;overflow:hidden}
 .ws-aura{position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);width:340px;height:200px;border-radius:50%;pointer-events:none;filter:blur(40px);z-index:1;transition:background .5s}
 .ws-carousel{position:relative;z-index:5;display:flex;align-items:flex-end;justify-content:center;width:100%;height:100%;padding-bottom:10px}
 .ws-card{position:absolute;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:all .35s cubic-bezier(.34,1.22,.64,1)}
@@ -70,8 +70,13 @@ body.wscls-agi .ws-btn{background:linear-gradient(90deg,#004d1a,#00ff88,#004d1a)
 body.wscls-crt .ws-btn{background:linear-gradient(90deg,#3d0080,#cc44ff,#3d0080);background-size:200%;color:#fff;box-shadow:0 0 18px rgba(180,50,255,.5);animation:wsBtnFlow 3s linear infinite}
 @keyframes wsBtnFlow{0%{background-position:0%}100%{background-position:200%}}
 .ws-btn:active{transform:scale(.97)}
-.ws-desc{font-family:'Share Tech Mono',monospace;font-size:10.5px;line-height:1.6;color:rgba(255,255,255,.42);text-align:center;padding:4px 6px 2px;border-top:1px solid rgba(0,240,255,.08);transition:color .3s;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-body.wscls-str .ws-desc{color:rgba(255,160,80,.55)} body.wscls-agi .ws-desc{color:rgba(0,230,120,.5)} body.wscls-crt .ws-desc{color:rgba(200,130,255,.55)}
+#ws-confirm{position:absolute;inset:0;z-index:30;display:flex;flex-direction:column;justify-content:flex-end;padding:20px 16px 24px;background:rgba(4,2,18,.9);backdrop-filter:blur(6px);border-radius:20px 20px 0 0}
+.ws-conf-name{font-family:'Orbitron',sans-serif;font-size:22px;font-weight:900;letter-spacing:2px;text-transform:uppercase;text-align:center;margin-bottom:10px}
+.ws-conf-desc{font-family:'Share Tech Mono',monospace;font-size:11.5px;line-height:1.7;color:rgba(255,255,255,.55);text-align:center;padding:0 4px 16px}
+.ws-conf-btns{display:flex;gap:10px}
+.ws-conf-cancel{flex:1;padding:12px;border-radius:3px;border:1px solid rgba(0,240,255,.22);background:rgba(0,240,255,.05);font-family:'Orbitron',sans-serif;font-size:10px;font-weight:700;cursor:pointer;letter-spacing:1px;text-transform:uppercase;color:rgba(0,240,255,.65)}
+.ws-conf-ok{flex:2;padding:13px;border-radius:3px;clip-path:polygon(8px 0,100% 0,calc(100% - 8px) 100%,0 100%);border:none;font-family:'Orbitron',sans-serif;font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1.5px;text-transform:uppercase;position:relative;overflow:hidden}
+.ws-conf-ok::before{content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.28),transparent);transform:skewX(-15deg);animation:wsShine 2.4s ease-in-out infinite}
 `;
 
 const _WS_DATA = {
@@ -101,7 +106,6 @@ Object.assign(MenuScene.prototype, {
       s.textContent = '@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap");' + _WS_CSS;
       document.head.appendChild(s);
     }
-    // Блокируем Phaser-canvas и Phaser input пока открыт оверлей (баг 1)
     const _canvas = document.querySelector('canvas');
     if (_canvas) _canvas.style.pointerEvents = 'none';
     try { if (this.input) this.input.enabled = false; } catch(_e) {}
@@ -134,7 +138,6 @@ Object.assign(MenuScene.prototype, {
         <div class="ws-dots" id="ws-dots"></div>
         <div class="ws-info"><div class="ws-cname" id="ws-cname"></div></div>
         <div class="ws-bonuses" id="ws-bonuses"></div>
-        <div class="ws-desc" id="ws-desc"></div>
         <button class="ws-btn ws-z" id="ws-btn"></button>
       </div></div>`;
     document.body.appendChild(el);
@@ -162,7 +165,6 @@ Object.assign(MenuScene.prototype, {
       document.querySelectorAll('.ws-dot').forEach(dot => dot.onclick = () => { curSkin=+dot.dataset.i; render(); });
       document.getElementById('ws-cname').textContent = d.skins[curSkin].name;
       document.getElementById('ws-bonuses').innerHTML = `<span class="ws-plus">${d.bonus}</span><span class="ws-minus">${d.penalty}</span>`;
-      document.getElementById('ws-desc').textContent = d.desc;
       document.getElementById('ws-btn').textContent = `▶ ВЫБРАТЬ — ${d.label}`;
     }
 
@@ -174,19 +176,44 @@ Object.assign(MenuScene.prototype, {
     });
     document.getElementById('ws-prev').onclick = () => { if (curSkin > 0) { curSkin--; render(); } };
     document.getElementById('ws-next').onclick = () => { if (curSkin < 2) { curSkin++; render(); } };
+
     function fadeClose(cb) {
       el.style.transition = 'opacity 0.18s';
       el.style.opacity = '0';
-      el.style.pointerEvents = 'none';      // overlay не принимает клики во время fade
-      // canvas пока ещё заблокирован — клик не пройдёт до Phaser
+      el.style.pointerEvents = 'none';
       setTimeout(() => { scene._closeWarriorSelect(); if (cb) cb(); }, 200);
     }
+
     document.getElementById('ws-btn').addEventListener('click', e => {
       e.stopPropagation(); e.preventDefault();
       const d = _WS_DATA[curKey];
       const key = curKey, skin = curSkin;
-      fadeClose(() => scene._selectWarriorType(key, `${d.skins[skin].name} (${d.label})`));
+      const sk = d.skins[skin];
+      // Показываем попап-подтверждение с описанием
+      const old = document.getElementById('ws-confirm');
+      if (old) old.remove();
+      const conf = document.createElement('div'); conf.id = 'ws-confirm';
+      const clrMap = {str:'#ff7733',agi:'#00ff88',crt:'#cc66ff'};
+      const btnBg = {
+        str:'background:linear-gradient(90deg,#8b1500,#ff5522,#8b1500);color:#fff;box-shadow:0 0 18px rgba(255,70,20,.5)',
+        agi:'background:linear-gradient(90deg,#004d1a,#00ff88,#004d1a);color:#001a0a;box-shadow:0 0 18px rgba(0,220,80,.45)',
+        crt:'background:linear-gradient(90deg,#3d0080,#cc44ff,#3d0080);color:#fff;box-shadow:0 0 18px rgba(180,50,255,.5)',
+      }[d.cls];
+      conf.innerHTML = `
+        <div class="ws-conf-name" style="color:${clrMap[d.cls]}">${sk.name}</div>
+        <div class="ws-conf-desc">${d.desc}</div>
+        <div class="ws-conf-btns">
+          <button class="ws-conf-cancel" id="ws-conf-cancel">✕ НАЗАД</button>
+          <button class="ws-conf-ok" id="ws-conf-ok" style="${btnBg}">✓ ПРИНЯТЬ</button>
+        </div>`;
+      document.getElementById('ws-panel').appendChild(conf);
+      document.getElementById('ws-conf-cancel').onclick = ev => { ev.stopPropagation(); conf.remove(); };
+      document.getElementById('ws-conf-ok').addEventListener('click', ev => {
+        ev.stopPropagation(); ev.preventDefault();
+        fadeClose(() => scene._selectWarriorType(key, `${sk.name} (${d.label})`));
+      });
     });
+
     document.getElementById('ws-close').onclick = e => { e.stopPropagation(); fadeClose(); };
     el.addEventListener('click', e => { if (e.target === el) { e.stopPropagation(); fadeClose(); } });
     let tx = 0;
@@ -221,9 +248,16 @@ Object.assign(MenuScene.prototype, {
   async _selectWarriorType(type, name) {
     if (!State.player) return;
     State.player.warrior_type = type;
-    if (this._panels.profile) { this._panels.profile.destroy(); this._panels.profile = null; }
-    this._buildProfilePanel();
-    this._switchTab('profile');   // всегда возвращаем на профиль чтобы видел изменение (баг 2)
+    const old = this._panels.profile;
+    if (old) {
+      try { this.sys.displayList.remove(old); } catch(_e) {}
+      try { old.destroy(); } catch(_e) {}
+      this._panels.profile = null;
+    }
+    try {
+      this._buildProfilePanel();
+      this._switchTab('profile');
+    } catch(e) { console.warn('[WS] rebuild profile:', e); }
     this._toast(`⚔️ Воин выбран: ${name || type}`);
     post('/api/warrior-type', { warrior_type: type })
       .then(r => { if (!r.ok) this._toast(`⚠️ Не сохранён (${r.reason || r.detail || 'err'})`); })
