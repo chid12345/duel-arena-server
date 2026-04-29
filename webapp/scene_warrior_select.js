@@ -200,6 +200,17 @@ Object.assign(MenuScene.prototype, {
     if (cv) cv.style.pointerEvents = '';
   },
 
+  _tryBattle() {
+    const wt = State.player?.warrior_type;
+    if (!wt || wt === 'default') {
+      tg?.HapticFeedback?.notificationOccurred('warning');
+      this._toast('⚔️ Сначала выбери воина — он влияет на бой!');
+      this._openWarriorSelect();
+      return;
+    }
+    this._switchTab('battle');
+  },
+
   async _selectWarriorType(type, name) {
     if (!State.player) return;
     State.player.warrior_type = type;

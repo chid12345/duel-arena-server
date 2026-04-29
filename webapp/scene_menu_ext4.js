@@ -290,7 +290,7 @@ Object.assign(MenuScene.prototype, {
     const fZ=ca(mkZ(W/2,actY+actH/2,actW,actH).setInteractive({useHandCursor:true}));
     fZ.on('pointerdown',()=>{fBg.clear();fBg.fillStyle(0x3730a3,1);fBg.fillRoundedRect(PAD,actY,actW,actH,16);tg?.HapticFeedback?.impactOccurred('medium');});
     fZ.on('pointerout', ()=>{fBg.clear();fBg.fillGradientStyle(0xc4b5fd,0xa29bfe,0x7c3aed,0x6d28d9,1);fBg.fillRoundedRect(PAD,actY,actW,actH,16);});
-    fZ.on('pointerup',  ()=>{fBg.clear();fBg.fillGradientStyle(0xc4b5fd,0xa29bfe,0x7c3aed,0x6d28d9,1);fBg.fillRoundedRect(PAD,actY,actW,actH,16);this._switchTab('battle');});
+    fZ.on('pointerup',  ()=>{fBg.clear();fBg.fillGradientStyle(0xc4b5fd,0xa29bfe,0x7c3aed,0x6d28d9,1);fBg.fillRoundedRect(PAD,actY,actW,actH,16);this._tryBattle();});
 
     // Магазин + Задания — slot-style, two half-width
     const btn2Y = actY + actH + 8, b2H = 46, b2W = (actW - 8) / 2;
