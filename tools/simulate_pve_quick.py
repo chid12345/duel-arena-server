@@ -90,7 +90,7 @@ def make_player(level: int, build: str = "balanced",
     return p
 
 
-def make_bot(level: int, weak: bool = False) -> dict:
+def make_bot(level: int, weak: bool = False, persona: str | None = None) -> dict:
     helper = _StatsHelper()
     s, e, c, hp = helper._compute_bot_stats_for_level(level)
     bot = {
@@ -105,6 +105,19 @@ def make_bot(level: int, weak: bool = False) -> dict:
         "ai_pattern": random.choice(("aggressive", "defensive", "balanced")),
         "bot_type": "novice",
     }
+    # Применяем persona-систему (4 статуса) — те же шаги что в репозитории.
+    from repositories.bots.personas import apply_persona_to_bot, pick_persona
+    if persona:
+        # Принудительный статус для теста: подменяем выбор pick_persona
+        import repositories.bots.personas as P
+        _orig = P.pick_persona
+        P.pick_persona = lambda rng=None, level=None: persona
+        try:
+            apply_persona_to_bot(bot, level)
+        finally:
+            P.pick_persona = _orig
+    else:
+        apply_persona_to_bot(bot, level)
     if weak:
         m = ONBOARDING_BOT_STAT_MULT
         bot["max_hp"]   = max(30, int(bot["max_hp"]   * m))
@@ -116,7 +129,8 @@ def make_bot(level: int, weak: bool = False) -> dict:
 
 
 async def run_simulation(player_level: int, build: str, weak_bot: bool, n: int = 300,
-                         warrior_type: str = "default", gear: str = "none"):
+                         warrior_type: str = "default", gear: str = "none",
+                         force_persona: str | None = None):
     from battle_system import BattleSystem
 
     class SimBattleSystem(BattleSystem):
@@ -133,7 +147,7 @@ async def run_simulation(player_level: int, build: str, weak_bot: bool, n: int =
 
     for _ in range(n):
         p = make_player(player_level, build, warrior_type=warrior_type, gear=gear)
-        b = make_bot(player_level, weak=weak_bot)
+        b = make_bot(player_level, weak=weak_bot, persona=force_persona)
         try:
             await bs.start_battle(p, b, is_bot2=True, is_test_battle=True)
         except Exception as ex:
@@ -173,34 +187,29 @@ async def run_simulation(player_level: int, build: str, weak_bot: bool, n: int =
 
 async def main():
     random.seed(42)
-    # (lv, build, weak_bot, warrior_type, gear, label)
+    # (lv, build, weak, wt, gear, persona, label)
     cases = [
-        (1, "balanced", True,  "default", "none",   "Онбординг Lv1"),
-        (1, "balanced", False, "default", "none",   "Голый Lv1"),
-        (10, "balanced", False, "default", "none",  "Голый Lv10 balanced"),
-        (50, "balanced", False, "default", "none",  "Голый Lv50 balanced"),
-        # Влияние класса воина на одинаковом билде
-        (10, "balanced", False, "tank",    "none",  "Lv10 + Берсерк"),
-        (10, "balanced", False, "agile",   "none",  "Lv10 + Тен.Вихрь"),
-        (10, "balanced", False, "crit",    "none",  "Lv10 + Хаос-Рыц."),
-        # Влияние снаряжения (один билд, разная экипировка)
-        (10, "balanced", False, "default", "common", "Lv10 + common сет"),
-        (10, "balanced", False, "default", "rare",  "Lv10 + редкий сет"),
-        (10, "balanced", False, "default", "epic",  "Lv10 + эпик сет"),
-        (10, "balanced", False, "default", "mythic","Lv10 + мифик сет"),
-        (50, "balanced", False, "default", "epic",  "Lv50 + эпик сет"),
-        (50, "balanced", False, "default", "mythic","Lv50 + мифик сет"),
-        # Билды без типа vs со своим типом
-        (10, "tank",  False, "default", "none",  "Lv10 END-билд голый"),
-        (10, "brute", False, "tank",    "none",  "Lv10 STR-билд+Берс"),
-        (10, "crit",  False, "crit",    "none",  "Lv10 CRT-билд+Хаос"),
+        (1,  "balanced", True,  "default", "none", None,      "Онбординг Lv1"),
+        (10, "balanced", False, "default", "none", None,      "Lv10 голый vs random-persona"),
+        (10, "balanced", False, "default", "none", "novice",  "Lv10 голый vs новичок"),
+        (10, "balanced", False, "default", "none", "farmer",  "Lv10 голый vs фармила"),
+        (10, "balanced", False, "default", "none", "major",   "Lv10 голый vs мажор"),
+        (10, "balanced", False, "default", "none", "donator", "Lv10 голый vs донатер"),
+        (10, "balanced", False, "default", "epic", None,      "Lv10+epic vs random"),
+        (10, "balanced", False, "default", "mythic",None,     "Lv10+mythic vs random"),
+        (50, "balanced", False, "default", "none", None,      "Lv50 голый vs random"),
+        (50, "balanced", False, "default", "epic", None,      "Lv50+epic vs random"),
+        (50, "balanced", False, "default", "mythic",None,     "Lv50+mythic vs random"),
+        (10, "balanced", False, "tank",    "none", None,      "Lv10+Берсерк vs random"),
+        (10, "balanced", False, "crit",    "none", None,      "Lv10+Хаос vs random"),
     ]
-    print(f"{'Сценарий':<28} {'win':>6} {'раунды':>7} {'dmg-opp':>8} {'dmg-you':>8}")
-    print("-" * 60)
-    for lv, build, weak, wt, gear, label in cases:
-        res = await run_simulation(lv, build, weak, n=200, warrior_type=wt, gear=gear)
+    print(f"{'Сценарий':<32} {'win':>6} {'раунды':>7} {'dmg-opp':>8} {'dmg-you':>8}")
+    print("-" * 64)
+    for lv, build, weak, wt, gear, persona, label in cases:
+        res = await run_simulation(lv, build, weak, n=200, warrior_type=wt, gear=gear,
+                                    force_persona=persona)
         if res:
-            print(f"{label:<28} {res['win_rate']:5.1f}% {res['avg_rounds']:6.2f}  "
+            print(f"{label:<32} {res['win_rate']:5.1f}% {res['avg_rounds']:6.2f}  "
                   f"{res['avg_dmg_opp']:5.0f}  {res['avg_dmg_you']:5.0f}")
 
 

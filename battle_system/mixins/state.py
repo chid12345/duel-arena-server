@@ -171,6 +171,8 @@ class BattleStateMixin:
 
         Раньше использовалось max(5,...) — на Lv1 бот с STR=4 «усиливался» до STR=5.
         Теперь умножаем без подъёма до пола — новичок получает реально слабого противника.
+        Также сбрасываем persona в novice и убираем виртуальную экипировку:
+        первые 5 боёв должны быть лёгкими, мажор/донатер сюда не попадают.
         """
         b = dict(bot)
         m = ONBOARDING_BOT_STAT_MULT
@@ -180,6 +182,11 @@ class BattleStateMixin:
         b["endurance"] = max(1, int(b.get("endurance", 10) * m))
         c0 = b.get("crit") or PLAYER_START_CRIT
         b["crit"] = max(1, int(int(c0) * m))
+        # Сбросить экипировку и persona — онбординг = чистый «новичок».
+        for k in list(b.keys()):
+            if k.startswith("_eq_"):
+                b[k] = 0
+        b["persona"] = "novice"
         return b
 
 
