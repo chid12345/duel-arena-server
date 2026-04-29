@@ -70,18 +70,23 @@ body.wscls-agi .ws-btn{background:linear-gradient(90deg,#004d1a,#00ff88,#004d1a)
 body.wscls-crt .ws-btn{background:linear-gradient(90deg,#3d0080,#cc44ff,#3d0080);background-size:200%;color:#fff;box-shadow:0 0 18px rgba(180,50,255,.5);animation:wsBtnFlow 3s linear infinite}
 @keyframes wsBtnFlow{0%{background-position:0%}100%{background-position:200%}}
 .ws-btn:active{transform:scale(.97)}
+.ws-desc{font-family:'Share Tech Mono',monospace;font-size:10.5px;line-height:1.6;color:rgba(255,255,255,.42);text-align:center;padding:4px 6px 2px;border-top:1px solid rgba(0,240,255,.08);transition:color .3s}
+body.wscls-str .ws-desc{color:rgba(255,160,80,.55)} body.wscls-agi .ws-desc{color:rgba(0,230,120,.5)} body.wscls-crt .ws-desc{color:rgba(200,130,255,.55)}
 `;
 
 const _WS_DATA = {
   tank:  { cls:'str', label:'Сила',     bonus:'+12% УРОН',     penalty:'↓8% уворот',
+    desc:'Каждый удар наносит на 12% больше урона — ты бьёшь тяжелее всех. За это платишь скоростью: противник уклоняется от тебя на 8% легче. Выбирай если хочешь ломить напролом.',
     aura:'radial-gradient(ellipse,rgba(255,80,15,.22) 0%,transparent 68%)',
     glow:'rgba(255,80,20,.8)',
     skins:[{img:'skins/sila/1.png',name:'МОЛОТ',e:'⚔️'},{img:'skins/sila/2.png',name:'ТИРАН',e:'🛡️'},{img:'skins/sila/3.png',name:'ДРАКОН',e:'🔥'}] },
   agile: { cls:'agi', label:'Ловкость', bonus:'+8% УКЛОН',     penalty:'↓10% броня',
+    desc:'Ты скользишь как тень — уклоняешься от ударов на 8% чаще. Но лёгкая броня трещит: защита снижена на 10%. Выбирай если хочешь уходить от урона и бить первым.',
     aura:'radial-gradient(ellipse,rgba(0,200,70,.2) 0%,transparent 68%)',
     glow:'rgba(0,210,80,.75)',
     skins:[{img:'skins/agility/1.png',name:'ПРИЗРАК',e:'🌑'},{img:'skins/agility/2.png',name:'КОГОТЬ',e:'🗡️'},{img:'skins/agility/3.png',name:'ШТОРМ',e:'💨'}] },
   crit:  { cls:'crt', label:'Интуиция', bonus:'+5% КРИТ ×1.65',penalty:'↓10% HP',
+    desc:'Критические удары срабатывают чаще (+5%) и бьют в 1.65× сильнее обычного. Но твоё HP ниже на 10% — ты хрупкий. Выбирай если хочешь убивать с одного удара.',
     aura:'radial-gradient(ellipse,rgba(160,55,255,.2) 0%,transparent 68%)',
     glow:'rgba(160,60,255,.75)',
     skins:[{img:'skins/crit/1.png',name:'ХАОС',e:'💜'},{img:'skins/crit/2.png',name:'ПУСТОТА',e:'🔮'},{img:'skins/crit/3.png',name:'РОК',e:'✨'}] },
@@ -96,6 +101,9 @@ Object.assign(MenuScene.prototype, {
       s.textContent = '@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap");' + _WS_CSS;
       document.head.appendChild(s);
     }
+    // Блокируем Phaser-canvas от приёма кликов пока открыт оверлей (баг 1)
+    const _canvas = document.querySelector('canvas');
+    if (_canvas) _canvas.style.pointerEvents = 'none';
 
     const curType = State.player?.warrior_type || 'tank';
     const el = document.createElement('div'); el.id = 'ws-overlay';
@@ -125,6 +133,7 @@ Object.assign(MenuScene.prototype, {
         <div class="ws-dots" id="ws-dots"></div>
         <div class="ws-info"><div class="ws-cname" id="ws-cname"></div></div>
         <div class="ws-bonuses" id="ws-bonuses"></div>
+        <div class="ws-desc" id="ws-desc"></div>
         <button class="ws-btn ws-z" id="ws-btn"></button>
       </div></div>`;
     document.body.appendChild(el);
@@ -152,6 +161,7 @@ Object.assign(MenuScene.prototype, {
       document.querySelectorAll('.ws-dot').forEach(dot => dot.onclick = () => { curSkin=+dot.dataset.i; render(); });
       document.getElementById('ws-cname').textContent = d.skins[curSkin].name;
       document.getElementById('ws-bonuses').innerHTML = `<span class="ws-plus">${d.bonus}</span><span class="ws-minus">${d.penalty}</span>`;
+      document.getElementById('ws-desc').textContent = d.desc;
       document.getElementById('ws-btn').textContent = `▶ ВЫБРАТЬ — ${d.label}`;
     }
 
@@ -163,13 +173,15 @@ Object.assign(MenuScene.prototype, {
     });
     document.getElementById('ws-prev').onclick = () => { if (curSkin > 0) { curSkin--; render(); } };
     document.getElementById('ws-next').onclick = () => { if (curSkin < 2) { curSkin++; render(); } };
-    document.getElementById('ws-btn').addEventListener('click', () => {
+    document.getElementById('ws-btn').addEventListener('click', e => {
+      e.stopPropagation(); e.preventDefault();
       const d = _WS_DATA[curKey];
-      scene._selectWarriorType(curKey, `${d.skins[curSkin].name} (${d.label})`);
-      scene._closeWarriorSelect();
+      scene._closeWarriorSelect();                                       // сначала убираем оверлей
+      setTimeout(() => scene._selectWarriorType(curKey,                 // потом применяем (баг 1+2)
+        `${d.skins[curSkin].name} (${d.label})`), 80);
     });
-    document.getElementById('ws-close').onclick = () => scene._closeWarriorSelect();
-    el.addEventListener('click', e => { if (e.target === el) scene._closeWarriorSelect(); });
+    document.getElementById('ws-close').onclick = e => { e.stopPropagation(); scene._closeWarriorSelect(); };
+    el.addEventListener('click', e => { if (e.target === el) { e.stopPropagation(); scene._closeWarriorSelect(); } });
     let tx = 0;
     const stg = document.getElementById('ws-stage');
     stg.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, {passive:true});
@@ -183,6 +195,9 @@ Object.assign(MenuScene.prototype, {
     const el = document.getElementById('ws-overlay');
     if (el) el.remove();
     document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
+    // Возвращаем клики холсту (баг 1)
+    const cv = document.querySelector('canvas');
+    if (cv) cv.style.pointerEvents = '';
   },
 
   async _selectWarriorType(type, name) {
@@ -190,7 +205,7 @@ Object.assign(MenuScene.prototype, {
     State.player.warrior_type = type;
     if (this._panels.profile) { this._panels.profile.destroy(); this._panels.profile = null; }
     this._buildProfilePanel();
-    if (this._activeTab === 'profile') this._switchTab('profile');
+    this._switchTab('profile');   // всегда возвращаем на профиль чтобы видел изменение (баг 2)
     this._toast(`⚔️ Воин выбран: ${name || type}`);
     post('/api/warrior-type', { warrior_type: type })
       .then(r => { if (!r.ok) this._toast(`⚠️ Не сохранён (${r.reason || r.detail || 'err'})`); })
