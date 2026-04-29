@@ -58,10 +58,11 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         opp_is_premium = bool(_premium_fields(opp_entity).get("is_premium"))
 
     # Persona-статус и виртуальный шмот соперника (только для PvE-ботов).
-    # Фронт показывает «🌱 Новичок» / «👑 Босс-донатер» рядом с ником
-    # и блок «Что одето» в карточке соперника.
+    # Фронт показывает «🌱 Новичок» / «👑 Босс-донатер» рядом с ником,
+    # блок «Что одето» с суммой бонусов и список предметов по слотам.
     opp_persona = None
     opp_eq = None
+    opp_items = None
     if opp_entity and opp_is_bot:
         opp_persona = opp_entity.get("persona")
         opp_eq = {
@@ -73,6 +74,12 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
             "pen_pct":     float(opp_entity.get("_eq_pen_pct") or 0.0),
             "crit_resist": int(opp_entity.get("_eq_crit_resist_pct") or 0),
         }
+        try:
+            from repositories.bots.persona_gear import items_for_ui
+            raw_items = opp_entity.get("equipment_items") or {}
+            opp_items = items_for_ui(raw_items)
+        except Exception:
+            opp_items = []
 
     return {
         "battle_id": bid,
@@ -96,6 +103,7 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "opp_is_premium": opp_is_premium,
         "opp_persona": opp_persona,
         "opp_eq": opp_eq,
+        "opp_items": opp_items,
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),

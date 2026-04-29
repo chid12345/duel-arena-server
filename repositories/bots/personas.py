@@ -10,6 +10,8 @@ from __future__ import annotations
 import random
 from typing import Dict, Tuple
 
+from repositories.bots.persona_gear import pick_gear_for_persona
+
 
 # Шансы выбора статуса по уровню игрока. На низких уровнях у НПС-«игроков»
 # не должно быть мифик-сетов — это противоречит логике мира. Распределение
@@ -72,52 +74,8 @@ def stat_jitter(rng: random.Random | None = None, span: float = 0.15) -> float:
     return 1.0 + r.uniform(-span, span)
 
 
-def _gear_for_persona(persona: str, level: int, rng: random.Random) -> Dict:
-    """Виртуальный сет. Скейл подобран так, чтобы:
-    - голый игрок vs novice ~ 60% шанс победы (легко);
-    - голый игрок vs farmer ~ 40-45% (вызов);
-    - голый vs major ~ 25-30% (надо стараться);
-    - голый vs donator ~ 12-18% (элита, редко).
-
-    Шмот линейно скейлится с уровнем — Lv10 «мажор» имеет ~25% от полного эпика,
-    Lv50 «мажор» — ~75%, Lv100+ — полный эпик.
-    """
-    lv = max(1, int(level))
-    # На Lv10 scale=0.25, Lv50 → 0.75, Lv100 → 1.0
-    scale = max(0.20, min(1.0, lv / 100.0 + 0.15))
-
-    if persona == "novice":
-        return {
-            "_eq_atk_bonus":   int(round(rng.choice([0, 0, 4, 8]) * scale)),
-            "_eq_def_pct":     0.0,
-            "_eq_dodge_bonus": rng.choice([0, 0, 3]),
-        }
-    if persona == "farmer":
-        return {
-            "_eq_atk_bonus":     int(round(rng.randint(15, 30) * scale)),
-            "_eq_def_pct":       round(rng.uniform(0.04, 0.09) * scale, 2),
-            "_eq_dodge_bonus":   int(round(rng.randint(3, 7) * scale)),
-            "_eq_accuracy":      int(round(rng.choice([0, 0, 5]) * scale)),
-        }
-    if persona == "major":
-        return {
-            "_eq_atk_bonus":     int(round(rng.randint(35, 55) * scale)),
-            "_eq_def_pct":       round(rng.uniform(0.08, 0.14) * scale, 2),
-            "_eq_dodge_bonus":   int(round(rng.randint(6, 11) * scale)),
-            "_eq_accuracy":      int(round(rng.randint(4, 9) * scale)),
-            "_eq_lifesteal_pct": int(round(rng.choice([0, 0, 5]) * scale)),
-            "_eq_pen_pct":       round(rng.uniform(0.0, 0.02) * scale, 2),
-        }
-    # donator
-    return {
-        "_eq_atk_bonus":       int(round(rng.randint(55, 75) * scale)),
-        "_eq_def_pct":         round(rng.uniform(0.14, 0.20) * scale, 2),
-        "_eq_dodge_bonus":     int(round(rng.randint(10, 14) * scale)),
-        "_eq_accuracy":        int(round(rng.randint(8, 14) * scale)),
-        "_eq_lifesteal_pct":   int(round(rng.randint(4, 8) * scale)),
-        "_eq_pen_pct":         round(rng.uniform(0.02, 0.04) * scale, 2),
-        "_eq_crit_resist_pct": int(round(rng.randint(5, 10) * scale)),
-    }
+# Прежний синтетический gear-генератор удалён — теперь подбираются реальные
+# item_id из equipment_catalog по слотам через persona_gear.pick_gear_for_persona.
 
 
 def _ai_pattern_for_persona(persona: str, rng: random.Random) -> str:
@@ -149,8 +107,22 @@ def apply_persona_to_bot(bot: Dict, level: int,
         bot["max_hp"] = max(30, int(round(int(bot["max_hp"]) * stat_jitter(r, 0.05))))
         bot["current_hp"] = bot["max_hp"]
 
-    # Виртуальная экипировка — даёт _eq_* поля как у одетого игрока.
-    bot.update(_gear_for_persona(persona, level, r))
+    # Виртуальная экипировка по слотам: реальные item_id из каталога.
+    items, stats = pick_gear_for_persona(persona, level, r)
+    bot["equipment_items"] = items  # {slot: item_id} — для UI карточки соперника
+    # Чистые _eq_* — для боевой формулы; _extra (hp/str/...) — на статы выше
+    extra = stats.pop("_extra", {})
+    bot.update(stats)
+    if extra.get("hp_bonus"):
+        bot["max_hp"] = int(bot.get("max_hp", 100)) + extra["hp_bonus"]
+        bot["current_hp"] = bot["max_hp"]
+    if extra.get("str_bonus"):
+        bot["strength"] = max(1, int(bot.get("strength", 1)) + extra["str_bonus"])
+    if extra.get("agi_bonus"):
+        bot["endurance"] = max(1, int(bot.get("endurance", 1)) + extra["agi_bonus"])
+    if extra.get("intu_bonus") or extra.get("crit_bonus"):
+        bot["crit"] = max(0, int(bot.get("crit", 0))
+                            + extra.get("intu_bonus", 0) + extra.get("crit_bonus", 0))
 
     # AI-стиль из персоны (перекрывает старый случайный выбор)
     bot["ai_pattern"] = _ai_pattern_for_persona(persona, r)

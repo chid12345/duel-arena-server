@@ -29,7 +29,10 @@ Object.assign(BattleScene.prototype, {
     };
     const oppPersona = (!isMe && isBot) ? (b.opp_persona || null) : null;
     const oppEq      = (!isMe && isBot) ? (b.opp_eq || null) : null;
+    const oppItems   = (!isMe && isBot) ? (b.opp_items || []) : [];
     const personaMeta = oppPersona ? PERSONA_META[oppPersona] : null;
+    // Эмодзи слотов — для компактного списка предметов
+    const SLOT_ICON = {weapon:'🗡', shield:'🛡', armor:'👕', belt:'🪖', boots:'👢', ring1:'💍', ring2:'💍'};
     const curHp  = isMe ? (me.current_hp || b.my_hp)  : (b.opp_hp  || 0);
     const maxHp  = isMe ? (me.max_hp   || b.my_max_hp): (b.opp_max_hp || 1);
     const stats  = isMe
@@ -58,10 +61,8 @@ Object.assign(BattleScene.prototype, {
     const objs = [];
     const add  = o => { objs.push(o); return o; };
 
-    // Если у бота есть persona-шмот — увеличиваем карточку на блок «Что одето».
-    const hasGearBlock = !!(oppEq && (oppEq.atk || oppEq.def_pct || oppEq.dodge ||
-                                       oppEq.lifesteal || oppEq.accuracy ||
-                                       oppEq.pen_pct || oppEq.crit_resist));
+    // Если у бота есть надетые предметы — увеличиваем карточку на блок «Что одето».
+    const hasGearBlock = !!(oppItems && oppItems.length > 0);
     const cw = W - 36, ch = (hasGearBlock || personaMeta) ? 296 : 242;
     const cx = 18, cy = Math.round(H * 0.13);
 
@@ -146,35 +147,33 @@ Object.assign(BattleScene.prototype, {
       t(sx + 22, sy + 14, String(s.val), 15, s.col, true);
     });
 
-    // Блок «Что одето» — только для бота с persona-шмотом (визуальный сигнал «бойся / лёгкая добыча»).
-    if (hasGearBlock) {
+    // Блок «Что одето»: реальные предметы по слотам (вместо суммарных бонусов).
+    // Цвет имени предмета = цвет редкости (common/rare/epic/mythic).
+    const showItems = !isMe && isBot && oppItems && oppItems.length > 0;
+    if (showItems) {
       const gY = cy + 200;
       const dG = this.add.graphics();
       dG.lineStyle(1, 0x2a2850, 0.5);
       dG.lineBetween(cx + 12, gY - 6, cx + cw - 12, gY - 6);
       con.add(dG);
       tC(cx + cw / 2, gY, '🎽 ЧТО ОДЕТО', 9, '#aaaacc', true);
-      const items = [];
-      if (oppEq.atk)         items.push({txt:`+${oppEq.atk} атк`,            col:'#ff8855'});
-      if (oppEq.def_pct)     items.push({txt:`+${Math.round(oppEq.def_pct*100)}% брони`, col:'#9abae0'});
-      if (oppEq.dodge)       items.push({txt:`+${oppEq.dodge} уворт`,        col:'#3cc8dc'});
-      if (oppEq.accuracy)    items.push({txt:`+${oppEq.accuracy} точн`,      col:'#ddddff'});
-      if (oppEq.lifesteal)   items.push({txt:`+${oppEq.lifesteal}% вамп`,    col:'#dc3c46'});
-      if (oppEq.pen_pct)     items.push({txt:`+${Math.round(oppEq.pen_pct*100)}% пробой`, col:'#ffc83c'});
-      if (oppEq.crit_resist) items.push({txt:`−${oppEq.crit_resist}% крит-урон`, col:'#b45aff'});
-      // Раскладка бейджей в 2 колонки.
       const colW = (cw - 28) / 2;
-      items.slice(0, 6).forEach((it, i) => {
+      oppItems.slice(0, 6).forEach((it, i) => {
         const ix = cx + 14 + (i % 2) * colW;
         const iy = gY + 18 + Math.floor(i / 2) * 18;
         const bg = this.add.graphics();
-        bg.fillStyle(0x1a1828, 1).fillRoundedRect(ix, iy, colW - 6, 14, 4);
+        bg.fillStyle(0x1a1828, 1).fillRoundedRect(ix, iy, colW - 6, 16, 4);
+        bg.lineStyle(1, parseInt((it.color || '#9aa0a6').slice(1), 16), 0.6);
+        bg.strokeRoundedRect(ix, iy, colW - 6, 16, 4);
         con.add(bg);
-        const tx = this.add.text(ix + 6, iy + 1, it.txt, {
-          fontSize: '10px', color: it.col, fontFamily: 'system-ui, sans-serif',
-          fontStyle: 'bold', resolution: 2,
-        }).setOrigin(0);
-        con.add(tx);
+        const icon = SLOT_ICON[it.slot] || '•';
+        // Обрезаем длинные имена под ширину колонки
+        const nm = (it.name || '').length > 13 ? it.name.slice(0, 12) + '…' : it.name;
+        con.add(this.add.text(ix + 4, iy + 1, icon, {fontSize:'11px',resolution:2}).setOrigin(0));
+        con.add(this.add.text(ix + 22, iy + 2, nm, {
+          fontSize:'10px', color: it.color || '#ddd',
+          fontFamily:'system-ui, sans-serif', fontStyle:'bold', resolution:2,
+        }).setOrigin(0));
       });
     } else if (isPrem) {
       tC(cx + cw / 2, cy + ch - 16, '✨ Premium', 12, '#cc9900', true);

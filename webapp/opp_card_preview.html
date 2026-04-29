@@ -36,6 +36,9 @@
   .gear-title{text-align:center;font-size:9px;color:#aaaacc;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
   .gear-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
   .badge{background:#1a1828;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+  .slot-row{background:#1a1828;border:1px solid #2a2840;border-radius:5px;padding:4px 6px;display:flex;align-items:center;gap:6px;font-size:10px;}
+  .slot-icon{font-size:11px;}
+  .slot-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .empty{text-align:center;font-size:10px;color:#666688;padding:8px;}
 
   .persona-novice  {color:#9ad9a0;}
@@ -77,12 +80,82 @@ const PREFIXES = {
 };
 function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
 function rng(a,b){return a+Math.random()*(b-a);}
-function gear(p, lv){
-  const sc = Math.max(.20, Math.min(1.0, lv/100 + 0.15));
-  if (p==='novice') return {atk: ri(0,8)*sc|0};
-  if (p==='farmer') return {atk:(ri(15,30)*sc)|0, def_pct:+(rng(0.04,0.09)*sc).toFixed(2), dodge:(ri(3,7)*sc)|0};
-  if (p==='major')  return {atk:(ri(35,55)*sc)|0, def_pct:+(rng(0.08,0.14)*sc).toFixed(2), dodge:(ri(6,11)*sc)|0, accuracy:(ri(4,9)*sc)|0, pen_pct:+(rng(0,0.02)*sc).toFixed(2)};
-  return {atk:(ri(55,75)*sc)|0, def_pct:+(rng(0.14,0.20)*sc).toFixed(2), dodge:(ri(10,14)*sc)|0, accuracy:(ri(8,14)*sc)|0, lifesteal:ri(4,8), pen_pct:+(rng(0.02,0.04)*sc).toFixed(2), crit_resist:ri(5,10)};
+// Каталог имён по слотам/редкости (синхрон с db_schema/equipment_catalog).
+const CAT = {
+  weapon: {
+    common: ['Деревянный меч','Каменный топор','Дубина','Грубый клинок'],
+    rare:   ['Стальной меч','Топор ополченца','Усиленная дубина','Меч паладина'],
+    epic:   ['Секира','Булава','Клинок хаоса','Меч рыцаря'],
+    mythic: ['Пламенный клинок','Топор хаоса','Молот колосса','Тень смерти'],
+  },
+  shield: {
+    common: ['Щит Ополченца','Щит Стойкости','Щит Закалённого','Щит Дружинника'],
+    rare:   ['Рыцарский Щит','Щит Великана','Щит Паладина','Щит Хранителя'],
+    epic:   ['Щит Дракона','Щит Колосса','Щит Непоколебимого','Щит Арканы'],
+    mythic: ['Щит Судьбы','Щит Бессмертного','Щит Рока','Щит Богов'],
+  },
+  armor: {
+    common: ['Кожаная броня'], rare: ['Кольчуга'], epic: ['Броня Дракона'], mythic: ['Броня Дракона'],
+  },
+  belt: { // в коде belt = шлем
+    common: ['Шлем Танка','Шлем Стража','Шлем Охотника','Шлем Дуэлянта'],
+    rare:   ['Шлем Берсерка','Шлем Крепости','Шлем Снайпера','Шлем Паладина'],
+    epic:   ['Шлем Демона','Стальная Крепость','Шлем Арканы','Шлем Разрушителя'],
+    mythic: ['Шлем Дракона','Корона Воителя','Маска Смерти','Шлем Богов'],
+  },
+  boots: {
+    common: ['Сапоги Скорохода','Сапоги Выносливого','Сапоги Тени','Кровавый след'],
+    rare:   ['Сапоги Вихря','Сапоги Живучести','Сапоги Ветра','Сапоги Кровопийцы'],
+    epic:   ['Сапоги Призрака','Сапоги Жизненной Силы','Сапоги Ловчего','Поступь Вампира'],
+    mythic: ['Сапоги Дракона','Поступь Бессмертия','Сапоги Призрака Смерти','Сапоги Владыки Крови'],
+  },
+  ring1: {
+    common: ['Кольцо Меткости','Кольцо Охотника','Кольцо Безмолвия','Кольцо Оков'],
+    rare:   ['Кольцо Снайпера','Кольцо Преследователя','Кольцо Тишины','Кольцо Замедления'],
+    epic:   ['Кольцо Ясновидца','Кольцо Неизбежности','Кольцо Молчания','Кольцо Оцепенения'],
+    mythic: ['Кольцо Провидца','Кольцо Рока','Кольцо Вечного Безмолвия','Кольцо Паралича'],
+  },
+};
+const RARITY_W = {
+  novice:  [0.85, 0.15, 0.00, 0.00],
+  farmer:  [0.20, 0.70, 0.10, 0.00],
+  major:   [0.05, 0.30, 0.55, 0.10],
+  donator: [0.00, 0.10, 0.40, 0.50],
+};
+const RAR_ORDER = ['common','rare','epic','mythic'];
+const RAR_COL = {common:'#9aa0a6', rare:'#3cc864', epic:'#b45aff', mythic:'#ffc83c'};
+const SLOT_ICON = {weapon:'🗡', shield:'🛡', armor:'👕', belt:'🪖', boots:'👢', ring1:'💍'};
+const SLOTS_FOR_BOT = ['weapon','shield','armor','belt','boots','ring1'];
+
+function pickRarity(p){
+  const w = RARITY_W[p] || RARITY_W.novice;
+  let r = Math.random(), a = 0;
+  for (let i=0; i<RAR_ORDER.length; i++){
+    a += w[i]; if (r <= a) return RAR_ORDER[i];
+  }
+  return 'common';
+}
+function pickItem(slot, p){
+  let rar = pickRarity(p);
+  let pool = CAT[slot] && CAT[slot][rar];
+  // fallback ↓
+  let idx = RAR_ORDER.indexOf(rar);
+  while ((!pool || !pool.length) && idx > 0){
+    idx--; rar = RAR_ORDER[idx]; pool = CAT[slot] && CAT[slot][rar];
+  }
+  if (!pool || !pool.length) return null;
+  return {slot, rarity: rar, name: pool[ri(0, pool.length-1)], color: RAR_COL[rar]};
+}
+function gearItems(p, lv){
+  const coverage = Math.max(.30, Math.min(1.0, lv/60 + 0.20));
+  const out = [];
+  for (const slot of SLOTS_FOR_BOT){
+    if (Math.random() > coverage) continue;
+    if (p === 'novice' && Math.random() > 0.50) continue;
+    const it = pickItem(slot, p);
+    if (it) out.push(it);
+  }
+  return out;
 }
 function makeOpp(p, lv){
   const pref = PREFIXES[p][ri(0,PREFIXES[p].length-1)];
@@ -93,13 +166,13 @@ function makeOpp(p, lv){
     rating: ri(900,1500),
     hp: ri(80,100), max_hp: 100,
     str: ri(8+lv,15+lv), agi: ri(8+lv,15+lv), intu: ri(5+lv,12+lv), sta: ri(0,15),
-    eq: gear(p, lv),
+    items: gearItems(p, lv),
   };
 }
 function makeMe(lv){
   return {persona:null, level:lv, name:'Вы', rating:1200, hp:80, max_hp:100,
     str:ri(8+lv,15+lv), agi:ri(8+lv,15+lv), intu:ri(5+lv,12+lv), sta:ri(0,15),
-    eq:null, isMe:true};
+    items:null, isMe:true};
 }
 
 let curP = 'major', curLv = 50;
@@ -110,23 +183,13 @@ function render(){
   const o = isMe ? makeMe(curLv) : makeOpp(curP, curLv);
   const meta = o.persona ? PMETA[o.persona] : null;
   const isBot = !isMe;
-  const hasGear = o.eq && Object.values(o.eq).some(v => v && v !== 0);
+  const hasGear = !!(o.items && o.items.length);
 
   const hpPct = o.hp / o.max_hp;
   const hpCol = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
 
   const head = meta ? `<span style="color:${meta.col}">${meta.emoji} ${meta.label}</span>` :
                (isMe ? '<span style="color:#5096ff">🧑 Вы</span>' : '<span style="color:#ccccee">🤖 Бот</span>');
-
-  const gearItems = !hasGear ? [] : [
-    o.eq.atk         ? {t:`+${o.eq.atk} атк`,             c:'#ff8855'} : null,
-    o.eq.def_pct     ? {t:`+${Math.round(o.eq.def_pct*100)}% брони`, c:'#9abae0'} : null,
-    o.eq.dodge       ? {t:`+${o.eq.dodge} уворт`,         c:'#3cc8dc'} : null,
-    o.eq.accuracy    ? {t:`+${o.eq.accuracy} точн`,       c:'#ddddff'} : null,
-    o.eq.lifesteal   ? {t:`+${o.eq.lifesteal}% вамп`,     c:'#dc3c46'} : null,
-    o.eq.pen_pct     ? {t:`+${Math.round(o.eq.pen_pct*100)}% пробой`, c:'#ffc83c'} : null,
-    o.eq.crit_resist ? {t:`−${o.eq.crit_resist}% крит-урон`, c:'#b45aff'} : null,
-  ].filter(Boolean);
 
   const top = isMe ? 50 : 100;
   const cardClass = '';
@@ -156,7 +219,11 @@ function render(){
       ${isBot ? (hasGear
         ? `<div class="gear-block">
              <div class="gear-title">🎽 ЧТО ОДЕТО</div>
-             <div class="gear-grid">${gearItems.map(it=>`<div class="badge" style="color:${it.c}">${it.t}</div>`).join('')}</div>
+             <div class="gear-grid">${o.items.map(it=>`
+               <div class="slot-row" style="border-color:${it.color}">
+                 <span class="slot-icon">${SLOT_ICON[it.slot]||'•'}</span>
+                 <span class="slot-name" style="color:${it.color}">${it.name}</span>
+               </div>`).join('')}</div>
            </div>`
         : `<div class="gear-block"><div class="empty">— шмота нет —</div></div>`
       ) : ''}
