@@ -93,10 +93,10 @@ const BotBattleHtml = (() => {
     root.innerHTML = `
       <div class="bg" style="background-image:url('${bgUrl}')"></div>
       <div class="hp-row">
-        <div class="hp-block"><div class="hp-name">${meName}</div>
+        <div class="hp-block"><div class="hp-name" id="bb-p1n" style="cursor:pointer">${meName}</div>
           <div class="hp-bar"><div class="hp-fill" id="bb-p1b" style="width:${myPct}%"></div></div>
           <div class="hp-num" id="bb-p1h">${b.my_hp || 0} / ${b.my_max_hp || 0}</div></div>
-        <div class="hp-block opp"><div class="hp-name" id="bb-p2n">${oppName}</div>
+        <div class="hp-block opp"><div class="hp-name" id="bb-p2n" style="cursor:pointer">${oppName}</div>
           <div class="hp-bar"><div class="hp-fill" id="bb-p2b" style="width:${oppPct}%"></div></div>
           <div class="hp-num" id="bb-p2h">${b.opp_hp || 0} / ${b.opp_max_hp || 0}</div></div>
       </div>
@@ -136,6 +136,7 @@ const BotBattleHtml = (() => {
       selectedAttack = a; selectedDefense = d; _refresh();
       setTimeout(() => { if (scene && scene._submitChoice) { scene._selAttack = a; scene._selDefense = d; try { scene._submitChoice(); } catch(_){} } }, 250);
     });
+    if (typeof BotBattleCard !== 'undefined') { if (e.target.closest('#bb-p2n')) BotBattleCard.show('opp'); else if (e.target.closest('#bb-p1n')) BotBattleCard.show('me'); }
   }
 
   function _refresh() {

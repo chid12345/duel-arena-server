@@ -32,7 +32,10 @@ Object.assign(BattleScene.prototype, {
     const mode  = b?.mode || 'normal';
     // Скины применяем ТОЛЬКО в обычном «Бой с ботом». Натиск (endless) и Титаны (titan) — свои скины будут позже.
     const allowSkin = isBot && mode === 'normal' && typeof BotSkinPicker !== 'undefined';
-    const skinId = allowSkin ? BotSkinPicker.pick() : null;
+    // Сначала используем skin_id с сервера (привязан к persona),
+    // если по какой-то причине не пришёл — fallback на старый случайный pick().
+    const serverSkinId = b?.opp_skin_id || null;
+    const skinId = allowSkin ? (serverSkinId || BotSkinPicker.pick()) : null;
     this._currentBotSkinId = skinId; // используется в _showCard для попапа инфы про бота
     console.log('[BotSkin]', { isBot, mode, skinId, hasPicker: typeof BotSkinPicker !== 'undefined' });
 

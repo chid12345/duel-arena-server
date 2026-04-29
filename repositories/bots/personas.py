@@ -11,6 +11,7 @@ import random
 from typing import Dict, Tuple
 
 from repositories.bots.persona_gear import pick_gear_for_persona
+from repositories.bots.persona_skins import pick_skin_for_persona
 
 
 # Шансы выбора статуса по уровню игрока. На низких уровнях у НПС-«игроков»
@@ -106,6 +107,11 @@ def apply_persona_to_bot(bot: Dict, level: int,
     if "max_hp" in bot:
         bot["max_hp"] = max(30, int(round(int(bot["max_hp"]) * stat_jitter(r, 0.05))))
         bot["current_hp"] = bot["max_hp"]
+
+    # Скин-«внешка»: грозные боссы — донатерам, простые модели — новичкам.
+    skin_id = pick_skin_for_persona(persona, r)
+    if skin_id:
+        bot["skin_id"] = int(skin_id)
 
     # Виртуальная экипировка по слотам: реальные item_id из каталога.
     items, stats = pick_gear_for_persona(persona, level, r)

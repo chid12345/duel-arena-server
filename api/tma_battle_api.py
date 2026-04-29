@@ -63,8 +63,10 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     opp_persona = None
     opp_eq = None
     opp_items = None
+    opp_skin_id = None
     if opp_entity and opp_is_bot:
         opp_persona = opp_entity.get("persona")
+        opp_skin_id = opp_entity.get("skin_id")
         opp_eq = {
             "atk":         int(opp_entity.get("_eq_atk_bonus") or 0),
             "def_pct":     float(opp_entity.get("_eq_def_pct") or 0.0),
@@ -104,6 +106,7 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "opp_persona": opp_persona,
         "opp_eq": opp_eq,
         "opp_items": opp_items,
+        "opp_skin_id": opp_skin_id,
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),
