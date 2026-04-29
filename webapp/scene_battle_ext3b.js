@@ -70,7 +70,9 @@ Object.assign(BattleScene.prototype, {
     const _p2Type = State.battle?.opp_warrior_type || 'tank';
     const _p2Key  = (skinId && haveSkn) ? skinKey : getWarriorKey(_p2Type);
     const p1Flip = skinId ? !!BotSkinPicker.PLAYER_FLIP_X : false;
-    this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setScale(0.15).setFlipX(p1Flip);
+    this.warrior1 = this.add.image(W * 0.28, H * 0.35, _p1Key).setFlipX(p1Flip);
+    { const t = this.textures.get(_p1Key).getSourceImage(); const wh = Math.round(H * 0.32);
+      this.warrior1.setDisplaySize(t.width ? wh * (t.width / t.height) : Math.round(wh * 0.65), wh); }
     const w2FlipX = skinId ? BotSkinPicker.shouldFlip(skinId) : true;
     this.warrior2 = this.add.image(W * 0.72, H * 0.35, _p2Key).setFlipX(w2FlipX);
     if (skinId) {
@@ -97,7 +99,8 @@ Object.assign(BattleScene.prototype, {
       this.add.graphics().setDepth(-1)
         .fillStyle(0x000000, 0.55).fillEllipse(this.warrior2.x, footY + 11, w2W * 0.55, 13);
     } else {
-      this.warrior2.setScale(0.15);
+      const t2 = this.textures.get(_p2Key).getSourceImage(); const wh2 = Math.round(H * 0.32);
+      this.warrior2.setDisplaySize(t2.width ? wh2 * (t2.width / t2.height) : Math.round(wh2 * 0.65), wh2).setFlipX(true);
     }
 
     // Premium/Elite/Sub — золотая вспышка при входе в бой

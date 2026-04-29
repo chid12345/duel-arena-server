@@ -108,7 +108,6 @@ Object.assign(MenuScene.prototype, {
     }
     const _canvas = document.querySelector('canvas');
     if (_canvas) _canvas.style.pointerEvents = 'none';
-    try { if (this.input) this.input.enabled = false; } catch(_e) {}
 
     const curType = State.player?.warrior_type || 'tank';
     const el = document.createElement('div'); el.id = 'ws-overlay';
@@ -231,7 +230,6 @@ Object.assign(MenuScene.prototype, {
     document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
     const cv = document.querySelector('canvas');
     if (cv) cv.style.pointerEvents = '';
-    try { if (this.input) this.input.enabled = true; } catch(_e) {}
   },
 
   _tryBattle() {

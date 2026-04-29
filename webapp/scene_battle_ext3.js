@@ -127,7 +127,8 @@ Object.assign(BattleScene.prototype, {
       if (tex && tex.width) spr.setDisplaySize(tH * (tex.width / tex.height), tH);
       spr.setFlipX(BotSkinPicker.shouldFlip(this._currentBotSkinId));
     } else {
-      spr.setScale(0.14).setFlipX(!isMe);
+      const _t = this.textures.get(spriteKey).getSourceImage(); const _tH = 110;
+      spr.setDisplaySize(_t.width ? _tH * (_t.width / _t.height) : 72, _tH).setFlipX(!isMe);
     }
     con.add(spr);
     this.tweens.add({ targets: spr, y: cy + 122, duration: 1700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });

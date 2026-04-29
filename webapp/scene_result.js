@@ -75,8 +75,9 @@ class ResultScene extends Phaser.Scene {
         const ring = this.add.graphics().setAlpha(0);
         ring.lineStyle(2, ringCol, 0.85).strokeCircle(W / 2, myAvY + 18, 22);
         ring.fillStyle(0x000000, 0.35).fillCircle(W / 2, myAvY + 18, 21);
+        const _avTex = this.textures.get(wKey).getSourceImage(); const _avH = 60;
         const av = this.add.image(W / 2, myAvY + 18, wKey)
-          .setScale(0.085).setAlpha(0);
+          .setDisplaySize(_avTex.width ? _avH * (_avTex.width / _avTex.height) : 40, _avH).setAlpha(0);
         this.tweens.add({ targets: [ring, av], alpha: 1, duration: 380, delay: 350 });
       }
     } catch (_) {}
