@@ -46,6 +46,7 @@ def register_tma_battle_read_routes(
         player = await asyncio.to_thread(db.get_or_create_player, uid, "")
         return {
             "ok": True,
+            "battle_id": mine.get("battle_id", ""),
             "human_won": human_won,
             "afk_loss": afk_loss,
             "mode": mine.get("mode", "normal"),

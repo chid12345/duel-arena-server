@@ -60,7 +60,7 @@ class BattleDamageMixin:
         cls_id = (attacker.get("current_class") or "").strip()
         dmg_bonus = 1.0
         if wt_atk == "tank":
-            dmg_bonus = 1.12   # Берсерк +12%
+            dmg_bonus = 1.10   # Берсерк +10% (раньше +12%, успокоен ради PvP-баланса силовиков)
         if usdt == "damage_pct":
             dmg_bonus = min(1.20, dmg_bonus * 1.08)  # кап: суммарный бонус ≤ +20%
         base_dmg = min(dmg_cap, int(base_dmg * dmg_bonus))

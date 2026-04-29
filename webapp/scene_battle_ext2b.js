@@ -139,6 +139,12 @@ Object.assign(BattleScene.prototype, {
           const res = await get('/api/battle/state');
           if (!res?.active) {
             const last = await get('/api/battle/last_result').catch(() => null);
+            // Защита от race-condition: если last_result пришёл от ДРУГОГО боя
+            // (например, кэш старого поражения по AFK), не показываем Result.
+            // Иначе игрок видел "Раундов: 0" из чужого результата.
+            if (last?.ok && myBattleId && last.battle_id && last.battle_id !== myBattleId) {
+              return;
+            }
             State.lastResult = last || { human_won: false, result: {} };
             BattleLog.hide();
             try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_){}
