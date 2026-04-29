@@ -132,8 +132,36 @@ class BotHandlersShopPayments:
             await tg_api_call(update.message.reply_text, msg, parse_mode="HTML")
             return
 
+        # Stars-свиток / ящик: payload = "stars_scroll:{scroll_id}"
+        # Основная выдача — через /api/shop/stars_confirm (мини-апп открыт).
+        # Здесь резервная выдача: если мини-апп был закрыт, игрок не потеряет товар.
+        if payload.startswith("stars_scroll:"):
+            scroll_id = payload[len("stars_scroll:"):]
+            if scroll_id:
+                try:
+                    db.add_to_inventory(user.id, scroll_id)
+                    try:
+                        db.process_referral_vip_shop_purchase(user.id, stars=stars)
+                    except Exception as _ve:
+                        logger.error("vip_shop scroll stars uid=%s: %s", user.id, _ve)
+                    is_box = scroll_id.startswith("box_")
+                    kind = "Ящик" if is_box else "Свиток"
+                    await tg_api_call(
+                        update.message.reply_text,
+                        f"✅ <b>{kind} получен!</b>\nОткройте «Герой → Моё» в игре. ⚔️ Duel Arena",
+                        parse_mode="HTML",
+                    )
+                except Exception as _e:
+                    logger.error("CRITICAL: Stars scroll not delivered uid=%s scroll=%s stars=%s err=%s",
+                                 user.id, scroll_id, stars, _e)
+                    await tg_api_call(
+                        update.message.reply_text,
+                        "⚠️ Оплата получена, но выдача свитка задержалась. Напишите в поддержку и укажите Telegram ID.",
+                    )
+            return
+
         if not payload.startswith("diamonds_"):
-            # Stars-свиток, ящик или другие Stars-покупки
+            # Неизвестный тип Stars-покупки
             try:
                 db.process_referral_vip_shop_purchase(user.id, stars=stars)
             except Exception as _ve:
