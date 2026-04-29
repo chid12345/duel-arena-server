@@ -40,9 +40,14 @@ const BotBattleCard = (() => {
       .bbc-stat-v{font-size:15px;font-weight:700;}
       .bbc-gear{margin-top:10px;border-top:1px dashed #2a2850;padding:8px 14px 12px;}
       .bbc-gear-title{text-align:center;font-size:9px;color:#aaaacc;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
-      .bbc-gear-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
-      .bbc-slot{background:#1a1828;border:1px solid #2a2840;border-radius:5px;padding:4px 6px;display:flex;align-items:center;gap:6px;font-size:10px;}
-      .bbc-slot-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      .bbc-equip{display:grid;grid-template-columns:64px 1fr 64px;grid-template-rows:64px 1fr 64px;gap:6px;align-items:stretch;justify-items:stretch;}
+      .bbc-equip .bbc-eq-sprite{grid-column:2;grid-row:2;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 60%, rgba(180,90,255,.18), transparent 70%);border-radius:8px;min-height:80px;}
+      .bbc-equip .bbc-eq-sprite img{max-width:100%;max-height:110px;}
+      .bbc-equip .bbc-eq-slot{background:#1a1828;border:1.5px solid #2a2840;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:3px 2px;text-align:center;min-height:64px;}
+      .bbc-equip .bbc-eq-slot.empty{opacity:.35;border-style:dashed;}
+      .bbc-equip .bbc-eq-icon{font-size:18px;line-height:1.1;}
+      .bbc-equip .bbc-eq-label{font-size:8px;color:#888;margin-top:1px;letter-spacing:.3px;}
+      .bbc-equip .bbc-eq-name{font-size:8px;font-weight:700;margin-top:1px;line-height:1.1;max-width:60px;word-wrap:break-word;}
       .bbc-empty{text-align:center;font-size:10px;color:#666688;padding:8px;}
     `;
     document.head.appendChild(s);
@@ -86,14 +91,39 @@ const BotBattleCard = (() => {
     const hpPct = Math.min(1, Math.max(0, curHp/maxHp));
     const hpCol = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
     const nameStr = (isPrem ? '👑 ' : '') + name;
-    const slotsHtml = items.length
-      ? `<div class="bbc-gear-grid">${items.slice(0,6).map(it=>`
-          <div class="bbc-slot" style="border-color:${it.color}">
-            <span>${SLOT_ICON[it.slot]||'•'}</span>
-            <span class="bbc-slot-name" style="color:${it.color}">${it.name||''}</span>
-          </div>`).join('')}</div>`
-      : `<div class="bbc-empty">— шмота нет —</div>`;
-    const gearBlock = (isBot) ? `<div class="bbc-gear"><div class="bbc-gear-title">🎽 ЧТО ОДЕТО</div>${slotsHtml}</div>` : '';
+
+    // Equipment grid: спрайт по центру, 6 слотов вокруг (как в гардеробе игрока).
+    // Индекс по слоту — позиция в 3x3 сетке.
+    const SLOT_LAYOUT = {
+      belt:   {row: 1, col: 2, label: 'Шлем'},
+      weapon: {row: 2, col: 1, label: 'Оружие'},
+      shield: {row: 2, col: 3, label: 'Щит'},
+      ring1:  {row: 3, col: 1, label: 'Кольцо'},
+      armor:  {row: 3, col: 2, label: 'Броня'},
+      boots:  {row: 3, col: 3, label: 'Сапоги'},
+    };
+    const itemsBySlot = {};
+    items.forEach(it => { itemsBySlot[it.slot] = it; });
+    const renderSlot = (slot) => {
+      const it = itemsBySlot[slot];
+      const meta = SLOT_LAYOUT[slot];
+      if (!meta) return '';
+      const style = `grid-row:${meta.row};grid-column:${meta.col};` +
+                    (it ? `border-color:${it.color};` : '');
+      const cls = it ? '' : 'empty';
+      const nm = it ? (it.name.length > 14 ? it.name.slice(0, 13) + '…' : it.name) : '—';
+      return `<div class="bbc-eq-slot ${cls}" style="${style}">
+        <div class="bbc-eq-icon">${SLOT_ICON[slot] || '•'}</div>
+        <div class="bbc-eq-label">${meta.label}</div>
+        ${it ? `<div class="bbc-eq-name" style="color:${it.color}">${nm}</div>` : ''}
+      </div>`;
+    };
+    const equipHtml = `
+      <div class="bbc-equip">
+        <div class="bbc-eq-sprite">${_spriteHtml(b, who)}</div>
+        ${['belt','weapon','shield','ring1','armor','boots'].map(renderSlot).join('')}
+      </div>`;
+    const gearBlock = (isBot) ? `<div class="bbc-gear"><div class="bbc-gear-title">🎽 ЧТО ОДЕТО</div>${equipHtml}</div>` : '';
 
     overlay = document.createElement('div');
     overlay.id = 'bbc-overlay';
@@ -106,16 +136,19 @@ const BotBattleCard = (() => {
         <div class="bbc-name" style="color:${isPrem?'#ffc83c':'#f0f0fa'}">${nameStr}</div>
         <div class="bbc-lv" style="color:${(!isMe && isBot && (b.opp_win_streak||0) > 0) ? '#ff8044' : '#ccccee'}">Ур. ${level} · ★ ${rating}${(!isMe && isBot && (b.opp_win_streak||0) > 0) ? `  ·  🔥 ${b.opp_win_streak} подряд` : ''}</div>
         <div class="bbc-div"></div>
-        <div class="bbc-body">
-          <div class="bbc-sprite">${_spriteHtml(b, who)}</div>
-          <div class="bbc-right">
-            <div class="bbc-hp-row"><span>❤️ HP</span><span style="color:${hpCol}">${curHp} / ${maxHp}</span></div>
-            <div class="bbc-hp-bar"><div class="bbc-hp-fill" style="width:${hpPct*100}%;background:${hpCol}"></div></div>
-            <div class="bbc-stats">${stats.map(s=>`
-              <div class="bbc-stat"><span class="bbc-stat-i">${s[0]}</span><div><div class="bbc-stat-l">${s[1]}</div><div class="bbc-stat-v" style="color:${s[3]}">${s[2]}</div></div></div>`).join('')}</div>
+        <div style="padding:6px 14px 0;">
+          <div class="bbc-hp-row"><span>❤️ HP</span><span style="color:${hpCol}">${curHp} / ${maxHp}</span></div>
+          <div class="bbc-hp-bar"><div class="bbc-hp-fill" style="width:${hpPct*100}%;background:${hpCol}"></div></div>
+          <div class="bbc-stats" style="grid-template-columns:repeat(4,1fr);text-align:center;">
+            ${stats.map(s=>`
+              <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
+                <span style="font-size:14px">${s[0]}</span>
+                <span style="font-size:13px;font-weight:700;color:${s[3]}">${s[2]}</span>
+                <span style="font-size:9px;color:#aaaacc">${s[1]}</span>
+              </div>`).join('')}
           </div>
         </div>
-        ${gearBlock}
+        ${isMe ? `<div style="padding:10px 14px;display:flex;justify-content:center;">${_spriteHtml(b, who)}</div>` : gearBlock}
       </div>`;
     document.body.appendChild(overlay);
     overlay.addEventListener('click', e => {
