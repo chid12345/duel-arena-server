@@ -95,9 +95,9 @@ Object.assign(BattleScene.prototype, {
     if (!b) return;
     if (this._htmlMode) {
       State.battle = b;
-      const md = (this._prevMyHp ?? b.my_hp) - b.my_hp, od = (this._prevOppHp ?? b.opp_hp) - b.opp_hp;
-      this._prevMyHp = b.my_hp; this._prevOppHp = b.opp_hp;
-      try { BotBattleHtml.update(b); if (od > 0) BotBattleHtml.hitFx('opp'); if (md > 0) BotBattleHtml.hitFx('me'); } catch(_){}
+      const md = (this._prevMyHp ?? b.my_hp) - b.my_hp, od = (this._prevOppHp ?? b.opp_hp) - b.opp_hp; this._prevMyHp = b.my_hp; this._prevOppHp = b.opp_hp;
+      const cr = String((b.combat_log||[]).slice(-1)[0]||'').toLowerCase().includes('крит');
+      try { BotBattleHtml.update(b); if (od > 0) BotBattleHtml.dmgFx('opp', od, cr); if (md > 0) BotBattleHtml.dmgFx('me', md, cr); } catch(_){}
       return;
     }
 

@@ -47,8 +47,6 @@ const BotBattleHtml = (() => {
       @keyframes bbVsPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
       @keyframes bbBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
       #bb-root .boss > img{animation:bbBreath 3.4s ease-in-out infinite;}
-      @keyframes bbHit{0%{filter:brightness(2.3) saturate(1.4)}100%{filter:brightness(1)}}
-      #bb-root .hit > img{animation:bbHit .4s ease-out;}
       #bb-root .holo{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:8px 10px 9px;
         background:rgba(2,5,20,.94);border-top:1px solid #00d8ff;
         box-shadow:inset 0 1px 0 rgba(0,216,255,.35),0 -2px 12px rgba(0,216,255,.15);display:flex;flex-direction:column;gap:5px;}
@@ -171,11 +169,8 @@ const BotBattleHtml = (() => {
       if (!mounted || !elWait) return;
       elWait.textContent = msg || ''; elWait.style.display = msg ? 'block' : 'none';
     },
-    hitFx(side) {
-      if (!mounted || !root) return;
-      const el = root.querySelector(side === 'opp' ? '#bb-p2' : '#bb-p1');
-      if (!el) return;
-      el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit');
+    dmgFx(side, amount, isCrit) {
+      if (mounted && typeof BotBattleFx !== 'undefined') BotBattleFx.apply(side, amount, isCrit);
     },
     unmount() {
       if (!mounted) return;
