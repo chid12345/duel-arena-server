@@ -377,13 +377,22 @@ function makeBackBtn(scene, label, onClick) {
  * остаться. Используется в начале create() каждой TabBar-сцены.
  */
 window._redirectIfInBattle = async function(scene) {
+  const now = Date.now();
+  // Кэш на 30 сек: если только что проверяли и боя не было — не стучимся снова
+  if (window._ribCache && now - window._ribCache.ts < 30000 && !window._ribCache.inBattle) {
+    return false;
+  }
   try {
     const sess = await post('/api/player/active_session', {});
-    if (sess?.ok && sess.scene && sess.scene !== scene.scene.key) {
+    const inBattle = !!(sess?.ok && sess.scene && sess.scene !== scene.scene.key);
+    window._ribCache = { ts: now, inBattle };
+    if (inBattle) {
       scene.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : undefined);
       return true;
     }
-  } catch(_) {}
+  } catch(_) {
+    window._ribCache = { ts: now, inBattle: false };
+  }
   return false;
 };
 

@@ -11,6 +11,10 @@ class ResultScene extends Phaser.Scene {
   }
 
   async create() {
+    // Закрываем зомби-оверлеи из предыдущей сцены
+    try { BattleLog.hideHistory?.(); } catch(_) {}
+    try { if (typeof BotBattleCard !== 'undefined') BotBattleCard.hide?.(); } catch(_) {}
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     const res   = State.lastResult;
     const won   = res?.human_won ?? false;

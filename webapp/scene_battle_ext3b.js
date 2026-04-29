@@ -164,8 +164,10 @@ Object.assign(BattleScene.prototype, {
   },
 
   shutdown() {
+    try { BattleLog.hideHistory?.(); } catch(_) {}
     BattleLog.hide();
     if (typeof BattleHints !== 'undefined') BattleHints.hide();
+    try { if (typeof BotBattleCard !== 'undefined') BotBattleCard.hide?.(); } catch(_) {}
     this.time.removeAllEvents();
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   },

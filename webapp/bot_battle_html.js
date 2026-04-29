@@ -152,7 +152,10 @@ const BotBattleHtml = (() => {
       if (mounted) return;
       if (!s || !s.game || !s.game.canvas) return;
       scene = s; mounted = true; _injectCss();
-      const skinId = s._currentBotSkinId || (typeof BotSkinPicker !== 'undefined' ? BotSkinPicker.pick() : null);
+      // Приоритет: уже выбранный → opp_skin_id с сервера → случайный
+      const skinId = s._currentBotSkinId
+        || window.State?.battle?.opp_skin_id
+        || (typeof BotSkinPicker !== 'undefined' ? BotSkinPicker.pick() : null);
       s._currentBotSkinId = skinId;
       root = document.createElement('div'); root.id = 'bb-root';
       const r = s.game.canvas.getBoundingClientRect();

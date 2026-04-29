@@ -110,6 +110,8 @@ const BattleLog = (() => {
       overlay.style.pointerEvents = 'none';
       overlay.onclick = null;
       _shown = false;
+      // Закрываем и попап истории раундов, если открыт
+      try { BattleLog.hideHistory?.(); } catch(_) {}
     },
     clear() {
       _init();
