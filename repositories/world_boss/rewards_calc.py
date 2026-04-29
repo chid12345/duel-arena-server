@@ -32,6 +32,7 @@ from config.world_boss_constants import (
     WB_DIAMONDS_TOP1,
     WB_DIAMONDS_TOP2,
     WB_DIAMONDS_TOP3,
+    WB_DIAMONDS_LAST_HIT,
     WB_GOLD_GUARANTEED,
     WB_GOLD_CONTRIB_PER_PLAYER,
     WB_REWARD_MULT_DEFEAT,
@@ -118,6 +119,12 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         tiers = [WB_DIAMONDS_TOP1, WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3]
         for i, row in enumerate(top3[:3]):
             diamonds_by_rank[int(row["user_id"])] = tiers[i]
+        # Last-hit бонус: +5 алмазов тому, кто нанёс финальный удар.
+        # Складывается с топ-бонусом (топ-1 = last-hitter → TOP1 + LAST_HIT).
+        last_hit_uid = db.get_wb_last_hitter(int(spawn_id))
+        if last_hit_uid and int(last_hit_uid) in by_uid:
+            lh = int(last_hit_uid)
+            diamonds_by_rank[lh] = diamonds_by_rank.get(lh, 0) + WB_DIAMONDS_LAST_HIT
     # Редкая удача: 3% шанс на весь рейд, что один случайный участник
     # (не топ-1) получит свиток scroll_all_12. Часто никто не получает —
     # это «заманушка-редкость» (~1 свиток на 30 рейдов).

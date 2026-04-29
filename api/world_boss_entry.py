@@ -133,7 +133,7 @@ async def world_boss_enter_active_inner(body: EnterActiveBody, *, db, get_user_f
     tg_user = get_user_from_init_data(body.init_data)
     uid = int(tg_user["id"])
 
-    active = db.get_wb_active()
+    active = db.get_wb_active_spawn()
     if not active:
         return {"ok": False, "reason": "Нет активного рейда"}
 
