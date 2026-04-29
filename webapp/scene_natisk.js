@@ -152,6 +152,7 @@ class NatiskScene extends Phaser.Scene {
     this._busy = true;
     try {
       const res = await post('/api/endless/start', {});
+      if (!this.scene?.isActive('Natisk')) return;
       if (!res.ok) { this._toast('❌ ' + (res.reason || 'Ошибка')); this._busy = false; return; }
       State.battle    = res.battle;
       State.endlessWave = res.wave;
@@ -170,6 +171,7 @@ class NatiskScene extends Phaser.Scene {
       await post('/api/endless/abandon', {});
     } catch(_) {}
     this._busy = false;
+    if (!this.scene?.isActive('Natisk')) return;
     this.scene.restart();
   }
 
@@ -178,6 +180,7 @@ class NatiskScene extends Phaser.Scene {
     this._busy = true;
     try {
       const res = await post('/api/endless/buy_attempt', { kind });
+      if (!this.scene?.isActive('Natisk')) return;
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         this._toast(`✅ Куплено попыток: ${res.bought}`);

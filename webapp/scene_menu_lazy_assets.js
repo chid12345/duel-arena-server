@@ -142,11 +142,10 @@ Object.assign(MenuScene.prototype, {
 
       for (const [k, p] of todo) this.load.image(k, p);
       this.load.once('complete', () => {
-        // Если таймаут уже отрезолвил (>100ms назад) — профиль построен
-        // с вектор-фолбэком, теперь перерисовываем с настоящими PNG.
-        if (resolvedAt && Date.now() - resolvedAt > 100) {
-          this._rebuildProfileAfterLazy();
-        }
+        // В режиме fire-and-forget профиль уже построен с emoji-фолбэком —
+        // всегда перерисовываем с PNG. В режиме await профиль ещё не построен
+        // (_panels.profile = null) → _rebuildProfileAfterLazy() безопасно ничего не делает.
+        this._rebuildProfileAfterLazy();
         _resolveOnce();
       });
       this.load.on('loaderror', f => console.warn('[LazyEq] priority loaderror:', f?.key, f?.src));
