@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лог боя — 3 варианта</title>
+<style>
+  body{margin:0;background:#0a0a12;color:#fff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px 14px 40px;}
+  h1{font-size:18px;margin:0 0 4px;text-align:center;letter-spacing:.5px;}
+  .sub{text-align:center;color:#8a8aa0;font-size:12px;margin-bottom:20px;}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:26px;max-width:1200px;margin:0 auto;}
+  .col{position:relative;padding-top:30px;}
+  .col-title{position:absolute;top:0;left:0;font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#aaa;}
+  .stage{aspect-ratio:9/13;border-radius:14px;overflow:hidden;position:relative;background:#03050f;box-shadow:0 8px 28px rgba(0,0,0,.55);}
+  .bg{position:absolute;inset:0;background:url('bot_skins/bg/33.jpg') center/cover;filter:brightness(.55) saturate(1.05);}
+  .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.5),rgba(0,0,0,.1) 40%,rgba(0,0,0,.7));}
+  .fighters{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 4%;pointer-events:none;}
+  .fighters img{height:55%;object-fit:contain;}
+  .fighters .p1{transform:scaleX(-1);}
+  .vs{position:absolute;top:36%;left:50%;transform:translate(-50%,-50%);font-family:"Consolas",monospace;font-size:38px;font-weight:900;letter-spacing:5px;color:#fff;
+      text-shadow:2px 0 0 #00ffe0,-2px 0 0 #ff0070,0 0 14px #ff0070,0 0 18px #00d8ff;}
+  .panel{position:absolute;left:0;right:0;bottom:0;background:rgba(2,5,20,.92);border-top:1px solid #00d8ff;padding:30px 10px 10px;}
+  .panel .row{display:flex;gap:6px;margin-bottom:5px;}
+  .panel .lbl{font-size:8px;font-weight:800;letter-spacing:1.5px;width:48px;font-family:"Consolas",monospace;}
+  .panel .atk-l{color:#ff8ac0;} .panel .def-l{color:#8ab8ff;}
+  .panel .btns{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;}
+  .panel .btn{padding:3px 0;border-radius:5px;background:rgba(0,0,0,.42);text-align:center;font-size:13px;border:1px solid rgba(255,255,255,.1);}
+  .panel .btn.atk{border-color:rgba(255,80,160,.55);}
+  .panel .btn.def{border-color:rgba(80,160,255,.55);}
+
+  /* ── A: тикер-полоска (киберпанк-терминал) ── */
+  .logA{position:absolute;left:8px;right:8px;bottom:calc(28% + 8px);z-index:9;
+        background:rgba(2,8,22,.9);border:1px solid #00d8ff;border-radius:5px;
+        padding:5px 9px;font-family:"Consolas",monospace;font-size:10px;
+        display:flex;align-items:center;gap:6px;box-shadow:0 0 12px rgba(0,216,255,.25);}
+  .logA .lbl{color:#00d8ff;font-weight:800;letter-spacing:1px;flex:0 0 auto;}
+  .logA .you{flex:1;color:#aaccff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .logA .div{color:#444;flex:0 0 auto;}
+  .logA .opp{flex:1;color:#ffaacc;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .logA .dmg{color:#5fb8ff;font-weight:700;}
+  .logA .dmg-r{color:#ff5fa0;font-weight:700;}
+  .logA .crit{color:#ffd35a;font-weight:700;}
+
+  /* ── B: карточки ударов (две квадратных, иконки слева) ── */
+  .logB{position:absolute;left:8px;right:8px;bottom:calc(28% + 8px);z-index:9;
+        display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+  .logB .card{padding:6px 8px;border-radius:6px;display:flex;align-items:center;gap:8px;
+              background:rgba(8,12,28,.88);border:1px solid;}
+  .logB .me{border-color:rgba(0,216,255,.45);}
+  .logB .opp{border-color:rgba(255,0,112,.5);}
+  .logB .ico{font-size:18px;}
+  .logB .info{flex:1;font-family:"Consolas",monospace;line-height:1.15;}
+  .logB .who{font-size:8px;letter-spacing:1.2px;font-weight:800;}
+  .logB .me .who{color:#00d8ff;}
+  .logB .opp .who{color:#ff5fa0;}
+  .logB .zone{font-size:10px;color:#fff;}
+  .logB .res{font-size:13px;font-weight:900;font-family:"Consolas",monospace;text-align:right;}
+  .logB .me .res{color:#5fb8ff;}
+  .logB .opp .res{color:#ff5fa0;}
+  .logB .dodge{color:#3cc8dc !important;font-size:11px;}
+
+  /* ── C: всплывающий чек-лист (две строки, жёлтое РN, минимализм) ── */
+  .logC{position:absolute;left:14%;right:14%;bottom:calc(28% + 8px);z-index:9;
+        background:rgba(0,0,0,.55);backdrop-filter:none;border:1px solid rgba(255,255,255,.08);
+        border-radius:8px;padding:5px 10px;font-family:"Consolas",monospace;font-size:10px;line-height:1.5;}
+  .logC .line{display:flex;justify-content:space-between;color:#ccc;}
+  .logC .r{color:#ffd35a;font-weight:800;width:32px;}
+  .logC .l{flex:1;text-align:left;padding-left:6px;}
+  .logC .arrow{color:#666;}
+  .logC .h{color:#ff8ac0;}
+  .logC .b{color:#8ab8ff;}
+  .logC .dmg{color:#fff;font-weight:700;}
+</style>
+</head>
+<body>
+<h1>Лог боя — 3 варианта (1-2 строки удара)</h1>
+<div class="sub">над панелью кнопок · только последние 1-2 раунда · киберпанк</div>
+<div class="grid">
+
+  <!-- ВАРИАНТ A: терминал-тикер -->
+  <div class="col">
+    <div class="col-title">A · ТЕРМИНАЛ-ТИКЕР</div>
+    <div class="stage">
+      <div class="bg"></div>
+      <div class="fighters"><img class="p1" src="warriors/warrior_crit.png"><img src="bot_skins/33.png"></div>
+      <div class="vs">VS</div>
+      <div class="logA">
+        <span class="lbl">Р3</span>
+        <span class="you">Голова <span class="dmg">−245</span></span>
+        <span class="div">│</span>
+        <span class="opp">Тело <span class="dmg-r">−180</span> <span class="crit">⚡крит</span></span>
+      </div>
+      <div class="panel">
+        <div class="row"><div class="lbl atk-l">АТАКА</div><div class="btns"><div class="btn atk">🪖</div><div class="btn atk">🛡</div><div class="btn atk">👢</div></div></div>
+        <div class="row"><div class="lbl def-l">ЗАЩИТА</div><div class="btns"><div class="btn def">🪖</div><div class="btn def">🛡</div><div class="btn def">👢</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ВАРИАНТ B: две карточки -->
+  <div class="col">
+    <div class="col-title">B · КАРТОЧКИ УДАРОВ</div>
+    <div class="stage">
+      <div class="bg"></div>
+      <div class="fighters"><img class="p1" src="warriors/warrior_crit.png"><img src="bot_skins/33.png"></div>
+      <div class="vs">VS</div>
+      <div class="logB">
+        <div class="card me">
+          <div class="ico">⚔️</div>
+          <div class="info"><div class="who">ВЫ → ГОЛОВА</div><div class="zone">прямой удар</div></div>
+          <div class="res">−245</div>
+        </div>
+        <div class="card opp">
+          <div class="ico">🛡️</div>
+          <div class="info"><div class="who">БОТ → ТЕЛО</div><div class="zone dodge">💨 уворот</div></div>
+          <div class="res dodge">—</div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="row"><div class="lbl atk-l">АТАКА</div><div class="btns"><div class="btn atk">🪖</div><div class="btn atk">🛡</div><div class="btn atk">👢</div></div></div>
+        <div class="row"><div class="lbl def-l">ЗАЩИТА</div><div class="btns"><div class="btn def">🪖</div><div class="btn def">🛡</div><div class="btn def">👢</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ВАРИАНТ C: чек-лист (2 строки последних раундов) -->
+  <div class="col">
+    <div class="col-title">C · ИСТОРИЯ 2 РАУНДОВ</div>
+    <div class="stage">
+      <div class="bg"></div>
+      <div class="fighters"><img class="p1" src="warriors/warrior_crit.png"><img src="bot_skins/33.png"></div>
+      <div class="vs">VS</div>
+      <div class="logC">
+        <div class="line"><span class="r">Р3</span><span class="l"><span class="h">Голова</span> <span class="dmg">−245</span> <span class="arrow">→</span> <span class="b">Тело</span> ⚡<span class="dmg">крит −180</span></span></div>
+        <div class="line"><span class="r">Р2</span><span class="l"><span class="h">Тело</span> 🛡блок <span class="arrow">→</span> <span class="b">Ноги</span> <span class="dmg">−92</span></span></div>
+      </div>
+      <div class="panel">
+        <div class="row"><div class="lbl atk-l">АТАКА</div><div class="btns"><div class="btn atk">🪖</div><div class="btn atk">🛡</div><div class="btn atk">👢</div></div></div>
+        <div class="row"><div class="lbl def-l">ЗАЩИТА</div><div class="btns"><div class="btn def">🪖</div><div class="btn def">🛡</div><div class="btn def">👢</div></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
