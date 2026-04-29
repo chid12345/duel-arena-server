@@ -53,17 +53,27 @@ const BotBattleHtml = (() => {
         box-shadow:inset 0 1px 0 rgba(0,216,255,.35),0 -2px 12px rgba(0,216,255,.15);display:flex;flex-direction:column;gap:5px;}
       #bb-root .row{display:flex;align-items:center;gap:7px;}
       #bb-root .row-lbl{flex:0 0 auto;font-size:8px;letter-spacing:1.8px;font-weight:800;text-transform:uppercase;width:54px;font-family:"Consolas",monospace;}
-      #bb-root .icon-row{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
-      #bb-root .icon-btn{padding:4px 0;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;cursor:pointer;background:rgba(0,0,0,.45);user-select:none;}
-      #bb-root .atk .icon-btn{border:1px solid rgba(255,80,160,.6);}
-      #bb-root .def .icon-btn{border:1px solid rgba(80,160,255,.6);}
-      #bb-root .atk .icon-btn.sel{background:rgba(255,80,160,.32);border-color:#ff5fa0;box-shadow:0 0 14px rgba(255,80,160,.7);}
-      #bb-root .def .icon-btn.sel{background:rgba(80,160,255,.32);border-color:#5fa0ff;box-shadow:0 0 14px rgba(80,160,255,.65);}
-      #bb-root .atk .row-lbl{color:#ff8ac0;}
-      #bb-root .def .row-lbl{color:#8ab8ff;}
-      #bb-root .random-btn{margin-top:2px;padding:5px;text-align:center;font-size:9.5px;font-weight:700;letter-spacing:2.5px;border-radius:5px;cursor:pointer;
-        background:linear-gradient(180deg,#0a0518,#1a0a3a);border:1px solid rgba(255,0,112,.6);color:#ff5fa0;
-        font-family:"Consolas",monospace;text-transform:uppercase;user-select:none;}
+      #bb-root .icon-row{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;}
+      #bb-root .ic-btn{display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;user-select:none;position:relative;padding:3px 0;}
+      #bb-root .ic-btn img{width:36px;height:36px;object-fit:contain;}
+      #bb-root .ic-btn .nm{font-size:8.5px;font-weight:800;letter-spacing:.5px;font-family:"Consolas",monospace;text-transform:uppercase;}
+      #bb-root .atk .ic-btn img{filter:drop-shadow(0 0 6px rgba(255,80,160,.8)) drop-shadow(0 1px 2px rgba(0,0,0,.7));}
+      #bb-root .def .ic-btn img{filter:drop-shadow(0 0 6px rgba(80,180,255,.8)) drop-shadow(0 1px 2px rgba(0,0,0,.7));}
+      #bb-root .atk .ic-btn .nm{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.6);}
+      #bb-root .def .ic-btn .nm{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.6);}
+      #bb-root .ic-btn .halo{position:absolute;top:-2px;left:50%;transform:translateX(-50%);width:52px;height:52px;border-radius:50%;pointer-events:none;opacity:0;}
+      #bb-root .atk .ic-btn .halo{background:radial-gradient(circle,rgba(255,0,112,.55) 0%,transparent 65%);}
+      #bb-root .def .ic-btn .halo{background:radial-gradient(circle,rgba(0,180,255,.55) 0%,transparent 65%);}
+      #bb-root .ic-btn.sel .halo{opacity:1;animation:bbHalo 1.4s ease-in-out infinite;}
+      @keyframes bbHalo{0%,100%{transform:translateX(-50%) scale(1);opacity:.85}50%{transform:translateX(-50%) scale(1.15);opacity:1}}
+      #bb-root .atk .ic-btn.sel img{filter:drop-shadow(0 0 18px #ff5fa0) drop-shadow(0 0 8px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.7));}
+      #bb-root .def .ic-btn.sel img{filter:drop-shadow(0 0 18px #5fb8ff) drop-shadow(0 0 8px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.7));}
+      #bb-root .ic-btn.sel .nm{color:#fff;}
+      #bb-root .atk .row-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.5);}
+      #bb-root .def .row-lbl{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.5);}
+      #bb-root .confirm-btn{margin-top:5px;padding:9px;text-align:center;border-radius:7px;font-family:"Consolas",monospace;font-weight:900;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#fff;text-shadow:0 0 8px #c98aff,0 0 14px #ff5fa0;background:linear-gradient(180deg,rgba(80,40,140,.55),rgba(40,15,80,.85));border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 14px rgba(180,80,255,.4),inset 0 1px 0 rgba(255,255,255,.18);opacity:.45;cursor:not-allowed;transition:opacity .25s;user-select:none;}
+      #bb-root .confirm-btn.ready{opacity:1;cursor:pointer;border-color:#ff5fa0;box-shadow:0 0 18px rgba(255,90,150,.7),0 0 32px rgba(80,180,255,.3),inset 0 1px 0 rgba(255,255,255,.3);animation:cfPulse 1.6s ease-in-out infinite;}
+      @keyframes cfPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
       #bb-root .wait{position:absolute;left:0;right:0;top:55%;text-align:center;color:#ffc83c;font-size:13px;font-weight:700;z-index:9;pointer-events:none;}
     `;
     document.head.appendChild(s);
@@ -78,8 +88,9 @@ const BotBattleHtml = (() => {
     const flipBoss = skinId && typeof BotSkinPicker !== 'undefined' && BotSkinPicker.shouldFlip(skinId);
     const meName = String(window.State?.player?.username || 'Вы').toUpperCase();
     const oppName = String(b.opp_name || 'Соперник').toUpperCase();
-    const ic = k => k === 'HEAD' ? '🪖' : k === 'TORSO' ? '🛡' : '👢';
-    const btn = (s, k) => `<div class="icon-btn" data-side="${s}" data-key="${k}"><span>${ic(k)}</span></div>`;
+    const ic = k => k === 'HEAD' ? 'head' : k === 'TORSO' ? 'torso' : 'legs';
+    const nm = k => k === 'HEAD' ? 'Голова' : k === 'TORSO' ? 'Тело' : 'Ноги';
+    const btn = (s, k) => `<div class="ic-btn" data-side="${s}" data-key="${k}"><div class="halo"></div><img src="battle_icons/${ic(k)}.png"><div class="nm">${nm(k)}</div></div>`;
     const myPct  = b.my_max_hp  > 0 ? Math.max(0, Math.min(100, b.my_hp  / b.my_max_hp  * 100)) : 0;
     const oppPct = b.opp_max_hp > 0 ? Math.max(0, Math.min(100, b.opp_hp / b.opp_max_hp * 100)) : 0;
     root.innerHTML = `
@@ -99,7 +110,7 @@ const BotBattleHtml = (() => {
       <div class="holo">
         <div class="row atk"><div class="row-lbl">АТАКА</div><div class="icon-row">${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div></div>
         <div class="row def"><div class="row-lbl">ЗАЩИТА</div><div class="icon-row">${['HEAD','TORSO','LEGS'].map(k => btn('def', k)).join('')}</div></div>
-        <div class="random-btn" id="bb-rand">🎲 Случайный ход</div>
+        <div class="confirm-btn" id="bb-confirm">⚔ Совершить ход</div>
       </div>
       <div class="wait" id="bb-wait" style="display:none"></div>`;
     elP1Hp = root.querySelector('#bb-p1h'); elP2Hp = root.querySelector('#bb-p2h');
@@ -109,29 +120,29 @@ const BotBattleHtml = (() => {
     elWait = root.querySelector('#bb-wait');
     if (typeof BotBattleLog !== 'undefined') BotBattleLog.attach(root);
     attackBtns = {}; defenseBtns = {};
-    root.querySelectorAll('.atk .icon-btn').forEach(b => attackBtns[b.dataset.key] = b);
-    root.querySelectorAll('.def .icon-btn').forEach(b => defenseBtns[b.dataset.key] = b);
+    root.querySelectorAll('.atk .ic-btn').forEach(b => attackBtns[b.dataset.key] = b);
+    root.querySelectorAll('.def .ic-btn').forEach(b => defenseBtns[b.dataset.key] = b);
   }
 
   function _onClick(e) {
     if (!mounted || !scene) return;
-    const btn = e.target.closest('.icon-btn');
+    const btn = e.target.closest('.ic-btn');
     if (btn) {
-      const side = btn.dataset.side, key = btn.dataset.key;
-      if (side === 'atk') selectedAttack = key; else selectedDefense = key;
+      if (btn.dataset.side === 'atk') selectedAttack = btn.dataset.key; else selectedDefense = btn.dataset.key;
       _refresh();
-      if (selectedAttack && selectedDefense && scene._submitChoice) {
-        scene._selAttack = selectedAttack; scene._selDefense = selectedDefense;
-        try { scene._submitChoice(); } catch(_){}
-      }
       return;
     }
-    if (e.target.closest('#bb-rand') && scene._onAuto) { try { scene._onAuto(); } catch(_){} }
+    if (e.target.closest('#bb-confirm') && selectedAttack && selectedDefense && scene._submitChoice) {
+      scene._selAttack = selectedAttack; scene._selDefense = selectedDefense;
+      try { scene._submitChoice(); } catch(_){}
+    }
   }
 
   function _refresh() {
     Object.values(attackBtns).forEach(b => b.classList.toggle('sel', b.dataset.key === selectedAttack));
     Object.values(defenseBtns).forEach(b => b.classList.toggle('sel', b.dataset.key === selectedDefense));
+    const cf = root && root.querySelector('#bb-confirm');
+    if (cf) cf.classList.toggle('ready', !!(selectedAttack && selectedDefense));
   }
 
   return {
