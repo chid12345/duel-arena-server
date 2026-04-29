@@ -156,7 +156,7 @@ class NatiskScene extends Phaser.Scene {
       State.battle    = res.battle;
       State.endlessWave = res.wave;
       tg?.HapticFeedback?.impactOccurred('heavy');
-      this.scene.start('Battle');
+      this.scene.start('Battle', {});
     } catch(_) {
       this._toast('❌ Нет соединения');
     }

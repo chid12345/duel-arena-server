@@ -13,7 +13,7 @@ Object.assign(MenuScene.prototype, {
     connectWS(p.user_id, msg => {
       if (msg.event === 'battle_started') {
         State.battle = msg.battle;
-        this.scene.start('Battle');
+        this.scene.start('Battle', {});
         return;
       }
       if (msg.event === 'challenge_incoming') {
@@ -112,7 +112,7 @@ Object.assign(MenuScene.prototype, {
         if (!accept) { this._toast('🚫 Вызов отклонён'); return; }
         if (res.battle) {
           State.battle = res.battle;
-          this.scene.start('Battle');
+          this.scene.start('Battle', {});
           return;
         }
       } catch (_) {

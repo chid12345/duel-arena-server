@@ -91,7 +91,7 @@ Object.assign(QueueScene.prototype, {
     this.cameras.main.flash(350, 80, 144, 255);
 
     State.battle = battle;
-    this.time.delayedCall(420, () => this.scene.start('Battle'));
+    this.time.delayedCall(420, () => this.scene.start('Battle', {}));
   },
 
   /* ── Отмена ────────────────────────────────────────────── */
@@ -100,7 +100,7 @@ Object.assign(QueueScene.prototype, {
     this._searching = false;
     try { await post('/api/battle/cancel_queue'); } catch (_) {}
     tg?.HapticFeedback?.impactOccurred('light');
-    this.scene.start('Menu');
+    this.scene.start('Menu', {});
   },
 
   /* ── Бой с ботом ──────────────────────────────────────── */
@@ -117,7 +117,7 @@ Object.assign(QueueScene.prototype, {
       if (res.ok && res.battle) {
         State.battle = res.battle;
         tg?.HapticFeedback?.impactOccurred('medium');
-        this.scene.start('Battle');
+        this.scene.start('Battle', {});
       } else {
         this._searching = true;
         this._statusTxt?.setText('Ошибка. Попробуй ещё раз.');

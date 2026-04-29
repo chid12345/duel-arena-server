@@ -387,7 +387,7 @@ window._redirectIfInBattle = async function(scene) {
     const inBattle = !!(sess?.ok && sess.scene && sess.scene !== scene.scene.key);
     window._ribCache = { ts: now, inBattle };
     if (inBattle) {
-      scene.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : undefined);
+      scene.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : {});
       return true;
     }
   } catch(_) {

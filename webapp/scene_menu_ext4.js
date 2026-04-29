@@ -73,7 +73,7 @@ Object.assign(MenuScene.prototype, {
     const avZ = this.add.zone(avX + avS / 2, avY + avS / 2, avS + 8, avS + 8);
     try { avZ.removeFromDisplayList(); } catch(_) {}
     avZ.setInteractive({ useHandCursor: true });
-    avZ.on('pointerup', () => { Sound.click(); this.scene.start('Avatar'); });
+    avZ.on('pointerup', () => { Sound.click(); this.scene.start('Avatar', {}); });
     c.add(avZ);
 
     // Name row
@@ -313,7 +313,7 @@ Object.assign(MenuScene.prototype, {
     const sZ = ca(mkZ(PAD + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
     sZ.on('pointerdown', () => { sBg.clear(); sBg.fillStyle(0x2a1f40,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,1); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); });
     sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0x1a1828,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,0.5); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); });
-    sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0x1a1828,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,0.5); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); this.scene.start('Shop'); });
+    sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0x1a1828,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,0.5); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); this.scene.start('Shop', {}); });
 
     // Tasks button
     const tasksX = PAD + b2W + 8;
@@ -329,7 +329,7 @@ Object.assign(MenuScene.prototype, {
     const tskZ = ca(mkZ(tasksX + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
     tskZ.on('pointerdown', () => { tBg.clear(); tBg.fillStyle(0x1a2d40,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,1); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
     tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
-    tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this.scene.start('Tasks'); });
+    tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this.scene.start('Tasks', {}); });
 
     // Badge on Tasks button in profile
     const pfBdgBg  = ca(this.add.graphics());

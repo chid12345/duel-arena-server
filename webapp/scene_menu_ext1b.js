@@ -10,9 +10,9 @@ Object.assign(MenuScene.prototype, {
     const rmdl = o => { try { o.removeFromDisplayList(); } catch(_) {} return o; };
 
     const items = [
-      { icon: '🎭', label: 'Аватарки',  cb: () => this.scene.start('Avatar')    },
+      { icon: '🎭', label: 'Аватарки',  cb: () => this.scene.start('Avatar', {})    },
       { icon: '🔗', label: 'Рефералка', cb: () => this._onInvite()              },
-      { icon: '📖', label: 'Справка',   cb: () => this.scene.start('Guide')     },
+      { icon: '📖', label: 'Справка',   cb: () => this.scene.start('Guide', {})     },
     ];
 
     const cols = 2;

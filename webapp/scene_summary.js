@@ -11,7 +11,7 @@ class SummaryScene extends Phaser.Scene {
     _extraBg(this, W, H);
 
     const p = State.player;
-    if (!p) { this.scene.start('Menu'); return; }
+    if (!p) { this.scene.start('Menu', {}); return; }
 
     _extraHeader(this, W, '📋', 'СВОДКА', `@${p.username}  ·  Уровень ${p.level}`);
 

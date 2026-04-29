@@ -21,9 +21,9 @@ Object.assign(MenuScene.prototype, {
         this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Нет противников');
         return;
       }
-      if (res.status === 'queued') { this.scene.start('Queue'); return; }
+      if (res.status === 'queued') { this.scene.start('Queue', {}); return; }
       State.battle = res.battle;
-      this.scene.start('Battle');
+      this.scene.start('Battle', {});
     } catch(e) { this._toast('❌ Нет соединения'); }
   },
 
@@ -40,7 +40,7 @@ Object.assign(MenuScene.prototype, {
       const res = await post('/api/battle/find', { prefer_bot: true });
       if (!res.ok) { this._toast('❌ Ошибка'); return; }
       State.battle = res.battle;
-      this.scene.start('Battle');
+      this.scene.start('Battle', {});
     } catch(e) { this._toast('❌ Нет соединения'); }
   },
 
@@ -59,7 +59,7 @@ Object.assign(MenuScene.prototype, {
         return;
       }
       State.battle = res.battle;
-      this.scene.start('Battle');
+      this.scene.start('Battle', {});
     } catch (_) {
       this._toast('❌ Нет соединения');
     }
@@ -73,7 +73,7 @@ Object.assign(MenuScene.prototype, {
       if (!res.ok) { this._toast('❌ ' + (res.reason || 'Ошибка')); this._buying = false; return; }
       State.battle = res.battle;
       State.endlessWave = res.wave;
-      this.scene.start('Battle');
+      this.scene.start('Battle', {});
     } catch (_) {
       this._toast('❌ Нет соединения');
     }
@@ -123,7 +123,7 @@ Object.assign(MenuScene.prototype, {
   },
 
   _showPvpTop() {
-    this.scene.start('Rating');
+    this.scene.start('Rating', {});
   },
 
   _showSummary() {

@@ -80,7 +80,7 @@ Object.assign(MenuScene.prototype, {
       '🔥  Натиск',
       'Арена выживания · волны врагов',
       null, midH,
-      () => this.scene.start('Natisk'));
+      () => this.scene.start('Natisk', {}));
     curY += midH + GAP;
 
     // ── 2 малые кнопки в ряд ──

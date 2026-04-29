@@ -134,7 +134,7 @@ Object.assign(ResultScene.prototype, {
         if (!r.ok) { this.scene.start('Menu', { returnTab: 'battle' }); return; }
         State.battle = r.battle;
         tg?.HapticFeedback?.impactOccurred('heavy');
-        this.scene.start('Battle');
+        this.scene.start('Battle', {});
       }).catch(() => this.scene.start('Menu', { returnTab: 'battle' }));
     };
     const bigBtnLabel = (isEndless && won) ? '🔥  Следующая волна!'
@@ -144,17 +144,17 @@ Object.assign(ResultScene.prototype, {
     const bigBtnCb = (isEndless && won)
       ? () => {
           post('/api/endless/next_wave', {}).then(r => {
-            if (!r.ok) { this.scene.start('Natisk'); return; }
+            if (!r.ok) { this.scene.start('Natisk', {}); return; }
             State.battle      = r.battle;
             State.endlessWave = r.wave;
             tg?.HapticFeedback?.impactOccurred('heavy');
-            this.scene.start('Battle');
-          }).catch(() => this.scene.start('Natisk'));
+            this.scene.start('Battle', {});
+          }).catch(() => this.scene.start('Natisk', {}));
         }
       : (isTitan)
       ? _goTitanNext
       : (isEndless)
-      ? () => { this.scene.start('Natisk'); }
+      ? () => { this.scene.start('Natisk', {}); }
       : () => { this.scene.start('Menu', { returnTab: 'profile' }); };
     this._bigBtn(W / 2, H * 0.79,
       bigBtnLabel,
@@ -164,7 +164,7 @@ Object.assign(ResultScene.prototype, {
     );
     if (isEndless && won) {
       this._mainBtn(W / 2, H * 0.89, '🚪  Завершить заход', () => {
-        post('/api/endless/abandon', {}).catch(() => {}).finally(() => this.scene.start('Natisk'));
+        post('/api/endless/abandon', {}).catch(() => {}).finally(() => this.scene.start('Natisk', {}));
       });
     } else if (isTitan) {
       this._mainBtn(W / 2, H * 0.89, '🚪  Выйти к боям', () => this.scene.start('Menu', { returnTab: 'battle' }));

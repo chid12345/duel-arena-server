@@ -102,6 +102,7 @@ Object.assign(BattleScene.prototype, {
     const myBattleId = State.battle?.battle_id || null;
 
     const handleMsg = msg => {
+      if (!this.scene?.isActive('Battle')) return;
       if (msg.event === 'round_result') {
         this._lastServerMsg = Date.now();
         this._updateFromState(msg.battle);
@@ -114,7 +115,7 @@ Object.assign(BattleScene.prototype, {
         State.lastResult = msg;
         BattleLog.hide();
         try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_){}
-        this.scene.start('Result');
+        this.scene.start('Result', {});
       }
     };
 
@@ -148,7 +149,7 @@ Object.assign(BattleScene.prototype, {
             State.lastResult = last || { human_won: false, result: {} };
             BattleLog.hide();
             try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_){}
-            this.scene.start('Result');
+            this.scene.start('Result', {});
           } else {
             this._lastServerMsg = now;
             this._updateFromState(res);

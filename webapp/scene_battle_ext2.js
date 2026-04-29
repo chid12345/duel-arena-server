@@ -54,7 +54,7 @@ Object.assign(BattleScene.prototype, {
         State.lastResult = res;
         BattleLog.hide();
         try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
-        this.scene.start('Result');
+        this.scene.start('Result', {});
       } else {
         this._choosing = true;
         const hint = res.detail || res.message || res.error || '';

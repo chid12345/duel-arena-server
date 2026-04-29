@@ -231,7 +231,7 @@ class WorldBossScene extends Phaser.Scene {
       this._renderResurrectRow(s, W, y); y += 54;
       // Кнопка "Покинуть бой" — только когда мёртв
       this._bigBtn(16, y, W-32, 36, 0x1a0030, '🚪 Покинуть бой',
-        () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('WorldBoss'); });
+        () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('WorldBoss', {}); });
       y += 46;
     }
 

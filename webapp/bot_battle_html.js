@@ -151,6 +151,8 @@ const BotBattleHtml = (() => {
     mount(s) {
       if (mounted) return;
       if (!s || !s.game || !s.game.canvas) return;
+      // Страховка: убираем зависший #bb-root от предыдущего боя (если unmount не отработал чисто)
+      try { const old = document.getElementById('bb-root'); if (old) old.remove(); } catch(_) {}
       scene = s; mounted = true; _injectCss();
       // Приоритет: уже выбранный → opp_skin_id с сервера → случайный
       const skinId = s._currentBotSkinId
