@@ -11,6 +11,10 @@ class StatsScene extends Phaser.Scene {
     this._initData = data || {};
     this._sceneGen = (this._sceneGen || 0) + 1;
     this._avatarBusy = false;
+    // Phaser переиспользует scene-инстанс между scene.start — без сброса
+    // флаг «открыто из профиля» прилипал к следующему входу и кидал
+    // _closeAvatarOverlay в Menu/profile из контекста, где это не нужно.
+    this._openedFromProfile = false;
     if (data && data.player) State.player = data.player;
   }
 
@@ -29,10 +33,15 @@ class StatsScene extends Phaser.Scene {
     // Универсальная страховка: закрываем ВСЕ TabBar-оверлеи (вкл. ClanHTML и др.).
     try { window._closeAllTabOverlays?.(); } catch(_) {}
 
-    // Режим прямого открытия гардероба из профиля — Hero-UI не строим
+    // Режим прямого открытия гардероба из профиля — Hero-UI не строим,
+    // НО нижнее меню всё равно нужно: иначе игрок «застревает» во вкладке
+    // Тело и не может уйти на Героя/Босс/etc, кроме как через X (который
+    // возвращает в Профиль = опять к слоту Тело). Активная вкладка —
+    // 'profile', потому что пришли по тапу слота брони из Профиля.
     if (d.openWardrobe) {
       this._openedFromProfile = true;
       this._drawBg(W, H);
+      TabBar.build(this, { activeKey: 'profile' });
       this._openAvatarPanel?.();
       return;
     }

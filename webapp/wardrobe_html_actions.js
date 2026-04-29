@@ -292,6 +292,10 @@
     const wrap = document.createElement('div');
     wrap.id = 'wd-root';
     wrap.className = 'wd-overlay';
+    // Освобождаем нижние 76px для TabBar в Stats(openWardrobe). У других wd-overlay-
+    // оверлеев (Оружие/Шлем/Сапоги/Щит/Кольцо) сцена выключает input — там TabBar
+    // всё равно не тапается, поэтому inline-стиль точечно для Брони, не глобально.
+    wrap.style.bottom = '76px';
     wrap.innerHTML = `
       <div class="wd-panel">
         <div class="wd-head">
