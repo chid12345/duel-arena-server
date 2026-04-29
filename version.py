@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.6.83"
-VERSION_LABEL = "v2.6.83 — fix: shutdown overlay cleanup in Equipment+Avatar scenes"
+VERSION = "2.6.84"
+VERSION_LABEL = "v2.6.84 — fix: USDT equip delivery — no false 'received' on fail"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "11.52"
+GAME_VERSION = "11.53"

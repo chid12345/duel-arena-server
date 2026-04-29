@@ -103,8 +103,10 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                                      _slot, uid, _item_id, invoice_id, _e)
                     if _equip_ok:
                         db.mark_items_delivered(int(invoice_id))
-                    await manager.send(uid, {"event": _evt, _id_key: _item_id, "source": "cryptopay"})
-                    await _send_tg_message(uid, f"{_title} <b>получено!</b>\nОткройте раздел «{_section}» в профиле — предмет уже надет.\n\n⚔️ Duel Arena")
+                        await manager.send(uid, {"event": _evt, _id_key: _item_id, "source": "cryptopay"})
+                        await _send_tg_message(uid, f"{_title} <b>получено!</b>\nОткройте раздел «{_section}» в профиле — предмет уже надет.\n\n⚔️ Duel Arena")
+                    else:
+                        await _send_tg_message(uid, f"⚠️ Оплата получена, но выдача {_title.lower()} задержалась. Напишите в поддержку и укажите ID платежа: {invoice_id}")
                     break
             if _handled_equip:
                 pass  # handled above
