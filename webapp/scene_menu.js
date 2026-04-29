@@ -147,11 +147,8 @@ class MenuScene extends Phaser.Scene {
           // Цена — +1-2с к лоадеру на мобиле, выгода — профиль открывается
           // сразу со ВСЕМИ картинками, без уродливого перехода emoji→PNG.
           // Fail-safe: 5с лимит внутри _preloadEquippedTextures.
-          if (this._loadingTxt?.setText) {
-            try { this._loadingTxt.setText('⏳ Загрузка экипировки…'); } catch(_) {}
-          }
           if (typeof this._preloadEquippedTextures === 'function') {
-            await this._preloadEquippedTextures();
+            this._preloadEquippedTextures().catch(() => null);
           }
           if (!this.scene?.isActive('Menu')) return;
           if (this._loadingTxt) { try { this._loadingTxt.destroy(); } catch(_) {} this._loadingTxt = null; }
