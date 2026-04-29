@@ -134,13 +134,20 @@ def pick_gear_for_persona(persona: str, level: int,
         # Шанс что слот вообще одет — растёт с уровнем
         if r.random() > coverage:
             continue
-        # Новички почти всегда голые (имитация новых аккаунтов).
-        # Без этого голый игрок vs новичок ~ 35% — а должно быть ~50%.
-        if persona == "novice" and r.random() > 0.25:
+        # Новички часто голые (имитация новых аккаунтов).
+        # 60% слотов проскакивают — карточка не пустая, но и не залита эпиком.
+        if persona == "novice" and r.random() > 0.40:
             continue
         iid = _pick_item_for_slot(slot, persona, r)
         if iid:
             items[slot] = iid
+
+    # Гарантия хотя бы одного предмета (оружия) — карточка не выглядит как
+    # «6 пустых слотов», у каждого бота должно быть чем драться.
+    if not items:
+        iid = _pick_item_for_slot("weapon", persona, r)
+        if iid:
+            items["weapon"] = iid
 
     stats = _accumulate_eq_stats(items)
     return items, stats
