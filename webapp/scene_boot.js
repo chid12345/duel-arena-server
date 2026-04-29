@@ -30,9 +30,16 @@ class BootScene extends Phaser.Scene {
     this.load.image('tab_rating',    `tab_rating.png${V}`);
     this.load.image('tab_more',      `tab_more.png${V}`);
     if (typeof BotSkinPicker !== 'undefined') BotSkinPicker.preloadInto(this, V);
+    const sub = document.getElementById('loading-sub');
+    let _errCount = 0;
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });
-    this.load.on('loaderror', f => console.warn('[Boot] loaderror:', f?.key, f?.src));
+    this.load.on('loaderror', f => {
+      _errCount++;
+      console.warn('[Boot] loaderror:', f?.key, f?.src);
+      if (sub) sub.textContent = `Загрузка (ошибка файла ${_errCount}, продолжаем...)`;
+    });
     this.load.on('complete', () => {
+      if (sub && _errCount === 0) sub.textContent = 'Запуск...';
       try {
         this._generateTextures();
       } catch(e) {

@@ -165,6 +165,13 @@ const config = {
     antialias: true,
     pixelArt: false,
   },
+  // На мобильном интернете запрос может зависнуть (connection open, no data).
+  // Без timeout Phaser ждёт бесконечно → полоска загрузки останавливается.
+  // 12с = достаточно даже на слабом 3G, но не бесконечно.
+  loader: {
+    timeout: 12000,
+    maxRetries: 2,
+  },
 };
 
 let _gameStarted = false;

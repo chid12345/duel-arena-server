@@ -148,18 +148,22 @@ window.BUILD_VERSION = '__BUILD_VERSION__';
   </div>
 </div>
 <script>
-// Watchdog: если loading screen не убран за 90с — показываем ошибку.
-// Boot теперь грузит только 3 PNG воинов (~200 КБ) → старт ~5с даже на 3G.
-// Тяжёлые PNG экипировки (~50 МБ) подкачиваются ленив в MenuScene в фоне.
-// Запас 90с = Render cold start (до 60с) + медленный 3G + ~80 JS-файлов.
+// Watchdog: если loading screen не убран — показываем ошибку с кнопкой.
+// 25с: Phaser + 13 PNG грузятся за ~5с на 3G, loader.timeout=12с на зависший файл.
+// Render cold start (до 60с на старте сервера) отдельно не блокирует UI —
+// cold start происходит уже в BootScene.create() после скрытия loading-screen.
 setTimeout(function(){
   var ls = document.getElementById('loading-screen');
   var sub = document.getElementById('loading-sub');
-  if (ls && ls.parentNode && sub) {
-    sub.textContent = '❌ Не удалось загрузить. Закройте и откройте заново.';
+  if (!ls || !ls.parentNode) return; // уже убран — загрузка прошла успешно
+  if (sub) {
+    sub.innerHTML = '❌ Не удалось загрузить.<br>' +
+      '<button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;' +
+      'background:#5096ff;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">' +
+      '🔄 Обновить</button>';
     sub.style.color = '#dc3c46';
   }
-}, 90000);
+}, 25000);
 </script>
 
 <!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
