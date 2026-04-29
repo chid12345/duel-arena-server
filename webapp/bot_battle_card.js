@@ -19,38 +19,38 @@ const BotBattleCard = (() => {
     const s = document.createElement('style'); s.id = 'bbc-css';
     s.textContent = `
       #bbc-overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eee;}
-      #bbc-card{width:min(360px,92vw);background:linear-gradient(180deg,#141420,#0f0d18);border:2px solid #444466;border-radius:14px;padding:0;box-sizing:border-box;}
+      #bbc-card{width:min(310px,90vw);background:linear-gradient(180deg,#141420,#0f0d18);border:2px solid #444466;border-radius:12px;padding:0;box-sizing:border-box;}
       #bbc-card.prem{border-color:#ffc83c;box-shadow:0 0 0 3px rgba(255,200,60,.10);}
-      .bbc-head{display:flex;justify-content:space-between;align-items:center;padding:11px 14px 0;font-size:11px;font-weight:700;}
-      .bbc-close{cursor:pointer;color:#ddddff;font-size:16px;padding:0 4px;}
-      .bbc-name{text-align:center;font-size:17px;font-weight:700;margin-top:6px;}
-      .bbc-lv{text-align:center;font-size:11px;color:#ccccee;margin-top:6px;}
-      .bbc-div{height:1px;background:#2a2850;margin:8px 12px;opacity:.5;}
-      .bbc-body{display:flex;padding:6px 14px;}
-      .bbc-sprite{flex:0 0 95px;height:120px;display:flex;align-items:center;justify-content:center;}
+      .bbc-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px 0;font-size:10px;font-weight:700;}
+      .bbc-close{cursor:pointer;color:#ddddff;font-size:14px;padding:0 4px;}
+      .bbc-name{text-align:center;font-size:15px;font-weight:700;margin-top:5px;}
+      .bbc-lv{text-align:center;font-size:10px;color:#ccccee;margin-top:5px;}
+      .bbc-div{height:1px;background:#2a2850;margin:6px 12px;opacity:.5;}
+      .bbc-body{display:flex;padding:5px 12px;}
+      .bbc-sprite{flex:0 0 80px;height:104px;display:flex;align-items:center;justify-content:center;}
       .bbc-sprite img{max-width:100%;max-height:100%;}
       .bbc-right{flex:1;}
-      .bbc-hp-row{display:flex;justify-content:space-between;font-size:10px;color:#ddddff;}
-      .bbc-hp-bar{height:11px;background:#0a0a18;border-radius:4px;margin-top:6px;overflow:hidden;}
+      .bbc-hp-row{display:flex;justify-content:space-between;font-size:9px;color:#ddddff;}
+      .bbc-hp-bar{height:9px;background:#0a0a18;border-radius:4px;margin-top:4px;overflow:hidden;}
       .bbc-hp-fill{height:100%;border-radius:4px;}
-      .bbc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:10px;}
-      .bbc-stat{display:flex;align-items:center;gap:8px;}
-      .bbc-stat-i{font-size:17px;}
-      .bbc-stat-l{font-size:11px;color:#ccccee;}
-      .bbc-stat-v{font-size:15px;font-weight:700;}
-      .bbc-gear{margin-top:10px;border-top:1px dashed #2a2850;padding:8px 14px 12px;}
-      .bbc-gear-title{text-align:center;font-size:9px;color:#aaaacc;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
-      /* Equip-grid: 3 колонки (левая 76px / центр 1fr / правая 76px), 3 ряда. */
-      .bbc-equip{display:grid;grid-template-columns:76px 1fr 76px;grid-template-rows:repeat(3,76px);gap:8px;align-items:stretch;}
+      .bbc-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-top:8px;}
+      .bbc-stat{display:flex;align-items:center;gap:6px;}
+      .bbc-stat-i{font-size:14px;}
+      .bbc-stat-l{font-size:10px;color:#ccccee;}
+      .bbc-stat-v{font-size:13px;font-weight:700;}
+      .bbc-gear{margin-top:8px;border-top:1px dashed #2a2850;padding:6px 12px 10px;}
+      .bbc-gear-title{text-align:center;font-size:9px;color:#aaaacc;font-weight:700;letter-spacing:1px;margin-bottom:6px;}
+      /* Equip-grid: 3 колонки (левая 64px / центр 1fr / правая 64px), 3 ряда. */
+      .bbc-equip{display:grid;grid-template-columns:64px 1fr 64px;grid-template-rows:repeat(3,64px);gap:6px;align-items:stretch;}
       .bbc-equip .bbc-eq-sprite{grid-column:2;grid-row:1 / 4;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%, rgba(180,90,255,.20), transparent 70%);border-radius:10px;}
       .bbc-equip .bbc-eq-sprite img{max-width:100%;max-height:100%;object-fit:contain;}
-      .bbc-equip .bbc-eq-slot{background:linear-gradient(180deg,#1f1d2e,#16142a);border:1.5px solid #2a2840;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:3px 2px 4px;text-align:center;position:relative;overflow:hidden;}
+      .bbc-equip .bbc-eq-slot{background:linear-gradient(180deg,#1f1d2e,#16142a);border:1.5px solid #2a2840;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2px 2px 3px;text-align:center;position:relative;overflow:hidden;}
       .bbc-equip .bbc-eq-slot.empty{opacity:.35;border-style:dashed;}
-      .bbc-equip .bbc-eq-label{font-size:8px;color:#aaaacc;letter-spacing:.5px;font-weight:700;text-transform:uppercase;}
+      .bbc-equip .bbc-eq-label{font-size:7px;color:#aaaacc;letter-spacing:.4px;font-weight:700;text-transform:uppercase;}
       .bbc-equip .bbc-eq-img{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:1px 0;}
-      .bbc-equip .bbc-eq-img img{max-width:38px;max-height:38px;object-fit:contain;}
-      .bbc-equip .bbc-eq-emoji{font-size:26px;line-height:1;}
-      .bbc-equip .bbc-eq-name{font-size:8px;font-weight:700;line-height:1.1;max-width:72px;word-wrap:break-word;padding:0 2px;}
+      .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;}
+      .bbc-equip .bbc-eq-emoji{font-size:22px;line-height:1;}
+      .bbc-equip .bbc-eq-name{font-size:7px;font-weight:700;line-height:1.1;max-width:60px;word-wrap:break-word;padding:0 2px;}
       .bbc-empty{text-align:center;font-size:10px;color:#666688;padding:8px;}
     `;
     document.head.appendChild(s);

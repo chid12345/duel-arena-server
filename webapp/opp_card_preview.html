@@ -39,16 +39,16 @@
   .slot-row{background:#1a1828;border:1px solid #2a2840;border-radius:5px;padding:4px 6px;display:flex;align-items:center;gap:6px;font-size:10px;}
   .slot-icon{font-size:11px;}
   .slot-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  /* Equipment grid: 3 колонки (76 / 1fr / 76), 3 ряда */
-  .equip{display:grid;grid-template-columns:76px 1fr 76px;grid-template-rows:repeat(3,76px);gap:8px;}
-  .eq-sprite{grid-column:2;grid-row:1 / 4;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%, rgba(180,90,255,.20), transparent 70%);border-radius:10px;font-size:64px;}
-  .eq-slot{background:linear-gradient(180deg,#1f1d2e,#16142a);border:1.5px solid #2a2840;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:3px 2px 4px;text-align:center;}
+  /* Equipment grid: 3 колонки (64 / 1fr / 64), 3 ряда — компактнее */
+  .equip{display:grid;grid-template-columns:64px 1fr 64px;grid-template-rows:repeat(3,64px);gap:6px;}
+  .eq-sprite{grid-column:2;grid-row:1 / 4;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%, rgba(180,90,255,.20), transparent 70%);border-radius:10px;font-size:54px;}
+  .eq-slot{background:linear-gradient(180deg,#1f1d2e,#16142a);border:1.5px solid #2a2840;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2px 2px 3px;text-align:center;}
   .eq-slot.empty{opacity:.35;border-style:dashed;}
-  .eq-label{font-size:8px;color:#aaaacc;letter-spacing:.5px;font-weight:700;text-transform:uppercase;}
+  .eq-label{font-size:7px;color:#aaaacc;letter-spacing:.4px;font-weight:700;text-transform:uppercase;}
   .eq-img{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:1px 0;}
-  .eq-img img{max-width:38px;max-height:38px;object-fit:contain;}
-  .eq-emoji{font-size:26px;}
-  .eq-name{font-size:8px;font-weight:700;line-height:1.1;max-width:72px;word-wrap:break-word;padding:0 2px;}
+  .eq-img img{max-width:30px;max-height:30px;object-fit:contain;}
+  .eq-emoji{font-size:22px;}
+  .eq-name{font-size:7px;font-weight:700;line-height:1.1;max-width:60px;word-wrap:break-word;padding:0 2px;}
   .empty{text-align:center;font-size:10px;color:#666688;padding:8px;}
 
   .persona-novice  {color:#9ad9a0;}
