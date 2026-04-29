@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.6.60"
-VERSION_LABEL = "v2.6.60 — фикс клика по нику: pointer-events:auto на .hp-name"
+VERSION = "2.6.61"
+VERSION_LABEL = "v2.6.61 — карточка читает State напрямую, а не через window.State"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "11.30"
+GAME_VERSION = "11.31"

@@ -50,7 +50,7 @@ const BotBattleCard = (() => {
 
   function _spriteHtml(b, who) {
     if (who === 'me') {
-      const wt = (window.State?.player?.warrior_type || 'crit');
+      const wt = ((typeof State !== 'undefined' ? State : window.State)?.player?.warrior_type || 'crit');
       const key = ['tank','agile','crit'].includes(wt) ? `warrior_${wt}` : 'warrior_crit';
       return `<img src="warriors/${key}.png" alt="">`;
     }
@@ -62,8 +62,8 @@ const BotBattleCard = (() => {
   function _show(who) {
     _injectCss();
     if (overlay) _hide();
-    const b  = window.State?.battle || {};
-    const me = window.State?.player || {};
+    const b  = (typeof State !== 'undefined' ? State : window.State)?.battle || {};
+    const me = (typeof State !== 'undefined' ? State : window.State)?.player || {};
     const isMe = who === 'me';
     const isPrem = isMe ? !!me.is_premium : !!b.opp_is_premium;
     const isBot  = isMe ? false : !!b.opp_is_bot;
