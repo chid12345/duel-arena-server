@@ -218,11 +218,11 @@ class BootScene extends Phaser.Scene {
           if (d.type === 'world_boss') {
             try { localStorage.removeItem('wb_left_raid'); } catch(_) {}
           }
-          this.scene.start(d.scene, d.openTab ? { returnTab: d.openTab } : undefined);
+          this.scene.start(d.scene, d.openTab ? { returnTab: d.openTab } : {});
           return;
         }
       } catch(_) {}
-      this.scene.start('Menu');
+      this.scene.start('Menu', {});
     })();
   }
 }

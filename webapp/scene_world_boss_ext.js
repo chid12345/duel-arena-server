@@ -277,7 +277,7 @@ Object.assign(WorldBossScene.prototype, {
       const d = await get('/api/admin/wb_test_schedule', { in_minutes: 0 });
       if (d.ok) {
         this._toast('⚔️ Рейд стартовал! Босс: ' + (d.boss_name || ''));
-        setTimeout(() => this._refresh(), 2000);
+        this.time.delayedCall(2000, () => { if (this._alive) this._refresh(); });
       } else { this._toast('❌ ' + (d.reason || 'Ошибка')); }
     } catch (e) { this._toast('❌ ' + (e?.message || 'Нет соединения')); }
     this._testBusy = false;
