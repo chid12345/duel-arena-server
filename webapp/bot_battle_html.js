@@ -48,9 +48,9 @@ const BotBattleHtml = (() => {
       @keyframes bbVsPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
       @keyframes bbBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
       #bb-root .boss > img{animation:bbBreath 3.4s ease-in-out infinite;}
-      #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:6px;z-index:9;}
-      #bb-root .atk-col{left:4px;top:24%;}
-      #bb-root .def-col{right:4px;top:24%;}
+      #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:10px;z-index:9;}
+      #bb-root .atk-col{left:4px;bottom:18%;}
+      #bb-root .def-col{right:4px;bottom:18%;}
       #bb-root .col-lbl{font-size:9px;font-weight:900;letter-spacing:1.6px;text-align:center;font-family:"Consolas",monospace;text-transform:uppercase;margin-bottom:1px;}
       #bb-root .atk-col .col-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.65);}
       #bb-root .def-col .col-lbl{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.65);}
@@ -69,9 +69,11 @@ const BotBattleHtml = (() => {
       #bb-root .atk-col .ic-btn.sel img{filter:drop-shadow(0 0 14px #ff5fa0) drop-shadow(0 0 6px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.8));}
       #bb-root .def-col .ic-btn.sel img{filter:drop-shadow(0 0 14px #5fb8ff) drop-shadow(0 0 6px #fff) drop-shadow(0 1px 2px rgba(0,0,0,.8));}
       #bb-root .ic-btn.sel .nm{color:#fff;}
-      #bb-root .confirm-btn{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);min-width:160px;padding:9px 14px;text-align:center;border-radius:8px;font-family:"Consolas",monospace;font-weight:900;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#fff;text-shadow:0 0 8px #c98aff,0 0 14px #ff5fa0;background:linear-gradient(180deg,rgba(80,40,140,.55),rgba(40,15,80,.85));border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 14px rgba(180,80,255,.4),inset 0 1px 0 rgba(255,255,255,.18);opacity:.45;cursor:not-allowed;transition:opacity .25s;user-select:none;z-index:9;}
+      #bb-root .action-row{position:absolute;left:50%;bottom:4%;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:9;} #bb-root .confirm-btn{min-width:150px;padding:9px 14px;text-align:center;border-radius:8px;font-family:"Consolas",monospace;font-weight:900;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#fff;text-shadow:0 0 8px #c98aff,0 0 14px #ff5fa0;background:linear-gradient(180deg,rgba(80,40,140,.55),rgba(40,15,80,.85));border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 14px rgba(180,80,255,.4),inset 0 1px 0 rgba(255,255,255,.18);opacity:.45;cursor:not-allowed;transition:opacity .25s;user-select:none;}
       #bb-root .confirm-btn.ready{opacity:1;cursor:pointer;border-color:#ff5fa0;box-shadow:0 0 18px rgba(255,90,150,.7),0 0 32px rgba(80,180,255,.3),inset 0 1px 0 rgba(255,255,255,.3);animation:cfPulse 1.6s ease-in-out infinite;}
       @keyframes cfPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+      #bb-root .auto-btn{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;background:linear-gradient(135deg,#3a2a08,#1a1004);border:1.5px solid rgba(255,200,80,.6);color:#ffd370;text-shadow:0 0 8px #ffa030;box-shadow:0 0 12px rgba(255,180,40,.45),inset 0 1px 0 rgba(255,200,100,.3);user-select:none;animation:autoGlow 2.4s ease-in-out infinite;}
+      @keyframes autoGlow{0%,100%{box-shadow:0 0 12px rgba(255,180,40,.45),inset 0 1px 0 rgba(255,200,100,.3)}50%{box-shadow:0 0 20px rgba(255,200,60,.75),0 0 30px rgba(255,140,40,.4),inset 0 1px 0 rgba(255,220,140,.45)}}
       #bb-root .wait{position:absolute;left:0;right:0;top:55%;text-align:center;color:#ffc83c;font-size:13px;font-weight:700;z-index:9;pointer-events:none;}
     `;
     document.head.appendChild(s);
@@ -107,7 +109,7 @@ const BotBattleHtml = (() => {
       <div class="fighter boss" id="bb-p2">${skinId ? `<img src="${skinUrl}"${flipBoss ? '' : ' style="transform:scaleX(-1)"'}>` : ''}<div class="shadow"></div></div>
       <div class="col atk-col"><div class="col-lbl">АТАКА</div>${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div>
       <div class="col def-col"><div class="col-lbl">ЗАЩИТА</div>${['HEAD','TORSO','LEGS'].map(k => btn('def', k)).join('')}</div>
-      <div class="confirm-btn" id="bb-confirm">⚔ Совершить ход</div>
+      <div class="action-row"><div class="auto-btn" id="bb-auto" title="Случайный ход">🎲</div><div class="confirm-btn" id="bb-confirm">⚔ Совершить ход</div></div>
       <div class="wait" id="bb-wait" style="display:none"></div>`;
     elP1Hp = root.querySelector('#bb-p1h'); elP2Hp = root.querySelector('#bb-p2h');
     elP1Bar = root.querySelector('#bb-p1b'); elP2Bar = root.querySelector('#bb-p2b');
@@ -131,7 +133,9 @@ const BotBattleHtml = (() => {
     if (e.target.closest('#bb-confirm') && selectedAttack && selectedDefense && scene._submitChoice) {
       scene._selAttack = selectedAttack; scene._selDefense = selectedDefense;
       try { scene._submitChoice(); } catch(_){}
+      return;
     }
+    if (e.target.closest('#bb-auto') && scene._onAuto) { try { scene._onAuto(); } catch(_){} }
   }
 
   function _refresh() {
