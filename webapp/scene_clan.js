@@ -88,6 +88,7 @@ class ClanScene extends Phaser.Scene {
     const H_UI = (this._subview === 'chat') ? H : (H - TabBar.HEIGHT);
     if (this._subview === 'preview' && this._previewClanId) {
       get('/api/clan/preview', { clan_id: this._previewClanId }).then(d => {
+        if (!this.scene?.isActive('Clan')) return;
         this._loading?.destroy();
         if (!d.ok) { txt(this, W/2, H/2, '❌ '+(d.reason||'Ошибка'), 13, '#dc3c46').setOrigin(0.5); return; }
         this._renderPreview(d, W, H_UI);

@@ -18,6 +18,7 @@ Object.assign(StatsScene.prototype, {
       // чтобы crit_pct / dodge_pct / armor_pct уже включали бафф
       if (buffs.length) {
         const pd = await post('/api/player');
+        if (!this.scene || !this.scene.isActive()) return;
         if (pd?.ok && pd.player) State.player = pd.player;
       }
       if (!this.scene || !this.scene.isActive()) return;
