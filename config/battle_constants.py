@@ -130,9 +130,11 @@ DODGE_DOUBLE_STRIKE_MAX_CHANCE = 0.08
 DODGE_DOUBLE_STRIKE_DAMAGE_MULT = 0.40
 
 # Выносливость/танк: шанс «поглощения» — входящий урон режется вдвое.
+# Был 0.12 — танк-билд (в симуляции 28-30% win-rate) подняли до 0.15,
+# чтобы крепкий боец чаще «съедал» удары и подтянулся к ~45% PvE.
 TANK_GUARD_STEP = 25
 TANK_GUARD_PCT_PER_STEP = 0.01
-TANK_GUARD_MAX_CHANCE = 0.12
+TANK_GUARD_MAX_CHANCE = 0.15
 TANK_GUARD_DAMAGE_MULT = 0.50
 
 # Силовой танк (сила + HP): редкая «абсолютная стойка» — любой входящий удар = 1 урон.

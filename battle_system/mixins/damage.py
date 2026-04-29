@@ -106,7 +106,7 @@ class BattleDamageMixin:
             if wt_def == "agile":
                 dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + 0.08)   # Теневой Вихрь +8% уворот
             elif wt_def == "tank":
-                dodge_ch = max(0.0, dodge_ch - 0.08)                 # Берсерк -8% уворот (трейдофф)
+                dodge_ch = max(0.0, dodge_ch - 0.05)                 # Берсерк -5% уворот (раньше -8%, успокоено вместе с +12%→+10%)
             # Бонус уворота от вложений в Ловкость (AGI_BONUS) — синхрон с UI
             def_agi_inv = max(0, self._safe_int_field(defender, "endurance", PLAYER_START_ENDURANCE) - PLAYER_START_ENDURANCE)
             dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + (def_agi_inv // max(1, AGI_BONUS_STEP)) * AGI_BONUS_PCT_PER_STEP)

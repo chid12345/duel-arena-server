@@ -36,6 +36,9 @@ def make_player(level: int, build: str = "balanced") -> dict:
     elif build == "brute":
         s = s + e // 2
         e = max(1, e - e // 2)
+    elif build == "crit":
+        c = c + (s + e) // 3
+        s = max(1, s - s // 4)
     return {
         "user_id": 900_000 + level,
         "level": level,
@@ -142,6 +145,9 @@ async def main():
         (100, "balanced", False),
         (10, "tank", False),
         (10, "brute", False),
+        (10, "crit", False),
+        (30, "crit", False),
+        (50, "crit", False),
     ]
     results = []
     for lv, build, weak in cases:
