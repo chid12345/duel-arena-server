@@ -23,8 +23,9 @@ class _StatsHelper(BotsStatsMixin):
     pass
 
 
-def make_player(level: int, build: str = "balanced") -> dict:
-    """Игрок со стартовыми статами + распределением свободных по билду."""
+def make_player(level: int, build: str = "balanced",
+                warrior_type: str = "default", gear: str = "none") -> dict:
+    """Игрок со статами по билду, опционально с warrior_type и экипировкой."""
     helper = _StatsHelper()
     s, e, c, hp = helper._compute_bot_stats_for_level(level)
     if build == "balanced":
@@ -39,7 +40,7 @@ def make_player(level: int, build: str = "balanced") -> dict:
     elif build == "crit":
         c = c + (s + e) // 3
         s = max(1, s - s // 4)
-    return {
+    p = {
         "user_id": 900_000 + level,
         "level": level,
         "strength": s,
@@ -47,10 +48,46 @@ def make_player(level: int, build: str = "balanced") -> dict:
         "crit": c,
         "max_hp": hp,
         "current_hp": hp,
-        "username": f"P_lv{level}_{build}",
+        "username": f"P_lv{level}_{build}_{warrior_type}_{gear}",
         "wins": 0, "losses": 0, "gold": 0, "exp": 0, "rating": 1000,
         "win_streak": 0, "free_stats": 0, "diamonds": 0, "exp_milestones": 0,
+        "warrior_type": warrior_type,
     }
+    # Экипировка: реальные суммы из db_schema/equipment_catalog по полному сету (6 слотов).
+    if gear == "common":
+        p["_eq_atk_bonus"] = 8
+        p["_eq_def_pct"]   = 0.05
+        p["max_hp"]       += 90; p["current_hp"] = p["max_hp"]
+        p["_eq_dodge_bonus"] = 3
+        p["strength"]     += 2
+        p["_eq_accuracy"] = 3
+    elif gear == "rare":
+        p["_eq_atk_bonus"] = 38
+        p["_eq_def_pct"]   = 0.11
+        p["max_hp"]       += 80; p["current_hp"] = p["max_hp"]
+        p["crit"]         += 5
+        p["_eq_dodge_bonus"] = 7
+        p["strength"]     += 1; p["endurance"] += 1; p["crit"] += 1
+        p["_eq_accuracy"] = 7
+    elif gear == "epic":
+        p["_eq_atk_bonus"] = 70
+        p["_eq_def_pct"]   = 0.20
+        p["max_hp"]       += 180; p["current_hp"] = p["max_hp"]
+        p["crit"]         += 10
+        p["_eq_dodge_bonus"] = 13
+        p["strength"]     += 2; p["endurance"] += 2; p["crit"] += 2
+        p["_eq_accuracy"] = 12
+    elif gear == "mythic":
+        p["_eq_atk_bonus"] = 87
+        p["_eq_def_pct"]   = 0.24
+        p["_eq_pen_pct"]   = 0.03
+        p["max_hp"]       += 320; p["current_hp"] = p["max_hp"]
+        p["crit"]         += 10
+        p["_eq_dodge_bonus"] = 16
+        p["_eq_regen_bonus"] = 22
+        p["strength"]     += 4; p["endurance"] += 4; p["crit"] += 4
+        p["_eq_accuracy"] = 18
+    return p
 
 
 def make_bot(level: int, weak: bool = False) -> dict:
@@ -78,7 +115,8 @@ def make_bot(level: int, weak: bool = False) -> dict:
     return bot
 
 
-async def run_simulation(player_level: int, build: str, weak_bot: bool, n: int = 300):
+async def run_simulation(player_level: int, build: str, weak_bot: bool, n: int = 300,
+                         warrior_type: str = "default", gear: str = "none"):
     from battle_system import BattleSystem
 
     class SimBattleSystem(BattleSystem):
@@ -94,7 +132,7 @@ async def run_simulation(player_level: int, build: str, weak_bot: bool, n: int =
     valid = 0
 
     for _ in range(n):
-        p = make_player(player_level, build)
+        p = make_player(player_level, build, warrior_type=warrior_type, gear=gear)
         b = make_bot(player_level, weak=weak_bot)
         try:
             await bs.start_battle(p, b, is_bot2=True, is_test_battle=True)
@@ -135,33 +173,35 @@ async def run_simulation(player_level: int, build: str, weak_bot: bool, n: int =
 
 async def main():
     random.seed(42)
+    # (lv, build, weak_bot, warrior_type, gear, label)
     cases = [
-        (1, "balanced", True),    # онбординг (первые 5 боев)
-        (1, "balanced", False),   # после онбординга
-        (5, "balanced", False),
-        (10, "balanced", False),
-        (30, "balanced", False),
-        (50, "balanced", False),
-        (100, "balanced", False),
-        (10, "tank", False),
-        (10, "brute", False),
-        (10, "crit", False),
-        (30, "crit", False),
-        (50, "crit", False),
+        (1, "balanced", True,  "default", "none",   "Онбординг Lv1"),
+        (1, "balanced", False, "default", "none",   "Голый Lv1"),
+        (10, "balanced", False, "default", "none",  "Голый Lv10 balanced"),
+        (50, "balanced", False, "default", "none",  "Голый Lv50 balanced"),
+        # Влияние класса воина на одинаковом билде
+        (10, "balanced", False, "tank",    "none",  "Lv10 + Берсерк"),
+        (10, "balanced", False, "agile",   "none",  "Lv10 + Тен.Вихрь"),
+        (10, "balanced", False, "crit",    "none",  "Lv10 + Хаос-Рыц."),
+        # Влияние снаряжения (один билд, разная экипировка)
+        (10, "balanced", False, "default", "common", "Lv10 + common сет"),
+        (10, "balanced", False, "default", "rare",  "Lv10 + редкий сет"),
+        (10, "balanced", False, "default", "epic",  "Lv10 + эпик сет"),
+        (10, "balanced", False, "default", "mythic","Lv10 + мифик сет"),
+        (50, "balanced", False, "default", "epic",  "Lv50 + эпик сет"),
+        (50, "balanced", False, "default", "mythic","Lv50 + мифик сет"),
+        # Билды без типа vs со своим типом
+        (10, "tank",  False, "default", "none",  "Lv10 END-билд голый"),
+        (10, "brute", False, "tank",    "none",  "Lv10 STR-билд+Берс"),
+        (10, "crit",  False, "crit",    "none",  "Lv10 CRT-билд+Хаос"),
     ]
-    results = []
-    for lv, build, weak in cases:
-        res = await run_simulation(lv, build, weak, n=200)
+    print(f"{'Сценарий':<28} {'win':>6} {'раунды':>7} {'dmg-opp':>8} {'dmg-you':>8}")
+    print("-" * 60)
+    for lv, build, weak, wt, gear, label in cases:
+        res = await run_simulation(lv, build, weak, n=200, warrior_type=wt, gear=gear)
         if res:
-            results.append(res)
-            tag = "ослабленный" if weak else "обычный"
-            print(f"Lv{lv:>3} {build:>9} bot={tag:>11}: "
-                  f"win={res['win_rate']:5.1f}% "
-                  f"rounds={res['avg_rounds']:5.2f} "
-                  f"dmg_opp={res['avg_dmg_opp']:6.1f} "
-                  f"dmg_you={res['avg_dmg_you']:6.1f} "
-                  f"afk_loss={res['afk_losses']}")
-    return results
+            print(f"{label:<28} {res['win_rate']:5.1f}% {res['avg_rounds']:6.2f}  "
+                  f"{res['avg_dmg_opp']:5.0f}  {res['avg_dmg_you']:5.0f}")
 
 
 if __name__ == "__main__":
