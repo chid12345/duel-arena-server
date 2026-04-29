@@ -16,12 +16,12 @@ const BotBattleFx = (() => {
     s.textContent = `
       @keyframes bbHit{0%{filter:brightness(2.3) saturate(1.4)}100%{filter:brightness(1)}}
       @keyframes bbShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-      @keyframes dmgFloat{0%{opacity:0;transform:translate(-50%,0) scale(.7)}15%{opacity:1;transform:translate(-50%,-30px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-90px) scale(1)}}
+      @keyframes dmgFloat{0%{opacity:0;transform:translate(-50%,15px) scale(.7)}12%{opacity:1;transform:translate(-50%,-10px) scale(1.18)}30%{opacity:1;transform:translate(-50%,-30px) scale(1.05)}100%{opacity:0;transform:translate(-50%,-110px) scale(1)}}
       #bb-root .hit > img{animation:bbHit .4s ease-out;}
       #bb-root .crit-hit > img{animation:bbHit .55s ease-out, bbShake .3s ease-out 2;}
-      #bb-root .dmg-float{position:absolute;left:50%;top:18%;font-size:26px;font-weight:900;font-family:"Consolas",monospace;color:#ff5fa0;text-shadow:0 2px 6px #000,0 0 12px rgba(255,0,112,.75);pointer-events:none;animation:dmgFloat .95s ease-out forwards;z-index:11;}
-      #bb-root .dmg-float.crit{color:#ffd35a;font-size:34px;text-shadow:0 2px 6px #000,0 0 16px #ff8a00,0 0 24px #ff4500;}
-      #bb-root .dmg-float.me{color:#5fb8ff;text-shadow:0 2px 6px #000,0 0 12px rgba(0,180,255,.75);}
+      #bb-root .dmg-float{position:absolute;left:50%;top:35%;font-size:30px;font-weight:900;font-family:"Consolas",monospace;color:#ff5fa0;text-shadow:0 3px 8px #000,0 0 14px rgba(255,0,112,.85),0 0 4px #fff;pointer-events:none;animation:dmgFloat 1.6s ease-out forwards;z-index:11;}
+      #bb-root .dmg-float.crit{color:#ffd35a;font-size:40px;text-shadow:0 3px 8px #000,0 0 18px #ff8a00,0 0 28px #ff4500,0 0 4px #fff;}
+      #bb-root .dmg-float.me{color:#5fb8ff;text-shadow:0 3px 8px #000,0 0 14px rgba(0,180,255,.85),0 0 4px #fff;}
     `;
     document.head.appendChild(s);
   }
@@ -39,7 +39,7 @@ const BotBattleFx = (() => {
         n.className = 'dmg-float' + (isCrit ? ' crit' : '') + (side === 'me' ? ' me' : '');
         n.textContent = (isCrit ? '💥 ' : '') + '−' + amount;
         el.appendChild(n);
-        setTimeout(() => { try { n.remove(); } catch(_) {} }, 950);
+        setTimeout(() => { try { n.remove(); } catch(_) {} }, 1700);
       }
     },
   };
