@@ -1,5 +1,6 @@
 """Профиль: сводка статов, welcome-текст, отправка карточки."""
 
+import asyncio
 import io
 import logging
 from html import escape as html_escape
@@ -91,7 +92,7 @@ class CallbackHandlersProfileUi:
 
         player = dict(player)
         player.setdefault("username", username)
-        img_bytes = generate_profile_card(player)
+        img_bytes = await asyncio.to_thread(generate_profile_card, player)
         caption = extra_text or ""
 
         if is_message:

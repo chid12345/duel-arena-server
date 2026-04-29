@@ -21,13 +21,11 @@ async def find_battle(query, player):
         )
         return
     uid = player['user_id']
-    un = query.from_user.username or ""
-    player = await asyncio.to_thread(db.get_or_create_player, uid, un)
+    player = dict(player)
 
     endurance_inv = stamina_stats_invested(player.get('max_hp', PLAYER_START_MAX_HP), player.get('level', 1))
-    regen_result = await asyncio.to_thread(db.apply_hp_regen, uid, endurance_inv)
+    regen_result = await asyncio.to_thread(db.apply_hp_regen_from_player, player, endurance_inv)
     if regen_result:
-        player = dict(player)
         player['current_hp'] = regen_result['current_hp']
 
     mh = int(player.get("max_hp", PLAYER_START_MAX_HP))
@@ -51,7 +49,7 @@ async def find_battle(query, player):
         return
 
     logger.info("event=battle_search user_id=%s level=%s", uid, player.get("level"))
-    db.log_metric_event("battle_search", uid)
+    asyncio.ensure_future(asyncio.to_thread(db.log_metric_event, "battle_search", uid))
 
     pvp_entry = await asyncio.to_thread(db.pvp_find_opponent, uid, int(player.get("level", PLAYER_START_LEVEL)))
     if pvp_entry:

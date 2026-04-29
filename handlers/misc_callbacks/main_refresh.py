@@ -30,20 +30,20 @@ async def refresh_main(query, player):
     """Обновить главный экран — загрузить свежие данные из БД, применить реген HP."""
     uid = player["user_id"]
     un = player.get("username") or ""
-    # Resync: если XP накопился без пересчёта уровня — пересчитать
+    # Один запрос вместо двух: берём fresh, проверяем levelup
+    fresh = await asyncio.to_thread(db.get_or_create_player, uid, un)
+    fresh = dict(fresh)
     try:
-        tmp = await asyncio.to_thread(db.get_or_create_player, uid, un)
-        p_exp = int(tmp.get("exp", 0) or 0)
-        p_lv = int(tmp.get("level", 1) or 1)
+        p_exp = int(fresh.get("exp", 0) or 0)
+        p_lv = int(fresh.get("level", 1) or 1)
         if p_exp >= exp_needed_for_next_level(p_lv) and p_lv < MAX_LEVEL:
             await asyncio.to_thread(db.grant_exp_with_levelup, uid, 0)
+            fresh = dict(await asyncio.to_thread(db.get_or_create_player, uid, un))
     except Exception:
         pass
 
-    fresh = await asyncio.to_thread(db.get_or_create_player, uid, un)
-    fresh = dict(fresh)
     endurance_inv = stamina_stats_invested(fresh.get("max_hp", PLAYER_START_MAX_HP), fresh.get("level", 1))
-    regen_result = await asyncio.to_thread(db.apply_hp_regen, uid, endurance_inv)
+    regen_result = await asyncio.to_thread(db.apply_hp_regen_from_player, fresh, endurance_inv)
     if regen_result:
         fresh["current_hp"] = regen_result["current_hp"]
 
