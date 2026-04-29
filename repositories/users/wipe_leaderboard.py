@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
+import threading
 import time
 from datetime import datetime
 from typing import Dict, List
 
 _TOP_CACHE: List[Dict] = []
 _TOP_CACHE_TS: float = 0.0
-_TOP_CACHE_TTL = 300  # 5 минут
+_TOP_CACHE_TTL = 300   # кэш живёт 5 минут
+_TOP_CACHE_WARM = 270  # фоновый прогрев за 30с до истечения
+_TOP_CACHE_REFRESHING = threading.Event()
 
 from config import (
     PLAYER_START_CRIT,
@@ -78,20 +81,34 @@ class UsersWipeLeaderboardMixin:
         conn.commit()
         conn.close()
 
-    def get_top_players(self, limit: int = 10) -> List[Dict]:
+    def _refresh_top_cache(self, limit: int) -> None:
         global _TOP_CACHE, _TOP_CACHE_TS
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT username, level, rating, wins, losses FROM players "
+                "WHERE wins + losses > 0 ORDER BY rating DESC LIMIT ?",
+                (limit,),
+            )
+            rows = [dict(r) for r in cursor.fetchall()]
+            conn.close()
+            _TOP_CACHE = rows
+            _TOP_CACHE_TS = time.time()
+        finally:
+            _TOP_CACHE_REFRESHING.clear()
+
+    def get_top_players(self, limit: int = 10) -> List[Dict]:
         now = time.time()
-        if _TOP_CACHE and now - _TOP_CACHE_TS < _TOP_CACHE_TTL:
+        age = now - _TOP_CACHE_TS
+        if _TOP_CACHE and age < _TOP_CACHE_TTL:
+            # Кэш валиден — если скоро истечёт, запускаем прогрев в фоне
+            if age > _TOP_CACHE_WARM and not _TOP_CACHE_REFRESHING.is_set():
+                _TOP_CACHE_REFRESHING.set()
+                threading.Thread(
+                    target=self._refresh_top_cache, args=(limit,), daemon=True
+                ).start()
             return _TOP_CACHE[:limit]
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute(
-            "SELECT username, level, rating, wins, losses FROM players "
-            "WHERE wins + losses > 0 ORDER BY rating DESC LIMIT ?",
-            (limit,),
-        )
-        rows = [dict(r) for r in cursor.fetchall()]
-        conn.close()
-        _TOP_CACHE = rows
-        _TOP_CACHE_TS = now
-        return rows
+        # Кэш пустой или истёк — блокирующий запрос (первый старт)
+        self._refresh_top_cache(limit)
+        return _TOP_CACHE[:limit]
