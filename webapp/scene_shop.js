@@ -29,6 +29,14 @@ class ShopScene extends Phaser.Scene {
       if (d.ok && d.player) State.player = d.player;
     } catch(_) {}
 
+    this._inv = {};
+    try {
+      const inv = await get('/api/shop/inventory');
+      if (inv?.inventory) {
+        for (const e of inv.inventory) this._inv[e.item_id] = e.quantity || 0;
+      }
+    } catch(_) {}
+
     this._buildBalance(W);
     this._buildItems(W, H);
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('shop');

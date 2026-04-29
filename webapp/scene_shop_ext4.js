@@ -38,6 +38,14 @@ Object.assign(ShopScene.prototype, {
       container.add(badgeG);
       container.add(txt(this, x + 63, y + 53, item.badge, 9, item.risk ? '#ff8888' : '#88aaff').setOrigin(0.5));
     }
+    const qty = (this._inv || {})[item.id] || 0;
+    if (qty > 0) {
+      const qg = this.add.graphics();
+      qg.fillStyle(0x1a3a1a, 0.95); qg.fillRoundedRect(x + 4, y + 4, 28, 14, 4);
+      qg.lineStyle(1, 0x44aa44, 0.7); qg.strokeRoundedRect(x + 4, y + 4, 28, 14, 4);
+      container.add(qg);
+      container.add(txt(this, x + 18, y + 11, `×${qty}`, 9, '#88ee88', true).setOrigin(0.5));
+    }
 
     if (item.hpPct && State.player) {
       const p = State.player;
@@ -79,7 +87,9 @@ Object.assign(ShopScene.prototype, {
     container.add(bg);
 
     container.add(txt(this, x + 16, y + h / 2, item.icon, 14).setOrigin(0.5));
-    container.add(txt(this, x + 32, y + h / 2, item.name, 11, canBuy ? '#ffffff' : '#ccccdd', true).setOrigin(0, 0.5));
+    const rowQty = (this._inv || {})[item.id] || 0;
+    const rowName = rowQty > 0 ? `${item.name}  ×${rowQty}` : item.name;
+    container.add(txt(this, x + 32, y + h / 2, rowName, 11, rowQty > 0 ? '#88ee88' : (canBuy ? '#ffffff' : '#ccccdd'), true).setOrigin(0, 0.5));
     const shortDesc = (item.desc || '').split('·')[0].trim();
     container.add(txt(this, x + w - 70, y + h / 2, shortDesc, 10, '#ffffff').setOrigin(1, 0.5));
     const pIcon = isDia ? '💎' : '🪙';
