@@ -255,9 +255,11 @@ function connectWS(userId, onMessage) {
   // Переиспользуем открытое соединение — меняем обработчик и onclose
   if (State.ws && State.ws.readyState === WebSocket.OPEN) {
     State.ws.onmessage = e => onMessage(JSON.parse(e.data));
-    // ВАЖНО: обновляем onclose чтобы переподключение использовало ТЕКУЩИЙ handler
+    // ВАЖНО: обновляем onclose чтобы переподключение использовало ТЕКУЩИЙ handler.
+    // Захватываем ref на текущий сокет — иначе State.ws === State.ws всегда true.
+    const _curWs = State.ws;
     State.ws.onclose = () => {
-      if (State.ws === State.ws) setTimeout(() => connectWS(userId, onMessage), 3000);
+      if (State.ws === _curWs) setTimeout(() => connectWS(userId, onMessage), 3000);
     };
     return State.ws;
   }

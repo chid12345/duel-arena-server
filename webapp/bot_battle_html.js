@@ -88,17 +88,22 @@ const BotBattleHtml = (() => {
     const ic = k => k === 'HEAD' ? 'head' : k === 'TORSO' ? 'torso' : 'legs';
     const nm = k => k === 'HEAD' ? 'Голова' : k === 'TORSO' ? 'Тело' : 'Ноги';
     const btn = (s, k) => `<div class="ic-btn" data-side="${s}" data-key="${k}"><div class="halo"></div><img src="battle_icons/${ic(k)}.png"><div class="nm">${nm(k)}</div></div>`;
-    const myPct  = b.my_max_hp  > 0 ? Math.max(0, Math.min(100, b.my_hp  / b.my_max_hp  * 100)) : 0;
-    const oppPct = b.opp_max_hp > 0 ? Math.max(0, Math.min(100, b.opp_hp / b.opp_max_hp * 100)) : 0;
+    // Fallback: если сервер вернул null HP (race при старте), берём данные игрока из State
+    const myHp    = b.my_hp     != null ? b.my_hp     : (window.State?.player?.current_hp ?? 0);
+    const myMaxHp = b.my_max_hp != null ? b.my_max_hp : (window.State?.player?.max_hp ?? 100);
+    const oppHp   = b.opp_hp    != null ? b.opp_hp    : (b.opp_max_hp ?? 100);
+    const oppMaxHp = b.opp_max_hp != null ? b.opp_max_hp : 100;
+    const myPct  = myMaxHp  > 0 ? Math.max(0, Math.min(100, myHp  / myMaxHp  * 100)) : 100;
+    const oppPct = oppMaxHp > 0 ? Math.max(0, Math.min(100, oppHp / oppMaxHp * 100)) : 100;
     root.innerHTML = `
       <div class="bg" style="background-image:url('${bgUrl}')"></div>
       <div class="hp-row">
         <div class="hp-block"><div class="hp-name" id="bb-p1n" style="cursor:pointer">${meName}</div>
           <div class="hp-bar"><div class="hp-fill" id="bb-p1b" style="width:${myPct}%"></div></div>
-          <div class="hp-num" id="bb-p1h">${b.my_hp || 0} / ${b.my_max_hp || 0}</div></div>
+          <div class="hp-num" id="bb-p1h">${myHp} / ${myMaxHp}</div></div>
         <div class="hp-block opp"><div class="hp-name" id="bb-p2n" style="cursor:pointer">${oppName}</div>
           <div class="hp-bar"><div class="hp-fill" id="bb-p2b" style="width:${oppPct}%"></div></div>
-          <div class="hp-num" id="bb-p2h">${b.opp_hp || 0} / ${b.opp_max_hp || 0}</div></div>
+          <div class="hp-num" id="bb-p2h">${oppHp} / ${oppMaxHp}</div></div>
       </div>
       <div class="timer" id="bb-timer">15</div>
       <div class="fighter player" id="bb-p1">${skinId ? `<img src="warriors/${_pkey()}.png">` : ''}<div class="shadow"></div></div>

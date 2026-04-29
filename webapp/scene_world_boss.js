@@ -79,7 +79,7 @@ class WorldBossScene extends Phaser.Scene {
       if (d && d.ok === false) {
         // Сервер ответил 200 но с ошибкой внутри — показываем и повторяем
         if (this._loading) { try { this._loading.setText('⚠️ Ошибка сервера\n(повтор через 5с)'); } catch(_) {} }
-        setTimeout(() => { if (this._alive) this._refresh(); }, 5000);
+        if (this._alive) this.time.delayedCall(5000, () => { if (this._alive) this._refresh(); });
         return;
       }
       this._state = d;
