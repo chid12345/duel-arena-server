@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Лог боя — финал (тонкий список)</title>
+<style>
+  body{margin:0;background:#0a0a12;color:#fff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:20px 14px 40px;}
+  h1{font-size:18px;margin:0 0 4px;text-align:center;letter-spacing:.5px;}
+  .sub{text-align:center;color:#8a8aa0;font-size:12px;margin-bottom:20px;}
+  .wrap{max-width:420px;margin:24px auto 0;position:relative;}
+  .label{position:absolute;top:-22px;left:0;font-size:11px;letter-spacing:2px;color:#aaa;text-transform:uppercase;font-weight:700;}
+  .stage{aspect-ratio:9/16;border-radius:14px;overflow:hidden;position:relative;background:#03050f;box-shadow:0 8px 28px rgba(0,0,0,.55);}
+  .bg{position:absolute;inset:0;background:url('bot_skins/bg/33.jpg') center/cover;filter:brightness(.6) saturate(1.05);}
+  .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.5),rgba(0,0,0,.05) 40%,rgba(0,0,0,.7));}
+  /* HP-плашки сверху — задают ширину, до которой растягивается лог */
+  .hp-row{position:absolute;top:8px;left:8px;right:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;z-index:10;}
+  .hp-block{padding:5px 9px;border-radius:7px;background:rgba(8,8,18,.86);border:1px solid rgba(0,216,255,.3);}
+  .hp-block.opp{border-color:rgba(255,0,112,.42);}
+  .hp-name{font-size:10px;font-weight:800;letter-spacing:.8px;color:#00ffe0;font-family:"Consolas",monospace;}
+  .hp-block.opp .hp-name{color:#ff3c80;}
+  .hp-bar{height:5px;border-radius:3px;background:rgba(0,0,0,.65);overflow:hidden;margin-top:3px;}
+  .hp-fill{height:100%;width:88%;background:linear-gradient(90deg,#00ffe0,#5fb8ff);}
+  .hp-block.opp .hp-fill{width:64%;background:linear-gradient(90deg,#ff0070,#ff5fa0);}
+
+  .fighters{position:absolute;inset:0;display:flex;align-items:flex-end;justify-content:space-between;padding:0 4%;pointer-events:none;}
+  .fighters img{height:46%;object-fit:contain;}
+  .fighters .p1{transform:scaleX(-1);}
+  .vs{position:absolute;top:42%;left:50%;transform:translate(-50%,-50%);font-family:"Consolas",monospace;font-size:42px;font-weight:900;letter-spacing:5px;color:#fff;
+      text-shadow:2px 0 0 #00ffe0,-2px 0 0 #ff0070,0 0 12px #ff0070,0 0 18px #00d8ff;}
+
+  /* === ЛОГ — тонкий, на всю ширину, 2 видимые строки, ротация === */
+  .blog{position:absolute;left:8px;right:8px;bottom:calc(28% + 6px);z-index:9;
+        background:rgba(2,5,18,.62);border:1px solid rgba(255,255,255,.08);border-radius:5px;
+        font-family:"Consolas",monospace;font-size:9.5px;
+        height:34px;overflow:hidden;}
+  .blog-stack{display:flex;flex-direction:column;transition:transform .35s ease;}
+  .line{display:flex;align-items:center;gap:6px;padding:1px 9px;height:17px;line-height:15px;
+        border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;}
+  .line.old{opacity:.55;}
+  .line .r{color:#ffd35a;font-weight:800;flex:0 0 26px;}
+  .line .l{flex:1;text-align:left;overflow:hidden;text-overflow:ellipsis;color:#bcc6e0;}
+  .line .arrow{color:#555;margin:0 4px;}
+  .line .h{color:#ff8ac0;}     /* мои зоны — розовый */
+  .line .b{color:#8ab8ff;}     /* зоны бота — голубой */
+  .line .dmg{color:#fff;font-weight:700;}
+  .line .crit{color:#ffd35a;font-weight:700;}
+  .line .dodge{color:#3cc8dc;}
+  .line .block{color:#aaa;}
+
+  /* Панель кнопок снизу — для контекста */
+  .panel{position:absolute;left:0;right:0;bottom:0;background:rgba(2,5,20,.94);border-top:1px solid #00d8ff;padding:8px 10px 9px;display:flex;flex-direction:column;gap:5px;}
+  .panel .row{display:flex;align-items:center;gap:7px;}
+  .panel .lbl{font-size:8px;font-weight:800;letter-spacing:1.8px;width:54px;font-family:"Consolas",monospace;}
+  .panel .atk-l{color:#ff8ac0;} .panel .def-l{color:#8ab8ff;}
+  .panel .btns{flex:1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;}
+  .panel .btn{padding:4px 0;border-radius:6px;background:rgba(0,0,0,.42);text-align:center;font-size:14px;border:1px solid rgba(255,255,255,.1);}
+  .panel .btn.atk{border-color:rgba(255,80,160,.55);}
+  .panel .btn.def{border-color:rgba(80,160,255,.55);}
+  .panel .rand{margin-top:2px;padding:5px;text-align:center;font-size:9.5px;font-weight:700;letter-spacing:2px;border-radius:5px;
+               background:linear-gradient(180deg,#0a0518,#1a0a3a);border:1px solid rgba(255,0,112,.6);color:#ff5fa0;font-family:"Consolas",monospace;text-transform:uppercase;}
+</style>
+</head>
+<body>
+<h1>Лог боя — финал</h1>
+<div class="sub">тонкая полоса от ника до ника · 2 строки · автоматически прокручивается при новых ударах</div>
+<div class="wrap">
+  <div class="label">Превью с живой ротацией каждые 1.8с</div>
+  <div class="stage">
+    <div class="bg"></div>
+    <div class="hp-row">
+      <div class="hp-block"><div class="hp-name">FLYKILLER</div><div class="hp-bar"><div class="hp-fill"></div></div></div>
+      <div class="hp-block opp"><div class="hp-name">БЕССМЕРТНЫЙ_ХАНТЕР</div><div class="hp-bar"><div class="hp-fill"></div></div></div>
+    </div>
+    <div class="fighters"><img class="p1" src="warriors/warrior_crit.png"><img src="bot_skins/33.png"></div>
+    <div class="vs">VS</div>
+
+    <div class="blog">
+      <div class="blog-stack" id="stack"></div>
+    </div>
+
+    <div class="panel">
+      <div class="row"><div class="lbl atk-l">АТАКА</div><div class="btns"><div class="btn atk">🪖</div><div class="btn atk">🛡</div><div class="btn atk">👢</div></div></div>
+      <div class="row"><div class="lbl def-l">ЗАЩИТА</div><div class="btns"><div class="btn def">🪖</div><div class="btn def">🛡</div><div class="btn def">👢</div></div></div>
+      <div class="rand">🎲 Случайный ход</div>
+    </div>
+  </div>
+</div>
+<script>
+  // Демо-данные раундов (как из combat_log)
+  const events = [
+    { r:1, mine:['Голова', '<span class="dmg">−245</span>'],   opp:['Тело',   '<span class="dodge">💨уворот</span>'] },
+    { r:2, mine:['Тело',   '<span class="block">🛡блок</span>'], opp:['Ноги',  '<span class="dmg">−92</span>'] },
+    { r:3, mine:['Ноги',   '<span class="dmg">−180</span>'],   opp:['Голова', '<span class="crit">⚡крит −310</span>'] },
+    { r:4, mine:['Голова', '<span class="crit">⚡крит −420</span>'], opp:['Тело', '<span class="dmg">−95</span>'] },
+    { r:5, mine:['Тело',   '<span class="dmg">−210</span>'],   opp:['Ноги',  '<span class="dodge">💨уворот</span>'] },
+  ];
+  const stack = document.getElementById('stack');
+  function lineHtml(e) {
+    return `<div class="line"><span class="r">Р${e.r}</span><span class="l"><span class="h">${e.mine[0]}</span> ${e.mine[1]} <span class="arrow">→</span> <span class="b">${e.opp[0]}</span> ${e.opp[1]}</span></div>`;
+  }
+  // Стартуем с двух последних
+  let i = 0;
+  function push(e) {
+    // Помечаем текущую верхнюю как "старую" (ниже)
+    const old = stack.querySelector('.line:not(.old)');
+    if (old) old.classList.add('old');
+    // Удаляем самую древнюю если их 3+
+    while (stack.children.length >= 2) stack.removeChild(stack.lastElementChild);
+    // Вставляем новую сверху
+    stack.insertAdjacentHTML('afterbegin', lineHtml(e));
+  }
+  // Заполняем первые 2
+  push(events[0]); push(events[1]); i = 2;
+  // Имитируем поток: каждые 1.8с — новый раунд
+  setInterval(() => { push(events[i % events.length]); i++; }, 1800);
+</script>
+</body>
+</html>
