@@ -44,8 +44,8 @@ const BotBattleHtml = (() => {
       @keyframes bbBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
       #bb-root .boss > img{animation:bbBreath 3.4s ease-in-out infinite;}
       #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:10px;z-index:9;}
-      #bb-root .atk-col{left:4px;bottom:18%;}
-      #bb-root .def-col{right:4px;bottom:18%;}
+      #bb-root .atk-col{left:4px;bottom:11%;}
+      #bb-root .def-col{right:4px;bottom:11%;}
       #bb-root .col-lbl{font-size:9px;font-weight:900;letter-spacing:1.6px;text-align:center;font-family:"Consolas",monospace;text-transform:uppercase;margin-bottom:1px;}
       #bb-root .atk-col .col-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.65);}
       #bb-root .def-col .col-lbl{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.65);}

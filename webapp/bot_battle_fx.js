@@ -20,12 +20,18 @@ const BotBattleFx = (() => {
       @keyframes bbScrShake{0%,100%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(3px,-2px)}75%{transform:translate(-2px,-1px)}}
       @keyframes bbScrShakeBig{0%,100%{transform:translate(0,0)}10%{transform:translate(-8px,4px)}30%{transform:translate(7px,-3px)}50%{transform:translate(-6px,3px)}70%{transform:translate(5px,4px)}90%{transform:translate(-4px,-3px)}}
       @keyframes bbHurt{0%{opacity:0}25%{opacity:.85}100%{opacity:0}}
-      @keyframes bbPop{0%{transform:translateY(0)}40%{transform:translateY(-12px) scale(1.08)}100%{transform:translateY(0)}}
+      @keyframes bbLungeR{0%{transform:translateX(0)}40%{transform:translateX(50px) scale(1.05)}100%{transform:translateX(0)}}
+      @keyframes bbLungeL{0%{transform:translateX(0)}40%{transform:translateX(-50px) scale(1.05)}100%{transform:translateX(0)}}
+      @keyframes bbKnockL{0%{transform:translateX(0) rotate(0)}40%{transform:translateX(-18px) rotate(-7deg)}100%{transform:translateX(0) rotate(0)}}
+      @keyframes bbKnockR{0%{transform:translateX(0) rotate(0)}40%{transform:translateX(18px) rotate(7deg)}100%{transform:translateX(0) rotate(0)}}
       #bb-root .hit > img{animation:bbHit .4s ease-out;}
       #bb-root .crit-hit > img{animation:bbHit .55s ease-out, bbShake .3s ease-out 2;}
       #bb-root.scr-shake{animation:bbScrShake .3s ease-out;}
       #bb-root.scr-shake-big{animation:bbScrShakeBig .55s ease-out;}
-      #bb-root .pop{animation:bbPop .38s ease-out;}
+      #bb-root .lunge-r{animation:bbLungeR .42s ease-out;transform-origin:50% 100%;}
+      #bb-root .lunge-l{animation:bbLungeL .42s ease-out;transform-origin:50% 100%;}
+      #bb-root .knock-l{animation:bbKnockL .5s ease-out;transform-origin:50% 100%;}
+      #bb-root .knock-r{animation:bbKnockR .5s ease-out;transform-origin:50% 100%;}
       #bb-root .hurt-vig{position:absolute;inset:0;pointer-events:none;z-index:50;opacity:0;background:radial-gradient(ellipse at center,transparent 35%,rgba(180,0,0,.55) 80%,rgba(255,0,0,.7) 100%);}
       #bb-root .hurt-vig.show{animation:bbHurt .55s ease-out;}
       #bb-root .dmg-float{position:absolute;left:50%;top:35%;font-size:30px;font-weight:900;font-family:"Consolas",monospace;color:#ff5fa0;text-shadow:0 3px 8px #000,0 0 14px rgba(255,0,112,.85),0 0 4px #fff;pointer-events:none;animation:dmgFloat 1.6s ease-out forwards;z-index:11;}
@@ -44,7 +50,14 @@ const BotBattleFx = (() => {
       if (!target) return;
       target.classList.remove('hit', 'crit-hit'); void target.offsetWidth;
       target.classList.add(isCrit ? 'crit-hit' : 'hit');
-      if (attacker) { attacker.classList.remove('pop'); void attacker.offsetWidth; attacker.classList.add('pop'); setTimeout(() => attacker.classList.remove('pop'), 400); }
+      if (attacker) {
+        const lc = attacker.id === 'bb-p1' ? 'lunge-r' : 'lunge-l';
+        attacker.classList.remove('lunge-r','lunge-l'); void attacker.offsetWidth; attacker.classList.add(lc);
+        setTimeout(() => attacker.classList.remove(lc), 460);
+      }
+      const kc = target.id === 'bb-p1' ? 'knock-l' : 'knock-r';
+      target.classList.remove('knock-l','knock-r'); void target.offsetWidth; target.classList.add(kc);
+      setTimeout(() => target.classList.remove(kc), 520);
       const sh = isCrit ? 'scr-shake-big' : 'scr-shake';
       root.classList.remove('scr-shake', 'scr-shake-big'); void root.offsetWidth; root.classList.add(sh);
       setTimeout(() => root.classList.remove(sh), isCrit ? 600 : 320);
