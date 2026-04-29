@@ -172,6 +172,7 @@ class EquipmentScene extends Phaser.Scene {
   }
 
   shutdown() {
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 }
