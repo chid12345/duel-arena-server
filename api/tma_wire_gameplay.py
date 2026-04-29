@@ -19,7 +19,7 @@ from api.tma_catalogs import CRYPTOPAY_API_BASE
 from api.tma_infra import _cache_invalidate, _cache_set, _rl_check
 from api.tma_notify import _send_tg_message
 from api.tma_player_api import _player_api, _premium_fields
-from api.tma_weekly_quests import _iso_week_key, _weekly_quests_status
+from api.tma_weekly_quests import _iso_week_key
 
 from battle_system import battle_system
 from config import (
@@ -51,7 +51,6 @@ def wire_gameplay_routes(app: FastAPI) -> None:
             "db": db,
             "get_user_from_init_data": get_user_from_init_data,
             "_cache_invalidate": _cache_invalidate,
-            "_weekly_quests_status": _weekly_quests_status,
         },
     )
     register_titan_training_routes(

@@ -9,11 +9,6 @@ from api.tma_player_api import _player_api
 from api.tma_infra import _global_cache_get, _global_cache_set, get_user_lock
 
 
-class WeeklyClaimBody(BaseModel):
-    init_data: str
-    claim_key: str
-
-
 class ClaimQuestBody(BaseModel):
     init_data: str
 
@@ -23,8 +18,6 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
     db = ctx["db"]
     get_user_from_init_data = ctx["get_user_from_init_data"]
     _cache_invalidate = ctx["_cache_invalidate"]
-    _weekly_quests_status = ctx["_weekly_quests_status"]
-
     @router.get("/api/season")
     async def get_season_info(init_data: str):
         tg_user = get_user_from_init_data(init_data)
@@ -57,8 +50,7 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
         uid = int(tg_user["id"])
         quest = db.get_daily_quest_status(uid)
         daily = db.check_daily_bonus(uid)
-        weekly = _weekly_quests_status(uid)
-        return {"ok": True, "quest": quest, "daily": daily, "weekly": weekly}
+        return {"ok": True, "quest": quest, "daily": daily}
 
     @router.post("/api/quests/claim")
     async def claim_quest(body: ClaimQuestBody):
@@ -83,38 +75,5 @@ def register_progression_routes(app, ctx: Dict[str, Any]) -> None:
             result["ok"] = True
             result["player"] = _player_api(dict(player))
             return result
-
-    @router.post("/api/quests/weekly_claim")
-    async def claim_weekly_quest(body: WeeklyClaimBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        async with get_user_lock(uid):
-            status = _weekly_quests_status(uid)
-            q = next((x for x in status["quests"] if x["key"] == body.claim_key), None)
-            if not q:
-                return {"ok": False, "reason": "quest_not_found"}
-            if q.get("reward_claimed"):
-                return {"ok": False, "reason": "already_claimed"}
-            if not q.get("is_completed"):
-                return {"ok": False, "reason": "not_completed"}
-            wk = status["week_key"]
-            if not db.add_weekly_claim(uid, wk, body.claim_key):
-                return {"ok": False, "reason": "already_claimed"}
-            pl = db.get_or_create_player(uid, "")
-            upd = {
-                "gold": int(pl.get("gold", 0)) + int(q.get("reward_gold", 0)),
-                "diamonds": int(pl.get("diamonds", 0)) + int(q.get("reward_diamonds", 0)),
-                "exp": int(pl.get("exp", 0)) + int(q.get("reward_xp", 0)),
-            }
-            db.update_player_stats(uid, upd)
-            _cache_invalidate(uid)
-            fresh = db.get_or_create_player(uid, "")
-            return {
-                "ok": True,
-                "gold": int(q.get("reward_gold", 0)),
-                "diamonds": int(q.get("reward_diamonds", 0)),
-                "xp": int(q.get("reward_xp", 0)),
-                "player": _player_api(dict(fresh)),
-            }
 
     app.include_router(router)

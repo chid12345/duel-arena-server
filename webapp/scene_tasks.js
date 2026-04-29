@@ -45,8 +45,7 @@ class TasksScene extends Phaser.Scene {
       }
       this._data = d;
       if (qd?.ok) {
-        this._data.oldWeekly    = qd.quests || [];
-        this._data.oldDailyQuest = qd.quest  || null;
+        this._data.oldDailyQuest = qd.quest || null;
       }
       this._render(d);
     } catch(e) {

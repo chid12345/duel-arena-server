@@ -118,7 +118,6 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
 
   // ── Недельные задания ─────────────────────────────────────
   const weeklyExtra = data.weekly_extra || [];
-  const oldWeekly   = data.oldWeekly || [];
   const weekKey     = data.week_key || '';
 
   const renderWeeklyQuest = (q, isExtra) => {
@@ -147,9 +146,7 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     container.add(txt(this, W - PAD - 4, y + 44, rwTxt, 9, done ? '#ffd700' : '#ffffff').setOrigin(1, 0));
 
     const ty = y;
-    const claimFn = isExtra
-      ? () => this._claimWeeklyExtra(q.key, weekKey)
-      : () => this._claimWeeklyOld(q.key);
+    const claimFn = () => this._claimWeeklyExtra(q.key, weekKey);
     if (done) {
       taps.push({ y: ty, h: bh, xMin: W - PAD - 40, fn: claimFn });
     }
@@ -167,15 +164,8 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
     y += bh + 5;
   };
 
-  if (oldWeekly.length > 0) {
-    container.add(txt(this, PAD, y, '📋 ЕЖЕНЕДЕЛЬНЫЕ', 13, '#ffffff', true).setOrigin(0, 0));
-    y += 16;
-    oldWeekly.forEach(q => renderWeeklyQuest(q, false));
-    y += 6;
-  }
   if (weeklyExtra.length > 0) {
-    const secLabel = oldWeekly.length > 0 ? '✨ НОВЫЕ НЕДЕЛЬНЫЕ' : '📋 ЕЖЕНЕДЕЛЬНЫЕ ЗАДАНИЯ';
-    container.add(txt(this, PAD, y, secLabel, 13, '#ffffff', true).setOrigin(0, 0));
+    container.add(txt(this, PAD, y, '📋 ЕЖЕНЕДЕЛЬНЫЕ ЗАДАНИЯ', 13, '#ffffff', true).setOrigin(0, 0));
     y += 16;
     weeklyExtra.forEach(q => renderWeeklyQuest(q, true));
     y += 6;
@@ -219,16 +209,3 @@ TasksScene.prototype._claimWeeklyExtra = function(taskKey, weekKey) {
     }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
 };
 
-TasksScene.prototype._claimWeeklyOld = function(key) {
-  if (_globalCooldown('claim')) { this._toast('⏳ Подождите...'); return; }
-  if (this._claimBusy) return;
-  this._claimBusy = true;
-  post('/api/quests/weekly_claim', { claim_key: key })
-    .then(r => {
-      this._claimBusy = false;
-      if (r?.ok) {
-        if (r.player) State.player = r.player;
-        _rewardAnim(this, r, () => this.scene.restart({ tab: 'daily' }));
-      } else this._toast('❌ ' + (r?.reason || 'Ошибка'));
-    }).catch(() => { this._claimBusy = false; this._toast('❌ Нет соединения'); });
-};
