@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.6.86"
-VERSION_LABEL = "v2.6.86 — fix: WB get_wb_active_spawn + last-hit diamonds"
+VERSION = "2.6.87"
+VERSION_LABEL = "v2.6.87 — fix: WB hits today uses local date (quest dq_wb_hit1)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "11.55"
+GAME_VERSION = "11.56"

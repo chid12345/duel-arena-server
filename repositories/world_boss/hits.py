@@ -124,9 +124,9 @@ class WorldBossHitsMixin:
         return int(row["c"]) if row else 0
 
     def get_wb_hits_today_count(self, user_id: int) -> int:
-        """Сколько ударов игрок нанёс боссу сегодня (UTC). Для daily-квеста dq_wb_hit1."""
-        from datetime import datetime, timezone
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+        """Сколько ударов игрок нанёс боссу сегодня. Для daily-квеста dq_wb_hit1."""
+        from datetime import date
+        today = date.today().isoformat()
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
