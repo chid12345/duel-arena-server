@@ -72,9 +72,7 @@ class ClanScene extends Phaser.Scene {
     _extraBg(this, W, H);
     if (this._subview !== 'chat') {
       _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
-      if (this._subview === 'main') {
-        _extraBack(this, 'Menu', 'more');
-      } else {
+      if (this._subview !== 'main') {
         makeBackBtn(this, 'Назад', () => {
           tg?.HapticFeedback?.impactOccurred('light');
           this.scene.restart({ sub: 'main' });

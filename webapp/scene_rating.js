@@ -29,7 +29,6 @@ class RatingScene extends Phaser.Scene {
 
     _extraBg(this, W, H);
     _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня · Натиск · Сезон · Босс');
-    _extraBack(this, 'Menu', 'profile');
 
     this._buildTabBar(W);
 
