@@ -2,565 +2,598 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Skin Preview — Duel Arena</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SKINS // DUEL ARENA</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&family=Inter:wght@400;700;800;900&display=swap');
 *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-body {
-  background: #07050f;
-  font-family: 'Inter', sans-serif;
-  color: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  gap: 40px;
-  flex-wrap: wrap;
-  padding: 30px;
+:root {
+  --cy: #00f0ff;   /* cyan chrome */
+  --mg: #ff00cc;   /* magenta */
+  --neon-str: #ff5522;
+  --neon-agi: #00ff88;
+  --neon-crt: #cc44ff;
 }
 
-/* ── Phone shell ── */
+html, body { height: 100%; background: #020209; font-family: 'Inter', sans-serif; color: #fff; overflow: hidden; }
+
+/* ══════════ PHONE ══════════ */
 .phone {
-  width: 390px;
-  height: 720px;
-  background: #0d0b1a;
-  border-radius: 36px;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  border: 1.5px solid var(--accent-color, rgba(109,40,217,0.45));
-  box-shadow: 0 0 60px var(--accent-glow, rgba(109,40,217,.2)), 0 24px 64px rgba(0,0,0,.95);
-  position: relative;
-  transition: border-color 0.4s ease, box-shadow 0.4s ease;
+  width: 390px; height: 100dvh; max-height: 840px;
+  margin: 0 auto;
+  display: flex; flex-direction: column;
+  position: relative; overflow: hidden;
+  background: #040212;
+  border-left:  1px solid rgba(0,240,255,.12);
+  border-right: 1px solid rgba(0,240,255,.12);
 }
 
-/* ── Header ── */
+/* grid overlay */
+.phone::before {
+  content: '';
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(0,240,255,.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,240,255,.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+/* scanlines */
+.phone::after {
+  content: '';
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent, transparent 2px,
+    rgba(0,0,0,.18) 2px, rgba(0,0,0,.18) 4px
+  );
+}
+
+/* bg blobs */
+.bg-blur { position: absolute; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.bg-blob { position: absolute; border-radius: 50%; filter: blur(70px); transition: background 0.6s ease; }
+.bg-blob-1 { width: 300px; height: 300px; top: -60px; left: -60px; opacity: 0.18; }
+.bg-blob-2 { width: 260px; height: 260px; bottom: 20px; right: -50px; opacity: 0.15; }
+
+/* corner brackets */
+.corner { position: absolute; width: 18px; height: 18px; z-index: 20; }
+.corner.tl { top:6px; left:6px; border-top:2px solid var(--cy); border-left:2px solid var(--cy); }
+.corner.tr { top:6px; right:6px; border-top:2px solid var(--cy); border-right:2px solid var(--cy); }
+.corner.bl { bottom:6px; left:6px; border-bottom:2px solid var(--cy); border-left:2px solid var(--cy); }
+.corner.br { bottom:6px; right:6px; border-bottom:2px solid var(--cy); border-right:2px solid var(--cy); }
+
+/* ══════════ HEADER ══════════ */
 .header {
-  display: flex;
-  align-items: center;
-  padding: 18px 20px 10px;
-  flex-shrink: 0;
-  z-index: 10;
+  position: relative; z-index: 15;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 20px 8px; flex-shrink: 0;
+  border-bottom: 1px solid rgba(0,240,255,.1);
 }
-.header-title {
-  flex: 1;
-  font-size: 17px;
-  font-weight: 800;
-  color: #f0eeff;
+.header-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--cy);
+  text-shadow: 0 0 12px rgba(0,240,255,.6), 0 0 24px rgba(0,240,255,.3);
 }
-
-/* ── Class selector tabs ── */
-.class-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 0 16px 14px;
-  z-index: 10;
-  flex-shrink: 0;
+.header-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: rgba(0,240,255,.4); letter-spacing: 1px;
 }
-.tab {
-  flex: 1;
-  padding: 8px 4px;
-  border-radius: 12px;
-  border: 1.5px solid rgba(255,255,255,.1);
-  background: rgba(255,255,255,.04);
-  text-align: center;
-  font-size: 11px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.25s ease;
-  letter-spacing: .3px;
-  user-select: none;
+.header-count {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px; font-weight: 700;
+  color: rgba(0,240,255,.5); letter-spacing: 1px;
 }
 
-/* class colours */
-.tab.strength  { color: #ff8844; }
-.tab.agility   { color: #00ee77; }
-.tab.intuition { color: #bb77ff; }
-
-.tab.active.strength  { background: rgba(255,100,40,.18); border-color: #ff6633; box-shadow: 0 0 16px rgba(255,90,30,.3); }
-.tab.active.agility   { background: rgba(0,210,90,.14);  border-color: #00cc66; box-shadow: 0 0 16px rgba(0,200,80,.3); }
-.tab.active.intuition { background: rgba(150,60,255,.16); border-color: #9944ff; box-shadow: 0 0 16px rgba(140,60,255,.35); }
-
-/* ── Hero stage ── */
-.hero-stage {
-  flex: 1;
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  overflow: hidden;
+/* ══════════ TABS ══════════ */
+.tabs {
+  position: relative; z-index: 15;
+  display: flex; gap: 8px;
+  padding: 10px 16px 12px; flex-shrink: 0;
 }
-
-/* big radial aura */
-.aura {
-  position: absolute;
-  bottom: -40px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(35px);
-  transition: background 0.5s ease;
-}
-.aura.strength  { background: radial-gradient(circle, rgba(255,110,30,0.28) 0%, transparent 68%); }
-.aura.agility   { background: radial-gradient(circle, rgba(0,230,90,0.24)  0%, transparent 68%); }
-.aura.intuition { background: radial-gradient(circle, rgba(130,70,255,0.26) 0%, transparent 68%); }
-
-/* floor oval */
-.floor-glow {
-  position: absolute;
-  bottom: 16px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 180px;
-  height: 22px;
-  border-radius: 50%;
-  pointer-events: none;
-  filter: blur(10px);
-  transition: background 0.5s ease;
-}
-.floor-glow.strength  { background: rgba(255,100,30,0.5); }
-.floor-glow.agility   { background: rgba(0,220,80,0.45); }
-.floor-glow.intuition { background: rgba(130,60,255,0.5); }
-
-/* particles container */
-.particles {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.p {
-  position: absolute;
-  border-radius: 50%;
-  opacity: 0;
-  animation: rise 4s ease-in infinite;
-}
-@keyframes rise {
-  0%   { opacity: 0;   transform: translateY(0)   scale(1); }
-  20%  { opacity: 0.6; }
-  80%  { opacity: 0.2; }
-  100% { opacity: 0;   transform: translateY(-220px) scale(0.3); }
-}
-
-/* hero image */
-.hero-img {
-  position: relative;
-  z-index: 5;
-  width: auto;
-  max-width: 92%;
-  height: 84%;
-  object-fit: contain;
-  object-position: bottom center;
-  cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-  animation: floating 3.6s ease-in-out infinite;
-  filter: drop-shadow(0 0 20px rgba(0,0,0,0.95));
-}
-.hero-img:hover { filter: drop-shadow(0 0 28px rgba(0,0,0,0.95)) brightness(1.06); }
-.hero-img.fade  { opacity: 0; transform: scale(0.96) translateY(6px); }
-
-@keyframes floating {
-  0%   { transform: translateY(0px); }
-  50%  { transform: translateY(-9px); }
-  100% { transform: translateY(0px); }
-}
-
-/* placeholder when img missing */
-#heroPlaceholder {
-  display: none;
-  position: absolute;
-  inset: 0;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 10px;
-  animation: floating 3.6s ease-in-out infinite;
-  z-index: 5;
-}
-
-/* ── Bottom panel ── */
-.bottom-panel {
-  flex-shrink: 0;
-  padding: 10px 16px 22px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  background: linear-gradient(to top, rgba(13,11,26,1) 75%, transparent);
-  z-index: 10;
-}
-
-.hero-name {
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: -.3px;
-  text-align: center;
-  transition: color 0.35s ease, text-shadow 0.35s ease;
-}
-.hero-name.strength  { color: #ff9966; text-shadow: 0 0 22px rgba(255,100,40,.5); }
-.hero-name.agility   { color: #44ffaa; text-shadow: 0 0 22px rgba(0,220,100,.5); }
-.hero-name.intuition { color: #cc88ff; text-shadow: 0 0 22px rgba(150,70,255,.55); }
-
-.hero-sub {
-  font-size: 10px;
-  text-align: center;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-weight: 700;
-  margin-top: -4px;
-  transition: color 0.35s ease;
-}
-.hero-sub.strength  { color: rgba(255,130,60,.55); }
-.hero-sub.agility   { color: rgba(0,210,100,.55); }
-.hero-sub.intuition { color: rgba(160,80,255,.55); }
-
-.hero-desc {
-  font-size: 11.5px;
-  color: rgba(255,255,255,.45);
-  text-align: center;
-  line-height: 1.55;
-  min-height: 32px;
-  transition: opacity 0.3s ease;
-}
-
-.stats-row {
-  display: flex;
-  gap: 7px;
-}
-.stat {
-  flex: 1;
-  background: rgba(255,255,255,.045);
-  border: 1px solid rgba(255,255,255,.09);
-  border-radius: 12px;
-  padding: 8px 4px;
-  text-align: center;
-}
-.stat-val {
-  font-size: 15px;
-  font-weight: 800;
-  transition: color 0.35s ease;
-}
-.stat-val.strength  { color: #ff8855; }
-.stat-val.agility   { color: #33ee99; }
-.stat-val.intuition { color: #bb77ff; }
-.stat-lbl {
-  font-size: 8.5px;
-  color: rgba(255,255,255,.38);
-  margin-top: 2px;
-  letter-spacing: .6px;
-  text-transform: uppercase;
-}
-
-.equip-btn {
-  width: 100%;
-  padding: 13px;
-  border-radius: 14px;
-  border: none;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 800;
-  cursor: pointer;
-  letter-spacing: .3px;
-  transition: all 0.25s ease;
-  margin-top: 2px;
-}
-.equip-btn.strength  { background: linear-gradient(135deg, #cc3300, #ff7733); color: #fff; box-shadow: 0 4px 22px rgba(200,60,20,.45); }
-.equip-btn.agility   { background: linear-gradient(135deg, #007733, #00ee77); color: #001a0d; box-shadow: 0 4px 22px rgba(0,180,80,.4); }
-.equip-btn.intuition { background: linear-gradient(135deg, #6622cc, #bb55ff); color: #fff; box-shadow: 0 4px 22px rgba(130,50,250,.5); }
-.equip-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
-.equip-btn:active { transform: translateY(1px); }
-
-/* ── Right legend ── */
-.legend {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 270px;
-}
-.legend h2 { font-size: 20px; font-weight: 800; color: #f0eeff; }
-.legend p  { font-size: 12.5px; color: rgba(255,255,255,.45); line-height: 1.6; }
-.feat {
-  display: flex;
-  gap: 10px;
-  padding: 11px 13px;
-  background: rgba(255,255,255,.04);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: 12px;
-}
-.feat-icon { font-size: 19px; flex-shrink: 0; }
-.feat-text { font-size: 12px; color: rgba(255,255,255,.55); line-height: 1.5; }
-.feat-text strong { color: #fff; display: block; margin-bottom: 1px; font-size: 12.5px; }
-
-.class-legend {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 4px;
-}
-.cls-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 9px 12px;
-  border-radius: 10px;
+.tab-btn {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  padding: 9px 4px 8px;
+  border-radius: 4px;
+  clip-path: polygon(8px 0%, 100% 0%, calc(100% - 8px) 100%, 0% 100%);
+  border: 1px solid rgba(255,255,255,.08);
   background: rgba(255,255,255,.03);
-  border: 1px solid rgba(255,255,255,.06);
-  font-size: 12px;
+  cursor: pointer; transition: all 0.25s ease;
+  user-select: none; -webkit-tap-highlight-color: transparent;
 }
-.cls-dot {
-  width: 10px; height: 10px;
-  border-radius: 50%;
-  flex-shrink: 0;
+.tab-icon {
+  font-size: 18px; line-height: 1;
+  filter: grayscale(0.6) brightness(0.7);
+  transition: all 0.25s ease;
 }
-.cls-name { font-weight: 700; flex: 1; }
-.cls-file { font-size: 10px; color: rgba(255,255,255,.3); font-family: monospace; }
+.tab-label {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
+  color: rgba(255,255,255,.25); transition: color 0.25s ease;
+}
+
+/* str tab */
+.tab-btn.str.active {
+  background: rgba(255,60,10,.14);
+  border-color: rgba(255,80,20,.7);
+  box-shadow: 0 0 16px rgba(255,70,10,.3), inset 0 0 10px rgba(255,60,10,.1);
+}
+.tab-btn.str.active .tab-icon  { filter: none; }
+.tab-btn.str.active .tab-label { color: #ff7733; text-shadow: 0 0 8px rgba(255,100,40,.7); }
+
+/* agi tab */
+.tab-btn.agi.active {
+  background: rgba(0,220,70,.1);
+  border-color: rgba(0,220,80,.7);
+  box-shadow: 0 0 16px rgba(0,210,70,.25), inset 0 0 10px rgba(0,200,60,.1);
+}
+.tab-btn.agi.active .tab-icon  { filter: none; }
+.tab-btn.agi.active .tab-label { color: #00ee77; text-shadow: 0 0 8px rgba(0,220,90,.7); }
+
+/* crt tab */
+.tab-btn.crt.active {
+  background: rgba(160,40,255,.14);
+  border-color: rgba(160,60,255,.7);
+  box-shadow: 0 0 16px rgba(150,50,255,.28), inset 0 0 10px rgba(140,40,255,.1);
+}
+.tab-btn.crt.active .tab-icon  { filter: none; }
+.tab-btn.crt.active .tab-label { color: #cc66ff; text-shadow: 0 0 8px rgba(170,70,255,.7); }
+
+/* ══════════ STAGE ══════════ */
+.stage {
+  position: relative; z-index: 5; flex: 1;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden; min-height: 0;
+}
+.aura {
+  position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%);
+  width: 380px; height: 260px; border-radius: 50%;
+  pointer-events: none; filter: blur(50px); transition: background 0.5s ease; z-index: 1;
+}
+.floor-oval {
+  position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+  width: 150px; height: 14px; border-radius: 50%;
+  pointer-events: none; filter: blur(8px); transition: background 0.5s ease; z-index: 2;
+}
+
+/* floor line (cyberpunk grid line) */
+.floor-line {
+  position: absolute; bottom: 18px; left: 10%; right: 10%; height: 1px;
+  z-index: 4; pointer-events: none;
+  transition: background 0.5s ease;
+}
+
+.particles { position: absolute; inset: 0; pointer-events: none; z-index: 3; }
+.p { position: absolute; border-radius: 50%; opacity: 0; animation: rise 4s ease-in infinite; }
+@keyframes rise {
+  0%   { opacity:0;   transform:translateY(0)     scale(1); }
+  20%  { opacity:0.8; }
+  80%  { opacity:0.2; }
+  100% { opacity:0;   transform:translateY(-240px) scale(0.3); }
+}
+
+/* ── Carousel ── */
+.carousel {
+  position: relative; z-index: 10;
+  display: flex; align-items: flex-end; justify-content: center;
+  width: 100%; height: 100%; padding-bottom: 14px;
+}
+.skin-card {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+  cursor: pointer;
+  transition: all 0.38s cubic-bezier(.34,1.22,.64,1);
+  -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.skin-card[data-pos="-1"] { transform: translateX(-116px) scale(0.7);  opacity: 0.35; filter: brightness(0.5) saturate(0.4); z-index: 5; }
+.skin-card[data-pos="0"]  { transform: translateX(0) scale(1);          opacity: 1;    filter: none;                           z-index: 10; }
+.skin-card[data-pos="1"]  { transform: translateX(116px) scale(0.7);   opacity: 0.35; filter: brightness(0.5) saturate(0.4); z-index: 5; }
+
+.skin-img-wrap {
+  position: relative; width: 170px; height: 300px;
+  display: flex; align-items: flex-end; justify-content: center;
+}
+
+/* cyberpunk neon frame for active */
+.skin-img-wrap::before {
+  content: ''; position: absolute; inset: -3px;
+  border-radius: 2px;
+  opacity: 0; transition: opacity 0.35s ease, box-shadow 0.35s ease;
+  pointer-events: none; z-index: 0;
+}
+.skin-card[data-pos="0"] .skin-img-wrap::before { opacity: 1; }
+
+body.cls-str .skin-card[data-pos="0"] .skin-img-wrap::before {
+  border: 1.5px solid rgba(255,80,20,1);
+  box-shadow: 0 0 0 1px rgba(255,80,20,.4), 0 0 20px rgba(255,80,20,.7), 0 0 50px rgba(255,80,20,.3), inset 0 0 20px rgba(255,80,20,.08);
+}
+body.cls-agi .skin-card[data-pos="0"] .skin-img-wrap::before {
+  border: 1.5px solid rgba(0,220,80,1);
+  box-shadow: 0 0 0 1px rgba(0,220,80,.4), 0 0 20px rgba(0,220,80,.7), 0 0 50px rgba(0,220,80,.3), inset 0 0 20px rgba(0,220,80,.08);
+}
+body.cls-crt .skin-card[data-pos="0"] .skin-img-wrap::before {
+  border: 1.5px solid rgba(180,70,255,1);
+  box-shadow: 0 0 0 1px rgba(180,70,255,.4), 0 0 20px rgba(180,70,255,.7), 0 0 50px rgba(180,70,255,.3), inset 0 0 20px rgba(180,70,255,.08);
+}
+
+.skin-img {
+  position: relative; z-index: 2;
+  width: 100%; height: 100%; object-fit: contain; object-position: bottom center;
+  filter: drop-shadow(0 10px 28px rgba(0,0,0,.95));
+  animation: float 3.8s ease-in-out infinite;
+}
+.skin-card[data-pos="0"] .skin-img { filter: drop-shadow(0 14px 30px rgba(0,0,0,.95)) brightness(1.1); }
+
+.skin-glow {
+  position: absolute; bottom: -4px; left: 50%; transform: translateX(-50%);
+  width: 130px; height: 22px; border-radius: 50%; filter: blur(14px);
+  opacity: 0; transition: opacity 0.35s ease; z-index: 1;
+}
+.skin-card[data-pos="0"] .skin-glow { opacity: 0.9; }
+
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+
+.skin-emoji-fb {
+  display: none; font-size: 96px;
+  animation: float 3.8s ease-in-out infinite;
+  position: relative; z-index: 2; filter: drop-shadow(0 0 28px rgba(0,0,0,.8));
+}
+
+/* ── Skin label ── */
+.skin-label { margin-top: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; transition: opacity 0.35s ease; }
+.skin-card[data-pos!="0"] .skin-label { opacity: 0.25; }
+
+.skin-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 12px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+  color: #fff; text-shadow: 0 0 10px rgba(255,255,255,.4);
+}
+.skin-bonus {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; font-weight: 700; letter-spacing: .6px;
+  padding: 2px 10px; border-radius: 2px;
+  background: rgba(0,240,255,.06); border: 1px solid rgba(0,240,255,.2); color: rgba(0,240,255,.7);
+}
+body.cls-str .skin-card[data-pos="0"] .skin-bonus { color: #ff8855; border-color: rgba(255,100,40,.5); background: rgba(255,80,20,.1); }
+body.cls-agi .skin-card[data-pos="0"] .skin-bonus { color: #00ff88; border-color: rgba(0,220,100,.5);  background: rgba(0,200,70,.09); }
+body.cls-crt .skin-card[data-pos="0"] .skin-bonus { color: #dd88ff; border-color: rgba(180,70,255,.5); background: rgba(160,50,255,.1); }
+
+/* arrows */
+.arrow-zone { position: absolute; top: 0; bottom: 0; width: 55px; z-index: 20; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.arrow-zone.left  { left: 0; }
+.arrow-zone.right { right: 0; }
+.arrow-icon {
+  font-size: 22px; font-weight: 900;
+  color: rgba(0,240,255,.15); transition: all 0.2s ease;
+  font-family: 'Share Tech Mono', monospace;
+}
+.arrow-zone:hover .arrow-icon { color: rgba(0,240,255,.7); text-shadow: 0 0 12px rgba(0,240,255,.6); }
+
+/* ══════════ BOTTOM PANEL ══════════ */
+.bottom-panel {
+  position: relative; z-index: 15; flex-shrink: 0;
+  padding: 10px 18px 26px;
+  background: linear-gradient(to top, rgba(4,2,18,1) 65%, transparent);
+  backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+  display: flex; flex-direction: column; gap: 9px;
+  border-top: 1px solid rgba(0,240,255,.1);
+}
+
+/* dots */
+.skin-dots { display: flex; justify-content: center; gap: 8px; }
+.dot { width: 6px; height: 6px; border-radius: 1px; background: rgba(0,240,255,.18); transition: all 0.3s ease; cursor: pointer; }
+.dot.active { width: 20px; border-radius: 2px; background: currentColor; box-shadow: 0 0 8px currentColor; }
+
+/* name */
+.active-info { text-align: center; }
+.active-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 22px; font-weight: 900; letter-spacing: 2px; text-transform: uppercase;
+  line-height: 1; transition: color 0.35s ease, text-shadow 0.35s ease;
+  animation: glitch-idle 8s ease-in-out infinite;
+}
+@keyframes glitch-idle {
+  0%,94%,100% { text-shadow: 0 0 20px currentColor, 0 0 40px currentColor; clip-path: none; transform: none; }
+  95% { transform: translateX(-2px); clip-path: polygon(0 20%,100% 20%,100% 40%,0 40%); filter: hue-rotate(90deg); }
+  96% { transform: translateX(2px);  clip-path: polygon(0 60%,100% 60%,100% 80%,0 80%); }
+  97% { transform: none; clip-path: none; filter: none; }
+}
+
+.active-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  margin-top: 4px; transition: color 0.35s ease; opacity: .5;
+}
+
+body.cls-str .active-name { color: #ff7733; }
+body.cls-str .active-sub  { color: #ff7733; }
+body.cls-agi .active-name { color: #00ff88; }
+body.cls-agi .active-sub  { color: #00ff88; }
+body.cls-crt .active-name { color: #cc66ff; }
+body.cls-crt .active-sub  { color: #cc66ff; }
+
+/* stats */
+.stats-row { display: flex; gap: 6px; }
+.stat-box {
+  flex: 1; padding: 8px 4px 7px;
+  border-radius: 3px;
+  clip-path: polygon(6px 0,100% 0,calc(100% - 6px) 100%,0 100%);
+  border: 1px solid rgba(0,240,255,.1); background: rgba(0,240,255,.04);
+  text-align: center;
+}
+.stat-val { font-family: 'Orbitron', sans-serif; font-size: 14px; font-weight: 700; transition: color 0.35s ease; }
+.stat-lbl { font-family: 'Share Tech Mono', monospace; font-size: 7.5px; letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,.25); margin-top: 2px; }
+body.cls-str .stat-val { color: #ff7733; }
+body.cls-agi .stat-val { color: #00ff88; }
+body.cls-crt .stat-val { color: #cc66ff; }
+
+/* equip btn */
+.equip-btn {
+  width: 100%; padding: 13px;
+  border-radius: 3px;
+  clip-path: polygon(12px 0,100% 0,calc(100% - 12px) 100%,0 100%);
+  border: none;
+  font-family: 'Orbitron', sans-serif; font-size: 12px; font-weight: 700;
+  cursor: pointer; letter-spacing: 1.5px; text-transform: uppercase;
+  transition: all 0.25s ease;
+  position: relative; overflow: hidden;
+}
+.equip-btn::before {
+  content: ''; position: absolute; top: 0; left: -80%; width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.3), transparent);
+  transform: skewX(-15deg); animation: shine 2.4s ease-in-out infinite;
+}
+@keyframes shine { 0%{left:-80%} 60%,100%{left:140%} }
+body.cls-str .equip-btn { background: linear-gradient(90deg, #8b1500, #ff5522, #8b1500); background-size:200%; color:#fff; box-shadow:0 0 20px rgba(255,70,20,.5),0 0 50px rgba(255,70,20,.2); animation:btnFlow 3s linear infinite; }
+body.cls-agi .equip-btn { background: linear-gradient(90deg, #005520, #00ff88, #005520); background-size:200%; color:#001a0a; box-shadow:0 0 20px rgba(0,220,80,.5),0 0 50px rgba(0,220,80,.2); animation:btnFlow 3s linear infinite; }
+body.cls-crt .equip-btn { background: linear-gradient(90deg, #4a0099, #cc44ff, #4a0099); background-size:200%; color:#fff; box-shadow:0 0 20px rgba(180,50,255,.5),0 0 50px rgba(180,50,255,.2); animation:btnFlow 3s linear infinite; }
+@keyframes btnFlow { 0%{background-position:0%} 100%{background-position:200%} }
+.equip-btn:hover  { transform: translateY(-2px) scaleX(1.02); filter: brightness(1.1); }
+.equip-btn:active { transform: scale(0.97); }
 </style>
 </head>
-<body>
+<body class="cls-str">
 
-<!-- ══════════════ PHONE ══════════════ -->
-<div class="phone" id="phone">
+<div class="phone">
+  <!-- cyberpunk corner brackets -->
+  <div class="corner tl"></div>
+  <div class="corner tr"></div>
+  <div class="corner bl"></div>
+  <div class="corner br"></div>
 
+  <!-- bg blobs -->
+  <div class="bg-blur">
+    <div class="bg-blob bg-blob-1" id="blob1"></div>
+    <div class="bg-blob bg-blob-2" id="blob2"></div>
+  </div>
+
+  <!-- header -->
   <div class="header">
-    <div class="header-title">Выбор персонажа</div>
+    <div>
+      <div class="header-logo">DUEL ARENA</div>
+      <div class="header-sub">// SKIN SELECT //</div>
+    </div>
+    <div class="header-count" id="hdrCount">01 / 03</div>
   </div>
 
-  <div class="class-tabs">
-    <div class="tab strength active"  onclick="setClass('strength')">⚔️ Сила</div>
-    <div class="tab agility"          onclick="setClass('agility')">🗡️ Ловкость</div>
-    <div class="tab intuition"        onclick="setClass('intuition')">🔮 Интуиция</div>
-  </div>
-
-  <div class="hero-stage">
-    <!-- particles rendered by JS -->
-    <div class="particles" id="particles"></div>
-
-    <div class="aura strength" id="aura"></div>
-    <div class="floor-glow strength" id="floorGlow"></div>
-
-    <img
-      id="heroImg"
-      class="hero-img"
-      src="../foto/воин.png"
-      alt="Герой"
-      onclick="pulse()"
-      onerror="onImgError()"
-    >
-    <div id="heroPlaceholder">
-      <div id="placeholderEmoji" style="font-size:110px;filter:drop-shadow(0 0 24px rgba(255,120,30,.7))">⚔️</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.25);letter-spacing:1px">foto / воин.png</div>
+  <!-- tabs -->
+  <div class="tabs">
+    <div class="tab-btn str active" onclick="setClass('str')">
+      <div class="tab-icon">👊</div>
+      <div class="tab-label">Сила</div>
+    </div>
+    <div class="tab-btn agi" onclick="setClass('agi')">
+      <div class="tab-icon">🦅</div>
+      <div class="tab-label">Ловкость</div>
+    </div>
+    <div class="tab-btn crt" onclick="setClass('crt')">
+      <div class="tab-icon">🎯</div>
+      <div class="tab-label">Крит</div>
     </div>
   </div>
 
+  <!-- stage -->
+  <div class="stage" id="stage">
+    <div class="aura"       id="aura"></div>
+    <div class="floor-oval" id="floorOval"></div>
+    <div class="floor-line" id="floorLine"></div>
+    <div class="particles"  id="particles"></div>
+    <div class="carousel"   id="carousel"></div>
+    <div class="arrow-zone left"  onclick="slide(-1)"><div class="arrow-icon">◂</div></div>
+    <div class="arrow-zone right" onclick="slide(+1)"><div class="arrow-icon">▸</div></div>
+  </div>
+
+  <!-- bottom -->
   <div class="bottom-panel">
-    <div class="hero-name strength" id="heroName">Берсерк</div>
-    <div class="hero-sub strength"  id="heroSub">Класс · Сила</div>
-    <div class="hero-desc"          id="heroDesc">Неудержимая мощь. Двойные топоры крушат любую броню.</div>
-    <div class="stats-row">
-      <div class="stat"><div class="stat-val strength" id="statAtk">2 800</div><div class="stat-lbl">Атака</div></div>
-      <div class="stat"><div class="stat-val strength" id="statDef">1 400</div><div class="stat-lbl">Защита</div></div>
-      <div class="stat"><div class="stat-val strength" id="statSpd">700</div> <div class="stat-lbl">Скорость</div></div>
+    <div class="skin-dots" id="dots"></div>
+    <div class="active-info">
+      <div class="active-name" id="activeName">ЯРОСТЬ</div>
+      <div class="active-sub"  id="activeSub">СИЛА · СКИН 01</div>
     </div>
-    <button class="equip-btn strength" id="equipBtn">Выбрать Силу</button>
-  </div>
-</div>
-
-<!-- ══════════════ LEGEND ══════════════ -->
-<div class="legend">
-  <h2>Система скинов</h2>
-  <p>Три класса — три уникальных образа. Жми на вкладки.</p>
-
-  <div class="class-legend">
-    <div class="cls-row">
-      <div class="cls-dot" style="background:#ff7733;box-shadow:0 0 6px #ff5522"></div>
-      <div class="cls-name" style="color:#ff9966">⚔️ Сила — Берсерк</div>
-      <div class="cls-file">воин.png</div>
-    </div>
-    <div class="cls-row">
-      <div class="cls-dot" style="background:#00ee77;box-shadow:0 0 6px #00cc55"></div>
-      <div class="cls-name" style="color:#44ffaa">🗡️ Ловкость — Ниндзя</div>
-      <div class="cls-file">ловкость 1.png</div>
-    </div>
-    <div class="cls-row">
-      <div class="cls-dot" style="background:#aa55ff;box-shadow:0 0 6px #8833ee"></div>
-      <div class="cls-name" style="color:#cc88ff">🔮 Интуиция — Тёмный эльф</div>
-      <div class="cls-file">крит 1.png</div>
-    </div>
-  </div>
-
-  <div class="feat">
-    <div class="feat-icon">✨</div>
-    <div class="feat-text"><strong>Уникальная аура</strong>Оранжевая / Зелёная / Фиолетовая — под цвет класса.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">🌊</div>
-    <div class="feat-text"><strong>Floating + частицы</strong>Персонаж покачивается, частицы поднимаются вверх.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">🔄</div>
-    <div class="feat-text"><strong>Плавная смена</strong>Fade-переход 0.3s при переключении класса.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">👆</div>
-    <div class="feat-text"><strong>Интерактив</strong>Hover → увеличение. Клик → pulse. Кнопка = цвет класса.</div>
+    <div class="stats-row" id="statsRow"></div>
+    <button class="equip-btn" id="equipBtn" onclick="onEquip()">▶ ВЫБРАТЬ СКИН</button>
   </div>
 </div>
 
 <script>
 const CLASSES = {
-  strength: {
-    src:   '../foto/воин.png',
-    name:  'Берсерк',
-    sub:   'Класс · Сила',
-    desc:  'Неудержимая мощь. Двойные топоры крушат любую броню.',
-    atk:   '2 800', def: '1 400', spd: '700',
-    btn:   '⚔️ Выбрать Силу',
-    phEmoji: '⚔️',
-    phGlow:  'rgba(255,120,30,.7)',
-    phFile:  'foto / воин.png',
-    pColor:  'rgba(255,110,40,',
-    accent:  'rgba(109,40,17,0.5)',
-    accentGlow: 'rgba(255,100,30,.25)'
+  str: {
+    label:'Сила', btnTxt:'▶ АКТИВИРОВАТЬ',
+    blobA:'rgba(255,70,10,0.4)', blobB:'rgba(200,40,0,0.28)',
+    aura:'radial-gradient(ellipse, rgba(255,80,15,.25) 0%, transparent 68%)',
+    floor:'rgba(255,80,15,0.7)',
+    floorLine:'linear-gradient(90deg,transparent,rgba(255,80,20,.8),transparent)',
+    pColor:'rgba(255,110,40,',
+    stats:[['2800','АТК'],['1400','ЗАЩ'],['700','СКР']],
+    skins:[
+      { img:'skins/sila/1.png',    name:'ЯРОСТЬ',  bonus:'+12% УРОН',    emoji:'⚔️' },
+      { img:'skins/sila/2.png',    name:'СТАЛЬ',   bonus:'+120 HP',      emoji:'🛡️' },
+      { img:'skins/sila/3.png',    name:'ЗВЕРЬ',   bonus:'+8% ЯРОСТЬ',   emoji:'🔥' },
+    ],
   },
-  agility: {
-    src:   '../foto/ловкость 1.png',
-    name:  'Призрак',
-    sub:   'Класс · Ловкость',
-    desc:  'Тень среди теней. Двойные клинки разят быстрее мысли.',
-    atk:   '2 100', def: '800', spd: '1 900',
-    btn:   '🗡️ Выбрать Ловкость',
-    phEmoji: '🗡️',
-    phGlow:  'rgba(0,220,80,.7)',
-    phFile:  'foto / ловкость 1.png',
-    pColor:  'rgba(0,220,80,',
-    accent:  'rgba(0,100,40,0.5)',
-    accentGlow: 'rgba(0,210,80,.25)'
+  agi: {
+    label:'Ловкость', btnTxt:'▶ АКТИВИРОВАТЬ',
+    blobA:'rgba(0,200,60,0.32)', blobB:'rgba(0,160,50,0.24)',
+    aura:'radial-gradient(ellipse, rgba(0,200,70,.22) 0%, transparent 68%)',
+    floor:'rgba(0,200,70,0.65)',
+    floorLine:'linear-gradient(90deg,transparent,rgba(0,220,80,.8),transparent)',
+    pColor:'rgba(0,220,90,',
+    stats:[['2100','АТК'],['800','ЗАЩ'],['1900','СКР']],
+    skins:[
+      { img:'skins/agility/1.png', name:'ТЕНЬ',    bonus:'+8% УКЛОН',    emoji:'🌑' },
+      { img:'skins/agility/2.png', name:'КЛИНОК',  bonus:'+10% ДВ.УД',   emoji:'🗡️' },
+      { img:'skins/agility/3.png', name:'ВЕТЕР',   bonus:'+6% СКОРОСТЬ', emoji:'💨' },
+    ],
   },
-  intuition: {
-    src:   '../foto/крит 1.png',
-    name:  'Тёмный эльф',
-    sub:   'Класс · Интуиция',
-    desc:  'Мастер крит-ударов. Руническое оружие пронизывает душу.',
-    atk:   '3 200', def: '600', spd: '1 100',
-    btn:   '🔮 Выбрать Интуицию',
-    phEmoji: '🔮',
-    phGlow:  'rgba(140,60,255,.7)',
-    phFile:  'foto / крит 1.png',
-    pColor:  'rgba(130,60,255,',
-    accent:  'rgba(109,40,217,0.5)',
-    accentGlow: 'rgba(130,60,255,.28)'
-  }
+  crt: {
+    label:'Крит', btnTxt:'▶ АКТИВИРОВАТЬ',
+    blobA:'rgba(160,40,255,0.34)', blobB:'rgba(120,20,220,0.26)',
+    aura:'radial-gradient(ellipse, rgba(160,55,255,.22) 0%, transparent 68%)',
+    floor:'rgba(160,50,255,0.65)',
+    floorLine:'linear-gradient(90deg,transparent,rgba(170,60,255,.8),transparent)',
+    pColor:'rgba(170,80,255,',
+    stats:[['3200','АТК'],['600','ЗАЩ'],['1100','СКР']],
+    skins:[
+      { img:'skins/crit/1.png',    name:'РАЗЛОМ',  bonus:'+18% КРИТ',    emoji:'💜' },
+      { img:'skins/crit/2.png',    name:'ЭФИР',    bonus:'+15% КРИТ.УР', emoji:'🔮' },
+      { img:'skins/crit/3.png',    name:'АСТРАЛ',  bonus:'+12% КРИТ',    emoji:'✨' },
+    ],
+  },
 };
 
-let current = 'strength';
-let particleTimer = null;
+let curCls  = 'str';
+let curSkin = 0;
 
-// build particles
-function buildParticles(cls) {
+function renderCarousel() {
+  const cls  = CLASSES[curCls];
+  const el   = document.getElementById('carousel');
+  el.innerHTML = '';
+  const glowMap = { str:'rgba(255,80,20,.8)', agi:'rgba(0,220,80,.75)', crt:'rgba(170,60,255,.75)' };
+  const glow = glowMap[curCls];
+
+  cls.skins.forEach((sk, i) => {
+    const pos = i - curSkin;
+    if (Math.abs(pos) > 1) return;
+    const card = document.createElement('div');
+    card.className   = 'skin-card';
+    card.dataset.pos = pos;
+    card.onclick = () => selectSkin(i);
+    card.innerHTML = `
+      <div class="skin-img-wrap">
+        <img class="skin-img" src="${sk.img}" alt="${sk.name}"
+          onerror="this.style.display='none';this.nextElementSibling.style.display='block'">
+        <div class="skin-emoji-fb">${sk.emoji}</div>
+        <div class="skin-glow" style="background:${glow}"></div>
+      </div>
+      <div class="skin-label">
+        <div class="skin-name">${sk.name}</div>
+        <div class="skin-bonus">${sk.bonus}</div>
+      </div>`;
+    el.appendChild(card);
+  });
+
+  updateDots();
+  updateInfo();
+}
+
+function selectSkin(idx) {
+  if (idx === curSkin) return;
+  curSkin = idx;
+  renderCarousel();
+}
+
+function slide(dir) {
+  const next = curSkin + dir;
+  if (next < 0 || next >= CLASSES[curCls].skins.length) return;
+  selectSkin(next);
+}
+
+function updateDots() {
+  const cls  = CLASSES[curCls];
+  const clrMap = { str:'#ff7733', agi:'#00ff88', crt:'#cc66ff' };
+  document.getElementById('dots').innerHTML = cls.skins.map((_,i) =>
+    `<div class="dot${i===curSkin?' active':''}" style="color:${clrMap[curCls]}" onclick="selectSkin(${i})"></div>`
+  ).join('');
+}
+
+function updateInfo() {
+  const cls = CLASSES[curCls];
+  const sk  = cls.skins[curSkin];
+  const num = String(curSkin+1).padStart(2,'0');
+  document.getElementById('activeName').textContent = sk.name;
+  document.getElementById('activeSub').textContent  = `${cls.label.toUpperCase()} · СКИН ${num}`;
+  document.getElementById('hdrCount').textContent   = `${num} / 03`;
+  document.getElementById('statsRow').innerHTML = cls.stats.map(([v,l]) =>
+    `<div class="stat-box"><div class="stat-val">${v}</div><div class="stat-lbl">${l}</div></div>`
+  ).join('');
+  document.getElementById('equipBtn').textContent = `${cls.btnTxt} — ${sk.name}`;
+}
+
+function setClass(key) {
+  if (key === curCls) return;
+  curCls  = key;
+  curSkin = 0;
+  document.body.className = 'cls-' + key;
+  document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+  document.querySelector('.tab-btn.' + key).classList.add('active');
+  const cls = CLASSES[key];
+  document.getElementById('blob1').style.background     = cls.blobA;
+  document.getElementById('blob2').style.background     = cls.blobB;
+  document.getElementById('aura').style.background      = cls.aura;
+  document.getElementById('floorOval').style.background = cls.floor;
+  document.getElementById('floorLine').style.background = cls.floorLine;
+  buildParticles();
+  renderCarousel();
+}
+
+function buildParticles() {
   const cont = document.getElementById('particles');
   cont.innerHTML = '';
-  const col = CLASSES[cls].pColor;
-  for (let i = 0; i < 14; i++) {
+  const col = CLASSES[curCls].pColor;
+  for (let i = 0; i < 18; i++) {
     const d = document.createElement('div');
     d.className = 'p';
-    const size = 3 + Math.random() * 5;
-    d.style.cssText = `
-      width:${size}px; height:${size}px;
-      background:${col}0.7)};
-      box-shadow: 0 0 ${size*2}px ${col}0.9)};
-      left:${15 + Math.random()*70}%;
-      bottom:${10 + Math.random()*30}%;
-      animation-delay:${Math.random()*4}s;
-      animation-duration:${3 + Math.random()*3}s;
-    `;
+    const sz = 2 + Math.random() * 5;
+    /* some particles are square (cyberpunk) */
+    const sq = Math.random() > 0.6;
+    d.style.cssText = `width:${sz}px;height:${sq?sz*2:sz}px;border-radius:${sq?'1px':'50%'};background:${col}0.9);box-shadow:0 0 ${sz*3}px ${col}1);left:${10+Math.random()*80}%;bottom:${5+Math.random()*30}%;animation-delay:${(Math.random()*4).toFixed(2)}s;animation-duration:${(2.5+Math.random()*3).toFixed(2)}s;`;
     cont.appendChild(d);
   }
 }
 
-function setClass(cls) {
-  if (cls === current) return;
-  current = cls;
-
-  // tabs
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelector('.tab.' + cls).classList.add('active');
-
-  const img  = document.getElementById('heroImg');
-  const ph   = document.getElementById('heroPlaceholder');
-  const data = CLASSES[cls];
-
-  // phone border
-  const phone = document.getElementById('phone');
-  phone.style.setProperty('--accent-color', data.accent);
-  phone.style.setProperty('--accent-glow',  data.accentGlow);
-
-  // fade out
-  img.classList.add('fade');
-
+function onEquip() {
+  const sk  = CLASSES[curCls].skins[curSkin];
+  const btn = document.getElementById('equipBtn');
+  btn.textContent = '✅ СКИН АКТИВИРОВАН';
+  btn.style.filter = 'brightness(1.3)';
   setTimeout(() => {
-    img.src = data.src;
-    img.onload  = () => { img.classList.remove('fade'); ph.style.display = 'none'; img.style.display = ''; };
-    img.onerror = () => { img.classList.remove('fade'); showPlaceholder(data); };
-
-    document.getElementById('aura').className      = 'aura '       + cls;
-    document.getElementById('floorGlow').className = 'floor-glow ' + cls;
-
-    const nm = document.getElementById('heroName');
-    nm.textContent = data.name; nm.className = 'hero-name ' + cls;
-
-    const sb = document.getElementById('heroSub');
-    sb.textContent = data.sub; sb.className = 'hero-sub ' + cls;
-
-    document.getElementById('heroDesc').textContent = data.desc;
-
-    document.getElementById('statAtk').textContent = data.atk;
-    document.getElementById('statDef').textContent = data.def;
-    document.getElementById('statSpd').textContent = data.spd;
-    ['statAtk','statDef','statSpd'].forEach(id => {
-      document.getElementById(id).className = 'stat-val ' + cls;
-    });
-
-    const btn = document.getElementById('equipBtn');
-    btn.textContent = data.btn;
-    btn.className = 'equip-btn ' + cls;
-
-    buildParticles(cls);
-  }, 290);
+    btn.textContent = `${CLASSES[curCls].btnTxt} — ${sk.name}`;
+    btn.style.filter = '';
+  }, 1800);
 }
 
-function showPlaceholder(data) {
-  const img = document.getElementById('heroImg');
-  img.style.display = 'none';
-  const ph = document.getElementById('heroPlaceholder');
-  ph.style.display = 'flex';
-  document.getElementById('placeholderEmoji').textContent = data.phEmoji;
-  document.getElementById('placeholderEmoji').style.filter = `drop-shadow(0 0 24px ${data.phGlow})`;
-  ph.querySelector('div:last-child').textContent = data.phFile;
-}
+/* touch swipe */
+let touchX = 0;
+const stageEl = document.getElementById('stage');
+stageEl.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; }, { passive:true });
+stageEl.addEventListener('touchend',   e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 40) slide(dx < 0 ? 1 : -1);
+}, { passive:true });
 
-function onImgError() {
-  showPlaceholder(CLASSES[current]);
-}
-
-function pulse() {
-  const img = document.getElementById('heroImg');
-  img.style.transition = 'transform 0.12s ease, filter 0.12s ease';
-  img.style.transform  = 'scale(1.08) translateY(-5px)';
-  img.style.filter     = 'drop-shadow(0 0 35px rgba(255,255,255,.25)) brightness(1.1)';
-  setTimeout(() => {
-    img.style.transform = '';
-    img.style.filter    = '';
-    setTimeout(() => { img.style.transition = ''; }, 350);
-  }, 160);
-}
-
-// init particles
-buildParticles('strength');
+/* init */
+(() => {
+  const cls = CLASSES[curCls];
+  document.getElementById('blob1').style.background     = cls.blobA;
+  document.getElementById('blob2').style.background     = cls.blobB;
+  document.getElementById('aura').style.background      = cls.aura;
+  document.getElementById('floorOval').style.background = cls.floor;
+  document.getElementById('floorLine').style.background = cls.floorLine;
+  buildParticles();
+  renderCarousel();
+})();
 </script>
 </body>
 </html>
