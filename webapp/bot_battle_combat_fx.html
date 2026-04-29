@@ -8,9 +8,10 @@
   body{margin:0;background:#0a0a12;color:#fff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:18px 14px 40px;}
   h1{font-size:18px;margin:0 0 4px;text-align:center;letter-spacing:.5px;}
   .sub{text-align:center;color:#8a8aa0;font-size:12px;margin-bottom:16px;}
-  .layout{display:flex;gap:18px;max-width:1100px;margin:0 auto;flex-wrap:wrap;justify-content:center;}
-  .stage-wrap{max-width:380px;flex:0 0 auto;}
-  .panel-wrap{flex:1;min-width:260px;max-width:460px;}
+  .layout{display:flex;gap:18px;max-width:1100px;margin:0 auto;align-items:flex-start;flex-wrap:wrap;justify-content:center;}
+  .stage-wrap{flex:0 0 auto;width:340px;position:sticky;top:14px;align-self:flex-start;}
+  @media (max-width:780px){.stage-wrap{position:static;width:100%;max-width:340px;}}
+  .panel-wrap{flex:1;min-width:280px;max-width:480px;}
 
   .stage{aspect-ratio:9/16;border-radius:14px;overflow:hidden;position:relative;background:#03050f;box-shadow:0 8px 28px rgba(0,0,0,.55);transition:transform .25s;}
   .bg{position:absolute;inset:0;background:url('bot_skins/bg/33.jpg') center/cover;filter:brightness(.55) saturate(1.05);}
