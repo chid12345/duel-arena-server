@@ -252,20 +252,19 @@ const SLOT_LAYOUT = {
   shield: {row:2, col:3, label:'Щит'},
   ring1:  {row:3, col:3, label:'Кольцо'},
 };
-// Маппинг item_id → PNG в webapp/ (синхрон с bot_battle_card.js:_itemImageUrl).
-function previewImageUrl(it){
+// Базовое имя файла без расширения (синхрон с bot_battle_card.js:_itemImageBase).
+function previewImageBase(it){
   const id = it.item_id || it.name || '';
   const slot = it.slot, rar = it.rarity || 'common';
   if (slot === 'shield' || slot === 'belt' || slot === 'ring1' || slot === 'boots') {
-    // В превью item_id берём по образцу, иначе пытаемся по rarity
-    if (/^(shield|helmet|ring|boots)_/.test(id)) return `${id}.png`;
+    if (/^(shield|helmet|ring|boots)_/.test(id)) return id;
     const base = slot === 'belt' ? 'helmet' : slot === 'ring1' ? 'ring' : slot;
     const m = {common:'free1', rare:'gold1', epic:'dia1', mythic:'mythic1'};
-    return `${base}_${m[rar]||'free1'}.png`;
+    return `${base}_${m[rar]||'free1'}`;
   }
   if (slot === 'armor') {
     const m = {common:'armor_free1', rare:'armor_gold1', epic:'armor_dia1', mythic:'armor_mythic1'};
-    return `${m[rar]||'armor_free1'}.png`;
+    return m[rar]||'armor_free1';
   }
   if (slot === 'weapon') {
     const parts = id.split('_');
@@ -274,10 +273,23 @@ function previewImageUrl(it){
     const rcl = (sfx==='steel'||sfx==='gold')?'rare':(sfx==='diamond')?'epic':(sfx==='mythic')?'mythic':'free';
     const types = ['sword','axe','club','gs'];
     const t = types.includes(wtype) ? wtype : 'sword';
-    return `weapon_${t}_${rcl}.png`;
+    return `weapon_${t}_${rcl}`;
   }
   return null;
 }
+// Глобальный fallback для onerror в превью.
+window._bbcImgFb = function(img) {
+  const tries = (img.dataset.tries || '').split(',').filter(Boolean);
+  if (!tries.length) {
+    const slot = img.dataset.slot || '';
+    const E = {weapon:'🗡',shield:'🛡',armor:'👕',belt:'🪖',boots:'👢',ring1:'💍'};
+    if (img.parentNode) img.parentNode.innerHTML = '<span class="eq-emoji">' + (E[slot]||'•') + '</span>';
+    return;
+  }
+  const next = tries.shift();
+  img.dataset.tries = tries.join(',');
+  img.src = (img.dataset.base||'') + '.' + next;
+};
 function renderEquip(items, persona){
   const bySlot = {};
   items.forEach(it => bySlot[it.slot] = it);
@@ -290,9 +302,9 @@ function renderEquip(items, persona){
     const style = `grid-row:${meta.row};grid-column:${meta.col};` + (it ? `border-color:${it.color};box-shadow:inset 0 0 8px ${it.color}33;` : '');
     const cls = it ? '' : 'empty';
     const nm = it ? (it.name.length > 13 ? it.name.slice(0,12)+'…' : it.name) : '';
-    const img = it ? previewImageUrl(it) : null;
-    const visual = img
-      ? `<div class="eq-img"><img src="${img}" onerror="this.parentNode.innerHTML='<span class=&quot;eq-emoji&quot;>${SLOT_ICON[slot]||'•'}</span>'"></div>`
+    const base = it ? previewImageBase(it) : null;
+    const visual = base
+      ? `<div class="eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onerror="window._bbcImgFb && window._bbcImgFb(this)"></div>`
       : `<div class="eq-img"><span class="eq-emoji">${SLOT_ICON[slot]||'•'}</span></div>`;
     return `<div class="eq-slot ${cls}" style="${style}">
       <div class="eq-label">${meta.label}</div>

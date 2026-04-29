@@ -51,23 +51,26 @@ const BotBattleCard = (() => {
       .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;}
       .bbc-equip .bbc-eq-emoji{font-size:22px;line-height:1;}
       .bbc-equip .bbc-eq-name{font-size:7px;font-weight:700;line-height:1.1;max-width:60px;word-wrap:break-word;padding:0 2px;}
+      .bbc-timer{position:absolute;top:8px;left:14px;font-size:10px;color:#9abae0;background:rgba(0,0,0,.4);padding:2px 6px;border-radius:4px;font-family:monospace;}
+      .bbc-timer.warn{color:#ff8044;}
       .bbc-empty{text-align:center;font-size:10px;color:#666688;padding:8px;}
     `;
     document.head.appendChild(s);
   }
 
-  // Маппинг item_id → имя файла в webapp/. Реальные PNG для shield/helmet/boots/ring
-  // совпадают с item_id; для armor/weapon строим по rarity (одна модель на редкость).
-  function _itemImageUrl(it) {
+  // Маппинг item_id → BASE имя файла (без расширения). В webapp/ файлы лежат
+  // с разными расширениями (shield_free*.jpeg, boots_dia*.jpg, helmet_*.png),
+  // поэтому фронт пробует .png → .jpg → .jpeg через onerror chain.
+  function _itemImageBase(it) {
     const id = it.item_id || '';
     const slot = it.slot;
     const rar = it.rarity || 'common';
     if (slot === 'shield' || slot === 'belt' || slot === 'ring1' || slot === 'boots') {
-      return `${id}.png`;
+      return id;
     }
     if (slot === 'armor') {
       const m = {common:'armor_free1', rare:'armor_gold1', epic:'armor_dia1', mythic:'armor_mythic1'};
-      return `${m[rar] || 'armor_free1'}.png`;
+      return m[rar] || 'armor_free1';
     }
     if (slot === 'weapon') {
       const parts = id.split('_');
@@ -76,9 +79,25 @@ const BotBattleCard = (() => {
       const rcl = (sfx === 'steel' || sfx === 'gold') ? 'rare'
                 : (sfx === 'diamond') ? 'epic'
                 : (sfx === 'mythic') ? 'mythic' : 'free';
-      return `weapon_${wtype}_${rcl}.png`;
+      return `weapon_${wtype}_${rcl}`;
     }
     return null;
+  }
+
+  // Глобальный fallback для онэррора: пробуем по очереди .jpg → .jpeg, иначе эмодзи.
+  if (typeof window !== 'undefined' && !window._bbcImgFb) {
+    window._bbcImgFb = function(img) {
+      const tries = (img.dataset.tries || '').split(',').filter(Boolean);
+      if (!tries.length) {
+        const slot = img.dataset.slot || '';
+        const E = {weapon:'🗡',shield:'🛡',armor:'👕',belt:'🪖',boots:'👢',ring1:'💍'};
+        if (img.parentNode) img.parentNode.innerHTML = '<span class="bbc-eq-emoji">' + (E[slot]||'•') + '</span>';
+        return;
+      }
+      const next = tries.shift();
+      img.dataset.tries = tries.join(',');
+      img.src = (img.dataset.base || '') + '.' + next;
+    };
   }
 
   function _spriteHtml(b, who) {
@@ -141,10 +160,10 @@ const BotBattleCard = (() => {
                     (it ? `border-color:${it.color};box-shadow:inset 0 0 8px ${it.color}33;` : '');
       const cls = it ? '' : 'empty';
       const nm = it ? (it.name.length > 13 ? it.name.slice(0, 12) + '…' : it.name) : '';
-      // Картинка предмета, fallback — эмодзи если PNG не найден
-      const img = it ? _itemImageUrl(it) : null;
-      const visual = img
-        ? `<div class="bbc-eq-img"><img src="${img}" onerror="this.parentNode.innerHTML='<span class=\\'bbc-eq-emoji\\'>${SLOT_ICON[slot]||'•'}</span>'"></div>`
+      // Картинка предмета: пробуем .png → .jpg → .jpeg → fallback эмодзи.
+      const base = it ? _itemImageBase(it) : null;
+      const visual = base
+        ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onerror="window._bbcImgFb && window._bbcImgFb(this)"></div>`
         : `<div class="bbc-eq-img"><span class="bbc-eq-emoji">${SLOT_ICON[slot] || '•'}</span></div>`;
       return `<div class="bbc-eq-slot ${cls}" style="${style}">
         <div class="bbc-eq-label">${meta.label}</div>
@@ -164,8 +183,12 @@ const BotBattleCard = (() => {
 
     overlay = document.createElement('div');
     overlay.id = 'bbc-overlay';
+    // Таймер хода — чтобы игрок не пропустил ход разглядывая карточку.
+    const initialDeadline = Math.max(1, Number(b.deadline_sec) || 15);
+    const showTimer = !!b.deadline_sec;
     overlay.innerHTML = `
       <div id="bbc-card" class="${isPrem?'prem':''}">
+        ${showTimer ? `<div class="bbc-timer" id="bbc-timer">⏱ ${initialDeadline}с</div>` : ''}
         <div class="bbc-head">
           <div>${head}</div>
           <div class="bbc-close" id="bbc-close">✕</div>
@@ -191,11 +214,26 @@ const BotBattleCard = (() => {
     overlay.addEventListener('click', e => {
       if (e.target === overlay || e.target.id === 'bbc-close') _hide();
     });
+    // Тикаем таймер: за 3 сек до AFK закрываем карточку, чтобы игрок успел походить.
+    if (showTimer) {
+      const startedAt = Date.now();
+      const tEl = overlay.querySelector('#bbc-timer');
+      overlay._ticker = setInterval(() => {
+        if (!overlay) return;
+        const left = Math.max(0, initialDeadline - (Date.now() - startedAt) / 1000);
+        if (tEl) {
+          tEl.textContent = `⏱ ${Math.ceil(left)}с`;
+          tEl.classList.toggle('warn', left <= 5);
+        }
+        if (left <= 3) _hide();
+      }, 250);
+    }
     try { window.tg?.HapticFeedback?.impactOccurred('light'); } catch(_){}
   }
 
   function _hide() {
     if (!overlay) return;
+    try { if (overlay._ticker) clearInterval(overlay._ticker); } catch(_){}
     try { overlay.parentNode && overlay.parentNode.removeChild(overlay); } catch(_){}
     overlay = null;
   }
