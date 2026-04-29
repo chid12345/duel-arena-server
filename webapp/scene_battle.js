@@ -151,6 +151,9 @@ class BattleScene extends Phaser.Scene {
     this._p2PrevPct  = null;
     this._oppCardOpen = false;
 
+    // Защита: если State.battle не пришёл с сервера (редкий race), возвращаем в меню.
+    if (!State.battle) { this.scene.start('Menu', { returnTab: 'profile' }); return; }
+
     // PvE «Бой с ботом» (mode=normal + opp_is_bot) → HTML-overlay 1-в-1 как в превью.
     // PvP/Натиск/Титаны идут обычным Phaser-путём.
     const _b0 = State.battle;

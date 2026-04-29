@@ -45,7 +45,7 @@ def register_active_session_route(
             active = db.get_wb_active_spawn()
             if active:
                 ps = db.get_wb_player_state(int(active["spawn_id"]), uid)
-                if ps and not int(ps.get("auto_bot") or 0):
+                if ps and not int(ps.get("auto_bot") or 0) and not int(ps.get("is_dead") or 0):
                     return {"ok": True, "type": "world_boss", "scene": "WorldBoss"}
         except Exception as e:
             log.warning("active_session WB check: %s", e)

@@ -127,6 +127,9 @@ Object.assign(BattleScene.prototype, {
     this._pollEvent = this.time.addEvent({
       delay: 3000, loop: true,
       callback: async () => {
+        // Async callback продолжает работать даже после _pollEvent.remove() в shutdown.
+        // Guard'им чтобы не показать Result после перехода на другую сцену.
+        if (!this.scene?.isActive('Battle')) return;
         const now = Date.now();
 
         if (!this._choosing) {
@@ -138,15 +141,16 @@ Object.assign(BattleScene.prototype, {
 
         try {
           const res = await get('/api/battle/state');
+          if (!this.scene?.isActive('Battle')) return;
           if (!res?.active) {
             const last = await get('/api/battle/last_result').catch(() => null);
-            // Защита от race-condition: если last_result пришёл от ДРУГОГО боя
-            // (например, кэш старого поражения по AFK), не показываем Result.
-            // Иначе игрок видел "Раундов: 0" из чужого результата.
-            if (last?.ok && myBattleId && last.battle_id && last.battle_id !== myBattleId) {
-              return;
-            }
-            State.lastResult = last || { human_won: false, result: {} };
+            if (!this.scene?.isActive('Battle')) return;
+            // Если результата нет — WS уже показал Result или бой ещё в памяти.
+            // Не показываем пустой экран поражения ("Раундов: —").
+            if (!last?.ok) return;
+            // Защита от race-condition: чужой результат по battle_id
+            if (myBattleId && last.battle_id && last.battle_id !== myBattleId) return;
+            State.lastResult = last;
             BattleLog.hide();
             try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_){}
             this.scene.start('Result', {});
