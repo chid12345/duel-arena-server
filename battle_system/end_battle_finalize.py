@@ -66,3 +66,20 @@ def invalidate_tma_cache(winner_user_id, loser_user_id) -> None:
             _cache_invalidate(int(loser_user_id))
     except Exception:
         pass
+
+
+def update_bot_win_streak(battle: Dict[str, Any], bot_won: bool) -> None:
+    """PvE: бот выиграл — +1 к win_streak; проиграл — сброс. PvP не трогаем."""
+    if not battle.get("is_bot2"):
+        return
+    bot_id = (battle.get("player2") or {}).get("bot_id")
+    if not bot_id:
+        return
+    try:
+        from database import db as _db
+        if bot_won:
+            _db.bot_inc_win_streak(int(bot_id))
+        else:
+            _db.bot_reset_win_streak(int(bot_id))
+    except Exception as e:
+        logger.warning("update_bot_win_streak failed bot_id=%s: %s", bot_id, e)

@@ -204,6 +204,13 @@ class BattleAfkEndMixin:
             if player2.get('user_id') is not None:
                 self.remember_battle_end_ui(player2['user_id'], result)
 
+        # PvE: серия побед бота при AFK-исходе. Игрок ушёл в AFK = бот выиграл.
+        try:
+            from battle_system.end_battle_finalize import update_bot_win_streak
+            update_bot_win_streak(battle, bot_won=not human_won)
+        except Exception:
+            pass
+
         if player1['user_id'] in self.battle_queue:
             del self.battle_queue[player1['user_id']]
         if not battle['is_bot2'] and player2.get('user_id') in self.battle_queue:

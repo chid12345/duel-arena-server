@@ -26,4 +26,9 @@ MIGRATIONS_PART5 = [
     ("2026_04_23_001_battles_pvp_weekly_idx", [
         "CREATE INDEX IF NOT EXISTS idx_battles_pvp_weekly ON battles (is_bot2, created_at)",
     ]),
+    # Боты с win-streak'ом — для надписи «🔥 N побед подряд» в карточке соперника.
+    # Колонка инкрементится после каждой победы бота, сбрасывается при поражении.
+    ("2026_04_29_001_bots_win_streak", [
+        "ALTER TABLE bots ADD COLUMN win_streak INTEGER DEFAULT 0",
+    ]),
 ]

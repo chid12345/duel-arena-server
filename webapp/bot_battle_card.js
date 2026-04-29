@@ -104,7 +104,7 @@ const BotBattleCard = (() => {
           <div class="bbc-close" id="bbc-close">✕</div>
         </div>
         <div class="bbc-name" style="color:${isPrem?'#ffc83c':'#f0f0fa'}">${nameStr}</div>
-        <div class="bbc-lv">Ур. ${level} · ★ ${rating}</div>
+        <div class="bbc-lv" style="color:${(!isMe && isBot && (b.opp_win_streak||0) > 0) ? '#ff8044' : '#ccccee'}">Ур. ${level} · ★ ${rating}${(!isMe && isBot && (b.opp_win_streak||0) > 0) ? `  ·  🔥 ${b.opp_win_streak} подряд` : ''}</div>
         <div class="bbc-div"></div>
         <div class="bbc-body">
           <div class="bbc-sprite">${_spriteHtml(b, who)}</div>

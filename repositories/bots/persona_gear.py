@@ -134,8 +134,9 @@ def pick_gear_for_persona(persona: str, level: int,
         # Шанс что слот вообще одет — растёт с уровнем
         if r.random() > coverage:
             continue
-        # Новички редко имеют экипировку (даже если уровень высокий — это «новичок»)
-        if persona == "novice" and r.random() > 0.50:
+        # Новички почти всегда голые (имитация новых аккаунтов).
+        # Без этого голый игрок vs новичок ~ 35% — а должно быть ~50%.
+        if persona == "novice" and r.random() > 0.25:
             continue
         iid = _pick_item_for_slot(slot, persona, r)
         if iid:

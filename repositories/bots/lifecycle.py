@@ -33,6 +33,33 @@ class BotsLifecycleMixin:
             if own_conn:
                 conn.close()
 
+    def bot_inc_win_streak(self, bot_id: int) -> int:
+        """Бот выиграл бой → +1 к win_streak. Возвращает новое значение."""
+        if not bot_id:
+            return 0
+        conn = self.get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute("UPDATE bots SET win_streak = COALESCE(win_streak,0) + 1 WHERE bot_id = ?", (int(bot_id),))
+            conn.commit()
+            cur.execute("SELECT win_streak FROM bots WHERE bot_id = ?", (int(bot_id),))
+            row = cur.fetchone()
+            return int(row["win_streak"]) if row else 0
+        finally:
+            conn.close()
+
+    def bot_reset_win_streak(self, bot_id: int) -> None:
+        """Бот проиграл → серия побед обнуляется."""
+        if not bot_id:
+            return
+        conn = self.get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute("UPDATE bots SET win_streak = 0 WHERE bot_id = ?", (int(bot_id),))
+            conn.commit()
+        finally:
+            conn.close()
+
     def create_initial_bots(self, conn=None):
         """Дополнить популяцию по таблице BOT_COUNT_BY_LEVEL, затем до TARGET_BOT_POPULATION."""
         own_conn = conn is None

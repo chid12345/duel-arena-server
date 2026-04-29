@@ -75,7 +75,8 @@ POSTGRES_DDL_01: tuple[str, ...] = (
         ai_pattern TEXT,
         last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         battles_count INTEGER DEFAULT 0,
-        wins INTEGER DEFAULT 0
+        wins INTEGER DEFAULT 0,
+        win_streak INTEGER DEFAULT 0
     )
     """,
     """

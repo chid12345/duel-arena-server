@@ -10,6 +10,7 @@ from config import STREAK_BONUS_EVERY, STREAK_BONUS_GOLD
 
 from battle_system.end_battle_finalize import (
     cleanup_queue_and_active, invalidate_tma_cache, log_stat, remember_ui,
+    update_bot_win_streak,
 )
 from battle_system.end_battle_finish_modes import run_titan_endless_progress
 from battle_system.end_battle_finish_result import build_battle_ended_result
@@ -173,6 +174,8 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     result["battle_id"] = battle_id  # нужен фронтенду для защиты от "старых" WS-событий
 
     remember_ui(bs, battle, player1, player2, result)
+    # PvE: серия побед бота — для надписи «🔥 N подряд» в карточке.
+    update_bot_win_streak(battle, bot_won=not is_winner_p1)
     cleanup_queue_and_active(bs, battle, battle_id, player1, player2)
     log_stat(loop, is_test=is_test, battle=battle, winner=winner, loser=loser,
              winner_user_id=winner_user_id, loser_user_id=loser_user_id,

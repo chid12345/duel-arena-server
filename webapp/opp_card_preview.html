@@ -167,12 +167,13 @@ function makeOpp(p, lv){
     hp: ri(80,100), max_hp: 100,
     str: ri(8+lv,15+lv), agi: ri(8+lv,15+lv), intu: ri(5+lv,12+lv), sta: ri(0,15),
     items: gearItems(p, lv),
+    win_streak: ri(0, 12),
   };
 }
 function makeMe(lv){
   return {persona:null, level:lv, name:'Вы', rating:1200, hp:80, max_hp:100,
     str:ri(8+lv,15+lv), agi:ri(8+lv,15+lv), intu:ri(5+lv,12+lv), sta:ri(0,15),
-    items:null, isMe:true};
+    items:null, isMe:true, win_streak:0};
 }
 
 let curP = 'major', curLv = 50;
@@ -201,7 +202,7 @@ function render(){
         <div style="color:#ddddff;font-size:14px;cursor:pointer;">✕</div>
       </div>
       <div class="name-row">${o.name}</div>
-      <div class="lv-row">Ур. ${o.level} · ★ ${o.rating}</div>
+      <div class="lv-row" style="color:${(!isMe && (o.win_streak||0) > 0) ? '#ff8044' : '#ccccee'}">Ур. ${o.level} · ★ ${o.rating}${(!isMe && (o.win_streak||0) > 0) ? ` · 🔥 ${o.win_streak} подряд` : ''}</div>
       <div class="div"></div>
       <div class="body">
         <div class="sprite">${isMe ? '🧙' : (curP==='donator' ? '👹' : curP==='major' ? '🦹' : curP==='farmer' ? '🥷' : '🧟')}</div>

@@ -108,7 +108,12 @@ Object.assign(BattleScene.prototype, {
 
     const nameStr = (isPrem ? '👑 ' : '') + name;
     tC(cx + cw / 2, cy + 34, nameStr, 17, isPrem ? '#ffc83c' : '#f0f0fa', true);
-    tC(cx + cw / 2, cy + 55, `Ур. ${level}  ·  ★ ${rating}`, 11, isPrem ? '#cc9900' : '#ccccee');
+    // Win-streak серия для бота: «🔥 N побед подряд» рядом с уровнем
+    const oppStreak = (!isMe && isBot) ? (b.opp_win_streak || 0) : 0;
+    const lvLine = oppStreak > 0
+      ? `Ур. ${level}  ·  ★ ${rating}  ·  🔥 ${oppStreak} подряд`
+      : `Ур. ${level}  ·  ★ ${rating}`;
+    tC(cx + cw / 2, cy + 55, lvLine, 11, isPrem ? '#cc9900' : (oppStreak > 0 ? '#ff8044' : '#ccccee'));
 
     const divG = this.add.graphics();
     divG.lineStyle(1, isPrem ? 0xffc83c : 0x2a2850, 0.5);
