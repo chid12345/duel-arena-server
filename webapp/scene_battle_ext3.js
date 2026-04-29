@@ -20,6 +20,16 @@ Object.assign(BattleScene.prototype, {
     const name   = isMe ? (me.username || 'Вы')      : (b.opp_name  || 'Соперник');
     const level  = isMe ? (me.level    || 1)          : (b.opp_level || 1);
     const rating = isMe ? (me.rating   || '—')        : (b.opp_rating || '—');
+    // Persona-статус соперника-бота: эмодзи + текстовая метка над именем.
+    const PERSONA_META = {
+      novice:  {emoji:'🌱', label:'Новичок',     col:'#9ad9a0'},
+      farmer:  {emoji:'⚔️', label:'Фармила',     col:'#9abae0'},
+      major:   {emoji:'💎', label:'Мажор',       col:'#c89aff'},
+      donator: {emoji:'👑', label:'Босс-донатер', col:'#ffc83c'},
+    };
+    const oppPersona = (!isMe && isBot) ? (b.opp_persona || null) : null;
+    const oppEq      = (!isMe && isBot) ? (b.opp_eq || null) : null;
+    const personaMeta = oppPersona ? PERSONA_META[oppPersona] : null;
     const curHp  = isMe ? (me.current_hp || b.my_hp)  : (b.opp_hp  || 0);
     const maxHp  = isMe ? (me.max_hp   || b.my_max_hp): (b.opp_max_hp || 1);
     const stats  = isMe
@@ -48,8 +58,12 @@ Object.assign(BattleScene.prototype, {
     const objs = [];
     const add  = o => { objs.push(o); return o; };
 
-    const cw = W - 36, ch = 242;
-    const cx = 18, cy = Math.round(H * 0.17);
+    // Если у бота есть persona-шмот — увеличиваем карточку на блок «Что одето».
+    const hasGearBlock = !!(oppEq && (oppEq.atk || oppEq.def_pct || oppEq.dodge ||
+                                       oppEq.lifesteal || oppEq.accuracy ||
+                                       oppEq.pen_pct || oppEq.crit_resist));
+    const cw = W - 36, ch = (hasGearBlock || personaMeta) ? 296 : 242;
+    const cx = 18, cy = Math.round(H * 0.13);
 
     const overlay = add(this.add.graphics());
     overlay.fillStyle(0x000000, 0.60);
@@ -85,7 +99,10 @@ Object.assign(BattleScene.prototype, {
     const tC = (x, y, str, sz, col, bold) => t(x, y, str, sz, col, bold).setOrigin(0.5);
     const tR = (x, y, str, sz, col) => t(x, y, str, sz, col).setOrigin(1, 0);
 
-    t(cx + 14, cy + 11, typeStr, 10, typeCol, true);
+    // В заголовке: для PvE-бота показываем persona-метку «💎 Мажор», иначе старую «🧑 Вы / 🤖 Бот».
+    const headStr = personaMeta ? `${personaMeta.emoji} ${personaMeta.label}` : typeStr;
+    const headCol = personaMeta ? personaMeta.col : typeCol;
+    t(cx + 14, cy + 11, headStr, 11, headCol, true);
     tR(cx + cw - 12, cy + 10, '✕', 16, '#ddddff');
 
     const nameStr = (isPrem ? '👑 ' : '') + name;
@@ -129,8 +146,40 @@ Object.assign(BattleScene.prototype, {
       t(sx + 22, sy + 14, String(s.val), 15, s.col, true);
     });
 
-    if (isPrem) {
+    // Блок «Что одето» — только для бота с persona-шмотом (визуальный сигнал «бойся / лёгкая добыча»).
+    if (hasGearBlock) {
+      const gY = cy + 200;
+      const dG = this.add.graphics();
+      dG.lineStyle(1, 0x2a2850, 0.5);
+      dG.lineBetween(cx + 12, gY - 6, cx + cw - 12, gY - 6);
+      con.add(dG);
+      tC(cx + cw / 2, gY, '🎽 ЧТО ОДЕТО', 9, '#aaaacc', true);
+      const items = [];
+      if (oppEq.atk)         items.push({txt:`+${oppEq.atk} атк`,            col:'#ff8855'});
+      if (oppEq.def_pct)     items.push({txt:`+${Math.round(oppEq.def_pct*100)}% брони`, col:'#9abae0'});
+      if (oppEq.dodge)       items.push({txt:`+${oppEq.dodge} уворт`,        col:'#3cc8dc'});
+      if (oppEq.accuracy)    items.push({txt:`+${oppEq.accuracy} точн`,      col:'#ddddff'});
+      if (oppEq.lifesteal)   items.push({txt:`+${oppEq.lifesteal}% вамп`,    col:'#dc3c46'});
+      if (oppEq.pen_pct)     items.push({txt:`+${Math.round(oppEq.pen_pct*100)}% пробой`, col:'#ffc83c'});
+      if (oppEq.crit_resist) items.push({txt:`−${oppEq.crit_resist}% крит-урон`, col:'#b45aff'});
+      // Раскладка бейджей в 2 колонки.
+      const colW = (cw - 28) / 2;
+      items.slice(0, 6).forEach((it, i) => {
+        const ix = cx + 14 + (i % 2) * colW;
+        const iy = gY + 18 + Math.floor(i / 2) * 18;
+        const bg = this.add.graphics();
+        bg.fillStyle(0x1a1828, 1).fillRoundedRect(ix, iy, colW - 6, 14, 4);
+        con.add(bg);
+        const tx = this.add.text(ix + 6, iy + 1, it.txt, {
+          fontSize: '10px', color: it.col, fontFamily: 'system-ui, sans-serif',
+          fontStyle: 'bold', resolution: 2,
+        }).setOrigin(0);
+        con.add(tx);
+      });
+    } else if (isPrem) {
       tC(cx + cw / 2, cy + ch - 16, '✨ Premium', 12, '#cc9900', true);
+    } else if (!isMe && isBot) {
+      tC(cx + cw / 2, cy + ch - 16, '— шмота нет —', 10, '#666688');
     }
 
     const closeZ = add(this.add.zone(cx + cw - 44, cy, 44, 38).setOrigin(0).setInteractive({ useHandCursor: true }));

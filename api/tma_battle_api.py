@@ -57,6 +57,23 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     if opp_entity and not opp_is_bot:
         opp_is_premium = bool(_premium_fields(opp_entity).get("is_premium"))
 
+    # Persona-статус и виртуальный шмот соперника (только для PvE-ботов).
+    # Фронт показывает «🌱 Новичок» / «👑 Босс-донатер» рядом с ником
+    # и блок «Что одето» в карточке соперника.
+    opp_persona = None
+    opp_eq = None
+    if opp_entity and opp_is_bot:
+        opp_persona = opp_entity.get("persona")
+        opp_eq = {
+            "atk":         int(opp_entity.get("_eq_atk_bonus") or 0),
+            "def_pct":     float(opp_entity.get("_eq_def_pct") or 0.0),
+            "dodge":       int(opp_entity.get("_eq_dodge_bonus") or 0),
+            "accuracy":    int(opp_entity.get("_eq_accuracy") or 0),
+            "lifesteal":   int(opp_entity.get("_eq_lifesteal_pct") or 0),
+            "pen_pct":     float(opp_entity.get("_eq_pen_pct") or 0.0),
+            "crit_resist": int(opp_entity.get("_eq_crit_resist_pct") or 0),
+        }
+
     return {
         "battle_id": bid,
         "active": True,
@@ -77,6 +94,8 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "opp_rating": ctx.get("opp_rating", 1000),
         "opp_is_bot": opp_is_bot,
         "opp_is_premium": opp_is_premium,
+        "opp_persona": opp_persona,
+        "opp_eq": opp_eq,
         "pending_attack": ctx.get("pending_attack"),
         "pending_defense": ctx.get("pending_defense"),
         "waiting_opponent": ctx.get("waiting_opponent", False),

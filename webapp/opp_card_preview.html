@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<title>Превью карточки соперника</title>
+<style>
+  body{margin:0;background:#0f0d18;color:#eee;font-family:system-ui,sans-serif;padding:20px;display:flex;flex-direction:column;align-items:center;}
+  h1{font-size:18px;margin:0 0 12px;}
+  .ctrl{margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+  button{background:#2a2840;color:#eee;border:1px solid #444;padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px;}
+  button:hover{background:#3a3850;}
+  button.act{background:#5096ff;border-color:#5096ff;}
+  .stage{position:relative;width:360px;height:640px;background:linear-gradient(180deg,#0a0a18,#0f0d18);border-radius:18px;border:1px solid #1a1828;overflow:hidden;}
+  .hint{font-size:11px;color:#666;text-align:center;margin-top:14px;max-width:360px;}
+
+  /* === Карточка (точная копия логики scene_battle_ext3.js) === */
+  .card{position:absolute;left:18px;width:324px;border-radius:14px;border:2px solid #444466;background:#141420;padding:0;color:#eee;font-family:system-ui,sans-serif;box-sizing:border-box;}
+  .card.prem{border-color:#ffc83c;background:#1a1508;box-shadow:0 0 0 3px rgba(255,200,60,.10);}
+  .card-head{font-size:11px;font-weight:700;padding:11px 14px 0;display:flex;justify-content:space-between;align-items:center;}
+  .name-row{text-align:center;font-size:17px;font-weight:700;margin-top:6px;}
+  .name-row.prem{color:#ffc83c;}
+  .lv-row{text-align:center;font-size:11px;color:#ccccee;margin-top:6px;}
+  .lv-row.prem{color:#cc9900;}
+  .div{height:1px;background:#2a2850;margin:8px 12px;opacity:.5;}
+  .body{display:flex;padding:6px 14px;}
+  .sprite{flex:0 0 95px;height:130px;background:radial-gradient(circle at 50% 60%, rgba(80,150,255,.15), transparent 70%);display:flex;align-items:center;justify-content:center;font-size:64px;}
+  .right{flex:1;}
+  .hp-row{display:flex;justify-content:space-between;font-size:10px;color:#ddddff;}
+  .hp-bar{height:11px;background:#0a0a18;border-radius:4px;margin-top:6px;overflow:hidden;}
+  .hp-fill{height:100%;background:#3cc864;border-radius:4px;}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:10px;}
+  .stat{display:flex;align-items:center;gap:8px;}
+  .stat-i{font-size:17px;}
+  .stat-l{font-size:11px;color:#ccccee;}
+  .stat-v{font-size:15px;font-weight:700;}
+  .gear-block{margin-top:10px;border-top:1px dashed #2a2850;padding:8px 14px 12px;}
+  .gear-title{text-align:center;font-size:9px;color:#aaaacc;font-weight:700;letter-spacing:1px;margin-bottom:8px;}
+  .gear-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+  .badge{background:#1a1828;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;}
+  .empty{text-align:center;font-size:10px;color:#666688;padding:8px;}
+
+  .persona-novice  {color:#9ad9a0;}
+  .persona-farmer  {color:#9abae0;}
+  .persona-major   {color:#c89aff;}
+  .persona-donator {color:#ffc83c;}
+</style></head><body>
+<h1>Превью карточки соперника</h1>
+<div class="ctrl">
+  <button data-p="novice">🌱 Новичок</button>
+  <button data-p="farmer">⚔️ Фармила</button>
+  <button data-p="major" class="act">💎 Мажор</button>
+  <button data-p="donator">👑 Босс-донатер</button>
+  <button data-p="me">🧑 Своя карточка</button>
+</div>
+<div class="ctrl">
+  <button data-lv="10">Lv10</button>
+  <button data-lv="30">Lv30</button>
+  <button data-lv="50" class="act">Lv50</button>
+  <button data-lv="80">Lv80</button>
+  <button id="reroll">🎲 Перегенерировать</button>
+</div>
+<div class="stage" id="stage"></div>
+<p class="hint">Это точная копия карточки из боя (scene_battle_ext3.js). В реальной игре открывается тапом по нику соперника сверху. Меняй кнопки — и сразу видишь как выглядит.</p>
+
+<script>
+const PMETA = {
+  novice:  {emoji:'🌱', label:'Новичок',     col:'#9ad9a0'},
+  farmer:  {emoji:'⚔️', label:'Фармила',     col:'#9abae0'},
+  major:   {emoji:'💎', label:'Мажор',       col:'#c89aff'},
+  donator: {emoji:'👑', label:'Босс-донатер', col:'#ffc83c'},
+};
+const NAMES = ['Тор','Локи','Один','Сигурд','Рагнар','Кратос','Кенши','Сёгун','Бездна','Хаос','Виверн','Дрейк'];
+const PREFIXES = {
+  novice:  ['Странник','Юный','Забытый','Дикий','Мрачный'],
+  farmer:  ['Стальной','Безмолвный','Жестокий','Чёрный','Кровавый'],
+  major:   ['Беспощадный','Адский','Багровый','Палач','Свирепый'],
+  donator: ['Король Бездны','Пожиратель Душ','Архидемон','Багровый Жнец','Древний'],
+};
+function ri(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function rng(a,b){return a+Math.random()*(b-a);}
+function gear(p, lv){
+  const sc = Math.max(.20, Math.min(1.0, lv/100 + 0.15));
+  if (p==='novice') return {atk: ri(0,8)*sc|0};
+  if (p==='farmer') return {atk:(ri(15,30)*sc)|0, def_pct:+(rng(0.04,0.09)*sc).toFixed(2), dodge:(ri(3,7)*sc)|0};
+  if (p==='major')  return {atk:(ri(35,55)*sc)|0, def_pct:+(rng(0.08,0.14)*sc).toFixed(2), dodge:(ri(6,11)*sc)|0, accuracy:(ri(4,9)*sc)|0, pen_pct:+(rng(0,0.02)*sc).toFixed(2)};
+  return {atk:(ri(55,75)*sc)|0, def_pct:+(rng(0.14,0.20)*sc).toFixed(2), dodge:(ri(10,14)*sc)|0, accuracy:(ri(8,14)*sc)|0, lifesteal:ri(4,8), pen_pct:+(rng(0.02,0.04)*sc).toFixed(2), crit_resist:ri(5,10)};
+}
+function makeOpp(p, lv){
+  const pref = PREFIXES[p][ri(0,PREFIXES[p].length-1)];
+  const nm = NAMES[ri(0,NAMES.length-1)];
+  return {
+    persona:p, level:lv,
+    name: `${pref} ${nm}`,
+    rating: ri(900,1500),
+    hp: ri(80,100), max_hp: 100,
+    str: ri(8+lv,15+lv), agi: ri(8+lv,15+lv), intu: ri(5+lv,12+lv), sta: ri(0,15),
+    eq: gear(p, lv),
+  };
+}
+function makeMe(lv){
+  return {persona:null, level:lv, name:'Вы', rating:1200, hp:80, max_hp:100,
+    str:ri(8+lv,15+lv), agi:ri(8+lv,15+lv), intu:ri(5+lv,12+lv), sta:ri(0,15),
+    eq:null, isMe:true};
+}
+
+let curP = 'major', curLv = 50;
+function render(){
+  const stage = document.getElementById('stage');
+  stage.innerHTML = '';
+  const isMe = curP === 'me';
+  const o = isMe ? makeMe(curLv) : makeOpp(curP, curLv);
+  const meta = o.persona ? PMETA[o.persona] : null;
+  const isBot = !isMe;
+  const hasGear = o.eq && Object.values(o.eq).some(v => v && v !== 0);
+
+  const hpPct = o.hp / o.max_hp;
+  const hpCol = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
+
+  const head = meta ? `<span style="color:${meta.col}">${meta.emoji} ${meta.label}</span>` :
+               (isMe ? '<span style="color:#5096ff">🧑 Вы</span>' : '<span style="color:#ccccee">🤖 Бот</span>');
+
+  const gearItems = !hasGear ? [] : [
+    o.eq.atk         ? {t:`+${o.eq.atk} атк`,             c:'#ff8855'} : null,
+    o.eq.def_pct     ? {t:`+${Math.round(o.eq.def_pct*100)}% брони`, c:'#9abae0'} : null,
+    o.eq.dodge       ? {t:`+${o.eq.dodge} уворт`,         c:'#3cc8dc'} : null,
+    o.eq.accuracy    ? {t:`+${o.eq.accuracy} точн`,       c:'#ddddff'} : null,
+    o.eq.lifesteal   ? {t:`+${o.eq.lifesteal}% вамп`,     c:'#dc3c46'} : null,
+    o.eq.pen_pct     ? {t:`+${Math.round(o.eq.pen_pct*100)}% пробой`, c:'#ffc83c'} : null,
+    o.eq.crit_resist ? {t:`−${o.eq.crit_resist}% крит-урон`, c:'#b45aff'} : null,
+  ].filter(Boolean);
+
+  const top = isMe ? 50 : 100;
+  const cardClass = '';
+
+  stage.innerHTML = `
+    <div class="card ${cardClass}" style="top:${top}px;">
+      <div class="card-head">
+        <div>${head}</div>
+        <div style="color:#ddddff;font-size:14px;cursor:pointer;">✕</div>
+      </div>
+      <div class="name-row">${o.name}</div>
+      <div class="lv-row">Ур. ${o.level} · ★ ${o.rating}</div>
+      <div class="div"></div>
+      <div class="body">
+        <div class="sprite">${isMe ? '🧙' : (curP==='donator' ? '👹' : curP==='major' ? '🦹' : curP==='farmer' ? '🥷' : '🧟')}</div>
+        <div class="right">
+          <div class="hp-row"><span>❤️ HP</span><span style="color:${hpCol}">${o.hp} / ${o.max_hp}</span></div>
+          <div class="hp-bar"><div class="hp-fill" style="width:${hpPct*100}%;background:${hpCol}"></div></div>
+          <div class="stats">
+            <div class="stat"><span class="stat-i">💪</span><div><div class="stat-l">Сила</div><div class="stat-v" style="color:#dc3c46">${o.str}</div></div></div>
+            <div class="stat"><span class="stat-i">🤸</span><div><div class="stat-l">Ловкость</div><div class="stat-v" style="color:#3cc8dc">${o.agi}</div></div></div>
+            <div class="stat"><span class="stat-i">💥</span><div><div class="stat-l">Интуиция</div><div class="stat-v" style="color:#b45aff">${o.intu}</div></div></div>
+            <div class="stat"><span class="stat-i">🛡</span><div><div class="stat-l">Выносл.</div><div class="stat-v" style="color:#3cc864">${o.sta}</div></div></div>
+          </div>
+        </div>
+      </div>
+      ${isBot ? (hasGear
+        ? `<div class="gear-block">
+             <div class="gear-title">🎽 ЧТО ОДЕТО</div>
+             <div class="gear-grid">${gearItems.map(it=>`<div class="badge" style="color:${it.c}">${it.t}</div>`).join('')}</div>
+           </div>`
+        : `<div class="gear-block"><div class="empty">— шмота нет —</div></div>`
+      ) : ''}
+    </div>`;
+}
+document.querySelectorAll('button[data-p]').forEach(b => b.addEventListener('click', () => {
+  curP = b.dataset.p;
+  document.querySelectorAll('button[data-p]').forEach(x => x.classList.toggle('act', x === b));
+  render();
+}));
+document.querySelectorAll('button[data-lv]').forEach(b => b.addEventListener('click', () => {
+  curLv = +b.dataset.lv;
+  document.querySelectorAll('button[data-lv]').forEach(x => x.classList.toggle('act', x === b));
+  render();
+}));
+document.getElementById('reroll').addEventListener('click', render);
+render();
+</script>
+</body></html>
