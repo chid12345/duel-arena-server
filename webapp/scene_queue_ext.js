@@ -114,6 +114,7 @@ Object.assign(QueueScene.prototype, {
 
     try {
       const res = await post('/api/battle/find', { prefer_bot: true });
+      if (!this.scene?.isActive('Queue')) return;
       if (res.ok && res.battle) {
         State.battle = res.battle;
         tg?.HapticFeedback?.impactOccurred('medium');

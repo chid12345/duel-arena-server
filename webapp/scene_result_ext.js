@@ -130,6 +130,7 @@ Object.assign(ResultScene.prototype, {
     }
 
     const _goTitanNext = () => {
+      if (this._done) return; this._done = true;
       post('/api/titans/start', {}).then(r => {
         if (!r.ok) { this.scene.start('Menu', { returnTab: 'battle' }); return; }
         State.battle = r.battle;
@@ -143,6 +144,7 @@ Object.assign(ResultScene.prototype, {
                       :                      '⚔️  Ещё бой!';
     const bigBtnCb = (isEndless && won)
       ? () => {
+          if (this._done) return; this._done = true;
           post('/api/endless/next_wave', {}).then(r => {
             if (!r.ok) { this.scene.start('Natisk', {}); return; }
             State.battle      = r.battle;

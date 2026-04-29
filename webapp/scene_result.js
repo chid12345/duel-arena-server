@@ -88,6 +88,7 @@ class ResultScene extends Phaser.Scene {
     let _diagTxt = '';
     try {
       const fresh = await post('/api/player');
+      if (!this.scene?.isActive('Result')) return;
       _diagTxt = `sv:${fresh._sv||'?'} hp:${fresh._db_hp||'?'}/${fresh._db_mhp||'?'} exp:${fresh._db_exp||'?'} c:${fresh.cached?1:0}`;
       if (fresh.ok) {
         const _wt = State.player?.warrior_type;
@@ -96,14 +97,17 @@ class ResultScene extends Phaser.Scene {
         State.playerLoadedAt = Date.now();
       }
     } catch (e) { _diagTxt = 'ERR:' + e.message; }
+    if (!this.scene?.isActive('Result')) return;
     // Временная диагностика — показать версию сервера и сырые HP/XP из БД
     if (_diagTxt) {
       txt(this, W / 2, H * 0.96, _diagTxt, 9, '#555555').setOrigin(0.5);
     }
     if (isEndless) {
       try { endlessStatus = await get('/api/endless/status'); } catch (_) {}
+      if (!this.scene?.isActive('Result')) return;
     }
 
+    this._done = false;
     await this._buildResultExtra(W, H, won, r, isEndless, isTitan, endlessWave, endlessProgress, endlessStatus, titanFloor, res);
   }
 }
