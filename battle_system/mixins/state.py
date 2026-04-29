@@ -154,7 +154,14 @@ class BattleStateMixin:
 
     @staticmethod
     def _entity_name(entity: Dict) -> str:
-        return entity.get("username") or entity.get("name") or "Unknown"
+        # Для ботов с persona-системой display_name = «Кровавый Тор»;
+        # для людей — username; иначе технический name.
+        return (
+            entity.get("display_name")
+            or entity.get("username")
+            or entity.get("name")
+            or "Unknown"
+        )
 
     @staticmethod
     def short_display_name(name: Optional[str], max_len: Optional[int] = None) -> str:

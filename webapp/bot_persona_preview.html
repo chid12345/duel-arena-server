@@ -70,12 +70,26 @@ function aiFor(p){
   return ['aggressive','defensive','strategist','strategist'][ri(0,3)];
 }
 function jitter(v, s=0.05){return Math.max(1, Math.round(v * (1 + (Math.random()*2-1)*s)));}
-const NAMES = ['Вася','Артём','Кеша','Лиса','Гром','Зена','Тор','Ника','Рик','Юта','Ким','Бен','Хан','Йо','Ева','Дрейк'];
+const NAMES = [
+  'Тор','Локи','Один','Фенрир','Сигурд','Рагнар','Беовульф','Бьёрн',
+  'Ахилл','Геракл','Леонид','Спартак','Кратос','Арес','Гектор','Максимус',
+  'Хаттори','Мусаси','Кенши','Ронин','Сёгун','Ямато','Чингис',
+  'Шторм','Бездна','Хаос','Волк','Сокол','Барс','Кобра','Дрейк','Виверн',
+];
+const PREFIXES = {
+  novice: ['Странник','Юный','Забытый','Дикий','Мрачный'],
+  warrior:['Стальной','Безмолвный','Жестокий','Чёрный','Кровавый','Хищный'],
+  master: ['Беспощадный','Адский','Багровый','Палач','Пожиратель','Свирепый'],
+  legend: ['Бессмертный','Король Бездны','Пожиратель Душ','Архидемон','Багровый Жнец','Древний'],
+};
+function tierFor(lv){return lv<=10?'novice':lv<=30?'warrior':lv<=50?'master':'legend';}
 function makeBot(lv){
   const p = pick(weightsFor(lv));
   const baseS = 5 + lv*1.3, baseE = 5 + lv*1.3, baseC = 3 + lv*0.9, baseHp = 60 + lv*12;
+  const tier = tierFor(lv);
+  const fullName = `${PREFIXES[tier][ri(0,PREFIXES[tier].length-1)]} ${NAMES[ri(0,NAMES.length-1)]}`;
   const bot = {
-    persona: p, level: lv, name: NAMES[ri(0,NAMES.length-1)],
+    persona: p, level: lv, name: fullName,
     strength: jitter(baseS), endurance: jitter(baseE), crit: jitter(baseC),
     max_hp: jitter(baseHp,0.05), ai: aiFor(p), gear: gear(p, lv), winStreak: ri(0,9),
   };

@@ -155,10 +155,14 @@ def apply_persona_to_bot(bot: Dict, level: int,
     # AI-стиль из персоны (перекрывает старый случайный выбор)
     bot["ai_pattern"] = _ai_pattern_for_persona(persona, r)
 
-    # Имя с эмодзи статуса (видимо игроку без раскрытия слова «бот»)
-    base_name = bot.get("name", "Bot")
-    if "(" not in base_name:
-        bot["display_name"] = f"{PERSONA_EMOJI[persona]} {base_name}"
+    # Display-имя для UI: «Кровавый Тор» из технического «Жестокий_Тор_a1b2c3d4».
+    # Эмодзи статуса добавляется отдельно фронтом через persona-поле.
+    raw = bot.get("name", "Bot")
+    parts = raw.split("_")
+    if len(parts) >= 2:
+        bot["display_name"] = f"{parts[0]} {parts[1]}"
+    else:
+        bot["display_name"] = raw
     return bot
 
 
