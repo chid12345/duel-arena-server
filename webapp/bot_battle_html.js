@@ -9,7 +9,7 @@
 
 const BotBattleHtml = (() => {
   let scene = null, root = null, mounted = false, clickHandler = null;
-  let elP1Hp, elP2Hp, elP1Bar, elP2Bar, elP2Name, elRound, elTimer, elWait;
+  let elP1Hp, elP2Hp, elP1Bar, elP2Bar, elP2Name, elTimer, elWait;
   let attackBtns = {}, defenseBtns = {};
   let selectedAttack = null, selectedDefense = null;
 
@@ -31,10 +31,7 @@ const BotBattleHtml = (() => {
       #bb-root .hp-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.7);overflow:hidden;margin-top:3px;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
       #bb-root .hp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#00ffe0,#5fb8ff);box-shadow:0 0 10px #00d8ff,inset 0 0 6px rgba(255,255,255,.4);transition:width .5s ease;}
       #bb-root .hp-block.opp .hp-fill{background:linear-gradient(90deg,#ff0070,#ff5fa0);box-shadow:0 0 10px #ff0070,inset 0 0 6px rgba(255,255,255,.4);}
-      #bb-root .round-line{position:absolute;top:62px;left:0;right:0;text-align:center;z-index:9;font-family:"Consolas",monospace;pointer-events:none;}
-      #bb-root .round-lbl{font-size:11px;color:#00d8ff;letter-spacing:3px;font-weight:800;}
-      #bb-root .round-num{font-size:22px;font-weight:900;color:#fff;text-shadow:0 0 10px rgba(0,216,255,.65);}
-      #bb-root .timer{position:absolute;top:88px;right:14px;font-size:14px;font-family:"Consolas",monospace;color:#fff;z-index:9;pointer-events:none;}
+      #bb-root .timer{position:absolute;top:104px;right:14px;font-size:14px;font-family:"Consolas",monospace;color:#fff;z-index:9;pointer-events:none;background:rgba(2,5,18,.6);padding:1px 6px;border-radius:4px;border:1px solid rgba(0,216,255,.3);}
       #bb-root .fighter{position:absolute;bottom:22%;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}
       #bb-root .player{left:-2%;width:38%;height:48%;}
       #bb-root .boss{right:-3%;width:62%;height:78%;}
@@ -96,7 +93,6 @@ const BotBattleHtml = (() => {
           <div class="hp-bar"><div class="hp-fill" id="bb-p2b" style="width:${oppPct}%"></div></div>
           <div class="hp-num" id="bb-p2h">${b.opp_hp || 0} / ${b.opp_max_hp || 0}</div></div>
       </div>
-      <div class="round-line"><div class="round-lbl">РАУНД</div><div class="round-num" id="bb-round">${(b.round || 0) + 1}</div></div>
       <div class="timer" id="bb-timer">15</div>
       <div class="fighter player" id="bb-p1">${skinId ? `<img src="warriors/${_pkey()}.png">` : ''}<div class="shadow"></div></div>
       <div class="vs">VS</div>
@@ -110,8 +106,9 @@ const BotBattleHtml = (() => {
     elP1Hp = root.querySelector('#bb-p1h'); elP2Hp = root.querySelector('#bb-p2h');
     elP1Bar = root.querySelector('#bb-p1b'); elP2Bar = root.querySelector('#bb-p2b');
     elP2Name = root.querySelector('#bb-p2n');
-    elRound = root.querySelector('#bb-round'); elTimer = root.querySelector('#bb-timer');
+    elTimer = root.querySelector('#bb-timer');
     elWait = root.querySelector('#bb-wait');
+    if (typeof BotBattleLog !== 'undefined') BotBattleLog.attach(root);
     attackBtns = {}; defenseBtns = {};
     root.querySelectorAll('.atk .icon-btn').forEach(b => attackBtns[b.dataset.key] = b);
     root.querySelectorAll('.def .icon-btn').forEach(b => defenseBtns[b.dataset.key] = b);
@@ -161,8 +158,8 @@ const BotBattleHtml = (() => {
         if (elP2Hp)  elP2Hp.textContent = `${b.opp_hp || 0} / ${b.opp_max_hp || 0}`;
         if (elP1Bar) elP1Bar.style.width = (b.my_max_hp  > 0 ? b.my_hp  / b.my_max_hp  * 100 : 0) + '%';
         if (elP2Bar) elP2Bar.style.width = (b.opp_max_hp > 0 ? b.opp_hp / b.opp_max_hp * 100 : 0) + '%';
-        if (elRound) elRound.textContent = (b.round || 0) + 1;
         if (b.opp_name && elP2Name) elP2Name.textContent = String(b.opp_name).toUpperCase();
+        if (typeof BotBattleLog !== 'undefined') BotBattleLog.update(b.combat_log);
       } catch(_) {}
     },
     setTimer(s) { if (mounted && elTimer) elTimer.textContent = String(Math.max(0, s|0)); },
@@ -187,7 +184,8 @@ const BotBattleHtml = (() => {
       root = null; scene = null; mounted = false; clickHandler = null;
       attackBtns = {}; defenseBtns = {};
       selectedAttack = null; selectedDefense = null;
-      elP1Hp = elP2Hp = elP1Bar = elP2Bar = elP2Name = elRound = elTimer = elWait = null;
+      elP1Hp = elP2Hp = elP1Bar = elP2Bar = elP2Name = elTimer = elWait = null;
+      try { if (typeof BotBattleLog !== 'undefined') BotBattleLog.reset(); } catch(_) {}
     },
   };
 })();
