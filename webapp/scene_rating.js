@@ -14,6 +14,8 @@ class RatingScene extends Phaser.Scene {
       RatingScene._cache   = {};
       RatingScene._cacheTs = now;
     }
+    // Мгновенная HTML-подложка под цвет _extraBg (C.bg→C.bgMid).
+    try { window._tabPlaceholderShow?.('rt-placeholder', { bg: 'linear-gradient(180deg,#12121c 0%,#1c1a2e 100%)' }); } catch(_) {}
   }
 
   async create() {
@@ -32,6 +34,7 @@ class RatingScene extends Phaser.Scene {
     _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня · Натиск · Сезон · Босс');
     this._buildTabBar(W);
     TabBar.build(this, { activeKey: 'rating' });
+    window._tabPlaceholderHideNextFrame?.('rt-placeholder');
 
     // Анти-эксплойт refresh: если в активном бою — назад в бой. После отрисовки UI.
     if (await window._redirectIfInBattle?.(this)) return;
@@ -56,6 +59,7 @@ class RatingScene extends Phaser.Scene {
 
   shutdown() {
     this._alive = false;
+    try { window._tabPlaceholderHide?.('rt-placeholder'); } catch(_) {}
     // Сбрасываем, иначе TabBar._enableScroll при повторном входе в Rating
     // пропустит регистрацию pointerdown/wheel — скролл умирает.
     this._tbScrollOn = false;

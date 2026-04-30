@@ -435,3 +435,29 @@ window._closeAllTabOverlays = function() {
   try { window.RingHTML?.close?.(); } catch(_) {}
   try { window.WBHtml?.close?.(); } catch(_) {}
 };
+
+/* ════════════════════════════════════════════════════════════
+   Tab placeholder — мгновенная HTML-подложка под цвет фона сцены.
+   Ставится в init() (синхронно, ДО первой отрисовки Phaser),
+   убирается через 2 RAF после TabBar.build (Phaser уже отрисовал
+   фон) и в shutdown() как fail-safe. pointer-events:none —
+   не блокирует тапы по нижнему меню.
+   ════════════════════════════════════════════════════════════ */
+window._tabPlaceholderShow = function(id, opts = {}) {
+  if (document.getElementById(id)) return;
+  const ph = document.createElement('div');
+  ph.id = id;
+  const bottom = opts.bottom != null ? opts.bottom : 76;
+  const bg = opts.bg || 'radial-gradient(ellipse at 50% 0%, #1a0a2a 0%, #05050a 55%), #000';
+  ph.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:${bottom}px;z-index:8999;background:${bg};pointer-events:none`;
+  document.body.appendChild(ph);
+};
+window._tabPlaceholderHide = function(id) {
+  try { document.getElementById(id)?.remove(); } catch(_) {}
+};
+// Убрать на 2-м кадре после вызова — Phaser к этому моменту отрендерил фон+таббар.
+window._tabPlaceholderHideNextFrame = function(id) {
+  try {
+    requestAnimationFrame(() => requestAnimationFrame(() => window._tabPlaceholderHide(id)));
+  } catch(_) { window._tabPlaceholderHide(id); }
+};

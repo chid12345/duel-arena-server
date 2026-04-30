@@ -16,6 +16,9 @@ class StatsScene extends Phaser.Scene {
     // _closeAvatarOverlay в Menu/profile из контекста, где это не нужно.
     this._openedFromProfile = false;
     if (data && data.player) State.player = data.player;
+    // Мгновенная HTML-подложка под цвет фона Stats — убирает мелькание
+    // canvas прошлой сцены пока Phaser не отрисовал _drawBg первого кадра.
+    try { window._tabPlaceholderShow?.('st-placeholder', { bg: 'linear-gradient(180deg,#05040e 0%,#0c0a1c 100%)' }); } catch(_) {}
   }
 
   async create() {
@@ -39,6 +42,7 @@ class StatsScene extends Phaser.Scene {
       this._openedFromProfile = true;
       this._drawBg(W, H);
       TabBar.build(this, { activeKey: 'profile' });
+      window._tabPlaceholderHideNextFrame?.('st-placeholder');
       // Анти-эксплойт refresh: чек после отрисовки — иначе чёрный экран на время POST.
       if (await window._redirectIfInBattle?.(this)) return;
       this._openAvatarPanel?.();
@@ -49,6 +53,7 @@ class StatsScene extends Phaser.Scene {
     // у игрока есть видимый фон и нижнее меню (а не чёрный экран).
     this._drawBg(W, H);
     TabBar.build(this, { activeKey: 'stats' });
+    window._tabPlaceholderHideNextFrame?.('st-placeholder');
 
     // Анти-эксплойт refresh: если в активном бою — назад в бой. После отрисовки UI.
     if (await window._redirectIfInBattle?.(this)) return;
@@ -112,6 +117,7 @@ class StatsScene extends Phaser.Scene {
   shutdown() {
     // Порядок важен: сперва гасим обновления/таймеры/кастомные колбеки,
     // затем закрываем HTML-оверлеи, и только потом бьём Phaser-объекты.
+    try { window._tabPlaceholderHide?.('st-placeholder'); } catch(_) {}
     try { this.time?.removeAllEvents?.(); } catch(_) {}
     try { this.tweens?.killAll?.(); } catch(_) {}
     this._wardrobeScrollFn = null;

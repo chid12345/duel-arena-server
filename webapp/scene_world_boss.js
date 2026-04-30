@@ -8,8 +8,14 @@
 class WorldBossScene extends Phaser.Scene {
   constructor() { super('WorldBoss'); }
 
+  init() {
+    // Мгновенная HTML-подложка под neon-arcade фон WorldBoss.
+    try { window._tabPlaceholderShow?.('wb-placeholder', { bg: 'linear-gradient(180deg,#0d0020 0%,#050015 100%)' }); } catch(_) {}
+  }
+
   shutdown() {
     this._alive = false;
+    try { window._tabPlaceholderHide?.('wb-placeholder'); } catch(_) {}
     try { this._ws?.close?.(); } catch(_) {}
     try { this._timer?.remove?.(); } catch(_) {}
     try { this._pollTimer?.remove?.(); } catch(_) {}
@@ -59,6 +65,7 @@ class WorldBossScene extends Phaser.Scene {
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     this._tabBarResult = TabBar.build(this, { activeKey: 'boss' });
+    window._tabPlaceholderHideNextFrame?.('wb-placeholder');
     this._refresh();
     this._timer = this.time.addEvent({ delay: 1000, loop: true, callback: () => this._tickSecond() });
     // Авто-рефреш: каждые 8с всегда (счётчики, старт боя), плюс быстрый fallback если WS мёртв
