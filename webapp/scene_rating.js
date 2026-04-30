@@ -21,16 +21,21 @@ class RatingScene extends Phaser.Scene {
     this.W = W; this.H = H;
     this._alive = true;
 
-    // Анти-эксплойт refresh: если в активном бою — назад в бой.
-    if (await window._redirectIfInBattle?.(this)) return;
-
     // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок.
     try { window._closeAllTabOverlays?.(); } catch(_) {}
 
+    // Сначала рисуем фон, шапку, таббар сверху, нижнее меню — ДО любых await.
+    // Раньше _redirectIfInBattle и await _buildPvpTab блокировали отрисовку
+    // нижнего меню → при медленной сети у игрока был чёрный экран и не было
+    // как уйти на другую вкладку.
     _extraBg(this, W, H);
     _extraHeader(this, W, '🏆', 'РЕЙТИНГ', 'Топ PvP · Башня · Натиск · Сезон · Босс');
-
     this._buildTabBar(W);
+    TabBar.build(this, { activeKey: 'rating' });
+
+    // Анти-эксплойт refresh: если в активном бою — назад в бой. После отрисовки UI.
+    if (await window._redirectIfInBattle?.(this)) return;
+    if (!this._alive) return;
 
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('rating');
 
@@ -47,7 +52,6 @@ class RatingScene extends Phaser.Scene {
     } else {
       this._buildTitansTab(W, H_UI);
     }
-    TabBar.build(this, { activeKey: 'rating' });
   }
 
   shutdown() {

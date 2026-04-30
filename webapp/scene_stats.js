@@ -23,9 +23,6 @@ class StatsScene extends Phaser.Scene {
     this.W = W; this.H = H;
     this._busy = false;
 
-    // Анти-эксплойт refresh: если в активном бою — назад в бой.
-    if (await window._redirectIfInBattle?.(this)) return;
-
     const d = this._initData;
 
     // Зачищаем любые HTML-оверлеи из прошлых сцен, иначе старый гардероб может «повиснуть»
@@ -42,12 +39,19 @@ class StatsScene extends Phaser.Scene {
       this._openedFromProfile = true;
       this._drawBg(W, H);
       TabBar.build(this, { activeKey: 'profile' });
+      // Анти-эксплойт refresh: чек после отрисовки — иначе чёрный экран на время POST.
+      if (await window._redirectIfInBattle?.(this)) return;
       this._openAvatarPanel?.();
       return;
     }
 
+    // Сначала фон + таббар: даже если active_session/StatsHTML тормозит,
+    // у игрока есть видимый фон и нижнее меню (а не чёрный экран).
     this._drawBg(W, H);
     TabBar.build(this, { activeKey: 'stats' });
+
+    // Анти-эксплойт refresh: если в активном бою — назад в бой. После отрисовки UI.
+    if (await window._redirectIfInBattle?.(this)) return;
 
     // HTML-оверлей строит шапку, сегментированное меню и 4 под-вкладки.
     // Если пришли из магазина по кнопке «🎒 Моё» — сразу открываем РЮКЗАК.

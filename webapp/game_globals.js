@@ -402,8 +402,12 @@ function makeBackBtn(scene, label, onClick) {
  */
 window._redirectIfInBattle = async function(scene) {
   const now = Date.now();
-  // Кэш на 30 сек: если только что проверяли и боя не было — не стучимся снова
-  if (window._ribCache && now - window._ribCache.ts < 30000 && !window._ribCache.inBattle) {
+  // Кэш на 60 сек ТОЛЬКО для отрицательного ответа («не в бою»).
+  // Положительный ответ не кэшируем — после выхода из боя страж должен
+  // увидеть свежее состояние, а не вечно дёргать обратно. 60с (вместо 30с)
+  // надёжно устраняет «чёрный экран при переходе»: за время одной сессии
+  // нижнего меню чек уже в кэше и переходы мгновенные.
+  if (window._ribCache && now - window._ribCache.ts < 60000 && !window._ribCache.inBattle) {
     return false;
   }
   try {
