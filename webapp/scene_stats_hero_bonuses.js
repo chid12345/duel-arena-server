@@ -33,7 +33,9 @@ Object.assign(StatsScene.prototype, {
 
   _buildWarriorBadge(W, wbY) {
     const p = State.player;
-    const wt = WT[p.warrior_type] || WT.tank;
+    // tank_1/agile_2/crit_0 → tank/agile/crit (скины не должны ломать бонусы)
+    const _wtKey = String(p?.warrior_type || '').split('_')[0];
+    const wt = WT[_wtKey] || WT.tank;
     const wbH = 32;
     this._heroBonuses = { open:false, wt, W, wbY, wbH, refs:[] };
     const R = this._heroBonuses;

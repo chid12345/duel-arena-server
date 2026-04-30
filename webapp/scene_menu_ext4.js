@@ -179,7 +179,8 @@ Object.assign(MenuScene.prototype, {
     const charCY = czY + czH * 0.42;
     // Aura colour per warrior class
     const _auraCols = { tank: 0xff5522, agile: 0x00cc55, crit: 0x7c3aed };
-    const _auraCol  = _auraCols[p.warrior_type] || 0x7c3aed;
+    // tank_1/agile_2/crit_0 → базовый класс, чтобы аура совпадала с цветом класса
+    const _auraCol  = _auraCols[String(p?.warrior_type||'').split('_')[0]] || 0x7c3aed;
     const aura1 = ca(mkG()); aura1.fillStyle(_auraCol, 0.1);  aura1.fillEllipse(W / 2, charCY, 150, 150);
     const aura2 = ca(mkG()); aura2.fillStyle(_auraCol, 0.05); aura2.fillEllipse(W / 2, charCY + 8, 90, 90);
     const floorG = ca(mkG()); floorG.fillStyle(_auraCol, 0.32); floorG.fillEllipse(W / 2, charCY + 52, 120, 16);

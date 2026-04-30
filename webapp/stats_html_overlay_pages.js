@@ -56,8 +56,10 @@ function statsHTML(p){
 }
 
 function bonusHTML(p, inv){
-  const wt=WT[p.warrior_type]||WT.tank;
-  const classRows=(CLASS_BONUS[p.warrior_type]||[]).map(r=>`<div class="r"><span class="k">${r.k}</span><span class="v${r.neg?' neg':''}">${r.v}</span></div>`).join('');
+  // tank_1/agile_2/crit_0 → tank/agile/crit (скины не должны ломать бонусы класса)
+  const _wtKey=String(p?.warrior_type||'').split('_')[0];
+  const wt=WT[_wtKey]||WT.tank;
+  const classRows=(CLASS_BONUS[_wtKey]||[]).map(r=>`<div class="r"><span class="k">${r.k}</span><span class="v${r.neg?' neg':''}">${r.v}</span></div>`).join('');
   const eq=inv?.eq_stats||p.eq_stats||{};
   const eqList=[
     eq.atk_bonus&&['Урон',`+${eq.atk_bonus}`],eq.hp_bonus&&['HP',`+${eq.hp_bonus}`],

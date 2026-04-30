@@ -227,11 +227,12 @@ function getWarriorSkinPath(type) {
   return `skins/${folder}/${Math.min(idx, 2) + 1}.png`;
 }
 
-/* PNG-скин воина для главного экрана */
+/* PNG-скин воина для главного экрана. tank_1/agile_2/crit_0 → базовый PNG класса. */
 function getWarriorDisplayKey(type) {
-  if (type === 'tank')  return 'warrior_tank_png';
-  if (type === 'agile') return 'warrior_agile_png';
-  if (type === 'crit')  return 'warrior_crit_png';
+  const base = String(type || '').split('_')[0];
+  if (base === 'tank')  return 'warrior_tank_png';
+  if (base === 'agile') return 'warrior_agile_png';
+  if (base === 'crit')  return 'warrior_crit_png';
   return 'warrior_tank_png';
 }
 

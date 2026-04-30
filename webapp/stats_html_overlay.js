@@ -15,7 +15,9 @@ let _scene=null, _inv=null, _currentTab='st', _invSubTab='scrolls', _openGen=0;
 
 function _render(){
   const P = window.StatsHTMLPages;
-  const p=State.player, wt=(P?.WT||{})[p.warrior_type]||P?.WT?.tank||{name:'',icon:''};
+  // tank_1/agile_2/crit_0 → tank/agile/crit (скины не должны ломать имя класса в шапке)
+  const p=State.player, _wtKey=String(p?.warrior_type||'').split('_')[0];
+  const wt=(P?.WT||{})[_wtKey]||P?.WT?.tank||{name:'',icon:''};
   const root=document.getElementById('st-root'); if(!root) return;
   const _bv=window.BUILD_VERSION||'0';
   const name=_esc((p.username||'Герой').slice(0,16));
