@@ -68,8 +68,8 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // Никакого фона и круга сзади — только сам предмет.
-      // Свечение цвета редкости даёт preFX.addGlow на спрайте ниже.
+      // Подсветки временно убраны: нет пятна света и нет glow.
+      // bc держим только на случай если понадобится для значков.
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -89,9 +89,7 @@ Object.assign(MenuScene.prototype, {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // Тонкий glow цвета редкости по контуру самого предмета —
-        // без круга сзади, только обводка-аура по PNG.
-        try { img.preFX?.addGlow(bc, 3, 0, false, 0.10, 10); } catch (_) {}
+        // Glow временно убран — оцениваем как смотрятся чистые иконки.
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
@@ -113,7 +111,7 @@ Object.assign(MenuScene.prototype, {
       // Точка-индикатор удалена вместе с подложкой — без квадрата
       // ей не за что держаться, и редкость уже видна по цвету ауры.
     } else {
-      // Пустой слот — только векторный значок, без круга и фона.
+      // Пустой слот — только векторный значок, без подсветки.
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
     }
 
