@@ -282,6 +282,7 @@ if (typeof document !== 'undefined') {
 
 // Видимый бейдж версии — игрок сразу понимает «новая у меня сборка или старая».
 // Если этого бейджа нет на экране — Mini App кэшируется, надо закрыть/открыть заново.
+// Также показывает текущий warrior_type — диагностика «какой скин ожидается в бою».
 (function _injectBuildBadge() {
   if (typeof document === 'undefined') return;
   if (document.getElementById('da-build-badge')) return;
@@ -299,6 +300,10 @@ if (typeof document !== 'undefined') {
       zIndex: '999', pointerEvents: 'none',
     });
     document.body.appendChild(d);
+    setInterval(() => {
+      const wt = (window.State && window.State.player && window.State.player.warrior_type) || '?';
+      d.textContent = 'v' + v + ' | wt:' + wt;
+    }, 800);
   };
   if (document.body) make();
   else document.addEventListener('DOMContentLoaded', make, {once: true});
