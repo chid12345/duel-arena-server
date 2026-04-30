@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.7.12"
-VERSION_LABEL = "v2.7.12 — fix: HTML-placeholder в Stats/Rating/WorldBoss (нет мелькания canvas прошлой сцены при переходе по нижнему меню)"
+VERSION = "2.7.13"
+VERSION_LABEL = "v2.7.13 — fix: HP застревал на значении после боя (Menu кэш игнорирует HP<max + _regenInterval синхронизирует бар при secsLeft=0)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "11.81"
+GAME_VERSION = "11.82"

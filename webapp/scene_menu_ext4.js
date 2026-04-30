@@ -254,7 +254,29 @@ Object.assign(MenuScene.prototype, {
       this._regenInterval = this.time.addEvent({
         delay: 1000, loop: true,
         callback: () => {
-          if (secsLeft <= 0) { regenTxt.setText('✅ HP полный!').setStyle({ color: '#4ade80' }); return; }
+          if (secsLeft <= 0) {
+            // HP уже на максимуме по серверной формуле — синхронизируем UI,
+            // чтобы цифры/полоска не застревали на «после-боевом» значении
+            // (например 1411/1549) когда 30-сек тик _startRegenTick не успел
+            // сработать из-за переключения табов.
+            const sp = State.player;
+            if (sp && this._liveHp && sp.current_hp < sp.max_hp) {
+              sp.current_hp = sp.max_hp;
+              const effMax = sp.max_hp_effective ?? sp.max_hp;
+              sp.hp_pct = 100;
+              const { g, t, x, y, w, h } = this._liveHp;
+              const rr2 = Math.ceil(h / 2) + 2;
+              g.clear();
+              g.fillStyle(0x000000, 0.72); g.fillRoundedRect(x, y, w, h, rr2);
+              g.fillStyle(0x4ade80, 0.22); g.fillRoundedRect(x, y - 1, w, h + 2, rr2);
+              g.fillGradientStyle(0x15803d, 0x86efac, 0x15803d, 0x86efac, 1);
+              g.fillRoundedRect(x, y, w, h, rr2);
+              g.fillStyle(0xffffff, 0.18); g.fillRoundedRect(x, y, w, Math.ceil(h / 2), rr2);
+              t.setText(`${sp.current_hp} / ${effMax}`);
+            }
+            regenTxt.setText('✅ HP полный!').setStyle({ color: '#4ade80' });
+            return;
+          }
           secsLeft = Math.max(0, secsLeft - 1);
           regenTxt.setText(secsLeft > 0 ? `❤️ +${rate}/мин · полный через ${_fmt(secsLeft)}` : '✅ HP полный!');
         },

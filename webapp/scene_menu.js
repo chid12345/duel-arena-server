@@ -66,7 +66,12 @@ class MenuScene extends Phaser.Scene {
     }
 
     const _PROFILE_TTL = 30000;
-    const cached = State.player && (Date.now() - State.playerLoadedAt) < _PROFILE_TTL;
+    // Кэш ТОЛЬКО при полном HP. Иначе игрок скачет по табам быстрее 30с,
+    // Phaser-таймер регена не успевает тикнуть ни разу, и HP «застревает»
+    // на значении после боя (визуальный баг 1411/1549). Сервер сам считает
+    // реген при /api/player через apply_hp_regen — берём свежие данные.
+    const _hpFull = State.player && (State.player.current_hp >= State.player.max_hp);
+    const cached = State.player && _hpFull && (Date.now() - State.playerLoadedAt) < _PROFILE_TTL;
 
     try {
       let playerOk = false;
