@@ -278,6 +278,23 @@ Object.assign(MenuScene.prototype, {
     post('/api/warrior-type', { warrior_type: encodedType })
       .then(r => { if (!r.ok) this._toast(`⚠️ Не сохранён (${r.reason || r.detail || 'err'})`); })
       .catch(() => this._toast('⚠️ Воин не сохранён — нет связи'));
+
+    // Страховка от click-through: если хвостовой тап через ~700ms всё-таки
+    // прорвался в нижний таб-бар и переключил сцену на Босс/Героя/Рейтинг —
+    // насильно возвращаем игрока в Меню→Профиль. Используем scene.start
+    // из контекста ЧУЖОЙ активной сцены (она остановит сама себя и стартует Menu).
+    const game = this.game;
+    setTimeout(() => {
+      try {
+        const scenes = game?.scene?.scenes || [];
+        // Ищем активную сцену не Menu и не Boot — это и есть результат click-through.
+        const stray = scenes.find(s =>
+          s?.scene?.isActive?.() && !['Menu','Boot'].includes(s.scene.key));
+        if (!stray) return;
+        console.warn('[WS] click-through detected → force return to Menu/profile, was:', stray.scene.key);
+        stray.scene.start('Menu', { returnTab: 'profile' });
+      } catch(_e) {}
+    }, 900);
   },
 
 });

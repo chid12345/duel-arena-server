@@ -299,19 +299,14 @@ if (typeof document !== 'undefined') {
       padding: '2px 6px', borderRadius: '4px',
       zIndex: '999', pointerEvents: 'none',
     });
-    Object.assign(d.style, { maxWidth: '95vw', whiteSpace: 'normal', wordBreak: 'break-all' });
     document.body.appendChild(d);
-    // Обновляем редко (3с) — на каждый кадр phaser'у не до бейджа.
-    // Расширенная диагностика: пишем warrior_type + что лежит в State.player + window.State.
+    // Лёгкий диагностический бейдж: показывает текущий warrior_type. Раз в 3с.
     setInterval(() => {
-      let wt='?', wsCheck='nope', sCheck='nope';
+      let wt = '?';
       try {
-        if (typeof State !== 'undefined') sCheck = State.player ? ('p,wt='+State.player.warrior_type) : 'no_p';
-      } catch(e) { sCheck = 'err:'+e.message.slice(0,15); }
-      try {
-        if (window.State) wsCheck = window.State.player ? ('p,wt='+window.State.player.warrior_type) : 'no_p';
-      } catch(e) { wsCheck = 'err:'+e.message.slice(0,15); }
-      d.textContent = 'v'+v+' | S:'+sCheck+' | wS:'+wsCheck;
+        if (typeof State !== 'undefined' && State.player) wt = State.player.warrior_type || '?';
+      } catch(_) {}
+      d.textContent = 'v' + v + ' | wt:' + wt;
     }, 3000);
   };
   if (document.body) make();
