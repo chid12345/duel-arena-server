@@ -36,6 +36,7 @@ class BootScene extends Phaser.Scene {
     this.load.image('tab_rating',    `tab_rating.png${V}`);
     this.load.image('tab_more',      `tab_more.png${V}`);
     if (typeof BotSkinPicker !== 'undefined') BotSkinPicker.preloadInto(this, V);
+    for (let i = 1; i <= 5; i++) this.load.image(`pvp_bg_${i}`, `pvp_bg/${i}.png${V}`);
     const sub = document.getElementById('loading-sub');
     let _errCount = 0;
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });

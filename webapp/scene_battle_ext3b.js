@@ -44,11 +44,27 @@ Object.assign(BattleScene.prototype, {
     const haveBg  = !!bgKey   && this.textures.exists(bgKey);
     const haveSkn = !!skinKey && this.textures.exists(skinKey);
 
-    const bg = this.add.image(W/2, H * 0.36, haveBg ? bgKey : 'arena_bg').setDisplaySize(W, H * 0.5);
+    // PvP (соперник-человек) → рандомный из 5 фонов в pvp_bg/.
+    // PvE-бот → фон скина (как было). Fallback — generated 'arena_bg'.
+    let initBgKey = 'arena_bg';
+    let pvpBgIdx = 0;
+    if (haveBg) {
+      initBgKey = bgKey;
+    } else if (!isBot) {
+      pvpBgIdx = 1 + Math.floor(Math.random() * 5);
+      const k = `pvp_bg_${pvpBgIdx}`;
+      if (this.textures.exists(k)) initBgKey = k;
+    }
+    const bg = this.add.image(W/2, H * 0.36, initBgKey).setDisplaySize(W, H * 0.5);
     // Inline-догрузка фона если preload не успел/не выполнился
     if (skinId && !haveBg) {
       this.load.image(bgKey, `bot_skins/bg/${skinId}.${BotSkinPicker.BG_EXT(skinId)}`);
       this.load.once(`filecomplete-image-${bgKey}`, () => bg.setTexture(bgKey).setDisplaySize(W, H * 0.5));
+      this.load.start();
+    } else if (!isBot && pvpBgIdx > 0 && initBgKey === 'arena_bg') {
+      const k = `pvp_bg_${pvpBgIdx}`;
+      this.load.image(k, `pvp_bg/${pvpBgIdx}.png`);
+      this.load.once(`filecomplete-image-${k}`, () => bg.setTexture(k).setDisplaySize(W, H * 0.5));
       this.load.start();
     }
 
