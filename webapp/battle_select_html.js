@@ -48,6 +48,17 @@ function _close() {
 function open(scene) {
   _injectCSS();
   _close();
+  // Click-through blocker — глушит хвостовые pointerup/click/touchend от того же
+  // тапа что нас открыл (по В БОЙ-зоне на Phaser-канвасе). Без него overlay
+  // открывается и СРАЗУ закрывается тем же тапом — пользователь видит ничего.
+  // Паттерн скопирован из scene_warrior_select.js fadeClose (350ms safety net).
+  const guard = document.createElement('div');
+  guard.style.cssText = 'position:fixed;inset:0;z-index:10000;background:transparent;touch-action:none;';
+  ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach(ev =>
+    guard.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, true));
+  document.body.appendChild(guard);
+  setTimeout(() => { try { guard.remove(); } catch(_) {} }, 350);
+
   const p = (typeof State !== 'undefined' && State.player) ? State.player : {};
   const lowHp = (p.hp_pct || 0) < 15;
 
@@ -55,7 +66,7 @@ function open(scene) {
   wrap.id = 'bs-overlay';
   wrap.className = 'bs-overlay';
   wrap.innerHTML = `
-    <div class="bs-panel" onclick="event.stopPropagation()">
+    <div class="bs-panel">
       <div class="bs-head">
         <span class="bs-title">⚔️ ВЫБЕРИ БОЙ</span>
         <button class="bs-close" id="bs-close">✕</button>
@@ -127,7 +138,8 @@ function open(scene) {
   wrap.addEventListener('click', (ev) => {
     const card = ev.target.closest('.bs-card');
     if (card && card.dataset.act) { dispatch(card.dataset.act); return; }
-    if (ev.target === wrap) _close();
+    // Закрываем только по ✕ (см. ниже) — backdrop-close убран,
+    // он же дополнительный риск click-through от тапа-открывателя.
   });
   document.getElementById('bs-close').onclick = () => {
     if (typeof tg !== 'undefined') tg?.HapticFeedback?.selectionChanged();
