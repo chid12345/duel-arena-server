@@ -6,6 +6,17 @@
 Object.assign(MenuScene.prototype, {
 
   async _loadProfileBuffs() {
+    // Throttle: каждый тап по «Профиль» вызывает _switchTab → _loadProfileBuffs.
+    // Без debounce игрок, который часто переключается, дёргает /api/player и
+    // /api/shop/inventory параллельно по 5–10 раз в минуту. На медленной сети
+    // ответы накапливаются → визуально UI «зависает» при возврате в Профиль.
+    // 3 сек — золотая середина: реген считается на сервере при каждом запросе
+    // (после фикса HP<max → cache miss), 3 сек хватит чтобы не плодить дубли.
+    const now = Date.now();
+    if (this._profileBuffsBusy) return;
+    if (this._profileBuffsAt && (now - this._profileBuffsAt) < 3000) return;
+    this._profileBuffsBusy = true;
+    this._profileBuffsAt = now;
     try {
       const [d, pd] = await Promise.all([get('/api/shop/inventory'), post('/api/player')]);
       if (!this.scene?.isActive?.()) return;
@@ -14,10 +25,26 @@ Object.assign(MenuScene.prototype, {
       if (pd?.ok && pd.player) {
         const _wt = State.player?.warrior_type; // сохраняем локальный выбор (сервер может ещё не сохранил)
         State.player = pd.player;
+        State.playerLoadedAt = Date.now();
         if (_wt) State.player.warrior_type = _wt; // не даём гонке откатить выбор воина
         const p = pd.player;
-        if (this._liveHp?.t)
-          this._liveHp.t.setText(`${p.current_hp} / ${p.max_hp_effective ?? p.max_hp} HP`);
+        // Обновляем не только текст HP, но и саму полоску — иначе при возврате
+        // в Профиль с подросшим HP цифры менялись, а зелёный бар оставался
+        // на «после-боевом» уровне до следующего 30-сек тика _startRegenTick.
+        if (this._liveHp) {
+          const effMax = p.max_hp_effective ?? p.max_hp;
+          const pct = Math.max(0, Math.min(1, (p.current_hp || 0) / Math.max(1, effMax)));
+          const { g, t, x, y, w, h } = this._liveHp;
+          const rr2 = Math.ceil(h / 2) + 2;
+          const fw = Math.max(rr2 * 2, Math.round(w * pct));
+          g.clear();
+          g.fillStyle(0x000000, 0.72); g.fillRoundedRect(x, y, w, h, rr2);
+          g.fillStyle(0x4ade80, 0.22); g.fillRoundedRect(x, y - 1, fw, h + 2, rr2);
+          g.fillGradientStyle(0x15803d, 0x86efac, 0x15803d, 0x86efac, 1);
+          g.fillRoundedRect(x, y, fw, h, rr2);
+          g.fillStyle(0xffffff, 0.18); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), rr2);
+          if (t) t.setText(`${p.current_hp} / ${effMax}`);
+        }
       }
       if (!buffs.length) return;
 
@@ -26,6 +53,7 @@ Object.assign(MenuScene.prototype, {
       const p = State.player;
 
     } catch {}
+    finally { this._profileBuffsBusy = false; }
   },
 
   _buildBattlePanel() {

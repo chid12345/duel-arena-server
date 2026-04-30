@@ -84,6 +84,19 @@ def register_tma_player_route(
         if cached is not None and not int(cached.get("avatar_bonus_applied", 0) or 0):
             _cache_invalidate(uid)
             cached = None
+        # Если HP не на максимуме — кэш игнорируем: иначе реген застревает,
+        # когда клиент дёргает /api/player чаще, чем _PLAYER_CACHE_TTL=20с
+        # (профиль/табы/экипировка). При полном HP кэш работает как раньше.
+        if cached is not None:
+            try:
+                _chp = int(cached.get("current_hp", 0) or 0)
+                _mhp = int(cached.get("max_hp", 0) or 0)
+                if _mhp > 0 and _chp < _mhp:
+                    _cache_invalidate(uid)
+                    cached = None
+            except (ValueError, TypeError):
+                _cache_invalidate(uid)
+                cached = None
         if cached is not None:
             # Бафы кешируем отдельно — 1 DB-запрос на 30 сек вместо каждого вызова
             cb = _buffs_cache_get(uid)
