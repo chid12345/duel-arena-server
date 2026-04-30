@@ -1,0 +1,139 @@
+/* ============================================================
+   BattleSelectHTML — оверлей «Выбери бой» (PvP/Башня/Натиск/Бот/Вызов)
+   Заменяет хрупкий Phaser-путь _switchTab('battle') на надёжный HTML.
+   Открывается из профиля по тапу «В БОЙ». Каждая карточка → свой режим.
+   ============================================================ */
+(() => {
+const CSS = `
+.bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);animation:bsFadeIn .22s ease-out}
+.bs-panel{width:100%;max-width:430px;max-height:92dvh;display:flex;flex-direction:column;background:#040212;border-top:1px solid rgba(124,58,237,.35);border-radius:20px 20px 0 0;overflow:hidden;animation:bsSlideUp .28s cubic-bezier(.22,1,.36,1)}
+@keyframes bsFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bsSlideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+.bs-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(124,58,237,.18)}
+.bs-title{font-size:16px;font-weight:800;letter-spacing:.6px;background:linear-gradient(90deg,#c4b5fd,#f9a8d4,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.bs-close{width:30px;height:30px;border-radius:9px;background:rgba(220,50,80,.18);border:1px solid rgba(255,80,120,.35);color:#fca5a5;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.bs-grid{display:flex;flex-direction:column;gap:8px;padding:12px 14px 18px;overflow-y:auto;scrollbar-width:thin}
+.bs-grid::-webkit-scrollbar{width:3px}
+.bs-grid::-webkit-scrollbar-thumb{background:rgba(130,80,255,.5);border-radius:3px}
+.bs-card{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#1a1828;border-radius:12px;border-left:5px solid var(--bsc,#7c3aed);cursor:pointer;transition:transform .15s,background .15s;-webkit-tap-highlight-color:transparent}
+.bs-card:active{transform:scale(.98);background:#221f36}
+.bs-emo{font-size:24px;flex-shrink:0;width:34px;text-align:center}
+.bs-tx{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
+.bs-name{font-size:14px;font-weight:700;color:var(--bsn,#fff)}
+.bs-sub{font-size:11px;color:#ddddff;opacity:.85}
+.bs-bonus{font-size:10px;color:#ffc83c;margin-top:1px}
+.bs-row{display:flex;gap:8px}
+.bs-row .bs-card{flex:1;padding:10px 12px}
+.bs-row .bs-emo{font-size:20px;width:26px}
+.bs-row .bs-name{font-size:12px}
+.bs-row .bs-sub{font-size:10px}
+.bs-hpwarn{padding:10px 12px;background:rgba(220,60,70,.12);border:1px solid rgba(255,90,100,.4);border-radius:10px;color:#fca5a5;font-size:11px;text-align:center;margin-bottom:6px}
+`;
+
+let _cssOn = false;
+function _injectCSS() {
+  if (_cssOn) return;
+  const s = document.createElement('style');
+  s.id = 'bs-css';
+  s.textContent = CSS;
+  document.head.appendChild(s);
+  _cssOn = true;
+}
+
+function _close() {
+  const el = document.getElementById('bs-overlay');
+  if (el) el.remove();
+}
+
+function open(scene) {
+  _injectCSS();
+  _close();
+  const p = (typeof State !== 'undefined' && State.player) ? State.player : {};
+  const lowHp = (p.hp_pct || 0) < 15;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'bs-overlay';
+  wrap.className = 'bs-overlay';
+  wrap.innerHTML = `
+    <div class="bs-panel" onclick="event.stopPropagation()">
+      <div class="bs-head">
+        <span class="bs-title">⚔️ ВЫБЕРИ БОЙ</span>
+        <button class="bs-close" id="bs-close">✕</button>
+      </div>
+      <div class="bs-grid">
+        ${lowHp ? '<div class="bs-hpwarn">❤️ HP ниже 15% — большинство боёв заблокировано. Зайди в профиль выпей зелье.</div>' : ''}
+        <div class="bs-card" data-act="pvp" style="--bsc:#dc3c46;--bsn:#ff6672">
+          <div class="bs-emo">⚔️</div>
+          <div class="bs-tx">
+            <div class="bs-name">Поиск соперника</div>
+            <div class="bs-sub">Живой игрок · рейтинговый бой</div>
+            <div class="bs-bonus">🏆 +рейтинг  💰 +30%  ⭐ +30% за победу</div>
+          </div>
+        </div>
+        <div class="bs-card" data-act="tower" style="--bsc:#b45aff;--bsn:#c97aff">
+          <div class="bs-emo">🗿</div>
+          <div class="bs-tx">
+            <div class="bs-name">Башня Титанов</div>
+            <div class="bs-sub">PvE · прогрессия уровней · редкие награды</div>
+          </div>
+        </div>
+        <div class="bs-card" data-act="natisk" style="--bsc:#ff5533;--bsn:#ff7755">
+          <div class="bs-emo">🔥</div>
+          <div class="bs-tx">
+            <div class="bs-name">Натиск</div>
+            <div class="bs-sub">Арена выживания · волны врагов</div>
+          </div>
+        </div>
+        <div class="bs-row">
+          <div class="bs-card" data-act="challenge" style="--bsc:#ffc83c;--bsn:#ffdca0">
+            <div class="bs-emo">🎯</div>
+            <div class="bs-tx">
+              <div class="bs-name">Вызов по нику</div>
+              <div class="bs-sub">PvP дуэль</div>
+            </div>
+          </div>
+          <div class="bs-card" data-act="incoming" style="--bsc:#5096ff;--bsn:#b8d4ff">
+            <div class="bs-emo">📨</div>
+            <div class="bs-tx">
+              <div class="bs-name">Мои вызовы</div>
+              <div class="bs-sub">Входящие · исходящие</div>
+            </div>
+          </div>
+        </div>
+        <div class="bs-card" data-act="bot" style="--bsc:#5096ff;--bsn:#7ab4ff">
+          <div class="bs-emo">🤖</div>
+          <div class="bs-tx">
+            <div class="bs-name">Бой с ботом</div>
+            <div class="bs-sub">Практика · без рейтинга · 💰 +золото</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+
+  const dispatch = (act) => {
+    if (typeof tg !== 'undefined') tg?.HapticFeedback?.impactOccurred('medium');
+    _close();
+    try {
+      if (act === 'pvp')        scene._onFight?.();
+      else if (act === 'tower') scene._onTitanFight?.();
+      else if (act === 'natisk')scene.scene.start('Natisk', {});
+      else if (act === 'bot')   scene._onBotFight?.();
+      else if (act === 'challenge') scene._onChallengeByNick?.();
+      else if (act === 'incoming')  scene._showOutgoingChallenges?.();
+    } catch (e) { console.warn('[BattleSelect] dispatch failed:', act, e); }
+  };
+
+  wrap.addEventListener('click', (ev) => {
+    const card = ev.target.closest('.bs-card');
+    if (card && card.dataset.act) { dispatch(card.dataset.act); return; }
+    if (ev.target === wrap) _close();
+  });
+  document.getElementById('bs-close').onclick = () => {
+    if (typeof tg !== 'undefined') tg?.HapticFeedback?.selectionChanged();
+    _close();
+  };
+}
+
+window.BattleSelectHTML = { open, close: _close };
+})();

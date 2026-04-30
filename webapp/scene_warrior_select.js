@@ -252,12 +252,16 @@ Object.assign(MenuScene.prototype, {
 
   _tryBattle() {
     if (!this._requireWarrior?.('battle')) return;
-    // Робастно: input мог застрять false после HTML-оверлея экипировки
-    // (если оверлей закрылся свайпом/back, не штатной кнопкой ✕), панель
-    // _panels.battle — null/destroyed после warrior_select rebuild, камера —
-    // прокручена (battle-панель уезжала вне экрана). Сброс + полная пересборка.
+    // HTML-оверлей вместо хрупкого Phaser _switchTab('battle'). Тот путь
+    // повторно ломался по разным причинам (input.enabled=false после
+    // overlay'ев, _panels.battle null/destroyed, scroll камеры). HTML-overlay
+    // независим от scene state — работает 100% (как helmet/boots/ring).
     try { this.input.enabled = true; } catch(_) {}
-    try { this.cameras?.main?.setScroll?.(0, 0); } catch(_) {}
+    if (typeof BattleSelectHTML !== 'undefined') {
+      BattleSelectHTML.open(this);
+      return;
+    }
+    // Фолбэк: если файл не подгрузился — старый Phaser-путь.
     try {
       if (this._panels?.battle) {
         try { this.sys.displayList.remove(this._panels.battle); } catch(_) {}
