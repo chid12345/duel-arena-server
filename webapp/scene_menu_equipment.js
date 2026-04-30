@@ -89,7 +89,10 @@ Object.assign(MenuScene.prototype, {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // Glow временно убран — оцениваем как смотрятся чистые иконки.
+        // Тонкая ПЛОТНАЯ обводка по контуру PNG — цветной "rim", не размытое
+        // облако. quality 0.3 + малый distance = чёткая линия, иконка не теряет
+        // деталей, цвет редкости виден.
+        try { img.preFX?.addGlow(bc, 1.5, 0, false, 0.3, 4); } catch (_) {}
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
