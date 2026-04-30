@@ -179,17 +179,23 @@ Object.assign(MenuScene.prototype, {
     function fadeClose(cb) {
       el.style.transition = 'opacity 0.18s';
       el.style.opacity = '0';
-      // НЕ ставим pointerEvents:none на overlay — иначе клики проваливаются
-      // в Phaser таб-бар во время fade и кидают игрока в Босс/Героя.
-      // overlay сам поглощает клики, пока DOM ещё на странице.
+      // Канвас УЖЕ pointerEvents:none из _openWarriorSelect — НЕ восстанавливаем
+      // его в _closeWarriorSelect, держим выключенным до снятия блокера.
+      // overlay не глушим (DOM сам поглощает клики во время fade).
       setTimeout(() => {
-        // Блокер мощно цепляем ПЕРЕД удалением overlay — нет щели для клика.
+        // Блокер ставим ПЕРЕД удалением overlay → нет щели для click-through.
         const g = document.createElement('div');
         g.style.cssText = 'position:fixed;inset:0;z-index:9200;background:transparent;';
         document.body.appendChild(g);
         scene._closeWarriorSelect();
-        setTimeout(() => g.remove(), 500);
         if (cb) cb();
+        // Через 700ms убираем блокер И возвращаем канвасу обычный pointer-events.
+        // 700ms = запас под медленные мобильные таймеры/тач-задержки.
+        setTimeout(() => {
+          g.remove();
+          const cv = document.querySelector('canvas');
+          if (cv) cv.style.pointerEvents = '';
+        }, 700);
       }, 200);
     }
 
@@ -239,8 +245,17 @@ Object.assign(MenuScene.prototype, {
     const el = document.getElementById('ws-overlay');
     if (el) el.remove();
     document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
-    const cv = document.querySelector('canvas');
-    if (cv) cv.style.pointerEvents = '';
+    // canvas pointer-events НЕ восстанавливаем здесь: fadeClose держит его
+    // выключенным до снятия блокера (700ms), иначе хвостовой touchend
+    // протекает в нижний таб-бар и кидает игрока в Босс/Героя/Рейтинг.
+    // Если оверлей закрылся БЕЗ fadeClose (теоретически невозможно, но safety
+    // net) — восстановим через 700ms.
+    setTimeout(() => {
+      if (!document.getElementById('ws-overlay')) {
+        const cv = document.querySelector('canvas');
+        if (cv && cv.style.pointerEvents === 'none') cv.style.pointerEvents = '';
+      }
+    }, 700);
   },
 
   _tryBattle() {
