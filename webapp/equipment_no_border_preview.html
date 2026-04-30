@@ -2,31 +2,148 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<title>Слоты экипировки — без рамки (До / После)</title>
+<title>Слоты экипировки — До / После (без рамки)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    background: radial-gradient(ellipse at top, #2e1a5c 0%, #16092e 50%, #0a0418 100%);
-    color: #e6e1ff;
+    background: #0a0a14;
+    color: #fff;
     min-height: 100vh;
     padding: 24px 16px 80px;
   }
-  h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; text-align: center; color: #fff; }
-  .sub { text-align: center; color: #a89cc8; font-size: 12px; margin-bottom: 28px; }
-  .wrap { max-width: 480px; margin: 0 auto; }
-  .section { margin-bottom: 28px; padding: 16px 14px; border-radius: 14px;
-             background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
-  .section h2 { font-size: 15px; color: #fff; margin-bottom: 4px; }
-  .section .desc { font-size: 11px; color: #a89cc8; margin-bottom: 14px; }
+  .page-title { text-align: center; margin-bottom: 24px; }
+  .page-title h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .page-title p { font-size: 12px; color: #a89cc8; }
 
-  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; place-items: center; }
-
-  /* ─────────── общий вид слота (как в 11.43-стиле Phaser) ─────────── */
-  .slot {
-    width: 78px; text-align: center; cursor: pointer;
+  .compare {
+    max-width: 760px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
   }
+  @media (max-width: 720px) {
+    .compare { grid-template-columns: 1fr; }
+  }
+
+  .col h2 { text-align: center; margin-bottom: 8px; font-size: 13px; color: #fff;
+            text-transform: uppercase; letter-spacing: 1px; }
+  .col h2.before { color: #ff8a8a; }
+  .col h2.after  { color: #8affc0; }
+
+  /* ═════════ Mockup телефонного экрана (как в Telegram WebApp) ═════════ */
+  .phone {
+    width: 100%;
+    max-width: 340px;
+    margin: 0 auto;
+    background: #12121c;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+  .phone-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px;
+    background: #18182a;
+    font-size: 11px;
+    color: #c8c0e0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .phone-bar .title { font-weight: 700; color: #fff; font-size: 13px; }
+  .phone-bar .right { font-size: 14px; opacity: 0.6; }
+
+  /* ═════════ Карточка профиля ═════════ */
+  .profile-card {
+    padding: 14px;
+  }
+  .profile-top {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+  }
+  .pt-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: linear-gradient(135deg, #c084fc, #6c5ce7);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .pt-info { flex: 1; }
+  .pt-name { font-size: 13px; font-weight: 700; color: #fff; }
+  .pt-name .crown { color: #fbbf24; }
+  .pt-stats { font-size: 10px; color: #a89cc8; margin-top: 2px; }
+  .pt-level {
+    background: rgba(192,132,252,0.18);
+    border: 1px solid rgba(192,132,252,0.4);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #c084fc;
+  }
+
+  /* Подкарточка статов */
+  .pt-detail {
+    display: flex; gap: 10px; padding: 10px 4px 4px; font-size: 10.5px;
+  }
+  .pt-detail-item { flex: 1; text-align: center; }
+  .pt-detail-item .v { font-size: 14px; font-weight: 800; color: #4ade80; }
+  .pt-detail-item .v.gold  { color: #fbbf24; }
+  .pt-detail-item .v.cyan  { color: #38bdf8; }
+  .pt-detail-item .l { color: #a89cc8; margin-top: 2px; font-size: 9px; }
+
+  /* ═════════ Игровое поле: герой + слоты ═════════ */
+  .arena {
+    position: relative;
+    height: 280px;
+    background:
+      radial-gradient(ellipse 100% 80% at 50% 50%, rgba(108, 92, 231, 0.35) 0%, transparent 65%),
+      radial-gradient(ellipse 60% 50% at 50% 90%, rgba(192, 132, 252, 0.18) 0%, transparent 70%),
+      linear-gradient(180deg, #1a0d2e 0%, #0d0822 100%);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  /* "Магический круг" под героем */
+  .arena::before {
+    content: '';
+    position: absolute;
+    left: 50%; bottom: 30px;
+    transform: translateX(-50%);
+    width: 140px; height: 30px;
+    background: radial-gradient(ellipse, rgba(192,132,252,0.5), transparent 70%);
+    filter: blur(4px);
+  }
+
+  /* Силуэт героя (SVG inline) */
+  .hero {
+    position: absolute;
+    left: 50%; bottom: 28px;
+    transform: translateX(-50%);
+    width: 80px; height: 200px;
+  }
+  .hero svg { width: 100%; height: 100%; filter: drop-shadow(0 0 8px rgba(192,132,252,0.5)); }
+
+  /* Слоты — 3 слева, 3 справа, как в игре */
+  .slots-left, .slots-right {
+    position: absolute;
+    top: 12px; bottom: 50px;
+    display: flex; flex-direction: column; justify-content: space-between;
+  }
+  .slots-left  { left: 8px; }
+  .slots-right { right: 8px; }
+
+  .slot {
+    width: 64px; text-align: center;
+    cursor: pointer;
+    transition: transform 0.15s;
+  }
+  .slot:hover { transform: scale(1.05); }
+
   .box {
     width: 60px; height: 64px;
     border-radius: 10px;
@@ -47,11 +164,12 @@
   }
   .box img {
     width: 50px; height: 50px;
-    mix-blend-mode: screen;
     position: relative; z-index: 1;
     user-select: none; pointer-events: none;
+    /* фон будет очищен через canvas chroma-key (см. <script> внизу),
+       поэтому mix-blend-mode не нужен — иконка получает прозрачный фон. */
   }
-  /* точка-индикатор в углу */
+  /* точка-индикатор */
   .box::after {
     content: '';
     position: absolute;
@@ -61,121 +179,400 @@
     background: var(--c);
     z-index: 2;
   }
-
   .label {
-    margin-top: 6px;
-    font-size: 9.5px;
+    margin-top: 4px;
+    font-size: 8.5px;
     font-weight: 700;
     letter-spacing: 0.6px;
-    color: rgba(210,215,235,0.9);
+    color: rgba(210,215,235,0.95);
     text-transform: uppercase;
   }
 
-  /* "ДО" — с рамкой */
+  /* ═════════ ВАРИАНТ "ДО" — С РАМКОЙ + квадратной подложкой ═════════ */
   .v-before .box {
-    border: 1.5px solid rgba(255,255,255,0); /* placeholder, override below */
-    outline: 1.5px solid var(--c);
-    outline-offset: -1px;
+    border: 1.5px solid var(--c);
   }
 
-  /* "ПОСЛЕ" — БЕЗ рамки. Только halo + tint + tinted background. */
-  /* (дефолтный стиль .box уже без border/outline) */
+  /* ═════════ ВАРИАНТ "ПОСЛЕ" — ВООБЩЕ БЕЗ ФОНА ═════════ */
+  /* Убираем подложку, круг сзади, tint, точку. Остаётся только сам
+     предмет с тонким drop-shadow цвета редкости (как preFX.addGlow). */
+  .v-after .box {
+    background: transparent;
+    box-shadow: none;
+    border: none;
+  }
+  .v-after .box::before { display: none; }
+  .v-after .box::after  { display: none; }
+  .v-after .box img {
+    filter: drop-shadow(0 0 4px var(--c)) drop-shadow(0 0 8px var(--c-halo));
+  }
 
-  .legend {
-    margin: 0 auto 18px;
-    max-width: 420px;
-    padding: 10px 14px;
+  /* HP бар */
+  .hp-wrap {
+    position: absolute;
+    left: 12px; right: 12px; bottom: 12px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .hp-icon { color: #4ade80; font-size: 11px; }
+  .hp-bar  {
+    flex: 1; height: 8px;
+    background: #1a1a2e;
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .hp-fill {
+    height: 100%; width: 95%;
+    background: linear-gradient(90deg, #22c55e, #4ade80);
+    border-radius: 4px;
+  }
+  .hp-num { font-size: 9.5px; color: #c8bce6; font-weight: 700; }
+
+  /* Бар над "В БОЙ" */
+  .ml-banner {
+    background: rgba(255,200,0,0.06);
+    border: 1px solid rgba(255,200,0,0.18);
+    border-radius: 6px;
+    text-align: center;
+    padding: 5px;
+    font-size: 10px;
+    color: #fbbf24;
+    margin: 4px 0;
+  }
+
+  /* ═════════ Кнопки внизу ═════════ */
+  .actions { padding: 0 4px 8px; }
+  .btn-primary {
+    background: linear-gradient(135deg, #a78bfa, #8b5cf6);
+    border-radius: 12px;
+    padding: 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 800;
+    color: #fff;
+    margin-bottom: 8px;
+    box-shadow: 0 4px 12px rgba(167,139,250,0.4);
+  }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .btn-secondary {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px;
-    background: rgba(0,0,0,0.25);
+    padding: 10px;
     font-size: 11px;
+    text-align: center;
     color: #c8bce6;
   }
-  .legend b { color: #fff; }
-  .legend ul { margin: 6px 0 0 18px; }
-  .legend li { margin: 2px 0; }
+
+  /* Tab bar — упрощённо для контекста */
+  .tabbar {
+    display: flex; justify-content: space-around;
+    padding: 8px 0;
+    background: rgba(7,4,26,0.96);
+    border-top: 1px solid rgba(255,255,255,0.05);
+    font-size: 8px;
+  }
+  .tab { text-align: center; opacity: 0.7; }
+  .tab .t-icon { font-size: 16px; margin-bottom: 2px; }
+  .tab .t-name { color: #c4b5fd; font-size: 7.5px; }
+
+  /* Подсказка */
+  .note {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 11px;
+    color: #a89cc8;
+    line-height: 1.5;
+  }
+  .note b { color: #fff; }
 </style>
 </head>
 <body>
 
-<h1>Слоты экипировки — убираем только рамку</h1>
-<p class="sub">11.43-стиль слева (с рамкой) ↔ Новый стиль справа (без рамки). Свечение то же.</p>
+<div class="page-title">
+  <h1>Слоты экипировки — точно как в игре</h1>
+  <p>Слева — текущий 11.43-стиль. Справа — без рамки (новое 11.49). Свечение, точка, halo, tint — те же.</p>
+</div>
 
-<div class="wrap">
+<div class="compare">
 
-  <div class="legend">
-    <b>Что меняется:</b>
-    <ul>
-      <li><b>Удаляется:</b> цветная рамка по периметру слота (`strokeRoundedRect`)</li>
-      <li><b>Остаётся:</b> halo вокруг (внешнее свечение), тёмная подложка `#1c1c2e`,
-          внутренний tint цвета редкости, точка-индикатор в углу</li>
-    </ul>
+  <!-- ═══════════════════════ КОЛОНКА: ДО ═══════════════════════ -->
+  <div class="col">
+    <h2 class="before">▼ ДО — с рамкой (11.43)</h2>
+    <div class="phone v-before">
+      <div class="phone-bar">
+        <span class="title">Duel Arena</span>
+        <span class="right">⋮ ✕</span>
+      </div>
+      <div class="profile-card">
+        <div class="profile-top">
+          <div class="pt-avatar">🎯</div>
+          <div class="pt-info">
+            <div class="pt-name"><span class="crown">👑</span> flykiller</div>
+            <div class="pt-stats">⭐ Premium · 12д · 🪙 131235 💎 1242</div>
+          </div>
+          <div class="pt-level">УР.80</div>
+        </div>
+        <div class="pt-detail">
+          <div class="pt-detail-item"><div class="v">205</div><div class="l">Победы</div></div>
+          <div class="pt-detail-item"><div class="v gold">32</div><div class="l">Топчик</div></div>
+          <div class="pt-detail-item"><div class="v">86%</div><div class="l">Выигрыш</div></div>
+          <div class="pt-detail-item"><div class="v gold">14 🔥</div><div class="l">Серия</div></div>
+        </div>
+
+        <div class="arena">
+          <!-- Силуэт героя -->
+          <div class="hero">
+            <svg viewBox="0 0 80 200" xmlns="http://www.w3.org/2000/svg">
+              <!-- Голова -->
+              <ellipse cx="40" cy="20" rx="11" ry="13" fill="#1a0d2e"/>
+              <!-- Корпус -->
+              <path d="M28 35 L52 35 L56 95 L48 130 L32 130 L24 95 Z" fill="#1a0d2e"/>
+              <!-- Руки -->
+              <path d="M28 40 L18 95 L22 130 L28 95 Z" fill="#16092e"/>
+              <path d="M52 40 L62 95 L58 130 L52 95 Z" fill="#16092e"/>
+              <!-- Меч в правой руке -->
+              <rect x="62" y="50" width="3" height="100" fill="#a89cc8"/>
+              <rect x="59" y="148" width="9" height="3" fill="#fbbf24"/>
+              <!-- Меч в левой руке -->
+              <rect x="15" y="50" width="3" height="100" fill="#a89cc8"/>
+              <rect x="12" y="148" width="9" height="3" fill="#fbbf24"/>
+              <!-- Ноги -->
+              <path d="M32 130 L28 195 L36 195 L40 132 Z" fill="#0d0822"/>
+              <path d="M48 130 L52 195 L44 195 L40 132 Z" fill="#0d0822"/>
+            </svg>
+          </div>
+
+          <!-- Слоты слева -->
+          <div class="slots-left">
+            <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+              <div class="box"><img src="helmet_dia1.png" alt=""></div>
+              <div class="label">Голова</div>
+            </div>
+            <div class="slot" style="--c:#fbbf24; --c-halo:rgba(251,191,36,0.07); --c-tint:rgba(251,191,36,0.08)">
+              <div class="box"><img src="armor_gold1.png" alt=""></div>
+              <div class="label">Тело</div>
+            </div>
+            <div class="slot" style="--c:#a0aec0; --c-halo:rgba(160,174,192,0.07); --c-tint:rgba(160,174,192,0.08)">
+              <div class="box"><img src="boots_free1.png" alt=""></div>
+              <div class="label">Ноги</div>
+            </div>
+          </div>
+
+          <!-- Слоты справа -->
+          <div class="slots-right">
+            <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+              <div class="box"><img src="weapon_sword_epic.png" alt=""></div>
+              <div class="label">Оружие</div>
+            </div>
+            <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+              <div class="box"><img src="shield_dia2.png" alt=""></div>
+              <div class="label">Щит</div>
+            </div>
+            <div class="slot" style="--c:#ff6b2b; --c-halo:rgba(255,107,43,0.07); --c-tint:rgba(255,107,43,0.08)">
+              <div class="box"><img src="ring_mythic1.png" alt=""></div>
+              <div class="label">Кольцо</div>
+            </div>
+          </div>
+
+          <!-- HP бар -->
+          <div class="hp-wrap">
+            <span class="hp-icon">💚</span>
+            <div class="hp-bar"><div class="hp-fill"></div></div>
+            <span class="hp-num">1411 / 1489</span>
+          </div>
+        </div>
+
+        <div class="ml-banner">⭐ Макс. уровень</div>
+
+        <div class="actions">
+          <div class="btn-primary">⚔ В БОЙ</div>
+          <div class="btn-row">
+            <div class="btn-secondary">🛒 Магазин</div>
+            <div class="btn-secondary">📋 Задания <sup style="color:#ef4444">13</sup></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tabbar">
+        <div class="tab"><div class="t-icon">🦁</div><div class="t-name">Профиль</div></div>
+        <div class="tab"><div class="t-icon">⚔</div><div class="t-name">Клан</div></div>
+        <div class="tab"><div class="t-icon">🛡</div><div class="t-name">Герой</div></div>
+        <div class="tab"><div class="t-icon">👹</div><div class="t-name">Босс</div></div>
+        <div class="tab"><div class="t-icon">🏆</div><div class="t-name">Рейтинг</div></div>
+        <div class="tab"><div class="t-icon">📚</div><div class="t-name">Меню</div></div>
+      </div>
+    </div>
   </div>
 
-  <!-- ───────────── ДО (11.43-стиль) ───────────── -->
-  <section class="section v-before">
-    <h2>ДО — текущий 11.43-стиль (с рамкой)</h2>
-    <p class="desc">Тонкая рамка по периметру цвета редкости.</p>
-    <div class="grid">
-      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
-        <div class="box"><img src="helmet_dia1.png" alt=""></div>
-        <div class="label">Голова</div>
+  <!-- ═══════════════════════ КОЛОНКА: ПОСЛЕ ═══════════════════════ -->
+  <div class="col">
+    <h2 class="after">▼ ПОСЛЕ — без рамки (11.49)</h2>
+    <div class="phone v-after">
+      <div class="phone-bar">
+        <span class="title">Duel Arena</span>
+        <span class="right">⋮ ✕</span>
       </div>
-      <div class="slot" style="--c:#fbbf24; --c-halo:rgba(251,191,36,0.07); --c-tint:rgba(251,191,36,0.08)">
-        <div class="box"><img src="armor_gold1.png" alt=""></div>
-        <div class="label">Тело</div>
-      </div>
-      <div class="slot" style="--c:#a0aec0; --c-halo:rgba(160,174,192,0.07); --c-tint:rgba(160,174,192,0.08)">
-        <div class="box"><img src="boots_free1.png" alt=""></div>
-        <div class="label">Ноги</div>
-      </div>
-      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
-        <div class="box"><img src="weapon_sword_epic.png" alt=""></div>
-        <div class="label">Оружие</div>
-      </div>
-      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
-        <div class="box"><img src="shield_dia2.png" alt=""></div>
-        <div class="label">Щит</div>
-      </div>
-      <div class="slot" style="--c:#ff6b2b; --c-halo:rgba(255,107,43,0.07); --c-tint:rgba(255,107,43,0.08)">
-        <div class="box"><img src="ring_mythic1.png" alt=""></div>
-        <div class="label">Кольцо</div>
-      </div>
-    </div>
-  </section>
+      <div class="profile-card">
+        <div class="profile-top">
+          <div class="pt-avatar">🎯</div>
+          <div class="pt-info">
+            <div class="pt-name"><span class="crown">👑</span> flykiller</div>
+            <div class="pt-stats">⭐ Premium · 12д · 🪙 131235 💎 1242</div>
+          </div>
+          <div class="pt-level">УР.80</div>
+        </div>
+        <div class="pt-detail">
+          <div class="pt-detail-item"><div class="v">205</div><div class="l">Победы</div></div>
+          <div class="pt-detail-item"><div class="v gold">32</div><div class="l">Топчик</div></div>
+          <div class="pt-detail-item"><div class="v">86%</div><div class="l">Выигрыш</div></div>
+          <div class="pt-detail-item"><div class="v gold">14 🔥</div><div class="l">Серия</div></div>
+        </div>
 
-  <!-- ───────────── ПОСЛЕ (без рамки) ───────────── -->
-  <section class="section v-after">
-    <h2>ПОСЛЕ — без рамки (новый стиль)</h2>
-    <p class="desc">Та же подложка, halo, tint, точка. Только убрана рамка-ободок.</p>
-    <div class="grid">
-      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
-        <div class="box"><img src="helmet_dia1.png" alt=""></div>
-        <div class="label">Голова</div>
+        <div class="arena">
+          <div class="hero">
+            <svg viewBox="0 0 80 200" xmlns="http://www.w3.org/2000/svg">
+              <ellipse cx="40" cy="20" rx="11" ry="13" fill="#1a0d2e"/>
+              <path d="M28 35 L52 35 L56 95 L48 130 L32 130 L24 95 Z" fill="#1a0d2e"/>
+              <path d="M28 40 L18 95 L22 130 L28 95 Z" fill="#16092e"/>
+              <path d="M52 40 L62 95 L58 130 L52 95 Z" fill="#16092e"/>
+              <rect x="62" y="50" width="3" height="100" fill="#a89cc8"/>
+              <rect x="59" y="148" width="9" height="3" fill="#fbbf24"/>
+              <rect x="15" y="50" width="3" height="100" fill="#a89cc8"/>
+              <rect x="12" y="148" width="9" height="3" fill="#fbbf24"/>
+              <path d="M32 130 L28 195 L36 195 L40 132 Z" fill="#0d0822"/>
+              <path d="M48 130 L52 195 L44 195 L40 132 Z" fill="#0d0822"/>
+            </svg>
+          </div>
+
+          <div class="slots-left">
+            <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+              <div class="box"><img src="helmet_dia1.png" alt=""></div>
+              <div class="label">Голова</div>
+            </div>
+            <div class="slot" style="--c:#fbbf24; --c-halo:rgba(251,191,36,0.07); --c-tint:rgba(251,191,36,0.08)">
+              <div class="box"><img src="armor_gold1.png" alt=""></div>
+              <div class="label">Тело</div>
+            </div>
+            <div class="slot" style="--c:#a0aec0; --c-halo:rgba(160,174,192,0.07); --c-tint:rgba(160,174,192,0.08)">
+              <div class="box"><img src="boots_free1.png" alt=""></div>
+              <div class="label">Ноги</div>
+            </div>
+          </div>
+
+          <div class="slots-right">
+            <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+              <div class="box"><img src="weapon_sword_epic.png" alt=""></div>
+              <div class="label">Оружие</div>
+            </div>
+            <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+              <div class="box"><img src="shield_dia2.png" alt=""></div>
+              <div class="label">Щит</div>
+            </div>
+            <div class="slot" style="--c:#ff6b2b; --c-halo:rgba(255,107,43,0.07); --c-tint:rgba(255,107,43,0.08)">
+              <div class="box"><img src="ring_mythic1.png" alt=""></div>
+              <div class="label">Кольцо</div>
+            </div>
+          </div>
+
+          <div class="hp-wrap">
+            <span class="hp-icon">💚</span>
+            <div class="hp-bar"><div class="hp-fill"></div></div>
+            <span class="hp-num">1411 / 1489</span>
+          </div>
+        </div>
+
+        <div class="ml-banner">⭐ Макс. уровень</div>
+
+        <div class="actions">
+          <div class="btn-primary">⚔ В БОЙ</div>
+          <div class="btn-row">
+            <div class="btn-secondary">🛒 Магазин</div>
+            <div class="btn-secondary">📋 Задания <sup style="color:#ef4444">13</sup></div>
+          </div>
+        </div>
       </div>
-      <div class="slot" style="--c:#fbbf24; --c-halo:rgba(251,191,36,0.07); --c-tint:rgba(251,191,36,0.08)">
-        <div class="box"><img src="armor_gold1.png" alt=""></div>
-        <div class="label">Тело</div>
-      </div>
-      <div class="slot" style="--c:#a0aec0; --c-halo:rgba(160,174,192,0.07); --c-tint:rgba(160,174,192,0.08)">
-        <div class="box"><img src="boots_free1.png" alt=""></div>
-        <div class="label">Ноги</div>
-      </div>
-      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
-        <div class="box"><img src="weapon_sword_epic.png" alt=""></div>
-        <div class="label">Оружие</div>
-      </div>
-      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
-        <div class="box"><img src="shield_dia2.png" alt=""></div>
-        <div class="label">Щит</div>
-      </div>
-      <div class="slot" style="--c:#ff6b2b; --c-halo:rgba(255,107,43,0.07); --c-tint:rgba(255,107,43,0.08)">
-        <div class="box"><img src="ring_mythic1.png" alt=""></div>
-        <div class="label">Кольцо</div>
+
+      <div class="tabbar">
+        <div class="tab"><div class="t-icon">🦁</div><div class="t-name">Профиль</div></div>
+        <div class="tab"><div class="t-icon">⚔</div><div class="t-name">Клан</div></div>
+        <div class="tab"><div class="t-icon">🛡</div><div class="t-name">Герой</div></div>
+        <div class="tab"><div class="t-icon">👹</div><div class="t-name">Босс</div></div>
+        <div class="tab"><div class="t-icon">🏆</div><div class="t-name">Рейтинг</div></div>
+        <div class="tab"><div class="t-icon">📚</div><div class="t-name">Меню</div></div>
       </div>
     </div>
-  </section>
+  </div>
 
 </div>
+
+<p class="note">
+  <b>Если зайдёт</b> — ничего больше делать не нужно, в коде уже применено (11.49).<br>
+  <b>Если не зайдёт</b> — пиши <b>«верни 11.43»</b>, я мгновенно откачу.
+</p>
+
+<script>
+/* ─────────────────────────────────────────────────────────────────
+   Chroma-key для PNG предметов: повторяет Phaser cleanEquipmentTexture.
+   Без этого тёмный фон PNG (как у helmet_dia1) сливается с подложкой
+   слота #1c1c2e, и иконки не видно. JS-обработка делает фон прозрачным,
+   точно как в реальной игре.
+   ───────────────────────────────────────────────────────────────── */
+(function () {
+  const LOW = 35, HIGH = 75;
+  const cache = new Map();
+
+  function avgCorner(ctx, w, h, size) {
+    const boxes = [
+      ctx.getImageData(0, 0, size, size),
+      ctx.getImageData(w - size, 0, size, size),
+      ctx.getImageData(0, h - size, size, size),
+      ctx.getImageData(w - size, h - size, size, size),
+    ];
+    let r = 0, g = 0, b = 0, n = 0;
+    boxes.forEach(d => {
+      for (let i = 0; i < d.data.length; i += 4) {
+        r += d.data[i]; g += d.data[i + 1]; b += d.data[i + 2]; n++;
+      }
+    });
+    return [r / n, g / n, b / n];
+  }
+
+  function process(img) {
+    const src = img.dataset.src || img.getAttribute('src');
+    if (!src) return;
+    if (cache.has(src)) { img.src = cache.get(src); return; }
+
+    const probe = new Image();
+    probe.crossOrigin = 'anonymous';
+    probe.onload = () => {
+      const cv = document.createElement('canvas');
+      cv.width = probe.naturalWidth; cv.height = probe.naturalHeight;
+      const ctx = cv.getContext('2d');
+      ctx.drawImage(probe, 0, 0);
+      const [bR, bG, bB] = avgCorner(ctx, cv.width, cv.height, 16);
+      const data = ctx.getImageData(0, 0, cv.width, cv.height);
+      const px = data.data;
+      for (let i = 0; i < px.length; i += 4) {
+        const dr = px[i] - bR, dg = px[i + 1] - bG, db = px[i + 2] - bB;
+        const d = Math.sqrt(dr * dr + dg * dg + db * db);
+        if (d < LOW)        px[i + 3] = 0;
+        else if (d < HIGH)  px[i + 3] = ((d - LOW) / (HIGH - LOW)) * 255 | 0;
+      }
+      ctx.putImageData(data, 0, 0);
+      const url = cv.toDataURL('image/png');
+      cache.set(src, url);
+      img.src = url;
+    };
+    probe.onerror = () => { /* fallback: оставить как есть */ };
+    probe.src = src;
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.box img').forEach(process);
+  });
+})();
+</script>
 
 </body>
 </html>

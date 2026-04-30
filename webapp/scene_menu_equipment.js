@@ -49,8 +49,6 @@ Object.assign(MenuScene.prototype, {
   },
 
   _drawEqSlot(c, x, y, w, h, slot, item, mkG, mkT, mkZ, ca, small) {
-    const g  = mkG();
-    const r  = small ? 7 : 10;
     const cx = x + w / 2, cy = y + h / 2 - (small ? 1 : 4);
 
     // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
@@ -70,17 +68,8 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // тонкий halo вокруг слота (очень слабый)
-      const haG = mkG(); haG.fillStyle(bc, 0.07); haG.fillRoundedRect(x - 3, y - 3, w + 6, h + 6, r + 3); c.add(haG);
-      // Непрозрачная подложка — даже если текстура предмета не прогрузилась,
-      // слот виден как кликабельная кнопка (раньше был только тонкий stroke
-      // → на мобилке слот «пропадал» при битой текстуре или фоновой догрузке).
-      g.fillStyle(0x1c1c2e, 0.98); g.fillRoundedRect(x, y, w, h, r);
-      // Слабый внутренний оттенок под цвет редкости — делает слот живым
-      const tintG = mkG(); tintG.fillStyle(bc, 0.08); tintG.fillRoundedRect(x + 2, y + 2, w - 4, h - 4, r - 2); c.add(tintG);
-      // рамка редкости убрана — остальное свечение (halo + подложка + tint
-      // + точка-индикатор) сохранено как в 11.43-стиле.
-      c.add(g); // подложка
+      // Никакого фона и круга сзади — только сам предмет.
+      // Свечение цвета редкости даёт preFX.addGlow на спрайте ниже.
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -100,6 +89,9 @@ Object.assign(MenuScene.prototype, {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
+        // Тонкий glow цвета редкости по контуру самого предмета —
+        // без круга сзади, только обводка-аура по PNG.
+        try { img.preFX?.addGlow(bc, 3, 0, false, 0.10, 10); } catch (_) {}
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
@@ -118,17 +110,11 @@ Object.assign(MenuScene.prototype, {
         }
       }
 
-      const dG = mkG(); dG.fillStyle(bc, 1); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
+      // Точка-индикатор удалена вместе с подложкой — без квадрата
+      // ей не за что держаться, и редкость уже видна по цвету ауры.
     } else {
-      // Пустой слот — стандартный вид
-      g.fillStyle(0x1c1c2e, 0.98); g.fillRoundedRect(x, y, w, h, r);
-      g.lineStyle(1, 0xffffff, 0.1); g.strokeRoundedRect(x, y, w, h, r);
-      c.add(g);
-      const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
-      const igG = mkG(); igG.fillStyle(sg.c, sg.a); igG.fillRoundedRect(x + 4, y + 4, w - 8, h - 8, r - 2); c.add(igG);
-      const haloG = mkG(); haloG.fillStyle(sg.c, 0.05); haloG.fillCircle(cx, cy - 2, 18); c.add(haloG);
+      // Пустой слот — только векторный значок, без круга и фона.
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
-      const dG = mkG(); dG.fillStyle(sg.c, 0.6); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     }
 
     if (!small) {
