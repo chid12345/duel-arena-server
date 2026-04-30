@@ -55,6 +55,8 @@ window.TabBar = {
       btn.activeBubble?.setVisible(active);
       if (btn.iconImg) {
         btn.iconImg.setAlpha(active ? 1 : 0.85);
+        // Aura активного таба ярче (2.5×) — заметная подсветка силуэта
+        if (btn.auraImg) btn.auraImg.setAlpha(active ? 0.42 : 0.16);
         if (btn.glowFx) btn.glowFx.outerStrength = active ? 6 : 2;
       } else if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
@@ -108,19 +110,26 @@ window.TabBar = {
 
       const useImg = tab.imgKey && scene.textures.exists(tab.imgKey);
       let iconG = null, iconImg = null, iconContainer, glowFx = null;
+      let auraImg = null;
       if (useImg) {
         iconImg = scene.add.image(0, 0, tab.imgKey).setDisplaySize(42, 42);
         iconImg.setAlpha(isActive ? 1 : 0.85);
-        // Лёгкое свечение под иконкой через Graphics (НЕ preFX!). preFX.addGlow
-        // на Android Telegram WebView лотерейно роняет случайный таб в "цветной
-        // квадрат" (раз Профиль = белый, раз Клан = оранжевый). Graphics-круги
-        // рисуются GPU-vertex путём — стабильно везде. Активный таб светится
-        // ярче (alpha ×2). Тёплый кружок цветом таба читается как "подсветка".
-        const tabGlow = scene.add.graphics();
-        const _gA = isActive ? 0.22 : 0.10;  // активный заметнее, неактивные — тонкий намёк
-        tabGlow.fillStyle(tab.col, _gA);     tabGlow.fillCircle(0, 0, 18);
-        tabGlow.fillStyle(tab.col, _gA*0.6); tabGlow.fillCircle(0, 0, 24);
-        iconContainer = _t(scene.add.container(cx, iy, [tabGlow, iconImg]));
+        // Aura — "сияние силуэта самой иконки" через tintFill-копию (НЕ preFX!).
+        // preFX.addGlow на Android Telegram WebView лотерейно роняет случайный
+        // таб в "цветной квадрат" (раз Профиль = белый, раз Клан = оранжевый).
+        // tintFill-копия — обычный sprite, рендерится стабильно. Силуэт иконки
+        // в цвете таба, чуть крупнее (×1.16), за основной иконкой → визуально
+        // создаёт «ауру предмета», а не круг сзади.
+        auraImg = scene.add.image(0, 0, tab.imgKey).setDisplaySize(49, 49);
+        auraImg.setTintFill(tab.col);
+        auraImg.setAlpha(isActive ? 0.42 : 0.16);
+        // Ambient floor — мягкое цветное пятно под иконкой (предмет «светит на
+        // поверхность»). Eллипс, не круг.
+        const ambient = scene.add.graphics();
+        const _aA = isActive ? 0.22 : 0.09;
+        ambient.fillStyle(tab.col, _aA);     ambient.fillEllipse(0, 22, 32, 5);
+        ambient.fillStyle(tab.col, _aA*0.5); ambient.fillEllipse(0, 22, 48, 8);
+        iconContainer = _t(scene.add.container(cx, iy, [ambient, auraImg, iconImg]));
       } else {
         iconG = scene.add.graphics();
         TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, isActive ? 2 : 1.4);
@@ -129,7 +138,7 @@ window.TabBar = {
 
       const labelTxt = _t(txt(scene, cx, tabTop + 57, tab.label, 9, hexCol).setOrigin(0.5));
 
-      btns[tab.key] = { activeBubble, iconContainer, iconG, iconImg, glowFx, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
+      btns[tab.key] = { activeBubble, iconContainer, iconG, iconImg, auraImg, glowFx, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
 
       // Премиум-эффекты для Профиля: золотой glow + pulse. Без рамки (PNG с
       // прозрачным фоном). Реакция на тап — общая, как у других табов.

@@ -87,29 +87,43 @@ Object.assign(MenuScene.prototype, {
       const imgKey = rawKey && typeof cleanEquipmentTexture === 'function'
         ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
-        // Halo ВСЕГДА под иконкой — на мобильном Android WebView преFX-связка
-        // лотерейно роняет ЛЮБОЙ слот в "белый квадрат" (раз шлем, раз тело).
-        // Halo через Graphics виден независимо от того, выжил ли спрайт.
+        // 1) Ambient — мягкое цветное пятно под иконкой ("предмет подсвечивает
+        //    поверхность"). Без круга — это размытое подсветка у нижней грани.
         this._drawSlotHalo(c, cx, cy, slot, mkG, bc);
         const imgSize = small ? 38 : 50;
-        const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
-        // Сохраняем пропорции PNG (688×1024 шлем, 408×612 мифик-броня и пр.).
-        // Без этого — всё растягивается в квадрат: шлем превращался в "тёмный
-        // блок" под прозрачной рамкой ("чёрный фон у головы"), броня в "белый
-        // прямоугольник" итд. Phaser-метод подгоняет в imgSize×imgSize, сохраняя
-        // соотношение сторон (как CSS object-fit: contain).
+        // Считаем aspect-fit размеры один раз — для ауры и иконки.
+        let dispW = imgSize, dispH = imgSize;
         try {
           const tex = this.textures.get(imgKey);
           const src = tex?.getSourceImage?.();
-          const sw = src?.width || imgSize, sh = src?.height || imgSize;
-          const scale = Math.min(imgSize / sw, imgSize / sh);
-          img.setDisplaySize(Math.round(sw * scale), Math.round(sh * scale));
-        } catch(_) { img.setDisplaySize(imgSize, imgSize); }
+          if (src) {
+            const sw = src.width || imgSize, sh = src.height || imgSize;
+            const sc = Math.min(imgSize / sw, imgSize / sh);
+            dispW = Math.round(sw * sc); dispH = Math.round(sh * sc);
+          }
+        } catch(_) {}
+        // 2) Aura — "сияние силуэта": та же иконка, цветом редкости (tintFill),
+        //    масштаб +18%, alpha с лёгким pulse 1.6с. Делает предмет металлически
+        //    "живым" — никакой геометрии-рамки, светится сама сталь.
+        try {
+          const aura = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
+          aura.setDisplaySize(Math.round(dispW * 1.18), Math.round(dispH * 1.18));
+          aura.setTintFill(bc);
+          aura.setAlpha(0.40);
+          ca(aura);
+          // Стаггер по слоту — чтобы все 6 ауры не пульсировали в унисон
+          this.tweens.add({
+            targets: aura, alpha: 0.62, duration: 1500,
+            ease: 'Sine.easeInOut', yoyo: true, repeat: -1,
+            delay: Math.floor(Math.random() * 1800),
+          });
+        } catch(_) {}
+        // 3) Main icon — поверх ауры, в пропорции (без сжатия в квадрат).
+        const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
+        img.setDisplaySize(dispW, dispH);
         // preFX-glow ОТКЛЮЧЁН для всех слотов: на Android Telegram WebView
         // комбинация PNG + preFX.addGlow стабильно роняет рендер случайного
-        // спрайта в "белый квадрат". Раньше думали что это только шлем — но
-        // следующая итерация показала тот же баг на броне. Halo сзади
-        // подчёркивает редкость надёжнее.
+        // спрайта в "белый квадрат". Tinted-aura через обычный sprite — safe.
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Halo + векторный значок
@@ -173,11 +187,12 @@ Object.assign(MenuScene.prototype, {
     const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
     const col = (typeof colorOverride === 'number') ? colorOverride : sg.c;
     const g = mkG();
-    // Тонкий намёк на цвет редкости — не «круг», а лёгкое подсвечивание
-    // под иконкой. По запросу пользователя alpha сильно ниже + меньше
-    // радиус. Раньше: 0.18/0.12/0.07 → читалось как «огоньки/диски».
-    g.fillStyle(col, 0.07); g.fillCircle(cx, cy - 2, 16);
-    g.fillStyle(col, 0.04); g.fillCircle(cx, cy - 2, 24);
+    // Ambient floor light — "предмет подсвечивает поверхность под собой".
+    // Это НЕ круг и НЕ рамка — размытое цветное пятно у нижней грани иконки.
+    // Силуэт-аура (свечение самой стали) делается отдельно в _drawEqSlot
+    // через tintFill-копию иконки.
+    g.fillStyle(col, 0.22); g.fillEllipse(cx, cy + 22, 32, 6);
+    g.fillStyle(col, 0.10); g.fillEllipse(cx, cy + 22, 50, 9);
     c.add(g);
   },
 

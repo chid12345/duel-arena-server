@@ -59,6 +59,8 @@ Object.assign(MenuScene.prototype, {
       btn.activeBubble?.setVisible(active);
       if (btn.iconImg) {
         btn.iconImg.setAlpha(active ? 1 : 0.85);
+        // Aura активного таба ярче (см. tab_bar.js TabBar.setActive — ту же логику)
+        if (btn.auraImg) btn.auraImg.setAlpha(active ? 0.42 : 0.16);
       } else if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
         TAB_ICONS[btn.iconName](btn.iconG, 0, 0, btn.tabCol || 0x22d3ee, active ? 2 : 1.4);
