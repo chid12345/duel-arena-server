@@ -7,21 +7,13 @@
 const _EQ_LEFT  = [{ slot: 'belt' }, { slot: 'armor' }, { slot: 'boots' }];
 const _EQ_RIGHT = [{ slot: 'weapon' }, { slot: 'shield' }, { slot: 'ring1' }];
 
-// Inset glow color per slot type — matches icon palette
-const _EQ_SLOT_GLOW = {
-  weapon: { c: 0xf59e0b, a: 0.09 },
-  belt:   { c: 0x6b7280, a: 0.09 },
-  boots:  { c: 0x92400e, a: 0.06 },
-  shield: { c: 0x3b82f6, a: 0.10 },
-  armor:  { c: 0x9ca3af, a: 0.07 },
-  ring1:  { c: 0xf59e0b, a: 0.09 },
-};
-
 const _EQ_SLOT_LABELS = {
   weapon: 'ОРУЖИЕ', belt: 'ГОЛОВА', boots: 'НОГИ',
   shield: 'ЩИТ',    armor: 'ТЕЛО',  ring1: 'КОЛЬЦО', ring2: 'КОЛЬЦО',
 };
-const _EQ_RARITY_COLOR = { common: 0xa0aec0, rare: 0xfbbf24, epic: 0xc084fc, mythic: 0xff6b2b };
+// Палитра "материалов": серебро / золото / алмаз / рубин — для неонового
+// glow по контуру предмета. Эпик = бирюзовый алмаз (как иконка чата-референса).
+const _EQ_RARITY_COLOR = { common: 0xc6cdd9, rare: 0xffb347, epic: 0x00e5ff, mythic: 0xff4d6d };
 
 Object.assign(MenuScene.prototype, {
 
@@ -68,10 +60,8 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // Парящий стиль: только мягкий halo цвета редкости, без рамки/подложки.
-      // Halo (фоновый овал) даёт ауру под предметом — слот остаётся "виден",
-      // но не выглядит как кнопка-окно.
-      const haG = mkG(); haG.fillStyle(bc, 0.10); haG.fillCircle(cx, cy - 2, w * 0.55); c.add(haG);
+      // Без halo-круга и подложки — свечение идёт от самой иконки
+      // (3-слойный preFX glow ниже на img).
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -91,8 +81,15 @@ Object.assign(MenuScene.prototype, {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // Glow цвета редкости по контуру предмета — даёт ощущение "парения".
-        try { img.preFX?.addGlow(bc, 4, 0, false, 0.1, 16); } catch (_) {}
+        // 3-слойный неоновый glow (как иконка-референс):
+        //  1) большой мягкий outer-glow — рассеянный ореол, тает в темноте
+        //  2) inner-glow — "светится изнутри" как полупрозрачное стекло
+        //  3) тонкий белый rim-light — блик по контуру
+        try {
+          img.preFX?.addGlow(bc,       6,   0,   false, 0.05, 24);
+          img.preFX?.addGlow(bc,       0,   3,   false, 0.10, 12);
+          img.preFX?.addGlow(0xffffff, 1.5, 0,   false, 0.30, 4);
+        } catch (_) {}
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
@@ -112,10 +109,8 @@ Object.assign(MenuScene.prototype, {
       }
 
     } else {
-      // Пустой слот — парящий стиль: только мягкая аура цвета слота + значок.
-      // Без подложки и рамки, как у занятого слота.
-      const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
-      const haloG = mkG(); haloG.fillStyle(sg.c, 0.18); haloG.fillCircle(cx, cy - 2, w * 0.55); c.add(haloG);
+      // Пустой слот — без подложки и кругов, только векторный значок.
+      // (preFX.addGlow на Graphics нестабильно работает — оставим чистым.)
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
     }
 
