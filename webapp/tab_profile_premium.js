@@ -1,9 +1,10 @@
 /* ============================================================
    TabProfilePremium — премиум-эффекты для иконки "Профиль":
-   - blend SCREEN: чёрный фон JPG исчезает на тёмной панели
-   - золотое + белое свечение (drop-shadow look) вместо рамки
+   - крупнее остальных (54 vs 42) — видны детали гривы/короны
+   - золотой glow вместо cyan + лёгкое белое сияние (drop-shadow)
    - pulse 2с (glow + alpha) — медленно "дышит"
-   - flash() — вспышка белым + scale 1.1 при тапе
+   PNG с прозрачным фоном (chroma key через scripts/_make_lion_transparent.py)
+   — поэтому glow идёт по контуру льва, без квадратной рамки.
    Маленький модуль (Закон 1: не раздуваем tab_bar.js).
    ============================================================ */
 
@@ -12,30 +13,24 @@
   const WHITE = 0xffffff;
 
   window.TabProfilePremium = {
-    // Применяем эффекты сразу после создания iconImg в TabBar.build().
+    // Применяем сразу после создания iconImg в TabBar.build().
     apply(scene, btn, isActive) {
       const img = btn?.iconImg;
-      const cont = btn?.iconContainer;
-      if (!img || !cont) return;
+      if (!img) return;
 
-      // 1. SCREEN убирает чёрный фон JPG: в кадре остаются только светлые
-      //    части (лев, корона, лучи), будто иконка парит над панелью.
-      try { img.setBlendMode(Phaser.BlendModes.SCREEN); } catch (_) {}
-
-      // 2. Крупнее (54 vs 42 у остальных табов) — детали гривы и короны видны.
+      // 1. Крупнее остальных табов.
       img.setDisplaySize(54, 54);
 
-      // 3. Заменяем cyan-glow на золотой + добавляем тонкое белое сияние.
-      //    Старый glowFx был добавлен в TabBar.build — снимаем и кладём свои.
+      // 2. Заменяем cyan-glow на золотой + кладём тонкое белое сияние сверху.
       try { if (btn.glowFx && img.preFX) img.preFX.remove(btn.glowFx); } catch (_) {}
       try {
         btn.glowFx      = img.preFX?.addGlow(GOLD,  isActive ? 7 : 5, 0, false, 0.1, 22);
         btn.glowFxWhite = img.preFX?.addGlow(WHITE, 2.0,              0, false, 0.1, 10);
       } catch (_) {}
 
-      // 4. Pulse 2с (yoyo 1с туда + 1с обратно): дышит сила золотого свечения
-      //    и слегка яркость самой иконки. Scale-контейнера не трогаем —
-      //    его использует общий hover/tap из tab_bar.js.
+      // 3. Pulse 2с (yoyo 1с туда + 1с обратно): дышит сила золотого свечения
+      //    и слегка яркость самой иконки. Scale-контейнер не трогаем —
+      //    его использует общий hover/tap из tab_bar.js (как у других табов).
       scene.tweens.killTweensOf(btn.glowFx);
       scene.tweens.killTweensOf(img);
       img.setAlpha(0.85);
@@ -52,35 +47,6 @@
         alpha: 1.0,
         duration: 1000, ease: 'Sine.easeInOut',
         yoyo: true, repeat: -1,
-      });
-
-      btn._premium = true;
-    },
-
-    // Вспышка белым + scale 1.1 на короткий миг (вызывается из pointerdown).
-    flash(scene, btn) {
-      const img = btn?.iconImg;
-      const cont = btn?.iconContainer;
-      if (!img || !cont) return;
-
-      // Резкий всплеск белого glow → плавно вернёмся.
-      if (btn.glowFxWhite) {
-        scene.tweens.killTweensOf(btn.glowFxWhite);
-        btn.glowFxWhite.outerStrength = 14;
-        scene.tweens.add({
-          targets: btn.glowFxWhite,
-          outerStrength: 2.0,
-          duration: 280, ease: 'Quad.easeOut',
-        });
-      }
-
-      // Scale 1.1 (не 1.3 как у обычных табов) — мягкая премиум-реакция.
-      scene.tweens.killTweensOf(cont);
-      scene.tweens.add({
-        targets: cont,
-        scaleX: 1.1, scaleY: 1.1,
-        duration: 80, ease: 'Back.easeOut',
-        yoyo: true,
       });
     },
   };

@@ -123,8 +123,8 @@ window.TabBar = {
 
       btns[tab.key] = { activeBubble, iconContainer, iconG, iconImg, glowFx, labelTxt, iconName: tab.icon, tabCol: tab.col, hexCol };
 
-      // Премиум-эффекты для Профиля: SCREEN-blend (фон уходит), золото+белый
-      // glow, pulse 2с. Свой модуль (Закон 1: tab_bar.js не раздуваем).
+      // Премиум-эффекты для Профиля: золотой glow + pulse. Без рамки (PNG с
+      // прозрачным фоном). Реакция на тап — общая, как у других табов.
       if (tab.key === 'profile' && typeof TabProfilePremium !== 'undefined') {
         TabProfilePremium.apply(scene, btns[tab.key], isActive);
       }
@@ -138,13 +138,8 @@ window.TabBar = {
         scene.tweens.add({ targets: ripple, scaleX: 3.6, scaleY: 3.6, alpha: 0, duration: 420, ease: 'Quad.easeOut', onComplete: () => ripple.destroy() });
         if (iconG) { iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 2.2); }
         if (iconImg) iconImg.setAlpha(1);
-        // Профиль: вспышка белым + scale 1.1 (вместо общего scale 1.3).
-        if (tab.key === 'profile' && typeof TabProfilePremium !== 'undefined') {
-          TabProfilePremium.flash(scene, btns[tab.key]);
-        } else {
-          scene.tweens.killTweensOf(iconContainer);
-          scene.tweens.add({ targets: iconContainer, scaleX: 1.3, scaleY: 1.3, duration: 80, ease: 'Back.easeOut' });
-        }
+        scene.tweens.killTweensOf(iconContainer);
+        scene.tweens.add({ targets: iconContainer, scaleX: 1.3, scaleY: 1.3, duration: 80, ease: 'Back.easeOut' });
       });
       zone.on('pointerout', () => {
         scene.tweens.killTweensOf(iconContainer);
