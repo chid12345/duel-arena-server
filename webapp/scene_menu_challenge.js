@@ -105,6 +105,39 @@ Object.assign(MenuScene.prototype, {
     if (this._waitChIntv) { try { clearInterval(this._waitChIntv); } catch (_) {} this._waitChIntv = null; }
   },
 
+  /* Splash «🎯 @nick принял! Готовься 3-2-1» перед стартом боя.
+     Показывается на стороне вызывающего после WS battle_started. */
+  _showAcceptedSplash(oppName, cb) {
+    try { document.getElementById('_acceptSpl')?.remove(); } catch (_) {}
+    const d = document.createElement('div');
+    d.id = '_acceptSpl';
+    d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,6,18,0.92);display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,Roboto,sans-serif;animation:_aspIn .18s ease-out;';
+    d.innerHTML =
+      '<style>@keyframes _aspIn{from{opacity:0}to{opacity:1}}@keyframes _aspNum{0%{transform:scale(.4);opacity:0}40%{transform:scale(1.2);opacity:1}100%{transform:scale(1);opacity:1}}</style>'
+      + '<div style="color:#3cc864;font-size:14px;font-weight:700;letter-spacing:1.5px;text-shadow:0 0 12px #3cc86477;">🎯 СОПЕРНИК ПРИНЯЛ</div>'
+      + '<div style="color:#fff;font-size:22px;font-weight:800;margin-top:6px;">@' + (oppName || 'Соперник') + '</div>'
+      + '<div id="_aspNum" style="color:#ffc83c;font-size:78px;font-weight:900;margin-top:14px;text-shadow:0 0 24px #ffc83c99;font-family:Consolas,monospace;animation:_aspNum .9s ease-out;">3</div>'
+      + '<div style="color:#aaaacc;font-size:11px;margin-top:8px;letter-spacing:2px;">ПРИГОТОВЬСЯ</div>';
+    document.body.appendChild(d);
+    let n = 3;
+    const numEl = d.querySelector('#_aspNum');
+    const tick = () => {
+      n--;
+      if (n <= 0) {
+        try { d.remove(); } catch (_) {}
+        if (cb) cb();
+        return;
+      }
+      numEl.textContent = String(n);
+      numEl.style.animation = 'none';
+      void numEl.offsetWidth;
+      numEl.style.animation = '_aspNum .9s ease-out';
+    };
+    setTimeout(tick, 900);
+    setTimeout(tick, 1800);
+    setTimeout(tick, 2700);
+  },
+
   _promptNickname(cb) {
     try { document.getElementById('_nickModal')?.remove(); } catch (_) {}
     const d = document.createElement('div');

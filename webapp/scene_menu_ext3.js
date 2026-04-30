@@ -14,7 +14,13 @@ Object.assign(MenuScene.prototype, {
       if (msg.event === 'battle_started') {
         try { this._closeWaitingChallenge?.(); } catch (_) {}
         State.battle = msg.battle;
-        this.scene.start('Battle', {});
+        const oppName = msg.battle?.opp_name || 'Соперник';
+        // Splash 3-2-1 на стороне вызывающего, чтобы старт боя не был резким.
+        if (typeof this._showAcceptedSplash === 'function') {
+          this._showAcceptedSplash(oppName, () => this.scene.start('Battle', {}));
+        } else {
+          this.scene.start('Battle', {});
+        }
         return;
       }
       if (msg.event === 'challenge_incoming') {
