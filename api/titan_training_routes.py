@@ -7,6 +7,8 @@ from typing import Any, Dict
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
+from api.warrior_guard import no_warrior_response, warrior_selected
+
 _TITAN_SESSION_TTL = 60  # секунд — сессия истекает после 1 мин неактивности
 
 
@@ -67,6 +69,8 @@ def register_titan_training_routes(app, ctx: Dict[str, Any]) -> None:
                 state = _battle_state_api(uid)
                 return {"ok": True, "status": "already_in_battle", "battle": state}
             player = db.get_or_create_player(uid, tg_user.get("username") or "")
+            if not warrior_selected(player):
+                return no_warrior_response()
             mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
             chp = int(player.get("current_hp", mhp))
             if chp < int(mhp * HP_MIN_BATTLE_PCT):

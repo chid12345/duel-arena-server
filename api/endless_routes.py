@@ -11,6 +11,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from api.tma_infra import get_user_lock
+from api.warrior_guard import no_warrior_response, warrior_selected
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,8 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
             uid = int(tg_user["id"])
             username = tg_user.get("username") or ""
             player = db.get_or_create_player(uid, username)
+            if not warrior_selected(player):
+                return no_warrior_response()
             progress = db.get_endless_progress(uid)
             if progress["is_active"] and progress["current_wave"] > 0:
                 db.endless_on_loss(uid, progress["current_wave"])

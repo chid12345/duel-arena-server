@@ -251,15 +251,7 @@ Object.assign(MenuScene.prototype, {
   },
 
   _tryBattle() {
-    const wt = State.player?.warrior_type || '';
-    const base = wt.split('_')[0];
-    if (!['tank','agile','crit'].includes(base)) {
-      tg?.HapticFeedback?.notificationOccurred('warning');
-      this._toast('⚔️ Сначала выбери воина — он влияет на бой!');
-      this._wsReturnTab = 'battle';
-      this._openWarriorSelect();
-      return;
-    }
+    if (!this._requireWarrior?.('battle')) return;
     this._switchTab('battle');
   },
 

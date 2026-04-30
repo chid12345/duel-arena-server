@@ -119,8 +119,8 @@ const BotBattleCard = (() => {
 
   function _spriteHtml(b, who) {
     if (who === 'me') {
-      const wt = ((typeof State !== 'undefined' ? State : window.State)?.player?.warrior_type || 'crit');
-      const url = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/crit/1.png';
+      const wt = ((typeof State !== 'undefined' ? State : window.State)?.player?.warrior_type || 'tank');
+      const url = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.png';
       return `<img src="${url}" alt="">`;
     }
     const skinId = b.opp_skin_id;

@@ -9,6 +9,7 @@ from fastapi import FastAPI
 
 from api.tma_infra import manager
 from api.tma_models import ChallengeCancelBody, ChallengeRespondBody, ChallengeSendBody, InitDataHeader
+from api.warrior_guard import no_warrior_response, warrior_selected
 
 logger = logging.getLogger(__name__)
 
@@ -182,6 +183,11 @@ def register_tma_battle_queue_routes(
 
         ch_player = db.get_or_create_player(challenger_id, "")
         tg_player = db.get_or_create_player(target_id, tg_user.get("username") or tg_user.get("first_name") or "")
+        # Оба бойца обязаны иметь выбранного воина (challenger мог сбросить класс после отправки вызова).
+        if not warrior_selected(ch_player):
+            return {"ok": False, "reason": "challenger_no_warrior"}
+        if not warrior_selected(tg_player):
+            return no_warrior_response()
         db.pvp_dequeue(challenger_id)
         db.pvp_dequeue(target_id)
 

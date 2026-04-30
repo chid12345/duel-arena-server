@@ -10,6 +10,7 @@ from fastapi import FastAPI
 
 from api.tma_infra import manager
 from api.tma_models import FindBattleBody
+from api.warrior_guard import no_warrior_response, warrior_selected
 from config.battle_constants import ONBOARDING_BATTLES_EASY
 
 
@@ -36,6 +37,8 @@ def register_find_battle_route(
         username = tg_user.get("username") or ""
 
         player = await asyncio.to_thread(db.get_or_create_player, uid, username)
+        if not warrior_selected(player):
+            return no_warrior_response()
         usdt_passive = await asyncio.to_thread(db.get_equipped_usdt_passive, uid)
         if usdt_passive:
             player = dict(player)

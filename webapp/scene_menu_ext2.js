@@ -9,6 +9,7 @@ Object.assign(MenuScene.prototype, {
   async _onFight() {
     const p = State.player;
     if (!p) return;
+    if (!this._requireWarrior?.('battle')) return;
     if (p.hp_pct < 15) {
       tg?.HapticFeedback?.notificationOccurred('error');
       this._toast('❤️ Нужно восстановить HP!');
@@ -30,6 +31,7 @@ Object.assign(MenuScene.prototype, {
   async _onBotFight() {
     const p = State.player;
     if (!p) return;
+    if (!this._requireWarrior?.('battle')) return;
     if (p.hp_pct < 15) {
       tg?.HapticFeedback?.notificationOccurred('error');
       this._toast('❤️ Нужно восстановить HP!');
@@ -47,6 +49,7 @@ Object.assign(MenuScene.prototype, {
   async _onTitanFight() {
     const p = State.player;
     if (!p) return;
+    if (!this._requireWarrior?.('battle')) return;
     if (p.hp_pct < 15) {
       this._toast('❤️ Нужно восстановить HP!');
       return;
@@ -67,6 +70,7 @@ Object.assign(MenuScene.prototype, {
 
   async _onEndlessFight() {
     if (this._buying) return;
+    if (!this._requireWarrior?.('battle')) return;
     this._buying = true;
     try {
       const res = await post('/api/endless/start', {});
