@@ -57,36 +57,9 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     if opp_entity and not opp_is_bot:
         opp_is_premium = bool(_premium_fields(opp_entity).get("is_premium"))
 
-    # Шмот САМОГО игрока (для своей карточки): тащим из БД через get_equipment.
-    # Формат — тот же что у opp_items: [{slot, item_id, name, rarity, color}].
-    my_items = []
-    try:
-        from database import db as _db
-        from repositories.bots.persona_gear import items_for_ui
-        eq_dict = _db.get_equipment(int(user_id)) or {}
-        items_map = {slot: data.get("item_id") for slot, data in eq_dict.items() if data.get("item_id")}
-        my_items = items_for_ui(items_map)
-        # Если стат-брони нет — добавляем косметику из гардероба
-        if not any(it["slot"] == "armor" for it in my_items):
-            equipped_cls = _db.get_equipped_class(int(user_id))
-            if equipped_cls:
-                cls_id = equipped_cls.get("class_id", "")
-                cls_type = equipped_cls.get("class_type", "free")
-                _TYPE_RAR = {"free": "common", "gold": "rare", "diamonds": "epic",
-                             "mythic": "mythic", "usdt": "mythic"}
-                _RAR_COL = {"common": "#9aa0a6", "rare": "#3cc864", "epic": "#b45aff", "mythic": "#ffc83c"}
-                _RAR_LBL = {"common": "Обычное", "rare": "Редкое",
-                            "epic": "Эпическое", "mythic": "Мифическое"}
-                rar = _TYPE_RAR.get(cls_type, "common")
-                cls_info = _db.get_class_info(cls_id) if hasattr(_db, "get_class_info") else {}
-                name = (cls_info or {}).get("name", "Броня")
-                my_items.append({
-                    "slot": "armor", "item_id": cls_id, "name": name,
-                    "rarity": rar, "rarity_label": _RAR_LBL.get(rar, rar),
-                    "color": _RAR_COL.get(rar, "#9aa0a6"),
-                })
-    except Exception:
-        my_items = []
+    # Шмот САМОГО игрока (своя карточка) и PvP-соперника — общий helper.
+    from api.tma_battle_items import items_for_user
+    my_items = items_for_user(int(user_id))
 
     # Persona-статус и виртуальный шмот соперника (только для PvE-ботов).
     # Фронт показывает «🌱 Новичок» / «👑 Босс-донатер» рядом с ником,
@@ -113,6 +86,14 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
             from repositories.bots.persona_gear import items_for_ui
             raw_items = opp_entity.get("equipment_items") or {}
             opp_items = items_for_ui(raw_items)
+        except Exception:
+            opp_items = []
+    elif opp_entity and not opp_is_bot:
+        # PvP: соперник-человек — читаем шмот из БД по его user_id.
+        try:
+            opp_uid = int(opp_entity.get("user_id") or 0)
+            if opp_uid:
+                opp_items = items_for_user(opp_uid)
         except Exception:
             opp_items = []
 

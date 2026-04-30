@@ -144,11 +144,13 @@ const BotBattleCard = (() => {
     const curHp  = isMe ? (b.my_hp  || 0) : (b.opp_hp  || 0);
     const maxHp  = isMe ? (b.my_max_hp || 1) : (b.opp_max_hp || 1);
     const persona = (!isMe && isBot) ? b.opp_persona : null;
-    // Для соперника-бота — opp_items, для своей карточки — my_items (надетое на игроке).
-    const items = isMe ? (b.my_items || []) : (isBot ? (b.opp_items || []) : []);
+    // Для своей карточки — my_items, для соперника (бот ИЛИ человек в PvP) — opp_items.
+    const items = isMe ? (b.my_items || []) : (b.opp_items || []);
     const meta = persona ? PERSONA_META[persona] : null;
     const head = meta ? `<span style="color:${meta.col}">${meta.emoji} ${meta.label}</span>` :
-                 (isMe ? '<span style="color:#5096ff">🧑 Вы</span>' : '<span style="color:#ccccee">🤖 Бот</span>');
+                 isMe  ? '<span style="color:#5096ff">🧑 Вы</span>' :
+                 isBot ? '<span style="color:#ccccee">🤖 Бот</span>' :
+                         '<span style="color:#3cc864">⚔️ Игрок</span>';
     const stats = isMe
       ? [['💪','Сила', me.strength||0,'#dc3c46'], ['🤸','Ловкость', me.agility||0,'#3cc8dc'],
          ['💥','Интуиция', me.intuition||0,'#b45aff'], ['🛡','Выносл.', me.stamina||0,'#3cc864']]
@@ -195,10 +197,9 @@ const BotBattleCard = (() => {
         <div class="bbc-eq-sprite">${_spriteHtml(b, who)}</div>
         ${['belt','armor','boots','weapon','shield','ring1'].map(renderSlot).join('')}
       </div>`;
-    // Equip-grid строим и для бота, и для своей карточки (my_items с бэка).
-    const gearBlock = (isBot || isMe)
-      ? `<div class="bbc-gear"><div class="bbc-gear-title">🎽 ЧТО ОДЕТО</div>${equipHtml}</div>`
-      : '';
+    // Equip-grid строим всегда (своя карточка / бот / PvP-соперник) — items
+    // подтягиваются с бэка для всех трёх случаев.
+    const gearBlock = `<div class="bbc-gear"><div class="bbc-gear-title">🎽 ЧТО ОДЕТО</div>${equipHtml}</div>`;
 
     overlay = document.createElement('div');
     overlay.id = 'bbc-overlay';
