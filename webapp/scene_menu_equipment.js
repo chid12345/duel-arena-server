@@ -78,8 +78,8 @@ Object.assign(MenuScene.prototype, {
       g.fillStyle(0x1c1c2e, 0.98); g.fillRoundedRect(x, y, w, h, r);
       // Слабый внутренний оттенок под цвет редкости — делает слот живым
       const tintG = mkG(); tintG.fillStyle(bc, 0.08); tintG.fillRoundedRect(x + 2, y + 2, w - 4, h - 4, r - 2); c.add(tintG);
-      // рамка редкости
-      const glG = mkG(); glG.lineStyle(1.5, bc, 0.7); glG.strokeRoundedRect(x, y, w, h, r); c.add(glG);
+      // рамка редкости убрана — остальное свечение (halo + подложка + tint
+      // + точка-индикатор) сохранено как в 11.43-стиле.
       c.add(g); // подложка
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Слоты экипировки — без рамки (До / После)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: radial-gradient(ellipse at top, #2e1a5c 0%, #16092e 50%, #0a0418 100%);
+    color: #e6e1ff;
+    min-height: 100vh;
+    padding: 24px 16px 80px;
+  }
+  h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; text-align: center; color: #fff; }
+  .sub { text-align: center; color: #a89cc8; font-size: 12px; margin-bottom: 28px; }
+  .wrap { max-width: 480px; margin: 0 auto; }
+  .section { margin-bottom: 28px; padding: 16px 14px; border-radius: 14px;
+             background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); }
+  .section h2 { font-size: 15px; color: #fff; margin-bottom: 4px; }
+  .section .desc { font-size: 11px; color: #a89cc8; margin-bottom: 14px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; place-items: center; }
+
+  /* ─────────── общий вид слота (как в 11.43-стиле Phaser) ─────────── */
+  .slot {
+    width: 78px; text-align: center; cursor: pointer;
+  }
+  .box {
+    width: 60px; height: 64px;
+    border-radius: 10px;
+    background: #1c1c2e;
+    position: relative;
+    margin: 0 auto;
+    /* halo (внешний) — соответствует haG в Phaser */
+    box-shadow: 0 0 0 3px var(--c-halo);
+    display: flex; align-items: center; justify-content: center;
+  }
+  /* tint (внутренний оттенок) */
+  .box::before {
+    content: '';
+    position: absolute; inset: 2px;
+    border-radius: 8px;
+    background: var(--c-tint);
+    pointer-events: none;
+  }
+  .box img {
+    width: 50px; height: 50px;
+    mix-blend-mode: screen;
+    position: relative; z-index: 1;
+    user-select: none; pointer-events: none;
+  }
+  /* точка-индикатор в углу */
+  .box::after {
+    content: '';
+    position: absolute;
+    right: 4px; bottom: 4px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--c);
+    z-index: 2;
+  }
+
+  .label {
+    margin-top: 6px;
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: rgba(210,215,235,0.9);
+    text-transform: uppercase;
+  }
+
+  /* "ДО" — с рамкой */
+  .v-before .box {
+    border: 1.5px solid rgba(255,255,255,0); /* placeholder, override below */
+    outline: 1.5px solid var(--c);
+    outline-offset: -1px;
+  }
+
+  /* "ПОСЛЕ" — БЕЗ рамки. Только halo + tint + tinted background. */
+  /* (дефолтный стиль .box уже без border/outline) */
+
+  .legend {
+    margin: 0 auto 18px;
+    max-width: 420px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(0,0,0,0.25);
+    font-size: 11px;
+    color: #c8bce6;
+  }
+  .legend b { color: #fff; }
+  .legend ul { margin: 6px 0 0 18px; }
+  .legend li { margin: 2px 0; }
+</style>
+</head>
+<body>
+
+<h1>Слоты экипировки — убираем только рамку</h1>
+<p class="sub">11.43-стиль слева (с рамкой) ↔ Новый стиль справа (без рамки). Свечение то же.</p>
+
+<div class="wrap">
+
+  <div class="legend">
+    <b>Что меняется:</b>
+    <ul>
+      <li><b>Удаляется:</b> цветная рамка по периметру слота (`strokeRoundedRect`)</li>
+      <li><b>Остаётся:</b> halo вокруг (внешнее свечение), тёмная подложка `#1c1c2e`,
+          внутренний tint цвета редкости, точка-индикатор в углу</li>
+    </ul>
+  </div>
+
+  <!-- ───────────── ДО (11.43-стиль) ───────────── -->
+  <section class="section v-before">
+    <h2>ДО — текущий 11.43-стиль (с рамкой)</h2>
+    <p class="desc">Тонкая рамка по периметру цвета редкости.</p>
+    <div class="grid">
+      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+        <div class="box"><img src="helmet_dia1.png" alt=""></div>
+        <div class="label">Голова</div>
+      </div>
+      <div class="slot" style="--c:#fbbf24; --c-halo:rgba(251,191,36,0.07); --c-tint:rgba(251,191,36,0.08)">
+        <div class="box"><img src="armor_gold1.png" alt=""></div>
+        <div class="label">Тело</div>
+      </div>
+      <div class="slot" style="--c:#a0aec0; --c-halo:rgba(160,174,192,0.07); --c-tint:rgba(160,174,192,0.08)">
+        <div class="box"><img src="boots_free1.png" alt=""></div>
+        <div class="label">Ноги</div>
+      </div>
+      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+        <div class="box"><img src="weapon_sword_epic.png" alt=""></div>
+        <div class="label">Оружие</div>
+      </div>
+      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+        <div class="box"><img src="shield_dia2.png" alt=""></div>
+        <div class="label">Щит</div>
+      </div>
+      <div class="slot" style="--c:#ff6b2b; --c-halo:rgba(255,107,43,0.07); --c-tint:rgba(255,107,43,0.08)">
+        <div class="box"><img src="ring_mythic1.png" alt=""></div>
+        <div class="label">Кольцо</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ───────────── ПОСЛЕ (без рамки) ───────────── -->
+  <section class="section v-after">
+    <h2>ПОСЛЕ — без рамки (новый стиль)</h2>
+    <p class="desc">Та же подложка, halo, tint, точка. Только убрана рамка-ободок.</p>
+    <div class="grid">
+      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+        <div class="box"><img src="helmet_dia1.png" alt=""></div>
+        <div class="label">Голова</div>
+      </div>
+      <div class="slot" style="--c:#fbbf24; --c-halo:rgba(251,191,36,0.07); --c-tint:rgba(251,191,36,0.08)">
+        <div class="box"><img src="armor_gold1.png" alt=""></div>
+        <div class="label">Тело</div>
+      </div>
+      <div class="slot" style="--c:#a0aec0; --c-halo:rgba(160,174,192,0.07); --c-tint:rgba(160,174,192,0.08)">
+        <div class="box"><img src="boots_free1.png" alt=""></div>
+        <div class="label">Ноги</div>
+      </div>
+      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+        <div class="box"><img src="weapon_sword_epic.png" alt=""></div>
+        <div class="label">Оружие</div>
+      </div>
+      <div class="slot" style="--c:#c084fc; --c-halo:rgba(192,132,252,0.07); --c-tint:rgba(192,132,252,0.08)">
+        <div class="box"><img src="shield_dia2.png" alt=""></div>
+        <div class="label">Щит</div>
+      </div>
+      <div class="slot" style="--c:#ff6b2b; --c-halo:rgba(255,107,43,0.07); --c-tint:rgba(255,107,43,0.08)">
+        <div class="box"><img src="ring_mythic1.png" alt=""></div>
+        <div class="label">Кольцо</div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+</body>
+</html>
