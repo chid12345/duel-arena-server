@@ -41,13 +41,7 @@ Object.assign(MenuScene.prototype, {
   },
 
   _drawEqSlot(c, x, y, w, h, slot, item, mkG, mkT, mkZ, ca, small) {
-    const r  = small ? 7 : 10;
-    const cx = x + w / 2, cy = y + h / 2 - (small ? 1 : 4);
-
-    // Стеклянный фон: тёмный полупрозрачный квадрат с закруглёнными углами
-    // (CSS-аналог: background: rgba(0,0,0,0.3); backdrop-filter не нативен в
-    // Phaser canvas, поэтому только полупрозрачная заливка — визуально 95%).
-    const bg = mkG(); bg.fillStyle(0x000000, 0.30); bg.fillRoundedRect(x, y, w, h, r); c.add(bg);
+    const cx = x + w / 2, cy = y + h / 2 - (small ? 4 : 8);
 
     // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
     const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
@@ -66,9 +60,15 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // Тонкая обводка цвета редкости — даёт чёткую форму квадрата
-      // (CSS-аналог: border: 1.5px solid rarityColor).
-      const border = mkG(); border.lineStyle(1.5, bc, 0.9); border.strokeRoundedRect(x, y, w, h, r); c.add(border);
+      // SPOTLIGHT FLOOR: пятно света на воображаемом "полу" под предметом —
+      // три эллипса разной alpha имитируют radial-gradient (Phaser graphics
+      // не имеет нативного gradient-fill).
+      const floorY = y + h - 18;
+      const floorG = mkG();
+      floorG.fillStyle(bc, 0.06); floorG.fillEllipse(cx, floorY, w * 1.15, 16);
+      floorG.fillStyle(bc, 0.18); floorG.fillEllipse(cx, floorY, w * 0.80, 11);
+      floorG.fillStyle(bc, 0.45); floorG.fillEllipse(cx, floorY, w * 0.45, 6);
+      c.add(floorG);
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -86,12 +86,22 @@ Object.assign(MenuScene.prototype, {
         ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
         const imgSize = small ? 38 : 50;
-        const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
+        const baseY = cy;
+        const img = this.make.image({ x: cx, y: baseY, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // Тонкий деликатный glow — в 3 раза слабее прежнего (было outer 6 / dist 24).
-        // Inner-glow и white-rim убраны: rim теперь даёт обводка border, стекло — фон.
-        try { img.preFX?.addGlow(bc, 2, 0, false, 0.10, 8); } catch (_) {}
+        // Soft glow цвета редкости — играет роль drop-shadow для "парящего" предмета.
+        try { img.preFX?.addGlow(bc, 3, 0, false, 0.10, 12); } catch (_) {}
         ca(img);
+        // Idle-левитация: предмет медленно "парит" над полом ↕ 4px.
+        if (this.tweens) {
+          try {
+            this.tweens.add({
+              targets: img, y: baseY - 4,
+              duration: 1700, yoyo: true, repeat: -1,
+              ease: 'Sine.easeInOut',
+            });
+          } catch (_) {}
+        }
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
         // рисуем тот же векторный значок, что и в пустых слотах — визуально
@@ -110,8 +120,12 @@ Object.assign(MenuScene.prototype, {
       }
 
     } else {
-      // Пустой слот: тот же стеклянный фон (выше) + бледно-белая рамка + значок.
-      const border = mkG(); border.lineStyle(1, 0xffffff, 0.20); border.strokeRoundedRect(x, y, w, h, r); c.add(border);
+      // Пустой слот: тусклое нейтральное пятно на полу + векторный значок.
+      const floorY = y + h - 18;
+      const floorG = mkG();
+      floorG.fillStyle(0x9c8cbf, 0.05); floorG.fillEllipse(cx, floorY, w * 1.15, 16);
+      floorG.fillStyle(0x9c8cbf, 0.12); floorG.fillEllipse(cx, floorY, w * 0.65, 8);
+      c.add(floorG);
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
     }
 
