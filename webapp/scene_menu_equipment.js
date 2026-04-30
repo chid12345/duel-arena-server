@@ -173,11 +173,11 @@ Object.assign(MenuScene.prototype, {
     const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
     const col = (typeof colorOverride === 'number') ? colorOverride : sg.c;
     const g = mkG();
-    // Чуть плотнее чем было (0.18/0.12/0.07) — на мобильных тёмных экранах
-    // 0.10/0.06 терялось. Это не «рамка» — мягкий свет под предметом.
-    g.fillStyle(col, 0.18); g.fillCircle(cx, cy - 2, 18);
-    g.fillStyle(col, 0.12); g.fillCircle(cx, cy - 2, 26);
-    g.fillStyle(col, 0.07); g.fillCircle(cx, cy - 2, 34);
+    // Тонкий намёк на цвет редкости — не «круг», а лёгкое подсвечивание
+    // под иконкой. По запросу пользователя alpha сильно ниже + меньше
+    // радиус. Раньше: 0.18/0.12/0.07 → читалось как «огоньки/диски».
+    g.fillStyle(col, 0.07); g.fillCircle(cx, cy - 2, 16);
+    g.fillStyle(col, 0.04); g.fillCircle(cx, cy - 2, 24);
     c.add(g);
   },
 

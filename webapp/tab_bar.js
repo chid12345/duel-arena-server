@@ -111,13 +111,16 @@ window.TabBar = {
       if (useImg) {
         iconImg = scene.add.image(0, 0, tab.imgKey).setDisplaySize(42, 42);
         iconImg.setAlpha(isActive ? 1 : 0.85);
-        // preFX.addGlow ОТКЛЮЧЁН для всех PNG-табов: на Android Telegram WebView
-        // лотерейно роняет случайный таб в "цветной квадрат" (раз Профиль = белый,
-        // раз Клан = оранжевый, раз другой). Активный таб всё равно подсвечивается
-        // тремя цветными точками сверху (activeBubble) — этого достаточно для
-        // визуальной обратной связи. Glow-сияние было фоновым украшением.
-        // Остаётся для иконок-векторов (else-ветка ниже).
-        iconContainer = _t(scene.add.container(cx, iy, [iconImg]));
+        // Лёгкое свечение под иконкой через Graphics (НЕ preFX!). preFX.addGlow
+        // на Android Telegram WebView лотерейно роняет случайный таб в "цветной
+        // квадрат" (раз Профиль = белый, раз Клан = оранжевый). Graphics-круги
+        // рисуются GPU-vertex путём — стабильно везде. Активный таб светится
+        // ярче (alpha ×2). Тёплый кружок цветом таба читается как "подсветка".
+        const tabGlow = scene.add.graphics();
+        const _gA = isActive ? 0.22 : 0.10;  // активный заметнее, неактивные — тонкий намёк
+        tabGlow.fillStyle(tab.col, _gA);     tabGlow.fillCircle(0, 0, 18);
+        tabGlow.fillStyle(tab.col, _gA*0.6); tabGlow.fillCircle(0, 0, 24);
+        iconContainer = _t(scene.add.container(cx, iy, [tabGlow, iconImg]));
       } else {
         iconG = scene.add.graphics();
         TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, isActive ? 2 : 1.4);
