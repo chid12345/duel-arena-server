@@ -174,29 +174,36 @@ Object.assign(MenuScene.prototype, {
     eqBg.lineStyle(1.5, 0x5b21b6, 0.85); eqBg.strokeRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
     // top accent line
     const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
-    const charCY = czY + czH * 0.42;
 
-    // Фоновое фото за героем (cover-fit, скруглённая маска под форму карточки).
-    // Декор-круги (aura/floor/ring) удалены — фото даёт глубину само.
+    // Платформа из фото (5.png) — круг внизу. Якорим фон по нижнему краю карточки,
+    // чтобы платформа точно была видна, а не уезжала за границу при cover-fit.
+    const _bgX = PAD + 1, _bgY = czY + 1, _bgW = W - PAD * 2 - 2, _bgH = czH - 2;
+    // Платформа на 5.png ≈ 84% высоты исходника. Поднимаем её до 80% карточки,
+    // чтобы место для головы воина и слотов сверху осталось.
+    const _platformY = _bgY + _bgH * 0.80; // куда ставим ноги героя
+    // PNG 250px высотой, origin 0.5 → центр героя выше «земли» на полроста
+    const charCY = _platformY - 110; // 110 = ~рост ниже центра до ступней (≈ 250*0.44)
     if (this.textures.exists('hero_profile_bg')) {
-      const bgX = PAD + 1, bgY = czY + 1, bgW = W - PAD * 2 - 2, bgH = czH - 2;
-      const bgImg = ca(mkI(bgX + bgW / 2, bgY + bgH / 2, 'hero_profile_bg').setOrigin(0.5));
+      // Якорь по низу: bottom фото = bottom карточки → платформа точно в кадре
+      const bgImg = ca(mkI(_bgX + _bgW / 2, _bgY + _bgH, 'hero_profile_bg').setOrigin(0.5, 1));
       const tex = this.textures.get('hero_profile_bg').getSourceImage();
-      const sc = Math.max(bgW / tex.width, bgH / tex.height);
-      bgImg.setScale(sc).setAlpha(0.78);
+      const sc = Math.max(_bgW / tex.width, _bgH / tex.height);
+      bgImg.setScale(sc).setAlpha(0.85);
       const mG = this.make.graphics({}, false);
-      mG.fillStyle(0xffffff, 1); mG.fillRoundedRect(bgX, bgY, bgW, bgH, 13);
+      mG.fillStyle(0xffffff, 1); mG.fillRoundedRect(_bgX, _bgY, _bgW, _bgH, 13);
       c.add(mG); mG.setVisible(false);
       bgImg.setMask(mG.createGeometryMask());
-      // Тёмная вуаль снизу — герой не сливается с фоном
+      // Лёгкое затемнение по верху — фокус на герое, не на потолке арены
       const veil = ca(mkG());
-      veil.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.05, 0.05, 0.55, 0.55);
-      veil.fillRoundedRect(bgX, bgY, bgW, bgH, 13);
+      veil.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.45, 0.45, 0.10, 0.10);
+      veil.fillRoundedRect(_bgX, _bgY, _bgW, _bgH, 13);
     }
 
     const _wKey = getWarriorKey(p.warrior_type);
-    const warrior = ca(mkI(W / 2, charCY, _wKey).setDisplaySize(170, 250).setOrigin(0.5));
-    this.tweens.add({ targets: warrior, y: charCY - 7, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Origin (0.5, 1) — точка крепления = центр ступней. Ставим ровно на платформу.
+    const warrior = ca(mkI(W / 2, _platformY, _wKey).setDisplaySize(170, 250).setOrigin(0.5, 1));
+    // Лёгкое «дыхание» — стоит на земле, но кадр живой (±2px вместо ±7)
+    this.tweens.add({ targets: warrior, y: _platformY - 2, duration: 2200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
     const wZone = ca(mkZ(W / 2, charCY, 140, 210).setInteractive({ useHandCursor: true }));
     wZone.on('pointerup', () => { Sound.click(); this._openWarriorSelect(); });
 
