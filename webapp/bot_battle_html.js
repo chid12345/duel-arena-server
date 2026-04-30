@@ -30,6 +30,9 @@ const BotBattleHtml = (() => {
       #bb-root .fighter{position:absolute;bottom:22%;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}
       #bb-root .player{left:-2%;width:38%;height:48%;}
       #bb-root .boss{right:-3%;width:62%;height:78%;}
+      /* PvP: оба игрока одного размера, симметрично от центра */
+      #bb-root.pvp .player{left:2%;width:46%;height:60%;}
+      #bb-root.pvp .boss{right:2%;width:46%;height:60%;}
       #bb-root .fighter img{width:100%;height:100%;object-fit:contain;object-position:bottom;
         -webkit-mask-image:linear-gradient(to top,transparent 0%,#000 8%);mask-image:linear-gradient(to top,transparent 0%,#000 8%);
         -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;
@@ -187,12 +190,28 @@ const BotBattleHtml = (() => {
       const pvpBgIdx = isPvp ? (s._currentPvpBgIdx || (1 + Math.floor(Math.random() * 5))) : 0;
       s._currentPvpBgIdx = pvpBgIdx;
       root = document.createElement('div'); root.id = 'bb-root';
+      if (isPvp) root.classList.add('pvp');
       const r = s.game.canvas.getBoundingClientRect();
       Object.assign(root.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' });
       document.body.appendChild(root);
       _renderShell(b0, skinId, pvpBgIdx);
       clickHandler = _onClick;
       root.addEventListener('click', clickHandler);
+      // Прямой listener на ники — bbBreath и pointer-events иногда мешают
+      // bubbling до root. Дублируем напрямую, чтобы карточка соперника
+      // в PvP открывалась гарантированно.
+      try {
+        const p1n = root.querySelector('#bb-p1n');
+        const p2n = root.querySelector('#bb-p2n');
+        if (p1n) p1n.addEventListener('click', e => {
+          e.stopPropagation();
+          if (typeof BotBattleCard !== 'undefined') BotBattleCard.show('me');
+        });
+        if (p2n) p2n.addEventListener('click', e => {
+          e.stopPropagation();
+          if (typeof BotBattleCard !== 'undefined') BotBattleCard.show('opp');
+        });
+      } catch(_) {}
     },
     update(b) {
       if (!mounted || !b || !root) return;
