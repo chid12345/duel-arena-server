@@ -95,10 +95,9 @@ Object.assign(MenuScene.prototype, {
         try { img.preFX?.addGlow(bc, 0.6, 0, false, 0.4, 3); } catch (_) {}
         ca(img);
       } else {
-        // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
-        // рисуем тот же векторный значок, что и в пустых слотах — визуально
-        // консистентно с остальным UI, на фоне рамки цвета редкости читается
-        // как «предмет надет, картинка подгружается».
+        // PNG ещё не пришёл (lazy-загрузка). Halo + векторный значок
+        // защищает от регрессии, когда картинка не пришла на медленной сети.
+        this._drawSlotHalo(c, cx, cy, slot, mkG);
         this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
         // Мягкий pulse (0.65↔1.0) — коммуницирует «идёт загрузка»,
         // без него переход emoji→PNG читался как «глитч».
@@ -114,7 +113,11 @@ Object.assign(MenuScene.prototype, {
       // Точка-индикатор удалена вместе с подложкой — без квадрата
       // ей не за что держаться, и редкость уже видна по цвету ауры.
     } else {
-      // Пустой слот — только векторный значок, без подсветки.
+      // Пустой слот — векторный значок + мягкий halo под ним.
+      // Без halo слот сливался с тёмным фоном профиля и читался как
+      // "белый пустой квадрат" (баг "Голова не показывает иконку").
+      // Halo не образует рамку — это просто свет под значком.
+      this._drawSlotHalo(c, cx, cy, slot, mkG);
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
     }
 
@@ -142,6 +145,17 @@ Object.assign(MenuScene.prototype, {
       }
     });
     c.add(zone);
+  },
+
+  // Мягкий двойной halo под иконкой слота — якорит её визуально, не
+  // образуя "рамки". Используется и в пустом слоте, и при fallback на
+  // векторный значок, когда PNG ещё не пришёл (race с lazy-загрузкой).
+  _drawSlotHalo(c, cx, cy, slot, mkG) {
+    const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
+    const g = mkG();
+    g.fillStyle(sg.c, 0.10); g.fillCircle(cx, cy - 2, 22);
+    g.fillStyle(sg.c, 0.06); g.fillCircle(cx, cy - 2, 32);
+    c.add(g);
   },
 
   _drawSlotIcon(c, cx, cy, slot, mkG, ca, small) {

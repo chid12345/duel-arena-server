@@ -1,15 +1,21 @@
 /* ============================================================
    TabProfilePremium — премиум-эффекты для иконки "Профиль":
    - размер 42 как у всех остальных табов
-   - белое свечение вместо cyan/золотого: лев бело-серебристый с
-     золотыми вставками, белый glow подсвечивает контур, а золотые
-     акценты остаются видными как контраст (а не сливаются с жёлтым)
-   - мягкий pulse 2с (yoyo): glow дышит 3↔6, alpha 0.85↔1.0
+   - тёплый золотой glow вместо белого: лев бело-серебристый с
+     золотыми вставками. Белый glow на белой шерсти "выжигал" детали
+     до белого блоба (баг "иконка не показывает картинку"). Золотой
+     glow подсвечивает контур, не съедая силуэт льва, и комплиментит
+     золотые акценты в самой иконке.
+   - мягкий pulse: glow дышит 1.4↔2.6, alpha 0.92↔1.0 — еле заметный,
+     чтобы не пересвечивать детали льва.
    Маленький модуль (Закон 1: не раздуваем tab_bar.js).
    ============================================================ */
 
 (function () {
-  const WHITE = 0xffffff;
+  // Тёплый золотой — гармонирует с золотыми акцентами на льве и
+  // не теряется на тёмной панели таббара. Белый (0xffffff) сюда не
+  // подходит: на серебристой шерсти он "глушит" контраст до белого.
+  const GOLD = 0xfde68a;
 
   window.TabProfilePremium = {
     apply(scene, btn, isActive) {
@@ -19,29 +25,31 @@
       // 1. Размер как у других табов — 42×42 (был 54, "выпирал").
       img.setDisplaySize(42, 42);
 
-      // 2. Заменяем cyan-glow из TabBar.build на белый. Один glow вместо
+      // 2. Заменяем cyan-glow из TabBar.build на золотой. Один glow вместо
       //    двух — раньше второй белый был лишним поверх золотого.
       try { if (btn.glowFx && img.preFX) img.preFX.remove(btn.glowFx); } catch (_) {}
       try {
-        btn.glowFx = img.preFX?.addGlow(WHITE, isActive ? 5 : 3, 0, false, 0.1, 18);
+        // outerStrength 2/1.4 + distance 14 = мягкий ободок вокруг льва.
+        // Раньше было 5/3 + 18 — съедало детали в белом ореоле.
+        btn.glowFx = img.preFX?.addGlow(GOLD, isActive ? 2 : 1.4, 0, false, 0.12, 14);
       } catch (_) {}
 
-      // 3. Pulse 2с — мягко дышит, не выжигает детали льва.
+      // 3. Pulse — мягко дышит, не выжигает детали льва.
       scene.tweens.killTweensOf(btn.glowFx);
       scene.tweens.killTweensOf(img);
-      img.setAlpha(0.9);
+      img.setAlpha(0.92);
       if (btn.glowFx) {
         scene.tweens.add({
           targets: btn.glowFx,
-          outerStrength: 6,
-          duration: 1000, ease: 'Sine.easeInOut',
+          outerStrength: isActive ? 2.6 : 1.9,
+          duration: 1100, ease: 'Sine.easeInOut',
           yoyo: true, repeat: -1,
         });
       }
       scene.tweens.add({
         targets: img,
         alpha: 1.0,
-        duration: 1000, ease: 'Sine.easeInOut',
+        duration: 1100, ease: 'Sine.easeInOut',
         yoyo: true, repeat: -1,
       });
     },
