@@ -196,35 +196,27 @@ Object.assign(MenuScene.prototype, {
       }, 200);
     }
 
-    document.getElementById('ws-btn').addEventListener('click', e => {
+    // Один клик, один результат: pointerdown — мгновенный блокер выше всего DOM
+    // (ловит touchend ДО того как Phaser таб-бар получит pointerup); затем
+    // click — применяем выбор и закрываем overlay. Без второго popup'а
+    // «✓ ПРИНЯТЬ» — два клика над таб-баром удваивали шанс на click-through.
+    const wsBtn = document.getElementById('ws-btn');
+    wsBtn.addEventListener('pointerdown', () => {
+      if (document.getElementById('ws-early-blocker')) return;
+      const g = document.createElement('div'); g.id = 'ws-early-blocker';
+      g.style.cssText = 'position:fixed;inset:0;z-index:10000;background:transparent;touch-action:none;';
+      document.body.appendChild(g);
+      ['click','pointerdown','pointerup','touchstart','touchend'].forEach(ev =>
+        g.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, true));
+      setTimeout(() => g.remove(), 1200);
+    });
+    wsBtn.addEventListener('click', e => {
       e.stopPropagation(); e.preventDefault();
       const d = _WS_DATA[curKey];
       const key = curKey, skin = curSkin;
       const sk = d.skins[skin];
-      // Показываем попап-подтверждение с описанием
-      const old = document.getElementById('ws-confirm');
-      if (old) old.remove();
-      const conf = document.createElement('div'); conf.id = 'ws-confirm';
-      const clrMap = {str:'#ff7733',agi:'#00ff88',crt:'#cc66ff'};
-      const btnBg = {
-        str:'background:linear-gradient(90deg,#8b1500,#ff5522,#8b1500);color:#fff;box-shadow:0 0 18px rgba(255,70,20,.5)',
-        agi:'background:linear-gradient(90deg,#004d1a,#00ff88,#004d1a);color:#001a0a;box-shadow:0 0 18px rgba(0,220,80,.45)',
-        crt:'background:linear-gradient(90deg,#3d0080,#cc44ff,#3d0080);color:#fff;box-shadow:0 0 18px rgba(180,50,255,.5)',
-      }[d.cls];
-      conf.innerHTML = `
-        <div class="ws-conf-name" style="color:${clrMap[d.cls]}">${sk.name}</div>
-        <div class="ws-conf-desc">${d.desc}</div>
-        <div class="ws-conf-btns">
-          <button class="ws-conf-cancel" id="ws-conf-cancel">✕ НАЗАД</button>
-          <button class="ws-conf-ok" id="ws-conf-ok" style="${btnBg}">✓ ПРИНЯТЬ</button>
-        </div>`;
-      document.getElementById('ws-panel').appendChild(conf);
-      document.getElementById('ws-conf-cancel').onclick = ev => { ev.stopPropagation(); conf.remove(); };
-      document.getElementById('ws-conf-ok').addEventListener('click', ev => {
-        ev.stopPropagation(); ev.preventDefault();
-        const encoded = skin > 0 ? `${key}_${skin}` : key;
-        fadeClose(() => scene._selectWarriorType(encoded, `${sk.name} (${d.label})`));
-      });
+      const encoded = skin > 0 ? `${key}_${skin}` : key;
+      fadeClose(() => scene._selectWarriorType(encoded, `${sk.name} (${d.label})`));
     });
 
     document.getElementById('ws-close').onclick = e => { e.stopPropagation(); fadeClose(); };
