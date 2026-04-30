@@ -161,11 +161,8 @@ const BotBattleHtml = (() => {
       } catch(_) {}
     },
     setTimer(s) {
-      if (!mounted || !elTimer) return;
-      const v = Math.max(0, s|0);
-      elTimer.textContent = String(v);
-      // Красный пульсирующий таймер при ≤5 сек.
-      elTimer.classList.toggle('danger', v > 0 && v <= 5);
+      if (!mounted) return;
+      if (typeof BotBattleHtmlFx !== 'undefined') BotBattleHtmlFx.timer(elTimer, s);
     },
     resetChoices() {
       selectedAttack = null; selectedDefense = null;
@@ -177,29 +174,11 @@ const BotBattleHtml = (() => {
     },
     dmgFx(side, amount, isCrit) {
       if (!mounted) return;
-      if (typeof BotBattleFx !== 'undefined') BotBattleFx.apply(side, amount, isCrit);
-      // Подсветка спрайта жертвы при крите.
-      if (isCrit && root) {
-        const sel = side === 'me' ? '#bb-p1' : '#bb-p2';
-        const el = root.querySelector(sel);
-        if (el) {
-          el.classList.remove('crit-hit');
-          void el.offsetWidth;
-          el.classList.add('crit-hit');
-          setTimeout(() => { try { el.classList.remove('crit-hit'); } catch(_) {} }, 360);
-        }
-      }
+      if (typeof BotBattleHtmlFx !== 'undefined') BotBattleHtmlFx.dmg(root, side, amount, isCrit);
     },
     dodgeFx(side) {
-      if (!mounted || !root) return;
-      const sel = side === 'me' ? '#bb-p1' : '#bb-p2';
-      const el = root.querySelector(sel);
-      if (!el) return;
-      const cls = side === 'me' ? 'dodge-left' : 'dodge-right';
-      el.classList.remove(cls);  // перезапуск если уже идёт
-      void el.offsetWidth;        // force reflow для рестарта animation
-      el.classList.add(cls);
-      setTimeout(() => { try { el.classList.remove(cls); } catch(_) {} }, 420);
+      if (!mounted) return;
+      if (typeof BotBattleHtmlFx !== 'undefined') BotBattleHtmlFx.dodge(root, side);
     },
     unmount() {
       if (!mounted) return;
