@@ -28,40 +28,36 @@
       // 1. Размер как у других табов — 42×42 (был 54, "выпирал").
       img.setDisplaySize(42, 42);
 
-      // 2. Графический диск-бэкдроп ВНУТРИ контейнера, ПОЗАДИ льва.
-      //    Это страховка от мобильного бага, когда сама картинка не
-      //    отрендерилась (preFX-комбинация роняла рендер на Android
-      //    Telegram WebView) — пользователь всё равно видит "премиум-диск"
-      //    и понимает, что это иконка Профиля.
+      // 2. Премиум-диск: золотой ободок + 2 концентрических круга. Кладём
+      //    ВНУТРИ контейнера. На ПК — лежит ПОД иконкой и работает как
+      //    тёплое сияние. На моб. Android WebView, где PNG льва иногда
+      //    роняется в "белый квадрат" из-за preFX-комбинации, — золотой
+      //    ободок выходит ЗА пределы 42×42 PNG и остаётся виден короной
+      //    вокруг квадрата. Игрок понимает, что это иконка Профиля.
       if (cont && !btn._premiumDisc) {
         const disc = scene.add.graphics();
-        disc.fillStyle(GOLD_DEEP, 0.18); disc.fillCircle(0, 0, 22);
-        disc.fillStyle(GOLD,      0.22); disc.fillCircle(0, 0, 16);
-        disc.fillStyle(GOLD,      0.10); disc.fillCircle(0, 0, 26);
-        // Container.addAt(child, 0) — кладём ПЕРВЫМ, чтобы лев был сверху.
+        // Внешний ободок (24px) — выходит за PNG (21px радиус). Видно
+        // даже когда центр закрыт белым квадратом.
+        disc.lineStyle(2, GOLD_DEEP, 0.85); disc.strokeCircle(0, 0, 24);
+        disc.lineStyle(1, GOLD,      0.55); disc.strokeCircle(0, 0, 27);
+        // Подложка-сияние под иконкой
+        disc.fillStyle(GOLD_DEEP, 0.20); disc.fillCircle(0, 0, 22);
+        disc.fillStyle(GOLD,      0.18); disc.fillCircle(0, 0, 16);
         try { cont.addAt(disc, 0); } catch(_) { cont.add(disc); }
         btn._premiumDisc = disc;
       }
 
-      // 3. Заменяем cyan-glow из TabBar.build на золотой (если preFX живой).
-      //    На моб. WebView если preFX упадёт — диск из шага 2 всё равно есть.
+      // 3. preFX-glow ОТКЛЮЧЁН: на Android Telegram WebView связка
+      //    "PNG + preFX.addGlow + tween" периодически рендерит спрайт
+      //    как белый квадрат. Это стабильный воспроизводимый баг
+      //    (повторялся через несколько итераций фиксов). Премиум-роль
+      //    исполняет графический диск из шага 2 — стабильно везде.
       try { if (btn.glowFx && img.preFX) img.preFX.remove(btn.glowFx); } catch (_) {}
-      try {
-        btn.glowFx = img.preFX?.addGlow(GOLD, isActive ? 2 : 1.4, 0, false, 0.12, 14);
-      } catch (_) {}
+      btn.glowFx = null;
 
-      // 4. Pulse — мягко дышит, не выжигает детали льва.
-      scene.tweens.killTweensOf(btn.glowFx);
+      // 4. Мягкий pulse alpha — еле заметный, без выгорания деталей.
       scene.tweens.killTweensOf(img);
       img.setAlpha(0.92);
-      if (btn.glowFx) {
-        scene.tweens.add({
-          targets: btn.glowFx,
-          outerStrength: isActive ? 2.6 : 1.9,
-          duration: 1100, ease: 'Sine.easeInOut',
-          yoyo: true, repeat: -1,
-        });
-      }
       scene.tweens.add({
         targets: img,
         alpha: 1.0,

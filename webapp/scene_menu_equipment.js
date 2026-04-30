@@ -81,9 +81,12 @@ Object.assign(MenuScene.prototype, {
         : (shieldTexKey && this.textures.exists(shieldTexKey)) ? shieldTexKey
         : (ringTexKey   && this.textures.exists(ringTexKey))   ? ringTexKey
         : null;
-      // Чистим чёрный фон у скинов один раз через canvas (аналог _removeDarkBg
-      // из оверлеев). Работает для PNG/JPG/JPEG — результат кэшируется в Phaser.
-      const imgKey = rawKey && typeof cleanEquipmentTexture === 'function'
+      // Шлем (belt): canvas-обработка cleanEquipmentTexture + preFX на Android
+      // Telegram WebView роняет шлем в "белый квадрат" (баг "на ПК есть, на телефоне
+      // нет"). Шлем-PNG уже с прозрачным фоном — чистка не нужна. preFX тоже
+      // отключаем, чтобы не повторять тот же сбой. Остальные слоты — без изменений.
+      const _skipClean = (slot === 'belt');
+      const imgKey = rawKey && !_skipClean && typeof cleanEquipmentTexture === 'function'
         ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
         // Halo ВСЕГДА под иконкой — на мобильном WebView preFX иногда
@@ -95,10 +98,13 @@ Object.assign(MenuScene.prototype, {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // Едва заметный rim — цветной кант еле виден, чтобы не съедал
-        // чёткость иконки. outerStrength 0.6 + distance 3 + quality 0.4
-        // = тонкий чёткий контур, без сияния.
-        try { img.preFX?.addGlow(bc, 0.6, 0, false, 0.4, 3); } catch (_) {}
+        // preFX-glow только для слотов БЕЗ известных проблем рендера на мобиле.
+        // Для шлема (belt) preFX выключен: историческая связка clean+preFX роняла
+        // картинку в "белый квадрат" на Android WebView. Halo сзади + чистый PNG
+        // выглядят корректно и стабильно.
+        if (slot !== 'belt') {
+          try { img.preFX?.addGlow(bc, 0.6, 0, false, 0.4, 3); } catch (_) {}
+        }
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Halo + векторный значок

@@ -140,16 +140,29 @@ Object.assign(MenuScene.prototype, {
       let resolvedAt = 0;
       const _resolveOnce = () => { if (resolvedAt) return; resolvedAt = Date.now(); resolve(); };
 
-      for (const [k, p] of todo) this.load.image(k, p);
-      this.load.once('complete', () => {
-        // В режиме fire-and-forget профиль уже построен с emoji-фолбэком —
-        // всегда перерисовываем с PNG. В режиме await профиль ещё не построен
-        // (_panels.profile = null) → _rebuildProfileAfterLazy() безопасно ничего не делает.
-        this._rebuildProfileAfterLazy();
-        _resolveOnce();
-      });
+      // Считаем готовность по индивидуальным filecomplete-событиям, а не
+      // по общему complete: если позже стартует _lazyLoadRestTextures()
+      // и докинет в очередь ~50МБ остальных PNG, общий complete ждал бы
+      // ВСЮ эту очередь — игрок видел "загрузку" минутами и обновлял
+      // страницу. С filecomplete мы дёргаем ребилд сразу, как пришли
+      // НАШИ 6 текстур, независимо от рестового хвоста.
+      const need = new Set(todo.map(([k]) => k));
+      const onFile = (key) => {
+        if (!need.has(key)) return;
+        need.delete(key);
+        if (need.size === 0) {
+          try { this.load.off('filecomplete', onFile); } catch(_) {}
+          this._rebuildProfileAfterLazy();
+          _resolveOnce();
+        }
+      };
+      this.load.on('filecomplete', onFile);
       this.load.on('loaderror', f => console.warn('[LazyEq] priority loaderror:', f?.key, f?.src));
-      this.load.start();
+
+      for (const [k, p] of todo) this.load.image(k, p);
+      // Старт лоадера, только если он сейчас не работает. Иначе Phaser
+      // докинет наши файлы в текущую очередь автоматически.
+      if (!this.load.isLoading()) this.load.start();
 
       // Fail-safe: 5с лимит. Лучше показать профиль с вектор-фолбэком,
       // чем держать игрока на «Загрузка…» при слабой/отвалившейся сети.
@@ -158,19 +171,25 @@ Object.assign(MenuScene.prototype, {
   },
 
   /* Фоновая догрузка остальных текстур (для Рюкзака/Equipment).
-     Запускается ПОСЛЕ показа профиля — не блокирует UI. */
+     Запускается ПОСЛЕ показа профиля — не блокирует UI.
+     ВАЖНО: запуск ОТЛОЖЕН на 1.5с, чтобы приоритетные 6 PNG (надетые)
+     успели дойти раньше — иначе на медленной сети Phaser-лоадер
+     обрабатывает очередь как одну общую партию (FIFO), и приоритет
+     "теряется" под весом ~90 остальных файлов. */
   _lazyLoadRestTextures() {
     if (this._lazyRestStarted) return;
     this._lazyRestStarted = true;
+    setTimeout(() => {
+      if (!this.scene?.isActive?.()) return;
+      const priorityKeys = this._getEquippedTextureKeys();
+      const todo = _LAZY_EQUIPMENT_ASSETS
+        .filter(([k]) => !priorityKeys.has(k) && !this.textures.exists(k));
+      if (!todo.length) return;
 
-    const priorityKeys = this._getEquippedTextureKeys();
-    const todo = _LAZY_EQUIPMENT_ASSETS
-      .filter(([k]) => !priorityKeys.has(k) && !this.textures.exists(k));
-    if (!todo.length) return;
-
-    this.load.on('loaderror', f => console.warn('[LazyEq] rest loaderror:', f?.key, f?.src));
-    for (const [k, p] of todo) this.load.image(k, p);
-    this.load.start();
+      this.load.on('loaderror', f => console.warn('[LazyEq] rest loaderror:', f?.key, f?.src));
+      for (const [k, p] of todo) this.load.image(k, p);
+      if (!this.load.isLoading()) this.load.start();
+    }, 1500);
   },
 
 });
