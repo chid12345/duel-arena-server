@@ -33,6 +33,9 @@ Object.assign(MenuScene.prototype, {
   },
 
   _switchTab(key) {
+    // Сброс scroll — без него после прокрутки в Профиле кнопка В БОЙ
+    // переключала таб, но новая панель уезжала вниз вне экрана.
+    try { this.cameras?.main?.setScroll?.(0, 0); } catch(_) {}
     Object.entries(this._panels).forEach(([k, c]) => {
       if (!c) return;
       const v = k === key;

@@ -252,14 +252,20 @@ Object.assign(MenuScene.prototype, {
 
   _tryBattle() {
     if (!this._requireWarrior?.('battle')) return;
-    // Защита: если battle-панель по какой-то причине не построилась
-    // (редкая гонка/exception при создании), нажатие "В БОЙ" приводило
-    // к "ничего не происходит" — _switchTab переключает active-метку,
-    // но видимая панель не появляется. Пересобираем на лету.
-    if (!this._panels?.battle && typeof this._buildBattlePanel === 'function') {
-      try { this._buildBattlePanel(); }
-      catch (e) { console.warn('[Battle] rebuild battle panel failed:', e); }
-    }
+    // Робастно: input мог застрять false после HTML-оверлея экипировки
+    // (если оверлей закрылся свайпом/back, не штатной кнопкой ✕), панель
+    // _panels.battle — null/destroyed после warrior_select rebuild, камера —
+    // прокручена (battle-панель уезжала вне экрана). Сброс + полная пересборка.
+    try { this.input.enabled = true; } catch(_) {}
+    try { this.cameras?.main?.setScroll?.(0, 0); } catch(_) {}
+    try {
+      if (this._panels?.battle) {
+        try { this.sys.displayList.remove(this._panels.battle); } catch(_) {}
+        try { this._panels.battle.destroy(true); } catch(_) {}
+        this._panels.battle = null;
+      }
+      if (typeof this._buildBattlePanel === 'function') this._buildBattlePanel();
+    } catch (e) { console.warn('[Battle] rebuild failed:', e); }
     this._switchTab('battle');
   },
 
