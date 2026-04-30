@@ -148,22 +148,18 @@ window.BUILD_VERSION = '__BUILD_VERSION__';
   </div>
 </div>
 <script>
-// Watchdog: если loading screen не убран — показываем ошибку с кнопкой.
-// 25с: Phaser + 13 PNG грузятся за ~5с на 3G, loader.timeout=12с на зависший файл.
-// Render cold start (до 60с на старте сервера) отдельно не блокирует UI —
-// cold start происходит уже в BootScene.create() после скрытия loading-screen.
+// Watchdog: если loading screen не убран за 90с — показываем ошибку.
+// Boot теперь грузит только 3 PNG воинов (~200 КБ) → старт ~5с даже на 3G.
+// Тяжёлые PNG экипировки (~50 МБ) подкачиваются ленив в MenuScene в фоне.
+// Запас 90с = Render cold start (до 60с) + медленный 3G + ~80 JS-файлов.
 setTimeout(function(){
   var ls = document.getElementById('loading-screen');
   var sub = document.getElementById('loading-sub');
-  if (!ls || !ls.parentNode) return; // уже убран — загрузка прошла успешно
-  if (sub) {
-    sub.innerHTML = '❌ Не удалось загрузить.<br>' +
-      '<button onclick="location.reload()" style="margin-top:12px;padding:8px 20px;' +
-      'background:#5096ff;color:#fff;border:none;border-radius:8px;font-size:14px;cursor:pointer;">' +
-      '🔄 Обновить</button>';
+  if (ls && ls.parentNode && sub) {
+    sub.textContent = '❌ Не удалось загрузить. Закройте и откройте заново.';
     sub.style.color = '#dc3c46';
   }
-}, 25000);
+}, 90000);
 </script>
 
 <!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
@@ -189,16 +185,12 @@ setTimeout(function(){
 <script defer src="dev_mode.js?v=__BUILD_VERSION__"></script>
 <!-- Глобальные константы, утилиты, State -->
 <script defer src="game_globals.js?v=__BUILD_VERSION__"></script>
-<script defer src="skin_prefetch.js?v=__BUILD_VERSION__"></script>
 <script defer src="item_detail_popup.js?v=__BUILD_VERSION__"></script>
 <!-- Boot сцена + Notif singleton -->
 <script defer src="bot_skin_picker.js?v=__BUILD_VERSION__"></script>
 <script defer src="bot_battle_log.js?v=__BUILD_VERSION__"></script>
 <script defer src="bot_battle_fx.js?v=__BUILD_VERSION__"></script>
-<script defer src="bot_battle_css.js?v=__BUILD_VERSION__"></script>
-<script defer src="bot_battle_html_fx.js?v=__BUILD_VERSION__"></script>
 <script defer src="bot_battle_html.js?v=__BUILD_VERSION__"></script>
-<script defer src="bot_battle_mode_banner.js?v=__BUILD_VERSION__"></script>
 <script defer src="bot_battle_card.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_boot.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_boot_warriors.js?v=__BUILD_VERSION__"></script>
@@ -320,6 +312,7 @@ setTimeout(function(){
 <script defer src="scene_world_boss_results.js?v=__BUILD_VERSION__"></script>
 <!-- Menu сцена -->
 <script defer src="scene_menu_tabicons.js?v=__BUILD_VERSION__"></script>
+<script defer src="tab_profile_premium.js?v=__BUILD_VERSION__"></script>
 <script defer src="tab_bar.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_menu.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_menu_ext1.js?v=__BUILD_VERSION__"></script>
@@ -341,8 +334,6 @@ setTimeout(function(){
 <script defer src="scene_equipment.js?v=__BUILD_VERSION__"></script>
 <!-- Warrior select overlay (после всех menu ext, чтобы MenuScene уже был определён) -->
 <script defer src="scene_warrior_select.js?v=__BUILD_VERSION__"></script>
-<!-- Guard: запрет входа в бой без выбранного воина (общий хелпер для 5 точек входа) -->
-<script defer src="menu_warrior_guard.js?v=__BUILD_VERSION__"></script>
 <!-- Guide сцена (справочник) -->
 <script defer src="scene_guide_data.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_guide.js?v=__BUILD_VERSION__"></script>
