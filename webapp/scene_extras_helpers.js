@@ -108,7 +108,10 @@ function _extraBg(scene, W, H) {
 function _extraBack(scene, dest = 'Menu', returnTab = 'more') {
   makeBackBtn(scene, 'Назад', () => {
     tg?.HapticFeedback?.impactOccurred('light');
-    scene.scene.start(dest, returnTab ? { returnTab } : undefined);
+    // ВАЖНО: всегда передаём явный объект ({}). Phaser 3 при scene.start без
+    // data сохраняет ПРЕДЫДУЩИЕ данные → старые флаги (openWardrobe и пр.)
+    // ломают навигацию на следующей сцене.
+    scene.scene.start(dest, returnTab ? { returnTab } : {});
   });
 }
 

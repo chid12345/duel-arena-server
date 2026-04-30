@@ -20,17 +20,6 @@ class MenuScene extends Phaser.Scene {
     this._tabBtns = {};
     this._activeTab = null;
 
-    // Анти-эксплойт: если игрок открыл Menu, но на сервере он сейчас в активном
-    // бою (рейд/PvP/натиск/башня) — сразу возвращаем в нужную сцену.
-    // Не даёт «пройти» в меню после refresh во время боя.
-    try {
-      const sess = await post('/api/player/active_session', {});
-      if (sess?.ok && sess.scene && sess.scene !== 'Menu') {
-        this.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : undefined);
-        return;
-      }
-    } catch(_) {}
-
     // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок,
     // если shutdown() не успел их закрыть (гонка, exception).
     try { window._closeAllTabOverlays?.(); } catch(_) {}
@@ -42,6 +31,19 @@ class MenuScene extends Phaser.Scene {
     // _panels пуст → _switchTab безопасно пройдёт пустым циклом.
     this._activeTab = this._returnTab || 'profile';
     this._buildTabBar();
+
+    // Анти-эксплойт: если игрок открыл Menu, но на сервере он сейчас в активном
+    // бою (рейд/PvP/натиск/башня) — сразу возвращаем в нужную сцену.
+    // ВАЖНО: fire-and-forget ПОСЛЕ _buildTabBar — иначе при медленной сети
+    // экран = чёрное небо без навигации до ответа /active_session.
+    // Передаём ВСЕГДА {} (никогда undefined): Phaser 3 при scene.start без
+    // data сохраняет ПРЕДЫДУЩИЕ данные → утечка флагов.
+    post('/api/player/active_session', {}).then(sess => {
+      if (!this.scene?.isActive('Menu')) return;
+      if (sess?.ok && sess.scene && sess.scene !== 'Menu') {
+        this.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : {});
+      }
+    }).catch(() => {});
     // Индикатор загрузки — пока _loadPlayer ждёт ответа сервера, игрок видит
     // «⏳ Загрузка…» вместо пустого неба. Убираем в _loadPlayer перед панелями.
     this._loadingTxt = txt(this, W / 2, H / 2, '⏳ Загрузка…', 16, '#aaaaff', true).setOrigin(0.5);

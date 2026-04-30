@@ -80,7 +80,7 @@ function openNoClan(scene) {
     const el = e.target.closest('[data-act],[data-sub]');
     if (!el) return;
     try { tg?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
-    if (el.dataset.act === 'back') { close(); scene.scene.start('Menu', { target: 'more' }); return; }
+    if (el.dataset.act === 'back') { close(); scene.scene.start('Menu', { returnTab: 'more' }); return; }
     const sub = el.dataset.sub;
     if (sub) scene.scene.restart({ sub });
   });

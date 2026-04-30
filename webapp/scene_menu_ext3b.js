@@ -107,6 +107,12 @@ Object.assign(MenuScene.prototype, {
     this._dailyBonusOverlay = null;
     this._liveHp = null;
     this._verTxt = null;
+    // Сброс throttle-флагов: Phaser переиспользует scene-инстанс между
+    // scene.start. Без сброса повисший _profileBuffsBusy=true (например
+    // после оборванной сети) после возврата в Меню молча скипал бы
+    // _loadProfileBuffs — UI Профиля «застывал» бы на старых данных.
+    this._profileBuffsBusy = false;
+    this._profileBuffsAt = 0;
     // _tbScrollOn сбрасываем: Phaser на shutdown очищает input-listeners,
     // флаг без сброса заблокировал бы повторное навешивание скролла.
     this._tbScrollOn = false;

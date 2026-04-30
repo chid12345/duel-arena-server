@@ -266,7 +266,7 @@ function openMyClan(scene, data) {
     if (!el) return;
     const act = el.dataset.act;
     try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
-    if (act === 'back')      { close(); scene.scene.start('Menu', { target: 'more' }); return; }
+    if (act === 'back')      { close(); scene.scene.start('Menu', { returnTab: 'more' }); return; }
     if (act === 'members')   { _showMembersPanel(members, isLeader, scene); return; }
     if (act === 'nav')       { scene.scene.restart({ sub: el.dataset.sub }); return; }
     if (act === 'chat')      { scene.scene.restart({ sub: 'chat' }); return; }
