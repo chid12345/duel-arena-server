@@ -64,6 +64,11 @@ const State = {
   avatarId: (() => { try { return parseInt(localStorage.getItem('da_avatar') || '3', 10); } catch(_) { return 3; } })(),
   wardrobeEquipped: (() => { try { const s = localStorage.getItem('da_wardrobe_eq'); return s ? JSON.parse(s) : null; } catch(_) { return null; } })(),
 };
+// КРИТИЧНО: const-State не появляется на window. Без этого все файлы
+// что читают window.State.* (bot_battle_html, bot_battle_card, _pSkin
+// и др.) получают undefined → дефолтный скин, дефолтное имя, дефолтный
+// HP. Привязываем явно — все window.State.X начинают работать.
+try { window.State = State; } catch(_) {}
 
 /* Сохраняет экипированную броню в State + localStorage */
 function setWardrobeEquipped(v) {

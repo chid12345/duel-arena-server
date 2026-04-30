@@ -300,10 +300,13 @@ if (typeof document !== 'undefined') {
       zIndex: '999', pointerEvents: 'none',
     });
     document.body.appendChild(d);
+    // Обновляем редко (3с) — на каждый кадр phaser'у не до бейджа.
+    // State объявлен через const на global scope — на window его нет, читаем напрямую.
     setInterval(() => {
-      const wt = (window.State && window.State.player && window.State.player.warrior_type) || '?';
+      let wt = '?';
+      try { if (typeof State !== 'undefined' && State.player) wt = State.player.warrior_type || '?'; } catch(_) {}
       d.textContent = 'v' + v + ' | wt:' + wt;
-    }, 800);
+    }, 3000);
   };
   if (document.body) make();
   else document.addEventListener('DOMContentLoaded', make, {once: true});

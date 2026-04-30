@@ -177,25 +177,22 @@ Object.assign(MenuScene.prototype, {
     document.getElementById('ws-next').onclick = () => { if (curSkin < 2) { curSkin++; render(); } };
 
     function fadeClose(cb) {
+      // Блокер ставим МГНОВЕННО — z-index выше overlay (9100), выше всего DOM.
+      // Любые pointerup/touchend в ближайшие 700ms попадают в блокер,
+      // не доходят до Phaser-канваса под ним. Фикс click-through на 100%.
+      const g = document.createElement('div');
+      g.style.cssText = 'position:fixed;inset:0;z-index:10000;background:transparent;touch-action:none;';
+      document.body.appendChild(g);
+      // Дополнительно глушим события на блокере — на всякий случай.
+      ['click','pointerdown','pointerup','touchstart','touchend'].forEach(ev =>
+        g.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, true));
+
       el.style.transition = 'opacity 0.18s';
       el.style.opacity = '0';
-      // Канвас УЖЕ pointerEvents:none из _openWarriorSelect — НЕ восстанавливаем
-      // его в _closeWarriorSelect, держим выключенным до снятия блокера.
-      // overlay не глушим (DOM сам поглощает клики во время fade).
       setTimeout(() => {
-        // Блокер ставим ПЕРЕД удалением overlay → нет щели для click-through.
-        const g = document.createElement('div');
-        g.style.cssText = 'position:fixed;inset:0;z-index:9200;background:transparent;';
-        document.body.appendChild(g);
         scene._closeWarriorSelect();
         if (cb) cb();
-        // Через 700ms убираем блокер И возвращаем канвасу обычный pointer-events.
-        // 700ms = запас под медленные мобильные таймеры/тач-задержки.
-        setTimeout(() => {
-          g.remove();
-          const cv = document.querySelector('canvas');
-          if (cv) cv.style.pointerEvents = '';
-        }, 700);
+        setTimeout(() => g.remove(), 500);
       }, 200);
     }
 
@@ -245,17 +242,8 @@ Object.assign(MenuScene.prototype, {
     const el = document.getElementById('ws-overlay');
     if (el) el.remove();
     document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
-    // canvas pointer-events НЕ восстанавливаем здесь: fadeClose держит его
-    // выключенным до снятия блокера (700ms), иначе хвостовой touchend
-    // протекает в нижний таб-бар и кидает игрока в Босс/Героя/Рейтинг.
-    // Если оверлей закрылся БЕЗ fadeClose (теоретически невозможно, но safety
-    // net) — восстановим через 700ms.
-    setTimeout(() => {
-      if (!document.getElementById('ws-overlay')) {
-        const cv = document.querySelector('canvas');
-        if (cv && cv.style.pointerEvents === 'none') cv.style.pointerEvents = '';
-      }
-    }, 700);
+    const cv = document.querySelector('canvas');
+    if (cv) cv.style.pointerEvents = '';
   },
 
   _tryBattle() {

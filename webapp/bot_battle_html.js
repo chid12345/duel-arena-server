@@ -76,8 +76,14 @@ const BotBattleHtml = (() => {
     document.head.appendChild(s);
   }
 
+  // State объявлен через const в game_globals — НЕТ на window. Читаем напрямую.
+  const _pWt = () => {
+    try { if (typeof State !== 'undefined' && State.player) return State.player.warrior_type; } catch(_) {}
+    try { return window.State?.player?.warrior_type; } catch(_) {}
+    return null;
+  };
   const _pSkin = () => (typeof getWarriorSkinPath === 'function')
-    ? getWarriorSkinPath(window.State?.player?.warrior_type)
+    ? getWarriorSkinPath(_pWt())
     : 'skins/crit/1.png';
 
   function _renderShell(b, skinId) {
