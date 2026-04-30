@@ -17,7 +17,7 @@ const BotBattleCss = (() => {
     #bb-root .hp-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.7);overflow:hidden;margin-top:3px;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
     #bb-root .hp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#00ffe0,#5fb8ff);box-shadow:0 0 10px #00d8ff,inset 0 0 6px rgba(255,255,255,.4);transition:width .5s ease;}
     #bb-root .hp-block.opp .hp-fill{background:linear-gradient(90deg,#ff0070,#ff5fa0);box-shadow:0 0 10px #ff0070,inset 0 0 6px rgba(255,255,255,.4);}
-    #bb-root .timer{position:absolute;top:118px;right:14px;font-size:14px;font-family:"Consolas",monospace;color:#fff;z-index:9;pointer-events:none;background:rgba(2,5,18,.6);padding:1px 6px;border-radius:4px;border:1px solid rgba(0,216,255,.3);transition:color .15s,border-color .15s,background .15s;}
+    #bb-root .timer{position:absolute;top:112px;right:14px;font-size:14px;font-family:"Consolas",monospace;color:#fff;z-index:9;pointer-events:none;background:rgba(2,5,18,.6);padding:1px 6px;border-radius:4px;border:1px solid rgba(0,216,255,.3);transition:color .15s,border-color .15s,background .15s;}
     #bb-root .timer.danger{color:#ff4455;border-color:rgba(255,68,85,.7);background:rgba(40,5,12,.85);animation:bbTimerPulse 1s ease-in-out infinite;}
     @keyframes bbTimerPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 transparent}50%{transform:scale(1.18);box-shadow:0 0 12px rgba(255,68,85,.8)}}
     #bb-root .hp-rating{display:block;font-weight:600;opacity:.75;font-size:8.5px;margin-top:1px;color:#ffc83c;text-shadow:0 0 5px rgba(255,200,60,.5);letter-spacing:.6px;font-family:"Consolas",monospace;}
