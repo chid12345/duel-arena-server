@@ -108,9 +108,6 @@ Object.assign(MenuScene.prototype, {
     }
     const _canvas = document.querySelector('canvas');
     if (_canvas) _canvas.style.pointerEvents = 'none';
-    // Глушим Phaser-input на время оверлея: иначе при fade-close DOM
-    // тап «протекает» в нижний таб-бар и кидает игрока в Босс/Героя/Рейтинг.
-    try { if (this.input) this.input.enabled = false; } catch(_e) {}
 
     const curType = State.player?.warrior_type || 'tank';
     const el = document.createElement('div'); el.id = 'ws-overlay';
@@ -182,15 +179,16 @@ Object.assign(MenuScene.prototype, {
     function fadeClose(cb) {
       el.style.transition = 'opacity 0.18s';
       el.style.opacity = '0';
-      el.style.pointerEvents = 'none';
+      // НЕ ставим pointerEvents:none на overlay — иначе клики проваливаются
+      // в Phaser таб-бар во время fade и кидают игрока в Босс/Героя.
+      // overlay сам поглощает клики, пока DOM ещё на странице.
       setTimeout(() => {
-        scene._closeWarriorSelect();
-        // Невидимый блокер: поглощает "хвостовые" клики 400ms
-        // чтобы они не пробились в Phaser нижнюю панель
+        // Блокер мощно цепляем ПЕРЕД удалением overlay — нет щели для клика.
         const g = document.createElement('div');
-        g.style.cssText = 'position:fixed;inset:0;z-index:5000;';
+        g.style.cssText = 'position:fixed;inset:0;z-index:9200;background:transparent;';
         document.body.appendChild(g);
-        setTimeout(() => g.remove(), 400);
+        scene._closeWarriorSelect();
+        setTimeout(() => g.remove(), 500);
         if (cb) cb();
       }, 200);
     }
@@ -243,7 +241,6 @@ Object.assign(MenuScene.prototype, {
     document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
     const cv = document.querySelector('canvas');
     if (cv) cv.style.pointerEvents = '';
-    try { if (this.input) this.input.enabled = true; } catch(_e) {}
   },
 
   _tryBattle() {
