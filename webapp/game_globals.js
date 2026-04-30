@@ -211,6 +211,17 @@ function getWarriorKey(type) {
   return (keys[base] || keys.tank)[Math.min(idx, 2)] || 'warrior_tank';
 }
 
+/* URL PNG-скина воина для HTML-оверлеев (бой с ботом, попап карточки).
+   type='tank'→skins/sila/1.png, 'tank_1'→skins/sila/2.png, 'crit_2'→skins/crit/3.png */
+function getWarriorSkinPath(type) {
+  const parts = String(type || 'tank').split('_');
+  const base  = parts[0];
+  const idx   = parts.length > 1 ? (parseInt(parts[1]) || 0) : 0;
+  const folders = { tank: 'sila', agile: 'agility', crit: 'crit' };
+  const folder = folders[base] || 'sila';
+  return `skins/${folder}/${Math.min(idx, 2) + 1}.png`;
+}
+
 /* PNG-скин воина для главного экрана */
 function getWarriorDisplayKey(type) {
   if (type === 'tank')  return 'warrior_tank_png';

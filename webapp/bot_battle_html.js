@@ -76,7 +76,9 @@ const BotBattleHtml = (() => {
     document.head.appendChild(s);
   }
 
-  const _pkey = () => { const t=(window.State?.player?.warrior_type||'crit')+''; return ['tank','agile','crit'].includes(t)?`warrior_${t}`:'warrior_crit'; };
+  const _pSkin = () => (typeof getWarriorSkinPath === 'function')
+    ? getWarriorSkinPath(window.State?.player?.warrior_type)
+    : 'skins/crit/1.png';
 
   function _renderShell(b, skinId) {
     const ext = skinId <= 25 ? 'png' : 'jpg';
@@ -106,7 +108,7 @@ const BotBattleHtml = (() => {
           <div class="hp-num" id="bb-p2h">${oppHp} / ${oppMaxHp}</div></div>
       </div>
       <div class="timer" id="bb-timer">15</div>
-      <div class="fighter player" id="bb-p1">${skinId ? `<img src="warriors/${_pkey()}.png">` : ''}<div class="shadow"></div></div>
+      <div class="fighter player" id="bb-p1">${skinId ? `<img src="${_pSkin()}">` : ''}<div class="shadow"></div></div>
       <div class="vs">VS</div>
       <div class="fighter boss" id="bb-p2">${skinId ? `<img src="${skinUrl}"${flipBoss ? '' : ' style="transform:scaleX(-1)"'}>` : ''}<div class="shadow"></div></div>
       <div class="col atk-col"><div class="col-lbl">АТАКА</div>${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div>
