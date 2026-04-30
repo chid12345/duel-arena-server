@@ -66,6 +66,10 @@ class BattlesPvpChallengesMixin:
 
     def get_outgoing_pvp_challenges(self, challenger_id: int, limit: int = 10) -> List[Dict]:
         now_ts = int(time.time())
+        # Окно «недавние» — последние 24 часа (для завершённых статусов).
+        # pending показываем всегда. Дедуп по target_id — берём последний вызов
+        # каждого соперника, чтобы не было «5 строк @flykiller · принят».
+        recent_ts = now_ts - 24 * 3600
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -77,8 +81,13 @@ class BattlesPvpChallengesMixin:
                 "SELECT c.id, c.target_id, c.status, c.expires_at, c.created_at, "
                 "p.username AS target_username, p.level AS target_level, p.rating AS target_rating "
                 "FROM pvp_challenges c JOIN players p ON p.user_id = c.target_id "
-                "WHERE c.challenger_id = ? ORDER BY c.created_at DESC LIMIT ?",
-                (challenger_id, int(limit)),
+                "WHERE c.challenger_id = ? "
+                "  AND (c.status = 'pending' OR c.created_at >= ?) "
+                "  AND c.id IN ("
+                "    SELECT MAX(id) FROM pvp_challenges WHERE challenger_id = ? GROUP BY target_id"
+                "  ) "
+                "ORDER BY c.created_at DESC LIMIT ?",
+                (challenger_id, recent_ts, challenger_id, int(limit)),
             )
             rows = [dict(r) for r in cursor.fetchall()]
             conn.commit()
