@@ -86,6 +86,12 @@ Object.assign(MenuScene.prototype, {
       const imgKey = rawKey && typeof cleanEquipmentTexture === 'function'
         ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
+        // Halo ВСЕГДА под иконкой — на мобильном WebView preFX иногда
+        // роняет сам спрайт в "белый квадрат" (баг "на ПК есть, на телефоне
+        // нет"). Halo рисуется через Graphics и виден независимо от того,
+        // пережил ли спрайт мобильный рендер. На ПК он мягким слоем
+        // подчёркивает редкость предмета — не мешает.
+        this._drawSlotHalo(c, cx, cy, slot, mkG, bc);
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
@@ -147,14 +153,20 @@ Object.assign(MenuScene.prototype, {
     c.add(zone);
   },
 
-  // Мягкий двойной halo под иконкой слота — якорит её визуально, не
-  // образуя "рамки". Используется и в пустом слоте, и при fallback на
-  // векторный значок, когда PNG ещё не пришёл (race с lazy-загрузкой).
-  _drawSlotHalo(c, cx, cy, slot, mkG) {
+  // Мягкий тройной halo под иконкой слота — якорит её визуально, не
+  // образуя "рамки". Используется и в пустом слоте, и под filled-иконкой,
+  // и при fallback на векторный значок (race с lazy-загрузкой).
+  // colorOverride — для filled-слотов передаём цвет редкости предмета,
+  // чтобы halo подсвечивал, кто там надет (mythic/epic/rare).
+  _drawSlotHalo(c, cx, cy, slot, mkG, colorOverride) {
     const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
+    const col = (typeof colorOverride === 'number') ? colorOverride : sg.c;
     const g = mkG();
-    g.fillStyle(sg.c, 0.10); g.fillCircle(cx, cy - 2, 22);
-    g.fillStyle(sg.c, 0.06); g.fillCircle(cx, cy - 2, 32);
+    // Чуть плотнее чем было (0.18/0.12/0.07) — на мобильных тёмных экранах
+    // 0.10/0.06 терялось. Это не «рамка» — мягкий свет под предметом.
+    g.fillStyle(col, 0.18); g.fillCircle(cx, cy - 2, 18);
+    g.fillStyle(col, 0.12); g.fillCircle(cx, cy - 2, 26);
+    g.fillStyle(col, 0.07); g.fillCircle(cx, cy - 2, 34);
     c.add(g);
   },
 
