@@ -107,7 +107,7 @@ function open(scene) {
             <div class="bs-emo">📨</div>
             <div class="bs-tx">
               <div class="bs-name">Мои вызовы</div>
-              <div class="bs-sub">Входящие · исходящие</div>
+              <div class="bs-sub">Исходящие вызовы</div>
             </div>
           </div>
         </div>
@@ -140,7 +140,11 @@ function open(scene) {
     try {
       if (act === 'pvp')        scene._onFight?.();
       else if (act === 'tower') scene._onTitanFight?.();
-      else if (act === 'natisk')scene.scene.start('Natisk', {});
+      else if (act === 'natisk') {
+        const sp = (typeof State !== 'undefined' && State.player) ? State.player : {};
+        if ((sp.hp_pct || 0) < 15) { scene._toast?.('❤️ Нужно восстановить HP!'); return; }
+        scene.scene.start('Natisk', {});
+      }
       else if (act === 'bot')   scene._onBotFight?.();
       else if (act === 'challenge') scene._onChallengeByNick?.();
       else if (act === 'incoming')  scene._showOutgoingChallenges?.();

@@ -113,6 +113,7 @@ Object.assign(MenuScene.prototype, {
     // _loadProfileBuffs — UI Профиля «застывал» бы на старых данных.
     this._profileBuffsBusy = false;
     this._profileBuffsAt = 0;
+    this._dailyClaimBusy = false;
     // _tbScrollOn сбрасываем: Phaser на shutdown очищает input-listeners,
     // флаг без сброса заблокировал бы повторное навешивание скролла.
     this._tbScrollOn = false;

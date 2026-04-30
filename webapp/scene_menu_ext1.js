@@ -114,7 +114,7 @@ Object.assign(MenuScene.prototype, {
     // ── 2 малые кнопки в ряд ──
     const BW = (W - PAD * 2 - GAP) / 2;
     const smLeft  = this._makeSmBtn(PAD,            curY, BW, smH, 0xffc83c, '#ffdca0', '🎯', 'Вызов по нику', 'PvP дуэль',       () => this._onChallengeByNick());
-    const smRight = this._makeSmBtn(PAD + BW + GAP, curY, BW, smH, 0x5096ff, '#b8d4ff', '📨', 'Мои вызовы',    'Входящие вызовы', () => this._showOutgoingChallenges());
+    const smRight = this._makeSmBtn(PAD + BW + GAP, curY, BW, smH, 0x5096ff, '#b8d4ff', '📨', 'Мои вызовы',    'Исходящие вызовы', () => this._showOutgoingChallenges());
     this._challengesBtnPos = { x: PAD + BW + GAP, y: curY, w: BW, h: smH };
     curY += smH + GAP;
 
