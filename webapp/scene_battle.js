@@ -167,12 +167,9 @@ class BattleScene extends Phaser.Scene {
       document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
     } catch(_) {}
 
-    // PvE-бой (Бой с ботом / Натиск / Башня Титанов) → один и тот же
-    // HTML-overlay. Режим (волна / этаж) рисуется в баннере поверх.
-    // PvP остаётся на обычном Phaser-пути.
-    const _b0 = State.battle;
-    const _isPveBot = !!_b0?.opp_is_bot;
-    if (_isPveBot && typeof BotBattleHtml !== 'undefined') {
+    // ВСЕ бои (PvE-бот / Натиск / Башня / PvP-поиск / Вызов по нику) идут
+    // через единый HTML-overlay. Phaser-путь оставлен только как fallback.
+    if (typeof BotBattleHtml !== 'undefined') {
       this._htmlMode = true;
       BotBattleHtml.mount(this);
       this._setupWSBattle();

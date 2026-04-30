@@ -43,6 +43,8 @@ const BotBattleHtml = (() => {
       @keyframes bbVsPulse{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.1)}}
       @keyframes bbBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.025)}}
       #bb-root .boss > img{animation:bbBreath 3.4s ease-in-out infinite;}
+      @keyframes bbBreathFlip{0%,100%{transform:scaleX(-1) scale(1)}50%{transform:scaleX(-1) scale(1.025)}}
+      #bb-root .boss.flip > img{animation:bbBreathFlip 3.4s ease-in-out infinite;}
       #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:10px;z-index:9;}
       #bb-root .atk-col{left:4px;bottom:11%;}
       #bb-root .def-col{right:4px;bottom:11%;}
@@ -86,11 +88,17 @@ const BotBattleHtml = (() => {
     ? getWarriorSkinPath(_pWt())
     : 'skins/crit/1.png';
 
-  function _renderShell(b, skinId) {
+  function _renderShell(b, skinId, pvpBgIdx) {
+    // PvP (соперник-человек): фон — рандомный из pvp_bg/1..5,
+    // спрайт соперника — getWarriorSkinPath по его warrior_type.
+    // PvE-бот: фон + скин из bot_skins/ (как было).
+    const isPvp = !b.opp_is_bot;
     const ext = skinId <= 25 ? 'png' : 'jpg';
-    const bgUrl = skinId ? `bot_skins/bg/${skinId}.${ext}` : '';
-    const skinUrl = skinId ? `bot_skins/${skinId}.png` : '';
-    const flipBoss = skinId && typeof BotSkinPicker !== 'undefined' && BotSkinPicker.shouldFlip(skinId);
+    const bgUrl = isPvp ? `pvp_bg/${pvpBgIdx || 1}.png` : (skinId ? `bot_skins/bg/${skinId}.${ext}` : '');
+    const skinUrl = isPvp
+      ? ((typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(b.opp_warrior_type || 'tank') : 'skins/sila/1.png')
+      : (skinId ? `bot_skins/${skinId}.png` : '');
+    const flipBoss = isPvp ? false : (skinId && typeof BotSkinPicker !== 'undefined' && BotSkinPicker.shouldFlip(skinId));
     const meName = String(window.State?.player?.username || 'Вы').toUpperCase();
     const oppName = String(b.opp_name || 'Соперник').toUpperCase();
     const ic = k => k === 'HEAD' ? 'head' : k === 'TORSO' ? 'torso' : 'legs';
@@ -114,9 +122,9 @@ const BotBattleHtml = (() => {
           <div class="hp-num" id="bb-p2h">${oppHp} / ${oppMaxHp}</div></div>
       </div>
       <div class="timer" id="bb-timer">15</div>
-      <div class="fighter player" id="bb-p1">${skinId ? `<img src="${_pSkin()}">` : ''}<div class="shadow"></div></div>
+      <div class="fighter player" id="bb-p1"><img src="${_pSkin()}"><div class="shadow"></div></div>
       <div class="vs">VS</div>
-      <div class="fighter boss" id="bb-p2">${skinId ? `<img src="${skinUrl}"${flipBoss ? '' : ' style="transform:scaleX(-1)"'}>` : ''}<div class="shadow"></div></div>
+      <div class="fighter boss${isPvp ? ' flip' : ''}" id="bb-p2">${skinUrl ? `<img src="${skinUrl}"${flipBoss ? '' : ' style="transform:scaleX(-1)"'}>` : ''}<div class="shadow"></div></div>
       <div class="col atk-col"><div class="col-lbl">АТАКА</div>${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div>
       <div class="col def-col"><div class="col-lbl">ЗАЩИТА</div>${['HEAD','TORSO','LEGS'].map(k => btn('def', k)).join('')}</div>
       <div class="action-row"><div class="auto-btn" id="bb-auto" title="Случайный ход">🎲</div><div class="confirm-btn" id="bb-confirm">⚔ Совершить ход</div></div>
@@ -168,16 +176,21 @@ const BotBattleHtml = (() => {
       // Страховка: убираем зависший #bb-root от предыдущего боя (если unmount не отработал чисто)
       try { const old = document.getElementById('bb-root'); if (old) old.remove(); } catch(_) {}
       scene = s; mounted = true; _injectCss();
-      // Приоритет: уже выбранный → opp_skin_id с сервера → случайный
-      const skinId = s._currentBotSkinId
-        || window.State?.battle?.opp_skin_id
-        || (typeof BotSkinPicker !== 'undefined' ? BotSkinPicker.pick() : null);
+      const b0 = window.State?.battle || {};
+      const isPvp = !b0.opp_is_bot;
+      // PvE-бот: skin_id с сервера → случайный из 31 бот-скина.
+      // PvP: skin_id не нужен (спрайт = warrior_type соперника), фон — рандом из 5.
+      const skinId = isPvp ? null : (s._currentBotSkinId
+        || b0.opp_skin_id
+        || (typeof BotSkinPicker !== 'undefined' ? BotSkinPicker.pick() : null));
       s._currentBotSkinId = skinId;
+      const pvpBgIdx = isPvp ? (s._currentPvpBgIdx || (1 + Math.floor(Math.random() * 5))) : 0;
+      s._currentPvpBgIdx = pvpBgIdx;
       root = document.createElement('div'); root.id = 'bb-root';
       const r = s.game.canvas.getBoundingClientRect();
       Object.assign(root.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' });
       document.body.appendChild(root);
-      _renderShell(window.State?.battle || {}, skinId);
+      _renderShell(b0, skinId, pvpBgIdx);
       clickHandler = _onClick;
       root.addEventListener('click', clickHandler);
     },

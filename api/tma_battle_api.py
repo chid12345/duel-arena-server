@@ -141,6 +141,7 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "opp_eq": opp_eq,
         "opp_items": opp_items,
         "opp_skin_id": opp_skin_id,
+        "opp_warrior_type": (opp_entity.get("warrior_type") if opp_entity else None) or "tank",
         "opp_win_streak": opp_win_streak,
         "my_items": my_items,
         "pending_attack": ctx.get("pending_attack"),
