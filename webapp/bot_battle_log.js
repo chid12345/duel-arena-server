@@ -18,7 +18,7 @@ const BotBattleLog = (() => {
     const s = document.createElement('style');
     s.id = 'bb-log-css';
     s.textContent = `
-      #bb-root .blog{position:absolute;left:8px;right:8px;top:62px;z-index:9;background:rgba(2,5,18,.62);border:1px solid rgba(255,255,255,.08);border-radius:5px;height:34px;overflow:hidden;font-family:"Consolas",monospace;font-size:9.5px;pointer-events:none;}
+      #bb-root .blog{position:absolute;left:8px;right:8px;top:78px;z-index:9;background:rgba(2,5,18,.62);border:1px solid rgba(255,255,255,.08);border-radius:5px;height:34px;overflow:hidden;font-family:"Consolas",monospace;font-size:9.5px;pointer-events:none;}
       #bb-root .blog .stack{display:flex;flex-direction:column;}
       #bb-root .blog .line{display:flex;align-items:center;padding:1px 9px;height:17px;line-height:15px;border-bottom:1px solid rgba(255,255,255,.04);white-space:nowrap;}
       #bb-root .blog .line.old{opacity:.55;}
