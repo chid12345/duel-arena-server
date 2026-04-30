@@ -36,6 +36,10 @@ const BotBattleHtml = (() => {
     const flipBoss = isPvp ? false : (skinId && typeof BotSkinPicker !== 'undefined' && BotSkinPicker.shouldFlip(skinId));
     const meName = String(window.State?.player?.username || 'Вы').toUpperCase();
     const oppName = String(b.opp_name || 'Соперник').toUpperCase();
+    const myRating  = window.State?.player?.rating || 0;
+    const oppRating = b.opp_rating || 0;
+    const myRatingHtml  = myRating  > 0 ? `<span class="hp-rating">★ ${myRating}</span>`  : '';
+    const oppRatingHtml = oppRating > 0 ? `<span class="hp-rating">★ ${oppRating}</span>` : '';
     const ic = k => k === 'HEAD' ? 'head' : k === 'TORSO' ? 'torso' : 'legs';
     const nm = k => k === 'HEAD' ? 'Голова' : k === 'TORSO' ? 'Тело' : 'Ноги';
     const btn = (s, k) => `<div class="ic-btn" data-side="${s}" data-key="${k}"><div class="halo"></div><img src="battle_icons/${ic(k)}.png"><div class="nm">${nm(k)}</div></div>`;
@@ -49,10 +53,10 @@ const BotBattleHtml = (() => {
     root.innerHTML = `
       <div class="bg" style="background-image:url('${bgUrl}')"></div>
       <div class="hp-row">
-        <div class="hp-block"><div class="hp-name" id="bb-p1n" style="cursor:pointer">${meName}</div>
+        <div class="hp-block"><div class="hp-name" id="bb-p1n" style="cursor:pointer">${meName}${myRatingHtml}</div>
           <div class="hp-bar"><div class="hp-fill" id="bb-p1b" style="width:${myPct}%"></div></div>
           <div class="hp-num" id="bb-p1h">${myHp} / ${myMaxHp}</div></div>
-        <div class="hp-block opp"><div class="hp-name" id="bb-p2n" style="cursor:pointer">${oppName}</div>
+        <div class="hp-block opp"><div class="hp-name" id="bb-p2n" style="cursor:pointer">${oppName}${oppRatingHtml}</div>
           <div class="hp-bar"><div class="hp-fill" id="bb-p2b" style="width:${oppPct}%"></div></div>
           <div class="hp-num" id="bb-p2h">${oppHp} / ${oppMaxHp}</div></div>
       </div>
@@ -156,7 +160,13 @@ const BotBattleHtml = (() => {
         if (typeof BotBattleLog !== 'undefined') BotBattleLog.update(b.combat_log);
       } catch(_) {}
     },
-    setTimer(s) { if (mounted && elTimer) elTimer.textContent = String(Math.max(0, s|0)); },
+    setTimer(s) {
+      if (!mounted || !elTimer) return;
+      const v = Math.max(0, s|0);
+      elTimer.textContent = String(v);
+      // Красный пульсирующий таймер при ≤5 сек.
+      elTimer.classList.toggle('danger', v > 0 && v <= 5);
+    },
     resetChoices() {
       selectedAttack = null; selectedDefense = null;
       if (mounted) { _refresh(); if (elWait) elWait.style.display = 'none'; }
@@ -166,7 +176,19 @@ const BotBattleHtml = (() => {
       elWait.textContent = msg || ''; elWait.style.display = msg ? 'block' : 'none';
     },
     dmgFx(side, amount, isCrit) {
-      if (mounted && typeof BotBattleFx !== 'undefined') BotBattleFx.apply(side, amount, isCrit);
+      if (!mounted) return;
+      if (typeof BotBattleFx !== 'undefined') BotBattleFx.apply(side, amount, isCrit);
+      // Подсветка спрайта жертвы при крите.
+      if (isCrit && root) {
+        const sel = side === 'me' ? '#bb-p1' : '#bb-p2';
+        const el = root.querySelector(sel);
+        if (el) {
+          el.classList.remove('crit-hit');
+          void el.offsetWidth;
+          el.classList.add('crit-hit');
+          setTimeout(() => { try { el.classList.remove('crit-hit'); } catch(_) {} }, 360);
+        }
+      }
     },
     dodgeFx(side) {
       if (!mounted || !root) return;

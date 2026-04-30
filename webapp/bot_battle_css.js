@@ -17,7 +17,11 @@ const BotBattleCss = (() => {
     #bb-root .hp-bar{height:8px;border-radius:4px;background:rgba(0,0,0,.7);overflow:hidden;margin-top:3px;box-shadow:inset 0 1px 2px rgba(0,0,0,.7);}
     #bb-root .hp-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,#00ffe0,#5fb8ff);box-shadow:0 0 10px #00d8ff,inset 0 0 6px rgba(255,255,255,.4);transition:width .5s ease;}
     #bb-root .hp-block.opp .hp-fill{background:linear-gradient(90deg,#ff0070,#ff5fa0);box-shadow:0 0 10px #ff0070,inset 0 0 6px rgba(255,255,255,.4);}
-    #bb-root .timer{position:absolute;top:104px;right:14px;font-size:14px;font-family:"Consolas",monospace;color:#fff;z-index:9;pointer-events:none;background:rgba(2,5,18,.6);padding:1px 6px;border-radius:4px;border:1px solid rgba(0,216,255,.3);}
+    #bb-root .timer{position:absolute;top:104px;right:14px;font-size:14px;font-family:"Consolas",monospace;color:#fff;z-index:9;pointer-events:none;background:rgba(2,5,18,.6);padding:1px 6px;border-radius:4px;border:1px solid rgba(0,216,255,.3);transition:color .15s,border-color .15s,background .15s;}
+    #bb-root .timer.danger{color:#ff4455;border-color:rgba(255,68,85,.7);background:rgba(40,5,12,.85);animation:bbTimerPulse 1s ease-in-out infinite;}
+    @keyframes bbTimerPulse{0%,100%{transform:scale(1);box-shadow:0 0 0 transparent}50%{transform:scale(1.18);box-shadow:0 0 12px rgba(255,68,85,.8)}}
+    #bb-root .hp-rating{display:block;font-weight:600;opacity:.75;font-size:8.5px;margin-top:1px;color:#ffc83c;text-shadow:0 0 5px rgba(255,200,60,.5);letter-spacing:.6px;font-family:"Consolas",monospace;}
+    #bb-root .hp-block.opp .hp-rating{color:#ff8aa8;text-shadow:0 0 5px rgba(255,100,140,.5);}
     #bb-root .fighter{position:absolute;bottom:22%;display:flex;align-items:flex-end;justify-content:center;pointer-events:none;}
     #bb-root .player{left:-2%;width:38%;height:48%;}
     #bb-root .boss{right:-3%;width:62%;height:78%;}
@@ -42,6 +46,10 @@ const BotBattleCss = (() => {
     @keyframes bbDodgeRight{0%,100%{translate:0 0;opacity:1}50%{translate:26px 0;opacity:.55}}
     #bb-root .fighter.dodge-left{animation:bbDodgeLeft 380ms ease-out;}
     #bb-root .fighter.dodge-right{animation:bbDodgeRight 380ms ease-out;}
+    /* Крит: оранжевый glow на спрайте жертвы. transition на filter не
+       мешает animation на transform (breath/breath-flip остаются). */
+    #bb-root .fighter > img{transition:filter 90ms ease-out;}
+    #bb-root .fighter.crit-hit > img{filter:drop-shadow(0 0 18px #ff8800) drop-shadow(0 0 32px #ffaa00) brightness(1.45) !important;}
     #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:10px;z-index:9;}
     #bb-root .atk-col{left:4px;bottom:11%;}
     #bb-root .def-col{right:4px;bottom:11%;}
