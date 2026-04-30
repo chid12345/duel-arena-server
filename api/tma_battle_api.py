@@ -122,6 +122,7 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         "is_pvp": is_pvp,
         "is_p1": is_p1,
         "mode": b.get("mode", "normal") if b else "normal",
+        "mode_meta": (b.get("mode_meta") if b else {}) or {},
         "round": ctx.get("round_num", 0),
         "my_hp": ctx.get("your_hp"),
         "my_max_hp": ctx.get("your_max"),

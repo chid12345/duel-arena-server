@@ -127,6 +127,7 @@ const BotBattleHtml = (() => {
     elTimer = root.querySelector('#bb-timer');
     elWait = root.querySelector('#bb-wait');
     if (typeof BotBattleLog !== 'undefined') BotBattleLog.attach(root);
+    if (typeof BotBattleModeBanner !== 'undefined') BotBattleModeBanner.attach(root);
     attackBtns = {}; defenseBtns = {};
     root.querySelectorAll('.atk-col .ic-btn').forEach(b => attackBtns[b.dataset.key] = b);
     root.querySelectorAll('.def-col .ic-btn').forEach(b => defenseBtns[b.dataset.key] = b);

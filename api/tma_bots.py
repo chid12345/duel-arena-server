@@ -6,6 +6,14 @@ from typing import Any, Dict
 
 from config import PLAYER_START_CRIT, PLAYER_START_MAX_HP
 
+# Те же 31 id что у обычных PvE-ботов (см. webapp/bot_skin_picker.js).
+# 6 и 19 пропущены — ассетов нет.
+_BOT_SKIN_IDS = [i for i in range(1, 34) if i not in (6, 19)]
+
+
+def _skin_id_for_index(idx: int) -> int:
+    return _BOT_SKIN_IDS[(max(1, int(idx)) - 1) % len(_BOT_SKIN_IDS)]
+
 
 def _titan_boss_for_floor(floor: int, player: Dict[str, Any]) -> Dict[str, Any]:
     fl = max(1, int(floor))
@@ -44,6 +52,7 @@ def _titan_boss_for_floor(floor: int, player: Dict[str, Any]) -> Dict[str, Any]:
         "current_hp": max_hp,
         "bot_type": "titan_boss",
         "ai_pattern": "adaptive",
+        "skin_id": _skin_id_for_index(fl),
     }
 
 
@@ -80,4 +89,5 @@ def _endless_bot_for_wave(wave: int) -> Dict[str, Any]:
         "max_hp": max_hp,
         "current_hp": max_hp,
         "is_premium": False,
+        "skin_id": _skin_id_for_index(wave),
     }
