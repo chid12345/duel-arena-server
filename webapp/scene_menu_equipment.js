@@ -7,13 +7,21 @@
 const _EQ_LEFT  = [{ slot: 'belt' }, { slot: 'armor' }, { slot: 'boots' }];
 const _EQ_RIGHT = [{ slot: 'weapon' }, { slot: 'shield' }, { slot: 'ring1' }];
 
+// Inset glow color per slot type — matches icon palette
+const _EQ_SLOT_GLOW = {
+  weapon: { c: 0xf59e0b, a: 0.09 },
+  belt:   { c: 0x6b7280, a: 0.09 },
+  boots:  { c: 0x92400e, a: 0.06 },
+  shield: { c: 0x3b82f6, a: 0.10 },
+  armor:  { c: 0x9ca3af, a: 0.07 },
+  ring1:  { c: 0xf59e0b, a: 0.09 },
+};
+
 const _EQ_SLOT_LABELS = {
   weapon: 'ОРУЖИЕ', belt: 'ГОЛОВА', boots: 'НОГИ',
   shield: 'ЩИТ',    armor: 'ТЕЛО',  ring1: 'КОЛЬЦО', ring2: 'КОЛЬЦО',
 };
-// Палитра "материалов": серебро / золото / алмаз / рубин — для неонового
-// glow по контуру предмета. Эпик = бирюзовый алмаз (как иконка чата-референса).
-const _EQ_RARITY_COLOR = { common: 0xc6cdd9, rare: 0xffb347, epic: 0x00e5ff, mythic: 0xff4d6d };
+const _EQ_RARITY_COLOR = { common: 0xa0aec0, rare: 0xfbbf24, epic: 0xc084fc, mythic: 0xff6b2b };
 
 Object.assign(MenuScene.prototype, {
 
@@ -41,7 +49,9 @@ Object.assign(MenuScene.prototype, {
   },
 
   _drawEqSlot(c, x, y, w, h, slot, item, mkG, mkT, mkZ, ca, small) {
-    const cx = x + w / 2, cy = y + h / 2 - (small ? 4 : 8);
+    const g  = mkG();
+    const r  = small ? 7 : 10;
+    const cx = x + w / 2, cy = y + h / 2 - (small ? 1 : 4);
 
     // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
     const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
@@ -60,15 +70,17 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // SPOTLIGHT FLOOR: пятно света на воображаемом "полу" под предметом —
-      // три эллипса разной alpha имитируют radial-gradient (Phaser graphics
-      // не имеет нативного gradient-fill).
-      const floorY = y + h - 18;
-      const floorG = mkG();
-      floorG.fillStyle(bc, 0.06); floorG.fillEllipse(cx, floorY, w * 1.15, 16);
-      floorG.fillStyle(bc, 0.18); floorG.fillEllipse(cx, floorY, w * 0.80, 11);
-      floorG.fillStyle(bc, 0.45); floorG.fillEllipse(cx, floorY, w * 0.45, 6);
-      c.add(floorG);
+      // тонкий halo вокруг слота (очень слабый)
+      const haG = mkG(); haG.fillStyle(bc, 0.07); haG.fillRoundedRect(x - 3, y - 3, w + 6, h + 6, r + 3); c.add(haG);
+      // Непрозрачная подложка — даже если текстура предмета не прогрузилась,
+      // слот виден как кликабельная кнопка (раньше был только тонкий stroke
+      // → на мобилке слот «пропадал» при битой текстуре или фоновой догрузке).
+      g.fillStyle(0x1c1c2e, 0.98); g.fillRoundedRect(x, y, w, h, r);
+      // Слабый внутренний оттенок под цвет редкости — делает слот живым
+      const tintG = mkG(); tintG.fillStyle(bc, 0.08); tintG.fillRoundedRect(x + 2, y + 2, w - 4, h - 4, r - 2); c.add(tintG);
+      // рамка редкости
+      const glG = mkG(); glG.lineStyle(1.5, bc, 0.7); glG.strokeRoundedRect(x, y, w, h, r); c.add(glG);
+      c.add(g); // подложка
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -86,22 +98,9 @@ Object.assign(MenuScene.prototype, {
         ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
         const imgSize = small ? 38 : 50;
-        const baseY = cy;
-        const img = this.make.image({ x: cx, y: baseY, key: imgKey }, false);
+        const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // Soft glow цвета редкости — играет роль drop-shadow для "парящего" предмета.
-        try { img.preFX?.addGlow(bc, 3, 0, false, 0.10, 12); } catch (_) {}
         ca(img);
-        // Idle-левитация: предмет медленно "парит" над полом ↕ 4px.
-        if (this.tweens) {
-          try {
-            this.tweens.add({
-              targets: img, y: baseY - 4,
-              duration: 1700, yoyo: true, repeat: -1,
-              ease: 'Sine.easeInOut',
-            });
-          } catch (_) {}
-        }
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
         // рисуем тот же векторный значок, что и в пустых слотах — визуально
@@ -119,18 +118,21 @@ Object.assign(MenuScene.prototype, {
         }
       }
 
+      const dG = mkG(); dG.fillStyle(bc, 1); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     } else {
-      // Пустой слот: тусклое нейтральное пятно на полу + векторный значок.
-      const floorY = y + h - 18;
-      const floorG = mkG();
-      floorG.fillStyle(0x9c8cbf, 0.05); floorG.fillEllipse(cx, floorY, w * 1.15, 16);
-      floorG.fillStyle(0x9c8cbf, 0.12); floorG.fillEllipse(cx, floorY, w * 0.65, 8);
-      c.add(floorG);
+      // Пустой слот — стандартный вид
+      g.fillStyle(0x1c1c2e, 0.98); g.fillRoundedRect(x, y, w, h, r);
+      g.lineStyle(1, 0xffffff, 0.1); g.strokeRoundedRect(x, y, w, h, r);
+      c.add(g);
+      const sg = _EQ_SLOT_GLOW[slot] || { c: 0x6c5ce7, a: 0.18 };
+      const igG = mkG(); igG.fillStyle(sg.c, sg.a); igG.fillRoundedRect(x + 4, y + 4, w - 8, h - 8, r - 2); c.add(igG);
+      const haloG = mkG(); haloG.fillStyle(sg.c, 0.05); haloG.fillCircle(cx, cy - 2, 18); c.add(haloG);
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
+      const dG = mkG(); dG.fillStyle(sg.c, 0.6); dG.fillCircle(x + w - 5, y + h - 5, 3); c.add(dG);
     }
 
     if (!small) {
-      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 9, '#ffffff', true)).setOrigin(0.5);
+      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 9, 'rgba(210,215,235,0.9)', true)).setOrigin(0.5);
     }
 
     const zone = mkZ(x + w / 2, y + h / 2, w + 4, h + 4).setInteractive({ useHandCursor: true });
