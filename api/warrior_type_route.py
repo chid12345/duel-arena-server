@@ -12,7 +12,12 @@ from database import db
 
 logger = logging.getLogger(__name__)
 
-VALID_WARRIOR_TYPES = {"default", "tank", "agile", "crit"}
+VALID_WARRIOR_TYPES = {
+    "default",
+    "tank",   "tank_0",   "tank_1",   "tank_2",
+    "agile",  "agile_0",  "agile_1",  "agile_2",
+    "crit",   "crit_0",   "crit_1",   "crit_2",
+}
 
 
 class WarriorTypeBody(BaseModel):

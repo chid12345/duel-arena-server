@@ -25,7 +25,7 @@ class BattleDamageArmorMixin:
         if buff_armor:
             m = max(0.0, m - buff_armor / 100.0)
         # Модификаторы брони по типу воина
-        wt = (defender.get("warrior_type") or "default")
+        wt = ((defender.get("warrior_type") or "default").split("_")[0])
         if wt == "agile":
             m = min(1.0, m + 0.10)   # Теневой Вихрь -10% броня (трейдофф за уклон)
         # Спецэффект Gold/Diamond: универсалы снижают входящий урон

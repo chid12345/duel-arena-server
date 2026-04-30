@@ -55,7 +55,7 @@ class BattleDamageMixin:
             debuff = "legs"
 
         # Бонус атакующего по типу воина + USDT damage_pct (кап: суммарно ≤ +20%)
-        wt_atk = attacker.get("warrior_type") or "default"
+        wt_atk = (attacker.get("warrior_type") or "default").split("_")[0]
         usdt = (attacker.get("usdt_passive_type") or "").strip()
         cls_id = (attacker.get("current_class") or "").strip()
         dmg_bonus = 1.0
@@ -102,7 +102,7 @@ class BattleDamageMixin:
             dodge_ch = min(DODGE_MAX_CHANCE, def_agi / (def_agi + atk_agi) * DODGE_MAX_CHANCE)
             dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + defender.get("_buff_dodge_pct", 0) / 100.0)
             # Бонус/штраф защитника по типу воина
-            wt_def = defender.get("warrior_type") or "default"
+            wt_def = (defender.get("warrior_type") or "default").split("_")[0]
             if wt_def == "agile":
                 dodge_ch = min(DODGE_MAX_CHANCE, dodge_ch + 0.08)   # Теневой Вихрь +8% уворот
             elif wt_def == "tank":

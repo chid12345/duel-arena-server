@@ -87,7 +87,7 @@ class BattleStartMixin:
 
     def _apply_warrior_type_to_stats(self, player: dict) -> None:
         """Вариант Б: пассивный HP-трейдофф Хаос-Рыцаря (-10% HP в бою)."""
-        wt = (player.get("warrior_type") or "default")
+        wt = ((player.get("warrior_type") or "default").split("_")[0])
         if wt == "crit":
             old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
             old_cur = int(player.get("current_hp", old_max))

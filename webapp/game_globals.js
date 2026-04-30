@@ -198,15 +198,17 @@ function getRingTextureKeyByRarity(rarity) {
   return 'ring_free1';
 }
 
-/* Ключ текстуры воина по типу и индексу скина (0/1/2) */
-function getWarriorKey(type, skinIdx) {
-  const idx = (skinIdx !== undefined ? skinIdx : (State.player?.warrior_skin_idx || 0));
+/* Ключ текстуры воина. type = 'tank'/'tank_1'/'agile_2'/... */
+function getWarriorKey(type) {
+  const parts = (type || '').split('_');
+  const base = parts[0];
+  const idx  = parts.length > 1 ? (parseInt(parts[parts.length - 1]) || 0) : 0;
   const keys = {
     tank:  ['warrior_tank',  'ws_tank_1',  'ws_tank_2'],
     agile: ['warrior_agile', 'ws_agi_1',   'ws_agi_2'],
     crit:  ['warrior_crit',  'ws_crt_1',   'ws_crt_2'],
   };
-  return (keys[type] || keys.tank)[Math.min(+idx, 2)] || 'warrior_tank';
+  return (keys[base] || keys.tank)[Math.min(idx, 2)] || 'warrior_tank';
 }
 
 /* PNG-скин воина для главного экрана */

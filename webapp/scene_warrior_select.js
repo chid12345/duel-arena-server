@@ -209,7 +209,8 @@ Object.assign(MenuScene.prototype, {
       document.getElementById('ws-conf-cancel').onclick = ev => { ev.stopPropagation(); conf.remove(); };
       document.getElementById('ws-conf-ok').addEventListener('click', ev => {
         ev.stopPropagation(); ev.preventDefault();
-        fadeClose(() => scene._selectWarriorType(key, `${sk.name} (${d.label})`, skin));
+        const encoded = skin > 0 ? `${key}_${skin}` : key;
+        fadeClose(() => scene._selectWarriorType(encoded, `${sk.name} (${d.label})`));
       });
     });
 
@@ -233,20 +234,23 @@ Object.assign(MenuScene.prototype, {
   },
 
   _tryBattle() {
-    const wt = State.player?.warrior_type;
-    if (!wt || wt === 'default') {
+    const wt = State.player?.warrior_type || '';
+    const base = wt.split('_')[0];
+    if (!['tank','agile','crit'].includes(base)) {
       tg?.HapticFeedback?.notificationOccurred('warning');
       this._toast('⚔️ Сначала выбери воина — он влияет на бой!');
+      this._wsReturnTab = 'battle';
       this._openWarriorSelect();
       return;
     }
     this._switchTab('battle');
   },
 
-  async _selectWarriorType(type, name, skinIdx) {
+  async _selectWarriorType(encodedType, name) {
     if (!State.player) return;
-    State.player.warrior_type = type;
-    State.player.warrior_skin_idx = skinIdx || 0;
+    State.player.warrior_type = encodedType;
+    const retTab = this._wsReturnTab || 'profile';
+    this._wsReturnTab = null;
     const old = this._panels.profile;
     if (old) {
       try { this.sys.displayList.remove(old); } catch(_e) {}
@@ -255,10 +259,10 @@ Object.assign(MenuScene.prototype, {
     }
     try {
       this._buildProfilePanel();
-      this._switchTab('profile');
+      this._switchTab(retTab);
     } catch(e) { console.warn('[WS] rebuild profile:', e); }
-    this._toast(`⚔️ Воин выбран: ${name || type}`);
-    post('/api/warrior-type', { warrior_type: type, warrior_skin_idx: State.player.warrior_skin_idx })
+    this._toast(`⚔️ Воин выбран: ${name || encodedType}`);
+    post('/api/warrior-type', { warrior_type: encodedType })
       .then(r => { if (!r.ok) this._toast(`⚠️ Не сохранён (${r.reason || r.detail || 'err'})`); })
       .catch(() => this._toast('⚠️ Воин не сохранён — нет связи'));
   },

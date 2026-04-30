@@ -94,7 +94,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eff_mhp = mhp + int(_cb.get("hp_bonus", 0)) + int(_cb.get("stamina", 0)) * STAMINA_PER_FREE_STAT
 
     # Воин-тип меняет отображаемые статы (синхрон с damage.py)
-    _wt = (player.get("warrior_type") or "default")
+    _wt = (player.get("warrior_type") or "default").split("_")[0]
     if _wt == "tank":
         dmg     = int(dmg * 1.12)   # +12% (было 1.15)
         dodge_p = max(0, dodge_p - 8)
