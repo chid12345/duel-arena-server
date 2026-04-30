@@ -12,6 +12,7 @@ Object.assign(MenuScene.prototype, {
     Notif.setScene(this);
     connectWS(p.user_id, msg => {
       if (msg.event === 'battle_started') {
+        try { this._closeWaitingChallenge?.(); } catch (_) {}
         State.battle = msg.battle;
         this.scene.start('Battle', {});
         return;
@@ -22,6 +23,7 @@ Object.assign(MenuScene.prototype, {
         return;
       }
       if (msg.event === 'challenge_declined') {
+        try { this._closeWaitingChallenge?.(); } catch (_) {}
         this._toast('🚫 Вызов отклонён');
         this._refreshChallengesBadge();
         return;
@@ -166,6 +168,11 @@ Object.assign(MenuScene.prototype, {
         return;
       }
       this._toast('✅ Вызов отправлен');
+      // Полоска ожидания: live-countdown до expires_at + кнопка «Отменить».
+      // Закрывается из WS battle_started / challenge_declined или сама на 0.
+      if (res.challenge_id && res.expires_at) {
+        this._showWaitingChallenge(nickname, res.challenge_id, res.expires_at);
+      }
     } catch (_) {
       this._toast('❌ Нет соединения');
     }

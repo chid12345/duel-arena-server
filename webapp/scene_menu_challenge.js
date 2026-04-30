@@ -65,6 +65,46 @@ Object.assign(MenuScene.prototype, {
 
   /* HTML-оверлей для ввода ника (взамен window.prompt).
      cb(value) — value=null при отмене, иначе строка. */
+  /* Полоска ожидания после отправки вызова. Live-countdown + кнопка отмены.
+     Закрывается извне через MenuScene._closeWaitingChallenge() — из WS
+     (battle_started / challenge_declined) или по таймеру expires. */
+  _showWaitingChallenge(nick, challengeId, expiresAt) {
+    try { document.getElementById('_waitChMod')?.remove(); } catch (_) {}
+    const d = document.createElement('div');
+    d.id = '_waitChMod';
+    d.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(8,6,18,0.78);display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,Roboto,Segoe UI,sans-serif;';
+    d.innerHTML =
+      '<div style="background:#1a1828;border:1px solid rgba(80,150,255,0.55);border-radius:14px;padding:18px 18px 14px;width:100%;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.5);text-align:center;">'
+      + '<div style="color:#5096ff;font-size:14px;font-weight:600;margin-bottom:6px;">⏳ Ждём ответа</div>'
+      + '<div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px;">@' + nick + '</div>'
+      + '<div id="_waitChTimer" style="color:#ffc83c;font-size:22px;font-weight:800;font-family:Consolas,monospace;margin:8px 0 12px;letter-spacing:2px;">--:--</div>'
+      + '<button id="_waitChCancel" style="width:100%;padding:11px;background:#aa1a22;color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🚫 Отменить вызов</button>'
+      + '</div>';
+    document.body.appendChild(d);
+    const fmt = (s) => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+    const tick = () => {
+      const left = Math.max(0, Math.floor((expiresAt * 1000 - Date.now()) / 1000));
+      const t = d.querySelector('#_waitChTimer');
+      if (t) t.textContent = fmt(left);
+      if (left <= 0) {
+        this._closeWaitingChallenge();
+        this._toast('⌛ Соперник не ответил');
+      }
+    };
+    tick();
+    this._waitChIntv = setInterval(tick, 1000);
+    d.querySelector('#_waitChCancel').onclick = async () => {
+      try { await post('/api/battle/challenge/cancel', { challenge_id: challengeId }); } catch (_) {}
+      this._closeWaitingChallenge();
+      this._toast('🚫 Вызов отменён');
+    };
+  },
+
+  _closeWaitingChallenge() {
+    try { document.getElementById('_waitChMod')?.remove(); } catch (_) {}
+    if (this._waitChIntv) { try { clearInterval(this._waitChIntv); } catch (_) {} this._waitChIntv = null; }
+  },
+
   _promptNickname(cb) {
     try { document.getElementById('_nickModal')?.remove(); } catch (_) {}
     const d = document.createElement('div');
