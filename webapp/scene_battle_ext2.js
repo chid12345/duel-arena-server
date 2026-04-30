@@ -9,6 +9,7 @@
 Object.assign(BattleScene.prototype, {
 
   _onZone(key, label, type, g, t) {
+    console.log('[BATTLE] _onZone', { key, type, choosing: this._choosing, submitting: this._submitting, mode: State.battle?.mode });
     if (!this._choosing || this._submitting) return;
     tg?.HapticFeedback?.selectionChanged();
 
@@ -34,11 +35,13 @@ Object.assign(BattleScene.prototype, {
     this._submitting = true;
     this._choosing = false;
     this._showWait('Ход отправлен...');
+    console.log('[BATTLE] _submitChoice →', { attack: this._selAttack, defense: this._selDefense, mode: State.battle?.mode, bid: State.battle?.battle_id });
     try {
       const res = await post('/api/battle/choice', {
         attack: this._selAttack,
         defense: this._selDefense,
       });
+      console.log('[BATTLE] _submitChoice ←', res);
       if (res.status === 'waiting_opponent') {
         this._showWait('⏳ Ждём соперника...');
         this._waitingSince = Date.now();
@@ -57,10 +60,13 @@ Object.assign(BattleScene.prototype, {
         this.scene.start('Result', {});
       } else {
         this._choosing = true;
-        const hint = res.detail || res.message || res.error || '';
-        this._showWait(hint ? `⚠️ ${hint}` : 'Ошибка. Попробуй ещё раз.');
+        const hint = res.detail || res.message || res.error || res.reason || res.status || '';
+        const msg = hint ? `⚠️ ${hint}` : '⚠️ Сервер не принял ход';
+        this._showWait(msg);
+        try { tg?.showAlert?.(msg); } catch(_) {}
       }
     } catch(e) {
+      console.error('[BATTLE] _submitChoice exception', e);
       this._choosing = true;
       this._showWait('Ошибка. Попробуй ещё раз.');
     } finally {
@@ -69,6 +75,7 @@ Object.assign(BattleScene.prototype, {
   },
 
   _onAuto() {
+    console.log('[BATTLE] _onAuto', { choosing: this._choosing, submitting: this._submitting, mode: State.battle?.mode });
     if (!this._choosing || this._submitting) return;
     const zones = ['HEAD', 'TORSO', 'LEGS'];
     if (!this._selAttack)  this._selAttack  = zones[Phaser.Math.Between(0,2)];
