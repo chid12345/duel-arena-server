@@ -28,6 +28,9 @@ const CSS = `
 .bs-row .bs-name{font-size:12px}
 .bs-row .bs-sub{font-size:10px}
 .bs-hpwarn{padding:10px 12px;background:rgba(220,60,70,.12);border:1px solid rgba(255,90,100,.4);border-radius:10px;color:#fca5a5;font-size:11px;text-align:center;margin-bottom:6px}
+.bs-card.bs-blocked{opacity:.32;filter:grayscale(.55)}
+.bs-card.bs-blocked:active{transform:none;background:#1a1828}
+@keyframes bsShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
 `;
 
 let _cssOn = false;
@@ -72,8 +75,8 @@ function open(scene) {
         <button class="bs-close" id="bs-close">✕</button>
       </div>
       <div class="bs-grid">
-        ${lowHp ? '<div class="bs-hpwarn">❤️ HP ниже 15% — большинство боёв заблокировано. Зайди в профиль выпей зелье.</div>' : ''}
-        <div class="bs-card" data-act="pvp" style="--bsc:#dc3c46;--bsn:#ff6672">
+        ${lowHp ? '<div class="bs-hpwarn" id="bs-hpwarn">❤️ HP ниже 15% — бои заблокированы. Зайди в профиль и выпей зелье!</div>' : ''}
+        <div class="bs-card${lowHp?' bs-blocked':''}" data-act="pvp" style="--bsc:#dc3c46;--bsn:#ff6672">
           <div class="bs-emo">⚔️</div>
           <div class="bs-tx">
             <div class="bs-name">Поиск соперника</div>
@@ -81,14 +84,14 @@ function open(scene) {
             <div class="bs-bonus">🏆 +рейтинг  💰 +30%  ⭐ +30% за победу</div>
           </div>
         </div>
-        <div class="bs-card" data-act="tower" style="--bsc:#b45aff;--bsn:#c97aff">
+        <div class="bs-card${lowHp?' bs-blocked':''}" data-act="tower" style="--bsc:#b45aff;--bsn:#c97aff">
           <div class="bs-emo">🗿</div>
           <div class="bs-tx">
             <div class="bs-name">Башня Титанов</div>
             <div class="bs-sub">PvE · прогрессия уровней · редкие награды</div>
           </div>
         </div>
-        <div class="bs-card" data-act="natisk" style="--bsc:#ff5533;--bsn:#ff7755">
+        <div class="bs-card${lowHp?' bs-blocked':''}" data-act="natisk" style="--bsc:#ff5533;--bsn:#ff7755">
           <div class="bs-emo">🔥</div>
           <div class="bs-tx">
             <div class="bs-name">Натиск</div>
@@ -111,7 +114,7 @@ function open(scene) {
             </div>
           </div>
         </div>
-        <div class="bs-card" data-act="bot" style="--bsc:#5096ff;--bsn:#7ab4ff">
+        <div class="bs-card${lowHp?' bs-blocked':''}" data-act="bot" style="--bsc:#5096ff;--bsn:#7ab4ff">
           <div class="bs-emo">🤖</div>
           <div class="bs-tx">
             <div class="bs-name">Бой с ботом</div>
@@ -122,9 +125,36 @@ function open(scene) {
     </div>`;
   document.body.appendChild(wrap);
 
+  const COMBAT_ACTS = new Set(['pvp', 'tower', 'natisk', 'bot']);
+
+  // Показать встряску предупреждения внутри overlay (не тост на canvas)
+  const _shakeWarn = () => {
+    const warn = document.getElementById('bs-hpwarn');
+    if (!warn) return;
+    warn.style.animation = 'none';
+    // eslint-disable-next-line no-unused-expressions
+    warn.offsetHeight; // reflow
+    warn.style.animation = 'bsShake .35s ease';
+    warn.style.background = 'rgba(220,60,70,.28)';
+    warn.style.borderColor = 'rgba(255,90,100,.8)';
+    if (typeof tg !== 'undefined') tg?.HapticFeedback?.notificationOccurred('error');
+  };
+
   let _dispatched = false;
   const dispatch = (act) => {
     if (_dispatched) return;
+
+    // Для боевых действий: проверяем HP ДО закрытия overlay.
+    // Если HP < 15 — встряска предупреждения внутри overlay (не тихий тост
+    // на canvas под непрозрачным guard-блокером). Overlay остаётся открытым.
+    if (COMBAT_ACTS.has(act)) {
+      const sp = (typeof State !== 'undefined' && State.player) ? State.player : null;
+      if (!sp || (sp.hp_pct || 0) < 15) {
+        _shakeWarn();
+        return;   // _dispatched остаётся false → можно нажать другую кнопку
+      }
+    }
+
     _dispatched = true;
     if (typeof tg !== 'undefined') tg?.HapticFeedback?.impactOccurred('medium');
     // Click-through guard: overlay sits over the Phaser tab bar.
@@ -138,14 +168,10 @@ function open(scene) {
     setTimeout(() => { try { g.remove(); } catch(_) {} }, 700);
     _close();
     try {
-      if (act === 'pvp')        scene._onFight?.();
-      else if (act === 'tower') scene._onTitanFight?.();
-      else if (act === 'natisk') {
-        const sp = (typeof State !== 'undefined' && State.player) ? State.player : {};
-        if ((sp.hp_pct || 0) < 15) { scene._toast?.('❤️ Нужно восстановить HP!'); return; }
-        scene.scene.start('Natisk', {});
-      }
-      else if (act === 'bot')   scene._onBotFight?.();
+      if (act === 'pvp')            scene._onFight?.();
+      else if (act === 'tower')     scene._onTitanFight?.();
+      else if (act === 'natisk')    scene.scene.start('Natisk', {});
+      else if (act === 'bot')       scene._onBotFight?.();
       else if (act === 'challenge') scene._onChallengeByNick?.();
       else if (act === 'incoming')  scene._showOutgoingChallenges?.();
     } catch (e) { console.warn('[BattleSelect] dispatch failed:', act, e); }
@@ -155,6 +181,8 @@ function open(scene) {
     const card = ev.target.closest('.bs-card');
     if (!card || !card.dataset.act) return;
     ev.stopPropagation(); ev.preventDefault();
+    // bs-blocked карточки можно нажать — показываем встряску вместо dispatch
+    if (card.classList.contains('bs-blocked')) { _shakeWarn(); return; }
     dispatch(card.dataset.act);
   };
   // pointerdown/touchstart fire BEFORE click — catch the event early
