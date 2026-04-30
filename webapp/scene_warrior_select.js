@@ -196,28 +196,40 @@ Object.assign(MenuScene.prototype, {
       }, 200);
     }
 
-    // Один клик, один результат: pointerdown — мгновенный блокер выше всего DOM
-    // (ловит touchend ДО того как Phaser таб-бар получит pointerup); затем
-    // click — применяем выбор и закрываем overlay. Без второго popup'а
-    // «✓ ПРИНЯТЬ» — два клика над таб-баром удваивали шанс на click-through.
+    // Действие на ПЕРВОМ событии (pointerdown / mousedown / touchstart) —
+    // оно срабатывает РАНЬШЕ click. Сразу применяем выбор и ставим блокер
+    // выше всего DOM (z-index:10000), чтобы хвостовые pointerup/touchend/click
+    // ушли на блокер, а не в Phaser таб-бар под кнопкой.
+    // Один тап = один результат, попап «✓ ПРИНЯТЬ» убран (два клика
+    // над таб-баром удваивали шанс на click-through).
     const wsBtn = document.getElementById('ws-btn');
-    wsBtn.addEventListener('pointerdown', () => {
-      if (document.getElementById('ws-early-blocker')) return;
+    let _wsApplied = false;
+    const _applyChoice = (e) => {
+      if (_wsApplied) return;
+      _wsApplied = true;
+      try { e.stopPropagation(); e.preventDefault(); } catch(_) {}
+      // Блокер: с этого момента ВСЕ события идут на него, не в Phaser.
       const g = document.createElement('div'); g.id = 'ws-early-blocker';
       g.style.cssText = 'position:fixed;inset:0;z-index:10000;background:transparent;touch-action:none;';
       document.body.appendChild(g);
-      ['click','pointerdown','pointerup','touchstart','touchend'].forEach(ev =>
-        g.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, true));
-      setTimeout(() => g.remove(), 1200);
-    });
-    wsBtn.addEventListener('click', e => {
-      e.stopPropagation(); e.preventDefault();
+      ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach(ev =>
+        g.addEventListener(ev, ev2 => { ev2.stopPropagation(); ev2.preventDefault(); }, true));
+      setTimeout(() => { try { g.remove(); } catch(_) {} }, 1200);
       const d = _WS_DATA[curKey];
       const key = curKey, skin = curSkin;
       const sk = d.skins[skin];
       const encoded = skin > 0 ? `${key}_${skin}` : key;
       fadeClose(() => scene._selectWarriorType(encoded, `${sk.name} (${d.label})`));
-    });
+    };
+    // Слушаем все варианты «начала тапа» — первый сработавший выполнит,
+    // остальные no-op'нут из-за _wsApplied. Telegram Desktop / iOS / Android
+    // могут диспатчить разные события в разном порядке — это покрывает все.
+    wsBtn.addEventListener('pointerdown', _applyChoice);
+    wsBtn.addEventListener('mousedown', _applyChoice);
+    wsBtn.addEventListener('touchstart', _applyChoice, { passive: false });
+    // Fallback на click — если устройство почему-то не выдаст ни pointerdown
+    // ни touchstart (теоретически невозможно, но safety net).
+    wsBtn.addEventListener('click', _applyChoice);
 
     document.getElementById('ws-close').onclick = e => { e.stopPropagation(); fadeClose(); };
     el.addEventListener('click', e => { if (e.target === el) { e.stopPropagation(); fadeClose(); } });
