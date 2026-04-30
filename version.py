@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.6.96"
-VERSION_LABEL = "v2.6.96 — fix: КРИТИЧНО — все кнопки боя не работали с 30.04 (коммит e8a221a случайно удалил <script src=menu_warrior_guard.js> из index.html). Без guard'а _requireWarrior было undefined → _tryBattle, _onFight, _onBotFight, _onTitanFight молча выходили на if(!undefined?.()) return. Подключение восстановлено. Проверено в preview через ?dev=1 — _tryBattle открывает overlay, тап PvP закрывает его и вызывает _onFight."
+VERSION = "2.6.97"
+VERSION_LABEL = "v2.6.97 — fix: click-through в BattleSelectHTML — тап по карточке боя пробивался в Phaser tab-bar (навигация в Клан/Босс вместо боя). Добавлен guard-div 700ms + ранний перехват pointerdown/touchstart + _dispatched флаг. Закрытие ✕ тоже защищено. Профиль больше не зависает при возврате."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "11.66"
+GAME_VERSION = "11.67"

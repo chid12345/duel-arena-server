@@ -122,8 +122,20 @@ function open(scene) {
     </div>`;
   document.body.appendChild(wrap);
 
+  let _dispatched = false;
   const dispatch = (act) => {
+    if (_dispatched) return;
+    _dispatched = true;
     if (typeof tg !== 'undefined') tg?.HapticFeedback?.impactOccurred('medium');
+    // Click-through guard: overlay sits over the Phaser tab bar.
+    // When we remove it, the browser re-dispatches remaining pointer
+    // events to the canvas → tab bar navigates to Clan/Boss/Rating.
+    const g = document.createElement('div');
+    g.style.cssText = 'position:fixed;inset:0;z-index:10000;background:transparent;touch-action:none;';
+    ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach(ev =>
+      g.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, true));
+    document.body.appendChild(g);
+    setTimeout(() => { try { g.remove(); } catch(_) {} }, 700);
     _close();
     try {
       if (act === 'pvp')        scene._onFight?.();
@@ -135,14 +147,27 @@ function open(scene) {
     } catch (e) { console.warn('[BattleSelect] dispatch failed:', act, e); }
   };
 
-  wrap.addEventListener('click', (ev) => {
+  const _onCard = (ev) => {
     const card = ev.target.closest('.bs-card');
-    if (card && card.dataset.act) { dispatch(card.dataset.act); return; }
-    // Закрываем только по ✕ (см. ниже) — backdrop-close убран,
-    // он же дополнительный риск click-through от тапа-открывателя.
-  });
-  document.getElementById('bs-close').onclick = () => {
+    if (!card || !card.dataset.act) return;
+    ev.stopPropagation(); ev.preventDefault();
+    dispatch(card.dataset.act);
+  };
+  // pointerdown/touchstart fire BEFORE click — catch the event early
+  // so remaining pointer events don't leak to the canvas after overlay removal.
+  wrap.addEventListener('pointerdown', _onCard);
+  wrap.addEventListener('touchstart', _onCard, { passive: false });
+  wrap.addEventListener('click', _onCard);
+  document.getElementById('bs-close').onclick = (e) => {
+    e.stopPropagation(); e.preventDefault();
     if (typeof tg !== 'undefined') tg?.HapticFeedback?.selectionChanged();
+    // Guard for close button too (it's near tab bar)
+    const g = document.createElement('div');
+    g.style.cssText = 'position:fixed;inset:0;z-index:10000;background:transparent;touch-action:none;';
+    ['click','pointerdown','pointerup','touchstart','touchend','mousedown','mouseup'].forEach(ev =>
+      g.addEventListener(ev, e2 => { e2.stopPropagation(); e2.preventDefault(); }, true));
+    document.body.appendChild(g);
+    setTimeout(() => { try { g.remove(); } catch(_) {} }, 500);
     _close();
   };
 }
