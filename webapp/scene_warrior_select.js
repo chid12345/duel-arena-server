@@ -180,7 +180,16 @@ Object.assign(MenuScene.prototype, {
       el.style.transition = 'opacity 0.18s';
       el.style.opacity = '0';
       el.style.pointerEvents = 'none';
-      setTimeout(() => { scene._closeWarriorSelect(); if (cb) cb(); }, 200);
+      setTimeout(() => {
+        scene._closeWarriorSelect();
+        // Невидимый блокер: поглощает "хвостовые" клики 400ms
+        // чтобы они не пробились в Phaser нижнюю панель
+        const g = document.createElement('div');
+        g.style.cssText = 'position:fixed;inset:0;z-index:5000;';
+        document.body.appendChild(g);
+        setTimeout(() => g.remove(), 400);
+        if (cb) cb();
+      }, 200);
     }
 
     document.getElementById('ws-btn').addEventListener('click', e => {
