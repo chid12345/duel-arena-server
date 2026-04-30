@@ -299,13 +299,19 @@ if (typeof document !== 'undefined') {
       padding: '2px 6px', borderRadius: '4px',
       zIndex: '999', pointerEvents: 'none',
     });
+    Object.assign(d.style, { maxWidth: '95vw', whiteSpace: 'normal', wordBreak: 'break-all' });
     document.body.appendChild(d);
     // Обновляем редко (3с) — на каждый кадр phaser'у не до бейджа.
-    // State объявлен через const на global scope — на window его нет, читаем напрямую.
+    // Расширенная диагностика: пишем warrior_type + что лежит в State.player + window.State.
     setInterval(() => {
-      let wt = '?';
-      try { if (typeof State !== 'undefined' && State.player) wt = State.player.warrior_type || '?'; } catch(_) {}
-      d.textContent = 'v' + v + ' | wt:' + wt;
+      let wt='?', wsCheck='nope', sCheck='nope';
+      try {
+        if (typeof State !== 'undefined') sCheck = State.player ? ('p,wt='+State.player.warrior_type) : 'no_p';
+      } catch(e) { sCheck = 'err:'+e.message.slice(0,15); }
+      try {
+        if (window.State) wsCheck = window.State.player ? ('p,wt='+window.State.player.warrior_type) : 'no_p';
+      } catch(e) { wsCheck = 'err:'+e.message.slice(0,15); }
+      d.textContent = 'v'+v+' | S:'+sCheck+' | wS:'+wsCheck;
     }, 3000);
   };
   if (document.body) make();
