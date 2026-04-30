@@ -172,19 +172,28 @@ Object.assign(MenuScene.prototype, {
     eqBg.fillGradientStyle(0x130f22, 0x130f22, 0x07060f, 0x07060f, 1);
     eqBg.fillRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
     eqBg.lineStyle(1.5, 0x5b21b6, 0.85); eqBg.strokeRoundedRect(PAD, czY, W - PAD * 2, czH, 14);
-    // inner radial glow (central light pool)
-    const eqGlow = ca(mkG()); eqGlow.fillStyle(0x6d28d9, 0.08); eqGlow.fillEllipse(W / 2, czY + czH * 0.4, W * 0.7, czH * 0.7);
     // top accent line
     const eqLine = ca(mkG()); eqLine.lineStyle(2, 0x8b5cf6, 0.5); eqLine.lineBetween(PAD + 14, czY, W - PAD - 14, czY);
     const charCY = czY + czH * 0.42;
-    // Aura colour per warrior class
-    const _auraCols = { tank: 0xff5522, agile: 0x00cc55, crit: 0x7c3aed };
-    // tank_1/agile_2/crit_0 → базовый класс, чтобы аура совпадала с цветом класса
-    const _auraCol  = _auraCols[String(p?.warrior_type||'').split('_')[0]] || 0x7c3aed;
-    const aura1 = ca(mkG()); aura1.fillStyle(_auraCol, 0.1);  aura1.fillEllipse(W / 2, charCY, 150, 150);
-    const aura2 = ca(mkG()); aura2.fillStyle(_auraCol, 0.05); aura2.fillEllipse(W / 2, charCY + 8, 90, 90);
-    const floorG = ca(mkG()); floorG.fillStyle(_auraCol, 0.32); floorG.fillEllipse(W / 2, charCY + 52, 120, 16);
-    const ringG = ca(mkG()); ringG.lineStyle(1, _auraCol, 0.28); ringG.strokeEllipse(W / 2, charCY + 48, 104, 28);
+
+    // Фоновое фото за героем (cover-fit, скруглённая маска под форму карточки).
+    // Декор-круги (aura/floor/ring) удалены — фото даёт глубину само.
+    if (this.textures.exists('hero_profile_bg')) {
+      const bgX = PAD + 1, bgY = czY + 1, bgW = W - PAD * 2 - 2, bgH = czH - 2;
+      const bgImg = ca(mkI(bgX + bgW / 2, bgY + bgH / 2, 'hero_profile_bg').setOrigin(0.5));
+      const tex = this.textures.get('hero_profile_bg').getSourceImage();
+      const sc = Math.max(bgW / tex.width, bgH / tex.height);
+      bgImg.setScale(sc).setAlpha(0.78);
+      const mG = this.make.graphics({}, false);
+      mG.fillStyle(0xffffff, 1); mG.fillRoundedRect(bgX, bgY, bgW, bgH, 13);
+      c.add(mG); mG.setVisible(false);
+      bgImg.setMask(mG.createGeometryMask());
+      // Тёмная вуаль снизу — герой не сливается с фоном
+      const veil = ca(mkG());
+      veil.fillGradientStyle(0x000000, 0x000000, 0x000000, 0x000000, 0.05, 0.05, 0.55, 0.55);
+      veil.fillRoundedRect(bgX, bgY, bgW, bgH, 13);
+    }
+
     const _wKey = getWarriorKey(p.warrior_type);
     const warrior = ca(mkI(W / 2, charCY, _wKey).setDisplaySize(170, 250).setOrigin(0.5));
     this.tweens.add({ targets: warrior, y: charCY - 7, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
