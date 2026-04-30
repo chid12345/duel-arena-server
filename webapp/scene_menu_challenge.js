@@ -3,6 +3,34 @@
                           HTML-модал ввода ника.
    ============================================================ */
 
+/* Общие стили для всех HTML-modals MenuScene (вызов по нику / ожидание /
+   splash). Один стиль — единый UX. Разные акценты — через модификатор класса. */
+(function _injectMenuModalCss() {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('_mmCss')) return;
+  const s = document.createElement('style');
+  s.id = '_mmCss';
+  s.textContent = `
+    .mm-shell{position:fixed;inset:0;z-index:99998;background:rgba(8,6,18,0.82);display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,Roboto,"Segoe UI",sans-serif;}
+    .mm-panel{background:#1a1828;border:1px solid #4a4670;border-radius:14px;padding:18px 18px 14px;width:100%;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.55);box-sizing:border-box;}
+    .mm-panel.gold{border-color:rgba(255,200,60,0.55);}
+    .mm-panel.blue{border-color:rgba(80,150,255,0.55);}
+    .mm-panel.green{border-color:rgba(60,200,100,0.55);}
+    .mm-title{font-size:14px;font-weight:600;margin-bottom:6px;}
+    .mm-panel.gold .mm-title{color:#ffc83c;}
+    .mm-panel.blue .mm-title{color:#5096ff;}
+    .mm-panel.green .mm-title{color:#3cc864;}
+    .mm-sub{color:#ddddff;font-size:11px;margin-bottom:10px;}
+    .mm-input{width:100%;padding:11px 12px;background:#0f0d1a;border:1px solid #4a4670;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;outline:none;}
+    .mm-row{display:flex;gap:8px;margin-top:12px;}
+    .mm-btn{flex:1;padding:10px;border:0;border-radius:8px;font-size:12px;cursor:pointer;font-weight:700;}
+    .mm-btn.cancel{background:#2a2840;color:#ccc;font-weight:400;}
+    .mm-btn.primary-gold{background:#ffc83c;color:#1a1828;}
+    .mm-btn.primary-red{background:#aa1a22;color:#fff;}
+  `;
+  document.head.appendChild(s);
+})();
+
 Object.assign(MenuScene.prototype, {
 
   /* Нарисовать/скрыть красный бейдж "!" у кнопки "Мои вызовы".
@@ -72,13 +100,13 @@ Object.assign(MenuScene.prototype, {
     try { document.getElementById('_waitChMod')?.remove(); } catch (_) {}
     const d = document.createElement('div');
     d.id = '_waitChMod';
-    d.style.cssText = 'position:fixed;inset:0;z-index:99998;background:rgba(8,6,18,0.78);display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,Roboto,Segoe UI,sans-serif;';
+    d.className = 'mm-shell';
     d.innerHTML =
-      '<div style="background:#1a1828;border:1px solid rgba(80,150,255,0.55);border-radius:14px;padding:18px 18px 14px;width:100%;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,0.5);text-align:center;">'
-      + '<div style="color:#5096ff;font-size:14px;font-weight:600;margin-bottom:6px;">⏳ Ждём ответа</div>'
+      '<div class="mm-panel blue" style="text-align:center;">'
+      + '<div class="mm-title">⏳ Ждём ответа</div>'
       + '<div style="color:#fff;font-size:16px;font-weight:700;margin-bottom:4px;">@' + nick + '</div>'
       + '<div id="_waitChTimer" style="color:#ffc83c;font-size:22px;font-weight:800;font-family:Consolas,monospace;margin:8px 0 12px;letter-spacing:2px;">--:--</div>'
-      + '<button id="_waitChCancel" style="width:100%;padding:11px;background:#aa1a22;color:#fff;border:0;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;">🚫 Отменить вызов</button>'
+      + '<button id="_waitChCancel" class="mm-btn primary-red" style="width:100%;padding:11px;font-size:13px;">🚫 Отменить вызов</button>'
       + '</div>';
     document.body.appendChild(d);
     const fmt = (s) => `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
@@ -142,16 +170,16 @@ Object.assign(MenuScene.prototype, {
     try { document.getElementById('_nickModal')?.remove(); } catch (_) {}
     const d = document.createElement('div');
     d.id = '_nickModal';
-    d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,6,18,0.82);display:flex;align-items:center;justify-content:center;padding:20px;font-family:-apple-system,Roboto,Segoe UI,sans-serif;';
+    d.className = 'mm-shell';
+    d.style.zIndex = '99999';
     d.innerHTML =
-      '<div style="background:#1a1828;border:1px solid rgba(255,200,60,0.55);border-radius:14px;padding:18px 18px 14px;width:100%;max-width:320px;box-shadow:0 8px 32px rgba(0,0,0,0.5);">'
-      + '<div style="color:#ffc83c;font-size:15px;font-weight:600;margin-bottom:4px;">🎯 Вызов по нику</div>'
-      + '<div style="color:#ddddff;font-size:11px;margin-bottom:10px;">Введите ник соперника (без @)</div>'
-      + '<input id="_nickInput" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" '
-      +   'style="width:100%;padding:11px 12px;background:#0f0d1a;border:1px solid #4a4670;border-radius:8px;color:#fff;font-size:14px;box-sizing:border-box;outline:none;" />'
-      + '<div style="display:flex;gap:8px;margin-top:12px;">'
-      +   '<button id="_nickCancel" style="flex:1;padding:10px;background:#2a2840;color:#ccc;border:0;border-radius:8px;font-size:12px;cursor:pointer;">Отмена</button>'
-      +   '<button id="_nickOk"     style="flex:1;padding:10px;background:#ffc83c;color:#1a1828;border:0;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">Отправить</button>'
+      '<div class="mm-panel gold">'
+      + '<div class="mm-title">🎯 Вызов по нику</div>'
+      + '<div class="mm-sub">Введите ник соперника (без @)</div>'
+      + '<input id="_nickInput" class="mm-input" type="text" autocomplete="off" autocapitalize="none" spellcheck="false" />'
+      + '<div class="mm-row">'
+      +   '<button id="_nickCancel" class="mm-btn cancel">Отмена</button>'
+      +   '<button id="_nickOk" class="mm-btn primary-gold">Отправить</button>'
       + '</div></div>';
     document.body.appendChild(d);
     const inp = d.querySelector('#_nickInput');
