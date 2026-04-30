@@ -111,7 +111,14 @@ window.TabBar = {
       if (useImg) {
         iconImg = scene.add.image(0, 0, tab.imgKey).setDisplaySize(42, 42);
         iconImg.setAlpha(isActive ? 1 : 0.85);
-        try { glowFx = iconImg.preFX?.addGlow(tab.col, isActive ? 6 : 2, 0, false, 0.1, 16); } catch(_) {}
+        // preFX-glow пропускаем для Профиля: tab_profile.png (лев в короне) на
+        // Android Telegram WebView в связке с preFX рендерится как белый квадрат.
+        // Премиум-вид у Профиля делает TabProfilePremium через Graphics-ободок.
+        // Остальные табы (клан/герой/босс/рейтинг/меню) preFX переживают —
+        // им glow оставляем, иначе таббар выглядит "мертво".
+        if (tab.key !== 'profile') {
+          try { glowFx = iconImg.preFX?.addGlow(tab.col, isActive ? 6 : 2, 0, false, 0.1, 16); } catch(_) {}
+        }
         iconContainer = _t(scene.add.container(cx, iy, [iconImg]));
       } else {
         iconG = scene.add.graphics();

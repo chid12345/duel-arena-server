@@ -81,30 +81,35 @@ Object.assign(MenuScene.prototype, {
         : (shieldTexKey && this.textures.exists(shieldTexKey)) ? shieldTexKey
         : (ringTexKey   && this.textures.exists(ringTexKey))   ? ringTexKey
         : null;
-      // Шлем (belt): canvas-обработка cleanEquipmentTexture + preFX на Android
-      // Telegram WebView роняет шлем в "белый квадрат" (баг "на ПК есть, на телефоне
-      // нет"). Шлем-PNG уже с прозрачным фоном — чистка не нужна. preFX тоже
-      // отключаем, чтобы не повторять тот же сбой. Остальные слоты — без изменений.
-      const _skipClean = (slot === 'belt');
-      const imgKey = rawKey && !_skipClean && typeof cleanEquipmentTexture === 'function'
+      // Чистка тёмного фона у скинов один раз через canvas. Сейчас триггерится
+      // только если у PNG 2+ тёмных непрозрачных угла — для PNG с прозрачными
+      // углами (большинство наших) это NO-OP, для JPG-сапог реально чистит.
+      const imgKey = rawKey && typeof cleanEquipmentTexture === 'function'
         ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
-        // Halo ВСЕГДА под иконкой — на мобильном WebView preFX иногда
-        // роняет сам спрайт в "белый квадрат" (баг "на ПК есть, на телефоне
-        // нет"). Halo рисуется через Graphics и виден независимо от того,
-        // пережил ли спрайт мобильный рендер. На ПК он мягким слоем
-        // подчёркивает редкость предмета — не мешает.
+        // Halo ВСЕГДА под иконкой — на мобильном Android WebView преFX-связка
+        // лотерейно роняет ЛЮБОЙ слот в "белый квадрат" (раз шлем, раз тело).
+        // Halo через Graphics виден независимо от того, выжил ли спрайт.
         this._drawSlotHalo(c, cx, cy, slot, mkG, bc);
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
-        img.setDisplaySize(imgSize, imgSize);
-        // preFX-glow только для слотов БЕЗ известных проблем рендера на мобиле.
-        // Для шлема (belt) preFX выключен: историческая связка clean+preFX роняла
-        // картинку в "белый квадрат" на Android WebView. Halo сзади + чистый PNG
-        // выглядят корректно и стабильно.
-        if (slot !== 'belt') {
-          try { img.preFX?.addGlow(bc, 0.6, 0, false, 0.4, 3); } catch (_) {}
-        }
+        // Сохраняем пропорции PNG (688×1024 шлем, 408×612 мифик-броня и пр.).
+        // Без этого — всё растягивается в квадрат: шлем превращался в "тёмный
+        // блок" под прозрачной рамкой ("чёрный фон у головы"), броня в "белый
+        // прямоугольник" итд. Phaser-метод подгоняет в imgSize×imgSize, сохраняя
+        // соотношение сторон (как CSS object-fit: contain).
+        try {
+          const tex = this.textures.get(imgKey);
+          const src = tex?.getSourceImage?.();
+          const sw = src?.width || imgSize, sh = src?.height || imgSize;
+          const scale = Math.min(imgSize / sw, imgSize / sh);
+          img.setDisplaySize(Math.round(sw * scale), Math.round(sh * scale));
+        } catch(_) { img.setDisplaySize(imgSize, imgSize); }
+        // preFX-glow ОТКЛЮЧЁН для всех слотов: на Android Telegram WebView
+        // комбинация PNG + preFX.addGlow стабильно роняет рендер случайного
+        // спрайта в "белый квадрат". Раньше думали что это только шлем — но
+        // следующая итерация показала тот же баг на броне. Halo сзади
+        // подчёркивает редкость надёжнее.
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Halo + векторный значок
