@@ -41,7 +41,13 @@ Object.assign(MenuScene.prototype, {
   },
 
   _drawEqSlot(c, x, y, w, h, slot, item, mkG, mkT, mkZ, ca, small) {
+    const r  = small ? 7 : 10;
     const cx = x + w / 2, cy = y + h / 2 - (small ? 1 : 4);
+
+    // Стеклянный фон: тёмный полупрозрачный квадрат с закруглёнными углами
+    // (CSS-аналог: background: rgba(0,0,0,0.3); backdrop-filter не нативен в
+    // Phaser canvas, поэтому только полупрозрачная заливка — визуально 95%).
+    const bg = mkG(); bg.fillStyle(0x000000, 0.30); bg.fillRoundedRect(x, y, w, h, r); c.add(bg);
 
     // Для слота брони — используем wardrobeEquipped (косметика), а не статовый предмет
     const wardrobeEq = slot === 'armor' ? State.wardrobeEquipped : null;
@@ -60,8 +66,9 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // Без halo-круга и подложки — свечение идёт от самой иконки
-      // (3-слойный preFX glow ниже на img).
+      // Тонкая обводка цвета редкости — даёт чёткую форму квадрата
+      // (CSS-аналог: border: 1.5px solid rarityColor).
+      const border = mkG(); border.lineStyle(1.5, bc, 0.9); border.strokeRoundedRect(x, y, w, h, r); c.add(border);
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -81,15 +88,9 @@ Object.assign(MenuScene.prototype, {
         const imgSize = small ? 38 : 50;
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(imgSize, imgSize);
-        // 3-слойный неоновый glow (как иконка-референс):
-        //  1) большой мягкий outer-glow — рассеянный ореол, тает в темноте
-        //  2) inner-glow — "светится изнутри" как полупрозрачное стекло
-        //  3) тонкий белый rim-light — блик по контуру
-        try {
-          img.preFX?.addGlow(bc,       6,   0,   false, 0.05, 24);
-          img.preFX?.addGlow(bc,       0,   3,   false, 0.10, 12);
-          img.preFX?.addGlow(0xffffff, 1.5, 0,   false, 0.30, 4);
-        } catch (_) {}
+        // Тонкий деликатный glow — в 3 раза слабее прежнего (было outer 6 / dist 24).
+        // Inner-glow и white-rim убраны: rim теперь даёт обводка border, стекло — фон.
+        try { img.preFX?.addGlow(bc, 2, 0, false, 0.10, 8); } catch (_) {}
         ca(img);
       } else {
         // PNG ещё не пришёл (lazy-загрузка). Вместо дешёвого emoji 🔥/🛡
@@ -109,13 +110,13 @@ Object.assign(MenuScene.prototype, {
       }
 
     } else {
-      // Пустой слот — без подложки и кругов, только векторный значок.
-      // (preFX.addGlow на Graphics нестабильно работает — оставим чистым.)
+      // Пустой слот: тот же стеклянный фон (выше) + бледно-белая рамка + значок.
+      const border = mkG(); border.lineStyle(1, 0xffffff, 0.20); border.strokeRoundedRect(x, y, w, h, r); c.add(border);
       this._drawSlotIcon(c, cx, cy, slot, mkG, ca, small);
     }
 
     if (!small) {
-      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 9, 'rgba(210,215,235,0.9)', true)).setOrigin(0.5);
+      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 9, '#ffffff', true)).setOrigin(0.5);
     }
 
     const zone = mkZ(x + w / 2, y + h / 2, w + 4, h + 4).setInteractive({ useHandCursor: true });
