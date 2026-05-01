@@ -281,35 +281,3 @@ if (typeof document !== 'undefined') {
   }, true);
 }
 
-// Видимый бейдж версии — игрок сразу понимает «новая у меня сборка или старая».
-// Если этого бейджа нет на экране — Mini App кэшируется, надо закрыть/открыть заново.
-// Также показывает текущий warrior_type — диагностика «какой скин ожидается в бою».
-(function _injectBuildBadge() {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById('da-build-badge')) return;
-  const v = window.BUILD_VERSION || '?';
-  const make = () => {
-    if (document.getElementById('da-build-badge')) return;
-    const d = document.createElement('div');
-    d.id = 'da-build-badge';
-    d.textContent = 'v' + v;
-    Object.assign(d.style, {
-      position: 'fixed', right: '4px', bottom: '4px',
-      background: 'rgba(0,0,0,.55)', color: '#aaa',
-      fontSize: '9px', fontFamily: 'system-ui, sans-serif',
-      padding: '2px 6px', borderRadius: '4px',
-      zIndex: '999', pointerEvents: 'none',
-    });
-    document.body.appendChild(d);
-    // Лёгкий диагностический бейдж: показывает текущий warrior_type. Раз в 3с.
-    setInterval(() => {
-      let wt = '?';
-      try {
-        if (typeof State !== 'undefined' && State.player) wt = State.player.warrior_type || '?';
-      } catch(_) {}
-      d.textContent = 'v' + v + ' | wt:' + wt;
-    }, 3000);
-  };
-  if (document.body) make();
-  else document.addEventListener('DOMContentLoaded', make, {once: true});
-})();

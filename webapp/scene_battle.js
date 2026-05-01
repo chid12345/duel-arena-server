@@ -167,11 +167,6 @@ class BattleScene extends Phaser.Scene {
       document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
     } catch(_) {}
 
-    // АВАРИЙНАЯ кнопка «← Меню» — всегда доступный DOM-элемент с высоким
-    // z-index. Если HTML-overlay/Phaser сломаются и UI боя зависнет —
-    // у игрока есть выход без перезагрузки/рестарта сервера.
-    this._mountEmergencyExit();
-
     // ВСЕ бои (PvE-бот / Натиск / Башня / PvP-поиск / Вызов по нику) идут
     // через единый HTML-overlay. Phaser-путь оставлен только как fallback.
     if (typeof BotBattleHtml !== 'undefined') {
@@ -205,26 +200,6 @@ class BattleScene extends Phaser.Scene {
     if (typeof BattleHints !== 'undefined') BattleHints.onBattleStart(this);
   }
 
-  _mountEmergencyExit() {
-    try { document.getElementById('battle-emerg-exit')?.remove(); } catch(_) {}
-    const btn = document.createElement('div');
-    btn.id = 'battle-emerg-exit';
-    btn.textContent = '← Меню';
-    btn.style.cssText = 'position:fixed;top:6px;left:6px;z-index:99998;padding:5px 10px;background:rgba(220,50,80,.92);color:#fff;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;font-family:-apple-system,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.5);';
-    btn.onclick = () => {
-      // КРИТИЧНО: ставим skip-флаг ПЕРЕД переходом в Menu, иначе active_session
-      // отправит игрока обратно в сломанный бой и начнётся цикл Menu↔Battle
-      // (внешне выглядит как «моргает экран»). 90 сек хватает чтобы AFK-timeout
-      // на сервере успел убить мёртвый бой.
-      try { localStorage.setItem('da_skip_battle_resume', String(Date.now())); } catch(_) {}
-      try { State.battle = null; } catch(_) {}
-      try { BotBattleHtml?.unmount?.(); } catch(_) {}
-      try { btn.remove(); } catch(_) {}
-      this.scene.start('Menu', { returnTab: 'profile' });
-    };
-    document.body.appendChild(btn);
-  }
-
   _armUiWatchdog() {
     // Через 4с проверяем — отрисовался ли UI боя? Если ни HTML-overlay
     // (#bb-p1n не существует), ни Phaser-арена (this.warrior1 = null),
@@ -250,7 +225,6 @@ class BattleScene extends Phaser.Scene {
     // Phaser сам чистит time.addEvent и tweens, но DOM-оверлей и WS-handler
     // висят независимо — убираем вручную, иначе после выхода из боя
     // BattleLog остаётся на экране, а ws.onmessage дёргает мёртвую сцену.
-    try { document.getElementById('battle-emerg-exit')?.remove(); } catch(_) {}
     if (this._uiWatchdog) { try { this._uiWatchdog.remove(); } catch(_) {} this._uiWatchdog = null; }
     try { BattleLog.hide(); } catch(_) {}
     try { if (typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}

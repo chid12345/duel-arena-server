@@ -183,7 +183,6 @@ Object.assign(BattleScene.prototype, {
   },
 
   shutdown() {
-    try { document.getElementById('battle-emerg-exit')?.remove(); } catch(_) {}
     if (this._uiWatchdog) { try { this._uiWatchdog.remove(); } catch(_) {} this._uiWatchdog = null; }
     try { BattleLog.hideHistory?.(); } catch(_) {}
     try { BattleLog.hide(); } catch(_) {}
