@@ -285,10 +285,31 @@ function connectWS(userId, onMessage) {
     };
     return State.ws;
   }
-  // Закрываем "зависшее" соединение без авто-переподключения
-  if (State.ws && State.ws.readyState !== WebSocket.CLOSED) {
+  // Если сокет ещё в CONNECTING — НЕ закрываем (это вызвало бы Chrome warning
+   // "closed before connection established"). Просто переназначаем handlers
+  // и ждём пока handshake завершится.
+  if (State.ws && State.ws.readyState === WebSocket.CONNECTING) {
+    const _curWs = State.ws;
+    _curWs.onmessage = e => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data && data.event === 'auth_failed') {
+          console.error('[WS] auth failed — закрываем без переподключения');
+          _curWs.onclose = null;
+          try { _curWs.close(); } catch(_) {}
+          return;
+        }
+        onMessage(data);
+      } catch(_) {}
+    };
+    _curWs.onclose = () => {
+      if (State.ws === _curWs) setTimeout(() => connectWS(userId, onMessage), 3000);
+    };
+    return _curWs;
+  }
+  // Закрываем "зависшее" CLOSING соединение без авто-переподключения
+  if (State.ws && State.ws.readyState === WebSocket.CLOSING) {
     State.ws.onclose = null;
-    State.ws.close();
   }
 
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
