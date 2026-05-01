@@ -144,33 +144,10 @@ const BotBattleHtml = (() => {
       s._currentPvpBgIdx = pvpBgIdx;
       root = document.createElement('div'); root.id = 'bb-root';
       if (isPvp) root.classList.add('pvp');
-      // НЕ позиционируем по канвасу — в Telegram Web WebView канвас может
-      // быть в кривой позиции (top=644 при viewport 670 → overlay уезжает
-      // за нижнюю границу). CSS #bb-root{position:fixed;inset:0} покрывает
-      // весь iframe — то что нужно для боевого UI.
       const r = s.game.canvas.getBoundingClientRect();
-      console.log('[BotBattleHtml] canvas rect (info only):', { left: r.left, top: r.top, width: r.width, height: r.height });
+      Object.assign(root.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' });
       document.body.appendChild(root);
       _renderShell(b0, skinId, pvpBgIdx);
-      // Диагностика: видны ли элементы в DOM после рендера? Если offsetWidth=0 —
-      // элемент скрыт (display:none, нулевой размер, или вне viewport-clip).
-      try {
-        const probe = sel => {
-          const el = root.querySelector(sel);
-          return el ? `${el.offsetWidth}x${el.offsetHeight}` : 'absent';
-        };
-        console.log('[BotBattleHtml] visibility probe:', {
-          root:    `${root.offsetWidth}x${root.offsetHeight}`,
-          rootPos: `(${root.getBoundingClientRect().left.toFixed(0)},${root.getBoundingClientRect().top.toFixed(0)})`,
-          bg:      probe('.bg'),
-          hpRow:   probe('.hp-row'),
-          hpBlock: probe('.hp-block'),
-          fighter: probe('.fighter.boss'),
-          atkCol:  probe('.atk-col'),
-          confirm: probe('.confirm-btn'),
-          blog:    probe('.blog'),
-        });
-      } catch(e) { console.warn('[BotBattleHtml] visibility probe failed:', e); }
       clickHandler = _onClick;
       root.addEventListener('click', clickHandler);
       // Прямой listener на ники — bbBreath и pointer-events иногда мешают
