@@ -183,4 +183,13 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_04_28_116_wb_qte_cooldown_ms", [
         "ALTER TABLE world_boss_player_state ADD COLUMN last_qte_ms INTEGER DEFAULT 0",
     ]),
+
+    # 18. Индексы для часто сортируемых колонок без покрытия:
+    #     - clans.season_score / wins — для кланового лидерборда (ORDER BY season_score DESC)
+    #     - LOWER(players.username) — для поиска без учёта регистра (LIKE, CASE)
+    ("2026_05_01_117_perf_indexes", [
+        "CREATE INDEX IF NOT EXISTS idx_clans_season_score ON clans (season_score DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_clans_wins ON clans (wins DESC)",
+        "CREATE INDEX IF NOT EXISTS idx_players_username_lower ON players (LOWER(username))",
+    ]),
 ]

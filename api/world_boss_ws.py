@@ -242,16 +242,27 @@ def register_world_boss_ws_routes(app) -> None:
             return
         await wb_manager.connect(user_id, ws)
         logger.info("WB WS connected uid=%s (subs=%d)", user_id, len(wb_manager.connections))
+
+        async def _ping():
+            while True:
+                await asyncio.sleep(20)
+                try:
+                    await ws.send_json({"event": "ping"})
+                except Exception:
+                    break
+
+        ping_task = asyncio.create_task(_ping())
         try:
             while True:
                 # Держим соединение — payload шлёт batter_tick_job.
-                # Клиент может слать любой текст (ping) — читаем и игнорим.
+                # Клиент может слать любой текст (ping/pong) — читаем и игнорим.
                 await ws.receive_text()
         except WebSocketDisconnect:
             pass
         except Exception as e:
             logger.warning("WB WS error uid=%s: %s", user_id, e)
         finally:
+            ping_task.cancel()
             await wb_manager.disconnect(user_id)
             logger.info("WB WS disconnected uid=%s (subs=%d)", user_id, len(wb_manager.connections))
 

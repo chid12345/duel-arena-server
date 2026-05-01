@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.7.22"
-VERSION_LABEL = "v2.7.22 — FIX: effMax ReferenceError в regen-tick (HP-текст); guard от дублирования таймера; WS onmessage=null в shutdown; _regenTimer/_profileTasksBadgeObjs в shutdown."
+VERSION = "2.7.23"
+VERSION_LABEL = "v2.7.23 — FIX: try/finally на DB-соединениях (clans join/leave/info, wb_entry, clan_routes); индексы clans.season_score/wins + LOWER(username); WB WS ping/pong; queue timer refs."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "11.92"
+GAME_VERSION = "11.93"

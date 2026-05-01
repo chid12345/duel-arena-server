@@ -97,14 +97,16 @@ def attach_social_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 # Проверяем есть ли уже pending-заявка от этого игрока
                 try:
                     conn = db.get_connection()
-                    cursor = conn.cursor()
-                    cursor.execute(
-                        "SELECT id FROM clan_join_requests "
-                        "WHERE clan_id = ? AND user_id = ? AND status = 'pending'",
-                        (int(clan_id), uid),
-                    )
-                    my_pending_request = cursor.fetchone() is not None
-                    conn.close()
+                    try:
+                        cursor = conn.cursor()
+                        cursor.execute(
+                            "SELECT id FROM clan_join_requests "
+                            "WHERE clan_id = ? AND user_id = ? AND status = 'pending'",
+                            (int(clan_id), uid),
+                        )
+                        my_pending_request = cursor.fetchone() is not None
+                    finally:
+                        conn.close()
                 except Exception:
                     pass
         except Exception:

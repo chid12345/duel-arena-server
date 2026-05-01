@@ -8,7 +8,7 @@ Object.assign(QueueScene.prototype, {
   /* ── Таймер ожидания ──────────────────────────────────── */
   _startSearchTimer() {
     this._startTs = Date.now();
-    this.time.addEvent({
+    this._searchTimer = this.time.addEvent({
       delay: 1000, loop: true,
       callback: () => {
         if (!this._searching) return;

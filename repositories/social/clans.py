@@ -101,79 +101,79 @@ class SocialClanMixin:
 
     def join_clan(self, user_id: int, clan_id: int) -> Dict[str, Any]:
         conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT clan_id, level FROM players WHERE user_id = ?", (user_id,))
-        row = cursor.fetchone()
-        if row and row["clan_id"]:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT clan_id, level FROM players WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            if row and row["clan_id"]:
+                return {"ok": False, "reason": "Вы уже состоите в клане"}
+            player_level = int((row or {}).get("level") or 1)
+            cursor.execute(
+                "SELECT id, name, COALESCE(min_level,1) as min_level, "
+                "COALESCE(closed,0) as closed FROM clans WHERE id = ?",
+                (clan_id,),
+            )
+            clan = cursor.fetchone()
+            if not clan:
+                return {"ok": False, "reason": "Клан не найден"}
+            if int(clan["closed"]) == 1:
+                return {"ok": False, "reason": "Клан закрыт — подайте заявку"}
+            if player_level < int(clan["min_level"]):
+                return {"ok": False, "reason": f"Нужен уровень не ниже {clan['min_level']}"}
+            cursor.execute("SELECT COUNT(*) as cnt FROM clan_members WHERE clan_id = ?", (clan_id,))
+            if cursor.fetchone()["cnt"] >= 20:
+                return {"ok": False, "reason": "Клан полон (макс. 20 человек)"}
+            cursor.execute("INSERT INTO clan_members (user_id, clan_id) VALUES (?, ?)", (user_id, clan_id))
+            cursor.execute("UPDATE players SET clan_id = ? WHERE user_id = ?", (clan_id, user_id))
+            cursor.execute("SELECT username FROM players WHERE user_id = ?", (user_id,))
+            uname = (cursor.fetchone() or {}).get("username") or f"User{user_id}"
+            conn.commit()
+        finally:
             conn.close()
-            return {"ok": False, "reason": "Вы уже состоите в клане"}
-        player_level = int((row or {}).get("level") or 1)
-        cursor.execute(
-            "SELECT id, name, COALESCE(min_level,1) as min_level, "
-            "COALESCE(closed,0) as closed FROM clans WHERE id = ?",
-            (clan_id,),
-        )
-        clan = cursor.fetchone()
-        if not clan:
-            conn.close()
-            return {"ok": False, "reason": "Клан не найден"}
-        if int(clan["closed"]) == 1:
-            conn.close()
-            return {"ok": False, "reason": "Клан закрыт — подайте заявку"}
-        if player_level < int(clan["min_level"]):
-            conn.close()
-            return {"ok": False, "reason": f"Нужен уровень не ниже {clan['min_level']}"}
-        cursor.execute("SELECT COUNT(*) as cnt FROM clan_members WHERE clan_id = ?", (clan_id,))
-        if cursor.fetchone()["cnt"] >= 20:
-            conn.close()
-            return {"ok": False, "reason": "Клан полон (макс. 20 человек)"}
-        cursor.execute("INSERT INTO clan_members (user_id, clan_id) VALUES (?, ?)", (user_id, clan_id))
-        cursor.execute("UPDATE players SET clan_id = ? WHERE user_id = ?", (clan_id, user_id))
-        cursor.execute("SELECT username FROM players WHERE user_id = ?", (user_id,))
-        uname = (cursor.fetchone() or {}).get("username") or f"User{user_id}"
-        conn.commit(); conn.close()
         try: self.log_clan_event(int(clan_id), "join", actor_id=user_id, actor_name=uname)
         except Exception: pass
         return {"ok": True, "clan_name": clan["name"]}
 
     def leave_clan(self, user_id: int) -> Dict[str, Any]:
         conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT clan_id FROM players WHERE user_id = ?", (user_id,))
-        row = cursor.fetchone()
-        if not row or not row["clan_id"]:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT clan_id FROM players WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            if not row or not row["clan_id"]:
+                return {"ok": False, "reason": "Вы не в клане"}
+            clan_id = row["clan_id"]
+            cursor.execute("SELECT leader_id FROM clans WHERE id = ?", (clan_id,))
+            clan = cursor.fetchone()
+            if clan and clan["leader_id"] == user_id:
+                return {"ok": False, "reason": "Лидер не может покинуть клан. Сначала передайте лидерство."}
+            cursor.execute("SELECT username FROM players WHERE user_id = ?", (user_id,))
+            uname = (cursor.fetchone() or {}).get("username") or f"User{user_id}"
+            cursor.execute("DELETE FROM clan_members WHERE user_id = ?", (user_id,))
+            cursor.execute("UPDATE players SET clan_id = NULL WHERE user_id = ?", (user_id,))
+            conn.commit()
+        finally:
             conn.close()
-            return {"ok": False, "reason": "Вы не в клане"}
-        clan_id = row["clan_id"]
-        cursor.execute("SELECT leader_id FROM clans WHERE id = ?", (clan_id,))
-        clan = cursor.fetchone()
-        if clan and clan["leader_id"] == user_id:
-            conn.close()
-            return {"ok": False, "reason": "Лидер не может покинуть клан. Сначала передайте лидерство."}
-        cursor.execute("SELECT username FROM players WHERE user_id = ?", (user_id,))
-        uname = (cursor.fetchone() or {}).get("username") or f"User{user_id}"
-        cursor.execute("DELETE FROM clan_members WHERE user_id = ?", (user_id,))
-        cursor.execute("UPDATE players SET clan_id = NULL WHERE user_id = ?", (user_id,))
-        conn.commit(); conn.close()
         try: self.log_clan_event(int(clan_id), "leave", actor_id=user_id, actor_name=uname)
         except Exception: pass
         return {"ok": True}
 
     def get_clan_info(self, clan_id: int) -> Optional[Dict[str, Any]]:
         conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM clans WHERE id = ?", (clan_id,))
-        clan = cursor.fetchone()
-        if not clan:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM clans WHERE id = ?", (clan_id,))
+            clan = cursor.fetchone()
+            if not clan:
+                return None
+            cursor.execute(
+                "SELECT cm.user_id, cm.role, p.username, p.level, p.wins FROM clan_members cm "
+                "JOIN players p ON p.user_id = cm.user_id WHERE cm.clan_id = ? ORDER BY cm.role DESC, p.wins DESC",
+                (clan_id,),
+            )
+            members = [dict(r) for r in cursor.fetchall()]
+        finally:
             conn.close()
-            return None
-        cursor.execute(
-            "SELECT cm.user_id, cm.role, p.username, p.level, p.wins FROM clan_members cm "
-            "JOIN players p ON p.user_id = cm.user_id WHERE cm.clan_id = ? ORDER BY cm.role DESC, p.wins DESC",
-            (clan_id,),
-        )
-        members = [dict(r) for r in cursor.fetchall()]
-        conn.close()
         return {"clan": dict(clan), "members": members}
 
     def search_clans(self, query_str: str, limit: int = 5) -> List[Dict]:

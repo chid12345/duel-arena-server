@@ -83,7 +83,7 @@ class QueueScene extends Phaser.Scene {
       .setOrigin(0.5);
 
     // Анимация точек в тексте
-    this.time.addEvent({
+    this._dotsTimer = this.time.addEvent({
       delay: 500, loop: true,
       callback: () => {
         if (!this._searching) return;

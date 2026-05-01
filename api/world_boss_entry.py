@@ -61,65 +61,64 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
     spawn_id = int(nxt["spawn_id"])
 
     conn = db.get_connection()
-    cur = conn.cursor()
+    try:
+        cur = conn.cursor()
 
-    # Подтягиваем ник из Telegram (если в БД пусто), чтобы в ростере было имя
-    _refresh_username(cur, uid, tg_user)
+        # Подтягиваем ник из Telegram (если в БД пусто), чтобы в ростере было имя
+        _refresh_username(cur, uid, tg_user)
 
-    # Уже зарегистрирован — ничего не делаем, просто возвращаем статус
-    cur.execute(
-        "SELECT 1 FROM world_boss_registrations WHERE spawn_id=? AND user_id=?",
-        (spawn_id, uid),
-    )
-    if cur.fetchone():
+        # Уже зарегистрирован — ничего не делаем, просто возвращаем статус
+        cur.execute(
+            "SELECT 1 FROM world_boss_registrations WHERE spawn_id=? AND user_id=?",
+            (spawn_id, uid),
+        )
+        if cur.fetchone():
+            cur.execute(
+                "SELECT COUNT(*) AS c FROM world_boss_registrations WHERE spawn_id=?",
+                (spawn_id,),
+            )
+            count = int(cur.fetchone()["c"])
+            cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+            row = cur.fetchone()
+            gold_left = int(row["gold"]) if row else 0
+            conn.commit()
+            return {"ok": True, "is_registered": True, "registrants_count": count,
+                    "spawn_id": spawn_id, "gold_left": gold_left}
+
+        # Атомарно списываем взнос (AND gold >= fee предотвращает уход в минус)
+        cur.execute(
+            "SELECT gold FROM players WHERE user_id=?", (uid,)
+        )
+        player = cur.fetchone()
+        if not player:
+            return {"ok": False, "reason": "Игрок не найден"}
+
+        cur.execute(
+            "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
+            (WB_ENTRY_FEE, uid, WB_ENTRY_FEE),
+        )
+        if cur.rowcount == 0:
+            gold_have = int(player["gold"])
+            return {"ok": False, "reason": f"Нужно {WB_ENTRY_FEE} золота (у тебя {gold_have})"}
+
+        # Регистрируем в том же соединении
+        cur.execute(
+            "INSERT OR IGNORE INTO world_boss_registrations (spawn_id, user_id) VALUES (?,?)",
+            (spawn_id, uid),
+        )
+
+        cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+        gold_left = int(cur.fetchone()["gold"])
+
         cur.execute(
             "SELECT COUNT(*) AS c FROM world_boss_registrations WHERE spawn_id=?",
             (spawn_id,),
         )
         count = int(cur.fetchone()["c"])
-        cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
-        row = cur.fetchone()
-        gold_left = int(row["gold"]) if row else 0
+
         conn.commit()
+    finally:
         conn.close()
-        return {"ok": True, "is_registered": True, "registrants_count": count,
-                "spawn_id": spawn_id, "gold_left": gold_left}
-
-    # Атомарно списываем взнос (AND gold >= fee предотвращает уход в минус)
-    cur.execute(
-        "SELECT gold FROM players WHERE user_id=?", (uid,)
-    )
-    player = cur.fetchone()
-    if not player:
-        conn.close()
-        return {"ok": False, "reason": "Игрок не найден"}
-
-    cur.execute(
-        "UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?",
-        (WB_ENTRY_FEE, uid, WB_ENTRY_FEE),
-    )
-    if cur.rowcount == 0:
-        gold_have = int(player["gold"])
-        conn.close()
-        return {"ok": False, "reason": f"Нужно {WB_ENTRY_FEE} золота (у тебя {gold_have})"}
-
-    # Регистрируем в том же соединении
-    cur.execute(
-        "INSERT OR IGNORE INTO world_boss_registrations (spawn_id, user_id) VALUES (?,?)",
-        (spawn_id, uid),
-    )
-
-    cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
-    gold_left = int(cur.fetchone()["gold"])
-
-    cur.execute(
-        "SELECT COUNT(*) AS c FROM world_boss_registrations WHERE spawn_id=?",
-        (spawn_id,),
-    )
-    count = int(cur.fetchone()["c"])
-
-    conn.commit()
-    conn.close()
 
     return {"ok": True, "is_registered": True, "registrants_count": count,
             "spawn_id": spawn_id, "gold_left": gold_left}
