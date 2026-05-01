@@ -148,6 +148,28 @@ const BotBattleHtml = (() => {
       console.log('[BotBattleHtml] canvas rect:', { left: r.left.toFixed(0), top: r.top.toFixed(0), width: r.width.toFixed(0), height: r.height.toFixed(0) });
       Object.assign(root.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' });
       document.body.appendChild(root);
+      // ДИАГНОСТИКА: проверяем СРАЗУ после appendChild — где реально оказался root
+      // и что с body/документом (transforms, scroll).
+      try {
+        const r0 = root.getBoundingClientRect();
+        const bodyR = document.body.getBoundingClientRect();
+        const cs = getComputedStyle(root);
+        const bcs = getComputedStyle(document.body);
+        const hcs = getComputedStyle(document.documentElement);
+        console.log('[BotBattleHtml] AFTER appendChild:', {
+          rootRect: `(${r0.left.toFixed(0)},${r0.top.toFixed(0)}) ${r0.width.toFixed(0)}x${r0.height.toFixed(0)}`,
+          rootInlineTop: root.style.top,
+          rootComputedPos: cs.position,
+          rootComputedTop: cs.top,
+          rootOffsetParent: root.offsetParent?.tagName || 'null',
+          bodyRect: `(${bodyR.left.toFixed(0)},${bodyR.top.toFixed(0)}) ${bodyR.width.toFixed(0)}x${bodyR.height.toFixed(0)}`,
+          bodyTransform: bcs.transform,
+          htmlTransform: hcs.transform,
+          scrollY: window.scrollY,
+          bodyHeight: document.body.style.height,
+          htmlHeight: document.documentElement.style.height,
+        });
+      } catch(e) { console.warn('[BotBattleHtml] post-append diag failed:', e); }
       _renderShell(b0, skinId, pvpBgIdx);
       // Диагностика: реальная позиция и размеры root + ключевых элементов.
       try {
