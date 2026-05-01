@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.7.35"
-VERSION_LABEL = "v2.7.35 — UI: радар-арт + оранжевый glow + координатный лог в QueueScene."
+VERSION = "2.7.36"
+VERSION_LABEL = "v2.7.36 — UI: Frameless Cyberpunk кнопка с черепом в QueueScene."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "12.05"
+GAME_VERSION = "12.06"

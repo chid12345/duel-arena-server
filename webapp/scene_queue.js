@@ -142,66 +142,92 @@ class QueueScene extends Phaser.Scene {
 
   /* ── Кнопки ───────────────────────────────────────────── */
   _buildButtons(W, H) {
-    this._makeCyberBtn(
-      W / 2, H * 0.70, 230, 46,
-      '🤖  БОЙ С БОТОМ',
-      () => this._onBotFight()
-    );
+    this._makeFramelessBtn(W / 2, H * 0.71, 262, 50, () => this._onBotFight());
 
-    txt(this, W / 2, H * 0.80,
+    txt(this, W / 2, H * 0.81,
       'Матч найдётся автоматически — можешь подождать',
       9, '#4ab8cc').setOrigin(0.5).setAlpha(0.55);
 
     makeBackBtn(this, 'Отменить поиск', () => this._onCancel());
   }
 
-  /* ── Полупрозрачная кнопка с красной рамкой + hover glow ── */
-  _makeCyberBtn(x, y, w, h, label, cb) {
-    const cut = 10;
-    const pts = [
-      new Phaser.Geom.Point(x - w / 2 + cut, y - h / 2),
-      new Phaser.Geom.Point(x + w / 2,       y - h / 2),
-      new Phaser.Geom.Point(x + w / 2,       y + h / 2 - cut),
-      new Phaser.Geom.Point(x + w / 2 - cut, y + h / 2),
-      new Phaser.Geom.Point(x - w / 2,       y + h / 2),
-      new Phaser.Geom.Point(x - w / 2,       y - h / 2 + cut),
-    ];
+  /* ── Frameless Cyberpunk кнопка с черепом ─────────────── */
+  _makeFramelessBtn(x, y, w, h, cb) {
+    const CL = 16;   // длина уголка
+    const lx = x - w / 2, rx = x + w / 2;
+    const ty = y - h / 2, by = y + h / 2;
 
-    const bg = this.add.graphics();
+    // Фон (hover-заливка)
+    const bgG = this.add.graphics();
 
-    const _draw = (hover) => {
-      bg.clear();
-      // Фон: полупрозрачный чёрный
-      bg.fillStyle(0x000000, hover ? 0.75 : 0.55);
-      bg.fillPoints(pts, true);
-      // Рамка: тонкая красная, при hover — яркая с glow
-      const borderAlpha = hover ? 1 : 0.5;
-      bg.lineStyle(hover ? 2 : 1.5, 0xff2244, borderAlpha);
-      bg.strokePoints(pts, true);
+    // Уголки
+    const cG = this.add.graphics();
+    const _drawCorners = (bright) => {
+      cG.clear();
+      // Внешний glow при hover
+      if (bright) {
+        cG.lineStyle(7, 0xff0000, 0.12);
+        [[lx,ty,CL,true],[rx,ty,CL,false],[lx,by,CL,true,true],[rx,by,CL,false,true]]
+          .forEach(([cx2,cy2,l,left,bot]) => _corner(cG, cx2, cy2, l, left, !!bot));
+        cG.lineStyle(4, 0xff0000, 0.25);
+        [[lx,ty,CL,true],[rx,ty,CL,false],[lx,by,CL,true,true],[rx,by,CL,false,true]]
+          .forEach(([cx2,cy2,l,left,bot]) => _corner(cG, cx2, cy2, l, left, !!bot));
+      }
+      // Основные уголки
+      cG.lineStyle(bright ? 2 : 1.5, 0xff0000, bright ? 1.0 : 0.65);
+      [[lx,ty,CL,true],[rx,ty,CL,false],[lx,by,CL,true,true],[rx,by,CL,false,true]]
+        .forEach(([cx2,cy2,l,left,bot]) => _corner(cG, cx2, cy2, l, left, !!bot));
+    };
+
+    const _corner = (g, cx2, cy2, l, left, bot) => {
+      const sx = left ? 1 : -1;
+      const sy = bot  ? -1 : 1;
+      g.lineBetween(cx2, cy2, cx2 + sx * l, cy2);
+      g.lineBetween(cx2, cy2, cx2, cy2 + sy * l);
+    };
+
+    const _drawBg = (hover) => {
+      bgG.clear();
       if (hover) {
-        // Внешнее свечение (3 слоя)
-        bg.lineStyle(6, 0xff2244, 0.08);
-        bg.strokePoints(pts, true);
-        bg.lineStyle(4, 0xff2244, 0.14);
-        bg.strokePoints(pts, true);
-        bg.lineStyle(2, 0xff2244, 0.35);
-        bg.strokePoints(pts, true);
+        bgG.fillStyle(0xff0000, 0.08);
+        bgG.fillRect(lx, ty, w, h);
       }
     };
 
-    _draw(false);
+    _drawCorners(false);
+    _drawBg(false);
 
-    this.add.text(x, y, label, {
+    // Череп — ADD blend чтобы белый фон стал прозрачным на тёмном bg
+    const skullX = lx + 26;
+    const skull = this.add.image(skullX, y, 'skull_bot')
+      .setDisplaySize(32, 32)
+      .setOrigin(0.5)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setAlpha(0.85);
+
+    // Пульсация черепа (глаза разгораются/затухают)
+    this.tweens.add({
+      targets: skull,
+      alpha: { from: 0.6, to: 1.0 },
+      duration: 1100,
+      yoyo: true, repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    // Текст
+    const labelX = skullX + 22;
+    this.add.text(labelX, y, '[ ИНИЦИИРОВАТЬ БОЙ С ИИ ]', {
       fontFamily: "'Orbitron','Arial',sans-serif",
-      fontSize: '13px', fontStyle: 'bold',
-      color: '#ff6680', resolution: 2,
-    }).setOrigin(0.5);
+      fontSize: '10px', fontStyle: 'bold',
+      color: '#ff0000', resolution: 2,
+    }).setOrigin(0, 0.5);
 
+    // Зона касания
     const zone = this.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
-    zone.on('pointerover',  () => _draw(true));
-    zone.on('pointerout',   () => _draw(false));
-    zone.on('pointerdown',  () => { _draw(true); tg?.HapticFeedback?.impactOccurred('medium'); });
-    zone.on('pointerup',    () => { _draw(false); cb(); });
+    zone.on('pointerover',  () => { _drawBg(true);  _drawCorners(true); });
+    zone.on('pointerout',   () => { _drawBg(false); _drawCorners(false); });
+    zone.on('pointerdown',  () => { tg?.HapticFeedback?.impactOccurred('medium'); });
+    zone.on('pointerup',    () => { _drawBg(false); _drawCorners(false); cb(); });
   }
 
   /* ── Старый _makeBtn (совместимость) ──────────────────── */
