@@ -142,126 +142,99 @@ class QueueScene extends Phaser.Scene {
 
   /* ── Кнопки ───────────────────────────────────────────── */
   _buildButtons(W, H) {
-    this._makeFramelessBtn(W / 2, H * 0.71, 262, 50, () => this._onBotFight());
+    this._makeIconBtn(W / 2, H * 0.72, () => this._onBotFight());
 
-    txt(this, W / 2, H * 0.81,
+    txt(this, W / 2, H * 0.855,
       'Матч найдётся автоматически — можешь подождать',
-      9, '#4ab8cc').setOrigin(0.5).setAlpha(0.55);
+      9, '#4ab8cc').setOrigin(0.5).setAlpha(0.5);
 
     makeBackBtn(this, 'Отменить поиск', () => this._onCancel());
   }
 
-  /* ── Frameless Cyberpunk кнопка с черепом ─────────────── */
-  _makeFramelessBtn(x, y, w, h, cb) {
-    const CL = 16;   // длина уголка
-    const lx = x - w / 2, rx = x + w / 2;
-    const ty = y - h / 2, by = y + h / 2;
+  /* ── 3D Icon-кнопка: робот + текст, масштаб по Container ── */
+  _makeIconBtn(x, y, cb) {
+    const SZ  = 90;   // размер иконки
+    const R   = 18;   // скругление фона
 
-    // Фон (hover-заливка)
+    // Container — всё внутри масштабируется из центра
+    const cont = this.add.container(x, y);
+
+    // 1. Тень-свечение снизу (парящий эффект)
+    const shadowG = this.add.graphics();
+    for (let i = 8; i >= 1; i--) {
+      const ew = SZ * 0.7 * (i / 8);
+      const eh = 10 * (i / 8);
+      const a  = 0.06 * i / 8;
+      shadowG.fillStyle(0xff0000, a);
+      shadowG.fillEllipse(0, SZ / 2 + 6 - (8 - i) * 0.5, ew, eh);
+    }
+    cont.add(shadowG);
+
+    // 2. Тёмный фон с скруглением (имитация border-radius)
     const bgG = this.add.graphics();
+    bgG.fillStyle(0x120000, 0.55);
+    bgG.fillRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
+    // Тонкая красная обводка
+    bgG.lineStyle(1, 0xff2020, 0.3);
+    bgG.strokeRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
+    cont.add(bgG);
 
-    // Уголки
-    const cG = this.add.graphics();
-    const _drawCorners = (bright) => {
-      cG.clear();
-      // Внешний glow при hover
-      if (bright) {
-        cG.lineStyle(7, 0xff0000, 0.12);
-        [[lx,ty,CL,true],[rx,ty,CL,false],[lx,by,CL,true,true],[rx,by,CL,false,true]]
-          .forEach(([cx2,cy2,l,left,bot]) => _corner(cG, cx2, cy2, l, left, !!bot));
-        cG.lineStyle(4, 0xff0000, 0.25);
-        [[lx,ty,CL,true],[rx,ty,CL,false],[lx,by,CL,true,true],[rx,by,CL,false,true]]
-          .forEach(([cx2,cy2,l,left,bot]) => _corner(cG, cx2, cy2, l, left, !!bot));
-      }
-      // Основные уголки
-      cG.lineStyle(bright ? 2 : 1.5, 0xff0000, bright ? 1.0 : 0.65);
-      [[lx,ty,CL,true],[rx,ty,CL,false],[lx,by,CL,true,true],[rx,by,CL,false,true]]
-        .forEach(([cx2,cy2,l,left,bot]) => _corner(cG, cx2, cy2, l, left, !!bot));
-    };
+    // 3. Изображение робота
+    const robot = this.add.image(0, -2, 'bot_icon')
+      .setDisplaySize(SZ * 0.82, SZ * 0.82)
+      .setOrigin(0.5);
+    cont.add(robot);
 
-    const _corner = (g, cx2, cy2, l, left, bot) => {
-      const sx = left ? 1 : -1;
-      const sy = bot  ? -1 : 1;
-      g.lineBetween(cx2, cy2, cx2 + sx * l, cy2);
-      g.lineBetween(cx2, cy2, cx2, cy2 + sy * l);
-    };
-
-    const _drawBg = (hover) => {
-      bgG.clear();
-      if (hover) {
-        bgG.fillStyle(0xff0000, 0.08);
-        bgG.fillRect(lx, ty, w, h);
-      }
-    };
-
-    _drawBg(false);
-
-    // ── Позиция черепа ──
-    const skullX = lx + 26;
-
-    // ── Слой 1: Радиальная подсветка сзади (dark-red → transparent) ──
-    const backdropG = this.add.graphics();
-    // ── Слой 2: Внешнее drop-shadow свечение ──
-    const glowG = this.add.graphics();
-
-    const _drawSkullGlow = (intense) => {
-      const K = intense ? 2.0 : 1.0;
-
-      // Радиальный градиент: 12 кругов от центра (тёмно-красный) → наружу (прозрачный)
-      backdropG.clear();
-      for (let i = 12; i >= 1; i--) {
-        const a = 0.025 * K * i / 12;
-        backdropG.fillStyle(0x660000, a);
-        backdropG.fillCircle(skullX, y, i * 3.2);
-      }
-
-      // drop-shadow: 8 полупрозрачных кругов снаружи иконки
-      glowG.clear();
-      for (let i = 8; i >= 1; i--) {
-        const r = 18 + i * 2.8;
-        const a = 0.05 * K * i / 8;
-        glowG.fillStyle(0xff0000, a);
-        glowG.fillCircle(skullX, y, r);
-      }
-      // Яркое внутреннее кольцо (ближний glow)
-      glowG.lineStyle(intense ? 3 : 1.5, 0xff2020, intense ? 0.55 : 0.25);
-      glowG.strokeCircle(skullX, y, 20);
-    };
-
-    _drawSkullGlow(false);
-
-    // ── Слой 3: Череп (ADD blend — белый фон растворяется, красный светится) ──
-    const skull = this.add.image(skullX, y, 'skull_bot')
-      .setDisplaySize(34, 34)
-      .setOrigin(0.5)
-      .setBlendMode(Phaser.BlendModes.ADD)
-      .setAlpha(0.82);
-
-    // Пульсация (глаза черепа разгораются)
+    // Плавное парение вверх-вниз
     this.tweens.add({
-      targets: skull,
-      alpha: { from: 0.6, to: 1.0 },
-      duration: 1100, yoyo: true, repeat: -1,
+      targets: cont,
+      y: y - 4,
+      duration: 1800, yoyo: true, repeat: -1,
       ease: 'Sine.easeInOut',
     });
 
-    // ── Слой 4: Уголки поверх черепа ──
-    _drawCorners(false);
-
-    // Текст
-    const labelX = skullX + 24;
-    this.add.text(labelX, y, '[ ИНИЦИИРОВАТЬ БОЙ С ИИ ]', {
+    // 4. Текст "ИИ-БОЙ" под роботом
+    const label = this.add.text(0, SZ / 2 + 14, 'ИИ-БОЙ', {
       fontFamily: "'Orbitron','Arial',sans-serif",
-      fontSize: '10px', fontStyle: 'bold',
-      color: '#ff0000', resolution: 2,
-    }).setOrigin(0, 0.5);
+      fontSize: '12px', fontStyle: 'bold',
+      color: '#00e5ff', resolution: 2,
+    }).setOrigin(0.5)
+      .setShadow(0, 0, '#00e5ff', 10, false, true);
+    cont.add(label);
 
-    // Зона касания
-    const zone = this.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
-    zone.on('pointerover',  () => { _drawBg(true);  _drawCorners(true);  _drawSkullGlow(true);  skull.setAlpha(1.0); });
-    zone.on('pointerout',   () => { _drawBg(false); _drawCorners(false); _drawSkullGlow(false); skull.setAlpha(0.82); });
-    zone.on('pointerdown',  () => { tg?.HapticFeedback?.impactOccurred('medium'); });
-    zone.on('pointerup',    () => { _drawBg(false); _drawCorners(false); _drawSkullGlow(false); skull.setAlpha(0.82); cb(); });
+    // 5. Интерактивная зона на весь контейнер
+    const hitW = SZ + 16, hitH = SZ + 36;
+    cont.setInteractive(
+      new Phaser.Geom.Rectangle(-hitW / 2, -SZ / 2 - 4, hitW, hitH),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    const _reset = () => {
+      this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 180, ease: 'Back.easeOut' });
+      robot.clearTint();
+      label.setStyle({ color: '#00e5ff' });
+      bgG.clear();
+      bgG.fillStyle(0x120000, 0.55);
+      bgG.fillRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
+      bgG.lineStyle(1, 0xff2020, 0.3);
+      bgG.strokeRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
+    };
+
+    cont.on('pointerdown', () => {
+      tg?.HapticFeedback?.impactOccurred('medium');
+      this.tweens.add({ targets: cont, scaleX: 0.88, scaleY: 0.88, duration: 90, ease: 'Power2' });
+      robot.setTint(0xff3333);
+      label.setStyle({ color: '#ff4444' });
+      // Вспышка фона
+      bgG.clear();
+      bgG.fillStyle(0xff0000, 0.18);
+      bgG.fillRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
+      bgG.lineStyle(2, 0xff0000, 0.9);
+      bgG.strokeRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
+    });
+
+    cont.on('pointerup',  () => { _reset(); cb(); });
+    cont.on('pointerout', () => _reset());
   }
 
   /* ── Старый _makeBtn (совместимость) ──────────────────── */

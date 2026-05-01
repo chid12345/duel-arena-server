@@ -38,6 +38,7 @@ class BootScene extends Phaser.Scene {
     this.load.image('hero_profile_bg', `hero_profile_bg.png${V}`);
     this.load.image('radar_target',    `radar_target.png${V}`);
     this.load.image('skull_bot',       `skull_bot.png${V}`);
+    this.load.image('bot_icon',        `bot_icon.png${V}`);
     if (typeof BotSkinPicker !== 'undefined') BotSkinPicker.preloadInto(this, V);
     for (let i = 1; i <= 5; i++) this.load.image(`pvp_bg_${i}`, `pvp_bg/${i}.png${V}`);
     const sub = document.getElementById('loading-sub');
