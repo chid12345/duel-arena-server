@@ -153,7 +153,7 @@ Object.assign(MenuScene.prototype, {
     }
 
     if (!small) {
-      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 9, 'rgba(210,215,235,0.9)', true)).setOrigin(0.5);
+      ca(mkT(cx, y + h - 9, _EQ_SLOT_LABELS[slot] || slot, 9, '#ffffff', true)).setOrigin(0.5);
     }
 
     const zone = mkZ(x + w / 2, y + h / 2, w + 4, h + 4).setInteractive({ useHandCursor: true });

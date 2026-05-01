@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.7.26"
-VERSION_LABEL = "v2.7.26 — FIX: таббар читает живое scene._activeTab вместо замороженного activeKey — Профиль/Меню не блокировались тапы; _switchTab использует setVisible вместо displayList.remove."
+VERSION = "2.7.27"
+VERSION_LABEL = "v2.7.27 — UI: ярче HP/XP/ELO/стат-лейблы и слоты экипировки в профиле."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "11.96"
+GAME_VERSION = "11.97"

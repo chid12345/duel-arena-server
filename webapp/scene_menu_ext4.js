@@ -101,7 +101,7 @@ Object.assign(MenuScene.prototype, {
       pBg.lineStyle(1.5, 0xfbbf24, 0.65); pBg.strokeRoundedRect(niX, avY + 23, 84, 17, 6);
       ca(mkT(niX + 42, avY + 31, `⭐ Premium · ${p.premium_days_left}д`, 9, '#fff8e7', true)).setOrigin(0.5);
     } else {
-      ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.4)'));
+      ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.75)'));
     }
 
     // Resource chips — рисованные иконки (монета + кристалл)
@@ -156,7 +156,7 @@ Object.assign(MenuScene.prototype, {
       const wx = PAD + i * scW;
       if (i > 0) { const sep = ca(mkG()); sep.lineStyle(1, 0xffffff, 0.06); sep.lineBetween(wx, sY + 4, wx, sY + 34); }
       ca(mkT(wx + scW / 2, sY + 11, d.v, 15, d.col, true)).setOrigin(0.5);
-      ca(mkT(wx + scW / 2, sY + 27, d.sub, 8, 'rgba(255,255,255,0.35)')).setOrigin(0.5);
+      ca(mkT(wx + scW / 2, sY + 27, d.sub, 8, 'rgba(255,255,255,0.65)')).setOrigin(0.5);
     });
     // Flame icon next to streak number
     { const fx = PAD + 3 * scW + scW * 0.68, fy = sY + 11;
@@ -223,7 +223,7 @@ Object.assign(MenuScene.prototype, {
       hrtG.fillTriangle(hic - 5, hiy, hic + 5, hiy, hic, hiy + 6); }
     ca(mkT(hpX + 18, hpRowCY - 5, 'HP', 9, hpColStr));
     const hpValStr = `${p.current_hp} / ${p.max_hp}`;
-    const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 9, 'rgba(255,255,255,0.5)')).setOrigin(1, 0);
+    const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 9, 'rgba(255,255,255,0.9)')).setOrigin(1, 0);
     const hpBX = hpX + 36, hpBW = W - PAD * 2 - 36 - 76;
     const hpBg = ca(mkBarGlow(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, 0x15803d, 0x86efac, 0x4ade80));
     this._liveHp = { g: hpBg, t: hpValTxt, x: hpBX, y: hpRowCY - Math.ceil(hpH / 2), w: hpBW, h: hpH };
@@ -239,7 +239,7 @@ Object.assign(MenuScene.prototype, {
         stG.fillStyle(0xc4b5fd, 0.5); stG.fillCircle(six, siy, 1.5); }
       ca(mkT(hpX + 18, xpRowCY - 5, 'XP', 9, '#a78bfa'));
       const xpValStr = `${p.exp} / ${p.exp_needed}`;
-      ca(mkT(W - PAD, xpRowCY - 5, xpValStr, 9, 'rgba(255,255,255,0.35)')).setOrigin(1, 0);
+      ca(mkT(W - PAD, xpRowCY - 5, xpValStr, 9, 'rgba(255,255,255,0.75)')).setOrigin(1, 0);
       ca(mkBarGlow(hpBX, xpRowCY - Math.ceil(hpH / 2), hpBW, hpH, Math.max(0, Math.min(1, (p.xp_pct || 0) / 100)), 0x4c1d95, 0xa855f7, 0xa855f7));
     } else {
       ca(mkT(W / 2, xpRowCY, '⭐ Макс. уровень', 10, '#fbbf24', true)).setOrigin(0.5);
