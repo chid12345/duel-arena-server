@@ -170,11 +170,21 @@ class BattleScene extends Phaser.Scene {
     // ВСЕ бои (PvE-бот / Натиск / Башня / PvP-поиск / Вызов по нику) идут
     // через единый HTML-overlay. Phaser-путь оставлен только как fallback.
     if (typeof BotBattleHtml !== 'undefined') {
-      this._htmlMode = true;
-      BotBattleHtml.mount(this);
-      this._setupWSBattle();
-      this._startTimer();
-      return;
+      try {
+        BotBattleHtml.mount(this);
+      } catch(e) {
+        console.error('[Battle] HTML overlay mount error — fallback to Phaser:', e);
+        try { BotBattleHtml.unmount(); } catch(_) {}
+      }
+      // isMounted() проверяет замыкание mounted — если mount вернулся
+      // досрочно (canvas null, бросил ошибку), падаем в Phaser-режим.
+      if (BotBattleHtml.isMounted()) {
+        this._htmlMode = true;
+        this._setupWSBattle();
+        this._startTimer();
+        return;
+      }
+      console.warn('[Battle] HTML overlay not mounted — using Phaser fallback');
     }
 
     this._buildArena();
