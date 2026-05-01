@@ -26,7 +26,7 @@ const CSS = `
 
 .bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:stretch;justify-content:center;background:rgba(1,4,12,.95);animation:bsFadeIn .18s cubic-bezier(.22,1,.36,1)}
 .bs-panel{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#050e1f url(battle_bg.png) center/cover no-repeat;isolation:isolate}
-.bs-panel::before{content:'';position:absolute;inset:0;background:rgba(2,8,20,.72);z-index:0;pointer-events:none}
+.bs-panel::before{content:'';position:absolute;inset:0;background:rgba(2,8,20,.55);z-index:0;pointer-events:none}
 .bs-panel>*{position:relative;z-index:1}
 
 .bs-cn{position:absolute;width:16px;height:16px;pointer-events:none;z-index:5}
@@ -50,31 +50,26 @@ const CSS = `
 .bs-ticker{font-family:'Share Tech Mono',monospace;font-size:8px;color:rgba(0,245,255,.2);padding:4px 0;border-bottom:1px solid rgba(0,245,255,.05);white-space:nowrap;overflow:hidden;letter-spacing:.8px}
 .bs-ticker-i{display:inline-block;animation:bsTicker 24s linear infinite;padding-left:20px}
 
-.bs-grid{flex:1;overflow-y:auto;padding:10px 0 14px;display:flex;flex-direction:column;gap:2px;scrollbar-width:none}
+.bs-grid{flex:1;overflow-y:auto;padding:10px 0 14px;display:flex;flex-direction:column;gap:15px;scrollbar-width:none;background:transparent}
 .bs-grid::-webkit-scrollbar{display:none}
 
 .bs-divider{height:1px;background:rgba(0,245,255,.06);margin:6px 16px}
 
-/* ── CP2077 Card — полная ширина, срез правого угла ── */
 .bs-card{
   position:relative;
   display:flex;align-items:center;gap:0;
-  padding:13px 38px 13px 16px;
-  background:rgba(0,8,20,.52);
-  backdrop-filter:blur(2px);
-  -webkit-backdrop-filter:blur(2px);
-  border:none;
-  border-left:3px solid #00f5ff;
+  padding:14px 16px 14px 16px;
+  background:rgba(0,40,60,0.4);
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  border:1px solid rgba(0,229,255,0.2);
+  border-left:3px solid #00E5FF;
+  box-shadow:-3px 0 10px rgba(0,229,255,.5),0 4px 18px rgba(0,0,0,.35);
   cursor:pointer;
-  transition:background .12s;
+  transition:background .15s,box-shadow .15s;
   -webkit-tap-highlight-color:transparent;
-  overflow:visible;
 }
-/* Срез правого угла — triangle overlay цвета фона панели */
-.bs-card::after{content:'';position:absolute;top:0;right:0;width:0;height:0;border-style:solid;border-width:0 22px 22px 0;border-color:transparent #040d1e transparent transparent;pointer-events:none;z-index:2}
-/* Тонкая горизонтальная разделительная линия между карточками */
-.bs-card::before{content:'';position:absolute;bottom:0;left:16px;right:22px;height:1px;background:rgba(0,245,255,.06);pointer-events:none}
-.bs-card:active{background:rgba(0,245,255,.07)}
+.bs-card:active{background:rgba(0,60,90,0.55)}
 .bs-card.bs-blocked{opacity:.2;filter:grayscale(.8);pointer-events:none}
 
 /* Symbol — левый индикатор */
@@ -85,10 +80,8 @@ const CSS = `
 .bs-cname{font-family:'Rajdhani','Share Tech Mono',monospace;font-size:15px;font-weight:700;color:#e8f4ff;letter-spacing:1.5px;text-transform:uppercase;line-height:1;white-space:nowrap}
 .bs-cbonus{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(0,245,255,.38);letter-spacing:.5px;white-space:nowrap;flex-shrink:0;margin-left:auto}
 
-/* HOT badge вместо left stripe для PvP */
-.bs-card-pvp{border-left-color:#ff6600}
+.bs-card-pvp{border-left-color:#ff6600;box-shadow:-3px 0 10px rgba(255,102,0,.55),0 4px 18px rgba(0,0,0,.35)}
 .bs-card-pvp .bs-sym{color:#ff6600}
-.bs-card-pvp::after{border-right-color:#040d1e}
 .bs-card-pvp .bs-hot{display:inline-flex}
 .bs-hot{display:none;align-items:center;font-family:'Share Tech Mono',monospace;font-size:7.5px;letter-spacing:1.5px;color:#ff6600;padding:1px 6px;border:1px solid rgba(255,102,0,.35);background:rgba(255,102,0,.08);margin-left:8px;clip-path:polygon(3px 0,100% 0,100% 100%,0 100%,0 3px);white-space:nowrap}
 
