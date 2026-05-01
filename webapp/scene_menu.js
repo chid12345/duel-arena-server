@@ -102,7 +102,6 @@ class MenuScene extends Phaser.Scene {
           const cnt = taskRes.claimable_count || 0;
           if (cnt !== this._tasksBadgeCount) {
             this._tasksBadgeCount = cnt;
-            if (this._tabBarObjs) this._buildTabBar();
             this._updateProfileTasksBadge?.();
           }
         });
@@ -143,7 +142,6 @@ class MenuScene extends Phaser.Scene {
             if (taskRes?.ok) {
               const cnt = taskRes.claimable_count || 0;
               this._tasksBadgeCount = cnt;
-              if (this._tabBarObjs) this._buildTabBar();
               this._updateProfileTasksBadge?.();
               if (cnt > 0) {
                 this.time.delayedCall(800, () =>

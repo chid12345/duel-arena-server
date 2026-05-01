@@ -148,11 +148,17 @@ window.TabBar = {
 
       const zone = _t(scene.add.zone(cx, tabTop + TAB_H / 2, tabW, TAB_H).setInteractive({ useHandCursor: true }));
 
+      // Ripple — один объект на кнопку, переиспользуется. Не добавляет новые
+      // объекты в children.list при каждом тапе (ранее засорял recomputeMax).
+      const rippleG = scene.add.graphics().setDepth(depth);
+      rippleG.fillStyle(tab.col, 0.35); rippleG.fillCircle(0, 0, 12);
+      const ripple = _t(scene.add.container(cx, iy, [rippleG]));
+      ripple.setScale(0).setAlpha(0);
+
       zone.on('pointerdown', () => {
-        const rg = scene.add.graphics();
-        rg.fillStyle(tab.col, 0.35); rg.fillCircle(0, 0, 12);
-        const ripple = scene.add.container(cx, iy, [rg]).setDepth(depth);
-        scene.tweens.add({ targets: ripple, scaleX: 3.6, scaleY: 3.6, alpha: 0, duration: 420, ease: 'Quad.easeOut', onComplete: () => ripple.destroy() });
+        scene.tweens.killTweensOf(ripple);
+        ripple.setScale(0.3).setAlpha(1);
+        scene.tweens.add({ targets: ripple, scaleX: 3.6, scaleY: 3.6, alpha: 0, duration: 420, ease: 'Quad.easeOut' });
         if (iconG) { iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, 2.2); }
         if (iconImg) iconImg.setAlpha(1);
         scene.tweens.killTweensOf(iconContainer);
@@ -199,8 +205,14 @@ window.TabBar = {
     const viewH = H - TABBAR_H;
     const cam = scene.cameras.main;
     let startY = 0, startScroll = 0, dragging = false, maxScroll = 0;
+    let _maxDirty = true;
+
+    // Помечаем dirty при смене таба — снаружи вызывается scene._tbInvalidateScroll?.()
+    scene._tbInvalidateScroll = () => { _maxDirty = true; };
 
     const recomputeMax = () => {
+      if (!_maxDirty) return;
+      _maxDirty = false;
       let contentMaxY = 0;
       scene.children.list.forEach(o => {
         if (o.scrollFactorY === 0) return;

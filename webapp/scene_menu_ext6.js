@@ -71,6 +71,9 @@ Object.assign(MenuScene.prototype, {
       btn.labelTxt.setStyle({ color: btn.hexCol || '#c4b5fd' });
     });
     this._activeTab = key;
+    // Сообщаем системе скролла что контент сменился — recomputeMax() пересчитает
+    // высоту один раз при следующем касании, а не на каждый тап как раньше.
+    this._tbInvalidateScroll?.();
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);
   },
 
