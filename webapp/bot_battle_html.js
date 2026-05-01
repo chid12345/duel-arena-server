@@ -145,9 +145,30 @@ const BotBattleHtml = (() => {
       root = document.createElement('div'); root.id = 'bb-root';
       if (isPvp) root.classList.add('pvp');
       const r = s.game.canvas.getBoundingClientRect();
+      console.log('[BotBattleHtml] canvas rect:', { left: r.left.toFixed(0), top: r.top.toFixed(0), width: r.width.toFixed(0), height: r.height.toFixed(0) });
       Object.assign(root.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' });
       document.body.appendChild(root);
       _renderShell(b0, skinId, pvpBgIdx);
+      // Диагностика: реальная позиция и размеры root + ключевых элементов.
+      try {
+        const probe = sel => {
+          const el = root.querySelector(sel);
+          return el ? `${el.offsetWidth}x${el.offsetHeight}` : 'absent';
+        };
+        const rrr = root.getBoundingClientRect();
+        console.log('[BotBattleHtml] visibility probe:', {
+          rootSize: `${root.offsetWidth}x${root.offsetHeight}`,
+          rootPos: `(${rrr.left.toFixed(0)},${rrr.top.toFixed(0)})`,
+          viewport: `${window.innerWidth}x${window.innerHeight}`,
+          bg:      probe('.bg'),
+          hpRow:   probe('.hp-row'),
+          hpBlock: probe('.hp-block'),
+          fighter: probe('.fighter.boss'),
+          atkCol:  probe('.atk-col'),
+          confirm: probe('.confirm-btn'),
+          blog:    probe('.blog'),
+        });
+      } catch(e) { console.warn('[BotBattleHtml] probe failed:', e); }
       clickHandler = _onClick;
       root.addEventListener('click', clickHandler);
       // Прямой listener на ники — bbBreath и pointer-events иногда мешают
