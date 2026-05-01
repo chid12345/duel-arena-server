@@ -128,12 +128,11 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
 
-    # Снаряга = постоянный HP-бонус (в отличие от зелий — всегда надета).
-    # Добавляем eq-бонус к current_hp и max_hp для отображения, чтобы во всех
-    # экранах (Профиль / Герой / Бой) было одно и то же число.
-    # Реген в DB идёт до base max_hp — разница current→max всегда одинакова.
-    _base_eq_mhp = mhp + _eq_hp          # 1411 + 138 = 1549
-    _display_chp = min(_base_eq_mhp, chp + _eq_hp)
+    # _eff_mhp уже содержит: базу + баффы + warrior-type штраф + eq бонус.
+    # Используем его напрямую — тогда Профиль/Герой/Бой показывают одно число.
+    # current_hp масштабируем пропорционально (реген идёт до base mhp в DB).
+    _base_eq_mhp = _eff_mhp
+    _display_chp = min(_eff_mhp, chp * _eff_mhp // max(1, mhp))
     if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
     if _eq_dodge: dodge_p  = int(min(DODGE_MAX_CHANCE * 100, dodge_p + _eq_dodge))
     if _eq_crit:
@@ -236,7 +235,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "stamina":   bonus_stamina,
         },
         "regen_per_min": round(
-            mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS) * 60
+            _base_eq_mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS) * 60
             * (1.0 + _eq_regen_speed / 100.0),
             1,
         ),
