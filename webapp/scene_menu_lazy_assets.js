@@ -109,6 +109,10 @@ Object.assign(MenuScene.prototype, {
   },
 
   _rebuildProfileAfterLazy() {
+    // Re-entrance guard: filecomplete может стрельнуть дважды при быстром переходе
+    // или при двух одновременных _preloadEquippedTextures Promise-ах (повторный create).
+    if (this._rebuildProfileBusy) return;
+    this._rebuildProfileBusy = true;
     try {
       if (!this.scene?.isActive?.()) return;
       if (this._panels?.profile) {
@@ -121,6 +125,10 @@ Object.assign(MenuScene.prototype, {
       }
     } catch(e) {
       console.warn('[LazyEq] rebuild profile failed:', e);
+      // Если _buildProfilePanel бросил исключение, _panels.profile = null.
+      // _switchTab('profile') обнаружит это и попробует перестроить снова.
+    } finally {
+      this._rebuildProfileBusy = false;
     }
   },
 

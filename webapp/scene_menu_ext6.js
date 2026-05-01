@@ -33,14 +33,19 @@ Object.assign(MenuScene.prototype, {
   },
 
   _switchTab(key) {
-    // Сброс scroll — без него после прокрутки в Профиле кнопка В БОЙ
-    // переключала таб, но новая панель уезжала вниз вне экрана.
+    // ВАЖНО: _activeTab обновляем СРАЗУ — до любых операций с объектами.
+    // Если что-то ниже бросит исключение, гард в TabBar pointerup
+    // ('tab.key === liveActive → return') увидит правильное состояние
+    // и не заблокирует повторный тап навсегда.
+    this._activeTab = key;
     try { this.cameras?.main?.setScroll?.(0, 0); } catch(_) {}
 
-    // Рекурсивный обход всех вложенных контейнеров для enable/disable input.
-    // displayList.remove/add раньше снимало REMOVED_FROM_SCENE на детях и
-    // вложенные зоны (не прямые дети) теряли регистрацию в инпут-менеджере —
-    // кнопки в профиле переставали работать после «Меню→Профиль».
+    // Страховка: если профильная панель пропала (уничтожена/исключение при build) —
+    // перестраиваем налету, чтобы не показывать чёрный экран.
+    if (key === 'profile' && !this._panels?.profile) {
+      try { this._buildProfilePanel(); } catch(_) {}
+    }
+
     const _setInputDeep = (container, enable) => {
       if (!container?.list) return;
       container.list.forEach(child => {
@@ -52,31 +57,37 @@ Object.assign(MenuScene.prototype, {
       });
     };
 
-    Object.entries(this._panels).forEach(([k, c]) => {
-      if (!c) return;
-      const v = k === key;
-      // Используем setVisible вместо displayList.add/remove: объекты остаются
-      // в сцене и не теряют регистрацию в input-плагине при переключении.
-      c.setVisible(v);
-      c.setActive(v);
-      if (v) { c.setAlpha(1); c.setPosition(0, 0); }
-      _setInputDeep(c, v);
-    });
+    try {
+      Object.entries(this._panels).forEach(([k, c]) => {
+        if (!c) return;
+        const v = k === key;
+        // Страховка: если контейнер не попал в displayList (исключение при build) — добавляем.
+        if (v && !this.sys.displayList.exists(c)) {
+          try { this.sys.displayList.add(c); } catch(_) {}
+        }
+        c.setVisible(v);
+        c.setActive(v);
+        if (v) { c.setAlpha(1); c.setPosition(0, 0); }
+        _setInputDeep(c, v);
+      });
+    } catch(_) {}
+
     if (key === 'profile') this._loadProfileBuffs();
-    if (this._dailyBonusOverlay) this._dailyBonusOverlay.setVisible(key === 'profile');
-    Object.entries(this._tabBtns).forEach(([k, btn]) => {
-      const active = k === key;
-      btn.activeBubble?.setVisible(active);
-      if (btn.iconImg) {
-        btn.iconImg.setAlpha(active ? 1 : 0.85);
-        if (btn.auraImg) btn.auraImg.setAlpha(active ? 0.42 : 0.16);
-      } else if (btn.iconG && btn.iconName) {
-        btn.iconG.clear();
-        TAB_ICONS[btn.iconName](btn.iconG, 0, 0, btn.tabCol || 0x22d3ee, active ? 2 : 1.4);
-      }
-      btn.labelTxt.setStyle({ color: btn.hexCol || '#c4b5fd' });
-    });
-    this._activeTab = key;
+    try { if (this._dailyBonusOverlay) this._dailyBonusOverlay.setVisible(key === 'profile'); } catch(_) {}
+    try {
+      Object.entries(this._tabBtns).forEach(([k, btn]) => {
+        const active = k === key;
+        btn.activeBubble?.setVisible(active);
+        if (btn.iconImg) {
+          btn.iconImg.setAlpha(active ? 1 : 0.85);
+          if (btn.auraImg) btn.auraImg.setAlpha(active ? 0.42 : 0.16);
+        } else if (btn.iconG && btn.iconName) {
+          btn.iconG.clear();
+          TAB_ICONS[btn.iconName](btn.iconG, 0, 0, btn.tabCol || 0x22d3ee, active ? 2 : 1.4);
+        }
+        btn.labelTxt?.setStyle?.({ color: btn.hexCol || '#c4b5fd' });
+      });
+    } catch(_) {}
     this._tbInvalidateScroll?.();
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);
   },
