@@ -82,13 +82,36 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
         #  а) слушать события другого игрока;
         #  б) вытеснить его сокет (manager.connect закрывает старый).
         # Поэтому доверяем ТОЛЬКО user_id из подписанного initData.
+        #
+        # ВАЖНО: сначала ACCEPT, потом авторизация. Без accept() закрытие
+        # WS приводит к HTTP 403 на handshake → Chrome показывает крайне
+        # непонятную ошибку "closed before connection established".
+        # Также init_data в URL может быть обрезан Render proxy (2KB лимит)
+        # для игроков с длинным photo_url/премиум-подпиской — поэтому ждём
+        # init_data в первом сообщении как fallback.
+        await ws.accept()
+
+        tg_user = None
         try:
             tg_user = get_user_from_init_data(init_data) if init_data else None
         except Exception:
             tg_user = None
+
+        # Fallback: ждём auth-сообщение от клиента (5 сек таймаут).
+        # Клиент шлёт {"type":"auth","init_data":"..."} сразу после onopen.
+        if not tg_user:
+            try:
+                first_msg = await asyncio.wait_for(ws.receive_text(), timeout=5.0)
+                msg = json.loads(first_msg)
+                if msg.get("type") == "auth":
+                    tg_user = get_user_from_init_data(msg.get("init_data", ""))
+            except (asyncio.TimeoutError, json.JSONDecodeError, Exception) as e:
+                logger.warning("WS auth fallback failed user_id=%s: %s", user_id, e)
+
         if not tg_user or int(tg_user.get("id", 0)) != int(user_id):
             try:
-                await ws.close(code=1008)  # policy violation
+                await ws.send_json({"event": "auth_failed"})
+                await ws.close(code=1008)
             except Exception:
                 pass
             return

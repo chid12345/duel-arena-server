@@ -141,7 +141,9 @@ class ConnectionManager:
         self.connections: Dict[int, WebSocket] = {}
 
     async def connect(self, user_id: int, ws: WebSocket) -> None:
-        await ws.accept()
+        # ВАЖНО: ws.accept() теперь делается в handler'е (system_realtime_routes)
+        # ДО auth-проверки — иначе закрытие WS даёт HTTP 403 на handshake,
+        # и Chrome показывает "closed before connection established".
         self.connections[user_id] = ws
 
     def disconnect(self, user_id: int) -> None:

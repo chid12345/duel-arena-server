@@ -293,11 +293,29 @@ function connectWS(userId, onMessage) {
 
   const proto = location.protocol === 'https:' ? 'wss' : 'ws';
   const host  = API.replace(/^https?:/, '') || `//${location.host}`;
-  // Без init_data бэк теперь закрывает сокет с code 1008 — передаём подпись Telegram.
-  const q     = State.initData ? `?init_data=${encodeURIComponent(State.initData)}` : '';
-  const url   = `${proto}:${host}/ws/${userId}${q}`;
+  // КРИТИЧНО: НЕ передаём init_data в URL — у premium-юзеров с photo_url
+  // строка 2KB+, Render proxy её обрезает → подпись битая → WS закрывается
+  // с code 1008 → Chrome шлёт "closed before connection established".
+  // Шлём init_data в первом сообщении после onopen (сервер ждёт 5 сек).
+  const url   = `${proto}:${host}/ws/${userId}`;
   const ws    = new WebSocket(url);
-  ws.onmessage = e => onMessage(JSON.parse(e.data));
+  ws.onopen = () => {
+    try {
+      ws.send(JSON.stringify({ type: 'auth', init_data: State.initData || '' }));
+    } catch(_) {}
+  };
+  ws.onmessage = e => {
+    try {
+      const data = JSON.parse(e.data);
+      if (data && data.event === 'auth_failed') {
+        console.error('[WS] auth failed — закрываем без переподключения');
+        ws.onclose = null;
+        try { ws.close(); } catch(_) {}
+        return;
+      }
+      onMessage(data);
+    } catch(_) {}
+  };
   ws.onclose   = () => {
     // Переподключаемся только если это ещё активное соединение
     if (State.ws === ws) {
