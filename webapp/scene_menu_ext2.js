@@ -19,10 +19,12 @@ Object.assign(MenuScene.prototype, {
     try {
       const res = await post('/api/battle/find', { queue_only: true });
       if (!res.ok) {
+        if (res.reason === 'no_warrior') { this._requireWarrior?.('battle'); return; }
         this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Нет противников');
         return;
       }
       if (res.status === 'queued') { this.scene.start('Queue', {}); return; }
+      if (!res.battle) { this._toast('❌ Сервер не вернул бой'); return; }
       State.battle = res.battle;
       this.scene.start('Battle', {});
     } catch(e) { this._toast('❌ Нет соединения'); }
@@ -40,7 +42,12 @@ Object.assign(MenuScene.prototype, {
     this._toast('🤖 Запускаем бой с ботом...');
     try {
       const res = await post('/api/battle/find', { prefer_bot: true });
-      if (!res.ok) { this._toast('❌ Ошибка'); return; }
+      if (!res.ok) {
+        if (res.reason === 'no_warrior') { this._requireWarrior?.('battle'); return; }
+        this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Бот недоступен');
+        return;
+      }
+      if (!res.battle) { this._toast('❌ Сервер не вернул бой'); return; }
       State.battle = res.battle;
       this.scene.start('Battle', {});
     } catch(e) { this._toast('❌ Нет соединения'); }
@@ -58,9 +65,11 @@ Object.assign(MenuScene.prototype, {
     try {
       const res = await post('/api/titans/start', {});
       if (!res.ok) {
+        if (res.reason === 'no_warrior') { this._requireWarrior?.('battle'); return; }
         this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Башня недоступна');
         return;
       }
+      if (!res.battle) { this._toast('❌ Сервер не вернул бой'); return; }
       State.battle = res.battle;
       this.scene.start('Battle', {});
     } catch (_) {

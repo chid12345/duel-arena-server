@@ -4,6 +4,21 @@
    Открывается из профиля по тапу «В БОЙ». Каждая карточка → свой режим.
    ============================================================ */
 (() => {
+function _fitToCanvas(root) {
+  try {
+    const c = document.querySelector('canvas');
+    if (!c) return;
+    const r = c.getBoundingClientRect();
+    const tabBarH = Math.round(r.height * 76 / (c.height || 700));
+    root.style.top    = r.top  + 'px';
+    root.style.left   = r.left + 'px';
+    root.style.width  = r.width + 'px';
+    root.style.right  = 'auto';
+    root.style.bottom = 'auto';
+    root.style.height = Math.max(0, r.height - tabBarH) + 'px';
+  } catch(_) {}
+}
+
 const CSS = `
 .bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);animation:bsFadeIn .22s ease-out}
 .bs-panel{width:100%;max-width:430px;max-height:92dvh;display:flex;flex-direction:column;background:#040212;border-top:1px solid rgba(124,58,237,.35);border-radius:20px 20px 0 0;overflow:hidden;animation:bsSlideUp .28s cubic-bezier(.22,1,.36,1)}
@@ -124,6 +139,7 @@ function open(scene) {
       </div>
     </div>`;
   document.body.appendChild(wrap);
+  _fitToCanvas(wrap);
 
   const COMBAT_ACTS = new Set(['pvp', 'tower', 'natisk', 'bot']);
 
