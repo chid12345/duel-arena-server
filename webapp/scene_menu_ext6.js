@@ -36,24 +36,31 @@ Object.assign(MenuScene.prototype, {
     // Сброс scroll — без него после прокрутки в Профиле кнопка В БОЙ
     // переключала таб, но новая панель уезжала вниз вне экрана.
     try { this.cameras?.main?.setScroll?.(0, 0); } catch(_) {}
+
+    // Рекурсивный обход всех вложенных контейнеров для enable/disable input.
+    // displayList.remove/add раньше снимало REMOVED_FROM_SCENE на детях и
+    // вложенные зоны (не прямые дети) теряли регистрацию в инпут-менеджере —
+    // кнопки в профиле переставали работать после «Меню→Профиль».
+    const _setInputDeep = (container, enable) => {
+      if (!container?.list) return;
+      container.list.forEach(child => {
+        if (child.input) {
+          if (enable) { child.setActive(true); try { this.input.enable(child); } catch(_) {} }
+          else { try { this.input.disable(child); } catch(_) {} child.setActive(false); }
+        }
+        if (child.list) _setInputDeep(child, enable);
+      });
+    };
+
     Object.entries(this._panels).forEach(([k, c]) => {
       if (!c) return;
       const v = k === key;
-      if (v) {
-        this.sys.displayList.add(c);
-        c.setVisible(true);
-        c.setAlpha(1);
-        c.setPosition(0, 0);
-        c.list.forEach(child => {
-          if (child.input) { child.setActive(true); this.input.enable(child); }
-        });
-      } else {
-        this.sys.displayList.remove(c);
-        // Двойная защита от ghost-input: disable + setActive(false)
-        c.list.forEach(child => {
-          if (child.input) { this.input.disable(child); child.setActive(false); }
-        });
-      }
+      // Используем setVisible вместо displayList.add/remove: объекты остаются
+      // в сцене и не теряют регистрацию в input-плагине при переключении.
+      c.setVisible(v);
+      c.setActive(v);
+      if (v) { c.setAlpha(1); c.setPosition(0, 0); }
+      _setInputDeep(c, v);
     });
     if (key === 'profile') this._loadProfileBuffs();
     if (this._dailyBonusOverlay) this._dailyBonusOverlay.setVisible(key === 'profile');
@@ -62,7 +69,6 @@ Object.assign(MenuScene.prototype, {
       btn.activeBubble?.setVisible(active);
       if (btn.iconImg) {
         btn.iconImg.setAlpha(active ? 1 : 0.85);
-        // Aura активного таба ярче (см. tab_bar.js TabBar.setActive — ту же логику)
         if (btn.auraImg) btn.auraImg.setAlpha(active ? 0.42 : 0.16);
       } else if (btn.iconG && btn.iconName) {
         btn.iconG.clear();
@@ -71,8 +77,6 @@ Object.assign(MenuScene.prototype, {
       btn.labelTxt.setStyle({ color: btn.hexCol || '#c4b5fd' });
     });
     this._activeTab = key;
-    // Сообщаем системе скролла что контент сменился — recomputeMax() пересчитает
-    // высоту один раз при следующем касании, а не на каждый тап как раньше.
     this._tbInvalidateScroll?.();
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);
   },

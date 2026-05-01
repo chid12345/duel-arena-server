@@ -167,21 +167,24 @@ window.TabBar = {
       zone.on('pointerout', () => {
         scene.tweens.killTweensOf(iconContainer);
         scene.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 130, ease: 'Sine.easeOut' });
-        const a = tab.key === activeKey;
+        // Используем живое scene._activeTab (Menu меняет его при _switchTab),
+        // иначе замыкание держит старый activeKey и иконка не восстанавливается.
+        const a = tab.key === (scene._activeTab || activeKey);
         if (iconG) { iconG.clear(); TAB_ICONS[tab.icon](iconG, 0, 0, tab.col, a ? 2 : 1.4); }
         if (iconImg) iconImg.setAlpha(a ? 1 : 0.85);
       });
       zone.on('pointerup', (pointer) => {
         scene.tweens.killTweensOf(iconContainer);
         scene.tweens.add({ targets: iconContainer, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
-        // Отличаем тап от свайпа по расстоянию, а не по совпадению зон pointerdown/up.
-        // Раньше было «только если pointerdown и pointerup на одной вкладке», но из-за
-        // мелкого дёргания пальца на мобилке pointerdown часто попадал на соседнюю зону,
-        // и тап пропадал «раз через два». 20px — щадящий порог для тач-экранов.
         try { if (pointer?.getDistance?.() > 20) return; } catch (_) {}
         if (typeof Sound !== 'undefined' && Sound.tab) Sound.tab();
         if (typeof tg !== 'undefined') tg?.HapticFeedback?.selectionChanged();
-        if (tab.key === activeKey) return;
+        // КРИТИЧНО: activeKey заморожен в замыкании на момент build().
+        // Menu меняет активную вкладку через _switchTab без rebuild таббара —
+        // нужно читать живое scene._activeTab, иначе клик на «Профиль» всегда
+        // блокируется: tab.key('profile') === activeKey('profile') → return.
+        const liveActive = scene._activeTab || activeKey;
+        if (tab.key === liveActive) return;
         TabBar.navigate(scene, tab.key, onInternal);
       });
     });
