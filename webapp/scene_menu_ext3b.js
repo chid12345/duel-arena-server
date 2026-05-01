@@ -8,8 +8,10 @@ Object.assign(MenuScene.prototype, {
   _startRegenTick() {
     const p = State.player;
     if (!p || !p.regen_per_min) return;
+    // Guard: prevent duplicate timers if called twice in same scene lifecycle.
+    if (this._regenTimer) { this.time.removeEvent(this._regenTimer); this._regenTimer = null; }
     const regenPerTick = p.regen_per_min / 2;
-    this.time.addEvent({
+    this._regenTimer = this.time.addEvent({
       delay: 30_000, loop: true,
       callback: () => {
         const sp = State.player;
@@ -22,7 +24,6 @@ Object.assign(MenuScene.prototype, {
 
         if (this._activeTab === 'profile' && this._liveHp) {
           const { g, t, x, y, w, h } = this._liveHp;
-          const col = sp.hp_pct > 50 ? C.green : sp.hp_pct > 25 ? C.gold : C.red;
           g.clear();
           const rr2 = Math.ceil(h / 2) + 2;
           g.fillStyle(0x000000, 0.72); g.fillRoundedRect(x, y, w, h, rr2);
@@ -31,7 +32,7 @@ Object.assign(MenuScene.prototype, {
           g.fillGradientStyle(0x15803d, 0x86efac, 0x15803d, 0x86efac, 1);
           g.fillRoundedRect(x, y, fw, h, rr2);
           g.fillStyle(0xffffff, 0.18); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), rr2);
-          t.setText(`${sp.current_hp} / ${effMax} HP`);
+          t.setText(`${sp.current_hp} / ${sp.max_hp} HP`);
         }
       },
     });
@@ -102,6 +103,9 @@ Object.assign(MenuScene.prototype, {
     // create) и осиротевшие графики → UI зависает к 3–4-му переключению.
     try { this.time.removeAllEvents(); } catch(_) {}
     try { this.tweens.killAll(); } catch(_) {}
+    // Глушим WS-обработчик: если сообщение придёт после shutdown (до того как
+    // следующая сцена вызовет connectWS), мёртвые this-методы не упадут.
+    try { if (State.ws) State.ws.onmessage = null; } catch(_) {}
     Object.values(this._panels || {}).forEach(c => { try { c?.destroy(true); } catch(_) {} });
     this._panels = {};
     this._tabBarObjs = null;
@@ -109,6 +113,9 @@ Object.assign(MenuScene.prototype, {
     this._dailyBonusOverlay = null;
     this._liveHp = null;
     this._verTxt = null;
+    this._regenTimer = null;
+    this._profileTasksBadgeObjs = null;
+    this._tasksBadgeCount = 0;
     // Сброс throttle-флагов: Phaser переиспользует scene-инстанс между
     // scene.start. Без сброса повисший _profileBuffsBusy=true (например
     // после оборванной сети) после возврата в Меню молча скипал бы
