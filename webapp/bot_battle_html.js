@@ -148,8 +148,18 @@ const BotBattleHtml = (() => {
       console.log('[BotBattleHtml] canvas rect:', { left: r.left, top: r.top, width: r.width, height: r.height });
       // Если канвас даёт валидные размеры — позиционируем по нему.
       // Если 0×0 (race при переходе сцен) — оставляем CSS inset:0 (full viewport).
+      // КРИТИЧНО: right:auto и bottom:auto явно отменяют CSS inset:0 — иначе
+      // получается over-constrained box (left+right+width одновременно), и
+      // в Telegram WebApp WebView это иногда схлопывает элементы внутри.
       if (r.width > 50 && r.height > 50) {
-        Object.assign(root.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' });
+        Object.assign(root.style, {
+          left: r.left + 'px',
+          top: r.top + 'px',
+          width: r.width + 'px',
+          height: r.height + 'px',
+          right: 'auto',
+          bottom: 'auto',
+        });
       } else {
         console.warn('[BotBattleHtml] canvas rect невалидный — fallback inset:0');
       }
@@ -166,6 +176,25 @@ const BotBattleHtml = (() => {
       window.addEventListener('resize', onResize);
       root._onResize = onResize;
       _renderShell(b0, skinId, pvpBgIdx);
+      // Диагностика: видны ли элементы в DOM после рендера? Если offsetWidth=0 —
+      // элемент скрыт (display:none, нулевой размер, или вне viewport-clip).
+      try {
+        const probe = sel => {
+          const el = root.querySelector(sel);
+          return el ? `${el.offsetWidth}x${el.offsetHeight}` : 'absent';
+        };
+        console.log('[BotBattleHtml] visibility probe:', {
+          root:    `${root.offsetWidth}x${root.offsetHeight}`,
+          rootPos: `(${root.getBoundingClientRect().left.toFixed(0)},${root.getBoundingClientRect().top.toFixed(0)})`,
+          bg:      probe('.bg'),
+          hpRow:   probe('.hp-row'),
+          hpBlock: probe('.hp-block'),
+          fighter: probe('.fighter.boss'),
+          atkCol:  probe('.atk-col'),
+          confirm: probe('.confirm-btn'),
+          blog:    probe('.blog'),
+        });
+      } catch(e) { console.warn('[BotBattleHtml] visibility probe failed:', e); }
       clickHandler = _onClick;
       root.addEventListener('click', clickHandler);
       // Прямой listener на ники — bbBreath и pointer-events иногда мешают
