@@ -25,23 +25,23 @@ Object.assign(QueueScene.prototype, {
     if (!this._searching) return;
     const { _cx: cx, _cy: cy } = this;
     const maxR = 90;
+    const CY = 0x00e5ff;
 
-    // Вращающийся луч
+    // Вращающийся луч — cyan с длинным шлейфом
     this._scanAngle += 0.038;
     const sg = this._scanG;
     sg.clear();
-    // Шлейф
-    for (let i = 0; i < 22; i++) {
-      const a     = this._scanAngle - i * 0.09;
-      const alpha = (1 - i / 22) * 0.32;
-      sg.lineStyle(2, C.blue, alpha);
+    for (let i = 0; i < 30; i++) {
+      const a     = this._scanAngle - i * 0.075;
+      const alpha = (1 - i / 30) * 0.38;
+      sg.lineStyle(2, CY, alpha);
       sg.beginPath();
       sg.moveTo(cx, cy);
       sg.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
       sg.strokePath();
     }
     // Яркий кончик луча
-    sg.lineStyle(2.5, C.blue, 0.92);
+    sg.lineStyle(2.5, CY, 1);
     sg.beginPath();
     sg.moveTo(cx, cy);
     sg.lineTo(
@@ -49,20 +49,18 @@ Object.assign(QueueScene.prototype, {
       cy + Math.sin(this._scanAngle) * maxR
     );
     sg.strokePath();
-    // Точка на кончике
-    sg.fillStyle(C.blue, 0.9);
-    sg.fillCircle(
-      cx + Math.cos(this._scanAngle) * maxR,
-      cy + Math.sin(this._scanAngle) * maxR,
-      3
-    );
+    // Точка-вспышка на кончике
+    sg.fillStyle(0xffffff, 0.9);
+    sg.fillCircle(cx + Math.cos(this._scanAngle) * maxR, cy + Math.sin(this._scanAngle) * maxR, 3);
+    sg.fillStyle(CY, 0.5);
+    sg.fillCircle(cx + Math.cos(this._scanAngle) * maxR, cy + Math.sin(this._scanAngle) * maxR, 6);
 
-    // Пульсирующее кольцо
+    // Пульсирующее кольцо — cyan
     this._pulseR += 1.1;
     if (this._pulseR > maxR + 25) this._pulseR = 0;
-    const palpha = Math.max(0, 0.55 - (this._pulseR / (maxR + 25)) * 0.55);
+    const palpha = Math.max(0, 0.6 - (this._pulseR / (maxR + 25)) * 0.6);
     this._pulseG.clear();
-    this._pulseG.lineStyle(2, C.blue, palpha);
+    this._pulseG.lineStyle(1.5, CY, palpha);
     this._pulseG.strokeCircle(cx, cy, this._pulseR);
   },
 
