@@ -184,9 +184,16 @@ Object.assign(BattleScene.prototype, {
 
   shutdown() {
     try { BattleLog.hideHistory?.(); } catch(_) {}
-    BattleLog.hide();
+    try { BattleLog.hide(); } catch(_) {}
     if (typeof BattleHints !== 'undefined') BattleHints.hide();
     try { if (typeof BotBattleCard !== 'undefined') BotBattleCard.hide?.(); } catch(_) {}
+    // Обязательно: unmount HTML-overlay и обрубаем WS-handler.
+    // Без этого mounted=true остаётся в замыкании BotBattleHtml и
+    // следующий mount() вернётся сразу → чёрный экран.
+    try { if (typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
+    try { if (State.ws) State.ws.onmessage = null; } catch(_) {}
+    if (this._timerEvent) { try { this._timerEvent.remove(); } catch(_) {} this._timerEvent = null; }
+    if (this._pollEvent)  { try { this._pollEvent.remove();  } catch(_) {} this._pollEvent  = null; }
     this.time.removeAllEvents();
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   },

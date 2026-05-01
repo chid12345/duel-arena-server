@@ -16,7 +16,7 @@ const BotBattleHtml = (() => {
   // State объявлен через const в game_globals — НЕТ на window. Читаем напрямую.
   const _pWt = () => {
     try { if (typeof State !== 'undefined' && State.player) return State.player.warrior_type; } catch(_) {}
-    try { return window.State?.player?.warrior_type; } catch(_) {}
+    try { return (typeof State !== 'undefined' ? State : window.State)?.player?.warrior_type; } catch(_) {}
     return null;
   };
   const _pSkin = () => (typeof getWarriorSkinPath === 'function')
@@ -34,9 +34,9 @@ const BotBattleHtml = (() => {
       ? ((typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(b.opp_warrior_type || 'tank') : 'skins/sila/1.png')
       : (skinId ? `bot_skins/${skinId}.png` : '');
     const flipBoss = isPvp ? false : (skinId && typeof BotSkinPicker !== 'undefined' && BotSkinPicker.shouldFlip(skinId));
-    const meName = String(window.State?.player?.username || 'Вы').toUpperCase();
+    const meName = String((typeof State !== 'undefined' ? State : window.State)?.player?.username || 'Вы').toUpperCase();
     const oppName = String(b.opp_name || 'Соперник').toUpperCase();
-    const myRating  = window.State?.player?.rating || 0;
+    const myRating  = (typeof State !== 'undefined' ? State : window.State)?.player?.rating || 0;
     const oppRating = b.opp_rating || 0;
     const myRatingHtml  = myRating  > 0 ? `<span class="hp-rating">★ ${myRating}</span>`  : '';
     const oppRatingHtml = oppRating > 0 ? `<span class="hp-rating">★ ${oppRating}</span>` : '';
@@ -44,8 +44,8 @@ const BotBattleHtml = (() => {
     const nm = k => k === 'HEAD' ? 'Голова' : k === 'TORSO' ? 'Тело' : 'Ноги';
     const btn = (s, k) => `<div class="ic-btn" data-side="${s}" data-key="${k}"><div class="halo"></div><img src="battle_icons/${ic(k)}.png"><div class="nm">${nm(k)}</div></div>`;
     // Fallback: если сервер вернул null HP (race при старте), берём данные игрока из State
-    const myHp    = b.my_hp     != null ? b.my_hp     : (window.State?.player?.current_hp ?? 0);
-    const myMaxHp = b.my_max_hp != null ? b.my_max_hp : (window.State?.player?.max_hp ?? 100);
+    const myHp    = b.my_hp     != null ? b.my_hp     : ((typeof State !== 'undefined' ? State : window.State)?.player?.current_hp ?? 0);
+    const myMaxHp = b.my_max_hp != null ? b.my_max_hp : ((typeof State !== 'undefined' ? State : window.State)?.player?.max_hp ?? 100);
     const oppHp   = b.opp_hp    != null ? b.opp_hp    : (b.opp_max_hp ?? 100);
     const oppMaxHp = b.opp_max_hp != null ? b.opp_max_hp : 100;
     const myPct  = myMaxHp  > 0 ? Math.max(0, Math.min(100, myHp  / myMaxHp  * 100)) : 100;
@@ -115,7 +115,7 @@ const BotBattleHtml = (() => {
       // Страховка: убираем зависший #bb-root от предыдущего боя (если unmount не отработал чисто)
       try { const old = document.getElementById('bb-root'); if (old) old.remove(); } catch(_) {}
       scene = s; mounted = true; _injectCss();
-      const b0 = window.State?.battle || {};
+      const b0 = (typeof State !== 'undefined' ? State : window.State)?.battle || {};
       const isPvp = !b0.opp_is_bot;
       // PvE-бот: skin_id с сервера → случайный из 31 бот-скина.
       // PvP: skin_id не нужен (спрайт = warrior_type соперника), фон — рандом из 5.
