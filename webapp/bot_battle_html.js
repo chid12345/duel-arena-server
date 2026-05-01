@@ -146,7 +146,19 @@ const BotBattleHtml = (() => {
       if (isPvp) root.classList.add('pvp');
       const r = s.game.canvas.getBoundingClientRect();
       console.log('[BotBattleHtml] canvas rect:', { left: r.left.toFixed(0), top: r.top.toFixed(0), width: r.width.toFixed(0), height: r.height.toFixed(0) });
-      Object.assign(root.style, { left:r.left+'px', top:r.top+'px', width:r.width+'px', height:r.height+'px' });
+      // КРИТИЧНО: ставим position:fixed ИНЛАЙН — иначе если CSS не парсится
+      // (например inset shorthand ломает весь блок), root остаётся position:static
+      // и падает в нормальный поток ПОСЛЕ канваса (y=644 при canvas height=640).
+      Object.assign(root.style, {
+        position: 'fixed',
+        left: r.left + 'px',
+        top: r.top + 'px',
+        width: r.width + 'px',
+        height: r.height + 'px',
+        zIndex: '200',
+        background: '#03050f',
+        overflow: 'hidden',
+      });
       document.body.appendChild(root);
       // ДИАГНОСТИКА: проверяем СРАЗУ после appendChild — где реально оказался root
       // и что с body/документом (transforms, scroll).
