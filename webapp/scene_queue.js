@@ -194,28 +194,62 @@ class QueueScene extends Phaser.Scene {
       }
     };
 
-    _drawCorners(false);
     _drawBg(false);
 
-    // Череп — ADD blend чтобы белый фон стал прозрачным на тёмном bg
+    // ── Позиция черепа ──
     const skullX = lx + 26;
+
+    // ── Слой 1: Радиальная подсветка сзади (dark-red → transparent) ──
+    const backdropG = this.add.graphics();
+    // ── Слой 2: Внешнее drop-shadow свечение ──
+    const glowG = this.add.graphics();
+
+    const _drawSkullGlow = (intense) => {
+      const K = intense ? 2.0 : 1.0;
+
+      // Радиальный градиент: 12 кругов от центра (тёмно-красный) → наружу (прозрачный)
+      backdropG.clear();
+      for (let i = 12; i >= 1; i--) {
+        const a = 0.025 * K * i / 12;
+        backdropG.fillStyle(0x660000, a);
+        backdropG.fillCircle(skullX, y, i * 3.2);
+      }
+
+      // drop-shadow: 8 полупрозрачных кругов снаружи иконки
+      glowG.clear();
+      for (let i = 8; i >= 1; i--) {
+        const r = 18 + i * 2.8;
+        const a = 0.05 * K * i / 8;
+        glowG.fillStyle(0xff0000, a);
+        glowG.fillCircle(skullX, y, r);
+      }
+      // Яркое внутреннее кольцо (ближний glow)
+      glowG.lineStyle(intense ? 3 : 1.5, 0xff2020, intense ? 0.55 : 0.25);
+      glowG.strokeCircle(skullX, y, 20);
+    };
+
+    _drawSkullGlow(false);
+
+    // ── Слой 3: Череп (ADD blend — белый фон растворяется, красный светится) ──
     const skull = this.add.image(skullX, y, 'skull_bot')
-      .setDisplaySize(32, 32)
+      .setDisplaySize(34, 34)
       .setOrigin(0.5)
       .setBlendMode(Phaser.BlendModes.ADD)
-      .setAlpha(0.85);
+      .setAlpha(0.82);
 
-    // Пульсация черепа (глаза разгораются/затухают)
+    // Пульсация (глаза черепа разгораются)
     this.tweens.add({
       targets: skull,
       alpha: { from: 0.6, to: 1.0 },
-      duration: 1100,
-      yoyo: true, repeat: -1,
+      duration: 1100, yoyo: true, repeat: -1,
       ease: 'Sine.easeInOut',
     });
 
+    // ── Слой 4: Уголки поверх черепа ──
+    _drawCorners(false);
+
     // Текст
-    const labelX = skullX + 22;
+    const labelX = skullX + 24;
     this.add.text(labelX, y, '[ ИНИЦИИРОВАТЬ БОЙ С ИИ ]', {
       fontFamily: "'Orbitron','Arial',sans-serif",
       fontSize: '10px', fontStyle: 'bold',
@@ -224,10 +258,10 @@ class QueueScene extends Phaser.Scene {
 
     // Зона касания
     const zone = this.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
-    zone.on('pointerover',  () => { _drawBg(true);  _drawCorners(true); });
-    zone.on('pointerout',   () => { _drawBg(false); _drawCorners(false); });
+    zone.on('pointerover',  () => { _drawBg(true);  _drawCorners(true);  _drawSkullGlow(true);  skull.setAlpha(1.0); });
+    zone.on('pointerout',   () => { _drawBg(false); _drawCorners(false); _drawSkullGlow(false); skull.setAlpha(0.82); });
     zone.on('pointerdown',  () => { tg?.HapticFeedback?.impactOccurred('medium'); });
-    zone.on('pointerup',    () => { _drawBg(false); _drawCorners(false); cb(); });
+    zone.on('pointerup',    () => { _drawBg(false); _drawCorners(false); _drawSkullGlow(false); skull.setAlpha(0.82); cb(); });
   }
 
   /* ── Старый _makeBtn (совместимость) ──────────────────── */
