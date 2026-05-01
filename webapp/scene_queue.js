@@ -26,162 +26,137 @@ class QueueScene extends Phaser.Scene {
     g.fillGradientStyle(0x02030a, 0x02030a, 0x04060f, 0x04060f, 1);
     g.fillRect(0, 0, W, H);
 
-    // Сетка киберпанк
-    g.lineStyle(1, 0x00e5ff, 0.035);
+    // Сетка — менее заметная (0.025)
+    g.lineStyle(1, 0x00e5ff, 0.025);
     const gs = 34;
     for (let x = 0; x <= W; x += gs) g.lineBetween(x, 0, x, H);
     for (let y = 0; y <= H; y += gs) g.lineBetween(0, y, W, y);
 
-    // Scanlines (горизонтальные полосы, каждые 4px)
-    g.lineStyle(1, 0x000000, 0.06);
+    // Scanlines
+    g.lineStyle(1, 0x000000, 0.055);
     for (let y = 0; y <= H; y += 4) g.lineBetween(0, y, W, y);
 
-    // Частицы-точки (не звёзды — квадратики данных)
-    for (let i = 0; i < 38; i++) {
+    // Частицы
+    for (let i = 0; i < 32; i++) {
       const px = Phaser.Math.Between(0, W);
       const py = Phaser.Math.Between(0, H * 0.88);
-      const pr = Phaser.Math.FloatBetween(0.4, 1.4);
-      const pa = Phaser.Math.FloatBetween(0.06, 0.28);
-      this.add.rectangle(px, py, pr * 2, pr * 2, 0x00e5ff, pa);
+      const pr = Phaser.Math.FloatBetween(0.4, 1.2);
+      this.add.rectangle(px, py, pr * 2, pr * 2, 0x00e5ff,
+        Phaser.Math.FloatBetween(0.05, 0.22));
     }
   }
 
   /* ── Центральный UI с радаром ──────────────────────────── */
   _buildSearchUI(W, H) {
     const cx = W / 2;
-    const cy = H * 0.36;
+    const cy = H * 0.38;
     this._cx = cx;
     this._cy = cy;
 
-    // Заголовок — стиль HUD
+    // Заголовок
     this.add.text(cx, H * 0.09, '// ПОИСК СОПЕРНИКА', {
-      fontFamily: "'Orbitron', 'Arial', sans-serif",
-      fontSize: '16px', fontStyle: 'bold',
-      color: '#00e5ff', resolution: 2,
+      fontFamily: "'Orbitron','Arial',sans-serif",
+      fontSize: '16px', fontStyle: 'bold', color: '#00e5ff', resolution: 2,
     }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 10, false, true);
 
-    // Подзаголовок
     txt(this, cx, H * 0.155, 'SCANNING FOR TARGET...', 10, '#4ab8cc')
-      .setOrigin(0.5).setAlpha(0.7);
+      .setOrigin(0.5).setAlpha(0.65);
 
-    // Статические кольца радара — cyan
-    const rg = this.add.graphics();
-    const rings = [90, 62, 38];
-    const CY = 0x00e5ff;
-    rings.forEach((r, i) => {
-      const alpha = 0.45 - i * 0.1;
-      rg.lineStyle(1.2 - i * 0.2, CY, alpha);
-      rg.strokeCircle(cx, cy, r);
-    });
+    // ── Координатный лог НАД радаром ──
+    this._coordTop = this.add.text(cx, H * 0.22, '', {
+      fontFamily: "'Share Tech Mono','Courier New',monospace",
+      fontSize: '8px', color: '#ffa040', resolution: 2, align: 'center',
+    }).setOrigin(0.5).setAlpha(0.7);
 
-    // Перекрестие
-    rg.lineStyle(1, CY, 0.12);
-    rg.lineBetween(cx - 96, cy, cx + 96, cy);
-    rg.lineBetween(cx, cy - 96, cx, cy + 96);
+    // ── Пульсирующее оранжевое свечение (слои) ──
+    this._glowG = this.add.graphics();
+    this._glowPhase = 0;
 
-    // Диаманды по кольцам (угловые засечки)
-    const diaSz = 3;
-    rg.lineStyle(1, CY, 0.55);
-    [90, 62].forEach(r => {
-      [0, 90, 180, 270].forEach(deg => {
-        const rad = (deg * Math.PI) / 180;
-        const dx = cx + Math.cos(rad) * r;
-        const dy = cy + Math.sin(rad) * r;
-        rg.strokeRect(dx - diaSz, dy - diaSz, diaSz * 2, diaSz * 2);
-      });
-    });
+    // ── Изображение радара (вращается) ──
+    const radarSize = Math.min(W, 200);
+    const radar = this.add.image(cx, cy, 'radar_target')
+      .setDisplaySize(radarSize, radarSize)
+      .setOrigin(0.5);
 
-    // Угловые скобки вокруг радара
-    this._drawCornerBrackets(rg, cx, cy, 104, 104, CY, 0.6);
-
-    // Пульсирующее кольцо (обновляется в update)
-    this._pulseG = this.add.graphics();
-    this._pulseR = 0;
-
-    // Вращающийся луч сканера (обновляется в update)
-    this._scanAngle = 0;
-    this._scanG     = this.add.graphics();
-
-    // Воин в центре
-    const warrior = this.add.image(cx, cy, 'warrior_blue')
-      .setScale(1.1).setOrigin(0.5);
+    // Медленное вращение: 30 секунд на круг
     this.tweens.add({
-      targets: warrior,
-      y: cy - 5,
-      duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut',
+      targets: radar,
+      angle: 360,
+      duration: 30000,
+      repeat: -1,
+      ease: 'Linear',
     });
 
-    // Метка TARGET LOCK под воином
-    txt(this, cx, cy + 58, 'TARGET LOCK', 7, '#00e5ff')
-      .setOrigin(0.5).setAlpha(0.4);
+    // ── Координатный лог ПОД радаром ──
+    this._coordBot = this.add.text(cx, cy + radarSize / 2 + 10, '', {
+      fontFamily: "'Share Tech Mono','Courier New',monospace",
+      fontSize: '8px', color: '#00e5ff', resolution: 2, align: 'center',
+    }).setOrigin(0.5).setAlpha(0.65);
 
-    // Статус и таймер — крупнее и ярче
-    this._statusTxt = this.add.text(cx, cy + 114, 'Ищем соперника...', {
-      fontFamily: "'Share Tech Mono', 'Courier New', monospace",
+    // Статус и таймер
+    this._statusTxt = this.add.text(cx, cy + radarSize / 2 + 28, 'Ищем соперника...', {
+      fontFamily: "'Share Tech Mono','Courier New',monospace",
       fontSize: '13px', color: '#c8d8ff', resolution: 2,
     }).setOrigin(0.5);
 
-    this._timerTxt = this.add.text(cx, cy + 134, '0:00', {
-      fontFamily: "'Orbitron', 'Arial', sans-serif",
-      fontSize: '18px', fontStyle: 'bold',
-      color: '#00e5ff', resolution: 2,
+    this._timerTxt = this.add.text(cx, cy + radarSize / 2 + 48, '0:00', {
+      fontFamily: "'Orbitron','Arial',sans-serif",
+      fontSize: '18px', fontStyle: 'bold', color: '#00e5ff', resolution: 2,
     }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 8, false, true);
 
-    // Анимация точек в тексте
+    // Анимация точек
     this._dotsTimer = this.time.addEvent({
       delay: 500, loop: true,
       callback: () => {
         if (!this._searching) return;
         this._dots = (this._dots + 1) % 4;
-        const d = '.'.repeat(this._dots || 1);
-        this._statusTxt?.setText(`Ищем соперника${d}`);
+        this._statusTxt?.setText(`Ищем соперника${'.'.repeat(this._dots || 1)}`);
       },
     });
 
-    // Разделитель — неон-линия
+    // Обновление координат каждые 1.2с
+    this._coordTimer = this.time.addEvent({
+      delay: 1200, loop: true,
+      callback: () => this._updateCoords(),
+    });
+    this._updateCoords();
+
+    // Разделитель
     const sep = this.add.graphics();
-    sep.lineStyle(1, 0x00e5ff, 0.15);
-    sep.lineBetween(30, H * 0.60, W - 30, H * 0.60);
-    // Центральная точка разделителя
-    sep.fillStyle(0x00e5ff, 0.4);
-    sep.fillRect(W / 2 - 3, H * 0.60 - 1, 6, 2);
+    sep.lineStyle(1, 0x00e5ff, 0.12);
+    sep.lineBetween(30, H * 0.62, W - 30, H * 0.62);
+    sep.fillStyle(0x00e5ff, 0.35);
+    sep.fillRect(W / 2 - 3, H * 0.62 - 1, 6, 2);
   }
 
-  /* ── Угловые скобки ───────────────────────────────────── */
-  _drawCornerBrackets(g, cx, cy, hw, hh, color, alpha) {
-    const bx = cx - hw, by = cy - hh;
-    const bw = hw * 2, bh = hh * 2;
-    const L = 14;
-    g.lineStyle(1.5, color, alpha);
-    g.lineBetween(bx, by + L, bx, by); g.lineBetween(bx, by, bx + L, by);
-    g.lineBetween(bx + bw - L, by, bx + bw, by); g.lineBetween(bx + bw, by, bx + bw, by + L);
-    g.lineBetween(bx, by + bh - L, bx, by + bh); g.lineBetween(bx, by + bh, bx + L, by + bh);
-    g.lineBetween(bx + bw - L, by + bh, bx + bw, by + bh); g.lineBetween(bx + bw, by + bh, bx + bw, by + bh - L);
+  /* ── Случайные координаты ──────────────────────────────── */
+  _updateCoords() {
+    const rnd = (n, d) => (n + (Math.random() - 0.5) * 0.04).toFixed(d);
+    const lat  = rnd(52.2297, 4);
+    const lon  = rnd(21.0122, 4);
+    const alt  = (400 + Math.floor(Math.random() * 8));
+    const ping = (18 + Math.floor(Math.random() * 30));
+    this._coordTop?.setText(`LAT: ${lat}  |  LONG: ${lon}`);
+    this._coordBot?.setText(`ALT: ${alt}km  |  PING: ${ping}ms`);
   }
 
   /* ── Кнопки ───────────────────────────────────────────── */
   _buildButtons(W, H) {
-    const cy1 = H * 0.68;
-    const cy2 = H * 0.80;
-
-    // Кнопка: Бой с ботом (угловая киберпанк)
     this._makeCyberBtn(
-      W / 2, cy1, 230, 46,
-      '🤖  БОЙ С БОТОМ', 0xff2244,
+      W / 2, H * 0.70, 230, 46,
+      '🤖  БОЙ С БОТОМ',
       () => this._onBotFight()
     );
 
-    // Подсказка
-    txt(this, W / 2, cy2,
+    txt(this, W / 2, H * 0.80,
       'Матч найдётся автоматически — можешь подождать',
-      9, '#4ab8cc').setOrigin(0.5).setAlpha(0.6);
+      9, '#4ab8cc').setOrigin(0.5).setAlpha(0.55);
 
-    // Кнопка: Отмена (внизу)
     makeBackBtn(this, 'Отменить поиск', () => this._onCancel());
   }
 
-  /* ── Угловая кнопка киберпанк ─────────────────────────── */
-  _makeCyberBtn(x, y, w, h, label, color, cb) {
+  /* ── Полупрозрачная кнопка с красной рамкой + hover glow ── */
+  _makeCyberBtn(x, y, w, h, label, cb) {
     const cut = 10;
     const pts = [
       new Phaser.Geom.Point(x - w / 2 + cut, y - h / 2),
@@ -193,43 +168,48 @@ class QueueScene extends Phaser.Scene {
     ];
 
     const bg = this.add.graphics();
-    const _draw = (fillAlpha) => {
+
+    const _draw = (hover) => {
       bg.clear();
-      bg.fillStyle(color, fillAlpha);
+      // Фон: полупрозрачный чёрный
+      bg.fillStyle(0x000000, hover ? 0.75 : 0.55);
       bg.fillPoints(pts, true);
-      // Неон-обводка
-      bg.lineStyle(1.5, color, 0.85);
+      // Рамка: тонкая красная, при hover — яркая с glow
+      const borderAlpha = hover ? 1 : 0.5;
+      bg.lineStyle(hover ? 2 : 1.5, 0xff2244, borderAlpha);
       bg.strokePoints(pts, true);
-      // Блик (верхняя треть)
-      bg.fillStyle(0xffffff, 0.08);
-      bg.fillPoints([
-        new Phaser.Geom.Point(x - w / 2 + cut, y - h / 2),
-        new Phaser.Geom.Point(x + w / 2,       y - h / 2),
-        new Phaser.Geom.Point(x + w / 2,       y),
-        new Phaser.Geom.Point(x - w / 2,       y),
-        new Phaser.Geom.Point(x - w / 2,       y - h / 2 + cut),
-      ], true);
+      if (hover) {
+        // Внешнее свечение (3 слоя)
+        bg.lineStyle(6, 0xff2244, 0.08);
+        bg.strokePoints(pts, true);
+        bg.lineStyle(4, 0xff2244, 0.14);
+        bg.strokePoints(pts, true);
+        bg.lineStyle(2, 0xff2244, 0.35);
+        bg.strokePoints(pts, true);
+      }
     };
-    _draw(1);
+
+    _draw(false);
 
     this.add.text(x, y, label, {
-      fontFamily: "'Orbitron', 'Arial', sans-serif",
+      fontFamily: "'Orbitron','Arial',sans-serif",
       fontSize: '13px', fontStyle: 'bold',
-      color: '#ffffff', resolution: 2,
+      color: '#ff6680', resolution: 2,
     }).setOrigin(0.5);
 
     const zone = this.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
-    zone.on('pointerdown',  () => { _draw(0.7); tg?.HapticFeedback?.impactOccurred('medium'); });
-    zone.on('pointerup',    () => { _draw(1); cb(); });
-    zone.on('pointerout',   () => { _draw(1); });
+    zone.on('pointerover',  () => _draw(true));
+    zone.on('pointerout',   () => _draw(false));
+    zone.on('pointerdown',  () => { _draw(true); tg?.HapticFeedback?.impactOccurred('medium'); });
+    zone.on('pointerup',    () => { _draw(false); cb(); });
   }
 
-  /* ── Старый _makeBtn (используется другими сценами если нужно) */
+  /* ── Старый _makeBtn (совместимость) ──────────────────── */
   _makeBtn(x, y, w, h, label, bgColor, textColor, cb,
            borderColor = null, borderAlpha = 0.6) {
     const g = this.add.graphics();
-    const fillAlpha = bgColor === C.dark ? 0.82 : 1;
-    g.fillStyle(bgColor, fillAlpha);
+    const fa = bgColor === C.dark ? 0.82 : 1;
+    g.fillStyle(bgColor, fa);
     g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12);
     if (borderColor) {
       g.lineStyle(1.5, borderColor, borderAlpha);
@@ -238,14 +218,12 @@ class QueueScene extends Phaser.Scene {
     txt(this, x, y, label, 15, textColor, true).setOrigin(0.5);
     const zone = this.add.zone(x, y, w, h).setInteractive({ useHandCursor: true });
     zone.on('pointerdown', () => {
-      g.clear();
-      const dark = Phaser.Display.Color.IntegerToColor(bgColor).darken(25).color;
-      g.fillStyle(dark, fillAlpha);
-      g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12);
+      g.clear(); const d = Phaser.Display.Color.IntegerToColor(bgColor).darken(25).color;
+      g.fillStyle(d, fa); g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12);
       tg?.HapticFeedback?.impactOccurred('medium');
     });
-    zone.on('pointerup',  () => { g.clear(); g.fillStyle(bgColor, fillAlpha); g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12); cb(); });
-    zone.on('pointerout', () => { g.clear(); g.fillStyle(bgColor, fillAlpha); g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12); });
+    zone.on('pointerup',  () => { g.clear(); g.fillStyle(bgColor, fa); g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12); cb(); });
+    zone.on('pointerout', () => { g.clear(); g.fillStyle(bgColor, fa); g.fillRoundedRect(x - w / 2, y - h / 2, w, h, 12); });
   }
 
   shutdown() {

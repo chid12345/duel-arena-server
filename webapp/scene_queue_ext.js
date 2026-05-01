@@ -20,48 +20,38 @@ Object.assign(QueueScene.prototype, {
     });
   },
 
-  /* ── update: анимация радара ──────────────────────────── */
+  /* ── update: пульсирующее оранжевое свечение вокруг радара ── */
   update() {
-    if (!this._searching) return;
-    const { _cx: cx, _cy: cy } = this;
-    const maxR = 90;
-    const CY = 0x00e5ff;
+    if (!this._searching || !this._glowG) return;
+    const { _cx: cx, _cy: cy, W } = this;
+    const baseR = Math.min(W, 200) / 2;
 
-    // Вращающийся луч — cyan с длинным шлейфом
-    this._scanAngle += 0.038;
-    const sg = this._scanG;
-    sg.clear();
-    for (let i = 0; i < 30; i++) {
-      const a     = this._scanAngle - i * 0.075;
-      const alpha = (1 - i / 30) * 0.38;
-      sg.lineStyle(2, CY, alpha);
-      sg.beginPath();
-      sg.moveTo(cx, cy);
-      sg.lineTo(cx + Math.cos(a) * maxR, cy + Math.sin(a) * maxR);
-      sg.strokePath();
-    }
-    // Яркий кончик луча
-    sg.lineStyle(2.5, CY, 1);
-    sg.beginPath();
-    sg.moveTo(cx, cy);
-    sg.lineTo(
-      cx + Math.cos(this._scanAngle) * maxR,
-      cy + Math.sin(this._scanAngle) * maxR
-    );
-    sg.strokePath();
-    // Точка-вспышка на кончике
-    sg.fillStyle(0xffffff, 0.9);
-    sg.fillCircle(cx + Math.cos(this._scanAngle) * maxR, cy + Math.sin(this._scanAngle) * maxR, 3);
-    sg.fillStyle(CY, 0.5);
-    sg.fillCircle(cx + Math.cos(this._scanAngle) * maxR, cy + Math.sin(this._scanAngle) * maxR, 6);
+    this._glowPhase = (this._glowPhase || 0) + 0.04;
+    const pulse = 0.5 + 0.5 * Math.sin(this._glowPhase);   // 0..1
+    const pulse2 = 0.5 + 0.5 * Math.sin(this._glowPhase * 1.7 + 1); // сдвинутый
 
-    // Пульсирующее кольцо — cyan
-    this._pulseR += 1.1;
-    if (this._pulseR > maxR + 25) this._pulseR = 0;
-    const palpha = Math.max(0, 0.6 - (this._pulseR / (maxR + 25)) * 0.6);
-    this._pulseG.clear();
-    this._pulseG.lineStyle(1.5, CY, palpha);
-    this._pulseG.strokeCircle(cx, cy, this._pulseR);
+    const g = this._glowG;
+    g.clear();
+
+    // Многослойное оранжевое свечение (6 колец, разный размер и альфа)
+    const layers = [
+      { dr: 8,  w: 22, a: 0.04 * pulse },
+      { dr: 4,  w: 14, a: 0.07 * pulse },
+      { dr: 2,  w: 8,  a: 0.12 * pulse2 },
+      { dr: 1,  w: 4,  a: 0.22 * pulse },
+      { dr: 0,  w: 2.5, a: 0.45 * pulse2 },
+      { dr: -2, w: 1.5, a: 0.6  * pulse },
+    ];
+    layers.forEach(({ dr, w, a }) => {
+      if (a < 0.01) return;
+      g.lineStyle(w, 0xff8c00, a);
+      g.strokeCircle(cx, cy, baseR + dr);
+    });
+
+    // Внутренний cyan-пульс (тонкий)
+    const innerA = 0.15 * pulse2;
+    g.lineStyle(2, 0x00e5ff, innerA);
+    g.strokeCircle(cx, cy, baseR * 0.55 + pulse * 6);
   },
 
   /* ── WebSocket ────────────────────────────────────────── */
