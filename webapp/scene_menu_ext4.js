@@ -223,7 +223,7 @@ Object.assign(MenuScene.prototype, {
       hrtG.fillTriangle(hic - 5, hiy, hic + 5, hiy, hic, hiy + 6); }
     ca(mkT(hpX + 18, hpRowCY - 5, 'HP', 9, hpColStr));
     const hpValStr = `${p.current_hp} / ${p.max_hp}`;
-    const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 9, 'rgba(255,255,255,0.9)')).setOrigin(1, 0);
+    const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 11, '#ffffff')).setOrigin(1, 0);
     const hpBX = hpX + 36, hpBW = W - PAD * 2 - 36 - 76;
     const hpBg = ca(mkBarGlow(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, 0x15803d, 0x86efac, 0x4ade80));
     this._liveHp = { g: hpBg, t: hpValTxt, x: hpBX, y: hpRowCY - Math.ceil(hpH / 2), w: hpBW, h: hpH };
