@@ -4,7 +4,7 @@
 const BotBattleCss = (() => {
 
   const CSS = `
-    #bb-root{position:fixed;background:#03050f;color:#fff;z-index:200;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;}
+    #bb-root{position:fixed;inset:0;background:#03050f;color:#fff;z-index:200;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;}
     #bb-root *{box-sizing:border-box;}
     #bb-root .bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(.78) saturate(1.05);pointer-events:none;}
     #bb-root .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(0,0,0,.4) 0%,rgba(0,0,0,.05) 35%,rgba(0,0,0,.05) 70%,rgba(0,0,0,.55) 100%);}
