@@ -41,6 +41,17 @@ class MenuScene extends Phaser.Scene {
     post('/api/player/active_session', {}).then(sess => {
       if (!this.scene?.isActive('Menu')) return;
       if (sess?.ok && sess.scene && sess.scene !== 'Menu') {
+        // Анти-зомби-цикл: если бой недавно упал по watchdog'у,
+        // не возвращаем игрока обратно в сломанный бой 30 сек.
+        if (sess.scene === 'Battle') {
+          try {
+            const skipUntil = +(localStorage.getItem('da_skip_battle_resume') || 0);
+            if (skipUntil && Date.now() - skipUntil < 30000) {
+              console.warn('[Menu] skip Battle resume — недавний UI-сбой');
+              return;
+            }
+          } catch(_) {}
+        }
         this.scene.start(sess.scene, sess.openTab ? { returnTab: sess.openTab } : {});
       }
     }).catch(() => {});

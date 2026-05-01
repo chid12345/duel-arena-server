@@ -20,10 +20,9 @@ function _fitToCanvas(root) {
 }
 
 const CSS = `
-.bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);animation:bsFadeIn .22s ease-out}
-.bs-panel{width:100%;max-width:430px;max-height:92dvh;display:flex;flex-direction:column;background:#040212;border-top:1px solid rgba(124,58,237,.35);border-radius:20px 20px 0 0;overflow:hidden;animation:bsSlideUp .28s cubic-bezier(.22,1,.36,1)}
+.bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:stretch;justify-content:center;background:rgba(2,1,8,.96);animation:bsFadeIn .18s ease-out}
+.bs-panel{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;background:#040212;border:none;border-radius:0;overflow:hidden;animation:bsFadeIn .22s ease-out}
 @keyframes bsFadeIn{from{opacity:0}to{opacity:1}}
-@keyframes bsSlideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
 .bs-head{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;border-bottom:1px solid rgba(124,58,237,.18)}
 .bs-title{font-size:16px;font-weight:800;letter-spacing:.6px;background:linear-gradient(90deg,#c4b5fd,#f9a8d4,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .bs-close{width:30px;height:30px;border-radius:9px;background:rgba(220,50,80,.18);border:1px solid rgba(255,80,120,.35);color:#fca5a5;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center}

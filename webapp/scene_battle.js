@@ -167,21 +167,26 @@ class BattleScene extends Phaser.Scene {
       document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
     } catch(_) {}
 
+    // АВАРИЙНАЯ кнопка «← Меню» — всегда доступный DOM-элемент с высоким
+    // z-index. Если HTML-overlay/Phaser сломаются и UI боя зависнет —
+    // у игрока есть выход без перезагрузки/рестарта сервера.
+    this._mountEmergencyExit();
+
     // ВСЕ бои (PvE-бот / Натиск / Башня / PvP-поиск / Вызов по нику) идут
     // через единый HTML-overlay. Phaser-путь оставлен только как fallback.
     if (typeof BotBattleHtml !== 'undefined') {
+      console.log('[Battle] mount HTML overlay…');
       try {
         BotBattleHtml.mount(this);
       } catch(e) {
         console.error('[Battle] HTML overlay mount error — fallback to Phaser:', e);
         try { BotBattleHtml.unmount(); } catch(_) {}
       }
-      // isMounted() проверяет замыкание mounted — если mount вернулся
-      // досрочно (canvas null, бросил ошибку), падаем в Phaser-режим.
       if (BotBattleHtml.isMounted()) {
         this._htmlMode = true;
         this._setupWSBattle();
         this._startTimer();
+        this._armUiWatchdog();
         return;
       }
       console.warn('[Battle] HTML overlay not mounted — using Phaser fallback');
@@ -194,15 +199,54 @@ class BattleScene extends Phaser.Scene {
     this._updateFromState(State.battle);
     this._setupWSBattle();
     this._startTimer();
+    this._armUiWatchdog();
 
     // Подсказки для новичков (первые 5 боёв)
     if (typeof BattleHints !== 'undefined') BattleHints.onBattleStart(this);
+  }
+
+  _mountEmergencyExit() {
+    try { document.getElementById('battle-emerg-exit')?.remove(); } catch(_) {}
+    const btn = document.createElement('div');
+    btn.id = 'battle-emerg-exit';
+    btn.textContent = '← Меню';
+    btn.style.cssText = 'position:fixed;top:6px;left:6px;z-index:99998;padding:5px 10px;background:rgba(220,50,80,.92);color:#fff;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;font-family:-apple-system,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.5);';
+    btn.onclick = () => {
+      try { State.battle = null; } catch(_) {}
+      try { BotBattleHtml?.unmount?.(); } catch(_) {}
+      try { btn.remove(); } catch(_) {}
+      this.scene.start('Menu', { returnTab: 'profile' });
+    };
+    document.body.appendChild(btn);
+  }
+
+  _armUiWatchdog() {
+    // Через 4с проверяем — отрисовался ли UI боя? Если ни HTML-overlay
+    // (#bb-p1n не существует), ни Phaser-арена (this.warrior1 = null),
+    // то сцена застряла → молча возвращаем в меню вместо чёрного экрана.
+    if (this._uiWatchdog) { try { this._uiWatchdog.remove(); } catch(_) {} }
+    this._uiWatchdog = this.time.delayedCall(4000, () => {
+      const htmlOk   = !!document.querySelector('#bb-root #bb-p1n');
+      const phaserOk = !!this.warrior1;
+      if (!htmlOk && !phaserOk) {
+        console.error('[Battle] UI watchdog: ни HTML, ни Phaser не отрисовались за 4с — выход в меню');
+        // Метка для MenuScene: бой только что упал — не возвращай нас сюда
+        // через active_session 30 секунд. Без этого получается зомби-цикл:
+        // Menu → active_session=Battle → Battle падает → Menu → Battle …
+        try { localStorage.setItem('da_skip_battle_resume', String(Date.now())); } catch(_) {}
+        try { State.battle = null; } catch(_) {}
+        try { BotBattleHtml?.unmount?.(); } catch(_) {}
+        this.scene.start('Menu', { returnTab: 'profile' });
+      }
+    });
   }
 
   shutdown() {
     // Phaser сам чистит time.addEvent и tweens, но DOM-оверлей и WS-handler
     // висят независимо — убираем вручную, иначе после выхода из боя
     // BattleLog остаётся на экране, а ws.onmessage дёргает мёртвую сцену.
+    try { document.getElementById('battle-emerg-exit')?.remove(); } catch(_) {}
+    if (this._uiWatchdog) { try { this._uiWatchdog.remove(); } catch(_) {} this._uiWatchdog = null; }
     try { BattleLog.hide(); } catch(_) {}
     try { if (typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
     try {
