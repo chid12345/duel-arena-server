@@ -127,6 +127,13 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     # _eq_str/agi/intu уже определены выше (ранняя фаза)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
+
+    # Снаряга = постоянный HP-бонус (в отличие от зелий — всегда надета).
+    # Добавляем eq-бонус к current_hp и max_hp для отображения, чтобы во всех
+    # экранах (Профиль / Герой / Бой) было одно и то же число.
+    # Реген в DB идёт до base max_hp — разница current→max всегда одинакова.
+    _base_eq_mhp = mhp + _eq_hp          # 1411 + 138 = 1549
+    _display_chp = min(_base_eq_mhp, chp + _eq_hp)
     if _eq_def:  armor_p   = min(95.0, round(armor_p + _eq_def * 100, 1))
     if _eq_dodge: dodge_p  = int(min(DODGE_MAX_CHANCE * 100, dodge_p + _eq_dodge))
     if _eq_crit:
@@ -196,8 +203,8 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "intuition_effective": _intu,
         "stamina_effective": _vyn + PLAYER_START_ENDURANCE,
         "max_hp_effective": _eff_mhp,
-        "max_hp": mhp,
-        "current_hp": chp,
+        "max_hp": _base_eq_mhp,
+        "current_hp": _display_chp,
         "gold": int(player.get("gold", 0)),
         "diamonds": int(player.get("diamonds", 0)),
         "wins": int(player.get("wins", 0)),
@@ -209,7 +216,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "dodge_pct": dodge_p,
         "crit_pct": crit_p,
         "armor_pct": armor_p,
-        "hp_pct": int(chp / max(1, mhp) * 100),
+        "hp_pct": int(_display_chp / max(1, _base_eq_mhp) * 100),
         "xp_pct": int(int(player.get("exp", 0)) / max(1, need_xp) * 100) if need_xp > 0 else 100,
         "max_level": lv >= MAX_LEVEL,
         "equipped_avatar_id": avatar_id,
@@ -235,9 +242,9 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         ),
         "regen_secs_to_full": (
             0
-            if chp >= mhp
+            if _display_chp >= _base_eq_mhp
             else int(
-                (mhp - chp)
+                (_base_eq_mhp - _display_chp)
                 / max(
                     0.001,
                     mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
