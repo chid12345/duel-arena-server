@@ -212,6 +212,11 @@ class BattleScene extends Phaser.Scene {
     btn.textContent = '← Меню';
     btn.style.cssText = 'position:fixed;top:6px;left:6px;z-index:99998;padding:5px 10px;background:rgba(220,50,80,.92);color:#fff;font-size:11px;font-weight:700;border-radius:6px;cursor:pointer;font-family:-apple-system,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.5);';
     btn.onclick = () => {
+      // КРИТИЧНО: ставим skip-флаг ПЕРЕД переходом в Menu, иначе active_session
+      // отправит игрока обратно в сломанный бой и начнётся цикл Menu↔Battle
+      // (внешне выглядит как «моргает экран»). 90 сек хватает чтобы AFK-timeout
+      // на сервере успел убить мёртвый бой.
+      try { localStorage.setItem('da_skip_battle_resume', String(Date.now())); } catch(_) {}
       try { State.battle = null; } catch(_) {}
       try { BotBattleHtml?.unmount?.(); } catch(_) {}
       try { btn.remove(); } catch(_) {}

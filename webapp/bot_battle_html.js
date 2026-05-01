@@ -21,6 +21,25 @@ const BotBattleHtml = (() => {
     : 'skins/crit/1.png';
 
   function _renderShell(b, skinId, pvpBgIdx) {
+    console.log('[BotBattleHtml] _renderShell start', { isPvp: !b.opp_is_bot, skinId, pvpBgIdx, b_keys: Object.keys(b||{}) });
+    try { return _renderShellImpl(b, skinId, pvpBgIdx); }
+    catch(e) {
+      console.error('[BotBattleHtml] _renderShell ОШИБКА:', e, '— рисую упрощённый UI');
+      // Упрощённый UI — игрок хотя бы увидит что-то и сможет действовать,
+      // вместо чёрного экрана с одной лог-полоской.
+      try {
+        root.innerHTML = `
+          <div style="position:absolute;inset:0;background:#03050f;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:-apple-system,sans-serif;padding:20px;text-align:center;">
+            <div style="font-size:32px;margin-bottom:12px">⚠️</div>
+            <div style="font-size:14px;font-weight:700;margin-bottom:8px">Ошибка отрисовки боя</div>
+            <div style="font-size:11px;opacity:.7;margin-bottom:16px">${String(e?.message || e).slice(0, 80)}</div>
+            <div style="font-size:10px;opacity:.5">Нажми «← Меню» в углу чтобы выйти</div>
+          </div>`;
+      } catch(_) {}
+    }
+  }
+
+  function _renderShellImpl(b, skinId, pvpBgIdx) {
     // PvP (соперник-человек): фон — рандомный из pvp_bg/1..5,
     // спрайт соперника — getWarriorSkinPath по его warrior_type.
     // PvE-бот: фон + скин из bot_skins/ (как было).
@@ -75,6 +94,7 @@ const BotBattleHtml = (() => {
     attackBtns = {}; defenseBtns = {};
     root.querySelectorAll('.atk-col .ic-btn').forEach(b => attackBtns[b.dataset.key] = b);
     root.querySelectorAll('.def-col .ic-btn').forEach(b => defenseBtns[b.dataset.key] = b);
+    console.log('[BotBattleHtml] _renderShell ok — кнопок атаки:', Object.keys(attackBtns).length, 'защиты:', Object.keys(defenseBtns).length);
   }
 
   function _onClick(e) {
