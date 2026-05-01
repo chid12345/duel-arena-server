@@ -23,14 +23,13 @@ class BotsMatchMixin:
             if not is_bot_search:
                 return None
             center = max(1, min(MAX_LEVEL, int(player_level)))
-            rows = []
-            for span in range(0, BOT_MATCH_LEVEL_RANGE_MAX + 1):
-                lo = max(0, center - span)
-                hi = min(MAX_LEVEL, center + span)
-                cursor.execute("SELECT * FROM bots WHERE level BETWEEN ? AND ?", (lo, hi))
-                rows = cursor.fetchall()
-                if rows:
-                    break
+            # Один запрос по всему допустимому диапазону вместо цикла (1→3 запроса).
+            # idx_bots_level покрывает BETWEEN, веса в random.choices дают предпочтение
+            # ботам точного уровня (BOT_MATCH_LEVEL_STRICTNESS очень высокий).
+            lo = max(0, center - BOT_MATCH_LEVEL_RANGE_MAX)
+            hi = min(MAX_LEVEL, center + BOT_MATCH_LEVEL_RANGE_MAX)
+            cursor.execute("SELECT * FROM bots WHERE level BETWEEN ? AND ?", (lo, hi))
+            rows = cursor.fetchall()
             if not rows:
                 bot_t = self._generate_bot_data(center)
                 self._insert_bot_row(cursor, bot_t)

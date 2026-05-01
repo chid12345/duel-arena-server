@@ -89,21 +89,23 @@ class UsersPlayerCoreMixin:
         values.append(user_id)
         sql = f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?"
         try:
-            cursor.execute(sql, values)
-        except Exception as e:
-            if "hp_full_notified" in str(e):
-                # Столбец не существует — повторить без него
-                self._log.warning("hp_full_notified column missing, retrying without it")
-                UsersPlayerCoreMixin._hp_notified_col = False
-                conn.rollback()
-                set_clauses = [c for c in set_clauses if "hp_full_notified" not in c]
-                sql = f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?"
+            try:
                 cursor.execute(sql, values)
-            else:
-                raise
-        affected = cursor.rowcount
-        conn.commit()
-        conn.close()
+            except Exception as e:
+                if "hp_full_notified" in str(e):
+                    # Столбец не существует — повторить без него
+                    self._log.warning("hp_full_notified column missing, retrying without it")
+                    UsersPlayerCoreMixin._hp_notified_col = False
+                    conn.rollback()
+                    set_clauses = [c for c in set_clauses if "hp_full_notified" not in c]
+                    sql = f"UPDATE players SET {', '.join(set_clauses)}, last_active = CURRENT_TIMESTAMP WHERE user_id = ?"
+                    cursor.execute(sql, values)
+                else:
+                    raise
+            affected = cursor.rowcount
+            conn.commit()
+        finally:
+            conn.close()
         if affected == 0:
             self._log.warning("update_player_stats: 0 rows affected uid=%s", user_id)
 

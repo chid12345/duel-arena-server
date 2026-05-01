@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from datetime import datetime
@@ -48,9 +49,11 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
         username = tg_user.get("username") or ""
-        player = db.get_or_create_player(uid, username)
-        progress = db.get_endless_progress(uid)
-        attempts_data = db.endless_get_attempts(uid)
+        player, progress, attempts_data = await asyncio.gather(
+            asyncio.to_thread(db.get_or_create_player, uid, username),
+            asyncio.to_thread(db.get_endless_progress, uid),
+            asyncio.to_thread(db.endless_get_attempts, uid),
+        )
         is_premium = bool(_premium_fields(player).get("is_premium"))
         base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
         total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
@@ -59,6 +62,11 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
         can_buy_diamond = True
         gold = int(player.get("gold", 0))
         diamonds = int(player.get("diamonds", 0))
+        week_key = _iso_week_key()
+        daily_wins, weekly = await asyncio.gather(
+            asyncio.to_thread(db.endless_get_daily_wins, uid),
+            asyncio.to_thread(db.endless_get_weekly_progress, uid, week_key),
+        )
         return {
             "ok": True,
             "attempts_left": attempts_left,
@@ -73,8 +81,8 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
             "player_diamonds": diamonds,
             "is_premium": is_premium,
             "progress": progress,
-            "daily_endless_wins": db.endless_get_daily_wins(uid),
-            "weekly_endless": db.endless_get_weekly_progress(uid, _iso_week_key()),
+            "daily_endless_wins": daily_wins,
+            "weekly_endless": weekly,
         }
 
     @router.post("/api/endless/start")
@@ -84,15 +92,17 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
             tg_user = get_user_from_init_data(body.init_data)
             uid = int(tg_user["id"])
             username = tg_user.get("username") or ""
-            player = db.get_or_create_player(uid, username)
+            player, progress = await asyncio.gather(
+                asyncio.to_thread(db.get_or_create_player, uid, username),
+                asyncio.to_thread(db.get_endless_progress, uid),
+            )
             if not warrior_selected(player):
                 return no_warrior_response()
-            progress = db.get_endless_progress(uid)
             if progress["is_active"] and progress["current_wave"] > 0:
-                db.endless_on_loss(uid, progress["current_wave"])
-                progress = db.get_endless_progress(uid)
+                await asyncio.to_thread(db.endless_on_loss, uid, progress["current_wave"])
+                progress = await asyncio.to_thread(db.get_endless_progress, uid)
 
-            attempts_data = db.endless_get_attempts(uid)
+            attempts_data = await asyncio.to_thread(db.endless_get_attempts, uid)
             is_premium = bool(_premium_fields(player).get("is_premium"))
             base = BASE_ENDLESS_ATTEMPTS + (PREMIUM_ENDLESS_BONUS if is_premium else 0)
             total_available = base + attempts_data["extra_gold"] + attempts_data["extra_diamond"]
@@ -101,11 +111,11 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
                 return {"ok": False, "reason": "Попытки закончились. Приходи завтра!"}
             wave = 1
             full_hp = int(player.get("max_hp", 100))
-            db.endless_start_run(uid, full_hp)
-            db.endless_use_attempt(uid)
+            await asyncio.to_thread(db.endless_start_run, uid, full_hp)
+            await asyncio.to_thread(db.endless_use_attempt, uid)
             # 1 заход в Натиск = 1 заряд баффа (независимо от числа волн)
-            db.consume_charges(uid)
-            db.cleanup_expired(uid)
+            await asyncio.to_thread(db.consume_charges, uid)
+            await asyncio.to_thread(db.cleanup_expired, uid)
 
             bot = _endless_bot_for_wave(wave)
             player_for_battle = dict(player)
@@ -126,8 +136,10 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
             tg_user = get_user_from_init_data(body.init_data)
             uid = int(tg_user["id"])
             username = tg_user.get("username") or ""
-            player = db.get_or_create_player(uid, username)
-            progress = db.get_endless_progress(uid)
+            player, progress = await asyncio.gather(
+                asyncio.to_thread(db.get_or_create_player, uid, username),
+                asyncio.to_thread(db.get_endless_progress, uid),
+            )
             if not progress["is_active"] or progress["current_wave"] <= 0:
                 return {"ok": False, "reason": "Нет активного захода"}
             # Сессия истекла (>1 мин неактивности) — заход считается проигранным
@@ -135,7 +147,7 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
                 upd = str(progress.get("updated_at") or "")[:19]
                 upd_ts = datetime.strptime(upd, "%Y-%m-%d %H:%M:%S").timestamp()
                 if time.time() - upd_ts > _ENDLESS_SESSION_TTL:
-                    db.endless_on_loss(uid, progress["current_wave"])
+                    await asyncio.to_thread(db.endless_on_loss, uid, progress["current_wave"])
                     return {"ok": False, "reason": "Заход истёк. Начни новый!"}
             except Exception:
                 pass
@@ -203,9 +215,9 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
     async def endless_abandon(body: TitanStartBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        progress = db.get_endless_progress(uid)
+        progress = await asyncio.to_thread(db.get_endless_progress, uid)
         if progress["is_active"]:
-            db.endless_on_loss(uid, progress["current_wave"])
+            await asyncio.to_thread(db.endless_on_loss, uid, progress["current_wave"])
         return {"ok": True}
 
     @router.get("/api/endless/top")
@@ -213,10 +225,12 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
         from db_core import iso_week_key_utc
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
-        leaders = db.endless_get_top(20)
-        my_pos = next((i + 1 for i, r in enumerate(leaders) if r["user_id"] == uid), None)
         week_key = iso_week_key_utc()
-        weekly = db.endless_get_weekly_top(week_key, limit=20)
+        leaders, weekly = await asyncio.gather(
+            asyncio.to_thread(db.endless_get_top, 20),
+            asyncio.to_thread(db.endless_get_weekly_top, week_key, 20),
+        )
+        my_pos = next((i + 1 for i, r in enumerate(leaders) if r["user_id"] == uid), None)
         rewards = [
             {"rank": 1,    "diamonds": 100, "gold": 300, "title": "Покоритель Волн"},
             {"rank": 2,    "diamonds": 60,  "gold": 200, "title": "Штормовой боец"},
