@@ -222,7 +222,7 @@ Object.assign(MenuScene.prototype, {
       hrtG.fillCircle(hic - 2.5, hiy - 1.5, 3); hrtG.fillCircle(hic + 2.5, hiy - 1.5, 3);
       hrtG.fillTriangle(hic - 5, hiy, hic + 5, hiy, hic, hiy + 6); }
     ca(mkT(hpX + 18, hpRowCY - 5, 'HP', 9, hpColStr));
-    const hpValStr = `${p.current_hp} / ${p.max_hp_effective ?? p.max_hp}`;
+    const hpValStr = `${p.current_hp} / ${p.max_hp}`;
     const hpValTxt = ca(mkT(W - PAD, hpRowCY - 5, hpValStr, 9, 'rgba(255,255,255,0.5)')).setOrigin(1, 0);
     const hpBX = hpX + 36, hpBW = W - PAD * 2 - 36 - 76;
     const hpBg = ca(mkBarGlow(hpBX, hpRowCY - Math.ceil(hpH / 2), hpBW, hpH, hpPct, 0x15803d, 0x86efac, 0x4ade80));
@@ -278,7 +278,6 @@ Object.assign(MenuScene.prototype, {
             const sp = State.player;
             if (sp && this._liveHp && sp.current_hp < sp.max_hp) {
               sp.current_hp = sp.max_hp;
-              const effMax = sp.max_hp_effective ?? sp.max_hp;
               sp.hp_pct = 100;
               const { g, t, x, y, w, h } = this._liveHp;
               const rr2 = Math.ceil(h / 2) + 2;
@@ -288,7 +287,7 @@ Object.assign(MenuScene.prototype, {
               g.fillGradientStyle(0x15803d, 0x86efac, 0x15803d, 0x86efac, 1);
               g.fillRoundedRect(x, y, w, h, rr2);
               g.fillStyle(0xffffff, 0.18); g.fillRoundedRect(x, y, w, Math.ceil(h / 2), rr2);
-              t.setText(`${sp.current_hp} / ${effMax}`);
+              t.setText(`${sp.current_hp} / ${sp.max_hp}`);
             }
             regenTxt.setText('✅ HP полный!').setStyle({ color: '#4ade80' });
             return;

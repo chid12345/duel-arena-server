@@ -32,8 +32,7 @@ Object.assign(MenuScene.prototype, {
         // в Профиль с подросшим HP цифры менялись, а зелёный бар оставался
         // на «после-боевом» уровне до следующего 30-сек тика _startRegenTick.
         if (this._liveHp) {
-          const effMax = p.max_hp_effective ?? p.max_hp;
-          const pct = Math.max(0, Math.min(1, (p.current_hp || 0) / Math.max(1, effMax)));
+          const pct = Math.max(0, Math.min(1, (p.current_hp || 0) / Math.max(1, p.max_hp)));
           const { g, t, x, y, w, h } = this._liveHp;
           const rr2 = Math.ceil(h / 2) + 2;
           const fw = Math.max(rr2 * 2, Math.round(w * pct));
@@ -43,7 +42,7 @@ Object.assign(MenuScene.prototype, {
           g.fillGradientStyle(0x15803d, 0x86efac, 0x15803d, 0x86efac, 1);
           g.fillRoundedRect(x, y, fw, h, rr2);
           g.fillStyle(0xffffff, 0.18); g.fillRoundedRect(x, y, fw, Math.ceil(h / 2), rr2);
-          if (t) t.setText(`${p.current_hp} / ${effMax}`);
+          if (t) t.setText(`${p.current_hp} / ${p.max_hp}`);
         }
       }
       if (!buffs.length) return;
