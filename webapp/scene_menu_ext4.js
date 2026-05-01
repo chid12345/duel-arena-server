@@ -375,6 +375,8 @@ Object.assign(MenuScene.prototype, {
     this._updateProfileTasksBadge();
 
     this._addEquipmentSlots(c, W, czY, czH, PAD, mkG, mkT, mkZ, ca);
+    this.sys.displayList.add(c);
+    c.setVisible(false);
     this._panels.profile = c;
     this._loadProfileBuffs();
   },

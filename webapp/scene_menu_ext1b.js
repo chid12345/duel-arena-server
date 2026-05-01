@@ -93,6 +93,8 @@ Object.assign(MenuScene.prototype, {
       c.add(vz);
     }
 
+    this.sys.displayList.add(c);
+    c.setVisible(false);
     this._panels.more = c;
   },
 

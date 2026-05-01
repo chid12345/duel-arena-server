@@ -166,6 +166,8 @@ Object.assign(MenuScene.prototype, {
       ...hpBlockObjs,
     ];
     children.forEach(o => c.add(o));
+    this.sys.displayList.add(c);
+    c.setVisible(false);
     this._panels.battle = c;
     this._checkIncomingChallenge();
   },
