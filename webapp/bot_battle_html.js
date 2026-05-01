@@ -144,37 +144,13 @@ const BotBattleHtml = (() => {
       s._currentPvpBgIdx = pvpBgIdx;
       root = document.createElement('div'); root.id = 'bb-root';
       if (isPvp) root.classList.add('pvp');
+      // НЕ позиционируем по канвасу — в Telegram Web WebView канвас может
+      // быть в кривой позиции (top=644 при viewport 670 → overlay уезжает
+      // за нижнюю границу). CSS #bb-root{position:fixed;inset:0} покрывает
+      // весь iframe — то что нужно для боевого UI.
       const r = s.game.canvas.getBoundingClientRect();
-      console.log('[BotBattleHtml] canvas rect:', { left: r.left, top: r.top, width: r.width, height: r.height });
-      // Если канвас даёт валидные размеры — позиционируем по нему.
-      // Если 0×0 (race при переходе сцен) — оставляем CSS inset:0 (full viewport).
-      // КРИТИЧНО: right:auto и bottom:auto явно отменяют CSS inset:0 — иначе
-      // получается over-constrained box (left+right+width одновременно), и
-      // в Telegram WebApp WebView это иногда схлопывает элементы внутри.
-      if (r.width > 50 && r.height > 50) {
-        Object.assign(root.style, {
-          left: r.left + 'px',
-          top: r.top + 'px',
-          width: r.width + 'px',
-          height: r.height + 'px',
-          right: 'auto',
-          bottom: 'auto',
-        });
-      } else {
-        console.warn('[BotBattleHtml] canvas rect невалидный — fallback inset:0');
-      }
+      console.log('[BotBattleHtml] canvas rect (info only):', { left: r.left, top: r.top, width: r.width, height: r.height });
       document.body.appendChild(root);
-      // Resize listener — на случай поворота экрана/изменения окна Telegram
-      const onResize = () => {
-        try {
-          const r2 = s.game.canvas.getBoundingClientRect();
-          if (r2.width > 50 && r2.height > 50 && root) {
-            Object.assign(root.style, { left:r2.left+'px', top:r2.top+'px', width:r2.width+'px', height:r2.height+'px' });
-          }
-        } catch(_) {}
-      };
-      window.addEventListener('resize', onResize);
-      root._onResize = onResize;
       _renderShell(b0, skinId, pvpBgIdx);
       // Диагностика: видны ли элементы в DOM после рендера? Если offsetWidth=0 —
       // элемент скрыт (display:none, нулевой размер, или вне viewport-clip).
@@ -247,7 +223,6 @@ const BotBattleHtml = (() => {
     unmount() {
       if (!mounted) return;
       try { if (root && clickHandler) root.removeEventListener('click', clickHandler); } catch(_) {}
-      try { if (root && root._onResize) window.removeEventListener('resize', root._onResize); } catch(_) {}
       try { root && root.parentNode && root.parentNode.removeChild(root); } catch(_) {}
       root = null; scene = null; mounted = false; clickHandler = null;
       attackBtns = {}; defenseBtns = {};
