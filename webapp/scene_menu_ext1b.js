@@ -77,6 +77,21 @@ Object.assign(MenuScene.prototype, {
     this._verTxt = rmdl(txt(this, W / 2, verY, `⚔️  Duel Arena  v${State.appVersion || '1.01'}`, 13, '#ffc83c', true).setOrigin(0.5));
     c.add(this._verTxt);
     c.add(rmdl(txt(this, W / 2, CH - 10, '@ZenDuelArena_bot', 10, '#ddddff').setOrigin(0.5)));
+    // Скрытый переключатель Safe Mode: 5 тапов по плашке версии
+    { let _tc = 0, _tt = null;
+      const vz = rmdl(this.add.zone(W/2 - 90, verY - 14, 180, 28).setOrigin(0).setInteractive());
+      vz.on('pointerup', () => {
+        _tc++; clearTimeout(_tt);
+        if (_tc >= 5) {
+          _tc = 0;
+          if (typeof SafeMode !== 'undefined') {
+            SafeMode.toggle();
+            tg?.HapticFeedback?.notificationOccurred(SafeMode.isOn() ? 'warning' : 'success');
+          }
+        } else { _tt = setTimeout(() => { _tc = 0; }, 1500); }
+      });
+      c.add(vz);
+    }
 
     this._panels.more = c;
   },

@@ -67,9 +67,13 @@ body.da-safe-mode *:not(canvas) {
     console.log(`[SafeMode] ${on ? 'ВКЛЮЧЁН — blur/shadow отключены' : 'ВЫКЛЮЧЕН — эффекты восстановлены'}`);
   }
 
-  // Применяем сразу при загрузке если было включено
+  // Применяем сразу при загрузке если было включено.
+  // Также читаем URL-параметр ?safe=1 / ?safe=0 — удобно без консоли.
   function _init() {
     try {
+      const urlParam = new URLSearchParams(location.search).get('safe');
+      if (urlParam === '1') { _apply(true); return; }
+      if (urlParam === '0') { _apply(false); return; }
       if (localStorage.getItem(LS_KEY) === '1') _apply(true);
     } catch(_) {}
   }
