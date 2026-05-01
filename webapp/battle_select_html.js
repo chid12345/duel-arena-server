@@ -24,8 +24,10 @@ const CSS = `
 @keyframes bsGlitch{0%,88%,100%{opacity:0}90%{opacity:.5;transform:translateX(-2px)}94%{opacity:.5;transform:translateX(2px)}97%{opacity:0}}
 @keyframes bsScan{0%{top:-100%}100%{top:110%}}
 
-.bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:stretch;justify-content:center;background:rgba(1,4,12,.97);animation:bsFadeIn .18s cubic-bezier(.22,1,.36,1)}
-.bs-panel{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;background:#040d1e;overflow:hidden;position:relative;background-image:repeating-linear-gradient(0deg,transparent 0,transparent 3px,rgba(0,245,255,.007) 3px,rgba(0,245,255,.007) 4px)}
+.bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:stretch;justify-content:center;background:rgba(1,4,12,.95);animation:bsFadeIn .18s cubic-bezier(.22,1,.36,1)}
+.bs-panel{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;overflow:hidden;position:relative;background:#050e1f url(battle_bg.png) center/cover no-repeat;isolation:isolate}
+.bs-panel::before{content:'';position:absolute;inset:0;background:rgba(2,8,20,.72);z-index:0;pointer-events:none}
+.bs-panel>*{position:relative;z-index:1}
 
 .bs-cn{position:absolute;width:16px;height:16px;pointer-events:none;z-index:5}
 .bs-cn-tl{top:0;left:0;border-top:1.5px solid rgba(0,245,255,.7);border-left:1.5px solid rgba(0,245,255,.7)}
@@ -58,7 +60,9 @@ const CSS = `
   position:relative;
   display:flex;align-items:center;gap:0;
   padding:13px 38px 13px 16px;
-  background:rgba(2,10,26,.0);
+  background:rgba(0,8,20,.52);
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
   border:none;
   border-left:3px solid #00f5ff;
   cursor:pointer;
