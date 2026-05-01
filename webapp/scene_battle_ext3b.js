@@ -195,6 +195,7 @@ Object.assign(BattleScene.prototype, {
     if (this._timerEvent) { try { this._timerEvent.remove(); } catch(_) {} this._timerEvent = null; }
     if (this._pollEvent)  { try { this._pollEvent.remove();  } catch(_) {} this._pollEvent  = null; }
     this.time.removeAllEvents();
+    try { this.tweens.killAll(); } catch(_) {}
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   },
 
