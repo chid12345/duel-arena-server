@@ -209,7 +209,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "dodge_pct": dodge_p,
         "crit_pct": crit_p,
         "armor_pct": armor_p,
-        "hp_pct": int(chp / max(1, _eff_mhp) * 100),
+        "hp_pct": int(chp / max(1, mhp) * 100),
         "xp_pct": int(int(player.get("exp", 0)) / max(1, need_xp) * 100) if need_xp > 0 else 100,
         "max_level": lv >= MAX_LEVEL,
         "equipped_avatar_id": avatar_id,

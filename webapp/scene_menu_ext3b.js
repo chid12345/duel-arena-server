@@ -15,8 +15,10 @@ Object.assign(MenuScene.prototype, {
         const sp = State.player;
         if (!sp || sp.current_hp >= sp.max_hp) return;
         sp.current_hp = Math.min(sp.max_hp, Math.round(sp.current_hp + regenPerTick));
-        const effMax = sp.max_hp_effective ?? sp.max_hp;
-        sp.hp_pct     = Math.round(sp.current_hp / effMax * 100);
+        // hp_pct считаем от max_hp (база, до которой идёт реген), а не от effMax.
+        // effMax включает бонус экипировки — он работает только в бою, не регенится.
+        // Иначе при наличии +HP экипировки бар застывал ниже 100% (было sp.current_hp / effMax).
+        sp.hp_pct = Math.round(sp.current_hp / Math.max(1, sp.max_hp) * 100);
 
         if (this._activeTab === 'profile' && this._liveHp) {
           const { g, t, x, y, w, h } = this._liveHp;

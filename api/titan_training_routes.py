@@ -71,6 +71,12 @@ def register_titan_training_routes(app, ctx: Dict[str, Any]) -> None:
             player = db.get_or_create_player(uid, tg_user.get("username") or "")
             if not warrior_selected(player):
                 return no_warrior_response()
+            # Применяем реген ДО проверки HP — иначе бар может быть несинхронен с DB
+            inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
+            regen = db.apply_hp_regen_from_player(player, inv)
+            if regen:
+                player = dict(player)
+                player["current_hp"] = regen["current_hp"]
             mhp = int(player.get("max_hp", PLAYER_START_MAX_HP))
             chp = int(player.get("current_hp", mhp))
             if chp < int(mhp * HP_MIN_BATTLE_PCT):

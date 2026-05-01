@@ -39,6 +39,13 @@ def register_find_battle_route(
         player = await asyncio.to_thread(db.get_or_create_player, uid, username)
         if not warrior_selected(player):
             return no_warrior_response()
+        # Применяем реген ДО проверки HP — иначе игрок может видеть "мало HP"
+        # хотя по факту оно уже восстановилось (если /api/player давно не вызывался)
+        inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", PLAYER_START_LEVEL))
+        regen = await asyncio.to_thread(db.apply_hp_regen_from_player, player, inv)
+        if regen:
+            player = dict(player)
+            player["current_hp"] = regen["current_hp"]
         usdt_passive = await asyncio.to_thread(db.get_equipped_usdt_passive, uid)
         if usdt_passive:
             player = dict(player)
