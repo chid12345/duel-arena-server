@@ -72,17 +72,6 @@ class NatiskScene extends Phaser.Scene {
       y += 66;
     }
 
-    /* ── Описание ── */
-    {
-      const dg = this.add.graphics();
-      dg.fillStyle(0x080d1c, 0.85); dg.fillRoundedRect(8, y, W - 16, 38, 8);
-      dg.lineStyle(1, 0x00e5ff, 0.12); dg.strokeRoundedRect(8, y, W - 16, 38, 8);
-      dg.lineStyle(2, 0x00e5ff, 0.65); dg.lineBetween(8, y + 6, 8, y + 32);
-      txt(this, 20, y + 8,  '▸ Выживи как можно дольше на арене.', 10, '#00e5ff');
-      txt(this, 20, y + 22, '▸ HP сохраняется · волны становятся сложнее.', 9, '#4a7080');
-      y += 48;
-    }
-
     /* ── Кнопка старта / нет попыток ── */
     if (d.attempts_left > 0) {
       this._makeMechBtn(W / 2, y + 68, () => this._startFight());
@@ -126,19 +115,40 @@ class NatiskScene extends Phaser.Scene {
       ? '⭐ Premium активен: +5 попыток/день'
       : '⭐ Premium: +5 бесплатных попыток/день';
     txt(this, W / 2, y + 6, premLine, 10, d.is_premium ? '#ffc83c' : '#445566').setOrigin(0.5);
+    y += 22;
+
+    /* ── Описание (кибер, внизу) ── */
+    {
+      const dg = this.add.graphics();
+      dg.fillStyle(0x0d0900, 0.92); dg.fillRoundedRect(8, y, W - 16, 58, 8);
+      dg.lineStyle(1, 0xff8c00, 0.2); dg.strokeRoundedRect(8, y, W - 16, 58, 8);
+      dg.lineStyle(3, 0xff8c00, 1); dg.lineBetween(8, y + 7, 8, y + 51);
+      txt(this, 20, y + 8,  '⚡ Выживи как можно дольше на арене.', 11, '#ffc83c', true)
+        .setShadow(0, 0, '#ff8c00', 6, false, true);
+      txt(this, 20, y + 25, '▸ Волны 1–3 лёгкие — дальше сложнее.', 10, '#ffaa55');
+      txt(this, 20, y + 40, '▸ HP сохраняется между боями.', 10, '#ffaa55');
+    }
   }
 
   _makeMechBtn(x, y, cb) {
     const SZ = 104;
     const cont = this.add.container(x, y);
 
-    // Мягкое cyan-зарево под ногами — никаких рамок
+    // Радиальное свечение вокруг скина (без рамки)
     const glowG = this.add.graphics();
-    for (let i = 6; i >= 1; i--) {
-      glowG.fillStyle(0x00e5ff, 0.04 * i / 6);
-      glowG.fillEllipse(0, SZ / 2 + 4, SZ * 0.85 * (i / 6), 18 * (i / 6));
+    for (let i = 7; i >= 1; i--) {
+      glowG.fillStyle(0x00e5ff, 0.045 * i / 7);
+      glowG.fillEllipse(0, 0, SZ * 1.1 * (i / 7), SZ * 1.1 * (i / 7));
     }
     cont.add(glowG);
+
+    // Зарево-пятно под ногами
+    const shadowG = this.add.graphics();
+    for (let i = 5; i >= 1; i--) {
+      shadowG.fillStyle(0x00e5ff, 0.05 * i / 5);
+      shadowG.fillEllipse(0, SZ / 2 + 6, SZ * 0.75 * (i / 5), 14 * (i / 5));
+    }
+    cont.add(shadowG);
 
     // Скин — чистый, без рамки
     const mech = this.add.image(0, 0, 'natisk_mech')
