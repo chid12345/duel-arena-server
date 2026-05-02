@@ -181,20 +181,23 @@ class NatiskScene extends Phaser.Scene {
     cont.add(img);
 
     // Метки
+    const brightHex = '#' + glowHex.toString(16).padStart(6, '0');
     const lbl = this.add.text(0, SZ / 2 + 14, label, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
-      fontSize: '12px', fontStyle: 'bold',
+      fontSize: '13px', fontStyle: 'bold',
       color: active ? '#ffffff' : '#556677', resolution: 2,
+      stroke: active ? hexStr : undefined, strokeThickness: active ? 1 : 0,
     }).setOrigin(0.5);
-    if (active) lbl.setShadow(0, 0, hexStr, 10, false, true);
+    if (active) lbl.setShadow(0, 0, hexStr, 18, false, true);
     cont.add(lbl);
 
     const subTxt = this.add.text(0, SZ / 2 + 31, sub, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
-      fontSize: '13px', fontStyle: 'bold',
-      color: active ? hexStr : '#3a3a4a', resolution: 2,
+      fontSize: '14px', fontStyle: 'bold',
+      color: active ? '#ffffff' : '#3a3a4a', resolution: 2,
+      stroke: active ? hexStr : undefined, strokeThickness: active ? 1.5 : 0,
     }).setOrigin(0.5);
-    if (active) subTxt.setShadow(0, 0, hexStr, 12, false, true);
+    if (active) subTxt.setShadow(0, 0, hexStr, 22, false, true);
     cont.add(subTxt);
 
     if (!active) return;
