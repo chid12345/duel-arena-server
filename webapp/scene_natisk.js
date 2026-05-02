@@ -127,19 +127,12 @@ class NatiskScene extends Phaser.Scene {
     const SZ = 104;
     const cont = this.add.container(x, y);
 
-    const glowG = this.add.graphics();
-    for (let i = 7; i >= 1; i--) {
-      glowG.fillStyle(0x00e5ff, 0.045 * i / 7);
-      glowG.fillEllipse(0, 0, SZ * 1.1 * (i / 7), SZ * 1.1 * (i / 7));
+    // Свечение по форме PNG — ADD blend, как у куполов
+    for (let i = 4; i >= 1; i--) {
+      cont.add(this.add.image(0, 0, 'natisk_mech')
+        .setDisplaySize(SZ + i * 14, SZ + i * 14).setOrigin(0.5)
+        .setAlpha(0.3 / i).setBlendMode(Phaser.BlendModes.ADD).setTint(0x00e5ff));
     }
-    cont.add(glowG);
-
-    const shadowG = this.add.graphics();
-    for (let i = 5; i >= 1; i--) {
-      shadowG.fillStyle(0x00e5ff, 0.05 * i / 5);
-      shadowG.fillEllipse(0, SZ / 2 + 6, SZ * 0.75 * (i / 5), 14 * (i / 5));
-    }
-    cont.add(shadowG);
 
     const mech = this.add.image(0, 0, 'natisk_mech')
       .setDisplaySize(SZ, SZ).setOrigin(0.5);
@@ -175,10 +168,10 @@ class NatiskScene extends Phaser.Scene {
 
     // Свечение по форме PNG: копии с ADD blend — повторяют контур скина, не круг
     const glowLayers = [];
-    for (let i = 3; i >= 1; i--) {
+    for (let i = 4; i >= 1; i--) {
       const g = this.add.image(0, 0, texKey)
-        .setDisplaySize(SZ + i * 10, SZ + i * 10).setOrigin(0.5)
-        .setAlpha(0.2 / i).setBlendMode(Phaser.BlendModes.ADD).setTint(glowHex);
+        .setDisplaySize(SZ + i * 12, SZ + i * 12).setOrigin(0.5)
+        .setAlpha(0.32 / i).setBlendMode(Phaser.BlendModes.ADD).setTint(glowHex);
       cont.add(g);
       glowLayers.push(g);
     }
