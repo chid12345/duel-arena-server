@@ -1,12 +1,13 @@
 /* ============================================================
    EquipmentSlotsHTML — HTML overlay для 6 слотов экипировки в профиле.
-   Изображения берём из Phaser-текстур (уже загружены), очищаем через
-   cleanEquipmentTexture, отдаём как data URL → нет чёрного фона.
+   Тот же паттерн что в helmet/weapon/boots HTML overlays:
+   texKey+'.png' → img → _removeDarkBg на onload → чистый PNG без фона.
    ============================================================ */
 (() => {
 const _RARITY_COLOR = { common:'#a0aec0', rare:'#fbbf24', epic:'#c084fc', mythic:'#ff6b2b' };
 const _LABELS = { belt:'ГОЛОВА', armor:'ТЕЛО', boots:'НОГИ', weapon:'ОРУЖИЕ', shield:'ЩИТ', ring1:'КОЛЬЦО' };
 const _EMPTY  = { belt:'⛑', armor:'🧥', boots:'👢', weapon:'⚔', shield:'🛡', ring1:'💍' };
+const _imgCache = new Map();
 
 let _cssOn = false;
 function _injectCSS() {
@@ -18,14 +19,13 @@ function _injectCSS() {
 .eqs-btn{position:fixed;display:flex;flex-direction:column;align-items:center;gap:2px;
   cursor:pointer;pointer-events:auto;touch-action:manipulation;
   transform:translate(-50%,-50%);-webkit-tap-highlight-color:transparent;user-select:none}
-.eqs-img{object-fit:contain;display:block;
+.eqs-img{object-fit:contain;display:block;background:transparent;
   filter:drop-shadow(0 0 8px var(--eqc,#607090)) drop-shadow(0 0 3px rgba(0,0,0,.6));
   transition:filter .15s,transform .15s}
 .eqs-btn:active .eqs-img{
   filter:drop-shadow(0 0 20px var(--eqc,#607090)) drop-shadow(0 0 6px rgba(0,0,0,.9));
   transform:scale(.88)}
-.eqs-empty{display:flex;align-items:center;justify-content:center;opacity:.28;transition:opacity .15s}
-.eqs-btn:active .eqs-empty{opacity:.5}
+.eqs-empty{display:flex;align-items:center;justify-content:center;opacity:.28}
 .eqs-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--eqc,#607090);
   text-shadow:0 0 5px var(--eqc,#607090);letter-spacing:.8px;white-space:nowrap}
 .eqs-lbl.empty{color:#607090;text-shadow:none;opacity:.45}
@@ -33,42 +33,67 @@ function _injectCSS() {
   document.head.appendChild(s);
 }
 
-/* Получить URL изображения из Phaser-текстуры (с очисткой чёрного фона) */
-function _getImgUrl(scene, texKey) {
-  if (!texKey || !scene?.textures?.exists(texKey)) return null;
+/* Убрать тёмный фон — тот же алгоритм что в helmet/weapon HTML overlays */
+function _removeDarkBg(img) {
+  if (img._bgDone) return;
+  img._bgDone = true;
+  if (!img.naturalWidth || !img.naturalHeight) return;
+  const origSrc = img.src;
+  if (_imgCache.has(origSrc)) {
+    const cached = _imgCache.get(origSrc);
+    if (cached !== origSrc) img.src = cached;
+    return;
+  }
+  const cv = document.createElement('canvas');
+  cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(img, 0, 0);
   try {
-    const cleanKey = (typeof cleanEquipmentTexture === 'function')
-      ? cleanEquipmentTexture(scene, texKey)
-      : texKey;
-    const src = scene.textures.get(cleanKey).getSourceImage();
-    if (!src) return null;
-    if (src instanceof HTMLCanvasElement) return src.toDataURL();
-    if (src.src) return src.src;
-  } catch(_) {}
-  return null;
+    const d = ctx.getImageData(0, 0, cv.width, cv.height);
+    const W = cv.width, H = cv.height;
+    let dark = 0;
+    [[0,0],[W-1,0],[0,H-1],[W-1,H-1]].forEach(([x,y]) => {
+      const i = (y*W+x)*4;
+      const mx = Math.max(d.data[i],d.data[i+1],d.data[i+2]);
+      const mn = Math.min(d.data[i],d.data[i+1],d.data[i+2]);
+      if (d.data[i+3]>10 && mx<80 && mx-mn<30) dark++;
+    });
+    if (dark < 2) { _imgCache.set(origSrc, origSrc); return; }
+    for (let i = 0; i < d.data.length; i += 4) {
+      const mx = Math.max(d.data[i],d.data[i+1],d.data[i+2]);
+      const mn = Math.min(d.data[i],d.data[i+1],d.data[i+2]);
+      if (mx < 72 && mx-mn < 28) d.data[i+3] = 0;
+    }
+    ctx.putImageData(d, 0, 0);
+    const cleaned = cv.toDataURL();
+    _imgCache.set(origSrc, cleaned);
+    img.src = cleaned;
+  } catch(_) { _imgCache.set(origSrc, origSrc); }
 }
 
-/* Данные слота: URL из Phaser + rarity */
-function _slotInfo(slot, scene) {
+/* Texture key → filename (тот же паттерн что в helmet_html_overlay.js) */
+function _texUrl(key) { return key ? key + '.png' : null; }
+
+/* Данные слота: texKey (→ filename) + rarity */
+function _slotInfo(slot) {
   const eq = State.equipment || {};
   if (slot === 'armor') {
     const wd = State.wardrobeEquipped;
-    const texKey = wd ? wd.textureKey : (eq.armor ? getArmorTextureKey(eq.armor.rarity) : null);
-    const rarity = wd ? (wd.rarity || 'common') : (eq.armor?.rarity);
-    const url = texKey ? _getImgUrl(scene, texKey) : null;
-    return url ? { url, rarity } : null;
+    if (wd?.textureKey) return { url: _texUrl(wd.textureKey), rarity: wd.rarity || 'common' };
+    const it = eq.armor;
+    if (it) return { url: _texUrl(getArmorTextureKey(it.rarity)), rarity: it.rarity };
+    return null;
   }
   const it = eq[slot];
   if (!it) return null;
   const r = it.rarity, id = it.item_id;
-  let texKey = null;
-  if      (slot === 'belt')   texKey = getHelmetTextureKey(id)  || getHelmetTextureKeyByRarity(r);
-  else if (slot === 'weapon') texKey = getWeaponTextureKey(id)  || getWeaponTextureKeyByRarity(r);
-  else if (slot === 'boots')  texKey = getBootsTextureKey(id)   || getBootsTextureKeyByRarity(r);
-  else if (slot === 'shield') texKey = getShieldTextureKey(id)  || getShieldTextureKeyByRarity(r);
-  else if (slot === 'ring1')  texKey = getRingTextureKey(id)    || getRingTextureKeyByRarity(r);
-  const url = texKey ? _getImgUrl(scene, texKey) : null;
-  return url ? { url, rarity: r } : null;
+  let key = null;
+  if      (slot === 'belt')   key = getHelmetTextureKey(id)  || getHelmetTextureKeyByRarity(r);
+  else if (slot === 'weapon') key = getWeaponTextureKey(id)  || getWeaponTextureKeyByRarity(r);
+  else if (slot === 'boots')  key = getBootsTextureKey(id)   || getBootsTextureKeyByRarity(r);
+  else if (slot === 'shield') key = getShieldTextureKey(id)  || getShieldTextureKeyByRarity(r);
+  else if (slot === 'ring1')  key = getRingTextureKey(id)    || getRingTextureKeyByRarity(r);
+  return key ? { url: _texUrl(key), rarity: r } : null;
 }
 
 /* Позиции слотов в CSS-пикселях (та же формула что в scene_menu_equipment.js) */
@@ -88,14 +113,14 @@ function _positions(cvs) {
   const sBot = czY + slotZoneH - SH;
   const px   = gx => r.left + (gx + SW / 2) * sx;
   const py   = gy => r.top  + (gy + SH / 2) * sy;
-  const imgPx = Math.round(SW * sx * 0.88);
+  const sz   = Math.round(SW * sx * 0.88);
   return {
-    belt:   { left: px(lx), top: py(sTop), size: imgPx },
-    armor:  { left: px(lx), top: py(sMid), size: imgPx },
-    boots:  { left: px(lx), top: py(sBot), size: imgPx },
-    weapon: { left: px(rx), top: py(sTop), size: imgPx },
-    shield: { left: px(rx), top: py(sMid), size: imgPx },
-    ring1:  { left: px(rx), top: py(sBot), size: imgPx },
+    belt:   { left: px(lx), top: py(sTop), sz },
+    armor:  { left: px(lx), top: py(sMid), sz },
+    boots:  { left: px(lx), top: py(sBot), sz },
+    weapon: { left: px(rx), top: py(sTop), sz },
+    shield: { left: px(rx), top: py(sMid), sz },
+    ring1:  { left: px(rx), top: py(sBot), sz },
   };
 }
 
@@ -129,29 +154,39 @@ function show(scene) {
   const SLOTS = ['belt','armor','boots','weapon','shield','ring1'];
 
   SLOTS.forEach(slot => {
-    const info  = _slotInfo(slot, scene);
+    const info  = _slotInfo(slot);
     const color = _RARITY_COLOR[info?.rarity] || '#607090';
     const p     = pos[slot];
     const btn   = document.createElement('div');
-    btn.className  = 'eqs-btn';
+    btn.className    = 'eqs-btn';
     btn.dataset.slot = slot;
     btn.style.cssText = `left:${p.left}px;top:${p.top}px;--eqc:${color}`;
 
     if (info?.url) {
       const img = document.createElement('img');
-      img.className = 'eqs-img';
-      img.width  = p.size;
-      img.height = p.size;
-      img.src    = info.url;
-      const lbl  = document.createElement('span');
+      img.className  = 'eqs-img';
+      img.style.width  = p.sz + 'px';
+      img.style.height = p.sz + 'px';
+      img.src = info.url;
+      img.onload  = () => _removeDarkBg(img);
+      img.onerror = () => {
+        // При ошибке — показываем emoji-заглушку вместо broken-image
+        img.style.display = 'none';
+        const em = document.createElement('div');
+        em.className = 'eqs-empty';
+        em.style.cssText = `width:${p.sz}px;height:${p.sz}px;font-size:${Math.round(p.sz*.52)}px`;
+        em.textContent   = _EMPTY[slot];
+        btn.insertBefore(em, btn.firstChild);
+      };
+      const lbl = document.createElement('span');
       lbl.className   = 'eqs-lbl';
       lbl.textContent = _LABELS[slot];
       btn.appendChild(img);
       btn.appendChild(lbl);
     } else {
       const em  = document.createElement('div');
-      em.className  = 'eqs-empty';
-      em.style.cssText = `width:${p.size}px;height:${p.size}px;font-size:${Math.round(p.size * .52)}px`;
+      em.className = 'eqs-empty';
+      em.style.cssText = `width:${p.sz}px;height:${p.sz}px;font-size:${Math.round(p.sz*.52)}px`;
       em.textContent   = _EMPTY[slot];
       const lbl = document.createElement('span');
       lbl.className   = 'eqs-lbl empty';
@@ -162,7 +197,6 @@ function show(scene) {
 
     btn.addEventListener('pointerdown',  e => e.stopPropagation());
     btn.addEventListener('pointerup',    e => { e.stopPropagation(); _dispatch(slot, scene); });
-    btn.addEventListener('pointercancel',() => {});
     wrap.appendChild(btn);
   });
 
@@ -172,12 +206,11 @@ function show(scene) {
     const np = _positions(cvs);
     wrap.querySelectorAll('.eqs-btn').forEach(btn => {
       const p = np[btn.dataset.slot]; if (!p) return;
-      btn.style.left = p.left + 'px';
-      btn.style.top  = p.top  + 'px';
+      btn.style.left = p.left + 'px'; btn.style.top = p.top + 'px';
       const img = btn.querySelector('.eqs-img');
-      if (img) { img.width = p.size; img.height = p.size; }
+      if (img) { img.style.width = p.sz+'px'; img.style.height = p.sz+'px'; }
       const em  = btn.querySelector('.eqs-empty');
-      if (em)  { em.style.width = p.size+'px'; em.style.height = p.size+'px'; em.style.fontSize = Math.round(p.size*.52)+'px'; }
+      if (em)  { em.style.width = p.sz+'px'; em.style.height = p.sz+'px'; em.style.fontSize = Math.round(p.sz*.52)+'px'; }
     });
   };
   window.addEventListener('resize', _onResize);
