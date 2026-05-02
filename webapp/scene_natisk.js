@@ -41,29 +41,36 @@ class NatiskScene extends Phaser.Scene {
       y += 48;
     }
 
-    /* ── Описание ── */
-    txt(this, 16, y, 'Выживи как можно дольше на арене.', 11, '#dceeff');
-    y += 16;
-    txt(this, 16, y, 'Волны 1–3 лёгкие — дальше сложнее. HP сохраняется между боями.', 10, '#dceeff');
-    y += 22;
+    /* ── Описание (кибер-панель) ── */
+    {
+      const dg = this.add.graphics();
+      dg.fillStyle(0x050d18, 0.85); dg.fillRoundedRect(8, y, W - 16, 50, 6);
+      dg.lineStyle(1, 0x00e5ff, 0.12); dg.strokeRoundedRect(8, y, W - 16, 50, 6);
+      dg.lineStyle(2, 0x00e5ff, 0.7); dg.lineBetween(8, y + 6, 8, y + 44);
+      txt(this, 20, y + 8,  '▸ Выживи как можно дольше на арене.', 10, '#00e5ff');
+      txt(this, 20, y + 24, '▸ Волны 1–3 лёгкие — дальше сложнее.', 9, '#5a8899');
+      txt(this, 20, y + 37, '▸ HP сохраняется между боями.', 9, '#5a8899');
+      y += 60;
+    }
 
     /* ── Попытки ── */
     {
       const attG = this.add.graphics();
-      attG.fillStyle(0x080b18, 0.85); attG.fillRoundedRect(8, y, W-16, 38, 6);
-      attG.lineStyle(1, 0xff8c00, 0.2); attG.strokeRoundedRect(8, y, W-16, 38, 6);
+      attG.fillStyle(0x080b18, 0.85); attG.fillRoundedRect(8, y, W - 16, 38, 6);
+      attG.lineStyle(1, 0xff8c00, 0.25); attG.strokeRoundedRect(8, y, W - 16, 38, 6);
+      attG.lineStyle(2, 0xff8c00, 0.8); attG.lineBetween(8, y + 6, 8, y + 32);
       const fires = d.attempts_left > 0 ? '🔥'.repeat(Math.min(d.attempts_left, 5)) : '💀';
-      txt(this, 20, y+19, fires, 16).setOrigin(0, 0.5);
-      txt(this, W-16, y+10, `${d.attempts_left} / ${d.base_attempts}`, 16, '#ff8c00', true)
+      txt(this, 20, y + 19, fires, 16).setOrigin(0, 0.5);
+      txt(this, W - 16, y + 10, `${d.attempts_left} / ${d.base_attempts}`, 16, '#ff8c00', true)
         .setOrigin(1, 0).setShadow(0, 0, '#ff8c00', 8, false, true);
-      txt(this, W-16, y+28, 'ПОПЫТОК ОСТАЛОСЬ', 8, '#4466aa').setOrigin(1, 0);
+      txt(this, W - 16, y + 28, 'ПОПЫТОК ОСТАЛОСЬ', 8, '#ff8c00').setOrigin(1, 0);
       y += 48;
     }
 
     /* ── Кнопка старта / нет попыток ── */
     if (d.attempts_left > 0) {
-      this._makeMechBtn(W/2, y + 68, () => this._startFight());
-      y += 152;
+      this._makeMechBtn(W / 2, y + 68, () => this._startFight());
+      y += 165;
     } else {
       const ng = this.add.graphics();
       ng.fillStyle(C.dark, 0.7); ng.fillRoundedRect(8, y, W-16, 44, 10);
@@ -142,13 +149,6 @@ class NatiskScene extends Phaser.Scene {
       fontSize: '14px', fontStyle: 'bold',
       color: '#00e5ff', resolution: 2, align: 'center',
     }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 14, false, true));
-
-    // Подпись
-    cont.add(this.add.text(0, SZ / 2 + 34, '[ ПРОТОКОЛ: ПЕРЕГРУЗКА ]', {
-      fontFamily: "'Orbitron','Arial Black',sans-serif",
-      fontSize: '8px', fontStyle: 'bold',
-      color: '#ff8c00', resolution: 2, align: 'center',
-    }).setOrigin(0.5).setShadow(0, 0, '#ff8c00', 8, false, true));
 
     cont.setInteractive(
       new Phaser.Geom.Rectangle(-SZ / 2, -SZ / 2, SZ, SZ + 50),
