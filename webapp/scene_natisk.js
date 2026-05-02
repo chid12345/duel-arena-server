@@ -142,9 +142,11 @@ class NatiskScene extends Phaser.Scene {
 
     cont.add(this.add.text(0, SZ / 2 + 16, 'НАТИСК', {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
-      fontSize: '14px', fontStyle: 'bold',
-      color: '#00e5ff', resolution: 2,
-    }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 16, false, true));
+      fontSize: '16px', fontStyle: 'bold',
+      color: '#ffffff',
+      stroke: '#00e5ff', strokeThickness: 2,
+      resolution: 2,
+    }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 28, false, true));
 
     cont.setInteractive(
       new Phaser.Geom.Rectangle(-SZ / 2, -SZ / 2, SZ, SZ + 42),
