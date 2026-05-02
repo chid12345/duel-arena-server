@@ -103,14 +103,7 @@ class NatiskScene extends Phaser.Scene {
       y += 128;
     }
 
-    /* ── Premium ── */
-    const premLine = d.is_premium
-      ? '⭐ Premium активен: +5 попыток/день'
-      : '⭐ Premium: +5 бесплатных попыток/день';
-    txt(this, W / 2, y + 6, premLine, 10, d.is_premium ? '#ffc83c' : '#445566').setOrigin(0.5);
-    y += 22;
-
-    /* ── Описание (кибер, внизу) ── */
+    /* ── Описание (кибер) ── */
     {
       const dg = this.add.graphics();
       dg.fillStyle(0x0d0900, 0.92); dg.fillRoundedRect(8, y, W - 16, 60, 8);
@@ -120,7 +113,14 @@ class NatiskScene extends Phaser.Scene {
         .setShadow(0, 0, '#ff8c00', 6, false, true);
       txt(this, 20, y + 27, '▸ Волны 1–3 лёгкие — дальше сложнее.', 10, '#ffaa55');
       txt(this, 20, y + 42, '▸ HP сохраняется между боями.', 10, '#ffaa55');
+      y += 68;
     }
+
+    /* ── Premium ── */
+    const premLine = d.is_premium
+      ? '⭐ Premium активен: +5 попыток/день'
+      : '⭐ Premium: +5 бесплатных попыток/день';
+    txt(this, W / 2, y + 6, premLine, 10, d.is_premium ? '#ffc83c' : '#445566').setOrigin(0.5);
   }
 
   _makeMechBtn(x, y, cb) {
@@ -169,57 +169,52 @@ class NatiskScene extends Phaser.Scene {
   }
 
   _makeBuySkinBtn(cx, cy, texKey, glowHex, label, sub, active, onBuy) {
-    const SZ = 82;
+    const SZ = 86;
+    const hexStr = '#' + glowHex.toString(16).padStart(6, '0');
     const cont = this.add.container(cx, cy);
 
-    // Тёмная круглая подложка — PNG чётко виден на тёмном фоне без артефактов
-    const bgG = this.add.graphics();
-    bgG.fillStyle(0x05080f, 0.9);
-    bgG.fillCircle(0, 0, SZ / 2 + 5);
-    cont.add(bgG);
-
-    // Свечение вокруг скина
-    const glowG = this.add.graphics();
-    const _drawGlow = (col) => {
-      glowG.clear();
-      for (let i = 5; i >= 1; i--) {
-        glowG.fillStyle(col, 0.06 * i / 5);
-        glowG.fillCircle(0, 0, (SZ / 2 + 12) * (i / 5));
-      }
-    };
-    _drawGlow(glowHex);
-    cont.add(glowG);
-
-    // Скин
+    // Скин — без подложек и кругов
     const img = this.add.image(0, 0, texKey).setDisplaySize(SZ, SZ).setOrigin(0.5);
     cont.add(img);
 
-    // Метки
-    const hexStr = '#' + glowHex.toString(16).padStart(6, '0');
-    cont.add(this.add.text(0, SZ / 2 + 11, label, {
+    // Лейбл — крупный, белый с тенью цвета кнопки
+    const lbl = this.add.text(0, SZ / 2 + 14, label, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
-      fontSize: '10px', fontStyle: active ? 'bold' : 'normal',
-      color: active ? '#ccddf5' : '#445566', resolution: 2,
-    }).setOrigin(0.5));
-    const subTxt = this.add.text(0, SZ / 2 + 26, sub, {
+      fontSize: '12px', fontStyle: 'bold',
+      color: active ? '#ffffff' : '#556677', resolution: 2,
+    }).setOrigin(0.5);
+    if (active) lbl.setShadow(0, 0, hexStr, 10, false, true);
+    cont.add(lbl);
+
+    // Цена — крупная, в цвете кнопки
+    const subTxt = this.add.text(0, SZ / 2 + 31, sub, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
-      fontSize: '11px', fontStyle: 'bold',
+      fontSize: '13px', fontStyle: 'bold',
       color: active ? hexStr : '#3a3a4a', resolution: 2,
     }).setOrigin(0.5);
-    if (active) subTxt.setShadow(0, 0, hexStr, 8, false, true);
+    if (active) subTxt.setShadow(0, 0, hexStr, 12, false, true);
     cont.add(subTxt);
 
     if (!active) return;
 
+    // Зелёное свечение при успехе — тонкая линия под скином
+    const successG = this.add.graphics();
+    cont.add(successG);
+    const _showSuccess = (on) => {
+      successG.clear();
+      if (!on) return;
+      successG.lineStyle(2, 0x00dd44, 0.9);
+      successG.strokeRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, 12);
+    };
+
     cont.setInteractive(
-      new Phaser.Geom.Rectangle(-SZ / 2 - 4, -SZ / 2 - 4, SZ + 8, SZ + 50),
+      new Phaser.Geom.Rectangle(-SZ / 2, -SZ / 2, SZ, SZ + 46),
       Phaser.Geom.Rectangle.Contains
     );
 
     const reset = () => {
       this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
       img.clearTint();
-      _drawGlow(glowHex);
     };
     cont.on('pointerdown', () => {
       tg?.HapticFeedback?.impactOccurred('medium');
@@ -228,11 +223,10 @@ class NatiskScene extends Phaser.Scene {
     });
     cont.on('pointerout', reset);
     cont.on('pointerup', () => {
-      this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
-      img.clearTint();
-      _drawGlow(0x00dd44);
+      reset();
+      _showSuccess(true);
       cont.disableInteractive();
-      this.time.delayedCall(10000, () => { _drawGlow(glowHex); });
+      this.time.delayedCall(10000, () => { _showSuccess(false); });
       onBuy();
     });
   }
