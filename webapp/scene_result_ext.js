@@ -131,9 +131,9 @@ Object.assign(ResultScene.prototype, {
   async _buildResultExtra(W, H, won, r, isEndless, isTitan, endlessWave, endlessProgress, endlessStatus, titanFloor, res) {
     const nCol = won ? 0x00e5ff : 0xff1144;
     const pb = this._panelBottom || H * 0.50;
-    const bigBtnY = pb + 46;
-    const secBtnY = bigBtnY + 68;
-    const histBtnY = secBtnY + 57;
+    const bigBtnY = pb + 34;
+    const secBtnY = bigBtnY + 56;
+    const histBtnY = secBtnY + 50;
 
     if (isEndless && endlessStatus?.ok) {
       const bw = endlessStatus.progress?.best_wave ?? endlessProgress?.best_wave ?? 0;
@@ -181,10 +181,10 @@ Object.assign(ResultScene.prototype, {
 
     // History — two side-by-side small buttons
     const replayLog = Array.isArray(res?.webapp_log) ? res.webapp_log : [];
-    this._logBtn(W/2 - 84, histBtnY, '📼  История боя', () => {
+    this._logBtn(W/2 - 80, histBtnY, '📼  История', () => {
       if (replayLog.length > 0) try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {}
     });
-    this._histBtn(W/2 + 84, histBtnY, '📚  Все бои', () => {
+    this._histBtn(W/2 + 80, histBtnY, '📚  Все бои', () => {
       try { BattleHistory.open(this.game.canvas); } catch (_) {}
     });
   },

@@ -101,11 +101,6 @@ Object.assign(ResultScene.prototype, {
     const startX = x - totalW / 2;
     const iconX  = startX + iconSz / 2;
 
-    // Soft glow blob behind icon
-    const g = this.add.graphics();
-    g.fillStyle(col, 0.22); g.fillCircle(iconX, y, iconSz * 0.58);
-    g.fillStyle(col, 0.08); g.fillCircle(iconX, y, iconSz * 0.88);
-
     // Icon
     if (this.textures?.exists(iconKey))
       this.add.image(iconX, y, iconKey).setDisplaySize(iconSz, iconSz);
