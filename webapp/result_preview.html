@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>Result Scene Preview — Cyberpunk</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#000; display:flex; flex-direction:column; align-items:center; justify-content:flex-start; min-height:100vh; padding:16px 0; gap:12px; }
+  .controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; }
+  button { background:#111; color:#00e5ff; border:1px solid #00e5ff44; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:13px; }
+  button:hover { background:#002233; }
+  #game-wrap { border:1px solid #00e5ff33; }
+  canvas { display:block; }
+</style>
+</head>
+<body>
+<div class="controls">
+  <button onclick="switchResult('win')">🏆 ПОБЕДА</button>
+  <button onclick="switchResult('win_streak')">🔥 Серия побед</button>
+  <button onclick="switchResult('loss')">💀 ПОРАЖЕНИЕ</button>
+  <button onclick="switchResult('afk')">⏱️ ТАЙМАУТ</button>
+</div>
+<div id="game-wrap"></div>
+
+<script src="phaser.min.js"></script>
+<script>
+// ── Stubs ──────────────────────────────────────────────────────
+const tg = { HapticFeedback: { notificationOccurred(){}, impactOccurred(){} } };
+const Sound = { victory(){}, defeat(){}, questDone(){} };
+const BattleLog = { showHistory(){} };
+const BattleHistory = { open(){} };
+
+async function post(url) {
+  if (url === '/api/player') return { ok:true, player:{warrior_type:'warrior'} };
+  return { ok:false };
+}
+async function get(url) { return { ok:false }; }
+
+const C = {
+  bg:0x12121c, bgMid:0x1c1a2e, bgPanel:0x1e1c30,
+  gold:0xffc83c, red:0xdc3c46, green:0x3cc864,
+  blue:0x5096ff, purple:0xb45aff, cyan:0x3cc8dc,
+  white:0xf0f0fa, gray:0x8888aa, dark:0x28243c,
+};
+
+const State = {
+  player: { warrior_type: 'warrior' },
+  playerLoadedAt: 0,
+  lastResult: null,
+};
+
+function getWarriorKey(t) { return null; } // no texture in preview
+
+function makePanel(scene, x, y, w, h, r=14, alpha=0.92) {
+  const g = scene.add.graphics();
+  g.fillStyle(0x12101e, alpha); g.fillRoundedRect(x, y, w, h, r);
+  g.lineStyle(1, 0x333355, 0.5); g.strokeRoundedRect(x, y, w, h, r);
+  return g;
+}
+
+function txt(scene, x, y, str, size=14, color='#f0f0fa', bold=false, stroke=null) {
+  const style = {
+    fontFamily: bold ? 'Arial Black, Arial' : 'Arial',
+    fontSize: size+'px',
+    color,
+  };
+  if (stroke) { style.stroke = stroke[0]; style.strokeThickness = stroke[1]; }
+  return scene.add.text(x, y, str, style);
+}
+
+// ── Mock data sets ─────────────────────────────────────────────
+const RESULTS = {
+  win: {
+    human_won: true, mode: 'normal',
+    result: {
+      gold: 21, exp: 257, rounds: 10,
+      rating_change: 5, win_streak: 1, streak_bonus: 0,
+      opponent_name: 'Бессмертный Хантер',
+      level_up: false,
+    },
+  },
+  win_streak: {
+    human_won: true, mode: 'normal',
+    result: {
+      gold: 34, exp: 380, rounds: 8,
+      rating_change: 7, win_streak: 20, streak_bonus: 30,
+      opponent_name: 'ЧёрныйВолк',
+      level_up: false,
+    },
+  },
+  loss: {
+    human_won: false, mode: 'normal',
+    result: {
+      gold: 4, exp: 40, rounds: 12,
+      rating_change: -4,
+      opponent_name: 'ЧёрныйВолк',
+    },
+  },
+  afk: {
+    human_won: false, mode: 'normal', afk_loss: true,
+    result: { rounds: 3, rating_change: -8, opponent_name: 'Боец' },
+  },
+};
+
+function switchResult(key) {
+  State.lastResult = RESULTS[key];
+  if (window._game) { window._game.destroy(true); }
+  startGame();
+}
+
+// ── Start game ─────────────────────────────────────────────────
+State.lastResult = RESULTS.win;
+</script>
+
+<!-- Load scene files AFTER stubs -->
+<script src="scene_result.js"></script>
+<script src="scene_result_ext.js"></script>
+<script src="scene_result_ext1.js"></script>
+
+<script>
+function startGame() {
+  window._game = new Phaser.Game({
+    type: Phaser.AUTO,
+    width: 390,
+    height: 780,
+    backgroundColor: '#04040c',
+    parent: 'game-wrap',
+    scene: [ResultScene],
+    audio: { noAudio: true },
+  });
+}
+startGame();
+</script>
+</body>
+</html>

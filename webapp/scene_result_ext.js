@@ -1,189 +1,198 @@
 /* ============================================================
    ResultScene ext — _buildResultPanel, _buildResultExtra
+   [cyberpunk redesign]
    ============================================================ */
 
 Object.assign(ResultScene.prototype, {
 
   _buildResultPanel(W, H, won, r, isAfk, isEndless, isTitan, endlessWave, titanFloor, res) {
-    const panH = won ? (r.level_up ? 185 : (r.win_streak > 1 ? 175 : (isTitan ? 185 : 155)))
-                     : (isAfk ? 128 : (isEndless ? 120 : (isTitan ? 110 : 132)));
-    const panY  = H * 0.28;
-    makePanel(this, 16, panY, W - 32, panH, 16);
+    const px = 14, py = H * 0.245, pw = W - 28;
+    const nCol = won ? 0x00e5ff : 0xff1144;
+    const nHex = won ? '#00e5ff' : '#ff1144';
+    const maxPH = won ? (r.win_streak > 1 || r.streak_bonus > 0 ? 202 : (isTitan ? 196 : 186)) : 140;
+    this._panelBottom = py + maxPH;
+    this._cyberPanel(px, py, pw, maxPH, nCol);
 
     if (won) {
-      txt(this, W / 2, panY + 18, 'НАГРАДЫ', 11, '#ccccee', true).setOrigin(0.5);
+      // Header bar
+      const hg = this.add.graphics();
+      hg.fillStyle(nCol, 0.12); hg.fillRect(px, py, pw, 22);
+      hg.lineStyle(1, nCol, 0.4); hg.moveTo(px, py+22); hg.lineTo(px+pw, py+22); hg.strokePath();
+      this.add.text(W/2, py+11, '◈  Н А Г Р А Д Ы  ◈', {
+        fontFamily: 'Arial', fontSize: '9px', fontStyle: 'bold', color: nHex, letterSpacing: 2
+      }).setOrigin(0.5);
 
-      const goldTxt = txt(this, W / 2, panY + 50, '💰 +0 золота', 22, '#ffc83c', true).setOrigin(0.5);
-      this._countUp(goldTxt, r.gold || 0, '💰 +', ' золота', 200);
+      // Gold
+      const goldTxt = this.add.text(W/2, py+52, '💰  +0 золота', {
+        fontFamily: 'Arial Black, Arial', fontSize: '22px', fontStyle: 'bold', color: '#ffd700',
+        shadow: { offsetX: 0, offsetY: 0, color: '#ffd700', blur: 12, fill: true }
+      }).setOrigin(0.5);
+      this._countUp(goldTxt, r.gold || 0, '💰  +', ' золота', 180);
 
       if (isEndless) {
-        txt(this, W / 2, panY + 86, `⚔️  Урон нанесён: ${r.damage || 0}`, 17, '#ddaa66', true).setOrigin(0.5);
+        this.add.text(W/2, py+90, `⚔️  Урон нанесён: ${r.damage || 0}`, {
+          fontFamily: 'Arial', fontSize: '17px', color: '#ddaa66'
+        }).setOrigin(0.5);
       } else {
-        const expTxt = txt(this, W / 2, panY + 86, '⭐ +0 опыта', 18, '#5096ff', true).setOrigin(0.5);
-        this._countUp(expTxt, r.exp || 0, '⭐ +', ' опыта', 450);
+        const expTxt = this.add.text(W/2, py+90, '⭐  +0 опыта', {
+          fontFamily: 'Arial Black, Arial', fontSize: '19px', fontStyle: 'bold', color: '#4488ff',
+          shadow: { offsetX: 0, offsetY: 0, color: '#4488ff', blur: 10, fill: true }
+        }).setOrigin(0.5);
+        this._countUp(expTxt, r.exp || 0, '⭐  +', ' опыта', 420);
       }
 
-      txt(this, W / 2, panY + 118, `⚔️  Раундов: ${r.rounds || 0}`, 12, '#ddddff').setOrigin(0.5);
+      // Divider
+      const dg = this.add.graphics();
+      dg.lineStyle(1, nCol, 0.18); dg.moveTo(px+18, py+116); dg.lineTo(px+pw-18, py+116); dg.strokePath();
+
+      // Rounds + ELO row
+      const ry = py + 134;
+      this.add.text(W/2 - 68, ry, `⚔️  Раундов: ${r.rounds || 0}`, {
+        fontFamily: 'Arial', fontSize: '12px', color: '#7788aa'
+      }).setOrigin(0.5);
 
       if (r.rating_change && r.rating_change !== 0) {
-        const eloSign = r.rating_change > 0 ? '+' : '';
-        txt(this, W / 2, panY + 138, `★ ${eloSign}${r.rating_change} ELO`, 12,
-          r.rating_change > 0 ? '#3cc864' : '#ff4455', true).setOrigin(0.5);
+        const eSign = r.rating_change > 0 ? '+' : '';
+        const eCol  = r.rating_change > 0 ? '#00ff88' : '#ff4455';
+        this.add.text(W/2+68, ry, `★ ${eSign}${r.rating_change} ELO`,
+          { fontFamily: 'Arial Black, Arial', fontSize: '13px', color: eCol, shadow: { offsetX:0, offsetY:0, color:eCol, blur:8, fill:true } }).setOrigin(0.5);
       }
-
-      let extraY = panY + (r.rating_change && r.rating_change !== 0 ? 158 : 138);
-
+      let extraY = py + 158;
       if ((r.streak_bonus || 0) > 0) {
-        const sbt = txt(this, W / 2, extraY, `🎉 +${r.streak_bonus} бонус серии!`, 12, '#ff8855', true)
-          .setOrigin(0.5).setAlpha(0);
-        this.tweens.add({ targets: sbt, alpha: 1, delay: 700, duration: 300 });
-        extraY += 24;
+        const sb = this.add.text(W/2, extraY, `🎉  +${r.streak_bonus} бонус серии!`,
+          { fontFamily: 'Arial', fontSize: '12px', fontStyle: 'bold', color: '#ff8855' }).setOrigin(0.5).setAlpha(0);
+        this.tweens.add({ targets: sb, alpha: 1, delay: 700, duration: 300 });
+        extraY += 22;
       }
-
-      if ((r.win_streak || 0) > 1) {
-        txt(this, W / 2, extraY, `🔥 Серия: ${r.win_streak} побед подряд!`, 13, '#ff8044', true)
-          .setOrigin(0.5);
-      }
-
+      if ((r.win_streak || 0) > 1)
+        this.add.text(W/2, extraY, `🔥  Серия: ${r.win_streak} побед подряд!`,
+          { fontFamily: 'Arial Black, Arial', fontSize: '13px', color: '#ff6600' }).setOrigin(0.5);
       if (r.level_up) this.time.delayedCall(900, () => this._levelUpFlash(W, H));
-
       if (isEndless && endlessWave > 0) {
-        const waveLabel = `🔥 Волна ${endlessWave} пройдена!`;
-        txt(this, W / 2, panY + 160, waveLabel, 13, '#ff6644', true).setOrigin(0.5);
-        if (endlessWave % 5 === 0) {
-          txt(this, W / 2, panY + 178, '💚 +10% HP восстановлено!', 12, '#3cc864').setOrigin(0.5);
-        }
+        this.add.text(W/2, py+163, `🔥  Волна ${endlessWave} пройдена!`,
+          { fontFamily: 'Arial', fontSize: '13px', color: '#ff6644' }).setOrigin(0.5);
+        if (endlessWave % 5 === 0)
+          this.add.text(W/2, py+183, '💚  +10% HP восстановлено!', {
+            fontFamily: 'Arial', fontSize: '12px', color: '#3cc864'
+          }).setOrigin(0.5);
       }
-
       if (isTitan && titanFloor > 0) {
-        txt(this, W / 2, panY + 160, `🗿 Этаж ${titanFloor} пройден!`, 14, '#b45aff', true).setOrigin(0.5);
+        this.add.text(W/2, py+163, `🗿  Этаж ${titanFloor} пройден!`, {
+          fontFamily: 'Arial Black', fontSize: '14px', color: '#cc88ff'
+        }).setOrigin(0.5);
         const tp = res?.titan_progress;
-        if (tp && Number(tp.best_floor) === titanFloor) {
-          txt(this, W / 2, panY + 179, '🆕 Новый рекорд Башни!', 11, '#ffc83c', true).setOrigin(0.5);
-        }
+        if (tp && Number(tp.best_floor) === titanFloor)
+          this.add.text(W/2, py+183, '🆕  Новый рекорд Башни!', {
+            fontFamily: 'Arial', fontSize: '11px', color: '#ffd700'
+          }).setOrigin(0.5);
       }
 
     } else if (isAfk) {
-      txt(this, W / 2, panY + 24, '⏱️ Поражение по таймауту', 14, '#ff8855', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 54, '3 раунда прошли без хода', 12, '#cc6633').setOrigin(0.5);
-      txt(this, W / 2, panY + 76, 'Нажимай кнопки быстрее!', 11, '#ccccee').setOrigin(0.5);
-      // 0 раундов в AFK не должно быть, но защитимся: показываем "—" вместо 0.
-      txt(this, W / 2, panY + 102, `Раундов: ${(r.rounds || 0) > 0 ? r.rounds : '—'}`, 11, '#ddddff').setOrigin(0.5);
+      this.add.text(W/2, py+28, '⏱️  Поражение по таймауту', {
+        fontFamily: 'Arial Black', fontSize: '14px', color: '#ff8855'
+      }).setOrigin(0.5);
+      this.add.text(W/2, py+56, '3 раунда прошли без хода', { fontFamily: 'Arial', fontSize: '12px', color: '#cc6633' }).setOrigin(0.5);
+      this.add.text(W/2, py+76, 'Нажимай кнопки быстрее!',  { fontFamily: 'Arial', fontSize: '11px', color: '#556677' }).setOrigin(0.5);
+      this.add.text(W/2, py+100, `Раундов: ${(r.rounds||0) > 0 ? r.rounds : '—'}`, { fontFamily: 'Arial', fontSize: '11px', color: '#7788aa' }).setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
-        const eloSign = r.rating_change > 0 ? '+' : '';
-        txt(this, W / 2, panY + 120, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
+        const s = r.rating_change > 0 ? '+' : '';
+        this.add.text(W/2, py+120, `★ ${s}${r.rating_change} ELO`, { fontFamily: 'Arial Black', fontSize: '12px', color: '#ff4455' }).setOrigin(0.5);
       }
     } else if (isEndless) {
-      txt(this, W / 2, panY + 14, 'ИТОГИ ЗАХОДА', 10, '#ccccee', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 42, `💀 Волна ${endlessWave > 0 ? endlessWave : '?'} — конец`, 16, '#ff4455', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 74, `⚔️  Урон нанесён: ${r.damage || 0}`, 13, '#ddaa66', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 98, `⏱️  Раундов: ${r.rounds || 0}`, 12, '#ddddff').setOrigin(0.5);
+      this.add.text(W/2, py+16, 'И Т О Г И  З А Х О Д А', { fontFamily: 'Arial', fontSize: '9px', fontStyle: 'bold', color: nHex, letterSpacing: 2 }).setOrigin(0.5);
+      this.add.text(W/2, py+44, `💀  Волна ${endlessWave > 0 ? endlessWave : '?'} — конец`, { fontFamily: 'Arial Black', fontSize: '16px', color: '#ff4455' }).setOrigin(0.5);
+      this.add.text(W/2, py+76, `⚔️  Урон нанесён: ${r.damage || 0}`, { fontFamily: 'Arial', fontSize: '13px', color: '#ddaa66' }).setOrigin(0.5);
+      this.add.text(W/2, py+100, `⏱️  Раундов: ${r.rounds || 0}`, { fontFamily: 'Arial', fontSize: '12px', color: '#7788aa' }).setOrigin(0.5);
     } else if (isTitan) {
-      txt(this, W / 2, panY + 14, 'ИТОГИ БАШНИ', 10, '#ccccee', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 44, `💀 Этаж ${titanFloor > 0 ? titanFloor : '?'} — не пройден`, 16, '#ff4455', true).setOrigin(0.5);
-      const tpLoss = res?.titan_progress;
-      const bestFloor = tpLoss?.best_floor ?? 0;
-      if (bestFloor > 0) {
-        txt(this, W / 2, panY + 76, `🏆 Твой рекорд: ${bestFloor} этаж`, 12, '#ddddff').setOrigin(0.5);
-      }
+      this.add.text(W/2, py+16, 'И Т О Г И  Б А Ш Н И', { fontFamily: 'Arial', fontSize: '9px', fontStyle: 'bold', color: nHex, letterSpacing: 2 }).setOrigin(0.5);
+      this.add.text(W/2, py+46, `💀  Этаж ${titanFloor > 0 ? titanFloor : '?'} — не пройден`, { fontFamily: 'Arial Black', fontSize: '16px', color: '#ff4455' }).setOrigin(0.5);
+      const bf = res?.titan_progress?.best_floor ?? 0;
+      if (bf > 0) this.add.text(W/2, py+78, `🏆  Рекорд: ${bf} этаж`, { fontFamily: 'Arial', fontSize: '12px', color: '#7788aa' }).setOrigin(0.5);
     } else {
-      txt(this, W / 2, panY + 18, '💪  Не сдавайся!', 14, '#ccccee', true).setOrigin(0.5);
-      txt(this, W / 2, panY + 42, 'Утешительные награды', 10, '#aaaacc').setOrigin(0.5);
+      this.add.text(W/2, py+22, '💪  Не сдавайся!', { fontFamily: 'Arial Black', fontSize: '14px', color: '#7788aa' }).setOrigin(0.5);
+      this.add.text(W/2, py+46, 'Утешительные награды', { fontFamily: 'Arial', fontSize: '10px', color: '#445566' }).setOrigin(0.5);
       if ((r.gold || 0) > 0) {
-        const cGold = txt(this, W / 2, panY + 64, '💰 +0 золота', 18, '#cc9922', true).setOrigin(0.5);
-        this._countUp(cGold, r.gold, '💰 +', ' золота', 200);
+        const cG = this.add.text(W/2, py+70, '💰  +0 золота', { fontFamily: 'Arial Black', fontSize: '18px', color: '#cc9922' }).setOrigin(0.5);
+        this._countUp(cG, r.gold, '💰  +', ' золота', 200);
       }
       if ((r.exp || 0) > 0) {
-        const cExp = txt(this, W / 2, panY + 90, '⭐ +0 опыта', 15, '#3366cc', true).setOrigin(0.5);
-        this._countUp(cExp, r.exp, '⭐ +', ' опыта', 400);
+        const cE = this.add.text(W/2, py+98, '⭐  +0 опыта', { fontFamily: 'Arial', fontSize: '15px', color: '#3366cc' }).setOrigin(0.5);
+        this._countUp(cE, r.exp, '⭐  +', ' опыта', 400);
       }
-      // Защита от мусорного rounds=0 (race-condition с прошлым боем): показываем "—".
-      txt(this, W / 2, panY + 114, `Раундов: ${(r.rounds || 0) > 0 ? r.rounds : '—'}`, 11, '#ddddff').setOrigin(0.5);
+      const sr = py + (((r.gold||0)>0 || (r.exp||0)>0) ? 122 : 74);
+      this.add.text(W/2-62, sr, `Раундов: ${(r.rounds||0)>0 ? r.rounds : '—'}`, { fontFamily: 'Arial', fontSize: '11px', color: '#445566' }).setOrigin(0.5);
       if (r.rating_change && r.rating_change !== 0) {
-        const eloSign = r.rating_change > 0 ? '+' : '';
-        txt(this, W / 2, panY + 130, `★ ${eloSign}${r.rating_change} ELO`, 11, '#ff4455', true).setOrigin(0.5);
+        const s = r.rating_change > 0 ? '+' : '';
+        this.add.text(W/2+62, sr, `★ ${s}${r.rating_change} ELO`, { fontFamily: 'Arial Black', fontSize: '12px', color: '#ff4455' }).setOrigin(0.5);
       }
     }
   },
 
   async _buildResultExtra(W, H, won, r, isEndless, isTitan, endlessWave, endlessProgress, endlessStatus, titanFloor, res) {
+    const nCol = won ? 0x00e5ff : 0xff1144;
+    const pb = this._panelBottom || H * 0.50;
+    const bigBtnY = pb + 46;
+    const secBtnY = bigBtnY + 68;
+    const histBtnY = secBtnY + 57;
+
     if (isEndless && endlessStatus?.ok) {
-      const bestWave = endlessStatus.progress?.best_wave ?? endlessProgress?.best_wave ?? 0;
-      const panY = H * 0.28;
-
-      if (!won && endlessWave > 0) {
-        const isNewRecord = endlessWave > 0 && bestWave === endlessWave;
-        if (isNewRecord) {
-          txt(this, W / 2, panY + 108, '🆕 Новый рекорд!', 12, '#ffc83c', true).setOrigin(0.5);
-        } else if (bestWave > endlessWave) {
-          txt(this, W / 2, panY + 108, `🏆 Твой рекорд: ${bestWave} волн`, 11, '#ddddff').setOrigin(0.5);
-        }
-      }
-
-      if (won && isEndless && endlessWave > 0 && bestWave === endlessWave && endlessWave > 1) {
-        txt(this, W / 2, panY + 178, '🆕 Новый рекорд волны!', 11, '#ffc83c', true).setOrigin(0.5);
-      }
-
+      const bw = endlessStatus.progress?.best_wave ?? endlessProgress?.best_wave ?? 0;
+      const py = H * 0.245;
+      if (!won && endlessWave > 0)
+        txt(this, W/2, py+110, bw===endlessWave ? '🆕 Новый рекорд!' : (bw>endlessWave ? `🏆 Рекорд: ${bw} волн` : ''), 12, '#ffd700', true).setOrigin(0.5);
+      if (won && endlessWave > 0 && bw === endlessWave && endlessWave > 1)
+        txt(this, W/2, py+183, '🆕 Новый рекорд волны!', 11, '#ffd700', true).setOrigin(0.5);
       const left = endlessStatus.attempts_left ?? 0;
-      const attColor = left > 0 ? '#88ddaa' : '#cc5555';
-      txt(this, W / 2, H * 0.72, `🔥 Осталось попыток: ${left}`, 12, attColor, true).setOrigin(0.5);
+      this.add.text(W/2, pb+18, `🔥  Осталось попыток: ${left}`,
+        { fontFamily: 'Arial', fontSize: '12px', fontStyle: 'bold', color: left > 0 ? '#00ff88' : '#ff4455' }).setOrigin(0.5);
     }
 
     const _goTitanNext = () => {
-      if (this._done) return; this._done = true;
-      post('/api/titans/start', {}).then(r => {
-        if (!r.ok) { this.scene.start('Menu', { returnTab: 'battle' }); return; }
-        State.battle = r.battle;
-        tg?.HapticFeedback?.impactOccurred('heavy');
-        this.scene.start('Battle', {});
+      post('/api/titans/start', {}).then(rr => {
+        if (!rr.ok) { this.scene.start('Menu', { returnTab: 'battle' }); return; }
+        State.battle = rr.battle; tg?.HapticFeedback?.impactOccurred('heavy'); this.scene.start('Battle');
       }).catch(() => this.scene.start('Menu', { returnTab: 'battle' }));
     };
-    const bigBtnLabel = (isEndless && won) ? '🔥  Следующая волна!'
-                      : (isTitan && won)   ? '⚔️  Следующий этаж!'
-                      : (isTitan)          ? '🔄  Попробовать снова!'
-                      :                      '⚔️  Ещё бой!';
-    const bigBtnCb = (isEndless && won)
-      ? () => {
-          if (this._done) return; this._done = true;
-          post('/api/endless/next_wave', {}).then(r => {
-            if (!r.ok) { this.scene.start('Natisk', {}); return; }
-            State.battle      = r.battle;
-            State.endlessWave = r.wave;
-            tg?.HapticFeedback?.impactOccurred('heavy');
-            this.scene.start('Battle', {});
-          }).catch(() => this.scene.start('Natisk', {}));
-        }
-      : (isTitan)
-      ? _goTitanNext
-      : (isEndless)
-      ? () => { this.scene.start('Natisk', {}); }
-      : () => { this.scene.start('Menu', { returnTab: 'profile' }); };
-    this._bigBtn(W / 2, H * 0.79,
-      bigBtnLabel,
-      won ? C.gold : 0x881a22,
-      won ? '#1a1a28' : '#ffffff',
-      bigBtnCb
-    );
-    if (isEndless && won) {
-      this._mainBtn(W / 2, H * 0.89, '🚪  Завершить заход', () => {
-        post('/api/endless/abandon', {}).catch(() => {}).finally(() => this.scene.start('Natisk', {}));
-      });
-    } else if (isTitan) {
-      this._mainBtn(W / 2, H * 0.89, '🚪  Выйти к боям', () => this.scene.start('Menu', { returnTab: 'battle' }));
-    } else {
-      this._mainBtn(W / 2, H * 0.89, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
-    }
 
-    // 📼 История боя (этот) + 📚 Все 20 прошлых — в рамках (стиль _mainBtn), вертикально
+    const bigLabel = (isEndless && won) ? '🔥  Следующая волна!'
+                   : (isTitan && won)   ? '⚔️  Следующий этаж!'
+                   : (isTitan)          ? '🔄  Попробовать снова!'
+                   :                      '⚔️  Ещё бой!';
+    const bigCb = (isEndless && won)
+      ? () => { post('/api/endless/next_wave', {}).then(rr => {
+          if (!rr.ok) { this.scene.start('Natisk'); return; }
+          State.battle = rr.battle; State.endlessWave = rr.wave;
+          tg?.HapticFeedback?.impactOccurred('heavy'); this.scene.start('Battle');
+        }).catch(() => this.scene.start('Natisk')); }
+      : (isTitan)   ? _goTitanNext
+      : (isEndless) ? () => this.scene.start('Natisk')
+      : () => this.scene.start('Menu', { returnTab: 'profile' });
+
+    this._bigBtn(W/2, bigBtnY, bigLabel, nCol, bigCb);
+
+    if (isEndless && won)
+      this._mainBtn(W/2, secBtnY, '🚪  Завершить заход', () => {
+        post('/api/endless/abandon', {}).catch(()=>{}).finally(() => this.scene.start('Natisk'));
+      });
+    else if (isTitan)
+      this._mainBtn(W/2, secBtnY, '🚪  Выйти к боям', () => this.scene.start('Menu', { returnTab: 'battle' }));
+    else
+      this._mainBtn(W/2, secBtnY, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
+
+    // History — two side-by-side small buttons
     const replayLog = Array.isArray(res?.webapp_log) ? res.webapp_log : [];
     if (replayLog.length > 0) {
-      this._mainBtn(W / 2, H * 0.935, '📼  История боя', () => {
+      this._histBtn(W/2 - 84, histBtnY, '📼  История боя', () => {
         try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {}
       });
+      this._histBtn(W/2 + 84, histBtnY, '📚  Все бои (20)', () => {
+        try { BattleHistory.open(this.game.canvas); } catch (_) {}
+      });
+    } else {
+      this._histBtn(W/2, histBtnY, '📚  Все мои бои (20)', () => {
+        try { BattleHistory.open(this.game.canvas); } catch (_) {}
+      });
     }
-    this._mainBtn(W / 2, H * 0.975, '📚  Все мои бои (20)', () => {
-      try { BattleHistory.open(this.game.canvas); } catch (_) {}
-    });
   },
 
 });
