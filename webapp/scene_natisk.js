@@ -13,7 +13,7 @@ class NatiskScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '⚡', 'НАТИСК', 'SURVIVAL PROTOCOL // ACTIVE');
+    _extraHeader(this, W, '⚡', 'НАТИСК', 'Арена выживания · бесконечные волны');
     this._buildAbortBtn(W, H);
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
@@ -29,7 +29,7 @@ class NatiskScene extends Phaser.Scene {
     bg.fillRoundedRect(bx, by, btnW, btnH, 6);
     bg.lineStyle(1.5, 0x00e5ff, 0.55);
     bg.strokeRoundedRect(bx, by, btnW, btnH, 6);
-    this.add.text(W / 2, by + btnH / 2, '◄  ABORT MISSION', {
+    this.add.text(W / 2, by + btnH / 2, '◄  Назад', {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
       fontSize: '10px', fontStyle: 'bold',
       color: '#00e5ff', resolution: 2,
