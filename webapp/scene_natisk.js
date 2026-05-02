@@ -104,59 +104,66 @@ class NatiskScene extends Phaser.Scene {
   }
 
   _makeMechBtn(x, y, cb) {
-    const SZ = 90, R = 16;
+    const SZ = 104;
     const cont = this.add.container(x, y);
 
-    const shadowG = this.add.graphics();
-    for (let i = 6; i >= 1; i--) {
-      shadowG.fillStyle(0xff2200, 0.04 * i / 6);
-      shadowG.fillEllipse(0, SZ/2 + 6, SZ * 0.65 * (i/6), 10 * (i/6));
+    // Glow-pool под персонажем
+    const glowG = this.add.graphics();
+    for (let i = 5; i >= 1; i--) {
+      glowG.fillStyle(0xff6600, 0.07 * i / 5);
+      glowG.fillEllipse(0, SZ / 2 - 4, SZ * 0.85 * (i / 5), 16 * (i / 5));
     }
-    cont.add(shadowG);
+    cont.add(glowG);
 
-    const bgG = this.add.graphics();
-    bgG.fillStyle(0x050d15, 0.85); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
-    cont.add(bgG);
-
-    const mech = this.add.image(0, -2, 'natisk_mech')
-      .setDisplaySize(SZ * 0.85, SZ * 0.85).setOrigin(0.5);
+    // Скин — сам кнопка, без рамки
+    const mech = this.add.image(0, 0, 'natisk_mech')
+      .setDisplaySize(SZ, SZ).setOrigin(0.5);
     cont.add(mech);
 
-    // L-уголки (cyan)
-    const cG = this.add.graphics();
-    const CL = 12, CT = 2, HS = SZ / 2;
-    [[- HS, -HS, 1, 1], [HS, -HS, -1, 1], [-HS, HS, 1, -1], [HS, HS, -1, -1]]
-      .forEach(([cx, cy, dx, dy]) => {
-        cG.lineStyle(CT, 0x00e5ff, 0.9);
-        cG.lineBetween(cx, cy, cx + dx * CL, cy);
-        cG.lineBetween(cx, cy, cx, cy + dy * CL);
-      });
-    cont.add(cG);
+    // Cyan нeon-линия + точки на концах
+    const lineG = this.add.graphics();
+    const _drawLine = (col, alpha) => {
+      lineG.clear();
+      lineG.lineStyle(1.5, col, alpha);
+      lineG.lineBetween(-SZ / 2 + 8, SZ / 2 + 3, SZ / 2 - 8, SZ / 2 + 3);
+      lineG.fillStyle(col, 1);
+      lineG.fillCircle(-SZ / 2 + 8, SZ / 2 + 3, 2.5);
+      lineG.fillCircle(SZ / 2 - 8, SZ / 2 + 3, 2.5);
+    };
+    _drawLine(0x00e5ff, 0.85);
+    cont.add(lineG);
 
-    this.tweens.add({ targets: cont, y: y - 4, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    // Парение
+    this.tweens.add({ targets: cont, y: y - 5, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
-    const label = this.add.text(0, SZ/2 + 10, '[ ИНИЦИИРОВАТЬ\nПРОТОКОЛ: ПЕРЕГРУЗКА ]', {
+    // Заголовок кнопки — НАТИСК
+    cont.add(this.add.text(0, SZ / 2 + 16, 'НАТИСК', {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
-      fontSize: '9px', fontStyle: 'bold',
+      fontSize: '14px', fontStyle: 'bold',
+      color: '#00e5ff', resolution: 2, align: 'center',
+    }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 14, false, true));
+
+    // Подпись
+    cont.add(this.add.text(0, SZ / 2 + 34, '[ ПРОТОКОЛ: ПЕРЕГРУЗКА ]', {
+      fontFamily: "'Orbitron','Arial Black',sans-serif",
+      fontSize: '8px', fontStyle: 'bold',
       color: '#ff8c00', resolution: 2, align: 'center',
-    }).setOrigin(0.5).setShadow(0, 0, '#ff8c00', 10, false, true);
-    cont.add(label);
+    }).setOrigin(0.5).setShadow(0, 0, '#ff8c00', 8, false, true));
 
     cont.setInteractive(
-      new Phaser.Geom.Rectangle(-SZ/2-8, -SZ/2-4, SZ+16, SZ+52),
+      new Phaser.Geom.Rectangle(-SZ / 2, -SZ / 2, SZ, SZ + 50),
       Phaser.Geom.Rectangle.Contains
     );
     const reset = () => {
       this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 180, ease: 'Back.easeOut' });
       mech.clearTint();
-      bgG.clear(); bgG.fillStyle(0x050d15, 0.85); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+      _drawLine(0x00e5ff, 0.85);
     };
     cont.on('pointerdown', () => {
       tg?.HapticFeedback?.impactOccurred('heavy');
       this.tweens.add({ targets: cont, scaleX: 0.88, scaleY: 0.88, duration: 90, ease: 'Power2' });
-      mech.setTint(0xffaa44);
-      bgG.clear(); bgG.fillStyle(0xff8c00, 0.15); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
-      bgG.lineStyle(2, 0xff8c00, 1); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+      mech.setTint(0xff8800);
+      _drawLine(0xff8c00, 1);
     });
     cont.on('pointerup',  () => { reset(); cb(); });
     cont.on('pointerout', reset);
