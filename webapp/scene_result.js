@@ -105,34 +105,40 @@ class ResultScene extends Phaser.Scene {
     // === OPPONENT ROW (compact, horizontal) ===
     const rawOpp = (r.opponent_name || '').toString().trim();
     const rowY   = H * 0.195;
-    const hasAvatar = (() => {
-      try {
-        const wKey = (typeof getWarriorKey === 'function') ? getWarriorKey(State.player?.warrior_type) : null;
-        if (wKey && this.textures?.exists(wKey)) {
-          const offX = (rawOpp && !isTitan && !isEndless) ? -52 : 0;
-          const ring = this.add.graphics().setAlpha(0);
-          ring.lineStyle(6, nCol, 0.22); ring.strokeCircle(W/2 + offX, rowY, 22);
-          ring.lineStyle(2, nCol, 0.95); ring.strokeCircle(W/2 + offX, rowY, 20);
-          ring.fillStyle(0x000000, 0.45); ring.fillCircle(W/2 + offX, rowY, 19);
-          const av = this.add.image(W/2 + offX, rowY, wKey).setScale(0.078).setAlpha(0);
-          this.tweens.add({ targets: [ring, av], alpha: 1, duration: 360, delay: 340 });
-          return offX;
-        }
-      } catch (_) {}
-      return 0;
-    })();
+    // === OPPONENT ROW ===
+    // Layout: [avatar ring] [label\nname] — все сгруппировано, без наложений
+    const hasOpp = rawOpp && !isTitan && !isEndless;
+    const oppShort = hasOpp ? (rawOpp.length > 20 ? rawOpp.slice(0, 18) + '…' : rawOpp) : '';
+    const labelTxt = won ? 'победил(а) над' : 'проиграл(а)';
 
-    if (rawOpp && !isTitan && !isEndless) {
-      const oppShort = rawOpp.length > 18 ? rawOpp.slice(0, 16) + '…' : rawOpp;
-      const labelTxt = won ? 'победил(а) над' : 'проиграл(а)';
-      const nameX = W/2 + (hasAvatar !== 0 ? 18 : 0);
-      this.add.text(nameX, rowY - 9, labelTxt, {
+    // Аватар — только если есть соперник, сдвигаем влево от центра
+    let avRendered = false;
+    try {
+      const wKey = (typeof getWarriorKey === 'function') ? getWarriorKey(State.player?.warrior_type) : null;
+      if (wKey && this.textures?.exists(wKey)) {
+        const avX = hasOpp ? W/2 - 78 : W/2;
+        const ring = this.add.graphics().setAlpha(0);
+        ring.lineStyle(6, nCol, 0.22); ring.strokeCircle(avX, rowY, 22);
+        ring.lineStyle(2, nCol, 0.95); ring.strokeCircle(avX, rowY, 20);
+        ring.fillStyle(0x000000, 0.45); ring.fillCircle(avX, rowY, 19);
+        const av = this.add.image(avX, rowY, wKey).setScale(0.078).setAlpha(0);
+        this.tweens.add({ targets: [ring, av], alpha: 1, duration: 360, delay: 340 });
+        avRendered = true;
+      }
+    } catch (_) {}
+
+    if (hasOpp) {
+      // Текст начинается правее аватара (или по центру если аватара нет)
+      const textX = avRendered ? W/2 - 78 + 26 + 6 : W/2;
+      const originX = avRendered ? 0 : 0.5;
+      this.add.text(textX, rowY - 9, labelTxt, {
         fontFamily: 'Arial', fontSize: '10px', color: '#99bbcc'
-      }).setOrigin(0.5);
-      this.add.text(nameX, rowY + 8, oppShort, {
-        fontFamily: 'Arial Black, Arial', fontSize: '13px', fontStyle: 'bold',
-        color: won ? '#7ed4f5' : '#ff8899'
-      }).setOrigin(0.5).setAlpha(0.9);
+      }).setOrigin(originX, 0.5);
+      this.add.text(textX, rowY + 9, oppShort, {
+        fontFamily: 'Arial Black, Arial', fontSize: '14px', fontStyle: 'bold',
+        color: won ? '#7ed4f5' : '#ff8899',
+        shadow: { offsetX: 0, offsetY: 0, color: won ? '#7ed4f5' : '#ff8899', blur: 8, fill: true }
+      }).setOrigin(originX, 0.5);
     }
 
     this._buildResultPanel(W, H, won, r, isAfk, isEndless, isTitan, endlessWave, titanFloor, res);

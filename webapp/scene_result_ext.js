@@ -131,9 +131,16 @@ Object.assign(ResultScene.prototype, {
   async _buildResultExtra(W, H, won, r, isEndless, isTitan, endlessWave, endlessProgress, endlessStatus, titanFloor, res) {
     const nCol = won ? 0x00e5ff : 0xff1144;
     const pb = this._panelBottom || H * 0.50;
-    const bigBtnY = pb + 34;
-    const secBtnY = bigBtnY + 56;
-    const histBtnY = secBtnY + 50;
+    const bigBtnY  = pb + 38;
+    const divY     = bigBtnY + 44;
+    const secBtnY  = divY + 32;
+    const histBtnY = secBtnY + 44;
+
+    // Neon divider between main and secondary buttons
+    const dg = this.add.graphics().setAlpha(0);
+    dg.lineStyle(1, nCol, 0.22);
+    dg.moveTo(W * 0.18, divY); dg.lineTo(W * 0.82, divY); dg.strokePath();
+    this.tweens.add({ targets: dg, alpha: 1, duration: 400, delay: 300 });
 
     if (isEndless && endlessStatus?.ok) {
       const bw = endlessStatus.progress?.best_wave ?? endlessProgress?.best_wave ?? 0;

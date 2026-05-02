@@ -87,52 +87,47 @@ Object.assign(ResultScene.prototype, {
 
   // Floating glow button — icon + text, no frame
   _floatBtn(x, y, iconKey, label, col, cb, iconSz, txtSz) {
-    const gap = 11;
+    const gap = 12;
     const colHex = '#' + col.toString(16).padStart(6, '0');
 
-    // Create text first to measure its width
     const lbl = this.add.text(-9999, y, label, {
       fontFamily: 'Arial Black, Arial', fontSize: txtSz + 'px', fontStyle: 'bold',
-      color: '#ffffff',
-      shadow: { offsetX: 0, offsetY: 0, color: colHex, blur: 20, fill: true }
+      color: colHex,
+      shadow: { offsetX: 0, offsetY: 0, color: colHex, blur: 18, fill: true }
     }).setOrigin(0, 0.5);
 
     const totalW = iconSz + gap + lbl.width;
     const startX = x - totalW / 2;
     const iconX  = startX + iconSz / 2;
 
-    // Icon
     if (this.textures?.exists(iconKey))
       this.add.image(iconX, y, iconKey).setDisplaySize(iconSz, iconSz);
 
-    // Reposition text
     lbl.setPosition(startX + iconSz + gap, y);
 
-    // Hit zone
-    const z = this.add.zone(x, y, totalW + 28, Math.max(iconSz, 40) + 10)
+    const z = this.add.zone(x, y, totalW + 32, Math.max(iconSz, 44) + 12)
       .setInteractive({ useHandCursor: true });
     z.on('pointerdown', () => {
-      lbl.setAlpha(0.65);
-      tg?.HapticFeedback?.impactOccurred('light');
+      lbl.setAlpha(0.55); tg?.HapticFeedback?.impactOccurred('light');
     });
     z.on('pointerup',  () => { lbl.setAlpha(1); cb(); });
     z.on('pointerout', () => { lbl.setAlpha(1); });
   },
 
   _bigBtn(x, y, label, nCol, cb) {
-    this._floatBtn(x, y, 'btn_fight', label, nCol, cb, 44, 17);
+    this._floatBtn(x, y, 'btn_fight', label, nCol, cb, 52, 19);
   },
 
   _mainBtn(x, y, label, cb) {
-    this._floatBtn(x, y, 'btn_home', label, 0x7eb8ff, cb, 32, 14);
+    this._floatBtn(x, y, 'btn_home', label, 0x7eb8ff, cb, 40, 15);
   },
 
   _histBtn(x, y, label, cb) {
-    this._floatBtn(x, y, 'btn_history', label, 0x4499ff, cb, 30, 13);
+    this._floatBtn(x, y, 'btn_history', label, 0x4499ff, cb, 36, 13);
   },
 
   _logBtn(x, y, label, cb) {
-    this._floatBtn(x, y, 'btn_battle_log', label, 0xcc44ff, cb, 30, 13);
+    this._floatBtn(x, y, 'btn_battle_log', label, 0xcc44ff, cb, 36, 13);
   },
 
 });
