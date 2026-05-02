@@ -122,6 +122,17 @@ class NatiskScene extends Phaser.Scene {
       .setDisplaySize(SZ * 0.85, SZ * 0.85).setOrigin(0.5);
     cont.add(mech);
 
+    // L-уголки (cyan)
+    const cG = this.add.graphics();
+    const CL = 12, CT = 2, HS = SZ / 2;
+    [[- HS, -HS, 1, 1], [HS, -HS, -1, 1], [-HS, HS, 1, -1], [HS, HS, -1, -1]]
+      .forEach(([cx, cy, dx, dy]) => {
+        cG.lineStyle(CT, 0x00e5ff, 0.9);
+        cG.lineBetween(cx, cy, cx + dx * CL, cy);
+        cG.lineBetween(cx, cy, cx, cy + dy * CL);
+      });
+    cont.add(cG);
+
     this.tweens.add({ targets: cont, y: y - 4, duration: 1800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     const label = this.add.text(0, SZ/2 + 10, '[ ИНИЦИИРОВАТЬ\nПРОТОКОЛ: ПЕРЕГРУЗКА ]', {
