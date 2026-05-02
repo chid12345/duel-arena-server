@@ -64,15 +64,17 @@ Object.assign(ResultScene.prototype, {
         this.tweens.add({ targets: sb, alpha: 1, delay: 700, duration: 300 });
         extraY += 22;
       }
-      if ((r.win_streak || 0) > 1)
+      if ((r.win_streak || 0) > 1) {
         this.add.text(W/2, extraY, `🔥  Серия: ${r.win_streak} побед подряд!`,
           { fontFamily: 'Arial Black, Arial', fontSize: '13px', color: '#ff6600' }).setOrigin(0.5);
+        extraY += 22;
+      }
       if (r.level_up) this.time.delayedCall(900, () => this._levelUpFlash(W, H));
       if (isEndless && endlessWave > 0) {
-        this.add.text(W/2, py+163, `🔥  Волна ${endlessWave} пройдена!`,
+        this.add.text(W/2, extraY, `🔥  Волна ${endlessWave} пройдена!`,
           { fontFamily: 'Arial', fontSize: '13px', color: '#ff6644' }).setOrigin(0.5);
         if (endlessWave % 5 === 0)
-          this.add.text(W/2, py+183, '💚  +10% HP восстановлено!', {
+          this.add.text(W/2, extraY + 20, '💚  +10% HP восстановлено!', {
             fontFamily: 'Arial', fontSize: '12px', color: '#3cc864'
           }).setOrigin(0.5);
       }
@@ -131,7 +133,7 @@ Object.assign(ResultScene.prototype, {
   async _buildResultExtra(W, H, won, r, isEndless, isTitan, endlessWave, endlessProgress, endlessStatus, titanFloor, res) {
     const nCol = won ? 0x00e5ff : 0xff1144;
     const pb   = this._panelBottom || H * 0.50;
-    const bigY = pb + 56;
+    const bigY = pb + (isEndless ? 70 : 56);
     const divY = bigY + 70;
     const rowY = divY + 36;
 
