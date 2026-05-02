@@ -59,11 +59,10 @@ Object.assign(BattleScene.prototype, {
         try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
         this.scene.start('Result', {});
       } else {
+        if (!this.scene?.isActive('Battle')) return;
         this._choosing = true;
-        const hint = res.detail || res.message || res.error || res.reason || res.status || '';
-        const msg = hint ? `⚠️ ${hint}` : '⚠️ Сервер не принял ход';
-        this._showWait(msg);
-        try { tg?.showAlert?.(msg); } catch(_) {}
+        const hint = res.detail || res.message || res.error || res.reason || '';
+        this._showWait(hint ? `⚠️ ${hint}` : '⚠️ Ошибка. Попробуй ещё раз.');
       }
     } catch(e) {
       console.error('[BATTLE] _submitChoice exception', e);
