@@ -42,6 +42,8 @@ class NatiskScene extends Phaser.Scene {
   _render(d, W, H) {
     if (this._loading) { this._loading.destroy(); this._loading = null; }
     if (!d.ok) { txt(this, W/2, H/2, '❌ Ошибка', 14, '#dc3c46').setOrigin(0.5); return; }
+    // Запоминаем границу: всё что добавим ПОСЛЕ этой точки — динамический контент
+    this._contentMark = this.children.length;
 
     const p = d.progress;
     let y = 84;
@@ -262,12 +264,21 @@ class NatiskScene extends Phaser.Scene {
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         this._toast(`✅ Куплено попыток: ${res.bought}`);
-        this.time.delayedCall(700, () => {
-          this.cameras.main.fadeOut(320, 0, 0, 0);
-          this.cameras.main.once('camerafadeoutcomplete', () => this.scene.restart());
-        });
+        this.time.delayedCall(500, () => this._softRefresh());
       } else { this._toast('❌ ' + (res.reason || 'Ошибка')); }
     } catch(_) { this._toast('❌ Нет соединения'); }
+    this._busy = false;
+  }
+
+  async _softRefresh() {
+    if (!this.scene?.isActive('Natisk')) return;
+    // Удаляем только динамический контент (всё что после _contentMark)
+    [...this.children.list].slice(this._contentMark ?? 0)
+      .forEach(o => { try { o.destroy(); } catch(_) {} });
+    try {
+      const d = await get('/api/endless/status');
+      if (this.scene?.isActive('Natisk')) this._render(d, this.W, this.H);
+    } catch(_) {}
     this._busy = false;
   }
 
