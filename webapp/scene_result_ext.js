@@ -9,7 +9,8 @@ Object.assign(ResultScene.prototype, {
     const px = 14, py = H * 0.245, pw = W - 28;
     const nCol = won ? 0x00e5ff : 0xff1144;
     const nHex = won ? '#00e5ff' : '#ff1144';
-    const maxPH = won ? (r.win_streak > 1 || r.streak_bonus > 0 ? 202 : (isTitan ? 196 : 186)) : 140;
+    const hasStreak = (r.win_streak > 1 || r.streak_bonus > 0);
+    const maxPH = won ? (hasStreak ? (isTitan ? 240 : 202) : (isTitan ? 200 : 186)) : 140;
     this._panelBottom = py + maxPH;
     this._cyberPanel(px, py, pw, maxPH, nCol);
 
@@ -79,12 +80,12 @@ Object.assign(ResultScene.prototype, {
           }).setOrigin(0.5);
       }
       if (isTitan && titanFloor > 0) {
-        this.add.text(W/2, py+163, `🗿  Этаж ${titanFloor} пройден!`, {
+        this.add.text(W/2, extraY, `🗿  Этаж ${titanFloor} пройден!`, {
           fontFamily: 'Arial Black', fontSize: '14px', color: '#cc88ff'
         }).setOrigin(0.5);
         const tp = res?.titan_progress;
         if (tp && Number(tp.best_floor) === titanFloor)
-          this.add.text(W/2, py+183, '🆕  Новый рекорд Башни!', {
+          this.add.text(W/2, extraY + 20, '🆕  Новый рекорд Башни!', {
             fontFamily: 'Arial', fontSize: '11px', color: '#ffd700'
           }).setOrigin(0.5);
       }
