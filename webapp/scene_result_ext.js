@@ -151,9 +151,9 @@ Object.assign(ResultScene.prototype, {
 
     const _goTitanNext = () => {
       post('/api/titans/start', {}).then(rr => {
-        if (!rr.ok) { this.scene.start('Menu', { returnTab: 'battle' }); return; }
+        if (!rr.ok) { this.scene.start('Menu', { openBattleSelect: true }); return; }
         State.battle = rr.battle; tg?.HapticFeedback?.impactOccurred('heavy'); this.scene.start('Battle');
-      }).catch(() => this.scene.start('Menu', { returnTab: 'battle' }));
+      }).catch(() => this.scene.start('Menu', { openBattleSelect: true }));
     };
 
     const bigLabel = (isEndless && won) ? 'Следующая\nволна!'
@@ -192,7 +192,7 @@ Object.assign(ResultScene.prototype, {
     // Башня: одна кнопка навигации
     if (isTitan) {
       this._iconBtn(W / 2, rowY, 'btn_home', 'К боям', '#7eb8ff',
-        () => this.scene.start('Menu', { returnTab: 'battle' }), 62);
+        () => this.scene.start('Menu', { openBattleSelect: true }), 62);
       return;
     }
 
