@@ -71,8 +71,28 @@ function _removeDarkBg(img) {
   } catch(_) { _imgCache.set(origSrc, origSrc); }
 }
 
-/* Texture key → filename (тот же паттерн что в helmet_html_overlay.js) */
-function _texUrl(key) { return key ? key + '.png' : null; }
+/* Точные расширения для сапог и щитов (смесь .png/.jpg/.jpeg) */
+const _EXT = {
+  boots_free1:'boots_free1.png',     boots_free2:'boots_free2.png',
+  boots_free3:'boots_free3.png',     boots_free4:'boots_free4.jpeg',
+  boots_gold1:'boots_gold1.png',     boots_gold2:'boots_gold2.jpg',
+  boots_gold3:'boots_gold3.jpg',     boots_gold4:'boots_gold4.jpg',
+  boots_dia1:'boots_dia1.jpg',       boots_dia2:'boots_dia2.jpg',
+  boots_dia3:'boots_dia3.jpg',       boots_dia4:'boots_dia4.jpg',
+  boots_mythic1:'boots_mythic1.jpeg',boots_mythic2:'boots_mythic2.jpeg',
+  boots_mythic3:'boots_mythic3.jpeg',boots_mythic4:'boots_mythic4.jpeg',
+  shield_free1:'shield_free1.jpeg',  shield_free2:'shield_free2.jpeg',
+  shield_free3:'shield_free3.jpeg',  shield_free4:'shield_free4.jpeg',
+  shield_gold1:'shield_gold1.jpeg',  shield_gold2:'shield_gold2.jpeg',
+  shield_gold3:'shield_gold3.jpeg',  shield_gold4:'shield_gold4.jpeg',
+  shield_dia1:'shield_dia1.png',     shield_dia2:'shield_dia2.png',
+  shield_dia3:'shield_dia3.png',     shield_dia4:'shield_dia4.png',
+  shield_mythic1:'shield_mythic1.png',shield_mythic2:'shield_mythic2.png',
+  shield_mythic3:'shield_mythic3.png',shield_mythic4:'shield_mythic4.png',
+};
+
+/* Texture key → filename (с правильным расширением) */
+function _texUrl(key) { return key ? (_EXT[key] || key + '.png') : null; }
 
 /* Данные слота: texKey (→ filename) + rarity */
 function _slotInfo(slot) {
