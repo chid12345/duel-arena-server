@@ -31,17 +31,17 @@ window.TabBarHTML = (() => {
 /* Точка-индикатор активного таба */
 .tb-dot{position:absolute;top:4px;left:50%;transform:translateX(-50%);
   width:7px;height:7px;border-radius:50%;
-  opacity:0;transition:opacity .22s;
+  opacity:.35;transition:opacity .22s;
   background:var(--col);
   box-shadow:0 0 8px var(--col),0 0 3px var(--col)}
 .tb-item.active .tb-dot{opacity:1}
-/* Мягкое круглое свечение за иконкой — только у активного (вместо фона ячейки) */
+/* Мягкое круглое свечение за иконкой — у всех, у активного ярче */
 .tb-glow{position:absolute;top:38%;left:50%;
   transform:translate(-50%,-50%);
   width:54px;height:54px;border-radius:50%;
   background:radial-gradient(circle,var(--col) 0%,transparent 68%);
-  opacity:0;transition:opacity .28s;pointer-events:none;z-index:0}
-.tb-item.active .tb-glow{opacity:.22}
+  opacity:.09;transition:opacity .28s;pointer-events:none;z-index:0}
+.tb-item.active .tb-glow{opacity:.26}
 /* Обёртка иконки */
 .tb-icon-wrap{width:28px;height:28px;display:flex;align-items:center;
   justify-content:center;position:relative;z-index:1;
@@ -49,32 +49,35 @@ window.TabBarHTML = (() => {
 .tb-item.active .tb-icon-wrap{transform:scale(1.2) translateY(-2px)}
 .tb-item:active .tb-icon-wrap{transform:scale(.88)}
 .tb-item.active:active .tb-icon-wrap{transform:scale(1.08) translateY(-1px)}
-/* PNG-иконка */
+/* PNG-иконка — все горят своим цветом, активная ярче */
 .tb-img{width:28px;height:28px;object-fit:contain;display:block;
-  filter:saturate(.38) brightness(.55);
+  filter:saturate(.85) brightness(.8)
+    drop-shadow(0 0 4px var(--col))
+    drop-shadow(0 0 10px var(--col));
   transition:filter .25s}
 .tb-item.active .tb-img{
-  filter:saturate(1.2) brightness(1.1)
-    drop-shadow(0 0 6px var(--col))
-    drop-shadow(0 0 16px var(--col))}
+  filter:saturate(1.3) brightness(1.15)
+    drop-shadow(0 0 7px var(--col))
+    drop-shadow(0 0 18px var(--col))}
 /* Emoji-фолбэк */
 .tb-em{font-size:21px;line-height:1;
-  filter:saturate(.38) brightness(.6);transition:filter .25s}
+  filter:saturate(.85) brightness(.8) drop-shadow(0 0 5px var(--col));
+  transition:filter .25s}
 .tb-item.active .tb-em{
-  filter:saturate(1.1) brightness(1.1) drop-shadow(0 0 7px var(--col))}
-/* Ambient floor — пятно под иконкой */
+  filter:saturate(1.2) brightness(1.1) drop-shadow(0 0 8px var(--col))}
+/* Ambient floor — пятно под иконкой у всех, активная ярче */
 .tb-ambient{position:absolute;bottom:6px;left:50%;
   transform:translateX(-50%);
   width:36px;height:5px;border-radius:50%;
   background:var(--col);filter:blur(5px);
-  opacity:0;transition:opacity .25s;pointer-events:none;z-index:0}
-.tb-item.active .tb-ambient{opacity:.45}
-/* Подпись */
+  opacity:.2;transition:opacity .25s;pointer-events:none;z-index:0}
+.tb-item.active .tb-ambient{opacity:.5}
+/* Подпись — у всех цвет своего таба, активная ярче */
 .tb-label{font-size:9px;font-weight:700;margin-top:3px;
   letter-spacing:.3px;white-space:nowrap;position:relative;z-index:1;
-  color:rgba(170,155,210,.48);
-  transition:color .25s,text-shadow .25s}
-.tb-item.active .tb-label{color:var(--col);text-shadow:0 0 8px var(--col)}
+  color:var(--col);opacity:.55;
+  transition:color .25s,text-shadow .25s,opacity .25s}
+.tb-item.active .tb-label{opacity:1;text-shadow:0 0 8px var(--col)}
 /* Ripple при тапе */
 .tb-ripple{position:absolute;border-radius:50%;pointer-events:none;
   top:50%;left:50%;width:0;height:0;
