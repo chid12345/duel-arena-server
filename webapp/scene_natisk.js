@@ -116,7 +116,6 @@ class NatiskScene extends Phaser.Scene {
 
     const bgG = this.add.graphics();
     bgG.fillStyle(0x050d15, 0.85); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
-    bgG.lineStyle(1.5, 0xff8c00, 0.55); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
     cont.add(bgG);
 
     const mech = this.add.image(0, -2, 'natisk_mech')
@@ -140,7 +139,6 @@ class NatiskScene extends Phaser.Scene {
       this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 180, ease: 'Back.easeOut' });
       mech.clearTint();
       bgG.clear(); bgG.fillStyle(0x050d15, 0.85); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
-      bgG.lineStyle(1.5, 0xff8c00, 0.55); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
     };
     cont.on('pointerdown', () => {
       tg?.HapticFeedback?.impactOccurred('heavy');
