@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.7.64"
-VERSION_LABEL = "v2.7.64 — UI: Натиск — текст НАТИСК под кнопкой ярче (белый + cyan stroke + glow 28px)"
+VERSION = "2.7.65"
+VERSION_LABEL = "v2.7.65 — fix: лаг/цикл при reconnect в бой (active_session не редиректит в Battle)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "12.34"
+GAME_VERSION = "12.35"

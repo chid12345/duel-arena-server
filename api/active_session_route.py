@@ -52,7 +52,8 @@ def register_active_session_route(
 
         # 2. PvP / бой с ботом / Натиск / Башня — все используют battle_system.
         # battle_queue говорит «в каком бою сейчас живой in-memory state».
-        # Если он есть — игрока редиректим в Battle scene (тип определяется по mode).
+        # НЕ перенаправляем в Battle при reconnect: фронт не имеет State.battle →
+        # цикл Menu→Battle→Menu (мигание). AFK-таймер (3×15 сек) завершит бой сам.
         in_memory_battle = False
         try:
             from battle_system import battle_system
@@ -61,7 +62,6 @@ def register_active_session_route(
                 b = battle_system.active_battles[bid]
                 if b.get("battle_active"):
                     in_memory_battle = True
-                    return {"ok": True, "type": "pvp", "scene": "Battle", "battle_id": bid}
         except Exception as e:
             log.warning("active_session battle check: %s", e)
 
