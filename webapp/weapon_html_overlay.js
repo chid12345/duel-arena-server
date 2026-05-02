@@ -257,15 +257,21 @@ function _render(scene, view) {
   }));
   const list = view==='owned' ? items.filter(w=>w.equipped||w.owned) : items;
 
-  const groups = [
-    {k:'common',l:'ОБЫЧНОЕ'},{k:'rare',l:'РЕДКОЕ'},{k:'epic',l:'ЭПИЧЕСКОЕ'},{k:'mythic',l:'МИФИЧЕСКОЕ'}
-  ];
-  grid.innerHTML = groups.map(g=>{
-    const gl = list.filter(w=>w.r===g.k);
-    if (!gl.length) return '';
-    return `<div class="wd-sep" style="color:${RC[g.k]}">${g.l}</div>
-            <div class="wd-card-group">${gl.map(_card).join('')}</div>`;
-  }).join('') || `<div class="wd-empty">Нет оружия</div>`;
+  if (view === 'owned') {
+    grid.innerHTML = list.length
+      ? `<div class="wd-card-group">${list.map(_card).join('')}</div>`
+      : `<div class="wd-empty">Нет оружия</div>`;
+  } else {
+    const groups = [
+      {k:'common',l:'ОБЫЧНОЕ'},{k:'rare',l:'РЕДКОЕ'},{k:'epic',l:'ЭПИЧЕСКОЕ'},{k:'mythic',l:'МИФИЧЕСКОЕ'}
+    ];
+    grid.innerHTML = groups.map(g=>{
+      const gl = list.filter(w=>w.r===g.k);
+      if (!gl.length) return '';
+      return `<div class="wd-sep" style="color:${RC[g.k]}">${g.l}</div>
+              <div class="wd-card-group">${gl.map(_card).join('')}</div>`;
+    }).join('') || `<div class="wd-empty">Нет оружия</div>`;
+  }
 
   grid.scrollTop = scrollTop;
   grid.querySelectorAll('.wd-card-img').forEach(img=>{
