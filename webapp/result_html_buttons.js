@@ -8,17 +8,17 @@ const ResultButtonsHTML = (() => {
 .rb-wrap{position:fixed;z-index:150;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:8px}
 .rb-info{font-size:12px;font-weight:800;letter-spacing:.3px;text-align:center;text-shadow:0 0 8px currentColor;pointer-events:none;margin-bottom:6px;font-family:'Arial Black',Arial,sans-serif}
 .rb-big-row{display:flex;gap:20px;justify-content:center;pointer-events:auto}
-.rb-big{display:flex;flex-direction:column;align-items:center;gap:5px;cursor:pointer;background:none;border:none;padding:4px 10px;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .12s;font-family:'Arial Black',Arial,sans-serif}
+.rb-big{display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;background:none;border:none;padding:4px 10px;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .12s;font-family:'Arial Black',Arial,sans-serif}
 .rb-big:active{transform:scale(.92)}
-.rb-bi-lg{width:82px;height:82px;object-fit:contain;filter:drop-shadow(0 0 14px currentColor) drop-shadow(0 0 5px rgba(0,0,0,.7));transition:filter .18s,transform .18s;display:block}
-.rb-big:active .rb-bi-lg{filter:drop-shadow(0 0 22px currentColor) drop-shadow(0 0 7px rgba(0,0,0,.7));transform:scale(.93)}
-.rb-lbl-lg{font-size:12px;font-weight:800;color:currentColor;text-shadow:0 0 8px currentColor;letter-spacing:.3px;text-align:center;white-space:pre-line;line-height:1.3}
+.rb-bi-lg{width:82px;height:82px;object-fit:contain;filter:drop-shadow(0 0 16px currentColor) drop-shadow(0 0 32px currentColor);mix-blend-mode:screen;transition:filter .18s,transform .18s;display:block}
+.rb-big:active .rb-bi-lg{filter:drop-shadow(0 0 24px currentColor) drop-shadow(0 0 40px currentColor);transform:scale(.93)}
+.rb-lbl-lg{font-size:12px;font-weight:800;color:currentColor;text-shadow:0 0 8px currentColor;letter-spacing:.3px;text-align:center;white-space:pre-line;line-height:1.4}
 .rb-div{width:64%;height:1px;background:currentColor;opacity:.22;margin:9px 0;pointer-events:none}
 .rb-row{display:flex;gap:14px;justify-content:center;pointer-events:auto}
 .rb-btn{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;background:none;border:none;padding:2px 8px;user-select:none;-webkit-tap-highlight-color:transparent;transition:transform .12s;font-family:'Arial Black',Arial,sans-serif}
 .rb-btn:active{transform:scale(.92)}
-.rb-bi-sm{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 0 11px currentColor) drop-shadow(0 0 4px rgba(0,0,0,.6));transition:filter .18s,transform .18s;display:block}
-.rb-btn:active .rb-bi-sm{filter:drop-shadow(0 0 17px currentColor) drop-shadow(0 0 6px rgba(0,0,0,.6));transform:scale(.93)}
+.rb-bi-sm{width:62px;height:62px;object-fit:contain;filter:drop-shadow(0 0 12px currentColor) drop-shadow(0 0 24px currentColor);mix-blend-mode:screen;transition:filter .18s,transform .18s;display:block}
+.rb-btn:active .rb-bi-sm{filter:drop-shadow(0 0 18px currentColor) drop-shadow(0 0 32px currentColor);transform:scale(.93)}
 .rb-lbl-sm{font-size:10.5px;font-weight:800;color:currentColor;text-shadow:0 0 6px currentColor;letter-spacing:.3px;white-space:nowrap}
 `;
 
