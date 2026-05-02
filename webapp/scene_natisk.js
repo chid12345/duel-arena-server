@@ -101,8 +101,8 @@ class NatiskScene extends Phaser.Scene {
         .setShadow(0, 0, '#4466aa', 8, false, true);
       y += 20;
 
-      this._makeBuySkinBtn(W / 4,     y + 58, 'natisk_gold',    0xff8c00, '+1 попытка',  goldSub,                    canGold, () => this._buyAttempt('gold'));
-      this._makeBuySkinBtn(W * 3 / 4, y + 58, 'natisk_diamond', 0x00e5ff, '+3 попытки', `${d.diamond_cost} 💎`,     canDia,  () => this._buyAttempt('diamond'));
+      this._makeBuySkinBtn(W / 4,     y + 58, 'natisk_gold',    0xff8c00, '+1 попытка',  goldSub,                    canGold, () => this._buyAttempt('gold'),    canGold ? null : (!d.can_buy_gold ? `🕐 Ещё не доступно` : `Не хватает золота`));
+      this._makeBuySkinBtn(W * 3 / 4, y + 58, 'natisk_diamond', 0x00e5ff, '+3 попытки', `${d.diamond_cost} 💎`,     canDia,  () => this._buyAttempt('diamond'), canDia  ? null : `Не хватает алмазов 💎`);
       y += 152;
     }
 
@@ -166,23 +166,25 @@ class NatiskScene extends Phaser.Scene {
     cont.on('pointerout', reset);
   }
 
-  _makeBuySkinBtn(cx, cy, texKey, glowHex, label, sub, active, onBuy) {
+  _makeBuySkinBtn(cx, cy, texKey, glowHex, label, sub, active, onBuy, errorMsg) {
     const SZ = 86;
     const hexStr = '#' + glowHex.toString(16).padStart(6, '0');
     const cont = this.add.container(cx, cy);
 
-    // Свечение по форме PNG: копии с ADD blend — повторяют контур скина, не круг
+    // Свечение по форме PNG: копии с ADD blend
     const glowLayers = [];
     for (let i = 4; i >= 1; i--) {
       const g = this.add.image(0, 0, texKey)
         .setDisplaySize(SZ + i * 12, SZ + i * 12).setOrigin(0.5)
-        .setAlpha(0.32 / i).setBlendMode(Phaser.BlendModes.ADD).setTint(glowHex);
+        .setAlpha(active ? 0.32 / i : 0.08 / i)
+        .setBlendMode(Phaser.BlendModes.ADD).setTint(glowHex);
       cont.add(g);
       glowLayers.push(g);
     }
 
-    // Основной скин
+    // Основной скин — приглушён если неактивен
     const img = this.add.image(0, 0, texKey).setDisplaySize(SZ, SZ).setOrigin(0.5);
+    if (!active) img.setAlpha(0.45);
     cont.add(img);
 
     // Метки
@@ -206,14 +208,21 @@ class NatiskScene extends Phaser.Scene {
     subTxt.setShadow(0, 0, hexStr, active ? 22 : 14, false, true);
     cont.add(subTxt);
 
-    if (!active) return;
-
     const _setGlow = (col) => glowLayers.forEach(g => g.setTint(col));
 
     cont.setInteractive(
       new Phaser.Geom.Rectangle(-SZ / 2, -SZ / 2, SZ, SZ + 50),
       Phaser.Geom.Rectangle.Contains
     );
+
+    if (!active) {
+      // Неактивна — показываем причину при нажатии
+      cont.on('pointerup', () => {
+        tg?.HapticFeedback?.notificationOccurred('error');
+        if (errorMsg) this._toast('❌ ' + errorMsg);
+      });
+      return;
+    }
 
     const reset = () => {
       this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
