@@ -40,6 +40,14 @@ Object.assign(MenuScene.prototype, {
     this._activeTab = key;
     try { this.cameras?.main?.setScroll?.(0, 0); } catch(_) {}
 
+    // Слоты экипировки — HTML overlay: показываем только на профиле
+    try {
+      if (typeof EquipmentSlotsHTML !== 'undefined') {
+        if (key === 'profile') EquipmentSlotsHTML.refresh(this);
+        else                   EquipmentSlotsHTML.close();
+      }
+    } catch(_) {}
+
     // Страховка: если профильная панель пропала (уничтожена/исключение при build) —
     // перестраиваем налету, чтобы не показывать чёрный экран.
     if (key === 'profile' && !this._panels?.profile) {
