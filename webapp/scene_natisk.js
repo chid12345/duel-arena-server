@@ -262,7 +262,10 @@ class NatiskScene extends Phaser.Scene {
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         this._toast(`✅ Куплено попыток: ${res.bought}`);
-        this.time.delayedCall(600, () => this.scene.restart());
+        this.time.delayedCall(700, () => {
+          this.cameras.main.fadeOut(320, 0, 0, 0);
+          this.cameras.main.once('camerafadeoutcomplete', () => this.scene.restart());
+        });
       } else { this._toast('❌ ' + (res.reason || 'Ошибка')); }
     } catch(_) { this._toast('❌ Нет соединения'); }
     this._busy = false;
