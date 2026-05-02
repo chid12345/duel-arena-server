@@ -85,69 +85,59 @@ Object.assign(ResultScene.prototype, {
     }
   },
 
-  // Primary CTA button — cyberpunk neon angular
-  _bigBtn(x, y, label, borderColor, cb) {
-    const BW = 268, BH = 50, cut = 10;
+  // Floating glow button — icon + text, no frame
+  _floatBtn(x, y, iconKey, label, col, cb, iconSz, txtSz) {
+    const gap = 11;
+    const colHex = '#' + col.toString(16).padStart(6, '0');
+
+    // Create text first to measure its width
+    const lbl = this.add.text(-9999, y, label, {
+      fontFamily: 'Arial Black, Arial', fontSize: txtSz + 'px', fontStyle: 'bold',
+      color: '#ffffff',
+      shadow: { offsetX: 0, offsetY: 0, color: colHex, blur: 20, fill: true }
+    }).setOrigin(0, 0.5);
+
+    const totalW = iconSz + gap + lbl.width;
+    const startX = x - totalW / 2;
+    const iconX  = startX + iconSz / 2;
+
+    // Soft glow blob behind icon
     const g = this.add.graphics();
-    const draw = () => {
-      g.clear();
-      g.fillStyle(borderColor, 0.11); g.fillRoundedRect(x-BW/2-5, y-BH/2-5, BW+10, BH+10, 5);
-      g.fillStyle(borderColor, 0.16); g.fillRect(x-BW/2, y-BH/2, BW, BH);
-      g.fillStyle(0xffffff, 0.06); g.fillRect(x-BW/2, y-BH/2, BW, BH*0.42);
-      g.lineStyle(2, borderColor, 0.92);
-      g.beginPath();
-      g.moveTo(x-BW/2+cut, y-BH/2); g.lineTo(x+BW/2-cut, y-BH/2);
-      g.lineTo(x+BW/2, y-BH/2+cut); g.lineTo(x+BW/2, y+BH/2-cut);
-      g.lineTo(x+BW/2-cut, y+BH/2); g.lineTo(x-BW/2+cut, y+BH/2);
-      g.lineTo(x-BW/2, y+BH/2-cut); g.lineTo(x-BW/2, y-BH/2+cut);
-      g.closePath(); g.strokePath();
-      g.lineStyle(1, borderColor, 0.35);
-      g.moveTo(x-BW/2+cut+6, y+BH/2-3); g.lineTo(x+BW/2-cut-6, y+BH/2-3); g.strokePath();
-    };
-    draw();
+    g.fillStyle(col, 0.22); g.fillCircle(iconX, y, iconSz * 0.58);
+    g.fillStyle(col, 0.08); g.fillCircle(iconX, y, iconSz * 0.88);
 
-    const colorHex = '#' + borderColor.toString(16).padStart(6, '0');
-    this.add.text(x, y, label, {
-      fontFamily: 'Arial Black, Arial', fontSize: '16px', fontStyle: 'bold', color: '#ffffff',
-      shadow: { offsetX: 0, offsetY: 0, color: colorHex, blur: 14, fill: false }
-    }).setOrigin(0.5);
+    // Icon
+    if (this.textures?.exists(iconKey))
+      this.add.image(iconX, y, iconKey).setDisplaySize(iconSz, iconSz);
 
-    const z = this.add.zone(x, y, BW, BH).setInteractive({ useHandCursor: true });
+    // Reposition text
+    lbl.setPosition(startX + iconSz + gap, y);
+
+    // Hit zone
+    const z = this.add.zone(x, y, totalW + 28, Math.max(iconSz, 40) + 10)
+      .setInteractive({ useHandCursor: true });
     z.on('pointerdown', () => {
-      g.clear(); g.fillStyle(borderColor, 0.32); g.fillRect(x-BW/2, y-BH/2, BW, BH);
-      g.lineStyle(2, borderColor, 1); g.strokeRect(x-BW/2, y-BH/2, BW, BH);
-      tg?.HapticFeedback?.impactOccurred('medium');
+      lbl.setAlpha(0.65);
+      tg?.HapticFeedback?.impactOccurred('light');
     });
-    z.on('pointerup',  () => { draw(); cb(); });
-    z.on('pointerout', () => { draw(); });
+    z.on('pointerup',  () => { lbl.setAlpha(1); cb(); });
+    z.on('pointerout', () => { lbl.setAlpha(1); });
   },
 
-  // Secondary button — dark with left accent stripe
+  _bigBtn(x, y, label, nCol, cb) {
+    this._floatBtn(x, y, 'btn_fight', label, nCol, cb, 44, 17);
+  },
+
   _mainBtn(x, y, label, cb) {
-    const BW = 214, BH = 40;
-    const g = this.add.graphics();
-    g.fillStyle(0x08081a, 0.92); g.fillRect(x-BW/2, y-BH/2, BW, BH);
-    g.lineStyle(1.5, 0x223355, 0.85); g.strokeRect(x-BW/2, y-BH/2, BW, BH);
-    g.lineStyle(3, 0x0099cc, 0.9);
-    g.moveTo(x-BW/2, y-BH/2+7); g.lineTo(x-BW/2, y+BH/2-7); g.strokePath();
-    this.add.text(x, y, label, {
-      fontFamily: 'Arial', fontSize: '14px', color: '#aac0dd'
-    }).setOrigin(0.5);
-    const z = this.add.zone(x, y, BW, BH).setInteractive({ useHandCursor: true });
-    z.on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); cb(); });
+    this._floatBtn(x, y, 'btn_home', label, 0x7eb8ff, cb, 32, 14);
   },
 
-  // Small side-by-side history buttons
   _histBtn(x, y, label, cb) {
-    const BW = 158, BH = 34;
-    const g = this.add.graphics();
-    g.fillStyle(0x060614, 0.88); g.fillRect(x-BW/2, y-BH/2, BW, BH);
-    g.lineStyle(1, 0x1a2840, 0.9); g.strokeRect(x-BW/2, y-BH/2, BW, BH);
-    this.add.text(x, y, label, {
-      fontFamily: 'Arial', fontSize: '12px', color: '#6677aa'
-    }).setOrigin(0.5);
-    const z = this.add.zone(x, y, BW, BH).setInteractive({ useHandCursor: true });
-    z.on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); cb(); });
+    this._floatBtn(x, y, 'btn_history', label, 0x4499ff, cb, 30, 13);
+  },
+
+  _logBtn(x, y, label, cb) {
+    this._floatBtn(x, y, 'btn_battle_log', label, 0xcc44ff, cb, 30, 13);
   },
 
 });

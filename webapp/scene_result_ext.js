@@ -181,18 +181,12 @@ Object.assign(ResultScene.prototype, {
 
     // History — two side-by-side small buttons
     const replayLog = Array.isArray(res?.webapp_log) ? res.webapp_log : [];
-    if (replayLog.length > 0) {
-      this._histBtn(W/2 - 84, histBtnY, '📼  История боя', () => {
-        try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {}
-      });
-      this._histBtn(W/2 + 84, histBtnY, '📚  Все бои (20)', () => {
-        try { BattleHistory.open(this.game.canvas); } catch (_) {}
-      });
-    } else {
-      this._histBtn(W/2, histBtnY, '📚  Все мои бои (20)', () => {
-        try { BattleHistory.open(this.game.canvas); } catch (_) {}
-      });
-    }
+    this._logBtn(W/2 - 84, histBtnY, '📼  История боя', () => {
+      if (replayLog.length > 0) try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {}
+    });
+    this._histBtn(W/2 + 84, histBtnY, '📚  Все бои', () => {
+      try { BattleHistory.open(this.game.canvas); } catch (_) {}
+    });
   },
 
 });

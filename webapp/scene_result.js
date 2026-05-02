@@ -6,6 +6,14 @@
 class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
 
+  preload() {
+    const load = (k, f) => { if (!this.textures.exists(k)) this.load.image(k, f); };
+    load('btn_fight',      'btn_fight.png');
+    load('btn_home',       'btn_home.png');
+    load('btn_history',    'btn_history.png');
+    load('btn_battle_log', 'btn_battle_log.png');
+  }
+
   shutdown() {
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
@@ -80,11 +88,6 @@ class ResultScene extends Phaser.Scene {
     const titleStr = won ? '⚡  ПОБЕДА!' : isAfk ? '⏱️  ТАЙМАУТ' : '💀  ПОРАЖЕНИЕ';
     const titleHex = won ? '#00ffcc' : isAfk ? '#ff8844' : '#ff1155';
 
-    const titleGlow = this.add.graphics().setAlpha(0);
-    titleGlow.fillStyle(nCol, 0.13);
-    titleGlow.fillRect(W/2 - 140, H*0.075, 280, 52);
-    this.tweens.add({ targets: titleGlow, alpha: 1, duration: 500, delay: 100 });
-
     const title = this.add.text(W/2, H*0.103, titleStr, {
       fontFamily: 'Arial Black, Arial', fontSize: '30px', fontStyle: 'bold', color: titleHex,
       shadow: { offsetX: 0, offsetY: 0, color: titleHex, blur: 18, fill: true }
@@ -124,8 +127,8 @@ class ResultScene extends Phaser.Scene {
       const labelTxt = won ? 'победил(а) над' : 'проиграл(а)';
       const nameX = W/2 + (hasAvatar !== 0 ? 18 : 0);
       this.add.text(nameX, rowY - 9, labelTxt, {
-        fontFamily: 'Arial', fontSize: '10px', color: '#556677'
-      }).setOrigin(0.5).setAlpha(0.8);
+        fontFamily: 'Arial', fontSize: '10px', color: '#99bbcc'
+      }).setOrigin(0.5);
       this.add.text(nameX, rowY + 8, oppShort, {
         fontFamily: 'Arial Black, Arial', fontSize: '13px', fontStyle: 'bold',
         color: won ? '#7ed4f5' : '#ff8899'
