@@ -68,8 +68,6 @@ Object.assign(MenuScene.prototype, {
 
     if (hasDisplay) {
       const bc = _EQ_RARITY_COLOR[displayRarity] || 0x6677aa;
-      // Подсветки временно убраны: нет пятна света и нет glow.
-      // bc держим только на случай если понадобится для значков.
 
       // Броня: wardrobeEquipped (косметика) → armor-по-rarity → PNG из карты по слоту
       const rawKey = (wardrobeEq && this.textures.exists(wardrobeEq.textureKey))
@@ -81,17 +79,12 @@ Object.assign(MenuScene.prototype, {
         : (shieldTexKey && this.textures.exists(shieldTexKey)) ? shieldTexKey
         : (ringTexKey   && this.textures.exists(ringTexKey))   ? ringTexKey
         : null;
-      // Чистка тёмного фона у скинов один раз через canvas. Сейчас триггерится
-      // только если у PNG 2+ тёмных непрозрачных угла — для PNG с прозрачными
-      // углами (большинство наших) это NO-OP, для JPG-сапог реально чистит.
       const imgKey = rawKey && typeof cleanEquipmentTexture === 'function'
         ? cleanEquipmentTexture(this, rawKey) : rawKey;
       if (imgKey) {
-        // 1) Ambient — мягкое цветное пятно под иконкой ("предмет подсвечивает
-        //    поверхность"). Без круга — это размытое подсветка у нижней грани.
+        // 1) Halo — цветное пятно под иконкой, цвет = редкость предмета
         this._drawSlotHalo(c, cx, cy, slot, mkG, bc);
         const imgSize = small ? 38 : 50;
-        // Считаем aspect-fit размеры один раз — для ауры и иконки.
         let dispW = imgSize, dispH = imgSize;
         try {
           const tex = this.textures.get(imgKey);
@@ -102,23 +95,33 @@ Object.assign(MenuScene.prototype, {
             dispW = Math.round(sw * sc); dispH = Math.round(sh * sc);
           }
         } catch(_) {}
-        // 2) Aura — "сияние силуэта": та же иконка, цветом редкости (tintFill),
-        //    масштаб +18%, alpha с лёгким pulse 1.6с. Делает предмет металлически
-        //    "живым" — никакой геометрии-рамки, светится сама сталь.
+        // 2) Outer glow aura — широкий мягкий ореол (цвет редкости)
+        try {
+          const outerAura = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
+          outerAura.setDisplaySize(Math.round(dispW * 1.55), Math.round(dispH * 1.55));
+          outerAura.setTintFill(bc);
+          outerAura.setAlpha(0.18);
+          ca(outerAura);
+          this.tweens.add({
+            targets: outerAura, alpha: 0.30, duration: 2200,
+            ease: 'Sine.easeInOut', yoyo: true, repeat: -1,
+            delay: Math.floor(Math.random() * 1200),
+          });
+        } catch(_) {}
+        // 3) Inner aura — плотный контурный ореол (цвет редкости)
         try {
           const aura = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
           aura.setDisplaySize(Math.round(dispW * 1.18), Math.round(dispH * 1.18));
           aura.setTintFill(bc);
-          aura.setAlpha(0.40);
+          aura.setAlpha(0.50);
           ca(aura);
-          // Стаггер по слоту — чтобы все 6 ауры не пульсировали в унисон
           this.tweens.add({
-            targets: aura, alpha: 0.62, duration: 1500,
+            targets: aura, alpha: 0.75, duration: 1500,
             ease: 'Sine.easeInOut', yoyo: true, repeat: -1,
             delay: Math.floor(Math.random() * 1800),
           });
         } catch(_) {}
-        // 3) Main icon — поверх ауры, в пропорции (без сжатия в квадрат).
+        // 4) Main icon — поверх ауры, в пропорции (без сжатия в квадрат).
         const img = this.make.image({ x: cx, y: cy - 2, key: imgKey }, false);
         img.setDisplaySize(dispW, dispH);
         // preFX-glow ОТКЛЮЧЁН для всех слотов: на Android Telegram WebView
@@ -191,8 +194,12 @@ Object.assign(MenuScene.prototype, {
     // Это НЕ круг и НЕ рамка — размытое цветное пятно у нижней грани иконки.
     // Силуэт-аура (свечение самой стали) делается отдельно в _drawEqSlot
     // через tintFill-копию иконки.
-    g.fillStyle(col, 0.22); g.fillEllipse(cx, cy + 22, 32, 6);
-    g.fillStyle(col, 0.10); g.fillEllipse(cx, cy + 22, 50, 9);
+    // Центральное пятно за иконкой — цвет редкости
+    g.fillStyle(col, 0.10); g.fillEllipse(cx, cy, 54, 50);
+    g.fillStyle(col, 0.06); g.fillEllipse(cx, cy, 72, 66);
+    // Floor shadow под иконкой
+    g.fillStyle(col, 0.28); g.fillEllipse(cx, cy + 22, 32, 6);
+    g.fillStyle(col, 0.12); g.fillEllipse(cx, cy + 22, 50, 9);
     c.add(g);
   },
 
