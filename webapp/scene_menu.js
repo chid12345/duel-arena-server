@@ -175,7 +175,6 @@ class MenuScene extends Phaser.Scene {
           this._switchTab(this._returnTab || 'profile');
           this._setupWS();
           this._startRegenTick();
-          this._loadDailyBonusCard();
           // Фоновая догрузка остальных PNG (~50МБ) — для Рюкзака/Equipment,
           // не блокирует профиль.
           this._lazyLoadRestTextures?.();
