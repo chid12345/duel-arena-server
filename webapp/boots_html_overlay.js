@@ -375,7 +375,10 @@ function _startBootsCryptoPolling(scene, invoiceId, itemId, immediate = false) {
   setTimeout(poll, immediate ? 800 : 4000);
 }
 
-function close() { document.getElementById('bt-root')?.remove(); }
+function close() {
+  document.getElementById('bt-root')?.remove();
+  try { if (_currentScene) _currentScene.input.enabled = true; } catch(_) {}
+}
 
 window.BootsHTML = { open, close, _removeDarkBg, refresh };
 })();

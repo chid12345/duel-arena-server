@@ -377,7 +377,10 @@ function _startHelmetCryptoPolling(scene, invoiceId, itemId, immediate = false) 
   setTimeout(poll, immediate ? 800 : 4000);
 }
 
-function close() { document.getElementById('hm-root')?.remove(); }
+function close() {
+  document.getElementById('hm-root')?.remove();
+  try { if (_currentScene) _currentScene.input.enabled = true; } catch(_) {}
+}
 
 window.HelmetHTML = { open, close, _removeDarkBg, refresh };
 })();

@@ -378,7 +378,10 @@ function _startShieldCryptoPolling(scene, invoiceId, itemId, immediate = false) 
   setTimeout(poll, immediate ? 800 : 4000);
 }
 
-function close() { document.getElementById('sh-root')?.remove(); }
+function close() {
+  document.getElementById('sh-root')?.remove();
+  try { if (_currentScene) _currentScene.input.enabled = true; } catch(_) {}
+}
 
 window.ShieldHTML = { open, close, _removeDarkBg, refresh };
 })();

@@ -393,7 +393,10 @@ function _startWeaponCryptoPolling(scene, invoiceId, itemId, immediate = false) 
   setTimeout(poll, immediate ? 800 : 4000);
 }
 
-function close() { document.getElementById('wn-root')?.remove(); }
+function close() {
+  document.getElementById('wn-root')?.remove();
+  try { if (_currentScene) _currentScene.input.enabled = true; } catch(_) {}
+}
 
 window.WeaponHTML = { open, close, _removeDarkBg, refresh };
 })();

@@ -388,7 +388,10 @@ function _startRingCryptoPolling(scene, invoiceId, itemId, immediate = false) {
   setTimeout(poll, immediate ? 800 : 4000);
 }
 
-function close() { document.getElementById('rg-root')?.remove(); }
+function close() {
+  document.getElementById('rg-root')?.remove();
+  try { if (_currentScene) _currentScene.input.enabled = true; } catch(_) {}
+}
 
 window.RingHTML = { open, close, _removeDarkBg, refresh };
 })();
