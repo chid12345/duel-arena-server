@@ -130,17 +130,10 @@ Object.assign(ResultScene.prototype, {
 
   async _buildResultExtra(W, H, won, r, isEndless, isTitan, endlessWave, endlessProgress, endlessStatus, titanFloor, res) {
     const nCol = won ? 0x00e5ff : 0xff1144;
-    const pb = this._panelBottom || H * 0.50;
-    const bigBtnY  = pb + 38;
-    const divY     = bigBtnY + 44;
-    const secBtnY  = divY + 32;
-    const histBtnY = secBtnY + 44;
-
-    // Neon divider between main and secondary buttons
-    const dg = this.add.graphics().setAlpha(0);
-    dg.lineStyle(1, nCol, 0.22);
-    dg.moveTo(W * 0.18, divY); dg.lineTo(W * 0.82, divY); dg.strokePath();
-    this.tweens.add({ targets: dg, alpha: 1, duration: 400, delay: 300 });
+    const pb   = this._panelBottom || H * 0.50;
+    const bigY = pb + 56;
+    const divY = bigY + 70;
+    const rowY = divY + 36;
 
     if (isEndless && endlessStatus?.ok) {
       const bw = endlessStatus.progress?.best_wave ?? endlessProgress?.best_wave ?? 0;
@@ -161,10 +154,10 @@ Object.assign(ResultScene.prototype, {
       }).catch(() => this.scene.start('Menu', { returnTab: 'battle' }));
     };
 
-    const bigLabel = (isEndless && won) ? '🔥  Следующая волна!'
-                   : (isTitan && won)   ? '⚔️  Следующий этаж!'
-                   : (isTitan)          ? '🔄  Попробовать снова!'
-                   :                      '⚔️  Ещё бой!';
+    const bigLabel = (isEndless && won) ? 'Следующая\nволна!'
+                   : (isTitan && won)   ? 'Следующий\nэтаж!'
+                   : (isTitan)          ? 'Попробовать\nснова!'
+                   :                      'Ещё бой!';
     const bigCb = (isEndless && won)
       ? () => { post('/api/endless/next_wave', {}).then(rr => {
           if (!rr.ok) { this.scene.start('Natisk'); return; }
@@ -175,25 +168,46 @@ Object.assign(ResultScene.prototype, {
       : (isEndless) ? () => this.scene.start('Natisk')
       : () => this.scene.start('Menu', { returnTab: 'profile' });
 
-    this._bigBtn(W/2, bigBtnY, bigLabel, nCol, bigCb);
-
-    if (isEndless && won)
-      this._mainBtn(W/2, secBtnY, '🚪  Завершить заход', () => {
+    // Endless won: два рядом, без нижнего ряда
+    if (isEndless && won) {
+      this._iconBtn(W * 0.33, bigY, 'btn_fight', bigLabel, '#ff8c00', bigCb, 72);
+      this._iconBtn(W * 0.67, bigY, 'btn_home',  'Завершить', '#7eb8ff', () => {
         post('/api/endless/abandon', {}).catch(()=>{}).finally(() => this.scene.start('Natisk'));
-      });
-    else if (isTitan)
-      this._mainBtn(W/2, secBtnY, '🚪  Выйти к боям', () => this.scene.start('Menu', { returnTab: 'battle' }));
-    else
-      this._mainBtn(W/2, secBtnY, '🏠  Главная', () => this.scene.start('Menu', { returnTab: 'profile' }));
+      }, 72);
+      return;
+    }
 
-    // History — two side-by-side small buttons
+    // Главная большая кнопка
+    const bigCol = won ? '#ff8c00' : '#ff4455';
+    this._iconBtn(W / 2, bigY, 'btn_fight', bigLabel, bigCol, bigCb, 82);
+
+    // Неоновый разделитель
+    const dg = this.add.graphics().setAlpha(0);
+    dg.lineStyle(1, nCol, 0.22);
+    dg.moveTo(W * 0.18, divY); dg.lineTo(W * 0.82, divY); dg.strokePath();
+    this.tweens.add({ targets: dg, alpha: 1, duration: 400, delay: 300 });
+
+    // Башня: одна кнопка навигации
+    if (isTitan) {
+      this._iconBtn(W / 2, rowY, 'btn_home', 'К боям', '#7eb8ff',
+        () => this.scene.start('Menu', { returnTab: 'battle' }), 62);
+      return;
+    }
+
+    // Обычный бой (и endless lost): ряд из 2–3 кнопок
     const replayLog = Array.isArray(res?.webapp_log) ? res.webapp_log : [];
-    this._logBtn(W/2 - 80, histBtnY, '📼  История', () => {
-      if (replayLog.length > 0) try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {}
-    });
-    this._histBtn(W/2 + 80, histBtnY, '📚  Все бои', () => {
-      try { BattleHistory.open(this.game.canvas); } catch (_) {}
-    });
+    const homeCb = () => this.scene.start('Menu', { returnTab: 'profile' });
+    const allCb  = () => { try { BattleHistory.open(this.game.canvas); } catch (_) {} };
+    const hisCb  = () => { if (replayLog.length > 0) try { BattleLog.showHistory(this.game.canvas, replayLog); } catch (_) {} };
+
+    if (replayLog.length > 0) {
+      this._iconBtn(W * 0.20, rowY, 'btn_home',       'Главная', '#7eb8ff', homeCb, 62);
+      this._iconBtn(W * 0.50, rowY, 'btn_battle_log', 'История', '#cc44ff', hisCb,  62);
+      this._iconBtn(W * 0.80, rowY, 'btn_history',    'Все бои', '#4499ff', allCb,  62);
+    } else {
+      this._iconBtn(W * 0.32, rowY, 'btn_home',    'Главная', '#7eb8ff', homeCb, 62);
+      this._iconBtn(W * 0.68, rowY, 'btn_history', 'Все бои', '#4499ff', allCb,  62);
+    }
   },
 
 });

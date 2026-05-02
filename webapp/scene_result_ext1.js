@@ -1,6 +1,6 @@
 /* ============================================================
    ResultScene ext1 — _countUp, _levelUpFlash, _celebrate,
-                      _bigBtn, _mainBtn, _histBtn
+                      _cyberPanel, _iconBtn
    [cyberpunk redesign]
    ============================================================ */
 
@@ -85,49 +85,24 @@ Object.assign(ResultScene.prototype, {
     }
   },
 
-  // Floating glow button — icon + text, no frame
-  _floatBtn(x, y, iconKey, label, col, cb, iconSz, txtSz) {
-    const gap = 12;
-    const colHex = '#' + col.toString(16).padStart(6, '0');
-
-    const lbl = this.add.text(-9999, y, label, {
-      fontFamily: 'Arial Black, Arial', fontSize: txtSz + 'px', fontStyle: 'bold',
-      color: colHex,
-      shadow: { offsetX: 0, offsetY: 0, color: colHex, blur: 18, fill: true }
-    }).setOrigin(0, 0.5);
-
-    const totalW = iconSz + gap + lbl.width;
-    const startX = x - totalW / 2;
-    const iconX  = startX + iconSz / 2;
-
-    if (this.textures?.exists(iconKey))
-      this.add.image(iconX, y, iconKey).setDisplaySize(iconSz, iconSz);
-
-    lbl.setPosition(startX + iconSz + gap, y);
-
-    const z = this.add.zone(x, y, totalW + 32, Math.max(iconSz, 44) + 12)
+  // Vertical card button — icon on top, glowing text below, no frame
+  _iconBtn(x, y, iconKey, label, color, cb, iconSize = 72) {
+    const col32 = parseInt(color.replace('#', ''), 16);
+    const gc = this.add.graphics();
+    gc.fillStyle(col32, 0.07); gc.fillCircle(x, y, iconSize / 2 + 16);
+    gc.fillStyle(col32, 0.13); gc.fillCircle(x, y, iconSize / 2 + 8);
+    gc.fillStyle(col32, 0.19); gc.fillCircle(x, y, iconSize / 2 + 2);
+    const img = this.add.image(x, y, iconKey).setDisplaySize(iconSize, iconSize);
+    this.add.text(x, y + iconSize / 2 + 14, label, {
+      fontFamily: 'Arial Black, Arial', fontSize: '12px', fontStyle: 'bold',
+      color, align: 'center',
+      shadow: { offsetX: 0, offsetY: 0, color, blur: 14, fill: true },
+    }).setOrigin(0.5);
+    const zone = this.add.zone(x, y + 10, iconSize + 22, iconSize + 34)
       .setInteractive({ useHandCursor: true });
-    z.on('pointerdown', () => {
-      lbl.setAlpha(0.55); tg?.HapticFeedback?.impactOccurred('light');
-    });
-    z.on('pointerup',  () => { lbl.setAlpha(1); cb(); });
-    z.on('pointerout', () => { lbl.setAlpha(1); });
-  },
-
-  _bigBtn(x, y, label, nCol, cb) {
-    this._floatBtn(x, y, 'btn_fight', label, nCol, cb, 52, 19);
-  },
-
-  _mainBtn(x, y, label, cb) {
-    this._floatBtn(x, y, 'btn_home', label, 0x7eb8ff, cb, 40, 15);
-  },
-
-  _histBtn(x, y, label, cb) {
-    this._floatBtn(x, y, 'btn_history', label, 0x4499ff, cb, 36, 13);
-  },
-
-  _logBtn(x, y, label, cb) {
-    this._floatBtn(x, y, 'btn_battle_log', label, 0xcc44ff, cb, 36, 13);
+    zone.on('pointerdown', () => { img.setAlpha(0.7); tg?.HapticFeedback?.impactOccurred('light'); });
+    zone.on('pointerup',   () => { img.setAlpha(1); cb(); });
+    zone.on('pointerout',  () => { img.setAlpha(1); });
   },
 
 });
