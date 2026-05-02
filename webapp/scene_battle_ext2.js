@@ -31,7 +31,7 @@ Object.assign(BattleScene.prototype, {
   },
 
   async _submitChoice() {
-    if (this._submitting) return;
+    if (!this._choosing || this._submitting) return;
     this._submitting = true;
     this._choosing = false;
     this._showWait('Ход отправлен...');
