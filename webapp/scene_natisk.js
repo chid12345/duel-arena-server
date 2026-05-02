@@ -10,6 +10,7 @@ class NatiskScene extends Phaser.Scene {
   }
 
   create() {
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);

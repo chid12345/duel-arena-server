@@ -174,6 +174,7 @@ window.TabBarHTML = (() => {
     _scene = scene;
     _onInternal = onInternal;
     _create();
+    show();   // гарантируем видимость — сцены без TabBar.build скроют через hide()
     _fit();
     setActive(activeKey);
   }

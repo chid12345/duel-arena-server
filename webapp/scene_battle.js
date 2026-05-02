@@ -138,6 +138,7 @@ class BattleScene extends Phaser.Scene {
   constructor() { super('Battle'); }
 
   create() {
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     this._selAttack  = null;
