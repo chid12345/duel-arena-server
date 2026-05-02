@@ -85,16 +85,14 @@ Object.assign(ResultScene.prototype, {
     }
   },
 
-  // Vertical card button — icon on top, glowing text below, no frame
+  // Vertical card button — icon on top, neon glow, no background shapes
   _iconBtn(x, y, iconKey, label, color, cb, iconSize = 72) {
     const col32 = parseInt(color.replace('#', ''), 16);
-    const gc = this.add.graphics();
-    gc.fillStyle(col32, 0.07); gc.fillCircle(x, y, iconSize / 2 + 16);
-    gc.fillStyle(col32, 0.13); gc.fillCircle(x, y, iconSize / 2 + 8);
-    gc.fillStyle(col32, 0.19); gc.fillCircle(x, y, iconSize / 2 + 2);
     const img = this.textures?.exists(iconKey)
       ? this.add.image(x, y, iconKey).setDisplaySize(iconSize, iconSize)
       : null;
+    // Neon drop-shadow glow follows icon shape (Phaser 3.60+ preFX)
+    try { img?.preFX?.addGlow(col32, 12, 0, false, 0.1, 28); } catch(_) {}
     this.add.text(x, y + iconSize / 2 + 14, label, {
       fontFamily: 'Arial Black, Arial', fontSize: '12px', fontStyle: 'bold',
       color, align: 'center',
