@@ -115,8 +115,8 @@ class NatiskScene extends Phaser.Scene {
     cont.add(shadowG);
 
     const bgG = this.add.graphics();
-    bgG.fillStyle(0x120000, 0.6); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
-    bgG.lineStyle(1.5, 0xff2020, 0.4); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+    bgG.fillStyle(0x050d15, 0.85); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+    bgG.lineStyle(1.5, 0xff8c00, 0.55); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
     cont.add(bgG);
 
     const mech = this.add.image(0, -2, 'natisk_mech')
@@ -128,8 +128,8 @@ class NatiskScene extends Phaser.Scene {
     const label = this.add.text(0, SZ/2 + 10, '[ ИНИЦИИРОВАТЬ\nПРОТОКОЛ: ПЕРЕГРУЗКА ]', {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
       fontSize: '9px', fontStyle: 'bold',
-      color: '#ff2244', resolution: 2, align: 'center',
-    }).setOrigin(0.5).setShadow(0, 0, '#ff2244', 8, false, true);
+      color: '#ff8c00', resolution: 2, align: 'center',
+    }).setOrigin(0.5).setShadow(0, 0, '#ff8c00', 10, false, true);
     cont.add(label);
 
     cont.setInteractive(
@@ -139,15 +139,15 @@ class NatiskScene extends Phaser.Scene {
     const reset = () => {
       this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 180, ease: 'Back.easeOut' });
       mech.clearTint();
-      bgG.clear(); bgG.fillStyle(0x120000, 0.6); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
-      bgG.lineStyle(1.5, 0xff2020, 0.4); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+      bgG.clear(); bgG.fillStyle(0x050d15, 0.85); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+      bgG.lineStyle(1.5, 0xff8c00, 0.55); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
     };
     cont.on('pointerdown', () => {
       tg?.HapticFeedback?.impactOccurred('heavy');
       this.tweens.add({ targets: cont, scaleX: 0.88, scaleY: 0.88, duration: 90, ease: 'Power2' });
-      mech.setTint(0xff4444);
-      bgG.clear(); bgG.fillStyle(0xff0000, 0.2); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
-      bgG.lineStyle(2, 0xff0000, 0.9); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+      mech.setTint(0xffaa44);
+      bgG.clear(); bgG.fillStyle(0xff8c00, 0.15); bgG.fillRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
+      bgG.lineStyle(2, 0xff8c00, 1); bgG.strokeRoundedRect(-SZ/2, -SZ/2, SZ, SZ, R);
     });
     cont.on('pointerup',  () => { reset(); cb(); });
     cont.on('pointerout', reset);
