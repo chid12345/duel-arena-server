@@ -13,13 +13,30 @@ class NatiskScene extends Phaser.Scene {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
-    _extraHeader(this, W, '🔥', 'НАТИСК', 'Выживи как можно дольше на арене');
-    _extraBack(this, 'Menu', 'battle');
+    _extraHeader(this, W, '⚡', 'НАТИСК', 'SURVIVAL PROTOCOL // ACTIVE');
+    this._buildAbortBtn(W, H);
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     get('/api/endless/status').then(d => this._render(d, W, H)).catch(() => {
       if (this._loading) this._loading.setText('❌ Нет соединения');
     });
+  }
+
+  _buildAbortBtn(W, H) {
+    const btnW = 172, btnH = 36, bx = (W - btnW) / 2, by = H - 82;
+    const bg = this.add.graphics();
+    bg.fillStyle(0x050d18, 0.92);
+    bg.fillRoundedRect(bx, by, btnW, btnH, 6);
+    bg.lineStyle(1.5, 0x00e5ff, 0.55);
+    bg.strokeRoundedRect(bx, by, btnW, btnH, 6);
+    this.add.text(W / 2, by + btnH / 2, '◄  ABORT MISSION', {
+      fontFamily: "'Orbitron','Arial Black',sans-serif",
+      fontSize: '10px', fontStyle: 'bold',
+      color: '#00e5ff', resolution: 2,
+    }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 6, false, true);
+    this.add.zone(bx, by, btnW, btnH).setOrigin(0).setInteractive({ useHandCursor: true })
+      .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x001a2a, 0.95); bg.fillRoundedRect(bx, by, btnW, btnH, 6); bg.lineStyle(2, 0x00e5ff, 0.9); bg.strokeRoundedRect(bx, by, btnW, btnH, 6); })
+      .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu', { returnTab: 'battle' }); });
   }
 
   _render(d, W, H) {
@@ -112,46 +129,24 @@ class NatiskScene extends Phaser.Scene {
   }
 
   _makeMechBtn(x, y, cb) {
-    const SZ = 96, R = 14;
+    const SZ = 104;
     const cont = this.add.container(x, y);
 
-    // Многослойный cyan aura — как иконка чата в клане
-    const auraG = this.add.graphics();
-    const _drawAura = (col) => {
-      auraG.clear();
-      for (let i = 8; i >= 1; i--) {
-        auraG.fillStyle(col, 0.028 * i / 8);
-        auraG.fillRoundedRect(
-          -SZ / 2 - i * 7, -SZ / 2 - i * 7,
-          SZ + i * 14, SZ + i * 14,
-          R + i * 3
-        );
-      }
-    };
-    _drawAura(0x00e5ff);
-    cont.add(auraG);
+    // Мягкое cyan-зарево под ногами — никаких рамок
+    const glowG = this.add.graphics();
+    for (let i = 6; i >= 1; i--) {
+      glowG.fillStyle(0x00e5ff, 0.04 * i / 6);
+      glowG.fillEllipse(0, SZ / 2 + 4, SZ * 0.85 * (i / 6), 18 * (i / 6));
+    }
+    cont.add(glowG);
 
-    // Тёмный фон кнопки
-    const bgG = this.add.graphics();
-    const _drawBg = (fill, borderCol) => {
-      bgG.clear();
-      bgG.fillStyle(fill, 0.96);
-      bgG.fillRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
-      bgG.lineStyle(2, borderCol, 0.95);
-      bgG.strokeRoundedRect(-SZ / 2, -SZ / 2, SZ, SZ, R);
-      bgG.lineStyle(1, borderCol, 0.25);
-      bgG.strokeRoundedRect(-SZ / 2 + 3, -SZ / 2 + 3, SZ - 6, SZ - 6, R - 2);
-    };
-    _drawBg(0x050d18, 0x00e5ff);
-    cont.add(bgG);
-
-    // Скин
+    // Скин — чистый, без рамки
     const mech = this.add.image(0, 0, 'natisk_mech')
-      .setDisplaySize(SZ - 6, SZ - 6).setOrigin(0.5);
+      .setDisplaySize(SZ, SZ).setOrigin(0.5);
     cont.add(mech);
 
     // Парение
-    this.tweens.add({ targets: cont, y: y - 5, duration: 1900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+    this.tweens.add({ targets: cont, y: y - 6, duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     // НАТИСК
     cont.add(this.add.text(0, SZ / 2 + 16, 'НАТИСК', {
@@ -161,21 +156,17 @@ class NatiskScene extends Phaser.Scene {
     }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 16, false, true));
 
     cont.setInteractive(
-      new Phaser.Geom.Rectangle(-SZ / 2 - 10, -SZ / 2 - 10, SZ + 20, SZ + 50),
+      new Phaser.Geom.Rectangle(-SZ / 2, -SZ / 2, SZ, SZ + 42),
       Phaser.Geom.Rectangle.Contains
     );
     const reset = () => {
       this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 180, ease: 'Back.easeOut' });
       mech.clearTint();
-      _drawBg(0x050d18, 0x00e5ff);
-      _drawAura(0x00e5ff);
     };
     cont.on('pointerdown', () => {
       tg?.HapticFeedback?.impactOccurred('heavy');
       this.tweens.add({ targets: cont, scaleX: 0.88, scaleY: 0.88, duration: 90, ease: 'Power2' });
       mech.setTint(0x88ddff);
-      _drawBg(0x001a2a, 0x00e5ff);
-      _drawAura(0x44ffff);
     });
     cont.on('pointerup',  () => { reset(); cb(); });
     cont.on('pointerout', reset);
