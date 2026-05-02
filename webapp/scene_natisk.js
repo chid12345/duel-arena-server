@@ -50,7 +50,6 @@ class NatiskScene extends Phaser.Scene {
     {
       const bW = (W - 28) / 2;
 
-      // Попытки (orange)
       const aG = this.add.graphics();
       aG.fillStyle(0x0a0e1a, 0.95); aG.fillRoundedRect(8, y, bW, 56, 10);
       aG.lineStyle(1.5, 0xff8c00, 0.7); aG.strokeRoundedRect(8, y, bW, 56, 10);
@@ -60,7 +59,6 @@ class NatiskScene extends Phaser.Scene {
       txt(this, 8 + bW / 2, y + 36, fires, 11).setOrigin(0.5);
       txt(this, 8 + bW / 2, y + 48, 'ПОПЫТКИ', 7, '#ff8c00').setOrigin(0.5);
 
-      // Рекорд волны (cyan)
       const rX = 8 + bW + 12;
       const rG = this.add.graphics();
       rG.fillStyle(0x0a0e1a, 0.95); rG.fillRoundedRect(rX, y, bW, 56, 10);
@@ -74,73 +72,36 @@ class NatiskScene extends Phaser.Scene {
 
     /* ── Кнопка старта / нет попыток ── */
     if (d.attempts_left > 0) {
-      this._makeMechBtn(W / 2, y + 68, () => this._startFight());
-      y += 155;
+      this._makeMechBtn(W / 2, y + 70, () => this._startFight());
+      y += 158;
     } else {
       const ng = this.add.graphics();
-      ng.fillStyle(0x0a0e1a, 0.9); ng.fillRoundedRect(8, y, W - 16, 48, 10);
-      ng.lineStyle(1.5, 0xcc3333, 0.5); ng.strokeRoundedRect(8, y, W - 16, 48, 10);
-      txt(this, W/2, y + 14, '💀 Попытки закончились', 13, '#cc4444', true).setOrigin(0.5);
-      txt(this, W/2, y + 32, 'Восстановятся завтра', 10, '#667799').setOrigin(0.5);
-      y += 58;
+      ng.fillStyle(0x0a0e1a, 0.9); ng.fillRoundedRect(8, y, W - 16, 52, 10);
+      ng.lineStyle(1.5, 0xcc3333, 0.5); ng.strokeRoundedRect(8, y, W - 16, 52, 10);
+      txt(this, W/2, y + 16, '💀 Попытки закончились', 13, '#cc4444', true).setOrigin(0.5);
+      txt(this, W/2, y + 34, 'Восстановятся завтра', 10, '#667799').setOrigin(0.5);
+      y += 62;
     }
 
     /* ── Купить попытки ── */
-    const halfW = (W - 28) / 2;
-    const canGold = d.can_buy_gold && d.player_gold >= d.gold_cost;
-    const canDia  = d.player_diamonds >= d.diamond_cost;
-
-    // Таймер до сброса (полночь UTC)
-    const _resetTimer = () => {
-      const n = new Date(), mid = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1));
-      const s = Math.floor((mid - n) / 1000);
-      return `${Math.floor(s / 3600)}ч ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}м`;
-    };
-
-    // Рисует кнопку покупки: state = 'idle'|'press'|'success'
-    const _buyBtn = (bx, bw, active, borderCol, fillIdle, fillPress, label, sub, onBuy) => {
-      const by = y; // захватываем значение y здесь, до любых изменений
-      const bg = this.add.graphics();
-      const _draw = (state) => {
-        bg.clear();
-        if (state === 'success') {
-          bg.fillStyle(0x003311, 1); bg.fillRoundedRect(bx, by, bw, 44, 8);
-          bg.lineStyle(2, 0x39ff14, 1);  bg.strokeRoundedRect(bx, by, bw, 44, 8);
-        } else if (state === 'press') {
-          bg.fillStyle(fillPress, 1);    bg.fillRoundedRect(bx, by, bw, 44, 8);
-          bg.lineStyle(2.5, borderCol, 1); bg.strokeRoundedRect(bx, by, bw, 44, 8);
-        } else {
-          bg.fillStyle(active ? fillIdle : 0x08090f, active ? 0.95 : 0.6);
-          bg.fillRoundedRect(bx, by, bw, 44, 8);
-          if (active) { bg.lineStyle(1.5, borderCol, 0.75); bg.strokeRoundedRect(bx, by, bw, 44, 8); }
-        }
-        bg.lineStyle(0, 0, 0);
+    {
+      const canGold = d.can_buy_gold && d.player_gold >= d.gold_cost;
+      const canDia  = d.player_diamonds >= d.diamond_cost;
+      const _resetTimer = () => {
+        const n = new Date(), mid = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1));
+        const s = Math.floor((mid - n) / 1000);
+        return `${Math.floor(s / 3600)}ч ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}м`;
       };
-      _draw('idle');
-      this.add.text(bx + bw / 2, y + 12, label, { fontSize: '11px', color: active ? '#ffffff' : '#555566', fontStyle: active ? 'bold' : 'normal', resolution: 2 }).setOrigin(0.5);
-      this.add.text(bx + bw / 2, y + 29, sub,   { fontSize: '11px', color: active ? '#ffdca0' : '#3a3a4a', fontStyle: active ? 'bold' : 'normal', resolution: 2 }).setOrigin(0.5);
-      if (!active) return;
-      const zone = this.add.zone(bx, y, bw, 44).setOrigin(0).setInteractive({ useHandCursor: true });
-      zone.on('pointerdown', () => { _draw('press'); tg?.HapticFeedback?.impactOccurred('medium'); });
-      zone.on('pointerout',  () => _draw('idle'));
-      zone.on('pointerup',   () => {
-        _draw('success');
-        zone.disableInteractive();
-        onBuy();
-      });
-    };
+      const goldSub = canGold ? `${d.gold_cost} 🪙`
+        : (!d.can_buy_gold ? `🕐 ${_resetTimer()}` : `${d.gold_cost} 🪙`);
 
-    // +1 за золото
-    const goldSub = canGold ? `${d.gold_cost} 🪙`
-      : (!d.can_buy_gold ? `🕐 сброс ${_resetTimer()}` : `${d.gold_cost} 🪙`);
-    _buyBtn(8, halfW, canGold, 0xffc83c, 0x0f0a00, 0x332200,
-      '+1 попытка', goldSub, () => this._buyAttempt('gold'));
+      txt(this, W / 2, y + 8, '— КУПИТЬ ПОПЫТКИ —', 8, '#334466').setOrigin(0.5);
+      y += 20;
 
-    // +3 за алмазы
-    const dBx = 8 + halfW + 12;
-    _buyBtn(dBx, halfW, canDia, 0x00e5ff, 0x001825, 0x003344,
-      '+3 попытки', `${d.diamond_cost} 💎`, () => this._buyAttempt('diamond'));
-    y += 54;
+      this._makeBuySkinBtn(W / 4,     y + 58, 'natisk_gold',    0xff8c00, '+1 попытка',  goldSub,                    canGold, () => this._buyAttempt('gold'));
+      this._makeBuySkinBtn(W * 3 / 4, y + 58, 'natisk_diamond', 0x00e5ff, '+3 попытки', `${d.diamond_cost} 💎`,     canDia,  () => this._buyAttempt('diamond'));
+      y += 128;
+    }
 
     /* ── Premium ── */
     const premLine = d.is_premium
@@ -152,13 +113,13 @@ class NatiskScene extends Phaser.Scene {
     /* ── Описание (кибер, внизу) ── */
     {
       const dg = this.add.graphics();
-      dg.fillStyle(0x0d0900, 0.92); dg.fillRoundedRect(8, y, W - 16, 58, 8);
-      dg.lineStyle(1, 0xff8c00, 0.2); dg.strokeRoundedRect(8, y, W - 16, 58, 8);
-      dg.lineStyle(3, 0xff8c00, 1); dg.lineBetween(8, y + 7, 8, y + 51);
-      txt(this, 20, y + 8,  '⚡ Выживи как можно дольше на арене.', 11, '#ffc83c', true)
+      dg.fillStyle(0x0d0900, 0.92); dg.fillRoundedRect(8, y, W - 16, 60, 8);
+      dg.lineStyle(1, 0xff8c00, 0.2); dg.strokeRoundedRect(8, y, W - 16, 60, 8);
+      dg.lineStyle(3, 0xff8c00, 1); dg.lineBetween(8, y + 8, 8, y + 52);
+      txt(this, 20, y + 10, '⚡ Выживи как можно дольше на арене.', 11, '#ffc83c', true)
         .setShadow(0, 0, '#ff8c00', 6, false, true);
-      txt(this, 20, y + 25, '▸ Волны 1–3 лёгкие — дальше сложнее.', 10, '#ffaa55');
-      txt(this, 20, y + 40, '▸ HP сохраняется между боями.', 10, '#ffaa55');
+      txt(this, 20, y + 27, '▸ Волны 1–3 лёгкие — дальше сложнее.', 10, '#ffaa55');
+      txt(this, 20, y + 42, '▸ HP сохраняется между боями.', 10, '#ffaa55');
     }
   }
 
@@ -166,7 +127,6 @@ class NatiskScene extends Phaser.Scene {
     const SZ = 104;
     const cont = this.add.container(x, y);
 
-    // Радиальное свечение вокруг скина (без рамки)
     const glowG = this.add.graphics();
     for (let i = 7; i >= 1; i--) {
       glowG.fillStyle(0x00e5ff, 0.045 * i / 7);
@@ -174,7 +134,6 @@ class NatiskScene extends Phaser.Scene {
     }
     cont.add(glowG);
 
-    // Зарево-пятно под ногами
     const shadowG = this.add.graphics();
     for (let i = 5; i >= 1; i--) {
       shadowG.fillStyle(0x00e5ff, 0.05 * i / 5);
@@ -182,12 +141,10 @@ class NatiskScene extends Phaser.Scene {
     }
     cont.add(shadowG);
 
-    // Скин — чистый, без рамки
     const mech = this.add.image(0, 0, 'natisk_mech')
       .setDisplaySize(SZ, SZ).setOrigin(0.5);
     cont.add(mech);
 
-    // НАТИСК
     cont.add(this.add.text(0, SZ / 2 + 16, 'НАТИСК', {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
       fontSize: '14px', fontStyle: 'bold',
@@ -209,6 +166,75 @@ class NatiskScene extends Phaser.Scene {
     });
     cont.on('pointerup',  () => { reset(); cb(); });
     cont.on('pointerout', reset);
+  }
+
+  _makeBuySkinBtn(cx, cy, texKey, glowHex, label, sub, active, onBuy) {
+    const SZ = 82;
+    const cont = this.add.container(cx, cy);
+
+    // Тёмная круглая подложка — PNG чётко виден на тёмном фоне без артефактов
+    const bgG = this.add.graphics();
+    bgG.fillStyle(0x05080f, 0.9);
+    bgG.fillCircle(0, 0, SZ / 2 + 5);
+    cont.add(bgG);
+
+    // Свечение вокруг скина
+    const glowG = this.add.graphics();
+    const _drawGlow = (col) => {
+      glowG.clear();
+      for (let i = 5; i >= 1; i--) {
+        glowG.fillStyle(col, 0.06 * i / 5);
+        glowG.fillCircle(0, 0, (SZ / 2 + 12) * (i / 5));
+      }
+    };
+    _drawGlow(glowHex);
+    cont.add(glowG);
+
+    // Скин
+    const img = this.add.image(0, 0, texKey).setDisplaySize(SZ, SZ).setOrigin(0.5);
+    cont.add(img);
+
+    // Метки
+    const hexStr = '#' + glowHex.toString(16).padStart(6, '0');
+    cont.add(this.add.text(0, SZ / 2 + 11, label, {
+      fontFamily: "'Orbitron','Arial Black',sans-serif",
+      fontSize: '10px', fontStyle: active ? 'bold' : 'normal',
+      color: active ? '#ccddf5' : '#445566', resolution: 2,
+    }).setOrigin(0.5));
+    const subTxt = this.add.text(0, SZ / 2 + 26, sub, {
+      fontFamily: "'Orbitron','Arial Black',sans-serif",
+      fontSize: '11px', fontStyle: 'bold',
+      color: active ? hexStr : '#3a3a4a', resolution: 2,
+    }).setOrigin(0.5);
+    if (active) subTxt.setShadow(0, 0, hexStr, 8, false, true);
+    cont.add(subTxt);
+
+    if (!active) return;
+
+    cont.setInteractive(
+      new Phaser.Geom.Rectangle(-SZ / 2 - 4, -SZ / 2 - 4, SZ + 8, SZ + 50),
+      Phaser.Geom.Rectangle.Contains
+    );
+
+    const reset = () => {
+      this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
+      img.clearTint();
+      _drawGlow(glowHex);
+    };
+    cont.on('pointerdown', () => {
+      tg?.HapticFeedback?.impactOccurred('medium');
+      this.tweens.add({ targets: cont, scaleX: 0.88, scaleY: 0.88, duration: 80, ease: 'Power2' });
+      img.setTint(0x77bbff);
+    });
+    cont.on('pointerout', reset);
+    cont.on('pointerup', () => {
+      this.tweens.add({ targets: cont, scaleX: 1, scaleY: 1, duration: 150, ease: 'Back.easeOut' });
+      img.clearTint();
+      _drawGlow(0x00dd44);
+      cont.disableInteractive();
+      this.time.delayedCall(10000, () => { _drawGlow(glowHex); });
+      onBuy();
+    });
   }
 
   async _startFight() {
