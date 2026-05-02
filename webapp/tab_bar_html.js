@@ -20,55 +20,67 @@ window.TabBarHTML = (() => {
   const CSS = `
 #tb-html-bar{position:fixed;z-index:9200;display:flex;
   background:rgba(7,4,26,.97);
-  border-top:1px solid rgba(255,255,255,.09);
-  overflow:hidden;
+  border-top:1px solid rgba(255,255,255,.07);
   font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
-#tb-html-bar::before{content:'';position:absolute;inset:0;
-  background:radial-gradient(ellipse at 50% 0%,rgba(90,50,180,.13),transparent 65%);
-  pointer-events:none}
+/* Ячейки — полностью прозрачные, без рамок и фонов = иконки "парят" */
 .tb-item{flex:1;display:flex;flex-direction:column;align-items:center;
   justify-content:center;position:relative;cursor:pointer;
   padding:3px 0 4px;overflow:hidden;
   -webkit-tap-highlight-color:transparent;user-select:none;
-  transition:background .15s}
-.tb-item:active{background:rgba(255,255,255,.07)}
+  background:transparent}
+/* Точка-индикатор активного таба */
 .tb-dot{position:absolute;top:4px;left:50%;transform:translateX(-50%);
   width:7px;height:7px;border-radius:50%;
   opacity:0;transition:opacity .22s;
   background:var(--col);
-  box-shadow:0 0 7px var(--col),0 0 3px var(--col)}
+  box-shadow:0 0 8px var(--col),0 0 3px var(--col)}
 .tb-item.active .tb-dot{opacity:1}
+/* Мягкое круглое свечение за иконкой — только у активного (вместо фона ячейки) */
+.tb-glow{position:absolute;top:38%;left:50%;
+  transform:translate(-50%,-50%);
+  width:54px;height:54px;border-radius:50%;
+  background:radial-gradient(circle,var(--col) 0%,transparent 68%);
+  opacity:0;transition:opacity .28s;pointer-events:none;z-index:0}
+.tb-item.active .tb-glow{opacity:.22}
+/* Обёртка иконки */
 .tb-icon-wrap{width:28px;height:28px;display:flex;align-items:center;
-  justify-content:center;position:relative;
+  justify-content:center;position:relative;z-index:1;
   transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
 .tb-item.active .tb-icon-wrap{transform:scale(1.2) translateY(-2px)}
+.tb-item:active .tb-icon-wrap{transform:scale(.88)}
+.tb-item.active:active .tb-icon-wrap{transform:scale(1.08) translateY(-1px)}
+/* PNG-иконка */
 .tb-img{width:28px;height:28px;object-fit:contain;display:block;
-  filter:saturate(.4) brightness(.6);
+  filter:saturate(.38) brightness(.55);
   transition:filter .25s}
 .tb-item.active .tb-img{
-  filter:saturate(1.15) brightness(1.1)
-    drop-shadow(0 0 5px var(--col))
-    drop-shadow(0 0 14px var(--col))}
+  filter:saturate(1.2) brightness(1.1)
+    drop-shadow(0 0 6px var(--col))
+    drop-shadow(0 0 16px var(--col))}
+/* Emoji-фолбэк */
 .tb-em{font-size:21px;line-height:1;
-  filter:saturate(.4) brightness(.65);transition:filter .25s}
+  filter:saturate(.38) brightness(.6);transition:filter .25s}
 .tb-item.active .tb-em{
-  filter:saturate(1.1) brightness(1.1) drop-shadow(0 0 6px var(--col))}
+  filter:saturate(1.1) brightness(1.1) drop-shadow(0 0 7px var(--col))}
+/* Ambient floor — пятно под иконкой */
 .tb-ambient{position:absolute;bottom:6px;left:50%;
   transform:translateX(-50%);
   width:36px;height:5px;border-radius:50%;
   background:var(--col);filter:blur(5px);
-  opacity:0;transition:opacity .25s;pointer-events:none}
-.tb-item.active .tb-ambient{opacity:.48}
+  opacity:0;transition:opacity .25s;pointer-events:none;z-index:0}
+.tb-item.active .tb-ambient{opacity:.45}
+/* Подпись */
 .tb-label{font-size:9px;font-weight:700;margin-top:3px;
-  letter-spacing:.3px;white-space:nowrap;
-  color:rgba(180,163,220,.5);
+  letter-spacing:.3px;white-space:nowrap;position:relative;z-index:1;
+  color:rgba(170,155,210,.48);
   transition:color .25s,text-shadow .25s}
 .tb-item.active .tb-label{color:var(--col);text-shadow:0 0 8px var(--col)}
+/* Ripple при тапе */
 .tb-ripple{position:absolute;border-radius:50%;pointer-events:none;
   top:50%;left:50%;width:0;height:0;
   transform:translate(-50%,-50%);
   animation:tbRip .42s ease-out forwards}
-@keyframes tbRip{from{opacity:.45}to{width:80px;height:80px;opacity:0}}
+@keyframes tbRip{from{opacity:.38}to{width:80px;height:80px;opacity:0}}
 `;
 
   function _inject() {
@@ -109,6 +121,7 @@ window.TabBarHTML = (() => {
       item.style.setProperty('--col', tab.col);
 
       const dot  = document.createElement('div'); dot.className  = 'tb-dot';
+      const glow = document.createElement('div'); glow.className = 'tb-glow';
       const wrap = document.createElement('div'); wrap.className = 'tb-icon-wrap';
       const amb  = document.createElement('div'); amb.className  = 'tb-ambient';
       const lbl  = document.createElement('div'); lbl.className  = 'tb-label'; lbl.textContent = tab.label;
@@ -122,7 +135,7 @@ window.TabBarHTML = (() => {
         wrap.appendChild(em);
       };
       wrap.appendChild(img);
-      item.append(dot, wrap, amb, lbl);
+      item.append(dot, glow, wrap, amb, lbl);
 
       item.addEventListener('pointerdown', () => {
         const rip = document.createElement('div');
