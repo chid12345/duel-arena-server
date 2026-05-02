@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.7.91"
-VERSION_LABEL = "v2.7.91 — fix: equipment overlay z-index 50 + close() во всех 5 item-оверлеях"
+VERSION = "2.7.92"
+VERSION_LABEL = "v2.7.92 — нижнее меню как HTML overlay: CSS glow, drop-shadow, плавные переходы"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "12.61"
+GAME_VERSION = "12.62"

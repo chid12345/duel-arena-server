@@ -50,6 +50,7 @@ window.TabBar = {
   },
 
   setActive(btns, activeKey) {
+    if (window.TabBarHTML) TabBarHTML.setActive(activeKey);
     Object.entries(btns).forEach(([k, btn]) => {
       const active = k === activeKey;
       btn.activeBubble?.setVisible(active);
@@ -77,6 +78,14 @@ window.TabBar = {
     const activeKey  = opts.activeKey || null;
     const onInternal = opts.onInternal || null;
     const depth      = (opts.depth != null) ? opts.depth : 100;
+
+    // === HTML overlay mode: делегируем отрисовку HTML-слою, оставляем только скролл ===
+    if (window.TabBarHTML) {
+      TabBarHTML.sync(scene, activeKey, onInternal);
+      try { scene.cameras.main.setScroll(0, 0); } catch(_) {}
+      TabBar._enableScroll(scene);
+      return { objs: [], btns: {} };
+    }
 
     const W = scene.game.canvas.width;
     const H = scene.game.canvas.height;

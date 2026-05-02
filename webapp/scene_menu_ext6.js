@@ -96,6 +96,7 @@ Object.assign(MenuScene.prototype, {
         btn.labelTxt?.setStyle?.({ color: btn.hexCol || '#c4b5fd' });
       });
     } catch(_) {}
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.setActive(key); } catch(_) {}
     this._tbInvalidateScroll?.();
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('menu_' + key);
   },
