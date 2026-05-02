@@ -100,7 +100,7 @@ class NatiskScene extends Phaser.Scene {
 
       this._makeBuySkinBtn(W / 4,     y + 58, 'natisk_gold',    0xff8c00, '+1 попытка',  goldSub,                    canGold, () => this._buyAttempt('gold'));
       this._makeBuySkinBtn(W * 3 / 4, y + 58, 'natisk_diamond', 0x00e5ff, '+3 попытки', `${d.diamond_cost} 💎`,     canDia,  () => this._buyAttempt('diamond'));
-      y += 128;
+      y += 152;
     }
 
     /* ── Описание (кибер) ── */
