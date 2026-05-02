@@ -1,175 +1,186 @@
 /* ============================================================
    BattleLog — история раундов (попап).
+   Дизайн идентичен истории боя с боссом (wb-bhist-* классы).
    Патчит BattleLog: showHistory / hideHistory.
-   Загружается после scene_battle.js.
    ============================================================ */
 (() => {
-  let el = null;
 
-  function _init() {
-    if (el) return;
-    const s = document.createElement('style');
-    s.textContent = `
-      #bl-history {
-        position:fixed; display:none; z-index:300;
-        background:rgba(8,6,20,0.97);
-        border:1px solid rgba(80,70,140,0.55); border-radius:10px;
-        overflow-y:auto; box-sizing:border-box;
-        font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-        font-size:11px; color:#ccc;
-      }
-      #bl-history .blh-close {
-        position:sticky; top:0;
-        background:rgba(8,6,20,0.98);
-        padding:6px 10px 5px;
-        font-size:13px; font-weight:700; color:#ffc83c;
-        text-align:right; cursor:pointer;
-        border-bottom:1px solid rgba(80,70,140,0.3);
-        display:flex; justify-content:space-between; align-items:center;
-      }
-      #bl-history .blh-title { font-size:12px; color:#aabbdd; font-weight:400; }
-      #bl-history .blh-row {
-        display:flex; align-items:center;
-        padding:5px 8px;
-        border-bottom:1px solid rgba(255,255,255,0.06);
-      }
-      #bl-history .blh-rn  { font-size:9px; color:#ffc83c; font-weight:700; min-width:24px; flex-shrink:0; }
-      #bl-history .blh-you { flex:1; color:#aabbdd; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      #bl-history .blh-sep { color:#555; padding:0 4px; flex-shrink:0; }
-      #bl-history .blh-opp { flex:1; text-align:right; color:#cc9999; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-      #bl-history .blh-hints { padding:8px 10px; border-top:1px solid rgba(255,200,60,0.25); background:rgba(255,200,60,0.04); }
-      #bl-history .blh-hints-t { font-size:11px; color:#ffc83c; font-weight:700; margin-bottom:4px; }
-      #bl-history .blh-hint   { font-size:10px; color:#ddddee; line-height:1.35; padding:2px 0; }
-    `;
-    document.head.appendChild(s);
-    el = document.createElement('div');
-    el.id = 'bl-history';
-    // pointer/mouse события — полностью поглощаем (не проваливаем на Phaser canvas)
-    ['pointerdown','pointerup','mousedown','mouseup','click'].forEach(ev => {
-      el.addEventListener(ev, e => { e.stopPropagation(); e.preventDefault(); }, { passive: false });
-    });
-    // touch — только stopPropagation, без preventDefault: иначе сломается нативный скролл
-    ['touchstart','touchend','touchmove'].forEach(ev => {
-      el.addEventListener(ev, e => e.stopPropagation(), { passive: true });
-    });
-    // Закрытие по ✕
-    el.addEventListener('click', e => {
-      if (e.target.classList.contains('blh-close') ||
-          e.target.closest?.('.blh-close')) BattleLog.hideHistory();
-    });
-    document.body.appendChild(el);
+  function _ensureCSS() {
+    try { WBBattleCSS?.inject?.(); } catch(_) {}
   }
 
-  // Разбирает webapp_log и выдаёт 1–3 подсказки «почему так получилось».
-  // Работает от лица игрока (Вы→). Если логов нет — возвращает пустой массив.
-  function _analyze(entries) {
-    const rx = /^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/;
-    let n = 0, myMiss = 0, myDodged = 0, myBlocked = 0;
-    let myCrit = 0, enemyCrit = 0, enemyHitsOnMe = 0, enemyDodge = 0, enemyBlock = 0;
-    const myZones = { 'Гол':0, 'Тело':0, 'Ноги':0 };
-    const enemyZones = { 'Гол':0, 'Тело':0, 'Ноги':0 };
-    for (const raw of entries || []) {
-      const m = (raw || '').match(rx);
+  function _fmt(n) { return (n|0).toLocaleString('ru'); }
+
+  function _parseDmg(mk) {
+    const m = String(mk || '').match(/[−\-](\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  }
+
+  function _isCrit(mk) { return /⚡|💥/.test(mk); }
+
+  function _isMiss(mk) {
+    const s = String(mk || '').trim();
+    return s.startsWith('✕') || /💨|🛡/.test(s);
+  }
+
+  function _parseHp(mk) {
+    const m = String(mk || '').match(/❤(\d+)/);
+    return m ? parseInt(m[1], 10) : null;
+  }
+
+  // Parse webapp_log entries → structured rounds + totals
+  function _parseLog(entries) {
+    const RX = /^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/;
+    const byRound = {};
+    let totalMe = 0, totalEnemy = 0, hits = 0, crits = 0, enemyHits = 0;
+
+    for (const raw of (entries || [])) {
+      const m = String(raw || '').match(RX);
       if (!m) continue;
-      n++;
-      const [, , z1, mark1, z2, mark2] = m;
-      if (myZones[z1] != null) myZones[z1]++;
-      if (enemyZones[z2] != null) enemyZones[z2]++;
-      // мой удар (mark1)
-      if (mark1.startsWith('✕')) myMiss++;
-      else if (mark1.includes('💨')) myDodged++;  // противник уклонился
-      else if (mark1.includes('🛡')) myBlocked++; // противник заблокировал
-      else if (mark1.includes('⚡') || mark1.includes('💥')) myCrit++;
-      // удар врага (mark2) — HP-суффикс «❤N» уже игнорируется (после маркера)
-      if (mark2.includes('⚡') || mark2.includes('💥')) enemyCrit++;
-      if (mark2.startsWith('−') || mark2.startsWith('-')) enemyHitsOnMe++;
-      if (mark2.includes('💨')) enemyDodge++;
-      if (mark2.includes('🛡')) enemyBlock++;
-    }
-    const hints = [];
-    if (n === 0) return hints;
-    // Частый уклон/блок врага → меняй зону
-    if ((myDodged + myBlocked) >= Math.max(2, Math.ceil(n * 0.4))) {
-      hints.push('🎯 Враг часто уклонялся/блокировал — меняй зону атаки чаще.');
-    }
-    // Частые промахи → прокачай силу/интуицию (влияет на точность)
-    if (myMiss >= Math.max(2, Math.ceil(n * 0.3))) {
-      hints.push('🎲 Много промахов — подумай о прокачке интуиции/силы.');
-    }
-    // Враг попадал критами → защита/броня
-    if (enemyCrit >= 2) {
-      hints.push(`⚡ Получил ${enemyCrit} критов — поднять выносливость/защиту головы.`);
-    }
-    // Враг бьёт стабильно → защита не покрывает зону
-    if (enemyHitsOnMe >= Math.max(3, Math.ceil(n * 0.6))) {
-      // Найти самую частую зону врага
-      const topZone = Object.entries(enemyZones).sort((a,b) => b[1]-a[1])[0];
-      if (topZone && topZone[1] >= 2) {
-        hints.push(`🛡️ Враг бил в «${topZone[0]}» — защищай эту зону в защите.`);
+      const [, rn, z1, m1, , m2] = m;
+      const rNum = parseInt(rn, 10);
+      if (!byRound[rNum]) byRound[rNum] = [];
+
+      // Player action
+      const myDmg = _parseDmg(m1);
+      const myIsCrit = _isCrit(m1);
+      const myIsMiss = _isMiss(m1);
+      if (!myIsMiss && myDmg > 0) { totalMe += myDmg; hits++; if (myIsCrit) crits++; }
+      byRound[rNum].push({
+        kind: myIsMiss ? 'miss' : myIsCrit ? 'crit' : 'me',
+        dmg: myDmg,
+        hp: null,
+      });
+
+      // Enemy action — only if actually dealt damage
+      const enDmg = _parseDmg(m2);
+      const enHp  = _parseHp(m2);
+      if (enDmg > 0) {
+        totalEnemy += enDmg;
+        enemyHits++;
+        byRound[rNum].push({ kind: _isCrit(m2) ? 'enemy_crit' : 'boss', dmg: enDmg, hp: enHp });
       }
     }
-    // Я много крит — похвала
-    if (myCrit >= 2) {
-      hints.push(`💥 Твои криты: ${myCrit} — прокачка интуиции работает!`);
-    }
-    // Если пусто — мягкий совет
-    if (!hints.length) {
-      hints.push('💭 Бой был ровным. Попробуй менять защитную зону каждые 2 раунда.');
-    }
-    return hints.slice(0, 3);
+
+    const rounds = Object.keys(byRound)
+      .sort((a, b) => +a - +b)
+      .map(k => ({ idx: +k, items: byRound[k] }));
+
+    return { rounds, totalMe, totalEnemy, hits, crits, enemyHits };
   }
 
-  function _fmtRow(raw) {
-    const p = (raw || '').match(/^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/);
-    if (!p) return `<div class="blh-row"><span class="blh-you">${raw}</span></div>`;
-    const [, rn, z1, m1, z2, m2] = p;
-    const sm = BattleLog.styleMarker;
-    return `<div class="blh-row">
-      <span class="blh-rn">Р${rn}</span>
-      <span class="blh-you">${z1} ${sm(m1.trim(),'you')}</span>
-      <span class="blh-sep">·</span>
-      <span class="blh-opp">${z2} ${sm(m2.trim(),'enemy')}</span>
+  function _evHtml(ev) {
+    let tagCls, tagTxt, dmgCls, hpIco;
+    if (ev.kind === 'me')         { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; }
+    else if (ev.kind === 'crit')  { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; }
+    else if (ev.kind === 'miss')  { tagCls='boss'; tagTxt='МИМО';   dmgCls='boss'; hpIco=''; }
+    else if (ev.kind === 'boss')  { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco='❤️'; }
+    else if (ev.kind === 'enemy_crit') { tagCls='boss'; tagTxt='ВР.КР'; dmgCls='boss'; hpIco='❤️'; }
+    else return '';
+
+    const dmgStr = ev.dmg > 0 ? `−${_fmt(ev.dmg)}` : (ev.kind === 'miss' ? 'мимо' : '—');
+    const hpHtml = ev.hp != null && hpIco
+      ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval">${_fmt(ev.hp)}</span></div>`
+      : '';
+
+    return `<div class="wb-bhist-ev">
+      <span class="wb-bhist-tag ${tagCls}">${tagTxt}</span>
+      <span class="wb-bhist-arr">▶</span>
+      <span class="wb-bhist-dmg ${dmgCls}">${dmgStr}</span>
+      ${hpHtml}
     </div>`;
   }
 
-  Object.assign(BattleLog, {
-    showHistory(canvas, entries) {
-      _init();
-      const r = canvas.getBoundingClientRect();
-      el.style.left   = (r.left + 8) + 'px';
-      el.style.top    = (r.top  + r.height * 0.05) + 'px';
-      el.style.width  = (r.width - 16) + 'px';
-      el.style.height = (r.height * 0.65) + 'px';
-      const n = (entries || []).length;
-      const rows = (entries || []).map(_fmtRow).join('');
-      const hints = _analyze(entries);
-      const hintsHtml = hints.length
-        ? `<div class="blh-hints">
-             <div class="blh-hints-t">💡 Разбор боя</div>
-             ${hints.map(h => `<div class="blh-hint">${h}</div>`).join('')}
-           </div>`
-        : '';
-      el.innerHTML =
-        `<div class="blh-close">
-           <span class="blh-title">📜 История раундов (${n})</span>
-           <span>✕</span>
-         </div>` +
-        (rows || '<div class="blh-row"><span class="blh-you">Раундов ещё не было</span></div>') +
-        hintsHtml;
-      el.style.display = 'block';
-      el.scrollTop = el.scrollHeight;
-    },
-    hideHistory() {
-      if (!el) return;
-      el.style.display = 'none';
-      // Phaser слушает события напрямую на canvas — ставим временный щит
-      const canvas = document.querySelector('canvas');
-      if (canvas) {
-        const shield = document.createElement('div');
-        shield.style.cssText = 'position:fixed;inset:0;z-index:299;pointer-events:all;';
-        document.body.appendChild(shield);
-        setTimeout(() => shield.remove(), 250);
-      }
-    },
-  });
+  // 1-3 подсказки по итогам боя
+  function _analyze(entries) {
+    const rx = /^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/;
+    let n = 0, myMiss = 0, myCrit = 0, enemyCrit = 0, enemyHits = 0;
+    for (const raw of entries || []) {
+      const m = String(raw || '').match(rx);
+      if (!m) continue;
+      n++;
+      const [, , , m1, , m2] = m;
+      if (_isMiss(m1)) myMiss++;
+      else if (_isCrit(m1)) myCrit++;
+      if (_isCrit(m2)) enemyCrit++;
+      if (_parseDmg(m2) > 0) enemyHits++;
+    }
+    const hints = [];
+    if (!n) return hints;
+    if (myMiss >= Math.max(2, Math.ceil(n * 0.3)))
+      hints.push('🎲 Много промахов — прокачай интуицию/силу.');
+    if (enemyCrit >= 2)
+      hints.push(`⚡ Получил ${enemyCrit} крита — подними выносливость/защиту.`);
+    if (enemyHits >= Math.max(3, Math.ceil(n * 0.6)))
+      hints.push('🛡️ Враг часто попадал — смени тактику защиты.');
+    if (myCrit >= 2)
+      hints.push(`💥 Твои криты: ${myCrit} — продолжай в том же духе!`);
+    if (!hints.length)
+      hints.push('💭 Бой был ровным. Меняй зону защиты каждые 2 раунда.');
+    return hints.slice(0, 2);
+  }
+
+  function showHistory(_canvas, entries) {
+    _ensureCSS();
+    document.getElementById('bl-bhist-ov')?.remove();
+
+    const { rounds, totalMe, totalEnemy, hits, crits, enemyHits } = _parseLog(entries);
+
+    const rowsHtml = rounds.map(r => {
+      const evs = r.items.map(_evHtml).join('');
+      return `<div class="wb-bhist-rsep">ROUND ${r.idx}</div>${evs}`;
+    }).join('');
+
+    const hints = _analyze(entries);
+    const hintsHtml = hints.length
+      ? `<div class="wb-bhist-rsep" style="margin-top:6px">💡 РАЗБОР</div>
+         ${hints.map(h => `<div class="wb-bhist-ev" style="padding:3px 0;font-size:10px;color:rgba(255,255,255,.65);gap:4px">${h}</div>`).join('')}`
+      : '';
+
+    const ov = document.createElement('div');
+    ov.id = 'bl-bhist-ov';
+    ov.className = 'wb-bhist-ov';
+    ov.innerHTML = `<div class="wb-bhist">
+      <div class="wb-bhist-x" id="bl-bhist-x">×</div>
+      <div class="wb-bhist-h">⚔ ИСТОРИЯ БОЯ <span class="wb-bhist-cnt">/ ${rounds.length} раундов</span></div>
+      <div class="wb-bhist-totals">
+        <div class="wb-bhist-tme">
+          <div class="wb-bhist-tlbl">⚔ МОЙ УРОН</div>
+          <div class="wb-bhist-tval me">${_fmt(totalMe)}</div>
+          <div class="wb-bhist-tsub">${hits} уд${crits ? ` · ${crits} крита` : ''}</div>
+        </div>
+        <div class="wb-bhist-tsep"></div>
+        <div class="wb-bhist-tboss">
+          <div class="wb-bhist-tlbl">🩸 ВРАГ ПО МНЕ</div>
+          <div class="wb-bhist-tval boss">${_fmt(totalEnemy)}</div>
+          <div class="wb-bhist-tsub">${enemyHits} удар${enemyHits===1?'':'а'}</div>
+        </div>
+      </div>
+      <div class="wb-bhist-list">
+        ${rowsHtml || '<div class="wb-bhist-empty">Нет данных о раундах.</div>'}
+        ${hintsHtml}
+      </div>
+      <div class="wb-bhist-ok" id="bl-bhist-ok">ПОНЯТНО</div>
+    </div>`;
+
+    document.body.appendChild(ov);
+    requestAnimationFrame(() => ov.classList.add('open'));
+
+    const close = () => {
+      ov.classList.remove('open');
+      setTimeout(() => { try { ov.remove(); } catch(_) {} }, 220);
+    };
+    ov.addEventListener('click', e => {
+      if (e.target === ov || e.target.id === 'bl-bhist-x' || e.target.id === 'bl-bhist-ok') close();
+    });
+  }
+
+  function hideHistory() {
+    const ov = document.getElementById('bl-bhist-ov');
+    if (!ov) return;
+    ov.classList.remove('open');
+    setTimeout(() => { try { ov.remove(); } catch(_) {} }, 220);
+  }
+
+  Object.assign(BattleLog, { showHistory, hideHistory });
 })();
