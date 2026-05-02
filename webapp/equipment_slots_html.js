@@ -15,7 +15,7 @@ function _injectCSS() {
   const s = document.createElement('style'); s.id = 'eqs-css';
   s.textContent = `
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-#eqs-overlay{position:fixed;inset:0;pointer-events:none;z-index:500}
+#eqs-overlay{position:fixed;inset:0;pointer-events:none;z-index:50}
 .eqs-btn{position:fixed;display:flex;flex-direction:column;align-items:center;gap:2px;
   cursor:pointer;pointer-events:auto;touch-action:manipulation;
   transform:translate(-50%,-50%);-webkit-tap-highlight-color:transparent;user-select:none}

@@ -302,6 +302,7 @@ function refresh() {
 }
 
 function open(scene) {
+  try { if (typeof EquipmentSlotsHTML !== 'undefined') EquipmentSlotsHTML.close(); } catch(_) {}
   _currentScene = scene;
   scene._ringBusy = false;
   try { scene.input.enabled = false; } catch(_) {}
