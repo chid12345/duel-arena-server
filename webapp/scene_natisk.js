@@ -123,10 +123,10 @@ class NatiskScene extends Phaser.Scene {
       dg.fillStyle(0x0d0900, 0.92); dg.fillRoundedRect(8, y, W - 16, 58, 8);
       dg.lineStyle(1, 0xff8c00, 0.2); dg.strokeRoundedRect(8, y, W - 16, 58, 8);
       dg.lineStyle(3, 0xff8c00, 1); dg.lineBetween(8, y + 7, 8, y + 51);
-      txt(this, 20, y + 8,  '⚡ SURVIVE AS LONG AS POSSIBLE', 11, '#ffc83c', true)
+      txt(this, 20, y + 8,  '⚡ Выживи как можно дольше на арене.', 11, '#ffc83c', true)
         .setShadow(0, 0, '#ff8c00', 6, false, true);
-      txt(this, 20, y + 25, '▸ WAVES 1–3: EASY  //  ESCALATES FAST', 10, '#ffaa55');
-      txt(this, 20, y + 40, '▸ HP CARRIES OVER BETWEEN ROUNDS', 10, '#ffaa55');
+      txt(this, 20, y + 25, '▸ Волны 1–3 лёгкие — дальше сложнее.', 10, '#ffaa55');
+      txt(this, 20, y + 40, '▸ HP сохраняется между боями.', 10, '#ffaa55');
     }
   }
 
