@@ -97,46 +97,48 @@ class NatiskScene extends Phaser.Scene {
       return `${Math.floor(s / 3600)}ч ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}м`;
     };
 
-    // Кнопка +1 за золото
-    const gG = this.add.graphics();
-    const _drawG = (p) => {
-      gG.clear();
-      gG.fillStyle(canGold ? (p ? 0x332200 : 0x0f0a00) : 0x08090f, canGold ? 0.95 : 0.6);
-      gG.fillRoundedRect(8, y, halfW, 44, 8);
-      if (canGold) { gG.lineStyle(p ? 2.5 : 1.5, 0xffc83c, p ? 1 : 0.7); gG.strokeRoundedRect(8, y, halfW, 44, 8); }
+    // Рисует кнопку покупки: state = 'idle'|'press'|'success'
+    const _buyBtn = (bx, bw, active, borderCol, fillIdle, fillPress, label, sub, onBuy) => {
+      const bg = this.add.graphics();
+      const _draw = (state) => {
+        bg.clear();
+        if (state === 'success') {
+          bg.fillStyle(0x003311, 1); bg.fillRoundedRect(bx, y, bw, 44, 8);
+          bg.lineStyle(2, 0x39ff14, 1);  bg.strokeRoundedRect(bx, y, bw, 44, 8);
+        } else if (state === 'press') {
+          bg.fillStyle(fillPress, 1);    bg.fillRoundedRect(bx, y, bw, 44, 8);
+          bg.lineStyle(2.5, borderCol, 1); bg.strokeRoundedRect(bx, y, bw, 44, 8);
+        } else {
+          bg.fillStyle(active ? fillIdle : 0x08090f, active ? 0.95 : 0.6);
+          bg.fillRoundedRect(bx, y, bw, 44, 8);
+          if (active) { bg.lineStyle(1.5, borderCol, 0.75); bg.strokeRoundedRect(bx, y, bw, 44, 8); }
+        }
+        bg.lineStyle(0, 0, 0); // сброс lineStyle — убирает артефакт-линию
+      };
+      _draw('idle');
+      this.add.text(bx + bw / 2, y + 12, label, { fontSize: '11px', color: active ? '#ffffff' : '#555566', fontStyle: active ? 'bold' : 'normal', resolution: 2 }).setOrigin(0.5);
+      this.add.text(bx + bw / 2, y + 29, sub,   { fontSize: '11px', color: active ? '#ffdca0' : '#3a3a4a', fontStyle: active ? 'bold' : 'normal', resolution: 2 }).setOrigin(0.5);
+      if (!active) return;
+      const zone = this.add.zone(bx, y, bw, 44).setOrigin(0).setInteractive({ useHandCursor: true });
+      zone.on('pointerdown', () => { _draw('press'); tg?.HapticFeedback?.impactOccurred('medium'); });
+      zone.on('pointerout',  () => _draw('idle'));
+      zone.on('pointerup',   () => {
+        _draw('success');
+        zone.disableInteractive();
+        onBuy();
+      });
     };
-    _drawG(false);
-    txt(this, 8 + halfW / 2, y + 12, '+1 попытка', 11, canGold ? '#ffc83c' : '#555566', canGold).setOrigin(0.5);
-    if (canGold) {
-      txt(this, 8 + halfW / 2, y + 29, `${d.gold_cost} 🪙`, 12, '#ffdca0', true).setOrigin(0.5);
-      const gz = this.add.zone(8, y, halfW, 44).setOrigin(0).setInteractive();
-      gz.on('pointerdown', () => { _drawG(true); tg?.HapticFeedback?.impactOccurred('light'); });
-      gz.on('pointerout',  () => _drawG(false));
-      gz.on('pointerup',   () => { _drawG(false); this._buyAttempt('gold'); });
-    } else if (!d.can_buy_gold) {
-      txt(this, 8 + halfW / 2, y + 29, `🕐 сброс ${_resetTimer()}`, 10, '#ff8c00').setOrigin(0.5);
-    } else {
-      txt(this, 8 + halfW / 2, y + 29, `${d.gold_cost} 🪙`, 12, '#3a3a4a').setOrigin(0.5);
-    }
 
-    // Кнопка +3 за алмазы
+    // +1 за золото
+    const goldSub = canGold ? `${d.gold_cost} 🪙`
+      : (!d.can_buy_gold ? `🕐 сброс ${_resetTimer()}` : `${d.gold_cost} 🪙`);
+    _buyBtn(8, halfW, canGold, 0xffc83c, 0x0f0a00, 0x332200,
+      '+1 попытка', goldSub, () => this._buyAttempt('gold'));
+
+    // +3 за алмазы
     const dBx = 8 + halfW + 12;
-    const dG = this.add.graphics();
-    const _drawD = (p) => {
-      dG.clear();
-      dG.fillStyle(canDia ? (p ? 0x003344 : 0x001825) : 0x08090f, canDia ? 0.95 : 0.6);
-      dG.fillRoundedRect(dBx, y, halfW, 44, 8);
-      if (canDia) { dG.lineStyle(p ? 2.5 : 1.5, 0x00e5ff, p ? 1 : 0.7); dG.strokeRoundedRect(dBx, y, halfW, 44, 8); }
-    };
-    _drawD(false);
-    txt(this, dBx + halfW / 2, y + 12, '+3 попытки', 11, canDia ? '#00e5ff' : '#555566', canDia).setOrigin(0.5);
-    txt(this, dBx + halfW / 2, y + 29, `${d.diamond_cost} 💎`, 12, canDia ? '#a8e8ff' : '#3a3a4a', canDia).setOrigin(0.5);
-    if (canDia) {
-      const dz = this.add.zone(dBx, y, halfW, 44).setOrigin(0).setInteractive();
-      dz.on('pointerdown', () => { _drawD(true); tg?.HapticFeedback?.impactOccurred('light'); });
-      dz.on('pointerout',  () => _drawD(false));
-      dz.on('pointerup',   () => { _drawD(false); this._buyAttempt('diamond'); });
-    }
+    _buyBtn(dBx, halfW, canDia, 0x00e5ff, 0x001825, 0x003344,
+      '+3 попытки', `${d.diamond_cost} 💎`, () => this._buyAttempt('diamond'));
     y += 54;
 
     /* ── Premium ── */
