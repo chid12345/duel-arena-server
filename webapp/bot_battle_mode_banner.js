@@ -12,7 +12,7 @@ const BotBattleModeBanner = (() => {
     const s = document.createElement('style');
     s.id = 'bb-mode-css';
     s.textContent = `
-      #bb-root .mode-banner{position:absolute;top:64px;left:50%;transform:translateX(-50%);
+      #bb-root .mode-banner{position:absolute;top:92px;left:50%;transform:translateX(-50%);
         z-index:11;pointer-events:none;padding:4px 14px;border-radius:14px;
         font-family:"Consolas",monospace;font-size:11px;font-weight:900;letter-spacing:2px;
         background:rgba(8,8,18,.86);border:1px solid rgba(255,200,80,.5);
