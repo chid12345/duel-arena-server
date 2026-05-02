@@ -183,23 +183,24 @@ class NatiskScene extends Phaser.Scene {
     cont.add(img);
 
     // Метки
-    const brightHex = '#' + glowHex.toString(16).padStart(6, '0');
     const lbl = this.add.text(0, SZ / 2 + 14, label, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
       fontSize: '13px', fontStyle: 'bold',
-      color: active ? '#ffffff' : '#556677', resolution: 2,
-      stroke: active ? hexStr : undefined, strokeThickness: active ? 1 : 0,
+      color: active ? '#ffffff' : '#99aabb',
+      stroke: hexStr, strokeThickness: active ? 1.5 : 0.5,
+      resolution: 2,
     }).setOrigin(0.5);
-    if (active) lbl.setShadow(0, 0, hexStr, 18, false, true);
+    lbl.setShadow(0, 0, hexStr, active ? 18 : 6, false, true);
     cont.add(lbl);
 
     const subTxt = this.add.text(0, SZ / 2 + 31, sub, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
       fontSize: '14px', fontStyle: 'bold',
-      color: active ? '#ffffff' : '#3a3a4a', resolution: 2,
-      stroke: active ? hexStr : undefined, strokeThickness: active ? 1.5 : 0,
+      color: active ? '#ffffff' : '#aabbcc',
+      stroke: hexStr, strokeThickness: active ? 2 : 0.5,
+      resolution: 2,
     }).setOrigin(0.5);
-    if (active) subTxt.setShadow(0, 0, hexStr, 22, false, true);
+    subTxt.setShadow(0, 0, hexStr, active ? 22 : 8, false, true);
     cont.add(subTxt);
 
     if (!active) return;
