@@ -36,7 +36,7 @@ class NatiskScene extends Phaser.Scene {
     }).setOrigin(0.5).setShadow(0, 0, '#00e5ff', 6, false, true);
     this.add.zone(bx, by, btnW, btnH).setOrigin(0).setInteractive({ useHandCursor: true })
       .on('pointerdown', () => { bg.clear(); bg.fillStyle(0x001a2a, 0.95); bg.fillRoundedRect(bx, by, btnW, btnH, 6); bg.lineStyle(2, 0x00e5ff, 0.9); bg.strokeRoundedRect(bx, by, btnW, btnH, 6); })
-      .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu', { returnTab: 'battle' }); });
+      .on('pointerup', () => { tg?.HapticFeedback?.impactOccurred('light'); this.scene.start('Menu', { openBattleSelect: true }); });
   }
 
   _render(d, W, H) {

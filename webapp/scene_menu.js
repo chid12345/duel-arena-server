@@ -8,7 +8,8 @@ class MenuScene extends Phaser.Scene {
   constructor() { super('Menu'); }
 
   init(data) {
-    this._returnTab = (data && data.returnTab) ? data.returnTab : null;
+    this._returnTab        = (data && data.returnTab)        ? data.returnTab        : null;
+    this._openBattleSelect = !!(data && data.openBattleSelect);
   }
 
   async create() {
@@ -173,6 +174,13 @@ class MenuScene extends Phaser.Scene {
           this._buildBattlePanel();
           this._buildMorePanel();
           this._switchTab(this._returnTab || 'profile');
+          if (this._openBattleSelect) {
+            this.time.delayedCall(120, () => {
+              if (this.scene?.isActive('Menu') && typeof BattleSelectHTML !== 'undefined') {
+                BattleSelectHTML.open(this);
+              }
+            });
+          }
           this._setupWS();
           this._startRegenTick();
           // Фоновая догрузка остальных PNG (~50МБ) — для Рюкзака/Equipment,
