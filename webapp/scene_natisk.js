@@ -97,7 +97,8 @@ class NatiskScene extends Phaser.Scene {
       const goldSub = canGold ? `${d.gold_cost} 🪙`
         : (!d.can_buy_gold ? `🕐 ${_resetTimer()}` : `${d.gold_cost} 🪙`);
 
-      txt(this, W / 2, y + 8, '— КУПИТЬ ПОПЫТКИ —', 8, '#334466').setOrigin(0.5);
+      txt(this, W / 2, y + 8, '— КУПИТЬ ПОПЫТКИ —', 9, '#7799cc', true).setOrigin(0.5)
+        .setShadow(0, 0, '#4466aa', 8, false, true);
       y += 20;
 
       this._makeBuySkinBtn(W / 4,     y + 58, 'natisk_gold',    0xff8c00, '+1 попытка',  goldSub,                    canGold, () => this._buyAttempt('gold'));
@@ -188,21 +189,21 @@ class NatiskScene extends Phaser.Scene {
     const lbl = this.add.text(0, SZ / 2 + 14, label, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
       fontSize: '13px', fontStyle: 'bold',
-      color: active ? '#ffffff' : '#99aabb',
-      stroke: hexStr, strokeThickness: active ? 1.5 : 0.5,
+      color: '#ffffff',
+      stroke: hexStr, strokeThickness: active ? 1.5 : 0.8,
       resolution: 2,
     }).setOrigin(0.5);
-    lbl.setShadow(0, 0, hexStr, active ? 18 : 6, false, true);
+    lbl.setShadow(0, 0, hexStr, active ? 18 : 12, false, true);
     cont.add(lbl);
 
     const subTxt = this.add.text(0, SZ / 2 + 31, sub, {
       fontFamily: "'Orbitron','Arial Black',sans-serif",
       fontSize: '14px', fontStyle: 'bold',
-      color: active ? '#ffffff' : '#aabbcc',
-      stroke: hexStr, strokeThickness: active ? 2 : 0.5,
+      color: '#ffffff',
+      stroke: hexStr, strokeThickness: active ? 2 : 1,
       resolution: 2,
     }).setOrigin(0.5);
-    subTxt.setShadow(0, 0, hexStr, active ? 22 : 8, false, true);
+    subTxt.setShadow(0, 0, hexStr, active ? 22 : 14, false, true);
     cont.add(subTxt);
 
     if (!active) return;
