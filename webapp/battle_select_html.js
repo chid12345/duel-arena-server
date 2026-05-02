@@ -90,6 +90,8 @@ function _close() {
 function open(scene) {
   _injectCSS();
   _close();
+  // Скрываем слоты экипировки пока открыт выбор боя
+  try { if (typeof EquipmentSlotsHTML !== 'undefined') EquipmentSlotsHTML.close(); } catch(_) {}
   // Click-through blocker — глушит хвостовые pointerup/click/touchend от того же
   // тапа что нас открыл (по В БОЙ-зоне на Phaser-канвасе). Без него overlay
   // открывается и СРАЗУ закрывается тем же тапом — пользователь видит ничего.
@@ -262,6 +264,8 @@ function open(scene) {
     document.body.appendChild(g);
     setTimeout(() => { try { g.remove(); } catch(_) {} }, 500);
     _close();
+    // Возвращаем слоты экипировки при закрытии без боя
+    try { if (typeof EquipmentSlotsHTML !== 'undefined') EquipmentSlotsHTML.refresh(scene); } catch(_) {}
   };
 }
 

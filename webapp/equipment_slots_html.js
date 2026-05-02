@@ -145,6 +145,8 @@ function _positions(cvs) {
 }
 
 function _dispatch(slot, scene) {
+  // Закрываем overlay слотов ДО открытия другого оверлея — иначе будет z-index bleed
+  _close();
   try {
     if (typeof Sound !== 'undefined') Sound.click?.();
     if      (slot === 'armor'  )                           scene.scene.start('Stats', { player: State.player, openWardrobe: true });
