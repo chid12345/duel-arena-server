@@ -6,16 +6,8 @@
 class ResultScene extends Phaser.Scene {
   constructor() { super('Result'); }
 
-  preload() {
-    const V = (typeof window !== 'undefined' && window.BUILD_VERSION) ? `?v=${window.BUILD_VERSION}` : '';
-    const load = (k, f) => { if (!this.textures.exists(k)) this.load.image(k, f); };
-    load('btn_fight',      `btn_fight.png${V}`);
-    load('btn_home',       `btn_home.png${V}`);
-    load('btn_history',    `btn_history.png${V}`);
-    load('btn_battle_log', `btn_battle_log.png${V}`);
-  }
-
   shutdown() {
+    ResultButtonsHTML?.hide();
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 

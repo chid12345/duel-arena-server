@@ -85,30 +85,5 @@ Object.assign(ResultScene.prototype, {
     }
   },
 
-  // Vertical card button — icon on top, two-layer soft neon glow
-  _iconBtn(x, y, iconKey, label, color, cb, iconSize = 72) {
-    const col32 = parseInt(color.replace('#', ''), 16);
-    const img = this.textures?.exists(iconKey)
-      ? this.add.image(x, y, iconKey).setDisplaySize(iconSize, iconSize)
-      : null;
-    // Two-layer glow: inner bright tight (≈5px) + outer soft halo (≈25px)
-    // quality=0.25/0.15 gives smooth falloff instead of harsh outline
-    try {
-      if (img?.preFX) {
-        img.preFX.addGlow(col32, 4, 0, false, 0.25, 5);   // inner: bright, tight
-        img.preFX.addGlow(col32, 2, 0, false, 0.15, 28);  // outer: dim, diffuse
-      }
-    } catch(_) {}
-    this.add.text(x, y + iconSize / 2 + 14, label, {
-      fontFamily: 'Arial Black, Arial', fontSize: '12px', fontStyle: 'bold',
-      color, align: 'center',
-      shadow: { offsetX: 0, offsetY: 0, color, blur: 14, fill: true },
-    }).setOrigin(0.5);
-    const zone = this.add.zone(x, y + 10, iconSize + 22, iconSize + 34)
-      .setInteractive({ useHandCursor: true });
-    zone.on('pointerdown', () => { img?.setAlpha(0.7); tg?.HapticFeedback?.impactOccurred('light'); });
-    zone.on('pointerup',   () => { img?.setAlpha(1); cb(); });
-    zone.on('pointerout',  () => { img?.setAlpha(1); });
-  },
-
 });
+
