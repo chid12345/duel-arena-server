@@ -92,7 +92,9 @@ Object.assign(ResultScene.prototype, {
     gc.fillStyle(col32, 0.07); gc.fillCircle(x, y, iconSize / 2 + 16);
     gc.fillStyle(col32, 0.13); gc.fillCircle(x, y, iconSize / 2 + 8);
     gc.fillStyle(col32, 0.19); gc.fillCircle(x, y, iconSize / 2 + 2);
-    const img = this.add.image(x, y, iconKey).setDisplaySize(iconSize, iconSize);
+    const img = this.textures?.exists(iconKey)
+      ? this.add.image(x, y, iconKey).setDisplaySize(iconSize, iconSize)
+      : null;
     this.add.text(x, y + iconSize / 2 + 14, label, {
       fontFamily: 'Arial Black, Arial', fontSize: '12px', fontStyle: 'bold',
       color, align: 'center',
@@ -100,9 +102,9 @@ Object.assign(ResultScene.prototype, {
     }).setOrigin(0.5);
     const zone = this.add.zone(x, y + 10, iconSize + 22, iconSize + 34)
       .setInteractive({ useHandCursor: true });
-    zone.on('pointerdown', () => { img.setAlpha(0.7); tg?.HapticFeedback?.impactOccurred('light'); });
-    zone.on('pointerup',   () => { img.setAlpha(1); cb(); });
-    zone.on('pointerout',  () => { img.setAlpha(1); });
+    zone.on('pointerdown', () => { img?.setAlpha(0.7); tg?.HapticFeedback?.impactOccurred('light'); });
+    zone.on('pointerup',   () => { img?.setAlpha(1); cb(); });
+    zone.on('pointerout',  () => { img?.setAlpha(1); });
   },
 
 });
