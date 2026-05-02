@@ -99,21 +99,22 @@ class NatiskScene extends Phaser.Scene {
 
     // Рисует кнопку покупки: state = 'idle'|'press'|'success'
     const _buyBtn = (bx, bw, active, borderCol, fillIdle, fillPress, label, sub, onBuy) => {
+      const by = y; // захватываем значение y здесь, до любых изменений
       const bg = this.add.graphics();
       const _draw = (state) => {
         bg.clear();
         if (state === 'success') {
-          bg.fillStyle(0x003311, 1); bg.fillRoundedRect(bx, y, bw, 44, 8);
-          bg.lineStyle(2, 0x39ff14, 1);  bg.strokeRoundedRect(bx, y, bw, 44, 8);
+          bg.fillStyle(0x003311, 1); bg.fillRoundedRect(bx, by, bw, 44, 8);
+          bg.lineStyle(2, 0x39ff14, 1);  bg.strokeRoundedRect(bx, by, bw, 44, 8);
         } else if (state === 'press') {
-          bg.fillStyle(fillPress, 1);    bg.fillRoundedRect(bx, y, bw, 44, 8);
-          bg.lineStyle(2.5, borderCol, 1); bg.strokeRoundedRect(bx, y, bw, 44, 8);
+          bg.fillStyle(fillPress, 1);    bg.fillRoundedRect(bx, by, bw, 44, 8);
+          bg.lineStyle(2.5, borderCol, 1); bg.strokeRoundedRect(bx, by, bw, 44, 8);
         } else {
           bg.fillStyle(active ? fillIdle : 0x08090f, active ? 0.95 : 0.6);
-          bg.fillRoundedRect(bx, y, bw, 44, 8);
-          if (active) { bg.lineStyle(1.5, borderCol, 0.75); bg.strokeRoundedRect(bx, y, bw, 44, 8); }
+          bg.fillRoundedRect(bx, by, bw, 44, 8);
+          if (active) { bg.lineStyle(1.5, borderCol, 0.75); bg.strokeRoundedRect(bx, by, bw, 44, 8); }
         }
-        bg.lineStyle(0, 0, 0); // сброс lineStyle — убирает артефакт-линию
+        bg.lineStyle(0, 0, 0);
       };
       _draw('idle');
       this.add.text(bx + bw / 2, y + 12, label, { fontSize: '11px', color: active ? '#ffffff' : '#555566', fontStyle: active ? 'bold' : 'normal', resolution: 2 }).setOrigin(0.5);
