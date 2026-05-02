@@ -46,8 +46,9 @@ const CSS = `
 .bs-card::after{content:'';position:absolute;top:0;right:0;width:10px;height:10px;border-top:1px solid var(--bsc,#00e5ff);border-right:1px solid var(--bsc,#00e5ff);opacity:.5}
 .bs-card:hover,.bs-card:focus{background:#0d1228;transform:translateX(2px);box-shadow:-3px 0 14px var(--bsc,#00e5ff)}
 .bs-card:active{transform:translateX(1px) scale(.99)}
-.bs-ico-wrap{width:38px;height:38px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);clip-path:polygon(5px 0%,100% 0%,calc(100% - 5px) 100%,0% 100%)}
-.bs-emo{font-size:20px;filter:drop-shadow(0 0 5px var(--bsc,#00e5ff))}
+.bs-ico-wrap{width:42px;height:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:none;border:none}
+.bs-emo{font-size:26px;filter:drop-shadow(0 0 10px var(--bsc,#00e5ff)) drop-shadow(0 0 4px rgba(0,0,0,.7));transition:filter .15s,transform .15s}
+.bs-card:hover .bs-emo,.bs-card:active .bs-emo{filter:drop-shadow(0 0 18px var(--bsc,#00e5ff)) drop-shadow(0 0 6px rgba(0,0,0,.8));transform:scale(1.12)}
 .bs-tx{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
 .bs-name{font-family:'Orbitron',sans-serif;font-size:11px;font-weight:700;color:var(--bsn,#00e5ff);letter-spacing:1.5px;text-shadow:0 0 8px var(--bsc,#00e5ff);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .bs-sub{font-family:'Share Tech Mono',monospace;font-size:9px;color:rgba(200,216,255,.45);letter-spacing:.4px;margin-top:2px}
@@ -62,8 +63,8 @@ const CSS = `
 .bs-div::after{background:linear-gradient(90deg,rgba(0,229,255,.15),transparent)}
 .bs-row{display:flex;gap:8px}
 .bs-row .bs-card{flex:1;padding:10px 12px 10px 14px}
-.bs-row .bs-ico-wrap{width:30px;height:30px}
-.bs-row .bs-emo{font-size:15px}
+.bs-row .bs-ico-wrap{width:34px;height:34px}
+.bs-row .bs-emo{font-size:20px}
 .bs-row .bs-name{font-size:9px;letter-spacing:1px}
 .bs-row .bs-sub{font-size:8px}
 .bs-hpwarn{padding:8px 12px;background:rgba(255,34,68,.08);border:1px solid rgba(255,34,68,.25);color:rgba(255,100,120,.9);font-size:9px;letter-spacing:.5px;margin-bottom:4px;font-family:'Share Tech Mono',monospace;clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px))}
