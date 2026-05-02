@@ -90,24 +90,53 @@ class NatiskScene extends Phaser.Scene {
     const canGold = d.can_buy_gold && d.player_gold >= d.gold_cost;
     const canDia  = d.player_diamonds >= d.diamond_cost;
 
-    const gG = this.add.graphics();
-    gG.fillStyle(canGold ? 0x0f0a00 : 0x08090f, canGold ? 0.95 : 0.6);
-    gG.fillRoundedRect(8, y, halfW, 44, 8);
-    if (canGold) { gG.lineStyle(1.5, 0xffc83c, 0.7); gG.strokeRoundedRect(8, y, halfW, 44, 8); }
-    txt(this, 8 + halfW / 2, y + 13, '+1 попытка', 11, canGold ? '#ffc83c' : '#555566', canGold).setOrigin(0.5);
-    txt(this, 8 + halfW / 2, y + 29, `${d.gold_cost} 🪙`, 12, canGold ? '#ffdca0' : '#3a3a4a', canGold).setOrigin(0.5);
-    if (canGold) this.add.zone(8, y, halfW, 44).setOrigin(0).setInteractive()
-      .on('pointerup', () => this._buyAttempt('gold'));
+    // Таймер до сброса (полночь UTC)
+    const _resetTimer = () => {
+      const n = new Date(), mid = new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate() + 1));
+      const s = Math.floor((mid - n) / 1000);
+      return `${Math.floor(s / 3600)}ч ${String(Math.floor((s % 3600) / 60)).padStart(2, '0')}м`;
+    };
 
+    // Кнопка +1 за золото
+    const gG = this.add.graphics();
+    const _drawG = (p) => {
+      gG.clear();
+      gG.fillStyle(canGold ? (p ? 0x332200 : 0x0f0a00) : 0x08090f, canGold ? 0.95 : 0.6);
+      gG.fillRoundedRect(8, y, halfW, 44, 8);
+      if (canGold) { gG.lineStyle(p ? 2.5 : 1.5, 0xffc83c, p ? 1 : 0.7); gG.strokeRoundedRect(8, y, halfW, 44, 8); }
+    };
+    _drawG(false);
+    txt(this, 8 + halfW / 2, y + 12, '+1 попытка', 11, canGold ? '#ffc83c' : '#555566', canGold).setOrigin(0.5);
+    if (canGold) {
+      txt(this, 8 + halfW / 2, y + 29, `${d.gold_cost} 🪙`, 12, '#ffdca0', true).setOrigin(0.5);
+      const gz = this.add.zone(8, y, halfW, 44).setOrigin(0).setInteractive();
+      gz.on('pointerdown', () => { _drawG(true); tg?.HapticFeedback?.impactOccurred('light'); });
+      gz.on('pointerout',  () => _drawG(false));
+      gz.on('pointerup',   () => { _drawG(false); this._buyAttempt('gold'); });
+    } else if (!d.can_buy_gold) {
+      txt(this, 8 + halfW / 2, y + 29, `🕐 сброс ${_resetTimer()}`, 10, '#ff8c00').setOrigin(0.5);
+    } else {
+      txt(this, 8 + halfW / 2, y + 29, `${d.gold_cost} 🪙`, 12, '#3a3a4a').setOrigin(0.5);
+    }
+
+    // Кнопка +3 за алмазы
     const dBx = 8 + halfW + 12;
     const dG = this.add.graphics();
-    dG.fillStyle(canDia ? 0x001825 : 0x08090f, canDia ? 0.95 : 0.6);
-    dG.fillRoundedRect(dBx, y, halfW, 44, 8);
-    if (canDia) { dG.lineStyle(1.5, 0x00e5ff, 0.7); dG.strokeRoundedRect(dBx, y, halfW, 44, 8); }
-    txt(this, dBx + halfW / 2, y + 13, '+3 попытки', 11, canDia ? '#00e5ff' : '#555566', canDia).setOrigin(0.5);
+    const _drawD = (p) => {
+      dG.clear();
+      dG.fillStyle(canDia ? (p ? 0x003344 : 0x001825) : 0x08090f, canDia ? 0.95 : 0.6);
+      dG.fillRoundedRect(dBx, y, halfW, 44, 8);
+      if (canDia) { dG.lineStyle(p ? 2.5 : 1.5, 0x00e5ff, p ? 1 : 0.7); dG.strokeRoundedRect(dBx, y, halfW, 44, 8); }
+    };
+    _drawD(false);
+    txt(this, dBx + halfW / 2, y + 12, '+3 попытки', 11, canDia ? '#00e5ff' : '#555566', canDia).setOrigin(0.5);
     txt(this, dBx + halfW / 2, y + 29, `${d.diamond_cost} 💎`, 12, canDia ? '#a8e8ff' : '#3a3a4a', canDia).setOrigin(0.5);
-    if (canDia) this.add.zone(dBx, y, halfW, 44).setOrigin(0).setInteractive()
-      .on('pointerup', () => this._buyAttempt('diamond'));
+    if (canDia) {
+      const dz = this.add.zone(dBx, y, halfW, 44).setOrigin(0).setInteractive();
+      dz.on('pointerdown', () => { _drawD(true); tg?.HapticFeedback?.impactOccurred('light'); });
+      dz.on('pointerout',  () => _drawD(false));
+      dz.on('pointerup',   () => { _drawD(false); this._buyAttempt('diamond'); });
+    }
     y += 54;
 
     /* ── Premium ── */
@@ -154,9 +183,6 @@ class NatiskScene extends Phaser.Scene {
     const mech = this.add.image(0, 0, 'natisk_mech')
       .setDisplaySize(SZ, SZ).setOrigin(0.5);
     cont.add(mech);
-
-    // Парение
-    this.tweens.add({ targets: cont, y: y - 6, duration: 2000, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
 
     // НАТИСК
     cont.add(this.add.text(0, SZ / 2 + 16, 'НАТИСК', {
