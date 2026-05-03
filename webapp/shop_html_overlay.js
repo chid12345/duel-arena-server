@@ -28,37 +28,31 @@ const CSS = `
 .sh-tab{flex-shrink:0;padding:7px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;border-bottom:2px solid transparent;transition:all .22s;white-space:nowrap;position:relative}
 .sh-tab.on{color:#00f5ff;border-bottom-color:#00f5ff;text-shadow:0 0 10px rgba(0,245,255,.7)}
 .sh-tab.on::after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:#00f5ff;box-shadow:0 0 8px #00f5ff,0 0 16px #00f5ff}
-.sh-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 12px 88px;scrollbar-width:thin;scrollbar-color:rgba(0,245,255,.2) transparent;position:relative;z-index:1}
+.sh-body{flex:1;overflow-y:auto;overflow-x:hidden;padding:8px 8px 88px;scrollbar-width:thin;scrollbar-color:rgba(0,245,255,.2) transparent;position:relative;z-index:1}
 .sh-body::-webkit-scrollbar{width:3px}.sh-body::-webkit-scrollbar-thumb{background:rgba(0,245,255,.2);border-radius:2px}
 .sh-panel{display:none}.sh-panel.on{display:block}
-.sh-sec{font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.28);text-transform:uppercase;margin:16px 0 9px;padding-left:2px}
-.sh-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
-.sh-card{position:relative;background:rgba(10,5,25,.88);border-radius:14px;border:1px solid rgba(255,255,255,.1);padding:10px 10px 8px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;box-shadow:0 0 8px rgba(0,0,0,.4);transition:transform .15s,border-color .15s,box-shadow .15s;user-select:none}
-.sh-card::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.035) 0%,transparent 50%);pointer-events:none}
-.sh-card:active{transform:scale(.95)}
-.sh-card:hover{transform:translateY(-2px)}
-.sh-card.r-r{border-color:rgba(68,136,255,.42);box-shadow:0 0 12px rgba(68,136,255,.22)}
-.sh-card.r-r:hover{border-color:rgba(68,136,255,.75);box-shadow:0 0 20px rgba(68,136,255,.4)}
-.sh-card.r-e{border-color:rgba(180,79,255,.45);box-shadow:0 0 14px rgba(180,79,255,.25)}
-.sh-card.r-e:hover{border-color:rgba(180,79,255,.82);box-shadow:0 0 22px rgba(180,79,255,.45)}
-.sh-card.r-l{background:rgba(14,6,2,.9);border-color:rgba(255,140,0,.48);box-shadow:0 0 14px rgba(255,140,0,.28);animation:shMythic 3s ease-in-out infinite}
-.sh-card.r-l:hover{border-color:rgba(255,140,0,.85);box-shadow:0 0 24px rgba(255,140,0,.5)}
-@keyframes shMythic{0%,100%{box-shadow:0 0 14px rgba(255,140,0,.28)}50%{box-shadow:0 0 6px rgba(255,140,0,.1)}}
-.sh-card.r-d{background:rgba(14,3,3,.9);border-color:rgba(255,51,51,.42);box-shadow:0 0 12px rgba(255,51,51,.22)}
-.sh-card.r-d:hover{border-color:rgba(255,51,51,.78);box-shadow:0 0 20px rgba(255,51,51,.4)}
-.sh-diode{position:absolute;top:9px;left:9px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 5px currentColor,0 0 10px currentColor}
-.d-c{background:#8a8a9a;color:#8a8a9a}.d-r{background:#4488ff;color:#4488ff;animation:shDiode 2s ease-in-out infinite}.d-e{background:#b44fff;color:#b44fff;animation:shDiode 1.6s ease-in-out infinite}.d-l{background:#ff8c00;color:#ff8c00;animation:shDiode 1s ease-in-out infinite}.d-d{background:#ff3333;color:#ff3333;animation:shDiode 1.2s ease-in-out infinite}
-@keyframes shDiode{0%,100%{opacity:1;box-shadow:0 0 5px currentColor,0 0 10px currentColor}50%{opacity:.4;box-shadow:0 0 2px currentColor}}
-.sh-inv-cnt{position:absolute;top:7px;right:7px;background:rgba(0,245,255,.12);border:1px solid rgba(0,245,255,.25);border-radius:6px;font-size:8px;font-weight:700;color:#00f5ff;padding:1px 5px;line-height:1.4;z-index:2}
-.sh-ico{font-size:30px;text-align:center;margin:12px 0 6px;filter:drop-shadow(0 0 6px rgba(255,255,255,.25));position:relative;z-index:1}
-.sh-nm{font-size:11.5px;font-weight:600;line-height:1.3;color:#d0d0e8;text-align:center;margin-bottom:3px;position:relative;z-index:1}
-.sh-ds{font-size:10px;color:rgba(255,255,255,.38);text-align:center;line-height:1.4;flex:1;position:relative;z-index:1}
-.sh-bdg{display:block;font-size:9px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:4px;margin:5px auto 0;width:fit-content;position:relative;z-index:1}
-.b-bat{background:rgba(255,45,120,.18);color:#ff2d78;border:1px solid rgba(255,45,120,.28)}.b-dur{background:rgba(0,245,255,.09);color:#00f5ff;border:1px solid rgba(0,245,255,.18)}.b-risk{background:rgba(255,60,60,.14);color:#ff4444;border:1px solid rgba(255,60,60,.28)}.b-day{background:rgba(255,215,0,.1);color:#ffd700;border:1px solid rgba(255,215,0,.2)}
-.sh-pr{display:flex;align-items:center;justify-content:center;gap:5px;margin:7px 0 5px;position:relative;z-index:1}
-.sh-pr-ico{font-size:15px}.sh-pr-v{font-size:17px;font-weight:800;color:#fff}
-.pv-g{color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.45)}.pv-d{color:#00f5ff;text-shadow:0 0 8px rgba(0,245,255,.45)}.pv-u{color:#00ff88;text-shadow:0 0 8px rgba(0,255,136,.45)}.pv-s{color:#ffaa33;text-shadow:0 0 8px rgba(255,170,51,.45)}
-.sh-btn{width:100%;padding:7px 0;border-radius:7px;border:none;font-size:11px;font-weight:700;letter-spacing:.8px;cursor:pointer;position:relative;overflow:hidden;transition:all .18s;z-index:1}
+.sh-sec{font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,.28);text-transform:uppercase;margin:14px 0 8px;padding-left:2px}
+.sh-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.sh-card{position:relative;background:none;border:none;box-shadow:none;padding:6px 3px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s;user-select:none}
+.sh-card:active{transform:scale(.93)}
+.sh-card.r-l{animation:shMythic 3s ease-in-out infinite}
+@keyframes shMythic{0%,100%{filter:drop-shadow(0 0 6px rgba(255,140,0,.45))}50%{filter:drop-shadow(0 0 2px rgba(255,140,0,.15))}}
+.sh-diode{display:none}
+.sh-inv-cnt{position:absolute;top:0;right:0;background:rgba(0,245,255,.18);border:1px solid rgba(0,245,255,.4);border-radius:5px;font-size:8px;font-weight:700;color:#00f5ff;padding:0 4px;line-height:1.3;z-index:2}
+.sh-ico{font-size:30px;text-align:center;margin:2px 0 4px;line-height:1;filter:drop-shadow(0 0 5px rgba(200,200,220,.4));transition:filter .15s}
+.sh-card.r-r .sh-ico{filter:drop-shadow(0 0 6px rgba(68,136,255,.7))}
+.sh-card.r-e .sh-ico{filter:drop-shadow(0 0 7px rgba(180,79,255,.8))}
+.sh-card.r-l .sh-ico{filter:drop-shadow(0 0 7px rgba(255,140,0,.85))}
+.sh-card.r-d .sh-ico{filter:drop-shadow(0 0 6px rgba(255,51,51,.75))}
+.sh-card:hover .sh-ico{filter:brightness(1.15) drop-shadow(0 0 9px rgba(255,255,255,.5))}
+.sh-nm{font-size:9.5px;font-weight:600;line-height:1.15;color:#d0d0e8;text-align:center;margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:22px}
+.sh-ds{display:none}
+.sh-bdg{display:inline-block;font-size:7.5px;font-weight:700;letter-spacing:.3px;padding:1px 4px;border-radius:3px;margin:1px auto;line-height:1.2}
+.b-bat{background:rgba(255,45,120,.15);color:#ff5a8a}.b-dur{background:rgba(0,245,255,.08);color:#5fdfff}.b-risk{background:rgba(255,60,60,.14);color:#ff6666}.b-day{background:rgba(255,215,0,.1);color:#ffd700}
+.sh-pr{display:flex;align-items:center;justify-content:center;gap:2px;margin:3px 0 4px}
+.sh-pr-ico{font-size:11px}.sh-pr-v{font-size:13px;font-weight:800;color:#fff;line-height:1}
+.pv-g{color:#ffd700;text-shadow:0 0 6px rgba(255,215,0,.45)}.pv-d{color:#00f5ff;text-shadow:0 0 6px rgba(0,245,255,.45)}.pv-u{color:#00ff88;text-shadow:0 0 6px rgba(0,255,136,.45)}.pv-s{color:#ffaa33;text-shadow:0 0 6px rgba(255,170,51,.45)}
+.sh-btn{width:100%;padding:4px 0;border-radius:5px;border:none;font-size:9.5px;font-weight:700;letter-spacing:.5px;cursor:pointer;position:relative;overflow:hidden;transition:all .18s;margin-top:auto}
 .btn-g{background:linear-gradient(135deg,#b87a08,#ffd700);color:#1a1000}.btn-d{background:linear-gradient(135deg,#0055bb,#00aaff);color:#fff}.btn-u{background:linear-gradient(135deg,#007a3d,#00dd77);color:#001a0d}.btn-s{background:linear-gradient(135deg,#995500,#ffaa33);color:#1a0800}.btn-danger{background:linear-gradient(135deg,#aa1111,#ff3333);color:#fff}
 .sh-btn:hover{filter:brightness(1.12);transform:scale(1.02)}.sh-btn:active{transform:scale(.96)}
 .sh-fov{position:absolute;inset:0;border-radius:14px;pointer-events:none;z-index:5;animation:shFlash .45s forwards}
