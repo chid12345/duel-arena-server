@@ -81,7 +81,7 @@ function _priceIcon(cur) {
 
 function _icoHtml(icon, size) {
   if (icon && icon.startsWith('img:')) {
-    return `<img src="${icon.slice(4)}" style="width:${size}px;height:${size}px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,200,80,.55))">`;
+    return `<img src="${icon.slice(4)}" style="width:${size}px;height:${size}px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.35))">`;
   }
   return icon;
 }
@@ -206,7 +206,7 @@ window.ShopHtmlItems = {
     }
 
     const detailIcon = (icon && icon.startsWith('img:'))
-      ? `<img src="${icon.slice(4)}" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(255,200,80,.7))">`
+      ? `<img src="${icon.slice(4)}" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,200,80,.4))">`
       : icon;
 
     ShopHtml.showDetail({

@@ -36,15 +36,15 @@ const CSS = `
 .sh-card{position:relative;background:none;border:none;box-shadow:none;padding:4px 2px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s;user-select:none}
 .sh-card:active{transform:scale(.93)}
 .sh-card.r-l{animation:shMythic 3s ease-in-out infinite}
-@keyframes shMythic{0%,100%{filter:drop-shadow(0 0 10px rgba(255,140,0,.7))}50%{filter:drop-shadow(0 0 3px rgba(255,140,0,.2))}}
+@keyframes shMythic{0%,100%{filter:drop-shadow(0 0 6px rgba(255,140,0,.45))}50%{filter:drop-shadow(0 0 2px rgba(255,140,0,.15))}}
 .sh-diode{display:none}
 .sh-inv-cnt{position:absolute;top:0;right:0;background:rgba(0,245,255,.18);border:1px solid rgba(0,245,255,.4);border-radius:5px;font-size:8px;font-weight:700;color:#00f5ff;padding:0 4px;line-height:1.3;z-index:2}
-.sh-ico{font-size:24px;text-align:center;margin:1px 0 2px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,215,0,.65)) drop-shadow(0 0 3px rgba(255,215,0,.4));transition:filter .2s}
-.sh-card.r-r .sh-ico{filter:drop-shadow(0 0 12px rgba(68,136,255,1)) drop-shadow(0 0 5px rgba(68,136,255,.6))}
-.sh-card.r-e .sh-ico{filter:drop-shadow(0 0 13px rgba(180,79,255,1)) drop-shadow(0 0 6px rgba(180,79,255,.7))}
-.sh-card.r-l .sh-ico{filter:drop-shadow(0 0 14px rgba(255,140,0,1)) drop-shadow(0 0 6px rgba(255,140,0,.8))}
-.sh-card.r-d .sh-ico{filter:drop-shadow(0 0 12px rgba(255,51,51,1)) drop-shadow(0 0 5px rgba(255,51,51,.6))}
-.sh-card:hover .sh-ico{filter:brightness(1.25) drop-shadow(0 0 16px currentColor) drop-shadow(0 0 6px currentColor)}
+.sh-ico{font-size:24px;text-align:center;margin:1px 0 2px;line-height:1;filter:drop-shadow(0 0 5px rgba(255,215,0,.35));transition:filter .2s}
+.sh-card.r-r .sh-ico{filter:drop-shadow(0 0 7px rgba(68,136,255,.5))}
+.sh-card.r-e .sh-ico{filter:drop-shadow(0 0 7px rgba(180,79,255,.5))}
+.sh-card.r-l .sh-ico{filter:drop-shadow(0 0 8px rgba(255,140,0,.5))}
+.sh-card.r-d .sh-ico{filter:drop-shadow(0 0 7px rgba(255,51,51,.5))}
+.sh-card:hover .sh-ico{filter:brightness(1.15) drop-shadow(0 0 9px currentColor)}
 .sh-nm{font-size:8.5px;font-weight:600;line-height:1.15;color:#d0d0e8;text-align:center;margin-bottom:1px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:18px}
 .sh-ds{display:none}
 .sh-bdg{display:inline-block;font-size:7px;font-weight:700;letter-spacing:.2px;padding:1px 3px;border-radius:3px;margin:0 auto;line-height:1.2}
