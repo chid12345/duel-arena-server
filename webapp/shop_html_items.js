@@ -155,12 +155,48 @@ window.ShopHtmlItems = {
     const bal = cur === 'diamonds' ? (p.diamonds || 0) : (p.gold || 0);
     const canBuy = bal >= price;
     const pIcon = cur === 'diamonds' ? '💎' : '🪙';
+
+    // HP-зелья: полоска здоровья в описании
+    let richDesc = desc;
+    if (['hp_small', 'hp_medium', 'hp_full'].includes(iid)) {
+      const curHp = p.current_hp ?? p.max_hp ?? 100;
+      const maxHp = p.max_hp ?? 100;
+      const isFull = curHp >= maxHp;
+      const pct = iid === 'hp_full' ? 1.0 : iid === 'hp_medium' ? 0.6 : 0.3;
+      const restore = iid === 'hp_full' ? (maxHp - curHp) : Math.max(1, Math.floor(maxHp * pct));
+      const newHp = Math.min(maxHp, curHp + restore);
+      const hpPct = Math.round(curHp / maxHp * 100);
+      const newPct = Math.min(100, Math.round(newHp / maxHp * 100));
+      richDesc = (isFull
+        ? `<span style="color:#ff6666">❌ HP уже полное — зелье не нужно</span>`
+        : `${desc}<br><br>`
+          + `<div style="font-size:10px;color:rgba(255,255,255,.45);margin-bottom:5px">Текущее HP: ${curHp} / ${maxHp}</div>`
+          + `<div style="background:rgba(255,255,255,.1);border-radius:4px;height:8px;overflow:hidden;margin-bottom:5px">`
+          + `<div style="width:${hpPct}%;height:100%;background:linear-gradient(90deg,#992222,#ff4444);border-radius:4px"></div></div>`
+          + `<div style="font-size:11px;color:#00ff88;font-weight:700">+${restore} HP → ${newHp} / ${maxHp} (${newPct}%)</div>`
+      );
+    }
+
+    // stat_reset: двойное подтверждение перед списанием 200💎
+    let action = canBuy
+      ? () => ShopHtmlItems._doBuy(iid)
+      : () => ShopHtml.toast(`❌ Не хватает ${cur === 'diamonds' ? 'алмазов' : 'золота'}`, true);
+
+    if (iid === 'stat_reset' && canBuy) {
+      action = () => ShopHtml.showDetail({
+        icon: '⚠️', name: 'Подтвердите сброс',
+        desc: 'Все вложенные очки статов обнулятся.<br>Это <b>необратимо</b> — откатить нельзя.',
+        price, currency: cur, rarity: 'd',
+        actionLabel: `⚠️ Сбросить за ${price} 💎`,
+        btnClass: 'btn-danger',
+        action: () => ShopHtmlItems._doBuy('stat_reset'),
+      });
+    }
+
     ShopHtml.showDetail({
-      icon, name, desc, badge, risk, price, currency: cur, qty, rarity: r,
+      icon, name, desc: richDesc, badge, risk, price, currency: cur, qty, rarity: r,
       actionLabel: canBuy ? `Купить за ${price} ${pIcon}` : `Нужно ${price} ${pIcon}`,
-      action: canBuy
-        ? () => ShopHtmlItems._doBuy(iid)
-        : () => ShopHtml.toast(`❌ Не хватает ${cur === 'diamonds' ? 'алмазов' : 'золота'}`, true),
+      action,
     });
   },
 
