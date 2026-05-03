@@ -10,6 +10,10 @@ class MenuScene extends Phaser.Scene {
   init(data) {
     this._returnTab        = (data && data.returnTab)        ? data.returnTab        : null;
     this._openBattleSelect = !!(data && data.openBattleSelect);
+    // Мгновенная HTML-подложка под цвет фона Menu — убирает чёрный flash
+    // между shutdown предыдущей сцены и первой отрисовкой Phaser.
+    // Без неё на мобиле 1-2 кадра чёрного экрана (особенно при Boss→Profile).
+    try { window._tabPlaceholderShow?.('menu-placeholder', { bg: 'linear-gradient(180deg,#0d0820 0%,#060412 100%)' }); } catch(_) {}
   }
 
   async create() {
@@ -26,6 +30,8 @@ class MenuScene extends Phaser.Scene {
     try { window._closeAllTabOverlays?.(); } catch(_) {}
 
     this._drawBg(W, H);
+    // Убираем placeholder на 2-м кадре — Phaser к этому моменту отрисовал фон.
+    window._tabPlaceholderHideNextFrame?.('menu-placeholder');
     // TabBar строим ДО _loadPlayer(): если сервер медленный/перезапускается,
     // игрок всё равно видит нижнее меню и может уйти на другую вкладку.
     // Без этого при долгом ответе API экран — чёрное небо без навигации.

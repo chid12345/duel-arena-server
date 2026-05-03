@@ -63,12 +63,13 @@ class ClanScene extends Phaser.Scene {
   async create() {
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
-    // Анти-эксплойт refresh: если в активном бою — назад в бой.
-    if (await window._redirectIfInBattle?.(this)) return;
     // Zombie-overlay страховка: закрываем overlay'и предыдущих вкладок
     // (StatsHTML/WardrobeHTML/...), если shutdown не успел их закрыть.
     // Свой ClanHTML откроется ниже — его close здесь не мешает.
     try { window._closeAllTabOverlays?.(); } catch(_) {}
+    // ВАЖНО: фон + TabBar рисуем ДО await — иначе во время ожидания
+    // _redirectIfInBattle (_scene TabBarHTML указывает на мёртвую старую сцену),
+    // тапы по таббару идут в shutdown-сцену → чёрный экран на мобиле.
     _extraBg(this, W, H);
     if (this._subview !== 'chat') {
       _extraHeader(this, W, '⚔️', 'КЛАН', 'Кланы · Поиск · Рейтинг');
@@ -81,6 +82,10 @@ class ClanScene extends Phaser.Scene {
     }
     this._loading = txt(this, W / 2, H / 2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     if (this._subview !== 'chat') TabBar.build(this, { activeKey: 'clan' });
+    // Анти-эксплойт refresh: если в активном бою — назад в бой.
+    // Вызывается ПОСЛЕ TabBar.build: к этому моменту _scene в TabBarHTML
+    // уже указывает на clanScene → тапы по таббару работают корректно.
+    if (await window._redirectIfInBattle?.(this)) return;
     // Рабочая высота для рендеров контента = H минус нижний таббар.
     // В подвиде chat таббара нет — используем полную высоту.
     const H_UI = (this._subview === 'chat') ? H : (H - TabBar.HEIGHT);

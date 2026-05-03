@@ -103,6 +103,8 @@ Object.assign(MenuScene.prototype, {
     // create) и осиротевшие графики → UI зависает к 3–4-му переключению.
     try { this.time.removeAllEvents(); } catch(_) {}
     try { this.tweens.killAll(); } catch(_) {}
+    // Fail-safe: убираем placeholder если не убрался через NextFrame (исключение и т.п.)
+    try { window._tabPlaceholderHide?.('menu-placeholder'); } catch(_) {}
     // Глушим WS-обработчик: если сообщение придёт после shutdown (до того как
     // следующая сцена вызовет connectWS), мёртвые this-методы не упадут.
     try { if (State.ws) State.ws.onmessage = null; } catch(_) {}
