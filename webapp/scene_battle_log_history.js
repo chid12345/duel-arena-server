@@ -52,13 +52,15 @@
         hp: null,
       });
 
-      // Enemy action — only if actually dealt damage
+      // Enemy action — всегда показываем, в т.ч. промахи
       const enDmg = _parseDmg(m2);
       const enHp  = _parseHp(m2);
       if (enDmg > 0) {
         totalEnemy += enDmg;
         enemyHits++;
         byRound[rNum].push({ kind: _isCrit(m2) ? 'enemy_crit' : 'boss', dmg: enDmg, hp: enHp });
+      } else {
+        byRound[rNum].push({ kind: 'enemy_miss', dmg: 0, hp: null });
       }
     }
 
@@ -74,11 +76,12 @@
     if (ev.kind === 'me')         { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; }
     else if (ev.kind === 'crit')  { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; }
     else if (ev.kind === 'miss')  { tagCls='boss'; tagTxt='МИМО';   dmgCls='boss'; hpIco=''; }
-    else if (ev.kind === 'boss')  { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco='❤️'; }
+    else if (ev.kind === 'boss')       { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco='❤️'; }
     else if (ev.kind === 'enemy_crit') { tagCls='boss'; tagTxt='ВР.КР'; dmgCls='boss'; hpIco='❤️'; }
+    else if (ev.kind === 'enemy_miss') { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco=''; }
     else return '';
 
-    const dmgStr = ev.dmg > 0 ? `−${_fmt(ev.dmg)}` : (ev.kind === 'miss' ? 'мимо' : '—');
+    const dmgStr = ev.dmg > 0 ? `−${_fmt(ev.dmg)}` : (ev.kind === 'miss' || ev.kind === 'enemy_miss' ? 'мимо' : '—');
     const hpHtml = ev.hp != null && hpIco
       ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval">${_fmt(ev.hp)}</span></div>`
       : '';
