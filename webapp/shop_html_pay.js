@@ -117,7 +117,10 @@ window.ShopHtmlPay = {
     html += `<div style="text-align:center;font-size:10px;color:rgba(85,119,170,.8);margin-top:16px">⭐ Telegram Stars — моментальная оплата</div>`;
     el.innerHTML = html;
     el.querySelectorAll('[data-stars]').forEach(card => {
-      card.addEventListener('click', () => ShopHtmlPay._buyStars(card.dataset.stars));
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        ShopHtmlPay._showStarsDetail(card.dataset.stars);
+      });
       card.querySelector('.sh-btn')?.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyStars(card.dataset.stars); });
     });
     el.querySelectorAll('[data-prem]').forEach(card => {
@@ -154,13 +157,18 @@ window.ShopHtmlPay = {
     html += `<div style="text-align:center;font-size:10px;color:rgba(85,119,170,.8);margin-top:16px">💡 После оплаты товар придёт автоматически</div>`;
     el.innerHTML = html;
     el.querySelectorAll('[data-usdt]').forEach(card => {
-      card.addEventListener('click', () => ShopHtmlPay._buyCrypto(card.dataset.usdt));
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        ShopHtmlPay._showUsdtDetail(card.dataset.usdt);
+      });
       card.querySelector('.sh-btn')?.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(card.dataset.usdt); });
     });
     el.querySelectorAll('[data-prem]').forEach(card => {
       card.querySelector('.sh-btn')?.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(card.dataset.prem); });
     });
   },
+
+  _pkgs() { return _pkgs; },
 
   async _buyStars(pkgId) {
     ShopHtml.toast('⏳ Открываем оплату...');

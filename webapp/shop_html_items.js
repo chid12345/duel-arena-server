@@ -138,11 +138,37 @@ window.ShopHtmlItems = {
     return '';
   },
 
+  _findItem(id) {
+    for (const tab of ['consumables', 'scrolls', 'boxes']) {
+      const it = (DATA[tab] || []).find(i => i[0] === id);
+      if (it) return { tab, item: it };
+    }
+    return null;
+  },
+
+  _showDetailFor(id) {
+    const found = ShopHtmlItems._findItem(id); if (!found) return;
+    const [iid, icon, name, price, cur, desc, badge, risk] = found.item;
+    const r = _rarity(cur, price, risk);
+    const qty = _inv[iid] || 0;
+    const p = State.player || {};
+    const bal = cur === 'diamonds' ? (p.diamonds || 0) : (p.gold || 0);
+    const canBuy = bal >= price;
+    const pIcon = cur === 'diamonds' ? '💎' : '🪙';
+    ShopHtml.showDetail({
+      icon, name, desc, badge, risk, price, currency: cur, qty, rarity: r,
+      actionLabel: canBuy ? `Купить за ${price} ${pIcon}` : `Нужно ${price} ${pIcon}`,
+      action: canBuy
+        ? () => ShopHtmlItems._doBuy(iid)
+        : () => ShopHtml.toast(`❌ Не хватает ${cur === 'diamonds' ? 'алмазов' : 'золота'}`, true),
+    });
+  },
+
   bindBuyEvents(root) {
     root.querySelectorAll('[data-buy]').forEach(card => {
       card.addEventListener('click', e => {
         if (e.target.tagName === 'BUTTON') return;
-        ShopHtmlItems._doBuy(card.dataset.buy);
+        ShopHtmlItems._showDetailFor(card.dataset.buy);
       });
       card.querySelector('.sh-btn')?.addEventListener('click', e => {
         e.stopPropagation();
