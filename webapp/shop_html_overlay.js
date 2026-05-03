@@ -47,6 +47,12 @@ const CSS = `
 .sh-card.r-e .sh-ico{filter:drop-shadow(0 0 7px rgba(180,79,255,.5))}
 .sh-card.r-l .sh-ico{filter:drop-shadow(0 0 8px rgba(255,140,0,.5))}
 .sh-card.r-d .sh-ico{filter:drop-shadow(0 0 7px rgba(255,51,51,.5))}
+.sh-card.r-stars .sh-ico{filter:drop-shadow(0 0 8px rgba(255,170,50,.65))}
+.sh-card.r-usdt .sh-ico{filter:drop-shadow(0 0 8px rgba(0,255,136,.55))}
+@keyframes shStars{0%,100%{filter:drop-shadow(0 0 6px rgba(255,170,50,.5))}50%{filter:drop-shadow(0 0 2px rgba(255,170,50,.15))}}
+@keyframes shUsdt{0%,100%{filter:drop-shadow(0 0 6px rgba(0,255,136,.45))}50%{filter:drop-shadow(0 0 2px rgba(0,255,136,.1))}}
+.sh-card.r-stars{animation:shStars 3s ease-in-out infinite}
+.sh-card.r-usdt{animation:shUsdt 3s ease-in-out infinite}
 .sh-card:hover .sh-ico{filter:brightness(1.15) drop-shadow(0 0 9px currentColor)}
 .sh-nm{font-size:8.5px;font-weight:600;line-height:1.15;color:#d0d0e8;text-align:center;margin-bottom:1px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:18px}
 .sh-ds{display:none}

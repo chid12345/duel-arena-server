@@ -14,12 +14,12 @@ function _cardStar(item) {
   const { id, label, stars, scroll_id } = item;
   const isBox = (scroll_id || '').startsWith('box_');
   const isLeg = id.includes('titan');
-  const r = isLeg ? 'l' : isBox ? 'e' : 'r';
+  const r = isLeg ? 'l' : isBox ? 'e' : 'stars';
   const name = label.replace(/^[^\s]+\s/, '');
   const icoHtml = isBox
     ? `<img src="chest_epic.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.35))">`
     : isLeg ? '🏔️'
-    : `<img src="scroll_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(0,200,255,.35))">`;
+    : `<img src="scroll_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,170,50,.6))">`;
   return `
 <div class="sh-card r-${r}" data-stars="${id}">
   <div class="sh-diode d-${r}"></div>
@@ -47,12 +47,12 @@ function _cardUSDT(pkg) {
   const { id, label, usdt, scroll_id } = pkg;
   const isBox = (scroll_id || '').startsWith('box_');
   const isLeg = id.includes('titan');
-  const r = isLeg ? 'l' : isBox ? 'e' : 'r';
+  const r = isLeg ? 'l' : isBox ? 'e' : 'usdt';
   const name = label.replace(/^[^\s]+\s/, '');
   const icoHtml = isBox
     ? `<img src="chest_epic.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.35))">`
     : isLeg ? '🏔️'
-    : `<img src="scroll_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(0,200,255,.35))">`;
+    : `<img src="scroll_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(0,255,136,.55))">`;
   return `
 <div class="sh-card r-${r}" data-usdt="${id}">
   <div class="sh-diode d-${r}"></div>

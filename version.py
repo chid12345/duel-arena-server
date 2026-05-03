@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.8.30"
-VERSION_LABEL = "v2.8.30 — fix: модалка Stars/USDT ящиков — chest_epic.png вместо 🎲"
+VERSION = "2.8.31"
+VERSION_LABEL = "v2.8.31 — feat: Stars-свитки золотые, USDT-свитки зелёные (r-stars/r-usdt)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "13.00"
+GAME_VERSION = "13.01"
