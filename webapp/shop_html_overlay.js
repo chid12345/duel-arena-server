@@ -9,7 +9,10 @@ const CSS = `
 #${ID}::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,245,255,.015) 3px 4px)}
 .sh-hdr{flex-shrink:0;background:rgba(10,10,20,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,245,255,.12);padding:6px 14px 0;position:relative;z-index:2}
 .sh-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
-.sh-back{font-size:22px;color:rgba(0,245,255,.7);cursor:pointer;padding:2px 8px;user-select:none}
+@keyframes shBackGlow{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6),0 0 48px rgba(0,245,255,.2);opacity:1}}
+.sh-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:30px;color:#00f5ff;cursor:pointer;padding:2px 10px;user-select:none;animation:shBackGlow 2s ease-in-out infinite}
+.sh-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.sh-back:active{transform:scale(.88)}
 .sh-ttl{font-size:17px;font-weight:700;letter-spacing:2px;color:#00f5ff;text-shadow:0 0 18px rgba(0,245,255,.5)}
 .sh-ttl span{color:#fff}
 .sh-bp{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;user-select:none}
@@ -132,7 +135,7 @@ window.ShopHtml = {
   hide() {
     const r = document.getElementById(ID);
     if (r) r.style.display = 'none';
-    if (_scene) { _scene.scene.start('Menu', { returnTab: 'more' }); _scene = null; }
+    if (_scene) { _scene.scene.start('Stats', { player: State.player }); _scene = null; }
   },
   _setTab(t, init) {
     _tab = t;

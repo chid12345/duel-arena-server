@@ -9,7 +9,10 @@ const CSS = `
 .nc-overlay::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
 .nc-panel{width:100%;max-width:430px;position:relative;z-index:2;padding:0 0 10px;display:flex;flex-direction:column;height:100%;box-sizing:border-box}
 .nc-hdr{padding:10px 16px 4px;display:flex;align-items:center;gap:10px;flex-shrink:0}
-.nc-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:4px 8px;opacity:.7;user-select:none}
+@keyframes ncBackGlow{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6);opacity:1}}
+.nc-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:30px;color:#00f5ff;cursor:pointer;padding:2px 10px;user-select:none;animation:ncBackGlow 2s ease-in-out infinite}
+.nc-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.nc-back:active{transform:scale(.88)}
 .nc-hdri{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:16px;background:linear-gradient(135deg,#1a0533,#2a0a40);border:1px solid #ff3ba8;box-shadow:0 0 10px rgba(255,59,168,.5),inset 0 0 6px rgba(255,59,168,.2)}
 .nc-hdrt{font-size:15px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .nc-hdrs{font-size:9.5px;color:#00e0ff;opacity:.75;margin-top:1px}

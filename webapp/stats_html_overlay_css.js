@@ -9,7 +9,10 @@ const CSS = `
 .st-panel{width:100%;max-width:430px;position:relative;z-index:2;padding:0 0 20px}
 .st-hdr{margin:10px;padding:10px 12px;border-radius:14px;background:linear-gradient(135deg,rgba(255,59,168,.1),rgba(0,240,255,.08));border:1px solid #00f0ff;box-shadow:0 0 14px rgba(0,240,255,.3),inset 0 0 10px rgba(0,240,255,.06);display:flex;align-items:center;gap:10px;position:relative}
 .st-hdr::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#ff3ba8,transparent)}
-.st-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:2px 8px 2px 0;opacity:.75;user-select:none}
+@keyframes stBackGlow{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6);opacity:1}}
+.st-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:30px;color:#00f5ff;cursor:pointer;padding:2px 10px 2px 0;user-select:none;animation:stBackGlow 2s ease-in-out infinite}
+.st-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.st-back:active{transform:scale(.88)}
 .st-av{width:46px;height:46px;display:grid;place-items:center;font-size:26px;flex-shrink:0;filter:drop-shadow(0 0 12px #ff3ba8) drop-shadow(0 0 5px #ff3ba8);cursor:pointer}
 .st-bd{flex:1;min-width:0}
 .st-n{font-size:13px;font-weight:800;color:#fff;text-shadow:0 0 5px #00f0ff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}

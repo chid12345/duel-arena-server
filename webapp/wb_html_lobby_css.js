@@ -16,8 +16,10 @@ window.WBLobbyCSS = (() => {
 .wb-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;
   border-bottom:1px solid rgba(255,0,200,.18);
   background:linear-gradient(180deg,rgba(30,0,50,.5) 0%,transparent 100%);position:sticky;top:0;z-index:10;}
-.wb-back{width:30px;height:30px;border-radius:8px;display:grid;place-items:center;
-  background:rgba(255,0,200,.07);border:1px solid rgba(255,0,200,.3);font-size:16px;color:#ff00cc;cursor:pointer;}
+@keyframes wbBackGlow{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6);opacity:1}}
+.wb-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:30px;color:#00f5ff;cursor:pointer;padding:2px 10px;user-select:none;animation:wbBackGlow 2s ease-in-out infinite}
+.wb-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.wb-back:active{transform:scale(.88)}
 .wb-hdr-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:20px;
   background:linear-gradient(135deg,#1a0033,#002a30);border:1px solid #ff00cc;
   box-shadow:0 0 16px rgba(255,0,200,.5);animation:wb-ip 3s ease-in-out infinite;}

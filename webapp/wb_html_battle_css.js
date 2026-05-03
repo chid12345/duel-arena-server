@@ -18,9 +18,10 @@ window.WBBattleCSS = (() => {
   border-bottom:1px solid rgba(255,0,85,.15);}
 .wb-bhdr2-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
 .wb-bhdr2-l{display:flex;align-items:center;gap:8px;}
-.wb-back2{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;
-  background:rgba(255,0,85,.07);border:1px solid rgba(255,0,85,.2);
-  font-size:14px;color:#ff0055;cursor:pointer;flex-shrink:0;}
+@keyframes wbBack2Glow{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6);opacity:1}}
+.wb-back2{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:28px;color:#00f5ff;cursor:pointer;padding:2px 8px;user-select:none;flex-shrink:0;animation:wbBack2Glow 2s ease-in-out infinite}
+.wb-back2::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.wb-back2:active{transform:scale(.88)}
 .wb-bhdr2-title{font-size:13px;font-weight:900;letter-spacing:3px;
   color:#FF0055;text-shadow:0 0 10px #FF0055,0 0 20px #FF0055;
   animation:wb-glitch 5s infinite;}

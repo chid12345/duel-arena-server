@@ -9,7 +9,10 @@ const CSS = `
 .cl-overlay::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
 .cl-panel{width:100%;max-width:430px;position:relative;z-index:2;padding:0 0 100px}
 .cl-hdr{padding:14px 16px 10px;display:flex;align-items:center;gap:10px}
-.cl-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:4px 8px;opacity:.7;user-select:none}
+@keyframes clBackGlow{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6);opacity:1}}
+.cl-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:30px;color:#00f5ff;cursor:pointer;padding:2px 10px;user-select:none;animation:clBackGlow 2s ease-in-out infinite}
+.cl-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.cl-back:active{transform:scale(.88)}
 .cl-hdr-icon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;font-size:18px;background:linear-gradient(135deg,#1a0533,#2a0a40);border:1px solid #ff3ba8;box-shadow:0 0 12px rgba(255,59,168,.5),inset 0 0 8px rgba(255,59,168,.2)}
 .cl-hdr-title{font-size:16px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cl-hdr-sub{font-size:10px;color:#00e0ff;opacity:.75;margin-top:1px}
@@ -50,7 +53,9 @@ const CSS = `
 .cl-mem-panel.closing{animation:clFadeOut .22s ease forwards}
 .cl-mem-hdr{display:flex;align-items:center;gap:10px;padding:12px 14px 10px;border-bottom:1px solid rgba(0,240,255,.18);position:sticky;top:0;background:rgba(10,2,20,.97);z-index:2}
 .cl-mem-hdr-title{font-size:13px;font-weight:800;color:#00f0ff;text-shadow:0 0 8px currentColor;letter-spacing:.5px}
-.cl-mem-hdr-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:2px 8px;opacity:.75;user-select:none}
+.cl-mem-hdr-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:30px;color:#00f5ff;cursor:pointer;padding:2px 10px;user-select:none;animation:clBackGlow 2s ease-in-out infinite}
+.cl-mem-hdr-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.cl-mem-hdr-back:active{transform:scale(.88)}
 .cl-mrow{padding:8px 10px;border-radius:10px;display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(15,5,30,.8),rgba(5,5,15,.8));border:1px solid rgba(0,240,255,.2)}
 .cl-mrow.leader{border-color:#ffd166;box-shadow:0 0 12px rgba(255,209,102,.25)}
 .cl-mic{font-size:15px;width:22px;text-align:center}

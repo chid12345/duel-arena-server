@@ -9,7 +9,10 @@ const CSS = `
 .cc-overlay::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
 .cc-panel{width:100%;max-width:430px;position:relative;z-index:2;display:flex;flex-direction:column;height:100%}
 .cc-hdr{padding:12px 14px 10px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,59,168,.3);background:linear-gradient(180deg,rgba(20,0,30,.9),rgba(10,5,20,.7));flex-shrink:0}
-.cc-back{font-size:22px;color:#80d8ff;cursor:pointer;padding:4px 8px;opacity:.8;user-select:none}
+@keyframes ccBackGlow{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6);opacity:1}}
+.cc-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:30px;color:#00f5ff;cursor:pointer;padding:2px 10px;user-select:none;animation:ccBackGlow 2s ease-in-out infinite}
+.cc-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.cc-back:active{transform:scale(.88)}
 .cc-hdr-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:16px;background:linear-gradient(135deg,#1a0533,#2a0a40);border:1px solid #00f0ff;box-shadow:0 0 12px rgba(0,240,255,.5),inset 0 0 8px rgba(0,240,255,.2)}
 .cc-hdr-ti{font-size:14px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .cc-hdr-sub{font-size:10px;color:#80d8ff;opacity:.75;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
