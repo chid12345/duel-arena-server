@@ -12,7 +12,17 @@ const CSS = `
 .sh-back{font-size:22px;color:rgba(0,245,255,.7);cursor:pointer;padding:2px 8px;user-select:none}
 .sh-ttl{font-size:17px;font-weight:700;letter-spacing:2px;color:#00f5ff;text-shadow:0 0 18px rgba(0,245,255,.5)}
 .sh-ttl span{color:#fff}
-.sh-inv{display:flex;align-items:center;gap:5px;background:rgba(180,79,255,.12);border:1px solid rgba(180,79,255,.35);border-radius:18px;padding:5px 11px;font-size:11px;font-weight:600;color:#b44fff;cursor:pointer}
+.sh-bp{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;user-select:none}
+.sh-bp-btn{position:relative;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(180,79,255,.07);box-shadow:0 0 0 1px rgba(180,79,255,.32),0 0 14px rgba(180,79,255,.28),inset 0 0 10px rgba(180,79,255,.05);transition:all .2s}
+.sh-bp:hover .sh-bp-btn{box-shadow:0 0 0 1px rgba(180,79,255,.65),0 0 22px rgba(180,79,255,.5),inset 0 0 14px rgba(180,79,255,.1)}
+.sh-bp-img{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(180,79,255,.55)) drop-shadow(0 0 12px rgba(180,79,255,.3));transition:filter .2s}
+.sh-bp:hover .sh-bp-img{filter:drop-shadow(0 0 8px rgba(180,79,255,.85)) drop-shadow(0 0 16px rgba(180,79,255,.5))}
+.sh-bp-badge{display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#e64c4c;border:2px solid #0a0a14;color:#fff;font-size:10px;font-weight:800;align-items:center;justify-content:center;padding:0 3px;line-height:1;z-index:3;animation:shBdgPop .3s ease}
+.sh-bp-badge.on{display:flex}
+@keyframes shBdgPop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.sh-bp-pulse{animation:shBpPulse .28s ease-in-out}
+@keyframes shBpPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
+.sh-bp-lbl{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(180,79,255,.75);text-transform:uppercase}
 .sh-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.05)}
 .sh-tabs::-webkit-scrollbar{display:none}
 .sh-tab{flex-shrink:0;padding:7px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,.4);cursor:pointer;border-bottom:2px solid transparent;transition:all .22s;white-space:nowrap;position:relative}
@@ -86,12 +96,13 @@ window.ShopHtml = {
     r.innerHTML = _html();
     r.style.display = 'flex';
     r.querySelector('.sh-back').addEventListener('click', () => ShopHtml.hide());
-    r.querySelector('.sh-inv').addEventListener('click', () => ShopHtml._setTab('stars'));
+    r.querySelector('#sh-bp').addEventListener('click', () => ShopHtml._openInventory());
     r.querySelectorAll('.sh-tab').forEach(t => t.addEventListener('click', () => ShopHtml._setTab(t.dataset.t)));
     ShopHtml._setTab(_tab, true);
     // Загружаем данные
     try { const d = await post('/api/player'); if (d.ok && d.player) State.player = d.player; } catch(_) {}
     ShopHtml._updateBalance();
+    ShopHtml._renderBadge();
     try {
       const inv = await get('/api/shop/inventory');
       if (inv?.inventory) ShopHtmlItems._setInv(inv.inventory);
@@ -125,7 +136,42 @@ window.ShopHtml = {
     clearTimeout(_toastTmr);
     _toastTmr = setTimeout(() => t.classList.remove('on'), 2200);
   },
-  bumpInvBadge() {},
+  _readInvCount() {
+    const sv = State?.player?.inventory_unseen;
+    if (typeof sv === 'number') return Math.max(0, sv | 0);
+    try { return parseInt(localStorage.getItem('shop_inv_new_count') || '0', 10) || 0; } catch(_) { return 0; }
+  },
+  _renderBadge() {
+    const badge = document.getElementById('sh-bp-badge'); if (!badge) return;
+    const n = ShopHtml._readInvCount();
+    if (n > 0) {
+      badge.textContent = n > 9 ? '9+' : String(n);
+      badge.classList.add('on');
+    } else {
+      badge.classList.remove('on');
+    }
+  },
+  bumpInvBadge() {
+    const hasSv = typeof State?.player?.inventory_unseen === 'number';
+    if (!hasSv) {
+      const n = ShopHtml._readInvCount() + 1;
+      try { localStorage.setItem('shop_inv_new_count', String(n)); } catch(_) {}
+    }
+    ShopHtml._renderBadge();
+    // Пульс кнопки
+    const btn = document.querySelector('.sh-bp-btn'); if (!btn) return;
+    btn.classList.remove('sh-bp-pulse');
+    void btn.offsetWidth;
+    btn.classList.add('sh-bp-pulse');
+    setTimeout(() => btn.classList.remove('sh-bp-pulse'), 300);
+  },
+  _openInventory() {
+    // Сбрасываем счётчик
+    try { localStorage.setItem('shop_inv_new_count', '0'); } catch(_) {}
+    const r = document.getElementById('shop-html-ov');
+    if (r) r.style.display = 'none';
+    if (_scene) { _scene.scene.start('Stats', { player: State.player, openInventory: true }); }
+  },
 };
 
 function _html() {
@@ -136,7 +182,13 @@ function _html() {
       <div class="sh-back">‹</div>
       <div class="sh-ttl"><span>⚔️</span> МАГАЗИН</div>
     </div>
-    <div class="sh-inv">🎒 Моё</div>
+    <div class="sh-bp" id="sh-bp">
+      <div class="sh-bp-btn">
+        <img src="рюкзак.png" class="sh-bp-img" alt="Рюкзак">
+        <span class="sh-bp-badge" id="sh-bp-badge"></span>
+      </div>
+      <div class="sh-bp-lbl">Рюкзак</div>
+    </div>
   </div>
   <div class="sh-tabs">
     <div class="sh-tab" data-t="consumables">🧪 Зелья</div>

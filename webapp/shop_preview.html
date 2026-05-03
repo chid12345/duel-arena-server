@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Duel Arena — Магазин</title>
+<style>
+:root{
+  --c:#00f5ff; --p:#b44fff; --g:#ffd700; --gn:#00ff88; --pk:#ff2d78;
+  --r-c:#8a8a9a; --r-r:#4488ff; --r-e:#b44fff; --r-l:#ff8c00; --r-d:#ff3333;
+  --bg:#0a0a14; --card:rgba(255,255,255,0.04); --brd:rgba(255,255,255,0.08);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:#e0e0f0;display:flex;flex-direction:column}
+body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,245,255,0.015) 3px 4px)}
+
+/* ═══ HEADER ═══ */
+.hdr{flex-shrink:0;background:rgba(10,10,20,0.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,245,255,0.12);padding:10px 14px 0}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.hdr-title{font-size:17px;font-weight:700;letter-spacing:2px;color:var(--c);text-shadow:0 0 18px rgba(0,245,255,0.5)}
+.hdr-title span{color:#fff}
+.sh-bp{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;user-select:none}
+.sh-bp-btn{position:relative;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(180,79,255,.07);box-shadow:0 0 0 1px rgba(180,79,255,.32),0 0 14px rgba(180,79,255,.28),inset 0 0 10px rgba(180,79,255,.05);transition:all .2s}
+.sh-bp:hover .sh-bp-btn{box-shadow:0 0 0 1px rgba(180,79,255,.65),0 0 22px rgba(180,79,255,.5),inset 0 0 14px rgba(180,79,255,.1)}
+.sh-bp-img{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(180,79,255,.55)) drop-shadow(0 0 12px rgba(180,79,255,.3))}
+.sh-bp-badge{display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#e64c4c;border:2px solid #0a0a14;color:#fff;font-size:10px;font-weight:800;align-items:center;justify-content:center;padding:0 3px;line-height:1;z-index:3;animation:shBdgPop .3s ease}
+.sh-bp-badge.on{display:flex}
+@keyframes shBdgPop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
+.sh-bp-lbl{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(180,79,255,.75);text-transform:uppercase}
+
+/* ═══ TABS ═══ */
+.tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,0.05)}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex-shrink:0;padding:7px 13px;font-size:12px;font-weight:600;color:rgba(255,255,255,0.4);cursor:pointer;border-bottom:2px solid transparent;transition:all .22s;white-space:nowrap;position:relative}
+.tab.on{color:var(--c);border-bottom-color:var(--c);text-shadow:0 0 10px rgba(0,245,255,0.7)}
+.tab.on::after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--c);box-shadow:0 0 8px var(--c),0 0 16px var(--c)}
+.tab:not(.on):hover{color:rgba(255,255,255,0.65)}
+
+/* ═══ SCROLL AREA ═══ */
+.body{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 12px 88px;scrollbar-width:thin;scrollbar-color:rgba(0,245,255,0.2) transparent}
+.body::-webkit-scrollbar{width:3px}
+.body::-webkit-scrollbar-thumb{background:rgba(0,245,255,0.2);border-radius:2px}
+
+/* ═══ PANEL ═══ */
+.panel{display:none}.panel.on{display:block}
+
+/* ═══ SECTION TITLE ═══ */
+.sec{font-size:10px;font-weight:700;letter-spacing:2px;color:rgba(255,255,255,0.28);text-transform:uppercase;margin:16px 0 9px;padding-left:2px}
+
+/* ═══ GRID ═══ */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+
+/* ═══ CARD ═══ */
+.card{
+  position:relative;
+  background:linear-gradient(145deg,rgba(18,5,32,.96),rgba(6,6,18,.97));
+  border-radius:14px;
+  border:none;
+  padding:10px 10px 8px;
+  display:flex;flex-direction:column;
+  overflow:hidden;cursor:pointer;
+  box-shadow:0 6px 28px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.055),inset 0 0 18px rgba(255,255,255,.025);
+  transition:transform .14s,box-shadow .2s;
+}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.04) 0%,transparent 50%);pointer-events:none}
+.card:hover{transform:translateY(-2px)}
+
+/* rarity glow — только box-shadow, без border */
+.card.r-r{
+  box-shadow:0 6px 28px rgba(0,0,0,.55),
+    0 0 0 1px rgba(68,136,255,.35),
+    0 0 18px rgba(68,136,255,.22),
+    inset 0 0 20px rgba(68,136,255,.06);
+}
+.card.r-r:hover{
+  box-shadow:0 8px 32px rgba(0,0,0,.6),
+    0 0 0 1px rgba(68,136,255,.6),
+    0 0 28px rgba(68,136,255,.38),
+    inset 0 0 24px rgba(68,136,255,.1);
+}
+.card.r-e{
+  box-shadow:0 6px 28px rgba(0,0,0,.55),
+    0 0 0 1px rgba(180,79,255,.38),
+    0 0 20px rgba(180,79,255,.26),
+    inset 0 0 22px rgba(180,79,255,.07);
+}
+.card.r-e:hover{
+  box-shadow:0 8px 32px rgba(0,0,0,.6),
+    0 0 0 1px rgba(180,79,255,.65),
+    0 0 30px rgba(180,79,255,.42),
+    inset 0 0 26px rgba(180,79,255,.12);
+}
+.card.r-l{
+  background:linear-gradient(145deg,rgba(24,10,4,.96),rgba(8,6,2,.97));
+  box-shadow:0 6px 28px rgba(0,0,0,.55),
+    0 0 0 1px rgba(255,140,0,.4),
+    0 0 22px rgba(255,140,0,.28),
+    inset 0 0 22px rgba(255,140,0,.07);
+  animation:mythicPulse 3s ease-in-out infinite;
+}
+.card.r-l:hover{
+  box-shadow:0 8px 32px rgba(0,0,0,.6),
+    0 0 0 1px rgba(255,140,0,.7),
+    0 0 34px rgba(255,140,0,.45),
+    inset 0 0 26px rgba(255,140,0,.12);
+}
+@keyframes mythicPulse{
+  0%,100%{box-shadow:0 6px 28px rgba(0,0,0,.55),0 0 0 1px rgba(255,140,0,.4),0 0 22px rgba(255,140,0,.28),inset 0 0 22px rgba(255,140,0,.07)}
+  50%{box-shadow:0 6px 28px rgba(0,0,0,.55),0 0 0 1px rgba(255,140,0,.25),0 0 12px rgba(255,140,0,.14),inset 0 0 14px rgba(255,140,0,.04)}
+}
+.card.r-d{
+  background:linear-gradient(145deg,rgba(22,4,4,.96),rgba(8,4,4,.97));
+  box-shadow:0 6px 28px rgba(0,0,0,.55),
+    0 0 0 1px rgba(255,51,51,.35),
+    0 0 18px rgba(255,51,51,.22),
+    inset 0 0 20px rgba(255,51,51,.06);
+}
+.card.r-d:hover{
+  box-shadow:0 8px 32px rgba(0,0,0,.6),
+    0 0 0 1px rgba(255,51,51,.6),
+    0 0 28px rgba(255,51,51,.38),
+    inset 0 0 24px rgba(255,51,51,.1);
+}
+
+/* ═══ DIODE ═══ */
+.diode{position:absolute;top:9px;left:9px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 5px currentColor,0 0 10px currentColor}
+.d-c{background:var(--r-c);color:var(--r-c)}
+.d-r{background:var(--r-r);color:var(--r-r);animation:pulse 2s ease-in-out infinite}
+.d-e{background:var(--r-e);color:var(--r-e);animation:pulse 1.6s ease-in-out infinite}
+.d-l{background:var(--r-l);color:var(--r-l);animation:pulse 1s ease-in-out infinite}
+.d-d{background:var(--r-d);color:var(--r-d);animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 5px currentColor,0 0 10px currentColor}50%{opacity:.45;box-shadow:0 0 2px currentColor}}
+
+/* ═══ CARD CONTENT ═══ */
+.c-ico{font-size:30px;text-align:center;margin:12px 0 6px;filter:drop-shadow(0 0 6px rgba(255,255,255,.25));position:relative;z-index:1}
+.c-name{font-size:11.5px;font-weight:600;line-height:1.3;color:#d0d0e8;text-align:center;margin-bottom:3px;position:relative;z-index:1}
+.c-desc{font-size:10px;color:rgba(255,255,255,.38);text-align:center;line-height:1.4;flex:1;position:relative;z-index:1}
+.c-badge{display:block;font-size:9px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:4px;margin:5px auto 0;width:fit-content;position:relative;z-index:1}
+.b-bat{background:rgba(255,45,120,.18);color:var(--pk);border:1px solid rgba(255,45,120,.28)}
+.b-dur{background:rgba(0,245,255,.09);color:var(--c);border:1px solid rgba(0,245,255,.18)}
+.b-risk{background:rgba(255,60,60,.14);color:#ff4444;border:1px solid rgba(255,60,60,.28)}
+.b-day{background:rgba(255,215,0,.1);color:var(--g);border:1px solid rgba(255,215,0,.2)}
+
+/* ═══ PRICE ═══ */
+.price-row{display:flex;align-items:center;justify-content:center;gap:5px;margin:7px 0 5px;position:relative;z-index:1}
+.price-ico{font-size:15px}
+.price-val{font-size:17px;font-weight:800;color:#fff}
+.pv-g{color:var(--g);text-shadow:0 0 8px rgba(255,215,0,.45)}
+.pv-d{color:var(--c);text-shadow:0 0 8px rgba(0,245,255,.45)}
+.pv-u{color:var(--gn);text-shadow:0 0 8px rgba(0,255,136,.45)}
+.pv-s{color:#ffaa33;text-shadow:0 0 8px rgba(255,170,51,.45)}
+
+/* ═══ BUY BTN ═══ */
+.buy{width:100%;padding:7px 0;border-radius:7px;border:none;font-size:11px;font-weight:700;letter-spacing:.8px;cursor:pointer;position:relative;overflow:hidden;transition:all .18s;z-index:1}
+.buy-g{background:linear-gradient(135deg,#b87a08,#ffd700);color:#1a1000}
+.buy-d{background:linear-gradient(135deg,#0055bb,#00aaff);color:#fff}
+.buy-u{background:linear-gradient(135deg,#007a3d,#00dd77);color:#001a0d}
+.buy-s{background:linear-gradient(135deg,#995500,#ffaa33);color:#1a0800}
+.buy-danger{background:linear-gradient(135deg,#aa1111,#ff3333);color:#fff}
+.buy:hover{filter:brightness(1.12);transform:scale(1.02)}
+.buy:active{transform:scale(.96)}
+.buy::after{content:"";position:absolute;inset:0;background:rgba(255,255,255,0);transition:background .3s;pointer-events:none}
+.card.flash .buy::after{animation:flashBtn .4s forwards}
+@keyframes flashBtn{0%{background:rgba(255,255,255,.55)}100%{background:rgba(255,255,255,0)}}
+
+/* card flash overlay */
+.flash-ov{position:absolute;inset:0;border-radius:11px;background:rgba(255,255,255,0);pointer-events:none;z-index:5}
+.card.flash .flash-ov{animation:flashCard .5s forwards}
+@keyframes flashCard{0%{background:rgba(255,255,255,.22)}100%{background:rgba(255,255,255,0)}}
+
+/* ═══ INV BADGE ═══ */
+.inv-cnt{position:absolute;top:7px;right:7px;background:rgba(0,245,255,.12);border:1px solid rgba(0,245,255,.25);border-radius:6px;font-size:8px;font-weight:700;color:var(--c);padding:1px 5px;line-height:1.4;z-index:2}
+
+/* ═══ PREMIUM BANNER ═══ */
+.prem-banner{background:linear-gradient(135deg,rgba(180,79,255,.13),rgba(255,45,120,.08));border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;position:relative;overflow:hidden;margin-bottom:2px}
+.prem-banner::before{content:"";position:absolute;top:-40%;right:-10%;width:160px;height:160px;background:radial-gradient(circle,rgba(180,79,255,.12),transparent 70%);pointer-events:none}
+.pb-left{display:flex;align-items:center;gap:10px}
+.pb-ico{font-size:26px}
+.pb-name{font-size:13px;font-weight:700;color:#fff}
+.pb-desc{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px}
+.pb-active{font-size:10px;color:var(--gn);margin-top:3px;font-weight:600}
+.pb-price{font-size:19px;font-weight:900;text-align:right}
+.prem-buy{margin-top:6px;padding:5px 10px;font-size:10px;font-weight:700;border-radius:7px;border:none;cursor:pointer;transition:all .18s}
+
+/* ═══ DANGER CARD ═══ */
+.danger-card{grid-column:span 2;background:rgba(255,30,30,.05);border:1px solid rgba(255,51,51,.3);border-radius:11px;padding:12px 14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.danger-card:hover{border-color:rgba(255,51,51,.6);box-shadow:0 3px 18px rgba(255,51,51,.2)}
+.dc-left .dc-name{font-size:13px;font-weight:700;color:#ff6666}
+.dc-left .dc-desc{font-size:10px;color:rgba(255,255,255,.38);margin-top:3px}
+.dc-price{font-size:18px;font-weight:800;color:#ff4444;text-shadow:0 0 8px rgba(255,51,51,.45);white-space:nowrap}
+
+/* ═══ FOOTER ═══ */
+.footer{flex-shrink:0;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(10,10,20,0.97);backdrop-filter:blur(20px);border-top:1px solid rgba(0,245,255,.18);padding:9px 18px;display:flex;align-items:center;justify-content:space-between}
+.footer::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--c),var(--p),transparent);box-shadow:0 0 8px var(--c)}
+.f-label{font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.3);text-transform:uppercase}
+.f-items{display:flex;gap:14px}
+.f-item{display:flex;align-items:center;gap:5px}
+.f-ico{font-size:17px}
+.f-val{font-size:15px;font-weight:800;line-height:1}
+.fv-g{color:var(--g);text-shadow:0 0 6px rgba(255,215,0,.35)}
+.fv-d{color:var(--c);text-shadow:0 0 6px rgba(0,245,255,.35)}
+
+/* ═══ TOAST ═══ */
+.toast{position:fixed;bottom:76px;left:50%;transform:translateX(-50%) translateY(12px);background:rgba(0,245,255,.13);border:1px solid rgba(0,245,255,.35);border-radius:18px;padding:7px 18px;font-size:12px;font-weight:600;color:var(--c);backdrop-filter:blur(10px);z-index:200;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:rgba(255,51,51,.13);border-color:rgba(255,51,51,.35);color:#ff6666}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <div class="hdr-row">
+    <div class="hdr-title"><span>⚔️</span> МАГАЗИН</div>
+    <div class="sh-bp" id="sh-bp" onclick="openBackpack()">
+      <div class="sh-bp-btn">
+        <img src="рюкзак.png" class="sh-bp-img" alt="Рюкзак">
+        <span class="sh-bp-badge on" id="sh-bp-badge">3</span>
+      </div>
+      <div class="sh-bp-lbl">Рюкзак</div>
+    </div>
+  </div>
+  <div class="tabs" id="tabs">
+    <div class="tab on"  data-t="consumables">🧪 Зелья</div>
+    <div class="tab"     data-t="scrolls">📜 Свитки</div>
+    <div class="tab"     data-t="boxes">🎲 Ящики</div>
+    <div class="tab"     data-t="stars">⭐ Звёзды</div>
+    <div class="tab"     data-t="special">💵 Купить</div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="body">
+
+<!-- ══════════════ ЗЕЛЬЯ ══════════════ -->
+<div class="panel on" id="p-consumables">
+
+  <div class="sec">🧪 Зелья HP</div>
+  <div class="grid">
+
+    <div class="card" data-id="hp_small">
+      <div class="flash-ov"></div><div class="diode d-c"></div>
+      <div class="inv-cnt">×3</div>
+      <div class="c-ico">🧪</div>
+      <div class="c-name">Малое зелье HP</div>
+      <div class="c-desc">+30% HP перед боем</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">12</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card" data-id="hp_medium">
+      <div class="flash-ov"></div><div class="diode d-c"></div>
+      <div class="c-ico">💊</div>
+      <div class="c-name">Среднее зелье HP</div>
+      <div class="c-desc">+60% HP перед боем</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">25</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card" data-id="hp_full">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">⚗️</div>
+      <div class="c-name">Полное зелье HP</div>
+      <div class="c-desc">Полное HP</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">50</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card" data-id="xp_boost_5">
+      <div class="flash-ov"></div><div class="diode d-c"></div>
+      <div class="c-ico">⚡</div>
+      <div class="c-name">XP Буст ×1.5</div>
+      <div class="c-desc">5 боёв</div>
+      <div class="c-badge b-dur">5 БОЁВ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">100</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">💎 За алмазы</div>
+  <div class="grid">
+
+    <div class="card r-r" data-id="xp_boost_20">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">⚡</div>
+      <div class="c-name">XP Буст ×1.5</div>
+      <div class="c-desc">→ в инвентарь</div>
+      <div class="c-badge b-dur">20 БОЁВ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">25</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="xp_boost_x2">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🚀</div>
+      <div class="c-name">XP Буст ×2.0</div>
+      <div class="c-desc">→ в инвентарь</div>
+      <div class="c-badge b-dur">10 БОЁВ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">40</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="gold_hunt">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">💰</div>
+      <div class="c-name">Охота за золотом</div>
+      <div class="c-desc">+20% золото · 24ч → инвентарь</div>
+      <div class="c-badge b-day">24 ЧАСА</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">20</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="xp_hunt">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">📚</div>
+      <div class="c-name">Охота за опытом</div>
+      <div class="c-desc">+50% опыта · 24ч → инвентарь</div>
+      <div class="c-badge b-day">24 ЧАСА</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">20</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="stat_reset">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🔄</div>
+      <div class="c-name">Сброс статов</div>
+      <div class="c-desc">Сброс всех статов персонажа</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">200</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ СВИТКИ ══════════════ -->
+<div class="panel" id="p-scrolls">
+
+  <div class="sec">🪙 За золото · 1 бой</div>
+  <div class="grid">
+
+    <div class="card r-r" data-id="scroll_str_3">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">⚔️</div>
+      <div class="c-name">Эликсир силы +3</div>
+      <div class="c-desc">Сила +3 · 1 бой</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">60</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="scroll_end_3">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🌀</div>
+      <div class="c-name">Эликс. ловкости +3</div>
+      <div class="c-desc">Ловкость +3 · 1 бой</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">60</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="scroll_crit_3">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🎯</div>
+      <div class="c-name">Интуиция +3</div>
+      <div class="c-desc">Интуиция +3 · 1 бой</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">75</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="scroll_armor_6">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🛡️</div>
+      <div class="c-name">Свиток брони 6%</div>
+      <div class="c-desc">Броня +6% · 1 бой</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">80</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="scroll_hp_100">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">❤️</div>
+      <div class="c-name">Эликсир HP +100</div>
+      <div class="c-desc">+100 HP · 1 бой</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">70</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_warrior">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">⚔️</div>
+      <div class="c-name">Комбо Воина</div>
+      <div class="c-desc">Сила+2, Ловк+2 · 1 бой</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">110</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_shadow">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🌑</div>
+      <div class="c-name">Комбо Тени</div>
+      <div class="c-desc">Ловк+3, Уворот+3%</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">100</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_fury">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">💥</div>
+      <div class="c-name">Комбо Ярости</div>
+      <div class="c-desc">Сила+4, Крит+2</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">120</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">💎 За алмазы · 3 боя</div>
+  <div class="grid">
+
+    <div class="card r-e" data-id="scroll_str_6">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">⚔️</div>
+      <div class="c-name">Эликсир силы +6</div>
+      <div class="c-desc">Сила +6 · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">20</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_end_6">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🌀</div>
+      <div class="c-name">Эликс. ловкости +6</div>
+      <div class="c-desc">Ловкость +6 · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">20</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_crit_6">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🎯</div>
+      <div class="c-name">Интуиция +6</div>
+      <div class="c-desc">Интуиция +6 · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">25</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_dodge_5">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">💨</div>
+      <div class="c-name">Свиток уворота 5%</div>
+      <div class="c-desc">Уворот +5% · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">25</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_armor_10">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🛡️</div>
+      <div class="c-name">Свиток брони 10%</div>
+      <div class="c-desc">Броня +10% · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">30</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_hp_200">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">❤️</div>
+      <div class="c-name">Эликсир HP +200</div>
+      <div class="c-desc">+200 HP · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">25</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_double_10">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">⚡</div>
+      <div class="c-name">Двойной удар +10%</div>
+      <div class="c-desc">Двойной удар +10% · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">35</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_accuracy">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🎯</div>
+      <div class="c-name">Точность +15%</div>
+      <div class="c-desc">Точность +15% · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">20</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_bastion">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🏰</div>
+      <div class="c-name">Бастион</div>
+      <div class="c-desc">Ловк+5, Броня+8% · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">35</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_predator">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🐍</div>
+      <div class="c-name">Хищник</div>
+      <div class="c-desc">Крит+5, Двойн+8% · 3 боя</div>
+      <div class="c-badge b-dur">3 БОЯ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">35</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_all_4">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">✨</div>
+      <div class="c-name">Все пассивки +4</div>
+      <div class="c-desc">Все статы +4 · 1 бой</div>
+      <div class="c-badge b-bat">1 БОЙ</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">40</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="scroll_berserker">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🔥</div>
+      <div class="c-name">Берсерк</div>
+      <div class="c-desc">Сила+8, Броня-5% · 3 боя</div>
+      <div class="c-badge b-risk">⚠ РИСК</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">40</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ ЯЩИКИ ══════════════ -->
+<div class="panel" id="p-boxes">
+
+  <div class="sec">💱 Обмен алмазы → золото</div>
+  <div class="grid">
+
+    <div class="card" data-id="exchange_small">
+      <div class="flash-ov"></div><div class="diode d-c"></div>
+      <div class="c-ico">💱</div>
+      <div class="c-name">5💎 → 350🪙</div>
+      <div class="c-desc">Обмен алмазы → золото</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">5</span></div>
+      <button class="buy buy-d">ОБМЕНЯТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="exchange_medium">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">💰</div>
+      <div class="c-name">15💎 → 1100🪙</div>
+      <div class="c-desc">Лучший курс</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">15</span></div>
+      <button class="buy buy-d">ОБМЕНЯТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="exchange_large">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">💎</div>
+      <div class="c-name">50💎 → 4000🪙</div>
+      <div class="c-desc">Максимальный курс · самый выгодный</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">50</span></div>
+      <button class="buy buy-d">ОБМЕНЯТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">📦 Ящики</div>
+  <div class="grid">
+
+    <div class="card" data-id="box_common">
+      <div class="flash-ov"></div><div class="diode d-c"></div>
+      <div class="c-ico">📦</div>
+      <div class="c-name">Обычный ящик</div>
+      <div class="c-desc">2–4 свитка · шанс на алмазный</div>
+      <div class="price-row"><span class="price-ico">🪙</span><span class="price-val pv-g">150</span></div>
+      <button class="buy buy-g">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="box_rare">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🟦</div>
+      <div class="c-name">Редкий ящик</div>
+      <div class="c-desc">3–6 алмазных свитков</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">50</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="box_rare_c">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🟪</div>
+      <div class="c-name">Редкий ящик+</div>
+      <div class="c-desc">2+ алмазных · шанс 300💎 и Premium</div>
+      <div class="price-row"><span class="price-ico">💎</span><span class="price-val pv-d">80</span></div>
+      <button class="buy buy-d">КУПИТЬ</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ ЗВЁЗДЫ ══════════════ -->
+<div class="panel" id="p-stars">
+
+  <div class="sec">👑 Premium</div>
+  <div class="prem-banner" onclick="doBuy('premium_stars','premium')">
+    <div class="pb-left">
+      <div class="pb-ico">👑</div>
+      <div>
+        <div class="pb-name">Premium подписка</div>
+        <div class="pb-desc">+15% XP · ящик · скидки · значок</div>
+        <div class="pb-desc" style="margin-top:2px;color:rgba(255,255,255,.25)">21 день</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="pb-price pv-s">⭐ 390</div>
+      <button class="prem-buy buy-s" style="margin-top:6px">АКТИВИРОВАТЬ</button>
+    </div>
+  </div>
+
+  <div class="sec">🎲 Эпические ящики</div>
+  <div class="grid">
+
+    <div class="card r-e" data-id="ss_box_e2">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🔮</div>
+      <div class="c-name">Эпический: Удача</div>
+      <div class="c-desc">Свитки, шанс Титан + Premium</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">200</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="ss_box_e3">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">⚔️</div>
+      <div class="c-name">Набор воина</div>
+      <div class="c-desc">Свитки, шанс Титан + Premium</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">200</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">📜 Боевые свитки</div>
+  <div class="grid">
+
+    <div class="card r-r" data-id="ss_str_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">⚔️</div>
+      <div class="c-name">Эликсир силы +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">65</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="ss_end_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🌀</div>
+      <div class="c-name">Эликсир ловкости +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">65</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="ss_stam_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🛡️</div>
+      <div class="c-name">Эликсир выносл. +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">65</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="ss_crit_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🎯</div>
+      <div class="c-name">Эликсир интуиции +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">65</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="ss_hp_500">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">❤️</div>
+      <div class="c-name">Эликсир HP +500</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">65</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="ss_all_12">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">✨</div>
+      <div class="c-name">Все пассивки +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">130</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-l" data-id="ss_titan">
+      <div class="flash-ov"></div><div class="diode d-l"></div>
+      <div class="c-ico">🏔️</div>
+      <div class="c-name">Свиток Титана</div>
+      <div class="c-desc">Все статы +15 · 3 боя → инвентарь</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">200</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">💎 Алмазы</div>
+  <div class="grid">
+
+    <div class="card r-r" data-id="d100">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">💎</div>
+      <div class="c-name">100 алмазов</div>
+      <div class="c-desc">Мгновенно на счёт</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">150</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="d300">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">💎</div>
+      <div class="c-name">300 алмазов</div>
+      <div class="c-desc">Мгновенно на счёт</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">390</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="d500">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">💎</div>
+      <div class="c-name">500 алмазов</div>
+      <div class="c-desc">Мгновенно на счёт · лучшая цена</div>
+      <div class="price-row"><span class="price-ico">⭐</span><span class="price-val pv-s">650</span></div>
+      <button class="buy buy-s">КУПИТЬ</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════ КУПИТЬ (USDT) ══════════════ -->
+<div class="panel" id="p-special">
+
+  <div class="sec">👑 Premium</div>
+  <div class="prem-banner" onclick="doBuy('cdpremium','usdt')">
+    <div class="pb-left">
+      <div class="pb-ico">👑</div>
+      <div>
+        <div class="pb-name">Premium подписка</div>
+        <div class="pb-desc">+15% XP · ящик · скидки · значок</div>
+        <div class="pb-desc" style="margin-top:2px;color:rgba(255,255,255,.25)">21 день</div>
+      </div>
+    </div>
+    <div style="text-align:right">
+      <div class="pb-price pv-u">8.00 <span style="font-size:12px;opacity:.7">USDT</span></div>
+      <button class="prem-buy buy-u" style="margin-top:6px">АКТИВИРОВАТЬ</button>
+    </div>
+  </div>
+
+  <div class="sec">🎲 Эпические ящики</div>
+  <div class="grid">
+
+    <div class="card r-e" data-id="us_box_e2">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">🔮</div>
+      <div class="c-name">Эпический: Удача</div>
+      <div class="c-desc">Свитки, шанс Титан + Premium</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">3</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="us_box_e3">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">⚔️</div>
+      <div class="c-name">Набор воина</div>
+      <div class="c-desc">Свитки, шанс Титан + Premium</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">3</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">📜 Боевые свитки</div>
+  <div class="grid">
+
+    <div class="card r-r" data-id="us_str_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">⚔️</div>
+      <div class="c-name">Эликсир силы +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">1</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="us_end_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🌀</div>
+      <div class="c-name">Эликсир ловкости +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">1</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="us_stam_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🛡️</div>
+      <div class="c-name">Эликсир выносл. +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">1</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="us_crit_12">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">🎯</div>
+      <div class="c-name">Эликсир интуиции +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">1</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="us_hp_500">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">❤️</div>
+      <div class="c-name">Эликсир HP +500</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">1</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="us_all_12">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">✨</div>
+      <div class="c-name">Все пассивки +12</div>
+      <div class="c-desc">→ инвентарь</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">2</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-l" data-id="us_titan">
+      <div class="flash-ov"></div><div class="diode d-l"></div>
+      <div class="c-ico">🏔️</div>
+      <div class="c-name">Свиток Титана</div>
+      <div class="c-desc">Все статы +15 · 3 боя → инвентарь</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">3</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">💎 Алмазы / USDT</div>
+  <div class="grid">
+
+    <div class="card r-r" data-id="cd100">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">💎</div>
+      <div class="c-name">100 алмазов</div>
+      <div class="c-desc">Мгновенно на счёт</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">2.99</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-r" data-id="cd300">
+      <div class="flash-ov"></div><div class="diode d-r"></div>
+      <div class="c-ico">💎</div>
+      <div class="c-name">300 алмазов</div>
+      <div class="c-desc">Мгновенно на счёт</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">7.99</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+    <div class="card r-e" data-id="cd500">
+      <div class="flash-ov"></div><div class="diode d-e"></div>
+      <div class="c-ico">💎</div>
+      <div class="c-name">500 алмазов</div>
+      <div class="c-desc">Лучшая цена · мгновенно</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">12.99</span></div>
+      <button class="buy buy-u">КУПИТЬ</button>
+    </div>
+
+  </div>
+
+  <div class="sec">⚠️ Danger Zone</div>
+  <div class="grid">
+    <div class="card r-d" data-id="cdfullreset">
+      <div class="flash-ov"></div><div class="diode d-d"></div>
+      <div class="c-ico">🔄</div>
+      <div class="c-name">Сброс прогресса</div>
+      <div class="c-desc">Уровень с нуля · золото и 💎 сохраняются</div>
+      <div class="price-row"><span class="price-ico">💲</span><span class="price-val pv-u">11.99</span></div>
+      <button class="buy buy-danger">СБРОСИТЬ</button>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- /body -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="f-label">Баланс</div>
+  <div class="f-items">
+    <div class="f-item">
+      <div class="f-ico">🪙</div>
+      <div class="f-val fv-g" id="fGold">132 299</div>
+    </div>
+    <div class="f-item">
+      <div class="f-ico">💎</div>
+      <div class="f-val fv-d" id="fDia">40</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Tabs ──
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setTab(t.dataset.t)));
+
+function setTab(key) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('on', t.dataset.t === key));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('on', p.id === 'p-' + key));
+  const el = document.querySelector(`.tab[data-t="${key}"]`);
+  el?.scrollIntoView({behavior:'smooth', block:'nearest', inline:'center'});
+  document.querySelector('.body')?.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ── Buy ──
+document.querySelectorAll('.card').forEach(card => {
+  card.addEventListener('click', e => {
+    if (e.target.tagName === 'BUTTON') e.stopPropagation();
+    doBuy(card.dataset.id, 'card');
+  });
+  card.querySelector('.buy')?.addEventListener('click', e => {
+    e.stopPropagation();
+    doBuy(card.dataset.id, 'btn');
+  });
+});
+
+function doBuy(id, src) {
+  const card = document.querySelector(`[data-id="${id}"]`);
+  if (card?.classList.contains('buying')) return;
+  if (card) {
+    card.classList.add('flash','buying');
+    setTimeout(() => card.classList.remove('flash','buying'), 600);
+  }
+  if (window.Telegram?.WebApp?.HapticFeedback)
+    window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  const name = card?.querySelector('.c-name')?.textContent || card?.querySelector('.pb-name')?.textContent || id;
+  showToast('✓ ' + name);
+  bumpBadge();
+}
+
+// ── Backpack ──
+function openBackpack() { showToast('🎒 Открываем рюкзак...'); }
+let _bpCount = 3;
+function bumpBadge() {
+  _bpCount++;
+  const b = document.getElementById('sh-bp-badge');
+  b.textContent = _bpCount > 9 ? '9+' : String(_bpCount);
+  b.classList.remove('on'); void b.offsetWidth; b.classList.add('on');
+  const btn = document.querySelector('.sh-bp-btn');
+  btn.style.transform = 'scale(1.18)'; setTimeout(() => btn.style.transform = '', 280);
+}
+
+// ── Toast ──
+let toastTmr;
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast on' + (err ? ' err' : '');
+  clearTimeout(toastTmr);
+  toastTmr = setTimeout(() => t.classList.remove('on'), 2000);
+}
+</script>
+</body>
+</html>

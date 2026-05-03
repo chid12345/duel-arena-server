@@ -168,7 +168,7 @@ window.ShopHtmlItems = {
         let msg = `✅ Куплено`;
         if (res.hp_restored > 0) msg = `❤️ +${res.hp_restored} HP`;
         if (res.gold_gained)     msg = `💰 +${res.gold_gained} золота`;
-        if (res.added_to_inventory) msg = `📦 → в инвентарь`;
+        if (res.added_to_inventory) { msg = `📦 → в инвентарь`; ShopHtml.bumpInvBadge(); }
         ShopHtml.toast(msg);
         // Обновляем инвентарь
         try { const inv = await get('/api/shop/inventory'); if (inv?.inventory) ShopHtmlItems._setInv(inv.inventory); } catch(_) {}

@@ -181,7 +181,8 @@ window.ShopHtmlPay = {
             const c = await post('/api/shop/stars_confirm', { package_id: pkgId });
             if (c.ok) {
               if (c.player) { State.player = c.player; ShopHtml._updateBalance(); }
-              ShopHtml.toast(c.scroll_received ? '✅ Свиток получен! → Моё' : c.premium_activated ? '👑 Premium активирован!' : `✅ +${c.diamonds_added || 0} 💎`);
+              if (c.scroll_received) ShopHtml.bumpInvBadge();
+              ShopHtml.toast(c.scroll_received ? '✅ Свиток получен! → Рюкзак' : c.premium_activated ? '👑 Premium активирован!' : `✅ +${c.diamonds_added || 0} 💎`);
             }
           } catch(_) {}
           _pkgs = null; ShopHtmlPay._buildStars();
@@ -212,6 +213,7 @@ window.ShopHtmlPay = {
         if (r.ok && r.paid) {
           tg?.HapticFeedback?.notificationOccurred('success');
           localStorage.removeItem('cryptoPendingInvoice');
+          if (r.scroll_received) ShopHtml.bumpInvBadge();
           const msg = r.profile_reset ? '🔄 Аккаунт сброшен' : r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
           ShopHtml.toast(msg);
           try { const d = await post('/api/player'); if (d.ok && d.player) { State.player = d.player; ShopHtml._updateBalance(); } } catch(_) {}
