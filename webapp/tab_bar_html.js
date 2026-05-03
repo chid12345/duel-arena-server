@@ -22,54 +22,62 @@ window.TabBarHTML = (() => {
   background:rgba(7,4,26,.97);
   border-top:1px solid rgba(255,255,255,.07);
   font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
-/* Ячейки — полностью прозрачные, без рамок и фонов */
+/* Ячейки — полностью прозрачные, без рамок и фонов = иконки "парят" */
 .tb-item{flex:1;display:flex;flex-direction:column;align-items:center;
   justify-content:center;position:relative;cursor:pointer;
-  padding:3px 0 0;overflow:hidden;
+  padding:3px 0 4px;overflow:hidden;
   -webkit-tap-highlight-color:transparent;user-select:none;
   background:transparent}
-/* Точка/glow/ambient — скрыты, оставлены для совместимости */
-.tb-dot{display:none}
-.tb-glow{display:none}
-.tb-ambient{display:none}
-/* Обёртка иконки — overflow:hidden обрезает рамку PNG */
+/* Точка-индикатор активного таба */
+.tb-dot{position:absolute;top:4px;left:50%;transform:translateX(-50%);
+  width:7px;height:7px;border-radius:50%;
+  opacity:.35;transition:opacity .22s;
+  background:var(--col);
+  box-shadow:0 0 8px var(--col),0 0 3px var(--col)}
+.tb-item.active .tb-dot{opacity:1}
+/* Мягкое круглое свечение за иконкой — у всех, у активного ярче */
+.tb-glow{position:absolute;top:38%;left:50%;
+  transform:translate(-50%,-50%);
+  width:54px;height:54px;border-radius:50%;
+  background:radial-gradient(circle,var(--col) 0%,transparent 68%);
+  opacity:.09;transition:opacity .28s;pointer-events:none;z-index:0}
+.tb-item.active .tb-glow{opacity:.26}
+/* Обёртка иконки */
 .tb-icon-wrap{width:28px;height:28px;display:flex;align-items:center;
-  justify-content:center;position:relative;z-index:1;overflow:hidden;
+  justify-content:center;position:relative;z-index:1;
   transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
 .tb-item.active .tb-icon-wrap{transform:scale(1.2) translateY(-2px)}
 .tb-item:active .tb-icon-wrap{transform:scale(.88)}
 .tb-item.active:active .tb-icon-wrap{transform:scale(1.08) translateY(-1px)}
-/* PNG-иконка: 40px в 28px контейнере — рамка по краям обрезается;
-   mix-blend-mode:screen убирает тёмный фон; drop-shadow по контуру */
-.tb-img{width:40px;height:40px;flex-shrink:0;object-fit:contain;display:block;
-  mix-blend-mode:screen;
-  filter:saturate(.7) brightness(.75)
-    drop-shadow(0 0 3px var(--col));
+/* PNG-иконка — все горят своим цветом, активная ярче */
+.tb-img{width:28px;height:28px;object-fit:contain;display:block;
+  filter:saturate(.85) brightness(.8)
+    drop-shadow(0 0 4px var(--col))
+    drop-shadow(0 0 10px var(--col));
   transition:filter .25s}
 .tb-item.active .tb-img{
-  filter:saturate(1.5) brightness(1.3)
-    drop-shadow(0 0 6px var(--col))
-    drop-shadow(0 0 14px var(--col))}
+  filter:saturate(1.3) brightness(1.15)
+    drop-shadow(0 0 7px var(--col))
+    drop-shadow(0 0 18px var(--col))}
 /* Emoji-фолбэк */
 .tb-em{font-size:21px;line-height:1;
-  filter:saturate(.7) brightness(.65) drop-shadow(0 0 3px var(--col));
+  filter:saturate(.85) brightness(.8) drop-shadow(0 0 5px var(--col));
   transition:filter .25s}
 .tb-item.active .tb-em{
-  filter:saturate(1.4) brightness(1.2) drop-shadow(0 0 8px var(--col))}
-/* Неоновая линия под иконкой активной вкладки */
-.tb-line{position:absolute;bottom:0;left:50%;transform:translateX(-50%);
-  width:0;height:2px;border-radius:2px;
-  background:var(--col);
-  filter:drop-shadow(0 0 4px var(--col)) drop-shadow(0 0 8px var(--col));
-  opacity:0;transition:width .28s cubic-bezier(.34,1.56,.64,1),opacity .2s;
-  pointer-events:none;z-index:2}
-.tb-item.active .tb-line{width:50%;opacity:1}
-/* Подпись — чистый нежно-голубой, без теней */
-.tb-label{font-size:8px;font-weight:500;margin-top:3px;margin-bottom:4px;
-  letter-spacing:.2px;white-space:nowrap;position:relative;z-index:1;
-  color:rgba(176,224,255,.45);
-  transition:color .25s,opacity .25s}
-.tb-item.active .tb-label{color:#e0f2fe;opacity:1}
+  filter:saturate(1.2) brightness(1.1) drop-shadow(0 0 8px var(--col))}
+/* Ambient floor — пятно под иконкой у всех, активная ярче */
+.tb-ambient{position:absolute;bottom:6px;left:50%;
+  transform:translateX(-50%);
+  width:36px;height:5px;border-radius:50%;
+  background:var(--col);filter:blur(5px);
+  opacity:.2;transition:opacity .25s;pointer-events:none;z-index:0}
+.tb-item.active .tb-ambient{opacity:.5}
+/* Подпись — у всех цвет своего таба, активная ярче */
+.tb-label{font-size:9px;font-weight:700;margin-top:3px;
+  letter-spacing:.3px;white-space:nowrap;position:relative;z-index:1;
+  color:var(--col);opacity:.55;
+  transition:color .25s,text-shadow .25s,opacity .25s}
+.tb-item.active .tb-label{opacity:1;text-shadow:0 0 8px var(--col)}
 /* Ripple при тапе */
 .tb-ripple{position:absolute;border-radius:50%;pointer-events:none;
   top:50%;left:50%;width:0;height:0;
@@ -119,7 +127,6 @@ window.TabBarHTML = (() => {
       const glow = document.createElement('div'); glow.className = 'tb-glow';
       const wrap = document.createElement('div'); wrap.className = 'tb-icon-wrap';
       const amb  = document.createElement('div'); amb.className  = 'tb-ambient';
-      const line = document.createElement('div'); line.className = 'tb-line';
       const lbl  = document.createElement('div'); lbl.className  = 'tb-label'; lbl.textContent = tab.label;
 
       const img = document.createElement('img');
@@ -131,7 +138,7 @@ window.TabBarHTML = (() => {
         wrap.appendChild(em);
       };
       wrap.appendChild(img);
-      item.append(dot, glow, wrap, amb, lbl, line);
+      item.append(dot, glow, wrap, amb, lbl);
 
       item.addEventListener('pointerdown', () => {
         const rip = document.createElement('div');
