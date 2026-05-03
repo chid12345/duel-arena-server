@@ -39,13 +39,15 @@ window.TabBarHTML = (() => {
 .tb-item.active .tb-icon-wrap{transform:scale(1.2) translateY(-2px)}
 .tb-item:active .tb-icon-wrap{transform:scale(.88)}
 .tb-item.active:active .tb-icon-wrap{transform:scale(1.08) translateY(-1px)}
-/* PNG-иконка — drop-shadow светит по контуру самой иконки */
+/* PNG-иконка — mix-blend-mode:screen убирает тёмный фон/рамку PNG;
+   drop-shadow светит по контуру самого значка */
 .tb-img{width:28px;height:28px;object-fit:contain;display:block;
-  filter:saturate(.7) brightness(.65)
+  mix-blend-mode:screen;
+  filter:saturate(.7) brightness(.7)
     drop-shadow(0 0 3px var(--col));
   transition:filter .25s}
 .tb-item.active .tb-img{
-  filter:saturate(1.4) brightness(1.2)
+  filter:saturate(1.5) brightness(1.25)
     drop-shadow(0 0 6px var(--col))
     drop-shadow(0 0 14px var(--col))}
 /* Emoji-фолбэк */
