@@ -21,9 +21,11 @@ body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;
 .hdr-title{font-size:17px;font-weight:700;letter-spacing:2px;color:var(--c);text-shadow:0 0 18px rgba(0,245,255,0.5)}
 .hdr-title span{color:#fff}
 .sh-bp{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;user-select:none}
-.sh-bp-btn{position:relative;width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;background:rgba(180,79,255,.07);box-shadow:0 0 0 1px rgba(180,79,255,.32),0 0 14px rgba(180,79,255,.28),inset 0 0 10px rgba(180,79,255,.05);transition:all .2s}
-.sh-bp:hover .sh-bp-btn{box-shadow:0 0 0 1px rgba(180,79,255,.65),0 0 22px rgba(180,79,255,.5),inset 0 0 14px rgba(180,79,255,.1)}
-.sh-bp-img{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(180,79,255,.55)) drop-shadow(0 0 12px rgba(180,79,255,.3))}
+.sh-bp-btn{position:relative;width:48px;height:48px;border-radius:13px;display:grid;place-items:center;background:rgba(10,5,25,.88);border:1px solid rgba(180,79,255,.5);box-shadow:0 0 12px rgba(180,79,255,.3),inset 0 0 8px rgba(180,79,255,.06);transition:all .15s}
+.sh-bp:active .sh-bp-btn{transform:scale(.93)}
+.sh-bp:hover .sh-bp-btn{border-color:rgba(180,79,255,.85);box-shadow:0 0 20px rgba(180,79,255,.55),inset 0 0 12px rgba(180,79,255,.12)}
+.sh-bp-img{width:28px;height:28px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(180,79,255,.6));transition:filter .15s}
+.sh-bp:hover .sh-bp-img{filter:drop-shadow(0 0 8px rgba(180,79,255,.9))}
 .sh-bp-badge{display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#e64c4c;border:2px solid #0a0a14;color:#fff;font-size:10px;font-weight:800;align-items:center;justify-content:center;padding:0 3px;line-height:1;z-index:3;animation:shBdgPop .3s ease}
 .sh-bp-badge.on{display:flex}
 @keyframes shBdgPop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
@@ -52,76 +54,19 @@ body::before{content:"";position:fixed;inset:0;z-index:9999;pointer-events:none;
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
 
 /* ═══ CARD ═══ */
-.card{
-  position:relative;
-  background:linear-gradient(145deg,rgba(18,5,32,.96),rgba(6,6,18,.97));
-  border-radius:14px;
-  border:none;
-  padding:10px 10px 8px;
-  display:flex;flex-direction:column;
-  overflow:hidden;cursor:pointer;
-  box-shadow:0 6px 28px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.055),inset 0 0 18px rgba(255,255,255,.025);
-  transition:transform .14s,box-shadow .2s;
-}
-.card::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.04) 0%,transparent 50%);pointer-events:none}
+.card{position:relative;background:rgba(10,5,25,.88);border-radius:14px;border:1px solid rgba(255,255,255,.1);padding:10px 10px 8px;display:flex;flex-direction:column;overflow:hidden;cursor:pointer;box-shadow:0 0 8px rgba(0,0,0,.4);transition:transform .15s,border-color .15s,box-shadow .15s;user-select:none}
+.card::before{content:"";position:absolute;inset:0;background:linear-gradient(145deg,rgba(255,255,255,.035) 0%,transparent 50%);pointer-events:none}
+.card:active{transform:scale(.95)}
 .card:hover{transform:translateY(-2px)}
-
-/* rarity glow — только box-shadow, без border */
-.card.r-r{
-  box-shadow:0 6px 28px rgba(0,0,0,.55),
-    0 0 0 1px rgba(68,136,255,.35),
-    0 0 18px rgba(68,136,255,.22),
-    inset 0 0 20px rgba(68,136,255,.06);
-}
-.card.r-r:hover{
-  box-shadow:0 8px 32px rgba(0,0,0,.6),
-    0 0 0 1px rgba(68,136,255,.6),
-    0 0 28px rgba(68,136,255,.38),
-    inset 0 0 24px rgba(68,136,255,.1);
-}
-.card.r-e{
-  box-shadow:0 6px 28px rgba(0,0,0,.55),
-    0 0 0 1px rgba(180,79,255,.38),
-    0 0 20px rgba(180,79,255,.26),
-    inset 0 0 22px rgba(180,79,255,.07);
-}
-.card.r-e:hover{
-  box-shadow:0 8px 32px rgba(0,0,0,.6),
-    0 0 0 1px rgba(180,79,255,.65),
-    0 0 30px rgba(180,79,255,.42),
-    inset 0 0 26px rgba(180,79,255,.12);
-}
-.card.r-l{
-  background:linear-gradient(145deg,rgba(24,10,4,.96),rgba(8,6,2,.97));
-  box-shadow:0 6px 28px rgba(0,0,0,.55),
-    0 0 0 1px rgba(255,140,0,.4),
-    0 0 22px rgba(255,140,0,.28),
-    inset 0 0 22px rgba(255,140,0,.07);
-  animation:mythicPulse 3s ease-in-out infinite;
-}
-.card.r-l:hover{
-  box-shadow:0 8px 32px rgba(0,0,0,.6),
-    0 0 0 1px rgba(255,140,0,.7),
-    0 0 34px rgba(255,140,0,.45),
-    inset 0 0 26px rgba(255,140,0,.12);
-}
-@keyframes mythicPulse{
-  0%,100%{box-shadow:0 6px 28px rgba(0,0,0,.55),0 0 0 1px rgba(255,140,0,.4),0 0 22px rgba(255,140,0,.28),inset 0 0 22px rgba(255,140,0,.07)}
-  50%{box-shadow:0 6px 28px rgba(0,0,0,.55),0 0 0 1px rgba(255,140,0,.25),0 0 12px rgba(255,140,0,.14),inset 0 0 14px rgba(255,140,0,.04)}
-}
-.card.r-d{
-  background:linear-gradient(145deg,rgba(22,4,4,.96),rgba(8,4,4,.97));
-  box-shadow:0 6px 28px rgba(0,0,0,.55),
-    0 0 0 1px rgba(255,51,51,.35),
-    0 0 18px rgba(255,51,51,.22),
-    inset 0 0 20px rgba(255,51,51,.06);
-}
-.card.r-d:hover{
-  box-shadow:0 8px 32px rgba(0,0,0,.6),
-    0 0 0 1px rgba(255,51,51,.6),
-    0 0 28px rgba(255,51,51,.38),
-    inset 0 0 24px rgba(255,51,51,.1);
-}
+.card.r-r{border-color:rgba(68,136,255,.42);box-shadow:0 0 12px rgba(68,136,255,.22)}
+.card.r-r:hover{border-color:rgba(68,136,255,.75);box-shadow:0 0 20px rgba(68,136,255,.4)}
+.card.r-e{border-color:rgba(180,79,255,.45);box-shadow:0 0 14px rgba(180,79,255,.25)}
+.card.r-e:hover{border-color:rgba(180,79,255,.82);box-shadow:0 0 22px rgba(180,79,255,.45)}
+.card.r-l{background:rgba(14,6,2,.9);border-color:rgba(255,140,0,.48);box-shadow:0 0 14px rgba(255,140,0,.28);animation:mythicPulse 3s ease-in-out infinite}
+.card.r-l:hover{border-color:rgba(255,140,0,.85);box-shadow:0 0 24px rgba(255,140,0,.5)}
+@keyframes mythicPulse{0%,100%{box-shadow:0 0 14px rgba(255,140,0,.28)}50%{box-shadow:0 0 6px rgba(255,140,0,.1)}}
+.card.r-d{background:rgba(14,3,3,.9);border-color:rgba(255,51,51,.42);box-shadow:0 0 12px rgba(255,51,51,.22)}
+.card.r-d:hover{border-color:rgba(255,51,51,.78);box-shadow:0 0 20px rgba(255,51,51,.4)}
 
 /* ═══ DIODE ═══ */
 .diode{position:absolute;top:9px;left:9px;width:7px;height:7px;border-radius:50%;box-shadow:0 0 5px currentColor,0 0 10px currentColor}
