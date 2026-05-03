@@ -5,7 +5,7 @@
 (() => {
 const ID = 'shop-html-ov';
 const CSS = `
-#${ID}{position:fixed;top:0;left:0;right:0;bottom:0;z-index:8500;display:flex;flex-direction:column;background:#0a0a14;color:#e0e0f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
+#${ID}{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9250;display:flex;flex-direction:column;background:#0a0a14;color:#e0e0f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden}
 #${ID}::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,245,255,.015) 3px 4px)}
 .sh-hdr{flex-shrink:0;background:rgba(10,10,20,.97);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,245,255,.12);padding:6px 14px 0;position:relative;z-index:2}
 .sh-hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
