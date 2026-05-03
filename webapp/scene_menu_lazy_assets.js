@@ -178,6 +178,36 @@ Object.assign(MenuScene.prototype, {
     });
   },
 
+  /* Фоновая догрузка скинов ботов (62 PNG, ~33МБ) и pvp-фонов (5 PNG, ~5МБ).
+     Раньше грузилось в Boot — из-за этого экран загрузки висел 30-90с на
+     мобильном интернете. Теперь грузим ПОСЛЕ показа меню: к моменту первого
+     боя они уже будут готовы; если нет — inline-fallback в BattleScene._buildArena(). */
+  _lazyLoadBotSkins() {
+    if (this._lazyBotSkinsStarted) return;
+    this._lazyBotSkinsStarted = true;
+    // Откладываем на 3с: дать время приоритетным 6 PNG экипировки загрузиться
+    setTimeout(() => {
+      if (!this.scene?.isActive?.()) return;
+      const V = (typeof window !== 'undefined' && window.BUILD_VERSION) ? `?v=${window.BUILD_VERSION}` : '';
+      // bot skins
+      if (typeof BotSkinPicker !== 'undefined') {
+        BotSkinPicker.ALL_IDS.forEach(id => {
+          if (!this.textures.exists(`bot_skin_${id}`))
+            this.load.image(`bot_skin_${id}`, `bot_skins/${id}.png${V}`);
+          if (!this.textures.exists(`bot_bg_${id}`))
+            this.load.image(`bot_bg_${id}`, `bot_skins/bg/${id}.${BotSkinPicker.BG_EXT(id)}${V}`);
+        });
+      }
+      // pvp backgrounds
+      for (let i = 1; i <= 5; i++) {
+        if (!this.textures.exists(`pvp_bg_${i}`))
+          this.load.image(`pvp_bg_${i}`, `pvp_bg/${i}.png${V}`);
+      }
+      this.load.on('loaderror', f => console.warn('[LazyBotSkins] loaderror:', f?.key));
+      if (!this.load.isLoading()) this.load.start();
+    }, 3000);
+  },
+
   /* Фоновая догрузка остальных текстур (для Рюкзака/Equipment).
      Запускается ПОСЛЕ показа профиля — не блокирует UI.
      ВАЖНО: запуск ОТЛОЖЕН на 1.5с, чтобы приоритетные 6 PNG (надетые)

@@ -42,8 +42,10 @@ class BootScene extends Phaser.Scene {
     this.load.image('natisk_mech',     `natisk_mech.png${V}`);
     this.load.image('natisk_gold',     `natisk_gold.png${V}`);
     this.load.image('natisk_diamond',  `natisk_diamond.png${V}`);
-    if (typeof BotSkinPicker !== 'undefined') BotSkinPicker.preloadInto(this, V);
-    for (let i = 1; i <= 5; i++) this.load.image(`pvp_bg_${i}`, `pvp_bg/${i}.png${V}`);
+    // bot_skins (62 PNG, ~33МБ) и pvp_bg (5 PNG, ~5МБ) грузятся лениво в MenuScene
+    // после показа меню — иначе Boot зависает на 30-90с на мобильном интернете.
+    // Inline-fallback в BattleScene._buildArena() подгрузит нужный скин если
+    // пользователь начнёт бой раньше, чем lazy-загрузка завершится.
     const sub = document.getElementById('loading-sub');
     let _errCount = 0;
     this.load.on('progress', v => { if (bar) bar.style.width = (v * 100) + '%'; });

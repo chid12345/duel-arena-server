@@ -192,6 +192,7 @@ class MenuScene extends Phaser.Scene {
           // Фоновая догрузка остальных PNG (~50МБ) — для Рюкзака/Equipment,
           // не блокирует профиль.
           this._lazyLoadRestTextures?.();
+          this._lazyLoadBotSkins?.();
         } catch(buildErr) {
           console.error('UI build error:', buildErr);
           this._showError('Ошибка UI: ' + (buildErr?.message || buildErr));

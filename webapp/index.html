@@ -148,10 +148,10 @@ window.BUILD_VERSION = '__BUILD_VERSION__';
   </div>
 </div>
 <script>
-// Watchdog: если loading screen не убран за 90с — показываем ошибку.
-// Boot теперь грузит только 3 PNG воинов (~200 КБ) → старт ~5с даже на 3G.
-// Тяжёлые PNG экипировки (~50 МБ) подкачиваются ленив в MenuScene в фоне.
-// Запас 90с = Render cold start (до 60с) + медленный 3G + ~80 JS-файлов.
+// Watchdog: если loading screen не убран за 150с — показываем ошибку.
+// Boot грузит только ~1МБ (воины + мелочь) → старт ~5с даже на 3G.
+// bot_skins (~33МБ) и pvp_bg (~5МБ) подкачиваются лениво ПОСЛЕ меню.
+// 150с = Render cold start (до 60с) + медленный 3G + 170 JS-файлов.
 setTimeout(function(){
   var ls = document.getElementById('loading-screen');
   var sub = document.getElementById('loading-sub');
@@ -159,7 +159,7 @@ setTimeout(function(){
     sub.textContent = '❌ Не удалось загрузить. Закройте и откройте заново.';
     sub.style.color = '#dc3c46';
   }
-}, 90000);
+}, 150000);
 </script>
 
 <!-- Battle Log DOM overlay (управляется из game.js через BattleLog) -->
