@@ -16,6 +16,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
     get_user_from_init_data = ctx["get_user_from_init_data"]
     _player_api = ctx["_player_api"]
     _send_tg_message = ctx["_send_tg_message"]
+    _notify_paid_full_reset = ctx["_notify_paid_full_reset"]
     STARS_PACKAGES = ctx["STARS_PACKAGES"]
     STARS_SCROLL_PACKAGES = ctx["STARS_SCROLL_PACKAGES"]
     BOT_TOKEN = ctx["BOT_TOKEN"]
@@ -62,6 +63,12 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
         diamonds = pkg["diamonds"]
         stars = pkg["stars"]
+
+        if pkg.get("full_reset"):
+            await _notify_paid_full_reset(uid)
+            fresh = db.get_or_create_player(uid, "")
+            return {"ok": True, "profile_reset": True, "player": _player_api(dict(fresh))}
+
         is_premium = pkg["id"] == "premium"
         if is_premium:
             prem = db.get_premium_status(uid)
@@ -163,7 +170,11 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
         if not pkg:
             return {"ok": False, "reason": "Пакет не найден"}
 
-        if pkg["id"] == "premium":
+        if pkg.get("full_reset"):
+            payload = "stars_full_reset"
+            title = "Сброс прогресса"
+            desc = "Полный сброс уровня и боёв в Duel Arena (золото и алмазы сохраняются)"
+        elif pkg["id"] == "premium":
             payload = "premium_sub"
             title = "Premium подписка"
             desc = f"Duel Arena Premium: +{PREMIUM_XP_BONUS_PERCENT}% опыта за бои и прочие бонусы"

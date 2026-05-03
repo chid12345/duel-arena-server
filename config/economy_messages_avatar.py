@@ -105,6 +105,7 @@ CRYPTOPAY_TOKEN = os.getenv("CRYPTOPAY_TOKEN", "56515:AAThe6SQhjz10EDpboEUulYqaa
 CRYPTOPAY_TESTNET = os.getenv("CRYPTOPAY_TESTNET", "0") == "1"
 # Полный сброс аккаунта через CryptoPay Mini App (только USDT)
 FULL_RESET_CRYPTO_USDT = (os.getenv("FULL_RESET_CRYPTO_USDT") or "11.99").strip()
+FULL_RESET_STARS = int(os.getenv("FULL_RESET_STARS") or "750")
 
 # Алмазы (премиум валюта)
 DIAMONDS_DAILY_STREAK = 2

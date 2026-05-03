@@ -101,7 +101,8 @@ window.ShopHtmlPay = {
     const el = document.getElementById('sh-p-stars'); if (!el) return;
     const d = await _loadPkgs();
     const prem = d.stars?.find(p => p.id === 'premium');
-    const pkgMain = (d.stars || []).filter(p => p.id !== 'premium');
+    const reset = d.stars?.find(p => p.full_reset);
+    const pkgMain = (d.stars || []).filter(p => p.id !== 'premium' && !p.full_reset);
     const scrolls = (d.stars_scrolls || []).filter(p => !p.scroll_id?.startsWith('box_'));
     const boxes   = (d.stars_scrolls || []).filter(p =>  p.scroll_id?.startsWith('box_'));
     const isPrem = !!(State.player || {}).is_premium;
@@ -122,6 +123,7 @@ window.ShopHtmlPay = {
     if (pkgMain.length) {
       html += `<div class="sh-sec">💎 Алмазы</div><div class="sh-grid">${pkgMain.map(_cardDia).join('')}</div>`;
     }
+    if (reset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid"><div class="sh-card r-d" data-stars="${reset.id}"><div class="sh-diode d-d"></div><div class="sh-ico"><img src="reset_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-ds">Уровень с нуля · золото и 💎 сохраняются</div><div class="sh-pr"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${reset.stars}</span></div><button class="sh-btn btn-danger">СБРОСИТЬ</button></div></div>`;
     html += `<div style="text-align:center;font-size:10px;color:rgba(85,119,170,.8);margin-top:16px">⭐ Telegram Stars — моментальная оплата</div>`;
     el.innerHTML = html;
     el.querySelectorAll('[data-stars]').forEach(card => {
@@ -161,7 +163,7 @@ window.ShopHtmlPay = {
     if (boxes.length) html += `<div class="sh-sec">🎲 Эпические ящики</div><div class="sh-grid">${boxes.map(_cardUSDT).join('')}</div>`;
     if (scrolls.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid">${scrolls.map(_cardUSDT).join('')}</div>`;
     if (dPkgs.length)   html += `<div class="sh-sec">💎 Алмазы / USDT</div><div class="sh-grid">${dPkgs.map(_cardDiaUSDT).join('')}</div>`;
-    if (reset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid"><div class="sh-card r-d" data-usdt="${reset.id}"><div class="sh-diode d-d"></div><div class="sh-ico">🔄</div><div class="sh-nm">Сброс прогресса</div><div class="sh-ds">Уровень с нуля · золото и 💎 сохраняются</div><div class="sh-pr"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${reset.usdt}</span></div><button class="sh-btn btn-danger">СБРОСИТЬ</button></div></div>`;
+    if (reset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid"><div class="sh-card r-d" data-usdt="${reset.id}"><div class="sh-diode d-d"></div><div class="sh-ico"><img src="reset_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-ds">Уровень с нуля · золото и 💎 сохраняются</div><div class="sh-pr"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${reset.usdt}</span></div><button class="sh-btn btn-danger">СБРОСИТЬ</button></div></div>`;
     html += `<div style="text-align:center;font-size:10px;color:rgba(85,119,170,.8);margin-top:16px">💡 После оплаты товар придёт автоматически</div>`;
     el.innerHTML = html;
     el.querySelectorAll('[data-usdt]').forEach(card => {
@@ -198,7 +200,7 @@ window.ShopHtmlPay = {
             if (c.ok) {
               if (c.player) { State.player = c.player; ShopHtml._updateBalance(); }
               if (c.scroll_received) ShopHtml.bumpInvBadge();
-              ShopHtml.toast(c.scroll_received ? '✅ Свиток получен! → Рюкзак' : c.premium_activated ? '👑 Premium активирован!' : `✅ +${c.diamonds_added || 0} 💎`);
+              ShopHtml.toast(c.scroll_received ? '✅ Свиток получен! → Рюкзак' : c.profile_reset ? '🔄 Аккаунт сброшен' : c.premium_activated ? '👑 Premium активирован!' : `✅ +${c.diamonds_added || 0} 💎`);
             }
           } catch(_) {}
           _pkgs = null; ShopHtmlPay._buildStars();

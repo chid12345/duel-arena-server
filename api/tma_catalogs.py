@@ -6,6 +6,7 @@ from config import (
     ELITE_AVATAR_STARS,
     ELITE_AVATAR_USDT,
     FULL_RESET_CRYPTO_USDT,
+    FULL_RESET_STARS,
     PREMIUM_SUBSCRIPTION_STARS,
 )
 
@@ -126,6 +127,15 @@ STARS_PACKAGES = [
     {"id": "d300", "diamonds": 300, "stars": 390, "label": "300 💎"},
     {"id": "d500", "diamonds": 500, "stars": 650, "label": "500 💎"},
     {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
+    {
+        "id": "sfullreset",
+        "diamonds": 0,
+        "stars": FULL_RESET_STARS,
+        "label": "🔄 Сброс прогресса",
+        "hint": "Уровень и бои с нуля; золото, 💎, клан и рефералка сохраняются",
+        "full_reset": True,
+        "stars_only": True,
+    },
 ]
 
 # Stars-свитки/ящики — те же предметы что и USDT, но за Telegram Stars
