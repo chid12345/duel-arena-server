@@ -9,6 +9,7 @@ class GuideScene extends Phaser.Scene {
   constructor() { super('Guide'); }
 
   create() {
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     this._activeSection = null;

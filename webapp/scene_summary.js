@@ -6,6 +6,7 @@ class SummaryScene extends Phaser.Scene {
   constructor() { super('Summary'); }
 
   create() {
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
