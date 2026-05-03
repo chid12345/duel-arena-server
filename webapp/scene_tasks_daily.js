@@ -26,32 +26,6 @@ TasksScene.prototype._buildDailyTab = function(data, W, H, startY) {
   const PAD = 10;
   let y = 6;
 
-  // ── Старый квест дня (5 боёв / 3 победы) — если выполнен но не забран ──
-  const odq = data.oldDailyQuest;
-  if (odq && odq.is_completed && !odq.reward_claimed) {
-    const bh = 52;
-    const clBg = this.add.graphics();
-    clBg.fillStyle(0x1a3010, 0.95); clBg.fillRoundedRect(PAD, y, W - PAD * 2, bh, 12);
-    clBg.lineStyle(2, C.gold, 0.9); clBg.strokeRoundedRect(PAD, y, W - PAD * 2, bh, 12);
-    container.add(clBg);
-    container.add(txt(this, W / 2, y + 14, '🏆 Квест дня выполнен!', 13, '#ffc83c', true).setOrigin(0.5));
-    const clBtn = this.add.graphics();
-    clBtn.fillStyle(C.gold, 1); clBtn.fillRoundedRect(PAD + 8, y + 28, W - PAD * 2 - 16, 18, 6);
-    container.add(clBtn);
-    container.add(txt(this, W / 2, y + 37, '🎁 Забрать +55💰 +150⭐', 11, '#1a1a28', true).setOrigin(0.5));
-    taps.push({ y, h: bh, fn: async () => {
-      const res = await post('/api/quests/claim').catch(() => null);
-      if (res?.ok) {
-        if (res.player) State.player = res.player;
-        clBtn.clear(); clBtn.fillStyle(0x1a4010, 1); clBtn.fillRoundedRect(PAD+8, y+28, W-PAD*2-16, 18, 6);
-        container.getAll().forEach(o => { if (o.text === '🎁 Забрать +55💰 +150⭐') o.setText(`✅ +${res.gold||55}💰 +${res.xp||150}⭐`); });
-        tg?.HapticFeedback?.notificationOccurred('success');
-        this.time.delayedCall(1200, () => this.scene.restart({ tab: 'daily' }));
-      }
-    }});
-    y += bh + 10;
-  }
-
   // ── Ежедневные задания ────────────────────────────────────
   const daily = data.daily || [];
   const dateTxt = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
