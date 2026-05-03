@@ -37,7 +37,7 @@ SHOP_CATALOG = {
 
     # ── Свитки — золото (1 бой, дёшево) ───────────────────────
     "scroll_str_3":    {"name": "Эликсир силы +3",      "price": 60,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила +3, 1 бой",          "inventory": True},
-    "scroll_end_3":    {"name": "Эликсир ловкости +3",  "price": 60,  "currency": "gold",     "icon": "🌀", "tab": "scrolls", "desc": "Уворот +3, 1 бой",        "inventory": True},
+    "scroll_end_3":    {"name": "Эликсир ловкости +3",  "price": 60,  "currency": "gold",     "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +3, 1 бой",      "inventory": True},
     "scroll_crit_3":   {"name": "Эликсир интуиции +3",  "price": 75,  "currency": "gold",     "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +3, 1 бой",       "inventory": True},
     "scroll_armor_6":  {"name": "Свиток брони 6%",      "price": 80,  "currency": "gold",     "icon": "🛡️", "tab": "scrolls", "desc": "Броня +6%, 1 бой",        "inventory": True},
     "scroll_hp_100":   {"name": "Эликсир HP +100",      "price": 70,  "currency": "gold",     "icon": "❤️", "tab": "scrolls", "desc": "+100 HP, 1 бой",          "inventory": True},
@@ -47,7 +47,7 @@ SHOP_CATALOG = {
 
     # ── Свитки — алмазы (3 боя, средние) ─────────────────────
     "scroll_str_6":    {"name": "Эликсир силы +6",      "price": 20,  "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +6, 3 боя",          "inventory": True},
-    "scroll_end_6":    {"name": "Эликсир ловкости +6",  "price": 20,  "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Уворот +6, 3 боя",        "inventory": True},
+    "scroll_end_6":    {"name": "Эликсир ловкости +6",  "price": 20,  "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +6, 3 боя",      "inventory": True},
     "scroll_crit_6":   {"name": "Эликсир интуиции +6",  "price": 25,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +6, 3 боя",       "inventory": True},
     "scroll_dodge_5":  {"name": "Свиток уворота 5%",    "price": 25,  "currency": "diamonds", "icon": "💨", "tab": "scrolls", "desc": "Уворот +5%, 3 боя",        "inventory": True},
     "scroll_armor_10": {"name": "Свиток брони 10%",     "price": 30,  "currency": "diamonds", "icon": "🛡️", "tab": "scrolls", "desc": "Броня +10%, 3 боя",       "inventory": True},

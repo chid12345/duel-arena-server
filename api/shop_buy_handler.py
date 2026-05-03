@@ -52,7 +52,7 @@ def _do_buy(db, uid: int, iid: str, item: dict) -> dict:
     # === Сброс статов (сразу) ===
     if iid == "stat_reset":
         r = _finalize(db, uid, db.buy_stat_reset(uid))
-        if r.get("ok"): db.track_purchase(uid, iid, "gold", item.get("price", 0))
+        if r.get("ok"): db.track_purchase(uid, iid, "diamonds", item.get("price", 0))
         return r
 
     # === XP бусты → в инвентарь ===
