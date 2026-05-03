@@ -135,7 +135,7 @@ window.ShopHtml = {
   hide() {
     const r = document.getElementById(ID);
     if (r) r.style.display = 'none';
-    if (_scene) { _scene.scene.start('Stats', { player: State.player }); _scene = null; }
+    if (_scene) { _scene.scene.start('Menu', { returnTab: 'profile' }); _scene = null; }
   },
   _setTab(t, init) {
     _tab = t;
