@@ -26,6 +26,7 @@ class AvatarScene extends Phaser.Scene {
     this._tab = (data && data.tab) || 'all';
     this._layer = [];
     this._tapAreas = [];
+    this._gen = (this._gen || 0) + 1;
 
     _extraBg(this, W, H);
     _extraHeader(this, W, '🏛️', 'ГАЛЕРЕЯ ОБРАЗОВ', 'Выбери свой путь воина');
@@ -37,6 +38,7 @@ class AvatarScene extends Phaser.Scene {
 
   async _loadData() {
     const _AVATAR_TTL = 60000; // кэш 60с — переключение вкладок не делает лишних запросов
+    const gen = this._gen;
     const cached = State.avatarsCache
       && Array.isArray(State.avatarsCache.avatars)
       && State.avatarsCache.avatars.length > 0
@@ -67,6 +69,8 @@ class AvatarScene extends Phaser.Scene {
         }
       }
     }
+    // Защита от гонки: если сцена перезапустилась пока шёл запрос — не рисуем
+    if (this._gen !== gen) return;
     if (this._loading) { this._loading.destroy(); this._loading = null; }
     this._buildTabs();
     this._renderList();
