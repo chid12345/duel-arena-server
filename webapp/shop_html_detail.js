@@ -7,7 +7,7 @@
 (() => {
 const ID = 'shop-detail-mod';
 const CSS = `
-#${ID}{position:fixed;inset:0;z-index:9200;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:shdFade .18s ease}
+#${ID}{position:fixed;inset:0;z-index:9300;display:none;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.82);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:shdFade .18s ease}
 #${ID}.on{display:flex}
 @keyframes shdFade{from{opacity:0}to{opacity:1}}
 #${ID} .shd-card{position:relative;width:100%;max-width:340px;background:linear-gradient(180deg,#0c0c1c 0%,#06060f 100%);border:1px solid rgba(0,245,255,.2);border-radius:18px;padding:20px 18px 16px;box-shadow:0 0 30px rgba(0,245,255,.15),0 12px 40px rgba(0,0,0,.7);animation:shdPop .25s cubic-bezier(.2,1.2,.4,1)}
