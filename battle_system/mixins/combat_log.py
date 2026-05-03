@@ -80,6 +80,8 @@ class BattleCombatLogMixin:
         hp2_after: int,
         hp1_max: int,
         hp2_max: int,
+        p1_heal: int = 0,
+        p2_heal: int = 0,
     ) -> None:
         """Короткий лог; урон и HP в <code> — в Telegram читается жирнее (фон у цифр)."""
         def _effect_icons(outcome: str) -> List[str]:
@@ -128,6 +130,7 @@ class BattleCombatLogMixin:
                 round_num, out1, out2, p1_damage, p2_damage,
                 p1_choices['attack'], p2_choices['attack'],
                 hp_target1_after=hp2_after, hp_target2_after=hp1_after,
+                p1_heal=p1_heal, p2_heal=p2_heal,
             )
         )
 
@@ -142,6 +145,8 @@ class BattleCombatLogMixin:
         atk_zone2: str = "ТУЛОВИЩЕ",
         hp_target1_after: int | None = None,
         hp_target2_after: int | None = None,
+        p1_heal: int = 0,
+        p2_heal: int = 0,
     ) -> str:
         """
         2 строки для WebApp DOM-лога.
@@ -181,6 +186,10 @@ class BattleCombatLogMixin:
         # Фронт (_styleMarker) разбирает его и рендерит отдельным маленьким тегом.
         if hp_target1_after is not None:
             m1 = f"{m1}❤{int(hp_target1_after)}"
+        if p1_heal > 0:
+            m1 = f"{m1}🩸+{p1_heal}"
         if hp_target2_after is not None:
             m2 = f"{m2}❤{int(hp_target2_after)}"
+        if p2_heal > 0:
+            m2 = f"{m2}🩸+{p2_heal}"
         return f"Р{round_num} Вы→{z1} {m1} · Враг→{z2} {m2}"

@@ -48,7 +48,7 @@ const BotBattleCard = (() => {
       .bbc-equip .bbc-eq-slot.empty{opacity:.35;border-style:dashed;}
       .bbc-equip .bbc-eq-label{font-size:7px;color:#aaaacc;letter-spacing:.4px;font-weight:700;text-transform:uppercase;}
       .bbc-equip .bbc-eq-img{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:1px 0;}
-      .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;}
+      .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;mix-blend-mode:lighten;filter:drop-shadow(0 0 5px rgba(180,120,255,.5));}
       .bbc-equip .bbc-eq-emoji{font-size:22px;line-height:1;}
       .bbc-equip .bbc-eq-name{font-size:7px;font-weight:700;line-height:1.1;max-width:60px;word-wrap:break-word;padding:0 2px;}
       .bbc-timer{position:absolute;top:8px;left:14px;font-size:10px;color:#9abae0;background:rgba(0,0,0,.4);padding:2px 6px;border-radius:4px;font-family:monospace;}

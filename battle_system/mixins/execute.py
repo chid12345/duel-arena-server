@@ -60,6 +60,8 @@ class BattleExecuteMixin:
                 player2['_debuff_legs'] = True
             if p1_debuffs.get('legs'):
                 player1['_debuff_legs'] = True
+            player1['_lifesteal_heal'] = 0
+            player2['_lifesteal_heal'] = 0
             p1_damage, o1, debuff_to_p2 = self._calculate_damage_detailed(
                 player1,
                 player2,
@@ -72,6 +74,8 @@ class BattleExecuteMixin:
                 p2_choices['attack'],
                 p1_choices['defense'],
             )
+            p1_heal = player1.pop('_lifesteal_heal', 0)
+            p2_heal = player2.pop('_lifesteal_heal', 0)
             battle['player1_debuffs'] = {}
             battle['player2_debuffs'] = {}
             if debuff_to_p1:
@@ -102,6 +106,8 @@ class BattleExecuteMixin:
                 player2['current_hp'],
                 player1['max_hp'],
                 player2['max_hp'],
+                p1_heal=p1_heal,
+                p2_heal=p2_heal,
             )
             battle['next_turn_deadline'] = datetime.now() + timedelta(seconds=TURN_ACTION_SECONDS)
 

@@ -229,6 +229,7 @@ class BattleDamageMixin:
                 int(attacker.get("max_hp", 1)),
                 int(attacker.get("current_hp", 1)) + _heal,
             )
+            attacker["_lifesteal_heal"] = attacker.get("_lifesteal_heal", 0) + _heal
 
         # Пробой брони: pen_pct атакующего снижает eq_def_pct защитника на время этого удара
         pen = float(attacker.get("_eq_pen_pct", 0) or 0)

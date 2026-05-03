@@ -28,6 +28,11 @@
     return m ? parseInt(m[1], 10) : null;
   }
 
+  function _parseHeal(mk) {
+    const m = String(mk || '').match(/🩸\+(\d+)/);
+    return m ? parseInt(m[1], 10) : 0;
+  }
+
   // Parse webapp_log entries → structured rounds + totals
   function _parseLog(entries) {
     const RX = /^Р(\d+)\s+Вы→(\S+)\s+(.*?)\s+·\s+Враг→(\S+)\s+(.*)$/;
@@ -49,6 +54,7 @@
       byRound[rNum].push({
         kind: myIsMiss ? 'miss' : myIsCrit ? 'crit' : 'me',
         dmg: myDmg, hp: myIsMiss ? null : _parseHp(m1), mk: m1,
+        heal: _parseHeal(m1),
       });
 
       // Enemy action — всегда показываем, в т.ч. промахи/блок/уклон
@@ -91,12 +97,15 @@
     const hpHtml = ev.hp != null && hpIco
       ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval"${hpColor ? ` style="color:${hpColor}"` : ''}>${_fmt(ev.hp)}</span></div>`
       : '';
+    const healHtml = ev.heal > 0
+      ? `<span style="font-size:10px;color:#ff4888;margin-left:6px;font-weight:700">🩸+${_fmt(ev.heal)}</span>`
+      : '';
 
     return `<div class="wb-bhist-ev">
       <span class="wb-bhist-tag ${tagCls}">${tagTxt}</span>
       <span class="wb-bhist-arr">▶</span>
       <span class="wb-bhist-dmg ${dmgCls}">${dmgStr}</span>
-      ${hpHtml}
+      ${hpHtml}${healHtml}
     </div>`;
   }
 
