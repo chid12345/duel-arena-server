@@ -48,11 +48,10 @@
       if (!myIsMiss && myDmg > 0) { totalMe += myDmg; hits++; if (myIsCrit) crits++; }
       byRound[rNum].push({
         kind: myIsMiss ? 'miss' : myIsCrit ? 'crit' : 'me',
-        dmg: myDmg,
-        hp: null,
+        dmg: myDmg, hp: null, mk: m1,
       });
 
-      // Enemy action — всегда показываем, в т.ч. промахи
+      // Enemy action — всегда показываем, в т.ч. промахи/блок/уклон
       const enDmg = _parseDmg(m2);
       const enHp  = _parseHp(m2);
       if (enDmg > 0) {
@@ -60,7 +59,7 @@
         enemyHits++;
         byRound[rNum].push({ kind: _isCrit(m2) ? 'enemy_crit' : 'boss', dmg: enDmg, hp: enHp });
       } else {
-        byRound[rNum].push({ kind: 'enemy_miss', dmg: 0, hp: null });
+        byRound[rNum].push({ kind: 'enemy_miss', dmg: 0, hp: null, mk: m2 });
       }
     }
 
@@ -71,17 +70,24 @@
     return { rounds, totalMe, totalEnemy, hits, crits, enemyHits };
   }
 
+  function _missLabel(mk) {
+    const s = String(mk || '');
+    if (s.includes('💨')) return '💨 уклон';
+    if (s.includes('🛡')) return '🛡 блок';
+    return '✕ мимо';
+  }
+
   function _evHtml(ev) {
     let tagCls, tagTxt, dmgCls, hpIco;
-    if (ev.kind === 'me')         { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; }
-    else if (ev.kind === 'crit')  { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; }
-    else if (ev.kind === 'miss')  { tagCls='boss'; tagTxt='МИМО';   dmgCls='boss'; hpIco=''; }
+    if (ev.kind === 'me')              { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; }
+    else if (ev.kind === 'crit')       { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; }
+    else if (ev.kind === 'miss')       { tagCls='boss'; tagTxt='МИМО';   dmgCls='boss'; hpIco=''; }
     else if (ev.kind === 'boss')       { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco='❤️'; }
     else if (ev.kind === 'enemy_crit') { tagCls='boss'; tagTxt='ВР.КР'; dmgCls='boss'; hpIco='❤️'; }
     else if (ev.kind === 'enemy_miss') { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco=''; }
     else return '';
 
-    const dmgStr = ev.dmg > 0 ? `−${_fmt(ev.dmg)}` : (ev.kind === 'miss' || ev.kind === 'enemy_miss' ? 'мимо' : '—');
+    const dmgStr = ev.dmg > 0 ? `−${_fmt(ev.dmg)}` : _missLabel(ev.mk);
     const hpHtml = ev.hp != null && hpIco
       ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval">${_fmt(ev.hp)}</span></div>`
       : '';
