@@ -141,15 +141,15 @@ STARS_PACKAGES = [
 # Stars-свитки/ящики — те же предметы что и USDT, но за Telegram Stars
 # Цены: ~50 Stars ≈ 1 USDT (150 Stars = $2.99 ≈ 100💎)
 STARS_SCROLL_PACKAGES = [
-    {"id": "ss_str_12",  "scroll_id": "scroll_str_12",  "label": "⚔️ Эликсир силы +12",        "stars": 65},
-    {"id": "ss_end_12",  "scroll_id": "scroll_end_12",  "label": "🌀 Эликсир ловкости +12",     "stars": 65},
-    {"id": "ss_stam_12", "scroll_id": "scroll_stam_12", "label": "🛡️ Эликсир выносливости +12", "stars": 65},
-    {"id": "ss_crit_12", "scroll_id": "scroll_crit_12", "label": "🎯 Эликсир интуиции +12",     "stars": 65},
-    {"id": "ss_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",          "stars": 65},
-    {"id": "ss_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "stars": 130},
-    {"id": "ss_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "stars": 200},
-    {"id": "ss_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "stars": 200},
-    {"id": "ss_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "stars": 200},
+    {"id": "ss_str_12",  "scroll_id": "scroll_str_12",  "label": "⚔️ Эликсир силы +12",        "stars": 65,  "desc": "Сила +12 на 5 боёв"},
+    {"id": "ss_end_12",  "scroll_id": "scroll_end_12",  "label": "🌀 Эликсир ловкости +12",     "stars": 65,  "desc": "Ловкость +12 на 5 боёв"},
+    {"id": "ss_stam_12", "scroll_id": "scroll_stam_12", "label": "🛡️ Эликсир выносливости +12", "stars": 65,  "desc": "Выносливость +12 на 5 боёв"},
+    {"id": "ss_crit_12", "scroll_id": "scroll_crit_12", "label": "🎯 Эликсир интуиции +12",     "stars": 65,  "desc": "Интуиция +12 на 5 боёв"},
+    {"id": "ss_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",          "stars": 65,  "desc": "+500 HP на 7 боёв"},
+    {"id": "ss_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "stars": 130, "desc": "Сила+Ловк+Инт+Вын +12 на 5 боёв"},
+    {"id": "ss_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "stars": 200, "desc": "Все статы +15 на 3 боя · легендарный"},
+    {"id": "ss_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "stars": 200, "desc": "USDT-свиток + алмазные · 20% шанс Титана"},
+    {"id": "ss_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "stars": 200, "desc": "USDT-свиток + XP×2 + свитки · 10% Титан"},
 ]
 
 ELITE_AVATAR_STARS_PACKAGE = {
@@ -161,15 +161,15 @@ ELITE_AVATAR_STARS_PACKAGE = {
 
 # USDT-свитки в "Особые" вкладке (дополнительно к обычным пакетам)
 USDT_SCROLL_PACKAGES = [
-    {"id": "us_str_12",  "scroll_id": "scroll_str_12",  "label": "⚔️ Эликсир силы +12",        "usdt": "1"},
-    {"id": "us_end_12",  "scroll_id": "scroll_end_12",  "label": "🌀 Эликсир ловкости +12",     "usdt": "1"},
-    {"id": "us_stam_12", "scroll_id": "scroll_stam_12", "label": "🛡️ Эликсир выносливости +12", "usdt": "1"},
-    {"id": "us_crit_12", "scroll_id": "scroll_crit_12", "label": "🎯 Эликсир интуиции +12",       "usdt": "1"},
-    {"id": "us_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",          "usdt": "1"},
-    {"id": "us_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "usdt": "2"},
-    {"id": "us_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "usdt": "3"},
-    {"id": "us_box_e2",  "scroll_id": "box_epic_e2",      "label": "🔮 Эпический: Удача",           "usdt": "3"},
-    {"id": "us_box_e3",  "scroll_id": "box_epic_e3",      "label": "⚔️ Эпический: Набор воина",    "usdt": "3"},
+    {"id": "us_str_12",  "scroll_id": "scroll_str_12",  "label": "⚔️ Эликсир силы +12",        "usdt": "1", "desc": "Сила +12 на 5 боёв"},
+    {"id": "us_end_12",  "scroll_id": "scroll_end_12",  "label": "🌀 Эликсир ловкости +12",     "usdt": "1", "desc": "Ловкость +12 на 5 боёв"},
+    {"id": "us_stam_12", "scroll_id": "scroll_stam_12", "label": "🛡️ Эликсир выносливости +12", "usdt": "1", "desc": "Выносливость +12 на 5 боёв"},
+    {"id": "us_crit_12", "scroll_id": "scroll_crit_12", "label": "🎯 Эликсир интуиции +12",     "usdt": "1", "desc": "Интуиция +12 на 5 боёв"},
+    {"id": "us_hp_500",  "scroll_id": "scroll_hp_500",  "label": "❤️ Эликсир HP +500",          "usdt": "1", "desc": "+500 HP на 7 боёв"},
+    {"id": "us_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "usdt": "2", "desc": "Сила+Ловк+Инт+Вын +12 на 5 боёв"},
+    {"id": "us_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "usdt": "3", "desc": "Все статы +15 на 3 боя · легендарный"},
+    {"id": "us_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "usdt": "3", "desc": "USDT-свиток + алмазные · 20% шанс Титана"},
+    {"id": "us_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "usdt": "3", "desc": "USDT-свиток + XP×2 + свитки · 10% Титан"},
 ]
 
 CRYPTO_PACKAGES = [

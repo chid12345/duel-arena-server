@@ -11,7 +11,7 @@ async function _loadPkgs() {
 }
 
 function _cardStar(item) {
-  const { id, label, stars, scroll_id } = item;
+  const { id, label, stars, scroll_id, desc } = item;
   const isBox = (scroll_id || '').startsWith('box_');
   const isLeg = id.includes('titan');
   const r = isLeg ? 'l' : isBox ? 'e' : 'stars';
@@ -25,7 +25,7 @@ function _cardStar(item) {
   <div class="sh-diode d-${r}"></div>
   <div class="sh-ico">${icoHtml}</div>
   <div class="sh-nm">${name}</div>
-  <div class="sh-ds">→ инвентарь</div>
+  <div class="sh-ds">${desc || '→ инвентарь'}</div>
   <div class="sh-pr"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${stars}</span></div>
   <button class="sh-btn btn-s">КУПИТЬ</button>
 </div>`;
@@ -44,7 +44,7 @@ function _cardDia(pkg) {
 }
 
 function _cardUSDT(pkg) {
-  const { id, label, usdt, scroll_id } = pkg;
+  const { id, label, usdt, scroll_id, desc } = pkg;
   const isBox = (scroll_id || '').startsWith('box_');
   const isLeg = id.includes('titan');
   const r = isLeg ? 'l' : isBox ? 'e' : 'usdt';
@@ -58,7 +58,7 @@ function _cardUSDT(pkg) {
   <div class="sh-diode d-${r}"></div>
   <div class="sh-ico">${icoHtml}</div>
   <div class="sh-nm">${name}</div>
-  <div class="sh-ds">→ инвентарь</div>
+  <div class="sh-ds">${desc || '→ инвентарь'}</div>
   <div class="sh-pr"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${usdt}</span></div>
   <button class="sh-btn btn-u">КУПИТЬ</button>
 </div>`;
@@ -179,6 +179,7 @@ window.ShopHtmlPay = {
   },
 
   _pkgs() { return _pkgs; },
+  _resetCache() { _pkgs = null; },
 
   async _buyStars(pkgId) {
     ShopHtml.toast('⏳ Открываем оплату...');

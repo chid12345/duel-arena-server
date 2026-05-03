@@ -96,6 +96,7 @@ function _root() {
 window.ShopHtml = {
   async show(tab, scene) {
     _scene = scene; _tab = tab || 'consumables';
+    ShopHtmlPay._resetCache();
     const r = _root();
     r.innerHTML = _html();
     r.style.display = 'flex';
