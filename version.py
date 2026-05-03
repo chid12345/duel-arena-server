@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.8.28"
-VERSION_LABEL = "v2.8.28 — feat: иконка обмена алмазы→золото — exchange.png для всех 3 карточек"
+VERSION = "2.8.29"
+VERSION_LABEL = "v2.8.29 — feat: свитки Stars/USDT — scroll_icon.png вместо 📜"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "12.98"
+GAME_VERSION = "12.99"
