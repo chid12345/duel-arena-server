@@ -16,7 +16,10 @@ function _meta(p, currency) {
   const isLeg = id.includes('titan');
   const r = isLeg ? 'l' : isBox ? 'e' : 'r';
   const isDia = !p.scroll_id;
-  const icon = isDia ? '💎' : (isBox ? '🎲' : isLeg ? '🏔️' : '📜');
+  const icon = isDia ? '💎'
+    : isBox ? `<img src="chest_epic.png" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,200,80,.4))">`
+    : isLeg ? '🏔️'
+    : `<img src="scroll_icon.png" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(0,200,255,.4))">`;
   const name = isDia ? `${p.diamonds} алмазов` : (p.label || '').replace(/^[^\s]+\s/, '');
   const desc = isDia
     ? (currency === 'stars' ? 'Алмазы зачислятся на счёт мгновенно' : 'Алмазы зачислятся на счёт после оплаты')
