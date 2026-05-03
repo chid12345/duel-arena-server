@@ -161,8 +161,10 @@ window.ShopHtmlItems = {
     // HP-зелья: полоска здоровья в описании
     let richDesc = desc;
     if (['hp_small', 'hp_medium', 'hp_full'].includes(iid)) {
-      const curHp = p.current_hp ?? p.max_hp ?? 100;
-      const maxHp = p.max_hp ?? 100;
+      const curHp = p.current_hp != null ? Number(p.current_hp) : null;
+      const maxHp = p.max_hp != null ? Number(p.max_hp) : null;
+      if (curHp === null || maxHp === null || maxHp <= 0) { richDesc = desc; }
+      else {
       const isFull = curHp >= maxHp;
       const pct = iid === 'hp_full' ? 1.0 : iid === 'hp_medium' ? 0.6 : 0.3;
       const restore = iid === 'hp_full' ? (maxHp - curHp) : Math.max(1, Math.floor(maxHp * pct));
@@ -177,6 +179,7 @@ window.ShopHtmlItems = {
           + `<div style="width:${hpPct}%;height:100%;background:linear-gradient(90deg,#992222,#ff4444);border-radius:4px"></div></div>`
           + `<div style="font-size:11px;color:#00ff88;font-weight:700">+${restore} HP → ${newHp} / ${maxHp} (${newPct}%)</div>`
       );
+      } // end else (HP data available)
     }
 
     // stat_reset: двойное подтверждение перед списанием 200💎

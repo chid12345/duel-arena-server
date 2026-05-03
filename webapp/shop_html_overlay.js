@@ -94,14 +94,24 @@ window.ShopHtml = {
     r.querySelector('#sh-bp').addEventListener('click', () => ShopHtml._openInventory());
     r.querySelectorAll('.sh-tab').forEach(t => t.addEventListener('click', () => ShopHtml._setTab(t.dataset.t)));
     ShopHtml._setTab(_tab, true);
-    // Загружаем данные
-    try { const d = await post('/api/player'); if (d.ok && d.player) State.player = d.player; } catch(_) {}
+    // Параллельно: игрок + инвентарь
+    const [pRes, invRes] = await Promise.allSettled([
+      post('/api/player'),
+      get('/api/shop/inventory'),
+    ]);
+    if (pRes.status === 'fulfilled' && pRes.value?.ok) State.player = pRes.value.player;
     ShopHtml._updateBalance();
     ShopHtml._renderBadge();
-    try {
-      const inv = await get('/api/shop/inventory');
-      if (inv?.inventory) ShopHtmlItems._setInv(inv.inventory);
-    } catch(_) {}
+    if (invRes.status === 'fulfilled' && invRes.value?.inventory) ShopHtmlItems._setInv(invRes.value.inventory);
+    // Авто-выдача премиум ящика (1 раз в день)
+    if (State.player?.is_premium) {
+      setTimeout(async () => {
+        try {
+          const box = await post('/api/shop/premium_daily_box', {});
+          if (box?.ok && box?.box_opened) { ShopHtml.bumpInvBadge(); ShopHtml._showPremBoxReveal(box.items || []); }
+        } catch(_) {}
+      }, 600);
+    }
     // Незавершённый крипто-платёж: проверить тихо при входе в магазин
     const _pendingId = (() => { try { return localStorage.getItem('cryptoPendingInvoice'); } catch(_) { return null; } })();
     if (_pendingId) {
@@ -177,11 +187,33 @@ window.ShopHtml = {
     setTimeout(() => btn.classList.remove('sh-bp-pulse'), 300);
   },
   _openInventory() {
-    // Сбрасываем счётчик
     try { localStorage.setItem('shop_inv_new_count', '0'); } catch(_) {}
     const r = document.getElementById('shop-html-ov');
     if (r) r.style.display = 'none';
     if (_scene) { _scene.scene.start('Stats', { player: State.player, openInventory: true }); }
+  },
+  _showPremBoxReveal(items) {
+    const ID2 = 'sh-prem-box';
+    let el = document.getElementById(ID2);
+    if (!el) { el = document.createElement('div'); el.id = ID2; document.body.appendChild(el); }
+    const rows = items.map(it => `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,215,0,.1)">
+        <span style="font-size:22px;flex-shrink:0">${it.icon||'🎁'}</span>
+        <div><div style="font-size:12px;font-weight:700;color:#fff">${it.name||it.item_id}</div>
+        <div style="font-size:10px;color:rgba(255,255,255,.45)">${it.desc||''}</div></div>
+      </div>`).join('');
+    el.innerHTML = `
+      <div style="position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.88);padding:20px">
+        <div style="width:100%;max-width:340px;background:linear-gradient(180deg,#14100a,#09060a);border:1px solid rgba(255,215,0,.5);border-radius:18px;padding:20px 16px 16px;box-shadow:0 0 32px rgba(255,215,0,.22)">
+          <div style="text-align:center;font-size:28px;margin-bottom:4px">👑</div>
+          <div style="text-align:center;font-size:15px;font-weight:800;color:#ffd700;letter-spacing:1px">ЕЖЕДНЕВНЫЙ ЯЩИК</div>
+          <div style="text-align:center;font-size:10px;color:rgba(255,215,0,.5);margin-bottom:14px;letter-spacing:.5px">PREMIUM · СЕГОДНЯШНЯЯ НАГРАДА</div>
+          ${rows}
+          <div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;margin-top:10px">→ всё добавлено в Рюкзак</div>
+          <button onclick="document.getElementById('${ID2}').remove()" style="width:100%;margin-top:12px;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#b87a08,#ffd700);color:#1a1000;font-size:13px;font-weight:800;cursor:pointer;letter-spacing:.5px">✅ Отлично!</button>
+        </div>
+      </div>`;
+    tg?.HapticFeedback?.notificationOccurred('success');
   },
 };
 

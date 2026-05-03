@@ -5,8 +5,12 @@
    ═══════════════════════════════════════════════════════════ */
 (() => {
 
+const _BOX_DESCS = {
+  'box_epic_e2': 'USDT-свиток + 2–4 алмазных · 20% шанс Титана · 8% Premium 7 дн. · 3% +100💎',
+  'box_epic_e3': 'USDT-свиток + XP×2 + алм. + золотой · 10% шанс Титана · 5% Premium 3 дн.',
+};
+
 function _meta(p, currency) {
-  // currency: 'stars' | 'usdt'
   const id = p.id || '';
   const isBox = (p.scroll_id || '').startsWith('box_');
   const isLeg = id.includes('titan');
@@ -16,7 +20,8 @@ function _meta(p, currency) {
   const name = isDia ? `${p.diamonds} алмазов` : (p.label || '').replace(/^[^\s]+\s/, '');
   const desc = isDia
     ? (currency === 'stars' ? 'Алмазы зачислятся на счёт мгновенно' : 'Алмазы зачислятся на счёт после оплаты')
-    : 'Свиток отправится в Рюкзак — применишь перед боем';
+    : isBox ? (_BOX_DESCS[p.scroll_id] || 'Ящик → в Рюкзак — открой и получи дроп')
+    : 'Свиток → в Рюкзак — применишь перед боем';
   return { icon, name, desc, rarity: r };
 }
 
