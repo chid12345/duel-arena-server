@@ -32,22 +32,22 @@ window.TabBarHTML = (() => {
 .tb-dot{display:none}
 .tb-glow{display:none}
 .tb-ambient{display:none}
-/* Обёртка иконки */
+/* Обёртка иконки — overflow:hidden обрезает рамку PNG */
 .tb-icon-wrap{width:28px;height:28px;display:flex;align-items:center;
-  justify-content:center;position:relative;z-index:1;
+  justify-content:center;position:relative;z-index:1;overflow:hidden;
   transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
 .tb-item.active .tb-icon-wrap{transform:scale(1.2) translateY(-2px)}
 .tb-item:active .tb-icon-wrap{transform:scale(.88)}
 .tb-item.active:active .tb-icon-wrap{transform:scale(1.08) translateY(-1px)}
-/* PNG-иконка — mix-blend-mode:screen убирает тёмный фон/рамку PNG;
-   drop-shadow светит по контуру самого значка */
-.tb-img{width:28px;height:28px;object-fit:contain;display:block;
+/* PNG-иконка: 40px в 28px контейнере — рамка по краям обрезается;
+   mix-blend-mode:screen убирает тёмный фон; drop-shadow по контуру */
+.tb-img{width:40px;height:40px;flex-shrink:0;object-fit:contain;display:block;
   mix-blend-mode:screen;
-  filter:saturate(.7) brightness(.7)
+  filter:saturate(.7) brightness(.75)
     drop-shadow(0 0 3px var(--col));
   transition:filter .25s}
 .tb-item.active .tb-img{
-  filter:saturate(1.5) brightness(1.25)
+  filter:saturate(1.5) brightness(1.3)
     drop-shadow(0 0 6px var(--col))
     drop-shadow(0 0 14px var(--col))}
 /* Emoji-фолбэк */
