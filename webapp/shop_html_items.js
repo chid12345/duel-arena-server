@@ -43,9 +43,9 @@ const DATA = {
     ['exchange_small', '💱','5💎 → 350🪙',     5,  'diamonds','Обмен алмазы → золото', null, false],
     ['exchange_medium','💰','15💎 → 1100🪙',   15,  'diamonds','Лучший курс',            null, false],
     ['exchange_large', '💎','50💎 → 4000🪙',   50,  'diamonds','Максимальный курс',      null, false],
-    ['box_common',     '📦','Обычный ящик',    150, 'gold',    '2–4 золотых свитка · 5% алмазный свиток · 3% +10–20💎', null, false],
-    ['box_rare',       '🟦','Редкий ящик',      50,  'diamonds','3–6 алмазных свитков · 5% USDT-свиток · 3% +100💎 · 3% Premium 3 дн.', null, false],
-    ['box_rare_c',     '🟪','Редкий ящик+',     80,  'diamonds','2 гарант. алмазных + 0–4 бонус · 5% USDT-свиток · 5% +300💎 · 3% Premium 3 дн.', null, false],
+    ['box_common',  'img:chest_gold.png',   'Обычный ящик',  150, 'gold',    '2–4 золотых свитка · 5% алмазный свиток · 3% +10–20💎', null, false],
+    ['box_rare',    'img:chest_diamond.png','Редкий ящик',    50,  'diamonds','3–6 алмазных свитков · 5% USDT-свиток · 3% +100💎 · 3% Premium 3 дн.', null, false],
+    ['box_rare_c',  'img:chest_diamond.png','Редкий ящик+',   80,  'diamonds','2 гарант. алмазных + 0–4 бонус · 5% USDT-свиток · 5% +300💎 · 3% Premium 3 дн.', null, false],
   ],
 };
 
@@ -79,6 +79,13 @@ function _priceIcon(cur) {
   return cur === 'diamonds' ? '💎' : '🪙';
 }
 
+function _icoHtml(icon, size) {
+  if (icon && icon.startsWith('img:')) {
+    return `<img src="${icon.slice(4)}" style="width:${size}px;height:${size}px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,200,80,.55))">`;
+  }
+  return icon;
+}
+
 function _cardHTML(item) {
   const [id, icon, name, price, cur, desc, badge, risk] = item;
   const r = _rarity(cur, price, risk);
@@ -90,7 +97,7 @@ function _cardHTML(item) {
 <div class="sh-card r-${r}" data-buy="${id}">
   <div class="sh-diode d-${r}"></div>
   ${invBdg}
-  <div class="sh-ico">${icon}</div>
+  <div class="sh-ico">${_icoHtml(icon, 34)}</div>
   <div class="sh-nm">${name}</div>
   <div class="sh-ds">${desc}</div>
   ${riskBdg}${badgeCls}
@@ -198,8 +205,12 @@ window.ShopHtmlItems = {
       });
     }
 
+    const detailIcon = (icon && icon.startsWith('img:'))
+      ? `<img src="${icon.slice(4)}" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(255,200,80,.7))">`
+      : icon;
+
     ShopHtml.showDetail({
-      icon, name, desc: richDesc, badge, risk, price, currency: cur, qty, rarity: r,
+      icon: detailIcon, name, desc: richDesc, badge, risk, price, currency: cur, qty, rarity: r,
       actionLabel: canBuy ? `Купить за ${price} ${pIcon}` : `Нужно ${price} ${pIcon}`,
       action,
     });

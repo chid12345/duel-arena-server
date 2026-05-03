@@ -16,10 +16,13 @@ function _cardStar(item) {
   const isLeg = id.includes('titan');
   const r = isLeg ? 'l' : isBox ? 'e' : 'r';
   const name = label.replace(/^[^\s]+\s/, '');
+  const icoHtml = isBox
+    ? `<img src="chest_epic.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,200,80,.55))">`
+    : isLeg ? '🏔️' : '📜';
   return `
 <div class="sh-card r-${r}" data-stars="${id}">
   <div class="sh-diode d-${r}"></div>
-  <div class="sh-ico">${isBox ? '🎲' : isLeg ? '🏔️' : '📜'}</div>
+  <div class="sh-ico">${icoHtml}</div>
   <div class="sh-nm">${name}</div>
   <div class="sh-ds">→ инвентарь</div>
   <div class="sh-pr"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${stars}</span></div>
@@ -45,10 +48,13 @@ function _cardUSDT(pkg) {
   const isLeg = id.includes('titan');
   const r = isLeg ? 'l' : isBox ? 'e' : 'r';
   const name = label.replace(/^[^\s]+\s/, '');
+  const icoHtml = isBox
+    ? `<img src="chest_epic.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,200,80,.55))">`
+    : isLeg ? '🏔️' : '📜';
   return `
 <div class="sh-card r-${r}" data-usdt="${id}">
   <div class="sh-diode d-${r}"></div>
-  <div class="sh-ico">${isBox ? '🎲' : isLeg ? '🏔️' : '📜'}</div>
+  <div class="sh-ico">${icoHtml}</div>
   <div class="sh-nm">${name}</div>
   <div class="sh-ds">→ инвентарь</div>
   <div class="sh-pr"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${usdt}</span></div>
