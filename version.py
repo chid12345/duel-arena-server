@@ -4,8 +4,8 @@ version.py — текущая версия проекта Duel Arena.
 """
 
 VERSION = "2.8.38"
-VERSION_LABEL = "v2.8.38 — fix: TabBarHTML скрывается при открытии выбора воина"
+VERSION_LABEL = "v2.8.38 — feat: Tasks UI киберпанк overlay + fix: TabBarHTML скрывается при выборе воина"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "13.06"
+GAME_VERSION = "13.07"
