@@ -474,6 +474,7 @@ window._closeAllTabOverlays = function() {
   try { window.RingHTML?.close?.(); } catch(_) {}
   try { window.WBHtml?.close?.(); } catch(_) {}
   try { window.BattleSelectHTML?.close?.(); } catch(_) {}
+  try { window.EquipmentSlotsHTML?.close?.(); } catch(_) {}
 };
 
 /* ════════════════════════════════════════════════════════════
