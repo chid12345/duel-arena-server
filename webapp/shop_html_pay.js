@@ -18,7 +18,7 @@ function _cardStar(item) {
   const name = label.replace(/^[^\s]+\s/, '');
   const icoHtml = isBox
     ? `<img src="chest_epic.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.35))">`
-    : isLeg ? '🏔️'
+    : isLeg ? `<img src="scroll_titan.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,140,0,.6))">`
     : `<img src="scroll_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,170,50,.6))">`;
   return `
 <div class="sh-card r-${r}" data-stars="${id}">
@@ -51,7 +51,7 @@ function _cardUSDT(pkg) {
   const name = label.replace(/^[^\s]+\s/, '');
   const icoHtml = isBox
     ? `<img src="chest_epic.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.35))">`
-    : isLeg ? '🏔️'
+    : isLeg ? `<img src="scroll_titan.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,140,0,.6))">`
     : `<img src="scroll_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(0,255,136,.55))">`;
   return `
 <div class="sh-card r-${r}" data-usdt="${id}">

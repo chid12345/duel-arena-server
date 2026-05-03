@@ -18,7 +18,7 @@ function _meta(p, currency) {
   const isDia = !p.scroll_id;
   const icon = isDia ? '💎'
     : isBox ? `<img src="chest_epic.png" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,200,80,.4))">`
-    : isLeg ? '🏔️'
+    : isLeg ? `<img src="scroll_titan.png" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,140,0,.65))">`
     : `<img src="scroll_icon.png" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(0,200,255,.4))">`;
   const name = isDia ? `${p.diamonds} алмазов` : (p.label || '').replace(/^[^\s]+\s/, '');
   const desc = isDia
