@@ -33,24 +33,18 @@ const CSS = `
 .sh-panel{display:none}.sh-panel.on{display:block}
 .sh-sec{font-size:9px;font-weight:700;letter-spacing:1.5px;color:rgba(255,255,255,.28);text-transform:uppercase;margin:7px 0 4px;padding-left:2px}
 .sh-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
-.sh-card{position:relative;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:4px 2px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s,box-shadow .18s;user-select:none}
+.sh-card{position:relative;background:none;border:none;box-shadow:none;padding:4px 2px;display:flex;flex-direction:column;align-items:center;cursor:pointer;transition:transform .15s;user-select:none}
 .sh-card:active{transform:scale(.93)}
-.sh-card.r-c{background:rgba(255,215,0,.05);border-color:rgba(255,215,0,.22);box-shadow:0 0 8px rgba(255,215,0,.1),inset 0 0 10px rgba(255,215,0,.04)}
-.sh-card.r-c:hover{box-shadow:0 0 14px rgba(255,215,0,.22),inset 0 0 12px rgba(255,215,0,.07)}
-.sh-card.r-r{background:rgba(68,136,255,.08);border-color:rgba(68,136,255,.3);box-shadow:0 0 10px rgba(68,136,255,.16),inset 0 0 12px rgba(68,136,255,.05)}
-.sh-card.r-r:hover{box-shadow:0 0 16px rgba(68,136,255,.28),inset 0 0 14px rgba(68,136,255,.08)}
-.sh-card.r-e{background:rgba(180,79,255,.09);border-color:rgba(180,79,255,.32);box-shadow:0 0 12px rgba(180,79,255,.2),inset 0 0 14px rgba(180,79,255,.06)}
-.sh-card.r-e:hover{box-shadow:0 0 18px rgba(180,79,255,.32),inset 0 0 16px rgba(180,79,255,.1)}
-.sh-card.r-l{background:rgba(255,140,0,.09);border-color:rgba(255,140,0,.32);animation:shMythic 3s ease-in-out infinite}
-@keyframes shMythic{0%,100%{box-shadow:0 0 14px rgba(255,140,0,.35),inset 0 0 14px rgba(255,140,0,.07)}50%{box-shadow:0 0 5px rgba(255,140,0,.1),inset 0 0 4px rgba(255,140,0,.02)}}
+.sh-card.r-l{animation:shMythic 3s ease-in-out infinite}
+@keyframes shMythic{0%,100%{filter:drop-shadow(0 0 10px rgba(255,140,0,.7))}50%{filter:drop-shadow(0 0 3px rgba(255,140,0,.2))}}
 .sh-diode{display:none}
 .sh-inv-cnt{position:absolute;top:0;right:0;background:rgba(0,245,255,.18);border:1px solid rgba(0,245,255,.4);border-radius:5px;font-size:8px;font-weight:700;color:#00f5ff;padding:0 4px;line-height:1.3;z-index:2}
-.sh-ico{font-size:24px;text-align:center;margin:1px 0 2px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,215,0,.5));transition:filter .2s}
-.sh-card.r-r .sh-ico{filter:drop-shadow(0 0 8px rgba(68,136,255,.9)) drop-shadow(0 0 3px rgba(68,136,255,.5))}
-.sh-card.r-e .sh-ico{filter:drop-shadow(0 0 9px rgba(180,79,255,1)) drop-shadow(0 0 4px rgba(180,79,255,.6))}
-.sh-card.r-l .sh-ico{filter:drop-shadow(0 0 10px rgba(255,140,0,1)) drop-shadow(0 0 4px rgba(255,140,0,.7))}
-.sh-card.r-d .sh-ico{filter:drop-shadow(0 0 8px rgba(255,51,51,.9)) drop-shadow(0 0 3px rgba(255,51,51,.5))}
-.sh-card:hover .sh-ico{filter:brightness(1.2) drop-shadow(0 0 12px currentColor)}
+.sh-ico{font-size:24px;text-align:center;margin:1px 0 2px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,215,0,.65)) drop-shadow(0 0 3px rgba(255,215,0,.4));transition:filter .2s}
+.sh-card.r-r .sh-ico{filter:drop-shadow(0 0 12px rgba(68,136,255,1)) drop-shadow(0 0 5px rgba(68,136,255,.6))}
+.sh-card.r-e .sh-ico{filter:drop-shadow(0 0 13px rgba(180,79,255,1)) drop-shadow(0 0 6px rgba(180,79,255,.7))}
+.sh-card.r-l .sh-ico{filter:drop-shadow(0 0 14px rgba(255,140,0,1)) drop-shadow(0 0 6px rgba(255,140,0,.8))}
+.sh-card.r-d .sh-ico{filter:drop-shadow(0 0 12px rgba(255,51,51,1)) drop-shadow(0 0 5px rgba(255,51,51,.6))}
+.sh-card:hover .sh-ico{filter:brightness(1.25) drop-shadow(0 0 16px currentColor) drop-shadow(0 0 6px currentColor)}
 .sh-nm{font-size:8.5px;font-weight:600;line-height:1.15;color:#d0d0e8;text-align:center;margin-bottom:1px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:18px}
 .sh-ds{display:none}
 .sh-bdg{display:inline-block;font-size:7px;font-weight:700;letter-spacing:.2px;padding:1px 3px;border-radius:3px;margin:0 auto;line-height:1.2}
