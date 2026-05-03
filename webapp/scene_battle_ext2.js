@@ -51,8 +51,12 @@ Object.assign(BattleScene.prototype, {
         this._hideCard();
         this._updateFromState(res.battle);
         this._resetChoices();
-        this._choosing = true;
-        this._startTimer();
+        // Ждём окончания анимации обоих ударов (~620мс) перед следующим ходом
+        setTimeout(() => {
+          if (!this.scene?.isActive('Battle')) return;
+          this._choosing = true;
+          this._startTimer();
+        }, 700);
       } else if (res.status === 'battle_ended') {
         State.lastResult = res;
         BattleLog.hide();

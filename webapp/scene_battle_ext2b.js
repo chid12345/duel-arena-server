@@ -107,8 +107,12 @@ Object.assign(BattleScene.prototype, {
         this._lastServerMsg = Date.now();
         this._updateFromState(msg.battle);
         this._resetChoices();
-        this._choosing = true;
-        this._startTimer(msg.battle?.deadline_sec);
+        // Ждём окончания анимации обоих ударов перед следующим ходом
+        setTimeout(() => {
+          if (!this.scene?.isActive('Battle')) return;
+          this._choosing = true;
+          this._startTimer(msg.battle?.deadline_sec);
+        }, 700);
       } else if (msg.event === 'battle_ended' || msg.event === 'battle_ended_afk') {
         if (myBattleId && msg.battle_id && msg.battle_id !== myBattleId) return;
         this._lastServerMsg = Date.now();
