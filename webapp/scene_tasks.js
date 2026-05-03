@@ -15,6 +15,7 @@ class TasksScene extends Phaser.Scene {
   }
 
   create() {
+    try { window._closeAllTabOverlays?.(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     _extraBg(this, W, H);
