@@ -123,7 +123,7 @@ window.ShopHtmlPay = {
     if (pkgMain.length) {
       html += `<div class="sh-sec">💎 Алмазы</div><div class="sh-grid">${pkgMain.map(_cardDia).join('')}</div>`;
     }
-    if (reset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid"><div class="sh-card r-d" data-stars="${reset.id}"><div class="sh-diode d-d"></div><div class="sh-ico"><img src="reset_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-ds">Уровень с нуля · золото и 💎 сохраняются</div><div class="sh-pr"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${reset.stars}</span></div><button class="sh-btn btn-danger">СБРОСИТЬ</button></div></div>`;
+    if (reset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid"><div class="sh-card r-d" data-stars="${reset.id}"><div class="sh-diode d-d"></div><div class="sh-ico"><img src="reset_icon.png?v=2" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-ds">Уровень с нуля · золото и 💎 сохраняются</div><div class="sh-pr"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${reset.stars}</span></div><button class="sh-btn btn-danger">СБРОСИТЬ</button></div></div>`;
     html += `<div style="text-align:center;font-size:10px;color:rgba(85,119,170,.8);margin-top:16px">⭐ Telegram Stars — моментальная оплата</div>`;
     el.innerHTML = html;
     el.querySelectorAll('[data-stars]').forEach(card => {
@@ -163,7 +163,7 @@ window.ShopHtmlPay = {
     if (boxes.length) html += `<div class="sh-sec">🎲 Эпические ящики</div><div class="sh-grid">${boxes.map(_cardUSDT).join('')}</div>`;
     if (scrolls.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid">${scrolls.map(_cardUSDT).join('')}</div>`;
     if (dPkgs.length)   html += `<div class="sh-sec">💎 Алмазы / USDT</div><div class="sh-grid">${dPkgs.map(_cardDiaUSDT).join('')}</div>`;
-    if (reset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid"><div class="sh-card r-d" data-usdt="${reset.id}"><div class="sh-diode d-d"></div><div class="sh-ico"><img src="reset_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-ds">Уровень с нуля · золото и 💎 сохраняются</div><div class="sh-pr"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${reset.usdt}</span></div><button class="sh-btn btn-danger">СБРОСИТЬ</button></div></div>`;
+    if (reset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid"><div class="sh-card r-d" data-usdt="${reset.id}"><div class="sh-diode d-d"></div><div class="sh-ico"><img src="reset_icon.png?v=2" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-ds">Уровень с нуля · золото и 💎 сохраняются</div><div class="sh-pr"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${reset.usdt}</span></div><button class="sh-btn btn-danger">СБРОСИТЬ</button></div></div>`;
     html += `<div style="text-align:center;font-size:10px;color:rgba(85,119,170,.8);margin-top:16px">💡 После оплаты товар придёт автоматически</div>`;
     el.innerHTML = html;
     el.querySelectorAll('[data-usdt]').forEach(card => {

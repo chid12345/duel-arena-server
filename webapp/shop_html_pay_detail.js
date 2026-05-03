@@ -45,7 +45,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     }
     if (p.full_reset) {
       ShopHtml.showDetail({
-        icon: '<img src="reset_icon.png" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name: 'Сброс прогресса',
+        icon: '<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name: 'Сброс прогресса',
         desc: 'Уровень и статы обнулятся. Золото, алмазы и инвентарь сохраняются. Действие необратимо.',
         price: p.stars, currency: 'stars', rarity: 'd',
         actionLabel: `Сбросить за ⭐ ${p.stars}`, btnClass: 'btn-danger',
@@ -67,7 +67,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     if (!p) return;
     if (p.full_reset) {
       ShopHtml.showDetail({
-        icon: '<img src="reset_icon.png" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name: 'Сброс прогресса',
+        icon: '<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name: 'Сброс прогресса',
         desc: 'Уровень и статы обнулятся. Золото, алмазы и инвентарь сохраняются. Действие необратимо.',
         price: p.usdt, currency: 'usdt', rarity: 'd',
         actionLabel: `Сбросить за 💲 ${p.usdt}`, btnClass: 'btn-danger',
