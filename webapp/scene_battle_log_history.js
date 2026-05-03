@@ -48,7 +48,7 @@
       if (!myIsMiss && myDmg > 0) { totalMe += myDmg; hits++; if (myIsCrit) crits++; }
       byRound[rNum].push({
         kind: myIsMiss ? 'miss' : myIsCrit ? 'crit' : 'me',
-        dmg: myDmg, hp: null, mk: m1,
+        dmg: myDmg, hp: myIsMiss ? null : _parseHp(m1), mk: m1,
       });
 
       // Enemy action — всегда показываем, в т.ч. промахи/блок/уклон
@@ -78,18 +78,18 @@
   }
 
   function _evHtml(ev) {
-    let tagCls, tagTxt, dmgCls, hpIco;
-    if (ev.kind === 'me')              { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; }
-    else if (ev.kind === 'crit')       { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; }
-    else if (ev.kind === 'miss')       { tagCls='boss'; tagTxt='МИМО';   dmgCls='boss'; hpIco=''; }
-    else if (ev.kind === 'boss')       { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco='❤️'; }
-    else if (ev.kind === 'enemy_crit') { tagCls='boss'; tagTxt='ВР.КР'; dmgCls='boss'; hpIco='❤️'; }
-    else if (ev.kind === 'enemy_miss') { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco=''; }
+    let tagCls, tagTxt, dmgCls, hpIco, hpColor;
+    if (ev.kind === 'me')              { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; hpColor='#00E5FF'; }
+    else if (ev.kind === 'crit')       { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; hpColor='#00FFB0'; }
+    else if (ev.kind === 'miss')       { tagCls='boss'; tagTxt='МИМО';   dmgCls='boss'; hpIco='';   hpColor=''; }
+    else if (ev.kind === 'boss')       { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco='❤️'; hpColor=''; }
+    else if (ev.kind === 'enemy_crit') { tagCls='boss'; tagTxt='ВР.КР'; dmgCls='boss'; hpIco='❤️'; hpColor=''; }
+    else if (ev.kind === 'enemy_miss') { tagCls='boss'; tagTxt='ВРАГ';   dmgCls='boss'; hpIco='';   hpColor=''; }
     else return '';
 
     const dmgStr = ev.dmg > 0 ? `−${_fmt(ev.dmg)}` : _missLabel(ev.mk);
     const hpHtml = ev.hp != null && hpIco
-      ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval">${_fmt(ev.hp)}</span></div>`
+      ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval"${hpColor ? ` style="color:${hpColor}"` : ''}>${_fmt(ev.hp)}</span></div>`
       : '';
 
     return `<div class="wb-bhist-ev">
