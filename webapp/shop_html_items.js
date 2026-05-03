@@ -24,6 +24,7 @@ const DATA = {
     ['scroll_warrior', '⚔️','Комбо Воина',         110, 'gold',   'Сила+2, Ловк+2 · 1 бой',  '1 БОЙ', false],
     ['scroll_shadow',  '🌑','Комбо Тени',          100, 'gold',   'Ловк+3, Уворот+3%',        '1 БОЙ', false],
     ['scroll_fury',    '💥','Комбо Ярости',        120, 'gold',   'Сила+4, Крит+2',           '1 БОЙ', false],
+    ['scroll_vampire_g','🩸','Свиток Вампира',     140, 'gold',   'Вампиризм 9% · 1 бой',     '1 БОЙ', false],
     ['scroll_str_6',   '⚔️','Эликсир силы +6',    20, 'diamonds','Сила +6 · 3 боя',          '3 БОЯ', false],
     ['scroll_end_6',   '🌀','Эликс. ловкости +6',  20, 'diamonds','Ловкость +6 · 3 боя',     '3 БОЯ', false],
     ['scroll_crit_6',  '🎯','Эликсир интуиции +6',   25, 'diamonds','Интуиция +6 · 3 боя',     '3 БОЯ', false],
@@ -36,6 +37,7 @@ const DATA = {
     ['scroll_predator','🐍','Хищник',               35, 'diamonds','Крит+5, Двойн+8% · 3 боя','3 БОЯ', false],
     ['scroll_berserker','🔥','Берсерк',             40, 'diamonds','Сила+8, Броня-5% · 3 боя','3 БОЯ', true],
     ['scroll_accuracy','🎯','Точность +15%',        20, 'diamonds','Точность +15% · 3 боя',   '3 БОЯ', false],
+    ['scroll_vampire_d','🧛','Свиток Вампира+',    40, 'diamonds','Вампиризм 15% · 3 боя',    '3 БОЯ', false],
   ],
   boxes: [
     ['exchange_small', '💱','5💎 → 350🪙',     5,  'diamonds','Обмен алмазы → золото', null, false],
@@ -208,7 +210,9 @@ window.ShopHtmlItems = {
       });
       card.querySelector('.sh-btn')?.addEventListener('click', e => {
         e.stopPropagation();
-        ShopHtmlItems._doBuy(card.dataset.buy);
+        const iid = card.dataset.buy;
+        if (iid === 'stat_reset') ShopHtmlItems._showDetailFor(iid);
+        else ShopHtmlItems._doBuy(iid);
       });
     });
   },

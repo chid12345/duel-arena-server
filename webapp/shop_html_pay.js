@@ -214,7 +214,10 @@ window.ShopHtmlPay = {
   },
 
   async _pollCrypto(invoiceId, attempts) {
-    if (attempts >= 24) return;
+    if (attempts >= 24) {
+      ShopHtml.toast('💳 Оплатили позже? Зайдите снова в магазин — товар проверится автоматически');
+      return;
+    }
     setTimeout(async () => {
       try {
         const r = await get(`/api/shop/crypto_check/${invoiceId}`);

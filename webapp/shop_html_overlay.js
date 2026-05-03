@@ -102,6 +102,22 @@ window.ShopHtml = {
       const inv = await get('/api/shop/inventory');
       if (inv?.inventory) ShopHtmlItems._setInv(inv.inventory);
     } catch(_) {}
+    // Незавершённый крипто-платёж: проверить тихо при входе в магазин
+    const _pendingId = (() => { try { return localStorage.getItem('cryptoPendingInvoice'); } catch(_) { return null; } })();
+    if (_pendingId) {
+      setTimeout(async () => {
+        try {
+          const r = await get(`/api/shop/crypto_check/${_pendingId}`);
+          if (r?.ok && r?.paid) {
+            try { localStorage.removeItem('cryptoPendingInvoice'); } catch(_) {}
+            if (r.scroll_received) ShopHtml.bumpInvBadge();
+            if (r.player) { State.player = r.player; ShopHtml._updateBalance(); }
+            const msg = r.profile_reset ? '🔄 Аккаунт сброшен' : r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
+            ShopHtml.toast(msg);
+          }
+        } catch(_) {}
+      }, 800);
+    }
   },
   hide() {
     const r = document.getElementById(ID);

@@ -28,6 +28,8 @@
     scroll_predator:{ icon:'🐍', name:'Хищник',                desc:'Крит +5, Двойной удар +8% · на 3 боя', tab:'scrolls' },
     scroll_berserker:{icon:'🔥', name:'Берсерк',               desc:'Сила +8, Броня −5% · на 3 боя', tab:'scrolls' },
     scroll_accuracy:{ icon:'👁️', name:'Свиток точности',      desc:'Точность +15 · на 3 боя', tab:'scrolls' },
+    scroll_vampire_g:{ icon:'🩸', name:'Свиток Вампира',      desc:'Вампиризм 9% · на 1 бой', tab:'scrolls' },
+    scroll_vampire_d:{ icon:'🧛', name:'Свиток Вампира+',     desc:'Вампиризм 15% · на 3 боя', tab:'scrolls' },
     // ── Особые (USDT-уровень) ──
     scroll_str_12:  { icon:'⚔️', name:'Эликсир силы +12',     desc:'Сила +12 · на 5 боёв', tab:'special' },
     scroll_end_12:  { icon:'🌀', name:'Эликсир ловкости +12',  desc:'Ловкость +12 · на 5 боёв', tab:'special' },
