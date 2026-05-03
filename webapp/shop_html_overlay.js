@@ -15,8 +15,8 @@ const CSS = `
 .sh-bp{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;user-select:none}
 .sh-bp-btn{position:relative;width:40px;height:40px;display:grid;place-items:center;background:none;border:none;box-shadow:none;transition:transform .15s}
 .sh-bp:active .sh-bp-btn{transform:scale(.93)}
-.sh-bp-img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(180,79,255,.55));transition:filter .15s}
-.sh-bp:hover .sh-bp-img{filter:drop-shadow(0 0 9px rgba(180,79,255,.95))}
+.sh-bp-img{width:38px;height:38px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(180,79,255,1)) drop-shadow(0 0 5px rgba(180,79,255,.7));transition:filter .18s}
+.sh-bp:hover .sh-bp-img{filter:drop-shadow(0 0 18px rgba(180,79,255,1)) drop-shadow(0 0 8px rgba(180,79,255,.9))}
 .sh-bp-badge{display:none;position:absolute;top:-5px;right:-5px;min-width:18px;height:18px;border-radius:9px;background:#e64c4c;border:2px solid #0a0a14;color:#fff;font-size:10px;font-weight:800;align-items:center;justify-content:center;padding:0 3px;line-height:1;z-index:3;animation:shBdgPop .3s ease}
 .sh-bp-badge.on{display:flex}
 @keyframes shBdgPop{0%{transform:scale(0)}70%{transform:scale(1.25)}100%{transform:scale(1)}}
