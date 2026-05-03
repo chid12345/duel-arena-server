@@ -106,6 +106,7 @@ Object.assign(MenuScene.prototype, {
       s.textContent = '@import url("https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap");' + _WS_CSS;
       document.head.appendChild(s);
     }
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
     const _canvas = document.querySelector('canvas');
     if (_canvas) _canvas.style.pointerEvents = 'none';
 
@@ -248,6 +249,7 @@ Object.assign(MenuScene.prototype, {
     document.body.className = document.body.className.replace(/wscls-\S+/g,'').trim();
     const cv = document.querySelector('canvas');
     if (cv) cv.style.pointerEvents = '';
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.show(this); } catch(_) {}
   },
 
   _tryBattle() {
