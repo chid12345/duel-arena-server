@@ -1,6 +1,20 @@
 /* ============================================================
    Tasks HTML — вкладка 🔥 Стрик
    ============================================================ */
+const _STREAK_ITEM_NAMES = {
+  scroll_str_3:   '⚔️ Эликсир силы +3',
+  scroll_end_3:   '🌀 Эликсир ловкости +3',
+  scroll_crit_3:  '🎯 Эликсир интуиции +3',
+  scroll_armor_6: '🛡️ Свиток брони 6%',
+  scroll_hp_100:  '❤️ Эликсир HP +100',
+  xp_boost_5:     '⚡ XP Буст ×1.5',
+  box_common:     '📦 Обычный ящик',
+  box_rare:       '🟦 Редкий ящик',
+};
+function _streakItemName(id) {
+  return _STREAK_ITEM_NAMES[id] || ('🎁 ' + id);
+}
+
 window.TasksHTML_Streak = function(streak) {
   if (!streak) return '<div class="tsk-loading">Нет данных стрика</div>';
 
@@ -55,7 +69,7 @@ window.TasksHTML_Streak = function(streak) {
   const rXp   = todayReward.xp || 0;
   const rItem = todayReward.item || '';
 
-  const rewardStr = [rGold && `+${rGold}💰`, rDia && `+${rDia}💎`, rXp && `+${rXp}⭐`, rItem && rItem].filter(Boolean).join(' ');
+  const rewardStr = [rGold && `+${rGold}💰`, rDia && `+${rDia}💎`, rXp && `+${rXp}⭐`, rItem && _streakItemName(rItem)].filter(Boolean).join(' ');
 
   const claimBtn = canClaim
     ? `<button class="tsk-scbtn" data-claim-streak="${sd}">🎁 Забрать ${rewardStr}</button>`
@@ -166,7 +180,7 @@ window.TasksHTML_attachStreakDayPopups = function(root) {
         if (d.gold) parts.push(`+${d.gold}💰`);
         if (d.dia)  parts.push(`+${d.dia}💎`);
         if (d.xp)   parts.push(`+${d.xp}⭐`);
-        if (d.item) parts.push(d.item);
+        if (d.item) parts.push(_streakItemName(d.item));
         const rewardLine = parts.length ? parts.join('  ') : '—';
         window.TasksHTML_showPopup?.({
           icon,
