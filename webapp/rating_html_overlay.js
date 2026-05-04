@@ -163,6 +163,9 @@ function _buildList(list, meta, tabKey) {
   let html = _podiumHTML(top3, meta, tabKey);
   if (list.length > 3) {
     html += `<div class="rt-section">Остальные участники</div><div class="rt-list">${list.slice(3).map((p,i)=>_rowHTML(p, i+3, meta, tabKey)).join('')}</div>`;
+  } else {
+    // ≤3 игроков: рендерим строки списка под подиумом — гарантированный клик для карточки
+    html += `<div class="rt-list" style="margin-top:6px">${list.map((p,i)=>_rowHTML(p, i, meta, tabKey)).join('')}</div>`;
   }
   return html;
 }
