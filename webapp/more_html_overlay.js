@@ -98,6 +98,7 @@ const MoreMenuHTML = (() => {
     _onTap(el.querySelector('#mo-btn-av'), () => {
       try { tg?.HapticFeedback?.selectionChanged(); } catch(_) {}
       try { Sound.click(); } catch(_) {}
+      MoreMenuHTML.close(); // убираем overlay ДО навигации
       setTimeout(() => {
         try { scene.scene.start('Avatar', {}); }
         catch(err) { console.error('[MoreMenu] Avatar nav:', err); }
@@ -107,6 +108,7 @@ const MoreMenuHTML = (() => {
     _onTap(el.querySelector('#mo-btn-ref'), () => {
       try { tg?.HapticFeedback?.selectionChanged(); } catch(_) {}
       try { Sound.click(); } catch(_) {}
+      // Рефералка не меняет сцену — overlay оставляем
       setTimeout(() => {
         try { scene._onInvite(); }
         catch(err) { console.error('[MoreMenu] Invite:', err); }
@@ -116,6 +118,7 @@ const MoreMenuHTML = (() => {
     _onTap(el.querySelector('#mo-btn-guide'), () => {
       try { tg?.HapticFeedback?.selectionChanged(); } catch(_) {}
       try { Sound.click(); } catch(_) {}
+      MoreMenuHTML.close(); // убираем overlay ДО навигации
       setTimeout(() => {
         try { scene.scene.start('Guide', {}); }
         catch(err) { console.error('[MoreMenu] Guide nav:', err); }
