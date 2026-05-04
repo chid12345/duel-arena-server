@@ -53,9 +53,11 @@ const CSS = `
 .rt-psub{font-size:9px;color:#8888aa;margin-top:1px}
 .rt-score{font-size:13px;font-weight:800;color:#ffd700;text-shadow:0 0 7px rgba(255,215,0,.4);flex-shrink:0}
 .rt-score.me{color:#00f5ff;text-shadow:0 0 7px rgba(0,245,255,.5)}
-.rt-mypos{margin:5px 8px;padding:7px 12px;border-radius:10px;display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(0,12,24,.98),rgba(0,4,12,.98));border:1.5px solid #00f5ff;box-shadow:0 0 12px rgba(0,245,255,.2)}
-.rt-mypos-label{font-size:8px;color:#00f5ff;opacity:.7;letter-spacing:.5px;text-transform:uppercase;margin-bottom:1px}
-.rt-mypos-val{font-size:14px;font-weight:800;color:#00f5ff;text-shadow:0 0 7px rgba(0,245,255,.5)}
+.rt-mypos{position:sticky;bottom:0;padding:9px 14px;display:flex;align-items:center;gap:10px;background:linear-gradient(90deg,rgba(0,10,22,.99),rgba(0,4,14,.99));border-top:1.5px solid rgba(0,245,255,.3);box-shadow:0 -6px 20px rgba(0,0,0,.6);z-index:5;margin-top:auto}
+.rt-mypos-label{font-size:8px;color:#00f5ff;opacity:.6;letter-spacing:.5px;text-transform:uppercase;margin-bottom:1px}
+.rt-mypos-val{font-size:15px;font-weight:800;color:#00f5ff;text-shadow:0 0 8px rgba(0,245,255,.6)}
+.rt-mypos-btn{font-size:10px;font-weight:700;color:#00f5ff;background:rgba(0,245,255,.12);border:1px solid rgba(0,245,255,.3);border-radius:7px;padding:4px 10px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+.rt-mypos-btn:active{opacity:.7}
 .rt-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:8px}
 .rt-empty-icon{font-size:32px;opacity:.5}
 .rt-empty-txt{font-size:12px;color:#8888aa;text-align:center}
@@ -180,14 +182,22 @@ function _buildList(list, meta, tabKey) {
   return html;
 }
 
-function _myPosHTML(meta, myRank, myScore, label) {
-  if (!myRank) return '';
+function _myPosHTML(myRank, scoreText, noRankLabel) {
+  const findBtn = (myRank && myRank > 3)
+    ? `<div class="rt-mypos-btn" id="rt-find-me">↑ Найти</div>` : '';
+  if (!myRank) {
+    return `<div class="rt-mypos">
+      <div style="flex:1"><div class="rt-mypos-label">Ваша позиция</div>
+      <div class="rt-mypos-val" style="opacity:.45;font-size:12px">${noRankLabel||'вне топа'}</div></div>
+    </div>`;
+  }
   return `<div class="rt-mypos">
-    <div style="flex:1">
-      <div class="rt-mypos-label">Ваш результат</div>
-      <div class="rt-mypos-val">#${myRank} · ${label || myScore}</div>
+    <div style="flex:1;min-width:0">
+      <div class="rt-mypos-label">Ваша позиция</div>
+      <div class="rt-mypos-val">#${myRank}</div>
     </div>
-    <div style="font-size:11px;color:#00f5ff;opacity:.6">${myScore}</div>
+    ${scoreText ? `<div style="font-size:11px;color:#00f5ff;opacity:.6;flex-shrink:0">${scoreText}</div>` : ''}
+    ${findBtn}
   </div>`;
 }
 
@@ -393,7 +403,7 @@ async function _renderTab(key, body) {
       const myElo  = State?.player?.rating || 1000;
       html += _infoBox('🎁 Награды', ['🥇 500💰+200💎  🥈 300💰+120💎  🥉 200💰+75💎  4–10: 50💰+20💎']);
       html += _buildList(list, meta, key);
-      if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, `★ ${myElo}`, myRank ? `#${myRank}` : 'вне топа');
+      html += _myPosHTML(myRank, `★ ${myElo}`, 'вне топа');
 
     } else if (key === 'titans') {
       const d = cache.titans || (cache.titans = await get('/api/titans/top'));
@@ -404,7 +414,7 @@ async function _renderTab(key, body) {
       const myFloor = myIdx >= 0 ? list[myIdx].weekly_best_floor : null;
       html += _infoBox(`🗿 Неделя: ${d.week_key||'—'}`, ['🥇 400💰+150💎  🥈 250💰+90💎  🥉 150💰+60💎  4-10: 60💰+25💎']);
       html += _buildList(list, meta, key);
-      if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, myFloor ? `Этаж ${myFloor}` : 'нет данных', myRank ? `#${myRank}` : 'не участвовал');
+      html += _myPosHTML(myRank, myFloor ? `Этаж ${myFloor}` : null, 'не участвовал');
 
     } else if (key === 'natisk') {
       const d = cache.natisk || (cache.natisk = await get('/api/endless/top'));
@@ -415,7 +425,7 @@ async function _renderTab(key, body) {
       const myWave = myIdx >= 0 ? list[myIdx].best_wave : null;
       html += _infoBox(`🔥 Неделя: ${d.week_key||'—'}`, ['🥇 300💰+100💎  🥈 200💰+60💎  🥉 100💰+40💎  4-10: 50💰+15💎']);
       html += _buildList(list, meta, key);
-      if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, myWave ? `Волна ${myWave}` : 'нет данных', myRank ? `#${myRank}` : 'не участвовал');
+      html += _myPosHTML(myRank, myWave ? `Волна ${myWave}` : null, 'не участвовал');
 
     } else if (key === 'season') {
       const d = cache.season || (cache.season = await get('/api/season'));
@@ -433,7 +443,7 @@ async function _renderTab(key, body) {
       }
       html += _infoBox(season ? season.name : 'Текущий сезон', [sub, '🥇500💰+200💎  🥈300💰+120💎  🥉200💰+75💎']);
       html += _buildList(list, meta, key);
-      if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, `★ ${myElo}`, myRank ? `#${myRank}` : 'вне топа');
+      html += _myPosHTML(myRank, `★ ${myElo}`, 'вне топа');
 
     } else if (key === 'boss') {
       const d = cache.boss || (cache.boss = await get('/api/rating/world_boss'));
@@ -450,10 +460,16 @@ async function _renderTab(key, body) {
       const ended  = spawn.ended_at ? new Date(String(spawn.ended_at).replace(' ','T')).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) : '—';
       html += _infoBox(`${status} ${spawn.boss_name||'Титан'} · ${ended}`, [`👥 Участников: ${spawn.total_participants||top.length}`]);
       html += _buildList(top, meta, key);
-      if (myPos && myPos > 10 && myDmg > 0) html += _myPosHTML(meta, myPos, _fmtNum(myDmg), `#${myPos}`);
+      html += _myPosHTML(myPos || null, myDmg > 0 ? _fmtNum(myDmg) + ' урона' : null, 'не участвовал');
     }
 
     body.innerHTML = html;
+
+    // Кнопка «↑ Найти» — прокрутка к строке игрока в списке
+    body.querySelector('#rt-find-me')?.addEventListener('click', () => {
+      const me = body.querySelector('.rt-row.me') || body.querySelector('[class*="rt-pod-me"]');
+      if (me) me.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
 
   } catch(e) {
     body.innerHTML = `<div class="rt-err"><div class="rt-err-icon">⚠️</div><div class="rt-err-txt">Нет соединения</div></div>`;
