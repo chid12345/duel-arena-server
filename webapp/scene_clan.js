@@ -17,7 +17,7 @@ class ClanScene extends Phaser.Scene {
       const ph = document.createElement('div');
       ph.id = 'cl-placeholder';
       const bottom = this._subview === 'chat' ? 0 : 76;
-      ph.style.cssText = `position:fixed;top:0;left:${0};right:0;bottom:${bottom}px;z-index:8999;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;pointer-events:none`;
+      ph.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:${bottom}px;z-index:9999;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;pointer-events:none`;
       document.body.appendChild(ph);
     }
   }
