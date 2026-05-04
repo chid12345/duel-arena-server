@@ -221,16 +221,20 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
         return {"ok": True}
 
     @router.get("/api/endless/top")
-    async def endless_top(init_data: str):
+    async def endless_top(init_data: str = ""):
         from db_core import iso_week_key_utc
-        tg_user = get_user_from_init_data(init_data)
-        uid = int(tg_user["id"])
         week_key = iso_week_key_utc()
         leaders, weekly = await asyncio.gather(
             asyncio.to_thread(db.endless_get_top, 20),
             asyncio.to_thread(db.endless_get_weekly_top, week_key, 20),
         )
-        my_pos = next((i + 1 for i, r in enumerate(leaders) if r["user_id"] == uid), None)
+        my_pos = None
+        if init_data:
+            try:
+                uid = int(get_user_from_init_data(init_data)["id"])
+                my_pos = next((i + 1 for i, r in enumerate(leaders) if r["user_id"] == uid), None)
+            except Exception:
+                pass
         rewards = [
             {"rank": 1,    "diamonds": 100, "gold": 300, "title": "Покоритель Волн"},
             {"rank": 2,    "diamonds": 60,  "gold": 200, "title": "Штормовой боец"},

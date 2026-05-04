@@ -142,10 +142,8 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": str(e)}
 
     @router.get("/api/rating/world_boss")
-    async def wb_rating(init_data: str):
+    async def wb_rating(init_data: str = ""):
         try:
-            tg = get_user(init_data)
-            uid = int(tg["id"])
             spawn = db.get_wb_last_finished()
             if not spawn:
                 return {"ok": True, "spawn": None, "top": [], "my_pos": None, "my_damage": 0}
@@ -160,21 +158,26 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
                 (sid,),
             )
             top = [dict(r) for r in cur.fetchall()]
-            cur.execute(
-                "SELECT total_damage FROM world_boss_player_state WHERE spawn_id=? AND user_id=?",
-                (sid, uid),
-            )
-            my_row = cur.fetchone()
-            my_dmg = int(my_row["total_damage"]) if my_row else 0
-            my_pos = None
-            if my_row:
-                cur.execute(
-                    "SELECT COUNT(*)+1 AS pos FROM world_boss_player_state "
-                    "WHERE spawn_id=? AND total_damage>?",
-                    (sid, my_dmg),
-                )
-                pos_row = cur.fetchone()
-                my_pos = int(pos_row["pos"]) if pos_row else None
+            my_pos, my_dmg = None, 0
+            if init_data:
+                try:
+                    uid = int(get_user(init_data)["id"])
+                    cur.execute(
+                        "SELECT total_damage FROM world_boss_player_state WHERE spawn_id=? AND user_id=?",
+                        (sid, uid),
+                    )
+                    my_row = cur.fetchone()
+                    if my_row:
+                        my_dmg = int(my_row["total_damage"])
+                        cur.execute(
+                            "SELECT COUNT(*)+1 AS pos FROM world_boss_player_state "
+                            "WHERE spawn_id=? AND total_damage>?",
+                            (sid, my_dmg),
+                        )
+                        pos_row = cur.fetchone()
+                        my_pos = int(pos_row["pos"]) if pos_row else None
+                except Exception:
+                    pass
             conn.close()
             return {"ok": True, "spawn": spawn, "top": top, "my_pos": my_pos, "my_damage": my_dmg}
         except Exception as e:
