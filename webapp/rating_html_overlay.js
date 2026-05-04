@@ -81,10 +81,9 @@ function _fitRoot(root) {
 }
 
 const TABS = [
-  { key: 'pvp',    label: '👑 Слава',  icon: '👑' },
+  { key: 'season', label: '🌟 Сезон',  icon: '🌟' },
   { key: 'titans', label: '🗿 Башня',  icon: '🗿' },
   { key: 'natisk', label: '🔥 Натиск', icon: '🔥' },
-  { key: 'season', label: '🌟 Сезон',  icon: '🌟' },
   { key: 'boss',   label: '☠️ Босс',   icon: '☠️' },
 ];
 
@@ -92,7 +91,7 @@ const TAB_META = {
   pvp:    { title: 'РЕЙТИНГ СЛАВЫ',   sub: 'Топ игроков по ELO рейтингу',              color: '#ffd700', glow: 'rgba(255,215,0,.35)',   scoreLabel: p => `★ ${p.rating}`,   subLabel: p => `🏆 ${p.wins||0}В  💀 ${p.losses||0}П` },
   titans: { title: 'БАШНЯ ТИТАНОВ',   sub: 'Топ покорителей башни за неделю',           color: '#00f0ff', glow: 'rgba(0,240,255,.35)',   scoreLabel: p => `${p.weekly_best_floor||0}`, subLabel: p => `🗿 Этаж ${p.weekly_best_floor||0}` },
   natisk: { title: 'НАТИСК ВОЛН',     sub: 'Топ выживших за неделю',                    color: '#ff6644', glow: 'rgba(255,100,70,.35)',  scoreLabel: p => `${p.best_wave||0}`, subLabel: p => `🔥 Волна ${p.best_wave||0}` },
-  season: { title: 'СЕЗОННЫЙ РЕЙТИНГ',sub: 'Сезонные рейтинговые бои',                  color: '#c78fff', glow: 'rgba(180,100,255,.35)', scoreLabel: p => `★ ${p.rating}`,   subLabel: p => `🏆 ${p.wins||0}В  💀 ${p.losses||0}П` },
+  season: { title: 'РЕЙТИНГ СЕЗОНА',  sub: 'Топ игроков · сбрасывается каждые 30 дней', color: '#c78fff', glow: 'rgba(180,100,255,.35)', scoreLabel: p => `★ ${p.rating}`,   subLabel: p => `🏆 ${p.wins||0}В  💀 ${p.losses||0}П` },
   boss:   { title: 'ТОП РЕЙДА',       sub: 'Лучшие по урону в последнем рейде',         color: '#ff3ba8', glow: 'rgba(255,59,168,.35)',  scoreLabel: p => _fmtNum(p.damage||p.total_damage||0), subLabel: p => `⚔️ ${_fmtNum(p.damage||p.total_damage||0)} урона` },
 };
 
@@ -220,7 +219,7 @@ async function _renderTab(key, body) {
       const myElo  = list[myIdx]?.rating || State?.player?.rating || 1000;
       let sub = '⏳ Сезон скоро начнётся';
       if (season) {
-        const endsMs  = new Date(String(season.started_at).replace(' ','T')).getTime() + 14*24*3600*1000;
+        const endsMs  = new Date(String(season.started_at).replace(' ','T')).getTime() + 30*24*3600*1000;
         const daysLeft = Math.max(0, Math.ceil((endsMs - Date.now()) / (24*3600*1000)));
         sub = `⏳ До конца: ${daysLeft} дн.`;
       }
@@ -260,7 +259,7 @@ window.RatingHTML = {
   _activeTab: 'pvp',
 
   open(tab) {
-    tab = tab || 'pvp';
+    tab = tab || 'season';
     this._activeTab = tab;
     _injectCSS();
     this.close();

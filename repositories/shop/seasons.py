@@ -24,7 +24,7 @@ _SEASON_RANK_REWARDS = {
     10: (50,  20,  "Участник топа"),
 }
 
-SEASON_DURATION_DAYS = 14
+SEASON_DURATION_DAYS = 30
 
 
 class ShopSeasonsMixin:

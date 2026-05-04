@@ -7,7 +7,7 @@ class RatingScene extends Phaser.Scene {
   constructor() { super('Rating'); }
 
   init(data) {
-    this._tab = (data && data.tab) ? data.tab : (RatingScene._lastTab || 'pvp');
+    this._tab = (data && data.tab) ? data.tab : (RatingScene._lastTab || 'season');
     RatingScene._lastTab = this._tab;
     try { window._tabPlaceholderShow?.('rt-placeholder', { bg: 'linear-gradient(180deg,#12121c 0%,#0d001a 100%)' }); } catch(_) {}
   }
