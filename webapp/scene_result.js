@@ -13,6 +13,7 @@ class ResultScene extends Phaser.Scene {
 
   async create() {
     try { if (typeof _closeAllTabOverlays === 'function') _closeAllTabOverlays(); } catch(_) {}
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     const res   = State.lastResult;
     const won   = res?.human_won ?? false;

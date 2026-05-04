@@ -139,6 +139,7 @@ class BattleScene extends Phaser.Scene {
 
   create() {
     try { if (typeof _closeAllTabOverlays === 'function') _closeAllTabOverlays(); } catch(_) {}
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
     this.W = W; this.H = H;
     this._selAttack  = null;
