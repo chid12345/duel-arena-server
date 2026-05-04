@@ -153,7 +153,7 @@ const config = {
   parent: document.body,
   scene: [BootScene, MenuScene, BattleScene, ResultScene, RatingScene, StatsScene, QueueScene,
           QuestsScene, SummaryScene, TitanTopScene, ClanScene, ShopScene, NatiskScene,
-          WorldBossScene, TasksScene, TasksWeeklyScene, AvatarScene, GuideScene, EquipmentScene],
+          WorldBossScene, TasksScene, AvatarScene, GuideScene, EquipmentScene],
   scale: {
     mode: Phaser.Scale.FIT,
     autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
