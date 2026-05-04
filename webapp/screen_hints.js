@@ -6,7 +6,7 @@
 
 const ScreenHints = (() => {
   const LS_KEY = 'da_screen_hints';
-  let _overlay = null, _showing = false;
+  let _overlay = null, _showing = false, _timer = null;
 
   function _seen() {
     try { return JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
@@ -85,10 +85,11 @@ const ScreenHints = (() => {
       if (_seen().includes(key)) return;
       const hint = typeof SCREEN_HINTS !== 'undefined' && SCREEN_HINTS[key];
       if (!hint) return;
-      setTimeout(() => _showCard(hint, key), 400);
+      _timer = setTimeout(() => { _timer = null; _showCard(hint, key); }, 400);
     },
-    /** Принудительно скрыть */
+    /** Принудительно скрыть (и отменить pending-таймер показа) */
     hide() {
+      if (_timer) { clearTimeout(_timer); _timer = null; }
       if (_overlay) _overlay.style.display = 'none';
       _showing = false;
     },
