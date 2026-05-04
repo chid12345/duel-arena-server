@@ -24,10 +24,10 @@ const CSS = `<style id="tsk-popup-style">
 .tpop-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,#5096ff,#00f0ff);box-shadow:0 0 8px rgba(0,240,255,.6)}
 .tpop-bar.done{background:linear-gradient(90deg,#3cc864,#80ff9c);box-shadow:0 0 8px rgba(60,200,100,.6)}
 .tpop-rewards{font-size:16px;font-weight:800;color:#ffd166;text-align:center;margin-top:10px;letter-spacing:2px;text-shadow:0 0 16px rgba(255,209,102,.8),0 0 32px rgba(255,209,102,.4);filter:drop-shadow(0 0 6px rgba(255,209,102,.5))}
-.tsk-reward-toast{position:fixed;left:50%;transform:translateX(-50%);top:36%;text-align:center;z-index:300;pointer-events:none;animation:tskRwdIn .3s cubic-bezier(.34,1.56,.64,1) both;transition:opacity .4s ease;white-space:nowrap}
-@keyframes tskRwdIn{from{transform:translateX(-50%) scale(.65);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
-.tsk-rt-title{font-size:9px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:2.5px;text-transform:uppercase;display:block;margin-bottom:5px;text-shadow:0 0 8px rgba(255,255,255,.3)}
-.tsk-rt-items{font-size:18px;font-weight:900;color:#ffd166;letter-spacing:2px;display:block;text-shadow:0 0 16px rgba(255,209,102,1),0 0 32px rgba(255,209,102,.6),0 2px 6px rgba(0,0,0,.9);filter:drop-shadow(0 0 8px rgba(255,209,102,.5))}
+.tsk-reward-toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:300;pointer-events:none;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:60px;padding:12px 28px 14px;animation:tskRwdIn .28s cubic-bezier(.34,1.56,.64,1) both;transition:opacity .38s ease;white-space:nowrap}
+@keyframes tskRwdIn{from{transform:translate(-50%,-50%) scale(.6);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
+.tsk-rt-title{font-size:9px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:3px;text-transform:uppercase;display:block;margin-bottom:4px}
+.tsk-rt-items{font-size:20px;font-weight:900;color:#ffd166;letter-spacing:3px;display:block;text-shadow:0 0 18px rgba(255,209,102,1),0 0 36px rgba(255,209,102,.6),0 2px 8px rgba(0,0,0,.95);filter:drop-shadow(0 0 8px rgba(255,209,102,.6))}
 </style>`;
 
 let _cssInjected = false;
