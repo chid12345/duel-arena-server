@@ -494,7 +494,7 @@ window._tabPlaceholderShow = function(id, opts = {}) {
   ph.id = id;
   const bottom = opts.bottom != null ? opts.bottom : 76;
   const bg = opts.bg || 'radial-gradient(ellipse at 50% 0%, #1a0a2a 0%, #05050a 55%), #000';
-  ph.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:${bottom}px;z-index:8999;background:${bg};pointer-events:none`;
+  ph.style.cssText = `position:fixed;top:0;left:0;right:0;bottom:${bottom}px;z-index:9999;background:${bg};pointer-events:none`;
   document.body.appendChild(ph);
 };
 window._tabPlaceholderHide = function(id) {
