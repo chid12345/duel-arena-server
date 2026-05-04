@@ -24,15 +24,17 @@ const CSS = `
 .rt-info{margin:5px 10px 0;padding:5px 10px;border-radius:8px;background:linear-gradient(135deg,rgba(20,14,0,.9),rgba(8,6,0,.9));border:1px solid rgba(255,215,0,.25);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .rt-info-title{font-size:10px;font-weight:700;color:#ffd700;white-space:nowrap}
 .rt-info-sub{font-size:9px;color:#c0b890;line-height:1.3}
-.rt-podium{display:flex;align-items:flex-end;justify-content:center;gap:6px;padding:8px 12px 0}
+.rt-podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:10px 12px 0}
 .rt-pod-col{display:flex;flex-direction:column;align-items:center}
-.rt-pod-medal{font-size:18px;margin-bottom:1px;filter:drop-shadow(0 0 5px currentColor)}
-.rt-pod-name{font-size:9px;font-weight:700;color:#fff;text-align:center;max-width:76px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
-.rt-pod-block{width:78px;border-radius:7px 7px 0 0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:6px 4px;position:relative;overflow:hidden}
-.rt-pod-block::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(255,255,255,.03) 2px 3px)}
-.rt-pod-score{font-size:13px;font-weight:800;color:#fff;text-shadow:0 0 8px currentColor}
-.rt-pod-lvl{font-size:8px;color:rgba(255,255,255,.55);margin-top:1px}
-.rt-pod-me{box-shadow:0 0 0 2px #00f5ff,0 0 14px rgba(0,245,255,.45)!important}
+.rt-pod-medal{font-size:20px;margin-bottom:2px;filter:drop-shadow(0 0 6px currentColor)}
+.rt-pod-name{font-size:9px;font-weight:700;color:#fff;text-align:center;max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
+.rt-pod-block{width:82px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 7px;position:relative;overflow:hidden;gap:2px}
+.rt-pod-block::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(255,255,255,.025) 2px 3px);pointer-events:none}
+.rt-pod-block::after{content:"";position:absolute;top:-30px;left:-30px;width:40px;height:160%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.07),transparent);pointer-events:none}
+.rt-pod-av{font-size:26px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.4));margin-bottom:1px}
+.rt-pod-score{font-size:14px;font-weight:800;color:#fff;text-shadow:0 0 12px currentColor;letter-spacing:.3px}
+.rt-pod-lvl{font-size:8px;color:rgba(255,255,255,.5);margin-top:0}
+.rt-pod-me{box-shadow:0 0 0 2px #00f5ff,0 0 18px rgba(0,245,255,.5)!important}
 .rt-section{padding:5px 10px 2px;font-size:9px;font-weight:700;color:#ffd700;letter-spacing:.7px;opacity:.65;text-transform:uppercase}
 .rt-list{display:flex;flex-direction:column;gap:3px;padding:0 8px}
 .rt-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:10px;background:linear-gradient(90deg,rgba(15,10,25,.9),rgba(6,4,14,.9));border:1px solid rgba(255,215,0,.12)}
@@ -108,26 +110,35 @@ function _rankClass(i) { return i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 
 function _rowClass(i, isMe) { return 'rt-row' + (isMe ? ' me' : i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : ''); }
 
 function _podiumHTML(top3, meta, tabKey) {
-  const order = [top3[1], top3[0], top3[2]]; // 2-1-3
+  const order  = [top3[1], top3[0], top3[2]]; // 2-1-3
   const ranks  = [2, 1, 3];
-  const heights = [62, 84, 48];
+  const heights = [72, 96, 58];
   const medals  = ['🥈','🥇','🥉'];
-  const colors  = ['#aabbcc','#ffd700','#cc9955'];
-  const bgs     = ['rgba(20,22,30,.95)','rgba(30,22,0,.95)','rgba(24,14,6,.95)'];
-  const borders = ['rgba(170,180,200,.5)','rgba(255,215,0,.7)','rgba(160,100,48,.5)'];
+  const colors  = ['#b0c8e8','#ffd700','#e0945a'];
+  const bgs = [
+    'linear-gradient(160deg,rgba(38,50,74,.98),rgba(12,14,26,.98))',
+    'linear-gradient(160deg,rgba(72,54,0,.98),rgba(22,14,0,.98))',
+    'linear-gradient(160deg,rgba(64,34,8,.98),rgba(18,8,2,.98))',
+  ];
+  const borders = ['rgba(160,195,235,.75)','rgba(255,215,0,.9)','rgba(210,130,60,.8)'];
+  const glows   = ['rgba(130,170,220,.45)','rgba(255,200,0,.55)','rgba(200,110,40,.45)'];
+  const _AVEMOJI = ['⚔️','🛡️','🧙','🐉','⚡','🗡️','🔥','🦅','🐺','🔮','✨','💀','🏹','🪓'];
   const myUid   = State?.player?.user_id;
 
   return `<div class="rt-podium">${order.map((p, i) => {
-    if (!p) return `<div class="rt-pod-col" style="width:76px"></div>`;
+    if (!p) return `<div class="rt-pod-col" style="width:82px"></div>`;
     const isMe = p.user_id === myUid;
     const meClass = isMe ? ' rt-pod-me' : '';
-    const nm = _esc(_trunc(p.username || `User${p.user_id}`, 10));
+    const nm  = _esc(_trunc(p.username || `User${p.user_id}`, 10));
+    const av  = _AVEMOJI[Math.abs(Number(p.user_id)||0) % _AVEMOJI.length];
+    const lvl = p.level ? `<div class="rt-pod-lvl">Ур. ${p.level}</div>` : '';
     return `<div class="rt-pod-col" data-pid="${p.user_id}" data-rank="${ranks[i]}" data-tab="${tabKey}">
       <div class="rt-pod-medal" style="color:${colors[i]}">${medals[i]}</div>
       <div class="rt-pod-name">${nm}</div>
-      <div class="rt-pod-block${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 18px ${borders[i]},inset 0 0 12px rgba(255,255,255,.03)">
-        <div class="rt-pod-score" style="color:${colors[i]};text-shadow:0 0 10px ${colors[i]}">${_esc(meta.scoreLabel(p))}</div>
-        <div class="rt-pod-lvl">Ур.${p.level||'—'}</div>
+      <div class="rt-pod-block${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 22px ${glows[i]},inset 0 0 16px rgba(255,255,255,.04)">
+        <div class="rt-pod-av">${av}</div>
+        <div class="rt-pod-score" style="color:${colors[i]};text-shadow:0 0 14px ${colors[i]}">${_esc(meta.scoreLabel(p))}</div>
+        ${lvl}
       </div>
     </div>`;
   }).join('')}</div>`;
