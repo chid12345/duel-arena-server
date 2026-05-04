@@ -61,25 +61,48 @@ const CSS = `
 .rt-row:active{opacity:.75}
 .rt-pod-col{cursor:pointer}
 .rt-pod-col:active{opacity:.75}
-.rt-pc-wrap{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
-.rt-pc{width:260px;border-radius:18px;overflow:hidden;background:linear-gradient(160deg,#0e0220 0%,#050010 100%);border:1.5px solid rgba(255,215,0,.5);box-shadow:0 0 40px rgba(255,215,0,.2),inset 0 0 30px rgba(255,215,0,.04);position:relative}
-.rt-pc::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,200,.015) 3px 4px);pointer-events:none}
-.rt-pc-close{position:absolute;top:10px;right:12px;font-size:18px;color:rgba(255,215,0,.5);cursor:pointer;z-index:2;line-height:1;padding:4px}
-.rt-pc-close:active{opacity:.5}
-.rt-pc-rank{position:absolute;top:10px;left:12px;font-size:11px;font-weight:800;color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.6);z-index:2}
-.rt-pc-body{padding:14px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1}
-.rt-pc-avatar{font-size:42px;line-height:1;filter:drop-shadow(0 0 14px rgba(255,215,0,.5));margin-top:8px}
-.rt-pc-name{font-size:16px;font-weight:800;color:#fff;text-shadow:0 0 10px rgba(255,215,0,.35);text-align:center;margin-top:2px}
-.rt-pc-lvl{font-size:10px;color:#ffd700;opacity:.8;letter-spacing:.3px}
-.rt-pc-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.3),transparent);margin:4px 0}
-.rt-pc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
-.rt-pc-stat{padding:7px 8px;border-radius:10px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.18);text-align:center}
-.rt-pc-stat-v{font-size:14px;font-weight:800;color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.4)}
-.rt-pc-stat-l{font-size:8px;color:#aaa;margin-top:1px;letter-spacing:.3px}
-.rt-pc-me{border-color:rgba(0,245,255,.6)!important;box-shadow:0 0 30px rgba(0,245,255,.2)!important}
-.rt-pc-me .rt-pc-name{color:#00f5ff;text-shadow:0 0 10px rgba(0,245,255,.4)}
-.rt-pc-me .rt-pc-stat{border-color:rgba(0,245,255,.2);background:rgba(0,245,255,.07)}
-.rt-pc-me .rt-pc-stat-v{color:#00f5ff;text-shadow:0 0 8px rgba(0,245,255,.4)}
+.rt-pc-wrap{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.75);backdrop-filter:blur(5px)}
+.rt-pc{width:min(300px,88vw);border-radius:16px;overflow:hidden;background:linear-gradient(180deg,#141420,#0f0d18);border:2px solid #444466;box-shadow:0 0 40px rgba(120,80,255,.2);position:relative;max-height:90vh;overflow-y:auto}
+.rt-pc::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,200,.012) 3px 4px);pointer-events:none;z-index:0}
+.rt-pc.prem{border-color:#ffc83c;box-shadow:0 0 0 3px rgba(255,200,60,.12),0 0 30px rgba(255,200,60,.15)}
+.rt-pc.me{border-color:#00f5ff;box-shadow:0 0 0 3px rgba(0,245,255,.12),0 0 30px rgba(0,245,255,.15)}
+.rt-pc-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px 0;font-size:10px;font-weight:700;position:relative;z-index:1}
+.rt-pc-close{cursor:pointer;color:#ddddff;font-size:14px;padding:2px 4px;opacity:.7}
+.rt-pc-close:active{opacity:.4}
+.rt-pc-name{text-align:center;font-size:15px;font-weight:800;padding:0 12px;margin-top:5px;color:#f0f0fa;position:relative;z-index:1}
+.rt-pc-name.prem{color:#ffc83c}
+.rt-pc-name.me{color:#00f5ff}
+.rt-pc-sub{text-align:center;font-size:10px;color:#9090bb;margin-top:4px;position:relative;z-index:1}
+.rt-pc-divider{height:1px;background:#2a2850;margin:6px 12px;opacity:.5;position:relative;z-index:1}
+.rt-pc-body{display:flex;padding:5px 12px;position:relative;z-index:1}
+.rt-pc-sprite{flex:0 0 76px;height:98px;display:flex;align-items:center;justify-content:center}
+.rt-pc-sprite img{max-width:100%;max-height:100%;object-fit:contain}
+.rt-pc-right{flex:1;padding-left:4px}
+.rt-pc-hp-row{display:flex;justify-content:space-between;font-size:9px;color:#ddddff}
+.rt-pc-hp-bar{height:8px;background:#0a0a18;border-radius:4px;margin-top:3px;overflow:hidden}
+.rt-pc-hp-fill{height:100%;border-radius:4px;transition:width .3s}
+.rt-pc-stats-g{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;margin-top:7px}
+.rt-pc-sg{display:flex;align-items:center;gap:5px}
+.rt-pc-sg-i{font-size:13px}
+.rt-pc-sg-l{font-size:9px;color:#ccccee}
+.rt-pc-sg-v{font-size:12px;font-weight:700}
+.rt-pc-gear{margin-top:7px;border-top:1px dashed #2a2850;padding:6px 12px 12px;position:relative;z-index:1}
+.rt-pc-gear-title{text-align:center;font-size:9px;color:#aaaacc;font-weight:700;letter-spacing:1px;margin-bottom:5px}
+.rt-pc-equip{display:grid;grid-template-columns:56px 1fr 56px;grid-template-rows:repeat(3,56px);gap:5px;align-items:stretch}
+.rt-pc-eq-sprite{grid-column:2;grid-row:1/4;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%,rgba(180,90,255,.18),transparent 70%);border-radius:8px}
+.rt-pc-eq-sprite img{max-width:100%;max-height:100%;object-fit:contain}
+.rt-pc-eq-slot{background:linear-gradient(180deg,#1f1d2e,#16142a);border:1.5px solid #2a2840;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2px;text-align:center;overflow:hidden}
+.rt-pc-eq-slot.empty{opacity:.3;border-style:dashed}
+.rt-pc-eq-label{font-size:6.5px;color:#aaaacc;letter-spacing:.4px;font-weight:700;text-transform:uppercase}
+.rt-pc-eq-img{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:1px 0}
+.rt-pc-eq-img img{max-width:26px;max-height:26px;object-fit:contain;mix-blend-mode:lighten;filter:drop-shadow(0 0 4px rgba(180,120,255,.5))}
+.rt-pc-eq-emoji{font-size:18px;line-height:1}
+.rt-pc-eq-name{font-size:6px;font-weight:700;line-height:1.1;max-width:52px;word-wrap:break-word;padding:0 1px}
+.rt-pc-wl{display:flex;justify-content:center;gap:12px;padding:6px 12px 10px;position:relative;z-index:1}
+.rt-pc-wl-item{display:flex;flex-direction:column;align-items:center;gap:2px}
+.rt-pc-wl-v{font-size:14px;font-weight:800;color:#ffd700}
+.rt-pc-wl-v.me{color:#00f5ff}
+.rt-pc-wl-l{font-size:8px;color:#8888aa;letter-spacing:.3px}
 `;
 
 function _injectCSS() {
@@ -201,46 +224,135 @@ function _infoBox(title, lines) {
   </div>`;
 }
 
-const TAB_AVATAR = { season:'⚔️', titans:'🗿', natisk:'🔥', boss:'☠️', pvp:'⚔️' };
+const _ITEM_IMG_BASE = {
+  tank_free:'armor_free1', agile_free:'armor_free2', crit_free:'armor_free3', universal_free:'armor_free4',
+  berserker_gold:'armor_gold1', assassin_gold:'armor_gold2', mage_gold:'armor_gold3', paladin_gold:'armor_gold4',
+  dragonknight_diamonds:'armor_dia1', shadowdancer_diamonds:'armor_dia2', archmage_diamonds:'armor_dia3', universal_diamonds:'armor_dia4',
+  berserker_mythic:'armor_mythic1', assassin_mythic:'armor_mythic2', archmage_mythic:'armor_mythic3', legendary_usdt:'armor_mythic4',
+};
+const _SLOT_ICON = { weapon:'🗡', shield:'🛡', armor:'👕', belt:'🪖', boots:'👢', ring1:'💍' };
+const _SLOT_LABEL = { weapon:'Оружие', shield:'Щит', armor:'Броня', belt:'Шлем', boots:'Сапоги', ring1:'Кольцо' };
+const _SLOT_LAYOUT = { belt:{r:1,c:1}, armor:{r:2,c:1}, boots:{r:3,c:1}, weapon:{r:1,c:3}, shield:{r:2,c:3}, ring1:{r:3,c:3} };
 
-function _showPlayerCard(p, rank, meta, tabKey) {
+if (!window._rtImgFb) {
+  window._rtImgFb = function(img) {
+    const tries = (img.dataset.tries || '').split(',').filter(Boolean);
+    if (!tries.length) {
+      const E = _SLOT_ICON;
+      if (img.parentNode) img.parentNode.innerHTML = `<span class="rt-pc-eq-emoji">${E[img.dataset.slot]||'•'}</span>`;
+      return;
+    }
+    img.src = (img.dataset.base||'') + '.' + tries.shift();
+    img.dataset.tries = tries.join(',');
+  };
+}
+
+function _itemImgBase(it) {
+  const id = it.item_id || '', slot = it.slot, rar = it.rarity || 'common';
+  if (['shield','belt','ring1','boots'].includes(slot)) return id;
+  if (slot === 'armor') return _ITEM_IMG_BASE[id] || ({common:'armor_free1',rare:'armor_gold1',epic:'armor_dia1',mythic:'armor_mythic1'}[rar]||'armor_free1');
+  if (slot === 'weapon') {
+    const [wt='sword', sfx=''] = id.split('_');
+    const rcl = {gold:'rare',diamond:'epic',mythic:'mythic',free:'free',steel:'rare',iron:'free'}[sfx] || {common:'free',rare:'rare',epic:'epic',mythic:'mythic'}[rar] || 'free';
+    return `weapon_${['sword','axe','club','gs'].includes(wt)?wt:'sword'}_${rcl}`;
+  }
+  return null;
+}
+
+function _renderEquipSlot(slot, it) {
+  const L = _SLOT_LAYOUT[slot]; if (!L) return '';
+  const style = `grid-row:${L.r};grid-column:${L.c};` + (it ? `border-color:${it.color};box-shadow:inset 0 0 7px ${it.color}33;` : '');
+  const base = it ? _itemImgBase(it) : null;
+  const visual = base
+    ? `<div class="rt-pc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onerror="window._rtImgFb&&window._rtImgFb(this)"></div>`
+    : `<div class="rt-pc-eq-img"><span class="rt-pc-eq-emoji">${_SLOT_ICON[slot]||'•'}</span></div>`;
+  const nm = it ? _esc(_trunc(it.name, 12)) : '';
+  return `<div class="rt-pc-eq-slot${it?'':' empty'}" style="${style}">
+    <div class="rt-pc-eq-label">${_SLOT_LABEL[slot]||slot}</div>${visual}
+    ${it?`<div class="rt-pc-eq-name" style="color:${it.color}">${nm}</div>`:''}
+  </div>`;
+}
+
+async function _fetchAndShowCard(uid, rank, tabKey, fallbackData) {
   document.getElementById('rt-pc-wrap')?.remove();
   const myUid = State?.player?.user_id;
-  const isMe  = p.user_id === myUid;
   const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
-  const nm    = _esc(_trunc(p.username || `User${p.user_id}`, 20));
-  const score = _esc(meta.scoreLabel(p));
 
-  // Строим статы из доступных данных
-  const stats = [];
-  stats.push({ v: score, l: meta.title.split(' ')[0] });
-  if (p.wins  != null) stats.push({ v: p.wins,   l: '🏆 ПОБЕДЫ' });
-  if (p.losses!= null) stats.push({ v: p.losses, l: '💀 ПОРАЖЕНИЙ' });
-  stats.push({ v: `Ур.${p.level||'?'}`, l: '📊 УРОВЕНЬ' });
-
-  const statsHtml = stats.slice(0, 4).map(s =>
-    `<div class="rt-pc-stat"><div class="rt-pc-stat-v">${_esc(String(s.v))}</div><div class="rt-pc-stat-l">${_esc(s.l)}</div></div>`
-  ).join('');
-
+  // Показываем скелетон пока грузим
   const wrap = document.createElement('div');
-  wrap.id = 'rt-pc-wrap';
-  wrap.className = 'rt-pc-wrap';
-  wrap.innerHTML = `<div class="rt-pc${isMe?' rt-pc-me':''}">
-    <div class="rt-pc-close" id="rt-pc-close">✕</div>
-    <div class="rt-pc-rank">${medal}</div>
+  wrap.id = 'rt-pc-wrap'; wrap.className = 'rt-pc-wrap';
+  wrap.innerHTML = `<div class="rt-pc"><div style="padding:40px;text-align:center;color:#888;font-size:13px;position:relative;z-index:1">⏳ Загрузка...</div></div>`;
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click', e => { if (e.target === wrap) wrap.remove(); });
+
+  let d;
+  try { d = await get(`/api/player/public/${uid}`); } catch(_) { d = null; }
+
+  if (!document.getElementById('rt-pc-wrap')) return; // закрыли пока грузилось
+
+  if (!d?.ok) {
+    // Fallback: показать базовые данные из leaderboard без HP/stats/items
+    d = { ok: true, user_id: uid, username: fallbackData?.username || '', level: fallbackData?.level || '?',
+          wins: fallbackData?.wins, losses: fallbackData?.losses, rating: fallbackData?.rating,
+          max_hp: 0, current_hp: 0, strength: 0, endurance: 0, crit: 0, warrior_type: 'tank',
+          is_premium: false, win_streak: 0, items: [] };
+  }
+
+  const isMe  = uid === myUid;
+  const isPrem = d.is_premium;
+  const nm    = _esc(_trunc(d.username || `ID${uid}`, 22));
+  const wt    = d.warrior_type || 'tank';
+  const skinUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : `skins/sila/1.png`;
+  const hpPct  = d.max_hp > 0 ? Math.min(1, Math.max(0, d.current_hp / d.max_hp)) : 1;
+  const hpCol  = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
+
+  const itemsBySlot = {};
+  (d.items || []).forEach(it => { itemsBySlot[it.slot] = it; });
+  const equipHtml = ['belt','armor','boots','weapon','shield','ring1']
+    .map(sl => _renderEquipSlot(sl, itemsBySlot[sl])).join('');
+
+  const headLabel = isMe ? '<span style="color:#00f5ff">🧑 Вы</span>' :
+                   isPrem ? '<span style="color:#ffc83c">👑 Игрок</span>' :
+                            '<span style="color:#3cc864">⚔️ Игрок</span>';
+
+  const hpBlock = d.max_hp > 0 ? `
+    <div class="rt-pc-hp-row"><span>❤️ HP</span><span style="color:${hpCol}">${d.current_hp} / ${d.max_hp}</span></div>
+    <div class="rt-pc-hp-bar"><div class="rt-pc-hp-fill" style="width:${hpPct*100}%;background:${hpCol}"></div></div>` : '';
+
+  const statsBlock = (d.strength || d.endurance || d.crit) ? `
+    <div class="rt-pc-stats-g">
+      <div class="rt-pc-sg"><span class="rt-pc-sg-i">💪</span><div><div class="rt-pc-sg-v" style="color:#dc3c46">${d.strength}</div><div class="rt-pc-sg-l">Сила</div></div></div>
+      <div class="rt-pc-sg"><span class="rt-pc-sg-i">🤸</span><div><div class="rt-pc-sg-v" style="color:#3cc8dc">${d.endurance}</div><div class="rt-pc-sg-l">Ловкость</div></div></div>
+      <div class="rt-pc-sg"><span class="rt-pc-sg-i">💥</span><div><div class="rt-pc-sg-v" style="color:#b45aff">${d.crit}</div><div class="rt-pc-sg-l">Интуиция</div></div></div>
+      <div class="rt-pc-sg"><span class="rt-pc-sg-i">⭐</span><div><div class="rt-pc-sg-v" style="color:#ffd700">${d.rating||1000}</div><div class="rt-pc-sg-l">Рейтинг</div></div></div>
+    </div>` : '';
+
+  wrap.querySelector('.rt-pc').outerHTML = `<div class="rt-pc${isPrem?' prem':''}${isMe?' me':''}">
+    <div class="rt-pc-head">
+      <div>${headLabel} · ${medal}</div>
+      <div class="rt-pc-close" id="rt-pc-close">✕</div>
+    </div>
+    <div class="rt-pc-name${isPrem?' prem':''}${isMe?' me':''}">${isPrem?'👑 ':''}${nm}</div>
+    <div class="rt-pc-sub">Ур. ${d.level||'?'}${d.win_streak>0?` · 🔥 ${d.win_streak} подряд`:''}</div>
+    <div class="rt-pc-divider"></div>
     <div class="rt-pc-body">
-      <div class="rt-pc-avatar">${TAB_AVATAR[tabKey]||'⚔️'}</div>
-      <div class="rt-pc-name">${nm}${isMe?' <span style="font-size:10px;opacity:.7">· ВЫ</span>':''}</div>
-      <div class="rt-pc-lvl">Уровень ${p.level||'?'}</div>
-      <div class="rt-pc-divider"></div>
-      <div class="rt-pc-stats">${statsHtml}</div>
+      <div class="rt-pc-sprite"><img src="${skinUrl}" alt="" onerror="this.style.display='none'"></div>
+      <div class="rt-pc-right">${hpBlock}${statsBlock}</div>
+    </div>
+    <div class="rt-pc-wl">
+      <div class="rt-pc-wl-item"><div class="rt-pc-wl-v${isMe?' me':''}">🏆 ${d.wins??'—'}</div><div class="rt-pc-wl-l">ПОБЕДЫ</div></div>
+      <div class="rt-pc-wl-item"><div class="rt-pc-wl-v${isMe?' me':''}">💀 ${d.losses??'—'}</div><div class="rt-pc-wl-l">ПОРАЖЕНИЙ</div></div>
+    </div>
+    <div class="rt-pc-gear">
+      <div class="rt-pc-gear-title">🎽 ЧТО ОДЕТО</div>
+      <div class="rt-pc-equip">
+        <div class="rt-pc-eq-sprite"><img src="${skinUrl}" alt="" onerror="this.style.display='none'"></div>
+        ${equipHtml}
+      </div>
     </div>
   </div>`;
 
-  document.body.appendChild(wrap);
-  wrap.addEventListener('click', e => {
-    if (e.target === wrap || e.target.id === 'rt-pc-close') wrap.remove();
-  });
+  document.getElementById('rt-pc-close')?.addEventListener('click', () => wrap.remove());
   try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
 }
 
@@ -380,15 +492,14 @@ window.RatingHTML = {
       this._switchTab(k);
     });
 
-    // Тап по строке или подиуму → карточка игрока
+    // Тап по строке или подиуму → полная карточка игрока
     root.querySelector('#rt-body').addEventListener('click', e => {
       const el = e.target.closest('[data-pid]'); if (!el) return;
       const uid  = +el.dataset.pid;
       const rank = +el.dataset.rank;
       const tKey = el.dataset.tab || this._activeTab;
-      const p    = this._players?.[uid]; if (!p) return;
-      const m    = TAB_META[tKey] || TAB_META[this._activeTab];
-      _showPlayerCard(p, rank, m, tKey);
+      const fallback = this._players?.[uid];
+      _fetchAndShowCard(uid, rank, tKey, fallback);
     });
 
     _renderTab(tab, root.querySelector('#rt-body'));

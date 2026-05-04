@@ -27,6 +27,7 @@ from api.stats_routes import register_stats_routes
 
 from api.tma_wire_gameplay import wire_gameplay_routes
 from api.tma_wire_shop import wire_shop_routes
+from api.player_public_route import register_player_public_route
 
 from config import CRYPTOPAY_TOKEN
 from database import db
@@ -36,6 +37,7 @@ from version import GAME_VERSION
 def wire_tma_feature_routes(app: FastAPI, *, app_build_version: str) -> None:
     wire_shop_routes(app)
     wire_gameplay_routes(app)
+    register_player_public_route(app, db=db)
     register_system_realtime_routes(
         app,
         {
