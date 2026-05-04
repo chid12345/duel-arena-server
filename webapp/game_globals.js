@@ -475,6 +475,8 @@ window._closeAllTabOverlays = function() {
   try { window.WBHtml?.close?.(); } catch(_) {}
   try { window.BattleSelectHTML?.close?.(); } catch(_) {}
   try { window.EquipmentSlotsHTML?.close?.(); } catch(_) {}
+  try { window.TasksHTML?.close?.(); } catch(_) {}
+  try { window.ShopHtml?.hide?.(); } catch(_) {}
   try { if (typeof ScreenHints !== 'undefined') ScreenHints.hide(); } catch(_) {}
 };
 
