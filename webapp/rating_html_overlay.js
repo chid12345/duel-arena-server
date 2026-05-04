@@ -92,7 +92,6 @@ const TABS = [
   { key: 'season', label: '🌟 Сезон',  icon: '🌟' },
   { key: 'titans', label: '🗿 Башня',  icon: '🗿' },
   { key: 'natisk', label: '🔥 Натиск', icon: '🔥' },
-  { key: 'boss',   label: '☠️ Босс',   icon: '☠️' },
 ];
 
 const TAB_META = {
