@@ -35,6 +35,7 @@ class RatingScene extends Phaser.Scene {
     this._alive = false;
     try { window._tabPlaceholderHide?.('rt-placeholder'); } catch(_) {}
     try { window.RatingHTML?.close(); } catch(_) {}
+    try { this.cameras.main.setScroll(0, 0); } catch(_) {}
     this._tbScrollOn = false;
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }

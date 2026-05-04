@@ -21,7 +21,8 @@ window.TabBarHTML = (() => {
 #tb-html-bar{position:fixed;z-index:9200;display:flex;
   background:rgba(7,4,26,.97);
   border-top:1px solid rgba(255,255,255,.07);
-  font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+  font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+  touch-action:manipulation}
 /* Ячейки — полностью прозрачные, без рамок и фонов = иконки "парят" */
 .tb-item{flex:1;display:flex;flex-direction:column;align-items:center;
   justify-content:center;position:relative;cursor:pointer;
