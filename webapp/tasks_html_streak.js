@@ -112,7 +112,9 @@ window.TasksHTML_StreakTop = function(streak) {
     const isDone = claimed.has(dn) || dn < sd;
     const isToday = dn === sd;
     const cls = isDone ? 'done' : isToday ? 'today' : '';
-    return `<span class="tsk-spill ${cls}">${name}${isDone?'✓':''}</span>`;
+    const r = rewards[dn - 1] || {};
+    const dayData = JSON.stringify({day:dn, gold:r.gold||0, dia:r.diamonds||0, xp:r.xp||0, item:r.item||'', isDone, isToday, wasClaimed:claimed.has(dn)});
+    return `<span class="tsk-spill ${cls}" data-sday='${dayData}' style="cursor:pointer">${name}${isDone?'✓':isToday?'·':''}</span>`;
   }).join('');
 
   const claimBtn = canClaim
@@ -145,4 +147,33 @@ window.TasksHTML_StreakTop = function(streak) {
   ${claimBtn}
 </div>
 <div class="tsk-stk-pills">${pillsHTML}</div>`;
+};
+
+/* ── Попап при тапе на день стрика ── */
+window.TasksHTML_attachStreakDayPopups = function(root) {
+  if (!root) return;
+  root.querySelectorAll('[data-sday]').forEach(pill => {
+    pill.addEventListener('click', e => {
+      e.stopPropagation();
+      try {
+        const d = JSON.parse(pill.dataset.sday);
+        const icon = d.wasClaimed ? '✅' : d.isToday ? '🎁' : d.isDone ? '✅' : '🔒';
+        const status = d.wasClaimed ? 'Уже получено'
+                     : d.isToday   ? 'Сегодняшний бонус — забери!'
+                     : d.isDone    ? 'День пройден'
+                     :               `Откроется на день ${d.day}`;
+        const parts = [];
+        if (d.gold) parts.push(`+${d.gold}💰`);
+        if (d.dia)  parts.push(`+${d.dia}💎`);
+        if (d.xp)   parts.push(`+${d.xp}⭐`);
+        if (d.item) parts.push(d.item);
+        const rewardLine = parts.length ? parts.join('  ') : '—';
+        window.TasksHTML_showPopup?.({
+          icon,
+          name: `День ${d.day} стрика`,
+          desc: `${status}\n\n🎁 Награда: ${rewardLine}`,
+        });
+      } catch(_) {}
+    });
+  });
 };

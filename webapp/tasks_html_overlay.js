@@ -98,6 +98,7 @@ window.TasksHTML = {
     const streakTop = _root.querySelector('#tsk-streak-top');
     if (streakTop) streakTop.innerHTML = window.TasksHTML_StreakTop?.(_data.streak) || '';
     _attachStreakClaims();
+    window.TasksHTML_attachStreakDayPopups?.(streakTop);
     _attachBack();
     this.switchTab(_curTab);
   },
