@@ -67,6 +67,8 @@ Object.assign(BattleScene.prototype, {
         this._choosing = true;
         const hint = res.detail || res.message || res.error || res.reason || '';
         this._showWait(hint ? `⚠️ ${hint}` : '⚠️ Ошибка. Попробуй ещё раз.');
+        // Бой мог завершиться (AFK/сервер) пока клиент не знал — форсируем поллинг немедленно
+        this._lastServerMsg = 0;
       }
     } catch(e) {
       console.error('[BATTLE] _submitChoice exception', e);
