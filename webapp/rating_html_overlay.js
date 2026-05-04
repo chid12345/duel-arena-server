@@ -57,6 +57,29 @@ const CSS = `
 .rt-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:36px 20px;gap:8px}
 .rt-empty-icon{font-size:32px;opacity:.5}
 .rt-empty-txt{font-size:12px;color:#8888aa;text-align:center}
+.rt-row{cursor:pointer}
+.rt-row:active{opacity:.75}
+.rt-pod-col{cursor:pointer}
+.rt-pod-col:active{opacity:.75}
+.rt-pc-wrap{position:fixed;inset:0;z-index:9500;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.72);backdrop-filter:blur(4px)}
+.rt-pc{width:260px;border-radius:18px;overflow:hidden;background:linear-gradient(160deg,#0e0220 0%,#050010 100%);border:1.5px solid rgba(255,215,0,.5);box-shadow:0 0 40px rgba(255,215,0,.2),inset 0 0 30px rgba(255,215,0,.04);position:relative}
+.rt-pc::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,200,.015) 3px 4px);pointer-events:none}
+.rt-pc-close{position:absolute;top:10px;right:12px;font-size:18px;color:rgba(255,215,0,.5);cursor:pointer;z-index:2;line-height:1;padding:4px}
+.rt-pc-close:active{opacity:.5}
+.rt-pc-rank{position:absolute;top:10px;left:12px;font-size:11px;font-weight:800;color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.6);z-index:2}
+.rt-pc-body{padding:14px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;position:relative;z-index:1}
+.rt-pc-avatar{font-size:42px;line-height:1;filter:drop-shadow(0 0 14px rgba(255,215,0,.5));margin-top:8px}
+.rt-pc-name{font-size:16px;font-weight:800;color:#fff;text-shadow:0 0 10px rgba(255,215,0,.35);text-align:center;margin-top:2px}
+.rt-pc-lvl{font-size:10px;color:#ffd700;opacity:.8;letter-spacing:.3px}
+.rt-pc-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,.3),transparent);margin:4px 0}
+.rt-pc-stats{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%}
+.rt-pc-stat{padding:7px 8px;border-radius:10px;background:rgba(255,215,0,.07);border:1px solid rgba(255,215,0,.18);text-align:center}
+.rt-pc-stat-v{font-size:14px;font-weight:800;color:#ffd700;text-shadow:0 0 8px rgba(255,215,0,.4)}
+.rt-pc-stat-l{font-size:8px;color:#aaa;margin-top:1px;letter-spacing:.3px}
+.rt-pc-me{border-color:rgba(0,245,255,.6)!important;box-shadow:0 0 30px rgba(0,245,255,.2)!important}
+.rt-pc-me .rt-pc-name{color:#00f5ff;text-shadow:0 0 10px rgba(0,245,255,.4)}
+.rt-pc-me .rt-pc-stat{border-color:rgba(0,245,255,.2);background:rgba(0,245,255,.07)}
+.rt-pc-me .rt-pc-stat-v{color:#00f5ff;text-shadow:0 0 8px rgba(0,245,255,.4)}
 `;
 
 function _injectCSS() {
@@ -100,8 +123,9 @@ function _fmtNum(n) { return n >= 1000000 ? (n/1000000).toFixed(1)+'M' : n >= 10
 function _rankClass(i) { return i === 0 ? 'gold' : i === 1 ? 'silver' : i === 2 ? 'bronze' : 'other'; }
 function _rowClass(i, isMe) { return 'rt-row' + (isMe ? ' me' : i === 0 ? ' gold' : i === 1 ? ' silver' : i === 2 ? ' bronze' : ''); }
 
-function _podiumHTML(top3, meta) {
+function _podiumHTML(top3, meta, tabKey) {
   const order = [top3[1], top3[0], top3[2]]; // 2-1-3
+  const ranks  = [2, 1, 3];
   const heights = [62, 84, 48];
   const medals  = ['🥈','🥇','🥉'];
   const colors  = ['#aabbcc','#ffd700','#cc9955'];
@@ -114,7 +138,7 @@ function _podiumHTML(top3, meta) {
     const isMe = p.user_id === myUid;
     const meClass = isMe ? ' rt-pod-me' : '';
     const nm = _esc(_trunc(p.username || `User${p.user_id}`, 10));
-    return `<div class="rt-pod-col">
+    return `<div class="rt-pod-col" data-pid="${p.user_id}" data-rank="${ranks[i]}" data-tab="${tabKey}">
       <div class="rt-pod-medal" style="color:${colors[i]}">${medals[i]}</div>
       <div class="rt-pod-name">${nm}</div>
       <div class="rt-pod-block${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 18px ${borders[i]},inset 0 0 12px rgba(255,255,255,.03)">
@@ -125,14 +149,14 @@ function _podiumHTML(top3, meta) {
   }).join('')}</div>`;
 }
 
-function _rowHTML(p, i, meta) {
+function _rowHTML(p, i, meta, tabKey) {
   const myUid = State?.player?.user_id;
   const isMe  = p.user_id === myUid;
   const rc    = _rankClass(i);
   const nm    = _esc(_trunc(p.username || `User${p.user_id}`, 18));
   const score = _esc(meta.scoreLabel(p));
   const sub   = _esc(meta.subLabel(p));
-  return `<div class="${_rowClass(i, isMe)}">
+  return `<div class="${_rowClass(i, isMe)}" data-pid="${p.user_id}" data-rank="${i+1}" data-tab="${tabKey}">
     <div class="rt-rank ${rc}">${i+1}</div>
     <div class="rt-pinfo">
       <div class="rt-pname${isMe?' me':''}">${nm}${isMe?' <span style="font-size:8px;color:#00f5ff;opacity:.7">● ВЫ</span>':''}</div>
@@ -142,15 +166,19 @@ function _rowHTML(p, i, meta) {
   </div>`;
 }
 
-function _buildList(list, meta) {
+function _buildList(list, meta, tabKey) {
   if (!list || !list.length) {
     return `<div class="rt-empty"><div class="rt-empty-icon">📭</div><div class="rt-empty-txt">Данных пока нет — первым войди в историю!</div></div>`;
   }
+  // Сохраняем данные для карточки по user_id
+  window.RatingHTML._players = {};
+  list.forEach(p => { window.RatingHTML._players[p.user_id] = p; });
+
   const top3 = list.length >= 3 ? list.slice(0,3) : null;
   let html = '';
-  if (top3) html += _podiumHTML(top3, meta);
+  if (top3) html += _podiumHTML(top3, meta, tabKey);
   if (list.length > 3) {
-    html += `<div class="rt-section">Остальные участники</div><div class="rt-list">${list.slice(3).map((p,i)=>_rowHTML(p, i+3, meta)).join('')}</div>`;
+    html += `<div class="rt-section">Остальные участники</div><div class="rt-list">${list.slice(3).map((p,i)=>_rowHTML(p, i+3, meta, tabKey)).join('')}</div>`;
   }
   return html;
 }
@@ -173,6 +201,49 @@ function _infoBox(title, lines) {
   </div>`;
 }
 
+const TAB_AVATAR = { season:'⚔️', titans:'🗿', natisk:'🔥', boss:'☠️', pvp:'⚔️' };
+
+function _showPlayerCard(p, rank, meta, tabKey) {
+  document.getElementById('rt-pc-wrap')?.remove();
+  const myUid = State?.player?.user_id;
+  const isMe  = p.user_id === myUid;
+  const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `#${rank}`;
+  const nm    = _esc(_trunc(p.username || `User${p.user_id}`, 20));
+  const score = _esc(meta.scoreLabel(p));
+
+  // Строим статы из доступных данных
+  const stats = [];
+  stats.push({ v: score, l: meta.title.split(' ')[0] });
+  if (p.wins  != null) stats.push({ v: p.wins,   l: '🏆 ПОБЕДЫ' });
+  if (p.losses!= null) stats.push({ v: p.losses, l: '💀 ПОРАЖЕНИЙ' });
+  stats.push({ v: `Ур.${p.level||'?'}`, l: '📊 УРОВЕНЬ' });
+
+  const statsHtml = stats.slice(0, 4).map(s =>
+    `<div class="rt-pc-stat"><div class="rt-pc-stat-v">${_esc(String(s.v))}</div><div class="rt-pc-stat-l">${_esc(s.l)}</div></div>`
+  ).join('');
+
+  const wrap = document.createElement('div');
+  wrap.id = 'rt-pc-wrap';
+  wrap.className = 'rt-pc-wrap';
+  wrap.innerHTML = `<div class="rt-pc${isMe?' rt-pc-me':''}">
+    <div class="rt-pc-close" id="rt-pc-close">✕</div>
+    <div class="rt-pc-rank">${medal}</div>
+    <div class="rt-pc-body">
+      <div class="rt-pc-avatar">${TAB_AVATAR[tabKey]||'⚔️'}</div>
+      <div class="rt-pc-name">${nm}${isMe?' <span style="font-size:10px;opacity:.7">· ВЫ</span>':''}</div>
+      <div class="rt-pc-lvl">Уровень ${p.level||'?'}</div>
+      <div class="rt-pc-divider"></div>
+      <div class="rt-pc-stats">${statsHtml}</div>
+    </div>
+  </div>`;
+
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click', e => {
+    if (e.target === wrap || e.target.id === 'rt-pc-close') wrap.remove();
+  });
+  try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light'); } catch(_) {}
+}
+
 // ── Рендер по вкладке ────────────────────────────────────────────────────────
 async function _renderTab(key, body) {
   const cache = window.RatingHTML._cache;
@@ -191,23 +262,31 @@ async function _renderTab(key, body) {
       const myIdx = list.findIndex(p => p.user_id === myUid);
       const myRank = myIdx >= 0 ? myIdx + 1 : null;
       const myElo  = State?.player?.rating || 1000;
-      html += _infoBox('🎁 Сезонные награды', ['🥇 500💰+200💎  🥈 300💰+120💎  🥉 200💰+75💎','4–10 место: 50💰+20💎']);
-      html += _buildList(list, meta);
+      html += _infoBox('🎁 Награды', ['🥇 500💰+200💎  🥈 300💰+120💎  🥉 200💰+75💎  4–10: 50💰+20💎']);
+      html += _buildList(list, meta, key);
       if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, `★ ${myElo}`, myRank ? `#${myRank}` : 'вне топа');
 
     } else if (key === 'titans') {
       const d = cache.titans || (cache.titans = await get('/api/titans/top'));
       if (!d.ok) throw new Error();
       const list = d.leaders || [];
-      html += _infoBox(`🗿 Неделя: ${d.week_key||'—'}`, ['🥇 400💰+150💎  🥈 250💰+90💎  🥉 150💰+60💎','Титулы: Покоритель / Гроза / Титаноборец']);
-      html += _buildList(list, meta);
+      const myIdx  = list.findIndex(p => p.user_id === myUid);
+      const myRank = myIdx >= 0 ? myIdx + 1 : null;
+      const myFloor = myIdx >= 0 ? list[myIdx].weekly_best_floor : null;
+      html += _infoBox(`🗿 Неделя: ${d.week_key||'—'}`, ['🥇 400💰+150💎  🥈 250💰+90💎  🥉 150💰+60💎  4-10: 60💰+25💎']);
+      html += _buildList(list, meta, key);
+      if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, myFloor ? `Этаж ${myFloor}` : 'нет данных', myRank ? `#${myRank}` : 'не участвовал');
 
     } else if (key === 'natisk') {
       const d = cache.natisk || (cache.natisk = await get('/api/endless/top'));
       if (!d.ok) throw new Error();
-      const list = d.weekly || d.leaders || [];
-      html += _infoBox(`🔥 Неделя: ${d.week_key||'—'}`, ['🥇 300💰+100💎  🥈 200💰+60💎  🥉 100💰+40💎','Титулы: Покоритель Волн / Штормовой / Волновой']);
-      html += _buildList(list, meta);
+      const list   = d.weekly || d.leaders || [];
+      const myIdx  = list.findIndex(p => p.user_id === myUid);
+      const myRank = myIdx >= 0 ? myIdx + 1 : (d.my_pos || null);
+      const myWave = myIdx >= 0 ? list[myIdx].best_wave : null;
+      html += _infoBox(`🔥 Неделя: ${d.week_key||'—'}`, ['🥇 300💰+100💎  🥈 200💰+60💎  🥉 100💰+40💎  4-10: 50💰+15💎']);
+      html += _buildList(list, meta, key);
+      if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, myWave ? `Волна ${myWave}` : 'нет данных', myRank ? `#${myRank}` : 'не участвовал');
 
     } else if (key === 'season') {
       const d = cache.season || (cache.season = await get('/api/season'));
@@ -224,7 +303,7 @@ async function _renderTab(key, body) {
         sub = `⏳ До конца: ${daysLeft} дн.`;
       }
       html += _infoBox(season ? season.name : 'Текущий сезон', [sub, '🥇500💰+200💎  🥈300💰+120💎  🥉200💰+75💎']);
-      html += _buildList(list, meta);
+      html += _buildList(list, meta, key);
       if (!myRank || myRank > 10) html += _myPosHTML(meta, myRank, `★ ${myElo}`, myRank ? `#${myRank}` : 'вне топа');
 
     } else if (key === 'boss') {
@@ -241,7 +320,7 @@ async function _renderTab(key, body) {
       const status = spawn.status === 'won' ? '✅' : '💀';
       const ended  = spawn.ended_at ? new Date(String(spawn.ended_at).replace(' ','T')).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) : '—';
       html += _infoBox(`${status} ${spawn.boss_name||'Титан'} · ${ended}`, [`👥 Участников: ${spawn.total_participants||top.length}`]);
-      html += _buildList(top, meta);
+      html += _buildList(top, meta, key);
       if (myPos && myPos > 10 && myDmg > 0) html += _myPosHTML(meta, myPos, _fmtNum(myDmg), `#${myPos}`);
     }
 
@@ -255,8 +334,9 @@ async function _renderTab(key, body) {
 // ── Публичный API ─────────────────────────────────────────────────────────────
 window.RatingHTML = {
   _cache: {},
+  _players: {},
   _root: null,
-  _activeTab: 'pvp',
+  _activeTab: 'season',
 
   open(tab) {
     tab = tab || 'season';
@@ -298,6 +378,17 @@ window.RatingHTML = {
       const k  = el.dataset.tab; if (k === this._activeTab) return;
       try { window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); } catch(_) {}
       this._switchTab(k);
+    });
+
+    // Тап по строке или подиуму → карточка игрока
+    root.querySelector('#rt-body').addEventListener('click', e => {
+      const el = e.target.closest('[data-pid]'); if (!el) return;
+      const uid  = +el.dataset.pid;
+      const rank = +el.dataset.rank;
+      const tKey = el.dataset.tab || this._activeTab;
+      const p    = this._players?.[uid]; if (!p) return;
+      const m    = TAB_META[tKey] || TAB_META[this._activeTab];
+      _showPlayerCard(p, rank, m, tKey);
     });
 
     _renderTab(tab, root.querySelector('#rt-body'));
