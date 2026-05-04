@@ -299,6 +299,7 @@ function refresh() {
 
 function open(scene) {
   try { if (typeof EquipmentSlotsHTML !== 'undefined') EquipmentSlotsHTML.close(); } catch(_) {}
+  try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
   _currentScene = scene;
   scene._shieldBusy = false;
   try { scene.input.enabled = false; } catch(_) {}
@@ -388,6 +389,7 @@ function _startShieldCryptoPolling(scene, invoiceId, itemId, immediate = false) 
 function close() {
   document.getElementById('sh-root')?.remove();
   try { if (_currentScene) _currentScene.input.enabled = true; } catch(_) {}
+  try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.show(); } catch(_) {}
 }
 
 window.ShieldHTML = { open, close, _removeDarkBg, refresh };

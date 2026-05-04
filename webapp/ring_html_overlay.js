@@ -309,6 +309,7 @@ function refresh() {
 
 function open(scene) {
   try { if (typeof EquipmentSlotsHTML !== 'undefined') EquipmentSlotsHTML.close(); } catch(_) {}
+  try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
   _currentScene = scene;
   scene._ringBusy = false;
   try { scene.input.enabled = false; } catch(_) {}
@@ -398,6 +399,7 @@ function _startRingCryptoPolling(scene, invoiceId, itemId, immediate = false) {
 function close() {
   document.getElementById('rg-root')?.remove();
   try { if (_currentScene) _currentScene.input.enabled = true; } catch(_) {}
+  try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.show(); } catch(_) {}
 }
 
 window.RingHTML = { open, close, _removeDarkBg, refresh };
