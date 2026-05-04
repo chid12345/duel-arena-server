@@ -108,7 +108,7 @@ const MoreMenuHTML = (() => {
     _onTap(el.querySelector('#mo-btn-ref'), () => {
       try { tg?.HapticFeedback?.selectionChanged(); } catch(_) {}
       try { Sound.click(); } catch(_) {}
-      // Рефералка не меняет сцену — overlay оставляем
+      MoreMenuHTML.close(); // попап Рефералки рисуется на canvas — убираем overlay
       setTimeout(() => {
         try { scene._onInvite(); }
         catch(err) { console.error('[MoreMenu] Invite:', err); }
