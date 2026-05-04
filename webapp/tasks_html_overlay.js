@@ -140,8 +140,9 @@ function _buildShell(hasReady, hasDailyDone) {
 
 function _attachBack() {
   _root.querySelector('#tsk-back')?.addEventListener('click', () => {
+    const s = _scene;
     window.TasksHTML.close();
-    try { _scene?.scene?.start('Menu', {}); } catch(_) {}
+    try { s?.scene?.start('Menu', {}); } catch(_) {}
   });
   _root.querySelectorAll('.tsk-tab').forEach(t => {
     t.addEventListener('click', () => window.TasksHTML.switchTab(t.dataset.tab));
