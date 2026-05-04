@@ -44,7 +44,8 @@ function _rewardAnim(scene, rewards = {}, onDone) {
     .setOrigin(0.5).setDepth(92).setAlpha(0);
   scene.tweens.add({ targets: titleT, alpha: 1, duration: 200, delay: 120 });
 
-  /* 4. Иконки наград в ряд */
+  /* 4. Иконки наград в ряд — собираем все объекты для общего fade-out */
+  const _allObjs = [dim, panel, titleT];
   const gap = Math.min(72, (panW - 24) / items.length);
   const startX = cx - (items.length - 1) * gap / 2;
   items.forEach((item, i) => {
@@ -52,10 +53,12 @@ function _rewardAnim(scene, rewards = {}, onDone) {
     const iconT = txt(scene, ix, panY + 62, item.icon, 28)
       .setOrigin(0.5).setDepth(92).setScale(0).setAlpha(0);
     scene.tweens.add({ targets: iconT, scale: 1, alpha: 1, duration: 220, delay: 160 + i * 60, ease: 'Back.easeOut' });
+    _allObjs.push(iconT);
     if (item.n > 0) {
       const amtT = txt(scene, ix, panY + 98, `+${item.n}`, 14, item.color, true)
         .setOrigin(0.5).setDepth(92).setAlpha(0);
       scene.tweens.add({ targets: amtT, alpha: 1, duration: 180, delay: 240 + i * 60 });
+      _allObjs.push(amtT);
     }
   });
 
@@ -83,18 +86,18 @@ function _rewardAnim(scene, rewards = {}, onDone) {
     });
   }
 
-  /* 6. Fade-out всей панели + onDone */
-  const all = [dim, panel, titleT];
+  /* 6. Fade-out ВСЕХ объектов включая иконки, затем уничтожаем */
   scene.tweens.add({
-    targets: all, alpha: 0, duration: 350, delay: 900,
-    onComplete: () => all.forEach(o => { try { o.destroy(); } catch(_) {} }),
+    targets: _allObjs, alpha: 0, duration: 350, delay: 900,
+    onComplete: () => _allObjs.forEach(o => { try { o.destroy(); } catch(_) {} }),
   });
 
-  /* Двойной запуск onDone: game-таймер + window.setTimeout (fallback для ПК) */
+  /* onDone: только через game-таймер (привязан к сцене, отменяется при shutdown) */
   let _called = false;
   const _call = () => { if (_called) return; _called = true; if (onDone) onDone(); };
   if (scene.time) scene.time.delayedCall(1260, _call);
-  setTimeout(_call, 1400);
+  // Fallback для ПК — только если сцена ещё активна, иначе не перезапускаем чужую сцену
+  setTimeout(() => { if (scene.sys?.isActive?.()) _call(); }, 1400);
 }
 
 function _extraBg(scene, W, H) {
