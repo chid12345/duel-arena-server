@@ -3,26 +3,31 @@
    ============================================================ */
 (function() {
 const CSS = `<style id="tsk-popup-style">
-#tsk-popup-overlay{position:absolute;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:200;animation:tpopFade .15s ease-out}
+#tsk-popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);display:flex;align-items:center;justify-content:center;z-index:200;animation:tpopFade .15s ease-out}
 @keyframes tpopFade{from{opacity:0}to{opacity:1}}
-.tpop-panel{background:linear-gradient(135deg,rgba(15,3,30,.98),rgba(5,5,18,.98));border:1px solid rgba(255,215,0,.45);border-radius:16px;padding:20px 18px 16px;width:calc(100% - 48px);max-width:340px;position:relative;animation:tpopPop .2s cubic-bezier(.34,1.56,.64,1)}
-@keyframes tpopPop{from{transform:scale(.85);opacity:0}to{transform:scale(1);opacity:1}}
-.tpop-close{position:absolute;top:10px;right:12px;background:rgba(255,100,100,.15);border:1px solid rgba(255,100,100,.4);border-radius:7px;color:#ffaaaa;font-size:13px;cursor:pointer;padding:2px 8px;line-height:1.6}
-.tpop-close:active{transform:scale(.92)}
-.tpop-icon{font-size:36px;text-align:center;margin-bottom:6px}
-.tpop-name{font-size:15px;font-weight:800;color:#ffe888;text-align:center;margin-bottom:4px}
-.tpop-divider{height:1px;background:rgba(255,215,0,.2);margin:8px 0}
-.tpop-desc{font-size:12px;color:#c8a878;text-align:center;line-height:1.55;white-space:pre-wrap;margin-bottom:8px}
-.tpop-badge{font-size:10px;font-weight:700;color:#88ccff;background:rgba(26,58,106,.9);border-radius:8px;padding:3px 12px;text-align:center;display:inline-block;width:100%;box-sizing:border-box;margin-bottom:8px}
-.tpop-prog{font-size:10px;font-weight:700;color:#ffe888;text-align:center;margin:5px 0 8px}
-.tpop-prog.done{color:#88ff88}
-.tpop-bar-wrap{height:6px;border-radius:3px;background:rgba(255,255,255,.08);overflow:hidden;margin:4px 0}
-.tpop-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,#5096ff,#00f0ff);box-shadow:0 0 6px rgba(0,240,255,.4);transition:width .3s}
-.tpop-bar.done{background:linear-gradient(90deg,#3cc864,#80ff9c);box-shadow:0 0 6px rgba(60,200,100,.4)}
-.tpop-rewards{font-size:13px;font-weight:700;color:#ffd700;text-align:center;margin-top:6px;letter-spacing:.3px}
-.tsk-reward-toast{position:absolute;left:50%;transform:translateX(-50%);top:40%;background:linear-gradient(135deg,rgba(15,3,30,.97),rgba(5,5,18,.97));border:1px solid rgba(255,215,0,.6);border-radius:16px;padding:18px 28px;text-align:center;z-index:300;box-shadow:0 0 30px rgba(255,215,0,.2);animation:tpopPop .25s cubic-bezier(.34,1.56,.64,1);transition:opacity .35s;white-space:nowrap}
-.tsk-rt-title{font-size:16px;font-weight:800;color:#fff;margin-bottom:8px}
-.tsk-rt-items{font-size:20px;font-weight:800;color:#ffd166;text-shadow:0 0 12px rgba(255,209,102,.6);letter-spacing:2px}
+.tpop-panel{background:linear-gradient(160deg,rgba(8,2,20,.99),rgba(2,4,16,.99));border:1px solid rgba(0,240,255,.5);border-radius:20px;padding:0 0 20px;width:calc(100% - 48px);max-width:320px;position:relative;overflow:hidden;box-shadow:0 0 28px rgba(0,240,255,.18),0 0 60px rgba(0,240,255,.07),inset 0 0 24px rgba(0,240,255,.03);animation:tpopPop .22s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tpopPop{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.tpop-panel::before{content:'';display:block;height:3px;background:linear-gradient(90deg,#ff3ba8,#00f0ff,#b45aff,#00f0ff,#ff3ba8);background-size:200%;animation:tpopShift 3s linear infinite}
+@keyframes tpopShift{0%{background-position:0%}100%{background-position:200%}}
+.tpop-panel::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,220,.018) 3px 4px);pointer-events:none;border-radius:20px}
+.tpop-close{position:absolute;top:10px;right:12px;background:rgba(255,59,168,.15);border:1px solid rgba(255,59,168,.5);border-radius:50%;color:#ff7acb;font-size:11px;cursor:pointer;width:26px;height:26px;display:flex;align-items:center;justify-content:center;z-index:2;transition:all .15s;line-height:1;box-shadow:0 0 8px rgba(255,59,168,.2)}
+.tpop-close:active{transform:scale(.85);background:rgba(255,59,168,.35)}
+@keyframes tpopIconPulse{0%,100%{filter:drop-shadow(0 0 12px rgba(0,240,255,.6)) drop-shadow(0 0 4px rgba(0,240,255,.3))}50%{filter:drop-shadow(0 0 22px rgba(0,240,255,.9)) drop-shadow(0 0 8px rgba(0,240,255,.5))}}
+.tpop-icon{font-size:48px;text-align:center;padding:18px 0 10px;animation:tpopIconPulse 2.5s ease-in-out infinite}
+.tpop-name{font-size:16px;font-weight:800;text-align:center;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:.4px;margin-bottom:2px;padding:0 28px}
+.tpop-divider{height:1px;background:linear-gradient(90deg,transparent,rgba(0,240,255,.45),transparent);margin:8px 16px 12px}
+.tpop-desc{font-size:11px;color:#80c8ff;text-align:center;line-height:1.65;white-space:pre-wrap;margin-bottom:10px;padding:0 18px;opacity:.88}
+.tpop-badge{font-size:11px;font-weight:800;color:#00f0ff;background:rgba(0,240,255,.08);border:1px solid rgba(0,240,255,.4);border-radius:20px;padding:4px 18px;text-align:center;display:block;width:fit-content;margin:0 auto 12px;box-shadow:0 0 10px rgba(0,240,255,.15),inset 0 0 8px rgba(0,240,255,.05);letter-spacing:.6px;text-shadow:0 0 8px rgba(0,240,255,.5)}
+.tpop-prog{font-size:10px;font-weight:700;color:#ffe888;text-align:center;margin:5px 0 8px;text-shadow:0 0 6px rgba(255,232,136,.4)}
+.tpop-prog.done{color:#80ff9c;text-shadow:0 0 6px rgba(128,255,156,.5)}
+.tpop-bar-wrap{height:5px;border-radius:3px;background:rgba(255,255,255,.07);overflow:hidden;margin:4px 20px}
+.tpop-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,#5096ff,#00f0ff);box-shadow:0 0 8px rgba(0,240,255,.6)}
+.tpop-bar.done{background:linear-gradient(90deg,#3cc864,#80ff9c);box-shadow:0 0 8px rgba(60,200,100,.6)}
+.tpop-rewards{font-size:16px;font-weight:800;color:#ffd166;text-align:center;margin-top:10px;letter-spacing:2px;text-shadow:0 0 16px rgba(255,209,102,.8),0 0 32px rgba(255,209,102,.4);filter:drop-shadow(0 0 6px rgba(255,209,102,.5))}
+.tsk-reward-toast{position:fixed;left:50%;transform:translateX(-50%);top:36%;text-align:center;z-index:300;pointer-events:none;animation:tskRwdIn .3s cubic-bezier(.34,1.56,.64,1) both;transition:opacity .4s ease;white-space:nowrap}
+@keyframes tskRwdIn{from{transform:translateX(-50%) scale(.65);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
+.tsk-rt-title{font-size:9px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:2.5px;text-transform:uppercase;display:block;margin-bottom:5px;text-shadow:0 0 8px rgba(255,255,255,.3)}
+.tsk-rt-items{font-size:18px;font-weight:900;color:#ffd166;letter-spacing:2px;display:block;text-shadow:0 0 16px rgba(255,209,102,1),0 0 32px rgba(255,209,102,.6),0 2px 6px rgba(0,0,0,.9);filter:drop-shadow(0 0 8px rgba(255,209,102,.5))}
 </style>`;
 
 let _cssInjected = false;
@@ -55,14 +60,16 @@ window.TasksHTML_showPopup = function(opts) {
     if (opts.rewards.gold)     parts.push(`+${opts.rewards.gold}💰`);
     if (opts.rewards.diamonds) parts.push(`+${opts.rewards.diamonds}💎`);
     if (opts.rewards.xp)       parts.push(`+${opts.rewards.xp}⭐`);
-    if (parts.length) rewardHtml = `<div class="tpop-rewards">🎁 ${parts.join('  ')}</div>`;
+    if (parts.length) rewardHtml = `<div class="tpop-rewards">${parts.join('  ')}</div>`;
   }
+
+  const icon = opts.icon || '✨';
 
   const wrap = document.createElement('div');
   wrap.id = 'tsk-popup-overlay';
   wrap.innerHTML = `<div class="tpop-panel">
   <button class="tpop-close" id="tpop-close-btn">✕</button>
-  <div class="tpop-icon">${_e(opts.icon||'📦')}</div>
+  <div class="tpop-icon">${_e(icon)}</div>
   <div class="tpop-name">${_e(opts.name||'')}</div>
   <div class="tpop-divider"></div>
   ${badgeHtml}
@@ -89,7 +96,7 @@ window.TasksHTML_showReward = function(r, onDone) {
 
   const toast = document.createElement('div');
   toast.className = 'tsk-reward-toast';
-  toast.innerHTML = `<div class="tsk-rt-title">✅ Получено!</div><div class="tsk-rt-items">${itemsText}</div>`;
+  toast.innerHTML = `<div class="tsk-rt-title">✅ Получено</div><div class="tsk-rt-items">${itemsText}</div>`;
   const root = document.getElementById('tsk-overlay') || document.body;
   root.appendChild(toast);
 

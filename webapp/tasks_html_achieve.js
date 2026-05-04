@@ -101,7 +101,7 @@ window.TasksHTML_attachAchPopups = function(root, scene) {
       try {
         const d = JSON.parse(card.dataset.achPopup);
         if (d.max) {
-          window.TasksHTML_showPopup({ icon: (d.label||'').split(' ')[0], name: (d.label||'').replace(/^[^ ]+ /,''), desc: `${d.desc||''}\n\n✅ Все ${d.max} уровней пройдены!`, badge: `MAX ${d.max}/${d.max}` });
+          window.TasksHTML_showPopup({ icon: '🏆', name: (d.label||'').replace(/^[^ ]+ /,''), desc: `${d.desc||''}\n\n✅ Все ${d.max} уровней пройдены!`, badge: `MAX ${d.max}/${d.max}` });
         } else {
           window.TasksHTML_showPopup({
             icon: d.icon, name: d.name,
