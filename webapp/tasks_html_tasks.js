@@ -2,48 +2,8 @@
    Tasks HTML — вкладка ⚡ Задания (ежедневные + недельные)
    + попап при тапе на карточку
    ============================================================ */
-window.TasksHTML_Daily = function(data) {
-  const _e = window._TasksHTML_esc;
-  const daily   = data.daily || [];
-  const weekly  = data.weekly_extra || [];
-  const date    = new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
-
-  function _rewardHtml(q) {
-    const parts = [];
-    if (q.reward_gold)     parts.push(`<span class="tw-rg">+${q.reward_gold}💰</span>`);
-    if (q.reward_diamonds) parts.push(`<span class="tw-rd">+${q.reward_diamonds}💎</span>`);
-    if (q.reward_xp)       parts.push(`<span class="tw-rx">+${q.reward_xp}⭐</span>`);
-    return parts.join('');
-  }
-
-  function _card(q, type) {
-    const done    = q.is_completed, claimed = q.reward_claimed;
-    if (claimed) return '';
-    const pct     = Math.min(100, Math.round((q.current / Math.max(1, q.target)) * 100));
-    const icon    = (q.label||'').split(' ')[0];
-    const name    = (q.label||'').replace(/^[^ ]+ /, '');
-    const barCls  = done ? 'gold' : type === 'weekly' ? 'purple' : 'blue';
-    const claimAttr = done ? (type==='weekly' ? `data-claim-weekly="${_e(q.key)}"` : `data-claim-daily="${_e(q.key)}"`) : '';
-    const cardKey = _e(JSON.stringify({icon,name,desc:q.desc||'',cur:q.current,max:q.target,rg:q.reward_gold,rd:q.reward_diamonds,rx:q.reward_xp}));
-    return `
-<div class="tw-card${done?' done':''}${type==='weekly'?' weekly':''}" data-popup='${cardKey}'>
-  <div class="tw-rpos">${_rewardHtml(q)}</div>
-  <div class="tw-row">
-    <div class="tw-ic">${_e(icon)}</div>
-    <div class="tw-body">
-      <div class="tw-nm${done?' done':''}">${_e(name)}</div>
-      <div class="tw-ds">${_e(q.desc||'')}</div>
-      <div class="tw-pg${done?' done':''}">${q.current} / ${q.target} · ${pct}%${done?' ✓':''}</div>
-      <div class="tw-bw"><div class="tw-bar ${barCls}" style="width:${pct}%"></div></div>
-    </div>
-    <div class="tw-right">
-      ${done
-        ? `<button class="tsk-gift-btn" ${claimAttr}><img src="task_gift.png" alt=""><span>ЗАБРАТЬ</span></button>`
-        : `<div class="tsk-lock">🔒</div>`}
-    </div>
-  </div>
-</div>`;
-  }
+(function() {
+  const _e = s => window._TasksHTML_esc(s);
 
   const CSS = `<style id="tsk-tasks-style">
 .tw-list{padding:0 12px;display:flex;flex-direction:column;gap:6px}
@@ -76,42 +36,84 @@ window.TasksHTML_Daily = function(data) {
 .tw-right{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;flex-shrink:0;width:50px;padding-bottom:1px}
 </style>`;
 
-  const dailyActive  = daily.filter(q => !q.reward_claimed);
-  const dailyClaimed = daily.filter(q => q.reward_claimed).length;
-  const pct = daily.length ? Math.round(dailyClaimed / daily.length * 100) : 0;
+  function _rewardHtml(q) {
+    const parts = [];
+    if (q.reward_gold)     parts.push(`<span class="tw-rg">+${q.reward_gold}💰</span>`);
+    if (q.reward_diamonds) parts.push(`<span class="tw-rd">+${q.reward_diamonds}💎</span>`);
+    if (q.reward_xp)       parts.push(`<span class="tw-rx">+${q.reward_xp}⭐</span>`);
+    return parts.join('');
+  }
 
-  const weeklyHtml = weekly.length ? `
-<div class="tsk-sec" style="margin-top:6px">НЕДЕЛЬНЫЕ <span class="tsk-date">Сброс: Пн</span></div>
-<div class="tw-list">${weekly.map(q => _card(q,'weekly')).join('')}</div>
-<div class="tsk-reset">🔄 Сброс в понедельник в 00:00</div>` : '';
+  function _card(q, type) {
+    const done = q.is_completed, claimed = q.reward_claimed;
+    if (claimed) return '';
+    const pct    = Math.min(100, Math.round((q.current / Math.max(1, q.target)) * 100));
+    const icon   = (q.label||'').split(' ')[0];
+    const name   = (q.label||'').replace(/^[^ ]+ /, '');
+    const barCls = done ? 'gold' : type === 'weekly' ? 'purple' : 'blue';
+    const claimAttr = done ? (type==='weekly' ? `data-claim-weekly="${_e(q.key)}"` : `data-claim-daily="${_e(q.key)}"`) : '';
+    const cardKey = _e(JSON.stringify({icon,name,desc:q.desc||'',cur:q.current,max:q.target,rg:q.reward_gold,rd:q.reward_diamonds,rx:q.reward_xp}));
+    return `
+<div class="tw-card${done?' done':''}${type==='weekly'?' weekly':''}" data-popup='${cardKey}'>
+  <div class="tw-rpos">${_rewardHtml(q)}</div>
+  <div class="tw-row">
+    <div class="tw-ic">${_e(icon)}</div>
+    <div class="tw-body">
+      <div class="tw-nm${done?' done':''}">${_e(name)}</div>
+      <div class="tw-ds">${_e(q.desc||'')}</div>
+      <div class="tw-pg${done?' done':''}">${q.current} / ${q.target} · ${pct}%${done?' ✓':''}</div>
+      <div class="tw-bw"><div class="tw-bar ${barCls}" style="width:${pct}%"></div></div>
+    </div>
+    <div class="tw-right">
+      ${done
+        ? `<button class="tsk-gift-btn" ${claimAttr}><img src="task_gift.png" alt=""><span>ЗАБРАТЬ</span></button>`
+        : `<div class="tsk-lock">🔒</div>`}
+    </div>
+  </div>
+</div>`;
+  }
 
-  return `${CSS}
+  window.TasksHTML_Daily = function(data) {
+    const daily  = data.daily || [];
+    const date   = new Date().toLocaleDateString('ru-RU', {day:'numeric', month:'long'});
+    const active  = daily.filter(q => !q.reward_claimed);
+    const dClaimed = daily.filter(q => q.reward_claimed).length;
+    const pct = daily.length ? Math.round(dClaimed / daily.length * 100) : 0;
+    return `${CSS}
 <div class="tsk-sec">ЕЖЕДНЕВНЫЕ <span class="tsk-date">${_e(date)}</span></div>
-<div class="tw-list">${dailyActive.length ? dailyActive.map(q => _card(q,'daily')).join('') : '<div class="tsk-loading" style="height:60px">✅ Все задания выполнены!</div>'}</div>
-${dailyClaimed > 0 ? `
-<div class="tsk-psum">
-  <span>✅ ${dailyClaimed} / ${daily.length} выполнено</span>
-  <div class="tsk-psbar"><div class="tsk-psfill" style="width:${pct}%"></div></div>
-  <span style="color:#80d8ff">${pct}%</span>
-</div>` : ''}
-<div class="tsk-reset">🔄 Сброс каждые сутки в 00:00</div>
-${weeklyHtml}`;
-};
+<div class="tw-list">${active.length ? active.map(q => _card(q,'daily')).join('') : '<div class="tsk-loading" style="height:60px">✅ Все задания выполнены!</div>'}</div>
+${dClaimed > 0 ? `<div class="tsk-psum"><span>✅ ${dClaimed} / ${daily.length} выполнено</span><div class="tsk-psbar"><div class="tsk-psfill" style="width:${pct}%"></div></div><span style="color:#80d8ff">${pct}%</span></div>` : ''}
+<div class="tsk-reset">🔄 Сброс каждые сутки в 00:00</div>`;
+  };
 
-/* ── Попап при тапе на карточку задания ── */
-window.TasksHTML_attachPopups = function(root, scene) {
-  root.querySelectorAll('[data-popup]').forEach(card => {
-    card.addEventListener('click', e => {
-      if (e.target.closest('.tsk-gift-btn, [data-claim-daily], [data-claim-weekly]')) return;
-      try {
-        const d = JSON.parse(card.dataset.popup);
-        showItemDetailPopup(scene, {
-          icon: d.icon, name: d.name,
-          desc: d.desc || 'Выполни задание, чтобы получить награду!',
-          progress: true, progressCur: d.cur, progressMax: d.max,
-          rewards: { gold: d.rg, diamonds: d.rd, xp: d.rx },
-        });
-      } catch(_) {}
+  window.TasksHTML_Weekly = function(data) {
+    const weekly = data.weekly_extra || [];
+    const active = weekly.filter(q => !q.reward_claimed);
+    const wClaimed = weekly.filter(q => q.reward_claimed).length;
+    const pct = weekly.length ? Math.round(wClaimed / weekly.length * 100) : 0;
+    if (!weekly.length) return `${CSS}<div class="tsk-loading" style="height:100px">Недельных заданий нет</div>`;
+    return `${CSS}
+<div class="tsk-sec">НЕДЕЛЬНЫЕ <span class="tsk-date">Сброс: Пн</span></div>
+<div class="tw-list">${active.length ? active.map(q => _card(q,'weekly')).join('') : '<div class="tsk-loading" style="height:60px">✅ Все недельные выполнены!</div>'}</div>
+${wClaimed > 0 ? `<div class="tsk-psum"><span>✅ ${wClaimed} / ${weekly.length} выполнено</span><div class="tsk-psbar"><div class="tsk-psfill" style="width:${pct}%"></div></div><span style="color:#80d8ff">${pct}%</span></div>` : ''}
+<div class="tsk-reset">🔄 Сброс в понедельник в 00:00</div>`;
+  };
+
+  /* ── Попап при тапе на карточку задания ── */
+  window.TasksHTML_attachPopups = function(root, scene) {
+    root.querySelectorAll('[data-popup]').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.closest('.tsk-gift-btn, [data-claim-daily], [data-claim-weekly]')) return;
+        try {
+          const d = JSON.parse(card.dataset.popup);
+          showItemDetailPopup(scene, {
+            icon: d.icon, name: d.name,
+            desc: d.desc || 'Выполни задание, чтобы получить награду!',
+            progress: true, progressCur: d.cur, progressMax: d.max,
+            rewards: { gold: d.rg, diamonds: d.rd, xp: d.rx },
+          });
+        } catch(_) {}
+      });
     });
-  });
-};
+  };
+})();

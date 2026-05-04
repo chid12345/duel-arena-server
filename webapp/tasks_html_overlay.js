@@ -57,7 +57,7 @@ function _fitToCanvas(el) {
 
 function _esc(s) { return String(s??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
-let _root = null, _scene = null, _data = null, _curTab = 'daily';
+let _root = null, _scene = null, _data = null, _curTab = 'daily'; // дефолт — ежедневные
 
 window.TasksHTML = {
   open(scene, tab) {
@@ -95,6 +95,9 @@ window.TasksHTML = {
     const hasReady = (_data.achievements||[]).some(a => a.can_claim_tier !== null && !a.all_done);
     const hasDailyDone = (_data.daily||[]).some(q => q.is_completed && !q.reward_claimed);
     _root.querySelector('.tsk-panel').innerHTML = _buildShell(hasReady, hasDailyDone);
+    const streakTop = _root.querySelector('#tsk-streak-top');
+    if (streakTop) streakTop.innerHTML = window.TasksHTML_StreakTop?.(_data.streak) || '';
+    _attachStreakClaims();
     _attachBack();
     this.switchTab(_curTab);
   },
@@ -102,15 +105,15 @@ window.TasksHTML = {
   switchTab(name) {
     if (!_root) return;
     _curTab = name;
-    ['streak','daily','achieve'].forEach(t => {
+    ['daily','weekly','achieve'].forEach(t => {
       const el = _root.querySelector('#tsk-'+t);
       if (el) el.style.display = t === name ? '' : 'none';
     });
     _root.querySelectorAll('.tsk-tab').forEach(t => {
       t.classList.toggle('active', t.dataset.tab === name);
     });
-    if (name === 'streak')  { _root.querySelector('#tsk-streak').innerHTML  = window.TasksHTML_Streak(_data.streak); _attachStreakClaims(); }
-    if (name === 'daily')   { _root.querySelector('#tsk-daily').innerHTML   = window.TasksHTML_Daily(_data);         _attachTaskClaims();  window.TasksHTML_attachPopups?.(_root.querySelector('#tsk-daily'), _scene); }
+    if (name === 'daily')   { _root.querySelector('#tsk-daily').innerHTML   = window.TasksHTML_Daily(_data);          _attachTaskClaims(); window.TasksHTML_attachPopups?.(_root.querySelector('#tsk-daily'), _scene); }
+    if (name === 'weekly')  { _root.querySelector('#tsk-weekly').innerHTML  = window.TasksHTML_Weekly?.(_data) || ''; _attachTaskClaims(); window.TasksHTML_attachPopups?.(_root.querySelector('#tsk-weekly'), _scene); }
     if (name === 'achieve') { _root.querySelector('#tsk-achieve').innerHTML = window.TasksHTML_Achieve(_data.achievements||[]); _attachAchClaims(); window.TasksHTML_attachAchPopups?.(_root.querySelector('#tsk-achieve'), _scene); }
   },
 };
@@ -120,16 +123,17 @@ function _buildShell(hasReady, hasDailyDone) {
   return `
 <div class="tsk-hdr">
   <div class="tsk-back" id="tsk-back">‹</div>
-  <div class="tsk-hdr-icon">📋</div>
+  <div class="tsk-hdr-icon">⚡</div>
   <div><div class="tsk-hdr-title">ЗАДАНИЯ</div><div class="tsk-hdr-sub">${_esc(date)}</div></div>
 </div>
+<div id="tsk-streak-top"></div>
 <div class="tsk-tabs">
-  <div class="tsk-tab" data-tab="streak">🔥 СТРИК</div>
-  <div class="tsk-tab" data-tab="daily">⚡ ЗАДАНИЯ${hasDailyDone?'<div class="tsk-dot"></div>':''}</div>
+  <div class="tsk-tab" data-tab="daily">⚡ ЕЖЕДН.${hasDailyDone?'<div class="tsk-dot"></div>':''}</div>
+  <div class="tsk-tab" data-tab="weekly">📅 НЕДЕЛ.</div>
   <div class="tsk-tab" data-tab="achieve">🏆 ДОСТИЖ.${hasReady?'<div class="tsk-dot"></div>':''}</div>
 </div>
-<div id="tsk-streak" style="display:none"></div>
-<div id="tsk-daily"  style="display:none"></div>
+<div id="tsk-daily"   style="display:none"></div>
+<div id="tsk-weekly"  style="display:none"></div>
 <div id="tsk-achieve" style="display:none"></div>`;
 }
 
