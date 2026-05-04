@@ -101,16 +101,14 @@ window.TasksHTML_attachAchPopups = function(root, scene) {
       try {
         const d = JSON.parse(card.dataset.achPopup);
         if (d.max) {
-          showItemDetailPopup(scene, { icon: (d.label||'').split(' ')[0], name: (d.label||'').replace(/^[^ ]+ /,''), desc: `${d.desc||''}\n\n✅ Все ${d.max} уровней пройдены!`, badge: `MAX ${d.max}/${d.max}` });
+          window.TasksHTML_showPopup({ icon: (d.label||'').split(' ')[0], name: (d.label||'').replace(/^[^ ]+ /,''), desc: `${d.desc||''}\n\n✅ Все ${d.max} уровней пройдены!`, badge: `MAX ${d.max}/${d.max}` });
         } else {
-          showItemDetailPopup(scene, {
+          window.TasksHTML_showPopup({
             icon: d.icon, name: d.name,
             desc: d.desc || 'Продолжай играть для прогресса!',
             badge: `Ур. ${d.tier} / ${d.maxTier}`,
             progress: true, progressCur: d.cur, progressMax: d.max,
             rewards: { gold: d.rg, diamonds: d.rd },
-            actionLabel: d.canClaim ? '🎁 Забрать награду' : null,
-            canAct: d.canClaim,
           });
         }
       } catch(_) {}

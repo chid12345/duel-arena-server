@@ -154,7 +154,7 @@ function _attachStreakClaims() {
       if (btn._busy) return; btn._busy = true;
       post('/api/tasks/claim_streak', { day_num: day }).then(r => {
         btn._busy = false;
-        if (r?.ok) { if (r.player) State.player = r.player; _rewardAnim(_scene, r, () => window.TasksHTML._load()); }
+        if (r?.ok) { if (r.player) State.player = r.player; window.TasksHTML_showReward?.(r, () => window.TasksHTML._load()); }
       }).catch(() => { btn._busy = false; });
     });
   });
@@ -166,7 +166,7 @@ function _attachTaskClaims() {
       if (btn._busy) return; btn._busy = true;
       post('/api/tasks/claim_daily', { task_key: btn.dataset.claimDaily }).then(r => {
         btn._busy = false;
-        if (r?.ok) { if (r.player) State.player = r.player; tg?.HapticFeedback?.notificationOccurred('success'); _rewardAnim(_scene, r, () => window.TasksHTML._load()); }
+        if (r?.ok) { if (r.player) State.player = r.player; tg?.HapticFeedback?.notificationOccurred('success'); window.TasksHTML_showReward?.(r, () => window.TasksHTML._load()); }
       }).catch(() => { btn._busy = false; });
     });
   });
@@ -175,7 +175,7 @@ function _attachTaskClaims() {
       if (btn._busy) return; btn._busy = true;
       post('/api/tasks/claim_weekly_extra', { task_key: btn.dataset.claimWeekly }).then(r => {
         btn._busy = false;
-        if (r?.ok) { if (r.player) State.player = r.player; tg?.HapticFeedback?.notificationOccurred('success'); _rewardAnim(_scene, r, () => window.TasksHTML._load()); }
+        if (r?.ok) { if (r.player) State.player = r.player; tg?.HapticFeedback?.notificationOccurred('success'); window.TasksHTML_showReward?.(r, () => window.TasksHTML._load()); }
       }).catch(() => { btn._busy = false; });
     });
   });
@@ -188,7 +188,7 @@ function _attachAchClaims() {
       const [key, tier] = btn.dataset.claimAch.split('|');
       post('/api/tasks/claim_achievement', { quest_key: key, tier: +tier }).then(r => {
         btn._busy = false;
-        if (r?.ok) { if (r.player) State.player = r.player; tg?.HapticFeedback?.notificationOccurred('success'); _rewardAnim(_scene, r, () => window.TasksHTML._load()); }
+        if (r?.ok) { if (r.player) State.player = r.player; tg?.HapticFeedback?.notificationOccurred('success'); window.TasksHTML_showReward?.(r, () => window.TasksHTML._load()); }
       }).catch(() => { btn._busy = false; });
     });
   });

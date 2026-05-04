@@ -106,7 +106,7 @@ ${wClaimed > 0 ? `<div class="tsk-psum"><span>✅ ${wClaimed} / ${weekly.length}
         if (e.target.closest('.tsk-gift-btn, [data-claim-daily], [data-claim-weekly]')) return;
         try {
           const d = JSON.parse(card.dataset.popup);
-          showItemDetailPopup(scene, {
+          window.TasksHTML_showPopup({
             icon: d.icon, name: d.name,
             desc: d.desc || 'Выполни задание, чтобы получить награду!',
             progress: true, progressCur: d.cur, progressMax: d.max,
