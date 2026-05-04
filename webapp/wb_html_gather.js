@@ -18,28 +18,19 @@
     const u = Math.abs(_uidNum(uid));
     return _AVATARS[u % _AVATARS.length];
   }
-  // Если это сам текущий игрок — берём ник напрямую из Telegram WebApp,
-  // не дожидаясь серверной БД. Так же делается в wb_html_result.js.
-  function _myTgName() {
-    const tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
-    // @username приоритетнее, иначе только first_name (фамилия не нужна).
-    return tgu.username || tgu.first_name || '';
-  }
   function _myTgId() {
     return _uidNum(window.Telegram?.WebApp?.initDataUnsafe?.user?.id);
   }
   // Имя по умолчанию если сервер не отдал ник: "Воин #1234" (последние 4 цифры uid)
   function _nameFor(p) {
-    // 1) Если это сам игрок — отдаём имя из Telegram (актуально, не зависит от БД)
     const myId = _myTgId();
     if (myId && _uidNum(p && p.user_id) === myId) {
-      const my = _myTgName();
+      const tgu = window.Telegram?.WebApp?.initDataUnsafe?.user || {};
+      const my = tgu.username || tgu.first_name || '';
       if (my) return my;
     }
-    // 2) Сервер вернул нормальный ник
     const n = (p && p.name) || '';
     if (n && n !== 'Игрок') return n;
-    // 3) Безопасный fallback
     const uid = Math.abs(_uidNum(p && p.user_id));
     return `Воин #${String(uid % 10000).padStart(4,'0')}`;
   }
@@ -72,9 +63,6 @@
   }
 
   function renderGather(root, s) {
-    // Если рейд уже стартанул — клиент должен переключиться на бой автоматически
-    // (логика в wb_html_lobby.js: state.active → _renderBattle).
-    // Здесь рендерим только «комнату ожидания» с таймером и ростером.
     const g = s.gather || {};
     const players = g.players || [];
     const count = g.count || players.length || 0;
@@ -112,7 +100,7 @@
   <div class="wb-gth-leave" data-act="gth-leave">↩ Выйти из комнаты</div>
 </div>`;
 
-    // Биндинг: тап по нику открывает карточку (как в боевом экране).
+    // Биндинг: тап по нику открывает карточку (wb_html_gather_card.js).
     if (!root.__wbGatherBound) {
       root.__wbGatherBound = true;
       root.addEventListener('click', e => {
@@ -124,7 +112,7 @@
         } else if (act === 'gth-card') {
           const uid = parseInt(el.dataset.uid);
           const p = (window.WBHtml._lastGatherState?.gather?.players || []).find(x => x.user_id === uid);
-          if (p) _showGatherCard(p);
+          if (p) window.WBHtml.showGatherCard(p);
         }
       });
     }
@@ -133,46 +121,7 @@
     _startLocalTick(sec);
   }
 
-  function _showGatherCard(p) {
-    document.getElementById('wb-gth-pcard')?.remove();
-    const ov = document.createElement('div');
-    ov.id = 'wb-gth-pcard'; ov.className = 'wb-gth-pcard-ov';
-    const str = p.strength || '?';
-    const mhp = p.max_hp || '?';
-    const lvl = p.level || '?';
-    ov.innerHTML = `<div class="wb-gth-pcard">
-      <div class="wb-gth-pcard-x">×</div>
-      <div class="wb-gth-pcard-av">${_avatarFor(p.user_id)}</div>
-      <div class="wb-gth-pcard-name">${_esc(_nameFor(p))}</div>
-      <div class="wb-gth-pcard-lv">Уровень ${lvl}</div>
-      <div class="wb-pc-stats" style="padding:14px 0 4px;">
-        <div class="wb-pc-st">
-          <div class="sv" style="color:#ff6680">${str}</div>
-          <div class="sl">СИЛА</div>
-        </div>
-        <div class="wb-pc-st">
-          <div class="sv" style="color:#00ccff">${mhp}</div>
-          <div class="sl">MAX HP</div>
-        </div>
-        <div class="wb-pc-st">
-          <div class="sv" style="color:#ffdd44">${lvl}</div>
-          <div class="sl">УРОВЕНЬ</div>
-        </div>
-      </div>
-      <div class="wb-gth-pcard-msg">⚔️ Готов к бою с боссом</div>
-    </div>`;
-    document.body.appendChild(ov);
-    requestAnimationFrame(() => ov.classList.add('open'));
-    ov.addEventListener('click', e => {
-      if (e.target === ov || e.target.classList.contains('wb-gth-pcard-x')) {
-        ov.classList.remove('open');
-        setTimeout(() => ov.remove(), 200);
-      }
-    });
-  }
-
   // Обновление таймера без перерисовки всего ростера (вызывается из _refresh / _onWsTick).
-  // Также пересинхронизируем локальный тикер с актуальным значением сервера.
   function updateGatherTimer(sec) {
     const el = document.getElementById('wb-gth-cnt');
     if (el) el.textContent = _fmtCountdown(sec);
@@ -180,7 +129,6 @@
   }
 
   // Обновляет только счётчик «В БОЮ N» без перерисовки всего ростера.
-  // Вызывается из _onWsIdle при получении registrants_count.
   function updateGatherCount(count) {
     const el = document.querySelector('.wb-gth-roster-h .cnt');
     if (el) el.textContent = count;
