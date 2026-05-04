@@ -322,10 +322,10 @@ async function _fetchAndShowCard(uid, rank, tabKey, fallbackData) {
   const equipSlots = ['belt','armor','boots','weapon','shield','ring1'].map(sl => _bbcSlotHtml(sl, itemsBySlot[sl])).join('');
 
   const stats = [
-    ['💪','Сила',      d.strength||0, '#dc3c46'],
-    ['🤸','Ловкость',  d.endurance||0,'#3cc8dc'],
-    ['💥','Интуиция',  d.crit||0,     '#b45aff'],
-    ['⭐','Рейтинг',   d.rating||1000,'#ffd700'],
+    ['💪','Сила',      d.strength||0,  '#dc3c46'],
+    ['🤸','Ловкость',  d.endurance||0, '#3cc8dc'],
+    ['💥','Интуиция',  d.crit||0,      '#b45aff'],
+    ['🛡','Выносл.',   d.stamina||0,   '#3cc864'],
   ];
 
   wrap.querySelector('#rt-bbc-card').outerHTML = `
@@ -335,20 +335,17 @@ async function _fetchAndShowCard(uid, rank, tabKey, fallbackData) {
         <div class="bbc-close" id="rt-bbc-close">✕</div>
       </div>
       <div class="bbc-name" style="color:${isPrem?'#ffc83c':isMe?'#00f5ff':'#f0f0fa'}">${isPrem?'👑 ':''}${nm}</div>
-      <div class="bbc-lv">Ур. ${d.level||'?'} · ★ ${d.rating||'—'}</div>
+      <div class="bbc-lv">${d.win_streak>0?`<span style="color:#ff8044">🔥 ${d.win_streak} подряд · </span>`:''}Ур. ${d.level||'?'} · ★ ${d.rating||'—'}</div>
       <div class="bbc-div"></div>
-      <div class="bbc-body">
-        <div class="bbc-sprite"><img src="${skinUrl}" alt=""></div>
-        <div class="bbc-right">
-          <div class="bbc-hp-row"><span>❤️ HP</span><span style="color:${hpCol}">${d.current_hp} / ${d.max_hp}</span></div>
-          <div class="bbc-hp-bar"><div class="bbc-hp-fill" style="width:${hpPct*100}%;background:${hpCol}"></div></div>
-          <div class="bbc-stats" style="grid-template-columns:repeat(4,1fr);text-align:center">
-            ${stats.map(s=>`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
-              <span style="font-size:14px">${s[0]}</span>
-              <span style="font-size:13px;font-weight:700;color:${s[3]}">${s[2]}</span>
-              <span style="font-size:9px;color:#aaaacc">${s[1]}</span>
-            </div>`).join('')}
-          </div>
+      <div style="padding:6px 14px 0">
+        <div class="bbc-hp-row"><span>❤️ HP</span><span style="color:${hpCol}">${d.current_hp} / ${d.max_hp}</span></div>
+        <div class="bbc-hp-bar"><div class="bbc-hp-fill" style="width:${hpPct*100}%;background:${hpCol}"></div></div>
+        <div class="bbc-stats" style="grid-template-columns:repeat(4,1fr);text-align:center;margin-top:8px">
+          ${stats.map(s=>`<div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <span style="font-size:14px">${s[0]}</span>
+            <span style="font-size:13px;font-weight:700;color:${s[3]}">${s[2]}</span>
+            <span style="font-size:9px;color:#aaaacc">${s[1]}</span>
+          </div>`).join('')}
         </div>
       </div>
       <div class="bbc-gear">

@@ -7,6 +7,7 @@ from __future__ import annotations
 from typing import Any
 
 from fastapi import FastAPI
+from config.battle_constants import stamina_stats_invested
 
 _RARITY_COLOR = {
     "common": "#a0aec0",
@@ -60,19 +61,24 @@ def register_player_public_route(app: FastAPI, *, db: Any) -> None:
             except Exception:
                 return default
 
+        lv     = int(_g("level", 1))
+        mhp    = int(_g("max_hp", 100))
+        stamina = stamina_stats_invested(mhp, lv)
+
         return {
             "ok":           True,
             "user_id":      uid,
             "username":     _g("username", ""),
-            "level":        int(_g("level", 1)),
+            "level":        lv,
             "wins":         int(_g("wins", 0)),
             "losses":       int(_g("losses", 0)),
             "rating":       int(_g("rating", 1000)),
-            "max_hp":       int(_g("max_hp", 100)),
+            "max_hp":       mhp,
             "current_hp":   int(_g("current_hp", 100)),
             "strength":     int(_g("strength", 0)),
             "endurance":    int(_g("endurance", 0)),
             "crit":         int(_g("crit", 0)),
+            "stamina":      stamina,
             "warrior_type": _g("current_class", "tank") or "tank",
             "is_premium":   bool(_g("is_premium", 0)),
             "win_streak":   int(_g("win_streak", 0)),
