@@ -159,9 +159,8 @@ function _buildList(list, meta, tabKey) {
   window.RatingHTML._players = {};
   list.forEach(p => { window.RatingHTML._players[p.user_id] = p; });
 
-  const top3 = list.length >= 3 ? list.slice(0,3) : null;
-  let html = '';
-  if (top3) html += _podiumHTML(top3, meta, tabKey);
+  const top3 = list.slice(0, 3);
+  let html = _podiumHTML(top3, meta, tabKey);
   if (list.length > 3) {
     html += `<div class="rt-section">Остальные участники</div><div class="rt-list">${list.slice(3).map((p,i)=>_rowHTML(p, i+3, meta, tabKey)).join('')}</div>`;
   }
