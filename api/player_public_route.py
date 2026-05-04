@@ -8,13 +8,7 @@ from typing import Any
 
 from fastapi import FastAPI
 from config.battle_constants import stamina_stats_invested
-
-_RARITY_COLOR = {
-    "common": "#a0aec0",
-    "rare":   "#fbbf24",
-    "epic":   "#c084fc",
-    "mythic": "#ff6b2b",
-}
+from api.tma_battle_items import items_for_user
 
 
 def register_player_public_route(app: FastAPI, *, db: Any) -> None:
@@ -35,26 +29,16 @@ def register_player_public_route(app: FastAPI, *, db: Any) -> None:
 
         player = dict(row)
 
+        # items_for_user = get_equipment + гардеробная броня (как в боевой карточке)
         try:
-            eq_raw = db.get_equipment(uid)
+            items = items_for_user(uid)
         except Exception:
-            eq_raw = {}
+            items = []
 
         try:
             eq_stats = db.get_equipment_stats(uid)
         except Exception:
             eq_stats = {}
-
-        items = []
-        for slot, it in eq_raw.items():
-            rar = it.get("rarity", "common")
-            items.append({
-                "slot":    slot,
-                "item_id": it.get("item_id", ""),
-                "name":    it.get("name", ""),
-                "rarity":  rar,
-                "color":   _RARITY_COLOR.get(rar, "#a0aec0"),
-            })
 
         def _i(key, default=0):
             try:
