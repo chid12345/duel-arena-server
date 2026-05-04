@@ -397,7 +397,7 @@ async function _renderTab(key, body) {
     } else if (key === 'natisk') {
       const d = cache.natisk || (cache.natisk = await get('/api/endless/top'));
       if (!d.ok) throw new Error();
-      const list   = d.weekly || d.leaders || [];
+      const list   = (d.weekly && d.weekly.length ? d.weekly : d.leaders) || [];
       const myIdx  = list.findIndex(p => p.user_id === myUid);
       const myRank = myIdx >= 0 ? myIdx + 1 : (d.my_pos || null);
       const myWave = myIdx >= 0 ? list[myIdx].best_wave : null;
