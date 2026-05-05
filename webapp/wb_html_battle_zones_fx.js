@@ -41,6 +41,7 @@
         70%{opacity:.85;transform:translate(0,12px) scale(1) rotate(6deg)}
         100%{opacity:0;transform:translate(0,28px) scale(.9) rotate(0deg)}
       }
+      .wbz-apply.wbz-apply-cd{opacity:.55!important;cursor:wait!important;animation:none!important;border-color:rgba(180,180,200,.4)!important;background:linear-gradient(180deg,rgba(40,40,60,.7),rgba(20,20,40,.92))!important;text-shadow:none!important}
     `;
     document.head.appendChild(s);
   }
@@ -87,5 +88,51 @@
     }
   }
 
-  window.WbzFx = { animate };
+  // Звуки результата удара. Используем существующий Sound API (sound.js).
+  function playResult(r) {
+    if (typeof Sound === 'undefined' || !r) return;
+    try {
+      // Звук основной атаки
+      if (r.is_crit) Sound.crit();
+      else if (r.zone_mode && r.atk_blocked) Sound.block();
+      else Sound.hit();
+      // Звук защитной фазы (через 220 мс — после звука атаки)
+      if (r.zone_mode) {
+        setTimeout(() => {
+          try {
+            if (r.def_blocked) Sound.dodge();
+            else if ((r.counter_damage || 0) > 0) Sound.hit();
+          } catch(_) {}
+        }, 220);
+      }
+      // Тревожный звук если HP игрока опустилось ≤ 25%
+      if (r.player_hp != null && r.player_max_hp) {
+        const pct = r.player_hp / r.player_max_hp;
+        if (pct > 0 && pct <= 0.25) setTimeout(() => { try { Sound.lowHp(); } catch(_){} }, 500);
+      }
+    } catch(_) {}
+  }
+
+  // Клиентский кулдаун между ходами — заставляет выдохнуть и подумать.
+  let _cdUntil = 0;
+  let _cdTimer = null;
+  function isOnCooldown() { return Date.now() < _cdUntil; }
+  function startCooldown(ms, applyBtn) {
+    _cdUntil = Date.now() + ms;
+    if (!applyBtn) return;
+    applyBtn.classList.add('wbz-apply-cd');
+    if (_cdTimer) clearInterval(_cdTimer);
+    _cdTimer = setInterval(() => {
+      const left = Math.max(0, _cdUntil - Date.now());
+      if (left <= 0) {
+        clearInterval(_cdTimer); _cdTimer = null;
+        applyBtn.classList.remove('wbz-apply-cd');
+        applyBtn.textContent = '⚔ Совершить ход';
+        return;
+      }
+      applyBtn.textContent = '⏱ ' + (left / 1000).toFixed(1) + ' c';
+    }, 80);
+  }
+
+  window.WbzFx = { animate, playResult, isOnCooldown, startCooldown };
 })();

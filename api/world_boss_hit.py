@@ -198,5 +198,6 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             "def_blocked": zr["def_blocked"],
             "counter_damage": counter,
             "player_hp": player_hp_after,
+            "player_max_hp": int(ps.get("max_hp") or eff_max_hp),
             "player_died": player_died,
         }

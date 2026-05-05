@@ -102,6 +102,7 @@
   async function _hit(scene) {
     if (_busy || !_selA || !_selD) return;
     if (scene._hitBusy) return;
+    if (window.WbzFx?.isOnCooldown?.()) return;
     _busy = true; scene._hitBusy = true;
     const apply = document.getElementById('wbz-apply');
     apply?.classList.add('busy');
@@ -121,8 +122,11 @@
         const root = document.getElementById('wb-root');
         if (root) {
           try { window.WbzFx?.animate?.(root, r, _selA, _selD); } catch(_) {}
+          try { window.WbzFx?.playResult?.(r); } catch(_) {}
           _resetSelection(root);
         }
+        // Клиентский кулдаун 1.5с между ходами — глянуть результат и подумать.
+        try { window.WbzFx?.startCooldown?.(1500, document.getElementById('wbz-apply')); } catch(_) {}
         const hadPs = !!scene._state?.player_state;
         // Если игрок умер — рефрешим состояние, чтобы показалось окно воскрешения.
         if (r.player_died || !hadPs) {
