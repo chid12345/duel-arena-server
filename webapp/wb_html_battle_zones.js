@@ -119,7 +119,10 @@
         try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit, r.boss_hp); } catch(_) {}
         _zoneToast(scene, r);
         const root = document.getElementById('wb-root');
-        if (root) _resetSelection(root);
+        if (root) {
+          try { window.WbzFx?.animate?.(root, r, _selA, _selD); } catch(_) {}
+          _resetSelection(root);
+        }
         const hadPs = !!scene._state?.player_state;
         // Если игрок умер — рефрешим состояние, чтобы показалось окно воскрешения.
         if (r.player_died || !hadPs) {

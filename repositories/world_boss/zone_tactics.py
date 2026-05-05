@@ -18,6 +18,13 @@ ZONES = ("HEAD", "TORSO", "LEGS")
 ATK_BLOCK_MULT = 0.4   # урон по боссу при попадании в защиту = 40% от обычного
 PLAYER_HIT_PCT = 0.03  # 3% maxHP игрока за пропущенный встречный удар босса
 
+# Защита новичков от тяжёлых рейдов: контр-урон масштабируется по уровню.
+# Лоулевелы получают мягче, чтобы не вылетали с пары пропусков защиты.
+NEWBIE_TIER_LOW_LEVEL    = 10   # < 10 ур. → ×0.5
+NEWBIE_TIER_MID_LEVEL    = 30   # 10-29 ур. → ×0.75; 30+ ур. → ×1.0
+NEWBIE_MULT_LOW          = 0.5
+NEWBIE_MULT_MID          = 0.75
+
 
 def _norm(z) -> Optional[str]:
     if not z:
@@ -26,12 +33,21 @@ def _norm(z) -> Optional[str]:
     return z if z in ZONES else None
 
 
+def _newbie_mult(level: int) -> float:
+    if level < NEWBIE_TIER_LOW_LEVEL:
+        return NEWBIE_MULT_LOW
+    if level < NEWBIE_TIER_MID_LEVEL:
+        return NEWBIE_MULT_MID
+    return 1.0
+
+
 def resolve_zones(
     player_atk_zone,
     player_def_zone,
     player_max_hp: int,
     base_damage_to_boss: int,
     *,
+    player_level: int = 0,
     rng=None,
 ) -> dict:
     """Считает результат «зонного» удара.
@@ -74,6 +90,9 @@ def resolve_zones(
 
     mod_dmg = max(1, int(base_damage_to_boss * (ATK_BLOCK_MULT if atk_blocked else 1.0)))
     counter = 0 if def_blocked else max(1, int(player_max_hp * PLAYER_HIT_PCT))
+    # Защита новичков: на низких уровнях контр-урон ослаблен.
+    if counter > 0 and player_level > 0:
+        counter = max(1, int(counter * _newbie_mult(int(player_level))))
 
     return {
         "zone_mode": True,

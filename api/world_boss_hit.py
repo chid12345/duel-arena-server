@@ -154,7 +154,8 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
 
         # Тактика по зонам (Фаза 2): модификатор урона + контр-урон по игроку.
         # Если клиент не прислал зоны (старый клиент) — режим бэкап-совместимости.
-        zr = resolve_zones(body.attack_zone, body.defense_zone, eff_max_hp, dmg)
+        zr = resolve_zones(body.attack_zone, body.defense_zone, eff_max_hp, dmg,
+                           player_level=int(player.get("level") or 1))
         dmg = zr["modified_damage"]
 
         new_hp = db.apply_damage_to_boss(spawn_id, dmg)
