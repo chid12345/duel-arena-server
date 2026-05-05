@@ -17,6 +17,7 @@ from repositories.world_boss.damage_calc import (
     PLAYER_HIT_COOLDOWN_MS,
     calc_player_damage_to_boss,
 )
+from repositories.world_boss.zone_tactics import resolve_zones
 
 log = logging.getLogger(__name__)
 
@@ -151,9 +152,28 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             is_vulnerability_window=vuln,
         )
 
+        # Тактика по зонам (Фаза 2): модификатор урона + контр-урон по игроку.
+        # Если клиент не прислал зоны (старый клиент) — режим бэкап-совместимости.
+        zr = resolve_zones(body.attack_zone, body.defense_zone, eff_max_hp, dmg)
+        dmg = zr["modified_damage"]
+
         new_hp = db.apply_damage_to_boss(spawn_id, dmg)
         if new_hp is None:
             return {"ok": False, "reason": "Рейд уже завершён"}
+
+        # Контр-урон по игроку (если защита не угадала зону атаки босса).
+        # Учитываем активный щит (-30% на 2 сек).
+        counter = int(zr["counter_damage"] or 0)
+        player_hp_after = int(ps.get("current_hp") or 0)
+        player_died = False
+        if counter > 0 and not int(ps.get("is_dead") or 0):
+            try:
+                shield_until = int(ps.get("shield_until_ms") or 0)
+                if shield_until > now_ms:
+                    counter = max(1, int(counter * 0.7))
+            except Exception:
+                pass
+            player_hp_after, player_died = db.wb_apply_damage_to_player(spawn_id, uid, counter)
 
         db.log_wb_hit(
             spawn_id=spawn_id, user_id=uid, damage=dmg,
@@ -169,4 +189,13 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             "boss_max_hp": int(active.get("max_hp") or 0),
             "boss_killed": new_hp <= 0,
             "vulnerable": vuln,
+            # Фаза 2: зоны
+            "zone_mode": zr["zone_mode"],
+            "boss_atk_zone": zr["boss_atk_zone"],
+            "boss_def_zone": zr["boss_def_zone"],
+            "atk_blocked": zr["atk_blocked"],
+            "def_blocked": zr["def_blocked"],
+            "counter_damage": counter,
+            "player_hp": player_hp_after,
+            "player_died": player_died,
         }

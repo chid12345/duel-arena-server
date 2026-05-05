@@ -85,6 +85,20 @@
     if (a) a.classList.toggle('ready', !!(_selA && _selD));
   }
 
+  function _zoneToast(scene, r) {
+    if (!r || !r.zone_mode) return;
+    const atkIc = r.atk_blocked ? '🛡' : '⚔';
+    const defIc = r.def_blocked ? '🛡' : '💢';
+    const atkTxt = r.atk_blocked ? `блок −${r.damage}` : `−${r.damage}`;
+    const defTxt = r.def_blocked ? 'отбил' : `получил −${r.counter_damage}`;
+    try { scene._toast?.(`${atkIc} ${atkTxt} · ${defIc} ${defTxt}`); } catch(_) {}
+  }
+
+  function _resetSelection(root) {
+    _selA = null; _selD = null;
+    _refresh(root);
+  }
+
   async function _hit(scene) {
     if (_busy || !_selA || !_selD) return;
     if (scene._hitBusy) return;
@@ -96,11 +110,23 @@
       if (r && r.ok) {
         try { tg?.HapticFeedback?.impactOccurred(r.is_crit ? 'heavy' : 'light'); } catch(_) {}
         if (scene._state?.active) scene._state.active.current_hp = r.boss_hp;
+        // Phase 2: сразу обновляем HP игрока локально, чтобы не ждать WS-тик.
+        if (scene._state?.player_state && r.player_hp != null) {
+          scene._state.player_state.current_hp = r.player_hp;
+          if (r.player_died) scene._state.player_state.is_dead = 1;
+        }
         try { window.WBHtml?.addHitLog?.(r.damage, r.is_crit); } catch(_) {}
         try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit, r.boss_hp); } catch(_) {}
+        _zoneToast(scene, r);
+        const root = document.getElementById('wb-root');
+        if (root) _resetSelection(root);
         const hadPs = !!scene._state?.player_state;
-        if (!hadPs) setTimeout(() => { if (scene._alive) scene._refresh?.(); }, 400);
-        else { try { window.WBHtml?.updateHUD?.(scene._state); } catch(_) {} }
+        // Если игрок умер — рефрешим состояние, чтобы показалось окно воскрешения.
+        if (r.player_died || !hadPs) {
+          setTimeout(() => { if (scene._alive) scene._refresh?.(); }, 400);
+        } else {
+          try { window.WBHtml?.updateHUD?.(scene._state); } catch(_) {}
+        }
       } else if (r && r.reason && r.reason !== 'Слишком быстро') {
         try { scene._toast?.('❌ ' + r.reason); } catch(_) {}
       }
