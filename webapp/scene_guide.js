@@ -8,6 +8,11 @@
 class GuideScene extends Phaser.Scene {
   constructor() { super('Guide'); }
 
+  init() {
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.hide(); } catch(_) {}
+    try { window._tabPlaceholderShow?.('gd-placeholder', { bg: 'linear-gradient(180deg,#0d0820 0%,#060412 100%)' }); } catch(_) {}
+  }
+
   create() {
     try { window._closeAllTabOverlays?.(); } catch(_) {}
     const { width: W, height: H } = this.game.canvas;
@@ -21,6 +26,7 @@ class GuideScene extends Phaser.Scene {
     this._dragStartScroll = 0;
 
     this._drawBg();
+    try { window._tabPlaceholderHideNextFrame?.('gd-placeholder'); } catch(_) {}
     this._buildHeader();
     this._buildSectionTabs();
     this._switchSection('battle');
@@ -175,6 +181,8 @@ class GuideScene extends Phaser.Scene {
   }
 
   shutdown() {
+    try { window._tabPlaceholderHide?.('gd-placeholder'); } catch(_) {}
+    try { if (typeof TabBarHTML !== 'undefined') TabBarHTML.show(); } catch(_) {}
     this.time.removeAllEvents();
   }
 }

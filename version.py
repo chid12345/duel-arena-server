@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.8.70"
-VERSION_LABEL = "v2.8.70 — fix: Рефералка — close overlay перед _onInvite (Phaser попап был скрыт)"
+VERSION = "2.8.71"
+VERSION_LABEL = "v2.8.71 — fix: Аватарки/Справка скрывают TabBar + placeholder при входе"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "13.37"
+GAME_VERSION = "13.38"
