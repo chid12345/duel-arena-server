@@ -19,9 +19,8 @@ const CSS = `
 .av-hdr-sub{font-size:9px;color:#00e0ff;opacity:.7;margin-top:1px}
 
 /* Tabs */
-.av-tabs{position:relative;z-index:2;display:flex;gap:5px;padding:2px 10px 8px;flex-shrink:0;overflow-x:auto;scrollbar-width:none}
-.av-tabs::-webkit-scrollbar{display:none}
-.av-tab{flex-shrink:0;padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all .22s;color:#3d4a5c;background:rgba(255,255,255,.04);white-space:nowrap;user-select:none}
+.av-tabs{position:relative;z-index:2;display:flex;gap:4px;padding:2px 10px 8px;flex-shrink:0;overflow:hidden}
+.av-tab{flex:1;min-width:0;padding:6px 4px;border-radius:20px;font-size:10.5px;font-weight:700;cursor:pointer;border:1.5px solid transparent;transition:all .22s;color:#3d4a5c;background:rgba(255,255,255,.04);white-space:nowrap;text-align:center;overflow:hidden;text-overflow:ellipsis;user-select:none}
 .av-tab:active{transform:scale(.95)}
 .av-tab[data-tab="mine"].av-active{border-color:rgba(0,240,255,.5);background:linear-gradient(135deg,rgba(0,240,255,.14),rgba(0,180,220,.08));box-shadow:0 0 12px rgba(0,240,255,.22);color:#80eeff}
 .av-tab[data-tab="free"].av-active{border-color:rgba(74,222,128,.5);background:linear-gradient(135deg,rgba(74,222,128,.14),rgba(22,163,74,.08));box-shadow:0 0 12px rgba(74,222,128,.2);color:#86efac}
