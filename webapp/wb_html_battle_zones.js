@@ -1,0 +1,160 @@
+/* wb_html_battle_zones.js — оверлей с зонами атака/защита для боя WB.
+   Заменяет «тап по боссу» на выбор зоны атаки + зоны защиты + «Совершить ход».
+   Монки-патчит WBHtml._renderBattle (не трогает существующий код).
+   Kill-switch: ?wb_classic=1 в URL или localStorage.wb_classic=1 — вернёт тап. */
+(() => {
+  const ZONES = ['HEAD','TORSO','LEGS'];
+  const NAME  = { HEAD:'Голова', TORSO:'Тело', LEGS:'Ноги' };
+  const ICON  = { HEAD:'battle_icons/head.png', TORSO:'battle_icons/torso.png', LEGS:'battle_icons/legs.png' };
+
+  let _selA = null, _selD = null;
+  let _busy = false;
+
+  function _isClassic() {
+    try { if (new URLSearchParams(location.search).get('wb_classic') === '1') return true; } catch(_) {}
+    try { if (localStorage.getItem('wb_classic') === '1') return true; } catch(_) {}
+    return false;
+  }
+
+  function _injectCss() {
+    if (document.getElementById('wbz-css')) return;
+    const s = document.createElement('style');
+    s.id = 'wbz-css';
+    s.textContent = `
+      .wbz-col{position:absolute;display:flex;flex-direction:column;gap:8px;z-index:30;bottom:14px}
+      .wbz-col-atk{left:6px} .wbz-col-def{right:6px}
+      .wbz-lbl{font-size:9px;font-weight:900;letter-spacing:1.6px;text-align:center;font-family:Consolas,monospace;text-transform:uppercase;margin-bottom:1px}
+      .wbz-col-atk .wbz-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.65)}
+      .wbz-col-def .wbz-lbl{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.65)}
+      .wbz-btn{width:54px;display:flex;flex-direction:column;align-items:center;cursor:pointer;position:relative;padding:2px 0;user-select:none;background:rgba(8,5,18,.55);border-radius:8px}
+      .wbz-btn img{width:30px;height:30px;object-fit:contain}
+      .wbz-btn .nm{font-size:7.5px;font-weight:800;letter-spacing:.4px;font-family:Consolas,monospace;text-transform:uppercase;margin-top:2px}
+      .wbz-col-atk .wbz-btn img{filter:drop-shadow(0 0 5px rgba(255,80,160,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
+      .wbz-col-def .wbz-btn img{filter:drop-shadow(0 0 5px rgba(80,180,255,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
+      .wbz-col-atk .wbz-btn .nm{color:#ff8ac0;text-shadow:0 0 5px rgba(255,80,160,.7)}
+      .wbz-col-def .wbz-btn .nm{color:#8acfff;text-shadow:0 0 5px rgba(80,180,255,.7)}
+      .wbz-col-atk .wbz-btn.sel{background:radial-gradient(circle at 50% 35%,rgba(255,80,160,.32) 0%,rgba(8,5,18,.55) 70%);box-shadow:0 0 0 2px rgba(255,80,160,.7),0 0 14px rgba(255,80,160,.55)}
+      .wbz-col-def .wbz-btn.sel{background:radial-gradient(circle at 50% 35%,rgba(80,180,255,.32) 0%,rgba(8,5,18,.55) 70%);box-shadow:0 0 0 2px rgba(80,180,255,.7),0 0 14px rgba(80,180,255,.55)}
+      .wbz-col-atk .wbz-btn.sel img{filter:drop-shadow(0 0 16px #ff5fa0) drop-shadow(0 0 8px #fff);animation:wbzPulse 1s ease-in-out infinite}
+      .wbz-col-def .wbz-btn.sel img{filter:drop-shadow(0 0 16px #5fb8ff) drop-shadow(0 0 8px #fff);animation:wbzPulse 1s ease-in-out infinite}
+      @keyframes wbzPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+      .wbz-btn.sel .nm{color:#fff;font-weight:900}
+      .wbz-actions{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:31}
+      .wbz-auto{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:19px;cursor:pointer;background:linear-gradient(135deg,#3a2a08,#1a1004);border:1.5px solid rgba(255,200,80,.6);color:#ffd370;text-shadow:0 0 8px #ffa030;box-shadow:0 0 12px rgba(255,180,40,.45);user-select:none}
+      .wbz-apply{min-width:160px;padding:10px 14px;text-align:center;border-radius:8px;font-family:Consolas,monospace;font-weight:900;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;text-shadow:0 0 8px #c98aff,0 0 14px #ff5fa0;background:linear-gradient(180deg,rgba(80,40,140,.7),rgba(40,15,80,.92));border:1.5px solid rgba(255,255,255,.18);box-shadow:0 0 14px rgba(180,80,255,.4);opacity:.45;cursor:not-allowed;transition:opacity .25s;user-select:none}
+      .wbz-apply.ready{opacity:1;cursor:pointer;border-color:#ff5fa0;animation:wbzReady 1.6s ease-in-out infinite}
+      @keyframes wbzReady{0%,100%{transform:scale(1);box-shadow:0 0 18px rgba(255,90,150,.7);filter:brightness(1)}50%{transform:scale(1.04);box-shadow:0 0 28px rgba(255,90,150,.95);filter:brightness(1.18)}}
+      .wbz-apply.busy{opacity:.6;animation:none;pointer-events:none}
+      /* отключим тап-подсказку и тап по боссу */
+      #wb-root .wbz-on .wb-tap-hint{display:none!important}
+    `;
+    document.head.appendChild(s);
+  }
+
+  function _disableTap(zoneEl) {
+    if (!zoneEl) return;
+    zoneEl.classList.add('wbz-on');
+    if (zoneEl.dataset.act === 'hit') zoneEl.removeAttribute('data-act');
+    zoneEl.querySelectorAll('[data-act="hit"]').forEach(el => el.removeAttribute('data-act'));
+  }
+
+  function _buildCol(side) {
+    const col = document.createElement('div');
+    col.className = 'wbz-col wbz-col-' + side;
+    col.innerHTML = `<div class="wbz-lbl">${side==='atk'?'⚔ Атака':'🛡 Защита'}</div>` +
+      ZONES.map(k => `<div class="wbz-btn" data-side="${side}" data-key="${k}"><img src="${ICON[k]}"><div class="nm">${NAME[k]}</div></div>`).join('');
+    return col;
+  }
+
+  function _injectZones(zoneEl) {
+    if (!zoneEl) return;
+    zoneEl.querySelectorAll('.wbz-col, .wbz-actions').forEach(el => el.remove());
+    if (getComputedStyle(zoneEl).position === 'static') zoneEl.style.position = 'relative';
+    zoneEl.appendChild(_buildCol('atk'));
+    zoneEl.appendChild(_buildCol('def'));
+    const a = document.createElement('div');
+    a.className = 'wbz-actions';
+    a.innerHTML = `<div class="wbz-auto" id="wbz-auto" title="Случайный ход">🎲</div><div class="wbz-apply" id="wbz-apply">⚔ Совершить ход</div>`;
+    zoneEl.appendChild(a);
+  }
+
+  function _refresh(root) {
+    root.querySelectorAll('.wbz-col-atk .wbz-btn').forEach(b => b.classList.toggle('sel', b.dataset.key === _selA));
+    root.querySelectorAll('.wbz-col-def .wbz-btn').forEach(b => b.classList.toggle('sel', b.dataset.key === _selD));
+    const a = root.querySelector('#wbz-apply');
+    if (a) a.classList.toggle('ready', !!(_selA && _selD));
+  }
+
+  async function _hit(scene) {
+    if (_busy || !_selA || !_selD) return;
+    if (scene._hitBusy) return;
+    _busy = true; scene._hitBusy = true;
+    const apply = document.getElementById('wbz-apply');
+    apply?.classList.add('busy');
+    try {
+      const r = await post('/api/world_boss/hit', { attack_zone: _selA, defense_zone: _selD });
+      if (r && r.ok) {
+        try { tg?.HapticFeedback?.impactOccurred(r.is_crit ? 'heavy' : 'light'); } catch(_) {}
+        if (scene._state?.active) scene._state.active.current_hp = r.boss_hp;
+        try { window.WBHtml?.addHitLog?.(r.damage, r.is_crit); } catch(_) {}
+        try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit, r.boss_hp); } catch(_) {}
+        const hadPs = !!scene._state?.player_state;
+        if (!hadPs) setTimeout(() => { if (scene._alive) scene._refresh?.(); }, 400);
+        else { try { window.WBHtml?.updateHUD?.(scene._state); } catch(_) {} }
+      } else if (r && r.reason && r.reason !== 'Слишком быстро') {
+        try { scene._toast?.('❌ ' + r.reason); } catch(_) {}
+      }
+    } catch(_) {}
+    _busy = false; scene._hitBusy = false;
+    apply?.classList.remove('busy');
+  }
+
+  function _bind(root) {
+    if (root.__wbzBound) return;
+    root.__wbzBound = true;
+    root.addEventListener('click', e => {
+      const btn = e.target.closest('.wbz-btn');
+      if (btn) {
+        if (btn.dataset.side === 'atk') _selA = btn.dataset.key; else _selD = btn.dataset.key;
+        _refresh(root);
+        return;
+      }
+      if (e.target.closest('#wbz-auto')) {
+        _selA = ZONES[Math.floor(Math.random() * 3)];
+        _selD = ZONES[Math.floor(Math.random() * 3)];
+        _refresh(root);
+        const sc = window.WBHtml?._scene;
+        if (sc) setTimeout(() => _hit(sc), 200);
+        return;
+      }
+      if (e.target.closest('#wbz-apply')) {
+        const sc = window.WBHtml?._scene;
+        if (sc) _hit(sc);
+        return;
+      }
+    });
+  }
+
+  function _hookRender() {
+    if (!window.WBHtml || !window.WBHtml._renderBattle) { setTimeout(_hookRender, 50); return; }
+    if (window.WBHtml.__wbzHooked) return;
+    window.WBHtml.__wbzHooked = true;
+    const orig = window.WBHtml._renderBattle;
+    window.WBHtml._renderBattle = function(root, s) {
+      orig.call(this, root, s);
+      if (_isClassic()) return;
+      try {
+        _injectCss();
+        const ps = s?.player_state;
+        if (!ps || ps.is_dead) return;  // мёртвый или не вошёл — не показываем зоны
+        const zone = root.querySelector('.wb-boss-zone');
+        _disableTap(zone);
+        _injectZones(zone);
+        _bind(root);
+        _refresh(root);
+      } catch(e) { console.warn('[wbz] render err', e); }
+    };
+  }
+
+  _hookRender();
+})();

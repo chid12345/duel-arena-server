@@ -23,6 +23,11 @@ log = logging.getLogger(__name__)
 
 class HitBody(BaseModel):
     init_data: str
+    # Зоны атаки/защиты (HEAD/TORSO/LEGS) — приходят с нового UI боя WB.
+    # Пока в расчёте урона НЕ используются (бэкап-совместимость со старым клиентом),
+    # но логируются и валидируются. Тактическая логика — отдельной фазой.
+    attack_zone: str | None = None
+    defense_zone: str | None = None
 
 
 def _parse_ts(value) -> datetime:
