@@ -26,9 +26,6 @@
   .boss img{width:100%;height:100%;object-fit:contain;object-position:bottom;filter:drop-shadow(0 0 24px rgba(255,0,112,.4));-webkit-mask-image:linear-gradient(to top,transparent 0%,#000 8%);mask-image:linear-gradient(to top,transparent 0%,#000 8%);animation:breath 3.6s ease-in-out infinite;transform-origin:50% 100%}
   @keyframes breath{0%,100%{transform:scale(1)}50%{transform:scale(1.03)}}
   .boss-shadow{position:absolute;bottom:8%;left:50%;transform:translateX(-50%);width:40%;height:14px;background:radial-gradient(ellipse,rgba(0,0,0,.7) 0%,transparent 70%)}
-  /* подсказка-намёк */
-  .hint{position:absolute;top:48%;left:50%;transform:translateX(-50%);background:rgba(20,5,25,.8);border:1px solid rgba(255,80,160,.4);border-radius:5px;padding:4px 10px;font-size:9px;letter-spacing:1.2px;color:#ffaaaa;font-family:Consolas,monospace;z-index:7;text-shadow:0 0 6px rgba(255,80,160,.6);white-space:nowrap}
-  .hint b{color:#ff5fa0}
   /* колонки атаки/защиты — опущены вниз до уровня авто-кнопки */
   .col{position:absolute;display:flex;flex-direction:column;gap:8px;z-index:9;bottom:3%}
   .col-atk{left:6px}
@@ -86,7 +83,6 @@
   </div>
   <div class="boss"><img src="bosses/boss_spider.png" alt="boss"></div>
   <div class="boss-shadow"></div>
-  <div class="hint">⚡ <b>Босс</b> целит в <b>ГОЛОВУ</b></div>
   <div class="col col-atk">
     <div class="col-lbl">⚔ Атака</div>
     <div class="ic-btn" data-side="atk" data-key="HEAD"><img src="battle_icons/head.png"><div class="nm">Голова</div></div>
