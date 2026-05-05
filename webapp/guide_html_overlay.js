@@ -13,9 +13,8 @@ const CSS = `
 .gd-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
 .gd-back:active{transform:scale(.88)}
 .gd-title{font-size:16px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
-.gd-tabs{display:flex;gap:6px;padding:10px 12px;overflow-x:auto;flex-shrink:0;scrollbar-width:none;-webkit-overflow-scrolling:touch}
-.gd-tabs::-webkit-scrollbar{display:none}
-.gd-tab{padding:8px 14px;border-radius:10px;font-size:11px;font-weight:700;color:#80a8c0;background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.15);cursor:pointer;user-select:none;white-space:nowrap;transition:all .2s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.gd-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px 12px;flex-shrink:0}
+.gd-tab{padding:8px 4px;border-radius:10px;font-size:10.5px;font-weight:700;color:#80a8c0;background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.15);cursor:pointer;user-select:none;text-align:center;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .gd-tab.on{background:linear-gradient(135deg,rgba(0,240,255,.2),rgba(255,59,168,.15));color:#e6f7ff;border-color:rgba(0,240,255,.4);box-shadow:0 0 10px rgba(0,240,255,.2)}
 .gd-cards{flex:1;overflow-y:auto;padding:6px 12px 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .gd-cards::-webkit-scrollbar{display:none}

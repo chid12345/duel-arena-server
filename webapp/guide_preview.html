@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Справка — превью</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#000;display:flex;justify-content:center;align-items:center;min-height:100vh;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+.phone{width:390px;height:844px;background:#111;border-radius:40px;overflow:hidden;position:relative;border:2px solid #333}
+
+.gd-ov{position:absolute;top:0;left:0;right:0;bottom:0;z-index:9000;display:flex;flex-direction:column;align-items:center;background:radial-gradient(ellipse at 50% 0%,#1a0a2a 0%,#05050a 55%),#000;color:#e6f7ff;overflow:hidden;font-family:-apple-system,"Segoe UI",Roboto,sans-serif}
+.gd-ov::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,220,.025) 3px 4px);pointer-events:none;z-index:1}
+.gd-ov::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 30%,rgba(255,40,170,.12),transparent 40%),radial-gradient(circle at 80% 70%,rgba(0,230,255,.10),transparent 40%);pointer-events:none;z-index:1}
+.gd-inner{position:relative;z-index:2;width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;overflow:hidden}
+.gd-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid rgba(0,240,255,.12);flex-shrink:0}
+@keyframes gdBack{0%,100%{text-shadow:0 0 8px #00f5ff,0 0 18px rgba(0,245,255,.3);opacity:.75}50%{text-shadow:0 0 16px #00f5ff,0 0 32px rgba(0,245,255,.6);opacity:1}}
+.gd-back{display:inline-flex;flex-direction:column;align-items:center;line-height:1;font-size:28px;color:#00f5ff;cursor:pointer;padding:2px 8px;user-select:none;animation:gdBack 2s ease-in-out infinite;flex-shrink:0}
+.gd-back::after{content:'НАЗАД';font-size:6px;font-weight:700;letter-spacing:1.2px;color:rgba(0,245,255,.6);margin-top:-1px}
+.gd-back:active{transform:scale(.88)}
+.gd-title{font-size:16px;font-weight:800;letter-spacing:.5px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gd-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px 12px;flex-shrink:0}
+.gd-tab{padding:8px 4px;border-radius:10px;font-size:10.5px;font-weight:700;color:#80a8c0;background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.15);cursor:pointer;user-select:none;text-align:center;transition:all .2s}
+.gd-tab.on{background:linear-gradient(135deg,rgba(0,240,255,.2),rgba(255,59,168,.15));color:#e6f7ff;border-color:rgba(0,240,255,.4);box-shadow:0 0 10px rgba(0,240,255,.2)}
+.gd-cards{flex:1;overflow-y:auto;padding:6px 12px 20px;scrollbar-width:none}
+.gd-cards::-webkit-scrollbar{display:none}
+.gd-card{display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:14px;margin-bottom:8px;background:linear-gradient(135deg,rgba(20,5,35,.9),rgba(5,5,18,.9));border:1px solid rgba(0,240,255,.2);cursor:pointer;user-select:none;transition:all .15s}
+.gd-card:active{border-color:rgba(0,240,255,.5);box-shadow:0 0 14px rgba(0,240,255,.2)}
+.gd-ci{font-size:24px;width:36px;text-align:center;flex-shrink:0}
+.gd-ct{flex:1;min-width:0}
+.gd-ctitle{font-size:13px;font-weight:700;color:#e6f7ff;margin-bottom:3px}
+.gd-cdesc{font-size:11px;color:#80c8ff;opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gd-cbadge{padding:2px 7px;font-size:9px;font-weight:800;border-radius:8px;background:rgba(0,240,255,.15);color:#00f0ff;border:1px solid rgba(0,240,255,.4);letter-spacing:.5px;display:inline-block;margin-bottom:4px}
+.gd-cwhere{font-size:9px;color:#888899;margin-top:3px}
+.gd-arr{font-size:18px;color:#445566;flex-shrink:0}
+@keyframes gdSlide{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.gd-backdrop{position:absolute;inset:0;background:rgba(0,0,0,.65);z-index:9200;display:flex;align-items:flex-end;justify-content:center}
+.gd-modal{width:100%;background:linear-gradient(160deg,#100520,#050510);border-radius:20px 20px 0 0;border-top:1px solid rgba(0,240,255,.35);padding:22px 18px 36px;animation:gdSlide .22s ease;max-height:72%;overflow-y:auto}
+.gd-modal-icon{font-size:34px;text-align:center;margin-bottom:10px}
+.gd-modal-title{font-size:16px;font-weight:800;text-align:center;margin-bottom:14px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.gd-modal-badge{text-align:center;margin-bottom:12px}
+.gd-modal-text{font-size:13px;color:#b0d0e8;line-height:1.75;white-space:pre-line}
+.gd-modal-where{margin-top:14px;padding:8px 12px;border-radius:10px;background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.2);font-size:11px;color:#60a8c0;text-align:center}
+.gd-modal-close{margin-top:18px;width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,rgba(0,240,255,.15),rgba(255,59,168,.1));border:1px solid rgba(0,240,255,.3);color:#00f0ff;font-size:13px;font-weight:700;text-align:center;cursor:pointer}
+.gd-modal-close:active{transform:scale(.97)}
+</style>
+</head>
+<body>
+<div class="phone">
+<div class="gd-ov">
+  <div class="gd-inner">
+    <div class="gd-hdr">
+      <div class="gd-back">‹</div>
+      <div class="gd-title">📖 СПРАВКА</div>
+    </div>
+    <div class="gd-tabs" id="tabs"></div>
+    <div class="gd-cards" id="cards"></div>
+  </div>
+</div>
+</div>
+
+<script>
+const SECTIONS = [
+  { key:'battle', icon:'⚔️', label:'Бой' },
+  { key:'stats',  icon:'📊', label:'Статы' },
+  { key:'items',  icon:'🧪', label:'Вещи' },
+  { key:'avatar', icon:'🎭', label:'Образы' },
+  { key:'clan',   icon:'🏰', label:'Клан' },
+  { key:'tasks',  icon:'📋', label:'Задания' },
+  { key:'faq',    icon:'❓', label:'FAQ' },
+];
+const CARDS = {
+  battle:[
+    {icon:'🎯',title:'Как устроен бой',desc:'Каждый раунд — выбери зону атаки и защиты',detail:'Бой по раундам. Выбираешь куда бить и что защищать. Атака в защищённую зону — блок!'},
+    {icon:'👤',title:'Голова (+30% урона)',badge:'Рискованно',desc:'Рискованно, но мощно',detail:'+30% урона, но враг часто защищает голову.'},
+    {icon:'🧥',title:'Тело (стандарт)',desc:'Стабильный урон без бонусов',detail:'Базовый урон. Самый надёжный выбор.'},
+    {icon:'🦵',title:'Ноги (−25% урона)',desc:'Мало урона, но снижает уклон врага',detail:'−25% урона, но −15% уклон врага на след. раунд.'},
+    {icon:'💥',title:'Крит / Уклон / Блок',desc:'Ключевые механики боя',detail:'💥 Крит: до 30%\n💨 Уклон: до 25%\n🛡 Блок: 15% шанс частичного блока'},
+  ],
+  stats:[
+    {icon:'💪',title:'Сила',badge:'Урон',desc:'Больше сила — больше урон'},
+    {icon:'🤸',title:'Ловкость',badge:'Уклон',desc:'Больше ловкость — чаще уворачиваешься'},
+    {icon:'💥',title:'Интуиция',badge:'Крит',desc:'Больше интуиция — чаще криты'},
+    {icon:'🛡',title:'Выносливость',badge:'Броня + HP',desc:'Больше выносливость — больше HP и броня'},
+  ],
+  clan:[
+    {icon:'🏰',title:'Что такое клан?',desc:'Объединение игроков для совместных боёв',detail:'Клан — группа до 30 игроков.\n\nДаёт:\n• Клановый чат\n• Рейды на Мирового Босса\n• Клановый рейтинг',where:'Вкладка «Клан»'},
+    {icon:'⚔️',title:'Мировой Босс',desc:'Рейд каждые 4 часа — бей с кланом',detail:'Появляется каждые 4 часа (0,4,8,12,16,20 UTC).\n\nНаграды:\n• 🪙 Золото за урон\n• 💎 Алмазы за топ-урон\n• Свитки статов',where:'Вкладка «Босс»'},
+    {icon:'💬',title:'Клановый чат',desc:'Общение в реальном времени',detail:'Чат в реальном времени. Координируй атаки, стратегии рейдов.',where:'Клан → Чат'},
+    {icon:'🤝',title:'Вступить или создать',desc:'Найди клан или основай свой',detail:'Вступить: Клан → Найти клан.\nСоздать: 500🪙 — ты становишься лидером.',where:'Вкладка «Клан»'},
+    {icon:'🏆',title:'Рейтинг кланов',desc:'Соревнование кланов по очкам',detail:'Формируется из урона по Боссу + активных участников + PvP побед.',where:'Клан → Рейтинг'},
+  ],
+  tasks:[
+    {icon:'📋',title:'Ежедневные задания',desc:'Обновляются каждый день в 00:00 UTC',detail:'Примеры:\n• 3 боя → 30🪙\n• 2 победы → 20🪙 + 5💎',where:'Меню → Задания'},
+    {icon:'🗓️',title:'Недельные задания',desc:'Сложнее — но награда выше',detail:'Примеры:\n• 15 PvP побед → 200🪙 + 30💎\n• 5 дней подряд → 50💎',where:'Задания → Недельные'},
+    {icon:'🔥',title:'Стрик активности',desc:'Заходи каждый день — бонус растёт',detail:'День 1: 40🪙\nДень 3: 60🪙+5💎\nДень 7: 120🪙+20💎\n\nОдин пропуск — сброс!',where:'Задания → Стрик'},
+    {icon:'🥇',title:'Достижения',desc:'Разовые награды за важные вехи',detail:'Первая победа, 10/50/100 побед, уровень, реферал...',where:'Задания → Достижения'},
+    {icon:'⭐',title:'Ежедневный бонус',desc:'Просто зайди — получи золото',detail:'Базовый: 40🪙\nАктивность (3+ боя): +80🪙\nСерия 5 побед: +30🪙'},
+  ],
+  faq:[
+    {icon:'🆕',title:'С чего начать?',desc:'Первые шаги в игре',detail:'1. 5 боёв с ботами\n2. Вкладывай очки в статы\n3. Купи зелье HP\n4. Выбери образ\n5. Иди в PvP'},
+    {icon:'❤️',title:'Как восстановить HP?',desc:'Авторегенерация + зелья',detail:'• Авторегенерация: зависит от выносливости\n• Зелья: мгновенно (Магазин → Зелья)'},
+    {icon:'📊',title:'Куда качать статы?',desc:'Какой билд выбрать',detail:'• Дамагер: сила\n• Ловкач: ловкость\n• Криттер: интуиция\n• Танк: выносливость'},
+    {icon:'🏆',title:'Как поднять рейтинг?',desc:'Рейтинговая система ELO',detail:'Победа над сильным = +много\nПоражение от слабого = −много\n\nТолько PvP даёт рейтинг!'},
+  ],
+};
+
+let activeKey = null;
+
+function renderCards(key) {
+  if (activeKey === key) return;
+  activeKey = key;
+  document.querySelectorAll('.gd-tab').forEach(t => t.classList.toggle('on', t.dataset.key===key));
+  const cards = CARDS[key] || [];
+  document.getElementById('cards').innerHTML = cards.map((c,i) => `
+    <div class="gd-card" onclick="showDetail(${i},'${key}')">
+      <div class="gd-ci">${c.icon}</div>
+      <div class="gd-ct">
+        ${c.badge?`<div class="gd-cbadge">${c.badge}</div>`:''}
+        <div class="gd-ctitle">${c.title}</div>
+        <div class="gd-cdesc">${c.desc}</div>
+        ${c.where?`<div class="gd-cwhere">📍 ${c.where}</div>`:''}
+      </div>
+      <div class="gd-arr">›</div>
+    </div>`).join('');
+  document.getElementById('cards').scrollTop = 0;
+}
+
+function showDetail(i, key) {
+  const c = CARDS[key][i];
+  const bd = document.createElement('div');
+  bd.className = 'gd-backdrop';
+  bd.innerHTML = `<div class="gd-modal">
+    <div class="gd-modal-icon">${c.icon}</div>
+    <div class="gd-modal-title">${c.title}</div>
+    ${c.badge?`<div class="gd-modal-badge"><span class="gd-cbadge">${c.badge}</span></div>`:''}
+    <div class="gd-modal-text">${c.detail||c.desc}</div>
+    ${c.where?`<div class="gd-modal-where">📍 ${c.where}</div>`:''}
+    <div class="gd-modal-close" onclick="this.closest('.gd-backdrop').remove()">Понятно ✓</div>
+  </div>`;
+  bd.addEventListener('click', e => { if(e.target===bd) bd.remove(); });
+  document.querySelector('.phone').appendChild(bd);
+}
+
+// Build tabs
+document.getElementById('tabs').innerHTML = SECTIONS.map(s =>
+  `<div class="gd-tab" data-key="${s.key}" onclick="renderCards('${s.key}')">${s.icon} ${s.label}</div>`
+).join('');
+renderCards('battle');
+</script>
+</body>
+</html>
