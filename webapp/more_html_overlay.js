@@ -11,7 +11,7 @@ const CSS = `
 .mo-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:0 8px}
 .mo-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;padding:16px 6px;cursor:pointer;user-select:none;-webkit-user-select:none;border:none;outline:none;background:none;-webkit-tap-highlight-color:transparent;transition:transform .12s;touch-action:manipulation;pointer-events:auto}
 .mo-btn:active,.mo-btn.pressed{transform:scale(.88)}
-.mo-icon{font-size:52px;line-height:1;display:block;transition:filter .18s,transform .18s;pointer-events:none}
+.mo-icon{width:80px;height:80px;object-fit:contain;display:block;transition:filter .18s,transform .18s;pointer-events:none}
 .mo-label{font-size:11px;font-weight:800;letter-spacing:.4px;text-align:center;pointer-events:none}
 @keyframes moP1{0%,100%{filter:drop-shadow(0 0 10px rgba(200,80,255,.6)) drop-shadow(0 0 4px rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 22px rgba(200,80,255,.95)) drop-shadow(0 0 8px rgba(0,0,0,.5))}}
 @keyframes moP2{0%,100%{filter:drop-shadow(0 0 10px rgba(0,220,255,.6)) drop-shadow(0 0 4px rgba(0,0,0,.6))}50%{filter:drop-shadow(0 0 22px rgba(0,220,255,.95)) drop-shadow(0 0 8px rgba(0,0,0,.5))}}
@@ -51,15 +51,15 @@ const MoreMenuHTML = (() => {
         <div class="mo-title">Настройки &amp; Разделы</div>
         <div class="mo-btns">
           <div class="mo-btn mo-av"    id="mo-btn-av"    role="button">
-            <span class="mo-icon">🎭</span>
+            <img class="mo-icon" src="menu_avatarki.png?v=${version}" alt="Аватарки">
             <span class="mo-label">Аватарки</span>
           </div>
           <div class="mo-btn mo-ref"   id="mo-btn-ref"   role="button">
-            <span class="mo-icon">🔗</span>
+            <img class="mo-icon" src="menu_referalka.png?v=${version}" alt="Рефералка">
             <span class="mo-label">Рефералка</span>
           </div>
           <div class="mo-btn mo-guide" id="mo-btn-guide" role="button">
-            <span class="mo-icon">📖</span>
+            <img class="mo-icon" src="menu_spravka.png?v=${version}" alt="Справка">
             <span class="mo-label">Справка</span>
           </div>
         </div>
