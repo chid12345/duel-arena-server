@@ -30,10 +30,16 @@
     const s = document.createElement('style');
     s.id = 'wbz-x-css';
     s.textContent = `
-      /* Растягиваем wb-root на flex column когда зон-режим — убираем пустоту внизу */
-      #wb-root.wbz-fill{display:flex!important;flex-direction:column}
-      #wb-root.wbz-fill .wb-boss-zone{flex:1 1 auto;min-height:300px}
-      #wb-root.wbz-fill .wb-plhp{flex-shrink:0;margin-top:auto}
+      /* Растягиваем wb-root на flex column когда зон-режим — убираем пустоту внизу.
+         Жёстко: flex:1 1 0 на boss-zone + height:100% на root + скрытие overflow,
+         чтобы заполнялось точно во весь viewport, а не сжималось до min-height. */
+      #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;height:100%!important;min-height:100vh!important;overflow:hidden!important}
+      #wb-root.wbz-fill > .wb-bhdr2,
+      #wb-root.wbz-fill > .wb-ticker,
+      #wb-root.wbz-fill > .wb-plhp{flex-shrink:0!important}
+      #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;height:auto!important}
+      #wb-root.wbz-fill .wb-ultra,
+      #wb-root.wbz-fill .wb-skills{display:none!important;height:0!important;overflow:hidden!important}
 
       /* Лента истории — flow-элемент внутри sticky-шапки (всегда виден) */
       .wbz-hbar{display:flex;align-items:center;gap:7px;padding:5px 2px 1px;font-family:Consolas,monospace;font-size:8.5px;color:rgba(200,200,220,.75);letter-spacing:.6px}
