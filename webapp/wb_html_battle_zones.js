@@ -120,7 +120,10 @@
           if (r.player_hp < _prevHp) {
             try { window.WBHtml?.checkBossHit?.(_prevHp, r.player_hp); } catch(_) {}
           }
-          if (r.player_died) scene._state.player_state.is_dead = 1;
+          if (r.player_died) {
+            scene._state.player_state.is_dead = 1;
+            try { window.WBHtml?.logDeath?.(); } catch(_) {}
+          }
         }
         try { window.WBHtml?.addHitLog?.(r.damage, r.is_crit); } catch(_) {}
         try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit, r.boss_hp); } catch(_) {}

@@ -82,6 +82,20 @@
     if (_log.length > 200) _log.splice(0, _log.length - 200);
   }
 
+  // Смерть игрока в рейде (kind='died') — записываем для лога.
+  function logDeath() {
+    _log.push({ ts: Date.now(), kind: 'died' });
+    _trim();
+    _saveToLS(_lastSpawnId);
+  }
+
+  // Воскрешение свитком (kind='resurrect') — пишем какой свиток + восстановленное HP.
+  function logResurrect(scrollName, hpRestored) {
+    _log.push({ ts: Date.now(), kind: 'resurrect', scroll: scrollName || '', hp: hpRestored | 0 });
+    _trim();
+    _saveToLS(_lastSpawnId);
+  }
+
   function getLog() { return _log.slice(); }
   function getLogForSpawn(sid) {
     // Геттер с явным spawn_id — для MVP-окна, когда _lastSpawnId уже мог
@@ -118,6 +132,14 @@
 
     const rowsHtml = rounds.map((r, i) => {
       const evHtml = r.items.map(it => {
+        // Особые события — без dmg/HP колонок
+        if (it.kind === 'died') {
+          return `<div class="wb-bhist-ev"><span class="wb-bhist-tag" style="background:rgba(255,80,160,.18);color:#ff8aa8;border-radius:4px;padding:3px 10px;font-weight:800;letter-spacing:.5px">💀 ПАЛ В БОЮ</span></div>`;
+        }
+        if (it.kind === 'resurrect') {
+          const hp = it.hp ? ` +${it.hp} HP` : '';
+          return `<div class="wb-bhist-ev"><span class="wb-bhist-tag" style="background:rgba(0,255,136,.18);color:#00ff88;border-radius:4px;padding:3px 10px;font-weight:800;letter-spacing:.5px">✨ ВОСКРЕС${hp}</span></div>`;
+        }
         let tagCls, tagTxt, dmgCls, hpIco, hpVal;
         if (it.kind === 'me')   { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; hpVal=it.boss_hp_after; }
         if (it.kind === 'crit') { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; hpVal=it.boss_hp_after; }
@@ -166,7 +188,7 @@
   Object.assign(window.WBHtml = window.WBHtml || {}, {
     _battleLog: _log,
     _resetBattleLog: _resetIfNewSpawn,
-    logMyHit, checkBossHit,
+    logMyHit, checkBossHit, logDeath, logResurrect,
     getBattleLog: getLog,
     getBattleLogForSpawn: getLogForSpawn,
     clearBattleLog: clearLog,
