@@ -113,7 +113,13 @@
         if (scene._state?.active) scene._state.active.current_hp = r.boss_hp;
         // Phase 2: сразу обновляем HP игрока локально, чтобы не ждать WS-тик.
         if (scene._state?.player_state && r.player_hp != null) {
+          const _prevHp = scene._state.player_state.current_hp;
           scene._state.player_state.current_hp = r.player_hp;
+          // F: на телефоне WS-тик иногда не приходит, и боссовый contre-урон
+          // не попадал в лог боя. Логируем напрямую при падении HP.
+          if (r.player_hp < _prevHp) {
+            try { window.WBHtml?.checkBossHit?.(_prevHp, r.player_hp); } catch(_) {}
+          }
           if (r.player_died) scene._state.player_state.is_dead = 1;
         }
         try { window.WBHtml?.addHitLog?.(r.damage, r.is_crit); } catch(_) {}
