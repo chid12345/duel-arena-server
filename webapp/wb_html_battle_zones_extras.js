@@ -37,8 +37,13 @@
       body.wbz-on #wb-root .wb-ultra,
       body.wbz-on #wb-root .wb-skills{display:none!important}
 
-      /* Лента истории под шапкой */
-      .wbz-hbar{position:absolute;top:90px;left:8px;right:8px;display:flex;align-items:center;gap:7px;z-index:11;font-family:Consolas,monospace;font-size:8.5px;color:rgba(200,200,220,.7);letter-spacing:.6px;pointer-events:none}
+      /* Растягиваем wb-root на flex column когда зон-режим — убираем пустоту внизу */
+      #wb-root.wbz-fill{display:flex!important;flex-direction:column}
+      #wb-root.wbz-fill .wb-boss-zone{flex:1 1 auto;min-height:300px}
+      #wb-root.wbz-fill .wb-plhp{flex-shrink:0;margin-top:auto}
+
+      /* Лента истории — flow-элемент внутри sticky-шапки (всегда виден) */
+      .wbz-hbar{display:flex;align-items:center;gap:7px;padding:5px 2px 1px;font-family:Consolas,monospace;font-size:8.5px;color:rgba(200,200,220,.75);letter-spacing:.6px}
       .wbz-hbar-lbl{text-transform:uppercase;font-weight:800;color:#ff8aa8;text-shadow:0 0 6px rgba(255,80,160,.55);white-space:nowrap}
       .wbz-hbar-row{display:flex;gap:4px;align-items:center}
       .wbz-h-cell{width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;background:rgba(8,5,18,.55);position:relative}
@@ -72,8 +77,11 @@
       bar = document.createElement('div');
       bar.className = 'wbz-hbar';
       bar.innerHTML = '<div class="wbz-hbar-lbl">⚡ БОСС ЦЕЛИЛ:</div><div class="wbz-hbar-row"></div>';
+      // Вставляем ВНУТРЬ sticky-шапки (после HP-секции) — лента всегда видна
       const hdr = root.querySelector('.wb-bhdr2');
-      if (hdr && hdr.parentNode) hdr.parentNode.insertBefore(bar, hdr.nextSibling);
+      const hpSec = hdr?.querySelector('.wb-hp2-sec');
+      if (hpSec && hpSec.parentNode) hpSec.parentNode.insertBefore(bar, hpSec.nextSibling);
+      else if (hdr) hdr.appendChild(bar);
       else root.appendChild(bar);
     }
     const row = bar.querySelector('.wbz-hbar-row');
@@ -156,6 +164,8 @@
       orig.call(this, root, s);
       try {
         _injectCss();
+        // Активируем flex layout — wb-boss-zone растягивается, пустоты внизу нет
+        if (root.classList) root.classList.add('wbz-fill');
         _hideOldUI(root);
         const sc = window.WBHtml?._scene;
         _renderHistory(root, sc);
