@@ -32,14 +32,18 @@
     const s = document.createElement('style');
     s.id = 'wbz-x-css';
     s.textContent = `
-      /* Минимальный flex layout — boss-zone забирает всё свободное место */
+      /* Layout — boss-zone забирает всё свободное место. Flex может не работать
+         в Telegram WebView — высоту boss-zone JS считает явно через JS. */
       #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;background-color:#02000a!important}
       #wb-root.wbz-fill > .wb-bhdr2,
       #wb-root.wbz-fill > .wb-ticker,
-      #wb-root.wbz-fill > .wb-plhp{flex-shrink:0!important}
+      #wb-root.wbz-fill > .wb-plhp,
+      #wb-root.wbz-fill > .wb-dead{flex-shrink:0!important}
       #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;background-image:none!important;background-color:transparent!important}
       #wb-root.wbz-fill .wb-ultra,
-      #wb-root.wbz-fill .wb-skills{display:none!important}
+      #wb-root.wbz-fill .wb-skills,
+      #wb-root.wbz-fill .wb-ultra *,
+      #wb-root.wbz-fill .wb-skills *{display:none!important}
 
       /* Фон босса на весь экран — отдельные правила для каждого типа */
       #wb-root.wbz-fill.bt-lich    {background-image:url('bosses/bg/lich.png?v=${BG_VER}')!important}
@@ -71,6 +75,37 @@
 
   function _hideOldUI(root) {
     root.querySelectorAll('.wb-ultra, .wb-skills').forEach(el => { el.style.display = 'none'; });
+  }
+
+  // Жёстко считаем высоту boss-zone через JS — flex в Telegram WebView
+  // ненадёжен: содержимое сжимается до natural-size, под HP игрока остаётся
+  // пустой кусок фона. JS вычисляет: vh - шапка - тикер - plhp/dead = boss-zone.
+  function _resizeBossZone(root) {
+    if (!root) return;
+    const zone = root.querySelector('.wb-boss-zone');
+    if (!zone) return;
+    try {
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const bhdr = root.querySelector('.wb-bhdr2');
+      const ticker = root.querySelector('.wb-ticker');
+      const plhp = root.querySelector('.wb-plhp');
+      const dead = root.querySelector('.wb-dead');
+      const headerH = (bhdr?.offsetHeight || 0) + (ticker?.offsetHeight || 0);
+      const bottomH = (plhp?.offsetHeight || 0) + (dead?.offsetHeight || 0);
+      const target = Math.max(220, vh - headerH - bottomH);
+      zone.style.height = target + 'px';
+      zone.style.minHeight = target + 'px';
+    } catch(_) {}
+  }
+
+  let _resizeBound = false;
+  function _bindResize() {
+    if (_resizeBound) return;
+    _resizeBound = true;
+    window.addEventListener('resize', () => {
+      const root = document.getElementById('wb-root');
+      if (root && root.classList.contains('wbz-fill')) _resizeBossZone(root);
+    });
   }
 
   function _renderHistory(root, scene) {
@@ -125,6 +160,12 @@
         const sc = window.WBHtml?._scene;
         _renderHistory(root, sc);
         try { window.WbzAutobot?.render?.(root, s); } catch(_) {}
+        // Принудительный resize boss-zone — flex ненадёжен в Telegram WebView
+        _resizeBossZone(root);
+        _bindResize();
+        // Re-run после прогрузки картинок (boss image влияет на header height)
+        setTimeout(() => _resizeBossZone(root), 100);
+        setTimeout(() => _resizeBossZone(root), 500);
       } catch(e) { console.warn('[wbz extras]', e); }
     };
   }
