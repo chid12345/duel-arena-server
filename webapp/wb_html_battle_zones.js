@@ -27,32 +27,30 @@
       .wbz-lbl{font-size:9px;font-weight:900;letter-spacing:1.4px;text-align:center;font-family:Consolas,monospace;text-transform:uppercase;margin-bottom:1px}
       .wbz-col-atk .wbz-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.65),0 1px 2px rgba(0,0,0,.9)}
       .wbz-col-def .wbz-lbl{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.65),0 1px 2px rgba(0,0,0,.9)}
-      /* Skin-style: без рамки/фона, только иконка + надпись + парение */
-      .wbz-btn{width:54px;display:flex;flex-direction:column;align-items:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none;animation:wbzFloat 2.6s ease-in-out infinite}
-      .wbz-btn:nth-child(2){animation-delay:.4s}
-      .wbz-btn:nth-child(3){animation-delay:.8s}
+      /* Skin-style: без рамки/фона, иконка + надпись. ФИКСИРОВАНЫ (без парения) */
+      .wbz-btn{width:54px;display:flex;flex-direction:column;align-items:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
       .wbz-btn img{width:32px;height:32px;object-fit:contain;transition:filter .2s,transform .2s}
       .wbz-btn .nm{font-size:8px;font-weight:800;letter-spacing:.5px;font-family:Consolas,monospace;text-transform:uppercase;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.95)}
       .wbz-col-atk .wbz-btn img{filter:drop-shadow(0 0 6px rgba(255,80,160,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
       .wbz-col-def .wbz-btn img{filter:drop-shadow(0 0 6px rgba(80,180,255,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
       .wbz-col-atk .wbz-btn .nm{color:#ff8ac0;text-shadow:0 0 5px rgba(255,80,160,.7),0 1px 3px rgba(0,0,0,.95)}
       .wbz-col-def .wbz-btn .nm{color:#8acfff;text-shadow:0 0 5px rgba(80,180,255,.7),0 1px 3px rgba(0,0,0,.95)}
-      /* Выбранная зона — без рамки, только усиленное свечение + scale */
+      /* Выбранная зона — без рамки, только усиленное свечение + scale (без парения) */
       .wbz-col-atk .wbz-btn.sel img{filter:drop-shadow(0 0 18px #ff5fa0) drop-shadow(0 0 10px #fff);transform:scale(1.18)}
       .wbz-col-def .wbz-btn.sel img{filter:drop-shadow(0 0 18px #5fb8ff) drop-shadow(0 0 10px #fff);transform:scale(1.18)}
-      .wbz-btn.sel{animation:wbzFloatStrong 2s ease-in-out infinite}
       .wbz-btn.sel .nm{color:#fff;font-weight:900;text-shadow:0 0 8px #fff,0 1px 3px rgba(0,0,0,.95)}
-      @keyframes wbzFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-      @keyframes wbzFloatStrong{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-      /* Кнопки действия — 🎲 (картинка) + Совершить ход */
+      /* Кнопки действия — 🎲 (картинка) + Совершить ход. ФИКСИРОВАНЫ */
       .wbz-actions{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:31}
-      .wbz-auto{display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none;animation:wbzFloat 2.4s ease-in-out infinite}
+      .wbz-auto{display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
       .wbz-auto img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,200,60,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.85))}
       .wbz-apply{min-width:160px;padding:11px 18px;text-align:center;border-radius:8px;font-family:Consolas,monospace;font-weight:900;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;text-shadow:0 0 6px rgba(201,138,255,.6);background:linear-gradient(180deg,rgba(80,40,140,.85),rgba(40,15,80,.95));border:1.5px solid rgba(180,80,255,.35);box-shadow:0 0 10px rgba(180,80,255,.25);opacity:.45;cursor:not-allowed;transition:opacity .25s}
       .wbz-apply.ready{opacity:1;cursor:pointer;border-color:rgba(255,95,160,.6);animation:wbzReady 2.2s ease-in-out infinite}
       @keyframes wbzReady{0%,100%{box-shadow:0 0 12px rgba(180,80,255,.4)}50%{box-shadow:0 0 20px rgba(255,95,160,.55)}}
       .wbz-apply.busy{opacity:.6;animation:none;pointer-events:none}
       #wb-root .wbz-on .wb-tap-hint{display:none!important}
+      /* При ударе старый код ставит transform:scale(.98) на boss-zone — это
+         сдвигало все зоны/кнопки внутри. Блокируем — пусть эффект на боссе. */
+      #wb-root .wb-boss-zone{transform:none!important}
     `;
     document.head.appendChild(s);
   }
