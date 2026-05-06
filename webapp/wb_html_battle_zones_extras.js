@@ -33,13 +33,17 @@
       /* Растягиваем wb-root на flex column когда зон-режим — убираем пустоту внизу.
          Жёстко: flex:1 1 0 на boss-zone + height:100% на root + скрытие overflow,
          чтобы заполнялось точно во весь viewport, а не сжималось до min-height. */
-      #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;height:100%!important;min-height:100vh!important;overflow:hidden!important}
+      #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;height:100%!important;min-height:100vh!important;overflow:hidden!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important}
       #wb-root.wbz-fill > .wb-bhdr2,
       #wb-root.wbz-fill > .wb-ticker,
       #wb-root.wbz-fill > .wb-plhp{flex-shrink:0!important}
-      #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;height:auto!important}
+      #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;height:auto!important;background-image:none!important;background-color:transparent!important}
       #wb-root.wbz-fill .wb-ultra,
       #wb-root.wbz-fill .wb-skills{display:none!important;height:0!important;overflow:hidden!important}
+      /* Полупрозрачные шапка и нижняя плашка — фон проступает */
+      #wb-root.wbz-fill > .wb-bhdr2{background:linear-gradient(180deg,rgba(5,5,8,.78),rgba(5,5,8,.45))!important;border-bottom:1px solid rgba(255,0,85,.25)!important;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+      #wb-root.wbz-fill > .wb-ticker{background:rgba(5,5,8,.45)!important;border-bottom:none!important;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+      #wb-root.wbz-fill > .wb-plhp{background:linear-gradient(0deg,rgba(5,5,8,.78),rgba(5,5,8,.35))!important;backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);padding-top:8px!important;padding-bottom:6px!important}
 
       /* Лента истории — flow-элемент внутри sticky-шапки (всегда виден) */
       .wbz-hbar{display:flex;align-items:center;gap:7px;padding:5px 2px 1px;font-family:Consolas,monospace;font-size:8.5px;color:rgba(200,200,220,.75);letter-spacing:.6px}
@@ -57,6 +61,23 @@
   function _hideOldUI(root) {
     // inline display:none — страховка если CSS не сработал
     root.querySelectorAll('.wb-ultra, .wb-skills').forEach(el => { el.style.display = 'none'; });
+  }
+
+  // Переносим фоновую картинку с .wb-boss-zone на #wb-root, чтобы фон
+  // занимал весь экран (включая шапку и нижнюю плашку, которые становятся
+  // полупрозрачными). У каждого босса свой bt-X класс с уникальным фоном.
+  function _liftBgToRoot(root) {
+    const zone = root.querySelector('.wb-boss-zone');
+    if (!zone) return;
+    try {
+      const bg = getComputedStyle(zone).backgroundImage;
+      if (bg && bg !== 'none' && bg !== 'initial') {
+        root.style.backgroundImage = bg;
+        // bg-color чтоб не было прозрачности по краям, если картинка не идеально cover
+        const bgColor = getComputedStyle(zone).backgroundColor;
+        if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)') root.style.backgroundColor = bgColor;
+      }
+    } catch(_) {}
   }
 
   function _renderHistory(root, scene) {
@@ -108,6 +129,7 @@
         _injectCss();
         if (root.classList) root.classList.add('wbz-fill');
         _hideOldUI(root);
+        _liftBgToRoot(root);  // фон босса на весь экран
         const sc = window.WBHtml?._scene;
         _renderHistory(root, sc);
         // Кнопка АВТО — делегируем отдельному модулю
