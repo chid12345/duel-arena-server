@@ -162,7 +162,7 @@ def register_equipment_routes(app: FastAPI) -> None:
 
         except Exception as e:
             _log.error("equip_item error: %s", e, exc_info=True)
-            return {"ok": False, "reason": f"Ошибка сервера: {e}"}
+            return {"ok": False, "reason": "Ошибка сервера"}
 
     @app.post("/api/equipment/unequip")
     def unequip_item(body: _UnequipBody):
@@ -215,4 +215,4 @@ def register_equipment_routes(app: FastAPI) -> None:
 
         except Exception as e:
             _log.error("unequip_item error: %s", e, exc_info=True)
-            return {"ok": False, "reason": f"Ошибка сервера: {e}"}
+            return {"ok": False, "reason": "Ошибка сервера"}

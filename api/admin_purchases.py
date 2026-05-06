@@ -17,7 +17,8 @@ def register_admin_purchases(app: Any, db: Any) -> None:
 
     @router.get("/admin/purchases", response_class=HTMLResponse)
     async def admin_purchases(token: str = ""):
-        if ADMIN_TOKEN and token != ADMIN_TOKEN:
+        # Если ADMIN_TOKEN не задан в окружении — закрываем admin полностью.
+        if not ADMIN_TOKEN or token != ADMIN_TOKEN:
             return HTMLResponse("<h2>403 Forbidden</h2><p>Неверный токен.</p>", status_code=403)
 
         usdt_rows, stars_rows = await asyncio.gather(

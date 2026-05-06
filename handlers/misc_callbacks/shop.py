@@ -63,19 +63,32 @@ async def handle_shop_purchase(query, player, item_key: str):
     uid = player["user_id"]
     ref_r: dict = {}
     purchase_ok = False
-    if item_key == "hp_potion":
+    if item_key == "hp_potion_small":
+        result = db.buy_hp_potion_small(uid)
+        if result["ok"]:
+            purchase_ok = True
+            hp_r = result["hp_restored"]
+            cost = result.get("cost", 60)
+            msg = f"✅ +{hp_r} HP восстановлено (−{cost} 🪙)"
+        else:
+            msg = f"❌ {result['reason']}"
+    elif item_key == "hp_potion":
         result = db.buy_hp_potion(uid)
         if result["ok"]:
             purchase_ok = True
             hp_r = result["hp_restored"]
-            msg = f"✅ HP восстановлен! +{hp_r} HP (−30 золота)" if hp_r > 0 else "❤️ HP уже полный! −30 золота"
+            cost = result.get("cost", 200)
+            msg = f"✅ HP полностью восстановлен (+{hp_r}) — −{cost} 🪙" if hp_r > 0 else f"❤️ HP уже полный — −{cost} 🪙"
         else:
             msg = f"❌ {result['reason']}"
     elif item_key == "xp_boost":
         result = db.buy_xp_boost(uid)
-        msg = f"✅ XP-буст: +5 зарядов куплено! (−100 золота)" if result["ok"] else f"❌ {result['reason']}"
         if result.get("ok"):
             purchase_ok = True
+            cost = result.get("cost", 400)
+            msg = f"✅ XP-буст: +5 зарядов (−{cost} 🪙)"
+        else:
+            msg = f"❌ {result['reason']}"
     elif item_key == "stat_reset":
         result = db.buy_stat_reset(uid)
         msg = (

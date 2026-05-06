@@ -57,8 +57,14 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
         return {"ok": True, "players": players, "my_rank": my_rank, "season": season}
 
     @router.get("/api/debug/cryptopay")
-    async def debug_cryptopay():
+    async def debug_cryptopay(token: str = ""):
         import httpx
+        import os
+        _admin = os.getenv("ADMIN_TOKEN", "")
+        # /api/debug/cryptopay показывает фрагмент токена и состояние testnet.
+        # Без ADMIN_TOKEN — 403, иначе любой может прочитать token_hint.
+        if not _admin or token != _admin:
+            return {"ok": False, "reason": "forbidden"}
 
         token_hint = (CRYPTOPAY_TOKEN[:8] + "...") if CRYPTOPAY_TOKEN else "НЕ ЗАДАН"
         result = {"testnet": "testnet-pay.crypt.bot" in CRYPTOPAY_API_BASE, "api_base": CRYPTOPAY_API_BASE, "token_hint": token_hint}

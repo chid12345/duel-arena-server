@@ -16,7 +16,9 @@ def register_stats_routes(app: Any, db: Any) -> None:
 
     @router.get("/admin/battle-stats", response_class=HTMLResponse)
     async def battle_stats_report(token: str = "", days: int = 7):
-        if ADMIN_TOKEN and token != ADMIN_TOKEN:
+        # Если ADMIN_TOKEN не задан — закрываем доступ полностью.
+        # Иначе любой бы дёргал /admin/battle-stats без токена.
+        if not ADMIN_TOKEN or token != ADMIN_TOKEN:
             return HTMLResponse("<h2>403 Forbidden</h2>", status_code=403)
         if days < 1 or days > 90:
             days = 7

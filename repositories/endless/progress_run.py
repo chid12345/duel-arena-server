@@ -59,6 +59,9 @@ class EndlessProgressRunMixin:
         return self.get_endless_progress(user_id)
 
     def endless_on_loss(self, user_id: int, wave: int) -> dict:
+        # При поражении засчитываем как пройденную предыдущую волну.
+        # wave = волна на которой проиграл → реально пройдено wave-1.
+        completed = max(0, int(wave) - 1)
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -68,7 +71,7 @@ class EndlessProgressRunMixin:
                 "ON CONFLICT(user_id) DO UPDATE SET "
                 "best_wave=MAX(endless_progress.best_wave, excluded.best_wave), "
                 "current_wave=0, current_hp=0, is_active=FALSE, updated_at=CURRENT_TIMESTAMP",
-                (user_id, wave),
+                (user_id, completed),
             )
             conn.commit()
         finally:

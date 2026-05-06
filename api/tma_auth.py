@@ -6,6 +6,7 @@ import hashlib
 import hmac
 import json
 import logging
+import os
 import urllib.parse
 from typing import Dict, Optional
 
@@ -22,6 +23,12 @@ def _verify_telegram_init_data(init_data: str) -> Optional[Dict]:
     Возвращает распарсенные данные или None если подпись неверна.
     """
     if not BOT_TOKEN:
+        # Без BOT_TOKEN HMAC проверить невозможно. В проде это означает
+        # «любой может ходить как любой uid» — поэтому пускаем без подписи
+        # ТОЛЬКО если явно разрешено в env (ALLOW_UNSIGNED_TMA=1, локалка).
+        if os.getenv("ALLOW_UNSIGNED_TMA", "") != "1":
+            logger.error("BOT_TOKEN не задан — TMA auth отключён, пропускаю запрос")
+            return None
         try:
             parsed = dict(urllib.parse.parse_qsl(init_data, strict_parsing=False))
             user_str = parsed.get("user", "{}")

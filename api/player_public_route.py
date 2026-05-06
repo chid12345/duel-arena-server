@@ -13,6 +13,9 @@ from api.tma_battle_items import items_for_user
 
 def register_player_public_route(app: FastAPI, *, db: Any) -> None:
 
+    import logging
+    _log = logging.getLogger(__name__)
+
     @app.get("/api/player/public/{uid}")
     def get_player_public(uid: int):
         try:
@@ -22,7 +25,8 @@ def register_player_public_route(app: FastAPI, *, db: Any) -> None:
             row = cursor.fetchone()
             conn.close()
         except Exception as e:
-            return {"ok": False, "reason": str(e)}
+            _log.error("player_public error uid=%s: %s", uid, e)
+            return {"ok": False, "reason": "Ошибка сервера"}
 
         if not row:
             return {"ok": False, "reason": "not_found"}

@@ -140,13 +140,21 @@ class ProgressCoreMixin:
                 batch += [("ach_buy_diamonds", 1), ("ach_spend_diamonds", price)]
             elif currency in ("stars", "usdt"):
                 batch += [("ach_buy_premium", 1)]
-            # Коллекция образов
-            if item_id.startswith("gold_"):
-                batch.append(("ach_collect_avatar_gold", 1))
-            elif item_id.startswith("dia_"):
-                batch.append(("ach_collect_avatar_dia", 1))
-            elif item_id.startswith("prem_") or item_id.startswith("elite_"):
-                batch.append(("ach_collect_avatar_premium", 1))
+            # Коллекция образов — только реальные аватары из каталога,
+            # иначе buff/расходник с префиксом (gold_hunt и т.п.) фармит ачивку.
+            try:
+                from config.avatar_catalog import AVATAR_CATALOG
+                _av = next((a for a in AVATAR_CATALOG if a.get("id") == item_id), None)
+            except Exception:
+                _av = None
+            if _av:
+                tier = _av.get("tier")
+                if tier == "gold":
+                    batch.append(("ach_collect_avatar_gold", 1))
+                elif tier == "diamond":
+                    batch.append(("ach_collect_avatar_dia", 1))
+                elif tier in ("premium", "elite"):
+                    batch.append(("ach_collect_avatar_premium", 1))
             # Один connection на всю пачку вместо open/close на каждый ключ.
             self._add_task_progress_batch(user_id, batch)
             if currency in ("gold", "diamonds", "stars", "usdt") and (price > 0 or currency in ("stars", "usdt")):

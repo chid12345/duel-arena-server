@@ -150,7 +150,9 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         contrib_xp = base_1v1 * WB_XP_CONTRIB_MULT * contribution_pct
         exp = max(0, int((guaranteed_xp + contrib_xp) * mult * bot_penalty))
 
-        diamonds = int(diamonds_by_rank.get(uid, 0))
+        # Алмазы тоже под пенальти авто-бота — иначе офлайн-игрок берёт top-1
+        # без штрафа и доит максимальные алмазы за «зашёл и ушёл».
+        diamonds = int(int(diamonds_by_rank.get(uid, 0)) * bot_penalty)
 
         # Сундук: только топ-1 по урону при победе → 💠 алмазный.
         # Свиток scroll_all_12: один случайный счастливчик за рейд (3% боёв),
