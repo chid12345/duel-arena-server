@@ -40,10 +40,12 @@
       #wb-root.wbz-fill > .wb-plhp,
       #wb-root.wbz-fill > .wb-dead{flex-shrink:0!important}
       #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;background-image:none!important;background-color:transparent!important}
+      /* ULT/SKILLS — display:none + position:absolute + size:0 — гарантированно
+         не занимают flex-место. Иначе создавали пустоту между боссом и UI внизу. */
       #wb-root.wbz-fill .wb-ultra,
-      #wb-root.wbz-fill .wb-skills,
-      #wb-root.wbz-fill .wb-ultra *,
-      #wb-root.wbz-fill .wb-skills *{display:none!important}
+      #wb-root.wbz-fill .wb-skills{display:none!important;position:absolute!important;left:-9999px!important;top:-9999px!important;width:0!important;height:0!important;margin:0!important;padding:0!important;overflow:hidden!important;pointer-events:none!important}
+      /* Карточка игрока — фиксированный overlay, не флекс-элемент */
+      #wb-root.wbz-fill .wb-pcard-ov{position:fixed!important;left:0!important;top:0!important;right:0!important;bottom:0!important;z-index:1000}
 
       /* Фон босса на весь экран — отдельные правила для каждого типа */
       #wb-root.wbz-fill.bt-lich    {background-image:url('bosses/bg/lich.png?v=${BG_VER}')!important}
@@ -75,7 +77,14 @@
   }
 
   function _hideOldUI(root) {
-    root.querySelectorAll('.wb-ultra, .wb-skills').forEach(el => { el.style.display = 'none'; });
+    // Жёстко убираем скрытые элементы из flex-flow — иначе создают пустое
+    // место между boss-zone и нижним UI.
+    root.querySelectorAll('.wb-ultra, .wb-skills').forEach(el => {
+      el.style.cssText = 'display:none!important;position:absolute!important;left:-9999px!important;width:0!important;height:0!important';
+    });
+    // Player-card overlay — fixed, не во flex
+    const pcov = root.querySelector('.wb-pcard-ov');
+    if (pcov) pcov.style.position = 'fixed';
   }
 
   // Переставляем DOM: boss-zone — наверх, остальная инфа (BOSS RAID + HP + лента
