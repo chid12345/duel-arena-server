@@ -31,16 +31,20 @@
 
   function _start() {
     if (_autoTimer) return;
-    try { localStorage.setItem('wbz_auto_on', '1'); } catch(_) {}
+    // НЕ persist в localStorage — auto-bot только в текущей сессии,
+    // иначе при reload бот мог дёргать удары в фоне (контр-урон → ранняя смерть).
     _step();
     _autoTimer = setInterval(_step, 3000);
   }
   function _stop() {
     if (_autoTimer) { clearInterval(_autoTimer); _autoTimer = null; }
+    // Чистим старый флаг — на случай если он остался от предыдущей версии.
     try { localStorage.removeItem('wbz_auto_on'); } catch(_) {}
     const btn = document.querySelector('#wb-root .wbz-auto-btn');
     if (btn) btn.classList.remove('on');
   }
+  // Чистим легаси-флаг сразу при загрузке модуля — старые сессии могли его оставить.
+  try { localStorage.removeItem('wbz_auto_on'); } catch(_) {}
 
   function _onClick() {
     const sc = window.WBHtml?._scene;
@@ -100,10 +104,10 @@
     if (!isPremium) {
       if (!lk) { lk = document.createElement('div'); lk.className = 'lk'; lk.textContent = '🔒'; btn.appendChild(lk); }
     } else if (lk) { lk.remove(); }
-    // Восстанавливаем авто-бой при ре-рендере если был включён (localStorage)
-    if (isPremium && !_isOn() && state?.active && !state?.player_state?.is_dead) {
-      try { if (localStorage.getItem('wbz_auto_on') === '1') _start(); } catch(_) {}
-    }
+    // НЕ автостартуем — иначе бот мог дёргать удары в фоне и убивать игрока
+    // контр-уроном до того как тот заметит. АВТО запускается ТОЛЬКО ручным
+    // тапом по кнопке. localStorage флаг используется только для UI-восстановления
+    // активного класса в текущем сеансе (если бот реально работает).
     btn.classList.toggle('on', _isOn());
     btn.title = isPremium ? (_isOn() ? 'Авто-бой ВКЛ — тап чтобы выключить' : 'Включить авто-бой') : '🔒 Только для подписчиков';
   }
