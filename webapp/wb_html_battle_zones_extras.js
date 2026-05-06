@@ -57,11 +57,10 @@
       #wb-root.wbz-fill.bt-demon   {background-image:url('bosses/bg/demon.png?v=${BG_VER}')!important}
       #wb-root.wbz-fill.bt-universal{background-image:url('bosses/bg/lich.png?v=${BG_VER}')!important}
 
-      /* Перенесли весь UI в НИЗ — bhdr2 больше не sticky, не вверху.
-         Полупрозрачные плашки складываются нижней полосой, фон проступает. */
-      #wb-root.wbz-fill > .wb-bhdr2{position:relative!important;top:auto!important;background:linear-gradient(0deg,rgba(0,0,0,.65),rgba(0,0,0,.25))!important;border-bottom:none!important;border-top:1px solid rgba(255,0,85,.18)!important;padding:6px 14px 4px!important}
-      #wb-root.wbz-fill > .wb-ticker{background:linear-gradient(0deg,rgba(0,0,0,.55),rgba(0,0,0,.25))!important;border-bottom:none!important;border-top:none!important;padding:3px 0!important}
-      #wb-root.wbz-fill > .wb-plhp{background:linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,.3))!important;padding:4px 14px 6px!important}
+      /* Полупрозрачные плашки — фон проступает через них. Шапка sticky сверху. */
+      #wb-root.wbz-fill > .wb-bhdr2{background:linear-gradient(180deg,rgba(0,0,0,.7),rgba(0,0,0,.3))!important;border-bottom:1px solid rgba(255,0,85,.2)!important}
+      #wb-root.wbz-fill > .wb-ticker{background:rgba(0,0,0,.45)!important;border-bottom:none!important}
+      #wb-root.wbz-fill > .wb-plhp{background:linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,.2))!important}
 
       /* Лента истории — flow внутри sticky-шапки */
       .wbz-hbar{display:flex;align-items:center;gap:7px;padding:5px 2px 1px;font-family:Consolas,monospace;font-size:8.5px;color:rgba(220,220,235,.85);letter-spacing:.6px}
@@ -87,44 +86,22 @@
     if (pcov) pcov.style.position = 'fixed';
   }
 
-  // Переставляем DOM: boss-zone — наверх, остальная инфа (BOSS RAID + HP + лента
-  // + ticker + HP игрока) — компактной полосой ВНИЗУ. Босс занимает весь верх.
-  function _reorderForBottomUI(root) {
-    if (!root) return;
-    const bossZone = root.querySelector('.wb-boss-zone');
-    const bhdr2 = root.querySelector('.wb-bhdr2');
-    const ticker = root.querySelector('.wb-ticker');
-    const plhp = root.querySelector('.wb-plhp');
-    const dead = root.querySelector('.wb-dead');
-    if (!bossZone) return;
-    // boss-zone в самое начало
-    if (root.firstChild !== bossZone) root.insertBefore(bossZone, root.firstChild);
-    // bhdr2 / ticker / plhp / dead — в конец, в этом порядке
-    if (bhdr2) root.appendChild(bhdr2);
-    if (ticker) root.appendChild(ticker);
-    if (plhp) root.appendChild(plhp);
-    if (dead) root.appendChild(dead);
-  }
-
   // Жёстко считаем высоту boss-zone через JS — flex в Telegram WebView
   // ненадёжен: содержимое сжимается до natural-size, под HP игрока остаётся
-  // пустой кусок фона. JS вычисляет: vh - шапка - тикер - plhp/dead = boss-zone.
+  // пустой кусок фона. JS вычисляет: vh - (шапка + тикер) - (plhp + dead).
   function _resizeBossZone(root) {
     if (!root) return;
     const zone = root.querySelector('.wb-boss-zone');
     if (!zone) return;
     try {
       const vh = window.innerHeight || document.documentElement.clientHeight;
-      // Все плашки UI теперь ВНИЗУ — суммируем их высоты для вычета.
       const bhdr = root.querySelector('.wb-bhdr2');
       const ticker = root.querySelector('.wb-ticker');
       const plhp = root.querySelector('.wb-plhp');
       const dead = root.querySelector('.wb-dead');
-      const bottomH = (bhdr?.offsetHeight || 0)
-                    + (ticker?.offsetHeight || 0)
-                    + (plhp?.offsetHeight || 0)
-                    + (dead?.offsetHeight || 0);
-      const target = Math.max(220, vh - bottomH);
+      const headerH = (bhdr?.offsetHeight || 0) + (ticker?.offsetHeight || 0);
+      const bottomH = (plhp?.offsetHeight || 0) + (dead?.offsetHeight || 0);
+      const target = Math.max(220, vh - headerH - bottomH);
       zone.style.height = target + 'px';
       zone.style.minHeight = target + 'px';
     } catch(_) {}
@@ -189,8 +166,6 @@
         _injectCss();
         if (root.classList) root.classList.add('wbz-fill');
         _hideOldUI(root);
-        // Переставляем DOM: boss-zone — наверх, всё остальное — в низ
-        _reorderForBottomUI(root);
         const sc = window.WBHtml?._scene;
         _renderHistory(root, sc);
         try { window.WbzAutobot?.render?.(root, s); } catch(_) {}
