@@ -123,6 +123,7 @@
         if (root) {
           try { window.WbzFx?.animate?.(root, r, _selA, _selD); } catch(_) {}
           try { window.WbzFx?.playResult?.(r); } catch(_) {}
+          try { window.WbzExtras?.logHit?.(scene, r); } catch(_) {}
           _resetSelection(root);
         }
         // Клиентский кулдаун 1.5с между ходами — глянуть результат и подумать.
