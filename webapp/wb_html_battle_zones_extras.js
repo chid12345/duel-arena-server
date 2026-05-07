@@ -62,15 +62,9 @@
       #wb-root.wbz-fill > .wb-ticker{background:rgba(0,0,0,.45)!important;border-bottom:none!important}
       #wb-root.wbz-fill > .wb-plhp{background:linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,.2))!important}
 
-      /* Лента истории — flow внутри sticky-шапки */
-      .wbz-hbar{display:flex;align-items:center;gap:7px;padding:5px 2px 1px;font-family:Consolas,monospace;font-size:8.5px;color:rgba(220,220,235,.85);letter-spacing:.6px}
-      .wbz-hbar-lbl{text-transform:uppercase;font-weight:800;color:#ff8aa8;text-shadow:0 0 6px rgba(255,80,160,.55);white-space:nowrap}
-      .wbz-hbar-row{display:flex;gap:4px;align-items:center}
-      .wbz-h-cell{width:22px;height:22px;border-radius:5px;border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;background:rgba(8,5,18,.6);position:relative}
-      .wbz-h-cell.ok{border-color:rgba(0,255,136,.6);box-shadow:0 0 6px rgba(0,255,136,.4)}
-      .wbz-h-cell.bad{border-color:rgba(255,51,68,.6);box-shadow:0 0 6px rgba(255,51,68,.45)}
-      .wbz-h-cell img{width:14px;height:14px;object-fit:contain;opacity:.92}
-      .wbz-h-empty{color:rgba(255,255,255,.4);font-size:10px;font-weight:700}
+      /* Кнопка «Лог боя» — flow внутри sticky-шапки (заменила старую ленту истории) */
+      .wbz-logbtn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;margin:5px 2px 1px;border-radius:6px;font-family:Consolas,monospace;font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffc83c;background:linear-gradient(180deg,rgba(60,40,5,.65),rgba(30,15,0,.85));border:1px solid rgba(255,200,60,.35);text-shadow:0 0 5px rgba(255,200,60,.5);cursor:pointer;user-select:none;transition:all .15s}
+      .wbz-logbtn:active{transform:scale(.96);background:linear-gradient(180deg,rgba(80,55,10,.75),rgba(50,25,0,.9))}
     `;
     document.head.appendChild(s);
   }
@@ -114,42 +108,34 @@
     });
   }
 
-  function _renderHistory(root, scene) {
-    let bar = root.querySelector('.wbz-hbar');
-    if (!bar) {
-      bar = document.createElement('div');
-      bar.className = 'wbz-hbar';
-      bar.innerHTML = '<div class="wbz-hbar-lbl">⚡ БОСС ЦЕЛИЛ:</div><div class="wbz-hbar-row"></div>';
-      const hdr = root.querySelector('.wb-bhdr2');
-      const hpSec = hdr?.querySelector('.wb-hp2-sec');
-      if (hpSec && hpSec.parentNode) hpSec.parentNode.insertBefore(bar, hpSec.nextSibling);
-      else if (hdr) hdr.appendChild(bar);
-      else root.appendChild(bar);
-    }
-    const row = bar.querySelector('.wbz-hbar-row');
-    if (!row) return;
-    const arr = _load(scene);
-    if (!arr.length) { row.innerHTML = '<span class="wbz-h-empty">пока пусто</span>'; return; }
-    row.innerHTML = arr.map(h => {
-      const zone = h.boss_atk || 'HEAD';
-      const cls = h.def_blocked ? 'ok' : 'bad';
-      return `<div class="wbz-h-cell ${cls}"><img src="${ZONE_ICON[zone] || ''}"></div>`;
-    }).join('');
+  // Вместо ленты «БОСС ЦЕЛИЛ» — компактная кнопка «📜 Лог боя».
+  // Тап → открывает существующий wb-bhist popup из wb_html_battle_log.js.
+  function _renderLogBtn(root) {
+    // Удаляем старую ленту если осталась от прошлой версии (быстрый cleanup)
+    root.querySelectorAll('.wbz-hbar').forEach(el => el.remove());
+    let btn = root.querySelector('.wbz-logbtn');
+    if (btn) return;
+    btn = document.createElement('div');
+    btn.className = 'wbz-logbtn';
+    btn.innerHTML = '📜 ЛОГ БОЯ';
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      try { window.WBHtml?.showBattleHistory?.(); } catch(_) {}
+    });
+    const hdr = root.querySelector('.wb-bhdr2');
+    const hpSec = hdr?.querySelector('.wb-hp2-sec');
+    if (hpSec && hpSec.parentNode) hpSec.parentNode.insertBefore(btn, hpSec.nextSibling);
+    else if (hdr) hdr.appendChild(btn);
+    else root.appendChild(btn);
   }
 
+  // Сохраняем удары в лог боя (используется для popup истории)
   function logHit(scene, r) {
     if (!scene || !r || !r.zone_mode || !r.boss_atk_zone) return;
     const arr = _load(scene);
-    arr.push({
-      ts: Date.now(),
-      boss_atk: r.boss_atk_zone,
-      boss_def: r.boss_def_zone,
-      def_blocked: !!r.def_blocked,
-      atk_blocked: !!r.atk_blocked,
-    });
+    arr.push({ ts:Date.now(), boss_atk:r.boss_atk_zone, boss_def:r.boss_def_zone,
+               def_blocked:!!r.def_blocked, atk_blocked:!!r.atk_blocked });
     _save(scene, arr);
-    const root = document.getElementById('wb-root');
-    if (root) _renderHistory(root, scene);
   }
 
   function _hookRender() {
@@ -164,7 +150,7 @@
         if (root.classList) root.classList.add('wbz-fill');
         _hideOldUI(root);
         const sc = window.WBHtml?._scene;
-        _renderHistory(root, sc);
+        _renderLogBtn(root);
         try { window.WbzAutobot?.render?.(root, s); } catch(_) {}
         // Принудительный resize boss-zone — flex ненадёжен в Telegram WebView
         _resizeBossZone(root);

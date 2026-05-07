@@ -21,29 +21,29 @@
     const s = document.createElement('style');
     s.id = 'wbz-css';
     s.textContent = `
-      /* Колонки атаки/защиты — внизу боссовой зоны, на уровне 🎲 + Совершить ход */
-      .wbz-col{position:absolute;display:flex;flex-direction:column;gap:6px;z-index:30;bottom:14px}
-      .wbz-col-atk{left:6px} .wbz-col-def{right:6px}
-      .wbz-lbl{font-size:9px;font-weight:900;letter-spacing:1.4px;text-align:center;font-family:Consolas,monospace;text-transform:uppercase;margin-bottom:1px}
+      /* Колонки атаки/защиты — внизу боссовой зоны. Компактные кнопки */
+      .wbz-col{position:absolute;display:flex;flex-direction:column;gap:4px;z-index:30;bottom:12px}
+      .wbz-col-atk{left:4px} .wbz-col-def{right:4px}
+      .wbz-lbl{font-size:8px;font-weight:900;letter-spacing:1.2px;text-align:center;font-family:Consolas,monospace;text-transform:uppercase;margin-bottom:1px}
       .wbz-col-atk .wbz-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.65),0 1px 2px rgba(0,0,0,.9)}
       .wbz-col-def .wbz-lbl{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.65),0 1px 2px rgba(0,0,0,.9)}
-      /* Skin-style: без рамки/фона, иконка + надпись. ФИКСИРОВАНЫ (без парения) */
-      .wbz-btn{width:54px;display:flex;flex-direction:column;align-items:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
-      .wbz-btn img{width:32px;height:32px;object-fit:contain;transition:filter .2s,transform .2s}
-      .wbz-btn .nm{font-size:8px;font-weight:800;letter-spacing:.5px;font-family:Consolas,monospace;text-transform:uppercase;margin-top:2px;text-shadow:0 1px 3px rgba(0,0,0,.95)}
+      /* Skin-style: без рамки/фона, компактные иконка + надпись. ФИКСИРОВАНЫ */
+      .wbz-btn{width:42px;display:flex;flex-direction:column;align-items:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
+      .wbz-btn img{width:24px;height:24px;object-fit:contain;transition:filter .2s,transform .2s}
+      .wbz-btn .nm{font-size:7px;font-weight:800;letter-spacing:.3px;font-family:Consolas,monospace;text-transform:uppercase;margin-top:1px;text-shadow:0 1px 3px rgba(0,0,0,.95)}
       .wbz-col-atk .wbz-btn img{filter:drop-shadow(0 0 6px rgba(255,80,160,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
       .wbz-col-def .wbz-btn img{filter:drop-shadow(0 0 6px rgba(80,180,255,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
       .wbz-col-atk .wbz-btn .nm{color:#ff8ac0;text-shadow:0 0 5px rgba(255,80,160,.7),0 1px 3px rgba(0,0,0,.95)}
       .wbz-col-def .wbz-btn .nm{color:#8acfff;text-shadow:0 0 5px rgba(80,180,255,.7),0 1px 3px rgba(0,0,0,.95)}
-      /* Выбранная зона — без рамки, только усиленное свечение + scale (без парения) */
-      .wbz-col-atk .wbz-btn.sel img{filter:drop-shadow(0 0 18px #ff5fa0) drop-shadow(0 0 10px #fff);transform:scale(1.18)}
-      .wbz-col-def .wbz-btn.sel img{filter:drop-shadow(0 0 18px #5fb8ff) drop-shadow(0 0 10px #fff);transform:scale(1.18)}
+      /* Выбранная зона — усиленное свечение + scale (без парения) */
+      .wbz-col-atk .wbz-btn.sel img{filter:drop-shadow(0 0 14px #ff5fa0) drop-shadow(0 0 8px #fff);transform:scale(1.2)}
+      .wbz-col-def .wbz-btn.sel img{filter:drop-shadow(0 0 14px #5fb8ff) drop-shadow(0 0 8px #fff);transform:scale(1.2)}
       .wbz-btn.sel .nm{color:#fff;font-weight:900;text-shadow:0 0 8px #fff,0 1px 3px rgba(0,0,0,.95)}
       /* Кнопки действия — 🎲 (картинка) + Совершить ход. ФИКСИРОВАНЫ */
-      .wbz-actions{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:31}
+      .wbz-actions{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:31}
       .wbz-auto{display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
-      .wbz-auto img{width:42px;height:42px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,200,60,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.85))}
-      .wbz-apply{min-width:160px;padding:11px 18px;text-align:center;border-radius:8px;font-family:Consolas,monospace;font-weight:900;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#fff;text-shadow:0 0 6px rgba(201,138,255,.6);background:linear-gradient(180deg,rgba(80,40,140,.85),rgba(40,15,80,.95));border:1.5px solid rgba(180,80,255,.35);box-shadow:0 0 10px rgba(180,80,255,.25);opacity:.45;cursor:not-allowed;transition:opacity .25s}
+      .wbz-auto img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,200,60,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.85))}
+      .wbz-apply{min-width:130px;padding:9px 14px;text-align:center;border-radius:7px;font-family:Consolas,monospace;font-weight:900;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#fff;text-shadow:0 0 5px rgba(201,138,255,.6);background:linear-gradient(180deg,rgba(80,40,140,.85),rgba(40,15,80,.95));border:1.5px solid rgba(180,80,255,.35);box-shadow:0 0 8px rgba(180,80,255,.25);opacity:.45;cursor:not-allowed;transition:opacity .25s}
       .wbz-apply.ready{opacity:1;cursor:pointer;border-color:rgba(255,95,160,.6);animation:wbzReady 2.2s ease-in-out infinite}
       @keyframes wbzReady{0%,100%{box-shadow:0 0 12px rgba(180,80,255,.4)}50%{box-shadow:0 0 20px rgba(255,95,160,.55)}}
       .wbz-apply.busy{opacity:.6;animation:none;pointer-events:none}
