@@ -60,8 +60,12 @@
       /* Полупрозрачные плашки. Шапка sticky сверху (как было изначально). */
       #wb-root.wbz-fill > .wb-bhdr2{background:linear-gradient(180deg,rgba(0,0,0,.7),rgba(0,0,0,.3))!important;border-bottom:1px solid rgba(255,0,85,.2)!important}
       #wb-root.wbz-fill > .wb-ticker{background:rgba(0,0,0,.45)!important;border-bottom:none!important;height:22px!important;min-height:22px!important;max-height:22px!important;overflow:hidden!important}
-      /* HP игрока: фиксированная высота — иначе при ударе layout «прыгает» */
-      #wb-root.wbz-fill > .wb-plhp{background:linear-gradient(0deg,rgba(0,0,0,.7),rgba(0,0,0,.2))!important;height:36px!important;min-height:36px!important;max-height:36px!important;flex-shrink:0!important;align-items:center!important}
+      /* HP игрока ПРИБИТ К ВИЗУАЛЬНОМУ НИЗУ (position:fixed) — гарантирует
+         что layout НЕ ПРЫГАЕТ при ударе, что бы внутри boss-zone не происходило */
+      #wb-root.wbz-fill > .wb-plhp{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:50!important;height:36px!important;background:linear-gradient(0deg,rgba(0,0,0,.85),rgba(0,0,0,.4))!important;align-items:center!important;border-top:1px solid rgba(0,191,255,.2)!important}
+      #wb-root.wbz-fill > .wb-dead{position:fixed!important;left:0!important;right:0!important;bottom:0!important;z-index:50!important}
+      /* Резерв места для фикс-плашки HP, чтобы кнопки зон не уходили под неё */
+      #wb-root.wbz-fill > .wb-boss-zone{padding-bottom:42px!important;box-sizing:border-box!important}
 
       /* Кнопка «Лог боя» — flow внутри sticky-шапки (заменила старую ленту истории) */
       .wbz-logbtn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;margin:5px 2px 1px;border-radius:6px;font-family:Consolas,monospace;font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#ffc83c;background:linear-gradient(180deg,rgba(60,40,5,.65),rgba(30,15,0,.85));border:1px solid rgba(255,200,60,.35);text-shadow:0 0 5px rgba(255,200,60,.5);cursor:pointer;user-select:none;transition:all .15s}
@@ -89,11 +93,9 @@
       const vh = window.innerHeight || document.documentElement.clientHeight;
       const bhdr = root.querySelector('.wb-bhdr2');
       const ticker = root.querySelector('.wb-ticker');
-      const plhp = root.querySelector('.wb-plhp');
-      const dead = root.querySelector('.wb-dead');
       const headerH = (bhdr?.offsetHeight || 0) + (ticker?.offsetHeight || 0);
-      const bottomH = (plhp?.offsetHeight || 0) + (dead?.offsetHeight || 0);
-      const target = Math.max(220, vh - headerH - bottomH);
+      // plhp / dead теперь position:fixed — НЕ во flow. Их не вычитаем.
+      const target = Math.max(220, vh - headerH);
       zone.style.height = target + 'px';
       zone.style.minHeight = target + 'px';
     } catch(_) {}
