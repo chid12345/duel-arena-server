@@ -40,15 +40,14 @@
       .wbz-col-def .wbz-btn.sel img{filter:drop-shadow(0 0 14px #5fb8ff) drop-shadow(0 0 8px #fff);transform:scale(1.2)}
       .wbz-btn.sel .nm{color:#fff;font-weight:900;text-shadow:0 0 8px #fff,0 1px 3px rgba(0,0,0,.95)}
       /* Кнопки действия — 🎲 (картинка) + Совершить ход. ФИКСИРОВАНЫ */
-      .wbz-actions{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:31}
-      /* Кубик-кнопка: skin-style (без рамки) + эффект нажатия */
-      .wbz-auto{display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none;transition:transform .12s ease-out,filter .12s}
-      .wbz-auto:active{transform:scale(.82);filter:brightness(1.35)}
-      .wbz-auto img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,200,60,.6)) drop-shadow(0 2px 4px rgba(0,0,0,.85));pointer-events:none;transition:filter .12s}
-      .wbz-auto:active img{filter:drop-shadow(0 0 14px #ffd700) drop-shadow(0 0 8px #fff)}
-      /* Apply: фиксированная ширина чтобы текст cooldown не сдвигал кнопки */
-      .wbz-apply{width:108px;min-width:108px;max-width:108px;padding:8px 0;text-align:center;border-radius:7px;font-family:Consolas,monospace;font-weight:900;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#fff;text-shadow:0 0 5px rgba(201,138,255,.7);background:linear-gradient(135deg,rgba(120,30,180,.92),rgba(180,40,140,.92),rgba(80,20,140,.95));border:1.5px solid rgba(220,120,200,.45);box-shadow:0 0 10px rgba(180,80,255,.3);opacity:.45;cursor:not-allowed;transition:transform .12s,opacity .25s;white-space:nowrap;overflow:hidden}
-      .wbz-apply:active{transform:scale(.96)}
+      .wbz-actions{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:31}
+      /* Кубик-кнопка: больше + объёмная подложка, выглядит как кнопка */
+      .wbz-auto{display:flex;align-items:center;justify-content:center;cursor:pointer;width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,rgba(50,30,5,.85),rgba(20,12,2,.95));border:1.5px solid rgba(255,200,80,.5);padding:4px;user-select:none;transition:transform .12s,box-shadow .15s,filter .12s;box-shadow:0 2px 8px rgba(0,0,0,.6),0 0 12px rgba(255,180,40,.25),inset 0 1px 0 rgba(255,220,120,.15)}
+      .wbz-auto:active{transform:scale(.88) translateY(2px);filter:brightness(1.25);box-shadow:0 0 4px rgba(0,0,0,.6),inset 0 0 8px rgba(0,0,0,.5)}
+      .wbz-auto img{width:36px;height:36px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,60,.7));pointer-events:none}
+      /* Apply: больше, объёмная, выглядит как настоящая кнопка */
+      .wbz-apply{width:138px;min-width:138px;max-width:138px;padding:11px 0;text-align:center;border-radius:9px;font-family:Consolas,monospace;font-weight:900;font-size:11px;letter-spacing:1.6px;text-transform:uppercase;color:#fff;text-shadow:0 0 5px rgba(201,138,255,.7),0 1px 2px rgba(0,0,0,.85);background:linear-gradient(180deg,rgba(140,40,200,.95),rgba(80,20,140,.98));border:1.5px solid rgba(220,120,200,.55);box-shadow:0 3px 10px rgba(0,0,0,.55),0 0 10px rgba(180,80,255,.35),inset 0 1px 0 rgba(255,180,255,.2);opacity:.55;cursor:not-allowed;transition:transform .12s,opacity .25s,box-shadow .12s;white-space:nowrap;overflow:hidden}
+      .wbz-apply:active{transform:scale(.96) translateY(2px);box-shadow:0 0 4px rgba(0,0,0,.6),inset 0 0 8px rgba(0,0,0,.5)}
       .wbz-apply.ready{opacity:1;cursor:pointer;border-color:rgba(255,120,200,.7);animation:wbzReady 2s ease-in-out infinite}
       @keyframes wbzReady{0%,100%{box-shadow:0 0 12px rgba(180,80,255,.45)}50%{box-shadow:0 0 22px rgba(255,100,180,.6)}}
       .wbz-apply.busy{opacity:.6;animation:none;pointer-events:none}

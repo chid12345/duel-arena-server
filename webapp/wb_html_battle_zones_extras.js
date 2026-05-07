@@ -32,14 +32,11 @@
     const s = document.createElement('style');
     s.id = 'wbz-x-css';
     s.textContent = `
-      /* Layout — boss-zone забирает всё свободное место. Flex может не работать
-         в Telegram WebView — высоту boss-zone JS считает явно через JS. */
-      #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;background-color:#02000a!important}
+      /* Layout — flex column + overflow:hidden гарантирует НЕТ scroll и НЕТ shift */
+      #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;overflow:hidden!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;background-color:#02000a!important}
       #wb-root.wbz-fill > .wb-bhdr2,
-      #wb-root.wbz-fill > .wb-ticker,
-      #wb-root.wbz-fill > .wb-plhp,
-      #wb-root.wbz-fill > .wb-dead{flex-shrink:0!important}
-      #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;background-image:none!important;background-color:transparent!important}
+      #wb-root.wbz-fill > .wb-ticker{flex-shrink:0!important}
+      #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;height:auto!important;background-image:none!important;background-color:transparent!important;padding-bottom:46px!important;box-sizing:border-box!important}
       /* ULT/SKILLS — display:none + position:absolute + size:0 — гарантированно
          не занимают flex-место. Иначе создавали пустоту между боссом и UI внизу. */
       #wb-root.wbz-fill .wb-ultra,
@@ -85,30 +82,11 @@
   }
 
   // Высота boss-zone = vh - (шапка+ticker сверху) - (plhp+dead снизу).
-  function _resizeBossZone(root) {
-    if (!root) return;
-    const zone = root.querySelector('.wb-boss-zone');
-    if (!zone) return;
-    try {
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const bhdr = root.querySelector('.wb-bhdr2');
-      const ticker = root.querySelector('.wb-ticker');
-      const headerH = (bhdr?.offsetHeight || 0) + (ticker?.offsetHeight || 0);
-      // plhp / dead теперь position:fixed — НЕ во flow. Их не вычитаем.
-      const target = Math.max(220, vh - headerH);
-      zone.style.height = target + 'px';
-      zone.style.minHeight = target + 'px';
-    } catch(_) {}
-  }
-
-  let _resizeBound = false;
-  function _bindResize() {
-    if (_resizeBound) return;
-    _resizeBound = true;
-    window.addEventListener('resize', () => {
-      const root = document.getElementById('wb-root');
-      if (root && root.classList.contains('wbz-fill')) _resizeBossZone(root);
-    });
+  // Высота boss-zone больше не считается JS — CSS flex:1 1 0 с overflow:hidden
+  // на родителе делает это надёжно. JS-расчёт раньше создавал shift при ударе.
+  function _clearJsHeight(root) {
+    const zone = root?.querySelector('.wb-boss-zone');
+    if (zone) { zone.style.height = ''; zone.style.minHeight = ''; }
   }
 
   // Вместо ленты «БОСС ЦЕЛИЛ» — компактная кнопка «📜 Лог боя».
@@ -155,12 +133,8 @@
         const sc = window.WBHtml?._scene;
         _renderLogBtn(root);
         try { window.WbzAutobot?.render?.(root, s); } catch(_) {}
-        // Принудительный resize boss-zone — flex ненадёжен в Telegram WebView
-        _resizeBossZone(root);
-        _bindResize();
-        // Re-run после прогрузки картинок и DOM-перестановки
-        setTimeout(() => _resizeBossZone(root), 100);
-        setTimeout(() => _resizeBossZone(root), 500);
+        // Чистим JS-высоту от старых версий — теперь layout полностью CSS-flex
+        _clearJsHeight(root);
       } catch(e) { console.warn('[wbz extras]', e); }
     };
   }
