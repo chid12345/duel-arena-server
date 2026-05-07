@@ -43,14 +43,14 @@
       .wbz-actions{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:8px;align-items:center;z-index:31}
       .wbz-auto{display:flex;align-items:center;justify-content:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
       .wbz-auto img{width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,200,60,.55)) drop-shadow(0 2px 4px rgba(0,0,0,.85))}
-      .wbz-apply{min-width:130px;padding:9px 14px;text-align:center;border-radius:7px;font-family:Consolas,monospace;font-weight:900;font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#fff;text-shadow:0 0 5px rgba(201,138,255,.6);background:linear-gradient(180deg,rgba(80,40,140,.85),rgba(40,15,80,.95));border:1.5px solid rgba(180,80,255,.35);box-shadow:0 0 8px rgba(180,80,255,.25);opacity:.45;cursor:not-allowed;transition:opacity .25s}
-      .wbz-apply.ready{opacity:1;cursor:pointer;border-color:rgba(255,95,160,.6);animation:wbzReady 2.2s ease-in-out infinite}
-      @keyframes wbzReady{0%,100%{box-shadow:0 0 12px rgba(180,80,255,.4)}50%{box-shadow:0 0 20px rgba(255,95,160,.55)}}
+      .wbz-apply{min-width:108px;padding:8px 12px;text-align:center;border-radius:7px;font-family:Consolas,monospace;font-weight:900;font-size:10px;letter-spacing:1.4px;text-transform:uppercase;color:#fff;text-shadow:0 0 5px rgba(201,138,255,.7);background:linear-gradient(135deg,rgba(120,30,180,.92),rgba(180,40,140,.92),rgba(80,20,140,.95));border:1.5px solid rgba(220,120,200,.45);box-shadow:0 0 10px rgba(180,80,255,.3);opacity:.45;cursor:not-allowed;transition:opacity .25s;white-space:nowrap}
+      .wbz-apply.ready{opacity:1;cursor:pointer;border-color:rgba(255,120,200,.7);animation:wbzReady 2s ease-in-out infinite}
+      @keyframes wbzReady{0%,100%{box-shadow:0 0 12px rgba(180,80,255,.45)}50%{box-shadow:0 0 22px rgba(255,100,180,.6)}}
       .wbz-apply.busy{opacity:.6;animation:none;pointer-events:none}
       #wb-root .wbz-on .wb-tap-hint{display:none!important}
       /* При ударе старый код ставит transform:scale(.98) на boss-zone — это
          сдвигало все зоны/кнопки внутри. Блокируем — пусть эффект на боссе. */
-      #wb-root .wb-boss-zone{transform:none!important}
+      #wb-root .wb-boss-zone{transform:none!important;cursor:default!important}
     `;
     document.head.appendChild(s);
   }
