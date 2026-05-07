@@ -56,6 +56,15 @@
 
       /* Полупрозрачные плашки. Шапка sticky сверху (как было изначально). */
       #wb-root.wbz-fill > .wb-bhdr2{background:linear-gradient(180deg,rgba(0,0,0,.7),rgba(0,0,0,.3))!important;border-bottom:1px solid rgba(255,0,85,.2)!important}
+      /* HP босса — насыщенный киберпанк-неон с полосами и пульсацией */
+      #wb-root.wbz-fill .wb-hp2-track{height:13px!important;border:1.5px solid rgba(255,0,153,.55)!important;box-shadow:inset 0 0 8px rgba(0,0,0,.85),0 0 10px rgba(255,0,153,.3)!important;border-radius:6px!important;overflow:hidden!important;position:relative!important}
+      #wb-root.wbz-fill .wb-hp2-fill{background:linear-gradient(90deg,#ff0099 0%,#ff5588 25%,#ffaa00 50%,#ff5588 75%,#ff0099 100%)!important;background-size:200% 100%!important;box-shadow:0 0 16px rgba(255,0,153,.95),inset 0 0 6px rgba(255,255,255,.4)!important;animation:wbz-hpflow 1.4s linear infinite!important;position:relative!important}
+      @keyframes wbz-hpflow{to{background-position:200% 0}}
+      #wb-root.wbz-fill .wb-hp2-fill::after{background:repeating-linear-gradient(90deg,transparent 0 6px,rgba(255,255,255,.18) 6px 7px)!important;animation:wbz-hpstripe .8s linear infinite!important}
+      @keyframes wbz-hpstripe{to{background-position:7px 0}}
+      #wb-root.wbz-fill .wb-hp2-track::before{content:'';position:absolute;top:0;left:0;right:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.22),transparent);pointer-events:none;z-index:2;border-radius:5px 5px 0 0}
+      #wb-root.wbz-fill .wb-hp2-nums{font-family:Consolas,monospace!important;font-size:11px!important;color:#fff!important;font-weight:900!important;text-shadow:0 0 6px #ff0099,0 0 12px rgba(255,0,153,.6)!important;letter-spacing:.5px!important}
+      #wb-root.wbz-fill .wb-hp2-lbl{color:#ff3377!important;font-weight:900!important;font-size:10px!important;text-shadow:0 0 6px rgba(255,0,153,.7)!important;letter-spacing:1.5px!important;font-family:Consolas,monospace!important}
       #wb-root.wbz-fill > .wb-ticker{background:rgba(0,0,0,.45)!important;border-bottom:none!important;height:22px!important;min-height:22px!important;max-height:22px!important;overflow:hidden!important}
       /* HP игрока ПРИБИТ К ВИЗУАЛЬНОМУ НИЗУ (position:fixed) — гарантирует
          что layout НЕ ПРЫГАЕТ при ударе, что бы внутри boss-zone не происходило */

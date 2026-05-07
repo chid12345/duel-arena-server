@@ -21,8 +21,8 @@
     const s = document.createElement('style');
     s.id = 'wbz-css';
     s.textContent = `
-      /* Колонки атаки/защиты — внизу боссовой зоны. Компактные кнопки */
-      .wbz-col{position:absolute;display:flex;flex-direction:column;gap:4px;z-index:30;bottom:12px}
+      /* Колонки атаки/защиты — внизу боссовой зоны. ВЫШЕ HP-плашки игрока */
+      .wbz-col{position:absolute;display:flex;flex-direction:column;gap:4px;z-index:30;bottom:48px}
       .wbz-col-atk{left:4px} .wbz-col-def{right:4px}
       .wbz-lbl{font-size:8px;font-weight:900;letter-spacing:1.2px;text-align:center;font-family:Consolas,monospace;text-transform:uppercase;margin-bottom:1px}
       .wbz-col-atk .wbz-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.65),0 1px 2px rgba(0,0,0,.9)}
@@ -40,7 +40,7 @@
       .wbz-col-def .wbz-btn.sel img{filter:drop-shadow(0 0 14px #5fb8ff) drop-shadow(0 0 8px #fff);transform:scale(1.2)}
       .wbz-btn.sel .nm{color:#fff;font-weight:900;text-shadow:0 0 8px #fff,0 1px 3px rgba(0,0,0,.95)}
       /* Кнопки действия — 🎲 (картинка) + Совершить ход. ФИКСИРОВАНЫ */
-      .wbz-actions{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:31}
+      .wbz-actions{position:absolute;left:50%;bottom:48px;transform:translateX(-50%);display:flex;gap:10px;align-items:center;z-index:31}
       /* Кубик-кнопка: больше + объёмная подложка, выглядит как кнопка */
       .wbz-auto{display:flex;align-items:center;justify-content:center;cursor:pointer;width:48px;height:48px;border-radius:10px;background:linear-gradient(180deg,rgba(50,30,5,.85),rgba(20,12,2,.95));border:1.5px solid rgba(255,200,80,.5);padding:4px;user-select:none;transition:transform .12s,box-shadow .15s,filter .12s;box-shadow:0 2px 8px rgba(0,0,0,.6),0 0 12px rgba(255,180,40,.25),inset 0 1px 0 rgba(255,220,120,.15)}
       .wbz-auto:active{transform:scale(.88) translateY(2px);filter:brightness(1.25);box-shadow:0 0 4px rgba(0,0,0,.6),inset 0 0 8px rgba(0,0,0,.5)}
@@ -126,7 +126,7 @@
           // F: на телефоне WS-тик иногда не приходит, и боссовый contre-урон
           // не попадал в лог боя. Логируем напрямую при падении HP.
           if (r.player_hp < _prevHp) {
-            try { window.WBHtml?.checkBossHit?.(_prevHp, r.player_hp); } catch(_) {}
+            try { window.WBHtml?.checkBossHit?.(_prevHp, r.player_hp, r.boss_atk_zone); } catch(_) {}
           }
           if (r.player_died) {
             scene._state.player_state.is_dead = 1;
@@ -134,7 +134,7 @@
           }
         }
         try { window.WBHtml?.addHitLog?.(r.damage, r.is_crit); } catch(_) {}
-        try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit, r.boss_hp); } catch(_) {}
+        try { window.WBHtml?.logMyHit?.(r.damage, !!r.is_crit, r.boss_hp, _selA); } catch(_) {}
         _zoneToast(scene, r);
         const root = document.getElementById('wb-root');
         if (root) {

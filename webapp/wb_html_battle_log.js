@@ -52,19 +52,20 @@
   }
 
   // Удар игрока по боссу (вызывается из scene._onHit при ответе сервера).
-  function logMyHit(dmg, isCrit, boss_hp_after) {
+  function logMyHit(dmg, isCrit, boss_hp_after, atk_zone) {
     _log.push({
       ts: Date.now(),
       kind: isCrit ? 'crit' : 'me',
       dmg: dmg|0,
       boss_hp_after: boss_hp_after != null ? (boss_hp_after|0) : null,
+      zone: atk_zone || null,
     });
     _trim();
     _saveToLS(_lastSpawnId);
   }
 
   // Удар босса по игроку — детектим по падению current_hp в WS-тике.
-  function checkBossHit(prev_hp, new_hp) {
+  function checkBossHit(prev_hp, new_hp, boss_atk_zone) {
     if (typeof prev_hp !== 'number' || typeof new_hp !== 'number') return;
     if (new_hp >= prev_hp) return;
     const dmg = prev_hp - new_hp;
@@ -73,6 +74,7 @@
       kind: 'boss',
       dmg,
       hp_after: new_hp,
+      zone: boss_atk_zone || null,
     });
     _trim();
     _saveToLS(_lastSpawnId);
@@ -130,25 +132,27 @@
       } else if (it.kind === 'boss') { totalBoss += it.dmg; bossHits++; }
     });
 
-    // PvP-стиль: 1 раунд = 1 строка. Слева — мой урон по боссу, справа —
-    // боссовый контр-урон. Особые события (died/resurrect) — отдельной строкой.
-    const _row = (label, dmg, hpIco, hpVal, color) =>
-      `<span style="color:${color};font-weight:800">${label} −${_fmt(dmg)}</span>` +
-      (hpVal != null ? `<small style="color:#88bbaa;margin-left:3px;font-size:9px">${hpIco}${_fmt(hpVal)}</small>` : '');
+    // PvP-стиль: 1 раунд = 1 строка с зонами. «P1  Тело −24⁹⁶  ·  Ноги −13¹⁸⁷»
+    const _zn = z => z === 'HEAD' ? 'Голова' : z === 'TORSO' ? 'Тело' : z === 'LEGS' ? 'Ноги' : '';
+    const _side = (zone, dmg, hpVal, hpIco, color) => {
+      const z = _zn(zone);
+      return `<span style="color:${color};font-weight:800">${z?z+' ':''}−${_fmt(dmg)}</span>` +
+        (hpVal != null ? `<sup style="color:#88bbaa;margin-left:2px;font-size:8px;font-weight:700">${hpIco}${_fmt(hpVal)}</sup>` : '');
+    };
     const rowsHtml = rounds.map((r, i) => {
       const lines = [];
-      let meDmg = 0, meCrit = false, meHpAfter = null;
-      let bsDmg = 0, bsHpAfter = null;
+      let meDmg = 0, meCrit = false, meHpAfter = null, meZone = null;
+      let bsDmg = 0, bsHpAfter = null, bsZone = null;
       r.items.forEach(it => {
-        if (it.kind === 'me')   { meDmg += it.dmg; meHpAfter = it.boss_hp_after ?? meHpAfter; }
-        if (it.kind === 'crit') { meDmg += it.dmg; meCrit = true; meHpAfter = it.boss_hp_after ?? meHpAfter; }
-        if (it.kind === 'boss') { bsDmg += it.dmg; bsHpAfter = it.hp_after ?? bsHpAfter; }
-        if (it.kind === 'died')      lines.push(`<div class="wbl-ev"><span style="background:rgba(255,80,160,.18);color:#ff8aa8;border-radius:4px;padding:2px 8px;font-weight:800;font-size:10px">💀 ПАЛ В БОЮ</span></div>`);
-        if (it.kind === 'resurrect') lines.push(`<div class="wbl-ev"><span style="background:rgba(0,255,136,.18);color:#00ff88;border-radius:4px;padding:2px 8px;font-weight:800;font-size:10px">✨ ВОСКРЕС${it.hp?` +${it.hp} HP`:''}</span></div>`);
+        if (it.kind === 'me')   { meDmg += it.dmg; meHpAfter = it.boss_hp_after ?? meHpAfter; meZone = it.zone || meZone; }
+        if (it.kind === 'crit') { meDmg += it.dmg; meCrit = true; meHpAfter = it.boss_hp_after ?? meHpAfter; meZone = it.zone || meZone; }
+        if (it.kind === 'boss') { bsDmg += it.dmg; bsHpAfter = it.hp_after ?? bsHpAfter; bsZone = it.zone || bsZone; }
+        if (it.kind === 'died')      lines.push(`<div style="padding:4px 8px"><span style="background:rgba(255,80,160,.18);color:#ff8aa8;border-radius:4px;padding:2px 8px;font-weight:800;font-size:10px">💀 ПАЛ В БОЮ</span></div>`);
+        if (it.kind === 'resurrect') lines.push(`<div style="padding:4px 8px"><span style="background:rgba(0,255,136,.18);color:#00ff88;border-radius:4px;padding:2px 8px;font-weight:800;font-size:10px">✨ ВОСКРЕС${it.hp?` +${it.hp} HP`:''}</span></div>`);
       });
-      const meHtml = meDmg > 0 ? _row(meCrit?'⚡':'⚔', meDmg, '💀', meHpAfter, meCrit?'#ffcc00':'#4d94ff') : '';
-      const bsHtml = bsDmg > 0 ? _row('💢', bsDmg, '❤', bsHpAfter, '#ff4d4d') : '';
-      const _S = 'display:grid;grid-template-columns:32px 1fr 12px 1fr;gap:6px;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.05);font-family:Consolas,monospace';
+      const meHtml = meDmg > 0 ? _side(meZone, meDmg, meHpAfter, '💀', meCrit?'#ffcc00':'#4d94ff') : '';
+      const bsHtml = bsDmg > 0 ? _side(bsZone, bsDmg, bsHpAfter, '❤', '#ff4d4d') : '';
+      const _S = 'display:grid;grid-template-columns:30px 1fr 10px 1fr;gap:5px;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.05);font-family:Consolas,monospace';
       const _SR = 'color:#bf00ff;font-weight:900;font-size:10px;text-shadow:0 0 4px rgba(191,0,255,.5)';
       const _SC = 'color:rgba(255,255,255,.3);text-align:center';
       const _SS = 'font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
