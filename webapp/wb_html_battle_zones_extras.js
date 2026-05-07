@@ -56,6 +56,11 @@
 
       /* Полупрозрачные плашки. Шапка sticky сверху (как было изначально). */
       #wb-root.wbz-fill > .wb-bhdr2{background:linear-gradient(180deg,rgba(0,0,0,.7),rgba(0,0,0,.3))!important;border-bottom:1px solid rgba(255,0,85,.2)!important}
+      /* Босс БЕЗ float-анимации — иначе при ударе wb-bfloat перезапускается
+         и спрайт прыгает по Y → выглядит как «экран поднимается». Только
+         glow + brightness-flash на удар, БЕЗ перемещения. */
+      #wb-root.wbz-fill .wb-bimg2{animation:wb-boss-glow 2s ease-in-out infinite!important;transform:translate(-50%,-52%)!important}
+      #wb-root.wbz-fill .wb-bimg2.wb-hit{animation:wb-bhit .18s ease forwards,wb-boss-glow 2s ease-in-out infinite!important;transform:translate(-50%,-52%)!important}
       /* HP босса — насыщенный киберпанк-неон с полосами и пульсацией */
       #wb-root.wbz-fill .wb-hp2-track{height:13px!important;border:1.5px solid rgba(255,0,153,.55)!important;box-shadow:inset 0 0 8px rgba(0,0,0,.85),0 0 10px rgba(255,0,153,.3)!important;border-radius:6px!important;overflow:hidden!important;position:relative!important}
       #wb-root.wbz-fill .wb-hp2-fill{background:linear-gradient(90deg,#ff0099 0%,#ff5588 25%,#ffaa00 50%,#ff5588 75%,#ff0099 100%)!important;background-size:200% 100%!important;box-shadow:0 0 16px rgba(255,0,153,.95),inset 0 0 6px rgba(255,255,255,.4)!important;animation:wbz-hpflow 1.4s linear infinite!important;position:relative!important}
