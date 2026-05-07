@@ -72,14 +72,15 @@
     const s = document.createElement('style');
     s.id = 'wbz-auto-css';
     s.textContent = `
-      /* АВТО — компактная кнопка ВНУТРИ шапки .wb-bhdr2, прижата к правому краю
-         на уровне HP-секции. Не налезает на босса/зоны атаки. */
+      /* АВТО — компактная кнопка ВНУТРИ шапки .wb-bhdr2, прижата к НИЖНЕМУ
+         правому углу — на уровне кнопки «ЛОГ БОЯ» (которая слева снизу шапки).
+         НЕ налезает на проценты HP (которые выше). */
       .wb-bhdr2{position:relative}
-      .wbz-auto-btn{position:absolute;top:30px;right:6px;z-index:14;display:flex;flex-direction:column;align-items:center;justify-content:center;width:34px;padding:3px 0;border-radius:7px;background:linear-gradient(135deg,rgba(15,5,30,.88),rgba(8,5,18,.92));border:1px solid rgba(160,150,200,.45);font-family:Consolas,monospace;cursor:pointer;user-select:none;transition:transform .12s,box-shadow .15s}
-      .wbz-auto-btn:active{transform:scale(.88)}
-      .wbz-auto-btn .ic{font-size:14px;line-height:1}
-      .wbz-auto-btn .lb{font-size:6px;font-weight:900;letter-spacing:.5px;color:#aaa;margin-top:1px;text-transform:uppercase}
-      .wbz-auto-btn .lk{position:absolute;bottom:-3px;right:-3px;font-size:8px;background:#222;border-radius:50%;padding:1px 3px}
+      .wbz-auto-btn{position:absolute;bottom:4px;right:6px;z-index:14;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:4px;padding:4px 8px;border-radius:6px;background:linear-gradient(135deg,rgba(15,5,30,.88),rgba(8,5,18,.92));border:1px solid rgba(160,150,200,.45);font-family:Consolas,monospace;cursor:pointer;user-select:none;transition:transform .12s,box-shadow .15s}
+      .wbz-auto-btn:active{transform:scale(.92)}
+      .wbz-auto-btn .ic{font-size:13px;line-height:1}
+      .wbz-auto-btn .lb{font-size:8px;font-weight:900;letter-spacing:.6px;color:#bbb;text-transform:uppercase}
+      .wbz-auto-btn .lk{position:absolute;top:-4px;right:-4px;font-size:8px;background:#222;border-radius:50%;padding:1px 3px}
       .wbz-auto-btn.locked{opacity:.7}
       .wbz-auto-btn.on{border-color:#00ff88;background:linear-gradient(135deg,rgba(0,80,40,.7),rgba(0,40,20,.9));box-shadow:0 0 14px rgba(0,255,136,.6);animation:wbzAutoPulse 2s ease-in-out infinite}
       @keyframes wbzAutoPulse{0%,100%{box-shadow:0 0 14px rgba(0,255,136,.6)}50%{box-shadow:0 0 22px rgba(0,255,136,.9)}}
