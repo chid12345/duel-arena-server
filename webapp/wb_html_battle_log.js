@@ -130,31 +130,32 @@
       } else if (it.kind === 'boss') { totalBoss += it.dmg; bossHits++; }
     });
 
+    // PvP-стиль: 1 раунд = 1 строка. Слева — мой урон по боссу, справа —
+    // боссовый контр-урон. Особые события (died/resurrect) — отдельной строкой.
+    const _row = (label, dmg, hpIco, hpVal, color) =>
+      `<span style="color:${color};font-weight:800">${label} −${_fmt(dmg)}</span>` +
+      (hpVal != null ? `<small style="color:#88bbaa;margin-left:3px;font-size:9px">${hpIco}${_fmt(hpVal)}</small>` : '');
     const rowsHtml = rounds.map((r, i) => {
-      const evHtml = r.items.map(it => {
-        // Особые события — без dmg/HP колонок
-        if (it.kind === 'died') {
-          return `<div class="wb-bhist-ev"><span class="wb-bhist-tag" style="background:rgba(255,80,160,.18);color:#ff8aa8;border-radius:4px;padding:3px 10px;font-weight:800;letter-spacing:.5px">💀 ПАЛ В БОЮ</span></div>`;
-        }
-        if (it.kind === 'resurrect') {
-          const hp = it.hp ? ` +${it.hp} HP` : '';
-          return `<div class="wb-bhist-ev"><span class="wb-bhist-tag" style="background:rgba(0,255,136,.18);color:#00ff88;border-radius:4px;padding:3px 10px;font-weight:800;letter-spacing:.5px">✨ ВОСКРЕС${hp}</span></div>`;
-        }
-        let tagCls, tagTxt, dmgCls, hpIco, hpVal;
-        if (it.kind === 'me')   { tagCls='me';   tagTxt='МОЙ УД'; dmgCls='me';   hpIco='💀'; hpVal=it.boss_hp_after; }
-        if (it.kind === 'crit') { tagCls='crit'; tagTxt='КРИТ!';  dmgCls='crit'; hpIco='💀'; hpVal=it.boss_hp_after; }
-        if (it.kind === 'boss') { tagCls='boss'; tagTxt='БОСС';   dmgCls='boss'; hpIco='❤️'; hpVal=it.hp_after; }
-        const hpHtml = hpVal != null
-          ? `<div class="wb-bhist-hp"><span class="wb-bhist-hpico">${hpIco}</span><span class="wb-bhist-hpval">${_fmt(hpVal)}</span></div>`
-          : '';
-        return `<div class="wb-bhist-ev">
-          <span class="wb-bhist-tag ${tagCls}">${tagTxt}</span>
-          <span class="wb-bhist-arr">▶</span>
-          <span class="wb-bhist-dmg ${dmgCls}">−${_fmt(it.dmg)}</span>
-          ${hpHtml}
-        </div>`;
-      }).join('');
-      return `<div class="wb-bhist-rsep">ROUND ${i+1}</div>${evHtml}`;
+      const lines = [];
+      let meDmg = 0, meCrit = false, meHpAfter = null;
+      let bsDmg = 0, bsHpAfter = null;
+      r.items.forEach(it => {
+        if (it.kind === 'me')   { meDmg += it.dmg; meHpAfter = it.boss_hp_after ?? meHpAfter; }
+        if (it.kind === 'crit') { meDmg += it.dmg; meCrit = true; meHpAfter = it.boss_hp_after ?? meHpAfter; }
+        if (it.kind === 'boss') { bsDmg += it.dmg; bsHpAfter = it.hp_after ?? bsHpAfter; }
+        if (it.kind === 'died')      lines.push(`<div class="wbl-ev"><span style="background:rgba(255,80,160,.18);color:#ff8aa8;border-radius:4px;padding:2px 8px;font-weight:800;font-size:10px">💀 ПАЛ В БОЮ</span></div>`);
+        if (it.kind === 'resurrect') lines.push(`<div class="wbl-ev"><span style="background:rgba(0,255,136,.18);color:#00ff88;border-radius:4px;padding:2px 8px;font-weight:800;font-size:10px">✨ ВОСКРЕС${it.hp?` +${it.hp} HP`:''}</span></div>`);
+      });
+      const meHtml = meDmg > 0 ? _row(meCrit?'⚡':'⚔', meDmg, '💀', meHpAfter, meCrit?'#ffcc00':'#4d94ff') : '';
+      const bsHtml = bsDmg > 0 ? _row('💢', bsDmg, '❤', bsHpAfter, '#ff4d4d') : '';
+      const _S = 'display:grid;grid-template-columns:32px 1fr 12px 1fr;gap:6px;align-items:center;padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.05);font-family:Consolas,monospace';
+      const _SR = 'color:#bf00ff;font-weight:900;font-size:10px;text-shadow:0 0 4px rgba(191,0,255,.5)';
+      const _SC = 'color:rgba(255,255,255,.3);text-align:center';
+      const _SS = 'font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+      const main = (meHtml || bsHtml)
+        ? `<div style="${_S}"><span style="${_SR}">P${i+1}</span><span style="${_SS}">${meHtml||'<span style="opacity:.3">—</span>'}</span><span style="${_SC}">·</span><span style="${_SS}">${bsHtml||'<span style="opacity:.3">—</span>'}</span></div>`
+        : '';
+      return main + lines.join('');
     }).join('');
 
     ov.innerHTML = `<div class="wb-bhist">

@@ -66,21 +66,25 @@
     if (btn) btn.classList.toggle('on', _isOn());
   }
 
-  // Инжект CSS кнопки АВТО — отдельно от других модулей
+  // Инжект CSS кнопки АВТО — теперь в шапке справа, под HP %
   function _injectCss() {
     if (document.getElementById('wbz-auto-css')) return;
     const s = document.createElement('style');
     s.id = 'wbz-auto-css';
     s.textContent = `
-      .wbz-auto-btn{position:absolute;top:10px;right:10px;z-index:14;display:flex;flex-direction:column;align-items:center;justify-content:center;width:46px;padding:5px 0;border-radius:9px;background:linear-gradient(135deg,rgba(15,5,30,.88),rgba(8,5,18,.92));border:1.5px solid rgba(160,150,200,.45);font-family:Consolas,monospace;cursor:pointer;user-select:none;transition:all .25s}
-      .wbz-auto-btn .ic{font-size:18px;line-height:1}
-      .wbz-auto-btn .lb{font-size:7px;font-weight:900;letter-spacing:.6px;color:#aaa;margin-top:2px;text-transform:uppercase}
-      .wbz-auto-btn .lk{position:absolute;bottom:-3px;right:-3px;font-size:9px;background:#222;border-radius:50%;padding:1px 3px}
+      /* АВТО — компактная кнопка ВНУТРИ шапки .wb-bhdr2, прижата к правому краю
+         на уровне HP-секции. Не налезает на босса/зоны атаки. */
+      .wb-bhdr2{position:relative}
+      .wbz-auto-btn{position:absolute;top:30px;right:6px;z-index:14;display:flex;flex-direction:column;align-items:center;justify-content:center;width:34px;padding:3px 0;border-radius:7px;background:linear-gradient(135deg,rgba(15,5,30,.88),rgba(8,5,18,.92));border:1px solid rgba(160,150,200,.45);font-family:Consolas,monospace;cursor:pointer;user-select:none;transition:transform .12s,box-shadow .15s}
+      .wbz-auto-btn:active{transform:scale(.88)}
+      .wbz-auto-btn .ic{font-size:14px;line-height:1}
+      .wbz-auto-btn .lb{font-size:6px;font-weight:900;letter-spacing:.5px;color:#aaa;margin-top:1px;text-transform:uppercase}
+      .wbz-auto-btn .lk{position:absolute;bottom:-3px;right:-3px;font-size:8px;background:#222;border-radius:50%;padding:1px 3px}
       .wbz-auto-btn.locked{opacity:.7}
-      .wbz-auto-btn.on{border-color:#00ff88;background:linear-gradient(135deg,rgba(0,80,40,.7),rgba(0,40,20,.9));box-shadow:0 0 18px rgba(0,255,136,.6),inset 0 0 8px rgba(0,255,136,.2);animation:wbzAutoPulse 2s ease-in-out infinite}
-      @keyframes wbzAutoPulse{0%,100%{box-shadow:0 0 18px rgba(0,255,136,.6)}50%{box-shadow:0 0 28px rgba(0,255,136,.9),0 0 40px rgba(0,255,136,.4)}}
-      .wbz-auto-btn.on .lb{color:#00ff88;text-shadow:0 0 6px #00ff88}
-      .wbz-auto-btn.on .ic{filter:drop-shadow(0 0 6px #00ff88)}
+      .wbz-auto-btn.on{border-color:#00ff88;background:linear-gradient(135deg,rgba(0,80,40,.7),rgba(0,40,20,.9));box-shadow:0 0 14px rgba(0,255,136,.6);animation:wbzAutoPulse 2s ease-in-out infinite}
+      @keyframes wbzAutoPulse{0%,100%{box-shadow:0 0 14px rgba(0,255,136,.6)}50%{box-shadow:0 0 22px rgba(0,255,136,.9)}}
+      .wbz-auto-btn.on .lb{color:#00ff88;text-shadow:0 0 5px #00ff88}
+      .wbz-auto-btn.on .ic{filter:drop-shadow(0 0 5px #00ff88)}
     `;
     document.head.appendChild(s);
   }
@@ -88,14 +92,18 @@
   // Внешний API: вызывается из wb_html_battle_zones_extras.js на каждом render
   function render(root, state) {
     _injectCss();
+    // Перенесли в шапку (.wb-bhdr2), под HP-процентом справа.
+    // Удаляем старую если осталась в boss-zone.
     const zone = root.querySelector('.wb-boss-zone');
-    if (!zone) return;
-    let btn = zone.querySelector('.wbz-auto-btn');
+    if (zone) zone.querySelectorAll('.wbz-auto-btn').forEach(el => el.remove());
+    const target = root.querySelector('.wb-bhdr2') || zone;
+    if (!target) return;
+    let btn = target.querySelector('.wbz-auto-btn');
     if (!btn) {
       btn = document.createElement('div');
       btn.className = 'wbz-auto-btn';
       btn.innerHTML = '<div class="ic">🤖</div><div class="lb">АВТО</div>';
-      zone.appendChild(btn);
+      target.appendChild(btn);
       btn.addEventListener('click', _onClick);
     }
     const isPremium = !!state?.is_premium;
