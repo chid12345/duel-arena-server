@@ -82,7 +82,11 @@ const BotBattleHtml = (() => {
       <div class="fighter boss${isPvp ? ' flip' : ''}" id="bb-p2">${skinUrl ? `<img src="${skinUrl}"${flipBoss ? '' : ' style="transform:scaleX(-1)"'}>` : ''}<div class="shadow"></div></div>
       <div class="col atk-col"><div class="col-lbl">АТАКА</div>${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div>
       <div class="col def-col"><div class="col-lbl">ЗАЩИТА</div>${['HEAD','TORSO','LEGS'].map(k => btn('def', k)).join('')}</div>
-      <div class="action-row"><div class="auto-btn" id="bb-auto" title="Случайный ход">🎲</div><div class="confirm-btn" id="bb-confirm">⚔ Совершить ход</div></div>
+      <div class="action-row">
+        <div class="auto-btn" id="bb-auto" title="Случайный ход (один раз)"><img src="btn_autoattack.png" alt="auto"></div>
+        <div class="confirm-btn" id="bb-confirm" data-text="⚔ Совершить ход"></div>
+        <div class="autobattle-btn" id="bb-autobattle" title="Автобой (премиум)"><img src="btn_auto.png" alt="autobattle"></div>
+      </div>
       <div class="wait" id="bb-wait" style="display:none"></div>`;
     elP1Hp = root.querySelector('#bb-p1h'); elP2Hp = root.querySelector('#bb-p2h');
     elP1Bar = root.querySelector('#bb-p1b'); elP2Bar = root.querySelector('#bb-p2b');
