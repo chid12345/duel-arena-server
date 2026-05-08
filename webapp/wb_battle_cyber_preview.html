@@ -192,6 +192,12 @@ body {
   border:1px solid rgba(0,240,255,.5);
   text-shadow:0 0 4px rgba(0,240,255,.7);
 }
+/* Тег номера раунда — золото-акцент */
+.clog-tag.round {
+  color:#ffd166; background:rgba(255,209,102,.12);
+  border:1px solid rgba(255,209,102,.5);
+  text-shadow:0 0 4px rgba(255,209,102,.7);
+}
 .clog-zone {
   font-weight:700; letter-spacing:.3px;
 }
@@ -682,22 +688,8 @@ body {
         <div class="hdr-bottom-row">
           <div class="clog" id="clog" title="Тапни — полная история раундов">
             <div class="clog-empty" id="clog-empty">— РАУНД ЕЩЁ НЕ СЫГРАН —</div>
-            <div class="clog-row" id="clog-p2" style="display:none">
-              <span class="clog-tag p2">P2</span>
-              <span class="clog-zone atk" id="p2-atk">—</span>
-              <span class="clog-res" id="p2-atk-r">—</span>
-              <span class="clog-arr">→</span>
-              <span class="clog-zone def" id="p2-def">—</span>
-              <span class="clog-res" id="p2-def-r">—</span>
-            </div>
-            <div class="clog-row" id="clog-p1" style="display:none">
-              <span class="clog-tag p1">P1</span>
-              <span class="clog-zone atk" id="p1-atk">—</span>
-              <span class="clog-res" id="p1-atk-r">—</span>
-              <span class="clog-arr">←</span>
-              <span class="clog-zone def" id="p1-def">—</span>
-              <span class="clog-res" id="p1-def-r">—</span>
-            </div>
+            <div class="clog-row" id="clog-prev" style="display:none"></div>
+            <div class="clog-row" id="clog-curr" style="display:none"></div>
           </div>
           <div class="auto-btn" id="autoBtn" title="Автобой (премиум)">
             <img src="btn_auto.png" alt="АВТО">
@@ -909,41 +901,40 @@ body {
     }, 100);
   }
 
-  // ====== МИНИ-ЛОГ ПОСЛЕДНЕГО ОБМЕНА ======
+  // ====== ЛОГ РАУНДОВ — последние 2 видны (Р1, Р2, Р3...) ======
   const ZONE_NAME = { HEAD:'Голова', TORSO:'Тело', LEGS:'Ноги' };
   const history = []; // полная история — для попапа
+  function _renderRound(num, r) {
+    const atkZ = ZONE_NAME[r.myAtk] || '—';
+    const defZ = ZONE_NAME[r.myDef] || '—';
+    const atkBlocked = r.myAtk === r.bossDef;
+    const atkRes = atkBlocked
+      ? '<span class="clog-res blk">⊘ блок</span>'
+      : (r.isCrit
+          ? '<span class="clog-res crit">−' + r.myDmg + '!</span>'
+          : '<span class="clog-res dmg">−' + r.myDmg + '</span>');
+    const defRes = r.defOK
+      ? '<span class="clog-res blk">⊘ отбил</span>'
+      : '<span class="clog-res hp">❤' + Math.max(0, myHP) + '</span>';
+    return '<span class="clog-tag round">Р' + num + '</span>'
+         + '<span class="clog-zone atk">' + atkZ + '</span> ' + atkRes
+         + '<span class="clog-arr">·</span>'
+         + '<span class="clog-zone def">' + defZ + '</span> ' + defRes;
+  }
   function pushClog(r) {
     history.push(r);
+    const num = history.length;
     document.getElementById('clog-empty').style.display = 'none';
-    const p2 = document.getElementById('clog-p2');
-    const p1 = document.getElementById('clog-p1');
-    p2.style.display = ''; p1.style.display = '';
-
-    // P2: бил по defOK?'отбито':'-bossDmg' / защищал по [bossDef] — мы пробили?
-    document.getElementById('p2-atk').textContent = ZONE_NAME[r.bossAtk] || '—';
-    const p2atkR = document.getElementById('p2-atk-r');
-    if (r.defOK) { p2atkR.className = 'clog-res blk'; p2atkR.textContent = '⊘ блок'; }
-    else         { p2atkR.className = 'clog-res dmg'; p2atkR.textContent = '−' + r.bossDmg; }
-
-    document.getElementById('p2-def').textContent = ZONE_NAME[r.bossDef] || '—';
-    const p2defR = document.getElementById('p2-def-r');
-    // если наша атака совпала с защитой босса — он отбил
-    if (r.myAtk === r.bossDef) { p2defR.className = 'clog-res blk'; p2defR.textContent = '⊘ отбил'; }
-    else                       { p2defR.className = 'clog-res hp';  p2defR.textContent = '✓ пробил'; }
-
-    // P1: атака [myAtk] → урон/блок | защита [myDef] → отбил/получил
-    document.getElementById('p1-atk').textContent = ZONE_NAME[r.myAtk] || '—';
-    const p1atkR = document.getElementById('p1-atk-r');
-    if (r.myAtk === r.bossDef) { p1atkR.className = 'clog-res blk'; p1atkR.textContent = '⊘ блок'; }
-    else if (r.isCrit)         { p1atkR.className = 'clog-res crit'; p1atkR.textContent = '−' + r.myDmg + '!'; }
-    else                       { p1atkR.className = 'clog-res dmg';  p1atkR.textContent = '−' + r.myDmg; }
-
-    document.getElementById('p1-def').textContent = ZONE_NAME[r.myDef] || '—';
-    const p1defR = document.getElementById('p1-def-r');
-    if (r.defOK) { p1defR.className = 'clog-res blk'; p1defR.textContent = '⊘ блок'; }
-    else         { p1defR.className = 'clog-res hp';  p1defR.textContent = '❤' + Math.max(0, myHP); }
-
-    // мерцание плашки
+    const prev = document.getElementById('clog-prev');
+    const curr = document.getElementById('clog-curr');
+    if (history.length === 1) {
+      prev.style.display = 'none';
+      curr.style.display = ''; curr.innerHTML = _renderRound(num, r);
+    } else {
+      const a = history[history.length - 2];
+      prev.style.display = ''; prev.innerHTML = _renderRound(num - 1, a);
+      curr.style.display = ''; curr.innerHTML = _renderRound(num, r);
+    }
     const c = document.getElementById('clog');
     c.classList.remove('fresh'); void c.offsetWidth; c.classList.add('fresh');
   }

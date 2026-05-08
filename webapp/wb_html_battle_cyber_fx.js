@@ -72,42 +72,44 @@
     setTimeout(() => { try { el.classList.remove('fx-ok','fx-bad'); } catch(_) {} }, 950);
   }
 
-  // Заполняет мини-лог последнего обмена P2 (босс) и P1 (игрок).
-  // r — ответ /api/world_boss/hit { damage, is_crit, boss_atk_zone, atk_blocked, def_blocked, counter_damage, player_hp, ... }
+  // Рендер ОДНОГО раунда: тег "Р{N}" + краткая инфа (моя атака → результат · защита → результат).
+  function _renderRound(num, sel, r) {
+    const atkZ = ZONE_NAME[sel.atk] || '—';
+    const defZ = ZONE_NAME[sel.def] || '—';
+    const atkRes = r.atk_blocked
+      ? '<span class="cy-clog-res blk">⊘ блок</span>'
+      : (r.is_crit
+          ? '<span class="cy-clog-res crit">−' + (r.damage || 0) + '!</span>'
+          : '<span class="cy-clog-res dmg">−' + (r.damage || 0) + '</span>');
+    const defRes = r.def_blocked
+      ? '<span class="cy-clog-res blk">⊘ отбил</span>'
+      : '<span class="cy-clog-res hp">❤' + Math.max(0, r.player_hp || 0) + '</span>';
+    return '<span class="cy-clog-tag round">Р' + num + '</span>'
+         + '<span class="cy-clog-zone atk">' + atkZ + '</span> ' + atkRes
+         + '<span class="cy-clog-arr">·</span>'
+         + '<span class="cy-clog-zone def">' + defZ + '</span> ' + defRes;
+  }
+
+  // Лог раундов: Р1, Р2, Р3, ... В шапке всегда видны ПОСЛЕДНИЕ ДВА раунда
+  // (старые скроллятся вверх). Полная история — в попапе тапом.
   function pushClog(root, sel, r) {
     if (!root || !r) return;
+    const hist = root.__cyHistory = root.__cyHistory || [];
+    const num = hist.length + 1;
+    hist.push({ num, sel, r });
+
     const empty = root.querySelector('#cy-clog-empty');
-    const p2 = root.querySelector('#cy-clog-p2');
-    const p1 = root.querySelector('#cy-clog-p1');
+    const prev  = root.querySelector('#cy-clog-prev');
+    const curr  = root.querySelector('#cy-clog-curr');
     if (empty) empty.style.display = 'none';
-    if (p2)    p2.style.display = '';
-    if (p1)    p1.style.display = '';
-
-    const bossAtk = r.boss_atk_zone || '?';
-    const setText = (id, txt) => { const el = root.querySelector('#' + id); if (el) el.textContent = txt; };
-    const setRes  = (id, cls, txt) => {
-      const el = root.querySelector('#' + id);
-      if (!el) return;
-      el.className = 'cy-clog-res ' + cls;
-      el.textContent = txt;
-    };
-
-    // P2 (босс): атака bossAtk → отбили (def_blocked) или прошёл -counter_damage
-    setText('cy-p2-atk', ZONE_NAME[bossAtk] || '—');
-    if (r.def_blocked) setRes('cy-p2-atk-r', 'blk', '⊘ блок');
-    else               setRes('cy-p2-atk-r', 'dmg', '−' + (r.counter_damage || 0));
-
-    // P1 (мы): атака selA → пробил (-damage) или босс отбил (atk_blocked)
-    setText('cy-p1-atk', ZONE_NAME[sel.atk] || '—');
-    if (r.atk_blocked) setRes('cy-p1-atk-r', 'blk', '⊘ блок');
-    else if (r.is_crit) setRes('cy-p1-atk-r', 'crit', '−' + (r.damage || 0) + '!');
-    else                setRes('cy-p1-atk-r', 'dmg',  '−' + (r.damage || 0));
-
-    // P1 защита selD → если defOK — отбил, иначе показываем текущий HP
-    setText('cy-p1-def', ZONE_NAME[sel.def] || '—');
-    if (r.def_blocked) setRes('cy-p1-def-r', 'blk', '⊘ отбил');
-    else               setRes('cy-p1-def-r', 'hp',  '❤' + Math.max(0, r.player_hp || 0));
-
+    if (hist.length === 1) {
+      if (prev) prev.style.display = 'none';
+      if (curr) { curr.style.display = ''; curr.innerHTML = _renderRound(num, sel, r); }
+    } else {
+      const a = hist[hist.length - 2], b = hist[hist.length - 1];
+      if (prev) { prev.style.display = ''; prev.innerHTML = _renderRound(a.num, a.sel, a.r); }
+      if (curr) { curr.style.display = ''; curr.innerHTML = _renderRound(b.num, b.sel, b.r); }
+    }
     // мерцание плашки
     const c = root.querySelector('#cy-clog');
     if (c) { c.classList.remove('fresh'); void c.offsetWidth; c.classList.add('fresh'); }

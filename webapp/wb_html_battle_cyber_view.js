@@ -92,19 +92,8 @@
         <div class="cy-hdr-bottom">
           <div class="cy-clog" id="cy-clog" data-act="clog" title="Полная история раундов">
             <div class="cy-clog-empty" id="cy-clog-empty">— РАУНД ЕЩЁ НЕ СЫГРАН —</div>
-            <div class="cy-clog-row" id="cy-clog-p2" style="display:none">
-              <span class="cy-clog-tag p2">P2</span>
-              <span class="cy-clog-zone atk" id="cy-p2-atk">—</span>
-              <span class="cy-clog-res" id="cy-p2-atk-r">—</span>
-            </div>
-            <div class="cy-clog-row" id="cy-clog-p1" style="display:none">
-              <span class="cy-clog-tag p1">P1</span>
-              <span class="cy-clog-zone atk" id="cy-p1-atk">—</span>
-              <span class="cy-clog-res" id="cy-p1-atk-r">—</span>
-              <span class="cy-clog-arr">·</span>
-              <span class="cy-clog-zone def" id="cy-p1-def">—</span>
-              <span class="cy-clog-res" id="cy-p1-def-r">—</span>
-            </div>
+            <div class="cy-clog-row" id="cy-clog-prev" style="display:none"></div>
+            <div class="cy-clog-row" id="cy-clog-curr" style="display:none"></div>
           </div>
           <div class="cy-auto" id="cy-auto" title="Автобой (премиум)"><img src="btn_auto.png" alt="АВТО"></div>
         </div>
