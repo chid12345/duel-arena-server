@@ -86,7 +86,9 @@
           scene._submitChoice();
         }
       } catch (_) {}
-      _busy = false;
+      // _busy держим включённым до смены раунда — _tick сбросит при новом round.
+      // Иначе быстрые тики 250мс могут сабмитить второй раз пока первый submit
+      // ещё в полёте (waiting_opponent → ошибка «Попробуй ещё раз»).
     };
     if (typeof BotBattleFx !== 'undefined' && BotBattleFx.spinChoice) {
       try { BotBattleFx.spinChoice(aBtns, dBtns, () => finish()); }
@@ -113,10 +115,12 @@
     if (_busy) return;
     const scene = _findBattleScene();
     if (!scene || !scene._choosing || scene._submitting) return;
-    // Один авто-ход на раунд
+    // Один авто-ход на раунд. _busy сбрасываем при смене раунда —
+    // это снимает блокировку с предыдущего автомува, который мог уйти в waiting.
     const rk = String(_S()?.battle?.round ?? -1);
     if (rk === _lastRoundKey) return;
     _lastRoundKey = rk;
+    _busy = false;
     // Лёгкая задержка чтобы игрок успел увидеть начало раунда
     setTimeout(_autoMove, 600);
   }

@@ -110,15 +110,20 @@ const BotBattleHtml = (() => {
       return;
     }
     if (e.target.closest('#bb-confirm') && selectedAttack && selectedDefense && scene._submitChoice) {
-      if (!scene._choosing) return;
+      // Защита от двойного клика: сцена сама ставит _submitting=true в _submitChoice,
+      // но клик по уже-нажатой кнопке должен молча проигнорироваться.
+      if (!scene._choosing || scene._submitting) return;
       scene._selAttack = selectedAttack; scene._selDefense = selectedDefense;
       try { scene._submitChoice(); } catch(_){}
       return;
     }
-    if (e.target.closest('#bb-auto') && typeof BotBattleFx !== 'undefined' && BotBattleFx.spinChoice) BotBattleFx.spinChoice(attackBtns, defenseBtns, (a, d) => {
-      selectedAttack = a; selectedDefense = d; _refresh();
-      setTimeout(() => { if (scene && scene._choosing && scene._submitChoice) { scene._selAttack = a; scene._selDefense = d; try { scene._submitChoice(); } catch(_){} } }, 250);
-    });
+    if (e.target.closest('#bb-auto') && typeof BotBattleFx !== 'undefined' && BotBattleFx.spinChoice) {
+      if (!scene._choosing || scene._submitting) return;
+      BotBattleFx.spinChoice(attackBtns, defenseBtns, (a, d) => {
+        selectedAttack = a; selectedDefense = d; _refresh();
+        setTimeout(() => { if (scene && scene._choosing && !scene._submitting && scene._submitChoice) { scene._selAttack = a; scene._selDefense = d; try { scene._submitChoice(); } catch(_){} } }, 250);
+      });
+    }
     if (typeof BotBattleCard !== 'undefined') { if (e.target.closest('#bb-p2n')) BotBattleCard.show('opp'); else if (e.target.closest('#bb-p1n')) BotBattleCard.show('me'); }
   }
 
@@ -205,7 +210,7 @@ const BotBattleHtml = (() => {
           fighter: probe('.fighter.boss'),
           atkCol:  probe('.atk-col'),
           confirm: probe('.confirm-btn'),
-          blog:    probe('.blog'),
+          clog:    probe('.bb-clog'),
         });
       } catch(e) { console.warn('[BotBattleHtml] probe failed:', e); }
       clickHandler = _onClick;
