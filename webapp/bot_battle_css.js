@@ -76,12 +76,16 @@ const BotBattleCss = (() => {
     @keyframes bbDodgeRight{0%,100%{translate:0 0;opacity:1}50%{translate:26px 0;opacity:.55}}
     #bb-root .fighter.dodge-left{animation:bbDodgeLeft 380ms ease-out;}
     #bb-root .fighter.dodge-right{animation:bbDodgeRight 380ms ease-out;}
-    /* Кибер-вспышка на жертве: pink (обычный) или cyan (крит) */
+    /* Кибер-вспышка на жертве — палитра по side:
+         opp:    pink → gold-crit  (мой удар по врагу)
+         me:     cyan → red-crit   (удар по мне) */
     #bb-root .fighter > img{transition:filter 90ms ease-out;}
     #bb-root .fighter.cy-hit > img{filter:drop-shadow(0 0 18px #ff3ba8) drop-shadow(0 0 32px #ff3ba8) brightness(1.4) saturate(.6) !important;}
-    #bb-root .fighter.cy-hit.crit > img{filter:drop-shadow(0 0 22px #00f0ff) drop-shadow(0 0 38px #00f0ff) brightness(1.7) saturate(.5) !important;}
-    /* Старый класс crit-hit — оставляем как алиас (вызывается из BotBattleHtmlFx) */
-    #bb-root .fighter.crit-hit > img{filter:drop-shadow(0 0 20px #00f0ff) drop-shadow(0 0 36px #00f0ff) brightness(1.55) !important;}
+    #bb-root .fighter.cy-hit.crit > img{filter:drop-shadow(0 0 22px #ffd166) drop-shadow(0 0 38px #ffd166) brightness(1.7) saturate(.5) !important;}
+    #bb-root .fighter.cy-hit.cy-me > img{filter:drop-shadow(0 0 18px #00f0ff) drop-shadow(0 0 32px #00f0ff) brightness(1.4) saturate(.6) !important;}
+    #bb-root .fighter.cy-hit.cy-me.crit > img{filter:drop-shadow(0 0 22px #ff4477) drop-shadow(0 0 38px #ff4477) brightness(1.7) saturate(.5) !important;}
+    /* Старый алиас crit-hit (на случай вызовов извне) */
+    #bb-root .fighter.crit-hit > img{filter:drop-shadow(0 0 20px #ffd166) drop-shadow(0 0 36px #ffd166) brightness(1.55) !important;}
 
     /* === ЗОНЫ АТАКИ/ЗАЩИТЫ — палитра выровнена под WB ==================== */
     #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:10px;z-index:9;}
@@ -137,18 +141,31 @@ const BotBattleCss = (() => {
     @keyframes bbToastFx{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
     #bb-root .wait{position:absolute;left:0;right:0;top:55%;text-align:center;color:#ffd166;font-size:13px;font-weight:700;z-index:9;pointer-events:none;text-shadow:0 0 6px rgba(255,209,102,.6);}
 
-    /* === ИМПАКТ-ЭФФЕКТЫ + НЕОН-ЦИФРЫ УРОНА (порт из cy-* WB) ============= */
+    /* === ИМПАКТ-ЭФФЕКТЫ + НЕОН-ЦИФРЫ УРОНА (порт из cy-* WB) =============
+       Цветовая логика:
+         базовый  (мой удар по врагу):  pink   #ff3ba8
+         .crit    (мой крит по врагу):  gold   #ffd166
+         .cy-me   (удар по мне):        cyan   #00f0ff
+         .cy-me.crit (крит по мне):     red    #ff4477  */
     #bb-root .cy-dmg{position:absolute;font-family:"Impact","Arial Black",Helvetica,sans-serif;font-weight:900;pointer-events:none;z-index:20;font-size:38px;line-height:1;letter-spacing:1px;white-space:nowrap;color:#ff3ba8;-webkit-text-stroke:2.5px #0a0014;text-shadow:0 0 8px #ff3ba8,0 0 16px rgba(255,59,168,.55),0 3px 0 rgba(0,0,0,.95),0 4px 10px rgba(0,0,0,.75);animation:bbDmgFly 1.6s cubic-bezier(.2,.7,.3,1) forwards;transform:translate(-50%,0);}
-    #bb-root .cy-dmg.crit{font-size:44px;color:#00f0ff;-webkit-text-stroke:2.5px #001a1f;text-shadow:0 0 10px #00f0ff,0 0 22px rgba(0,240,255,.7),0 0 36px rgba(0,240,255,.4),0 3px 0 rgba(0,0,0,.95),0 4px 10px rgba(0,0,0,.75);}
+    #bb-root .cy-dmg.crit{font-size:44px;color:#ffd166;-webkit-text-stroke:2.5px #1a1000;text-shadow:0 0 10px #ffd166,0 0 22px rgba(255,209,102,.7),0 0 36px rgba(255,209,102,.4),0 3px 0 rgba(0,0,0,.95),0 4px 10px rgba(0,0,0,.75);}
+    #bb-root .cy-dmg.cy-me{color:#00f0ff;-webkit-text-stroke:2.5px #001a1f;text-shadow:0 0 8px #00f0ff,0 0 16px rgba(0,240,255,.55),0 3px 0 rgba(0,0,0,.95),0 4px 10px rgba(0,0,0,.75);}
+    #bb-root .cy-dmg.cy-me.crit{color:#ff4477;-webkit-text-stroke:2.5px #1a0008;text-shadow:0 0 10px #ff4477,0 0 22px rgba(255,68,119,.7),0 0 36px rgba(255,68,119,.4),0 3px 0 rgba(0,0,0,.95),0 4px 10px rgba(0,0,0,.75);}
     @keyframes bbDmgFly{0%{opacity:0;transform:translate(-50%,12px) scale(.5) rotate(-3deg);}14%{opacity:1;transform:translate(-50%,-14px) scale(1.25) rotate(-1deg);}30%{opacity:1;transform:translate(-50%,-24px) scale(1) rotate(0deg);}78%{opacity:1;transform:translate(-50%,-58px) scale(1) rotate(0deg);}100%{opacity:0;transform:translate(-50%,-90px) scale(.85) rotate(0deg);}}
     #bb-root .cy-slash{position:absolute;width:240px;height:12px;transform:translate(-50%,-50%) rotate(var(--slash-rot,-25deg)) scaleX(0);background:linear-gradient(90deg,transparent 0%,#ff3ba8 25%,#fff 50%,#ff3ba8 75%,transparent 100%);filter:blur(2px) drop-shadow(0 0 14px #ff3ba8) drop-shadow(0 0 4px #fff);opacity:0;pointer-events:none;z-index:18;border-radius:6px;transform-origin:50% 50%;animation:bbSlash .42s cubic-bezier(.2,.8,.3,1) forwards;}
-    #bb-root .cy-slash.crit{background:linear-gradient(90deg,transparent 0%,#00f0ff 25%,#fff 50%,#00f0ff 75%,transparent 100%);filter:blur(2px) drop-shadow(0 0 18px #00f0ff) drop-shadow(0 0 6px #fff);}
+    #bb-root .cy-slash.crit{background:linear-gradient(90deg,transparent 0%,#ffd166 25%,#fff 50%,#ffd166 75%,transparent 100%);filter:blur(2px) drop-shadow(0 0 18px #ffd166) drop-shadow(0 0 6px #fff);}
+    #bb-root .cy-slash.cy-me{background:linear-gradient(90deg,transparent 0%,#00f0ff 25%,#fff 50%,#00f0ff 75%,transparent 100%);filter:blur(2px) drop-shadow(0 0 14px #00f0ff) drop-shadow(0 0 4px #fff);}
+    #bb-root .cy-slash.cy-me.crit{background:linear-gradient(90deg,transparent 0%,#ff4477 25%,#fff 50%,#ff4477 75%,transparent 100%);filter:blur(2px) drop-shadow(0 0 18px #ff4477) drop-shadow(0 0 6px #fff);}
     @keyframes bbSlash{0%{opacity:0;transform:translate(-50%,-50%) rotate(var(--slash-rot,-25deg)) scaleX(0);}18%{opacity:1;transform:translate(-50%,-50%) rotate(var(--slash-rot,-25deg)) scaleX(1.05);}60%{opacity:.9;}100%{opacity:0;transform:translate(-50%,-50%) rotate(var(--slash-rot,-25deg)) scaleX(1);}}
     #bb-root .cy-shock{position:absolute;width:44px;height:44px;border-radius:50%;border:3px solid #ff3ba8;transform:translate(-50%,-50%) scale(0);opacity:0;pointer-events:none;z-index:16;box-shadow:0 0 14px #ff3ba8,inset 0 0 8px rgba(255,59,168,.4);animation:bbShock .55s cubic-bezier(.2,.7,.3,1) forwards;}
-    #bb-root .cy-shock.crit{border-color:#00f0ff;box-shadow:0 0 18px #00f0ff,inset 0 0 8px rgba(0,240,255,.4);}
+    #bb-root .cy-shock.crit{border-color:#ffd166;box-shadow:0 0 18px #ffd166,inset 0 0 8px rgba(255,209,102,.4);}
+    #bb-root .cy-shock.cy-me{border-color:#00f0ff;box-shadow:0 0 14px #00f0ff,inset 0 0 8px rgba(0,240,255,.4);}
+    #bb-root .cy-shock.cy-me.crit{border-color:#ff4477;box-shadow:0 0 18px #ff4477,inset 0 0 8px rgba(255,68,119,.4);}
     @keyframes bbShock{0%{opacity:1;transform:translate(-50%,-50%) scale(0);border-width:4px;}60%{opacity:.85;}100%{opacity:0;transform:translate(-50%,-50%) scale(6);border-width:1px;}}
     #bb-root .cy-spark{position:absolute;width:6px;height:6px;border-radius:50%;background:#fff;color:#ff3ba8;box-shadow:0 0 8px currentColor,0 0 16px currentColor;pointer-events:none;z-index:17;--dx:0px;--dy:0px;transform:translate(-50%,-50%);animation:bbSpark .55s ease-out forwards;}
-    #bb-root .cy-spark.crit{color:#00f0ff;}
+    #bb-root .cy-spark.crit{color:#ffd166;}
+    #bb-root .cy-spark.cy-me{color:#00f0ff;}
+    #bb-root .cy-spark.cy-me.crit{color:#ff4477;}
     @keyframes bbSpark{0%{opacity:1;transform:translate(-50%,-50%) scale(1);}100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) scale(.2);}}
   `;
 

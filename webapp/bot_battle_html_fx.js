@@ -42,13 +42,19 @@ const BotBattleHtmlFx = (() => {
     };
   }
 
+  // side='opp' (мой удар по врагу) → pink/gold-crit
+  // side='me'  (удар по мне)        → cyan/red-crit (через .cy-me модификатор)
+  function _sideCls(side, isCrit) {
+    return (side === 'me' ? ' cy-me' : '') + (isCrit ? ' crit' : '');
+  }
+
   function _impact(root, side, isCrit) {
     const c = _victimCenter(root, side);
     if (!c) return;
-    const critCls = isCrit ? ' crit' : '';
+    const cls = _sideCls(side, isCrit);
 
     // SLASH — диагональная вспышка под случайным углом
-    _spawn(root, 'cy-slash' + critCls, el => {
+    _spawn(root, 'cy-slash' + cls, el => {
       const ang = -35 + Math.random() * 70;
       el.style.left = c.x + 'px';
       el.style.top  = c.y + 'px';
@@ -56,7 +62,7 @@ const BotBattleHtmlFx = (() => {
     }, 500);
 
     // SHOCKWAVE
-    _spawn(root, 'cy-shock' + critCls, el => {
+    _spawn(root, 'cy-shock' + cls, el => {
       el.style.left = c.x + 'px';
       el.style.top  = c.y + 'px';
     }, 600);
@@ -66,7 +72,7 @@ const BotBattleHtmlFx = (() => {
     for (let i = 0; i < n; i++) {
       const a = (Math.PI * 2 * i / n) + (Math.random() * 0.4 - 0.2);
       const dist = (isCrit ? 70 : 50) + Math.random() * 30;
-      _spawn(root, 'cy-spark' + critCls, el => {
+      _spawn(root, 'cy-spark' + cls, el => {
         el.style.left = c.x + 'px';
         el.style.top  = c.y + 'px';
         el.style.setProperty('--dx', Math.cos(a) * dist + 'px');
@@ -78,7 +84,7 @@ const BotBattleHtmlFx = (() => {
   function _dmgNumber(root, side, amount, isCrit) {
     const c = _victimCenter(root, side);
     if (!c || amount == null) return;
-    _spawn(root, 'cy-dmg' + (isCrit ? ' crit' : ''), el => {
+    _spawn(root, 'cy-dmg' + _sideCls(side, isCrit), el => {
       el.style.left = (c.x + (Math.random() - .5) * 40) + 'px';
       el.style.top  = (c.y - 14) + 'px';
       el.textContent = (isCrit ? '💥 −' : '−') + (Number(amount) || 0).toLocaleString('ru') + (isCrit ? '!' : '');
@@ -93,9 +99,11 @@ const BotBattleHtmlFx = (() => {
       if (!root) return;
       const target = root.querySelector(side === 'me' ? '#bb-p1' : '#bb-p2');
       if (!target) return;
-      target.classList.remove('cy-hit', 'crit'); void target.offsetWidth;
-      target.classList.add('cy-hit'); if (isCrit) target.classList.add('crit');
-      setTimeout(() => { try { target.classList.remove('cy-hit', 'crit'); } catch (_) {} }, 360);
+      target.classList.remove('cy-hit', 'crit', 'cy-me'); void target.offsetWidth;
+      target.classList.add('cy-hit');
+      if (isCrit) target.classList.add('crit');
+      if (side === 'me') target.classList.add('cy-me');
+      setTimeout(() => { try { target.classList.remove('cy-hit', 'crit', 'cy-me'); } catch (_) {} }, 360);
     },
 
     dodge(root, side) {
