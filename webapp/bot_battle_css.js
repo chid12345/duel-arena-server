@@ -85,8 +85,8 @@ const BotBattleCss = (() => {
 
     /* === ЗОНЫ АТАКИ/ЗАЩИТЫ — палитра выровнена под WB ==================== */
     #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:10px;z-index:9;}
-    #bb-root .atk-col{left:4px;bottom:120px;}
-    #bb-root .def-col{right:4px;bottom:120px;}
+    #bb-root .atk-col{left:4px;bottom:104px;}
+    #bb-root .def-col{right:4px;bottom:104px;}
     #bb-root .col-lbl{font-size:9px;font-weight:900;letter-spacing:1.6px;text-align:center;font-family:"Courier New","Consolas",monospace;text-transform:uppercase;margin-bottom:1px;}
     #bb-root .atk-col .col-lbl{color:#ff7acb;text-shadow:0 0 6px rgba(255,59,168,.7);}
     #bb-root .def-col .col-lbl{color:#80e8ff;text-shadow:0 0 6px rgba(0,240,255,.7);}
@@ -114,18 +114,18 @@ const BotBattleCss = (() => {
     /* === ПАНЕЛЬ ДЕЙСТВИЙ (auto + confirm + autobattle) =================== */
     /* Стоит над HP-полоской игрока (которая на bottom:8px) */
     #bb-root .action-row{position:absolute;left:8px;right:8px;bottom:42px;display:flex;gap:8px;align-items:stretch;z-index:9;}
-    #bb-root .auto-btn{flex-shrink:0;width:54px;height:54px;background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .12s;font-size:0;}
+    #bb-root .auto-btn{flex-shrink:0;width:38px;height:38px;background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .12s;font-size:0;}
     #bb-root .auto-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,200,60,.5)) drop-shadow(0 2px 4px rgba(0,0,0,.6));transition:filter .18s, transform .18s;}
     #bb-root .auto-btn:active{transform:scale(.92);}
     #bb-root .auto-btn:active img{filter:drop-shadow(0 0 12px rgba(255,200,60,.85)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}
-    #bb-root .confirm-btn{flex:1;height:54px;position:relative;display:flex;align-items:center;justify-content:center;border-radius:12px;background:linear-gradient(135deg,rgba(20,5,40,.95),rgba(8,2,20,.98));border:1.5px solid rgba(120,40,120,.45);box-shadow:inset 0 1px 0 rgba(255,180,255,.07),0 2px 8px rgba(0,0,0,.55);font-family:-apple-system,"Segoe UI",Roboto,sans-serif;font-size:13px;font-weight:900;letter-spacing:2.4px;text-transform:uppercase;color:transparent;cursor:not-allowed;overflow:hidden;opacity:.6;transition:opacity .2s, border-color .2s, box-shadow .2s, transform .12s;user-select:none;}
+    #bb-root .confirm-btn{flex:1;height:38px;position:relative;display:flex;align-items:center;justify-content:center;border-radius:10px;background:linear-gradient(135deg,rgba(20,5,40,.95),rgba(8,2,20,.98));border:1.5px solid rgba(120,40,120,.45);box-shadow:inset 0 1px 0 rgba(255,180,255,.07),0 2px 8px rgba(0,0,0,.55);font-family:-apple-system,"Segoe UI",Roboto,sans-serif;font-size:11px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;color:transparent;cursor:not-allowed;overflow:hidden;opacity:.6;transition:opacity .2s, border-color .2s, box-shadow .2s, transform .12s;user-select:none;}
     #bb-root .confirm-btn::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(circle at 0% 0%,rgba(255,59,168,.10),transparent 55%),radial-gradient(circle at 100% 100%,rgba(0,240,255,.10),transparent 55%);}
     #bb-root .confirm-btn::after{content:attr(data-text);position:relative;z-index:2;background:linear-gradient(90deg,#ff7acb,#80e8ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 1px 2px rgba(0,0,0,.85));}
     #bb-root .confirm-btn.ready{opacity:1;cursor:pointer;border-color:rgba(255,59,168,.65);box-shadow:inset 0 0 16px rgba(255,59,168,.10),inset 0 1px 0 rgba(255,180,255,.18),0 0 16px rgba(255,59,168,.45),0 0 28px rgba(0,240,255,.25);animation:cfPulse 1.8s ease-in-out infinite;}
     #bb-root .confirm-btn.ready::after{background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 6px rgba(255,59,168,.45));}
     @keyframes cfPulse{0%,100%{box-shadow:inset 0 0 16px rgba(255,59,168,.10),inset 0 1px 0 rgba(255,180,255,.18),0 0 16px rgba(255,59,168,.45),0 0 28px rgba(0,240,255,.25);}50%{box-shadow:inset 0 0 20px rgba(255,59,168,.18),inset 0 1px 0 rgba(255,180,255,.25),0 0 26px rgba(255,59,168,.7),0 0 44px rgba(0,240,255,.4);}}
     #bb-root .confirm-btn.ready:active{transform:scale(.97);animation:none;}
-    #bb-root .autobattle-btn{flex-shrink:0;width:54px;height:54px;background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .12s;position:relative;font-size:0;}
+    #bb-root .autobattle-btn{flex-shrink:0;width:38px;height:38px;background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .12s;position:relative;font-size:0;}
     #bb-root .autobattle-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;filter:hue-rotate(160deg) saturate(1.2) drop-shadow(0 0 6px rgba(0,240,255,.4)) drop-shadow(0 2px 4px rgba(0,0,0,.6));transition:filter .25s, transform .18s;}
     #bb-root .autobattle-btn:active{transform:scale(.92);}
     #bb-root .autobattle-btn:active img{filter:hue-rotate(160deg) saturate(1.3) brightness(1.15) drop-shadow(0 0 12px rgba(0,240,255,.7)) drop-shadow(0 2px 4px rgba(0,0,0,.6));transform:scale(.96);}
