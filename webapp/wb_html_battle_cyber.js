@@ -116,6 +116,30 @@
     }
   }
 
+  // Переопределяем setAutoAttack: старая (logic.js) дёргает sc._onHit() БЕЗ
+  // attack_zone/defense_zone — серверу нужны зоны → удары не проходят. Эмулируем
+  // тап по кубику автоудара (он сам выбирает случайные зоны и шлёт hit).
+  function _setAutoAttackCyber(on) {
+    if (window._cyAutoTimer) { clearInterval(window._cyAutoTimer); window._cyAutoTimer = null; }
+    if (window.WBHtml) window.WBHtml._autoOn = !!on;
+    if (!on) return;
+    window._cyAutoTimer = setInterval(() => {
+      const root = document.getElementById('wb-root');
+      if (!root || !root.classList.contains('cy')) { _setAutoAttackCyber(false); return; }
+      const sc = window.WBHtml?._scene;
+      if (!sc || sc._alive === false) { _setAutoAttackCyber(false); return; }
+      const hp = sc._state?.active?.current_hp;
+      if (hp != null && hp <= 0) { _setAutoAttackCyber(false); return; }
+      if (sc._state?.player_state?.is_dead) return;
+      // emul-клик по кубику — он сам выберет зоны и стартанёт ход
+      const dice = root.querySelector('#cy-dice');
+      const apply = root.querySelector('#cy-apply');
+      // если CD активен — пропускаем тик, дождёмся следующего
+      if (apply?.classList.contains('cd')) return;
+      dice?.click();
+    }, 2200); // ~2.2с между раундами (apply CD = 1.5с + запас)
+  }
+
   function _hook() {
     if (!window.WBHtml || !window.WBHtml._renderBattle) { setTimeout(_hook, 50); return; }
     if (window.__cyberBattleHooked) return;
@@ -126,6 +150,8 @@
         _bind(root, s);
       } catch(e) { console.warn('[cyber-battle]', e); }
     };
+    // Переопределяем АВТОБОЙ — старая реализация несовместима с zone-режимом
+    window.WBHtml.setAutoAttack = _setAutoAttackCyber;
   }
   _hook();
 })();

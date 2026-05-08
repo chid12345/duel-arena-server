@@ -149,12 +149,12 @@ body {
   color:#fff; text-shadow:0 0 6px #ff3ba8; white-space:nowrap;
 }
 
-/* === ВСТРОЕННЫЙ МИНИ-ЛОГ (последний обмен) === */
+/* === ВСТРОЕННЫЙ МИНИ-ЛОГ (последний обмен, −20%) === */
 .clog {
-  display:flex; flex-direction:column; gap:2px;
-  padding:5px 7px;
+  display:flex; flex-direction:column; gap:1px;
+  padding:4px 6px;
   background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(10,2,20,.45));
-  border-radius:8px;
+  border-radius:7px;
   border:1px solid rgba(0,240,255,.12);
   cursor:pointer;
   transition:border-color .15s,box-shadow .15s;
@@ -169,18 +169,18 @@ body {
 }
 .clog.fresh { animation:clogPulse .9s ease-out; }
 .clog-row {
-  display:flex; align-items:center; gap:5px;
+  display:flex; align-items:center; gap:4px;
   font-family:'Courier New',monospace;
-  font-size:9.5px;
+  font-size:8px;
   white-space:nowrap;
   overflow:hidden;
-  line-height:1.45;
+  line-height:1.4;
 }
 .clog-tag {
-  font-weight:900; letter-spacing:.5px;
-  padding:1px 5px; border-radius:4px;
+  font-weight:900; letter-spacing:.4px;
+  padding:1px 4px; border-radius:3px;
   flex-shrink:0;
-  font-size:9px;
+  font-size:7.5px;
 }
 .clog-tag.p2 {
   color:#ff7acb; background:rgba(255,59,168,.15);
@@ -211,23 +211,23 @@ body {
 .clog-res.blk { color:rgba(220,220,235,.55); }
 .clog-res.miss { color:rgba(255,180,90,.7); }
 .clog-empty {
-  text-align:center; font-size:9px;
-  color:rgba(160,200,255,.4); letter-spacing:1.5px;
+  text-align:center; font-size:7.5px;
+  color:rgba(160,200,255,.4); letter-spacing:1.3px;
   font-family:'Courier New',monospace;
-  padding:4px 0;
+  padding:3px 0;
 }
 
-/* === ШАПКА: ряд "лог + АВТО" === */
+/* === ШАПКА: ряд "лог + АВТО" (−20%) === */
 .hdr-bottom-row {
-  display:flex; gap:6px; align-items:stretch;
-  min-height:48px; /* фиксируем — чтобы не было "прыжка" АВТО при первом раунде */
+  display:flex; gap:5px; align-items:stretch;
+  min-height:38px; /* фиксируем — чтобы не было "прыжка" АВТО при первом раунде */
 }
 .hdr-bottom-row .clog { flex:1; min-width:0; }
 
 /* === Кнопка АВТОБОЙ — PNG-скин (картинка = кнопка) === */
 .auto-btn {
   flex-shrink:0;
-  width:54px; height:48px;
+  width:44px; height:38px;
   display:flex; align-items:center; justify-content:center;
   background:none; border:none; padding:0;
   cursor:pointer;
@@ -366,9 +366,9 @@ body {
   100% { opacity:0; transform:translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.2); }
 }
 
-/* колонки зон */
+/* колонки зон — bottom:8px (прижаты к низу арены, рядом с кнопками автоудара/хода) */
 .col {
-  position:absolute; top:10px;
+  position:absolute; bottom:8px;
   display:flex; flex-direction:column; gap:8px;
   z-index:5;
 }
@@ -396,6 +396,21 @@ body {
   position:relative;
   transition:transform .12s;
 }
+/* halo-круг за иконкой при выборе */
+.zbtn::before {
+  content:''; position:absolute;
+  width:46px; height:46px; left:50%; top:6px;
+  transform:translateX(-50%) scale(.6);
+  border-radius:50%;
+  opacity:0;
+  pointer-events:none;
+  background:radial-gradient(circle, var(--sel-glow,#ff3ba8) 0%, transparent 70%);
+  border:2px solid var(--sel-glow,#ff3ba8);
+  box-shadow:0 0 14px var(--sel-glow,#ff3ba8), inset 0 0 10px rgba(255,255,255,.18);
+  transition:opacity .2s ease-out, transform .2s ease-out;
+  z-index:0;
+}
+.zbtn img, .zbtn .lbl { position:relative; z-index:1; }
 .zbtn:active { transform:scale(.92); }
 .zbtn img {
   width:32px; height:32px; object-fit:contain;
@@ -416,19 +431,17 @@ body {
   margin-top:1px;
 }
 /* семантика цветов колонок */
-.col-atk .zbtn { color:#ff7acb; }
-.col-def .zbtn { color:#80e8ff; }
-/* выбранная — двойной glow цветом + scale, надпись становится белой */
-.zbtn.sel {
-  color:#fff;
+.col-atk .zbtn { color:#ff7acb; --sel-glow:#ff3ba8; }
+.col-def .zbtn { color:#80e8ff; --sel-glow:#00f0ff; }
+/* выбранная — halo-круг через ::before + усиленный glow на иконке, надпись белая */
+.zbtn.sel { color:#fff; }
+.zbtn.sel::before {
+  opacity:.78 !important;
+  transform:translateX(-50%) scale(1) !important;
 }
-.col-atk .zbtn.sel { --sel-glow:#ff3ba8; }
-.col-def .zbtn.sel { --sel-glow:#00f0ff; }
 .zbtn.sel img {
-  filter:drop-shadow(0 0 18px var(--sel-glow))
-         drop-shadow(0 0 32px var(--sel-glow))
+  filter:drop-shadow(0 0 14px var(--sel-glow))
          drop-shadow(0 0 4px rgba(0,0,0,.6));
-  transform:scale(1.1);
 }
 .zbtn.sel .lbl {
   text-shadow:0 0 8px currentColor, 0 0 14px var(--sel-glow), 0 1px 3px rgba(0,0,0,.95);
@@ -459,14 +472,14 @@ body {
   display:flex; flex-direction:column; gap:7px;
   z-index:6;
 }
-/* === SKIN-КНОПКИ: картинка = кнопка, без рамки/фона === */
+/* === SKIN-КНОПКИ: картинка = кнопка, без рамки/фона (−20%) === */
 .acts {
   display:flex; gap:10px; align-items:center;
 }
 /* Автоудар — квадратная PNG-кнопка */
 .dice {
   flex-shrink:0;
-  width:64px; height:64px;
+  width:52px; height:52px;
   background:none; border:0; padding:0;
   display:block;
   cursor:pointer;
@@ -479,14 +492,12 @@ body {
 }
 .dice:active { transform:scale(.9); filter:brightness(1.2); }
 
-/* === Apply — киберпанк CSS-кнопка ===
-   Тёмная основа + двойной неон-градиент по обводке + glow в ready-состоянии.
-   Текст градиентом розовый→бирюза (тот же градиент что и заголовок в шапке). */
+/* === Apply — киберпанк CSS-кнопка (−20%) === */
 .apply {
-  flex:1; height:64px;
+  flex:1; height:52px;
   position:relative;
   display:flex; align-items:center; justify-content:center;
-  border-radius:14px;
+  border-radius:12px;
   background:linear-gradient(135deg,rgba(20,5,40,.95),rgba(8,2,20,.98));
   border:1.5px solid rgba(120,40,120,.45);
   box-shadow:inset 0 1px 0 rgba(255,180,255,.07),0 2px 8px rgba(0,0,0,.55);
@@ -504,7 +515,7 @@ body {
 }
 .apply-text {
   position:relative; z-index:2;
-  font-size:14px; font-weight:900; letter-spacing:2.6px;
+  font-size:11.5px; font-weight:900; letter-spacing:2.2px;
   text-transform:uppercase;
   background:linear-gradient(90deg,#ff7acb,#80e8ff);
   -webkit-background-clip:text; background-clip:text;
@@ -543,8 +554,8 @@ body {
 }
 .apply.cd .apply-text {
   font-family:'Courier New',monospace;
-  font-size:18px;
-  letter-spacing:1.5px;
+  font-size:14.5px;
+  letter-spacing:1.3px;
   background:none;
   -webkit-text-fill-color:#fff;
   filter:drop-shadow(0 1px 2px rgba(0,0,0,.95));
