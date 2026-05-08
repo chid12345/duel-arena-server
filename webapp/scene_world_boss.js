@@ -111,7 +111,7 @@ class WorldBossScene extends Phaser.Scene {
     }
   }
 
-  // "Форма" state — что определяет ВЁРСТКУ (вошёл/живой/мёртв/рейд кончился).
+  // "Форма" state — что определяет ВЁРСТКУ (вошёл/живой/мёртв/рейд кончился/gather).
   // Цифры (HP, таймер, проценты) сюда НЕ входят: их обновляет updateHUD без re-render.
   _shapeKey(s) {
     if (!s) return 'null';
@@ -121,7 +121,11 @@ class WorldBossScene extends Phaser.Scene {
     const hasPs  = s.player_state ? 1 : 0;
     const dead   = s.player_state?.is_dead ? 1 : 0;
     const unc    = (s.unclaimed_rewards || []).length > 0 ? 1 : 0;
-    return `${sid}|${active}|${prep}|${hasPs}|${dead}|${unc}`;
+    // gather.is_open — открыта ли "комната ожидания" (за ~5 мин до старта).
+    // Без этого: сервер открывает gather, but shape не меняется → _render не вызывается
+    // → кнопка "ВОЙТИ В ЗАЛ ОЖИДАНИЯ" не появляется до ручного обновления страницы.
+    const gth = s.gather?.is_open ? 1 : 0;
+    return `${sid}|${active}|${prep}|${hasPs}|${dead}|${unc}|${gth}`;
   }
 
   _openWS() {
