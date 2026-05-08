@@ -26,7 +26,15 @@ const CSS = `
 .rt-info-sub{font-size:9px;color:#c0b890;line-height:1.3}
 .rt-podium{display:flex;align-items:flex-end;justify-content:center;gap:8px;padding:10px 12px 0}
 .rt-pod-col{display:flex;flex-direction:column;align-items:center}
-.rt-pod-medal{font-size:20px;margin-bottom:2px;filter:drop-shadow(0 0 6px currentColor)}
+.rt-pod-medal{margin-bottom:3px;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.rt-pod-medal img{display:block;width:100%;height:100%;object-fit:contain;animation:rtMedalFloat 2.6s ease-in-out infinite}
+.rt-pod-medal-1{width:58px;height:58px}
+.rt-pod-medal-2{width:46px;height:46px}
+.rt-pod-medal-3{width:42px;height:42px}
+.rt-pod-medal-1 img{filter:drop-shadow(0 0 10px rgba(255,215,0,.85)) drop-shadow(0 0 22px rgba(255,200,0,.55));animation-delay:.2s}
+.rt-pod-medal-2 img{filter:drop-shadow(0 0 8px rgba(176,200,232,.8)) drop-shadow(0 0 18px rgba(130,170,220,.45));animation-delay:0s}
+.rt-pod-medal-3 img{filter:drop-shadow(0 0 8px rgba(224,148,90,.8)) drop-shadow(0 0 18px rgba(200,110,40,.45));animation-delay:.4s}
+@keyframes rtMedalFloat{0%,100%{transform:translateY(0);opacity:1}50%{transform:translateY(-3px);opacity:.92}}
 .rt-pod-name{font-size:9px;font-weight:700;color:#fff;text-align:center;max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
 .rt-pod-block{width:82px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 7px;position:relative;overflow:hidden;gap:2px}
 .rt-pod-block::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(255,255,255,.025) 2px 3px);pointer-events:none}
@@ -135,7 +143,7 @@ function _podiumHTML(top3, meta, tabKey) {
     const av  = _AVEMOJI[Math.abs(Number(p.user_id)||0) % _AVEMOJI.length];
     const lvl = p.level ? `<div class="rt-pod-lvl">Ур. ${p.level}</div>` : '';
     return `<div class="rt-pod-col" data-pid="${p.user_id}" data-rank="${ranks[i]}" data-tab="${tabKey}">
-      <div class="rt-pod-medal" style="color:${colors[i]}">${medals[i]}</div>
+      <div class="rt-pod-medal rt-pod-medal-${ranks[i]}"><img src="rating_medal_${ranks[i]}.png" alt="" draggable="false" onerror="this.style.display='none';this.parentNode.textContent='${medals[i]}';this.parentNode.style.fontSize='28px';this.parentNode.style.color='${colors[i]}';"></div>
       <div class="rt-pod-name">${nm}</div>
       <div class="rt-pod-block${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 22px ${glows[i]},inset 0 0 16px rgba(255,255,255,.04)">
         <div class="rt-pod-av">${av}</div>
