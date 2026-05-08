@@ -147,11 +147,24 @@
   font-family:'Courier New',monospace;
   font-size:8px; line-height:1.4;
   white-space:nowrap; overflow:hidden;
+  transition:opacity .2s;
 }
+.cy-clog-row.old { opacity:.55; }
 .cy-clog-tag {
   font-weight:900; letter-spacing:.4px;
   padding:1px 4px; border-radius:3px; flex-shrink:0;
   font-size:7.5px;
+}
+/* Чередование цвета тега — свежий раунд розовый, предыдущий циан (как в боте) */
+.cy-clog-tag.t-pink {
+  color:#ff7acb; background:rgba(255,59,168,.15);
+  border:1px solid rgba(255,59,168,.5);
+  text-shadow:0 0 4px rgba(255,59,168,.7);
+}
+.cy-clog-tag.t-cyan {
+  color:#80e8ff; background:rgba(0,240,255,.12);
+  border:1px solid rgba(0,240,255,.5);
+  text-shadow:0 0 4px rgba(0,240,255,.7);
 }
 .cy-clog-tag.p2 {
   color:#ff7acb; background:rgba(255,59,168,.15);
@@ -172,12 +185,17 @@
 .cy-clog-zone { font-weight:700; letter-spacing:.3px; }
 .cy-clog-zone.atk { color:#ff9ed4; text-shadow:0 0 4px rgba(255,59,168,.5); }
 .cy-clog-zone.def { color:#a8eaff; text-shadow:0 0 4px rgba(0,240,255,.5); }
+/* зоны "moя/его" (как в боте) */
+.cy-clog-zone.me  { color:#80e8ff; text-shadow:0 0 4px rgba(0,240,255,.5); }
+.cy-clog-zone.opp { color:#ff9ed4; text-shadow:0 0 4px rgba(255,59,168,.5); }
 .cy-clog-arr { color:rgba(255,255,255,.35); font-weight:700; margin:0 1px; }
 .cy-clog-res { font-weight:800; letter-spacing:.3px; display:inline-flex; align-items:center; gap:2px; }
 .cy-clog-res.dmg { color:#ff4477; text-shadow:0 0 4px rgba(255,68,119,.6); }
 .cy-clog-res.crit { color:#ffd166; text-shadow:0 0 5px rgba(255,209,102,.7); }
 .cy-clog-res.hp { color:#80e8ff; }
 .cy-clog-res.blk { color:rgba(220,220,235,.55); }
+.cy-clog-res.miss { color:rgba(220,220,235,.55); }
+.cy-clog-res.dodge { color:#80e8ff; text-shadow:0 0 4px rgba(0,240,255,.5); }
 .cy-clog-empty {
   text-align:center; font-size:7.5px;
   color:rgba(160,200,255,.4); letter-spacing:1.3px;

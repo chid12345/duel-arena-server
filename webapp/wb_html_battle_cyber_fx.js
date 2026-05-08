@@ -72,26 +72,33 @@
     setTimeout(() => { try { el.classList.remove('fx-ok','fx-bad'); } catch(_) {} }, 950);
   }
 
-  // Рендер ОДНОГО раунда: тег "Р{N}" + краткая инфа (моя атака → результат · защита → результат).
-  function _renderRound(num, sel, r) {
-    const atkZ = ZONE_NAME[sel.atk] || '—';
-    const defZ = ZONE_NAME[sel.def] || '—';
-    const atkRes = r.atk_blocked
+  // Сокращения зон (как в боте: Гол / Тело / Ноги).
+  const ZONE_SHORT = { HEAD:'Гол', TORSO:'Тело', LEGS:'Ноги' };
+
+  // Рендер ОДНОГО раунда (формат как bot_battle_log: моя атака+рез · его атака+рез).
+  // isFresh=true → тег розовый (свежий), false → тег циан (старый, приглушён).
+  function _renderRound(num, sel, r, isFresh) {
+    const myZ = ZONE_SHORT[sel.atk] || '—';
+    const oppZ = ZONE_SHORT[r.boss_atk_zone] || '—';
+    const myRes = r.atk_blocked
       ? '<span class="cy-clog-res blk">⊘ блок</span>'
       : (r.is_crit
-          ? '<span class="cy-clog-res crit">−' + (r.damage || 0) + '!</span>'
+          ? '<span class="cy-clog-res crit">💥−' + (r.damage || 0) + '</span>'
           : '<span class="cy-clog-res dmg">−' + (r.damage || 0) + '</span>');
-    const defRes = r.def_blocked
-      ? '<span class="cy-clog-res blk">⊘ отбил</span>'
-      : '<span class="cy-clog-res hp">❤' + Math.max(0, r.player_hp || 0) + '</span>';
-    return '<span class="cy-clog-tag round">Р' + num + '</span>'
-         + '<span class="cy-clog-zone atk">' + atkZ + '</span> ' + atkRes
+    const oppRes = r.def_blocked
+      ? '<span class="cy-clog-res blk">⊘ блок</span>'
+      : (r.counter_damage
+          ? '<span class="cy-clog-res dmg">−' + r.counter_damage + '</span>'
+          : '<span class="cy-clog-res miss">✕ мимо</span>');
+    const tagCls = isFresh ? 't-pink' : 't-cyan';
+    return '<span class="cy-clog-tag ' + tagCls + '">Р' + num + '</span>'
+         + '<span class="cy-clog-zone me">' + myZ + '</span> ' + myRes
          + '<span class="cy-clog-arr">·</span>'
-         + '<span class="cy-clog-zone def">' + defZ + '</span> ' + defRes;
+         + '<span class="cy-clog-zone opp">' + oppZ + '</span> ' + oppRes;
   }
 
   // Лог раундов: Р1, Р2, Р3, ... В шапке всегда видны ПОСЛЕДНИЕ ДВА раунда
-  // (старые скроллятся вверх). Полная история — в попапе тапом.
+  // (свежий розовый, предыдущий циан + opacity:.55). Полная история — попап тапом.
   function pushClog(root, sel, r) {
     if (!root || !r) return;
     const hist = root.__cyHistory = root.__cyHistory || [];
@@ -102,15 +109,27 @@
     const prev  = root.querySelector('#cy-clog-prev');
     const curr  = root.querySelector('#cy-clog-curr');
     if (empty) empty.style.display = 'none';
+    // curr — самый свежий (розовый), prev — предыдущий (циан, приглушён)
     if (hist.length === 1) {
       if (prev) prev.style.display = 'none';
-      if (curr) { curr.style.display = ''; curr.innerHTML = _renderRound(num, sel, r); }
+      if (curr) {
+        curr.style.display = '';
+        curr.classList.remove('old');
+        curr.innerHTML = _renderRound(num, sel, r, true);
+      }
     } else {
       const a = hist[hist.length - 2], b = hist[hist.length - 1];
-      if (prev) { prev.style.display = ''; prev.innerHTML = _renderRound(a.num, a.sel, a.r); }
-      if (curr) { curr.style.display = ''; curr.innerHTML = _renderRound(b.num, b.sel, b.r); }
+      if (prev) {
+        prev.style.display = '';
+        prev.classList.add('old');
+        prev.innerHTML = _renderRound(a.num, a.sel, a.r, false);
+      }
+      if (curr) {
+        curr.style.display = '';
+        curr.classList.remove('old');
+        curr.innerHTML = _renderRound(b.num, b.sel, b.r, true);
+      }
     }
-    // мерцание плашки
     const c = root.querySelector('#cy-clog');
     if (c) { c.classList.remove('fresh'); void c.offsetWidth; c.classList.add('fresh'); }
   }

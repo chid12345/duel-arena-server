@@ -175,34 +175,32 @@ body {
   white-space:nowrap;
   overflow:hidden;
   line-height:1.4;
+  transition:opacity .2s;
 }
+.clog-row.old { opacity:.55; }
 .clog-tag {
   font-weight:900; letter-spacing:.4px;
   padding:1px 4px; border-radius:3px;
   flex-shrink:0;
   font-size:7.5px;
 }
-.clog-tag.p2 {
+.clog-tag.p2, .clog-tag.t-pink {
   color:#ff7acb; background:rgba(255,59,168,.15);
   border:1px solid rgba(255,59,168,.5);
   text-shadow:0 0 4px rgba(255,59,168,.7);
 }
-.clog-tag.p1 {
+.clog-tag.p1, .clog-tag.t-cyan {
   color:#80e8ff; background:rgba(0,240,255,.12);
   border:1px solid rgba(0,240,255,.5);
   text-shadow:0 0 4px rgba(0,240,255,.7);
-}
-/* Тег номера раунда — золото-акцент */
-.clog-tag.round {
-  color:#ffd166; background:rgba(255,209,102,.12);
-  border:1px solid rgba(255,209,102,.5);
-  text-shadow:0 0 4px rgba(255,209,102,.7);
 }
 .clog-zone {
   font-weight:700; letter-spacing:.3px;
 }
 .clog-zone.atk { color:#ff9ed4; text-shadow:0 0 4px rgba(255,59,168,.5); }
 .clog-zone.def { color:#a8eaff; text-shadow:0 0 4px rgba(0,240,255,.5); }
+.clog-zone.me  { color:#80e8ff; text-shadow:0 0 4px rgba(0,240,255,.5); }
+.clog-zone.opp { color:#ff9ed4; text-shadow:0 0 4px rgba(255,59,168,.5); }
 .clog-arr {
   color:rgba(255,255,255,.35); font-weight:700;
   margin:0 1px;
@@ -901,25 +899,28 @@ body {
     }, 100);
   }
 
-  // ====== ЛОГ РАУНДОВ — последние 2 видны (Р1, Р2, Р3...) ======
-  const ZONE_NAME = { HEAD:'Голова', TORSO:'Тело', LEGS:'Ноги' };
-  const history = []; // полная история — для попапа
-  function _renderRound(num, r) {
-    const atkZ = ZONE_NAME[r.myAtk] || '—';
-    const defZ = ZONE_NAME[r.myDef] || '—';
+  // ====== ЛОГ РАУНДОВ — формат как в bot_battle_log (Р{N}, чередование цветов) ======
+  const ZONE_SHORT = { HEAD:'Гол', TORSO:'Тело', LEGS:'Ноги' };
+  const history = [];
+  function _renderRound(num, r, isFresh) {
+    const myZ = ZONE_SHORT[r.myAtk] || '—';
+    const oppZ = ZONE_SHORT[r.bossAtk] || '—';
     const atkBlocked = r.myAtk === r.bossDef;
-    const atkRes = atkBlocked
+    const myRes = atkBlocked
       ? '<span class="clog-res blk">⊘ блок</span>'
       : (r.isCrit
-          ? '<span class="clog-res crit">−' + r.myDmg + '!</span>'
+          ? '<span class="clog-res crit">💥−' + r.myDmg + '</span>'
           : '<span class="clog-res dmg">−' + r.myDmg + '</span>');
-    const defRes = r.defOK
-      ? '<span class="clog-res blk">⊘ отбил</span>'
-      : '<span class="clog-res hp">❤' + Math.max(0, myHP) + '</span>';
-    return '<span class="clog-tag round">Р' + num + '</span>'
-         + '<span class="clog-zone atk">' + atkZ + '</span> ' + atkRes
+    const oppRes = r.defOK
+      ? '<span class="clog-res blk">⊘ блок</span>'
+      : (r.bossDmg
+          ? '<span class="clog-res dmg">−' + r.bossDmg + '</span>'
+          : '<span class="clog-res miss">✕ мимо</span>');
+    const tagCls = isFresh ? 't-pink' : 't-cyan';
+    return '<span class="clog-tag ' + tagCls + '">Р' + num + '</span>'
+         + '<span class="clog-zone me">' + myZ + '</span> ' + myRes
          + '<span class="clog-arr">·</span>'
-         + '<span class="clog-zone def">' + defZ + '</span> ' + defRes;
+         + '<span class="clog-zone opp">' + oppZ + '</span> ' + oppRes;
   }
   function pushClog(r) {
     history.push(r);
@@ -929,11 +930,14 @@ body {
     const curr = document.getElementById('clog-curr');
     if (history.length === 1) {
       prev.style.display = 'none';
-      curr.style.display = ''; curr.innerHTML = _renderRound(num, r);
+      curr.style.display = ''; curr.classList.remove('old');
+      curr.innerHTML = _renderRound(num, r, true);
     } else {
       const a = history[history.length - 2];
-      prev.style.display = ''; prev.innerHTML = _renderRound(num - 1, a);
-      curr.style.display = ''; curr.innerHTML = _renderRound(num, r);
+      prev.style.display = ''; prev.classList.add('old');
+      prev.innerHTML = _renderRound(num - 1, a, false);
+      curr.style.display = ''; curr.classList.remove('old');
+      curr.innerHTML = _renderRound(num, r, true);
     }
     const c = document.getElementById('clog');
     c.classList.remove('fresh'); void c.offsetWidth; c.classList.add('fresh');
