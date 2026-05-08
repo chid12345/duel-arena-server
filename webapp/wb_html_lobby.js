@@ -85,14 +85,17 @@ window.WBHtml = (() => {
       </div>`;
     }).join('');
 
+    // Карточки воскрешения — ИНФО-режим без активной покупки.
+    // Свитки реально покупаются в боевом окне после смерти (там же кнопки),
+    // здесь дублирование не нужно — оставляем только справку.
     const resHTML = RES_META.map(r => {
       const gc = r.gold ? ' style="color:#ffdd44"' : '';
-      return `<div class="wb-rc" data-act="buy-res" data-id="${r.id}">
+      return `<div class="wb-rc info">
         <div class="wb-rh"${r.gold?' style="border-color:rgba(255,200,0,.15)"':''}><div class="wb-ri">${r.icon}</div>
           <div class="wb-rh-pct"${gc}>${r.pct}</div></div>
         <div class="wb-rb"><div class="wb-rb-cnt"${gc}>${res[r.id]||0}</div>
           <div class="wb-rb-lbl">В ЗАПАСЕ</div><div class="wb-rb-desc">${r.desc}</div>
-          <div class="wb-rbtn"${gc}>${r.price}</div></div>
+          <div class="wb-rprice"${gc}>${r.price}</div></div>
       </div>`;
     }).join('');
 
@@ -179,7 +182,10 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
   <div class="wb-cat" data-cat="history"><span class="wb-cat-ic">📜</span><span class="wb-cat-lb">ИСТОРИЯ</span></div>
 </div>
 <div class="wb-cp on" data-cp="boosts"><div class="wb-bgrid">${boostsHTML}</div></div>
-<div class="wb-cp" data-cp="revival"><div class="wb-rgrid">${resHTML}</div></div>
+<div class="wb-cp" data-cp="revival">
+  <div class="wb-rev-info">🛡 Свитки воскрешения покупаются <b>после смерти</b> в бою — кнопка появится прямо в боевом окне. Эта вкладка только показывает цены и твой запас.</div>
+  <div class="wb-rgrid">${resHTML}</div>
+</div>
 <div class="wb-cp" data-cp="history"><div class="wb-hist">${topRows}</div></div>`;
   }
 
@@ -507,7 +513,7 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
 
   function _startTimer() {
     clearInterval(window._wbTimer);
-    let _zeroTs = 0;
+    let _zeroTs = 0, _gatherCheckTs = 0;
     window._wbTimer = setInterval(() => {
       const el = document.getElementById('wb-timer'); if (!el) { clearInterval(window._wbTimer); return; }
       const sa = _state?.next_scheduled?.scheduled_at;
@@ -517,6 +523,15 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
       // Когда таймер на нуле и нет активного боя — поллим каждые 2с пока не стартует
       if (msLeft < 1000 && !_state?.active && Date.now() - _zeroTs > 2000) {
         _zeroTs = Date.now();
+        try { _scene?._refresh?.(); } catch(_) {}
+      }
+      // Окно открытия gather (≤ 6 мин до старта) — клиент сам по себе не узнает
+      // что сервер открыл "комнату ожидания". Поллим раз в 5с пока is_open=false,
+      // чтобы кнопка "ВОЙТИ В ЗАЛ ОЖИДАНИЯ" появилась вовремя.
+      const secLeft = msLeft / 1000;
+      if (secLeft > 0 && secLeft < 360 && !_state?.gather?.is_open && !_state?.active
+          && Date.now() - _gatherCheckTs > 5000) {
+        _gatherCheckTs = Date.now();
         try { _scene?._refresh?.(); } catch(_) {}
       }
     }, 1000);
