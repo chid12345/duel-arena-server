@@ -354,10 +354,10 @@
 }
 .cy-acts { display:flex; gap:10px; align-items:center; }
 
-/* Автоудар — PNG-скин (−20%) */
+/* Автоудар — PNG-скин (компактный) */
 .cy-dice {
   flex-shrink:0;
-  width:52px; height:52px;
+  width:36px; height:36px;
   background:none; border:0; padding:0; display:block;
   cursor:pointer;
   transition:transform .12s, filter .15s;
@@ -368,12 +368,12 @@
 }
 .cy-dice:active { transform:scale(.9); filter:brightness(1.2); }
 
-/* Совершить ход — CSS-кнопка киберпанк (−20%) */
+/* Совершить ход — CSS-кнопка киберпанк (компактная) */
 .cy-apply {
-  flex:1; height:52px;
+  flex:1; height:36px;
   position:relative;
   display:flex; align-items:center; justify-content:center;
-  border-radius:12px;
+  border-radius:9px;
   background:linear-gradient(135deg,rgba(20,5,40,.95),rgba(8,2,20,.98));
   border:1.5px solid rgba(120,40,120,.45);
   box-shadow:inset 0 1px 0 rgba(255,180,255,.07),0 2px 8px rgba(0,0,0,.55);
@@ -389,7 +389,7 @@
 }
 .cy-apply-text {
   position:relative; z-index:2;
-  font-size:11.5px; font-weight:900; letter-spacing:2.2px;
+  font-size:9px; font-weight:900; letter-spacing:1.6px;
   text-transform:uppercase;
   background:linear-gradient(90deg,#ff7acb,#80e8ff);
   -webkit-background-clip:text; background-clip:text;
@@ -418,7 +418,7 @@
 .cy-apply.ready:active { transform:scale(.97); animation:none; }
 .cy-apply.cd { cursor:wait; opacity:.55; border-color:rgba(150,150,170,.3); box-shadow:none; animation:none; }
 .cy-apply.cd .cy-apply-text {
-  font-family:'Courier New',monospace; font-size:14.5px; letter-spacing:1.3px;
+  font-family:'Courier New',monospace; font-size:11px; letter-spacing:1px;
   background:none; -webkit-text-fill-color:#fff;
   filter:drop-shadow(0 1px 2px rgba(0,0,0,.95));
 }
