@@ -18,29 +18,38 @@ const BotBattleCss = (() => {
     #bb-root .bg{position:absolute;top:0;left:0;right:0;bottom:0;background-size:cover;background-position:center;filter:brightness(.72) saturate(1.05);pointer-events:none;z-index:0;}
     #bb-root .bg::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(5,5,15,.45) 0%,rgba(5,5,15,.05) 35%,rgba(5,5,15,.05) 65%,rgba(5,5,15,.7) 100%);}
 
-    /* === HP-БЛОКИ ШАПКИ ================================================== */
-    #bb-root .hp-row{position:absolute;top:8px;left:8px;right:8px;display:grid;grid-template-columns:1fr 1fr;gap:6px;z-index:10;pointer-events:none;}
-    #bb-root .hp-block{padding:5px 8px;border-radius:8px;background:linear-gradient(180deg,rgba(10,2,20,.92),rgba(10,2,20,.55));border:1.5px solid rgba(0,240,255,.4);box-shadow:inset 0 1px 0 rgba(180,240,255,.1),0 0 10px rgba(0,240,255,.18);}
-    #bb-root .hp-block.opp{border-color:rgba(255,59,168,.45);box-shadow:inset 0 1px 0 rgba(255,180,255,.1),0 0 10px rgba(255,59,168,.18);}
-    #bb-root .hp-name{font-size:10px;font-weight:900;letter-spacing:1px;color:#80e8ff;text-shadow:0 0 6px rgba(0,240,255,.7);font-family:"Courier New","Consolas",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;cursor:pointer;}
-    #bb-root .hp-block.opp .hp-name{color:#ff7acb;text-shadow:0 0 6px rgba(255,59,168,.7);}
-    #bb-root .hp-num{font-size:9px;opacity:.85;text-align:right;margin-top:2px;font-family:"Courier New","Consolas",monospace;font-weight:700;color:#80e8ff;text-shadow:0 0 4px rgba(0,240,255,.5);}
-    #bb-root .hp-block.opp .hp-num{color:#ff7acb;text-shadow:0 0 4px rgba(255,59,168,.5);}
-    /* HP-полоска с inset glow + 12 сегментов через repeating-gradient overlay */
-    #bb-root .hp-bar{position:relative;height:9px;border-radius:5px;background:rgba(255,255,255,.04);overflow:hidden;margin-top:3px;border:1px solid rgba(0,240,255,.3);box-shadow:inset 0 0 6px rgba(0,0,0,.7);}
-    #bb-root .hp-block.opp .hp-bar{border-color:rgba(255,59,168,.35);}
+    /* === ШАПКА (соперник сверху, как в WB-бою) =========================== */
+    #bb-root .bb-top{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:8px;z-index:10;pointer-events:none;}
+    #bb-root .bb-top-name{flex:1;min-width:0;font-size:14px;font-weight:900;letter-spacing:1px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:auto;cursor:pointer;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;}
+    #bb-root .bb-top-sub{font-size:9px;color:#ffd166;text-shadow:0 0 5px rgba(255,209,102,.6);letter-spacing:.5px;font-family:"Courier New","Consolas",monospace;flex-shrink:0;}
+    #bb-root .bb-top-sub:empty{display:none;}
+    #bb-root .bb-top-sub .hp-rating{color:#ffd166;}
+
+    /* HP-полоска соперника на всю ширину под шапкой */
+    #bb-root .bb-bhp{position:absolute;top:34px;left:8px;right:8px;display:flex;align-items:center;gap:8px;z-index:10;pointer-events:none;}
+    #bb-root .bb-bhp-lbl{font-size:9px;font-weight:900;letter-spacing:1.2px;color:#ffd166;text-shadow:0 0 5px rgba(255,209,102,.6);flex-shrink:0;font-family:"Courier New","Consolas",monospace;}
+    #bb-root .bb-bhp-nums{font-family:"Courier New","Consolas",monospace;font-size:10px;font-weight:900;color:#fff;text-shadow:0 0 5px #ff3ba8;white-space:nowrap;flex-shrink:0;}
+
+    /* HP-полоска (общий компонент) с inset glow + сегменты + блик */
+    #bb-root .hp-bar{position:relative;flex:1;height:14px;border-radius:7px;background:rgba(255,255,255,.04);overflow:hidden;border:1.5px solid rgba(0,240,255,.4);box-shadow:inset 0 0 8px rgba(0,0,0,.7),0 0 10px rgba(0,240,255,.18);}
+    #bb-root .hp-bar.opp{border-color:rgba(255,59,168,.4);box-shadow:inset 0 0 8px rgba(0,0,0,.7),0 0 10px rgba(255,59,168,.18);}
     #bb-root .hp-fill{height:100%;background:linear-gradient(90deg,#0066ff 0%,#00f0ff 100%);background-size:200% 100%;box-shadow:0 0 8px rgba(0,240,255,.6),inset 0 0 4px rgba(255,255,255,.3);transition:width .5s ease;animation:bbHpFlow 2.4s linear infinite;}
-    #bb-root .hp-block.opp .hp-fill{background:linear-gradient(90deg,#ff0066 0%,#ff3ba8 50%,#ffd166 100%);background-size:200% 100%;box-shadow:0 0 8px rgba(255,59,168,.6),inset 0 0 4px rgba(255,255,255,.3);}
+    #bb-root .hp-bar.opp .hp-fill{background:linear-gradient(90deg,#ff0066 0%,#ff3ba8 50%,#ffd166 100%);background-size:200% 100%;box-shadow:0 0 8px rgba(255,59,168,.6),inset 0 0 4px rgba(255,255,255,.3);}
     @keyframes bbHpFlow{to{background-position:200% 0;}}
-    /* Сегменты — 12 равных делений вертикальной линией */
     #bb-root .hp-bar::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0,transparent calc(8.333% - 1px),rgba(0,0,0,.45) calc(8.333% - 1px),rgba(0,0,0,.45) 8.333%);z-index:2;}
-    /* Бликовая полоска сверху */
-    #bb-root .hp-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.22),transparent);pointer-events:none;z-index:1;border-radius:4px 4px 0 0;}
-    #bb-root .hp-rating{display:block;font-weight:600;opacity:.85;font-size:8.5px;margin-top:1px;color:#ffd166;text-shadow:0 0 5px rgba(255,209,102,.6);letter-spacing:.6px;font-family:"Courier New","Consolas",monospace;}
-    #bb-root .hp-block.opp .hp-rating{color:#ffb070;text-shadow:0 0 5px rgba(255,176,112,.5);}
+    #bb-root .hp-bar::after{content:"";position:absolute;left:0;right:0;top:0;height:45%;background:linear-gradient(180deg,rgba(255,255,255,.22),transparent);pointer-events:none;z-index:1;border-radius:6px 6px 0 0;}
+    #bb-root .hp-rating{font-weight:600;opacity:.95;font-size:9.5px;color:#ffd166;text-shadow:0 0 5px rgba(255,209,102,.6);letter-spacing:.6px;font-family:"Courier New","Consolas",monospace;}
+
+    /* HP игрока — внизу под кнопками, как в WB */
+    #bb-root .bb-php-row{position:absolute;left:8px;right:8px;bottom:8px;display:flex;align-items:center;gap:8px;z-index:9;pointer-events:none;}
+    #bb-root .bb-php-row .hp-bar{height:9px;border-radius:5px;}
+    #bb-root .bb-php-ic{font-size:14px;flex-shrink:0;filter:drop-shadow(0 0 4px #00f0ff);color:#00f0ff;}
+    #bb-root .bb-php-nums{font-family:"Courier New","Consolas",monospace;font-size:10px;font-weight:700;color:#80e8ff;text-shadow:0 0 5px #00f0ff;flex-shrink:0;white-space:nowrap;}
+    #bb-root .bb-php-name{font-size:10px;font-weight:900;letter-spacing:.8px;color:#80e8ff;text-shadow:0 0 6px rgba(0,240,255,.7);font-family:"Courier New","Consolas",monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:35%;flex-shrink:0;pointer-events:auto;cursor:pointer;}
+    #bb-root .bb-php-name .hp-rating{margin-left:4px;}
 
     /* === КИБЕР-ТАЙМЕР =================================================== */
-    #bb-root .timer{position:absolute;top:114px;right:10px;display:flex;align-items:center;gap:5px;font-family:"Courier New","Consolas",monospace;font-size:13px;font-weight:700;color:#00f0ff;text-shadow:0 0 6px #00f0ff;z-index:9;pointer-events:none;background:rgba(10,2,20,.65);padding:3px 8px;border-radius:6px;border:1px solid rgba(0,240,255,.35);transition:color .15s,border-color .15s,background .15s;}
+    #bb-root .timer{display:flex;align-items:center;gap:5px;font-family:"Courier New","Consolas",monospace;font-size:13px;font-weight:700;color:#00f0ff;text-shadow:0 0 6px #00f0ff;pointer-events:none;background:rgba(10,2,20,.65);padding:3px 8px;border-radius:6px;border:1px solid rgba(0,240,255,.35);transition:color .15s,border-color .15s,background .15s;flex-shrink:0;}
     #bb-root .timer::before{content:"";width:5px;height:5px;border-radius:50%;background:#00f0ff;box-shadow:0 0 6px #00f0ff;animation:bbTimerDot 1s ease-in-out infinite;}
     @keyframes bbTimerDot{0%,100%{opacity:1}50%{opacity:.25}}
     #bb-root .timer.danger{color:#ff4477;text-shadow:0 0 6px #ff4477;border-color:rgba(255,68,119,.7);background:rgba(40,5,12,.85);animation:bbTimerPulse 1s ease-in-out infinite;}
@@ -76,8 +85,8 @@ const BotBattleCss = (() => {
 
     /* === ЗОНЫ АТАКИ/ЗАЩИТЫ — палитра выровнена под WB ==================== */
     #bb-root .col{position:absolute;display:flex;flex-direction:column;gap:10px;z-index:9;}
-    #bb-root .atk-col{left:4px;bottom:11%;}
-    #bb-root .def-col{right:4px;bottom:11%;}
+    #bb-root .atk-col{left:4px;bottom:120px;}
+    #bb-root .def-col{right:4px;bottom:120px;}
     #bb-root .col-lbl{font-size:9px;font-weight:900;letter-spacing:1.6px;text-align:center;font-family:"Courier New","Consolas",monospace;text-transform:uppercase;margin-bottom:1px;}
     #bb-root .atk-col .col-lbl{color:#ff7acb;text-shadow:0 0 6px rgba(255,59,168,.7);}
     #bb-root .def-col .col-lbl{color:#80e8ff;text-shadow:0 0 6px rgba(0,240,255,.7);}
@@ -103,7 +112,8 @@ const BotBattleCss = (() => {
     #bb-root .ic-btn.spin > img{filter:brightness(2) drop-shadow(0 0 12px #fff) drop-shadow(0 0 6px #ffd166)!important;}
 
     /* === ПАНЕЛЬ ДЕЙСТВИЙ (auto + confirm + autobattle) =================== */
-    #bb-root .action-row{position:absolute;left:8px;right:8px;bottom:8px;display:flex;gap:8px;align-items:stretch;z-index:9;}
+    /* Стоит над HP-полоской игрока (которая на bottom:8px) */
+    #bb-root .action-row{position:absolute;left:8px;right:8px;bottom:42px;display:flex;gap:8px;align-items:stretch;z-index:9;}
     #bb-root .auto-btn{flex-shrink:0;width:54px;height:54px;background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .12s;font-size:0;}
     #bb-root .auto-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;filter:drop-shadow(0 0 6px rgba(255,200,60,.5)) drop-shadow(0 2px 4px rgba(0,0,0,.6));transition:filter .18s, transform .18s;}
     #bb-root .auto-btn:active{transform:scale(.92);}

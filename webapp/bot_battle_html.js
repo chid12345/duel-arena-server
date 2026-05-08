@@ -68,24 +68,30 @@ const BotBattleHtml = (() => {
     const oppPct = oppMaxHp > 0 ? Math.max(0, Math.min(100, oppHp / oppMaxHp * 100)) : 100;
     root.innerHTML = `
       <div class="bg" style="background-image:url('${bgUrl}')"></div>
-      <div class="hp-row">
-        <div class="hp-block"><div class="hp-name" id="bb-p1n" style="cursor:pointer">${meName}${myRatingHtml}</div>
-          <div class="hp-bar"><div class="hp-fill" id="bb-p1b" style="width:${myPct}%"></div></div>
-          <div class="hp-num" id="bb-p1h">${myHp} / ${myMaxHp}</div></div>
-        <div class="hp-block opp"><div class="hp-name" id="bb-p2n" style="cursor:pointer">${oppName}${oppRatingHtml}</div>
-          <div class="hp-bar"><div class="hp-fill" id="bb-p2b" style="width:${oppPct}%"></div></div>
-          <div class="hp-num" id="bb-p2h">${oppHp} / ${oppMaxHp}</div></div>
+      <div class="bb-top">
+        <div class="bb-top-name" id="bb-p2n" style="cursor:pointer">${oppName}</div>
+        <div class="bb-top-sub">${oppRatingHtml || '&nbsp;'}</div>
+        <div class="timer" id="bb-timer">15</div>
       </div>
-      <div class="timer" id="bb-timer">15</div>
+      <div class="bb-bhp">
+        <div class="bb-bhp-lbl">HP</div>
+        <div class="hp-bar opp"><div class="hp-fill" id="bb-p2b" style="width:${oppPct}%"></div></div>
+        <div class="bb-bhp-nums" id="bb-p2h">${oppHp} / ${oppMaxHp}</div>
+      </div>
       <div class="fighter player" id="bb-p1"><img src="${_pSkin()}"><div class="shadow"></div></div>
-      <div class="vs">VS</div>
       <div class="fighter boss${isPvp ? ' flip' : ''}" id="bb-p2">${skinUrl ? `<img src="${skinUrl}"${flipBoss ? '' : ' style="transform:scaleX(-1)"'}>` : ''}<div class="shadow"></div></div>
-      <div class="col atk-col"><div class="col-lbl">АТАКА</div>${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div>
-      <div class="col def-col"><div class="col-lbl">ЗАЩИТА</div>${['HEAD','TORSO','LEGS'].map(k => btn('def', k)).join('')}</div>
+      <div class="col atk-col"><div class="col-lbl">⚔ АТАКА</div>${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div>
+      <div class="col def-col"><div class="col-lbl">🛡 ЗАЩИТА</div>${['HEAD','TORSO','LEGS'].map(k => btn('def', k)).join('')}</div>
       <div class="action-row">
         <div class="auto-btn" id="bb-auto" title="Случайный ход (один раз)"><img src="btn_autoattack.png" alt="auto"></div>
         <div class="confirm-btn" id="bb-confirm" data-text="⚔ Совершить ход"></div>
         <div class="autobattle-btn" id="bb-autobattle" title="Автобой (премиум)"><img src="btn_auto.png" alt="autobattle"></div>
+      </div>
+      <div class="bb-php-row">
+        <div class="bb-php-ic">❤</div>
+        <div class="hp-bar"><div class="hp-fill" id="bb-p1b" style="width:${myPct}%"></div></div>
+        <div class="bb-php-nums" id="bb-p1h">${myHp} / ${myMaxHp}</div>
+        <div class="bb-php-name" id="bb-p1n" style="cursor:pointer">${meName}${myRatingHtml}</div>
       </div>
       <div class="wait" id="bb-wait" style="display:none"></div>`;
     elP1Hp = root.querySelector('#bb-p1h'); elP2Hp = root.querySelector('#bb-p2h');

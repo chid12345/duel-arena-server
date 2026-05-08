@@ -23,7 +23,7 @@ const BotBattleLog = (() => {
     const s = document.createElement('style');
     s.id = 'bb-log-css';
     s.textContent = `
-      #bb-root .bb-clog{position:absolute;left:8px;right:8px;top:62px;z-index:9;display:flex;flex-direction:column;gap:2px;padding:5px 7px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(10,2,20,.45));border-radius:8px;border:1px solid rgba(0,240,255,.12);font-family:'Courier New',monospace;font-size:10px;line-height:1.4;pointer-events:none;}
+      #bb-root .bb-clog{position:absolute;left:8px;right:8px;top:58px;z-index:9;display:flex;flex-direction:column;gap:2px;padding:5px 7px;background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(10,2,20,.45));border-radius:8px;border:1px solid rgba(0,240,255,.12);font-family:'Courier New',monospace;font-size:10px;line-height:1.4;pointer-events:none;}
       @keyframes bbClogPulse{0%{box-shadow:0 0 0 0 rgba(0,240,255,0);border-color:rgba(0,240,255,.12);}20%{box-shadow:0 0 12px rgba(0,240,255,.4);border-color:rgba(0,240,255,.55);}100%{box-shadow:0 0 0 0 rgba(0,240,255,0);border-color:rgba(0,240,255,.12);}}
       #bb-root .bb-clog.fresh{animation:bbClogPulse .9s ease-out;}
       #bb-root .bb-clog-row{display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden;}
