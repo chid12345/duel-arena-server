@@ -396,17 +396,17 @@ body {
   position:relative;
   transition:transform .12s;
 }
-/* halo-круг за иконкой при выборе */
+/* halo-плашка квадратная (rounded square, как в бою с ботом) */
 .zbtn::before {
   content:''; position:absolute;
-  width:46px; height:46px; left:50%; top:6px;
-  transform:translateX(-50%) scale(.6);
-  border-radius:50%;
+  inset:0;
+  transform:scale(.85);
+  border-radius:10px;
   opacity:0;
   pointer-events:none;
-  background:radial-gradient(circle, var(--sel-glow,#ff3ba8) 0%, transparent 70%);
-  border:2px solid var(--sel-glow,#ff3ba8);
-  box-shadow:0 0 14px var(--sel-glow,#ff3ba8), inset 0 0 10px rgba(255,255,255,.18);
+  background:linear-gradient(180deg, color-mix(in srgb, var(--sel-glow,#ff3ba8) 22%, transparent), color-mix(in srgb, var(--sel-glow,#ff3ba8) 8%, transparent));
+  border:1.5px solid var(--sel-glow,#ff3ba8);
+  box-shadow:0 0 14px var(--sel-glow,#ff3ba8), inset 0 0 10px rgba(255,255,255,.12);
   transition:opacity .2s ease-out, transform .2s ease-out;
   z-index:0;
 }
@@ -436,8 +436,8 @@ body {
 /* выбранная — halo-круг через ::before + усиленный glow на иконке, надпись белая */
 .zbtn.sel { color:#fff; }
 .zbtn.sel::before {
-  opacity:.78 !important;
-  transform:translateX(-50%) scale(1) !important;
+  opacity:1 !important;
+  transform:scale(1) !important;
 }
 .zbtn.sel img {
   filter:drop-shadow(0 0 14px var(--sel-glow))
