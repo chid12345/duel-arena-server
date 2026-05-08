@@ -32,8 +32,11 @@
     const s = document.createElement('style');
     s.id = 'wbz-x-css';
     s.textContent = `
-      /* Layout — flex column + overflow:hidden гарантирует НЕТ scroll и НЕТ shift */
-      #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;overflow:hidden!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;background-color:#02000a!important}
+      /* Layout — flex column + overflow:hidden + блок touch-overscroll (iOS bounce).
+         Гарантирует: НЕТ scroll, НЕТ rubber-band, НЕТ shift при ударе. */
+      #wb-root.wbz-fill{display:flex!important;flex-direction:column!important;overflow:hidden!important;overscroll-behavior:none!important;touch-action:manipulation!important;background-size:cover!important;background-position:center!important;background-repeat:no-repeat!important;background-color:#02000a!important}
+      /* Боссовая зона — НИКАКИХ transform/animation/scrollbar — статичная */
+      #wb-root.wbz-fill > .wb-boss-zone{transform:none!important;animation:none!important;overflow:hidden!important;overscroll-behavior:none!important}
       #wb-root.wbz-fill > .wb-bhdr2,
       #wb-root.wbz-fill > .wb-ticker{flex-shrink:0!important}
       #wb-root.wbz-fill > .wb-boss-zone{flex:1 1 0!important;min-height:0!important;height:auto!important;background-image:none!important;background-color:transparent!important;padding-bottom:46px!important;box-sizing:border-box!important}
