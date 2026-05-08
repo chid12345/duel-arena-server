@@ -334,6 +334,17 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
   }
 
   function _fitToCanvas(root) {
+    // В боевом режиме (#wb-root.wbz-fill) НИКОГДА не подгоняем под canvas.
+    // Бой идёт на весь viewport — Telegram шлёт viewportChanged при тапе/haptic,
+    // resize-наблюдатель срабатывал, root сжимался до размеров canvas минус
+    // таб-бар → между HP-плашкой и низом TG появлялась чёрная полоса
+    // ("экран поднимался вверх" после удара). Держим inset:0 жёстко.
+    if (root.classList && root.classList.contains('wbz-fill')) {
+      root.style.top = '0'; root.style.left = '0';
+      root.style.right = '0'; root.style.bottom = '0';
+      root.style.width = ''; root.style.height = '';
+      return;
+    }
     try {
       const c = document.querySelector('canvas'); if (!c) return;
       const r = c.getBoundingClientRect();
