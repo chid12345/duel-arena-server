@@ -36,11 +36,17 @@ const CSS = `
 .rt-pod-medal-3 img{filter:drop-shadow(0 0 8px rgba(224,148,90,.8)) drop-shadow(0 0 18px rgba(200,110,40,.45));animation-delay:.4s}
 @keyframes rtMedalFloat{0%,100%{transform:translateY(0);opacity:1}50%{transform:translateY(-3px);opacity:.92}}
 .rt-pod-name{font-size:9px;font-weight:700;color:#fff;text-align:center;max-width:82px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:3px}
-.rt-pod-block{width:82px;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px 7px;position:relative;overflow:hidden;gap:2px}
-.rt-pod-block::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(255,255,255,.025) 2px 3px);pointer-events:none}
-.rt-pod-block::after{content:"";position:absolute;top:-30px;left:-30px;width:40px;height:160%;background:linear-gradient(110deg,transparent,rgba(255,255,255,.07),transparent);pointer-events:none}
-.rt-pod-av{font-size:26px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.4));margin-bottom:1px}
-.rt-pod-score{font-size:14px;font-weight:800;color:#fff;text-shadow:0 0 12px currentColor;letter-spacing:.3px}
+.rt-pod-block{width:82px;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:8px 4px 9px;position:relative;overflow:hidden;gap:3px;isolation:isolate}
+.rt-pod-block::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(255,255,255,.025) 2px 3px);pointer-events:none;z-index:1}
+.rt-pod-block::after{content:"";position:absolute;top:-10%;left:-60%;width:55%;height:140%;background:linear-gradient(110deg,transparent 30%,rgba(255,255,255,.18) 50%,transparent 70%);pointer-events:none;animation:rtPodSweep 4.5s ease-in-out infinite;z-index:2}
+@keyframes rtPodSweep{0%,18%{left:-60%;opacity:0}25%{opacity:1}80%{opacity:1}88%,100%{left:130%;opacity:0}}
+.rt-pod-energy{position:absolute;left:0;right:0;bottom:0;height:65%;background:linear-gradient(to top,var(--medal-c-strong) 0%,var(--medal-c-soft) 55%,transparent 100%);pointer-events:none;animation:rtEnergyPulse 3s ease-in-out infinite;z-index:0;mix-blend-mode:screen}
+@keyframes rtEnergyPulse{0%,100%{opacity:.55;transform:translateY(2%)}50%{opacity:.95;transform:translateY(0)}}
+.rt-pod-block.rt-pod-rank-1{animation:rtPodCrown 4s ease-in-out infinite}
+@keyframes rtPodCrown{0%,100%{box-shadow:0 0 22px rgba(255,200,0,.55),inset 0 0 16px rgba(255,255,255,.04)}50%{box-shadow:0 0 32px rgba(255,200,0,.85),0 0 60px rgba(255,200,0,.35),inset 0 0 22px rgba(255,235,120,.12)}}
+.rt-pod-av{font-size:26px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.4));margin-bottom:1px;position:relative;z-index:3}
+.rt-pod-score{font-size:14px;font-weight:800;color:#fff;text-shadow:0 0 12px currentColor;letter-spacing:.3px;position:relative;z-index:3}
+.rt-pod-lvl{position:relative;z-index:3}
 .rt-pod-lvl{font-size:8px;color:rgba(255,255,255,.5);margin-top:0}
 .rt-pod-me{box-shadow:0 0 0 2px #00f5ff,0 0 18px rgba(0,245,255,.5)!important}
 .rt-section{padding:5px 10px 2px;font-size:9px;font-weight:700;color:#ffd700;letter-spacing:.7px;opacity:.65;text-transform:uppercase}
@@ -132,6 +138,9 @@ function _podiumHTML(top3, meta, tabKey) {
   ];
   const borders = ['rgba(160,195,235,.75)','rgba(255,215,0,.9)','rgba(210,130,60,.8)'];
   const glows   = ['rgba(130,170,220,.45)','rgba(255,200,0,.55)','rgba(200,110,40,.45)'];
+  // Энерго-заливка снизу (soft = слабая верхушка, strong = яркое основание)
+  const energySoft   = ['rgba(170,200,235,.18)','rgba(255,215,80,.22)','rgba(220,140,70,.18)'];
+  const energyStrong = ['rgba(120,170,220,.55)','rgba(255,200,0,.65)','rgba(210,110,40,.55)'];
   const _AVEMOJI = ['⚔️','🛡️','🧙','🐉','⚡','🗡️','🔥','🦅','🐺','🔮','✨','💀','🏹','🪓'];
   const myUid   = State?.player?.user_id;
 
@@ -145,7 +154,8 @@ function _podiumHTML(top3, meta, tabKey) {
     return `<div class="rt-pod-col" data-pid="${p.user_id}" data-rank="${ranks[i]}" data-tab="${tabKey}">
       <div class="rt-pod-medal rt-pod-medal-${ranks[i]}"><img src="rating_medal_${ranks[i]}.png" alt="" draggable="false" onerror="this.style.display='none';this.parentNode.textContent='${medals[i]}';this.parentNode.style.fontSize='28px';this.parentNode.style.color='${colors[i]}';"></div>
       <div class="rt-pod-name">${nm}</div>
-      <div class="rt-pod-block${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 22px ${glows[i]},inset 0 0 16px rgba(255,255,255,.04)">
+      <div class="rt-pod-block rt-pod-rank-${ranks[i]}${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 22px ${glows[i]},inset 0 0 16px rgba(255,255,255,.04);--medal-c-soft:${energySoft[i]};--medal-c-strong:${energyStrong[i]}">
+        <div class="rt-pod-energy"></div>
         <div class="rt-pod-av">${av}</div>
         <div class="rt-pod-score" style="color:${colors[i]};text-shadow:0 0 14px ${colors[i]}">${_esc(meta.scoreLabel(p))}</div>
         ${lvl}
