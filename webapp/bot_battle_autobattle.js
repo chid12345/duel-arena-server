@@ -129,7 +129,7 @@
     const btn = ev.target.closest('#bb-autobattle');
     if (!btn) return;
     if (!_isPrem()) {
-      _toast('👑 АВТОБОЙ — только для подписчиков');
+      _toast('👑 АВТОБОЙ доступен с Премиум');
       try { tg?.HapticFeedback?.notificationOccurred?.('warning'); } catch (_) {}
       return;
     }
