@@ -89,8 +89,17 @@ class WorldBossScene extends Phaser.Scene {
         if (this._alive) this.time.delayedCall(5000, () => { if (this._alive) this._refresh(); });
         return;
       }
+      // "Форма" state — что определяет ВЁРСТКУ (а не цифры). Если форма не
+      // изменилась — фоновый poll/ws-fallback не должен пересобирать innerHTML:
+      // это вызывало "прыжок" экрана при ударе и сбрасывало выбор зон.
+      const prevShape = this._shapeKey(this._state);
+      const newShape  = this._shapeKey(d);
       this._state = d;
-      try { this._render(); } catch(e) { console.warn('WB render error:', e); }
+      if (this._loading || prevShape !== newShape) {
+        try { this._render(); } catch(e) { console.warn('WB render error:', e); }
+      } else {
+        try { window.WBHtml?.updateHUD(this._state); } catch(_) {}
+      }
       this._openWS();
     } catch(_) {
       if (this._alive && this._loading) {
@@ -100,6 +109,19 @@ class WorldBossScene extends Phaser.Scene {
     } finally {
       this._refreshBusy = false;
     }
+  }
+
+  // "Форма" state — что определяет ВЁРСТКУ (вошёл/живой/мёртв/рейд кончился).
+  // Цифры (HP, таймер, проценты) сюда НЕ входят: их обновляет updateHUD без re-render.
+  _shapeKey(s) {
+    if (!s) return 'null';
+    const sid    = s.active?.spawn_id || 0;
+    const active = s.active ? 1 : 0;
+    const prep   = (s.prep_seconds_left || 0) > 0 ? 1 : 0;
+    const hasPs  = s.player_state ? 1 : 0;
+    const dead   = s.player_state?.is_dead ? 1 : 0;
+    const unc    = (s.unclaimed_rewards || []).length > 0 ? 1 : 0;
+    return `${sid}|${active}|${prep}|${hasPs}|${dead}|${unc}`;
   }
 
   _openWS() {
