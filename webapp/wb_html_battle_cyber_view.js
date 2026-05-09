@@ -17,22 +17,24 @@
     }</div>`;
   }
 
+  // res_30=500🪙, res_60=40💎, res_100=80💎 — цены пачки (10 зарядов)
+  const RES_ITEMS = [
+    { id:'res_30',  ic:'💊', lbl:'30% HP',  price:'500 🪙',  cur:'gold'     },
+    { id:'res_60',  ic:'💉', lbl:'60% HP',  price:'40 💎',   cur:'diamonds' },
+    { id:'res_100', ic:'✨', lbl:'100% HP', price:'80 💎',   cur:'diamonds' },
+  ];
   function _deadHTML(a, s) {
     const scrolls = s?.res_scrolls_inv || {};
-    const ITEMS = [['res_30','💊','30% HP'],['res_60','💉','60% HP'],['res_100','✨','100% HP']];
-    const btns = ITEMS.map(([id, ic, lbl]) => {
+    const btns = RES_ITEMS.map(({ id, ic, lbl, price }) => {
       const n = scrolls[id] || 0;
-      const dis = n === 0 ? ' dis' : '';
-      return `<div class="cy-dead-b${dis}" ${n > 0 ? `data-act="res" data-t="${id}"` : ''}>`+
-        `<span class="ic">${ic}</span>${lbl}<br><small>${n > 0 ? `${n} шт.` : 'нет'}</small></div>`;
+      const sub = n > 0 ? `${n} шт.` : `купить ${price}`;
+      const act = n > 0 ? `data-act="res"` : `data-act="res-buy"`;
+      return `<div class="cy-dead-b" ${act} data-t="${id}">` +
+        `<span class="ic">${ic}</span>${lbl}<br><small>${sub}</small></div>`;
     }).join('');
-    const hasAny = ITEMS.some(([id]) => (scrolls[id] || 0) > 0);
-    const sub = hasAny
-      ? 'Выбери свиток воскрешения'
-      : 'Свитков нет — жди окончания рейда';
     return `<div class="cy-dead">
       <div class="cy-dead-t">💀 Вы пали в бою</div>
-      <div class="cy-dead-sub">${sub}</div>
+      <div class="cy-dead-sub">Воскреснуть или дождаться окончания</div>
       <div class="cy-dead-row">${btns}</div>
       <div class="cy-dead-tmr">⏳ До конца рейда: <span id="cy-dead-timer">${fmtSec(a.seconds_left)}</span></div>
     </div>`;

@@ -52,6 +52,17 @@
       if (ev.target.closest('#cy-clog')) { try { window.WBHtml?.showBattleHistory?.(); } catch(_) {} return; }
       const res = ev.target.closest('[data-act="res"]');
       if (res) { try { sc?._resurrect?.(res.dataset.t); } catch(_) {} return; }
+      const resBuy = ev.target.closest('[data-act="res-buy"]');
+      if (resBuy) {
+        (async () => {
+          try {
+            const r = await post('/api/shop/buy', { item_id: resBuy.dataset.t });
+            if (!r?.ok) { try { window.WBHtml?.toast?.('❌ ' + (r?.reason || 'Нет золота')); } catch(_) {} return; }
+            try { sc?._resurrect?.(resBuy.dataset.t); } catch(_) {}
+          } catch(_) { try { window.WBHtml?.toast?.('❌ Ошибка сети'); } catch(_) {} }
+        })();
+        return;
+      }
       if (ev.target.closest('[data-act="back"]')) {
         const inFight = !!sc?._state?.active && !sc?._state?.player_state?.is_dead && !!sc?._state?.player_state;
         if (inFight) { try { window.WBHtml?.toast?.('⚔️ Нельзя выйти — ты в бою'); } catch(_) {} return; }
