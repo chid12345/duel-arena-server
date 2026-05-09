@@ -148,9 +148,30 @@ async function claim(level, track) {
   }
 }
 
-function buyPremium() {
-  // TODO: интеграция с Stars/USDT; пока только подсказка
-  toast("Premium покупается через /buy в боте (390 ⭐ или 4.99 USDT)", true);
+async function buyPremium() {
+  if (!TG || !TG.openInvoice) {
+    toast("Открой через бота /pass — нужен Telegram WebApp", true);
+    return;
+  }
+  try {
+    const r = await api("/api/season_pass/buy_premium_invoice");
+    if (!r.ok || !r.invoice_link) {
+      toast("Не получилось создать счёт: " + (r.detail || ""), true);
+      return;
+    }
+    TG.openInvoice(r.invoice_link, (status) => {
+      if (status === "paid") {
+        toast("✓ Premium активирован!");
+        setTimeout(load, 800);  // дать боту время обработать webhook
+      } else if (status === "cancelled") {
+        toast("Покупка отменена", true);
+      } else if (status === "failed") {
+        toast("Платёж не прошёл", true);
+      }
+    });
+  } catch (e) {
+    toast("Ошибка: " + e.message, true);
+  }
 }
 
 async function load() {

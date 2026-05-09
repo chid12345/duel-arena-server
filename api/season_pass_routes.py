@@ -11,7 +11,10 @@ api/season_pass_routes.py — endpoints боевого пропуска для M
 from __future__ import annotations
 
 import logging
+import os
+from typing import Any
 
+import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
@@ -36,6 +39,10 @@ class ClaimBody(BaseModel):
     init_data: str
     level: int
     track: str  # 'free' | 'premium'
+
+
+class InvoiceBody(BaseModel):
+    init_data: str
 
 
 def _build_state_for_user(user_id: int) -> dict:
@@ -85,6 +92,33 @@ def _build_state_for_user(user_id: int) -> dict:
     }
 
 
+async def _create_premium_invoice_link() -> str:
+    """Через Bot API создаёт invoice link для Premium-подписки (Telegram Stars).
+    payload='premium_sub' — обрабатывается в successful_payment_handler существующего бота."""
+    token = (os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
+    if not token:
+        raise HTTPException(status_code=503, detail="TELEGRAM_BOT_TOKEN не настроен")
+    from config import PREMIUM_SUBSCRIPTION_STARS
+
+    payload: dict[str, Any] = {
+        "title": "Premium-подписка",
+        "description": "Premium-трек батл-пасса + бонусы (XP +30%, золото +18%, ящик в день)",
+        "payload": "premium_sub",
+        "currency": "XTR",  # Telegram Stars
+        "prices": [{"label": "Premium", "amount": int(PREMIUM_SUBSCRIPTION_STARS)}],
+    }
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        r = await client.post(
+            f"https://api.telegram.org/bot{token}/createInvoiceLink",
+            json=payload,
+        )
+        data = r.json()
+    if not data.get("ok"):
+        logger.error("createInvoiceLink failed: %s", data)
+        raise HTTPException(status_code=502, detail=f"createInvoiceLink: {data.get('description')}")
+    return str(data["result"])
+
+
 def register_season_pass_routes(app: FastAPI) -> None:
     @app.post("/api/season_pass/state", tags=["season_pass"])
     def get_state(body: StateBody):
@@ -94,6 +128,16 @@ def register_season_pass_routes(app: FastAPI) -> None:
         except Exception as e:
             raise HTTPException(status_code=401, detail=f"auth: {e}")
         return _build_state_for_user(uid)
+
+    @app.post("/api/season_pass/buy_premium_invoice", tags=["season_pass"])
+    async def buy_premium_invoice(body: InvoiceBody):
+        try:
+            user = get_user_from_init_data(body.init_data)
+            int(user["id"])
+        except Exception as e:
+            raise HTTPException(status_code=401, detail=f"auth: {e}")
+        link = await _create_premium_invoice_link()
+        return {"ok": True, "invoice_link": link}
 
     @app.post("/api/season_pass/claim", tags=["season_pass"])
     def claim_reward(body: ClaimBody):
