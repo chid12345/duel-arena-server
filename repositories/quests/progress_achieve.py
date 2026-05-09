@@ -105,6 +105,12 @@ class ProgressAchieveMixin:
             user_id, tier_def["xp"], gold_add=tier_def["gold"],
             diamonds_add=tier_def["diamonds"],
         )
+        # Шаг 5: BP-очки за получение тира достижения (one-time)
+        try:
+            from repositories.season_pass.award_points import award_quest_complete
+            award_quest_complete(self, user_id, "once")
+        except Exception:
+            pass
         return {
             "ok": True,
             "gold": tier_def["gold"],

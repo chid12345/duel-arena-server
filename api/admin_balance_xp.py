@@ -32,6 +32,50 @@ class XpUpdate(BaseModel):
     anchor: dict | None = None
 
 
+def build_season_pass_audit() -> dict:
+    """Сезонный пасс — текущий сезон, конфиг, награды."""
+    from repositories.season_pass.config_loader import (
+        get_pass_max_level, get_points_per_level,
+        get_points_for_action, get_rewards_grid, get_premium_subscription_config,
+        get_current_season_config,
+    )
+    from database import db
+
+    season = None
+    try:
+        season = db.get_active_bp_season()
+    except Exception as e:
+        logger.warning("get_active_bp_season failed: %s", e)
+
+    actions = ("pvp_win", "pvp_loss", "pve_bot_win", "daily_quest",
+               "weekly_quest", "achievement", "wb_hit", "wb_top_damage",
+               "wb_last_hit", "tower_floor", "endless_wave")
+    points = {a: get_points_for_action(a) for a in actions}
+
+    grid = get_rewards_grid()
+    levels = []
+    for k, v in grid.items():
+        if k.isdigit():
+            levels.append({
+                "level": int(k),
+                "free": v.get("free", {}),
+                "premium": v.get("premium", {}),
+            })
+    levels.sort(key=lambda x: x["level"])
+
+    return {
+        "active_season": season,
+        "season_config": get_current_season_config(),
+        "pass_config": {
+            "max_level": get_pass_max_level(),
+            "points_per_level": get_points_per_level(),
+        },
+        "points_for_action": points,
+        "rewards_levels": levels,
+        "premium_subscription": get_premium_subscription_config(),
+    }
+
+
 def build_xp_audit() -> dict:
     """Собрать XP-часть payload для общего audit endpoint."""
     from economy.xp_formulas import xp_per_win, xp_to_next, xp_for_task, load_xp_economy

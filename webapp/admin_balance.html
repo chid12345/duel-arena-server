@@ -19,6 +19,7 @@
   <div class="tab" data-tab="quests">📋 Квесты</div>
   <div class="tab" data-tab="shop">🛒 Магазин</div>
   <div class="tab" data-tab="xp">🌟 Опыт</div>
+  <div class="tab" data-tab="season">🏆 Сезон</div>
 </div>
 
 <!-- ======== АНКЕР ======== -->
@@ -98,9 +99,40 @@
   </div>
 </div>
 
+<!-- ======== СЕЗОН + БАТЛ-ПАСС ======== -->
+<div class="panel" id="panel-season">
+  <div class="card">
+    <h2>Текущий сезон (bp_seasons)</h2>
+    <div id="season-info">Загрузка…</div>
+  </div>
+
+  <div class="card">
+    <h2>Очки пасса за действия (BP points_for_action)</h2>
+    <table id="season-points-table">
+      <thead><tr><th>Действие</th><th>BP-очков</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="sub" style="margin-top: 8px;">
+      Меняется в config/season_pass.json. Калибровать так, чтобы F2P проходил пасс за 60-80% длины сезона.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Награды по уровням пасса (free + premium)</h2>
+    <table id="season-rewards-table">
+      <thead><tr><th>Уровень</th><th>Free track</th><th>Premium track</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <div class="sub" style="margin-top: 8px;">
+      Премиум-подписка <span id="season-prem-price">—</span> активирует premium track до конца сезона.
+    </div>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script src="/admin_balance_xp.js"></script>
+<script src="/admin_balance_season.js"></script>
 <script src="/admin_balance.js"></script>
 </body>
 </html>

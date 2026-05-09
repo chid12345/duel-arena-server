@@ -19,7 +19,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-from api.admin_balance_xp import build_xp_audit, register_save_xp
+from api.admin_balance_xp import build_season_pass_audit, build_xp_audit, register_save_xp
 from api.tma_auth import get_user_from_init_data
 from config.battle_constants import ADMIN_USER_IDS
 from economy import load_economy
@@ -207,4 +207,5 @@ def _build_audit_payload() -> dict:
 
     payload = {"ok": True, "quests": quests, "shop": shop}
     payload.update(build_xp_audit())
+    payload["season_pass"] = build_season_pass_audit()
     return payload

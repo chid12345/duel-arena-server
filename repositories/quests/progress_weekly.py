@@ -70,6 +70,12 @@ class ProgressWeeklyMixin:
             user_id, task["reward_xp"], gold_add=task["reward_gold"],
             diamonds_add=task["reward_diamonds"],
         )
+        # Шаг 5: BP-очки за выполненный недельный квест
+        try:
+            from repositories.season_pass.award_points import award_quest_complete
+            award_quest_complete(self, user_id, "weekly")
+        except Exception:
+            pass
         return {"ok": True, "gold": task["reward_gold"],
                 "diamonds": task["reward_diamonds"], "xp": task["reward_xp"],
                 "leveled": result.get("leveled", False),

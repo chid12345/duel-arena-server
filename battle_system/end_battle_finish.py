@@ -14,6 +14,7 @@ from battle_system.end_battle_finalize import (
 )
 from battle_system.end_battle_finish_modes import run_titan_endless_progress
 from battle_system.end_battle_finish_result import build_battle_ended_result
+from repositories.season_pass.award_points import award_battle_loss, award_battle_win
 from repositories.social.clan_bonus import apply_clan_win_bonus
 
 logger = logging.getLogger(__name__)
@@ -45,6 +46,8 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         # Бафф клана: +5% к золоту победителю + bump activity + clan progress
         from database import db as _db
         gold_reward = apply_clan_win_bonus(_db, winner_user_id, gold_reward)
+        # Шаг 5: BP-очки за победу. is_bot2 — бой против бота (PvE).
+        award_battle_win(_db, winner_user_id, vs_bot=bool(battle.get("is_bot2")))
         total_gold = winner_live.get("gold", 0) + gold_reward
         if new_win_streak > 0 and new_win_streak % STREAK_BONUS_EVERY == 0:
             streak_bonus_gold = STREAK_BONUS_GOLD
@@ -80,6 +83,10 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     loser_stats = None
     loser_did_level = False
     if not is_test and loser_user_id is not None and not loser_locked:
+        # Шаг 5: BP-очки за поражение PvP (только если против реального игрока).
+        if not battle.get("is_bot2"):
+            from database import db as _db_l
+            award_battle_loss(_db_l, loser_user_id)
         loser_pl = dict(loser_live)
         loser_pl["gold"] = max(0, loser_pl.get("gold", 0) + defeat_gold)
         loser_exp_patch, loser_did_level = bs._exp_progression_updates(loser_pl, loser_exp, max_level_ups=1)

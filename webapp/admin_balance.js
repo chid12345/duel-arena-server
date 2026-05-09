@@ -139,6 +139,7 @@ async function reloadConfig() {
     }
     if (audit.xp_levels) renderXpLevels(audit.xp_levels);
     if (audit.xp_quests) renderXpQuests(audit.xp_quests);
+    if (audit.season_pass && typeof renderSeason === "function") renderSeason(audit.season_pass);
     toast("Конфиг загружен ✓");
   } catch (e) {
     $("server-status").textContent = `Ошибка: ${e.message}`;
