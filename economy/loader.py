@@ -104,6 +104,16 @@ def get_tier_mult(tier: str) -> float:
     return float(load_economy()["tier_mult"][tier])
 
 
+def get_reward_grid_cell(frequency: str, difficulty: str) -> tuple[int, int] | None:
+    """Калиброванная награда для существующих квестов (gold, diamonds).
+    Возвращает None если клетка не задана — тогда вызывающий считает по формуле."""
+    grid = load_economy().get("reward_grid")
+    if not grid or frequency not in grid or difficulty not in grid[frequency]:
+        return None
+    cell = grid[frequency][difficulty]
+    return int(cell[0]), int(cell[1])
+
+
 if __name__ == "__main__":
     data = load_economy()
     print(f"Загружено: {economy_source_path()}")

@@ -18,6 +18,7 @@ from economy.loader import (
     get_difficulty_pu,
     get_frequency_mult,
     get_rarity_mult,
+    get_reward_grid_cell,
     get_reward_split,
     get_tier_mult,
 )
@@ -63,13 +64,17 @@ def reward_for_task(
     """
     Вернуть (gold, diamonds) по балансной сетке. Только валюта.
 
-    XP — отдельная система, считается через progression_loader (этап 5).
+    Сначала ищет в калиброванной сетке `reward_grid` (фактические значения
+    существующих квестов). Если клетки нет — считает формулой
+    `total_pu × split` для НОВЫХ заданий.
 
-    Логика:
-      total_pu = difficulty_pu × frequency_mult
-      gold     = pu_to_gold(total_pu × split[gold])
-      diamonds = round((total_pu × split[diamond]) × PU_TO_GOLD / GOLD_TO_DIAMOND)
+    XP — отдельная система, считается через progression_loader (этап 5).
     """
+    cell = get_reward_grid_cell(frequency, difficulty)
+    if cell is not None:
+        return cell
+
+    # Формула для новых заданий, не указанных в reward_grid
     total_pu = get_difficulty_pu(difficulty) * get_frequency_mult(frequency)
     split = get_reward_split(frequency)
     gold_pu = total_pu * split.get("gold", 0.0)
