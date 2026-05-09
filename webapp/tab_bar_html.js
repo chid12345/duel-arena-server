@@ -18,72 +18,71 @@ window.TabBarHTML = (() => {
   let _root = null, _scene = null, _onInternal = null, _activeKey = null;
 
   const CSS = `
+/* Вариант B "Голо-платформы (Tron)" — иконки парят над светящейся платформой */
 #tb-html-bar{position:fixed;z-index:9200;display:flex;
-  background:rgba(7,4,26,.97);
-  border-top:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg,transparent 0,rgba(7,4,26,.55) 40%,rgba(7,4,26,.92) 100%);
   font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
-  touch-action:manipulation}
-/* Ячейки — полностью прозрачные, без рамок и фонов = иконки "парят" */
+  touch-action:manipulation;padding:0 4px;gap:4px}
+/* Тонкая верхняя неоновая линия — отделяет панель от контента */
+#tb-html-bar::before{content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(0,240,255,.45),transparent);
+  box-shadow:0 0 8px rgba(0,240,255,.35);pointer-events:none}
+/* Ячейки — без фонов и рамок, иконки "парят" */
 .tb-item{flex:1;display:flex;flex-direction:column;align-items:center;
   justify-content:center;position:relative;cursor:pointer;
-  padding:3px 0 4px;overflow:hidden;
+  padding:4px 0 6px;
   -webkit-tap-highlight-color:transparent;user-select:none;
   background:transparent}
-/* Точка-индикатор активного таба */
-.tb-dot{position:absolute;top:4px;left:50%;transform:translateX(-50%);
-  width:7px;height:7px;border-radius:50%;
-  opacity:.35;transition:opacity .22s;
-  background:var(--col);
-  box-shadow:0 0 8px var(--col),0 0 3px var(--col)}
-.tb-item.active .tb-dot{opacity:1}
-/* Мягкое круглое свечение за иконкой — у всех, у активного ярче */
-.tb-glow{position:absolute;top:38%;left:50%;
-  transform:translate(-50%,-50%);
-  width:54px;height:54px;border-radius:50%;
-  background:radial-gradient(circle,var(--col) 0%,transparent 68%);
-  opacity:.09;transition:opacity .28s;pointer-events:none;z-index:0}
-.tb-item.active .tb-glow{opacity:.26}
+/* Голо-платформа под иконкой: эллипс цвета таба, blur, у активного ярче и пульсирует */
+.tb-platform{position:absolute;left:14%;right:14%;bottom:6px;height:4px;
+  border-radius:50%;background:var(--col);filter:blur(2px);
+  opacity:.45;transition:opacity .25s,filter .25s,height .25s;
+  pointer-events:none;z-index:0}
+/* Расширенное свечение платформы (эллипс-аура) */
+.tb-platform::after{content:"";position:absolute;left:-15%;right:-15%;top:-2px;
+  height:8px;border-radius:50%;
+  background:radial-gradient(ellipse,var(--col) 0%,transparent 70%);
+  opacity:.4;transition:opacity .25s}
+.tb-item.active .tb-platform{opacity:.95;filter:blur(3px);height:5px;
+  animation:tbPulse 1.6s ease-in-out infinite}
+.tb-item.active .tb-platform::after{opacity:.75}
+@keyframes tbPulse{0%,100%{opacity:.85}50%{opacity:1}}
 /* Обёртка иконки */
 .tb-icon-wrap{width:28px;height:28px;display:flex;align-items:center;
-  justify-content:center;position:relative;z-index:1;
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
-.tb-item.active .tb-icon-wrap{transform:scale(1.2) translateY(-2px)}
+  justify-content:center;position:relative;z-index:1;margin-bottom:6px;
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1)}
+.tb-item.active .tb-icon-wrap{transform:translateY(-5px) scale(1.14)}
 .tb-item:active .tb-icon-wrap{transform:scale(.88)}
-.tb-item.active:active .tb-icon-wrap{transform:scale(1.08) translateY(-1px)}
+.tb-item.active:active .tb-icon-wrap{transform:translateY(-2px) scale(1.04)}
 /* PNG-иконка — все горят своим цветом, активная ярче */
 .tb-img{width:28px;height:28px;object-fit:contain;display:block;
-  filter:saturate(.85) brightness(.8)
-    drop-shadow(0 0 4px var(--col))
-    drop-shadow(0 0 10px var(--col));
+  filter:saturate(.9) brightness(.85)
+    drop-shadow(0 0 5px var(--col))
+    drop-shadow(0 0 12px var(--col))
+    drop-shadow(0 2px 3px rgba(0,0,0,.7));
   transition:filter .25s}
 .tb-item.active .tb-img{
-  filter:saturate(1.3) brightness(1.15)
-    drop-shadow(0 0 7px var(--col))
-    drop-shadow(0 0 18px var(--col))}
+  filter:saturate(1.35) brightness(1.2)
+    drop-shadow(0 0 8px var(--col))
+    drop-shadow(0 0 22px var(--col))
+    drop-shadow(0 3px 4px rgba(0,0,0,.7))}
 /* Emoji-фолбэк */
 .tb-em{font-size:21px;line-height:1;
-  filter:saturate(.85) brightness(.8) drop-shadow(0 0 5px var(--col));
+  filter:saturate(.9) brightness(.85) drop-shadow(0 0 6px var(--col)) drop-shadow(0 2px 3px rgba(0,0,0,.7));
   transition:filter .25s}
 .tb-item.active .tb-em{
-  filter:saturate(1.2) brightness(1.1) drop-shadow(0 0 8px var(--col))}
-/* Ambient floor — пятно под иконкой у всех, активная ярче */
-.tb-ambient{position:absolute;bottom:6px;left:50%;
-  transform:translateX(-50%);
-  width:36px;height:5px;border-radius:50%;
-  background:var(--col);filter:blur(5px);
-  opacity:.2;transition:opacity .25s;pointer-events:none;z-index:0}
-.tb-item.active .tb-ambient{opacity:.5}
+  filter:saturate(1.3) brightness(1.18) drop-shadow(0 0 10px var(--col)) drop-shadow(0 0 22px var(--col))}
 /* Подпись — у всех цвет своего таба, активная ярче */
-.tb-label{font-size:9px;font-weight:700;margin-top:3px;
-  letter-spacing:.3px;white-space:nowrap;position:relative;z-index:1;
-  color:var(--col);opacity:.55;
-  transition:color .25s,text-shadow .25s,opacity .25s}
-.tb-item.active .tb-label{opacity:1;text-shadow:0 0 8px var(--col)}
+.tb-label{font-size:9px;font-weight:700;
+  letter-spacing:.4px;white-space:nowrap;position:relative;z-index:1;
+  color:var(--col);opacity:.6;text-shadow:0 0 4px var(--col);
+  transition:opacity .25s,text-shadow .25s}
+.tb-item.active .tb-label{opacity:1;text-shadow:0 0 9px var(--col),0 0 2px var(--col)}
 /* Ripple при тапе */
 .tb-ripple{position:absolute;border-radius:50%;pointer-events:none;
   top:50%;left:50%;width:0;height:0;
   transform:translate(-50%,-50%);
-  animation:tbRip .42s ease-out forwards}
+  animation:tbRip .42s ease-out forwards;z-index:2}
 @keyframes tbRip{from{opacity:.38}to{width:80px;height:80px;opacity:0}}
 `;
 
@@ -124,11 +123,9 @@ window.TabBarHTML = (() => {
       item.dataset.key = tab.key;
       item.style.setProperty('--col', tab.col);
 
-      const dot  = document.createElement('div'); dot.className  = 'tb-dot';
-      const glow = document.createElement('div'); glow.className = 'tb-glow';
-      const wrap = document.createElement('div'); wrap.className = 'tb-icon-wrap';
-      const amb  = document.createElement('div'); amb.className  = 'tb-ambient';
-      const lbl  = document.createElement('div'); lbl.className  = 'tb-label'; lbl.textContent = tab.label;
+      const platform = document.createElement('div'); platform.className = 'tb-platform';
+      const wrap     = document.createElement('div'); wrap.className     = 'tb-icon-wrap';
+      const lbl      = document.createElement('div'); lbl.className      = 'tb-label'; lbl.textContent = tab.label;
 
       const img = document.createElement('img');
       img.className = 'tb-img';
@@ -139,7 +136,7 @@ window.TabBarHTML = (() => {
         wrap.appendChild(em);
       };
       wrap.appendChild(img);
-      item.append(dot, glow, wrap, amb, lbl);
+      item.append(platform, wrap, lbl);
 
       item.addEventListener('pointerdown', () => {
         const rip = document.createElement('div');
