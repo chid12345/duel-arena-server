@@ -56,6 +56,21 @@ def weekly_titan_rank_reward(rank: int) -> Tuple[int, int, str]:
     return 0, 0, ""
 
 
+def weekly_wb_rank_reward(rank: int) -> Tuple[int, int, str]:
+    """Возвращает (diamonds, gold, title) за недельный топ урона по боссу."""
+    if rank == 1:
+        return 100, 1000, "Убийца Боссов"
+    if rank == 2:
+        return 70, 700, "Охотник на Боссов"
+    if rank == 3:
+        return 50, 500, "Истребитель"
+    if rank == 4:
+        return 30, 300, "Боец Рейда"
+    if rank == 5:
+        return 15, 150, "Участник Рейда"
+    return 0, 0, ""
+
+
 def weekly_natisk_rank_reward(rank: int) -> Tuple[int, int, str]:
     """Возвращает (diamonds, gold, title)."""
     if rank == 1:

@@ -29,17 +29,16 @@ from typing import Any, Optional
 
 from config.world_boss_constants import (
     WB_CHEST_TOP_DAMAGE,
-    WB_DIAMONDS_TOP1,
     WB_DIAMONDS_TOP2,
     WB_DIAMONDS_TOP3,
-    WB_DIAMONDS_LAST_HIT,
-    WB_GOLD_GUARANTEED,
+    WB_POOL_BASE,
     WB_GOLD_CONTRIB_PER_PLAYER,
     WB_REWARD_MULT_DEFEAT,
     WB_REWARD_MULT_VICTORY,
     WB_XP_GUARANTEED_PCT,
     WB_XP_CONTRIB_MULT,
 )
+from db_core.week_utils import iso_week_key_utc
 from progression_loader import victory_xp_for_player_level
 
 # 5% шанс на ВЕСЬ рейд, что один случайный игрок (не топ-1) получит свиток
@@ -110,7 +109,7 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         logger.warning("wb_rewards_calc: ошибка чтения auto-bots spawn=%s: %s", spawn_id, e)
 
     mult = WB_REWARD_MULT_VICTORY if is_victory else WB_REWARD_MULT_DEFEAT
-    pool_gold = WB_GOLD_CONTRIB_PER_PLAYER * n_participants
+    pool_gold = WB_POOL_BASE + WB_GOLD_CONTRIB_PER_PLAYER * n_participants
 
     # Топ-3 считаем из by_uid (world_boss_hits) — единый источник истины.
     # get_wb_top_damagers читает player_state, которая может разойтись с hits при рассинхроне.
@@ -118,23 +117,15 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     top_uid = top3_uids[0] if top3_uids else None
     diamonds_by_rank: dict[int, int] = {}
     if is_victory:
-        tiers = [WB_DIAMONDS_TOP1, WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3]
+        # top-1 получает сундук, алмазы только top-2 и top-3
+        tiers = [0, WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3]
         for i, uid_rank in enumerate(top3_uids):
-            diamonds_by_rank[uid_rank] = tiers[i]
-        # Last-hit бонус: +5 алмазов тому, кто нанёс финальный удар.
-        last_hit_uid = db.get_wb_last_hitter(int(spawn_id))
-        if last_hit_uid and int(last_hit_uid) in by_uid:
-            lh = int(last_hit_uid)
-            diamonds_by_rank[lh] = diamonds_by_rank.get(lh, 0) + WB_DIAMONDS_LAST_HIT
-        # Шаг 5: BP-очки за топ урона и финальный удар по WB
+            if tiers[i] > 0:
+                diamonds_by_rank[uid_rank] = tiers[i]
         try:
-            from repositories.season_pass.award_points import (
-                award_wb_top_damage, award_wb_last_hit,
-            )
+            from repositories.season_pass.award_points import award_wb_top_damage
             if top_uid:
                 award_wb_top_damage(db, top_uid)
-            if last_hit_uid and int(last_hit_uid) in by_uid:
-                award_wb_last_hit(db, last_hit_uid)
         except Exception:
             pass
     # Редкая удача: 3% шанс на весь рейд, что один случайный участник
@@ -153,7 +144,7 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         bot_penalty = 0.5 if uid in auto_bots else 1.0
 
         # ЗОЛОТО: гарантия + (пул × вклад%) × mult.
-        gold = max(0, int((WB_GOLD_GUARANTEED + pool_gold * contribution_pct) * mult * bot_penalty))
+        gold = max(0, int(pool_gold * contribution_pct * mult * bot_penalty))
 
         # ОПЫТ: от уровня игрока, как 1v1, + бонус по вкладу.
         lvl = levels.get(uid, 1)
@@ -200,4 +191,22 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
                 "wb_rewards_calc: ошибка создания награды uid=%s spawn=%s: %s",
                 uid, spawn_id, e,
             )
+    # Обновляем недельный рейтинг урона
+    week_key = iso_week_key_utc()
+    try:
+        conn = db.get_connection()
+        cur = conn.cursor()
+        for uid, dmg in by_uid.items():
+            cur.execute(
+                """INSERT INTO wb_weekly_scores (user_id, week_key, total_damage, raids_count)
+                   VALUES (?, ?, ?, 1)
+                   ON CONFLICT(user_id, week_key) DO UPDATE SET
+                   total_damage = total_damage + excluded.total_damage,
+                   raids_count = raids_count + 1""",
+                (uid, week_key, int(dmg)),
+            )
+        conn.commit()
+        conn.close()
+    except Exception as _we:
+        logger.warning("wb_rewards_calc: weekly score update failed: %s", _we)
     return created

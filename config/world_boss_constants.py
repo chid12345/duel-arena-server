@@ -69,35 +69,22 @@ WB_VULN_INTERVAL_SEC: int = 60
 # Срабатывает 1 раз за рейд (атомарно по stage<2).
 WB_ENRAGE_MULT: float = 1.2
 
-# ── Награды (Вариант Б: гарантия + пул по вкладу) ───────────
-# ЗОЛОТО:
-#   guaranteed = 30 (фикс за регистрацию ИЛИ участие в бою)
-#   pool       = 50 × N_участников  (распределяется по вкладу в урон)
-#   итого игроку: (30 + pool × вклад%) × mult(победа/поражение)
-WB_GOLD_GUARANTEED: int = 30
+# -- Награды: пул по вкладу -------------------------------------------
+# ЗОЛОТО: pool = WB_POOL_BASE + 50 * N_участников, распределяется по вкладу%
+WB_POOL_BASE: int = 500
 WB_GOLD_CONTRIB_PER_PLAYER: int = 50
-# ОПЫТ:
-#   База = victory_xp_for_player_level(уровень) — то же что и за победу 1v1.
-#   guaranteed = база × 0.3 (за регистрацию)
-#   contrib    = база × 3.0 × вклад% (если бил)
-#   итого: (guaranteed + contrib) × mult
+# ОПЫТ: база + contrib * вклад%, с множителем победы/поражения
 WB_XP_GUARANTEED_PCT: float = 0.3
 WB_XP_CONTRIB_MULT: float = 3.0
 
-# Старые константы (оставляем для совместимости — больше не используются в формуле).
-WB_BASE_GOLD: int = 50  # legacy
-WB_BASE_EXP: int = 500  # legacy
-# Алмазы — фиксированный бонус только топ-3 и last-hit (не пропорционально вкладу).
-WB_DIAMONDS_TOP1: int = 15
+# Алмазы: только топ-2 и топ-3 при победе (top-1 получает сундук).
 WB_DIAMONDS_TOP2: int = 10
-WB_DIAMONDS_TOP3: int = 7
-WB_DIAMONDS_LAST_HIT: int = 5
-# Множители gold/exp от contribution.
+WB_DIAMONDS_TOP3: int = 5
+# Множители gold/exp.
 WB_REWARD_MULT_VICTORY: float = 2.0
 WB_REWARD_MULT_DEFEAT: float = 0.3
-# Сундуки (chest_type в world_boss_rewards).
-WB_CHEST_LAST_HIT: str = "wb_gold_chest"    # обычный (золотой)
-WB_CHEST_TOP_DAMAGE: str = "wb_diamond_chest"  # редкий (алмазный)
+# Сундук: топ-1 по урону при победе получает алмазный сундук.
+WB_CHEST_TOP_DAMAGE: str = "wb_diamond_chest"
 
 # 10 имён босса — рандом при спавне.
 WB_BOSS_NAMES: List[str] = [

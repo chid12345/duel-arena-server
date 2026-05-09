@@ -192,4 +192,16 @@ MIGRATIONS_PART_WORLD_BOSS = [
         "CREATE INDEX IF NOT EXISTS idx_clans_wins ON clans (wins DESC)",
         "CREATE INDEX IF NOT EXISTS idx_players_username_lower ON players (LOWER(username))",
     ]),
+
+    # 19. Недельный рейтинг урона по боссу.
+    ("2026_05_10_118_wb_weekly_scores", [
+        """CREATE TABLE IF NOT EXISTS wb_weekly_scores (
+            user_id INTEGER NOT NULL,
+            week_key TEXT NOT NULL,
+            total_damage INTEGER DEFAULT 0,
+            raids_count INTEGER DEFAULT 0,
+            PRIMARY KEY (user_id, week_key)
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_wb_weekly_week ON wb_weekly_scores (week_key, total_damage DESC)",
+    ]),
 ]

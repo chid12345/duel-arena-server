@@ -10,6 +10,7 @@ from db_core import (
     weekly_pvp_rank_reward,
     weekly_titan_rank_reward,
     weekly_natisk_rank_reward,
+    weekly_wb_rank_reward,
 )
 
 _log = logging.getLogger(__name__)
@@ -150,6 +151,50 @@ class LeaderboardWeeklyPayoutsMixin:
             except Exception as ex:
                 conn.rollback()
                 _log.exception("weekly Natisk payout failed: %s", ex)
+            finally:
+                conn.close()
+
+        # ── Мировой Босс (недельный топ урона) ───────────────────
+        if not self.weekly_payout_already_done(week_key, "wb"):
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                cursor.execute(
+                    "SELECT user_id, total_damage FROM wb_weekly_scores "
+                    "WHERE week_key = ? ORDER BY total_damage DESC LIMIT 10",
+                    (week_key,),
+                )
+                rows = [dict(x) if hasattr(x, 'keys') else {"user_id": x[0], "total_damage": x[1]}
+                        for x in cursor.fetchall()]
+                for idx, r in enumerate(rows[:5], 1):
+                    d, g, title = weekly_wb_rank_reward(idx)
+                    if d <= 0:
+                        continue
+                    uid = int(r["user_id"])
+                    cursor.execute(
+                        "UPDATE players SET diamonds = diamonds + ?, gold = gold + ?, display_title = ? WHERE user_id = ?",
+                        (d, g, title, uid),
+                    )
+                    out["invalidate_uids"].append(uid)
+                    self.log_metric_event("weekly_wb_lb_reward", uid, value=d)
+                    cid = self.get_player_chat_id(uid)
+                    if cid:
+                        out["telegram"].append({
+                            "chat_id": cid,
+                            "text": (
+                                f"👹 <b>Награда за неделю {week_key}</b> (Мировой Босс)\n\n"
+                                f"Место: <b>#{idx}</b>\n+{g} 💰 +{d} 💎\nТитул: «{title}»"
+                            ),
+                        })
+                cursor.execute(
+                    "INSERT INTO weekly_leaderboard_payouts (week_key, board) VALUES (?, ?)",
+                    (week_key, "wb"),
+                )
+                conn.commit()
+                out["wb_paid"] = min(5, len(rows))
+            except Exception as ex:
+                conn.rollback()
+                _log.exception("weekly WB payout failed: %s", ex)
             finally:
                 conn.close()
 
