@@ -22,7 +22,7 @@ POSTGRES_DDL_01: tuple[str, ...] = (
         wins INTEGER DEFAULT 0,
         losses INTEGER DEFAULT 0,
         win_streak INTEGER DEFAULT 0,
-        rating INTEGER DEFAULT 1000,
+        rating INTEGER DEFAULT 0,
         last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         daily_streak INTEGER DEFAULT 0,
         last_daily DATE,

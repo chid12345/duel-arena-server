@@ -74,11 +74,12 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
             "exp_milestones": exp_patch["exp_milestones"],
             "max_hp": exp_patch["max_hp"],
             "current_hp": winner_hp,
-            "rating": int(winner_live.get("rating", 1000)) + elo_delta_w,
+            "rating": int(winner_live.get("rating", 0)) + elo_delta_w,
             "win_streak": new_win_streak,
         }
 
-    defeat_gold = 0 if is_test else max(1, int(gold_reward * 0.10))
+    # PvP: проигравший ничего не получает; vs бот — небольшое утешение
+    defeat_gold = 0 if (is_test or not battle.get("is_bot2")) else max(1, int(gold_reward * 0.10))
 
     loser_stats = None
     loser_did_level = False
@@ -97,7 +98,7 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
             "losses": loser_live.get("losses", 0) + 1,
             "win_streak": 0,
             "current_hp": loser_hp,
-            "rating": max(100, int(loser_live.get("rating", 1000)) + elo_delta_l),
+            "rating": max(0, int(loser_live.get("rating", 0)) + elo_delta_l),
             "exp": loser_exp_patch["exp"],
             "exp_milestones": loser_exp_patch["exp_milestones"],
             "free_stats": loser_exp_patch["free_stats"],

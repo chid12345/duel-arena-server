@@ -31,13 +31,13 @@ class LeaderboardWeeklyPayoutsMixin:
             cursor = conn.cursor()
             try:
                 for idx, r in enumerate(rows[:10], 1):
-                    d, title = weekly_pvp_rank_reward(idx)
+                    d, g, title = weekly_pvp_rank_reward(idx)
                     if d <= 0:
                         continue
                     uid = int(r["user_id"])
                     cursor.execute(
-                        "UPDATE players SET diamonds = diamonds + ?, display_title = ? WHERE user_id = ?",
-                        (d, title, uid),
+                        "UPDATE players SET diamonds = diamonds + ?, gold = gold + ?, display_title = ? WHERE user_id = ?",
+                        (d, g, title, uid),
                     )
                     out["invalidate_uids"].append(uid)
                     self.log_metric_event("weekly_pvp_lb_reward", uid, value=d)
@@ -47,7 +47,7 @@ class LeaderboardWeeklyPayoutsMixin:
                             "chat_id": cid,
                             "text": (
                                 f"🏆 <b>Награда за неделю {week_key}</b> (топ PvP)\n\n"
-                                f"Место: <b>#{idx}</b>\n+{d} 💎\nТитул: «{title}»"
+                                f"Место: <b>#{idx}</b>\n+{g} 💰 +{d} 💎\nТитул: «{title}»"
                             ),
                         })
                 cursor.execute(

@@ -140,7 +140,7 @@ class BattleEndBattleMixin:
         hypothetical_loser_win = 0 if is_test else int(
             victory_xp_for_player_level(loser_level) * loser_if_won_mult * loser_if_won_dmg
         )
-        loser_exp = 0 if is_test else int(hypothetical_loser_win * DEFEAT_XP_AS_WIN_FRACTION)
+        loser_exp = 0 if (is_test or not battle.get("is_bot2")) else int(hypothetical_loser_win * DEFEAT_XP_AS_WIN_FRACTION)
 
         exp_reward = int(base_exp * 1.5) if xp_boosted else base_exp
         if not is_test and prem_w_active and exp_reward > 0:
@@ -189,8 +189,8 @@ class BattleEndBattleMixin:
         _is_pvp = not battle.get("is_bot2")
         if not is_test and _is_pvp and battle_mode not in ("titan", "endless"):
             _elo_k = 32
-            _r_w = int(winner_live.get("rating", 1000))
-            _r_l = int(loser_live.get("rating", 1000))
+            _r_w = int(winner_live.get("rating", 0))
+            _r_l = int(loser_live.get("rating", 0))
             _e_w = 1.0 / (1.0 + 10.0 ** ((_r_l - _r_w) / 400.0))
             _e_l = 1.0 - _e_w
             elo_delta_w = max(1, round(_elo_k * (1.0 - _e_w)))

@@ -30,17 +30,17 @@ def prev_iso_week_bounds_utc() -> Tuple[str, datetime, datetime]:
     return key, start_naive, end_naive
 
 
-def weekly_pvp_rank_reward(rank: int) -> Tuple[int, str]:
-    """Возвращает (diamonds, title)."""
+def weekly_pvp_rank_reward(rank: int) -> Tuple[int, int, str]:
+    """Возвращает (diamonds, gold, title)."""
     if rank == 1:
-        return 120, "Легенда PvP"
+        return 120, 1200, "Легенда PvP"
     if rank == 2:
-        return 80, "Мастер PvP"
+        return 80, 720, "Мастер PvP"
     if rank == 3:
-        return 50, "Герой арены"
+        return 50, 480, "Герой арены"
     if 4 <= rank <= 10:
-        return 20, "Участник топа"
-    return 0, ""
+        return 20, 180, "Участник топа"
+    return 0, 0, ""
 
 
 def weekly_titan_rank_reward(rank: int) -> Tuple[int, int, str]:

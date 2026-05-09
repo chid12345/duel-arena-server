@@ -18,7 +18,7 @@ def create_sqlite_tables(cursor) -> None:
             free_stats INTEGER DEFAULT 0,
             wins INTEGER DEFAULT 0,
             losses INTEGER DEFAULT 0,
-            rating INTEGER DEFAULT 1000,
+            rating INTEGER DEFAULT 0,
             last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             daily_streak INTEGER DEFAULT 0,
             last_daily DATE,
