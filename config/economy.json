@@ -4,8 +4,8 @@
   "anchor": {
     "PU_TO_GOLD": 300,
     "GOLD_TO_DIAMOND": 75,
-    "STAR_TO_DIAMOND": 1.3,
-    "USDT_TO_DIAMOND": 38,
+    "STAR_TO_DIAMOND": 0.667,
+    "USDT_TO_DIAMOND": 33.4,
     "PVP_WIN_GOLD": 25,
     "PVP_DEFEAT_GOLD": 5,
     "DAILY_BONUS_GOLD": 40,

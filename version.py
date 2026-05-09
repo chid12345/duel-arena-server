@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.18.18"
-VERSION_LABEL = "v2.18.18 — feat: калибровка economy.json — reward_grid с реальными числами 12 квестов"
+VERSION = "2.18.19"
+VERSION_LABEL = "v2.18.19 — feat: калибровка курсов Stars/USDT в economy.json под реальные пакеты"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "14.38"
+GAME_VERSION = "14.39"

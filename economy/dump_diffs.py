@@ -77,21 +77,27 @@ def audit_reward_table() -> list[dict[str, Any]]:
 
 
 def audit_currency_packs() -> None:
-    """Проверка симметрии Stars/USDT пакетов диамантов."""
-    print("\n=== ВАЛЮТНЫЕ ПАКЕТЫ: Stars vs USDT ===")
+    """Проверка симметрии Stars/USDT пакетов диамантов.
+
+    Telegram Stars обычно дешевле USDT (~1.5×) — это намеренная скидка канала,
+    не баг. Поэтому сверяемся с фактическими пакетами через формулу.
+    """
+    print("\n=== ВАЛЮТНЫЕ ПАКЕТЫ: формульное число алмазов vs фактическое ===")
     packs = [
-        ("100 💎", 150, 2.99),
-        ("300 💎", 390, 7.99),
-        ("500 💎", 650, 12.99),
+        ("100 💎", 150, 2.99, 100),
+        ("300 💎", 390, 7.99, 300),
+        ("500 💎", 650, 12.99, 500),
     ]
-    for label, stars, usdt in packs:
+    for label, stars, usdt, actual_d in packs:
         d_from_stars = star_to_diamond(stars)
         d_from_usdt = usdt_to_diamond(usdt)
-        ratio = d_from_usdt / d_from_stars if d_from_stars > 0 else 0
-        flag = "·" if 0.85 <= ratio <= 1.15 else "⚠"
-        print(f"{label}: {stars:4d} ⭐ → формульно {d_from_stars:6.1f} 💎 | "
-              f"{usdt:5.2f} USDT → формульно {d_from_usdt:6.1f} 💎 | "
-              f"USDT/Stars = {ratio:4.2f}  {flag}")
+        s_match = abs(d_from_stars - actual_d) / actual_d < 0.05
+        u_match = abs(d_from_usdt - actual_d) / actual_d < 0.05
+        flag_s = "·" if s_match else "⚠"
+        flag_u = "·" if u_match else "⚠"
+        print(f"{label} (факт {actual_d:3d}): "
+              f"{stars:4d} ⭐ → формула {d_from_stars:6.1f} 💎 {flag_s} | "
+              f"{usdt:5.2f} USDT → формула {d_from_usdt:6.1f} 💎 {flag_u}")
 
 
 def audit_box_common() -> None:
