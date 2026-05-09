@@ -31,7 +31,9 @@
     try { root.querySelectorAll('.bb-toast').forEach(n => n.remove()); } catch (_) {}
     const t = document.createElement('div');
     t.className = 'bb-toast';
-    t.textContent = msg;
+    // Текст рендерится через ::after { content: attr(data-text) } чтобы получить
+    // gradient-fill (pink→cyan) — color:transparent на родителе скрывает дубликат.
+    t.setAttribute('data-text', msg);
     root.appendChild(t);
     setTimeout(() => { try { t.remove(); } catch (_) {} }, 2400);
   }

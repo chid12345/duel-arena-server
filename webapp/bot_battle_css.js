@@ -137,8 +137,56 @@ const BotBattleCss = (() => {
     @keyframes bbAutoOnGlow{0%,100%{filter:hue-rotate(160deg) saturate(1.3) drop-shadow(0 0 10px rgba(0,240,255,.55)) drop-shadow(0 0 16px rgba(255,59,168,.35)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}50%{filter:hue-rotate(160deg) saturate(1.4) drop-shadow(0 0 16px rgba(0,240,255,.85)) drop-shadow(0 0 28px rgba(255,59,168,.6)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}}
     #bb-root .autobattle-btn.locked img{filter:grayscale(.6) brightness(.7) drop-shadow(0 2px 4px rgba(0,0,0,.6));}
     #bb-root .autobattle-btn .lock-em{position:absolute;top:-2px;right:-2px;font-size:14px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.85));pointer-events:none;}
-    #bb-root .bb-toast{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);background:linear-gradient(180deg,rgba(40,8,40,.95),rgba(20,4,20,.95));border:1px solid rgba(0,240,255,.45);border-radius:8px;padding:7px 14px;font-size:11px;font-weight:700;color:#80e8ff;text-shadow:0 0 6px rgba(0,240,255,.5);letter-spacing:.5px;box-shadow:0 0 14px rgba(0,240,255,.35);z-index:50;pointer-events:none;animation:bbToastFx 2.4s ease-out forwards;}
-    @keyframes bbToastFx{0%{opacity:0;transform:translate(-50%,8px)}10%,80%{opacity:1;transform:translate(-50%,0)}100%{opacity:0;transform:translate(-50%,-6px)}}
+    /* Toast в стиле киберпанк-HUD:
+       - двойная неон-рамка (pink снаружи, cyan внутри через ::before)
+       - gradient-текст pink→cyan на фоне тёмно-фиолетового градиента
+       - угловые брекеты ┌┐└┘ через clip-path-маски ::before */
+    #bb-root .bb-toast{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);
+      background:linear-gradient(135deg,rgba(20,5,40,.95) 0%,rgba(40,8,40,.95) 50%,rgba(8,2,20,.98) 100%);
+      border:1.5px solid rgba(255,59,168,.65);
+      border-radius:6px;
+      padding:9px 22px 9px 18px;
+      font-family:"Courier New","Consolas",monospace;
+      font-size:11px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;
+      background-clip:padding-box;
+      box-shadow:
+        inset 0 0 14px rgba(0,240,255,.18),
+        inset 0 1px 0 rgba(255,180,255,.2),
+        0 0 16px rgba(255,59,168,.5),
+        0 0 32px rgba(0,240,255,.3);
+      z-index:50;pointer-events:none;
+      animation:bbToastFx 2.4s ease-out forwards;
+      white-space:nowrap;}
+    /* gradient текст */
+    #bb-root .bb-toast{
+      background-image:
+        linear-gradient(135deg,rgba(20,5,40,.95) 0%,rgba(40,8,40,.95) 50%,rgba(8,2,20,.98) 100%);
+      color:transparent;
+    }
+    #bb-root .bb-toast::after{
+      content:attr(data-text);
+      background:linear-gradient(90deg,#ff3ba8 0%,#80e8ff 50%,#00f0ff 100%);
+      -webkit-background-clip:text;background-clip:text;
+      -webkit-text-fill-color:transparent;
+      filter:drop-shadow(0 0 6px rgba(0,240,255,.55)) drop-shadow(0 0 10px rgba(255,59,168,.45)) drop-shadow(0 1px 1px rgba(0,0,0,.95));
+      animation:bbToastGlitch 1.6s steps(1) infinite;
+    }
+    /* угловые брекеты — мелкие L-уголки в углах */
+    #bb-root .bb-toast::before{
+      content:"";position:absolute;inset:-1px;pointer-events:none;border-radius:6px;
+      background:
+        linear-gradient(#00f0ff,#00f0ff) left top/8px 1.5px no-repeat,
+        linear-gradient(#00f0ff,#00f0ff) left top/1.5px 8px no-repeat,
+        linear-gradient(#00f0ff,#00f0ff) right top/8px 1.5px no-repeat,
+        linear-gradient(#00f0ff,#00f0ff) right top/1.5px 8px no-repeat,
+        linear-gradient(#ff3ba8,#ff3ba8) left bottom/8px 1.5px no-repeat,
+        linear-gradient(#ff3ba8,#ff3ba8) left bottom/1.5px 8px no-repeat,
+        linear-gradient(#ff3ba8,#ff3ba8) right bottom/8px 1.5px no-repeat,
+        linear-gradient(#ff3ba8,#ff3ba8) right bottom/1.5px 8px no-repeat;
+      filter:drop-shadow(0 0 3px currentColor);
+    }
+    @keyframes bbToastFx{0%{opacity:0;transform:translate(-50%,8px) scale(.92)}10%{opacity:1;transform:translate(-50%,0) scale(1.02)}18%,80%{opacity:1;transform:translate(-50%,0) scale(1)}100%{opacity:0;transform:translate(-50%,-6px) scale(.96)}}
+    @keyframes bbToastGlitch{0%,90%,100%{filter:drop-shadow(0 0 6px rgba(0,240,255,.55)) drop-shadow(0 0 10px rgba(255,59,168,.45)) drop-shadow(0 1px 1px rgba(0,0,0,.95));transform:translate(0,0)}93%{filter:drop-shadow(2px 0 0 #ff3ba8) drop-shadow(-2px 0 0 #00f0ff);transform:translate(1px,0)}96%{filter:drop-shadow(-1px 0 0 #ff3ba8) drop-shadow(1px 0 0 #00f0ff);transform:translate(-1px,0)}}
     #bb-root .wait{position:absolute;left:0;right:0;top:55%;text-align:center;color:#ffd166;font-size:13px;font-weight:700;z-index:9;pointer-events:none;text-shadow:0 0 6px rgba(255,209,102,.6);}
 
     /* === ИМПАКТ-ЭФФЕКТЫ + НЕОН-ЦИФРЫ УРОНА (порт из cy-* WB) =============

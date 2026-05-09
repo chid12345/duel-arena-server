@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.16.0"
-VERSION_LABEL = "v2.16.0 — feat: импакт-эффекты разделены по сторонам — мой удар pink/gold-crit, удар по мне cyan/red-crit"
+VERSION = "2.16.1"
+VERSION_LABEL = "v2.16.1 — tweak: киберпанк-стиль toast'а (gradient pink→cyan, glitch, угловые брекеты)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "14.00"
+GAME_VERSION = "14.01"
