@@ -1,0 +1,47 @@
+{
+  "_comment": "Балансная сетка Duel Arena (только ВАЛЮТА: gold/diamond/star/usdt). Опыт XP — отдельная система, делается следующим этапом в xp_economy.json. Все цены/награды-в-валюте считаются от этих чисел через economy/formulas.py.",
+  "version": 1,
+  "anchor": {
+    "PU_TO_GOLD": 300,
+    "GOLD_TO_DIAMOND": 75,
+    "STAR_TO_DIAMOND": 1.3,
+    "USDT_TO_DIAMOND": 38,
+    "PVP_WIN_GOLD": 25,
+    "PVP_DEFEAT_GOLD": 5,
+    "DAILY_BONUS_GOLD": 40,
+    "PREMIUM_GOLD_BUFF": 1.18,
+    "PREMIUM_XP_BUFF": 1.15,
+    "PREMIUM_DROP_BUFF": 1.10,
+    "BOX_EV_RATIO": 0.85,
+    "BOX_JACKPOT_BUDGET": 0.10
+  },
+  "difficulty_pu": {
+    "easy": 0.3,
+    "medium": 0.8,
+    "hard": 2.0,
+    "epic": 5.0
+  },
+  "frequency_mult": {
+    "daily": 0.6,
+    "weekly": 1.5,
+    "once": 3.0
+  },
+  "rarity_mult": {
+    "common": 1.0,
+    "rare": 2.5,
+    "epic": 6.0,
+    "legendary": 15.0
+  },
+  "tier_mult": {
+    "T1": 1.0,
+    "T2": 1.8,
+    "T3": 3.2,
+    "T4": 5.5
+  },
+  "reward_split": {
+    "_comment": "Доля от валютной PU-награды. Сумма gold+diamond=1.0. XP считается отдельной системой.",
+    "daily":  { "gold": 1.00, "diamond": 0.00 },
+    "weekly": { "gold": 0.55, "diamond": 0.45 },
+    "once":   { "gold": 0.45, "diamond": 0.55 }
+  }
+}

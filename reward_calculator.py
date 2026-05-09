@@ -87,6 +87,40 @@ def quest_reward(q: dict) -> dict:
     return {**q, 'reward_gold': gold, 'reward_diamonds': diamonds, 'reward_xp': xp}
 
 
+# ── Формульный расчёт (балансная сетка economy.formulas) ─────────────────────
+# Параллельный путь — пока не подменяет calc_reward.
+# Используется для аудита расхождений (dump_diffs) и будет постепенно подключаться
+# вместо REWARD_TABLE на этапе 2. XP пока берётся из legacy-таблицы (этап 5).
+
+def formula_reward(difficulty: str, frequency: str) -> tuple[int, int, int]:
+    """
+    Вернуть (gold, diamonds, xp) по формуле из economy/formulas.py.
+    XP до этапа 5 берётся из legacy REWARD_TABLE.
+    """
+    try:
+        from economy import reward_for_task
+    except Exception:
+        return calc_reward(difficulty, frequency)
+    gold, diamonds = reward_for_task(difficulty, frequency)
+    _, _, legacy_xp = calc_reward(difficulty, frequency)
+    return gold, diamonds, legacy_xp
+
+
+def reward_delta(difficulty: str, frequency: str) -> dict:
+    """
+    Сравнить legacy REWARD_TABLE и формулу. Возвращает словарь дельт.
+    Полезно при логировании / dump_diffs.
+    """
+    cg, cd, cx = calc_reward(difficulty, frequency)
+    fg, fd, fx = formula_reward(difficulty, frequency)
+    return {
+        "current": {"gold": cg, "diamond": cd, "xp": cx},
+        "formula": {"gold": fg, "diamond": fd, "xp": fx},
+        "diff_gold": fg - cg,
+        "diff_diamond": fd - cd,
+    }
+
+
 # ── __main__ (отладка) ────────────────────────────────────────────────────────
 
 if __name__ == '__main__':

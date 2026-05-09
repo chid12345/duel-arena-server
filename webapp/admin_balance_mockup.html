@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Duel Arena — Балансная панель (мокап)</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    background: #0d1117; color: #e6edf3; padding: 24px; min-height: 100vh;
+  }
+  h1 { font-size: 20px; margin-bottom: 4px; }
+  .sub { color: #7d8590; font-size: 13px; margin-bottom: 20px; }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 10px;
+    background: #1f6feb33; color: #79c0ff; font-size: 11px; margin-left: 8px; }
+
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid #30363d; margin-bottom: 20px; }
+  .tab { padding: 10px 18px; cursor: pointer; border-bottom: 2px solid transparent;
+    color: #7d8590; font-size: 14px; }
+  .tab:hover { color: #e6edf3; }
+  .tab.active { color: #e6edf3; border-color: #1f6feb; font-weight: 600; }
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 10px;
+    padding: 18px 20px; }
+  .card h2 { font-size: 14px; margin-bottom: 14px; color: #e6edf3;
+    text-transform: uppercase; letter-spacing: .5px; }
+
+  .slider-row { display: grid; grid-template-columns: 200px 1fr 70px; gap: 10px;
+    align-items: center; padding: 8px 0; border-bottom: 1px dashed #21262d; }
+  .slider-row:last-child { border-bottom: none; }
+  .slider-row label { font-size: 13px; color: #c9d1d9; }
+  .slider-row input[type=range] { width: 100%; accent-color: #1f6feb; }
+  .slider-row .val { text-align: right; font-variant-numeric: tabular-nums;
+    font-size: 13px; color: #79c0ff; font-weight: 600; }
+
+  .preview-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .preview-table th, .preview-table td { padding: 6px 8px; text-align: left;
+    border-bottom: 1px solid #21262d; }
+  .preview-table th { color: #7d8590; font-weight: 500; font-size: 11px;
+    text-transform: uppercase; }
+  .preview-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .preview-table .delta-up { color: #3fb950; }
+  .preview-table .delta-down { color: #f85149; }
+  .preview-table .delta-zero { color: #7d8590; }
+
+  .actions { display: flex; gap: 10px; margin-top: 18px; }
+  .btn { padding: 8px 18px; border-radius: 6px; border: 1px solid #30363d;
+    background: #21262d; color: #c9d1d9; cursor: pointer; font-size: 13px; }
+  .btn:hover { background: #30363d; }
+  .btn.primary { background: #238636; border-color: #2ea043; color: #fff; }
+  .btn.primary:hover { background: #2ea043; }
+  .btn.warn { background: #6e3c00; border-color: #9e6a03; color: #fff; }
+
+  .alert { background: #f8514922; border: 1px solid #f85149; color: #ffa198;
+    padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 14px; }
+  .alert.ok { background: #3fb95022; border-color: #3fb950; color: #7ee787; }
+
+  /* Пасс */
+  .pass-track { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px;
+    margin-top: 14px; }
+  .pass-level { background: #21262d; border-radius: 4px; padding: 8px 4px;
+    text-align: center; font-size: 10px; position: relative; }
+  .pass-level .lvl { color: #7d8590; font-weight: 600; }
+  .pass-level .free { color: #79c0ff; }
+  .pass-level .prem { color: #d2a8ff; }
+  .pass-level.milestone { background: #1f6feb33; }
+  .legend { display: flex; gap: 16px; margin-top: 12px; font-size: 12px;
+    color: #7d8590; }
+  .legend .dot { display: inline-block; width: 10px; height: 10px;
+    border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* Карта цен (редкость × тир) */
+  .grid-table { width: 100%; border-collapse: separate; border-spacing: 8px; margin-top: 8px; }
+  .grid-table th { font-size: 11px; color: #7d8590; text-transform: uppercase;
+    text-align: center; padding: 8px; font-weight: 500; }
+  .grid-table th.rarity-h { text-align: left; padding-left: 12px; }
+  .grid-table td.rarity-name { font-weight: 700; padding: 12px; border-radius: 8px;
+    text-align: left; min-width: 140px; font-size: 13px; }
+  .grid-table .r-common    { background: linear-gradient(135deg,#1a3a1a,#0d2515); color:#7ee787; border:1px solid #3fb950;}
+  .grid-table .r-rare      { background: linear-gradient(135deg,#1f3a5a,#0d1f3d); color:#79c0ff; border:1px solid #1f6feb;}
+  .grid-table .r-epic      { background: linear-gradient(135deg,#3d1f5a,#250d3d); color:#d2a8ff; border:1px solid #8957e5;}
+  .grid-table .r-legendary { background: linear-gradient(135deg,#5a3d0a,#3d2505); color:#ffd33d; border:1px solid #d4a72c;}
+
+  .grid-table td.cell { background: #161b22; border:1px solid #30363d;
+    border-radius: 8px; padding: 14px 10px; text-align: center; transition: all .15s; cursor:pointer;}
+  .grid-table td.cell:hover { border-color: #58a6ff; background: #1c2230;
+    transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.4);}
+  .grid-table td.cell .mult { font-size: 11px; color: #7d8590; }
+  .grid-table td.cell .price { font-size: 18px; font-weight: 700; color: #e6edf3;
+    margin-top: 4px; font-variant-numeric: tabular-nums;}
+  .grid-table td.cell .price-d { font-size: 11px; color: #79c0ff; margin-top: 2px;}
+
+  /* Модалка пошагового выбора */
+  .overlay { position: fixed; inset: 0; background: rgba(0,0,0,.75); display:none;
+    align-items: center; justify-content: center; z-index: 100;}
+  .overlay.show { display: flex; }
+  .modal { background: #161b22; border: 1px solid #30363d; border-radius: 12px;
+    padding: 28px 32px; width: 560px; max-width: 92vw;}
+  .modal h2 { margin-bottom: 6px; font-size: 18px; }
+  .modal .step-line { display: flex; gap: 6px; margin-bottom: 22px; }
+  .modal .step-line .step { flex: 1; height: 4px; background: #30363d; border-radius: 2px; }
+  .modal .step-line .step.done { background: #1f6feb; }
+  .choice-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px;}
+  .choice { padding: 14px; border-radius: 8px; cursor: pointer; border:1px solid #30363d;
+    background:#0d1117; transition: all .15s;}
+  .choice:hover { border-color:#58a6ff; transform: translateY(-1px);}
+  .choice.selected { border-color: #1f6feb; background:#1f6feb22;}
+  .choice .ch-title { font-weight: 700; font-size: 14px; margin-bottom: 4px;}
+  .choice .ch-desc { font-size: 11px; color: #7d8590; }
+  .modal-actions { display: flex; justify-content: space-between; margin-top: 22px;}
+  .price-result { background: #0d1117; border:1px solid #30363d; padding:18px; border-radius: 8px;
+    margin-top: 16px; text-align: center; }
+  .price-result .big { font-size: 28px; font-weight: 800; color: #ffd33d; }
+  .price-result .alt { font-size: 12px; color: #7d8590; margin-top: 6px;}
+
+  /* Симулятор */
+  .sim-result { background: #0d1117; border: 1px solid #30363d; border-radius: 6px;
+    padding: 14px; margin-top: 14px; font-family: ui-monospace, monospace;
+    font-size: 12px; line-height: 1.7; white-space: pre; color: #c9d1d9; }
+  .progress-bar { height: 6px; background: #21262d; border-radius: 3px; overflow: hidden; margin-top: 6px; }
+  .progress-bar > div { height: 100%; background: linear-gradient(90deg, #1f6feb, #79c0ff); }
+</style>
+</head>
+<body>
+
+<h1>Балансная панель Duel Arena <span class="badge">МОКАП — без бэкенда</span></h1>
+<div class="sub">
+  Только валюта (золото / алмазы / Stars / USDT). Опыт XP — отдельная панель, делается следующим этапом.
+  Файл: <code>config/economy.json</code> · Версия игры: <span id="game-version">14.36</span>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="anchor">⚓ Анкер</div>
+  <div class="tab" data-tab="season">🏆 Сезон + Батл-пасс</div>
+  <div class="tab" data-tab="grid">📐 Карта цен (редкость × тир)</div>
+  <div class="tab" data-tab="sim">🎲 Симулятор F2P/Premium</div>
+</div>
+
+<!-- =================== ВКЛАДКА 1: АНКЕР =================== -->
+<div class="panel active" id="panel-anchor">
+
+  <div class="grid">
+    <div class="card">
+      <h2>Базовый якорь ценности</h2>
+      <div class="slider-row">
+        <label title="Сколько золота за 1 час активной игры (~12 PvP-боёв)">1 час игры =</label>
+        <input type="range" min="100" max="600" value="300" id="s_pu_gold">
+        <div class="val"><span id="v_pu_gold">300</span> 🪙</div>
+      </div>
+      <div class="slider-row">
+        <label title="Курс обмена алмаза на золото">1 алмаз =</label>
+        <input type="range" min="40" max="150" value="75" id="s_g_d">
+        <div class="val"><span id="v_g_d">75</span> 🪙</div>
+      </div>
+      <div class="slider-row">
+        <label>1 Star (⭐) =</label>
+        <input type="range" min="0.5" max="2.5" step="0.1" value="1.3" id="s_s_d">
+        <div class="val"><span id="v_s_d">1.3</span> 💎</div>
+      </div>
+      <div class="slider-row">
+        <label>1 USDT =</label>
+        <input type="range" min="20" max="80" value="38" id="s_u_d">
+        <div class="val"><span id="v_u_d">38</span> 💎</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Боевые награды</h2>
+      <div class="slider-row">
+        <label>Победа PvP даёт</label>
+        <input type="range" min="10" max="80" value="25" id="s_win">
+        <div class="val"><span id="v_win">25</span> 🪙</div>
+      </div>
+      <div class="slider-row">
+        <label>Поражение PvP даёт</label>
+        <input type="range" min="0" max="20" value="5" id="s_def">
+        <div class="val"><span id="v_def">5</span> 🪙</div>
+      </div>
+      <div class="slider-row">
+        <label>Ежедневный бонус</label>
+        <input type="range" min="20" max="200" value="40" id="s_dbg">
+        <div class="val"><span id="v_dbg">40</span> 🪙</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Премиум-буст (гибрид)</h2>
+      <div class="slider-row">
+        <label>+% к золоту</label>
+        <input type="range" min="0" max="50" value="18" id="s_pgold">
+        <div class="val">+<span id="v_pgold">18</span>%</div>
+      </div>
+      <div class="slider-row">
+        <label>+% к шансу дропа</label>
+        <input type="range" min="0" max="40" value="10" id="s_pdrop">
+        <div class="val">+<span id="v_pdrop">10</span>%</div>
+      </div>
+      <div class="sub" style="margin-top: 10px; font-size: 11px;">
+        XP-буст премиума управляется в отдельной панели опыта (этап 5).
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Ящики (house edge)</h2>
+      <div class="slider-row">
+        <label>EV ящика от цены</label>
+        <input type="range" min="0.5" max="1.0" step="0.01" value="0.85" id="s_ev">
+        <div class="val"><span id="v_ev">85</span>%</div>
+      </div>
+      <div class="slider-row">
+        <label>Доля под джекпот</label>
+        <input type="range" min="0" max="0.3" step="0.01" value="0.1" id="s_jp">
+        <div class="val"><span id="v_jp">10</span>%</div>
+      </div>
+      <div class="sub" style="margin-top: 10px; font-size: 11px;">
+        EV 85% = на каждые 100 🪙 цены ящика игрок получает контента на 85 🪙. House edge 15%.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 24px;">
+    <h2>Предпросмотр изменений</h2>
+    <table class="preview-table">
+      <thead>
+        <tr><th>Объект</th><th>Сейчас</th><th>После</th><th>Δ</th></tr>
+      </thead>
+      <tbody id="preview-tbody"></tbody>
+    </table>
+    <div class="alert" id="impact"></div>
+    <div class="actions">
+      <button class="btn">Сбросить</button>
+      <button class="btn warn">Откатить к версии</button>
+      <button class="btn primary">✓ Применить (бамп v + push)</button>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ВКЛАДКА 2: СЕЗОН =================== -->
+<div class="panel" id="panel-season">
+  <div class="grid">
+    <div class="card">
+      <h2>Текущий сезон</h2>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+        <div>
+          <div class="sub">Тема</div>
+          <div style="font-size: 18px; font-weight: 600;">🔥 Сезон Огня</div>
+        </div>
+        <div>
+          <div class="sub">Длина</div>
+          <div style="font-size: 18px; font-weight: 600;">90 дней</div>
+        </div>
+        <div>
+          <div class="sub">Прошло</div>
+          <div style="font-size: 18px;">23 / 90</div>
+          <div class="progress-bar"><div style="width: 25%;"></div></div>
+        </div>
+        <div>
+          <div class="sub">Игроков в пассе</div>
+          <div style="font-size: 18px;">— (мокап)</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Премиум-подписка</h2>
+      <div class="slider-row">
+        <label>Цена в Stars</label>
+        <input type="range" min="200" max="800" value="390" id="s_prem_s">
+        <div class="val"><span id="v_prem_s">390</span> ⭐</div>
+      </div>
+      <div class="slider-row">
+        <label>Цена в USDT</label>
+        <input type="range" min="2.99" max="9.99" step="0.5" value="4.99" id="s_prem_u">
+        <div class="val"><span id="v_prem_u">4.99</span> $</div>
+      </div>
+      <div class="sub" style="margin-top: 10px;">
+        Премиум = премиум-трек батл-пасса до конца сезона + комфорт-плюшки + 18% буст к золоту.
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top: 24px;">
+    <h2>Боевой пропуск (50 уровней) — 10 первых уровней</h2>
+    <div class="legend">
+      <span><span class="dot" style="background:#79c0ff;"></span>Free track</span>
+      <span><span class="dot" style="background:#d2a8ff;"></span>Premium track</span>
+      <span><span class="dot" style="background:#1f6feb;"></span>Milestone</span>
+    </div>
+    <div class="pass-track" id="pass-track"></div>
+  </div>
+</div>
+
+<!-- =================== ВКЛАДКА 3: КАРТА ЦЕН (редкость × тир) =================== -->
+<div class="panel" id="panel-grid">
+  <div class="card">
+    <h2>📐 Карта цен — редкость × тир (БАЗА ВСЕЙ ЭКОНОМИКИ)</h2>
+    <p class="sub" style="margin: 0 0 14px;">
+      Это <b>главная таблица игры</b>. Каждый предмет (меч, броня, свиток, ящик) принадлежит одной из 16 ячеек.
+      4 редкости × 4 тира = 16 уровней цены. Цена ячейки = «балл силы» × множитель ячейки.
+    </p>
+
+    <table class="grid-table">
+      <thead>
+        <tr>
+          <th class="rarity-h">Редкость \ Тир</th>
+          <th>T1 — слабый (старт)</th>
+          <th>T2 — средний</th>
+          <th>T3 — сильный</th>
+          <th>T4 — топ (эндгейм)</th>
+        </tr>
+      </thead>
+      <tbody id="grid-tbody"></tbody>
+    </table>
+
+    <div style="margin-top: 18px; display: flex; justify-content: space-between; align-items: center;">
+      <div class="sub" style="margin: 0;">
+        💡 Кликни на любую ячейку — увидишь примеры предметов этой категории.
+      </div>
+      <button class="btn primary" onclick="openWizard()">+ Новый предмет (мастер)</button>
+    </div>
+
+    <div style="margin-top: 22px; padding: 14px; background: #0d1117; border-left: 3px solid #1f6feb; border-radius: 4px;">
+      <b style="color:#79c0ff;">📌 ПРАВИЛО ПРОЕКТА (записано в docs/ECONOMY.md)</b>
+      <div style="margin-top:6px; font-size: 13px; line-height: 1.6;">
+        Любой новый предмет / свиток / ящик / задание <b>сначала получает редкость и тир</b> из этой таблицы,
+        потом формула выдаёт цену. Никаких «придумаем цену потом».
+        Это правило одинаково работает и для валюты (золото/алмазы/Stars/USDT), и для опыта (XP, делается отдельно).
+      </div>
+    </div>
+
+    <!-- Модалка-визард -->
+    <div class="overlay" id="wiz-overlay">
+      <div class="modal">
+        <h2 id="wiz-title">Новый предмет — шаг 1 из 3</h2>
+        <p class="sub" id="wiz-sub" style="margin-bottom: 14px;">Выбери редкость предмета.</p>
+        <div class="step-line"><div class="step done"></div><div class="step"></div><div class="step"></div></div>
+
+        <!-- Шаг 1: редкость -->
+        <div id="wiz-step-1">
+          <div class="choice-row">
+            <div class="choice" onclick="pickRarity('common',this)">
+              <div class="ch-title" style="color:#7ee787;">🟢 Common (обычный)</div>
+              <div class="ch-desc">Базовый предмет. Лёгкая добыча — фарм, ежедневки, гарант в обычных ящиках.</div>
+            </div>
+            <div class="choice" onclick="pickRarity('rare',this)">
+              <div class="ch-title" style="color:#79c0ff;">🔵 Rare (редкий)</div>
+              <div class="ch-desc">Заметная сила. Фарм нелегко — недельные квесты, редкий дроп, средний шоп.</div>
+            </div>
+            <div class="choice" onclick="pickRarity('epic',this)">
+              <div class="ch-title" style="color:#d2a8ff;">🟣 Epic (эпический)</div>
+              <div class="ch-desc">Сильная вещь. Месяцы фарма F2P или донат. Топ-награды за достижения.</div>
+            </div>
+            <div class="choice" onclick="pickRarity('legendary',this)">
+              <div class="ch-title" style="color:#ffd33d;">🟡 Legendary (легендарный)</div>
+              <div class="ch-desc">Эндгейм. Только донат / эпические события / победы в сезоне.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Шаг 2: тир -->
+        <div id="wiz-step-2" style="display:none;">
+          <div class="choice-row">
+            <div class="choice" onclick="pickTier('T1',this)">
+              <div class="ch-title">T1 — слабый</div>
+              <div class="ch-desc">Стартовый. Подходит игрокам ур. 1–20.</div>
+            </div>
+            <div class="choice" onclick="pickTier('T2',this)">
+              <div class="ch-title">T2 — средний</div>
+              <div class="ch-desc">Прогресс. Подходит игрокам ур. 20–45.</div>
+            </div>
+            <div class="choice" onclick="pickTier('T3',this)">
+              <div class="ch-title">T3 — сильный</div>
+              <div class="ch-desc">Поздняя игра. Игрокам ур. 45–70.</div>
+            </div>
+            <div class="choice" onclick="pickTier('T4',this)">
+              <div class="ch-title">T4 — топ (эндгейм)</div>
+              <div class="ch-desc">Самое мощное. Ур. 70+, BIS-комплект.</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Шаг 3: балл силы -->
+        <div id="wiz-step-3" style="display:none;">
+          <div class="sub" style="margin-bottom: 8px;">
+            Балл силы = сумма всех бонусов предмета (статы + проценты).
+            Пример: меч «+12 силы, +5% крита» → балл ≈ 17.
+          </div>
+          <input type="range" min="1" max="50" value="10" id="wiz-power" style="width:100%; accent-color:#1f6feb;">
+          <div style="text-align:center; font-size:18px; margin-top:8px;">
+            Балл силы: <b id="wiz-power-val" style="color:#ffd33d;">10</b>
+          </div>
+          <div class="price-result">
+            <div class="sub">Формульная цена этого предмета:</div>
+            <div class="big"><span id="wiz-price-gold">—</span> 🪙</div>
+            <div class="alt">
+              = <span id="wiz-price-dia">—</span> 💎
+              · <span id="wiz-price-star">—</span> ⭐
+              · <span id="wiz-price-usdt">—</span> $
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn" onclick="closeWizard()">✕ Отмена</button>
+          <div>
+            <button class="btn" id="wiz-back" onclick="wizBack()" style="display:none;">← Назад</button>
+            <button class="btn primary" id="wiz-next" onclick="wizNext()" disabled>Далее →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =================== ВКЛАДКА 4: СИМУЛЯТОР =================== -->
+<div class="panel" id="panel-sim">
+  <div class="card">
+    <h2>Прокатить виртуальных игроков</h2>
+    <div style="display: flex; gap: 14px; align-items: center;">
+      <label>Игроков: <input type="number" value="1000" min="100" max="10000" style="background:#0d1117;color:#e6edf3;border:1px solid #30363d;padding:6px;border-radius:4px;width:80px;"></label>
+      <label>Дней: <input type="number" value="90" min="7" max="365" style="background:#0d1117;color:#e6edf3;border:1px solid #30363d;padding:6px;border-radius:4px;width:80px;"></label>
+      <label>Премиум %: <input type="number" value="15" min="0" max="100" style="background:#0d1117;color:#e6edf3;border:1px solid #30363d;padding:6px;border-radius:4px;width:80px;"></label>
+      <button class="btn primary" onclick="runSim()">▶ Запустить</button>
+    </div>
+    <div class="sim-result" id="sim-result">Нажми «Запустить», чтобы увидеть как игроки прокатятся 90 дней по выбранным цифрам.</div>
+  </div>
+</div>
+
+<script>
+const CURRENT = {
+  pu_gold: 300, g_d: 75, s_d: 1.3, u_d: 38,
+  win: 25, def: 5, dbg: 40,
+  pgold: 18, pdrop: 10,
+  ev: 0.85, jp: 0.10,
+};
+const ORIGINAL = {
+  // Текущие хардкод-цифры из кода (для расчёта дельты)
+  reward_w_med: [160, 1], reward_w_hard: [200, 2], reward_w_epic: [200, 3],
+  reward_o_med: [450, 3], reward_o_epic: [800, 10],
+  pack_500_d: [650, 12.99], box_common: 150, box_rare_d: 50,
+};
+
+function $(id) { return document.getElementById(id); }
+function bind(id, key, fmt) {
+  const slider = $('s_' + id), label = $('v_' + id);
+  slider.addEventListener('input', e => {
+    CURRENT[key] = parseFloat(e.target.value);
+    label.textContent = fmt ? fmt(CURRENT[key]) : CURRENT[key];
+    rebuild();
+  });
+}
+bind('pu_gold', 'pu_gold');
+bind('g_d', 'g_d');
+bind('s_d', 's_d', v => v.toFixed(1));
+bind('u_d', 'u_d');
+bind('win', 'win');
+bind('def', 'def');
+bind('dbg', 'dbg');
+bind('pgold', 'pgold');
+bind('pdrop', 'pdrop');
+bind('ev', 'ev', v => Math.round(v*100));
+bind('jp', 'jp', v => Math.round(v*100));
+bind('prem_s', 'prem_s');
+bind('prem_u', 'prem_u', v => v.toFixed(2));
+
+// Формула наград: total_pu = diff_pu × freq_mult; gold/dia по split
+function rewardFor(diff, freq) {
+  const D = { easy:0.3, medium:0.8, hard:2.0, epic:5.0 };
+  const F = { daily:0.6, weekly:1.5, once:3.0 };
+  const S = {
+    daily:  { gold:1.00, dia:0.00 },
+    weekly: { gold:0.55, dia:0.45 },
+    once:   { gold:0.45, dia:0.55 },
+  };
+  const total = D[diff] * F[freq];
+  const gold = Math.round(total * S[freq].gold * CURRENT.pu_gold);
+  const dia = Math.round(total * S[freq].dia * CURRENT.pu_gold / CURRENT.g_d);
+  return [gold, dia];
+}
+
+function delta(now, was) {
+  if (was === 0) return now === 0 ? '·' : '+∞';
+  const d = ((now - was) / was * 100).toFixed(0);
+  return (d > 0 ? '+' : '') + d + '%';
+}
+function deltaCls(now, was) {
+  if (was === 0) return 'delta-zero';
+  const d = now - was;
+  return d > 0 ? 'delta-up' : (d < 0 ? 'delta-down' : 'delta-zero');
+}
+
+function rebuild() {
+  const tb = $('preview-tbody');
+  const rows = [];
+  const items = [
+    ['Квест weekly medium', rewardFor('medium','weekly'), ORIGINAL.reward_w_med, 'gold+dia'],
+    ['Квест weekly hard',   rewardFor('hard','weekly'),   ORIGINAL.reward_w_hard, 'gold+dia'],
+    ['Квест weekly epic',   rewardFor('epic','weekly'),   ORIGINAL.reward_w_epic, 'gold+dia'],
+    ['Достижение medium',   rewardFor('medium','once'),   ORIGINAL.reward_o_med, 'gold+dia'],
+    ['Достижение epic',     rewardFor('epic','once'),     ORIGINAL.reward_o_epic, 'gold+dia'],
+  ];
+  for (const [name, now, was, kind] of items) {
+    const nowStr = `${now[0]} 🪙 + ${now[1]} 💎`;
+    const wasStr = `${was[0]} 🪙 + ${was[1]} 💎`;
+    const dGold = delta(now[0], was[0]);
+    rows.push(`<tr>
+      <td>${name}</td>
+      <td>${wasStr}</td>
+      <td><b>${nowStr}</b></td>
+      <td class="num ${deltaCls(now[0],was[0])}">${dGold}</td>
+    </tr>`);
+  }
+  // Stars/USDT симметрия
+  const dFromS = 500 / (650 / CURRENT.pu_gold * CURRENT.pu_gold) * CURRENT.s_d * (650/CURRENT.s_d/CURRENT.s_d);  // упрощаем
+  const dStars = ORIGINAL.pack_500_d[0] * CURRENT.s_d;
+  const dUsdt  = ORIGINAL.pack_500_d[1] * CURRENT.u_d;
+  rows.push(`<tr>
+    <td>Пакет 500 💎: формула Stars</td>
+    <td>650 ⭐ (хардкод)</td>
+    <td><b>${Math.round(500/CURRENT.s_d)} ⭐</b></td>
+    <td class="num ${deltaCls(Math.round(500/CURRENT.s_d), 650)}">${delta(Math.round(500/CURRENT.s_d), 650)}</td>
+  </tr>`);
+  rows.push(`<tr>
+    <td>Пакет 500 💎: формула USDT</td>
+    <td>12.99 $ (хардкод)</td>
+    <td><b>${(500/CURRENT.u_d).toFixed(2)} $</b></td>
+    <td class="num ${deltaCls(500/CURRENT.u_d, 12.99)}">${delta((500/CURRENT.u_d).toFixed(2), 12.99)}</td>
+  </tr>`);
+  // EV ящика
+  const evGold = (150 * CURRENT.ev).toFixed(0);
+  rows.push(`<tr>
+    <td>Ящик 150 🪙: ожидаемая ценность</td>
+    <td>~105 🪙 (текущая ~70%)</td>
+    <td><b>${evGold} 🪙</b></td>
+    <td class="num ${deltaCls(evGold, 105)}">${delta(evGold, 105)}</td>
+  </tr>`);
+  tb.innerHTML = rows.join('');
+
+  const big = items.filter(it => Math.abs((it[1][0] - it[2][0]) / Math.max(1,it[2][0])) > 0.25).length;
+  const al = $('impact');
+  if (big > 0) {
+    al.className = 'alert';
+    al.textContent = `⚠ Изменится ${big} награды более чем на 25%. Проверь, что игроки готовы к таким сдвигам перед применением.`;
+  } else {
+    al.className = 'alert ok';
+    al.textContent = '✓ Сдвиги в пределах 25% — безопасно применять.';
+  }
+}
+rebuild();
+
+// Табы
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    $('panel-' + t.dataset.tab).classList.add('active');
+  });
+});
+
+// Пасс
+const PASS = [
+  {lvl:1,  free:'150 🪙',     prem:'200 🪙 + 5 💎',  m:false},
+  {lvl:2,  free:'свиток сил', prem:'2 свитка сил',   m:false},
+  {lvl:3,  free:'200 🪙',     prem:'10 💎',          m:false},
+  {lvl:5,  free:'box_common', prem:'box_rare',       m:true},
+  {lvl:7,  free:'5 💎',        prem:'15 💎',          m:false},
+  {lvl:10, free:'250 🪙',     prem:'25 💎 + рамка',  m:true},
+  {lvl:15, free:'свиток HP',  prem:'2 свитка HP',    m:false},
+  {lvl:20, free:'10 💎',       prem:'40 💎 + скин',   m:true},
+  {lvl:30, free:'box_rare',   prem:'box_rare_c',     m:true},
+  {lvl:50, free:'25 💎',       prem:'200 💎 + меч',  m:true},
+];
+$('pass-track').innerHTML = PASS.map(p => `
+  <div class="pass-level ${p.m ? 'milestone' : ''}">
+    <div class="lvl">Ур. ${p.lvl}</div>
+    <div class="free">${p.free}</div>
+    <div class="prem">${p.prem}</div>
+  </div>
+`).join('');
+
+// =================== КАРТА ЦЕН (редкость × тир) ===================
+const RARITY_MULT = { common: 1.0, rare: 2.5, epic: 6.0, legendary: 15.0 };
+const TIER_MULT   = { T1: 1.0, T2: 1.8, T3: 3.2, T4: 5.5 };
+const RARITY_META = {
+  common:    { cls:'r-common',    label:'🟢 Common',    desc:'Обычный · фарм/ежедневки' },
+  rare:      { cls:'r-rare',      label:'🔵 Rare',      desc:'Редкий · недельные/средний шоп' },
+  epic:      { cls:'r-epic',      label:'🟣 Epic',      desc:'Эпический · ачивки/донат' },
+  legendary: { cls:'r-legendary', label:'🟡 Legendary', desc:'Легендарный · эндгейм/донат' },
+};
+const REF_POWER = 10;  // балл силы для примера в таблице
+
+function gridPrice(rarity, tier, power) {
+  // Та же формула что в economy/formulas.py: power × rarity × tier × 0.05 × PU_TO_GOLD
+  const pu = power * RARITY_MULT[rarity] * TIER_MULT[tier] * 0.05;
+  return Math.round(pu * CURRENT.pu_gold);
+}
+
+function buildGrid() {
+  const tb = document.getElementById('grid-tbody');
+  if (!tb) return;
+  const tiers = ['T1','T2','T3','T4'];
+  const rows = [];
+  for (const r of ['common','rare','epic','legendary']) {
+    const cells = tiers.map(t => {
+      const gold = gridPrice(r, t, REF_POWER);
+      const dia = Math.ceil(gold / CURRENT.g_d);
+      const mult = (RARITY_MULT[r] * TIER_MULT[t]).toFixed(1);
+      return `<td class="cell" onclick="cellInfo('${r}','${t}')">
+        <div class="mult">×${mult}</div>
+        <div class="price">${gold.toLocaleString()} 🪙</div>
+        <div class="price-d">${dia} 💎</div>
+      </td>`;
+    }).join('');
+    rows.push(`<tr>
+      <td class="rarity-name ${RARITY_META[r].cls}">
+        ${RARITY_META[r].label}<br>
+        <span style="font-weight:400; font-size:11px; opacity:.8;">${RARITY_META[r].desc}</span>
+      </td>
+      ${cells}
+    </tr>`);
+  }
+  tb.innerHTML = rows.join('');
+}
+buildGrid();
+
+function cellInfo(rarity, tier) {
+  const examples = {
+    'common.T1': 'малое зелье HP, базовый свиток силы +3',
+    'common.T2': 'свиток брони 6%, эликсир HP +100',
+    'common.T3': 'комбо-свиток (Воин/Тень)',
+    'common.T4': 'обычный сундук 150 🪙',
+    'rare.T1':   'свиток силы +6 (3 боя)',
+    'rare.T2':   'свиток уворота 5%, бастион',
+    'rare.T3':   'все пассивки +4 / хищник',
+    'rare.T4':   'box_rare 50 💎',
+    'epic.T1':   'свиток вампир+ 15%',
+    'epic.T2':   'box_rare_c 80 💎',
+    'epic.T3':   'эпический ящик E2/E3',
+    'epic.T4':   'комплект средней брони (USDT)',
+    'legendary.T1': 'свиток Титана (USDT)',
+    'legendary.T2': 'легендарный меч / шлем',
+    'legendary.T3': 'мифическая броня / класс',
+    'legendary.T4': 'Доспех Светоносного Бога (BIS)',
+  };
+  alert(`Категория: ${RARITY_META[rarity].label} × ${tier}\n` +
+        `Множитель: ×${(RARITY_MULT[rarity]*TIER_MULT[tier]).toFixed(1)}\n` +
+        `Цена @ балл силы 10: ${gridPrice(rarity,tier,10).toLocaleString()} 🪙\n\n` +
+        `Примеры предметов:\n${examples[rarity+'.'+tier] || '—'}`);
+}
+
+// =================== Визард «новый предмет» ===================
+let WIZ = { step: 1, rarity: null, tier: null, power: 10 };
+
+function openWizard() {
+  WIZ = { step: 1, rarity: null, tier: null, power: 10 };
+  document.getElementById('wiz-overlay').classList.add('show');
+  showStep(1);
+}
+function closeWizard() {
+  document.getElementById('wiz-overlay').classList.remove('show');
+}
+function showStep(n) {
+  WIZ.step = n;
+  for (let i = 1; i <= 3; i++) {
+    document.getElementById('wiz-step-' + i).style.display = (i === n ? 'block' : 'none');
+  }
+  document.querySelectorAll('.step-line .step').forEach((s,i) => {
+    s.classList.toggle('done', i < n);
+  });
+  const titles = ['', 'Шаг 1 из 3 — выбери редкость', 'Шаг 2 из 3 — выбери тир', 'Шаг 3 из 3 — балл силы'];
+  const subs   = ['', 'Насколько редкая эта вещь?', 'Какая мощность?', 'Сумма всех статов/процентов предмета.'];
+  document.getElementById('wiz-title').textContent = titles[n];
+  document.getElementById('wiz-sub').textContent = subs[n];
+  document.getElementById('wiz-back').style.display = (n > 1 ? 'inline-block' : 'none');
+  const next = document.getElementById('wiz-next');
+  if (n === 3) {
+    next.textContent = '✓ Принять цену';
+    next.disabled = false;
+    next.onclick = () => {
+      alert(`✓ Принято.\n\n${RARITY_META[WIZ.rarity].label} × ${WIZ.tier}, балл ${WIZ.power}\n` +
+            `Цена: ${gridPrice(WIZ.rarity,WIZ.tier,WIZ.power).toLocaleString()} 🪙\n\n` +
+            `(в реальной панели тут будет форма «название/описание/иконка» и кнопка сохранения в БД)`);
+      closeWizard();
+    };
+    updateWizPrice();
+  } else {
+    next.textContent = 'Далее →';
+    next.onclick = wizNext;
+    const ok = (n === 1 && WIZ.rarity) || (n === 2 && WIZ.tier);
+    next.disabled = !ok;
+  }
+}
+function pickRarity(r, el) {
+  WIZ.rarity = r;
+  document.querySelectorAll('#wiz-step-1 .choice').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('wiz-next').disabled = false;
+}
+function pickTier(t, el) {
+  WIZ.tier = t;
+  document.querySelectorAll('#wiz-step-2 .choice').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('wiz-next').disabled = false;
+}
+function wizNext() { if (WIZ.step < 3) showStep(WIZ.step + 1); }
+function wizBack() { if (WIZ.step > 1) showStep(WIZ.step - 1); }
+function updateWizPrice() {
+  const gold = gridPrice(WIZ.rarity, WIZ.tier, WIZ.power);
+  document.getElementById('wiz-price-gold').textContent = gold.toLocaleString();
+  document.getElementById('wiz-price-dia').textContent = Math.ceil(gold / CURRENT.g_d);
+  document.getElementById('wiz-price-star').textContent = Math.round(Math.ceil(gold / CURRENT.g_d) / CURRENT.s_d);
+  document.getElementById('wiz-price-usdt').textContent = (Math.ceil(gold / CURRENT.g_d) / CURRENT.u_d).toFixed(2);
+}
+document.addEventListener('input', e => {
+  if (e.target.id === 'wiz-power') {
+    WIZ.power = parseInt(e.target.value);
+    document.getElementById('wiz-power-val').textContent = WIZ.power;
+    updateWizPrice();
+  }
+});
+// Перерисовать карту цен, если изменился анкер
+const _origRebuild = rebuild;
+rebuild = function() { _origRebuild(); buildGrid(); };
+
+// Симулятор (фейковая, но реалистичная)
+function runSim() {
+  const out = $('sim-result');
+  out.textContent = 'Прокатываю...';
+  setTimeout(() => {
+    const goldDay = CURRENT.win * 8 + CURRENT.def * 2 + CURRENT.dbg;
+    const f2pGold30 = goldDay * 30;
+    const f2pGold90 = goldDay * 90;
+    const premGold90 = Math.round(f2pGold90 * (1 + CURRENT.pgold/100));
+    const premBonus = premGold90 - f2pGold90;
+    const subPriceG = Math.round((CURRENT.s_d > 0 ? 390/CURRENT.s_d : 0) * CURRENT.g_d);
+    out.textContent =
+`╭─ Симуляция: 1000 игроков × 90 дней ─────────────────╮
+│
+│  F2P-игрок (среднее за день): ${goldDay} 🪙
+│  ├─ к 30-му дню накопит:  ${f2pGold30.toLocaleString()} 🪙
+│  ├─ к 90-му дню накопит:  ${f2pGold90.toLocaleString()} 🪙
+│  └─ алмазов за сезон:     ~${(90*0.7).toFixed(0)} 💎 (квесты+стрик)
+│
+│  Premium-игрок (буст +${CURRENT.pgold}%):
+│  ├─ к 90-му дню накопит:  ${premGold90.toLocaleString()} 🪙 (+${premBonus.toLocaleString()})
+│  ├─ батл-пасс премиум:    +800 💎 за сезон
+│  └─ ROI подписки:         ~${Math.round(premBonus / Math.max(1,subPriceG) * 100)}% по золоту
+│                           +800 💎 (~${Math.round(800 * CURRENT.g_d).toLocaleString()} 🪙 эквивалент)
+│
+│  Конверсия в премиум: 15% (модель)
+│  Чистая прибыль / игрок (ARPU 90д): ~${(0.15 * 4.99).toFixed(2)} $
+│
+│  ⚠ Топ-3 «дыры» по балансу (что нужно править):
+│   1. ach_spend_diamonds T6: ROI 125% → cap до 30%
+│   2. weekly_spend_gold_500: убыток 300 🪙 → перевернуть
+│   3. ach_buy_premium T9: +100💎 за факт покупок → срезать
+│
+╰──────────────────────────────────────────────────────╯`;
+  }, 600);
+}
+</script>
+</body>
+</html>
