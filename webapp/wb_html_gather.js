@@ -73,8 +73,11 @@
       const isMe = myId && _uidNum(p.user_id) === myId;
       return `<div class="wb-gth-row${isMe?' me':''}" data-uid="${p.user_id}" data-act="gth-card">
         <span class="av">${_avatarFor(p.user_id)}</span>
-        <span class="nm">${_esc(_nameFor(p))}</span>
-        <span class="lv">Ур.${p.level||'?'}</span>
+        <div class="wb-gth-row-body">
+          <span class="nm">${_esc(_nameFor(p))}</span>
+          <span class="lv">Ур.${p.level||'?'}</span>
+        </div>
+        <span class="wb-gth-row-ic">👤</span>
       </div>`;
     }).join('');
 

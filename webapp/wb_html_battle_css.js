@@ -785,19 +785,21 @@ window.WBBattleCSS = (() => {
   font-size:11px;letter-spacing:0;text-shadow:0 0 6px rgba(255,255,255,.6);}
 .wb-gth-roster-list{flex:1;overflow-y:auto;scrollbar-width:none;}
 .wb-gth-roster-list::-webkit-scrollbar{display:none;}
-.wb-gth-row{display:flex;align-items:center;gap:4px;padding:7px 6px 7px 8px;cursor:pointer;
-  border-left:2px solid rgba(0,245,255,.08);transition:all .12s;position:relative;}
-.wb-gth-row::after{content:'›';position:absolute;right:5px;top:50%;transform:translateY(-50%);
-  font-size:10px;color:rgba(0,245,255,.3);pointer-events:none;}
-.wb-gth-row:hover{background:rgba(0,245,255,.07);border-left-color:rgba(0,245,255,.4);}
-.wb-gth-row:active{background:rgba(0,245,255,.14);}
+.wb-gth-row{display:flex;align-items:center;gap:5px;padding:7px 6px 7px 8px;cursor:pointer;
+  border-left:2px solid rgba(0,245,255,.12);transition:background .12s,border-color .12s;}
+.wb-gth-row:hover{background:rgba(0,245,255,.09);border-left-color:rgba(0,245,255,.5);}
+.wb-gth-row:active{background:rgba(0,245,255,.18);transform:scale(.98);}
 .wb-gth-row.me{border-left-color:#ff44cc;background:rgba(255,68,204,.08);}
 .wb-gth-row.me .nm{color:#ff88ee;}
-.wb-gth-row.me::after{color:rgba(255,68,204,.4);}
+.wb-gth-row.me .wb-gth-row-ic{color:rgba(255,68,204,.8);}
 .wb-gth-row .av{font-size:12px;flex-shrink:0;}
-.wb-gth-row .nm{flex:1;font-size:8px;color:rgba(210,235,255,.9);font-weight:600;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.wb-gth-row .lv{font-size:7px;color:rgba(0,245,255,.5);font-family:'Courier New',monospace;flex-shrink:0;margin-right:8px;}
+.wb-gth-row-body{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;}
+.wb-gth-row .nm{font-size:9px;color:#00f5ff;font-weight:700;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  text-shadow:0 0 6px rgba(0,245,255,.4);}
+.wb-gth-row .lv{font-size:7px;color:rgba(255,255,255,.35);font-family:'Courier New',monospace;}
+.wb-gth-row-ic{font-size:13px;flex-shrink:0;opacity:.7;transition:opacity .12s;}
+.wb-gth-row:hover .wb-gth-row-ic{opacity:1;}
 .wb-gth-empty{padding:18px 8px;text-align:center;font-size:8px;
   color:rgba(0,245,255,.3);letter-spacing:1px;}
 
