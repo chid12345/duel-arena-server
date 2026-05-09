@@ -22,14 +22,18 @@
   }
 
   function _ensureCss() {
-    if (document.getElementById('wb-gth-bbc-css')) return;
+    // Всегда обновляем CSS — убираем старую версию если есть
+    document.getElementById('wb-gth-bbc-css')?.remove();
     const s = document.createElement('style'); s.id = 'wb-gth-bbc-css';
     s.textContent = `
-      #wb-gth-pcard{position:fixed;inset:0;background:rgba(0,0,0,.62);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eee}
-      #wb-gth-bbc{width:min(310px,90vw);background:linear-gradient(180deg,#141420,#0f0d18);border:2px solid #444466;border-radius:12px;padding:0;box-sizing:border-box}
-      #wb-gth-bbc.prem{border-color:#ffc83c;box-shadow:0 0 0 3px rgba(255,200,60,.10)}
-      .bbc-head{display:flex;justify-content:space-between;align-items:center;padding:9px 12px 0;font-size:10px;font-weight:700}
-      .bbc-close{cursor:pointer;color:#ddddff;font-size:14px;padding:0 4px}
+      #wb-gth-pcard{position:fixed;inset:0;background:rgba(0,0,0,.86);z-index:9999;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;color:#eee}
+      #wb-gth-bbc{width:min(310px,90vw);background:linear-gradient(180deg,#12101e,#0c0a16);border:1.5px solid rgba(0,245,255,.35);border-radius:14px;padding:0;box-sizing:border-box;box-shadow:0 0 30px rgba(0,245,255,.10),0 8px 40px rgba(0,0,0,.6)}
+      #wb-gth-bbc.prem{border-color:#ffc83c;box-shadow:0 0 30px rgba(255,200,60,.15),0 8px 40px rgba(0,0,0,.6)}
+      .bbc-banner{display:flex;align-items:center;justify-content:space-between;padding:8px 12px 7px;background:linear-gradient(90deg,rgba(0,245,255,.08),rgba(0,245,255,.03));border-bottom:1px solid rgba(0,245,255,.12);border-radius:12px 12px 0 0;font-size:9px;font-weight:900;letter-spacing:2px;color:rgba(0,245,255,.7);text-transform:uppercase}
+      .bbc-banner-title{display:flex;align-items:center;gap:5px}
+      .bbc-close{cursor:pointer;color:rgba(255,255,255,.5);font-size:16px;padding:0 2px;line-height:1;transition:color .15s}
+      .bbc-close:hover{color:#fff}
+      .bbc-head{display:flex;justify-content:space-between;align-items:center;padding:7px 12px 0;font-size:10px;font-weight:700}
       .bbc-name{text-align:center;font-size:15px;font-weight:700;margin-top:5px}
       .bbc-lv{text-align:center;font-size:10px;color:#ccccee;margin-top:5px}
       .bbc-div{height:1px;background:#2a2850;margin:6px 12px;opacity:.5}
@@ -149,9 +153,12 @@
 
     wrap.querySelector('#wb-gth-bbc').outerHTML = `
       <div id="wb-gth-bbc" class="${isPrem?'prem':''}">
+        <div class="bbc-banner">
+          <div class="bbc-banner-title">📋 ПРОФИЛЬ УЧАСТНИКА</div>
+          <div class="bbc-close" id="wb-gth-bbc-x">✕</div>
+        </div>
         <div class="bbc-head">
           <div>${headLabel}${d.win_streak>0?` · <span style="color:#ff8044">🔥${d.win_streak}</span>`:''}</div>
-          <div class="bbc-close" id="wb-gth-bbc-x">✕</div>
         </div>
         <div class="bbc-name" style="color:${isPrem?'#ffc83c':isMe?'#00f5ff':'#f0f0fa'}">${isPrem?'👑 ':''}${nm}</div>
         <div class="bbc-lv">Ур. ${d.level||'?'} · ★ ${d.rating||'—'} · ⚔️ Рейд</div>
