@@ -253,21 +253,21 @@ Object.assign(WorldBossScene.prototype, {
   _tickSecond() {
     if (this._nextSchedAt && this._countdownTxt) {
       this._countdownTxt.setText(this._fmtCountdown(this._nextSchedAt));
-      // Отсчёт до 0 и бой ещё не стартовал — рефреш (WS мог умереть)
       if (!this._state?.active && !this._refreshBusy) {
         const msLeft = new Date(this._nextSchedAt).getTime() - Date.now();
         if (msLeft < 2000) this._refresh();
       }
     }
-    if (this._state?.active?.seconds_left != null) {
-      this._state.active.seconds_left = Math.max(0, this._state.active.seconds_left - 1);
-      if (this._secLeftT) this._secLeftT.setText(`⏱ ${this._fmtSec(this._state.active.seconds_left)}`);
-      // Обновляем HTML-таймеры (cyber-battle cy-bl-timer и обычный wb-bl-timer)
+    if (this._state?.active) {
+      // Обновляем HUD каждую секунду независимо от seconds_left
       try { window.WBHtml?.updateHUD?.(this._state); } catch(_) {}
-      // Бой должен закончиться (HP=0 или время=0) — рефрешим пока сервер не подтвердит
-      const _shouldEnd = this._state.active.seconds_left === 0
-                      || (this._state.active.current_hp || 0) <= 0;
-      if (_shouldEnd && !this._refreshBusy) this._refresh();
+      if (this._state.active.seconds_left != null) {
+        this._state.active.seconds_left = Math.max(0, this._state.active.seconds_left - 1);
+        if (this._secLeftT) this._secLeftT.setText(`⏱ ${this._fmtSec(this._state.active.seconds_left)}`);
+        const _shouldEnd = this._state.active.seconds_left === 0
+                        || (this._state.active.current_hp || 0) <= 0;
+        if (_shouldEnd && !this._refreshBusy) this._refresh();
+      }
     }
     this._tickPrep?.();
   },

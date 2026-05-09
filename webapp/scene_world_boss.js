@@ -203,13 +203,12 @@ class WorldBossScene extends Phaser.Scene {
     try { if (p.participants?.length && this._state.player_state) this._updateRaidPanel?.(p.participants); } catch(_) {}
     const _isDeadNow = !!this._state.player_state?.is_dead;
     const _hasPsNow = !!this._state.player_state;
-    // Смена живой↔мёртвый ИЛИ первое появление ps (вход в бой) —
-    // перерисовываем полностью: меняется кнопка и раскрывается HUD/слоты.
+    // Смена живой↔мёртвый ИЛИ первое появление ps (вход в бой) — перерисовываем.
     if (_isDeadNow !== _wasDeadBefore || _hasPsNow !== _hadPsBefore) {
       try { this._render(); } catch(_) {}
-    } else {
-      try { window.WBHtml?.updateHUD(this._state); } catch(_) {}
     }
+    // updateHUD всегда — в т.ч. после _render(), чтобы HP-бары не замерзали
+    try { window.WBHtml?.updateHUD(this._state); } catch(_) {}
     try {
       const mx = Math.max(1, p.boss.max_hp || 1);
       this._updateBossBg?.(Math.max(0, p.boss.hp) / mx);
