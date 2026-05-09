@@ -66,7 +66,8 @@ class WorldBossScene extends Phaser.Scene {
 
     this._loading = txt(this, W/2, H/2, 'Загрузка...', 14, '#ddddff').setOrigin(0.5);
     this._tabBarResult = TabBar.build(this, { activeKey: 'boss' });
-    window._tabPlaceholderHideNextFrame?.('wb-placeholder');
+    // Плейсхолдер скрываем только после WBHtml.render() — не сразу.
+    // Иначе игрок видит старый Phaser-экран пока грузится API.
     this._refresh();
     // Нативный setInterval — не зависит от Phaser-паузы при idle/blur
     this._timerNative = setInterval(() => { if (this._alive) this._tickSecond(); }, 1000);
@@ -106,6 +107,8 @@ class WorldBossScene extends Phaser.Scene {
     } catch(_) {
       if (this._alive && this._loading) {
         try { this._loading.setText('❌ Нет соединения\n(повтор через 5с)'); } catch(_) {}
+        // Показываем Phaser-текст с ошибкой — убираем плейсхолдер
+        try { window._tabPlaceholderHide?.('wb-placeholder'); } catch(_) {}
       }
       setTimeout(() => { if (this._alive) this._refresh(); }, 5000);
     } finally {
@@ -215,8 +218,11 @@ class WorldBossScene extends Phaser.Scene {
     this.children.getAll().filter(o => o._wbChild).forEach(o => { try { o.destroy(); } catch(_){} });
     try {
       window.WBHtml?.render(this, this._state);
+      // Плейсхолдер убираем только сейчас — HTML-оверлей уже в DOM
+      try { window._tabPlaceholderHide?.('wb-placeholder'); } catch(_) {}
     } catch(e) {
       console.error('WBHtml render error:', e);
+      try { window._tabPlaceholderHide?.('wb-placeholder'); } catch(_) {}
       // Показываем видимое сообщение вместо чёрного экрана
       try {
         const root = document.getElementById('wb-root') || (() => { const r = document.createElement('div'); r.id = 'wb-root'; document.body.appendChild(r); return r; })();
