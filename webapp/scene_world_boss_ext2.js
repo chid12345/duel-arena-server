@@ -48,6 +48,22 @@ Object.assign(WorldBossScene.prototype, {
       if (r.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         this._toast('🕯️ +10 зарядов воскрешения в инвентаре!');
+        // Оптимистично обновляем стейт и DOM — _shapeKey не включает инвентарь,
+        // поэтому _refresh не вызовет _render, лобби осталось бы со старыми ×0.
+        if (this._state?.res_scrolls_inv) {
+          this._state.res_scrolls_inv[iid] = (this._state.res_scrolls_inv[iid] || 0) + 10;
+        }
+        try {
+          const card = document.querySelector(`[data-act="buy-res"][data-id="${iid}"]`);
+          if (card) {
+            const cnt = card.querySelector('.wb-rb-cnt');
+            if (cnt) {
+              const qty = this._state?.res_scrolls_inv?.[iid] || 10;
+              cnt.textContent = `×${qty}`;
+              cnt.style.color = '#22dd88';
+            }
+          }
+        } catch(_) {}
         this._refresh();
         ok = true;
       } else {
