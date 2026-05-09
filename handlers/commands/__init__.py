@@ -9,9 +9,11 @@ from handlers.commands.season_pass import BotHandlersSeasonPass
 from handlers.commands.shop_payments import BotHandlersShopPayments
 from handlers.commands.referral_notify import BotHandlersReferralNotify
 from handlers.commands.invite_health import BotHandlersInviteHealth
+from handlers.commands.admin_balance import BotHandlersAdminBalance
 
 
 class BotHandlers(
+    BotHandlersAdminBalance,
     BotHandlersInviteHealth,
     BotHandlersShopPayments,
     BotHandlersReferralNotify,

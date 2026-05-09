@@ -5,11 +5,17 @@ import sys
 
 from progression_loader import hp_when_reaching_level
 
-ADMIN_USER_IDS = {
+# Дефолтный admin для разработки (личный telegram_id владельца проекта).
+# В проде задаётся через env ADMIN_USER_IDS — она перекрывает этот fallback.
+_DEFAULT_ADMIN_IDS = {386313532}
+
+_env_admin_ids = {
     int(user_id.strip())
     for user_id in os.getenv("ADMIN_USER_IDS", "").split(",")
     if user_id.strip().isdigit()
 }
+
+ADMIN_USER_IDS = _env_admin_ids or _DEFAULT_ADMIN_IDS
 
 # База данных
 # Локально без DATABASE_URL: SQLite в файле (DATA_DIR или папка рядом с config.py).
