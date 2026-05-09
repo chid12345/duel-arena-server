@@ -217,8 +217,16 @@ def _load_tick_data(db, subs: list) -> dict:
         return {"kind": "idle", "ts": ts_ms, "reg_count": reg_count, "prep_left": prep_left}
     spawn_id = int(active["spawn_id"])
     boss = _build_boss_block(active)
-    top = _build_top_block(db, spawn_id)
-    participants = _build_participants_block(db, spawn_id)
+    try:
+        top = _build_top_block(db, spawn_id)
+    except Exception as _te:
+        logger.warning("_build_top_block: %s", _te)
+        top = []
+    try:
+        participants = _build_participants_block(db, spawn_id)
+    except Exception as _pe:
+        logger.warning("_build_participants_block: %s", _pe)
+        participants = []
     # Батч: один SQL вместо N open/close при 100+ подписчиках.
     states = db.get_wb_player_states(spawn_id, subs)
     players = {}
