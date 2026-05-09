@@ -263,6 +263,9 @@ class QueueScene extends Phaser.Scene {
 
   shutdown() {
     this.time.removeAllEvents();
+    // Глушим WS-handler: иначе battle_started может прийти после перехода
+    // на другую сцену (до того как та сцена вызовет connectWS заново).
+    try { if (State.ws) State.ws.onmessage = null; } catch(_) {}
     this.children.getAll().forEach(o => { try { o.destroy(); } catch(_) {} });
   }
 }

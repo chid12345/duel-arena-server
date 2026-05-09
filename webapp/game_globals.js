@@ -482,6 +482,7 @@ window._closeAllTabOverlays = function() {
   try { window.GuideHTML?.close?.(); } catch(_) {}
   try { window.ReferralHTML?.close?.(); } catch(_) {}
   try { window.AvatarHTML?.close?.(); } catch(_) {}
+  try { window.ResultButtonsHTML?.hide?.(); } catch(_) {}
   try { if (typeof ScreenHints !== 'undefined') ScreenHints.hide(); } catch(_) {}
 };
 

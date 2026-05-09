@@ -222,22 +222,6 @@ class BattleScene extends Phaser.Scene {
     });
   }
 
-  shutdown() {
-    // Phaser сам чистит time.addEvent и tweens, но DOM-оверлей и WS-handler
-    // висят независимо — убираем вручную, иначе после выхода из боя
-    // BattleLog остаётся на экране, а ws.onmessage дёргает мёртвую сцену.
-    if (this._uiWatchdog) { try { this._uiWatchdog.remove(); } catch(_) {} this._uiWatchdog = null; }
-    try { BattleLog.hide(); } catch(_) {}
-    try { if (typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
-    try {
-      if (State.ws && State.ws.onmessage) {
-        // Ставим no-op — следующая сцена (Result/Menu) всё равно вызовет
-        // connectWS и перезапишет. Нужно только чтобы мёртвый handleMsg
-        // не стрельнул прямо сейчас на приходящий round_result.
-        State.ws.onmessage = null;
-      }
-    } catch(_) {}
-    if (this._timerEvent) { try { this._timerEvent.remove(); } catch(_) {} this._timerEvent = null; }
-    if (this._pollEvent)  { try { this._pollEvent.remove();  } catch(_) {} this._pollEvent  = null; }
-  }
+  // shutdown() — определён в scene_battle_ext3b.js (Object.assign на prototype).
+  // Там же: BattleLog.hide, BotBattleHtml.unmount, WS nullify, killAll, children destroy.
 }

@@ -55,6 +55,10 @@ Object.assign(BattleScene.prototype, {
           this._startTimer();
         }, 700);
       } else if (res.status === 'battle_ended') {
+        // Guard: WS battle_ended может прийти раньше HTTP-ответа (сервер шлёт WS
+        // до return). Если WS уже запустил Result — isActive('Battle')=false,
+        // повторный scene.start перезапустил бы Result (видимый flash экрана).
+        if (!this.scene?.isActive('Battle')) return;
         State.lastResult = res;
         BattleLog.hide();
         try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}

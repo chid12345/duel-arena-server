@@ -18,6 +18,9 @@ Object.assign(MenuScene.prototype, {
     this._toast('🔍 Ищем соперника...');
     try {
       const res = await post('/api/battle/find', { queue_only: true });
+      // Guard: пользователь мог уйти со сцены пока API отвечал.
+      // Без проверки isActive — scene.start запустит Battle поверх текущей сцены.
+      if (!this.scene?.isActive('Menu')) return;
       if (!res.ok) {
         if (res.reason === 'no_warrior') { this._requireWarrior?.('battle'); return; }
         this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Нет противников');
@@ -42,6 +45,7 @@ Object.assign(MenuScene.prototype, {
     this._toast('🤖 Запускаем бой с ботом...');
     try {
       const res = await post('/api/battle/find', { prefer_bot: true });
+      if (!this.scene?.isActive('Menu')) return;
       if (!res.ok) {
         if (res.reason === 'no_warrior') { this._requireWarrior?.('battle'); return; }
         this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Бот недоступен');
@@ -64,6 +68,7 @@ Object.assign(MenuScene.prototype, {
     this._toast('🗿 Запускаем Башню титанов...');
     try {
       const res = await post('/api/titans/start', {});
+      if (!this.scene?.isActive('Menu')) return;
       if (!res.ok) {
         if (res.reason === 'no_warrior') { this._requireWarrior?.('battle'); return; }
         this._toast(res.reason === 'low_hp' ? '❤️ Нужно восстановить HP!' : '❌ Башня недоступна');
@@ -83,6 +88,7 @@ Object.assign(MenuScene.prototype, {
     this._buying = true;
     try {
       const res = await post('/api/endless/start', {});
+      if (!this.scene?.isActive('Menu')) return;
       if (!res.ok) { this._toast('❌ ' + (res.reason || 'Ошибка')); this._buying = false; return; }
       State.battle = res.battle;
       State.endlessWave = res.wave;
