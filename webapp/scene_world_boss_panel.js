@@ -122,7 +122,7 @@ function _wbpInjectCSS() {
   const s = document.createElement('style');
   s.id = 'wbp-css';
   s.textContent = `
-#wb-raid-panel{position:fixed;top:78px;right:0;width:102px;z-index:800;
+#wb-raid-panel{position:fixed;top:78px;right:0;width:102px;z-index:9600;
   background:rgba(5,2,18,.78);border-left:1px solid rgba(0,229,255,.18);
   border-radius:10px 0 0 10px;backdrop-filter:blur(10px);overflow:hidden;
   transition:width .2s;font-family:'Segoe UI',sans-serif}
@@ -152,7 +152,7 @@ function _wbpInjectCSS() {
 .wbp-dm{font-size:8px;color:#778899;white-space:nowrap}
 .wbp-bar{height:2px;background:rgba(255,255,255,.07);border-radius:1px;overflow:hidden;margin-top:2px}
 .wbp-fill{height:100%;border-radius:1px;transition:width .5s}
-#wbp-card-bg{position:fixed;inset:0;z-index:1100;background:rgba(0,0,0,.72);
+#wbp-card-bg{position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,.72);
   backdrop-filter:blur(5px);display:flex;align-items:flex-end;justify-content:center}
 #wbp-card{background:linear-gradient(180deg,#0e0028 0%,#060014 100%);
   border:1px solid rgba(0,229,255,.22);border-radius:18px 18px 0 0;
