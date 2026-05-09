@@ -45,6 +45,36 @@ def _parse_ts(value):
     return datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
 
+def _get_spawn_participants(db, spawn_id: int) -> list:
+    try:
+        conn = db.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT r.user_id, p.username, r.contribution_pct, r.gold, r.exp, r.diamonds "
+            "FROM world_boss_rewards r "
+            "JOIN players p ON p.user_id = r.user_id "
+            "WHERE r.spawn_id = ? "
+            "ORDER BY r.contribution_pct DESC",
+            (int(spawn_id),),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return [
+            {
+                "user_id": int(r["user_id"]),
+                "name": r.get("username") or "Игрок",
+                "contribution_pct": float(r.get("contribution_pct") or 0.0),
+                "gold": int(r.get("gold") or 0),
+                "exp": int(r.get("exp") or 0),
+                "diamonds": int(r.get("diamonds") or 0),
+            }
+            for r in rows
+        ]
+    except Exception as e:
+        _log.warning("_get_spawn_participants spawn=%s: %s", spawn_id, e)
+        return []
+
+
 def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) -> Dict[str, Any]:
     """Состояние рейда и игрока для UI (читается при входе на вкладку + polling fallback).
 
@@ -239,6 +269,7 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
                 "contribution_pct": float(r.get("contribution_pct") or 0.0),
                 "is_victory": bool(r.get("is_victory")),
                 "total_damage": int(r.get("total_damage") or 0),
+                "participants": _get_spawn_participants(db, int(r["spawn_id"])),
             })(_get_boss_type(r.get("boss_type"))) for r in unclaimed
         ],
     }

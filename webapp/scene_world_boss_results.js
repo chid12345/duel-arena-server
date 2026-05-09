@@ -1,8 +1,8 @@
 /* ============================================================
    WorldBossScene — results: модальный экран итогов рейда.
    Показывается, когда есть незабранная награда — над боевой сценой.
-   Содержит иконку победы/поражения, имя босса, вклад %, сундук
-   и кнопку «Забрать» (вызывает _claimReward).
+   Содержит иконку победы/поражения, имя босса, вклад %, сундук,
+   кнопку «Забрать», и таблицу всех участников с наградами.
    Закон 9: отдельный дом для UI итогов, чтобы не раздувать ext.
    ============================================================ */
 
@@ -11,16 +11,19 @@ Object.assign(WorldBossScene.prototype, {
   _renderResultsOverlay(s, W, H) {
     if (!s.unclaimed_rewards || !s.unclaimed_rewards.length) return;
     const r = s.unclaimed_rewards[0];
+    const participants = r.participants || [];
+    const nParts = Math.min(participants.length, 6);
 
     // Полупрозрачный фон-overlay.
     const dim = this.add.rectangle(W/2, H/2, W, H, 0x000000, 0.72).setDepth(1000);
     dim._wbChild = true;
 
-    // Карточка итогов.
+    // Карточка: базовые 330px + секция участников снизу.
     const cardW = Math.min(W - 24, 340);
-    const cardH = 330;
+    const partSectionH = nParts > 0 ? 28 + nParts * 22 : 0;
+    const cardH = 330 + partSectionH;
     const cx = W/2 - cardW/2;
-    const cy = Math.max(60, H/2 - cardH/2);
+    const cy = Math.max(16, H/2 - cardH/2);
 
     const bg = this.add.graphics().setDepth(1001);
     bg.fillStyle(0x0d0020, 0.99); bg.fillRoundedRect(cx, cy, cardW, cardH, 10);
@@ -71,16 +74,46 @@ Object.assign(WorldBossScene.prototype, {
       chr._wbChild = true;
     }
 
-    // Кнопка забрать.
-    const btnY = cy + cardH - 58;
+    // Кнопка забрать (фиксированное положение: cy+272, независимо от cardH).
+    const btnY = cy + 272;
     const btn = this._bigBtn(cx + 16, btnY, cardW - 32, 44,
                              win ? 0xbb0066 : 0x440044,
                              '🎁 Забрать награду',
                              () => this._claimReward(r.reward_id));
-    // Поднимем глубину кнопки над overlay.
     try {
       btn.g.setDepth(1002); btn.lt.setDepth(1003); btn.z.setDepth(1003);
     } catch(_) {}
+
+    // ── Таблица участников ────────────────────────────────────────
+    if (nParts > 0) {
+      const sepY = cy + 326;
+      // Разделитель.
+      const sepLine = this.add.graphics().setDepth(1002);
+      sepLine.lineStyle(1, 0x440066, 0.8);
+      sepLine.lineBetween(cx + 10, sepY, cx + cardW - 10, sepY);
+      sepLine._wbChild = true;
+
+      const ph = txt(this, W/2, sepY + 12, '⚔️ ВСЕ УЧАСТНИКИ', 10, '#cc44ff', true).setOrigin(0.5).setDepth(1002);
+      ph._wbChild = true;
+
+      participants.slice(0, 6).forEach((p, i) => {
+        const py = sepY + 26 + i * 22;
+        const cpct = Math.round(p.contribution_pct || 0);
+        const name = (p.name || 'Игрок').substring(0, 14);
+        const isMe = p.user_id === (s.uid || 0);
+        const nameCol = isMe ? '#ffee88' : '#ccccee';
+
+        const tn = txt(this, cx + 10, py, `${i+1}. ${name}  ${cpct}%`, 10, nameCol).setOrigin(0, 0.5).setDepth(1002);
+        tn._wbChild = true;
+
+        const rewards = [];
+        if (p.gold)     rewards.push(`💰${p.gold}`);
+        if (p.diamonds) rewards.push(`💎${p.diamonds}`);
+        const rewardStr = rewards.join(' ') || '—';
+        const trew = txt(this, cx + cardW - 10, py, rewardStr, 10, '#ffdd66').setOrigin(1, 0.5).setDepth(1002);
+        trew._wbChild = true;
+      });
+    }
   },
 
   // История последних 5 рейдов — на вкладке «Ожидание» под подсказками.
