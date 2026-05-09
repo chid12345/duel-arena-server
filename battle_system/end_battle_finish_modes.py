@@ -28,6 +28,12 @@ async def run_titan_endless_progress(
         try:
             if is_winner_p1 and not winner_locked:
                 titan_progress = await loop.run_in_executor(None, db.titan_on_win, player1["user_id"], floor)
+                # Шаг 5: BP-очки за пройденный этаж Башни
+                try:
+                    from repositories.season_pass.award_points import award_tower_floor
+                    award_tower_floor(db, player1["user_id"], floor)
+                except Exception:
+                    pass
             elif not is_winner_p1 and not loser_locked:
                 titan_progress = await loop.run_in_executor(None, db.titan_on_loss, player1["user_id"], floor)
         except Exception as _te:
@@ -50,6 +56,12 @@ async def run_titan_endless_progress(
                     await loop.run_in_executor(None, db.endless_quest_on_win, player1["user_id"], wave)
                 except Exception as _qe:
                     logger.warning("endless_quest_on_win error: %s", _qe)
+                # Шаг 5: BP-очки за пройденную волну Натиска
+                try:
+                    from repositories.season_pass.award_points import award_endless_wave
+                    award_endless_wave(db, player1["user_id"], wave)
+                except Exception:
+                    pass
             elif not is_winner_p1 and not loser_locked:
                 endless_progress = await loop.run_in_executor(None, db.endless_on_loss, player1["user_id"], wave)
         except Exception as _ee:

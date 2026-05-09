@@ -32,6 +32,22 @@ class XpUpdate(BaseModel):
     anchor: dict | None = None
 
 
+class SeasonPassUpdate(BaseModel):
+    init_data: str = ""
+    token: str = ""
+    points_for_action: dict | None = None
+    rewards_grid: dict | None = None  # {"5": {"free": {...}, "premium": {...}}, ...}
+
+
+_ALLOWED_POINTS_KEYS = {
+    "pvp_win", "pvp_loss", "pve_bot_win",
+    "daily_quest", "weekly_quest", "achievement",
+    "wb_hit", "wb_top_damage", "wb_last_hit",
+    "tower_floor", "endless_wave",
+}
+_ALLOWED_REWARD_FIELDS = {"gold", "diamond", "item"}
+
+
 def build_season_pass_audit() -> dict:
     """Сезонный пасс — текущий сезон, конфиг, награды."""
     from repositories.season_pass.config_loader import (
@@ -117,9 +133,66 @@ def build_xp_audit() -> dict:
     }
 
 
+def _save_season_pass_config(payload: SeasonPassUpdate) -> dict:
+    """Применить правки к config/season_pass.json. Возвращает обновлённый словарь."""
+    from repositories.season_pass.config_loader import (
+        _config_path, load_season_pass_config, reset_config_cache,
+    )
+    current = load_season_pass_config()
+    new_data = json.loads(json.dumps(current))
+
+    if payload.points_for_action:
+        for k, v in payload.points_for_action.items():
+            if k not in _ALLOWED_POINTS_KEYS:
+                raise HTTPException(status_code=400, detail=f"Неизвестное действие: {k}")
+            if not isinstance(v, (int, float)) or v < 0:
+                raise HTTPException(status_code=400, detail=f"points_for_action/{k}: число ≥0")
+            new_data.setdefault("points_for_action", {})[k] = int(v)
+
+    if payload.rewards_grid:
+        for level_str, cell in payload.rewards_grid.items():
+            if not str(level_str).isdigit():
+                continue
+            for track in ("free", "premium"):
+                track_data = cell.get(track)
+                if track_data is None:
+                    continue
+                clean = {}
+                for f, val in track_data.items():
+                    if f not in _ALLOWED_REWARD_FIELDS:
+                        continue
+                    if f in ("gold", "diamond"):
+                        if not isinstance(val, (int, float)) or val < 0:
+                            raise HTTPException(status_code=400, detail=f"reward/{level_str}/{track}/{f}: число ≥0")
+                        if int(val) > 0:
+                            clean[f] = int(val)
+                    elif f == "item":
+                        if val:
+                            clean[f] = str(val)
+                if clean:
+                    new_data.setdefault("rewards_grid", {}).setdefault(str(level_str), {})[track] = clean
+
+    with _config_path().open("w", encoding="utf-8") as f:
+        json.dump(new_data, f, ensure_ascii=False, indent=2)
+    reset_config_cache()
+    return new_data
+
+
 def register_save_xp(app: FastAPI, auth_check: Callable[[str, str], int]) -> None:
-    """Регистрирует POST /api/admin/balance/save_xp.
+    """Регистрирует:
+      POST /api/admin/balance/save_xp
+      POST /api/admin/balance/save_season_pass
     auth_check(init_data, token) — функция авторизации из admin_balance."""
+
+    @app.post("/api/admin/balance/save_season_pass", tags=["admin"])
+    def save_season_pass(body: SeasonPassUpdate):
+        uid = auth_check(body.init_data, body.token)
+        if not body.points_for_action and not body.rewards_grid:
+            raise HTTPException(status_code=400, detail="Нет данных для сохранения")
+        new_data = _save_season_pass_config(body)
+        logger.info("admin_balance: season_pass.json обновлён uid=%s", uid)
+        return {"ok": True, "version": new_data.get("version", 1)}
+
     @app.post("/api/admin/balance/save_xp", tags=["admin"])
     def save_xp(body: XpUpdate):
         uid = auth_check(body.init_data, body.token)

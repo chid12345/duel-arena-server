@@ -153,6 +153,12 @@ def _build_app(bot_count: int) -> Application:
             clan_season_rotate_job, interval=3600, first=120,
             name="clan_season_rotate",
         )
+        # Ротация сезона батл-пасса (90 дней) — раз в час: закрывает просроченный, создаёт новый.
+        from jobs.bp_season_rotate import bp_season_rotate_job
+        application.job_queue.run_repeating(
+            bp_season_rotate_job, interval=3600, first=180,
+            name="bp_season_rotate",
+        )
         # Мировой босс — тик раз в 10 сек (расписание 10 мин: рейды
         # стартуют/закрываются точно по слотам, без задержки до минуты).
         from jobs.world_boss_scheduler import world_boss_scheduler_job

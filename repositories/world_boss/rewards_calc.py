@@ -126,6 +126,17 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         if last_hit_uid and int(last_hit_uid) in by_uid:
             lh = int(last_hit_uid)
             diamonds_by_rank[lh] = diamonds_by_rank.get(lh, 0) + WB_DIAMONDS_LAST_HIT
+        # Шаг 5: BP-очки за топ урона и финальный удар по WB
+        try:
+            from repositories.season_pass.award_points import (
+                award_wb_top_damage, award_wb_last_hit,
+            )
+            if top_uid:
+                award_wb_top_damage(db, top_uid)
+            if last_hit_uid and int(last_hit_uid) in by_uid:
+                award_wb_last_hit(db, last_hit_uid)
+        except Exception:
+            pass
     # Редкая удача: 3% шанс на весь рейд, что один случайный участник
     # (не топ-1) получит свиток scroll_all_12. Часто никто не получает —
     # это «заманушка-редкость» (~1 свиток на 30 рейдов).

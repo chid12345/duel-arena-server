@@ -38,6 +38,12 @@ class WorldBossHitsMixin:
             row = cur.fetchone()
             hit_id = row["hit_id"] if row else 0
         conn.close()
+        # Шаг 5: BP-очки за удар по WB
+        try:
+            from repositories.season_pass.award_points import award_wb_hit
+            award_wb_hit(self, user_id)
+        except Exception:
+            pass
         return int(hit_id)
 
     def get_wb_total_damage_by_user(self, spawn_id: int, user_id: int) -> int:
