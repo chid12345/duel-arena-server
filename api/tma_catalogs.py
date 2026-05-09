@@ -74,8 +74,8 @@ SHOP_CATALOG = {
 
     # ── Лут-боксы ─────────────────────────────────────────────
     "box_common":      {"name": "Обычный ящик",         "price": 70,  "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "2–4 свитка · шанс на алмазный", "inventory": True},
-    "box_rare":        {"name": "Редкий ящик",          "price": 12,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков", "inventory": True},
-    "box_rare_c":      {"name": "Редкий ящик+",         "price": 20,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2+ алмазных · шанс 300💎 и Premium", "inventory": True},
+    "box_rare":        {"name": "Редкий ящик",          "price": 5,   "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков", "inventory": True},
+    "box_rare_c":      {"name": "Редкий ящик+",         "price": 10,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2+ алмазных · шанс 300💎 и Premium", "inventory": True},
     "box_epic_e2":     {"name": "Эпический: Удача",     "price": 0,   "currency": "diamonds", "icon": "🔮", "tab": "boxes", "desc": "USDT-свиток + алмазные · шанс Титана", "inventory": True},
     "box_epic_e3":     {"name": "Эпический: Набор воина","price": 0,  "currency": "diamonds", "icon": "⚔️", "tab": "boxes", "desc": "USDT-свиток + XP×2 + свитки", "inventory": True},
 
@@ -133,6 +133,14 @@ STARS_PACKAGES = [
     {"id": "d500", "diamonds": 500, "stars": 650, "label": "500 💎"},
     {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
     {
+        "id": "starter_pack",
+        "diamonds": 200,
+        "stars": 200,
+        "label": "🎁 Стартовый пак",
+        "hint": "200💎 + Premium 14 дней + 2× Свиток Титана · только 1 раз",
+        "starter_pack": True,
+    },
+    {
         "id": "sfullreset",
         "diamonds": 0,
         "stars": FULL_RESET_STARS,
@@ -182,6 +190,14 @@ CRYPTO_PACKAGES = [
     {"id": "cd300", "diamonds": 300, "label": "300 💎", "usdt": "7.99"},
     {"id": "cd500", "diamonds": 500, "label": "500 💎", "usdt": "12.99"},
     {"id": "cdpremium", "diamonds": 0, "label": "👑 Premium", "usdt": "8.00", "premium": True},
+    {
+        "id": "cdstarter",
+        "diamonds": 200,
+        "label": "🎁 Стартовый пак",
+        "hint": "200💎 + Premium 14 дней + 2× Свиток Титана · только 1 раз",
+        "usdt": "4.00",
+        "starter_pack": True,
+    },
     {
         "id": "cdfullreset",
         "diamonds": 0,

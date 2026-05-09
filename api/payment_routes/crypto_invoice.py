@@ -74,10 +74,13 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
         amount = str(pkg["usdt"])
         is_premium = pkg.get("premium", False)
         is_full_reset = pkg.get("full_reset", False)
+        is_starter_pack = pkg.get("starter_pack", False)
         if is_premium:
             prem_status = db.get_premium_status(uid)
             if prem_status["is_active"]:
                 return {"ok": False, "reason": f"👑 Premium уже активен ещё {prem_status['days_left']} дн. — деньги не списаны"}
+        if is_starter_pack and db.is_starter_pack_used(uid):
+            return {"ok": False, "reason": "Стартовый пак уже был куплен ранее — деньги не списаны"}
 
         if is_full_reset:
             description = "Duel Arena — сброс прогресса (💰💎 клан рефералка сохраняются, USDT)"
@@ -85,6 +88,9 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
         elif is_premium:
             description = "Duel Arena — 👑 Premium подписка"
             payload_str = f"uid:{uid}:premium:1"
+        elif is_starter_pack:
+            description = "Duel Arena — 🎁 Стартовый пак (200💎 + Premium 14 дн. + 2× Titan)"
+            payload_str = f"uid:{uid}:starter_pack:1"
         else:
             description = f"Duel Arena — {pkg['diamonds']} 💎 алмазов"
             payload_str = f"uid:{uid}:diamonds:{pkg['diamonds']}"

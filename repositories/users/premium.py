@@ -69,3 +69,32 @@ class UsersPremiumMixin:
             "days_left": max(0, (new_until - now).days),
             "bonus_diamonds": bonus_diamonds,
         }
+
+    def is_starter_pack_used(self, user_id: int) -> bool:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT starter_pack_used FROM players WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            return bool(row and int(row["starter_pack_used"] or 0))
+        finally:
+            conn.close()
+
+    def apply_starter_pack(self, user_id: int) -> Dict[str, Any]:
+        """Выдать стартовый пак: 200💎 + 14 дней Premium + 2× scroll_titan. Одноразово."""
+        if self.is_starter_pack_used(user_id):
+            return {"ok": False, "reason": "already_used"}
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE players SET diamonds = diamonds + 200, starter_pack_used = 1 WHERE user_id = ?",
+                (user_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        self.add_to_inventory(user_id, "scroll_titan")
+        self.add_to_inventory(user_id, "scroll_titan")
+        prem = self.activate_premium(user_id, days=14)
+        return {"ok": True, "diamonds_added": 200, "premium_days": prem.get("days_left", 14), "scrolls": 2}

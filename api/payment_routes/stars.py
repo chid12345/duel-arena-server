@@ -84,6 +84,26 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             fresh = db.get_or_create_player(uid, "")
             return {"ok": True, "profile_reset": True, "player": _player_api(dict(fresh))}
 
+        if pkg.get("starter_pack"):
+            if db.is_starter_pack_used(uid):
+                fresh = db.get_or_create_player(uid, "")
+                return {"ok": False, "reason": "Стартовый пак уже был куплен ранее.", "player": _player_api(dict(fresh))}
+            if not db.check_stars_bot_payment(uid, body.package_id):
+                fresh = db.get_or_create_player(uid, "")
+                return {"ok": False, "reason": "not_verified", "player": _player_api(dict(fresh))}
+            if db.mark_stars_tma_delivered(uid, body.package_id, pkg["stars"]):
+                result = db.apply_starter_pack(uid)
+                await manager.send(uid, {"event": "starter_pack_activated", "diamonds_added": 200, "source": "stars"})
+                await _send_tg_message(uid,
+                    "🎁 <b>Стартовый пак активирован!</b>\n\n"
+                    "💎 +200 алмазов\n"
+                    "👑 Premium на 14 дней\n"
+                    "🏔️ ×2 Свиток Титана\n\n"
+                    "Спасибо за покупку! ⚔️ Duel Arena"
+                )
+            fresh = db.get_or_create_player(uid, "")
+            return {"ok": True, "starter_pack_activated": True, "player": _player_api(dict(fresh))}
+
         is_premium = pkg["id"] == "premium"
         if is_premium:
             prem = db.get_premium_status(uid)
@@ -189,6 +209,10 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             payload = "stars_full_reset"
             title = "Сброс прогресса"
             desc = "Полный сброс уровня и боёв в Duel Arena (золото и алмазы сохраняются)"
+        elif pkg.get("starter_pack"):
+            payload = f"starter_pack_{pkg['id']}"
+            title = "Стартовый пак"
+            desc = "200💎 + Premium 14 дней + 2× Свиток Титана · только 1 раз · Duel Arena"
         elif pkg["id"] == "premium":
             payload = "premium_sub"
             title = "Premium подписка"
