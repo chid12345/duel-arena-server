@@ -122,7 +122,7 @@ window.WBHtml = (() => {
     const gatherBtn = (s.gather?.is_open && !s.active)
       ? `<div class="wb-enter wb-gather-cta active" data-act="enter-gather">
           <div class="wb-enter-in"><div class="wb-enter-icon">⚔</div>
-            <div class="wb-enter-lbl">ВОЙТИ В БОЙ<span class="wb-enter-sub">КОМНАТА ОЖИДАНИЯ ОТКРЫТА · ${s.gather.count||0} В БОЮ</span></div>
+            <div class="wb-enter-lbl">ВОЙТИ В БОЙ<span class="wb-enter-sub">КОМНАТА ОЖИДАНИЯ ОТКРЫТА · ${s.gather.count||0} ЗАРЕГУ</span></div>
           </div>
         </div>`
       : '';

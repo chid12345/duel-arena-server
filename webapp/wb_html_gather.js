@@ -130,7 +130,7 @@
         } else if (act === 'gth-card') {
           const uid = parseInt(el.dataset.uid);
           const p = (window.WBHtml._lastGatherState?.gather?.players || []).find(x => x.user_id === uid);
-          if (p) window.WBHtml.showGatherCard(p);
+          if (p) window.WBHtml.showGatherCard?.(p);
         }
       });
     }
