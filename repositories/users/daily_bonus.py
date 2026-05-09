@@ -61,8 +61,6 @@ class UsersDailyBonusMixin:
                 streak = 1
         bonus = DAILY_BONUS_GOLD
         extra_d = DIAMONDS_DAILY_STREAK if streak % 7 == 0 else 0
-        if streak % 7 == 0:
-            bonus += DIAMONDS_DAILY_STREAK
         cursor.execute(
             "UPDATE players SET daily_streak = ?, last_daily = ?, gold = gold + ?, diamonds = diamonds + ? WHERE user_id = ?",
             (streak, today, bonus if bonus > 0 else 0, extra_d, user_id),

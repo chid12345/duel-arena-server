@@ -21,7 +21,6 @@ const BotBattleHtml = (() => {
     : 'skins/crit/1.png';
 
   function _renderShell(b, skinId, pvpBgIdx) {
-    console.log('[BotBattleHtml] _renderShell start', { isPvp: !b.opp_is_bot, skinId, pvpBgIdx, b_keys: Object.keys(b||{}) });
     try { return _renderShellImpl(b, skinId, pvpBgIdx); }
     catch(e) {
       console.error('[BotBattleHtml] _renderShell ОШИБКА:', e, '— рисую упрощённый UI');
@@ -104,7 +103,6 @@ const BotBattleHtml = (() => {
     attackBtns = {}; defenseBtns = {};
     root.querySelectorAll('.atk-col .ic-btn').forEach(b => attackBtns[b.dataset.key] = b);
     root.querySelectorAll('.def-col .ic-btn').forEach(b => defenseBtns[b.dataset.key] = b);
-    console.log('[BotBattleHtml] _renderShell ok — кнопок атаки:', Object.keys(attackBtns).length, 'защиты:', Object.keys(defenseBtns).length);
   }
 
   function _onClick(e) {
@@ -161,7 +159,6 @@ const BotBattleHtml = (() => {
       root = document.createElement('div'); root.id = 'bb-root';
       if (isPvp) root.classList.add('pvp');
       const r = s.game.canvas.getBoundingClientRect();
-      console.log('[BotBattleHtml] canvas rect:', { left: r.left.toFixed(0), top: r.top.toFixed(0), width: r.width.toFixed(0), height: r.height.toFixed(0) });
       // КРИТИЧНО: ставим position:fixed ИНЛАЙН — иначе если CSS не парсится
       // (например inset shorthand ломает весь блок), root остаётся position:static
       // и падает в нормальный поток ПОСЛЕ канваса (y=644 при canvas height=640).
@@ -176,49 +173,7 @@ const BotBattleHtml = (() => {
         overflow: 'hidden',
       });
       document.body.appendChild(root);
-      // ДИАГНОСТИКА: проверяем СРАЗУ после appendChild — где реально оказался root
-      // и что с body/документом (transforms, scroll).
-      try {
-        const r0 = root.getBoundingClientRect();
-        const bodyR = document.body.getBoundingClientRect();
-        const cs = getComputedStyle(root);
-        const bcs = getComputedStyle(document.body);
-        const hcs = getComputedStyle(document.documentElement);
-        console.log('[BotBattleHtml] AFTER appendChild:', {
-          rootRect: `(${r0.left.toFixed(0)},${r0.top.toFixed(0)}) ${r0.width.toFixed(0)}x${r0.height.toFixed(0)}`,
-          rootInlineTop: root.style.top,
-          rootComputedPos: cs.position,
-          rootComputedTop: cs.top,
-          rootOffsetParent: root.offsetParent?.tagName || 'null',
-          bodyRect: `(${bodyR.left.toFixed(0)},${bodyR.top.toFixed(0)}) ${bodyR.width.toFixed(0)}x${bodyR.height.toFixed(0)}`,
-          bodyTransform: bcs.transform,
-          htmlTransform: hcs.transform,
-          scrollY: window.scrollY,
-          bodyHeight: document.body.style.height,
-          htmlHeight: document.documentElement.style.height,
-        });
-      } catch(e) { console.warn('[BotBattleHtml] post-append diag failed:', e); }
       _renderShell(b0, skinId, pvpBgIdx);
-      // Диагностика: реальная позиция и размеры root + ключевых элементов.
-      try {
-        const probe = sel => {
-          const el = root.querySelector(sel);
-          return el ? `${el.offsetWidth}x${el.offsetHeight}` : 'absent';
-        };
-        const rrr = root.getBoundingClientRect();
-        console.log('[BotBattleHtml] visibility probe:', {
-          rootSize: `${root.offsetWidth}x${root.offsetHeight}`,
-          rootPos: `(${rrr.left.toFixed(0)},${rrr.top.toFixed(0)})`,
-          viewport: `${window.innerWidth}x${window.innerHeight}`,
-          bg:      probe('.bg'),
-          hpRow:   probe('.hp-row'),
-          hpBlock: probe('.hp-block'),
-          fighter: probe('.fighter.boss'),
-          atkCol:  probe('.atk-col'),
-          confirm: probe('.confirm-btn'),
-          clog:    probe('.bb-clog'),
-        });
-      } catch(e) { console.warn('[BotBattleHtml] probe failed:', e); }
       clickHandler = _onClick;
       root.addEventListener('click', clickHandler);
       // Прямой listener на ники — bbBreath и pointer-events иногда мешают
