@@ -62,6 +62,7 @@ class EndlessProgressRunMixin:
         # При поражении засчитываем как пройденную предыдущую волну.
         # wave = волна на которой проиграл → реально пройдено wave-1.
         completed = max(0, int(wave) - 1)
+        gold_reward = max(10, completed * 10) if completed > 0 else 0
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -73,7 +74,14 @@ class EndlessProgressRunMixin:
                 "current_wave=0, current_hp=0, is_active=FALSE, updated_at=CURRENT_TIMESTAMP",
                 (user_id, completed),
             )
+            if gold_reward > 0:
+                cursor.execute(
+                    "UPDATE players SET gold = gold + ? WHERE user_id = ?",
+                    (gold_reward, user_id),
+                )
             conn.commit()
         finally:
             conn.close()
-        return self.get_endless_progress(user_id)
+        result = self.get_endless_progress(user_id)
+        result["attempt_gold"] = gold_reward
+        return result

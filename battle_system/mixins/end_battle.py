@@ -156,8 +156,7 @@ class BattleEndBattleMixin:
             gold_reward = 0 if is_test else int(12 + floor * 5)
             exp_reward = 0 if is_test else max(1, int(round(base_exp * (1.0 + min(1.0, floor * 0.06)))))
         if battle_mode == "endless":
-            wave = max(1, int(mode_meta.get("wave", 1)))
-            gold_reward = 0 if is_test else int(8 + wave * 4)
+            gold_reward = 0
             exp_reward = 0
             loser_exp = 0
 

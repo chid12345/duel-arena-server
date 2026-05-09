@@ -59,11 +59,11 @@ def weekly_titan_rank_reward(rank: int) -> Tuple[int, int, str]:
 def weekly_natisk_rank_reward(rank: int) -> Tuple[int, int, str]:
     """Возвращает (diamonds, gold, title)."""
     if rank == 1:
-        return 100, 300, "Покоритель Волн"
+        return 100, 700, "Покоритель Волн"
     if rank == 2:
-        return 60, 200, "Штормовой боец"
+        return 60, 420, "Штормовой боец"
     if rank == 3:
-        return 40, 100, "Волновой боец"
+        return 40, 280, "Волновой боец"
     if 4 <= rank <= 10:
-        return 15, 50, "Участник натиска"
+        return 15, 100, "Участник натиска"
     return 0, 0, ""
