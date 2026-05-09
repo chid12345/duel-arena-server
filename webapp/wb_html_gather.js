@@ -68,36 +68,46 @@
     const count = g.count || players.length || 0;
     const sec = g.seconds_left || 0;
 
-    const rows = players.map(p =>
-      `<div class="wb-gth-row" data-uid="${p.user_id}" data-act="gth-card">
+    const myId = _myTgId();
+    const rows = players.map(p => {
+      const isMe = myId && _uidNum(p.user_id) === myId;
+      return `<div class="wb-gth-row${isMe?' me':''}" data-uid="${p.user_id}" data-act="gth-card">
         <span class="av">${_avatarFor(p.user_id)}</span>
         <span class="nm">${_esc(_nameFor(p))}</span>
-        <span class="lv">${p.level||'?'}</span>
-      </div>`
-    ).join('');
+        <span class="lv">Ур.${p.level||'?'}</span>
+      </div>`;
+    }).join('');
 
     root.innerHTML = `
 <div class="wb-gth">
   <div class="wb-gth-bg b1"></div>
   <div class="wb-gth-bg b2"></div>
   <div class="wb-gth-vignette"></div>
+  <div class="wb-gth-scanlines"></div>
 
   <div class="wb-gth-top">
-    <div class="wb-gth-head">⌛ КОМНАТА ОЖИДАНИЯ</div>
-    <div class="wb-gth-sub">сбор перед боем · автовход в 0:00</div>
+    <div class="wb-gth-badge"><span class="wb-gth-dot"></span>RAID LOBBY</div>
+    <div class="wb-gth-head">⬡ ЗОНА СБОРА</div>
+    <div class="wb-gth-sub">BOSS RAID · автовход в 00:00</div>
   </div>
 
   <div class="wb-gth-timer">
-    <div class="wb-gth-timer-lbl">До боя</div>
+    <div class="wb-gth-timer-lbl">СТАРТ ЧЕРЕЗ</div>
     <div class="wb-gth-timer-val" id="wb-gth-cnt">${_fmtCountdown(sec)}</div>
+    <div class="wb-gth-timer-bar"><div class="wb-gth-timer-fill" id="wb-gth-fill"></div></div>
   </div>
 
   <div class="wb-gth-roster">
-    <div class="wb-gth-roster-h">⚔ В БОЮ <span class="cnt">${count}</span></div>
-    <div class="wb-gth-roster-list">${rows || '<div class="wb-gth-empty">Пока пусто. Будь первым!</div>'}</div>
+    <div class="wb-gth-roster-h">
+      <span>⚔ В БОЮ</span>
+      <span class="cnt">${count}</span>
+    </div>
+    <div class="wb-gth-roster-list">${rows || '<div class="wb-gth-empty">— ОЖИДАЕМ БОЙЦОВ —</div>'}</div>
   </div>
 
-  <div class="wb-gth-leave" data-act="gth-leave">↩ Выйти из комнаты</div>
+  <div class="wb-gth-leave" data-act="gth-leave">
+    <span class="wb-gth-leave-ic">⏎</span> ВЫЙТИ ИЗ ЗОНЫ
+  </div>
 </div>`;
 
     // Биндинг: тап по нику открывает карточку (wb_html_gather_card.js).

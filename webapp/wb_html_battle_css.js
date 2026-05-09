@@ -709,7 +709,7 @@ window.WBBattleCSS = (() => {
   box-shadow:0 0 18px rgba(0,100,255,.35);transition:transform .12s;}
 .wb-blog-ok:active{transform:scale(.97);}
 
-/* ── Комната ожидания (gather) ── */
+/* ── Комната ожидания (gather) — киберпанк ── */
 .wb-gth{position:fixed!important;inset:0!important;z-index:9500;background:#000;
   font-family:-apple-system,"Segoe UI",Roboto,sans-serif;color:#e0e0e0;
   overflow:hidden;}
@@ -719,56 +719,96 @@ window.WBBattleCSS = (() => {
 .wb-gth-bg.b1{background-image:url('bosses/gather/1.png?v=a10');animation-delay:0s;}
 .wb-gth-bg.b2{background-image:url('bosses/gather/2.png?v=a10');animation-delay:12s;}
 @keyframes wb-gth-fade{
-  0%,40%   {opacity:1}
-  50%,90%  {opacity:0}
-  100%     {opacity:1}}
+  0%,40%{opacity:1}
+  50%,90%{opacity:0}
+  100%{opacity:1}}
 .wb-gth-vignette{position:absolute;inset:0;z-index:2;pointer-events:none;
   background:radial-gradient(ellipse 90% 80% at 50% 50%,
-    transparent 0%, rgba(0,0,0,.45) 70%, rgba(0,0,0,.85) 100%);}
+    transparent 0%,rgba(0,0,0,.5) 65%,rgba(0,0,0,.9) 100%);}
+.wb-gth-scanlines{position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.18) 2px 4px);
+  opacity:.55;}
+
+/* Шапка */
 .wb-gth-top{position:absolute;top:14px;left:14px;right:14px;z-index:10;}
-.wb-gth-head{font-size:11px;font-weight:900;letter-spacing:2px;color:#ff88dd;
-  text-shadow:0 0 10px rgba(255,80,200,.6);text-transform:uppercase;}
-.wb-gth-sub{font-size:9px;color:rgba(255,255,255,.55);margin-top:2px;letter-spacing:1.5px;}
-.wb-gth-timer{position:absolute;left:0;right:108px;top:42%;z-index:5;text-align:center;}
-.wb-gth-timer-lbl{font-size:9px;letter-spacing:2px;color:#cc88ff;
-  text-shadow:0 0 8px rgba(180,80,255,.4);margin-bottom:4px;text-transform:uppercase;}
-.wb-gth-timer-val{font-size:64px;font-weight:900;font-family:'Courier New',monospace;
-  background:linear-gradient(180deg,#ffee00,#ff8800);
+.wb-gth-badge{display:inline-flex;align-items:center;gap:5px;
+  padding:3px 9px;border-radius:20px;
+  background:rgba(0,245,255,.07);border:1px solid rgba(0,245,255,.25);
+  font-size:8px;font-weight:900;letter-spacing:2.5px;color:#00f5ff;
+  text-shadow:0 0 8px rgba(0,245,255,.6);margin-bottom:5px;}
+.wb-gth-dot{width:5px;height:5px;border-radius:50%;background:#00f5ff;
+  box-shadow:0 0 6px #00f5ff;animation:wb-gth-dot-blink .9s ease-in-out infinite;}
+@keyframes wb-gth-dot-blink{0%,100%{opacity:1;box-shadow:0 0 6px #00f5ff}50%{opacity:.2;box-shadow:none}}
+.wb-gth-head{font-size:18px;font-weight:900;letter-spacing:3px;
+  background:linear-gradient(90deg,#ff44cc,#00f5ff);
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  letter-spacing:3px;
-  filter:drop-shadow(0 0 12px rgba(255,200,0,.6));
-  animation:wb-gth-pulse 1.6s ease-in-out infinite;}
-@keyframes wb-gth-pulse{
-  0%,100%{filter:drop-shadow(0 0 8px rgba(255,200,0,.5))}
-  50%   {filter:drop-shadow(0 0 22px rgba(255,200,0,.9))}}
+  filter:drop-shadow(0 0 8px rgba(255,80,200,.5));
+  text-transform:uppercase;}
+.wb-gth-sub{font-size:8px;color:rgba(255,255,255,.4);margin-top:3px;letter-spacing:2px;}
+
+/* Таймер */
+.wb-gth-timer{position:absolute;left:0;right:112px;top:40%;z-index:5;text-align:center;padding:0 18px;}
+.wb-gth-timer-lbl{font-size:8px;letter-spacing:3px;color:#00f5ff;
+  text-shadow:0 0 8px rgba(0,245,255,.5);margin-bottom:6px;text-transform:uppercase;}
+.wb-gth-timer-val{font-size:62px;font-weight:900;font-family:'Courier New',monospace;
+  background:linear-gradient(180deg,#00f5ff,#0088ff);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  letter-spacing:4px;
+  filter:drop-shadow(0 0 16px rgba(0,245,255,.7));
+  animation:wb-gth-timer-pulse 1.4s ease-in-out infinite;}
+@keyframes wb-gth-timer-pulse{
+  0%,100%{filter:drop-shadow(0 0 10px rgba(0,245,255,.55))}
+  50%{filter:drop-shadow(0 0 28px rgba(0,245,255,1)) drop-shadow(0 0 50px rgba(0,140,255,.4))}}
+.wb-gth-timer-bar{margin:10px auto 0;width:80%;max-width:160px;height:3px;
+  border-radius:2px;background:rgba(0,245,255,.12);border:1px solid rgba(0,245,255,.2);overflow:hidden;}
+.wb-gth-timer-fill{height:100%;width:100%;
+  background:linear-gradient(90deg,#0088ff,#00f5ff);
+  box-shadow:0 0 8px rgba(0,245,255,.6);
+  animation:wb-gth-bar-flow 2s linear infinite;}
+@keyframes wb-gth-bar-flow{
+  0%{background-position:0 0}100%{background-position:60px 0}}
+
+/* Ростер */
 .wb-gth-roster{position:absolute;right:0;top:0;bottom:0;z-index:8;
-  width:108px;border-radius:10px 0 0 10px;
-  background:rgba(5,2,18,.78);backdrop-filter:blur(10px);
-  -webkit-backdrop-filter:blur(10px);
-  border-left:1px solid rgba(255,80,200,.18);
+  width:112px;border-radius:10px 0 0 10px;
+  background:rgba(4,1,16,.82);backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-left:1px solid rgba(0,245,255,.14);
   overflow:hidden;display:flex;flex-direction:column;}
 .wb-gth-roster-h{display:flex;align-items:center;justify-content:space-between;
-  padding:5px 7px;font-size:7px;font-weight:900;letter-spacing:1.5px;
-  color:#ff88dd;text-transform:uppercase;
-  border-bottom:1px solid rgba(255,80,200,.12);}
+  padding:6px 8px;font-size:7px;font-weight:900;letter-spacing:2px;
+  color:#00f5ff;text-transform:uppercase;
+  border-bottom:1px solid rgba(0,245,255,.1);
+  text-shadow:0 0 6px rgba(0,245,255,.5);}
 .wb-gth-roster-h .cnt{color:#fff;font-family:'Courier New',monospace;
-  font-size:9px;letter-spacing:0;}
+  font-size:10px;letter-spacing:0;text-shadow:0 0 5px rgba(255,255,255,.5);}
 .wb-gth-roster-list{flex:1;overflow-y:auto;scrollbar-width:none;}
 .wb-gth-roster-list::-webkit-scrollbar{display:none;}
-.wb-gth-row{display:flex;align-items:center;gap:4px;padding:4px 6px;cursor:pointer;
-  transition:background .12s;}
-.wb-gth-row:hover{background:rgba(255,80,200,.07);}
-.wb-gth-row:active{background:rgba(255,80,200,.14);}
+.wb-gth-row{display:flex;align-items:center;gap:4px;padding:5px 7px;cursor:pointer;
+  border-left:2px solid transparent;transition:all .12s;}
+.wb-gth-row:hover{background:rgba(0,245,255,.05);border-left-color:rgba(0,245,255,.3);}
+.wb-gth-row:active{background:rgba(0,245,255,.1);}
+.wb-gth-row.me{border-left-color:#ff44cc;background:rgba(255,68,204,.07);}
+.wb-gth-row.me .nm{color:#ff88ee;}
 .wb-gth-row .av{font-size:11px;flex-shrink:0;}
-.wb-gth-row .nm{flex:1;font-size:8px;color:#cce4ff;font-weight:600;
+.wb-gth-row .nm{flex:1;font-size:8px;color:rgba(200,230,255,.85);font-weight:600;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.wb-gth-row .lv{font-size:7px;color:rgba(255,255,255,.35);font-family:'Courier New',monospace;flex-shrink:0;}
-.wb-gth-empty{padding:16px 8px;text-align:center;font-size:9px;color:rgba(255,255,255,.35);}
-.wb-gth-leave{position:absolute;left:14px;right:118px;bottom:14px;z-index:10;
-  padding:11px;border-radius:10px;text-align:center;cursor:pointer;
-  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);
-  font-size:11px;font-weight:700;letter-spacing:1px;color:rgba(255,255,255,.6);}
-.wb-gth-leave:active{background:rgba(255,255,255,.08);}
+.wb-gth-row .lv{font-size:7px;color:rgba(0,245,255,.45);font-family:'Courier New',monospace;flex-shrink:0;}
+.wb-gth-empty{padding:18px 8px;text-align:center;font-size:8px;
+  color:rgba(0,245,255,.3);letter-spacing:1px;}
+
+/* Кнопка «Выйти» */
+.wb-gth-leave{position:absolute;left:14px;right:122px;bottom:14px;z-index:10;
+  padding:11px 14px;border-radius:10px;text-align:center;cursor:pointer;
+  background:rgba(255,0,180,.06);
+  border:1px solid rgba(255,0,180,.35);
+  font-size:10px;font-weight:900;letter-spacing:2px;color:rgba(255,160,220,.85);
+  text-shadow:0 0 8px rgba(255,80,200,.4);
+  box-shadow:0 0 12px rgba(255,0,180,.1),inset 0 0 8px rgba(255,0,180,.04);
+  transition:all .15s;display:flex;align-items:center;justify-content:center;gap:7px;}
+.wb-gth-leave:active{background:rgba(255,0,180,.14);
+  box-shadow:0 0 20px rgba(255,0,180,.3),inset 0 0 12px rgba(255,0,180,.1);}
+.wb-gth-leave-ic{font-size:14px;opacity:.7;}
 
 /* Карточка игрока (попап от тапа на ник) */
 .wb-gth-pcard-ov{position:fixed;inset:0;z-index:9999;
