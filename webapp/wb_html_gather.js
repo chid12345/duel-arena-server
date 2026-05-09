@@ -108,7 +108,15 @@
         const act = el.dataset.act;
         if (act === 'gth-leave') {
           try { sessionStorage.removeItem('wb_in_gather'); } catch(_) {}
-          window.WBHtml._scene?._refresh?.();
+          _stopLocalTick();
+          // _refresh() не вызовет _render() если серверный state не изменился
+          // (shape key одинаковый — gather.is_open не изменилось на сервере).
+          // Вызываем render напрямую с текущим state — покажет лобби.
+          try {
+            const sc = window.WBHtml._scene;
+            if (sc && sc._state) window.WBHtml.render(sc, sc._state);
+            else sc?._refresh?.();
+          } catch(_) {}
         } else if (act === 'gth-card') {
           const uid = parseInt(el.dataset.uid);
           const p = (window.WBHtml._lastGatherState?.gather?.players || []).find(x => x.user_id === uid);

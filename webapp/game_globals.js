@@ -478,6 +478,10 @@ window._closeAllTabOverlays = function() {
   try { window.TasksHTML?.close?.(); } catch(_) {}
   try { window.ShopHtml?.hide?.(); } catch(_) {}
   try { window.RatingHTML?.close?.(); } catch(_) {}
+  try { window.MoreMenuHTML?.close?.(); } catch(_) {}
+  try { window.GuideHTML?.close?.(); } catch(_) {}
+  try { window.ReferralHTML?.close?.(); } catch(_) {}
+  try { window.AvatarHTML?.close?.(); } catch(_) {}
   try { if (typeof ScreenHints !== 'undefined') ScreenHints.hide(); } catch(_) {}
 };
 
