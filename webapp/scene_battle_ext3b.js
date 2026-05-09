@@ -37,7 +37,6 @@ Object.assign(BattleScene.prototype, {
     const serverSkinId = b?.opp_skin_id || null;
     const skinId = allowSkin ? (serverSkinId || BotSkinPicker.pick()) : null;
     this._currentBotSkinId = skinId; // используется в _showCard для попапа инфы про бота
-    console.log('[BotSkin]', { isBot, mode, skinId, hasPicker: typeof BotSkinPicker !== 'undefined' });
 
     const skinKey = skinId ? BotSkinPicker.skinKey(skinId) : null;
     const bgKey   = skinId ? BotSkinPicker.bgKey(skinId)   : null;

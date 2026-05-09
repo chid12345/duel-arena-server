@@ -66,6 +66,8 @@ class BotHandlersShopPayments:
         stars = int(payment.total_amount or 0)
 
         if payload == "premium_sub":
+            # Ключ "premium" — совпадает с STARS_PACKAGES[id] в mini app (anti-exploit gate)
+            db.record_stars_bot_payment(user.id, "premium", stars)
             from config import PREMIUM_XP_BONUS_PERCENT
 
             prem_result = db.activate_premium(user.id, days=21)
@@ -138,6 +140,8 @@ class BotHandlersShopPayments:
         if payload.startswith("stars_scroll:"):
             scroll_id = payload[len("stars_scroll:"):]
             if scroll_id:
+                # Ключ "scroll:{scroll_id}" — совпадает с ключом в stars_confirm (anti-exploit gate)
+                db.record_stars_bot_payment(user.id, f"scroll:{scroll_id}", stars)
                 try:
                     db.add_to_inventory(user.id, scroll_id)
                     try:
@@ -160,6 +164,15 @@ class BotHandlersShopPayments:
                     )
             return
 
+        if payload == "stars_full_reset":
+            # Ключ "sfullreset" совпадает с STARS_PACKAGES[id] в mini app (anti-exploit gate)
+            db.record_stars_bot_payment(user.id, "sfullreset", stars)
+            await tg_api_call(
+                update.message.reply_text,
+                "✅ Оплата получена! Сброс прогресса применится при следующем открытии игры. ⚔️ Duel Arena",
+            )
+            return
+
         if not payload.startswith("diamonds_"):
             # Неизвестный тип Stars-покупки
             try:
@@ -178,6 +191,8 @@ class BotHandlersShopPayments:
         if diamonds <= 0:
             return
         package_id = f"d{diamonds}"
+        # Записываем bot-запись с тем же ключом что и mini app (anti-exploit gate)
+        db.record_stars_bot_payment(user.id, package_id, stars)
         result = db.confirm_stars_payment(user.id, package_id, diamonds, stars)
         ref = db.process_referral_vip_shop_purchase(user.id, stars=stars)
         if result.get("ok"):

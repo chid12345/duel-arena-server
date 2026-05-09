@@ -118,11 +118,14 @@ class QuestsStreakMixin:
         xp = int(reward.get("xp") or 0)
         item = reward.get("item")
 
-        # Выдать награду
-        cur.execute(
-            "UPDATE players SET gold=gold+?, diamonds=diamonds+?, exp=exp+? WHERE user_id=?",
-            (gold, diamonds, xp, user_id),
-        )
+        conn.commit()
+        conn.close()
+
+        # Выдать награду через grant_exp_with_levelup — чтобы уровень рос корректно
+        try:
+            self.grant_exp_with_levelup(user_id, xp, gold_add=gold, diamonds_add=diamonds)
+        except Exception as e:
+            log.warning("streak grant_exp failed uid=%s: %s", user_id, e)
 
         # Добавить предмет в инвентарь если есть
         if item:
@@ -130,6 +133,9 @@ class QuestsStreakMixin:
                 self.add_to_inventory(user_id, item)
             except Exception as e:
                 log.warning("streak item add failed uid=%s item=%s: %s", user_id, item, e)
+
+        conn = self.get_connection()
+        cur = conn.cursor()
 
         # Обновить claimed list
         claimed.append(day_num)

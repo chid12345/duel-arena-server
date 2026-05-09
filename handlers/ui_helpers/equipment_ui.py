@@ -161,7 +161,7 @@ async def handle_equip_buy(query, user_id: int, item_id: str, slot: str) -> None
         conn.commit()
         conn.close()
 
-    db.equip_item(user_id, slot, item_id)
+    db.equip_item(user_id, slot, item_id, force=(slot in ("ring1", "ring2")))
     await query.answer(f"✅ {item['name']} надето!", show_alert=False)
 
     # Refresh slot view

@@ -26,16 +26,27 @@ class BattlesPvpQueueMixin:
         conn.close()
 
     def pvp_find_opponent(self, user_id: int, level: int, range_max: int = 3) -> Optional[Dict]:
+        """Атомарно ищет и удаляет оппонента из очереди — исключает race condition."""
         conn = self.get_connection()
         cursor = conn.cursor()
         lo = max(1, level - range_max)
         hi = min(MAX_LEVEL, level + range_max)
-        cursor.execute(
-            "SELECT * FROM pvp_queue WHERE user_id != ? AND level BETWEEN ? AND ? "
-            "ORDER BY ABS(level - ?) ASC, joined_at ASC LIMIT 1",
-            (user_id, lo, hi, level),
-        )
-        row = cursor.fetchone()
+        # BEGIN IMMEDIATE берёт write-lock сразу — второй параллельный запрос ждёт.
+        cursor.execute("BEGIN IMMEDIATE")
+        try:
+            cursor.execute(
+                "SELECT * FROM pvp_queue WHERE user_id != ? AND level BETWEEN ? AND ? "
+                "ORDER BY ABS(level - ?) ASC, joined_at ASC LIMIT 1",
+                (user_id, lo, hi, level),
+            )
+            row = cursor.fetchone()
+            if row:
+                cursor.execute("DELETE FROM pvp_queue WHERE user_id = ?", (row["user_id"],))
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            conn.close()
+            raise
         conn.close()
         return dict(row) if row else None
 

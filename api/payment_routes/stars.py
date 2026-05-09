@@ -44,16 +44,23 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
         if scroll_pkg:
             scroll_id = scroll_pkg["scroll_id"]
             scroll_stars = scroll_pkg["stars"]
-            db.add_to_inventory(uid, scroll_id)
-            try:
-                db.process_referral_vip_shop_purchase(uid, stars=scroll_stars)
-            except Exception as _ve:
-                logger.error("vip_shop scroll stars uid=%s: %s", uid, _ve)
-            is_box = scroll_id.startswith("box_")
+            # Проверяем что Telegram действительно подтвердил оплату
+            if not db.check_stars_bot_payment(uid, f"scroll:{scroll_id}"):
+                logger.warning("stars_confirm scroll not_verified uid=%s pkg=%s", uid, body.package_id)
+                fresh = db.get_or_create_player(uid, "")
+                return {"ok": False, "reason": "not_verified", "player": _player_api(dict(fresh))}
+            # Дедуп: выдаём только один раз через mini app
+            if db.mark_stars_tma_delivered(uid, f"scroll:{scroll_id}", scroll_stars):
+                db.add_to_inventory(uid, scroll_id)
+                try:
+                    db.process_referral_vip_shop_purchase(uid, stars=scroll_stars)
+                except Exception as _ve:
+                    logger.error("vip_shop scroll stars uid=%s: %s", uid, _ve)
+                is_box = scroll_id.startswith("box_")
+                label = scroll_pkg["label"]
+                kind = "Ящик" if is_box else "Свиток"
+                await _send_tg_message(uid, f"📜 <b>{kind} получен!</b>\n{label}\n\nОткройте «Герой → Моё → Особые» ⚔️ Duel Arena")
             await manager.send(uid, {"event": "scroll_received", "scroll_id": scroll_id, "source": "stars"})
-            label = scroll_pkg["label"]
-            kind = "Ящик" if is_box else "Свиток"
-            await _send_tg_message(uid, f"📜 <b>{kind} получен!</b>\n{label}\n\nОткройте «Герой → Моё → Особые» ⚔️ Duel Arena")
             fresh = db.get_or_create_player(uid, "")
             return {"ok": True, "scroll_received": True, "scroll_id": scroll_id, "player": _player_api(dict(fresh))}
 
@@ -64,8 +71,16 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
         diamonds = pkg["diamonds"]
         stars = pkg["stars"]
 
+        # Для всех типов требуем подтверждение от Telegram-бота (anti-exploit)
+        bot_key = body.package_id  # "premium", "d100", "full_reset" и т.д.
+        if not db.check_stars_bot_payment(uid, bot_key):
+            logger.warning("stars_confirm not_verified uid=%s pkg=%s", uid, body.package_id)
+            fresh = db.get_or_create_player(uid, "")
+            return {"ok": False, "reason": "not_verified", "player": _player_api(dict(fresh))}
+
         if pkg.get("full_reset"):
-            await _notify_paid_full_reset(uid)
+            if db.mark_stars_tma_delivered(uid, bot_key, stars):
+                await _notify_paid_full_reset(uid)
             fresh = db.get_or_create_player(uid, "")
             return {"ok": True, "profile_reset": True, "player": _player_api(dict(fresh))}
 

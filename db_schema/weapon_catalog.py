@@ -10,7 +10,7 @@ WEAPON_CATALOG: dict[str, dict] = {
         "desc":"+5 атк, +1 крит",
     },
     "sword_gold": {
-        "slot":"weapon","rarity":"rare","name":"Стальной меч","emoji":"⚔️",
+        "slot":"weapon","rarity":"rare","name":"Боевой меч","emoji":"⚔️",
         "atk_bonus":15,"crit_bonus":3,"pen_pct":0.01,"price_gold":1200,
         "desc":"+15 атк, +3 крит, +1% пробой",
     },

@@ -35,7 +35,7 @@ SLOT_LABEL = {
     SLOT_WEAPON: ("🗡️", "Оружие"),
     SLOT_SHIELD: ("🛡️", "Щит"),
     SLOT_ARMOR:  ("🥋", "Броня"),
-    SLOT_BELT:   ("🪢", "Пояс"),
+    SLOT_BELT:   ("⛑️", "Шлем"),
     SLOT_BOOTS:  ("👟", "Ботинки"),
     SLOT_RING1:  ("💍", "Кольцо 1"),
     SLOT_RING2:  ("💍", "Кольцо 2"),
@@ -48,23 +48,23 @@ SLOT_LABEL = {
 #   crit_bonus — плоский бонус к стату крита
 
 EQUIPMENT_CATALOG: dict[str, dict] = {
-    # ── ОРУЖИЕ ──────────────────────────────────────────────
+    # ── ОРУЖИЕ (legacy — заменено weapon_catalog.py, не показывать в магазине) ──
     "sword_iron": {
         "slot": SLOT_WEAPON, "rarity": RARITY_COMMON,
         "name": "Железный меч", "emoji": "🗡️",
-        "atk_bonus": 8, "price_gold": 300,
+        "atk_bonus": 8, "legacy": True,
         "desc": "+8 к урону",
     },
     "sword_steel": {
         "slot": SLOT_WEAPON, "rarity": RARITY_RARE,
-        "name": "Стальной меч", "emoji": "⚔️",
-        "atk_bonus": 20, "price_gold": 1200,
+        "name": "Стальной клинок", "emoji": "⚔️",
+        "atk_bonus": 20, "legacy": True,
         "desc": "+20 к урону",
     },
     "sword_chaos": {
         "slot": SLOT_WEAPON, "rarity": RARITY_EPIC,
         "name": "Клинок Хаоса", "emoji": "🌀",
-        "atk_bonus": 40, "price_gold": 0, "price_diamonds": 25,
+        "atk_bonus": 40, "legacy": True,
         "desc": "+40 к урону",
     },
     # ── БРОНЯ ────────────────────────────────────────────────

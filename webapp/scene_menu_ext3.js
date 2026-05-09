@@ -56,7 +56,8 @@ Object.assign(MenuScene.prototype, {
       }
       if (msg.event === 'diamonds_credited') {
         tg?.HapticFeedback?.notificationOccurred('success');
-        Notif.push('💎', `+${msg.diamonds} алмазов зачислено!`, '#3cc8dc', 3500);
+        const _d = msg.diamonds; const _dw = _d % 100 >= 11 && _d % 100 <= 14 ? 'алмазов' : (_d % 10 === 1 ? 'алмаз' : _d % 10 >= 2 && _d % 10 <= 4 ? 'алмаза' : 'алмазов');
+        Notif.push('💎', `+${_d} ${_dw} зачислено!`, '#3cc8dc', 3500);
         State.playerLoadedAt = 0;
         post('/api/player').then(d => { if (d.ok && d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); } }).catch(() => {});
       }

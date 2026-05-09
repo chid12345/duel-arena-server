@@ -37,9 +37,12 @@ class ShopStoreMixin:
         new_hp = min(max_hp, current_hp + int(max_hp * 0.30))
         notify_flag = 1 if new_hp >= max_hp else 0
         cursor.execute(
-            "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ?, hp_full_notified = ? WHERE user_id = ?",
-            (COST, new_hp, datetime.utcnow().isoformat(), notify_flag, user_id),
+            "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ?, hp_full_notified = ? WHERE user_id = ? AND gold >= ?",
+            (COST, new_hp, datetime.utcnow().isoformat(), notify_flag, user_id, COST),
         )
+        if cursor.rowcount == 0:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {COST} золота, у вас недостаточно"}
         conn.commit()
         conn.close()
         return {"ok": True, "cost": COST, "hp_restored": new_hp - current_hp, "new_hp": new_hp, "max_hp": max_hp}
@@ -57,9 +60,12 @@ class ShopStoreMixin:
             conn.close()
             return {"ok": False, "reason": f"Нужно {COST} золота, у вас {row['gold']}"}
         cursor.execute(
-            "UPDATE players SET gold = gold - ?, current_hp = max_hp, last_hp_regen = ? WHERE user_id = ?",
-            (COST, datetime.utcnow().isoformat(), user_id),
+            "UPDATE players SET gold = gold - ?, current_hp = max_hp, last_hp_regen = ? WHERE user_id = ? AND gold >= ?",
+            (COST, datetime.utcnow().isoformat(), user_id, COST),
         )
+        if cursor.rowcount == 0:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {COST} золота, у вас недостаточно"}
         conn.commit()
         conn.close()
         return {"ok": True, "cost": COST, "hp_restored": row["max_hp"] - row["current_hp"]}
@@ -77,9 +83,12 @@ class ShopStoreMixin:
             conn.close()
             return {"ok": False, "reason": f"Нужно {COST} золота, у вас {row['gold']}"}
         cursor.execute(
-            "UPDATE players SET gold = gold - ?, xp_boost_charges = xp_boost_charges + 5 WHERE user_id = ?",
-            (COST, user_id),
+            "UPDATE players SET gold = gold - ?, xp_boost_charges = xp_boost_charges + 5 WHERE user_id = ? AND gold >= ?",
+            (COST, user_id, COST),
         )
+        if cursor.rowcount == 0:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {COST} золота, у вас недостаточно"}
         conn.commit()
         conn.close()
         return {"ok": True, "cost": COST, "charges_added": 5}

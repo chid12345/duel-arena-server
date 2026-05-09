@@ -34,19 +34,16 @@ def _do_buy(db, uid: int, iid: str, item: dict) -> dict:
         r = _buy_hp(db, uid, price=12, pct=0.30)
         if r.get("ok"):
             db.track_purchase(uid, iid, "gold", 12)
-            db.track_item_use(uid, iid)
         return r
     if iid == "hp_medium":
         r = _buy_hp(db, uid, price=25, pct=0.60)
         if r.get("ok"):
             db.track_purchase(uid, iid, "gold", 25)
-            db.track_item_use(uid, iid)
         return r
     if iid == "hp_full":
         r = _buy_hp(db, uid, price=50, pct=1.0)
         if r.get("ok"):
             db.track_purchase(uid, iid, "gold", 50)
-            db.track_item_use(uid, iid)
         return r
 
     # === Сброс статов (сразу) ===

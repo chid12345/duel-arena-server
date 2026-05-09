@@ -6,20 +6,91 @@ from typing import Any, Dict, List
 
 
 class SocialPaymentsMixin:
-    def confirm_stars_payment(self, user_id: int, package_id: str, diamonds: int, stars: int) -> Dict[str, Any]:
+
+    def record_stars_bot_payment(self, user_id: int, package_key: str, stars: int) -> None:
+        """Вызывается successful_payment_handler при реальной оплате Telegram.
+        Записывает source='bot' — ворота для stars_confirm (anti-exploit).
+        """
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT id FROM stars_payments WHERE user_id = ? AND package_id = ? AND created_at > datetime('now', '-5 minutes')",
+                "SELECT id FROM stars_payments WHERE user_id=? AND package_id=? AND source='bot' "
+                "AND created_at > datetime('now', '-15 minutes')",
+                (user_id, package_key),
+            )
+            if cursor.fetchone():
+                return
+            cursor.execute(
+                "INSERT INTO stars_payments (user_id, package_id, diamonds, stars, source) VALUES (?,?,0,?,'bot')",
+                (user_id, package_key, stars),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def check_stars_bot_payment(self, user_id: int, package_key: str) -> bool:
+        """True если Telegram подтвердил оплату за последние 15 минут."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT id FROM stars_payments WHERE user_id=? AND package_id=? AND source='bot' "
+                "AND created_at > datetime('now', '-15 minutes')",
+                (user_id, package_key),
+            )
+            return cursor.fetchone() is not None
+        finally:
+            conn.close()
+
+    def mark_stars_tma_delivered(self, user_id: int, package_key: str, stars: int) -> bool:
+        """Помечает свиток/премиум как выданный через mini app. False если уже выдано."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT id FROM stars_payments WHERE user_id=? AND package_id=? AND source='tma' "
+                "AND created_at > datetime('now', '-15 minutes')",
+                (user_id, package_key),
+            )
+            if cursor.fetchone():
+                return False
+            cursor.execute(
+                "INSERT INTO stars_payments (user_id, package_id, diamonds, stars, source) VALUES (?,?,0,?,'tma')",
+                (user_id, package_key, stars),
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+
+    def confirm_stars_payment(self, user_id: int, package_id: str, diamonds: int, stars: int) -> Dict[str, Any]:
+        """Mini app: требует bot-запись, потом зачисляет алмазы.
+        Без bot-записи → not_verified (закрывает эксплойт фарма алмазов).
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            # Требуем подтверждение от Telegram-бота
+            cursor.execute(
+                "SELECT id FROM stars_payments WHERE user_id=? AND package_id=? AND source='bot' "
+                "AND created_at > datetime('now', '-15 minutes')",
+                (user_id, package_id),
+            )
+            if not cursor.fetchone():
+                return {"ok": False, "reason": "not_verified"}
+            # Дедупликация: уже зачислено через mini app
+            cursor.execute(
+                "SELECT id FROM stars_payments WHERE user_id=? AND package_id=? AND source='tma' "
+                "AND created_at > datetime('now', '-15 minutes')",
                 (user_id, package_id),
             )
             if cursor.fetchone():
                 return {"ok": False, "reason": "already_credited"}
             if diamonds > 0:
-                cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (diamonds, user_id))
+                cursor.execute("UPDATE players SET diamonds=diamonds+? WHERE user_id=?", (diamonds, user_id))
             cursor.execute(
-                "INSERT INTO stars_payments (user_id, package_id, diamonds, stars, source) VALUES (?, ?, ?, ?, 'tma')",
+                "INSERT INTO stars_payments (user_id, package_id, diamonds, stars, source) VALUES (?,?,?,?,'tma')",
                 (user_id, package_id, diamonds, stars),
             )
             conn.commit()

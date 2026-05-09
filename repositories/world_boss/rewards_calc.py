@@ -112,15 +112,16 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     mult = WB_REWARD_MULT_VICTORY if is_victory else WB_REWARD_MULT_DEFEAT
     pool_gold = WB_GOLD_CONTRIB_PER_PLAYER * n_participants
 
-    top3 = db.get_wb_top_damagers(int(spawn_id), limit=3)
-    top_uid = int(top3[0]["user_id"]) if top3 else None
+    # Топ-3 считаем из by_uid (world_boss_hits) — единый источник истины.
+    # get_wb_top_damagers читает player_state, которая может разойтись с hits при рассинхроне.
+    top3_uids = sorted(by_uid.keys(), key=lambda u: by_uid[u], reverse=True)[:3]
+    top_uid = top3_uids[0] if top3_uids else None
     diamonds_by_rank: dict[int, int] = {}
     if is_victory:
         tiers = [WB_DIAMONDS_TOP1, WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3]
-        for i, row in enumerate(top3[:3]):
-            diamonds_by_rank[int(row["user_id"])] = tiers[i]
+        for i, uid_rank in enumerate(top3_uids):
+            diamonds_by_rank[uid_rank] = tiers[i]
         # Last-hit бонус: +5 алмазов тому, кто нанёс финальный удар.
-        # Складывается с топ-бонусом (топ-1 = last-hitter → TOP1 + LAST_HIT).
         last_hit_uid = db.get_wb_last_hitter(int(spawn_id))
         if last_hit_uid and int(last_hit_uid) in by_uid:
             lh = int(last_hit_uid)
