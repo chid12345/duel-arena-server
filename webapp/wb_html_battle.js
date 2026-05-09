@@ -49,22 +49,33 @@
     }).join('');
 
     // Когда мёртв в активном рейде — кнопки «Покинуть бой» нет.
-    // Через 20 сек окно сжимается до тонкой полоски, чтобы не загораживать
-    // продолжающийся бой. Кликом на полоску можно развернуть обратно.
+    // Авто-сворачивание убрано: мёртвый игрок должен видеть кнопки воскрешения постоянно.
+    // Кликом на полоску (compact) можно развернуть обратно в любой момент.
+    const _resInv = s.res_scrolls_inv || {};
+    const _resItems = [
+      { id:'res_30',  ic:'💊', pct:'30%' },
+      { id:'res_60',  ic:'💉', pct:'60%' },
+      { id:'res_100', ic:'✨', pct:'100%' },
+    ];
+    const _resButtons = _resItems.map(({ id, ic, pct }) => {
+      const n = parseInt(_resInv[id] || 0, 10);
+      const hasScroll = n > 0;
+      const sub = hasScroll
+        ? `<small style="color:#22dd88">✅ ${n} шт.</small>`
+        : `<small style="color:#884444">❌ нет</small>`;
+      const dim = hasScroll ? '' : ' style="opacity:.4;cursor:not-allowed"';
+      return `<div class="wb-res-b" data-act="res" data-t="${id}"${dim}><span class="ri">${ic}</span>${pct} HP<br>${sub}</div>`;
+    }).join('');
     const deadHTML = `
       <div class="wb-dead" id="wb-dead">
         <div class="wb-dead-full">
           <div class="wb-dead-t">💀 Вы пали в бою</div>
-          <div style="font-size:10px;color:#667;margin-bottom:4px">Используй свиток воскрешения или дождись окончания рейда</div>
-          <div class="wb-res-row">
-            <div class="wb-res-b" data-act="res" data-t="res_30"><span class="ri">💊</span>30% HP<br><small style="color:#666">500 🪙</small></div>
-            <div class="wb-res-b" data-act="res" data-t="res_60"><span class="ri">💉</span>60% HP<br><small style="color:#666">1 500 🪙</small></div>
-            <div class="wb-res-b" data-act="res" data-t="res_100"><span class="ri">✨</span>100% HP<br><small style="color:#666">3 000 🪙</small></div>
-          </div>
-          <div style="margin-top:8px;font-size:10px;color:#aaa;padding:7px;border:1px solid rgba(255,200,0,.15);border-radius:8px;background:rgba(255,200,0,.04);text-align:center;">⏳ До окончания рейда: <span id="wb-dead-timer">${_fmtSec(a.seconds_left)}</span> · окно свернётся через 20с</div>
+          <div style="font-size:10px;color:#aaa;margin-bottom:6px">Используй свиток воскрешения или дождись окончания рейда</div>
+          <div class="wb-res-row">${_resButtons}</div>
+          <div style="margin-top:8px;font-size:10px;color:#888;padding:6px;border:1px solid rgba(255,200,0,.12);border-radius:8px;background:rgba(255,200,0,.03);text-align:center;">⏳ До конца рейда: <span id="wb-dead-timer">${_fmtSec(a.seconds_left)}</span></div>
         </div>
         <div class="wb-dead-mini" data-act="dead-expand">
-          💀 Ты пал · ⏳ <span id="wb-dead-timer-mini">${_fmtSec(a.seconds_left)}</span> · 🕯️ воскреситься
+          💀 Ты пал · ⏳ <span id="wb-dead-timer-mini">${_fmtSec(a.seconds_left)}</span> · нажми для воскрешения
         </div>
       </div>`;
 
@@ -155,13 +166,10 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       const upct = window.WBHtml.getUltraPct?.() || 0;
       if (upct > 0) setUltraFill(upct);
     } catch(_) {}
-    // Авто-сжатие dead-окна через 20 сек чтобы не загораживало бой.
-    // Идемпотентно — на каждом ререндере reset'им и снова стартуем 20с.
+    // Авто-сворачивание убрано: мёртвый игрок должен видеть кнопки постоянно.
+    // Ручное сворачивание по клику (dead-expand) сохранено — таймер не нужен.
     if (isDead) {
       try { clearTimeout(window.WBHtml._deadCollapseTimer); } catch(_) {}
-      window.WBHtml._deadCollapseTimer = setTimeout(() => {
-        document.getElementById('wb-dead')?.classList.add('compact');
-      }, 20000);
     }
     // Apply boss glow color as CSS variable for animated drop-shadow
     requestAnimationFrame(() => {
@@ -199,16 +207,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       else if (act === 'ult')        { /* handled by _useSkillDirect */ }
       else if (act === 'skill-info') _showSkillInfo(el.dataset.sk, sc, s);
       else if (act === 'dead-expand') {
-        // Раскрываем dead-окно и сразу запускаем новый 20-сек таймер автосжатия,
-        // чтобы оно не висело перед глазами вечно.
-        const el = document.getElementById('wb-dead');
-        if (el) {
-          el.classList.remove('compact');
-          try { clearTimeout(window.WBHtml._deadCollapseTimer); } catch(_) {}
-          window.WBHtml._deadCollapseTimer = setTimeout(() => {
-            document.getElementById('wb-dead')?.classList.add('compact');
-          }, 20000);
-        }
+        document.getElementById('wb-dead')?.classList.remove('compact');
       }
     });
     document.getElementById('wb-ultra-btn')?.addEventListener('click', () => window.WBHtml.fireUltra?.());
