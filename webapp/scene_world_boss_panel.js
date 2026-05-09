@@ -49,19 +49,29 @@ Object.assign(WorldBossScene.prototype, {
 
     const rows = participants.map((p, i) => {
       const hpPct = p.max_hp > 0 ? Math.round(p.hp / p.max_hp * 100) : 0;
-      const hpC = p.is_dead ? '#440011' : hpPct > 50 ? '#00cc55' : hpPct > 25 ? '#ffaa00' : '#ff3344';
-      const bC  = RANK_C[i] || 'rgba(255,255,255,.1)';
-      const act = p.is_dead ? '💀' : p.last_action === 'crit' ? '✨' : '⚔️';
-      const dmgTxt = p.damage >= 1000 ? (p.damage/1000).toFixed(1)+'k' : String(p.damage);
-      const cls   = 'wbp-row' + (p.is_dead ? ' dead' : '') + (flash.has(p.user_id) ? ' flash' : '');
+      const hpC  = p.is_dead ? '#440011' : hpPct > 50 ? '#00cc55' : hpPct > 25 ? '#ffaa00' : '#ff3344';
+      const bC   = RANK_C[i] || 'rgba(255,255,255,.1)';
+      const totTxt = p.damage >= 1000 ? (p.damage/1000).toFixed(1)+'k' : String(p.damage);
+      const cls  = 'wbp-row' + (p.is_dead ? ' dead' : '') + (flash.has(p.user_id) ? ' flash' : '');
+      // Последний удар: иконка + число
+      let lastTxt, lastC;
+      if (p.is_dead) { lastTxt = '💀'; lastC = '#884444'; }
+      else if (p.last_dmg > 0) {
+        const ico = p.last_action === 'crit' ? '✨' : '⚔';
+        const num = p.last_dmg >= 1000 ? (p.last_dmg/1000).toFixed(1)+'k' : p.last_dmg;
+        lastTxt = ico + ' ' + num;
+        lastC = p.last_action === 'crit' ? '#ffdd44' : '#00ccff';
+      } else { lastTxt = '· · ·'; lastC = '#334455'; }
       return '<div class="' + cls + '" style="border-left-color:' + bC + '" data-i="' + i + '">' +
         '<div class="wbp-r1">' +
           '<span class="wbp-rk" style="color:' + (RANK_C[i]||'#445566') + '">#' + (i+1) + '</span>' +
-          '<span class="wbp-act">' + act + '</span>' +
           '<span class="wbp-nk">' + _wbpEsc(p.name) + '</span>' +
-          '<span class="wbp-dm">' + dmgTxt + '</span>' +
+          '<span class="wbp-dm">' + totTxt + '</span>' +
         '</div>' +
-        '<div class="wbp-bar"><div class="wbp-fill" style="width:' + hpPct + '%;background:' + hpC + '"></div></div>' +
+        '<div class="wbp-r2">' +
+          '<span class="wbp-last" style="color:' + lastC + '">' + lastTxt + '</span>' +
+          '<div class="wbp-bar"><div class="wbp-fill" style="width:' + hpPct + '%;background:' + hpC + '"></div></div>' +
+        '</div>' +
       '</div>';
     }).join('');
 
@@ -96,7 +106,7 @@ Object.assign(WorldBossScene.prototype, {
         '<div class="wbpc-stats">' +
           '<div class="wbpc-stat"><div class="wbpc-sl">УРОН</div><div class="wbpc-sv">' + (p.damage||0).toLocaleString() + '</div></div>' +
           '<div class="wbpc-stat"><div class="wbpc-sl">ВКЛАД</div><div class="wbpc-sv">' + pct + '%</div></div>' +
-          '<div class="wbpc-stat"><div class="wbpc-sl">ПОСЛЕДНЕЕ</div><div class="wbpc-sv" style="font-size:18px">' + (p.is_dead?'💀':p.last_action==='crit'?'✨ КРИТ':'⚔️ УДАР') + '</div></div>' +
+          '<div class="wbpc-stat"><div class="wbpc-sl">ПОСЛЕДНИЙ</div><div class="wbpc-sv" style="font-size:13px;color:' + (p.last_action==='crit'?'#ffdd44':'#00ccff') + '">' + (p.is_dead?'💀':(p.last_action==='crit'?'✨ ':'⚔ ')+(p.last_dmg>0?(p.last_dmg>=1000?(p.last_dmg/1000).toFixed(1)+'k':p.last_dmg):'—')) + '</div></div>' +
         '</div>' +
         '<button class="wbpc-close">Закрыть</button>' +
       '</div>';
@@ -122,7 +132,7 @@ function _wbpInjectCSS() {
   const s = document.createElement('style');
   s.id = 'wbp-css';
   s.textContent = `
-#wb-raid-panel{position:fixed;top:78px;right:0;width:102px;z-index:9600;
+#wb-raid-panel{position:fixed;top:118px;right:0;width:102px;z-index:9600;
   background:rgba(5,2,18,.78);border-left:1px solid rgba(0,229,255,.18);
   border-radius:10px 0 0 10px;backdrop-filter:blur(10px);overflow:hidden;
   transition:width .2s;font-family:'Segoe UI',sans-serif}
@@ -146,11 +156,12 @@ function _wbpInjectCSS() {
 .wbp-row.flash{animation:wbpFlash .55s ease}
 @keyframes wbpFlash{0%{background:rgba(0,229,255,.28)}100%{background:transparent}}
 .wbp-r1{display:flex;align-items:center;gap:2px}
+.wbp-r2{display:flex;align-items:center;gap:4px;margin-top:2px}
 .wbp-rk{font-size:8px;font-weight:700;width:12px}
-.wbp-act{font-size:9px;width:13px;text-align:center}
-.wbp-nk{font-size:8px;color:#cce4ff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:42px}
+.wbp-nk{font-size:8px;color:#cce4ff;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:52px}
 .wbp-dm{font-size:8px;color:#778899;white-space:nowrap}
-.wbp-bar{height:2px;background:rgba(255,255,255,.07);border-radius:1px;overflow:hidden;margin-top:2px}
+.wbp-last{font-size:8px;font-weight:700;white-space:nowrap;flex-shrink:0}
+.wbp-bar{flex:1;height:2px;background:rgba(255,255,255,.07);border-radius:1px;overflow:hidden}
 .wbp-fill{height:100%;border-radius:1px;transition:width .5s}
 #wbp-card-bg{position:fixed;inset:0;z-index:9700;background:rgba(0,0,0,.72);
   backdrop-filter:blur(5px);display:flex;align-items:flex-end;justify-content:center}

@@ -81,10 +81,12 @@ wb_manager = WBConnectionManager()
 # last_action: uid → 'atk'|'crit' (эфемерно, в памяти процесса).
 # Обновляется из world_boss_hit.py при каждом ударе — без изменений схемы БД.
 _last_actions: Dict[int, str] = {}
+_last_dmg: Dict[int, int] = {}
 
 
-def update_last_action(uid: int, action: str) -> None:
+def update_last_action(uid: int, action: str, dmg: int = 0) -> None:
     _last_actions[int(uid)] = action
+    _last_dmg[int(uid)] = int(dmg)
 
 
 def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
@@ -137,6 +139,7 @@ def _build_participants_block(db, spawn_id: int) -> list:
             "damage": int(r.get("total_damage") or 0),
             "last_hit_ago": last_hit_ago,
             "last_action": _last_actions.get(uid, "atk"),
+            "last_dmg": _last_dmg.get(uid, 0),
         })
     return result
 

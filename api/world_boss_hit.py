@@ -183,7 +183,7 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         db.wb_add_player_damage(spawn_id, uid, dmg)
         try:
             from api.world_boss_ws import update_last_action
-            update_last_action(uid, "crit" if is_crit else "atk")
+            update_last_action(uid, "crit" if is_crit else "atk", dmg)
         except Exception:
             pass
 
