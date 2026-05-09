@@ -110,27 +110,27 @@
   </div>
 </div>`;
 
-    // Биндинг: тап по нику открывает карточку (wb_html_gather_card.js).
-    if (!root.__wbGatherBound) {
-      root.__wbGatherBound = true;
-      root.addEventListener('click', e => {
+    // Биндинг: вешаем на .wb-gth — он всегда новый (создаётся через innerHTML),
+    // поэтому не нужен флаг __wbGatherBound и нет проблем со старыми listeners.
+    const gthEl = root.querySelector('.wb-gth');
+    if (gthEl) {
+      gthEl.addEventListener('click', e => {
         const el = e.target.closest('[data-act]'); if (!el) return;
         const act = el.dataset.act;
         if (act === 'gth-leave') {
           try { sessionStorage.removeItem('wb_in_gather'); } catch(_) {}
           _stopLocalTick();
-          // _refresh() не вызовет _render() если серверный state не изменился
-          // (shape key одинаковый — gather.is_open не изменилось на сервере).
-          // Вызываем render напрямую с текущим state — покажет лобби.
           try {
             const sc = window.WBHtml._scene;
             if (sc && sc._state) window.WBHtml.render(sc, sc._state);
             else sc?._refresh?.();
           } catch(_) {}
         } else if (act === 'gth-card') {
-          const uid = parseInt(el.dataset.uid);
-          const p = (window.WBHtml._lastGatherState?.gather?.players || []).find(x => x.user_id === uid);
-          if (p) window.WBHtml.showGatherCard?.(p);
+          const uid = _uidNum(el.dataset.uid);
+          // Ищем игрока — сравниваем через _uidNum для точности с large uid
+          const pList = window.WBHtml._lastGatherState?.gather?.players || [];
+          const p = pList.find(x => _uidNum(x.user_id) === uid);
+          try { window.WBHtml.showGatherCard?.(p || { user_id: uid, name: el.querySelector('.nm')?.textContent || '', level: 1 }); } catch(_) {}
         }
       });
     }
