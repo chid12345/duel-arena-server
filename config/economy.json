@@ -38,6 +38,13 @@
     "T3": 3.2,
     "T4": 5.5
   },
+  "price_factor": {
+    "_comment": "Множитель в price_for_item: price_pu = power × rarity × tier × factor[currency]. Калиброван под реальную игру: алмазные предметы стоят дороже за единицу силы (premium-валюта).",
+    "gold":    0.067,
+    "diamond": 0.333,
+    "star":    0.333,
+    "usdt":    0.333
+  },
   "reward_split": {
     "_comment": "Доля от валютной PU-награды. Используется для НОВЫХ заданий, если их нет в reward_grid.",
     "daily":  { "gold": 1.00, "diamond": 0.00 },

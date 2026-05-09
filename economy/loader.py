@@ -104,6 +104,15 @@ def get_tier_mult(tier: str) -> float:
     return float(load_economy()["tier_mult"][tier])
 
 
+def get_price_factor(currency: str) -> float:
+    """Множитель формулы цен для конкретной валюты.
+    Default 0.05 для совместимости, если price_factor отсутствует в economy.json."""
+    factors = load_economy().get("price_factor")
+    if not factors:
+        return 0.05
+    return float(factors.get(currency, factors.get("gold", 0.05)))
+
+
 def get_reward_grid_cell(frequency: str, difficulty: str) -> tuple[int, int] | None:
     """Калиброванная награда для существующих квестов (gold, diamonds).
     Возвращает None если клетка не задана — тогда вызывающий считает по формуле."""

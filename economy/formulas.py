@@ -17,6 +17,7 @@ from economy.loader import (
     get_anchor,
     get_difficulty_pu,
     get_frequency_mult,
+    get_price_factor,
     get_rarity_mult,
     get_reward_grid_cell,
     get_reward_split,
@@ -96,14 +97,17 @@ def price_for_item(
 ) -> int:
     """
     Цена предмета по формуле:
-        price_pu = power_score × rarity_mult × tier_mult × 0.05
+        price_pu = power_score × rarity_mult × tier_mult × price_factor[currency]
 
-    Множитель 0.05 — калибровка: один «балл силы» common-T1 ≈ 0.05 часа игры (15 голда).
-    Это даёт пристойные цены для свитков (60–120 голда) и ящиков (~150).
+    Множитель `price_factor` зависит от валюты:
+      - gold:    дёшево (фарм-валюта, расходники)
+      - diamond: дорого (premium-валюта)
+    Конкретные числа в config/economy.json/price_factor.
 
     currency: 'gold' | 'diamond' | 'star' | 'usdt'
     """
-    base_pu = float(power_score) * get_rarity_mult(rarity) * get_tier_mult(tier) * 0.05
+    factor = get_price_factor(currency)
+    base_pu = float(power_score) * get_rarity_mult(rarity) * get_tier_mult(tier) * factor
     gold = pu_to_gold(base_pu)
 
     if currency == "gold":

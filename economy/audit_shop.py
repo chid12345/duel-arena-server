@@ -46,13 +46,15 @@ def load_shop_tags() -> dict[str, Any]:
     return data.get("items", {})
 
 
-def actual_price_in_gold(price: int, currency: str) -> float:
-    """Привести фактическую цену предмета к золоту для сравнения с формулой."""
-    if currency == "gold":
-        return float(price)
-    if currency == "diamonds":
-        return diamond_to_gold(price)
-    return float(price)
+def shop_currency_to_formula(currency: str) -> str:
+    """SHOP_CATALOG.currency → currency для price_for_item.
+    'diamonds' → 'diamond', 'gold' → 'gold'."""
+    return "diamond" if currency == "diamonds" else currency
+
+
+def fmt_price(value: int, currency: str) -> str:
+    sym = "🪙" if currency == "gold" else "💎" if currency == "diamonds" else currency
+    return f"{value}{sym}"
 
 
 def main() -> None:
@@ -90,22 +92,20 @@ def main() -> None:
             price = item.get("price", 0)
             curr = item.get("currency", "?")
             if price == 0 or tag is None:
-                # бесплатные (free drop / inventory-only) или без тэга — пропуск с пометкой
                 why = "free/drop" if price == 0 else "no tag"
                 print(f"{item_id:22s} {'-':10s} {'-':3s} {'-':>4s}  "
                       f"{'—':>10s} {'—':>12s}  {'—':>6s}  ·    {why}")
                 continue
             total_count += 1
-            actual_g = actual_price_in_gold(price, curr)
-            formula_g = price_for_item(tag["power"], tag["rarity"], tag["tier"], currency="gold")
-            rel = (actual_g - formula_g) / formula_g if formula_g > 0 else 0.0
+            f_curr = shop_currency_to_formula(curr)
+            formula_price = price_for_item(tag["power"], tag["rarity"], tag["tier"], currency=f_curr)
+            rel = (price - formula_price) / formula_price if formula_price > 0 else 0.0
             mark = "OK" if abs(rel) < _DELTA_THRESHOLD else ("ВЫШЕ" if rel > 0 else "НИЖЕ")
             flag = "·" if mark == "OK" else "⚠"
             if flag == "⚠":
                 warn_count += 1
-            actual_str = f"{price} {curr[:4]}"
-            formula_str = (f"{formula_g:.0f}🪙 = {gold_to_diamond(formula_g)}💎"
-                           if curr == "diamonds" else f"{formula_g:.0f}🪙")
+            actual_str = fmt_price(price, curr)
+            formula_str = fmt_price(formula_price, curr)
             print(f"{item_id:22s} {tag['rarity']:10s} {tag['tier']:3s} {tag['power']:>4d}  "
                   f"{actual_str:>10s} {formula_str:>12s}  {rel*100:>+5.0f}%  {flag}    "
                   f"{tag.get('comment', '')[:35]}")
