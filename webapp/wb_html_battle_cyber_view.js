@@ -17,15 +17,23 @@
     }</div>`;
   }
 
-  function _deadHTML(a) {
+  function _deadHTML(a, s) {
+    const scrolls = s?.res_scrolls_inv || {};
+    const ITEMS = [['res_30','💊','30% HP'],['res_60','💉','60% HP'],['res_100','✨','100% HP']];
+    const btns = ITEMS.map(([id, ic, lbl]) => {
+      const n = scrolls[id] || 0;
+      const dis = n === 0 ? ' dis' : '';
+      return `<div class="cy-dead-b${dis}" ${n > 0 ? `data-act="res" data-t="${id}"` : ''}>`+
+        `<span class="ic">${ic}</span>${lbl}<br><small>${n > 0 ? `${n} шт.` : 'нет'}</small></div>`;
+    }).join('');
+    const hasAny = ITEMS.some(([id]) => (scrolls[id] || 0) > 0);
+    const sub = hasAny
+      ? 'Выбери свиток воскрешения'
+      : 'Свитков нет — жди окончания рейда';
     return `<div class="cy-dead">
       <div class="cy-dead-t">💀 Вы пали в бою</div>
-      <div class="cy-dead-sub">Используй свиток воскрешения или дождись окончания</div>
-      <div class="cy-dead-row">
-        <div class="cy-dead-b" data-act="res" data-t="res_30"><span class="ic">💊</span>30% HP<br><small>500 🪙</small></div>
-        <div class="cy-dead-b" data-act="res" data-t="res_60"><span class="ic">💉</span>60% HP<br><small>1 500 🪙</small></div>
-        <div class="cy-dead-b" data-act="res" data-t="res_100"><span class="ic">✨</span>100% HP<br><small>3 000 🪙</small></div>
-      </div>
+      <div class="cy-dead-sub">${sub}</div>
+      <div class="cy-dead-row">${btns}</div>
       <div class="cy-dead-tmr">⏳ До конца рейда: <span id="cy-dead-timer">${fmtSec(a.seconds_left)}</span></div>
     </div>`;
   }
@@ -103,7 +111,7 @@
         ${ps && !isDead ? _zonesHTML('atk') + _zonesHTML('def') : ''}
       </div>
       ${isDead
-        ? _deadHTML(a)
+        ? _deadHTML(a, s)
         : (ps
             ? _bottomHTML(ps)
             : `<div class="cy-bottom"><div class="cy-acts"><div class="cy-apply ready" data-act="enter"><div class="cy-apply-text">⚔ ВОЙТИ В БОЙ</div></div></div></div>`)}`;
