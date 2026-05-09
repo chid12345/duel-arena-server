@@ -45,7 +45,9 @@ const CSS = `
 .rt-pod-block.rt-pod-rank-1{animation:rtPodCrown 4s ease-in-out infinite}
 @keyframes rtPodCrown{0%,100%{box-shadow:0 0 22px rgba(255,200,0,.55),inset 0 0 16px rgba(255,255,255,.04)}50%{box-shadow:0 0 32px rgba(255,200,0,.85),0 0 60px rgba(255,200,0,.35),inset 0 0 22px rgba(255,235,120,.12)}}
 .rt-pod-av{font-size:26px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.4));margin-bottom:1px;position:relative;z-index:3}
-.rt-pod-score{font-size:14px;font-weight:800;color:#fff;text-shadow:0 0 12px currentColor;letter-spacing:.3px;position:relative;z-index:3}
+.rt-pod-skin{width:50px;height:50px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,255,255,.3));position:relative;z-index:3;flex-shrink:0;pointer-events:none}
+.rt-pod-tag{font-size:7px;font-weight:800;letter-spacing:2.5px;opacity:.6;text-transform:uppercase;font-family:"Courier New",Consolas,monospace;position:relative;z-index:3;margin-bottom:-1px}
+.rt-pod-score{font-size:16px;font-weight:800;color:#fff;text-shadow:0 0 12px currentColor;letter-spacing:.5px;position:relative;z-index:3;font-family:"Courier New",Consolas,monospace}
 .rt-pod-lvl{position:relative;z-index:3}
 .rt-pod-lvl{font-size:8px;color:rgba(255,255,255,.5);margin-top:0}
 .rt-pod-me{box-shadow:0 0 0 2px #00f5ff,0 0 18px rgba(0,245,255,.5)!important}
@@ -141,7 +143,8 @@ function _podiumHTML(top3, meta, tabKey) {
   // Энерго-заливка снизу (soft = слабая верхушка, strong = яркое основание)
   const energySoft   = ['rgba(170,200,235,.18)','rgba(255,215,80,.22)','rgba(220,140,70,.18)'];
   const energyStrong = ['rgba(120,170,220,.55)','rgba(255,200,0,.65)','rgba(210,110,40,.55)'];
-  const _AVEMOJI = ['⚔️','🛡️','🧙','🐉','⚡','🗡️','🔥','🦅','🐺','🔮','✨','💀','🏹','🪓'];
+  const _SCORE_TAG = { pvp:'ELO', season:'ELO', titans:'ЭТАЖ', natisk:'ВОЛНА', boss:'УРОН' };
+  const scoreTag = _SCORE_TAG[tabKey] || '';
   const myUid   = State?.player?.user_id;
 
   return `<div class="rt-podium">${order.map((p, i) => {
@@ -149,15 +152,25 @@ function _podiumHTML(top3, meta, tabKey) {
     const isMe = p.user_id === myUid;
     const meClass = isMe ? ' rt-pod-me' : '';
     const nm  = _esc(_trunc(p.username || `User${p.user_id}`, 10));
-    const av  = _AVEMOJI[Math.abs(Number(p.user_id)||0) % _AVEMOJI.length];
+    // Число без звёздочки — она убирается, вместо неё тег ELO/ЭТАЖ/ВОЛНА
+    const scoreRaw = meta.scoreLabel(p);
+    const scoreNum = scoreRaw.startsWith('★ ') ? scoreRaw.slice(2) : scoreRaw;
+    // Warrior skin вместо emoji-аватара
+    const wt = p.warrior_type || 'tank';
+    const skinUrl = typeof getWarriorSkinPath === 'function' ? getWarriorSkinPath(wt) : null;
+    const avHTML = skinUrl
+      ? `<img class="rt-pod-skin" src="${skinUrl}" alt="" draggable="false">`
+      : `<div class="rt-pod-av">${['⚔️','🛡️','🧙','🐉','⚡','🗡️','🔥','🦅','🐺','🔮','✨','💀','🏹','🪓'][Math.abs(Number(p.user_id)||0) % 14]}</div>`;
+    const tagHTML = scoreTag ? `<div class="rt-pod-tag" style="color:${colors[i]}">${scoreTag}</div>` : '';
     const lvl = p.level ? `<div class="rt-pod-lvl">Ур. ${p.level}</div>` : '';
     return `<div class="rt-pod-col" data-pid="${p.user_id}" data-rank="${ranks[i]}" data-tab="${tabKey}">
       <div class="rt-pod-medal rt-pod-medal-${ranks[i]}"><img src="rating_medal_${ranks[i]}.png" alt="" draggable="false" onerror="this.style.display='none';this.parentNode.textContent='${medals[i]}';this.parentNode.style.fontSize='28px';this.parentNode.style.color='${colors[i]}';"></div>
       <div class="rt-pod-name">${nm}</div>
       <div class="rt-pod-block rt-pod-rank-${ranks[i]}${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 22px ${glows[i]},inset 0 0 16px rgba(255,255,255,.04);--medal-c-soft:${energySoft[i]};--medal-c-strong:${energyStrong[i]}">
         <div class="rt-pod-energy"></div>
-        <div class="rt-pod-av">${av}</div>
-        <div class="rt-pod-score" style="color:${colors[i]};text-shadow:0 0 14px ${colors[i]}">${_esc(meta.scoreLabel(p))}</div>
+        ${avHTML}
+        ${tagHTML}
+        <div class="rt-pod-score" style="color:${colors[i]};text-shadow:0 0 14px ${colors[i]}">${_esc(scoreNum)}</div>
         ${lvl}
       </div>
     </div>`;

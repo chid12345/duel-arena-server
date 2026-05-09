@@ -65,7 +65,7 @@ class ShopSeasonsMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT ss.user_id, p.username, ss.wins, ss.losses, ss.rating FROM season_stats ss "
+            "SELECT ss.user_id, p.username, p.warrior_type, ss.wins, ss.losses, ss.rating FROM season_stats ss "
             "JOIN players p ON p.user_id = ss.user_id WHERE ss.season_id = ? "
             "ORDER BY ss.rating DESC, ss.wins DESC LIMIT ?",
             (season_id, limit),
