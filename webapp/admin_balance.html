@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duel Arena — Админ-панель балансной сетки</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="/admin_balance.css">
+</head>
+<body>
+
+<header>
+  <h1>⚓ Балансная панель Duel Arena</h1>
+  <div class="sub" id="server-status">Подключение к серверу…</div>
+</header>
+
+<div class="tabs">
+  <div class="tab active" data-tab="anchor">⚓ Анкер</div>
+  <div class="tab" data-tab="quests">📋 Квесты</div>
+  <div class="tab" data-tab="shop">🛒 Магазин</div>
+</div>
+
+<!-- ======== АНКЕР ======== -->
+<div class="panel active" id="panel-anchor">
+  <div class="card">
+    <h2>Базовый якорь ценности (anchor)</h2>
+    <div id="anchor-sliders"></div>
+  </div>
+
+  <div class="card">
+    <h2>Множители формулы</h2>
+    <div id="factor-sliders"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn warn" onclick="reloadConfig()">↻ Сбросить (перечитать с сервера)</button>
+    <button class="btn primary" onclick="saveConfig()">✓ Применить (записать в economy.json)</button>
+  </div>
+</div>
+
+<!-- ======== КВЕСТЫ ======== -->
+<div class="panel" id="panel-quests">
+  <div class="card">
+    <h2>Награды квестов: текущие vs формульные</h2>
+    <table id="quests-table">
+      <thead>
+        <tr><th>Частота</th><th>Сложность</th><th>Сейчас</th><th>Формула</th><th>Δ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ======== МАГАЗИН ======== -->
+<div class="panel" id="panel-shop">
+  <div class="card">
+    <h2>Цены магазина: текущие vs формульные (56 предметов)</h2>
+    <table id="shop-table">
+      <thead>
+        <tr><th>ID</th><th>Имя</th><th>Tab</th><th>Rarity</th><th>Tier</th><th>Pow</th><th>Сейчас</th><th>Формула</th><th>Δ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script src="/admin_balance.js"></script>
+</body>
+</html>
