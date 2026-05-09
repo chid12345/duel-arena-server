@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -26,6 +27,12 @@ from economy.loader import economy_source_path
 logger = logging.getLogger(__name__)
 
 
+def _admin_token() -> str:
+    """Постоянный токен для прямого доступа к админ-панели из браузера (без Telegram).
+    Задаётся в env ADMIN_BALANCE_TOKEN. Если пусто — браузерный режим выключен."""
+    return (os.getenv("ADMIN_BALANCE_TOKEN") or "").strip()
+
+
 def _project_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
@@ -34,23 +41,35 @@ def _shop_tags_path() -> Path:
     return _project_root() / "config" / "shop_tags.json"
 
 
-def _check_admin(init_data: str) -> int:
-    """Возвращает uid, если он в ADMIN_USER_IDS. Иначе HTTP 403."""
-    user = get_user_from_init_data(init_data)
-    uid = int(user["id"])
-    if not ADMIN_USER_IDS:
-        raise HTTPException(status_code=503, detail="ADMIN_USER_IDS не настроен в env")
-    if uid not in ADMIN_USER_IDS:
-        raise HTTPException(status_code=403, detail="Доступ запрещён (не админ)")
-    return uid
+def _check_admin(init_data: str = "", token: str = "") -> int:
+    """Авторизация: либо Telegram initData (uid в ADMIN_USER_IDS), либо токен из env.
+    Возвращает uid (0 если по токену). Иначе HTTPException."""
+    if token:
+        expected = _admin_token()
+        if not expected:
+            raise HTTPException(status_code=503, detail="ADMIN_BALANCE_TOKEN не задан в env")
+        if token != expected:
+            raise HTTPException(status_code=403, detail="Неверный токен")
+        return 0  # uid=0 для токена (не привязан к конкретному игроку)
+    if init_data:
+        user = get_user_from_init_data(init_data)
+        uid = int(user["id"])
+        if not ADMIN_USER_IDS:
+            raise HTTPException(status_code=503, detail="ADMIN_USER_IDS не настроен в env")
+        if uid not in ADMIN_USER_IDS:
+            raise HTTPException(status_code=403, detail="Доступ запрещён (не админ)")
+        return uid
+    raise HTTPException(status_code=401, detail="Нужен init_data или token")
 
 
 class ConfigQuery(BaseModel):
-    init_data: str
+    init_data: str = ""
+    token: str = ""
 
 
 class ConfigUpdate(BaseModel):
-    init_data: str
+    init_data: str = ""
+    token: str = ""
     anchor: dict | None = None
     price_factor: dict | None = None
     reward_grid: dict | None = None
@@ -116,7 +135,7 @@ def _save_economy(new_data: dict) -> None:
 def register_admin_balance_routes(app: FastAPI) -> None:
     @app.post("/api/admin/balance/config", tags=["admin"])
     def get_config(body: ConfigQuery):
-        _check_admin(body.init_data)
+        _check_admin(body.init_data, body.token)
         eco = load_economy(force=True)
         try:
             with _shop_tags_path().open("r", encoding="utf-8") as f:
@@ -127,7 +146,7 @@ def register_admin_balance_routes(app: FastAPI) -> None:
 
     @app.post("/api/admin/balance/save", tags=["admin"])
     def save_config(body: ConfigUpdate):
-        uid = _check_admin(body.init_data)
+        uid = _check_admin(body.init_data, body.token)
         current = load_economy(force=True)
         new_data = _validate_update(body, current)
         _save_economy(new_data)
@@ -136,7 +155,7 @@ def register_admin_balance_routes(app: FastAPI) -> None:
 
     @app.post("/api/admin/balance/audit", tags=["admin"])
     def get_audit(body: ConfigQuery):
-        _check_admin(body.init_data)
+        _check_admin(body.init_data, body.token)
         return _build_audit_payload()
 
 

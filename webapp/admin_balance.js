@@ -3,6 +3,7 @@
 
 let TG = null;
 let INIT_DATA = "";
+let TOKEN = "";
 let CONFIG = null;
 
 function $(id) { return document.getElementById(id); }
@@ -14,7 +15,8 @@ function toast(msg, isError) {
 }
 
 async function api(endpoint, payload) {
-  const body = Object.assign({ init_data: INIT_DATA }, payload || {});
+  const auth = TOKEN ? { token: TOKEN } : { init_data: INIT_DATA };
+  const body = Object.assign(auth, payload || {});
   const r = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -156,15 +158,23 @@ document.querySelectorAll(".tab").forEach(t => {
 });
 
 window.addEventListener("DOMContentLoaded", () => {
-  TG = window.Telegram && window.Telegram.WebApp;
-  if (TG) {
-    TG.ready();
-    TG.expand();
-    INIT_DATA = TG.initData || "";
+  // Сначала пробуем токен из URL (?token=...) — режим прямого доступа из браузера
+  const urlParams = new URLSearchParams(window.location.search);
+  TOKEN = urlParams.get("token") || "";
+
+  // Если токена нет — пробуем Telegram WebApp initData
+  if (!TOKEN) {
+    TG = window.Telegram && window.Telegram.WebApp;
+    if (TG) {
+      TG.ready();
+      TG.expand();
+      INIT_DATA = TG.initData || "";
+    }
   }
-  if (!INIT_DATA) {
+
+  if (!TOKEN && !INIT_DATA) {
     $("server-status").textContent =
-      "⚠ Откройте панель из бота через /admin_balance — нужны Telegram initData для авторизации";
+      "⚠ Нет авторизации. Откройте через /admin в боте, или добавьте ?token=ВАШ_ТОКЕН в URL.";
     return;
   }
   reloadConfig();
