@@ -394,6 +394,8 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
     // rage vignette
     const rage = document.getElementById('wb-rage2');
     if (rage) rage.classList.toggle('on', pct < 50);
+    // Cyber-battle view имеет свои id (cy-pl-bar, cy-boss-bar) — обновляем тоже
+    try { window.CyberView?.updateHUD?.(state); } catch(_) {}
   }
 
   function addHitLog(dmg, isCrit, tx, ty) {

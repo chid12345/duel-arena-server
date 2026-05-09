@@ -111,5 +111,29 @@
     if (window.WBHtml?._autoOn) root.querySelector('#cy-auto')?.classList.add('on');
   }
 
-  window.CyberView = { render, ZONES, ZONE_NAME, fmtSec };
+  function updateHUD(s) {
+    const a = s?.active; if (!a) return;
+    const ps = s.player_state;
+    // Boss HP bar + nums
+    const bpct = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
+    const bb = document.getElementById('cy-boss-bar');
+    if (bb) bb.style.width = bpct + '%';
+    const bn = document.getElementById('cy-boss-nums');
+    if (bn) bn.textContent = fmtHp(a.current_hp) + ' / ' + fmtHp(a.max_hp) + ' · ' + bpct + '%';
+    // Timer
+    const bt2 = document.getElementById('cy-bl-timer');
+    if (bt2) bt2.textContent = fmtSec(a.seconds_left);
+    const dt = document.getElementById('cy-dead-timer');
+    if (dt) dt.textContent = fmtSec(a.seconds_left);
+    // Player HP bar + nums
+    if (ps) {
+      const ppct = ps.max_hp > 0 ? Math.round(ps.current_hp / ps.max_hp * 100) : 0;
+      const pb = document.getElementById('cy-pl-bar');
+      if (pb) pb.style.width = ppct + '%';
+      const ph = document.getElementById('cy-pl-hp');
+      if (ph) ph.textContent = ps.current_hp + ' / ' + ps.max_hp;
+    }
+  }
+
+  window.CyberView = { render, updateHUD, ZONES, ZONE_NAME, fmtSec };
 })();
