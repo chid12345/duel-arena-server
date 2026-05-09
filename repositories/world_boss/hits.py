@@ -112,6 +112,24 @@ class WorldBossHitsMixin:
         conn.close()
         return [dict(r) for r in rows]
 
+    def wb_get_participants(self, spawn_id: int, limit: int = 15) -> List[Dict[str, Any]]:
+        """Участники рейда для live-панели: сортировка по last_hit_at DESC."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT ps.user_id, p.username, p.level, p.warrior_type, "
+            "ps.current_hp, ps.max_hp, ps.is_dead, ps.total_damage, "
+            "ps.last_hit_at "
+            "FROM world_boss_player_state ps "
+            "JOIN players p ON p.user_id = ps.user_id "
+            "WHERE ps.spawn_id=? "
+            "ORDER BY ps.total_damage DESC LIMIT ?",
+            (int(spawn_id), int(limit)),
+        )
+        rows = cur.fetchall()
+        conn.close()
+        return [dict(r) for r in rows]
+
     def get_wb_participants_count(self, spawn_id: int) -> int:
         conn = self.get_connection()
         cur = conn.cursor()

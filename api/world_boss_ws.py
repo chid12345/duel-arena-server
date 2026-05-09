@@ -78,6 +78,14 @@ class WBConnectionManager:
 
 wb_manager = WBConnectionManager()
 
+# last_action: uid → 'atk'|'crit' (эфемерно, в памяти процесса).
+# Обновляется из world_boss_hit.py при каждом ударе — без изменений схемы БД.
+_last_actions: Dict[int, str] = {}
+
+
+def update_last_action(uid: int, action: str) -> None:
+    _last_actions[int(uid)] = action
+
 
 def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
     seconds_left = None
@@ -102,6 +110,35 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
         "boss_sprite": _bt.get("sprite", "boss_lich.png"),
         "boss_glow": _bt.get("glow_color", "#9b30ff"),
     }
+
+
+def _build_participants_block(db, spawn_id: int) -> list:
+    """Список участников для live-панели: топ-15 по урону + last_action из памяти."""
+    rows = db.wb_get_participants(spawn_id, limit=15)
+    now = time.time()
+    result = []
+    for r in rows:
+        uid = int(r["user_id"])
+        last_hit_ago = 999
+        try:
+            lh = r.get("last_hit_at")
+            if lh:
+                last_hit_ago = int(now - _parse_ts(lh).timestamp())
+        except Exception:
+            pass
+        result.append({
+            "user_id": uid,
+            "name": r.get("username") or "Игрок",
+            "level": int(r.get("level") or 1),
+            "warrior_type": r.get("warrior_type") or "warrior",
+            "hp": int(r.get("current_hp") or 0),
+            "max_hp": int(r.get("max_hp") or 100),
+            "is_dead": bool(int(r.get("is_dead") or 0)),
+            "damage": int(r.get("total_damage") or 0),
+            "last_hit_ago": last_hit_ago,
+            "last_action": _last_actions.get(uid, "atk"),
+        })
+    return result
 
 
 def _build_top_block(db, spawn_id: int) -> list:
@@ -177,6 +214,7 @@ def _load_tick_data(db, subs: list) -> dict:
     spawn_id = int(active["spawn_id"])
     boss = _build_boss_block(active)
     top = _build_top_block(db, spawn_id)
+    participants = _build_participants_block(db, spawn_id)
     # Батч: один SQL вместо N open/close при 100+ подписчиках.
     states = db.get_wb_player_states(spawn_id, subs)
     players = {}
@@ -194,7 +232,8 @@ def _load_tick_data(db, subs: list) -> dict:
     except Exception:
         fighters = 0; regs = 0
     return {"kind": "active", "ts": ts_ms, "spawn_id": spawn_id, "boss": boss, "top": top,
-            "players": players, "fighters_count": fighters, "registrants_count": regs}
+            "participants": participants, "players": players,
+            "fighters_count": fighters, "registrants_count": regs}
 
 
 async def wb_broadcast_tick(db) -> None:
@@ -213,11 +252,13 @@ async def wb_broadcast_tick(db) -> None:
         await asyncio.gather(*(wb_manager.send(uid, payload) for uid in subs), return_exceptions=True)
         return
     ts, spawn_id, boss, top, players = data["ts"], data["spawn_id"], data["boss"], data["top"], data["players"]
+    participants = data.get("participants", [])
     fighters_count = data.get("fighters_count", 0)
     regs_count = data.get("registrants_count", 0)
     await asyncio.gather(*(wb_manager.send(uid, {
         "event": "wb_tick", "ts": ts, "active": True,
         "spawn_id": spawn_id, "boss": boss, "player": players.get(uid), "top": top,
+        "participants": participants,
         "fighters_count": fighters_count, "registrants_count": regs_count,
     }) for uid in subs), return_exceptions=True)
 

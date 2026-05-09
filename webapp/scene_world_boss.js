@@ -18,6 +18,7 @@ class WorldBossScene extends Phaser.Scene {
     try { window._tabPlaceholderHide?.('wb-placeholder'); } catch(_) {}
     try { this._ws?.close?.(); } catch(_) {}
     if (this._timerNative) { clearInterval(this._timerNative); this._timerNative = null; }
+    try { this._destroyRaidPanel?.(); } catch(_) {}
     try { this._pollTimer?.remove?.(); } catch(_) {}
     try { this._wsFallbackTimer?.remove?.(); } catch(_) {}
     try { this._clearBossBg?.(); } catch(_) {}
@@ -193,6 +194,7 @@ class WorldBossScene extends Phaser.Scene {
     if (p.boss.boss_bg_hex) this._state.active.boss_bg_hex = p.boss.boss_bg_hex;
     if (p.player) this._state.player_state = p.player;
     if (p.top) this._state.top = p.top;
+    try { if (p.participants?.length) this._updateRaidPanel?.(p.participants); } catch(_) {}
     const _isDeadNow = !!this._state.player_state?.is_dead;
     const _hasPsNow = !!this._state.player_state;
     // Смена живой↔мёртвый ИЛИ первое появление ps (вход в бой) —
