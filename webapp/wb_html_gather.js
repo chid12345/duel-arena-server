@@ -136,10 +136,15 @@
     if (sec > 0) _startLocalTick(sec); // ресинк
   }
 
-  // Обновляет только счётчик «В БОЮ N» без перерисовки всего ростера.
+  // Обновляет счётчик «В БОЮ N» и при изменении — рефреш для обновления списка.
   function updateGatherCount(count) {
     const el = document.querySelector('.wb-gth-roster-h .cnt');
-    if (el) el.textContent = count;
+    if (!el) return;
+    const prev = parseInt(el.textContent) || 0;
+    el.textContent = count;
+    if (prev !== count) {
+      try { window.WBHtml._scene?._refresh?.(); } catch(_) {}
+    }
   }
 
   Object.assign(window.WBHtml = window.WBHtml || {}, { renderGather, updateGatherTimer, updateGatherCount });
