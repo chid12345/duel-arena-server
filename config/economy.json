@@ -8,10 +8,10 @@
     "USDT_TO_DIAMOND": 33.4,
     "PVP_WIN_GOLD": 25,
     "PVP_DEFEAT_GOLD": 5,
-    "DAILY_BONUS_GOLD": 40,
-    "PREMIUM_GOLD_BUFF": 1.18,
-    "PREMIUM_XP_BUFF": 1.15,
-    "PREMIUM_DROP_BUFF": 1.10,
+    "DAILY_BONUS_GOLD": 60,
+    "PREMIUM_GOLD_BUFF": 1.25,
+    "PREMIUM_XP_BUFF": 1.25,
+    "PREMIUM_DROP_BUFF": 1.25,
     "BOX_EV_RATIO": 0.85,
     "BOX_JACKPOT_BUDGET": 0.10
   },
@@ -40,7 +40,7 @@
   },
   "price_factor": {
     "_comment": "Множитель в price_for_item: price_pu = power × rarity × tier × factor[currency]. Калиброван под реальную игру: алмазные предметы стоят дороже за единицу силы (premium-валюта).",
-    "gold":    0.067,
+    "gold":    0.10,
     "diamond": 0.333,
     "star":    0.333,
     "usdt":    0.333
