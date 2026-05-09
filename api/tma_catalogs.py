@@ -32,11 +32,11 @@ SHOP_CATALOG = {
     "res_100":       {"name": "Свиток воскрешения 100%",  "price": 60,  "currency": "diamonds", "icon": "✨", "tab": "resurrection", "desc": "10 воскрешений со 100% HP (рейд босса)", "inventory": True},
 
     # ── Рейд-свитки (работают ТОЛЬКО в рейде босса, 1 заряд = 1 рейд, макс 2 активных) ──
-    "damage_25":     {"name": "Свиток урона +25%",        "price": 5,   "currency": "diamonds", "icon": "⚔️", "tab": "raid_scrolls", "desc": "+25% урона по боссу (1 рейд)",     "inventory": True},
-    "power_10":      {"name": "Свиток силы +10%",          "price": 2,   "currency": "diamonds", "icon": "💪", "tab": "raid_scrolls", "desc": "+10% урона (стак с +25%, 1 рейд)", "inventory": True},
-    "defense_20":    {"name": "Свиток защиты +20%",        "price": 4,   "currency": "diamonds", "icon": "🛡️", "tab": "raid_scrolls", "desc": "+20% защита от ответки (1 рейд)",  "inventory": True},
-    "dodge_10":      {"name": "Свиток уворота +10%",       "price": 2,   "currency": "diamonds", "icon": "💨", "tab": "raid_scrolls", "desc": "+10% уворот от ответки (1 рейд)",   "inventory": True},
-    "crit_10":       {"name": "Свиток крита +10%",         "price": 3,   "currency": "diamonds", "icon": "🎯", "tab": "raid_scrolls", "desc": "+10% шанс крита (1 рейд)",           "inventory": True},
+    "damage_25":     {"name": "Свиток урона +25%",        "price": 25,  "currency": "diamonds", "icon": "⚔️", "tab": "raid_scrolls", "desc": "+25% урона по боссу (1 рейд)",     "inventory": True},
+    "power_10":      {"name": "Свиток силы +10%",          "price": 10,  "currency": "diamonds", "icon": "💪", "tab": "raid_scrolls", "desc": "+10% урона (стак с +25%, 1 рейд)", "inventory": True},
+    "defense_20":    {"name": "Свиток защиты +20%",        "price": 15,  "currency": "diamonds", "icon": "🛡️", "tab": "raid_scrolls", "desc": "+20% защита от ответки (1 рейд)",  "inventory": True},
+    "dodge_10":      {"name": "Свиток уворота +10%",       "price": 10,  "currency": "diamonds", "icon": "💨", "tab": "raid_scrolls", "desc": "+10% уворот от ответки (1 рейд)",   "inventory": True},
+    "crit_10":       {"name": "Свиток крита +10%",         "price": 12,  "currency": "diamonds", "icon": "🎯", "tab": "raid_scrolls", "desc": "+10% шанс крита (1 рейд)",           "inventory": True},
 
     # ── Свитки — золото (1 бой) ────────────────────────────────
     # Простые (+3 стат): 1 бой = ~16г дохода → цена = 1–2 боя
