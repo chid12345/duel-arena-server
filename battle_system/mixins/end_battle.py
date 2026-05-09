@@ -122,6 +122,10 @@ class BattleEndBattleMixin:
         opp_max_hp = max(1, int(loser.get("max_hp", PLAYER_START_MAX_HP)))
         your_max_hp = max(1, int(winner.get("max_hp", PLAYER_START_MAX_HP)))
 
+        _bot_over_limit = (
+            not is_test and battle.get("is_bot2") and winner_user_id
+            and db.get_bot_wins_today(int(winner_user_id)) >= BOT_DAILY_LIMIT
+        )
         gold_reward = 0 if is_test else (VICTORY_GOLD if not battle["is_bot2"] else int(VICTORY_GOLD * 0.8))
         winner_level = int(winner_live.get("level", PLAYER_START_LEVEL))
         loser_level = int(loser_live.get("level", PLAYER_START_LEVEL))
@@ -176,6 +180,10 @@ class BattleEndBattleMixin:
                 gold_reward = int(gold_reward * (1.0 + _eq_gold / 100.0))
             if _eq_xp and exp_reward > 0:
                 exp_reward = int(exp_reward * (1.0 + _eq_xp / 100.0))
+
+        if _bot_over_limit:
+            gold_reward = BOT_SYMBOLIC_GOLD
+            exp_reward = BOT_SYMBOLIC_XP
 
         combat_log_html = "\n\n".join(battle.get("combat_log_lines", []))
 

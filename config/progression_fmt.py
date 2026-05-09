@@ -44,6 +44,11 @@ DEFEAT_GOLD = 5   # небольшое утешение — не демотив�
 DAILY_BONUS_GOLD = 40
 ACTIVE_BONUS_GOLD = 80
 
+# Лимит боёв с ботом в день: первые N побед — полная награда, дальше символически
+BOT_DAILY_LIMIT = 20
+BOT_SYMBOLIC_GOLD = 3
+BOT_SYMBOLIC_XP = 3
+
 # Уровни 1..MAX_LEVEL; пороги XP, апы, награды за ап — progression_100_levels_v4/progression.json
 DEFEAT_EXP = 0
 # XP за поражение: доля от гипотетического XP «как за победу» (тот же уровень, множитель разницы уровней, урон по max_hp победителя); золото не начисляется

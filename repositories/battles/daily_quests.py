@@ -25,6 +25,18 @@ class BattlesDailyQuestsMixin:
         conn.commit()
         conn.close()
 
+    def get_bot_wins_today(self, user_id: int) -> int:
+        today = datetime.now().date().isoformat()
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT bot_wins FROM daily_quests WHERE user_id = ? AND quest_date = ?",
+            (user_id, today),
+        )
+        row = cursor.fetchone()
+        conn.close()
+        return int(row["bot_wins"] or 0) if row else 0
+
     def get_daily_quest_status(self, user_id: int) -> Dict[str, Any]:
         today = datetime.now().date().isoformat()
         conn = self.get_connection()
