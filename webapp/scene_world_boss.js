@@ -197,7 +197,8 @@ class WorldBossScene extends Phaser.Scene {
     if (p.boss.boss_bg_hex) this._state.active.boss_bg_hex = p.boss.boss_bg_hex;
     if (p.player) this._state.player_state = p.player;
     if (p.top) this._state.top = p.top;
-    try { if (p.participants?.length) this._updateRaidPanel?.(p.participants); } catch(_) {}
+    // Панель только когда игрок уже вступил в бой (player_state есть)
+    try { if (p.participants?.length && this._state.player_state) this._updateRaidPanel?.(p.participants); } catch(_) {}
     const _isDeadNow = !!this._state.player_state?.is_dead;
     const _hasPsNow = !!this._state.player_state;
     // Смена живой↔мёртвый ИЛИ первое появление ps (вход в бой) —
@@ -216,6 +217,10 @@ class WorldBossScene extends Phaser.Scene {
   _render() {
     if (this._loading) { try { this._loading.destroy(); } catch(_){} this._loading = null; }
     this.children.getAll().filter(o => o._wbChild).forEach(o => { try { o.destroy(); } catch(_){} });
+    // Панель участников — только в активном бою с вступившим игроком
+    if (!this._state?.active || !this._state?.player_state) {
+      try { this._destroyRaidPanel?.(); } catch(_) {}
+    }
     try {
       window.WBHtml?.render(this, this._state);
       // Плейсхолдер убираем только сейчас — HTML-оверлей уже в DOM

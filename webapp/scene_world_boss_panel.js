@@ -29,7 +29,7 @@ Object.assign(WorldBossScene.prototype, {
   },
 
   _updateRaidPanel(participants) {
-    if (!participants?.length) return;
+    if (!this._alive || !participants?.length) return;
     if (!this._raidPanelEl) this._buildRaidPanel();
     this._raidLastP = participants;
 
