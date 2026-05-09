@@ -30,11 +30,11 @@ SHOP_CATALOG = {
     "res_100":       {"name": "Свиток воскрешения 100%",  "price": 80,  "currency": "diamonds", "icon": "✨", "tab": "resurrection", "desc": "10 воскрешений со 100% HP (рейд босса)", "inventory": True},
 
     # ── Рейд-свитки (работают ТОЛЬКО в рейде босса, 1 заряд = 1 рейд, макс 2 активных) ──
-    "damage_25":     {"name": "Свиток урона +25%",        "price": 60,  "currency": "diamonds", "icon": "⚔️", "tab": "raid_scrolls", "desc": "+25% урона по боссу (1 рейд)",     "inventory": True},
+    "damage_25":     {"name": "Свиток урона +25%",        "price": 100, "currency": "diamonds", "icon": "⚔️", "tab": "raid_scrolls", "desc": "+25% урона по боссу (1 рейд)",     "inventory": True},
     "power_10":      {"name": "Свиток силы +10%",          "price": 30,  "currency": "diamonds", "icon": "💪", "tab": "raid_scrolls", "desc": "+10% урона (стак с +25%, 1 рейд)", "inventory": True},
-    "defense_20":    {"name": "Свиток защиты +20%",        "price": 45,  "currency": "diamonds", "icon": "🛡️", "tab": "raid_scrolls", "desc": "+20% защита от ответки (1 рейд)",  "inventory": True},
+    "defense_20":    {"name": "Свиток защиты +20%",        "price": 75,  "currency": "diamonds", "icon": "🛡️", "tab": "raid_scrolls", "desc": "+20% защита от ответки (1 рейд)",  "inventory": True},
     "dodge_10":      {"name": "Свиток уворота +10%",       "price": 35,  "currency": "diamonds", "icon": "💨", "tab": "raid_scrolls", "desc": "+10% уворот от ответки (1 рейд)",   "inventory": True},
-    "crit_10":       {"name": "Свиток крита +10%",         "price": 40,  "currency": "diamonds", "icon": "🎯", "tab": "raid_scrolls", "desc": "+10% шанс крита (1 рейд)",           "inventory": True},
+    "crit_10":       {"name": "Свиток крита +10%",         "price": 55,  "currency": "diamonds", "icon": "🎯", "tab": "raid_scrolls", "desc": "+10% шанс крита (1 рейд)",           "inventory": True},
 
     # ── Свитки — золото (1 бой, дёшево) ───────────────────────
     "scroll_str_3":    {"name": "Эликсир силы +3",      "price": 60,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила +3, 1 бой",          "inventory": True},
@@ -59,7 +59,7 @@ SHOP_CATALOG = {
     "scroll_predator": {"name": "Хищник",               "price": 35,  "currency": "diamonds", "icon": "🐍", "tab": "scrolls", "desc": "Крит+5, Двойн+8%, 3 боя",  "inventory": True},
     "scroll_berserker":{"name": "Берсерк",              "price": 40,  "currency": "diamonds", "icon": "🔥", "tab": "scrolls", "desc": "Сила+8, Броня-5%, 3 боя",   "inventory": True},
     "scroll_accuracy": {"name": "Свиток точности",      "price": 20,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Точность +15%, 3 боя",      "inventory": True},
-    "scroll_vampire_g":{"name": "Свиток Вампира",      "price": 140, "currency": "gold",     "icon": "🩸", "tab": "scrolls", "desc": "Вампиризм 9%, 1 бой",       "inventory": True},
+    "scroll_vampire_g":{"name": "Свиток Вампира",      "price": 250, "currency": "gold",     "icon": "🩸", "tab": "scrolls", "desc": "Вампиризм 9%, 1 бой",       "inventory": True},
     "scroll_vampire_d":{"name": "Свиток Вампира+",     "price": 40,  "currency": "diamonds", "icon": "🧛", "tab": "scrolls", "desc": "Вампиризм 15%, 3 боя",      "inventory": True},
 
     # ── Обмен алмазы → золото ─────────────────────────────────
