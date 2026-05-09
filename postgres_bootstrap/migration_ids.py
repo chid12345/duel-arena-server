@@ -73,4 +73,8 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_04_19_001_equipment",
     "2026_04_21_001_owned_weapons",
     "2026_04_23_001_battles_pvp_weekly_idx",
+    # Шаг 5: сезоны и батл-пасс (новая система — изолирована префиксом bp_)
+    "2026_05_09_001_bp_seasons",
+    "2026_05_09_002_bp_progress",
+    "2026_05_09_003_bp_rewards_claimed",
 )

@@ -11,11 +11,13 @@ from postgres_bootstrap.ddl_02_features import POSTGRES_DDL_02
 from postgres_bootstrap.ddl_03_indexes import POSTGRES_DDL_03
 from postgres_bootstrap.ddl_04_clan_v2 import POSTGRES_DDL_04_CLAN_V2
 from postgres_bootstrap.ddl_05_world_boss import POSTGRES_DDL_05_WORLD_BOSS
+from postgres_bootstrap.ddl_06_season_pass import POSTGRES_DDL_06_SEASON_PASS
 from postgres_bootstrap.migration_ids import POSTGRES_MIGRATION_IDS
 
 POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
     POSTGRES_DDL_01 + POSTGRES_DDL_02 + POSTGRES_DDL_03
     + POSTGRES_DDL_04_CLAN_V2 + POSTGRES_DDL_05_WORLD_BOSS
+    + POSTGRES_DDL_06_SEASON_PASS
 )
 
 __all__ = (

@@ -1,0 +1,56 @@
+{
+  "_comment": "Конфиг сезонов и боевого пропуска. Сезон длится season_days дней, пасс имеет 50 уровней (free + premium треки). Очки за действия задаются в points_for_action. Меняется через админ-панель (вкладка «🏆 Сезон»).",
+  "version": 1,
+
+  "current_season": {
+    "name": "Сезон Огня",
+    "theme": "fire",
+    "season_days": 90,
+    "started_at": null,
+    "auto_rotate": false
+  },
+
+  "pass": {
+    "max_level": 50,
+    "points_per_level": 100,
+    "_comment_pp": "100 очков на уровень × 50 = 5000 очков за весь пасс. F2P без премиума: ~2 уровня в день при 30 мин игры → 50 уровней за 25 дней. Premium быстрее на ~30%."
+  },
+
+  "points_for_action": {
+    "_comment": "Сколько BP-очков даёт каждое действие. Калибровать так, чтобы F2P доходил до 50 уровня за 60-80% длины сезона.",
+    "pvp_win":          5,
+    "pvp_loss":         1,
+    "pve_bot_win":      3,
+    "daily_quest":      30,
+    "weekly_quest":     150,
+    "achievement":      75,
+    "wb_hit":           2,
+    "wb_top_damage":    50,
+    "wb_last_hit":      40,
+    "tower_floor":      8,
+    "endless_wave":     5
+  },
+
+  "premium_subscription": {
+    "stars_price": 390,
+    "usdt_price": 4.99,
+    "duration_days": 90,
+    "_comment": "Премиум активирует premium track на пассе текущего сезона до его окончания. Если куплен в середине — игрок получает премиум-награды задним числом за уже взятые free-уровни."
+  },
+
+  "rewards_grid": {
+    "_comment": "Награды по уровням. Формат: {level: {free: {gold/diamond/item}, premium: {...}}}. Если уровня нет — пустой.",
+    "1":  { "free": { "gold": 200 },                "premium": { "gold": 300, "diamond": 5 } },
+    "2":  { "free": { "item": "scroll_str_3" },     "premium": { "diamond": 8 } },
+    "3":  { "free": { "gold": 250 },                "premium": { "gold": 400, "diamond": 5 } },
+    "5":  { "free": { "item": "box_common" },       "premium": { "item": "box_rare", "diamond": 15 } },
+    "7":  { "free": { "diamond": 5 },               "premium": { "diamond": 25 } },
+    "10": { "free": { "gold": 500 },                "premium": { "gold": 1000, "diamond": 30, "item": "scroll_warrior" } },
+    "15": { "free": { "item": "scroll_hp_100" },    "premium": { "item": "scroll_all_4", "diamond": 20 } },
+    "20": { "free": { "diamond": 10 },              "premium": { "diamond": 50, "item": "box_rare_c" } },
+    "25": { "free": { "gold": 800 },                "premium": { "gold": 1500, "diamond": 30 } },
+    "30": { "free": { "item": "box_common" },       "premium": { "item": "box_rare_c", "diamond": 40 } },
+    "40": { "free": { "diamond": 15 },              "premium": { "diamond": 80, "item": "scroll_titan" } },
+    "50": { "free": { "diamond": 25 },              "premium": { "diamond": 200, "item": "scroll_all_12" } }
+  }
+}
