@@ -99,7 +99,7 @@
 
   <div class="wb-gth-roster">
     <div class="wb-gth-roster-h">
-      <span>⚔ В БОЮ</span>
+      <span>✅ ЗАРЕГУ</span>
       <span class="cnt">${count}</span>
     </div>
     <div class="wb-gth-roster-list">${rows || '<div class="wb-gth-empty">— ОЖИДАЕМ БОЙЦОВ —</div>'}</div>
@@ -146,7 +146,7 @@
     if (sec > 0) _startLocalTick(sec); // ресинк
   }
 
-  // Обновляет счётчик «В БОЮ N» и при изменении — рефреш для обновления списка.
+  // Обновляет счётчик «ЗАРЕГУ N» и при изменении — рефреш для обновления списка.
   function updateGatherCount(count) {
     const el = document.querySelector('.wb-gth-roster-h .cnt');
     if (!el) return;
