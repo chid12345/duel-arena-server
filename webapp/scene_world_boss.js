@@ -156,6 +156,7 @@ class WorldBossScene extends Phaser.Scene {
   }
 
   _onWsPreparing(p) {
+    try { this._destroyRaidPanel?.(); } catch(_) {}
     if (this._state?.active) return;
     if (!this._state) this._state = {};
     const wasPrep = (this._state.prep_seconds_left || 0) > 0;
@@ -168,6 +169,7 @@ class WorldBossScene extends Phaser.Scene {
   }
 
   _onWsIdle(p) {
+    try { this._destroyRaidPanel?.(); } catch(_) {}
     if (this._state?.active) { this._refresh(); return; }
     if (p.registrants_count != null && this._state) {
       this._state.registrants_count = p.registrants_count;
