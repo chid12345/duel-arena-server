@@ -200,6 +200,8 @@ def _build_app(bot_count: int) -> Application:
     app.add_handler(CommandHandler("health",     BotHandlers.health_command))
     app.add_handler(CommandHandler("wipe_me",    BotHandlers.wipe_me_command))
     app.add_handler(CommandHandler("agent_code", BotHandlers.agent_code_command))
+    app.add_handler(CommandHandler("admin",         BotHandlers.admin_balance_command))
+    app.add_handler(CommandHandler("admin_balance", BotHandlers.admin_balance_command))
     app.add_handler(CommandHandler("admin_list_clans",  BotHandlers.admin_list_clans_command))
     app.add_handler(CommandHandler("admin_delete_clan", BotHandlers.admin_delete_clan_command))
     app.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
