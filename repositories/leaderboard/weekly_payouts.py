@@ -98,6 +98,8 @@ class LeaderboardWeeklyPayoutsMixin:
                     "INSERT INTO weekly_leaderboard_payouts (week_key, board) VALUES (?, ?)",
                     (week_key, "titan"),
                 )
+                # Сброс этажа: все стартуют с 1 в новую неделю
+                cursor.execute("UPDATE titan_progress SET current_floor = 1")
                 conn.commit()
                 out["titan_paid"] = min(10, len(rows))
             except Exception as ex:
