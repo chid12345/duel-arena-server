@@ -17,7 +17,7 @@ class WorldBossScene extends Phaser.Scene {
     this._alive = false;
     try { window._tabPlaceholderHide?.('wb-placeholder'); } catch(_) {}
     try { this._ws?.close?.(); } catch(_) {}
-    try { this._timer?.remove?.(); } catch(_) {}
+    if (this._timerNative) { clearInterval(this._timerNative); this._timerNative = null; }
     try { this._pollTimer?.remove?.(); } catch(_) {}
     try { this._wsFallbackTimer?.remove?.(); } catch(_) {}
     try { this._clearBossBg?.(); } catch(_) {}
@@ -67,7 +67,8 @@ class WorldBossScene extends Phaser.Scene {
     this._tabBarResult = TabBar.build(this, { activeKey: 'boss' });
     window._tabPlaceholderHideNextFrame?.('wb-placeholder');
     this._refresh();
-    this._timer = this.time.addEvent({ delay: 1000, loop: true, callback: () => this._tickSecond() });
+    // Нативный setInterval — не зависит от Phaser-паузы при idle/blur
+    this._timerNative = setInterval(() => { if (this._alive) this._tickSecond(); }, 1000);
     // Авто-рефреш: каждые 8с всегда (счётчики, старт боя), плюс быстрый fallback если WS мёртв
     this._pollTimer = this.time.addEvent({ delay: 8000, loop: true, callback: () => {
       this._refresh();

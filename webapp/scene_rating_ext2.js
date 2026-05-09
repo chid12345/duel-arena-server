@@ -19,6 +19,8 @@ const config = {
     antialias: true,
     pixelArt: false,
   },
+  // Не паузировать игровой цикл при потере фокуса (Telegram Mini App idle)
+  pauseOnBlur: false,
   // 12с timeout — достаточно даже на слабом 3G, но не бесконечно.
   loader: {
     timeout: 12000,
