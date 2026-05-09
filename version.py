@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.18.31"
-VERSION_LABEL = "v2.18.31 — feat: Шаг 5.2 — repositories/season_pass (config_loader, state, claim) + Database mixins"
+VERSION = "2.18.32"
+VERSION_LABEL = "v2.18.32 — feat: Шаг 5.3+5.4 — API season_pass + premium активирует premium track"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "14.51"
+GAME_VERSION = "14.52"
