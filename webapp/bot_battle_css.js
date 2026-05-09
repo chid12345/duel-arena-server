@@ -130,16 +130,13 @@ const BotBattleCss = (() => {
     @keyframes cfPulse{0%,100%{box-shadow:inset 0 0 16px rgba(255,59,168,.10),inset 0 1px 0 rgba(255,180,255,.18),0 0 16px rgba(255,59,168,.45),0 0 28px rgba(0,240,255,.25);}50%{box-shadow:inset 0 0 20px rgba(255,59,168,.18),inset 0 1px 0 rgba(255,180,255,.25),0 0 26px rgba(255,59,168,.7),0 0 44px rgba(0,240,255,.4);}}
     #bb-root .confirm-btn.ready:active{transform:scale(.97);animation:none;}
     #bb-root .autobattle-btn{flex-shrink:0;width:38px;height:38px;background:none;border:0;padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;user-select:none;transition:transform .15s;position:relative;font-size:0;}
-    #bb-root .autobattle-btn::before{content:'';position:absolute;inset:-6px;border-radius:50%;opacity:0;pointer-events:none;transition:opacity .3s;}
-    #bb-root .autobattle-btn.on{transform:scale(1.06);}
-    #bb-root .autobattle-btn.on::before{opacity:1;animation:bbAutoRing 1.6s ease-in-out infinite;}
-    #bb-root .autobattle-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;filter:grayscale(.55) brightness(.6) drop-shadow(0 2px 4px rgba(0,0,0,.7));transition:filter .3s, transform .18s;}
+    #bb-root .autobattle-btn.on{transform:scale(1.08);}
+    #bb-root .autobattle-btn img{width:100%;height:100%;object-fit:contain;pointer-events:none;filter:brightness(.7) drop-shadow(0 0 5px rgba(255,50,50,.6)) drop-shadow(0 0 10px rgba(255,50,50,.3)) drop-shadow(0 2px 4px rgba(0,0,0,.7));transition:filter .3s;}
     #bb-root .autobattle-btn:active,#bb-root .autobattle-btn.on:active{transform:scale(.92);}
-    #bb-root .autobattle-btn:active img{filter:hue-rotate(160deg) saturate(1.3) brightness(1.15) drop-shadow(0 0 12px rgba(0,240,255,.7)) drop-shadow(0 2px 4px rgba(0,0,0,.6));transform:scale(.96);}
+    #bb-root .autobattle-btn:active img{filter:brightness(.85) drop-shadow(0 0 8px rgba(255,50,50,.8)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}
     #bb-root .autobattle-btn.on img{animation:bbAutoOnGlow 1.6s ease-in-out infinite;}
-    @keyframes bbAutoRing{0%,100%{box-shadow:0 0 8px 3px rgba(0,240,255,.55),0 0 18px 6px rgba(255,59,168,.3);}50%{box-shadow:0 0 16px 6px rgba(0,240,255,.9),0 0 32px 10px rgba(255,59,168,.6);}}
-    @keyframes bbAutoOnGlow{0%,100%{filter:hue-rotate(160deg) saturate(1.5) brightness(1.15) drop-shadow(0 0 12px rgba(0,240,255,.75)) drop-shadow(0 0 22px rgba(255,59,168,.5)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}50%{filter:hue-rotate(160deg) saturate(1.7) brightness(1.3) drop-shadow(0 0 22px rgba(0,240,255,1)) drop-shadow(0 0 40px rgba(255,59,168,.85)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}}
-    #bb-root .autobattle-btn.locked img{filter:grayscale(.6) brightness(.7) drop-shadow(0 2px 4px rgba(0,0,0,.6));}
+    @keyframes bbAutoOnGlow{0%,100%{filter:drop-shadow(0 0 10px rgba(0,255,120,.85)) drop-shadow(0 0 20px rgba(0,200,80,.45)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}50%{filter:drop-shadow(0 0 18px rgba(0,255,120,1)) drop-shadow(0 0 36px rgba(0,200,80,.75)) drop-shadow(0 2px 4px rgba(0,0,0,.6));}}
+    #bb-root .autobattle-btn.locked img{filter:grayscale(.6) brightness(.6) drop-shadow(0 2px 4px rgba(0,0,0,.6));}
     #bb-root .autobattle-btn .lock-em{position:absolute;top:-2px;right:-2px;font-size:14px;line-height:1;filter:drop-shadow(0 1px 2px rgba(0,0,0,.85));pointer-events:none;}
     /* Toast в стиле киберпанк-HUD:
        - двойная неон-рамка (pink снаружи, cyan внутри через ::before)

@@ -76,16 +76,16 @@
          правому углу — на уровне кнопки «ЛОГ БОЯ» (которая слева снизу шапки).
          НЕ налезает на проценты HP (которые выше). */
       .wb-bhdr2{position:relative}
-      .wbz-auto-btn{position:absolute;bottom:4px;right:6px;z-index:14;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:4px;padding:4px 8px;border-radius:6px;background:linear-gradient(135deg,rgba(15,5,30,.88),rgba(8,5,18,.92));border:1px solid rgba(100,90,130,.3);font-family:Consolas,monospace;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .25s,opacity .25s,border-color .25s;opacity:.45}
+      .wbz-auto-btn{position:absolute;bottom:4px;right:6px;z-index:14;display:flex;flex-direction:row;align-items:center;justify-content:center;gap:4px;padding:4px 8px;border-radius:6px;background:linear-gradient(135deg,rgba(15,5,30,.88),rgba(8,5,18,.92));border:1px solid rgba(255,50,50,.35);font-family:Consolas,monospace;cursor:pointer;user-select:none;transition:transform .15s,box-shadow .25s,border-color .25s;box-shadow:0 0 6px rgba(255,50,50,.25)}
       .wbz-auto-btn:active{transform:scale(.92)}
-      .wbz-auto-btn .ic{font-size:13px;line-height:1;filter:grayscale(.7) brightness(.7);transition:filter .25s}
-      .wbz-auto-btn .lb{font-size:8px;font-weight:900;letter-spacing:.6px;color:rgba(180,170,210,.5);text-transform:uppercase;transition:color .25s,text-shadow .25s}
+      .wbz-auto-btn .ic{font-size:13px;line-height:1;filter:brightness(.75) drop-shadow(0 0 4px rgba(255,50,50,.55));transition:filter .25s}
+      .wbz-auto-btn .lb{font-size:8px;font-weight:900;letter-spacing:.6px;color:rgba(255,100,100,.7);text-transform:uppercase;text-shadow:0 0 4px rgba(255,50,50,.5);transition:color .25s,text-shadow .25s}
       .wbz-auto-btn .lk{position:absolute;top:-4px;right:-4px;font-size:8px;background:#222;border-radius:50%;padding:1px 3px}
-      .wbz-auto-btn.locked{opacity:.35}
-      .wbz-auto-btn.on{opacity:1;border-color:rgba(0,240,255,.7);background:linear-gradient(135deg,rgba(0,30,60,.8),rgba(10,5,30,.92));animation:wbzAutoPulse 1.6s ease-in-out infinite}
-      @keyframes wbzAutoPulse{0%,100%{box-shadow:0 0 8px 2px rgba(0,240,255,.5),0 0 18px 5px rgba(255,59,168,.28);}50%{box-shadow:0 0 16px 5px rgba(0,240,255,.88),0 0 32px 9px rgba(255,59,168,.55);}}
-      .wbz-auto-btn.on .lb{color:#00f0ff;text-shadow:0 0 6px rgba(0,240,255,.9)}
-      .wbz-auto-btn.on .ic{filter:drop-shadow(0 0 5px rgba(0,240,255,.9)) drop-shadow(0 0 10px rgba(255,59,168,.5))}
+      .wbz-auto-btn.locked{opacity:.5}
+      .wbz-auto-btn.on{border-color:rgba(0,255,120,.65);box-shadow:0 0 10px rgba(0,255,120,.6);animation:wbzAutoPulse 1.6s ease-in-out infinite}
+      @keyframes wbzAutoPulse{0%,100%{box-shadow:0 0 10px rgba(0,255,120,.6);}50%{box-shadow:0 0 20px rgba(0,255,120,1),0 0 32px rgba(0,200,80,.5);}}
+      .wbz-auto-btn.on .lb{color:#00ff88;text-shadow:0 0 6px rgba(0,255,120,.9)}
+      .wbz-auto-btn.on .ic{filter:drop-shadow(0 0 6px rgba(0,255,120,.9)) drop-shadow(0 0 12px rgba(0,200,80,.5))}
     `;
     document.head.appendChild(s);
   }
