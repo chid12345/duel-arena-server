@@ -102,7 +102,7 @@
 
   function _findBattleScene() {
     try {
-      const game = window.game || window.phaserGame;
+      const game = window.game || window.phaserGame || window.__game;
       if (!game) return null;
       const battle = game.scene?.getScene?.('Battle');
       return battle && battle.scene?.isActive?.() ? battle : null;
@@ -114,15 +114,17 @@
     if (!root) return; // overlay не смонтирован
     _syncBtn(); // премиум-статус мог измениться
     if (!_on) return;
-    if (_busy) return;
     const scene = _findBattleScene();
-    if (!scene || !scene._choosing || scene._submitting) return;
-    // Один авто-ход на раунд. _busy сбрасываем при смене раунда —
-    // это снимает блокировку с предыдущего автомува, который мог уйти в waiting.
+    if (!scene) return;
+    // Сначала проверяем смену раунда — это сбрасывает _busy от предыдущего хода.
+    // Важно делать ДО if (_busy): иначе _busy застревает true навсегда.
     const rk = String(_S()?.battle?.round ?? -1);
-    if (rk === _lastRoundKey) return;
-    _lastRoundKey = rk;
-    _busy = false;
+    if (rk !== _lastRoundKey) {
+      _lastRoundKey = rk;
+      _busy = false;
+    }
+    if (_busy) return;
+    if (!scene._choosing || scene._submitting) return;
     // Лёгкая задержка чтобы игрок успел увидеть начало раунда
     setTimeout(_autoMove, 600);
   }

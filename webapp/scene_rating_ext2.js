@@ -35,6 +35,7 @@ function _launchPhaser() {
   _gameStarted = true;
   try {
     const game = new Phaser.Game(config);
+    window.game = game; // нужен BotBattleAutoBattle._findBattleScene()
     if (window.__DEV_MODE__) window.__game = game;
   } catch(e) {
     console.error('Phaser.Game init error:', e);
