@@ -45,7 +45,7 @@ const CSS = `
 .rt-pod-block.rt-pod-rank-1{animation:rtPodCrown 4s ease-in-out infinite}
 @keyframes rtPodCrown{0%,100%{box-shadow:0 0 22px rgba(255,200,0,.55),inset 0 0 16px rgba(255,255,255,.04)}50%{box-shadow:0 0 32px rgba(255,200,0,.85),0 0 60px rgba(255,200,0,.35),inset 0 0 22px rgba(255,235,120,.12)}}
 .rt-pod-av{font-size:26px;line-height:1;filter:drop-shadow(0 0 8px rgba(255,255,255,.4));margin-bottom:1px;position:relative;z-index:3}
-.rt-pod-skin{width:50px;height:50px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,255,255,.3));position:relative;z-index:3;flex-shrink:0;pointer-events:none}
+.rt-pod-skin{width:54px;height:54px;object-fit:contain;pointer-events:none;flex-shrink:0;margin-bottom:-10px;position:relative;z-index:4}
 .rt-pod-tag{font-size:7px;font-weight:800;letter-spacing:2.5px;opacity:.6;text-transform:uppercase;font-family:"Courier New",Consolas,monospace;position:relative;z-index:3;margin-bottom:-1px}
 .rt-pod-score{font-size:16px;font-weight:800;color:#fff;text-shadow:0 0 12px currentColor;letter-spacing:.5px;position:relative;z-index:3;font-family:"Courier New",Consolas,monospace}
 .rt-pod-lvl{position:relative;z-index:3}
@@ -159,16 +159,16 @@ function _podiumHTML(top3, meta, tabKey) {
     const wt = p.warrior_type || 'tank';
     const skinUrl = typeof getWarriorSkinPath === 'function' ? getWarriorSkinPath(wt) : null;
     const avHTML = skinUrl
-      ? `<img class="rt-pod-skin" src="${skinUrl}" alt="" draggable="false">`
-      : `<div class="rt-pod-av">${['⚔️','🛡️','🧙','🐉','⚡','🗡️','🔥','🦅','🐺','🔮','✨','💀','🏹','🪓'][Math.abs(Number(p.user_id)||0) % 14]}</div>`;
+      ? `<img class="rt-pod-skin" src="${skinUrl}" alt="" draggable="false" style="filter:drop-shadow(0 0 10px ${colors[i]}88)">`
+      : `<div class="rt-pod-av" style="font-size:32px;margin-bottom:-10px;position:relative;z-index:4">${['⚔️','🛡️','🧙','🐉','⚡','🗡️','🔥','🦅','🐺','🔮','✨','💀','🏹','🪓'][Math.abs(Number(p.user_id)||0) % 14]}</div>`;
     const tagHTML = scoreTag ? `<div class="rt-pod-tag" style="color:${colors[i]}">${scoreTag}</div>` : '';
     const lvl = p.level ? `<div class="rt-pod-lvl">Ур. ${p.level}</div>` : '';
     return `<div class="rt-pod-col" data-pid="${p.user_id}" data-rank="${ranks[i]}" data-tab="${tabKey}">
       <div class="rt-pod-medal rt-pod-medal-${ranks[i]}"><img src="rating_medal_${ranks[i]}.png" alt="" draggable="false" onerror="this.style.display='none';this.parentNode.textContent='${medals[i]}';this.parentNode.style.fontSize='28px';this.parentNode.style.color='${colors[i]}';"></div>
       <div class="rt-pod-name">${nm}</div>
+      ${avHTML}
       <div class="rt-pod-block rt-pod-rank-${ranks[i]}${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 22px ${glows[i]},inset 0 0 16px rgba(255,255,255,.04);--medal-c-soft:${energySoft[i]};--medal-c-strong:${energyStrong[i]}">
         <div class="rt-pod-energy"></div>
-        ${avHTML}
         ${tagHTML}
         <div class="rt-pod-score" style="color:${colors[i]};text-shadow:0 0 14px ${colors[i]}">${_esc(scoreNum)}</div>
         ${lvl}
