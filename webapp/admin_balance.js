@@ -52,6 +52,8 @@ const FACTOR_FIELDS = [
   ["usdt",    "price_factor (usdt)",    0.05, 1.00, 0.005],
 ];
 
+// XP_FIELDS, renderXpLevels/Quests, saveXp — определены в admin_balance_xp.js
+
 function buildSliders(containerId, fields, source, scopeName) {
   const c = $(containerId);
   c.innerHTML = "";
@@ -81,6 +83,10 @@ document.addEventListener("input", (e) => {
   peers.forEach(p => { if (p !== e.target) p.value = val; });
   if (scope === "anchor") CONFIG.economy.anchor[key] = val;
   else if (scope === "factor") CONFIG.economy.price_factor[key] = val;
+  else if (scope === "xp") {
+    if (!CONFIG.xp_anchor) CONFIG.xp_anchor = {};
+    CONFIG.xp_anchor[key] = val;
+  }
 });
 
 // ── QUESTS / SHOP TABLES ──────────────────────────────
@@ -127,6 +133,12 @@ async function reloadConfig() {
     const audit = await api("/api/admin/balance/audit");
     renderQuests(audit.quests);
     renderShop(audit.shop);
+    if (audit.xp_anchor) {
+      CONFIG.xp_anchor = audit.xp_anchor;
+      buildSliders("xp-anchor-sliders", XP_FIELDS, audit.xp_anchor, "xp");
+    }
+    if (audit.xp_levels) renderXpLevels(audit.xp_levels);
+    if (audit.xp_quests) renderXpQuests(audit.xp_quests);
     toast("Конфиг загружен ✓");
   } catch (e) {
     $("server-status").textContent = `Ошибка: ${e.message}`;

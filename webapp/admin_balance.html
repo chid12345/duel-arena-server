@@ -18,6 +18,7 @@
   <div class="tab active" data-tab="anchor">⚓ Анкер</div>
   <div class="tab" data-tab="quests">📋 Квесты</div>
   <div class="tab" data-tab="shop">🛒 Магазин</div>
+  <div class="tab" data-tab="xp">🌟 Опыт</div>
 </div>
 
 <!-- ======== АНКЕР ======== -->
@@ -64,8 +65,42 @@
   </div>
 </div>
 
+<!-- ======== ОПЫТ (XP) ======== -->
+<div class="panel" id="panel-xp">
+  <div class="card">
+    <h2>Якорь опыта (xp_economy.json)</h2>
+    <div id="xp-anchor-sliders"></div>
+    <div class="actions">
+      <button class="btn warn" onclick="reloadConfig()">↻ Сбросить</button>
+      <button class="btn primary" onclick="saveXp()">✓ Применить (xp_economy.json)</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Прогрессия: progression.json vs формула</h2>
+    <table id="xp-levels-table">
+      <thead>
+        <tr><th>Уровень</th><th>Факт WIN</th><th>Формула WIN</th><th>Δ</th>
+            <th>Факт NEXT</th><th>Формула NEXT</th><th>Δ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>XP-награды квестов: фактические vs формула</h2>
+    <table id="xp-quests-table">
+      <thead>
+        <tr><th>Частота</th><th>Сложность</th><th>Факт</th><th>Формула</th><th>Δ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
 <div id="toast" class="toast"></div>
 
+<script src="/admin_balance_xp.js"></script>
 <script src="/admin_balance.js"></script>
 </body>
 </html>

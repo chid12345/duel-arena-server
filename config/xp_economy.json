@@ -1,0 +1,31 @@
+{
+  "_comment": "Балансная сетка ОПЫТА (XP). Параллельная система — progression.json остаётся источником правды для боя, эта формула используется для аудита и будущей калибровки. Когда докрутишь анкер — можно сгенерировать новый progression.json через скрипт.",
+  "version": 1,
+  "anchor": {
+    "XP_BASE_WIN": 80,
+    "XP_GROWTH_START": 70,
+    "XP_GROWTH_RATE": 180,
+    "XP_GROWTH_POWER": 1.5,
+    "XP_DEFEAT_FRACTION": 0.10,
+    "XP_TO_NEXT_BASE": 400,
+    "XP_TO_NEXT_LIN": 20,
+    "XP_TO_NEXT_BREAK1": 30,
+    "XP_TO_NEXT_BREAK2": 60,
+    "XP_TO_NEXT_BREAK1_BONUS": 5,
+    "XP_TO_NEXT_BREAK2_BONUS": 5,
+    "PREMIUM_XP_BUFF": 1.30,
+    "MAX_LEVEL": 80
+  },
+  "task_xp_per_pu": {
+    "_comment": "Сколько XP за 1 PU усилия (1 PU = 1 час игры). Используется для XP-наград квестов.",
+    "easy": 240,
+    "medium": 460,
+    "hard": 700,
+    "epic": 900
+  },
+  "task_freq_mult": {
+    "daily": 1.0,
+    "weekly": 1.0,
+    "once": 1.0
+  }
+}

@@ -19,6 +19,7 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from api.admin_balance_xp import build_xp_audit, register_save_xp
 from api.tma_auth import get_user_from_init_data
 from config.battle_constants import ADMIN_USER_IDS
 from economy import load_economy
@@ -158,11 +159,13 @@ def register_admin_balance_routes(app: FastAPI) -> None:
         _check_admin(body.init_data, body.token)
         return _build_audit_payload()
 
+    register_save_xp(app, _check_admin)
+
 
 def _build_audit_payload() -> dict:
-    """Собрать JSON-отчёт для админ-панели (вместо текста stdout)."""
+    """Собрать JSON-отчёт для админ-панели (квесты + магазин + XP из admin_balance_xp)."""
     from reward_calculator import REWARD_TABLE
-    from economy import reward_for_task, price_for_item, gold_to_diamond
+    from economy import reward_for_task, price_for_item
     from api.tma_catalogs import SHOP_CATALOG
 
     quests = []
@@ -202,4 +205,6 @@ def _build_audit_payload() -> dict:
             "tab": item.get("tab"),
         })
 
-    return {"ok": True, "quests": quests, "shop": shop}
+    payload = {"ok": True, "quests": quests, "shop": shop}
+    payload.update(build_xp_audit())
+    return payload

@@ -1,0 +1,97 @@
+"""
+api/admin_balance_xp.py — XP-часть админ-панели балансной сетки.
+
+Отделено от admin_balance.py для соблюдения Закона 1 (≤200 строк/файл).
+Регистрирует endpoint POST /api/admin/balance/save_xp и предоставляет
+функцию build_xp_audit() для общего payload.
+"""
+
+from __future__ import annotations
+
+import json
+import logging
+from typing import Callable
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+
+logger = logging.getLogger(__name__)
+
+_ALLOWED_XP_KEYS = {
+    "XP_BASE_WIN", "XP_GROWTH_START", "XP_GROWTH_RATE", "XP_GROWTH_POWER",
+    "XP_DEFEAT_FRACTION", "XP_TO_NEXT_BASE", "XP_TO_NEXT_LIN",
+    "XP_TO_NEXT_BREAK1", "XP_TO_NEXT_BREAK2",
+    "XP_TO_NEXT_BREAK1_BONUS", "XP_TO_NEXT_BREAK2_BONUS",
+    "PREMIUM_XP_BUFF", "MAX_LEVEL",
+}
+
+
+class XpUpdate(BaseModel):
+    init_data: str = ""
+    token: str = ""
+    anchor: dict | None = None
+
+
+def build_xp_audit() -> dict:
+    """Собрать XP-часть payload для общего audit endpoint."""
+    from economy.xp_formulas import xp_per_win, xp_to_next, xp_for_task, load_xp_economy
+    from reward_calculator import REWARD_TABLE
+
+    xp_levels = []
+    try:
+        from progression_loader.accessors import _PROGRESSION
+        actual_win = _PROGRESSION.get("xp_per_win", [])
+        actual_next = _PROGRESSION.get("xp_to_next", [])
+        max_level = int(_PROGRESSION.get("max_level", 80))
+        show_set = set(range(1, 11))
+        show_set.update([15, 20, 25, 30, 40, 50, 60, 70, 80, max_level])
+        for lv in sorted(lv for lv in show_set if 1 <= lv <= max_level):
+            idx = lv - 1
+            xp_levels.append({
+                "level": lv,
+                "actual_win": actual_win[idx] if idx < len(actual_win) else 0,
+                "formula_win": xp_per_win(lv),
+                "actual_next": actual_next[idx] if idx < len(actual_next) else 0,
+                "formula_next": xp_to_next(lv),
+            })
+    except Exception as e:
+        logger.warning("xp progression audit error: %s", e)
+
+    xp_quests = []
+    for (freq, diff), tup in sorted(REWARD_TABLE.items()):
+        actual_xp = tup[2] if len(tup) > 2 else 0
+        xp_quests.append({
+            "freq": freq, "diff": diff,
+            "actual": actual_xp,
+            "formula": xp_for_task(diff, freq),
+        })
+
+    return {
+        "xp_levels": xp_levels,
+        "xp_quests": xp_quests,
+        "xp_anchor": load_xp_economy().get("anchor", {}),
+    }
+
+
+def register_save_xp(app: FastAPI, auth_check: Callable[[str, str], int]) -> None:
+    """Регистрирует POST /api/admin/balance/save_xp.
+    auth_check(init_data, token) — функция авторизации из admin_balance."""
+    @app.post("/api/admin/balance/save_xp", tags=["admin"])
+    def save_xp(body: XpUpdate):
+        uid = auth_check(body.init_data, body.token)
+        if not body.anchor:
+            raise HTTPException(status_code=400, detail="Нет данных для сохранения")
+        from economy.xp_formulas import xp_economy_path, reset_xp_cache, load_xp_economy
+        current = load_xp_economy()
+        new_data = json.loads(json.dumps(current))
+        for k, v in body.anchor.items():
+            if k not in _ALLOWED_XP_KEYS:
+                raise HTTPException(status_code=400, detail=f"Неизвестный ключ XP: {k}")
+            if not isinstance(v, (int, float)) or v < 0:
+                raise HTTPException(status_code=400, detail=f"XP/{k}: число ≥0")
+            new_data["anchor"][k] = float(v)
+        with xp_economy_path().open("w", encoding="utf-8") as f:
+            json.dump(new_data, f, ensure_ascii=False, indent=2)
+        reset_xp_cache()
+        logger.info("admin_balance: xp_economy.json обновлён uid=%s", uid)
+        return {"ok": True, "version": new_data.get("version", 1)}
