@@ -1,0 +1,73 @@
+{
+  "_comment": "Тэги для аудита SHOP_CATALOG. Каждый предмет получает rarity/tier/power — формула price_for_item должна выдавать близкую цену. Если расхождение >25% — пометка ⚠ в audit_shop.",
+  "version": 1,
+
+  "items": {
+    "hp_small":      { "rarity": "common", "tier": "T1", "power": 3,  "comment": "+30% HP — базовый расходник" },
+    "hp_medium":     { "rarity": "common", "tier": "T1", "power": 6,  "comment": "+60% HP" },
+    "hp_full":       { "rarity": "common", "tier": "T2", "power": 10, "comment": "100% HP" },
+
+    "xp_boost_5":    { "rarity": "rare",   "tier": "T1", "power": 6,  "comment": "5 боёв XP×1.5 — gold" },
+    "xp_boost_20":   { "rarity": "rare",   "tier": "T2", "power": 12, "comment": "20 боёв XP×1.5 — diamond" },
+    "xp_boost_x2":   { "rarity": "rare",   "tier": "T3", "power": 16, "comment": "10 боёв XP×2.0" },
+
+    "gold_hunt":     { "rarity": "rare",   "tier": "T1", "power": 12, "comment": "+20% золото 24ч" },
+    "xp_hunt":       { "rarity": "rare",   "tier": "T1", "power": 12, "comment": "+50% опыт 24ч" },
+    "stat_reset":    { "rarity": "epic",   "tier": "T2", "power": 20, "comment": "Сброс статов" },
+
+    "res_30":        { "rarity": "common", "tier": "T2", "power": 30, "comment": "10×воскрешений 30%" },
+    "res_60":        { "rarity": "rare",   "tier": "T2", "power": 30, "comment": "10×воскрешений 60%" },
+    "res_100":       { "rarity": "epic",   "tier": "T2", "power": 30, "comment": "10×воскрешений 100%" },
+
+    "damage_25":     { "rarity": "rare",   "tier": "T2", "power": 25, "comment": "+25% урона по боссу" },
+    "power_10":      { "rarity": "rare",   "tier": "T1", "power": 10, "comment": "+10% урона стак" },
+    "defense_20":    { "rarity": "rare",   "tier": "T2", "power": 20, "comment": "+20% защита" },
+    "dodge_10":      { "rarity": "rare",   "tier": "T1", "power": 10, "comment": "+10% уворот" },
+    "crit_10":       { "rarity": "rare",   "tier": "T2", "power": 12, "comment": "+10% крит" },
+
+    "scroll_str_3":     { "rarity": "common", "tier": "T1", "power": 3,  "comment": "Сила +3, 1 бой" },
+    "scroll_end_3":     { "rarity": "common", "tier": "T1", "power": 3,  "comment": "Ловкость +3, 1 бой" },
+    "scroll_crit_3":    { "rarity": "common", "tier": "T1", "power": 4,  "comment": "Интуиция +3, 1 бой" },
+    "scroll_armor_6":   { "rarity": "common", "tier": "T1", "power": 5,  "comment": "Броня +6%, 1 бой" },
+    "scroll_hp_100":    { "rarity": "common", "tier": "T1", "power": 4,  "comment": "+100 HP, 1 бой" },
+    "scroll_warrior":   { "rarity": "common", "tier": "T2", "power": 4,  "comment": "Сила+2/Ловк+2 — комбо" },
+    "scroll_shadow":    { "rarity": "common", "tier": "T2", "power": 4,  "comment": "Ловк+3/Уворот+3% — комбо" },
+    "scroll_fury":      { "rarity": "common", "tier": "T2", "power": 5,  "comment": "Сила+4/Крит+2 — комбо" },
+    "scroll_vampire_g": { "rarity": "rare",   "tier": "T1", "power": 9,  "comment": "Вампиризм 9%, 1 бой" },
+
+    "scroll_str_6":     { "rarity": "rare",   "tier": "T1", "power": 6,  "comment": "Сила +6 × 3 боя" },
+    "scroll_end_6":     { "rarity": "rare",   "tier": "T1", "power": 6,  "comment": "Ловкость +6 × 3 боя" },
+    "scroll_crit_6":    { "rarity": "rare",   "tier": "T1", "power": 7,  "comment": "Интуиция +6 × 3 боя" },
+    "scroll_dodge_5":   { "rarity": "rare",   "tier": "T1", "power": 7,  "comment": "Уворот +5% × 3 боя" },
+    "scroll_armor_10":  { "rarity": "rare",   "tier": "T2", "power": 8,  "comment": "Броня +10% × 3 боя" },
+    "scroll_hp_200":    { "rarity": "rare",   "tier": "T1", "power": 7,  "comment": "+200 HP × 3 боя" },
+    "scroll_double_10": { "rarity": "rare",   "tier": "T2", "power": 10, "comment": "Двойной +10% × 3 боя" },
+    "scroll_all_4":     { "rarity": "rare",   "tier": "T2", "power": 12, "comment": "Все пассивки +4, 1 бой" },
+    "scroll_bastion":   { "rarity": "rare",   "tier": "T2", "power": 10, "comment": "Ловк+5/Броня+8% × 3" },
+    "scroll_predator":  { "rarity": "rare",   "tier": "T2", "power": 10, "comment": "Крит+5/Двойн+8% × 3" },
+    "scroll_berserker": { "rarity": "rare",   "tier": "T2", "power": 12, "comment": "Сила+8/Броня−5% × 3" },
+    "scroll_accuracy":  { "rarity": "rare",   "tier": "T1", "power": 6,  "comment": "Точность +15% × 3" },
+    "scroll_vampire_d": { "rarity": "rare",   "tier": "T2", "power": 12, "comment": "Вампиризм 15% × 3" },
+
+    "exchange_small":   { "rarity": "common", "tier": "T1", "power": 5,  "comment": "5💎 → 350🪙 (обмен)" },
+    "exchange_medium":  { "rarity": "common", "tier": "T2", "power": 15, "comment": "15💎 → 1100🪙" },
+    "exchange_large":   { "rarity": "common", "tier": "T3", "power": 50, "comment": "50💎 → 4000🪙" },
+
+    "box_common":       { "rarity": "common", "tier": "T2", "power": 9,  "comment": "Обычный ящик 150🪙" },
+    "box_rare":         { "rarity": "rare",   "tier": "T2", "power": 11, "comment": "Редкий ящик 50💎" },
+    "box_rare_c":       { "rarity": "rare",   "tier": "T3", "power": 10, "comment": "Редкий ящик+ 80💎" },
+    "box_epic_e2":      { "rarity": "epic",   "tier": "T3", "power": 30, "comment": "Эпический Удача (free drop)" },
+    "box_epic_e3":      { "rarity": "epic",   "tier": "T3", "power": 30, "comment": "Эпический Воин (free drop)" },
+
+    "wb_gold_chest":    { "rarity": "common", "tier": "T2", "power": 10, "comment": "Золотой сундук рейда (drop)" },
+    "wb_diamond_chest": { "rarity": "rare",   "tier": "T3", "power": 15, "comment": "Алмазный сундук рейда (drop)" },
+
+    "scroll_str_12":    { "rarity": "epic", "tier": "T2", "power": 60, "comment": "Сила +12 × 5 боёв (USDT)" },
+    "scroll_end_12":    { "rarity": "epic", "tier": "T2", "power": 60, "comment": "Ловкость +12 × 5 боёв (USDT)" },
+    "scroll_stam_12":   { "rarity": "epic", "tier": "T2", "power": 60, "comment": "Выносливость +12 × 5 (USDT)" },
+    "scroll_crit_12":   { "rarity": "epic", "tier": "T2", "power": 60, "comment": "Интуиция +12 × 5 (USDT)" },
+    "scroll_hp_500":    { "rarity": "epic", "tier": "T2", "power": 84, "comment": "+500 HP × 7 боёв (USDT)" },
+    "scroll_all_12":    { "rarity": "epic", "tier": "T3", "power": 80, "comment": "Все пассивки +12 × 5 (USDT)" },
+    "scroll_titan":     { "rarity": "legendary", "tier": "T2", "power": 60, "comment": "Все статы +15 × 3 — легенда" }
+  }
+}
