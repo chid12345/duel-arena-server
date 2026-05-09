@@ -54,11 +54,13 @@ Object.assign(WorldBossScene.prototype, {
       const totTxt = p.damage >= 1000 ? (p.damage/1000).toFixed(1)+'k' : String(p.damage);
       const cls  = 'wbp-row' + (p.is_dead ? ' dead' : '') + (flash.has(p.user_id) ? ' flash' : '');
       // Последний удар: иконка + число
+      // last_dmg из памяти сервера; fallback — среднее по ударам
+      const effDmg = p.last_dmg > 0 ? p.last_dmg : (p.hits > 0 ? Math.round(p.damage / p.hits) : 0);
       let lastTxt, lastC;
       if (p.is_dead) { lastTxt = '💀'; lastC = '#884444'; }
-      else if (p.last_dmg > 0) {
+      else if (effDmg > 0) {
         const ico = p.last_action === 'crit' ? '✨' : '⚔';
-        const num = p.last_dmg >= 1000 ? (p.last_dmg/1000).toFixed(1)+'k' : p.last_dmg;
+        const num = effDmg >= 1000 ? (effDmg/1000).toFixed(1)+'k' : effDmg;
         lastTxt = ico + ' ' + num;
         lastC = p.last_action === 'crit' ? '#ffdd44' : '#00ccff';
       } else { lastTxt = '· · ·'; lastC = '#334455'; }
@@ -106,7 +108,7 @@ Object.assign(WorldBossScene.prototype, {
         '<div class="wbpc-stats">' +
           '<div class="wbpc-stat"><div class="wbpc-sl">УРОН</div><div class="wbpc-sv">' + (p.damage||0).toLocaleString() + '</div></div>' +
           '<div class="wbpc-stat"><div class="wbpc-sl">ВКЛАД</div><div class="wbpc-sv">' + pct + '%</div></div>' +
-          '<div class="wbpc-stat"><div class="wbpc-sl">ПОСЛЕДНИЙ</div><div class="wbpc-sv" style="font-size:13px;color:' + (p.last_action==='crit'?'#ffdd44':'#00ccff') + '">' + (p.is_dead?'💀':(p.last_action==='crit'?'✨ ':'⚔ ')+(p.last_dmg>0?(p.last_dmg>=1000?(p.last_dmg/1000).toFixed(1)+'k':p.last_dmg):'—')) + '</div></div>' +
+          '<div class="wbpc-stat"><div class="wbpc-sl">ПОСЛЕДНИЙ</div><div class="wbpc-sv" style="font-size:13px;color:' + (p.last_action==='crit'?'#ffdd44':'#00ccff') + '">' + (function(){ var d=p.last_dmg>0?p.last_dmg:(p.hits>0?Math.round(p.damage/p.hits):0); return p.is_dead?'💀':(p.last_action==='crit'?'✨ ':'⚔ ')+(d>0?(d>=1000?(d/1000).toFixed(1)+'k':d):'—'); }()) + '</div></div>' +
         '</div>' +
         '<button class="wbpc-close">Закрыть</button>' +
       '</div>';

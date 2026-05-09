@@ -118,7 +118,7 @@ class WorldBossHitsMixin:
         cur = conn.cursor()
         cur.execute(
             "SELECT ps.user_id, p.username, p.level, p.warrior_type, "
-            "ps.current_hp, ps.max_hp, ps.is_dead, ps.total_damage, "
+            "ps.current_hp, ps.max_hp, ps.is_dead, ps.total_damage, ps.hits_count, "
             "ps.last_hit_at "
             "FROM world_boss_player_state ps "
             "JOIN players p ON p.user_id = ps.user_id "

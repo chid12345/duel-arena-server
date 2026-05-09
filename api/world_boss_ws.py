@@ -138,6 +138,7 @@ def _build_participants_block(db, spawn_id: int) -> list:
             "is_dead": bool(int(r.get("is_dead") or 0)),
             "damage": int(r.get("total_damage") or 0),
             "last_hit_ago": last_hit_ago,
+            "hits": int(r.get("hits_count") or 0),
             "last_action": _last_actions.get(uid, "atk"),
             "last_dmg": _last_dmg.get(uid, 0),
         })
