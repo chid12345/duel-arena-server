@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Боевой пропуск — Duel Arena</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link rel="stylesheet" href="/season_pass.css">
+</head>
+<body>
+
+<header class="bp-header">
+  <div class="bp-back" onclick="goBack()">‹</div>
+  <div class="bp-title">
+    <div class="bp-season-name" id="season-name">Загрузка…</div>
+    <div class="bp-season-meta" id="season-meta"></div>
+  </div>
+</header>
+
+<section class="bp-progress-card">
+  <div class="bp-progress-row">
+    <div class="bp-level-big" id="level-big">—</div>
+    <div class="bp-level-info">
+      <div class="bp-points" id="points-text">— BP</div>
+      <div class="bp-bar"><div class="bp-bar-fill" id="bar-fill"></div></div>
+      <div class="bp-next" id="next-text"></div>
+    </div>
+  </div>
+  <div class="bp-premium-row" id="premium-row"></div>
+</section>
+
+<section class="bp-track-header">
+  <div class="bp-track-label bp-free">FREE</div>
+  <div class="bp-level-num">УРОВЕНЬ</div>
+  <div class="bp-track-label bp-prem">PREMIUM</div>
+</section>
+
+<section class="bp-levels" id="bp-levels">
+  <div class="bp-loading">Загружаем награды…</div>
+</section>
+
+<div id="toast" class="bp-toast"></div>
+
+<script src="/season_pass.js"></script>
+</body>
+</html>

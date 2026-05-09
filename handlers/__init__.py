@@ -30,6 +30,8 @@ def register_all(app):
     app.add_handler(CommandHandler("agent_code", BotHandlers.agent_code_command))
     app.add_handler(CommandHandler("admin", BotHandlers.admin_balance_command))
     app.add_handler(CommandHandler("admin_balance", BotHandlers.admin_balance_command))
+    app.add_handler(CommandHandler("pass", BotHandlers.battle_pass_command))
+    app.add_handler(CommandHandler("battle_pass", BotHandlers.battle_pass_command))
     app.add_handler(CallbackQueryHandler(CallbackHandlers.handle_callback))
     app.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, BotHandlers.successful_payment_handler))
