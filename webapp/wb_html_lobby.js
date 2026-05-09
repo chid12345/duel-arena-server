@@ -40,9 +40,9 @@ window.WBHtml = (() => {
     crit_10:    { icon:'🎯', name:'КРИТ ШАНС', val:'+10%', price:'40 🪙' },
   };
   const RES_META = [
-    { id:'res_30',  icon:'💊', pct:'30%',  price:'500 🪙',  desc:'Восстанавливает 30% HP после гибели' },
-    { id:'res_60',  icon:'💉', pct:'60%',  price:'1 500 🪙', desc:'Восстанавливает 60% HP после гибели' },
-    { id:'res_100', icon:'✨', pct:'100%', price:'3 000 🪙', desc:'Полное воскрешение с 100% HP', gold:true },
+    { id:'res_30',  icon:'💊', pct:'30%',  price:'500 🪙',  cur:'gold',     desc:'30% HP · 10 зарядов' },
+    { id:'res_60',  icon:'💉', pct:'60%',  price:'40 💎',   cur:'diamonds', desc:'60% HP · 10 зарядов' },
+    { id:'res_100', icon:'✨', pct:'100%', price:'80 💎',   cur:'diamonds', desc:'100% HP · 10 зарядов', gold:true },
   ];
   const BOSS_TYPE_STYLE = {
     universal: { hdr:'rgba(60,20,90,.97)',  border:'rgba(150,80,255,.55)', badge:'#cc88ff', label:'УНИВЕРСАЛЬНЫЙ' },
@@ -85,17 +85,20 @@ window.WBHtml = (() => {
       </div>`;
     }).join('');
 
-    // Карточки воскрешения — ИНФО-режим без активной покупки.
-    // Свитки реально покупаются в боевом окне после смерти (там же кнопки),
-    // здесь дублирование не нужно — оставляем только справку.
+    // Карточки воскрешения — кнопки покупки. Купить можно ДО рейда, использовать — после смерти в бою.
     const resHTML = RES_META.map(r => {
+      const qty = res[r.id] || 0;
       const gc = r.gold ? ' style="color:#ffdd44"' : '';
-      return `<div class="wb-rc info">
-        <div class="wb-rh"${r.gold?' style="border-color:rgba(255,200,0,.15)"':''}><div class="wb-ri">${r.icon}</div>
+      const hasBorder = r.gold ? 'border-color:rgba(255,200,0,.22)' : '';
+      return `<div class="wb-rc" data-act="buy-res" data-id="${r.id}" style="${hasBorder}">
+        <div class="wb-rh"><div class="wb-ri">${r.icon}</div>
           <div class="wb-rh-pct"${gc}>${r.pct}</div></div>
-        <div class="wb-rb"><div class="wb-rb-cnt"${gc}>${res[r.id]||0}</div>
-          <div class="wb-rb-lbl">В ЗАПАСЕ</div><div class="wb-rb-desc">${r.desc}</div>
-          <div class="wb-rprice"${gc}>${r.price}</div></div>
+        <div class="wb-rb">
+          <div class="wb-rb-cnt"${qty>0?` style="color:#22dd88"`:''}>×${qty}</div>
+          <div class="wb-rb-lbl">В ЗАПАСЕ</div>
+          <div class="wb-rb-desc">${r.desc}</div>
+          <div class="wb-rprice"${gc}>${r.price}</div>
+        </div>
       </div>`;
     }).join('');
 
@@ -183,7 +186,7 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
 </div>
 <div class="wb-cp on" data-cp="boosts"><div class="wb-bgrid">${boostsHTML}</div></div>
 <div class="wb-cp" data-cp="revival">
-  <div class="wb-rev-info">🛡 Свитки воскрешения покупаются <b>после смерти</b> в бою — кнопка появится прямо в боевом окне. Эта вкладка только показывает цены и твой запас.</div>
+  <div class="wb-rev-info">🛡 Купи свиток <b>ДО</b> рейда — 1 покупка = 10 зарядов. В бою после смерти кнопки появятся автоматически, если заряды есть.</div>
   <div class="wb-rgrid">${resHTML}</div>
 </div>
 <div class="wb-cp" data-cp="history"><div class="wb-hist">${topRows}</div></div>`;

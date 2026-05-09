@@ -217,10 +217,10 @@ window.WBLobbyCSS = (() => {
   font-size:9.5px;line-height:1.45;color:rgba(200,225,255,.78);letter-spacing:.2px;}
 .wb-rev-info b{color:#ff66bb;text-shadow:0 0 4px rgba(255,102,187,.5);}
 .wb-rgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;padding:3px 10px 8px;}
-.wb-rc{border-radius:8px;overflow:hidden;transition:all .2s;
+.wb-rc{border-radius:8px;overflow:hidden;transition:all .15s;cursor:pointer;
   background:linear-gradient(135deg,rgba(25,0,20,.97),rgba(10,0,12,.97));border:1px solid rgba(255,80,180,.2);}
-/* info-режим — без cursor:pointer и hover-эффекта (карточка только показывает цену/запас) */
-.wb-rc.info{cursor:default;}
+.wb-rc:hover{border-color:rgba(255,80,180,.55);background:linear-gradient(135deg,rgba(35,0,28,.99),rgba(15,0,18,.99));}
+.wb-rc:active{transform:scale(.96);}
 .wb-rh{padding:5px 5px 4px;text-align:center;
   background:linear-gradient(135deg,rgba(255,0,150,.08),rgba(200,0,100,.04));border-bottom:1px solid rgba(255,80,180,.12);}
 .wb-ri{font-size:14px;filter:drop-shadow(0 0 4px rgba(255,80,180,.6));}
@@ -229,10 +229,9 @@ window.WBLobbyCSS = (() => {
 .wb-rb-cnt{font-size:11px;font-weight:900;color:#00e5ff;text-shadow:0 0 4px currentColor;}
 .wb-rb-lbl{font-size:6px;color:#446688;letter-spacing:1px;margin-bottom:2px;}
 .wb-rb-desc{font-size:6px;color:rgba(255,255,255,.5);margin-bottom:3px;line-height:1.2;}
-/* Цена без интерактивного вида — просто пилюля с надписью, не кнопка */
 .wb-rprice{padding:3px 0;border-radius:5px;font-size:9px;font-weight:900;text-align:center;
-  background:rgba(255,200,0,.05);border:1px dashed rgba(255,200,0,.28);
-  color:#ffdd44;letter-spacing:.3px;cursor:default;opacity:.85;}
+  background:rgba(255,80,180,.12);border:1px solid rgba(255,80,180,.4);
+  color:#ff88dd;letter-spacing:.3px;}
 
 /* ── История ── */
 .wb-hist{padding:6px 14px 14px;display:flex;flex-direction:column;gap:5px;}

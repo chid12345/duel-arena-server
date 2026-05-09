@@ -47,7 +47,7 @@ Object.assign(WorldBossScene.prototype, {
       const r = await post('/api/shop/buy', { item_id: iid });
       if (r.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
-        this._toast('🕯️ Свитки → инвентарь');
+        this._toast('🕯️ +10 зарядов воскрешения в инвентаре!');
         this._refresh();
         ok = true;
       } else {
