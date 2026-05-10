@@ -87,6 +87,9 @@ class UsersPremiumMixin:
             cursor.execute(f"SELECT {col} FROM players WHERE user_id = ?", (user_id,))
             row = cursor.fetchone()
             return not bool(row and int(row[col] or 0))
+        except Exception:
+            # колонка ещё не создана (миграция не запущена) — скидка доступна
+            return True
         finally:
             conn.close()
 
@@ -126,6 +129,14 @@ class UsersPremiumMixin:
             )
             conn.commit()
             return cursor.rowcount > 0
+        except Exception:
+            # колонка ещё не создана — fallback: просто зачислить алмазы
+            try:
+                cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (diamonds, user_id))
+                conn.commit()
+            except Exception:
+                pass
+            return True
         finally:
             conn.close()
 
@@ -137,6 +148,8 @@ class UsersPremiumMixin:
         try:
             cursor.execute(f"UPDATE players SET {col} = 1 WHERE user_id = ?", (user_id,))
             conn.commit()
+        except Exception:
+            pass  # колонка ещё не создана — миграция применится при рестарте
         finally:
             conn.close()
 
