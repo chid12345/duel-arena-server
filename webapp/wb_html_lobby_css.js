@@ -222,6 +222,9 @@ window.WBLobbyCSS = (() => {
   background:linear-gradient(135deg,rgba(25,0,20,.97),rgba(10,0,12,.97));border:1px solid rgba(255,80,180,.2);}
 .wb-rc:hover{border-color:rgba(255,80,180,.55);background:linear-gradient(135deg,rgba(35,0,28,.99),rgba(15,0,18,.99));}
 .wb-rc:active{transform:scale(.96);}
+.wb-rc-info{cursor:default;opacity:.9;}
+.wb-rc-info:hover{border-color:rgba(255,80,180,.2);background:linear-gradient(135deg,rgba(25,0,20,.97),rgba(10,0,12,.97));}
+.wb-rc-info:active{transform:none;}
 .wb-rh{padding:5px 5px 4px;text-align:center;
   background:linear-gradient(135deg,rgba(255,0,150,.08),rgba(200,0,100,.04));border-bottom:1px solid rgba(255,80,180,.12);}
 .wb-ri{font-size:14px;filter:drop-shadow(0 0 4px rgba(255,80,180,.6));}

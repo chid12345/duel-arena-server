@@ -85,17 +85,14 @@ window.WBHtml = (() => {
       </div>`;
     }).join('');
 
-    // Карточки воскрешения — кнопки покупки. Купить можно ДО рейда, использовать — после смерти в бою.
+    // Карточки воскрешения — только информация о ценах (покупка происходит в бою после смерти).
     const resHTML = RES_META.map(r => {
-      const qty = res[r.id] || 0;
       const gc = r.gold ? ' style="color:#ffdd44"' : '';
       const hasBorder = r.gold ? 'border-color:rgba(255,200,0,.22)' : '';
-      return `<div class="wb-rc" data-act="buy-res" data-id="${r.id}" style="${hasBorder}">
+      return `<div class="wb-rc wb-rc-info" style="${hasBorder}">
         <div class="wb-rh"><div class="wb-ri">${r.icon}</div>
           <div class="wb-rh-pct"${gc}>${r.pct}</div></div>
         <div class="wb-rb">
-          <div class="wb-rb-cnt"${qty>0?` style="color:#22dd88"`:''}>×${qty}</div>
-          <div class="wb-rb-lbl">В ЗАПАСЕ</div>
           <div class="wb-rb-desc">${r.desc}</div>
           <div class="wb-rprice"${gc}>${r.price}</div>
         </div>
