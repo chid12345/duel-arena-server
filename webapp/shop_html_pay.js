@@ -230,7 +230,7 @@ window.ShopHtmlPay = {
       const uRow = uItem
         ? `<div class="sh-dual-row" data-usdt="${uItem.id}"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${uItem.usdt}</span><button class="sh-btn btn-u">КУПИТЬ</button></div>`
         : '';
-      return `<div class="sh-card r-${r}" style="justify-content:flex-start"><div class="sh-ico">${_dualIco(item)}</div><div class="sh-nm">${name}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
+      return `<div class="sh-card r-${r}" style="justify-content:flex-start" data-s-id="${sItem?.id||''}" data-u-id="${uItem?.id||''}" data-combined="1"><div class="sh-ico">${_dualIco(item)}</div><div class="sh-nm">${name}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
     }
     function _cardDiaDual(sItem, uItem) {
       const label = sItem ? `${sItem.diamonds} 💎` : `${uItem.diamonds} 💎`;
@@ -240,7 +240,7 @@ window.ShopHtmlPay = {
       const uRow = uItem
         ? `<div class="sh-dual-row" data-usdt="${uItem.id}"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${uItem.usdt}</span><button class="sh-btn btn-u">КУПИТЬ</button></div>`
         : '';
-      return `<div class="sh-card r-r" style="justify-content:flex-start"><div class="sh-ico">💎</div><div class="sh-nm">${label}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
+      return `<div class="sh-card r-r" style="justify-content:flex-start" data-s-id="${sItem?.id||''}" data-u-id="${uItem?.id||''}" data-combined="1"><div class="sh-ico">💎</div><div class="sh-nm">${label}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
     }
     function _cardResetDual(sItem, uItem) {
       const sRow = sItem
@@ -249,7 +249,7 @@ window.ShopHtmlPay = {
       const uRow = uItem
         ? `<div class="sh-dual-row" data-usdt="${uItem.id}"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${uItem.usdt}</span><button class="sh-btn btn-danger">СБРОС</button></div>`
         : '';
-      return `<div class="sh-card r-d" style="justify-content:flex-start"><div class="sh-ico"><img src="reset_icon.png?v=2" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
+      return `<div class="sh-card r-d" style="justify-content:flex-start" data-s-id="${sItem?.id||''}" data-u-id="${uItem?.id||''}" data-combined="1"><div class="sh-ico"><img src="reset_icon.png?v=2" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
     }
 
     let html = '';
@@ -307,6 +307,13 @@ window.ShopHtmlPay = {
     // Bind dual-row USDT buttons
     el.querySelectorAll('.sh-dual-row[data-usdt] button').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(btn.closest('[data-usdt]').dataset.usdt); });
+    });
+    // Клик по карточке целиком → детальная модалка с двумя кнопками оплаты
+    el.querySelectorAll('[data-combined]').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        ShopHtmlPay._showCombinedDetail(card.dataset.sId || null, card.dataset.uId || null);
+      });
     });
   },
 
