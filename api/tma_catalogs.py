@@ -24,7 +24,7 @@ SHOP_CATALOG = {
     "xp_boost_x2":   {"name": "XP Буст ×2.0",         "price": 6,   "currency": "diamonds", "icon": "🚀", "tab": "consumables", "desc": "10 боёв XP ×2.0",       "inventory": True},
     "gold_hunt":     {"name": "Охота за золотом",      "price": 5,   "currency": "diamonds", "icon": "💰", "tab": "consumables", "desc": "+20% золото за бой, 24 ч", "inventory": True},
     "xp_hunt":       {"name": "Охота за опытом",       "price": 8,   "currency": "diamonds", "icon": "📚", "tab": "consumables", "desc": "+50% опыта за бой, 24 ч",  "inventory": True},
-    "stat_reset":    {"name": "Сброс статов",          "price": 75,  "currency": "diamonds", "icon": "🔄", "tab": "consumables", "desc": "Сбросить все статы"},
+    "stat_reset":    {"name": "Сброс статов",          "price": 75,  "currency": "diamonds", "icon": "🔄", "tab": "boxes",       "desc": "Сбросить все статы"},
 
     # ── Свитки воскрешения (для рейда Мирового босса, 10 зарядов в пачке) ───
     "res_30":        {"name": "Свиток воскрешения +30%",  "price": 80,  "currency": "gold",     "icon": "🕯️", "tab": "resurrection", "desc": "10 воскрешений с 30% HP (рейд босса)", "inventory": True},

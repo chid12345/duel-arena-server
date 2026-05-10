@@ -18,7 +18,6 @@ Object.assign(ShopScene.prototype, {
         { id: 'xp_boost_x2', icon: '🚀', name: 'XP Буст ×2.0',    price: 6,   currency: 'diamonds', desc: '10 боёв → инвентарь' },
         { id: 'gold_hunt',   icon: '💰', name: 'Охота за золотом', price: 5,   currency: 'diamonds', desc: '+20% золото · 24ч → инвентарь' },
         { id: 'xp_hunt',     icon: '📚', name: 'Охота за опытом',  price: 8,   currency: 'diamonds', desc: '+50% опыта · 24ч → инвентарь' },
-        { id: 'stat_reset',  icon: '🔄', name: 'Сброс статов',    price: 75,  currency: 'diamonds', desc: 'Сброс всех статов' },
       ];
     }
     if (this._tab === 'scrolls') {
@@ -54,6 +53,7 @@ Object.assign(ShopScene.prototype, {
         { id: 'exchange_small',  icon: '💱', name: '5💎 → 450🪙',       price: 5,   currency: 'diamonds', desc: 'Обмен алмазы → золото' },
         { id: 'exchange_medium', icon: '💱', name: '15💎 → 1400🪙',     price: 15,  currency: 'diamonds', desc: 'Лучший курс' },
         { id: 'exchange_large',  icon: '💱', name: '50💎 → 5000🪙',     price: 50,  currency: 'diamonds', desc: 'Максимальный курс' },
+        { id: 'stat_reset',      icon: '🔄', name: 'Сброс статов',      price: 75,  currency: 'diamonds', desc: 'Сброс всех статов' },
         { id: 'box_common',      icon: '📦', name: 'Обычный ящик',       price: 150, currency: 'gold',     desc: '2–4 свитка · шанс на алмазный' },
         { id: 'box_rare',        icon: '🟦', name: 'Редкий ящик',        price: 20,  currency: 'diamonds', desc: '3–6 алмазных свитков' },
         { id: 'box_rare_c',      icon: '🟪', name: 'Редкий ящик+',       price: 30,  currency: 'diamonds', desc: '2+ алмазных · шанс 300💎 и Premium' },

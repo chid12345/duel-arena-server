@@ -13,7 +13,6 @@ const DATA = {
     ['xp_boost_x2', '🚀','XP Буст ×2.0',      6, 'diamonds','10 боёв → инвентарь',    '10 БОЁВ',false],
     ['gold_hunt',   '💰','Охота за золотом',   5, 'diamonds','+20% золото · 24ч',      '24 ЧАСА',false],
     ['xp_hunt',     '📚','Охота за опытом',    8, 'diamonds','+50% опыта · 24ч',       '24 ЧАСА',false],
-    ['stat_reset',  '🔄','Сброс статов',      75, 'diamonds','Сброс всех статов',       null,   false],
   ],
   scrolls: [
     ['scroll_str_3',    '⚔️','Эликсир силы +3',     20, 'gold',   'Сила +3 · 1 бой',         '1 БОЙ', false],
@@ -43,6 +42,7 @@ const DATA = {
     ['exchange_small', 'img:exchange.png','5💎 → 450🪙',     5,  'diamonds','Обмен алмазы → золото', null, false],
     ['exchange_medium','img:exchange.png','15💎 → 1400🪙',   15,  'diamonds','Лучший курс',            null, false],
     ['exchange_large', 'img:exchange.png','50💎 → 5000🪙',   50,  'diamonds','Максимальный курс',      null, false],
+    ['stat_reset',     '🔄','Сброс статов',       75, 'diamonds','Сброс всех статов',     null,   false],
     ['box_common',  'img:chest_gold.png',   'Обычный ящик',  150, 'gold',    '2–4 золотых свитка · 5% алмазный свиток · 3% +10–20💎', null, false],
     ['box_rare',    'img:chest_diamond.png','Редкий ящик',    20,  'diamonds','3–6 алмазных свитков · 5% USDT-свиток · 3% +100💎 · 3% Premium 3 дн.', null, false],
     ['box_rare_c',  'img:chest_diamond.png','Редкий ящик+',   30,  'diamonds','2 гарант. алмазных + 0–4 бонус · 5% USDT-свиток · 5% +300💎 · 3% Premium 3 дн.', null, false],
