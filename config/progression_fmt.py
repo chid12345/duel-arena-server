@@ -54,7 +54,7 @@ DEFEAT_EXP = 0
 # XP за поражение: доля от гипотетического XP «как за победу» (тот же уровень, множитель разницы уровней, урон по max_hp победителя); золото не начисляется
 DEFEAT_XP_AS_WIN_FRACTION = 0.10
 # Premium: бонус к XP за бой (победа и поражение), после зелья ×1.5 из магазина
-PREMIUM_XP_BONUS_PERCENT = 30
+PREMIUM_XP_BONUS_PERCENT = 25
 PREMIUM_XP_MULTIPLIER = 1.0 + PREMIUM_XP_BONUS_PERCENT / 100.0
 MAX_LEVEL = max_level_from_table()
 

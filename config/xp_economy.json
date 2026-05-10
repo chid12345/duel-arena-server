@@ -13,7 +13,7 @@
     "XP_TO_NEXT_BREAK2": 60,
     "XP_TO_NEXT_BREAK1_BONUS": 5,
     "XP_TO_NEXT_BREAK2_BONUS": 5,
-    "PREMIUM_XP_BUFF": 1.30,
+    "PREMIUM_XP_BUFF": 1.25,
     "MAX_LEVEL": 80
   },
   "task_xp_per_pu": {

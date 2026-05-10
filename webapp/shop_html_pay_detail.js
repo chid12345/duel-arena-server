@@ -68,7 +68,7 @@ function _row(ico, txt, val, valCls = 'vc') {
 // ── Контент-блок по типу товара ───────────────────────────────────────────────
 function _contentRows(base, { isPrem, isReset, isBox, isLeg, isDia, sid }) {
   if (isPrem) return [
-    _row('⭐', 'Бонус XP',        '+30%', 'vc'),
+    _row('⭐', 'Бонус XP',        '+25%', 'vc'),
     _row('💰', 'Бонус Золото',    '+25%', 'vc'),
     _row('📦', 'Ежедневный ящик', 'каждый день', 'vg'),
     _row('💎', 'Алмазы',          '+200 при активации', 'vp'),
@@ -250,7 +250,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     const p = [...(d.stars || []), ...(d.stars_scrolls || [])].find(x => x.id === id);
     if (!p) return;
     if (p.id === 'premium' || p.premium) {
-      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+30% XP · ежедневный ящик · 200 💎 · значок премиум', price:p.stars, currency:'stars', rarity:'e', actionLabel:`Активировать ⭐ ${p.stars}`, action:() => ShopHtmlPay._buyStars(id) });
+      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP · ежедневный ящик · 200 💎 · значок премиум', price:p.stars, currency:'stars', rarity:'e', actionLabel:`Активировать ⭐ ${p.stars}`, action:() => ShopHtmlPay._buyStars(id) });
       return;
     }
     if (p.full_reset) {
@@ -269,7 +269,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
       return;
     }
     if (p.premium) {
-      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+30% XP · ежедневный ящик · 200 💎 · значок премиум', price:p.usdt, currency:'usdt', rarity:'e', actionLabel:`Активировать 💲 ${p.usdt}`, action:() => ShopHtmlPay._buyCrypto(id) });
+      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP · ежедневный ящик · 200 💎 · значок премиум', price:p.usdt, currency:'usdt', rarity:'e', actionLabel:`Активировать 💲 ${p.usdt}`, action:() => ShopHtmlPay._buyCrypto(id) });
       return;
     }
     ShopHtmlPay._showCombinedDetail(null, id);
