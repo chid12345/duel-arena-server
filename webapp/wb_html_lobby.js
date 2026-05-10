@@ -40,9 +40,9 @@ window.WBHtml = (() => {
     crit_10:    { icon:'🎯', name:'КРИТ ШАНС', val:'+10%', price:'4 💎' },
   };
   const RES_META = [
-    { id:'res_30',  icon:'💊', pct:'30%',  price:'80 🪙',   cur:'gold', desc:'Воскреснуть с 30% HP' },
-    { id:'res_60',  icon:'💉', pct:'60%',  price:'150 🪙',  cur:'gold', desc:'Воскреснуть с 60% HP' },
-    { id:'res_100', icon:'✨', pct:'100%', price:'250 🪙',  cur:'gold', desc:'Воскреснуть со 100% HP', gold:true },
+    { id:'res_30',  icon:'💊', pct:'30%',  price:'80 🪙',   cur:'gold', desc:'Воскреснуть с 30% HP',   gold:true },
+    { id:'res_60',  icon:'💉', pct:'60%',  price:'150 🪙',  cur:'gold', desc:'Воскреснуть с 60% HP',   gold:true },
+    { id:'res_100', icon:'✨', pct:'100%', price:'250 🪙',  cur:'gold', desc:'Воскреснуть со 100% HP',  gold:true },
   ];
   const BOSS_TYPE_STYLE = {
     universal: { hdr:'rgba(60,20,90,.97)',  border:'rgba(150,80,255,.55)', badge:'#cc88ff', label:'УНИВЕРСАЛЬНЫЙ' },

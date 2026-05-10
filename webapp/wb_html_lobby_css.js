@@ -199,8 +199,8 @@ window.WBLobbyCSS = (() => {
 .bc-vl{font-family:'Courier New',monospace;font-size:11px;font-weight:900;color:#00FF9F;
   text-shadow:0 0 6px rgba(0,255,159,.5);line-height:1.1;}
 .bc-buy{margin-top:3px;padding:3px 0;border-radius:5px;font-size:7px;font-weight:800;
-  text-align:center;color:#FF0055;border:1px solid rgba(255,0,85,.35);
-  background:rgba(255,0,85,.08);letter-spacing:.2px;}
+  text-align:center;color:#44ddff;border:1px solid rgba(40,200,255,.35);
+  background:rgba(40,200,255,.07);letter-spacing:.2px;}
 .bc-bought-lbl{display:none;margin-top:3px;font-size:7px;font-weight:800;letter-spacing:.5px;
   color:#00FF9F;text-align:center;}
 
@@ -234,8 +234,8 @@ window.WBLobbyCSS = (() => {
 .wb-rb-lbl{font-size:6px;color:#446688;letter-spacing:1px;margin-bottom:2px;}
 .wb-rb-desc{font-size:6px;color:rgba(255,255,255,.5);margin-bottom:3px;line-height:1.2;}
 .wb-rprice{padding:3px 0;border-radius:5px;font-size:9px;font-weight:900;text-align:center;
-  background:rgba(255,80,180,.12);border:1px solid rgba(255,80,180,.4);
-  color:#ff88dd;letter-spacing:.3px;}
+  background:rgba(220,170,0,.12);border:1px solid rgba(220,170,0,.4);
+  color:#ffcc44;letter-spacing:.3px;}
 
 /* ── История ── */
 .wb-hist{padding:6px 14px 14px;display:flex;flex-direction:column;gap:5px;}

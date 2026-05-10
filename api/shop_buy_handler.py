@@ -84,9 +84,9 @@ def _do_buy(db, uid: int, iid: str, item: dict) -> dict:
         if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
         return r
 
-    # === Свитки воскрешения (рейд босса) → 10 зарядов в инвентарь ===
+    # === Свитки воскрешения (рейд босса) → 1 воскрешение за покупку ===
     if iid in ("res_30", "res_60", "res_100"):
-        r = _buy_to_inventory(db, uid, iid, item["price"], item["currency"], quantity=10)
+        r = _buy_to_inventory(db, uid, iid, item["price"], item["currency"], quantity=1)
         if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
         return r
 
