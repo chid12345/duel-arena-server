@@ -246,6 +246,7 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
                 "exp": int(r.get("exp") or 0),
                 "diamonds": int(r.get("diamonds") or 0),
                 "chest_type": r.get("chest_type"),
+                "total_damage": int(r.get("total_damage") or 0),
             })(_get_boss_type(r.get("boss_type"))) for r in recent
         ],
         "top": wb_top,

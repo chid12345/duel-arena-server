@@ -93,12 +93,14 @@ class WorldBossSpawnsMixin:
             "       COALESCE(r.gold, 0) AS gold, "
             "       COALESCE(r.exp, 0) AS exp, "
             "       COALESCE(r.diamonds, 0) AS diamonds, "
-            "       r.chest_type AS chest_type "
+            "       r.chest_type AS chest_type, "
+            "       COALESCE(ps.total_damage, 0) AS total_damage "
             "FROM world_boss_spawns s "
             "LEFT JOIN world_boss_rewards r ON r.spawn_id = s.spawn_id AND r.user_id = ? "
+            "LEFT JOIN world_boss_player_state ps ON ps.spawn_id = s.spawn_id AND ps.user_id = ? "
             "WHERE s.status IN ('won','lost') "
             "ORDER BY s.spawn_id DESC LIMIT ?",
-            (int(user_id), int(limit)),
+            (int(user_id), int(user_id), int(limit)),
         )
         rows = cur.fetchall()
         conn.close()

@@ -99,14 +99,27 @@ window.WBHtml = (() => {
       </div>`;
     }).join('');
 
-    const topRows = (s.top||[]).slice(0,5).map((t,i)=>
-      `<div class="wb-hc"><div class="wb-hh">
-        <div class="wb-hi">${['🥇','🥈','🥉','4️⃣','5️⃣'][i]}</div>
-        <div style="flex:1"><div class="wb-hn">${_esc(t.name||'Игрок')}</div>
-          <div class="wb-hm"><span class="wb-hd">Ур.${t.level||'?'}</span><span class="wb-hdmg">⚔️${(t.damage||0).toLocaleString('ru')}</span></div>
+    const _raids = s.recent_raids || [];
+    const _CHEST = { bronze:'🥉 Бронзовый', silver:'🥈 Серебряный', gold:'🥇 Золотой', epic:'💜 Эпический' };
+    const historyHTML = _raids.length ? _raids.map(r => {
+      const won = r.status === 'won';
+      const dmg = (r.total_damage||0).toLocaleString('ru');
+      const gld = (r.gold||0).toLocaleString('ru');
+      const dia = r.diamonds > 0 ? `<span class="wb-hr-dia">💎${r.diamonds}</span>` : '';
+      const cst = r.chest_type ? `<span class="wb-hr-chest">${_CHEST[r.chest_type]||r.chest_type}</span>` : '';
+      const participated = r.total_damage > 0;
+      const sub = participated
+        ? `<span class="wb-hr-dmg">⚔️ ${dmg}</span><span class="wb-hr-gld">🪙 ${gld}</span>${dia}${cst}`
+        : `<span class="wb-hr-skip">не участвовал</span>`;
+      return `<div class="wb-hr ${won?'won':'lost'}">
+        <div class="wb-hr-em">${r.boss_emoji||'💀'}</div>
+        <div class="wb-hr-info">
+          <div class="wb-hr-name">${_esc(r.boss_name||'Мировой Босс')}</div>
+          <div class="wb-hr-sub">${sub}</div>
         </div>
-        <div class="wb-hbdg ${t.contribution>=100?'f':'p'}">${t.contribution>=100?'100%':`${t.contribution||0}%`}</div>
-      </div></div>`).join('') || '<div style="padding:14px;text-align:center;font-size:11px;color:#445;letter-spacing:1px;">История пуста</div>';
+        <div class="wb-hr-badge ${won?'won':'lost'}">${won?'🏆 ПОБЕДА':'💀 ПОРАЖЕНИЕ'}</div>
+      </div>`;
+    }).join('') : '<div class="wb-hist-empty">Вы ещё не участвовали в рейдах</div>';
 
     const top5 = (s.top||[]).slice(0,6);
     const DEF_EM = ['⚔️','🛡️','🔮','🐉','⚡','🗡️','🔥'];
@@ -187,7 +200,7 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
   <div class="wb-rev-info">🛡 Свитки покупаются <b>во время боя</b> после смерти — каждая покупка = 1 воскрешение. Кнопки появятся автоматически.</div>
   <div class="wb-rgrid">${resHTML}</div>
 </div>
-<div class="wb-cp" data-cp="history"><div class="wb-hist">${topRows}</div></div>`;
+<div class="wb-cp" data-cp="history"><div class="wb-hist">${historyHTML}</div></div>`;
   }
 
   function _buildInvChips(s) {

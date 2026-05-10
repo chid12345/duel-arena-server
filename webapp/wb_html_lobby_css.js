@@ -238,17 +238,24 @@ window.WBLobbyCSS = (() => {
   color:#ffcc44;letter-spacing:.3px;}
 
 /* ── История ── */
-.wb-hist{padding:6px 14px 14px;display:flex;flex-direction:column;gap:5px;}
-.wb-hc{border-radius:13px;overflow:hidden;background:rgba(8,0,18,.75);
-  border:1px solid rgba(255,0,200,.12);border-left:2px solid rgba(255,0,200,.35);}
-.wb-hh{display:flex;align-items:center;gap:10px;padding:9px 12px;}
-.wb-hi{font-size:18px;width:24px;text-align:center;flex-shrink:0;}
-.wb-hn{font-size:12px;font-weight:800;color:#ddd;}
-.wb-hm{display:flex;gap:8px;margin-top:2px;}
-.wb-hd{font-size:9px;color:#445566;}.wb-hdmg{font-size:9px;color:#ff4466;font-weight:700;}
-.wb-hbdg{font-size:8px;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.5px;flex-shrink:0;}
-.wb-hbdg.f{background:rgba(0,229,255,.12);color:#00e5ff;border:1px solid rgba(0,229,255,.28);}
-.wb-hbdg.p{background:rgba(255,200,0,.1);color:#ffcc44;border:1px solid rgba(255,200,0,.25);}
+.wb-hist{padding:6px 14px 14px;display:flex;flex-direction:column;gap:6px;}
+.wb-hist-empty{padding:24px 14px;text-align:center;font-size:11px;color:#334;letter-spacing:.5px;}
+.wb-hr{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;
+  background:rgba(8,0,18,.8);border:1px solid rgba(255,255,255,.06);}
+.wb-hr.won{border-left:3px solid rgba(0,229,100,.5);}
+.wb-hr.lost{border-left:3px solid rgba(255,40,80,.4);}
+.wb-hr-em{font-size:22px;flex-shrink:0;}
+.wb-hr-info{flex:1;min-width:0;}
+.wb-hr-name{font-size:11px;font-weight:800;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wb-hr-sub{display:flex;flex-wrap:wrap;gap:5px;margin-top:3px;align-items:center;}
+.wb-hr-dmg{font-size:9px;font-weight:700;color:#ff8844;}
+.wb-hr-gld{font-size:9px;font-weight:700;color:#ffcc44;}
+.wb-hr-dia{font-size:9px;font-weight:700;color:#44ddff;}
+.wb-hr-chest{font-size:8px;color:#bb88ff;font-weight:600;}
+.wb-hr-skip{font-size:9px;color:#445;font-style:italic;}
+.wb-hr-badge{flex-shrink:0;font-size:8px;font-weight:800;padding:3px 7px;border-radius:6px;letter-spacing:.4px;white-space:nowrap;}
+.wb-hr-badge.won{background:rgba(0,229,100,.12);color:#00e564;border:1px solid rgba(0,229,100,.3);}
+.wb-hr-badge.lost{background:rgba(255,40,80,.1);color:#ff5566;border:1px solid rgba(255,40,80,.3);}
 
 /* ── Инфо-попап буста ── */
 .wb-binfo-ov{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.6);
