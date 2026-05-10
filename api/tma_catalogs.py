@@ -131,6 +131,9 @@ STARS_PACKAGES = [
     {"id": "d100", "diamonds": 100, "stars": 150, "label": "100 💎"},
     {"id": "d300", "diamonds": 300, "stars": 350, "label": "300 💎"},
     {"id": "d500", "diamonds": 500, "stars": 500, "label": "500 💎"},
+    {"id": "d100_first", "diamonds": 100, "stars": 50,  "label": "100 💎", "first_purchase": True},
+    {"id": "d300_first", "diamonds": 300, "stars": 150, "label": "300 💎", "first_purchase": True},
+    {"id": "d500_first", "diamonds": 500, "stars": 200, "label": "500 💎", "first_purchase": True},
     {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
     {
         "id": "starter_pack",
@@ -179,6 +182,9 @@ CRYPTO_PACKAGES = [
     {"id": "cd100", "diamonds": 100, "label": "100 💎", "usdt": "2.99"},
     {"id": "cd300", "diamonds": 300, "label": "300 💎", "usdt": "6.99"},
     {"id": "cd500", "diamonds": 500, "label": "500 💎", "usdt": "9.99"},
+    {"id": "cd100_first", "diamonds": 100, "label": "100 💎", "usdt": "1.00", "first_purchase": True},
+    {"id": "cd300_first", "diamonds": 300, "label": "300 💎", "usdt": "3.00", "first_purchase": True},
+    {"id": "cd500_first", "diamonds": 500, "label": "500 💎", "usdt": "4.00", "first_purchase": True},
     {"id": "cdpremium", "diamonds": 0, "label": "👑 Premium", "usdt": "8.00", "premium": True},
     {
         "id": "cdstarter",

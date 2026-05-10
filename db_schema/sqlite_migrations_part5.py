@@ -35,4 +35,7 @@ MIGRATIONS_PART5 = [
     ("2026_05_10_002_starter_pack_used", [
         "ALTER TABLE players ADD COLUMN starter_pack_used INTEGER DEFAULT 0",
     ]),
+    ("2026_05_10_003_diamond_first_purchased", [
+        "ALTER TABLE players ADD COLUMN diamond_first_purchased INTEGER DEFAULT 0",
+    ]),
 ]

@@ -61,6 +61,8 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_usdt_slot = ":usdt_slot:" in custom_payload
             is_usdt_reset = ":usdt_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
+            is_diamond_first = ":diamond_first:" in custom_payload
+            diamond_first_count = int(custom_payload.split(":diamond_first:", 1)[1].strip()) if is_diamond_first else 0
             is_weapon_equip = ":weapon_equip:" in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_helmet_equip = ":helmet_equip:" in custom_payload
@@ -176,6 +178,15 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                         unlock.get("reason"),
                     )
                     await _send_tg_message(uid, "⚠️ Оплата получена, но выдача образа задержалась. Напишите в поддержку и укажите ID платежа.")
+            elif is_diamond_first and diamond_first_count > 0:
+                ok_first = db.mark_diamond_first_purchased(uid, diamond_first_count)
+                if ok_first:
+                    db.mark_items_delivered(int(invoice_id))
+                    await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamond_first_count, "source": "cryptopay_first"})
+                    await _send_tg_message(uid, f"💎 <b>+{diamond_first_count} алмазов зачислено!</b>
+🔥 Скидка первой покупки использована.
+
+⚔️ Duel Arena")
             elif is_starter_pack:
                 db.apply_starter_pack(uid)
                 db.mark_items_delivered(int(invoice_id))

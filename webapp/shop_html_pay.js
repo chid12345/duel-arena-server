@@ -242,6 +242,20 @@ window.ShopHtmlPay = {
         : '';
       return `<div class="sh-card r-r" style="justify-content:flex-start" data-s-id="${sItem?.id||''}" data-u-id="${uItem?.id||''}" data-combined="1"><div class="sh-ico">💎</div><div class="sh-nm">${label}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
     }
+    function _cardDiaFirstDual(sItem, uItem) {
+      const label = sItem ? `${sItem.diamonds} 💎` : `${uItem.diamonds} 💎`;
+      // Нормальные цены для зачёркивания
+      const normalStars = sItem ? {'100':150,'300':350,'500':500}[String(sItem.diamonds)] || '' : '';
+      const normalUsdt  = uItem ? {'100':'2.99','300':'6.99','500':'9.99'}[String(uItem.diamonds)] || '' : '';
+      const sRow = sItem
+        ? `<div class="sh-dual-row" data-stars="${sItem.id}"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${sItem.stars}<span style="font-size:7px;opacity:.5;text-decoration:line-through;margin-left:2px">${normalStars}</span></span><button class="sh-btn btn-s">КУПИТЬ</button></div>`
+        : '';
+      const uRow = uItem
+        ? `<div class="sh-dual-row" data-usdt="${uItem.id}"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${uItem.usdt}<span style="font-size:7px;opacity:.5;text-decoration:line-through;margin-left:2px">${normalUsdt}</span></span><button class="sh-btn btn-u">КУПИТЬ</button></div>`
+        : '';
+      return `<div class="sh-card r-r" style="justify-content:flex-start;border:1px solid rgba(255,170,51,.4);box-shadow:0 0 8px rgba(255,170,51,.2)" data-s-id="${sItem?.id||''}" data-u-id="${uItem?.id||''}" data-combined="1"><div class="sh-ico" style="font-size:20px;position:relative">💎<span style="position:absolute;top:-4px;right:-4px;font-size:9px">🔥</span></div><div class="sh-nm">${label}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
+    }
+
     function _cardResetDual(sItem, uItem) {
       const sRow = sItem
         ? `<div class="sh-dual-row" data-stars="${sItem.id}"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${sItem.stars}</span><button class="sh-btn btn-danger">СБРОС</button></div>`
@@ -284,9 +298,20 @@ window.ShopHtmlPay = {
     // Scrolls
     const scrPairs = _matchByScrollId(starScrolls, usdtScrolls);
     if (scrPairs.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid-d">${scrPairs.map(([s,u]) => _cardDual(s,u)).join('')}</div>`;
-    // Diamonds
+    // Diamonds — first_purchase или обычные
+    const firstAvail = !(State.player?.diamond_first_purchased);
+    const starFirst  = (d.stars  || []).filter(p => p.first_purchase);
+    const usdtFirst  = (d.crypto || []).filter(p => p.first_purchase);
+    if (firstAvail && (starFirst.length || usdtFirst.length)) {
+      const firstPairs = _matchDia(starFirst, usdtFirst);
+      html += `<div class="sh-sec" style="color:#ffaa33">🔥 Первая покупка · только 1 раз</div>`;
+      html += `<div class="sh-grid-d">${firstPairs.map(([s,u]) => _cardDiaFirstDual(s,u)).join('')}</div>`;
+      html += `<div class="sh-sec">💎 Алмазы</div>`;
+    } else {
+      html += `<div class="sh-sec">💎 Алмазы</div>`;
+    }
     const diaPairs = _matchDia(starDia, usdtDia);
-    if (diaPairs.length) html += `<div class="sh-sec">💎 Алмазы</div><div class="sh-grid-d">${diaPairs.map(([s,u]) => _cardDiaDual(s,u)).join('')}</div>`;
+    if (diaPairs.length) html += `<div class="sh-grid-d">${diaPairs.map(([s,u]) => _cardDiaDual(s,u)).join('')}</div>`;
     // Reset
     if (starReset || usdtReset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid-d">${_cardResetDual(starReset, usdtReset)}</div>`;
 

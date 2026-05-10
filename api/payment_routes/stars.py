@@ -104,6 +104,20 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             fresh = db.get_or_create_player(uid, "")
             return {"ok": True, "starter_pack_activated": True, "player": _player_api(dict(fresh))}
 
+        if pkg.get("first_purchase"):
+            if not db.is_diamond_first_available(uid):
+                fresh = db.get_or_create_player(uid, "")
+                return {"ok": False, "reason": "Скидка первой покупки уже использована.", "player": _player_api(dict(fresh))}
+            ok = db.mark_diamond_first_purchased(uid, diamonds)
+            if ok:
+                await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "stars_first"})
+                await _send_tg_message(uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>
+🔥 Скидка первой покупки использована.
+
+⚔️ Duel Arena")
+            fresh = db.get_or_create_player(uid, "")
+            return {"ok": True, "diamonds_added": diamonds, "player": _player_api(dict(fresh))}
+
         is_premium = pkg["id"] == "premium"
         if is_premium:
             prem = db.get_premium_status(uid)
@@ -213,6 +227,13 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             payload = f"starter_pack_{pkg['id']}"
             title = "Стартовый пак"
             desc = "200💎 + Premium 14 дней + 2× Свиток Титана · только 1 раз · Duel Arena"
+        elif pkg.get("first_purchase"):
+            if not db.is_diamond_first_available(uid):
+                fresh = db.get_or_create_player(uid, "")
+                return {"ok": False, "reason": "Скидка первой покупки уже использована.", "player": _player_api(dict(fresh))}
+            payload = f"diamond_first_{pkg['diamonds']}"
+            title = f"{pkg['diamonds']} алмазов · первая покупка"
+            desc = f"{pkg['diamonds']} 💎 алмазов со скидкой первой покупки · Duel Arena"
         elif pkg["id"] == "premium":
             payload = "premium_sub"
             title = "Premium подписка"

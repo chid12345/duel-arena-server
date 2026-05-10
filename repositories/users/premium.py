@@ -70,6 +70,32 @@ class UsersPremiumMixin:
             "bonus_diamonds": bonus_diamonds,
         }
 
+    def is_diamond_first_available(self, user_id: int) -> bool:
+        """Возвращает True если первая покупка алмазов ещё не использована."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT diamond_first_purchased FROM players WHERE user_id = ?", (user_id,))
+            row = cursor.fetchone()
+            return not bool(row and int(row["diamond_first_purchased"] or 0))
+        finally:
+            conn.close()
+
+    def mark_diamond_first_purchased(self, user_id: int, diamonds: int) -> bool:
+        """Зачислить алмазы первой покупки и пометить флаг."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE players SET diamonds = diamonds + ?, diamond_first_purchased = 1 "
+                "WHERE user_id = ? AND diamond_first_purchased = 0",
+                (diamonds, user_id),
+            )
+            conn.commit()
+            return cursor.rowcount > 0
+        finally:
+            conn.close()
+
     def is_starter_pack_used(self, user_id: int) -> bool:
         conn = self.get_connection()
         cursor = conn.cursor()

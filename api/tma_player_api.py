@@ -206,6 +206,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "current_hp": _display_chp,
         "gold": int(player.get("gold", 0)),
         "diamonds": int(player.get("diamonds", 0)),
+        "diamond_first_purchased": bool(int(player.get("diamond_first_purchased", 0))),
         "wins": int(player.get("wins", 0)),
         "losses": int(player.get("losses", 0)),
         "rating": int(player.get("rating", 1000)),
