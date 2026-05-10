@@ -137,10 +137,14 @@ class SocialPaymentsMixin:
                 return {"ok": False, "reason": "already_paid"}
             _valid_cols = {"diamond_first_100", "diamond_first_300", "diamond_first_500"}
             if first_purchase_col and first_purchase_col in _valid_cols:
-                cursor.execute(
-                    f"UPDATE players SET diamonds = diamonds + ?, {first_purchase_col} = 1 WHERE user_id = ?",
-                    (diamonds, user_id),
-                )
+                try:
+                    cursor.execute(
+                        f"UPDATE players SET diamonds = diamonds + ?, {first_purchase_col} = 1 WHERE user_id = ?",
+                        (diamonds, user_id),
+                    )
+                except Exception:
+                    # Колонка ещё не создана (migration pending) — зачисляем алмазы без флага
+                    cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (diamonds, user_id))
             else:
                 cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (diamonds, user_id))
             conn.commit()

@@ -77,4 +77,8 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_05_09_001_bp_seasons",
     "2026_05_09_002_bp_progress",
     "2026_05_09_003_bp_rewards_claimed",
+    # Магазин: стартовый пак и скидка первой покупки по пакетам
+    "2026_05_10_002_starter_pack_used",
+    "2026_05_10_003_diamond_first_purchased",
+    "2026_05_10_004_diamond_first_per_pack",
 )
