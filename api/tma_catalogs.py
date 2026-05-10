@@ -129,8 +129,8 @@ SCROLL_EFFECTS = {
 
 STARS_PACKAGES = [
     {"id": "d100", "diamonds": 100, "stars": 150, "label": "100 💎"},
-    {"id": "d300", "diamonds": 300, "stars": 390, "label": "300 💎"},
-    {"id": "d500", "diamonds": 500, "stars": 650, "label": "500 💎"},
+    {"id": "d300", "diamonds": 300, "stars": 350, "label": "300 💎"},
+    {"id": "d500", "diamonds": 500, "stars": 500, "label": "500 💎"},
     {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
     {
         "id": "starter_pack",
@@ -187,8 +187,8 @@ USDT_SCROLL_PACKAGES = [
 
 CRYPTO_PACKAGES = [
     {"id": "cd100", "diamonds": 100, "label": "100 💎", "usdt": "2.99"},
-    {"id": "cd300", "diamonds": 300, "label": "300 💎", "usdt": "7.99"},
-    {"id": "cd500", "diamonds": 500, "label": "500 💎", "usdt": "12.99"},
+    {"id": "cd300", "diamonds": 300, "label": "300 💎", "usdt": "6.99"},
+    {"id": "cd500", "diamonds": 500, "label": "500 💎", "usdt": "9.99"},
     {"id": "cdpremium", "diamonds": 0, "label": "👑 Premium", "usdt": "8.00", "premium": True},
     {
         "id": "cdstarter",
