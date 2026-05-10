@@ -65,6 +65,15 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             except (ValueError, IndexError):
                 diamond_first_count = 0
                 is_diamond_first = False
+            # Вычисляем колонку ДО confirm, чтобы передать её атомически
+            _diamond_first_col = None
+            if is_diamond_first and diamond_first_count > 0:
+                if diamond_first_count <= 100:
+                    _diamond_first_col = "diamond_first_100"
+                elif diamond_first_count <= 300:
+                    _diamond_first_col = "diamond_first_300"
+                else:
+                    _diamond_first_col = "diamond_first_500"
             is_starter_pack = ":starter_pack:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
@@ -83,7 +92,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
             shield_equip_id = custom_payload.split(":shield_equip:", 1)[1].strip() if is_shield_equip else None
             ring_equip_id   = custom_payload.split(":ring_equip:",   1)[1].strip() if is_ring_equip   else None
-            result = db.confirm_crypto_invoice(int(invoice_id))
+            result = db.confirm_crypto_invoice(int(invoice_id), first_purchase_col=_diamond_first_col)
             if result.get("ok"):
                 diamonds = result["diamonds"]
                 asset = result.get("asset", "USDT")
@@ -221,12 +230,13 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await _notify_paid_full_reset(owner_uid)
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "profile_reset": True}
-                if is_diamond_first:
-                    db.set_diamond_first_flag(owner_uid, diamond_first_count)
-                await manager.send(owner_uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})
+                _cache_invalidate(owner_uid)
+                event_source = "cryptopay_first" if is_diamond_first else "cryptopay"
+                await manager.send(owner_uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": event_source})
                 await _send_tg_message(owner_uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
                 db.mark_items_delivered(invoice_id)
-                return {"ok": True, "paid": True, "diamonds": diamonds}
+                fresh = db.get_or_create_player(owner_uid, "")
+                return {"ok": True, "paid": True, "diamonds": diamonds, "player": _player_api(dict(fresh))}
             if result.get("reason") == "already_paid":
                 if is_weapon_equip and weapon_equip_id:
                     db.equip_item(uid, "weapon", weapon_equip_id)
@@ -306,8 +316,6 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "already_confirmed": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
-                if is_diamond_first:
-                    db.set_diamond_first_flag(uid, diamond_first_count)
                 return {
                     "ok": True, "paid": True, "already_confirmed": True,
                     "profile_reset": is_full_reset,

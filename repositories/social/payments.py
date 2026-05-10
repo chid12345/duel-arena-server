@@ -110,7 +110,8 @@ class SocialPaymentsMixin:
         finally:
             conn.close()
 
-    def confirm_crypto_invoice(self, invoice_id: int) -> Dict[str, Any]:
+    def confirm_crypto_invoice(self, invoice_id: int, first_purchase_col: str = None) -> Dict[str, Any]:
+        """Атомически подтверждает инвойс: кредитует алмазы и (опционально) ставит флаг скидки первой покупки."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -134,7 +135,14 @@ class SocialPaymentsMixin:
             if cursor.rowcount == 0:
                 conn.commit()
                 return {"ok": False, "reason": "already_paid"}
-            cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (diamonds, user_id))
+            _valid_cols = {"diamond_first_100", "diamond_first_300", "diamond_first_500"}
+            if first_purchase_col and first_purchase_col in _valid_cols:
+                cursor.execute(
+                    f"UPDATE players SET diamonds = diamonds + ?, {first_purchase_col} = 1 WHERE user_id = ?",
+                    (diamonds, user_id),
+                )
+            else:
+                cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (diamonds, user_id))
             conn.commit()
             return {
                 "ok": True,

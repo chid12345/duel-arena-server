@@ -47,7 +47,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
         if not invoice_id:
             return {"ok": True}
 
-        result = db.confirm_crypto_invoice(int(invoice_id))
+        result = db.confirm_crypto_invoice(int(invoice_id), first_purchase_col=_diamond_first_col)
         if result.get("ok"):
             uid = result["user_id"]
             diamonds = result["diamonds"]
@@ -67,6 +67,14 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             except (ValueError, IndexError):
                 diamond_first_count = 0
                 is_diamond_first = False
+            _diamond_first_col = None
+            if is_diamond_first and diamond_first_count > 0:
+                if diamond_first_count <= 100:
+                    _diamond_first_col = "diamond_first_100"
+                elif diamond_first_count <= 300:
+                    _diamond_first_col = "diamond_first_300"
+                else:
+                    _diamond_first_col = "diamond_first_500"
             is_weapon_equip = ":weapon_equip:" in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_helmet_equip = ":helmet_equip:" in custom_payload
@@ -183,14 +191,14 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     )
                     await _send_tg_message(uid, "⚠️ Оплата получена, но выдача образа задержалась. Напишите в поддержку и укажите ID платежа.")
             elif is_diamond_first and diamond_first_count > 0:
-                ok_first = db.mark_diamond_first_purchased(uid, diamond_first_count)
-                if ok_first:
-                    db.mark_items_delivered(int(invoice_id))
-                    await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamond_first_count, "source": "cryptopay_first"})
-                    await _send_tg_message(uid,
-                        f"💎 <b>+{diamond_first_count} алмазов зачислено!</b>\n"
-                        "🔥 Скидка первой покупки использована.\n\n"
-                        "⚔️ Duel Arena")
+                # Флаг и алмазы уже выданы атомически в confirm_crypto_invoice
+                db.mark_items_delivered(int(invoice_id))
+                await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamond_first_count, "source": "cryptopay_first"})
+                await _send_tg_message(uid,
+                    f"💎 <b>+{diamond_first_count} алмазов зачислено!</b>\n"
+                    "🔥 Скидка первой покупки использована.\n\n"
+                    "⚔️ Duel Arena"
+                )
             elif is_starter_pack:
                 db.apply_starter_pack(uid)
                 db.mark_items_delivered(int(invoice_id))
