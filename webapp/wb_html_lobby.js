@@ -157,6 +157,7 @@ ${gatherBtn}
       <div class="wb-prize-hint">👆 что получишь?</div>
     </div>
     <div class="wb-prize-coins">🪙 ${prizePool}</div>
+    <div class="wb-prize-formula">500 база · +50 за игрока</div>
   </div>
   <div class="wb-prize-r">
     <div class="wb-prize-cnt">${regCnt}</div>

@@ -73,6 +73,7 @@ window.WBLobbyCSS = (() => {
 .wb-prize-hint{font-size:9px;color:#ffaa44;font-weight:700;letter-spacing:.3px;
   white-space:nowrap;text-shadow:0 0 6px rgba(255,160,0,.4);opacity:.9;}
 .wb-prize-coins{font-size:20px;font-weight:900;color:#ffdd44;text-shadow:0 0 10px rgba(255,200,0,.6);white-space:nowrap;margin-top:2px;}
+.wb-prize-formula{font-size:9px;color:#aaa;font-weight:600;letter-spacing:.3px;margin-top:1px;opacity:.7;}
 .wb-prize-sub{font-size:9px;color:#ffaa44;font-weight:700;letter-spacing:.5px;}
 .wb-prize-r{flex-shrink:0;text-align:center;}
 .wb-prize-cnt{font-size:28px;font-weight:900;color:#00BFFF;text-shadow:0 0 10px rgba(0,191,255,.6);line-height:1;}
