@@ -6,7 +6,7 @@ from __future__ import annotations
 WEAPON_CATALOG: dict[str, dict] = {
     "sword_free": {
         "slot":"weapon","rarity":"common","name":"Деревянный меч","emoji":"🗡️",
-        "atk_bonus":5,"crit_bonus":1,"pen_pct":0.0,"price_gold":2000,
+        "atk_bonus":5,"crit_bonus":1,"pen_pct":0.0,"price_gold":800,
         "desc":"+5 атк, +1 крит",
     },
     "sword_gold": {
@@ -27,7 +27,7 @@ WEAPON_CATALOG: dict[str, dict] = {
     # ── ТОПОР ────────────────────────────────────────────────
     "axe_free": {
         "slot":"weapon","rarity":"common","name":"Каменный топор","emoji":"🪓",
-        "atk_bonus":8,"crit_bonus":0,"pen_pct":0.0,"price_gold":2000,
+        "atk_bonus":8,"crit_bonus":0,"pen_pct":0.0,"price_gold":800,
         "desc":"+8 атк",
     },
     "axe_gold": {
@@ -48,7 +48,7 @@ WEAPON_CATALOG: dict[str, dict] = {
     # ── ДУБИНА ───────────────────────────────────────────────
     "club_free": {
         "slot":"weapon","rarity":"common","name":"Дубина","emoji":"🏏",
-        "atk_bonus":3,"crit_bonus":0,"hp_bonus":50,"pen_pct":0.0,"price_gold":2000,
+        "atk_bonus":3,"crit_bonus":0,"hp_bonus":50,"pen_pct":0.0,"price_gold":800,
         "desc":"+3 атк, +50 HP",
     },
     "club_gold": {
@@ -69,7 +69,7 @@ WEAPON_CATALOG: dict[str, dict] = {
     # ── БОЛЬШОЙ МЕЧ ──────────────────────────────────────────
     "gs_free": {
         "slot":"weapon","rarity":"common","name":"Двуручный меч","emoji":"🗡️",
-        "atk_bonus":4,"crit_bonus":5,"pen_pct":0.0,"price_gold":2000,
+        "atk_bonus":4,"crit_bonus":5,"pen_pct":0.0,"price_gold":800,
         "desc":"+4 атк, +5 крит",
     },
     "gs_gold": {

@@ -71,7 +71,7 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     "armor_leather": {
         "slot": SLOT_ARMOR, "rarity": RARITY_COMMON,
         "name": "Кожаная броня", "emoji": "🥋",
-        "def_pct": 0.02, "hp_bonus": 30, "price_gold": 2000,
+        "def_pct": 0.02, "hp_bonus": 30, "price_gold": 800,
         "desc": "-2% урона врага, +30 HP",
     },
     "armor_chain": {
@@ -91,25 +91,25 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     "helmet_free1": {
         "slot": SLOT_BELT, "rarity": RARITY_COMMON,
         "name": "Шлем Танка", "emoji": "⛑️",
-        "hp_bonus": 60, "price_gold": 2000,
+        "hp_bonus": 60, "price_gold": 800,
         "desc": "+60 HP — чистый запас жизни",
     },
     "helmet_free2": {
         "slot": SLOT_BELT, "rarity": RARITY_COMMON,
         "name": "Шлем Стража", "emoji": "⛑️",
-        "def_pct": 0.03, "price_gold": 2000,
+        "def_pct": 0.03, "price_gold": 800,
         "desc": "-3% урона врага",
     },
     "helmet_free3": {
         "slot": SLOT_BELT, "rarity": RARITY_COMMON,
         "name": "Шлем Охотника", "emoji": "⛑️",
-        "atk_bonus": 8, "price_gold": 2000,
+        "atk_bonus": 8, "price_gold": 800,
         "desc": "+8 к урону",
     },
     "helmet_free4": {
         "slot": SLOT_BELT, "rarity": RARITY_COMMON,
         "name": "Шлем Дуэлянта", "emoji": "⛑️",
-        "crit_bonus": 4, "price_gold": 2000,
+        "crit_bonus": 4, "price_gold": 800,
         "desc": "+4 крит — для крит-билдов",
     },
     # За золото — двойные синергии
@@ -192,10 +192,10 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
         "desc": "-15% урона врага, +280 HP, +12 крит — неубиваемый",
     },
     # ── ЩИТЫ (shield slot) ──────────────────────────────────
-    "shield_free1": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Ополченца",     "emoji": "🛡️", "def_pct": 0.03, "str_bonus": 2, "price_gold": 2000, "desc": "-3% урона врага, +2 Сила"},
-    "shield_free2": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Стойкости",     "emoji": "🛡️", "hp_bonus": 50,  "agi_bonus": 2, "price_gold": 2000, "desc": "+50 HP, +2 Ловкость"},
-    "shield_free3": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Закалённого",   "emoji": "🛡️", "crit_resist_pct": 10, "intu_bonus": 2, "price_gold": 2000, "desc": "-10% крит-урон врага, +2 Интуиция"},
-    "shield_free4": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Дружинника",    "emoji": "🛡️", "def_pct": 0.02, "hp_bonus": 30, "str_bonus": 2, "price_gold": 2000, "desc": "-2% урона, +30 HP, +2 Сила"},
+    "shield_free1": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Ополченца",     "emoji": "🛡️", "def_pct": 0.03, "str_bonus": 2, "price_gold": 800, "desc": "-3% урона врага, +2 Сила"},
+    "shield_free2": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Стойкости",     "emoji": "🛡️", "hp_bonus": 50,  "agi_bonus": 2, "price_gold": 800, "desc": "+50 HP, +2 Ловкость"},
+    "shield_free3": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Закалённого",   "emoji": "🛡️", "crit_resist_pct": 10, "intu_bonus": 2, "price_gold": 800, "desc": "-10% крит-урон врага, +2 Интуиция"},
+    "shield_free4": {"slot": SLOT_SHIELD, "rarity": RARITY_COMMON, "name": "Щит Дружинника",    "emoji": "🛡️", "def_pct": 0.02, "hp_bonus": 30, "str_bonus": 2, "price_gold": 800, "desc": "-2% урона, +30 HP, +2 Сила"},
     "shield_gold1": {"slot": SLOT_SHIELD, "rarity": RARITY_RARE, "name": "Рыцарский Щит",       "emoji": "🛡️", "def_pct": 0.06, "str_bonus": 1, "agi_bonus": 1, "intu_bonus": 1, "price_gold": 8000, "desc": "-6% урона врага, +1 ко всем статам"},
     "shield_gold2": {"slot": SLOT_SHIELD, "rarity": RARITY_RARE, "name": "Щит Великана",        "emoji": "🛡️", "hp_bonus": 110, "str_bonus": 1, "agi_bonus": 1, "intu_bonus": 1, "price_gold": 8000, "desc": "+110 HP, +1 ко всем статам"},
     "shield_gold3": {"slot": SLOT_SHIELD, "rarity": RARITY_RARE, "name": "Щит Паладина",        "emoji": "🛡️", "crit_resist_pct": 18, "str_bonus": 1, "agi_bonus": 1, "intu_bonus": 1, "price_gold": 8000, "desc": "-18% крит-урон врага, +1 ко всем статам"},
@@ -209,10 +209,10 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     "shield_mythic3": {"slot": SLOT_SHIELD, "rarity": "mythic", "name": "Щит Рока",             "emoji": "🛡️", "def_pct": 0.08, "crit_resist_pct": 30, "str_bonus": 4, "agi_bonus": 4, "intu_bonus": 4, "price_stars": 590, "desc": "-8% урона, -30% крит-урон, +4 ко всем статам"},
     "shield_mythic4": {"slot": SLOT_SHIELD, "rarity": "mythic", "name": "Щит Богов",            "emoji": "🛡️", "def_pct": 0.10, "hp_bonus": 120, "crit_resist_pct": 18, "str_bonus": 4, "agi_bonus": 4, "intu_bonus": 4, "price_stars": 590, "desc": "-10% урона, +120 HP, -18% крит, +4 ко всем статам"},
     # ── КОЛЬЦА (ring1/ring2 slot) ────────────────────────────
-    "ring_free1": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Меткости",      "emoji": "💍", "accuracy": 3,          "price_gold": 2000, "desc": "+3% точность"},
-    "ring_free2": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Охотника",      "emoji": "💍", "anti_dodge_pct": 5,    "price_gold": 2000, "desc": "-5% уворот врага"},
-    "ring_free3": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Безмолвия",     "emoji": "💍", "silence_pct": 5,       "price_gold": 2000, "desc": "5% глушит крит врага"},
-    "ring_free4": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Оков",          "emoji": "💍", "slow_pct": 5,          "price_gold": 2000, "desc": "-5% двойной удар врага"},
+    "ring_free1": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Меткости",      "emoji": "💍", "accuracy": 3,          "price_gold": 800, "desc": "+3% точность"},
+    "ring_free2": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Охотника",      "emoji": "💍", "anti_dodge_pct": 5,    "price_gold": 800, "desc": "-5% уворот врага"},
+    "ring_free3": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Безмолвия",     "emoji": "💍", "silence_pct": 5,       "price_gold": 800, "desc": "5% глушит крит врага"},
+    "ring_free4": {"slot": SLOT_RING1, "rarity": RARITY_COMMON, "name": "Кольцо Оков",          "emoji": "💍", "slow_pct": 5,          "price_gold": 800, "desc": "-5% двойной удар врага"},
     "ring_gold1": {"slot": SLOT_RING1, "rarity": RARITY_RARE, "name": "Кольцо Снайпера",        "emoji": "💍", "accuracy": 7,          "price_gold": 8000, "desc": "+7% точность"},
     "ring_gold2": {"slot": SLOT_RING1, "rarity": RARITY_RARE, "name": "Кольцо Преследователя",  "emoji": "💍", "anti_dodge_pct": 12,   "price_gold": 8000, "desc": "-12% уворот врага"},
     "ring_gold3": {"slot": SLOT_RING1, "rarity": RARITY_RARE, "name": "Кольцо Тишины",          "emoji": "💍", "silence_pct": 12,      "price_gold": 8000, "desc": "12% глушит крит врага"},
@@ -230,25 +230,25 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
     "boots_free1": {
         "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
         "name": "Сапоги Скорохода", "emoji": "👟",
-        "dodge_bonus": 3, "price_gold": 2000,
+        "dodge_bonus": 3, "price_gold": 800,
         "desc": "+3% уворот — быстрые ноги",
     },
     "boots_free2": {
         "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
         "name": "Сапоги Выносливого", "emoji": "👟",
-        "regen_bonus": 12, "regen_speed_pct": 10, "price_gold": 2000,
+        "regen_bonus": 12, "regen_speed_pct": 10, "price_gold": 800,
         "desc": "+12 HP/раунд, +10% скорость реген",
     },
     "boots_free3": {
         "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
         "name": "Сапоги Тени", "emoji": "👟",
-        "dodge_bonus": 2, "regen_bonus": 8, "price_gold": 2000,
+        "dodge_bonus": 2, "regen_bonus": 8, "price_gold": 800,
         "desc": "+2% уворот, +8 HP/раунд",
     },
     "boots_free4": {
         "slot": SLOT_BOOTS, "rarity": RARITY_COMMON,
         "name": "Кровавый след", "emoji": "👟",
-        "lifesteal_pct": 3, "price_gold": 2000,
+        "lifesteal_pct": 3, "price_gold": 800,
         "desc": "+3% вампиризм — 3% урона возвращается как HP",
     },
     # За золото — двойные синергии
