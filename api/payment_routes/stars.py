@@ -187,6 +187,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
     async def _stars_invoice_inner(body: StarsInvoiceBody):
         tg_user = get_user_from_init_data(body.init_data)
+        uid = int(tg_user["id"])
         if not BOT_TOKEN:
             return {"ok": False, "reason": "Бот не настроен (нет BOT_TOKEN)"}
 
