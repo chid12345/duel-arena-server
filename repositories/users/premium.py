@@ -70,25 +70,58 @@ class UsersPremiumMixin:
             "bonus_diamonds": bonus_diamonds,
         }
 
-    def is_diamond_first_available(self, user_id: int) -> bool:
-        """Возвращает True если первая покупка алмазов ещё не использована."""
+    @staticmethod
+    def _diamond_first_col(diamonds: int) -> str:
+        if diamonds <= 100:
+            return "diamond_first_100"
+        if diamonds <= 300:
+            return "diamond_first_300"
+        return "diamond_first_500"
+
+    def is_diamond_first_available(self, user_id: int, diamonds: int = 0) -> bool:
+        """True если скидка первой покупки для данного пакета ещё не использована."""
+        col = self._diamond_first_col(diamonds)
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT diamond_first_purchased FROM players WHERE user_id = ?", (user_id,))
+            cursor.execute(f"SELECT {col} FROM players WHERE user_id = ?", (user_id,))
             row = cursor.fetchone()
-            return not bool(row and int(row["diamond_first_purchased"] or 0))
+            return not bool(row and int(row[col] or 0))
         finally:
             conn.close()
 
-    def mark_diamond_first_purchased(self, user_id: int, diamonds: int) -> bool:
-        """Зачислить алмазы первой покупки и пометить флаг."""
+    def get_diamond_first_available(self, user_id: int) -> list:
+        """Возвращает список пакетов [100, 300, 500], у которых скидка ещё не использована."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "UPDATE players SET diamonds = diamonds + ?, diamond_first_purchased = 1 "
-                "WHERE user_id = ? AND diamond_first_purchased = 0",
+                "SELECT diamond_first_100, diamond_first_300, diamond_first_500 FROM players WHERE user_id = ?",
+                (user_id,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return [100, 300, 500]
+            result = []
+            if not int(row["diamond_first_100"] or 0):
+                result.append(100)
+            if not int(row["diamond_first_300"] or 0):
+                result.append(300)
+            if not int(row["diamond_first_500"] or 0):
+                result.append(500)
+            return result
+        finally:
+            conn.close()
+
+    def mark_diamond_first_purchased(self, user_id: int, diamonds: int) -> bool:
+        """Зачислить алмазы первой покупки и пометить флаг для данного пакета."""
+        col = self._diamond_first_col(diamonds)
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                f"UPDATE players SET diamonds = diamonds + ?, {col} = 1 "
+                f"WHERE user_id = ? AND {col} = 0",
                 (diamonds, user_id),
             )
             conn.commit()
@@ -96,15 +129,13 @@ class UsersPremiumMixin:
         finally:
             conn.close()
 
-    def set_diamond_first_flag(self, user_id: int) -> None:
-        """Только поставить флаг первой покупки (алмазы уже зачислены отдельно)."""
+    def set_diamond_first_flag(self, user_id: int, diamonds: int = 0) -> None:
+        """Только поставить флаг первой покупки для данного пакета (алмазы уже зачислены)."""
+        col = self._diamond_first_col(diamonds)
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute(
-                "UPDATE players SET diamond_first_purchased = 1 WHERE user_id = ?",
-                (user_id,),
-            )
+            cursor.execute(f"UPDATE players SET {col} = 1 WHERE user_id = ?", (user_id,))
             conn.commit()
         finally:
             conn.close()

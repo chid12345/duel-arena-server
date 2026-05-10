@@ -105,7 +105,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             return {"ok": True, "starter_pack_activated": True, "player": _player_api(dict(fresh))}
 
         if pkg.get("first_purchase"):
-            if not db.is_diamond_first_available(uid):
+            if not db.is_diamond_first_available(uid, diamonds):
                 fresh = db.get_or_create_player(uid, "")
                 return {"ok": False, "reason": "Скидка первой покупки уже использована.", "player": _player_api(dict(fresh))}
             ok = db.mark_diamond_first_purchased(uid, diamonds)

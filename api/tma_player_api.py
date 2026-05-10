@@ -206,7 +206,10 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "current_hp": _display_chp,
         "gold": int(player.get("gold", 0)),
         "diamonds": int(player.get("diamonds", 0)),
-        "diamond_first_purchased": bool(int(player.get("diamond_first_purchased", 0))),
+        "diamond_first_available": [
+            cnt for cnt, col in ((100, "diamond_first_100"), (300, "diamond_first_300"), (500, "diamond_first_500"))
+            if not int(player.get(col, 0))
+        ],
         "starter_pack_used": bool(int(player.get("starter_pack_used", 0))),
         "wins": int(player.get("wins", 0)),
         "losses": int(player.get("losses", 0)),

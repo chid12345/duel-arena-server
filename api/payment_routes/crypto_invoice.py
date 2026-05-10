@@ -82,7 +82,7 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 return {"ok": False, "reason": f"👑 Premium уже активен ещё {prem_status['days_left']} дн. — деньги не списаны"}
         if is_starter_pack and db.is_starter_pack_used(uid):
             return {"ok": False, "reason": "Стартовый пак уже был куплен ранее — деньги не списаны"}
-        if is_diamond_first and not db.is_diamond_first_available(uid):
+        if is_diamond_first and not db.is_diamond_first_available(uid, pkg.get("diamonds", 0)):
             return {"ok": False, "reason": "Скидка первой покупки уже использована — деньги не списаны"}
 
         if is_full_reset:

@@ -297,10 +297,11 @@ window.ShopHtmlPay = {
     // Scrolls
     const scrPairs = _matchByScrollId(starScrolls, usdtScrolls);
     if (scrPairs.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid-d">${scrPairs.map(([s,u]) => _cardCombined(s,u)).join('')}</div>`;
-    // Diamonds — 3 карточки; цена = первая покупка (со зачёркнутой) или обычная
-    const firstAvail = !(State.player?.diamond_first_purchased);
+    // Diamonds — 3 карточки; скидка первой покупки независима для каждого пакета
+    const firstAvailSet = new Set(State.player?.diamond_first_available || [100, 300, 500]);
     html += `<div class="sh-sec">💎 Алмазы</div>`;
     const diaHtml = [100, 300, 500].map(cnt => {
+      const firstAvail = firstAvailSet.has(cnt);
       const sf = (d.stars  || []).find(p => p.first_purchase && p.diamonds === cnt);
       const uf = (d.crypto || []).find(p => p.first_purchase && p.diamonds === cnt);
       const sn = starDia.find(p => p.diamonds === cnt);
