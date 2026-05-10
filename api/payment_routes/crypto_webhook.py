@@ -183,10 +183,10 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 if ok_first:
                     db.mark_items_delivered(int(invoice_id))
                     await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamond_first_count, "source": "cryptopay_first"})
-                    await _send_tg_message(uid, f"💎 <b>+{diamond_first_count} алмазов зачислено!</b>
-🔥 Скидка первой покупки использована.
-
-⚔️ Duel Arena")
+                    await _send_tg_message(uid,
+                        f"💎 <b>+{diamond_first_count} алмазов зачислено!</b>\n"
+                        "🔥 Скидка первой покупки использована.\n\n"
+                        "⚔️ Duel Arena")
             elif is_starter_pack:
                 db.apply_starter_pack(uid)
                 db.mark_items_delivered(int(invoice_id))
