@@ -19,9 +19,9 @@ _XP_BOOST_CHARGES = {
 
 # Золото за обмен алмазов
 _EXCHANGE_GOLD = {
-    "exchange_small":  (5,  350),
-    "exchange_medium": (15, 1100),
-    "exchange_large":  (50, 4000),
+    "exchange_small":  (5,  450),
+    "exchange_medium": (15, 1400),
+    "exchange_large":  (50, 5000),
 }
 
 

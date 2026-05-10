@@ -40,12 +40,12 @@ const DATA = {
     ['scroll_berserker','🔥','Берсерк',                15, 'diamonds','Сила+8, Броня-5% · 3 боя','3 БОЯ', true],
   ],
   boxes: [
-    ['exchange_small', 'img:exchange.png','5💎 → 350🪙',     5,  'diamonds','Обмен алмазы → золото', null, false],
-    ['exchange_medium','img:exchange.png','15💎 → 1100🪙',   15,  'diamonds','Лучший курс',            null, false],
-    ['exchange_large', 'img:exchange.png','50💎 → 4000🪙',   50,  'diamonds','Максимальный курс',      null, false],
+    ['exchange_small', 'img:exchange.png','5💎 → 450🪙',     5,  'diamonds','Обмен алмазы → золото', null, false],
+    ['exchange_medium','img:exchange.png','15💎 → 1400🪙',   15,  'diamonds','Лучший курс',            null, false],
+    ['exchange_large', 'img:exchange.png','50💎 → 5000🪙',   50,  'diamonds','Максимальный курс',      null, false],
     ['box_common',  'img:chest_gold.png',   'Обычный ящик',  150, 'gold',    '2–4 золотых свитка · 5% алмазный свиток · 3% +10–20💎', null, false],
-    ['box_rare',    'img:chest_diamond.png','Редкий ящик',    20,  'diamonds','3–6 алмазных свитков · 5% USDT-свиток · 3% +100💎 · 3% Premium 3 дн.', null, false],
-    ['box_rare_c',  'img:chest_diamond.png','Редкий ящик+',   35,  'diamonds','2 гарант. алмазных + 0–4 бонус · 5% USDT-свиток · 5% +300💎 · 3% Premium 3 дн.', null, false],
+    ['box_rare',    'img:chest_diamond.png','Редкий ящик',    35,  'diamonds','3–6 алмазных свитков · 5% USDT-свиток · 3% +100💎 · 3% Premium 3 дн.', null, false],
+    ['box_rare_c',  'img:chest_diamond.png','Редкий ящик+',   50,  'diamonds','2 гарант. алмазных + 0–4 бонус · 5% USDT-свиток · 5% +300💎 · 3% Premium 3 дн.', null, false],
   ],
 };
 

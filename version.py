@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.18.59"
-VERSION_LABEL = "v2.18.59 — fix: цены магазина в shop_html_items.js синхронизированы с tma_catalogs"
+VERSION = "2.18.60"
+VERSION_LABEL = "v2.18.60 — balance: обмен 90г/💎, box_rare 35💎, box_rare_c 50💎"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "14.79"
+GAME_VERSION = "14.80"

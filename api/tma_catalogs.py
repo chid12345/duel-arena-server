@@ -68,14 +68,14 @@ SHOP_CATALOG = {
     "scroll_all_4":    {"name": "Все пассивки +4",      "price": 10,  "currency": "diamonds", "icon": "✨", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +4, 1 бой", "inventory": True},
 
     # ── Обмен алмазы → золото ─────────────────────────────────
-    "exchange_small":  {"name": "5💎 → 350🪙",          "price": 5,   "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 350 золота"},
-    "exchange_medium": {"name": "15💎 → 1100🪙",        "price": 15,  "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 1100 золота"},
-    "exchange_large":  {"name": "50💎 → 4000🪙",        "price": 50,  "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 4000 золота"},
+    "exchange_small":  {"name": "5💎 → 450🪙",           "price": 5,   "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 450 золота"},
+    "exchange_medium": {"name": "15💎 → 1400🪙",        "price": 15,  "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 1400 золота"},
+    "exchange_large":  {"name": "50💎 → 5000🪙",        "price": 50,  "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 5000 золота"},
 
     # ── Лут-боксы ─────────────────────────────────────────────
     "box_common":      {"name": "Обычный ящик",         "price": 150, "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "2–4 свитка · шанс на алмазный", "inventory": True},
-    "box_rare":        {"name": "Редкий ящик",          "price": 20,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков", "inventory": True},
-    "box_rare_c":      {"name": "Редкий ящик+",         "price": 35,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2+ алмазных · шанс 300💎 и Premium", "inventory": True},
+    "box_rare":        {"name": "Редкий ящик",          "price": 35,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков", "inventory": True},
+    "box_rare_c":      {"name": "Редкий ящик+",         "price": 50,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2+ алмазных · шанс 300💎 и Premium", "inventory": True},
     "box_epic_e2":     {"name": "Эпический: Удача",     "price": 0,   "currency": "diamonds", "icon": "🔮", "tab": "boxes", "desc": "USDT-свиток + алмазные · шанс Титана", "inventory": True},
     "box_epic_e3":     {"name": "Эпический: Набор воина","price": 0,  "currency": "diamonds", "icon": "⚔️", "tab": "boxes", "desc": "USDT-свиток + XP×2 + свитки", "inventory": True},
 
