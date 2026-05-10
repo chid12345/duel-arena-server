@@ -161,7 +161,7 @@ window.ShopHtmlItems = {
   _showDetailFor(id) {
     const found = ShopHtmlItems._findItem(id); if (!found) return;
     const [iid, icon, name, price, cur, desc, badge, risk] = found.item;
-    const r = _rarity(cur, price, risk);
+    let r = _rarity(cur, price, risk);
     const qty = _inv[iid] || 0;
     const p = State.player || {};
     const bal = cur === 'diamonds' ? (p.diamonds || 0) : (p.gold || 0);
@@ -202,6 +202,31 @@ window.ShopHtmlItems = {
            + _r('✅','Золото и алмазы','сохраняются','vc')
            + _r('✅','Инвентарь','сохраняется','vc')
            + _r('🔒','Действие','необратимо','vr');
+    }
+    // Ящики — красивые строки содержимого
+    else if (iid === 'box_common') {
+      r = 'r';
+      rows = _r('📜','2–4 золотых свитка','гарантировано','vc')
+           + _r('💎','Алмазный свиток','5% шанс','vo')
+           + _r('💰','+10–20 алмазов','3% шанс','vo')
+           + _r('🎒','Содержимое','→ в рюкзак','vm');
+    }
+    else if (iid === 'box_rare') {
+      r = 'e';
+      rows = _r('💎','Алмазных свитков × 3–6','гарантировано','vc')
+           + _r('📜','USDT-свиток','5% шанс','vo')
+           + _r('💰','+100 алмазов','3% шанс','vo')
+           + _r('👑','Premium 3 дня','3% шанс','vp')
+           + _r('🎒','Содержимое','→ в рюкзак','vm');
+    }
+    else if (iid === 'box_rare_c') {
+      r = 'e';
+      rows = _r('💎','×2 алмазных свитка (гарант.)','гарантировано','vc')
+           + _r('💎','×0–4 алмазных свитка','бонус','vc')
+           + _r('📜','USDT-свиток','5% шанс','vo')
+           + _r('💰','+300 алмазов','5% шанс','vg')
+           + _r('👑','Premium 3 дня','3% шанс','vp')
+           + _r('🎒','Содержимое','→ в рюкзак','vm');
     }
     // Предметы с badge (броня/мечи/шлемы — временные)
     else if (badge) {
