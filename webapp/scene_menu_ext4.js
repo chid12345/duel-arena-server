@@ -100,16 +100,18 @@ Object.assign(MenuScene.prototype, {
       pBg.fillRoundedRect(niX, avY + 23, 84, 17, 6);
       pBg.lineStyle(1.5, 0xfbbf24, 0.65); pBg.strokeRoundedRect(niX, avY + 23, 84, 17, 6);
       ca(mkT(niX + 42, avY + 31, `⭐ Premium · ${p.premium_days_left}д`, 9, '#fff8e7', true)).setOrigin(0.5);
-      // Кнопка ежедневного ящика справа от бейджа
-      const boxTxt = ca(mkT(niX + 90, avY + 31, '📦', 16)).setOrigin(0, 0.5);
-      const boxZone = mkZ(niX + 98, avY + 31, 24, 24).setInteractive({ useHandCursor: true });
+      // Кнопка ежедневного ящика — центр тёмной зоны справа от бейджа
+      const boxCX = Math.round((niX + 84 + W - PAD) / 2);
+      const boxCY = avY + 40;
+      const boxTxt = ca(mkT(boxCX, boxCY, '📦', 24, '#ffd700')).setOrigin(0.5, 0.5);
+      const boxZone = mkZ(boxCX, boxCY, 36, 36).setInteractive({ useHandCursor: true });
       ca(boxZone);
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
         if (res?.claimed) {
-          boxTxt.setAlpha(0.3);
+          boxTxt.setAlpha(0.25);
         } else {
-          this.tweens.add({ targets: boxTxt, alpha: 0.4, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          this.tweens.add({ targets: boxTxt, alpha: 0.5, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
           boxZone.on('pointerup', () => this._claimPremBoxProfile(boxTxt, boxZone));
         }
       }).catch(() => {});
