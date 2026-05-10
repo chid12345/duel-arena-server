@@ -6,17 +6,17 @@ from __future__ import annotations
 WEAPON_CATALOG: dict[str, dict] = {
     "sword_free": {
         "slot":"weapon","rarity":"common","name":"Деревянный меч","emoji":"🗡️",
-        "atk_bonus":5,"crit_bonus":1,"pen_pct":0.0,"price_gold":0,
+        "atk_bonus":5,"crit_bonus":1,"pen_pct":0.0,"price_gold":2000,
         "desc":"+5 атк, +1 крит",
     },
     "sword_gold": {
         "slot":"weapon","rarity":"rare","name":"Боевой меч","emoji":"⚔️",
-        "atk_bonus":15,"crit_bonus":3,"pen_pct":0.01,"price_gold":1200,
+        "atk_bonus":15,"crit_bonus":3,"pen_pct":0.01,"price_gold":8000,
         "desc":"+15 атк, +3 крит, +1% пробой",
     },
     "sword_diamond": {
         "slot":"weapon","rarity":"epic","name":"Рунический клинок","emoji":"🌀",
-        "atk_bonus":30,"crit_bonus":7,"pen_pct":0.02,"price_gold":0,"price_diamonds":25,
+        "atk_bonus":30,"crit_bonus":7,"pen_pct":0.02,"price_diamonds":75,
         "desc":"+30 атк, +7 крит, +2% пробой",
     },
     "sword_mythic": {
@@ -27,17 +27,17 @@ WEAPON_CATALOG: dict[str, dict] = {
     # ── ТОПОР ────────────────────────────────────────────────
     "axe_free": {
         "slot":"weapon","rarity":"common","name":"Каменный топор","emoji":"🪓",
-        "atk_bonus":8,"crit_bonus":0,"pen_pct":0.0,"price_gold":0,
+        "atk_bonus":8,"crit_bonus":0,"pen_pct":0.0,"price_gold":2000,
         "desc":"+8 атк",
     },
     "axe_gold": {
         "slot":"weapon","rarity":"rare","name":"Топор ополченца","emoji":"🪓",
-        "atk_bonus":22,"crit_bonus":0,"pen_pct":0.01,"price_gold":1500,
+        "atk_bonus":22,"crit_bonus":0,"pen_pct":0.01,"price_gold":8000,
         "desc":"+22 атк, +1% пробой",
     },
     "axe_diamond": {
         "slot":"weapon","rarity":"epic","name":"Секира","emoji":"🪓",
-        "atk_bonus":40,"crit_bonus":0,"pen_pct":0.02,"price_gold":0,"price_diamonds":30,
+        "atk_bonus":40,"crit_bonus":0,"pen_pct":0.02,"price_diamonds":75,
         "desc":"+40 атк, +2% пробой",
     },
     "axe_mythic": {
@@ -48,17 +48,17 @@ WEAPON_CATALOG: dict[str, dict] = {
     # ── ДУБИНА ───────────────────────────────────────────────
     "club_free": {
         "slot":"weapon","rarity":"common","name":"Дубина","emoji":"🏏",
-        "atk_bonus":3,"crit_bonus":0,"hp_bonus":50,"pen_pct":0.0,"price_gold":0,
+        "atk_bonus":3,"crit_bonus":0,"hp_bonus":50,"pen_pct":0.0,"price_gold":2000,
         "desc":"+3 атк, +50 HP",
     },
     "club_gold": {
         "slot":"weapon","rarity":"rare","name":"Усиленная дубина","emoji":"🏏",
-        "atk_bonus":8,"crit_bonus":0,"hp_bonus":100,"pen_pct":0.01,"price_gold":1200,
+        "atk_bonus":8,"crit_bonus":0,"hp_bonus":100,"pen_pct":0.01,"price_gold":8000,
         "desc":"+8 атк, +100 HP, +1% пробой",
     },
     "club_diamond": {
         "slot":"weapon","rarity":"epic","name":"Булава","emoji":"🏏",
-        "atk_bonus":18,"crit_bonus":0,"hp_bonus":150,"pen_pct":0.02,"price_gold":0,"price_diamonds":28,
+        "atk_bonus":18,"crit_bonus":0,"hp_bonus":150,"pen_pct":0.02,"price_diamonds":75,
         "desc":"+18 атк, +150 HP, +2% пробой",
     },
     "club_mythic": {
@@ -69,17 +69,17 @@ WEAPON_CATALOG: dict[str, dict] = {
     # ── БОЛЬШОЙ МЕЧ ──────────────────────────────────────────
     "gs_free": {
         "slot":"weapon","rarity":"common","name":"Двуручный меч","emoji":"🗡️",
-        "atk_bonus":4,"crit_bonus":5,"pen_pct":0.0,"price_gold":0,
+        "atk_bonus":4,"crit_bonus":5,"pen_pct":0.0,"price_gold":2000,
         "desc":"+4 атк, +5 крит",
     },
     "gs_gold": {
         "slot":"weapon","rarity":"rare","name":"Меч паладина","emoji":"⚔️",
-        "atk_bonus":10,"crit_bonus":15,"pen_pct":0.01,"price_gold":1400,
+        "atk_bonus":10,"crit_bonus":15,"pen_pct":0.01,"price_gold":8000,
         "desc":"+10 атк, +15 крит, +1% пробой",
     },
     "gs_diamond": {
         "slot":"weapon","rarity":"epic","name":"Клинок хаоса","emoji":"🌀",
-        "atk_bonus":15,"crit_bonus":25,"pen_pct":0.02,"price_gold":0,"price_diamonds":25,
+        "atk_bonus":15,"crit_bonus":25,"pen_pct":0.02,"price_diamonds":75,
         "desc":"+15 атк, +25 крит, +2% пробой",
     },
     "gs_mythic": {
