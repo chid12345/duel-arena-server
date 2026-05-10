@@ -168,31 +168,53 @@ window.ShopHtmlItems = {
     const canBuy = bal >= price;
     const pIcon = cur === 'diamonds' ? '💎' : '🪙';
 
-    // HP-зелья: полоска здоровья в описании
+    // ── Строки описания в spd-row стиле ──────────────────────────────────────
+    function _r(ico, txt, val, vc) {
+      return `<div class="spd-row"><span class="spd-row-ico">${ico}</span><span class="spd-row-txt">${txt}</span>${val ? `<span class="spd-row-val ${vc||'vc'}">${val}</span>` : ''}</div>`;
+    }
+    let rows = null;
     let richDesc = desc;
+
+    // HP-зелья
     if (['hp_small', 'hp_medium', 'hp_full'].includes(iid)) {
       const curHp = p.current_hp != null ? Number(p.current_hp) : null;
       const maxHp = p.max_hp != null ? Number(p.max_hp) : null;
-      if (curHp === null || maxHp === null || maxHp <= 0) { richDesc = desc; }
-      else {
-      const isFull = curHp >= maxHp;
-      const pct = iid === 'hp_full' ? 1.0 : iid === 'hp_medium' ? 0.6 : 0.3;
-      const restore = iid === 'hp_full' ? (maxHp - curHp) : Math.max(1, Math.floor(maxHp * pct));
-      const newHp = Math.min(maxHp, curHp + restore);
-      const hpPct = Math.round(curHp / maxHp * 100);
-      const newPct = Math.min(100, Math.round(newHp / maxHp * 100));
-      richDesc = (isFull
-        ? `<span style="color:#ff6666">❌ HP уже полное — зелье не нужно</span>`
-        : `${desc}<br><br>`
-          + `<div style="font-size:10px;color:rgba(255,255,255,.45);margin-bottom:5px">Текущее HP: ${curHp} / ${maxHp}</div>`
-          + `<div style="background:rgba(255,255,255,.1);border-radius:4px;height:8px;overflow:hidden;margin-bottom:5px">`
-          + `<div style="width:${hpPct}%;height:100%;background:linear-gradient(90deg,#992222,#ff4444);border-radius:4px"></div></div>`
-          + `<div style="font-size:11px;color:#00ff88;font-weight:700">+${restore} HP → ${newHp} / ${maxHp} (${newPct}%)</div>`
-      );
-      } // end else (HP data available)
+      if (curHp != null && maxHp > 0) {
+        const isFull = curHp >= maxHp;
+        const pct = iid === 'hp_full' ? 1.0 : iid === 'hp_medium' ? 0.6 : 0.3;
+        const restore = iid === 'hp_full' ? (maxHp - curHp) : Math.max(1, Math.floor(maxHp * pct));
+        const newHp = Math.min(maxHp, curHp + restore);
+        const hpPct = Math.round(curHp / maxHp * 100);
+        const newPct = Math.min(100, Math.round(newHp / maxHp * 100));
+        if (isFull) {
+          rows = _r('❌','HP уже полное','зелье не нужно','vr');
+        } else {
+          const bar = `<div style="background:rgba(255,255,255,.1);border-radius:4px;height:6px;overflow:hidden;margin:4px 0"><div style="width:${hpPct}%;height:100%;background:linear-gradient(90deg,#992222,#ff4444);border-radius:4px"></div></div>`;
+          rows = _r('❤️', desc, '', '')
+            + `<div class="spd-row" style="flex-direction:column;align-items:flex-start;gap:2px"><span class="spd-row-txt" style="font-size:11px;opacity:.6">${curHp} / ${maxHp} HP сейчас</span>${bar}</div>`
+            + _r('💚', `+${restore} HP восстановится`, `→ ${newHp} (${newPct}%)`, 'vc');
+        }
+      }
+    }
+    // stat_reset
+    else if (iid === 'stat_reset') {
+      rows = _r('⚠️','Все очки статов','сбросятся','vr')
+           + _r('✅','Золото и алмазы','сохраняются','vc')
+           + _r('✅','Инвентарь','сохраняется','vc')
+           + _r('🔒','Действие','необратимо','vr');
+    }
+    // Предметы с badge (броня/мечи/шлемы — временные)
+    else if (badge) {
+      rows = _r('⚡', desc || name, '', '')
+           + _r('⏱','Длительность', badge, 'vo')
+           + _r('🎒','В инвентарь','применишь перед боем','vm');
+    }
+    // Обычный предмет — просто текст
+    else {
+      richDesc = desc;
     }
 
-    // stat_reset: двойное подтверждение перед списанием 200💎
+    // stat_reset: двойное подтверждение
     let action = canBuy
       ? () => ShopHtmlItems._doBuy(iid)
       : () => ShopHtml.toast(`❌ Не хватает ${cur === 'diamonds' ? 'алмазов' : 'золота'}`, true);
@@ -200,7 +222,7 @@ window.ShopHtmlItems = {
     if (iid === 'stat_reset' && canBuy) {
       action = () => ShopHtml.showDetail({
         icon: '⚠️', name: 'Подтвердите сброс',
-        desc: 'Все вложенные очки статов обнулятся.<br>Это <b>необратимо</b> — откатить нельзя.',
+        rows: _r('⚠️','Все очки статов обнулятся','необратимо','vr') + _r('✅','Золото и алмазы','сохраняются','vc'),
         price, currency: cur, rarity: 'd',
         actionLabel: `⚠️ Сбросить за ${price} 💎`,
         btnClass: 'btn-danger',
@@ -209,11 +231,12 @@ window.ShopHtmlItems = {
     }
 
     const detailIcon = (icon && icon.startsWith('img:'))
-      ? `<img src="${icon.slice(4)}" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,200,80,.4))">`
-      : icon;
+      ? `<img src="${icon.slice(4)}" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 10px rgba(255,200,80,.5))">`
+      : (icon || '📦');
 
     ShopHtml.showDetail({
-      icon: detailIcon, name, desc: richDesc, badge, risk, price, currency: cur, qty, rarity: r,
+      icon: detailIcon, name, rows, desc: rows ? null : richDesc,
+      badge: rows ? null : badge, risk, price, currency: cur, qty, rarity: r,
       actionLabel: canBuy ? `Купить за ${price} ${pIcon}` : `Нужно ${price} ${pIcon}`,
       action,
     });

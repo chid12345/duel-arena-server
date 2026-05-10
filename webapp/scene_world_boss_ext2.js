@@ -35,7 +35,28 @@ Object.assign(WorldBossScene.prototype, {
 
       const z = this.add.zone(x, y, bw, 48).setOrigin(0).setInteractive({ useHandCursor: true });
       z._wbChild = true;
-      z.on('pointerup', () => this._buyResScroll(sc.id));
+      z.on('pointerup', () => this._showResDetail(sc));
+    });
+  },
+
+  _showResDetail(sc) {
+    const pIcon = sc.cur === '💎' ? '💎' : '🪙';
+    const cur   = sc.cur === '💎' ? 'diamonds' : 'gold';
+    const pLabel = sc.cur === '💎' ? 'алмазов' : 'золота';
+    const hpMap = { res_30:'30%', res_60:'60%', res_100:'100%' };
+    const rows =
+      `<div class="spd-row"><span class="spd-row-ico">❤️</span><span class="spd-row-txt">Восстанавливает HP</span><span class="spd-row-val vc">${hpMap[sc.id] || sc.label}</span></div>`
+    + `<div class="spd-row"><span class="spd-row-ico">⚡</span><span class="spd-row-txt">Срабатывает при гибели</span><span class="spd-row-val vg">автоматически</span></div>`
+    + `<div class="spd-row"><span class="spd-row-ico">🎒</span><span class="spd-row-txt">Выдаётся</span><span class="spd-row-val vc">×10 зарядов</span></div>`;
+    ShopHtml.showDetail({
+      icon: sc.icon || '🕯️',
+      name: `Свиток воскрешения ${sc.label}`,
+      rows,
+      price: sc.price,
+      currency: cur,
+      rarity: sc.cur === '💎' ? 'e' : 'r',
+      actionLabel: `Купить за ${sc.price} ${pIcon}`,
+      action: () => this._buyResScroll(sc.id),
     });
   },
 
