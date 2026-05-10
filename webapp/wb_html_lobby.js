@@ -33,11 +33,11 @@ window.WBHtml = (() => {
   }
 
   const SCROLL_META = {
-    damage_25:  { icon:'⚔️', name:'УРОН',   val:'+25%', price:'60 🪙' },
-    power_10:   { icon:'🐲', name:'УРОН',   val:'+10%', price:'30 🪙' },
-    defense_20: { icon:'🛡️', name:'ЗАЩИТА', val:'+20%', price:'45 🪙' },
-    dodge_10:   { icon:'💨', name:'УВОРОТ', val:'+10%', price:'35 🪙' },
-    crit_10:    { icon:'🎯', name:'КРИТ ШАНС', val:'+10%', price:'40 🪙' },
+    damage_25:  { icon:'⚔️', name:'УРОН',      val:'+25%', price:'8 💎' },
+    power_10:   { icon:'🐲', name:'УРОН',      val:'+10%', price:'3 💎' },
+    defense_20: { icon:'🛡️', name:'ЗАЩИТА',   val:'+20%', price:'6 💎' },
+    dodge_10:   { icon:'💨', name:'УВОРОТ',    val:'+10%', price:'3 💎' },
+    crit_10:    { icon:'🎯', name:'КРИТ ШАНС', val:'+10%', price:'4 💎' },
   };
   const RES_META = [
     { id:'res_30',  icon:'💊', pct:'30%',  price:'80 🪙',   cur:'gold', desc:'Воскреснуть с 30% HP' },
