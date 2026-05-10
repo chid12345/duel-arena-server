@@ -62,7 +62,11 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_usdt_reset = ":usdt_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
             is_diamond_first = ":diamond_first:" in custom_payload
-            diamond_first_count = int(custom_payload.split(":diamond_first:", 1)[1].strip()) if is_diamond_first else 0
+            try:
+                diamond_first_count = int(custom_payload.split(":diamond_first:", 1)[1].strip()) if is_diamond_first else 0
+            except (ValueError, IndexError):
+                diamond_first_count = 0
+                is_diamond_first = False
             is_weapon_equip = ":weapon_equip:" in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_helmet_equip = ":helmet_equip:" in custom_payload

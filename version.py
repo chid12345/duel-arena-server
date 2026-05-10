@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.18.85"
-VERSION_LABEL = "v2.18.85 — fix: TypeError в tma_player_api + OperationalError при незапущенной миграции"
+VERSION = "2.18.86"
+VERSION_LABEL = "v2.18.86 — fix: ValueError/IndexError в crypto_check и crypto_webhook при парсинге payload"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "15.05"
+GAME_VERSION = "15.06"

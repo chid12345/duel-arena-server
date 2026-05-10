@@ -60,7 +60,11 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 return {"ok": False, "reason": "invoice_user_mismatch"}
             is_premium = ":premium:" in custom_payload
             is_diamond_first = ":diamond_first:" in custom_payload
-            diamond_first_count = int(custom_payload.split(":diamond_first:", 1)[1].strip()) if is_diamond_first else 0
+            try:
+                diamond_first_count = int(custom_payload.split(":diamond_first:", 1)[1].strip()) if is_diamond_first else 0
+            except (ValueError, IndexError):
+                diamond_first_count = 0
+                is_diamond_first = False
             is_starter_pack = ":starter_pack:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
