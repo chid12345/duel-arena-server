@@ -23,7 +23,8 @@ Object.assign(MenuScene.prototype, {
           this._toast('📦 Ящик получен! Открой Рюкзак');
         }
       } else {
-        boxTxt.setAlpha(0.3);
+        this.tweens.killTweensOf(boxTxt);
+        boxTxt.setAlpha(0.25);
         this._toast('📦 ' + (box?.reason || 'Уже получен сегодня'));
       }
     } catch(_) {

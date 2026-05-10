@@ -17,8 +17,8 @@ window.ShopHtmlPremBox = {
     try { res = await get('/api/shop/premium_box/status'); } catch(_) { return; }
     if (!res?.ok || !res.is_premium) { hdr.style.display = 'none'; return; }
 
-    if (res.claimed) {
-      this._setDark(hdr, res.seconds_until_reset);
+    if (!res.ok || res.claimed) {
+      this._setDark(hdr, res.seconds_until_reset || 0);
     } else {
       this._setGlow(hdr);
     }

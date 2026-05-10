@@ -108,13 +108,14 @@ Object.assign(MenuScene.prototype, {
       ca(boxZone);
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
-        if (res?.claimed) {
+        if (!res?.ok || res?.claimed) {
+          // claimed или ошибка статус-API → гасим, не даём пульсировать
           boxTxt.setAlpha(0.25);
         } else {
           this.tweens.add({ targets: boxTxt, alpha: 0.5, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
           boxZone.on('pointerup', () => this._claimPremBoxProfile(boxTxt, boxZone));
         }
-      }).catch(() => {});
+      }).catch(() => { boxTxt.setAlpha(0.25); });
     } else {
       ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.75)'));
     }
