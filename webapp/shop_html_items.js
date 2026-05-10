@@ -139,9 +139,12 @@ window.ShopHtmlItems = {
            + `<div class="sh-sec">💎 За алмазы · 3 боя</div><div class="sh-grid">${dia.map(_cardHTML).join('')}</div>`;
     }
     if (tab === 'boxes') {
-      const ex  = items.filter(i => i[0].startsWith('exchange'));
-      const box = items.filter(i => i[0].startsWith('box'));
+      const ex   = items.filter(i => i[0].startsWith('exchange'));
+      const misc = items.filter(i => i[0] === 'stat_reset');
+      const box  = items.filter(i => i[0].startsWith('box'));
+      const miscHtml = misc.length ? `<div class="sh-sec">🔄 Прочее</div><div class="sh-grid">${misc.map(_cardHTML).join('')}</div>` : '';
       return `<div class="sh-sec">💱 Обмен алмазы → золото</div><div class="sh-grid">${ex.map(_cardHTML).join('')}</div>`
+           + miscHtml
            + `<div class="sh-sec">📦 Ящики</div><div class="sh-grid">${box.map(_cardHTML).join('')}</div>`;
     }
     return '';
