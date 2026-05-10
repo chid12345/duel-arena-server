@@ -27,9 +27,9 @@ SHOP_CATALOG = {
     "stat_reset":    {"name": "Сброс статов",          "price": 75,  "currency": "diamonds", "icon": "🔄", "tab": "boxes",       "desc": "Сбросить все статы"},
 
     # ── Свитки воскрешения (для рейда Мирового босса, 10 зарядов в пачке) ───
-    "res_30":        {"name": "Свиток воскрешения +30%",  "price": 80,  "currency": "gold",     "icon": "🕯️", "tab": "resurrection", "desc": "10 воскрешений с 30% HP (рейд босса)", "inventory": True},
-    "res_60":        {"name": "Свиток воскрешения +60%",  "price": 150, "currency": "gold",     "icon": "🔮", "tab": "resurrection", "desc": "10 воскрешений с 60% HP (рейд босса)", "inventory": True},
-    "res_100":       {"name": "Свиток воскрешения 100%",  "price": 250, "currency": "gold",     "icon": "✨", "tab": "resurrection", "desc": "10 воскрешений со 100% HP (рейд босса)", "inventory": True},
+    "res_30":        {"name": "Свиток воскрешения +30%",  "price": 80,  "currency": "gold",     "icon": "🕯️", "tab": "resurrection", "desc": "Воскреснуть с 30% HP в рейде (1 раз)", "inventory": True},
+    "res_60":        {"name": "Свиток воскрешения +60%",  "price": 150, "currency": "gold",     "icon": "🔮", "tab": "resurrection", "desc": "Воскреснуть с 60% HP в рейде (1 раз)", "inventory": True},
+    "res_100":       {"name": "Свиток воскрешения 100%",  "price": 250, "currency": "gold",     "icon": "✨", "tab": "resurrection", "desc": "Воскреснуть со 100% HP в рейде (1 раз)", "inventory": True},
 
     # ── Рейд-свитки (работают ТОЛЬКО в рейде босса, 1 заряд = 1 рейд, макс 2 активных) ──
     "damage_25":     {"name": "Свиток урона +25%",        "price": 8,   "currency": "diamonds", "icon": "⚔️", "tab": "raid_scrolls", "desc": "+25% урона по боссу (1 рейд)",     "inventory": True},
