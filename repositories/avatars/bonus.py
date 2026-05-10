@@ -4,11 +4,9 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from datetime import datetime
-
 from config import (
     AVATAR_SCALE_EVERY_LEVELS, AVATAR_SCALE_MAX_BONUS,
-    ELITE_AVATAR_ID, STAMINA_PER_FREE_STAT, SUB_STAT_PENALTY,
+    ELITE_AVATAR_ID, STAMINA_PER_FREE_STAT,
 )
 
 
@@ -36,33 +34,11 @@ class AvatarsBonusMixin:
 
         return {"strength": b_str, "endurance": b_end, "crit": b_crit, "hp_flat": b_hp}
 
-    @staticmethod
-    def _is_premium_active(cursor, user_id: int) -> bool:
-        try:
-            cursor.execute("SELECT premium_until FROM players WHERE user_id = ?", (user_id,))
-            row = cursor.fetchone()
-            if not row:
-                return False
-            val = row["premium_until"] if isinstance(row, dict) else row[0]
-            if not val:
-                return False
-            return datetime.fromisoformat(str(val)) > datetime.utcnow()
-        except Exception:
-            return False
-
     def _effective_avatar_bonus_for_user(
         self, cursor, user_id: int, avatar_id: Optional[str], level: int
     ) -> Dict[str, int]:
         if (avatar_id or "") != ELITE_AVATAR_ID:
-            bonus = self._effective_avatar_bonus(avatar_id, level)
-            # Штраф за истекшую подписку для sub-tier
-            avatars = self._avatar_map()
-            av = avatars.get(avatar_id or "")
-            if av and (av.get("tier") or "").lower() == "sub":
-                if not self._is_premium_active(cursor, user_id):
-                    factor = 1.0 - SUB_STAT_PENALTY
-                    bonus = {k: max(0, int(v * factor)) for k, v in bonus.items()}
-            return bonus
+            return self._effective_avatar_bonus(avatar_id, level)
         active = self._get_active_elite_build(cursor, user_id)
         if not active:
             return self._effective_avatar_bonus(avatar_id, level)

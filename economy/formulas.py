@@ -172,9 +172,6 @@ def apply_premium_gold(gold: float) -> int:
     return max(0, round(float(gold) * get_anchor("PREMIUM_GOLD_BUFF")))
 
 
-def apply_premium_drop(chance: float) -> float:
-    return min(1.0, float(chance) * get_anchor("PREMIUM_DROP_BUFF"))
-
 
 if __name__ == "__main__":
     print("=== Балансная сетка (валюта): тестовые расчёты ===")

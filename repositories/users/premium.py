@@ -51,17 +51,6 @@ class UsersPremiumMixin:
         finally:
             conn.close()
 
-        # Активируем premium track в текущем сезоне батл-пасса (Шаг 5).
-        # Вызываем после commit основной транзакции, чтобы не блокировать соединение.
-        try:
-            self.activate_bp_premium(user_id)
-        except Exception as e:
-            # Не критично для активации основного премиума — логируем и идём дальше.
-            import logging
-            logging.getLogger(__name__).warning(
-                "activate_bp_premium failed uid=%s: %s", user_id, e,
-            )
-
         return {
             "ok": True,
             "premium_until": new_until.isoformat(),

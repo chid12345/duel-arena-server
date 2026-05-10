@@ -15,7 +15,6 @@ PREMIUM_AVATAR_USDT = "1.00"
 
 # Подписочный образ.
 SUB_AVATAR_ID = "sub_celestial"
-SUB_STAT_PENALTY = 0.30  # -30% к статам при истекшей подписке
 
 # Реферальный образ.
 REF_AVATAR_ID = "ref_guardian"
