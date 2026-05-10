@@ -17,10 +17,10 @@ const SHIELD_IMG = {
 
 const SHIELD_DATA = [
   // Бесплатные
-  {id:'shield_free1', r:'common', ht:'🛡️ Щит', name:'Щит Ополченца',       stars:'★☆☆☆', def:3,  hp:0,   crit_resist:0,  str:2, agi:0, intu:0, type:'gold', price:'8000'},
-  {id:'shield_free2', r:'common', ht:'🛡️ Щит', name:'Щит Стойкости',        stars:'★☆☆☆', def:0,  hp:50,  crit_resist:0,  str:0, agi:2, intu:0, type:'gold', price:'8000'},
-  {id:'shield_free3', r:'common', ht:'🛡️ Щит', name:'Щит Закалённого',      stars:'★☆☆☆', def:0,  hp:0,   crit_resist:10, str:0, agi:0, intu:2, type:'gold', price:'8000'},
-  {id:'shield_free4', r:'common', ht:'🛡️ Щит', name:'Щит Дружинника',       stars:'★☆☆☆', def:2,  hp:30,  crit_resist:0,  str:2, agi:0, intu:0, type:'gold', price:'8000'},
+  {id:'shield_free1', r:'common', ht:'🛡️ Щит', name:'Щит Ополченца',       stars:'★☆☆☆', def:3,  hp:0,   crit_resist:0,  str:2, agi:0, intu:0, type:'gold', price:'800'},
+  {id:'shield_free2', r:'common', ht:'🛡️ Щит', name:'Щит Стойкости',        stars:'★☆☆☆', def:0,  hp:50,  crit_resist:0,  str:0, agi:2, intu:0, type:'gold', price:'800'},
+  {id:'shield_free3', r:'common', ht:'🛡️ Щит', name:'Щит Закалённого',      stars:'★☆☆☆', def:0,  hp:0,   crit_resist:10, str:0, agi:0, intu:2, type:'gold', price:'800'},
+  {id:'shield_free4', r:'common', ht:'🛡️ Щит', name:'Щит Дружинника',       stars:'★☆☆☆', def:2,  hp:30,  crit_resist:0,  str:2, agi:0, intu:0, type:'gold', price:'800'},
   // Золото
   {id:'shield_gold1', r:'rare',   ht:'🛡️ Щит', name:'Рыцарский Щит',        stars:'★★☆☆', def:6,  hp:0,   crit_resist:0,  str:1, agi:1, intu:1, type:'gold',     price:'8000'},
   {id:'shield_gold2', r:'rare',   ht:'🛡️ Щит', name:'Щит Великана',         stars:'★★☆☆', def:0,  hp:110, crit_resist:0,  str:1, agi:1, intu:1, type:'gold',     price:'8000'},

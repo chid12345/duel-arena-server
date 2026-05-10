@@ -17,10 +17,10 @@ const HELMET_IMG = {
 
 const HELMETS_DATA = [
   // ── Бесплатные — каждый = одна чистая роль
-  {id:'helmet_free1',  r:'common', ht:'⛑️ Шлем', name:'Шлем Танка',        stars:'★☆☆☆', atk:0,  crit:0,  hp:60,  def:0,  pen:0, type:'gold', price:'8000'},
-  {id:'helmet_free2',  r:'common', ht:'⛑️ Шлем', name:'Шлем Стража',       stars:'★☆☆☆', atk:0,  crit:0,  hp:0,   def:3,  pen:0, type:'gold', price:'8000'},
-  {id:'helmet_free3',  r:'common', ht:'⛑️ Шлем', name:'Шлем Охотника',     stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   def:0,  pen:0, type:'gold', price:'8000'},
-  {id:'helmet_free4',  r:'common', ht:'⛑️ Шлем', name:'Шлем Дуэлянта',    stars:'★☆☆☆', atk:0,  crit:4,  hp:0,   def:0,  pen:0, type:'gold', price:'8000'},
+  {id:'helmet_free1',  r:'common', ht:'⛑️ Шлем', name:'Шлем Танка',        stars:'★☆☆☆', atk:0,  crit:0,  hp:60,  def:0,  pen:0, type:'gold', price:'800'},
+  {id:'helmet_free2',  r:'common', ht:'⛑️ Шлем', name:'Шлем Стража',       stars:'★☆☆☆', atk:0,  crit:0,  hp:0,   def:3,  pen:0, type:'gold', price:'800'},
+  {id:'helmet_free3',  r:'common', ht:'⛑️ Шлем', name:'Шлем Охотника',     stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   def:0,  pen:0, type:'gold', price:'800'},
+  {id:'helmet_free4',  r:'common', ht:'⛑️ Шлем', name:'Шлем Дуэлянта',    stars:'★☆☆☆', atk:0,  crit:4,  hp:0,   def:0,  pen:0, type:'gold', price:'800'},
   // ── Золото — двойные синергии
   {id:'helmet_gold1',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Берсерка',     stars:'★★☆☆', atk:18, crit:5,  hp:0,   def:0,  pen:0, type:'gold',     price:'8000'},
   {id:'helmet_gold2',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Крепости',     stars:'★★☆☆', atk:0,  crit:0,  hp:90,  def:6,  pen:0, type:'gold',     price:'8000'},

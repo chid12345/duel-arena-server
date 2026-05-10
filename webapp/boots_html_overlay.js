@@ -17,10 +17,10 @@ const BOOTS_IMG = {
 
 const BOOTS_DATA = [
   // ── Бесплатные — уворот и регенерация
-  {id:'boots_free1', r:'common', ht:'👟 Сапоги', name:'Сапоги Скорохода',        stars:'★☆☆☆', dodge:3,  regen:0,  type:'gold', price:'8000'},
-  {id:'boots_free2', r:'common', ht:'👟 Сапоги', name:'Сапоги Выносливого',       stars:'★☆☆☆', dodge:0,  regen:12, type:'gold', price:'8000'},
-  {id:'boots_free3', r:'common', ht:'👟 Сапоги', name:'Сапоги Тени',              stars:'★☆☆☆', dodge:2,  regen:8,  type:'gold', price:'8000'},
-  {id:'boots_free4', r:'common', ht:'👟 Сапоги', name:'Кровавый след',             stars:'★☆☆☆', dodge:0,  regen:0,  lifesteal:3,  type:'gold', price:'8000'},
+  {id:'boots_free1', r:'common', ht:'👟 Сапоги', name:'Сапоги Скорохода',        stars:'★☆☆☆', dodge:3,  regen:0,  type:'gold', price:'800'},
+  {id:'boots_free2', r:'common', ht:'👟 Сапоги', name:'Сапоги Выносливого',       stars:'★☆☆☆', dodge:0,  regen:12, type:'gold', price:'800'},
+  {id:'boots_free3', r:'common', ht:'👟 Сапоги', name:'Сапоги Тени',              stars:'★☆☆☆', dodge:2,  regen:8,  type:'gold', price:'800'},
+  {id:'boots_free4', r:'common', ht:'👟 Сапоги', name:'Кровавый след',             stars:'★☆☆☆', dodge:0,  regen:0,  lifesteal:3,  type:'gold', price:'800'},
   // ── Золото
   {id:'boots_gold1', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Вихря',             stars:'★★☆☆', dodge:7,  regen:0,  type:'gold',     price:'8000'},
   {id:'boots_gold2', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Живучести',          stars:'★★☆☆', dodge:0,  regen:28, type:'gold',     price:'8000'},

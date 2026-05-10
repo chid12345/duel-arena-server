@@ -17,10 +17,10 @@ const RING_IMG = {
 
 const RING_DATA = [
   // Бесплатные (3% бой + 3% реген + 2% золото/опыт)
-  {id:'ring_free1', r:'common', ht:'💍 Кольцо', name:'Кольцо Меткости',          stars:'★☆☆☆', acc:3,  anti_dodge:0, silence:0, slow:0, regen:3, gold:2, xp:0, type:'gold', price:'8000'},
-  {id:'ring_free2', r:'common', ht:'💍 Кольцо', name:'Кольцо Охотника',          stars:'★☆☆☆', acc:0,  anti_dodge:3, silence:0, slow:0, regen:3, gold:0, xp:2, type:'gold', price:'8000'},
-  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Безмолвия',         stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:3, slow:0, regen:3, gold:2, xp:0, type:'gold', price:'8000'},
-  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Оков',              stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:0, slow:3, regen:3, gold:0, xp:2, type:'gold', price:'8000'},
+  {id:'ring_free1', r:'common', ht:'💍 Кольцо', name:'Кольцо Меткости',          stars:'★☆☆☆', acc:3,  anti_dodge:0, silence:0, slow:0, regen:3, gold:2, xp:0, type:'gold', price:'800'},
+  {id:'ring_free2', r:'common', ht:'💍 Кольцо', name:'Кольцо Охотника',          stars:'★☆☆☆', acc:0,  anti_dodge:3, silence:0, slow:0, regen:3, gold:0, xp:2, type:'gold', price:'800'},
+  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Безмолвия',         stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:3, slow:0, regen:3, gold:2, xp:0, type:'gold', price:'800'},
+  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Оков',              stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:0, slow:3, regen:3, gold:0, xp:2, type:'gold', price:'800'},
   // Золото (5% бой + 5% реген + 3% золото/опыт)
   {id:'ring_gold1', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Снайпера',          stars:'★★☆☆', acc:5,  anti_dodge:0, silence:0, slow:0, regen:5, gold:3, xp:0, type:'gold',     price:'8000'},
   {id:'ring_gold2', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Преследователя',    stars:'★★☆☆', acc:0,  anti_dodge:5, silence:0, slow:0, regen:5, gold:0, xp:3, type:'gold',     price:'8000'},
