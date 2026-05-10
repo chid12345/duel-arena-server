@@ -27,10 +27,11 @@
     const scrolls = s?.res_scrolls_inv || {};
     const btns = RES_ITEMS.map(({ id, ic, lbl, price }) => {
       const n = scrolls[id] || 0;
+      const subCls = n > 0 ? 'cy-db-qty' : 'cy-db-price';
       const sub = n > 0 ? `${n} шт.` : `купить ${price}`;
       const act = n > 0 ? `data-act="res"` : `data-act="res-buy"`;
       return `<div class="cy-dead-b" ${act} data-t="${id}">` +
-        `<span class="ic">${ic}</span>${lbl}<br><small>${sub}</small></div>`;
+        `<span class="ic">${ic}</span>${lbl}<br><small class="${subCls}">${sub}</small></div>`;
     }).join('');
     return `<div class="cy-dead">
       <div class="cy-dead-t">💀 Вы пали в бою</div>

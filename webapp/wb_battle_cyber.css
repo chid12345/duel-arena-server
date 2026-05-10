@@ -506,7 +506,8 @@
 }
 .cy-dead-b:active { transform:scale(.96); }
 .cy-dead-b .ic { display:block; font-size:18px; margin-bottom:2px; }
-.cy-dead-b small { color:#ffcc44; }
+.cy-dead-b .cy-db-qty { color:#22dd88; }
+.cy-dead-b .cy-db-price { color:#ffcc44; }
 .cy-dead-tmr { margin-top:10px; font-size:10px; color:#aaa; }
 
 /* === ЦИФРЫ УРОНА === */
