@@ -234,11 +234,10 @@ window.ShopHtmlPay = {
       if (sItem) parts.push(_ph('⭐', sItem.stars, opts.strikeS));
       if (uItem) parts.push(_ph('$', uItem.usdt, opts.strikeU));
       const priceHint = parts.join(' &nbsp;·&nbsp; ');
-      const cardStyle = fire ? 'border:1px solid rgba(255,170,51,.4);box-shadow:0 0 8px rgba(255,170,51,.2)' : '';
+      const cardStyle = fire ? 'filter:drop-shadow(0 0 7px rgba(255,170,51,.55))' : '';
       const btnCls   = isRes ? 'btn-danger' : 'btn-s';
       const btnLabel = isRes ? 'СБРОСИТЬ' : 'КУПИТЬ';
       return `<div class="sh-card r-${r}" style="${cardStyle}" data-s-id="${sItem?.id||''}" data-u-id="${uItem?.id||''}" data-combined="1">
-  <div class="sh-diode d-${r}"></div>
   <div class="sh-ico">${icoHtml}</div>
   <div class="sh-nm">${name}</div>
   <div class="sh-ds">${priceHint}</div>
@@ -289,10 +288,10 @@ window.ShopHtmlPay = {
 
     // Boxes
     const boxPairs = _matchByScrollId(starBoxes, usdtBoxes);
-    if (boxPairs.length) html += `<div class="sh-sec">🎲 Эпические ящики</div><div class="sh-grid">${boxPairs.map(([s,u]) => _cardCombined(s,u)).join('')}</div>`;
+    if (boxPairs.length) html += `<div class="sh-sec">🎲 Эпические ящики</div><div class="sh-grid-d">${boxPairs.map(([s,u]) => _cardCombined(s,u)).join('')}</div>`;
     // Scrolls
     const scrPairs = _matchByScrollId(starScrolls, usdtScrolls);
-    if (scrPairs.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid">${scrPairs.map(([s,u]) => _cardCombined(s,u)).join('')}</div>`;
+    if (scrPairs.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid-d">${scrPairs.map(([s,u]) => _cardCombined(s,u)).join('')}</div>`;
     // Diamonds — 3 карточки; цена = первая покупка (со зачёркнутой) или обычная
     const firstAvail = !(State.player?.diamond_first_purchased);
     html += firstAvail
@@ -309,9 +308,9 @@ window.ShopHtmlPay = {
       const strikeU = (firstAvail && uf && un) ? String(un.usdt)  : '';
       return _cardCombined(sItem, uItem, { isDiamond: true, diaCount: cnt, firePct: firstAvail && !!sf, strikeS, strikeU });
     }).join('');
-    html += `<div class="sh-grid">${diaHtml}</div>`;
+    html += `<div class="sh-grid-d">${diaHtml}</div>`;
     // Reset
-    if (starReset || usdtReset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid">${_cardCombined(starReset, usdtReset, { isReset: true })}</div>`;
+    if (starReset || usdtReset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid-d">${_cardCombined(starReset, usdtReset, { isReset: true })}</div>`;
 
     html += '<div style="text-align:center;font-size:10px;color:rgba(0,200,255,.55);margin-top:16px;letter-spacing:.5px;text-shadow:0 0 6px rgba(0,200,255,.3)">⭐ Stars — моментально &nbsp;·&nbsp; 💲 USDT — крипто</div>';
     el.innerHTML = html;
@@ -361,7 +360,7 @@ window.ShopHtmlPay = {
               ShopHtml.toast(c.scroll_received ? '✅ Свиток получен! → Рюкзак' : c.profile_reset ? '🔄 Аккаунт сброшен' : c.premium_activated ? '👑 Premium активирован!' : `✅ +${c.diamonds_added || 0} 💎`);
             }
           } catch(_) {}
-          _pkgs = null; ShopHtmlPay._buildStars();
+          _pkgs = null; ShopHtmlPay._buildStars(); ShopHtmlPay._buildCombined();
         } else if (status === 'cancelled') ShopHtml.toast('❌ Оплата отменена', true);
       });
     } catch(_) { ShopHtml.toast('❌ Нет соединения', true); }
@@ -396,7 +395,7 @@ window.ShopHtmlPay = {
           const msg = r.profile_reset ? '🔄 Аккаунт сброшен' : r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
           ShopHtml.toast(msg);
           try { const d = await post('/api/player'); if (d.ok && d.player) { State.player = d.player; ShopHtml._updateBalance(); } } catch(_) {}
-          _pkgs = null; ShopHtmlPay._buildCombined();
+          _pkgs = null; ShopHtmlPay._buildCombined(); ShopHtmlPay._buildStars();
         } else ShopHtmlPay._pollCrypto(invoiceId, attempts + 1);
       } catch(_) { ShopHtmlPay._pollCrypto(invoiceId, attempts + 1); }
     }, 5000);

@@ -55,7 +55,7 @@ const CSS = `
 .sh-card.r-usdt{animation:shUsdt 3s ease-in-out infinite}
 .sh-card:hover .sh-ico{filter:brightness(1.15) drop-shadow(0 0 9px currentColor)}
 .sh-nm{font-size:9.5px;font-weight:700;line-height:1.2;color:#e0eeff;text-align:center;margin-bottom:2px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:20px}
-.sh-ds{display:none}
+.sh-ds{display:none}.sh-grid-d .sh-card .sh-ds{display:block;font-size:8.5px;color:rgba(0,200,255,.65);text-align:center;margin-bottom:3px;letter-spacing:.2px;text-shadow:0 0 5px rgba(0,200,255,.25)}
 .sh-bdg{display:inline-block;font-size:7px;font-weight:700;letter-spacing:.2px;padding:1px 3px;border-radius:3px;margin:0 auto;line-height:1.2}
 .b-bat{background:rgba(255,45,120,.15);color:#ff5a8a}.b-dur{background:rgba(0,245,255,.08);color:#5fdfff}.b-risk{background:rgba(255,60,60,.14);color:#ff6666}.b-day{background:rgba(255,215,0,.1);color:#ffd700}
 .sh-pr{display:flex;align-items:center;justify-content:center;gap:2px;margin:2px 0 2px}

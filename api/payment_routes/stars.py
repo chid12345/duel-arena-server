@@ -109,12 +109,15 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 fresh = db.get_or_create_player(uid, "")
                 return {"ok": False, "reason": "Скидка первой покупки уже использована.", "player": _player_api(dict(fresh))}
             ok = db.mark_diamond_first_purchased(uid, diamonds)
-            if ok:
-                await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "stars_first"})
-                await _send_tg_message(uid,
-                    f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
-                    "🔥 Скидка первой покупки использована.\n\n"
-                    "⚔️ Duel Arena")
+            if not ok:
+                # Гонка или повторная попытка — флаг уже выставлен другим запросом
+                fresh = db.get_or_create_player(uid, "")
+                return {"ok": False, "reason": "Скидка первой покупки уже использована.", "player": _player_api(dict(fresh))}
+            await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "stars_first"})
+            await _send_tg_message(uid,
+                f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
+                "🔥 Скидка первой покупки использована.\n\n"
+                "⚔️ Duel Arena")
             fresh = db.get_or_create_player(uid, "")
             return {"ok": True, "diamonds_added": diamonds, "player": _player_api(dict(fresh))}
 
