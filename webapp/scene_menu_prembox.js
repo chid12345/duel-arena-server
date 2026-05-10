@@ -4,32 +4,33 @@
 
 Object.assign(MenuScene.prototype, {
 
-  async _claimPremBoxProfile(boxTxt, boxZone) {
+  async _claimPremBoxProfile(boxImg, boxGlow, boxZone) {
     if (this._premBoxBusy) return;
     this._premBoxBusy = true;
     try { boxZone.disableInteractive(); } catch(_) {}
-    this.tweens.killTweensOf(boxTxt);
-    boxTxt.setAlpha(0.5);
+    this.tweens.killTweensOf(boxImg);
+    this.tweens.killTweensOf(boxGlow);
+    boxImg.setAlpha(0.5); boxGlow.setAlpha(0);
 
     try {
       const box = await post('/api/shop/premium_daily_box', {});
       if (box?.ok && box?.box_opened) {
-        boxTxt.setAlpha(0.3);
+        boxImg.setAlpha(0.22); boxGlow.setAlpha(0);
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
-        // Показываем что получили
         if (typeof ShopHtml !== 'undefined') {
           ShopHtml._showPremBoxReveal(box.items || []);
         } else {
-          this._toast('📦 Ящик получен! Открой Рюкзак');
+          this._toast('👑 Ящик получен! Открой Рюкзак');
         }
       } else {
-        this.tweens.killTweensOf(boxTxt);
-        boxTxt.setAlpha(0.25);
-        this._toast('📦 ' + (box?.reason || 'Уже получен сегодня'));
+        this.tweens.killTweensOf(boxImg);
+        this.tweens.killTweensOf(boxGlow);
+        boxImg.setAlpha(0.22); boxGlow.setAlpha(0);
+        this._toast('👑 ' + (box?.reason || 'Уже получен сегодня'));
       }
     } catch(_) {
       this._premBoxBusy = false;
-      boxTxt.setAlpha(1);
+      boxImg.setAlpha(1); boxGlow.setAlpha(0.28);
       try { boxZone.setInteractive({ useHandCursor: true }); } catch(_) {}
       this._toast('❌ Нет соединения');
     }

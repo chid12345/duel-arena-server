@@ -30,24 +30,17 @@ window.ShopHtmlPremBox = {
     const ico = document.getElementById('sh-prembox-hdr-ico');
     const lbl = document.getElementById('sh-prembox-hdr-lbl');
     if (ico) {
-      ico.style.filter = 'drop-shadow(0 0 8px rgba(255,180,0,.9))';
       ico.style.opacity = '1';
-      ico.style.animation = 'premhdr-pulse 1.4s ease-in-out infinite';
+      ico.style.animation = 'premhdr-glow 1.4s ease-in-out infinite';
     }
-    if (lbl) { lbl.textContent = 'ЗАБРАТЬ'; lbl.style.color = '#ffd700'; }
-    if (!document.getElementById('premhdr-css')) {
-      const s = document.createElement('style');
-      s.id = 'premhdr-css';
-      s.textContent = '@keyframes premhdr-pulse{0%,100%{transform:scale(1);filter:drop-shadow(0 0 6px rgba(255,180,0,.8))}50%{transform:scale(1.18);filter:drop-shadow(0 0 14px rgba(255,220,0,1))}}';
-      document.head.appendChild(s);
-    }
+    if (lbl) { lbl.textContent = 'ЗАБРАТЬ'; lbl.style.color = '#ffd700'; lbl.style.opacity = '1'; }
   },
 
   _setDark(hdr, seconds) {
     clearInterval(this._timerId);
     const ico = document.getElementById('sh-prembox-hdr-ico');
     const lbl = document.getElementById('sh-prembox-hdr-lbl');
-    if (ico) { ico.style.filter = 'grayscale(1) brightness(.4)'; ico.style.animation = 'none'; ico.style.opacity = '.5'; }
+    if (ico) { ico.style.filter = 'grayscale(1) brightness(.3)'; ico.style.animation = 'none'; ico.style.opacity = '.3'; }
     if (!lbl) return;
     let secs = seconds || 0;
     const _fmt = s => {

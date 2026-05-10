@@ -103,19 +103,26 @@ Object.assign(MenuScene.prototype, {
       // Кнопка ежедневного ящика — центр тёмной зоны справа от бейджа
       const boxCX = Math.round((niX + 84 + W - PAD) / 2);
       const boxCY = avY + 40;
-      const boxTxt = ca(mkT(boxCX, boxCY, '📦', 24, '#ffd700')).setOrigin(0.5, 0.5);
-      const boxZone = mkZ(boxCX, boxCY, 36, 36).setInteractive({ useHandCursor: true });
+      // Glow-кружок позади картинки
+      const boxGlow = ca(mkG());
+      boxGlow.fillStyle(0xffd700, 0.28); boxGlow.fillCircle(boxCX, boxCY, 19);
+      boxGlow.setAlpha(0);
+      // Картинка crown/circuit
+      const boxImg = this.make.image({ x: boxCX, y: boxCY, key: 'prem_box' }, false);
+      boxImg.setDisplaySize(36, 36).setOrigin(0.5, 0.5);
+      ca(boxImg);
+      const boxZone = mkZ(boxCX, boxCY, 38, 38).setInteractive({ useHandCursor: true });
       ca(boxZone);
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
         if (!res?.ok || res?.claimed) {
-          // claimed или ошибка статус-API → гасим, не даём пульсировать
-          boxTxt.setAlpha(0.25);
+          boxImg.setAlpha(0.22); boxGlow.setAlpha(0);
         } else {
-          this.tweens.add({ targets: boxTxt, alpha: 0.5, duration: 700, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-          boxZone.on('pointerup', () => this._claimPremBoxProfile(boxTxt, boxZone));
+          this.tweens.add({ targets: boxGlow, alpha: { from: 0.15, to: 0.45 }, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          this.tweens.add({ targets: boxImg,  alpha: { from: 0.7,  to: 1    }, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          boxZone.on('pointerup', () => this._claimPremBoxProfile(boxImg, boxGlow, boxZone));
         }
-      }).catch(() => { boxTxt.setAlpha(0.25); });
+      }).catch(() => { boxImg.setAlpha(0.22); boxGlow.setAlpha(0); });
     } else {
       ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.75)'));
     }

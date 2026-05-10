@@ -26,6 +26,11 @@ const CSS = `
 .sh-bp-pulse{animation:shBpPulse .28s ease-in-out}
 @keyframes shBpPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.18)}}
 .sh-bp-lbl{font-size:9px;font-weight:700;letter-spacing:.5px;color:rgba(220,70,70,.8);text-transform:uppercase;text-shadow:0 0 5px rgba(220,55,55,.4)}
+.sh-prembox-btn{flex-direction:column;align-items:center;cursor:pointer;user-select:none;margin-right:6px;transition:transform .12s}
+.sh-prembox-btn:active{transform:scale(.92)}
+.sh-prembox-img{width:44px;height:44px;object-fit:contain;transition:filter .18s;filter:drop-shadow(0 0 8px rgba(255,180,0,.8)) drop-shadow(0 0 3px rgba(0,0,0,.5))}
+.sh-prembox-lbl{font-size:8px;font-weight:800;letter-spacing:.8px;color:#ffd700;text-shadow:0 0 6px rgba(255,180,0,.7);text-transform:uppercase;margin-top:1px}
+@keyframes premhdr-glow{0%,100%{filter:drop-shadow(0 0 7px rgba(255,180,0,.8)) drop-shadow(0 0 3px rgba(0,0,0,.5))}50%{filter:drop-shadow(0 0 22px rgba(255,220,0,1)) drop-shadow(0 0 10px rgba(255,160,0,.9)) drop-shadow(0 0 32px rgba(255,200,0,.45))}}
 .sh-tabs{display:flex;overflow-x:auto;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.05)}
 .sh-tabs::-webkit-scrollbar{display:none}
 .sh-tab{flex-shrink:0;padding:5px 10px;font-size:11px;font-weight:700;color:rgba(180,210,255,.55);cursor:pointer;border-bottom:2px solid transparent;transition:all .22s;white-space:nowrap;position:relative}
@@ -234,9 +239,9 @@ function _html() {
       <div class="sh-back">‹</div>
       <div class="sh-ttl"><span>⚔️</span> МАГАЗИН</div>
     </div>
-    <div id="sh-prembox-hdr" style="display:none;flex-direction:column;align-items:center;cursor:pointer;margin-right:2px;position:relative" title="Премиум ящик">
-      <div id="sh-prembox-hdr-ico" style="font-size:26px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,180,0,.8))">📦</div>
-      <div id="sh-prembox-hdr-lbl" style="font-size:8px;color:#ffd700;font-weight:800;letter-spacing:.5px;margin-top:1px">ЗАБРАТЬ</div>
+    <div id="sh-prembox-hdr" class="sh-prembox-btn" style="display:none" title="Премиум ящик">
+      <img id="sh-prembox-hdr-ico" src="prem_box.png" class="sh-prembox-img" alt="">
+      <div id="sh-prembox-hdr-lbl" class="sh-prembox-lbl">ЗАБРАТЬ</div>
     </div>
     <div class="sh-bp" id="sh-bp">
       <div class="sh-bp-btn">
