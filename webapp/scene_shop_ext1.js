@@ -18,7 +18,7 @@ Object.assign(ShopScene.prototype, {
         { id: 'xp_boost_x2', icon: '🚀', name: 'XP Буст ×2.0',    price: 6,   currency: 'diamonds', desc: '10 боёв → инвентарь' },
         { id: 'gold_hunt',   icon: '💰', name: 'Охота за золотом', price: 5,   currency: 'diamonds', desc: '+20% золото · 24ч → инвентарь' },
         { id: 'xp_hunt',     icon: '📚', name: 'Охота за опытом',  price: 8,   currency: 'diamonds', desc: '+50% опыта · 24ч → инвентарь' },
-        { id: 'stat_reset',  icon: '🔄', name: 'Сброс статов',    price: 200, currency: 'diamonds', desc: 'Сброс всех статов' },
+        { id: 'stat_reset',  icon: '🔄', name: 'Сброс статов',    price: 75,  currency: 'diamonds', desc: 'Сброс всех статов' },
       ];
     }
     if (this._tab === 'scrolls') {
