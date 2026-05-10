@@ -68,9 +68,9 @@ window.WBHtml = (() => {
     const reminded  = s.reminder_opt_in || false;
     const joinedAll = joined; // показываем joined если зарегистрирован (не ждём reminder)
     // Призовой фонд = пул за вклад (50/игрока). Каждому ещё +30 гарантия.
-    const _GOLD_GUARANTEED = 30;
+    const _GOLD_GUARANTEED = 500;
     const _GOLD_PER_PLAYER = 50;
-    const prizePool = (regCnt * _GOLD_PER_PLAYER).toLocaleString('ru');
+    const prizePool = (_GOLD_GUARANTEED + regCnt * _GOLD_PER_PLAYER).toLocaleString('ru');
 
     const bought = _getBought();
     const boostEntries = Object.entries(SCROLL_META);
@@ -574,7 +574,7 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     const prizeCnt = root.querySelector('.wb-prize-cnt');
     if (prizeCnt) prizeCnt.textContent = cnt;
     const coins = root.querySelector('.wb-prize-coins');
-    if (coins) coins.textContent = '🪙 ' + (cnt * 50).toLocaleString('ru');
+    if (coins) coins.textContent = '🪙 ' + (500 + cnt * 50).toLocaleString('ru');
     const avMore = root.querySelector('.wb-av-more');
     if (avMore) avMore.textContent = cnt + ' участников';
     const sub = root.querySelector('.wb-join-sub');
