@@ -3,8 +3,19 @@
 from __future__ import annotations
 
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Dict
+
+_MSK = timedelta(hours=3)  # UTC+3 Moscow
+
+def _today_msk() -> str:
+    return (datetime.utcnow() + _MSK).date().isoformat()
+
+def _seconds_until_msk_midnight() -> int:
+    now_msk = datetime.utcnow() + _MSK
+    from datetime import time as dtime
+    next_midnight = datetime.combine(now_msk.date() + timedelta(days=1), dtime.min)
+    return max(0, int((next_midnight - now_msk).total_seconds()))
 
 from fastapi import APIRouter
 
@@ -111,9 +122,35 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             "cryptopay_enabled": bool(CRYPTOPAY_TOKEN),
         }
 
+    @router.get("/api/shop/premium_box/status")
+    async def premium_box_status(init_data: str):
+        """Статус ежедневного ящика для премиум-игрока."""
+        try:
+            tg_user = get_user_from_init_data(init_data)
+            uid = int(tg_user["id"])
+            prem = db.get_premium_status(uid)
+            if not prem.get("is_active"):
+                return {"ok": True, "is_premium": False, "claimed": False, "seconds_until_reset": 0}
+            today = _today_msk()
+            conn = db.get_connection()
+            cursor = conn.cursor()
+            cursor.execute("SELECT premium_box_claimed FROM players WHERE user_id = ?", (uid,))
+            row = cursor.fetchone()
+            conn.close()
+            claimed_date = (row["premium_box_claimed"] if row else None) or ""
+            claimed = str(claimed_date) == today
+            return {
+                "ok": True,
+                "is_premium": True,
+                "claimed": claimed,
+                "seconds_until_reset": _seconds_until_msk_midnight(),
+            }
+        except Exception as exc:
+            return {"ok": False, "reason": str(exc)}
+
     @router.post("/api/shop/premium_daily_box")
     async def premium_daily_box(body: ShopBuyBody):
-        """Бесплатный ящик для Premium-игроков (1 раз в день)."""
+        """Ежедневный ящик для Premium-игроков (1 раз в день, сброс в 00:00 МСК)."""
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         _rl_check(uid, "premium_box", max_hits=2, window_sec=10)
@@ -121,8 +158,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             prem = db.get_premium_status(uid)
             if not prem.get("is_active"):
                 return {"ok": False, "reason": "Требуется Premium"}
-            today = datetime.utcnow().date().isoformat()
-            # Атомарный UPDATE: WHERE premium_box_claimed != today защищает от дублей
+            today = _today_msk()
             conn = db.get_connection()
             cursor = conn.cursor()
             cursor.execute(
@@ -136,8 +172,20 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             if rows == 0:
                 return {"ok": False, "reason": "Ящик уже получен сегодня. Возвращайтесь завтра!"}
             result = _open_loot_box("box_common", db, uid)
+            # +10 алмазов ежедневно (140 за 14 дней подписки)
+            conn2 = db.get_connection()
+            cursor2 = conn2.cursor()
+            cursor2.execute("UPDATE players SET diamonds = diamonds + 10 WHERE user_id = ?", (uid,))
+            conn2.commit()
+            conn2.close()
+            if "items" not in result:
+                result["items"] = []
+            result["items"].insert(0, {
+                "icon": "💎", "name": "10 алмазов", "desc": "Ежедневный премиум бонус", "item_id": "diamonds_daily"
+            })
             result["free"] = True
             result["box_opened"] = True
+            result["seconds_until_reset"] = _seconds_until_msk_midnight()
             return result
 
     app.include_router(router)

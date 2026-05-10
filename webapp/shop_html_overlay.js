@@ -119,15 +119,8 @@ window.ShopHtml = {
     ShopHtml._updateBalance();
     ShopHtml._renderBadge();
     if (invRes.status === 'fulfilled' && invRes.value?.inventory) ShopHtmlItems._setInv(invRes.value.inventory);
-    // Авто-выдача премиум ящика (1 раз в день)
-    if (State.player?.is_premium) {
-      setTimeout(async () => {
-        try {
-          const box = await post('/api/shop/premium_daily_box', {});
-          if (box?.ok && box?.box_opened) { ShopHtml.bumpInvBadge(); ShopHtml._showPremBoxReveal(box.items || []); }
-        } catch(_) {}
-      }, 600);
-    }
+    // Иконка ежедневного ящика в шапке (для премиум-игроков)
+    if (State.player?.is_premium) ShopHtmlPremBox?.initHeaderBtn?.();
     // Незавершённый крипто-платёж: проверить тихо при входе в магазин
     const _pendingId = (() => { try { return localStorage.getItem('cryptoPendingInvoice'); } catch(_) { return null; } })();
     if (_pendingId) {
@@ -240,6 +233,10 @@ function _html() {
     <div style="display:flex;align-items:center;gap:8px">
       <div class="sh-back">‹</div>
       <div class="sh-ttl"><span>⚔️</span> МАГАЗИН</div>
+    </div>
+    <div id="sh-prembox-hdr" style="display:none;flex-direction:column;align-items:center;cursor:pointer;margin-right:2px;position:relative" title="Премиум ящик">
+      <div id="sh-prembox-hdr-ico" style="font-size:26px;line-height:1;filter:drop-shadow(0 0 6px rgba(255,180,0,.8))">📦</div>
+      <div id="sh-prembox-hdr-lbl" style="font-size:8px;color:#ffd700;font-weight:800;letter-spacing:.5px;margin-top:1px">ЗАБРАТЬ</div>
     </div>
     <div class="sh-bp" id="sh-bp">
       <div class="sh-bp-btn">

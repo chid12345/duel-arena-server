@@ -27,7 +27,7 @@ class UsersPremiumMixin:
             conn.close()
 
     def activate_premium(self, user_id: int, days: int = 21) -> Dict[str, Any]:
-        """Активировать/продлить Premium на N дней. При активации — +200 алмазов."""
+        """Активировать/продлить Premium на N дней. Алмазы выдаются по +10/день через ежедневный ящик."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -42,10 +42,10 @@ class UsersPremiumMixin:
                     pass
             base = current_until if (current_until and current_until > now) else now
             new_until = base + timedelta(days=days)
-            bonus_diamonds = 200
+            bonus_diamonds = 0
             cursor.execute(
-                "UPDATE players SET premium_until = ?, diamonds = diamonds + ? WHERE user_id = ?",
-                (new_until.isoformat(), bonus_diamonds, user_id),
+                "UPDATE players SET premium_until = ? WHERE user_id = ?",
+                (new_until.isoformat(), user_id),
             )
             conn.commit()
         finally:
