@@ -304,7 +304,7 @@ window.ShopHtmlPay = {
         ? `<button class="sh-btn btn-u" data-prem-usdt="${usdtStarter.id}" style="flex:1">💲 ${usdtStarter.usdt} USDT</button>`
         : '';
       html += `<div class="sh-sec" style="color:#ffaa33">🎁 Стартовый пак · только 1 раз</div>
-<div class="sh-prem" style="cursor:default;background:linear-gradient(135deg,rgba(255,170,51,.13),rgba(255,100,0,.08));border-color:rgba(255,170,51,.4)">
+<div class="sh-prem" data-starter="1" style="cursor:pointer;background:linear-gradient(135deg,rgba(255,170,51,.13),rgba(255,100,0,.08));border-color:rgba(255,170,51,.4)">
   <div style="display:flex;align-items:center;gap:10px">
     <div style="font-size:26px">🎁</div>
     <div>
@@ -349,6 +349,13 @@ window.ShopHtmlPay = {
     });
     el.querySelectorAll('[data-prem-usdt]').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(btn.dataset.premUsdt); });
+    });
+    // Клик по Стартовому паку → детальная карточка
+    el.querySelector('[data-starter]')?.addEventListener('click', e => {
+      if (e.target.tagName === 'BUTTON') return;
+      const sId = starStarter?.id || null;
+      const uId = usdtStarter?.id || null;
+      ShopHtmlPay._showStarterDetail(sId, uId, starStarter, usdtStarter, d.cryptopay_enabled);
     });
     // Bind dual-row Stars buttons
     el.querySelectorAll('.sh-dual-row[data-stars] button').forEach(btn => {
