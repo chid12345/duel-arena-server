@@ -59,6 +59,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 logger.warning("crypto_check invoice %s payload uid mismatch payload=%s init=%s", invoice_id, payload_uid, uid)
                 return {"ok": False, "reason": "invoice_user_mismatch"}
             is_premium = ":premium:" in custom_payload
+            is_diamond_first = ":diamond_first:" in custom_payload
             is_starter_pack = ":starter_pack:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
@@ -215,6 +216,8 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await _notify_paid_full_reset(owner_uid)
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "profile_reset": True}
+                if is_diamond_first:
+                    db.set_diamond_first_flag(owner_uid)
                 await manager.send(owner_uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})
                 await _send_tg_message(owner_uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
                 db.mark_items_delivered(invoice_id)
@@ -298,6 +301,8 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "already_confirmed": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
+                if is_diamond_first:
+                    db.set_diamond_first_flag(uid)
                 return {
                     "ok": True, "paid": True, "already_confirmed": True,
                     "profile_reset": is_full_reset,

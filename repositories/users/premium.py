@@ -96,6 +96,19 @@ class UsersPremiumMixin:
         finally:
             conn.close()
 
+    def set_diamond_first_flag(self, user_id: int) -> None:
+        """Только поставить флаг первой покупки (алмазы уже зачислены отдельно)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "UPDATE players SET diamond_first_purchased = 1 WHERE user_id = ?",
+                (user_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def is_starter_pack_used(self, user_id: int) -> bool:
         conn = self.get_connection()
         cursor = conn.cursor()
