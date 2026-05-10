@@ -37,7 +37,7 @@
     scroll_crit_12: { icon:'🎯', name:'Эликсир интуиции +12',  desc:'Интуиция +12 · на 5 боёв', tab:'special' },
     scroll_hp_500:  { icon:'❤️', name:'Эликсир HP +500',      desc:'+500 к здоровью · на 7 боёв', tab:'special' },
     scroll_all_12:  { icon:'✨', name:'Все пассивки +12',      desc:'Сила, Ловк, Инт, Вын +12 · на 5 боёв', tab:'special' },
-    scroll_titan:   { icon:'🏔️', name:'Свиток Титана',        desc:'Все статы +15 · на 3 боя', tab:'special' },
+    scroll_titan:   { icon:'🏔️', name:'Свиток Титана',        desc:'Все статы +15 · на 7 боёв', tab:'special' },
     // ── Ящики ──
     box_common:     { icon:'📦', name:'Обычный ящик',          desc:'2–4 свитка · шанс на алмазный', tab:'special' },
     box_rare:       { icon:'🟦', name:'Редкий ящик',           desc:'3–6 алмазных свитков', tab:'special' },

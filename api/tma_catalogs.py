@@ -90,7 +90,7 @@ SHOP_CATALOG = {
     "scroll_crit_12":  {"name": "Эликсир интуиции +12",  "price": 0, "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +12, 5 боёв",      "inventory": True},
     "scroll_hp_500":   {"name": "Эликсир HP +500",       "price": 0, "currency": "diamonds", "icon": "❤️", "tab": "scrolls", "desc": "+500 HP, 7 боёв",           "inventory": True},
     "scroll_all_12":   {"name": "Все пассивки +12",      "price": 0, "currency": "diamonds", "icon": "✨", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +12, 5 боёв", "inventory": True},
-    "scroll_titan":    {"name": "Свиток Титана",         "price": 0, "currency": "diamonds", "icon": "🏔️", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +15, 3 боя", "inventory": True},
+    "scroll_titan":    {"name": "Свиток Титана",         "price": 0, "currency": "diamonds", "icon": "🏔️", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +15, 7 боёв", "inventory": True},
 }
 
 # Эффекты свитков при apply: [(buff_type, value, charges), ...]
@@ -124,7 +124,7 @@ SCROLL_EFFECTS = {
     "scroll_crit_12":  [("crit",        12,  5)],
     "scroll_hp_500":   [("hp_bonus",    500, 7)],
     "scroll_all_12":   [("strength",    12,  5), ("endurance", 12, 5), ("crit", 12, 5), ("stamina", 12, 5)],
-    "scroll_titan":    [("strength",    15,  3), ("endurance", 15, 3), ("crit", 15, 3), ("stamina", 15, 3)],
+    "scroll_titan":    [("strength",    15,  7), ("endurance", 15, 7), ("crit", 15, 7), ("stamina", 15, 7)],
 }
 
 STARS_PACKAGES = [
@@ -158,7 +158,7 @@ STARS_PACKAGES = [
 # Цены: ~50 Stars ≈ 1 USDT (150 Stars = $2.99 ≈ 100💎)
 STARS_SCROLL_PACKAGES = [
     {"id": "ss_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "stars": 100, "desc": "Сила+Ловк+Инт+Вын +12 на 5 боёв"},
-    {"id": "ss_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "stars": 150, "desc": "Все статы +15 на 3 боя · легендарный"},
+    {"id": "ss_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "stars": 150, "desc": "Все статы +15 на 7 боёв · легендарный"},
     {"id": "ss_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "stars": 150, "desc": "USDT-свиток + алмазные · 20% шанс Титана"},
     {"id": "ss_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "stars": 150, "desc": "USDT-свиток + XP×2 + свитки · 10% Титан"},
 ]
@@ -173,7 +173,7 @@ ELITE_AVATAR_STARS_PACKAGE = {
 # USDT-свитки в "Особые" вкладке (дополнительно к обычным пакетам)
 USDT_SCROLL_PACKAGES = [
     {"id": "us_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "usdt": "2", "desc": "Сила+Ловк+Инт+Вын +12 на 5 боёв"},
-    {"id": "us_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "usdt": "3", "desc": "Все статы +15 на 3 боя · легендарный"},
+    {"id": "us_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "usdt": "3", "desc": "Все статы +15 на 7 боёв · легендарный"},
     {"id": "us_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "usdt": "3", "desc": "USDT-свиток + алмазные · 20% шанс Титана"},
     {"id": "us_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "usdt": "3", "desc": "USDT-свиток + XP×2 + свитки · 10% Титан"},
 ]
