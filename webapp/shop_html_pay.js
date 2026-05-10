@@ -178,6 +178,138 @@ window.ShopHtmlPay = {
     });
   },
 
+
+  async _buildCombined() {
+    const el = document.getElementById('sh-p-special'); if (!el) return;
+    const d = await _loadPkgs();
+    const isPrem = !!(State.player || {}).is_premium;
+
+    const starPrem    = d.stars?.find(p => p.id === 'premium');
+    const usdtPrem    = d.crypto?.find(p => p.premium);
+    const starReset   = d.stars?.find(p => p.full_reset);
+    const usdtReset   = d.crypto?.find(p => p.full_reset);
+    const starScrolls = (d.stars_scrolls || []).filter(p => !p.scroll_id?.startsWith('box_'));
+    const usdtScrolls = (d.usdt_scrolls || []).filter(p => !p.scroll_id?.startsWith('box_'));
+    const starBoxes   = (d.stars_scrolls || []).filter(p =>  p.scroll_id?.startsWith('box_'));
+    const usdtBoxes   = (d.usdt_scrolls || []).filter(p =>  p.scroll_id?.startsWith('box_'));
+    const starDia     = (d.stars  || []).filter(p => p.diamonds > 0 && !p.full_reset && p.id !== 'premium' && !p.starter_pack);
+    const usdtDia     = (d.crypto || []).filter(p => p.diamonds > 0 && !p.full_reset && !p.premium && !p.starter_pack);
+
+    function _matchByScrollId(sArr, uArr) {
+      const all = new Map();
+      sArr.forEach(s => all.set(s.scroll_id, { s }));
+      uArr.forEach(u => { const e = all.get(u.scroll_id) || {}; e.u = u; all.set(u.scroll_id, e); });
+      return [...all.values()].map(e => [e.s || null, e.u || null]);
+    }
+    function _matchDia(sArr, uArr) {
+      const pairs = [];
+      const len = Math.max(sArr.length, uArr.length);
+      for (let i = 0; i < len; i++) pairs.push([sArr[i] || null, uArr[i] || null]);
+      return pairs;
+    }
+    function _dualIco(item) {
+      const sid = (item?.scroll_id || '');
+      const isBox = sid.startsWith('box_');
+      const isLeg = sid.includes('titan') || (item?.id || '').includes('titan');
+      return isBox
+        ? '<img src="chest_epic.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.35))">'
+        : isLeg
+        ? '<img src="scroll_titan.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,140,0,.6))"> '
+        : '<img src="scroll_icon.png" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 8px rgba(255,170,50,.6))">';
+    }
+    function _cardDual(sItem, uItem) {
+      const item = sItem || uItem;
+      const sid  = (item?.scroll_id || '');
+      const isBox = sid.startsWith('box_');
+      const isLeg = sid.includes('titan') || (item?.id || '').includes('titan');
+      const r = isLeg ? 'l' : isBox ? 'e' : 'stars';
+      const name = (item?.label || '').replace(/^[^\s]+\s/, '');
+      const sRow = sItem
+        ? `<div class="sh-dual-row" data-stars="${sItem.id}"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${sItem.stars}</span><button class="sh-btn btn-s">КУПИТЬ</button></div>`
+        : '';
+      const uRow = uItem
+        ? `<div class="sh-dual-row" data-usdt="${uItem.id}"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${uItem.usdt}</span><button class="sh-btn btn-u">КУПИТЬ</button></div>`
+        : '';
+      return `<div class="sh-card r-${r}" style="justify-content:flex-start"><div class="sh-ico">${_dualIco(item)}</div><div class="sh-nm">${name}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
+    }
+    function _cardDiaDual(sItem, uItem) {
+      const label = sItem ? `${sItem.diamonds} 💎` : `${uItem.diamonds} 💎`;
+      const sRow = sItem
+        ? `<div class="sh-dual-row" data-stars="${sItem.id}"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${sItem.stars}</span><button class="sh-btn btn-s">КУПИТЬ</button></div>`
+        : '';
+      const uRow = uItem
+        ? `<div class="sh-dual-row" data-usdt="${uItem.id}"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${uItem.usdt}</span><button class="sh-btn btn-u">КУПИТЬ</button></div>`
+        : '';
+      return `<div class="sh-card r-r" style="justify-content:flex-start"><div class="sh-ico">💎</div><div class="sh-nm">${label}</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
+    }
+    function _cardResetDual(sItem, uItem) {
+      const sRow = sItem
+        ? `<div class="sh-dual-row" data-stars="${sItem.id}"><span class="sh-pr-ico">⭐</span><span class="sh-pr-v pv-s">${sItem.stars}</span><button class="sh-btn btn-danger">СБРОС</button></div>`
+        : '';
+      const uRow = uItem
+        ? `<div class="sh-dual-row" data-usdt="${uItem.id}"><span class="sh-pr-ico">💲</span><span class="sh-pr-v pv-u">${uItem.usdt}</span><button class="sh-btn btn-danger">СБРОС</button></div>`
+        : '';
+      return `<div class="sh-card r-d" style="justify-content:flex-start"><div class="sh-ico"><img src="reset_icon.png?v=2" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 7px rgba(255,51,51,.6))"></div><div class="sh-nm">Сброс прогресса</div><div class="sh-dual-rows">${sRow}${uRow}</div></div>`;
+    }
+
+    let html = '';
+
+    // Premium
+    html += '<div class="sh-sec">👑 Premium</div>';
+    if (isPrem) {
+      html += `<div style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`;
+    } else {
+      const sBtn = starPrem
+        ? `<button class="sh-btn btn-s" data-prem-stars="${starPrem.id}" style="flex:1">⭐ ${starPrem.stars}</button>`
+        : '';
+      const uBtn = (usdtPrem && d.cryptopay_enabled)
+        ? `<button class="sh-btn btn-u" data-prem-usdt="${usdtPrem.id}" style="flex:1">💲 ${usdtPrem.usdt} USDT</button>`
+        : '';
+      html += `<div class="sh-prem" style="cursor:default">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="font-size:26px">👑</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#fff">Premium подписка</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.45)">+15% XP · ящик · скидки · значок</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px">21 день</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:90px">${sBtn}${uBtn}</div>
+</div>`;
+    }
+
+    // Boxes
+    const boxPairs = _matchByScrollId(starBoxes, usdtBoxes);
+    if (boxPairs.length) html += `<div class="sh-sec">🎲 Эпические ящики</div><div class="sh-grid-d">${boxPairs.map(([s,u]) => _cardDual(s,u)).join('')}</div>`;
+    // Scrolls
+    const scrPairs = _matchByScrollId(starScrolls, usdtScrolls);
+    if (scrPairs.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid-d">${scrPairs.map(([s,u]) => _cardDual(s,u)).join('')}</div>`;
+    // Diamonds
+    const diaPairs = _matchDia(starDia, usdtDia);
+    if (diaPairs.length) html += `<div class="sh-sec">💎 Алмазы</div><div class="sh-grid-d">${diaPairs.map(([s,u]) => _cardDiaDual(s,u)).join('')}</div>`;
+    // Reset
+    if (starReset || usdtReset) html += `<div class="sh-sec">⚠️ Danger Zone</div><div class="sh-grid-d">${_cardResetDual(starReset, usdtReset)}</div>`;
+
+    html += '<div style="text-align:center;font-size:10px;color:rgba(85,119,170,.8);margin-top:16px">⭐ Stars — моментально &nbsp;·&nbsp; 💲 USDT — крипто</div>';
+    el.innerHTML = html;
+
+    // Bind Premium buttons
+    el.querySelectorAll('[data-prem-stars]').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyStars(btn.dataset.premStars); });
+    });
+    el.querySelectorAll('[data-prem-usdt]').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(btn.dataset.premUsdt); });
+    });
+    // Bind dual-row Stars buttons
+    el.querySelectorAll('.sh-dual-row[data-stars] button').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyStars(btn.closest('[data-stars]').dataset.stars); });
+    });
+    // Bind dual-row USDT buttons
+    el.querySelectorAll('.sh-dual-row[data-usdt] button').forEach(btn => {
+      btn.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(btn.closest('[data-usdt]').dataset.usdt); });
+    });
+  },
+
   _pkgs() { return _pkgs; },
   _resetCache() { _pkgs = null; },
 
@@ -239,7 +371,7 @@ window.ShopHtmlPay = {
           const msg = r.profile_reset ? '🔄 Аккаунт сброшен' : r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
           ShopHtml.toast(msg);
           try { const d = await post('/api/player'); if (d.ok && d.player) { State.player = d.player; ShopHtml._updateBalance(); } } catch(_) {}
-          _pkgs = null; ShopHtmlPay._buildSpecial();
+          _pkgs = null; ShopHtmlPay._buildCombined();
         } else ShopHtmlPay._pollCrypto(invoiceId, attempts + 1);
       } catch(_) { ShopHtmlPay._pollCrypto(invoiceId, attempts + 1); }
     }, 5000);

@@ -72,6 +72,12 @@ const CSS = `
 .sh-fl{font-size:9px;letter-spacing:1px;color:rgba(255,255,255,.3);text-transform:uppercase}
 .sh-fi{display:flex;gap:14px}.sh-fitem{display:flex;align-items:center;gap:5px}
 .sh-fval{font-size:13px;font-weight:800;line-height:1}.fv-g{color:#ffd700;text-shadow:0 0 6px rgba(255,215,0,.35)}.fv-d{color:#00f5ff;text-shadow:0 0 6px rgba(0,245,255,.35)}
+.sh-grid-d{display:grid;grid-template-columns:repeat(3,1fr);gap:5px}
+.sh-dual-rows{width:100%;margin-top:2px;display:flex;flex-direction:column;gap:2px}
+.sh-dual-row{display:flex;align-items:center;gap:3px;padding:2px 2px;border-radius:4px;background:rgba(255,255,255,.03)}
+.sh-dual-row .sh-btn{flex:1;padding:2px 0;font-size:7px}
+.sh-dual-row .sh-pr-ico{font-size:9px;flex-shrink:0}
+.sh-dual-row .sh-pr-v{font-size:10px;font-weight:800;min-width:24px;text-align:right;flex-shrink:0}
 .sh-toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(12px);background:rgba(0,245,255,.13);border:1px solid rgba(0,245,255,.35);border-radius:18px;padding:7px 18px;font-size:12px;font-weight:600;color:#00f5ff;backdrop-filter:blur(10px);z-index:9100;opacity:0;transition:all .25s;white-space:nowrap;pointer-events:none}
 .sh-toast.on{opacity:1;transform:translateX(-50%) translateY(0)}.sh-toast.err{background:rgba(255,51,51,.13);border-color:rgba(255,51,51,.35);color:#ff6666}
 `;
@@ -152,8 +158,7 @@ window.ShopHtml = {
     r.querySelectorAll('.sh-panel').forEach(el => el.classList.toggle('on', el.id === `sh-p-${t}`));
     if (!init) r.querySelector('.sh-body')?.scrollTo({ top: 0, behavior: 'smooth' });
     r.querySelector(`.sh-tab[data-t="${t}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-    if (t === 'stars') ShopHtmlPay._buildStars();
-    if (t === 'special') ShopHtmlPay._buildSpecial();
+    if (t === 'special') ShopHtmlPay._buildCombined();
   },
   _updateBalance() {
     const p = State.player;
@@ -248,7 +253,6 @@ function _html() {
     <div class="sh-tab" data-t="consumables">🧪 Зелья</div>
     <div class="sh-tab" data-t="scrolls">📜 Свитки</div>
     <div class="sh-tab" data-t="boxes">🎲 Ящики</div>
-    <div class="sh-tab" data-t="stars">⭐ Звёзды</div>
     <div class="sh-tab" data-t="special">💵 Купить</div>
   </div>
 </div>
@@ -256,7 +260,6 @@ function _html() {
   <div class="sh-panel" id="sh-p-consumables">${ShopHtmlItems._panelHTML('consumables')}</div>
   <div class="sh-panel" id="sh-p-scrolls">${ShopHtmlItems._panelHTML('scrolls')}</div>
   <div class="sh-panel" id="sh-p-boxes">${ShopHtmlItems._panelHTML('boxes')}</div>
-  <div class="sh-panel" id="sh-p-stars"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3)">⏳ Загрузка...</div></div>
   <div class="sh-panel" id="sh-p-special"><div style="text-align:center;padding:40px;color:rgba(255,255,255,.3)">⏳ Загрузка...</div></div>
 </div>
 <div class="sh-foot">
