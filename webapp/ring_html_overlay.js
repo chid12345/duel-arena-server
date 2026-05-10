@@ -17,20 +17,20 @@ const RING_IMG = {
 
 const RING_DATA = [
   // Бесплатные (3% бой + 3% реген + 2% золото/опыт)
-  {id:'ring_free1', r:'common', ht:'💍 Кольцо', name:'Кольцо Меткости',          stars:'★☆☆☆', acc:3,  anti_dodge:0, silence:0, slow:0, regen:3, gold:2, xp:0, type:'free'},
-  {id:'ring_free2', r:'common', ht:'💍 Кольцо', name:'Кольцо Охотника',          stars:'★☆☆☆', acc:0,  anti_dodge:3, silence:0, slow:0, regen:3, gold:0, xp:2, type:'free'},
-  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Безмолвия',         stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:3, slow:0, regen:3, gold:2, xp:0, type:'free'},
-  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Оков',              stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:0, slow:3, regen:3, gold:0, xp:2, type:'free'},
+  {id:'ring_free1', r:'common', ht:'💍 Кольцо', name:'Кольцо Меткости',          stars:'★☆☆☆', acc:3,  anti_dodge:0, silence:0, slow:0, regen:3, gold:2, xp:0, type:'gold', price:'8000'},
+  {id:'ring_free2', r:'common', ht:'💍 Кольцо', name:'Кольцо Охотника',          stars:'★☆☆☆', acc:0,  anti_dodge:3, silence:0, slow:0, regen:3, gold:0, xp:2, type:'gold', price:'8000'},
+  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Безмолвия',         stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:3, slow:0, regen:3, gold:2, xp:0, type:'gold', price:'8000'},
+  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Оков',              stars:'★☆☆☆', acc:0,  anti_dodge:0, silence:0, slow:3, regen:3, gold:0, xp:2, type:'gold', price:'8000'},
   // Золото (5% бой + 5% реген + 3% золото/опыт)
-  {id:'ring_gold1', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Снайпера',          stars:'★★☆☆', acc:5,  anti_dodge:0, silence:0, slow:0, regen:5, gold:3, xp:0, type:'gold',     price:'1100'},
-  {id:'ring_gold2', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Преследователя',    stars:'★★☆☆', acc:0,  anti_dodge:5, silence:0, slow:0, regen:5, gold:0, xp:3, type:'gold',     price:'1400'},
-  {id:'ring_gold3', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Тишины',            stars:'★★☆☆', acc:0,  anti_dodge:0, silence:5, slow:0, regen:5, gold:3, xp:0, type:'gold',     price:'1700'},
-  {id:'ring_gold4', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Замедления',        stars:'★★☆☆', acc:0,  anti_dodge:0, silence:0, slow:5, regen:5, gold:0, xp:3, type:'gold',     price:'2000'},
+  {id:'ring_gold1', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Снайпера',          stars:'★★☆☆', acc:5,  anti_dodge:0, silence:0, slow:0, regen:5, gold:3, xp:0, type:'gold',     price:'8000'},
+  {id:'ring_gold2', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Преследователя',    stars:'★★☆☆', acc:0,  anti_dodge:5, silence:0, slow:0, regen:5, gold:0, xp:3, type:'gold',     price:'8000'},
+  {id:'ring_gold3', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Тишины',            stars:'★★☆☆', acc:0,  anti_dodge:0, silence:5, slow:0, regen:5, gold:3, xp:0, type:'gold',     price:'8000'},
+  {id:'ring_gold4', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Замедления',        stars:'★★☆☆', acc:0,  anti_dodge:0, silence:0, slow:5, regen:5, gold:0, xp:3, type:'gold',     price:'8000'},
   // Алмазы (7% бой + 7% реген + 5% золото/опыт)
-  {id:'ring_dia1',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Ясновидца',         stars:'★★★☆', acc:7,  anti_dodge:0, silence:0, slow:0, regen:7, gold:5, xp:0, type:'diamonds', price:'25'},
-  {id:'ring_dia2',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Неизбежности',      stars:'★★★☆', acc:0,  anti_dodge:7, silence:0, slow:0, regen:7, gold:0, xp:5, type:'diamonds', price:'35'},
-  {id:'ring_dia3',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Молчания',          stars:'★★★☆', acc:0,  anti_dodge:0, silence:7, slow:0, regen:7, gold:5, xp:0, type:'diamonds', price:'50'},
-  {id:'ring_dia4',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Оцепенения',        stars:'★★★☆', acc:0,  anti_dodge:0, silence:0, slow:7, regen:7, gold:0, xp:5, type:'diamonds', price:'70'},
+  {id:'ring_dia1',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Ясновидца',         stars:'★★★☆', acc:7,  anti_dodge:0, silence:0, slow:0, regen:7, gold:5, xp:0, type:'diamonds', price:'75'},
+  {id:'ring_dia2',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Неизбежности',      stars:'★★★☆', acc:0,  anti_dodge:7, silence:0, slow:0, regen:7, gold:0, xp:5, type:'diamonds', price:'75'},
+  {id:'ring_dia3',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Молчания',          stars:'★★★☆', acc:0,  anti_dodge:0, silence:7, slow:0, regen:7, gold:5, xp:0, type:'diamonds', price:'75'},
+  {id:'ring_dia4',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Оцепенения',        stars:'★★★☆', acc:0,  anti_dodge:0, silence:0, slow:7, regen:7, gold:0, xp:5, type:'diamonds', price:'75'},
   // Мифические (10% бой + 10% реген + 7% золото/опыт)
   {id:'ring_mythic1',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Провидца',          stars:'★★★★', acc:10, anti_dodge:0,  silence:0,  slow:0,  regen:10, gold:7, xp:0, type:'mythic'},
   {id:'ring_mythic2',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Рока',              stars:'★★★★', acc:0,  anti_dodge:10, silence:0,  slow:0,  regen:10, gold:0, xp:7, type:'mythic'},

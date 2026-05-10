@@ -17,20 +17,20 @@ const HELMET_IMG = {
 
 const HELMETS_DATA = [
   // ── Бесплатные — каждый = одна чистая роль
-  {id:'helmet_free1',  r:'common', ht:'⛑️ Шлем', name:'Шлем Танка',        stars:'★☆☆☆', atk:0,  crit:0,  hp:60,  def:0,  pen:0, type:'free'},
-  {id:'helmet_free2',  r:'common', ht:'⛑️ Шлем', name:'Шлем Стража',       stars:'★☆☆☆', atk:0,  crit:0,  hp:0,   def:3,  pen:0, type:'free'},
-  {id:'helmet_free3',  r:'common', ht:'⛑️ Шлем', name:'Шлем Охотника',     stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   def:0,  pen:0, type:'free'},
-  {id:'helmet_free4',  r:'common', ht:'⛑️ Шлем', name:'Шлем Дуэлянта',    stars:'★☆☆☆', atk:0,  crit:4,  hp:0,   def:0,  pen:0, type:'free'},
+  {id:'helmet_free1',  r:'common', ht:'⛑️ Шлем', name:'Шлем Танка',        stars:'★☆☆☆', atk:0,  crit:0,  hp:60,  def:0,  pen:0, type:'gold', price:'8000'},
+  {id:'helmet_free2',  r:'common', ht:'⛑️ Шлем', name:'Шлем Стража',       stars:'★☆☆☆', atk:0,  crit:0,  hp:0,   def:3,  pen:0, type:'gold', price:'8000'},
+  {id:'helmet_free3',  r:'common', ht:'⛑️ Шлем', name:'Шлем Охотника',     stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   def:0,  pen:0, type:'gold', price:'8000'},
+  {id:'helmet_free4',  r:'common', ht:'⛑️ Шлем', name:'Шлем Дуэлянта',    stars:'★☆☆☆', atk:0,  crit:4,  hp:0,   def:0,  pen:0, type:'gold', price:'8000'},
   // ── Золото — двойные синергии
-  {id:'helmet_gold1',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Берсерка',     stars:'★★☆☆', atk:18, crit:5,  hp:0,   def:0,  pen:0, type:'gold',     price:'1200'},
-  {id:'helmet_gold2',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Крепости',     stars:'★★☆☆', atk:0,  crit:0,  hp:90,  def:6,  pen:0, type:'gold',     price:'1500'},
-  {id:'helmet_gold3',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Снайпера',     stars:'★★☆☆', atk:14, crit:9,  hp:0,   def:0,  pen:0, type:'gold',     price:'1800'},
-  {id:'helmet_gold4',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Паладина',     stars:'★★☆☆', atk:10, crit:0,  hp:55,  def:4,  pen:0, type:'gold',     price:'2200'},
+  {id:'helmet_gold1',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Берсерка',     stars:'★★☆☆', atk:18, crit:5,  hp:0,   def:0,  pen:0, type:'gold',     price:'8000'},
+  {id:'helmet_gold2',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Крепости',     stars:'★★☆☆', atk:0,  crit:0,  hp:90,  def:6,  pen:0, type:'gold',     price:'8000'},
+  {id:'helmet_gold3',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Снайпера',     stars:'★★☆☆', atk:14, crit:9,  hp:0,   def:0,  pen:0, type:'gold',     price:'8000'},
+  {id:'helmet_gold4',  r:'rare',   ht:'⛑️ Шлем', name:'Шлем Паладина',     stars:'★★☆☆', atk:10, crit:0,  hp:55,  def:4,  pen:0, type:'gold',     price:'8000'},
   // ── Алмазы — мощные или уникальные комбо
-  {id:'helmet_dia1',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Демона',       stars:'★★★☆', atk:30, crit:10, hp:0,   def:0,  pen:0, type:'diamonds', price:'25'},
-  {id:'helmet_dia2',   r:'epic',   ht:'⛑️ Шлем', name:'Стальная Крепость', stars:'★★★☆', atk:0,  crit:0,  hp:150, def:9,  pen:0, type:'diamonds', price:'35'},
-  {id:'helmet_dia3',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Арканы',       stars:'★★★☆', atk:0,  crit:14, hp:0,   def:5,  pen:0, type:'diamonds', price:'50'},
-  {id:'helmet_dia4',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Разрушителя',  stars:'★★★☆', atk:38, crit:0,  hp:70,  def:0,  pen:2, type:'diamonds', price:'70'},
+  {id:'helmet_dia1',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Демона',       stars:'★★★☆', atk:30, crit:10, hp:0,   def:0,  pen:0, type:'diamonds', price:'75'},
+  {id:'helmet_dia2',   r:'epic',   ht:'⛑️ Шлем', name:'Стальная Крепость', stars:'★★★☆', atk:0,  crit:0,  hp:150, def:9,  pen:0, type:'diamonds', price:'75'},
+  {id:'helmet_dia3',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Арканы',       stars:'★★★☆', atk:0,  crit:14, hp:0,   def:5,  pen:0, type:'diamonds', price:'75'},
+  {id:'helmet_dia4',   r:'epic',   ht:'⛑️ Шлем', name:'Шлем Разрушителя',  stars:'★★★☆', atk:38, crit:0,  hp:70,  def:0,  pen:2, type:'diamonds', price:'75'},
   // ── Мифические — каждый = уникальный стиль игры
   {id:'helmet_mythic1',r:'mythic', ht:'⛑️ Шлем', name:'Шлем Дракона',      stars:'★★★★', atk:42, crit:0,  hp:160, def:10, pen:0, type:'mythic'},
   {id:'helmet_mythic2',r:'mythic', ht:'⛑️ Шлем', name:'Корона Воителя',    stars:'★★★★', atk:35, crit:16, hp:0,   def:6,  pen:0, type:'mythic'},
