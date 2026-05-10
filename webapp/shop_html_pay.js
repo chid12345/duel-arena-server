@@ -192,8 +192,10 @@ window.ShopHtmlPay = {
     const usdtScrolls = (d.usdt_scrolls || []).filter(p => !p.scroll_id?.startsWith('box_'));
     const starBoxes   = (d.stars_scrolls || []).filter(p =>  p.scroll_id?.startsWith('box_'));
     const usdtBoxes   = (d.usdt_scrolls || []).filter(p =>  p.scroll_id?.startsWith('box_'));
-    const starDia     = (d.stars  || []).filter(p => p.diamonds > 0 && !p.full_reset && p.id !== 'premium' && !p.starter_pack);
-    const usdtDia     = (d.crypto || []).filter(p => p.diamonds > 0 && !p.full_reset && !p.premium && !p.starter_pack);
+    const starDia     = (d.stars  || []).filter(p => p.diamonds > 0 && !p.full_reset && p.id !== 'premium' && !p.starter_pack && !p.first_purchase);
+    const usdtDia     = (d.crypto || []).filter(p => p.diamonds > 0 && !p.full_reset && !p.premium && !p.starter_pack && !p.first_purchase);
+    const starStarter = d.stars?.find(p => p.starter_pack);
+    const usdtStarter = d.crypto?.find(p => p.starter_pack);
 
     function _matchByScrollId(sArr, uArr) {
       const all = new Map();
@@ -286,6 +288,29 @@ window.ShopHtmlPay = {
       <div style="font-size:13px;font-weight:700;color:#fff">Premium подписка</div>
       <div style="font-size:10px;color:rgba(255,255,255,.45)">+15% XP · ящик · скидки · значок</div>
       <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px">21 день</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:90px">${sBtn}${uBtn}</div>
+</div>`;
+    }
+
+    // Стартовый пак (только если не куплен)
+    const starterUsed = !!(State.player?.starter_pack_used);
+    if (!starterUsed && (starStarter || usdtStarter)) {
+      const sBtn = starStarter
+        ? `<button class="sh-btn btn-s" data-prem-stars="${starStarter.id}" style="flex:1">⭐ ${starStarter.stars}</button>`
+        : '';
+      const uBtn = (usdtStarter && d.cryptopay_enabled)
+        ? `<button class="sh-btn btn-u" data-prem-usdt="${usdtStarter.id}" style="flex:1">💲 ${usdtStarter.usdt} USDT</button>`
+        : '';
+      html += `<div class="sh-sec" style="color:#ffaa33">🎁 Стартовый пак · только 1 раз</div>
+<div class="sh-prem" style="cursor:default;background:linear-gradient(135deg,rgba(255,170,51,.13),rgba(255,100,0,.08));border-color:rgba(255,170,51,.4)">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div style="font-size:26px">🎁</div>
+    <div>
+      <div style="font-size:13px;font-weight:700;color:#ffaa33">Стартовый пак</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.55)">200💎 · Premium 14 дн. · 2× Свиток Титана</div>
+      <div style="font-size:10px;color:rgba(255,170,51,.6);margin-top:2px">только 1 раз · скидка ×4</div>
     </div>
   </div>
   <div style="display:flex;flex-direction:column;gap:4px;min-width:90px">${sBtn}${uBtn}</div>
