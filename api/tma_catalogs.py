@@ -39,33 +39,33 @@ SHOP_CATALOG = {
     "crit_10":       {"name": "Свиток крита +10%",         "price": 3,   "currency": "diamonds", "icon": "🎯", "tab": "raid_scrolls", "desc": "+10% шанс крита (1 рейд)",           "inventory": True},
 
     # ── Свитки — золото (1 бой) ────────────────────────────────
-    # Простые (+3 стат): 1 бой = ~16г дохода → цена = 1–2 боя
-    "scroll_str_3":    {"name": "Эликсир силы +3",      "price": 20,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила +3, 1 бой",          "inventory": True},
-    "scroll_end_3":    {"name": "Эликсир ловкости +3",  "price": 20,  "currency": "gold",     "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +3, 1 бой",      "inventory": True},
-    "scroll_crit_3":   {"name": "Эликсир интуиции +3",  "price": 20,  "currency": "gold",     "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +3, 1 бой",       "inventory": True},
-    "scroll_armor_6":  {"name": "Свиток брони 6%",      "price": 25,  "currency": "gold",     "icon": "🛡️", "tab": "scrolls", "desc": "Броня +6%, 1 бой",        "inventory": True},
-    "scroll_hp_100":   {"name": "Эликсир HP +100",      "price": 20,  "currency": "gold",     "icon": "❤️", "tab": "scrolls", "desc": "+100 HP, 1 бой",          "inventory": True},
-    # Комбо-свитки: 2–3 боя окупаемость
-    "scroll_warrior":  {"name": "Комбо Воина",          "price": 35,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила+2, Ловк+2, 1 бой",   "inventory": True},
-    "scroll_shadow":   {"name": "Комбо Тени",           "price": 45,  "currency": "gold",     "icon": "🌑", "tab": "scrolls", "desc": "Ловк+3, Уворот+3%, 1 бой", "inventory": True},
-    "scroll_fury":     {"name": "Комбо Ярости",         "price": 55,  "currency": "gold",     "icon": "💥", "tab": "scrolls", "desc": "Сила+4, Крит+2, 1 бой",    "inventory": True},
-    "scroll_vampire_g":{"name": "Свиток Вампира",       "price": 70,  "currency": "gold",     "icon": "🩸", "tab": "scrolls", "desc": "Вампиризм 9%, 1 бой",       "inventory": True},
+    # Сетка: Common T1=20г · T2=28г | Rare T1=40г · T2=60г | Epic=75г
+    # (доход ~16г/бой → T1≈1.25 боя, Rare≈2.5 боя, Epic≈4.7 боя)
+    "scroll_str_3":    {"name": "Эликсир силы +3",      "price": 20,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила +3, 1 бой",           "inventory": True},
+    "scroll_end_3":    {"name": "Эликсир ловкости +3",  "price": 20,  "currency": "gold",     "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +3, 1 бой",       "inventory": True},
+    "scroll_crit_3":   {"name": "Эликсир интуиции +3",  "price": 20,  "currency": "gold",     "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +3, 1 бой",        "inventory": True},
+    "scroll_armor_6":  {"name": "Свиток брони 6%",      "price": 28,  "currency": "gold",     "icon": "🛡️", "tab": "scrolls", "desc": "Броня +6%, 1 бой",         "inventory": True},
+    "scroll_hp_100":   {"name": "Эликсир HP +100",      "price": 20,  "currency": "gold",     "icon": "❤️", "tab": "scrolls", "desc": "+100 HP, 1 бой",           "inventory": True},
+    "scroll_warrior":  {"name": "Комбо Воина",          "price": 40,  "currency": "gold",     "icon": "⚔️", "tab": "scrolls", "desc": "Сила+2, Ловк+2, 1 бой",    "inventory": True},
+    "scroll_shadow":   {"name": "Комбо Тени",           "price": 40,  "currency": "gold",     "icon": "🌑", "tab": "scrolls", "desc": "Ловк+3, Уворот+3%, 1 бой",  "inventory": True},
+    "scroll_fury":     {"name": "Комбо Ярости",         "price": 60,  "currency": "gold",     "icon": "💥", "tab": "scrolls", "desc": "Сила+4, Крит+2, 1 бой",     "inventory": True},
+    "scroll_vampire_g":{"name": "Свиток Вампира",       "price": 75,  "currency": "gold",     "icon": "🩸", "tab": "scrolls", "desc": "Вампиризм 9%, 1 бой",        "inventory": True},
 
     # ── Свитки — алмазы (3 боя) ───────────────────────────────
-    # ~5-8💎/день → базовые 5💎, комбо 7-8💎, премиум 10💎
-    "scroll_str_6":    {"name": "Эликсир силы +6",      "price": 15,  "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +6, 3 боя",          "inventory": True},
-    "scroll_end_6":    {"name": "Эликсир ловкости +6",  "price": 15,  "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +6, 3 боя",      "inventory": True},
-    "scroll_crit_6":   {"name": "Эликсир интуиции +6",  "price": 15,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +6, 3 боя",       "inventory": True},
-    "scroll_dodge_5":  {"name": "Свиток уворота 5%",    "price": 15,  "currency": "diamonds", "icon": "💨", "tab": "scrolls", "desc": "Уворот +5%, 3 боя",        "inventory": True},
-    "scroll_armor_10": {"name": "Свиток брони 10%",     "price": 20,  "currency": "diamonds", "icon": "🛡️", "tab": "scrolls", "desc": "Броня +10%, 3 боя",       "inventory": True},
-    "scroll_hp_200":   {"name": "Эликсир HP +200",      "price": 15,  "currency": "diamonds", "icon": "❤️", "tab": "scrolls", "desc": "+200 HP, 3 боя",          "inventory": True},
-    "scroll_accuracy": {"name": "Свиток точности",      "price": 15,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Точность +15%, 3 боя",      "inventory": True},
-    "scroll_double_10":{"name": "Двойной удар +10%",    "price": 25,  "currency": "diamonds", "icon": "⚡", "tab": "scrolls", "desc": "Двойной удар +10%, 3 боя", "inventory": True},
-    "scroll_bastion":  {"name": "Бастион",              "price": 25,  "currency": "diamonds", "icon": "🏰", "tab": "scrolls", "desc": "Ловк+5, Броня+8%, 3 боя",  "inventory": True},
-    "scroll_predator": {"name": "Хищник",               "price": 25,  "currency": "diamonds", "icon": "🐍", "tab": "scrolls", "desc": "Крит+5, Двойн+8%, 3 боя",  "inventory": True},
-    "scroll_vampire_d":{"name": "Свиток Вампира+",      "price": 25,  "currency": "diamonds", "icon": "🧛", "tab": "scrolls", "desc": "Вампиризм 15%, 3 боя",      "inventory": True},
-    "scroll_berserker":{"name": "Берсерк",              "price": 30,  "currency": "diamonds", "icon": "🔥", "tab": "scrolls", "desc": "Сила+8, Броня-5%, 3 боя",   "inventory": True},
-    "scroll_all_4":    {"name": "Все пассивки +4",      "price": 30,  "currency": "diamonds", "icon": "✨", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +4, 1 бой", "inventory": True},
+    # Сетка: Common T1=15💎 · T2=20💎 | Rare T1=25💎 · T2=32💎 | Epic(1бой)=20💎
+    "scroll_str_6":    {"name": "Эликсир силы +6",      "price": 15,  "currency": "diamonds", "icon": "⚔️", "tab": "scrolls", "desc": "Сила +6, 3 боя",           "inventory": True},
+    "scroll_end_6":    {"name": "Эликсир ловкости +6",  "price": 15,  "currency": "diamonds", "icon": "🌀", "tab": "scrolls", "desc": "Ловкость +6, 3 боя",       "inventory": True},
+    "scroll_crit_6":   {"name": "Эликсир интуиции +6",  "price": 15,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Интуиция +6, 3 боя",        "inventory": True},
+    "scroll_dodge_5":  {"name": "Свиток уворота 5%",    "price": 15,  "currency": "diamonds", "icon": "💨", "tab": "scrolls", "desc": "Уворот +5%, 3 боя",         "inventory": True},
+    "scroll_hp_200":   {"name": "Эликсир HP +200",      "price": 15,  "currency": "diamonds", "icon": "❤️", "tab": "scrolls", "desc": "+200 HP, 3 боя",           "inventory": True},
+    "scroll_accuracy": {"name": "Свиток точности",      "price": 15,  "currency": "diamonds", "icon": "🎯", "tab": "scrolls", "desc": "Точность +15%, 3 боя",       "inventory": True},
+    "scroll_armor_10": {"name": "Свиток брони 10%",     "price": 20,  "currency": "diamonds", "icon": "🛡️", "tab": "scrolls", "desc": "Броня +10%, 3 боя",        "inventory": True},
+    "scroll_double_10":{"name": "Двойной удар +10%",    "price": 25,  "currency": "diamonds", "icon": "⚡", "tab": "scrolls", "desc": "Двойной удар +10%, 3 боя",  "inventory": True},
+    "scroll_bastion":  {"name": "Бастион",              "price": 25,  "currency": "diamonds", "icon": "🏰", "tab": "scrolls", "desc": "Ловк+5, Броня+8%, 3 боя",   "inventory": True},
+    "scroll_predator": {"name": "Хищник",               "price": 25,  "currency": "diamonds", "icon": "🐍", "tab": "scrolls", "desc": "Крит+5, Двойн+8%, 3 боя",   "inventory": True},
+    "scroll_vampire_d":{"name": "Свиток Вампира+",      "price": 25,  "currency": "diamonds", "icon": "🧛", "tab": "scrolls", "desc": "Вампиризм 15%, 3 боя",       "inventory": True},
+    "scroll_berserker":{"name": "Берсерк",              "price": 32,  "currency": "diamonds", "icon": "🔥", "tab": "scrolls", "desc": "Сила+8, Броня-5%, 3 боя",    "inventory": True},
+    "scroll_all_4":    {"name": "Все пассивки +4",      "price": 20,  "currency": "diamonds", "icon": "✨", "tab": "scrolls", "desc": "Сила+Ловк+Инт+Вын +4, 1 бой", "inventory": True},
 
     # ── Обмен алмазы → золото ─────────────────────────────────
     "exchange_small":  {"name": "5💎 → 350🪙",          "price": 5,   "currency": "diamonds", "icon": "💱", "tab": "boxes", "desc": "Получить 350 золота"},
