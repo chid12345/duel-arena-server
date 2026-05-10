@@ -240,7 +240,7 @@ window.ShopHtmlPay = {
       return `<div class="sh-card r-${r}" style="${cardStyle}" data-s-id="${sItem?.id||''}" data-u-id="${uItem?.id||''}" data-combined="1">
   <div class="sh-ico">${icoHtml}</div>
   <div class="sh-nm">${name}</div>
-  <div class="sh-ds">${priceHint}</div>
+  <div class="sh-ds"></div>
   <button class="sh-btn ${btnCls}">${btnLabel}</button>
 </div>`;
     }
@@ -299,9 +299,7 @@ window.ShopHtmlPay = {
     if (scrPairs.length) html += `<div class="sh-sec">📜 Боевые свитки</div><div class="sh-grid-d">${scrPairs.map(([s,u]) => _cardCombined(s,u)).join('')}</div>`;
     // Diamonds — 3 карточки; цена = первая покупка (со зачёркнутой) или обычная
     const firstAvail = !(State.player?.diamond_first_purchased);
-    html += firstAvail
-      ? `<div class="sh-sec" style="color:#ffaa33">💎 Алмазы · 🔥 скидка первой покупки</div>`
-      : `<div class="sh-sec">💎 Алмазы</div>`;
+    html += `<div class="sh-sec">💎 Алмазы</div>`;
     const diaHtml = [100, 300, 500].map(cnt => {
       const sf = (d.stars  || []).find(p => p.first_purchase && p.diamonds === cnt);
       const uf = (d.crypto || []).find(p => p.first_purchase && p.diamonds === cnt);
