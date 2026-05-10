@@ -40,9 +40,9 @@ window.WBHtml = (() => {
     crit_10:    { icon:'🎯', name:'КРИТ ШАНС', val:'+10%', price:'40 🪙' },
   };
   const RES_META = [
-    { id:'res_30',  icon:'💊', pct:'30%',  price:'500 🪙',  cur:'gold',     desc:'30% HP · 10 зарядов' },
-    { id:'res_60',  icon:'💉', pct:'60%',  price:'40 💎',   cur:'diamonds', desc:'60% HP · 10 зарядов' },
-    { id:'res_100', icon:'✨', pct:'100%', price:'80 💎',   cur:'diamonds', desc:'100% HP · 10 зарядов', gold:true },
+    { id:'res_30',  icon:'💊', pct:'30%',  price:'80 🪙',   cur:'gold', desc:'30% HP · 10 зарядов' },
+    { id:'res_60',  icon:'💉', pct:'60%',  price:'150 🪙',  cur:'gold', desc:'60% HP · 10 зарядов' },
+    { id:'res_100', icon:'✨', pct:'100%', price:'250 🪙',  cur:'gold', desc:'100% HP · 10 зарядов', gold:true },
   ];
   const BOSS_TYPE_STYLE = {
     universal: { hdr:'rgba(60,20,90,.97)',  border:'rgba(150,80,255,.55)', badge:'#cc88ff', label:'УНИВЕРСАЛЬНЫЙ' },
@@ -187,7 +187,7 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
 </div>
 <div class="wb-cp on" data-cp="boosts"><div class="wb-bgrid">${boostsHTML}</div></div>
 <div class="wb-cp" data-cp="revival">
-  <div class="wb-rev-info">🛡 Купи свиток <b>ДО</b> рейда — 1 покупка = 10 зарядов. В бою после смерти кнопки появятся автоматически, если заряды есть.</div>
+  <div class="wb-rev-info">🛡 Свитки покупаются <b>во время боя</b> после смерти — 1 покупка = 10 зарядов. Кнопки появятся автоматически.</div>
   <div class="wb-rgrid">${resHTML}</div>
 </div>
 <div class="wb-cp" data-cp="history"><div class="wb-hist">${topRows}</div></div>`;

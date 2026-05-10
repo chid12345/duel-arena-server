@@ -84,7 +84,7 @@ Object.assign(WorldBossScene.prototype, {
     if (!hasAny) {
       this._addPanel(16, y, W - 32, 38);
       this._addText(W / 2, y + 11, '🕯️ Свитков воскрешения нет', 11, '#cc88ff').setOrigin(0.5);
-      this._addText(W / 2, y + 26, 'Купить можно до рейда в магазине', 9, '#9977bb').setOrigin(0.5);
+      this._addText(W / 2, y + 26, 'Купить можно здесь — кнопка появится после смерти', 9, '#9977bb').setOrigin(0.5);
       return;
     }
     const bw = (W - 32 - 16) / 3;
