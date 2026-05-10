@@ -149,6 +149,8 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
         PRIMARY KEY (user_id, item_id)
     )""",
     "CREATE INDEX IF NOT EXISTS idx_owned_weapons_uid ON player_owned_weapons(user_id)",
+    # Скидка первой покупки алмазов (one-time per account)
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS diamond_first_purchased INTEGER DEFAULT 0",
     # world_boss_rewards.claimed: INTEGER → BOOLEAN (если ещё не BOOLEAN)
     # DEFAULT 0 нельзя кастовать автоматически → дропаем, меняем тип, ставим новый DEFAULT.
     """
