@@ -88,8 +88,13 @@ class UsersPremiumMixin:
             row = cursor.fetchone()
             return not bool(row and int(row[col] or 0))
         except Exception:
-            # колонка ещё не создана (миграция не запущена) — скидка доступна
-            return True
+            # новые колонки ещё не созданы — проверяем старый общий флаг
+            try:
+                cursor.execute("SELECT diamond_first_purchased FROM players WHERE user_id = ?", (user_id,))
+                row = cursor.fetchone()
+                return not bool(row and int(row["diamond_first_purchased"] or 0))
+            except Exception:
+                return True
         finally:
             conn.close()
 
@@ -130,13 +135,17 @@ class UsersPremiumMixin:
             conn.commit()
             return cursor.rowcount > 0
         except Exception:
-            # колонка ещё не создана — fallback: просто зачислить алмазы
+            # новые колонки не созданы — используем старый общий флаг
             try:
-                cursor.execute("UPDATE players SET diamonds = diamonds + ? WHERE user_id = ?", (diamonds, user_id))
+                cursor.execute(
+                    "UPDATE players SET diamonds = diamonds + ?, diamond_first_purchased = 1 "
+                    "WHERE user_id = ? AND diamond_first_purchased = 0",
+                    (diamonds, user_id),
+                )
                 conn.commit()
+                return cursor.rowcount > 0
             except Exception:
-                pass
-            return True
+                return False
         finally:
             conn.close()
 
@@ -149,7 +158,12 @@ class UsersPremiumMixin:
             cursor.execute(f"UPDATE players SET {col} = 1 WHERE user_id = ?", (user_id,))
             conn.commit()
         except Exception:
-            pass  # колонка ещё не создана — миграция применится при рестарте
+            # новые колонки не созданы — ставим старый общий флаг
+            try:
+                cursor.execute("UPDATE players SET diamond_first_purchased = 1 WHERE user_id = ?", (user_id,))
+                conn.commit()
+            except Exception:
+                pass
         finally:
             conn.close()
 
