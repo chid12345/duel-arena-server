@@ -17,11 +17,11 @@
     }</div>`;
   }
 
-  // res_30=80🪙, res_60=150🪙, res_100=250🪙 — 1 воскрешение за покупку
+  // res_30=60🪙, res_60=80🪙, res_100=100🪙 — 1 воскрешение за покупку
   const RES_ITEMS = [
-    { id:'res_30',  ic:'💊', lbl:'30% HP',  price:'80 🪙',  cur:'gold' },
-    { id:'res_60',  ic:'💉', lbl:'60% HP',  price:'150 🪙', cur:'gold' },
-    { id:'res_100', ic:'✨', lbl:'100% HP', price:'250 🪙', cur:'gold' },
+    { id:'res_30',  ic:'💊', lbl:'30% HP',  price:'60 🪙',  cur:'gold' },
+    { id:'res_60',  ic:'💉', lbl:'60% HP',  price:'80 🪙',  cur:'gold' },
+    { id:'res_100', ic:'✨', lbl:'100% HP', price:'100 🪙', cur:'gold' },
   ];
   function _deadHTML(a, s) {
     const scrolls = s?.res_scrolls_inv || {};

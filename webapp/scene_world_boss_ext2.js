@@ -7,9 +7,9 @@ Object.assign(WorldBossScene.prototype, {
 
   _renderResShop(s, W, y) {
     const RES = [
-      { id: 'res_30',  icon: '🕯️', label: '30% HP', price: 80,  cur: '💰' },
-      { id: 'res_60',  icon: '🔮', label: '60% HP', price: 150, cur: '💰' },
-      { id: 'res_100', icon: '✨', label: '100% HP', price: 250, cur: '💰' },
+      { id: 'res_30',  icon: '🕯️', label: '30% HP', price: 60,  cur: '💰' },
+      { id: 'res_60',  icon: '🔮', label: '60% HP', price: 80,  cur: '💰' },
+      { id: 'res_100', icon: '✨', label: '100% HP', price: 100, cur: '💰' },
     ];
     const inv = s?.res_scrolls_inv || {};
 
