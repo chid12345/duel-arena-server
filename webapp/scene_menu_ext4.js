@@ -400,21 +400,35 @@ Object.assign(MenuScene.prototype, {
         .setDisplaySize(34, 34).setOrigin(0.5);
       ca(pb3Ico);
       const pb3Title = ca(mkT(icoX + 22, pb3CY, 'Забрать награду', 14, '#ffd700', true)).setOrigin(0, 0.5);
+      // Shimmer sweep — диагональный золотой блик бежит по кнопке (как у В БОЙ)
+      const pb3MaskG = this.make.graphics({}, false);
+      pb3MaskG.fillStyle(0xffffff, 1); pb3MaskG.fillRoundedRect(PAD, pb3Y, actW, b2H, 12);
+      c.add(pb3MaskG); pb3MaskG.setVisible(false);
+      const pb3Shim = this.make.graphics({}, false);
+      pb3Shim.fillStyle(0xffd700, 0.22);
+      pb3Shim.beginPath();
+      pb3Shim.moveTo(-20, pb3Y - 2); pb3Shim.lineTo(20, pb3Y - 2);
+      pb3Shim.lineTo(8,  pb3Y + b2H + 2); pb3Shim.lineTo(-30, pb3Y + b2H + 2);
+      pb3Shim.closePath(); pb3Shim.fillPath();
+      pb3Shim.setMask(pb3MaskG.createGeometryMask());
+      c.add(pb3Shim);
       // 8. Зона
       const pb3Zone = mkZ(PAD + actW/2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
       pb3Zone.on('pointerdown', () => _reDraw(pb3Bg, PAD, pb3Y, actW, b2H, 0xffd700, 0.85, 0x1a1500));
       pb3Zone.on('pointerout',  () => _reDraw(pb3Bg, PAD, pb3Y, actW, b2H, 0xffd700, 0.85));
-      const _pulse = [pb3OutGlow, pb3Drop, pb3Bdr, pb3Ico, pb3Glow];
+      const _pulse = [pb3OutGlow, pb3Drop, pb3Bdr, pb3Ico, pb3Glow, pb3Shim];
       const _pb3Dim = () => {
         _pulse.forEach(t => this.tweens.killTweensOf(t));
         pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3OutGlow.setAlpha(0);
-        pb3Drop.setAlpha(0); pb3Bdr.setAlpha(0); pb3Title.setAlpha(0.25); pb3Bg.setAlpha(0.4);
+        pb3Drop.setAlpha(0); pb3Bdr.setAlpha(0); pb3Shim.setAlpha(0); pb3Title.setAlpha(0.25); pb3Bg.setAlpha(0.4);
       };
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
         if (!res?.ok || res?.claimed) { _pb3Dim(); return; }
-        // Дыхание всех слоёв — смещённые фазы как у В БОЙ
+        // Shimmer пробегает по кнопке периодически
+        this.tweens.add({ targets: pb3Shim, x: { from: PAD - 32, to: PAD + actW + 40 }, duration: 1800, repeat: -1, repeatDelay: 2200, ease: 'Quad.easeIn' });
+        // Дыхание всех слоёв — смещённые фазы
         this.tweens.add({ targets: pb3OutGlow, alpha: { from:0.4, to:1 }, duration:1200, yoyo:true, repeat:-1, ease:'Sine.easeInOut' });
         this.tweens.add({ targets: pb3Drop, scaleX:{ from:1, to:1.15 }, alpha:{ from:1, to:0.1 }, duration:1100, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:200 });
         this.tweens.add({ targets: pb3Bdr, alpha:{ from:0.25, to:1 }, duration:1000, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:300 });
