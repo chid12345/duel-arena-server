@@ -393,14 +393,13 @@ Object.assign(MenuScene.prototype, {
       // 4. Пульсирующий дополнительный слой рамки поверх (breathing)
       const pb3Bdr = ca(mkG());
       pb3Bdr.lineStyle(2, 0xffd700, 0.9); pb3Bdr.strokeRoundedRect(PAD, pb3Y, actW, b2H, 12);
-      const icoX = PAD + 30;
-      const pb3Glow = ca(mkG()); // пустой — нужен для dim/tween совместимости
-      // 6. Иконка
+      // Иконка + текст центрированы как группа: иконка 34px + gap 8 + текст ~118px = ~160
+      const icoX = PAD + Math.round((actW - 160) / 2) + 17;
+      const pb3Glow = ca(mkG()); // пустой — для dim/tween совместимости
       const pb3Ico = this.make.image({ x: icoX, y: pb3CY, key: 'prem_box' }, false)
-        .setDisplaySize(36, 36).setOrigin(0.5);
+        .setDisplaySize(34, 34).setOrigin(0.5);
       ca(pb3Ico);
-      // 7. Текст
-      const pb3Title = ca(mkT(PAD + 58, pb3CY, 'Забрать награду', 14, '#ffd700', true)).setOrigin(0, 0.5);
+      const pb3Title = ca(mkT(icoX + 22, pb3CY, 'Забрать награду', 14, '#ffd700', true)).setOrigin(0, 0.5);
       // 8. Зона
       const pb3Zone = mkZ(PAD + actW/2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
