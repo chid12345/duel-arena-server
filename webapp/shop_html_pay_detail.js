@@ -71,7 +71,7 @@ function _contentRows(base, { isPrem, isReset, isBox, isLeg, isDia, sid }) {
     _row('⭐', 'Бонус XP',        '+25%',               'vc'),
     _row('💰', 'Бонус Золото',    '+25%',               'vc'),
     _row('⚡', 'Авто-бой',        'все режимы',         'vo'),
-    _row('📦', 'Ежедневный ящик', 'каждый день',        'vg'),
+    _row('<img src="chest_gold.png" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
     _row('💎', 'Алмазы',          '+10 в день (×14=140)', 'vp'),
     _row('👑', 'Значок Premium',  '21 день',            'vg'),
   ].join('');
@@ -253,7 +253,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
       _row('⭐', 'Бонус XP',        '+25%',                'vc'),
       _row('💰', 'Бонус Золото',    '+25%',                'vc'),
       _row('⚡', 'Авто-бой',        'все режимы',          'vo'),
-      _row('📦', 'Ежедневный ящик', 'каждый день',         'vg'),
+      _row('<img src="chest_gold.png" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
       _row('💎', 'Алмазы',          '+10 в день',          'vp'),
       _row('👑', 'Значок Premium',  `ещё ${daysLeft} дн.`, 'vg'),
     ].join('');
