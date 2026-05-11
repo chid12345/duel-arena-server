@@ -369,32 +369,31 @@ Object.assign(MenuScene.prototype, {
     tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
     tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this.scene.start('Tasks', {}); });
 
-    // Premium «ЗАБРАТЬ» — точно в стиле кнопок Магазин/Задания (только для премиум)
+    // Premium «Ежедневная награда» — слот-кнопка только для премиум
     if (p.is_premium) {
       const pb3Y = btn2Y + b2H + 5, pb3CY = pb3Y + b2H / 2;
-      // Тот же _drawSlotBtn — фон 0x1a1828, золотая рамка
       const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.55));
-      // Иконка короны (левая позиция — как иконки у Магазина/Задания)
-      const pb3Ico = this.make.image({ x: PAD + actW / 2 - 26, y: pb3CY, key: 'prem_box' }, false)
-        .setDisplaySize(28, 28).setOrigin(0.5);
+      // Иконка — слева, как у Магазина/Задания
+      const pb3Ico = this.make.image({ x: PAD + 28, y: pb3CY, key: 'prem_box' }, false)
+        .setDisplaySize(26, 26).setOrigin(0.5);
       ca(pb3Ico);
-      // Текст (правая позиция — как у Магазина/Задания)
-      const pb3Txt = ca(mkT(PAD + actW / 2 + 8, pb3CY, 'ЗАБРАТЬ', 14, '#ffd700', true)).setOrigin(0.5);
+      // Заголовок + подпись
+      const pb3Title = ca(mkT(PAD + 52, pb3CY - 8, 'Ежедневная награда', 13, '#ffd700', true)).setOrigin(0, 0.5);
+      const pb3Sub   = ca(mkT(PAD + 52, pb3CY + 8,  '10 💎 + предметы из ящика', 10, 'rgba(255,220,80,0.8)')).setOrigin(0, 0.5);
       // Зона
       const pb3Zone = mkZ(PAD + actW / 2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
-      // Press/out — идентично Магазину/Заданиям, только gold
       pb3Zone.on('pointerdown', () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1500,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,1); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12); });
       pb3Zone.on('pointerout',  () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1828,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,0.55); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12); });
-      // Статус
-      const _pb3Dim = () => { pb3Ico.setAlpha(0.22); pb3Txt.setAlpha(0.25); pb3Bg.setAlpha(0.4); };
+      const _pb3Dim = () => { pb3Ico.setAlpha(0.22); pb3Title.setAlpha(0.25); pb3Sub.setAlpha(0.25); pb3Bg.setAlpha(0.4); };
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
         if (!res?.ok || res?.claimed) { _pb3Dim(); return; }
         this.tweens.add({ targets: pb3Ico, alpha: { from: 0.7, to: 1 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         pb3Zone.on('pointerup', () => {
           this.tweens.killTweensOf(pb3Ico);
-          pb3Bg.clear(); pb3Bg.fillStyle(0x1a1828,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,0.55); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12);
+          _pb3Dim();
+          pb3Bg.setAlpha(1);
           this._claimPremBoxProfile(pb3Ico, null, pb3Zone);
         });
       }).catch(_pb3Dim);
