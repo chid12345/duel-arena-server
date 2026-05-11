@@ -382,30 +382,33 @@ Object.assign(MenuScene.prototype, {
     // Premium «Забрать награду» — слот-кнопка только для премиум
     if (p.is_premium) {
       const pb3Y = btn2Y + b2H + 5, pb3CY = pb3Y + b2H / 2;
-      // Все animation-объекты стартуют невидимыми — включаются только если API подтвердил unclaimed
-      // (иначе кнопка "вспыхивала" активной на ~300ms пока API отвечал)
-      // 1. Внешний glow за кнопкой
+
+      // ВСЕ объекты alpha=0 сразу — никакой вспышки пока API не ответил
       const pb3OutGlow = ca(mkG());
       pb3OutGlow.fillStyle(0xffd700, 0.18); pb3OutGlow.fillRoundedRect(PAD-5, pb3Y-5, actW+10, b2H+10, 15);
       pb3OutGlow.setAlpha(0);
-      // 2. Drop-тень под кнопкой
       const pb3Drop = ca(mkG());
       pb3Drop.fillStyle(0xffd700, 0.32); pb3Drop.fillEllipse(PAD + actW/2, pb3Y + b2H + 4, actW*0.68, 9);
       pb3Drop.setAlpha(0);
-      // 3. Фон кнопки
       const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.85));
-      // 4. Пульсирующая рамка
+      pb3Bg.setAlpha(0); // невидим до ответа API
       const pb3Bdr = ca(mkG());
       pb3Bdr.lineStyle(2, 0xffd700, 0.9); pb3Bdr.strokeRoundedRect(PAD, pb3Y, actW, b2H, 12);
       pb3Bdr.setAlpha(0);
-      // Иконка + текст центрированы как группа: иконка 34px + gap 8 + текст ~118px = ~160
+
+      // Иконка + текст: группа 160px центрирована по кнопке
       const icoX = PAD + Math.round((actW - 160) / 2) + 17;
-      const pb3Glow = ca(mkG()); // пустой — для dim/tween совместимости
+      const pb3Glow = ca(mkG());
       const pb3Ico = this.make.image({ x: icoX, y: pb3CY, key: 'prem_box' }, false)
-        .setDisplaySize(34, 34).setOrigin(0.5);
+        .setDisplaySize(34, 34).setOrigin(0.5).setAlpha(0);
       ca(pb3Ico);
-      const pb3Title = ca(mkT(icoX + 22, pb3CY, 'Забрать награду', 14, '#ffd700', true)).setOrigin(0, 0.5);
-      // Shimmer sweep — диагональный золотой блик бежит по кнопке (как у В БОЙ)
+      const pb3Title = ca(mkT(icoX + 22, pb3CY, 'Забрать награду', 14, '#ffd700', true))
+        .setOrigin(0, 0.5).setAlpha(0);
+
+      // Countdown — виден только когда ящик уже получен
+      const pb3Timer = ca(mkT(PAD + actW / 2, pb3CY + 10, '', 9, '#00dcff')).setOrigin(0.5).setAlpha(0);
+
+      // Shimmer (diagonal gold flash, masked)
       const pb3MaskG = this.make.graphics({}, false);
       pb3MaskG.fillStyle(0xffffff, 1); pb3MaskG.fillRoundedRect(PAD, pb3Y, actW, b2H, 12);
       c.add(pb3MaskG); pb3MaskG.setVisible(false);
@@ -416,33 +419,67 @@ Object.assign(MenuScene.prototype, {
       pb3Shim.lineTo(8,  pb3Y + b2H + 2); pb3Shim.lineTo(-30, pb3Y + b2H + 2);
       pb3Shim.closePath(); pb3Shim.fillPath();
       pb3Shim.setMask(pb3MaskG.createGeometryMask());
+      pb3Shim.setAlpha(0);
       c.add(pb3Shim);
-      // 8. Зона
+
       const pb3Zone = mkZ(PAD + actW/2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
       pb3Zone.on('pointerdown', () => _reDraw(pb3Bg, PAD, pb3Y, actW, b2H, 0xffd700, 0.85, 0x1a1500));
       pb3Zone.on('pointerout',  () => _reDraw(pb3Bg, PAD, pb3Y, actW, b2H, 0xffd700, 0.85));
+
       const _pulse = [pb3OutGlow, pb3Drop, pb3Bdr, pb3Ico, pb3Glow, pb3Shim];
-      const _pb3Dim = () => {
-        _pulse.forEach(t => this.tweens.killTweensOf(t));
-        pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3OutGlow.setAlpha(0);
-        pb3Drop.setAlpha(0); pb3Bdr.setAlpha(0); pb3Shim.setAlpha(0); pb3Title.setAlpha(0.25); pb3Bg.setAlpha(0.4);
+
+      // Форматирование: H:MM:SS или M:SS
+      const _fmtSecs = s => {
+        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sc = s % 60;
+        return h > 0
+          ? `🕒 ${h}:${String(m).padStart(2,'0')}:${String(sc).padStart(2,'0')}`
+          : `🕒 ${m}:${String(sc).padStart(2,'0')}`;
       };
+
+      // Запуск живого отсчёта (вызывается изнутри _pb3Dim и из колбэка claim)
+      const _pb3StartTimer = (secsLeft) => {
+        if (!secsLeft) return;
+        if (this._premBoxTimerEvent) { try { this._premBoxTimerEvent.remove(); } catch(_) {} }
+        let secs = secsLeft;
+        pb3Title.setText('Уже получено').setAlpha(0.35).setY(pb3CY - 8);
+        pb3Ico.setY(pb3CY - 8);
+        pb3Timer.setText(_fmtSecs(secs)).setAlpha(1);
+        this._premBoxTimerEvent = this.time.addEvent({
+          delay: 1000, loop: true,
+          callback: () => {
+            if (!this.scene?.isActive('Menu')) { this._premBoxTimerEvent?.remove(); return; }
+            secs = Math.max(0, secs - 1);
+            pb3Timer.setText(secs > 0 ? _fmtSecs(secs) : '🔄 Доступно!');
+            if (secs === 0) this._premBoxTimerEvent?.remove();
+          },
+        });
+      };
+
+      const _pb3Dim = (secsLeft) => {
+        _pulse.forEach(t => this.tweens.killTweensOf(t));
+        pb3Bg.setAlpha(0.4);
+        pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3OutGlow.setAlpha(0);
+        pb3Drop.setAlpha(0); pb3Bdr.setAlpha(0); pb3Shim.setAlpha(0);
+        try { pb3Zone.disableInteractive(); } catch(_) {}
+        _pb3StartTimer(secsLeft);
+      };
+
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
-        if (!res?.ok || res?.claimed) { _pb3Dim(); return; }
-        // Shimmer пробегает по кнопке периодически
+        if (!res?.ok || res?.claimed) { _pb3Dim(res?.seconds_until_reset || 0); return; }
+        // Не получен — активируем кнопку
+        pb3Bg.setAlpha(1); pb3Title.setAlpha(1); pb3Ico.setAlpha(1); pb3Shim.setAlpha(1);
         this.tweens.add({ targets: pb3Shim, x: { from: PAD - 32, to: PAD + actW + 40 }, duration: 1800, repeat: -1, repeatDelay: 2200, ease: 'Quad.easeIn' });
-        // Дыхание всех слоёв — смещённые фазы
         this.tweens.add({ targets: pb3OutGlow, alpha: { from:0.4, to:1 }, duration:1200, yoyo:true, repeat:-1, ease:'Sine.easeInOut' });
         this.tweens.add({ targets: pb3Drop, scaleX:{ from:1, to:1.15 }, alpha:{ from:1, to:0.1 }, duration:1100, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:200 });
         this.tweens.add({ targets: pb3Bdr, alpha:{ from:0.25, to:1 }, duration:1000, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:300 });
         this.tweens.add({ targets:[pb3Ico, pb3Glow], alpha:{ from:0.65, to:1 }, duration:900, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:100 });
         pb3Zone.on('pointerup', () => {
-          _pb3Dim(); pb3Bg.setAlpha(1);
-          this._claimPremBoxProfile(pb3Ico, null, pb3Zone);
+          _pb3Dim(0); pb3Bg.setAlpha(1);
+          this._claimPremBoxProfile(pb3Ico, null, pb3Zone, secs => _pb3StartTimer(secs));
         });
-      }).catch(_pb3Dim);
+      }).catch(() => _pb3Dim(0));
     }
 
     // Badge on Tasks button in profile

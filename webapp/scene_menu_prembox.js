@@ -4,7 +4,7 @@
 
 Object.assign(MenuScene.prototype, {
 
-  async _claimPremBoxProfile(boxImg, boxGlow, boxZone) {
+  async _claimPremBoxProfile(boxImg, boxGlow, boxZone, onSuccess) {
     if (this._premBoxBusy) return;
     this._premBoxBusy = true;
     try { boxZone.disableInteractive(); } catch(_) {}
@@ -24,6 +24,8 @@ Object.assign(MenuScene.prototype, {
           State.player.gold     = box.player.gold     ?? State.player.gold;
         }
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
+        // Запускаем обратный отсчёт в кнопке — сколько секунд до следующего сброса
+        if (typeof onSuccess === 'function') onSuccess(box.seconds_until_reset || 0);
         if (typeof ShopHtml !== 'undefined') {
           ShopHtml._showPremBoxReveal(box.items || []);
         } else {
