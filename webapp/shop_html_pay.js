@@ -85,7 +85,7 @@ function _premBanner(price, cur, pkgId) {
     <div style="font-size:26px">👑</div>
     <div>
       <div style="font-size:13px;font-weight:700;color:#fff">Premium подписка</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP · ящик · значок</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP · авто-бой · ящик · значок</div>
       <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px">21 день</div>
     </div>
   </div>
@@ -273,7 +273,7 @@ window.ShopHtmlPay = {
     <div style="font-size:26px">👑</div>
     <div>
       <div style="font-size:13px;font-weight:700;color:#fff">Premium подписка</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP · ящик · значок</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP · авто-бой · ящик · значок</div>
       <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px">21 день</div>
     </div>
   </div>

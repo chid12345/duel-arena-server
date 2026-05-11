@@ -68,11 +68,12 @@ function _row(ico, txt, val, valCls = 'vc') {
 // ── Контент-блок по типу товара ───────────────────────────────────────────────
 function _contentRows(base, { isPrem, isReset, isBox, isLeg, isDia, sid }) {
   if (isPrem) return [
-    _row('⭐', 'Бонус XP',        '+25%', 'vc'),
-    _row('💰', 'Бонус Золото',    '+25%', 'vc'),
-    _row('📦', 'Ежедневный ящик', 'каждый день', 'vg'),
-    _row('💎', 'Алмазы',          '+10 в день (×14 = 140)', 'vp'),
-    _row('👑', 'Значок Premium',  '21 день', 'vg'),
+    _row('⭐', 'Бонус XP',        '+25%',               'vc'),
+    _row('💰', 'Бонус Золото',    '+25%',               'vc'),
+    _row('⚡', 'Авто-бой',        'все режимы',         'vo'),
+    _row('📦', 'Ежедневный ящик', 'каждый день',        'vg'),
+    _row('💎', 'Алмазы',          '+10 в день (×14=140)', 'vp'),
+    _row('👑', 'Значок Premium',  '21 день',            'vg'),
   ].join('');
 
   if (isReset) return [
@@ -249,10 +250,11 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     const el = _openModal('shop-combined-detail');
     el.className = 'spd-overlay';
     const rows = [
-      _row('⭐', 'Бонус XP',        '+25%',            'vc'),
-      _row('💰', 'Бонус Золото',    '+25%',            'vc'),
-      _row('📦', 'Ежедневный ящик', 'каждый день',     'vg'),
-      _row('💎', 'Алмазы',          '+10 в день',      'vp'),
+      _row('⭐', 'Бонус XP',        '+25%',                'vc'),
+      _row('💰', 'Бонус Золото',    '+25%',                'vc'),
+      _row('⚡', 'Авто-бой',        'все режимы',          'vo'),
+      _row('📦', 'Ежедневный ящик', 'каждый день',         'vg'),
+      _row('💎', 'Алмазы',          '+10 в день',          'vp'),
       _row('👑', 'Значок Premium',  `ещё ${daysLeft} дн.`, 'vg'),
     ].join('');
     el.innerHTML = `
