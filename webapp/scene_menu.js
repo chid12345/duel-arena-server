@@ -150,11 +150,7 @@ class MenuScene extends Phaser.Scene {
               const cnt = taskRes.claimable_count || 0;
               this._tasksBadgeCount = cnt;
               this._updateProfileTasksBadge?.();
-              if (cnt > 0) {
-                this.time.delayedCall(800, () =>
-                  this._toast(`📋 Есть награды в Заданиях! (${cnt})`)
-                );
-              }
+              // бейдж на кнопке Задания показывает cnt — тост не нужен
             }
           });
         }
