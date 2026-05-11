@@ -300,7 +300,8 @@ Object.assign(MenuScene.prototype, {
 
     /* ── 4. ACTION BUTTONS ───────────────────────────────── */
     const extrasH = p.current_hp < p.max_hp ? 18 : 0;
-    const actY = Math.min(CH - 110, regenY + extrasH + 6);
+    const premRowH = p.is_premium ? 51 : 0; // b2H(46) + gap(5) for ЗАБРАТЬ button
+    const actY = Math.min(CH - 110 - premRowH, regenY + extrasH + 6);
     const actW = W - PAD * 2, actH = 54;
 
     // В БОЙ — живая кнопка: тень·пульс·шиммер·перелив
