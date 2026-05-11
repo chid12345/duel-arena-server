@@ -368,27 +368,47 @@ Object.assign(MenuScene.prototype, {
     tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
     tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this.scene.start('Tasks', {}); });
 
-    // Premium «ЗАБРАТЬ» — компактная кнопка под Магазин/Задания (только для премиум)
+    // Premium «ЗАБРАТЬ» — кнопка под Магазин/Задания (только для премиум)
     if (p.is_premium) {
-      const pb3Y = btn2Y + b2H + 5, pb3H = 36;
+      const pb3Y = btn2Y + b2H + 5, pb3H = 42, pb3CY = btn2Y + b2H + 5 + 21;
+      // Soft outer glow
+      const pb3Glow = ca(mkG());
+      pb3Glow.fillStyle(0xffa000, 0.1); pb3Glow.fillRoundedRect(PAD - 3, pb3Y - 3, actW + 6, pb3H + 6, 14);
+      // Gradient background
       const pb3Bg = ca(mkG());
-      pb3Bg.fillStyle(0x110900, 1); pb3Bg.fillRoundedRect(PAD, pb3Y, actW, pb3H, 11);
-      pb3Bg.lineStyle(1.5, 0xffa000, 0.45); pb3Bg.strokeRoundedRect(PAD, pb3Y, actW, pb3H, 11);
-      const pb3CY = pb3Y + pb3H / 2;
-      const pb3Ico = this.make.image({ x: PAD + 22, y: pb3CY, key: 'prem_box' }, false).setDisplaySize(26, 26).setOrigin(0.5);
+      pb3Bg.fillGradientStyle(0x1c0e00, 0x2d1800, 0x140a00, 0x201200, 1);
+      pb3Bg.fillRoundedRect(PAD, pb3Y, actW, pb3H, 12);
+      // Gold border (separate — чтобы твинить alpha)
+      const pb3Border = ca(mkG());
+      pb3Border.lineStyle(2, 0xffd700, 0.85); pb3Border.strokeRoundedRect(PAD, pb3Y, actW, pb3H, 12);
+      // Crown icon слева
+      const pb3Ico = this.make.image({ x: PAD + 26, y: pb3CY, key: 'prem_box' }, false).setDisplaySize(32, 32).setOrigin(0.5);
       ca(pb3Ico);
-      const pb3Txt = ca(mkT(W / 2, pb3CY, 'ЗАБРАТЬ', 13, '#ffd700', true)).setOrigin(0.5);
+      // Разделитель
+      const pb3Sep = ca(mkG()); pb3Sep.lineStyle(1, 0xffd700, 0.2); pb3Sep.lineBetween(PAD + 46, pb3Y + 9, PAD + 46, pb3Y + pb3H - 9);
+      // Текст "ЗАБРАТЬ" в оставшейся части
+      const pb3Txt = ca(mkT(PAD + 46 + (actW - 46) / 2, pb3CY, 'ЗАБРАТЬ', 14, '#ffd700', true)).setOrigin(0.5);
+      // Зона нажатия
       const pb3Zone = mkZ(W / 2, pb3CY, actW, pb3H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
+      // Press-эффект
+      pb3Zone.on('pointerdown', () => { pb3Bg.clear(); pb3Bg.fillGradientStyle(0x2d1800,0x3f2400,0x200f00,0x2d1800,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,pb3H,12); });
+      pb3Zone.on('pointerout',  () => { pb3Bg.clear(); pb3Bg.fillGradientStyle(0x1c0e00,0x2d1800,0x140a00,0x201200,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,pb3H,12); });
+      // Статус
+      const _pb3Dim = () => { pb3Ico.setAlpha(0.2); pb3Txt.setAlpha(0.22); pb3Border.setAlpha(0.2); pb3Glow.setAlpha(0); pb3Bg.setAlpha(0.5); };
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
-        if (!res?.ok || res?.claimed) {
-          pb3Ico.setAlpha(0.22); pb3Txt.setAlpha(0.28); pb3Bg.setAlpha(0.45);
-        } else {
-          this.tweens.add({ targets: pb3Ico, alpha: { from: 0.65, to: 1 }, duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-          pb3Zone.on('pointerup', () => this._claimPremBoxProfile(pb3Ico, null, pb3Zone));
-        }
-      }).catch(() => { pb3Ico.setAlpha(0.22); pb3Txt.setAlpha(0.28); pb3Bg.setAlpha(0.45); });
+        if (!res?.ok || res?.claimed) { _pb3Dim(); return; }
+        this.tweens.add({ targets: pb3Glow,   alpha: { from: 0.06, to: 0.2  }, duration: 950, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.tweens.add({ targets: pb3Border, alpha: { from: 0.5,  to: 1.0  }, duration: 950, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.tweens.add({ targets: pb3Ico,    alpha: { from: 0.65, to: 1    }, duration: 950, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        pb3Zone.on('pointerup', () => {
+          this.tweens.killTweensOf(pb3Glow); this.tweens.killTweensOf(pb3Border); this.tweens.killTweensOf(pb3Ico);
+          pb3Glow.setAlpha(0); pb3Border.setAlpha(0.3);
+          pb3Bg.clear(); pb3Bg.fillGradientStyle(0x1c0e00,0x2d1800,0x140a00,0x201200,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,pb3H,12);
+          this._claimPremBoxProfile(pb3Ico, null, pb3Zone);
+        });
+      }).catch(_pb3Dim);
     }
 
     // Badge on Tasks button in profile
