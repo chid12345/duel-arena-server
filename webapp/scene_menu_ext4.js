@@ -382,15 +382,14 @@ Object.assign(MenuScene.prototype, {
       const pb3Ico = this.make.image({ x: icoX, y: pb3CY, key: 'prem_box' }, false)
         .setDisplaySize(36, 36).setOrigin(0.5);
       ca(pb3Ico);
-      // Текст: заголовок + подпись
-      const pb3Title = ca(mkT(PAD + 58, pb3CY - 8, 'Забрать награду', 13, '#ffd700', true)).setOrigin(0, 0.5);
-      const pb3Sub   = ca(mkT(PAD + 58, pb3CY + 8,  '10 💎 + предметы из ящика', 10, 'rgba(255,220,80,0.8)')).setOrigin(0, 0.5);
+      // Текст: только заголовок, по центру
+      const pb3Title = ca(mkT(PAD + 58, pb3CY, 'Забрать награду', 14, '#ffd700', true)).setOrigin(0, 0.5);
       // Зона
       const pb3Zone = mkZ(PAD + actW / 2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
       pb3Zone.on('pointerdown', () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1500,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,1); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12); });
       pb3Zone.on('pointerout',  () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1828,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,0.55); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12); });
-      const _pb3Dim = () => { pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3Title.setAlpha(0.25); pb3Sub.setAlpha(0.25); pb3Bg.setAlpha(0.4); };
+      const _pb3Dim = () => { pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3Title.setAlpha(0.25); pb3Bg.setAlpha(0.4); };
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
         if (!res?.ok || res?.claimed) { _pb3Dim(); return; }
