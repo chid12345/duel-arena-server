@@ -111,7 +111,7 @@ window.ShopHtmlPay = {
     if (prem) {
       html += `<div class="sh-sec">👑 Premium</div>`;
       html += isPrem
-        ? `<div style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`
+        ? `<div data-prem-active="${State.player.premium_days_left}" style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px;cursor:pointer">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`
         : _premBanner(prem.stars, 'stars', prem.id);
     }
     if (boxes.length) {
@@ -133,8 +133,15 @@ window.ShopHtmlPay = {
       });
       card.querySelector('.sh-btn')?.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyStars(card.dataset.stars); });
     });
+    el.querySelectorAll('[data-prem-active]').forEach(div => {
+      div.addEventListener('click', () => ShopHtmlPay._showPremActive(+div.dataset.premActive));
+    });
     el.querySelectorAll('[data-prem]').forEach(card => {
       const id = card.dataset.prem;
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        ShopHtmlPay._showCombinedDetail(id, null);
+      });
       card.querySelector('.sh-btn')?.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyStars(id); });
     });
   },
@@ -157,7 +164,7 @@ window.ShopHtmlPay = {
     if (prem) {
       html += `<div class="sh-sec">👑 Premium</div>`;
       html += isPrem
-        ? `<div style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`
+        ? `<div data-prem-active="${State.player.premium_days_left}" style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px;cursor:pointer">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`
         : _premBanner(prem.usdt, 'usdt', prem.id);
     }
     if (boxes.length) html += `<div class="sh-sec">🎲 Эпические ящики</div><div class="sh-grid">${boxes.map(_cardUSDT).join('')}</div>`;
@@ -173,7 +180,14 @@ window.ShopHtmlPay = {
       });
       card.querySelector('.sh-btn')?.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(card.dataset.usdt); });
     });
+    el.querySelectorAll('[data-prem-active]').forEach(div => {
+      div.addEventListener('click', () => ShopHtmlPay._showPremActive(+div.dataset.premActive));
+    });
     el.querySelectorAll('[data-prem]').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        ShopHtmlPay._showCombinedDetail(null, card.dataset.prem);
+      });
       card.querySelector('.sh-btn')?.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyCrypto(card.dataset.prem); });
     });
   },
@@ -250,11 +264,11 @@ window.ShopHtmlPay = {
     // Premium
     html += '<div class="sh-sec">👑 Premium</div>';
     if (isPrem) {
-      html += `<div style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`;
+      html += `<div data-prem-active="${State.player.premium_days_left}" style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px;cursor:pointer">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`;
     } else {
       const sBtn = starPrem ? `<button class="sh-btn btn-s" data-prem-stars="${starPrem.id}" style="flex:1">⭐ ${starPrem.stars}</button>` : '';
       const uBtn = (usdtPrem && d.cryptopay_enabled) ? `<button class="sh-btn btn-u" data-prem-usdt="${usdtPrem.id}" style="flex:1">💲 ${usdtPrem.usdt} USDT</button>` : '';
-      html += `<div class="sh-prem" style="cursor:default">
+      html += `<div class="sh-prem" data-prem-card="1" style="cursor:pointer">
   <div style="display:flex;align-items:center;gap:10px">
     <div style="font-size:26px">👑</div>
     <div>
@@ -319,6 +333,17 @@ window.ShopHtmlPay = {
     html += '<div style="text-align:center;font-size:10px;color:rgba(0,200,255,.55);margin-top:16px;letter-spacing:.5px;text-shadow:0 0 6px rgba(0,200,255,.3)">⭐ Stars — моментально &nbsp;·&nbsp; 💲 USDT — крипто</div>';
     el.innerHTML = html;
 
+    // Premium активен → инфо-попап
+    el.querySelectorAll('[data-prem-active]').forEach(div => {
+      div.addEventListener('click', () => ShopHtmlPay._showPremActive(+div.dataset.premActive));
+    });
+    // Premium карточка (не купил) → детальная модалка при клике на фон
+    el.querySelectorAll('[data-prem-card]').forEach(card => {
+      card.addEventListener('click', e => {
+        if (e.target.tagName === 'BUTTON') return;
+        ShopHtmlPay._showCombinedDetail(starPrem?.id || null, usdtPrem?.id || null);
+      });
+    });
     // Bind Premium / Starter кнопки (прямая оплата)
     el.querySelectorAll('[data-prem-stars]').forEach(btn => {
       btn.addEventListener('click', e => { e.stopPropagation(); ShopHtmlPay._buyStars(btn.dataset.premStars); });

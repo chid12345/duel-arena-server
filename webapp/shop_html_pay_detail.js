@@ -244,6 +244,31 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     el.querySelector('[data-act-u]')?.addEventListener('click', () => { el.remove(); ShopHtmlPay._buyCrypto(usdtId); });
   },
 
+  // ── Premium активен: информационный попап (без кнопок покупки) ─────────────
+  _showPremActive(daysLeft) {
+    const el = _openModal('shop-combined-detail');
+    el.className = 'spd-overlay';
+    const rows = [
+      _row('⭐', 'Бонус XP',        '+25%',            'vc'),
+      _row('💰', 'Бонус Золото',    '+25%',            'vc'),
+      _row('📦', 'Ежедневный ящик', 'каждый день',     'vg'),
+      _row('💎', 'Алмазы',          '+10 в день',      'vp'),
+      _row('👑', 'Значок Premium',  `ещё ${daysLeft} дн.`, 'vg'),
+    ].join('');
+    el.innerHTML = `
+<div class="spd-card" style="border:1px solid rgba(180,79,255,.7);box-shadow:0 0 40px rgba(180,79,255,.3),0 16px 50px rgba(0,0,0,.8)">
+  <div class="spd-close" data-close>×</div>
+  <div class="spd-ico"><div style="font-size:72px;line-height:1;filter:drop-shadow(0 0 20px rgba(180,79,255,.7))">👑</div></div>
+  <div class="spd-name" style="text-shadow:0 0 18px rgba(180,79,255,.6)">Premium активен</div>
+  <div class="spd-sub" style="color:rgba(200,100,255,.85)">осталось ${daysLeft} дн. · все бонусы активны</div>
+  <div class="spd-rows" style="border-color:rgba(180,79,255,.2);background:rgba(180,79,255,.06)">${rows}</div>
+  <div class="spd-line" style="background:linear-gradient(90deg,transparent,rgba(180,79,255,.45),transparent)"></div>
+  <div class="spd-hint" style="color:rgba(200,100,255,.6);font-size:12px">👑 Спасибо за поддержку!</div>
+</div>`;
+    el.querySelector('[data-close]')?.addEventListener('click', () => el.remove());
+    el.addEventListener('click', e => { if (e.target === el) el.remove(); });
+  },
+
   // ── Совместимость: Stars/USDT отдельные карточки ────────────────────────────
   _showStarsDetail(id) {
     const d = ShopHtmlPay._pkgs() || {};
