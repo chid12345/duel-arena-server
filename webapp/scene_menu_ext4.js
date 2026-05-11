@@ -373,11 +373,12 @@ Object.assign(MenuScene.prototype, {
     if (p.is_premium) {
       const pb3Y = btn2Y + b2H + 5, pb3CY = pb3Y + b2H / 2;
       const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.55));
-      // Сияние иконки — как кнопка ЧАТ в клане: без рамки, только glow-круги
+      // Сияние иконки — drop-shadow(0 0 12px #ffd700) как .cl-bi в клане ЧАТ
+      // 4 слоя с убывающей альфой = гауссово рассеивание от краёв иконки
       const icoX = PAD + 30;
       const pb3Glow = ca(mkG());
-      pb3Glow.fillStyle(0xffd700, 0.30); pb3Glow.fillCircle(icoX, pb3CY, 20);
-      pb3Glow.fillStyle(0xffd700, 0.10); pb3Glow.fillCircle(icoX, pb3CY, 28);
+      [{ r: 19, a: 0.55 }, { r: 24, a: 0.28 }, { r: 30, a: 0.12 }, { r: 37, a: 0.04 }]
+        .forEach(({ r, a }) => { pb3Glow.fillStyle(0xffd700, a); pb3Glow.fillCircle(icoX, pb3CY, r); });
       // Иконка без рамки, крупнее
       const pb3Ico = this.make.image({ x: icoX, y: pb3CY, key: 'prem_box' }, false)
         .setDisplaySize(36, 36).setOrigin(0.5);
