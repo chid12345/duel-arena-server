@@ -383,11 +383,8 @@ Object.assign(MenuScene.prototype, {
       // 4. Пульсирующая рамка (как fBdr у В БОЙ)
       const pb3Bdr = ca(mkG());
       pb3Bdr.lineStyle(1.5, 0xffd700, 0.85); pb3Bdr.strokeRoundedRect(PAD, pb3Y, actW, b2H, 12);
-      // 5. Glow иконки — 4 слоя как drop-shadow у .cl-bi клана
       const icoX = PAD + 30;
-      const pb3Glow = ca(mkG());
-      [{ r:19, a:0.55 }, { r:24, a:0.28 }, { r:30, a:0.12 }, { r:37, a:0.04 }]
-        .forEach(({ r, a }) => { pb3Glow.fillStyle(0xffd700, a); pb3Glow.fillCircle(icoX, pb3CY, r); });
+      const pb3Glow = ca(mkG()); // пустой — нужен для dim/tween совместимости
       // 6. Иконка
       const pb3Ico = this.make.image({ x: icoX, y: pb3CY, key: 'prem_box' }, false)
         .setDisplaySize(36, 36).setOrigin(0.5);
