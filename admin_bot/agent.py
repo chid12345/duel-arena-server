@@ -4,7 +4,7 @@ Claude-агент с tool-use циклом для управления прое�
 import anthropic
 from .tools import TOOL_SCHEMAS, execute_tool
 
-MODEL = "claude-sonnet-4-6"
+MODEL = "claude-haiku-4-5-20251001"
 MAX_TOKENS = 4096
 
 SYSTEM_PROMPT = """Ты — ассистент разработчика проекта duel-arena-server (Telegram PvP-игра на Python).

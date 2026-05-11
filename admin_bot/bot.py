@@ -11,7 +11,17 @@ from pathlib import Path
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
+ROOT = Path(__file__).parent.parent
+sys.path.insert(0, str(ROOT))
+
+# Загружаем .env.local если есть
+_env_file = ROOT / ".env.local"
+if _env_file.exists():
+    for _line in _env_file.read_text(encoding="utf-8").splitlines():
+        if "=" in _line and not _line.startswith("#"):
+            _k, _v = _line.split("=", 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
+
 from admin_bot import agent
 
 logging.basicConfig(format="%(asctime)s %(levelname)s %(message)s", level=logging.INFO)
