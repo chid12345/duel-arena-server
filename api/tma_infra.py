@@ -144,6 +144,13 @@ class ConnectionManager:
         # ВАЖНО: ws.accept() теперь делается в handler'е (system_realtime_routes)
         # ДО auth-проверки — иначе закрытие WS даёт HTTP 403 на handshake,
         # и Chrome показывает "closed before connection established".
+        old = self.connections.get(user_id)
+        if old:
+            try:
+                await old.send_json({"event": "kicked", "reason": "Игра открыта на другом устройстве"})
+                await old.close(code=1000)
+            except Exception:
+                pass
         self.connections[user_id] = ws
 
     def disconnect(self, user_id: int) -> None:

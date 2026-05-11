@@ -273,10 +273,29 @@ function get(path, params = {}, timeoutMs = 15000) {
 }
 
 /* ─── WebSocket ─────────────────────────────────────────────── */
+function _wsKicked(ws) {
+  if (State.ws === ws) State.ws = null;
+  try { ws.onclose = null; ws.close(); } catch(_) {}
+  const msg = '⚠️ Игра открыта на другом устройстве. Обновите эту страницу чтобы продолжить.';
+  if (window.Telegram?.WebApp?.showAlert) {
+    Telegram.WebApp.showAlert(msg, () => location.reload());
+  } else {
+    alert(msg);
+    location.reload();
+  }
+}
+
 function connectWS(userId, onMessage) {
   // Переиспользуем открытое соединение — меняем обработчик и onclose
   if (State.ws && State.ws.readyState === WebSocket.OPEN) {
-    State.ws.onmessage = e => onMessage(JSON.parse(e.data));
+    const _reuseWs = State.ws;
+    State.ws.onmessage = e => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data?.event === 'kicked') { _wsKicked(_reuseWs); return; }
+        onMessage(data);
+      } catch(_) {}
+    };
     // ВАЖНО: обновляем onclose чтобы переподключение использовало ТЕКУЩИЙ handler.
     // Захватываем ref на текущий сокет — иначе State.ws === State.ws всегда true.
     const _curWs = State.ws;
@@ -334,6 +353,7 @@ function connectWS(userId, onMessage) {
         try { ws.close(); } catch(_) {}
         return;
       }
+      if (data && data.event === 'kicked') { _wsKicked(ws); return; }
       onMessage(data);
     } catch(_) {}
   };
