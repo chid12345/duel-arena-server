@@ -372,33 +372,48 @@ Object.assign(MenuScene.prototype, {
     // Premium «Забрать награду» — слот-кнопка только для премиум
     if (p.is_premium) {
       const pb3Y = btn2Y + b2H + 5, pb3CY = pb3Y + b2H / 2;
-      const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.55));
-      // Сияние иконки — drop-shadow(0 0 12px #ffd700) как .cl-bi в клане ЧАТ
-      // 4 слоя с убывающей альфой = гауссово рассеивание от краёв иконки
+      // 1. Внешний glow за кнопкой (как fGlow у В БОЙ)
+      const pb3OutGlow = ca(mkG());
+      pb3OutGlow.fillStyle(0xffd700, 0.18); pb3OutGlow.fillRoundedRect(PAD-5, pb3Y-5, actW+10, b2H+10, 15);
+      // 2. Drop-тень под кнопкой (как fDrop у В БОЙ)
+      const pb3Drop = ca(mkG());
+      pb3Drop.fillStyle(0xffd700, 0.32); pb3Drop.fillEllipse(PAD + actW/2, pb3Y + b2H + 4, actW*0.68, 9);
+      // 3. Фон кнопки
+      const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.0));
+      // 4. Пульсирующая рамка (как fBdr у В БОЙ)
+      const pb3Bdr = ca(mkG());
+      pb3Bdr.lineStyle(1.5, 0xffd700, 0.85); pb3Bdr.strokeRoundedRect(PAD, pb3Y, actW, b2H, 12);
+      // 5. Glow иконки — 4 слоя как drop-shadow у .cl-bi клана
       const icoX = PAD + 30;
       const pb3Glow = ca(mkG());
-      [{ r: 19, a: 0.55 }, { r: 24, a: 0.28 }, { r: 30, a: 0.12 }, { r: 37, a: 0.04 }]
+      [{ r:19, a:0.55 }, { r:24, a:0.28 }, { r:30, a:0.12 }, { r:37, a:0.04 }]
         .forEach(({ r, a }) => { pb3Glow.fillStyle(0xffd700, a); pb3Glow.fillCircle(icoX, pb3CY, r); });
-      // Иконка без рамки, крупнее
+      // 6. Иконка
       const pb3Ico = this.make.image({ x: icoX, y: pb3CY, key: 'prem_box' }, false)
         .setDisplaySize(36, 36).setOrigin(0.5);
       ca(pb3Ico);
-      // Текст: только заголовок, по центру
+      // 7. Текст
       const pb3Title = ca(mkT(PAD + 58, pb3CY, 'Забрать награду', 14, '#ffd700', true)).setOrigin(0, 0.5);
-      // Зона
-      const pb3Zone = mkZ(PAD + actW / 2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
+      // 8. Зона
+      const pb3Zone = mkZ(PAD + actW/2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
       pb3Zone.on('pointerdown', () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1500,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,1); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12); });
-      pb3Zone.on('pointerout',  () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1828,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,0.55); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12); });
-      const _pb3Dim = () => { pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3Title.setAlpha(0.25); pb3Bg.setAlpha(0.4); };
+      pb3Zone.on('pointerout',  () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1828,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); });
+      const _pulse = [pb3OutGlow, pb3Drop, pb3Bdr, pb3Ico, pb3Glow];
+      const _pb3Dim = () => {
+        _pulse.forEach(t => this.tweens.killTweensOf(t));
+        pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3OutGlow.setAlpha(0);
+        pb3Drop.setAlpha(0); pb3Bdr.setAlpha(0); pb3Title.setAlpha(0.25); pb3Bg.setAlpha(0.4);
+      };
       get('/api/shop/premium_box/status').then(res => {
         if (!this.scene?.isActive('Menu')) return;
         if (!res?.ok || res?.claimed) { _pb3Dim(); return; }
-        // Пульс иконки + сияния вместе
-        this.tweens.add({ targets: [pb3Ico, pb3Glow], alpha: { from: 0.7, to: 1 }, duration: 900, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        // Дыхание всех слоёв — смещённые фазы как у В БОЙ
+        this.tweens.add({ targets: pb3OutGlow, alpha: { from:0.4, to:1 }, duration:1200, yoyo:true, repeat:-1, ease:'Sine.easeInOut' });
+        this.tweens.add({ targets: pb3Drop, scaleX:{ from:1, to:1.15 }, alpha:{ from:1, to:0.1 }, duration:1100, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:200 });
+        this.tweens.add({ targets: pb3Bdr, alpha:{ from:0.25, to:1 }, duration:1000, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:300 });
+        this.tweens.add({ targets:[pb3Ico, pb3Glow], alpha:{ from:0.65, to:1 }, duration:900, yoyo:true, repeat:-1, ease:'Sine.easeInOut', delay:100 });
         pb3Zone.on('pointerup', () => {
-          this.tweens.killTweensOf(pb3Ico);
-          this.tweens.killTweensOf(pb3Glow);
           _pb3Dim(); pb3Bg.setAlpha(1);
           this._claimPremBoxProfile(pb3Ico, null, pb3Zone);
         });
