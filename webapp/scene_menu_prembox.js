@@ -9,13 +9,15 @@ Object.assign(MenuScene.prototype, {
     this._premBoxBusy = true;
     try { boxZone.disableInteractive(); } catch(_) {}
     this.tweens.killTweensOf(boxImg);
-    this.tweens.killTweensOf(boxGlow);
-    boxImg.setAlpha(0.5); boxGlow.setAlpha(0);
+    if (boxGlow) this.tweens.killTweensOf(boxGlow);
+    boxImg.setAlpha(0.5);
+    if (boxGlow) boxGlow.setAlpha(0);
 
     try {
       const box = await post('/api/shop/premium_daily_box', {});
       if (box?.ok && box?.box_opened) {
-        boxImg.setAlpha(0.22); boxGlow.setAlpha(0);
+        boxImg.setAlpha(0.22);
+        if (boxGlow) boxGlow.setAlpha(0);
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
         if (typeof ShopHtml !== 'undefined') {
           ShopHtml._showPremBoxReveal(box.items || []);
@@ -24,13 +26,15 @@ Object.assign(MenuScene.prototype, {
         }
       } else {
         this.tweens.killTweensOf(boxImg);
-        this.tweens.killTweensOf(boxGlow);
-        boxImg.setAlpha(0.22); boxGlow.setAlpha(0);
+        if (boxGlow) this.tweens.killTweensOf(boxGlow);
+        boxImg.setAlpha(0.22);
+        if (boxGlow) boxGlow.setAlpha(0);
         this._toast('👑 ' + (box?.reason || 'Уже получен сегодня'));
       }
     } catch(_) {
       this._premBoxBusy = false;
-      boxImg.setAlpha(1); boxGlow.setAlpha(0.28);
+      boxImg.setAlpha(1);
+      if (boxGlow) boxGlow.setAlpha(0.28);
       try { boxZone.setInteractive({ useHandCursor: true }); } catch(_) {}
       this._toast('❌ Нет соединения');
     }

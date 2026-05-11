@@ -124,8 +124,6 @@ window.ShopHtml = {
     ShopHtml._updateBalance();
     ShopHtml._renderBadge();
     if (invRes.status === 'fulfilled' && invRes.value?.inventory) ShopHtmlItems._setInv(invRes.value.inventory);
-    // Иконка ежедневного ящика в шапке (для премиум-игроков)
-    if (State.player?.is_premium) ShopHtmlPremBox?.initHeaderBtn?.();
     // Незавершённый крипто-платёж: проверить тихо при входе в магазин
     const _pendingId = (() => { try { return localStorage.getItem('cryptoPendingInvoice'); } catch(_) { return null; } })();
     if (_pendingId) {
@@ -239,11 +237,7 @@ function _html() {
       <div class="sh-back">‹</div>
       <div class="sh-ttl"><span>⚔️</span> МАГАЗИН</div>
     </div>
-    <div id="sh-prembox-hdr" class="sh-prembox-btn" style="display:none" title="Премиум ящик">
-      <img id="sh-prembox-hdr-ico" src="prem_box.png" class="sh-prembox-img" alt="">
-      <div id="sh-prembox-hdr-lbl" class="sh-prembox-lbl">ЗАБРАТЬ</div>
-    </div>
-    <div class="sh-bp" id="sh-bp">
+<div class="sh-bp" id="sh-bp">
       <div class="sh-bp-btn">
         <img src="рюкзак.png" class="sh-bp-img" alt="Рюкзак">
         <span class="sh-bp-badge" id="sh-bp-badge"></span>

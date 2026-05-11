@@ -100,29 +100,6 @@ Object.assign(MenuScene.prototype, {
       pBg.fillRoundedRect(niX, avY + 23, 84, 17, 6);
       pBg.lineStyle(1.5, 0xfbbf24, 0.65); pBg.strokeRoundedRect(niX, avY + 23, 84, 17, 6);
       ca(mkT(niX + 42, avY + 31, `⭐ Premium · ${p.premium_days_left}д`, 9, '#fff8e7', true)).setOrigin(0.5);
-      // Кнопка ежедневного ящика — центр тёмной зоны справа от бейджа
-      const boxCX = Math.round((niX + 84 + W - PAD) / 2);
-      const boxCY = avY + 40;
-      // Glow-кружок позади картинки
-      const boxGlow = ca(mkG());
-      boxGlow.fillStyle(0xffd700, 0.28); boxGlow.fillCircle(boxCX, boxCY, 19);
-      boxGlow.setAlpha(0);
-      // Картинка crown/circuit
-      const boxImg = this.make.image({ x: boxCX, y: boxCY, key: 'prem_box' }, false);
-      boxImg.setDisplaySize(36, 36).setOrigin(0.5, 0.5);
-      ca(boxImg);
-      const boxZone = mkZ(boxCX, boxCY, 38, 38).setInteractive({ useHandCursor: true });
-      ca(boxZone);
-      get('/api/shop/premium_box/status').then(res => {
-        if (!this.scene?.isActive('Menu')) return;
-        if (!res?.ok || res?.claimed) {
-          boxImg.setAlpha(0.22); boxGlow.setAlpha(0);
-        } else {
-          this.tweens.add({ targets: boxGlow, alpha: { from: 0.15, to: 0.45 }, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-          this.tweens.add({ targets: boxImg,  alpha: { from: 0.7,  to: 1    }, duration: 800, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-          boxZone.on('pointerup', () => this._claimPremBoxProfile(boxImg, boxGlow, boxZone));
-        }
-      }).catch(() => { boxImg.setAlpha(0.22); boxGlow.setAlpha(0); });
     } else {
       ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.75)'));
     }
@@ -390,6 +367,29 @@ Object.assign(MenuScene.prototype, {
     tskZ.on('pointerdown', () => { tBg.clear(); tBg.fillStyle(0x1a2d40,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,1); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
     tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
     tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this.scene.start('Tasks', {}); });
+
+    // Premium «ЗАБРАТЬ» — компактная кнопка под Магазин/Задания (только для премиум)
+    if (p.is_premium) {
+      const pb3Y = btn2Y + b2H + 5, pb3H = 36;
+      const pb3Bg = ca(mkG());
+      pb3Bg.fillStyle(0x110900, 1); pb3Bg.fillRoundedRect(PAD, pb3Y, actW, pb3H, 11);
+      pb3Bg.lineStyle(1.5, 0xffa000, 0.45); pb3Bg.strokeRoundedRect(PAD, pb3Y, actW, pb3H, 11);
+      const pb3CY = pb3Y + pb3H / 2;
+      const pb3Ico = this.make.image({ x: PAD + 22, y: pb3CY, key: 'prem_box' }, false).setDisplaySize(26, 26).setOrigin(0.5);
+      ca(pb3Ico);
+      const pb3Txt = ca(mkT(W / 2, pb3CY, 'ЗАБРАТЬ', 13, '#ffd700', true)).setOrigin(0.5);
+      const pb3Zone = mkZ(W / 2, pb3CY, actW, pb3H).setInteractive({ useHandCursor: true });
+      ca(pb3Zone);
+      get('/api/shop/premium_box/status').then(res => {
+        if (!this.scene?.isActive('Menu')) return;
+        if (!res?.ok || res?.claimed) {
+          pb3Ico.setAlpha(0.22); pb3Txt.setAlpha(0.28); pb3Bg.setAlpha(0.45);
+        } else {
+          this.tweens.add({ targets: pb3Ico, alpha: { from: 0.65, to: 1 }, duration: 850, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+          pb3Zone.on('pointerup', () => this._claimPremBoxProfile(pb3Ico, null, pb3Zone));
+        }
+      }).catch(() => { pb3Ico.setAlpha(0.22); pb3Txt.setAlpha(0.28); pb3Bg.setAlpha(0.45); });
+    }
 
     // Badge on Tasks button in profile
     const pfBdgBg  = ca(this.add.graphics());
