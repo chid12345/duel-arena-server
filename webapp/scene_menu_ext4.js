@@ -332,15 +332,25 @@ Object.assign(MenuScene.prototype, {
 
     // Магазин + Задания — slot-style, two half-width
     const btn2Y = actY + actH + 8, b2H = 46, b2W = (actW - 8) / 2;
+    // Рисует кнопку с внешним свечением как в Рейтинге
     const _drawSlotBtn = (bx, by, bw, bh, borderC, borderA) => {
       const g = mkG();
+      g.lineStyle(9, borderC, borderA * 0.13); g.strokeRoundedRect(bx-4, by-4, bw+8, bh+8, 16);
+      g.lineStyle(5, borderC, borderA * 0.30); g.strokeRoundedRect(bx-2, by-2, bw+4, bh+4, 14);
       g.fillStyle(0x1a1828, 1); g.fillRoundedRect(bx, by, bw, bh, 12);
-      g.lineStyle(1.5, borderC, borderA); g.strokeRoundedRect(bx, by, bw, bh, 12);
+      g.lineStyle(2, borderC, borderA); g.strokeRoundedRect(bx, by, bw, bh, 12);
       return g;
+    };
+    const _reDraw = (g, bx, by, bw, bh, c, bA, fillC) => {
+      g.clear();
+      g.lineStyle(9, c, bA * 0.13); g.strokeRoundedRect(bx-4, by-4, bw+8, bh+8, 16);
+      g.lineStyle(5, c, bA * 0.30); g.strokeRoundedRect(bx-2, by-2, bw+4, bh+4, 14);
+      g.fillStyle(fillC !== undefined ? fillC : 0x1a1828, 1); g.fillRoundedRect(bx, by, bw, bh, 12);
+      g.lineStyle(2, c, bA); g.strokeRoundedRect(bx, by, bw, bh, 12);
     };
 
     // Shop button
-    const sBg = ca(_drawSlotBtn(PAD, btn2Y, b2W, b2H, 0x7c3aed, 0.5));
+    const sBg = ca(_drawSlotBtn(PAD, btn2Y, b2W, b2H, 0x7c3aed, 0.9));
     // Bag icon
     const siG = ca(mkG()); const six = PAD + b2W / 2 - 34, siy = btn2Y + b2H / 2;
     siG.fillStyle(0xc084fc, 0.85); siG.fillRoundedRect(six-7,siy-5,14,11,2);
@@ -349,13 +359,13 @@ Object.assign(MenuScene.prototype, {
     siG.fillStyle(0x1a1828,1); siG.fillRect(six-5,siy-5,10,3);
     ca(mkT(PAD + b2W / 2 + 8, btn2Y + b2H / 2, 'Магазин', 14, '#c084fc', true)).setOrigin(0.5);
     const sZ = ca(mkZ(PAD + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
-    sZ.on('pointerdown', () => { sBg.clear(); sBg.fillStyle(0x2a1f40,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,1); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); });
-    sZ.on('pointerout',  () => { sBg.clear(); sBg.fillStyle(0x1a1828,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,0.5); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); });
-    sZ.on('pointerup',   () => { sBg.clear(); sBg.fillStyle(0x1a1828,1); sBg.fillRoundedRect(PAD,btn2Y,b2W,b2H,12); sBg.lineStyle(1.5,0x7c3aed,0.5); sBg.strokeRoundedRect(PAD,btn2Y,b2W,b2H,12); this.scene.start('Shop', {}); });
+    sZ.on('pointerdown', () => _reDraw(sBg, PAD, btn2Y, b2W, b2H, 0x7c3aed, 0.9, 0x1e1535));
+    sZ.on('pointerout',  () => _reDraw(sBg, PAD, btn2Y, b2W, b2H, 0x7c3aed, 0.9));
+    sZ.on('pointerup',   () => { _reDraw(sBg, PAD, btn2Y, b2W, b2H, 0x7c3aed, 0.9); this.scene.start('Shop', {}); });
 
     // Tasks button
     const tasksX = PAD + b2W + 8;
-    const tBg = ca(_drawSlotBtn(tasksX, btn2Y, b2W, b2H, 0x3b82f6, 0.5));
+    const tBg = ca(_drawSlotBtn(tasksX, btn2Y, b2W, b2H, 0x3b82f6, 0.9));
     // Document icon
     const tiG = ca(mkG()); const tix = tasksX + b2W / 2 - 34, tiy = btn2Y + b2H / 2;
     tiG.fillStyle(0x93c5fd,0.15); tiG.fillRoundedRect(tix-7,tiy-8,13,16,2);
@@ -365,9 +375,9 @@ Object.assign(MenuScene.prototype, {
     tiG.lineBetween(tix-4,tiy+2,tix+1,tiy+2);
     ca(mkT(tasksX + b2W / 2 + 8, btn2Y + b2H / 2, 'Задания', 14, '#93c5fd', true)).setOrigin(0.5);
     const tskZ = ca(mkZ(tasksX + b2W / 2, btn2Y + b2H / 2, b2W, b2H).setInteractive({ useHandCursor: true }));
-    tskZ.on('pointerdown', () => { tBg.clear(); tBg.fillStyle(0x1a2d40,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,1); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
-    tskZ.on('pointerout',  () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); });
-    tskZ.on('pointerup',   () => { tBg.clear(); tBg.fillStyle(0x1a1828,1); tBg.fillRoundedRect(tasksX,btn2Y,b2W,b2H,12); tBg.lineStyle(1.5,0x3b82f6,0.5); tBg.strokeRoundedRect(tasksX,btn2Y,b2W,b2H,12); this.scene.start('Tasks', {}); });
+    tskZ.on('pointerdown', () => _reDraw(tBg, tasksX, btn2Y, b2W, b2H, 0x3b82f6, 0.9, 0x0f1e35));
+    tskZ.on('pointerout',  () => _reDraw(tBg, tasksX, btn2Y, b2W, b2H, 0x3b82f6, 0.9));
+    tskZ.on('pointerup',   () => { _reDraw(tBg, tasksX, btn2Y, b2W, b2H, 0x3b82f6, 0.9); this.scene.start('Tasks', {}); });
 
     // Premium «Забрать награду» — слот-кнопка только для премиум
     if (p.is_premium) {
@@ -378,11 +388,11 @@ Object.assign(MenuScene.prototype, {
       // 2. Drop-тень под кнопкой (как fDrop у В БОЙ)
       const pb3Drop = ca(mkG());
       pb3Drop.fillStyle(0xffd700, 0.32); pb3Drop.fillEllipse(PAD + actW/2, pb3Y + b2H + 4, actW*0.68, 9);
-      // 3. Фон кнопки
-      const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.0));
-      // 4. Пульсирующая рамка (как fBdr у В БОЙ)
+      // 3. Фон кнопки — такое же свечение как Магазин/Задания, только gold
+      const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.85));
+      // 4. Пульсирующий дополнительный слой рамки поверх (breathing)
       const pb3Bdr = ca(mkG());
-      pb3Bdr.lineStyle(1.5, 0xffd700, 0.85); pb3Bdr.strokeRoundedRect(PAD, pb3Y, actW, b2H, 12);
+      pb3Bdr.lineStyle(2, 0xffd700, 0.9); pb3Bdr.strokeRoundedRect(PAD, pb3Y, actW, b2H, 12);
       const icoX = PAD + 30;
       const pb3Glow = ca(mkG()); // пустой — нужен для dim/tween совместимости
       // 6. Иконка
@@ -394,8 +404,8 @@ Object.assign(MenuScene.prototype, {
       // 8. Зона
       const pb3Zone = mkZ(PAD + actW/2, pb3CY, actW, b2H).setInteractive({ useHandCursor: true });
       ca(pb3Zone);
-      pb3Zone.on('pointerdown', () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1500,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); pb3Bg.lineStyle(1.5,0xffd700,1); pb3Bg.strokeRoundedRect(PAD,pb3Y,actW,b2H,12); });
-      pb3Zone.on('pointerout',  () => { pb3Bg.clear(); pb3Bg.fillStyle(0x1a1828,1); pb3Bg.fillRoundedRect(PAD,pb3Y,actW,b2H,12); });
+      pb3Zone.on('pointerdown', () => _reDraw(pb3Bg, PAD, pb3Y, actW, b2H, 0xffd700, 0.85, 0x1a1500));
+      pb3Zone.on('pointerout',  () => _reDraw(pb3Bg, PAD, pb3Y, actW, b2H, 0xffd700, 0.85));
       const _pulse = [pb3OutGlow, pb3Drop, pb3Bdr, pb3Ico, pb3Glow];
       const _pb3Dim = () => {
         _pulse.forEach(t => this.tweens.killTweensOf(t));
