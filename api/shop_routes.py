@@ -171,13 +171,14 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             conn.close()
             if rows == 0:
                 return {"ok": False, "reason": "Ящик уже получен сегодня. Возвращайтесь завтра!"}
-            result = _open_loot_box("box_common", db, uid)
-            # +10 алмазов ежедневно (140 за 14 дней подписки)
+            # +10 алмазов ДО открытия ящика — чтобы _apply_drops загрузил игрока с актуальным счётом
             conn2 = db.get_connection()
             cursor2 = conn2.cursor()
             cursor2.execute("UPDATE players SET diamonds = diamonds + 10 WHERE user_id = ?", (uid,))
             conn2.commit()
             conn2.close()
+            # Открываем ящик (свитки → инвентарь, _apply_drops загружает игрока уже с +10 💎)
+            result = _open_loot_box("box_common", db, uid)
             if "items" not in result:
                 result["items"] = []
             result["items"].insert(0, {

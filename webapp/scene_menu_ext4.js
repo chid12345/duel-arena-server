@@ -382,17 +382,22 @@ Object.assign(MenuScene.prototype, {
     // Premium «Забрать награду» — слот-кнопка только для премиум
     if (p.is_premium) {
       const pb3Y = btn2Y + b2H + 5, pb3CY = pb3Y + b2H / 2;
-      // 1. Внешний glow за кнопкой (как fGlow у В БОЙ)
+      // Все animation-объекты стартуют невидимыми — включаются только если API подтвердил unclaimed
+      // (иначе кнопка "вспыхивала" активной на ~300ms пока API отвечал)
+      // 1. Внешний glow за кнопкой
       const pb3OutGlow = ca(mkG());
       pb3OutGlow.fillStyle(0xffd700, 0.18); pb3OutGlow.fillRoundedRect(PAD-5, pb3Y-5, actW+10, b2H+10, 15);
-      // 2. Drop-тень под кнопкой (как fDrop у В БОЙ)
+      pb3OutGlow.setAlpha(0);
+      // 2. Drop-тень под кнопкой
       const pb3Drop = ca(mkG());
       pb3Drop.fillStyle(0xffd700, 0.32); pb3Drop.fillEllipse(PAD + actW/2, pb3Y + b2H + 4, actW*0.68, 9);
-      // 3. Фон кнопки — такое же свечение как Магазин/Задания, только gold
+      pb3Drop.setAlpha(0);
+      // 3. Фон кнопки
       const pb3Bg = ca(_drawSlotBtn(PAD, pb3Y, actW, b2H, 0xffd700, 0.85));
-      // 4. Пульсирующий дополнительный слой рамки поверх (breathing)
+      // 4. Пульсирующая рамка
       const pb3Bdr = ca(mkG());
       pb3Bdr.lineStyle(2, 0xffd700, 0.9); pb3Bdr.strokeRoundedRect(PAD, pb3Y, actW, b2H, 12);
+      pb3Bdr.setAlpha(0);
       // Иконка + текст центрированы как группа: иконка 34px + gap 8 + текст ~118px = ~160
       const icoX = PAD + Math.round((actW - 160) / 2) + 17;
       const pb3Glow = ca(mkG()); // пустой — для dim/tween совместимости

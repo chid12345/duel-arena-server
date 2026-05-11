@@ -18,6 +18,11 @@ Object.assign(MenuScene.prototype, {
       if (box?.ok && box?.box_opened) {
         boxImg.setAlpha(0.22);
         if (boxGlow) boxGlow.setAlpha(0);
+        // Обновляем State.player из ответа — алмазы/предметы сразу видны на экране
+        if (box.player && State.player) {
+          State.player.diamonds = box.player.diamonds ?? State.player.diamonds;
+          State.player.gold     = box.player.gold     ?? State.player.gold;
+        }
         window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
         if (typeof ShopHtml !== 'undefined') {
           ShopHtml._showPremBoxReveal(box.items || []);
