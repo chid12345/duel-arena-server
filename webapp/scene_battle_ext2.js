@@ -66,7 +66,8 @@ Object.assign(BattleScene.prototype, {
       } else {
         if (!this.scene?.isActive('Battle')) return;
         this._choosing = true;
-        const hint = res.detail || res.message || res.error || res.reason || '';
+        const hint = res.detail || res.message || res.error || res.reason
+                   || res.result?.error || res.result?.message || '';
         this._showWait(hint ? `⚠️ ${hint}` : '⚠️ Ошибка. Попробуй ещё раз.');
         // Бой мог завершиться (AFK/сервер) пока клиент не знал — форсируем поллинг немедленно
         this._lastServerMsg = 0;

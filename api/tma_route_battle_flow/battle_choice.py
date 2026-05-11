@@ -164,4 +164,12 @@ def register_battle_choice_route(
         if result.get("status") == "choice_made":
             return {"ok": True, "status": "waiting_opponent"}
 
+        # Выбор уже принят в этом раунде (гонка таймера и ручного хода) — просто ждём
+        if result.get("status") == "duplicate_choice":
+            return {"ok": True, "status": "waiting_opponent"}
+
+        # Ошибка от battle_system — вернуть на top-level, чтобы клиент показал текст
+        if result.get("error"):
+            return {"ok": False, "error": result["error"]}
+
         return {"ok": True, "status": result.get("status"), "result": result}
