@@ -300,7 +300,7 @@ Object.assign(MenuScene.prototype, {
 
     /* ── 4. ACTION BUTTONS ───────────────────────────────── */
     const extrasH = p.current_hp < p.max_hp ? 18 : 0;
-    const premRowH = p.is_premium ? 51 : 0; // b2H(46) + gap(5) for ЗАБРАТЬ button
+    const premRowH = p.is_premium ? 68 : 0; // b2H(46) + gap(5) + 17px для текста под кнопкой
     const actY = Math.min(CH - 110 - premRowH, regenY + extrasH + 6);
     const actW = W - PAD * 2, actH = 54;
 
@@ -405,8 +405,8 @@ Object.assign(MenuScene.prototype, {
       const pb3Title = ca(mkT(icoX + 22, pb3CY, 'Забрать награду', 14, '#ffd700', true))
         .setOrigin(0, 0.5).setAlpha(0);
 
-      // Countdown — виден только когда ящик уже получен
-      const pb3Timer = ca(mkT(PAD + actW / 2, pb3CY + 10, '', 9, '#00dcff')).setOrigin(0.5).setAlpha(0);
+      // Countdown — под кнопкой, не внутри
+      const pb3Timer = ca(mkT(PAD + actW / 2, pb3Y + b2H + 9, '', 9, '#00dcff')).setOrigin(0.5).setAlpha(0);
 
       // Shimmer (diagonal gold flash, masked)
       const pb3MaskG = this.make.graphics({}, false);
@@ -437,20 +437,18 @@ Object.assign(MenuScene.prototype, {
           : `🕒 ${m}:${String(sc).padStart(2,'0')}`;
       };
 
-      // Запуск живого отсчёта (вызывается изнутри _pb3Dim и из колбэка claim)
+      // Запуск живого отсчёта под кнопкой (кнопка остаётся как есть — только тускнеет)
       const _pb3StartTimer = (secsLeft) => {
         if (!secsLeft) return;
         if (this._premBoxTimerEvent) { try { this._premBoxTimerEvent.remove(); } catch(_) {} }
         let secs = secsLeft;
-        pb3Title.setText('Уже получено').setAlpha(0.35).setY(pb3CY - 8);
-        pb3Ico.setY(pb3CY - 8);
-        pb3Timer.setText(_fmtSecs(secs)).setAlpha(1);
+        pb3Timer.setText('✓ Получено · ' + _fmtSecs(secs)).setAlpha(0.7);
         this._premBoxTimerEvent = this.time.addEvent({
           delay: 1000, loop: true,
           callback: () => {
             if (!this.scene?.isActive('Menu')) { this._premBoxTimerEvent?.remove(); return; }
             secs = Math.max(0, secs - 1);
-            pb3Timer.setText(secs > 0 ? _fmtSecs(secs) : '🔄 Доступно!');
+            pb3Timer.setText(secs > 0 ? '✓ Получено · ' + _fmtSecs(secs) : '🔄 Обновите экран');
             if (secs === 0) this._premBoxTimerEvent?.remove();
           },
         });
@@ -458,8 +456,9 @@ Object.assign(MenuScene.prototype, {
 
       const _pb3Dim = (secsLeft) => {
         _pulse.forEach(t => this.tweens.killTweensOf(t));
-        pb3Bg.setAlpha(0.4);
-        pb3Ico.setAlpha(0.22); pb3Glow.setAlpha(0); pb3OutGlow.setAlpha(0);
+        pb3Bg.setAlpha(0.35);
+        pb3Ico.setAlpha(0.20); pb3Title.setAlpha(0.20);
+        pb3Glow.setAlpha(0); pb3OutGlow.setAlpha(0);
         pb3Drop.setAlpha(0); pb3Bdr.setAlpha(0); pb3Shim.setAlpha(0);
         try { pb3Zone.disableInteractive(); } catch(_) {}
         _pb3StartTimer(secsLeft);
