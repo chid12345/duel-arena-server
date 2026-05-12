@@ -123,6 +123,10 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
             return
         ping_task = None
         session_key = await manager.connect(user_id, ws)
+        if session_key is None:
+            # Соединение отклонено: активная сессия защищена (другое устройство
+            # только что подключилось и защитное окно 30 сек ещё не истекло).
+            return
         # Отправляем токен сессии сразу после подключения.
         # Клиент сохраняет его и прикладывает к каждому HTTP-ходу в бою.
         # Если придёт другое устройство → токен сменится → старый отклонится.
@@ -153,7 +157,8 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
         finally:
             if ping_task:
                 ping_task.cancel()
-            manager.disconnect(user_id)
+            # Передаём ws чтобы не удалить активную сессию другого устройства
+            manager.disconnect(user_id, ws)
             logger.info("WS disconnected user_id=%s", user_id)
 
     app.include_router(router)

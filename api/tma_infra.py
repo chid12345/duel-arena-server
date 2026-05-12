@@ -139,20 +139,37 @@ def _global_cache_invalidate(key: str) -> None:
 class ConnectionManager:
     def __init__(self) -> None:
         self.connections: Dict[int, WebSocket] = {}
-        self._session_keys: Dict[int, str] = {}  # user_id → активный session key
+        self._session_keys: Dict[int, str] = {}   # user_id → активный session key
+        self._protected_until: Dict[int, float] = {}  # user_id → время защиты (epoch)
 
-    async def connect(self, user_id: int, ws: WebSocket) -> str:
+    async def connect(self, user_id: int, ws: WebSocket) -> str | None:
         # ВАЖНО: ws.accept() теперь делается в handler'е (system_realtime_routes)
         # ДО auth-проверки — иначе закрытие WS даёт HTTP 403 на handshake,
         # и Chrome показывает "closed before connection established".
-        import secrets
+        import secrets, time
         old = self.connections.get(user_id)
         if old:
+            # Если активная сессия защищена — отклоняем новое подключение.
+            # Так старое устройство не может переподключиться сразу после кика:
+            # Telegram закрывает мини-апп, но иногда переоткрывает его автоматически.
+            if time.time() < self._protected_until.get(user_id, 0):
+                try:
+                    await ws.send_json({"event": "kicked", "reason": "Игра уже открыта на другом устройстве"})
+                    await ws.close(code=1008)
+                except Exception:
+                    pass
+                return None  # соединение отклонено, старая сессия защищена
+            # Кикаем старое устройство и защищаем новую сессию на 30 сек
             try:
                 await old.send_json({"event": "kicked", "reason": "Игра открыта на другом устройстве"})
                 await old.close(code=1000)
             except Exception:
                 pass
+            self._protected_until[user_id] = time.time() + 30
+        else:
+            # Нет активной сессии — очищаем защиту (нормальное переподключение)
+            self._protected_until.pop(user_id, None)
+
         key = secrets.token_hex(16)
         self._session_keys[user_id] = key
         self.connections[user_id] = ws
@@ -164,7 +181,10 @@ class ConnectionManager:
             return True  # клиент ещё не получил токен (старая версия) — пропускаем
         return self._session_keys.get(user_id) == key
 
-    def disconnect(self, user_id: int) -> None:
+    def disconnect(self, user_id: int, ws: WebSocket | None = None) -> None:
+        # ws передаётся чтобы не удалить чужую активную сессию случайно
+        if ws is not None and self.connections.get(user_id) is not ws:
+            return
         self.connections.pop(user_id, None)
 
     async def send(self, user_id: int, data: dict) -> None:
