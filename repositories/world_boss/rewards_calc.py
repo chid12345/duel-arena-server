@@ -2,11 +2,10 @@
 
 Вход: spawn_id + is_victory. Выход — записи в world_boss_rewards.
 
-Формула (Вариант Б — гарантия + пул по вкладу):
+Формула:
   ЗОЛОТО:
-    guaranteed = 30 (фикс)
-    pool       = 50 × N_участников
-    итого      = (guaranteed + pool × вклад%) × mult
+    pool  = WB_POOL_BASE(500) + 50 × N_участников
+    итого = pool × вклад% × mult
   ОПЫТ:
     база       = victory_xp_for_player_level(уровень_игрока)
     guaranteed = база × 0.3
