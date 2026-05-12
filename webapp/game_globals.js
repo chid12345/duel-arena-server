@@ -282,30 +282,18 @@ function _wsKicked(ws) {
   State.sessionKey = null;
   try { ws.onclose = null; ws.close(); } catch(_) {}
 
-  // Показываем экран "сессия занята" — без авто-перезагрузки.
-  // Пользователь сам решает: остаться смотреть или нажать "Играть здесь" (кикнет другое устройство).
-  if (window.Telegram?.WebApp?.showPopup) {
-    try {
-      Telegram.WebApp.showPopup({
-        title: '📵 Сессия деактивирована',
-        message: 'Вы вошли в игру с другого устройства.\nЭта вкладка остановлена.',
-        buttons: [
-          { id: 'play_here', type: 'default', text: '🎮 Играть здесь' },
-          { id: 'ok', type: 'close', text: 'Закрыть' },
-        ],
-      }, id => { if (id === 'play_here') location.reload(); });
-      return;
-    } catch(_) {}
-  }
-
-  // Fallback (браузер без TG SDK): DOM-оверлей поверх игры
+  // Новое устройство зашло → старое закрывается само, без вопросов.
+  // Telegram WebApp: закрываем мини-приложение нативно.
+  try { if (window.Telegram?.WebApp?.close) { Telegram.WebApp.close(); return; } } catch(_) {}
+  // Браузер: пробуем закрыть вкладку.
+  try { window.close(); } catch(_) {}
+  // Если window.close() не сработал (браузер запрещает) — мёртвый экран без кнопок.
   const overlay = document.createElement('div');
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;text-align:center;padding:24px;';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;text-align:center;padding:24px;';
   overlay.innerHTML = `
-    <div style="font-size:40px;margin-bottom:16px">📵</div>
-    <div style="font-size:18px;font-weight:bold;margin-bottom:8px">Сессия деактивирована</div>
-    <div style="font-size:14px;color:#aaa;margin-bottom:24px">Вы вошли в игру с другого устройства.<br>Эта вкладка остановлена.</div>
-    <button onclick="location.reload()" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:16px;cursor:pointer">🎮 Играть здесь</button>
+    <div style="font-size:48px;margin-bottom:16px">📵</div>
+    <div style="font-size:20px;font-weight:bold;margin-bottom:10px">Игра открыта на другом устройстве</div>
+    <div style="font-size:14px;color:#888">Эта вкладка закрыта. Вернитесь на активное устройство.</div>
   `;
   document.body.appendChild(overlay);
 }
