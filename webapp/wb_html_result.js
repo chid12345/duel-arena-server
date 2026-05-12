@@ -101,7 +101,6 @@
           <div class="wb-mvp-dmg-bar"><div class="wb-mvp-dmg-bar-fill" style="width:${contPct}%"></div></div>
         </div>
       </div>
-      <div class="wb-mvp-rew-head">// ${win ? 'НАГРАДЫ РАЗБЛОКИРОВАНЫ' : 'УТЕШИТЕЛЬНЫЕ НАГРАДЫ'}</div>
       ${rewGrid}
       ${chest}
       <div class="wb-mvp-log-btn" id="wb-mvp-log">
