@@ -279,14 +279,35 @@ function get(path, params = {}, timeoutMs = 15000) {
 /* ─── WebSocket ─────────────────────────────────────────────── */
 function _wsKicked(ws) {
   if (State.ws === ws) State.ws = null;
+  State.sessionKey = null;
   try { ws.onclose = null; ws.close(); } catch(_) {}
-  const msg = '⚠️ Игра открыта на другом устройстве. Обновите эту страницу чтобы продолжить.';
-  if (window.Telegram?.WebApp?.showAlert) {
-    Telegram.WebApp.showAlert(msg, () => location.reload());
-  } else {
-    alert(msg);
-    location.reload();
+
+  // Показываем экран "сессия занята" — без авто-перезагрузки.
+  // Пользователь сам решает: остаться смотреть или нажать "Играть здесь" (кикнет другое устройство).
+  if (window.Telegram?.WebApp?.showPopup) {
+    try {
+      Telegram.WebApp.showPopup({
+        title: '📵 Сессия деактивирована',
+        message: 'Вы вошли в игру с другого устройства.\nЭта вкладка остановлена.',
+        buttons: [
+          { id: 'play_here', type: 'default', text: '🎮 Играть здесь' },
+          { id: 'ok', type: 'close', text: 'Закрыть' },
+        ],
+      }, id => { if (id === 'play_here') location.reload(); });
+      return;
+    } catch(_) {}
   }
+
+  // Fallback (браузер без TG SDK): DOM-оверлей поверх игры
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;font-family:sans-serif;text-align:center;padding:24px;';
+  overlay.innerHTML = `
+    <div style="font-size:40px;margin-bottom:16px">📵</div>
+    <div style="font-size:18px;font-weight:bold;margin-bottom:8px">Сессия деактивирована</div>
+    <div style="font-size:14px;color:#aaa;margin-bottom:24px">Вы вошли в игру с другого устройства.<br>Эта вкладка остановлена.</div>
+    <button onclick="location.reload()" style="background:#c0392b;color:#fff;border:none;border-radius:8px;padding:12px 28px;font-size:16px;cursor:pointer">🎮 Играть здесь</button>
+  `;
+  document.body.appendChild(overlay);
 }
 
 function connectWS(userId, onMessage) {
