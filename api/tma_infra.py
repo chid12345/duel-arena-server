@@ -139,11 +139,13 @@ def _global_cache_invalidate(key: str) -> None:
 class ConnectionManager:
     def __init__(self) -> None:
         self.connections: Dict[int, WebSocket] = {}
+        self._session_keys: Dict[int, str] = {}  # user_id → активный session key
 
-    async def connect(self, user_id: int, ws: WebSocket) -> None:
+    async def connect(self, user_id: int, ws: WebSocket) -> str:
         # ВАЖНО: ws.accept() теперь делается в handler'е (system_realtime_routes)
         # ДО auth-проверки — иначе закрытие WS даёт HTTP 403 на handshake,
         # и Chrome показывает "closed before connection established".
+        import secrets
         old = self.connections.get(user_id)
         if old:
             try:
@@ -151,7 +153,16 @@ class ConnectionManager:
                 await old.close(code=1000)
             except Exception:
                 pass
+        key = secrets.token_hex(16)
+        self._session_keys[user_id] = key
         self.connections[user_id] = ws
+        return key
+
+    def validate_session(self, user_id: int, key: str | None) -> bool:
+        """True если key совпадает с текущей сессией пользователя."""
+        if not key:
+            return True  # клиент ещё не получил токен (старая версия) — пропускаем
+        return self._session_keys.get(user_id) == key
 
     def disconnect(self, user_id: int) -> None:
         self.connections.pop(user_id, None)

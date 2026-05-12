@@ -11,6 +11,7 @@ class BattleChoiceBody(BaseModel):
     init_data: str
     attack: str  # HEAD / TORSO / LEGS
     defense: str
+    session_key: str | None = None
 
 
 class FindBattleBody(BaseModel):

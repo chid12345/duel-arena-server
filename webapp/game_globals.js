@@ -239,6 +239,10 @@ function getWarriorDisplayKey(type) {
 function post(path, body = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
+  // session_key — токен активной WS-сессии. Если устройство было кикнуто и его
+  // токен устарел, сервер отклонит ход (предотвращает управление боем с 2 устройств).
+  const sk = State.sessionKey;
+  if (sk) body = { session_key: sk, ...body };
   return fetch(API + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -293,6 +297,7 @@ function connectWS(userId, onMessage) {
       try {
         const data = JSON.parse(e.data);
         if (data?.event === 'kicked') { _wsKicked(_reuseWs); return; }
+        if (data?.event === 'session') { State.sessionKey = data.key; return; }
         onMessage(data);
       } catch(_) {}
     };
@@ -354,6 +359,7 @@ function connectWS(userId, onMessage) {
         return;
       }
       if (data && data.event === 'kicked') { _wsKicked(ws); return; }
+      if (data && data.event === 'session') { State.sessionKey = data.key; return; }
       onMessage(data);
     } catch(_) {}
   };

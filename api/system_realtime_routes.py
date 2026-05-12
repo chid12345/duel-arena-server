@@ -122,7 +122,14 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
                 pass
             return
         ping_task = None
-        await manager.connect(user_id, ws)
+        session_key = await manager.connect(user_id, ws)
+        # Отправляем токен сессии сразу после подключения.
+        # Клиент сохраняет его и прикладывает к каждому HTTP-ходу в бою.
+        # Если придёт другое устройство → токен сменится → старый отклонится.
+        try:
+            await ws.send_json({"event": "session", "key": session_key})
+        except Exception:
+            pass
         logger.info("WS connected user_id=%s", user_id)
         try:
             async def _ping():
