@@ -145,6 +145,9 @@ class BattleEndBattleMixin:
         exp_reward = int(base_exp * 1.5) if xp_boosted else base_exp
         if not is_test and prem_w_active and exp_reward > 0:
             exp_reward = max(1, int(round(exp_reward * PREMIUM_XP_MULTIPLIER)))
+        # Premium: +25% к ЗОЛОТУ победителя (UI обещает «+25% Gold» — даём)
+        if not is_test and prem_w_active and gold_reward > 0:
+            gold_reward = max(1, int(round(gold_reward * PREMIUM_XP_MULTIPLIER)))
         if not is_test and prem_l_active and loser_exp > 0:
             loser_exp = max(0, int(round(loser_exp * PREMIUM_XP_MULTIPLIER)))
 

@@ -107,6 +107,9 @@ async def world_boss_claim_reward_inner(body: ClaimRewardBody, *, db, get_user_f
         gold = int(row.get("gold") or 0)
         exp = int(row.get("exp") or 0)
         diamonds = int(row.get("diamonds") or 0)
+        # Premium: +25% к gold и exp (UI-обещание «+25% XP / +25% Gold»)
+        from economy.premium_bonus import apply_premium_rewards
+        gold, exp, is_prem = apply_premium_rewards(db, uid, gold, exp)
         if gold or exp or diamonds:
             conn = db.get_connection()
             cur = conn.cursor()
@@ -140,6 +143,7 @@ async def world_boss_claim_reward_inner(body: ClaimRewardBody, *, db, get_user_f
         return {
             "ok": True, "reward_id": int(body.reward_id),
             "gold": gold, "exp": exp, "diamonds": diamonds,
+            "premium_bonus": is_prem,
             "chest_type": chest,
             "chest_added": chest_added,
             "chest_error": chest_error,

@@ -62,6 +62,14 @@ window.ShopHtmlPremBox = {
     try {
       const box = await post('/api/shop/premium_daily_box', {});
       if (box?.ok && box?.box_opened) {
+        // Обновляем баланс игрока (алмазы/золото) из ответа сервера
+        if (box.player && window.State?.player) {
+          State.player.diamonds = box.player.diamonds ?? State.player.diamonds;
+          State.player.gold     = box.player.gold     ?? State.player.gold;
+          State.player.inventory_unseen = box.player.inventory_unseen ?? State.player.inventory_unseen;
+        }
+        // Перерисовываем счётчики в футере магазина
+        ShopHtml._updateBalance?.();
         ShopHtml._showPremBoxReveal(box.items || []);
         ShopHtml.bumpInvBadge?.();
         this._setDark(hdr, box.seconds_until_reset || 0);

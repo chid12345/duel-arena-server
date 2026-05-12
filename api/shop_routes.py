@@ -11,6 +11,15 @@ _MSK = timedelta(hours=3)  # UTC+3 Moscow
 def _today_msk() -> str:
     return (datetime.utcnow() + _MSK).date().isoformat()
 
+def _norm_date_str(val) -> str:
+    """Нормализовать значение даты из БД к ISO-строке (Postgres вернёт date, SQLite — str)."""
+    if not val:
+        return ""
+    if hasattr(val, "isoformat"):
+        try: return val.isoformat()
+        except Exception: pass
+    return str(val)
+
 def _seconds_until_msk_midnight() -> int:
     now_msk = datetime.utcnow() + _MSK
     from datetime import time as dtime
@@ -137,8 +146,8 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             cursor.execute("SELECT premium_box_claimed FROM players WHERE user_id = ?", (uid,))
             row = cursor.fetchone()
             conn.close()
-            claimed_date = (row["premium_box_claimed"] if row else None) or ""
-            claimed = str(claimed_date) == today
+            claimed_date = row["premium_box_claimed"] if row else None
+            claimed = _norm_date_str(claimed_date) == today
             return {
                 "ok": True,
                 "is_premium": True,
@@ -159,25 +168,28 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             if not prem.get("is_active"):
                 return {"ok": False, "reason": "Требуется Premium"}
             today = _today_msk()
+            # 1) Проверяем, не получено ли уже сегодня — атомарность защищена user_lock выше.
             conn = db.get_connection()
             cursor = conn.cursor()
+            cursor.execute("SELECT premium_box_claimed FROM players WHERE user_id = ?", (uid,))
+            row = cursor.fetchone()
+            cur_str = _norm_date_str(row["premium_box_claimed"] if row else None)
+            if cur_str == today:
+                conn.close()
+                return {
+                    "ok": False,
+                    "reason": "Ящик уже получен сегодня. Возвращайтесь завтра!",
+                    "claimed": True,
+                    "seconds_until_reset": _seconds_until_msk_midnight(),
+                }
+            # 2) Помечаем как получено + +10 алмазов одной транзакцией.
             cursor.execute(
-                "UPDATE players SET premium_box_claimed = ? "
-                "WHERE user_id = ? AND (premium_box_claimed IS NULL OR premium_box_claimed != ?)",
-                (today, uid, today),
+                "UPDATE players SET premium_box_claimed = ?, diamonds = diamonds + 10 WHERE user_id = ?",
+                (today, uid),
             )
-            rows = cursor.rowcount
             conn.commit()
             conn.close()
-            if rows == 0:
-                return {"ok": False, "reason": "Ящик уже получен сегодня. Возвращайтесь завтра!"}
-            # +10 алмазов ДО открытия ящика — чтобы _apply_drops загрузил игрока с актуальным счётом
-            conn2 = db.get_connection()
-            cursor2 = conn2.cursor()
-            cursor2.execute("UPDATE players SET diamonds = diamonds + 10 WHERE user_id = ?", (uid,))
-            conn2.commit()
-            conn2.close()
-            # Открываем ящик (свитки → инвентарь, _apply_drops загружает игрока уже с +10 💎)
+            # 3) Открываем ящик (свитки → инвентарь, _apply_drops загружает игрока уже с +10 💎)
             result = _open_loot_box("box_common", db, uid)
             if "items" not in result:
                 result["items"] = []
@@ -186,6 +198,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             })
             result["free"] = True
             result["box_opened"] = True
+            result["claimed"] = True
             result["seconds_until_reset"] = _seconds_until_msk_midnight()
             return result
 

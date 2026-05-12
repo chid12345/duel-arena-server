@@ -66,8 +66,13 @@ class ProgressWeeklyMixin:
             return {"ok": False, "reason": "Не выполнено"}
         if not self.add_task_claim(user_id, claim_key):
             return {"ok": False, "reason": "Уже получено"}
+        # Premium: +25% к gold и xp (UI-обещание)
+        from economy.premium_bonus import apply_premium_rewards
+        gold_final, xp_final, is_prem = apply_premium_rewards(
+            self, user_id, task["reward_gold"], task["reward_xp"]
+        )
         result = self.grant_exp_with_levelup(
-            user_id, task["reward_xp"], gold_add=task["reward_gold"],
+            user_id, xp_final, gold_add=gold_final,
             diamonds_add=task["reward_diamonds"],
         )
         # Шаг 5: BP-очки за выполненный недельный квест
@@ -76,7 +81,8 @@ class ProgressWeeklyMixin:
             award_quest_complete(self, user_id, "weekly")
         except Exception:
             pass
-        return {"ok": True, "gold": task["reward_gold"],
-                "diamonds": task["reward_diamonds"], "xp": task["reward_xp"],
+        return {"ok": True, "gold": gold_final,
+                "diamonds": task["reward_diamonds"], "xp": xp_final,
+                "premium_bonus": is_prem,
                 "leveled": result.get("leveled", False),
                 "new_level": result.get("new_level")}
