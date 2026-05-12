@@ -48,12 +48,16 @@
 
     document.getElementById('wb-mvp-ov')?.remove();
     const ov = document.createElement('div');
-    ov.id = 'wb-mvp-ov'; ov.className = 'wb-mvp-ov' + (win ? '' : ' lose');
+    ov.id = 'wb-mvp-ov'; ov.className = 'wb-mvp-ov';
 
-    const rewards = [];
-    if (r.gold)     rewards.push(`💰 ${r.gold}`);
-    if (r.exp)      rewards.push(`⭐ ${r.exp}`);
-    if (r.diamonds) rewards.push(`💎 ${r.diamonds}`);
+    // Сетка наград: кристаллы только если есть (топ-2/3), MVP получает сундук
+    const rewCells = [];
+    if (r.gold) rewCells.push(`<div class="wb-mvp-rew-cell gc"><div class="wb-mvp-rew-ic">💰</div><div class="wb-mvp-rew-num">${r.gold.toLocaleString('ru')}</div><div class="wb-mvp-rew-lbl">Золото</div></div>`);
+    if (r.exp)  rewCells.push(`<div class="wb-mvp-rew-cell ec"><div class="wb-mvp-rew-ic">⭐</div><div class="wb-mvp-rew-num">${r.exp.toLocaleString('ru')}</div><div class="wb-mvp-rew-lbl">Опыт</div></div>`);
+    if (r.diamonds > 0) rewCells.push(`<div class="wb-mvp-rew-cell dc"><div class="wb-mvp-rew-ic">💎</div><div class="wb-mvp-rew-num">${r.diamonds}</div><div class="wb-mvp-rew-lbl">Кристаллы</div></div>`);
+    const rewCols = rewCells.length || 2;
+    const rewGrid = rewCells.length ? `<div class="wb-mvp-rew-grid" style="grid-template-columns:repeat(${rewCols},1fr)">${rewCells.join('')}</div>` : '';
+
     let chest = '';
     if (r.chest_type === 'wb_diamond_chest') {
       chest = `<div class="wb-mvp-chest">💠 Алмазный сундук рейда · топ-1 по урону</div>`;
@@ -68,20 +72,54 @@
     const avgDmg = hits ? Math.round((dmg||0) / hits) : 0;
     const recHp = (ps.max_hp || 0) - (ps.current_hp || 0);
     const hpPct = ps.max_hp ? Math.round(((ps.current_hp||0) / ps.max_hp) * 100) : 0;
+    const contPct = Math.min(100, r.contribution_pct || 0);
+    const msgIc = win ? (contPct >= 50 ? '👑' : '🏆') : '💪';
 
-    ov.innerHTML = `<div class="wb-mvp">
+    ov.innerHTML = `<div class="wb-mvp ${win ? 'win' : 'lose'}">
+      <div class="wb-mvp-grid"></div>
       <div class="wb-mvp-x" id="wb-mvp-x" title="Закрыть">×</div>
-      <div class="wb-mvp-bdg">${head}</div>
-      <div class="wb-mvp-av">${avatar}</div>
-      <div class="wb-mvp-name">@${_esc(name)}</div>
-      <div class="wb-mvp-sub">${sub}</div>
-      <div class="wb-mvp-dmg">Урон: <span>${(dmg||0).toLocaleString('ru')}</span></div>
-      ${rewards.length ? `<div class="wb-mvp-rew">${rewards.join('   ')}</div>` : ''}
+      <div class="wb-mvp-bdg ${win ? 'win' : 'lose'}"><div class="wb-mvp-bdg-dot"></div>${head}</div>
+      <div class="wb-mvp-av-wrap">
+        <div class="wb-mvp-av-ring-blur${win ? '' : ' lose'}"></div>
+        <div class="wb-mvp-av-ring${win ? '' : ' lose'}"></div>
+        <div class="wb-mvp-av">${avatar}</div>
+      </div>
+      <div class="wb-mvp-name${win ? '' : ' lose'}">@${_esc(name)}</div>
+      <div class="wb-mvp-sub${win ? '' : ' lose'}">${sub}</div>
+      <div class="wb-mvp-dmg-block ${win ? 'win' : 'lose'}">
+        <div class="wb-mvp-dmg-header">
+          <div class="wb-mvp-dmg-dot"></div>
+          <div class="wb-mvp-dmg-lbl">урон нанесён</div>
+          <div class="wb-mvp-dmg-dot"></div>
+        </div>
+        <div class="wb-mvp-dmg-val">${(dmg||0).toLocaleString('ru')}</div>
+        <div class="wb-mvp-dmg-bar-wrap">
+          <div class="wb-mvp-dmg-bar-row">
+            <span class="wb-mvp-dmg-bar-lbl">вклад в рейд</span>
+            <span class="wb-mvp-dmg-bar-pct">${contPct.toFixed(1)}%</span>
+          </div>
+          <div class="wb-mvp-dmg-bar"><div class="wb-mvp-dmg-bar-fill" style="width:${contPct}%"></div></div>
+        </div>
+      </div>
+      <div class="wb-mvp-rew-head">// ${win ? 'НАГРАДЫ РАЗБЛОКИРОВАНЫ' : 'УТЕШИТЕЛЬНЫЕ НАГРАДЫ'}</div>
+      ${rewGrid}
       ${chest}
+      <div class="wb-mvp-log-btn" id="wb-mvp-log">
+        <div class="wb-mvp-log-left">
+          <div class="wb-mvp-log-ic">📜</div>
+          <div class="wb-mvp-log-text">
+            <div class="wb-mvp-log-title">Лог боя</div>
+            <div class="wb-mvp-log-sub">каждый удар · статистика</div>
+          </div>
+        </div>
+        <div class="wb-mvp-log-arrow">›</div>
+      </div>
       <div id="wb-mvp-summary" class="wb-mvp-summary" style="display:none"></div>
-      <div class="wb-mvp-log-btn" id="wb-mvp-log">📜 Лог боя</div>
-      <div class="wb-mvp-msg">${msg}</div>
-      <button class="wb-mvp-btn" id="wb-mvp-claim">ПОЛУЧИТЬ НАГРАДУ</button>
+      <div class="wb-mvp-msg ${win ? 'win' : 'lose'}">
+        <span class="wb-mvp-msg-ic">${msgIc}</span>
+        <span class="wb-mvp-msg-text">${msg}</span>
+      </div>
+      <button class="wb-mvp-btn ${win ? 'win' : 'lose'}" id="wb-mvp-claim">ПОЛУЧИТЬ НАГРАДУ</button>
     </div>`;
     document.body.appendChild(ov);
     requestAnimationFrame(() => ov.classList.add('open'));
@@ -183,35 +221,57 @@
     const box = document.getElementById('wb-mvp-summary');
     if (!box) return;
     const parts = [];
-    parts.push(`<div class="wb-mvp-sum-h">📜 ИТОГИ РЕЙДА</div>`);
-    if (d.winner) {
-      parts.push(`<div class="wb-mvp-sum-row gold">
-        <span class="wb-mvp-sum-ic">💠</span>
-        <span class="wb-mvp-sum-lbl">Топ-1 урон:</span>
-        <span class="wb-mvp-sum-val">@${_esc(d.winner.name)}</span>
-        <span class="wb-mvp-sum-pct">${(d.winner.contribution_pct||0).toFixed(1)}%</span>
-      </div>`);
-    }
-    if (d.scroll_winners && d.scroll_winners.length) {
-      const names = d.scroll_winners.slice(0, 5).map(w => `@${_esc(w.name)}`).join(', ');
-      const more = d.scroll_winners.length > 5 ? ` и ещё ${d.scroll_winners.length - 5}` : '';
-      parts.push(`<div class="wb-mvp-sum-row scroll">
-        <span class="wb-mvp-sum-ic">✨</span>
-        <span class="wb-mvp-sum-lbl">Свиток выпал (5%):</span>
-        <span class="wb-mvp-sum-val">${names}${more}</span>
-      </div>`);
-    }
+    const title = d.is_victory !== false ? '🏆 Итоги рейда' : '📊 Итоги рейда';
+    parts.push(`<div class="wb-mvp-sum-h">${title}</div>`);
+
     if (d.top3 && d.top3.length) {
       const medals = ['🥇', '🥈', '🥉'];
-      const rows = d.top3.map((t, i) =>
-        `<div class="wb-mvp-sum-row top3">
-          <span class="wb-mvp-sum-ic">${medals[i]}</span>
-          <span class="wb-mvp-sum-val">@${_esc(t.name)}</span>
-          <span class="wb-mvp-sum-pct">⚔️ ${(t.damage||0).toLocaleString('ru')}</span>
-        </div>`
-      ).join('');
-      parts.push(rows);
+      const rankCls = ['r1', 'r2', 'r3'];
+      const rowCls  = ['r1-row', 'r2-row', 'r3-row'];
+      const maxDmg  = Math.max(...d.top3.map(t => t.damage || 0)) || 1;
+      d.top3.forEach((t, i) => {
+        const pct    = i === 0 && d.winner ? (d.winner.contribution_pct||0).toFixed(1) : ((t.damage / maxDmg) * 100).toFixed(0);
+        const barW   = i === 0 && d.winner ? Math.min(100, d.winner.contribution_pct||0) : Math.round((t.damage / maxDmg) * 100);
+        const pctCls = i === 0 ? ' gold-p' : '';
+        parts.push(`<div class="wb-mvp-sum-row ${rowCls[i]}">
+          <div class="wb-mvp-rank ${rankCls[i]}">${medals[i]}</div>
+          <div class="wb-mvp-sum-body">
+            <div class="wb-mvp-sum-namerow">
+              <span class="wb-mvp-sum-name">@${_esc(t.name)}</span>
+              <span class="wb-mvp-sum-pct${pctCls}">${pct}%</span>
+            </div>
+            <div class="wb-mvp-sum-bar"><div class="wb-mvp-sum-bar-fill" style="width:${barW}%"></div></div>
+          </div>
+        </div>`);
+      });
+    } else if (d.winner) {
+      const barW = Math.min(100, d.winner.contribution_pct || 0);
+      parts.push(`<div class="wb-mvp-sum-row r1-row">
+        <div class="wb-mvp-rank r1">🥇</div>
+        <div class="wb-mvp-sum-body">
+          <div class="wb-mvp-sum-namerow">
+            <span class="wb-mvp-sum-name">@${_esc(d.winner.name)}</span>
+            <span class="wb-mvp-sum-pct gold-p">${(d.winner.contribution_pct||0).toFixed(1)}%</span>
+          </div>
+          <div class="wb-mvp-sum-bar"><div class="wb-mvp-sum-bar-fill" style="width:${barW}%"></div></div>
+        </div>
+      </div>`);
     }
+
+    if (d.scroll_winners && d.scroll_winners.length) {
+      const names = d.scroll_winners.slice(0, 3).map(w => `@${_esc(w.name)}`).join(', ');
+      const more  = d.scroll_winners.length > 3 ? ` +${d.scroll_winners.length - 3}` : '';
+      parts.push(`<div class="wb-mvp-sum-row">
+        <div class="wb-mvp-rank rscroll">✨</div>
+        <div class="wb-mvp-sum-body">
+          <div class="wb-mvp-sum-namerow">
+            <span class="wb-mvp-sum-name" style="color:#cc88ff">${names}${more}</span>
+            <span class="wb-mvp-sum-pct" style="color:#cc88ff;background:rgba(204,136,255,.1)">свиток</span>
+          </div>
+        </div>
+      </div>`);
+    }
+
     box.innerHTML = parts.join('');
     box.style.display = '';
   }
