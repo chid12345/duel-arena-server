@@ -103,7 +103,22 @@ async function _applyItem(itemId, replace){
       if(res.player){ State.player=res.player; State.playerLoadedAt=Date.now(); }
       await _refreshInv();
       _render();
-      try{ _scene?._showToast?.(res.msg||'✅ Применено'); }catch(_){}
+      // Открытие ящика — показываем единый «что выпало» оверлей,
+      // как в StatsScene-инвентаре и магазине (BoxRevealCard).
+      if(res.box_opened && window.BoxRevealCard){
+        const items = res.items
+          || [{ item_id:res.item_id, icon:res.item_icon, name:res.item_name, desc:'' }];
+        try{
+          window.BoxRevealCard.show(items, {
+            title:'ИЗ ЯЩИКА ВЫПАЛО', boxId:itemId,
+            onClose:()=>{ _refreshInv().then(()=>_render()); },
+          });
+        }catch(_){
+          _scene?._showToast?.(res.msg||'✅ Применено');
+        }
+      } else {
+        try{ _scene?._showToast?.(res.msg||'✅ Применено'); }catch(_){}
+      }
     } else {
       _scene?._showToast?.(`❌ ${res?.reason||'Ошибка'}`);
     }
