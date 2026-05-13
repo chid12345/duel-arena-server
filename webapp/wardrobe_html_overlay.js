@@ -194,16 +194,16 @@ const ARMORS_DATA = [
   { id:'universal_free', r:'common', name:'Плащ Странника',   stars:'★☆☆☆', tier:'БЕСПЛ.', str:2,agi:2,int:2,end:2, extra:'+1% макс.HP', bonus:'«Сбалансирован»\n+1% к макс. HP.\nУниверсальный плащ для новичка.', type:'free' },
 
   // Золото — 4
-  { id:'berserker_gold', r:'rare', name:'Панцирь Берсерка',  stars:'★★☆☆', tier:'ЗОЛОТО', str:7,agi:0,int:0,end:7, extra:'+50 HP',       bonus:'«Берсерк»\n+4% урона при HP < 30%.\nЯрость выкованной стали.',         type:'gold',     price:'💰 5000' },
-  { id:'assassin_gold',  r:'rare', name:'Кольчуга Теней',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:7,int:0,end:7, extra:'+3% уклон',    bonus:'«Теневой удар»\n+4% шанс двойного удара.\nБесшумная кольчуга.',      type:'gold',     price:'💰 5000' },
-  { id:'mage_gold',      r:'rare', name:'Мантия Чародея',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:0,int:7,end:7, extra:'+3% крит.ур', bonus:'«Чародей»\n+4% к крит. урону.\nВышита магическими рунами.',         type:'gold',     price:'💰 5000' },
-  { id:'paladin_gold',   r:'rare', name:'Броня Стража',      stars:'★★☆☆', tier:'ЗОЛОТО', str:4,agi:4,int:4,end:4, extra:'+3% защита',   bonus:'«Страж»\n−3% к входящему урону.\nБаланс стали и света.',              type:'gold',     price:'💰 5000' },
+  { id:'berserker_gold', r:'rare', name:'Панцирь Берсерка',  stars:'★★☆☆', tier:'ЗОЛОТО', str:7,agi:0,int:0,end:7, extra:'+50 HP',       bonus:'«Берсерк»\n+4% урона при HP < 30%.\nЯрость выкованной стали.',         type:'gold',     price:'💰 8000' },
+  { id:'assassin_gold',  r:'rare', name:'Кольчуга Теней',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:7,int:0,end:7, extra:'+3% уклон',    bonus:'«Теневой удар»\n+4% шанс двойного удара.\nБесшумная кольчуга.',      type:'gold',     price:'💰 8000' },
+  { id:'mage_gold',      r:'rare', name:'Мантия Чародея',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:0,int:7,end:7, extra:'+3% крит.ур', bonus:'«Чародей»\n+4% к крит. урону.\nВышита магическими рунами.',         type:'gold',     price:'💰 8000' },
+  { id:'paladin_gold',   r:'rare', name:'Броня Стража',      stars:'★★☆☆', tier:'ЗОЛОТО', str:4,agi:4,int:4,end:4, extra:'+3% защита',   bonus:'«Страж»\n−3% к входящему урону.\nБаланс стали и света.',              type:'gold',     price:'💰 8000' },
 
   // Алмазы — 4
-  { id:'dragonknight_diamonds', r:'epic', name:'Латы Кровавого Вождя',  stars:'★★★☆', tier:'АЛМАЗЫ', str:9,agi:0,int:0,end:9, extra:'+80 HP',       bonus:'«Ярость Вождя»\n+6% урона при HP < 40%.\nЗакалены в крови дракона.',  type:'diamonds', price:'💎 100' },
-  { id:'shadowdancer_diamonds', r:'epic', name:'Плащ Ночного Клинка',   stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:9,int:0,end:9, extra:'+4% уклон',    bonus:'«Ночной Клинок»\n+6% шанс двойного удара.\nСплетён из лунных нитей.', type:'diamonds', price:'💎 100' },
-  { id:'archmage_diamonds',     r:'epic', name:'Одеяние Архимага',      stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:0,int:9,end:9, extra:'+4% крит.ур', bonus:'«Архимаг»\n+6% к крит. урону.\nПропитано эфирным пеплом.',           type:'diamonds', price:'💎 100' },
-  { id:'universal_diamonds',    r:'epic', name:'Латы Паладина Зари',    stars:'★★★☆', tier:'АЛМАЗЫ', str:6,agi:6,int:6,end:6, extra:'+6% защита',   bonus:'«Заря»\n−6% к входящему урону.\nСвященные латы рассвета.',            type:'diamonds', price:'💎 100' },
+  { id:'dragonknight_diamonds', r:'epic', name:'Латы Кровавого Вождя',  stars:'★★★☆', tier:'АЛМАЗЫ', str:9,agi:0,int:0,end:9, extra:'+80 HP',       bonus:'«Ярость Вождя»\n+6% урона при HP < 40%.\nЗакалены в крови дракона.',  type:'diamonds', price:'💎 75' },
+  { id:'shadowdancer_diamonds', r:'epic', name:'Плащ Ночного Клинка',   stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:9,int:0,end:9, extra:'+4% уклон',    bonus:'«Ночной Клинок»\n+6% шанс двойного удара.\nСплетён из лунных нитей.', type:'diamonds', price:'💎 75' },
+  { id:'archmage_diamonds',     r:'epic', name:'Одеяние Архимага',      stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:0,int:9,end:9, extra:'+4% крит.ур', bonus:'«Архимаг»\n+6% к крит. урону.\nПропитано эфирным пеплом.',           type:'diamonds', price:'💎 75' },
+  { id:'universal_diamonds',    r:'epic', name:'Латы Паладина Зари',    stars:'★★★☆', tier:'АЛМАЗЫ', str:6,agi:6,int:6,end:6, extra:'+6% защита',   bonus:'«Заря»\n−6% к входящему урону.\nСвященные латы рассвета.',            type:'diamonds', price:'💎 75' },
 
   // Мифические — 4
   { id:'berserker_mythic', r:'mythic', name:'Доспех Пламенного Титана',    stars:'★★★★', tier:'МИФИК', str:12,agi:0,int:0,end:12, extra:'+120 HP',      bonus:'«Пламя Ярости»\n+12% урона при HP < 30%.\nВыкован в сердце вулкана.',   type:'mythic', price:'11.99' },
