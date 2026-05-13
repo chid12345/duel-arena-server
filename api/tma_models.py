@@ -42,6 +42,12 @@ class ShopApplyBody(BaseModel):
     replace: bool = False  # True → заменить активный свиток
 
 
+class InitDataOnlyBody(BaseModel):
+    """Универсальное тело для endpoints, которым нужен только init_data
+    (бесплатные действия: ежедневный ящик, claim, refresh и т.п.)."""
+    init_data: str
+
+
 class ChallengeCancelBody(BaseModel):
     init_data: str
     challenge_id: int

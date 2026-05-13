@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 from api.tma_catalogs import STARS_SCROLL_PACKAGES, USDT_SCROLL_PACKAGES
 from api.tma_infra import get_user_lock
 from api.shop_loot_box import _open_box_free as _open_loot_box
-from api.tma_models import ShopBuyBody, ShopApplyBody
+from api.tma_models import ShopBuyBody, ShopApplyBody, InitDataOnlyBody
 from api.shop_buy_handler import shop_buy_inner
 from api.shop_apply_handler import shop_apply_inner
 
@@ -139,8 +139,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             uid = int(tg_user["id"])
             prem = db.get_premium_status(uid)
             if not prem.get("is_active"):
-                return {"ok": True, "is_premium": False, "claimed": False, "seconds_until_reset": 0,
-                        "_debug": {"reason": "not_premium", "prem": prem}}
+                return {"ok": True, "is_premium": False, "claimed": False, "seconds_until_reset": 0}
             today = _today_msk()
             conn = db.get_connection()
             cursor = conn.cursor()
@@ -149,40 +148,33 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             conn.close()
             claimed_date = row["premium_box_claimed"] if row else None
             claimed = _norm_date_str(claimed_date) == today
-            logger.info("premium_box/status uid=%s today=%s db_raw=%r claimed=%s",
-                        uid, today, claimed_date, claimed)
             return {
                 "ok": True,
                 "is_premium": True,
                 "claimed": claimed,
                 "seconds_until_reset": _seconds_until_msk_midnight(),
-                "_debug": {"today_msk": today, "db_raw": repr(claimed_date),
-                           "db_norm": _norm_date_str(claimed_date), "uid": uid},
             }
         except Exception as exc:
             logger.exception("premium_box/status error:")
             return {"ok": False, "reason": str(exc)}
 
     @router.post("/api/shop/premium_daily_box")
-    async def premium_daily_box(body: ShopBuyBody):
+    async def premium_daily_box(body: InitDataOnlyBody):
         """Ежедневный ящик для Premium-игроков (1 раз в день, сброс в 00:00 МСК)."""
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
         _rl_check(uid, "premium_box", max_hits=2, window_sec=10)
         async with get_user_lock(uid):
             prem = db.get_premium_status(uid)
-            logger.info("premium_daily_box: uid=%s prem=%r", uid, prem)
             if not prem.get("is_active"):
-                return {"ok": False, "reason": "Требуется Premium", "_debug": {"prem": prem}}
+                return {"ok": False, "reason": "Требуется Premium"}
             today = _today_msk()
             # 1) Проверяем, не получено ли уже сегодня — атомарность защищена user_lock выше.
             conn = db.get_connection()
             cursor = conn.cursor()
             cursor.execute("SELECT premium_box_claimed FROM players WHERE user_id = ?", (uid,))
             row = cursor.fetchone()
-            db_raw = row["premium_box_claimed"] if row else None
-            cur_str = _norm_date_str(db_raw)
-            logger.info("premium_daily_box: uid=%s today=%s db_raw=%r cur_str=%r", uid, today, db_raw, cur_str)
+            cur_str = _norm_date_str(row["premium_box_claimed"] if row else None)
             if cur_str == today:
                 conn.close()
                 return {
@@ -190,7 +182,6 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                     "reason": "Ящик уже получен сегодня. Возвращайтесь завтра!",
                     "claimed": True,
                     "seconds_until_reset": _seconds_until_msk_midnight(),
-                    "_debug": {"today_msk": today, "db_raw": repr(db_raw), "cur_str": cur_str},
                 }
             # 2) Помечаем как получено + +10 алмазов одной транзакцией.
             cursor.execute(
