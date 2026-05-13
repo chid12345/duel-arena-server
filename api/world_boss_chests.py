@@ -40,6 +40,18 @@ def _expand(key: str, drops: List[Dict]) -> None:
         drops.append({"type": "item", "item_id": key})
 
 
+def _generate_wb_gold_chest(db, uid: int) -> Dict:
+    """🏆 Золотой сундук рейда (wb_gold_chest) — 3-4 базовых свитка."""
+    from api.shop_loot_box import _apply_drops, _pick_n, _GOLD_SCROLLS
+    import random
+    count = random.choice([3, 3, 4, 4])
+    drops = [{"type": "item", "item_id": iid} for iid in _pick_n(_GOLD_SCROLLS, count)]
+    if random.random() < 0.1:
+        from api.shop_loot_box import _pick, _DIAMOND_SCROLLS
+        drops.append({"type": "item", "item_id": _pick(_DIAMOND_SCROLLS)})
+    return _apply_drops(db, uid, drops)
+
+
 def _generate_wb_diamond_chest(db, uid: int) -> Dict:
     from api.shop_loot_box import _apply_drops
     count = random.choice([3, 3, 4, 4, 5])  # чаще 4
@@ -62,3 +74,5 @@ from api.shop_loot_box import _BOX_GENERATORS, ALL_BOX_IDS
 
 _BOX_GENERATORS[WB_CHEST_TOP_DAMAGE] = _generate_wb_diamond_chest
 ALL_BOX_IDS.add(WB_CHEST_TOP_DAMAGE)
+_BOX_GENERATORS["wb_gold_chest"] = _generate_wb_gold_chest
+ALL_BOX_IDS.add("wb_gold_chest")
