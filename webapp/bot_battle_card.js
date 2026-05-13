@@ -48,7 +48,7 @@ const BotBattleCard = (() => {
       .bbc-equip .bbc-eq-slot.empty{opacity:.35;border-style:dashed;}
       .bbc-equip .bbc-eq-label{font-size:7px;color:#aaaacc;letter-spacing:.4px;font-weight:700;text-transform:uppercase;}
       .bbc-equip .bbc-eq-img{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:1px 0;}
-      .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;mix-blend-mode:lighten;filter:drop-shadow(0 0 5px rgba(180,120,255,.5));}
+      .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;background:transparent;filter:drop-shadow(0 0 6px rgba(180,120,255,.6));}
       .bbc-equip .bbc-eq-emoji{font-size:22px;line-height:1;}
       .bbc-equip .bbc-eq-name{font-size:7px;font-weight:700;line-height:1.1;max-width:60px;word-wrap:break-word;padding:0 2px;}
       .bbc-timer{position:absolute;top:8px;left:14px;font-size:10px;color:#9abae0;background:rgba(0,0,0,.4);padding:2px 6px;border-radius:4px;font-family:monospace;}
@@ -100,6 +100,46 @@ const BotBattleCard = (() => {
     }
     return null;
   }
+
+  // Canvas-удаление тёмного фона за иконками снаряжения (тот же алгоритм что в equipment_slots_html.js).
+  const _bgCache = new Map();
+  function _removeDarkBg(img) {
+    if (img._bgDone) return;
+    img._bgDone = true;
+    if (!img.naturalWidth || !img.naturalHeight) return;
+    const origSrc = img.src;
+    if (_bgCache.has(origSrc)) {
+      const cached = _bgCache.get(origSrc);
+      if (cached !== origSrc) img.src = cached;
+      return;
+    }
+    const cv = document.createElement('canvas');
+    cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    try {
+      const d = ctx.getImageData(0, 0, cv.width, cv.height);
+      const W = cv.width, H = cv.height;
+      let dark = 0;
+      [[0,0],[W-1,0],[0,H-1],[W-1,H-1]].forEach(([x,y]) => {
+        const i = (y*W+x)*4;
+        const mx = Math.max(d.data[i],d.data[i+1],d.data[i+2]);
+        const mn = Math.min(d.data[i],d.data[i+1],d.data[i+2]);
+        if (d.data[i+3]>10 && mx<80 && mx-mn<30) dark++;
+      });
+      if (dark < 2) { _bgCache.set(origSrc, origSrc); return; }
+      for (let i = 0; i < d.data.length; i += 4) {
+        const mx = Math.max(d.data[i],d.data[i+1],d.data[i+2]);
+        const mn = Math.min(d.data[i],d.data[i+1],d.data[i+2]);
+        if (mx < 72 && mx-mn < 28) d.data[i+3] = 0;
+      }
+      ctx.putImageData(d, 0, 0);
+      const cleaned = cv.toDataURL();
+      _bgCache.set(origSrc, cleaned);
+      img.src = cleaned;
+    } catch(_) { _bgCache.set(origSrc, origSrc); }
+  }
+  if (typeof window !== 'undefined') window._bbcRemoveBg = _removeDarkBg;
 
   // Глобальный fallback для онэррора: пробуем по очереди .jpg → .jpeg, иначе эмодзи.
   if (typeof window !== 'undefined' && !window._bbcImgFb) {
@@ -184,7 +224,7 @@ const BotBattleCard = (() => {
       // Картинка предмета: пробуем .png → .jpg → .jpeg → fallback эмодзи.
       const base = it ? _itemImageBase(it) : null;
       const visual = base
-        ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onerror="window._bbcImgFb && window._bbcImgFb(this)"></div>`
+        ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onload="window._bbcRemoveBg && window._bbcRemoveBg(this)" onerror="window._bbcImgFb && window._bbcImgFb(this)"></div>`
         : `<div class="bbc-eq-img"><span class="bbc-eq-emoji">${SLOT_ICON[slot] || '•'}</span></div>`;
       return `<div class="bbc-eq-slot ${cls}" style="${style}">
         <div class="bbc-eq-label">${meta.label}</div>
