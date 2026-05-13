@@ -109,10 +109,11 @@ function invHTML(inv, subTab){
         const isBox=it.item_id.startsWith('box_'), isBoss=m.tab==='boss';
         const btn=isBoss?'⚔ В рейде':(isBox?'🎲 Открыть':'Применить');
         // Для ящиков/сундуков подставляем PNG из BoxIcons (как в магазине),
-        // иначе эмодзи из ITEM_META.icon.
+        // иначе эмодзи из ITEM_META.icon. Свечение — по валюте (золото/алмазы/USDT/звёзды).
         const imgPath=window.BoxIcons?.imageFor?.(it.item_id);
+        const glow=window.BoxIcons?.glowFor?.(it.item_id)||'rgba(255,200,80,.45)';
         const icHtml=imgPath
-          ? `<img src="${imgPath}" style="width:32px;height:32px;object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 0 6px rgba(255,200,80,.45))" alt="">`
+          ? `<img src="${imgPath}" style="width:34px;height:34px;object-fit:contain;display:block;margin:0 auto;filter:drop-shadow(0 0 8px ${glow}) drop-shadow(0 0 2px ${glow})" alt="">`
           : (m.icon||'📦');
         return `<div class="st-it" data-act="card" data-item="${_esc(it.item_id)}"><div class="st-it-ic">${icHtml}</div>
           <div class="st-it-bd"><div class="st-it-n">${_esc(m.name||it.item_id)}</div><div class="st-it-d">${_esc(m.desc||'')}</div><div class="st-it-q">×${it.quantity}</div></div>
