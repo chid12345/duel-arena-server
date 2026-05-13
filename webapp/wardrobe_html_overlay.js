@@ -187,11 +187,11 @@ const RARITY_COLOR = { common:'#9ca3af', rare:'#60a5fa', epic:'#c084fc', mythic:
 const RARITY_LABEL = { common:'Обычная', rare:'Редкая', epic:'Эпическая', mythic:'Мифическая' };
 
 const ARMORS_DATA = [
-  // Бесплатные — 4
-  { id:'tank_free',      r:'common', name:'Кираса Ополченца', stars:'★☆☆☆', tier:'БЕСПЛ.', str:5,agi:0,int:0,end:5, extra:'+30 HP',       bonus:'«Бронированный»\n+2% к защите.\nБазовая броня для первых боёв.', type:'free' },
-  { id:'agile_free',     r:'common', name:'Жилет Следопыта',  stars:'★☆☆☆', tier:'БЕСПЛ.', str:0,agi:5,int:0,end:5, extra:'+2% уклон',    bonus:'«Гибкий»\n+2% уклонение.\nЛёгкий доспех для разведчиков.',      type:'free' },
-  { id:'crit_free',      r:'common', name:'Роба Ученика',     stars:'★☆☆☆', tier:'БЕСПЛ.', str:0,agi:0,int:5,end:5, extra:'+5% крит.ур', bonus:'«Острый глаз»\n+5% крит. урон.\nМантия начинающего мага.',       type:'free' },
-  { id:'universal_free', r:'common', name:'Плащ Странника',   stars:'★☆☆☆', tier:'БЕСПЛ.', str:2,agi:2,int:2,end:2, extra:'+1% макс.HP', bonus:'«Сбалансирован»\n+1% к макс. HP.\nУниверсальный плащ для новичка.', type:'free' },
+  // Обычные — 4
+  { id:'tank_free',      r:'common', name:'Кираса Ополченца', stars:'★☆☆☆', tier:'ЗОЛОТО', str:5,agi:0,int:0,end:5, extra:'+30 HP',       bonus:'«Бронированный»\n+2% к защите.\nБазовая броня для первых боёв.', type:'gold', price:'💰 800' },
+  { id:'agile_free',     r:'common', name:'Жилет Следопыта',  stars:'★☆☆☆', tier:'ЗОЛОТО', str:0,agi:5,int:0,end:5, extra:'+2% уклон',    bonus:'«Гибкий»\n+2% уклонение.\nЛёгкий доспех для разведчиков.',      type:'gold', price:'💰 800' },
+  { id:'crit_free',      r:'common', name:'Роба Ученика',     stars:'★☆☆☆', tier:'ЗОЛОТО', str:0,agi:0,int:5,end:5, extra:'+5% крит.ур', bonus:'«Острый глаз»\n+5% крит. урон.\nМантия начинающего мага.',       type:'gold', price:'💰 800' },
+  { id:'universal_free', r:'common', name:'Плащ Странника',   stars:'★☆☆☆', tier:'ЗОЛОТО', str:2,agi:2,int:2,end:2, extra:'+1% макс.HP', bonus:'«Сбалансирован»\n+1% к макс. HP.\nУниверсальный плащ для новичка.', type:'gold', price:'💰 800' },
 
   // Золото — 4
   { id:'berserker_gold', r:'rare', name:'Панцирь Берсерка',  stars:'★★☆☆', tier:'ЗОЛОТО', str:7,agi:0,int:0,end:7, extra:'+50 HP',       bonus:'«Берсерк»\n+4% урона при HP < 30%.\nЯрость выкованной стали.',         type:'gold',     price:'💰 8000' },
