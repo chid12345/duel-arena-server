@@ -11,9 +11,11 @@ from handlers.commands.referral_notify import BotHandlersReferralNotify
 from handlers.commands.invite_health import BotHandlersInviteHealth
 from handlers.commands.admin_balance import BotHandlersAdminBalance
 from handlers.commands.battle_pass import BotHandlersBattlePass
+from handlers.commands.reset_prembox import BotHandlersResetPremBox
 
 
 class BotHandlers(
+    BotHandlersResetPremBox,
     BotHandlersBattlePass,
     BotHandlersAdminBalance,
     BotHandlersInviteHealth,

@@ -212,6 +212,7 @@ def _build_app(bot_count: int) -> Application:
     app.add_handler(CommandHandler("battle_pass",   BotHandlers.battle_pass_command))
     app.add_handler(CommandHandler("admin_list_clans",  BotHandlers.admin_list_clans_command))
     app.add_handler(CommandHandler("admin_delete_clan", BotHandlers.admin_delete_clan_command))
+    app.add_handler(CommandHandler("reset_prembox",     BotHandlers.reset_prembox_command))
     app.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, BotHandlers.successful_payment_handler))
     app.add_handler(CallbackQueryHandler(CallbackHandlers.handle_callback))
