@@ -218,64 +218,49 @@
     const cardH = 56, cardW = W - 32;
 
     if (items.length === 0) {
+      InvBoxesHtml.hide();
       ov.push(txt(this, W/2, listY + listH/2, 'Пусто. Загляни в Магазин!', 11, '#a07848', true).setOrigin(.5).setDepth(133));
+    } else if (this._invTab === 'special') {
+      // Ящики — DOM-оверлей с PNG и киберпанк-стилем поверх canvas
+      InvBoxesHtml.show(items, listY, listH, (itemId) => this._applyInventoryItem(itemId));
     } else {
+      InvBoxesHtml.hide();
       const maxVisible = Math.floor(listH / (cardH + 6));
       items.slice(0, maxVisible).forEach((it, i) => {
         const meta = ITEM_META[it.item_id] || { icon:'📦', name: it.item_id, desc: '', tab: 'scrolls' };
         const y = listY + i * (cardH + 6);
         const crd = this.add.graphics().setDepth(132);
-        // Фон карточки
         crd.fillStyle(0x190f05, 0.97);
         crd.fillRoundedRect(16, y, cardW, cardH, 7);
         crd.lineStyle(1, 0x5a3a18, 0.75);
         crd.strokeRoundedRect(16, y, cardW, cardH, 7);
-        // Левый золотой акцент
         crd.fillStyle(0xc8903c, 0.75);
         crd.fillRoundedRect(16, y, 3, cardH, 2);
         ov.push(crd);
-        // Для ящиков рисуем настоящую картинку (как в магазине) вместо эмодзи
-        const _boxImg = (window.BoxIcons && BoxIcons.imageFor(it.item_id))
-          ? BoxIcons.imageFor(it.item_id).replace('.png', '') : null;
-        const _boxImgKey = _boxImg ? ({ 'chest_gold': 'chest_gold', 'chest_diamond': 'chest_diamond', 'chest_epic': 'chest_epic' })[_boxImg] : null;
-        let _nameX = 28;
-        if (_boxImgKey && this.textures.exists(_boxImgKey)) {
-          const img = this.add.image(34, y + cardH/2, _boxImgKey)
-            .setDisplaySize(28, 28).setOrigin(0.5).setDepth(133);
-          ov.push(img);
-          _nameX = 52;  // сдвигаем текст вправо под картинку
-          ov.push(txt(this, _nameX, y+10, meta.name, 12, '#fff8d0', true).setDepth(133));
-        } else {
-          ov.push(txt(this, _nameX, y+10, `${meta.icon} ${meta.name}`, 12, '#fff8d0', true).setDepth(133));
-        }
-        ov.push(txt(this, _nameX, y+27, meta.desc, 9, '#c8a878').setDepth(133));
-        ov.push(txt(this, _nameX, y+41, `Кол-во: ${it.quantity}`, 9, '#ffe04a').setDepth(133));
-        const isBox  = it.item_id.startsWith('box_') || it.item_id.endsWith('_chest');
+        ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#fff8d0', true).setDepth(133));
+        ov.push(txt(this, 28, y+27, meta.desc, 9, '#c8a878').setDepth(133));
+        ov.push(txt(this, 28, y+41, `Кол-во: ${it.quantity}`, 9, '#ffe04a').setDepth(133));
         const isBoss = meta.tab === 'boss';
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;
         const bg2 = this.add.graphics().setDepth(133);
-        const btnColor  = isBoss ? 0x1a2a4a : (isBox ? 0x7a3800 : 0x6e4810);
-        const btnBorder = isBoss ? 0x5096ff : (isBox ? 0xffaa33 : 0xdca028);
-        const btnLabel  = isBoss ? '⚔️ В рейде' : (isBox ? '🎲 Открыть' : 'Применить');
-        const btnTxt    = isBoss ? '#aaddff'    : (isBox ? '#ffe0aa'    : '#ffe878');
-        bg2.fillStyle(btnColor, 0.95);
+        bg2.fillStyle(isBoss ? 0x1a2a4a : 0x6e4810, 0.95);
         bg2.fillRoundedRect(bx, by, bw, 24, 6);
-        bg2.lineStyle(1, btnBorder, 0.85);
+        bg2.lineStyle(1, isBoss ? 0x5096ff : 0xdca028, 0.85);
         bg2.strokeRoundedRect(bx, by, bw, 24, 6);
+        const btnLabel = isBoss ? '⚔️ В рейде' : 'Применить';
+        const btnTxt   = isBoss ? '#aaddff' : '#ffe878';
         ov.push(bg2, txt(this, bx+bw/2, by+12, btnLabel, 10, btnTxt, true).setOrigin(.5).setDepth(134));
         const z = this.add.zone(bx+bw/2, by+12, bw, 24).setInteractive({useHandCursor:true}).setDepth(135);
         z.on('pointerdown', () => isBoss
           ? this._showToast('Переходи в ⚔️ Мировой Босс — там применишь')
           : this._applyInventoryItem(it.item_id));
         ov.push(z);
-        // Тап на карточку (вне кнопки) → попап с описанием
         const cardZ = this.add.zone(16 + (cardW - bw - 6) / 2, y + cardH / 2, cardW - bw - 6, cardH)
           .setInteractive({ useHandCursor: true }).setDepth(135);
         cardZ.on('pointerdown', () => {
           showItemDetailPopup(this, {
             icon: meta.icon, name: meta.name, desc: meta.desc,
-            actionLabel: btnLabel,
-            depthBase: 250,
+            actionLabel: btnLabel, depthBase: 250,
             actionFn: () => { closeItemDetailPopup(this); this._applyInventoryItem(it.item_id); },
           });
         }); ov.push(cardZ);

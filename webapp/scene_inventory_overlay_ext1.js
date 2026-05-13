@@ -93,6 +93,7 @@
   StatsScene.prototype._closeInvOverlay = function() {
     (this._invOverlay || []).forEach(o => { try { o.destroy(); } catch {} });
     this._invOverlay = null;
+    InvBoxesHtml?.hide?.();
     this._refreshBuffDisplay();
   };
 
