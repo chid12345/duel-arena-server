@@ -446,7 +446,7 @@ Object.assign(MenuScene.prototype, {
         this._premBoxTimerEvent = this.time.addEvent({
           delay: 1000, loop: true,
           callback: () => {
-            if (!this.scene?.isActive('Menu')) { this._premBoxTimerEvent?.remove(); return; }
+            if (!pb3Timer?.active || !this.scene?.isActive('Menu')) { this._premBoxTimerEvent?.remove(); return; }
             secs = Math.max(0, secs - 1);
             pb3Timer.setText(secs > 0 ? '✓ Получено · ' + _fmtSecs(secs) : '🔄 Обновите экран');
             if (secs === 0) this._premBoxTimerEvent?.remove();
