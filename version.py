@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.19.55"
-VERSION_LABEL = "v2.19.55 — fix: краш таймера pb3Timer при переходе в арсенал"
+VERSION = "2.19.56"
+VERSION_LABEL = "v2.19.56 — fix: BoxRevealCard z-index 99999 + try-catch + InvBoxesHtml PNG через BoxIcons"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "15.74"
+GAME_VERSION = "15.75"

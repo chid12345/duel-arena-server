@@ -35,7 +35,7 @@ const _CSS = `
 @keyframes brc-pop{from{opacity:0;transform:scale(.72) translateY(18px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @keyframes brc-bd{from{opacity:0}to{opacity:1}}
 @keyframes brc-row{from{opacity:0;transform:translateX(-14px)}to{opacity:1;transform:translateX(0)}}
-#${_ID}{position:fixed;inset:0;z-index:9600;display:flex;align-items:center;justify-content:center;
+#${_ID}{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;
   padding:14px;background:rgba(0,0,0,.9);animation:brc-bd .2s ease;backdrop-filter:blur(6px)}
 #${_ID}::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
   background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,245,255,.012) 3px 4px)}
@@ -106,6 +106,7 @@ function _injectCSS() {
 
 window.BoxRevealCard = {
   show(items, opts = {}) {
+    console.log('[BoxRevealCard] show called, items:', items?.length, 'opts:', opts);
     _injectCSS();
     document.getElementById(_ID)?.remove();
 

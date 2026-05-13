@@ -36,6 +36,7 @@
         this._invData.active_buffs = res.active_buffs;
       }
       if (res.box_opened) {
+        console.log('[inv] box_opened=true, itemId:', itemId, 'items:', res.items?.length);
         this._showBoxReveal(res, itemId);
       } else {
         this._showToast(res.msg || '✅ Применено!');
@@ -106,10 +107,18 @@
   StatsScene.prototype._showBoxReveal = function(res, boxId) {
     const items = res.items
       || [{ item_id: res.item_id, icon: res.item_icon, name: res.item_name, desc: '' }];
-    BoxRevealCard.show(items, {
-      title:   'ИЗ ЯЩИКА ВЫПАЛО',
-      boxId,
-      onClose: () => { this._renderInvOverlay(); },
-    });
+    console.log('[_showBoxReveal] boxId:', boxId, 'items:', items);
+    try {
+      BoxRevealCard.show(items, {
+        title:   'ИЗ ЯЩИКА ВЫПАЛО',
+        boxId,
+        onClose: () => { this._renderInvOverlay(); },
+      });
+    } catch(e) {
+      console.error('[_showBoxReveal] BoxRevealCard.show failed:', e);
+      const names = items.slice(0, 3).map(i => i.name || i.item_id).join(', ');
+      this._showToast('🎁 Получено: ' + names + (items.length > 3 ? '...' : ''));
+      this._renderInvOverlay();
+    }
   };
 })();
