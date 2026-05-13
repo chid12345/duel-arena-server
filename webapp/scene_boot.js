@@ -42,6 +42,9 @@ class BootScene extends Phaser.Scene {
     this.load.image('natisk_mech',     `natisk_mech.png${V}`);
     this.load.image('natisk_gold',     `natisk_gold.png${V}`);
     this.load.image('prem_box',        `prem_box.png${V}`);
+    this.load.image('chest_gold',      `chest_gold.png${V}`);
+    this.load.image('chest_diamond',   `chest_diamond.png${V}`);
+    this.load.image('chest_epic',      `chest_epic.png${V}`);
     this.load.image('natisk_diamond',  `natisk_diamond.png${V}`);
     // bot_skins (62 PNG, ~33МБ) и pvp_bg (5 PNG, ~5МБ) грузятся лениво в MenuScene
     // после показа меню — иначе Boot зависает на 30-90с на мобильном интернете.

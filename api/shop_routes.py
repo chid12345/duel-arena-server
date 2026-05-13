@@ -192,8 +192,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             conn.close()
             # 3) Кладём ЗАКРЫТЫЙ ящик в инвентарь — игрок откроет когда захочет.
             db.add_to_inventory(uid, "box_common")
-            # 4) Формируем ответ
-            box_info = _SHOP_CATALOG_FULL.get("box_common", {})
+            # 4) Формируем ответ — item_id="box_common" → фронт сам подтянет картинку
             player = db.get_or_create_player(uid, "")
             return {
                 "ok": True,
@@ -203,8 +202,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                 "items": [
                     {"icon": "💎", "name": "10 алмазов",
                      "desc": "Ежедневный премиум бонус", "item_id": "diamonds_daily"},
-                    {"icon": box_info.get("icon", "📦"),
-                     "name": box_info.get("name", "Обычный ящик"),
+                    {"icon": "📦", "name": "Обычный ящик",
                      "desc": "Открой в Рюкзаке когда захочешь",
                      "item_id": "box_common"},
                 ],

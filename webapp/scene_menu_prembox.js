@@ -9,9 +9,12 @@ function _showPremBoxRevealDOM(items, onClose) {
   const ID = 'menu-prem-box';
   let el = document.getElementById(ID);
   if (!el) { el = document.createElement('div'); el.id = ID; document.body.appendChild(el); }
+  const _ico = (it) => (window.BoxIcons && BoxIcons.imageFor(it.item_id))
+    ? `<img src="${BoxIcons.imageFor(it.item_id)}" style="width:34px;height:34px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.5));flex-shrink:0" alt="">`
+    : `<span style="font-size:22px;flex-shrink:0">${it.icon||'🎁'}</span>`;
   const rows = (items || []).map(it => `
     <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,215,0,.1)">
-      <span style="font-size:22px;flex-shrink:0">${it.icon||'🎁'}</span>
+      ${_ico(it)}
       <div><div style="font-size:12px;font-weight:700;color:#fff">${it.name||it.item_id||''}</div>
       <div style="font-size:10px;color:rgba(255,255,255,.45)">${it.desc||''}</div></div>
     </div>`).join('');

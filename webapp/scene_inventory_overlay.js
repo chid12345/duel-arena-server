@@ -234,9 +234,22 @@
         crd.fillStyle(0xc8903c, 0.75);
         crd.fillRoundedRect(16, y, 3, cardH, 2);
         ov.push(crd);
-        ov.push(txt(this, 28, y+10, `${meta.icon} ${meta.name}`, 12, '#fff8d0', true).setDepth(133));
-        ov.push(txt(this, 28, y+27, meta.desc, 9, '#c8a878').setDepth(133));
-        ov.push(txt(this, 28, y+41, `Кол-во: ${it.quantity}`, 9, '#ffe04a').setDepth(133));
+        // Для ящиков рисуем настоящую картинку (как в магазине) вместо эмодзи
+        const _boxImg = (window.BoxIcons && BoxIcons.imageFor(it.item_id))
+          ? BoxIcons.imageFor(it.item_id).replace('.png', '') : null;
+        const _boxImgKey = _boxImg ? ({ 'chest_gold': 'chest_gold', 'chest_diamond': 'chest_diamond', 'chest_epic': 'chest_epic' })[_boxImg] : null;
+        let _nameX = 28;
+        if (_boxImgKey && this.textures.exists(_boxImgKey)) {
+          const img = this.add.image(34, y + cardH/2, _boxImgKey)
+            .setDisplaySize(28, 28).setOrigin(0.5).setDepth(133);
+          ov.push(img);
+          _nameX = 52;  // сдвигаем текст вправо под картинку
+          ov.push(txt(this, _nameX, y+10, meta.name, 12, '#fff8d0', true).setDepth(133));
+        } else {
+          ov.push(txt(this, _nameX, y+10, `${meta.icon} ${meta.name}`, 12, '#fff8d0', true).setDepth(133));
+        }
+        ov.push(txt(this, _nameX, y+27, meta.desc, 9, '#c8a878').setDepth(133));
+        ov.push(txt(this, _nameX, y+41, `Кол-во: ${it.quantity}`, 9, '#ffe04a').setDepth(133));
         const isBox  = it.item_id.startsWith('box_') || it.item_id.endsWith('_chest');
         const isBoss = meta.tab === 'boss';
         const bw = 90, bx = 16 + cardW - bw - 6, by = y + (cardH - 24) / 2;
