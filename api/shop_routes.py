@@ -30,9 +30,9 @@ from fastapi import APIRouter
 
 logger = logging.getLogger(__name__)
 
-from api.tma_catalogs import STARS_SCROLL_PACKAGES, USDT_SCROLL_PACKAGES
+from api.tma_catalogs import STARS_SCROLL_PACKAGES, USDT_SCROLL_PACKAGES, SHOP_CATALOG as _SHOP_CATALOG_FULL
 from api.tma_infra import get_user_lock
-from api.shop_loot_box import _open_box_free as _open_loot_box
+from api.tma_player_api import _player_api
 from api.tma_models import ShopBuyBody, ShopApplyBody, InitDataOnlyBody
 from api.shop_buy_handler import shop_buy_inner
 from api.shop_apply_handler import shop_apply_inner
@@ -190,17 +190,26 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             )
             conn.commit()
             conn.close()
-            # 3) Открываем ящик (свитки → инвентарь, _apply_drops загружает игрока уже с +10 💎)
-            result = _open_loot_box("box_common", db, uid)
-            if "items" not in result:
-                result["items"] = []
-            result["items"].insert(0, {
-                "icon": "💎", "name": "10 алмазов", "desc": "Ежедневный премиум бонус", "item_id": "diamonds_daily"
-            })
-            result["free"] = True
-            result["box_opened"] = True
-            result["claimed"] = True
-            result["seconds_until_reset"] = _seconds_until_msk_midnight()
-            return result
+            # 3) Кладём ЗАКРЫТЫЙ ящик в инвентарь — игрок откроет когда захочет.
+            db.add_to_inventory(uid, "box_common")
+            # 4) Формируем ответ
+            box_info = _SHOP_CATALOG_FULL.get("box_common", {})
+            player = db.get_or_create_player(uid, "")
+            return {
+                "ok": True,
+                "free": True,
+                "box_opened": True,
+                "claimed": True,
+                "items": [
+                    {"icon": "💎", "name": "10 алмазов",
+                     "desc": "Ежедневный премиум бонус", "item_id": "diamonds_daily"},
+                    {"icon": box_info.get("icon", "📦"),
+                     "name": box_info.get("name", "Обычный ящик"),
+                     "desc": "Открой в Рюкзаке когда захочешь",
+                     "item_id": "box_common"},
+                ],
+                "player": _player_api(dict(player)) if player else None,
+                "seconds_until_reset": _seconds_until_msk_midnight(),
+            }
 
     app.include_router(router)
