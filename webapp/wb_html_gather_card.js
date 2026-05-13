@@ -46,11 +46,11 @@
       .bbc-equip{display:grid;grid-template-columns:64px 1fr 64px;grid-template-rows:repeat(3,64px);gap:6px;align-items:stretch}
       .bbc-equip .bbc-eq-sprite{grid-column:2;grid-row:1/4;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 55%,rgba(180,90,255,.20),transparent 70%);border-radius:10px}
       .bbc-equip .bbc-eq-sprite img{max-width:100%;max-height:100%;object-fit:contain}
-      .bbc-equip .bbc-eq-slot{background:linear-gradient(180deg,#1f1d2e,#16142a);border:1.5px solid #2a2840;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2px 2px 3px;text-align:center;position:relative;overflow:hidden}
+      .bbc-equip .bbc-eq-slot{background:transparent;border:1.5px solid #2a2840;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:2px 2px 3px;text-align:center;position:relative}
       .bbc-equip .bbc-eq-slot.empty{opacity:.35;border-style:dashed}
       .bbc-equip .bbc-eq-label{font-size:7px;color:#aaaacc;letter-spacing:.4px;font-weight:700;text-transform:uppercase}
       .bbc-equip .bbc-eq-img{flex:1;display:flex;align-items:center;justify-content:center;width:100%;margin:1px 0}
-      .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;mix-blend-mode:lighten;filter:drop-shadow(0 0 5px rgba(180,120,255,.5))}
+      .bbc-equip .bbc-eq-img img{max-width:30px;max-height:30px;object-fit:contain;background:transparent;filter:drop-shadow(0 0 6px rgba(180,120,255,.6))}
       .bbc-equip .bbc-eq-emoji{font-size:22px;line-height:1}
       .bbc-equip .bbc-eq-name{font-size:7px;font-weight:700;line-height:1.1;max-width:60px;word-wrap:break-word;padding:0 2px}
     `;

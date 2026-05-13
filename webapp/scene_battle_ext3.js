@@ -168,7 +168,7 @@ Object.assign(BattleScene.prototype, {
         const ix = cx + 14 + (i % 2) * colW;
         const iy = gY + 18 + Math.floor(i / 2) * 18;
         const bg = this.add.graphics();
-        bg.fillStyle(0x1a1828, 1).fillRoundedRect(ix, iy, colW - 6, 16, 4);
+        bg.fillStyle(0x1a1828, 0.45).fillRoundedRect(ix, iy, colW - 6, 16, 4);
         bg.lineStyle(1, parseInt((it.color || '#9aa0a6').slice(1), 16), 0.6);
         bg.strokeRoundedRect(ix, iy, colW - 6, 16, 4);
         con.add(bg);
