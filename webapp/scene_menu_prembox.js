@@ -36,7 +36,10 @@ Object.assign(MenuScene.prototype, {
         if (boxGlow) this.tweens.killTweensOf(boxGlow);
         boxImg.setAlpha(0.22);
         if (boxGlow) boxGlow.setAlpha(0);
-        this._toast('👑 ' + (box?.reason || 'Уже получен сегодня'));
+        // DEBUG: показываем полный ответ сервера, чтобы видеть точную причину отказа
+        const dbg = box?._debug ? ' [' + JSON.stringify(box._debug) + ']' : '';
+        this._toast('👑 ' + (box?.reason || 'Уже получен сегодня') + dbg);
+        try { console.log('[prembox] server response:', box); } catch(_) {}
       }
     } catch(_) {
       this._premBoxBusy = false;
