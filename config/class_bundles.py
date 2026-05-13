@@ -1,10 +1,13 @@
 """Таблицы классов (free/gold/diamonds/mythic/USDT) и цены сброса статов."""
 
-# Бесплатные классы (эксклюзивный выбор - только один)
-FREE_CLASSES = {
+# Бесплатных классов больше нет — все перенесены в GOLD_CLASSES (цена 800)
+FREE_CLASSES = {}
+
+GOLD_CLASSES = {
+    # Обычные (800 золота)
     "tank_free": {
         "name": "Кираса Ополченца",
-        "price_gold": 0,
+        "price_gold": 800,
         "price_diamonds": 0,
         "bonus_strength": 5,
         "bonus_agility": 0,
@@ -14,7 +17,7 @@ FREE_CLASSES = {
     },
     "agile_free": {
         "name": "Жилет Следопыта",
-        "price_gold": 0,
+        "price_gold": 800,
         "price_diamonds": 0,
         "bonus_strength": 0,
         "bonus_agility": 5,
@@ -24,7 +27,7 @@ FREE_CLASSES = {
     },
     "crit_free": {
         "name": "Роба Ученика",
-        "price_gold": 0,
+        "price_gold": 800,
         "price_diamonds": 0,
         "bonus_strength": 0,
         "bonus_agility": 0,
@@ -34,7 +37,7 @@ FREE_CLASSES = {
     },
     "universal_free": {
         "name": "Плащ Странника",
-        "price_gold": 0,
+        "price_gold": 800,
         "price_diamonds": 0,
         "bonus_strength": 2,
         "bonus_agility": 2,
@@ -42,12 +45,10 @@ FREE_CLASSES = {
         "bonus_endurance": 2,
         "special_bonus": "Сбалансирован: +1% к макс. HP",
     },
-}
-
-GOLD_CLASSES = {
+    # Редкие (8000 золота)
     "berserker_gold": {
         "name": "Панцирь Берсерка",
-        "price_gold": 5000,
+        "price_gold": 8000,
         "price_diamonds": 0,
         "bonus_strength": 7,
         "bonus_agility": 0,
@@ -57,7 +58,7 @@ GOLD_CLASSES = {
     },
     "assassin_gold": {
         "name": "Кольчуга Теней",
-        "price_gold": 5000,
+        "price_gold": 8000,
         "price_diamonds": 0,
         "bonus_strength": 0,
         "bonus_agility": 7,
@@ -67,7 +68,7 @@ GOLD_CLASSES = {
     },
     "mage_gold": {
         "name": "Мантия Чародея",
-        "price_gold": 5000,
+        "price_gold": 8000,
         "price_diamonds": 0,
         "bonus_strength": 0,
         "bonus_agility": 0,
@@ -77,7 +78,7 @@ GOLD_CLASSES = {
     },
     "paladin_gold": {
         "name": "Броня Стража",
-        "price_gold": 5000,
+        "price_gold": 8000,
         "price_diamonds": 0,
         "bonus_strength": 4,
         "bonus_agility": 4,
@@ -91,7 +92,7 @@ DIAMONDS_CLASSES = {
     "dragonknight_diamonds": {
         "name": "Латы Кровавого Вождя",
         "price_gold": 0,
-        "price_diamonds": 100,
+        "price_diamonds": 75,
         "bonus_strength": 9,
         "bonus_agility": 0,
         "bonus_intuition": 0,
@@ -101,7 +102,7 @@ DIAMONDS_CLASSES = {
     "shadowdancer_diamonds": {
         "name": "Плащ Ночного Клинка",
         "price_gold": 0,
-        "price_diamonds": 100,
+        "price_diamonds": 75,
         "bonus_strength": 0,
         "bonus_agility": 9,
         "bonus_intuition": 0,
@@ -111,7 +112,7 @@ DIAMONDS_CLASSES = {
     "archmage_diamonds": {
         "name": "Одеяние Архимага",
         "price_gold": 0,
-        "price_diamonds": 100,
+        "price_diamonds": 75,
         "bonus_strength": 0,
         "bonus_agility": 0,
         "bonus_intuition": 9,
@@ -121,7 +122,7 @@ DIAMONDS_CLASSES = {
     "universal_diamonds": {
         "name": "Латы Паладина Зари",
         "price_gold": 0,
-        "price_diamonds": 100,
+        "price_diamonds": 75,
         "bonus_strength": 6,
         "bonus_agility": 6,
         "bonus_intuition": 6,

@@ -31,8 +31,8 @@
     else if (a.equipped)              { mbCls += 'mb-uneq'; mbTxt = '✅ Надета — Снять'; }
     else if (a.owned)                 { mbCls += 'mb-eq';   mbTxt = '⚔️ Надеть броню'; }
     else if (a.type === 'free')       { mbCls += 'mb-free'; mbTxt = '🆓 Выбрать бесплатно'; }
-    else if (a.type === 'gold')       { mbCls += 'mb-gold'; mbTxt = `💰 Купить — ${a.price}`; }
-    else if (a.type === 'diamonds')   { mbCls += 'mb-dia';  mbTxt = `💎 Купить — ${a.price}`; }
+    else if (a.type === 'gold')       { mbCls += 'mb-gold'; mbTxt = `💰 Купить — ${a.price.replace('💰 ','')}`; }
+    else if (a.type === 'diamonds')   { mbCls += 'mb-dia';  mbTxt = `💎 Купить — ${a.price.replace('💎 ','')}`; }
     else if (a.type === 'mythic')     { mbCls += 'mb-usdt'; mbTxt = `💳 Купить — $${a.price}`; }
     else                              { mbCls += 'mb-usdt'; mbTxt = `🔥 Купить — ${a.price} USDT`; }
 
@@ -277,6 +277,7 @@
 
   /* ── open ── */
   function open(scene, wp) {
+    scene._wardrobeHtmlBusy = false; // сброс на случай зависшего запроса
     // Синхронизируем wardrobeEquipped с данными сервера при каждом открытии
     const eqId = wp?.equipped_class?.class_id || '';
     if (eqId) {
