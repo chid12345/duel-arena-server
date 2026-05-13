@@ -43,6 +43,8 @@ def build_battle_ended_result(
     pvp_repeat_factor: Any,
     titan_progress: Optional[Dict],
     endless_progress: Optional[Dict],
+    prem_w_active: bool = False,
+    prem_l_active: bool = False,
 ) -> Dict[str, Any]:
     return {
         "status": "battle_ended",
@@ -58,6 +60,8 @@ def build_battle_ended_result(
         if not (winner_locked if is_winner_p1 else loser_locked)
         else 0,
         "xp_boosted": xp_boosted and is_winner_p1,
+        "premium_bonus": prem_w_active if is_winner_p1 else prem_l_active,
+        "p2_premium_bonus": prem_l_active if is_winner_p1 else prem_w_active,
         "streak_bonus_gold": (streak_bonus_gold if is_winner_p1 else 0) if not winner_locked else 0,
         "win_streak": new_win_streak if is_winner_p1 and winner_user_id and not winner_locked else 0,
         "rating_change": 0 if is_test else (elo_delta_w if is_winner_p1 else elo_delta_l),

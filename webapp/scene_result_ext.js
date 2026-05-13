@@ -59,6 +59,25 @@ Object.assign(ResultScene.prototype, {
           { fontFamily: 'Arial Black, Arial', fontSize: '13px', color: eCol, shadow: { offsetX:0, offsetY:0, color:eCol, blur:8, fill:true } }).setOrigin(0.5);
       }
       let extraY = py + 158;
+      // 👑 Premium +25% — плашка под наградами, если у победителя/получателя был активен премиум
+      const _premBonus = !!(res?.premium_bonus);
+      if (_premBonus && ((r.gold || 0) > 0 || (r.exp || 0) > 0)) {
+        // Сколько прибавил премиум (×1.25 → base = received/1.25, bonus = received-base)
+        const _baseG = Math.round((r.gold || 0) / 1.25);
+        const _baseX = Math.round((r.exp  || 0) / 1.25);
+        const _addG  = Math.max(0, (r.gold || 0) - _baseG);
+        const _addX  = Math.max(0, (r.exp  || 0) - _baseX);
+        const _extras = [];
+        if (_addG > 0) _extras.push(`+${_addG}🪙`);
+        if (_addX > 0) _extras.push(`+${_addX}⭐`);
+        const _label = `👑 PREMIUM +25%` + (_extras.length ? ` (${_extras.join(' · ')})` : '');
+        const pb = this.add.text(W/2, extraY, _label, {
+          fontFamily: 'Arial Black, Arial', fontSize: '12px', fontStyle: 'bold', color: '#ffd700',
+          shadow: { offsetX: 0, offsetY: 0, color: '#ffaa00', blur: 8, fill: true }
+        }).setOrigin(0.5).setAlpha(0);
+        this.tweens.add({ targets: pb, alpha: 1, delay: 500, duration: 350 });
+        extraY += 22;
+      }
       if ((r.streak_bonus || 0) > 0) {
         const sb = this.add.text(W/2, extraY, `🎉  +${r.streak_bonus} бонус серии!`,
           { fontFamily: 'Arial', fontSize: '12px', fontStyle: 'bold', color: '#ff8855' }).setOrigin(0.5).setAlpha(0);

@@ -236,5 +236,7 @@ class BattleEndBattleMixin:
             "combat_log_html": combat_log_html,
             "elo_delta_w": elo_delta_w,
             "elo_delta_l": elo_delta_l,
+            "prem_w_active": prem_w_active,
+            "prem_l_active": prem_l_active,
         }
         return await end_battle_rewards_and_finish(self, ctx)

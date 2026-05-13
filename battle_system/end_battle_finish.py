@@ -34,6 +34,8 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     gold_reward, exp_reward, loser_exp = ctx["gold_reward"], ctx["exp_reward"], ctx["loser_exp"]
     combat_log_html = ctx["combat_log_html"]
     elo_delta_w, elo_delta_l = ctx["elo_delta_w"], ctx["elo_delta_l"]
+    prem_w_active = bool(ctx.get("prem_w_active"))
+    prem_l_active = bool(ctx.get("prem_l_active"))
 
     streak_bonus_gold = 0
     new_win_streak = 0
@@ -177,6 +179,8 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         pvp_repeat_factor=pvp_repeat_factor,
         titan_progress=titan_progress,
         endless_progress=endless_progress,
+        prem_w_active=prem_w_active,
+        prem_l_active=prem_l_active,
     )
 
     result["battle_id"] = battle_id  # нужен фронтенду для защиты от "старых" WS-событий

@@ -73,9 +73,22 @@ function bonusHTML(p, inv){
   const cb=inv?.clan_bonus;
   const clanTitle=cb?.clan_name?`🏰 Клан · ${_esc(cb.clan_name)}`:'🏰 Клан';
   const clanHtml=cb?.perks?.length?cb.perks.map(pk=>`<div class="r"><span class="k">${_esc(pk.icon)} ${_esc(pk.label)}</span><span class="v">${_esc(pk.value)}</span></div>`).join(''):`<div class="em">вступите в клан для бонусов</div>`;
+  // Premium-блок: +25% XP / +25% Gold во всех источниках наград
+  const isPrem = !!(p?.is_premium);
+  const daysLeft = Number(p?.premium_days_left || 0);
+  const premTitle = isPrem
+    ? `👑 Premium · активен${daysLeft>0?` · ${daysLeft} дн.`:''}`
+    : `👑 Premium`;
+  const premHtml = isPrem
+    ? `<div class="r"><span class="k">📚 Опыт</span><span class="v">+25%</span></div>
+       <div class="r"><span class="k">💰 Золото</span><span class="v">+25%</span></div>
+       <div class="r"><span class="k">🎁 Ежедневный ящик</span><span class="v">каждый день</span></div>
+       <div class="r"><span class="k">⚡ Авто-бой</span><span class="v">все режимы</span></div>`
+    : `<div class="em">купите Premium в магазине для +25% XP/Gold и ежедневного ящика</div>`;
   return `<div class="st-bon"><div class="t">⚔ Класс · ${_esc(wt.name)}</div>${classRows||'<div class="em">нет бонусов</div>'}</div>
     <div class="st-bon"><div class="t">🛡 Экипировка</div>${eqHtml}</div>
-    <div class="st-bon"><div class="t">${clanTitle}</div>${clanHtml}</div>`;
+    <div class="st-bon"><div class="t">${clanTitle}</div>${clanHtml}</div>
+    <div class="st-bon"><div class="t">${premTitle}</div>${premHtml}</div>`;
 }
 
 function invHTML(inv, subTab){
