@@ -28,14 +28,15 @@ function _btnCls(bc) {
   return 'ibh-a';
 }
 
-/* Иконка: сначала PNG через BoxIcons, потом img напрямую, потом эмодзи */
+/* Иконка: локальный _CFG.img → BoxIcons → эмодзи.
+   Локальный маппинг приоритетнее, чтобы при холодном кэше box_icons.js
+   всё равно показать PNG (мы видели жалобы на эмодзи у wb_diamond_chest). */
 function _iconHtml(it, c) {
-  // BoxIcons уже знает все ящики и умеет показывать с emoji-fallback
-  if (window.BoxIcons) {
-    return window.BoxIcons.htmlIcon(it.item_id, c.fi || '📦', 64);
-  }
   if (c.img) {
     return `<img style="width:64px;height:64px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 0 10px ${c.bc})" src="${c.img}" alt="" onerror="this.style.display='none';this.nextSibling.style.display='flex'"><span style="display:none;width:64px;height:64px;font-size:38px;align-items:center;justify-content:center;flex-shrink:0">${c.fi}</span>`;
+  }
+  if (window.BoxIcons) {
+    return window.BoxIcons.htmlIcon(it.item_id, c.fi || '📦', 64);
   }
   return `<span style="width:64px;height:64px;font-size:38px;display:flex;align-items:center;justify-content:center;flex-shrink:0">${c.fi}</span>`;
 }

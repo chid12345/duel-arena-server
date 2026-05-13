@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.19.57"
-VERSION_LABEL = "v2.19.57 — fix: BoxIcons маппинг wb_diamond_chest + prem_box (PNG в рюкзаке)"
+VERSION = "2.19.58"
+VERSION_LABEL = "v2.19.58 — fix: InvBoxesHtml приоритет локального _CFG.img над BoxIcons (PNG ящиков)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "15.76"
+GAME_VERSION = "15.77"
