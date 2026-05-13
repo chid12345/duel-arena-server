@@ -63,15 +63,28 @@
       const sub = hasScroll
         ? `<small style="color:#22dd88">✅ ${n} шт.</small>`
         : `<small style="color:#884444">❌ нет</small>`;
-      const dim = hasScroll ? '' : ' style="opacity:.4;cursor:not-allowed"';
+      const dim = hasScroll ? '' : ' style="opacity:.4;cursor:not-allowed;pointer-events:none"';
       return `<div class="wb-res-b" data-act="res" data-t="${id}"${dim}><span class="ri">${ic}</span>${pct} HP<br>${sub}</div>`;
     }).join('');
+    const hasAnyScroll = _resItems.some(({ id }) => parseInt(_resInv[id] || 0, 10) > 0);
+    // Блок покупки — показываем только когда нет ни одного свитка.
+    // Цены берём напрямую: res_30=60🪙, res_60=80🪙, res_100=100🪙.
+    const _buyBlock = hasAnyScroll ? '' : `
+      <div style="margin-top:8px;padding:7px 6px;background:rgba(180,30,30,.1);border:1px solid rgba(255,80,80,.2);border-radius:8px;text-align:center">
+        <div style="font-size:9px;color:#cc7777;margin-bottom:6px;letter-spacing:.3px">Купи свиток прямо сейчас за золото:</div>
+        <div style="display:flex;gap:5px;justify-content:center">
+          <div class="wb-res-b" data-act="buy-res" data-t="res_30"  style="opacity:1;cursor:pointer;border-color:rgba(255,150,0,.4)">🕯️ 30%<br><small style="color:#ffaa44">60 🪙</small></div>
+          <div class="wb-res-b" data-act="buy-res" data-t="res_60"  style="opacity:1;cursor:pointer;border-color:rgba(255,150,0,.4)">🔮 60%<br><small style="color:#ffaa44">80 🪙</small></div>
+          <div class="wb-res-b" data-act="buy-res" data-t="res_100" style="opacity:1;cursor:pointer;border-color:rgba(255,150,0,.4)">✨ 100%<br><small style="color:#ffaa44">100 🪙</small></div>
+        </div>
+      </div>`;
     const deadHTML = `
       <div class="wb-dead" id="wb-dead">
         <div class="wb-dead-full">
           <div class="wb-dead-t">💀 Вы пали в бою</div>
           <div style="font-size:10px;color:#aaa;margin-bottom:6px">Используй свиток воскрешения или дождись окончания рейда</div>
           <div class="wb-res-row">${_resButtons}</div>
+          ${_buyBlock}
           <div style="margin-top:8px;font-size:10px;color:#888;padding:6px;border:1px solid rgba(255,200,0,.12);border-radius:8px;background:rgba(255,200,0,.03);text-align:center;">⏳ До конца рейда: <span id="wb-dead-timer">${_fmtSec(a.seconds_left)}</span></div>
         </div>
         <div class="wb-dead-mini" data-act="dead-expand">
@@ -201,6 +214,7 @@ ${isDead ? deadHTML : (ps ? `<div class="wb-plhp"><span class="wb-plhp-i">❤️
       const act = el.dataset.act;
       if (act === 'hit')        _onHit(root, sc);
       else if (act === 'res')   sc?._resurrect?.(el.dataset.t);
+      else if (act === 'buy-res') sc?._buyScroll?.(el.dataset.t);
       else if (act === 'back')  { try { if (s.active?.spawn_id) localStorage.setItem('wb_left_raid', String(s.active.spawn_id)); } catch(_) {} window.WBHtml.close(); sc?.scene?.start?.('WorldBoss'); }
       else if (act === 'use-scroll') window.WBHtml._htmlScrollPicker?.(s, sc);
       else if (act === 'shield')     { /* handled by _useSkillDirect */ }

@@ -130,6 +130,15 @@
           }
           if (r.player_died) {
             scene._state.player_state.is_dead = 1;
+            // Сразу убираем зоны из DOM — не ждём 400мс рефреша.
+            // Иначе игрок успевает нажать «Совершить ход» снова и попадает
+            // в бесконечный цикл «Вы мертвы — нужен свиток воскрешения».
+            const _dRoot = document.getElementById('wb-root');
+            if (_dRoot) {
+              _dRoot.querySelectorAll('.wbz-col, .wbz-actions').forEach(el => el.remove());
+              _resetSelection(_dRoot);
+            }
+            _busy = true; // блок повторных кликов до рефреша
             try { window.WBHtml?.logDeath?.(); } catch(_) {}
           }
         }
@@ -152,8 +161,21 @@
         } else {
           try { window.WBHtml?.updateHUD?.(scene._state); } catch(_) {}
         }
-      } else if (r && r.reason && r.reason !== 'Слишком быстро') {
-        try { scene._toast?.('❌ ' + r.reason); } catch(_) {}
+      } else if (r && r.reason) {
+        if (r.reason !== 'Слишком быстро') {
+          try { scene._toast?.('❌ ' + r.reason); } catch(_) {}
+        }
+        // Если сервер говорит «мёртв» — значит state отстал.
+        // Ставим флаг и рефрешим, чтобы показался dead UI со свитками.
+        if (r.reason === 'Вы мертвы — нужен свиток воскрешения') {
+          if (scene._state?.player_state) scene._state.player_state.is_dead = 1;
+          const _dRoot2 = document.getElementById('wb-root');
+          if (_dRoot2) {
+            _dRoot2.querySelectorAll('.wbz-col, .wbz-actions').forEach(el => el.remove());
+            _resetSelection(_dRoot2);
+          }
+          setTimeout(() => { if (scene._alive) scene._refresh?.(); }, 300);
+        }
       }
     } catch(_) {}
     _busy = false; scene._hitBusy = false;
