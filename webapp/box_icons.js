@@ -7,12 +7,14 @@
 window.BoxIcons = {
   // item_id → путь к PNG (относительно webapp/)
   MAP: {
-    'box_common':    'chest_gold.png',
-    'box_rare':      'chest_diamond.png',
-    'box_rare_c':    'chest_diamond.png',
-    'box_epic_e2':   'chest_epic.png',
-    'box_epic_e3':   'chest_epic.png',
-    'wb_gold_chest': 'chest_gold.png',
+    'box_common':       'chest_gold.png',
+    'box_rare':         'chest_diamond.png',
+    'box_rare_c':       'chest_diamond.png',
+    'box_epic_e2':      'chest_epic.png',
+    'box_epic_e3':      'chest_epic.png',
+    'wb_gold_chest':    'chest_gold.png',
+    'wb_diamond_chest': 'chest_diamond.png',
+    'prem_box':         'prem_box.png',
   },
 
   /** Вернуть путь к картинке или null если не ящик. */
