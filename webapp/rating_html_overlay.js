@@ -282,6 +282,32 @@ function _ensureBbcCss() {
     .bbc-empty{text-align:center;font-size:10px;color:#666688;padding:8px}
   `;
   document.head.appendChild(s);
+  if (!window._bbcRemoveBg) {
+    const _bgC = new Map();
+    window._bbcRemoveBg = function(img) {
+      if (img._bgDone) return; img._bgDone = true;
+      if (!img.naturalWidth || !img.naturalHeight) return;
+      const src = img.src;
+      if (_bgC.has(src)) { const c = _bgC.get(src); if (c !== src) img.src = c; return; }
+      const cv = document.createElement('canvas');
+      cv.width = img.naturalWidth; cv.height = img.naturalHeight;
+      const ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0);
+      try {
+        const d = ctx.getImageData(0, 0, cv.width, cv.height), W = cv.width, H = cv.height;
+        let dk = 0;
+        [[0,0],[W-1,0],[0,H-1],[W-1,H-1]].forEach(([x,y]) => {
+          const i=(y*W+x)*4, mx=Math.max(d.data[i],d.data[i+1],d.data[i+2]), mn=Math.min(d.data[i],d.data[i+1],d.data[i+2]);
+          if (d.data[i+3]>10 && mx<80 && mx-mn<30) dk++;
+        });
+        if (dk < 2) { _bgC.set(src, src); return; }
+        for (let i=0; i<d.data.length; i+=4) {
+          const mx=Math.max(d.data[i],d.data[i+1],d.data[i+2]), mn=Math.min(d.data[i],d.data[i+1],d.data[i+2]);
+          if (mx<72 && mx-mn<28) d.data[i+3]=0;
+        }
+        ctx.putImageData(d,0,0); const cl=cv.toDataURL(); _bgC.set(src,cl); img.src=cl;
+      } catch(_) { _bgC.set(src,src); }
+    };
+  }
 }
 
 const _BBC_ARMOR_MAP = {
@@ -324,7 +350,7 @@ function _bbcSlotHtml(slot, it) {
   const style = `grid-row:${L.r};grid-column:${L.c};`+(it?`border-color:${it.color};box-shadow:inset 0 0 8px ${it.color}33;`:'');
   const base = it ? _bbcItemBase(it) : null;
   const visual = base
-    ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onerror="window._bbcImgFbRt&&window._bbcImgFbRt(this)"></div>`
+    ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onload="window._bbcRemoveBg&&window._bbcRemoveBg(this)" onerror="window._bbcImgFbRt&&window._bbcImgFbRt(this)"></div>`
     : `<div class="bbc-eq-img"><span class="bbc-eq-emoji">${_BBC_SLOT_ICON[slot]||'•'}</span></div>`;
   const nm = it ? _esc(_trunc(it.name, 13)) : '';
   return `<div class="bbc-eq-slot${it?'':' empty'}" style="${style}">
