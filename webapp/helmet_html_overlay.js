@@ -279,6 +279,10 @@ function _render(scene, view) {
     const btn=e.target.closest('[data-act]');
     if (btn) {
       e.stopPropagation();
+      // Ghost-tap guard: блокируем ВСЕ touch/click события до конца обработки.
+      // 500мс хватит на сетевой round-trip + re-render. Без этого click может
+      // «улететь» в кнопку под оверлеем (БОИ/TabBar) при touch на мобиле.
+      try { window.GhostTapGuard?.block?.(500); } catch(_) {}
       const h=items.find(x=>x.id===btn.dataset.id);
       if (h) _doAction(scene,btn.dataset.act,h);
       return;
