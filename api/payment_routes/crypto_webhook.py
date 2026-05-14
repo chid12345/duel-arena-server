@@ -47,13 +47,31 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
         if not invoice_id:
             return {"ok": True}
 
+        # CRITICAL: парсинг :diamond_first: ДО confirm_crypto_invoice — иначе
+        # _diamond_first_col не определён → UnboundLocalError → webhook падает,
+        # USDT-платежи не доставляются.
+        custom_payload = inv.get("payload", "")
+        is_diamond_first = ":diamond_first:" in custom_payload
+        try:
+            diamond_first_count = int(custom_payload.split(":diamond_first:", 1)[1].strip()) if is_diamond_first else 0
+        except (ValueError, IndexError):
+            diamond_first_count = 0
+            is_diamond_first = False
+        _diamond_first_col = None
+        if is_diamond_first and diamond_first_count > 0:
+            if diamond_first_count <= 100:
+                _diamond_first_col = "diamond_first_100"
+            elif diamond_first_count <= 300:
+                _diamond_first_col = "diamond_first_300"
+            else:
+                _diamond_first_col = "diamond_first_500"
+
         result = db.confirm_crypto_invoice(int(invoice_id), first_purchase_col=_diamond_first_col)
         if result.get("ok"):
             uid = result["user_id"]
             diamonds = result["diamonds"]
             asset = result.get("asset", "USDT")
             amount_str = result.get("amount", "0")
-            custom_payload = inv.get("payload", "")
             is_premium = ":premium:" in custom_payload
             is_starter_pack = ":starter_pack:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
@@ -61,20 +79,6 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_usdt_slot = ":usdt_slot:" in custom_payload
             is_usdt_reset = ":usdt_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
-            is_diamond_first = ":diamond_first:" in custom_payload
-            try:
-                diamond_first_count = int(custom_payload.split(":diamond_first:", 1)[1].strip()) if is_diamond_first else 0
-            except (ValueError, IndexError):
-                diamond_first_count = 0
-                is_diamond_first = False
-            _diamond_first_col = None
-            if is_diamond_first and diamond_first_count > 0:
-                if diamond_first_count <= 100:
-                    _diamond_first_col = "diamond_first_100"
-                elif diamond_first_count <= 300:
-                    _diamond_first_col = "diamond_first_300"
-                else:
-                    _diamond_first_col = "diamond_first_500"
             is_weapon_equip = ":weapon_equip:" in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_helmet_equip = ":helmet_equip:" in custom_payload

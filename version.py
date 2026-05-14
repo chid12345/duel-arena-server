@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.19.98"
-VERSION_LABEL = "v2.19.98 — fix: парсер class_id поддерживает usdt_custom_* (Легендарный образ) — теперь донат-сет 6/6"
+VERSION = "2.19.99"
+VERSION_LABEL = "v2.19.99 — fix-critical: CryptoPay webhook падал с UnboundLocalError (_diamond_first_col) → все USDT-платежи не доставлялись"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.17"
+GAME_VERSION = "16.18"
