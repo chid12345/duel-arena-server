@@ -32,6 +32,8 @@ const PERKS = {
    Зеркало `class_id_to_rarity` из config/set_bonuses.py. */
 function _classIdToRarity(cls){
   if (!cls) return null;
+  // USDT-кастомные образы (Легендарный) — class_id вида usdt_custom_<uid>_<n>
+  if (cls.startsWith('usdt_custom_')) return 'mythic';
   if (cls.endsWith('_mythic') || cls.endsWith('_usdt')) return 'mythic';
   if (cls.endsWith('_diamonds')) return 'epic';
   if (cls.endsWith('_gold')) return 'rare';

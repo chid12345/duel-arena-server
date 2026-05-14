@@ -99,14 +99,22 @@ PERK_INFO = {
 
 
 def class_id_to_rarity(class_id: str | None) -> str | None:
-    """Парсер суффикса class_id (гардероб/класс) в редкость сет-бонуса.
+    """Парсер class_id (гардероб/класс) в редкость сет-бонуса.
 
-    Гардероб = броня в этой игре: tank_free → common, berserker_gold → rare,
-    dragonknight_diamonds → epic, berserker_mythic / legendary_usdt → mythic.
+    Гардероб = броня в этой игре. Форматы id:
+      tank_free / agile_free → common
+      berserker_gold / paladin_gold → rare
+      dragonknight_diamonds / archmage_diamonds → epic
+      berserker_mythic / archmage_mythic → mythic
+      legendary_usdt → mythic
+      usdt_custom_<uid>_<n> → mythic (Легендарный образ, пользовательский USDT-слот)
     """
     if not class_id:
         return None
     cid = str(class_id)
+    # USDT-кастомные образы — высший тир (mythic), id в формате usdt_custom_*
+    if cid.startswith("usdt_custom_"):
+        return RARITY_MYTHIC
     if cid.endswith("_mythic") or cid.endswith("_usdt"):
         return RARITY_MYTHIC
     if cid.endswith("_diamonds"):
