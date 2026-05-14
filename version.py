@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.20.00"
-VERSION_LABEL = "v2.20.00 — tool: recover_crypto_invoice.py — скрипт восстановления потерянных USDT-платежей (idempotent)"
+VERSION = "2.20.01"
+VERSION_LABEL = "v2.20.01 — admin bot-команды восстановления: /lost_payments /my_lost /recover /recover_all_my"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.19"
+GAME_VERSION = "16.20"

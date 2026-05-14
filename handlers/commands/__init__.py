@@ -12,9 +12,11 @@ from handlers.commands.invite_health import BotHandlersInviteHealth
 from handlers.commands.admin_balance import BotHandlersAdminBalance
 from handlers.commands.battle_pass import BotHandlersBattlePass
 from handlers.commands.reset_prembox import BotHandlersResetPremBox
+from handlers.commands.recover_payments import BotHandlersRecoverPayments
 
 
 class BotHandlers(
+    BotHandlersRecoverPayments,
     BotHandlersResetPremBox,
     BotHandlersBattlePass,
     BotHandlersAdminBalance,
