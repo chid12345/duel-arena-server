@@ -347,6 +347,9 @@ function open(scene) {
   });
   document.getElementById('wn-close').onclick=()=>{
     tg?.HapticFeedback?.impactOccurred('light');
+    // Ghost-tap guard: после remove() оверлея pointer-up проскакивает в DOM
+    // под ним → ложный тап по кнопке Заданий/Магазина в профиле под пальцем.
+    try { window.GhostTapGuard?.block?.(300); } catch(_) {}
     close();
     // Перестраиваем слот профиля на месте (без перезапуска сцены).
     // Перезапуск сцены создаёт race-condition: зоны таббара успевают поймать

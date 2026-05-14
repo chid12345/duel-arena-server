@@ -51,7 +51,30 @@ Object.assign(MenuScene.prototype, {
     // Страховка: если профильная панель пропала (уничтожена/исключение при build) —
     // перестраиваем налету, чтобы не показывать чёрный экран.
     if (key === 'profile' && !this._panels?.profile) {
-      try { this._buildProfilePanel(); } catch(_) {}
+      try {
+        this._buildProfilePanel();
+      } catch(e) {
+        // Раньше ошибка глоталась → игрок видел пустой профиль и не понимал
+        // что произошло. Теперь явный лог + visible баннер для диагностики.
+        console.error('[ProfileBug] _buildProfilePanel failed in _switchTab:', e);
+        try {
+          if (window.Notif?.push) {
+            window.Notif.push('⚠️', 'Ошибка профиля: ' + (e?.message || e), '#dc3c46', 4500);
+          }
+        } catch(_) {}
+        // Делаем ОДНУ повторную попытку через 200мс — на случай если ошибка
+        // была из-за гонки с lazy-load (текстуры ещё не приехали).
+        if (!this._profileRetryScheduled) {
+          this._profileRetryScheduled = true;
+          this.time.delayedCall(200, () => {
+            this._profileRetryScheduled = false;
+            if (!this.scene?.isActive?.()) return;
+            if (this._panels?.profile) return;
+            try { this._buildProfilePanel(); if (this._activeTab === 'profile') this._switchTab('profile'); }
+            catch(e2) { console.error('[ProfileBug] retry also failed:', e2); }
+          });
+        }
+      }
     }
 
     const _setInputDeep = (container, enable) => {

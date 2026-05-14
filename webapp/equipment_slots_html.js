@@ -147,15 +147,22 @@ function _positions(cvs) {
 function _dispatch(slot, scene) {
   // Закрываем overlay слотов ДО открытия другого оверлея — иначе будет z-index bleed
   _close();
-  try {
-    if (typeof Sound !== 'undefined') Sound.click?.();
-    if      (slot === 'armor'  )                           scene.scene.start('Stats', { player: State.player, openWardrobe: true });
-    else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') WeaponHTML.open(scene);
-    else if (slot === 'belt'   && typeof HelmetHTML !== 'undefined') HelmetHTML.open(scene);
-    else if (slot === 'boots'  && typeof BootsHTML  !== 'undefined') BootsHTML.open(scene);
-    else if (slot === 'shield' && typeof ShieldHTML !== 'undefined') ShieldHTML.open(scene);
-    else if (slot === 'ring1'  && typeof RingHTML   !== 'undefined') RingHTML.open(scene);
-  } catch(e) { console.warn('[EqSlotsHTML] dispatch', slot, e); }
+  // Ghost-tap guard: блокируем сквозные pointer-up до открытия нового
+  // overlay, чтобы палец не «пробил» первую кнопку (Голова → авто-открытие первого шлема).
+  try { window.GhostTapGuard?.block?.(180); } catch(_) {}
+  if (typeof Sound !== 'undefined') Sound.click?.();
+  // Открываем overlay с задержкой 80мс — pointer-up успевает отыграть
+  // на текущей кнопке без побочного эффекта на новых элементах.
+  setTimeout(() => {
+    try {
+      if      (slot === 'armor'  )                           scene.scene.start('Stats', { player: State.player, openWardrobe: true });
+      else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') WeaponHTML.open(scene);
+      else if (slot === 'belt'   && typeof HelmetHTML !== 'undefined') HelmetHTML.open(scene);
+      else if (slot === 'boots'  && typeof BootsHTML  !== 'undefined') BootsHTML.open(scene);
+      else if (slot === 'shield' && typeof ShieldHTML !== 'undefined') ShieldHTML.open(scene);
+      else if (slot === 'ring1'  && typeof RingHTML   !== 'undefined') RingHTML.open(scene);
+    } catch(e) { console.warn('[EqSlotsHTML] dispatch', slot, e); }
+  }, 80);
 }
 
 function _close() {

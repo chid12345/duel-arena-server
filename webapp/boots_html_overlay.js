@@ -339,6 +339,8 @@ function open(scene) {
   });
   document.getElementById('bt-close').onclick=()=>{
     tg?.HapticFeedback?.impactOccurred('light');
+    // Ghost-tap guard: pointer-up не должен проскочить в DOM под оверлеем.
+    try { window.GhostTapGuard?.block?.(300); } catch(_) {}
     close();
     try {
       const sc = _currentScene;
