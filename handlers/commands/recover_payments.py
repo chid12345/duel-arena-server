@@ -54,13 +54,17 @@ class BotHandlersRecoverPayments:
         user = update.effective_user
         if not _is_admin(user.id):
             await _deny(update); return
-        rows = list_stuck()
-        if not rows:
-            await tg_api_call(update.message.reply_text, "✅ Нет застрявших платежей.")
-            return
-        rows = rows[:50]
-        lines = [f"📋 Застрявших платежей: {len(rows)} (топ-50)"] + [_format_invoice_row(r) for r in rows]
-        await tg_api_call(update.message.reply_text, "\n".join(lines))
+        try:
+            rows = list_stuck()
+            if not rows:
+                await tg_api_call(update.message.reply_text, "✅ Нет застрявших платежей.")
+                return
+            rows = rows[:50]
+            lines = [f"📋 Застрявших платежей: {len(rows)} (топ-50)"] + [_format_invoice_row(r) for r in rows]
+            await tg_api_call(update.message.reply_text, "\n".join(lines))
+        except Exception as e:
+            logger.exception("lost_payments error uid=%s: %s", user.id, e)
+            await tg_api_call(update.message.reply_text, f"❌ Ошибка: {type(e).__name__}: {e}")
 
     @staticmethod
     async def my_lost_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -68,14 +72,18 @@ class BotHandlersRecoverPayments:
         user = update.effective_user
         if not _is_admin(user.id):
             await _deny(update); return
-        rows = list_stuck(user.id)
-        if not rows:
-            await tg_api_call(update.message.reply_text, "✅ У тебя нет потерянных платежей.")
-            return
-        lines = [f"📋 Твоих потерянных: {len(rows)}"] + [_format_invoice_row(r) for r in rows]
-        lines.append("\nЧтобы восстановить ВСЕ — напиши /recover_all_my")
-        lines.append("Или по одному — /recover <invoice_id>")
-        await tg_api_call(update.message.reply_text, "\n".join(lines))
+        try:
+            rows = list_stuck(user.id)
+            if not rows:
+                await tg_api_call(update.message.reply_text, "✅ У тебя нет потерянных платежей.")
+                return
+            lines = [f"📋 Твоих потерянных: {len(rows)}"] + [_format_invoice_row(r) for r in rows]
+            lines.append("\nЧтобы восстановить ВСЕ — напиши /recover_all_my")
+            lines.append("Или по одному — /recover <invoice_id>")
+            await tg_api_call(update.message.reply_text, "\n".join(lines))
+        except Exception as e:
+            logger.exception("my_lost error uid=%s: %s", user.id, e)
+            await tg_api_call(update.message.reply_text, f"❌ Ошибка: {type(e).__name__}: {e}")
 
     @staticmethod
     async def recover_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -87,7 +95,12 @@ class BotHandlersRecoverPayments:
             await tg_api_call(update.message.reply_text, "Использование: /recover <invoice_id>")
             return
         invoice_id = int(context.args[0])
-        res = recover_one(invoice_id)
+        try:
+            res = recover_one(invoice_id)
+        except Exception as e:
+            logger.exception("recover %s error uid=%s: %s", invoice_id, user.id, e)
+            await tg_api_call(update.message.reply_text, f"❌ Ошибка: {type(e).__name__}: {e}")
+            return
         if res.get("ok"):
             msg = (
                 f"✅ Восстановлено!\n"
@@ -105,7 +118,12 @@ class BotHandlersRecoverPayments:
         user = update.effective_user
         if not _is_admin(user.id):
             await _deny(update); return
-        rows = list_stuck(user.id)
+        try:
+            rows = list_stuck(user.id)
+        except Exception as e:
+            logger.exception("recover_all_my list error uid=%s: %s", user.id, e)
+            await tg_api_call(update.message.reply_text, f"❌ Ошибка получения списка: {type(e).__name__}: {e}")
+            return
         if not rows:
             await tg_api_call(update.message.reply_text, "✅ У тебя нет потерянных платежей.")
             return
@@ -113,7 +131,11 @@ class BotHandlersRecoverPayments:
         ok_count = fail_count = 0
         for r in rows:
             iid = int(r["invoice_id"])
-            res = recover_one(iid)
+            try:
+                res = recover_one(iid)
+            except Exception as e:
+                logger.exception("recover_all_my recover_one #%s error: %s", iid, e)
+                res = {"ok": False, "reason": f"{type(e).__name__}: {e}"}
             if res.get("ok"):
                 ok_count += 1
                 results.append(f"✅ #{iid} → {res.get('kind')}")
