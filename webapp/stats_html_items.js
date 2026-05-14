@@ -95,28 +95,40 @@ function showItemDetail({ itemId, meta, qty, onApply }){
   if (!meta) return;
   const isBox  = itemId.startsWith('box_');
   const isBoss = meta.tab === 'boss';
-  const cls = isBoss ? 'boss' : (isBox ? 'box' : '');
-  const btnCls = isBoss ? 'boss' : (isBox ? 'box' : 'ok');
-  const btnLbl = isBoss ? '⚔ Применяется в рейде' : (isBox ? '🎲 Открыть' : '✨ Применить');
+
+  // Ящики → делегируем на тот же красивый попап что в Магазине
+  // (PNG ящика, рамка по редкости, строки «что внутри», цветные плашки).
+  if (isBox && window.ShopHtml?.showDetail && window.BoxDetailRows?.has?.(itemId)) {
+    const imgPath = window.BoxIcons?.imageFor?.(itemId);
+    const glow = window.BoxIcons?.glowFor?.(itemId) || 'rgba(255,200,80,.45)';
+    const iconHtml = imgPath
+      ? `<img src="${imgPath}" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 14px ${glow}) drop-shadow(0 0 4px ${glow})" alt="">`
+      : (meta.icon || '📦');
+    window.ShopHtml.showDetail({
+      icon:        iconHtml,
+      name:        meta.name || itemId,
+      rows:        window.BoxDetailRows.rowsHtml(itemId),
+      rarity:      window.BoxDetailRows.rarity(itemId),
+      qty:         qty || 0,
+      actionLabel: '🎲 Открыть',
+      action:      () => onApply?.(),
+    });
+    return;
+  }
+
+  // Не-ящики (свитки/зелья/боссовские) — простой попап как раньше.
+  const cls = isBoss ? 'boss' : '';
+  const btnCls = isBoss ? 'boss' : 'ok';
+  const btnLbl = isBoss ? '⚔ Применяется в рейде' : '✨ Применить';
   const btn = isBoss
     ? `<div class="hi-b info">${_esc(btnLbl)}</div>`
     : `<div class="hi-b ${btnCls}" data-hi="ok">${_esc(btnLbl)}</div>`;
-  // Для ящиков подставляем PNG из BoxIcons (как в рюкзаке/магазине),
-  // иначе эмодзи. Свечение по валюте.
-  const imgPath = window.BoxIcons?.imageFor?.(itemId);
-  const glow = window.BoxIcons?.glowFor?.(itemId) || 'rgba(255,200,80,.45)';
-  const icHtml = imgPath
-    ? `<img src="${imgPath}" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px ${glow}) drop-shadow(0 0 4px ${glow})" alt="">`
-    : _esc(meta.icon||'📦');
-  // Для ящиков — строки «что внутри» с редкостями (как в магазине).
-  const boxRows = isBox ? (window.BoxDetailRows?.html?.(itemId) || '') : '';
   const html = `
     <div class="hi-mdl ${cls}" role="dialog">
       <div class="hi-x" data-hi="close">✕</div>
-      <div class="hi-ic">${icHtml}</div>
+      <div class="hi-ic">${_esc(meta.icon||'📦')}</div>
       <div class="hi-t">${_esc(meta.name||itemId)}</div>
       <div class="hi-d">${_esc(meta.desc||'')}</div>
-      ${boxRows}
       ${qty>0?`<div class="hi-q">В рюкзаке: ×${qty|0}</div>`:''}
       ${isBoss?'<div class="hi-warn">Открой вкладку ⚔ Мировой Босс — там применишь в слот рейда</div>':''}
       <div class="hi-btns"><div class="hi-b cancel" data-hi="cancel">Отмена</div>${btn}</div>
