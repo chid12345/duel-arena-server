@@ -28,10 +28,32 @@ const PERKS = {
   mythic: { name:'Гнев богов',        desc:'Каждый 5-й удар автоматически наносит x2 урона' },
 };
 
+/* Армор-слот в этой игре = гардероб/класс (player.current_class), не player_equipment.armor.
+   Зеркало `class_id_to_rarity` из config/set_bonuses.py. */
+function _classIdToRarity(cls){
+  if (!cls) return null;
+  if (cls.endsWith('_mythic') || cls.endsWith('_usdt')) return 'mythic';
+  if (cls.endsWith('_diamonds')) return 'epic';
+  if (cls.endsWith('_gold')) return 'rare';
+  if (cls.endsWith('_free')) return 'common';
+  return null;
+}
+
+function _armorRarity(eq){
+  // current_class имеет приоритет (это и есть «броня» в игре); fallback на eq.armor
+  const cls = window.State?.player?.current_class;
+  return _classIdToRarity(cls) || eq?.armor?.rarity || null;
+}
+
+function _slotRarity(eq, slot){
+  if (slot === 'armor') return _armorRarity(eq);
+  return eq?.[slot]?.rarity || null;
+}
+
 function _countRarities(eq){
   const c = {};
   CATS.forEach(s => {
-    const r = eq?.[s]?.rarity;
+    const r = _slotRarity(eq, s);
     if (r) c[r] = (c[r] || 0) + 1;
   });
   return c;
@@ -60,8 +82,9 @@ function _bonusLine(b){
 function _renderSlotMap(eq, tier){
   // Полоска 6 значков: какие слоты дают вклад в этот тир.
   // ✓ зелёный — предмет нужной редкости; иначе серый с другой иконкой.
+  // Для armor-слота rarity берётся из current_class (гардероб).
   return CATS.map(s => {
-    const r = eq?.[s]?.rarity;
+    const r = _slotRarity(eq, s);
     const ok = r === tier;
     const missing = !r;
     const mismatch = !!r && r !== tier;
@@ -113,7 +136,7 @@ function _renderTierCard(tier, count, isActive, eq){
 function pageHTML(p){
   const eq = (window.State && State.equipment) || {};
   const counts = _countRarities(eq);
-  const totalEquipped = CATS.filter(s => eq[s]?.rarity).length;
+  const totalEquipped = CATS.filter(s => _slotRarity(eq, s)).length;
   const active = _resolveActive(counts);
 
   if (totalEquipped === 0) {

@@ -68,24 +68,9 @@ EQUIPMENT_CATALOG: dict[str, dict] = {
         "desc": "+40 к урону",
     },
     # ── БРОНЯ ────────────────────────────────────────────────
-    "armor_leather": {
-        "slot": SLOT_ARMOR, "rarity": RARITY_COMMON,
-        "name": "Кожаная броня", "emoji": "🥋",
-        "def_pct": 0.02, "hp_bonus": 30, "price_gold": 800,
-        "desc": "-2% урона врага, +30 HP",
-    },
-    "armor_chain": {
-        "slot": SLOT_ARMOR, "rarity": RARITY_RARE,
-        "name": "Кольчуга", "emoji": "🥋",
-        "def_pct": 0.05, "hp_bonus": 80, "price_gold": 8000,
-        "desc": "-5% урона врага, +80 HP",
-    },
-    "armor_dragon": {
-        "slot": SLOT_ARMOR, "rarity": RARITY_EPIC,
-        "name": "Броня Дракона", "emoji": "🐉",
-        "def_pct": 0.10, "hp_bonus": 180, "price_diamonds": 75,
-        "desc": "-10% урона врага, +180 HP",
-    },
+    # Старые armor_leather/chain/dragon удалены 2026-05-14: дедуп с гардеробом.
+    # Армор в этой игре управляется через players.current_class (гардероб),
+    # см. webapp/wardrobe_html_overlay.js и битву (damage.py).
     # ── ШЛЕМЫ (belt slot) ────────────────────────────────────
     # Бесплатные — каждый = одна роль, чистый стат
     "helmet_free1": {

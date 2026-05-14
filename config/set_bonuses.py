@@ -98,14 +98,41 @@ PERK_INFO = {
 }
 
 
-def count_set_rarities(equipped: dict) -> dict[str, int]:
-    """Кол-во надетых вещей по редкости. Считаются только 6 категорий SET_CATEGORIES."""
+def class_id_to_rarity(class_id: str | None) -> str | None:
+    """Парсер суффикса class_id (гардероб/класс) в редкость сет-бонуса.
+
+    Гардероб = броня в этой игре: tank_free → common, berserker_gold → rare,
+    dragonknight_diamonds → epic, berserker_mythic / legendary_usdt → mythic.
+    """
+    if not class_id:
+        return None
+    cid = str(class_id)
+    if cid.endswith("_mythic") or cid.endswith("_usdt"):
+        return RARITY_MYTHIC
+    if cid.endswith("_diamonds"):
+        return RARITY_EPIC
+    if cid.endswith("_gold"):
+        return RARITY_RARE
+    if cid.endswith("_free"):
+        return RARITY_COMMON
+    return None
+
+
+def count_set_rarities(equipped: dict, current_class: str | None = None) -> dict[str, int]:
+    """Кол-во надетых вещей по редкости. Считаются только 6 категорий SET_CATEGORIES.
+
+    Армор-слот (SLOT_ARMOR) в этой игре заполняется через гардероб/класс
+    (`players.current_class`), а не через `player_equipment.armor`. Поэтому если
+    передан current_class — для armor-слота используется его редкость.
+    """
     counts: dict[str, int] = {}
+    armor_rarity = class_id_to_rarity(current_class)
     for slot in SET_CATEGORIES:
-        item = equipped.get(slot)
-        if not item:
-            continue
-        rarity = item.get("rarity")
+        if slot == SLOT_ARMOR:
+            rarity = armor_rarity
+        else:
+            item = equipped.get(slot)
+            rarity = item.get("rarity") if item else None
         if not rarity:
             continue
         counts[rarity] = counts.get(rarity, 0) + 1
@@ -119,13 +146,13 @@ def _rarity_rank(r: str) -> int:
         return -1
 
 
-def resolve_active_set(equipped: dict) -> dict | None:
+def resolve_active_set(equipped: dict, current_class: str | None = None) -> dict | None:
     """Определяет активный сет по правилу: больше вещей → побеждает.
     При равенстве — старшая редкость.
 
     Возвращает: {rarity, count, name, emoji, bonuses, perk} или None если порог < 3.
     """
-    counts = count_set_rarities(equipped)
+    counts = count_set_rarities(equipped, current_class)
     if not counts:
         return None
 

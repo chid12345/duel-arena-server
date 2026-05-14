@@ -13,14 +13,17 @@ from api.tma_models import InitDataHeader
 log = logging.getLogger(__name__)
 
 
-def _fetch_equipment_parallel(db: Any, uid: int) -> tuple[dict, list, dict, dict | None]:
-    """Три equipment-запроса выполняются параллельно. Возвращает (eq, weapons, stats, set_info)."""
+def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = None) -> tuple[dict, list, dict, dict | None]:
+    """Три equipment-запроса выполняются параллельно. Возвращает (eq, weapons, stats, set_info).
+
+    current_class — для подсчёта сет-бонуса в slot=armor (гардероб=броня).
+    """
     from config.set_bonuses import resolve_active_set, bonuses_human, PERK_INFO
 
     def _eq():
         try:
             eq_raw = db.get_equipment(uid)
-            set_info = resolve_active_set(eq_raw)
+            set_info = resolve_active_set(eq_raw, current_class=current_class)
             if set_info:
                 set_info = dict(set_info)
                 set_info["bonuses_human"] = bonuses_human(set_info["bonuses"])
@@ -115,7 +118,8 @@ def register_tma_player_route(
             if usdt_passive:
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
-            equipment, owned_weapons, eq_stats_cached, set_info = _fetch_equipment_parallel(db, uid)
+            equipment, owned_weapons, eq_stats_cached, set_info = _fetch_equipment_parallel(
+                db, uid, current_class=cached.get("current_class"))
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
                     "owned_weapons": owned_weapons, "set_bonus": set_info, "cached": True, "_sv": VERSION}
 
@@ -171,7 +175,8 @@ def register_tma_player_route(
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
-        equipment, owned_weapons, eq_stats_fresh, set_info = _fetch_equipment_parallel(db, uid)
+        equipment, owned_weapons, eq_stats_fresh, set_info = _fetch_equipment_parallel(
+            db, uid, current_class=player.get("current_class"))
         return {
             "ok": True,
             "player": _player_api(player, combined_buffs=cb, eq_stats=eq_stats_fresh),

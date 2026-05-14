@@ -46,9 +46,10 @@ class BattleSetPerksMixin:
         """Активный сет: hp_pct/def_pct_bonus/atk_pct/accuracy + perk_id для 6/6.
 
         Вызывается из start.py:_apply_equipment_stats после применения базовых стат.
+        Армор-слот в этой игре читается из `players.current_class` (гардероб = броня).
         """
         from config.set_bonuses import resolve_active_set
-        info = resolve_active_set(equipped)
+        info = resolve_active_set(equipped, current_class=player.get("current_class"))
         player["_set_info"] = info  # для API/UI; None если порог < 3
         if not info:
             return
