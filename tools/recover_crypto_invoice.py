@@ -29,6 +29,15 @@ if _ROOT not in sys.path:
 
 from database import db
 
+try:
+    import httpx
+    from config import CRYPTOPAY_TOKEN
+    from api.tma_catalogs import CRYPTOPAY_API_BASE
+except Exception:
+    httpx = None
+    CRYPTOPAY_TOKEN = ""
+    CRYPTOPAY_API_BASE = ""
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 log = logging.getLogger("recover")
 
@@ -105,8 +114,41 @@ def _deliver(uid: int, invoice_id: int, payload: str, diamonds: int) -> str:
     return "unknown_payload"
 
 
+def verify_paid_on_cryptopay(invoice_id: int) -> tuple[bool, str]:
+    """Запрашивает у CryptoPay API статус инвойса.
+    Возвращает (is_paid, status_string). При любой ошибке is_paid=False.
+    """
+    if not httpx or not CRYPTOPAY_TOKEN or not CRYPTOPAY_API_BASE:
+        return False, "cryptopay_not_configured"
+    try:
+        with httpx.Client(timeout=10) as client:
+            resp = client.get(
+                f"{CRYPTOPAY_API_BASE}/getInvoices",
+                headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
+                params={"invoice_ids": str(invoice_id)},
+            )
+            data = resp.json()
+        if not data.get("ok"):
+            return False, "cryptopay_api_error"
+        items = data.get("result", {}).get("items", [])
+        if not items:
+            return False, "invoice_not_found"
+        status = items[0].get("status") or ""
+        return (status == "paid"), status
+    except Exception as e:
+        log.warning("verify_paid_on_cryptopay invoice=%s err=%s", invoice_id, e)
+        return False, f"error:{e}"
+
+
 def recover_one(invoice_id: int) -> dict:
-    """Восстанавливает выдачу по конкретному invoice_id."""
+    """Восстанавливает выдачу по конкретному invoice_id.
+
+    Безопасность:
+    - status='paid' + items_delivered=0 → доставить (точно потерянный).
+    - status='pending' → запросить CryptoPay; если там 'paid' → подтвердить и доставить;
+      если не paid → пропустить (никакой бесплатной халявы).
+    - items_delivered=1 → пропустить (уже доставлено).
+    """
     conn = db.get_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM crypto_invoices WHERE invoice_id = ?", (invoice_id,))
@@ -116,14 +158,19 @@ def recover_one(invoice_id: int) -> dict:
         return {"ok": False, "reason": "invoice not found"}
     row = dict(row)
     if int(row.get("items_delivered") or 0):
-        return {"ok": False, "reason": "already delivered", "row": row}
+        return {"ok": False, "reason": "already delivered"}
 
-    if (row.get("status") or "") != "paid":
-        # Принудительно отметим как оплаченный (предполагаем, что админ проверил у CryptoPay)
+    status = (row.get("status") or "").strip()
+    if status != "paid":
+        # Сверяемся с CryptoPay — был ли инвойс реально оплачен
+        is_paid, cp_status = verify_paid_on_cryptopay(int(invoice_id))
+        if not is_paid:
+            return {"ok": False, "reason": f"not paid on CryptoPay (status={cp_status})"}
+        # Подтверждаем в нашей БД
         r = db.confirm_crypto_invoice(int(invoice_id), first_purchase_col=None)
-        log.info("confirm result: %s", r)
+        log.info("confirm result for invoice=%s: %s", invoice_id, r)
         if not r.get("ok"):
-            return {"ok": False, "reason": "confirm failed", "row": row}
+            return {"ok": False, "reason": "confirm failed"}
 
     uid = int(row["user_id"])
     payload = row.get("payload") or ""
