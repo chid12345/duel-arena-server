@@ -17,6 +17,7 @@ function _renderShell(){
   // Полная вёрстка каркаса — вызывается ОДИН раз на open(). На клике по табу
   // и при apply/train идёт точечное обновление (_renderHdr + _renderPage),
   // которое не пересоздаёт DOM-поддерево (300+ элементов).
+  const _perfT = window.Perf?.mark?.();
   const P = window.StatsHTMLPages;
   const p=State.player, _wtKey=String(p?.warrior_type||'').split('_')[0];
   const wt=(P?.WT||{})[_wtKey]||P?.WT?.tank||{name:'',icon:''};
@@ -44,11 +45,13 @@ function _renderShell(){
     <div class="st-page${_currentTab==='in'?' on':''}" data-p="in">${_currentTab==='in'?P.invHTML(_inv,_invSubTab):''}</div>
     <div class="st-page${_currentTab==='ra'?' on':''}" data-p="ra">${_currentTab==='ra'?P.rateHTML(p):''}</div>
   </div>`;
+  window.Perf?.end?.('stats.renderShell', _perfT);
 }
 
 function _renderHdr(){
   // Точечно обновляет шапку (имя, подзаголовок, очки) и активный таб в сегменте.
   // НЕ пересоздаёт DOM — только textContent + classList → дёшево.
+  const _perfT = window.Perf?.mark?.();
   const P = window.StatsHTMLPages;
   const p = State.player;
   const _wtKey = String(p?.warrior_type||'').split('_')[0];
@@ -67,11 +70,13 @@ function _renderHdr(){
   root.querySelectorAll('.st-seg .s').forEach(s => {
     s.classList.toggle('on', s.dataset.tab === _currentTab);
   });
+  window.Perf?.end?.('stats.renderHdr', _perfT);
 }
 
 function _renderPage(){
   // Точечно обновляет содержимое активной страницы. Остальные страницы
   // не трогаем — их HTML рендерится лениво при первом открытии.
+  const _perfT = window.Perf?.mark?.();
   const P = window.StatsHTMLPages;
   const p = State.player;
   const root = document.getElementById('st-root'); if (!root) return;
@@ -86,6 +91,7 @@ function _renderPage(){
   else if (_currentTab === 'in') html = P.invHTML(_inv, _invSubTab);
   else if (_currentTab === 'ra') html = P.rateHTML(p);
   active.innerHTML = html;
+  window.Perf?.end?.('stats.renderPage', _perfT);
 }
 
 function _render(){

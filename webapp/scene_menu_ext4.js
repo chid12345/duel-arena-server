@@ -5,6 +5,8 @@
 Object.assign(MenuScene.prototype, {
 
   _buildProfilePanel() {
+    const _perfT = window.Perf?.mark?.();
+    const _perfDone = () => window.Perf?.end?.('buildProfilePanel', _perfT);
     const { W, CONTENT_H: CH } = this;
     const p   = State.player;
     const c   = new Phaser.GameObjects.Container(this, 0, 0);
@@ -492,6 +494,7 @@ Object.assign(MenuScene.prototype, {
     c.setVisible(false);
     this._panels.profile = c;
     this._loadProfileBuffs();
+    _perfDone();
   },
 
   _updateProfileTasksBadge() {

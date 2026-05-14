@@ -122,6 +122,7 @@ Object.assign(MenuScene.prototype, {
       if (!this.scene?.isActive?.()) return;
       if (this._rebuildProfileBusy) return;
       this._rebuildProfileBusy = true;
+      const _perfT = window.Perf?.mark?.();
       try {
         if (this._panels?.profile) {
           this._panels.profile.destroy(true);
@@ -132,6 +133,7 @@ Object.assign(MenuScene.prototype, {
         if (this._activeTab === 'profile' && typeof this._switchTab === 'function') {
           this._switchTab('profile');
         }
+        window.Perf?.end?.('rebuildProfileAfterLazy', _perfT);
       } catch(e) {
         console.warn('[LazyEq] rebuild profile failed:', e);
         // Если _buildProfilePanel бросил исключение, _panels.profile = null
