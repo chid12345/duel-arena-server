@@ -101,10 +101,17 @@ function showItemDetail({ itemId, meta, qty, onApply }){
   const btn = isBoss
     ? `<div class="hi-b info">${_esc(btnLbl)}</div>`
     : `<div class="hi-b ${btnCls}" data-hi="ok">${_esc(btnLbl)}</div>`;
+  // Для ящиков подставляем PNG из BoxIcons (как в рюкзаке/магазине),
+  // иначе эмодзи. Свечение по валюте.
+  const imgPath = window.BoxIcons?.imageFor?.(itemId);
+  const glow = window.BoxIcons?.glowFor?.(itemId) || 'rgba(255,200,80,.45)';
+  const icHtml = imgPath
+    ? `<img src="${imgPath}" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px ${glow}) drop-shadow(0 0 4px ${glow})" alt="">`
+    : _esc(meta.icon||'📦');
   const html = `
     <div class="hi-mdl ${cls}" role="dialog">
       <div class="hi-x" data-hi="close">✕</div>
-      <div class="hi-ic">${_esc(meta.icon||'📦')}</div>
+      <div class="hi-ic">${icHtml}</div>
       <div class="hi-t">${_esc(meta.name||itemId)}</div>
       <div class="hi-d">${_esc(meta.desc||'')}</div>
       ${qty>0?`<div class="hi-q">В рюкзаке: ×${qty|0}</div>`:''}
