@@ -91,8 +91,9 @@ function _renderTierCard(tier, count, isActive, eq){
   }).join('');
   const perk = PERKS[tier];
   const perkOn = count >= 6;
+  const lockBadge = perkOn ? '★' : `<span class="sb-perk-lock">🔒 нужно ещё ${6 - count}</span>`;
   const perkRow = `<div class="sb-perk ${perkOn?'on':'off'}">
-    <div class="sb-perk-h">★ ${perk.name}</div>
+    <div class="sb-perk-h">${lockBadge} ${perk.name}</div>
     <div class="sb-perk-d">${perk.desc}</div>
   </div>`;
   return `<div class="st-bon sb-card ${isActive?'sb-active':''}" style="--sb-c:${c}">
