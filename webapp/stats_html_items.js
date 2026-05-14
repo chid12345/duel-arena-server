@@ -108,12 +108,15 @@ function showItemDetail({ itemId, meta, qty, onApply }){
   const icHtml = imgPath
     ? `<img src="${imgPath}" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px ${glow}) drop-shadow(0 0 4px ${glow})" alt="">`
     : _esc(meta.icon||'📦');
+  // Для ящиков — строки «что внутри» с редкостями (как в магазине).
+  const boxRows = isBox ? (window.BoxDetailRows?.html?.(itemId) || '') : '';
   const html = `
     <div class="hi-mdl ${cls}" role="dialog">
       <div class="hi-x" data-hi="close">✕</div>
       <div class="hi-ic">${icHtml}</div>
       <div class="hi-t">${_esc(meta.name||itemId)}</div>
       <div class="hi-d">${_esc(meta.desc||'')}</div>
+      ${boxRows}
       ${qty>0?`<div class="hi-q">В рюкзаке: ×${qty|0}</div>`:''}
       ${isBoss?'<div class="hi-warn">Открой вкладку ⚔ Мировой Босс — там применишь в слот рейда</div>':''}
       <div class="hi-btns"><div class="hi-b cancel" data-hi="cancel">Отмена</div>${btn}</div>
