@@ -13,9 +13,11 @@
 const _esc = s => String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let _scene=null, _inv=null, _currentTab='st', _invSubTab='scrolls', _openGen=0;
 
-function _render(){
+function _renderShell(){
+  // Полная вёрстка каркаса — вызывается ОДИН раз на open(). На клике по табу
+  // и при apply/train идёт точечное обновление (_renderHdr + _renderPage),
+  // которое не пересоздаёт DOM-поддерево (300+ элементов).
   const P = window.StatsHTMLPages;
-  // tank_1/agile_2/crit_0 → tank/agile/crit (скины не должны ломать имя класса в шапке)
   const p=State.player, _wtKey=String(p?.warrior_type||'').split('_')[0];
   const wt=(P?.WT||{})[_wtKey]||P?.WT?.tank||{name:'',icon:''};
   const root=document.getElementById('st-root'); if(!root) return;
@@ -42,6 +44,60 @@ function _render(){
     <div class="st-page${_currentTab==='in'?' on':''}" data-p="in">${_currentTab==='in'?P.invHTML(_inv,_invSubTab):''}</div>
     <div class="st-page${_currentTab==='ra'?' on':''}" data-p="ra">${_currentTab==='ra'?P.rateHTML(p):''}</div>
   </div>`;
+}
+
+function _renderHdr(){
+  // Точечно обновляет шапку (имя, подзаголовок, очки) и активный таб в сегменте.
+  // НЕ пересоздаёт DOM — только textContent + classList → дёшево.
+  const P = window.StatsHTMLPages;
+  const p = State.player;
+  const _wtKey = String(p?.warrior_type||'').split('_')[0];
+  const wt = (P?.WT||{})[_wtKey] || P?.WT?.tank || { name:'', icon:'' };
+  const root = document.getElementById('st-root'); if (!root) return;
+  const fs = p.free_stats|0;
+  const pts = root.querySelector('.st-pts');
+  if (pts) {
+    pts.classList.toggle('zero', fs <= 0);
+    pts.textContent = fs > 0 ? `⚡ ${fs}` : '✅';
+  }
+  const nm = root.querySelector('.st-n');
+  if (nm) nm.textContent = (p.username || 'Герой').slice(0, 16);
+  const sb = root.querySelector('.st-sb');
+  if (sb) sb.textContent = `УР.${p.level} · ★ ${p.rating||0} · ${wt.name}`;
+  root.querySelectorAll('.st-seg .s').forEach(s => {
+    s.classList.toggle('on', s.dataset.tab === _currentTab);
+  });
+}
+
+function _renderPage(){
+  // Точечно обновляет содержимое активной страницы. Остальные страницы
+  // не трогаем — их HTML рендерится лениво при первом открытии.
+  const P = window.StatsHTMLPages;
+  const p = State.player;
+  const root = document.getElementById('st-root'); if (!root) return;
+  root.querySelectorAll('.st-page').forEach(pg => {
+    pg.classList.toggle('on', pg.dataset.p === _currentTab);
+  });
+  const active = root.querySelector(`.st-page[data-p="${_currentTab}"]`);
+  if (!active) return;
+  let html = '';
+  if (_currentTab === 'st')      html = P.statsHTML(p);
+  else if (_currentTab === 'bo') html = P.bonusHTML(p, _inv);
+  else if (_currentTab === 'in') html = P.invHTML(_inv, _invSubTab);
+  else if (_currentTab === 'ra') html = P.rateHTML(p);
+  active.innerHTML = html;
+}
+
+function _render(){
+  // Если каркас уже отрисован — обновляем точечно (шапка + активная страница).
+  // Это в разы дешевле полной перестройки innerHTML панели (300+ элементов).
+  const root = document.getElementById('st-root');
+  if (root && root.querySelector('.st-panel')) {
+    _renderHdr();
+    _renderPage();
+    return;
+  }
+  _renderShell();
 }
 
 async function _onClick(e){
