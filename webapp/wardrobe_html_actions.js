@@ -102,6 +102,34 @@
     el._t = setTimeout(() => { el.style.opacity = '0'; }, 2800);
   }
 
+  /* Polling после открытия инвойса USDT для мифик-брони.
+     Опрашивает /api/shop/crypto_check каждые 5с, до 30 попыток (~2.5 мин).
+     При успехе — обновляет гардероб и показывает уведомление.
+     Не блокирует UI, не падает при сетевых ошибках. */
+  function _startArmorCryptoPolling(scene, invoiceId, classId, immediate = false) {
+    let attempts = 0;
+    const poll = async () => {
+      attempts++;
+      try {
+        const r = await get(`/api/shop/crypto_check/${invoiceId}`);
+        if (r && r.ok && r.paid) {
+          try { localStorage.removeItem('armorPendingInvoice'); localStorage.removeItem('armorPendingClassId'); } catch(_) {}
+          if (r.player) { State.player = r.player; State.playerLoadedAt = Date.now(); }
+          window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+          _notify('✅ Мифическая броня получена! Откройте Гардероб → надеть.');
+          // Обновляем гардероб если открыт
+          try {
+            const wpFresh = await get('/api/wardrobe');
+            if (wpFresh?.ok) WardrobeHTML.refresh(scene, wpFresh);
+          } catch(_) {}
+          return;
+        }
+      } catch(_) {}
+      if (attempts < 30) setTimeout(poll, 5000);
+    };
+    setTimeout(poll, immediate ? 800 : 4000);
+  }
+
   /* ── api actions ── */
   async function _doAction(scene, action, item, wp) {
     // Открытие редактора статов USDT-слота — не требует API, открывает Phaser-экран
@@ -166,7 +194,18 @@
           else window.Telegram?.WebApp?.openLink?.(_url);
         } catch(_) {}
         _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
-        scene._wardrobeHtmlBusy = false; return;
+        scene._wardrobeHtmlBusy = false;
+        // Polling: после оплаты (~30с) опрашиваем сервер каждые 5с, чтобы
+        // НЕ полагаться только на webhook. Если crypto_check скажет paid+armor —
+        // обновляем гардероб и показываем «✅ Получено».
+        if (invRes.invoice_id) {
+          try {
+            localStorage.setItem('armorPendingInvoice', String(invRes.invoice_id));
+            localStorage.setItem('armorPendingClassId', item.id);
+          } catch(_) {}
+          _startArmorCryptoPolling(scene, invRes.invoice_id, item.id);
+        }
+        return;
       }
       if (action === 'buy_armor_stars') {
         _notify('⏳ Создаём счёт Stars...', true);
