@@ -137,8 +137,13 @@ window.BoxRevealCard = {
       const cfg = _RCFG[r];
       const star = cfg.star ? `<span style="font-size:13px;flex-shrink:0">${cfg.star}</span>` : '';
       const desc = it.desc ? `<div class="brc-desc">${it.desc}</div>` : '';
+      // Для ящиков-наград (из премиум-ящика, ивентов и т.п.) подставляем PNG
+      // как в магазине вместо тусклой эмодзи 📦.
+      const rowIco = (window.BoxIcons && window.BoxIcons.imageFor(it.item_id))
+        ? window.BoxIcons.htmlIcon(it.item_id, it.icon || '🎁', 28)
+        : (it.icon || '🎁');
       return `<div class="brc-row r-${r}" style="animation-delay:${80 + i * 55}ms">
-        <span class="brc-ico">${it.icon || '🎁'}</span>
+        <span class="brc-ico">${rowIco}</span>
         <div class="brc-txt">
           <div class="brc-name" style="color:${cfg.nameCol}">${it.name || it.item_id || '?'}</div>
           ${desc}
