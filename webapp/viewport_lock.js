@@ -47,6 +47,35 @@
     setTimeout(apply, 400);
   });
 
+  /* После resume из фона Phaser Text-объекты могут терять свои внутренние
+     canvas-текстуры (Image-объекты остаются), отсюда симптом «исчез верх/низ
+     меню, иконки остались». Лечим принудительным re-render: walk сцен →
+     setText(this.text) на каждом Text объекте → Phaser перерисует canvas2d
+     текстуру и заново загрузит в WebGL. БЕЗ трюков со scale.listeners. */
+  function _refreshTexts() {
+    try {
+      const game = window.game;
+      if (!game?.scene?.scenes) return;
+      const walk = (list) => {
+        if (!list || !list.forEach) return;
+        list.forEach(obj => {
+          if (typeof obj.setText === 'function' && obj.text !== undefined) {
+            try { obj.setText(obj.text); } catch (_) {}
+          }
+          if (obj.list) walk(obj.list);
+        });
+      };
+      game.scene.scenes.forEach(scene => {
+        if (!scene.scene?.isActive?.()) return;
+        walk(scene.children?.list);
+      });
+    } catch (_) {}
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    setTimeout(_refreshTexts, 500);
+  });
+
   /* Debug: тройной тап в верхнем-левом углу (90×90 — крупная зона) →
      alert с диагностикой. pointerdown в capture-фазе перехватит тап
      ДО того как Phaser canvas его съест. */
