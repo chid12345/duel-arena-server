@@ -84,6 +84,8 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             is_boots_equip  = ":boots_equip:"  in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_ring_equip   = ":ring_equip:"   in custom_payload
+            is_armor_class  = ":armor_class:"  in custom_payload
+            armor_class_id  = custom_payload.split(":armor_class:", 1)[1].strip() if is_armor_class else None
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
@@ -157,6 +159,21 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     try: await manager.send(owner_uid, {"event": "ring_equipped", "ring_id": ring_equip_id, "source": "cryptopay_confirm"})
                     except Exception: pass
                     return {"ok": True, "paid": True, "ring_equipped": True, "ring_id": ring_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
+                if is_armor_class and armor_class_id:
+                    # Мифик-броня (класс) — идемпотентно через purchase_class
+                    _armor_ok = False
+                    try:
+                        ok2, msg2 = db.purchase_class(owner_uid, armor_class_id)
+                        _armor_ok = bool(ok2) or ("уже есть" in (msg2 or ""))
+                    except Exception as _e:
+                        logger.error("CRITICAL: armor_class purchase via crypto_check uid=%s class=%s err=%s", owner_uid, armor_class_id, _e)
+                    _cache_invalidate(owner_uid)
+                    if _armor_ok:
+                        db.mark_items_delivered(invoice_id)
+                    try: await manager.send(owner_uid, {"event": "armor_class_purchased", "class_id": armor_class_id, "source": "cryptopay_confirm"})
+                    except Exception: pass
+                    fresh = db.get_or_create_player(owner_uid, "")
+                    return {"ok": True, "paid": True, "armor_class_purchased": True, "class_id": armor_class_id, "player": _player_api(dict(fresh))}
                 if is_usdt_scroll and usdt_scroll_id:
                     _scroll_ok = False
                     try:
