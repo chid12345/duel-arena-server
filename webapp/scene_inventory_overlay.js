@@ -41,7 +41,7 @@
     // ── Ящики ──
     box_common:     { icon:'📦', name:'Обычный ящик',          desc:'2–4 свитка · шанс на алмазный', tab:'special' },
     box_rare:       { icon:'🟦', name:'Редкий ящик',           desc:'3–6 алмазных свитков', tab:'special' },
-    box_rare_c:     { icon:'🟪', name:'Редкий ящик+',          desc:'2+ алмазных · шанс 300💎 и Premium', tab:'special' },
+    box_rare_c:     { icon:'🟪', name:'Редкий ящик+',          desc:'2+ алмазных · шанс 200💎 и Premium', tab:'special' },
     box_epic_e2:    { icon:'🔮', name:'Эпический: Удача',      desc:'USDT-свиток + алмазные · шанс Титана', tab:'special' },
     box_epic_e3:    { icon:'⚔️', name:'Эпический: Набор воина',desc:'USDT-свиток + XP×2 + свитки', tab:'special' },
     // ── Зелья HP ──

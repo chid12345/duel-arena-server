@@ -97,9 +97,9 @@ def _generate_rare_c(db, uid) -> Dict[str, Any]:
     if random.random() < 0.05:
         drops.append({"type": "item", "item_id": _pick(_USDT_SCROLLS)})
 
-    # 5% бонус: +300 алмазов (джекпот!)
+    # 5% бонус: +200 алмазов (джекпот!)
     if random.random() < 0.05:
-        drops.append({"type": "diamonds", "amount": 300})
+        drops.append({"type": "diamonds", "amount": 200})
 
     # 3% бонус: Premium 3 дня
     if random.random() < 0.03:

@@ -56,7 +56,7 @@ Object.assign(ShopScene.prototype, {
         { id: 'stat_reset',      icon: '🔄', name: 'Сброс статов',      price: 75,  currency: 'diamonds', desc: 'Сброс всех статов' },
         { id: 'box_common',      icon: '📦', name: 'Обычный ящик',       price: 150, currency: 'gold',     desc: '2–4 свитка · шанс на алмазный' },
         { id: 'box_rare',        icon: '🟦', name: 'Редкий ящик',        price: 20,  currency: 'diamonds', desc: '3–6 алмазных свитков' },
-        { id: 'box_rare_c',      icon: '🟪', name: 'Редкий ящик+',       price: 30,  currency: 'diamonds', desc: '2+ алмазных · шанс 300💎 и Premium' },
+        { id: 'box_rare_c',      icon: '🟪', name: 'Редкий ящик+',       price: 30,  currency: 'diamonds', desc: '2+ алмазных · шанс 200💎 и Premium' },
       ];
     }
     return [];

@@ -75,7 +75,7 @@ SHOP_CATALOG = {
     # ── Лут-боксы ─────────────────────────────────────────────
     "box_common":      {"name": "Обычный ящик",         "price": 150, "currency": "gold",     "icon": "📦", "tab": "boxes", "desc": "2–4 свитка · шанс на алмазный", "inventory": True},
     "box_rare":        {"name": "Редкий ящик",          "price": 20,  "currency": "diamonds", "icon": "🟦", "tab": "boxes", "desc": "3–6 алмазных свитков", "inventory": True},
-    "box_rare_c":      {"name": "Редкий ящик+",         "price": 30,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2+ алмазных · шанс 300💎 и Premium", "inventory": True},
+    "box_rare_c":      {"name": "Редкий ящик+",         "price": 30,  "currency": "diamonds", "icon": "🟪", "tab": "boxes", "desc": "2+ алмазных · шанс 200💎 и Premium", "inventory": True},
     "box_epic_e2":     {"name": "Эпический: Удача",     "price": 0,   "currency": "diamonds", "icon": "🔮", "tab": "boxes", "desc": "USDT-свиток + алмазные · шанс Титана", "inventory": True},
     "box_epic_e3":     {"name": "Эпический: Набор воина","price": 0,  "currency": "diamonds", "icon": "⚔️", "tab": "boxes", "desc": "USDT-свиток + XP×2 + свитки", "inventory": True},
 
