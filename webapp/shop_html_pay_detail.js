@@ -89,7 +89,7 @@ function _contentRows(base, { isPrem, isReset, isBox, isLeg, isDia, sid }) {
     _row('💎', '2–4 алмазных свитка','гарантировано', 'vc'),
     _row('🏔️', 'Свиток Титана',     '20% шанс', 'vo'),
     _row('👑', 'Premium 7 дней',    '8% шанс', 'vp'),
-    _row('💰', '+100 алмазов бонус','3% шанс', 'vg'),
+    _row('💎', '+100 алмазов бонус','3% шанс', 'vg'),
   ].join('');
 
   if (sid === 'box_epic_e3') return [
