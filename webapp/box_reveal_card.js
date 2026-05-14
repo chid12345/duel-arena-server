@@ -24,6 +24,11 @@ function _rar(id) {
   return 'common';
 }
 
+// "Удача" — бонус-дроп (_diamonds/_premium/_usdt) или редкость ВЫШЕ тира ящика.
+const _BTIER={box_common:0,wb_gold_chest:0,box_rare:1,box_rare_c:1,wb_diamond_chest:1,box_epic_e2:2,box_epic_e3:2,prem_box:2};
+const _RT={common:0,rare:1,epic:2,legendary:3};
+function _luck(id,bid){if(!id) return false; if(String(id).startsWith('_')) return true; const bt=_BTIER[bid]; return bt!=null && (_RT[_rar(id)]||0)>bt;}
+
 const _RCFG = {
   legendary: { nameCol: '#ffcc44', badge: 'ЛЕГЕНДАРНОЕ', star: '⭐', lucky: '🔥 везунчик!' },
   epic:      { nameCol: '#cc88ff', badge: 'ЭПИЧЕСКОЕ',   star: '',   lucky: '⚡ круто!'    },
@@ -147,7 +152,7 @@ window.BoxRevealCard = {
       const rowIco = (window.BoxIcons && window.BoxIcons.imageFor(it.item_id))
         ? window.BoxIcons.htmlIcon(it.item_id, it.icon || '🎁', 28)
         : (it.icon || '🎁');
-      const lck = cfg.lucky ? `<div class="brc-lck r-${r}">${cfg.lucky}</div>` : '';
+      const lck = (cfg.lucky && _luck(it.item_id, boxId)) ? `<div class="brc-lck r-${r}">${cfg.lucky}</div>` : '';
       return `<div class="brc-row r-${r}" style="animation-delay:${80 + i * 55}ms">
         ${lck}
         <span class="brc-ico">${rowIco}</span>
