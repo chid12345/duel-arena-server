@@ -267,7 +267,7 @@ class NatiskScene extends Phaser.Scene {
     try { await post('/api/endless/abandon', {}); } catch(_) {}
     this._busy = false;
     if (!this.scene?.isActive('Natisk')) return;
-    this.scene.restart();
+    this.scene.restart({});
   }
 
   async _buyAttempt(kind) {

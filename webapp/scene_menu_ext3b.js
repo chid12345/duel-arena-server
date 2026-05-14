@@ -88,7 +88,7 @@ Object.assign(MenuScene.prototype, {
       callback: () => {
         countdown--;
         if (countdown <= 0) {
-          this.scene.restart();
+          this.scene.restart({});
         } else {
           cntTxt.setText(`Авто-повтор через ${countdown}с`);
         }

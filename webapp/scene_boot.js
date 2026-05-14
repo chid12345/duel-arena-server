@@ -46,6 +46,18 @@ class BootScene extends Phaser.Scene {
     this.load.image('chest_diamond',   `chest_diamond.png${V}`);
     this.load.image('chest_epic',      `chest_epic.png${V}`);
     this.load.image('natisk_diamond',  `natisk_diamond.png${V}`);
+    // Иконки сегмент-табов Stats overlay (CSS background-image). В Boot не
+    // нужны Phaser-сцене, но проход через HTTP даёт браузерный кеш, и при
+    // первом открытии «Герой» картинки отрисуются мгновенно без задержки.
+    this.load.image('hero_tab_stats',  `hero_tab_stats.png${V}`);
+    this.load.image('hero_tab_bonus',  `hero_tab_bonus.png${V}`);
+    this.load.image('hero_tab_inv',    `hero_tab_inv.png${V}`);
+    this.load.image('hero_tab_rate',   `hero_tab_rate.png${V}`);
+    // То же для кнопок Clan overlay (Чат/Заявки/Распустить) — без preload
+    // первый рендер клана дёргается, пока браузер тащит 3 PNG.
+    this.load.image('clan_btn_chat',    `clan_btn_chat.png${V}`);
+    this.load.image('clan_btn_req',     `clan_btn_req.png${V}`);
+    this.load.image('clan_btn_disband', `clan_btn_disband.png${V}`);
     // bot_skins (62 PNG, ~33МБ) и pvp_bg (5 PNG, ~5МБ) грузятся лениво в MenuScene
     // после показа меню — иначе Boot зависает на 30-90с на мобильном интернете.
     // Inline-fallback в BattleScene._buildArena() подгрузит нужный скин если

@@ -133,7 +133,7 @@
     if (!menu) return false;
     if (menu.sys.settings.status >= 3) return true; // уже стартовала
     console.log('[DevMode] Menu не стартовала — форсим scene.start("Menu")');
-    try { g.scene.start('Menu'); } catch (e) { console.warn('[DevMode] force-start err:', e); }
+    try { g.scene.start('Menu', {}); } catch (e) { console.warn('[DevMode] force-start err:', e); }
     return true;
   };
   setTimeout(() => { if (!_tryForceMenu()) setTimeout(_tryForceMenu, 2000); }, 3000);

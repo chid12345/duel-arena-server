@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.19.84"
-VERSION_LABEL = "v2.19.84 — perf: чистка load/timer-слушателей в MenuScene при shutdown (Шаг 3/4 анти-лаг)"
+VERSION = "2.19.85"
+VERSION_LABEL = "v2.19.85 — perf: preload Stats/Clan icons + scene.restart с {} в Natisk/menu-ext3b/dev_mode (Шаг 4/4 анти-лаг)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.03"
+GAME_VERSION = "16.04"
