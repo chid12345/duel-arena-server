@@ -109,27 +109,38 @@ Object.assign(MenuScene.prototype, {
   },
 
   _rebuildProfileAfterLazy() {
-    // Re-entrance guard: filecomplete может стрельнуть дважды при быстром переходе
-    // или при двух одновременных _preloadEquippedTextures Promise-ах (повторный create).
-    if (this._rebuildProfileBusy) return;
-    this._rebuildProfileBusy = true;
-    try {
+    // Одноразовый ребилд: после первой перестройки приоритетные PNG уже в
+    // текстурном кэше Phaser — повторная перестройка панели ничего не даст
+    // визуально, но стоит 200-400мс синхронной работы на мобиле.
+    if (this._profileRebuiltAfterLazy) return;
+    // Дебаунс: filecomplete может стрелять подряд (несколько файлов почти
+    // одновременно). Если ребилд уже запланирован — не дублируем.
+    if (this._rebuildProfileTimer) return;
+    // time.delayedCall привязан к сцене → Phaser сам отменит при shutdown.
+    this._rebuildProfileTimer = this.time.delayedCall(80, () => {
+      this._rebuildProfileTimer = null;
       if (!this.scene?.isActive?.()) return;
-      if (this._panels?.profile) {
-        this._panels.profile.destroy(true);
-        this._panels.profile = null;
+      if (this._rebuildProfileBusy) return;
+      this._rebuildProfileBusy = true;
+      try {
+        if (this._panels?.profile) {
+          this._panels.profile.destroy(true);
+          this._panels.profile = null;
+        }
+        this._buildProfilePanel();
+        this._profileRebuiltAfterLazy = true;
+        if (this._activeTab === 'profile' && typeof this._switchTab === 'function') {
+          this._switchTab('profile');
+        }
+      } catch(e) {
+        console.warn('[LazyEq] rebuild profile failed:', e);
+        // Если _buildProfilePanel бросил исключение, _panels.profile = null
+        // и флаг _profileRebuiltAfterLazy не выставится → следующий
+        // filecomplete попробует снова.
+      } finally {
+        this._rebuildProfileBusy = false;
       }
-      this._buildProfilePanel();
-      if (this._activeTab === 'profile' && typeof this._switchTab === 'function') {
-        this._switchTab('profile');
-      }
-    } catch(e) {
-      console.warn('[LazyEq] rebuild profile failed:', e);
-      // Если _buildProfilePanel бросил исключение, _panels.profile = null.
-      // _switchTab('profile') обнаружит это и попробует перестроить снова.
-    } finally {
-      this._rebuildProfileBusy = false;
-    }
+    });
   },
 
   /* Awaitable: грузит ТОЛЬКО надетые предметы (6 PNG, ~3МБ).
