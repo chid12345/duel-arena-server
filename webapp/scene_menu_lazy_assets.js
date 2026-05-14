@@ -166,17 +166,26 @@ Object.assign(MenuScene.prototype, {
       // страницу. С filecomplete мы дёргаем ребилд сразу, как пришли
       // НАШИ 6 текстур, независимо от рестового хвоста.
       const need = new Set(todo.map(([k]) => k));
+      const onErr = f => console.warn('[LazyEq] priority loaderror:', f?.key, f?.src);
+      const cleanup = () => {
+        try { this.load.off('filecomplete', onFile); } catch(_) {}
+        try { this.load.off('loaderror', onErr); } catch(_) {}
+      };
       const onFile = (key) => {
         if (!need.has(key)) return;
         need.delete(key);
         if (need.size === 0) {
-          try { this.load.off('filecomplete', onFile); } catch(_) {}
+          cleanup();
           this._rebuildProfileAfterLazy();
           _resolveOnce();
         }
       };
       this.load.on('filecomplete', onFile);
-      this.load.on('loaderror', f => console.warn('[LazyEq] priority loaderror:', f?.key, f?.src));
+      this.load.on('loaderror', onErr);
+      // Если игрок уйдёт из Menu до завершения загрузки — Phaser destroy()
+      // LoaderPlugin сам снимет listeners, но при scene.restart() lifecycle
+      // переиспользует loader → listeners копились бы. Явно снимаем.
+      this.events.once('shutdown', cleanup);
 
       for (const [k, p] of todo) this.load.image(k, p);
       // Старт лоадера, только если он сейчас не работает. Иначе Phaser
@@ -185,7 +194,8 @@ Object.assign(MenuScene.prototype, {
 
       // Fail-safe: 5с лимит. Лучше показать профиль с вектор-фолбэком,
       // чем держать игрока на «Загрузка…» при слабой/отвалившейся сети.
-      setTimeout(_resolveOnce, 5000);
+      // time.delayedCall привязан к сцене — Phaser отменит при shutdown.
+      this.time.delayedCall(5000, _resolveOnce);
     });
   },
 
@@ -196,8 +206,9 @@ Object.assign(MenuScene.prototype, {
   _lazyLoadBotSkins() {
     if (this._lazyBotSkinsStarted) return;
     this._lazyBotSkinsStarted = true;
-    // Откладываем на 3с: дать время приоритетным 6 PNG экипировки загрузиться
-    setTimeout(() => {
+    // Откладываем на 3с: дать время приоритетным 6 PNG экипировки загрузиться.
+    // delayedCall (не setTimeout) — Phaser отменит при shutdown сцены.
+    this.time.delayedCall(3000, () => {
       if (!this.scene?.isActive?.()) return;
       const V = (typeof window !== 'undefined' && window.BUILD_VERSION) ? `?v=${window.BUILD_VERSION}` : '';
       // bot skins
@@ -214,9 +225,13 @@ Object.assign(MenuScene.prototype, {
         if (!this.textures.exists(`pvp_bg_${i}`))
           this.load.image(`pvp_bg_${i}`, `pvp_bg/${i}.png${V}`);
       }
-      this.load.on('loaderror', f => console.warn('[LazyBotSkins] loaderror:', f?.key));
+      const onErr = f => console.warn('[LazyBotSkins] loaderror:', f?.key);
+      this.load.on('loaderror', onErr);
+      // Снимаем listener при выходе из сцены или после завершения очереди.
+      this.load.once('complete', () => { try { this.load.off('loaderror', onErr); } catch(_) {} });
+      this.events.once('shutdown', () => { try { this.load.off('loaderror', onErr); } catch(_) {} });
       if (!this.load.isLoading()) this.load.start();
-    }, 3000);
+    });
   },
 
   /* Фоновая догрузка остальных текстур (для Рюкзака/Equipment).
@@ -228,17 +243,22 @@ Object.assign(MenuScene.prototype, {
   _lazyLoadRestTextures() {
     if (this._lazyRestStarted) return;
     this._lazyRestStarted = true;
-    setTimeout(() => {
+    // delayedCall — Phaser отменит таймер при shutdown сцены.
+    this.time.delayedCall(1500, () => {
       if (!this.scene?.isActive?.()) return;
       const priorityKeys = this._getEquippedTextureKeys();
       const todo = _LAZY_EQUIPMENT_ASSETS
         .filter(([k]) => !priorityKeys.has(k) && !this.textures.exists(k));
       if (!todo.length) return;
 
-      this.load.on('loaderror', f => console.warn('[LazyEq] rest loaderror:', f?.key, f?.src));
+      const onErr = f => console.warn('[LazyEq] rest loaderror:', f?.key, f?.src);
+      this.load.on('loaderror', onErr);
+      this.load.once('complete', () => { try { this.load.off('loaderror', onErr); } catch(_) {} });
+      this.events.once('shutdown', () => { try { this.load.off('loaderror', onErr); } catch(_) {} });
+
       for (const [k, p] of todo) this.load.image(k, p);
       if (!this.load.isLoading()) this.load.start();
-    }, 1500);
+    });
   },
 
 });
