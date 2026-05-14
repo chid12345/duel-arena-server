@@ -8,6 +8,8 @@
    ============================================================ */
 (() => {
 const CATS = ['weapon','shield','armor','belt','boots','ring1'];
+const SLOT_EMO = { weapon:'⚔️', shield:'🛡️', armor:'🥋', belt:'⛑️', boots:'👢', ring1:'💍' };
+const SLOT_LBL = { weapon:'Оружие', shield:'Щит', armor:'Тело', belt:'Голова', boots:'Ноги', ring1:'Кольцо' };
 const ORDER = ['common','rare','epic','mythic'];
 const TIERS = ['common','rare','epic','mythic'];
 const NAME = { common:'Новобранец', rare:'Герой', epic:'Чемпион', mythic:'Бог войны' };
@@ -55,9 +57,28 @@ function _bonusLine(b){
   return parts.join(' · ');
 }
 
-function _renderTierCard(tier, count, isActive){
+function _renderSlotMap(eq, tier){
+  // Полоска 6 значков: какие слоты дают вклад в этот тир.
+  // ✓ зелёный — предмет нужной редкости; иначе серый с другой иконкой.
+  return CATS.map(s => {
+    const r = eq?.[s]?.rarity;
+    const ok = r === tier;
+    const missing = !r;
+    const mismatch = !!r && r !== tier;
+    let cls = 'sb-sl';
+    if (ok) cls += ' on';
+    else if (missing) cls += ' empty';
+    else if (mismatch) cls += ' bad';
+    const tip = ok ? SLOT_LBL[s]
+                   : (missing ? `${SLOT_LBL[s]}: пусто` : `${SLOT_LBL[s]}: ${r}`);
+    return `<span class="${cls}" title="${tip}">${SLOT_EMO[s]}</span>`;
+  }).join('');
+}
+
+function _renderTierCard(tier, count, isActive, eq){
   const c = COLOR[tier];
   const activeBadge = isActive ? `<span class="sb-badge" style="color:${c};border-color:${c}">АКТИВЕН</span>` : '';
+  const slotMap = `<div class="sb-slots">${_renderSlotMap(eq, tier)}</div>`;
   const moreNeeded = count < 3 ? `<div class="sb-need">Соберите ещё ${3 - count} для бонуса</div>` : '';
   const rows = [3, 4, 5, 6].map(t => {
     const on = count >= t;
@@ -81,6 +102,7 @@ function _renderTierCard(tier, count, isActive){
       <span class="sb-count" style="color:${c}">${count}/6</span>
       ${activeBadge}
     </div>
+    ${slotMap}
     ${moreNeeded}
     <div class="sb-rows">${rows}</div>
     ${perkRow}
@@ -105,7 +127,7 @@ function pageHTML(p){
     <div class="sb-int-d">Носи 3+ предмета одной редкости — получишь бонус. Работает тот сет, где предметов больше всего (при равенстве — старшая редкость). 6/6 открывает уникальный перк.</div>
   </div>`;
 
-  const cards = TIERS.map(t => _renderTierCard(t, counts[t] || 0, t === active)).join('');
+  const cards = TIERS.map(t => _renderTierCard(t, counts[t] || 0, t === active, eq)).join('');
   return intro + cards;
 }
 

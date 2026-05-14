@@ -91,6 +91,11 @@ const CSS = `
 .sb-name{flex:1;letter-spacing:.5px}
 .sb-count{font-weight:800;font-size:13px;text-shadow:0 0 4px currentColor}
 .sb-badge{padding:2px 6px;border:1px solid currentColor;border-radius:5px;font-size:9px;font-weight:800;letter-spacing:.8px;text-shadow:0 0 6px currentColor;background:rgba(0,0,0,.3)}
+.sb-slots{display:flex;gap:6px;margin:5px 0 4px;flex-wrap:wrap}
+.sb-sl{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:6px;font-size:14px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03)}
+.sb-sl.on{border-color:var(--sb-c,#9cffa8);background:rgba(156,255,168,.10);box-shadow:0 0 6px var(--sb-c,#9cffa8) inset;filter:none}
+.sb-sl.bad{border-color:rgba(248,113,113,.45);opacity:.55;filter:grayscale(.7)}
+.sb-sl.empty{opacity:.30;filter:grayscale(1)}
 .sb-need{margin:4px 0 6px;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.04);color:#9aa0b8;font-size:10px}
 .sb-rows{display:flex;flex-direction:column;gap:3px;margin-top:5px}
 .sb-row{display:flex;align-items:center;gap:7px;padding:4px 5px;border-radius:5px;font-size:10.5px;line-height:1.3}
