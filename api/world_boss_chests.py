@@ -66,6 +66,9 @@ def _generate_wb_diamond_chest(db, uid: int) -> Dict:
         drops.append({"type": "item", "item_id": random.choice(
             ("scroll_str_12", "scroll_end_12", "scroll_crit_12", "scroll_hp_500", "scroll_all_12")
         )})
+    # 5% Premium 3 дня (как в магазинных алмазных ящиках)
+    if random.random() < 0.05:
+        drops.append({"type": "premium", "days": 3})
     return _apply_drops(db, uid, drops)
 
 
