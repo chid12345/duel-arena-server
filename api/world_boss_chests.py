@@ -61,8 +61,8 @@ def _generate_wb_diamond_chest(db, uid: int) -> Dict:
     # 5% джекпот: +100💎
     if random.random() < 0.05:
         drops.append({"type": "diamonds", "amount": 100})
-    # 3% USDT-свиток
-    if random.random() < 0.03:
+    # 5% USDT-свиток (как в магазинных алмазных ящиках)
+    if random.random() < 0.05:
         drops.append({"type": "item", "item_id": random.choice(
             ("scroll_str_12", "scroll_end_12", "scroll_crit_12", "scroll_hp_500", "scroll_all_12")
         )})
