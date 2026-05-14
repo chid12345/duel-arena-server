@@ -227,6 +227,9 @@ async function _doAction(scene, action, item) {
       action==='unequip' ? {slot:'belt'} : {item_id:item.id,slot:'belt'}
     );
     if (res?.ok) {
+      // Ghost-tap guard: после re-render палец игрока не должен пробить
+      // в кнопку под оверлеем (TabBar/БОИ-карта/Меню/etc) на touch-устройствах.
+      try { window.GhostTapGuard?.block?.(300); } catch(_) {}
       if (res.player)        { State.player=res.player; State.playerLoadedAt=Date.now(); }
       if (res.equipment)     State.equipment=res.equipment;
       if (res.owned_weapons) State.ownedWeapons=res.owned_weapons;

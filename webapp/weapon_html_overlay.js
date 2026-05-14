@@ -232,6 +232,8 @@ async function _doAction(scene, action, item) {
       action==='unequip' ? {slot:'weapon'} : {item_id:item.id,slot:'weapon'}
     );
     if (res?.ok) {
+      // Ghost-tap guard: после re-render палец не должен пробить в кнопку под оверлеем.
+      try { window.GhostTapGuard?.block?.(300); } catch(_) {}
       if (res.player)        { State.player=res.player; State.playerLoadedAt=Date.now(); }
       if (res.equipment)     State.equipment=res.equipment;
       if (res.owned_weapons) State.ownedWeapons=res.owned_weapons;
