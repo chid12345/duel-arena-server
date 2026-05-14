@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.19.71"
-VERSION_LABEL = "v2.19.71 — fix: viewport_lock — убран maxH-роста (застрял на 708 при окне 649), теперь чистый stable→current"
+VERSION = "2.19.72"
+VERSION_LABEL = "v2.19.72 — revert: вернул maxH-only-grows в viewport_lock (без него canvas усыхает 328x589, TabBar пропадает)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "15.90"
+GAME_VERSION = "15.91"

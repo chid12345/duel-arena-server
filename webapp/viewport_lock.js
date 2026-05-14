@@ -8,21 +8,21 @@
    ============================================================ */
 (function () {
   const tg = window.Telegram?.WebApp;
-  function apply() {
-    /* viewportStableHeight — высота WebApp ИСКЛЮЧАЯ клавиатуру (именно
-       то что нам нужно). Если 0/мусор — fallback на viewportHeight.
-       Раньше использовали maxH-only-grows, но он мог застрять на
-       большом старом значении (напр. 708 при реальном окне 649) —
-       тогда body выше реального viewport, Phaser FIT canvas в этот
-       завышенный body, и при resume Telegram refit'ит постоянно. */
+  let maxH = 0;
+  function candidateH() {
     const stable = tg?.viewportStableHeight || 0;
     const current = tg?.viewportHeight || window.innerHeight || 0;
-    const h = stable > 100 ? stable : current;
+    return stable > 100 ? stable : current;
+  }
+  function apply() {
+    const h = candidateH();
     if (h < 100) return;
-    document.documentElement.style.height = h + 'px';
-    document.body.style.height = h + 'px';
+    if (h > maxH) maxH = h;
+    document.documentElement.style.height = maxH + 'px';
+    document.body.style.height = maxH + 'px';
     window.__viewport_debug = {
-      stable, current, inner: window.innerHeight, applied: h,
+      stable: tg?.viewportStableHeight, current: tg?.viewportHeight,
+      inner: window.innerHeight, applied: maxH,
     };
   }
   if (tg) {
@@ -43,6 +43,7 @@
     window.addEventListener('load', apply);
   }
   window.addEventListener('orientationchange', () => {
+    maxH = 0;
     setTimeout(apply, 400);
   });
 
