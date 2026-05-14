@@ -15,19 +15,9 @@ const _BOX_IMG = {
   prem_box: 'prem_box.png',
 };
 
-function _rar(id) {
-  if (!id) return 'common';
-  const s = String(id).toLowerCase();
-  if (s.includes('titan') || s.includes('_500') || s === '_premium') return 'legendary';
-  if (s.includes('_12') || s.includes('usdt') || s.includes('epic')) return 'epic';
-  if (s.includes('_9') || s.includes('_6') || s === '_diamonds' || s.includes('diamond')) return 'rare';
-  return 'common';
-}
-
-// "Удача" — бонус-дроп (_diamonds/_premium/_usdt) или редкость ВЫШЕ тира ящика.
-const _BTIER={box_common:0,wb_gold_chest:0,box_rare:1,box_rare_c:1,wb_diamond_chest:1,box_epic_e2:2,box_epic_e3:2,prem_box:2};
-const _RT={common:0,rare:1,epic:2,legendary:3};
-function _luck(id,bid){if(!id) return false; if(String(id).startsWith('_')) return true; const bt=_BTIER[bid]; return bt!=null && (_RT[_rar(id)]||0)>bt;}
+// Таблицы редкости и helpers — в window.BoxRevealHelpers (см. box_reveal_helpers.js).
+const _rar  = (id)      => window.BoxRevealHelpers?.rar?.(id)      || 'common';
+const _luck = (id, bid) => window.BoxRevealHelpers?.luck?.(id, bid) || false;
 
 const _RCFG = {
   legendary: { nameCol: '#ffcc44', badge: 'ЛЕГЕНДАРНОЕ', star: '⭐', lucky: '🔥 везунчик!' },
