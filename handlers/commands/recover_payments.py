@@ -42,8 +42,35 @@ def _format_invoice_row(row: dict) -> str:
     status = row.get("status")
     amount = row.get("amount")
     asset = row.get("asset")
-    payload = (row.get("payload") or "")[:50]
+    payload = (row.get("payload") or "")[:30]
     return f"• #{iid} uid={uid} {amount}{asset} [{status}] {payload}"
+
+
+# Telegram лимит сообщения 4096 символов. Берём с запасом.
+_TG_MSG_LIMIT = 3800
+
+
+def _split_long_message(text: str) -> list[str]:
+    """Разбивает длинное сообщение на части по 3800 символов (по строкам)."""
+    if len(text) <= _TG_MSG_LIMIT:
+        return [text]
+    parts, current = [], ""
+    for line in text.split("\n"):
+        if len(current) + len(line) + 1 > _TG_MSG_LIMIT:
+            if current:
+                parts.append(current)
+            current = line
+        else:
+            current = (current + "\n" + line) if current else line
+    if current:
+        parts.append(current)
+    return parts
+
+
+async def _send_long(reply_func, text: str) -> None:
+    """Отправляет потенциально длинное сообщение, разбивая на куски при необходимости."""
+    for chunk in _split_long_message(text):
+        await tg_api_call(reply_func, chunk)
 
 
 class BotHandlersRecoverPayments:
@@ -59,9 +86,16 @@ class BotHandlersRecoverPayments:
             if not rows:
                 await tg_api_call(update.message.reply_text, "✅ Нет застрявших платежей.")
                 return
-            rows = rows[:50]
-            lines = [f"📋 Застрявших платежей: {len(rows)} (топ-50)"] + [_format_invoice_row(r) for r in rows]
-            await tg_api_call(update.message.reply_text, "\n".join(lines))
+            # Считаем pending vs paid отдельно — pending часто это просто брошенные счета.
+            pending = [r for r in rows if r.get("status") != "paid"]
+            paid = [r for r in rows if r.get("status") == "paid"]
+            show = (paid[:20] + pending[:20])[:30]
+            header = (
+                f"📋 Всего {len(rows)}: paid={len(paid)} pending={len(pending)}\n"
+                f"Показываю топ {len(show)} (приоритет — paid):"
+            )
+            lines = [header] + [_format_invoice_row(r) for r in show]
+            await _send_long(update.message.reply_text, "\n".join(lines))
         except Exception as e:
             logger.exception("lost_payments error uid=%s: %s", user.id, e)
             await tg_api_call(update.message.reply_text, f"❌ Ошибка: {type(e).__name__}: {e}")
@@ -77,10 +111,21 @@ class BotHandlersRecoverPayments:
             if not rows:
                 await tg_api_call(update.message.reply_text, "✅ У тебя нет потерянных платежей.")
                 return
-            lines = [f"📋 Твоих потерянных: {len(rows)}"] + [_format_invoice_row(r) for r in rows]
-            lines.append("\nЧтобы восстановить ВСЕ — напиши /recover_all_my")
-            lines.append("Или по одному — /recover <invoice_id>")
-            await tg_api_call(update.message.reply_text, "\n".join(lines))
+            # Считаем pending (брошенные/не-доставленные) и paid (точно потерянные)
+            pending = [r for r in rows if r.get("status") != "paid"]
+            paid = [r for r in rows if r.get("status") == "paid"]
+            header = (
+                f"📋 Всего твоих потерянных: {len(rows)}\n"
+                f"  💳 paid (точно потеряны): {len(paid)}\n"
+                f"  ⏳ pending (не оплачены или webhook не пришёл): {len(pending)}\n"
+            )
+            # Приоритет paid; берём топ 30 в сумме чтобы не превысить лимит
+            show = (paid[:20] + pending[:20])[:30]
+            lines = [header] + [_format_invoice_row(r) for r in show]
+            if len(rows) > len(show):
+                lines.append(f"\n…и ещё {len(rows) - len(show)} (не помещаются)")
+            lines.append("\nЧтобы восстановить — `/recover_all_my` или `/recover <invoice_id>`")
+            await _send_long(update.message.reply_text, "\n".join(lines))
         except Exception as e:
             logger.exception("my_lost error uid=%s: %s", user.id, e)
             await tg_api_call(update.message.reply_text, f"❌ Ошибка: {type(e).__name__}: {e}")
@@ -146,5 +191,5 @@ class BotHandlersRecoverPayments:
             f"📊 Восстановлено: {ok_count} | Не удалось: {fail_count}\n\n"
             + "\n".join(results)
         )
-        await tg_api_call(update.message.reply_text, summary)
+        await _send_long(update.message.reply_text, summary)
         logger.info("recover_all_my uid=%s ok=%s fail=%s", user.id, ok_count, fail_count)
