@@ -97,6 +97,15 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         eff_endur    = int(player.get("endurance") or PLAYER_START_ENDURANCE) \
                        + int(eq.get("agi_bonus", 0) or 0) \
                        + int(buffs.get("endurance", 0) or 0)
+        # Бонусы за комплект (set bonus): hp_pct и atk_pct
+        try:
+            from config.set_bonuses import apply_set_to_wb_stats
+            equipped_raw = db.get_equipment(uid)
+            eff_max_hp, eff_strength = apply_set_to_wb_stats(
+                eff_max_hp, eff_strength,
+                equipped_raw, player.get("current_class"))
+        except Exception:
+            pass
         ps = db.wb_join_raid(
             spawn_id, uid, max_hp=eff_max_hp,
             endurance=eff_endur,

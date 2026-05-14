@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.19.92"
-VERSION_LABEL = "v2.19.92 — fix: armor-слот в сете читается из players.current_class (гардероб=броня), убран dead-код EquipmentScene"
+VERSION = "2.19.93"
+VERSION_LABEL = "v2.19.93 — fix: Set-бонусы (hp%/atk%) теперь применяются и в Мировом Боссе (hit + QTE)"
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.11"
+GAME_VERSION = "16.12"

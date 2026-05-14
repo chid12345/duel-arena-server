@@ -69,6 +69,15 @@ async def world_boss_qte_bonus_inner(body: QteBonusBody, *, db, get_user_from_in
                     + int(eq.get("crit_bonus", 0) or 0)
                     + int(eq.get("intu_bonus", 0) or 0)
                     + int(buffs.get("crit", 0) or 0))
+        # Бонусы за комплект (set bonus) — applied на eff_strength
+        try:
+            from config.set_bonuses import apply_set_to_wb_stats
+            equipped_raw = db.get_equipment(uid)
+            _, eff_strength = apply_set_to_wb_stats(
+                int(player.get("max_hp", 100)), eff_strength,
+                equipped_raw, player.get("current_class"))
+        except Exception:
+            pass
 
         try:
             elapsed = (now_utc - _parse_ts(active["started_at"])).total_seconds()

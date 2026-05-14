@@ -180,6 +180,28 @@ def resolve_active_set(equipped: dict, current_class: str | None = None) -> dict
     }
 
 
+def apply_set_to_wb_stats(eff_max_hp: int, eff_strength: int,
+                          equipped: dict, current_class: str | None) -> tuple[int, int]:
+    """Применяет hp_pct и atk_pct активного сета к эффективным статам.
+
+    Используется в Мировом Боссе (`api/world_boss_hit.py`, `api/world_boss_qte.py`)
+    где бой идёт по особой формуле в обход start_battle. Возвращает (max_hp, strength)
+    с учётом сета. def_pct/accuracy в WB не применимы (босс бьёт %HP, не промахивается).
+
+    ⚠ Перки сета (second_wind/decisive_strike/cold_blood/gods_wrath) пока в WB не
+    применяются — это TODO, требует отдельной интеграции в WB-механику.
+    """
+    info = resolve_active_set(equipped, current_class)
+    if not info:
+        return eff_max_hp, eff_strength
+    b = info["bonuses"]
+    hp_pct = int(b.get("hp_pct", 0))
+    atk_pct = int(b.get("atk_pct", 0))
+    new_hp = int(eff_max_hp * (1 + hp_pct / 100)) if hp_pct else eff_max_hp
+    new_str = int(eff_strength * (1 + atk_pct / 100)) if atk_pct else eff_strength
+    return new_hp, new_str
+
+
 def bonuses_human(bonuses: dict) -> list[str]:
     """Текстовый список бонусов для UI."""
     lines = []
