@@ -121,11 +121,13 @@ def calc_boss_attack_damage(
 
     boss_str = float(boss_stat_profile.get("str", 1.0))
     raw = BOSS_ATTACK_PCT_HP * max_hp * boss_str
-    mitigated = raw / mults["defense_mult"]
+    # Защита от set-bonus (eq_def_pct: 0.05 = 5%) дополнительно снижает урон.
+    set_def_pct = float(player_state.get("_eq_def_pct_set") or 0.0)
+    mitigated = raw / mults["defense_mult"] / (1.0 + set_def_pct)
     dmg = max(1, int(mitigated))
     return (dmg, False, {
         "raw": raw, "defense_mult": mults["defense_mult"],
-        "boss_str": boss_str,
+        "boss_str": boss_str, "set_def_pct": set_def_pct,
     })
 
 

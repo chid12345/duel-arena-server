@@ -119,7 +119,7 @@ def register_tma_player_route(
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
             equipment, owned_weapons, eq_stats_cached, set_info = _fetch_equipment_parallel(
-                db, uid, current_class=cached.get("current_class"))
+                db, uid, current_class=cached.get("current_class") or cached.get("warrior_type"))
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
                     "owned_weapons": owned_weapons, "set_bonus": set_info, "cached": True, "_sv": VERSION}
 
@@ -176,7 +176,7 @@ def register_tma_player_route(
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
         equipment, owned_weapons, eq_stats_fresh, set_info = _fetch_equipment_parallel(
-            db, uid, current_class=player.get("current_class"))
+            db, uid, current_class=player.get("current_class") or player.get("warrior_type"))
         return {
             "ok": True,
             "player": _player_api(player, combined_buffs=cb, eq_stats=eq_stats_fresh),

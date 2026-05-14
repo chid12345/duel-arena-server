@@ -144,6 +144,34 @@ class WorldBossPlayerStateMixin:
         conn.close()
         return (new_hp, is_dead)
 
+    def wb_apply_second_wind(
+        self, spawn_id: int, user_id: int, heal: int = 100
+    ) -> Optional[int]:
+        """Set-bonus perk «Второе дыхание»: +N HP в рейде, раз за рейд.
+        Атомарно: heal применяется только если sb_second_wind_used=0 и игрок жив.
+        Возвращает новый current_hp или None если перк уже использован/игрок мёртв.
+        """
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_player_state "
+            "SET current_hp = MIN(max_hp, current_hp + ?), sb_second_wind_used = 1 "
+            "WHERE spawn_id=? AND user_id=? AND is_dead=0 AND sb_second_wind_used=0",
+            (int(heal), int(spawn_id), int(user_id)),
+        )
+        if cur.rowcount == 0:
+            conn.close()
+            return None
+        cur.execute(
+            "SELECT current_hp FROM world_boss_player_state "
+            "WHERE spawn_id=? AND user_id=?",
+            (int(spawn_id), int(user_id)),
+        )
+        row = cur.fetchone()
+        conn.commit()
+        conn.close()
+        return int(row["current_hp"]) if row else None
+
     def wb_resurrect_player(
         self, spawn_id: int, user_id: int, hp_pct: float
     ) -> Optional[int]:

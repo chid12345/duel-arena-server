@@ -49,7 +49,10 @@ class BattleSetPerksMixin:
         Армор-слот в этой игре читается из `players.current_class` (гардероб = броня).
         """
         from config.set_bonuses import resolve_active_set
-        info = resolve_active_set(equipped, current_class=player.get("current_class"))
+        # current_class имеет приоритет; если пусто — warrior_type (у некоторых игроков
+        # «броня» хранится только там)
+        _cls_hint = player.get("current_class") or player.get("warrior_type")
+        info = resolve_active_set(equipped, current_class=_cls_hint)
         player["_set_info"] = info  # для API/UI; None если порог < 3
         if not info:
             return

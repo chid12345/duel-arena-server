@@ -58,6 +58,18 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
     ps = db.get_wb_player_state(spawn_id, user_id)
     if not ps or int(ps.get("is_dead") or 0):
         return
+    # Set-bonus: def_pct снижает входящий урон, perk second_wind — после удара.
+    _sb = {"def_pct": 0.0, "perk_id": None}
+    try:
+        from config.set_bonuses import get_wb_set_data
+        player = db.get_or_create_player(user_id, "")
+        equipped = db.get_equipment(user_id)
+        _sb = get_wb_set_data(equipped, player.get("current_class") or player.get("warrior_type"))
+        if _sb["def_pct"]:
+            ps = dict(ps)
+            ps["_eq_def_pct_set"] = _sb["def_pct"]
+    except Exception:
+        pass
     dmg, dodged, _ = calc_boss_attack_damage(
         ps, stat_profile,
         scroll_1=ps.get("raid_scroll_1"),
@@ -80,6 +92,17 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
         "wb battle: boss hit user=%s dmg=%s → hp=%s dead=%s",
         user_id, dmg, new_hp, is_dead,
     )
+    # Set-bonus perk: «Второе дыхание» (серебро 6/6) — раз в рейд, при HP < 30% +100 HP.
+    try:
+        if (_sb["perk_id"] == "second_wind"
+            and not is_dead
+            and not int(ps.get("sb_second_wind_used") or 0)):
+            max_hp = max(1, int(ps.get("max_hp") or 1))
+            if new_hp > 0 and new_hp / max_hp < 0.30:
+                db.wb_apply_second_wind(spawn_id, user_id, heal=100)
+                logger.info("wb battle: second_wind triggered uid=%s +100hp", user_id)
+    except Exception as e:
+        logger.warning("wb battle: second_wind error uid=%s: %s", user_id, e)
 
 
 def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict) -> dict | None:

@@ -40,9 +40,13 @@ function _classIdToRarity(cls){
 }
 
 function _armorRarity(eq){
-  // current_class имеет приоритет (это и есть «броня» в игре); fallback на eq.armor
-  const cls = window.State?.player?.current_class;
-  return _classIdToRarity(cls) || eq?.armor?.rarity || null;
+  // current_class имеет приоритет (это и есть «броня» в игре). Если пусто —
+  // fallback на warrior_type (у некоторых игроков «броня» там), потом на eq.armor.
+  const p = window.State?.player || {};
+  return _classIdToRarity(p.current_class)
+      || _classIdToRarity(p.warrior_type)
+      || eq?.armor?.rarity
+      || null;
 }
 
 function _slotRarity(eq, slot){

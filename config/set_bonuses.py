@@ -184,22 +184,34 @@ def apply_set_to_wb_stats(eff_max_hp: int, eff_strength: int,
                           equipped: dict, current_class: str | None) -> tuple[int, int]:
     """Применяет hp_pct и atk_pct активного сета к эффективным статам.
 
-    Используется в Мировом Боссе (`api/world_boss_hit.py`, `api/world_boss_qte.py`)
-    где бой идёт по особой формуле в обход start_battle. Возвращает (max_hp, strength)
-    с учётом сета. def_pct/accuracy в WB не применимы (босс бьёт %HP, не промахивается).
+    Возвращает (max_hp, strength) с учётом сета. Используется в WB hit/QTE.
+    Для расширенных данных (def_pct, perk_id) — см. `get_wb_set_data`.
+    """
+    data = get_wb_set_data(equipped, current_class)
+    new_hp = int(eff_max_hp * (1 + data["hp_pct"] / 100)) if data["hp_pct"] else eff_max_hp
+    new_str = int(eff_strength * (1 + data["atk_pct"] / 100)) if data["atk_pct"] else eff_strength
+    return new_hp, new_str
 
-    ⚠ Перки сета (second_wind/decisive_strike/cold_blood/gods_wrath) пока в WB не
-    применяются — это TODO, требует отдельной интеграции в WB-механику.
+
+def get_wb_set_data(equipped: dict, current_class: str | None) -> dict:
+    """Сводка set-бонуса для Мирового Босса: проценты + perk_id + кол-во.
+
+    Возвращает: {hp_pct, atk_pct, def_pct, perk_id, count, rarity}.
+    Если сет не активен — все нули и None.
     """
     info = resolve_active_set(equipped, current_class)
     if not info:
-        return eff_max_hp, eff_strength
+        return {"hp_pct": 0, "atk_pct": 0, "def_pct": 0.0,
+                "perk_id": None, "count": 0, "rarity": None}
     b = info["bonuses"]
-    hp_pct = int(b.get("hp_pct", 0))
-    atk_pct = int(b.get("atk_pct", 0))
-    new_hp = int(eff_max_hp * (1 + hp_pct / 100)) if hp_pct else eff_max_hp
-    new_str = int(eff_strength * (1 + atk_pct / 100)) if atk_pct else eff_strength
-    return new_hp, new_str
+    return {
+        "hp_pct":  int(b.get("hp_pct", 0)),
+        "atk_pct": int(b.get("atk_pct", 0)),
+        "def_pct": float(b.get("def_pct_bonus", 0.0)),
+        "perk_id": info.get("perk"),
+        "count":   int(info.get("count", 0)),
+        "rarity":  info.get("rarity"),
+    }
 
 
 def bonuses_human(bonuses: dict) -> list[str]:

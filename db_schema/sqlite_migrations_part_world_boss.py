@@ -204,4 +204,11 @@ MIGRATIONS_PART_WORLD_BOSS = [
         )""",
         "CREATE INDEX IF NOT EXISTS idx_wb_weekly_week ON wb_weekly_scores (week_key, total_damage DESC)",
     ]),
+
+    # 20. Set-bonus perks state: флаг использования one-shot перка second_wind.
+    #     Остальные перки (decisive_strike, cold_blood, gods_wrath) считаются
+    #     из hits_count, отдельной колонки не требуют.
+    ("2026_05_14_119_wb_set_perks", [
+        "ALTER TABLE world_boss_player_state ADD COLUMN sb_second_wind_used INTEGER DEFAULT 0",
+    ]),
 ]

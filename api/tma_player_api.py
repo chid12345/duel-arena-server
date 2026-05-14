@@ -257,6 +257,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             )
         ),
         "warrior_type": (player.get("warrior_type") or "default"),
+        "current_class": (player.get("current_class") or ""),
         "inventory_unseen": int(player.get("inventory_unseen", 0) or 0),
         "eq_stats": {
             "atk_bonus":    _eq_atk,

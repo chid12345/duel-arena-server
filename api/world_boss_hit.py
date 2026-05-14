@@ -97,13 +97,14 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         eff_endur    = int(player.get("endurance") or PLAYER_START_ENDURANCE) \
                        + int(eq.get("agi_bonus", 0) or 0) \
                        + int(buffs.get("endurance", 0) or 0)
-        # Бонусы за комплект (set bonus): hp_pct и atk_pct
+        # Бонусы за комплект (set bonus): hp_pct, atk_pct + perk_id (для perks ниже)
+        _sb = {"hp_pct": 0, "atk_pct": 0, "def_pct": 0.0, "perk_id": None, "count": 0}
         try:
-            from config.set_bonuses import apply_set_to_wb_stats
+            from config.set_bonuses import get_wb_set_data
             equipped_raw = db.get_equipment(uid)
-            eff_max_hp, eff_strength = apply_set_to_wb_stats(
-                eff_max_hp, eff_strength,
-                equipped_raw, player.get("current_class"))
+            _sb = get_wb_set_data(equipped_raw, player.get("current_class") or player.get("warrior_type"))
+            eff_max_hp   = int(eff_max_hp * (1 + _sb["hp_pct"] / 100)) if _sb["hp_pct"] else eff_max_hp
+            eff_strength = int(eff_strength * (1 + _sb["atk_pct"] / 100)) if _sb["atk_pct"] else eff_strength
         except Exception:
             pass
         ps = db.wb_join_raid(
@@ -160,6 +161,19 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             scroll_2=ps.get("raid_scroll_2"),
             is_vulnerability_window=vuln,
         )
+
+        # Set-bonus перки (атака игрока по боссу). hits_count — кол-во УЖЕ нанесённых
+        # ударов; этот удар — следующий по счёту (hits_count + 1).
+        _perk = _sb.get("perk_id")
+        _hits_before = int(ps.get("hits_count") or 0)
+        if _perk == "decisive_strike" and _hits_before == 0:
+            dmg = int(dmg * 1.5)  # первый удар +50%
+        elif _perk == "cold_blood":
+            ramp = min(10, _hits_before) / 100.0
+            if ramp > 0:
+                dmg = int(dmg * (1.0 + ramp))
+        if _perk == "gods_wrath" and (_hits_before + 1) % 5 == 0:
+            dmg = dmg * 2  # каждый 5-й удар x2
 
         # Тактика по зонам (Фаза 2): модификатор урона + контр-урон по игроку.
         # Если клиент не прислал зоны (старый клиент) — режим бэкап-совместимости.

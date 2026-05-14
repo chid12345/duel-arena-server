@@ -69,13 +69,14 @@ async def world_boss_qte_bonus_inner(body: QteBonusBody, *, db, get_user_from_in
                     + int(eq.get("crit_bonus", 0) or 0)
                     + int(eq.get("intu_bonus", 0) or 0)
                     + int(buffs.get("crit", 0) or 0))
-        # Бонусы за комплект (set bonus) — applied на eff_strength
+        # Бонусы за комплект (set bonus): atk_pct + perk_id (для perks ниже)
+        _sb = {"atk_pct": 0, "perk_id": None}
         try:
-            from config.set_bonuses import apply_set_to_wb_stats
+            from config.set_bonuses import get_wb_set_data
             equipped_raw = db.get_equipment(uid)
-            _, eff_strength = apply_set_to_wb_stats(
-                int(player.get("max_hp", 100)), eff_strength,
-                equipped_raw, player.get("current_class"))
+            _sb = get_wb_set_data(equipped_raw, player.get("current_class") or player.get("warrior_type"))
+            if _sb["atk_pct"]:
+                eff_strength = int(eff_strength * (1 + _sb["atk_pct"] / 100))
         except Exception:
             pass
 
@@ -94,6 +95,18 @@ async def world_boss_qte_bonus_inner(body: QteBonusBody, *, db, get_user_from_in
             is_vulnerability_window=vuln,
         )
         bonus_dmg = int(base_dmg * 1.5)
+
+        # Set-bonus перки на QTE (QTE считается за «удар» как и обычный hit)
+        _perk = _sb.get("perk_id")
+        _hits_before = int(ps.get("hits_count") or 0)
+        if _perk == "decisive_strike" and _hits_before == 0:
+            bonus_dmg = int(bonus_dmg * 1.5)
+        elif _perk == "cold_blood":
+            ramp = min(10, _hits_before) / 100.0
+            if ramp > 0:
+                bonus_dmg = int(bonus_dmg * (1.0 + ramp))
+        if _perk == "gods_wrath" and (_hits_before + 1) % 5 == 0:
+            bonus_dmg = bonus_dmg * 2
 
         new_hp = db.apply_damage_to_boss(spawn_id, bonus_dmg)
         if new_hp is None:
