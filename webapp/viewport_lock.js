@@ -55,11 +55,24 @@
     setTimeout(apply, 400);
   });
 
-  /* Debug: тройной тап в правом верхнем углу → alert с диагностикой */
+  /* После resume из фона — форсим Phaser Scale.refresh + apply, чтобы сбросить
+     рассинхрон canvas-размера с body-размером, который вызывает «моргание»
+     HTML-оверлеев в Telegram WebApp на Android. Задержка 250мс — даёт
+     Telegram закончить анимацию expand перед пересчётом. */
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) return;
+    setTimeout(() => {
+      try { apply(); } catch (_) {}
+      try { window.game?.scale?.refresh?.(); } catch (_) {}
+    }, 250);
+  });
+
+  /* Debug: тройной тап в верхнем-левом углу (90×90 — крупная зона) →
+     alert с диагностикой. pointerdown в capture-фазе перехватит тап
+     ДО того как Phaser canvas его съест. */
   let _tapCnt = 0, _tapTimer = null;
-  document.addEventListener('click', (e) => {
-    const w = window.innerWidth, h = window.innerHeight;
-    if (e.clientX < w - 60 || e.clientY > 60) { _tapCnt = 0; return; }
+  document.addEventListener('pointerdown', (e) => {
+    if (e.clientX > 90 || e.clientY > 90) { _tapCnt = 0; return; }
     _tapCnt++;
     clearTimeout(_tapTimer);
     _tapTimer = setTimeout(() => { _tapCnt = 0; }, 800);
@@ -73,8 +86,8 @@
         `stable=${d.stable} current=${d.current} inner=${d.inner} applied=${d.applied}\n` +
         `body=${document.body.offsetWidth}x${document.body.offsetHeight}\n` +
         `canvas=${r ? Math.round(r.width) + 'x' + Math.round(r.height) : '?'}\n` +
-        `window=${w}x${h}`
+        `window=${window.innerWidth}x${window.innerHeight}`
       );
     }
-  });
+  }, true);
 })();
