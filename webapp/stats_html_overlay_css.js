@@ -82,6 +82,34 @@ const CSS = `
 .st-it-b{padding:7px 9px;border-radius:8px;background:linear-gradient(135deg,#ff3ba8,#a01e6e);color:#fff;font-size:10px;font-weight:800;cursor:pointer;user-select:none;box-shadow:0 0 8px rgba(255,59,168,.45);white-space:nowrap}
 .st-it-b:active{transform:scale(.94)}
 .st-it-b.boss{background:linear-gradient(135deg,#00aaff,#0055a8);box-shadow:0 0 8px rgba(0,170,255,.5)}
+
+/* ── Страница «Комплект» (set bonus) ────────────────────────── */
+.sb-card{border:1px solid var(--sb-c,#607090);box-shadow:0 0 10px var(--sb-c,#607090);}
+.sb-card.sb-active{box-shadow:0 0 16px var(--sb-c,#607090),inset 0 0 18px rgba(255,255,255,.04)}
+.sb-head{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sb-emo{font-size:18px}
+.sb-name{flex:1;letter-spacing:.5px}
+.sb-count{font-weight:800;font-size:13px;text-shadow:0 0 4px currentColor}
+.sb-badge{padding:2px 6px;border:1px solid currentColor;border-radius:5px;font-size:9px;font-weight:800;letter-spacing:.8px;text-shadow:0 0 6px currentColor;background:rgba(0,0,0,.3)}
+.sb-need{margin:4px 0 6px;padding:5px 8px;border-radius:6px;background:rgba(255,255,255,.04);color:#9aa0b8;font-size:10px}
+.sb-rows{display:flex;flex-direction:column;gap:3px;margin-top:5px}
+.sb-row{display:flex;align-items:center;gap:7px;padding:4px 5px;border-radius:5px;font-size:10.5px;line-height:1.3}
+.sb-row.on{background:rgba(156,255,168,.07);color:#c8e8d4}
+.sb-row.off{color:#5a5a76;opacity:.55}
+.sb-row .sb-mark{width:12px;text-align:center;font-weight:800}
+.sb-row.on .sb-mark{color:#9cffa8;text-shadow:0 0 5px currentColor}
+.sb-row .sb-th{font-weight:800;color:var(--sb-c,#a0aec0);min-width:30px}
+.sb-row.off .sb-th{color:#4a4a66}
+.sb-row .sb-bn{flex:1;color:inherit}
+.sb-perk{margin-top:7px;padding:7px 9px;border-radius:7px;border:1px solid rgba(255,200,60,.35);background:rgba(255,200,60,.07)}
+.sb-perk.off{opacity:.40;filter:grayscale(.65)}
+.sb-perk-h{font-size:11px;font-weight:800;color:#ffd07c;text-shadow:0 0 6px currentColor;margin-bottom:3px}
+.sb-perk-d{font-size:10px;color:#e3d5b3;line-height:1.35}
+.sb-empty{text-align:center;padding:18px 12px}
+.sb-empty .t{color:#80c8ff}
+.sb-intro{border:1px dashed rgba(0,240,255,.25)}
+.sb-intro .t{color:#00f0ff}
+.sb-int-d{font-size:10.5px;color:#80c8ff;line-height:1.45;padding-top:4px}
 `;
 function inject(){
   if (document.getElementById('st-style')) return;

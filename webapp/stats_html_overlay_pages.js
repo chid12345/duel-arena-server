@@ -124,12 +124,10 @@ function invHTML(inv, subTab){
 }
 
 function rateHTML(p){
-  const wins=p.wins|0, losses=p.losses|0, total=wins+losses, wr=total?Math.round(wins/total*100):0, streak=p.win_streak|0;
-  return `<div class="st-bon"><div class="t">🏆 Боевая статистика</div>
-    <div class="r"><span class="k">Победы</span><span class="v">${wins}</span></div>
-    <div class="r"><span class="k">Поражения</span><span class="v neg">${losses}</span></div>
-    <div class="r"><span class="k">Винрейт</span><span class="v" style="color:#ffd166">${wr}%</span></div>
-    <div class="r"><span class="k">Серия побед</span><span class="v" style="color:#fb923c">${streak} 🔥</span></div></div>`;
+  // Перепрофилирована: показывает страницу «Комплект» (set bonus).
+  // Старая боевая статистика (Победы/Серия) убрана — дублировала шапку Профиля.
+  if (window.SetBonusPage?.html) return window.SetBonusPage.html(p);
+  return `<div class="st-bon"><div class="em">Загрузка страницы комплектов…</div></div>`;
 }
 
 window.StatsHTMLPages = { WT, statsHTML, bonusHTML, invHTML, rateHTML };

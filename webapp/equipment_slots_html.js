@@ -168,8 +168,6 @@ function _dispatch(slot, scene) {
 function _close() {
   const el = document.getElementById('eqs-overlay');
   if (el) { if (el._offResize) el._offResize(); el.remove(); }
-  // Set-bonus баннер живёт парой со слотами — закрываем синхронно
-  try { window.SetBonusHTML?.close?.(); } catch(_) {}
 }
 
 function show(scene) {
@@ -249,9 +247,6 @@ function show(scene) {
 
   scene.events.once('shutdown', _close);
   scene.events.once('destroy',  _close);
-
-  // Set-bonus баннер — пара слотов экипировки. Появляется автоматически на профиле.
-  try { window.SetBonusHTML?.show?.(scene); } catch(_) {}
 }
 
 function refresh(scene) { show(scene); }
