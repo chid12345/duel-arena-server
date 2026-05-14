@@ -47,22 +47,6 @@
     setTimeout(apply, 400);
   });
 
-  /* После resume из фона Telegram анимирует expand WebApp ~300-500мс,
-     window.resize стреляет десятки раз, Phaser FIT каждый раз refit'ит
-     canvas → каскад reflow HTML-оверлеев = «моргание». Лечим жёстко:
-     отключаем Phaser scale listeners на время анимации, ждём 500мс,
-     дёргаем refresh ровно один раз. apply() тоже один раз — после. */
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) return;
-    const sc = window.game?.scale;
-    try { sc?.stopListeners?.(); } catch (_) {}
-    setTimeout(() => {
-      try { apply(); } catch (_) {}
-      try { sc?.refresh?.(); } catch (_) {}
-      try { sc?.startListeners?.(); } catch (_) {}
-    }, 500);
-  });
-
   /* Debug: тройной тап в верхнем-левом углу (90×90 — крупная зона) →
      alert с диагностикой. pointerdown в capture-фазе перехватит тап
      ДО того как Phaser canvas его съест. */
