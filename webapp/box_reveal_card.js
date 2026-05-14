@@ -25,10 +25,10 @@ function _rar(id) {
 }
 
 const _RCFG = {
-  legendary: { nameCol: '#ffcc44', badge: 'ЛЕГЕНДАРНОЕ', star: '⭐' },
-  epic:      { nameCol: '#cc88ff', badge: 'ЭПИЧЕСКОЕ',   star: ''  },
-  rare:      { nameCol: '#88bbff', badge: 'РЕДКОЕ',       star: ''  },
-  common:    { nameCol: '#c8d8f0', badge: 'ОБЫЧНОЕ',      star: ''  },
+  legendary: { nameCol: '#ffcc44', badge: 'ЛЕГЕНДАРНОЕ', star: '⭐', lucky: '🔥 везунчик!' },
+  epic:      { nameCol: '#cc88ff', badge: 'ЭПИЧЕСКОЕ',   star: '',   lucky: '⚡ круто!'    },
+  rare:      { nameCol: '#88bbff', badge: 'РЕДКОЕ',       star: '',   lucky: '✨ удача!'    },
+  common:    { nameCol: '#c8d8f0', badge: 'ОБЫЧНОЕ',      star: '',   lucky: null          },
 };
 
 const _CSS = `
@@ -63,9 +63,14 @@ const _CSS = `
 .brc-list{padding:10px 12px 6px;display:flex;flex-direction:column;gap:6px;
   max-height:55vmax;overflow-y:auto;scrollbar-width:none}
 .brc-list::-webkit-scrollbar{display:none}
-.brc-row{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;
+.brc-row{position:relative;display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:11px;
   animation:brc-row .26s ease both;
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+@keyframes brc-lck{0%,100%{opacity:.55;filter:brightness(.95)}50%{opacity:1;filter:brightness(1.45) drop-shadow(0 0 6px currentColor)}}
+.brc-lck{position:absolute;top:-6px;right:10px;font-size:8px;font-weight:900;letter-spacing:1.2px;padding:2px 6px;border-radius:4px;text-transform:uppercase;animation:brc-lck 1s ease-in-out infinite;line-height:1.2;pointer-events:none;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;z-index:2}
+.brc-lck.r-rare{background:#0a1538;color:#9cc8ff;border:1px solid rgba(136,187,255,.55)}
+.brc-lck.r-epic{background:#1a0840;color:#d9a8ff;border:1px solid rgba(204,136,255,.55)}
+.brc-lck.r-legendary{background:#3a1a00;color:#ffd766;border:1px solid rgba(255,200,80,.6)}
 .brc-row.r-common{background:rgba(255,255,255,.04);border:1px solid rgba(0,245,255,.1)}
 .brc-row.r-rare{background:rgba(10,40,120,.25);border:1px solid rgba(68,136,255,.35);
   box-shadow:0 0 8px rgba(68,136,255,.1) inset}
@@ -142,7 +147,9 @@ window.BoxRevealCard = {
       const rowIco = (window.BoxIcons && window.BoxIcons.imageFor(it.item_id))
         ? window.BoxIcons.htmlIcon(it.item_id, it.icon || '🎁', 28)
         : (it.icon || '🎁');
+      const lck = cfg.lucky ? `<div class="brc-lck r-${r}">${cfg.lucky}</div>` : '';
       return `<div class="brc-row r-${r}" style="animation-delay:${80 + i * 55}ms">
+        ${lck}
         <span class="brc-ico">${rowIco}</span>
         <div class="brc-txt">
           <div class="brc-name" style="color:${cfg.nameCol}">${it.name || it.item_id || '?'}</div>
