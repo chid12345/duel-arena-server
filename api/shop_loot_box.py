@@ -73,8 +73,8 @@ def _generate_rare_b(db, uid) -> Dict[str, Any]:
     if random.random() < 0.03:
         drops.append({"type": "diamonds", "amount": 100})
 
-    # 3% бонус: Premium 3 дня
-    if random.random() < 0.03:
+    # 5% бонус: Premium 3 дня
+    if random.random() < 0.05:
         drops.append({"type": "premium", "days": 3})
 
     return _apply_drops(db, uid, drops)
@@ -101,8 +101,8 @@ def _generate_rare_c(db, uid) -> Dict[str, Any]:
     if random.random() < 0.05:
         drops.append({"type": "diamonds", "amount": 200})
 
-    # 3% бонус: Premium 3 дня
-    if random.random() < 0.03:
+    # 5% бонус: Premium 3 дня
+    if random.random() < 0.05:
         drops.append({"type": "premium", "days": 3})
 
     return _apply_drops(db, uid, drops)

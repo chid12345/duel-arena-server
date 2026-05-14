@@ -44,8 +44,8 @@ const DATA = {
     ['exchange_large', 'img:exchange.png','50💎 → 5000🪙',   50,  'diamonds','Максимальный курс',      null, false],
     ['stat_reset',     '🔄','Сброс статов',       75, 'diamonds','Сброс всех статов',     null,   false],
     ['box_common',  'img:chest_gold.png',   'Обычный ящик',  150, 'gold',    '2–4 золотых свитка · 5% алмазный свиток · 3% +10–20💎', null, false],
-    ['box_rare',    'img:chest_diamond.png','Редкий ящик',    20,  'diamonds','3–6 алмазных свитков · 5% USDT-свиток · 3% +100💎 · 3% Premium 3 дн.', null, false],
-    ['box_rare_c',  'img:chest_diamond.png','Редкий ящик+',   30,  'diamonds','2 гарант. алмазных + 0–4 бонус · 5% USDT-свиток · 5% +200💎 · 3% Premium 3 дн.', null, false],
+    ['box_rare',    'img:chest_diamond.png','Редкий ящик',    20,  'diamonds','3–6 алмазных свитков · 5% USDT-свиток · 3% +100💎 · 5% Premium 3 дн.', null, false],
+    ['box_rare_c',  'img:chest_diamond.png','Редкий ящик+',   30,  'diamonds','2 гарант. алмазных + 0–4 бонус · 5% USDT-свиток · 5% +200💎 · 5% Premium 3 дн.', null, false],
   ],
 };
 
@@ -216,7 +216,7 @@ window.ShopHtmlItems = {
       rows = _r('💎','Алмазных свитков × 3–6','гарантировано','vc')
            + _r('📜','USDT-свиток','5% шанс','vo')
            + _r('💰','+100 алмазов','3% шанс','vo')
-           + _r('👑','Premium 3 дня','3% шанс','vp')
+           + _r('👑','Premium 3 дня','5% шанс','vp')
            + _r('🎒','Содержимое','→ в рюкзак','vm');
     }
     else if (iid === 'box_rare_c') {
@@ -225,7 +225,7 @@ window.ShopHtmlItems = {
            + _r('💎','×0–4 алмазных свитка','бонус','vc')
            + _r('📜','USDT-свиток','5% шанс','vo')
            + _r('💰','+200 алмазов','5% шанс','vg')
-           + _r('👑','Premium 3 дня','3% шанс','vp')
+           + _r('👑','Premium 3 дня','5% шанс','vp')
            + _r('🎒','Содержимое','→ в рюкзак','vm');
     }
     // Предметы с badge (броня/мечи/шлемы — временные)
