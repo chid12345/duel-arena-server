@@ -283,6 +283,7 @@ function _render(scene, view) {
     const btn=e.target.closest('[data-act]');
     if (btn) {
       e.stopPropagation();
+      try { window.GhostTapGuard?.block?.(500); } catch(_) {}
       const w=items.find(x=>x.id===btn.dataset.id);
       if (w) _doAction(scene,btn.dataset.act,w);
       return;
