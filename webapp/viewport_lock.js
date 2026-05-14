@@ -38,7 +38,15 @@
     /* Серия попыток — Telegram expand асинхронный, первые значения могут
        быть малыми. Берём МАКСИМУМ из всех увиденных. */
     [0, 100, 300, 700, 1500].forEach(d => setTimeout(apply, d));
-    tg.onEvent('viewportChanged', apply);
+    /* viewportChanged может прилетать пачкой при resume из фона
+       (Telegram анимирует expand): без debounce body высота прыгает,
+       Phaser FIT каждый раз пересчитывает canvas → мерцание HUD/оверлеев.
+       Дебаунс 120мс — apply() сработает один раз когда viewport устаканится. */
+    let _vpDeb = null;
+    tg.onEvent('viewportChanged', () => {
+      clearTimeout(_vpDeb);
+      _vpDeb = setTimeout(apply, 120);
+    });
   } else {
     window.addEventListener('load', apply);
   }
