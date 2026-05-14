@@ -27,7 +27,11 @@ class BattleDamageMixin:
         flat = STRENGTH_DAMAGE_FLAT_PER_LEVEL * level
         scaled = STRENGTH_DAMAGE_SCALE * (strength ** STRENGTH_DAMAGE_POWER)
         eq_atk = int(attacker.get("_eq_atk_bonus", 0) or 0)
-        return max(1, int(flat + scaled + eq_atk))
+        base = flat + scaled + eq_atk
+        atk_pct = int(attacker.get("_eq_atk_pct", 0) or 0)
+        if atk_pct:
+            base = base * (1.0 + atk_pct / 100.0)
+        return max(1, int(base))
 
     def _calculate_damage_detailed(
         self,

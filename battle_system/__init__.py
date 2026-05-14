@@ -7,6 +7,7 @@ from battle_system.mixins.timer import BattleTimerMixin
 from battle_system.mixins.choices import BattleChoicesMixin
 from battle_system.mixins.execute import BattleExecuteMixin
 from battle_system.mixins.execute_afk import BattleExecuteAfkMixin
+from battle_system.mixins.set_perks import BattleSetPerksMixin
 from battle_system.mixins.combat_log import BattleCombatLogMixin
 from battle_system.mixins.exchange_text import BattleExchangeMixin
 from battle_system.mixins.damage import BattleDamageMixin
@@ -25,6 +26,7 @@ class BattleSystem(
     BattleChoicesMixin,
     BattleExecuteMixin,
     BattleExecuteAfkMixin,
+    BattleSetPerksMixin,
     BattleCombatLogMixin,
     BattleExchangeMixin,
     BattleDamageArmorMixin,

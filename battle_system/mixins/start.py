@@ -147,6 +147,7 @@ class BattleStartMixin:
             return
         try:
             stats = db.get_equipment_stats(int(uid))
+            equipped = db.get_equipment(int(uid))
         except Exception:
             return
         player["_eq_atk_bonus"]    = stats.get("atk_bonus", 0)
@@ -161,6 +162,7 @@ class BattleStartMixin:
         player["_eq_anti_dodge_pct"] = int(stats.get("anti_dodge_pct", 0))
         player["_eq_silence_pct"]    = int(stats.get("silence_pct", 0))
         player["_eq_slow_pct"]       = int(stats.get("slow_pct", 0))
+        player["_eq_atk_pct"]        = 0  # значение по умолчанию, переопределит set-bonus
         if stats.get("str_bonus", 0):
             player["strength"] = max(1, int(player.get("strength", PLAYER_START_STRENGTH)) + stats["str_bonus"])
         if stats.get("agi_bonus", 0):
@@ -174,6 +176,9 @@ class BattleStartMixin:
             player["current_hp"] = min(player["max_hp"], old_cur + stats["hp_bonus"])
         if stats.get("crit_bonus", 0):
             player["crit"] = max(0, int(player.get("crit", PLAYER_START_CRIT)) + stats["crit_bonus"])
+        # Бонусы за комплект (set bonus) — применяются ПОВЕРХ обычных статов.
+        # Логика — в battle_system/mixins/set_perks.py (BattleSetPerksMixin)
+        self._apply_set_bonus(player, equipped)
 
     def set_battle_ui_message(self, user_id: int, chat_id: int, message_id: int) -> None:
         """Сообщение с клавиатурой боя — для таймера и обновления без callback."""

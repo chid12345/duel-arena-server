@@ -62,6 +62,9 @@ class BattleExecuteMixin:
                 player1['_debuff_legs'] = True
             player1['_lifesteal_heal'] = 0
             player2['_lifesteal_heal'] = 0
+            # Перки за полную сборку (set bonus 6/6): pre-damage модификаторы
+            self._apply_set_perks_pre(battle, player1, "p1", round_num)
+            self._apply_set_perks_pre(battle, player2, "p2", round_num)
             p1_damage, o1, debuff_to_p2 = self._calculate_damage_detailed(
                 player1,
                 player2,
@@ -74,6 +77,9 @@ class BattleExecuteMixin:
                 p2_choices['attack'],
                 p1_choices['defense'],
             )
+            # Перк gods_wrath: каждый 5-й удар х2 (только успешные, damage > 0)
+            p1_damage = self._apply_set_perk_gods_wrath(battle, "p1", p1_damage)
+            p2_damage = self._apply_set_perk_gods_wrath(battle, "p2", p2_damage)
             p1_heal = player1.pop('_lifesteal_heal', 0)
             p2_heal = player2.pop('_lifesteal_heal', 0)
             battle['player1_debuffs'] = {}
@@ -92,6 +98,9 @@ class BattleExecuteMixin:
             p2_regen = int(battle['player2'].get('_eq_regen_bonus', 0))
             if p2_regen > 0 and player2['current_hp'] > 0:
                 player2['current_hp'] = min(player2['max_hp'], player2['current_hp'] + p2_regen)
+            # Перк second_wind: при HP < 30% мгновенно +100 HP (раз в бой)
+            self._apply_set_perk_second_wind(battle, player1, "p1")
+            self._apply_set_perk_second_wind(battle, player2, "p2")
 
             self._append_combat_log_round(
                 battle,
