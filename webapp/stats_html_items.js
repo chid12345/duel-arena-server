@@ -93,12 +93,12 @@ function _mount(html, onClick){
 /* Карточка предмета с описанием и кнопкой действия */
 function showItemDetail({ itemId, meta, qty, onApply }){
   if (!meta) return;
-  const isBox  = itemId.startsWith('box_');
+  const hasBoxRows = !!window.BoxDetailRows?.has?.(itemId);
+  const isBox  = itemId.startsWith('box_') || hasBoxRows;
   const isBoss = meta.tab === 'boss';
 
-  // Ящики → делегируем на тот же красивый попап что в Магазине
-  // (PNG ящика, рамка по редкости, строки «что внутри», цветные плашки).
-  if (isBox && window.ShopHtml?.showDetail && window.BoxDetailRows?.has?.(itemId)) {
+  // Ящики (включая рейдовые wb_*_chest) → красивый попап как в Магазине.
+  if (hasBoxRows && window.ShopHtml?.showDetail) {
     const imgPath = window.BoxIcons?.imageFor?.(itemId);
     const glow = window.BoxIcons?.glowFor?.(itemId) || 'rgba(255,200,80,.45)';
     const iconHtml = imgPath
