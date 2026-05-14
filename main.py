@@ -218,6 +218,7 @@ def _build_app(bot_count: int) -> Application:
     app.add_handler(CommandHandler("my_lost",        BotHandlers.my_lost_command))
     app.add_handler(CommandHandler("recover",        BotHandlers.recover_command))
     app.add_handler(CommandHandler("recover_all_my", BotHandlers.recover_all_my_command))
+    app.add_handler(CommandHandler("dismiss_my_lost", BotHandlers.dismiss_my_lost_command))
     app.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
     app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, BotHandlers.successful_payment_handler))
     app.add_handler(CallbackQueryHandler(CallbackHandlers.handle_callback))

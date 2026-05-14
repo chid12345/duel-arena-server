@@ -185,6 +185,23 @@ def recover_one(invoice_id: int) -> dict:
         return {"ok": False, "reason": str(e)}
 
 
+def dismiss_user_stuck(user_id: int) -> int:
+    """Помечает ВСЕ застрявшие инвойсы пользователя как доставленные БЕЗ выдачи предметов.
+    Используется для очистки списка тестовых платежей. Возвращает кол-во помеченных.
+    """
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE crypto_invoices SET items_delivered = 1 "
+        "WHERE user_id = ? AND items_delivered = 0",
+        (int(user_id),),
+    )
+    affected = cur.rowcount
+    conn.commit()
+    conn.close()
+    return affected
+
+
 def list_stuck(user_id: int | None = None) -> list[dict]:
     """Списки застрявших платежей (paid или pending без выдачи)."""
     conn = db.get_connection()

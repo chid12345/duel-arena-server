@@ -20,7 +20,7 @@ from telegram.ext import ContextTypes
 
 from config import ADMIN_USER_IDS
 from handlers.common import tg_api_call
-from tools.recover_crypto_invoice import list_stuck, recover_one
+from tools.recover_crypto_invoice import dismiss_user_stuck, list_stuck, recover_one
 
 logger = logging.getLogger(__name__)
 
@@ -156,6 +156,29 @@ class BotHandlersRecoverPayments:
             msg = f"❌ Не восстановлено: {res.get('reason')}"
         await tg_api_call(update.message.reply_text, msg)
         logger.info("recover_command uid=%s invoice=%s result=%s", user.id, invoice_id, res)
+
+    @staticmethod
+    async def dismiss_my_lost_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """/dismiss_my_lost — пометить все свои застрявшие как доставленные БЕЗ выдачи.
+
+        Используется для очистки списка тестовых платежей. БЕЗОПАСНО: только меняет
+        флаг items_delivered=1, никакие предметы НЕ выдаются.
+        """
+        user = update.effective_user
+        if not _is_admin(user.id):
+            await _deny(update); return
+        try:
+            affected = dismiss_user_stuck(user.id)
+        except Exception as e:
+            logger.exception("dismiss_my_lost error uid=%s: %s", user.id, e)
+            await tg_api_call(update.message.reply_text, f"❌ Ошибка: {type(e).__name__}: {e}")
+            return
+        await tg_api_call(
+            update.message.reply_text,
+            f"🧹 Помечено как доставленные (без выдачи предметов): {affected}\n"
+            f"Список /my_lost теперь должен быть пустым."
+        )
+        logger.info("dismiss_my_lost uid=%s affected=%s", user.id, affected)
 
     @staticmethod
     async def recover_all_my_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
