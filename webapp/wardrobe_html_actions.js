@@ -221,6 +221,9 @@
       const card = e.target.closest('.wd-card');
       if (btn) {
         e.stopPropagation();
+        // Ghost-tap guard: блокируем touch/click 500мс пока идёт async API call,
+        // иначе click может «улететь» в кнопку под оверлеем на touch-устройствах.
+        try { window.GhostTapGuard?.block?.(500); } catch(_) {}
         const a = items.find(x => x.id === btn.dataset.id);
         if (a) _doAction(scene, btn.dataset.act, a, wp);
         return;
