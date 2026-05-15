@@ -13,9 +13,16 @@ class ProgressWeeklyMixin:
         conn = self.get_connection()
         try:
             cur = conn.cursor()
-            cur.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
+            # Недельная серия — task_progress[wq_max_streak_<week>]:
+            # обновляется в update_daily_quest_progress.set_task_progress_if_greater.
+            # Раньше читали players.win_streak (глобальный) — это был баг:
+            # серия с прошлой недели засчитывалась как выполненная.
+            cur.execute(
+                "SELECT value FROM task_progress WHERE user_id=? AND task_key=?",
+                (user_id, f"wq_max_streak_{week_key}"),
+            )
             _wr = cur.fetchone()
-            streak = int(_wr["win_streak"] if _wr else 0)
+            streak = int(_wr["value"] if _wr else 0)
             # Прогресс недельных треков одним запросом
             wq_keys = [f"{wq['track']}_{week_key}" for wq in WEEKLY_EXTRA_DEFS
                        if wq["track"] != "streak"]

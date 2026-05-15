@@ -48,8 +48,11 @@ def _weekly_quests_status(uid: int) -> Dict[str, Any]:
 
     titan = db.get_titan_progress(uid)
     weekly_floor = int(titan.get("weekly_best_floor", 0))
-    streak = int((db.get_or_create_player(uid, "") or {}).get("win_streak", 0))
     week_key = _iso_week_key()
+    # Недельная серия читается из task_progress[wq_max_streak_<week>] —
+    # обновляется в update_daily_quest_progress. Раньше брался
+    # players.win_streak (глобальный, без сброса) — баг с переносом.
+    streak = int(db.get_task_progress(uid, f"wq_max_streak_{week_key}"))
     endless_weekly = db.endless_get_weekly_progress(uid, week_key)
     endless_weekly_wins = endless_weekly["weekly_wins"]
     endless_weekly_wave = endless_weekly["best_wave"]

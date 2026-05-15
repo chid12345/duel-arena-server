@@ -24,6 +24,7 @@ class BattlesDailyQuestsMixin:
         )
         # Сегодняшняя серия: инкремент при победе, обнуление при поражении.
         # today_max_streak держит максимум за сутки → для dq_streak3.
+        new_streak = 0
         if won_battle:
             cursor.execute(
                 "UPDATE daily_quests SET today_win_streak=today_win_streak+1, "
@@ -32,6 +33,12 @@ class BattlesDailyQuestsMixin:
                 "WHERE user_id=? AND quest_date=?",
                 (user_id, today),
             )
+            cursor.execute(
+                "SELECT today_win_streak FROM daily_quests WHERE user_id=? AND quest_date=?",
+                (user_id, today),
+            )
+            row = cursor.fetchone()
+            new_streak = int(row["today_win_streak"] or 0) if row else 0
         else:
             cursor.execute(
                 "UPDATE daily_quests SET today_win_streak=0 WHERE user_id=? AND quest_date=?",
@@ -39,6 +46,20 @@ class BattlesDailyQuestsMixin:
             )
         conn.commit()
         conn.close()
+
+        # Недельная серия — отдельный ключ task_progress, max за неделю.
+        # Нужно для weekly_undefeated_5 и weekly_streak_5, которые раньше
+        # использовали глобальную players.win_streak (вечную).
+        if won_battle and new_streak > 0:
+            try:
+                from datetime import datetime as _dt
+                y, w, _ = _dt.utcnow().isocalendar()
+                week_key = f"{int(y)}-W{int(w):02d}"
+                self.set_task_progress_if_greater(
+                    user_id, f"wq_max_streak_{week_key}", new_streak,
+                )
+            except Exception:
+                pass
 
     def get_bot_wins_today(self, user_id: int) -> int:
         today = datetime.now().date().isoformat()

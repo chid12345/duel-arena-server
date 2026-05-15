@@ -82,6 +82,36 @@ class ProgressCoreMixin:
         finally:
             conn.close()
 
+    def set_task_progress_if_greater(self, user_id: int, task_key: str, value: int) -> None:
+        """Обновить прогресс до value, но только если value больше текущего.
+        Нужно для max-серий — задача 'выиграть N подряд' хранит максимум."""
+        if value <= 0:
+            return
+        conn = self.get_connection()
+        cur = conn.cursor()
+        try:
+            if getattr(self, "_pg", False):
+                cur.execute(
+                    "INSERT INTO task_progress (user_id, task_key, value) VALUES (%s,%s,%s) "
+                    "ON CONFLICT (user_id, task_key) DO UPDATE "
+                    "SET value=GREATEST(task_progress.value, EXCLUDED.value), "
+                    "updated_at=CURRENT_TIMESTAMP",
+                    (user_id, task_key, value),
+                )
+            else:
+                cur.execute(
+                    "INSERT OR IGNORE INTO task_progress (user_id, task_key, value) VALUES (?,?,0)",
+                    (user_id, task_key),
+                )
+                cur.execute(
+                    "UPDATE task_progress SET value=?, updated_at=CURRENT_TIMESTAMP "
+                    "WHERE user_id=? AND task_key=? AND value<?",
+                    (value, user_id, task_key, value),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
     def has_task_claim(self, user_id: int, claim_key: str) -> bool:
         conn = self.get_connection()
         cur = conn.cursor()
