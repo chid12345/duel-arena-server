@@ -108,7 +108,7 @@ window.TasksHTML_Achieve = function(achievements) {
     <span class="ta-head-ic">🏆</span>
     <div class="ta-head-l">
       <div class="ta-head-t">ДОСТИЖЕНИЯ</div>
-      <div class="ta-head-c">пройдено <b>${doneN}</b> из <i>${total}</i> · ${headPct}%</div>
+      <div class="ta-head-c">пройдено <b>${doneN}</b> из <i>${total}</i></div>
     </div>
   </div>
   <div class="ta-head-bar"><div class="ta-head-bf" style="width:${headPct}%"></div></div>
