@@ -30,6 +30,7 @@ def db():
     from repositories.leaderboard import LeaderboardMixin
     from repositories.shop import ShopMixin
     from repositories.social import SocialMixin
+    from repositories.inventory import InventoryMixin
 
     # Временный файл — каждое соединение видит одни и те же таблицы
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
@@ -40,6 +41,7 @@ def db():
         DBCore, DBSchema,
         BotsMixin, UsersMixin, BattlesMixin,
         GameLogicMixin, EndlessMixin, LeaderboardMixin, ShopMixin, SocialMixin,
+        InventoryMixin,
     ):
         def __init__(self):
             self._pg = False

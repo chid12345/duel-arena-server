@@ -106,26 +106,32 @@ def test_wb_hits_today_count(db):
 def test_rewards_victory_gives_diamonds_and_chests(db):
     from repositories.world_boss.rewards_calc import compute_and_create_rewards
     from config.world_boss_constants import (
-        WB_DIAMONDS_TOP1, WB_DIAMONDS_LAST_HIT,
-        WB_CHEST_TOP_DAMAGE, WB_CHEST_LAST_HIT,
+        WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3, WB_CHEST_TOP_DAMAGE,
     )
-    # 3 игрока, разные вклады. user 1001 — топ-1 + last-hit.
+    # 3 игрока, разные вклады. user 1001 — топ-1 (наибольший урон).
     for uid in (1001, 1002, 1003):
         db.get_or_create_player(uid, f"u{uid}")
     spawn_id = _make_spawn(db)
-    db.log_wb_hit(spawn_id, 1002, damage=2000)
-    db.log_wb_hit(spawn_id, 1003, damage=3000)
-    db.log_wb_hit(spawn_id, 1001, damage=5000)  # last hit + top1
+    db.log_wb_hit(spawn_id, 1002, damage=3000)  # топ-2
+    db.log_wb_hit(spawn_id, 1003, damage=2000)  # топ-3
+    db.log_wb_hit(spawn_id, 1001, damage=5000)  # топ-1
 
     created = compute_and_create_rewards(db, spawn_id, is_victory=True)
     assert created == 3
 
+    # Топ-1: алмазный сундук, без алмазов (логика обновлена).
     r1 = db.get_wb_reward_by_spawn(spawn_id, 1001)
-    assert r1["diamonds"] >= WB_DIAMONDS_TOP1 + WB_DIAMONDS_LAST_HIT - 1
-    # top-1 → diamond chest приоритетнее gold.
-    assert r1["chest_type"] == WB_CHEST_TOP_DAMAGE
+    assert r1["chest_type"] == WB_CHEST_TOP_DAMAGE, "Топ-1 должен получить алмазный сундук"
     assert r1["is_victory"] == 1
     assert r1["gold"] > 0 and r1["exp"] > 0
+
+    # Топ-2: WB_DIAMONDS_TOP2 алмазов, без сундука.
+    r2 = db.get_wb_reward_by_spawn(spawn_id, 1002)
+    assert r2["diamonds"] == WB_DIAMONDS_TOP2, f"Топ-2 ждал {WB_DIAMONDS_TOP2} алмазов"
+
+    # Топ-3: WB_DIAMONDS_TOP3 алмазов.
+    r3 = db.get_wb_reward_by_spawn(spawn_id, 1003)
+    assert r3["diamonds"] == WB_DIAMONDS_TOP3, f"Топ-3 ждал {WB_DIAMONDS_TOP3} алмазов"
 
 
 # ── Test 4: расчёт наград — поражение (алмазов нет) ──────────────────────────
