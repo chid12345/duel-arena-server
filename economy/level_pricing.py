@@ -22,6 +22,11 @@ from typing import Any
 from economy.curves import is_tier_unlocked, tier_unlocked_at
 from economy.formulas import price_for_item
 
+# Алиас рарности: в каталоге шмота исторически "mythic" — это топ-редкость.
+# В economy.json/rarity_mult её нет (там common/rare/epic/legendary). Маппим
+# "mythic" → "legendary" для расчёта формулы. Стат-эффекты в бою не меняются.
+_RARITY_ALIAS = {"mythic": "legendary"}
+
 
 def shop_price(item: dict, currency: str | None = None) -> int:
     """Цена предмета для магазина.
@@ -36,9 +41,11 @@ def shop_price(item: dict, currency: str | None = None) -> int:
         if key not in item:
             raise KeyError(f"item: нет обязательного поля {key!r}")
     cur = currency or item.get("currency", "gold")
+    rarity = str(item["rarity"])
+    rarity = _RARITY_ALIAS.get(rarity, rarity)
     return price_for_item(
         float(item["power_score"]),
-        rarity=str(item["rarity"]),
+        rarity=rarity,
         tier=str(item["tier"]),
         currency=str(cur),
     )

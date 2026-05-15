@@ -159,3 +159,34 @@ def test_fill_prices_does_not_mutate_source():
     _ = fill_prices_for_level(catalog, 50)
     assert "price_calc" not in catalog["x"]
     assert "locked" not in catalog["x"]
+
+
+# ── Калибровка реального каталога (этап 3C) ──────────────────────────────────
+
+def test_real_catalog_prices_match_formula_within_5pct():
+    """Все шмот-предметы из db_schema/equipment_catalog должны иметь
+    formula-цену в пределах ±5% от захардкоженной (price_gold/price_diamonds/
+    price_stars). Это гарантирует, что переключение магазина на формулу в
+    куске 3D не сломает баланс.
+    """
+    from db_schema.equipment_catalog import EQUIPMENT_CATALOG
+
+    fails = []
+    for iid, item in EQUIPMENT_CATALOG.items():
+        if "tier" not in item:
+            continue  # legacy (sword_iron/steel/chaos) — без tier, пропускаем
+        if "price_gold" in item:
+            old = item["price_gold"]; cur = "gold"
+        elif "price_diamonds" in item:
+            old = item["price_diamonds"]; cur = "diamond"
+        elif "price_stars" in item:
+            old = item["price_stars"]; cur = "star"
+        else:
+            continue
+        new = shop_price(item, cur)
+        if old == 0:
+            continue
+        delta_pct = abs(new - old) / old * 100
+        if delta_pct > 5.0:
+            fails.append(f"{iid}: old={old}, formula={new}, delta={delta_pct:.1f}%")
+    assert not fails, "Калибровка power_score нарушена:\n" + "\n".join(fails)
