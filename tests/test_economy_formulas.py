@@ -28,7 +28,7 @@ from economy.formulas import (  # noqa: E402
     ev_for_box,
     apply_premium_gold,
 )
-from economy.loader import get_anchor, get_combat, get_combat_dict  # noqa: E402
+from economy.loader import get_anchor, get_combat, get_combat_dict, get_world_boss  # noqa: E402
 
 
 # ── Конвертеры валют ─────────────────────────────────────────────────────────
@@ -145,6 +145,42 @@ def test_combat_pvp_repeat_factor_thresholds():
 def test_combat_unknown_key_raises():
     with pytest.raises(KeyError):
         get_combat("nonexistent_key")
+
+
+# ── World Boss балансные числа ───────────────────────────────────────────────
+
+def test_world_boss_pool_and_contrib_present():
+    """Пул золота 500 + 50 за участника — из economy.json."""
+    assert get_world_boss("pool_base") == 500
+    assert get_world_boss("gold_contrib_per_player") == 50
+
+
+def test_world_boss_diamonds_top2_top3():
+    """Алмазы топ-2 (10) и топ-3 (5) — фиксированные бонусы при победе."""
+    assert get_world_boss("diamonds_top2") == 10
+    assert get_world_boss("diamonds_top3") == 5
+
+
+def test_world_boss_reward_mults():
+    """Победа умножает на 2.0, поражение — на 0.3."""
+    assert get_world_boss("reward_mult_victory") == 2.0
+    assert get_world_boss("reward_mult_defeat") == 0.3
+
+
+def test_world_boss_xp_formula_params():
+    """XP: 30% гарантия + 3.0× вклад."""
+    assert get_world_boss("xp_guaranteed_pct") == 0.3
+    assert get_world_boss("xp_contrib_mult") == 3.0
+
+
+def test_world_boss_scroll_drop_chance():
+    """Шанс редкого свитка scroll_all_12 — 5% на рейд."""
+    assert get_world_boss("victory_scroll_drop_chance") == 0.05
+
+
+def test_world_boss_unknown_key_raises():
+    with pytest.raises(KeyError):
+        get_world_boss("nonexistent")
 
 
 # ── Премиум ──────────────────────────────────────────────────────────────────

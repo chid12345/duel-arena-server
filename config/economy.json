@@ -57,6 +57,18 @@
     "weekly": { "easy": [70, 0],  "medium": [100, 1],  "hard": [130, 1],  "epic": [160, 2]  },
     "once":   { "easy": [180, 0], "medium": [320, 2],  "hard": [450, 5],  "epic": [550, 8]  }
   },
+  "world_boss": {
+    "_comment": "Балансные числа Мирового босса (этап 2D редизайна). Механика (расписание, длительность, HP-формула, имена) остаётся в config/world_boss_constants.py.",
+    "pool_base": 500,
+    "gold_contrib_per_player": 50,
+    "xp_guaranteed_pct": 0.3,
+    "xp_contrib_mult": 3.0,
+    "diamonds_top2": 10,
+    "diamonds_top3": 5,
+    "reward_mult_victory": 2.0,
+    "reward_mult_defeat": 0.3,
+    "victory_scroll_drop_chance": 0.05
+  },
   "combat": {
     "_comment": "Балансные множители боя. Этап 2C редизайна — вынесены из battle_system/mixins/end_battle.py чтобы можно было менять без правки кода.",
     "pvp_winrate_bonus": 1.30,

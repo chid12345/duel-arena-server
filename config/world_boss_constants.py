@@ -70,20 +70,10 @@ WB_VULN_INTERVAL_SEC: int = 60
 WB_ENRAGE_MULT: float = 1.2
 
 # -- Награды: пул по вкладу -------------------------------------------
-# ЗОЛОТО: pool = WB_POOL_BASE + 50 * N_участников, распределяется по вкладу%
-WB_POOL_BASE: int = 500
-WB_GOLD_CONTRIB_PER_PLAYER: int = 50
-# ОПЫТ: база + contrib * вклад%, с множителем победы/поражения
-WB_XP_GUARANTEED_PCT: float = 0.3
-WB_XP_CONTRIB_MULT: float = 3.0
-
-# Алмазы: только топ-2 и топ-3 при победе (top-1 получает сундук).
-WB_DIAMONDS_TOP2: int = 10
-WB_DIAMONDS_TOP3: int = 5
-# Множители gold/exp.
-WB_REWARD_MULT_VICTORY: float = 2.0
-WB_REWARD_MULT_DEFEAT: float = 0.3
-# Сундук: топ-1 по урону при победе получает алмазный сундук.
+# Этап 2D редизайна: балансные числа (pool_base, contrib, проценты,
+# алмазы топ-2/3, множители победа/поражение, шанс свитка) переехали
+# в config/economy.json/world_boss. Читаются через economy.loader.get_world_boss.
+# Здесь оставлено только не-балансное: ID сундука и имя dropping-предмета.
 WB_CHEST_TOP_DAMAGE: str = "wb_diamond_chest"
 
 # 10 имён босса — рандом при спавне.

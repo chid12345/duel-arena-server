@@ -105,9 +105,10 @@ def test_wb_hits_today_count(db):
 
 def test_rewards_victory_gives_diamonds_and_chests(db):
     from repositories.world_boss.rewards_calc import compute_and_create_rewards
-    from config.world_boss_constants import (
-        WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3, WB_CHEST_TOP_DAMAGE,
-    )
+    from config.world_boss_constants import WB_CHEST_TOP_DAMAGE
+    from economy.loader import get_world_boss
+    WB_DIAMONDS_TOP2 = int(get_world_boss("diamonds_top2"))
+    WB_DIAMONDS_TOP3 = int(get_world_boss("diamonds_top3"))
     # 3 игрока, разные вклады. user 1001 — топ-1 (наибольший урон).
     for uid in (1001, 1002, 1003):
         db.get_or_create_player(uid, f"u{uid}")

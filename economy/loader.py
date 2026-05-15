@@ -145,6 +145,17 @@ def get_combat(key: str, default: float | None = None) -> float:
     return float(val)
 
 
+def get_world_boss(key: str) -> float:
+    """Балансное число Мирового босса из секции `world_boss`. KeyError если нет."""
+    wb = load_economy().get("world_boss") or {}
+    if key not in wb:
+        raise KeyError(f"economy.json/world_boss: нет ключа {key!r}")
+    val = wb[key]
+    if isinstance(val, dict):
+        raise ValueError(f"economy.json/world_boss/{key}: ожидалось число, получили dict")
+    return float(val)
+
+
 def get_combat_dict(key: str) -> dict:
     """Сложный конфиг боя (например, pvp_repeat_factor). KeyError если нет."""
     combat = load_economy().get("combat") or {}

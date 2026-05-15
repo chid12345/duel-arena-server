@@ -26,24 +26,13 @@ import logging
 import random
 from typing import Any, Optional
 
-from config.world_boss_constants import (
-    WB_CHEST_TOP_DAMAGE,
-    WB_DIAMONDS_TOP2,
-    WB_DIAMONDS_TOP3,
-    WB_POOL_BASE,
-    WB_GOLD_CONTRIB_PER_PLAYER,
-    WB_REWARD_MULT_DEFEAT,
-    WB_REWARD_MULT_VICTORY,
-    WB_XP_GUARANTEED_PCT,
-    WB_XP_CONTRIB_MULT,
-)
+from config.world_boss_constants import WB_CHEST_TOP_DAMAGE
 from db_core.week_utils import iso_week_key_utc
+from economy.loader import get_world_boss
 from progression_loader import victory_xp_for_player_level
 
-# 5% шанс на ВЕСЬ рейд, что один случайный игрок (не топ-1) получит свиток
-# «✨ Все пассивки +12» (scroll_all_12, 130⭐/$2 в магазине). Часто никто
-# не получает — это «заманушка-редкость», ~1 свиток на 20 рейдов.
-WB_VICTORY_SCROLL_DROP_CHANCE: float = 0.05
+# Балансные числа — из economy.json/world_boss (этап 2D). Читаются при каждом
+# вызове, чтобы геймдиз мог менять конфиг без перезапуска (через load_economy(force=True)).
 WB_VICTORY_SCROLL_ITEM_ID: str = "scroll_all_12"
 
 logger = logging.getLogger(__name__)
@@ -91,8 +80,8 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     total_damage = sum(by_uid.values())
     levels = _get_player_levels(db, list(by_uid.keys()))
 
-    mult = WB_REWARD_MULT_VICTORY if is_victory else WB_REWARD_MULT_DEFEAT
-    pool_gold = WB_POOL_BASE + WB_GOLD_CONTRIB_PER_PLAYER * n_participants
+    mult = get_world_boss("reward_mult_victory") if is_victory else get_world_boss("reward_mult_defeat")
+    pool_gold = int(get_world_boss("pool_base")) + int(get_world_boss("gold_contrib_per_player")) * n_participants
 
     # Топ-3 считаем из by_uid (world_boss_hits) — единый источник истины.
     # get_wb_top_damagers читает player_state, которая может разойтись с hits при рассинхроне.
@@ -101,7 +90,7 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     diamonds_by_rank: dict[int, int] = {}
     if is_victory:
         # top-1 получает сундук, алмазы только top-2 и top-3
-        tiers = [0, WB_DIAMONDS_TOP2, WB_DIAMONDS_TOP3]
+        tiers = [0, int(get_world_boss("diamonds_top2")), int(get_world_boss("diamonds_top3"))]
         for i, uid_rank in enumerate(top3_uids):
             if tiers[i] > 0:
                 diamonds_by_rank[uid_rank] = tiers[i]
@@ -115,7 +104,7 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
     # (не топ-1) получит свиток scroll_all_12. Часто никто не получает —
     # это «заманушка-редкость» (~1 свиток на 30 рейдов).
     scroll_lucky_uid: Optional[int] = None
-    if is_victory and random.random() < WB_VICTORY_SCROLL_DROP_CHANCE:
+    if is_victory and random.random() < get_world_boss("victory_scroll_drop_chance"):
         candidates = [u for u in by_uid.keys() if u != top_uid]
         if candidates:
             scroll_lucky_uid = random.choice(candidates)
@@ -130,8 +119,8 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         # ОПЫТ: от уровня игрока, как 1v1, + бонус по вкладу.
         lvl = levels.get(uid, 1)
         base_1v1 = victory_xp_for_player_level(lvl)
-        guaranteed_xp = base_1v1 * WB_XP_GUARANTEED_PCT
-        contrib_xp = base_1v1 * WB_XP_CONTRIB_MULT * contribution_pct
+        guaranteed_xp = base_1v1 * get_world_boss("xp_guaranteed_pct")
+        contrib_xp = base_1v1 * get_world_boss("xp_contrib_mult") * contribution_pct
         exp = max(0, int((guaranteed_xp + contrib_xp) * mult))
 
         diamonds = int(diamonds_by_rank.get(uid, 0))
