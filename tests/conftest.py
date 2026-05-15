@@ -90,33 +90,21 @@ def db():
 
 # ── Хелперы (используются как обычные функции из db-фикстуры) ─────────────────
 
-def make_player(db, user_id: int, username: str = None, *,
-                gold: int = None, diamonds: int = None,
-                level: int = None, exp: int = None,
-                strength: int = None, endurance: int = None, crit: int = None,
-                max_hp: int = None, current_hp: int = None,
-                premium_until: str = None) -> dict:
-    """Создаёт игрока и опционально проставляет нужные поля одним UPDATE.
+def get_player_row(db, user_id: int) -> dict:
+    """Прочитать игрока из БД (публичного db.get_player() нет — только прямой SELECT)."""
+    conn = db.get_connection()
+    row = conn.execute("SELECT * FROM players WHERE user_id = ?", (user_id,)).fetchone()
+    conn.close()
+    return dict(row) if row else None
 
-    Использование в тесте:
-        from tests.conftest import make_player
-        make_player(db, 1001, gold=500, level=10)
-    """
-    db.get_or_create_player(user_id, username or f"u{user_id}")
-    fields = {
-        "gold": gold, "diamonds": diamonds,
-        "level": level, "exp": exp,
-        "strength": strength, "endurance": endurance, "crit": crit,
-        "max_hp": max_hp, "current_hp": current_hp,
-        "premium_until": premium_until,
-    }
-    updates = {k: v for k, v in fields.items() if v is not None}
-    if not updates:
-        return db.get_player(user_id)
-    sets = ", ".join(f"{k} = ?" for k in updates)
-    vals = list(updates.values()) + [user_id]
+
+def set_player_fields(db, user_id: int, **fields) -> None:
+    """Прямой UPDATE players по нужным полям. Помогает готовить состояние для теста."""
+    if not fields:
+        return
+    sets = ", ".join(f"{k} = ?" for k in fields)
+    vals = list(fields.values()) + [user_id]
     conn = db.get_connection()
     conn.execute(f"UPDATE players SET {sets} WHERE user_id = ?", vals)
     conn.commit()
     conn.close()
-    return db.get_player(user_id)
