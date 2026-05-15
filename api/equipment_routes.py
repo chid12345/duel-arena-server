@@ -12,6 +12,8 @@ from api.tma_models import InitDataHeader
 from api.tma_player_api import _player_api
 from database import db
 from db_schema.equipment_catalog import get_item
+from economy.curves import is_tier_unlocked
+from economy.level_pricing import get_item_cost
 
 _log = logging.getLogger(__name__)
 
@@ -42,13 +44,33 @@ def register_equipment_routes(app: FastAPI) -> None:
             item = get_item(body.item_id)
             if not item:
                 return {"ok": False, "reason": "Предмет не найден"}
+
+            # Этап 3F: tier-блокировка для TMA (та же логика что в repositories/equipment).
+            # Если предмет уже в коллекции (owned) — пропускаем блок (уже куплено).
+            item_tier = item.get("tier")
+            if item_tier and body.item_id not in db.get_owned_weapons(uid):
+                # Уровень игрока
+                _conn_lvl = db.get_connection()
+                try:
+                    _cur_lvl = _conn_lvl.cursor()
+                    _cur_lvl.execute("SELECT level FROM players WHERE user_id = ?", (uid,))
+                    _row_lvl = _cur_lvl.fetchone()
+                    _pl_level = int(_row_lvl["level"] or 1) if _row_lvl else 1
+                finally:
+                    _conn_lvl.close()
+                if not is_tier_unlocked(_pl_level, item_tier):
+                    rec = item.get("recommended_level", "?")
+                    return {"ok": False, "reason": f"🔒 Нужен {rec} ур. для {item_tier}"}
+
             if int(item.get("price_stars", 0)) > 0:
                 # Разрешаем надеть если уже куплено
                 if body.item_id not in db.get_owned_weapons(uid):
                     return {"ok": False, "reason": "Мифическое оружие покупается за Stars или USDT — используйте кнопки ⭐ или 💳"}
 
-            gold_cost = int(item.get("price_gold", 0))
-            diamond_cost = int(item.get("price_diamonds", 0))
+            # Цена через формулу (та же что в боте, этап 3D). Fallback на legacy.
+            _cost, _currency = get_item_cost(item)
+            gold_cost = _cost if _currency == "gold" else 0
+            diamond_cost = _cost if _currency == "diamond" else 0
 
             conn = db.get_connection()
             try:
