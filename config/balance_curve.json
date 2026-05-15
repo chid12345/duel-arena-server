@@ -2,10 +2,10 @@
   "version": 1,
   "_comment": "Сгенерирован tools/balance_xlsx_export.py. Не редактировать руками.",
   "anchor": {
-    "days_to_max_level": 35,
+    "days_to_max_level": 90,
     "pu_per_day": 1.5,
     "max_level": 80,
-    "xp_per_pu_avg": 1930.67
+    "xp_per_pu_avg": 750.81
   },
   "tier_thresholds": {
     "T1": 1,
@@ -111,7 +111,7 @@
       "xp_to_next": 420,
       "xp_cum": 400,
       "power": 5,
-      "days_to_reach": 0.14,
+      "days_to_reach": 0.36,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -124,7 +124,7 @@
       "xp_to_next": 440,
       "xp_cum": 820,
       "power": 10,
-      "days_to_reach": 0.28,
+      "days_to_reach": 0.73,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -137,7 +137,7 @@
       "xp_to_next": 460,
       "xp_cum": 1260,
       "power": 15,
-      "days_to_reach": 0.44,
+      "days_to_reach": 1.12,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -150,7 +150,7 @@
       "xp_to_next": 480,
       "xp_cum": 1720,
       "power": 20,
-      "days_to_reach": 0.59,
+      "days_to_reach": 1.53,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -163,7 +163,7 @@
       "xp_to_next": 500,
       "xp_cum": 2200,
       "power": 25,
-      "days_to_reach": 0.76,
+      "days_to_reach": 1.95,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -176,7 +176,7 @@
       "xp_to_next": 520,
       "xp_cum": 2700,
       "power": 30,
-      "days_to_reach": 0.93,
+      "days_to_reach": 2.4,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -189,7 +189,7 @@
       "xp_to_next": 540,
       "xp_cum": 3220,
       "power": 35,
-      "days_to_reach": 1.11,
+      "days_to_reach": 2.86,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -202,7 +202,7 @@
       "xp_to_next": 560,
       "xp_cum": 3760,
       "power": 40,
-      "days_to_reach": 1.3,
+      "days_to_reach": 3.34,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -215,7 +215,7 @@
       "xp_to_next": 580,
       "xp_cum": 4320,
       "power": 45,
-      "days_to_reach": 1.49,
+      "days_to_reach": 3.84,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -228,7 +228,7 @@
       "xp_to_next": 600,
       "xp_cum": 4900,
       "power": 53,
-      "days_to_reach": 1.69,
+      "days_to_reach": 4.35,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -241,7 +241,7 @@
       "xp_to_next": 620,
       "xp_cum": 5500,
       "power": 58,
-      "days_to_reach": 1.9,
+      "days_to_reach": 4.88,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -254,7 +254,7 @@
       "xp_to_next": 640,
       "xp_cum": 6120,
       "power": 63,
-      "days_to_reach": 2.11,
+      "days_to_reach": 5.43,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -267,7 +267,7 @@
       "xp_to_next": 660,
       "xp_cum": 6760,
       "power": 68,
-      "days_to_reach": 2.33,
+      "days_to_reach": 6.0,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -280,7 +280,7 @@
       "xp_to_next": 680,
       "xp_cum": 7420,
       "power": 73,
-      "days_to_reach": 2.56,
+      "days_to_reach": 6.59,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -293,7 +293,7 @@
       "xp_to_next": 700,
       "xp_cum": 8100,
       "power": 78,
-      "days_to_reach": 2.8,
+      "days_to_reach": 7.19,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -306,7 +306,7 @@
       "xp_to_next": 720,
       "xp_cum": 8800,
       "power": 83,
-      "days_to_reach": 3.04,
+      "days_to_reach": 7.81,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -319,7 +319,7 @@
       "xp_to_next": 740,
       "xp_cum": 9520,
       "power": 88,
-      "days_to_reach": 3.29,
+      "days_to_reach": 8.45,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -332,7 +332,7 @@
       "xp_to_next": 760,
       "xp_cum": 10260,
       "power": 93,
-      "days_to_reach": 3.54,
+      "days_to_reach": 9.11,
       "tier_unlock": "T1",
       "tiers_available": [
         "T1"
@@ -345,7 +345,7 @@
       "xp_to_next": 780,
       "xp_cum": 11020,
       "power": 98,
-      "days_to_reach": 3.81,
+      "days_to_reach": 9.78,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -359,7 +359,7 @@
       "xp_to_next": 820,
       "xp_cum": 11800,
       "power": 108,
-      "days_to_reach": 4.07,
+      "days_to_reach": 10.48,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -373,7 +373,7 @@
       "xp_to_next": 840,
       "xp_cum": 12620,
       "power": 113,
-      "days_to_reach": 4.36,
+      "days_to_reach": 11.21,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -387,7 +387,7 @@
       "xp_to_next": 860,
       "xp_cum": 13460,
       "power": 118,
-      "days_to_reach": 4.65,
+      "days_to_reach": 11.95,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -401,7 +401,7 @@
       "xp_to_next": 880,
       "xp_cum": 14320,
       "power": 123,
-      "days_to_reach": 4.94,
+      "days_to_reach": 12.72,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -415,7 +415,7 @@
       "xp_to_next": 900,
       "xp_cum": 15200,
       "power": 128,
-      "days_to_reach": 5.25,
+      "days_to_reach": 13.5,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -429,7 +429,7 @@
       "xp_to_next": 920,
       "xp_cum": 16100,
       "power": 133,
-      "days_to_reach": 5.56,
+      "days_to_reach": 14.3,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -443,7 +443,7 @@
       "xp_to_next": 940,
       "xp_cum": 17020,
       "power": 138,
-      "days_to_reach": 5.88,
+      "days_to_reach": 15.11,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -457,7 +457,7 @@
       "xp_to_next": 960,
       "xp_cum": 17960,
       "power": 143,
-      "days_to_reach": 6.2,
+      "days_to_reach": 15.95,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -471,7 +471,7 @@
       "xp_to_next": 980,
       "xp_cum": 18920,
       "power": 148,
-      "days_to_reach": 6.53,
+      "days_to_reach": 16.8,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -485,7 +485,7 @@
       "xp_to_next": 1000,
       "xp_cum": 19900,
       "power": 153,
-      "days_to_reach": 6.87,
+      "days_to_reach": 17.67,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -499,7 +499,7 @@
       "xp_to_next": 1020,
       "xp_cum": 20900,
       "power": 163,
-      "days_to_reach": 7.22,
+      "days_to_reach": 18.56,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -513,7 +513,7 @@
       "xp_to_next": 1040,
       "xp_cum": 21920,
       "power": 168,
-      "days_to_reach": 7.57,
+      "days_to_reach": 19.46,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -527,7 +527,7 @@
       "xp_to_next": 1060,
       "xp_cum": 22960,
       "power": 173,
-      "days_to_reach": 7.93,
+      "days_to_reach": 20.39,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -541,7 +541,7 @@
       "xp_to_next": 1080,
       "xp_cum": 24020,
       "power": 178,
-      "days_to_reach": 8.29,
+      "days_to_reach": 21.33,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -555,7 +555,7 @@
       "xp_to_next": 1100,
       "xp_cum": 25100,
       "power": 183,
-      "days_to_reach": 8.67,
+      "days_to_reach": 22.29,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -569,7 +569,7 @@
       "xp_to_next": 1120,
       "xp_cum": 26200,
       "power": 188,
-      "days_to_reach": 9.05,
+      "days_to_reach": 23.26,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -583,7 +583,7 @@
       "xp_to_next": 1140,
       "xp_cum": 27320,
       "power": 193,
-      "days_to_reach": 9.43,
+      "days_to_reach": 24.26,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -597,7 +597,7 @@
       "xp_to_next": 1160,
       "xp_cum": 28460,
       "power": 198,
-      "days_to_reach": 9.83,
+      "days_to_reach": 25.27,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -611,7 +611,7 @@
       "xp_to_next": 1180,
       "xp_cum": 29620,
       "power": 203,
-      "days_to_reach": 10.23,
+      "days_to_reach": 26.3,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -625,7 +625,7 @@
       "xp_to_next": 1200,
       "xp_cum": 30800,
       "power": 208,
-      "days_to_reach": 10.64,
+      "days_to_reach": 27.35,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -639,7 +639,7 @@
       "xp_to_next": 1220,
       "xp_cum": 32000,
       "power": 220,
-      "days_to_reach": 11.05,
+      "days_to_reach": 28.41,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -653,7 +653,7 @@
       "xp_to_next": 1240,
       "xp_cum": 33220,
       "power": 225,
-      "days_to_reach": 11.47,
+      "days_to_reach": 29.5,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -667,7 +667,7 @@
       "xp_to_next": 1260,
       "xp_cum": 34460,
       "power": 230,
-      "days_to_reach": 11.9,
+      "days_to_reach": 30.6,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -681,7 +681,7 @@
       "xp_to_next": 1280,
       "xp_cum": 35720,
       "power": 235,
-      "days_to_reach": 12.33,
+      "days_to_reach": 31.72,
       "tier_unlock": "T2",
       "tiers_available": [
         "T1",
@@ -695,7 +695,7 @@
       "xp_to_next": 1300,
       "xp_cum": 37000,
       "power": 240,
-      "days_to_reach": 12.78,
+      "days_to_reach": 32.85,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -710,7 +710,7 @@
       "xp_to_next": 1320,
       "xp_cum": 38300,
       "power": 245,
-      "days_to_reach": 13.23,
+      "days_to_reach": 34.01,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -725,7 +725,7 @@
       "xp_to_next": 1340,
       "xp_cum": 39620,
       "power": 250,
-      "days_to_reach": 13.68,
+      "days_to_reach": 35.18,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -740,7 +740,7 @@
       "xp_to_next": 1360,
       "xp_cum": 40960,
       "power": 255,
-      "days_to_reach": 14.14,
+      "days_to_reach": 36.37,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -755,7 +755,7 @@
       "xp_to_next": 1380,
       "xp_cum": 42320,
       "power": 260,
-      "days_to_reach": 14.61,
+      "days_to_reach": 37.58,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -770,7 +770,7 @@
       "xp_to_next": 1400,
       "xp_cum": 43700,
       "power": 265,
-      "days_to_reach": 15.09,
+      "days_to_reach": 38.8,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -785,7 +785,7 @@
       "xp_to_next": 1450,
       "xp_cum": 45100,
       "power": 278,
-      "days_to_reach": 15.57,
+      "days_to_reach": 40.05,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -800,7 +800,7 @@
       "xp_to_next": 1485,
       "xp_cum": 46550,
       "power": 283,
-      "days_to_reach": 16.07,
+      "days_to_reach": 41.33,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -815,7 +815,7 @@
       "xp_to_next": 1520,
       "xp_cum": 48035,
       "power": 288,
-      "days_to_reach": 16.59,
+      "days_to_reach": 42.65,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -830,7 +830,7 @@
       "xp_to_next": 1555,
       "xp_cum": 49555,
       "power": 293,
-      "days_to_reach": 17.11,
+      "days_to_reach": 44.0,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -845,7 +845,7 @@
       "xp_to_next": 1590,
       "xp_cum": 51110,
       "power": 298,
-      "days_to_reach": 17.65,
+      "days_to_reach": 45.38,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -860,7 +860,7 @@
       "xp_to_next": 1625,
       "xp_cum": 52700,
       "power": 303,
-      "days_to_reach": 18.2,
+      "days_to_reach": 46.79,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -875,7 +875,7 @@
       "xp_to_next": 1660,
       "xp_cum": 54325,
       "power": 308,
-      "days_to_reach": 18.76,
+      "days_to_reach": 48.24,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -890,7 +890,7 @@
       "xp_to_next": 1695,
       "xp_cum": 55985,
       "power": 313,
-      "days_to_reach": 19.33,
+      "days_to_reach": 49.71,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -905,7 +905,7 @@
       "xp_to_next": 1730,
       "xp_cum": 57680,
       "power": 318,
-      "days_to_reach": 19.92,
+      "days_to_reach": 51.22,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -920,7 +920,7 @@
       "xp_to_next": 1765,
       "xp_cum": 59410,
       "power": 323,
-      "days_to_reach": 20.51,
+      "days_to_reach": 52.75,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -935,7 +935,7 @@
       "xp_to_next": 1800,
       "xp_cum": 61175,
       "power": 336,
-      "days_to_reach": 21.12,
+      "days_to_reach": 54.32,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -950,7 +950,7 @@
       "xp_to_next": 1835,
       "xp_cum": 62975,
       "power": 341,
-      "days_to_reach": 21.75,
+      "days_to_reach": 55.92,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -965,7 +965,7 @@
       "xp_to_next": 1870,
       "xp_cum": 64810,
       "power": 346,
-      "days_to_reach": 22.38,
+      "days_to_reach": 57.55,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -980,7 +980,7 @@
       "xp_to_next": 1905,
       "xp_cum": 66680,
       "power": 351,
-      "days_to_reach": 23.02,
+      "days_to_reach": 59.21,
       "tier_unlock": "T3",
       "tiers_available": [
         "T1",
@@ -995,7 +995,7 @@
       "xp_to_next": 1940,
       "xp_cum": 68585,
       "power": 356,
-      "days_to_reach": 23.68,
+      "days_to_reach": 60.9,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1011,7 +1011,7 @@
       "xp_to_next": 1975,
       "xp_cum": 70525,
       "power": 361,
-      "days_to_reach": 24.35,
+      "days_to_reach": 62.62,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1027,7 +1027,7 @@
       "xp_to_next": 2010,
       "xp_cum": 72500,
       "power": 366,
-      "days_to_reach": 25.03,
+      "days_to_reach": 64.37,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1043,7 +1043,7 @@
       "xp_to_next": 2045,
       "xp_cum": 74510,
       "power": 371,
-      "days_to_reach": 25.73,
+      "days_to_reach": 66.16,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1059,7 +1059,7 @@
       "xp_to_next": 2080,
       "xp_cum": 76555,
       "power": 376,
-      "days_to_reach": 26.43,
+      "days_to_reach": 67.98,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1075,7 +1075,7 @@
       "xp_to_next": 2115,
       "xp_cum": 78635,
       "power": 381,
-      "days_to_reach": 27.15,
+      "days_to_reach": 69.82,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1091,7 +1091,7 @@
       "xp_to_next": 2150,
       "xp_cum": 80750,
       "power": 396,
-      "days_to_reach": 27.88,
+      "days_to_reach": 71.7,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1107,7 +1107,7 @@
       "xp_to_next": 2185,
       "xp_cum": 82900,
       "power": 401,
-      "days_to_reach": 28.63,
+      "days_to_reach": 73.61,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1123,7 +1123,7 @@
       "xp_to_next": 2220,
       "xp_cum": 85085,
       "power": 406,
-      "days_to_reach": 29.38,
+      "days_to_reach": 75.55,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1139,7 +1139,7 @@
       "xp_to_next": 2255,
       "xp_cum": 87305,
       "power": 411,
-      "days_to_reach": 30.15,
+      "days_to_reach": 77.52,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1155,7 +1155,7 @@
       "xp_to_next": 2290,
       "xp_cum": 89560,
       "power": 416,
-      "days_to_reach": 30.93,
+      "days_to_reach": 79.52,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1171,7 +1171,7 @@
       "xp_to_next": 2325,
       "xp_cum": 91850,
       "power": 421,
-      "days_to_reach": 31.72,
+      "days_to_reach": 81.56,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1187,7 +1187,7 @@
       "xp_to_next": 2360,
       "xp_cum": 94175,
       "power": 426,
-      "days_to_reach": 32.52,
+      "days_to_reach": 83.62,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1203,7 +1203,7 @@
       "xp_to_next": 2395,
       "xp_cum": 96535,
       "power": 431,
-      "days_to_reach": 33.33,
+      "days_to_reach": 85.72,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1219,7 +1219,7 @@
       "xp_to_next": 2430,
       "xp_cum": 98930,
       "power": 436,
-      "days_to_reach": 34.16,
+      "days_to_reach": 87.84,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",
@@ -1235,7 +1235,7 @@
       "xp_to_next": 0,
       "xp_cum": 101360,
       "power": 441,
-      "days_to_reach": 35.0,
+      "days_to_reach": 90.0,
       "tier_unlock": "T4",
       "tiers_available": [
         "T1",

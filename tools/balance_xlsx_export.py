@@ -21,7 +21,7 @@ from tools._balance_xlsx_writer import write_xlsx
 # ── АНКЕР: меняй здесь, потом перезапусти скрипт ─────────────────────────────
 
 CONFIG = {
-    "days_to_max_level": 35,
+    "days_to_max_level": 90,
     "pu_per_day": 1.5,
     "max_level": 80,
     "tier_thresholds": {"T1": 1, "T2": 20, "T3": 45, "T4": 65},

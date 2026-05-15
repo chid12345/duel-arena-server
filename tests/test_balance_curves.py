@@ -133,11 +133,16 @@ def test_pvp_rewards_grow_with_bracket():
 
 # ── Якорь 35 дней ────────────────────────────────────────────────────────────
 
-def test_anchor_35_days_to_max_level():
-    """Среднему игроку нужно ~35 дней до 80 уровня (допуск ±3 дня)."""
+def test_anchor_days_to_max_level_matches():
+    """Дни до 80 уровня должны совпадать с якорем CONFIG (допуск ±1 день).
+
+    Текущий якорь читается из balance_curve.json — `anchor.days_to_max_level`.
+    Если CONFIG в tools/balance_xlsx_export.py изменили — заново запустить
+    `python -m tools.balance_xlsx_export`.
+    """
     target = load_curves()["anchor"]["days_to_max_level"]
     actual = days_to_reach(80)
-    assert abs(actual - target) <= 3.0, (
+    assert abs(actual - target) <= 1.0, (
         f"Калибровка нарушена: цель {target} дней, факт {actual} дней"
     )
 
