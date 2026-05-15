@@ -44,15 +44,17 @@ def weekly_pvp_rank_reward(rank: int) -> Tuple[int, int, str]:
 
 
 def weekly_titan_rank_reward(rank: int) -> Tuple[int, int, str]:
-    """Возвращает (diamonds, gold, title)."""
+    """Возвращает (diamonds, gold, title). Должно совпадать с UI в
+    api/titan_training_routes.py:titan_top — иначе игрок видит одни цифры,
+    получает другие. Эталон — UI."""
     if rank == 1:
-        return 60, 900, "Покоритель Титанов"
+        return 150, 400, "Покоритель Титанов"
     if rank == 2:
-        return 35, 550, "Гроза Башни"
+        return 90, 250, "Гроза Башни"
     if rank == 3:
-        return 20, 350, "Титаноборец"
+        return 60, 150, "Титаноборец"
     if 4 <= rank <= 10:
-        return 8, 150, "Штурмовик Башни"
+        return 25, 60, "Штурмовик Башни"
     return 0, 0, ""
 
 

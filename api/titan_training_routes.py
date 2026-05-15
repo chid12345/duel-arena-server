@@ -112,11 +112,13 @@ def register_titan_training_routes(app, ctx: Dict[str, Any]) -> None:
     @router.get("/api/titans/top")
     async def titan_top(limit: int = 30):
         rows = db.get_titan_weekly_top(limit=min(100, max(5, int(limit))))
+        # Цифры должны совпадать с db_core/week_utils.py:weekly_titan_rank_reward
+        # (одна правда: что показали, то и выдали).
         rewards = [
-            {"rank": 1, "diamonds": 150, "title": "Покоритель Титанов"},
-            {"rank": 2, "diamonds": 90, "title": "Гроза Башни"},
-            {"rank": 3, "diamonds": 60, "title": "Титаноборец"},
-            {"rank": "4-10", "diamonds": 25, "title": "Штурмовик Башни"},
+            {"rank": 1,      "gold": 400, "diamonds": 150, "title": "Покоритель Титанов"},
+            {"rank": 2,      "gold": 250, "diamonds":  90, "title": "Гроза Башни"},
+            {"rank": 3,      "gold": 150, "diamonds":  60, "title": "Титаноборец"},
+            {"rank": "4-10", "gold":  60, "diamonds":  25, "title": "Штурмовик Башни"},
         ]
         return {"ok": True, "week_key": _iso_week_key(), "leaders": rows, "rewards": rewards}
 
