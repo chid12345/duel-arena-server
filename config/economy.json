@@ -12,7 +12,8 @@
     "PREMIUM_GOLD_BUFF": 1.25,
     "PREMIUM_XP_BUFF": 1.25,
     "BOX_EV_RATIO": 0.85,
-    "BOX_JACKPOT_BUDGET": 0.10
+    "BOX_JACKPOT_BUDGET": 0.10,
+    "POST_CAP_XP_TO_GOLD": 0.1
   },
   "difficulty_pu": {
     "easy": 0.3,

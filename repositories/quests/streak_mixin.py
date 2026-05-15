@@ -122,8 +122,10 @@ class QuestsStreakMixin:
         conn.close()
 
         # Выдать награду через grant_exp_with_levelup — чтобы уровень рос корректно
+        xp_to_gold_bonus = 0
         try:
-            self.grant_exp_with_levelup(user_id, xp, gold_add=gold, diamonds_add=diamonds)
+            grant_res = self.grant_exp_with_levelup(user_id, xp, gold_add=gold, diamonds_add=diamonds)
+            xp_to_gold_bonus = int((grant_res or {}).get("xp_to_gold", 0) or 0)
         except Exception as e:
             log.warning("streak grant_exp failed uid=%s: %s", user_id, e)
 
@@ -166,4 +168,5 @@ class QuestsStreakMixin:
             "xp": xp,
             "item": item,
             "cycle_complete": day_num == 7,
+            "xp_to_gold": xp_to_gold_bonus,
         }

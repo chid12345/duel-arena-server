@@ -18,6 +18,16 @@ from config import (
 )
 
 
+def _post_cap_xp_to_gold_rate() -> float:
+    """Курс конвертации XP→Gold после достижения MAX_LEVEL.
+    Берётся из economy.json/anchor/POST_CAP_XP_TO_GOLD. По умолчанию 0.1."""
+    try:
+        from economy import get_anchor
+        return float(get_anchor("POST_CAP_XP_TO_GOLD"))
+    except Exception:
+        return 0.1
+
+
 class UsersExpLevelMixin:
     def grant_exp_with_levelup(
         self, user_id: int, exp_add: int, gold_add: int = 0, diamonds_add: int = 0,
@@ -77,10 +87,20 @@ class UsersExpLevelMixin:
                 free_stats += stats_when_reaching_level(level)
                 diamonds += diamonds_when_reaching_level(level)
 
+            # Конвертация XP→Gold после MAX_LEVEL: остаток XP не копится в БД,
+            # а превращается в золото по курсу POST_CAP_XP_TO_GOLD.
+            xp_to_gold_bonus = 0
+            if level >= MAX_LEVEL and exp > 0:
+                rate = _post_cap_xp_to_gold_rate()
+                xp_to_gold_bonus = int(exp * rate)
+                gold += xp_to_gold_bonus
+                exp = 0
+
             # Пишем в БД только если что-то реально изменилось
             has_changes = (
                 exp_add > 0 or gold_add > 0 or diamonds_add > 0
                 or leveled or level != orig_level
+                or xp_to_gold_bonus > 0
             )
             if has_changes:
                 cur.execute(
@@ -92,6 +112,7 @@ class UsersExpLevelMixin:
                 )
                 conn.commit()
             return {"ok": True, "leveled": leveled, "new_level": level,
-                    "gold": gold, "diamonds": diamonds, "xp": exp}
+                    "gold": gold, "diamonds": diamonds, "xp": exp,
+                    "xp_to_gold": xp_to_gold_bonus}
         finally:
             conn.close()

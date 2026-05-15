@@ -133,4 +133,5 @@ class BattlesDailyQuestsMixin:
         result = self.grant_exp_with_levelup(user_id, xp_reward, gold_add=gold_reward)
         return {"ok": True, "gold": gold_reward, "xp": xp_reward,
                 "leveled": result.get("leveled", False),
-                "new_level": result.get("new_level")}
+                "new_level": result.get("new_level"),
+                "xp_to_gold": int(result.get("xp_to_gold", 0) or 0)}

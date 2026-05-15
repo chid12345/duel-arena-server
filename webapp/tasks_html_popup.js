@@ -88,10 +88,12 @@ window.TasksHTML_showPopup = function(opts) {
 window.TasksHTML_showReward = function(r, onDone) {
   _injectCSS();
   document.querySelector('.tsk-reward-toast')?.remove();
+  const xpToGold = +(r.xp_to_gold || 0);
   const parts = [];
   if ((r.gold     || 0) > 0) parts.push(`+${r.gold}💰`);
   if ((r.diamonds || 0) > 0) parts.push(`+${r.diamonds}💎`);
   if ((r.xp       || 0) > 0) parts.push(`+${r.xp}⭐`);
+  if (xpToGold > 0) parts.push(`+${xpToGold}💰<span style="opacity:.7;font-size:.85em"> (XP→💰 макс.ур.)</span>`);
   const itemsText = parts.length ? parts.join('  ') : '🎁';
 
   const toast = document.createElement('div');

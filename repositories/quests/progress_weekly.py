@@ -90,4 +90,5 @@ class ProgressWeeklyMixin:
                 "diamonds": task["reward_diamonds"], "xp": xp_final,
                 "premium_bonus": False,
                 "leveled": result.get("leveled", False),
-                "new_level": result.get("new_level")}
+                "new_level": result.get("new_level"),
+                "xp_to_gold": int(result.get("xp_to_gold", 0) or 0)}

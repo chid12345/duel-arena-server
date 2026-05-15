@@ -34,6 +34,7 @@ def _validate(data: dict[str, Any]) -> None:
         "PVP_WIN_GOLD", "PVP_DEFEAT_GOLD", "DAILY_BONUS_GOLD",
         "PREMIUM_GOLD_BUFF", "PREMIUM_XP_BUFF",
         "BOX_EV_RATIO", "BOX_JACKPOT_BUDGET",
+        "POST_CAP_XP_TO_GOLD",
     )
     anchor = data["anchor"]
     for key in required_anchor:
