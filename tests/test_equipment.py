@@ -79,6 +79,67 @@ def test_force_ring1_removes_legacy_ring2(db):
     assert "ring2" not in eq, "ring2 должен быть удалён (legacy)"
 
 
+def test_equip_blocks_t4_for_low_level_player(db):
+    """Этап 3E: серверная защита — игрок 10 ур. НЕ может надеть T4-вещь."""
+    db.get_or_create_player(2001, "u_low")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 10 WHERE user_id = ?", (2001,))
+    conn.commit()
+    conn.close()
+
+    # T4 разблокируется с 65 ур. — на 10-м должен быть отказ
+    ok = db.equip_item(2001, "belt", "helmet_mythic1")
+
+    assert ok is False, "T4 на 10 ур. — equip_item должен вернуть False"
+    eq = db.get_equipment(2001)
+    assert "belt" not in eq, "Слот belt не должен быть заполнен"
+
+
+def test_equip_t4_works_at_max_level(db):
+    """На 80 ур. T4-вещь надевается без проблем."""
+    db.get_or_create_player(2002, "u_high")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (2002,))
+    conn.commit()
+    conn.close()
+
+    ok = db.equip_item(2002, "belt", "helmet_mythic1")
+
+    assert ok is True
+    eq = db.get_equipment(2002)
+    assert eq["belt"]["item_id"] == "helmet_mythic1"
+
+
+def test_equip_force_bypasses_tier_block(db):
+    """force=True — для платных Stars/USDT покупок — обходит tier-блок.
+    Игрок уже заплатил, отказывать нельзя."""
+    db.get_or_create_player(2003, "u_paid")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 10 WHERE user_id = ?", (2003,))
+    conn.commit()
+    conn.close()
+
+    # T4 за Stars (force=True) — даже на 10 ур. должно надеться
+    ok = db.equip_item(2003, "belt", "helmet_mythic1", force=True)
+
+    assert ok is True, "force=True должен пропустить tier-блок"
+    eq = db.get_equipment(2003)
+    assert eq["belt"]["item_id"] == "helmet_mythic1"
+
+
+def test_equip_legacy_item_no_tier_works(db):
+    """Legacy предмет без tier (sword_iron) — проверка пропускается."""
+    db.get_or_create_player(2004, "u_legacy")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 1 WHERE user_id = ?", (2004,))
+    conn.commit()
+    conn.close()
+
+    ok = db.equip_item(2004, "weapon", "sword_iron")
+
+    assert ok is True, "Legacy без tier должен надеваться без проверки"
+
+
 def test_add_owned_weapon_idempotent(db):
     """Повторный add_owned_weapon не должен создавать дубль."""
     db.get_or_create_player(1006, "u6")

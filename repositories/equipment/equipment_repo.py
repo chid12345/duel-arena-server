@@ -5,9 +5,24 @@ from __future__ import annotations
 from typing import Dict, Optional
 
 from db_schema.equipment_catalog import get_item, get_item_stats, SLOT_RING1, SLOT_RING2
+from economy.curves import is_tier_unlocked
 
 
 class EquipmentMixin:
+
+    def _can_use_tier(self, user_id: int, item_tier: Optional[str]) -> bool:
+        """Серверная проверка tier-разблокировки. None tier → пропускаем (legacy)."""
+        if not item_tier:
+            return True
+        conn = self.get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT level FROM players WHERE user_id = ?", (user_id,))
+            row = cur.fetchone()
+            player_level = int(row["level"] or 1) if row else 1
+        finally:
+            conn.close()
+        return is_tier_unlocked(player_level, str(item_tier))
 
     def get_equipment(self, user_id: int) -> Dict[str, Dict]:
         """Возвращает {slot: {item_id, ...item_data}} для всех слотов игрока."""
@@ -31,7 +46,16 @@ class EquipmentMixin:
         """Надеть предмет в слот (UPSERT). Для кольца — по умолчанию заполняет ring1, потом ring2.
         force=True — писать точно в переданный slot без ring-логики (для платных покупок Stars/USDT:
         мини-апп показывает только ring1, и купленное кольцо должно туда и попадать).
+
+        Этап 3E: tier-проверка по уровню игрока. force=True пропускает блок —
+        Stars/USDT-покупки уже оплачены, отказывать нельзя. Бот/TMA обычная
+        покупка → блок работает.
         """
+        # Серверная защита tier-блокировки (этап 3E)
+        item_meta = get_item(item_id) or {}
+        if not force and not self._can_use_tier(user_id, item_meta.get("tier")):
+            return False
+
         target_slot = slot if force else self._resolve_ring_slot(user_id, slot, item_id)
         if target_slot is None:
             return False
