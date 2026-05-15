@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.20.26"
-VERSION_LABEL = "v2.20.26 — tests: боевая система — броня и урон (9 тестов). Armor: броня снижает damage, _eq_def_pct ещё больше, paladin_gold -3%, agile +10% (трейдофф). Damage: _base_damage растёт от strength, cap проверка, lifesteal лечит attacker, обычный hit > 0, при совпадении зон чаще block. Всего 101/101 теста зелёные."
+VERSION = "2.20.27"
+VERSION_LABEL = "v2.20.27 — tests: финал! Makefile + test.bat + GitHub Actions CI + pytest в requirements.txt. Все 101 тест зелёные. 10 этапов закрыты — игра готова к запуску, регрессии будут ловиться автоматически на каждый push в main."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.45"
+GAME_VERSION = "16.46"
