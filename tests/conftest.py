@@ -71,7 +71,10 @@ def db():
 
         def get_connection(self):
             import sqlite3
-            conn = sqlite3.connect(self._db_path, check_same_thread=False)
+            # timeout=5 — спасает от "database is locked" когда внутренний код
+            # открывает новый connection во время уже запущенной транзакции
+            # (например, log_metric_event внутри process_weekly_leaderboard_payouts).
+            conn = sqlite3.connect(self._db_path, check_same_thread=False, timeout=5.0)
             conn.row_factory = sqlite3.Row
             conn.execute("PRAGMA journal_mode=WAL")
             conn.execute("PRAGMA foreign_keys=ON")
