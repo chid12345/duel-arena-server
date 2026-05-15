@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.21.01"
-VERSION_LABEL = "v2.21.01 — Balance Этап 1 (fix): якорь 35 → 90 дней до 80 уровня (по запросу геймдиза). Калькулятор перегенерён, balance_curve.json и xlsx синхронизированы. T2@20 ~10дн, T3@45 ~33дн, T4@65 ~61дн, L80 ровно 90 дней. xp_per_pu_avg: 1930 → 750. Тест test_anchor_days_to_max_level_matches переименован (был test_anchor_35_days_to_max_level), теперь читает якорь из конфига."
+VERSION = "2.21.02"
+VERSION_LABEL = "v2.21.02 — Balance Этап 2A: формула цены HP-зелий через price_for_item. Секция potions в economy.json, функция potion_price_for_hp(max_hp) в economy/formulas.py. На 1 ур (max_hp=100) зелье 15g, на 80 ур (max_hp=1000) — 150g. Магазин (бот+TMA) пока НЕ переключён — это следующий кусок 2B. Тесты 25/25 зелёные (+2 новых)."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.52"
+GAME_VERSION = "16.53"

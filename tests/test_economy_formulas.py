@@ -24,6 +24,7 @@ from economy.formulas import (  # noqa: E402
     gold_to_diamond,
     reward_for_task,
     price_for_item,
+    potion_price_for_hp,
     ev_for_box,
     apply_premium_gold,
 )
@@ -81,6 +82,28 @@ def test_price_for_item_currencies_all_positive():
     for cur in ("gold", "diamond", "star", "usdt"):
         p = price_for_item(10, "common", "T1", currency=cur)
         assert p > 0, f"Цена в валюте {cur!r} должна быть > 0, получили {p}"
+
+
+# ── Цена зелья от max_hp ─────────────────────────────────────────────────────
+
+def test_potion_price_for_hp_scales_with_max_hp():
+    """Цена зелья растёт линейно с max_hp игрока.
+
+    Анкер: power_score_per_max_hp=0.005 → 1 ур (max_hp=100): ~15g,
+    80 ур (max_hp=1000): ~150g. На 80 уровне зелье в 10 раз дороже.
+    """
+    p1 = potion_price_for_hp("hp_full", 100)
+    p80 = potion_price_for_hp("hp_full", 1000)
+    assert 10 <= p1 <= 25, f"Новичок: ожидали 10-25g, получили {p1}g"
+    assert 100 <= p80 <= 200, f"Ветеран: ожидали 100-200g, получили {p80}g"
+    # Линейность: 10× max_hp → 10× цена (±1 на округлениях)
+    assert abs(p80 / p1 - 10) <= 1, f"Масштаб должен быть ~10×, получили {p80/p1:.2f}"
+
+
+def test_potion_price_unknown_raises():
+    """Неизвестное зелье → KeyError из конфига."""
+    with pytest.raises(KeyError):
+        potion_price_for_hp("hp_nonexistent", 100)
 
 
 # ── EV ящика ─────────────────────────────────────────────────────────────────

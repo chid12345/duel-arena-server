@@ -56,5 +56,17 @@
     "daily":  { "easy": [15, 0],  "medium": [25, 0],   "hard": [35, 0],   "epic": [35, 0]   },
     "weekly": { "easy": [70, 0],  "medium": [100, 1],  "hard": [130, 1],  "epic": [160, 2]  },
     "once":   { "easy": [180, 0], "medium": [320, 2],  "hard": [450, 5],  "epic": [550, 8]  }
+  },
+  "potions": {
+    "_comment": "Зелья HP. Цена считается формулой potion_price_for_hp(max_hp) — масштабируется с уровнем игрока. На 1 ур (max_hp~100): ~15g. На 80 ур (max_hp~1000): ~150g. Этап 2 редизайна.",
+    "hp_full": {
+      "name": "Зелье полного HP",
+      "emoji": "❤️",
+      "rarity": "common",
+      "tier": "T1",
+      "power_score_per_max_hp": 0.005,
+      "currency": "gold",
+      "restore_pct": 1.0
+    }
   }
 }

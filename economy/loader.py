@@ -124,6 +124,14 @@ def get_reward_grid_cell(frequency: str, difficulty: str) -> tuple[int, int] | N
     return int(cell[0]), int(cell[1])
 
 
+def get_potion(potion_id: str) -> dict:
+    """Конфиг зелья из секции `potions` (raises KeyError если нет)."""
+    potions = load_economy().get("potions") or {}
+    if potion_id not in potions:
+        raise KeyError(f"economy.json/potions: нет зелья {potion_id!r}")
+    return dict(potions[potion_id])
+
+
 if __name__ == "__main__":
     data = load_economy()
     print(f"Загружено: {economy_source_path()}")

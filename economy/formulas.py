@@ -17,6 +17,7 @@ from economy.loader import (
     get_anchor,
     get_difficulty_pu,
     get_frequency_mult,
+    get_potion,
     get_price_factor,
     get_rarity_mult,
     get_reward_grid_cell,
@@ -123,6 +124,28 @@ def price_for_item(
         rate = get_anchor("USDT_TO_DIAMOND")
         return max(0, round(d / rate, 2)) if rate > 0 else 0  # type: ignore[return-value]
     raise ValueError(f"Неизвестная валюта: {currency!r}")
+
+
+# ── Цена зелья (масштабируется с max_hp игрока) ──────────────────────────────
+
+def potion_price_for_hp(potion_id: str, max_hp: int) -> int:
+    """Цена зелья от max_hp игрока через price_for_item.
+
+    Формула: power_score = max_hp × p["power_score_per_max_hp"], потом
+    стандартная price_for_item(power, rarity, tier, currency). Это значит
+    зелье для новичка дешёвое, для ветерана дорогое — пропорционально
+    тому, сколько HP оно восстанавливает.
+
+    Конфиг зелья — в config/economy.json/potions/<potion_id>.
+    """
+    p = get_potion(potion_id)
+    power = float(max_hp) * float(p["power_score_per_max_hp"])
+    return price_for_item(
+        power,
+        rarity=p.get("rarity", "common"),
+        tier=p.get("tier", "T1"),
+        currency=p.get("currency", "gold"),
+    )
 
 
 # ── EV ящика ─────────────────────────────────────────────────────────────────
