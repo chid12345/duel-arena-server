@@ -85,11 +85,14 @@ window.TasksHTML_Achieve = function(achievements) {
   const inProgress = sorted.filter(a => !a.all_done);
   const allDone    = sorted.filter(a => a.all_done);
 
+  const total = achievements.length;
+  const doneN = allDone.length;
+
   return `${CSS}
 ${ready > 0 ? `<div class="ta-banner">🎁 Готово к получению: ${ready} достижени${ready===1?'е':ready<5?'я':'й'}</div>` : ''}
-<div class="tsk-sec" style="margin-top:6px">ДОСТИЖЕНИЯ</div>
+<div class="tsk-sec" style="margin-top:6px">🏆 ДОСТИЖЕНИЯ · ${doneN} из ${total} пройдено</div>
 <div class="ta-list">${inProgress.map(_achCard).join('')}</div>
-${allDone.length ? `<div class="ta-dsep">✅ ЗАВЕРШЁННЫЕ ДОСТИЖЕНИЯ</div><div class="ta-list">${allDone.map(_achCard).join('')}</div>` : ''}
+${allDone.length ? `<div class="ta-dsep">✅ ЗАВЕРШЁННЫЕ ДОСТИЖЕНИЯ (${doneN}/${total})</div><div class="ta-list">${allDone.map(_achCard).join('')}</div>` : ''}
 <div class="tsk-reset">🏆 Достижения не сбрасываются</div>`;
 };
 
