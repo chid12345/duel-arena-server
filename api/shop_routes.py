@@ -60,8 +60,39 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
     )
 
     @router.get("/api/shop/catalog")
-    async def shop_catalog():
-        return {"ok": True, "items": SHOP_CATALOG}
+    async def shop_catalog(init_data: str = ""):
+        """Каталог магазина. Если init_data передан — пересчитывает динамические
+        цены под уровень/max_hp игрока (этап 3G). Иначе отдаёт каталог как есть.
+
+        Динамические товары: hp_full (potion_price_for_hp от max_hp) — больше
+        пока нет, но архитектура расширяемая через флаг dynamic_price.
+        """
+        if not init_data:
+            return {"ok": True, "items": SHOP_CATALOG}
+        try:
+            from economy.formulas import potion_price_for_hp
+            tg_user = get_user_from_init_data(init_data)
+            uid = int(tg_user["id"])
+            conn = db.get_connection()
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT max_hp FROM players WHERE user_id = ?", (uid,))
+                row = cur.fetchone()
+                max_hp = int(row["max_hp"] or 100) if row else 100
+            finally:
+                conn.close()
+            items = dict(SHOP_CATALOG)
+            # Пересчитываем динамические цены
+            for iid, it in list(items.items()):
+                if not it.get("dynamic_price"):
+                    continue
+                if iid == "hp_full":
+                    items[iid] = {**it, "price": potion_price_for_hp("hp_full", max_hp)}
+            return {"ok": True, "items": items}
+        except Exception as exc:
+            logger.exception("shop catalog dynamic error:")
+            # Безопасный фолбек — обычный каталог, чтобы UI не падал
+            return {"ok": True, "items": SHOP_CATALOG}
 
     @router.get("/api/shop/inventory")
     async def shop_inventory(init_data: str):

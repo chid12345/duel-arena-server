@@ -152,8 +152,10 @@ const GuideHTML = (() => {
       const cat = res.items;
       const gc = GUIDE_CARDS;
       const potions = gc.items?.find(c => c.title === 'Зелья HP');
-      if (potions && cat.hp_small && cat.hp_medium && cat.hp_full) {
-        potions.detail = `Зелья HP — покупай в Магазине:\n• 🧪 Малое: ${cat.hp_small.desc} — ${cat.hp_small.price}${cat.hp_small.currency==='gold'?'🪙':'💎'}\n• 🧪 Среднее: ${cat.hp_medium.desc} — ${cat.hp_medium.price}${cat.hp_medium.currency==='gold'?'🪙':'💎'}\n• 🧪 Полное: ${cat.hp_full.desc} — ${cat.hp_full.price}${cat.hp_full.currency==='gold'?'🪙':'💎'}\n\nИспользуй между боями чтобы быстрее вернуться в строй.`;
+      if (potions && cat.hp_full) {
+        // Этап 2B/3G: в магазине одно зелье HP, цена считается от max_hp игрока
+        const _cur = cat.hp_full.currency === 'gold' ? '🪙' : '💎';
+        potions.detail = `Зелье HP — покупай в Магазине:\n• ⚗️ Полное HP: ${cat.hp_full.desc} — ${cat.hp_full.price}${_cur}\n\nЦена растёт с уровнем (max HP). Использует между боями чтобы быстрее вернуться в строй.`;
       }
       const scrolls = gc.items?.find(c => c.title === 'Свитки статов');
       if (scrolls && cat.scroll_str_3) {

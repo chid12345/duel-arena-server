@@ -9,10 +9,13 @@ Object.assign(ShopScene.prototype, {
     const p = State.player;
     const xpCharges = p?.xp_boost_charges || 0;
     if (this._tab === 'consumables') {
+      // hp_full: цена считается формулой от max_hp игрока (этап 3G).
+      // Серверная истина — economy.formulas.potion_price_for_hp, фронт повторяет:
+      // power_score_per_max_hp=0.005 × rarity(1) × tier_mult(1) × factor.gold(0.10) × PU_TO_GOLD(300) = ×0.15
+      const _max_hp = Number(p?.max_hp || 100);
+      const _hp_full_price = Math.round(_max_hp * 0.15);
       return [
-        { id: 'hp_small',    icon: '🧪', name: 'Малое зелье HP',   price: 10,  currency: 'gold',     desc: '+30% HP', hpPct: 0.30 },
-        { id: 'hp_medium',   icon: '💊', name: 'Среднее зелье HP',  price: 20,  currency: 'gold',     desc: '+60% HP', hpPct: 0.60 },
-        { id: 'hp_full',     icon: '⚗️', name: 'Полное зелье HP',  price: 35,  currency: 'gold',     desc: 'Полное HP', hpPct: 1.0 },
+        { id: 'hp_full',     icon: '⚗️', name: 'Зелье полного HP', price: _hp_full_price, currency: 'gold', desc: 'Полное HP (цена растёт с уровнем)', hpPct: 1.0 },
         { id: 'xp_boost_5',  icon: '⚡', name: 'XP Буст ×1.5',    price: 60,  currency: 'gold',     desc: `5 боёв · активно: ${xpCharges}` },
         { id: 'xp_boost_20', icon: '⚡', name: 'XP Буст ×1.5',    price: 8,   currency: 'diamonds', desc: '20 боёв → инвентарь' },
         { id: 'xp_boost_x2', icon: '🚀', name: 'XP Буст ×2.0',    price: 6,   currency: 'diamonds', desc: '10 боёв → инвентарь' },
