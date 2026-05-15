@@ -28,7 +28,7 @@ from economy.formulas import (  # noqa: E402
     ev_for_box,
     apply_premium_gold,
 )
-from economy.loader import get_anchor  # noqa: E402
+from economy.loader import get_anchor, get_combat, get_combat_dict  # noqa: E402
 
 
 # ── Конвертеры валют ─────────────────────────────────────────────────────────
@@ -114,6 +114,37 @@ def test_ev_for_box_overflow_warned():
     assert res["jackpot_overflow_gold"] > 0, (
         f"Огромный джекпот должен дать overflow > 0, получили {res['jackpot_overflow_gold']}"
     )
+
+
+# ── Балансные множители боя ──────────────────────────────────────────────────
+
+def test_combat_pvp_winrate_bonus_present():
+    """PvP-бонус ×1.30 должен быть в economy.json/combat."""
+    assert get_combat("pvp_winrate_bonus") == 1.30
+
+
+def test_combat_xp_boost_mult_present():
+    """XP-буст ×1.5 — единственный источник правды."""
+    assert get_combat("xp_boost_mult") == 1.5
+
+
+def test_combat_bot_win_gold_multiplier_present():
+    """Бот даёт меньше золота (анти-фарм PvE), коэффициент ×0.8."""
+    assert get_combat("bot_win_gold_multiplier") == 0.8
+
+
+def test_combat_pvp_repeat_factor_thresholds():
+    """Anti-friend-farm: пороги 3 и 6 боёв, множители 0.5 и 0.2."""
+    cfg = get_combat_dict("pvp_repeat_factor")
+    assert cfg["threshold_low"] == 3
+    assert cfg["factor_low"] == 0.5
+    assert cfg["threshold_high"] == 6
+    assert cfg["factor_high"] == 0.2
+
+
+def test_combat_unknown_key_raises():
+    with pytest.raises(KeyError):
+        get_combat("nonexistent_key")
 
 
 # ── Премиум ──────────────────────────────────────────────────────────────────

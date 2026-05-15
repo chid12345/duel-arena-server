@@ -132,6 +132,30 @@ def get_potion(potion_id: str) -> dict:
     return dict(potions[potion_id])
 
 
+def get_combat(key: str, default: float | None = None) -> float:
+    """Балансный множитель боя из секции `combat`. KeyError если нет и default не задан."""
+    combat = load_economy().get("combat") or {}
+    if key not in combat:
+        if default is not None:
+            return float(default)
+        raise KeyError(f"economy.json/combat: нет ключа {key!r}")
+    val = combat[key]
+    if isinstance(val, dict):
+        raise ValueError(f"economy.json/combat/{key}: ожидалось число, получили dict — используй get_combat_dict")
+    return float(val)
+
+
+def get_combat_dict(key: str) -> dict:
+    """Сложный конфиг боя (например, pvp_repeat_factor). KeyError если нет."""
+    combat = load_economy().get("combat") or {}
+    if key not in combat:
+        raise KeyError(f"economy.json/combat: нет ключа {key!r}")
+    val = combat[key]
+    if not isinstance(val, dict):
+        raise ValueError(f"economy.json/combat/{key}: ожидался dict, получили {type(val).__name__}")
+    return dict(val)
+
+
 if __name__ == "__main__":
     data = load_economy()
     print(f"Загружено: {economy_source_path()}")

@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 from config import *
 from database import db
+from economy.loader import get_combat, get_combat_dict
 
 from battle_system.end_battle_finish import end_battle_rewards_and_finish
 
@@ -104,10 +105,12 @@ class BattleEndBattleMixin:
                     xp_boosted = bool(done["xp_boost"])
                 if "pvp_cnt" in done and not isinstance(done["pvp_cnt"], Exception):
                     cnt = done["pvp_cnt"]
-                    if cnt >= 6:
-                        pvp_repeat_factor = 0.2
-                    elif cnt >= 3:
-                        pvp_repeat_factor = 0.5
+                    # Анти-фарм-другов: пороги и множители из economy.json/combat/pvp_repeat_factor
+                    _prf = get_combat_dict("pvp_repeat_factor")
+                    if cnt >= int(_prf["threshold_high"]):
+                        pvp_repeat_factor = float(_prf["factor_high"])
+                    elif cnt >= int(_prf["threshold_low"]):
+                        pvp_repeat_factor = float(_prf["factor_low"])
 
         winner_locked = self._is_profile_reset_locked(winner_user_id) or self._is_stale_after_profile_reset(
             winner_live, battle["started_at"]
@@ -126,7 +129,9 @@ class BattleEndBattleMixin:
             not is_test and battle.get("is_bot2") and winner_user_id
             and db.get_bot_wins_today(int(winner_user_id)) >= BOT_DAILY_LIMIT
         )
-        gold_reward = 0 if is_test else (VICTORY_GOLD if not battle["is_bot2"] else int(VICTORY_GOLD * 0.8))
+        # Бот: уменьшенная награда (анти-фарм PvE), множитель в economy.json/combat
+        _bot_mult = get_combat("bot_win_gold_multiplier")
+        gold_reward = 0 if is_test else (VICTORY_GOLD if not battle["is_bot2"] else int(VICTORY_GOLD * _bot_mult))
         winner_level = int(winner_live.get("level", PLAYER_START_LEVEL))
         loser_level = int(loser_live.get("level", PLAYER_START_LEVEL))
         level_diff = winner_level - loser_level
@@ -142,7 +147,8 @@ class BattleEndBattleMixin:
         )
         loser_exp = 0 if (is_test or not battle.get("is_bot2")) else int(hypothetical_loser_win * DEFEAT_XP_AS_WIN_FRACTION)
 
-        exp_reward = int(base_exp * 1.5) if xp_boosted else base_exp
+        # XP-буст: множитель в economy.json/combat/xp_boost_mult
+        exp_reward = int(base_exp * get_combat("xp_boost_mult")) if xp_boosted else base_exp
         if not is_test and prem_w_active and exp_reward > 0:
             exp_reward = max(1, int(round(exp_reward * PREMIUM_XP_MULTIPLIER)))
         # Premium: +25% к ЗОЛОТУ победителя (UI обещает «+25% Gold» — даём)
@@ -152,8 +158,10 @@ class BattleEndBattleMixin:
             loser_exp = max(0, int(round(loser_exp * PREMIUM_XP_MULTIPLIER)))
 
         if not is_test and not battle.get("is_bot2"):
-            gold_reward = int(round(gold_reward * 1.30 * pvp_repeat_factor))
-            exp_reward = int(round(exp_reward * 1.30 * pvp_repeat_factor))
+            # PvP-бонус и анти-фарм-другов: множители из economy.json/combat
+            _pvp_bonus = get_combat("pvp_winrate_bonus")
+            gold_reward = int(round(gold_reward * _pvp_bonus * pvp_repeat_factor))
+            exp_reward = int(round(exp_reward * _pvp_bonus * pvp_repeat_factor))
         if battle_mode == "titan":
             floor = max(1, int(mode_meta.get("floor", 1)))
             gold_reward = 0 if is_test else int(12 + floor * 5)
