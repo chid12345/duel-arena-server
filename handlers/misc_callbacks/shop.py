@@ -9,13 +9,15 @@ from database import db
 
 async def show_shop(query, player):
     """Показать магазин — только рабочие товары."""
+    from economy.formulas import potion_price_for_hp
     boost_charges = player.get("xp_boost_charges", 0) or 0
+    max_hp = int(player.get("max_hp") or 100)
+    hp_potion_cost = potion_price_for_hp("hp_full", max_hp)
     text = (
         f"🛒 <b>МАГАЗИН</b>\n\n"
         f"🪙 Золото: <b>{player['gold']}</b>  |  💎 Алмазы: <b>{player['diamonds']}</b>\n\n"
         f"<b>🧪 Зелья и бусты:</b>\n"
-        f"• 🧪 Малое зелье HP · <b>60🪙</b> — восстановить 30% HP\n"
-        f"• ⚗️ Большое зелье HP · <b>200🪙</b> — полное восстановление HP\n"
+        f"• ⚗️ Зелье полного HP · <b>{hp_potion_cost}🪙</b> — полное восстановление HP\n"
         f"• 💊 XP ×1.5 · <b>400🪙</b> — двойной опыт на 5 боёв"
         f" (у вас: {boost_charges} зарядов)\n\n"
         f"<b>💎 Премиум:</b>\n"
@@ -26,10 +28,7 @@ async def show_shop(query, player):
     from config import PREMIUM_SUBSCRIPTION_STARS
 
     keyboard = [
-        [
-            InlineKeyboardButton("🧪 Малое зелье · 60🪙", callback_data="buy_hp_potion_small"),
-            InlineKeyboardButton("⚗️ Зелье HP · 200🪙", callback_data="buy_hp_potion"),
-        ],
+        [InlineKeyboardButton(f"⚗️ Зелье HP · {hp_potion_cost}🪙", callback_data="buy_hp_potion")],
         [InlineKeyboardButton("💊 XP ×1.5 · 400🪙", callback_data="buy_xp_boost")],
         [InlineKeyboardButton(f"🔄 Сброс статов · {RESET_STATS_COST_DIAMONDS}💎", callback_data="buy_stat_reset")],
         [
@@ -63,21 +62,12 @@ async def handle_shop_purchase(query, player, item_key: str):
     uid = player["user_id"]
     ref_r: dict = {}
     purchase_ok = False
-    if item_key == "hp_potion_small":
-        result = db.buy_hp_potion_small(uid)
-        if result["ok"]:
-            purchase_ok = True
-            hp_r = result["hp_restored"]
-            cost = result.get("cost", 60)
-            msg = f"✅ +{hp_r} HP восстановлено (−{cost} 🪙)"
-        else:
-            msg = f"❌ {result['reason']}"
-    elif item_key == "hp_potion":
+    if item_key == "hp_potion":
         result = db.buy_hp_potion(uid)
         if result["ok"]:
             purchase_ok = True
             hp_r = result["hp_restored"]
-            cost = result.get("cost", 200)
+            cost = result.get("cost", 0)
             msg = f"✅ HP полностью восстановлен (+{hp_r}) — −{cost} 🪙" if hp_r > 0 else f"❤️ HP уже полный — −{cost} 🪙"
         else:
             msg = f"❌ {result['reason']}"

@@ -6,7 +6,6 @@ from api.tma_infra import get_user_lock
 from api.shop_helpers import (
     _XP_BOOST_CHARGES,
     _EXCHANGE_GOLD,
-    _buy_hp,
     _finalize,
     _buy_xp_boost_item,
     _exchange_diamonds,
@@ -29,21 +28,11 @@ async def shop_buy_inner(body, *, db, get_user_from_init_data, _rl_check, SHOP_C
 
 
 def _do_buy(db, uid: int, iid: str, item: dict) -> dict:
-    # === HP зелья (сразу) ===
-    if iid == "hp_small":
-        r = _buy_hp(db, uid, price=12, pct=0.30)
-        if r.get("ok"):
-            db.track_purchase(uid, iid, "gold", 12)
-        return r
-    if iid == "hp_medium":
-        r = _buy_hp(db, uid, price=25, pct=0.60)
-        if r.get("ok"):
-            db.track_purchase(uid, iid, "gold", 25)
-        return r
+    # === Зелье полного HP (сразу). Цена считается формулой от max_hp игрока. ===
     if iid == "hp_full":
-        r = _buy_hp(db, uid, price=50, pct=1.0)
+        r = _finalize(db, uid, db.buy_hp_potion(uid))
         if r.get("ok"):
-            db.track_purchase(uid, iid, "gold", 50)
+            db.track_purchase(uid, iid, "gold", int(r.get("cost", 0)))
         return r
 
     # === Сброс статов (сразу) ===

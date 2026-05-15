@@ -2,14 +2,17 @@
 tests/test_shop_buys.py — покупки в магазине (зелья, буст XP, сброс статов).
 
 Покрывает:
-- buy_hp_potion_small (60g, +30% HP, не выше max),
-- buy_hp_potion (200g, до full),
-- buy_hp_potion_small блокируется при полном HP,
+- buy_hp_potion: единственное зелье full-HP, цена считается формулой
+  potion_price_for_hp(max_hp) — растёт с уровнем игрока (этап 2B редизайна),
+- buy_hp_potion блокируется при полном HP,
+- buy_hp_potion блокируется при нехватке золота,
 - buy_xp_boost (+5 charges за 400g),
 - consume_xp_boost_charge,
 - buy_stat_reset (списывает алмазы, сбрасывает статы).
 """
 from __future__ import annotations
+
+from economy.formulas import potion_price_for_hp
 
 
 def _set_player(db, uid: int, **fields) -> None:
@@ -32,45 +35,63 @@ def _row(db, uid: int) -> dict:
     return dict(row)
 
 
-def test_buy_hp_potion_small_costs_60_and_heals(db):
-    """Малое зелье: -60g, +30% от max_hp."""
-    db.get_or_create_player(1001, "u1")
-    _set_player(db, 1001, gold=200, max_hp=100, current_hp=10)
-
-    res = db.buy_hp_potion_small(1001)
-
-    assert res["ok"] is True
-    assert res["cost"] == 60
-    p = _row(db,1001)
-    assert p["gold"] == 140, f"Ожидали 140 gold (200-60), получили {p['gold']}"
-    # 30% от 100 = 30, было 10 → 40
-    assert p["current_hp"] == 40, f"Ожидали 40 HP, получили {p['current_hp']}"
-
-
-def test_buy_hp_potion_small_blocks_at_full_hp(db):
-    """При полном HP малое зелье не покупается, золото не тратится."""
-    db.get_or_create_player(1002, "u2")
-    _set_player(db, 1002, gold=200, max_hp=100, current_hp=100)
-
-    res = db.buy_hp_potion_small(1002)
-
-    assert res["ok"] is False, "При full HP покупка должна быть отклонена"
-    p = _row(db,1002)
-    assert p["gold"] == 200, "Золото не должно тратиться"
-
-
-def test_buy_hp_potion_full_to_max(db):
-    """Большое зелье (200g) восстанавливает до max."""
+def test_buy_hp_potion_full_uses_formula_price(db):
+    """Зелье HP: цена считается через potion_price_for_hp(max_hp).
+    На 1 ур (max_hp=100) ≈ 15g, восстанавливает до full."""
     db.get_or_create_player(1003, "u3")
     _set_player(db, 1003, gold=300, max_hp=200, current_hp=50)
 
+    expected_cost = potion_price_for_hp("hp_full", 200)
     res = db.buy_hp_potion(1003)
 
     assert res["ok"] is True
-    assert res["cost"] == 200
-    p = _row(db,1003)
-    assert p["gold"] == 100, "300-200=100"
+    assert res["cost"] == expected_cost, f"Цена должна быть {expected_cost}g, получили {res['cost']}g"
+    p = _row(db, 1003)
+    assert p["gold"] == 300 - expected_cost, f"Списано {expected_cost}g золота"
     assert p["current_hp"] == p["max_hp"], "HP должно быть full"
+
+
+def test_buy_hp_potion_scales_with_max_hp(db):
+    """Зелье на 80 ур (max_hp=1000) стоит сильно дороже, чем на 1 ур (max_hp=100)."""
+    db.get_or_create_player(1010, "u10")
+    _set_player(db, 1010, gold=10000, max_hp=100, current_hp=10)
+    res_low = db.buy_hp_potion(1010)
+    cost_low = res_low["cost"]
+
+    db.get_or_create_player(1011, "u11")
+    _set_player(db, 1011, gold=10000, max_hp=1000, current_hp=10)
+    res_high = db.buy_hp_potion(1011)
+    cost_high = res_high["cost"]
+
+    assert cost_high > cost_low, f"Зелье на 80 ур ({cost_high}g) должно быть дороже, чем на 1 ур ({cost_low}g)"
+    # Линейно: max_hp×10 → цена×10 (±1 на округлениях)
+    assert abs(cost_high / cost_low - 10) <= 1.0, (
+        f"Масштаб ~10×, получили {cost_high/cost_low:.2f}"
+    )
+
+
+def test_buy_hp_potion_blocks_at_full_hp(db):
+    """При полном HP зелье не покупается, золото не тратится."""
+    db.get_or_create_player(1002, "u2")
+    _set_player(db, 1002, gold=200, max_hp=100, current_hp=100)
+
+    res = db.buy_hp_potion(1002)
+
+    assert res["ok"] is False, "При full HP покупка должна быть отклонена"
+    p = _row(db, 1002)
+    assert p["gold"] == 200, "Золото не должно тратиться"
+
+
+def test_buy_hp_potion_blocks_when_no_gold(db):
+    """При нехватке золота — покупка отклонена, золото не тратится."""
+    db.get_or_create_player(1012, "u12")
+    _set_player(db, 1012, gold=5, max_hp=100, current_hp=10)
+
+    res = db.buy_hp_potion(1012)
+
+    assert res["ok"] is False, "Должен вернуть ok=False при нехватке золота"
+    p = _row(db, 1012)
+    assert p["gold"] == 5, "Золото не должно тратиться"
 
 
 def test_buy_xp_boost_adds_5_charges(db):

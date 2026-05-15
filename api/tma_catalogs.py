@@ -14,10 +14,10 @@ from config import (
 # inventory=False/отсутствует → эффект применяется немедленно
 SHOP_CATALOG = {
     # ── Расходники: применяются сразу ─────────────────────────
-    # Зелья HP — почти бесплатно, берут перед каждым боем
-    "hp_small":      {"name": "Малое зелье HP",       "price": 10,  "currency": "gold",     "icon": "🧪", "tab": "consumables", "desc": "+30% HP"},
-    "hp_medium":     {"name": "Среднее зелье HP",      "price": 20,  "currency": "gold",     "icon": "💊", "tab": "consumables", "desc": "+60% HP"},
-    "hp_full":       {"name": "Полное зелье HP",       "price": 35,  "currency": "gold",     "icon": "⚗️", "tab": "consumables", "desc": "Полное HP"},
+    # Зелье полного HP — единственное (этап 2B редизайна). Цена ДИНАМИЧЕСКАЯ:
+    # считается на сервере через potion_price_for_hp(max_hp). Поле price тут —
+    # ориентир для UI новичка (max_hp=100 → ~15g), реальная цена приходит в ответе buy.
+    "hp_full":       {"name": "Зелье полного HP",     "price": 15,  "currency": "gold",     "icon": "⚗️", "tab": "consumables", "desc": "Полное HP (цена растёт с уровнем)", "dynamic_price": True},
     # XP/Gold бусты — золото дёшево (5 боёв), алмазы для серьёзного буста
     "xp_boost_5":    {"name": "XP Буст ×1.5",         "price": 60,  "currency": "gold",     "icon": "⚡", "tab": "consumables", "desc": "5 боёв с бонусом XP",   "inventory": True},
     "xp_boost_20":   {"name": "XP Буст ×1.5",         "price": 8,   "currency": "diamonds", "icon": "⚡", "tab": "consumables", "desc": "20 боёв с бонусом XP",  "inventory": True},

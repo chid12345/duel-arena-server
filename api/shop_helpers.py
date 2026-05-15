@@ -32,43 +32,6 @@ def _finalize(db, uid: int, result: dict) -> dict:
     return result
 
 
-def _buy_hp(db, uid: int, price: int, pct: float) -> dict:
-    conn = db.get_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT gold, max_hp, current_hp FROM players WHERE user_id = ?", (uid,))
-    row = cursor.fetchone()
-    if not row:
-        conn.close()
-        return {"ok": False, "reason": "Игрок не найден"}
-    max_hp = int(row["max_hp"] or 100)
-    cur_hp = int(row["current_hp"]) if row["current_hp"] is not None else max_hp
-    if cur_hp >= max_hp:
-        conn.close()
-        return {"ok": False, "reason": "HP уже полное!"}
-    if (row["gold"] or 0) < price:
-        conn.close()
-        return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
-    if pct >= 1.0:
-        new_hp = max_hp
-    else:
-        new_hp = min(max_hp, cur_hp + max(1, int(max_hp * pct)))
-    # Атомарное списание: WHERE gold >= price AND current_hp < max_hp защищает от race condition
-    notify_flag = 1 if new_hp >= max_hp else 0
-    cursor.execute(
-        "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ?, hp_full_notified = ? "
-        "WHERE user_id = ? AND gold >= ? AND current_hp < max_hp",
-        (price, new_hp, datetime.utcnow().isoformat(), notify_flag, uid, price),
-    )
-    rows_affected = cursor.rowcount
-    conn.commit()
-    conn.close()
-    if rows_affected == 0:
-        return {"ok": False, "reason": f"Нужно {price} 🪙 золота"}
-    player = db.get_or_create_player(uid, "")
-    return {"ok": True, "hp_restored": new_hp - cur_hp, "new_hp": new_hp, "max_hp": max_hp,
-            "player": _player_api(dict(player))}
-
-
 def _buy_to_inventory(db, uid: int, item_id: str, price: int, currency: str,
                       quantity: int = 1) -> dict:
     conn = db.get_connection()

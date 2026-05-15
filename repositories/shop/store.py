@@ -14,11 +14,18 @@ from config import (
     expected_max_hp_from_level,
     stats_when_reaching_level,
 )
+from economy.formulas import potion_price_for_hp
 
 
 class ShopStoreMixin:
-    def buy_hp_potion_small(self, user_id: int) -> Dict[str, Any]:
-        COST = 60
+    def buy_hp_potion(self, user_id: int) -> Dict[str, Any]:
+        """Зелье полного HP. Цена считается формулой от max_hp игрока
+        (см. economy/formulas.py::potion_price_for_hp + config/economy.json/potions).
+
+        На 1 ур (max_hp=100) ≈ 15g, на 80 ур (max_hp=1000) ≈ 150g.
+        Этап 2B редизайна: унифицировано (раньше было buy_hp_potion_small=60g
+        и buy_hp_potion=200g плоские, что создавало дыру TMA vs бот).
+        """
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("SELECT gold, max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
@@ -26,49 +33,26 @@ class ShopStoreMixin:
         if not row:
             conn.close()
             return {"ok": False, "reason": "Игрок не найден"}
-        if row["gold"] < COST:
-            conn.close()
-            return {"ok": False, "reason": f"Нужно {COST} золота, у вас {row['gold']}"}
         max_hp = int(row["max_hp"] or 100)
         current_hp = int(row["current_hp"]) if row["current_hp"] is not None else max_hp
         if current_hp >= max_hp:
             conn.close()
             return {"ok": False, "reason": "HP уже полное!"}
-        new_hp = min(max_hp, current_hp + int(max_hp * 0.30))
-        notify_flag = 1 if new_hp >= max_hp else 0
+        cost = potion_price_for_hp("hp_full", max_hp)
+        if int(row["gold"] or 0) < cost:
+            conn.close()
+            return {"ok": False, "reason": f"Нужно {cost} золота, у вас {row['gold']}"}
         cursor.execute(
-            "UPDATE players SET gold = gold - ?, current_hp = ?, last_hp_regen = ?, hp_full_notified = ? WHERE user_id = ? AND gold >= ?",
-            (COST, new_hp, datetime.utcnow().isoformat(), notify_flag, user_id, COST),
+            "UPDATE players SET gold = gold - ?, current_hp = max_hp, last_hp_regen = ? "
+            "WHERE user_id = ? AND gold >= ? AND current_hp < max_hp",
+            (cost, datetime.utcnow().isoformat(), user_id, cost),
         )
         if cursor.rowcount == 0:
             conn.close()
-            return {"ok": False, "reason": f"Нужно {COST} золота, у вас недостаточно"}
+            return {"ok": False, "reason": f"Нужно {cost} золота, у вас недостаточно"}
         conn.commit()
         conn.close()
-        return {"ok": True, "cost": COST, "hp_restored": new_hp - current_hp, "new_hp": new_hp, "max_hp": max_hp}
-
-    def buy_hp_potion(self, user_id: int) -> Dict[str, Any]:
-        COST = 200
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("SELECT gold, max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
-        row = cursor.fetchone()
-        if not row:
-            conn.close()
-            return {"ok": False, "reason": "Игрок не найден"}
-        if row["gold"] < COST:
-            conn.close()
-            return {"ok": False, "reason": f"Нужно {COST} золота, у вас {row['gold']}"}
-        cursor.execute(
-            "UPDATE players SET gold = gold - ?, current_hp = max_hp, last_hp_regen = ? WHERE user_id = ? AND gold >= ?",
-            (COST, datetime.utcnow().isoformat(), user_id, COST),
-        )
-        if cursor.rowcount == 0:
-            conn.close()
-            return {"ok": False, "reason": f"Нужно {COST} золота, у вас недостаточно"}
-        conn.commit()
-        conn.close()
-        return {"ok": True, "cost": COST, "hp_restored": row["max_hp"] - row["current_hp"]}
+        return {"ok": True, "cost": cost, "hp_restored": max_hp - current_hp, "new_hp": max_hp, "max_hp": max_hp}
 
     def buy_xp_boost(self, user_id: int) -> Dict[str, Any]:
         COST = 400

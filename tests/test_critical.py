@@ -73,13 +73,13 @@ def db():
 def test_gold_cannot_go_negative(db):
     """Покупка зелья при недостатке золота должна вернуть ok=False, золото не меняется."""
     db.get_or_create_player(1001, "tester1")
-    # Устанавливаем 5 золота — меньше стоимости зелья (12)
+    # 5 золота — заведомо меньше цены зелья на 1 ур (~15g) и любого max_hp
     conn = db.get_connection()
-    conn.execute("UPDATE players SET gold = 5 WHERE user_id = 1001")
+    conn.execute("UPDATE players SET gold = 5, max_hp = 100, current_hp = 10 WHERE user_id = 1001")
     conn.commit()
     conn.close()
 
-    result = db.buy_hp_potion_small(1001)
+    result = db.buy_hp_potion(1001)
 
     assert result["ok"] is False, "Должен вернуть ok=False при нехватке золота"
 
