@@ -77,6 +77,8 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS bot_wins INTEGER DEFAULT 0",
     "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS shop_buys INTEGER DEFAULT 0",
     "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS pvp_wins INTEGER DEFAULT 0",
+    "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS today_win_streak INTEGER DEFAULT 0",
+    "ALTER TABLE daily_quests ADD COLUMN IF NOT EXISTS today_max_streak INTEGER DEFAULT 0",
     """CREATE TABLE IF NOT EXISTS task_progress (
         user_id BIGINT NOT NULL,
         task_key TEXT NOT NULL,

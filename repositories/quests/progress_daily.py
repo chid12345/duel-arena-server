@@ -18,7 +18,7 @@ class ProgressDailyMixin:
         cur = conn.cursor()
         try:
             cur.execute(
-                "SELECT battles_played, battles_won, endless_wins, bot_wins, shop_buys, pvp_wins "
+                "SELECT battles_played, battles_won, endless_wins, bot_wins, shop_buys, pvp_wins, today_max_streak "
                 "FROM daily_quests WHERE user_id=? AND quest_date=?",
                 (user_id, today),
             )
@@ -30,9 +30,8 @@ class ProgressDailyMixin:
             )
         _dq = cur.fetchone()
         p = dict(_dq) if _dq else {}
-        cur.execute("SELECT win_streak FROM players WHERE user_id=?", (user_id,))
-        _wr = cur.fetchone()
-        streak = int(_wr["win_streak"] if _wr else 0)
+        # Сегодняшняя серия — отдельная колонка, чтобы вчерашняя не зачитывалась
+        streak = int(p.get("today_max_streak") or 0)
         # Клеймы всех ежедневных заданий за сегодня одним запросом
         daily_keys = [f"{dq['key']}_{today}" for dq in DAILY_QUEST_DEFS]
         placeholders = ",".join(["?" for _ in daily_keys])
@@ -51,6 +50,7 @@ class ProgressDailyMixin:
             "bot_wins": int(p.get("bot_wins") or 0),
             "shop_buys": int(p.get("shop_buys") or 0),
             "streak": streak,
+            "today_streak": streak,
             "wb_hits": self.get_wb_hits_today_count(user_id),
         }
         result = []

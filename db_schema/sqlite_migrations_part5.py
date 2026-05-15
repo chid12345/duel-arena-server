@@ -43,4 +43,10 @@ MIGRATIONS_PART5 = [
         "ALTER TABLE players ADD COLUMN diamond_first_300 INTEGER DEFAULT 0",
         "ALTER TABLE players ADD COLUMN diamond_first_500 INTEGER DEFAULT 0",
     ]),
+    # Сегодняшняя серия побед (для dq_streak3) — отдельно от глобального
+    # win_streak в players, чтобы задание не "тащилось" с прошлых дней.
+    ("2026_05_15_001_daily_today_streak", [
+        "ALTER TABLE daily_quests ADD COLUMN today_win_streak INTEGER DEFAULT 0",
+        "ALTER TABLE daily_quests ADD COLUMN today_max_streak INTEGER DEFAULT 0",
+    ]),
 ]

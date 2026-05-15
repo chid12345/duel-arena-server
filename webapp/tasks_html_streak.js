@@ -54,7 +54,7 @@ window.TasksHTML_Streak = function(streak) {
 .tsk-scbtn.claimed{background:linear-gradient(135deg,#1a4020,#0a2010);color:#80ff9c;box-shadow:none;cursor:default}
 </style>`;
 
-  const dayNames = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+  const dayNames = ['1Д','2Д','3Д','4Д','5Д','6Д','7Д'];
   const daysHTML = Array.from({length:7}, (_,i) => {
     const dn = i + 1;
     const isDone = claimed.has(dn) || dn < sd;
@@ -120,7 +120,7 @@ window.TasksHTML_StreakTop = function(streak) {
   const rXp   = todayReward.xp || 0;
   const rewardStr = [rGold&&`+${rGold}💰`, rDia&&`+${rDia}💎`, rXp&&`+${rXp}⭐`].filter(Boolean).join(' ');
 
-  const dayNames = ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'];
+  const dayNames = ['1Д','2Д','3Д','4Д','5Д','6Д','7Д'];
   const pillsHTML = dayNames.map((name, i) => {
     const dn = i + 1;
     const isDone = claimed.has(dn) || dn < sd;

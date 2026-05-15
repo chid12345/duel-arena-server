@@ -22,6 +22,21 @@ class BattlesDailyQuestsMixin:
             "bot_wins=bot_wins+?, pvp_wins=pvp_wins+? WHERE user_id=? AND quest_date=?",
             (1 if won_battle else 0, bot_inc, pvp_inc, user_id, today),
         )
+        # Сегодняшняя серия: инкремент при победе, обнуление при поражении.
+        # today_max_streak держит максимум за сутки → для dq_streak3.
+        if won_battle:
+            cursor.execute(
+                "UPDATE daily_quests SET today_win_streak=today_win_streak+1, "
+                "today_max_streak=CASE WHEN today_win_streak+1 > today_max_streak "
+                "THEN today_win_streak+1 ELSE today_max_streak END "
+                "WHERE user_id=? AND quest_date=?",
+                (user_id, today),
+            )
+        else:
+            cursor.execute(
+                "UPDATE daily_quests SET today_win_streak=0 WHERE user_id=? AND quest_date=?",
+                (user_id, today),
+            )
         conn.commit()
         conn.close()
 
