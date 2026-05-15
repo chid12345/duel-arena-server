@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.20.20"
-VERSION_LABEL = "v2.20.20 — tests: инвентарь, магазин, daily bonus (14 тестов). add/remove/has_item, bump_unseen=False для starter, buy_hp_potion (60g/200g), buy_xp_boost+5 charges, buy_stat_reset, daily streak +1 на след день, 7-й день +алмазы. Всего 38/38 зелёных."
+VERSION = "2.20.21"
+VERSION_LABEL = "v2.20.21 — tests: экипировка и сет-бонусы (10 тестов). equip/unequip, get_equipment_stats суммирует, авто-resolve ring1/ring2, force=True снимает legacy ring2 (фикс фантом-статов), 6/6 один rarity = max bonus, при равенстве — старшая редкость, ring2 НЕ считается в сете. Всего 48/48."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.39"
+GAME_VERSION = "16.40"
