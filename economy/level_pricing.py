@@ -86,6 +86,27 @@ def visible_in_shop_for_level(items: dict[str, dict], player_level: int) -> dict
     return out
 
 
+def get_item_cost(item: dict) -> tuple[int, str]:
+    """Вернуть (cost, currency) для покупки предмета.
+
+    Если у item есть tier+power_score+rarity — считает через shop_price
+    (новая система, этап 3). Иначе fallback на legacy price_gold/diamonds/stars
+    (для предметов без tier — например legacy swords).
+
+    currency возвращается одним из: gold/diamond/star.
+    """
+    # Новая система: tier-based formula
+    if "tier" in item and "power_score" in item and "rarity" in item:
+        cur = item.get("currency", "gold")
+        return shop_price(item, cur), cur
+    # Legacy fallback
+    if "price_stars" in item:
+        return int(item["price_stars"]), "star"
+    if "price_diamonds" in item:
+        return int(item["price_diamonds"]), "diamond"
+    return int(item.get("price_gold", 0)), "gold"
+
+
 def fill_prices_for_level(items: dict[str, Any], player_level: int) -> dict[str, dict]:
     """Вернуть копию каталога с подставленными ценами через формулу.
 

@@ -14,6 +14,8 @@ from db_schema.equipment_catalog import (
     get_items_for_slot, get_item,
     SLOT_RING1, SLOT_RING2,
 )
+from economy.curves import is_tier_unlocked
+from economy.level_pricing import get_item_cost
 from handlers.common import tg_api_call
 
 logger = logging.getLogger(__name__)
@@ -74,20 +76,30 @@ def slot_shop_text(user_id: int, slot: str) -> tuple[str, InlineKeyboardMarkup]:
         lines.append("Надето: <i>пусто</i>\n")
 
     items = get_items_for_slot(slot)
+    player_level = int(player.get("level", 1)) if player else 1
     lines.append(f"💰 У вас: {gold} золота  |  💎 {diamonds} алмазов\n")
     lines.append("<b>Доступные предметы:</b>")
 
+    _CUR_SYMBOL = {"gold": "🪙", "diamond": "💎", "star": "⭐"}
     rows: list[list] = []
     for item in items:
         r_emoji = RARITY_EMOJI.get(item.get("rarity", ""), "")
-        price_str = (
-            f"{item['price_gold']} 🪙" if item.get("price_gold")
-            else f"{item.get('price_diamonds', '?')} 💎"
-        )
-        lines.append(f"\n{r_emoji} <b>{html_escape(item['name'])}</b> — {html_escape(item.get('desc', ''))}")
+        cost, currency = get_item_cost(item)
+        price_str = f"{cost} {_CUR_SYMBOL.get(currency, currency)}"
+        # Tier-блокировка по уровню
+        item_tier = item.get("tier")
+        locked = bool(item_tier) and not is_tier_unlocked(player_level, item_tier)
+        rec_lvl = item.get("recommended_level")
+        suffix = f" 🔒 c {rec_lvl} ур." if locked and rec_lvl else ""
+        lines.append(f"\n{r_emoji} <b>{html_escape(item['name'])}</b>{suffix} — {html_escape(item.get('desc', ''))}")
         lines.append(f"   Цена: {price_str}")
         is_equipped = (equipped.get(slot, {}) or {}).get("item_id") == item["id"]
-        label_btn = "✅ Надето" if is_equipped else f"Надеть ({price_str})"
+        if is_equipped:
+            label_btn = "✅ Надето"
+        elif locked:
+            label_btn = f"🔒 c {rec_lvl} ур."
+        else:
+            label_btn = f"Надеть ({price_str})"
         rows.append([InlineKeyboardButton(label_btn, callback_data=f"equip_buy:{item['id']}:{slot}")])
 
     # Unequip button
@@ -135,31 +147,45 @@ async def handle_equip_buy(query, user_id: int, item_id: str, slot: str) -> None
         await query.answer("Уже надето!", show_alert=False)
         return
 
-    # Payment
-    gold_cost = int(item.get("price_gold", 0))
-    diamond_cost = int(item.get("price_diamonds", 0))
-    if gold_cost > 0:
-        if int(player.get("gold", 0)) < gold_cost:
-            await query.answer(f"Недостаточно золота. Нужно {gold_cost} 🪙", show_alert=True)
+    # Tier-блокировка по уровню (новая логика, этап 3D)
+    item_tier = item.get("tier")
+    if item_tier and not is_tier_unlocked(int(player.get("level", 1)), item_tier):
+        rec = item.get("recommended_level", "?")
+        await query.answer(f"🔒 Нужен {rec} ур. для {item_tier}", show_alert=True)
+        return
+
+    # Цена через формулу (с fallback на legacy price_*)
+    cost, currency = get_item_cost(item)
+    _SYM = {"gold": "🪙", "diamond": "💎", "star": "⭐"}
+    if cost <= 0:
+        # Бесплатный предмет (например стартовый) — пропускаем оплату
+        pass
+    elif currency == "gold":
+        if int(player.get("gold", 0)) < cost:
+            await query.answer(f"Недостаточно золота. Нужно {cost} 🪙", show_alert=True)
             return
         conn = db.get_connection()
         cur = conn.cursor()
-        cur.execute("UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?", (gold_cost, user_id, gold_cost))
+        cur.execute("UPDATE players SET gold = gold - ? WHERE user_id = ? AND gold >= ?", (cost, user_id, cost))
         ok = cur.rowcount > 0
         conn.commit()
         conn.close()
         if not ok:
             await query.answer("Недостаточно золота.", show_alert=True)
             return
-    elif diamond_cost > 0:
-        if int(player.get("diamonds", 0)) < diamond_cost:
-            await query.answer(f"Недостаточно алмазов. Нужно {diamond_cost} 💎", show_alert=True)
+    elif currency == "diamond":
+        if int(player.get("diamonds", 0)) < cost:
+            await query.answer(f"Недостаточно алмазов. Нужно {cost} 💎", show_alert=True)
             return
         conn = db.get_connection()
         cur = conn.cursor()
-        cur.execute("UPDATE players SET diamonds = diamonds - ? WHERE user_id = ? AND diamonds >= ?", (diamond_cost, user_id, diamond_cost))
+        cur.execute("UPDATE players SET diamonds = diamonds - ? WHERE user_id = ? AND diamonds >= ?", (cost, user_id, cost))
         conn.commit()
         conn.close()
+    else:
+        # star — покупка только через TMA / payment, не через бота
+        await query.answer(f"⭐ Эта вещь покупается за звёзды через /buy", show_alert=True)
+        return
 
     db.equip_item(user_id, slot, item_id, force=(slot in ("ring1", "ring2")))
     await query.answer(f"✅ {item['name']} надето!", show_alert=False)

@@ -19,6 +19,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from economy.level_pricing import (  # noqa: E402
     can_purchase,
     fill_prices_for_level,
+    get_item_cost,
     shop_price,
     visible_in_shop_for_level,
 )
@@ -159,6 +160,55 @@ def test_fill_prices_does_not_mutate_source():
     _ = fill_prices_for_level(catalog, 50)
     assert "price_calc" not in catalog["x"]
     assert "locked" not in catalog["x"]
+
+
+# ── get_item_cost (этап 3D — magazin reads via formula) ──────────────────────
+
+def test_get_item_cost_uses_formula_for_new_items():
+    """Если есть tier+power_score — считается через формулу, не из legacy price_*."""
+    item = {
+        "power_score": 27, "rarity": "common", "tier": "T1", "currency": "gold",
+        "price_gold": 999,  # legacy fallback — НЕ должен использоваться
+    }
+    cost, cur = get_item_cost(item)
+    assert cur == "gold"
+    assert cost == 810  # 27 × 1 × 1 × 30 = 810; не 999
+
+
+def test_get_item_cost_falls_back_to_legacy_without_tier():
+    """Legacy предмет (sword_iron) без tier — берётся price_gold напрямую."""
+    item = {"rarity": "common", "price_gold": 500}
+    cost, cur = get_item_cost(item)
+    assert cur == "gold"
+    assert cost == 500
+
+
+def test_get_item_cost_legacy_diamond_priority():
+    """Legacy: если есть price_stars — это star, потом diamond, потом gold."""
+    item_star = {"price_stars": 100, "price_diamonds": 50, "price_gold": 800}
+    assert get_item_cost(item_star) == (100, "star")
+    item_dia = {"price_diamonds": 50, "price_gold": 800}
+    assert get_item_cost(item_dia) == (50, "diamond")
+    item_gold = {"price_gold": 800}
+    assert get_item_cost(item_gold) == (800, "gold")
+
+
+def test_get_item_cost_real_helmet_free1():
+    """Реальный helmet_free1 из каталога: формула даёт ~810g."""
+    from db_schema.equipment_catalog import EQUIPMENT_CATALOG
+    item = EQUIPMENT_CATALOG["helmet_free1"]
+    cost, cur = get_item_cost(item)
+    assert cur == "gold"
+    assert 750 <= cost <= 850, f"Ожидали ~810g, получили {cost}"
+
+
+def test_get_item_cost_real_helmet_dia1():
+    """Реальный helmet_dia1: формула даёт ~77 алмазов."""
+    from db_schema.equipment_catalog import EQUIPMENT_CATALOG
+    item = EQUIPMENT_CATALOG["helmet_dia1"]
+    cost, cur = get_item_cost(item)
+    assert cur == "diamond"
+    assert 70 <= cost <= 85, f"Ожидали ~77 алмазов, получили {cost}"
 
 
 # ── Калибровка реального каталога (этап 3C) ──────────────────────────────────
