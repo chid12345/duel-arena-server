@@ -139,7 +139,7 @@ ACHIEVEMENT_DEFS: list[dict] = [
             {"tier": 6, "target": 75,  "gold": 3000, "diamonds": 24, "xp": 4400},
             {"tier": 7, "target": 125, "gold": 4000, "diamonds": 32, "xp": 6000},
             {"tier": 8, "target": 200, "gold": 5400, "diamonds": 44, "xp": 8000},
-            {"tier": 9, "target": 250, "gold": 7000, "diamonds": 60, "xp":10000},
+            {"tier": 9, "target": 250, "gold":12000, "diamonds":200, "xp":10000},
         ],
     },
     # ── КОЛЛЕКЦИЯ ОБРАЗОВ ───────────────────────────────────────────
