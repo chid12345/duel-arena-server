@@ -80,11 +80,11 @@ class ProgressDailyMixin:
             return {"ok": False, "reason": "Не выполнено"}
         if not self.add_task_claim(user_id, claim_key):
             return {"ok": False, "reason": "Уже получено"}
-        # Premium: +25% к gold и xp (UI-обещание)
-        from economy.premium_bonus import apply_premium_rewards
-        gold_final, xp_final, is_prem = apply_premium_rewards(
-            self, user_id, task["reward_gold"], task["reward_xp"]
-        )
+        # Премиум-бонус +25% НЕ применяется к наградам за задания — только
+        # к наградам за бои. Иначе у premium-игроков задание "получи 100xp"
+        # выдавало бы 125xp, что путало пользователей.
+        gold_final = int(task["reward_gold"])
+        xp_final = int(task["reward_xp"])
         result = self.grant_exp_with_levelup(
             user_id, xp_final, gold_add=gold_final,
             diamonds_add=task["reward_diamonds"],
@@ -97,6 +97,6 @@ class ProgressDailyMixin:
             pass
         return {"ok": True, "gold": gold_final,
                 "diamonds": task["reward_diamonds"], "xp": xp_final,
-                "premium_bonus": is_prem,
+                "premium_bonus": False,
                 "leveled": result.get("leveled", False),
                 "new_level": result.get("new_level")}
