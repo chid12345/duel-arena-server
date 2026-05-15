@@ -103,7 +103,17 @@ class BattlesDailyQuestsMixin:
             "quest_target_won": 3,
         }
 
-    def claim_daily_quest_reward(self, user_id: int, gold_reward: int = 55, xp_reward: int = 150) -> Dict[str, Any]:
+    def claim_daily_quest_reward(self, user_id: int, gold_reward: int | None = None, xp_reward: int | None = None) -> Dict[str, Any]:
+        """Забрать награду за legacy-ежедневку «5 боёв + 3 победы».
+
+        Если gold_reward/xp_reward не переданы — берёт из economy.json/quests/
+        daily_main_quest. Этап 2E редизайна — раньше были захардкожены 55/150.
+        """
+        if gold_reward is None or xp_reward is None:
+            from economy.loader import get_daily_main_quest_reward
+            cfg_gold, cfg_xp = get_daily_main_quest_reward()
+            gold_reward = cfg_gold if gold_reward is None else gold_reward
+            xp_reward = cfg_xp if xp_reward is None else xp_reward
         today = datetime.now().date().isoformat()
         conn = self.get_connection()
         cursor = conn.cursor()

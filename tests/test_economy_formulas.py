@@ -28,7 +28,13 @@ from economy.formulas import (  # noqa: E402
     ev_for_box,
     apply_premium_gold,
 )
-from economy.loader import get_anchor, get_combat, get_combat_dict, get_world_boss  # noqa: E402
+from economy.loader import (  # noqa: E402
+    get_anchor,
+    get_combat,
+    get_combat_dict,
+    get_daily_main_quest_reward,
+    get_world_boss,
+)
 
 
 # ── Конвертеры валют ─────────────────────────────────────────────────────────
@@ -181,6 +187,15 @@ def test_world_boss_scroll_drop_chance():
 def test_world_boss_unknown_key_raises():
     with pytest.raises(KeyError):
         get_world_boss("nonexistent")
+
+
+# ── Legacy daily main quest (5 боёв + 3 победы) ──────────────────────────────
+
+def test_daily_main_quest_reward_from_config():
+    """Награда за legacy-ежедневку — 55g + 150xp из economy.json/quests/daily_main_quest."""
+    gold, xp = get_daily_main_quest_reward()
+    assert gold == 55, f"Ожидали 55g, получили {gold}g"
+    assert xp == 150, f"Ожидали 150xp, получили {xp}xp"
 
 
 # ── Премиум ──────────────────────────────────────────────────────────────────

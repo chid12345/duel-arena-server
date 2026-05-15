@@ -145,6 +145,19 @@ def get_combat(key: str, default: float | None = None) -> float:
     return float(val)
 
 
+def get_daily_main_quest_reward() -> tuple[int, int]:
+    """Награда за «главный» ежедневный квест (5 боёв + 3 победы) — (gold, xp).
+
+    Этап 2E редизайна. Legacy-функция claim_daily_quest_reward читает отсюда
+    вместо захардкоженных 55g/150xp.
+    """
+    q = load_economy().get("quests") or {}
+    main_q = q.get("daily_main_quest") or {}
+    if "gold" not in main_q or "xp" not in main_q:
+        raise KeyError("economy.json/quests/daily_main_quest: нет gold/xp")
+    return int(main_q["gold"]), int(main_q["xp"])
+
+
 def get_world_boss(key: str) -> float:
     """Балансное число Мирового босса из секции `world_boss`. KeyError если нет."""
     wb = load_economy().get("world_boss") or {}

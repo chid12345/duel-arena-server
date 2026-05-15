@@ -57,6 +57,13 @@
     "weekly": { "easy": [70, 0],  "medium": [100, 1],  "hard": [130, 1],  "epic": [160, 2]  },
     "once":   { "easy": [180, 0], "medium": [320, 2],  "hard": [450, 5],  "epic": [550, 8]  }
   },
+  "quests": {
+    "_comment": "Награды специфических квестов вне общей таблицы reward_calculator. Этап 2E: legacy daily_main_quest (5 боёв + 3 победы) — переехали хардкоды из repositories/battles/daily_quests.py:106.",
+    "daily_main_quest": {
+      "gold": 55,
+      "xp": 150
+    }
+  },
   "world_boss": {
     "_comment": "Балансные числа Мирового босса (этап 2D редизайна). Механика (расписание, длительность, HP-формула, имена) остаётся в config/world_boss_constants.py.",
     "pool_base": 500,
