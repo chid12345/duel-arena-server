@@ -33,18 +33,21 @@ from __future__ import annotations
 # ── Таблица наград (frequency, difficulty) → (gold, diamonds, xp) ─────────────
 
 REWARD_TABLE: dict[tuple[str, str], tuple[int, int, int]] = {
-    ('daily',  'easy')  : ( 35,  0,   80),
-    ('daily',  'medium'): ( 55,  0,  150),
-    ('daily',  'hard')  : ( 65,  0,  200),
-    ('daily',  'epic')  : ( 65,  0,  200),
-    ('weekly', 'easy')  : (120,  0,  300),
-    ('weekly', 'medium'): (160,  1,  500),
-    ('weekly', 'hard')  : (200,  2,  700),
-    ('weekly', 'epic')  : (200,  3,  900),
-    ('once',   'easy')  : (250,  0,  600),
-    ('once',   'medium'): (450,  3, 1200),
-    ('once',   'hard')  : (650,  6, 2000),
-    ('once',   'epic')  : (800, 10, 3000),
+    # Rebalance 2026-05-15: квесты не должны превышать ~30-40% к дневному
+    # фарму игрока (~720g/день с BP+кланом). Раньше задания давали ~80%
+    # сверху — обесценивало фарм и магазин.
+    ('daily',  'easy')  : ( 15,  0,   40),
+    ('daily',  'medium'): ( 25,  0,   80),
+    ('daily',  'hard')  : ( 35,  0,  120),
+    ('daily',  'epic')  : ( 35,  0,  120),
+    ('weekly', 'easy')  : ( 70,  0,  180),
+    ('weekly', 'medium'): (100,  1,  280),
+    ('weekly', 'hard')  : (130,  1,  420),
+    ('weekly', 'epic')  : (160,  2,  560),
+    ('once',   'easy')  : (180,  0,  400),
+    ('once',   'medium'): (320,  2,  800),
+    ('once',   'hard')  : (450,  5, 1300),
+    ('once',   'epic')  : (550,  8, 1900),
 }
 
 _VALID_FREQ = ('daily', 'weekly', 'once')

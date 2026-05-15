@@ -13,12 +13,13 @@ WB_ACHIEVEMENT_DEFS: list[dict] = [
         "desc": "Побед в рейдах Мирового босса",
         "source": "computed",
         "compute": "wb_wins",
+        # legendary × 2.0 (мировой босс — пиковая активность)
         "tiers": [
-            {"tier": 1, "target": 1,    "gold": 150,  "diamonds": 1,   "xp": 400},
-            {"tier": 2, "target": 5,    "gold": 400,  "diamonds": 3,   "xp": 1200},
-            {"tier": 3, "target": 10,   "gold": 800,  "diamonds": 6,   "xp": 2500},
-            {"tier": 4, "target": 100,  "gold": 2500, "diamonds": 20,  "xp": 8000},
-            {"tier": 5, "target": 1000, "gold": 8000, "diamonds": 100, "xp": 30000},
+            {"tier": 1, "target": 1,    "gold":  160, "diamonds":  0, "xp":  400},
+            {"tier": 2, "target": 5,    "gold":  360, "diamonds":  2, "xp":  800},
+            {"tier": 3, "target": 10,   "gold":  700, "diamonds":  6, "xp": 1400},
+            {"tier": 4, "target": 100,  "gold": 2000, "diamonds": 16, "xp": 3200},
+            {"tier": 5, "target": 1000, "gold": 7000, "diamonds": 60, "xp":10000},
         ],
     },
 ]
