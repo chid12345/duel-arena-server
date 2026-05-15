@@ -30,6 +30,20 @@ window.TasksHTML_Achieve = function(achievements) {
 .ta-rg{font-size:10px;font-weight:700;color:#ffd166}
 .ta-rd{font-size:9px;font-weight:700;color:#cc88ff}
 .ta-dsep{margin:8px 12px 4px;padding:6px 14px;border-radius:9px;background:rgba(255,215,0,.05);border:1px solid rgba(255,215,0,.18);font-size:9px;font-weight:700;color:#ffd700;text-align:center;letter-spacing:.5px}
+@keyframes taHeadScan{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes taHeadPulse{0%,100%{box-shadow:0 0 16px rgba(255,59,168,.25),0 0 32px rgba(0,240,255,.15)}50%{box-shadow:0 0 24px rgba(255,59,168,.45),0 0 48px rgba(0,240,255,.3)}}
+.ta-head{position:relative;margin:10px 12px 6px;padding:11px 14px;border-radius:12px;background:linear-gradient(135deg,rgba(20,0,35,.92),rgba(5,5,18,.92),rgba(0,30,40,.92));border:1px solid rgba(255,59,168,.55);overflow:hidden;animation:taHeadPulse 2.6s ease-in-out infinite}
+.ta-head::before{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,#ff3ba8,#00f0ff,transparent)}
+.ta-head::after{content:"";position:absolute;top:0;left:0;width:30%;height:100%;background:linear-gradient(90deg,transparent,rgba(0,240,255,.08),transparent);animation:taHeadScan 3.2s linear infinite;pointer-events:none}
+.ta-head-row{display:flex;align-items:center;gap:10px;position:relative;z-index:1}
+.ta-head-ic{font-size:22px;filter:drop-shadow(0 0 6px #ff3ba8)}
+.ta-head-l{flex:1;min-width:0}
+.ta-head-t{font-size:11px;font-weight:900;letter-spacing:1.5px;color:#ff7acb;text-shadow:0 0 8px rgba(255,59,168,.6);text-transform:uppercase}
+.ta-head-c{font-size:9px;color:#80d8ff;letter-spacing:.5px;margin-top:1px;opacity:.85}
+.ta-head-c b{color:#00f0ff;text-shadow:0 0 6px rgba(0,240,255,.6);font-size:11px}
+.ta-head-c i{color:#ffd166;font-style:normal;text-shadow:0 0 6px rgba(255,209,102,.5);font-weight:800}
+.ta-head-bar{margin-top:8px;height:5px;border-radius:3px;background:rgba(10,5,25,.7);border:1px solid rgba(0,240,255,.15);overflow:hidden;position:relative;z-index:1}
+.ta-head-bf{height:100%;border-radius:3px;background:linear-gradient(90deg,#ff3ba8,#cc44dd,#00f0ff);box-shadow:0 0 10px rgba(255,59,168,.6),0 0 16px rgba(0,240,255,.4)}
 </style>`;
 
   const sorted = [...achievements].sort((a,b) => {
@@ -87,10 +101,22 @@ window.TasksHTML_Achieve = function(achievements) {
 
   const total = achievements.length;
   const doneN = allDone.length;
+  const headPct = total > 0 ? Math.min(100, Math.round(doneN / total * 100)) : 0;
+
+  const headHTML = `<div class="ta-head">
+  <div class="ta-head-row">
+    <span class="ta-head-ic">🏆</span>
+    <div class="ta-head-l">
+      <div class="ta-head-t">ДОСТИЖЕНИЯ</div>
+      <div class="ta-head-c">пройдено <b>${doneN}</b> из <i>${total}</i> · ${headPct}%</div>
+    </div>
+  </div>
+  <div class="ta-head-bar"><div class="ta-head-bf" style="width:${headPct}%"></div></div>
+</div>`;
 
   return `${CSS}
+${headHTML}
 ${ready > 0 ? `<div class="ta-banner">🎁 Готово к получению: ${ready} достижени${ready===1?'е':ready<5?'я':'й'}</div>` : ''}
-<div class="tsk-sec" style="margin-top:6px">🏆 ДОСТИЖЕНИЯ · ${doneN} из ${total} пройдено</div>
 <div class="ta-list">${inProgress.map(_achCard).join('')}</div>
 ${allDone.length ? `<div class="ta-dsep">✅ ЗАВЕРШЁННЫЕ ДОСТИЖЕНИЯ (${doneN}/${total})</div><div class="ta-list">${allDone.map(_achCard).join('')}</div>` : ''}
 <div class="tsk-reset">🏆 Достижения не сбрасываются</div>`;
