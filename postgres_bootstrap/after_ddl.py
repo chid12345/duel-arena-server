@@ -160,6 +160,17 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     # Этап 7C: «Удвоить следующий бой» — 1 раз в день для премов
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS next_battle_x2 INTEGER DEFAULT 0",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS next_battle_x2_date TEXT DEFAULT ''",
+    # Этап 8: аренда mythic-снаряжения (Stars-оплата, временный доступ)
+    """CREATE TABLE IF NOT EXISTS equipment_rentals (
+        user_id BIGINT NOT NULL REFERENCES players(user_id) ON DELETE CASCADE,
+        item_id TEXT NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        rented_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        stars_paid INTEGER NOT NULL DEFAULT 0,
+        PRIMARY KEY (user_id, item_id)
+    )""",
+    "CREATE INDEX IF NOT EXISTS idx_equipment_rentals_user ON equipment_rentals (user_id)",
+    "CREATE INDEX IF NOT EXISTS idx_equipment_rentals_expires ON equipment_rentals (expires_at)",
     # world_boss_rewards.claimed: INTEGER → BOOLEAN (если ещё не BOOLEAN)
     # DEFAULT 0 нельзя кастовать автоматически → дропаем, меняем тип, ставим новый DEFAULT.
     """

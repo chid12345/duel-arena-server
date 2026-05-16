@@ -96,12 +96,14 @@ def test_equip_blocks_t4_for_low_level_player(db):
 
 
 def test_equip_t4_works_at_max_level(db):
-    """На 80 ур. T4-вещь надевается без проблем."""
+    """На 80 ур. T4-вещь надевается без проблем (если куплена)."""
     db.get_or_create_player(2002, "u_high")
     conn = db.get_connection()
     conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (2002,))
     conn.commit()
     conn.close()
+    # Этап 8: mythic надевается только если куплено или арендовано
+    db.add_owned_weapon(2002, "helmet_mythic1")
 
     ok = db.equip_item(2002, "belt", "helmet_mythic1")
 
@@ -118,6 +120,8 @@ def test_equip_force_bypasses_tier_block(db):
     conn.execute("UPDATE players SET level = 10 WHERE user_id = ?", (2003,))
     conn.commit()
     conn.close()
+    # Этап 8: stars-покупка добавляет в owned перед equip
+    db.add_owned_weapon(2003, "helmet_mythic1")
 
     # T4 за Stars (force=True) — даже на 10 ур. должно надеться
     ok = db.equip_item(2003, "belt", "helmet_mythic1", force=True)
@@ -125,6 +129,43 @@ def test_equip_force_bypasses_tier_block(db):
     assert ok is True, "force=True должен пропустить tier-блок"
     eq = db.get_equipment(2003)
     assert eq["belt"]["item_id"] == "helmet_mythic1"
+
+
+def test_rented_mythic_can_be_equipped_and_auto_unequips_on_expire(db):
+    """Этап 8: аренда mythic = временный доступ.
+
+    1. Аренда на 7 дней → mythic надевается и держится в слоте.
+    2. Истечение аренды → get_equipment авто-снимает с слота.
+    """
+    from datetime import datetime, timedelta
+    db.get_or_create_player(2010, "u_rent")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (2010,))
+    conn.commit()
+    conn.close()
+    # Аренда 7 дней
+    db.rent_item(2010, "helmet_mythic1", days=7, stars_paid=295)
+    assert db.has_active_rental(2010, "helmet_mythic1") is True
+
+    # Надеваем — для теста используем force (имитация stars-покупки flow,
+    # но аренда тоже даёт право).
+    ok = db.equip_item(2010, "belt", "helmet_mythic1", force=True)
+    assert ok is True
+    eq = db.get_equipment(2010)
+    assert eq["belt"]["item_id"] == "helmet_mythic1", "Аренда — слот занят"
+
+    # Симулируем истечение: ставим expires_at в прошлое
+    past = (datetime.utcnow() - timedelta(days=1)).isoformat()
+    conn = db.get_connection()
+    conn.execute(
+        "UPDATE equipment_rentals SET expires_at = ? WHERE user_id = ? AND item_id = ?",
+        (past, 2010, "helmet_mythic1"),
+    )
+    conn.commit()
+    conn.close()
+
+    eq2 = db.get_equipment(2010)
+    assert "belt" not in eq2, "Истёкшая аренда → слот авто-очищается"
 
 
 def test_equip_legacy_item_no_tier_works(db):

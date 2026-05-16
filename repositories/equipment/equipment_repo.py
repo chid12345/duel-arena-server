@@ -25,7 +25,12 @@ class EquipmentMixin:
         return is_tier_unlocked(player_level, str(item_tier))
 
     def get_equipment(self, user_id: int) -> Dict[str, Dict]:
-        """Возвращает {slot: {item_id, ...item_data}} для всех слотов игрока."""
+        """Возвращает {slot: {item_id, ...item_data}} для всех надетых слотов.
+
+        Этап 8: mythic-предметы доступны только если куплены или у игрока
+        есть активная аренда. Истёкшие mythic-аренды авто-снимаются здесь —
+        get_equipment вызывается в каждом рендере профиля и в бою.
+        """
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(
@@ -35,11 +40,24 @@ class EquipmentMixin:
         rows = cursor.fetchall()
         conn.close()
         result: Dict[str, Dict] = {}
+        expired_slots: list[str] = []
+        owned_set: set[str] | None = None
+        rental_set: set[str] | None = None
         for row in rows:
             slot, item_id = row["slot"], row["item_id"]
             item = get_item(item_id)
-            if item:
-                result[slot] = {"item_id": item_id, **item}
+            if not item:
+                continue
+            if item.get("rarity") == "mythic":
+                if owned_set is None:
+                    owned_set = set(self.get_owned_weapons(user_id))
+                    rental_set = {r["item_id"] for r in self.list_active_rentals(user_id)}
+                if item_id not in owned_set and item_id not in rental_set:
+                    expired_slots.append(slot)
+                    continue
+            result[slot] = {"item_id": item_id, **item}
+        for s in expired_slots:
+            self.unequip_item(user_id, s)
         return result
 
     def equip_item(self, user_id: int, slot: str, item_id: str, force: bool = False) -> bool:

@@ -46,9 +46,11 @@ def register_equipment_routes(app: FastAPI) -> None:
                 return {"ok": False, "reason": "Предмет не найден"}
 
             # Этап 3F: tier-блокировка для TMA (та же логика что в repositories/equipment).
-            # Если предмет уже в коллекции (owned) — пропускаем блок (уже куплено).
+            # Если предмет уже в коллекции (owned) или арендован — пропускаем блок.
             item_tier = item.get("tier")
-            if item_tier and body.item_id not in db.get_owned_weapons(uid):
+            _owned = body.item_id in db.get_owned_weapons(uid)
+            _rented = db.has_active_rental(uid, body.item_id)
+            if item_tier and not _owned and not _rented:
                 # Уровень игрока
                 _conn_lvl = db.get_connection()
                 try:
@@ -63,9 +65,9 @@ def register_equipment_routes(app: FastAPI) -> None:
                     return {"ok": False, "reason": f"🔒 Нужен {rec} ур. для {item_tier}"}
 
             if int(item.get("price_stars", 0)) > 0:
-                # Разрешаем надеть если уже куплено
-                if body.item_id not in db.get_owned_weapons(uid):
-                    return {"ok": False, "reason": "Мифическое оружие покупается за Stars или USDT — используйте кнопки ⭐ или 💳"}
+                # Разрешаем надеть если уже куплено или есть активная аренда (Этап 8)
+                if not _owned and not _rented:
+                    return {"ok": False, "reason": "Мифическое оружие покупается за Stars или USDT — или арендуется на 7 дней"}
 
             # Цена через формулу (та же что в боте, этап 3D). Fallback на legacy.
             _cost, _currency = get_item_cost(item)

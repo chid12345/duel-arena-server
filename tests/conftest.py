@@ -52,6 +52,7 @@ def db():
     from repositories.equipment import EquipmentMixin
     from repositories.season_pass import SeasonPassMixin, SeasonPassClaimMixin
     from repositories.upgrades import UpgradesMixin
+    from repositories.rentals import RentalsMixin
 
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
     tmp_path = tmp.name
@@ -64,6 +65,7 @@ def db():
         ShopMixin, SocialMixin, AvatarsMixin, InventoryMixin,
         QuestsMixin, WorldBossMixin, EquipmentMixin,
         SeasonPassMixin, SeasonPassClaimMixin, UpgradesMixin,
+        RentalsMixin,
     ):
         def __init__(self):
             self._pg = False
