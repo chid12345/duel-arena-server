@@ -87,4 +87,6 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_05_16_010_next_battle_x2",
     # Этап 8 редизайна — аренда mythic-снаряжения
     "2026_05_17_001_equipment_rentals",
+    # Этап 9 — warrior_type у ботов
+    "2026_05_17_010_bots_warrior_type",
 )

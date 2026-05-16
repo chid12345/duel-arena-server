@@ -8,6 +8,7 @@ Object.assign(QueueScene.prototype, {
   /* ── Таймер ожидания ──────────────────────────────────── */
   _startSearchTimer() {
     this._startTs = Date.now();
+    this._autoFallbackFired = false;
     this._searchTimer = this.time.addEvent({
       delay: 1000, loop: true,
       callback: () => {
@@ -16,8 +17,37 @@ Object.assign(QueueScene.prototype, {
         const m   = Math.floor(sec / 60);
         const s   = sec % 60;
         this._timerTxt?.setText(`${m}:${String(s).padStart(2, '0')}`);
+        // Этап 9: auto-fallback на бот-под-маской PvP через 30 сек.
+        // Игрок не отличит — карточка соперника как у живого (класс воина,
+        // никакой метки «бот», ник из реального пула).
+        if (sec >= 30 && !this._autoFallbackFired) {
+          this._autoFallbackFired = true;
+          this._autoFallbackToBot();
+        }
       },
     });
+  },
+
+  async _autoFallbackToBot() {
+    if (!this._searching) return;
+    try { await post('/api/battle/cancel_queue'); } catch (_) {}
+    try {
+      const res = await post('/api/battle/find', { prefer_bot: true, disguise_as_pvp: true });
+      if (!this.scene?.isActive('Queue')) return;
+      if (res.ok && res.battle) {
+        this._searching = false;
+        State.battle = res.battle;
+        tg?.HapticFeedback?.notificationOccurred('success');
+        this._statusTxt?.setText('✅ Соперник найден!').setStyle({ color: '#3cc864' });
+        this.cameras.main.flash(350, 80, 144, 255);
+        this.time.delayedCall(420, () => this.scene.start('Battle', {}));
+      } else {
+        // Не получилось — даём пользователю шанс попробовать ручную кнопку «бот»
+        this._autoFallbackFired = false;
+      }
+    } catch (_) {
+      this._autoFallbackFired = false;
+    }
   },
 
   /* ── update: пульсирующее оранжевое свечение вокруг радара ── */

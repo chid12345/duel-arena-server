@@ -53,9 +53,20 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
         else:
             opp_entity = b.get("player1")
             opp_is_bot = False
+    # Этап 9 (auto-fallback): бой создан как PvE (is_bot2=true), но
+    # маркирован «замаскировать под PvP» → отдаём UI opp_is_bot=false.
+    disguised = bool(
+        (b and b.get("_disguise_as_pvp"))
+        or (opp_entity and opp_entity.get("_disguise_as_pvp"))
+    )
+    if disguised and opp_is_bot:
+        opp_is_bot = False
     opp_is_premium = False
     if opp_entity and not opp_is_bot:
         opp_is_premium = bool(_premium_fields(opp_entity).get("is_premium"))
+        # Маска: если бот-донатер замаскирован — тоже даём Premium-бейдж
+        if disguised and opp_entity.get("persona") == "donator":
+            opp_is_premium = True
     elif opp_entity and opp_is_bot:
         # Этап 9: бот-донатер показывается с тем же бейджем «👑 Premium»
         # что и живой премиум-игрок — игрок их не отличает.
@@ -74,12 +85,16 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     opp_items = None
     opp_skin_id = None
     opp_win_streak = 0
-    if opp_entity and opp_is_bot:
+    if opp_entity and (opp_is_bot or disguised):
         opp_persona = opp_entity.get("persona")
         # Этап 9: бот-донатер маскируется под живого премиума — скрываем
         # persona-метку, чтобы не было двойного 👑 (персона + premium-бейдж).
         # Игрок видит только бейдж «👑 Premium» возле имени, как у настоящего.
         if opp_persona == "donator":
+            opp_persona = None
+        # Auto-fallback: при маскировке полностью скрываем persona — бот
+        # должен выглядеть как живой игрок без статус-метки.
+        if disguised:
             opp_persona = None
         opp_skin_id = opp_entity.get("skin_id")
         opp_win_streak = int(opp_entity.get("win_streak") or 0)

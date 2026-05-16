@@ -18,6 +18,10 @@ class FindBattleBody(BaseModel):
     init_data: str
     queue_only: bool = False
     prefer_bot: bool = False
+    # Этап 9: auto-fallback из PvP-очереди в бой с ботом (≥30 сек без живого
+    # соперника). Бот выбирается из брекета игрока, но в карточке выглядит
+    # как PvP-игрок (opp_is_bot=false, persona скрыта).
+    disguise_as_pvp: bool = False
 
 
 class ChallengeSendBody(BaseModel):

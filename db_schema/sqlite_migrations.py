@@ -9,6 +9,7 @@ from .sqlite_migrations_part5 import MIGRATIONS_PART5
 from .sqlite_migrations_part6_upgrades import MIGRATIONS_PART6_UPGRADES
 from .sqlite_migrations_part7_premium import MIGRATIONS_PART7_PREMIUM
 from .sqlite_migrations_part8_rentals import MIGRATIONS_PART8_RENTALS
+from .sqlite_migrations_part9_bots_warrior import MIGRATIONS_PART9_BOTS_WARRIOR
 from .sqlite_migrations_part_clan_v2 import MIGRATIONS_PART_CLAN_V2
 from .sqlite_migrations_part_season_pass import MIGRATIONS_PART_SEASON_PASS
 from .sqlite_migrations_part_world_boss import MIGRATIONS_PART_WORLD_BOSS
@@ -18,5 +19,5 @@ SQLITE_MIGRATIONS = (
     + MIGRATIONS_PART4 + MIGRATIONS_PART5 + MIGRATIONS_PART_CLAN_V2
     + MIGRATIONS_PART_WORLD_BOSS + MIGRATIONS_PART_SEASON_PASS
     + MIGRATIONS_PART6_UPGRADES + MIGRATIONS_PART7_PREMIUM
-    + MIGRATIONS_PART8_RENTALS
+    + MIGRATIONS_PART8_RENTALS + MIGRATIONS_PART9_BOTS_WARRIOR
 )

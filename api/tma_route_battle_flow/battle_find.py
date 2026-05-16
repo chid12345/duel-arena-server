@@ -104,5 +104,17 @@ def register_find_battle_route(
         if completed < ONBOARDING_BATTLES_EASY:
             opponent = battle_system.apply_onboarding_bot(opponent)
 
+        # Этап 9 (auto-fallback): помечаем бот-бой как «замаскированный под PvP».
+        # battle_find продолжает работать как раньше; флаг читается в tma_battle_api,
+        # которое отдаёт UI: opp_is_bot=false, persona-метка скрыта.
+        if body.disguise_as_pvp:
+            opponent = dict(opponent)
+            opponent["_disguise_as_pvp"] = True
+
         battle_id = await battle_system.start_battle(player, opponent, is_bot2=True)
+        # Также пометим сам бой — на случай если opp_entity потеряется в цикле
+        b = battle_system.active_battles.get(battle_id)
+        if b and body.disguise_as_pvp:
+            b["_disguise_as_pvp"] = True
+
         return {"ok": True, "status": "bot_started", "battle": _battle_state_api(uid)}

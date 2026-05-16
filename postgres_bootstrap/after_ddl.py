@@ -171,6 +171,8 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     )""",
     "CREATE INDEX IF NOT EXISTS idx_equipment_rentals_user ON equipment_rentals (user_id)",
     "CREATE INDEX IF NOT EXISTS idx_equipment_rentals_expires ON equipment_rentals (expires_at)",
+    # Этап 9: warrior_type у ботов — чтобы выглядели как живые игроки (классы воинов)
+    "ALTER TABLE bots ADD COLUMN IF NOT EXISTS warrior_type TEXT DEFAULT 'tank_0'",
     # world_boss_rewards.claimed: INTEGER → BOOLEAN (если ещё не BOOLEAN)
     # DEFAULT 0 нельзя кастовать автоматически → дропаем, меняем тип, ставим новый DEFAULT.
     """
