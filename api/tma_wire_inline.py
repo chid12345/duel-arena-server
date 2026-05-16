@@ -14,6 +14,7 @@ from api.tma_route_battle_queue import register_tma_battle_queue_routes
 from api.tma_route_battle_read import register_tma_battle_read_routes
 from api.tma_route_player import register_tma_player_route
 from api.equipment_routes import register_equipment_routes
+from api.upgrade_handler import register_upgrade_routes
 from api.weapon_payment_routes import register_weapon_payment_routes
 from api.helmet_payment_routes import register_helmet_payment_routes
 from api.boots_payment_routes import register_boots_payment_routes
@@ -39,6 +40,7 @@ from database import db
 
 def wire_tma_inline_routes(app: FastAPI) -> None:
     register_equipment_routes(app)
+    register_upgrade_routes(app)
     register_weapon_payment_routes(app)
     register_helmet_payment_routes(app)
     register_boots_payment_routes(app)
