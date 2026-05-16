@@ -12,12 +12,37 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 
-def test_rental_stars_price_half_of_full():
-    """50% от полной mythic-цены (590⭐ → 295⭐, 490⭐ → 245⭐)."""
-    from economy.rental_pricing import rental_stars_price
-    assert rental_stars_price(590) == 295
-    assert rental_stars_price(490) == 245
-    assert rental_stars_price(0) == 1  # минимум 1
+def test_rental_pricing_fixed_constants():
+    """Этап 8 фикс-цена: 100⭐ или $2 для любого mythic, независимо от цены покупки."""
+    from economy.rental_pricing import (
+        RENTAL_DURATION_DAYS,
+        RENTAL_PRICE_STARS,
+        RENTAL_PRICE_USDT,
+    )
+    assert RENTAL_PRICE_STARS == 100
+    assert RENTAL_PRICE_USDT == "2.00"
+    assert RENTAL_DURATION_DAYS == 7
+
+
+def test_deliver_rental_usdt_flow(db):
+    """deliver_rental помещает аренду и надевает предмет (используется в 3 USDT-путях)."""
+    from api.payment_routes.rental_deliver import deliver_rental, parse_rental_payload
+
+    db.get_or_create_player(3010, "u_usdt_rent")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (3010,))
+    conn.commit()
+    conn.close()
+
+    item_id = parse_rental_payload("uid:3010:rental:shield_mythic1")
+    assert item_id == "shield_mythic1"
+
+    ok = deliver_rental(db, 3010, item_id)
+
+    assert ok is True
+    assert db.has_active_rental(3010, "shield_mythic1") is True
+    eq = db.get_equipment(3010)
+    assert eq["shield"]["item_id"] == "shield_mythic1"
 
 
 def test_rent_item_creates_active_rental(db):

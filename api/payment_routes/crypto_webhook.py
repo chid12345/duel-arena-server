@@ -84,6 +84,10 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_boots_equip  = ":boots_equip:"  in custom_payload
             is_ring_equip   = ":ring_equip:"   in custom_payload
             is_armor_class  = ":armor_class:"  in custom_payload
+            # Этап 8: аренда mythic-предмета за USDT
+            from api.payment_routes.rental_deliver import deliver_rental, parse_rental_payload
+            is_rental = ":rental:" in custom_payload
+            rental_item_id = parse_rental_payload(custom_payload) if is_rental else ""
             usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             weapon_equip_id = custom_payload.split(":weapon_equip:", 1)[1].strip() if is_weapon_equip else None
@@ -128,6 +132,16 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     break
             if _handled_equip:
                 pass  # handled above
+            elif is_rental and rental_item_id:
+                # Этап 8: аренда mythic за USDT. Идемпотентно.
+                _rent_ok = deliver_rental(db, uid, rental_item_id)
+                _cache_invalidate(uid)
+                if _rent_ok:
+                    db.mark_items_delivered(int(invoice_id))
+                    await manager.send(uid, {"event": "rental_activated", "item_id": rental_item_id, "source": "cryptopay"})
+                    await _send_tg_message(uid, f"🕐 <b>Аренда оформлена — предмет надет!</b>\nОткройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena")
+                else:
+                    await _send_tg_message(uid, f"⚠️ Оплата получена, но выдача аренды задержалась. Напишите в поддержку и укажите ID платежа: {invoice_id}")
             elif is_armor_class and armor_class_id:
                 # Мифическая броня (класс) — покупаем класс целиком через purchase_class.
                 # Идемпотентно: повторная оплата вернёт "уже есть" и не создаст дубликат.

@@ -58,6 +58,8 @@ def _parse_payload(payload: str) -> dict:
     out["boots_equip_id"]  = payload.split(":boots_equip:",  1)[1].strip() if ":boots_equip:"  in payload else None
     out["ring_equip_id"]   = payload.split(":ring_equip:",   1)[1].strip() if ":ring_equip:"   in payload else None
     out["avatar_id"]       = payload.split(":avatar:", 1)[1].strip() if ":avatar:" in payload else None
+    # Этап 8: аренда mythic
+    out["rental_item_id"]  = payload.split(":rental:", 1)[1].strip() if ":rental:" in payload else None
     return out
 
 
@@ -76,6 +78,12 @@ def _deliver(uid: int, invoice_id: int, payload: str, diamonds: int) -> str:
             db.equip_item(uid, slot, item_id, force=True)
             db.add_owned_weapon(uid, item_id)
             return f"equip:{slot}:{item_id}"
+
+    # Этап 8: аренда mythic за USDT (rental:{item_id}) — rent_item + equip
+    if p.get("rental_item_id"):
+        from api.payment_routes.rental_deliver import deliver_rental
+        ok = deliver_rental(db, uid, p["rental_item_id"])
+        return f"rental:{p['rental_item_id']}:{ok}"
 
     if p["is_armor_class"] and p["armor_class_id"]:
         ok, msg = db.purchase_class(uid, p["armor_class_id"])
