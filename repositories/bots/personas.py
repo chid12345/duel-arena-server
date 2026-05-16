@@ -133,12 +133,16 @@ def apply_persona_to_bot(bot: Dict, level: int,
     # AI-стиль из персоны (перекрывает старый случайный выбор)
     bot["ai_pattern"] = _ai_pattern_for_persona(persona, r)
 
-    # Display-имя для UI: «Кровавый Тор» из технического «Жестокий_Тор_a1b2c3d4».
-    # Эмодзи статуса добавляется отдельно фронтом через persona-поле.
+    # Display-имя для UI: «DarkRaven» или «IronFist Vortex» из технического
+    # имени `prefix_base_uuid` или `base_uuid`. Этап 9: префикс может быть пустым.
     raw = bot.get("name", "Bot")
     parts = raw.split("_")
-    if len(parts) >= 2:
-        bot["display_name"] = f"{parts[0]} {parts[1]}"
+    if len(parts) >= 3:
+        # `prefix_base_uuid` → "Prefix Base"
+        bot["display_name"] = f"{parts[0]}{parts[1]}" if not parts[0] else f"{parts[0]} {parts[1]}"
+    elif len(parts) == 2:
+        # `base_uuid` (без префикса) → "Base"
+        bot["display_name"] = parts[0]
     else:
         bot["display_name"] = raw
     return bot

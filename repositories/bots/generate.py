@@ -24,7 +24,10 @@ class BotsGenerateMixin:
         else:
             bot_type = "legend"
             prefix = random.choice(BOT_PREFIXES["legend"])
-        name = f"{prefix}_{random.choice(BOT_NAMES)}_{uuid.uuid4().hex[:8]}"
+        base = random.choice(BOT_NAMES)
+        uid = uuid.uuid4().hex[:8]
+        # Этап 9: префикс может быть пустым (новички). Не клеим лишний "_".
+        name = f"{prefix}_{base}_{uid}" if prefix else f"{base}_{uid}"
         strength, endurance, crit, max_hp = self._compute_bot_stats_for_level(level)
         ai_pattern = random.choice(("aggressive", "defensive", "balanced"))
         return (name, level, strength, endurance, crit, max_hp, max_hp, bot_type, ai_pattern)

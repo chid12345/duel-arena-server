@@ -56,6 +56,11 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     opp_is_premium = False
     if opp_entity and not opp_is_bot:
         opp_is_premium = bool(_premium_fields(opp_entity).get("is_premium"))
+    elif opp_entity and opp_is_bot:
+        # Этап 9: бот-донатер показывается с тем же бейджем «👑 Premium»
+        # что и живой премиум-игрок — игрок их не отличает.
+        if opp_entity.get("persona") == "donator":
+            opp_is_premium = True
 
     # Шмот САМОГО игрока (своя карточка) и PvP-соперника — общий helper.
     from api.tma_battle_items import items_for_user
@@ -71,6 +76,11 @@ def _battle_state_api(user_id: int) -> Optional[dict]:
     opp_win_streak = 0
     if opp_entity and opp_is_bot:
         opp_persona = opp_entity.get("persona")
+        # Этап 9: бот-донатер маскируется под живого премиума — скрываем
+        # persona-метку, чтобы не было двойного 👑 (персона + premium-бейдж).
+        # Игрок видит только бейдж «👑 Premium» возле имени, как у настоящего.
+        if opp_persona == "donator":
+            opp_persona = None
         opp_skin_id = opp_entity.get("skin_id")
         opp_win_streak = int(opp_entity.get("win_streak") or 0)
         opp_eq = {
