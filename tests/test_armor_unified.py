@@ -70,17 +70,22 @@ def test_armor_mythic4_is_legendary_usdt_template():
     """armor_mythic4 = заготовка legendary_usdt: 0 базовых статов, free_stats=19."""
     item = get_item("armor_mythic4")
     assert item is not None
-    assert item["class_strength"] == 0
-    assert item["class_agility"] == 0
-    assert item["class_intuition"] == 0
-    assert item["class_endurance"] == 0
+    assert item.get("str_bonus", 0) == 0
+    assert item.get("agi_bonus", 0) == 0
+    assert item.get("intu_bonus", 0) == 0
+    assert item.get("hp_bonus", 0) == 0
     assert item.get("free_stats") == 19
     assert item.get("custom_name_supported") is True
     assert item.get("legacy_class_id") == "legendary_usdt"
 
 
-def test_armor_class_stats_match_legacy_class_bundles():
-    """Базовые статы armor совпадают с class_bundles (миграция стат не теряет)."""
+def test_armor_stats_match_legacy_class_bundles():
+    """Статы armor совпадают со старой class-системой (миграция стат не теряет).
+
+    Унификация armor (этап 7): str_bonus = bundle.bonus_strength,
+    agi_bonus = bundle.bonus_agility, intu_bonus = bundle.bonus_intuition,
+    hp_bonus = bundle.bonus_endurance × 2 (STAMINA_PER_FREE_STAT).
+    """
     from config.class_bundles import DIAMONDS_CLASSES, GOLD_CLASSES, MYTHIC_CLASSES
 
     legacy_to_new = {
@@ -97,28 +102,26 @@ def test_armor_class_stats_match_legacy_class_bundles():
     for legacy_id, new_id in legacy_to_new.items():
         bundle = all_bundles[legacy_id]
         item = get_item(new_id)
-        assert item["class_strength"] == bundle["bonus_strength"], f"{new_id} strength"
-        assert item["class_agility"] == bundle["bonus_agility"], f"{new_id} agility"
-        assert item["class_intuition"] == bundle["bonus_intuition"], f"{new_id} intuition"
-        assert item["class_endurance"] == bundle["bonus_endurance"], f"{new_id} endurance"
+        assert item.get("str_bonus", 0) == bundle["bonus_strength"], f"{new_id} str_bonus"
+        assert item.get("agi_bonus", 0) == bundle["bonus_agility"], f"{new_id} agi_bonus"
+        assert item.get("intu_bonus", 0) == bundle["bonus_intuition"], f"{new_id} intu_bonus"
+        assert item.get("hp_bonus", 0) == bundle["bonus_endurance"] * 2, f"{new_id} hp_bonus"
 
 
-def test_armor_does_not_pollute_get_equipment_stats():
-    """class_strength/agility/intuition/endurance НЕ должны попадать в get_item_stats.
+def test_armor_stats_in_get_item_stats():
+    """Статы armor читаются через get_item_stats как у обычных предметов.
 
-    Эти поля применяются delta-моделью в switch_class (коммит 3), а не через
-    суммирование как обычные item-bonuses. Двойного счёта быть не должно.
+    Унификация armor (этап 7): str_bonus/agi_bonus/intu_bonus/hp_bonus
+    теперь стандартные поля → get_item_stats их возвращает → в бою
+    применяются автоматически через battle_system.
     """
     from db_schema.equipment_catalog import get_item_stats
 
-    stats = get_item_stats("armor_gold1")  # str=7, end=7, special_bonus
-    # get_item_stats возвращает только стандартные поля (atk_bonus, hp_bonus, ...)
-    # class_* туда не попадают
-    assert "class_strength" not in stats
-    assert "class_endurance" not in stats
-    # Стандартные item-bonuses не заданы для armor → нули
-    assert stats["atk_bonus"] == 0
-    assert stats["hp_bonus"] == 0
+    stats = get_item_stats("armor_gold1")  # berserker_gold: str=7, end=7
+    assert stats["str_bonus"] == 7
+    assert stats["hp_bonus"] == 14  # 7 × STAMINA_PER_FREE_STAT(2)
+    assert stats["agi_bonus"] == 0
+    assert stats["intu_bonus"] == 0
 
 
 # ── Коммит 2: таблицы armor_custom_mods / player_owned_armor + миграция ─────

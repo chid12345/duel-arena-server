@@ -33,48 +33,24 @@ _SQ_UNEQUIP_SQL = """UPDATE players
 
 class InventoryUnequipResyncMixin:
     def unequip_class(self, user_id: int) -> Tuple[bool, str]:
-        """Снять текущий образ/класс."""
+        """Снять текущий образ/класс.
+
+        Унификация armor (этап 7): delta-вычитание из players.* отключено —
+        статы брони идут через get_equipment_stats. unequip просто чистит
+        флаг equipped в user_inventory, current_class и player_equipment.armor.
+        """
         conn = self.get_connection()
         cursor = conn.cursor()
         self._ensure_inventory_schema(cursor)
         try:
-            cur_info = self._player_current_class_info(cursor, user_id)
             cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
-
-            vec_to_subtract = None
-            if cur_info and cur_info.get("class_type") in {"free", "gold", "diamonds"}:
-                vec_to_subtract = self._class_stat_vector(cur_info)
-            elif cur_info and cur_info.get("class_type") == "usdt":
-                # USDT: вычитаем ровно то, что было добавлено при equip (saved + пассивка)
-                usdt_vec = self._usdt_stat_vector(cursor, user_id, cur_info)
-                if any(v > 0 for v in usdt_vec.values()):
-                    vec_to_subtract = usdt_vec
-
-            if vec_to_subtract:
-                vec = vec_to_subtract
-                cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
-                hp_row = cursor.fetchone()
-                _raw_mhp = self._row_get(hp_row, "max_hp", 1)
-                new_max_hp = max(1, int(1 if _raw_mhp is None else _raw_mhp) - int(vec["max_hp"]))
-                _raw_chp = self._row_get(hp_row, "current_hp", new_max_hp)
-                new_current_hp = min(
-                    new_max_hp,
-                    max(1, (new_max_hp if _raw_chp is None else int(_raw_chp)) - int(vec["max_hp"])),
-                )
-                if bool(getattr(self, "_pg", False)):
-                    cursor.execute(_PG_UNEQUIP_SQL,
-                        (vec["strength"], vec["endurance"], vec["crit"], new_max_hp, new_current_hp, user_id))
-                else:
-                    cursor.execute(_SQ_UNEQUIP_SQL,
-                        (vec["strength"], vec["strength"], vec["endurance"], vec["endurance"],
-                         vec["crit"], vec["crit"], new_max_hp, new_current_hp, user_id))
-            else:
-                cursor.execute(
-                    "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
-                    (user_id,),
-                )
-
-            # Унификация armor (шаг 3/6): синхронизация с player_equipment
+            cursor.execute(
+                "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
+                (user_id,),
+            )
+            # Унификация armor: синхронизация с player_equipment — слот
+            # «тело» очищается, get_equipment_stats больше не суммирует
+            # статы этой брони → они автоматически уходят из боя.
             cursor.execute(
                 "DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
                 (user_id,),

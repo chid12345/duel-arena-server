@@ -1,18 +1,35 @@
-"""Переключение активного класса — единая delta-модель для всех типов."""
+"""Переключение активного класса.
+
+Унификация armor (этап 7): delta-модель статов отключена. Раньше класс
+напрямую менял players.strength/endurance/crit/max_hp. Теперь armor — это
+обычный предмет в EQUIPMENT_CATALOG, и его статы (str_bonus/agi_bonus/
+intu_bonus/hp_bonus) суммируются в get_equipment_stats и применяются в
+бою через battle_system/mixins/start.py, как у helmet/weapon/shield/etc.
+
+switch_class по-прежнему:
+- Обновляет players.current_class (UI-маркер совместимости)
+- UPDATE user_inventory.equipped (legacy таблица, остаётся до полной выпилки)
+- Dual-write в player_equipment(slot='armor') + player_owned_armor
+- Синхронизация armor_custom_mods для USDT-кастомок
+
+НО НЕ применяет delta к players.strength/endurance/crit/max_hp —
+статы приходят через unified equipment-путь.
+"""
 
 from __future__ import annotations
 
 from typing import Tuple
 
-from config import PLAYER_START_CRIT, PLAYER_START_ENDURANCE, PLAYER_START_STRENGTH, STAMINA_PER_FREE_STAT
 from db_schema.equipment_items.armor import legacy_class_to_armor_item_id
-
-_USDT_BASE_STAMINA = 5  # базовая выносливость Легендарный образа (даёт броню сразу)
 
 
 class InventorySwitchMixin:
     def switch_class(self, user_id: int, class_id: str) -> Tuple[bool, str]:
-        """Переключиться на другой класс (включая Легендарный слоты)."""
+        """Переключиться на другой класс (включая Легендарный слоты).
+
+        После унификации armor (этап 7) статы не применяются delta —
+        они идут через get_equipment_stats как у обычных предметов.
+        """
         conn = self.get_connection()
         cursor = conn.cursor()
         self._ensure_inventory_schema(cursor)
@@ -32,17 +49,7 @@ class InventorySwitchMixin:
 
             self._remove_legacy_avatar_bonus_with_cursor(cursor, user_id)
 
-            # Вектор старого класса (чтобы вычесть его бонусы)
-            old_info = self._equipped_inventory_class_info(cursor, user_id)
-            old_vec = self._usdt_stat_vector(cursor, user_id, old_info)
-
-            # Вектор нового класса / Легендарный слота
-            if target_type == "usdt":
-                new_vec = self._usdt_stat_vector(cursor, user_id, {"class_type": "usdt", "class_id": class_id})
-            else:
-                new_vec = self._class_stat_vector(class_info)
-
-            # Обновляем инвентарь и current_class
+            # Обновляем инвентарь и current_class (UI-маркер)
             cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
             cursor.execute(
                 "UPDATE user_inventory SET equipped = TRUE WHERE user_id = ? AND class_id = ?",
@@ -53,16 +60,11 @@ class InventorySwitchMixin:
                 (class_id, target_type, user_id),
             )
 
-            # Унификация armor (шаг 3/6): dual-write в новые таблицы
+            # Унификация armor: dual-write в новые таблицы. Это запись брони
+            # в player_equipment(slot='armor') — далее get_equipment_stats
+            # автоматом применит str_bonus/agi_bonus/intu_bonus/hp_bonus из
+            # каталога armor.py к статам игрока в бою.
             self._mirror_armor_to_unified_tables(cursor, user_id, class_id, target_type)
-
-            # Применяем delta (единая логика для всех типов)
-            d_str = new_vec["strength"] - old_vec["strength"]
-            d_end = new_vec["endurance"] - old_vec["endurance"]
-            d_crit = new_vec["crit"] - old_vec["crit"]
-            d_hp = new_vec["max_hp"] - old_vec["max_hp"]
-
-            self._apply_stat_delta_to_player(cursor, user_id, d_str, d_end, d_crit, d_hp)
 
             conn.commit()
             return True, f"Переключен на класс '{class_info['name'] if class_info else 'USDT слот'}'"
@@ -73,13 +75,37 @@ class InventorySwitchMixin:
         finally:
             conn.close()
 
-    def _mirror_armor_to_unified_tables(self, cursor, user_id: int, class_id: str, class_type: str) -> None:
-        """Унификация armor (шаг 3/6) — dual-write в новые таблицы.
+    def _apply_stat_delta_to_player(self, cursor, user_id: int,
+                                    d_str: int, d_end: int, d_crit: int, d_hp: int) -> None:
+        """NO-OP после унификации armor (этап 7).
 
-        После UPDATE players.current_class пишем:
+        Раньше применял delta к players.strength/endurance/crit/max_hp.
+        Теперь статы брони идут через get_equipment_stats как у обычного
+        предмета. USDT-кастомка хранит +19 свободных статов в
+        armor_custom_mods, которые подмешиваются в get_equipment_stats.
+
+        Метод-заглушка оставлен ради обратной совместимости consumers
+        (usdt.py, usdt_apply_passive.py). При полной выпилке legacy
+        стека (отдельный этап) будет удалён.
+        """
+        return
+
+    def _usdt_stat_vector(self, cursor, user_id: int, class_info) -> dict:
+        """NO-OP после унификации armor (этап 7).
+
+        Возвращает нулевой вектор — все статы USDT-кастомки идут через
+        armor_custom_mods → get_equipment_stats.
+        """
+        return {"strength": 0, "endurance": 0, "crit": 0, "max_hp": 0}
+
+    def _mirror_armor_to_unified_tables(self, cursor, user_id: int, class_id: str, class_type: str) -> None:
+        """Dual-write в новые armor-таблицы после UPDATE players.current_class.
+
         - player_owned_armor — гарантируем владение item_id
-        - player_equipment(slot='armor') — текущая надетая броня
+        - player_equipment(slot='armor') — текущая надетая броня для
+          get_equipment_stats / UI
         - armor_custom_mods (только для USDT) — синхронизируем saved-поля
+          и custom_name для legendary_usdt (+19 свободных статов)
         """
         item_id = legacy_class_to_armor_item_id(class_id)
         if not item_id:
@@ -124,61 +150,3 @@ class InventorySwitchMixin:
                         1 if bool(self._row_get(row, "stats_applied", False)) else 0,
                     ),
                 )
-
-    def _apply_stat_delta_to_player(self, cursor, user_id: int,
-                                    d_str: int, d_end: int, d_crit: int, d_hp: int) -> None:
-        """Применить delta статов к players (min 1 для всех, HP скорректировать)."""
-        cursor.execute("SELECT max_hp, current_hp FROM players WHERE user_id = ?", (user_id,))
-        hp_row = cursor.fetchone()
-        new_max_hp = max(1, int(hp_row["max_hp"]) + d_hp)
-        new_cur_hp = min(new_max_hp, max(1, int(hp_row["current_hp"]) + d_hp))
-        _min_s = int(PLAYER_START_STRENGTH)
-        _min_e = int(PLAYER_START_ENDURANCE)
-        _min_c = int(PLAYER_START_CRIT)
-        if bool(getattr(self, "_pg", False)):
-            cursor.execute(
-                """UPDATE players SET strength=GREATEST(?,strength+?),
-                   endurance=GREATEST(?,endurance+?), crit=GREATEST(?,crit+?),
-                   max_hp=?, current_hp=? WHERE user_id=?""",
-                (_min_s, d_str, _min_e, d_end, _min_c, d_crit, new_max_hp, new_cur_hp, user_id),
-            )
-        else:
-            cursor.execute(
-                """UPDATE players
-                   SET strength  = CASE WHEN (strength +?)<? THEN ? ELSE strength +? END,
-                       endurance = CASE WHEN (endurance+?)<? THEN ? ELSE endurance+? END,
-                       crit      = CASE WHEN (crit     +?)<? THEN ? ELSE crit     +? END,
-                       max_hp=?, current_hp=? WHERE user_id=?""",
-                (d_str, _min_s, _min_s, d_str,
-                 d_end, _min_e, _min_e, d_end,
-                 d_crit, _min_c, _min_c, d_crit,
-                 new_max_hp, new_cur_hp, user_id),
-            )
-
-    def _usdt_stat_vector(self, cursor, user_id: int, class_info) -> dict:
-        """Вектор статов Легендарный слота.
-        Базово: +5 выносливости (броня) всегда при надевании.
-        Сохранённые 19 статов применяются только когда stats_applied=TRUE.
-        Пассивка — боевой модификатор, не стат (не входит в вектор).
-        """
-        if not class_info:
-            return {"strength": 0, "endurance": 0, "crit": 0, "max_hp": 0}
-        if class_info.get("class_type") == "usdt":
-            cid = class_info.get("class_id", "")
-            cursor.execute(
-                """SELECT strength_saved, agility_saved, intuition_saved, stamina_saved, stats_applied
-                   FROM user_inventory WHERE user_id=? AND class_id=?""",
-                (user_id, cid),
-            )
-            saved = cursor.fetchone()
-            base_hp = _USDT_BASE_STAMINA * int(STAMINA_PER_FREE_STAT)
-            if not bool(self._row_get(saved, "stats_applied", False)):
-                # Статы ещё не сохранены — только базовая выносливость
-                return {"strength": 0, "endurance": 0, "crit": 0, "max_hp": base_hp}
-            return {
-                "strength": int(self._row_get(saved, "strength_saved", 0) or 0),
-                "endurance": int(self._row_get(saved, "agility_saved", 0) or 0),
-                "crit":      int(self._row_get(saved, "intuition_saved", 0) or 0),
-                "max_hp":    int(self._row_get(saved, "stamina_saved", 0) or 0) * int(STAMINA_PER_FREE_STAT) + base_hp,
-            }
-        return self._class_stat_vector(class_info)

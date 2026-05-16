@@ -175,11 +175,29 @@ class EquipmentMixin:
         )
         total: Dict[str, float] = {f: 0.0 if "pct" in f else 0 for f in _STAT_FIELDS}
 
+        # Унификация armor (этап 7): для USDT-кастомки (armor_mythic4)
+        # подмешиваем индивидуальные модификаторы из armor_custom_mods.
+        # Это +19 свободных статов, распределённых игроком.
+        armor_mods: dict | None = None
+        if SLOT_ARMOR in equipped and equipped[SLOT_ARMOR].get("item_id") == "armor_mythic4":
+            try:
+                armor_mods = self.get_armor_custom_mods(user_id, "armor_mythic4")
+            except Exception:
+                armor_mods = None
+
         for slot, item in equipped.items():
             item_id = item["item_id"]
             base_stats = get_item_stats(item_id)
             plus = int(all_plus.get(item_id, 0))
             stats = plus_stats_for(base_stats, plus) if plus > 0 else base_stats
+            # Подмешиваем USDT-кастомизацию к armor_mythic4
+            if slot == SLOT_ARMOR and armor_mods and armor_mods.get("applied"):
+                stats = dict(stats)
+                stats["str_bonus"] = int(stats.get("str_bonus", 0)) + int(armor_mods.get("str_bonus", 0))
+                stats["agi_bonus"] = int(stats.get("agi_bonus", 0)) + int(armor_mods.get("agi_bonus", 0))
+                stats["intu_bonus"] = int(stats.get("intu_bonus", 0)) + int(armor_mods.get("int_bonus", 0))
+                # end_bonus в armor_custom_mods → hp_bonus (×2 stamina per stat)
+                stats["hp_bonus"] = int(stats.get("hp_bonus", 0)) + int(armor_mods.get("end_bonus", 0)) * 2
             for f in _STAT_FIELDS:
                 val = stats.get(f, 0)
                 if not isinstance(val, (int, float)):
