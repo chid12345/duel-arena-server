@@ -1,165 +1,125 @@
 /* ============================================================
-   SetBonusPage — рендер страницы «Комплект» во вкладке Герой.
-   Показывает 4 карточки (серебро/золото/алмаз/донат) с прогрессом
-   3/4/5/6, бонусами на каждом пороге и перком за 6/6.
-   Активный сет (тот что даёт бонусы прямо сейчас) подсвечен.
-   Источник истины — State.equipment. Зеркалит config/set_bonuses.py.
-   Экспорт: window.SetBonusPage.html(player)
+   SetBonusPage — страница «Комплект» во вкладке Герой.
+   Архетипные сеты v2 (этап 5E): 6 архетипов, пороги 2/4/6.
+   Источник данных — /api/sets/status (рассчитывается на сервере).
+   Кэшируется в State.setsStatus, обновляется при equip/unequip.
+   Экспорт: window.SetBonusPage.html(player), window.SetBonusPage.refresh()
    ============================================================ */
 (() => {
-const CATS = ['weapon','shield','armor','belt','boots','ring1'];
-const SLOT_EMO = { weapon:'⚔️', shield:'🛡️', armor:'🥋', belt:'⛑️', boots:'👢', ring1:'💍' };
-const SLOT_LBL = { weapon:'Оружие', shield:'Щит', armor:'Тело', belt:'Голова', boots:'Ноги', ring1:'Кольцо' };
-const ORDER = ['common','rare','epic','mythic'];
-const TIERS = ['common','rare','epic','mythic'];
-const NAME = { common:'Новобранец', rare:'Герой', epic:'Чемпион', mythic:'Бог войны' };
-const EMO  = { common:'🥈', rare:'🥇', epic:'💎', mythic:'⭐' };
-const COLOR= { common:'#a0aec0', rare:'#fbbf24', epic:'#c084fc', mythic:'#ff6b2b' };
-const BONUSES = {
-  common: {3:{hp:1,def:1},                            4:{hp:2,def:2,atk:1},        5:{hp:3,def:3,atk:2,acc:1},   6:{hp:4,def:3,atk:2,acc:2}},
-  rare:   {3:{hp:3,def:2,atk:2},                       4:{hp:4,def:3,atk:3,acc:1},  5:{hp:5,def:4,atk:4,acc:2},   6:{hp:6,def:5,atk:5,acc:3}},
-  epic:   {3:{hp:5,def:4,atk:4,acc:1},                 4:{hp:7,def:5,atk:5,acc:2},  5:{hp:8,def:6,atk:6,acc:3},   6:{hp:10,def:7,atk:7,acc:4}},
-  mythic: {3:{hp:7,def:5,atk:5,acc:2},                 4:{hp:9,def:6,atk:7,acc:3},  5:{hp:11,def:8,atk:9,acc:4},  6:{hp:13,def:10,atk:11,acc:5}},
-};
-const PERKS = {
-  common: { name:'Второе дыхание',   desc:'Раз в бой: при HP < 30% мгновенно +100 HP' },
-  rare:   { name:'Решающий удар',     desc:'Первый удар в бою +50% урона' },
-  epic:   { name:'Хладнокровие',      desc:'Каждый раунд +1% к урону (до +10% за бой)' },
-  mythic: { name:'Гнев богов',        desc:'Каждый 5-й удар автоматически наносит x2 урона' },
+const COLOR = {
+  predator: '#22c55e',
+  bastion:  '#3b82f6',
+  berserk:  '#ef4444',
+  ghost:    '#a78bfa',
+  mage:     '#06b6d4',
+  regent:   '#f59e0b',
 };
 
-/* Армор-слот в этой игре = гардероб/класс (player.current_class), не player_equipment.armor.
-   Зеркало `class_id_to_rarity` из config/set_bonuses.py. */
-function _classIdToRarity(cls){
-  if (!cls) return null;
-  // USDT-кастомные образы (Легендарный) — class_id вида usdt_custom_<uid>_<n>
-  if (cls.startsWith('usdt_custom_')) return 'mythic';
-  if (cls.endsWith('_mythic') || cls.endsWith('_usdt')) return 'mythic';
-  if (cls.endsWith('_diamonds')) return 'epic';
-  if (cls.endsWith('_gold')) return 'rare';
-  if (cls.endsWith('_free')) return 'common';
-  return null;
+async function refresh() {
+  try {
+    const r = await get('/api/sets/status');
+    if (r?.ok) {
+      window.State = window.State || {};
+      State.setsStatus = r;
+    }
+  } catch (_) {}
 }
 
-function _armorRarity(eq){
-  // current_class имеет приоритет (это и есть «броня» в игре). Если пусто —
-  // fallback на warrior_type (у некоторых игроков «броня» там), потом на eq.armor.
-  const p = window.State?.player || {};
-  return _classIdToRarity(p.current_class)
-      || _classIdToRarity(p.warrior_type)
-      || eq?.armor?.rarity
-      || null;
-}
+function _renderArchetype(arch, maxPieces) {
+  const c = COLOR[arch.set_id] || '#888';
+  const count = arch.count;
+  const isFull = count >= maxPieces;
+  const isActive = count >= 2;
+  const fullBadge = isFull ? `<span class="sb-badge" style="color:${c};border-color:${c}">★ ПОЛНЫЙ</span>` : '';
+  const activeBadge = (!isFull && isActive) ? `<span class="sb-badge" style="color:${c};border-color:${c}">АКТИВЕН</span>` : '';
 
-function _slotRarity(eq, slot){
-  if (slot === 'armor') return _armorRarity(eq);
-  return eq?.[slot]?.rarity || null;
-}
-
-function _countRarities(eq){
-  const c = {};
-  CATS.forEach(s => {
-    const r = _slotRarity(eq, s);
-    if (r) c[r] = (c[r] || 0) + 1;
-  });
-  return c;
-}
-
-function _resolveActive(counts){
-  const keys = Object.keys(counts);
-  if (!keys.length) return null;
-  let maxC = 0;
-  keys.forEach(r => { if (counts[r] > maxC) maxC = counts[r]; });
-  if (maxC < 3) return null;
-  const winners = keys.filter(r => counts[r] === maxC);
-  winners.sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
-  return winners[winners.length - 1];  // старшая редкость при равенстве
-}
-
-function _bonusLine(b){
-  const parts = [];
-  if (b.hp)  parts.push(`+${b.hp}% HP`);
-  if (b.def) parts.push(`Защита +${b.def}%`);
-  if (b.atk) parts.push(`+${b.atk}% урон`);
-  if (b.acc) parts.push(`+${b.acc}% точность`);
-  return parts.join(' · ');
-}
-
-function _renderSlotMap(eq, tier){
-  // Полоска 6 значков: какие слоты дают вклад в этот тир.
-  // ✓ зелёный — предмет нужной редкости; иначе серый с другой иконкой.
-  // Для armor-слота rarity берётся из current_class (гардероб).
-  return CATS.map(s => {
-    const r = _slotRarity(eq, s);
-    const ok = r === tier;
-    const missing = !r;
-    const mismatch = !!r && r !== tier;
-    let cls = 'sb-sl';
-    if (ok) cls += ' on';
-    else if (missing) cls += ' empty';
-    else if (mismatch) cls += ' bad';
-    const tip = ok ? SLOT_LBL[s]
-                   : (missing ? `${SLOT_LBL[s]}: пусто` : `${SLOT_LBL[s]}: ${r}`);
-    return `<span class="${cls}" title="${tip}">${SLOT_EMO[s]}</span>`;
-  }).join('');
-}
-
-function _renderTierCard(tier, count, isActive, eq){
-  const c = COLOR[tier];
-  const activeBadge = isActive ? `<span class="sb-badge" style="color:${c};border-color:${c}">АКТИВЕН</span>` : '';
-  const slotMap = `<div class="sb-slots">${_renderSlotMap(eq, tier)}</div>`;
-  const moreNeeded = count < 3 ? `<div class="sb-need">Соберите ещё ${3 - count} для бонуса</div>` : '';
-  const rows = [3, 4, 5, 6].map(t => {
-    const on = count >= t;
-    const b = BONUSES[tier][t];
+  const rows = arch.thresholds.map(t => {
+    const on = t.reached;
+    const bonusStr = (t.bonuses_human || []).join(' · ') || '—';
     return `<div class="sb-row ${on?'on':'off'}">
       <span class="sb-mark">${on ? '✓' : '○'}</span>
-      <span class="sb-th">${t}/6</span>
-      <span class="sb-bn">${_bonusLine(b)}</span>
+      <span class="sb-th">${t.n}/${maxPieces}</span>
+      <span class="sb-bn">${bonusStr}</span>
     </div>`;
   }).join('');
-  const perk = PERKS[tier];
-  const perkOn = count >= 6;
-  const lockBadge = perkOn ? '★' : `<span class="sb-perk-lock">🔒 нужно ещё ${6 - count}</span>`;
-  const perkRow = `<div class="sb-perk ${perkOn?'on':'off'}">
-    <div class="sb-perk-h">${lockBadge} ${perk.name}</div>
-    <div class="sb-perk-d">${perk.desc}</div>
-  </div>`;
+
+  // Перк (на пороге 6) — единственный, ищем в thresholds
+  let perkRow = '';
+  const perkTier = (arch.thresholds || []).find(t => t.n === maxPieces && t.perk_id);
+  if (perkTier) {
+    const perkOn = count >= maxPieces;
+    const lockBadge = perkOn ? '★' : `<span class="sb-perk-lock">🔒 нужно ещё ${maxPieces - count}</span>`;
+    perkRow = `<div class="sb-perk ${perkOn?'on':'off'}">
+      <div class="sb-perk-h">${lockBadge} ${perkTier.perk_id}</div>
+      <div class="sb-perk-d">${perkTier.perk_desc || ''}</div>
+    </div>`;
+  }
+
+  const moreNeeded = count < 2 ? `<div class="sb-need">Соберите ещё ${2 - count} для бонуса</div>` : '';
+
   return `<div class="st-bon sb-card ${isActive?'sb-active':''}" style="--sb-c:${c}">
     <div class="t sb-head">
-      <span class="sb-emo">${EMO[tier]}</span>
-      <span class="sb-name" style="color:${c}">${NAME[tier]}</span>
-      <span class="sb-count" style="color:${c}">${count}/6</span>
-      ${activeBadge}
+      <span class="sb-emo">${arch.emoji}</span>
+      <span class="sb-name" style="color:${c}">${arch.name}</span>
+      <span class="sb-count" style="color:${c}">${count}/${maxPieces}</span>
+      ${fullBadge}${activeBadge}
     </div>
-    ${slotMap}
+    <div class="sb-desc" style="font-size:11px;color:#80a8c0;opacity:.85;margin:4px 0 8px">${arch.desc || ''}</div>
     ${moreNeeded}
     <div class="sb-rows">${rows}</div>
     ${perkRow}
   </div>`;
 }
 
-function pageHTML(p){
-  const eq = (window.State && State.equipment) || {};
-  const counts = _countRarities(eq);
-  const totalEquipped = CATS.filter(s => _slotRarity(eq, s)).length;
-  const active = _resolveActive(counts);
+function pageHTML(p) {
+  const s = (window.State && State.setsStatus) || null;
 
-  if (totalEquipped === 0) {
+  if (!s || !s.ok) {
+    // Триггерим обновление в фоне, пока показываем заглушку
+    refresh();
+    return `<div class="st-bon sb-empty">
+      <div class="t">⏳ Загрузка комплектов...</div>
+      <div class="em">Если ничего не появилось — обнови вкладку Герой.</div>
+    </div>`;
+  }
+
+  const maxPieces = s.max_pieces || 6;
+  const archs = s.archetypes || [];
+  const anyEquipped = archs.some(a => a.count > 0);
+
+  if (!anyEquipped) {
     return `<div class="st-bon sb-empty">
       <div class="t">📦 Снаряга не надета</div>
-      <div class="em">Загляни в Профиль → надень любые предметы → возвращайся сюда смотреть прогресс комплектов</div>
+      <div class="em">Загляни в Профиль → надень предметы → возвращайся смотреть прогресс архетипов.</div>
     </div>`;
   }
 
   const intro = `<div class="st-bon sb-intro">
-    <div class="t">🎁 Комплекты</div>
-    <div class="sb-int-d">Носи 3+ предмета одной редкости — получишь бонус. Работает тот сет, где предметов больше всего (при равенстве — старшая редкость). 6/6 открывает уникальный перк.</div>
+    <div class="t">🎁 Архетипы</div>
+    <div class="sb-int-d">6 стилей игры. Носи 2+ предмета одного архетипа — получишь бонус. Несколько архетипов могут быть активны одновременно. Полный комплект 6/6 даёт уникальный перк.</div>
   </div>`;
 
-  const cards = TIERS.map(t => _renderTierCard(t, counts[t] || 0, t === active, eq)).join('');
+  // Сортируем: активные (count >= 2) первыми, по убыванию count
+  const sorted = archs.slice().sort((a, b) => b.count - a.count);
+  const cards = sorted.map(arch => _renderArchetype(arch, maxPieces)).join('');
   return intro + cards;
 }
 
-window.SetBonusPage = { html: pageHTML, resolveActive: (eq) => _resolveActive(_countRarities(eq)) };
+// Авто-обновление при первой загрузке (если есть State.initData)
+function _autoLoad() {
+  if (window.State?.initData && !State.setsStatus) refresh();
+}
+
+window.SetBonusPage = {
+  html: pageHTML,
+  refresh,
+  // Совместимость со старым API (use sites просили resolveActive)
+  resolveActive: () => {
+    const s = window.State?.setsStatus;
+    return s?.active?.[0]?.set_id || null;
+  },
+};
+
+// Стартовая загрузка через 500мс — даём время initData проникнуть
+setTimeout(_autoLoad, 500);
 })();

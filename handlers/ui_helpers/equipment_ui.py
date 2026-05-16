@@ -52,6 +52,30 @@ def equipment_menu_text(user_id: int) -> tuple[str, InlineKeyboardMarkup]:
     if not any(stats.values()):
         lines.append("<i>Нет экипировки — наденьте предметы</i>")
 
+    # Активные сеты (этап 5D)
+    try:
+        from repositories.sets import resolve_active_sets, aggregate_set_bonuses
+        from config.set_bonuses import bonuses_human
+        player = db.get_player(user_id) or {}
+        cur_class = player.get("current_class") or player.get("warrior_type")
+        active = resolve_active_sets(equipped, current_class=cur_class)
+        if active:
+            lines.append("\n<b>Активные сеты:</b>")
+            for s in sorted(active, key=lambda x: -x["threshold"]):
+                bonuses_str = ", ".join(bonuses_human(s["bonuses"])) or "—"
+                full = "★" if s["threshold"] >= 6 else ""
+                lines.append(
+                    f"{s['emoji']} <b>{html_escape(s['name'])}</b> "
+                    f"({s['count']}/6) {full}\n   {bonuses_str}"
+                )
+                perk = s["bonuses"].get("perk_id")
+                if perk:
+                    perk_desc = s["bonuses"].get("perk_desc", "")
+                    if perk_desc:
+                        lines.append(f"   ⭐ <i>{html_escape(perk_desc)}</i>")
+    except Exception:
+        pass  # UI fallback — не ломаем меню если сеты падают
+
     rows = []
     for slot in ALL_SLOTS:
         emoji, label = SLOT_LABEL[slot]

@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.21.23"
-VERSION_LABEL = "v2.21.23 — Balance Этап 5C: интеграция архетипных сетов в бой. config/set_bonuses.py → compatibility shim над v2 (старые consumers без правок). ring2 исключён в resolver. Реализованы 6 перков 6/6: bastion second_wind, berserk blood_rage, predator frenzy_on_crit, ghost phantom_strike, mage arcane_burst, regent kings_will (3 последних упрощены до статичных бонусов — триггер-механика отдельным рефактором). +18 тестов. 249/249 зелёные."
+VERSION = "2.21.24"
+VERSION_LABEL = "v2.21.24 — Balance Этап 5D+5E (финал Этапа 5): UI архетипных сетов. Бот: в equipment_menu_text блок «Активные сеты» с эмодзи/прогрессом/перком. TMA: новый /api/sets/status (active + 6 archetypes с порогами 2/4/6), webapp/set_bonus_html.js полностью переписан под 6 архетипов вместо 4 редкостей. Кэш в State.setsStatus. 249/249 зелёные. ЭТАП 5 ЗАВЕРШЁН."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.74"
+GAME_VERSION = "16.75"
