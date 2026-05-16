@@ -35,6 +35,31 @@ def deliver_rental(db: Any, owner_uid: int, item_id: str) -> bool:
     try:
         db.rent_item(int(owner_uid), item_id, days=RENTAL_DURATION_DAYS)
         db.equip_item(int(owner_uid), slot, item_id, force=True)
+
+        # Унификация armor: у брони базовые статы (str/end/crit/max_hp) идут
+        # delta-моделью через switch_class. equip_item этого не делает.
+        # Решение для арендованной брони — зарегистрировать класс в
+        # user_inventory (как «доступен через аренду») и вызвать switch_class.
+        # Это даёт игроку реальные боевые статы от мифик-брони.
+        if slot == "armor":
+            legacy_class = item.get("legacy_class_id")
+            if legacy_class:
+                conn = db.get_connection()
+                cursor = conn.cursor()
+                try:
+                    cursor.execute(
+                        "INSERT OR IGNORE INTO user_inventory (user_id, class_id, class_type) VALUES (?, ?, 'mythic')",
+                        (int(owner_uid), legacy_class),
+                    )
+                    conn.commit()
+                finally:
+                    conn.close()
+                ok, msg = db.switch_class(int(owner_uid), legacy_class)
+                if not ok:
+                    _log.warning(
+                        "deliver_rental: switch_class failed uid=%s class=%s msg=%s",
+                        owner_uid, legacy_class, msg,
+                    )
         return True
     except Exception as e:
         _log.error(

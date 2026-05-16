@@ -121,6 +121,7 @@
         return;
       }
       const _url = invRes.invoice_url || '';
+      const invoiceId = invRes.invoice_id;
       try {
         if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
         else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) tg?.openTelegramLink?.(_url);
@@ -128,10 +129,65 @@
       } catch (_) { }
       if (!tg && _url) try { window.open(_url, '_blank'); } catch (_) { }
       notifyFn('💲 Счёт USDT открыт — оплатите и вернитесь');
-      // Через 5с попробуем обновить
-      if (typeof onSuccess === 'function') setTimeout(onSuccess, 5000);
+      // Сохраняем invoice_id чтобы при возврате в мини-app продолжить polling
+      // даже если игрок закрыл оверлей.
+      try {
+        localStorage.setItem('rentalPendingInvoice', String(invoiceId));
+        localStorage.setItem('rentalPendingItemId', String(item.id));
+      } catch (_) { }
+      // Запускаем polling /api/shop/crypto_check — это третий из «трёх путей
+      // доставки USDT» (webhook + crypto_check + recover). Если webhook не
+      // сработал — клиент сам вызовет deliver_rental через crypto_check.
+      if (invoiceId) _startRentalPolling(invoiceId, item, onSuccess, notifyFn);
     } catch (e) {
       notifyFn('❌ Ошибка сети', false);
+    }
+  }
+
+  /* Polling /api/shop/crypto_check после открытия инвойса (до 5 мин, 5с шаг).
+     Идемпотентен — повторный paid не создаёт дубликат аренды.
+     При успехе — onSuccess() и убирает pending-маркер из localStorage. */
+  function _startRentalPolling(invoiceId, item, onSuccess, notifyFn) {
+    let attempts = 0;
+    const poll = async () => {
+      attempts++;
+      try {
+        const r = await fetch('/api/shop/crypto_check/' + invoiceId).then(x => x.json());
+        if (r && r.ok && r.paid) {
+          try {
+            localStorage.removeItem('rentalPendingInvoice');
+            localStorage.removeItem('rentalPendingItemId');
+          } catch (_) { }
+          notifyFn('✅ Аренда активирована — броня надета!');
+          window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred('success');
+          if (typeof onSuccess === 'function') onSuccess();
+          return;
+        }
+      } catch (_) { }
+      if (attempts < 60) setTimeout(poll, 5000);
+    };
+    setTimeout(poll, 4000);
+  }
+
+  /* При загрузке: если есть pendingInvoice в localStorage — подхватываем
+     polling (игрок мог закрыть приложение между оплатой и доставкой). */
+  function _resumePendingRental() {
+    try {
+      const invoiceId = localStorage.getItem('rentalPendingInvoice');
+      const itemId = localStorage.getItem('rentalPendingItemId');
+      if (invoiceId && itemId) {
+        _startRentalPolling(invoiceId, { id: itemId }, () => {
+          // Принудительно обновляем профиль/гардероб
+          try { State.playerLoadedAt = 0; } catch (_) { }
+        }, (msg) => { try { console.log('[rental]', msg); } catch (_) { } });
+      }
+    } catch (_) { }
+  }
+  if (typeof window !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', _resumePendingRental);
+    } else {
+      _resumePendingRental();
     }
   }
 
