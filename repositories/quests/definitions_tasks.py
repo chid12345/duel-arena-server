@@ -43,6 +43,25 @@ DAILY_QUEST_DEFS: list[dict] = [
         "desc": "Нанести 1 удар мировому боссу", "target": 1,
         "track": "wb_hits", "difficulty": "easy", "frequency": "daily",
     },
+    # Этап 7D: премиум-квесты (видны только премам, +1💎 каждый).
+    {
+        "key": "dq_prem_buy1", "label": "👑 Премиум-покупка",
+        "desc": "Купить 1 предмет в магазине", "target": 1,
+        "track": "shop_buys", "difficulty": "premium", "frequency": "daily",
+        "premium_only": True,
+    },
+    {
+        "key": "dq_prem_bot5", "label": "👑 Премиум-охотник",
+        "desc": "Победить 5 ботов", "target": 5,
+        "track": "bot_wins", "difficulty": "premium", "frequency": "daily",
+        "premium_only": True,
+    },
+    {
+        "key": "dq_prem_play3", "label": "👑 Премиум-боец",
+        "desc": "Провести 3 боя", "target": 3,
+        "track": "battles", "difficulty": "premium", "frequency": "daily",
+        "premium_only": True,
+    },
 ]
 
 # ── Дополнительные недельные задания (к существующим 5) ───────────────────────

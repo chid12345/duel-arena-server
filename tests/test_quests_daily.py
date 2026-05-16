@@ -87,3 +87,58 @@ def test_claim_unknown_task_key_returns_error(db):
     res = db.claim_daily_task(1005, "dq_doesnotexist")
 
     assert res["ok"] is False
+
+
+def test_premium_quests_hidden_for_f2p(db):
+    """Этап 7D: F2P-игрок НЕ видит премиум-квесты в списке."""
+    db.get_or_create_player(1006, "u6")
+
+    tasks = db.get_daily_tasks_status(1006)
+    keys = {t["key"] for t in tasks}
+
+    assert "dq_prem_buy1" not in keys
+    assert "dq_prem_bot5" not in keys
+    assert "dq_prem_play3" not in keys
+    # Обычные квесты — на месте
+    assert "dq_play1" in keys
+
+
+def test_premium_quests_visible_for_premium(db):
+    """Этап 7D: премиум видит +3 эксклюзивных квеста с difficulty='premium'."""
+    db.get_or_create_player(1007, "u7")
+    db.activate_premium(1007, days=7)
+
+    tasks = db.get_daily_tasks_status(1007)
+    keys = {t["key"] for t in tasks}
+
+    assert "dq_prem_buy1" in keys
+    assert "dq_prem_bot5" in keys
+    assert "dq_prem_play3" in keys
+    # У всех премиум-квестов: 55g + 1💎 + 100xp
+    for k in ("dq_prem_buy1", "dq_prem_bot5", "dq_prem_play3"):
+        t = _task(tasks, k)
+        assert t["reward_gold"] == 55, f"{k}: ожидали 55g, получили {t['reward_gold']}"
+        assert t["reward_diamonds"] == 1, f"{k}: ожидали 1💎, получили {t['reward_diamonds']}"
+        assert t["reward_xp"] == 100, f"{k}: ожидали 100xp, получили {t['reward_xp']}"
+        assert t["premium_only"] is True
+
+
+def test_premium_quest_claim_credits_55g_and_1_diamond(db):
+    """Премиум выполняет dq_prem_play3 (3 боя) → claim даёт 55g + 1💎 + 100xp."""
+    db.get_or_create_player(1008, "u8")
+    db.activate_premium(1008, days=7)
+    for _ in range(3):
+        db.update_daily_quest_progress(1008, won_battle=True, is_bot=False)
+    p_before = _row(db, 1008)
+    gold_before = int(p_before["gold"])
+    dia_before = int(p_before["diamonds"])
+
+    res = db.claim_daily_task(1008, "dq_prem_play3")
+
+    assert res["ok"] is True
+    assert res["gold"] == 55
+    assert res["diamonds"] == 1
+    assert res["xp"] == 100
+    p_after = _row(db, 1008)
+    assert p_after["gold"] == gold_before + 55
+    assert p_after["diamonds"] == dia_before + 1

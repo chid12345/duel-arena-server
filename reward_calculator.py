@@ -40,6 +40,10 @@ REWARD_TABLE: dict[tuple[str, str], tuple[int, int, int]] = {
     ('daily',  'medium'): ( 25,  0,   80),
     ('daily',  'hard')  : ( 35,  0,  120),
     ('daily',  'epic')  : ( 35,  0,  120),
+    # Этап 7D: премиум-квесты — доступны только премам, награда 55g + 1💎 + 100xp.
+    # Алмазы в daily — исключение для премов: 3 квеста × 1💎 = 3💎/день
+    # к дневному ящику премиума +10💎/день. Итого ~13💎/день за активность.
+    ('daily',  'premium'): ( 55,  1,  100),
     ('weekly', 'easy')  : ( 70,  0,  180),
     ('weekly', 'medium'): (100,  1,  280),
     ('weekly', 'hard')  : (130,  1,  420),
@@ -51,7 +55,7 @@ REWARD_TABLE: dict[tuple[str, str], tuple[int, int, int]] = {
 }
 
 _VALID_FREQ = ('daily', 'weekly', 'once')
-_VALID_DIFF = ('easy', 'medium', 'hard', 'epic')
+_VALID_DIFF = ('easy', 'medium', 'hard', 'epic', 'premium')
 
 
 # ── Основная функция ──────────────────────────────────────────────────────────

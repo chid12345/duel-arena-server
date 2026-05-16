@@ -32,14 +32,20 @@ class ProgressDailyMixin:
         p = dict(_dq) if _dq else {}
         # Сегодняшняя серия — отдельная колонка, чтобы вчерашняя не зачитывалась
         streak = int(p.get("today_max_streak") or 0)
-        # Клеймы всех ежедневных заданий за сегодня одним запросом
-        daily_keys = [f"{dq['key']}_{today}" for dq in DAILY_QUEST_DEFS]
-        placeholders = ",".join(["?" for _ in daily_keys])
-        cur.execute(
-            f"SELECT claim_key FROM task_claims WHERE user_id=? AND claim_key IN ({placeholders})",
-            (user_id, *daily_keys),
-        )
-        claimed_set = {r["claim_key"] for r in cur.fetchall()}
+        # Этап 7D: премиум-квесты видны только премам
+        is_prem = bool(self.get_premium_status(user_id).get("is_active"))
+        visible_defs = [dq for dq in DAILY_QUEST_DEFS if is_prem or not dq.get("premium_only")]
+        # Клеймы видимых ежедневных заданий за сегодня одним запросом
+        daily_keys = [f"{dq['key']}_{today}" for dq in visible_defs]
+        if daily_keys:
+            placeholders = ",".join(["?" for _ in daily_keys])
+            cur.execute(
+                f"SELECT claim_key FROM task_claims WHERE user_id=? AND claim_key IN ({placeholders})",
+                (user_id, *daily_keys),
+            )
+            claimed_set = {r["claim_key"] for r in cur.fetchall()}
+        else:
+            claimed_set = set()
         conn.close()
 
         track_map = {
@@ -54,7 +60,7 @@ class ProgressDailyMixin:
             "wb_hits": self.get_wb_hits_today_count(user_id),
         }
         result = []
-        for dq in DAILY_QUEST_DEFS:
+        for dq in visible_defs:
             cur_val = track_map.get(dq["track"], 0)
             done = cur_val >= dq["target"]
             claimed = f"{dq['key']}_{today}" in claimed_set
@@ -64,6 +70,7 @@ class ProgressDailyMixin:
                 "current": min(cur_val, dq["target"]), "target": dq["target"],
                 "is_completed": done, "reward_claimed": claimed,
                 "reward_gold": g, "reward_diamonds": d, "reward_xp": xp,
+                "premium_only": bool(dq.get("premium_only", False)),
             })
         return result
 
