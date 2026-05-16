@@ -37,3 +37,19 @@ def apply_premium_rewards(db, user_id: int, gold: int = 0, xp: int = 0) -> Tuple
     if x > 0:
         x = max(1, int(round(x * PREMIUM_XP_MULTIPLIER)))
     return g, x, True
+
+
+def consume_next_battle_x2(db, user_id: int, gold: int, xp: int) -> Tuple[int, int, bool]:
+    """Этап 7C: если у победителя стоит флаг «удвоить следующий бой» — сжечь его, удвоить gold+xp.
+
+    Возвращает (gold, xp, was_x2). Безопасно вызывать без флага — вернёт исходные.
+    """
+    try:
+        used = bool(db.consume_next_battle_x2(int(user_id)))
+    except Exception:
+        used = False
+    if not used:
+        return int(gold), int(xp), False
+    g = int(gold) * 2
+    x = int(xp) * 2
+    return g, x, True

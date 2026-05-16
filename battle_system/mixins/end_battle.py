@@ -215,6 +215,15 @@ class BattleEndBattleMixin:
             if _eq_xp and exp_reward > 0:
                 exp_reward = int(exp_reward * (1.0 + _eq_xp / 100.0))
 
+        # Этап 7C: «Удвоить следующий бой» — если активен, удвоить gold+xp и сжечь флаг.
+        # Делаем до _bot_over_limit, чтобы не удваивать символический лимит.
+        x2_used = False
+        if not is_test and winner_user_id and not _bot_over_limit and (gold_reward > 0 or exp_reward > 0):
+            from economy.premium_bonus import consume_next_battle_x2
+            gold_reward, exp_reward, x2_used = consume_next_battle_x2(
+                db, int(winner_user_id), gold_reward, exp_reward
+            )
+
         if _bot_over_limit:
             gold_reward = BOT_SYMBOLIC_GOLD
             exp_reward = BOT_SYMBOLIC_XP
@@ -270,5 +279,6 @@ class BattleEndBattleMixin:
             "elo_delta_l": elo_delta_l,
             "prem_w_active": prem_w_active,
             "prem_l_active": prem_l_active,
+            "x2_used": x2_used,
         }
         return await end_battle_rewards_and_finish(self, ctx)

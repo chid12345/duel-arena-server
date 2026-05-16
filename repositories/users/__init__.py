@@ -11,6 +11,7 @@ from repositories.users.improvements import UsersImprovementsMixin
 from repositories.users.metrics import UsersMetricsMixin
 from repositories.users.player_core import UsersPlayerCoreMixin
 from repositories.users.premium import UsersPremiumMixin
+from repositories.users.premium_perks import UsersPremiumPerksMixin
 from repositories.users.search import UsersSearchMixin
 from repositories.users.wipe_leaderboard import UsersWipeLeaderboardMixin
 
@@ -27,5 +28,6 @@ class UsersMixin(
     UsersSearchMixin,
     UsersMetricsMixin,
     UsersPremiumMixin,
+    UsersPremiumPerksMixin,
 ):
     """Mixin: всё про игрока — CRUD, HP, бонусы, улучшения, поиск, Premium."""

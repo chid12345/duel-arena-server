@@ -157,6 +157,9 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS diamond_first_100 INTEGER DEFAULT 0",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS diamond_first_300 INTEGER DEFAULT 0",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS diamond_first_500 INTEGER DEFAULT 0",
+    # Этап 7C: «Удвоить следующий бой» — 1 раз в день для премов
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS next_battle_x2 INTEGER DEFAULT 0",
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS next_battle_x2_date TEXT DEFAULT ''",
     # world_boss_rewards.claimed: INTEGER → BOOLEAN (если ещё не BOOLEAN)
     # DEFAULT 0 нельзя кастовать автоматически → дропаем, меняем тип, ставим новый DEFAULT.
     """

@@ -63,6 +63,54 @@ def test_bot_daily_limit_premium_plus_10():
     assert bot_daily_limit_for(is_premium=True) == BOT_DAILY_LIMIT + 10
 
 
+def test_next_battle_x2_requires_premium(db):
+    """Этап 7C: F2P не может активировать «удвоить следующий бой»."""
+    db.get_or_create_player(2001, "u1")
+
+    res = db.activate_next_battle_x2(2001)
+    assert res["ok"] is False
+    assert res["error"] == "not_premium"
+
+    status = db.get_next_battle_x2_status(2001)
+    assert status["is_premium"] is False
+    assert status["available"] is False
+
+
+def test_next_battle_x2_activate_and_consume(db):
+    """Этап 7C: премиум активирует → флаг стоит → consume сжигает один раз."""
+    db.get_or_create_player(2002, "u2")
+    db.activate_premium(2002, days=7)
+
+    status_before = db.get_next_battle_x2_status(2002)
+    assert status_before["available"] is True
+    assert status_before["active"] is False
+
+    res = db.activate_next_battle_x2(2002)
+    assert res["ok"] is True
+
+    status_after = db.get_next_battle_x2_status(2002)
+    assert status_after["active"] is True
+    assert status_after["available"] is False
+    assert status_after["used_today"] is True
+
+    # Сжигаем один раз — возвращает True
+    assert db.consume_next_battle_x2(2002) is True
+    # Второй раз — False (флаг уже снят)
+    assert db.consume_next_battle_x2(2002) is False
+
+
+def test_next_battle_x2_once_per_day(db):
+    """Этап 7C: даже если флаг сжёг, второй раз за день — нельзя."""
+    db.get_or_create_player(2003, "u3")
+    db.activate_premium(2003, days=7)
+    db.activate_next_battle_x2(2003)
+    db.consume_next_battle_x2(2003)
+
+    res = db.activate_next_battle_x2(2003)
+    assert res["ok"] is False
+    assert res["error"] == "used_today"
+
+
 def test_diamond_first_three_separate_slots(db):
     """Слоты diamond_first_100/300/500 независимы.
 
