@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Tuple
 
 from config import PLAYER_START_CRIT, PLAYER_START_ENDURANCE, PLAYER_START_STRENGTH, STAMINA_PER_FREE_STAT
+from db_schema.equipment_items.armor import legacy_class_to_armor_item_id
 
 _USDT_BASE_STAMINA = 5  # базовая выносливость Легендарный образа (даёт броню сразу)
 
@@ -52,6 +53,9 @@ class InventorySwitchMixin:
                 (class_id, target_type, user_id),
             )
 
+            # Унификация armor (шаг 3/6): dual-write в новые таблицы
+            self._mirror_armor_to_unified_tables(cursor, user_id, class_id, target_type)
+
             # Применяем delta (единая логика для всех типов)
             d_str = new_vec["strength"] - old_vec["strength"]
             d_end = new_vec["endurance"] - old_vec["endurance"]
@@ -68,6 +72,58 @@ class InventorySwitchMixin:
             return False, f"Ошибка переключения: {str(e)}"
         finally:
             conn.close()
+
+    def _mirror_armor_to_unified_tables(self, cursor, user_id: int, class_id: str, class_type: str) -> None:
+        """Унификация armor (шаг 3/6) — dual-write в новые таблицы.
+
+        После UPDATE players.current_class пишем:
+        - player_owned_armor — гарантируем владение item_id
+        - player_equipment(slot='armor') — текущая надетая броня
+        - armor_custom_mods (только для USDT) — синхронизируем saved-поля
+        """
+        item_id = legacy_class_to_armor_item_id(class_id)
+        if not item_id:
+            return
+        cursor.execute(
+            "INSERT INTO player_owned_armor (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+            (user_id, item_id),
+        )
+        cursor.execute(
+            """INSERT INTO player_equipment (user_id, slot, item_id)
+               VALUES (?, 'armor', ?)
+               ON CONFLICT(user_id, slot) DO UPDATE SET item_id=excluded.item_id, equipped_at=CURRENT_TIMESTAMP""",
+            (user_id, item_id),
+        )
+        if class_type == "usdt":
+            cursor.execute(
+                """SELECT strength_saved, agility_saved, intuition_saved, endurance_saved,
+                          custom_name, stats_applied
+                   FROM user_inventory WHERE user_id=? AND class_id=?""",
+                (user_id, class_id),
+            )
+            row = cursor.fetchone()
+            if row is not None:
+                cursor.execute(
+                    """INSERT INTO armor_custom_mods
+                           (user_id, item_id, str_bonus, agi_bonus, int_bonus, end_bonus, custom_name, applied)
+                       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                       ON CONFLICT(user_id, item_id) DO UPDATE SET
+                           str_bonus=excluded.str_bonus,
+                           agi_bonus=excluded.agi_bonus,
+                           int_bonus=excluded.int_bonus,
+                           end_bonus=excluded.end_bonus,
+                           custom_name=excluded.custom_name,
+                           applied=excluded.applied""",
+                    (
+                        user_id, item_id,
+                        int(self._row_get(row, "strength_saved", 0) or 0),
+                        int(self._row_get(row, "agility_saved", 0) or 0),
+                        int(self._row_get(row, "intuition_saved", 0) or 0),
+                        int(self._row_get(row, "endurance_saved", 0) or 0),
+                        self._row_get(row, "custom_name"),
+                        1 if bool(self._row_get(row, "stats_applied", False)) else 0,
+                    ),
+                )
 
     def _apply_stat_delta_to_player(self, cursor, user_id: int,
                                     d_str: int, d_end: int, d_crit: int, d_hp: int) -> None:

@@ -207,3 +207,21 @@ ARMOR: dict[str, dict] = {
         "custom_name_supported": True,
     },
 }
+
+
+# ── Маппинг legacy_class_id → новый item_id (для switch_class/unequip) ────────
+_LEGACY_TO_ITEM_ID: dict[str, str] = {
+    v["legacy_class_id"]: k for k, v in ARMOR.items() if v.get("legacy_class_id")
+}
+
+
+def legacy_class_to_armor_item_id(class_id: str | None) -> str | None:
+    """Маппит legacy class_id → новый item_id брони.
+
+    Для USDT-кастомок (usdt_custom_*) — всегда armor_mythic4 (legendary_usdt).
+    """
+    if not class_id:
+        return None
+    if class_id.startswith("usdt_custom_") or class_id == "legendary_usdt":
+        return "armor_mythic4"
+    return _LEGACY_TO_ITEM_ID.get(class_id)

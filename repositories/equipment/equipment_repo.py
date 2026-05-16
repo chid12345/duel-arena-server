@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Dict, Optional
 
-from db_schema.equipment_catalog import get_item, get_item_stats, SLOT_RING1, SLOT_RING2
+from db_schema.equipment_catalog import get_item, get_item_stats, SLOT_ARMOR, SLOT_RING1, SLOT_RING2
+from db_schema.equipment_items.armor import legacy_class_to_armor_item_id
 from economy.curves import is_tier_unlocked
 
 
@@ -30,6 +31,11 @@ class EquipmentMixin:
         Этап 8: mythic-предметы доступны только если куплены или у игрока
         есть активная аренда. Истёкшие mythic-аренды авто-снимаются здесь —
         get_equipment вызывается в каждом рендере профиля и в бою.
+
+        Унификация armor (шаг 3/6): если в player_equipment нет armor, но
+        в players.current_class есть значение — собираем armor синтетически
+        через маппинг legacy_class_id → item_id. Это позволяет consumer-коду
+        видеть armor как обычный 6-й слот до полного перехода на equip_item.
         """
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -38,24 +44,62 @@ class EquipmentMixin:
             (user_id,),
         )
         rows = cursor.fetchall()
-        conn.close()
         result: Dict[str, Dict] = {}
         expired_slots: list[str] = []
         owned_set: set[str] | None = None
+        armor_owned_set: set[str] | None = None
         rental_set: set[str] | None = None
+
+        def _ensure_rental_set():
+            nonlocal rental_set
+            if rental_set is None:
+                rental_set = {r["item_id"] for r in self.list_active_rentals(user_id)}
+            return rental_set
+
         for row in rows:
             slot, item_id = row["slot"], row["item_id"]
             item = get_item(item_id)
             if not item:
                 continue
             if item.get("rarity") == "mythic":
-                if owned_set is None:
-                    owned_set = set(self.get_owned_weapons(user_id))
-                    rental_set = {r["item_id"] for r in self.list_active_rentals(user_id)}
-                if item_id not in owned_set and item_id not in rental_set:
-                    expired_slots.append(slot)
-                    continue
+                _ensure_rental_set()
+                if slot == SLOT_ARMOR:
+                    if armor_owned_set is None:
+                        armor_owned_set = set(self.get_owned_armor(user_id))
+                    if item_id not in armor_owned_set and item_id not in rental_set:
+                        expired_slots.append(slot)
+                        continue
+                else:
+                    if owned_set is None:
+                        owned_set = set(self.get_owned_weapons(user_id))
+                    if item_id not in owned_set and item_id not in rental_set:
+                        expired_slots.append(slot)
+                        continue
             result[slot] = {"item_id": item_id, **item}
+
+        # Fallback armor: если в player_equipment нет — собираем из current_class
+        if SLOT_ARMOR not in result:
+            cursor.execute(
+                "SELECT current_class FROM players WHERE user_id = ?", (user_id,),
+            )
+            crow = cursor.fetchone()
+            cur_class = crow["current_class"] if crow else None
+            item_id = legacy_class_to_armor_item_id(cur_class)
+            if item_id:
+                item = get_item(item_id)
+                if item:
+                    # mythic-чек тоже работает для fallback
+                    skip = False
+                    if item.get("rarity") == "mythic":
+                        _ensure_rental_set()
+                        if armor_owned_set is None:
+                            armor_owned_set = set(self.get_owned_armor(user_id))
+                        if item_id not in armor_owned_set and item_id not in rental_set:
+                            skip = True
+                    if not skip:
+                        result[SLOT_ARMOR] = {"item_id": item_id, **item}
+
+        conn.close()
         for s in expired_slots:
             self.unequip_item(user_id, s)
         return result

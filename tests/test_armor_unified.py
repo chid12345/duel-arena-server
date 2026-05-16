@@ -222,3 +222,162 @@ def test_migration_owned_armor_from_user_inventory(db):
     assert mods["end_bonus"] == 5
     assert mods["custom_name"] == "Светобой"
     assert mods["applied"] is True
+
+
+# ── Коммит 3: switch_class dual-write + get_equipment fallback ──────────────
+
+def _purchase_class_directly(db, user_id: int, class_id: str, class_type: str) -> None:
+    """Имитация покупки класса (запись в user_inventory) до перевода на equip_item."""
+    conn = db.get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "INSERT OR IGNORE INTO user_inventory (user_id, class_id, class_type) VALUES (?, ?, ?)",
+        (user_id, class_id, class_type),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_switch_class_writes_to_player_equipment_armor(db):
+    """После switch_class('berserker_gold') в player_equipment появляется armor_gold1."""
+    db.get_or_create_player(12001, "u_sc_eq")
+    _purchase_class_directly(db, 12001, "berserker_gold", "gold")
+
+    ok, _msg = db.switch_class(12001, "berserker_gold")
+    assert ok is True
+
+    # В player_equipment должна появиться запись slot='armor', item_id='armor_gold1'
+    conn = db.get_connection()
+    row = conn.execute(
+        "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
+        (12001,),
+    ).fetchone()
+    conn.close()
+    assert row is not None, "switch_class должен записать armor в player_equipment"
+    assert row["item_id"] == "armor_gold1"
+
+    # А также добавить в player_owned_armor
+    assert "armor_gold1" in db.get_owned_armor(12001)
+
+
+def test_switch_class_updates_player_equipment_on_change(db):
+    """switch_class на другой class_id обновляет player_equipment.armor."""
+    db.get_or_create_player(12002, "u_sc_change")
+    _purchase_class_directly(db, 12002, "berserker_gold", "gold")
+    _purchase_class_directly(db, 12002, "paladin_gold", "gold")
+
+    db.switch_class(12002, "berserker_gold")
+    db.switch_class(12002, "paladin_gold")
+
+    conn = db.get_connection()
+    row = conn.execute(
+        "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
+        (12002,),
+    ).fetchone()
+    conn.close()
+    assert row["item_id"] == "armor_gold4"  # paladin_gold → armor_gold4
+
+
+def test_unequip_class_clears_player_equipment_armor(db):
+    """unequip_class удаляет запись slot='armor' из player_equipment."""
+    db.get_or_create_player(12003, "u_unequip")
+    _purchase_class_directly(db, 12003, "berserker_gold", "gold")
+    db.switch_class(12003, "berserker_gold")
+
+    ok, _msg = db.unequip_class(12003)
+    assert ok is True
+
+    conn = db.get_connection()
+    row = conn.execute(
+        "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
+        (12003,),
+    ).fetchone()
+    conn.close()
+    assert row is None, "После unequip_class запись armor в player_equipment должна исчезнуть"
+
+
+def test_get_equipment_returns_armor_via_player_equipment(db):
+    """get_equipment видит armor как обычный 6-й слот после switch_class."""
+    db.get_or_create_player(12004, "u_get_eq_armor")
+    _purchase_class_directly(db, 12004, "tank_free", "gold")
+    db.switch_class(12004, "tank_free")
+
+    eq = db.get_equipment(12004)
+    assert "armor" in eq, f"armor должен быть в get_equipment, eq={list(eq.keys())}"
+    assert eq["armor"]["item_id"] == "armor_free1"
+    assert eq["armor"]["rarity"] == "common"
+
+
+def test_get_equipment_armor_fallback_from_current_class(db):
+    """Если в player_equipment пусто, но players.current_class заполнен — fallback работает.
+
+    Имитирует переходное состояние между deploy'ями (старая запись в БД,
+    новая система ещё не записала в player_equipment).
+    """
+    db.get_or_create_player(12005, "u_fallback")
+    # Прямой UPDATE players.current_class без switch_class — fallback должен сработать
+    conn = db.get_connection()
+    conn.execute(
+        "UPDATE players SET current_class = 'berserker_gold', current_class_type = 'gold' WHERE user_id = ?",
+        (12005,),
+    )
+    conn.commit()
+    conn.close()
+
+    eq = db.get_equipment(12005)
+    assert "armor" in eq, "fallback из current_class должен сработать"
+    assert eq["armor"]["item_id"] == "armor_gold1"
+
+
+def test_get_equipment_armor_mythic_blocks_without_owned(db):
+    """Мифик-армор без записи в player_owned_armor и без rental — get_equipment его НЕ возвращает.
+
+    Защита: даже если кто-то залил current_class='berserker_mythic' прямым SQL,
+    игрок не должен получать stats от мифика без покупки/аренды.
+    """
+    db.get_or_create_player(12006, "u_mythic_block")
+    conn = db.get_connection()
+    conn.execute(
+        "UPDATE players SET current_class = 'berserker_mythic', current_class_type = 'mythic' WHERE user_id = ?",
+        (12006,),
+    )
+    conn.commit()
+    conn.close()
+
+    eq = db.get_equipment(12006)
+    assert "armor" not in eq, "мифик-армор без owned/rental должен быть скрыт"
+
+
+def test_get_equipment_armor_mythic_works_with_owned(db):
+    """Мифик-армор с записью в player_owned_armor — get_equipment возвращает корректно."""
+    db.get_or_create_player(12007, "u_mythic_owned")
+    db.add_owned_armor(12007, "armor_mythic1")
+    conn = db.get_connection()
+    conn.execute(
+        "UPDATE players SET current_class = 'berserker_mythic', current_class_type = 'mythic' WHERE user_id = ?",
+        (12007,),
+    )
+    conn.commit()
+    conn.close()
+
+    eq = db.get_equipment(12007)
+    assert "armor" in eq
+    assert eq["armor"]["item_id"] == "armor_mythic1"
+    assert eq["armor"]["rarity"] == "mythic"
+
+
+def test_get_equipment_armor_mythic_works_with_rental(db):
+    """Мифик-армор без покупки, но с активной арендой — get_equipment возвращает."""
+    db.get_or_create_player(12008, "u_mythic_rent")
+    db.rent_item(12008, "armor_mythic1", days=7, stars_paid=100)
+    conn = db.get_connection()
+    conn.execute(
+        "UPDATE players SET current_class = 'berserker_mythic', current_class_type = 'mythic' WHERE user_id = ?",
+        (12008,),
+    )
+    conn.commit()
+    conn.close()
+
+    eq = db.get_equipment(12008)
+    assert "armor" in eq
+    assert eq["armor"]["item_id"] == "armor_mythic1"

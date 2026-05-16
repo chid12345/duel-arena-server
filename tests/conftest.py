@@ -54,6 +54,12 @@ def db():
     from repositories.upgrades import UpgradesMixin
     from repositories.rentals import RentalsMixin
 
+    # InventoryBaseMixin кеширует факт "схема user_inventory мигрирована" в
+    # class-level флаге. Между тестами с разными БД его надо сбрасывать,
+    # иначе новая БД не получает ALTER TABLE и падает на stamina_saved.
+    from repositories.inventory.base import InventoryBaseMixin
+    InventoryBaseMixin._inventory_schema_ensured = False
+
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
     tmp_path = tmp.name
     tmp.close()

@@ -74,6 +74,12 @@ class InventoryUnequipResyncMixin:
                     (user_id,),
                 )
 
+            # Унификация armor (шаг 3/6): синхронизация с player_equipment
+            cursor.execute(
+                "DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
+                (user_id,),
+            )
+
             cursor.execute(
                 "SELECT level, strength, endurance, crit, free_stats, max_hp, current_hp FROM players WHERE user_id = ?",
                 (user_id,),
@@ -110,6 +116,11 @@ class InventoryUnequipResyncMixin:
             cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
             cursor.execute(
                 "UPDATE players SET current_class = NULL, current_class_type = NULL, equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
+                (user_id,),
+            )
+            # Унификация armor (шаг 3/6): синхронизация с player_equipment
+            cursor.execute(
+                "DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
                 (user_id,),
             )
 
