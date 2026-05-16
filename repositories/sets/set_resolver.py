@@ -1,15 +1,17 @@
-"""Resolver активных сетов по надетой экипировке (Этап 5A).
+"""Resolver активных сетов по надетой экипировке (Этап 5A + 5B.2).
 
 Принимает словарь equipped {slot: {item_id, set_id, ...}} (как из
-db.get_equipment) и возвращает список активных сетов с порогом и бонусами.
+db.get_equipment) и опционально current_class игрока (армор-слот).
+Возвращает список активных сетов с порогом 2/4/6 и бонусами.
 
 Несколько сетов могут быть активны одновременно — каждый со своим порогом.
-Перк (7) — только при полном составе одного сета.
+Перк (6) — только при полном составе одного сета (полный комплект из 6 слотов).
 """
 from __future__ import annotations
 
 from typing import Any
 
+from config.class_set_mapping import class_id_to_set_id
 from config.sets_catalog_v2 import SETS_V2
 
 # Игра имеет 6 слотов экипировки (голова, тело, оружие, щит, ноги, кольцо).
@@ -26,23 +28,37 @@ def _max_threshold(count: int) -> int:
     return achieved
 
 
-def resolve_active_sets(equipped: dict[str, dict]) -> list[dict[str, Any]]:
+def resolve_active_sets(
+    equipped: dict[str, dict],
+    current_class: str | None = None,
+) -> list[dict[str, Any]]:
     """Список активных сетов: [{set_id, name, emoji, count, threshold, bonuses}].
 
-    Активным считается сет с count >= 3. Порог = max(3,5,7) для count.
+    Активным считается сет с count >= 2 (порог 2). Порог = max из 2/4/6.
     Bonuses — словарь стат-бонусов из SETS_V2[set_id].thresholds[threshold].
-    Perk_id есть только в bonuses порога 7.
+    Perk_id есть только в bonuses порога 6 (полный комплект).
+
+    current_class: id класса из players.current_class. Если задан, его set_id
+    добавляется как armor-слот (виртуально). Так полный комплект 6 предметов
+    включает 5 equipment + armor (класс).
     """
-    if not equipped:
-        return []
     counts: dict[str, int] = {}
-    for slot, item in equipped.items():
-        if not isinstance(item, dict):
-            continue
-        sid = item.get("set_id")
-        if not sid:
-            continue
-        counts[str(sid)] = counts.get(str(sid), 0) + 1
+    if equipped:
+        for slot, item in equipped.items():
+            if not isinstance(item, dict):
+                continue
+            sid = item.get("set_id")
+            if not sid:
+                continue
+            counts[str(sid)] = counts.get(str(sid), 0) + 1
+
+    # Armor (класс) → виртуальный +1 к соответствующему set_id
+    armor_set_id = class_id_to_set_id(current_class)
+    if armor_set_id:
+        counts[armor_set_id] = counts.get(armor_set_id, 0) + 1
+
+    if not counts:
+        return []
 
     results: list[dict[str, Any]] = []
     for sid, count in counts.items():

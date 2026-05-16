@@ -7,7 +7,7 @@ db_schema/equipment_items/ (Закон 1). Этот файл — коротки�
 """
 from __future__ import annotations
 
-from db_schema.equipment_items import all_equipment_items
+from db_schema.equipment_items import _default_set_id, all_equipment_items
 from db_schema.weapon_catalog import WEAPON_CATALOG
 
 # ── Редкости ─────────────────────────────────────────────────────────────────
@@ -57,7 +57,14 @@ SLOT_LABEL = {
 # slow_pct, regen_speed_pct.
 
 EQUIPMENT_CATALOG: dict[str, dict] = all_equipment_items()
-EQUIPMENT_CATALOG.update(WEAPON_CATALOG)
+# Weapons из weapon_catalog.py — те же шаблоны item_id (sword_free1, axe_gold2 ...).
+# Применяем тот же детерминированный маппинг set_id (этап 5B).
+for _wid, _witem in WEAPON_CATALOG.items():
+    if "set_id" not in _witem:
+        _sid = _default_set_id(_wid)
+        EQUIPMENT_CATALOG[_wid] = {**_witem, "set_id": _sid} if _sid else dict(_witem)
+    else:
+        EQUIPMENT_CATALOG[_wid] = _witem
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────

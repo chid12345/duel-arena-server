@@ -127,6 +127,44 @@ def test_aggregate_multiple_sets_stacks():
     assert res["hp_pct"] == 3.0
 
 
+# ── current_class (armor) ─────────────────────────────────────────────────────
+
+def test_armor_class_counts_in_set():
+    """Класс игрока (current_class) добавляет +1 к set_id архетипа.
+
+    1 предмет predator + класс predator → count=2, активен порог 2.
+    """
+    eq = _eq(["predator"])
+    res = resolve_active_sets(eq, current_class="base_crit")  # base_crit → predator
+    assert len(res) == 1
+    assert res[0]["set_id"] == "predator"
+    assert res[0]["count"] == 2
+    assert res[0]["threshold"] == 2
+
+
+def test_armor_class_completes_full_set():
+    """5 predator-equipment + класс predator = полный комплект 6 → перк."""
+    eq = _eq(["predator"] * 5)
+    res = resolve_active_sets(eq, current_class="dia_duelist")  # dia_duelist → predator
+    assert res[0]["count"] == 6
+    assert res[0]["threshold"] == 6
+    assert "perk_id" in res[0]["bonuses"]
+
+
+def test_armor_class_unknown_ignored():
+    """Класс без маппинга (default_start) не добавляет ничего."""
+    eq = _eq(["predator"] * 3)
+    res = resolve_active_sets(eq, current_class="default_start")
+    assert res[0]["count"] == 3  # без бонуса от armor
+
+
+def test_armor_class_none_no_effect():
+    """current_class=None → как будто не передано."""
+    eq = _eq(["bastion"] * 3)
+    res = resolve_active_sets(eq, current_class=None)
+    assert res[0]["count"] == 3
+
+
 def test_aggregate_collects_perks():
     """Из бонусов порога 6 — perk_id в списке perks."""
     sets = [{
