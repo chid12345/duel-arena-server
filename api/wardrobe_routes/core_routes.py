@@ -91,6 +91,9 @@ def attach_wardrobe_core(
             _cache_invalidate(uid)
             player = await asyncio.to_thread(db.get_or_create_player, uid, "")
             result["player"] = _player_api(dict(player))
+            # Унификация armor: клиент обновит State.equipment.armor чтобы
+            # слот «тело» в профиле сразу показал надетую броню.
+            result["equipment"] = await asyncio.to_thread(db.get_equipment, uid)
             result.update(await wardrobe(body.init_data))
         return result
 
@@ -106,6 +109,8 @@ def attach_wardrobe_core(
             _cache_invalidate(uid)
             player = await asyncio.to_thread(db.get_or_create_player, uid, "")
             result["player"] = _player_api(dict(player))
+            # Унификация armor: после снятия слот «тело» должен опустеть в UI.
+            result["equipment"] = await asyncio.to_thread(db.get_equipment, uid)
             result.update(await wardrobe(body.init_data))
         return result
 

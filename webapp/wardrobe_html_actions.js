@@ -254,9 +254,10 @@
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-        // Унификация armor (5/6): armor приходит с сервера как обычный слот в
-        // State.equipment.armor. localStorage-кэш wardrobeEquipped больше не
-        // нужен — синхронизация идёт через _refreshProfile/getEquipment.
+        // Унификация armor (фикс v2.21.48): сервер возвращает свежий equipment
+        // после equip/unequip. Обновляем State.equipment чтобы слот «тело» в
+        // профиле сразу показал/убрал броню (как делают остальные 5 слотов).
+        if (res.equipment) State.equipment = res.equipment;
         const msg = action==='buy' ? '✅ Броня получена' : action==='unequip' ? '✅ Броня снята' : '✅ Броня надета';
         _notify(msg);
         WardrobeHTML.refresh(scene, res);
