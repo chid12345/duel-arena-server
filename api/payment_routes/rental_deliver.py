@@ -38,27 +38,31 @@ def deliver_rental(db: Any, owner_uid: int, item_id: str) -> bool:
 
         # Унификация armor: у брони базовые статы (str/end/crit/max_hp) идут
         # delta-моделью через switch_class. equip_item этого не делает.
-        # Решение для арендованной брони — зарегистрировать класс в
-        # user_inventory (как «доступен через аренду») и вызвать switch_class.
-        # Это даёт игроку реальные боевые статы от мифик-брони.
+        # Решение для арендованной брони — purchase_class регистрирует класс
+        # бесплатно (mythic-классы имеют price_gold=0, price_diamonds=0),
+        # затем switch_class применяет delta-статы. Работает и на SQLite,
+        # и на Postgres — без сырого INSERT OR IGNORE (SQLite-only).
         if slot == "armor":
             legacy_class = item.get("legacy_class_id")
             if legacy_class:
-                conn = db.get_connection()
-                cursor = conn.cursor()
                 try:
-                    cursor.execute(
-                        "INSERT OR IGNORE INTO user_inventory (user_id, class_id, class_type) VALUES (?, ?, 'mythic')",
-                        (int(owner_uid), legacy_class),
-                    )
-                    conn.commit()
-                finally:
-                    conn.close()
-                ok, msg = db.switch_class(int(owner_uid), legacy_class)
-                if not ok:
-                    _log.warning(
-                        "deliver_rental: switch_class failed uid=%s class=%s msg=%s",
-                        owner_uid, legacy_class, msg,
+                    if not db.has_class(int(owner_uid), legacy_class):
+                        ok_p, msg_p = db.purchase_class(int(owner_uid), legacy_class)
+                        if not ok_p:
+                            _log.warning(
+                                "deliver_rental: purchase_class failed uid=%s class=%s msg=%s",
+                                owner_uid, legacy_class, msg_p,
+                            )
+                    ok_s, msg_s = db.switch_class(int(owner_uid), legacy_class)
+                    if not ok_s:
+                        _log.warning(
+                            "deliver_rental: switch_class failed uid=%s class=%s msg=%s",
+                            owner_uid, legacy_class, msg_s,
+                        )
+                except Exception as ce:
+                    _log.error(
+                        "deliver_rental: armor class apply failed uid=%s class=%s err=%s",
+                        owner_uid, legacy_class, ce,
                     )
         return True
     except Exception as e:
