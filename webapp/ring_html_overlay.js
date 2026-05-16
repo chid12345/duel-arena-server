@@ -94,7 +94,10 @@ function _pills(h) {
 
 function _btn(h) {
   if (h.equipped)
-    return `<button class="wd-btn btn-uneq" data-act="unequip" data-id="${h.id}">✅ Снять</button>`;
+    return `<div style="display:flex;gap:4px">
+      <button class="wd-btn btn-uneq" data-act="unequip" data-id="${h.id}" style="flex:1">✅ Снять</button>
+      <button class="wd-btn btn-gold" data-act="upgrade" data-id="${h.id}" style="flex:1;background:linear-gradient(135deg,#3a2050,#7c2d92);color:#fff">🔨 Прокачать</button>
+    </div>`;
   if (h.owned && h.type !== 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${h.id}">💍 Надеть</button>`;
   if (h.type === 'free')

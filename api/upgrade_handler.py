@@ -165,6 +165,46 @@ def register_upgrade_routes(app: FastAPI) -> None:
             _log.error("upgrade_dismantle error: %s", e, exc_info=True)
             return {"ok": False, "reason": "Ошибка сервера"}
 
+    @app.get("/api/upgrade/preview")
+    def upgrade_preview(init_data: str, item_id: str):
+        """Сводка по предмету для UI: текущий +N, стоимость следующего шага,
+        шанс, доступные шарды/золото. Без побочных эффектов.
+        """
+        try:
+            tg_user = get_user_from_init_data(init_data)
+            uid = int(tg_user["id"])
+            item = get_item(item_id)
+            if not item:
+                return {"ok": False, "reason": "Предмет не найден"}
+            tier = item.get("tier")
+            if not tier:
+                return {"ok": False, "reason": "Legacy предмет не апгрейдится"}
+            current_plus = db.get_item_plus(uid, item_id)
+            ok_check, reason = can_attempt_upgrade(item, current_plus)
+            target_plus = current_plus + 1
+            base_gold = shop_price(item, "gold")
+            gold_cost = cost_to_upgrade_gold(base_gold, target_plus) if ok_check else 0
+            shards_cost = shards_cost_for(target_plus) if ok_check else 0
+            chance = success_chance(target_plus) if ok_check else 0.0
+            _, player_gold = _player_level_and_gold(uid)
+            return {
+                "ok": True,
+                "tier": tier,
+                "current_plus": current_plus,
+                "target_plus": target_plus if ok_check else None,
+                "gold_cost": gold_cost,
+                "shards_cost": shards_cost,
+                "chance": round(chance, 3),
+                "can_attempt": ok_check,
+                "reason": reason if not ok_check else "",
+                "player_gold": player_gold,
+                "player_shards": db.get_shards(uid, tier),
+                "dismantle_shards": dismantle_shards_for(tier),
+            }
+        except Exception as e:
+            _log.error("upgrade_preview error: %s", e, exc_info=True)
+            return {"ok": False, "reason": "Ошибка сервера"}
+
     @app.get("/api/upgrade/status")
     def upgrade_status(init_data: str):
         """Сводка: все +N игрока + все шарды."""
