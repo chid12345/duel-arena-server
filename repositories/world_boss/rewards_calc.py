@@ -28,6 +28,7 @@ from typing import Any, Optional
 
 from config.world_boss_constants import WB_CHEST_TOP_DAMAGE
 from db_core.week_utils import iso_week_key_utc
+from economy.curves import tier_unlocked_at
 from economy.loader import get_world_boss
 from progression_loader import victory_xp_for_player_level
 
@@ -141,6 +142,22 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
             db.consume_charges(uid)
         except Exception as _ce:
             logger.warning("wb_rewards_calc: consume_charges uid=%s: %s", uid, _ce)
+
+        # Этап 4D.5 редизайна: шарды для апгрейдов. Только при победе.
+        # Тир шарда — самый высокий доступный игроку по уровню (T1 для новичков,
+        # T4 для уровня 65+). Количество: 1 базе + 1 для топ-2/3, +2 для топ-1.
+        # Поражение → 0 шардов (как и алмазы).
+        if is_victory:
+            try:
+                pl_tier = tier_unlocked_at(int(lvl))
+                shard_qty = 1
+                if uid == top_uid:
+                    shard_qty += 2
+                elif uid in top3_uids:
+                    shard_qty += 1
+                db.add_shards(uid, pl_tier, shard_qty)
+            except Exception as _se:
+                logger.warning("wb_rewards_calc: add_shards uid=%s: %s", uid, _se)
 
         try:
             db.create_wb_reward(

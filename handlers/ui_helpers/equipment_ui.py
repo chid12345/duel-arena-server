@@ -102,8 +102,16 @@ def slot_shop_text(user_id: int, slot: str) -> tuple[str, InlineKeyboardMarkup]:
             label_btn = f"Надеть ({price_str})"
         rows.append([InlineKeyboardButton(label_btn, callback_data=f"equip_buy:{item['id']}:{slot}")])
 
-    # Unequip button
-    if equipped.get(slot):
+    # Unequip + Upgrade buttons (этап 4E)
+    eq_item = equipped.get(slot)
+    if eq_item:
+        eq_id = eq_item.get("item_id")
+        if eq_id and eq_item.get("tier"):
+            cur_plus = db.get_item_plus(user_id, eq_id) if hasattr(db, "get_item_plus") else 0
+            rows.append([InlineKeyboardButton(
+                f"🔨 Прокачать (+{cur_plus})",
+                callback_data=f"upgrade_menu:{eq_id}",
+            )])
         rows.append([InlineKeyboardButton("❌ Снять", callback_data=f"equip_remove:{slot}")])
     rows.append([InlineKeyboardButton("◀️ Назад", callback_data="equipment_menu")])
     return "\n".join(lines), InlineKeyboardMarkup(rows)

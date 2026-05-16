@@ -34,13 +34,14 @@ def db():
     from repositories.users import UsersMixin
     from repositories.bots import BotsMixin
     from repositories.shop import ShopMixin
+    from repositories.upgrades import UpgradesMixin
     from repositories.world_boss import WorldBossMixin
 
     tmp = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
     tmp_path = tmp.name
     tmp.close()
 
-    class TestDB(DBCore, DBSchema, UsersMixin, BotsMixin, ShopMixin, WorldBossMixin):
+    class TestDB(DBCore, DBSchema, UsersMixin, BotsMixin, ShopMixin, WorldBossMixin, UpgradesMixin):
         def __init__(self):
             self._pg = False
             self._db_path = tmp_path
@@ -151,6 +152,54 @@ def test_rewards_defeat_no_diamonds(db):
     assert r["is_victory"] == 0
     # gold/exp всё равно выдаётся, но со штрафным множителем.
     assert r["gold"] > 0
+
+
+# ── Test 5: WB-дроп шардов (этап 4D.5 редизайна) ──────────────────────────────
+
+def test_wb_drops_shards_on_victory(db):
+    """Победа: все участники получают шарды своего тира.
+    Топ-1: 3 шарда, Топ-2/3: 2 шарда, остальные: 1 шард.
+    """
+    from repositories.world_boss.rewards_calc import compute_and_create_rewards
+
+    # 3 игрока разных уровней: 1 (T1), 30 (T2), 70 (T4)
+    db.get_or_create_player(4001, "u_t1")
+    db.get_or_create_player(4002, "u_t2")
+    db.get_or_create_player(4003, "u_t4")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 1 WHERE user_id = 4001")
+    conn.execute("UPDATE players SET level = 30 WHERE user_id = 4002")
+    conn.execute("UPDATE players SET level = 70 WHERE user_id = 4003")
+    conn.commit()
+    conn.close()
+
+    spawn_id = _make_spawn(db)
+    db.log_wb_hit(spawn_id, 4001, damage=1000)  # топ-3 (T1)
+    db.log_wb_hit(spawn_id, 4002, damage=2000)  # топ-2 (T2)
+    db.log_wb_hit(spawn_id, 4003, damage=5000)  # топ-1 (T4)
+
+    compute_and_create_rewards(db, spawn_id, is_victory=True)
+
+    # Топ-1 (T4): 1 + 2 = 3 шарда T4
+    assert db.get_shards(4003, "T4") == 3
+    # Топ-2 (T2): 1 + 1 = 2 шарда T2
+    assert db.get_shards(4002, "T2") == 2
+    # Топ-3 (T1): 1 + 1 = 2 шарда T1
+    assert db.get_shards(4001, "T1") == 2
+
+
+def test_wb_no_shards_on_defeat(db):
+    """Поражение: шарды не выдаются (как и алмазы)."""
+    from repositories.world_boss.rewards_calc import compute_and_create_rewards
+    db.get_or_create_player(4101, "d")
+    spawn_id = _make_spawn(db)
+    db.log_wb_hit(spawn_id, 4101, damage=1500)
+
+    compute_and_create_rewards(db, spawn_id, is_victory=False)
+
+    # Все шарды = 0 (defeat)
+    for t in ("T1", "T2", "T3", "T4"):
+        assert db.get_shards(4101, t) == 0
 
 
 # ── Test 5: победы для ach_wb_wins ────────────────────────────────────────────

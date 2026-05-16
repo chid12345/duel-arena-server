@@ -185,6 +185,18 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             slot = callback_data.split(":", 1)[1]
             from handlers.ui_helpers.equipment_ui import handle_equip_remove
             await handle_equip_remove(query, user.id, slot)
+        elif callback_data.startswith("upgrade_menu:"):
+            item_id = callback_data.split(":", 1)[1]
+            from handlers.ui_helpers.upgrade_ui import handle_upgrade_menu
+            await handle_upgrade_menu(query, user.id, item_id)
+        elif callback_data.startswith("upgrade_do:"):
+            item_id = callback_data.split(":", 1)[1]
+            from handlers.ui_helpers.upgrade_ui import handle_upgrade_do
+            await handle_upgrade_do(query, user.id, item_id)
+        elif callback_data.startswith("dismantle:"):
+            item_id = callback_data.split(":", 1)[1]
+            from handlers.ui_helpers.upgrade_ui import handle_dismantle
+            await handle_dismantle(query, user.id, item_id)
         else:
             await CallbackHandlers._callback_set_message(query, "❌ Неизвестное действие")
 
