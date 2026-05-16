@@ -210,7 +210,6 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             cnt for cnt, col in ((100, "diamond_first_100"), (300, "diamond_first_300"), (500, "diamond_first_500"))
             if not int(player.get(col) or 0)
         ],
-        "starter_pack_used": bool(int(player.get("starter_pack_used", 0))),
         "wins": int(player.get("wins", 0)),
         "losses": int(player.get("losses", 0)),
         "rating": int(player.get("rating", 1000)),

@@ -153,8 +153,6 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     "CREATE INDEX IF NOT EXISTS idx_owned_weapons_uid ON player_owned_weapons(user_id)",
     # Скидка первой покупки алмазов (one-time per account, старый общий флаг)
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS diamond_first_purchased INTEGER DEFAULT 0",
-    # Стартовый пак (одноразовый)
-    "ALTER TABLE players ADD COLUMN IF NOT EXISTS starter_pack_used INTEGER DEFAULT 0",
     # Скидка первой покупки — по пакету (100/300/500 💎 независимо)
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS diamond_first_100 INTEGER DEFAULT 0",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS diamond_first_300 INTEGER DEFAULT 0",

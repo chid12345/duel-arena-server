@@ -74,7 +74,6 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     _diamond_first_col = "diamond_first_300"
                 else:
                     _diamond_first_col = "diamond_first_500"
-            is_starter_pack = ":starter_pack:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
             is_usdt_slot = ":usdt_slot:" in custom_payload
@@ -214,19 +213,6 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     db.mark_items_delivered(invoice_id)
                     fresh = db.get_or_create_player(owner_uid, "")
                     return {"ok": True, "paid": True, "status": "paid", "avatar_unlocked": True, "avatar_id": avatar_id, "player": _player_api(dict(fresh))}
-                if is_starter_pack:
-                    result2 = db.apply_starter_pack(owner_uid)
-                    db.mark_items_delivered(invoice_id)
-                    await manager.send(owner_uid, {"event": "starter_pack_activated", "diamonds_added": 200, "source": "cryptopay"})
-                    await _send_tg_message(owner_uid,
-                        "🎁 <b>Стартовый пак активирован!</b>\n\n"
-                        "💎 +200 алмазов\n"
-                        "👑 Premium на 14 дней\n"
-                        "🏔️ ×2 Свиток Титана\n\n"
-                        "Спасибо за покупку! ⚔️ Duel Arena"
-                    )
-                    fresh = db.get_or_create_player(owner_uid, "")
-                    return {"ok": True, "paid": True, "starter_pack_activated": True, "player": _player_api(dict(fresh))}
                 if is_premium:
                     prem = db.activate_premium(owner_uid, days=21)
                     bonus_d = prem.get("bonus_diamonds", 0)

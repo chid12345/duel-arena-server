@@ -1,12 +1,13 @@
 """
-tests/test_premium.py — Premium-подписка и стартовый пак.
+tests/test_premium.py — Premium-подписка и скидки первой покупки.
 
 Покрывает:
 - activate_premium(N) → days_left ≈ N,
 - продление: activate + activate складываются,
 - get_premium_status для истёкшего премиума → is_active=False,
-- apply_starter_pack одноразовый,
 - diamond_first три слота (100/300/500) независимы.
+
+apply_starter_pack удалён в Этапе 7A редизайна — функции и тесты на него вырезаны.
 """
 from __future__ import annotations
 
@@ -48,19 +49,6 @@ def test_get_premium_status_expired(db):
 
     assert status["is_active"] is False
     assert status["days_left"] == 0
-
-
-def test_apply_starter_pack_only_once(db):
-    """Стартовый пак выдаётся один раз; повторный вызов → already_used."""
-    db.get_or_create_player(1004, "u4")
-
-    first = db.apply_starter_pack(1004)
-    second = db.apply_starter_pack(1004)
-
-    assert first["ok"] is True
-    assert first["diamonds_added"] == 200
-    assert second["ok"] is False
-    assert second["reason"] == "already_used"
 
 
 def test_diamond_first_three_separate_slots(db):

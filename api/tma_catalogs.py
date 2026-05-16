@@ -136,14 +136,6 @@ STARS_PACKAGES = [
     {"id": "d500_first", "diamonds": 500, "stars": 200, "label": "500 💎", "first_purchase": True},
     {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
     {
-        "id": "starter_pack",
-        "diamonds": 200,
-        "stars": 200,
-        "label": "🎁 Стартовый пак",
-        "hint": "200💎 + Premium 14 дней + 2× Свиток Титана · только 1 раз",
-        "starter_pack": True,
-    },
-    {
         "id": "sfullreset",
         "diamonds": 0,
         "stars": FULL_RESET_STARS,
@@ -186,14 +178,6 @@ CRYPTO_PACKAGES = [
     {"id": "cd300_first", "diamonds": 300, "label": "300 💎", "usdt": "3.00", "first_purchase": True},
     {"id": "cd500_first", "diamonds": 500, "label": "500 💎", "usdt": "4.00", "first_purchase": True},
     {"id": "cdpremium", "diamonds": 0, "label": "👑 Premium", "usdt": "8.00", "premium": True},
-    {
-        "id": "cdstarter",
-        "diamonds": 200,
-        "label": "🎁 Стартовый пак",
-        "hint": "200💎 + Premium 14 дней + 2× Свиток Титана · только 1 раз",
-        "usdt": "4.00",
-        "starter_pack": True,
-    },
     {
         "id": "cdfullreset",
         "diamonds": 0,

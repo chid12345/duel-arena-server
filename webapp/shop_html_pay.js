@@ -206,10 +206,8 @@ window.ShopHtmlPay = {
     const usdtScrolls = (d.usdt_scrolls || []).filter(p => !p.scroll_id?.startsWith('box_'));
     const starBoxes   = (d.stars_scrolls || []).filter(p =>  p.scroll_id?.startsWith('box_'));
     const usdtBoxes   = (d.usdt_scrolls || []).filter(p =>  p.scroll_id?.startsWith('box_'));
-    const starDia     = (d.stars  || []).filter(p => p.diamonds > 0 && !p.full_reset && p.id !== 'premium' && !p.starter_pack && !p.first_purchase);
-    const usdtDia     = (d.crypto || []).filter(p => p.diamonds > 0 && !p.full_reset && !p.premium && !p.starter_pack && !p.first_purchase);
-    const starStarter = d.stars?.find(p => p.starter_pack);
-    const usdtStarter = d.crypto?.find(p => p.starter_pack);
+    const starDia     = (d.stars  || []).filter(p => p.diamonds > 0 && !p.full_reset && p.id !== 'premium' && !p.first_purchase);
+    const usdtDia     = (d.crypto || []).filter(p => p.diamonds > 0 && !p.full_reset && !p.premium && !p.first_purchase);
 
     function _matchByScrollId(sArr, uArr) {
       const all = new Map();
@@ -278,30 +276,6 @@ window.ShopHtmlPay = {
     </div>
   </div>
   <div style="display:flex;flex-direction:column;gap:4px;min-width:90px">${sBtn}${uBtn}</div>
-</div>`;
-    }
-
-    // Стартовый пак (только если не куплен)
-    const starterUsed = !!(State.player?.starter_pack_used);
-    if (!starterUsed && (starStarter || usdtStarter)) {
-      const sBtn = starStarter ? `<button class="sh-btn btn-s" data-prem-stars="${starStarter.id}" style="flex:1;font-size:9px">⭐ ${starStarter.stars}</button>` : '';
-      const uBtn = (usdtStarter && d.cryptopay_enabled) ? `<button class="sh-btn btn-u" data-prem-usdt="${usdtStarter.id}" style="flex:1;font-size:9px">$ ${usdtStarter.usdt}</button>` : '';
-      html += `<div class="sh-sec" style="color:#ffaa33;text-shadow:0 0 10px rgba(255,170,51,.5)">🎁 Стартовый пак · только 1 раз</div>
-<div class="sh-prem" data-starter="1" style="cursor:pointer;background:linear-gradient(135deg,rgba(255,160,30,.16),rgba(180,79,255,.1),rgba(255,100,0,.08));border-color:rgba(255,140,0,.55);box-shadow:0 0 18px rgba(255,140,0,.12) inset,0 0 12px rgba(255,140,0,.1)">
-  <div style="flex:1;min-width:0">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:5px">
-      <span style="font-size:18px">🎁</span>
-      <span style="font-size:12px;font-weight:800;color:#ffaa33;letter-spacing:.5px;text-shadow:0 0 8px rgba(255,170,51,.4)">СТАРТОВЫЙ ПАК</span>
-      <span style="font-size:8px;font-weight:700;background:rgba(255,140,0,.2);border:1px solid rgba(255,140,0,.5);border-radius:4px;padding:1px 6px;color:#ffc44d;letter-spacing:.3px">×4 СКИДКА</span>
-    </div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:3px">
-      <span style="font-size:9.5px;color:#00f5ff;text-shadow:0 0 6px rgba(0,245,255,.4)">💎 200 алмазов</span>
-      <span style="font-size:9.5px;color:#c8a0ff;text-shadow:0 0 6px rgba(180,79,255,.35)">👑 Premium 14 дн.</span>
-      <span style="font-size:9.5px;color:#ffaa33;text-shadow:0 0 6px rgba(255,170,51,.35)">📜 ×2 Свиток Титана</span>
-    </div>
-    <div style="font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.3px">только 1 раз на аккаунт</div>
-  </div>
-  <div style="display:flex;flex-direction:column;gap:4px;min-width:82px;flex-shrink:0">${sBtn}${uBtn}</div>
 </div>`;
     }
 

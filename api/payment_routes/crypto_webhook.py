@@ -73,7 +73,6 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             asset = result.get("asset", "USDT")
             amount_str = result.get("amount", "0")
             is_premium = ":premium:" in custom_payload
-            is_starter_pack = ":starter_pack:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
             is_usdt_slot = ":usdt_slot:" in custom_payload
@@ -202,17 +201,6 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     f"💎 <b>+{diamond_first_count} алмазов зачислено!</b>\n"
                     "🔥 Скидка первой покупки использована.\n\n"
                     "⚔️ Duel Arena"
-                )
-            elif is_starter_pack:
-                db.apply_starter_pack(uid)
-                db.mark_items_delivered(int(invoice_id))
-                await manager.send(uid, {"event": "starter_pack_activated", "diamonds_added": 200, "source": "cryptopay"})
-                await _send_tg_message(uid,
-                    "🎁 <b>Стартовый пак активирован!</b>\n\n"
-                    "💎 +200 алмазов\n"
-                    "👑 Premium на 14 дней\n"
-                    "🏔️ ×2 Свиток Титана\n\n"
-                    "Спасибо за покупку! ⚔️ Duel Arena"
                 )
             elif is_premium:
                 prem = db.activate_premium(uid, days=21)

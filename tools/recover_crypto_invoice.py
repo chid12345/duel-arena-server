@@ -46,7 +46,6 @@ def _parse_payload(payload: str) -> dict:
     """Парсит CryptoPay-payload в структуру действий (зеркало webhook-логики)."""
     out = {
         "is_premium":      ":premium:" in payload,
-        "is_starter_pack": ":starter_pack:" in payload,
         "is_full_reset":   ":full_reset:" in payload,
         "is_usdt_slot":    ":usdt_slot:" in payload,
         "is_armor_class":  ":armor_class:" in payload,
@@ -93,12 +92,6 @@ def _deliver(uid: int, invoice_id: int, payload: str, diamonds: int) -> str:
     if p["is_premium"]:
         result = db.activate_premium(uid, days=21)
         return f"premium:{result.get('days_left')}d"
-
-    if p["is_starter_pack"]:
-        if not db.is_starter_pack_used(uid):
-            db.apply_starter_pack(uid)
-            return "starter_pack:applied"
-        return "starter_pack:already_used"
 
     if p["is_full_reset"]:
         return "full_reset:flagged"  # handler doesn't auto-reset; admin uses notify path
