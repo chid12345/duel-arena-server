@@ -126,9 +126,13 @@ class BattleEndBattleMixin:
         opp_max_hp = max(1, int(loser.get("max_hp", PLAYER_START_MAX_HP)))
         your_max_hp = max(1, int(winner.get("max_hp", PLAYER_START_MAX_HP)))
 
+        # Этап 7B: премиум-подписчик получает +10 бот-побед в день (30 вместо 20).
+        # Лимит — на НАГРАДУ, не на бой. После лимита бот даёт BOT_SYMBOLIC.
+        from economy.premium_bonus import bot_daily_limit_for
+        _bot_limit_today = bot_daily_limit_for(prem_w_active)
         _bot_over_limit = (
             not is_test and battle.get("is_bot2") and winner_user_id
-            and db.get_bot_wins_today(int(winner_user_id)) >= BOT_DAILY_LIMIT
+            and db.get_bot_wins_today(int(winner_user_id)) >= _bot_limit_today
         )
         # Этап 6 редизайна: PvP-награда зависит от БРЕКЕТА игрока, не от
         # разницы уровней (нет level_mult). PvE (is_bot2) сохраняет старую

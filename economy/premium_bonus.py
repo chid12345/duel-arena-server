@@ -8,7 +8,15 @@ from __future__ import annotations
 
 from typing import Tuple
 
-from config.progression_fmt import PREMIUM_XP_MULTIPLIER
+from config.progression_fmt import BOT_DAILY_LIMIT, PREMIUM_XP_MULTIPLIER
+
+# Этап 7B: премиум-бонус к дневному лимиту бот-побед.
+BOT_DAILY_LIMIT_PREMIUM_BONUS = 10
+
+
+def bot_daily_limit_for(is_premium: bool) -> int:
+    """Дневной лимит бот-побед: 20 базовый + 10 для премов = 30."""
+    return BOT_DAILY_LIMIT + (BOT_DAILY_LIMIT_PREMIUM_BONUS if is_premium else 0)
 
 
 def is_premium_active(db, user_id: int) -> bool:

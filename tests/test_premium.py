@@ -51,6 +51,18 @@ def test_get_premium_status_expired(db):
     assert status["days_left"] == 0
 
 
+def test_bot_daily_limit_premium_plus_10():
+    """Этап 7B: премиум-подписчик получает +10 к дневному лимиту бот-побед.
+
+    F2P → 20 побед/день, premium → 30 побед/день.
+    """
+    from config.progression_fmt import BOT_DAILY_LIMIT
+    from economy.premium_bonus import bot_daily_limit_for
+
+    assert bot_daily_limit_for(is_premium=False) == BOT_DAILY_LIMIT
+    assert bot_daily_limit_for(is_premium=True) == BOT_DAILY_LIMIT + 10
+
+
 def test_diamond_first_three_separate_slots(db):
     """Слоты diamond_first_100/300/500 независимы.
 
