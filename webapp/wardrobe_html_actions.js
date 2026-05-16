@@ -254,10 +254,22 @@
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-        // Унификация armor (фикс v2.21.48): сервер возвращает свежий equipment
+        // Унификация armor (фикс v2.21.48+): сервер возвращает свежий equipment
         // после equip/unequip. Обновляем State.equipment чтобы слот «тело» в
         // профиле сразу показал/убрал броню (как делают остальные 5 слотов).
         if (res.equipment) State.equipment = res.equipment;
+        // Фикс v2.21.49: сбрасываем TTL-кэш профиля чтобы Menu при возврате
+        // гарантированно сделал свежий /api/player и перерисовал слоты.
+        // Иначе игрок видит старую броню, пока кэш (30с) не истёк.
+        State.playerLoadedAt = 0;
+        // Если EquipmentSlotsHTML открыт (например wardrobe вызван без смены
+        // сцены) — принудительно перерисуем слот «тело» сразу.
+        try {
+          if (typeof EquipmentSlotsHTML !== 'undefined' &&
+              document.getElementById('eqs-overlay')) {
+            EquipmentSlotsHTML.refresh(scene);
+          }
+        } catch(_) {}
         const msg = action==='buy' ? '✅ Броня получена' : action==='unequip' ? '✅ Броня снята' : '✅ Броня надета';
         _notify(msg);
         WardrobeHTML.refresh(scene, res);
