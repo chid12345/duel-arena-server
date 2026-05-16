@@ -146,13 +146,19 @@
 
   /* Polling /api/shop/crypto_check после открытия инвойса (до 5 мин, 5с шаг).
      Идемпотентен — повторный paid не создаёт дубликат аренды.
-     При успехе — onSuccess() и убирает pending-маркер из localStorage. */
+     При успехе — onSuccess() и убирает pending-маркер из localStorage.
+
+     Использует global get() helper из game_globals.js — он автоматически
+     добавляет ?init_data=... (без него endpoint возвращает 422). */
   function _startRentalPolling(invoiceId, item, onSuccess, notifyFn) {
     let attempts = 0;
     const poll = async () => {
       attempts++;
       try {
-        const r = await fetch('/api/shop/crypto_check/' + invoiceId).then(x => x.json());
+        const r = await (typeof get === 'function'
+          ? get('/api/shop/crypto_check/' + invoiceId)
+          : fetch('/api/shop/crypto_check/' + invoiceId + '?init_data=' +
+              encodeURIComponent(window.Telegram?.WebApp?.initData || '')).then(x => x.json()));
         if (r && r.ok && r.paid) {
           try {
             localStorage.removeItem('rentalPendingInvoice');
