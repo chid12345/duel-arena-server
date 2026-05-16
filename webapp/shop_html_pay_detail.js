@@ -68,12 +68,14 @@ function _row(ico, txt, val, valCls = 'vc') {
 // ── Контент-блок по типу товара ───────────────────────────────────────────────
 function _contentRows(base, { isPrem, isReset, isBox, isLeg, isDia, sid }) {
   if (isPrem) return [
-    _row('⭐', 'Бонус XP',        '+25%',               'vc'),
-    _row('💰', 'Бонус Золото',    '+25%',               'vc'),
-    _row('⚡', 'Авто-бой',        'все режимы',         'vo'),
+    _row('⭐', 'Бонус XP',         '+25%',                'vc'),
+    _row('💰', 'Бонус Золото',     '+25%',                'vc'),
+    _row('🤖', 'Побед над ботом',  '30/день (+10)',       'vc'),
+    _row('×2', 'Удвоить бой',      '1 раз в день',        'vp'),
+    _row('📋', 'Эксклюзив-квесты', '+3 в день',           'vp'),
     _row('<img src="chest_gold.png" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
-    _row('💎', 'Алмазы',          '+10 в день (×14=140)', 'vp'),
-    _row('👑', 'Значок Premium',  '21 день',            'vg'),
+    _row('💎', 'Алмазы',           '+10 в день (×21=210)', 'vp'),
+    _row('👑', 'Значок Premium',   '21 день',             'vg'),
   ].join('');
 
   if (isReset) return [
@@ -250,12 +252,14 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     const el = _openModal('shop-combined-detail');
     el.className = 'spd-overlay';
     const rows = [
-      _row('⭐', 'Бонус XP',        '+25%',                'vc'),
-      _row('💰', 'Бонус Золото',    '+25%',                'vc'),
-      _row('⚡', 'Авто-бой',        'все режимы',          'vo'),
+      _row('⭐', 'Бонус XP',         '+25%',                 'vc'),
+      _row('💰', 'Бонус Золото',     '+25%',                 'vc'),
+      _row('🤖', 'Побед над ботом',  '30/день (+10)',        'vc'),
+      _row('×2', 'Удвоить бой',      '1 раз в день',         'vp'),
+      _row('📋', 'Эксклюзив-квесты', '+3 в день',            'vp'),
       _row('<img src="chest_gold.png" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
-      _row('💎', 'Алмазы',          '+10 в день',          'vp'),
-      _row('👑', 'Значок Premium',  `ещё ${daysLeft} дн.`, 'vg'),
+      _row('💎', 'Алмазы',           '+10 в день',           'vp'),
+      _row('👑', 'Значок Premium',   `ещё ${daysLeft} дн.`,  'vg'),
     ].join('');
     el.innerHTML = `
 <div class="spd-card" style="border:1px solid rgba(180,79,255,.7);box-shadow:0 0 40px rgba(180,79,255,.3),0 16px 50px rgba(0,0,0,.8)">
@@ -277,7 +281,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     const p = [...(d.stars || []), ...(d.stars_scrolls || [])].find(x => x.id === id);
     if (!p) return;
     if (p.id === 'premium' || p.premium) {
-      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP · ящик + 10💎 каждый день · значок премиум', price:p.stars, currency:'stars', rarity:'e', actionLabel:`Активировать ⭐ ${p.stars}`, action:() => ShopHtmlPay._buyStars(id) });
+      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста · ящик 10💎/день', price:p.stars, currency:'stars', rarity:'e', actionLabel:`Активировать ⭐ ${p.stars}`, action:() => ShopHtmlPay._buyStars(id) });
       return;
     }
     if (p.full_reset) {
@@ -296,7 +300,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
       return;
     }
     if (p.premium) {
-      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP · ящик + 10💎 каждый день · значок премиум', price:p.usdt, currency:'usdt', rarity:'e', actionLabel:`Активировать 💲 ${p.usdt}`, action:() => ShopHtmlPay._buyCrypto(id) });
+      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста · ящик 10💎/день', price:p.usdt, currency:'usdt', rarity:'e', actionLabel:`Активировать 💲 ${p.usdt}`, action:() => ShopHtmlPay._buyCrypto(id) });
       return;
     }
     ShopHtmlPay._showCombinedDetail(null, id);

@@ -26,8 +26,11 @@ class BotHandlersShopPayments:
         ]
         text = (
             "💎 <b>Магазин Telegram Stars</b>\n\n"
-            f"👑 <b>Premium подписка</b> — {PREMIUM_SUBSCRIPTION_STARS} ⭐\n"
-            f"• Опыт за бои: +{PREMIUM_XP_BONUS_PERCENT}%\n\n"
+            f"👑 <b>Premium подписка</b> (21 день) — {PREMIUM_SUBSCRIPTION_STARS} ⭐\n"
+            f"• +{PREMIUM_XP_BONUS_PERCENT}% к опыту и золоту за бои\n"
+            "• +10 побед над ботом в день (30 вместо 20)\n"
+            "• Кнопка «×2 за следующий бой» — 1 раз в день\n"
+            "• +3 эксклюзивных ежедневных квеста (+3💎/день)\n\n"
             "<b>Алмазы:</b>\n"
         )
         keyboard = [
