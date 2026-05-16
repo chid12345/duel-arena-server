@@ -39,9 +39,12 @@ class BattlesPvpQueueMixin:
         hi = min(MAX_LEVEL, hi)
         conn = self.get_connection()
         cursor = conn.cursor()
-        # BEGIN IMMEDIATE берёт write-lock сразу — второй параллельный запрос ждёт.
-        cursor.execute("BEGIN IMMEDIATE")
+        # Атомарность: на SQLite — BEGIN IMMEDIATE (write-lock), на Postgres —
+        # обычная транзакция (она и так открывается автоматически).
+        # Раньше был хардкод "BEGIN IMMEDIATE" — падал на проде с PG (синтаксис).
         try:
+            if not self._pg:
+                cursor.execute("BEGIN IMMEDIATE")
             cursor.execute(
                 "SELECT * FROM pvp_queue WHERE user_id != ? AND level BETWEEN ? AND ? "
                 "ORDER BY ABS(level - ?) ASC, joined_at ASC LIMIT 1",
@@ -52,7 +55,8 @@ class BattlesPvpQueueMixin:
                 cursor.execute("DELETE FROM pvp_queue WHERE user_id = ?", (row["user_id"],))
             conn.commit()
         except Exception:
-            conn.rollback()
+            try: conn.rollback()
+            except Exception: pass
             conn.close()
             raise
         conn.close()
