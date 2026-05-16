@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.21.31"
-VERSION_LABEL = "v2.21.31 — Balance Этап 8A+8B: фундамент аренды mythic-шмота. Миграция part8 — таблица equipment_rentals (user_id, item_id, expires_at, rented_at, stars_paid). PG: after_ddl + migration_ids. Новый пакет repositories/rentals/ (RentalsMixin: rent_item/has_active_rental/list_active_rentals/cleanup_expired_rentals). database.py + tests/conftest.py подключают RentalsMixin. equipment_repo.get_equipment теперь авто-снимает mythic без owned/rental. api/equipment/equip разрешает аренду как право экипировки. Тесты: rent + expire + auto-unequip; 2 теста equipment обновлены под новую логику. 263/263."
+VERSION = "2.21.32"
+VERSION_LABEL = "v2.21.32 — Balance Этап 8 (финал): аренда mythic-шмота за Stars (7 дней за 50% цены). Этап 8C: economy/rental_pricing.py (RENTAL_DURATION_DAYS=7, rental_stars_price=full*0.5). api/rental_routes.py — POST /api/rental/stars_invoice + GET /api/rental/list. handlers/commands/shop_equip_stars.py — обработка payload `rental_stars:` → rent_item + equip_item(force=True). Этап 8D: webapp/rental_pay.js — общий helper (buildButton + rent). Кнопка «🕐 Аренда 7д · ⭐ N» добавлена в 5 overlay (helmet/shield/boots/ring/weapon). index.html подключает rental_pay.js. 5 тестов аренды (price, rent, extension stacking, cleanup, bot handler). 268/268."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.82"
+GAME_VERSION = "16.83"

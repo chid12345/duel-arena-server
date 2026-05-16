@@ -53,6 +53,36 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
     Возвращает None, если payload не про снаряжение — вызывающий код идёт дальше
     по остальным веткам диспетчера платежей.
     """
+    # Этап 8: аренда mythic — payload `rental_stars:{uid}:{item_id}`.
+    # Не покупаем (не add_owned_weapon), а пишем в equipment_rentals + надеваем.
+    if payload.startswith("rental_stars:"):
+        parts = payload.split(":", 2)
+        item_id = parts[2] if len(parts) == 3 else ""
+        if not item_id:
+            return None
+        try:
+            from db_schema.equipment_catalog import get_item as _get_item
+            from economy.rental_pricing import RENTAL_DURATION_DAYS
+            item = _get_item(item_id) or {}
+            slot = item.get("slot", "")
+            db.rent_item(user_id, item_id, days=RENTAL_DURATION_DAYS, stars_paid=stars)
+            if slot:
+                db.equip_item(user_id, slot, item_id, force=True)
+        except Exception as exc:
+            logger.error(
+                "CRITICAL: Stars rental failed uid=%s item=%s stars=%s err=%s",
+                user_id, item_id, stars, exc,
+            )
+            return (
+                "⚠️ Оплата получена, но выдача аренды задержалась.\n"
+                "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena"
+            )
+        from economy.rental_pricing import RENTAL_DURATION_DAYS as _DAYS
+        return (
+            f"✅ <b>Аренда {_DAYS} дн. оформлена — предмет надет!</b>\n"
+            "Откройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena"
+        )
+
     # Мифическая броня (класс) — выдаём класс целиком через purchase_class.
     # Идемпотентно: purchase_class вернёт (False,"У вас уже есть этот класс")
     # при повторной оплате — игрок не потеряет деньги впустую, но и дубликата не будет.

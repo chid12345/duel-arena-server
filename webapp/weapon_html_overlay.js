@@ -103,10 +103,13 @@ function _btn(w) {
     return `<button class="wd-btn btn-gold" data-act="buy" data-id="${w.id}">💰 ${w.price}</button>`;
   if (w.type === 'diamonds')
     return `<button class="wd-btn btn-dia" data-act="buy" data-id="${w.id}">💎 ${w.price}</button>`;
-  // mythic — два варианта оплаты
-  return `<div style="display:flex;gap:6px">
-    <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_usdt" data-id="${w.id}">💳 $11.99</button>
-    <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${w.id}">⭐ 590</button>
+  // mythic — два варианта оплаты + аренда (Этап 8)
+  return `<div>
+    <div style="display:flex;gap:6px">
+      <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_usdt" data-id="${w.id}">💳 $11.99</button>
+      <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${w.id}">⭐ 590</button>
+    </div>
+    ${window.RentalPay ? RentalPay.buildButton(w.id, RentalPay.rentalStarsFor(590)) : ''}
   </div>`;
 }
 
@@ -159,6 +162,14 @@ async function _doAction(scene, action, item) {
   scene._weaponBusy = true;
   try {
     // ── Stars (мифическое оружие) ──────────────────────────────
+    if (action === 'buy_rental') {
+      await RentalPay.rent(scene, item, () => {
+        const activeTab = document.querySelector('#wn-root ._wn-view.active');
+        _render(scene, activeTab?.dataset?.wv || 'all');
+      }, _notify);
+      scene._weaponBusy = false;
+      return;
+    }
     if (action === 'buy_stars') {
       _notify('⏳ Создаём счёт Stars...', true, true);
       const invRes = await post('/api/equipment/weapon_stars_invoice', {item_id: item.id});
