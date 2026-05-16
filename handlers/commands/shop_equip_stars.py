@@ -86,12 +86,25 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
     # Мифическая броня (класс) — выдаём класс целиком через purchase_class.
     # Идемпотентно: purchase_class вернёт (False,"У вас уже есть этот класс")
     # при повторной оплате — игрок не потеряет деньги впустую, но и дубликата не будет.
+    # legendary_usdt — особый кастомный USDT-slot, создаётся через create_usdt_class.
     if payload.startswith("armor_class_stars:"):
         parts = payload.split(":", 2)
         class_id = parts[2] if len(parts) == 3 else ""
         if not class_id:
             return None
         try:
+            if class_id == "legendary_usdt":
+                # Кастомный USDT-slot: создаём персональный класс с +19 свободных статов.
+                # На USDT-пути это идёт через crypto_webhook → create_usdt_class.
+                # Stars-путь: ровно та же логика, чтобы UI кнопок был унифицирован.
+                ok, msg, new_class_id = db.create_usdt_class(user_id)
+                if not ok and "уже есть" not in (msg or ""):
+                    logger.error("Stars legendary_usdt slot creation failed uid=%s stars=%s msg=%s",
+                                 user_id, stars, msg)
+                    return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
+                            "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
+                return ("✅ <b>Легендарный образ получен!</b>\n"
+                        "Откройте «Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
             ok, msg = db.purchase_class(user_id, class_id)
             if not ok and "уже есть" not in msg:
                 logger.error("Stars mythic armor purchase failed uid=%s class=%s stars=%s msg=%s",

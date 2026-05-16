@@ -256,13 +256,13 @@ function _btnHtml(a) {
     return `<button class="wd-btn btn-gold" data-act="buy" data-id="${a.id}">💰 Купить — ${a.price.replace('💰 ','')}</button>`;
   if (a.type === 'diamonds')
     return `<button class="wd-btn btn-dia" data-act="buy" data-id="${a.id}">💎 Купить — ${a.price.replace('💎 ','')}</button>`;
-  // mythic-фикс (новые 3) — Stars + USDT
-  if (a.type === 'mythic')
+  // mythic-rarity (включая legendary_usdt-слот) — Stars + USDT, как у других слотов шмота
+  if (a.r === 'mythic')
     return `<div style="display:flex;gap:6px">
       <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_armor_usdt" data-id="${a.id}">💳 $${a.price}</button>
       <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_armor_stars" data-id="${a.id}">⭐ 590</button>
     </div>`;
-  // usdt/legendary (кастомный слот)
+  // fallback (общий, не должен срабатывать для обычных классов)
   return `<div class="wd-smoke-wrap"><div class="wd-smoke"></div><button class="wd-btn btn-mythic" data-act="buy_usdt" data-id="${a.id}">🔥 КУПИТЬ — ${a.price} USDT</button></div>`;
 }
 

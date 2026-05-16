@@ -35,7 +35,14 @@ def register_armor_payment_routes(app: FastAPI) -> None:
         _rl_check(uid, "armor_pay", max_hits=5, window_sec=60)
 
         class_id = body.class_id.strip()
-        cls = MYTHIC_CLASSES.get(class_id)
+        # legendary_usdt — кастомный USDT-slot, у него нет записи в MYTHIC_CLASSES.
+        # Делаем спец-ветку: фикс цена 590⭐, серверный handler создаёт slot
+        # через create_usdt_class (см. handlers/commands/shop_equip_stars.py).
+        if class_id == "legendary_usdt":
+            cls = {"name": "Доспех Светоносного Бога", "price_stars": 590,
+                   "special_bonus": "+19 свободных статов · кастомный слот"}
+        else:
+            cls = MYTHIC_CLASSES.get(class_id)
         if not cls:
             return {"ok": False, "reason": "Броня не найдена"}
         if not BOT_TOKEN:
@@ -74,15 +81,21 @@ def register_armor_payment_routes(app: FastAPI) -> None:
         _rl_check(uid, "armor_pay", max_hits=5, window_sec=60)
 
         class_id = body.class_id.strip()
-        cls = MYTHIC_CLASSES.get(class_id)
-        if not cls:
-            return {"ok": False, "reason": "Броня не найдена"}
+        # legendary_usdt — кастомный USDT-slot. Переиспользуем существующий путь
+        # `:usdt_slot:` (он уже обработан в crypto_webhook/check/recover).
+        if class_id == "legendary_usdt":
+            cls = {"name": "Доспех Светоносного Бога", "price_usdt": "11.99"}
+            payload_str = f"uid:{uid}:usdt_slot:"
+        else:
+            cls = MYTHIC_CLASSES.get(class_id)
+            if not cls:
+                return {"ok": False, "reason": "Броня не найдена"}
+            payload_str = f"uid:{uid}:armor_class:{class_id}"
         if not CRYPTOPAY_TOKEN:
             return {"ok": False, "reason": "CryptoPay не настроен"}
 
         amount = str(cls.get("price_usdt", "11.99"))
         description = f"Duel Arena — {cls['name']} (мифическая броня)"
-        payload_str = f"uid:{uid}:armor_class:{class_id}"
 
         try:
             async with httpx.AsyncClient(timeout=10) as client:
