@@ -2,7 +2,8 @@
 tools/balance_xlsx_export.py — генератор балансной таблицы Duel Arena.
 
 Единый источник правды для кривых по уровням. Запускается вручную или в CI:
-    python -m tools.balance_xlsx_export
+    python -m tools.balance_xlsx_export           # экспорт: пишет JSON и XLSX
+    python -m tools.balance_xlsx_export --check   # проверка: сравнить с диском, 0 если совпадает
 
 Производит два артефакта с одинаковыми числами:
     1. Калькулятор_экономики_игры.xlsx — для геймдиза (визуализация)
@@ -13,7 +14,9 @@ xlsx-вывод — в tools/_balance_xlsx_writer.py (Закон 2 — отде�
 """
 from __future__ import annotations
 
+import argparse
 import json
+import sys
 from pathlib import Path
 
 from tools._balance_xlsx_writer import write_xlsx
@@ -145,19 +148,61 @@ def build_payload(prog: dict) -> dict:
 
 # ── CLI ──────────────────────────────────────────────────────────────────────
 
-def main() -> int:
+def _serialize(payload: dict) -> str:
+    return json.dumps(payload, ensure_ascii=False, indent=2) + "\n"
+
+
+def _do_export() -> int:
     prog = load_progression()
     payload = build_payload(prog)
-    JSON_OUT.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    JSON_OUT.write_text(_serialize(payload), encoding="utf-8")
     write_xlsx(payload, XLSX_OUT)
     print(f"JSON: {JSON_OUT}")
     print(f"XLSX: {XLSX_OUT}")
     print(f"Calibration: {CONFIG['days_to_max_level']} days * "
           f"{CONFIG['pu_per_day']} PU = {payload['anchor']['xp_per_pu_avg']} XP/PU")
     return 0
+
+
+def _do_check() -> int:
+    """Сравнить сгенерированный payload с config/balance_curve.json. 0=ок, 1=расхождение.
+
+    Использует ASCII-маркеры [OK]/[FAIL] вместо emoji — работает в cp1251-консоли
+    Windows и в любом CI без падений с UnicodeEncodeError.
+    """
+    if not JSON_OUT.exists():
+        print(f"[FAIL] {JSON_OUT} не существует - запусти `make balance-export`", file=sys.stderr)
+        return 1
+    prog = load_progression()
+    expected = _serialize(build_payload(prog))
+    actual = JSON_OUT.read_text(encoding="utf-8")
+    if expected == actual:
+        print(f"[OK] {JSON_OUT.name} consistent with calculator (anchor={CONFIG['days_to_max_level']} days)")
+        return 0
+    # Расхождение — печатаем краткий diff (первые 20 различающихся строк)
+    import difflib
+    diff = difflib.unified_diff(
+        actual.splitlines(keepends=True),
+        expected.splitlines(keepends=True),
+        fromfile="config/balance_curve.json (disk)",
+        tofile="expected (from CONFIG in balance_xlsx_export.py)",
+        n=2,
+    )
+    print("[FAIL] xlsx<->json mismatch. Run `python -m tools.balance_xlsx_export`", file=sys.stderr)
+    for i, line in enumerate(diff):
+        if i > 40:
+            print("  ... (diff truncated)", file=sys.stderr)
+            break
+        sys.stderr.write(line)
+    return 1
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Экспорт балансной таблицы Duel Arena")
+    parser.add_argument("--check", action="store_true",
+                        help="Сравнить с диском (без записи). Exit 1 если расхождение.")
+    args = parser.parse_args(argv)
+    return _do_check() if args.check else _do_export()
 
 
 if __name__ == "__main__":
