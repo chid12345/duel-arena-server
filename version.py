@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.21.16"
-VERSION_LABEL = "v2.21.16 — Balance Этап 4B: БД и repository для апгрейдов. item_upgrades (plus_level, gold/shards_invested, attempts/fails) + upgrade_materials (shard_T1..T4 по тиру). SQLite миграция + Postgres DDL параллельно. UpgradesMixin (UpgradeRepoMixin + MaterialsRepoMixin) с атомарным consume_shards. Database+conftest обновлены. +13 тестов. Бой/UI не тронуты — будет в 4C/4D/4E."
+VERSION = "2.21.17"
+VERSION_LABEL = "v2.21.17 — Balance Этап 4C: +N апгрейды учитываются в бою. get_equipment_stats применяет plus_stats_for (×(1+0.08×N)) к каждому предмету с plus > 0. Поскольку этот метод используется в end_battle/damage/HP-расчёте — +N теперь влияет на бой автоматически. helmet_free1 +5 = 84 HP вместо 60. +3 теста. Старая 30-строчная логика сжата до цикла по _STAT_FIELDS."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "16.67"
+GAME_VERSION = "16.68"

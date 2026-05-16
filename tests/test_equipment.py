@@ -140,6 +140,50 @@ def test_equip_legacy_item_no_tier_works(db):
     assert ok is True, "Legacy без tier должен надеваться без проверки"
 
 
+def test_equipment_stats_with_plus_upgrade(db):
+    """Этап 4C: get_equipment_stats умножает статы на +N через plus_stats_for.
+
+    helmet_free1: hp_bonus=60 (база). Игрок имеет +5 → stats × 1.40 = 84 HP.
+    """
+    db.get_or_create_player(3001, "u_plus")
+    db.equip_item(3001, "belt", "helmet_free1")
+    # Базовый стат
+    stats_base = db.get_equipment_stats(3001)
+    assert stats_base["hp_bonus"] == 60, f"База: {stats_base['hp_bonus']}"
+
+    # Прокачиваем 5 успешных попыток → plus_level = 5
+    for _ in range(5):
+        db.record_upgrade_attempt(3001, "helmet_free1", 300, 1, success=True)
+
+    stats_plus5 = db.get_equipment_stats(3001)
+    # 60 × (1 + 0.08 × 5) = 60 × 1.40 = 84
+    assert stats_plus5["hp_bonus"] == 84, (
+        f"+5 → ожидали 84 HP, получили {stats_plus5['hp_bonus']}"
+    )
+
+
+def test_equipment_stats_zero_plus_unchanged(db):
+    """+0 (нет записи) → статы как у базового предмета."""
+    db.get_or_create_player(3002, "u_zero")
+    db.equip_item(3002, "belt", "helmet_free1")
+    # Без апгрейда
+    stats = db.get_equipment_stats(3002)
+    assert stats["hp_bonus"] == 60
+
+
+def test_equipment_stats_pct_field_with_plus(db):
+    """def_pct (процент) тоже масштабируется."""
+    db.get_or_create_player(3003, "u_def")
+    db.equip_item(3003, "belt", "helmet_free2")  # def_pct = 0.03
+    for _ in range(3):
+        db.record_upgrade_attempt(3003, "helmet_free2", 300, 1, success=True)
+    stats = db.get_equipment_stats(3003)
+    # 0.03 × (1 + 0.08 × 3) = 0.03 × 1.24 = 0.0372
+    assert abs(stats["def_pct"] - 0.0372) < 0.0001, (
+        f"+3 def_pct: ожидали 0.0372, получили {stats['def_pct']}"
+    )
+
+
 def test_add_owned_weapon_idempotent(db):
     """Повторный add_owned_weapon не должен создавать дубль."""
     db.get_or_create_player(1006, "u6")

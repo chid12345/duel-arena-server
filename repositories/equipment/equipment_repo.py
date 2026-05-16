@@ -92,36 +92,40 @@ class EquipmentMixin:
         return affected > 0
 
     def get_equipment_stats(self, user_id: int) -> Dict[str, float]:
-        """Суммарные бонусы от всей экипировки."""
+        """Суммарные бонусы от всей экипировки. С учётом +N апгрейдов (этап 4C).
+
+        Каждый предмет с plus_level > 0 даёт умноженные статы:
+        stat × (1 + 0.08 × plus). Применяется к каждому стату независимо.
+        Базовые статы — из get_item_stats (db_schema/equipment_catalog).
+        """
+        from economy.upgrades_formulas import plus_stats_for
+
         equipped = self.get_equipment(user_id)
-        total = {"atk_bonus": 0, "def_pct": 0.0, "hp_bonus": 0, "crit_bonus": 0,
-                 "pen_pct": 0.0, "dodge_bonus": 0, "regen_bonus": 0, "lifesteal_pct": 0,
-                 "crit_resist_pct": 0, "str_bonus": 0, "agi_bonus": 0, "intu_bonus": 0,
-                 "double_pct": 0, "gold_pct": 0, "xp_pct": 0,
-                 "accuracy": 0, "anti_dodge_pct": 0, "silence_pct": 0, "slow_pct": 0,
-                 "regen_speed_pct": 0}
+        # +N для каждого предмета (если методы есть — этап 4B загружен)
+        all_plus = self.get_all_item_plus(user_id) if hasattr(self, "get_all_item_plus") else {}
+
+        _STAT_FIELDS = (
+            "atk_bonus", "def_pct", "hp_bonus", "crit_bonus", "pen_pct",
+            "dodge_bonus", "regen_bonus", "lifesteal_pct", "crit_resist_pct",
+            "str_bonus", "agi_bonus", "intu_bonus", "double_pct",
+            "gold_pct", "xp_pct", "accuracy", "anti_dodge_pct",
+            "silence_pct", "slow_pct", "regen_speed_pct",
+        )
+        total: Dict[str, float] = {f: 0.0 if "pct" in f else 0 for f in _STAT_FIELDS}
+
         for slot, item in equipped.items():
-            stats = get_item_stats(item["item_id"])
-            total["atk_bonus"]    += stats["atk_bonus"]
-            total["def_pct"]      += stats["def_pct"]
-            total["hp_bonus"]     += stats["hp_bonus"]
-            total["crit_bonus"]   += stats["crit_bonus"]
-            total["pen_pct"]      += stats.get("pen_pct", 0.0)
-            total["dodge_bonus"]  += stats.get("dodge_bonus", 0)
-            total["regen_bonus"]  += stats.get("regen_bonus", 0)
-            total["lifesteal_pct"]   += stats.get("lifesteal_pct", 0)
-            total["crit_resist_pct"] += stats.get("crit_resist_pct", 0)
-            total["str_bonus"]  += stats.get("str_bonus", 0)
-            total["agi_bonus"]  += stats.get("agi_bonus", 0)
-            total["intu_bonus"] += stats.get("intu_bonus", 0)
-            total["double_pct"] += stats.get("double_pct", 0)
-            total["gold_pct"]   += stats.get("gold_pct", 0)
-            total["xp_pct"]     += stats.get("xp_pct", 0)
-            total["accuracy"]        += stats.get("accuracy", 0)
-            total["anti_dodge_pct"]  += stats.get("anti_dodge_pct", 0)
-            total["silence_pct"]     += stats.get("silence_pct", 0)
-            total["slow_pct"]        += stats.get("slow_pct", 0)
-            total["regen_speed_pct"] += stats.get("regen_speed_pct", 0)
+            item_id = item["item_id"]
+            base_stats = get_item_stats(item_id)
+            plus = int(all_plus.get(item_id, 0))
+            stats = plus_stats_for(base_stats, plus) if plus > 0 else base_stats
+            for f in _STAT_FIELDS:
+                val = stats.get(f, 0)
+                if not isinstance(val, (int, float)):
+                    continue
+                if "pct" in f:
+                    total[f] = float(total[f]) + float(val)
+                else:
+                    total[f] = int(total[f]) + int(val)
         return total
 
     def add_owned_weapon(self, user_id: int, item_id: str) -> None:
