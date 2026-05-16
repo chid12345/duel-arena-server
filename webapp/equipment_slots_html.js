@@ -94,21 +94,18 @@ const _EXT = {
 /* Texture key → filename (с правильным расширением) */
 function _texUrl(key) { return key ? (_EXT[key] || key + '.png') : null; }
 
-/* Данные слота: texKey (→ filename) + rarity */
+/* Данные слота: texKey (→ filename) + rarity.
+   Унификация armor (шаг 5/6): armor теперь обычный слот в State.equipment
+   с правильным item_id (armor_free1..armor_mythic4). Текстура — из item.texture_key
+   (сервер) или из getArmorTextureKey(item_id) (клиент-fallback). */
 function _slotInfo(slot) {
   const eq = State.equipment || {};
-  if (slot === 'armor') {
-    const wd = State.wardrobeEquipped;
-    if (wd?.textureKey) return { url: _texUrl(wd.textureKey), rarity: wd.rarity || 'common' };
-    const it = eq.armor;
-    if (it) return { url: _texUrl(getArmorTextureKey(it.rarity)), rarity: it.rarity };
-    return null;
-  }
   const it = eq[slot];
   if (!it) return null;
   const r = it.rarity, id = it.item_id;
   let key = null;
-  if      (slot === 'belt')   key = getHelmetTextureKey(id)  || getHelmetTextureKeyByRarity(r);
+  if      (slot === 'armor')  key = it.texture_key || getArmorTextureKey(id) || getArmorTextureKey(r);
+  else if (slot === 'belt')   key = getHelmetTextureKey(id)  || getHelmetTextureKeyByRarity(r);
   else if (slot === 'weapon') key = getWeaponTextureKey(id)  || getWeaponTextureKeyByRarity(r);
   else if (slot === 'boots')  key = getBootsTextureKey(id)   || getBootsTextureKeyByRarity(r);
   else if (slot === 'shield') key = getShieldTextureKey(id)  || getShieldTextureKeyByRarity(r);

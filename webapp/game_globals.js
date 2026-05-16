@@ -62,7 +62,6 @@ const State = {
   ws: null,
   appVersion: '...',
   avatarId: (() => { try { return parseInt(localStorage.getItem('da_avatar') || '3', 10); } catch(_) { return 3; } })(),
-  wardrobeEquipped: (() => { try { const s = localStorage.getItem('da_wardrobe_eq'); return s ? JSON.parse(s) : null; } catch(_) { return null; } })(),
 };
 // КРИТИЧНО: const-State не появляется на window. Без этого все файлы
 // что читают window.State.* (bot_battle_html, bot_battle_card, _pSkin
@@ -70,17 +69,25 @@ const State = {
 // HP. Привязываем явно — все window.State.X начинают работать.
 try { window.State = State; } catch(_) {}
 
-/* Сохраняет экипированную броню в State + localStorage */
-function setWardrobeEquipped(v) {
-  State.wardrobeEquipped = v;
-  try {
-    if (v) localStorage.setItem('da_wardrobe_eq', JSON.stringify(v));
-    else    localStorage.removeItem('da_wardrobe_eq');
-  } catch(_) {}
-}
+// Одноразовая очистка localStorage от устаревшего ключа (унификация armor 5/6).
+// Раньше клиент кешировал State.wardrobeEquipped — теперь armor приходит с сервера
+// как обычный слот в State.equipment.armor.
+try { localStorage.removeItem('da_wardrobe_eq'); } catch(_) {}
 
-/* Ключ Phaser-текстуры брони по class_id (fallback — по rarity) */
+/* Ключ Phaser-текстуры брони — поддерживает и legacy class_id, и новые item_id.
+   Унификация armor (шаг 5/6): сервер возвращает item_id вида armor_free1, для
+   обратной совместимости старых кэшей оставлены legacy class_id-маппинги. */
 const _ARMOR_TEXTURE_MAP = {
+  // Новые item_id (после унификации) — texture_key === item_id
+  armor_free1:'armor_free1', armor_free2:'armor_free2',
+  armor_free3:'armor_free3', armor_free4:'armor_free4',
+  armor_gold1:'armor_gold1', armor_gold2:'armor_gold2',
+  armor_gold3:'armor_gold3', armor_gold4:'armor_gold4',
+  armor_dia1:'armor_dia1',   armor_dia2:'armor_dia2',
+  armor_dia3:'armor_dia3',   armor_dia4:'armor_dia4',
+  armor_mythic1:'armor_mythic1', armor_mythic2:'armor_mythic2',
+  armor_mythic3:'armor_mythic3', armor_mythic4:'armor_mythic4',
+  // Legacy class_id (до унификации, для совместимости)
   tank_free:'armor_free1',      agile_free:'armor_free2',
   crit_free:'armor_free3',      universal_free:'armor_free4',
   berserker_gold:'armor_gold1', assassin_gold:'armor_gold2',
@@ -90,8 +97,30 @@ const _ARMOR_TEXTURE_MAP = {
   berserker_mythic:'armor_mythic1',   assassin_mythic:'armor_mythic2',
   archmage_mythic:'armor_mythic3',    legendary_usdt:'armor_mythic4',
 };
-function getArmorTextureKey(classIdOrRarity) {
-  const key = String(classIdOrRarity || '').trim();
+/* Маппинг legacy class_id (или USDT-кастомка) → новый item_id брони.
+   Унификация armor (5/6): нужно когда UI оперирует class_id (гардероб), а
+   серверный API (rental, equipment) — item_id (armor_mythic1..4). */
+const _ARMOR_LEGACY_TO_ITEM_ID = {
+  tank_free:'armor_free1', agile_free:'armor_free2',
+  crit_free:'armor_free3', universal_free:'armor_free4',
+  berserker_gold:'armor_gold1', assassin_gold:'armor_gold2',
+  mage_gold:'armor_gold3', paladin_gold:'armor_gold4',
+  dragonknight_diamonds:'armor_dia1', shadowdancer_diamonds:'armor_dia2',
+  archmage_diamonds:'armor_dia3', universal_diamonds:'armor_dia4',
+  berserker_mythic:'armor_mythic1', assassin_mythic:'armor_mythic2',
+  archmage_mythic:'armor_mythic3', legendary_usdt:'armor_mythic4',
+};
+function armorItemIdFromLegacy(classId) {
+  const key = String(classId || '').trim();
+  if (!key) return null;
+  if (_ARMOR_LEGACY_TO_ITEM_ID[key]) return _ARMOR_LEGACY_TO_ITEM_ID[key];
+  if (key.startsWith('armor_')) return key;
+  if (key.startsWith('usdt_custom_')) return 'armor_mythic4';
+  return null;
+}
+
+function getArmorTextureKey(classIdOrItemIdOrRarity) {
+  const key = String(classIdOrItemIdOrRarity || '').trim();
   if (_ARMOR_TEXTURE_MAP[key]) return _ARMOR_TEXTURE_MAP[key];
   // fallback по rarity → первая картинка соотв. тира
   if (key === 'rare')   return 'armor_gold1';

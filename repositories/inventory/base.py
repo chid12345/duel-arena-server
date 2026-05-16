@@ -14,7 +14,11 @@ from config import (
 
 
 class InventoryBaseMixin:
-    _inventory_schema_ensured: bool = False
+    # Флаг "схема user_inventory мигрирована" хранится per-instance через
+    # getattr/setattr внутри _ensure_inventory_schema. Class-level атрибут
+    # был ошибкой — между тестами с разными БД одна и та же Database в
+    # production не имеет проблемы (1 инстанс), но в pytest каждая фикстура
+    # создаёт новый Database — class-level флаг ломал миграцию схемы.
 
     @staticmethod
     def _row_get(row: Any, key: str, default: Any = None) -> Any:
@@ -47,7 +51,7 @@ class InventoryBaseMixin:
 
     def _ensure_inventory_schema(self, cursor) -> None:
         """Safety net: гарантирует наличие user_inventory и полей классов в players. Runs once per instance."""
-        if InventoryBaseMixin._inventory_schema_ensured:
+        if getattr(self, "_inventory_schema_ensured", False):
             return
         is_pg = bool(getattr(self, "_pg", False))
         if is_pg:
@@ -150,7 +154,7 @@ class InventoryBaseMixin:
             if "stats_applied" not in inv_cols:
                 cursor.execute("ALTER TABLE user_inventory ADD COLUMN stats_applied INTEGER DEFAULT 0")
 
-        InventoryBaseMixin._inventory_schema_ensured = True
+        self._inventory_schema_ensured = True
 
     @staticmethod
     def _class_stat_vector(class_info: Optional[Dict]) -> Dict[str, int]:

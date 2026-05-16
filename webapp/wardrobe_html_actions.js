@@ -207,6 +207,24 @@
         }
         return;
       }
+      if (action === 'buy_rental') {
+        // Унификация armor (5/6): аренда мифик-брони через единый RentalPay
+        // (тот же endpoint /api/rental/*, что для оружия/шлема/щита/ног/кольца).
+        // item.id здесь — уже item_id (armor_mythicN) из RentalPay.buildButton,
+        // но на всякий случай маппим class_id → item_id.
+        const armorItemId = (typeof armorItemIdFromLegacy === 'function')
+          ? (armorItemIdFromLegacy(item.id) || item.id) : item.id;
+        const rentalItem = { id: armorItemId, name: item.name, emoji: item.emoji || '🛡' };
+        await RentalPay.rent(scene, rentalItem, async () => {
+          // После успешной аренды — обновить гардероб и закрыть busy
+          try {
+            const wpFresh = await get('/api/wardrobe');
+            if (wpFresh?.ok) WardrobeHTML.refresh(scene, wpFresh);
+          } catch(_) {}
+        }, _notify);
+        scene._wardrobeHtmlBusy = false;
+        return;
+      }
       if (action === 'buy_armor_stars') {
         _notify('⏳ Создаём счёт Stars...', true);
         const invRes = await post('/api/wardrobe/armor_stars_invoice', {class_id: item.id});
@@ -236,13 +254,9 @@
       }
       if (res?.ok) {
         if (res.player) { State.player = res.player; State.playerLoadedAt = Date.now(); }
-        // Обновляем State.wardrobeEquipped для слота брони в профиле
-        if (action === 'unequip') {
-          setWardrobeEquipped(null);
-        } else if ((action === 'equip' || action === 'buy') && item.r) {
-          // item.id = class_id (berserker_mythic и т.п.) → точная текстура конкретной косметики
-          setWardrobeEquipped({ rarity: item.r, textureKey: getArmorTextureKey(item.id || item.r) });
-        }
+        // Унификация armor (5/6): armor приходит с сервера как обычный слот в
+        // State.equipment.armor. localStorage-кэш wardrobeEquipped больше не
+        // нужен — синхронизация идёт через _refreshProfile/getEquipment.
         const msg = action==='buy' ? '✅ Броня получена' : action==='unequip' ? '✅ Броня снята' : '✅ Броня надета';
         _notify(msg);
         WardrobeHTML.refresh(scene, res);
@@ -263,8 +277,18 @@
         // Ghost-tap guard: блокируем touch/click 500мс пока идёт async API call,
         // иначе click может «улететь» в кнопку под оверлеем на touch-устройствах.
         try { window.GhostTapGuard?.block?.(500); } catch(_) {}
-        const a = items.find(x => x.id === btn.dataset.id);
-        if (a) _doAction(scene, btn.dataset.act, a, wp);
+        const dataId = btn.dataset.id;
+        const action = btn.dataset.act;
+        // Унификация armor (5/6): кнопка аренды имеет data-id=armor_mythicN
+        // (item_id для RentalPay), а ARMORS_DATA индексирован по class_id —
+        // ищем по обоим, либо синтезируем минимальный item.
+        let a = items.find(x => x.id === dataId);
+        if (!a && action === 'buy_rental' && typeof armorItemIdFromLegacy === 'function') {
+          // dataId уже item_id → пробуем найти class_id по обратному маппингу
+          a = items.find(x => armorItemIdFromLegacy(x.id) === dataId);
+          if (!a) a = { id: dataId, name: 'Мифическая броня', r: 'mythic', emoji: '🛡' };
+        }
+        if (a) _doAction(scene, action, a, wp);
         return;
       }
       if (card) {
@@ -320,15 +344,8 @@
   /* ── open ── */
   function open(scene, wp) {
     scene._wardrobeHtmlBusy = false; // сброс на случай зависшего запроса
-    // Синхронизируем wardrobeEquipped с данными сервера при каждом открытии
-    const eqId = wp?.equipped_class?.class_id || '';
-    if (eqId) {
-      const match = W.ARMORS_DATA.find(a => a.id === eqId) || (eqId.includes('usdt') ? { r: 'mythic' } : null);
-      if (match) setWardrobeEquipped({ rarity: match.r, textureKey: getArmorTextureKey(match.id || match.r) });
-    } else {
-      setWardrobeEquipped(null);
-    }
-
+    // Унификация armor (5/6): синхронизация wardrobeEquipped удалена —
+    // armor приходит через /api/profile в State.equipment.armor.
     W._injectCSS();
     close();
     let view = scene._wardrobeView || 'all';

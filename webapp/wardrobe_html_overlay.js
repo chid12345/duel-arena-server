@@ -257,11 +257,22 @@ function _btnHtml(a) {
   if (a.type === 'diamonds')
     return `<button class="wd-btn btn-dia" data-act="buy" data-id="${a.id}">💎 Купить — ${a.price.replace('💎 ','')}</button>`;
   // mythic-rarity (включая legendary_usdt-слот) — Stars + USDT, как у других слотов шмота
-  if (a.r === 'mythic')
-    return `<div style="display:flex;gap:6px">
-      <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_armor_usdt" data-id="${a.id}">💳 $${a.price}</button>
-      <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_armor_stars" data-id="${a.id}">⭐ 590</button>
+  // Унификация armor (5/6): добавлена кнопка «Арендовать» через единый RentalPay,
+  // как у helmet/weapon/shield/boots/ring. item_id берётся через маппинг class_id → armor_mythicN.
+  if (a.r === 'mythic') {
+    const armorItemId = (typeof armorItemIdFromLegacy === 'function')
+      ? armorItemIdFromLegacy(a.id) : null;
+    const rentalBtn = (window.RentalPay && armorItemId)
+      ? RentalPay.buildButton(armorItemId, RentalPay.rentalStarsFor(590))
+      : '';
+    return `<div>
+      <div style="display:flex;gap:6px">
+        <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_armor_usdt" data-id="${a.id}">💳 $${a.price}</button>
+        <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_armor_stars" data-id="${a.id}">⭐ 590</button>
+      </div>
+      ${rentalBtn}
     </div>`;
+  }
   // fallback (общий, не должен срабатывать для обычных классов)
   return `<div class="wd-smoke-wrap"><div class="wd-smoke"></div><button class="wd-btn btn-mythic" data-act="buy_usdt" data-id="${a.id}">🔥 КУПИТЬ — ${a.price} USDT</button></div>`;
 }

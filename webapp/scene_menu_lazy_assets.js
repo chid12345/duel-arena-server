@@ -72,10 +72,11 @@ Object.assign(MenuScene.prototype, {
   _getEquippedTextureKeys() {
     const keys = new Set();
     const eq = State.equipment || {};
-    // Броня: wardrobe-косметика или статовая-по-rarity
-    if (State.wardrobeEquipped?.textureKey) keys.add(State.wardrobeEquipped.textureKey);
-    if (eq.armor?.rarity && typeof getArmorTextureKey === 'function') {
-      const k = getArmorTextureKey(eq.armor.rarity);
+    // Броня: унификация armor (5/6) — texture_key с сервера или fallback по item_id/rarity
+    if (eq.armor && typeof getArmorTextureKey === 'function') {
+      const k = eq.armor.texture_key
+        || getArmorTextureKey(eq.armor.item_id)
+        || getArmorTextureKey(eq.armor.rarity);
       if (k) keys.add(k);
     }
     // Оружие

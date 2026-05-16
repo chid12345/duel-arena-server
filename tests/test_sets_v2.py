@@ -130,12 +130,19 @@ def test_aggregate_multiple_sets_stacks():
 # ── current_class (armor) ─────────────────────────────────────────────────────
 
 def test_armor_class_counts_in_set():
-    """Класс игрока (current_class) добавляет +1 к set_id архетипа.
+    """Унификация armor (шаг 4/6): armor — обычный слот в equipped, не через current_class.
 
-    1 предмет predator + класс predator → count=2, активен порог 2.
+    Раньше armor добавлялся виртуально через current_class. Теперь —
+    обычный slot в equipped[armor] с set_id. Параметр current_class
+    сохранён в сигнатуре для обратной совместимости, но игнорируется.
+
+    1 weapon predator + 1 armor predator → count=2, порог 2.
     """
-    eq = _eq(["predator"])
-    res = resolve_active_sets(eq, current_class="base_crit")  # base_crit → predator
+    eq = {
+        "weapon": {"item_id": "w1", "set_id": "predator"},
+        "armor":  {"item_id": "armor_free1", "set_id": "predator"},
+    }
+    res = resolve_active_sets(eq, current_class=None)
     assert len(res) == 1
     assert res[0]["set_id"] == "predator"
     assert res[0]["count"] == 2
@@ -143,19 +150,21 @@ def test_armor_class_counts_in_set():
 
 
 def test_armor_class_completes_full_set():
-    """5 predator-equipment + класс predator = полный комплект 6 → перк."""
+    """5 predator-equipment + armor-predator = полный комплект 6 → перк."""
     eq = _eq(["predator"] * 5)
-    res = resolve_active_sets(eq, current_class="dia_duelist")  # dia_duelist → predator
+    eq["armor"] = {"item_id": "armor_free1", "set_id": "predator"}
+    res = resolve_active_sets(eq, current_class=None)
     assert res[0]["count"] == 6
     assert res[0]["threshold"] == 6
     assert "perk_id" in res[0]["bonuses"]
 
 
 def test_armor_class_unknown_ignored():
-    """Класс без маппинга (default_start) не добавляет ничего."""
+    """current_class теперь игнорируется. Если armor нет в equipped — не добавляется."""
     eq = _eq(["predator"] * 3)
     res = resolve_active_sets(eq, current_class="default_start")
-    assert res[0]["count"] == 3  # без бонуса от armor
+    # 3 predator-предмета, armor НЕ в equipped → count=3
+    assert res[0]["count"] == 3
 
 
 def test_armor_class_none_no_effect():
