@@ -45,6 +45,9 @@ def resolve_active_sets(
     counts: dict[str, int] = {}
     if equipped:
         for slot, item in equipped.items():
+            # ring2 — legacy слот, в UI скрыт, в сетах не считается (этап 5C).
+            if slot == "ring2":
+                continue
             if not isinstance(item, dict):
                 continue
             sid = item.get("set_id")

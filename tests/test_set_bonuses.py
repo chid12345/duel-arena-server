@@ -1,94 +1,125 @@
 """
-tests/test_set_bonuses.py — бонусы за полный комплект (set bonus).
+tests/test_set_bonuses.py — совместимый shim над v2 архетипными сетами (Этап 5C).
 
-Покрывает:
-- 6 предметов одной редкости → bonus = SET_BONUSES[rarity][6],
-- меньше 3 в любой редкости → None,
-- при равенстве побеждает старшая редкость,
-- ring2 НЕ считается в сете (он не в SET_CATEGORIES, фантом-слот).
+Покрывает старое API config/set_bonuses.py:
+- resolve_active_set возвращает «главный» сет (max threshold)
+- get_wb_set_data — агрегированная сводка для WB
+- count_set_rarities — legacy, считает по рарити (для UI)
+- bonuses_human — текстовое представление бонусов
+- ring2 не считается в новом resolver
 
-Чистые функции — БД не нужна.
+Старые тесты на рарити-сеты заменены — система переведена на архетипы.
 """
 from __future__ import annotations
 
 
-def _piece(rarity: str) -> dict:
-    """Минимальная заглушка предмета: только поле rarity нужно для count_set_rarities."""
-    return {"rarity": rarity, "item_id": f"x_{rarity}"}
+def _eq_archetype(set_ids: list[str], slot_prefix: str = "slot") -> dict:
+    """Equipped из списка set_id с виртуальными слотами."""
+    return {f"{slot_prefix}{i}": {"item_id": f"x{i}", "set_id": sid}
+            for i, sid in enumerate(set_ids)}
 
 
-def test_six_pieces_common_gives_max_common_bonus():
-    """6 common (включая armor через current_class) → bonus = SET_BONUSES[common][6]."""
-    from config.set_bonuses import resolve_active_set, SET_BONUSES
+def test_resolve_active_set_returns_main_set():
+    """resolve_active_set возвращает главный (с max threshold) при нескольких."""
+    from config.set_bonuses import resolve_active_set
 
-    equipped = {
-        "weapon": _piece("common"),
-        "shield": _piece("common"),
-        "belt":   _piece("common"),
-        "boots":  _piece("common"),
-        "ring1":  _piece("common"),
-        # armor читается из current_class
-    }
-    info = resolve_active_set(equipped, current_class="tank_free")  # _free → common
-
-    assert info is not None, "При 6/6 сет должен быть активен"
-    assert info["rarity"] == "common"
-    assert info["count"] == 6
+    # 6 хищников (полный комплект) + 3 бастиона (порог 2)
+    eq = _eq_archetype(["predator"] * 6 + ["bastion"] * 3)
+    info = resolve_active_set(eq, current_class=None)
+    assert info is not None
+    assert info["rarity"] == "predator"  # set_id под legacy-именем поля
     assert info["threshold"] == 6
-    assert info["bonuses"] == SET_BONUSES["common"][6]
-    assert info["perk"] == "second_wind"
+    assert info["perk"] == "frenzy_on_crit"
 
 
-def test_below_threshold_returns_none():
-    """Меньше 3 предметов одной редкости → сет не активен (None)."""
+def test_resolve_below_threshold_returns_none():
+    """1 предмет → порог 2 не достигнут → None."""
     from config.set_bonuses import resolve_active_set
-
-    equipped = {
-        "weapon": _piece("common"),
-        "shield": _piece("rare"),
-    }
-    info = resolve_active_set(equipped, current_class=None)
-
-    assert info is None, "При 2/6 сет не должен быть активен"
+    eq = _eq_archetype(["predator"])
+    assert resolve_active_set(eq) is None
 
 
-def test_tie_resolves_to_higher_rarity():
-    """3 common + 3 rare (равенство) → побеждает rare (старшая редкость)."""
+def test_resolve_uses_current_class_as_armor():
+    """current_class даёт +1 к set_id архетипа (armor-слот)."""
     from config.set_bonuses import resolve_active_set
+    eq = _eq_archetype(["predator"])  # 1 предмет
+    info = resolve_active_set(eq, current_class="base_crit")  # base_crit → predator
+    # 1 + 1 (armor) = 2 → порог 2
+    assert info is not None
+    assert info["count"] == 2
+    assert info["threshold"] == 2
+
+
+def test_get_wb_set_data_aggregates_multiple_sets():
+    """2 хищника + 2 бастиона → hp_pct и crit_bonus оба активны."""
+    from config.set_bonuses import get_wb_set_data
+    eq = _eq_archetype(["predator"] * 2 + ["bastion"] * 2)
+    data = get_wb_set_data(eq, current_class=None)
+    assert data["hp_pct"] == 3        # bastion threshold 2 → hp_pct=3
+    assert data["perk_id"] is None    # порог 2, не 6
+    assert data["count"] == 4         # сумма по двум сетам
+
+
+def test_get_wb_set_data_full_set_has_perk():
+    """6 бастиона → перк second_wind."""
+    from config.set_bonuses import get_wb_set_data
+    eq = _eq_archetype(["bastion"] * 6)
+    data = get_wb_set_data(eq, current_class=None)
+    assert data["perk_id"] == "second_wind"
+    assert data["hp_pct"] == 15  # 6-комплект bastion
+
+
+def test_get_wb_set_data_empty_eq():
+    """Без сетов → нули и None."""
+    from config.set_bonuses import get_wb_set_data
+    data = get_wb_set_data({}, current_class=None)
+    assert data == {"hp_pct": 0, "atk_pct": 0, "def_pct": 0.0,
+                    "perk_id": None, "count": 0, "rarity": None}
+
+
+def test_count_set_rarities_legacy_still_works():
+    """Старая функция count_set_rarities считает по рарити (для legacy UI)."""
+    from config.set_bonuses import count_set_rarities
 
     equipped = {
-        "weapon": _piece("common"),
-        "shield": _piece("common"),
-        "belt":   _piece("common"),
-        "boots":  _piece("rare"),
-        "ring1":  _piece("rare"),
-        # armor читается из current_class — даём rare
+        "weapon": {"rarity": "rare", "item_id": "x1"},
+        "shield": {"rarity": "rare", "item_id": "x2"},
+        "belt":   {"rarity": "common", "item_id": "x3"},
+        "boots":  {"rarity": "common", "item_id": "x4"},
+        "ring1":  {"rarity": "rare", "item_id": "x5"},
     }
-    info = resolve_active_set(equipped, current_class="berserker_gold")  # _gold → rare
+    counts = count_set_rarities(equipped, current_class="berserker_gold")
+    # 3 rare equipment + armor rare через gold = 4 rare, 2 common
+    assert counts.get("rare") == 4
+    assert counts.get("common") == 2
 
-    assert info is not None
-    assert info["rarity"] == "rare", f"При равенстве 3-3 должна победить rare, получили {info['rarity']}"
-    assert info["threshold"] == 3
 
-
-def test_ring2_not_counted_in_set():
-    """ring2 не входит в SET_CATEGORIES — даже надетое там кольцо не помогает добить сет."""
-    from config.set_bonuses import resolve_active_set, count_set_rarities
-
-    equipped = {
-        "weapon": _piece("epic"),
-        "shield": _piece("epic"),
-        "belt":   _piece("epic"),
-        "boots":  _piece("epic"),
-        "ring1":  _piece("epic"),
-        "ring2":  _piece("epic"),  # ← фантом, не считаем
-        # armor через current_class
+def test_ring2_not_counted_in_new_resolver():
+    """ring2 — legacy слот, новый resolver исключает его."""
+    from repositories.sets import resolve_active_sets
+    # 5 predator + 1 в ring2 → ring2 не должен считаться
+    eq = {
+        "weapon": {"item_id": "w", "set_id": "predator"},
+        "shield": {"item_id": "s", "set_id": "predator"},
+        "belt":   {"item_id": "b", "set_id": "predator"},
+        "boots":  {"item_id": "bt", "set_id": "predator"},
+        "ring1":  {"item_id": "r1", "set_id": "predator"},
+        "ring2":  {"item_id": "r2", "set_id": "predator"},  # ← не должен считаться
     }
-    counts = count_set_rarities(equipped, current_class="dragonknight_diamonds")  # epic
+    res = resolve_active_sets(eq)
+    assert len(res) == 1
+    assert res[0]["count"] == 5  # не 6
 
-    # 5 слотов из equipped (без ring2) + armor = 6 epic
-    assert counts.get("epic") == 6, f"Должно быть 6 (без учёта ring2), получили {counts.get('epic')}"
 
-    info = resolve_active_set(equipped, current_class="dragonknight_diamonds")
-    assert info is not None
-    assert info["count"] == 6, "Если бы ring2 считалось — count был бы 7, но он не в SET_CATEGORIES"
+def test_bonuses_human_renders_both_formats():
+    """bonuses_human поддерживает старые и новые ключи."""
+    from config.set_bonuses import bonuses_human
+    # Новые архетипные бонусы
+    lines = bonuses_human({"crit_bonus": 6, "atk_pct": 5, "def_pct": 0.10})
+    assert "+5% урон" in lines
+    assert "+6 крит" in lines
+    assert "+10% защита от урона" in lines
+    # Legacy ключ def_pct_bonus тоже должен работать
+    lines2 = bonuses_human({"def_pct_bonus": 0.03, "hp_pct": 5})
+    assert "+5% HP" in lines2
+    assert "+3% защита от урона" in lines2

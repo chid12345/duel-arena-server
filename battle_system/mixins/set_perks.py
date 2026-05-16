@@ -2,11 +2,16 @@
 
 _apply_set_bonus     — применяет hp_pct/def/atk/accuracy и помечает _set_perk_id
 
-4 перка по тирам (срабатывают только при 6/6 одной редкости):
-  second_wind     (серебро 6/6) — раз в бой, при HP < 30% мгновенно +100 HP
-  decisive_strike (золото 6/6)  — первый удар в бою +50% урона
-  cold_blood      (алмаз 6/6)   — каждый раунд +1% к урону (накапл., max +10%)
-  gods_wrath      (донат 6/6)   — каждый 5-й успешный удар наносит x2 урона
+Этап 5C: переход на архетипные сеты v2 (6 архетипов × порог 6). Старые
+рарити-перки (decisive_strike, cold_blood, gods_wrath) больше не возвращаются
+new resolver-ом, но обработчики оставлены для legacy-совместимости (на случай
+старых сохранений). Новые перки 6/6:
+  predator → frenzy_on_crit  — постоянно +10% урон (эмуляция «френзи»)
+  bastion  → second_wind     — HP < 30% → +30% от max HP (раз в бой)
+  berserk  → blood_rage      — при HP < 50% +30% урон на оставшийся бой
+  ghost    → phantom_strike  — постоянно +5% к шансу уворота
+  mage     → arcane_burst    — постоянно +5% пробою брони (pen_pct)
+  regent   → kings_will      — в начале боя +20% от max HP (раз в бой)
 
 Все методы безопасны: если у игрока нет соответствующего perk_id — ничего не делают.
 """
@@ -88,17 +93,50 @@ class BattleSetPerksMixin:
         if not perk:
             return
 
-        # decisive_strike — только первый удар, помечаем флаг в состоянии
+        # decisive_strike (legacy) — только первый удар, помечаем флаг в состоянии
         if perk == "decisive_strike":
             st = _perk_state(battle, who)
             if not st["decisive_used"]:
                 player["_eq_atk_pct"] = int(player.get("_eq_atk_pct", 0) or 0) + DECISIVE_STRIKE_BONUS_PCT
                 st["decisive_used"] = True
 
-        # cold_blood — накапливаемый бонус, зависит от номера раунда
+        # cold_blood (legacy) — накапливаемый бонус, зависит от номера раунда
         elif perk == "cold_blood":
             bonus = min(COLD_BLOOD_MAX, COLD_BLOOD_PER_ROUND * round_num)
             player["_eq_atk_pct"] = int(player.get("_eq_atk_pct", 0) or 0) + bonus
+
+        # ── Новые архетипные перки (этап 5C) ──────────────────────────
+
+        # blood_rage (berserk 6/6) — при HP < 50% +30% урон оставшийся бой
+        elif perk == "blood_rage":
+            cur_hp = int(player.get("current_hp", 1))
+            max_hp = max(1, int(player.get("max_hp", 1)))
+            if cur_hp / max_hp < 0.50:
+                player["_eq_atk_pct"] = int(player.get("_eq_atk_pct", 0) or 0) + 30
+
+        # frenzy_on_crit (predator 6/6) — упрощённо: постоянно +10% урон
+        # (полноценная триггер-логика «после крита» — отдельная доработка)
+        elif perk == "frenzy_on_crit":
+            player["_eq_atk_pct"] = int(player.get("_eq_atk_pct", 0) or 0) + 10
+
+        # phantom_strike (ghost 6/6) — упрощённо: постоянный +5% к dodge
+        # (полноценная реакция на удар врага — отдельная доработка)
+        elif perk == "phantom_strike":
+            player["_eq_dodge"] = int(player.get("_eq_dodge", 0) or 0) + 5
+
+        # arcane_burst (mage 6/6) — упрощённо: постоянный +5% pen
+        # (полноценный «каждый 4-й удар игнорирует броню» — отдельная доработка)
+        elif perk == "arcane_burst":
+            player["_eq_pen_pct"] = float(player.get("_eq_pen_pct", 0) or 0) + 0.05
+
+        # kings_will (regent 6/6) — в первом раунде +20% от max HP, раз в бой
+        elif perk == "kings_will":
+            st = _perk_state(battle, who)
+            if not st.get("kings_will_used") and round_num <= 1:
+                cur_hp = int(player.get("current_hp", 0))
+                max_hp = max(1, int(player.get("max_hp", 1)))
+                player["current_hp"] = min(max_hp, cur_hp + int(max_hp * 0.20))
+                st["kings_will_used"] = True
 
     def _apply_set_perk_gods_wrath(self, battle: Dict, who: str, damage: int) -> int:
         """gods_wrath: каждый 5-й удар (с уроном > 0) умножает damage на 2."""
