@@ -188,28 +188,28 @@ const RARITY_LABEL = { common:'Обычная', rare:'Редкая', epic:'Эп�
 
 const ARMORS_DATA = [
   // Обычные — 4
-  { id:'tank_free',      r:'common', name:'Кираса Ополченца', stars:'★☆☆☆', tier:'ЗОЛОТО', str:5,agi:0,int:0,end:5, extra:'+30 HP',       bonus:'«Бронированный»\n+2% к защите.\nБазовая броня для первых боёв.', type:'gold', price:'💰 800' },
-  { id:'agile_free',     r:'common', name:'Жилет Следопыта',  stars:'★☆☆☆', tier:'ЗОЛОТО', str:0,agi:5,int:0,end:5, extra:'+2% уклон',    bonus:'«Гибкий»\n+2% уклонение.\nЛёгкий доспех для разведчиков.',      type:'gold', price:'💰 800' },
-  { id:'crit_free',      r:'common', name:'Роба Ученика',     stars:'★☆☆☆', tier:'ЗОЛОТО', str:0,agi:0,int:5,end:5, extra:'+5% крит.ур', bonus:'«Острый глаз»\n+5% крит. урон.\nМантия начинающего мага.',       type:'gold', price:'💰 800' },
-  { id:'universal_free', r:'common', name:'Плащ Странника',   stars:'★☆☆☆', tier:'ЗОЛОТО', str:2,agi:2,int:2,end:2, extra:'+1% макс.HP', bonus:'«Сбалансирован»\n+1% к макс. HP.\nУниверсальный плащ для новичка.', type:'gold', price:'💰 800' },
+  { id:'tank_free',      r:'common', name:'Кираса Ополченца', stars:'★☆☆☆', tier:'ЗОЛОТО', recLevel:1, str:5,agi:0,int:0,end:5, extra:'+30 HP',       bonus:'«Бронированный»\n+2% к защите.\nБазовая броня для первых боёв.', type:'gold', price:'💰 800' },
+  { id:'agile_free',     r:'common', name:'Жилет Следопыта',  stars:'★☆☆☆', tier:'ЗОЛОТО', recLevel:1, str:0,agi:5,int:0,end:5, extra:'+2% уклон',    bonus:'«Гибкий»\n+2% уклонение.\nЛёгкий доспех для разведчиков.',      type:'gold', price:'💰 800' },
+  { id:'crit_free',      r:'common', name:'Роба Ученика',     stars:'★☆☆☆', tier:'ЗОЛОТО', recLevel:1, str:0,agi:0,int:5,end:5, extra:'+5% крит.ур', bonus:'«Острый глаз»\n+5% крит. урон.\nМантия начинающего мага.',       type:'gold', price:'💰 800' },
+  { id:'universal_free', r:'common', name:'Плащ Странника',   stars:'★☆☆☆', tier:'ЗОЛОТО', recLevel:1, str:2,agi:2,int:2,end:2, extra:'+1% макс.HP', bonus:'«Сбалансирован»\n+1% к макс. HP.\nУниверсальный плащ для новичка.', type:'gold', price:'💰 800' },
 
   // Золото — 4
-  { id:'berserker_gold', r:'rare', name:'Панцирь Берсерка',  stars:'★★☆☆', tier:'ЗОЛОТО', str:7,agi:0,int:0,end:7, extra:'+50 HP',       bonus:'«Берсерк»\n+4% урона при HP < 30%.\nЯрость выкованной стали.',         type:'gold',     price:'💰 8000' },
-  { id:'assassin_gold',  r:'rare', name:'Кольчуга Теней',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:7,int:0,end:7, extra:'+3% уклон',    bonus:'«Теневой удар»\n+4% шанс двойного удара.\nБесшумная кольчуга.',      type:'gold',     price:'💰 8000' },
-  { id:'mage_gold',      r:'rare', name:'Мантия Чародея',    stars:'★★☆☆', tier:'ЗОЛОТО', str:0,agi:0,int:7,end:7, extra:'+3% крит.ур', bonus:'«Чародей»\n+4% к крит. урону.\nВышита магическими рунами.',         type:'gold',     price:'💰 8000' },
-  { id:'paladin_gold',   r:'rare', name:'Броня Стража',      stars:'★★☆☆', tier:'ЗОЛОТО', str:4,agi:4,int:4,end:4, extra:'+3% защита',   bonus:'«Страж»\n−3% к входящему урону.\nБаланс стали и света.',              type:'gold',     price:'💰 8000' },
+  { id:'berserker_gold', r:'rare', name:'Панцирь Берсерка',  stars:'★★☆☆', tier:'ЗОЛОТО', recLevel:20, str:7,agi:0,int:0,end:7, extra:'+50 HP',       bonus:'«Берсерк»\n+4% урона при HP < 30%.\nЯрость выкованной стали.',         type:'gold',     price:'💰 8000' },
+  { id:'assassin_gold',  r:'rare', name:'Кольчуга Теней',    stars:'★★☆☆', tier:'ЗОЛОТО', recLevel:20, str:0,agi:7,int:0,end:7, extra:'+3% уклон',    bonus:'«Теневой удар»\n+4% шанс двойного удара.\nБесшумная кольчуга.',      type:'gold',     price:'💰 8000' },
+  { id:'mage_gold',      r:'rare', name:'Мантия Чародея',    stars:'★★☆☆', tier:'ЗОЛОТО', recLevel:20, str:0,agi:0,int:7,end:7, extra:'+3% крит.ур', bonus:'«Чародей»\n+4% к крит. урону.\nВышита магическими рунами.',         type:'gold',     price:'💰 8000' },
+  { id:'paladin_gold',   r:'rare', name:'Броня Стража',      stars:'★★☆☆', tier:'ЗОЛОТО', recLevel:20, str:4,agi:4,int:4,end:4, extra:'+3% защита',   bonus:'«Страж»\n−3% к входящему урону.\nБаланс стали и света.',              type:'gold',     price:'💰 8000' },
 
   // Алмазы — 4
-  { id:'dragonknight_diamonds', r:'epic', name:'Латы Кровавого Вождя',  stars:'★★★☆', tier:'АЛМАЗЫ', str:9,agi:0,int:0,end:9, extra:'+80 HP',       bonus:'«Ярость Вождя»\n+6% урона при HP < 40%.\nЗакалены в крови дракона.',  type:'diamonds', price:'💎 75' },
-  { id:'shadowdancer_diamonds', r:'epic', name:'Плащ Ночного Клинка',   stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:9,int:0,end:9, extra:'+4% уклон',    bonus:'«Ночной Клинок»\n+6% шанс двойного удара.\nСплетён из лунных нитей.', type:'diamonds', price:'💎 75' },
-  { id:'archmage_diamonds',     r:'epic', name:'Одеяние Архимага',      stars:'★★★☆', tier:'АЛМАЗЫ', str:0,agi:0,int:9,end:9, extra:'+4% крит.ур', bonus:'«Архимаг»\n+6% к крит. урону.\nПропитано эфирным пеплом.',           type:'diamonds', price:'💎 75' },
-  { id:'universal_diamonds',    r:'epic', name:'Латы Паладина Зари',    stars:'★★★☆', tier:'АЛМАЗЫ', str:6,agi:6,int:6,end:6, extra:'+6% защита',   bonus:'«Заря»\n−6% к входящему урону.\nСвященные латы рассвета.',            type:'diamonds', price:'💎 75' },
+  { id:'dragonknight_diamonds', r:'epic', name:'Латы Кровавого Вождя',  stars:'★★★☆', tier:'АЛМАЗЫ', recLevel:45, str:9,agi:0,int:0,end:9, extra:'+80 HP',       bonus:'«Ярость Вождя»\n+6% урона при HP < 40%.\nЗакалены в крови дракона.',  type:'diamonds', price:'💎 75' },
+  { id:'shadowdancer_diamonds', r:'epic', name:'Плащ Ночного Клинка',   stars:'★★★☆', tier:'АЛМАЗЫ', recLevel:45, str:0,agi:9,int:0,end:9, extra:'+4% уклон',    bonus:'«Ночной Клинок»\n+6% шанс двойного удара.\nСплетён из лунных нитей.', type:'diamonds', price:'💎 75' },
+  { id:'archmage_diamonds',     r:'epic', name:'Одеяние Архимага',      stars:'★★★☆', tier:'АЛМАЗЫ', recLevel:45, str:0,agi:9,int:0,end:9, extra:'+4% крит.ур', bonus:'«Архимаг»\n+6% к крит. урону.\nПропитано эфирным пеплом.',           type:'diamonds', price:'💎 75' },
+  { id:'universal_diamonds',    r:'epic', name:'Латы Паладина Зари',    stars:'★★★☆', tier:'АЛМАЗЫ', recLevel:45, str:6,agi:6,int:6,end:6, extra:'+6% защита',   bonus:'«Заря»\n−6% к входящему урону.\nСвященные латы рассвета.',            type:'diamonds', price:'💎 75' },
 
   // Мифические — 4
-  { id:'berserker_mythic', r:'mythic', name:'Доспех Пламенного Титана',    stars:'★★★★', tier:'МИФИК', str:12,agi:0,int:0,end:12, extra:'+120 HP',      bonus:'«Пламя Ярости»\n+12% урона при HP < 30%.\nВыкован в сердце вулкана.',   type:'mythic', price:'11.99' },
-  { id:'assassin_mythic',  r:'mythic', name:'Облачение Призрака Ветров',   stars:'★★★★', tier:'МИФИК', str:0,agi:12,int:0,end:12, extra:'+6% уклон',    bonus:'«Ветра»\n+9% шанс двойного удара.\nСотканы из дыхания бури.',           type:'mythic', price:'11.99' },
-  { id:'archmage_mythic',  r:'mythic', name:'Регалии Повелителя Молний',   stars:'★★★★', tier:'МИФИК', str:0,agi:0,int:12,end:12, extra:'+6% крит.ур', bonus:'«Повелитель Молний»\n+18% к крит. урону.\nПронизаны грозовой силой.',  type:'mythic', price:'11.99' },
-  { id:'legendary_usdt',   r:'mythic', name:'Доспех Светоносного Бога',    stars:'★★★★', tier:'ЛЕГЕНДА', str:0,agi:0,int:0,end:0, extra:'+19 своб.ст', bonus:'«Свет»\n+19 свободных статов\nПассивка на выбор · сброс 5.99 USDT',   type:'usdt',   price:'11.99' },
+  { id:'berserker_mythic', r:'mythic', name:'Доспех Пламенного Титана',    stars:'★★★★', tier:'МИФИК', recLevel:65, str:12,agi:0,int:0,end:12, extra:'+120 HP',      bonus:'«Пламя Ярости»\n+12% урона при HP < 30%.\nВыкован в сердце вулкана.',   type:'mythic', price:'11.99' },
+  { id:'assassin_mythic',  r:'mythic', name:'Облачение Призрака Ветров',   stars:'★★★★', tier:'МИФИК', recLevel:65, str:0,agi:12,int:0,end:12, extra:'+6% уклон',    bonus:'«Ветра»\n+9% шанс двойного удара.\nСотканы из дыхания бури.',           type:'mythic', price:'11.99' },
+  { id:'archmage_mythic',  r:'mythic', name:'Регалии Повелителя Молний',   stars:'★★★★', tier:'МИФИК', recLevel:65, str:0,agi:0,int:12,end:12, extra:'+6% крит.ур', bonus:'«Повелитель Молний»\n+18% к крит. урону.\nПронизаны грозовой силой.',  type:'mythic', price:'11.99' },
+  { id:'legendary_usdt',   r:'mythic', name:'Доспех Светоносного Бога',    stars:'★★★★', tier:'ЛЕГЕНДА', recLevel:65, str:0,agi:0,int:0,end:0, extra:'+19 своб.ст', bonus:'«Свет»\n+19 свободных статов\nПассивка на выбор · сброс 5.99 USDT',   type:'usdt',   price:'11.99' },
 ];
 
 function _injectCSS() {
@@ -248,6 +248,8 @@ function _btnHtml(a) {
     return `<button class="wd-btn btn-uneq" data-act="unequip" data-id="${a.id}">✅ Снять броню</button>`;
   if (a.owned)
     return `<button class="wd-btn btn-eq" data-act="equip" data-id="${a.id}">⚔️ Надеть</button>`;
+  // Этап 3 Вариант В: уровень не достигнут → серая заблокированная кнопка
+  if (window.LevelLock?.isLocked(a)) return LevelLock.lockedBtn(a);
   if (a.type === 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${a.id}">🆓 Выбрать бесплатно</button>`;
   if (a.type === 'gold')
@@ -269,7 +271,8 @@ function _cardHtml(a) {
   const rc  = RARITY_COLOR[a.r] || '#aaa';
   const fullCls = '';
   const eqBadge = a.equipped ? '<div class="wd-eq-badge">✅ Надета</div>' : '';
-  return `<div class="wd-card rarity-${a.r}${fullCls}${a.equipped?' equipped':''}" data-id="${a.id}">
+  const lockCls = window.LevelLock?.cardLockedClass(a) || '';
+  return `<div class="wd-card rarity-${a.r}${fullCls}${a.equipped?' equipped':''}${lockCls}" data-id="${a.id}">
     ${eqBadge}
     ${_imgAreaHtml(a)}
     <div class="wd-card-body">
@@ -277,6 +280,7 @@ function _cardHtml(a) {
       <div class="wd-rarity-row">
         <span class="wd-rarity-badge" style="color:${rc}">${RARITY_LABEL[a.r]}</span>
         <span class="wd-stars" style="color:${rc}">${a.stars}</span>
+        ${window.LevelLock?.buildBadge(a) || ''}
       </div>
       <div class="wd-pills">${_pills(a)}</div>
       ${_btnHtml(a)}
