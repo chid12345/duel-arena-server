@@ -119,3 +119,106 @@ def test_armor_does_not_pollute_get_equipment_stats():
     # Стандартные item-bonuses не заданы для armor → нули
     assert stats["atk_bonus"] == 0
     assert stats["hp_bonus"] == 0
+
+
+# ── Коммит 2: таблицы armor_custom_mods / player_owned_armor + миграция ─────
+
+def test_armor_tables_created(db):
+    """Миграции part10 создали новые таблицы — INSERT/SELECT работают."""
+    db.get_or_create_player(11001, "u_armor_tables")
+
+    # Проверяем INSERT в player_owned_armor через mixin
+    db.add_owned_armor(11001, "armor_gold1")
+    assert db.is_armor_owned(11001, "armor_gold1") is True
+    assert "armor_gold1" in db.get_owned_armor(11001)
+
+    # Идемпотентность (на conflict)
+    db.add_owned_armor(11001, "armor_gold1")
+    assert db.get_owned_armor(11001) == ["armor_gold1"]
+
+
+def test_armor_custom_mods_crud(db):
+    """armor_custom_mods: upsert/get/reset работают."""
+    db.get_or_create_player(11002, "u_armor_mods")
+
+    # get на пустом → None
+    assert db.get_armor_custom_mods(11002, "armor_mythic4") is None
+
+    # upsert + get
+    db.upsert_armor_custom_mods(
+        11002, "armor_mythic4",
+        str_bonus=7, agi_bonus=4, int_bonus=3, end_bonus=5,
+        custom_name="Светобой",
+        applied=True,
+    )
+    mods = db.get_armor_custom_mods(11002, "armor_mythic4")
+    assert mods is not None
+    assert mods["str_bonus"] == 7
+    assert mods["agi_bonus"] == 4
+    assert mods["int_bonus"] == 3
+    assert mods["end_bonus"] == 5
+    assert mods["custom_name"] == "Светобой"
+    assert mods["applied"] is True
+
+    # Сумма распределения = 19 (контракт legendary_usdt)
+    assert mods["str_bonus"] + mods["agi_bonus"] + mods["int_bonus"] + mods["end_bonus"] == 19
+
+    # reset
+    db.reset_armor_custom_mods(11002, "armor_mythic4")
+    mods = db.get_armor_custom_mods(11002, "armor_mythic4")
+    assert mods["str_bonus"] == 0
+    assert mods["custom_name"] is None
+    assert mods["applied"] is False
+
+
+def test_migration_owned_armor_from_user_inventory(db):
+    """После создания user_inventory.purchase → миграция переносит в player_owned_armor.
+
+    Здесь делаем ручной INSERT в user_inventory (как старая система покупала),
+    затем перепрогоняем миграции (через _ensure_inventory_schema) и проверяем
+    что данные оказались в player_owned_armor с новым item_id.
+
+    Примечание: миграции уже применены при init_database; для проверки
+    переноса дописываем строки и заново триггерим миграции 003/004 — они
+    INSERT OR IGNORE, идемпотентны.
+    """
+    db.get_or_create_player(11003, "u_migrate")
+
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        """INSERT INTO user_inventory (user_id, class_id, class_type, custom_name,
+           strength_saved, agility_saved, intuition_saved, endurance_saved, stats_applied)
+           VALUES (?, 'berserker_gold', 'gold', NULL, 0, 0, 0, 0, 0)""",
+        (11003,),
+    )
+    cur.execute(
+        """INSERT INTO user_inventory (user_id, class_id, class_type, custom_name,
+           strength_saved, agility_saved, intuition_saved, endurance_saved, stats_applied)
+           VALUES (?, 'legendary_usdt', 'usdt', 'Светобой', 7, 4, 3, 5, 1)""",
+        (11003,),
+    )
+    conn.commit()
+
+    # Применить миграцию 003 и 004 повторно (INSERT OR IGNORE — идемпотентны)
+    from db_schema.sqlite_migrations_part10_armor_unify import MIGRATIONS_PART10_ARMOR_UNIFY
+    for mig_id, stmts in MIGRATIONS_PART10_ARMOR_UNIFY:
+        if mig_id in ("2026_05_18_003_migrate_owned_armor_from_user_inventory",
+                      "2026_05_18_004_migrate_usdt_custom_mods"):
+            for s in stmts:
+                cur.execute(s)
+    conn.commit()
+    conn.close()
+
+    owned = db.get_owned_armor(11003)
+    assert "armor_gold1" in owned, f"berserker_gold должен мигрировать в armor_gold1, owned={owned}"
+    assert "armor_mythic4" in owned, f"legendary_usdt должен мигрировать в armor_mythic4, owned={owned}"
+
+    mods = db.get_armor_custom_mods(11003, "armor_mythic4")
+    assert mods is not None, "USDT-кастомка должна попасть в armor_custom_mods"
+    assert mods["str_bonus"] == 7
+    assert mods["agi_bonus"] == 4
+    assert mods["int_bonus"] == 3
+    assert mods["end_bonus"] == 5
+    assert mods["custom_name"] == "Светобой"
+    assert mods["applied"] is True

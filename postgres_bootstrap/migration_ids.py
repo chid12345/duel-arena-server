@@ -89,4 +89,9 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_05_17_001_equipment_rentals",
     # Этап 9 — warrior_type у ботов
     "2026_05_17_010_bots_warrior_type",
+    # Унификация armor (Вариант В, шаг 2/6) — новые таблицы + миграция данных
+    "2026_05_18_001_player_owned_armor",
+    "2026_05_18_002_armor_custom_mods",
+    "2026_05_18_003_migrate_owned_armor_from_user_inventory",
+    "2026_05_18_004_migrate_usdt_custom_mods",
 )
