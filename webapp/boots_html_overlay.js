@@ -96,6 +96,7 @@ function _btn(h) {
     </div>`;
   if (h.owned && h.type !== 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${h.id}">👟 Надеть</button>`;
+  if (window.LevelLock?.isLocked(h)) return LevelLock.lockedBtn(h);
   if (h.type === 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${h.id}">🆓 Выбрать</button>`;
   if (h.type === 'gold')
@@ -114,7 +115,8 @@ function _btn(h) {
 function _card(h) {
   const nc = h.r==='epic'?' epic':h.r==='mythic'?' mythic':'';
   const src = BOOTS_IMG[h.id] || '';
-  return `<div class="wd-card rarity-${h.r}${h.equipped?' equipped':''}" data-id="${h.id}">
+  const lockCls = window.LevelLock?.cardLockedClass(h) || '';
+  return `<div class="wd-card rarity-${h.r}${h.equipped?' equipped':''}${lockCls}" data-id="${h.id}">
     ${h.equipped?'<div class="wd-eq-badge">✅ Надеты</div>':''}
     <div class="wd-img-area">
       <div class="wd-img-wrap">
@@ -130,6 +132,7 @@ function _card(h) {
       <div class="wd-rarity-row">
         <span class="wd-rarity-badge" style="color:${RC[h.r]}">${RL[h.r]}</span>
         <span class="wd-stars" style="color:${RC[h.r]}">${h.stars}</span>
+        ${window.LevelLock?.buildBadge(h) || ''}
       </div>
       <div class="wd-pills">${_pills(h)}</div>
       ${_btn(h)}
