@@ -33,6 +33,7 @@ from repositories.quests import QuestsMixin
 from repositories.world_boss import WorldBossMixin
 from repositories.equipment import EquipmentMixin
 from repositories.season_pass import SeasonPassMixin, SeasonPassClaimMixin
+from repositories.upgrades import UpgradesMixin
 
 
 class Database(
@@ -53,6 +54,7 @@ class Database(
     EquipmentMixin,
     SeasonPassMixin,
     SeasonPassClaimMixin,
+    UpgradesMixin,
 ):
     def __init__(self):
         DBCore.__init__(self)
