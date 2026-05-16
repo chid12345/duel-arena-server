@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Dict, Optional
 
 from config import MAX_LEVEL
+from economy.curves import pvp_bracket_at, pvp_bracket_range
 
 
 class BattlesPvpQueueMixin:
@@ -26,11 +27,18 @@ class BattlesPvpQueueMixin:
         conn.close()
 
     def pvp_find_opponent(self, user_id: int, level: int, range_max: int = 3) -> Optional[Dict]:
-        """Атомарно ищет и удаляет оппонента из очереди — исключает race condition."""
+        """Атомарно ищет и удаляет оппонента из очереди (Этап 6).
+
+        Ищет в рамках PvP-брекета игрока (4 интервала уровней: 1-10, 11-25,
+        26-50, 51-80). Параметр range_max — legacy, игнорируется. Брекет
+        приоритетнее точной разницы уровней — это нормализует PvP по группам.
+        """
+        bracket = pvp_bracket_at(int(level))
+        lo, hi = pvp_bracket_range(bracket)
+        lo = max(1, lo)
+        hi = min(MAX_LEVEL, hi)
         conn = self.get_connection()
         cursor = conn.cursor()
-        lo = max(1, level - range_max)
-        hi = min(MAX_LEVEL, level + range_max)
         # BEGIN IMMEDIATE берёт write-lock сразу — второй параллельный запрос ждёт.
         cursor.execute("BEGIN IMMEDIATE")
         try:

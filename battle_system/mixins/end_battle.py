@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 from config import *
 from database import db
+from economy.curves import pvp_bracket_at, pvp_gold_base, pvp_xp_base
 from economy.loader import get_combat, get_combat_dict
 
 from battle_system.end_battle_finish import end_battle_rewards_and_finish
@@ -129,23 +130,42 @@ class BattleEndBattleMixin:
             not is_test and battle.get("is_bot2") and winner_user_id
             and db.get_bot_wins_today(int(winner_user_id)) >= BOT_DAILY_LIMIT
         )
-        # Бот: уменьшенная награда (анти-фарм PvE), множитель в economy.json/combat
+        # Этап 6 редизайна: PvP-награда зависит от БРЕКЕТА игрока, не от
+        # разницы уровней (нет level_mult). PvE (is_bot2) сохраняет старую
+        # формулу, потому что брекет применим только к матчу игрок-vs-игрок.
         _bot_mult = get_combat("bot_win_gold_multiplier")
-        gold_reward = 0 if is_test else (VICTORY_GOLD if not battle["is_bot2"] else int(VICTORY_GOLD * _bot_mult))
         winner_level = int(winner_live.get("level", PLAYER_START_LEVEL))
         loser_level = int(loser_live.get("level", PLAYER_START_LEVEL))
-        level_diff = winner_level - loser_level
-        level_mult = max(0.3, 1.0 - level_diff * 0.15)
         dmg_ratio = min(1.0, max(0.4, winner_dmg / opp_max_hp))
-        base_exp = 0 if is_test else max(1, int(victory_xp_for_player_level(winner_level) * level_mult * dmg_ratio))
 
-        loser_if_won_diff = loser_level - winner_level
-        loser_if_won_mult = max(0.3, 1.0 - loser_if_won_diff * 0.15)
-        loser_if_won_dmg = min(1.0, max(0.4, loser_dmg / your_max_hp))
-        hypothetical_loser_win = 0 if is_test else int(
-            victory_xp_for_player_level(loser_level) * loser_if_won_mult * loser_if_won_dmg
-        )
-        loser_exp = 0 if (is_test or not battle.get("is_bot2")) else int(hypothetical_loser_win * DEFEAT_XP_AS_WIN_FRACTION)
+        if is_test:
+            gold_reward = 0
+            base_exp = 0
+        elif battle.get("is_bot2"):
+            # PvE с ботом — старая формула с level_mult
+            level_diff = winner_level - loser_level
+            level_mult = max(0.3, 1.0 - level_diff * 0.15)
+            gold_reward = int(VICTORY_GOLD * _bot_mult)
+            base_exp = max(1, int(victory_xp_for_player_level(winner_level) * level_mult * dmg_ratio))
+        else:
+            # PvP — награда по брекету победителя, БЕЗ level_mult
+            _bracket = pvp_bracket_at(winner_level)
+            gold_reward = int(pvp_gold_base(_bracket))
+            base_exp = max(1, int(pvp_xp_base(_bracket) * dmg_ratio))
+
+        # Утешительный XP для PvE-проигрыша против бота (как было).
+        # PvP-проигравший получает 0 XP (matchmaking равных брекетов делает это
+        # не несправедливым — оба в одной группе).
+        if not is_test and battle.get("is_bot2"):
+            loser_if_won_diff = loser_level - winner_level
+            loser_if_won_mult = max(0.3, 1.0 - loser_if_won_diff * 0.15)
+            loser_if_won_dmg = min(1.0, max(0.4, loser_dmg / your_max_hp))
+            hypothetical_loser_win = int(
+                victory_xp_for_player_level(loser_level) * loser_if_won_mult * loser_if_won_dmg
+            )
+            loser_exp = int(hypothetical_loser_win * DEFEAT_XP_AS_WIN_FRACTION)
+        else:
+            loser_exp = 0
 
         # XP-буст: множитель в economy.json/combat/xp_boost_mult
         exp_reward = int(base_exp * get_combat("xp_boost_mult")) if xp_boosted else base_exp
