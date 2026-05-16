@@ -63,18 +63,19 @@ def class_id_to_rarity(class_id: str | None) -> str | None:
     return None
 
 
-def count_set_rarities(equipped: dict, current_class: str | None = None) -> dict[str, int]:
+def count_set_rarities(equipped: dict, current_class: str | None = None) -> dict[str, int]:  # noqa: ARG001
     """Legacy. Возвращает {rarity: count} для совместимости. В новой системе
     рарити больше не основа сетов — используется set_id. Эта функция оставлена
-    для UI/тестов, считает по старой логике (для отчётности)."""
+    для UI/тестов, считает по старой логике (для отчётности).
+
+    Унификация armor (шаг 4/6): armor теперь полноценный слот в equipped,
+    рарити берётся прямо из equipped[SLOT_ARMOR]. Параметр current_class
+    игнорируется (оставлен для обратной совместимости старых вызовов).
+    """
     counts: dict[str, int] = {}
-    armor_rarity = class_id_to_rarity(current_class)
     for slot in SET_CATEGORIES:
-        if slot == SLOT_ARMOR:
-            rarity = armor_rarity
-        else:
-            item = equipped.get(slot)
-            rarity = item.get("rarity") if item else None
+        item = equipped.get(slot)
+        rarity = item.get("rarity") if item else None
         if not rarity:
             continue
         counts[rarity] = counts.get(rarity, 0) + 1

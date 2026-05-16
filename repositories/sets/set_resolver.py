@@ -1,7 +1,10 @@
 """Resolver активных сетов по надетой экипировке (Этап 5A + 5B.2).
 
 Принимает словарь equipped {slot: {item_id, set_id, ...}} (как из
-db.get_equipment) и опционально current_class игрока (армор-слот).
+db.get_equipment) — теперь содержит и armor как полноценный слот (унификация
+шаг 3/6, коммит 2026-05-18). Параметр current_class сохранён только для
+обратной совместимости вызовов и игнорируется внутри.
+
 Возвращает список активных сетов с порогом 2/4/6 и бонусами.
 
 Несколько сетов могут быть активны одновременно — каждый со своим порогом.
@@ -11,7 +14,6 @@ from __future__ import annotations
 
 from typing import Any
 
-from config.class_set_mapping import class_id_to_set_id
 from config.sets_catalog_v2 import SETS_V2
 
 # Игра имеет 6 слотов экипировки (голова, тело, оружие, щит, ноги, кольцо).
@@ -30,7 +32,7 @@ def _max_threshold(count: int) -> int:
 
 def resolve_active_sets(
     equipped: dict[str, dict],
-    current_class: str | None = None,
+    current_class: str | None = None,  # noqa: ARG001 — legacy, игнорируется
 ) -> list[dict[str, Any]]:
     """Список активных сетов: [{set_id, name, emoji, count, threshold, bonuses}].
 
@@ -38,9 +40,10 @@ def resolve_active_sets(
     Bonuses — словарь стат-бонусов из SETS_V2[set_id].thresholds[threshold].
     Perk_id есть только в bonuses порога 6 (полный комплект).
 
-    current_class: id класса из players.current_class. Если задан, его set_id
-    добавляется как armor-слот (виртуально). Так полный комплект 6 предметов
-    включает 5 equipment + armor (класс).
+    Унификация armor (шаг 4/6): equipped теперь содержит armor как полноценный
+    слот с set_id. Параметр current_class игнорируется (сохранён для
+    совместимости старых вызовов). Раньше тут добавлялся виртуальный armor —
+    после унификации это привело бы к двойному счёту.
     """
     counts: dict[str, int] = {}
     if equipped:
@@ -54,11 +57,6 @@ def resolve_active_sets(
             if not sid:
                 continue
             counts[str(sid)] = counts.get(str(sid), 0) + 1
-
-    # Armor (класс) → виртуальный +1 к соответствующему set_id
-    armor_set_id = class_id_to_set_id(current_class)
-    if armor_set_id:
-        counts[armor_set_id] = counts.get(armor_set_id, 0) + 1
 
     if not counts:
         return []

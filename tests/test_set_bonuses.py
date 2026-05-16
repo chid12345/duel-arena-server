@@ -39,15 +39,32 @@ def test_resolve_below_threshold_returns_none():
     assert resolve_active_set(eq) is None
 
 
-def test_resolve_uses_current_class_as_armor():
-    """current_class даёт +1 к set_id архетипа (armor-слот)."""
+def test_resolve_armor_slot_counts_as_normal_equipment():
+    """После унификации armor (шаг 4/6) armor — обычный слот в equipped.
+
+    Раньше armor приходил виртуально через current_class; теперь
+    equipped[armor] содержит реальный item с set_id, и resolver его
+    считает как обычно. Параметр current_class игнорируется.
+    """
     from config.set_bonuses import resolve_active_set
-    eq = _eq_archetype(["predator"])  # 1 предмет
-    info = resolve_active_set(eq, current_class="base_crit")  # base_crit → predator
-    # 1 + 1 (armor) = 2 → порог 2
+    # 1 weapon-predator + 1 armor-predator = 2 → порог 2
+    eq = {
+        "weapon": {"item_id": "w1", "set_id": "predator"},
+        "armor":  {"item_id": "armor_free1", "set_id": "predator"},
+    }
+    info = resolve_active_set(eq, current_class=None)
     assert info is not None
     assert info["count"] == 2
     assert info["threshold"] == 2
+
+
+def test_resolve_current_class_param_ignored():
+    """Параметр current_class теперь игнорируется — armor приходит в equipped."""
+    from config.set_bonuses import resolve_active_set
+    eq = _eq_archetype(["predator"])  # 1 предмет, armor не в equipped
+    # Раньше current_class давал +1 виртуально → порог 2. Теперь нет.
+    info = resolve_active_set(eq, current_class="base_crit")
+    assert info is None, "Без armor в equipped — только 1 предмет, порог 2 не достигнут"
 
 
 def test_get_wb_set_data_aggregates_multiple_sets():
@@ -78,20 +95,29 @@ def test_get_wb_set_data_empty_eq():
 
 
 def test_count_set_rarities_legacy_still_works():
-    """Старая функция count_set_rarities считает по рарити (для legacy UI)."""
+    """count_set_rarities считает по рарити (для legacy UI).
+
+    Унификация armor (шаг 4/6): armor теперь полноценный слот в equipped,
+    рарити берётся из equipped[armor].rarity. Параметр current_class
+    игнорируется. Двойного счёта быть не должно.
+    """
     from config.set_bonuses import count_set_rarities
 
     equipped = {
         "weapon": {"rarity": "rare", "item_id": "x1"},
         "shield": {"rarity": "rare", "item_id": "x2"},
+        "armor":  {"rarity": "rare", "item_id": "armor_gold1"},
         "belt":   {"rarity": "common", "item_id": "x3"},
         "boots":  {"rarity": "common", "item_id": "x4"},
         "ring1":  {"rarity": "rare", "item_id": "x5"},
     }
-    counts = count_set_rarities(equipped, current_class="berserker_gold")
-    # 3 rare equipment + armor rare через gold = 4 rare, 2 common
+    counts = count_set_rarities(equipped)
     assert counts.get("rare") == 4
     assert counts.get("common") == 2
+
+    # current_class игнорируется — результат тот же
+    counts2 = count_set_rarities(equipped, current_class="berserker_gold")
+    assert counts2 == counts
 
 
 def test_ring2_not_counted_in_new_resolver():

@@ -381,3 +381,36 @@ def test_get_equipment_armor_mythic_works_with_rental(db):
     eq = db.get_equipment(12008)
     assert "armor" in eq
     assert eq["armor"]["item_id"] == "armor_mythic1"
+
+
+# ── Коммит 4: set-resolver не делает двойной счёт armor ──────────────────────
+
+def test_set_resolver_no_double_count_armor(db):
+    """После унификации armor приходит в equipped, виртуальное добавление убрано.
+
+    Раньше для armor в resolve_active_sets делалось +1 виртуально (из
+    current_class). Если бы это осталось — после унификации armor считался
+    бы дважды (один раз как item в equipped, второй раз виртуально).
+    Этот тест защищает от регрессии.
+    """
+    from repositories.sets import resolve_active_sets
+
+    db.get_or_create_player(12010, "u_no_double")
+    _purchase_class_directly(db, 12010, "berserker_gold", "gold")
+    db.switch_class(12010, "berserker_gold")
+
+    eq = db.get_equipment(12010)
+    # armor_gold1 принадлежит archetype-сету (см. _SET_RING[4]='mage')
+    armor_set_id = eq["armor"].get("set_id")
+    assert armor_set_id, "armor должен иметь set_id"
+
+    # Передаём current_class — он должен игнорироваться
+    actives = resolve_active_sets(eq, current_class="berserker_gold")
+
+    # Counter для armor-сета должен быть ровно 1 (один armor), не 2
+    matching = [s for s in actives if s["set_id"] == armor_set_id]
+    if matching:
+        assert matching[0]["count"] == 1, (
+            f"armor-сет {armor_set_id} должен считаться ровно 1 раз, "
+            f"получили {matching[0]['count']} (двойной счёт)"
+        )
