@@ -334,12 +334,22 @@ function refresh() {
 }
 
 function _loadActiveRentals() {
-  // Подтянуть active_rentals в State (для бейджа «🕐 Аренда · Nд»)
-  return post('/api/player', {}).then(res => {
-    if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
-    if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
-    if (res?.equipment)     State.equipment = res.equipment;
-    if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
+  // Подтянуть active_rentals в State (для бейджа «🕐 Аренда · Nд»).
+  // Telegram WebView кэширует POST /api/player. Используем уникальный
+  // ?_t=timestamp + cache: 'no-store' чтобы обойти.
+  const ts = Date.now();
+  const tg = window.Telegram?.WebApp;
+  return fetch(API + '/api/player?_t=' + ts, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    cache: 'no-store',
+    body: JSON.stringify({ init_data: tg?.initData || State.initData || '' }),
+  }).then(r => r.json().catch(() => null)).then(res => {
+    if (!res) return;
+    if (Array.isArray(res.active_rentals)) State.activeRentals = res.active_rentals;
+    if (Array.isArray(res.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+    if (res.equipment)     State.equipment = res.equipment;
+    if (res.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
   }).catch(() => {});
 }
 
