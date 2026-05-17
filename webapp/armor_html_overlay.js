@@ -185,7 +185,10 @@ async function _doAction(scene, action, item) {
       return;
     }
     if (action === 'buy_rental') {
-      await RentalPay.rent(scene, item, () => {
+      await RentalPay.rent(scene, item, async () => {
+        // После оплаты аренды — обязательно подтянуть свежий active_rentals,
+        // иначе бейдж «🕐 Аренда · Nд» и кнопка «Надеть» не появятся.
+        await _loadActiveRentals();
         const activeTab = document.querySelector('#ar-root ._ar-view.active');
         _render(scene, activeTab?.dataset?.av || 'all');
       }, _notify);
