@@ -156,13 +156,12 @@ def test_rewards_defeat_no_diamonds(db):
 
 # ── Test 5: WB-дроп шардов (этап 4D.5 редизайна) ──────────────────────────────
 
-def test_wb_drops_shards_on_victory(db):
-    """Победа: все участники получают шарды своего тира.
-    Топ-1: 3 шарда, Топ-2/3: 2 шарда, остальные: 1 шард.
+def test_wb_no_longer_drops_shards(db):
+    """Решение 2026-05-17: WB больше НЕ даёт шарды.
+    Шарды добываются только разборкой ненужного шмота (упрощает экономику).
     """
     from repositories.world_boss.rewards_calc import compute_and_create_rewards
 
-    # 3 игрока разных уровней: 1 (T1), 30 (T2), 70 (T4)
     db.get_or_create_player(4001, "u_t1")
     db.get_or_create_player(4002, "u_t2")
     db.get_or_create_player(4003, "u_t4")
@@ -174,18 +173,16 @@ def test_wb_drops_shards_on_victory(db):
     conn.close()
 
     spawn_id = _make_spawn(db)
-    db.log_wb_hit(spawn_id, 4001, damage=1000)  # топ-3 (T1)
-    db.log_wb_hit(spawn_id, 4002, damage=2000)  # топ-2 (T2)
-    db.log_wb_hit(spawn_id, 4003, damage=5000)  # топ-1 (T4)
+    db.log_wb_hit(spawn_id, 4001, damage=1000)
+    db.log_wb_hit(spawn_id, 4002, damage=2000)
+    db.log_wb_hit(spawn_id, 4003, damage=5000)
 
     compute_and_create_rewards(db, spawn_id, is_victory=True)
 
-    # Топ-1 (T4): 1 + 2 = 3 шарда T4
-    assert db.get_shards(4003, "T4") == 3
-    # Топ-2 (T2): 1 + 1 = 2 шарда T2
-    assert db.get_shards(4002, "T2") == 2
-    # Топ-3 (T1): 1 + 1 = 2 шарда T1
-    assert db.get_shards(4001, "T1") == 2
+    # Никаких шардов всем участникам — даже топ-1
+    assert db.get_shards(4001, "T1") == 0
+    assert db.get_shards(4002, "T2") == 0
+    assert db.get_shards(4003, "T4") == 0
 
 
 def test_wb_no_shards_on_defeat(db):

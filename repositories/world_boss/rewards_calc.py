@@ -143,21 +143,9 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         except Exception as _ce:
             logger.warning("wb_rewards_calc: consume_charges uid=%s: %s", uid, _ce)
 
-        # Этап 4D.5 редизайна: шарды для апгрейдов. Только при победе.
-        # Тир шарда — самый высокий доступный игроку по уровню (T1 для новичков,
-        # T4 для уровня 65+). Количество: 1 базе + 1 для топ-2/3, +2 для топ-1.
-        # Поражение → 0 шардов (как и алмазы).
-        if is_victory:
-            try:
-                pl_tier = tier_unlocked_at(int(lvl))
-                shard_qty = 1
-                if uid == top_uid:
-                    shard_qty += 2
-                elif uid in top3_uids:
-                    shard_qty += 1
-                db.add_shards(uid, pl_tier, shard_qty)
-            except Exception as _se:
-                logger.warning("wb_rewards_calc: add_shards uid=%s: %s", uid, _se)
+        # Этап 4D.5 редизайна — WB-дроп шардов УБРАН (решение 2026-05-17).
+        # Шарды теперь добываются ТОЛЬКО разборкой ненужного шмота.
+        # Позже могут добавиться другие источники (отдельная задача).
 
         try:
             db.create_wb_reward(

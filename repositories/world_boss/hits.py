@@ -148,15 +148,20 @@ class WorldBossHitsMixin:
         return int(row["c"]) if row else 0
 
     def get_wb_hits_today_count(self, user_id: int) -> int:
-        """Сколько ударов игрок нанёс боссу сегодня. Для daily-квеста dq_wb_hit1."""
-        from datetime import date
-        today = date.today().isoformat()
+        """Сколько ударов игрок нанёс боссу сегодня. Для daily-квеста dq_wb_hit1.
+
+        Использует UTC: created_at пишется через CURRENT_TIMESTAMP (UTC),
+        соответственно «сегодня» считаем тоже в UTC. Раньше использовался
+        date.today() (local), на сервере GMT+N тест ломался ночью.
+        """
+        from datetime import datetime
+        today_utc = datetime.utcnow().date().isoformat()
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
             "SELECT COUNT(*) AS c FROM world_boss_hits "
             "WHERE user_id=? AND created_at >= ?",
-            (int(user_id), today + " 00:00:00"),
+            (int(user_id), today_utc + " 00:00:00"),
         )
         row = cur.fetchone()
         conn.close()

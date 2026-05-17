@@ -128,6 +128,9 @@ def test_aggregate_multiple_sets_stacks():
 
 
 # ── current_class (armor) ─────────────────────────────────────────────────────
+# После Унификации armor (этап 7 в main) armor приходит как обычный слот
+# в equipped с set_id. Параметр current_class в resolve_active_sets — для
+# обратной совместимости, но игнорируется (noqa: ARG001).
 
 def test_armor_class_counts_in_set():
     """Унификация armor (шаг 4/6): armor — обычный слот в equipped, не через current_class.

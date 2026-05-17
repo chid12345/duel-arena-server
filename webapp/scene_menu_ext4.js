@@ -106,11 +106,18 @@ Object.assign(MenuScene.prototype, {
       ca(mkT(niX, avY + 25, `★ ELO ${p.rating}`, 10, 'rgba(255,255,255,0.75)'));
     }
 
-    // Resource chips — рисованные иконки (монета + кристалл)
+    // Resource chips — рисованные иконки (монета + кристалл + шарды 💠)
+    // Шарды: сумма всех тиров из State (общий счётчик, без разбивки T1/T2/T3/T4).
+    // Детализация — в модалке прокачки конкретного предмета.
+    const shardsTotal = (() => {
+      const s = (typeof State !== 'undefined' ? State.shards : null) || {};
+      return (s.T1 || 0) + (s.T2 || 0) + (s.T3 || 0) + (s.T4 || 0);
+    })();
     let cx = niX;
     [
-      { val: p.gold,     border: 0xfbbf24, col: '#fde68a', type: 'coin' },
-      { val: p.diamonds, border: 0x60a5fa, col: '#93c5fd', type: 'gem'  },
+      { val: p.gold,      border: 0xfbbf24, col: '#fde68a', type: 'coin' },
+      { val: p.diamonds,  border: 0x60a5fa, col: '#93c5fd', type: 'gem'  },
+      { val: shardsTotal, border: 0x06b6d4, col: '#a5f3fc', type: 'shard' },
     ].forEach(({ val, border, col, type }) => {
       const cw = Math.min(82, String(val).length * 6 + 32);
       const chipBg = ca(mkG());
@@ -122,10 +129,16 @@ Object.assign(MenuScene.prototype, {
         iG.fillStyle(0xfbbf24, 1); iG.fillCircle(ix, iy, 4);
         iG.fillStyle(0xfde68a, 1); iG.fillCircle(ix, iy, 2.8);
         iG.fillStyle(0x92400e, 0.7); iG.fillRect(ix-2, iy-0.6, 4, 1.2); iG.fillRect(ix-0.6, iy-2, 1.2, 4);
-      } else {
+      } else if (type === 'gem') {
         iG.fillStyle(0x3b82f6, 0.9); iG.fillTriangle(ix, iy-6, ix-5, iy, ix+5, iy);
         iG.fillStyle(0x93c5fd, 0.7); iG.fillTriangle(ix, iy-6, ix-4.5, iy, ix, iy-3);
         iG.fillStyle(0x1d4ed8, 0.9); iG.fillTriangle(ix-5, iy, ix+5, iy, ix, iy+4);
+      } else {
+        // shard — светло-голубой ромб (💠), отличается от 💎 цветом
+        iG.fillStyle(0x06b6d4, 0.95); iG.fillTriangle(ix, iy-5, ix-4, iy, ix+4, iy);
+        iG.fillStyle(0xa5f3fc, 0.85); iG.fillTriangle(ix, iy-5, ix-3, iy, ix, iy-2);
+        iG.fillStyle(0x0e7490, 0.95); iG.fillTriangle(ix-4, iy, ix+4, iy, ix, iy+4);
+        iG.fillStyle(0xcffafe, 0.8); iG.fillCircle(ix-1.5, iy-2, 0.7);
       }
       ca(mkT(cx + cw / 2 + 5, avY + 53, String(val), 9, col, true)).setOrigin(0.5);
       cx += cw + 5;

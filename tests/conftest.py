@@ -29,6 +29,21 @@ def _seed_random():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _reset_inventory_schema_flag():
+    """Сбрасывает class-level флаг InventoryBaseMixin._inventory_schema_ensured
+    ПЕРЕД КАЖДЫМ ТЕСТОМ — иначе при переходе между тестами с разными tmp.db
+    второй тест думает что схема уже мигрирована, и не делает ALTER TABLE
+    ADD COLUMN stamina_saved. Это вызывает sqlite3.OperationalError.
+    """
+    try:
+        from repositories.inventory.base import InventoryBaseMixin
+        InventoryBaseMixin._inventory_schema_ensured = False
+    except Exception:
+        pass
+    yield
+
+
 @pytest.fixture
 def db():
     """Database со ВСЕМИ миксинами (как в database.py). Отдельный SQLite-файл на тест."""

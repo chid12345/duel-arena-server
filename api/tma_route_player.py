@@ -121,7 +121,8 @@ def register_tma_player_route(
             equipment, owned_weapons, eq_stats_cached, set_info = _fetch_equipment_parallel(
                 db, uid, current_class=cached.get("current_class") or cached.get("warrior_type"))
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
-                    "owned_weapons": owned_weapons, "set_bonus": set_info, "cached": True, "_sv": VERSION}
+                    "owned_weapons": owned_weapons, "set_bonus": set_info, "shards": db.get_all_shards(uid),
+                    "cached": True, "_sv": VERSION}
 
         player = db.get_or_create_player(uid, username)
 
@@ -183,6 +184,7 @@ def register_tma_player_route(
             "equipment": equipment,
             "owned_weapons": owned_weapons,
             "set_bonus": set_info,
+            "shards": db.get_all_shards(uid),
             "_sv": VERSION,
             "_db_hp": int(player.get("current_hp", 0)),
             "_db_mhp": int(player.get("max_hp", 0)),

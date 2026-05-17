@@ -120,6 +120,7 @@ async function _doApply(itemId, opts) {
       tg?.HapticFeedback?.notificationOccurred('error');
     }
     if (r.player) { State.player = r.player; State.playerLoadedAt = Date.now(); }
+    if (r.shards) { State.shards = r.shards; }
     _busy = false;
     // Перерендерить модалку с новыми данными
     const fresh = await _fetchPreview(itemId);
@@ -142,6 +143,7 @@ async function _doDismantle(itemId, opts) {
     if (!r?.ok) { _toast('❌ ' + (r?.reason || 'Ошибка'), false); _busy = false; return; }
     _toast(`♻️ +${r.shards_gained} шардов ${r.tier}`, true);
     tg?.HapticFeedback?.notificationOccurred('success');
+    if (r.shards) { State.shards = r.shards; }
     _busy = false;
     _close();
     opts?.onClose?.();
