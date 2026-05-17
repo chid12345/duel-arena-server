@@ -40,23 +40,29 @@ class BotHandlersDebugRentals:
         try:
             api_rentals = db.list_active_rentals(uid)
 
+            # Используем cursor (а не conn.execute) — иначе в Postgres
+            # ? не преобразуется в %s и получаем ProgrammingError.
             conn = db.get_connection()
             try:
-                rows = conn.execute(
+                cur = conn.cursor()
+                cur.execute(
                     "SELECT user_id, item_id, expires_at, rented_at, stars_paid "
                     "FROM equipment_rentals WHERE user_id = ?",
                     (uid,),
-                ).fetchall()
+                )
+                rows = cur.fetchall()
                 raw_rows = [dict(r) for r in rows]
             finally:
                 conn.close()
 
             conn = db.get_connection()
             try:
-                rows = conn.execute(
+                cur = conn.cursor()
+                cur.execute(
                     "SELECT slot, item_id FROM player_equipment WHERE user_id = ?",
                     (uid,),
-                ).fetchall()
+                )
+                rows = cur.fetchall()
                 equipment_rows = [dict(r) for r in rows]
             finally:
                 conn.close()
