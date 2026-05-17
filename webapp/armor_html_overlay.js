@@ -365,6 +365,7 @@ function open(scene) {
         <div class="wd-tab active _ar-view" id="ar-tab-all" data-av="all"><span>🛡 Вся броня</span></div>
         <div class="wd-tab _ar-view" id="ar-tab-owned" data-av="owned"><span>🎒 Арсенал</span></div>
       </div>
+      <div style="padding:4px 12px;background:rgba(96,165,250,.08);font-size:10px;color:#a0c8ff;text-align:center;cursor:pointer" id="ar-debug-btn">🔬 Debug: показать состояние аренд в БД</div>
       <div class="wd-grid" id="ar-grid"></div>
     </div>`;
   document.body.appendChild(wrap);
@@ -377,6 +378,19 @@ function open(scene) {
     const pid = localStorage.getItem('armorPendingItemId') || '';
     if (pi > 0 && pid) _startArmorCryptoPolling(scene, pi, pid, true);
   } catch(_) {}
+  document.getElementById('ar-debug-btn').onclick = async () => {
+    try {
+      const tg = window.Telegram?.WebApp;
+      const initData = tg?.initData || '';
+      const resp = await fetch('/api/debug/my_rentals?init_data=' + encodeURIComponent(initData));
+      const data = await resp.json();
+      const txt = JSON.stringify(data, null, 2);
+      _notify('Debug: данные скопированы в alert (внизу). Сделай скриншот.', true, true);
+      alert('🔬 DEBUG: state of equipment_rentals\n\n' + txt);
+    } catch (e) {
+      alert('Debug error: ' + e);
+    }
+  };
   wrap.querySelectorAll('._ar-view').forEach(t=>t.onclick=()=>{
     view=t.dataset.av;
     wrap.querySelectorAll('._ar-view').forEach(x=>x.classList.remove('active'));
