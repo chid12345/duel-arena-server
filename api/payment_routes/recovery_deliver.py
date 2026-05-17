@@ -133,15 +133,24 @@ async def deliver_recovery_payload(
         (":boots_equip:",  "boots",  "boots_equipped",  "boots_id",  "👟", "Сапоги получены!"),
         (":shield_equip:", "shield", "shield_equipped", "shield_id", "🛡️", "Щит получен!"),
         (":ring_equip:",   "ring1",  "ring_equipped",   "ring_id",   "💍", "Кольцо получено!"),
+        (":armor_equip:",  "armor",  "armor_equipped",  "armor_id",  "🛡",  "Мифическая броня получена!"),
     )
     for marker, slot, event, id_field, emoji, title in _equip_map:
         if marker not in payload:
             continue
         item_id = payload.split(marker, 1)[1].strip()
-        force = (slot == "ring1")
+        # armor использует force=True И отдельную таблицу player_owned_armor
+        # (get_equipment проверяет именно её для slot=armor)
+        force = (slot == "ring1") or (slot == "armor")
         try:
-            await _exec(db.equip_item, uid, slot, item_id, force) if force else await _exec(db.equip_item, uid, slot, item_id)
-            await _exec(db.add_owned_weapon, uid, item_id)
+            if force:
+                await _exec(db.equip_item, uid, slot, item_id, True)
+            else:
+                await _exec(db.equip_item, uid, slot, item_id)
+            if slot == "armor":
+                await _exec(db.add_owned_armor, uid, item_id)
+            else:
+                await _exec(db.add_owned_weapon, uid, item_id)
         except Exception as e:
             _log.error("CRITICAL: recovery %s uid=%s item=%s inv=%s err=%s", event, uid, item_id, inv_id, e)
             return False

@@ -139,6 +139,42 @@ def test_recovery_rental_success(db):
     assert any(e[1].get("event") == "rental_activated" for e in mgr.events)
 
 
+def test_recovery_armor_equip_success(db):
+    """Этап 8: recovery надевает мифик-броню (slot=armor) и добавляет в owned."""
+    db.get_or_create_player(5008, "u_armor_eq")
+    _lvl_up(db, 5008, 80)
+
+    ok, mgr = _call(db, uid=5008, payload="uid:5008:armor_equip:armor_mythic1")
+
+    assert ok is True
+    eq = db.get_equipment(5008)
+    assert eq.get("armor", {}).get("item_id") == "armor_mythic1", (
+        f"Ожидали armor_mythic1 в слоте armor, получили {eq}"
+    )
+    assert "armor_mythic1" in db.get_owned_armor(5008), (
+        "Броня должна быть в player_owned_armor (отдельная таблица от owned_weapons)"
+    )
+    assert any(e[1].get("event") == "armor_equipped" for e in mgr.events)
+
+
+def test_recovery_armor_equip_rental_rental_appears_in_active_rentals(db):
+    """Аренда мифик-брони → list_active_rentals возвращает её, бейдж в UI."""
+    db.get_or_create_player(5009, "u_armor_rent")
+    _lvl_up(db, 5009, 80)
+
+    ok, _ = _call(db, uid=5009, payload="uid:5009:rental:armor_mythic1")
+
+    assert ok is True
+    rentals = db.list_active_rentals(5009)
+    assert any(r["item_id"] == "armor_mythic1" for r in rentals), (
+        f"Аренда armor_mythic1 должна быть в active_rentals: {rentals}"
+    )
+    eq = db.get_equipment(5009)
+    assert eq.get("armor", {}).get("item_id") == "armor_mythic1", (
+        "После аренды броня должна быть надета в слот armor"
+    )
+
+
 def test_recovery_unknown_payload_returns_true(db):
     """Неизвестный payload без маркеров → True (только базовые алмазы)."""
     db.get_or_create_player(5007, "u_unknown")

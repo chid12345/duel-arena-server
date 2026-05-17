@@ -31,7 +31,8 @@ Object.assign(MenuScene.prototype, {
       const zone = mkZ(cx, y + SH / 2, SW + 4, SH + 4).setInteractive({ useHandCursor: true });
       zone.on('pointerup', () => {
         Sound.click();
-        if      (slot === 'armor'  )                         this.scene.start('Stats', { player: State.player, openWardrobe: true });
+        if      (slot === 'armor'  && typeof ArmorHTML  !== 'undefined') ArmorHTML.open(this);
+        else if (slot === 'armor'  )                         this.scene.start('Stats', { player: State.player, openWardrobe: true });
         else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') WeaponHTML.open(this);
         else if (slot === 'belt'   && typeof HelmetHTML !== 'undefined') HelmetHTML.open(this);
         else if (slot === 'boots'  && typeof BootsHTML  !== 'undefined') BootsHTML.open(this);
