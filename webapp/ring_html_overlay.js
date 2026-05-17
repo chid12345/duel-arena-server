@@ -342,6 +342,7 @@ function open(scene) {
     <div class="wd-panel">
       <div class="wd-head">
         <span class="wd-title">💍 Кольца</span>
+        ${window.ShardsBar ? ShardsBar.build() : ''}
         <button class="wd-close" id="rg-close">✕</button>
       </div>
       <div class="wd-tabs">

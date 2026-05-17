@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.21.54"
-VERSION_LABEL = "v2.21.54 — Шарды (поверх настоящей унификации armor): убран WB-дроп, добавлен счётчик 💠 на главной, починены 4 теста. (1) repositories/world_boss/rewards_calc.py — удалён блок add_shards при победе (шарды теперь ТОЛЬКО через разборку шмота). (2) api/tma_route_player.py — /api/player возвращает shards: {T1, T2, T3, T4}. (3) webapp/scene_menu_ext4.js — 3-й chip 💠 (cyan ромб) после 🪙/💎 в шапке профиля, сумма всех тиров. (4) webapp/upgrade_modal.js — обновляет State.shards после apply/dismantle. Починены: test_wb_drops_shards → test_wb_no_longer_drops_shards; test_wb_hits_today_count — UTC вместо local date (timezone bug); test_wipe_resets_profile — autouse-сброс _inventory_schema_ensured в conftest для изоляции между тестами. 294/294 зелёные."
+VERSION = "2.21.55"
+VERSION_LABEL = "v2.21.55 — Шарды-бар (Вариант А) в заголовке всех 6 каталогов. Новый helper webapp/shards_bar_helper.js — рендерит 4-чип ⬡ T1/T2/T3/T4 справа от заголовка перед ✕. Цвета по тиру: T1 серебро (для гольдового шмота 800g), T2 золото (для T2-шмота 8000g), T3 фиолет (для алмазного 75💎), T4 огонь (для mythic за донат). Пустой счёт (0) приглушается (.empty). Подключён в index.html. ShardsBar.build() вставлен в wd-head 6 overlay: helmet, shield, boots, ring, weapon, wardrobe_html_actions. Tooltip на hover поясняет тир. Адаптив для узких экранов (<400px) — меньший padding/gap. Читает window.State.shards (уже было заполнено через /api/player в предыдущем коммите)."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "17.05"
+GAME_VERSION = "17.06"
