@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.21.60"
-VERSION_LABEL = "v2.21.60 — debug кнопка в armor overlay: нажав «🔬 Debug» игрок сразу видит сырое состояние equipment_rentals и player_equipment — это позволит понять, почему аренда не сохраняется (миграция? формат expires_at? rent_item упал?). После диагностики — удалить."
+VERSION = "2.21.61"
+VERSION_LABEL = "v2.21.61 — bot command /debug_rentals: обходит JS-кэш Telegram, отправляет сырое состояние equipment_rentals прямо в чат. Игрок не смог дождаться обновления debug-кнопки в overlay (Telegram WebView держит старый JS даже с уникальным ?v=). После диагностики бага аренды — удалить."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "17.11"
+GAME_VERSION = "17.12"
