@@ -112,19 +112,25 @@ async def deliver_recovery_payload(
 
     if ":armor_class:" in payload:
         class_id = payload.split(":armor_class:", 1)[1].strip()
+        # Унификация armor: legacy `:armor_class:` остался только для legendary_usdt.
+        # Все остальные мифик-брони доставляются через `:armor_equip:` (общий путь).
+        if class_id != "legendary_usdt":
+            _log.warning(
+                "deprecated armor_class marker for %s in invoice %s — пропускаю", class_id, inv_id,
+            )
+            return True
         try:
-            ok2, msg2 = await _exec(db.purchase_class, uid, class_id)
-            armor_ok = bool(ok2) or ("уже есть" in (msg2 or ""))
-            if not armor_ok:
-                _log.error("CRITICAL: recovery armor_class uid=%s class=%s inv=%s msg=%s", uid, class_id, inv_id, msg2)
+            ok2, _msg2, _new_id = await _exec(db.create_usdt_class, uid)
+            if not ok2 and "уже есть" not in (_msg2 or ""):
+                _log.error("CRITICAL: recovery legendary_usdt uid=%s inv=%s msg=%s", uid, inv_id, _msg2)
                 return False
         except Exception as e:
-            _log.error("CRITICAL: recovery purchase_class exc uid=%s class=%s inv=%s err=%s", uid, class_id, inv_id, e)
+            _log.error("CRITICAL: recovery create_usdt_class exc uid=%s inv=%s err=%s", uid, inv_id, e)
             return False
         cache_invalidate(uid)
         if manager is not None:
             await manager.send(uid, {"event": "armor_class_purchased", "class_id": class_id, "source": "cryptopay"})
-        await send_tg_message(uid, "🛡️ <b>Мифическая броня получена!</b>\nОткройте «Гардероб» — слот «Тело».\n\n⚔️ Duel Arena")
+        await send_tg_message(uid, "💠 <b>Легендарный образ получен!</b>\nОткройте «Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
         return True
 
     _equip_map = (

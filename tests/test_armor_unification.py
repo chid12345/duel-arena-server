@@ -1,0 +1,199 @@
+"""tests/test_armor_unification.py — финальная унификация slot=armor с 5 другими.
+
+Покрывает:
+- Stars-payload armor_equip_stars: проходит unified-путь (add_owned_armor + equip + current_class)
+- USDT: webhook _equip_map обрабатывает :armor_equip:
+- equip_item('armor', X) синхронизирует players.current_class из legacy_class_id
+- unequip_item('armor') обнуляет current_class
+- purchase_class больше не делает delta-stat-апдейт (двойной счёт устранён)
+- /api/player возвращает rental:{...} в каждом слоте, где item_id арендован
+"""
+from __future__ import annotations
+
+
+# ─────────── Stars-путь покупки постоянной мифик-брони ───────────
+
+def test_stars_armor_equip_unified_path(db, monkeypatch):
+    """armor_equip_stars: → equip_item('armor', force=True) + add_owned_armor + current_class."""
+    import handlers.commands.shop_equip_stars as mod
+    monkeypatch.setattr(mod, "db", db)
+
+    db.get_or_create_player(4001, "u_stars_armor")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (4001,))
+    conn.commit()
+    conn.close()
+
+    msg = mod.handle_stars_equip_payload(4001, "armor_equip_stars:4001:armor_mythic1", 590)
+
+    assert msg is not None and "Мифический" in msg, f"payload не обработан: {msg!r}"
+    # owned пишется в player_owned_armor (не player_owned_weapons)
+    assert "armor_mythic1" in db.get_owned_armor(4001)
+    # равно надета
+    eq = db.get_equipment(4001)
+    assert eq["armor"]["item_id"] == "armor_mythic1"
+    # players.current_class авто-синхронизирован с legacy_class_id
+    conn = db.get_connection()
+    row = conn.execute("SELECT current_class FROM players WHERE user_id = ?", (4001,)).fetchone()
+    conn.close()
+    assert row["current_class"] == "berserker_mythic"
+
+
+# ─────────── armor_class_stars: теперь только legendary_usdt ───────────
+
+def test_stars_armor_class_legacy_blocked_for_non_legendary(db, monkeypatch):
+    """`armor_class_stars:berserker_mythic` → deprecated, не покупается через legacy path."""
+    import handlers.commands.shop_equip_stars as mod
+    monkeypatch.setattr(mod, "db", db)
+
+    db.get_or_create_player(4002, "u_legacy_block")
+
+    msg = mod.handle_stars_equip_payload(4002, "armor_class_stars:4002:berserker_mythic", 590)
+
+    assert msg is not None
+    assert "не поддерживается" in msg or "обновить" in msg
+    # legacy class не должен был быть создан через старый путь
+    assert db.has_class(4002, "berserker_mythic") is False
+
+
+def test_stars_armor_class_legendary_usdt_still_works(db, monkeypatch):
+    """`armor_class_stars:legendary_usdt` → создаёт USDT-кастомку (mythic4)."""
+    import handlers.commands.shop_equip_stars as mod
+    monkeypatch.setattr(mod, "db", db)
+
+    db.get_or_create_player(4003, "u_legendary")
+
+    msg = mod.handle_stars_equip_payload(4003, "armor_class_stars:4003:legendary_usdt", 0)
+
+    assert msg is not None and "Легендарный" in msg
+    # create_usdt_class создаёт класс типа usdt_custom_*
+    inv = db.get_user_inventory(4003)
+    usdt_classes = [c for c in inv if (c.get("class_type") or "") == "usdt"]
+    assert len(usdt_classes) >= 1, f"create_usdt_class не создал запись: {inv!r}"
+
+
+# ─────────── equip_item('armor') sync current_class ───────────
+
+def test_equip_armor_syncs_current_class(db):
+    """equip_item('armor', armor_gold1) → players.current_class = berserker_gold."""
+    db.get_or_create_player(4010, "u_sync")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 25 WHERE user_id = ?", (4010,))
+    conn.commit()
+    conn.close()
+
+    ok = db.equip_item(4010, "armor", "armor_gold1", force=True)
+    assert ok is True
+
+    conn = db.get_connection()
+    row = conn.execute("SELECT current_class, current_class_type FROM players WHERE user_id = ?", (4010,)).fetchone()
+    conn.close()
+    assert row["current_class"] == "berserker_gold"
+    assert row["current_class_type"] == "gold"
+
+
+def test_unequip_armor_clears_current_class(db):
+    """unequip_item('armor') → players.current_class = NULL."""
+    db.get_or_create_player(4011, "u_unequip")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 25 WHERE user_id = ?", (4011,))
+    conn.commit()
+    conn.close()
+    db.equip_item(4011, "armor", "armor_gold2", force=True)
+
+    db.unequip_item(4011, "armor")
+
+    conn = db.get_connection()
+    row = conn.execute("SELECT current_class, current_class_type FROM players WHERE user_id = ?", (4011,)).fetchone()
+    conn.close()
+    assert row["current_class"] is None
+    assert row["current_class_type"] is None
+
+
+def test_switch_armor_updates_current_class(db):
+    """Смена брони обновляет current_class на новый legacy_class_id."""
+    db.get_or_create_player(4012, "u_switch")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 50 WHERE user_id = ?", (4012,))
+    conn.commit()
+    conn.close()
+    db.equip_item(4012, "armor", "armor_gold1", force=True)  # berserker_gold
+    db.equip_item(4012, "armor", "armor_dia2", force=True)   # shadowdancer_diamonds
+
+    conn = db.get_connection()
+    row = conn.execute("SELECT current_class FROM players WHERE user_id = ?", (4012,)).fetchone()
+    conn.close()
+    assert row["current_class"] == "shadowdancer_diamonds"
+
+
+# ─────────── purchase_class не делает double-stat-counting ───────────
+
+def test_purchase_class_does_not_double_count_stats(db):
+    """purchase_class больше не пушит +N в players.strength (мифик-броня даёт это через get_equipment_stats)."""
+    db.get_or_create_player(4020, "u_double")
+    conn = db.get_connection()
+    row = conn.execute("SELECT strength, endurance, crit, max_hp FROM players WHERE user_id = ?", (4020,)).fetchone()
+    str0, end0, crit0, hp0 = row["strength"], row["endurance"], row["crit"], row["max_hp"]
+    conn.execute("UPDATE players SET gold = 100000, diamonds = 1000 WHERE user_id = ?", (4020,))
+    conn.commit()
+    conn.close()
+
+    ok, _msg = db.purchase_class(4020, "berserker_gold")
+    assert ok is True, _msg
+
+    conn = db.get_connection()
+    row = conn.execute("SELECT strength, endurance, crit, max_hp FROM players WHERE user_id = ?", (4020,)).fetchone()
+    conn.close()
+    # delta больше НЕ применяется — статы должны остаться такими же.
+    # Бонус брони берётся через get_equipment_stats (unified path).
+    assert row["strength"] == str0, f"strength изменилась: {str0} → {row['strength']}"
+    assert row["endurance"] == end0
+    assert row["crit"] == crit0
+    assert row["max_hp"] == hp0
+
+
+# ─────────── /api/player обогащает каждый слот rental: {expires_at, ...} ───────────
+
+def test_api_player_returns_rental_per_slot(db):
+    """`_fetch_equipment_parallel._eq` подмешивает rental: {seconds_left, days_left} к слоту."""
+    from api.tma_route_player import _fetch_equipment_parallel
+    db.get_or_create_player(4040, "u_api_rent")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (4040,))
+    conn.commit()
+    conn.close()
+
+    db.rent_item(4040, "helmet_mythic1", days=7)
+    db.equip_item(4040, "belt", "helmet_mythic1", force=True)
+
+    eq, _weapons, _stats, _set = _fetch_equipment_parallel(db, 4040)
+    assert "belt" in eq
+    assert eq["belt"]["item_id"] == "helmet_mythic1"
+    rental = eq["belt"].get("rental")
+    assert rental is not None, f"rental missing на надетой арендованной вещи: {eq['belt']}"
+    assert rental["days_left"] >= 1
+    assert rental["seconds_left"] > 0
+
+
+# ─────────── Аренда брони не теряется при смене на другую ───────────
+
+def test_armor_rental_persists_through_switch(db):
+    """Арендовал armor_mythic1 → надел armor_gold1 → аренда mythic1 всё ещё активна."""
+    db.get_or_create_player(4030, "u_rent_persist")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (4030,))
+    conn.commit()
+    conn.close()
+
+    # Покупаем аренду через тот же helper, что и Stars-handler
+    db.rent_item(4030, "armor_mythic1", days=7, stars_paid=100)
+    db.equip_item(4030, "armor", "armor_mythic1", force=True)
+    db.add_owned_armor(4030, "armor_mythic1")  # обычно делается deliver_rental
+
+    # Переключились на gold-броню
+    db.equip_item(4030, "armor", "armor_gold1", force=True)
+
+    # Аренда mythic1 должна сохраниться в equipment_rentals
+    assert db.has_active_rental(4030, "armor_mythic1") is True
+    rentals = db.list_active_rentals(4030)
+    assert any(r["item_id"] == "armor_mythic1" for r in rentals)

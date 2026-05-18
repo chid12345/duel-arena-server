@@ -17,6 +17,11 @@ def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = Non
     """Три equipment-запроса выполняются параллельно. Возвращает (eq, weapons, stats, set_info).
 
     current_class — для подсчёта сет-бонуса в slot=armor (гардероб=броня).
+
+    Унификация армора (этап 8.1): каждый слот обогащается полем
+    `rental: {expires_at, seconds_left, days_left}`, если item_id в этом
+    слоте сейчас арендован. Это позволяет 6 overlay-вкладкам показывать
+    «🕐 Аренда · Nд» через общий RentalBadge без отдельных запросов.
     """
     from config.set_bonuses import resolve_active_set, bonuses_human, PERK_INFO
 
@@ -29,11 +34,26 @@ def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = Non
                 set_info["bonuses_human"] = bonuses_human(set_info["bonuses"])
                 if set_info.get("perk"):
                     set_info["perk_info"] = PERK_INFO.get(set_info["perk"], {})
-            return {
-                slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"],
-                       "rarity": it["rarity"], "desc": it.get("desc", "")}
-                for slot, it in eq_raw.items()
-            }, set_info
+            try:
+                rental_by_item = {r["item_id"]: r for r in db.list_active_rentals(uid)}
+            except Exception:
+                rental_by_item = {}
+            out = {}
+            for slot, it in eq_raw.items():
+                slot_data = {
+                    "item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"],
+                    "rarity": it["rarity"], "desc": it.get("desc", ""),
+                }
+                r = rental_by_item.get(it["item_id"])
+                if r:
+                    sec = int(r.get("seconds_left", 0) or 0)
+                    slot_data["rental"] = {
+                        "expires_at": r.get("expires_at"),
+                        "seconds_left": sec,
+                        "days_left": max(1, (sec + 86399) // 86400),
+                    }
+                out[slot] = slot_data
+            return out, set_info
         except Exception:
             return {}, None
 

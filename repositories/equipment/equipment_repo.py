@@ -5,8 +5,29 @@ from __future__ import annotations
 from typing import Dict, Optional
 
 from db_schema.equipment_catalog import get_item, get_item_stats, SLOT_ARMOR, SLOT_RING1, SLOT_RING2
-from db_schema.equipment_items.armor import legacy_class_to_armor_item_id
+from db_schema.equipment_items.armor import ARMOR, legacy_class_to_armor_item_id
 from economy.curves import is_tier_unlocked
+
+
+def _armor_item_to_legacy_class(item_id: str) -> tuple[str | None, str | None]:
+    """Возвращает (legacy_class_id, class_type) для armor item_id.
+
+    Нужно battle_system: damage.py / damage_armor.py / set_perks.py читают
+    `players.current_class` для перков (берсеркер +12%, страж -3% урона и т.п.).
+    Унификация armor: класс синхронизируется автоматически из надетого armor item.
+    """
+    meta = ARMOR.get(item_id) or {}
+    legacy = meta.get("legacy_class_id")
+    if not legacy:
+        return None, None
+    # currency определяет class_type (для current_class_type в battle_system).
+    currency = (meta.get("currency") or "").strip()
+    type_map = {"gold": "gold", "diamond": "diamonds", "star": "mythic", "usdt": "usdt"}
+    class_type = type_map.get(currency)
+    # free-классы помечены currency="gold", но цена 800g и legacy_class_id=*_free
+    if legacy.endswith("_free"):
+        class_type = "free"
+    return legacy, class_type
 
 
 class EquipmentMixin:
@@ -136,6 +157,19 @@ class EquipmentMixin:
                 "DELETE FROM player_equipment WHERE user_id = ? AND slot = ?",
                 (user_id, SLOT_RING2),
             )
+        # Унификация armor: синхронизируем `players.current_class` с надетой
+        # бронёй. Это нужно battle_system (damage.py:64, damage_armor.py:32,
+        # set_perks.py:59) — перки берсеркера/стража/драконьего рыцаря читают
+        # current_class. Сделав auto-sync здесь, мы убираем зависимость от
+        # legacy purchase_class/switch_class — они больше не вызываются для
+        # обычных мифик-брони, только для legendary_usdt (armor_mythic4).
+        if target_slot == SLOT_ARMOR:
+            legacy_cls, class_type = _armor_item_to_legacy_class(item_id)
+            if legacy_cls:
+                cursor.execute(
+                    "UPDATE players SET current_class = ?, current_class_type = ? WHERE user_id = ?",
+                    (legacy_cls, class_type or "", user_id),
+                )
         conn.commit()
         conn.close()
         return True
@@ -149,6 +183,13 @@ class EquipmentMixin:
             (user_id, slot),
         )
         affected = cursor.rowcount
+        # Унификация armor: при снятии брони обнуляем «класс», иначе перки
+        # берсеркера/стража продолжат действовать на голого игрока.
+        if slot == SLOT_ARMOR:
+            cursor.execute(
+                "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
+                (user_id,),
+            )
         conn.commit()
         conn.close()
         return affected > 0

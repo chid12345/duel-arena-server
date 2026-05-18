@@ -120,8 +120,9 @@ function _card(h) {
   const nc = h.r==='epic'?' epic':h.r==='mythic'?' mythic':'';
   const src = RING_IMG[h.id] || '';
   const lockCls = window.LevelLock?.cardLockedClass(h) || '';
-  return `<div class="wd-card rarity-${h.r}${h.equipped?' equipped':''}${lockCls}" data-id="${h.id}">
+  return `<div class="wd-card rarity-${h.r}${h.equipped?' equipped':''}${lockCls}" data-id="${h.id}" style="position:relative">
     ${h.equipped?'<div class="wd-eq-badge">✅ Надет</div>':''}
+    ${window.RentalBadge ? RentalBadge.html(h.id, State.activeRentals) : ''}
     <div class="wd-img-area">
       <div class="wd-img-wrap">
         <img src="${src}" class="wd-card-img" loading="eager" decoding="async"
@@ -167,7 +168,8 @@ async function _doAction(scene, action, item) {
   scene._ringBusy = true;
   try {
     if (action === 'buy_rental') {
-      await RentalPay.rent(scene, item, () => {
+      await RentalPay.rent(scene, item, async () => {
+        if (window.RentalBadge) await RentalBadge.refreshState();
         const activeTab = document.querySelector('#rg-root ._rg-view.active');
         _render(scene, activeTab?.dataset?.rv || 'all');
       }, _notify);
@@ -274,7 +276,9 @@ function _render(scene, view) {
   const equippedIds = new Set([
     (eq.ring1||{}).item_id, (eq.ring2||{}).item_id,
   ].filter(Boolean));
-  const ownedSet = new Set([...(State.ownedWeapons||[]), ...((State.activeRentals||[]).map(r => r.item_id))]);
+  const ownedSet = window.RentalBadge
+    ? RentalBadge.ownedSetFor('ring1', State.ownedWeapons, State.activeRentals)
+    : new Set([...(State.ownedWeapons||[]), ...((State.activeRentals||[]).map(r => r.item_id))]);
   const items = RING_DATA.map(h=>({
     ...h,
     equipped: equippedIds.has(h.id),
@@ -353,14 +357,17 @@ function open(scene) {
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
-  post('/api/player', {}).then(res => {
-    if (!document.getElementById('rg-root')) return;
-    if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
-    if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
-    if (res?.equipment)     State.equipment = res.equipment;
-    if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
-    refresh();
-  }).catch(() => {});
+  (window.RentalBadge ? RentalBadge.refreshState() : post('/api/player', {}))
+    .then(res => {
+      if (!document.getElementById('rg-root')) return;
+      if (res && !window.RentalBadge) {
+        if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+        if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
+        if (res?.equipment)     State.equipment = res.equipment;
+        if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
+      }
+      refresh();
+    }).catch(() => {});
   try {
     const pi = parseInt(localStorage.getItem('ringPendingInvoice') || '0', 10);
     const pid = localStorage.getItem('ringPendingItemId') || '';

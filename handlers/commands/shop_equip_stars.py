@@ -28,6 +28,7 @@ _STARS_EQUIP_SLOT = {
     "helmet_equip_stars": "belt",
     "boots_equip_stars":  "boots",
     "ring_equip_stars":   "ring1",
+    "armor_equip_stars":  "armor",
 }
 
 
@@ -83,41 +84,34 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
             "Откройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena"
         )
 
-    # Мифическая броня (класс) — выдаём класс целиком через purchase_class.
-    # Идемпотентно: purchase_class вернёт (False,"У вас уже есть этот класс")
-    # при повторной оплате — игрок не потеряет деньги впустую, но и дубликата не будет.
-    # legendary_usdt — особый кастомный USDT-slot, создаётся через create_usdt_class.
+    # legacy `armor_class_stars:` — теперь только для legendary_usdt (armor_mythic4)
+    # с +19 свободных статов. Все остальные мифик-брони идут через
+    # `armor_equip_stars:` (унифицировано с helmet/weapon/shield/boots/ring),
+    # см. _STARS_EQUIP_SLOT выше.
     if payload.startswith("armor_class_stars:"):
         parts = payload.split(":", 2)
         class_id = parts[2] if len(parts) == 3 else ""
-        if not class_id:
-            return None
+        if class_id != "legendary_usdt":
+            logger.warning(
+                "deprecated payload armor_class_stars:%s ignored — use armor_equip_stars:* для мифик-брони",
+                class_id,
+            )
+            return ("⚠️ Этот тип покупки больше не поддерживается.\n"
+                    "Попробуйте обновить мини-апп. ⚔️ Duel Arena")
         try:
-            if class_id == "legendary_usdt":
-                # Кастомный USDT-slot: создаём персональный класс с +19 свободных статов.
-                # На USDT-пути это идёт через crypto_webhook → create_usdt_class.
-                # Stars-путь: ровно та же логика, чтобы UI кнопок был унифицирован.
-                ok, msg, new_class_id = db.create_usdt_class(user_id)
-                if not ok and "уже есть" not in (msg or ""):
-                    logger.error("Stars legendary_usdt slot creation failed uid=%s stars=%s msg=%s",
-                                 user_id, stars, msg)
-                    return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
-                            "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
-                return ("✅ <b>Легендарный образ получен!</b>\n"
-                        "Откройте «Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
-            ok, msg = db.purchase_class(user_id, class_id)
-            if not ok and "уже есть" not in msg:
-                logger.error("Stars mythic armor purchase failed uid=%s class=%s stars=%s msg=%s",
-                             user_id, class_id, stars, msg)
+            ok, msg, _new_class_id = db.create_usdt_class(user_id)
+            if not ok and "уже есть" not in (msg or ""):
+                logger.error("Stars legendary_usdt slot creation failed uid=%s stars=%s msg=%s",
+                             user_id, stars, msg)
                 return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
                         "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
         except Exception as exc:
-            logger.error("CRITICAL: Stars mythic armor exception uid=%s class=%s err=%s",
-                         user_id, class_id, exc)
+            logger.error("CRITICAL: Stars legendary_usdt exception uid=%s err=%s",
+                         user_id, exc)
             return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
                     "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
-        return ("✅ <b>Мифическая броня получена!</b>\n"
-                "Откройте «Гардероб» и наденьте её.\n\n⚔️ Duel Arena")
+        return ("✅ <b>Легендарный образ получен!</b>\n"
+                "Откройте «Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
 
     parse = _parse(payload)
     if parse is None:
@@ -127,7 +121,12 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
         # force=True: для кольца — точно в ring1 (мини-апп показывает только ring1;
         # без force резолвер мог бы положить в ring2, и покупка «потерялась бы» в UI).
         db.equip_item(user_id, slot, item_id, force=True)
-        db.add_owned_weapon(user_id, item_id)
+        # Унификация armor: владение мифик-брони пишется в отдельную таблицу
+        # player_owned_armor (так её читает get_equipment для slot=armor).
+        if slot == "armor":
+            db.add_owned_armor(user_id, item_id)
+        else:
+            db.add_owned_weapon(user_id, item_id)
     except Exception as exc:  # pragma: no cover — логируем критично для разбора
         logger.error(
             "CRITICAL: Stars equip failed uid=%s slot=%s item=%s stars=%s err=%s",

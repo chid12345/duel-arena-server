@@ -119,8 +119,9 @@ function _card(h) {
   const nc = h.r==='epic'?' epic':h.r==='mythic'?' mythic':'';
   const src = HELMET_IMG[h.id] || '';
   const lockCls = window.LevelLock?.cardLockedClass(h) || '';
-  return `<div class="wd-card rarity-${h.r}${h.equipped?' equipped':''}${lockCls}" data-id="${h.id}">
+  return `<div class="wd-card rarity-${h.r}${h.equipped?' equipped':''}${lockCls}" data-id="${h.id}" style="position:relative">
     ${h.equipped?'<div class="wd-eq-badge">✅ Надет</div>':''}
+    ${window.RentalBadge ? RentalBadge.html(h.id, State.activeRentals) : ''}
     <div class="wd-img-area">
       <div class="wd-img-wrap">
         <img src="${src}" class="wd-card-img" loading="eager" decoding="async"
@@ -167,8 +168,11 @@ async function _doAction(scene, action, item) {
   try {
     if (action === 'buy_rental') {
       // Этап 8: аренда mythic-шлема на 7 дней за 50% Stars-цены.
-      // Сервер сам делает rent + equip. После 'paid' — перерендер.
-      await RentalPay.rent(scene, item, () => {
+      // Сервер сам делает rent + equip. После 'paid' — обновляем State через
+      // no-store /api/player (иначе бейдж «🕐 Аренда · Nд» не появится из-за кэша),
+      // потом перерендер.
+      await RentalPay.rent(scene, item, async () => {
+        if (window.RentalBadge) await RentalBadge.refreshState();
         const activeTab = document.querySelector('#hm-root ._hm-view.active');
         _render(scene, activeTab?.dataset?.hv || 'all');
       }, _notify);
@@ -267,7 +271,9 @@ function _render(scene, view) {
   if (!grid) return;
   const scrollTop = grid.scrollTop;
   const eqId = (State.equipment?.belt||{}).item_id||'';
-  const ownedSet = new Set([...(State.ownedWeapons||[]), ...((State.activeRentals||[]).map(r => r.item_id))]);
+  const ownedSet = window.RentalBadge
+    ? RentalBadge.ownedSetFor('belt', State.ownedWeapons, State.activeRentals)
+    : new Set([...(State.ownedWeapons||[]), ...((State.activeRentals||[]).map(r => r.item_id))]);
   const items = HELMETS_DATA.map(h=>({
     ...h,
     equipped: h.id===eqId,
@@ -349,14 +355,20 @@ function open(scene) {
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
-  post('/api/player', {}).then(res => {
-    if (!document.getElementById('hm-root')) return;
-    if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
-    if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
-    if (res?.equipment)     State.equipment = res.equipment;
-    if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
-    refresh();
-  }).catch(() => {});
+  // no-store fetch обходит кэш Telegram WebView (иначе после покупки
+  // active_rentals остаётся пустым и бейдж аренды не появляется).
+  (window.RentalBadge ? RentalBadge.refreshState() : post('/api/player', {}))
+    .then(res => {
+      if (!document.getElementById('hm-root')) return;
+      // RentalBadge.refreshState уже сохранил State; для fallback дописываем.
+      if (res && !window.RentalBadge) {
+        if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+        if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
+        if (res?.equipment)     State.equipment = res.equipment;
+        if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
+      }
+      refresh();
+    }).catch(() => {});
   try {
     const pi = parseInt(localStorage.getItem('helmetPendingInvoice') || '0', 10);
     const pid = localStorage.getItem('helmetPendingItemId') || '';

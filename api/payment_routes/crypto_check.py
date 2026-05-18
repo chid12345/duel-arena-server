@@ -187,13 +187,25 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     fresh = db.get_or_create_player(owner_uid, "")
                     return {"ok": True, "paid": True, "rental_activated": True, "item_id": rental_item_id, "equipment": eq_resp, "player": _player_api(dict(fresh))}
                 if is_armor_class and armor_class_id:
-                    # Мифик-броня (класс) — идемпотентно через purchase_class
+                    # Унификация armor: `:armor_class:` legacy-маркер сохранён ТОЛЬКО
+                    # для legendary_usdt (armor_mythic4 с +19 свободных статов
+                    # через armor_custom_mods). Остальные мифик-брони идут через
+                    # `:armor_equip:` (общий путь с helmet/weapon/shield).
+                    if armor_class_id != "legendary_usdt":
+                        logger.warning(
+                            "deprecated armor_class marker for %s in invoice %s — игнорирую (используйте armor_equip)",
+                            armor_class_id, invoice_id,
+                        )
+                        db.mark_items_delivered(invoice_id)
+                        fresh = db.get_or_create_player(owner_uid, "")
+                        return {"ok": True, "paid": True, "deprecated_payload": True,
+                                "class_id": armor_class_id, "player": _player_api(dict(fresh))}
                     _armor_ok = False
                     try:
-                        ok2, msg2 = db.purchase_class(owner_uid, armor_class_id)
-                        _armor_ok = bool(ok2) or ("уже есть" in (msg2 or ""))
+                        _ok2, _msg2, _new_id = db.create_usdt_class(owner_uid)
+                        _armor_ok = bool(_ok2) or ("уже есть" in (_msg2 or ""))
                     except Exception as _e:
-                        logger.error("CRITICAL: armor_class purchase via crypto_check uid=%s class=%s err=%s", owner_uid, armor_class_id, _e)
+                        logger.error("CRITICAL: legendary_usdt creation via crypto_check uid=%s err=%s", owner_uid, _e)
                     _cache_invalidate(owner_uid)
                     if _armor_ok:
                         db.mark_items_delivered(invoice_id)

@@ -129,22 +129,10 @@ class InventoryCrudMixin:
                     (user_id, class_id),
                 )
                 self._remove_legacy_avatar_bonus_with_cursor(cursor, user_id)
-                v = self._class_stat_vector(class_info)
-                cursor.execute(
-                    "SELECT max_hp, current_hp FROM players WHERE user_id = ?",
-                    (user_id,),
-                )
-                hp_row = cursor.fetchone()
-                hp_delta = int(v["max_hp"])
-                new_max_hp = max(1, int(hp_row["max_hp"]) + hp_delta)
-                new_current_hp = min(new_max_hp, max(1, int(hp_row["current_hp"]) + hp_delta))
-                cursor.execute(
-                    """UPDATE players
-                       SET strength = strength + ?, endurance = endurance + ?, crit = crit + ?,
-                           max_hp = ?, current_hp = ?
-                       WHERE user_id = ?""",
-                    (v["strength"], v["endurance"], v["crit"], new_max_hp, new_current_hp, user_id),
-                )
+                # Унификация armor: НЕ применяем delta к players.strength/endurance/crit/max_hp.
+                # Раньше класс пушил +12 силы в `players.strength`, плюс мифик-броня
+                # давала те же +12 через `get_equipment_stats` — двойной счёт статов.
+                # Теперь статы идут только через get_equipment_stats (unified path).
                 cursor.execute(
                     "UPDATE players SET current_class = ?, current_class_type = ? WHERE user_id = ?",
                     (class_id, class_info["class_type"], user_id),

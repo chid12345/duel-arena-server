@@ -49,30 +49,33 @@ def _call(db, *, uid: int, payload: str, diamonds: int = 0, mgr: _FakeManager | 
     return result, manager
 
 
-def test_recovery_armor_class_success(db):
-    """Первая выдача мифик-брони через recovery → True + событие armor_class_purchased."""
+def test_recovery_armor_class_deprecated_silently_skipped(db):
+    """Унификация armor: `:armor_class:berserker_mythic` теперь deprecated.
+
+    Recovery возвращает True (чтобы не зацикливать retry-loop), но НЕ создаёт
+    legacy-класс. Реальная мифик-броня доставляется через `:armor_equip:`.
+    """
     db.get_or_create_player(5001, "u_armor")
 
-    ok, mgr = _call(db, uid=5001, payload="uid:5001:armor_class:berserker_mythic")
+    ok, _mgr = _call(db, uid=5001, payload="uid:5001:armor_class:berserker_mythic")
 
     assert ok is True
-    assert any(e[1].get("event") == "armor_class_purchased" for e in mgr.events), (
-        f"Ожидали событие armor_class_purchased, получили: {mgr.events}"
+    assert db.has_class(5001, "berserker_mythic") is False, (
+        "deprecated :armor_class: для не-legendary_usdt не должен создавать класс"
     )
-    assert db.has_class(5001, "berserker_mythic") is True, "Класс должен быть выдан"
 
 
-def test_recovery_armor_class_idempotent(db):
-    """Повторная выдача уже купленной мифик-брони → True (msg «уже есть»)."""
-    db.get_or_create_player(5002, "u_armor2")
-    # Первый раз — класс куплен напрямую (мог быть через webhook ранее)
-    db.purchase_class(5002, "berserker_mythic")
-    assert db.has_class(5002, "berserker_mythic") is True
+def test_recovery_armor_class_legendary_usdt_works(db):
+    """`:armor_class:legendary_usdt` остаётся валидным — создаёт USDT-кастомку."""
+    db.get_or_create_player(5002, "u_legendary")
 
-    # Recovery повторяет — должен вернуть True (идемпотентно)
-    ok, _ = _call(db, uid=5002, payload="uid:5002:armor_class:berserker_mythic")
+    ok, mgr = _call(db, uid=5002, payload="uid:5002:armor_class:legendary_usdt")
 
-    assert ok is True, "Повторная выдача уже купленного класса = True (msg «уже есть»)"
+    assert ok is True
+    inv = db.get_user_inventory(5002)
+    usdt_classes = [c for c in inv if (c.get("class_type") or "") == "usdt"]
+    assert len(usdt_classes) >= 1, "create_usdt_class не отработал"
+    assert any(e[1].get("event") == "armor_class_purchased" for e in mgr.events)
 
 
 def _lvl_up(db, uid: int, lvl: int) -> None:

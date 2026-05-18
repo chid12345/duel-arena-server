@@ -118,8 +118,9 @@ function _card(w) {
   const nc = w.r==='epic'?' epic':w.r==='mythic'?' mythic':'';
   const src = WEAPON_IMG[w.id] || '';
   const lockCls = window.LevelLock?.cardLockedClass(w) || '';
-  return `<div class="wd-card rarity-${w.r}${w.equipped?' equipped':''}${lockCls}" data-id="${w.id}">
+  return `<div class="wd-card rarity-${w.r}${w.equipped?' equipped':''}${lockCls}" data-id="${w.id}" style="position:relative">
     ${w.equipped?'<div class="wd-eq-badge">✅ Надет</div>':''}
+    ${window.RentalBadge ? RentalBadge.html(w.id, State.activeRentals) : ''}
     <div class="wd-img-area">
       <div class="wd-img-wrap">
         <img src="${src}" class="wd-card-img" loading="eager" decoding="async"
@@ -166,7 +167,8 @@ async function _doAction(scene, action, item) {
   try {
     // ── Stars (мифическое оружие) ──────────────────────────────
     if (action === 'buy_rental') {
-      await RentalPay.rent(scene, item, () => {
+      await RentalPay.rent(scene, item, async () => {
+        if (window.RentalBadge) await RentalBadge.refreshState();
         const activeTab = document.querySelector('#wn-root ._wn-view.active');
         _render(scene, activeTab?.dataset?.wv || 'all');
       }, _notify);
@@ -268,7 +270,12 @@ function _render(scene, view) {
   if (!grid) return;
   const scrollTop = grid.scrollTop;
   const eqId = (State.equipment?.weapon||{}).item_id||'';
-  const ownedSet = new Set(State.ownedWeapons||[]);
+  // FIX: раньше у weapon-вкладки в ownedSet НЕ добавлялись активные аренды,
+  // поэтому арендованное мифик-оружие пропадало из «Арсенала». Унифицировано
+  // с остальными 5 слотами через RentalBadge.ownedSetFor.
+  const ownedSet = window.RentalBadge
+    ? RentalBadge.ownedSetFor('weapon', State.ownedWeapons, State.activeRentals)
+    : new Set([...(State.ownedWeapons||[]), ...((State.activeRentals||[]).map(r => r.item_id))]);
   const items = WEAPONS_DATA.map(w=>({
     ...w,
     equipped: w.id===eqId,
@@ -346,15 +353,19 @@ function open(scene) {
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
-  // Всегда перечитываем стейт при открытии (нужно после оплаты)
-  post('/api/player', {}).then(res => {
-    if (!document.getElementById('wn-root')) return;
-    if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
-    if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
-    if (res?.equipment)     State.equipment = res.equipment;
-    if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
-    refresh();
-  }).catch(() => {});
+  // no-store fetch обходит кэш Telegram WebView (иначе после оплаты аренды
+  // в active_rentals[] не появится новая запись и бейдж не отрисуется).
+  (window.RentalBadge ? RentalBadge.refreshState() : post('/api/player', {}))
+    .then(res => {
+      if (!document.getElementById('wn-root')) return;
+      if (res && !window.RentalBadge) {
+        if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+        if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
+        if (res?.equipment)     State.equipment = res.equipment;
+        if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
+      }
+      refresh();
+    }).catch(() => {});
   // Pending USDT invoice — возобновляем поллинг (если оверлей закрылся во время оплаты)
   try {
     const pi = parseInt(localStorage.getItem('weaponPendingInvoice') || '0', 10);
