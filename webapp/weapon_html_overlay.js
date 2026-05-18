@@ -350,6 +350,7 @@ function open(scene) {
   post('/api/player', {}).then(res => {
     if (!document.getElementById('wn-root')) return;
     if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+    if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
     if (res?.equipment)     State.equipment = res.equipment;
     if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
     refresh();

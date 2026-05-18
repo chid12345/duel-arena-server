@@ -265,7 +265,7 @@ function _render(scene, view) {
   if (!grid) return;
   const scrollTop = grid.scrollTop;
   const eqId = (State.equipment?.shield||{}).item_id||'';
-  const ownedSet = new Set(State.ownedWeapons||[]);
+  const ownedSet = new Set([...(State.ownedWeapons||[]), ...((State.activeRentals||[]).map(r => r.item_id))]);
   const items = SHIELD_DATA.map(h=>({
     ...h,
     equipped: h.id===eqId,
@@ -347,6 +347,7 @@ function open(scene) {
   post('/api/player', {}).then(res => {
     if (!document.getElementById('sh-root')) return;
     if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+    if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
     if (res?.equipment)     State.equipment = res.equipment;
     if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
     refresh();

@@ -274,7 +274,7 @@ function _render(scene, view) {
   const equippedIds = new Set([
     (eq.ring1||{}).item_id, (eq.ring2||{}).item_id,
   ].filter(Boolean));
-  const ownedSet = new Set(State.ownedWeapons||[]);
+  const ownedSet = new Set([...(State.ownedWeapons||[]), ...((State.activeRentals||[]).map(r => r.item_id))]);
   const items = RING_DATA.map(h=>({
     ...h,
     equipped: equippedIds.has(h.id),
@@ -356,6 +356,7 @@ function open(scene) {
   post('/api/player', {}).then(res => {
     if (!document.getElementById('rg-root')) return;
     if (Array.isArray(res?.owned_weapons)) State.ownedWeapons = res.owned_weapons;
+    if (Array.isArray(res?.active_rentals)) State.activeRentals = res.active_rentals;
     if (res?.equipment)     State.equipment = res.equipment;
     if (res?.player)        { State.player = res.player; State.playerLoadedAt = Date.now(); }
     refresh();
