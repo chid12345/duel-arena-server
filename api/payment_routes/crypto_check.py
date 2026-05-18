@@ -202,8 +202,8 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                                 "class_id": armor_class_id, "player": _player_api(dict(fresh))}
                     _armor_ok = False
                     try:
-                        _ok2, _msg2, _new_id = db.create_usdt_class(owner_uid)
-                        _armor_ok = bool(_ok2) or ("уже есть" in (_msg2 or ""))
+                        _ok2, _msg2 = db.create_legendary_armor(owner_uid)
+                        _armor_ok = bool(_ok2) or ("уже" in (_msg2 or "").lower())
                     except Exception as _e:
                         logger.error("CRITICAL: legendary_usdt creation via crypto_check uid=%s err=%s", owner_uid, _e)
                     _cache_invalidate(owner_uid)
@@ -228,18 +228,18 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                         db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "scroll_received": True, "scroll_id": usdt_scroll_id}
                 if is_usdt_slot:
-                    ok2, msg2, new_class_id = db.create_usdt_class(owner_uid)
-                    await manager.send(owner_uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
-                    await _send_tg_message(owner_uid, f"💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
-                    if ok2:
+                    ok2, msg2 = db.create_legendary_armor(owner_uid)
+                    await manager.send(owner_uid, {"event": "usdt_slot_created", "class_id": "armor_mythic4", "ok": ok2})
+                    await _send_tg_message(owner_uid, f"💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
+                    if ok2 or "уже" in (msg2 or "").lower():
                         db.mark_items_delivered(invoice_id)
-                    return {"ok": True, "paid": True, "usdt_slot_created": True, "class_id": new_class_id}
+                    return {"ok": True, "paid": True, "usdt_slot_created": True, "class_id": "armor_mythic4"}
                 if is_usdt_reset and usdt_reset_class_id:
-                    db.reset_usdt_slot_stats(owner_uid, usdt_reset_class_id)
-                    await manager.send(owner_uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
-                    await _send_tg_message(owner_uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+                    db.reset_legendary(owner_uid)
+                    await manager.send(owner_uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
+                    await _send_tg_message(owner_uid, f"🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «Профиль → 🛡 Броня» и распределите заново.\n\n⚔️ Duel Arena")
                     db.mark_items_delivered(invoice_id)
-                    return {"ok": True, "paid": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
+                    return {"ok": True, "paid": True, "usdt_slot_reset": True, "class_id": "armor_mythic4"}
                 if avatar_id:
                     unlock = db.unlock_avatar(owner_uid, avatar_id, source="usdt")
                     if not unlock.get("ok"):
@@ -372,10 +372,10 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "already_confirmed": True, "premium_activated": True, "premium_days_left": days_left}
                 if is_usdt_reset and usdt_reset_class_id:
-                    db.reset_usdt_slot_stats(uid, usdt_reset_class_id)
-                    await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
+                    db.reset_legendary(uid)
+                    await manager.send(uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
                     db.mark_items_delivered(invoice_id)
-                    return {"ok": True, "paid": True, "already_confirmed": True, "usdt_slot_reset": True, "class_id": usdt_reset_class_id}
+                    return {"ok": True, "paid": True, "already_confirmed": True, "usdt_slot_reset": True, "class_id": "armor_mythic4"}
                 return {
                     "ok": True, "paid": True, "already_confirmed": True,
                     "profile_reset": is_full_reset,

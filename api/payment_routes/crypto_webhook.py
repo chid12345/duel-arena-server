@@ -165,14 +165,14 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 else:
                     _armor_ok = False
                     try:
-                        ok2, msg2, _new_id = db.create_usdt_class(uid)
-                        _armor_ok = bool(ok2) or ("уже есть" in (msg2 or ""))
+                        ok2, msg2 = db.create_legendary_armor(uid)
+                        _armor_ok = bool(ok2) or ("уже" in (msg2 or "").lower())
                     except Exception as _e:
                         logger.error("CRITICAL: legendary_usdt creation uid=%s invoice=%s err=%s",
                                      uid, invoice_id, _e)
                     _cache_invalidate(uid)
-                    await manager.send(uid, {"event": "armor_class_purchased", "class_id": armor_class_id, "source": "cryptopay"})
-                    await _send_tg_message(uid, "💠 <b>Легендарный образ получен!</b>\nОткройте «Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+                    await manager.send(uid, {"event": "armor_class_purchased", "class_id": "armor_mythic4", "source": "cryptopay"})
+                    await _send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
                     if _armor_ok:
                         db.mark_items_delivered(int(invoice_id))
             elif is_usdt_scroll and usdt_scroll_id:
@@ -189,15 +189,15 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 if _scroll_ok:
                     db.mark_items_delivered(int(invoice_id))
             elif is_usdt_slot:
-                ok2, msg2, new_class_id = db.create_usdt_class(uid)
-                await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": ok2})
-                await _send_tg_message(uid, f"💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
-                if ok2:
+                ok2, msg2 = db.create_legendary_armor(uid)
+                await manager.send(uid, {"event": "usdt_slot_created", "class_id": "armor_mythic4", "ok": ok2})
+                await _send_tg_message(uid, f"💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
+                if ok2 or "уже" in (msg2 or "").lower():
                     db.mark_items_delivered(int(invoice_id))
             elif is_usdt_reset and usdt_reset_class_id:
-                db.reset_usdt_slot_stats(uid, usdt_reset_class_id)
-                await manager.send(uid, {"event": "usdt_slot_reset", "class_id": usdt_reset_class_id})
-                await _send_tg_message(uid, f"🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+                db.reset_legendary(uid)
+                await manager.send(uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
+                await _send_tg_message(uid, f"🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «Профиль → 🛡 Броня» и распределите заново.\n\n⚔️ Duel Arena")
                 db.mark_items_delivered(int(invoice_id))
             elif avatar_id:
                 unlock = db.unlock_avatar(uid, avatar_id, source="usdt")

@@ -38,16 +38,8 @@ class StatsScene extends Phaser.Scene {
     // Тело и не может уйти на Героя/Босс/etc, кроме как через X (который
     // возвращает в Профиль = опять к слоту Тело). Активная вкладка —
     // 'profile', потому что пришли по тапу слота брони из Профиля.
-    if (d.openWardrobe) {
-      this._openedFromProfile = true;
-      this._drawBg(W, H);
-      TabBar.build(this, { activeKey: 'profile' });
-      window._tabPlaceholderHideNextFrame?.('st-placeholder');
-      // Анти-эксплойт refresh: чек после отрисовки — иначе чёрный экран на время POST.
-      if (await window._redirectIfInBattle?.(this)) return;
-      this._openAvatarPanel?.();
-      return;
-    }
+    // legacy openWardrobe был для старого «Гардероба классов» (удалён).
+    // Если ещё прилетит от старого URL — просто игнорируем флаг и идём в Stats как обычно.
 
     // Сначала фон + таббар: даже если active_session/StatsHTML тормозит,
     // у игрока есть видимый фон и нижнее меню (а не чёрный экран).
@@ -65,11 +57,7 @@ class StatsScene extends Phaser.Scene {
 
     if (typeof ScreenHints !== 'undefined') ScreenHints.show('stats');
 
-    // После restart от wardrobe-действия — открыть гардероб заново
-    if (d.reopenWardrobe && d.wardrobePayload) {
-      this._renderAvatarOverlay?.(d.wardrobePayload);
-      if (d.toast) this._showToast(d.toast);
-    }
+    // legacy reopenWardrobe (старый Phaser-Wardrobe удалён) — игнорируем.
   }
 
   /* ── Фон ─────────────────────────────────────────────── */

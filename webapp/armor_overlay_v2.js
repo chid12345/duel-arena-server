@@ -179,9 +179,18 @@ async function _doAction(scene, action, item) {
   scene._armorBusy = true;
   try {
     if (action === 'open_legendary') {
-      // armor_mythic4 — открыть старый гардероб для USDT-слота с тренировкой статов
-      close();
-      scene.scene.start('Stats', { player: State.player, openWardrobe: true });
+      // armor_mythic4 → новый overlay распределения +19 статов и пассивки.
+      if (window.LegendaryArmor) {
+        LegendaryArmor.open(scene, () => {
+          // После закрытия legendary — перерисовать armor-вкладку.
+          if (window.RentalBadge) RentalBadge.refreshState().then(() => {
+            const tab = document.querySelector('#ar-root ._ar-view.active');
+            _render(scene, tab?.dataset?.av || 'all');
+          });
+        });
+      } else {
+        _notify('Легендарный слот недоступен', false);
+      }
       return;
     }
     if (action === 'buy_rental') {

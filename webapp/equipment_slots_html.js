@@ -152,7 +152,7 @@ function _dispatch(slot, scene) {
   // на текущей кнопке без побочного эффекта на новых элементах.
   setTimeout(() => {
     try {
-      if      (slot === 'armor'  )                           scene.scene.start('Stats', { player: State.player, openWardrobe: true });
+      if      (slot === 'armor'  && typeof ArmorHTML  !== 'undefined') ArmorHTML.open(scene);
       else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') WeaponHTML.open(scene);
       else if (slot === 'belt'   && typeof HelmetHTML !== 'undefined') HelmetHTML.open(scene);
       else if (slot === 'boots'  && typeof BootsHTML  !== 'undefined') BootsHTML.open(scene);

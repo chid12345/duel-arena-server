@@ -7,43 +7,19 @@ class InitDataHeader(BaseModel):
     init_data: str
 
 
-class WardrobeBuyBody(BaseModel):
-    init_data: str
-    class_id: str
-
-
-class WardrobeEquipBody(BaseModel):
-    init_data: str
-    class_id: str
-
-
-class USDTBody(BaseModel):
-    init_data: str
-    class_id: str
-
+# Унификация armor: legendary_usdt теперь одна единственная USDT-кастомка
+# (armor_mythic4). Endpoints больше не принимают class_id — там всегда mythic4.
 
 class USDTNameBody(BaseModel):
     init_data: str
-    class_id: str
     custom_name: str
-
-
-class USDTBuyInvoiceBody(BaseModel):
-    init_data: str
-
-
-class USDTResetInvoiceBody(BaseModel):
-    init_data: str
-    class_id: str
 
 
 class USDTTrainBody(BaseModel):
     init_data: str
-    class_id: str
     stat: str
 
 
 class USDTPassiveBody(BaseModel):
     init_data: str
-    class_id: str
     passive_type: str

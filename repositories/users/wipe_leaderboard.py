@@ -33,25 +33,20 @@ class UsersWipeLeaderboardMixin:
                       "player_buffs"):
             cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM metric_events WHERE user_id = ?", (user_id,))
-        # Классы: удаляем всё кроме USDT-покупок (игрок заплатил реальные деньги)
+        # Унификация armor: снос legacy class-системы. user_inventory больше нет.
+        # Купленные мифики живут в player_owned_armor — игрок заплатил, не сносим.
+        # USDT-кастомка (armor_mythic4) в armor_custom_mods — сбрасываем статы,
+        # но сам слот сохраняем (игрок заплатил $11.99).
         cursor.execute(
-            "DELETE FROM user_inventory WHERE user_id = ? AND class_type != 'usdt'",
-            (user_id,),
-        )
-        # Гарантируем наличие всех колонок (stamina_saved, passive_type могут быть
-        # добавлены динамически и отсутствовать в старых БД)
-        self._ensure_inventory_schema(cursor)
-        # USDT-слоты снимаем (equipped=FALSE) и сбрасываем распределённые статы,
-        # но сами записи (=купленные слоты) сохраняем
-        cursor.execute(
-            """UPDATE user_inventory SET
-               equipped = FALSE, stats_applied = 0,
-               strength_saved = 0, agility_saved = 0,
-               intuition_saved = 0, stamina_saved = 0,
-               free_stats_saved = 19, passive_type = NULL
+            """UPDATE armor_custom_mods SET
+               str_bonus = 0, agi_bonus = 0, int_bonus = 0, end_bonus = 0,
+               applied = 0, free_stats_left = 19, passive_type = NULL
                WHERE user_id = ?""",
             (user_id,),
         )
+        # Снимаем все слоты экипировки (но сами вещи в player_owned_weapons/armor
+        # остаются — они куплены).
+        cursor.execute("DELETE FROM player_equipment WHERE user_id = ?", (user_id,))
         if keep_wallet_clan_and_referrals:
             for table in ("season_stats", "battle_pass", "season_rewards", "pvp_queue"):
                 cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))

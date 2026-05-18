@@ -230,9 +230,9 @@ setTimeout(function(){
 <script defer src="shop_html_pay.js?v=__BUILD_VERSION__"></script>
 <script defer src="shop_html_pay_detail.js?v=__BUILD_VERSION__"></script>
 <script defer src="shop_html_prembox.js?v=__BUILD_VERSION__"></script>
-<!-- Wardrobe HTML overlay (DOM-based, rarity glassmorphism) -->
+<!-- Wardrobe HTML overlay — теперь только базовый CSS + helpers
+     (wardrobe_html_actions.js удалён вместе с legacy class-системой) -->
 <script defer src="wardrobe_html_overlay.js?v=__BUILD_VERSION__"></script>
-<script defer src="wardrobe_html_actions.js?v=__BUILD_VERSION__"></script>
 <script defer src="detail_compare.js?v=__BUILD_VERSION__"></script>
 <!-- Upgrade modal — общий для всех overlay шмота (этап 4F редизайна) -->
 <script defer src="upgrade_modal.js?v=__BUILD_VERSION__"></script>
@@ -249,6 +249,8 @@ setTimeout(function(){
 <script defer src="helmet_html_overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="helmet_html_detail.js?v=__BUILD_VERSION__"></script>
 <script defer src="armor_overlay_v2.js?v=__BUILD_VERSION__"></script>
+<!-- Легендарная броня (armor_mythic4) — overlay распределения +19 статов и пассивки -->
+<script defer src="legendary_armor_overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="boots_html_overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="boots_html_detail.js?v=__BUILD_VERSION__"></script>
 <script defer src="shield_html_overlay.js?v=__BUILD_VERSION__"></script>
@@ -257,13 +259,7 @@ setTimeout(function(){
 <script defer src="ring_html_detail.js?v=__BUILD_VERSION__"></script>
 <!-- Battle Select HTML overlay (тап «В БОЙ» из профиля) -->
 <script defer src="battle_select_html.js?v=__BUILD_VERSION__"></script>
-<!-- Wardrobe overlay -->
-<script defer src="scene_wardrobe_overlay.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_wardrobe_overlay_ext.js?v=__BUILD_VERSION__"></script>
-<!-- Wardrobe detail сцена -->
-<script defer src="scene_wardrobe_detail.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_wardrobe_detail_ext.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_wardrobe_detail_ext2.js?v=__BUILD_VERSION__"></script>
+<!-- Wardrobe (legacy class-выбор Phaser-overlay) удалён — теперь только armor_overlay_v2 + legendary_armor_overlay -->
 <!-- Inventory overlay — DOM-карточки ящиков -->
 <script defer src="inv_boxes_html.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_inventory_overlay.js?v=__BUILD_VERSION__"></script>

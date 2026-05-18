@@ -1,4 +1,8 @@
-"""Легендарный образы: создание, переименование, тренировка статов, пассивка."""
+"""Легендарная броня (armor_mythic4): создание, переименование, распределение +19 статов, пассивка.
+
+После сноса legacy class-системы все ручки идут через armor_custom_mods —
+никакого user_inventory/class_id. legendary armor у игрока ОДИН (mythic4).
+"""
 
 from __future__ import annotations
 
@@ -10,7 +14,6 @@ from fastapi import APIRouter
 
 from api.wardrobe_routes.models import (
     InitDataHeader,
-    USDTBody,
     USDTNameBody,
     USDTPassiveBody,
     USDTTrainBody,
@@ -34,7 +37,7 @@ def attach_wardrobe_usdt(
 
     def _player_response(uid: int) -> dict:
         p = dict(db.get_or_create_player(uid, ""))
-        usdt_passive = db.get_equipped_usdt_passive(uid)
+        usdt_passive = db.get_equipped_legendary_passive(uid)
         if usdt_passive:
             p["usdt_passive_type"] = usdt_passive
         return _player_api(p)
@@ -47,22 +50,10 @@ def attach_wardrobe_usdt(
         uid = int(tg_user["id"])
         username = tg_user.get("username") or tg_user.get("first_name") or ""
         await asyncio.to_thread(db.get_or_create_player, uid, username)
-        success, message, new_class_id = await asyncio.to_thread(db.create_usdt_class, uid)
-        result = {"ok": success, "message": message, "new_class_id": new_class_id}
-        if success:
-            _cache_invalidate(uid)
-            result.update(await wardrobe(body.init_data))
-        return result
-
-    @router.post("/api/wardrobe/usdt/save")
-    async def wardrobe_usdt_save(body: USDTBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        username = tg_user.get("username") or tg_user.get("first_name") or ""
-        await asyncio.to_thread(db.get_or_create_player, uid, username)
-        success, message = await asyncio.to_thread(db.save_usdt_stats, uid, body.class_id.strip())
+        success, message = await asyncio.to_thread(db.create_legendary_armor, uid)
         result = {"ok": success, "message": message}
         if success:
+            _cache_invalidate(uid)
             result.update(await wardrobe(body.init_data))
         return result
 
@@ -70,44 +61,18 @@ def attach_wardrobe_usdt(
     async def wardrobe_usdt_rename(body: USDTNameBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        inventory = await asyncio.to_thread(db.get_user_inventory, uid)
-        usdt_item = next((item for item in inventory if item["class_id"] == body.class_id), None)
-        if not usdt_item or usdt_item["class_type"] != "usdt":
-            return {"ok": False, "message": "Легендарный образ не найден"}
-
-        def _do_rename():
-            conn = db.get_connection()
-            cursor = conn.cursor()
-            try:
-                cursor.execute(
-                    "UPDATE user_inventory SET custom_name = ? WHERE user_id = ? AND class_id = ?",
-                    (body.custom_name.strip()[:50], uid, body.class_id),
-                )
-                conn.commit()
-                return True, None
-            except Exception as e:
-                conn.rollback()
-                return False, str(e)
-            finally:
-                conn.close()
-
-        ok, err = await asyncio.to_thread(_do_rename)
-        if not ok:
-            logger.error("usdt rename failed: %s", err)
-            return {"ok": False, "message": f"Ошибка: {err}"}
-        result = {"ok": True, "message": "Название обновлено"}
-        result.update(await wardrobe(body.init_data))
+        ok, msg = await asyncio.to_thread(db.set_legendary_name, uid, body.custom_name)
+        result = {"ok": ok, "message": msg}
+        if ok:
+            result.update(await wardrobe(body.init_data))
         return result
 
     @router.get("/api/wardrobe/reset-cost")
     async def wardrobe_reset_cost(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
-        cost, inventory = await asyncio.gather(
-            asyncio.to_thread(db.get_reset_stats_cost, uid),
-            asyncio.to_thread(db.get_user_inventory, uid),
-        )
-        has_usdt = any(item["class_type"] == "usdt" for item in inventory)
+        has_usdt = await asyncio.to_thread(db.has_legendary_armor, uid)
+        cost = RESET_STATS_COST_DIAMONDS_USDT if has_usdt else RESET_STATS_COST_DIAMONDS
         return {
             "ok": True,
             "cost_diamonds": cost,
@@ -117,45 +82,45 @@ def attach_wardrobe_usdt(
         }
 
     @router.post("/api/wardrobe/usdt/apply-stats")
-    async def wardrobe_usdt_apply_stats(body: USDTBody):
+    async def wardrobe_usdt_apply_stats(body: InitDataHeader):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        ok, msg, item = await asyncio.to_thread(db.apply_usdt_stats, uid, body.class_id.strip())
+        ok, msg, item = await asyncio.to_thread(db.apply_legendary_stats, uid)
         if ok:
             _cache_invalidate(uid)
             player = await asyncio.to_thread(_player_response, uid)
-            return {"ok": True, "message": msg, "inventory_item": item, "player": player}
-        return {"ok": False, "message": msg, "inventory_item": item}
+            return {"ok": True, "message": msg, "armor_mods": item, "player": player}
+        return {"ok": False, "message": msg, "armor_mods": item}
 
     @router.post("/api/wardrobe/usdt/train")
     async def wardrobe_usdt_train(body: USDTTrainBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        ok, msg, item = await asyncio.to_thread(db.train_usdt_stat, uid, body.class_id.strip(), body.stat.strip())
+        ok, msg, item = await asyncio.to_thread(db.train_legendary_stat, uid, body.stat.strip())
         if ok:
             _cache_invalidate(uid)
             player = await asyncio.to_thread(_player_response, uid)
-            return {"ok": True, "message": msg, "inventory_item": item, "player": player}
-        return {"ok": False, "message": msg, "inventory_item": item}
+            return {"ok": True, "message": msg, "armor_mods": item, "player": player}
+        return {"ok": False, "message": msg, "armor_mods": item}
 
     @router.post("/api/wardrobe/usdt/untrain")
     async def wardrobe_usdt_untrain(body: USDTTrainBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        ok, msg, item = await asyncio.to_thread(db.untrain_usdt_stat, uid, body.class_id.strip(), body.stat.strip())
+        ok, msg, item = await asyncio.to_thread(db.untrain_legendary_stat, uid, body.stat.strip())
         if ok:
             _cache_invalidate(uid)
             player = await asyncio.to_thread(_player_response, uid)
-            return {"ok": True, "message": msg, "inventory_item": item, "player": player}
-        return {"ok": False, "message": msg, "inventory_item": item}
+            return {"ok": True, "message": msg, "armor_mods": item, "player": player}
+        return {"ok": False, "message": msg, "armor_mods": item}
 
     @router.post("/api/wardrobe/usdt/set-passive")
     async def wardrobe_usdt_set_passive(body: USDTPassiveBody):
         tg_user = get_user_from_init_data(body.init_data)
         uid = int(tg_user["id"])
-        ok, msg, item = await asyncio.to_thread(db.set_usdt_passive, uid, body.class_id.strip(), body.passive_type)
+        ok, msg, item = await asyncio.to_thread(db.set_legendary_passive, uid, body.passive_type)
         if ok:
             _cache_invalidate(uid)
             player = await asyncio.to_thread(_player_response, uid)
-            return {"ok": True, "message": msg, "inventory_item": item, "player": player}
-        return {"ok": False, "message": msg, "inventory_item": item}
+            return {"ok": True, "message": msg, "armor_mods": item, "player": player}
+        return {"ok": False, "message": msg, "armor_mods": item}

@@ -52,12 +52,12 @@ def test_stars_armor_class_legacy_blocked_for_non_legendary(db, monkeypatch):
 
     assert msg is not None
     assert "не поддерживается" in msg or "обновить" in msg
-    # legacy class не должен был быть создан через старый путь
-    assert db.has_class(4002, "berserker_mythic") is False
+    # Через legacy не должна была создаться legendary запись.
+    assert db.has_legendary_armor(4002) is False
 
 
 def test_stars_armor_class_legendary_usdt_still_works(db, monkeypatch):
-    """`armor_class_stars:legendary_usdt` → создаёт USDT-кастомку (mythic4)."""
+    """`armor_class_stars:legendary_usdt` → создаёт Легендарную броню (armor_custom_mods)."""
     import handlers.commands.shop_equip_stars as mod
     monkeypatch.setattr(mod, "db", db)
 
@@ -66,10 +66,10 @@ def test_stars_armor_class_legendary_usdt_still_works(db, monkeypatch):
     msg = mod.handle_stars_equip_payload(4003, "armor_class_stars:4003:legendary_usdt", 0)
 
     assert msg is not None and "Легендарный" in msg
-    # create_usdt_class создаёт класс типа usdt_custom_*
-    inv = db.get_user_inventory(4003)
-    usdt_classes = [c for c in inv if (c.get("class_type") or "") == "usdt"]
-    assert len(usdt_classes) >= 1, f"create_usdt_class не создал запись: {inv!r}"
+    assert db.has_legendary_armor(4003) is True
+    mods = db.get_armor_custom_mods(4003, "armor_mythic4")
+    assert mods is not None
+    assert mods["free_stats_left"] == 19, "новая legendary должна стартовать с 19 свободных статов"
 
 
 # ─────────── equip_item('armor') sync current_class ───────────
@@ -128,28 +128,38 @@ def test_switch_armor_updates_current_class(db):
 
 # ─────────── purchase_class не делает double-stat-counting ───────────
 
-def test_purchase_class_does_not_double_count_stats(db):
-    """purchase_class больше не пушит +N в players.strength (мифик-броня даёт это через get_equipment_stats)."""
-    db.get_or_create_player(4020, "u_double")
+def test_purchase_armor_does_not_double_count_stats(db):
+    """Покупка мифик-брони (через add_owned_armor + equip_item) не пушит delta-статы в players.
+
+    Раньше purchase_class напрямую обновлял players.strength/endurance/crit/max_hp,
+    плюс мифик-броня давала те же +N через get_equipment_stats — двойной счёт.
+    Сейчас purchase_class удалён, остался только unified path.
+    """
+    db.get_or_create_player(4020, "u_no_double")
     conn = db.get_connection()
     row = conn.execute("SELECT strength, endurance, crit, max_hp FROM players WHERE user_id = ?", (4020,)).fetchone()
     str0, end0, crit0, hp0 = row["strength"], row["endurance"], row["crit"], row["max_hp"]
-    conn.execute("UPDATE players SET gold = 100000, diamonds = 1000 WHERE user_id = ?", (4020,))
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (4020,))
     conn.commit()
     conn.close()
 
-    ok, _msg = db.purchase_class(4020, "berserker_gold")
-    assert ok is True, _msg
+    # Купили armor_gold1 (str_bonus=7, hp_bonus=14) через unified path
+    db.add_owned_armor(4020, "armor_gold1")
+    db.equip_item(4020, "armor", "armor_gold1", force=True)
 
     conn = db.get_connection()
     row = conn.execute("SELECT strength, endurance, crit, max_hp FROM players WHERE user_id = ?", (4020,)).fetchone()
     conn.close()
-    # delta больше НЕ применяется — статы должны остаться такими же.
-    # Бонус брони берётся через get_equipment_stats (unified path).
+    # players.* колонки не меняются — бонусы брони идут через get_equipment_stats.
     assert row["strength"] == str0, f"strength изменилась: {str0} → {row['strength']}"
     assert row["endurance"] == end0
     assert row["crit"] == crit0
     assert row["max_hp"] == hp0
+
+    # А вот get_equipment_stats — должен дать +7 strength / +14 hp.
+    stats = db.get_equipment_stats(4020)
+    assert stats.get("str_bonus", 0) >= 7
+    assert stats.get("hp_bonus", 0) >= 14
 
 
 # ─────────── /api/player обогащает каждый слот rental: {expires_at, ...} ───────────

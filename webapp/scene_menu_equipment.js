@@ -32,7 +32,6 @@ Object.assign(MenuScene.prototype, {
       zone.on('pointerup', () => {
         Sound.click();
         if      (slot === 'armor'  && typeof ArmorHTML  !== 'undefined') ArmorHTML.open(this);
-        else if (slot === 'armor'  )                         this.scene.start('Stats', { player: State.player, openWardrobe: true });
         else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') WeaponHTML.open(this);
         else if (slot === 'belt'   && typeof HelmetHTML !== 'undefined') HelmetHTML.open(this);
         else if (slot === 'boots'  && typeof BootsHTML  !== 'undefined') BootsHTML.open(this);

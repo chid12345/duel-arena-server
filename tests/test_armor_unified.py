@@ -174,120 +174,57 @@ def test_armor_custom_mods_crud(db):
     assert mods["applied"] is False
 
 
-def test_migration_owned_armor_from_user_inventory(db):
-    """После создания user_inventory.purchase → миграция переносит в player_owned_armor.
-
-    Здесь делаем ручной INSERT в user_inventory (как старая система покупала),
-    затем перепрогоняем миграции (через _ensure_inventory_schema) и проверяем
-    что данные оказались в player_owned_armor с новым item_id.
-
-    Примечание: миграции уже применены при init_database; для проверки
-    переноса дописываем строки и заново триггерим миграции 003/004 — они
-    INSERT OR IGNORE, идемпотентны.
-    """
-    db.get_or_create_player(11003, "u_migrate")
-
-    conn = db.get_connection()
-    cur = conn.cursor()
-    cur.execute(
-        """INSERT INTO user_inventory (user_id, class_id, class_type, custom_name,
-           strength_saved, agility_saved, intuition_saved, endurance_saved, stats_applied)
-           VALUES (?, 'berserker_gold', 'gold', NULL, 0, 0, 0, 0, 0)""",
-        (11003,),
-    )
-    cur.execute(
-        """INSERT INTO user_inventory (user_id, class_id, class_type, custom_name,
-           strength_saved, agility_saved, intuition_saved, endurance_saved, stats_applied)
-           VALUES (?, 'legendary_usdt', 'usdt', 'Светобой', 7, 4, 3, 5, 1)""",
-        (11003,),
-    )
-    conn.commit()
-
-    # Применить миграцию 003 и 004 повторно (INSERT OR IGNORE — идемпотентны)
-    from db_schema.sqlite_migrations_part10_armor_unify import MIGRATIONS_PART10_ARMOR_UNIFY
-    for mig_id, stmts in MIGRATIONS_PART10_ARMOR_UNIFY:
-        if mig_id in ("2026_05_18_003_migrate_owned_armor_from_user_inventory",
-                      "2026_05_18_004_migrate_usdt_custom_mods"):
-            for s in stmts:
-                cur.execute(s)
-    conn.commit()
-    conn.close()
-
-    owned = db.get_owned_armor(11003)
-    assert "armor_gold1" in owned, f"berserker_gold должен мигрировать в armor_gold1, owned={owned}"
-    assert "armor_mythic4" in owned, f"legendary_usdt должен мигрировать в armor_mythic4, owned={owned}"
-
-    mods = db.get_armor_custom_mods(11003, "armor_mythic4")
-    assert mods is not None, "USDT-кастомка должна попасть в armor_custom_mods"
-    assert mods["str_bonus"] == 7
-    assert mods["agi_bonus"] == 4
-    assert mods["int_bonus"] == 3
-    assert mods["end_bonus"] == 5
-    assert mods["custom_name"] == "Светобой"
-    assert mods["applied"] is True
+# Унификация armor завершена: user_inventory таблица удалена (migration part11),
+# switch_class/unequip_class/purchase_class функции удалены. Покупка/смена брони
+# теперь идёт ТОЛЬКО через equip_item('armor', item_id) + add_owned_armor.
 
 
-# ── Коммит 3: switch_class dual-write + get_equipment fallback ──────────────
+def test_equip_armor_writes_to_player_equipment(db):
+    """equip_item('armor', 'armor_gold1') → запись в player_equipment.armor + current_class sync."""
+    db.get_or_create_player(12001, "u_eq_armor")
+    db.add_owned_armor(12001, "armor_gold1")
 
-def _purchase_class_directly(db, user_id: int, class_id: str, class_type: str) -> None:
-    """Имитация покупки класса (запись в user_inventory) до перевода на equip_item."""
-    conn = db.get_connection()
-    cursor = conn.cursor()
-    cursor.execute(
-        "INSERT OR IGNORE INTO user_inventory (user_id, class_id, class_type) VALUES (?, ?, ?)",
-        (user_id, class_id, class_type),
-    )
-    conn.commit()
-    conn.close()
-
-
-def test_switch_class_writes_to_player_equipment_armor(db):
-    """После switch_class('berserker_gold') в player_equipment появляется armor_gold1."""
-    db.get_or_create_player(12001, "u_sc_eq")
-    _purchase_class_directly(db, 12001, "berserker_gold", "gold")
-
-    ok, _msg = db.switch_class(12001, "berserker_gold")
+    ok = db.equip_item(12001, "armor", "armor_gold1", force=True)
     assert ok is True
 
-    # В player_equipment должна появиться запись slot='armor', item_id='armor_gold1'
     conn = db.get_connection()
     row = conn.execute(
         "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
         (12001,),
     ).fetchone()
+    cls = conn.execute("SELECT current_class FROM players WHERE user_id = ?", (12001,)).fetchone()
     conn.close()
-    assert row is not None, "switch_class должен записать armor в player_equipment"
-    assert row["item_id"] == "armor_gold1"
-
-    # А также добавить в player_owned_armor
-    assert "armor_gold1" in db.get_owned_armor(12001)
+    assert row is not None and row["item_id"] == "armor_gold1"
+    assert cls["current_class"] == "berserker_gold"
 
 
-def test_switch_class_updates_player_equipment_on_change(db):
-    """switch_class на другой class_id обновляет player_equipment.armor."""
-    db.get_or_create_player(12002, "u_sc_change")
-    _purchase_class_directly(db, 12002, "berserker_gold", "gold")
-    _purchase_class_directly(db, 12002, "paladin_gold", "gold")
+def test_switch_armor_updates_player_equipment(db):
+    """equip_item('armor', X) → equip_item('armor', Y) — слот перезаписан, current_class обновлён."""
+    db.get_or_create_player(12002, "u_switch_armor")
+    db.add_owned_armor(12002, "armor_gold1")
+    db.add_owned_armor(12002, "armor_gold4")
 
-    db.switch_class(12002, "berserker_gold")
-    db.switch_class(12002, "paladin_gold")
+    db.equip_item(12002, "armor", "armor_gold1", force=True)
+    db.equip_item(12002, "armor", "armor_gold4", force=True)
 
     conn = db.get_connection()
     row = conn.execute(
         "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
         (12002,),
     ).fetchone()
+    cls = conn.execute("SELECT current_class FROM players WHERE user_id = ?", (12002,)).fetchone()
     conn.close()
-    assert row["item_id"] == "armor_gold4"  # paladin_gold → armor_gold4
+    assert row["item_id"] == "armor_gold4"
+    assert cls["current_class"] == "paladin_gold"
 
 
-def test_unequip_class_clears_player_equipment_armor(db):
-    """unequip_class удаляет запись slot='armor' из player_equipment."""
-    db.get_or_create_player(12003, "u_unequip")
-    _purchase_class_directly(db, 12003, "berserker_gold", "gold")
-    db.switch_class(12003, "berserker_gold")
+def test_unequip_armor_clears_player_equipment_and_class(db):
+    """unequip_item('armor') удаляет запись + обнуляет players.current_class."""
+    db.get_or_create_player(12003, "u_unequip_armor")
+    db.add_owned_armor(12003, "armor_gold1")
+    db.equip_item(12003, "armor", "armor_gold1", force=True)
 
-    ok, _msg = db.unequip_class(12003)
+    ok = db.unequip_item(12003, "armor")
     assert ok is True
 
     conn = db.get_connection()
@@ -295,15 +232,18 @@ def test_unequip_class_clears_player_equipment_armor(db):
         "SELECT item_id FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
         (12003,),
     ).fetchone()
+    cls = conn.execute("SELECT current_class, current_class_type FROM players WHERE user_id = ?", (12003,)).fetchone()
     conn.close()
-    assert row is None, "После unequip_class запись armor в player_equipment должна исчезнуть"
+    assert row is None
+    assert cls["current_class"] is None
+    assert cls["current_class_type"] is None
 
 
-def test_get_equipment_returns_armor_via_player_equipment(db):
-    """get_equipment видит armor как обычный 6-й слот после switch_class."""
+def test_get_equipment_returns_armor_as_normal_slot(db):
+    """get_equipment видит armor как обычный 6-й слот после equip_item."""
     db.get_or_create_player(12004, "u_get_eq_armor")
-    _purchase_class_directly(db, 12004, "tank_free", "gold")
-    db.switch_class(12004, "tank_free")
+    db.add_owned_armor(12004, "armor_free1")
+    db.equip_item(12004, "armor", "armor_free1", force=True)
 
     eq = db.get_equipment(12004)
     assert "armor" in eq, f"armor должен быть в get_equipment, eq={list(eq.keys())}"
@@ -399,11 +339,10 @@ def test_set_resolver_no_double_count_armor(db):
     from repositories.sets import resolve_active_sets
 
     db.get_or_create_player(12010, "u_no_double")
-    _purchase_class_directly(db, 12010, "berserker_gold", "gold")
-    db.switch_class(12010, "berserker_gold")
+    db.add_owned_armor(12010, "armor_gold1")
+    db.equip_item(12010, "armor", "armor_gold1", force=True)
 
     eq = db.get_equipment(12010)
-    # armor_gold1 принадлежит archetype-сету (см. _SET_RING[4]='mage')
     armor_set_id = eq["armor"].get("set_id")
     assert armor_set_id, "armor должен иметь set_id"
 

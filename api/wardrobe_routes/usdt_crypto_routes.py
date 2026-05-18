@@ -1,19 +1,18 @@
-"""Crypto-маршруты Легендарный образов: создание/проверка инвойсов CryptoPay."""
+"""Crypto-маршруты Легендарной брони (armor_mythic4): покупка $11.99 и сброс $5.99 через CryptoPay.
+
+Унификация armor: все ручки работают с armor_custom_mods (не user_inventory).
+"""
 
 from __future__ import annotations
 
 import logging
-from typing import Any, Awaitable, Callable, Dict
+from typing import Any, Callable, Dict
 
 from fastapi import APIRouter
 
 import httpx
 
-from api.wardrobe_routes.models import (
-    InitDataHeader,
-    USDTBuyInvoiceBody,
-    USDTResetInvoiceBody,
-)
+from api.wardrobe_routes.models import InitDataHeader
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +58,7 @@ def attach_wardrobe_usdt_crypto(
         return {"ok": False, "reason": f"CryptoPay [{err.get('code','?')}] {err.get('name','UNKNOWN')}"}
 
     @router.post("/api/wardrobe/usdt/buy-invoice")
-    async def wardrobe_usdt_buy_invoice(body: USDTBuyInvoiceBody):
+    async def wardrobe_usdt_buy_invoice(body: InitDataHeader):
         try:
             tg_user = get_user_from_init_data(body.init_data)
             uid = int(tg_user["id"])
@@ -67,7 +66,7 @@ def attach_wardrobe_usdt_crypto(
             return await _create_cryptopay_invoice(
                 uid,
                 amount="11.99",
-                description="Duel Arena — Легендарный образ (кастомный слот)",
+                description="Duel Arena — Легендарная броня (кастомный слот)",
                 payload_str=f"uid:{uid}:usdt_slot:1",
             )
         except Exception as e:
@@ -75,30 +74,28 @@ def attach_wardrobe_usdt_crypto(
             return {"ok": False, "reason": str(e)[:120]}
 
     @router.post("/api/wardrobe/usdt/reset-invoice")
-    async def wardrobe_usdt_reset_invoice(body: USDTResetInvoiceBody):
+    async def wardrobe_usdt_reset_invoice(body: InitDataHeader):
         try:
             tg_user = get_user_from_init_data(body.init_data)
             uid = int(tg_user["id"])
-            class_id = body.class_id.strip()
-            if not db.has_class(uid, class_id):
-                return {"ok": False, "reason": "Легендарный образ не найден"}
+            if not db.has_legendary_armor(uid):
+                return {"ok": False, "reason": "Легендарный слот не создан"}
             return await _create_cryptopay_invoice(
                 uid,
                 amount="5.99",
-                description="Duel Arena — сброс статов Легендарный образа",
-                payload_str=f"uid:{uid}:usdt_reset:{class_id}",
+                description="Duel Arena — сброс статов Легендарной брони",
+                payload_str=f"uid:{uid}:usdt_reset:armor_mythic4",
             )
         except Exception as e:
             logger.error("usdt reset-invoice: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)[:120]}
 
     @router.get("/api/wardrobe/usdt/check-reset")
-    async def wardrobe_usdt_check_reset(init_data: str, class_id: str, invoice_id: int):
+    async def wardrobe_usdt_check_reset(init_data: str, invoice_id: int):
         """Проверить оплату сброса напрямую у CryptoPay и применить сброс."""
         try:
             tg_user = get_user_from_init_data(init_data)
             uid = int(tg_user["id"])
-            cid = class_id.strip()
             if not CRYPTOPAY_TOKEN:
                 return {"ok": False, "reason": "CryptoPay не настроен"}
             async with httpx.AsyncClient(timeout=10) as client:
@@ -115,12 +112,11 @@ def attach_wardrobe_usdt_crypto(
             if status != "paid":
                 return {"ok": False, "reason": f"Счёт ещё не оплачен (статус: {status})"}
             db.confirm_crypto_invoice(invoice_id)
-            ok, msg = db.reset_usdt_slot_stats(uid, cid)
+            ok, msg = db.reset_legendary(uid)
             if ok:
                 _cache_invalidate(uid)
-                inventory = db.get_user_inventory(uid)
-                inv_item = next((i for i in inventory if i["class_id"] == cid), None)
-                return {"ok": True, "reset_applied": True, "inventory_item": inv_item,
+                mods = db.get_armor_custom_mods(uid, "armor_mythic4")
+                return {"ok": True, "reset_applied": True, "armor_mods": mods,
                         "player": player_response_fn(uid)}
             return {"ok": False, "reason": msg}
         except Exception as e:

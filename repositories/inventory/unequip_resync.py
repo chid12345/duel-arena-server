@@ -1,4 +1,9 @@
-"""Снятие образа и пересчёт статов."""
+"""Пересчёт статов игрока при рассинхроне.
+
+После сноса legacy class-системы тут только resync_player_stats — он не
+трогает user_inventory (таблица удалена), а считает чистые базовые статы
+из уровня и аватара. Никаких UPDATE равен_классу/UPDATE class_id.
+"""
 
 from __future__ import annotations
 
@@ -14,92 +19,26 @@ from config import (
     total_free_stats_at_level,
 )
 
-_PG_UNEQUIP_SQL = """UPDATE players
-   SET strength  = GREATEST(1, strength  - ?),
-       endurance = GREATEST(1, endurance - ?),
-       crit      = GREATEST(1, crit      - ?),
-       max_hp = ?, current_hp = ?,
-       current_class = NULL, current_class_type = NULL
-   WHERE user_id = ?"""
-
-_SQ_UNEQUIP_SQL = """UPDATE players
-   SET strength  = CASE WHEN (strength  - ?) < 1 THEN 1 ELSE (strength  - ?) END,
-       endurance = CASE WHEN (endurance - ?) < 1 THEN 1 ELSE (endurance - ?) END,
-       crit      = CASE WHEN (crit      - ?) < 1 THEN 1 ELSE (crit      - ?) END,
-       max_hp = ?, current_hp = ?,
-       current_class = NULL, current_class_type = NULL
-   WHERE user_id = ?"""
-
 
 class InventoryUnequipResyncMixin:
-    def unequip_class(self, user_id: int) -> Tuple[bool, str]:
-        """Снять текущий образ/класс.
-
-        Унификация armor (этап 7): delta-вычитание из players.* отключено —
-        статы брони идут через get_equipment_stats. unequip просто чистит
-        флаг equipped в user_inventory, current_class и player_equipment.armor.
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        self._ensure_inventory_schema(cursor)
-        try:
-            cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
-            cursor.execute(
-                "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
-                (user_id,),
-            )
-            # Унификация armor: синхронизация с player_equipment — слот
-            # «тело» очищается, get_equipment_stats больше не суммирует
-            # статы этой брони → они автоматически уходят из боя.
-            cursor.execute(
-                "DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
-                (user_id,),
-            )
-
-            cursor.execute(
-                "SELECT level, strength, endurance, crit, free_stats, max_hp, current_hp FROM players WHERE user_id = ?",
-                (user_id,),
-            )
-            p = cursor.fetchone()
-            lv = int(self._row_get(p, "level", 1) or 1)
-            exp_hp = int(expected_max_hp_from_level(lv))
-            if (
-                int(self._row_get(p, "strength", PLAYER_START_STRENGTH) or PLAYER_START_STRENGTH) < PLAYER_START_STRENGTH
-                or int(self._row_get(p, "endurance", PLAYER_START_ENDURANCE) or PLAYER_START_ENDURANCE)
-                < PLAYER_START_ENDURANCE
-                or int(self._row_get(p, "crit", PLAYER_START_CRIT) or PLAYER_START_CRIT) < PLAYER_START_CRIT
-                or int(self._row_get(p, "max_hp", exp_hp) or exp_hp) < exp_hp
-            ):
-                self.resync_player_stats(user_id, _cursor=cursor, _in_tx=True)
-
-            conn.commit()
-            return True, "Образ снят"
-        except Exception as e:
-            conn.rollback()
-            return False, f"Ошибка: {str(e)}"
-        finally:
-            conn.close()
 
     def resync_player_stats(self, user_id: int, *, _cursor=None, _in_tx: bool = False) -> Tuple[bool, str]:
-        """Починка статов игрока при некорректных значениях."""
+        """Починка статов игрока при некорректных значениях.
+
+        Считает базовые str/end/crit/max_hp из уровня + аватара. Не трогает
+        слот brony — он живёт через player_equipment + armor_custom_mods и
+        даёт статы через get_equipment_stats.
+        """
         own_conn = None
         cursor = _cursor
         if cursor is None:
             own_conn = self.get_connection()
             cursor = own_conn.cursor()
-            self._ensure_inventory_schema(cursor)
         try:
-            cursor.execute("UPDATE user_inventory SET equipped = FALSE WHERE user_id = ?", (user_id,))
             cursor.execute(
-                "UPDATE players SET current_class = NULL, current_class_type = NULL, equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
+                "UPDATE players SET equipped_avatar_id = 'base_neutral' WHERE user_id = ?",
                 (user_id,),
             )
-            # Унификация armor (шаг 3/6): синхронизация с player_equipment
-            cursor.execute(
-                "DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'",
-                (user_id,),
-            )
-
             cursor.execute(
                 "SELECT level, strength, endurance, crit, max_hp, current_hp, free_stats FROM players WHERE user_id = ?",
                 (user_id,),
@@ -144,7 +83,7 @@ class InventoryUnequipResyncMixin:
             base_hp = int(expected_max_hp_from_level(lv))
             new_mhp = max(1, base_hp + alloc[3] * int(STAMINA_PER_FREE_STAT))
 
-            # Добавляем бонус base_neutral (аватар сброшен в base_neutral выше)
+            # Бонус base_neutral (аватар сброшен в base_neutral выше)
             av_bonus = self._effective_avatar_bonus("base_neutral", lv)
             new_str += int(av_bonus.get("strength", 0))
             new_agi += int(av_bonus.get("endurance", 0))

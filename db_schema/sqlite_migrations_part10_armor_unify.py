@@ -82,4 +82,26 @@ MIGRATIONS_PART10_ARMOR_UNIFY = [
             FROM user_inventory
             WHERE class_type = 'usdt'""",
     ]),
+    # Этап «снос legacy class-системы»: расширяем armor_custom_mods,
+    # чтобы он полностью заменил user_inventory для USDT-кастомки.
+    # Новые поля: free_stats_left (счётчик неразложенных очков, по умолчанию 19),
+    # passive_type (боевая пассивка: damage_pct/double_hit/crit_dmg_pct/armor_pct).
+    ("2026_05_18_005_armor_custom_mods_free_stats", [
+        "ALTER TABLE armor_custom_mods ADD COLUMN free_stats_left INTEGER NOT NULL DEFAULT 19",
+    ]),
+    ("2026_05_18_006_armor_custom_mods_passive", [
+        "ALTER TABLE armor_custom_mods ADD COLUMN passive_type TEXT",
+    ]),
+    ("2026_05_18_007_migrate_free_stats_passive_from_inventory", [
+        """UPDATE armor_custom_mods
+            SET free_stats_left = COALESCE(
+                (SELECT free_stats_saved FROM user_inventory
+                 WHERE user_inventory.user_id = armor_custom_mods.user_id
+                   AND user_inventory.class_type = 'usdt' LIMIT 1),
+                19),
+                passive_type = (SELECT passive_type FROM user_inventory
+                                WHERE user_inventory.user_id = armor_custom_mods.user_id
+                                  AND user_inventory.class_type = 'usdt' LIMIT 1)
+            WHERE item_id = 'armor_mythic4'""",
+    ]),
 ]

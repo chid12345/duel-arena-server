@@ -109,7 +109,7 @@ def register_tma_player_route(
         _rl_check(uid, "player", max_hits=20, window_sec=10)
         username = tg_user.get("username") or tg_user.get("first_name") or ""
 
-        usdt_passive = db.get_equipped_usdt_passive(uid)
+        usdt_passive = db.get_equipped_legendary_passive(uid)
 
         cached = _cache_get(uid)
         # Если бонус аватара не применён — сбросить кэш, чтобы миграция отработала

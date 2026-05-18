@@ -115,7 +115,12 @@ async function _onClick(e){
   // Захватываем ссылку на сцену ДО close() — иначе _scene=null и scene.start не отработает.
   const scn=_scene;
   if(act==='back'){ close(); scn?.scene?.start('Menu', { returnTab:'profile' }); return; }
-  if(act==='wardrobe'){ try{ await scn?._openAvatarPanel?.(); }catch(_){} return; }
+  if(act==='wardrobe'){
+    // legacy «Гардероб классов» удалён — открываем новый Armor overlay.
+    close();
+    try { if (typeof ArmorHTML !== 'undefined') ArmorHTML.open(scn); } catch(_) {}
+    return;
+  }
   if(act==='shop'){ close(); scn?.scene?.start('Shop'); return; }
   if(act==='train'){
     const key=el.dataset.stat; if(!key) return;

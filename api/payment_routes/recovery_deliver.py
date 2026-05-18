@@ -52,27 +52,26 @@ async def deliver_recovery_payload(
 
     if ":usdt_slot:" in payload:
         try:
-            ok2, _m, new_class_id = await _exec(db.create_usdt_class, uid)
-            if not ok2:
+            ok2, msg2 = await _exec(db.create_legendary_armor, uid)
+            if not ok2 and "уже" not in (msg2 or "").lower():
                 return False
         except Exception as e:
-            _log.error("CRITICAL: recovery create_usdt_class uid=%s inv=%s err=%s", uid, inv_id, e)
+            _log.error("CRITICAL: recovery create_legendary_armor uid=%s inv=%s err=%s", uid, inv_id, e)
             return False
         if manager is not None:
-            await manager.send(uid, {"event": "usdt_slot_created", "class_id": new_class_id, "ok": True})
-        await send_tg_message(uid, "💠 <b>Легендарный образ получен!</b>\nОткройте «Статы → Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+            await manager.send(uid, {"event": "usdt_slot_created", "class_id": "armor_mythic4", "ok": True})
+        await send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
         return True
 
     if ":usdt_reset:" in payload:
-        class_id = payload.split(":usdt_reset:", 1)[1].strip()
         try:
-            await _exec(db.reset_usdt_slot_stats, uid, class_id)
+            await _exec(db.reset_legendary, uid)
         except Exception as e:
-            _log.error("CRITICAL: recovery reset_usdt_slot_stats uid=%s class=%s inv=%s err=%s", uid, class_id, inv_id, e)
+            _log.error("CRITICAL: recovery reset_legendary uid=%s inv=%s err=%s", uid, inv_id, e)
             return False
         if manager is not None:
-            await manager.send(uid, {"event": "usdt_slot_reset", "class_id": class_id})
-        await send_tg_message(uid, "🔄 <b>Статы образа сброшены!</b>\nОткройте «Гардероб» и настройте новую сборку.\n\n⚔️ Duel Arena")
+            await manager.send(uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
+        await send_tg_message(uid, "🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «Профиль → 🛡 Броня» и распределите заново.\n\n⚔️ Duel Arena")
         return True
 
     if ":avatar:" in payload:
@@ -120,17 +119,17 @@ async def deliver_recovery_payload(
             )
             return True
         try:
-            ok2, _msg2, _new_id = await _exec(db.create_usdt_class, uid)
-            if not ok2 and "уже есть" not in (_msg2 or ""):
+            ok2, _msg2 = await _exec(db.create_legendary_armor, uid)
+            if not ok2 and "уже" not in (_msg2 or "").lower():
                 _log.error("CRITICAL: recovery legendary_usdt uid=%s inv=%s msg=%s", uid, inv_id, _msg2)
                 return False
         except Exception as e:
-            _log.error("CRITICAL: recovery create_usdt_class exc uid=%s inv=%s err=%s", uid, inv_id, e)
+            _log.error("CRITICAL: recovery create_legendary_armor exc uid=%s inv=%s err=%s", uid, inv_id, e)
             return False
         cache_invalidate(uid)
         if manager is not None:
-            await manager.send(uid, {"event": "armor_class_purchased", "class_id": class_id, "source": "cryptopay"})
-        await send_tg_message(uid, "💠 <b>Легендарный образ получен!</b>\nОткройте «Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+            await manager.send(uid, {"event": "armor_class_purchased", "class_id": "armor_mythic4", "source": "cryptopay"})
+        await send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
         return True
 
     _equip_map = (

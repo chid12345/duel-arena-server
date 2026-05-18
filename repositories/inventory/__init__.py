@@ -1,31 +1,20 @@
 """
-Пакет инвентаря классов (гардероб, Легендарный слоты).
-Публичный API: InventoryMixin для database.Database.
+Inventory-пакет. После сноса legacy class-системы (user_inventory + классы воина)
+здесь остался только resync_player_stats — пересчёт базовых стат при рассинхроне.
+
+USDT-кастомка (legendary armor_mythic4 +19 свободных статов) переехала в
+repositories/equipment/armor_mods_repo.py — там работает с armor_custom_mods.
 """
 
 from repositories.inventory.base import InventoryBaseMixin
-from repositories.inventory.catalog import InventoryClassCatalogMixin
-from repositories.inventory.crud import InventoryCrudMixin
-from repositories.inventory.legacy_avatar import InventoryLegacyAvatarMixin
-from repositories.inventory.switch import InventorySwitchMixin
 from repositories.inventory.unequip_resync import InventoryUnequipResyncMixin
-from repositories.inventory.usdt import InventoryUsdtMixin
-from repositories.inventory.usdt_train import InventoryUsdtTrainMixin
-from repositories.inventory.usdt_apply_passive import InventoryUsdtApplyPassiveMixin
 
 
 class InventoryMixin(
-    InventoryUsdtMixin,
-    InventoryUsdtApplyPassiveMixin,
-    InventoryUsdtTrainMixin,
-    InventorySwitchMixin,
-    InventoryCrudMixin,
-    InventoryClassCatalogMixin,
-    InventoryLegacyAvatarMixin,
     InventoryUnequipResyncMixin,
     InventoryBaseMixin,
 ):
-    """Инвентарь классов, покупка, переключение, Легендарный образы."""
+    """Минимальный слой инвентаря: только resync статов."""
 
     pass
 

@@ -99,8 +99,8 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
             return ("⚠️ Этот тип покупки больше не поддерживается.\n"
                     "Попробуйте обновить мини-апп. ⚔️ Duel Arena")
         try:
-            ok, msg, _new_class_id = db.create_usdt_class(user_id)
-            if not ok and "уже есть" not in (msg or ""):
+            ok, msg = db.create_legendary_armor(user_id)
+            if not ok and "уже" not in (msg or "").lower():
                 logger.error("Stars legendary_usdt slot creation failed uid=%s stars=%s msg=%s",
                              user_id, stars, msg)
                 return ("⚠️ Оплата получена, но выдача брони задержалась.\n"

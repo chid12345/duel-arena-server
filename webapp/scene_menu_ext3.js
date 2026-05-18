@@ -72,19 +72,11 @@ Object.assign(MenuScene.prototype, {
         tg?.HapticFeedback?.notificationOccurred('success');
         State.playerLoadedAt = 0;
         post('/api/player').then(d => { if (d.ok && d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); } }).catch(() => {});
-        if (this._avatarOverlay) {
-          this._openAvatarPanel();
-        } else {
-          this._showToast?.('🔄 Сброс выполнен — зайди в Гардероб');
-        }
+        this._showToast?.('🔄 Сброс выполнен — открой Профиль → 🛡 Броня');
       }
       if (msg.event === 'usdt_slot_created') {
         tg?.HapticFeedback?.notificationOccurred('success');
-        if (this._avatarOverlay) {
-          this._openAvatarPanel();
-        } else {
-          this._showToast?.('💠 Легендарный образ получен — открой Гардероб');
-        }
+        this._showToast?.('💠 Легендарная броня получена — открой Профиль → 🛡 Броня');
       }
       if (msg.event === 'weapon_equipped') {
         tg?.HapticFeedback?.notificationOccurred('success');

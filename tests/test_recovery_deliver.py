@@ -60,21 +60,20 @@ def test_recovery_armor_class_deprecated_silently_skipped(db):
     ok, _mgr = _call(db, uid=5001, payload="uid:5001:armor_class:berserker_mythic")
 
     assert ok is True
-    assert db.has_class(5001, "berserker_mythic") is False, (
-        "deprecated :armor_class: для не-legendary_usdt не должен создавать класс"
-    )
+    # has_legendary_armor должен быть False — берсеркер не legendary.
+    assert db.has_legendary_armor(5001) is False
 
 
 def test_recovery_armor_class_legendary_usdt_works(db):
-    """`:armor_class:legendary_usdt` остаётся валидным — создаёт USDT-кастомку."""
+    """`:armor_class:legendary_usdt` остаётся валидным — создаёт Легендарную броню."""
     db.get_or_create_player(5002, "u_legendary")
 
     ok, mgr = _call(db, uid=5002, payload="uid:5002:armor_class:legendary_usdt")
 
     assert ok is True
-    inv = db.get_user_inventory(5002)
-    usdt_classes = [c for c in inv if (c.get("class_type") or "") == "usdt"]
-    assert len(usdt_classes) >= 1, "create_usdt_class не отработал"
+    assert db.has_legendary_armor(5002) is True
+    mods = db.get_armor_custom_mods(5002, "armor_mythic4")
+    assert mods is not None and mods["free_stats_left"] == 19
     assert any(e[1].get("event") == "armor_class_purchased" for e in mgr.events)
 
 

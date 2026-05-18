@@ -46,7 +46,7 @@ def register_find_battle_route(
         if regen:
             player = dict(player)
             player["current_hp"] = regen["current_hp"]
-        usdt_passive = await asyncio.to_thread(db.get_equipped_usdt_passive, uid)
+        usdt_passive = await asyncio.to_thread(db.get_equipped_legendary_passive, uid)
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
@@ -76,7 +76,7 @@ def register_find_battle_route(
                 opp_uid = pvp_entry["user_id"]
                 await asyncio.to_thread(db.pvp_dequeue, opp_uid)
                 opp_player = await asyncio.to_thread(db.get_or_create_player, opp_uid, "")
-                opp_passive = await asyncio.to_thread(db.get_equipped_usdt_passive, opp_uid)
+                opp_passive = await asyncio.to_thread(db.get_equipped_legendary_passive, opp_uid)
                 if opp_passive:
                     opp_player = dict(opp_player)
                     opp_player["usdt_passive_type"] = opp_passive
