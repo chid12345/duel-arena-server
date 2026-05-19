@@ -251,7 +251,11 @@ setTimeout(function(){
 <!-- Старый armor (ArmorHTML/Detail/Legendary) удалён под корень. Новая «БРОНЯ» — armor2. -->
 <script defer src="armor2_overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="armor2_html_detail.js?v=__BUILD_VERSION__"></script>
-<script defer src="legendary_armor2_overlay.js?v=__BUILD_VERSION__"></script>
+<!-- Легендарная armor2 — распилен на 4 модуля ≤200 строк (Закон 1). Порядок: api → polling → actions → overlay. -->
+<script defer src="legendary_armor2/api.js?v=__BUILD_VERSION__"></script>
+<script defer src="legendary_armor2/polling.js?v=__BUILD_VERSION__"></script>
+<script defer src="legendary_armor2/actions.js?v=__BUILD_VERSION__"></script>
+<script defer src="legendary_armor2/overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="boots_html_overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="boots_html_detail.js?v=__BUILD_VERSION__"></script>
 <script defer src="shield_html_overlay.js?v=__BUILD_VERSION__"></script>
