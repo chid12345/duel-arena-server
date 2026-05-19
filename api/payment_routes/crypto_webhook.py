@@ -75,43 +75,31 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_premium = ":premium:" in custom_payload
             is_full_reset = ":full_reset:" in custom_payload
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
-            is_usdt_slot = ":usdt_slot:" in custom_payload
-            is_usdt_reset = ":usdt_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
             is_weapon_equip = ":weapon_equip:" in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_helmet_equip = ":helmet_equip:" in custom_payload
             is_boots_equip  = ":boots_equip:"  in custom_payload
             is_ring_equip   = ":ring_equip:"   in custom_payload
-            is_armor_class  = ":armor_class:"  in custom_payload
             # Этап 8: аренда mythic-предмета за USDT
             from api.payment_routes.rental_deliver import deliver_rental, parse_rental_payload
             is_rental = ":rental:" in custom_payload
             rental_item_id = parse_rental_payload(custom_payload) if is_rental else ""
-            usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
             weapon_equip_id = custom_payload.split(":weapon_equip:", 1)[1].strip() if is_weapon_equip else None
             shield_equip_id = custom_payload.split(":shield_equip:", 1)[1].strip() if is_shield_equip else None
             helmet_equip_id = custom_payload.split(":helmet_equip:", 1)[1].strip() if is_helmet_equip else None
             boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
             ring_equip_id   = custom_payload.split(":ring_equip:",   1)[1].strip() if is_ring_equip   else None
-            armor_class_id  = custom_payload.split(":armor_class:",  1)[1].strip() if is_armor_class  else None
-            logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s usdt_slot=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, is_usdt_slot, usdt_scroll_id, asset, invoice_id)
-            # --- Мифическое снаряжение за USDT (weapon/shield/helmet/boots/ring)
-            # Раньше обрабатывался только weapon; для остальных предметы выдавались
-            # только через polling /api/shop/crypto_check из живого mini app.
-            # Если mini app закрылся — покупка терялась.
-            # armor_equip — отдельная ветка ниже, т.к. owned пишется в player_owned_armor,
-            # а не в player_owned_weapons (см. equipment_repo.get_equipment для slot=armor)
-            is_armor_equip = ":armor_equip:" in custom_payload
-            armor_equip_id = custom_payload.split(":armor_equip:", 1)[1].strip() if is_armor_equip else None
+            logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, usdt_scroll_id, asset, invoice_id)
+            # Старый armor (:usdt_slot:, :armor_class:, :armor_equip:) снесён под корень.
+            # Мифическое снаряжение за USDT — без armor.
             _equip_map = [
                 (is_weapon_equip, weapon_equip_id, "weapon", "weapon_equipped", "weapon_id", "⚔️ Мифическое оружие",   "Меч"),
                 (is_shield_equip, shield_equip_id, "shield", "shield_equipped", "shield_id", "🛡 Мифический щит",       "Щит"),
                 (is_helmet_equip, helmet_equip_id, "belt",   "helmet_equipped", "helmet_id", "⛑ Мифический шлем",      "Шлем"),
                 (is_boots_equip,  boots_equip_id,  "boots",  "boots_equipped",  "boots_id",  "🥾 Мифические ботинки",   "Ботинки"),
                 (is_ring_equip,   ring_equip_id,   "ring1",  "ring_equipped",   "ring_id",   "💍 Мифическое кольцо",    "Кольцо"),
-                (is_armor_equip,  armor_equip_id,  "armor",  "armor_equipped",  "armor_id",  "🛡 Мифическая броня",     "Броня"),
             ]
             _handled_equip = False
             for _flag, _item_id, _slot, _evt, _id_key, _title, _section in _equip_map:
@@ -119,15 +107,8 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     _handled_equip = True
                     _equip_ok = False
                     try:
-                        # force=True: кольцо/броня пишем точно в свой слот (ring1, armor),
-                        # минуя резолвер ring1/ring2 (мини-апп профиля рендерит только ring1).
                         db.equip_item(uid, _slot, _item_id, force=True)
-                        # armor владеется через отдельную таблицу — иначе get_equipment
-                        # для mythic-armor не пройдёт owned-проверку и снимет слот.
-                        if _slot == "armor":
-                            db.add_owned_armor(uid, _item_id)
-                        else:
-                            db.add_owned_weapon(uid, _item_id)
+                        db.add_owned_weapon(uid, _item_id)
                         _cache_invalidate(uid)
                         _equip_ok = True
                     except Exception as _e:
@@ -152,29 +133,6 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     await _send_tg_message(uid, f"🕐 <b>Аренда оформлена — предмет надет!</b>\nОткройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena")
                 else:
                     await _send_tg_message(uid, f"⚠️ Оплата получена, но выдача аренды задержалась. Напишите в поддержку и укажите ID платежа: {invoice_id}")
-            elif is_armor_class and armor_class_id:
-                # Унификация armor: `:armor_class:` теперь только для legendary_usdt
-                # (armor_mythic4 +19 свободных статов). Остальные мифик-брони
-                # должны идти через `:armor_equip:` (см. _equip_map выше).
-                if armor_class_id != "legendary_usdt":
-                    logger.warning(
-                        "deprecated armor_class marker for %s in invoice %s — игнорирую (используйте armor_equip)",
-                        armor_class_id, invoice_id,
-                    )
-                    db.mark_items_delivered(int(invoice_id))
-                else:
-                    _armor_ok = False
-                    try:
-                        ok2, msg2 = db.create_legendary_armor(uid)
-                        _armor_ok = bool(ok2) or ("уже" in (msg2 or "").lower())
-                    except Exception as _e:
-                        logger.error("CRITICAL: legendary_usdt creation uid=%s invoice=%s err=%s",
-                                     uid, invoice_id, _e)
-                    _cache_invalidate(uid)
-                    await manager.send(uid, {"event": "armor_class_purchased", "class_id": "armor_mythic4", "source": "cryptopay"})
-                    await _send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
-                    if _armor_ok:
-                        db.mark_items_delivered(int(invoice_id))
             elif is_usdt_scroll and usdt_scroll_id:
                 _scroll_ok = False
                 try:
@@ -188,17 +146,6 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 await _send_tg_message(uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
                 if _scroll_ok:
                     db.mark_items_delivered(int(invoice_id))
-            elif is_usdt_slot:
-                ok2, msg2 = db.create_legendary_armor(uid)
-                await manager.send(uid, {"event": "usdt_slot_created", "class_id": "armor_mythic4", "ok": ok2})
-                await _send_tg_message(uid, f"💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
-                if ok2 or "уже" in (msg2 or "").lower():
-                    db.mark_items_delivered(int(invoice_id))
-            elif is_usdt_reset and usdt_reset_class_id:
-                db.reset_legendary(uid)
-                await manager.send(uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
-                await _send_tg_message(uid, f"🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «Профиль → 🛡 Броня» и распределите заново.\n\n⚔️ Duel Arena")
-                db.mark_items_delivered(int(invoice_id))
             elif avatar_id:
                 unlock = db.unlock_avatar(uid, avatar_id, source="usdt")
                 if unlock.get("ok"):

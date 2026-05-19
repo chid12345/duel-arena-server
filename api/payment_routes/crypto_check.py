@@ -76,29 +76,22 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     _diamond_first_col = "diamond_first_500"
             is_full_reset = ":full_reset:" in custom_payload
             is_usdt_scroll = ":usdt_scroll:" in custom_payload
-            is_usdt_slot = ":usdt_slot:" in custom_payload
-            is_usdt_reset = ":usdt_reset:" in custom_payload
             is_weapon_equip = ":weapon_equip:" in custom_payload
             is_helmet_equip = ":helmet_equip:" in custom_payload
             is_boots_equip  = ":boots_equip:"  in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_ring_equip   = ":ring_equip:"   in custom_payload
-            is_armor_equip  = ":armor_equip:"  in custom_payload
-            is_armor_class  = ":armor_class:"  in custom_payload
             # Этап 8: аренда mythic-предмета (USDT). Универсальный обработчик.
             from api.payment_routes.rental_deliver import deliver_rental, parse_rental_payload
             is_rental = ":rental:" in custom_payload
             rental_item_id = parse_rental_payload(custom_payload) if is_rental else ""
-            armor_class_id  = custom_payload.split(":armor_class:", 1)[1].strip() if is_armor_class else None
             usdt_scroll_id = custom_payload.split(":usdt_scroll:", 1)[1].strip() if is_usdt_scroll else None
-            usdt_reset_class_id = custom_payload.split(":usdt_reset:", 1)[1].strip() if is_usdt_reset else None
             avatar_id = custom_payload.split(":avatar:", 1)[1].strip() if ":avatar:" in custom_payload else None
             weapon_equip_id = custom_payload.split(":weapon_equip:", 1)[1].strip() if is_weapon_equip else None
             helmet_equip_id = custom_payload.split(":helmet_equip:", 1)[1].strip() if is_helmet_equip else None
             boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
             shield_equip_id = custom_payload.split(":shield_equip:", 1)[1].strip() if is_shield_equip else None
             ring_equip_id   = custom_payload.split(":ring_equip:",   1)[1].strip() if is_ring_equip   else None
-            armor_equip_id  = custom_payload.split(":armor_equip:",  1)[1].strip() if is_armor_equip  else None
             result = db.confirm_crypto_invoice(int(invoice_id), first_purchase_col=_diamond_first_col)
             if result.get("ok"):
                 diamonds = result["diamonds"]
@@ -164,17 +157,6 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     try: await manager.send(owner_uid, {"event": "ring_equipped", "ring_id": ring_equip_id, "source": "cryptopay_confirm"})
                     except Exception: pass
                     return {"ok": True, "paid": True, "ring_equipped": True, "ring_id": ring_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
-                if is_armor_equip and armor_equip_id:
-                    db.equip_item(owner_uid, "armor", armor_equip_id, force=True)
-                    db.add_owned_armor(owner_uid, armor_equip_id)
-                    _cache_invalidate(owner_uid)
-                    db.mark_items_delivered(invoice_id)
-                    eq_resp = {slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"], "desc": it.get("desc", "")} for slot, it in db.get_equipment(owner_uid).items()}
-                    ow = db.get_owned_weapons(owner_uid)
-                    fresh = db.get_or_create_player(owner_uid, "")
-                    try: await manager.send(owner_uid, {"event": "armor_equipped", "armor_id": armor_equip_id, "source": "cryptopay_confirm"})
-                    except Exception: pass
-                    return {"ok": True, "paid": True, "armor_equipped": True, "armor_id": armor_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if is_rental and rental_item_id:
                     # Этап 8: аренда mythic. rent_item + equip + mark_delivered
                     ok_rent = deliver_rental(db, owner_uid, rental_item_id)
@@ -186,33 +168,6 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     eq_resp = {slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"], "desc": it.get("desc", "")} for slot, it in db.get_equipment(owner_uid).items()}
                     fresh = db.get_or_create_player(owner_uid, "")
                     return {"ok": True, "paid": True, "rental_activated": True, "item_id": rental_item_id, "equipment": eq_resp, "player": _player_api(dict(fresh))}
-                if is_armor_class and armor_class_id:
-                    # Унификация armor: `:armor_class:` legacy-маркер сохранён ТОЛЬКО
-                    # для legendary_usdt (armor_mythic4 с +19 свободных статов
-                    # через armor_custom_mods). Остальные мифик-брони идут через
-                    # `:armor_equip:` (общий путь с helmet/weapon/shield).
-                    if armor_class_id != "legendary_usdt":
-                        logger.warning(
-                            "deprecated armor_class marker for %s in invoice %s — игнорирую (используйте armor_equip)",
-                            armor_class_id, invoice_id,
-                        )
-                        db.mark_items_delivered(invoice_id)
-                        fresh = db.get_or_create_player(owner_uid, "")
-                        return {"ok": True, "paid": True, "deprecated_payload": True,
-                                "class_id": armor_class_id, "player": _player_api(dict(fresh))}
-                    _armor_ok = False
-                    try:
-                        _ok2, _msg2 = db.create_legendary_armor(owner_uid)
-                        _armor_ok = bool(_ok2) or ("уже" in (_msg2 or "").lower())
-                    except Exception as _e:
-                        logger.error("CRITICAL: legendary_usdt creation via crypto_check uid=%s err=%s", owner_uid, _e)
-                    _cache_invalidate(owner_uid)
-                    if _armor_ok:
-                        db.mark_items_delivered(invoice_id)
-                    try: await manager.send(owner_uid, {"event": "armor_class_purchased", "class_id": armor_class_id, "source": "cryptopay_confirm"})
-                    except Exception: pass
-                    fresh = db.get_or_create_player(owner_uid, "")
-                    return {"ok": True, "paid": True, "armor_class_purchased": True, "class_id": armor_class_id, "player": _player_api(dict(fresh))}
                 if is_usdt_scroll and usdt_scroll_id:
                     _scroll_ok = False
                     try:
@@ -227,19 +182,6 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     if _scroll_ok:
                         db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "scroll_received": True, "scroll_id": usdt_scroll_id}
-                if is_usdt_slot:
-                    ok2, msg2 = db.create_legendary_armor(owner_uid)
-                    await manager.send(owner_uid, {"event": "usdt_slot_created", "class_id": "armor_mythic4", "ok": ok2})
-                    await _send_tg_message(owner_uid, f"💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
-                    if ok2 or "уже" in (msg2 or "").lower():
-                        db.mark_items_delivered(invoice_id)
-                    return {"ok": True, "paid": True, "usdt_slot_created": True, "class_id": "armor_mythic4"}
-                if is_usdt_reset and usdt_reset_class_id:
-                    db.reset_legendary(owner_uid)
-                    await manager.send(owner_uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
-                    await _send_tg_message(owner_uid, f"🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «Профиль → 🛡 Броня» и распределите заново.\n\n⚔️ Duel Arena")
-                    db.mark_items_delivered(invoice_id)
-                    return {"ok": True, "paid": True, "usdt_slot_reset": True, "class_id": "armor_mythic4"}
                 if avatar_id:
                     unlock = db.unlock_avatar(owner_uid, avatar_id, source="usdt")
                     if not unlock.get("ok"):
@@ -330,15 +272,6 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     ow = db.get_owned_weapons(uid)
                     fresh = db.get_or_create_player(uid, "")
                     return {"ok": True, "paid": True, "already_confirmed": True, "ring_equipped": True, "ring_id": ring_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
-                if is_armor_equip and armor_equip_id:
-                    db.equip_item(uid, "armor", armor_equip_id, force=True)
-                    db.add_owned_armor(uid, armor_equip_id)
-                    db.mark_items_delivered(invoice_id)
-                    _cache_invalidate(uid)
-                    eq_resp = {slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"], "desc": it.get("desc", "")} for slot, it in db.get_equipment(uid).items()}
-                    ow = db.get_owned_weapons(uid)
-                    fresh = db.get_or_create_player(uid, "")
-                    return {"ok": True, "paid": True, "already_confirmed": True, "armor_equipped": True, "armor_id": armor_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
                 if is_rental and rental_item_id:
                     # Этап 8: already_paid — повторно вызываем deliver_rental (идемпотентно)
                     deliver_rental(db, uid, rental_item_id)
@@ -371,17 +304,11 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "already_confirmed": True, "premium_activated": True, "premium_days_left": days_left}
-                if is_usdt_reset and usdt_reset_class_id:
-                    db.reset_legendary(uid)
-                    await manager.send(uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
-                    db.mark_items_delivered(invoice_id)
-                    return {"ok": True, "paid": True, "already_confirmed": True, "usdt_slot_reset": True, "class_id": "armor_mythic4"}
                 return {
                     "ok": True, "paid": True, "already_confirmed": True,
                     "profile_reset": is_full_reset,
                     "scroll_received": is_usdt_scroll,
                     "scroll_id": usdt_scroll_id if is_usdt_scroll else None,
-                    "usdt_slot_created": is_usdt_slot,
                 }
             return {"ok": False, "reason": result.get("reason")}
         except Exception as e:

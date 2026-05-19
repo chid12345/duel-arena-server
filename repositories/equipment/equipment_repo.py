@@ -1,33 +1,16 @@
-"""CRUD для player_equipment + суммарные бонусы к бою."""
+"""CRUD для player_equipment + суммарные бонусы к бою.
+
+Старый armor (slot='armor') снесён под корень — со всеми ветками про
+armor_owned_set, current_class sync, armor_custom_mods, legacy_class_id.
+Новый чистый слот «БРОНЯ» в разработке.
+"""
 
 from __future__ import annotations
 
 from typing import Dict, Optional
 
-from db_schema.equipment_catalog import get_item, get_item_stats, SLOT_ARMOR, SLOT_RING1, SLOT_RING2
-from db_schema.equipment_items.armor import ARMOR, legacy_class_to_armor_item_id
+from db_schema.equipment_catalog import get_item, get_item_stats, SLOT_RING1, SLOT_RING2
 from economy.curves import is_tier_unlocked
-
-
-def _armor_item_to_legacy_class(item_id: str) -> tuple[str | None, str | None]:
-    """Возвращает (legacy_class_id, class_type) для armor item_id.
-
-    Нужно battle_system: damage.py / damage_armor.py / set_perks.py читают
-    `players.current_class` для перков (берсеркер +12%, страж -3% урона и т.п.).
-    Унификация armor: класс синхронизируется автоматически из надетого armor item.
-    """
-    meta = ARMOR.get(item_id) or {}
-    legacy = meta.get("legacy_class_id")
-    if not legacy:
-        return None, None
-    # currency определяет class_type (для current_class_type в battle_system).
-    currency = (meta.get("currency") or "").strip()
-    type_map = {"gold": "gold", "diamond": "diamonds", "star": "mythic", "usdt": "usdt"}
-    class_type = type_map.get(currency)
-    # free-классы помечены currency="gold", но цена 800g и legacy_class_id=*_free
-    if legacy.endswith("_free"):
-        class_type = "free"
-    return legacy, class_type
 
 
 class EquipmentMixin:
@@ -50,13 +33,7 @@ class EquipmentMixin:
         """Возвращает {slot: {item_id, ...item_data}} для всех надетых слотов.
 
         Этап 8: mythic-предметы доступны только если куплены или у игрока
-        есть активная аренда. Истёкшие mythic-аренды авто-снимаются здесь —
-        get_equipment вызывается в каждом рендере профиля и в бою.
-
-        Унификация armor (шаг 3/6): если в player_equipment нет armor, но
-        в players.current_class есть значение — собираем armor синтетически
-        через маппинг legacy_class_id → item_id. Это позволяет consumer-коду
-        видеть armor как обычный 6-й слот до полного перехода на equip_item.
+        есть активная аренда. Истёкшие mythic-аренды авто-снимаются здесь.
         """
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -68,7 +45,6 @@ class EquipmentMixin:
         result: Dict[str, Dict] = {}
         expired_slots: list[str] = []
         owned_set: set[str] | None = None
-        armor_owned_set: set[str] | None = None
         rental_set: set[str] | None = None
 
         def _ensure_rental_set():
@@ -84,41 +60,12 @@ class EquipmentMixin:
                 continue
             if item.get("rarity") == "mythic":
                 _ensure_rental_set()
-                if slot == SLOT_ARMOR:
-                    if armor_owned_set is None:
-                        armor_owned_set = set(self.get_owned_armor(user_id))
-                    if item_id not in armor_owned_set and item_id not in rental_set:
-                        expired_slots.append(slot)
-                        continue
-                else:
-                    if owned_set is None:
-                        owned_set = set(self.get_owned_weapons(user_id))
-                    if item_id not in owned_set and item_id not in rental_set:
-                        expired_slots.append(slot)
-                        continue
+                if owned_set is None:
+                    owned_set = set(self.get_owned_weapons(user_id))
+                if item_id not in owned_set and item_id not in rental_set:
+                    expired_slots.append(slot)
+                    continue
             result[slot] = {"item_id": item_id, **item}
-
-        # Fallback armor: если в player_equipment нет — собираем из current_class
-        if SLOT_ARMOR not in result:
-            cursor.execute(
-                "SELECT current_class FROM players WHERE user_id = ?", (user_id,),
-            )
-            crow = cursor.fetchone()
-            cur_class = crow["current_class"] if crow else None
-            item_id = legacy_class_to_armor_item_id(cur_class)
-            if item_id:
-                item = get_item(item_id)
-                if item:
-                    # mythic-чек тоже работает для fallback
-                    skip = False
-                    if item.get("rarity") == "mythic":
-                        _ensure_rental_set()
-                        if armor_owned_set is None:
-                            armor_owned_set = set(self.get_owned_armor(user_id))
-                        if item_id not in armor_owned_set and item_id not in rental_set:
-                            skip = True
-                    if not skip:
-                        result[SLOT_ARMOR] = {"item_id": item_id, **item}
 
         conn.close()
         for s in expired_slots:
@@ -157,19 +104,6 @@ class EquipmentMixin:
                 "DELETE FROM player_equipment WHERE user_id = ? AND slot = ?",
                 (user_id, SLOT_RING2),
             )
-        # Унификация armor: синхронизируем `players.current_class` с надетой
-        # бронёй. Это нужно battle_system (damage.py:64, damage_armor.py:32,
-        # set_perks.py:59) — перки берсеркера/стража/драконьего рыцаря читают
-        # current_class. Сделав auto-sync здесь, мы убираем зависимость от
-        # legacy purchase_class/switch_class — они больше не вызываются для
-        # обычных мифик-брони, только для legendary_usdt (armor_mythic4).
-        if target_slot == SLOT_ARMOR:
-            legacy_cls, class_type = _armor_item_to_legacy_class(item_id)
-            if legacy_cls:
-                cursor.execute(
-                    "UPDATE players SET current_class = ?, current_class_type = ? WHERE user_id = ?",
-                    (legacy_cls, class_type or "", user_id),
-                )
         conn.commit()
         conn.close()
         return True
@@ -183,13 +117,6 @@ class EquipmentMixin:
             (user_id, slot),
         )
         affected = cursor.rowcount
-        # Унификация armor: при снятии брони обнуляем «класс», иначе перки
-        # берсеркера/стража продолжат действовать на голого игрока.
-        if slot == SLOT_ARMOR:
-            cursor.execute(
-                "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
-                (user_id,),
-            )
         conn.commit()
         conn.close()
         return affected > 0
@@ -216,29 +143,11 @@ class EquipmentMixin:
         )
         total: Dict[str, float] = {f: 0.0 if "pct" in f else 0 for f in _STAT_FIELDS}
 
-        # Унификация armor (этап 7): для USDT-кастомки (armor_mythic4)
-        # подмешиваем индивидуальные модификаторы из armor_custom_mods.
-        # Это +19 свободных статов, распределённых игроком.
-        armor_mods: dict | None = None
-        if SLOT_ARMOR in equipped and equipped[SLOT_ARMOR].get("item_id") == "armor_mythic4":
-            try:
-                armor_mods = self.get_armor_custom_mods(user_id, "armor_mythic4")
-            except Exception:
-                armor_mods = None
-
         for slot, item in equipped.items():
             item_id = item["item_id"]
             base_stats = get_item_stats(item_id)
             plus = int(all_plus.get(item_id, 0))
             stats = plus_stats_for(base_stats, plus) if plus > 0 else base_stats
-            # Подмешиваем USDT-кастомизацию к armor_mythic4
-            if slot == SLOT_ARMOR and armor_mods and armor_mods.get("applied"):
-                stats = dict(stats)
-                stats["str_bonus"] = int(stats.get("str_bonus", 0)) + int(armor_mods.get("str_bonus", 0))
-                stats["agi_bonus"] = int(stats.get("agi_bonus", 0)) + int(armor_mods.get("agi_bonus", 0))
-                stats["intu_bonus"] = int(stats.get("intu_bonus", 0)) + int(armor_mods.get("int_bonus", 0))
-                # end_bonus в armor_custom_mods → hp_bonus (×2 stamina per stat)
-                stats["hp_bonus"] = int(stats.get("hp_bonus", 0)) + int(armor_mods.get("end_bonus", 0)) * 2
             for f in _STAT_FIELDS:
                 val = stats.get(f, 0)
                 if not isinstance(val, (int, float)):

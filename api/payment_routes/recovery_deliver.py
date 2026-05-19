@@ -50,29 +50,8 @@ async def deliver_recovery_payload(
         await send_tg_message(uid, "📜 <b>Свиток получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
         return True
 
-    if ":usdt_slot:" in payload:
-        try:
-            ok2, msg2 = await _exec(db.create_legendary_armor, uid)
-            if not ok2 and "уже" not in (msg2 or "").lower():
-                return False
-        except Exception as e:
-            _log.error("CRITICAL: recovery create_legendary_armor uid=%s inv=%s err=%s", uid, inv_id, e)
-            return False
-        if manager is not None:
-            await manager.send(uid, {"event": "usdt_slot_created", "class_id": "armor_mythic4", "ok": True})
-        await send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
-        return True
-
-    if ":usdt_reset:" in payload:
-        try:
-            await _exec(db.reset_legendary, uid)
-        except Exception as e:
-            _log.error("CRITICAL: recovery reset_legendary uid=%s inv=%s err=%s", uid, inv_id, e)
-            return False
-        if manager is not None:
-            await manager.send(uid, {"event": "usdt_slot_reset", "class_id": "armor_mythic4"})
-        await send_tg_message(uid, "🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «Профиль → 🛡 Броня» и распределите заново.\n\n⚔️ Duel Arena")
-        return True
+    # Старый armor (:usdt_slot:, :usdt_reset:, :armor_class:, :armor_equip:)
+    # снесён под корень — новый чистый слот «БРОНЯ» в разработке.
 
     if ":avatar:" in payload:
         avatar_id = payload.split(":avatar:", 1)[1].strip()
@@ -107,55 +86,24 @@ async def deliver_recovery_payload(
         await send_tg_message(uid, f"👑 <b>Premium подписка активирована!</b>\nСрок действия: <b>{days_left} дней</b>{bonus_txt}\n\nСпасибо за покупку! ⚔️ Duel Arena")
         return True
 
-    # ── Покрытие, отсутствовавшее ранее: мифик-армор, 5 видов снаряжения, аренда ──
-
-    if ":armor_class:" in payload:
-        class_id = payload.split(":armor_class:", 1)[1].strip()
-        # Унификация armor: legacy `:armor_class:` остался только для legendary_usdt.
-        # Все остальные мифик-брони доставляются через `:armor_equip:` (общий путь).
-        if class_id != "legendary_usdt":
-            _log.warning(
-                "deprecated armor_class marker for %s in invoice %s — пропускаю", class_id, inv_id,
-            )
-            return True
-        try:
-            ok2, _msg2 = await _exec(db.create_legendary_armor, uid)
-            if not ok2 and "уже" not in (_msg2 or "").lower():
-                _log.error("CRITICAL: recovery legendary_usdt uid=%s inv=%s msg=%s", uid, inv_id, _msg2)
-                return False
-        except Exception as e:
-            _log.error("CRITICAL: recovery create_legendary_armor exc uid=%s inv=%s err=%s", uid, inv_id, e)
-            return False
-        cache_invalidate(uid)
-        if manager is not None:
-            await manager.send(uid, {"event": "armor_class_purchased", "class_id": "armor_mythic4", "source": "cryptopay"})
-        await send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «Профиль → 🛡 Броня» и настройте её.\n\n⚔️ Duel Arena")
-        return True
-
     _equip_map = (
         (":weapon_equip:", "weapon", "weapon_equipped", "weapon_id", "⚔️", "Оружие получено!"),
         (":helmet_equip:", "belt",   "helmet_equipped", "helmet_id", "⛑️", "Шлем получен!"),
         (":boots_equip:",  "boots",  "boots_equipped",  "boots_id",  "👟", "Сапоги получены!"),
         (":shield_equip:", "shield", "shield_equipped", "shield_id", "🛡️", "Щит получен!"),
         (":ring_equip:",   "ring1",  "ring_equipped",   "ring_id",   "💍", "Кольцо получено!"),
-        (":armor_equip:",  "armor",  "armor_equipped",  "armor_id",  "🛡",  "Мифическая броня получена!"),
     )
     for marker, slot, event, id_field, emoji, title in _equip_map:
         if marker not in payload:
             continue
         item_id = payload.split(marker, 1)[1].strip()
-        # armor использует force=True И отдельную таблицу player_owned_armor
-        # (get_equipment проверяет именно её для slot=armor)
-        force = (slot == "ring1") or (slot == "armor")
+        force = (slot == "ring1")
         try:
             if force:
                 await _exec(db.equip_item, uid, slot, item_id, True)
             else:
                 await _exec(db.equip_item, uid, slot, item_id)
-            if slot == "armor":
-                await _exec(db.add_owned_armor, uid, item_id)
-            else:
-                await _exec(db.add_owned_weapon, uid, item_id)
+            await _exec(db.add_owned_weapon, uid, item_id)
         except Exception as e:
             _log.error("CRITICAL: recovery %s uid=%s item=%s inv=%s err=%s", event, uid, item_id, inv_id, e)
             return False

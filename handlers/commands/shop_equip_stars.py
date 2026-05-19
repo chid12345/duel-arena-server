@@ -28,7 +28,6 @@ _STARS_EQUIP_SLOT = {
     "helmet_equip_stars": "belt",
     "boots_equip_stars":  "boots",
     "ring_equip_stars":   "ring1",
-    "armor_equip_stars":  "armor",
 }
 
 
@@ -84,53 +83,8 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
             "Откройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena"
         )
 
-    # Stars-сброс Легендарной (armor_mythic4 +19 свободных статов).
-    # Payload: `legendary_reset_stars:UID:armor_mythic4`. Эквивалент $5.99
-    # USDT по курсу Telegram (~400⭐).
-    if payload.startswith("legendary_reset_stars:"):
-        try:
-            ok, msg = db.reset_legendary(user_id)
-            if not ok:
-                logger.error("Stars legendary reset failed uid=%s stars=%s msg=%s",
-                             user_id, stars, msg)
-                return ("⚠️ Оплата получена, но сброс задержался.\n"
-                        "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
-        except Exception as exc:
-            logger.error("CRITICAL: Stars legendary reset exception uid=%s err=%s",
-                         user_id, exc)
-            return ("⚠️ Оплата получена, но сброс задержался.\n"
-                    "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
-        return ("🔄 <b>Статы Легендарной брони сброшены!</b>\n"
-                "Откройте «Профиль → 🛡 Броня → ⚙ Настроить» и распределите заново.\n\n⚔️ Duel Arena")
-
-    # legacy `armor_class_stars:` — теперь только для legendary_usdt (armor_mythic4)
-    # с +19 свободных статов. Все остальные мифик-брони идут через
-    # `armor_equip_stars:` (унифицировано с helmet/weapon/shield/boots/ring),
-    # см. _STARS_EQUIP_SLOT выше.
-    if payload.startswith("armor_class_stars:"):
-        parts = payload.split(":", 2)
-        class_id = parts[2] if len(parts) == 3 else ""
-        if class_id != "legendary_usdt":
-            logger.warning(
-                "deprecated payload armor_class_stars:%s ignored — use armor_equip_stars:* для мифик-брони",
-                class_id,
-            )
-            return ("⚠️ Этот тип покупки больше не поддерживается.\n"
-                    "Попробуйте обновить мини-апп. ⚔️ Duel Arena")
-        try:
-            ok, msg = db.create_legendary_armor(user_id)
-            if not ok and "уже" not in (msg or "").lower():
-                logger.error("Stars legendary_usdt slot creation failed uid=%s stars=%s msg=%s",
-                             user_id, stars, msg)
-                return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
-                        "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
-        except Exception as exc:
-            logger.error("CRITICAL: Stars legendary_usdt exception uid=%s err=%s",
-                         user_id, exc)
-            return ("⚠️ Оплата получена, но выдача брони задержалась.\n"
-                    "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
-        return ("✅ <b>Легендарный образ получен!</b>\n"
-                "Откройте «Гардероб → Мой инвентарь» и настройте его.\n\n⚔️ Duel Arena")
+    # Старые armor Stars-payloads (legendary_reset_stars, armor_class_stars,
+    # armor_equip_stars) снесены под корень — новый чистый слот «БРОНЯ» в разработке.
 
     parse = _parse(payload)
     if parse is None:
@@ -140,12 +94,7 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
         # force=True: для кольца — точно в ring1 (мини-апп показывает только ring1;
         # без force резолвер мог бы положить в ring2, и покупка «потерялась бы» в UI).
         db.equip_item(user_id, slot, item_id, force=True)
-        # Унификация armor: владение мифик-брони пишется в отдельную таблицу
-        # player_owned_armor (так её читает get_equipment для slot=armor).
-        if slot == "armor":
-            db.add_owned_armor(user_id, item_id)
-        else:
-            db.add_owned_weapon(user_id, item_id)
+        db.add_owned_weapon(user_id, item_id)
     except Exception as exc:  # pragma: no cover — логируем критично для разбора
         logger.error(
             "CRITICAL: Stars equip failed uid=%s slot=%s item=%s stars=%s err=%s",

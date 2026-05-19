@@ -117,7 +117,7 @@
         const data = await resp.json();
         if (data?.ok) {
           if (typeof notifyFn === 'function')
-            notifyFn(`✅ Аренд: ${data.deleted_rentals} · броней: ${data.deleted_owned_armor} · прочих мификов: ${data.deleted_owned_weapons} · снято слотов: ${data.cleared_slots}. Чисто.`);
+            notifyFn(`✅ Аренд: ${data.deleted_rentals} · мификов: ${data.deleted_owned_weapons} · снято слотов: ${data.cleared_slots}. Чисто.`);
           await refreshState();
           if (typeof onWiped === 'function') onWiped();
         } else {

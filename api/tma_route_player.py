@@ -64,9 +64,8 @@ def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = Non
                 cur = conn.cursor()
                 cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
                 weapons = [r["item_id"] for r in cur.fetchall()]
-                cur.execute("SELECT item_id FROM player_owned_armor WHERE user_id = ?", (uid,))
-                armors = [r["item_id"] for r in cur.fetchall()]
-                return weapons, armors
+                # owned_armor больше не возвращаем — старый armor снесён под корень.
+                return weapons, []
             finally:
                 conn.close()
         except Exception:

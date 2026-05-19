@@ -10,7 +10,6 @@ from fastapi import FastAPI
 from api.avatar_shop_routes import register_avatar_shop_routes
 from api.payment_routes import register_payment_routes
 from api.shop_routes import register_shop_routes
-from api.wardrobe_routes import register_wardrobe_routes
 
 from api.tma_auth import get_user_from_init_data
 from api.tma_catalogs import (
@@ -65,25 +64,8 @@ def wire_shop_routes(app: FastAPI) -> None:
             "_send_tg_message": _send_tg_message,
         },
     )
-    register_wardrobe_routes(
-        app,
-        {
-            "db": db,
-            "get_user_from_init_data": get_user_from_init_data,
-            "_player_api": _player_api,
-            "_cache_invalidate": _cache_invalidate,
-            "_rl_check": _rl_check,
-            "FREE_CLASSES": FREE_CLASSES,
-            "GOLD_CLASSES": GOLD_CLASSES,
-            "DIAMONDS_CLASSES": DIAMONDS_CLASSES,
-            "USDT_CLASS_BASE": USDT_CLASS_BASE,
-            "RESET_STATS_COST_DIAMONDS": RESET_STATS_COST_DIAMONDS,
-            "RESET_STATS_COST_DIAMONDS_USDT": RESET_STATS_COST_DIAMONDS_USDT,
-            "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
-            "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
-            "BOT_TOKEN": BOT_TOKEN,
-        },
-    )
+    # wardrobe_routes (Легендарная броня armor_mythic4) снесён под корень
+    # вместе со старым armor — новый чистый слот «БРОНЯ» в разработке.
     register_shop_routes(
         app,
         {

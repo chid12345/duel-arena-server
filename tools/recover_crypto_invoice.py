@@ -47,10 +47,7 @@ def _parse_payload(payload: str) -> dict:
     out = {
         "is_premium":      ":premium:" in payload,
         "is_full_reset":   ":full_reset:" in payload,
-        "is_usdt_slot":    ":usdt_slot:" in payload,
-        "is_armor_class":  ":armor_class:" in payload,
     }
-    out["armor_class_id"] = payload.split(":armor_class:", 1)[1].strip() if out["is_armor_class"] else None
     out["usdt_scroll_id"] = payload.split(":usdt_scroll:", 1)[1].strip() if ":usdt_scroll:" in payload else None
     out["weapon_equip_id"] = payload.split(":weapon_equip:", 1)[1].strip() if ":weapon_equip:" in payload else None
     out["shield_equip_id"] = payload.split(":shield_equip:", 1)[1].strip() if ":shield_equip:" in payload else None
@@ -64,15 +61,11 @@ def _parse_payload(payload: str) -> dict:
 
 
 def _deliver(uid: int, invoice_id: int, payload: str, diamonds: int) -> str:
-    """Доставляет содержимое invoice по типу payload. Возвращает 'тип' выдачи."""
-    p = _parse_payload(payload)
+    """Доставляет содержимое invoice по типу payload. Возвращает 'тип' выдачи.
 
-    # armor_equip — отдельная ветка: owned пишется в player_owned_armor.
-    armor_equip_id = payload.split(":armor_equip:", 1)[1].strip() if ":armor_equip:" in payload else None
-    if armor_equip_id:
-        db.equip_item(uid, "armor", armor_equip_id, force=True)
-        db.add_owned_armor(uid, armor_equip_id)
-        return f"equip:armor:{armor_equip_id}"
+    Старый armor (:armor_equip:, :armor_class:, :usdt_slot:) снесён под корень.
+    """
+    p = _parse_payload(payload)
 
     # Equip-предметы (weapon/shield/helmet/boots/ring) за USDT
     equip_map = [
@@ -92,21 +85,9 @@ def _deliver(uid: int, invoice_id: int, payload: str, diamonds: int) -> str:
         ok = deliver_rental(db, uid, p["rental_item_id"])
         return f"rental:{p['rental_item_id']}:{ok}"
 
-    # Унификация armor: `:armor_class:` сужен до legendary_usdt только.
-    # Для остальных мифик-брони используется `:armor_equip:` (выше).
-    if p["is_armor_class"] and p["armor_class_id"] == "legendary_usdt":
-        ok, msg = db.create_legendary_armor(uid)
-        return f"legendary_armor:{ok}:{msg}"
-    if p["is_armor_class"] and p["armor_class_id"]:
-        return f"armor_class:deprecated:{p['armor_class_id']}"
-
     if p["usdt_scroll_id"]:
         db.add_to_inventory(uid, p["usdt_scroll_id"])
         return f"scroll:{p['usdt_scroll_id']}"
-
-    if p["is_usdt_slot"]:
-        ok, msg = db.create_legendary_armor(uid)
-        return f"usdt_slot:armor_mythic4:{ok}:{msg}"
 
     if p["is_premium"]:
         result = db.activate_premium(uid, days=21)

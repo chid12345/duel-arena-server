@@ -53,17 +53,7 @@ def register_debug_rentals_route(app: FastAPI) -> None:
         except Exception as e:
             eq_repr = {"error": str(e)}
 
-        # 5. Купленные брони (player_owned_armor) — если предмет тут, то после
-        # истечения аренды он НЕ снимается (считается купленным).
-        conn = db.get_connection()
-        try:
-            rows = conn.execute(
-                "SELECT item_id, owned_at FROM player_owned_armor WHERE user_id = ?",
-                (uid,),
-            ).fetchall()
-            owned_armor_rows = [dict(r) for r in rows]
-        finally:
-            conn.close()
+        # Старая таблица player_owned_armor снесена вместе с armor.
 
         return {
             "ok": True,
@@ -73,8 +63,6 @@ def register_debug_rentals_route(app: FastAPI) -> None:
             "raw_equipment_rentals_count": len(raw_rows),
             "raw_equipment_rentals": raw_rows,
             "player_equipment_rows": equipment_rows,
-            "player_owned_armor_count": len(owned_armor_rows),
-            "player_owned_armor": owned_armor_rows,
             "get_equipment_result": eq_repr,
         }
 
@@ -84,13 +72,12 @@ def register_debug_rentals_route(app: FastAPI) -> None:
 
         Удаляется (для теста — игрок теряет ВСЁ что покупал/арендовал):
         - equipment_rentals (все аренды любых слотов).
-        - player_owned_armor (купленные мифик-брони).
-        - player_owned_weapons (купленные мифик-шлемы/мечи/щиты/ноги/кольца —
-          одна общая таблица для всех слотов кроме armor).
-        - armor_custom_mods (USDT-кастомка armor_mythic4 +19 статов).
-        - player_equipment ВСЕ слоты (а не только armor — иначе после удаления
-          owned-таблиц в слотах останутся «мёртвые ссылки» на удалённые предметы).
-        - players.current_class / current_class_type (legacy кэш брони).
+        - player_owned_weapons (купленные мифик-шлемы/мечи/щиты/ноги/кольца).
+        - player_equipment ВСЕ слоты (иначе после удаления owned-таблицы
+          в слотах останутся «мёртвые ссылки» на удалённые предметы).
+
+        Старый armor (player_owned_armor, armor_custom_mods, current_class кэш)
+        снесён под корень — таблиц больше нет.
         """
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
@@ -105,27 +92,19 @@ def register_debug_rentals_route(app: FastAPI) -> None:
                 row = cur.fetchone()
                 return int((row["n"] if isinstance(row, dict) else row[0]) or 0)
 
-            deleted_rentals       = _count("SELECT COUNT(*) AS n FROM equipment_rentals  WHERE user_id = ?")
-            deleted_owned_armor   = _count("SELECT COUNT(*) AS n FROM player_owned_armor WHERE user_id = ?")
+            deleted_rentals       = _count("SELECT COUNT(*) AS n FROM equipment_rentals    WHERE user_id = ?")
             deleted_owned_weapons = _count("SELECT COUNT(*) AS n FROM player_owned_weapons WHERE user_id = ?")
-            cleared_slots         = _count("SELECT COUNT(*) AS n FROM player_equipment   WHERE user_id = ?")
+            cleared_slots         = _count("SELECT COUNT(*) AS n FROM player_equipment     WHERE user_id = ?")
 
             cur.execute("DELETE FROM equipment_rentals    WHERE user_id = ?", (uid,))
-            cur.execute("DELETE FROM player_owned_armor   WHERE user_id = ?", (uid,))
             cur.execute("DELETE FROM player_owned_weapons WHERE user_id = ?", (uid,))
-            cur.execute("DELETE FROM armor_custom_mods    WHERE user_id = ?", (uid,))
             cur.execute("DELETE FROM player_equipment     WHERE user_id = ?", (uid,))
-            cur.execute(
-                "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
-                (uid,),
-            )
             conn.commit()
         finally:
             conn.close()
         return {
             "ok": True, "uid": uid,
             "deleted_rentals": deleted_rentals,
-            "deleted_owned_armor": deleted_owned_armor,
             "deleted_owned_weapons": deleted_owned_weapons,
             "cleared_slots": cleared_slots,
         }
