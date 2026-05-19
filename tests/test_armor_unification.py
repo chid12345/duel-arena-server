@@ -102,6 +102,41 @@ def test_stars_armor_class_legendary_usdt_still_works(db, monkeypatch):
     assert mods["free_stats_left"] == 19, "новая legendary должна стартовать с 19 свободных статов"
 
 
+def test_create_legendary_armor_repairs_desync(db):
+    """Регрессия: если armor_custom_mods запись есть, а в player_owned_armor нет
+    (рассогласование после прерванной доставки / старого wipe), повторный вызов
+    create_legendary_armor должен починить — добавить запись в player_owned_armor.
+
+    Иначе игрок оплачивает $11.99, видит «куплено», но броня не появляется
+    в арсенале (фронт читает owned_armor)."""
+    db.get_or_create_player(4099, "u_desync")
+
+    # 1. Создаём legendary нормально — обе записи появляются
+    ok, _ = db.create_legendary_armor(4099)
+    assert ok is True
+    assert "armor_mythic4" in db.get_owned_armor(4099)
+    assert db.has_legendary_armor(4099) is True
+
+    # 2. Имитируем рассогласование — удаляем ТОЛЬКО player_owned_armor
+    conn = db.get_connection()
+    conn.execute("DELETE FROM player_owned_armor WHERE user_id = ?", (4099,))
+    conn.commit()
+    conn.close()
+    assert "armor_mythic4" not in db.get_owned_armor(4099)
+    assert db.has_legendary_armor(4099) is True  # mods остались
+
+    # 3. Повторный вызов — раньше тут был ранний выход (False, "уже создан"),
+    #    player_owned_armor оставалась пустой и броня не появлялась в арсенале.
+    ok, msg = db.create_legendary_armor(4099)
+    assert ok is False  # "уже создан" — идемпотентность ок
+    assert "уже" in msg.lower()
+    # Главное: рассогласование починилось
+    assert "armor_mythic4" in db.get_owned_armor(4099), (
+        "create_legendary_armor должен ВСЕГДА гарантировать запись в "
+        "player_owned_armor — иначе после оплаты броня не появится в арсенале"
+    )
+
+
 # ─────────── equip_item('armor') sync current_class ───────────
 
 def test_equip_armor_syncs_current_class(db):

@@ -165,7 +165,14 @@ class ArmorModsMixin:
 
         Идемпотентно: если уже есть armor_custom_mods запись — возвращает (False, "уже есть").
         Не вызывает equip_item — это решение игрока в UI.
+
+        ВАЖНО: add_owned_armor вызывается ДО проверки armor_custom_mods, чтобы
+        починить рассогласование. Если запись в armor_custom_mods есть, а в
+        player_owned_armor — нет (мог остаться после старого wipe / прерванной
+        доставки), то без этой строки игрок оплатил, но броня не появилась
+        бы в арсенале. INSERT идемпотентен (ON CONFLICT DO NOTHING).
         """
+        self.add_owned_armor(user_id, LEGENDARY_USDT_ITEM_ID)
         existing = self.get_armor_custom_mods(user_id, LEGENDARY_USDT_ITEM_ID)
         if existing is not None:
             return False, "Легендарный слот уже создан"
@@ -173,10 +180,6 @@ class ArmorModsMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute(
-                "INSERT INTO player_owned_armor (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
-                (user_id, LEGENDARY_USDT_ITEM_ID),
-            )
             cursor.execute(
                 """INSERT INTO armor_custom_mods
                        (user_id, item_id, str_bonus, agi_bonus, int_bonus, end_bonus,
