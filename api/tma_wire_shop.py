@@ -81,6 +81,7 @@ def wire_shop_routes(app: FastAPI) -> None:
             "RESET_STATS_COST_DIAMONDS_USDT": RESET_STATS_COST_DIAMONDS_USDT,
             "CRYPTOPAY_TOKEN": CRYPTOPAY_TOKEN,
             "CRYPTOPAY_API_BASE": CRYPTOPAY_API_BASE,
+            "BOT_TOKEN": BOT_TOKEN,
         },
     )
     register_shop_routes(

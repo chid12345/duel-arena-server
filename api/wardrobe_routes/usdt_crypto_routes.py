@@ -73,6 +73,43 @@ def attach_wardrobe_usdt_crypto(
             logger.error("usdt buy-invoice: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)[:120]}
 
+    @router.post("/api/wardrobe/usdt/buy-invoice-stars")
+    async def wardrobe_usdt_buy_invoice_stars(body: InitDataHeader):
+        """Telegram Stars-инвойс на 590⭐ для Легендарной брони (armor_mythic4).
+
+        Stars — реальные деньги Telegram, эквивалент ~$11.99. После оплаты
+        handle_stars_equip_payload обработает payload `armor_class_stars:
+        legendary_usdt` → create_legendary_armor → у игрока появится
+        armor_custom_mods с free_stats_left=19, можно распределять статы.
+        """
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            db.get_or_create_player(uid, tg_user.get("username") or tg_user.get("first_name") or "")
+            BOT_TOKEN = ctx.get("BOT_TOKEN", "")
+            if not BOT_TOKEN:
+                return {"ok": False, "reason": "Бот не настроен"}
+            payload = f"armor_class_stars:{uid}:legendary_usdt"
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.post(
+                    f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink",
+                    json={
+                        "title": "Легендарная броня",
+                        "description": "Доспех Светоносного Бога — +19 свободных статов и выбор пассивки",
+                        "payload": payload,
+                        "currency": "XTR",
+                        "prices": [{"label": "Легендарная броня", "amount": 590}],
+                    },
+                )
+                data = resp.json()
+            if data.get("ok"):
+                return {"ok": True, "invoice_url": data["result"]}
+            logger.error("legendary stars invoice error: %s", data)
+            return {"ok": False, "reason": "Telegram отклонил запрос"}
+        except Exception as e:
+            logger.error("legendary stars invoice: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)[:120]}
+
     @router.post("/api/wardrobe/usdt/reset-invoice")
     async def wardrobe_usdt_reset_invoice(body: InitDataHeader):
         try:

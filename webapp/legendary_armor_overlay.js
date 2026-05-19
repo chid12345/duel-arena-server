@@ -79,8 +79,11 @@ function _render(mods, owned) {
         <div style="font-size:11px;color:#a0c8ff;line-height:1.5;margin-bottom:16px">
           Доспех с +19 свободных статов · выбор боевой пассивки · кастомное имя
         </div>
-        <button class="wd-btn btn-mythic" data-act="buy" style="width:100%;padding:12px;font-size:13px">
+        <button class="wd-btn btn-mythic" data-act="buy" style="width:100%;padding:12px;font-size:13px;margin-bottom:8px">
           💳 Купить за $11.99 USDT
+        </button>
+        <button class="wd-btn btn-gold" data-act="buy_stars" style="width:100%;padding:12px;font-size:13px;background:linear-gradient(135deg,#44240e,#92400e)">
+          ⭐ Купить за 590 Stars
         </button>
       </div>`;
     return;
@@ -170,6 +173,32 @@ async function _doAction(act, params) {
         else tg?.openLink?.(url);
       } catch(_) {}
       _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
+      return;
+    }
+    if (act === 'buy_stars') {
+      const inv = await _api('/api/wardrobe/usdt/buy-invoice-stars', {});
+      if (!inv?.ok) { _notify('❌ ' + (inv?.reason || 'Ошибка'), false); return; }
+      const tg = window.Telegram?.WebApp;
+      const url = inv.invoice_url || '';
+      if (typeof tg?.openInvoice === 'function') {
+        tg.openInvoice(url, async (status) => {
+          if (status === 'paid') {
+            _notify('✅ Легендарная броня получена!');
+            tg?.HapticFeedback?.notificationOccurred('success');
+            // Подождать пока бот обработает successful_payment и создаст armor_custom_mods
+            await new Promise(r => setTimeout(r, 1500));
+            await _load();  // перерисовать overlay с уже созданной кастомкой
+          } else if (status === 'cancelled') {
+            _notify('❌ Оплата отменена', false);
+          }
+        });
+        return;
+      }
+      try {
+        if (url.startsWith('https://t.me/') || url.startsWith('tg://')) tg?.openTelegramLink?.(url);
+        else tg?.openLink?.(url);
+      } catch(_) {}
+      _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
       return;
     }
     if (act === 'train' || act === 'untrain') {
