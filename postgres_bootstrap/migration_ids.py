@@ -94,4 +94,13 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_05_18_002_armor_custom_mods",
     "2026_05_18_003_migrate_owned_armor_from_user_inventory",
     "2026_05_18_004_migrate_usdt_custom_mods",
+    # Снос старого armor под корень (Этап 1 чистого перезапуска)
+    "2026_05_19_001_armor_wipe_owned",
+    "2026_05_19_002_armor_wipe_custom_mods",
+    "2026_05_19_003_armor_wipe_equipment_slot",
+    "2026_05_19_004_armor_wipe_rentals",
+    "2026_05_19_005_armor_wipe_current_class",
+    # Новый чистый armor2 (Этап 2 — старт с нуля)
+    "2026_05_19_010_player_owned_armor2",
+    "2026_05_19_011_armor2_custom_mods",
 )

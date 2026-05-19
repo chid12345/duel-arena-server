@@ -14,13 +14,14 @@ from postgres_bootstrap.ddl_05_world_boss import POSTGRES_DDL_05_WORLD_BOSS
 from postgres_bootstrap.ddl_06_season_pass import POSTGRES_DDL_06_SEASON_PASS
 from postgres_bootstrap.ddl_07_upgrades import POSTGRES_DDL_07_UPGRADES
 from postgres_bootstrap.ddl_08_armor_unify import POSTGRES_DDL_08_ARMOR_UNIFY
+from postgres_bootstrap.ddl_09_armor2 import POSTGRES_DDL_09_ARMOR2
 from postgres_bootstrap.migration_ids import POSTGRES_MIGRATION_IDS
 
 POSTGRES_DDL_STATEMENTS: tuple[str, ...] = (
     POSTGRES_DDL_01 + POSTGRES_DDL_02 + POSTGRES_DDL_03
     + POSTGRES_DDL_04_CLAN_V2 + POSTGRES_DDL_05_WORLD_BOSS
     + POSTGRES_DDL_06_SEASON_PASS + POSTGRES_DDL_07_UPGRADES
-    + POSTGRES_DDL_08_ARMOR_UNIFY
+    + POSTGRES_DDL_08_ARMOR_UNIFY + POSTGRES_DDL_09_ARMOR2
 )
 
 __all__ = (

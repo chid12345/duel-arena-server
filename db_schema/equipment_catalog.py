@@ -32,17 +32,19 @@ RARITY_LABEL = {
 
 SLOT_WEAPON = "weapon"
 SLOT_SHIELD = "shield"
+SLOT_ARMOR2 = "armor2"
 SLOT_BELT   = "belt"
 SLOT_BOOTS  = "boots"
 SLOT_RING1  = "ring1"
 SLOT_RING2  = "ring2"
 
-# Старый SLOT_ARMOR снесён под корень — новый чистый слот «БРОНЯ» в разработке.
-ALL_SLOTS = [SLOT_WEAPON, SLOT_SHIELD, SLOT_BELT, SLOT_BOOTS, SLOT_RING1, SLOT_RING2]
+# Старый SLOT_ARMOR снесён под корень — заменён на SLOT_ARMOR2 (чистая реализация).
+ALL_SLOTS = [SLOT_WEAPON, SLOT_SHIELD, SLOT_ARMOR2, SLOT_BELT, SLOT_BOOTS, SLOT_RING1, SLOT_RING2]
 
 SLOT_LABEL = {
     SLOT_WEAPON: ("🗡️", "Оружие"),
     SLOT_SHIELD: ("🛡️", "Щит"),
+    SLOT_ARMOR2: ("🛡", "Броня"),
     SLOT_BELT:   ("⛑️", "Шлем"),
     SLOT_BOOTS:  ("👟", "Ботинки"),
     SLOT_RING1:  ("💍", "Кольцо 1"),
