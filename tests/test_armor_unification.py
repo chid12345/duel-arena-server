@@ -176,7 +176,7 @@ def test_api_player_returns_rental_per_slot(db):
     db.rent_item(4040, "helmet_mythic1", days=7)
     db.equip_item(4040, "belt", "helmet_mythic1", force=True)
 
-    eq, _weapons, _stats, _set = _fetch_equipment_parallel(db, 4040)
+    eq, _weapons, _armors, _stats, _set = _fetch_equipment_parallel(db, 4040)
     assert "belt" in eq
     assert eq["belt"]["item_id"] == "helmet_mythic1"
     rental = eq["belt"].get("rental")

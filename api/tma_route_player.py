@@ -13,7 +13,7 @@ from api.tma_models import InitDataHeader
 log = logging.getLogger(__name__)
 
 
-def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = None) -> tuple[dict, list, dict, dict | None]:
+def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = None) -> tuple[dict, list, list, dict, dict | None]:
     """Три equipment-запроса выполняются параллельно. Возвращает (eq, weapons, stats, set_info).
 
     current_class — для подсчёта сет-бонуса в slot=armor (гардероб=броня).
@@ -63,11 +63,14 @@ def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = Non
             try:
                 cur = conn.cursor()
                 cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
-                return [r["item_id"] for r in cur.fetchall()]
+                weapons = [r["item_id"] for r in cur.fetchall()]
+                cur.execute("SELECT item_id FROM player_owned_armor WHERE user_id = ?", (uid,))
+                armors = [r["item_id"] for r in cur.fetchall()]
+                return weapons, armors
             finally:
                 conn.close()
         except Exception:
-            return []
+            return [], []
 
     def _stats():
         try:
@@ -78,7 +81,8 @@ def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = Non
     with ThreadPoolExecutor(max_workers=3) as ex:
         f_eq, f_wp, f_st = ex.submit(_eq), ex.submit(_weapons), ex.submit(_stats)
         eq_data, set_info = f_eq.result()
-        return eq_data, f_wp.result(), f_st.result(), set_info
+        weapons, armors = f_wp.result()
+        return eq_data, weapons, armors, f_st.result(), set_info
 
 
 def register_tma_player_route(
@@ -138,7 +142,7 @@ def register_tma_player_route(
             if usdt_passive:
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
-            equipment, owned_weapons, eq_stats_cached, set_info = _fetch_equipment_parallel(
+            equipment, owned_weapons, owned_armor, eq_stats_cached, set_info = _fetch_equipment_parallel(
                 db, uid, current_class=cached.get("current_class") or cached.get("warrior_type"))
             # Sync: если armor истёк и get_equipment его авто-снял, но в кэше
             # ещё current_class — invalidate, чтобы клиент не видел «фантомный»
@@ -150,7 +154,8 @@ def register_tma_player_route(
                 cached["current_class"] = None
                 cached["current_class_type"] = None
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
-                    "owned_weapons": owned_weapons, "set_bonus": set_info, "shards": db.get_all_shards(uid),
+                    "owned_weapons": owned_weapons, "owned_armor": owned_armor,
+                    "set_bonus": set_info, "shards": db.get_all_shards(uid),
                     "active_rentals": db.list_active_rentals(uid),
                     "cached": True, "_sv": VERSION}
 
@@ -206,13 +211,14 @@ def register_tma_player_route(
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
-        equipment, owned_weapons, eq_stats_fresh, set_info = _fetch_equipment_parallel(
+        equipment, owned_weapons, owned_armor, eq_stats_fresh, set_info = _fetch_equipment_parallel(
             db, uid, current_class=player.get("current_class") or player.get("warrior_type"))
         return {
             "ok": True,
             "player": _player_api(player, combined_buffs=cb, eq_stats=eq_stats_fresh),
             "equipment": equipment,
             "owned_weapons": owned_weapons,
+            "owned_armor": owned_armor,
             "set_bonus": set_info,
             "shards": db.get_all_shards(uid),
             "active_rentals": db.list_active_rentals(uid),

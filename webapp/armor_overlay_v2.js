@@ -285,7 +285,10 @@ function _render(scene, view) {
   if (!grid) return;
   const scrollTop = grid.scrollTop;
   const eqId = (State.equipment?.armor||{}).item_id||'';
-  const ownedSet = new Set(State.ownedWeapons||[]);
+  // Для armor «купленные» хранятся в отдельной таблице player_owned_armor,
+  // не в player_owned_weapons. Иначе купив armor за $11.99, после снятия
+  // снова показывались бы кнопки покупки — игрок мог купить второй раз.
+  const ownedArmorSet = new Set(State.ownedArmor||[]);
   const rentalsByItem = {};
   for (const r of (State.activeRentals || [])) {
     if (r && r.item_id) rentalsByItem[r.item_id] = r;
@@ -293,7 +296,7 @@ function _render(scene, view) {
   const items = ARMORS_DATA.map(a => ({
     ...a,
     equipped: a.id===eqId,
-    owned: ownedSet.has(a.id) || !!rentalsByItem[a.id],
+    owned: ownedArmorSet.has(a.id) || !!rentalsByItem[a.id],
     rental: rentalsByItem[a.id] || null,
   }));
   const list = view==='owned' ? items.filter(a=>a.equipped||a.owned) : items;
