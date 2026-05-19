@@ -14,15 +14,24 @@
     return null;
   }
 
+  // Форматирование оставшегося времени: 5д / 12ч / 30мин / 45с
+  // (в зависимости от того, какая единица больше всего подходит).
+  function _formatTimeLeft(sec) {
+    if (sec < 60) return Math.max(1, sec) + 'с';
+    if (sec < 3600) return Math.floor(sec / 60) + 'мин';
+    if (sec < 86400) return Math.floor(sec / 3600) + 'ч';
+    return Math.ceil(sec / 86400) + 'д';
+  }
+
   function html(itemId, activeRentals) {
     const r = _rentalFor(itemId, activeRentals);
     if (!r) return '';
     const sec = Number(r.seconds_left || 0);
     if (sec <= 0) return '';
-    const days = Math.max(1, Math.ceil(sec / 86400));
+    const left = _formatTimeLeft(sec);
     // Размещаем в правом верхнем углу, чтобы не пересекаться с бейджем
     // «✅ Надета» (он в левом верхнем у всех 6 overlay'ев).
-    return `<div style="position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#dbeafe;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;border:1px solid rgba(96,165,250,.5);z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.4)">🕐 Аренда · ${days}д</div>`;
+    return `<div style="position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#dbeafe;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;border:1px solid rgba(96,165,250,.5);z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.4)">🕐 Аренда · ${left}</div>`;
   }
 
   function rentalsByItem(activeRentals) {
