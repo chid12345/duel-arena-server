@@ -102,11 +102,15 @@ function _btn(a) {
   if (a.owned && a.type !== 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${a.id}">🛡 Надеть</button>`;
   if (window.LevelLock?.isLocked(a)) return LevelLock.lockedBtn(a);
-  // armor_mythic4 = legendary_usdt → ТОЛЬКО постоянная покупка $11.99
-  // с +19 свободных статов через armor_custom_mods. Аренда не имеет смысла
-  // (даст пустую модель без статов), поэтому кнопка АРЕНДА не показывается.
+  // armor_mythic4 = legendary_usdt → постоянная покупка $11.99 или 590⭐
+  // (Stars = эквивалент). После оплаты создаётся armor_custom_mods с +19
+  // свободных статов, открывается LegendaryArmor overlay для распределения.
+  // Аренда не показывается — без распределения статов пустая, бесполезно.
   if (a.id === 'armor_mythic4')
-    return `<button class="wd-btn btn-mythic" data-act="open_legendary" data-id="${a.id}" style="font-size:11px">💠 Легендарный слот ($11.99)</button>`;
+    return `<div style="display:flex;gap:6px">
+      <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_legendary_usdt" data-id="${a.id}">💳 $11.99</button>
+      <button class="wd-btn btn-gold" style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_legendary_stars" data-id="${a.id}">⭐ 590</button>
+    </div>`;
   if (a.type === 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${a.id}">🆓 Выбрать</button>`;
   if (a.type === 'gold')
@@ -187,6 +191,64 @@ async function _doAction(scene, action, item) {
       } else {
         _notify('Легендарный слот недоступен', false);
       }
+      return;
+    }
+    if (action === 'buy_legendary_usdt') {
+      _notify('⏳ Создаём счёт USDT...', true, true);
+      const invRes = await post('/api/wardrobe/usdt/buy-invoice', {});
+      if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._armorBusy=false; return; }
+      const _url = invRes.invoice_url || '';
+      try {
+        if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
+        else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) tg?.openTelegramLink?.(_url);
+        else tg?.openLink?.(_url);
+      } catch(_) {}
+      if (!tg && _url) try { window.open(_url, '_blank'); } catch(_) {}
+      _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
+      scene._armorBusy = false;
+      if (invRes.invoice_id) {
+        try {
+          localStorage.setItem('armorPendingInvoice', String(invRes.invoice_id));
+          localStorage.setItem('armorPendingItemId', item.id);
+        } catch(_) {}
+        _startArmorCryptoPolling(scene, invRes.invoice_id, item.id);
+      }
+      return;
+    }
+    if (action === 'buy_legendary_stars') {
+      _notify('⏳ Создаём счёт Stars...', true, true);
+      const invRes = await post('/api/wardrobe/usdt/buy-invoice-stars', {});
+      if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._armorBusy=false; return; }
+      const starsUrl = invRes.invoice_url || '';
+      if (typeof tg?.openInvoice === 'function') {
+        tg.openInvoice(starsUrl, async (status) => {
+          if (status === 'paid') {
+            _notify('⏳ Активируем...', true, true);
+            // Бот обработает successful_payment → create_legendary_armor.
+            // Подождём 1.5 сек и подтянем свежий state.
+            await new Promise(r => setTimeout(r, 1500));
+            if (window.RentalBadge) await RentalBadge.refreshState();
+            tg?.HapticFeedback?.notificationOccurred('success');
+            _notify('✅ Легендарная броня получена!');
+            // Открываем overlay распределения статов
+            if (window.LegendaryArmor) {
+              LegendaryArmor.open(scene, () => {
+                const tab = document.querySelector('#ar-root ._ar-view.active');
+                _render(scene, tab?.dataset?.av || 'all');
+              });
+            }
+          } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
+          scene._armorBusy = false;
+        });
+        return;
+      }
+      try {
+        if (starsUrl.startsWith('https://t.me/') || starsUrl.startsWith('tg://'))
+          tg?.openTelegramLink?.(starsUrl);
+        else tg?.openLink?.(starsUrl);
+      } catch(_) {}
+      _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
+      scene._armorBusy = false;
       return;
     }
     if (action === 'buy_rental') {
@@ -331,6 +393,20 @@ function _render(scene, view) {
       const a=items.find(x=>x.id===btn.dataset.id);
       if (a) _doAction(scene,btn.dataset.act,a);
       return;
+    }
+    // Тап по самой карточке armor_mythic4 (если она куплена/надета) — открыть
+    // LegendaryArmor overlay для распределения +19 свободных статов и пассивки.
+    const card = e.target.closest('.wd-card');
+    if (card && card.dataset.id === 'armor_mythic4') {
+      const a = items.find(x => x.id === 'armor_mythic4');
+      if (a && (a.owned || a.equipped) && window.LegendaryArmor) {
+        LegendaryArmor.open(scene, () => {
+          if (window.RentalBadge) RentalBadge.refreshState().then(() => {
+            const tab = document.querySelector('#ar-root ._ar-view.active');
+            _render(scene, tab?.dataset?.av || 'all');
+          });
+        });
+      }
     }
   };
 }
