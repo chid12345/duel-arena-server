@@ -64,7 +64,7 @@ def db():
     from repositories.inventory import InventoryMixin
     from repositories.quests import QuestsMixin
     from repositories.world_boss import WorldBossMixin
-    from repositories.equipment import EquipmentMixin
+    from repositories.equipment import Armor2ModsMixin, EquipmentMixin
     from repositories.season_pass import SeasonPassMixin, SeasonPassClaimMixin
     from repositories.upgrades import UpgradesMixin
     from repositories.rentals import RentalsMixin
@@ -78,7 +78,7 @@ def db():
         BotsMixin, UsersMixin, BattlesMixin,
         GameLogicMixin, EndlessMixin, LeaderboardMixin,
         ShopMixin, SocialMixin, AvatarsMixin, InventoryMixin,
-        QuestsMixin, WorldBossMixin, EquipmentMixin,
+        QuestsMixin, WorldBossMixin, EquipmentMixin, Armor2ModsMixin,
         SeasonPassMixin, SeasonPassClaimMixin, UpgradesMixin,
         RentalsMixin,
     ):

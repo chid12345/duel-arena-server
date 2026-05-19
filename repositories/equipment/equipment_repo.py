@@ -45,6 +45,7 @@ class EquipmentMixin:
         result: Dict[str, Dict] = {}
         expired_slots: list[str] = []
         owned_set: set[str] | None = None
+        owned_armor2_set: set[str] | None = None
         rental_set: set[str] | None = None
 
         def _ensure_rental_set():
@@ -60,11 +61,20 @@ class EquipmentMixin:
                 continue
             if item.get("rarity") == "mythic":
                 _ensure_rental_set()
-                if owned_set is None:
-                    owned_set = set(self.get_owned_weapons(user_id))
-                if item_id not in owned_set and item_id not in rental_set:
-                    expired_slots.append(slot)
-                    continue
+                # armor2 владеется через player_owned_armor2 (отдельная таблица),
+                # остальные слоты — через player_owned_weapons.
+                if slot == "armor2":
+                    if owned_armor2_set is None:
+                        owned_armor2_set = set(self.get_owned_armor2(user_id))
+                    if item_id not in owned_armor2_set and item_id not in rental_set:
+                        expired_slots.append(slot)
+                        continue
+                else:
+                    if owned_set is None:
+                        owned_set = set(self.get_owned_weapons(user_id))
+                    if item_id not in owned_set and item_id not in rental_set:
+                        expired_slots.append(slot)
+                        continue
             result[slot] = {"item_id": item_id, **item}
 
         conn.close()
@@ -143,11 +153,28 @@ class EquipmentMixin:
         )
         total: Dict[str, float] = {f: 0.0 if "pct" in f else 0 for f in _STAT_FIELDS}
 
+        # armor2_mythic4: подмешиваем +19 свободных статов из armor2_custom_mods.
+        # Применяется ТОЛЬКО если игрок зафиксировал сборку (applied=1).
+        armor2_mods: dict | None = None
+        armor2_item = equipped.get("armor2")
+        if armor2_item and armor2_item.get("item_id") == "armor2_mythic4":
+            try:
+                armor2_mods = self.get_armor2_custom_mods(user_id, "armor2_mythic4")
+            except Exception:
+                armor2_mods = None
+
         for slot, item in equipped.items():
             item_id = item["item_id"]
             base_stats = get_item_stats(item_id)
             plus = int(all_plus.get(item_id, 0))
             stats = plus_stats_for(base_stats, plus) if plus > 0 else base_stats
+            if slot == "armor2" and armor2_mods and armor2_mods.get("applied"):
+                stats = dict(stats)
+                stats["str_bonus"] = int(stats.get("str_bonus", 0)) + int(armor2_mods.get("str_bonus", 0))
+                stats["agi_bonus"] = int(stats.get("agi_bonus", 0)) + int(armor2_mods.get("agi_bonus", 0))
+                stats["intu_bonus"] = int(stats.get("intu_bonus", 0)) + int(armor2_mods.get("int_bonus", 0))
+                # end_bonus (выносливость) → hp_bonus ×2 (stamina per stat)
+                stats["hp_bonus"] = int(stats.get("hp_bonus", 0)) + int(armor2_mods.get("end_bonus", 0)) * 2
             for f in _STAT_FIELDS:
                 val = stats.get(f, 0)
                 if not isinstance(val, (int, float)):

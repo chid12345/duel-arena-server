@@ -1,9 +1,10 @@
 """Экипировка игрока: надеть, снять, получить бонусы.
 
-ArmorModsMixin (USDT-кастомка armor_mythic4 +19 свободных статов) снесён под
-корень вместе со всем старым armor — новый чистый слот «БРОНЯ» в разработке.
+Armor2ModsMixin — новая чистая кастомка armor2_mythic4 (+19 свободных статов).
+Старый ArmorModsMixin снесён под корень со всем legacy armor.
 """
 
+from repositories.equipment.armor2_mods_repo import Armor2ModsMixin
 from repositories.equipment.equipment_repo import EquipmentMixin
 
-__all__ = ["EquipmentMixin"]
+__all__ = ["Armor2ModsMixin", "EquipmentMixin"]
