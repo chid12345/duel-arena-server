@@ -108,7 +108,8 @@ CRYPTOPAY_TOKEN = os.getenv("CRYPTOPAY_TOKEN", "56515:AAThe6SQhjz10EDpboEUulYqaa
 CRYPTOPAY_TESTNET = os.getenv("CRYPTOPAY_TESTNET", "0") == "1"
 # Полный сброс аккаунта через CryptoPay Mini App (только USDT)
 FULL_RESET_CRYPTO_USDT = (os.getenv("FULL_RESET_CRYPTO_USDT") or "11.99").strip()
-FULL_RESET_STARS = int(os.getenv("FULL_RESET_STARS") or "600")
+# $11.99 × 67⭐/$ = 803⭐ (округление до 800 как у мификов).
+FULL_RESET_STARS = int(os.getenv("FULL_RESET_STARS") or "800")
 
 # Алмазы (премиум валюта)
 DIAMONDS_DAILY_STREAK = 2
@@ -120,7 +121,8 @@ REFERRAL_PCT_SUB_RANK_1_10 = 5
 REFERRAL_PCT_SUB_RANK_11_30 = 7
 REFERRAL_PCT_SUB_RANK_31_PLUS = 10
 REFERRAL_PCT_VIP_ALL_SHOP = 10  # с 31-го платящего: все покупки этого игрока в магазине и Stars-пакеты
-# Цена подписки Premium в Telegram Stars (инвойс payload premium_sub)
-PREMIUM_SUBSCRIPTION_STARS = 390
+# Цена подписки Premium в Telegram Stars (инвойс payload premium_sub).
+# $8.00 USDT × 67⭐/$ = 536⭐ — соответствует CRYPTO_PACKAGES cdpremium.
+PREMIUM_SUBSCRIPTION_STARS = 536
 
 # Образы, масштабирование, элит — вынесены в config/avatar_catalog.py

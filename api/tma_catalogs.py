@@ -128,13 +128,15 @@ SCROLL_EFFECTS = {
 }
 
 STARS_PACKAGES = [
-    {"id": "d100", "diamonds": 100, "stars": 150, "label": "100 💎"},
-    {"id": "d300", "diamonds": 300, "stars": 350, "label": "300 💎"},
-    {"id": "d500", "diamonds": 500, "stars": 500, "label": "500 💎"},
-    {"id": "d100_first", "diamonds": 100, "stars": 50,  "label": "100 💎", "first_purchase": True},
-    {"id": "d300_first", "diamonds": 300, "stars": 150, "label": "300 💎", "first_purchase": True},
-    {"id": "d500_first", "diamonds": 500, "stars": 200, "label": "500 💎", "first_purchase": True},
-    {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},
+    # Цены Stars выравнены с USDT по официальному курсу Telegram (67⭐/$1).
+    # Раньше Stars были в ~1.33 раза дешевле USDT-эквивалента.
+    {"id": "d100", "diamonds": 100, "stars": 200, "label": "100 💎"},   # $2.99
+    {"id": "d300", "diamonds": 300, "stars": 468, "label": "300 💎"},   # $6.99
+    {"id": "d500", "diamonds": 500, "stars": 669, "label": "500 💎"},   # $9.99
+    {"id": "d100_first", "diamonds": 100, "stars": 67,  "label": "100 💎", "first_purchase": True},   # $1.00
+    {"id": "d300_first", "diamonds": 300, "stars": 201, "label": "300 💎", "first_purchase": True},   # $3.00
+    {"id": "d500_first", "diamonds": 500, "stars": 268, "label": "500 💎", "first_purchase": True},   # $4.00
+    {"id": "premium", "diamonds": 0, "stars": PREMIUM_SUBSCRIPTION_STARS, "label": "👑 Premium"},      # 536⭐ = $8.00
     {
         "id": "sfullreset",
         "diamonds": 0,
@@ -146,13 +148,13 @@ STARS_PACKAGES = [
     },
 ]
 
-# Stars-свитки/ящики — те же предметы что и USDT, но за Telegram Stars
-# Цены: ~50 Stars ≈ 1 USDT (150 Stars = $2.99 ≈ 100💎)
+# Stars-свитки/ящики — те же предметы что и USDT, но за Telegram Stars.
+# Цены выравнены с USDT по официальному курсу (67⭐/$1).
 STARS_SCROLL_PACKAGES = [
-    {"id": "ss_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "stars": 100, "desc": "Сила+Ловк+Инт+Вын +12 на 5 боёв"},
-    {"id": "ss_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "stars": 150, "desc": "Все статы +15 на 7 боёв · легендарный"},
-    {"id": "ss_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "stars": 150, "desc": "USDT-свиток + алмазные · 20% шанс Титана"},
-    {"id": "ss_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "stars": 150, "desc": "USDT-свиток + XP×2 + свитки · 10% Титан"},
+    {"id": "ss_all_12",  "scroll_id": "scroll_all_12",  "label": "✨ Все пассивки +12",          "stars": 134, "desc": "Сила+Ловк+Инт+Вын +12 на 5 боёв"},      # $2
+    {"id": "ss_titan",   "scroll_id": "scroll_titan",   "label": "🏔️ Свиток Титана",            "stars": 201, "desc": "Все статы +15 на 7 боёв · легендарный"},  # $3
+    {"id": "ss_box_e2",  "scroll_id": "box_epic_e2",    "label": "🔮 Эпический: Удача",          "stars": 201, "desc": "USDT-свиток + алмазные · 20% шанс Титана"},  # $3
+    {"id": "ss_box_e3",  "scroll_id": "box_epic_e3",    "label": "⚔️ Эпический: Набор воина",   "stars": 201, "desc": "USDT-свиток + XP×2 + свитки · 10% Титан"},  # $3
 ]
 
 ELITE_AVATAR_STARS_PACKAGE = {
