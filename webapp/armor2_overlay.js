@@ -407,7 +407,10 @@ function open(scene) {
   scene._armor2Busy = false;
   try { scene.input.enabled = false; } catch(_) {}
   if (typeof WardrobeHTML!=='undefined') WardrobeHTML._injectCSS();
-  close();
+  // Только удаляем старый DOM-узел — без побочных эффектов close()
+  // (close() при настоящем закрытии возвращает таббар + Phaser-инпут;
+  // здесь это бы перекрыло hide()/disable из шагов выше → ghost-tap в таббар).
+  document.getElementById('ar2-root')?.remove();
   const wrap=document.createElement('div');
   wrap.id='ar2-root'; wrap.className='wd-overlay';
   let view='all';

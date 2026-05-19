@@ -4,7 +4,7 @@
    ============================================================ */
 (() => {
 const CSS = `
-.wd-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:flex-start;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(6px)}
+.wd-overlay{position:fixed;inset:0;z-index:9300;display:flex;align-items:flex-start;justify-content:center;background:rgba(0,0,0,.85);backdrop-filter:blur(6px)}
 .wd-panel{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;background:rgba(8,4,20,.98);backdrop-filter:blur(18px);border-left:1px solid rgba(120,60,240,.2);border-right:1px solid rgba(120,60,240,.2);box-shadow:0 0 80px rgba(80,20,180,.12)}
 
 /* Head */
