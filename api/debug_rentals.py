@@ -60,3 +60,33 @@ def register_debug_rentals_route(app: FastAPI) -> None:
             "player_equipment_rows": equipment_rows,
             "get_equipment_result": eq_repr,
         }
+
+    @app.post("/api/debug/wipe_my_rentals")
+    async def wipe_my_rentals(init_data: str):
+        """Debug: удалить ВСЕ аренды текущего игрока (активные и истёкшие).
+
+        Дополнительно снимает мифик-броню из player_equipment, чтобы UI сразу
+        перестал её показывать (иначе при следующем get_equipment слот сам
+        опустеет, но кэш может задержать обновление).
+        """
+        tg_user = get_user_from_init_data(init_data)
+        uid = int(tg_user["id"])
+        conn = db.get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) AS n FROM equipment_rentals WHERE user_id = ?", (uid,))
+            row = cur.fetchone()
+            before = int((row["n"] if isinstance(row, dict) else row[0]) or 0)
+            cur.execute("DELETE FROM equipment_rentals WHERE user_id = ?", (uid,))
+            # снять надетые мифик-предметы из других слотов чтобы UI обновился —
+            # достаточно тронуть armor (для слота брони у нас auto-unequip
+            # current_class через unequip_item).
+            cur.execute("DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'", (uid,))
+            cur.execute(
+                "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
+                (uid,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+        return {"ok": True, "uid": uid, "deleted_rentals": before, "armor_slot_cleared": True}
