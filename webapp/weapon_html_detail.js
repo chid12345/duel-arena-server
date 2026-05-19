@@ -90,9 +90,12 @@ function _btnHtml(w) {
     return `<button class="wd-btn btn-gold" style="width:100%" data-act="buy" data-id="${w.id}">💰 Купить за ${w.price}</button>`;
   if (w.type === 'diamonds')
     return `<button class="wd-btn btn-dia" style="width:100%" data-act="buy" data-id="${w.id}">💎 Купить за ${w.price}</button>`;
-  return `<div style="display:flex;gap:8px">
-    <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:8px 4px" data-act="buy_usdt" data-id="${w.id}">💳 $11.99</button>
-    <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:8px 4px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${w.id}">⭐ 590</button>
+  return `<div>
+    <div style="display:flex;gap:8px">
+      <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:8px 4px" data-act="buy_usdt" data-id="${w.id}">💳 $11.99</button>
+      <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:8px 4px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${w.id}">⭐ 590</button>
+    </div>
+    ${window.RentalPay ? RentalPay.buildButton(w.id) : ''}
   </div>`;
 }
 
