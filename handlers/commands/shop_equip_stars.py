@@ -84,6 +84,25 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
             "Откройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena"
         )
 
+    # Stars-сброс Легендарной (armor_mythic4 +19 свободных статов).
+    # Payload: `legendary_reset_stars:UID:armor_mythic4`. Эквивалент $5.99
+    # USDT по курсу Telegram (~400⭐).
+    if payload.startswith("legendary_reset_stars:"):
+        try:
+            ok, msg = db.reset_legendary(user_id)
+            if not ok:
+                logger.error("Stars legendary reset failed uid=%s stars=%s msg=%s",
+                             user_id, stars, msg)
+                return ("⚠️ Оплата получена, но сброс задержался.\n"
+                        "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
+        except Exception as exc:
+            logger.error("CRITICAL: Stars legendary reset exception uid=%s err=%s",
+                         user_id, exc)
+            return ("⚠️ Оплата получена, но сброс задержался.\n"
+                    "Напишите в поддержку и укажите Telegram ID. ⚔️ Duel Arena")
+        return ("🔄 <b>Статы Легендарной брони сброшены!</b>\n"
+                "Откройте «Профиль → 🛡 Броня → ⚙ Настроить» и распределите заново.\n\n⚔️ Duel Arena")
+
     # legacy `armor_class_stars:` — теперь только для legendary_usdt (armor_mythic4)
     # с +19 свободных статов. Все остальные мифик-брони идут через
     # `armor_equip_stars:` (унифицировано с helmet/weapon/shield/boots/ring),

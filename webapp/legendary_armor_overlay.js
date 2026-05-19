@@ -119,7 +119,10 @@ function _render(mods, owned) {
       <div style="font-size:9px;color:#8899cc;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px">ПАССИВКА</div>
       ${passiveRows}
       ${locked
-        ? `<button class="wd-btn btn-uneq" data-act="reset" style="width:100%;padding:10px;margin-top:12px;font-size:12px">🔄 Сброс ($5.99 USDT)</button>`
+        ? `<div style="display:flex;gap:6px;margin-top:12px">
+            <button class="wd-btn btn-uneq" data-act="reset" style="flex:1;padding:10px;font-size:11px">💳 Сброс $5.99</button>
+            <button class="wd-btn btn-gold" data-act="reset_stars" style="flex:1;padding:10px;font-size:11px;background:linear-gradient(135deg,#44240e,#92400e)">⭐ Сброс 400</button>
+          </div>`
         : `<button class="wd-btn btn-mythic" data-act="apply" style="width:100%;padding:10px;margin-top:12px;font-size:12px;${(free > 0 || !passive) ? 'opacity:.5' : ''}" ${(free > 0 || !passive) ? 'disabled' : ''}>✅ Сохранить сборку</button>`
       }
     </div>`;
@@ -231,6 +234,33 @@ async function _doAction(act, params) {
         else tg?.openLink?.(url);
       } catch(_) {}
       _notify('💳 Счёт сброса открыт — оплатите и вернитесь');
+      return;
+    }
+    if (act === 'reset_stars') {
+      const inv = await _api('/api/wardrobe/usdt/reset-invoice-stars', {});
+      if (!inv?.ok) { _notify('❌ ' + (inv?.reason || 'Ошибка'), false); return; }
+      const tg = window.Telegram?.WebApp;
+      const url = inv.invoice_url || '';
+      if (typeof tg?.openInvoice === 'function') {
+        tg.openInvoice(url, async (status) => {
+          if (status === 'paid') {
+            _notify('⏳ Применяем сброс...', true);
+            // Бот обработает payload legendary_reset_stars → db.reset_legendary
+            await new Promise(r => setTimeout(r, 1500));
+            tg?.HapticFeedback?.notificationOccurred('success');
+            _notify('🔄 Сборка сброшена! Распределяй заново.');
+            await _load();  // перерисовать overlay (теперь applied=0, можно крутить +/−)
+          } else if (status === 'cancelled') {
+            _notify('❌ Оплата отменена', false);
+          }
+        });
+        return;
+      }
+      try {
+        if (url.startsWith('https://t.me/') || url.startsWith('tg://')) tg?.openTelegramLink?.(url);
+        else tg?.openLink?.(url);
+      } catch(_) {}
+      _notify('⭐ Счёт сброса открыт — оплатите и вернитесь');
       return;
     }
   } finally {

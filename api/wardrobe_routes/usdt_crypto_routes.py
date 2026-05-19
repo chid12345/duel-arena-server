@@ -127,6 +127,43 @@ def attach_wardrobe_usdt_crypto(
             logger.error("usdt reset-invoice: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)[:120]}
 
+    @router.post("/api/wardrobe/usdt/reset-invoice-stars")
+    async def wardrobe_usdt_reset_invoice_stars(body: InitDataHeader):
+        """Telegram Stars-инвойс на 400⭐ для сброса статов Легендарной (mythic4).
+
+        Эквивалент $5.99 USDT по курсу Telegram (1$ ≈ 67⭐).
+        После оплаты payload `legendary_reset_stars:UID:armor_mythic4` идёт
+        в shop_equip_stars.handle_stars_equip_payload → db.reset_legendary(uid).
+        """
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            if not db.has_legendary_armor(uid):
+                return {"ok": False, "reason": "Легендарный слот не создан"}
+            BOT_TOKEN = ctx.get("BOT_TOKEN", "")
+            if not BOT_TOKEN:
+                return {"ok": False, "reason": "Бот не настроен"}
+            payload = f"legendary_reset_stars:{uid}:armor_mythic4"
+            async with httpx.AsyncClient(timeout=10) as client:
+                resp = await client.post(
+                    f"https://api.telegram.org/bot{BOT_TOKEN}/createInvoiceLink",
+                    json={
+                        "title": "Сброс Легендарной брони",
+                        "description": "Возврат пула +19 свободных статов для новой сборки",
+                        "payload": payload,
+                        "currency": "XTR",
+                        "prices": [{"label": "Сброс статов", "amount": 400}],
+                    },
+                )
+                data = resp.json()
+            if data.get("ok"):
+                return {"ok": True, "invoice_url": data["result"]}
+            logger.error("legendary reset stars invoice error: %s", data)
+            return {"ok": False, "reason": "Telegram отклонил запрос"}
+        except Exception as e:
+            logger.error("legendary reset stars invoice: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)[:120]}
+
     @router.get("/api/wardrobe/usdt/check-reset")
     async def wardrobe_usdt_check_reset(init_data: str, invoice_id: int):
         """Проверить оплату сброса напрямую у CryptoPay и применить сброс."""

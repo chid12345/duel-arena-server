@@ -56,6 +56,36 @@ def test_stars_armor_class_legacy_blocked_for_non_legendary(db, monkeypatch):
     assert db.has_legendary_armor(4002) is False
 
 
+def test_stars_legendary_reset_via_payload(db, monkeypatch):
+    """`legendary_reset_stars:UID:armor_mythic4` сбрасывает armor_custom_mods."""
+    import handlers.commands.shop_equip_stars as mod
+    monkeypatch.setattr(mod, "db", db)
+
+    db.get_or_create_player(4090, "u_reset_stars")
+    # Создать Легендарную и сделать сборку «зафиксированной»
+    db.create_legendary_armor(4090)
+    # Распределить статы, выбрать пассивку, зафиксировать
+    for _ in range(19):
+        db.train_legendary_stat(4090, "strength")
+    db.set_legendary_passive(4090, "damage_pct")
+    db.apply_legendary_stats(4090)
+
+    mods_before = db.get_armor_custom_mods(4090, "armor_mythic4")
+    assert mods_before["applied"] is True
+    assert mods_before["str_bonus"] == 19
+    assert mods_before["free_stats_left"] == 0
+
+    # Stars-сброс через payload
+    msg = mod.handle_stars_equip_payload(4090, "legendary_reset_stars:4090:armor_mythic4", 400)
+
+    assert msg is not None and "сброшены" in msg
+    mods_after = db.get_armor_custom_mods(4090, "armor_mythic4")
+    assert mods_after["applied"] is False
+    assert mods_after["str_bonus"] == 0
+    assert mods_after["free_stats_left"] == 19
+    assert mods_after["passive_type"] is None
+
+
 def test_stars_armor_class_legendary_usdt_still_works(db, monkeypatch):
     """`armor_class_stars:legendary_usdt` → создаёт Легендарную броню (armor_custom_mods)."""
     import handlers.commands.shop_equip_stars as mod
