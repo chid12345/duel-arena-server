@@ -69,9 +69,9 @@ function _renderArchetype(arch, maxPieces) {
 
   const moreNeeded = count < 2 ? `<div class="sb-need">Соберите ещё ${2 - count} для бонуса</div>` : '';
 
-  // Разворот по слотам: показываем только если у игрока хотя бы один предмет
-  // этого архетипа надет (count >= 1) — иначе нет смысла занимать место.
-  const breakdown = (count >= 1 && window.SetBonusBreakdown)
+  // Разворот по слотам: показываем для ВСЕХ архетипов, в т.ч. 0/6 —
+  // игрок сразу видит что носит и что нужно докупить чтобы получить бонус.
+  const breakdown = window.SetBonusBreakdown
     ? window.SetBonusBreakdown.slotsHTML(arch.set_id)
     : '';
 
