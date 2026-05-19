@@ -23,6 +23,7 @@ const PASSIVES = [
 
 let _busy = false;
 let _onCloseCb = null;
+let _pollTimer = null;
 
 function _notify(msg, ok = true) {
   let el = document.getElementById('la2-notify');
@@ -123,6 +124,41 @@ async function _load() {
   _render(r.armor2_mods, !!r.owned);
 }
 
+function _startCryptoPolling(invoiceId, kind) {
+  if (_pollTimer) { clearTimeout(_pollTimer); _pollTimer = null; }
+  let attempts = 0;
+  const tick = async () => {
+    attempts++;
+    try {
+      const apiBase = (typeof API !== 'undefined' && API) ? API : '';
+      const r = await fetch(apiBase + `/api/shop/crypto_check/${invoiceId}`, { cache: 'no-store' }).then(x => x.json());
+      if (r && r.ok && r.paid) {
+        try { localStorage.removeItem('la2PendingInvoice'); localStorage.removeItem('la2PendingKind'); } catch (_) { }
+        try {
+          const init_data = window.Telegram?.WebApp?.initData || (window.State && State.initData) || '';
+          const pd = await fetch(apiBase + '/api/player', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+            cache: 'no-store',
+            body: JSON.stringify({ init_data }),
+          }).then(x => x.json());
+          if (pd) {
+            if (Array.isArray(pd.owned_armor2)) State.ownedArmor2 = pd.owned_armor2;
+            if (pd.equipment) State.equipment = pd.equipment;
+            if (pd.player) { State.player = pd.player; State.playerLoadedAt = Date.now(); }
+          }
+        } catch (_) { }
+        window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
+        _notify(kind === 'reset' ? '🔄 Сборка сброшена!' : '✅ Легендарная броня получена!');
+        if (document.getElementById('la2-root')) await _load();
+        return;
+      }
+    } catch (_) { }
+    if (attempts < 60) _pollTimer = setTimeout(tick, 5000);
+  };
+  _pollTimer = setTimeout(tick, 4000);
+}
+
 async function _doAction(act, params) {
   if (_busy) return;
   _busy = true;
@@ -138,6 +174,13 @@ async function _doAction(act, params) {
         else tg?.openLink?.(url);
       } catch (_) { }
       _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
+      if (inv.invoice_id) {
+        try {
+          localStorage.setItem('la2PendingInvoice', String(inv.invoice_id));
+          localStorage.setItem('la2PendingKind', 'buy');
+        } catch (_) { }
+        _startCryptoPolling(inv.invoice_id, 'buy');
+      }
       return;
     }
     if (act === 'buy_stars') {
@@ -195,6 +238,13 @@ async function _doAction(act, params) {
         else tg?.openLink?.(url);
       } catch (_) { }
       _notify('💳 Счёт сброса открыт — оплатите и вернитесь');
+      if (inv.invoice_id) {
+        try {
+          localStorage.setItem('la2PendingInvoice', String(inv.invoice_id));
+          localStorage.setItem('la2PendingKind', 'reset');
+        } catch (_) { }
+        _startCryptoPolling(inv.invoice_id, 'reset');
+      }
       return;
     }
     if (act === 'reset_stars') {
@@ -261,6 +311,12 @@ function open(_scene, onClose) {
   wrap.addEventListener('touchmove', e => e.stopPropagation(), { passive: false });
 
   _load();
+
+  try {
+    const pendingId = localStorage.getItem('la2PendingInvoice');
+    const pendingKind = localStorage.getItem('la2PendingKind') || 'buy';
+    if (pendingId) _startCryptoPolling(pendingId, pendingKind);
+  } catch (_) { }
 }
 
 function close() {
