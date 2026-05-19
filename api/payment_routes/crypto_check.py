@@ -332,6 +332,28 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     eq_resp = {slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"], "desc": it.get("desc", "")} for slot, it in db.get_equipment(uid).items()}
                     fresh = db.get_or_create_player(uid, "")
                     return {"ok": True, "paid": True, "already_confirmed": True, "rental_activated": True, "item_id": rental_item_id, "equipment": eq_resp, "player": _player_api(dict(fresh))}
+                if ":armor2_legendary_reset:" in custom_payload:
+                    try:
+                        db.reset_legendary_armor2(uid)
+                    except Exception as _e:
+                        logger.error("CRITICAL: armor2 legendary reset (crypto_check already_paid) uid=%s err=%s", uid, _e)
+                    _cache_invalidate(uid)
+                    db.mark_items_delivered(invoice_id)
+                    return {"ok": True, "paid": True, "already_confirmed": True, "armor2_legendary_reset": True,
+                            "player": _player_api(dict(db.get_or_create_player(uid, "")))}
+                if ":armor2_legendary:" in custom_payload:
+                    # Идемпотентно: webhook мог создать раньше — create_legendary_armor2 вернёт «уже есть»,
+                    # но клиенту важно получить owned_armor2 чтобы оверлей перерисовался в режим распределения.
+                    try:
+                        db.create_legendary_armor2(uid)
+                    except Exception as _e:
+                        logger.error("CRITICAL: armor2 legendary create (crypto_check already_paid) uid=%s err=%s", uid, _e)
+                    _cache_invalidate(uid)
+                    db.mark_items_delivered(invoice_id)
+                    return {"ok": True, "paid": True, "already_confirmed": True, "armor2_legendary_created": True,
+                            "armor2_mods": db.get_armor2_custom_mods(uid, "armor2_mythic4"),
+                            "owned_armor2": db.get_owned_armor2(uid),
+                            "player": _player_api(dict(db.get_or_create_player(uid, "")))}
                 if avatar_id:
                     unlock = db.unlock_avatar(uid, avatar_id, source="usdt")
                     if unlock.get("ok"):

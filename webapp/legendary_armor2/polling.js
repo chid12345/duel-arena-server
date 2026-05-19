@@ -39,7 +39,21 @@
       } catch (_) { }
       if (attempts < 60) N._pollTimer = setTimeout(tick, 5000);
     };
-    N._pollTimer = setTimeout(tick, 4000);
+    N._pollTimer = setTimeout(tick, 800);
   };
+
+  N._resumePolling = function () {
+    try {
+      const pid = localStorage.getItem('la2PendingInvoice');
+      const pkind = localStorage.getItem('la2PendingKind') || 'buy';
+      if (pid) N._startCryptoPolling(pid, pkind);
+    } catch (_) { }
+  };
+
+  try {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) N._resumePolling(); });
+    window.addEventListener('focus', () => N._resumePolling());
+    setTimeout(() => N._resumePolling(), 1500);
+  } catch (_) { }
 
 })();

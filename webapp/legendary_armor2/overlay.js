@@ -32,8 +32,8 @@
     if (!owned) {
       root.querySelector('.la2-body').innerHTML = `
         <div style="text-align:center;padding:24px 12px">
-          <div style="font-size:48px;margin-bottom:12px">💠</div>
-          <div style="font-size:14px;font-weight:700;color:#3cd084;margin-bottom:8px">Легендарная броня</div>
+          <img src="armor_mythic4.png?v=17.62" alt="Доспех Светоносного Бога" style="width:120px;height:120px;object-fit:contain;margin:0 auto 10px;display:block;filter:drop-shadow(0 0 14px rgba(60,208,132,.55))">
+          <div style="font-size:14px;font-weight:700;color:#3cd084;margin-bottom:4px">Доспех Светоносного Бога</div>
           <div style="font-size:11px;color:#a0c8ff;line-height:1.5;margin-bottom:16px">
             +19 свободных статов · выбор боевой пассивки · кастомное имя
           </div>
