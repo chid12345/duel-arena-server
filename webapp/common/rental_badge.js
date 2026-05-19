@@ -93,7 +93,7 @@
     if (!_isDev()) return '';
     return `<div style="display:flex;gap:6px;padding:4px 12px">
       <div class="rb-debug-show" style="flex:1;background:rgba(96,165,250,.08);font-size:10px;color:#a0c8ff;text-align:center;cursor:pointer;padding:4px;border-radius:4px">🔬 Debug</div>
-      <div class="rb-debug-wipe" style="flex:1;background:rgba(220,80,80,.12);font-size:10px;color:#ff9aa0;text-align:center;cursor:pointer;padding:4px;border-radius:4px">🗑 Сбросить мои аренды</div>
+      <div class="rb-debug-wipe" style="flex:1;background:rgba(220,80,80,.12);font-size:10px;color:#ff9aa0;text-align:center;cursor:pointer;padding:4px;border-radius:4px">🗑 Сбросить мифики + аренды</div>
     </div>`;
   }
 
@@ -111,12 +111,13 @@
       } catch (e) { alert('Debug error: ' + e); }
     };
     if (wipeBtn) wipeBtn.onclick = async () => {
-      if (!confirm('🗑 ПОЛНЫЙ сброс брони и аренд (для теста авто-снятия)?\n\nУдалится:\n• все аренды\n• все купленные мифик-брони\n• armor-слот будет очищен\n\nПродолжить?')) return;
+      if (!confirm('🗑 ПОЛНЫЙ сброс мификов + аренд (для тестов)?\n\nУдалится:\n• все аренды (любые слоты)\n• все купленные мифик-брони\n• все купленные мифики (шлем/меч/щит/ноги/кольцо)\n• кастомка легендарной брони\n• ВСЕ 6 слотов экипировки будут очищены\n\nПродолжить?')) return;
       try {
         const resp = await fetch('/api/debug/wipe_my_rentals?init_data=' + encodeURIComponent(initData()), { method: 'POST' });
         const data = await resp.json();
         if (data?.ok) {
-          if (typeof notifyFn === 'function') notifyFn(`✅ Аренд: ${data.deleted_rentals}, купленных броней: ${data.deleted_owned_armor}. Чисто.`);
+          if (typeof notifyFn === 'function')
+            notifyFn(`✅ Аренд: ${data.deleted_rentals} · броней: ${data.deleted_owned_armor} · прочих мификов: ${data.deleted_owned_weapons} · снято слотов: ${data.cleared_slots}. Чисто.`);
           await refreshState();
           if (typeof onWiped === 'function') onWiped();
         } else {

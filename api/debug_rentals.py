@@ -82,14 +82,15 @@ def register_debug_rentals_route(app: FastAPI) -> None:
     async def wipe_my_rentals(init_data: str):
         """Debug: ПОЛНЫЙ сброс брони и аренд игрока для теста авто-снятия.
 
-        Удаляется:
-        - ВСЕ записи в equipment_rentals (аренды).
-        - ВСЕ записи в player_owned_armor (купленные мифик-брони) — иначе
-          истёкшая аренда не снимется, т.к. предмет считается купленным.
-        - Слот brony в player_equipment + current_class в players.
+        Удаляется (для теста — игрок теряет ВСЁ что покупал/арендовал):
+        - equipment_rentals (все аренды любых слотов).
+        - player_owned_armor (купленные мифик-брони).
+        - player_owned_weapons (купленные мифик-шлемы/мечи/щиты/ноги/кольца —
+          одна общая таблица для всех слотов кроме armor).
         - armor_custom_mods (USDT-кастомка armor_mythic4 +19 статов).
-
-        ⚠️ Используется ТОЛЬКО для теста — игрок теряет всё что покупал.
+        - player_equipment ВСЕ слоты (а не только armor — иначе после удаления
+          owned-таблиц в слотах останутся «мёртвые ссылки» на удалённые предметы).
+        - players.current_class / current_class_type (legacy кэш брони).
         """
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
@@ -98,17 +99,22 @@ def register_debug_rentals_route(app: FastAPI) -> None:
         conn = db.get_connection()
         try:
             cur = conn.cursor()
-            cur.execute("SELECT COUNT(*) AS n FROM equipment_rentals WHERE user_id = ?", (uid,))
-            row = cur.fetchone()
-            deleted_rentals = int((row["n"] if isinstance(row, dict) else row[0]) or 0)
-            cur.execute("SELECT COUNT(*) AS n FROM player_owned_armor WHERE user_id = ?", (uid,))
-            row = cur.fetchone()
-            deleted_owned = int((row["n"] if isinstance(row, dict) else row[0]) or 0)
 
-            cur.execute("DELETE FROM equipment_rentals WHERE user_id = ?", (uid,))
-            cur.execute("DELETE FROM player_owned_armor WHERE user_id = ?", (uid,))
-            cur.execute("DELETE FROM armor_custom_mods WHERE user_id = ?", (uid,))
-            cur.execute("DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'", (uid,))
+            def _count(sql: str) -> int:
+                cur.execute(sql, (uid,))
+                row = cur.fetchone()
+                return int((row["n"] if isinstance(row, dict) else row[0]) or 0)
+
+            deleted_rentals       = _count("SELECT COUNT(*) AS n FROM equipment_rentals  WHERE user_id = ?")
+            deleted_owned_armor   = _count("SELECT COUNT(*) AS n FROM player_owned_armor WHERE user_id = ?")
+            deleted_owned_weapons = _count("SELECT COUNT(*) AS n FROM player_owned_weapons WHERE user_id = ?")
+            cleared_slots         = _count("SELECT COUNT(*) AS n FROM player_equipment   WHERE user_id = ?")
+
+            cur.execute("DELETE FROM equipment_rentals    WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM player_owned_armor   WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM player_owned_weapons WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM armor_custom_mods    WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM player_equipment     WHERE user_id = ?", (uid,))
             cur.execute(
                 "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
                 (uid,),
@@ -119,6 +125,7 @@ def register_debug_rentals_route(app: FastAPI) -> None:
         return {
             "ok": True, "uid": uid,
             "deleted_rentals": deleted_rentals,
-            "deleted_owned_armor": deleted_owned,
-            "armor_slot_cleared": True,
+            "deleted_owned_armor": deleted_owned_armor,
+            "deleted_owned_weapons": deleted_owned_weapons,
+            "cleared_slots": cleared_slots,
         }
