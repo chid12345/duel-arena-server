@@ -185,6 +185,111 @@ def test_api_player_returns_rental_per_slot(db):
     assert rental["seconds_left"] > 0
 
 
+# ─────────── Авто-снятие истёкшей аренды без фантомных бонусов ───────────
+
+def test_expired_armor_rental_auto_unequips_and_clears_class(db):
+    """После истечения аренды get_equipment авто-снимает armor + обнуляет current_class.
+
+    Защита от фантомных class-перков в бою: если аренда истекла, не должно
+    остаться ни статов через get_equipment_stats, ни записи в player_equipment,
+    ни значения current_class в players.
+    """
+    from datetime import datetime, timedelta
+    db.get_or_create_player(4050, "u_expire")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (4050,))
+    conn.commit()
+    conn.close()
+
+    db.rent_item(4050, "armor_mythic1", days=1)
+    db.equip_item(4050, "armor", "armor_mythic1", force=True)
+
+    # Проверяем что аренда работает: armor есть, current_class установлен
+    eq = db.get_equipment(4050)
+    assert "armor" in eq and eq["armor"]["item_id"] == "armor_mythic1"
+    conn = db.get_connection()
+    row = conn.execute("SELECT current_class FROM players WHERE user_id = ?", (4050,)).fetchone()
+    conn.close()
+    assert row["current_class"] == "berserker_mythic"
+
+    # Делаем аренду истёкшей (backdate expires_at)
+    past = (datetime.utcnow() - timedelta(minutes=5)).isoformat()
+    conn = db.get_connection()
+    conn.execute(
+        "UPDATE equipment_rentals SET expires_at = ? WHERE user_id = ? AND item_id = ?",
+        (past, 4050, "armor_mythic1"),
+    )
+    conn.commit()
+    conn.close()
+
+    # Следующий get_equipment должен авто-снять armor (mythic, не в owned, не в active rental)
+    eq2 = db.get_equipment(4050)
+    assert "armor" not in eq2, "Истёкшая аренда не должна возвращать armor в equipment"
+
+    # players.current_class должен обнулиться через unequip_item('armor')
+    conn = db.get_connection()
+    row = conn.execute("SELECT current_class, current_class_type FROM players WHERE user_id = ?", (4050,)).fetchone()
+    conn.close()
+    assert row["current_class"] is None, "current_class должен обнулиться после авто-снятия"
+    assert row["current_class_type"] is None
+
+    # get_equipment_stats не должен содержать str_bonus от armor_mythic1 (+12)
+    stats = db.get_equipment_stats(4050)
+    assert stats.get("str_bonus", 0) == 0
+    assert stats.get("hp_bonus", 0) == 0
+
+
+def test_expired_rental_no_phantom_set_bonus(db):
+    """Сет-бонус не должен учитывать арендованный предмет после истечения.
+
+    Сценарий: игрок арендует mythic-броню и mythic-щит одного архетипа.
+    При активной аренде сет 2/6 даёт бонус. После истечения brony — сета
+    больше нет, count для архетипа = 1.
+    """
+    from datetime import datetime, timedelta
+    from repositories.sets import resolve_active_sets
+    db.get_or_create_player(4051, "u_set_phantom")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (4051,))
+    conn.commit()
+    conn.close()
+
+    # Арендуем 2 предмета одного архетипа
+    db.rent_item(4051, "armor_mythic1", days=1)
+    db.equip_item(4051, "armor", "armor_mythic1", force=True)
+    db.rent_item(4051, "shield_mythic1", days=1)
+    db.equip_item(4051, "shield", "shield_mythic1", force=True)
+
+    eq = db.get_equipment(4051)
+    armor_set = eq["armor"].get("set_id")
+    shield_set = eq["shield"].get("set_id")
+    # Если архетипы совпадают — сет активен (2/6).
+    if armor_set and shield_set and armor_set == shield_set:
+        actives = resolve_active_sets(eq)
+        active_set = next((s for s in actives if s["set_id"] == armor_set), None)
+        assert active_set is not None and active_set["count"] == 2
+
+    # Истекает аренда armor
+    past = (datetime.utcnow() - timedelta(minutes=5)).isoformat()
+    conn = db.get_connection()
+    conn.execute(
+        "UPDATE equipment_rentals SET expires_at = ? WHERE user_id = ? AND item_id = ?",
+        (past, 4051, "armor_mythic1"),
+    )
+    conn.commit()
+    conn.close()
+
+    eq2 = db.get_equipment(4051)
+    assert "armor" not in eq2
+    # Если архетипы совпадали — count должен упасть до 1 (порог 2 не достигнут).
+    if armor_set and shield_set and armor_set == shield_set:
+        actives2 = resolve_active_sets(eq2)
+        for s in actives2:
+            assert s["count"] < 2 or s["set_id"] != armor_set, (
+                f"После истечения armor сет {armor_set} не должен включать его"
+            )
+
+
 # ─────────── Аренда брони не теряется при смене на другую ───────────
 
 def test_armor_rental_persists_through_switch(db):

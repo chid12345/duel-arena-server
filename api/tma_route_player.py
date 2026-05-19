@@ -140,6 +140,15 @@ def register_tma_player_route(
                 cached["usdt_passive_type"] = usdt_passive
             equipment, owned_weapons, eq_stats_cached, set_info = _fetch_equipment_parallel(
                 db, uid, current_class=cached.get("current_class") or cached.get("warrior_type"))
+            # Sync: если armor истёк и get_equipment его авто-снял, но в кэше
+            # ещё current_class — invalidate, чтобы клиент не видел «фантомный»
+            # класс берсеркера/etc для голого слота.
+            _cached_cls = (cached.get("current_class") or "").strip()
+            if _cached_cls and "armor" not in equipment:
+                _cache_invalidate(uid)
+                cached = dict(cached)
+                cached["current_class"] = None
+                cached["current_class_type"] = None
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
                     "owned_weapons": owned_weapons, "set_bonus": set_info, "shards": db.get_all_shards(uid),
                     "active_rentals": db.list_active_rentals(uid),
