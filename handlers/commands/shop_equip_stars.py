@@ -28,6 +28,7 @@ _STARS_EQUIP_SLOT = {
     "helmet_equip_stars": "belt",
     "boots_equip_stars":  "boots",
     "ring_equip_stars":   "ring1",
+    "armor2_equip_stars": "armor2",
 }
 
 
@@ -94,7 +95,11 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
         # force=True: для кольца — точно в ring1 (мини-апп показывает только ring1;
         # без force резолвер мог бы положить в ring2, и покупка «потерялась бы» в UI).
         db.equip_item(user_id, slot, item_id, force=True)
-        db.add_owned_weapon(user_id, item_id)
+        # armor2 владеется через player_owned_armor2 (отдельная таблица).
+        if slot == "armor2":
+            db.add_owned_armor2(user_id, item_id)
+        else:
+            db.add_owned_weapon(user_id, item_id)
     except Exception as exc:  # pragma: no cover — логируем критично для разбора
         logger.error(
             "CRITICAL: Stars equip failed uid=%s slot=%s item=%s stars=%s err=%s",

@@ -69,7 +69,7 @@
       if (!res) return null;
       if (Array.isArray(res.active_rentals)) State.activeRentals = res.active_rentals;
       if (Array.isArray(res.owned_weapons)) State.ownedWeapons = res.owned_weapons;
-      if (Array.isArray(res.owned_armor))   State.ownedArmor   = res.owned_armor;
+      if (Array.isArray(res.owned_armor2))  State.ownedArmor2  = res.owned_armor2;
       if (res.equipment)                    State.equipment    = res.equipment;
       if (res.player)                       { State.player = res.player; State.playerLoadedAt = Date.now(); }
       return res;

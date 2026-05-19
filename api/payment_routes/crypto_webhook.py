@@ -81,6 +81,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             is_helmet_equip = ":helmet_equip:" in custom_payload
             is_boots_equip  = ":boots_equip:"  in custom_payload
             is_ring_equip   = ":ring_equip:"   in custom_payload
+            is_armor2_equip = ":armor2_equip:" in custom_payload
             # Этап 8: аренда mythic-предмета за USDT
             from api.payment_routes.rental_deliver import deliver_rental, parse_rental_payload
             is_rental = ":rental:" in custom_payload
@@ -91,15 +92,16 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             helmet_equip_id = custom_payload.split(":helmet_equip:", 1)[1].strip() if is_helmet_equip else None
             boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
             ring_equip_id   = custom_payload.split(":ring_equip:",   1)[1].strip() if is_ring_equip   else None
+            armor2_equip_id = custom_payload.split(":armor2_equip:", 1)[1].strip() if is_armor2_equip else None
             logger.info("CryptoPay paid: uid=%s diamonds=%s premium=%s reset=%s scroll=%s asset=%s invoice=%s", uid, diamonds, is_premium, is_full_reset, usdt_scroll_id, asset, invoice_id)
-            # Старый armor (:usdt_slot:, :armor_class:, :armor_equip:) снесён под корень.
-            # Мифическое снаряжение за USDT — без armor.
+            # Мифическое снаряжение за USDT. armor2 — отдельная ветка (owned в player_owned_armor2).
             _equip_map = [
                 (is_weapon_equip, weapon_equip_id, "weapon", "weapon_equipped", "weapon_id", "⚔️ Мифическое оружие",   "Меч"),
                 (is_shield_equip, shield_equip_id, "shield", "shield_equipped", "shield_id", "🛡 Мифический щит",       "Щит"),
                 (is_helmet_equip, helmet_equip_id, "belt",   "helmet_equipped", "helmet_id", "⛑ Мифический шлем",      "Шлем"),
                 (is_boots_equip,  boots_equip_id,  "boots",  "boots_equipped",  "boots_id",  "🥾 Мифические ботинки",   "Ботинки"),
                 (is_ring_equip,   ring_equip_id,   "ring1",  "ring_equipped",   "ring_id",   "💍 Мифическое кольцо",    "Кольцо"),
+                (is_armor2_equip, armor2_equip_id, "armor2", "armor2_equipped", "armor2_id", "🛡 Мифическая броня",     "Броня"),
             ]
             _handled_equip = False
             for _flag, _item_id, _slot, _evt, _id_key, _title, _section in _equip_map:
@@ -108,7 +110,11 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                     _equip_ok = False
                     try:
                         db.equip_item(uid, _slot, _item_id, force=True)
-                        db.add_owned_weapon(uid, _item_id)
+                        # armor2 → player_owned_armor2, остальные → player_owned_weapons
+                        if _slot == "armor2":
+                            db.add_owned_armor2(uid, _item_id)
+                        else:
+                            db.add_owned_weapon(uid, _item_id)
                         _cache_invalidate(uid)
                         _equip_ok = True
                     except Exception as _e:

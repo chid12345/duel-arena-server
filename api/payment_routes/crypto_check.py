@@ -81,6 +81,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             is_boots_equip  = ":boots_equip:"  in custom_payload
             is_shield_equip = ":shield_equip:" in custom_payload
             is_ring_equip   = ":ring_equip:"   in custom_payload
+            is_armor2_equip = ":armor2_equip:" in custom_payload
             # Этап 8: аренда mythic-предмета (USDT). Универсальный обработчик.
             from api.payment_routes.rental_deliver import deliver_rental, parse_rental_payload
             is_rental = ":rental:" in custom_payload
@@ -92,6 +93,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
             boots_equip_id  = custom_payload.split(":boots_equip:",  1)[1].strip() if is_boots_equip  else None
             shield_equip_id = custom_payload.split(":shield_equip:", 1)[1].strip() if is_shield_equip else None
             ring_equip_id   = custom_payload.split(":ring_equip:",   1)[1].strip() if is_ring_equip   else None
+            armor2_equip_id = custom_payload.split(":armor2_equip:", 1)[1].strip() if is_armor2_equip else None
             result = db.confirm_crypto_invoice(int(invoice_id), first_purchase_col=_diamond_first_col)
             if result.get("ok"):
                 diamonds = result["diamonds"]
@@ -157,6 +159,19 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     try: await manager.send(owner_uid, {"event": "ring_equipped", "ring_id": ring_equip_id, "source": "cryptopay_confirm"})
                     except Exception: pass
                     return {"ok": True, "paid": True, "ring_equipped": True, "ring_id": ring_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
+                if is_armor2_equip and armor2_equip_id:
+                    # armor2: owned пишется в player_owned_armor2 (отдельная таблица).
+                    db.equip_item(owner_uid, "armor2", armor2_equip_id, force=True)
+                    db.add_owned_armor2(owner_uid, armor2_equip_id)
+                    _cache_invalidate(owner_uid)
+                    db.mark_items_delivered(invoice_id)
+                    eq_resp = {slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"], "desc": it.get("desc", "")} for slot, it in db.get_equipment(owner_uid).items()}
+                    fresh = db.get_or_create_player(owner_uid, "")
+                    try: await manager.send(owner_uid, {"event": "armor2_equipped", "armor2_id": armor2_equip_id, "source": "cryptopay_confirm"})
+                    except Exception: pass
+                    return {"ok": True, "paid": True, "armor2_equipped": True, "armor2_id": armor2_equip_id,
+                            "equipment": eq_resp, "owned_armor2": db.get_owned_armor2(owner_uid),
+                            "player": _player_api(dict(fresh))}
                 if is_rental and rental_item_id:
                     # Этап 8: аренда mythic. rent_item + equip + mark_delivered
                     ok_rent = deliver_rental(db, owner_uid, rental_item_id)
@@ -272,6 +287,16 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     ow = db.get_owned_weapons(uid)
                     fresh = db.get_or_create_player(uid, "")
                     return {"ok": True, "paid": True, "already_confirmed": True, "ring_equipped": True, "ring_id": ring_equip_id, "equipment": eq_resp, "owned_weapons": ow, "player": _player_api(dict(fresh))}
+                if is_armor2_equip and armor2_equip_id:
+                    db.equip_item(uid, "armor2", armor2_equip_id, force=True)
+                    db.add_owned_armor2(uid, armor2_equip_id)
+                    db.mark_items_delivered(invoice_id)
+                    _cache_invalidate(uid)
+                    eq_resp = {slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"], "desc": it.get("desc", "")} for slot, it in db.get_equipment(uid).items()}
+                    fresh = db.get_or_create_player(uid, "")
+                    return {"ok": True, "paid": True, "already_confirmed": True, "armor2_equipped": True,
+                            "armor2_id": armor2_equip_id, "equipment": eq_resp,
+                            "owned_armor2": db.get_owned_armor2(uid), "player": _player_api(dict(fresh))}
                 if is_rental and rental_item_id:
                     # Этап 8: already_paid — повторно вызываем deliver_rental (идемпотентно)
                     deliver_rental(db, uid, rental_item_id)

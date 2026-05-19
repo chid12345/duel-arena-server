@@ -64,8 +64,10 @@ def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = Non
                 cur = conn.cursor()
                 cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
                 weapons = [r["item_id"] for r in cur.fetchall()]
-                # owned_armor больше не возвращаем — старый armor снесён под корень.
-                return weapons, []
+                # Новая броня — отдельная таблица player_owned_armor2.
+                cur.execute("SELECT item_id FROM player_owned_armor2 WHERE user_id = ?", (uid,))
+                armor2 = [r["item_id"] for r in cur.fetchall()]
+                return weapons, armor2
             finally:
                 conn.close()
         except Exception:
@@ -142,19 +144,10 @@ def register_tma_player_route(
             if usdt_passive:
                 cached = dict(cached)
                 cached["usdt_passive_type"] = usdt_passive
-            equipment, owned_weapons, owned_armor, eq_stats_cached, set_info = _fetch_equipment_parallel(
+            equipment, owned_weapons, owned_armor2, eq_stats_cached, set_info = _fetch_equipment_parallel(
                 db, uid, current_class=cached.get("current_class") or cached.get("warrior_type"))
-            # Sync: если armor истёк и get_equipment его авто-снял, но в кэше
-            # ещё current_class — invalidate, чтобы клиент не видел «фантомный»
-            # класс берсеркера/etc для голого слота.
-            _cached_cls = (cached.get("current_class") or "").strip()
-            if _cached_cls and "armor" not in equipment:
-                _cache_invalidate(uid)
-                cached = dict(cached)
-                cached["current_class"] = None
-                cached["current_class_type"] = None
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
-                    "owned_weapons": owned_weapons, "owned_armor": owned_armor,
+                    "owned_weapons": owned_weapons, "owned_armor2": owned_armor2,
                     "set_bonus": set_info, "shards": db.get_all_shards(uid),
                     "active_rentals": db.list_active_rentals(uid),
                     "cached": True, "_sv": VERSION}
@@ -211,14 +204,14 @@ def register_tma_player_route(
         if usdt_passive:
             player = dict(player)
             player["usdt_passive_type"] = usdt_passive
-        equipment, owned_weapons, owned_armor, eq_stats_fresh, set_info = _fetch_equipment_parallel(
+        equipment, owned_weapons, owned_armor2, eq_stats_fresh, set_info = _fetch_equipment_parallel(
             db, uid, current_class=player.get("current_class") or player.get("warrior_type"))
         return {
             "ok": True,
             "player": _player_api(player, combined_buffs=cb, eq_stats=eq_stats_fresh),
             "equipment": equipment,
             "owned_weapons": owned_weapons,
-            "owned_armor": owned_armor,
+            "owned_armor2": owned_armor2,
             "set_bonus": set_info,
             "shards": db.get_all_shards(uid),
             "active_rentals": db.list_active_rentals(uid),

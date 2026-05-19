@@ -67,6 +67,13 @@ def _deliver(uid: int, invoice_id: int, payload: str, diamonds: int) -> str:
     """
     p = _parse_payload(payload)
 
+    # armor2_equip — отдельная таблица player_owned_armor2
+    armor2_equip_id = payload.split(":armor2_equip:", 1)[1].strip() if ":armor2_equip:" in payload else None
+    if armor2_equip_id:
+        db.equip_item(uid, "armor2", armor2_equip_id, force=True)
+        db.add_owned_armor2(uid, armor2_equip_id)
+        return f"equip:armor2:{armor2_equip_id}"
+
     # Equip-предметы (weapon/shield/helmet/boots/ring) за USDT
     equip_map = [
         ("weapon", p["weapon_equip_id"]), ("shield", p["shield_equip_id"]),

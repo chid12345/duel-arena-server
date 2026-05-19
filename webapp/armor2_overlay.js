@@ -173,12 +173,14 @@ async function _doAction(scene, action, item) {
   if (scene._armor2Busy) return;
   scene._armor2Busy = true;
   try {
-    // Платные покупки (Stars/USDT) — endpoints появятся в Этапе 2.4.
-    // Пока заглушка чтобы UI не падал.
-    if (action === 'buy_stars' || action === 'buy_usdt'
-        || action === 'buy_legendary_stars' || action === 'buy_legendary_usdt'
-        || action === 'buy_rental') {
-      _notify('⚙️ Платные покупки брони — скоро (Этап 2.4)', false);
+    // Заглушки до Этапа 2.4.C (Legendary armor2_mythic4 endpoints).
+    if (action === 'buy_legendary_stars' || action === 'buy_legendary_usdt') {
+      _notify('⚙️ Легендарная броня — скоро (Этап 2.4.C)', false);
+      scene._armor2Busy = false;
+      return;
+    }
+    if (action === 'buy_rental') {
+      _notify('⚙️ Аренда брони — скоро', false);
       scene._armor2Busy = false;
       return;
     }
@@ -187,7 +189,69 @@ async function _doAction(scene, action, item) {
       scene._armor2Busy = false;
       return;
     }
-    // Обычное надевание/снятие — общий endpoint /api/equipment/*.
+    if (action === 'buy_stars') {
+      _notify('⏳ Создаём счёт Stars...', true, true);
+      const invRes = await post('/api/equipment/armor2_stars_invoice', {item_id: item.id});
+      if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._armor2Busy=false; return; }
+      const starsUrl = invRes.invoice_url || '';
+      if (typeof tg?.openInvoice === 'function') {
+        tg.openInvoice(starsUrl, async (status) => {
+          if (status === 'paid') {
+            _notify('⏳ Активируем...', true, true);
+            let conf = null;
+            for (let i = 0; i < 3; i++) {
+              try { conf = await post('/api/equipment/armor2_stars_confirm', {item_id: item.id}); }
+              catch(_) { conf = null; }
+              if (conf?.ok) break;
+              if (conf?.reason !== 'processing') break;
+              await new Promise(r => setTimeout(r, 2000));
+            }
+            if (conf?.ok) {
+              if (conf.player)       { State.player=conf.player; State.playerLoadedAt=Date.now(); }
+              if (conf.equipment)    State.equipment=conf.equipment;
+              if (conf.owned_armor2) State.ownedArmor2=conf.owned_armor2;
+              tg?.HapticFeedback?.notificationOccurred('success');
+              _notify('✅ Мифическая броня получена!');
+              const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+              _render(scene, activeTab?.dataset?.av||'all');
+            } else { _notify('⚠️ Оплата прошла! Обновите профиль.', true); }
+          } else if (status === 'cancelled') { _notify('❌ Оплата отменена', false); }
+          scene._armor2Busy = false;
+        });
+        return;
+      }
+      try {
+        if (starsUrl.startsWith('https://t.me/') || starsUrl.startsWith('tg://'))
+          tg?.openTelegramLink?.(starsUrl);
+        else tg?.openLink?.(starsUrl);
+      } catch(_) {}
+      _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
+      scene._armor2Busy = false;
+      return;
+    }
+    if (action === 'buy_usdt') {
+      _notify('⏳ Создаём счёт USDT...', true, true);
+      const invRes = await post('/api/equipment/armor2_crypto_invoice', {item_id: item.id});
+      if (!invRes?.ok) { _notify('❌ '+(invRes?.reason||'Ошибка'), false); scene._armor2Busy=false; return; }
+      const _url = invRes.invoice_url || '';
+      try {
+        if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
+        else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) tg?.openTelegramLink?.(_url);
+        else tg?.openLink?.(_url);
+      } catch(_) {}
+      if (!tg && _url) try { window.open(_url, '_blank'); } catch(_) {}
+      _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
+      scene._armor2Busy = false;
+      if (invRes.invoice_id) {
+        try {
+          localStorage.setItem('armor2PendingInvoice', String(invRes.invoice_id));
+          localStorage.setItem('armor2PendingItemId', item.id);
+        } catch(_) {}
+        _startArmor2CryptoPolling(scene, invRes.invoice_id, item.id);
+      }
+      return;
+    }
+    // Обычное надевание/снятие (free/gold/diamonds) через общий endpoint.
     _notify(action==='unequip'?'⏳ Снимаем...':'⏳ Надеваем...', true, true);
     const res = await post(
       action==='unequip' ? '/api/equipment/unequip' : '/api/equipment/equip',
@@ -195,9 +259,9 @@ async function _doAction(scene, action, item) {
     );
     if (res?.ok) {
       try { window.GhostTapGuard?.block?.(300); } catch(_) {}
-      if (res.player)        { State.player=res.player; State.playerLoadedAt=Date.now(); }
-      if (res.equipment)     State.equipment=res.equipment;
-      if (res.owned_weapons) State.ownedWeapons=res.owned_weapons;
+      if (res.player)       { State.player=res.player; State.playerLoadedAt=Date.now(); }
+      if (res.equipment)    State.equipment=res.equipment;
+      if (res.owned_armor2) State.ownedArmor2=res.owned_armor2;
       tg?.HapticFeedback?.notificationOccurred('success');
       _notify(action==='unequip'?'✅ Броня снята':'✅ Броня надета!');
       const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
@@ -205,6 +269,33 @@ async function _doAction(scene, action, item) {
     } else { _notify('❌ '+(res?.reason||res?.detail||'Ошибка'), false); }
   } catch(_) { _notify('❌ Ошибка сети', false); }
   scene._armor2Busy = false;
+}
+
+function _startArmor2CryptoPolling(scene, invoiceId, itemId, immediate = false) {
+  let attempts = 0;
+  const poll = async () => {
+    attempts++;
+    try {
+      const r = await get(`/api/shop/crypto_check/${invoiceId}`);
+      if (r.ok && r.paid) {
+        try { localStorage.removeItem('armor2PendingInvoice'); localStorage.removeItem('armor2PendingItemId'); } catch(_) {}
+        try {
+          const pd = await post('/api/player');
+          if (Array.isArray(pd?.owned_armor2)) State.ownedArmor2 = pd.owned_armor2;
+          if (Array.isArray(pd?.owned_weapons)) State.ownedWeapons = pd.owned_weapons;
+          if (pd?.equipment) State.equipment = pd.equipment;
+          if (pd?.player) { State.player = pd.player; State.playerLoadedAt = Date.now(); }
+        } catch(_) {}
+        tg?.HapticFeedback?.notificationOccurred('success');
+        _notify('✅ Мифическая броня получена!');
+        const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+        if (activeTab) _render(scene, activeTab.dataset?.av || 'all');
+        return;
+      }
+    } catch(_) {}
+    if (attempts < 30) setTimeout(poll, 5000);
+  };
+  setTimeout(poll, immediate ? 800 : 4000);
 }
 
 function _render(scene, view) {
