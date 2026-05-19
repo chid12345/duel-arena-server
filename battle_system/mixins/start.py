@@ -150,23 +150,10 @@ class BattleStartMixin:
             equipped = db.get_equipment(int(uid))
         except Exception:
             return
-        # Sync current_class из реально надетой брони. Защита от фантомных
-        # class-перков (берсеркер +12%, страж −3% и т.п.) при истёкшей аренде:
-        # get_equipment сам делает unequip_item('armor'), и БД current_class
-        # обнуляется, но в `player` dict уже загружено старое значение из
-        # db.get_or_create_player. Перезаписываем здесь чтобы damage.py /
-        # damage_armor.py не применили перки несуществующей брони.
-        _armor = equipped.get("armor") if equipped else None
-        if _armor:
-            try:
-                from db_schema.equipment_items.armor import ARMOR
-                _legacy = ARMOR.get(_armor.get("item_id"), {}).get("legacy_class_id")
-                player["current_class"] = _legacy or None
-            except Exception:
-                pass
-        else:
-            player["current_class"] = None
-            player["current_class_type"] = None
+        # Старый armor снесён под корень — current_class всегда None
+        # (новый чистый слот «БРОНЯ» строится с нуля, без legacy class-системы).
+        player["current_class"] = None
+        player["current_class_type"] = None
         player["_eq_atk_bonus"]    = stats.get("atk_bonus", 0)
         player["_eq_def_pct"]      = stats.get("def_pct", 0.0)
         player["_eq_pen_pct"]      = stats.get("pen_pct", 0.0)
