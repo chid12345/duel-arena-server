@@ -102,9 +102,14 @@ function _btn(a) {
   if (a.owned && a.type !== 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${a.id}">🛡 Надеть</button>`;
   if (window.LevelLock?.isLocked(a)) return LevelLock.lockedBtn(a);
-  // armor_mythic4 = legendary_usdt → особый путь через гардероб (+19 свободных статов)
+  // armor_mythic4 = legendary_usdt → особый путь через гардероб (+19 свободных статов).
+  // Дополнительно АРЕНДА — для единообразия с остальными мификами (даст
+  // надетую броню без кастомки и +19 статов, только визуально).
   if (a.id === 'armor_mythic4')
-    return `<button class="wd-btn btn-mythic" data-act="open_legendary" data-id="${a.id}" style="font-size:11px">💠 Легендарный слот ($11.99)</button>`;
+    return `<div>
+      <button class="wd-btn btn-mythic" data-act="open_legendary" data-id="${a.id}" style="width:100%;font-size:11px">💠 Легендарный слот ($11.99)</button>
+      ${window.RentalPay ? RentalPay.buildButton(a.id, RentalPay.rentalStarsFor(590)) : ''}
+    </div>`;
   if (a.type === 'free')
     return `<button class="wd-btn btn-free" data-act="buy" data-id="${a.id}">🆓 Выбрать</button>`;
   if (a.type === 'gold')
