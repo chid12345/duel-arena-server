@@ -72,11 +72,11 @@ Object.assign(MenuScene.prototype, {
   _getEquippedTextureKeys() {
     const keys = new Set();
     const eq = State.equipment || {};
-    // Броня: унификация armor (5/6) — texture_key с сервера или fallback по item_id/rarity
-    if (eq.armor && typeof getArmorTextureKey === 'function') {
-      const k = eq.armor.texture_key
-        || getArmorTextureKey(eq.armor.item_id)
-        || getArmorTextureKey(eq.armor.rarity);
+    // Броня: новый чистый slot=armor2 (старый armor снесён под корень).
+    if (eq.armor2 && typeof getArmorTextureKey === 'function') {
+      const k = eq.armor2.texture_key
+        || getArmorTextureKey(eq.armor2.item_id)
+        || getArmorTextureKey(eq.armor2.rarity);
       if (k) keys.add(k);
     }
     // Оружие

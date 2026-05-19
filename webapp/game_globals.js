@@ -121,13 +121,14 @@ function armorItemIdFromLegacy(classId) {
 
 function getArmorTextureKey(classIdOrItemIdOrRarity) {
   const key = String(classIdOrItemIdOrRarity || '').trim();
+  // armor2_* (новая чистая броня) → текстура та же, просто меняем префикс.
+  // texture_key для armor2 в каталоге = 'armor_free1', 'armor_mythic4' и т.п.
+  if (key.startsWith('armor2_')) return key.replace('armor2_', 'armor_');
   if (_ARMOR_TEXTURE_MAP[key]) return _ARMOR_TEXTURE_MAP[key];
   // fallback по rarity → первая картинка соотв. тира
   if (key === 'rare')   return 'armor_gold1';
   if (key === 'epic')   return 'armor_dia1';
   if (key === 'mythic') return 'armor_mythic1';
-  // usdt_custom_* → 4-й мифик
-  if (key.startsWith('usdt_custom_')) return 'armor_mythic4';
   return 'armor_free1';
 }
 

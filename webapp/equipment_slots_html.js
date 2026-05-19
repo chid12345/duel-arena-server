@@ -94,15 +94,17 @@ const _EXT = {
 /* Texture key → filename (с правильным расширением) */
 function _texUrl(key) { return key ? (_EXT[key] || key + '.png') : null; }
 
-/* Данные слота: texKey (→ filename) + rarity. Слот armor2 («БРОНЯ») сейчас
-   ничего не надевает (пустой каркас), вернётся null → emoji-заглушка. */
+/* Данные слота: texKey (→ filename) + rarity.
+   armor2 — новая чистая броня (item_id='armor2_free1'..'armor2_mythic4').
+   texture_key сервер возвращает 'armor_free1'..'armor_mythic4' (старые PNG). */
 function _slotInfo(slot) {
   const eq = State.equipment || {};
   const it = eq[slot];
   if (!it) return null;
   const r = it.rarity, id = it.item_id;
   let key = null;
-  if      (slot === 'belt')   key = getHelmetTextureKey(id)  || getHelmetTextureKeyByRarity(r);
+  if      (slot === 'armor2') key = it.texture_key || getArmorTextureKey(id) || getArmorTextureKey(r);
+  else if (slot === 'belt')   key = getHelmetTextureKey(id)  || getHelmetTextureKeyByRarity(r);
   else if (slot === 'weapon') key = getWeaponTextureKey(id)  || getWeaponTextureKeyByRarity(r);
   else if (slot === 'boots')  key = getBootsTextureKey(id)   || getBootsTextureKeyByRarity(r);
   else if (slot === 'shield') key = getShieldTextureKey(id)  || getShieldTextureKeyByRarity(r);
