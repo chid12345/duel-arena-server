@@ -100,12 +100,12 @@
       } catch (e) { alert('Debug error: ' + e); }
     };
     if (wipeBtn) wipeBtn.onclick = async () => {
-      if (!confirm('🗑 Удалить ВСЕ твои аренды и снять броню? (для теста)')) return;
+      if (!confirm('🗑 ПОЛНЫЙ сброс брони и аренд (для теста авто-снятия)?\n\nУдалится:\n• все аренды\n• все купленные мифик-брони\n• armor-слот будет очищен\n\nПродолжить?')) return;
       try {
         const resp = await fetch('/api/debug/wipe_my_rentals?init_data=' + encodeURIComponent(initData()), { method: 'POST' });
         const data = await resp.json();
         if (data?.ok) {
-          if (typeof notifyFn === 'function') notifyFn(`✅ Удалено аренд: ${data.deleted_rentals}. Броня снята.`);
+          if (typeof notifyFn === 'function') notifyFn(`✅ Аренд: ${data.deleted_rentals}, купленных броней: ${data.deleted_owned_armor}. Чисто.`);
           await refreshState();
           if (typeof onWiped === 'function') onWiped();
         } else {

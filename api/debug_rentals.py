@@ -50,6 +50,18 @@ def register_debug_rentals_route(app: FastAPI) -> None:
         except Exception as e:
             eq_repr = {"error": str(e)}
 
+        # 5. Купленные брони (player_owned_armor) — если предмет тут, то после
+        # истечения аренды он НЕ снимается (считается купленным).
+        conn = db.get_connection()
+        try:
+            rows = conn.execute(
+                "SELECT item_id, owned_at FROM player_owned_armor WHERE user_id = ?",
+                (uid,),
+            ).fetchall()
+            owned_armor_rows = [dict(r) for r in rows]
+        finally:
+            conn.close()
+
         return {
             "ok": True,
             "uid": uid,
@@ -58,16 +70,23 @@ def register_debug_rentals_route(app: FastAPI) -> None:
             "raw_equipment_rentals_count": len(raw_rows),
             "raw_equipment_rentals": raw_rows,
             "player_equipment_rows": equipment_rows,
+            "player_owned_armor_count": len(owned_armor_rows),
+            "player_owned_armor": owned_armor_rows,
             "get_equipment_result": eq_repr,
         }
 
     @app.post("/api/debug/wipe_my_rentals")
     async def wipe_my_rentals(init_data: str):
-        """Debug: удалить ВСЕ аренды текущего игрока (активные и истёкшие).
+        """Debug: ПОЛНЫЙ сброс брони и аренд игрока для теста авто-снятия.
 
-        Дополнительно снимает мифик-броню из player_equipment, чтобы UI сразу
-        перестал её показывать (иначе при следующем get_equipment слот сам
-        опустеет, но кэш может задержать обновление).
+        Удаляется:
+        - ВСЕ записи в equipment_rentals (аренды).
+        - ВСЕ записи в player_owned_armor (купленные мифик-брони) — иначе
+          истёкшая аренда не снимется, т.к. предмет считается купленным.
+        - Слот brony в player_equipment + current_class в players.
+        - armor_custom_mods (USDT-кастомка armor_mythic4 +19 статов).
+
+        ⚠️ Используется ТОЛЬКО для теста — игрок теряет всё что покупал.
         """
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
@@ -76,11 +95,14 @@ def register_debug_rentals_route(app: FastAPI) -> None:
             cur = conn.cursor()
             cur.execute("SELECT COUNT(*) AS n FROM equipment_rentals WHERE user_id = ?", (uid,))
             row = cur.fetchone()
-            before = int((row["n"] if isinstance(row, dict) else row[0]) or 0)
+            deleted_rentals = int((row["n"] if isinstance(row, dict) else row[0]) or 0)
+            cur.execute("SELECT COUNT(*) AS n FROM player_owned_armor WHERE user_id = ?", (uid,))
+            row = cur.fetchone()
+            deleted_owned = int((row["n"] if isinstance(row, dict) else row[0]) or 0)
+
             cur.execute("DELETE FROM equipment_rentals WHERE user_id = ?", (uid,))
-            # снять надетые мифик-предметы из других слотов чтобы UI обновился —
-            # достаточно тронуть armor (для слота брони у нас auto-unequip
-            # current_class через unequip_item).
+            cur.execute("DELETE FROM player_owned_armor WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM armor_custom_mods WHERE user_id = ?", (uid,))
             cur.execute("DELETE FROM player_equipment WHERE user_id = ? AND slot = 'armor'", (uid,))
             cur.execute(
                 "UPDATE players SET current_class = NULL, current_class_type = NULL WHERE user_id = ?",
@@ -89,4 +111,9 @@ def register_debug_rentals_route(app: FastAPI) -> None:
             conn.commit()
         finally:
             conn.close()
-        return {"ok": True, "uid": uid, "deleted_rentals": before, "armor_slot_cleared": True}
+        return {
+            "ok": True, "uid": uid,
+            "deleted_rentals": deleted_rentals,
+            "deleted_owned_armor": deleted_owned,
+            "armor_slot_cleared": True,
+        }
