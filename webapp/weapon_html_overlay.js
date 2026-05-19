@@ -137,6 +137,8 @@ function _card(w) {
         <span class="wd-stars" style="color:${RC[w.r]}">${w.stars}</span>
         ${window.LevelLock?.buildBadge(w) || ''}
       </div>
+      ${window.ArchBadge?.htmlFor(w.id) || ''}
+      ${window.ArchBadge?.slotNeedFor(w.id) || ''}
       <div class="wd-pills">${_pills(w)}</div>
       ${w.bonus ? `<div style="font-size:9px;color:#ffc97a;line-height:1.35;margin-top:2px;font-style:italic">✨ ${w.bonus}</div>` : ''}
       ${_btn(w)}

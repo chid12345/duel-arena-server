@@ -69,6 +69,12 @@ function _renderArchetype(arch, maxPieces) {
 
   const moreNeeded = count < 2 ? `<div class="sb-need">Соберите ещё ${2 - count} для бонуса</div>` : '';
 
+  // Разворот по слотам: показываем только если у игрока хотя бы один предмет
+  // этого архетипа надет (count >= 1) — иначе нет смысла занимать место.
+  const breakdown = (count >= 1 && window.SetBonusBreakdown)
+    ? window.SetBonusBreakdown.slotsHTML(arch.set_id)
+    : '';
+
   return `<div class="st-bon sb-card ${isActive?'sb-active':''}" style="--sb-c:${c}">
     <div class="t sb-head">
       <span class="sb-emo">${arch.emoji}</span>
@@ -80,6 +86,7 @@ function _renderArchetype(arch, maxPieces) {
     ${moreNeeded}
     <div class="sb-rows">${rows}</div>
     ${perkRow}
+    ${breakdown}
   </div>`;
 }
 
