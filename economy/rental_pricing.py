@@ -17,3 +17,9 @@ from __future__ import annotations
 RENTAL_DURATION_DAYS = 7
 RENTAL_PRICE_STARS = 100
 RENTAL_PRICE_USDT = "2.00"
+
+# 🧪 ВРЕМЕННЫЙ ТЕСТОВЫЙ РЕЖИМ — для быстрой проверки авто-снятия аренды в UI.
+# Если установлено в положительное число — `rent_item` использует ЭТО кол-во
+# МИНУТ вместо RENTAL_DURATION_DAYS. ПОСЛЕ ТЕСТА вернуть в None!
+# (см. memory: project_armor_slot_dual_source / project_wb_schedule паттерн)
+RENTAL_DURATION_TEST_OVERRIDE_MINUTES: int | None = 2

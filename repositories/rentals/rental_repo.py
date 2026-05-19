@@ -13,7 +13,12 @@ class RentalRepoMixin:
 
         Если активная аренда уже есть — добавляем дни к expires_at.
         Если истекла или нет — начинаем с now()+days.
+
+        🧪 TEST MODE: если в economy.rental_pricing.RENTAL_DURATION_TEST_OVERRIDE_MINUTES
+        задано положительное число — берём его как минуты вместо days.
+        Используется для быстрой проверки авто-снятия аренды в UI.
         """
+        from economy.rental_pricing import RENTAL_DURATION_TEST_OVERRIDE_MINUTES
         now = datetime.utcnow()
         conn = self.get_connection()
         cur = conn.cursor()
@@ -31,7 +36,10 @@ class RentalRepoMixin:
                 base = cur_expires if cur_expires > now else now
             else:
                 base = now
-            new_expires = base + timedelta(days=int(days))
+            if RENTAL_DURATION_TEST_OVERRIDE_MINUTES and RENTAL_DURATION_TEST_OVERRIDE_MINUTES > 0:
+                new_expires = base + timedelta(minutes=int(RENTAL_DURATION_TEST_OVERRIDE_MINUTES))
+            else:
+                new_expires = base + timedelta(days=int(days))
             cur.execute(
                 "DELETE FROM equipment_rentals WHERE user_id=? AND item_id=?",
                 (int(user_id), item_id),

@@ -58,8 +58,14 @@ def test_rent_item_creates_active_rental(db):
     assert "helmet_mythic1" in ids
 
 
-def test_rent_extension_stacks(db):
-    """Повторная аренда продлевает: 7 + 7 = 14 дней с почти таким же expires_at."""
+def test_rent_extension_stacks(db, monkeypatch):
+    """Повторная аренда продлевает: 7 + 7 = 14 дней с почти таким же expires_at.
+
+    Отключаем тестовый минутный override, чтобы проверить штатный режим в днях.
+    """
+    import economy.rental_pricing as _rp
+    monkeypatch.setattr(_rp, "RENTAL_DURATION_TEST_OVERRIDE_MINUTES", None)
+
     db.get_or_create_player(3002, "r2")
     db.rent_item(3002, "shield_mythic1", days=7, stars_paid=295)
 
