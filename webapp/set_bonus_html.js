@@ -15,12 +15,24 @@ const COLOR = {
   regent:   '#f59e0b',
 };
 
+function _countsSig(s) {
+  // Стабильная подпись по counts архетипов — чтоб понять, изменилось ли.
+  if (!s || !s.archetypes) return '';
+  return s.archetypes.map(a => `${a.set_id}:${a.count}`).join('|');
+}
+
 async function refresh() {
   try {
     const r = await get('/api/sets/status');
-    if (r?.ok) {
-      window.State = window.State || {};
-      State.setsStatus = r;
+    if (!r?.ok) return;
+    window.State = window.State || {};
+    const oldSig = _countsSig(State.setsStatus);
+    State.setsStatus = r;
+    const newSig = _countsSig(r);
+    // Если подсчёты изменились и оверлей Героя открыт на вкладке КОМПЛЕКТ —
+    // перерисовать. Иначе игрок видит залежавшийся кэш с нулями.
+    if (oldSig !== newSig) {
+      try { window.StatsHTML?.refresh?.(); } catch (_) {}
     }
   } catch (_) {}
 }
@@ -72,11 +84,12 @@ function _renderArchetype(arch, maxPieces) {
 }
 
 function pageHTML(p) {
+  // На каждой отрисовке тянем свежий статус — после equip/unequip счётчики
+  // должны обновиться, без этого видны старые нули из первого открытия.
+  refresh();
   const s = (window.State && State.setsStatus) || null;
 
   if (!s || !s.ok) {
-    // Триггерим обновление в фоне, пока показываем заглушку
-    refresh();
     return `<div class="st-bon sb-empty">
       <div class="t">⏳ Загрузка комплектов...</div>
       <div class="em">Если ничего не появилось — обнови вкладку Герой.</div>
