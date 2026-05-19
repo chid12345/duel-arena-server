@@ -81,13 +81,26 @@ function _priceLabel(a) {
 }
 
 function _btnHtml(a) {
+  // armor2_mythic4 (Легендарная): когда куплена — показываем «⚙️ Настроить статы»
+  // (открывает LegendaryArmor2 с распределением +19 + сбросом за полцены) рядом
+  // со стандартными кнопками Снять/Надеть/Прокачать.
+  const isLegendary = a.id === 'armor2_mythic4';
+  const cfgBtn = isLegendary
+    ? `<button class="wd-btn btn-mythic" data-act="configure_legendary" data-id="${a.id}" style="flex:1;background:linear-gradient(135deg,#1a5a3a,#3cd084);color:#0a1810;font-size:11px;padding:8px 4px">⚙️ Настроить статы</button>`
+    : '';
   if (a.equipped)
-    return `<div style="display:flex;gap:4px">
-      <button class="wd-btn btn-uneq" data-act="unequip" data-id="${a.id}" style="flex:1">✅ Снять</button>
-      <button class="wd-btn btn-gold" data-act="upgrade" data-id="${a.id}" style="flex:1;background:linear-gradient(135deg,#3a2050,#7c2d92);color:#fff">🔨 Прокачать</button>
+    return `<div style="display:flex;gap:4px;flex-wrap:wrap">
+      <button class="wd-btn btn-uneq" data-act="unequip" data-id="${a.id}" style="flex:1;min-width:40%">✅ Снять</button>
+      <button class="wd-btn btn-gold" data-act="upgrade" data-id="${a.id}" style="flex:1;min-width:40%;background:linear-gradient(135deg,#3a2050,#7c2d92);color:#fff">🔨 Прокачать</button>
+      ${cfgBtn ? `<div style="flex-basis:100%;height:0"></div>${cfgBtn}` : ''}
     </div>`;
   if (a.owned && a.type !== 'free')
-    return `<button class="wd-btn btn-free" style="width:100%" data-act="buy" data-id="${a.id}">🛡 Надеть</button>`;
+    return isLegendary
+      ? `<div style="display:flex;gap:4px;flex-wrap:wrap">
+          <button class="wd-btn btn-free" style="flex:1;min-width:40%" data-act="buy" data-id="${a.id}">🛡 Надеть</button>
+          ${cfgBtn}
+        </div>`
+      : `<button class="wd-btn btn-free" style="width:100%" data-act="buy" data-id="${a.id}">🛡 Надеть</button>`;
   if (window.LevelLock?.isLocked(a)) return LevelLock.lockedBtn(a);
   if (a.id === 'armor2_mythic4')
     return `<div style="display:flex;gap:6px">

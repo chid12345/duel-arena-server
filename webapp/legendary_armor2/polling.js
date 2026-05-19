@@ -33,7 +33,13 @@
           } catch (_) { }
           window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
           N._notify(kind === 'reset' ? '🔄 Сборка сброшена!' : '✅ Легендарная броня получена!');
-          if (document.getElementById('la2-root')) await N._load();
+          if (document.getElementById('la2-root')) {
+            await N._load();
+          } else if (kind === 'buy' && window.LegendaryArmor2) {
+            // Авто-открытие окна распределения статов сразу после выдачи —
+            // юзеру не надо искать «куда тыкнуть чтобы раскатить».
+            try { setTimeout(() => window.LegendaryArmor2.open(null, null), 600); } catch (_) { }
+          }
           return;
         }
       } catch (_) { }

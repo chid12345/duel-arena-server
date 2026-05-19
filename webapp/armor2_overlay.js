@@ -174,10 +174,23 @@ async function _doAction(scene, action, item) {
   if (scene._armor2Busy) return;
   scene._armor2Busy = true;
   try {
-    // Легендарная (armor2_mythic4) — покупка идёт ОДНИМ кликом: сразу создаём
-    // invoice и открываем CryptoPay/Stars, без промежуточного оверлея.
-    // Polling из window.LA2 выдаст броню после оплаты, а оверлей распределения
-    // статов откроется по тапу на карточку когда a.owned=true (см. строку 384).
+    // Легендарная (armor2_mythic4) — «⚙️ Настроить статы» открывает оверлей
+    // распределения +19 / выбора пассивки / сброса за полцены.
+    if (action === 'configure_legendary') {
+      if (window.LegendaryArmor2) {
+        LegendaryArmor2.open(scene, () => {
+          const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+          _render(scene, activeTab?.dataset?.av || 'all');
+        });
+      } else {
+        _notify('Окно настройки недоступно', false);
+      }
+      scene._armor2Busy = false;
+      return;
+    }
+    // Покупка Легендарной идёт ОДНИМ кликом: сразу создаём invoice и открываем
+    // CryptoPay/Stars, без промежуточного оверлея. Polling из window.LA2 выдаст
+    // броню после оплаты (и автооткроет настройку, см. polling.js).
     if (action === 'buy_legendary_usdt') {
       _notify('⏳ Создаём счёт USDT...', true, true);
       const invRes = await post('/api/equipment/armor2_legendary_usdt_invoice', {});
@@ -425,14 +438,9 @@ function _render(scene, view) {
     if (!card) return;
     const a = items.find(x => x.id === card.dataset.id);
     if (!a) return;
-    // armor2_mythic4 уже куплена/надета → сразу открываем экран распределения.
-    if (a.id === 'armor2_mythic4' && (a.owned || a.equipped) && window.LegendaryArmor2) {
-      LegendaryArmor2.open(scene, () => {
-        const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
-        _render(scene, activeTab?.dataset?.av || 'all');
-      });
-      return;
-    }
+    // armor2_mythic4: показываем стандартную карточку детали — там кнопка
+    // «⚙️ Настроить статы» откроет LegendaryArmor2 (а до покупки — кнопки
+    // 💳 $11.99 / ⭐ 800 идут напрямую в CryptoPay через _doAction).
     const eq = items.find(x => x.equipped);
     if (typeof Armor2HTMLDetail !== 'undefined')
       Armor2HTMLDetail.show(scene, a, (act, item) => _doAction(scene, act, item), eq);
