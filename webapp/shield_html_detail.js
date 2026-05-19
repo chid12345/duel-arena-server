@@ -154,6 +154,7 @@ function show(scene, h, onAction, eq) {
         <div class="shd-pills">${_pillsHtml(h)}</div>
         <div class="shd-stat-line">${_statLine(h)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'hp',label:'HP',suf:''},{k:'str',label:'Сила',suf:''},{k:'agi',label:'Ловкость',suf:''},{k:'intu',label:'Интуиция',suf:''}]):'')}
+        ${h.bonus ? `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;background:rgba(255,180,80,.10);border:1px solid rgba(255,180,80,.25);font-size:11px;color:#ffd29a;line-height:1.45">✨ <b>Особенность:</b> ${h.bonus}</div>` : ''}
         <div class="shd-desc">${SHIELD_DESC[h.id] || ''}</div>
         <div class="shd-btn-wrap">${_btnHtml(h)}</div>
       </div>

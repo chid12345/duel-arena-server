@@ -150,6 +150,7 @@ function show(scene, w, onAction, eq) {
         <div class="wnd-pills2">${_pillsHtml(w)}</div>
         <div class="wnd-stat-line">${_statLine(w)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(w,eq,[{k:'atk',label:'Атака',suf:''},{k:'crit',label:'Крит',suf:''},{k:'hp',label:'HP',suf:''},{k:'pen',label:'Пробой',suf:'%'}]):'')}
+        ${w.bonus ? `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;background:rgba(255,180,80,.10);border:1px solid rgba(255,180,80,.25);font-size:11px;color:#ffd29a;line-height:1.45">✨ <b>Особенность:</b> ${w.bonus}</div>` : ''}
         <div class="wnd-desc2">${WEAPON_DESC[w.id] || ''}</div>
         <div class="wnd-btn-wrap">${_btnHtml(w)}</div>
       </div>

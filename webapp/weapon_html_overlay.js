@@ -16,26 +16,26 @@ const WEAPON_IMG = {
 };
 
 const WEAPONS_DATA = [
-  // ── Меч
-  {id:'sword_free',    r:'common', wt:'⚔️ Меч',         name:'Деревянный меч',    stars:'★☆☆☆', atk:5,  crit:1,  hp:0,   pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1},
-  {id:'sword_gold',    r:'rare',   wt:'⚔️ Меч',         name:'Стальной меч',       stars:'★★☆☆', atk:15, crit:3,  hp:0,   pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20},
-  {id:'sword_diamond', r:'epic',   wt:'⚔️ Меч',         name:'Рунический клинок',  stars:'★★★☆', atk:30, crit:7,  hp:0,   pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45},
-  {id:'sword_mythic',  r:'mythic', wt:'⚔️ Меч',         name:'Пламенный клинок',   stars:'★★★★', atk:45, crit:10, hp:0,   pen:3,  type:'mythic', tier:'T4', recLevel:65},
-  // ── Топор
-  {id:'axe_free',      r:'common', wt:'🪓 Топор',        name:'Каменный топор',     stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1},
-  {id:'axe_gold',      r:'rare',   wt:'🪓 Топор',        name:'Топор ополченца',    stars:'★★☆☆', atk:22, crit:0,  hp:0,   pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20},
-  {id:'axe_diamond',   r:'epic',   wt:'🪓 Топор',        name:'Секира',             stars:'★★★☆', atk:40, crit:0,  hp:0,   pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45},
-  {id:'axe_mythic',    r:'mythic', wt:'🪓 Топор',        name:'Топор хаоса',        stars:'★★★★', atk:58, crit:0,  hp:0,   pen:3,  type:'mythic', tier:'T4', recLevel:65},
-  // ── Дубина
-  {id:'club_free',     r:'common', wt:'🏏 Дубина',       name:'Дубина',             stars:'★☆☆☆', atk:3,  crit:0,  hp:50,  pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1},
-  {id:'club_gold',     r:'rare',   wt:'🏏 Дубина',       name:'Усиленная дубина',   stars:'★★☆☆', atk:8,  crit:0,  hp:100, pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20},
-  {id:'club_diamond',  r:'epic',   wt:'🏏 Дубина',       name:'Булава',             stars:'★★★☆', atk:18, crit:0,  hp:150, pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45},
-  {id:'club_mythic',   r:'mythic', wt:'🏏 Дубина',       name:'Молот колосса',      stars:'★★★★', atk:32, crit:0,  hp:170, pen:3,  type:'mythic', tier:'T4', recLevel:65},
-  // ── Большой меч
-  {id:'gs_free',       r:'common', wt:'🗡️ Большой меч', name:'Двуручный меч',      stars:'★☆☆☆', atk:4,  crit:5,  hp:0,   pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1},
-  {id:'gs_gold',       r:'rare',   wt:'🗡️ Большой меч', name:'Меч паладина',       stars:'★★☆☆', atk:10, crit:15, hp:0,   pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20},
-  {id:'gs_diamond',    r:'epic',   wt:'🗡️ Большой меч', name:'Клинок хаоса',       stars:'★★★☆', atk:15, crit:25, hp:0,   pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45},
-  {id:'gs_mythic',     r:'mythic', wt:'🗡️ Большой меч', name:'Тень смерти',        stars:'★★★★', atk:20, crit:35, hp:0,   pen:3,  type:'mythic', tier:'T4', recLevel:65},
+  // ── Меч (баланс атаки и критов)
+  {id:'sword_free',    r:'common', wt:'⚔️ Меч',         name:'Деревянный меч',    stars:'★☆☆☆', atk:5,  crit:1,  hp:0,   pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Меч: лёгкий баланс атаки и критов'},
+  {id:'sword_gold',    r:'rare',   wt:'⚔️ Меч',         name:'Стальной меч',       stars:'★★☆☆', atk:15, crit:3,  hp:0,   pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Стальной: проверенная сталь — урон и пробой'},
+  {id:'sword_diamond', r:'epic',   wt:'⚔️ Меч',         name:'Рунический клинок',  stars:'★★★☆', atk:30, crit:7,  hp:0,   pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Руны: магия усиливает каждый удар'},
+  {id:'sword_mythic',  r:'mythic', wt:'⚔️ Меч',         name:'Пламенный клинок',   stars:'★★★★', atk:45, crit:10, hp:0,   pen:3,  type:'mythic', tier:'T4', recLevel:65, bonus:'Пламя: чистая мощь меча — крит, пробой, урон'},
+  // ── Топор (чистый урон)
+  {id:'axe_free',      r:'common', wt:'🪓 Топор',        name:'Каменный топор',     stars:'★☆☆☆', atk:8,  crit:0,  hp:0,   pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Каменный: чистый удар без изыска'},
+  {id:'axe_gold',      r:'rare',   wt:'🪓 Топор',        name:'Топор ополченца',    stars:'★★☆☆', atk:22, crit:0,  hp:0,   pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Ополченец: тяжёлый удар + пробой'},
+  {id:'axe_diamond',   r:'epic',   wt:'🪓 Топор',        name:'Секира',             stars:'★★★☆', atk:40, crit:0,  hp:0,   pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Секира: рубит броню как масло'},
+  {id:'axe_mythic',    r:'mythic', wt:'🪓 Топор',        name:'Топор хаоса',        stars:'★★★★', atk:58, crit:0,  hp:0,   pen:3,  type:'mythic', tier:'T4', recLevel:65, bonus:'Хаос: топ-урон + пробой любой защиты'},
+  // ── Дубина (тяжёлый удар с HP-буфом)
+  {id:'club_free',     r:'common', wt:'🏏 Дубина',       name:'Дубина',             stars:'★☆☆☆', atk:3,  crit:0,  hp:50,  pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Дубина: тяжёлая, +HP к стойкости'},
+  {id:'club_gold',     r:'rare',   wt:'🏏 Дубина',       name:'Усиленная дубина',   stars:'★★☆☆', atk:8,  crit:0,  hp:100, pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Усиленная: больше HP + пробой'},
+  {id:'club_diamond',  r:'epic',   wt:'🏏 Дубина',       name:'Булава',             stars:'★★★☆', atk:18, crit:0,  hp:150, pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Булава: танковый дамаг — HP + урон'},
+  {id:'club_mythic',   r:'mythic', wt:'🏏 Дубина',       name:'Молот колосса',      stars:'★★★★', atk:32, crit:0,  hp:170, pen:3,  type:'mythic', tier:'T4', recLevel:65, bonus:'Колосс: разрушитель с запасом HP'},
+  // ── Большой меч (ставка на крит)
+  {id:'gs_free',       r:'common', wt:'🗡️ Большой меч', name:'Двуручный меч',      stars:'★☆☆☆', atk:4,  crit:5,  hp:0,   pen:0,  type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Двуручник: ставка на крит'},
+  {id:'gs_gold',       r:'rare',   wt:'🗡️ Большой меч', name:'Меч паладина',       stars:'★★☆☆', atk:10, crit:15, hp:0,   pen:1,  type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Паладин: высокий крит и баланс'},
+  {id:'gs_diamond',    r:'epic',   wt:'🗡️ Большой меч', name:'Клинок хаоса',       stars:'★★★☆', atk:15, crit:25, hp:0,   pen:2,  type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Хаос: каждый второй удар — крит'},
+  {id:'gs_mythic',     r:'mythic', wt:'🗡️ Большой меч', name:'Тень смерти',        stars:'★★★★', atk:20, crit:35, hp:0,   pen:3,  type:'mythic', tier:'T4', recLevel:65, bonus:'Тень: топ-крит в игре, разит наповал'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
@@ -138,6 +138,7 @@ function _card(w) {
         ${window.LevelLock?.buildBadge(w) || ''}
       </div>
       <div class="wd-pills">${_pills(w)}</div>
+      ${w.bonus ? `<div style="font-size:9px;color:#ffc97a;line-height:1.35;margin-top:2px;font-style:italic">✨ ${w.bonus}</div>` : ''}
       ${_btn(w)}
     </div>
   </div>`;
