@@ -398,7 +398,7 @@ async function _fetchAndShowCard(uid, rank, tabKey, fallbackData) {
 
   const itemsBySlot = {};
   (d.items||[]).forEach(it => { itemsBySlot[it.slot] = it; });
-  const equipSlots = ['belt','armor','boots','weapon','shield','ring1'].map(sl => _bbcSlotHtml(sl, itemsBySlot[sl])).join('');
+  const equipSlots = ['belt','armor2','boots','weapon','shield','ring1'].map(sl => _bbcSlotHtml(sl, itemsBySlot[sl])).join('');
 
   const stats = [
     ['💪','Сила',      d.strength||0,  '#dc3c46'],

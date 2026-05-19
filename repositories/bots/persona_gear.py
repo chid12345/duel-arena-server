@@ -14,8 +14,9 @@ from db_schema.equipment_catalog import EQUIPMENT_CATALOG, get_item_stats
 
 
 # Слоты, которые имеет смысл одевать (ring2 опускаем — большинство ботов
-# с одним кольцом, как настоящие игроки).
-SLOTS_FOR_BOT = ("weapon", "shield", "armor", "belt", "boots", "ring1")
+# с одним кольцом, как настоящие игроки). armor2 — новая чистая броня
+# после сноса старого armor (см. project_armor2_clean_restart).
+SLOTS_FOR_BOT = ("weapon", "shield", "armor2", "belt", "boots", "ring1")
 
 # Шансы редкостей по статусу. Веса в порядке (common, rare, epic, mythic).
 # Сумма = 1. Mythic-слоты для armor отсутствуют в каталоге — fallback на epic.

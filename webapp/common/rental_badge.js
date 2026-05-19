@@ -43,10 +43,12 @@
     return out;
   }
 
-  function ownedSetFor(slot, ownedWeapons, activeRentals, ownedArmor) {
+  function ownedSetFor(slot, ownedWeapons, activeRentals) {
+    // Используется для helmet/weapon/shield/boots/ring (одна таблица
+    // player_owned_weapons). armor2 имеет свою State.ownedArmor2 — её overlay
+    // ходит напрямую, не через эту функцию.
     const ids = [];
     if (Array.isArray(ownedWeapons)) ids.push(...ownedWeapons);
-    if (slot === 'armor' && Array.isArray(ownedArmor)) ids.push(...ownedArmor);
     if (Array.isArray(activeRentals)) {
       for (const r of activeRentals) if (r && r.item_id) ids.push(r.item_id);
     }

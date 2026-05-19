@@ -61,16 +61,8 @@ const BotBattleCard = (() => {
   // Маппинг item_id → BASE имя файла (без расширения). В webapp/ файлы лежат
   // с разными расширениями (shield_free*.jpeg, boots_dia*.jpg, helmet_*.png),
   // поэтому фронт пробует .png → .jpg → .jpeg через onerror chain.
-  const _ARMOR_CLASS_MAP = {
-    tank_free:'armor_free1',      agile_free:'armor_free2',
-    crit_free:'armor_free3',      universal_free:'armor_free4',
-    berserker_gold:'armor_gold1', assassin_gold:'armor_gold2',
-    mage_gold:'armor_gold3',      paladin_gold:'armor_gold4',
-    dragonknight_diamonds:'armor_dia1', shadowdancer_diamonds:'armor_dia2',
-    archmage_diamonds:'armor_dia3',     universal_diamonds:'armor_dia4',
-    berserker_mythic:'armor_mythic1',   assassin_mythic:'armor_mythic2',
-    archmage_mythic:'armor_mythic3',    legendary_usdt:'armor_mythic4',
-  };
+  // Старый _ARMOR_CLASS_MAP (legacy class_id → armor_*) снесён вместе со
+  // старым armor — теперь префикс armor2_ просто заменяется на armor_.
   function _itemImageBase(it) {
     const id = it.item_id || '';
     const slot = it.slot;
@@ -78,10 +70,10 @@ const BotBattleCard = (() => {
     if (slot === 'shield' || slot === 'belt' || slot === 'ring1' || slot === 'boots') {
       return id;
     }
-    if (slot === 'armor') {
-      // Wardrobe class_id → точная текстура (например assassin_mythic → armor_mythic2)
-      if (_ARMOR_CLASS_MAP[id]) return _ARMOR_CLASS_MAP[id];
-      // Stat armor (armor_leather/chain/dragon) → по редкости
+    if (slot === 'armor2') {
+      // Новая броня armor2_free1..armor2_mythic4 → texture key armor_free1..armor_mythic4
+      // (texture_key с сервера или префикс-замена armor2_ → armor_).
+      if (id && id.startsWith('armor2_')) return id.replace('armor2_', 'armor_');
       const m = {common:'armor_free1', rare:'armor_gold1', epic:'armor_dia1', mythic:'armor_mythic1'};
       return m[rar] || 'armor_free1';
     }
@@ -235,7 +227,7 @@ const BotBattleCard = (() => {
     const equipHtml = `
       <div class="bbc-equip">
         <div class="bbc-eq-sprite">${_spriteHtml(b, who)}</div>
-        ${['belt','armor','boots','weapon','shield','ring1'].map(renderSlot).join('')}
+        ${['belt','armor2','boots','weapon','shield','ring1'].map(renderSlot).join('')}
       </div>`;
     // Equip-grid строим всегда (своя карточка / бот / PvP-соперник) — items
     // подтягиваются с бэка для всех трёх случаев.

@@ -168,7 +168,7 @@
 
     const itemsBySlot = {};
     (d.items||[]).forEach(it => { itemsBySlot[it.slot] = it; });
-    const equipSlots = ['belt','armor','boots','weapon','shield','ring1'].map(sl => _slotHtml(sl, itemsBySlot[sl])).join('');
+    const equipSlots = ['belt','armor2','boots','weapon','shield','ring1'].map(sl => _slotHtml(sl, itemsBySlot[sl])).join('');
 
     const stats = [
       ['💪','Сила',     d.strength||0, '#dc3c46'],
