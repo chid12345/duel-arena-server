@@ -20,7 +20,9 @@
     const sec = Number(r.seconds_left || 0);
     if (sec <= 0) return '';
     const days = Math.max(1, Math.ceil(sec / 86400));
-    return `<div style="position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#dbeafe;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;border:1px solid rgba(96,165,250,.5);z-index:2">🕐 Аренда · ${days}д</div>`;
+    // Размещаем в правом верхнем углу, чтобы не пересекаться с бейджем
+    // «✅ Надета» (он в левом верхнем у всех 6 overlay'ев).
+    return `<div style="position:absolute;top:6px;right:6px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#dbeafe;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;border:1px solid rgba(96,165,250,.5);z-index:5;box-shadow:0 2px 6px rgba(0,0,0,.4)">🕐 Аренда · ${days}д</div>`;
   }
 
   function rentalsByItem(activeRentals) {

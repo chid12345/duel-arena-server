@@ -121,19 +121,13 @@ function _btn(a) {
   </div>`;
 }
 
-function _rentalBadge(a) {
-  if (!a.rental || !a.rental.seconds_left) return '';
-  const days = Math.max(1, Math.ceil(a.rental.seconds_left / 86400));
-  return `<div style="position:absolute;top:6px;left:6px;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#dbeafe;font-size:9px;font-weight:700;padding:2px 6px;border-radius:8px;border:1px solid rgba(96,165,250,.5);z-index:2">🕐 Аренда · ${days}д</div>`;
-}
-
 function _card(a) {
   const nc = a.r==='epic'?' epic':a.r==='mythic'?' mythic':'';
   const src = ARMOR_IMG[a.id] || '';
   const lockCls = window.LevelLock?.cardLockedClass(a) || '';
   return `<div class="wd-card rarity-${a.r}${a.equipped?' equipped':''}${lockCls}" data-id="${a.id}" style="position:relative">
     ${a.equipped?'<div class="wd-eq-badge">✅ Надета</div>':''}
-    ${_rentalBadge(a)}
+    ${window.RentalBadge ? RentalBadge.html(a.id, State.activeRentals) : ''}
     <div class="wd-img-area">
       <div class="wd-img-wrap">
         <img src="${src}" class="wd-card-img" loading="eager" decoding="async"
