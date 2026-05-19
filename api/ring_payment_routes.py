@@ -59,7 +59,7 @@ def register_ring_payment_routes(app: FastAPI) -> None:
         if not BOT_TOKEN:
             return {"ok": False, "reason": "Бот не настроен"}
 
-        stars = int(item.get("price_stars", 665))
+        stars = int(item.get("price_stars", 800))
         title = item["name"]
         desc = f"Мифическое кольцо Duel Arena: {item.get('desc', '')}"
         payload = f"ring_equip_stars:{uid}:{body.item_id}"

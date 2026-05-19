@@ -1,8 +1,9 @@
 """Кольца (slot=ring1, надеваются также в ring2). 16 предметов: 4 free + 4 gold + 4 dia + 4 mythic.
 
-Этап 3B редизайна — чистый перенос из db_schema/equipment_catalog.py.
-Числа НЕ менялись. ВНИМАНИЕ: цена mythic-колец — 490⭐ (НЕ 590, в отличие
-от шлемов/щитов/сапог), это историческое значение, сохраняется.
+Мифик-кольца стоят как остальные мифик-предметы: 800⭐ или $11.99 USDT.
+power_score=3.58 (равно T4 mythic-стандарту). Раньше было 490⭐/2.97,
+но при выравнивании Stars-цен под официальный курс Telegram (1$≈67⭐)
+выяснилось что USDT-цена $11.99 одинаковая → Stars тоже должна быть 800.
 """
 from __future__ import annotations
 
@@ -19,8 +20,8 @@ RINGS: dict[str, dict] = {
     "ring_dia2":  {"slot": "ring1", "rarity": "epic",   "name": "Кольцо Неизбежности",    "emoji": "💍", "anti_dodge_pct": 20, "price_diamonds": 75, "tier": "T3", "power_score": 3.0, "recommended_level": 45, "currency": "diamond", "desc": "-20% уворот врага"},
     "ring_dia3":  {"slot": "ring1", "rarity": "epic",   "name": "Кольцо Молчания",        "emoji": "💍", "silence_pct": 20,    "price_diamonds": 75, "tier": "T3", "power_score": 3.0, "recommended_level": 45, "currency": "diamond", "desc": "20% глушит крит врага"},
     "ring_dia4":  {"slot": "ring1", "rarity": "epic",   "name": "Кольцо Оцепенения",      "emoji": "💍", "slow_pct": 20,       "price_diamonds": 75, "tier": "T3", "power_score": 3.0, "recommended_level": 45, "currency": "diamond", "desc": "-20% двойной удар врага"},
-    "ring_mythic1": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Провидца",          "emoji": "💍", "accuracy": 18,       "price_stars": 665, "tier": "T4", "power_score": 2.97, "recommended_level": 65, "currency": "star", "desc": "+18% точность"},
-    "ring_mythic2": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Рока",              "emoji": "💍", "anti_dodge_pct": 30, "price_stars": 665, "tier": "T4", "power_score": 2.97, "recommended_level": 65, "currency": "star", "desc": "-30% уворот врага"},
-    "ring_mythic3": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Вечного Безмолвия", "emoji": "💍", "silence_pct": 30,    "price_stars": 665, "tier": "T4", "power_score": 2.97, "recommended_level": 65, "currency": "star", "desc": "30% глушит крит врага"},
-    "ring_mythic4": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Паралича",          "emoji": "💍", "slow_pct": 30,       "price_stars": 665, "tier": "T4", "power_score": 2.97, "recommended_level": 65, "currency": "star", "desc": "-30% двойной удар врага"},
+    "ring_mythic1": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Провидца",          "emoji": "💍", "accuracy": 18,       "price_stars": 800, "tier": "T4", "power_score": 3.58, "recommended_level": 65, "currency": "star", "desc": "+18% точность"},
+    "ring_mythic2": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Рока",              "emoji": "💍", "anti_dodge_pct": 30, "price_stars": 800, "tier": "T4", "power_score": 3.58, "recommended_level": 65, "currency": "star", "desc": "-30% уворот врага"},
+    "ring_mythic3": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Вечного Безмолвия", "emoji": "💍", "silence_pct": 30,    "price_stars": 800, "tier": "T4", "power_score": 3.58, "recommended_level": 65, "currency": "star", "desc": "30% глушит крит врага"},
+    "ring_mythic4": {"slot": "ring1", "rarity": "mythic", "name": "Кольцо Паралича",          "emoji": "💍", "slow_pct": 30,       "price_stars": 800, "tier": "T4", "power_score": 3.58, "recommended_level": 65, "currency": "star", "desc": "-30% двойной удар врага"},
 }

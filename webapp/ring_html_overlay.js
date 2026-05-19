@@ -110,7 +110,7 @@ function _btn(h) {
   return `<div>
     <div style="display:flex;gap:6px">
       <button class="wd-btn btn-mythic" style="flex:1;font-size:10px;padding:6px 2px" data-act="buy_usdt" data-id="${h.id}">💳 $11.99</button>
-      <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${h.id}">⭐ 665</button>
+      <button class="wd-btn btn-gold"   style="flex:1;font-size:10px;padding:6px 2px;background:linear-gradient(135deg,#44240e,#92400e)" data-act="buy_stars" data-id="${h.id}">⭐ 800</button>
     </div>
     ${window.RentalPay ? RentalPay.buildButton(h.id, RentalPay.rentalStarsFor(490)) : ''}
   </div>`;
