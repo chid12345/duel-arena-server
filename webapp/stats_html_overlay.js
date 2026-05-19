@@ -116,9 +116,10 @@ async function _onClick(e){
   const scn=_scene;
   if(act==='back'){ close(); scn?.scene?.start('Menu', { returnTab:'profile' }); return; }
   if(act==='wardrobe'){
-    // legacy «Гардероб классов» удалён — открываем новый Armor overlay.
+    // legacy «Гардероб классов» удалён, старый ArmorHTML тоже снесён —
+    // открываем новый чистый Armor2HTML («БРОНЯ»).
     close();
-    try { if (typeof ArmorHTML !== 'undefined') ArmorHTML.open(scn); } catch(_) {}
+    try { if (typeof Armor2HTML !== 'undefined') Armor2HTML.open(scn); } catch(_) {}
     return;
   }
   if(act==='shop'){ close(); scn?.scene?.start('Shop'); return; }

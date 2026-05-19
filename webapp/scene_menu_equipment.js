@@ -11,8 +11,9 @@ Object.assign(MenuScene.prototype, {
       EquipmentSlotsHTML.show(this);
       return;
     }
-    // Fallback: если overlay не загрузился — показываем текстовые метки
-    const _LABELS = { belt:'ГОЛОВА', armor:'ТЕЛО', boots:'НОГИ',
+    // Fallback: если overlay не загрузился — показываем текстовые метки.
+    // Старый slot=armor снесён под корень, заменён на armor2 («БРОНЯ»).
+    const _LABELS = { belt:'ГОЛОВА', armor2:'БРОНЯ', boots:'НОГИ',
                       weapon:'ОРУЖИЕ', shield:'ЩИТ', ring1:'КОЛЬЦО' };
     const SW = 60, SH = 64;
     const colW = Math.round((W - PAD * 2) / 4);
@@ -21,7 +22,7 @@ Object.assign(MenuScene.prototype, {
     const slotZoneH = czH - 80;
     const sTop = czY + 14, sMid = czY + Math.round((slotZoneH - SH) / 2), sBot = czY + slotZoneH - SH;
     const slots = [
-      { slot:'belt',   x:lx, y:sTop }, { slot:'armor',  x:lx, y:sMid },
+      { slot:'belt',   x:lx, y:sTop }, { slot:'armor2', x:lx, y:sMid },
       { slot:'boots',  x:lx, y:sBot }, { slot:'weapon',  x:rx, y:sTop },
       { slot:'shield', x:rx, y:sMid }, { slot:'ring1',   x:rx, y:sBot },
     ];
@@ -31,7 +32,7 @@ Object.assign(MenuScene.prototype, {
       const zone = mkZ(cx, y + SH / 2, SW + 4, SH + 4).setInteractive({ useHandCursor: true });
       zone.on('pointerup', () => {
         Sound.click();
-        if      (slot === 'armor'  && typeof ArmorHTML  !== 'undefined') ArmorHTML.open(this);
+        if      (slot === 'armor2' && typeof Armor2HTML !== 'undefined') Armor2HTML.open(this);
         else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') WeaponHTML.open(this);
         else if (slot === 'belt'   && typeof HelmetHTML !== 'undefined') HelmetHTML.open(this);
         else if (slot === 'boots'  && typeof BootsHTML  !== 'undefined') BootsHTML.open(this);
