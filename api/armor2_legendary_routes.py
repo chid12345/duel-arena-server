@@ -42,8 +42,18 @@ class _NameBody(InitDataHeader):
 
 
 def _state(uid: int) -> dict:
-    mods = db.get_armor2_custom_mods(uid, ITEM_ID)
     owned = db.is_armor2_owned(uid, ITEM_ID)
+    mods = db.get_armor2_custom_mods(uid, ITEM_ID)
+    # Lazy-create: если броня куплена (есть в player_owned_armor2), но запись
+    # для распределения +19 статов ещё не создана — создаём сейчас. Это позволяет
+    # покупке использовать общий flow :armor2_equip: (как у всех других mythic),
+    # не выдумывая отдельную цепочку доставки только для одной брони.
+    if owned and mods is None:
+        try:
+            db.create_legendary_armor2(uid)
+            mods = db.get_armor2_custom_mods(uid, ITEM_ID)
+        except Exception as _e:
+            logger.error("armor2 legendary lazy-init uid=%s err=%s", uid, _e)
     return {"armor2_mods": mods, "owned": owned}
 
 
@@ -79,7 +89,7 @@ def register_armor2_legendary_routes(app: FastAPI) -> None:
                     headers={"Crypto-Pay-API-Token": CRYPTOPAY_TOKEN},
                     json={
                         "asset": "USDT", "amount": PRICE_USDT,
-                        "payload": f"uid:{uid}:armor2_legendary:create",
+                        "payload": f"uid:{uid}:armor2_equip:{ITEM_ID}",
                         "description": "Duel Arena — Легендарная броня (+19 свободных статов)",
                         "allow_comments": False, "allow_anonymous": False,
                     },
@@ -88,7 +98,7 @@ def register_armor2_legendary_routes(app: FastAPI) -> None:
             if data.get("ok"):
                 inv = data["result"]
                 db.create_crypto_invoice(uid, inv["invoice_id"], 0, "USDT", PRICE_USDT,
-                                         payload=f"uid:{uid}:armor2_legendary:create")
+                                         payload=f"uid:{uid}:armor2_equip:{ITEM_ID}")
                 url = inv.get("mini_app_invoice_url") or inv.get("bot_invoice_url") or inv.get("web_app_invoice_url")
                 return {"ok": True, "invoice_url": url,
                         "web_app_url": inv.get("web_app_invoice_url"),

@@ -98,6 +98,27 @@ def test_create_legendary_armor2_repairs_desync(db):
     )
 
 
+def test_state_lazy_creates_mods_when_owned_but_no_mods(db, monkeypatch):
+    """v2.22.14: USDT-покупка идёт через общий :armor2_equip:armor2_mythic4 →
+    webhook кладёт броню только в player_owned_armor2 (как у всех других mythic).
+    Запись armor2_custom_mods (для +19 свободных статов) должна быть создана
+    лениво при первом вызове /api/equipment/armor2_legendary_state.
+    """
+    from api.armor2_legendary_routes import _state as _routes_state
+    import api.armor2_legendary_routes as _routes_mod
+    monkeypatch.setattr(_routes_mod, "db", db)
+
+    db.get_or_create_player(6099, "u_lazy_state")
+    db.add_owned_armor2(6099, "armor2_mythic4")
+    # Запись armor2_custom_mods ещё НЕ создана:
+    assert db.get_armor2_custom_mods(6099, "armor2_mythic4") is None
+
+    state = _routes_state(6099)
+    assert state["owned"] is True
+    assert state["armor2_mods"] is not None, "lazy-init должен был создать armor2_custom_mods"
+    assert state["armor2_mods"]["free_stats_left"] == 19
+
+
 def test_train_untrain_legendary_armor2_stat(db):
     """Распределение и снятие свободных статов."""
     db.get_or_create_player(6004, "u_train")
