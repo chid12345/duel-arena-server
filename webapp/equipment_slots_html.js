@@ -5,8 +5,8 @@
    ============================================================ */
 (() => {
 const _RARITY_COLOR = { common:'#a0aec0', rare:'#fbbf24', epic:'#c084fc', mythic:'#ff6b2b' };
-const _LABELS = { belt:'ГОЛОВА', armor:'ТЕЛО', boots:'НОГИ', weapon:'ОРУЖИЕ', shield:'ЩИТ', ring1:'КОЛЬЦО' };
-const _EMPTY  = { belt:'⛑', armor:'🧥', boots:'👢', weapon:'⚔', shield:'🛡', ring1:'💍' };
+const _LABELS = { belt:'ГОЛОВА', armor:'ТЕЛО', armor2:'БРОНЯ', boots:'НОГИ', weapon:'ОРУЖИЕ', shield:'ЩИТ', ring1:'КОЛЬЦО' };
+const _EMPTY  = { belt:'⛑', armor:'🧥', armor2:'🛡', boots:'👢', weapon:'⚔', shield:'🛡', ring1:'💍' };
 const _imgCache = new Map();
 
 let _cssOn = false;
@@ -119,25 +119,38 @@ function _positions(cvs) {
   const sx = r.width  / (cvs.width  || 390);
   const sy = r.height / (cvs.height || 700);
   const W  = cvs.width || 390;
-  const PAD = 10, SW = 60, SH = 64;
+  // SH уменьшен 64→48 чтобы в левой колонке уместились 4 слота
+  // (belt/armor/armor2/boots). Правая остаётся 3 слота, но с той же высотой
+  // для единообразия. sz считается через min(SW,SH) чтобы картинка не вылезала.
+  const PAD = 10, SW = 60, SH = 48;
   const colW      = Math.round((W - PAD * 2) / 4);
   const lx        = PAD + Math.round((colW - SW) / 2);
   const rx        = W - PAD - colW + Math.round((colW - SW) / 2);
   const czY       = 136, czH = 330;
   const slotZoneH = czH - 80;
   const sTop = czY + 14;
-  const sMid = czY + Math.round((slotZoneH - SH) / 2);
   const sBot = czY + slotZoneH - SH;
+  // Левая 4 точки: belt / armor / armor2 / boots (3 равных интервала)
+  const stepL = (sBot - sTop) / 3;
+  const sL1 = sTop;
+  const sL2 = Math.round(sTop + stepL);
+  const sL3 = Math.round(sTop + 2 * stepL);
+  const sL4 = sBot;
+  // Правая 3 точки: weapon / shield / ring1
+  const sR1 = sTop;
+  const sR2 = Math.round((sTop + sBot) / 2);
+  const sR3 = sBot;
   const px   = gx => r.left + (gx + SW / 2) * sx;
   const py   = gy => r.top  + (gy + SH / 2) * sy;
-  const sz   = Math.round(SW * sx * 0.88);
+  const sz   = Math.round(Math.min(SW, SH) * sx * 0.88);
   return {
-    belt:   { left: px(lx), top: py(sTop), sz },
-    armor:  { left: px(lx), top: py(sMid), sz },
-    boots:  { left: px(lx), top: py(sBot), sz },
-    weapon: { left: px(rx), top: py(sTop), sz },
-    shield: { left: px(rx), top: py(sMid), sz },
-    ring1:  { left: px(rx), top: py(sBot), sz },
+    belt:   { left: px(lx), top: py(sL1), sz },
+    armor:  { left: px(lx), top: py(sL2), sz },
+    armor2: { left: px(lx), top: py(sL3), sz },
+    boots:  { left: px(lx), top: py(sL4), sz },
+    weapon: { left: px(rx), top: py(sR1), sz },
+    shield: { left: px(rx), top: py(sR2), sz },
+    ring1:  { left: px(rx), top: py(sR3), sz },
   };
 }
 
@@ -153,6 +166,7 @@ function _dispatch(slot, scene) {
   setTimeout(() => {
     try {
       if      (slot === 'armor'  && typeof ArmorHTML  !== 'undefined') ArmorHTML.open(scene);
+      else if (slot === 'armor2' && typeof Armor2HTML !== 'undefined') Armor2HTML.open(scene);
       else if (slot === 'weapon' && typeof WeaponHTML !== 'undefined') WeaponHTML.open(scene);
       else if (slot === 'belt'   && typeof HelmetHTML !== 'undefined') HelmetHTML.open(scene);
       else if (slot === 'boots'  && typeof BootsHTML  !== 'undefined') BootsHTML.open(scene);
@@ -177,7 +191,10 @@ function show(scene) {
   wrap.id = 'eqs-overlay';
 
   const pos   = _positions(cvs);
-  const SLOTS = ['belt','armor','boots','weapon','shield','ring1'];
+  // armor2 — 7-й слот «БРОНЯ» рядом с ТЕЛО (между ТЕЛО и НОГИ в левой колонке).
+  // Открывает Armor2HTML — отдельный пустой оверлей (каркас на будущее).
+  // State.equipment.armor2 не существует, _slotInfo вернёт null → emoji 🛡.
+  const SLOTS = ['belt','armor','armor2','boots','weapon','shield','ring1'];
 
   SLOTS.forEach(slot => {
     const info  = _slotInfo(slot);
