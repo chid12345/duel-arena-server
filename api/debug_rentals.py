@@ -8,6 +8,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 
 from api.tma_auth import get_user_from_init_data
+from config.battle_constants import ADMIN_USER_IDS
 from database import db
 
 
@@ -17,6 +18,8 @@ def register_debug_rentals_route(app: FastAPI) -> None:
     async def my_rentals(init_data: str):
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
+        if uid not in ADMIN_USER_IDS:
+            return {"ok": False, "reason": "forbidden"}
 
         # 1. Метод который использует UI/API
         api_rentals = db.list_active_rentals(uid)
@@ -90,6 +93,8 @@ def register_debug_rentals_route(app: FastAPI) -> None:
         """
         tg_user = get_user_from_init_data(init_data)
         uid = int(tg_user["id"])
+        if uid not in ADMIN_USER_IDS:
+            return {"ok": False, "reason": "forbidden"}
         conn = db.get_connection()
         try:
             cur = conn.cursor()

@@ -394,10 +394,11 @@ function _render(scene, view) {
       if (a) _doAction(scene,btn.dataset.act,a);
       return;
     }
-    // Тап по самой карточке armor_mythic4 (если она куплена/надета) — открыть
-    // LegendaryArmor overlay для распределения +19 свободных статов и пассивки.
     const card = e.target.closest('.wd-card');
-    if (card && card.dataset.id === 'armor_mythic4') {
+    if (!card) return;
+    // armor_mythic4 куплена/надета → сразу открываем экран распределения
+    // +19 свободных статов и пассивки (старое поведение).
+    if (card.dataset.id === 'armor_mythic4') {
       const a = items.find(x => x.id === 'armor_mythic4');
       if (a && (a.owned || a.equipped) && window.LegendaryArmor) {
         LegendaryArmor.open(scene, () => {
@@ -406,8 +407,14 @@ function _render(scene, view) {
             _render(scene, tab?.dataset?.av || 'all');
           });
         });
+        return;
       }
     }
+    // Все остальные карточки (и armor_mythic4 если ещё не куплена) — попап деталей.
+    const a = items.find(x => x.id === card.dataset.id);
+    const eq = items.find(x => x.equipped);
+    if (a && typeof ArmorHTMLDetail !== 'undefined')
+      ArmorHTMLDetail.show(scene, a, (act, item) => _doAction(scene, act, item), eq);
   };
 }
 

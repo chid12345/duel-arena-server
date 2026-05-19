@@ -79,7 +79,18 @@
   // Debug-полоса под вкладками: 2 кнопки «🔬 Debug» и «🗑 Сбросить мои аренды».
   // Используется во всех 6 overlay'ях (armor/helmet/weapon/shield/boots/ring),
   // чтобы можно было проверить аренду в любом слоте без code-дубля.
+  // Доступ — только разработчику (ID 386313532). Бэкенд тоже режет чужих
+  // (см. api/debug_rentals.py: ADMIN_USER_IDS из config/battle_constants).
+  const DEV_USER_ID = 386313532;
+  function _isDev() {
+    try {
+      const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+      if (id && Number(id) === DEV_USER_ID) return true;
+    } catch (_) { }
+    return false;
+  }
   function debugBarHtml() {
+    if (!_isDev()) return '';
     return `<div style="display:flex;gap:6px;padding:4px 12px">
       <div class="rb-debug-show" style="flex:1;background:rgba(96,165,250,.08);font-size:10px;color:#a0c8ff;text-align:center;cursor:pointer;padding:4px;border-radius:4px">🔬 Debug</div>
       <div class="rb-debug-wipe" style="flex:1;background:rgba(220,80,80,.12);font-size:10px;color:#ff9aa0;text-align:center;cursor:pointer;padding:4px;border-radius:4px">🗑 Сбросить мои аренды</div>
