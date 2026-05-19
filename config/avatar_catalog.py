@@ -4,13 +4,13 @@
 AVATAR_SCALE_EVERY_LEVELS = 20
 AVATAR_SCALE_MAX_BONUS = 3
 
-# Элитный образ (Stars/USDT).
+# Элитный образ (Stars/USDT). Курс Telegram 1$ ≈ 67⭐ (см. memory).
 ELITE_AVATAR_ID = "elite_emperor"
-ELITE_AVATAR_STARS = 590
+ELITE_AVATAR_STARS = 800
 ELITE_AVATAR_USDT = "11.99"
 
-# Премиум-аватарки ($1 USDT / 50 Stars каждый).
-PREMIUM_AVATAR_STARS = 50
+# Премиум-аватарки ($1 USDT / 67⭐ каждый — официальный курс Telegram).
+PREMIUM_AVATAR_STARS = 67
 PREMIUM_AVATAR_USDT = "1.00"
 
 # Подписочный образ.
@@ -73,16 +73,16 @@ AVATAR_CATALOG = [
     {"id": "dia_liquidator", "name": "🎭 Ликвидатор",        "tier": "diamond", "rarity": "epic", "currency": "diamonds", "price": 300, "strength": 5,  "endurance": 5, "crit": 9, "hp_flat": 4,  "badge": "🎭", "description": "Максимум крита."},
 
     # ── PREMIUM (stars/usdt, legendary, ~29 очков, $1 / 50⭐) ────────
-    {"id": "prem_dragon",  "name": "🐉 Дракон Хаоса", "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 8, "endurance": 7, "crit": 5, "hp_flat": 10, "badge": "🐉", "description": "Древний зверь."},
-    {"id": "prem_phoenix", "name": "🔥 Феникс",       "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 6, "endurance": 8, "crit": 6, "hp_flat": 8,  "badge": "🔥", "description": "Возрождение."},
-    {"id": "prem_kraken",  "name": "🦑 Кракен",       "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 5, "endurance": 9, "crit": 3, "hp_flat": 14, "badge": "🦑", "description": "Монстр глубин."},
-    {"id": "prem_wolf",    "name": "🐺 Альфа Волк",   "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 7, "endurance": 6, "crit": 7, "hp_flat": 8,  "badge": "🐺", "description": "Вожак стаи."},
-    {"id": "prem_lion",    "name": "🦁 Лев Арены",    "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 9, "endurance": 7, "crit": 4, "hp_flat": 10, "badge": "🦁", "description": "Царь зверей."},
-    {"id": "prem_serpent", "name": "🐍 Змей Тьмы",    "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 4, "endurance": 8, "crit": 9, "hp_flat": 8,  "badge": "🐍", "description": "Ядовитый — крит из засады."},
-    {"id": "prem_eagle",   "name": "🦅 Орёл Небес",   "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 6, "endurance": 7, "crit": 8, "hp_flat": 8,  "badge": "🦅", "description": "Удар с высоты."},
-    {"id": "prem_bear",    "name": "🐻 Медведь",      "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 8, "endurance": 8, "crit": 2, "hp_flat": 12, "badge": "🐻", "description": "Неудержимая мощь."},
-    {"id": "prem_panther", "name": "🐆 Пантера",      "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 7, "endurance": 6, "crit": 8, "hp_flat": 8,  "badge": "🐆", "description": "Молниеносный хищник."},
-    {"id": "prem_hydra",   "name": "🐲 Гидра",        "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 50, "usdt_price": "1.00", "strength": 6, "endurance": 8, "crit": 5, "hp_flat": 12, "badge": "🐲", "description": "Многоглавый зверь."},
+    {"id": "prem_dragon",  "name": "🐉 Дракон Хаоса", "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 8, "endurance": 7, "crit": 5, "hp_flat": 10, "badge": "🐉", "description": "Древний зверь."},
+    {"id": "prem_phoenix", "name": "🔥 Феникс",       "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 6, "endurance": 8, "crit": 6, "hp_flat": 8,  "badge": "🔥", "description": "Возрождение."},
+    {"id": "prem_kraken",  "name": "🦑 Кракен",       "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 5, "endurance": 9, "crit": 3, "hp_flat": 14, "badge": "🦑", "description": "Монстр глубин."},
+    {"id": "prem_wolf",    "name": "🐺 Альфа Волк",   "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 7, "endurance": 6, "crit": 7, "hp_flat": 8,  "badge": "🐺", "description": "Вожак стаи."},
+    {"id": "prem_lion",    "name": "🦁 Лев Арены",    "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 9, "endurance": 7, "crit": 4, "hp_flat": 10, "badge": "🦁", "description": "Царь зверей."},
+    {"id": "prem_serpent", "name": "🐍 Змей Тьмы",    "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 4, "endurance": 8, "crit": 9, "hp_flat": 8,  "badge": "🐍", "description": "Ядовитый — крит из засады."},
+    {"id": "prem_eagle",   "name": "🦅 Орёл Небес",   "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 6, "endurance": 7, "crit": 8, "hp_flat": 8,  "badge": "🦅", "description": "Удар с высоты."},
+    {"id": "prem_bear",    "name": "🐻 Медведь",      "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 8, "endurance": 8, "crit": 2, "hp_flat": 12, "badge": "🐻", "description": "Неудержимая мощь."},
+    {"id": "prem_panther", "name": "🐆 Пантера",      "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 7, "endurance": 6, "crit": 8, "hp_flat": 8,  "badge": "🐆", "description": "Молниеносный хищник."},
+    {"id": "prem_hydra",   "name": "🐲 Гидра",        "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 6, "endurance": 8, "crit": 5, "hp_flat": 12, "badge": "🐲", "description": "Многоглавый зверь."},
 
     # ── ПОДПИСКА (sub, legendary, 39 очков) ──────────────────────────
     {"id": "sub_celestial", "name": "👑 Небесный Страж", "tier": "sub", "rarity": "legendary", "currency": "subscription", "price": 0, "strength": 9, "endurance": 9, "crit": 7, "hp_flat": 14, "badge": "👑", "description": "Эксклюзив для Premium подписчиков."},
