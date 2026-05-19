@@ -344,10 +344,12 @@ function open(scene) {
         <div class="wd-tab active _sh-view" id="sh-tab-all" data-sv="all"><span>🛡️ Все щиты</span></div>
         <div class="wd-tab _sh-view" id="sh-tab-owned" data-sv="owned"><span>🎒 Арсенал</span></div>
       </div>
+      ${window.RentalBadge ? RentalBadge.debugBarHtml() : ''}
       <div class="wd-grid" id="sh-grid"></div>
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
+  if (window.RentalBadge) RentalBadge.attachDebugBar(wrap, refresh, _notify);
   (window.RentalBadge ? RentalBadge.refreshState() : post('/api/player', {}))
     .then(res => {
       if (!document.getElementById('sh-root')) return;

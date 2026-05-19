@@ -340,10 +340,12 @@ function open(scene) {
         <div class="wd-tab active _bt-view" id="bt-tab-all" data-bv="all"><span>👟 Все сапоги</span></div>
         <div class="wd-tab _bt-view" id="bt-tab-owned" data-bv="owned"><span>🎒 Арсенал</span></div>
       </div>
+      ${window.RentalBadge ? RentalBadge.debugBarHtml() : ''}
       <div class="wd-grid" id="bt-grid"></div>
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
+  if (window.RentalBadge) RentalBadge.attachDebugBar(wrap, refresh, _notify);
   (window.RentalBadge ? RentalBadge.refreshState() : post('/api/player', {}))
     .then(res => {
       if (!document.getElementById('bt-root')) return;

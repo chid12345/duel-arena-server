@@ -65,5 +65,46 @@
     }).catch(() => null);
   }
 
-  window.RentalBadge = { html, rentalsByItem, ownedSetFor, refreshState };
+  // Debug-полоса под вкладками: 2 кнопки «🔬 Debug» и «🗑 Сбросить мои аренды».
+  // Используется во всех 6 overlay'ях (armor/helmet/weapon/shield/boots/ring),
+  // чтобы можно было проверить аренду в любом слоте без code-дубля.
+  function debugBarHtml() {
+    return `<div style="display:flex;gap:6px;padding:4px 12px">
+      <div class="rb-debug-show" style="flex:1;background:rgba(96,165,250,.08);font-size:10px;color:#a0c8ff;text-align:center;cursor:pointer;padding:4px;border-radius:4px">🔬 Debug</div>
+      <div class="rb-debug-wipe" style="flex:1;background:rgba(220,80,80,.12);font-size:10px;color:#ff9aa0;text-align:center;cursor:pointer;padding:4px;border-radius:4px">🗑 Сбросить мои аренды</div>
+    </div>`;
+  }
+
+  // Подключить обработчики кнопок Debug-бара. После «Сбросить» вызовет onWiped().
+  function attachDebugBar(rootEl, onWiped, notifyFn) {
+    const tg = window.Telegram?.WebApp;
+    const initData = () => tg?.initData || (window.State && State.initData) || '';
+    const showBtn = rootEl.querySelector('.rb-debug-show');
+    const wipeBtn = rootEl.querySelector('.rb-debug-wipe');
+    if (showBtn) showBtn.onclick = async () => {
+      try {
+        const resp = await fetch('/api/debug/my_rentals?init_data=' + encodeURIComponent(initData()));
+        const data = await resp.json();
+        alert('🔬 DEBUG: state of equipment_rentals\n\n' + JSON.stringify(data, null, 2));
+      } catch (e) { alert('Debug error: ' + e); }
+    };
+    if (wipeBtn) wipeBtn.onclick = async () => {
+      if (!confirm('🗑 Удалить ВСЕ твои аренды и снять броню? (для теста)')) return;
+      try {
+        const resp = await fetch('/api/debug/wipe_my_rentals?init_data=' + encodeURIComponent(initData()), { method: 'POST' });
+        const data = await resp.json();
+        if (data?.ok) {
+          if (typeof notifyFn === 'function') notifyFn(`✅ Удалено аренд: ${data.deleted_rentals}. Броня снята.`);
+          await refreshState();
+          if (typeof onWiped === 'function') onWiped();
+        } else {
+          if (typeof notifyFn === 'function') notifyFn('❌ Ошибка сброса', false);
+        }
+      } catch (e) {
+        if (typeof notifyFn === 'function') notifyFn('❌ ' + e, false);
+      }
+    };
+  }
+
+  window.RentalBadge = { html, rentalsByItem, ownedSetFor, refreshState, debugBarHtml, attachDebugBar };
 })();

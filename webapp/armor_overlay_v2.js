@@ -384,10 +384,7 @@ function open(scene) {
         <div class="wd-tab active _ar-view" id="ar-tab-all" data-av="all"><span>🛡 Вся броня</span></div>
         <div class="wd-tab _ar-view" id="ar-tab-owned" data-av="owned"><span>🎒 Арсенал</span></div>
       </div>
-      <div style="display:flex;gap:6px;padding:4px 12px">
-        <div style="flex:1;background:rgba(96,165,250,.08);font-size:10px;color:#a0c8ff;text-align:center;cursor:pointer;padding:4px;border-radius:4px" id="ar-debug-btn">🔬 Debug</div>
-        <div style="flex:1;background:rgba(220,80,80,.12);font-size:10px;color:#ff9aa0;text-align:center;cursor:pointer;padding:4px;border-radius:4px" id="ar-wipe-btn">🗑 Сбросить мои аренды</div>
-      </div>
+      ${window.RentalBadge ? RentalBadge.debugBarHtml() : ''}
       <div class="wd-grid" id="ar-grid"></div>
     </div>`;
   document.body.appendChild(wrap);
@@ -400,38 +397,10 @@ function open(scene) {
     const pid = localStorage.getItem('armorPendingItemId') || '';
     if (pi > 0 && pid) _startArmorCryptoPolling(scene, pi, pid, true);
   } catch(_) {}
-  document.getElementById('ar-debug-btn').onclick = async () => {
-    try {
-      const tg = window.Telegram?.WebApp;
-      const initData = tg?.initData || '';
-      const resp = await fetch('/api/debug/my_rentals?init_data=' + encodeURIComponent(initData));
-      const data = await resp.json();
-      const txt = JSON.stringify(data, null, 2);
-      _notify('Debug: данные скопированы в alert (внизу). Сделай скриншот.', true, true);
-      alert('🔬 DEBUG: state of equipment_rentals\n\n' + txt);
-    } catch (e) {
-      alert('Debug error: ' + e);
-    }
-  };
-  document.getElementById('ar-wipe-btn').onclick = async () => {
-    if (!confirm('🗑 Удалить ВСЕ твои аренды и снять броню? (для теста)')) return;
-    try {
-      const tg = window.Telegram?.WebApp;
-      const initData = tg?.initData || '';
-      const resp = await fetch('/api/debug/wipe_my_rentals?init_data=' + encodeURIComponent(initData), { method: 'POST' });
-      const data = await resp.json();
-      if (data?.ok) {
-        _notify(`✅ Удалено аренд: ${data.deleted_rentals}. Броня снята.`);
-        if (window.RentalBadge) await RentalBadge.refreshState();
-        const tab = document.querySelector('#ar-root ._ar-view.active');
-        _render(_currentScene, tab?.dataset?.av || 'all');
-      } else {
-        _notify('❌ Ошибка сброса', false);
-      }
-    } catch (e) {
-      _notify('❌ ' + e, false);
-    }
-  };
+  if (window.RentalBadge) RentalBadge.attachDebugBar(wrap, () => {
+    const tab = document.querySelector('#ar-root ._ar-view.active');
+    _render(_currentScene, tab?.dataset?.av || 'all');
+  }, _notify);
   wrap.querySelectorAll('._ar-view').forEach(t=>t.onclick=()=>{
     view=t.dataset.av;
     wrap.querySelectorAll('._ar-view').forEach(x=>x.classList.remove('active'));

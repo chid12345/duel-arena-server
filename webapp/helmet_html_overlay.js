@@ -351,10 +351,12 @@ function open(scene) {
         <div class="wd-tab active _hm-view" id="hm-tab-all" data-hv="all"><span>⛑️ Все шлемы</span></div>
         <div class="wd-tab _hm-view" id="hm-tab-owned" data-hv="owned"><span>🎒 Арсенал</span></div>
       </div>
+      ${window.RentalBadge ? RentalBadge.debugBarHtml() : ''}
       <div class="wd-grid" id="hm-grid"></div>
     </div>`;
   document.body.appendChild(wrap);
   _render(scene, view);
+  if (window.RentalBadge) RentalBadge.attachDebugBar(wrap, refresh, _notify);
   // no-store fetch обходит кэш Telegram WebView (иначе после покупки
   // active_rentals остаётся пустым и бейдж аренды не появляется).
   (window.RentalBadge ? RentalBadge.refreshState() : post('/api/player', {}))
