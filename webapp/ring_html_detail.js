@@ -156,6 +156,7 @@ function show(scene, h, onAction, eq) {
         <div class="rgd-pills">${_pillsHtml(h)}</div>
         <div class="rgd-stat-line">${_statLine(h)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'acc',label:'Точность',suf:'%'},{k:'anti_dodge',label:'Антиуклон',suf:'%'},{k:'silence',label:'Тишина',suf:'%'},{k:'slow',label:'Замедление',suf:'%'},{k:'regen',label:'Реген HP',suf:'%'},{k:'gold',label:'Золото',suf:'%'},{k:'xp',label:'Опыт',suf:'%'}]):'')}
+        ${window.ArchBadge?.detailBlock(h.id) || ''}
         ${h.bonus ? `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;background:rgba(255,180,80,.10);border:1px solid rgba(255,180,80,.25);font-size:11px;color:#ffd29a;line-height:1.45">✨ <b>Особенность:</b> ${h.bonus}</div>` : ''}
         <div class="rgd-desc">${RING_DESC[h.id] || ''}</div>
         <div class="rgd-btn-wrap">${_btnHtml(h)}</div>

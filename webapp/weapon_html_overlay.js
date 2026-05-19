@@ -138,7 +138,6 @@ function _card(w) {
         ${window.LevelLock?.buildBadge(w) || ''}
       </div>
       ${window.ArchBadge?.htmlFor(w.id) || ''}
-      ${window.ArchBadge?.slotNeedFor(w.id) || ''}
       <div class="wd-pills">${_pills(w)}</div>
       ${w.bonus ? `<div style="font-size:9px;color:#ffc97a;line-height:1.35;margin-top:2px;font-style:italic">✨ ${w.bonus}</div>` : ''}
       ${_btn(w)}

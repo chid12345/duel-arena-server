@@ -172,6 +172,7 @@ function show(scene, a, onAction, eq) {
         <div class="a2d-pills">${_pillsHtml(a)}</div>
         <div class="a2d-stat-line">${_statLine(a)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(a,eq,[{k:'str',label:'Сила',suf:''},{k:'agi',label:'Ловкость',suf:''},{k:'intu',label:'Интуиция',suf:''},{k:'hp',label:'HP',suf:''}]):'')}
+        ${window.ArchBadge?.detailBlock(a.id) || ''}
         ${a.bonus ? `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;background:rgba(255,180,80,.10);border:1px solid rgba(255,180,80,.25);font-size:11px;color:#ffd29a;line-height:1.45">✨ <b>Особенность:</b> ${a.bonus}</div>` : ''}
         <div class="a2d-desc">${ARMOR2_DESC[a.id] || ''}</div>
         <div class="a2d-btn-wrap">${_btnHtml(a)}</div>

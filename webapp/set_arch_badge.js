@@ -99,5 +99,53 @@
     return slotNeed(setIdFor(itemId));
   }
 
-  window.ArchBadge = { meta, html, slotNeed, setIdFor, htmlFor, slotNeedFor };
+  /* Описания архетипов (синхронизировано с config/sets_catalog_v2.py). */
+  const DESC = {
+    predator: 'Крит и шанс двойного удара',
+    bastion:  'HP и защита от урона',
+    berserk:  'Чистый урон без защиты',
+    ghost:    'Уворот и точность',
+    mage:     'Пробой брони и сила удара',
+    regent:   'Сбалансированный универсал',
+  };
+
+  /* Большой блок для детального попапа: название архетипа + описание стиля
+     + строка прогресса «у тебя X/6». Подсветка если этот предмет добавит +1
+     к самому полному незакрытому архетипу. */
+  function detailBlock(itemId) {
+    const sid = setIdFor(itemId);
+    const m = meta(sid);
+    if (!m) return '';
+    const s = window.State?.setsStatus;
+    const arch = s?.archetypes?.find(a => a.set_id === sid);
+    const cur = arch ? arch.count : 0;
+    const eq = window.State?.equipment || {};
+    // Если этот же item_id уже надет — он уже учтён в cur, не «добавит +1».
+    let alreadyEquipped = false;
+    for (const slot in eq) if (eq[slot]?.item_id === itemId) { alreadyEquipped = true; break; }
+    const wouldAdd = !alreadyEquipped && cur < 6;
+    // «Топ незакрытый» для подсветки
+    let topUnfinished = null;
+    if (s?.archetypes) {
+      for (const a of s.archetypes) {
+        if (a.count <= 0 || a.count >= 6) continue;
+        if (!topUnfinished || a.count > topUnfinished.count) topUnfinished = a;
+      }
+    }
+    const isTop = wouldAdd && topUnfinished?.set_id === sid;
+    const progLine = (cur > 0)
+      ? `<div style="font-size:11px;color:#a8c0d8;margin-top:4px">У тебя <b style="color:${m.color}">${cur}/6</b> этого архетипа${wouldAdd ? ' — этот предмет даст +1' : ''}.</div>`
+      : `<div style="font-size:11px;color:#80a8c0;margin-top:4px;opacity:.85">У тебя пока нет предметов этого архетипа.</div>`;
+    const topHint = isTop
+      ? `<div style="font-size:11px;color:${m.color};margin-top:4px;font-weight:700">⭐ Нужно — это твой самый полный незаконченный комплект.</div>`
+      : '';
+    return `<div style="margin-top:8px;padding:8px 10px;border-radius:8px;`
+      + `background:${m.color}14;border:1px solid ${m.color}55">`
+      + `<div style="font-size:12px;color:${m.color};font-weight:700">${m.emoji} Архетип: ${m.name}</div>`
+      + `<div style="font-size:11px;color:#cfe0f0;margin-top:2px">${DESC[sid] || ''}</div>`
+      + `${progLine}${topHint}`
+      + `</div>`;
+  }
+
+  window.ArchBadge = { meta, html, slotNeed, setIdFor, htmlFor, slotNeedFor, detailBlock };
 })();
