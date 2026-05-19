@@ -84,8 +84,38 @@ def handle_stars_equip_payload(user_id: int, payload: str, stars: int) -> Option
             "Откройте игру — увидите его в снаряжении.\n\n⚔️ Duel Arena"
         )
 
-    # Старые armor Stars-payloads (legendary_reset_stars, armor_class_stars,
-    # armor_equip_stars) снесены под корень — новый чистый слот «БРОНЯ» в разработке.
+    # Stars-сброс armor2 Легендарной: payload `armor2_legendary_reset_stars:UID:armor2_mythic4`.
+    if payload.startswith("armor2_legendary_reset_stars:"):
+        try:
+            ok, msg = db.reset_legendary_armor2(user_id)
+            if not ok:
+                logger.error("Stars armor2 legendary reset failed uid=%s stars=%s msg=%s",
+                             user_id, stars, msg)
+                return ("⚠️ Оплата получена, но сброс задержался.\n"
+                        "Напишите в поддержку. ⚔️ Duel Arena")
+        except Exception as exc:
+            logger.error("CRITICAL: Stars armor2 legendary reset uid=%s err=%s", user_id, exc)
+            return ("⚠️ Оплата получена, но сброс задержался.\n"
+                    "Напишите в поддержку. ⚔️ Duel Arena")
+        return ("🔄 <b>Статы Легендарной брони сброшены!</b>\n"
+                "Откройте «🛡 БРОНЯ» и распределите заново.\n\n⚔️ Duel Arena")
+
+    # Stars-покупка armor2 Легендарной: `armor2_legendary_stars:UID:create`.
+    if payload.startswith("armor2_legendary_stars:"):
+        try:
+            ok, msg = db.create_legendary_armor2(user_id)
+            if not ok and "уже" not in (msg or "").lower():
+                logger.error("Stars armor2 legendary creation failed uid=%s msg=%s",
+                             user_id, msg)
+                return ("⚠️ Оплата получена, но выдача задержалась.\n"
+                        "Напишите в поддержку. ⚔️ Duel Arena")
+        except Exception as exc:
+            logger.error("CRITICAL: Stars armor2 legendary creation uid=%s err=%s",
+                         user_id, exc)
+            return ("⚠️ Оплата получена, но выдача задержалась.\n"
+                    "Напишите в поддержку. ⚔️ Duel Arena")
+        return ("💠 <b>Легендарная броня получена!</b>\n"
+                "Откройте «🛡 БРОНЯ» и настройте её.\n\n⚔️ Duel Arena")
 
     parse = _parse(payload)
     if parse is None:

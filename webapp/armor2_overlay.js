@@ -173,9 +173,18 @@ async function _doAction(scene, action, item) {
   if (scene._armor2Busy) return;
   scene._armor2Busy = true;
   try {
-    // Заглушки до Этапа 2.4.C (Legendary armor2_mythic4 endpoints).
+    // Легендарная (armor2_mythic4) — открываем overlay распределения статов
+    // (там и кнопки покупки, и +/- статов, и сохранение).
     if (action === 'buy_legendary_stars' || action === 'buy_legendary_usdt') {
-      _notify('⚙️ Легендарная броня — скоро (Этап 2.4.C)', false);
+      if (window.LegendaryArmor2) {
+        LegendaryArmor2.open(scene, () => {
+          // После закрытия — перерисовать каталог (вдруг купили).
+          const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+          _render(scene, activeTab?.dataset?.av || 'all');
+        });
+      } else {
+        _notify('Легендарный слот недоступен', false);
+      }
       scene._armor2Busy = false;
       return;
     }
@@ -352,8 +361,17 @@ function _render(scene, view) {
     const card = e.target.closest('.wd-card');
     if (!card) return;
     const a = items.find(x => x.id === card.dataset.id);
+    if (!a) return;
+    // armor2_mythic4 уже куплена/надета → сразу открываем экран распределения.
+    if (a.id === 'armor2_mythic4' && (a.owned || a.equipped) && window.LegendaryArmor2) {
+      LegendaryArmor2.open(scene, () => {
+        const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+        _render(scene, activeTab?.dataset?.av || 'all');
+      });
+      return;
+    }
     const eq = items.find(x => x.equipped);
-    if (a && typeof Armor2HTMLDetail !== 'undefined')
+    if (typeof Armor2HTMLDetail !== 'undefined')
       Armor2HTMLDetail.show(scene, a, (act, item) => _doAction(scene, act, item), eq);
   };
 }

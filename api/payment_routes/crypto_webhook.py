@@ -152,6 +152,31 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 await _send_tg_message(uid, f"{scroll_info.get('icon', '📜')} <b>{scroll_info.get('name', usdt_scroll_id)} получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
                 if _scroll_ok:
                     db.mark_items_delivered(int(invoice_id))
+            elif ":armor2_legendary_reset:" in custom_payload:
+                _r_ok = False
+                try:
+                    _r_ok, _ = db.reset_legendary_armor2(uid)
+                except Exception as _e:
+                    logger.error("CRITICAL: armor2 legendary reset uid=%s invoice=%s err=%s",
+                                 uid, invoice_id, _e)
+                _cache_invalidate(uid)
+                await manager.send(uid, {"event": "armor2_legendary_reset", "source": "cryptopay"})
+                await _send_tg_message(uid, "🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «🛡 БРОНЯ» и распределите заново.\n\n⚔️ Duel Arena")
+                if _r_ok:
+                    db.mark_items_delivered(int(invoice_id))
+            elif ":armor2_legendary:" in custom_payload:
+                _l_ok = False
+                try:
+                    _l_ok, _msg = db.create_legendary_armor2(uid)
+                    _l_ok = bool(_l_ok) or ("уже" in (_msg or "").lower())
+                except Exception as _e:
+                    logger.error("CRITICAL: armor2 legendary creation uid=%s invoice=%s err=%s",
+                                 uid, invoice_id, _e)
+                _cache_invalidate(uid)
+                await manager.send(uid, {"event": "armor2_legendary_created", "source": "cryptopay"})
+                await _send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «🛡 БРОНЯ» и настройте её.\n\n⚔️ Duel Arena")
+                if _l_ok:
+                    db.mark_items_delivered(int(invoice_id))
             elif avatar_id:
                 unlock = db.unlock_avatar(uid, avatar_id, source="usdt")
                 if unlock.get("ok"):

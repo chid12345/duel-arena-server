@@ -183,6 +183,33 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     eq_resp = {slot: {"item_id": it["item_id"], "name": it["name"], "emoji": it["emoji"], "rarity": it["rarity"], "desc": it.get("desc", "")} for slot, it in db.get_equipment(owner_uid).items()}
                     fresh = db.get_or_create_player(owner_uid, "")
                     return {"ok": True, "paid": True, "rental_activated": True, "item_id": rental_item_id, "equipment": eq_resp, "player": _player_api(dict(fresh))}
+                if ":armor2_legendary_reset:" in custom_payload:
+                    try:
+                        db.reset_legendary_armor2(owner_uid)
+                    except Exception as _e:
+                        logger.error("CRITICAL: armor2 legendary reset (crypto_check) uid=%s err=%s", owner_uid, _e)
+                    _cache_invalidate(owner_uid)
+                    db.mark_items_delivered(invoice_id)
+                    try: await manager.send(owner_uid, {"event": "armor2_legendary_reset", "source": "cryptopay_confirm"})
+                    except Exception: pass
+                    return {"ok": True, "paid": True, "armor2_legendary_reset": True,
+                            "player": _player_api(dict(db.get_or_create_player(owner_uid, "")))}
+                if ":armor2_legendary:" in custom_payload:
+                    try:
+                        _ok, _msg = db.create_legendary_armor2(owner_uid)
+                        _ok = bool(_ok) or ("уже" in (_msg or "").lower())
+                    except Exception as _e:
+                        logger.error("CRITICAL: armor2 legendary create (crypto_check) uid=%s err=%s", owner_uid, _e)
+                        _ok = False
+                    _cache_invalidate(owner_uid)
+                    if _ok:
+                        db.mark_items_delivered(invoice_id)
+                    try: await manager.send(owner_uid, {"event": "armor2_legendary_created", "source": "cryptopay_confirm"})
+                    except Exception: pass
+                    return {"ok": True, "paid": True, "armor2_legendary_created": True,
+                            "armor2_mods": db.get_armor2_custom_mods(owner_uid, "armor2_mythic4"),
+                            "owned_armor2": db.get_owned_armor2(owner_uid),
+                            "player": _player_api(dict(db.get_or_create_player(owner_uid, "")))}
                 if is_usdt_scroll and usdt_scroll_id:
                     _scroll_ok = False
                     try:

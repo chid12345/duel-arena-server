@@ -50,8 +50,31 @@ async def deliver_recovery_payload(
         await send_tg_message(uid, "📜 <b>Свиток получен!</b>\nОткройте «Герой → Моё → Особые» и нажмите Применить.\n\n⚔️ Duel Arena")
         return True
 
-    # Старый armor (:usdt_slot:, :usdt_reset:, :armor_class:, :armor_equip:)
-    # снесён под корень — новый чистый слот «БРОНЯ» в разработке.
+    if ":armor2_legendary_reset:" in payload:
+        try:
+            await _exec(db.reset_legendary_armor2, uid)
+        except Exception as e:
+            _log.error("CRITICAL: recovery armor2_legendary_reset uid=%s inv=%s err=%s", uid, inv_id, e)
+            return False
+        cache_invalidate(uid)
+        if manager is not None:
+            await manager.send(uid, {"event": "armor2_legendary_reset", "source": "cryptopay"})
+        await send_tg_message(uid, "🔄 <b>Статы Легендарной брони сброшены!</b>\nОткройте «🛡 БРОНЯ» и распределите заново.\n\n⚔️ Duel Arena")
+        return True
+
+    if ":armor2_legendary:" in payload:
+        try:
+            ok2, msg2 = await _exec(db.create_legendary_armor2, uid)
+            if not ok2 and "уже" not in (msg2 or "").lower():
+                return False
+        except Exception as e:
+            _log.error("CRITICAL: recovery armor2_legendary uid=%s inv=%s err=%s", uid, inv_id, e)
+            return False
+        cache_invalidate(uid)
+        if manager is not None:
+            await manager.send(uid, {"event": "armor2_legendary_created", "source": "cryptopay"})
+        await send_tg_message(uid, "💠 <b>Легендарная броня получена!</b>\nОткройте «🛡 БРОНЯ» и настройте её.\n\n⚔️ Duel Arena")
+        return True
 
     if ":avatar:" in payload:
         avatar_id = payload.split(":avatar:", 1)[1].strip()
