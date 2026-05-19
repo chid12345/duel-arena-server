@@ -26,8 +26,9 @@
           try {
             localStorage.setItem('la2PendingInvoice', String(inv.invoice_id));
             localStorage.setItem('la2PendingKind', 'buy');
+            localStorage.setItem('la2PendingTs', String(Date.now()));
           } catch (_) { }
-          N._startCryptoPolling(inv.invoice_id, 'buy');
+          N._startCryptoPolling(inv.invoice_id, 'buy', { fresh: true });
         }
         return;
       }
@@ -90,8 +91,9 @@
           try {
             localStorage.setItem('la2PendingInvoice', String(inv.invoice_id));
             localStorage.setItem('la2PendingKind', 'reset');
+            localStorage.setItem('la2PendingTs', String(Date.now()));
           } catch (_) { }
-          N._startCryptoPolling(inv.invoice_id, 'reset');
+          N._startCryptoPolling(inv.invoice_id, 'reset', { fresh: true });
         }
         return;
       }

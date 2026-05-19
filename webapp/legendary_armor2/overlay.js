@@ -123,7 +123,8 @@
     try {
       const pendingId = localStorage.getItem('la2PendingInvoice');
       const pendingKind = localStorage.getItem('la2PendingKind') || 'buy';
-      if (pendingId) N._startCryptoPolling(pendingId, pendingKind);
+      // Resume — НЕ свежая покупка, не открывать LA2-оверлей автоматически.
+      if (pendingId) N._startCryptoPolling(pendingId, pendingKind, { fresh: false });
     } catch (_) { }
   }
 

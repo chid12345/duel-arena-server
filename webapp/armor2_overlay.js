@@ -207,9 +207,10 @@ async function _doAction(scene, action, item) {
         try {
           localStorage.setItem('la2PendingInvoice', String(invRes.invoice_id));
           localStorage.setItem('la2PendingKind', 'buy');
+          localStorage.setItem('la2PendingTs', String(Date.now()));
         } catch (_) { }
         if (window.LA2 && window.LA2._startCryptoPolling) {
-          window.LA2._startCryptoPolling(invRes.invoice_id, 'buy');
+          window.LA2._startCryptoPolling(invRes.invoice_id, 'buy', { fresh: true });
         }
       }
       scene._armor2Busy = false;

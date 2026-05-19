@@ -7,8 +7,32 @@
 
   const N = window.LA2;
 
-  N._startCryptoPolling = function (invoiceId, kind) {
+  // Максимальное «время жизни» pending invoice. После этого считаем что
+  // покупка зависла или давно закрыта — чистим, чтобы не плодить призраки.
+  const _PENDING_TTL_MS = 30 * 60 * 1000;  // 30 минут
+
+  // In-memory флаг: авто-открытие LegendaryArmor2 после успешной выдачи
+  // допустимо только если polling был стартован В ЭТОЙ сессии (act='buy'
+  // → _doAction → _startCryptoPolling сразу же). При _resumePolling из
+  // прошлой сессии флаг false → авто-открытие НЕ запускаем, иначе
+  // оверлей раскатки статов вылетает рандомно при каждом visibilitychange.
+  let _autoOpenOnPaid = false;
+
+  function _clearPending() {
+    try {
+      localStorage.removeItem('la2PendingInvoice');
+      localStorage.removeItem('la2PendingKind');
+      localStorage.removeItem('la2PendingTs');
+    } catch (_) { }
+  }
+
+  N._clearPending = _clearPending;
+
+  N._startCryptoPolling = function (invoiceId, kind, opts) {
     if (N._pollTimer) { clearTimeout(N._pollTimer); N._pollTimer = null; }
+    // Если стартовали polling из текущей сессии (opts.fresh === true) —
+    // разрешаем авто-открытие LegendaryArmor2 после paid. На resume — нет.
+    _autoOpenOnPaid = !!(opts && opts.fresh);
     let attempts = 0;
     const tick = async () => {
       attempts++;
@@ -16,7 +40,7 @@
         const apiBase = (typeof API !== 'undefined' && API) ? API : '';
         const r = await fetch(apiBase + `/api/shop/crypto_check/${invoiceId}`, { cache: 'no-store' }).then(x => x.json());
         if (r && r.ok && r.paid) {
-          try { localStorage.removeItem('la2PendingInvoice'); localStorage.removeItem('la2PendingKind'); } catch (_) { }
+          _clearPending();
           try {
             const init_data = window.Telegram?.WebApp?.initData || (window.State && State.initData) || '';
             const pd = await fetch(apiBase + '/api/player', {
@@ -35,11 +59,12 @@
           N._notify(kind === 'reset' ? '🔄 Сборка сброшена!' : '✅ Легендарная броня получена!');
           if (document.getElementById('la2-root')) {
             await N._load();
-          } else if (kind === 'buy' && window.LegendaryArmor2) {
+          } else if (kind === 'buy' && _autoOpenOnPaid && window.LegendaryArmor2) {
             // Авто-открытие окна распределения статов сразу после выдачи —
-            // юзеру не надо искать «куда тыкнуть чтобы раскатить».
+            // ТОЛЬКО для свежей покупки этой сессии. Resume не открывает.
             try { setTimeout(() => window.LegendaryArmor2.open(null, null), 600); } catch (_) { }
           }
+          _autoOpenOnPaid = false;
           return;
         }
       } catch (_) { }
@@ -51,8 +76,17 @@
   N._resumePolling = function () {
     try {
       const pid = localStorage.getItem('la2PendingInvoice');
+      if (!pid) return;
+      // Старые ключи без timestamp = stale (от прежней версии кода) → чистим.
+      const tsRaw = localStorage.getItem('la2PendingTs');
+      const ts = tsRaw ? parseInt(tsRaw, 10) : 0;
+      if (!ts || Date.now() - ts > _PENDING_TTL_MS) {
+        _clearPending();
+        return;
+      }
       const pkind = localStorage.getItem('la2PendingKind') || 'buy';
-      if (pid) N._startCryptoPolling(pid, pkind);
+      // opts.fresh = false → не открывать LegendaryArmor2 авто-оверлеем.
+      N._startCryptoPolling(pid, pkind, { fresh: false });
     } catch (_) { }
   };
 
