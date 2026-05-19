@@ -245,6 +245,13 @@ async function _doAction(scene, action, item) {
       }
       return;
     }
+    if (action === 'upgrade') {
+      if (window.UpgradeModal) {
+        UpgradeModal.show(item.id, { itemName: item.name, onClose: refresh });
+      } else { _notify('UpgradeModal недоступен', false); }
+      scene._helmetBusy = false;
+      return;
+    }
     _notify(action==='unequip'?'⏳ Снимаем...':'⏳ Надеваем...', true, true);
     const res = await post(
       action==='unequip' ? '/api/equipment/unequip' : '/api/equipment/equip',

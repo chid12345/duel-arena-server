@@ -189,12 +189,29 @@ async function _doAction(scene, action, item) {
       return;
     }
     if (action === 'buy_rental') {
-      _notify('⚙️ Аренда брони — скоро', false);
+      // Этап 8: аренда mythic-armor2 на 7 дней. Сервер сам делает rent + equip.
+      // deliver_rental в payment_routes/rental_deliver.py работает универсально
+      // (берёт slot из item.slot — для armor2 пишется в slot='armor2').
+      await RentalPay.rent(scene, item, async () => {
+        if (window.RentalBadge) await RentalBadge.refreshState();
+        const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+        _render(scene, activeTab?.dataset?.av || 'all');
+      }, _notify);
       scene._armor2Busy = false;
       return;
     }
     if (action === 'upgrade') {
-      _notify('⚙️ Прокачка брони — скоро', false);
+      if (window.UpgradeModal) {
+        UpgradeModal.show(item.id, {
+          itemName: item.name,
+          onClose: () => {
+            const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+            _render(scene, activeTab?.dataset?.av || 'all');
+          },
+        });
+      } else {
+        _notify('UpgradeModal недоступен', false);
+      }
       scene._armor2Busy = false;
       return;
     }

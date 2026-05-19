@@ -242,6 +242,13 @@ async function _doAction(scene, action, item) {
       }
       return;
     }
+    if (action === 'upgrade') {
+      if (window.UpgradeModal) {
+        UpgradeModal.show(item.id, { itemName: item.name, onClose: refresh });
+      } else { _notify('UpgradeModal недоступен', false); }
+      scene._ringBusy = false;
+      return;
+    }
     _notify(action==='unequip'?'⏳ Снимаем...':'⏳ Надеваем...', true, true);
     // Снять: определяем слот по item_id — кольцо может сидеть в ring2 (legacy до фикса).
     // Надеть: всегда в ring1 (сервер при этом чистит ring2 от дублей).

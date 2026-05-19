@@ -160,6 +160,55 @@ def test_armor2_stats_flow_to_get_equipment_stats(db):
     assert stats["hp_bonus"] == 24, f"+24 HP от Доспеха Пламенного Титана: {stats}"
 
 
+def test_armor2_rental_7_days_universal_deliver(db):
+    """Аренда armor2: deliver_rental универсально берёт slot из item.slot.
+    Раньше у старого armor требовалась отдельная ветка с add_owned_armor —
+    у armor2 этого костыля нет, slot='armor2' работает через общий путь."""
+    from api.payment_routes.rental_deliver import deliver_rental
+    from economy.rental_pricing import RENTAL_DURATION_DAYS
+
+    db.get_or_create_player(6020, "u_rental_a2")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (6020,))
+    conn.commit(); conn.close()
+
+    assert RENTAL_DURATION_DAYS == 7, "Срок аренды должен быть 7 дней"
+
+    ok = deliver_rental(db, 6020, "armor2_mythic1")
+    assert ok is True, "deliver_rental должен вернуть True для armor2_mythic1"
+    # Должна появиться в active_rentals
+    rentals = db.list_active_rentals(6020)
+    assert any(r["item_id"] == "armor2_mythic1" for r in rentals), (
+        f"Аренда armor2_mythic1 должна быть в active_rentals: {rentals}"
+    )
+    # Должна быть надета в slot='armor2'
+    eq = db.get_equipment(6020)
+    assert eq.get("armor2", {}).get("item_id") == "armor2_mythic1", (
+        f"После аренды броня должна быть надета в slot='armor2': {eq}"
+    )
+
+
+def test_armor2_rental_stars_payload_via_shop_equip_stars(db, monkeypatch):
+    """Stars-payload `rental_stars:UID:armor2_mythic2` активирует аренду через
+    handle_stars_equip_payload (унифицировано с helmet/weapon/etc)."""
+    import handlers.commands.shop_equip_stars as mod
+    monkeypatch.setattr(mod, "db", db)
+
+    db.get_or_create_player(6021, "u_rental_stars_a2")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (6021,))
+    conn.commit(); conn.close()
+
+    msg = mod.handle_stars_equip_payload(6021, "rental_stars:6021:armor2_mythic2", 133)
+    assert msg is not None and "Аренда" in msg
+    rentals = db.list_active_rentals(6021)
+    assert any(r["item_id"] == "armor2_mythic2" for r in rentals), (
+        "Аренда должна появиться после Stars-payload"
+    )
+    eq = db.get_equipment(6021)
+    assert eq.get("armor2", {}).get("item_id") == "armor2_mythic2"
+
+
 def test_armor2_legendary_passive_reads_via_db(db):
     """get_equipped_legendary_armor2_passive возвращает passive_type ТОЛЬКО
     когда armor2_mythic4 надет И applied=1. Этим значением battle_find
