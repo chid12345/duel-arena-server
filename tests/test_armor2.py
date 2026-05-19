@@ -160,6 +160,39 @@ def test_armor2_stats_flow_to_get_equipment_stats(db):
     assert stats["hp_bonus"] == 24, f"+24 HP от Доспеха Пламенного Титана: {stats}"
 
 
+def test_armor2_legendary_passive_reads_via_db(db):
+    """get_equipped_legendary_armor2_passive возвращает passive_type ТОЛЬКО
+    когда armor2_mythic4 надет И applied=1. Этим значением battle_find
+    и /api/player подмешивают player['usdt_passive_type'], а battle_system
+    (damage.py / damage_armor.py) применяет его в бою."""
+    db.get_or_create_player(6010, "u_passive_battle")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (6010,))
+    conn.commit(); conn.close()
+
+    # 1. Без брони — пусто
+    assert db.get_equipped_legendary_armor2_passive(6010) == ""
+
+    # 2. Только создали — applied=False, пусто
+    db.create_legendary_armor2(6010)
+    db.equip_item(6010, "armor2", "armor2_mythic4", force=True)
+    assert db.get_equipped_legendary_armor2_passive(6010) == ""
+
+    # 3. Разложили статы + пассивка, но НЕ apply — пусто
+    for _ in range(19):
+        db.train_legendary_armor2_stat(6010, "intuition")
+    db.set_legendary_armor2_passive(6010, "crit_dmg_pct")
+    assert db.get_equipped_legendary_armor2_passive(6010) == ""
+
+    # 4. Apply — пассивка появляется
+    db.apply_legendary_armor2_stats(6010)
+    assert db.get_equipped_legendary_armor2_passive(6010) == "crit_dmg_pct"
+
+    # 5. Сняли броню — пусто (нет в equipped armor2)
+    db.unequip_item(6010, "armor2")
+    assert db.get_equipped_legendary_armor2_passive(6010) == ""
+
+
 def test_armor2_mythic4_custom_mods_only_after_apply(db):
     """Кастомка armor2_mythic4 не даёт стат пока не зафиксирована."""
     db.get_or_create_player(6008, "u_legend_stats")

@@ -114,8 +114,12 @@ def register_tma_player_route(
         _rl_check(uid, "player", max_hits=20, window_sec=10)
         username = tg_user.get("username") or tg_user.get("first_name") or ""
 
-        # Старый usdt_passive (armor_mythic4 +19 свободных статов) снесён под корень.
-        usdt_passive = None
+        # Новая чистая пассивка armor2_mythic4 — после apply применяется в бою
+        # (damage.py для damage_pct/double_hit/crit_dmg_pct, damage_armor.py для armor_pct).
+        try:
+            usdt_passive = db.get_equipped_legendary_armor2_passive(uid)
+        except Exception:
+            usdt_passive = None
 
         cached = _cache_get(uid)
         # Если бонус аватара не применён — сбросить кэш, чтобы миграция отработала

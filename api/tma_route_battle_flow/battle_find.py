@@ -46,7 +46,14 @@ def register_find_battle_route(
         if regen:
             player = dict(player)
             player["current_hp"] = regen["current_hp"]
-        # Старый usdt_passive (armor_mythic4 +19 свободных статов) снесён под корень.
+        # Пассивка armor2_mythic4 → player dict (damage.py / damage_armor.py читают).
+        try:
+            usdt_passive = await asyncio.to_thread(db.get_equipped_legendary_armor2_passive, uid)
+            if usdt_passive:
+                player = dict(player)
+                player["usdt_passive_type"] = usdt_passive
+        except Exception:
+            pass
 
         if battle_system.get_battle_status(uid):
             state = _battle_state_api(uid)
@@ -73,7 +80,13 @@ def register_find_battle_route(
                 opp_uid = pvp_entry["user_id"]
                 await asyncio.to_thread(db.pvp_dequeue, opp_uid)
                 opp_player = await asyncio.to_thread(db.get_or_create_player, opp_uid, "")
-                # opp_passive (старый armor_mythic4) снесён под корень.
+                try:
+                    opp_passive = await asyncio.to_thread(db.get_equipped_legendary_armor2_passive, opp_uid)
+                    if opp_passive:
+                        opp_player = dict(opp_player)
+                        opp_player["usdt_passive_type"] = opp_passive
+                except Exception:
+                    pass
                 battle_id = await battle_system.start_battle(player, opp_player, is_bot2=False)
                 b = battle_system.active_battles.get(battle_id)
                 if b:
