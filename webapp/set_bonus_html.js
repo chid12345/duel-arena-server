@@ -123,6 +123,27 @@ function _autoLoad() {
   if (window.State?.initData && !State.setsStatus) refresh();
 }
 
+// Хук State.equipment: любая запись (equip/unequip из любого оверлея)
+// мгновенно дёргает refresh — иначе кэш setsStatus висит до перезапуска бота.
+let _refreshT = 0;
+function _scheduleRefresh() {
+  if (_refreshT) return;
+  _refreshT = setTimeout(() => { _refreshT = 0; refresh(); }, 150);
+}
+function _hookEquipment() {
+  if (!window.State) { setTimeout(_hookEquipment, 50); return; }
+  if (State._equipmentHooked) return;
+  let _eq = State.equipment;
+  try {
+    Object.defineProperty(State, 'equipment', {
+      get() { return _eq; },
+      set(v) { _eq = v; _scheduleRefresh(); },
+      configurable: true, enumerable: true,
+    });
+    State._equipmentHooked = true;
+  } catch (_) {}
+}
+
 window.SetBonusPage = {
   html: pageHTML,
   refresh,
@@ -135,4 +156,5 @@ window.SetBonusPage = {
 
 // Стартовая загрузка через 500мс — даём время initData проникнуть
 setTimeout(_autoLoad, 500);
+_hookEquipment();
 })();
