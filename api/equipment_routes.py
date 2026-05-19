@@ -47,8 +47,13 @@ def register_equipment_routes(app: FastAPI) -> None:
 
             # Этап 3F: tier-блокировка для TMA (та же логика что в repositories/equipment).
             # Если предмет уже в коллекции (owned) или арендован — пропускаем блок.
+            # armor2: owned хранится в отдельной таблице player_owned_armor2,
+            # остальные слоты — в player_owned_weapons.
             item_tier = item.get("tier")
-            _owned = body.item_id in db.get_owned_weapons(uid)
+            if body.slot == "armor2":
+                _owned = db.is_armor2_owned(uid, body.item_id)
+            else:
+                _owned = body.item_id in db.get_owned_weapons(uid)
             _rented = db.has_active_rental(uid, body.item_id)
             if item_tier and not _owned and not _rented:
                 # Уровень игрока
@@ -95,11 +100,13 @@ def register_equipment_routes(app: FastAPI) -> None:
                 eq_row = cur.fetchone()
                 already_equipped = eq_row and eq_row["item_id"] == body.item_id
 
-                # Проверяем наличие в коллекции (для платных предметов)
+                # Проверяем наличие в коллекции (для платных предметов).
+                # armor2 → player_owned_armor2, остальные → player_owned_weapons.
+                _owned_table = "player_owned_armor2" if body.slot == "armor2" else "player_owned_weapons"
                 already_owned = False
                 if (gold_cost > 0 or diamond_cost > 0) and not already_equipped:
                     cur.execute(
-                        "SELECT 1 FROM player_owned_weapons WHERE user_id = ? AND item_id = ?",
+                        f"SELECT 1 FROM {_owned_table} WHERE user_id = ? AND item_id = ?",
                         (uid, body.item_id),
                     )
                     already_owned = cur.fetchone() is not None
@@ -116,7 +123,7 @@ def register_equipment_routes(app: FastAPI) -> None:
                             return {"ok": False, "reason": "Недостаточно золота"}
                         gold -= gold_cost
                         cur.execute(
-                            "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                            f"INSERT INTO {_owned_table} (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                             (uid, body.item_id),
                         )
                     elif diamond_cost > 0:
@@ -130,7 +137,7 @@ def register_equipment_routes(app: FastAPI) -> None:
                             return {"ok": False, "reason": "Недостаточно алмазов"}
                         diamonds -= diamond_cost
                         cur.execute(
-                            "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                            f"INSERT INTO {_owned_table} (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                             (uid, body.item_id),
                         )
 
@@ -153,6 +160,9 @@ def register_equipment_routes(app: FastAPI) -> None:
                 # Получаем все owned_weapons для ответа
                 cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
                 owned_ids = [r["item_id"] for r in cur.fetchall()]
+                # И owned_armor2 — отдельная таблица (фронт читает State.ownedArmor2).
+                cur.execute("SELECT item_id FROM player_owned_armor2 WHERE user_id = ?", (uid,))
+                owned_armor2_ids = [r["item_id"] for r in cur.fetchall()]
 
                 # Все слоты экипировки для ответа
                 cur.execute("SELECT slot, item_id FROM player_equipment WHERE user_id = ?", (uid,))
@@ -182,7 +192,8 @@ def register_equipment_routes(app: FastAPI) -> None:
             except Exception:
                 player_resp = {}
 
-            return {"ok": True, "equipment": eq_resp, "player": player_resp, "owned_weapons": owned_ids}
+            return {"ok": True, "equipment": eq_resp, "player": player_resp,
+                    "owned_weapons": owned_ids, "owned_armor2": owned_armor2_ids}
 
         except Exception as e:
             _log.error("equip_item error: %s", e, exc_info=True)

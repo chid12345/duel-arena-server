@@ -160,6 +160,43 @@ def test_armor2_stats_flow_to_get_equipment_stats(db):
     assert stats["hp_bonus"] == 24, f"+24 HP от Доспеха Пламенного Титана: {stats}"
 
 
+def test_armor2_buy_two_keeps_both_in_arsenal(db):
+    """Регрессия: купил armor2_gold1 → купил armor2_gold2 → ОБА в арсенале.
+    Раньше /api/equipment/equip писал armor2 в player_owned_weapons (не туда),
+    из-за чего первая броня «пропадала» после покупки второй (player_equipment
+    UPSERT перезаписывал слот, owned-копии не было)."""
+    # Имитируем что endpoint /api/equipment/equip делает после фикса —
+    # покупка должна писать в player_owned_armor2, не в player_owned_weapons.
+    db.get_or_create_player(6030, "u_buy_two")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80, gold = 100000 WHERE user_id = ?", (6030,))
+    conn.commit(); conn.close()
+
+    # Купили первую rare-броню (имитация endpoint: списать gold + add_owned_armor2 + equip)
+    db.add_owned_armor2(6030, "armor2_gold1")
+    db.equip_item(6030, "armor2", "armor2_gold1", force=True)
+    assert "armor2_gold1" in db.get_owned_armor2(6030)
+
+    # Купили вторую rare-броню
+    db.add_owned_armor2(6030, "armor2_gold2")
+    db.equip_item(6030, "armor2", "armor2_gold2", force=True)
+
+    # ОБЕ должны быть в арсенале (player_owned_armor2)
+    owned = set(db.get_owned_armor2(6030))
+    assert owned == {"armor2_gold1", "armor2_gold2"}, (
+        f"Купленные брони должны сохраняться в арсенале: {owned}"
+    )
+    # Надета — последняя
+    eq = db.get_equipment(6030)
+    assert eq.get("armor2", {}).get("item_id") == "armor2_gold2"
+
+    # player_owned_weapons НЕ должна содержать armor2_* (отдельная таблица)
+    weapons = set(db.get_owned_weapons(6030))
+    assert not any(w.startswith("armor2_") for w in weapons), (
+        f"armor2_* НЕ должны попадать в player_owned_weapons: {weapons}"
+    )
+
+
 def test_armor2_rental_7_days_universal_deliver(db):
     """Аренда armor2: deliver_rental универсально берёт slot из item.slot.
     Раньше у старого armor требовалась отдельная ветка с add_owned_armor —
