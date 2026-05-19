@@ -33,19 +33,9 @@ class UsersWipeLeaderboardMixin:
                       "player_buffs"):
             cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
         cursor.execute("DELETE FROM metric_events WHERE user_id = ?", (user_id,))
-        # Унификация armor: снос legacy class-системы. user_inventory больше нет.
-        # Купленные мифики живут в player_owned_armor — игрок заплатил, не сносим.
-        # USDT-кастомка (armor_mythic4) в armor_custom_mods — сбрасываем статы,
-        # но сам слот сохраняем (игрок заплатил $11.99).
-        cursor.execute(
-            """UPDATE armor_custom_mods SET
-               str_bonus = 0, agi_bonus = 0, int_bonus = 0, end_bonus = 0,
-               applied = 0, free_stats_left = 19, passive_type = NULL
-               WHERE user_id = ?""",
-            (user_id,),
-        )
-        # Снимаем все слоты экипировки (но сами вещи в player_owned_weapons/armor
-        # остаются — они куплены).
+        # Старый armor (player_owned_armor, armor_custom_mods) снесён под корень.
+        # Снимаем все слоты экипировки (сами вещи в player_owned_weapons остаются —
+        # они куплены).
         cursor.execute("DELETE FROM player_equipment WHERE user_id = ?", (user_id,))
         if keep_wallet_clan_and_referrals:
             for table in ("season_stats", "battle_pass", "season_rewards", "pvp_queue"):

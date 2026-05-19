@@ -26,8 +26,8 @@ class InventoryUnequipResyncMixin:
         """Починка статов игрока при некорректных значениях.
 
         Считает базовые str/end/crit/max_hp из уровня + аватара. Не трогает
-        слот brony — он живёт через player_equipment + armor_custom_mods и
-        даёт статы через get_equipment_stats.
+        слот brony — он живёт через player_equipment и даёт статы через
+        get_equipment_stats (старый armor с armor_custom_mods снесён).
         """
         own_conn = None
         cursor = _cursor

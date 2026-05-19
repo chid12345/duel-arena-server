@@ -1,11 +1,10 @@
 """tests/test_recovery_deliver.py — recovery вторичной доставки USDT-платежей.
 
-Покрывает 7 типов, которые раньше recovery НЕ обрабатывал:
-- armor_class (мифик-броня)
+Покрывает типы которые recovery обрабатывает после сноса armor:
 - weapon_equip / helmet_equip / boots_equip / shield_equip / ring_equip
 - rental (аренда mythic-предмета)
 
-Плюс идемпотентность (повторный вызов на уже выполненной выдаче — True).
+Старый armor (armor_class, armor_equip, usdt_slot, usdt_reset) снесён под корень.
 """
 from __future__ import annotations
 
@@ -47,34 +46,6 @@ def _call(db, *, uid: int, payload: str, diamonds: int = 0, mgr: _FakeManager | 
         )
     )
     return result, manager
-
-
-def test_recovery_armor_class_deprecated_silently_skipped(db):
-    """Унификация armor: `:armor_class:berserker_mythic` теперь deprecated.
-
-    Recovery возвращает True (чтобы не зацикливать retry-loop), но НЕ создаёт
-    legacy-класс. Реальная мифик-броня доставляется через `:armor_equip:`.
-    """
-    db.get_or_create_player(5001, "u_armor")
-
-    ok, _mgr = _call(db, uid=5001, payload="uid:5001:armor_class:berserker_mythic")
-
-    assert ok is True
-    # has_legendary_armor должен быть False — берсеркер не legendary.
-    assert db.has_legendary_armor(5001) is False
-
-
-def test_recovery_armor_class_legendary_usdt_works(db):
-    """`:armor_class:legendary_usdt` остаётся валидным — создаёт Легендарную броню."""
-    db.get_or_create_player(5002, "u_legendary")
-
-    ok, mgr = _call(db, uid=5002, payload="uid:5002:armor_class:legendary_usdt")
-
-    assert ok is True
-    assert db.has_legendary_armor(5002) is True
-    mods = db.get_armor_custom_mods(5002, "armor_mythic4")
-    assert mods is not None and mods["free_stats_left"] == 19
-    assert any(e[1].get("event") == "armor_class_purchased" for e in mgr.events)
 
 
 def _lvl_up(db, uid: int, lvl: int) -> None:
@@ -139,42 +110,6 @@ def test_recovery_rental_success(db):
     assert ok is True
     assert db.has_active_rental(5006, "helmet_mythic1") is True
     assert any(e[1].get("event") == "rental_activated" for e in mgr.events)
-
-
-def test_recovery_armor_equip_success(db):
-    """Этап 8: recovery надевает мифик-броню (slot=armor) и добавляет в owned."""
-    db.get_or_create_player(5008, "u_armor_eq")
-    _lvl_up(db, 5008, 80)
-
-    ok, mgr = _call(db, uid=5008, payload="uid:5008:armor_equip:armor_mythic1")
-
-    assert ok is True
-    eq = db.get_equipment(5008)
-    assert eq.get("armor", {}).get("item_id") == "armor_mythic1", (
-        f"Ожидали armor_mythic1 в слоте armor, получили {eq}"
-    )
-    assert "armor_mythic1" in db.get_owned_armor(5008), (
-        "Броня должна быть в player_owned_armor (отдельная таблица от owned_weapons)"
-    )
-    assert any(e[1].get("event") == "armor_equipped" for e in mgr.events)
-
-
-def test_recovery_armor_equip_rental_rental_appears_in_active_rentals(db):
-    """Аренда мифик-брони → list_active_rentals возвращает её, бейдж в UI."""
-    db.get_or_create_player(5009, "u_armor_rent")
-    _lvl_up(db, 5009, 80)
-
-    ok, _ = _call(db, uid=5009, payload="uid:5009:rental:armor_mythic1")
-
-    assert ok is True
-    rentals = db.list_active_rentals(5009)
-    assert any(r["item_id"] == "armor_mythic1" for r in rentals), (
-        f"Аренда armor_mythic1 должна быть в active_rentals: {rentals}"
-    )
-    eq = db.get_equipment(5009)
-    assert eq.get("armor", {}).get("item_id") == "armor_mythic1", (
-        "После аренды броня должна быть надета в слот armor"
-    )
 
 
 def test_recovery_unknown_payload_returns_true(db):

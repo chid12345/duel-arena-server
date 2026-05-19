@@ -97,22 +97,19 @@ def test_get_wb_set_data_empty_eq():
 def test_count_set_rarities_legacy_still_works():
     """count_set_rarities считает по рарити (для legacy UI).
 
-    Унификация armor (шаг 4/6): armor теперь полноценный слот в equipped,
-    рарити берётся из equipped[armor].rarity. Параметр current_class
-    игнорируется. Двойного счёта быть не должно.
+    Старый armor снесён под корень — слот не считается в SET_CATEGORIES.
     """
     from config.set_bonuses import count_set_rarities
 
     equipped = {
         "weapon": {"rarity": "rare", "item_id": "x1"},
         "shield": {"rarity": "rare", "item_id": "x2"},
-        "armor":  {"rarity": "rare", "item_id": "armor_gold1"},
         "belt":   {"rarity": "common", "item_id": "x3"},
         "boots":  {"rarity": "common", "item_id": "x4"},
         "ring1":  {"rarity": "rare", "item_id": "x5"},
     }
     counts = count_set_rarities(equipped)
-    assert counts.get("rare") == 4
+    assert counts.get("rare") == 3
     assert counts.get("common") == 2
 
     # current_class игнорируется — результат тот же

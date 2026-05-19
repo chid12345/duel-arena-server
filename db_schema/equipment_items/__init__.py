@@ -6,7 +6,6 @@
 """
 from __future__ import annotations
 
-from db_schema.equipment_items.armor import ARMOR
 from db_schema.equipment_items.boots import BOOTS
 from db_schema.equipment_items.helmets import HELMETS
 from db_schema.equipment_items.rings import RINGS
@@ -104,11 +103,10 @@ def all_equipment_items() -> dict[str, dict]:
     raw.update(SHIELDS)
     raw.update(RINGS)
     raw.update(BOOTS)
-    raw.update(ARMOR)
     return _apply_set_ids(raw)
 
 
 __all__ = [
-    "all_equipment_items", "SWORDS_LEGACY", "HELMETS", "SHIELDS", "RINGS", "BOOTS", "ARMOR",
+    "all_equipment_items", "SWORDS_LEGACY", "HELMETS", "SHIELDS", "RINGS", "BOOTS",
     "_default_set_id",
 ]

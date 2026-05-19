@@ -17,16 +17,15 @@ epic/mythic), порог 3-6. Заменена архетипными сетам
 from __future__ import annotations
 
 from db_schema.equipment_catalog import (
-    SLOT_ARMOR, SLOT_BELT, SLOT_BOOTS, SLOT_RING1, SLOT_SHIELD, SLOT_WEAPON,
+    SLOT_BELT, SLOT_BOOTS, SLOT_RING1, SLOT_SHIELD, SLOT_WEAPON,
     RARITY_COMMON, RARITY_EPIC, RARITY_RARE,
 )
 from repositories.sets import aggregate_set_bonuses, resolve_active_sets
 
 RARITY_MYTHIC = "mythic"
 
-# Категории сета — 6 штук. ring2 НЕ считается (legacy, в UI скрыт).
-# Оставлено для consumers, которые читают эту константу напрямую.
-SET_CATEGORIES = [SLOT_WEAPON, SLOT_SHIELD, SLOT_ARMOR, SLOT_BELT, SLOT_BOOTS, SLOT_RING1]
+# Категории сета — 5 штук (armor снесён под корень). ring2 не считается (legacy).
+SET_CATEGORIES = [SLOT_WEAPON, SLOT_SHIELD, SLOT_BELT, SLOT_BOOTS, SLOT_RING1]
 
 # Legacy константы для UI — сохранены как декорации (новые архетипы используют свои):
 RARITY_ORDER = [RARITY_COMMON, RARITY_RARE, RARITY_EPIC, RARITY_MYTHIC]
