@@ -59,7 +59,7 @@ def register_shield_payment_routes(app: FastAPI) -> None:
         if not BOT_TOKEN:
             return {"ok": False, "reason": "Бот не настроен"}
 
-        stars = int(item.get("price_stars", 590))
+        stars = int(item.get("price_stars", 800))
         title = item["name"]
         desc = f"Мифический щит Duel Arena: {item.get('desc', '')}"
         payload = f"shield_equip_stars:{uid}:{body.item_id}"

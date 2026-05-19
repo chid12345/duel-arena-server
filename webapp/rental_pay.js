@@ -12,7 +12,7 @@
 (function (global) {
   'use strict';
 
-  const RENTAL_STARS = 100;
+  const RENTAL_STARS = 133;   // эквивалент $2 по курсу Telegram (~67⭐/$)
   const RENTAL_USDT = '2.00';
   const RENTAL_DAYS = 7;
 

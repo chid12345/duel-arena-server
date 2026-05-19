@@ -15,7 +15,9 @@ MVP: 1 тариф — 7 дней. Фиксированная цена для в�
 from __future__ import annotations
 
 RENTAL_DURATION_DAYS = 7
-RENTAL_PRICE_STARS = 100
+# Курс Telegram Stars: 1$ ≈ 67⭐ (см. memory project_telegram_stars_usd_rate).
+# Аренда $2 → 133⭐. Раньше было 100⭐ ($1.50 по курсу Telegram).
+RENTAL_PRICE_STARS = 133
 RENTAL_PRICE_USDT = "2.00"
 
 # 🧪 ВРЕМЕННЫЙ ТЕСТОВЫЙ РЕЖИМ — для быстрой проверки авто-снятия аренды в UI.

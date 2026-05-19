@@ -13,13 +13,14 @@ from datetime import datetime, timedelta
 
 
 def test_rental_pricing_fixed_constants():
-    """Этап 8 фикс-цена: 100⭐ или $2 для любого mythic, независимо от цены покупки."""
+    """Этап 8 + выравнивание под официальный курс Telegram (1$ ≈ 67⭐):
+    133⭐ или $2 для любого mythic, независимо от цены покупки."""
     from economy.rental_pricing import (
         RENTAL_DURATION_DAYS,
         RENTAL_PRICE_STARS,
         RENTAL_PRICE_USDT,
     )
-    assert RENTAL_PRICE_STARS == 100
+    assert RENTAL_PRICE_STARS == 133
     assert RENTAL_PRICE_USDT == "2.00"
     assert RENTAL_DURATION_DAYS == 7
 

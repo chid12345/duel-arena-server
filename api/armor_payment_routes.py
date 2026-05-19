@@ -36,10 +36,11 @@ def register_armor_payment_routes(app: FastAPI) -> None:
 
         class_id = body.class_id.strip()
         # legendary_usdt — кастомный USDT-slot, у него нет записи в MYTHIC_CLASSES.
-        # Делаем спец-ветку: фикс цена 590⭐, серверный handler создаёт slot
-        # через create_usdt_class (см. handlers/commands/shop_equip_stars.py).
+        # Делаем спец-ветку: фикс цена 800⭐ (эквивалент $11.99 по официальному
+        # курсу Telegram 1$ ≈ 67⭐), серверный handler создаёт slot через
+        # create_legendary_armor (см. handlers/commands/shop_equip_stars.py).
         if class_id == "legendary_usdt":
-            cls = {"name": "Доспех Светоносного Бога", "price_stars": 590,
+            cls = {"name": "Доспех Светоносного Бога", "price_stars": 800,
                    "special_bonus": "+19 свободных статов · кастомный слот"}
         else:
             cls = MYTHIC_CLASSES.get(class_id)
@@ -48,7 +49,7 @@ def register_armor_payment_routes(app: FastAPI) -> None:
         if not BOT_TOKEN:
             return {"ok": False, "reason": "Бот не настроен"}
 
-        stars = int(cls.get("price_stars", 590))
+        stars = int(cls.get("price_stars", 800))
         title = cls["name"]
         desc = f"Мифическая броня Duel Arena: {cls.get('special_bonus', '')}"
         payload = f"armor_class_stars:{uid}:{class_id}"

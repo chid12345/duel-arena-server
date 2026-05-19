@@ -98,7 +98,7 @@ def attach_wardrobe_usdt_crypto(
                         "description": "Доспех Светоносного Бога — +19 свободных статов и выбор пассивки",
                         "payload": payload,
                         "currency": "XTR",
-                        "prices": [{"label": "Легендарная броня", "amount": 590}],
+                        "prices": [{"label": "Легендарная броня", "amount": 800}],
                     },
                 )
                 data = resp.json()

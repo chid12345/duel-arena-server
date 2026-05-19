@@ -83,7 +83,7 @@ function _render(mods, owned) {
           💳 Купить за $11.99 USDT
         </button>
         <button class="wd-btn btn-gold" data-act="buy_stars" style="width:100%;padding:12px;font-size:13px;background:linear-gradient(135deg,#44240e,#92400e)">
-          ⭐ Купить за 590 Stars
+          ⭐ Купить за 800 Stars
         </button>
       </div>`;
     return;

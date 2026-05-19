@@ -21,7 +21,7 @@ WEAPON_CATALOG: dict[str, dict] = {
     },
     "sword_mythic": {
         "slot":"weapon","rarity":"mythic","name":"Пламенный клинок","emoji":"🔥",
-        "atk_bonus":45,"crit_bonus":10,"pen_pct":0.03,"price_gold":0,"price_stars":590,
+        "atk_bonus":45,"crit_bonus":10,"pen_pct":0.03,"price_gold":0,"price_stars":800,
         "desc":"+45 атк, +10 крит, +3% пробой",
     },
     # ── ТОПОР ────────────────────────────────────────────────
@@ -42,7 +42,7 @@ WEAPON_CATALOG: dict[str, dict] = {
     },
     "axe_mythic": {
         "slot":"weapon","rarity":"mythic","name":"Топор хаоса","emoji":"💀",
-        "atk_bonus":58,"crit_bonus":0,"pen_pct":0.03,"price_gold":0,"price_stars":590,
+        "atk_bonus":58,"crit_bonus":0,"pen_pct":0.03,"price_gold":0,"price_stars":800,
         "desc":"+58 атк, +3% пробой",
     },
     # ── ДУБИНА ───────────────────────────────────────────────
@@ -63,7 +63,7 @@ WEAPON_CATALOG: dict[str, dict] = {
     },
     "club_mythic": {
         "slot":"weapon","rarity":"mythic","name":"Молот колосса","emoji":"🔨",
-        "atk_bonus":32,"crit_bonus":0,"hp_bonus":170,"pen_pct":0.03,"price_gold":0,"price_stars":590,
+        "atk_bonus":32,"crit_bonus":0,"hp_bonus":170,"pen_pct":0.03,"price_gold":0,"price_stars":800,
         "desc":"+32 атк, +170 HP, +3% пробой",
     },
     # ── БОЛЬШОЙ МЕЧ ──────────────────────────────────────────
@@ -84,7 +84,7 @@ WEAPON_CATALOG: dict[str, dict] = {
     },
     "gs_mythic": {
         "slot":"weapon","rarity":"mythic","name":"Тень смерти","emoji":"🌑",
-        "atk_bonus":20,"crit_bonus":35,"pen_pct":0.03,"price_gold":0,"price_stars":590,
+        "atk_bonus":20,"crit_bonus":35,"pen_pct":0.03,"price_gold":0,"price_stars":800,
         "desc":"+20 атк, +35 крит, +3% пробой",
     },
 }
