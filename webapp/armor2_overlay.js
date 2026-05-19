@@ -174,18 +174,63 @@ async function _doAction(scene, action, item) {
   if (scene._armor2Busy) return;
   scene._armor2Busy = true;
   try {
-    // Легендарная (armor2_mythic4) — открываем overlay распределения статов
-    // (там и кнопки покупки, и +/- статов, и сохранение).
-    if (action === 'buy_legendary_stars' || action === 'buy_legendary_usdt') {
-      if (window.LegendaryArmor2) {
-        LegendaryArmor2.open(scene, () => {
-          // После закрытия — перерисовать каталог (вдруг купили).
-          const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
-          _render(scene, activeTab?.dataset?.av || 'all');
-        });
-      } else {
-        _notify('Легендарный слот недоступен', false);
+    // Легендарная (armor2_mythic4) — покупка идёт ОДНИМ кликом: сразу создаём
+    // invoice и открываем CryptoPay/Stars, без промежуточного оверлея.
+    // Polling из window.LA2 выдаст броню после оплаты, а оверлей распределения
+    // статов откроется по тапу на карточку когда a.owned=true (см. строку 384).
+    if (action === 'buy_legendary_usdt') {
+      _notify('⏳ Создаём счёт USDT...', true, true);
+      const invRes = await post('/api/equipment/armor2_legendary_usdt_invoice', {});
+      if (!invRes?.ok) { _notify('❌ ' + (invRes?.reason || 'Ошибка'), false); scene._armor2Busy = false; return; }
+      const _url = invRes.invoice_url || '';
+      try {
+        if (invRes.web_app_url) tg?.openLink?.(invRes.web_app_url);
+        else if (_url.startsWith('https://t.me/') || _url.startsWith('tg://')) tg?.openTelegramLink?.(_url);
+        else tg?.openLink?.(_url);
+      } catch (_) { }
+      _notify('💳 Счёт USDT открыт — оплатите и вернитесь');
+      if (invRes.invoice_id) {
+        try {
+          localStorage.setItem('la2PendingInvoice', String(invRes.invoice_id));
+          localStorage.setItem('la2PendingKind', 'buy');
+        } catch (_) { }
+        if (window.LA2 && window.LA2._startCryptoPolling) {
+          window.LA2._startCryptoPolling(invRes.invoice_id, 'buy');
+        }
       }
+      scene._armor2Busy = false;
+      return;
+    }
+    if (action === 'buy_legendary_stars') {
+      _notify('⏳ Создаём счёт Stars...', true, true);
+      const invRes = await post('/api/equipment/armor2_legendary_stars_invoice', {});
+      if (!invRes?.ok) { _notify('❌ ' + (invRes?.reason || 'Ошибка'), false); scene._armor2Busy = false; return; }
+      const starsUrl = invRes.invoice_url || '';
+      if (typeof tg?.openInvoice === 'function') {
+        tg.openInvoice(starsUrl, async (status) => {
+          if (status === 'paid') {
+            tg?.HapticFeedback?.notificationOccurred('success');
+            _notify('✅ Легендарная броня получена!');
+            try {
+              const pd = await post('/api/player');
+              if (Array.isArray(pd?.owned_armor2)) State.ownedArmor2 = pd.owned_armor2;
+              if (pd?.equipment) State.equipment = pd.equipment;
+              if (pd?.player) { State.player = pd.player; State.playerLoadedAt = Date.now(); }
+            } catch (_) { }
+            const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
+            _render(scene, activeTab?.dataset?.av || 'all');
+          } else if (status === 'cancelled') {
+            _notify('❌ Оплата отменена', false);
+          }
+          scene._armor2Busy = false;
+        });
+        return;
+      }
+      try {
+        if (starsUrl.startsWith('https://t.me/') || starsUrl.startsWith('tg://')) tg?.openTelegramLink?.(starsUrl);
+        else tg?.openLink?.(starsUrl);
+      } catch (_) { }
+      _notify('⭐ Счёт Stars открыт — оплатите и вернитесь');
       scene._armor2Busy = false;
       return;
     }
