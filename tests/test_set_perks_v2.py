@@ -55,7 +55,8 @@ def test_frenzy_on_crit_adds_10_pct():
 def test_phantom_strike_adds_5_dodge():
     p = {"_set_perk_id": "phantom_strike", "current_hp": 100, "max_hp": 100}
     _M._apply_set_perks_pre(_battle(), p, "p1", round_num=1)
-    assert p.get("_eq_dodge") == 5
+    # Поле должно быть _eq_dodge_bonus — именно его читает damage.py.
+    assert p.get("_eq_dodge_bonus") == 5
 
 
 # ── arcane_burst ──────────────────────────────────────────────────────────────

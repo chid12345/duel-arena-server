@@ -1,6 +1,7 @@
 """Бонусы и перки за полный комплект (set bonus).
 
-_apply_set_bonus     — применяет hp_pct/def/atk/accuracy и помечает _set_perk_id
+_apply_set_bonus     — агрегирует ВСЕ активные сеты и применяет ВСЕ статы
+                       (hp/atk/def/crit/dodge/accuracy/pen/double) + _set_perk_id
 
 Этап 5C: переход на архетипные сеты v2 (6 архетипов × порог 6). Старые
 рарити-перки (decisive_strike, cold_blood, gods_wrath) больше не возвращаются
@@ -19,7 +20,7 @@ from __future__ import annotations
 
 from typing import Dict
 
-from config import PLAYER_START_MAX_HP
+from config import PLAYER_START_CRIT, PLAYER_START_MAX_HP
 
 
 # Пороги и магические числа перков
@@ -48,40 +49,66 @@ def _perk_state(battle: Dict, who: str) -> Dict:
 class BattleSetPerksMixin:
 
     def _apply_set_bonus(self, player: dict, equipped: dict) -> None:
-        """Активный сет: hp_pct/def_pct_bonus/atk_pct/accuracy + perk_id для 6/6.
+        """Применяет суммарные бонусы ВСЕХ активных сетов перед боем.
 
         Вызывается из start.py:_apply_equipment_stats после применения базовых стат.
-        Армор-слот в этой игре читается из `players.current_class` (гардероб = броня).
+
+        Раньше применялся только ОДИН «главный» сет и только часть статов
+        (hp/atk/accuracy). Теперь агрегируем все активные сеты (как в Мировом
+        Боссе) и применяем все типы бонусов в нужные поля боя:
+          hp_pct      → max_hp / current_hp (+%)
+          atk_pct     → _eq_atk_pct        (читается в damage._base_damage)
+          def_pct     → _eq_def_pct        (снижение входящего урона, доля)
+          crit_bonus  → player['crit']     (как и item crit_bonus)
+          dodge_bonus → _eq_dodge_bonus    (damage.py уворот, %)
+          accuracy    → _eq_accuracy       (снижение промаха, %)
+          pen_pct     → _eq_pen_pct        (пробой брони, доля)
+          double_pct  → _eq_double_pct     (шанс двойного удара, %)
+        Перк (6/6) — максимум один (6 слотов = один полный сет).
         """
         from config.set_bonuses import resolve_active_set
-        # current_class имеет приоритет; если пусто — warrior_type (у некоторых игроков
-        # «броня» хранится только там)
+        from repositories.sets import aggregate_set_bonuses, resolve_active_sets
+        # current_class имеет приоритет; если пусто — warrior_type
         _cls_hint = player.get("current_class") or player.get("warrior_type")
-        info = resolve_active_set(equipped, current_class=_cls_hint)
-        player["_set_info"] = info  # для API/UI; None если порог < 3
-        if not info:
+        actives = resolve_active_sets(equipped, current_class=_cls_hint)
+        # _set_info — «главный» сет (для API/UI/совместимости). None если нет активных.
+        player["_set_info"] = resolve_active_set(equipped, current_class=_cls_hint)
+        if not actives:
             return
-        b = info["bonuses"]
+        agg = aggregate_set_bonuses(actives)
         # +% HP — увеличиваем max_hp и текущий
-        hp_pct = int(b.get("hp_pct", 0))
+        hp_pct = int(agg.get("hp_pct", 0))
         if hp_pct:
             old_max = max(1, int(player.get("max_hp", PLAYER_START_MAX_HP)))
             old_cur = int(player.get("current_hp", old_max))
             extra = int(old_max * hp_pct / 100)
             player["max_hp"]     = old_max + extra
             player["current_hp"] = min(player["max_hp"], old_cur + extra)
-        # +% атаки — читается в damage._base_damage
-        if b.get("atk_pct"):
-            player["_eq_atk_pct"] = int(b["atk_pct"])
-        # +% защита — добавляем к существующему _eq_def_pct (как доля)
-        if b.get("def_pct_bonus"):
-            player["_eq_def_pct"] = float(player.get("_eq_def_pct", 0) or 0) + float(b["def_pct_bonus"])
-        # +% точность — добавляем к _eq_accuracy (целые проценты)
-        if b.get("accuracy"):
-            player["_eq_accuracy"] = int(player.get("_eq_accuracy", 0) or 0) + int(b["accuracy"])
-        # Перк (только для 6/6)
-        if info.get("perk"):
-            player["_set_perk_id"] = info["perk"]
+        # +% атаки (additive поверх базового _eq_atk_pct, =0 на старте боя)
+        if agg.get("atk_pct"):
+            player["_eq_atk_pct"] = int(player.get("_eq_atk_pct", 0) or 0) + int(agg["atk_pct"])
+        # +% защита от урона (правильный ключ def_pct, доля)
+        if agg.get("def_pct"):
+            player["_eq_def_pct"] = float(player.get("_eq_def_pct", 0) or 0) + float(agg["def_pct"])
+        # +крит → в player['crit'] (та же шкала что у item crit_bonus)
+        if agg.get("crit_bonus"):
+            player["crit"] = max(0, int(player.get("crit", PLAYER_START_CRIT)) + int(agg["crit_bonus"]))
+        # +% уворот → _eq_dodge_bonus (читается в damage.py)
+        if agg.get("dodge_bonus"):
+            player["_eq_dodge_bonus"] = int(player.get("_eq_dodge_bonus", 0) or 0) + int(agg["dodge_bonus"])
+        # +% точность
+        if agg.get("accuracy"):
+            player["_eq_accuracy"] = int(player.get("_eq_accuracy", 0) or 0) + int(agg["accuracy"])
+        # +% пробой брони (доля)
+        if agg.get("pen_pct"):
+            player["_eq_pen_pct"] = float(player.get("_eq_pen_pct", 0) or 0) + float(agg["pen_pct"])
+        # +% двойной удар
+        if agg.get("double_pct"):
+            player["_eq_double_pct"] = int(player.get("_eq_double_pct", 0) or 0) + int(agg["double_pct"])
+        # Перк (6/6) — максимум один (6 слотов = один полный сет одного архетипа)
+        perks = agg.get("perks") or []
+        if perks:
+            player["_set_perk_id"] = perks[0]
             # Состояние перка инициализируется в execute.py при первом раунде
 
     def _apply_set_perks_pre(self, battle: Dict, player: Dict, who: str, round_num: int) -> None:
@@ -119,10 +146,10 @@ class BattleSetPerksMixin:
         elif perk == "frenzy_on_crit":
             player["_eq_atk_pct"] = int(player.get("_eq_atk_pct", 0) or 0) + 10
 
-        # phantom_strike (ghost 6/6) — упрощённо: постоянный +5% к dodge
-        # (полноценная реакция на удар врага — отдельная доработка)
+        # phantom_strike (ghost 6/6) — упрощённо: постоянный +5% к dodge.
+        # ВАЖНО: поле _eq_dodge_bonus (его читает damage.py), НЕ _eq_dodge.
         elif perk == "phantom_strike":
-            player["_eq_dodge"] = int(player.get("_eq_dodge", 0) or 0) + 5
+            player["_eq_dodge_bonus"] = int(player.get("_eq_dodge_bonus", 0) or 0) + 5
 
         # arcane_burst (mage 6/6) — упрощённо: постоянный +5% pen
         # (полноценный «каждый 4-й удар игнорирует броню» — отдельная доработка)
