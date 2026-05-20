@@ -204,9 +204,10 @@ class EquipmentMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
+            # Паттерн параметром (не литералом) — иначе '%' ломает psycopg на Postgres.
             cursor.execute(
-                "SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id NOT LIKE 'armor2_%'",
-                (user_id,),
+                "SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id NOT LIKE ?",
+                (user_id, "armor2%"),
             )
             return [r["item_id"] for r in cursor.fetchall()]
         finally:

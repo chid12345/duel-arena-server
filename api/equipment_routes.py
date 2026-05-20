@@ -157,10 +157,11 @@ def register_equipment_routes(app: FastAPI) -> None:
                     )
 
                 # Все owned для ответа — общая таблица. Оружие = не-броня,
-                # owned_armor2 = только armor2_* (фронт читает State.ownedArmor2).
-                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id NOT LIKE 'armor2_%'", (uid,))
+                # owned_armor2 = только armor2* (фронт читает State.ownedArmor2).
+                # Паттерн параметром: '%' литералом ломает psycopg на Postgres.
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id NOT LIKE ?", (uid, "armor2%"))
                 owned_ids = [r["item_id"] for r in cur.fetchall()]
-                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE 'armor2_%'", (uid,))
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE ?", (uid, "armor2%"))
                 owned_armor2_ids = [r["item_id"] for r in cur.fetchall()]
 
                 # Все слоты экипировки для ответа

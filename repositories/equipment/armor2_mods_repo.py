@@ -54,9 +54,12 @@ class Armor2ModsMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
+            # Паттерн идёт ПАРАМЕТРОМ, не литералом: иначе на Postgres psycopg
+            # принимает '%' за плейсхолдер и запрос падает (на SQLite ок).
+            # 'armor2%' (без '_') — все id брони начинаются с armor2, чужих нет.
             cursor.execute(
-                "SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE 'armor2_%'",
-                (user_id,),
+                "SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE ?",
+                (user_id, "armor2%"),
             )
             return [r["item_id"] for r in cursor.fetchall()]
         finally:
