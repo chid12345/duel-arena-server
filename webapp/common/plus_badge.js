@@ -12,11 +12,11 @@
 (() => {
   'use strict';
 
-  // % за уровень по редкости (T1..T4 = common/rare/epic/mythic). Fallback 8%.
-  const STEP_BY_RARITY = { common: 0.10, rare: 0.16, epic: 0.22, mythic: 0.30 };
-  // Целочисленные статы — минимум +1 за уровень.
+  // ЦЕЛЫЕ статы — сильный множитель по редкости + минимум +1 за уровень.
+  const INT_STEP = { common: 0.06, rare: 0.09, epic: 0.12, mythic: 0.15 };
   const INT_FIELDS = ['atk', 'crit', 'hp', 'str', 'agi', 'intu', 'dodge', 'regen', 'acc'];
-  // Процентные статы — чисто мультипликативно (на карточке показываются как целые %).
+  // ПРОЦЕНТНЫЕ статы — мягкий множитель (нельзя умножать сильно — улетают).
+  const PCT_STEP = { common: 0.02, rare: 0.03, epic: 0.04, mythic: 0.05 };
   const PCT_FIELDS = ['def', 'pen', 'lifesteal', 'crit_resist', 'anti_dodge', 'silence', 'slow', 'gold', 'xp'];
 
   function level(itemId) {
@@ -26,25 +26,23 @@
     } catch (_) { return 0; }
   }
 
-  function stepFor(rarity) {
-    return STEP_BY_RARITY[rarity] || 0.08;
-  }
-
   // Вернуть копию предмета с усиленными статами под его +N. Не мутирует оригинал.
   // rarity берём из item.r (как в карточках) или item.rarity.
   function boostItem(item) {
     if (!item || !item.id) return item;
     const n = level(item.id);
     if (n <= 0) return item;
-    const mult = 1 + stepFor(item.r || item.rarity) * n;
+    const r = item.r || item.rarity;
+    const intMult = 1 + (INT_STEP[r] || 0.08) * n;
+    const pctMult = 1 + (PCT_STEP[r] || 0.04) * n;
     const out = Object.assign({}, item);
     for (const f of INT_FIELDS) {
       const v = out[f];
-      if (typeof v === 'number' && v > 0) out[f] = Math.max(Math.round(v * mult), Math.round(v) + n);
+      if (typeof v === 'number' && v > 0) out[f] = Math.max(Math.round(v * intMult), Math.round(v) + n);
     }
     for (const f of PCT_FIELDS) {
       const v = out[f];
-      if (typeof v === 'number' && v > 0) out[f] = Math.round(v * mult);
+      if (typeof v === 'number' && v > 0) out[f] = Math.round(v * pctMult);
     }
     return out;
   }

@@ -132,18 +132,18 @@ def test_plus_stats_zero_returns_copy():
 
 
 def test_plus_stats_per_tier_mythic_strongest():
-    """Сила прокачки растёт по тиру: мифическая (T4, +30%/ур) > обычной (T1, +10%/ур)."""
+    """Сила прокачки целых статов растёт по тиру: мифическая (T4, +15%/ур) > обычной (T1, +6%/ур)."""
     base = {"str_bonus": 12}
-    t1 = plus_stats_for({**base, "tier": "T1"}, 5)["str_bonus"]  # 12×(1+0.10×5)=18
-    t4 = plus_stats_for({**base, "tier": "T4"}, 5)["str_bonus"]  # 12×(1+0.30×5)=30
-    assert t1 == 18
-    assert t4 == 30
+    t1 = plus_stats_for({**base, "tier": "T1"}, 5)["str_bonus"]  # 12×1.30=15.6→16, мин 17 → 17
+    t4 = plus_stats_for({**base, "tier": "T4"}, 5)["str_bonus"]  # 12×1.75=21
+    assert t1 == 17
+    assert t4 == 21
     assert t4 > t1
 
 
 def test_plus_stats_min_plus_one_per_level():
     """Целочисленный стат растёт минимум на +1 за уровень, даже если % даёт меньше."""
-    # base 5, T1 (+10%): 5×1.5=7.5→8 по %, но минимум 5+5=10 → берём 10
+    # base 5, T1 (+6%): 5×1.3≈6.5 по %, но минимум 5+5=10 → берём 10
     item = {"atk_bonus": 5, "tier": "T1"}
     result = plus_stats_for(item, 5)
     assert result["atk_bonus"] == 10
@@ -152,16 +152,25 @@ def test_plus_stats_min_plus_one_per_level():
 def test_plus_stats_tier_param_overrides():
     """tier можно передать аргументом (для «голых» статов из get_item_stats)."""
     stats = {"hp_bonus": 100}  # без поля tier
-    r = plus_stats_for(stats, 5, tier="T4")  # 100×(1+0.30×5)=250
-    assert r["hp_bonus"] == 250
+    r = plus_stats_for(stats, 5, tier="T4")  # 100×(1+0.15×5)=175
+    assert r["hp_bonus"] == 175
+
+
+def test_plus_stats_pct_gentler_than_int():
+    """% статы качаются МЯГКО (отдельный pct-шаг), не как целые — иначе улетают."""
+    # T4: целый шаг 0.15, процентный 0.05. +12: целое ×2.8, проценты ×1.6.
+    item = {"def_pct": 0.14, "hp_bonus": 100, "tier": "T4"}
+    r = plus_stats_for(item, 12)
+    assert abs(r["def_pct"] - 0.224) < 0.0001   # 0.14 × (1 + 0.05×12) = 0.224 (не 0.64!)
+    assert r["hp_bonus"] == 280                  # 100 × (1 + 0.15×12) = 280
 
 
 def test_plus_stats_scales_pct_stats():
-    """% статы — чисто мультипликативно, без правила «минимум +1»."""
-    item = {"def_pct": 0.10, "lifesteal_pct": 5, "tier": "T1"}  # +10%/ур
-    result = plus_stats_for(item, 5)  # ×1.5
-    assert abs(result["def_pct"] - 0.15) < 0.0001
-    assert abs(result["lifesteal_pct"] - 7.5) < 0.0001
+    """% статы — мягкий множитель (pct-шаг), без правила «минимум +1»."""
+    item = {"def_pct": 0.10, "lifesteal_pct": 5, "tier": "T1"}  # pct +2%/ур → ×1.10
+    result = plus_stats_for(item, 5)
+    assert abs(result["def_pct"] - 0.11) < 0.0001
+    assert abs(result["lifesteal_pct"] - 5.5) < 0.0001
 
 
 def test_plus_stats_does_not_mutate_source():
