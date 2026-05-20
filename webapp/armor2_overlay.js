@@ -83,11 +83,16 @@ function _removeDarkBg(img) {
 }
 
 function _pills(a) {
+  const B = window.PlusBadge;
+  const str = B ? B.boost(a.str, a.id) : a.str;
+  const agi = B ? B.boost(a.agi, a.id) : a.agi;
+  const intu = B ? B.boost(a.intu, a.id) : a.intu;
+  const hp = B ? B.boost(a.hp, a.id) : a.hp;
   let s = '';
-  if (a.str  > 0) s += `<span class="wd-pill p-s">С+${a.str}</span>`;
-  if (a.agi  > 0) s += `<span class="wd-pill p-a">Л+${a.agi}</span>`;
-  if (a.intu > 0) s += `<span class="wd-pill p-i">И+${a.intu}</span>`;
-  if (a.hp   > 0) s += `<span class="wd-pill p-e">+${a.hp} HP</span>`;
+  if (a.str  > 0) s += `<span class="wd-pill p-s">С+${str}</span>`;
+  if (a.agi  > 0) s += `<span class="wd-pill p-a">Л+${agi}</span>`;
+  if (a.intu > 0) s += `<span class="wd-pill p-i">И+${intu}</span>`;
+  if (a.hp   > 0) s += `<span class="wd-pill p-e">+${hp} HP</span>`;
   if (a.id === 'armor2_mythic4') s += `<span class="wd-pill p-s">+19 своб.ст</span>`;
   return s;
 }
@@ -143,6 +148,7 @@ function _card(a) {
       <div class="wd-rarity-row">
         <span class="wd-rarity-badge" style="color:${RC[a.r]}">${RL[a.r]}</span>
         <span class="wd-stars" style="color:${RC[a.r]}">${a.stars}</span>
+        ${window.PlusBadge?.badge(a.id) || ''}
         ${window.LevelLock?.buildBadge(a) || ''}
       </div>
       ${window.ArchBadge?.htmlFor(a.id) || ''}

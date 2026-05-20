@@ -121,22 +121,32 @@ function _btnHtml(a) {
 }
 
 function _pillsHtml(a) {
+  const B = window.PlusBadge;
+  const str = B ? B.boost(a.str, a.id) : a.str;
+  const agi = B ? B.boost(a.agi, a.id) : a.agi;
+  const intu = B ? B.boost(a.intu, a.id) : a.intu;
+  const hp = B ? B.boost(a.hp, a.id) : a.hp;
   let s = '';
-  if (a.str  > 0) s += `<span class="wd-pill p-s">С+${a.str}</span>`;
-  if (a.agi  > 0) s += `<span class="wd-pill p-a">Л+${a.agi}</span>`;
-  if (a.intu > 0) s += `<span class="wd-pill p-i">И+${a.intu}</span>`;
-  if (a.hp   > 0) s += `<span class="wd-pill p-e">+${a.hp} HP</span>`;
+  if (a.str  > 0) s += `<span class="wd-pill p-s">С+${str}</span>`;
+  if (a.agi  > 0) s += `<span class="wd-pill p-a">Л+${agi}</span>`;
+  if (a.intu > 0) s += `<span class="wd-pill p-i">И+${intu}</span>`;
+  if (a.hp   > 0) s += `<span class="wd-pill p-e">+${hp} HP</span>`;
   if (a.id === 'armor2_mythic4') s += `<span class="wd-pill p-s">+19 своб.ст</span>`;
   return s;
 }
 
 function _statLine(a) {
+  const B = window.PlusBadge;
+  const n = B ? B.level(a.id) : 0;
+  const v = (val) => B ? B.boost(val, a.id) : val;
   const p = [];
-  if (a.str  > 0) p.push(`Сила: +${a.str}`);
-  if (a.agi  > 0) p.push(`Ловкость: +${a.agi}`);
-  if (a.intu > 0) p.push(`Интуиция: +${a.intu}`);
-  if (a.hp   > 0) p.push(`HP: +${a.hp}`);
-  return p.join(' · ');
+  if (a.str  > 0) p.push(`Сила: +${v(a.str)}`);
+  if (a.agi  > 0) p.push(`Ловкость: +${v(a.agi)}`);
+  if (a.intu > 0) p.push(`Интуиция: +${v(a.intu)}`);
+  if (a.hp   > 0) p.push(`HP: +${v(a.hp)}`);
+  const line = p.join(' · ');
+  // Подсказка, что числа уже усилены прокачкой.
+  return n > 0 ? `${line}　<span style="color:#ffd55a">(прокачка +${n})</span>` : line;
 }
 
 function show(scene, a, onAction, eq) {
@@ -168,7 +178,7 @@ function show(scene, a, onAction, eq) {
           <span class="a2d-dot">·</span>
           <span class="a2d-price">${_priceLabel(a)}</span>
         </div>
-        <div class="a2d-stars" style="color:${RC[a.r]}">${a.stars}</div>
+        <div class="a2d-stars" style="color:${RC[a.r]}">${a.stars} ${window.PlusBadge?.badge(a.id) || ''}</div>
         <div class="a2d-pills">${_pillsHtml(a)}</div>
         <div class="a2d-stat-line">${_statLine(a)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(a,eq,[{k:'str',label:'Сила',suf:''},{k:'agi',label:'Ловкость',suf:''},{k:'intu',label:'Интуиция',suf:''},{k:'hp',label:'HP',suf:''}]):'')}

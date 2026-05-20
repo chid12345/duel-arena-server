@@ -73,6 +73,8 @@
       if (Array.isArray(res.owned_weapons)) State.ownedWeapons = res.owned_weapons;
       if (Array.isArray(res.owned_armor2))  State.ownedArmor2  = res.owned_armor2;
       if (res.equipment)                    State.equipment    = res.equipment;
+      if (res.shards)                       State.shards       = res.shards;
+      if (res.plus)                         State.itemPlus     = res.plus;   // {item_id: +N}
       if (res.player)                       { State.player = res.player; State.playerLoadedAt = Date.now(); }
       return res;
     }).catch(() => null);
