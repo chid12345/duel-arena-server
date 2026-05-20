@@ -54,7 +54,10 @@ class EndlessTopWeeklyMixin:
             cursor.execute(
                 "INSERT INTO endless_weekly_scores (user_id, week_key, weekly_wins, best_wave_this_week) VALUES (?,?,1,?) "
                 "ON CONFLICT(user_id, week_key) DO UPDATE SET "
-                "weekly_wins = weekly_wins + 1, best_wave_this_week = MAX(best_wave_this_week, excluded.best_wave_this_week)",
+                # Квалифицируем столбцы таблицы: голая ссылка в DO UPDATE
+                # неоднозначна в PostgreSQL (есть и в таблице, и в excluded).
+                "weekly_wins = endless_weekly_scores.weekly_wins + 1, "
+                "best_wave_this_week = MAX(endless_weekly_scores.best_wave_this_week, excluded.best_wave_this_week)",
                 (user_id, week_key, wave),
             )
             conn.commit()

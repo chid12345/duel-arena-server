@@ -171,11 +171,13 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         cur = conn.cursor()
         for uid, dmg in by_uid.items():
             cur.execute(
+                # Квалифицируем столбцы таблицы: голая ссылка в DO UPDATE
+                # неоднозначна в PostgreSQL (есть и в таблице, и в excluded).
                 """INSERT INTO wb_weekly_scores (user_id, week_key, total_damage, raids_count)
                    VALUES (?, ?, ?, 1)
                    ON CONFLICT(user_id, week_key) DO UPDATE SET
-                   total_damage = total_damage + excluded.total_damage,
-                   raids_count = raids_count + 1""",
+                   total_damage = wb_weekly_scores.total_damage + excluded.total_damage,
+                   raids_count = wb_weekly_scores.raids_count + 1""",
                 (uid, week_key, int(dmg)),
             )
         conn.commit()

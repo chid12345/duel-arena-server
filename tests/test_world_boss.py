@@ -231,3 +231,29 @@ def test_claim_reward_idempotent(db):
     # Повторный клейм — возвращает None, строка уже claimed=1.
     second = db.claim_wb_reward(r["reward_id"], 4001)
     assert second is None
+
+
+# ── Test 7: недельный урон суммируется по рейдам ─────────────────────────────
+
+def test_wb_weekly_score_accumulates_across_raids(db):
+    """2 рейда за неделю → урон складывается (1000+700), raids_count=2.
+
+    Регрессия AmbiguousColumn: голый `total_damage` в ON CONFLICT DO UPDATE
+    падал в PostgreSQL — второй рейд молча не прибавлялся к недельному итогу.
+    """
+    from repositories.world_boss.rewards_calc import compute_and_create_rewards
+    db.get_or_create_player(5101, "ww")
+    sp_a = _make_spawn(db)
+    sp_b = _make_spawn(db, scheduled_in_sec=60)
+    db.log_wb_hit(sp_a, 5101, damage=1000)
+    compute_and_create_rewards(db, sp_a, is_victory=True)
+    db.log_wb_hit(sp_b, 5101, damage=700)
+    compute_and_create_rewards(db, sp_b, is_victory=True)
+
+    conn = db.get_connection()
+    row = conn.execute(
+        "SELECT total_damage, raids_count FROM wb_weekly_scores WHERE user_id=5101"
+    ).fetchone()
+    conn.close()
+    assert int(row["total_damage"]) == 1700
+    assert int(row["raids_count"]) == 2
