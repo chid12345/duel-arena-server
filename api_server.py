@@ -64,12 +64,28 @@ async def _wb_scheduler_loop() -> None:
         await asyncio.sleep(10)
 
 
+async def _payment_settle_loop() -> None:
+    """Авто-разбор оплаченных CryptoPay-счетов — гарантия выдачи без webhook.
+    Каждые 30 сек проверяет свежие неоплаченные счета и выдаёт оплаченное.
+    Идемпотентно (см. jobs/payment_settler). settle_recent_pending синхронна —
+    запускаем в thread, чтобы не блокировать event loop."""
+    from jobs.payment_settler import settle_recent_pending
+    await asyncio.sleep(15)  # дать серверу подняться
+    while True:
+        try:
+            await asyncio.to_thread(settle_recent_pending)
+        except Exception as e:
+            logger.warning("payment_settle_loop: %s", e)
+        await asyncio.sleep(30)
+
+
 @asynccontextmanager
 async def _lifespan(app):  # noqa: ARG001
     tick_task = asyncio.create_task(_wb_tick_loop())
     sched_task = asyncio.create_task(_wb_scheduler_loop())
+    settle_task = asyncio.create_task(_payment_settle_loop())
     yield
-    for t in (tick_task, sched_task):
+    for t in (tick_task, sched_task, settle_task):
         t.cancel()
         try:
             await t
