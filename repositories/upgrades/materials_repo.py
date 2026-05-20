@@ -62,11 +62,16 @@ class MaterialsRepoMixin:
         conn = self.get_connection()
         try:
             cur = conn.cursor()
+            # qty с обеих сторон квалифицируем: в PostgreSQL внутри ON CONFLICT
+            # DO UPDATE голая ссылка `qty` неоднозначна (есть и в таблице, и в
+            # псевдо-таблице excluded) → AmbiguousColumn. SQLite такую форму тоже
+            # принимает, так что один SQL работает в обеих БД.
             cur.execute(
                 """INSERT INTO upgrade_materials (user_id, mat_type, qty)
                    VALUES (?, ?, ?)
-                   ON CONFLICT(user_id, mat_type) DO UPDATE SET qty = qty + ?""",
-                (int(user_id), mat, int(qty), int(qty)),
+                   ON CONFLICT(user_id, mat_type)
+                   DO UPDATE SET qty = upgrade_materials.qty + excluded.qty""",
+                (int(user_id), mat, int(qty)),
             )
             conn.commit()
         finally:

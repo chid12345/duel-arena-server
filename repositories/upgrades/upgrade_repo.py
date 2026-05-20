@@ -59,23 +59,24 @@ class UpgradeRepoMixin:
         try:
             cur = conn.cursor()
             # UPSERT: если строки нет — создаём с plus_level=0, attempts=1, далее +1 при успехе.
+            # Голые имена столбцов в DO UPDATE неоднозначны в PostgreSQL
+            # (есть и в item_upgrades, и в excluded) → AmbiguousColumn.
+            # Квалифицируем обе стороны через excluded.* — вставляемые значения
+            # как раз равны приростам (plus +1/0, fails +0/1, gold/shards/now).
             cur.execute(
                 """INSERT INTO item_upgrades
                    (user_id, item_id, plus_level, gold_invested, shards_invested,
                     attempts, fails, updated_at)
                    VALUES (?, ?, ?, ?, ?, 1, ?, ?)
                    ON CONFLICT(user_id, item_id) DO UPDATE SET
-                     plus_level = plus_level + ?,
-                     gold_invested = gold_invested + ?,
-                     shards_invested = shards_invested + ?,
-                     attempts = attempts + 1,
-                     fails = fails + ?,
-                     updated_at = ?""",
+                     plus_level = item_upgrades.plus_level + excluded.plus_level,
+                     gold_invested = item_upgrades.gold_invested + excluded.gold_invested,
+                     shards_invested = item_upgrades.shards_invested + excluded.shards_invested,
+                     attempts = item_upgrades.attempts + excluded.attempts,
+                     fails = item_upgrades.fails + excluded.fails,
+                     updated_at = excluded.updated_at""",
                 (
                     int(user_id), str(item_id),
-                    1 if success else 0,
-                    int(gold_cost), int(shards_cost),
-                    0 if success else 1, now,
                     1 if success else 0,
                     int(gold_cost), int(shards_cost),
                     0 if success else 1, now,
