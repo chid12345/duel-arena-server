@@ -45,34 +45,49 @@
   }
 
   function _row(slot, targetSetId) {
+    const target = window.ArchBadge?.meta?.(targetSetId);
+    const targetName = target ? `${target.emoji} ${target.name}` : 'этого архетипа';
     const eq = _getEquipped(slot.key);
+
+    // Слот пуст — нужно что-то надеть.
     if (!eq) {
-      // Пусто: даём подсказку в стиле «нужен предмет архетипа X».
-      const archMeta = window.ArchBadge?.meta?.(targetSetId);
-      const hint = archMeta ? `купи ${archMeta.emoji} ${archMeta.name}` : 'купи предмет';
       return `<div class="sb-slot off">
         <span class="sb-slot-em">${slot.emoji}</span>
         <span class="sb-slot-lb">${slot.label}</span>
-        <span class="sb-slot-st" style="color:#6b7280">○ пусто · ${hint}</span>
+        <div class="sb-slot-info">
+          <span class="sb-item-nm" style="color:#6b7280">пусто</span>
+          <span class="sb-status need">надень ${targetName}</span>
+        </div>
       </div>`;
     }
+
     const sid = _itemSetId(eq);
     const match = sid === targetSetId;
     const name = eq.name || eq.item_id || '—';
     const rarStyle = _rarityStyle(eq.rarity);
-    const icon  = match ? '✓' : '✗';
-    const iconColor = match ? '#22c55e' : '#6b7280';
-    const archMeta = window.ArchBadge?.meta?.(sid);
-    const archTxt = (!match && archMeta)
-      ? `<span style="font-size:9px;opacity:.65;margin-left:4px;color:${archMeta.color}">(${archMeta.emoji} ${archMeta.name})</span>`
-      : '';
-    return `<div class="sb-slot ${match?'on':'mismatch'}">
+
+    // Совпадает — в комплекте, зелёная галочка.
+    if (match) {
+      return `<div class="sb-slot on">
+        <span class="sb-slot-em">${slot.emoji}</span>
+        <span class="sb-slot-lb">${slot.label}</span>
+        <div class="sb-slot-info">
+          <span class="sb-item-nm" style="${rarStyle}">${name}</span>
+        </div>
+        <span class="sb-status ok">✓ в сете</span>
+      </div>`;
+    }
+
+    // Надет ЧУЖОЙ архетип — явно говорим «замени», а не голый крестик.
+    const cur = window.ArchBadge?.meta?.(sid);
+    const curName = cur ? `${cur.emoji} ${cur.name}` : 'другой архетип';
+    return `<div class="sb-slot mismatch">
       <span class="sb-slot-em">${slot.emoji}</span>
       <span class="sb-slot-lb">${slot.label}</span>
-      <span class="sb-slot-nm">
-        <span style="color:${iconColor};font-weight:700">${icon}</span>
-        <span class="sb-item-nm" style="${rarStyle}">${name}</span>${archTxt}
-      </span>
+      <div class="sb-slot-info">
+        <span class="sb-item-nm" style="${rarStyle}">${name}</span>
+        <span class="sb-status swap">это ${curName} — замени на ${targetName}</span>
+      </div>
     </div>`;
   }
 
@@ -80,7 +95,7 @@
     if (!setId) return '';
     const rows = SLOTS.map(s => _row(s, setId)).join('');
     return `<div class="sb-breakdown">
-      <div class="sb-breakdown-h">По слотам:</div>
+      <div class="sb-breakdown-h">Что надето · ✓ в сете / замени / пусто:</div>
       ${rows}
     </div>`;
   }
@@ -89,14 +104,18 @@
     if (document.getElementById('sb-breakdown-css')) return;
     const css = `
 .sb-breakdown{margin-top:8px;padding:8px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid rgba(255,255,255,.06)}
-.sb-breakdown-h{font-size:10px;color:#80a8c0;opacity:.7;margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
-.sb-slot{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:11px}
-.sb-slot-em{width:18px;text-align:center}
-.sb-slot-lb{width:54px;color:#a8b8cc;font-weight:600}
-.sb-slot-nm{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;align-items:center;gap:4px}
-.sb-item-nm{overflow:hidden;text-overflow:ellipsis;font-weight:600;letter-spacing:.2px}
-.sb-slot-st{flex:1;font-style:italic}
-.sb-slot.mismatch .sb-item-nm{opacity:.45}
+.sb-breakdown-h{font-size:9.5px;color:#80a8c0;opacity:.7;margin-bottom:6px;letter-spacing:.3px}
+.sb-slot{display:flex;align-items:center;gap:7px;padding:4px 0;font-size:11px;border-top:1px solid rgba(255,255,255,.04)}
+.sb-slot:first-of-type{border-top:none}
+.sb-slot-em{width:18px;text-align:center;flex-shrink:0}
+.sb-slot-lb{width:48px;color:#a8b8cc;font-weight:600;flex-shrink:0}
+.sb-slot-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.sb-item-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600;letter-spacing:.2px}
+.sb-status{font-size:9px;font-weight:600}
+.sb-status.ok{color:#22c55e;flex-shrink:0}
+.sb-status.swap{color:#fb923c}
+.sb-status.need{color:#fbbf24}
+.sb-slot.mismatch .sb-item-nm{opacity:.5}
     `;
     const el = document.createElement('style');
     el.id = 'sb-breakdown-css';
