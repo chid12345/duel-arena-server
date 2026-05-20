@@ -81,6 +81,7 @@ function _removeDarkBg(img) {
 }
 
 function _pills(w) {
+  w = window.PlusBadge ? window.PlusBadge.boostItem(w) : w;
   let h = '';
   if (w.atk  > 0) h += `<span class="wd-pill p-s">+${w.atk} атк</span>`;
   if (w.crit > 0) h += `<span class="wd-pill p-i">+${w.crit} крит</span>`;
@@ -135,6 +136,7 @@ function _card(w) {
       <div class="wd-rarity-row">
         <span class="wd-rarity-badge" style="color:${RC[w.r]}">${RL[w.r]}</span>
         <span class="wd-stars" style="color:${RC[w.r]}">${w.stars}</span>
+        ${window.PlusBadge?.badge(w.id) || ''}
         ${window.LevelLock?.buildBadge(w) || ''}
       </div>
       ${window.ArchBadge?.htmlFor(w.id) || ''}

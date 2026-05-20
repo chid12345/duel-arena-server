@@ -100,6 +100,7 @@ function _btnHtml(h) {
 }
 
 function _pillsHtml(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   let s = '';
   if (h.dodge > 0)     s += `<span class="wd-pill p-i">+${h.dodge}% уворот</span>`;
   if (h.regen > 0)     s += `<span class="wd-pill p-e">+${h.regen} HP/раунд</span>`;
@@ -108,6 +109,7 @@ function _pillsHtml(h) {
 }
 
 function _statLine(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   const p = [];
   if (h.dodge > 0)     p.push(`Уворот: +${h.dodge}%`);
   if (h.regen > 0)     p.push(`Реген: +${h.regen} HP/раунд`);
@@ -144,7 +146,7 @@ function show(scene, h, onAction, eq) {
           <span class="bnd-dot">·</span>
           <span class="bnd-price">${_priceLabel(h)}</span>
         </div>
-        <div class="bnd-stars" style="color:${RC[h.r]}">${h.stars}</div>
+        <div class="bnd-stars" style="color:${RC[h.r]}">${h.stars} ${window.PlusBadge?.badge(h.id) || ''}</div>
         <div class="bnd-pills">${_pillsHtml(h)}</div>
         <div class="bnd-stat-line">${_statLine(h)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'dodge',label:'Уворот',suf:'%'},{k:'regen',label:'Реген',suf:''},{k:'lifesteal',label:'Вампиризм',suf:'%'}]):'')}

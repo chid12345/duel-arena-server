@@ -100,6 +100,7 @@ function _btnHtml(h) {
 }
 
 function _pillsHtml(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   let s = '';
   if (h.atk  > 0) s += `<span class="wd-pill p-s">+${h.atk} атк</span>`;
   if (h.crit > 0) s += `<span class="wd-pill p-i">+${h.crit} крит</span>`;
@@ -110,6 +111,7 @@ function _pillsHtml(h) {
 }
 
 function _statLine(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   const p = [];
   if (h.atk  > 0) p.push(`Атака: +${h.atk}`);
   if (h.crit > 0) p.push(`Крит-стат: +${h.crit}`);
@@ -148,7 +150,7 @@ function show(scene, h, onAction, eq) {
           <span class="hnd-dot">·</span>
           <span class="hnd-price">${_priceLabel(h)}</span>
         </div>
-        <div class="hnd-stars" style="color:${RC[h.r]}">${h.stars}</div>
+        <div class="hnd-stars" style="color:${RC[h.r]}">${h.stars} ${window.PlusBadge?.badge(h.id) || ''}</div>
         <div class="hnd-pills">${_pillsHtml(h)}</div>
         <div class="hnd-stat-line">${_statLine(h)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'atk',label:'Атака',suf:''},{k:'crit',label:'Крит',suf:''},{k:'hp',label:'HP',suf:''},{k:'pen',label:'Пробой',suf:'%'}]):'')}

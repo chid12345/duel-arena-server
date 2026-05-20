@@ -100,6 +100,7 @@ function _btnHtml(h) {
 }
 
 function _pillsHtml(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   let s = '';
   if (h.def > 0)         s += `<span class="wd-pill p-a">-${h.def}% урона врага</span>`;
   if (h.hp > 0)          s += `<span class="wd-pill p-e">+${h.hp} HP</span>`;
@@ -111,6 +112,7 @@ function _pillsHtml(h) {
 }
 
 function _statLine(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   const p = [];
   if (h.def > 0)         p.push(`Защита: -${h.def}% урона`);
   if (h.hp > 0)          p.push(`HP: +${h.hp}`);
@@ -150,7 +152,7 @@ function show(scene, h, onAction, eq) {
           <span class="shd-dot">·</span>
           <span class="shd-price">${_priceLabel(h)}</span>
         </div>
-        <div class="shd-stars" style="color:${RC[h.r]}">${h.stars}</div>
+        <div class="shd-stars" style="color:${RC[h.r]}">${h.stars} ${window.PlusBadge?.badge(h.id) || ''}</div>
         <div class="shd-pills">${_pillsHtml(h)}</div>
         <div class="shd-stat-line">${_statLine(h)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'hp',label:'HP',suf:''},{k:'str',label:'Сила',suf:''},{k:'agi',label:'Ловкость',suf:''},{k:'intu',label:'Интуиция',suf:''}]):'')}

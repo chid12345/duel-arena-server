@@ -29,6 +29,26 @@
     return n > 0 ? `<span class="plus-badge">+${n}</span>` : '';
   }
 
+  // Поля статов, которые показывают карточки снаряжения (все слоты). Все они
+  // в бою масштабируются на +N — здесь усиливаем те же числа для отображения.
+  const STAT_FIELDS = [
+    'atk', 'crit', 'hp', 'def', 'pen', 'str', 'agi', 'intu', 'acc',
+    'anti_dodge', 'silence', 'slow', 'regen', 'gold', 'xp', 'dodge',
+    'lifesteal', 'crit_resist',
+  ];
+
+  // Вернуть копию предмета с усиленными статами под его +N. Не мутирует оригинал.
+  function boostItem(item) {
+    if (!item || !item.id) return item;
+    const n = level(item.id);
+    if (n <= 0) return item;
+    const out = Object.assign({}, item);
+    for (const f of STAT_FIELDS) {
+      if (typeof out[f] === 'number' && out[f] > 0) out[f] = boost(out[f], n);
+    }
+    return out;
+  }
+
   function injectCSS() {
     if (document.getElementById('plus-badge-css')) return;
     const s = document.createElement('style');
@@ -42,5 +62,5 @@
   }
   try { injectCSS(); } catch (_) {}
 
-  window.PlusBadge = { level, boost, badge, injectCSS };
+  window.PlusBadge = { level, boost, badge, boostItem, injectCSS };
 })();

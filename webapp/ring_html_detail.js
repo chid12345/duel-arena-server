@@ -100,6 +100,7 @@ function _btnHtml(h) {
 }
 
 function _pillsHtml(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   let s = '';
   if (h.acc        > 0) s += `<span class="wd-pill p-a">+${h.acc}% точность</span>`;
   if (h.anti_dodge > 0) s += `<span class="wd-pill p-i">-${h.anti_dodge}% уворот врага</span>`;
@@ -112,6 +113,7 @@ function _pillsHtml(h) {
 }
 
 function _statLine(h) {
+  h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   const p = [];
   if (h.acc        > 0) p.push(`Точность: +${h.acc}%`);
   if (h.anti_dodge > 0) p.push(`Антиуклон: -${h.anti_dodge}% уворот врага`);
@@ -152,7 +154,7 @@ function show(scene, h, onAction, eq) {
           <span class="rgd-dot">·</span>
           <span class="rgd-price">${_priceLabel(h)}</span>
         </div>
-        <div class="rgd-stars" style="color:${RC[h.r]}">${h.stars}</div>
+        <div class="rgd-stars" style="color:${RC[h.r]}">${h.stars} ${window.PlusBadge?.badge(h.id) || ''}</div>
         <div class="rgd-pills">${_pillsHtml(h)}</div>
         <div class="rgd-stat-line">${_statLine(h)}</div>
         ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'acc',label:'Точность',suf:'%'},{k:'anti_dodge',label:'Антиуклон',suf:'%'},{k:'silence',label:'Тишина',suf:'%'},{k:'slow',label:'Замедление',suf:'%'},{k:'regen',label:'Реген HP',suf:'%'},{k:'gold',label:'Золото',suf:'%'},{k:'xp',label:'Опыт',suf:'%'}]):'')}
