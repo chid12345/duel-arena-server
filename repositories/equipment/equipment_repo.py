@@ -208,6 +208,22 @@ class EquipmentMixin:
         finally:
             conn.close()
 
+    def remove_owned_weapon(self, user_id: int, item_id: str) -> bool:
+        """Удалить оружие/шлем/щит/ботинки/кольцо из арсенала (при разборке).
+        Возвращает True если строка была удалена."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "DELETE FROM player_owned_weapons WHERE user_id = ? AND item_id = ?",
+                (user_id, item_id),
+            )
+            affected = cursor.rowcount
+            conn.commit()
+            return affected > 0
+        finally:
+            conn.close()
+
     def _resolve_ring_slot(self, user_id: int, slot: str, item_id: str) -> Optional[str]:
         """Для кольца: ring1 если свободен, иначе ring2. Для остальных — слот напрямую."""
         if slot not in (SLOT_RING1, SLOT_RING2):

@@ -165,6 +165,49 @@ def test_dismantle_t4_gives_12_shards(db, monkeypatch):
     assert res["tier"] == "T4"
 
 
+def test_dismantle_consumes_owned_weapon(db, monkeypatch):
+    """Разобранный предмет ИСЧЕЗАЕТ из коллекции (player_owned_weapons) и снимается."""
+    _setup(monkeypatch, db, uid=5012)
+    db.add_owned_weapon(5012, "helmet_gold1")
+    db.equip_item(5012, "belt", "helmet_gold1", force=True)
+
+    fn = _get_endpoint("upgrade_dismantle")
+    res = fn(_make_body("ok", "helmet_gold1"))
+
+    assert res["ok"] is True
+    assert "helmet_gold1" not in db.get_owned_weapons(5012)
+    assert "belt" not in db.get_equipment(5012)
+    assert "owned_weapons" in res and "helmet_gold1" not in res["owned_weapons"]
+
+
+def test_dismantle_consumes_owned_armor2(db, monkeypatch):
+    """Разобранная броня исчезает из player_owned_armor2."""
+    _setup(monkeypatch, db, uid=5013)
+    db.add_owned_armor2(5013, "armor2_mythic1")
+    db.equip_item(5013, "armor2", "armor2_mythic1", force=True)
+
+    fn = _get_endpoint("upgrade_dismantle")
+    res = fn(_make_body("ok", "armor2_mythic1"))
+
+    assert res["ok"] is True
+    assert "armor2_mythic1" not in db.get_owned_armor2(5013)
+    assert "armor2" not in db.get_equipment(5013)
+
+
+def test_dismantle_legendary_clears_custom_mods(db, monkeypatch):
+    """Разбор легендарной armor2_mythic4 стирает и персональные моды (+19 статов)."""
+    _setup(monkeypatch, db, uid=5014)
+    db.create_legendary_armor2(5014, "Имя")
+    assert db.get_armor2_custom_mods(5014, "armor2_mythic4") is not None
+
+    fn = _get_endpoint("upgrade_dismantle")
+    res = fn(_make_body("ok", "armor2_mythic4"))
+
+    assert res["ok"] is True
+    assert "armor2_mythic4" not in db.get_owned_armor2(5014)
+    assert db.get_armor2_custom_mods(5014, "armor2_mythic4") is None
+
+
 # ── status ────────────────────────────────────────────────────────────────────
 
 def test_status_returns_plus_and_shards(db, monkeypatch):

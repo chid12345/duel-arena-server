@@ -58,6 +58,28 @@ class Armor2ModsMixin:
         finally:
             conn.close()
 
+    def remove_owned_armor2(self, user_id: int, item_id: str) -> bool:
+        """Удалить броню из арсенала (при разборке). Для armor2_mythic4 заодно
+        стирает персональные модификаторы (armor2_custom_mods), иначе при повторной
+        покупке всплыли бы старые +19 статов. Возвращает True если что-то удалено."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "DELETE FROM player_owned_armor2 WHERE user_id = ? AND item_id = ?",
+                (user_id, item_id),
+            )
+            affected = cursor.rowcount
+            if item_id == LEGENDARY_ARMOR2_ITEM_ID:
+                cursor.execute(
+                    "DELETE FROM armor2_custom_mods WHERE user_id = ? AND item_id = ?",
+                    (user_id, item_id),
+                )
+            conn.commit()
+            return affected > 0
+        finally:
+            conn.close()
+
     def is_armor2_owned(self, user_id: int, item_id: str) -> bool:
         """Проверка владения конкретной бронёй."""
         conn = self.get_connection()
