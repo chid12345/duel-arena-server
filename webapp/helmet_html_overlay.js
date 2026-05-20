@@ -266,6 +266,7 @@ async function _doAction(scene, action, item) {
       if (res.player)        { State.player=res.player; State.playerLoadedAt=Date.now(); }
       if (res.equipment)     State.equipment=res.equipment;
       if (res.owned_weapons) State.ownedWeapons=res.owned_weapons;
+      try { window.SetBonusPage?.refresh?.(); } catch(_) {}  // обновить «Комплект»
       tg?.HapticFeedback?.notificationOccurred('success');
       _notify(action==='unequip'?'✅ Шлем снят':'✅ Шлем надет!');
       const activeTab = document.querySelector('#hm-root ._hm-view.active');

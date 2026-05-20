@@ -265,6 +265,7 @@ async function _doAction(scene, action, item) {
       if (res.player)        { State.player=res.player; State.playerLoadedAt=Date.now(); }
       if (res.equipment)     State.equipment=res.equipment;
       if (res.owned_weapons) State.ownedWeapons=res.owned_weapons;
+      try { window.SetBonusPage?.refresh?.(); } catch(_) {}  // обновить «Комплект»
       tg?.HapticFeedback?.notificationOccurred('success');
       _notify(action==='unequip'?'✅ Оружие снято':'✅ Оружие надето!');
       const activeTab = document.querySelector('#wn-root ._wn-view.active');

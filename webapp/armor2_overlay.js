@@ -349,6 +349,7 @@ async function _doAction(scene, action, item) {
       if (res.player)       { State.player=res.player; State.playerLoadedAt=Date.now(); }
       if (res.equipment)    State.equipment=res.equipment;
       if (res.owned_armor2) State.ownedArmor2=res.owned_armor2;
+      try { window.SetBonusPage?.refresh?.(); } catch(_) {}  // обновить «Комплект»
       tg?.HapticFeedback?.notificationOccurred('success');
       _notify(action==='unequip'?'✅ Броня снята':'✅ Броня надета!');
       const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
