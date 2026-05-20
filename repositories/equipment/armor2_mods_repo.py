@@ -1,12 +1,16 @@
-"""CRUD для player_owned_armor2 и armor2_custom_mods.
+"""CRUD для брони armor2 и armor2_custom_mods.
 
-Чистая реализация после сноса старого armor:
-- player_owned_armor2 — что куплено (одна таблица для всех 16 armor2_*).
+2026_05_20 — КОНЕЦ ДУАЛИЗМА: броня живёт в ОБЩЕЙ таблице player_owned_weapons
+(как все 5 слотов: оружие/шлем/щит/ноги/кольцо), а не в отдельной
+player_owned_armor2. id брони (armor2_*) не конфликтуют с остальными
+(weapon_*/helmet_*/…), поэтому фильтруем по префиксу armor2_%. Это убирает
+повторяющиеся баги «операция для всех предметов забыла про броню» (сброс,
+выдача и т.п.).
+- player_owned_weapons (item_id LIKE 'armor2_%') — что куплено.
 - armor2_custom_mods — только для armor2_mythic4 (+19 свободных статов,
-  выбор пассивки, кастомное имя).
+  выбор пассивки, кастомное имя). Остаётся отдельной — это спец-поля 1 предмета.
 
 НЕТ синхронизации с players.current_class, mirror-таблиц или legacy_class_id.
-Полный паритет по логике с старым ArmorModsMixin, но без legacy-боли.
 """
 
 from __future__ import annotations
@@ -30,15 +34,15 @@ _USDT_MAX_NAME_LEN = 50
 
 class Armor2ModsMixin:
 
-    # ── player_owned_armor2 ────────────────────────────────────────────────────
+    # ── броня в общей таблице player_owned_weapons (item_id LIKE 'armor2_%') ─────
 
     def add_owned_armor2(self, user_id: int, item_id: str) -> None:
-        """Добавить броню в арсенал (идемпотентно)."""
+        """Добавить броню в арсенал (идемпотентно). Общая таблица со всеми слотами."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "INSERT INTO player_owned_armor2 (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                 (user_id, item_id),
             )
             conn.commit()
@@ -46,12 +50,12 @@ class Armor2ModsMixin:
             conn.close()
 
     def get_owned_armor2(self, user_id: int) -> List[str]:
-        """Список item_id брони в арсенале игрока."""
+        """Список item_id брони игрока (только armor2_*, из общей таблицы)."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT item_id FROM player_owned_armor2 WHERE user_id = ?",
+                "SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE 'armor2_%'",
                 (user_id,),
             )
             return [r["item_id"] for r in cursor.fetchall()]
@@ -66,7 +70,7 @@ class Armor2ModsMixin:
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "DELETE FROM player_owned_armor2 WHERE user_id = ? AND item_id = ?",
+                "DELETE FROM player_owned_weapons WHERE user_id = ? AND item_id = ?",
                 (user_id, item_id),
             )
             affected = cursor.rowcount
@@ -86,7 +90,7 @@ class Armor2ModsMixin:
         cursor = conn.cursor()
         try:
             cursor.execute(
-                "SELECT 1 FROM player_owned_armor2 WHERE user_id = ? AND item_id = ? LIMIT 1",
+                "SELECT 1 FROM player_owned_weapons WHERE user_id = ? AND item_id = ? LIMIT 1",
                 (user_id, item_id),
             )
             return cursor.fetchone() is not None

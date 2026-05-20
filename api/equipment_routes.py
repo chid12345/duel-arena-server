@@ -101,12 +101,11 @@ def register_equipment_routes(app: FastAPI) -> None:
                 already_equipped = eq_row and eq_row["item_id"] == body.item_id
 
                 # Проверяем наличие в коллекции (для платных предметов).
-                # armor2 → player_owned_armor2, остальные → player_owned_weapons.
-                _owned_table = "player_owned_armor2" if body.slot == "armor2" else "player_owned_weapons"
+                # Все слоты, включая броню (armor2_*), — в общей player_owned_weapons.
                 already_owned = False
                 if (gold_cost > 0 or diamond_cost > 0) and not already_equipped:
                     cur.execute(
-                        f"SELECT 1 FROM {_owned_table} WHERE user_id = ? AND item_id = ?",
+                        "SELECT 1 FROM player_owned_weapons WHERE user_id = ? AND item_id = ?",
                         (uid, body.item_id),
                     )
                     already_owned = cur.fetchone() is not None
@@ -123,7 +122,7 @@ def register_equipment_routes(app: FastAPI) -> None:
                             return {"ok": False, "reason": "Недостаточно золота"}
                         gold -= gold_cost
                         cur.execute(
-                            f"INSERT INTO {_owned_table} (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                            "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                             (uid, body.item_id),
                         )
                     elif diamond_cost > 0:
@@ -137,7 +136,7 @@ def register_equipment_routes(app: FastAPI) -> None:
                             return {"ok": False, "reason": "Недостаточно алмазов"}
                         diamonds -= diamond_cost
                         cur.execute(
-                            f"INSERT INTO {_owned_table} (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
+                            "INSERT INTO player_owned_weapons (user_id, item_id) VALUES (?, ?) ON CONFLICT DO NOTHING",
                             (uid, body.item_id),
                         )
 
@@ -157,11 +156,11 @@ def register_equipment_routes(app: FastAPI) -> None:
                         (uid,),
                     )
 
-                # Получаем все owned_weapons для ответа
-                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
+                # Все owned для ответа — общая таблица. Оружие = не-броня,
+                # owned_armor2 = только armor2_* (фронт читает State.ownedArmor2).
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id NOT LIKE 'armor2_%'", (uid,))
                 owned_ids = [r["item_id"] for r in cur.fetchall()]
-                # И owned_armor2 — отдельная таблица (фронт читает State.ownedArmor2).
-                cur.execute("SELECT item_id FROM player_owned_armor2 WHERE user_id = ?", (uid,))
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE 'armor2_%'", (uid,))
                 owned_armor2_ids = [r["item_id"] for r in cur.fetchall()]
 
                 # Все слоты экипировки для ответа

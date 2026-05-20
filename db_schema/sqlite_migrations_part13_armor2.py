@@ -39,4 +39,16 @@ MIGRATIONS_PART13_ARMOR2 = [
         )""",
         "CREATE INDEX IF NOT EXISTS idx_armor2_custom_mods_user ON armor2_custom_mods (user_id)",
     ]),
+    # 2026_05_20: КОНЕЦ ДУАЛИЗМА. Броня жила в отдельной таблице player_owned_armor2 —
+    # из-за этого каждая операция «для всех предметов» (сброс/выдача/проверка) про
+    # неё забывала → повторяющиеся баги. Сливаем броню в общую player_owned_weapons
+    # (id не конфликтуют: armor2_* vs weapon_*/helmet_*/…). Теперь броня «как все 5
+    # слотов». armor2_custom_mods (+19 статов легендарной) остаётся — это спец-поля
+    # одного предмета. Движок миграций толерантен к ошибкам statement (skip+log),
+    # поэтому повторный запуск после DROP безопасен.
+    ("2026_05_20_001_merge_owned_armor2_into_weapons", [
+        "INSERT INTO player_owned_weapons (user_id, item_id) "
+        "SELECT user_id, item_id FROM player_owned_armor2 ON CONFLICT DO NOTHING",
+        "DROP TABLE IF EXISTS player_owned_armor2",
+    ]),
 ]

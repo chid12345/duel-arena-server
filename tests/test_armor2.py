@@ -82,9 +82,9 @@ def test_create_legendary_armor2_repairs_desync(db):
     player_owned_armor2 нет, повторный create должен починить (add ВСЕГДА)."""
     db.get_or_create_player(6003, "u_desync")
     db.create_legendary_armor2(6003)
-    # Имитируем рассогласование — удаляем только owned
+    # Имитируем рассогласование — удаляем только owned (общая таблица, armor2_*)
     conn = db.get_connection()
-    conn.execute("DELETE FROM player_owned_armor2 WHERE user_id = ?", (6003,))
+    conn.execute("DELETE FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE 'armor2_%'", (6003,))
     conn.commit(); conn.close()
     assert "armor2_mythic4" not in db.get_owned_armor2(6003)
     # Повторный вызов — раньше был ранний выход «уже создан», owned оставалась пустой
@@ -96,6 +96,31 @@ def test_create_legendary_armor2_repairs_desync(db):
         "create_legendary_armor2 должен ВСЕГДА гарантировать запись в "
         "player_owned_armor2 — иначе после оплаты броня не появится в арсенале"
     )
+
+
+def test_armor2_lives_in_shared_weapons_table(db):
+    """2026_05_20: КОНЕЦ ДУАЛИЗМА. Броня хранится в общей player_owned_weapons
+    (как все 5 слотов), но get_owned_armor2/get_owned_weapons разделены фильтром.
+    Поэтому общий сброс (DELETE FROM player_owned_weapons) теперь чистит и броню —
+    раньше она оставалась в отдельной таблице и сброс её забывал."""
+    db.get_or_create_player(6098, "u_shared")
+    db.add_owned_weapon(6098, "weapon_mythic1")
+    db.add_owned_armor2(6098, "armor2_mythic1")
+    db.add_owned_armor2(6098, "armor2_mythic4")
+
+    # Разделение: оружие не содержит броню, броня = только armor2_*
+    assert "armor2_mythic1" not in db.get_owned_weapons(6098)
+    assert set(db.get_owned_armor2(6098)) == {"armor2_mythic1", "armor2_mythic4"}
+    assert db.is_armor2_owned(6098, "armor2_mythic1") is True
+
+    # Имитация общего сброса (как debug wipe): чистим общую таблицу.
+    conn = db.get_connection()
+    conn.execute("DELETE FROM player_owned_weapons WHERE user_id = ?", (6098,))
+    conn.commit(); conn.close()
+
+    # Теперь пусто И у оружия, И у брони — броня больше не «выживает» отдельно.
+    assert db.get_owned_weapons(6098) == []
+    assert db.get_owned_armor2(6098) == []
 
 
 def test_state_lazy_creates_mods_when_owned_but_no_mods(db, monkeypatch):

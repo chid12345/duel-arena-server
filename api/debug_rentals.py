@@ -72,7 +72,10 @@ def register_debug_rentals_route(app: FastAPI) -> None:
 
         Удаляется (для теста — игрок теряет ВСЁ что покупал/арендовал):
         - equipment_rentals (все аренды любых слотов).
-        - player_owned_weapons (купленные мифик-шлемы/мечи/щиты/ноги/кольца).
+        - player_owned_weapons (ВСЁ купленное: мифик-шлемы/мечи/щиты/ноги/кольца
+          И броня armor2_* — с 2026_05_20 броня живёт в этой же таблице).
+        - armor2_custom_mods (+19 статов легендарной armor2_mythic4 — иначе
+          после повторной покупки всплыла бы старая сборка).
         - player_equipment ВСЕ слоты (иначе после удаления owned-таблицы
           в слотах останутся «мёртвые ссылки» на удалённые предметы).
 
@@ -98,6 +101,7 @@ def register_debug_rentals_route(app: FastAPI) -> None:
 
             cur.execute("DELETE FROM equipment_rentals    WHERE user_id = ?", (uid,))
             cur.execute("DELETE FROM player_owned_weapons WHERE user_id = ?", (uid,))
+            cur.execute("DELETE FROM armor2_custom_mods   WHERE user_id = ?", (uid,))
             cur.execute("DELETE FROM player_equipment     WHERE user_id = ?", (uid,))
             conn.commit()
         finally:

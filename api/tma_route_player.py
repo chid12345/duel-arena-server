@@ -62,10 +62,10 @@ def _fetch_equipment_parallel(db: Any, uid: int, current_class: str | None = Non
             conn = db.get_connection()
             try:
                 cur = conn.cursor()
-                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (uid,))
+                # Общая таблица: оружие = не-броня, броня = armor2_*.
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id NOT LIKE 'armor2_%'", (uid,))
                 weapons = [r["item_id"] for r in cur.fetchall()]
-                # Новая броня — отдельная таблица player_owned_armor2.
-                cur.execute("SELECT item_id FROM player_owned_armor2 WHERE user_id = ?", (uid,))
+                cur.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id LIKE 'armor2_%'", (uid,))
                 armor2 = [r["item_id"] for r in cur.fetchall()]
                 return weapons, armor2
             finally:

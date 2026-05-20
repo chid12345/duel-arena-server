@@ -199,11 +199,15 @@ class EquipmentMixin:
             conn.close()
 
     def get_owned_weapons(self, user_id: int):
-        """Возвращает список item_id оружия в арсенале."""
+        """Список item_id экипировки игрока БЕЗ брони (оружие/шлем/щит/ноги/кольцо).
+        Броня (armor2_*) живёт в той же таблице, но отдаётся через get_owned_armor2."""
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            cursor.execute("SELECT item_id FROM player_owned_weapons WHERE user_id = ?", (user_id,))
+            cursor.execute(
+                "SELECT item_id FROM player_owned_weapons WHERE user_id = ? AND item_id NOT LIKE 'armor2_%'",
+                (user_id,),
+            )
             return [r["item_id"] for r in cursor.fetchall()]
         finally:
             conn.close()

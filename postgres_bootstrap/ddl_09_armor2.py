@@ -1,22 +1,14 @@
-"""DDL для нового чистого armor2 (после сноса старого armor).
+"""DDL для armor2-кастомки (после сноса старого armor).
 
-Создаёт:
-- player_owned_armor2 — что куплено (одна таблица для всех armor2_*).
-- armor2_custom_mods — кастомка только для armor2_mythic4 (+19 свободных
-  статов, custom_name, passive_type).
-
-Чистая реализация: никаких legacy полей, sync с current_class или mirror-таблиц.
+2026_05_20 — броня (player_owned_armor2) слита в общую player_owned_weapons
+(см. миграцию 2026_05_20_001_merge_owned_armor2_into_weapons). Отдельную
+таблицу владения больше НЕ создаём. Здесь остаётся только:
+- armor2_custom_mods — кастомка для armor2_mythic4 (+19 свободных статов,
+  custom_name, passive_type) — спец-поля одного предмета.
 """
 from __future__ import annotations
 
 POSTGRES_DDL_09_ARMOR2: tuple[str, ...] = (
-    """CREATE TABLE IF NOT EXISTS player_owned_armor2 (
-        user_id BIGINT NOT NULL,
-        item_id TEXT NOT NULL,
-        owned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        PRIMARY KEY (user_id, item_id)
-    )""",
-    "CREATE INDEX IF NOT EXISTS idx_player_owned_armor2_user ON player_owned_armor2 (user_id)",
     """CREATE TABLE IF NOT EXISTS armor2_custom_mods (
         user_id BIGINT NOT NULL,
         item_id TEXT NOT NULL,
