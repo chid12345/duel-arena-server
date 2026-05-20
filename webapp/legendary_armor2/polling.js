@@ -33,6 +33,13 @@
     // Если стартовали polling из текущей сессии (opts.fresh === true) —
     // разрешаем авто-открытие LegendaryArmor2 после paid. На resume — нет.
     _autoOpenOnPaid = !!(opts && opts.fresh);
+    // Свежая покупка этой сессии → показываем красивый статус-оверлей.
+    if (_autoOpenOnPaid && window.PaymentStatus) {
+      window.PaymentStatus.show({
+        title: 'Доспех Светоносного Бога',
+        onManualCheck: () => { try { N._pollTimer && clearTimeout(N._pollTimer); tick(); } catch (_) { } },
+      });
+    }
     let attempts = 0;
     const tick = async () => {
       attempts++;
@@ -56,7 +63,9 @@
             }
           } catch (_) { }
           window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success');
-          N._notify(kind === 'reset' ? '🔄 Сборка сброшена!' : '✅ Легендарная броня получена!');
+          const _paidMsg = kind === 'reset' ? '🔄 Сборка сброшена!' : '✅ Легендарная броня получена!';
+          if (window.PaymentStatus && window.PaymentStatus.isOpen()) window.PaymentStatus.success(_paidMsg);
+          else N._notify(_paidMsg);
           if (document.getElementById('la2-root')) {
             await N._load();
           } else if (kind === 'buy' && _autoOpenOnPaid && window.LegendaryArmor2) {
