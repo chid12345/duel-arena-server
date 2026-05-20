@@ -336,10 +336,6 @@ async function _doAction(scene, action, item) {
           localStorage.setItem('armor2PendingInvoice', String(invRes.invoice_id));
           localStorage.setItem('armor2PendingItemId', item.id);
         } catch(_) {}
-        if (window.PaymentStatus) window.PaymentStatus.show({
-          title: item.name || 'Мифическая броня',
-          onManualCheck: () => _startArmor2CryptoPolling(scene, invRes.invoice_id, item.id, true),
-        });
         _startArmor2CryptoPolling(scene, invRes.invoice_id, item.id);
       }
       return;
@@ -381,8 +377,7 @@ function _startArmor2CryptoPolling(scene, invoiceId, itemId, immediate = false) 
           if (pd?.player) { State.player = pd.player; State.playerLoadedAt = Date.now(); }
         } catch(_) {}
         tg?.HapticFeedback?.notificationOccurred('success');
-        if (window.PaymentStatus && window.PaymentStatus.isOpen()) window.PaymentStatus.success('✅ Мифическая броня получена!');
-        else _notify('✅ Мифическая броня получена!');
+        _notify('✅ Мифическая броня получена!');
         const activeTab = document.querySelector('#ar2-root ._ar2-view.active');
         if (activeTab) _render(scene, activeTab.dataset?.av || 'all');
         return;
