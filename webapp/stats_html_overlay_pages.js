@@ -70,6 +70,8 @@ function bonusHTML(p, inv){
     eq.intu_bonus&&['Интуиция (щит)',`+${eq.intu_bonus}`],eq.accuracy&&['Точность',`+${eq.accuracy}%`],
   ].filter(Boolean);
   const eqHtml=eqList.length?eqList.map(([k,v])=>`<div class="r"><span class="k">${_esc(k)}</span><span class="v">${_esc(v)}</span></div>`).join(''):`<div class="em">наденьте снаряжение в гардеробе</div>`;
+  // 🎁 Комплект — активные сет-бонусы (берём из State.setsStatus.active).
+  const setHtml=_setBonusHtml();
   const cb=inv?.clan_bonus;
   const clanTitle=cb?.clan_name?`🏰 Клан · ${_esc(cb.clan_name)}`:'🏰 Клан';
   const clanHtml=cb?.perks?.length?cb.perks.map(pk=>`<div class="r"><span class="k">${_esc(pk.icon)} ${_esc(pk.label)}</span><span class="v">${_esc(pk.value)}</span></div>`).join(''):`<div class="em">вступите в клан для бонусов</div>`;
@@ -87,8 +89,30 @@ function bonusHTML(p, inv){
     : `<div class="em">купите Premium в магазине для +25% XP/Gold и ежедневного ящика</div>`;
   return `<div class="st-bon"><div class="t">⚔ Класс · ${_esc(wt.name)}</div>${classRows||'<div class="em">нет бонусов</div>'}</div>
     <div class="st-bon"><div class="t">🛡 Экипировка</div>${eqHtml}</div>
+    ${setHtml}
     <div class="st-bon"><div class="t">${clanTitle}</div>${clanHtml}</div>
     <div class="st-bon"><div class="t">${premTitle}</div>${premHtml}</div>`;
+}
+
+// 🎁 Комплект — карточка активных сет-бонусов для вкладки БОНУСЫ.
+// Источник — State.setsStatus.active (тот же что вкладка «Комплект»).
+function _setBonusHtml(){
+  const s=window.State&&State.setsStatus;
+  if(!s||!s.active){
+    // Данных ещё нет — триггерим фон-загрузку, покажем заглушку (перерисуется).
+    try{ window.SetBonusPage?.refresh?.(); }catch(_){}
+    return `<div class="st-bon"><div class="t">🎁 Комплект</div><div class="em">загрузка…</div></div>`;
+  }
+  const act=s.active||[], mp=s.max_pieces||6;
+  if(!act.length){
+    return `<div class="st-bon"><div class="t">🎁 Комплект</div><div class="em">надень 2+ предмета одного архетипа — бонус появится тут</div></div>`;
+  }
+  const rows=act.map(a=>{
+    const bonuses=(a.bonuses_human||[]).join(' · ')||'—';
+    const perk=a.perk_id?`<div class="r"><span class="k">★ ${_esc(a.perk_desc||a.perk_id)}</span><span class="v"></span></div>`:'';
+    return `<div class="r"><span class="k">${a.emoji||''} ${_esc(a.name)} · ${a.count}/${mp}</span><span class="v">${_esc(bonuses)}</span></div>${perk}`;
+  }).join('');
+  return `<div class="st-bon"><div class="t">🎁 Комплект</div>${rows}</div>`;
 }
 
 function invHTML(inv, subTab){
