@@ -121,29 +121,24 @@ function _btnHtml(a) {
 }
 
 function _pillsHtml(a) {
-  const B = window.PlusBadge;
-  const str = B ? B.boost(a.str, a.id) : a.str;
-  const agi = B ? B.boost(a.agi, a.id) : a.agi;
-  const intu = B ? B.boost(a.intu, a.id) : a.intu;
-  const hp = B ? B.boost(a.hp, a.id) : a.hp;
+  const b = window.PlusBadge ? window.PlusBadge.boostItem(a) : a;
   let s = '';
-  if (a.str  > 0) s += `<span class="wd-pill p-s">С+${str}</span>`;
-  if (a.agi  > 0) s += `<span class="wd-pill p-a">Л+${agi}</span>`;
-  if (a.intu > 0) s += `<span class="wd-pill p-i">И+${intu}</span>`;
-  if (a.hp   > 0) s += `<span class="wd-pill p-e">+${hp} HP</span>`;
+  if (a.str  > 0) s += `<span class="wd-pill p-s">С+${b.str}</span>`;
+  if (a.agi  > 0) s += `<span class="wd-pill p-a">Л+${b.agi}</span>`;
+  if (a.intu > 0) s += `<span class="wd-pill p-i">И+${b.intu}</span>`;
+  if (a.hp   > 0) s += `<span class="wd-pill p-e">+${b.hp} HP</span>`;
   if (a.id === 'armor2_mythic4') s += `<span class="wd-pill p-s">+19 своб.ст</span>`;
   return s;
 }
 
 function _statLine(a) {
-  const B = window.PlusBadge;
-  const n = B ? B.level(a.id) : 0;
-  const v = (val) => B ? B.boost(val, a.id) : val;
+  const n = window.PlusBadge ? window.PlusBadge.level(a.id) : 0;
+  const b = window.PlusBadge ? window.PlusBadge.boostItem(a) : a;
   const p = [];
-  if (a.str  > 0) p.push(`Сила: +${v(a.str)}`);
-  if (a.agi  > 0) p.push(`Ловкость: +${v(a.agi)}`);
-  if (a.intu > 0) p.push(`Интуиция: +${v(a.intu)}`);
-  if (a.hp   > 0) p.push(`HP: +${v(a.hp)}`);
+  if (a.str  > 0) p.push(`Сила: +${b.str}`);
+  if (a.agi  > 0) p.push(`Ловкость: +${b.agi}`);
+  if (a.intu > 0) p.push(`Интуиция: +${b.intu}`);
+  if (a.hp   > 0) p.push(`HP: +${b.hp}`);
   const line = p.join(' · ');
   // Подсказка, что числа уже усилены прокачкой.
   return n > 0 ? `${line}　<span style="color:#ffd55a">(прокачка +${n})</span>` : line;

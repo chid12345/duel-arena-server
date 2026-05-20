@@ -131,20 +131,37 @@ def test_plus_stats_zero_returns_copy():
     assert result is not item, "Должна быть копия, не тот же объект"
 
 
-def test_plus_stats_scales_int_stats():
-    """+5 → atk_bonus × (1 + 0.08×5) = ×1.40."""
-    item = {"atk_bonus": 10, "hp_bonus": 100}
+def test_plus_stats_per_tier_mythic_strongest():
+    """Сила прокачки растёт по тиру: мифическая (T4, +30%/ур) > обычной (T1, +10%/ур)."""
+    base = {"str_bonus": 12}
+    t1 = plus_stats_for({**base, "tier": "T1"}, 5)["str_bonus"]  # 12×(1+0.10×5)=18
+    t4 = plus_stats_for({**base, "tier": "T4"}, 5)["str_bonus"]  # 12×(1+0.30×5)=30
+    assert t1 == 18
+    assert t4 == 30
+    assert t4 > t1
+
+
+def test_plus_stats_min_plus_one_per_level():
+    """Целочисленный стат растёт минимум на +1 за уровень, даже если % даёт меньше."""
+    # base 5, T1 (+10%): 5×1.5=7.5→8 по %, но минимум 5+5=10 → берём 10
+    item = {"atk_bonus": 5, "tier": "T1"}
     result = plus_stats_for(item, 5)
-    assert result["atk_bonus"] == 14  # round(10 × 1.40) = 14
-    assert result["hp_bonus"] == 140
+    assert result["atk_bonus"] == 10
+
+
+def test_plus_stats_tier_param_overrides():
+    """tier можно передать аргументом (для «голых» статов из get_item_stats)."""
+    stats = {"hp_bonus": 100}  # без поля tier
+    r = plus_stats_for(stats, 5, tier="T4")  # 100×(1+0.30×5)=250
+    assert r["hp_bonus"] == 250
 
 
 def test_plus_stats_scales_pct_stats():
-    """% статы тоже масштабируются."""
-    item = {"def_pct": 0.10, "lifesteal_pct": 5}
-    result = plus_stats_for(item, 5)
-    assert abs(result["def_pct"] - 0.14) < 0.0001
-    assert abs(result["lifesteal_pct"] - 7.0) < 0.0001
+    """% статы — чисто мультипликативно, без правила «минимум +1»."""
+    item = {"def_pct": 0.10, "lifesteal_pct": 5, "tier": "T1"}  # +10%/ур
+    result = plus_stats_for(item, 5)  # ×1.5
+    assert abs(result["def_pct"] - 0.15) < 0.0001
+    assert abs(result["lifesteal_pct"] - 7.5) < 0.0001
 
 
 def test_plus_stats_does_not_mutate_source():

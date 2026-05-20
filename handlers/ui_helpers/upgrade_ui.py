@@ -50,7 +50,7 @@ def upgrade_menu_text(user_id: int, item_id: str) -> tuple[str, InlineKeyboardMa
 
     current_plus = db.get_item_plus(user_id, item_id)
     base_stats = get_item_stats(item_id)
-    current_stats = plus_stats_for(base_stats, current_plus) if current_plus > 0 else base_stats
+    current_stats = plus_stats_for(base_stats, current_plus, tier=tier) if current_plus > 0 else base_stats
     r_emoji = RARITY_EMOJI.get(item.get("rarity", ""), "")
     player = db.get_player(user_id) or {}
     gold = int(player.get("gold", 0))
@@ -68,7 +68,7 @@ def upgrade_menu_text(user_id: int, item_id: str) -> tuple[str, InlineKeyboardMa
         gold_cost = cost_to_upgrade_gold(base_gold, target_plus)
         shards_cost = shards_cost_for(target_plus)
         chance = success_chance(target_plus)
-        next_stats = plus_stats_for(base_stats, target_plus)
+        next_stats = plus_stats_for(base_stats, target_plus, tier=tier)
         lines.append(f"<b>Следующий +{target_plus}:</b> {_stats_short(next_stats)}")
         lines.append(f"<b>Стоимость:</b> {gold_cost}🪙  +  {shards_cost} шардов {tier}")
         chance_pct = int(round(chance * 100))

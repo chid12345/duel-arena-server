@@ -1,12 +1,23 @@
 /* ============================================================
    PlusBadge — общий помощник отображения прокачки (+N) на карточках.
    Уровень хранится в State.itemPlus = {item_id: N} (грузится в /api/player).
-   Бой УЖЕ учитывает +N (stat × (1 + 0.08 × N), см. economy/upgrades_formulas.py);
-   этот модуль — только ВИЗУАЛ, чтобы игрок видел, что прокачка работает.
+   Бой УЖЕ учитывает +N (см. economy/upgrades_formulas.py:plus_stats_for) —
+   здесь ВИЗУАЛ: показать значок +N и усиленные числа, чтобы игрок видел эффект.
+
+   Сила прокачки растёт по редкости (мягкий P2W) — синхронно с
+   config/balance_curve.json → upgrades.stat_step_pct_per_tier:
+     обычная +10% / редкая +16% / эпическая +22% / мифическая +30% за уровень.
+   Целочисленные статы — минимум +1 за уровень (как на сервере).
    ============================================================ */
 (() => {
   'use strict';
-  const STEP = 0.08; // +8% за уровень — синхронно с upgrades_formulas.stat_step_pct
+
+  // % за уровень по редкости (T1..T4 = common/rare/epic/mythic). Fallback 8%.
+  const STEP_BY_RARITY = { common: 0.10, rare: 0.16, epic: 0.22, mythic: 0.30 };
+  // Целочисленные статы — минимум +1 за уровень.
+  const INT_FIELDS = ['atk', 'crit', 'hp', 'str', 'agi', 'intu', 'dodge', 'regen', 'acc'];
+  // Процентные статы — чисто мультипликативно (на карточке показываются как целые %).
+  const PCT_FIELDS = ['def', 'pen', 'lifesteal', 'crit_resist', 'anti_dodge', 'silence', 'slow', 'gold', 'xp'];
 
   function level(itemId) {
     try {
@@ -15,38 +26,33 @@
     } catch (_) { return 0; }
   }
 
-  // Усилить целочисленный стат на N уровней (как plus_stats_for: round(val×mult)).
-  function boost(val, itemIdOrN) {
-    const v = Number(val) || 0;
-    const n = typeof itemIdOrN === 'number' ? itemIdOrN : level(itemIdOrN);
-    if (!n || v <= 0) return v;
-    return Math.round(v * (1 + STEP * n));
+  function stepFor(rarity) {
+    return STEP_BY_RARITY[rarity] || 0.08;
+  }
+
+  // Вернуть копию предмета с усиленными статами под его +N. Не мутирует оригинал.
+  // rarity берём из item.r (как в карточках) или item.rarity.
+  function boostItem(item) {
+    if (!item || !item.id) return item;
+    const n = level(item.id);
+    if (n <= 0) return item;
+    const mult = 1 + stepFor(item.r || item.rarity) * n;
+    const out = Object.assign({}, item);
+    for (const f of INT_FIELDS) {
+      const v = out[f];
+      if (typeof v === 'number' && v > 0) out[f] = Math.max(Math.round(v * mult), Math.round(v) + n);
+    }
+    for (const f of PCT_FIELDS) {
+      const v = out[f];
+      if (typeof v === 'number' && v > 0) out[f] = Math.round(v * mult);
+    }
+    return out;
   }
 
   // Золотой чип «+N». '' если предмет не прокачан.
   function badge(itemId) {
     const n = level(itemId);
     return n > 0 ? `<span class="plus-badge">+${n}</span>` : '';
-  }
-
-  // Поля статов, которые показывают карточки снаряжения (все слоты). Все они
-  // в бою масштабируются на +N — здесь усиливаем те же числа для отображения.
-  const STAT_FIELDS = [
-    'atk', 'crit', 'hp', 'def', 'pen', 'str', 'agi', 'intu', 'acc',
-    'anti_dodge', 'silence', 'slow', 'regen', 'gold', 'xp', 'dodge',
-    'lifesteal', 'crit_resist',
-  ];
-
-  // Вернуть копию предмета с усиленными статами под его +N. Не мутирует оригинал.
-  function boostItem(item) {
-    if (!item || !item.id) return item;
-    const n = level(item.id);
-    if (n <= 0) return item;
-    const out = Object.assign({}, item);
-    for (const f of STAT_FIELDS) {
-      if (typeof out[f] === 'number' && out[f] > 0) out[f] = boost(out[f], n);
-    }
-    return out;
   }
 
   function injectCSS() {
@@ -62,5 +68,5 @@
   }
   try { injectCSS(); } catch (_) {}
 
-  window.PlusBadge = { level, boost, badge, boostItem, injectCSS };
+  window.PlusBadge = { level, badge, boostItem, injectCSS };
 })();

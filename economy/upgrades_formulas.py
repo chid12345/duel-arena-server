@@ -8,8 +8,11 @@ economy/upgrades_formulas.py — формулы апгрейда предмет�
 
 Якоря — из config/balance_curve.json/upgrades через economy.curves.upgrades_config:
 - max_plus_per_tier: {T1: 5, T2: 8, T3: 10, T4: 12}
-- stat_step_pct: 0.08 (8% за каждый +N)
+- stat_step_pct_per_tier: {T1: .10, T2: .16, T3: .22, T4: .30} — % усиления статов
+  за каждый +N, растёт по редкости (мягкий P2W). Fallback — stat_step_pct (0.08).
 - fail_chance_start: 6 (с +7 начинается риск провала)
+Целочисленные статы получают минимум +1 за уровень (видимый прирост даже на
+малых базах); процентные — чисто мультипликативно.
 
 Стоимость попытки: pct = 0.20 + 0.15 × target_plus от базовой цены предмета.
 Шанс успеха: 100% до +6, далее −10% за каждый шаг, минимум 40% на +12.
@@ -42,6 +45,19 @@ def max_plus_for(tier: str) -> int:
     cfg = upgrades_config()
     cap = cfg.get("max_plus_per_tier") or {}
     return int(cap.get(str(tier), 0))
+
+
+def step_for_tier(tier: str | None) -> float:
+    """% усиления статов за каждый +N, зависит от редкости/тира.
+
+    Дороже редкость — сильнее прокачка (мягкий P2W): T1<T2<T3<T4. Берётся из
+    stat_step_pct_per_tier; fallback — общий stat_step_pct (legacy 8%).
+    """
+    cfg = upgrades_config()
+    per = cfg.get("stat_step_pct_per_tier") or {}
+    if str(tier) in per:
+        return float(per[str(tier)])
+    return float(cfg.get("stat_step_pct", 0.08))
 
 
 def success_chance(target_plus: int) -> float:
@@ -77,22 +93,32 @@ def dismantle_shards_for(tier: str) -> int:
     return int(_DISMANTLE_SHARDS.get(str(tier), 0))
 
 
-def plus_stats_for(item: dict, plus_level: int) -> dict:
+def plus_stats_for(item: dict, plus_level: int, tier: str | None = None) -> dict:
     """Возвращает item-подобный dict со статами, увеличенными на (1 + step × N).
 
-    step берётся из upgrades_config().stat_step_pct (default 0.08).
-    Не мутирует исходник. Целочисленные статы округляются, % — до 4 знаков.
-    Если plus_level <= 0 — возвращает копию без изменений.
+    step зависит от редкости/тира (step_for_tier): дороже вещь — сильнее прокачка.
+    tier берётся из аргумента, иначе из item["tier"] (вызовы с «голыми» статами
+    из get_item_stats обязаны передать tier явно).
+
+    Целочисленные статы (atk/str/hp/…): минимум +1 за уровень — чтобы прокачка
+    всегда давала видимый прирост, даже на маленьких базовых значениях.
+    Процентные статы (def_pct/…) — чисто мультипликативно, до 4 знаков.
+    Не мутирует исходник. plus_level <= 0 → копия без изменений.
     """
     result = dict(item)
     n = int(plus_level)
     if n <= 0:
         return result
-    step = float(upgrades_config().get("stat_step_pct", 0.08))
+    step = step_for_tier(tier if tier is not None else item.get("tier"))
     mult = 1.0 + step * n
     for stat in _INT_STATS:
         if stat in result and isinstance(result[stat], (int, float)):
-            result[stat] = round(float(result[stat]) * mult)
+            base = float(result[stat])
+            if base > 0:
+                # минимум +1 за уровень, иначе по проценту (что больше)
+                result[stat] = max(round(base * mult), int(round(base)) + n)
+            else:
+                result[stat] = round(base * mult)
     for stat in _PCT_STATS:
         if stat in result and isinstance(result[stat], (int, float)):
             result[stat] = round(float(result[stat]) * mult, 4)

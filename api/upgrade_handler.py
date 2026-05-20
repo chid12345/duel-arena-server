@@ -132,6 +132,8 @@ def register_upgrade_routes(app: FastAPI) -> None:
 
             _cache_invalidate(uid)
             player = db.get_or_create_player(uid, "")
+            # eq_stats с НОВЫМ +N — чтобы возвращённый игрок сразу показывал
+            # усиленные урон/HP/крит (иначе бонусы экипировки временно «пропадали»).
             return {
                 "ok": True,
                 "success": roll_success,
@@ -140,7 +142,7 @@ def register_upgrade_routes(app: FastAPI) -> None:
                 "shards_spent": shards_cost,
                 "chance_was": chance,
                 "tier": tier,
-                "player": _player_api(dict(player)),
+                "player": _player_api(dict(player), eq_stats=db.get_equipment_stats(uid)),
                 "shards": db.get_all_shards(uid),
             }
         except HTTPException:

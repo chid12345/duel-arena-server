@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.22.30"
-VERSION_LABEL = "v2.22.30 — КРАСИВЫЙ СТАТУС ОПЛАТЫ. Новый общий компонент webapp/common/payment_status.js (киберпанк): после оплаты USDT вместо тишины показывается оверлей «⚡ Проверяю оплату…» (спиннер + прогресс-бар), который сам превращается в «✅ Получено!» когда товар выдан. Резервная кнопка «Я уже оплатил — проверить» появляется через 20 сек (триггерит немедленный poll). Интегрирован в покупку брони armor2: legendary (legendary_armor2/polling.js — show при fresh-покупке, success при paid) и обычная mythic (armor2_overlay.js buy_usdt + _startArmor2CryptoPolling). PaymentStatus.show/success/hide/isOpen — общий API, дальше подключим к helmet/shield/weapon/boots/ring тем же одним вызовом. version.py →2.22.30, GAME_VERSION →17.80."
+VERSION = "2.22.31"
+VERSION_LABEL = "v2.22.31 — прокачка стала ОЩУТИМОЙ и зависит от редкости: % усиления статов за уровень обычная +10% / редкая +16% / эпическая +22% / мифическая +30% (stat_step_pct_per_tier), целочисленные статы минимум +1 за уровень (мифическая +12 силы → на максе +55). plus_stats_for(item, n, tier) tier-aware; equipment_repo/upgrade_ui передают tier; apply отдаёт игрока с НОВЫМ eq_stats; фронт plus_badge.js усиливает числа по той же кривой. GAME_VERSION →17.81."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "17.80"
+GAME_VERSION = "17.81"

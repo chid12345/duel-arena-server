@@ -167,7 +167,9 @@ class EquipmentMixin:
             item_id = item["item_id"]
             base_stats = get_item_stats(item_id)
             plus = int(all_plus.get(item_id, 0))
-            stats = plus_stats_for(base_stats, plus) if plus > 0 else base_stats
+            # tier берём из item (get_equipment отдаёт полный каталог), т.к.
+            # get_item_stats возвращает только статы без tier.
+            stats = plus_stats_for(base_stats, plus, tier=item.get("tier")) if plus > 0 else base_stats
             if slot == "armor2" and armor2_mods and armor2_mods.get("applied"):
                 stats = dict(stats)
                 stats["str_bonus"] = int(stats.get("str_bonus", 0)) + int(armor2_mods.get("str_bonus", 0))
