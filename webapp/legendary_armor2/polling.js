@@ -94,6 +94,14 @@
         return;
       }
       const pkind = localStorage.getItem('la2PendingKind') || 'buy';
+      // Вернулись из CryptoBot (миниапп перезагрузился) — первый статус-оверлей
+      // потерян. Показываем заново, чтобы игрок видел «⚡ Проверяю оплату…».
+      if (pkind === 'buy' && window.PaymentStatus && !window.PaymentStatus.isOpen()) {
+        window.PaymentStatus.show({
+          title: 'Доспех Светоносного Бога',
+          onManualCheck: () => { try { N._resumePolling(); } catch (_) { } },
+        });
+      }
       // opts.fresh = false → не открывать LegendaryArmor2 авто-оверлеем.
       N._startCryptoPolling(pid, pkind, { fresh: false });
     } catch (_) { }
