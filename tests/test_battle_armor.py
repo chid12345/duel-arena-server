@@ -82,3 +82,28 @@ def test_agile_warrior_takes_more_damage():
     b = bs.apply(raw, d_agile)
 
     assert b > a, f"agile должен получать больше урона: agile={b}, default={a}"
+
+
+def test_body_def_only_on_torso():
+    """Зональная защита тела (броня armor2) срабатывает ТОЛЬКО при ударе в ТУЛОВИЩЕ.
+    По голове/ногам броня тела не помогает — это её уникальная ниша."""
+    bs = _BS()
+    raw = 100
+    d = _defender(endurance=15, _eq_body_def_pct=0.15)
+
+    head  = bs._mixin._apply_incoming_damage(raw, d, "ГОЛОВА")
+    torso = bs._mixin._apply_incoming_damage(raw, d, "ТУЛОВИЩЕ")
+    legs  = bs._mixin._apply_incoming_damage(raw, d, "НОГИ")
+
+    assert torso < head, f"по телу урон должен быть меньше: тело={torso}, голова={head}"
+    assert head == legs, "защита тела не должна влиять на удары по голове/ногам"
+
+
+def test_body_def_no_zone_no_effect():
+    """Без указания зоны (afk/совместимость) защита тела не применяется."""
+    bs = _BS()
+    raw = 100
+    d_plain = _defender(endurance=15)
+    d_body  = _defender(endurance=15, _eq_body_def_pct=0.15)
+    # attack_zone=None → одинаково (защита тела не срабатывает)
+    assert bs._mixin._apply_incoming_damage(raw, d_plain) == bs._mixin._apply_incoming_damage(raw, d_body)

@@ -27,12 +27,12 @@ def test_armor2_catalog_has_16_items():
 
 
 def test_armor2_mythic1_has_correct_stats():
-    """armor2_mythic1 = Доспех Пламенного Титана: +12 силы, +24 HP."""
+    """armor2_mythic1 = Доспех Пламенного Титана: +12 силы, +180 HP (HP поднят 2026_05_21)."""
     from db_schema.equipment_items import ARMOR2
 
     item = ARMOR2["armor2_mythic1"]
     assert item["str_bonus"] == 12
-    assert item["hp_bonus"] == 24
+    assert item["hp_bonus"] == 180
     assert item["slot"] == "armor2"
 
 
@@ -96,6 +96,43 @@ def test_create_legendary_armor2_repairs_desync(db):
         "create_legendary_armor2 должен ВСЕГДА гарантировать запись в "
         "player_owned_armor2 — иначе после оплаты броня не появится в арсенале"
     )
+
+
+def test_armor2_body_defense_hp_and_effects():
+    """2026_05_21: броня получила защиту тела (3/6/9/15% по редкости),
+    поднятый HP (40/75/120/180), №3 анти-крит, №4 глобальную защиту."""
+    from db_schema.equipment_items import ARMOR2
+
+    # Защита тела по редкости
+    assert ARMOR2["armor2_free1"]["body_def_pct"] == 0.03
+    assert ARMOR2["armor2_gold1"]["body_def_pct"] == 0.06
+    assert ARMOR2["armor2_dia1"]["body_def_pct"] == 0.09
+    assert ARMOR2["armor2_mythic1"]["body_def_pct"] == 0.15
+    # HP поднят в ряд с другими слотами
+    assert ARMOR2["armor2_free1"]["hp_bonus"] == 40
+    assert ARMOR2["armor2_mythic1"]["hp_bonus"] == 180
+    # №3 (магическая) — анти-крит, mythic 15% (урезан с 22 по просьбе)
+    assert ARMOR2["armor2_mythic3"]["crit_resist_pct"] == 15
+    assert ARMOR2["armor2_free3"]["crit_resist_pct"] == 3
+    # №4 (баланс) — фиксированная (глобальная) защита, как у щита/шлема
+    assert ARMOR2["armor2_dia4"]["def_pct"] == 0.06
+    assert ARMOR2["armor2_free4"]["def_pct"] == 0.02
+    # Легендарка (mythic4) не трогали — остаётся чистым листом
+    assert "body_def_pct" not in ARMOR2["armor2_mythic4"]
+    assert ARMOR2["armor2_mythic4"].get("free_stats") == 19
+
+
+def test_armor2_body_def_aggregates_in_equipment_stats(db):
+    """body_def_pct надетой брони попадает в get_equipment_stats."""
+    db.get_or_create_player(6096, "u_bodydef")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET level = 80 WHERE user_id = ?", (6096,))
+    conn.commit(); conn.close()
+    db.add_owned_armor2(6096, "armor2_mythic1")
+    db.equip_item(6096, "armor2", "armor2_mythic1", force=True)
+    stats = db.get_equipment_stats(6096)
+    assert stats.get("body_def_pct") == 0.15
+    assert stats.get("hp_bonus", 0) >= 180
 
 
 def test_armor2_lives_in_shared_weapons_table(db):
@@ -203,7 +240,7 @@ def test_armor2_stats_flow_to_get_equipment_stats(db):
     db.add_owned_armor2(6007, "armor2_mythic1")
     stats = db.get_equipment_stats(6007)
     assert stats["str_bonus"] == 12, f"+12 силы от Доспеха Пламенного Титана: {stats}"
-    assert stats["hp_bonus"] == 24, f"+24 HP от Доспеха Пламенного Титана: {stats}"
+    assert stats["hp_bonus"] == 180, f"+180 HP от Доспеха Пламенного Титана (HP поднят): {stats}"
 
 
 def test_armor2_buy_two_keeps_both_in_arsenal(db):

@@ -88,6 +88,7 @@ _STATS_FIELDS = (
     "str_bonus", "agi_bonus", "intu_bonus", "double_pct",
     "gold_pct", "xp_pct", "accuracy", "anti_dodge_pct",
     "silence_pct", "slow_pct", "regen_speed_pct",
+    "body_def_pct",  # зональная защита тела (броня armor2)
 )
 
 

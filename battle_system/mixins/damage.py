@@ -92,11 +92,11 @@ class BattleDamageMixin:
             # Крит-пробой блока
             if random.random() < (crit_ch * CRIT_BLOCK_PIERCE_CHANCE):
                 dmg = max(1, int(base_dmg * CRIT_BLOCK_PIERCE_DAMAGE_MULT))
-                return self._apply_incoming_damage(dmg, defender), "pierce_crit", debuff
+                return self._apply_incoming_damage(dmg, defender, attack_zone), "pierce_crit", debuff
             # Частичный блок (вскользь)
             if random.random() < PARTIAL_BLOCK_CHANCE:
                 dmg = max(1, int(base_dmg * PARTIAL_BLOCK_DAMAGE_MULT))
-                return self._apply_incoming_damage(dmg, defender), "partial", debuff
+                return self._apply_incoming_damage(dmg, defender, attack_zone), "partial", debuff
             return 0, "block", ""
 
         # Уворот: сравнительная формула по Ловкости (endurance) + баф уворота защитника
@@ -139,7 +139,7 @@ class BattleDamageMixin:
                     dbl_ch = max(0.0, dbl_ch - _slow / 100.0)
                 if random.random() < dbl_ch:
                     d2 = max(1, int(base_dmg * DODGE_DOUBLE_STRIKE_DAMAGE_MULT))
-                    return self._apply_incoming_damage(d2, defender), "double", debuff
+                    return self._apply_incoming_damage(d2, defender, attack_zone), "double", debuff
                 return 0, "dodge", ""
 
         # Крит: сравнительная формула по Интуиции (crit)
@@ -216,7 +216,7 @@ class BattleDamageMixin:
                           ((def_str + def_sta) // max(1, FORTRESS_GUARD_STEP))
                           * FORTRESS_GUARD_PCT_PER_STEP)
         if random.random() < fortress_ch:
-            return self._apply_incoming_damage(1, defender), "fortress", debuff
+            return self._apply_incoming_damage(1, defender, attack_zone), "fortress", debuff
 
         # Пролом брони (break)
         atk_str = self._safe_int_field(attacker, "strength", PLAYER_START_STRENGTH)
@@ -240,7 +240,7 @@ class BattleDamageMixin:
         _orig_def = float(defender.get("_eq_def_pct", 0) or 0)
         if pen:
             defender["_eq_def_pct"] = max(0.0, _orig_def - pen)
-        damage = self._apply_incoming_damage(damage, defender)
+        damage = self._apply_incoming_damage(damage, defender, attack_zone)
         if pen:
             defender["_eq_def_pct"] = _orig_def  # восстановить
         if is_break:

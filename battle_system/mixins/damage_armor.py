@@ -15,8 +15,13 @@ class BattleDamageArmorMixin:
         reduction = armor_reduction(vyn, lv)
         return 1.0 - reduction
 
-    def _apply_incoming_damage(self, raw: int, defender: Dict) -> int:
+    def _apply_incoming_damage(self, raw: int, defender: Dict, attack_zone: str | None = None) -> int:
         m = self._armor_multiplier(defender)
+        # Зональная защита тела (броня armor2): срабатывает ТОЛЬКО при ударе в туловище.
+        if attack_zone == "ТУЛОВИЩЕ":
+            body_def = float(defender.get("_eq_body_def_pct", 0) or 0)
+            if body_def:
+                m = max(0.0, m - body_def)
         # USDT пассивка: броня +4%
         if (defender.get("usdt_passive_type") or "").strip() == "armor_pct":
             m = max(0.0, m - 0.04)
