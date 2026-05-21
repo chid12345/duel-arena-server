@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duel Arena — Аудит «обмана» в игре</title>
+<style>
+  :root{--bg:#0a0617;--card:#15102b;--line:rgba(120,90,220,.25);--bad:#ff5c7a;--good:#4ade80;--gold:#ffd55a;--txt:#e6e2f5;--mut:#9a90c0}
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0a0617,#120a26);color:var(--txt);font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:18px;line-height:1.5}
+  h1{font-size:22px;margin:0 0 4px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:20px}
+  h2{font-size:15px;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  .sev{display:inline-block;padding:1px 9px;border-radius:8px;font-size:11px;font-weight:800;margin-left:6px;vertical-align:middle}
+  .s-hi{background:rgba(255,92,122,.18);color:#ff8da3}
+  .s-md{background:rgba(255,213,90,.16);color:#ffe08a}
+  .s-lo{background:rgba(154,144,192,.18);color:#c3bbe0}
+  .s-done{background:rgba(74,222,128,.16);color:#86efac}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .card .t{font-size:14px;font-weight:800;margin-bottom:4px}
+  .card .where{font-size:11px;color:var(--mut);margin-bottom:10px;font-family:monospace}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:560px){.cols{grid-template-columns:1fr}}
+  .col{border-radius:10px;padding:10px 12px;font-size:13px}
+  .now{background:rgba(255,92,122,.08);border:1px solid rgba(255,92,122,.28)}
+  .will{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.28)}
+  .col .lbl{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+  .now .lbl{color:var(--bad)} .will .lbl{color:var(--good)}
+  b{color:var(--gold)}
+  .note{font-size:12px;color:var(--mut);margin-top:8px;font-style:italic}
+</style>
+</head>
+<body>
+  <h1>🔍 Аудит «обмана» в Duel Arena</h1>
+  <div class="sub">Что показано игроку ≠ что реально работает. Сначала смотрим — потом правим. Проверено по коду.</div>
+
+  <h2>🔴 Высокая — прямой обман<span class="sev s-hi">4</span></h2>
+
+  <div class="card">
+    <div class="t">1. Мировой босс не считает статы предметов</div>
+    <div class="where">repositories/world_boss/damage_calc.py · api/world_boss_hit.py</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Сейчас</div>В рейде урон по боссу = только <b>Сила</b> и крит. Защита, уворот, пробой, крит-сопр, вампиризм, двойной удар, точность с предметов — <b>не работают</b>. При этом карточка босса советует «качай уворот / максимум защиты».</div>
+      <div class="col will"><div class="lbl">Будет</div>Бой с боссом учитывает все статы экипировки (как обычный бой): защита снижает урон босса, уворот/крит/пробой/вампиризм работают. Экипировка реально влияет на рейд.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">2. «XP Буст ×2.0» на деле даёт ×1.5</div>
+    <div class="where">api/shop_helpers.py:17 · battle_system/mixins/end_battle.py:175</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Сейчас</div>Платный товар за <b>6 💎</b> «XP Буст ×2.0». В коде множитель для всех бустов один — <b>×1.5</b>. Цифра 2.0 нигде не используется. Игрок платит за ×2, получает ×1.5.</div>
+      <div class="col will"><div class="lbl">Будет</div>Либо ×2.0 реально работает, либо честно переименовать в ×1.5. На твой выбор.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">3. Зелье полного HP: цена на кнопке ≠ списанию</div>
+    <div class="where">webapp/shop_html_items.js:10 · repositories/shop/store.py:41</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Сейчас</div>На кнопке всегда <b>35 🪙</b>. Реально списывается динамическая цена (растёт с уровнем): ~15 🪙 на 1 ур., до <b>~150 🪙</b> на 80 ур. Витрина не запрашивает реальную цену.</div>
+      <div class="col will"><div class="lbl">Будет</div>На кнопке — настоящая цена с сервера (как сейчас списывается). Никаких «показали 35 — сняли 150».</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">4. Сезонный пропуск: предметы-награды не выдаются</div>
+    <div class="where">repositories/season_pass/claim.py:78 (пишет в удалённую таблицу user_inventory)</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Сейчас</div>На уровнях пропуска с 📦 (свитки/ящики) при «Забрать» предмет <b>не приходит</b> — запись идёт в удалённую таблицу, claim падает. Хуже: на уровнях «золото+алмазы+предмет» клейм может не отметиться → <b>риск повторного фарма</b> валюты.</div>
+      <div class="col will"><div class="lbl">Будет</div>Предмет выдаётся в правильный инвентарь, клейм отмечается один раз. Деньги и предметы — честно и без дублей.</div>
+    </div>
+  </div>
+
+  <h2>🟡 Средняя<span class="sev s-md">2</span></h2>
+
+  <div class="card">
+    <div class="t">5. Зелья «Малое / Среднее HP» нельзя купить</div>
+    <div class="where">webapp/shop_html_items.js:8-9 · api/shop_buy_handler.py</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Сейчас</div>В магазине висят «Малое зелье HP» (10🪙) и «Среднее» (20🪙) с карточками, но при покупке — <b>«Покупка недоступна»</b>. Их нет в серверном каталоге.</div>
+      <div class="col will"><div class="lbl">Будет</div>Либо включить покупку (дёшево лечить частично), либо убрать с витрины. На твой выбор.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">6. Урон босса по игроку игнорирует защиту предметов</div>
+    <div class="where">api/world_boss_hit.py · jobs/world_boss_battle_tick.py</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Сейчас</div>Контрудар босса = фикс. 3% от макс. HP; фоновая ответка учитывает только бонус <b>комплекта</b>. Индивидуальная защита/уворот/блок/шипы предметов — не считаются.</div>
+      <div class="col will"><div class="lbl">Будет</div>Защита предметов реально снижает урон босса (в пару к находке №1).</div>
+    </div>
+  </div>
+
+  <h2>⚪ Низкая<span class="sev s-lo">1</span></h2>
+
+  <div class="card">
+    <div class="t">7. Мёртвый код старой недельной системы квестов</div>
+    <div class="where">api/tma_weekly_quests.py (не подключён как роут)</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Сейчас</div>Старая ветка недельных квестов висит в коде, но не используется (рабочая — другая). Игрока не обманывает, но при правках легко перепутать.</div>
+      <div class="col will"><div class="lbl">Будет</div>Удалить мёртвый код.</div>
+    </div>
+  </div>
+
+  <h2>✅ Уже исправлено в этой сессии<span class="sev s-done">было → стало</span></h2>
+
+  <div class="card">
+    <div class="t">Разборка вещей</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Было</div>«Ошибка сервера» при любой разборке. Вещь не тратилась. Системное серое окно подтверждения.</div>
+      <div class="col will"><div class="lbl">Стало</div>Разбор работает (фикс серверной ошибки), вещь исчезает → шарды, красивое окно в стиле игры.</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">Прокачка (+N)</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Было</div>На карточке только базовые цифры, «+N» не видно, прибавка мизерная (8% всем).</div>
+      <div class="col will"><div class="lbl">Стало</div>Значок «+N» и усиленные цифры на всех слотах. Баланс по редкости: числа множим, проценты — мягко (без улёта 64%/138%).</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">Кольца</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Было</div>Реген/золото/опыт нарисованы, но в бою не работали. Главные статы карточка занижала. «Реген» был ошибочно «HP/раунд».</div>
+      <div class="col will"><div class="lbl">Стало</div>Реген/золото/опыт реальны. Цифры = бой. «Реген» → «% восстановления вне боя» (как в описании).</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">Восстановление HP</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Было</div>Порог входа в бой 15%. «% скорость восстановления» с ботинок не работала (мёртвая). Восстановление мало заметно.</div>
+      <div class="col will"><div class="lbl">Стало</div>Порог 70% («энергия в HP»). «% скорость» реально ускоряет набор HP. Индикатор «⏱ восст. +N/мин · до боя ~M мин».</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="t">Недельные рейтинги (Мировой босс / Натиск)</div>
+    <div class="cols">
+      <div class="col now"><div class="lbl">Было</div>Очки за 2-й и последующие заходы за неделю молча терялись (та же серверная ошибка, что в разборке).</div>
+      <div class="col will"><div class="lbl">Стало</div>Очки складываются корректно.</div>
+    </div>
+  </div>
+
+  <div class="note">Сгенерировано аудитом. Скажи, что чиним первым — и в каком порядке.</div>
+</body>
+</html>
