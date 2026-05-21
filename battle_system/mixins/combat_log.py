@@ -167,15 +167,23 @@ class BattleCombatLogMixin:
                 return "✕мимо"
             if dmg <= 0:
                 return "0"
+            # Значки механик (могут совмещаться: крит + двойной и т.п.).
+            # ВАЖНО: «стойка» = 🏰 (НЕ 🛡 — иначе фронт спутает её с полным блоком).
             suffix = ""
             if "crit" in t and "pierce" in t:
-                suffix = "⚡💥"
+                suffix += "⚡💥"
             elif "crit" in t:
-                suffix = "⚡"
-            elif "double" in t:
-                suffix = "×2"
-            elif "break" in t:
-                suffix = "🪓"
+                suffix += "⚡"
+            if "double" in t:
+                suffix += "×2"        # двойной удар
+            if "break" in t:
+                suffix += "🪓"        # пролом брони
+            if "guard" in t:
+                suffix += "🧱"        # поглощение (защитник съел половину)
+            if "fortress" in t:
+                suffix += "🏰"        # абсолютная стойка (почти весь урон погашен)
+            if "partial" in t:
+                suffix += "▪"         # вскользь (частичный блок)
             return f"−{dmg}{suffix}"
 
         z1 = _ZONE_SHORT.get(atk_zone1, atk_zone1[:3])

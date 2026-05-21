@@ -44,6 +44,7 @@ const BattleLog = (() => {
       .bl-dodge-col { color: #2ecc71; }
       .bl-miss-col  { color: #cccccc; }
       .bl-hp-left   { color: #88bbaa; font-size: 9px; font-weight: 600; margin-left: 3px; opacity: 0.85; }
+      .bl-heal      { color: #5fe08a; font-size: 9px; font-weight: 700; margin-left: 3px; }
     `;
     document.head.appendChild(style);
     overlay = document.createElement('div');
@@ -55,11 +56,18 @@ const BattleLog = (() => {
   }
 
   function _styleMarker(m, side) {
-    // Суффикс "❤N" — HP цели после удара (добавляется бэком).
+    // Хвост строки от бэка: "❤N" — HP цели после удара, "🩸+N" — вампиризм соперника.
+    // Снимаем оба (🩸 идёт ПОСЛЕ ❤, поэтому сначала его), иначе ❤-парсер ломался
+    // и обе пометки вываливались сырым текстом в строку урона.
     let hpTail = '';
+    const healM = (m || '').match(/🩸\+(\d+)\s*$/);
+    if (healM) {
+      hpTail = `<span class="bl-heal">🩸+${healM[1]}</span>` + hpTail;
+      m = m.slice(0, healM.index).trim();
+    }
     const hpM = (m || '').match(/❤(\d+)\s*$/);
     if (hpM) {
-      hpTail = `<span class="bl-hp-left">❤${hpM[1]}</span>`;
+      hpTail = `<span class="bl-hp-left">❤${hpM[1]}</span>` + hpTail;
       m = m.slice(0, hpM.index).trim();
     }
     let core;

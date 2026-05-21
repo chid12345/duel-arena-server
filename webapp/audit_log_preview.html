@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Лог боя — стало (этап 2, #4/#5)</title>
+<style>
+  body{margin:0;background:linear-gradient(160deg,#0a0617,#120a26);color:#e6e2f5;
+    font-family:-apple-system,"Segoe UI",sans-serif;padding:16px;max-width:560px;margin:0 auto}
+  h2{font-size:15px;margin:18px 0 8px}
+  .sub{color:#9a90c0;font-size:12px;margin-bottom:8px}
+  #bb-root{position:relative;height:150px;margin:6px 0 4px;border:1px solid rgba(120,90,220,.25);
+    border-radius:10px;background:rgba(0,0,0,.25)}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  td{padding:5px 9px;border-bottom:1px solid rgba(120,90,220,.2);vertical-align:middle}
+  .k{font-size:17px;width:64px}
+</style>
+</head>
+<body>
+  <h2>🆕 Лог боя — что теперь видно (этап 2 · #4 + #5)</h2>
+  <div class="sub">Раньше игрок видел просто «−N» (и мусор от вампиризма). Теперь видно, ЧТО произошло:</div>
+  <div id="bb-root"></div>
+
+  <h2>Что значат значки</h2>
+  <table>
+    <tr><td class="k">⚡ / 💥</td><td>крит / крит-пробой блока</td></tr>
+    <tr><td class="k">×2</td><td>двойной удар</td></tr>
+    <tr><td class="k">🪓</td><td>пролом брони</td></tr>
+    <tr><td class="k">🧱</td><td>поглощение — соперник принял урон вдвое слабее</td></tr>
+    <tr><td class="k">🏰</td><td>абсолютная стойка — почти весь урон погашен (1)</td></tr>
+    <tr><td class="k">▪</td><td>вскользь — частичный блок</td></tr>
+    <tr><td class="k">🩸+N</td><td>соперник подлечился вампиризмом на N</td></tr>
+    <tr><td class="k">💨 / 🛡 / ✕</td><td>уклон / блок / промах</td></tr>
+  </table>
+
+  <script src="bot_battle_log.js"></script>
+  <script>
+    BotBattleLog.attach(document.getElementById('bb-root'));
+    BotBattleLog.update([
+      "Р7 Вы→Тело −210⚡×2❤180🩸+15 · Враг→Гол −1🏰❤520",
+      "Р8 Вы→Ноги −45▪❤135 · Враг→Тело −60🧱❤460"
+    ]);
+  </script>
+</body>
+</html>

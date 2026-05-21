@@ -50,15 +50,25 @@ const BotBattleLog = (() => {
     const s = String(raw || '').trim();
     if (!s || s === '—' || s === '0') return { cls: 'blk', text: '—' };
     if (s.includes('💨')) return { cls: 'dodge', text: '💨' };
-    if (s.includes('🛡') || /блок/i.test(s)) return { cls: 'blk', text: '⊘ блок' };
+    // 🛡 = полный блок; 🏰 (абсолютная стойка) НЕ блок — это урон 1, обрабатываем ниже.
+    if ((s.includes('🛡') && !s.includes('🏰')) || /блок/i.test(s)) return { cls: 'blk', text: '⊘ блок' };
     if (s.includes('✕') || /мимо/i.test(s)) return { cls: 'miss', text: '✕ мимо' };
+    // Доп. значки механик + вампиризм соперника (🩸+N) — показываем рядом с уроном.
+    let extra = '';
+    if (s.includes('×2')) extra += '×2';
+    if (s.includes('🪓')) extra += '🪓';
+    if (s.includes('🧱')) extra += '🧱';
+    if (s.includes('🏰')) extra += '🏰';
+    if (s.includes('▪'))  extra += '▪';
+    const healM = s.match(/🩸\+(\d+)/);
+    if (healM) extra += ' 🩸+' + healM[1];
     if (s.includes('💥') || s.includes('⚡')) {
       const num = (s.match(/-?\d+/) || [''])[0];
-      return { cls: 'crit', text: '💥−' + (num.replace(/^-/, '') || '?') };
+      return { cls: 'crit', text: '💥−' + (num.replace(/^-/, '') || '?') + extra };
     }
     if (/^[−-]\d/.test(s)) {
       const m = s.match(/^[−-](\d+)/);
-      return { cls: 'dmg', text: '−' + (m ? m[1] : '?') };
+      return { cls: 'dmg', text: '−' + (m ? m[1] : '?') + extra };
     }
     return { cls: 'blk', text: s.slice(0, 14) };
   }
