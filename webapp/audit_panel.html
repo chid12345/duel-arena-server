@@ -74,6 +74,7 @@
   <div class="stages" id="stages"></div>
 
   <div id="changelog"></div>
+  <div id="filterbar" style="margin:14px 0 4px"></div>
   <div id="report"></div>
 
   <div class="note" id="footer"></div>
@@ -271,28 +272,53 @@ const MAP_HTML = `
 </div>
 `;
 
-// рендер находок по этапам
-let html = MAP_HTML;
-STAGES.filter(s=>s.id>=2).forEach(s=>{
-  const fs = FINDINGS.filter(f=>f.stage===s.id);
-  const [,sttTxt]=SST[s.status];
-  html += `<h2>Этап ${s.id} — ${s.title} <span class="badge ${SST[s.status][0].replace('st-','b-').replace('b-wait','b-defer')}">${sttTxt}</span></h2>`;
-  if(!fs.length){ html += `<div class="empty">Пока находок нет — этап ещё не пройден.</div>`; return; }
-  fs.forEach(f=>{
-    const [scls,stxt]=SEV[f.sev];
-    const [bcls,btxt]=STT[f.status];
-    html += `<div class="card">
-      <div class="t">${f.title}<span class="sev ${scls}">${stxt}</span> <span class="badge ${bcls}">${btxt}</span></div>
-      <div class="where">${f.where}</div>
-      <div class="cols">
-        <div class="col now"><div class="lbl">${f.status==='fixed'?'Было':'Сейчас'}</div>${f.now}</div>
-        <div class="col will"><div class="lbl">${f.status==='fixed'?'Стало':'Будет / предложение'}</div>${f.will}</div>
-      </div></div>`;
+// Фильтр: по умолчанию показываем открытые/отложенные, исправленные прячем
+// (они остаются в Журнале правок выше и доступны по кнопке).
+let _showFixed = false;
+
+function renderReport(){
+  let html = MAP_HTML;
+  STAGES.filter(s=>s.id>=2).forEach(s=>{
+    let fs = FINDINGS.filter(f=>f.stage===s.id);
+    const fixedN = fs.filter(f=>f.status==='fixed').length;
+    const totalFs = fs.length;
+    if(!_showFixed) fs = fs.filter(f=>f.status!=='fixed');
+    const [,sttTxt]=SST[s.status];
+    const hiddenTag = (!_showFixed && fixedN) ? ` <span class="badge b-fixed">✅ ${fixedN} скрыто</span>` : "";
+    html += `<h2>Этап ${s.id} — ${s.title} <span class="badge ${SST[s.status][0].replace('st-','b-').replace('b-wait','b-defer')}">${sttTxt}</span>${hiddenTag}</h2>`;
+    if(!fs.length){
+      if(totalFs && !_showFixed) html += `<div class="empty">✅ всё исправлено (${fixedN}) — подробности в «Журнале правок» выше.</div>`;
+      else html += `<div class="empty">Пока находок нет — этап ещё не пройден.</div>`;
+      return;
+    }
+    fs.forEach(f=>{
+      const [scls,stxt]=SEV[f.sev];
+      const [bcls,btxt]=STT[f.status];
+      html += `<div class="card">
+        <div class="t">${f.title}<span class="sev ${scls}">${stxt}</span> <span class="badge ${bcls}">${btxt}</span></div>
+        <div class="where">${f.where}</div>
+        <div class="cols">
+          <div class="col now"><div class="lbl">${f.status==='fixed'?'Было':'Сейчас'}</div>${f.now}</div>
+          <div class="col will"><div class="lbl">${f.status==='fixed'?'Стало':'Будет / предложение'}</div>${f.will}</div>
+        </div></div>`;
+    });
   });
-});
-document.getElementById("report").innerHTML = html;
+  document.getElementById("report").innerHTML = html;
+}
+
+function renderFilterBar(){
+  const fixedTotal = FINDINGS.filter(f=>f.status==='fixed').length;
+  const label = _showFixed ? `Скрыть исправленные (${fixedTotal})` : `Показать исправленные (${fixedTotal})`;
+  document.getElementById("filterbar").innerHTML =
+    `<button id="togglefixed" style="background:var(--card2);color:var(--txt);border:1px solid var(--line);border-radius:9px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer">${label}</button>
+     <span style="color:var(--mut);font-size:12px;margin-left:10px">по умолчанию видно только открытые и отложенные</span>`;
+  document.getElementById("togglefixed").onclick = () => { _showFixed = !_showFixed; renderFilterBar(); renderReport(); };
+}
+
+renderFilterBar();
+renderReport();
 document.getElementById("footer").innerHTML =
-  "Панель обновляется по ходу аудита. Скажи приоритеты — что чиним первым.";
+  "Панель обновляется по ходу аудита. Исправленные скрыты — их список в «Журнале правок» выше.";
 </script>
 </body>
 </html>
