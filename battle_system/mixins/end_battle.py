@@ -205,8 +205,8 @@ class BattleEndBattleMixin:
                 _xp_pct = _combined.get("xp_pct", 0)
                 if _xp_pct and exp_reward > 0:
                     exp_reward = int(exp_reward * (1.0 + _xp_pct / 100.0))
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning("gold/xp buff apply failed for winner=%s: %s", winner_user_id, e)
             # Бонусы кольц (+gold_pct / +xp_pct от экипировки)
             _eq_gold = int(winner.get("_eq_gold_pct", 0) or 0)
             _eq_xp   = int(winner.get("_eq_xp_pct",   0) or 0)

@@ -80,8 +80,8 @@ body.wscls-crt .ws-btn{background:linear-gradient(90deg,#3d0080,#cc44ff,#3d0080)
 `;
 
 const _WS_DATA = {
-  tank:  { cls:'str', label:'Сила',     bonus:'+12% УРОН',     penalty:'↓8% уворот',
-    desc:'Каждый удар наносит на 12% больше урона — ты бьёшь тяжелее всех. За это платишь скоростью: противник уклоняется от тебя на 8% легче. Выбирай если хочешь ломить напролом.',
+  tank:  { cls:'str', label:'Сила',     bonus:'+10% УРОН',     penalty:'↓5% уворот',
+    desc:'Каждый удар наносит на 10% больше урона — ты бьёшь тяжелее всех. За это платишь скоростью: противник уклоняется от тебя на 5% легче. Выбирай если хочешь ломить напролом.',
     aura:'radial-gradient(ellipse,rgba(255,80,15,.22) 0%,transparent 68%)',
     glow:'rgba(255,80,20,.8)',
     skins:[{img:'skins/sila/1.png',name:'МОЛОТ',e:'⚔️'},{img:'skins/sila/2.png',name:'ТИРАН',e:'🛡️'},{img:'skins/sila/3.png',name:'ДРАКОН',e:'🔥'}] },

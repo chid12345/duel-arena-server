@@ -96,7 +96,6 @@ duel-arena-server/
 ### Основные настройки (config.py):
 ```python
 # Боевая система
-BATTLE_TIMEOUT_SECONDS = 5
 AFK_ROUNDS_TO_DEFEAT = 3
 CRIT_CHANCE = 0.15
 MISS_CHANCE = 0.10

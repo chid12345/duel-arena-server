@@ -208,8 +208,8 @@ class BattleAfkEndMixin:
         try:
             from battle_system.end_battle_finalize import update_bot_win_streak
             update_bot_win_streak(battle, bot_won=not human_won)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("AFK: update_bot_win_streak failed: %s", e)
 
         if player1['user_id'] in self.battle_queue:
             del self.battle_queue[player1['user_id']]
@@ -236,7 +236,7 @@ class BattleAfkEndMixin:
                 _cache_invalidate(int(winner_user_id))
             if loser_user_id is not None:
                 _cache_invalidate(int(loser_user_id))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning("AFK: TMA cache invalidate failed: %s", e)
 
         return result

@@ -11,7 +11,7 @@ const WT = {
   crit:  { name:'Хаос-Рыцарь',   icon:'💥' },
 };
 const CLASS_BONUS = {
-  tank:  [{k:'Урон',v:'+12%',neg:false},{k:'Уворот',v:'−8%',neg:true}],
+  tank:  [{k:'Урон',v:'+10%',neg:false},{k:'Уворот',v:'−5%',neg:true}],
   agile: [{k:'Уворот',v:'+8%',neg:false},{k:'Броня',v:'−10%',neg:true}],
   crit:  [{k:'Шанс крита',v:'+5%'},{k:'Множитель крита',v:'×1.65'},{k:'Здоровье',v:'−10%',neg:true}],
 };

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ТЕСТ ИГРЫ — Duel Arena</title>
+<style>
+  :root{
+    --bg:#0a0617;--card:#15102b;--card2:#1b1436;--line:rgba(120,90,220,.25);
+    --bad:#ff5c7a;--good:#4ade80;--gold:#ffd55a;--blue:#38bdf8;--txt:#e6e2f5;--mut:#9a90c0;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:linear-gradient(160deg,#0a0617,#120a26);color:var(--txt);
+    font-family:-apple-system,"Segoe UI",Roboto,sans-serif;padding:18px;line-height:1.5;max-width:1100px;margin:0 auto}
+  h1{font-size:24px;margin:0 0 4px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:13px;margin-bottom:18px}
+  h2{font-size:17px;margin:30px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+  h3{font-size:14px;margin:18px 0 8px;color:var(--blue)}
+
+  /* Прогресс по этапам */
+  .stages{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 24px}
+  .stage{flex:1 1 180px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:13px}
+  .stage .n{font-size:11px;color:var(--mut);font-weight:800}
+  .stage .nm{font-weight:700;margin:2px 0}
+  .stage .stt{font-size:11px;font-weight:800}
+  .st-wait .stt{color:var(--mut)} .st-work .stt{color:var(--gold)} .st-done .stt{color:var(--good)}
+  .st-work{border-color:rgba(255,213,90,.5);box-shadow:0 0 0 1px rgba(255,213,90,.25)}
+
+  /* Сводка-счётчики */
+  .counts{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .cnt{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:8px 14px;font-size:13px}
+  .cnt b{font-size:18px;display:block}
+
+  /* Карточки находок */
+  .sev{display:inline-block;padding:1px 9px;border-radius:8px;font-size:11px;font-weight:800;margin-left:6px;vertical-align:middle}
+  .s-hi{background:rgba(255,92,122,.18);color:#ff8da3}
+  .s-md{background:rgba(255,213,90,.16);color:#ffe08a}
+  .s-lo{background:rgba(154,144,192,.18);color:#c3bbe0}
+  .badge{display:inline-block;padding:1px 8px;border-radius:7px;font-size:10px;font-weight:800;letter-spacing:.3px}
+  .b-found{background:rgba(255,92,122,.14);color:#ff8da3}
+  .b-work{background:rgba(255,213,90,.14);color:#ffe08a}
+  .b-fixed{background:rgba(74,222,128,.16);color:#86efac}
+  .b-defer{background:rgba(154,144,192,.16);color:#c3bbe0}
+  .b-info{background:rgba(56,189,248,.14);color:#7dd3fc}
+
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-bottom:14px}
+  .card .t{font-size:15px;font-weight:800;margin-bottom:4px}
+  .card .where{font-size:11px;color:var(--mut);margin-bottom:10px;font-family:monospace}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:620px){.cols{grid-template-columns:1fr}.stages{flex-direction:column}}
+  .col{border-radius:10px;padding:10px 12px;font-size:13px}
+  .now{background:rgba(255,92,122,.08);border:1px solid rgba(255,92,122,.28)}
+  .will{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.28)}
+  .col .lbl{font-size:10px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+  .now .lbl{color:var(--bad)} .will .lbl{color:var(--good)}
+  b{color:var(--gold)}
+
+  /* Информационные блоки (карта игры) */
+  .info{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px;font-size:13px}
+  .info ul{margin:6px 0;padding-left:18px} .info li{margin:3px 0}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin:8px 0}
+  th,td{text-align:left;padding:7px 9px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.4px}
+  code{background:rgba(120,90,220,.16);padding:1px 5px;border-radius:5px;font-size:12px}
+  .empty{color:var(--mut);font-style:italic;font-size:13px;padding:8px 0}
+  .note{font-size:12px;color:var(--mut);margin-top:6px}
+</style>
+</head>
+<body>
+  <h1>🧪 ТЕСТ ИГРЫ — Duel Arena</h1>
+  <div class="sub" id="sub"></div>
+
+  <div class="counts" id="counts"></div>
+  <div class="stages" id="stages"></div>
+
+  <div id="changelog"></div>
+  <div id="report"></div>
+
+  <div class="note" id="footer"></div>
+
+<script>
+// ====== ДАННЫЕ АУДИТА (редактируется по ходу) ======
+const META = { version: "v2.22.42 / GAME_VERSION 17.92", updated: "2026-05-21" };
+
+// ====== ЖУРНАЛ ПРАВОК (живой блокнот: что сделали/добавили) ======
+const CHANGELOG = [
+  { date:"2026-05-21", items:[
+    "Этап 2 «Бой» проверен полностью — найдено 11 пунктов.",
+    "✅ Берсерк: тексты приведены к бою (+10% урон / −5% уворот) в 5 местах.",
+    "✅ Гайд «Поглощение»: 12% → 15% (как в коде).",
+    "✅ Крит-пробой блока: ×0.5 → ×0.7 везде.",
+    "✅ Удалена мёртвая настройка BATTLE_TIMEOUT_SECONDS.",
+    "✅ Тихие ошибки в конце боя теперь пишутся в журнал (logger.warning).",
+  ]},
+];
+// =================================================================
+
+const STAGES = [
+  { id:1,  key:"map",      title:"Карта игры",            status:"work" },
+  { id:2,  key:"battle",   title:"Бой и баланс",          status:"wait" },
+  { id:3,  key:"progress", title:"Прогрессия (ур./опыт/статы)", status:"wait" },
+  { id:4,  key:"economy",  title:"Экономика (золото/алмазы)",   status:"wait" },
+  { id:5,  key:"shop",     title:"Магазин и предметы",    status:"wait" },
+  { id:6,  key:"equip",    title:"Экипировка и сеты",     status:"wait" },
+  { id:7,  key:"skins",    title:"Скины и аватары",       status:"wait" },
+  { id:8,  key:"quests",   title:"Квесты и задания",      status:"wait" },
+  { id:9,  key:"social",   title:"Соц / платежи / босс",  status:"wait" },
+  { id:10, key:"ui",       title:"Интерфейс (кнопки/тексты)", status:"wait" },
+];
+
+// sev: hi|md|lo  · status: found|work|fixed|defer|info
+const FINDINGS = [
+  // ===== ЭТАП 2 — БОЙ =====
+  {
+    stage:2, sev:"hi", status:"fixed",
+    title:"Класс «Берсерк»: на экране одни цифры, в бою — другие",
+    where:"webapp/scene_warrior_select.js · stats_html_info.js · scene_stats_hero_bonuses.js · stats_html_overlay_pages.js",
+    now:"При выборе класса игроку обещали <b>+12% урон / −8% уворот</b>. В бою реально <b>+10% / −5%</b> (класс ослабили ради баланса, а тексты забыли обновить).",
+    will:"Тексты везде показывают <b>+10% урон / −5% уворот</b> — как в бою. Поправлено в 5 местах: выбор класса, карточка героя, бонусы, инфо. Классы «Ловкость» и «Интуиция» были верны — не трогал."
+  },
+  {
+    stage:2, sev:"hi", status:"work",
+    title:"Пропуск хода / зависание: переделка во всех боях (Вариант А)",
+    where:"api/tma_route_battle_flow/battle_find.py · battle_system/mixins/choices.py, timer.py, execute_afk.py",
+    now:"Сейчас в мини-аппе за молчащего игрока ходят НАУГАД, а в PvP при закрытом приложении соперник ждёт вечно. Наказание «0 урона + чистый удар, 3 раза = поражение» по-настоящему работает только в Telegram-боте.",
+    will:"РЕШЕНО (Вариант А): во всех боях и для обоих игроков — пропустил ход → бьёшь на 0, получаешь чистый удар без защит, 3 раза = поражение (победителю опыт по факту урона). Серверный таймер засчитает даже при закрытом приложении. С боссом — просто получаешь урон, пока он не добьёт. Делаю отдельным аккуратным заходом."
+  },
+  {
+    stage:2, sev:"md", status:"defer",
+    title:"Экипировка «плоская» — на Lv50 почти не помогает",
+    where:"симуляция tools/simulate_pve_quick.py",
+    now:"Бонусы гиры — фиксированные числа. На Lv10 мифик-сет = <b>88% побед</b>, но на Lv50 базовые статы выросли, и тот же мифик даёт всего <b>~33%</b> — почти как голый (~24%). Шмот «обесценивается» с уровнем.",
+    will:"ОТЛОЖЕНО до этапа «Экипировка» — там сверим точные числа каталога и решим (бонусы растут с уровнем или % от статов)."
+  },
+  {
+    stage:2, sev:"md", status:"found",
+    title:"Лог боя не показывает половину того, что произошло",
+    where:"battle_system/mixins/combat_log.py:158 · webapp/bot_battle_log.js:49 · scene_battle.js:69",
+    now:"Движок считает двойной удар, пролом брони, поглощение (урон ÷2), «абсолютную стойку», частичный и глухой блок брони — но в живом логе игрок видит просто «<b>−N</b>». Непонятно, почему урон вдруг маленький или почему «блок», а урон прошёл.",
+    will:"Добавить в лог понятные значки/подписи: ×2 двойной, 🪓 пролом, 🧱 поглощение, 🛡∞ стойка, «вскользь» — чтобы игрок понимал бой."
+  },
+  {
+    stage:2, sev:"md", status:"found",
+    title:"Вампиризм соперника в логе ломается (мусор на экране)",
+    where:"battle_system/mixins/combat_log.py:189 · webapp/scene_battle.js (_styleMarker)",
+    now:"Сервер дописывает «🩸+N» (соперник подлечился вампиризмом), но фронт это <b>не разбирает</b> — текст лезет сырым прямо в строку урона. Игрок видит мусор и не понимает, что враг восстановил HP.",
+    will:"Фронт должен корректно разбирать «🩸+N» и рисовать отдельным значком (как уже делает с «❤ осталось HP»)."
+  },
+  {
+    stage:2, sev:"md", status:"work",
+    title:"Лимит 30 раундов и нечестная ничья — убираем",
+    where:"battle_system/mixins/execute.py:177",
+    now:"Бой обрывался на 30-м раунде, и при равном HP побеждал всегда Player1 (нечестно к сопернику в PvP).",
+    will:"РЕШЕНО: лимит раундов убираем — бьются до нокаута. Чтобы бой не завис навсегда (два «лекаря»), после 60 раундов лечение отключается → кто-то обязательно падает. Нечестная ничья исчезает сама. Делаю следующим шагом."
+  },
+  {
+    stage:2, sev:"lo", status:"fixed",
+    title:"Подсказка «Поглощение»: написано макс 12%, в коде 15%",
+    where:"webapp/scene_guide_data.js:62",
+    now:"Гайд обещал максимум поглощения <b>12%</b>, а в коде потолок <b>15%</b>.",
+    will:"В гайде теперь <b>макс 15%</b> — совпадает с боем."
+  },
+  {
+    stage:2, sev:"lo", status:"fixed",
+    title:"Крит-пробой блока: тултип «×0.5», в коде ×0.7",
+    where:"webapp/stats_html_info.js:63",
+    now:"В тултипе Интуиции было «урон проходит ×0.5», в гайде — «70%», а в коде реально <b>×0.7</b>. Тексты спорили между собой.",
+    will:"Тултип исправлен на <b>×0.7</b> — теперь везде одинаково и совпадает с боем."
+  },
+  {
+    stage:2, sev:"lo", status:"fixed",
+    title:"Мёртвая константа BATTLE_TIMEOUT_SECONDS",
+    where:"config/battle_constants.py · README.md",
+    now:"Константа <code>BATTLE_TIMEOUT_SECONDS = 5</code> нигде в бою не использовалась — забытый остаток, путал при чтении.",
+    will:"Удалена из настроек и из README."
+  },
+  {
+    stage:2, sev:"lo", status:"fixed",
+    title:"Молчаливые «проглатывания» ошибок в конце боя",
+    where:"battle_system/mixins/afk_end.py · end_battle.py",
+    now:"В 3 местах начисления наград/стрика стоял <code>except: pass</code> без записи в журнал. Если начисление сломается — игрок ничего не получит, а в логах пусто, баг невидим.",
+    will:"Теперь все 3 места пишут предупреждение в журнал (logger.warning) — сбой сразу видно. Игроку ничего не изменилось."
+  },
+  {
+    stage:2, sev:"lo", status:"defer",
+    title:"Боты: тупой ИИ + бедно одеты → отдельная задача",
+    where:"repositories/bots/persona_gear.py · battle_system/mixins/damage_extra.py, execute_afk.py",
+    now:"Стратег-боты теряют «память» о защите игрока на пропусках хода. Плюс боты одеты плохо: даже «мажор» не заполняет все слоты и носит слабые вещи — бои неинтересные.",
+    will:"ОТЛОЖЕНО в отдельную фокусную задачу: сделать ботов умнее И интереснее одетыми (вероятно вместе с этапом «Экипировка»)."
+  },
+];
+// =====================================================
+
+const SEV = { hi:["s-hi","🔴 Высокая"], md:["s-md","🟡 Средняя"], lo:["s-lo","⚪ Низкая"] };
+const STT = {
+  found:["b-found","НАЙДЕНО"], work:["b-work","В РАБОТЕ"],
+  fixed:["b-fixed","ИСПРАВЛЕНО"], defer:["b-defer","ОТЛОЖЕНО"], info:["b-info","ИНФО"]
+};
+const SST = { wait:["st-wait","⏳ ожидает"], work:["st-work","🔄 в работе"], done:["st-done","✅ готово"] };
+
+document.getElementById("sub").innerHTML =
+  `Что показано игроку ≠ что реально работает + баланс/цены/UX. Режим: <b>найти всё → показать → чинить утверждённое</b>. ${META.version} · обновлено ${META.updated}`;
+
+// счётчики
+const c = { found:0, work:0, fixed:0, defer:0 };
+FINDINGS.forEach(f=>{ if(c[f.status]!==undefined) c[f.status]++; });
+document.getElementById("counts").innerHTML = `
+  <div class="cnt"><b>${FINDINGS.filter(f=>f.status!=='info').length}</b>находок всего</div>
+  <div class="cnt" style="border-color:rgba(255,92,122,.4)"><b style="color:var(--bad)">${c.found}</b>найдено</div>
+  <div class="cnt" style="border-color:rgba(255,213,90,.4)"><b style="color:var(--gold)">${c.work}</b>в работе</div>
+  <div class="cnt" style="border-color:rgba(74,222,128,.4)"><b style="color:var(--good)">${c.fixed}</b>исправлено</div>
+  <div class="cnt"><b style="color:var(--mut)">${c.defer}</b>отложено</div>`;
+
+// этапы
+document.getElementById("stages").innerHTML = STAGES.map(s=>{
+  const [cls,txt]=SST[s.status];
+  const cnt = FINDINGS.filter(f=>f.stage===s.id && f.status!=='info').length;
+  return `<div class="stage ${cls}"><div class="n">ЭТАП ${s.id}</div>
+    <div class="nm">${s.title}</div>
+    <div class="stt">${txt}${cnt?` · ${cnt} наход.`:""}</div></div>`;
+}).join("");
+
+// журнал правок (живой блокнот)
+document.getElementById("changelog").innerHTML =
+  `<h2>📒 Журнал правок — что сделали / добавили</h2>` +
+  CHANGELOG.map(c=>`<div class="info"><b style="color:var(--good)">${c.date}</b><ul>${c.items.map(i=>`<li>${i}</li>`).join("")}</ul></div>`).join("");
+
+// карта игры (этап 1) — статичный блок
+const MAP_HTML = `
+<h2>🗺️ Этап 1 — Карта игры <span class="badge b-info">ИНФО</span></h2>
+<div class="info">
+<b>Что это за игра.</b> Duel Arena — пошаговый бойцовский клуб внутри Telegram (Mini App).
+Игрок дерётся с ботами-персонажами (и в PvP), выбирает зоны удара (голова/корпус/ноги),
+получает золото и опыт, качает статы, одевает экипировку, выполняет задания, бьёт мирового босса,
+вступает в кланы. Донат — через Telegram Stars и USDT.
+</div>
+<div class="info">
+<b>Из чего собрана (техническая часть, простыми словами):</b>
+<ul>
+<li><b>Фронтенд (то, что видит игрок)</b> — папка <code>webapp/</code>, движок Phaser. Экраны: Меню, Бой, Магазин, Профиль, Герой, Клан, Босс, Рейтинг.</li>
+<li><b>Бот в Telegram</b> — <code>main.py</code> + <code>handlers/</code>. Команды (/start и т.п.) и кнопки.</li>
+<li><b>Сервер (мозг игры)</b> — <code>api_server.py</code> + папка <code>api/</code>. Считает бой, выдаёт награды, проводит покупки.</li>
+<li><b>База данных</b> — папка <code>repositories/</code> (вся работа с БД), схема в <code>db_schema/</code>. Локально SQLite, на проде Postgres.</li>
+<li><b>Боевая механика</b> — папка <code>battle_system/</code> (урон, крит, блок, уклон, раунды).</li>
+<li><b>Настройки баланса</b> — папка <code>config/</code> (цены, формулы, награды) + таблицы <code>.xlsx</code>.</li>
+</ul>
+</div>
+<div class="info">
+<b>6 вкладок снизу:</b>
+<table>
+<tr><th>Вкладка</th><th>Что внутри</th></tr>
+<tr><td>👤 Профиль</td><td>карточка героя, статы, экипировка, реген HP</td></tr>
+<tr><td>🛡️ Клан</td><td>кланы, вступление, соц</td></tr>
+<tr><td>⚔️ Герой</td><td>прокачка статов, гардероб/скины, инвентарь</td></tr>
+<tr><td>🐲 Босс</td><td>мировой босс, рейды толпой</td></tr>
+<tr><td>🏆 Рейтинг</td><td>таблицы лидеров, недельные награды</td></tr>
+<tr><td>☰ Меню</td><td>бой, магазин, задания, настройки</td></tr>
+</table>
+<div class="note">Бой и Магазин открываются кнопками (не отдельные вкладки таббара).</div>
+</div>
+<div class="info">
+<b>Чем я проверяю (инструменты):</b> 330 автотестов (<code>python -m pytest tests/</code>),
+3 симуляции (<code>tools/simulate_*.py</code> — бой, PvE, экономика на 30 дней),
+таблицы баланса (<code>.xlsx</code>), и сам интерфейс через локальный запуск (<code>?dev=1</code>) со скринами.
+</div>
+`;
+
+// рендер находок по этапам
+let html = MAP_HTML;
+STAGES.filter(s=>s.id>=2).forEach(s=>{
+  const fs = FINDINGS.filter(f=>f.stage===s.id);
+  const [,sttTxt]=SST[s.status];
+  html += `<h2>Этап ${s.id} — ${s.title} <span class="badge ${SST[s.status][0].replace('st-','b-').replace('b-wait','b-defer')}">${sttTxt}</span></h2>`;
+  if(!fs.length){ html += `<div class="empty">Пока находок нет — этап ещё не пройден.</div>`; return; }
+  fs.forEach(f=>{
+    const [scls,stxt]=SEV[f.sev];
+    const [bcls,btxt]=STT[f.status];
+    html += `<div class="card">
+      <div class="t">${f.title}<span class="sev ${scls}">${stxt}</span> <span class="badge ${bcls}">${btxt}</span></div>
+      <div class="where">${f.where}</div>
+      <div class="cols">
+        <div class="col now"><div class="lbl">${f.status==='fixed'?'Было':'Сейчас'}</div>${f.now}</div>
+        <div class="col will"><div class="lbl">${f.status==='fixed'?'Стало':'Будет / предложение'}</div>${f.will}</div>
+      </div></div>`;
+  });
+});
+document.getElementById("report").innerHTML = html;
+document.getElementById("footer").innerHTML =
+  "Панель обновляется по ходу аудита. Скажи приоритеты — что чиним первым.";
+</script>
+</body>
+</html>

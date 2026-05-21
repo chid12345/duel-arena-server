@@ -98,7 +98,6 @@ BOT_MATCH_LEVEL_RANGE_MAX = 2
 BOT_MATCH_LEVEL_STRICTNESS = 3000.0  # очень высокий K → почти всегда бот вашего уровня
 
 # Боевая система
-BATTLE_TIMEOUT_SECONDS = 5
 # Время на полный ход (атака+защита); по истечении — пропуск, удар по вам без блока
 TURN_ACTION_SECONDS = 15
 TURN_LIMIT_SECONDS = 15  # отображение таймера (синхрон с TURN_ACTION_SECONDS)

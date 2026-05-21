@@ -7,7 +7,7 @@
 
   const WT = {
     tank:  { name:'Берсерк',       icon:'⚔️', col:0x8a2818, tcol:'#ffbba0',
-             rows:[{i:'⚔️',n:'Урон',v:'+12%',neg:false},{i:'🤸',n:'Уворот',v:'−8%',neg:true}] },
+             rows:[{i:'⚔️',n:'Урон',v:'+10%',neg:false},{i:'🤸',n:'Уворот',v:'−5%',neg:true}] },
     agile: { name:'Теневой Вихрь', icon:'💨', col:0x1a6840, tcol:'#7affb8',
              rows:[{i:'🤸',n:'Уворот',v:'+8%',neg:false},{i:'🛡',n:'Броня',v:'−10%',neg:true}] },
     crit:  { name:'Хаос-Рыцарь',   icon:'💥', col:0x5a2890, tcol:'#e0b8ff',
