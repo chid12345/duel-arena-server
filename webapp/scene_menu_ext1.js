@@ -135,9 +135,15 @@ Object.assign(MenuScene.prototype, {
       rmdl(txt(this, W / 2, curY + 6, `❤️ ${p.current_hp}/${p.max_hp_effective ?? p.max_hp} HP`, 10, '#f0f0fa').setOrigin(0.5))
     );
     if (p.hp_pct < 100) {
-      const regenStr = p.regen_secs_to_full > 0
-        ? `+${p.regen_per_min}/мин · полный через ${Math.ceil(p.regen_secs_to_full / 60)}мин`
-        : `+${p.regen_per_min}/мин`;
+      let regenStr;
+      if (p.regen_secs_to_battle > 0) {
+        // ещё нельзя в бой (HP < порога) — показываем время до боя
+        regenStr = `⏱ восст. +${p.regen_per_min}/мин · до боя ~${Math.ceil(p.regen_secs_to_battle / 60)}мин`;
+      } else if (p.regen_secs_to_full > 0) {
+        regenStr = `⏱ восст. +${p.regen_per_min}/мин · полный через ${Math.ceil(p.regen_secs_to_full / 60)}мин`;
+      } else {
+        regenStr = `⏱ восст. +${p.regen_per_min}/мин`;
+      }
       hpBlockObjs.push(rmdl(txt(this, PAD, curY + 18, regenStr, 9, '#ddddff')));
     }
     if (p.hp_pct < 15) {

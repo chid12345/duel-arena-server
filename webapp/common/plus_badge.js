@@ -17,7 +17,7 @@
   const INT_FIELDS = ['atk', 'crit', 'hp', 'str', 'agi', 'intu', 'dodge', 'regen', 'acc'];
   // ПРОЦЕНТНЫЕ статы — мягкий множитель (нельзя умножать сильно — улетают).
   const PCT_STEP = { common: 0.02, rare: 0.03, epic: 0.04, mythic: 0.05 };
-  const PCT_FIELDS = ['def', 'pen', 'lifesteal', 'crit_resist', 'anti_dodge', 'silence', 'slow', 'gold', 'xp'];
+  const PCT_FIELDS = ['def', 'pen', 'lifesteal', 'crit_resist', 'anti_dodge', 'silence', 'slow', 'gold', 'xp', 'regen_speed'];
 
   function level(itemId) {
     try {

@@ -106,7 +106,7 @@ function _pillsHtml(h) {
   if (h.anti_dodge > 0) s += `<span class="wd-pill p-i">-${h.anti_dodge}% уворот врага</span>`;
   if (h.silence    > 0) s += `<span class="wd-pill p-s">${h.silence}% тишина</span>`;
   if (h.slow       > 0) s += `<span class="wd-pill p-e">${h.slow}% замедление</span>`;
-  if (h.regen      > 0) s += `<span class="wd-pill p-r">+${h.regen} HP/раунд</span>`;
+  if (h.regen_speed > 0) s += `<span class="wd-pill p-r">+${h.regen_speed}% восст. вне боя</span>`;
   if (h.gold       > 0) s += `<span class="wd-pill p-g">+${h.gold}% золото</span>`;
   if (h.xp         > 0) s += `<span class="wd-pill p-x">+${h.xp}% опыт</span>`;
   return s;
@@ -119,7 +119,7 @@ function _statLine(h) {
   if (h.anti_dodge > 0) p.push(`Антиуклон: -${h.anti_dodge}% уворот врага`);
   if (h.silence    > 0) p.push(`Тишина: ${h.silence}% глушит крит`);
   if (h.slow       > 0) p.push(`Замедление: -${h.slow}% двойной врага`);
-  if (h.regen      > 0) p.push(`Реген: +${h.regen} HP/раунд`);
+  if (h.regen_speed > 0) p.push(`Восст. вне боя: +${h.regen_speed}%`);
   if (h.gold       > 0) p.push(`Золото: +${h.gold}%`);
   if (h.xp         > 0) p.push(`Опыт: +${h.xp}%`);
   return p.join(' · ');
@@ -157,7 +157,7 @@ function show(scene, h, onAction, eq) {
         <div class="rgd-stars" style="color:${RC[h.r]}">${h.stars} ${window.PlusBadge?.badge(h.id) || ''}</div>
         <div class="rgd-pills">${_pillsHtml(h)}</div>
         <div class="rgd-stat-line">${_statLine(h)}</div>
-        ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'acc',label:'Точность',suf:'%'},{k:'anti_dodge',label:'Антиуклон',suf:'%'},{k:'silence',label:'Тишина',suf:'%'},{k:'slow',label:'Замедление',suf:'%'},{k:'regen',label:'Реген HP',suf:'%'},{k:'gold',label:'Золото',suf:'%'},{k:'xp',label:'Опыт',suf:'%'}]):'')}
+        ${(typeof DetailCompare!=='undefined'?DetailCompare.html(h,eq,[{k:'acc',label:'Точность',suf:'%'},{k:'anti_dodge',label:'Антиуклон',suf:'%'},{k:'silence',label:'Тишина',suf:'%'},{k:'slow',label:'Замедление',suf:'%'},{k:'regen_speed',label:'Восст. вне боя',suf:'%'},{k:'gold',label:'Золото',suf:'%'},{k:'xp',label:'Опыт',suf:'%'}]):'')}
         ${window.ArchBadge?.detailBlock(h.id) || ''}
         ${h.bonus ? `<div style="margin-top:6px;padding:8px 10px;border-radius:8px;background:rgba(255,180,80,.10);border:1px solid rgba(255,180,80,.25);font-size:11px;color:#ffd29a;line-height:1.45">✨ <b>Особенность:</b> ${h.bonus}</div>` : ''}
         <div class="rgd-desc">${RING_DESC[h.id] || ''}</div>

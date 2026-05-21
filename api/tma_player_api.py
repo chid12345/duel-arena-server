@@ -12,6 +12,7 @@ from config import (
     DODGE_MAX_CHANCE,
     FREE_CLASSES,
     GOLD_CLASSES,
+    HP_MIN_BATTLE_PCT,
     HP_REGEN_BASE_SECONDS,
     HP_REGEN_ENDURANCE_BONUS,
     INT_BONUS_PCT_PER_STEP,
@@ -258,6 +259,20 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
                 )
             )
         ),
+        # секунд до порога входа в бой (HP_MIN_BATTLE_PCT). 0 = уже можно в бой.
+        "regen_secs_to_battle": (
+            0
+            if _display_chp >= int(_base_eq_mhp * HP_MIN_BATTLE_PCT)
+            else int(
+                (int(_base_eq_mhp * HP_MIN_BATTLE_PCT) - _display_chp)
+                / max(
+                    0.001,
+                    mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
+                    * (1.0 + _eq_regen_speed / 100.0),
+                )
+            )
+        ),
+        "battle_min_hp_pct": int(HP_MIN_BATTLE_PCT * 100),
         "warrior_type": (player.get("warrior_type") or "default"),
         "current_class": (player.get("current_class") or ""),
         "inventory_unseen": int(player.get("inventory_unseen", 0) or 0),
