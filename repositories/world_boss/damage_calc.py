@@ -119,15 +119,23 @@ def calc_boss_attack_damage(
     if rng.random() < dodge:
         return (0, True, {"dodged": True, "dodge_chance": dodge})
 
+    # Глухой блок брони (№2): шанс полностью погасить ответку босса.
+    block = float(player_state.get("_eq_block_chance") or 0.0)
+    if block and rng.random() < block / 100.0:
+        return (0, True, {"blocked": True, "block_chance": block})
+
     boss_str = float(boss_stat_profile.get("str", 1.0))
     raw = BOSS_ATTACK_PCT_HP * max_hp * boss_str
-    # Защита от set-bonus (eq_def_pct: 0.05 = 5%) дополнительно снижает урон.
+    # Защита снижает урон: сет-бонус (eq_def_pct_set) + поштучная защита предметов
+    # (eq_def_pct_item = def_pct щита/шлема/брони + body_def_pct брони — босс бьёт в корпус).
     set_def_pct = float(player_state.get("_eq_def_pct_set") or 0.0)
-    mitigated = raw / mults["defense_mult"] / (1.0 + set_def_pct)
+    item_def_pct = float(player_state.get("_eq_def_pct_item") or 0.0)
+    total_def = set_def_pct + item_def_pct
+    mitigated = raw / mults["defense_mult"] / (1.0 + total_def)
     dmg = max(1, int(mitigated))
     return (dmg, False, {
         "raw": raw, "defense_mult": mults["defense_mult"],
-        "boss_str": boss_str, "set_def_pct": set_def_pct,
+        "boss_str": boss_str, "set_def_pct": set_def_pct, "item_def_pct": item_def_pct,
     })
 
 

@@ -59,24 +59,32 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
     if not ps or int(ps.get("is_dead") or 0):
         return
     # Set-bonus: def_pct снижает входящий урон, perk second_wind — после удара.
+    # Поштучная защита экипировки: def_pct (щит/шлем/броня №4) + body_def_pct (броня,
+    # босс бьёт в корпус) снижают ответку; block_chance — шанс погасить; reflect_pct
+    # (шипы брони №1) — отражает урон боссу.
     _sb = {"def_pct": 0.0, "perk_id": None}
+    _eq_reflect = 0.0
     try:
         from config.set_bonuses import get_wb_set_data
         player = db.get_or_create_player(user_id, "")
         equipped = db.get_equipment(user_id)
         _sb = get_wb_set_data(equipped, player.get("current_class") or player.get("warrior_type"))
+        eq = db.get_equipment_stats(user_id) or {}
+        ps = dict(ps)
         if _sb["def_pct"]:
-            ps = dict(ps)
             ps["_eq_def_pct_set"] = _sb["def_pct"]
+        ps["_eq_def_pct_item"] = float(eq.get("def_pct", 0.0) or 0.0) + float(eq.get("body_def_pct", 0.0) or 0.0)
+        ps["_eq_block_chance"] = float(eq.get("block_chance", 0) or 0)
+        _eq_reflect = float(eq.get("reflect_pct", 0) or 0)
     except Exception:
         pass
-    dmg, dodged, _ = calc_boss_attack_damage(
+    dmg, dodged, _dbg_atk = calc_boss_attack_damage(
         ps, stat_profile,
         scroll_1=ps.get("raid_scroll_1"),
         scroll_2=ps.get("raid_scroll_2"),
     )
     if dodged:
-        logger.debug("wb battle: boss hit user=%s dodged", user_id)
+        logger.debug("wb battle: boss hit user=%s dodged/blocked", user_id)
         return
     # Щит игрока (-30% урона) если активен.
     try:
@@ -88,6 +96,13 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
     except Exception:
         pass
     new_hp, is_dead = db.wb_apply_damage_to_player(spawn_id, user_id, dmg)
+    # Шипы (reflect_pct, броня №1): отражаем % полученного урона в HP босса.
+    # Помогает рейду, но НЕ идёт в личный total_damage (чтобы не фармить награду).
+    if _eq_reflect and dmg > 0:
+        try:
+            db.apply_damage_to_boss(spawn_id, max(1, int(dmg * _eq_reflect / 100.0)))
+        except Exception:
+            pass
     logger.debug(
         "wb battle: boss hit user=%s dmg=%s → hp=%s dead=%s",
         user_id, dmg, new_hp, is_dead,

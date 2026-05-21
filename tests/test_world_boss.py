@@ -257,3 +257,35 @@ def test_wb_weekly_score_accumulates_across_raids(db):
     conn.close()
     assert int(row["total_damage"]) == 1700
     assert int(row["raids_count"]) == 2
+
+
+# ─── Защита экипировки от ответки босса (2026_05_21) ───
+
+class _FixedRng:
+    """rng с фиксированным random() — для детерминированных тестов урона босса."""
+    def __init__(self, val):
+        self._val = val
+    def random(self):
+        return self._val
+
+
+def test_boss_attack_applies_item_defense():
+    """Поштучная защита брони (def_pct + body_def_pct → _eq_def_pct_item) снижает
+    урон ответки босса. Раньше учитывался только сет-бонус."""
+    from repositories.world_boss.damage_calc import calc_boss_attack_damage
+    profile = {"str": 1.0, "agi": 1.0, "int": 1.0}
+    base = {"max_hp": 1000, "endurance": 5}
+    # rng=0.99: не уворот (порог мал), не блок (не задан)
+    d_plain, dodged1, _ = calc_boss_attack_damage(dict(base), profile, rng=_FixedRng(0.99))
+    d_def, dodged2, _ = calc_boss_attack_damage({**base, "_eq_def_pct_item": 0.30}, profile, rng=_FixedRng(0.99))
+    assert not dodged1 and not dodged2
+    assert d_def < d_plain, f"защита брони должна снижать урон босса: с защитой={d_def}, без={d_plain}"
+
+
+def test_boss_attack_block_negates():
+    """block_chance=100 (глухой блок брони №2) полностью гасит ответку босса."""
+    from repositories.world_boss.damage_calc import calc_boss_attack_damage
+    profile = {"str": 1.0, "agi": 1.0, "int": 1.0}
+    dmg, blocked, dbg = calc_boss_attack_damage(
+        {"max_hp": 1000, "endurance": 5, "_eq_block_chance": 100.0}, profile, rng=_FixedRng(0.99))
+    assert dmg == 0 and blocked and dbg.get("blocked")
