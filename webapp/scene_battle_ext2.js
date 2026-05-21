@@ -90,9 +90,20 @@ Object.assign(BattleScene.prototype, {
     }
   },
 
-  // Время вышло: НЕ ходим за игрока наугад. Честный пропуск — сообщаем серверу,
-  // он засчитает 0 урона + чистый удар соперника (3 пропуска = поражение).
-  async _onAuto() {
+  // Кнопка «🎲 Случайный ход»: игрок ОСОЗНАННО делегирует ход рандому — это
+  // полноценный ход (а не пропуск). Выбираем случайные зоны и отправляем как обычно.
+  _onAuto() {
+    if (!this._choosing || this._submitting) return;
+    const zones = ['HEAD', 'TORSO', 'LEGS'];
+    if (!this._selAttack)  this._selAttack  = zones[Phaser.Math.Between(0,2)];
+    if (!this._selDefense) this._selDefense = zones[Phaser.Math.Between(0,2)];
+    this._submitChoice();
+  },
+
+  // Время вышло (игрок не сходил сам за 15 сек): честный ПРОПУСК (Вариант А) —
+  // НЕ случайный ход. Сервер засчитает 0 урона + чистый удар соперника
+  // (3 пропуска подряд = поражение).
+  async _onTimeout() {
     if (!this._choosing || this._submitting) return;
     this._submitting = true;
     this._choosing = false;
@@ -101,7 +112,7 @@ Object.assign(BattleScene.prototype, {
       const res = await post('/api/battle/timeout', {});
       this._applyBattleResponse(res);
     } catch(e) {
-      console.error('[BATTLE] _onAuto timeout exception', e);
+      console.error('[BATTLE] _onTimeout exception', e);
       // Не достучались до сервера — фоновый свипер всё равно засчитает пропуск.
       // Подгоняем поллинг, чтобы быстро подхватить результат.
       this._waitingSince = Date.now() - 9000;

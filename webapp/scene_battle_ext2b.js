@@ -89,7 +89,8 @@ Object.assign(BattleScene.prototype, {
           tg?.HapticFeedback?.impactOccurred('light');
         }
         if (secs <= 0) {
-          if (this._choosing) this._onAuto();
+          // Время вышло — честный ПРОПУСК (не случайный ход): см. _onTimeout.
+          if (this._choosing) this._onTimeout();
         }
       },
     });
