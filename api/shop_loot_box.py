@@ -58,7 +58,7 @@ def _generate_common(db, uid) -> Dict[str, Any]:
 
 
 def _generate_rare_b(db, uid) -> Dict[str, Any]:
-    """🟦 Редкий ящик B (50💎) — щедрый: 3–6 алмазных предметов."""
+    """🟦 Редкий ящик B (20💎) — щедрый: 3–6 алмазных предметов."""
     drops: List[Dict] = []
     count = random.choice([3, 3, 4, 4, 4, 5, 6])  # чаще 4
 
@@ -81,7 +81,7 @@ def _generate_rare_b(db, uid) -> Dict[str, Any]:
 
 
 def _generate_rare_c(db, uid) -> Dict[str, Any]:
-    """🟪 Редкий ящик C (80💎) — джекпотный: 2 гарант + 0–4 бонус."""
+    """🟪 Редкий ящик C (30💎) — джекпотный: 2 гарант + 0–4 бонус."""
     drops: List[Dict] = []
 
     # 2 гарантированных алмазных свитка

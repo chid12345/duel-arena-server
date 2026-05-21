@@ -77,6 +77,16 @@ function _priceIcon(cur) {
   return cur === 'diamonds' ? '💎' : '🪙';
 }
 
+// Зелье HP — цена динамическая (растёт с max_hp). Берём реальную из API (heal_potion_price),
+// иначе на карточке висели бы статичные 35🪙, а списывалось бы 15…150🪙.
+function _effPrice(id, price) {
+  if (id === 'hp_full') {
+    const dyn = (typeof State !== 'undefined' && State.player && State.player.heal_potion_price) || 0;
+    if (dyn > 0) return dyn;
+  }
+  return price;
+}
+
 function _icoHtml(icon, size) {
   if (icon && icon.startsWith('img:')) {
     return `<img src="${icon.slice(4)}" style="width:${size}px;height:${size}px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(255,200,80,.35))">`;
@@ -85,7 +95,8 @@ function _icoHtml(icon, size) {
 }
 
 function _cardHTML(item) {
-  const [id, icon, name, price, cur, desc, badge, risk] = item;
+  const [id, icon, name, , cur, desc, badge, risk] = item;
+  const price = _effPrice(id, item[3]);
   const r = _rarity(cur, price, risk);
   const qty = _inv[id] || 0;
   const badgeCls = badge ? `<span class="sh-bdg ${_badgeClass(badge)}">${badge}</span>` : '';
@@ -158,7 +169,8 @@ window.ShopHtmlItems = {
 
   _showDetailFor(id) {
     const found = ShopHtmlItems._findItem(id); if (!found) return;
-    const [iid, icon, name, price, cur, desc, badge, risk] = found.item;
+    const [iid, icon, name, , cur, desc, badge, risk] = found.item;
+    const price = _effPrice(iid, found.item[3]);
     let r = _rarity(cur, price, risk);
     const qty = _inv[iid] || 0;
     const p = State.player || {};
