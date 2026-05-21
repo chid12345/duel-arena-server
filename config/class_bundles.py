@@ -192,5 +192,6 @@ USDT_RESET_PRICE = "5.99"
 # Бонус пассивки Легендарный образа (в очках стата)
 USDT_PASSIVE_BONUS = 8
 
-RESET_STATS_COST_DIAMONDS = 200
+# Цена сброса статов = 75 💎 (совпадает с тем, что показано в мини-аппе и боте).
+RESET_STATS_COST_DIAMONDS = 75
 RESET_STATS_COST_DIAMONDS_USDT = 25

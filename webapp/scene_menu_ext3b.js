@@ -42,7 +42,7 @@ Object.assign(MenuScene.prototype, {
     zone.disableInteractive();
     btnTxt.setText('Пьём зелье...');
     try {
-      const res = await post('/api/shop/buy', { item_id: 'hp_small' });
+      const res = await post('/api/shop/buy', { item_id: 'hp_full' });
       if (res.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         if (res.player) State.player = res.player;
@@ -52,7 +52,7 @@ Object.assign(MenuScene.prototype, {
         tg?.HapticFeedback?.notificationOccurred('error');
         btnTxt.setText(res.reason || 'Ошибка');
         this.time.delayedCall(1500, () => {
-          btnTxt.setText('🧪 Выпить малое зелье  —  12 🪙');
+          btnTxt.setText(`🧪 Выпить зелье HP  —  ${State.player?.heal_potion_price || 15} 🪙`);
           zone.setInteractive({ useHandCursor: true });
         });
       }

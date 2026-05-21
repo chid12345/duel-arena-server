@@ -76,6 +76,24 @@ def test_level_does_not_exceed_max(db):
     assert p["level"] == MAX_LEVEL
 
 
+def test_battle_xp_post_cap_converts_to_gold():
+    """Боевой путь (_exp_progression_updates) на MAX_LEVEL: опыт → золото, не копится."""
+    from config import MAX_LEVEL
+    from battle_system import BattleSystem
+
+    bs = BattleSystem()
+    player = {
+        "level": MAX_LEVEL, "exp": 0, "exp_milestones": 0, "free_stats": 0,
+        "gold": 100, "diamonds": 0, "max_hp": 500, "current_hp": 500,
+    }
+    patch, leveled = bs._exp_progression_updates(player, 1000)
+
+    assert leveled is False
+    assert patch["level"] == MAX_LEVEL
+    assert patch["exp"] == 0, "на капе опыт не должен копиться"
+    assert patch["gold"] == 100 + int(1000 * 0.1), "опыт на капе должен уйти в золото ×0.1"
+
+
 def test_partial_post_cap_converts_remainder(db):
     """Игрок на (MAX_LEVEL - 1) с большим грантом: дойдёт до MAX_LEVEL и остаток XP → gold."""
     from config import MAX_LEVEL

@@ -50,11 +50,15 @@ Object.assign(ResultScene.prototype, {
       fontFamily: 'Arial Black, Arial', fontSize: '27px', fontStyle: 'bold', color: '#cc88ff',
       shadow: { offsetX: 0, offsetY: 0, color: '#cc88ff', blur: 22, fill: true }
     }).setOrigin(0.5).setScale(0).setAlpha(0).setDepth(51);
+    const hint = this.add.text(W/2, H*0.476 + 32, '✨ Получены очки статов — потрать их в «Герой»!', {
+      fontFamily: 'Arial', fontSize: '12px', fontStyle: 'bold', color: '#e0b8ff'
+    }).setOrigin(0.5).setAlpha(0).setDepth(51);
+    this.tweens.add({ targets: hint, alpha: 1, delay: 240, duration: 380 });
     this.tweens.add({
       targets: t, scale: 1, alpha: 1, duration: 420, ease: 'Back.easeOut',
       onComplete: () => this.time.delayedCall(1400, () => {
-        this.tweens.add({ targets: [t, glow], alpha: 0, y: t.y - 48, duration: 500,
-          onComplete: () => { t.destroy(); glow.destroy(); } });
+        this.tweens.add({ targets: [t, glow, hint], alpha: 0, y: '-=48', duration: 500,
+          onComplete: () => { t.destroy(); glow.destroy(); hint.destroy(); } });
       }),
     });
     Sound.questDone();

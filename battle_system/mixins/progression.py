@@ -69,6 +69,17 @@ class BattleProgressionMixin:
             free_stats += stats_when_reaching_level(level)
             diamonds += diamonds_when_reaching_level(level)  # 0 на обычных, >0 на сигнальных (×10)
 
+        # На максимальном уровне остаток опыта не копится впустую, а конвертируется
+        # в золото (как у квестов — см. grant_exp_with_levelup). Курс из economy.json.
+        if level >= MAX_LEVEL and exp > 0:
+            try:
+                from economy import get_anchor
+                rate = float(get_anchor("POST_CAP_XP_TO_GOLD"))
+            except Exception:
+                rate = 0.1
+            gold += int(exp * rate)
+            exp = 0
+
         return (
             {
                 'exp':            exp,

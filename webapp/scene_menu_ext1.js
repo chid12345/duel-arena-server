@@ -147,13 +147,14 @@ Object.assign(MenuScene.prototype, {
       hpBlockObjs.push(rmdl(txt(this, PAD, curY + 18, regenStr, 9, '#ddddff')));
     }
     if (p.hp_pct < 15) {
-      const canAfford = (p.gold || 0) >= 12;
+      const healPrice = p.heal_potion_price || 15;
+      const canAfford = (p.gold || 0) >= healPrice;
       const btnBY = curY + 32;
       const qBg = rmdl(this.add.graphics());
       qBg.fillStyle(canAfford ? C.red : C.dark, canAfford ? 0.88 : 0.55);
       qBg.fillRoundedRect(PAD, btnBY, W - PAD * 2, 38, 10);
       if (canAfford) { qBg.lineStyle(1.5, C.gold, 0.3); qBg.strokeRoundedRect(PAD, btnBY, W - PAD * 2, 38, 10); }
-      const qLabel = canAfford ? `🧪 Выпить малое зелье  —  12 🪙` : `🧪 Нужно 12 🪙 (у вас ${p.gold || 0})`;
+      const qLabel = canAfford ? `🧪 Выпить зелье HP  —  ${healPrice} 🪙` : `🧪 Нужно ${healPrice} 🪙 (у вас ${p.gold || 0})`;
       const qT = rmdl(txt(this, W / 2, btnBY + 19, qLabel, 11, canAfford ? '#ffffff' : '#cc8888', true).setOrigin(0.5));
       const qZ = rmdl(this.add.zone(PAD, btnBY, W - PAD * 2, 38).setOrigin(0).setInteractive({ useHandCursor: canAfford }));
       if (canAfford) {

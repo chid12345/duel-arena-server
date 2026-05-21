@@ -32,6 +32,7 @@ from config import (
 )
 
 from api.tma_avatar_bonus import AVATAR_BY_ID, _avatar_effective_bonus
+from economy.formulas import potion_price_for_hp
 
 
 def _premium_fields(player: dict) -> dict:
@@ -206,6 +207,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "intuition_effective": _intu,
         "stamina_effective": _vyn + PLAYER_START_ENDURANCE,
         "max_hp_effective": _eff_mhp,
+        "heal_potion_price": potion_price_for_hp("hp_full", mhp),  # реальная цена зелья полного HP
         "max_hp": _base_eq_mhp,
         "current_hp": _display_chp,
         "gold": int(player.get("gold", 0)),
