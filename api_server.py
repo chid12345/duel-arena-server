@@ -79,13 +79,30 @@ async def _payment_settle_loop() -> None:
         await asyncio.sleep(30)
 
 
+async def _afk_sweep_loop() -> None:
+    """Свипер зависших боёв мини-аппа: server-side засчёт пропуска хода.
+    В мини-аппе таймер хода ведёт клиент; если он закрыл приложение (особенно
+    в PvP), раунд некому продвинуть. Раз в несколько секунд продвигаем такие бои
+    через process_turn_timeout. Telegram-бои не трогаем (у них свой таймер)."""
+    from jobs.afk_sweep import afk_sweep_once, AFK_SWEEP_INTERVAL_SECONDS
+    from battle_system import battle_system
+    await asyncio.sleep(10)  # дать серверу подняться
+    while True:
+        await asyncio.sleep(AFK_SWEEP_INTERVAL_SECONDS)
+        try:
+            await afk_sweep_once(battle_system)
+        except Exception as e:
+            logger.warning("afk_sweep_loop: %s", e)
+
+
 @asynccontextmanager
 async def _lifespan(app):  # noqa: ARG001
     tick_task = asyncio.create_task(_wb_tick_loop())
     sched_task = asyncio.create_task(_wb_scheduler_loop())
     settle_task = asyncio.create_task(_payment_settle_loop())
+    afk_task = asyncio.create_task(_afk_sweep_loop())
     yield
-    for t in (tick_task, sched_task, settle_task):
+    for t in (tick_task, sched_task, settle_task, afk_task):
         t.cancel()
         try:
             await t
