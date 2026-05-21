@@ -124,6 +124,9 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
     _eq_silence     = int(_eq_early.get("silence_pct", 0) or 0)
     _eq_slow        = int(_eq_early.get("slow_pct", 0) or 0)
     _eq_regen_speed = int(_eq_early.get("regen_speed_pct", 0) or 0)
+    _eq_body_def = float(_eq.get("body_def_pct", 0.0) or 0.0)  # защита тела (броня)
+    _eq_reflect  = int(_eq.get("reflect_pct", 0) or 0)         # шипы (броня №1)
+    _eq_block    = int(_eq.get("block_chance", 0) or 0)        # глухой блок (броня №2)
     # _eq_str/agi/intu уже определены выше (ранняя фаза)
     if _eq_atk:  dmg       = dmg + _eq_atk
     if _eq_hp:   _eff_mhp  = _eff_mhp + _eq_hp
@@ -279,6 +282,9 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "silence_pct":     _eq_silence,
             "slow_pct":        _eq_slow,
             "regen_speed_pct": _eq_regen_speed,
+            "body_def_pct":    round(_eq_body_def * 100, 1),
+            "reflect_pct":     _eq_reflect,
+            "block_chance":    _eq_block,
         },
         **_premium_fields(player),
     }

@@ -122,6 +122,15 @@ def test_armor2_body_defense_hp_and_effects():
     assert ARMOR2["armor2_mythic4"].get("free_stats") == 19
 
 
+def test_player_api_exposes_armor2_defense_fields():
+    """eq_stats в /api/player отдаёт защиту тела/шипы/блок — иначе фронт не покажет числом."""
+    from api.tma_player_api import _player_api
+    r = _player_api({"user_id": 1}, eq_stats={"body_def_pct": 0.15, "reflect_pct": 15, "block_chance": 12})
+    assert r["eq_stats"]["body_def_pct"] == 15.0
+    assert r["eq_stats"]["reflect_pct"] == 15
+    assert r["eq_stats"]["block_chance"] == 12
+
+
 def test_armor2_body_def_aggregates_in_equipment_stats(db):
     """body_def_pct надетой брони попадает в get_equipment_stats."""
     db.get_or_create_player(6096, "u_bodydef")

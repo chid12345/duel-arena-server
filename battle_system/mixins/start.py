@@ -162,6 +162,7 @@ class BattleStartMixin:
         player["_eq_pen_pct"]      = stats.get("pen_pct", 0.0)
         player["_eq_dodge_bonus"]  = int(stats.get("dodge_bonus", 0))
         player["_eq_regen_bonus"]  = int(stats.get("regen_bonus", 0))
+        player["_eq_regen_speed_pct"] = int(stats.get("regen_speed_pct", 0))  # ускоряет реген от сапог
         player["_eq_lifesteal_pct"]   = int(stats.get("lifesteal_pct", 0))
         player["_eq_crit_resist_pct"] = int(stats.get("crit_resist_pct", 0))
         player["_eq_double_pct"] = int(stats.get("double_pct", 0))

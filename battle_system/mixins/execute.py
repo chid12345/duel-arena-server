@@ -99,11 +99,18 @@ class BattleExecuteMixin:
             _r_p1 = float(battle['player1'].get('_eq_reflect_pct', 0) or 0)
             if _r_p1 and p2_damage > 0:
                 player2['current_hp'] = max(0, player2['current_hp'] - max(1, int(p2_damage * _r_p1 / 100.0)))
-            # Регенерация от сапог (regen_bonus HP за раунд, только живым)
-            p1_regen = int(battle['player1'].get('_eq_regen_bonus', 0))
+            # Регенерация от сапог (regen_bonus HP за раунд, только живым).
+            # regen_speed_pct ускоряет реген: +N% к величине восстановления.
+            def _regen_amount(p):
+                base = int(p.get('_eq_regen_bonus', 0))
+                if base <= 0:
+                    return 0
+                spd = int(p.get('_eq_regen_speed_pct', 0))
+                return int(base * (1 + spd / 100.0)) if spd else base
+            p1_regen = _regen_amount(battle['player1'])
             if p1_regen > 0 and player1['current_hp'] > 0:
                 player1['current_hp'] = min(player1['max_hp'], player1['current_hp'] + p1_regen)
-            p2_regen = int(battle['player2'].get('_eq_regen_bonus', 0))
+            p2_regen = _regen_amount(battle['player2'])
             if p2_regen > 0 and player2['current_hp'] > 0:
                 player2['current_hp'] = min(player2['max_hp'], player2['current_hp'] + p2_regen)
             # Перк second_wind: при HP < 30% мгновенно +100 HP (раз в бой)

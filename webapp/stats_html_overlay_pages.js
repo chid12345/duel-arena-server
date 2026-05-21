@@ -68,6 +68,14 @@ function bonusHTML(p, inv){
     eq.regen_bonus&&['Регенерация',`+${eq.regen_bonus} HP/р`],eq.lifesteal_pct&&['Вампиризм',`+${eq.lifesteal_pct}%`],
     eq.str_bonus&&['Сила (щит)',`+${eq.str_bonus}`],eq.agi_bonus&&['Ловкость (щит)',`+${eq.agi_bonus}`],
     eq.intu_bonus&&['Интуиция (щит)',`+${eq.intu_bonus}`],eq.accuracy&&['Точность',`+${eq.accuracy}%`],
+    // Броня armor2 — защитные механики
+    eq.body_def_pct&&['Защита тела',`−${eq.body_def_pct}%`],eq.reflect_pct&&['🪞 Шипы',`${eq.reflect_pct}%`],
+    eq.block_chance&&['🛡 Блок',`${eq.block_chance}%`],eq.crit_resist_pct&&['Защита от крита',`−${eq.crit_resist_pct}%`],
+    // Прочие боевые
+    eq.double_pct&&['Двойной удар',`+${eq.double_pct}%`],eq.anti_dodge_pct&&['Анти-уворот',`−${eq.anti_dodge_pct}%`],
+    eq.silence_pct&&['Глушение крита',`${eq.silence_pct}%`],eq.slow_pct&&['Замедление врага',`−${eq.slow_pct}%`],
+    eq.regen_speed_pct&&['Скорость регена',`+${eq.regen_speed_pct}%`],
+    eq.gold_pct&&['Золото',`+${eq.gold_pct}%`],eq.xp_pct&&['Опыт',`+${eq.xp_pct}%`],
   ].filter(Boolean);
   const eqHtml=eqList.length?eqList.map(([k,v])=>`<div class="r"><span class="k">${_esc(k)}</span><span class="v">${_esc(v)}</span></div>`).join(''):`<div class="em">наденьте снаряжение в гардеробе</div>`;
   // 🎁 Комплект — активные сет-бонусы (берём из State.setsStatus.active).
