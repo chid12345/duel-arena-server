@@ -37,7 +37,7 @@ const ARMOR2_DATA = [
   {id:'armor2_mythic1',r:'mythic', ht:'🛡 Броня', name:'Доспех Пламенного Титана', stars:'★★★★', str:12, agi:0, intu:0, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · 🪞 Шипы 15%'},
   {id:'armor2_mythic2',r:'mythic', ht:'🛡 Броня', name:'Облачение Призрака Ветров',stars:'★★★★', str:0, agi:12, intu:0, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · 🛡 Блок 12%'},
   {id:'armor2_mythic3',r:'mythic', ht:'🛡 Броня', name:'Регалии Повелителя Молний',stars:'★★★★', str:0, agi:0, intu:12, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · −15% крит врага'},
-  {id:'armor2_mythic4',r:'mythic', ht:'🛡 Броня', name:'Доспех Светоносного Бога', stars:'★★★★', str:0, agi:0, intu:0,  hp:0,  type:'legendary', tier:'T4', recLevel:65, bonus:'+19 свободных статов · пассивка на выбор'},
+  {id:'armor2_mythic4',r:'mythic', ht:'🛡 Броня', name:'Доспех Светоносного Бога', stars:'★★★★', str:0, agi:0, intu:0,  hp:0,  type:'legendary', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · +19 свободных статов · пассивка'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};

@@ -117,8 +117,8 @@ def test_armor2_body_defense_hp_and_effects():
     # №4 (баланс) — фиксированная (глобальная) защита, как у щита/шлема
     assert ARMOR2["armor2_dia4"]["def_pct"] == 0.06
     assert ARMOR2["armor2_free4"]["def_pct"] == 0.02
-    # Легендарка (mythic4) не трогали — остаётся чистым листом
-    assert "body_def_pct" not in ARMOR2["armor2_mythic4"]
+    # Легендарка (mythic4) — тоже броня, тоже защищает тело −15% (как остальные мифики)
+    assert ARMOR2["armor2_mythic4"]["body_def_pct"] == 0.15
     assert ARMOR2["armor2_mythic4"].get("free_stats") == 19
 
 
