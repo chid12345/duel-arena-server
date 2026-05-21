@@ -21,7 +21,7 @@ SHOP_CATALOG = {
     # XP/Gold бусты — золото дёшево (5 боёв), алмазы для серьёзного буста
     "xp_boost_5":    {"name": "XP Буст ×1.5",         "price": 60,  "currency": "gold",     "icon": "⚡", "tab": "consumables", "desc": "5 боёв с бонусом XP",   "inventory": True},
     "xp_boost_20":   {"name": "XP Буст ×1.5",         "price": 8,   "currency": "diamonds", "icon": "⚡", "tab": "consumables", "desc": "20 боёв с бонусом XP",  "inventory": True},
-    "xp_boost_x2":   {"name": "XP Буст ×2.0",         "price": 6,   "currency": "diamonds", "icon": "🚀", "tab": "consumables", "desc": "10 боёв XP ×2.0",       "inventory": True},
+    "xp_boost_x2":   {"name": "XP Буст ×1.5",         "price": 6,   "currency": "diamonds", "icon": "🚀", "tab": "consumables", "desc": "10 боёв с бонусом XP",  "inventory": True},
     "gold_hunt":     {"name": "Охота за золотом",      "price": 5,   "currency": "diamonds", "icon": "💰", "tab": "consumables", "desc": "+20% золото за бой, 24 ч", "inventory": True},
     "xp_hunt":       {"name": "Охота за опытом",       "price": 8,   "currency": "diamonds", "icon": "📚", "tab": "consumables", "desc": "+50% опыта за бой, 24 ч",  "inventory": True},
     "stat_reset":    {"name": "Сброс статов",          "price": 75,  "currency": "diamonds", "icon": "🔄", "tab": "boxes",       "desc": "Сбросить все статы"},

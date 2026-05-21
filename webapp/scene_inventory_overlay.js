@@ -49,7 +49,7 @@
     // ── Эликсиры ──
     xp_boost_5:    { icon:'⚡', name:'XP Буст ×1.5',          desc:'Опыт ×1.5 · на 5 боёв', tab:'elixirs' },
     xp_boost_20:   { icon:'⚡', name:'XP Буст ×1.5',          desc:'Опыт ×1.5 · на 20 боёв', tab:'elixirs' },
-    xp_boost_x2:   { icon:'🚀', name:'XP Буст ×2.0',          desc:'Опыт ×2.0 · на 10 боёв', tab:'elixirs' },
+    xp_boost_x2:   { icon:'🚀', name:'XP Буст ×1.5',          desc:'Бонус XP · на 10 боёв', tab:'elixirs' },
     gold_hunt:     { icon:'💰', name:'Охота за золотом',       desc:'+20% золота за бой · 24 часа', tab:'elixirs' },
     xp_hunt:       { icon:'📚', name:'Охота за опытом',        desc:'+50% опыта за бой · 24 часа', tab:'elixirs' },
     // ── Мировой Босс: свитки рейда (применяются в слоты во вкладке ⚔️ Босс) ──

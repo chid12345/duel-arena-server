@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 _XP_BOOST_CHARGES = {
     "xp_boost_5":  (5,  1.5),
     "xp_boost_20": (20, 1.5),
-    "xp_boost_x2": (10, 2.0),
+    "xp_boost_x2": (10, 1.5),
 }
 
 # Золото за обмен алмазов

@@ -18,7 +18,7 @@ Object.assign(ShopScene.prototype, {
         { id: 'hp_full',     icon: '⚗️', name: 'Зелье полного HP', price: _hp_full_price, currency: 'gold', desc: 'Полное HP (цена растёт с уровнем)', hpPct: 1.0 },
         { id: 'xp_boost_5',  icon: '⚡', name: 'XP Буст ×1.5',    price: 60,  currency: 'gold',     desc: `5 боёв · активно: ${xpCharges}` },
         { id: 'xp_boost_20', icon: '⚡', name: 'XP Буст ×1.5',    price: 8,   currency: 'diamonds', desc: '20 боёв → инвентарь' },
-        { id: 'xp_boost_x2', icon: '🚀', name: 'XP Буст ×2.0',    price: 6,   currency: 'diamonds', desc: '10 боёв → инвентарь' },
+        { id: 'xp_boost_x2', icon: '🚀', name: 'XP Буст ×1.5',    price: 6,   currency: 'diamonds', desc: '10 боёв → инвентарь' },
         { id: 'gold_hunt',   icon: '💰', name: 'Охота за золотом', price: 5,   currency: 'diamonds', desc: '+20% золото · 24ч → инвентарь' },
         { id: 'xp_hunt',     icon: '📚', name: 'Охота за опытом',  price: 8,   currency: 'diamonds', desc: '+50% опыта · 24ч → инвентарь' },
       ];
