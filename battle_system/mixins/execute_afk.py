@@ -17,25 +17,42 @@ from battle_system.models import BattleRound, BattleResult
 logger = logging.getLogger(__name__)
 
 class BattleExecuteAfkMixin:
-    async def _execute_round_afk_human(self, battle_id: str) -> Dict:
-        """Игрок не успел за TURN_ACTION_SECONDS: 0 урона по боту, бот бьёт без блока."""
+    async def _execute_round_afk(self, battle_id: str) -> Dict:
+        """Раунд-пропуск: кто не выставил ход за TURN_ACTION_SECONDS — бьёт на 0 и
+        получает ЧИСТЫЙ удар (без блока/уклона) от активного бойца. Контрудара у
+        пропустившего нет. Работает для PvE и PvP, для любого из двоих (или обоих)."""
         battle = self.active_battles[battle_id]
         battle['current_round'] += 1
         round_num = battle['current_round']
         player1 = battle['player1'].copy()
         player2 = battle['player2'].copy()
-        p2_choices = self._get_bot_choice(player2, player1)
+
+        p1_choices = battle.get('player1_choices') or {}
+        p2_choices = battle.get('player2_choices') or {}
+        # Бот всегда ходит сам (PvE): за него выбор делает ИИ.
+        if battle['is_bot2'] and not p2_choices:
+            p2_choices = self._get_bot_choice(player2, player1)
+        p1_afk = not p1_choices
+        p2_afk = not p2_choices
+        p1_choices = dict(p1_choices) if p1_choices else {'attack': 'ТУЛОВИЩЕ', 'defense': 'ТУЛОВИЩЕ'}
+        p2_choices = dict(p2_choices) if p2_choices else {'attack': 'ТУЛОВИЩЕ', 'defense': 'ТУЛОВИЩЕ'}
         battle['player2_choices'] = p2_choices
-        p1_choices = {'attack': 'ТУЛОВИЩЕ', 'defense': 'ТУЛОВИЩЕ'}
-        p1_damage = 0
-        o1 = 'timeout'
-        p2_damage, o2, _ = self._calculate_damage_detailed(
-            player2,
-            player1,
-            p2_choices['attack'],
-            p1_choices['defense'],
-            is_afk=True,
-        )
+
+        # Пропустивший бьёт на 0; активный бьёт пропустившего «чисто»
+        # (is_afk=True у цели — она не блокирует/не уклоняется).
+        if p1_afk:
+            p1_damage, o1 = 0, 'timeout'
+        else:
+            p1_damage, o1, _ = self._calculate_damage_detailed(
+                player1, player2, p1_choices['attack'], p2_choices['defense'], is_afk=p2_afk,
+            )
+        if p2_afk:
+            p2_damage, o2 = 0, 'timeout'
+        else:
+            p2_damage, o2, _ = self._calculate_damage_detailed(
+                player2, player1, p2_choices['attack'], p1_choices['defense'], is_afk=p1_afk,
+            )
+
         player1['current_hp'] = max(0, player1['current_hp'] - p2_damage)
         player2['current_hp'] = max(0, player2['current_hp'] - p1_damage)
 

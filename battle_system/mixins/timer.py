@@ -114,7 +114,7 @@ class BattleTimerMixin:
             if battle['player1_consecutive_afk'] >= AFK_ROUNDS_TO_DEFEAT:
                 self.cancel_turn_timer(battle)
                 return await self._end_battle_by_afk(battle_id, bot_wid)
-            return await self._execute_round_afk_human(battle_id)
+            return await self._execute_round_afk(battle_id)
         else:
             # PvP: проверяем обоих
             p1_ok = bool(battle.get('player1_choices'))
@@ -136,4 +136,4 @@ class BattleTimerMixin:
             if battle.get('player2_consecutive_afk', 0) >= AFK_ROUNDS_TO_DEFEAT:
                 self.cancel_turn_timer(battle)
                 return await self._end_battle_by_afk(battle_id, battle['player1']['user_id'])
-            return await self._execute_round(battle_id)
+            return await self._execute_round_afk(battle_id)
