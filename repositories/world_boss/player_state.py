@@ -172,6 +172,23 @@ class WorldBossPlayerStateMixin:
         conn.close()
         return int(row["current_hp"]) if row else None
 
+    def wb_heal_player(self, spawn_id: int, user_id: int, heal: int) -> None:
+        """Лечит живого игрока в рейде на heal HP (не выше max_hp).
+        Используется вампиризмом (lifesteal от урона по боссу). Без флагов —
+        срабатывает каждый удар. Мёртвых не лечит (нужен свиток воскрешения)."""
+        if heal <= 0:
+            return
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_player_state "
+            "SET current_hp = MIN(max_hp, current_hp + ?) "
+            "WHERE spawn_id=? AND user_id=? AND is_dead=0",
+            (int(heal), int(spawn_id), int(user_id)),
+        )
+        conn.commit()
+        conn.close()
+
     def wb_resurrect_player(
         self, spawn_id: int, user_id: int, hp_pct: float
     ) -> Optional[int]:

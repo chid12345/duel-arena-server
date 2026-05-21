@@ -97,6 +97,9 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         eff_endur    = int(player.get("endurance") or PLAYER_START_ENDURANCE) \
                        + int(eq.get("agi_bonus", 0) or 0) \
                        + int(buffs.get("endurance", 0) or 0)
+        # Атакующие статы экипировки по боссу: двойной удар (шанс x2) и вампиризм.
+        _eq_double_pct = int(eq.get("double_pct", 0) or 0) + int(buffs.get("double_pct", 0) or 0)
+        _eq_lifesteal_pct = int(eq.get("lifesteal_pct", 0) or 0) + int(buffs.get("lifesteal_pct", 0) or 0)
         # Бонусы за комплект (set bonus): hp_pct, atk_pct + perk_id (для perks ниже)
         _sb = {"hp_pct": 0, "atk_pct": 0, "def_pct": 0.0, "perk_id": None, "count": 0}
         try:
@@ -181,9 +184,22 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
                            player_level=int(player.get("level") or 1))
         dmg = zr["modified_damage"]
 
+        # Двойной удар (double_pct, оружие/usdt): шанс нанести x2 урона по боссу.
+        import random as _rnd
+        is_double = bool(_eq_double_pct) and _rnd.random() < _eq_double_pct / 100.0
+        if is_double:
+            dmg = max(1, dmg * 2)
+
         new_hp = db.apply_damage_to_boss(spawn_id, dmg)
         if new_hp is None:
             return {"ok": False, "reason": "Рейд уже завершён"}
+
+        # Вампиризм (lifesteal_pct, ботинки): лечим игрока на % от урона по боссу.
+        if _eq_lifesteal_pct and dmg > 0 and not int(ps.get("is_dead") or 0):
+            try:
+                db.wb_heal_player(spawn_id, uid, max(1, int(dmg * _eq_lifesteal_pct / 100.0)))
+            except Exception:
+                pass
 
         # Контр-урон по игроку (если защита не угадала зону атаки босса).
         # Учитываем активный щит (-30% на 2 сек).

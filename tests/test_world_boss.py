@@ -289,3 +289,17 @@ def test_boss_attack_block_negates():
     dmg, blocked, dbg = calc_boss_attack_damage(
         {"max_hp": 1000, "endurance": 5, "_eq_block_chance": 100.0}, profile, rng=_FixedRng(0.99))
     assert dmg == 0 and blocked and dbg.get("blocked")
+
+
+def test_wb_heal_player_caps_at_max(db):
+    """Вампиризм по боссу (wb_heal_player) лечит живого игрока, не выше max_hp."""
+    spawn_id = _make_spawn(db)
+    db.get_or_create_player(7001, "u_heal")
+    db.wb_join_raid(spawn_id, 7001, max_hp=1000, endurance=10, crit=5)
+    db.wb_apply_damage_to_player(spawn_id, 7001, 400)   # hp=600
+    db.wb_heal_player(spawn_id, 7001, 150)              # hp=750
+    ps = db.get_wb_player_state(spawn_id, 7001)
+    assert int(ps["current_hp"]) == 750
+    db.wb_heal_player(spawn_id, 7001, 99999)           # упирается в max_hp
+    ps = db.get_wb_player_state(spawn_id, 7001)
+    assert int(ps["current_hp"]) == 1000
