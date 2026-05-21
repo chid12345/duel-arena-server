@@ -65,6 +65,14 @@ class BattleExecuteMixin:
             # Перки за полную сборку (set bonus 6/6): pre-damage модификаторы
             self._apply_set_perks_pre(battle, player1, "p1", round_num)
             self._apply_set_perks_pre(battle, player2, "p2", round_num)
+            # Внезапная смерть: с раунда SUDDEN_DEATH_ROUND отключаем ВСЁ лечение
+            # (вампиризм/реген/second_wind), чтобы бой без лимита раундов гарантированно
+            # закончился нокаутом, а не «лекари бьются вечно».
+            sudden_death = round_num >= SUDDEN_DEATH_ROUND
+            if sudden_death:
+                for _p in (player1, player2):
+                    _p['_buff_lifesteal_pct'] = 0
+                    _p['_eq_lifesteal_pct'] = 0
             p1_damage, o1, debuff_to_p2 = self._calculate_damage_detailed(
                 player1,
                 player2,
@@ -107,15 +115,16 @@ class BattleExecuteMixin:
                     return 0
                 spd = int(p.get('_eq_regen_speed_pct', 0))
                 return int(base * (1 + spd / 100.0)) if spd else base
-            p1_regen = _regen_amount(battle['player1'])
+            p1_regen = 0 if sudden_death else _regen_amount(battle['player1'])
             if p1_regen > 0 and player1['current_hp'] > 0:
                 player1['current_hp'] = min(player1['max_hp'], player1['current_hp'] + p1_regen)
-            p2_regen = _regen_amount(battle['player2'])
+            p2_regen = 0 if sudden_death else _regen_amount(battle['player2'])
             if p2_regen > 0 and player2['current_hp'] > 0:
                 player2['current_hp'] = min(player2['max_hp'], player2['current_hp'] + p2_regen)
             # Перк second_wind: при HP < 30% мгновенно +100 HP (раз в бой)
-            self._apply_set_perk_second_wind(battle, player1, "p1")
-            self._apply_set_perk_second_wind(battle, player2, "p2")
+            if not sudden_death:
+                self._apply_set_perk_second_wind(battle, player1, "p1")
+                self._apply_set_perk_second_wind(battle, player2, "p2")
 
             self._append_combat_log_round(
                 battle,
