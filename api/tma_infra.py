@@ -141,6 +141,11 @@ class ConnectionManager:
         self.connections: Dict[int, WebSocket] = {}
         self._session_keys: Dict[int, str] = {}   # user_id → активный session key
         self._protected_until: Dict[int, float] = {}  # user_id → время защиты (epoch)
+        # Предыдущий ключ остаётся валидным короткое время после ротации — чтобы на
+        # ОДНОМ устройстве реконнект WS (моргнула сеть/свернули мини-апп) не ронял ход
+        # «старым» ключом с ошибкой «открыта на другом устройстве».
+        self._prev_keys: Dict[int, tuple] = {}     # user_id → (old_key, valid_until_epoch)
+        self._key_grace_sec = 25
 
     async def connect(self, user_id: int, ws: WebSocket) -> str | None:
         # ВАЖНО: ws.accept() теперь делается в handler'е (system_realtime_routes)
@@ -170,16 +175,29 @@ class ConnectionManager:
             # Нет активной сессии — очищаем защиту (нормальное переподключение)
             self._protected_until.pop(user_id, None)
 
+        # Старый ключ остаётся валидным ещё _key_grace_sec — анти-гонка с реконнектом.
+        _old_key = self._session_keys.get(user_id)
+        if _old_key:
+            self._prev_keys[user_id] = (_old_key, time.time() + self._key_grace_sec)
         key = secrets.token_hex(16)
         self._session_keys[user_id] = key
         self.connections[user_id] = ws
         return key
 
     def validate_session(self, user_id: int, key: str | None) -> bool:
-        """True если key совпадает с текущей сессией пользователя."""
+        """True если key совпадает с текущей сессией пользователя.
+
+        Также принимаем ПРЕДЫДУЩИЙ ключ короткое время (grace): на одном устройстве
+        при переподключении WS ключ ротируется, и ход со «старым» ключом иначе ложно
+        падает с «открыта на другом устройстве». Реальное 2-е устройство это не пускает —
+        его UI уже закрыт событием kicked, ходить оно не может."""
         if not key:
             return True  # клиент ещё не получил токен (старая версия) — пропускаем
-        return self._session_keys.get(user_id) == key
+        if self._session_keys.get(user_id) == key:
+            return True
+        import time as _t
+        prev = self._prev_keys.get(user_id)
+        return bool(prev and prev[0] == key and _t.time() < prev[1])
 
     def disconnect(self, user_id: int, ws: WebSocket | None = None) -> None:
         # ws передаётся чтобы не удалить чужую активную сессию случайно
