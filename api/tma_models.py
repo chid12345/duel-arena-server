@@ -14,6 +14,12 @@ class BattleChoiceBody(BaseModel):
     session_key: str | None = None
 
 
+class BattleTimeoutBody(BaseModel):
+    """Игрок не успел сходить за отведённое время — честный пропуск (без случайного хода)."""
+    init_data: str
+    session_key: str | None = None
+
+
 class FindBattleBody(BaseModel):
     init_data: str
     queue_only: bool = False

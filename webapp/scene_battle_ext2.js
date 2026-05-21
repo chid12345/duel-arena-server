@@ -39,39 +39,7 @@ Object.assign(BattleScene.prototype, {
         attack: this._selAttack,
         defense: this._selDefense,
       });
-      if (res.status === 'waiting_opponent') {
-        this._showWait('⏳ Ждём соперника...');
-        this._waitingSince = Date.now();
-        return;
-      }
-      if (res.status === 'round_completed') {
-        this._hideCard();
-        this._updateFromState(res.battle);
-        this._resetChoices();
-        // Ждём окончания анимации обоих ударов (~620мс) перед следующим ходом
-        setTimeout(() => {
-          if (!this.scene?.isActive('Battle')) return;
-          this._choosing = true;
-          this._startTimer();
-        }, 700);
-      } else if (res.status === 'battle_ended') {
-        // Guard: WS battle_ended может прийти раньше HTTP-ответа (сервер шлёт WS
-        // до return). Если WS уже запустил Result — isActive('Battle')=false,
-        // повторный scene.start перезапустил бы Result (видимый flash экрана).
-        if (!this.scene?.isActive('Battle')) return;
-        State.lastResult = res;
-        BattleLog.hide();
-        try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
-        this.scene.start('Result', {});
-      } else {
-        if (!this.scene?.isActive('Battle')) return;
-        this._choosing = true;
-        const hint = res.detail || res.message || res.error || res.reason
-                   || res.result?.error || res.result?.message || '';
-        this._showWait(hint ? `⚠️ ${hint}` : '⚠️ Ошибка. Попробуй ещё раз.');
-        // Бой мог завершиться (AFK/сервер) пока клиент не знал — форсируем поллинг немедленно
-        this._lastServerMsg = 0;
-      }
+      this._applyBattleResponse(res);
     } catch(e) {
       console.error('[BATTLE] _submitChoice exception', e);
       this._choosing = true;
@@ -81,12 +49,66 @@ Object.assign(BattleScene.prototype, {
     }
   },
 
-  _onAuto() {
+  // Общая обработка ответа сервера на ход/пропуск (для _submitChoice и _onAuto).
+  _applyBattleResponse(res) {
+    if (res.status === 'waiting_opponent') {
+      this._showWait('⏳ Ждём соперника...');
+      this._waitingSince = Date.now();
+      return;
+    }
+    if (res.status === 'round_completed') {
+      this._hideCard();
+      this._updateFromState(res.battle);
+      this._resetChoices();
+      // Ждём окончания анимации обоих ударов (~620мс) перед следующим ходом
+      setTimeout(() => {
+        if (!this.scene?.isActive('Battle')) return;
+        this._choosing = true;
+        this._startTimer();
+      }, 700);
+    } else if (res.status === 'battle_ended') {
+      // Guard: WS battle_ended может прийти раньше HTTP-ответа (сервер шлёт WS
+      // до return). Если WS уже запустил Result — isActive('Battle')=false,
+      // повторный scene.start перезапустил бы Result (видимый flash экрана).
+      if (!this.scene?.isActive('Battle')) return;
+      State.lastResult = res;
+      BattleLog.hide();
+      try { if (this._htmlMode && typeof BotBattleHtml !== 'undefined') BotBattleHtml.unmount(); } catch(_) {}
+      this.scene.start('Result', {});
+    } else if (res.status === 'no_battle') {
+      // Бой уже завершён/исчез — форсируем поллинг, он покажет Result.
+      this._lastServerMsg = 0;
+      this._waitingSince = Date.now() - 9000;
+    } else {
+      if (!this.scene?.isActive('Battle')) return;
+      this._choosing = true;
+      const hint = res.detail || res.message || res.error || res.reason
+                 || res.result?.error || res.result?.message || '';
+      this._showWait(hint ? `⚠️ ${hint}` : '⚠️ Ошибка. Попробуй ещё раз.');
+      // Бой мог завершиться (AFK/сервер) пока клиент не знал — форсируем поллинг немедленно
+      this._lastServerMsg = 0;
+    }
+  },
+
+  // Время вышло: НЕ ходим за игрока наугад. Честный пропуск — сообщаем серверу,
+  // он засчитает 0 урона + чистый удар соперника (3 пропуска = поражение).
+  async _onAuto() {
     if (!this._choosing || this._submitting) return;
-    const zones = ['HEAD', 'TORSO', 'LEGS'];
-    if (!this._selAttack)  this._selAttack  = zones[Phaser.Math.Between(0,2)];
-    if (!this._selDefense) this._selDefense = zones[Phaser.Math.Between(0,2)];
-    this._submitChoice();
+    this._submitting = true;
+    this._choosing = false;
+    this._showWait('⏱ Ход пропущен...');
+    try {
+      const res = await post('/api/battle/timeout', {});
+      this._applyBattleResponse(res);
+    } catch(e) {
+      console.error('[BATTLE] _onAuto timeout exception', e);
+      // Не достучались до сервера — фоновый свипер всё равно засчитает пропуск.
+      // Подгоняем поллинг, чтобы быстро подхватить результат.
+      this._waitingSince = Date.now() - 9000;
+      this._lastServerMsg = 0;
+    } finally {
+      this._submitting = false;
+    }
   },
 
   _showWait(msg) {

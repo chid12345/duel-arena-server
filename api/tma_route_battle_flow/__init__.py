@@ -7,6 +7,7 @@ from typing import Any, Callable
 from fastapi import FastAPI
 
 from api.tma_route_battle_flow.battle_choice import register_battle_choice_route
+from api.tma_route_battle_flow.battle_timeout import register_battle_timeout_route
 from api.tma_route_battle_flow.battle_find import register_find_battle_route
 
 
@@ -42,6 +43,16 @@ def register_tma_battle_flow_routes(
         stamina_stats_invested=stamina_stats_invested,
     )
     register_battle_choice_route(
+        app,
+        db=db,
+        battle_system=battle_system,
+        get_user_from_init_data=get_user_from_init_data,
+        _rl_check=_rl_check,
+        _battle_state_api=_battle_state_api,
+        _adapt_battle_result_for_user=_adapt_battle_result_for_user,
+        _cache_invalidate=_cache_invalidate,
+    )
+    register_battle_timeout_route(
         app,
         db=db,
         battle_system=battle_system,
