@@ -42,6 +42,7 @@ class EndlessTopWeeklyMixin:
         week_key = iso_week_key_utc()
         conn = self.get_connection()
         cursor = conn.cursor()
+        endless_reward_due = False
         try:
             cursor.execute(
                 "INSERT OR IGNORE INTO daily_quests (user_id, quest_date, battles_played, battles_won, endless_wins, reward_claimed) VALUES (?,?,0,0,0,0)",
@@ -51,6 +52,15 @@ class EndlessTopWeeklyMixin:
                 "UPDATE daily_quests SET endless_wins = endless_wins + 1 WHERE user_id=? AND quest_date=?",
                 (user_id, today),
             )
+            # Награда за дневной Натиск (+80🪙 +1💎) — ровно при достижении 3 побед
+            # за день (endless_wins == 3 случается один раз, флаг не нужен).
+            cursor.execute(
+                "SELECT endless_wins FROM daily_quests WHERE user_id=? AND quest_date=?",
+                (user_id, today),
+            )
+            _ew_row = cursor.fetchone()
+            if _ew_row and int(_ew_row["endless_wins"] or 0) == 3:
+                endless_reward_due = True
             cursor.execute(
                 "INSERT INTO endless_weekly_scores (user_id, week_key, weekly_wins, best_wave_this_week) VALUES (?,?,1,?) "
                 "ON CONFLICT(user_id, week_key) DO UPDATE SET "
@@ -63,6 +73,13 @@ class EndlessTopWeeklyMixin:
             conn.commit()
         finally:
             conn.close()
+        # Награда за дневной Натиск выдаётся ВНЕ основного соединения
+        # (grant_exp_with_levelup открывает собственное). +80🪙 +1💎, один раз в день.
+        if endless_reward_due:
+            try:
+                self.grant_exp_with_levelup(user_id, 0, gold_add=80, diamonds_add=1)
+            except Exception:
+                pass
 
     def endless_get_weekly_progress(self, user_id: int, week_key: str) -> dict:
         conn = self.get_connection()

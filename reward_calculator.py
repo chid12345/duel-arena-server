@@ -6,26 +6,16 @@ reward_calculator.py — таблица наград для квестов и и
 
     gold, diamonds, xp = calc_reward('medium', 'weekly')  # → (160, 1, 500)
 
-Баланс (апрель 2026):
-    - Игрок зарабатывает ~260 золота в день
-    - XP за победу в бою ~85; нужно 3–13 побед на уровень
-    - 1 алмаз = 40 золотых
-    - Алмазы: только weekly medium+ и once medium+
-    - daily — никогда алмазов (повторяются каждый день)
+Баланс (ребаланс 2026-05-15; источник истины — economy.json/reward_grid):
+    - Квесты = бонус ~30-40% к дневному фарму, не основа дохода
+    - 1 алмаз ≈ 75 золотых (anchor GOLD_TO_DIAMOND)
+    - Алмазы: weekly medium+ и once medium+; daily — 0 (кроме premium-квестов)
 
-Таблица:
-    daily  easy   →  35 🪙  0 💎   80 ⭐  (~1 победа)
-    daily  medium →  55 🪙  0 💎  150 ⭐  (~1.7 победы)
-    daily  hard   →  65 🪙  0 💎  200 ⭐  (~2.3 победы)
-    daily  epic   →  65 🪙  0 💎  200 ⭐
-    weekly easy   → 120 🪙  0 💎  300 ⭐  (~3.5 победы)
-    weekly medium → 160 🪙  1 💎  500 ⭐  (~6 побед)
-    weekly hard   → 200 🪙  2 💎  700 ⭐  (~8 побед)
-    weekly epic   → 200 🪙  3 💎  900 ⭐  (~10 побед)
-    once   easy   → 250 🪙  0 💎  600 ⭐
-    once   medium → 450 🪙  3 💎 1200 ⭐
-    once   hard   → 650 🪙  6 💎 2000 ⭐
-    once   epic   → 800 🪙 10 💎 3000 ⭐
+Таблица (актуальная, совпадает с REWARD_TABLE ниже):
+    daily   easy/medium/hard/epic →  15 / 25 / 35 / 35 🪙   0 💎
+    daily   premium               →  55 🪙   1 💎
+    weekly  easy/medium/hard/epic →  70 / 100 / 130 / 160 🪙   0 / 1 / 1 / 2 💎
+    once    easy/medium/hard/epic → 180 / 320 / 450 / 550 🪙   0 / 2 / 5 / 8 💎
 """
 
 from __future__ import annotations

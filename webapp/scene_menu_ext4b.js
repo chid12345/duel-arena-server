@@ -111,7 +111,7 @@ Object.assign(MenuScene.prototype, {
         // Анимация — превращаем в "Получено!"
         overlay.each(ch => { if (ch.type === 'Text') ch.setVisible(false); });
 
-        const bonus = res.bonus || 40;
+        const bonus = res.bonus || 60;
         const dmnd = res.diamonds_bonus || 0;
         let msg = `✅ +${bonus} 💰`;
         if (dmnd) msg += `  +${dmnd} 💎`;

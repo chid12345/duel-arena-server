@@ -44,10 +44,8 @@
     box_rare_c:     { icon:'🟪', name:'Редкий ящик+',          desc:'2+ алмазных · шанс 200💎 и Premium', tab:'special' },
     box_epic_e2:    { icon:'🔮', name:'Эпический: Удача',      desc:'USDT-свиток + алмазные · шанс Титана', tab:'special' },
     box_epic_e3:    { icon:'⚔️', name:'Эпический: Набор воина',desc:'USDT-свиток + XP×2 + свитки', tab:'special' },
-    // ── Зелья HP ──
-    hp_small:      { icon:'🧪', name:'Малое зелье HP',         desc:'+30% HP перед боем', tab:'elixirs' },
-    hp_medium:     { icon:'💊', name:'Среднее зелье HP',        desc:'+60% HP перед боем', tab:'elixirs' },
-    hp_full:       { icon:'⚗️', name:'Полное зелье HP',         desc:'Полное HP перед боем', tab:'elixirs' },
+    // ── Зелье HP (единственное — полное) ──
+    hp_full:       { icon:'⚗️', name:'Зелье HP',               desc:'Полное HP', tab:'elixirs' },
     // ── Эликсиры ──
     xp_boost_5:    { icon:'⚡', name:'XP Буст ×1.5',          desc:'Опыт ×1.5 · на 5 боёв', tab:'elixirs' },
     xp_boost_20:   { icon:'⚡', name:'XP Буст ×1.5',          desc:'Опыт ×1.5 · на 20 боёв', tab:'elixirs' },

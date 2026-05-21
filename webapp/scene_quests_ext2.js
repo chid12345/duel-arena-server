@@ -6,7 +6,7 @@ Object.assign(QuestsScene.prototype, {
 
   /* ── Логин-бонус ─────────────────────────────────────────── */
   _buildDailyBonus(d, W, y) {
-    const canClaim = d.can_claim, streak = d.streak || 0, bonus = d.bonus || 40;
+    const canClaim = d.can_claim, streak = d.streak || 0, bonus = d.bonus || 60;
     const bh = 80;
     const bg = this.add.graphics();
     bg.fillStyle(canClaim ? 0x0e2010 : C.bgPanel, 0.95);

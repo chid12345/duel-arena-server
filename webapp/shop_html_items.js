@@ -5,9 +5,7 @@
 // [id, icon, name, price, currency, desc, badge, risk]
 const DATA = {
   consumables: [
-    ['hp_small',    '🧪','Малое зелье HP',   10, 'gold',    '+30% HP перед боем',      null,   false],
-    ['hp_medium',   '💊','Среднее зелье HP',  20, 'gold',    '+60% HP перед боем',      null,   false],
-    ['hp_full',     '⚗️','Полное зелье HP',   35, 'gold',    'Полное HP',               null,   false],
+    ['hp_full',     '⚗️','Зелье HP',          35, 'gold',    'Полное HP',               null,   false],
     ['xp_boost_5',  '⚡','XP Буст ×1.5',     60, 'gold',    '5 боёв → инвентарь',      '5 БОЁВ',false],
     ['xp_boost_20', '⚡','XP Буст ×1.5',      8, 'diamonds','20 боёв → инвентарь',     '20 БОЁВ',false],
     ['xp_boost_x2', '🚀','XP Буст ×2.0',      6, 'diamonds','10 боёв → инвентарь',    '10 БОЁВ',false],
@@ -175,24 +173,21 @@ window.ShopHtmlItems = {
     let rows = null;
     let richDesc = desc;
 
-    // HP-зелья
-    if (['hp_small', 'hp_medium', 'hp_full'].includes(iid)) {
+    // Зелье HP (единственное — полное)
+    if (iid === 'hp_full') {
       const curHp = p.current_hp != null ? Number(p.current_hp) : null;
       const maxHp = p.max_hp != null ? Number(p.max_hp) : null;
       if (curHp != null && maxHp > 0) {
         const isFull = curHp >= maxHp;
-        const pct = iid === 'hp_full' ? 1.0 : iid === 'hp_medium' ? 0.6 : 0.3;
-        const restore = iid === 'hp_full' ? (maxHp - curHp) : Math.max(1, Math.floor(maxHp * pct));
-        const newHp = Math.min(maxHp, curHp + restore);
+        const restore = maxHp - curHp;
         const hpPct = Math.round(curHp / maxHp * 100);
-        const newPct = Math.min(100, Math.round(newHp / maxHp * 100));
         if (isFull) {
           rows = _r('❌','HP уже полное','зелье не нужно','vr');
         } else {
           const bar = `<div style="background:rgba(255,255,255,.1);border-radius:4px;height:6px;overflow:hidden;margin:4px 0"><div style="width:${hpPct}%;height:100%;background:linear-gradient(90deg,#992222,#ff4444);border-radius:4px"></div></div>`;
           rows = _r('❤️', desc, '', '')
             + `<div class="spd-row" style="flex-direction:column;align-items:flex-start;gap:2px"><span class="spd-row-txt" style="font-size:11px;opacity:.6">${curHp} / ${maxHp} HP сейчас</span>${bar}</div>`
-            + _r('💚', `+${restore} HP восстановится`, `→ ${newHp} (${newPct}%)`, 'vc');
+            + _r('💚', `+${restore} HP восстановится`, `→ ${maxHp} (100%)`, 'vc');
         }
       }
     }

@@ -3,9 +3,9 @@ version.py — текущая версия проекта Duel Arena.
 Обновляется при каждом значимом изменении.
 """
 
-VERSION = "2.22.51"
-VERSION_LABEL = "v2.22.51 — аудит «ТЕСТ ИГРЫ», этап 3 (прогрессия), 5 правок: (1) сброс статов — цена везде 75💎 (RESET_STATS_COST_DIAMONDS 200→75; раньше показывали 75, списывали 200); (2) тултип Выносливости — добавлена строка про +5% к скорости регена за вложение (stats_html_info.js); (3) кнопка «выпить зелье» на главной ПОЧИНЕНА — покупала несуществующий hp_small (вообще не лечила!), теперь покупает hp_full и показывает реальную цену (новое поле heal_potion_price в tma_player_api.py; scene_menu_ext1.js + scene_menu_ext3b.js); (4) на 80 ур. боевой опыт теперь конвертируется в золото ×0.1 как у квестов (battle_system/mixins/progression.py); (5) левелап показывает подсказку «получены очки статов — потрать в Герой» (scene_result_ext1.js). Тесты test_buy_stat_reset + test_battle_xp_post_cap_converts_to_gold. version.py →2.22.51, GAME_VERSION →18.01."
+VERSION = "2.22.52"
+VERSION_LABEL = "v2.22.52 — аудит «ТЕСТ ИГРЫ», этап 4 (экономика): (1) охоты gold_hunt/xp_hunt — обработчик берёт цену из каталога (5💎/8💎), раньше хардкодил 20💎 (shop_buy_handler.py); (2) дневной Натиск реально выдаёт +80🪙+1💎 при 3-й победе за день — авто, раз в день (endless_quest_on_win в top_weekly.py), раньше бейдж показывался без выдачи; (3) запасная цифра дневного бонуса в клиенте 40→60 (scene_menu_ext4b, scene_quests_ext2); (4) зелья: оставлено одно полное, мёртвые малое/среднее убраны из shop_html_items.js + scene_inventory_overlay.js; (5) обновлён устаревший комментарий reward_calculator.py. Тесты test_endless_daily_reward + test_xp_post_cap. version.py →2.22.52, GAME_VERSION →18.02."
 
 # Игровая версия для UI (bot / mini app). Один источник истины.
 # При деплое с изменениями кода увеличивать на +0.01 (например 2.01 → 2.02).
-GAME_VERSION = "18.01"
+GAME_VERSION = "18.02"

@@ -61,10 +61,10 @@ def _do_buy(db, uid: int, iid: str, item: dict) -> dict:
         if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
         return r
 
-    # === Охоты (золото/опыт) → в инвентарь ===
+    # === Охоты (золото/опыт) → в инвентарь. Цена из каталога (5💎/8💎), как показано игроку. ===
     if iid in ("gold_hunt", "xp_hunt"):
-        r = _buy_to_inventory(db, uid, iid, price=20, currency="diamonds")
-        if r.get("ok"): db.track_purchase(uid, iid, "diamonds", 20)
+        r = _buy_to_inventory(db, uid, iid, item["price"], item["currency"])
+        if r.get("ok"): db.track_purchase(uid, iid, item["currency"], item["price"])
         return r
 
     # === Свитки → в инвентарь ===
