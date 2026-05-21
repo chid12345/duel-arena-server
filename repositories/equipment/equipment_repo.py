@@ -150,7 +150,9 @@ class EquipmentMixin:
             "str_bonus", "agi_bonus", "intu_bonus", "double_pct",
             "gold_pct", "xp_pct", "accuracy", "anti_dodge_pct",
             "silence_pct", "slow_pct", "regen_speed_pct",
-            "body_def_pct",  # зональная защита тела (броня armor2)
+            "body_def_pct",   # зональная защита тела (броня armor2)
+            "reflect_pct",    # шипы — отражение урона (броня №1)
+            "block_chance",   # глухой блок — шанс погасить удар (броня №2)
         )
         total: Dict[str, float] = {f: 0.0 if "pct" in f else 0 for f in _STAT_FIELDS}
 

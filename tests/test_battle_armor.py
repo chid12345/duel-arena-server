@@ -107,3 +107,36 @@ def test_body_def_no_zone_no_effect():
     d_body  = _defender(endurance=15, _eq_body_def_pct=0.15)
     # attack_zone=None → одинаково (защита тела не срабатывает)
     assert bs._mixin._apply_incoming_damage(raw, d_plain) == bs._mixin._apply_incoming_damage(raw, d_body)
+
+
+# ─────────── Этап 2: шипы (reflect) + блок (block_chance) ───────────
+
+def test_armor2_no1_has_reflect_no2_has_block():
+    """№1 (силовая) — шипы reflect_pct; №2 (ловкая) — block_chance. По редкости."""
+    from db_schema.equipment_items import ARMOR2
+    assert ARMOR2["armor2_free1"]["reflect_pct"] == 4
+    assert ARMOR2["armor2_mythic1"]["reflect_pct"] == 15
+    assert ARMOR2["armor2_free2"]["block_chance"] == 3
+    assert ARMOR2["armor2_mythic2"]["block_chance"] == 12
+    # перекрёстно не назначено
+    assert "block_chance" not in ARMOR2["armor2_mythic1"]
+    assert "reflect_pct" not in ARMOR2["armor2_mythic2"]
+
+
+def test_block_chance_zeroes_damage(monkeypatch):
+    """block_chance=100 → удар гасится в 0 (outcome armor_block).
+    random=0.99 фиксируем: не промах, не уворот (их пороги < 0.99), но блок
+    (порог 1.0) срабатывает — проверяем именно ветку брони."""
+    import battle_system.mixins.damage as dmg_mod
+
+    class _D:
+        from battle_system.mixins.damage import BattleDamageMixin
+        from battle_system.mixins.damage_armor import BattleDamageArmorMixin
+        _m = type("_M", (BattleDamageMixin, BattleDamageArmorMixin), {})()
+
+    monkeypatch.setattr(dmg_mod.random, "random", lambda: 0.99)
+    atk = {"level": 10, "max_hp": 200, "current_hp": 200, "strength": 30, "endurance": 5, "crit": 5}
+    d_block = {"level": 10, "max_hp": 200, "current_hp": 200, "strength": 10,
+               "endurance": 5, "crit": 5, "_eq_block_chance": 100.0}
+    dmg, outcome, _ = _D._m._calculate_damage_detailed(atk, d_block, "ГОЛОВА", "НОГИ", False)
+    assert dmg == 0 and "armor_block" in outcome, f"блок 100% должен гасить удар: {dmg}, {outcome}"

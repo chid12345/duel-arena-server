@@ -142,6 +142,12 @@ class BattleDamageMixin:
                     return self._apply_incoming_damage(d2, defender, attack_zone), "double", debuff
                 return 0, "dodge", ""
 
+        # Глухой блок брони (block_chance, броня №2) — шанс полностью погасить удар
+        if not is_afk:
+            _block = float(defender.get("_eq_block_chance", 0) or 0)
+            if _block and random.random() < _block / 100.0:
+                return 0, "armor_block", debuff
+
         # Крит: сравнительная формула по Интуиции (crit)
         atk_crit = self._safe_int_field(attacker, "crit", PLAYER_START_CRIT)
         def_crit = self._safe_int_field(defender, "crit", PLAYER_START_CRIT)

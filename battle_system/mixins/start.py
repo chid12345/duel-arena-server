@@ -157,6 +157,8 @@ class BattleStartMixin:
         player["_eq_atk_bonus"]    = stats.get("atk_bonus", 0)
         player["_eq_def_pct"]      = stats.get("def_pct", 0.0)
         player["_eq_body_def_pct"] = stats.get("body_def_pct", 0.0)  # зональная защита тела (броня)
+        player["_eq_reflect_pct"]  = float(stats.get("reflect_pct", 0) or 0)   # шипы (броня №1)
+        player["_eq_block_chance"] = float(stats.get("block_chance", 0) or 0)  # глухой блок (броня №2)
         player["_eq_pen_pct"]      = stats.get("pen_pct", 0.0)
         player["_eq_dodge_bonus"]  = int(stats.get("dodge_bonus", 0))
         player["_eq_regen_bonus"]  = int(stats.get("regen_bonus", 0))

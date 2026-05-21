@@ -91,6 +91,14 @@ class BattleExecuteMixin:
 
             player1['current_hp'] = max(0, player1['current_hp'] - p2_damage)
             player2['current_hp'] = max(0, player2['current_hp'] - p1_damage)
+            # Шипы (reflect_pct, броня №1): защитник отражает % полученного урона
+            # обратно атакующему. p2 отражает урон от p1; p1 отражает урон от p2.
+            _r_p2 = float(battle['player2'].get('_eq_reflect_pct', 0) or 0)
+            if _r_p2 and p1_damage > 0:
+                player1['current_hp'] = max(0, player1['current_hp'] - max(1, int(p1_damage * _r_p2 / 100.0)))
+            _r_p1 = float(battle['player1'].get('_eq_reflect_pct', 0) or 0)
+            if _r_p1 and p2_damage > 0:
+                player2['current_hp'] = max(0, player2['current_hp'] - max(1, int(p2_damage * _r_p1 / 100.0)))
             # Регенерация от сапог (regen_bonus HP за раунд, только живым)
             p1_regen = int(battle['player1'].get('_eq_regen_bonus', 0))
             if p1_regen > 0 and player1['current_hp'] > 0:
