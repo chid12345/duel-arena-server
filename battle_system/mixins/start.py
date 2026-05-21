@@ -167,6 +167,9 @@ class BattleStartMixin:
         player["_eq_anti_dodge_pct"] = int(stats.get("anti_dodge_pct", 0))
         player["_eq_silence_pct"]    = int(stats.get("silence_pct", 0))
         player["_eq_slow_pct"]       = int(stats.get("slow_pct", 0))
+        # Бонусы золота/опыта от экипировки (кольца) — потребляются в end_battle.
+        player["_eq_gold_pct"]       = int(stats.get("gold_pct", 0))
+        player["_eq_xp_pct"]         = int(stats.get("xp_pct", 0))
         player["_eq_atk_pct"]        = 0  # значение по умолчанию, переопределит set-bonus
         if stats.get("str_bonus", 0):
             player["strength"] = max(1, int(player.get("strength", PLAYER_START_STRENGTH)) + stats["str_bonus"])

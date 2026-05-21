@@ -225,6 +225,32 @@ def test_equipment_stats_pct_field_with_plus(db):
     )
 
 
+def test_ring_secondary_stats_reach_combat(db):
+    """Кольцо реально даёт реген/золото%/опыт% (не только на карточке).
+    ring_mythic1: accuracy 18 + regen_bonus 10 + gold_pct 7 — всё в боевых статах."""
+    db.get_or_create_player(3004, "u_ring")
+    db.add_owned_weapon(3004, "ring_mythic1")  # mythic — нужно владеть, иначе снимется
+    db.equip_item(3004, "ring1", "ring_mythic1", force=True)
+    stats = db.get_equipment_stats(3004)
+    assert stats["accuracy"] == 18
+    assert stats["regen_bonus"] == 10
+    assert stats["gold_pct"] == 7
+
+
+def test_ring_secondary_stats_scale_with_plus(db):
+    """Прокачка усиливает и вторичные бонусы кольца (реген — целый, +1/ур; золото — %)."""
+    db.get_or_create_player(3005, "u_ring2")
+    db.add_owned_weapon(3005, "ring_mythic1")
+    db.equip_item(3005, "ring1", "ring_mythic1", force=True)
+    for _ in range(5):
+        db.record_upgrade_attempt(3005, "ring_mythic1", 0, 0, success=True)
+    stats = db.get_equipment_stats(3005)
+    # T4 целый шаг +15%/ур: regen 10×1.75=17.5→18 (или мин 10+5=15 → 18)
+    assert stats["regen_bonus"] == 18
+    # T4 процентный шаг +5%/ур: gold 7×(1+0.05×5)=7×1.25=8.75 (% — без «минимум +1»)
+    assert abs(stats["gold_pct"] - 8.75) < 0.0001
+
+
 def test_add_owned_weapon_idempotent(db):
     """Повторный add_owned_weapon не должен создавать дубль."""
     db.get_or_create_player(1006, "u6")

@@ -106,7 +106,7 @@ function _pillsHtml(h) {
   if (h.anti_dodge > 0) s += `<span class="wd-pill p-i">-${h.anti_dodge}% уворот врага</span>`;
   if (h.silence    > 0) s += `<span class="wd-pill p-s">${h.silence}% тишина</span>`;
   if (h.slow       > 0) s += `<span class="wd-pill p-e">${h.slow}% замедление</span>`;
-  if (h.regen      > 0) s += `<span class="wd-pill p-r">+${h.regen}% реген</span>`;
+  if (h.regen      > 0) s += `<span class="wd-pill p-r">+${h.regen} HP/раунд</span>`;
   if (h.gold       > 0) s += `<span class="wd-pill p-g">+${h.gold}% золото</span>`;
   if (h.xp         > 0) s += `<span class="wd-pill p-x">+${h.xp}% опыт</span>`;
   return s;
@@ -119,7 +119,7 @@ function _statLine(h) {
   if (h.anti_dodge > 0) p.push(`Антиуклон: -${h.anti_dodge}% уворот врага`);
   if (h.silence    > 0) p.push(`Тишина: ${h.silence}% глушит крит`);
   if (h.slow       > 0) p.push(`Замедление: -${h.slow}% двойной врага`);
-  if (h.regen      > 0) p.push(`Реген HP: +${h.regen}%`);
+  if (h.regen      > 0) p.push(`Реген: +${h.regen} HP/раунд`);
   if (h.gold       > 0) p.push(`Золото: +${h.gold}%`);
   if (h.xp         > 0) p.push(`Опыт: +${h.xp}%`);
   return p.join(' · ');
