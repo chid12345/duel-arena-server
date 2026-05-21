@@ -99,7 +99,7 @@ EMOJI = {
 # HP реген (time-based, вне боя)
 HP_REGEN_BASE_SECONDS = 300       # 5 минут — полный реген без вложений в выносливость
 HP_REGEN_ENDURANCE_BONUS = 0.05   # +5% скорости за каждое вложение свободного стата в выносливость
-HP_MIN_BATTLE_PCT = 0.15          # нельзя начать бой если текущий HP < 15% от макс.
+HP_MIN_BATTLE_PCT = 0.70          # нельзя начать бой если текущий HP < 70% от макс. (восстановление как «энергия»)
 
 # CryptoPay (https://t.me/CryptoBot)
 # Дефолт = тестовый токен (@CryptoTestnetBot). Боевой прописать в CRYPTOPAY_TOKEN на Render.

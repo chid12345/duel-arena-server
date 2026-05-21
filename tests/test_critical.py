@@ -172,6 +172,31 @@ def test_hp_regen_capped_at_max(db):
     assert row["current_hp"] > 10, "HP должен был вырасти"
 
 
+def test_regen_speed_pct_boosts_recovery(db):
+    """Ботинки с regen_speed_pct восстанавливают HP быстрее (вне боя)."""
+    from datetime import datetime, timedelta
+    past = (datetime.utcnow() - timedelta(seconds=60)).isoformat()
+
+    # Игрок БЕЗ ботинок скорости
+    db.get_or_create_player(1101, "no_boots")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET current_hp=100, max_hp=100000, last_hp_regen=? WHERE user_id=1101", (past,))
+    conn.commit(); conn.close()
+    no_boots = db.apply_hp_regen(1101, endurance_invested=0)["current_hp"]
+
+    # Игрок С ботинками regen_speed (boots_free2 = +10% скорость)
+    db.get_or_create_player(1102, "with_boots")
+    conn = db.get_connection()
+    conn.execute("INSERT INTO player_equipment (user_id, slot, item_id) VALUES (1102, 'boots', 'boots_free2')")
+    conn.execute("UPDATE players SET current_hp=100, max_hp=100000, last_hp_regen=? WHERE user_id=1102", (past,))
+    conn.commit(); conn.close()
+    with_boots = db.apply_hp_regen(1102, endurance_invested=0)["current_hp"]
+
+    assert with_boots > no_boots, (
+        f"С ботинками скорости HP должно набраться больше: с={with_boots} без={no_boots}"
+    )
+
+
 # ── Тест 5: PvP матч — winner_id корректен ───────────────────────────────────
 
 def test_pvp_winner_id_is_correct(db):

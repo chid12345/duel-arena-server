@@ -9,6 +9,22 @@ from config import HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS, PLAYER_START
 
 
 class UsersHpRegenMixin:
+    def _equipped_regen_speed_pct(self, user_id: int) -> float:
+        """Сумма regen_speed_pct надетых вещей (ботинки) — ускоряет реген вне боя."""
+        from db_schema.equipment_catalog import get_item
+        conn = self.get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute("SELECT item_id FROM player_equipment WHERE user_id = ?", (user_id,))
+            total = 0.0
+            for r in cur.fetchall():
+                it = get_item(r["item_id"])
+                if it:
+                    total += float(it.get("regen_speed_pct", 0) or 0)
+            return total
+        finally:
+            conn.close()
+
     def apply_hp_regen(self, user_id: int, endurance_invested: int) -> Dict:
         """Ленивый реген HP по таймеру — вызывать при каждом действии игрока."""
         conn = self.get_connection()
@@ -32,7 +48,8 @@ class UsersHpRegenMixin:
                 except ValueError:
                     last_regen = now
                 elapsed = max(0.0, (now - last_regen).total_seconds())
-                mult = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS
+                speed = self._equipped_regen_speed_pct(user_id)  # % скорость от снаряжения
+                mult = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS + speed / 100.0
                 gained = int(elapsed * (max_hp / HP_REGEN_BASE_SECONDS * mult))
                 current_hp = min(max_hp, current_hp + gained)
             cursor.execute(
@@ -62,7 +79,8 @@ class UsersHpRegenMixin:
             except (ValueError, AttributeError):
                 last_regen = now
             elapsed = max(0.0, (now - last_regen).total_seconds())
-            mult = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS
+            speed = self._equipped_regen_speed_pct(user_id)  # % скорость от снаряжения
+            mult = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS + speed / 100.0
             gained = int(elapsed * (max_hp / HP_REGEN_BASE_SECONDS * mult))
             current_hp = min(max_hp, current_hp + gained)
         conn = self.get_connection()
