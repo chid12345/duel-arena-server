@@ -19,23 +19,23 @@ const RING_DATA = [
   // Бесплатные — главный стат + реген 3 HP/раунд + золото/опыт 2%
   {id:'ring_free1', r:'common', ht:'💍 Кольцо', name:'Кольцо Меткости',          stars:'★☆☆☆', acc:3,  anti_dodge:0,  silence:0,  slow:0,  regen_speed:3,  gold:2, xp:0, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Меткость: точные удары + бонус золота'},
   {id:'ring_free2', r:'common', ht:'💍 Кольцо', name:'Кольцо Охотника',          stars:'★☆☆☆', acc:0,  anti_dodge:5,  silence:0,  slow:0,  regen_speed:3,  gold:0, xp:2, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Охотник: враг хуже уворачивается'},
-  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Безмолвия',         stars:'★☆☆☆', acc:0,  anti_dodge:0,  silence:5,  slow:0,  regen_speed:3,  gold:2, xp:0, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Безмолвие: гасит абилки врага'},
-  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Оков',              stars:'★☆☆☆', acc:0,  anti_dodge:0,  silence:0,  slow:5,  regen_speed:3,  gold:0, xp:2, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Оковы: замедляет врага в бою'},
+  {id:'ring_free3', r:'common', ht:'💍 Кольцо', name:'Кольцо Безмолвия',         stars:'★☆☆☆', acc:0,  anti_dodge:0,  silence:5,  slow:0,  regen_speed:3,  gold:2, xp:0, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Безмолвие: шанс погасить крит врага'},
+  {id:'ring_free4', r:'common', ht:'💍 Кольцо', name:'Кольцо Оков',              stars:'★☆☆☆', acc:0,  anti_dodge:0,  silence:0,  slow:5,  regen_speed:3,  gold:0, xp:2, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Оковы: снижают шанс двойного удара врага'},
   // Золото — главный стат + реген 5 HP/раунд + золото/опыт 3%
   {id:'ring_gold1', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Снайпера',          stars:'★★☆☆', acc:7,  anti_dodge:0,  silence:0,  slow:0,  regen_speed:5,  gold:3, xp:0, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Снайпер: высокая точность атак'},
   {id:'ring_gold2', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Преследователя',    stars:'★★☆☆', acc:0,  anti_dodge:12, silence:0,  slow:0,  regen_speed:5,  gold:0, xp:3, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Преследователь: враг не уйдёт уворотом'},
-  {id:'ring_gold3', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Тишины',            stars:'★★☆☆', acc:0,  anti_dodge:0,  silence:12, slow:0,  regen_speed:5,  gold:3, xp:0, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Тишина: усиленная блокировка абилок'},
-  {id:'ring_gold4', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Замедления',        stars:'★★☆☆', acc:0,  anti_dodge:0,  silence:0,  slow:12, regen_speed:5,  gold:0, xp:3, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Замедление: сильно тормозит врага'},
+  {id:'ring_gold3', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Тишины',            stars:'★★☆☆', acc:0,  anti_dodge:0,  silence:12, slow:0,  regen_speed:5,  gold:3, xp:0, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Тишина: чаще гасит крит врага'},
+  {id:'ring_gold4', r:'rare',   ht:'💍 Кольцо', name:'Кольцо Замедления',        stars:'★★☆☆', acc:0,  anti_dodge:0,  silence:0,  slow:12, regen_speed:5,  gold:0, xp:3, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Замедление: сильно режет двойной удар врага'},
   // Алмазы — главный стат + реген 7 HP/раунд + золото/опыт 5%
   {id:'ring_dia1',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Ясновидца',         stars:'★★★☆', acc:12, anti_dodge:0,  silence:0,  slow:0,  regen_speed:7,  gold:5, xp:0, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Ясновидец: каждый удар точен'},
   {id:'ring_dia2',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Неизбежности',      stars:'★★★☆', acc:0,  anti_dodge:20, silence:0,  slow:0,  regen_speed:7,  gold:0, xp:5, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Неизбежность: от тебя не убежать'},
-  {id:'ring_dia3',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Молчания',          stars:'★★★☆', acc:0,  anti_dodge:0,  silence:20, slow:0,  regen_speed:7,  gold:5, xp:0, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Молчание: глушит абилки надолго'},
-  {id:'ring_dia4',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Оцепенения',        stars:'★★★☆', acc:0,  anti_dodge:0,  silence:0,  slow:20, regen_speed:7,  gold:0, xp:5, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Оцепенение: враг почти не двигается'},
+  {id:'ring_dia3',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Молчания',          stars:'★★★☆', acc:0,  anti_dodge:0,  silence:20, slow:0,  regen_speed:7,  gold:5, xp:0, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Молчание: высокий шанс снять крит врага'},
+  {id:'ring_dia4',  r:'epic',   ht:'💍 Кольцо', name:'Кольцо Оцепенения',        stars:'★★★☆', acc:0,  anti_dodge:0,  silence:0,  slow:20, regen_speed:7,  gold:0, xp:5, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Оцепенение: враг почти без двойных ударов'},
   // Мифические — главный стат + реген 10 HP/раунд + золото/опыт 7%
   {id:'ring_mythic1',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Провидца',          stars:'★★★★', acc:18, anti_dodge:0,  silence:0,  slow:0,  regen_speed:10, gold:7, xp:0, type:'mythic', tier:'T4', recLevel:65, bonus:'Провидец: топ точности — ни промаха'},
   {id:'ring_mythic2',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Рока',              stars:'★★★★', acc:0,  anti_dodge:30, silence:0,  slow:0,  regen_speed:10, gold:0, xp:7, type:'mythic', tier:'T4', recLevel:65, bonus:'Рок: уворот врага почти бесполезен'},
-  {id:'ring_mythic3',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Вечного Безмолвия',stars:'★★★★', acc:0,  anti_dodge:0,  silence:30, slow:0,  regen_speed:10, gold:7, xp:0, type:'mythic', tier:'T4', recLevel:65, bonus:'Безмолвие: враг без абилок'},
-  {id:'ring_mythic4',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Паралича',         stars:'★★★★', acc:0,  anti_dodge:0,  silence:0,  slow:30, regen_speed:10, gold:0, xp:7, type:'mythic', tier:'T4', recLevel:65, bonus:'Паралич: парализует врага почти полностью'},
+  {id:'ring_mythic3',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Вечного Безмолвия',stars:'★★★★', acc:0,  anti_dodge:0,  silence:30, slow:0,  regen_speed:10, gold:7, xp:0, type:'mythic', tier:'T4', recLevel:65, bonus:'Безмолвие: почти всегда гасит крит врага'},
+  {id:'ring_mythic4',r:'mythic',ht:'💍 Кольцо', name:'Кольцо Паралича',         stars:'★★★★', acc:0,  anti_dodge:0,  silence:0,  slow:30, regen_speed:10, gold:0, xp:7, type:'mythic', tier:'T4', recLevel:65, bonus:'Паралич: лишает врага двойного удара'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
@@ -85,8 +85,8 @@ function _pills(h) {
   let s = '';
   if (h.acc        > 0) s += `<span class="wd-pill p-a">+${h.acc}% точность</span>`;
   if (h.anti_dodge > 0) s += `<span class="wd-pill p-i">-${h.anti_dodge}% уворот врага</span>`;
-  if (h.silence    > 0) s += `<span class="wd-pill p-s">${h.silence}% тишина</span>`;
-  if (h.slow       > 0) s += `<span class="wd-pill p-e">${h.slow}% замедление</span>`;
+  if (h.silence    > 0) s += `<span class="wd-pill p-s">${h.silence}% гасит крит врага</span>`;
+  if (h.slow       > 0) s += `<span class="wd-pill p-e">-${h.slow}% двойной удар врага</span>`;
   if (h.regen_speed > 0) s += `<span class="wd-pill p-r">+${h.regen_speed}% восст. вне боя</span>`;
   if (h.gold       > 0) s += `<span class="wd-pill p-g">+${h.gold}% золото</span>`;
   if (h.xp         > 0) s += `<span class="wd-pill p-x">+${h.xp}% опыт</span>`;

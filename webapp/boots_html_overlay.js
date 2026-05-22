@@ -18,23 +18,23 @@ const BOOTS_IMG = {
 const BOOTS_DATA = [
   // ── Бесплатные — уворот и регенерация
   {id:'boots_free1', r:'common', ht:'👟 Сапоги', name:'Сапоги Скорохода',        stars:'★☆☆☆', dodge:3,  regen:0,  type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Скороход: чистый уворот'},
-  {id:'boots_free2', r:'common', ht:'👟 Сапоги', name:'Сапоги Выносливого',       stars:'★☆☆☆', dodge:0,  regen:12, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Выносливый: восстанавливает HP в бою'},
+  {id:'boots_free2', r:'common', ht:'👟 Сапоги', name:'Сапоги Выносливого',       stars:'★☆☆☆', dodge:0,  regen:12, regen_speed:10, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Выносливый: восстанавливает HP в бою'},
   {id:'boots_free3', r:'common', ht:'👟 Сапоги', name:'Сапоги Тени',              stars:'★☆☆☆', dodge:2,  regen:8,  type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Тень: уворот + регенерация'},
   {id:'boots_free4', r:'common', ht:'👟 Сапоги', name:'Кровавый след',             stars:'★☆☆☆', dodge:0,  regen:0,  lifesteal:3,  type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'Кровавый: вампиризм от каждого удара'},
   // ── Золото
   {id:'boots_gold1', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Вихря',             stars:'★★☆☆', dodge:7,  regen:0,  type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Вихрь: усиленный уворот'},
-  {id:'boots_gold2', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Живучести',          stars:'★★☆☆', dodge:0,  regen:28, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Живучесть: топовая регенерация'},
-  {id:'boots_gold3', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Ветра',             stars:'★★☆☆', dodge:5,  regen:16, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Ветер: баланс уворота и регена'},
+  {id:'boots_gold2', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Живучести',          stars:'★★☆☆', dodge:0,  regen:28, regen_speed:20, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Живучесть: топовая регенерация'},
+  {id:'boots_gold3', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Ветра',             stars:'★★☆☆', dodge:5,  regen:16, regen_speed:10, type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Ветер: баланс уворота и регена'},
   {id:'boots_gold4', r:'rare',   ht:'👟 Сапоги', name:'Сапоги Кровопийцы',        stars:'★★☆☆', dodge:0,  regen:0,  lifesteal:5,  type:'gold',     price:'7965', tier:'T2', recLevel:20, bonus:'Кровопийца: усиленный вампиризм'},
   // ── Алмазы
   {id:'boots_dia1',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Призрака',          stars:'★★★☆', dodge:13, regen:0,  type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Призрак: топ уворота за алмазы'},
-  {id:'boots_dia2',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Жизненной Силы',    stars:'★★★☆', dodge:0,  regen:48, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Жизненная сила: лечит после каждого хода'},
+  {id:'boots_dia2',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Жизненной Силы',    stars:'★★★☆', dodge:0,  regen:48, regen_speed:25, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Жизненная сила: лечит после каждого хода'},
   {id:'boots_dia3',  r:'epic',   ht:'👟 Сапоги', name:'Сапоги Ловчего',           stars:'★★★☆', dodge:9,  regen:22, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Ловчий: уворот + лечение'},
   {id:'boots_dia4',  r:'epic',   ht:'👟 Сапоги', name:'Поступь Вампира',           stars:'★★★☆', dodge:0,  regen:0,  lifesteal:7,  type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'Вампир: топ вампиризма за алмазы'},
   // ── Мифические
   {id:'boots_mythic1',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Дракона',           stars:'★★★★', dodge:16, regen:22, type:'mythic', tier:'T4', recLevel:65, bonus:'Дракон: универсал — уворот и реген'},
-  {id:'boots_mythic2',r:'mythic',ht:'👟 Сапоги', name:'Поступь Бессмертия',       stars:'★★★★', dodge:5,  regen:65, type:'mythic', tier:'T4', recLevel:65, bonus:'Бессмертие: максимальная регенерация'},
-  {id:'boots_mythic3',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Призрака Смерти',   stars:'★★★★', dodge:20, regen:0,  type:'mythic', tier:'T4', recLevel:65, bonus:'Призрак Смерти: топ уворота в игре'},
+  {id:'boots_mythic2',r:'mythic',ht:'👟 Сапоги', name:'Поступь Бессмертия',       stars:'★★★★', dodge:5,  regen:65, regen_speed:35, type:'mythic', tier:'T4', recLevel:65, bonus:'Бессмертие: максимальная регенерация'},
+  {id:'boots_mythic3',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Призрака Смерти',   stars:'★★★★', dodge:20, regen:0,  regen_speed:20, type:'mythic', tier:'T4', recLevel:65, bonus:'Призрак Смерти: топ уворота в игре'},
   {id:'boots_mythic4',r:'mythic',ht:'👟 Сапоги', name:'Сапоги Владыки Крови',     stars:'★★★★', dodge:0,  regen:0,  lifesteal:10, type:'mythic', tier:'T4', recLevel:65, bonus:'Владыка: максимальный вампиризм'},
 ];
 
@@ -83,9 +83,10 @@ function _removeDarkBg(img) {
 function _pills(h) {
   h = window.PlusBadge ? window.PlusBadge.boostItem(h) : h;
   let s = '';
-  if (h.dodge > 0)     s += `<span class="wd-pill p-i">+${h.dodge}% уворот</span>`;
-  if (h.regen > 0)     s += `<span class="wd-pill p-e">+${h.regen} HP/раунд</span>`;
-  if (h.lifesteal > 0) s += `<span class="wd-pill p-s">+${h.lifesteal}% вампиризм</span>`;
+  if (h.dodge > 0)       s += `<span class="wd-pill p-i">+${h.dodge}% уворот</span>`;
+  if (h.regen > 0)       s += `<span class="wd-pill p-e">+${h.regen} HP/раунд</span>`;
+  if (h.regen_speed > 0) s += `<span class="wd-pill p-r">+${h.regen_speed}% скорость реген</span>`;
+  if (h.lifesteal > 0)   s += `<span class="wd-pill p-s">+${h.lifesteal}% вампиризм</span>`;
   return s;
 }
 

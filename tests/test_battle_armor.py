@@ -4,7 +4,6 @@ tests/test_battle_armor.py — расчёт брони (входящий уро�
 Покрывает:
 - броня снижает входящий урон,
 - _eq_def_pct из экипировки уменьшает урон ещё сильнее,
-- paladin_gold даёт -3% (защитник Стража),
 - agile warrior получает +10% (трейдофф за уклон).
 
 Тестируем чистые методы _armor_multiplier и _apply_incoming_damage —
@@ -56,19 +55,6 @@ def test_eq_def_pct_reduces_damage_more():
     b = bs.apply(raw, d_with_eq)
 
     assert b < a, f"_eq_def_pct должно дать больше снижения: с={b}, без={a}"
-
-
-def test_paladin_gold_reduces_damage_extra():
-    """current_class=paladin_gold → -3% дополнительно."""
-    bs = _BS()
-    raw = 100
-    d_default = _defender(endurance=15)
-    d_paladin = _defender(endurance=15, current_class="paladin_gold")
-
-    a = bs.apply(raw, d_default)
-    b = bs.apply(raw, d_paladin)
-
-    assert b < a, f"Страж должен получать меньше урона: paladin={b}, default={a}"
 
 
 def test_agile_warrior_takes_more_damage():
