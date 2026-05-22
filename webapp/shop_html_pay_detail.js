@@ -281,7 +281,10 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     const p = [...(d.stars || []), ...(d.stars_scrolls || [])].find(x => x.id === id);
     if (!p) return;
     if (p.id === 'premium' || p.premium) {
-      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста · ящик 10💎/день', price:p.stars, currency:'stars', rarity:'e', actionLabel:`Активировать ⭐ ${p.stars}`, action:() => ShopHtmlPay._buyStars(id) });
+      const _pf = !!(State.player?.premium_first_available);
+      const _now = _pf ? Math.floor(Number(p.stars) / 2) : p.stars;
+      const _lbl = _pf ? `Активировать ⭐ ${_now} (−50%, было ${p.stars})` : `Активировать ⭐ ${p.stars}`;
+      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% опыта и золота · +10 ботов/день · ×2 за бой · +3 квеста · ящик 10💎/день · 🕐 аренда мификов', price:_now, currency:'stars', rarity:'e', actionLabel:_lbl, action:() => ShopHtmlPay._buyStars(id) });
       return;
     }
     if (p.full_reset) {
@@ -300,7 +303,10 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
       return;
     }
     if (p.premium) {
-      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста · ящик 10💎/день', price:p.usdt, currency:'usdt', rarity:'e', actionLabel:`Активировать 💲 ${p.usdt}`, action:() => ShopHtmlPay._buyCrypto(id) });
+      const _pf = !!(State.player?.premium_first_available);
+      const _now = _pf ? '4.00' : p.usdt;
+      const _lbl = _pf ? `Активировать 💲 ${_now} (−50%, было ${p.usdt})` : `Активировать 💲 ${p.usdt}`;
+      ShopHtml.showDetail({ icon:'👑', name:'Premium подписка (21 день)', desc:'+25% опыта и золота · +10 ботов/день · ×2 за бой · +3 квеста · ящик 10💎/день · 🕐 аренда мификов', price:_now, currency:'usdt', rarity:'e', actionLabel:_lbl, action:() => ShopHtmlPay._buyCrypto(id) });
       return;
     }
     ShopHtmlPay._showCombinedDetail(null, id);

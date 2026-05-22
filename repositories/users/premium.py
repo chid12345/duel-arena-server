@@ -26,6 +26,30 @@ class UsersPremiumMixin:
         finally:
             conn.close()
 
+    def is_premium_first_available(self, user_id: int) -> bool:
+        """True если игрок НИКОГДА не покупал/не получал Premium → доступна
+        скидка 50% на первую покупку Premium (этап 9 аудита).
+
+        Надёжный сигнал «никогда не было премиума»: premium_until пуст (его
+        ставит activate_premium во ВСЕХ путях оплаты) И first_premium_at пуст
+        (его ставит реферальная обработка/подарок). После любой активации —
+        скидка пропадает."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(
+                "SELECT premium_until, first_premium_at FROM players WHERE user_id = ?",
+                (user_id,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return True
+            return not (row["premium_until"] or row["first_premium_at"])
+        except Exception:
+            return False
+        finally:
+            conn.close()
+
     def activate_premium(self, user_id: int, days: int = 21) -> Dict[str, Any]:
         """Активировать/продлить Premium на N дней. Алмазы выдаются по +10/день через ежедневный ящик."""
         conn = self.get_connection()

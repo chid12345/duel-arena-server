@@ -203,6 +203,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
         if not pkg:
             return {"ok": False, "reason": "Пакет не найден"}
 
+        stars_amount = int(pkg["stars"])  # может быть переопределён скидкой ниже
         if pkg.get("full_reset"):
             payload = "stars_full_reset"
             title = "Сброс прогресса"
@@ -216,8 +217,16 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             desc = f"{pkg['diamonds']} 💎 алмазов со скидкой первой покупки · Duel Arena"
         elif pkg["id"] == "premium":
             payload = "premium_sub"
-            title = "Premium подписка"
-            desc = f"Duel Arena Premium: +{PREMIUM_XP_BONUS_PERCENT}% опыта за бои и прочие бонусы"
+            # Скидка 50% на ПЕРВУЮ покупку Premium (этап 9, как у алмазов).
+            # Цена считается на сервере при создании инвойса — фронт не может
+            # подделать. Одноразово: после активации premium_until заполнен.
+            if db.is_premium_first_available(uid):
+                stars_amount = int(pkg["stars"]) // 2
+                title = "Premium −50% (первый раз)"
+                desc = f"Duel Arena Premium со скидкой 50%: +{PREMIUM_XP_BONUS_PERCENT}% опыта/золота, ящик, премиум-награды пасса"
+            else:
+                title = "Premium подписка"
+                desc = f"Duel Arena Premium: +{PREMIUM_XP_BONUS_PERCENT}% опыта/золота и прочие бонусы"
         else:
             payload = f"diamonds_{pkg['diamonds']}"
             title = f"{pkg['diamonds']} алмазов"
@@ -233,7 +242,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
                         "description": desc,
                         "payload": payload,
                         "currency": "XTR",
-                        "prices": [{"label": title, "amount": pkg["stars"]}],
+                        "prices": [{"label": title, "amount": stars_amount}],
                     },
                 )
                 data = resp.json()

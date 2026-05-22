@@ -577,6 +577,14 @@ const FINDINGS = [
     will:"✅ Серверный гейт: оба маршрута /api/rental/{stars,crypto}_invoice отклоняют без активной подписки. Фронт: кнопка показывает «🔒 только Premium» не-премам, клик → апселл. Аренда вписана в перки подписки. Тест test_rental_premium_gate (4 кейса)."
   },
 
+  {
+    stage:9, sev:"lo", status:"fixed",
+    title:"НОВОЕ (по просьбе): скидка 50% на первую покупку Premium + перк «аренда» на карточке",
+    where:"repositories/users/premium.is_premium_first_available · stars/crypto invoice · tma_player_api · shop_html_pay(.js/_detail.js)",
+    now:"Premium стоил всегда 536⭐/$8. Просьба — дать скидку 50% на ПЕРВУЮ покупку (как у алмазов). Плюс на живой карточке не было перка «аренда мификов».",
+    will:"✅ Скидка 50% (268⭐/$4) пока игрок ни разу не активировал Premium (premium_until И first_premium_at пусты). Цена считается на СЕРВЕРЕ при создании инвойса (stars+crypto) — фронт не подделает; одноразово. Флаг premium_first_available в player API, на карточке/в деталях показана скидка с зачёркнутой полной ценой. ✅ Перк «🕐 аренда мификов» дописан на карточку. Тесты test_premium_first_discount_*."
+  },
+
   // ===== ЭТАП 9 — РЕФЕРАЛКА (в самом конце) =====
   {
     stage:9, sev:"md", status:"defer",

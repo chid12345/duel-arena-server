@@ -77,16 +77,23 @@ function _cardDiaUSDT(pkg) {
 }
 
 function _premBanner(price, cur, pkgId) {
-  const icon = cur === 'stars' ? `⭐ ${price}` : `${price} <span style="font-size:12px;opacity:.7">USDT</span>`;
+  // Скидка 50% на первую покупку Premium (этап 9). Цена при оплате считается
+  // на сервере; здесь показываем скидочную и зачёркиваем полную.
+  const _pf = !!(State.player?.premium_first_available);
+  const _now = _pf ? (cur === 'stars' ? Math.floor(Number(price) / 2) : '4.00') : price;
+  const icon = cur === 'stars'
+    ? `⭐ ${_now}${_pf ? ` <s style="opacity:.45;font-size:11px">${price}</s>` : ''}`
+    : `${_now}${_pf ? ` <s style="opacity:.45;font-size:11px">${price}</s>` : ''} <span style="font-size:12px;opacity:.7">USDT</span>`;
   const btnCls = cur === 'stars' ? 'btn-s' : 'btn-u';
-  const pv = cur === 'stars' ? 'pv-s' : 'pv-u';
+  const disc = _pf ? `<div style="font-size:9px;color:#ff8c33;font-weight:700;margin-top:2px">🔥 −50% первый раз</div>` : '';
   return `<div class="sh-prem" data-prem="${pkgId}" data-cur="${cur}">
   <div style="display:flex;align-items:center;gap:10px">
     <div style="font-size:26px">👑</div>
     <div>
       <div style="font-size:13px;font-weight:700;color:#fff">Premium подписка</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста · 🕐 аренда мификов</div>
       <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px">21 день</div>
+      ${disc}
     </div>
   </div>
   <div style="text-align:right">
@@ -264,15 +271,24 @@ window.ShopHtmlPay = {
     if (isPrem) {
       html += `<div data-prem-active="${State.player.premium_days_left}" style="background:rgba(180,79,255,.1);border:1px solid rgba(180,79,255,.3);border-radius:11px;padding:10px 14px;font-size:12px;color:#c8a0ff;margin-bottom:8px;cursor:pointer">👑 Premium активен · ещё ${State.player.premium_days_left} дн.</div>`;
     } else {
-      const sBtn = starPrem ? `<button class="sh-btn btn-s" data-prem-stars="${starPrem.id}" style="flex:1">⭐ ${starPrem.stars}</button>` : '';
-      const uBtn = (usdtPrem && d.cryptopay_enabled) ? `<button class="sh-btn btn-u" data-prem-usdt="${usdtPrem.id}" style="flex:1">💲 ${usdtPrem.usdt} USDT</button>` : '';
+      const _pf   = !!(State.player?.premium_first_available);  // скидка 50% первого раза
+      const _sFull = (starPrem?.stars) || 536;
+      const _sNow  = _pf ? Math.floor(_sFull / 2) : _sFull;
+      const _uFull = (usdtPrem?.usdt) || '8.00';
+      const _uNow  = _pf ? '4.00' : _uFull;
+      const _sLbl  = _pf ? `⭐ ${_sNow} <s style="opacity:.45;font-size:9px">${_sFull}</s>` : `⭐ ${_sNow}`;
+      const _uLbl  = _pf ? `💲 ${_uNow} <s style="opacity:.45;font-size:9px">${_uFull}</s>` : `💲 ${_uNow} USDT`;
+      const sBtn = starPrem ? `<button class="sh-btn btn-s" data-prem-stars="${starPrem.id}" style="flex:1">${_sLbl}</button>` : '';
+      const uBtn = (usdtPrem && d.cryptopay_enabled) ? `<button class="sh-btn btn-u" data-prem-usdt="${usdtPrem.id}" style="flex:1">${_uLbl}</button>` : '';
+      const _disc = _pf ? `<div style="font-size:10px;color:#ff8c33;font-weight:700;margin-top:2px">🔥 −50% на первую покупку!</div>` : '';
       html += `<div class="sh-prem" data-prem-card="1" style="cursor:pointer">
   <div style="display:flex;align-items:center;gap:10px">
     <div style="font-size:26px">👑</div>
     <div>
       <div style="font-size:13px;font-weight:700;color:#fff">Premium подписка</div>
-      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста</div>
+      <div style="font-size:10px;color:rgba(255,255,255,.45)">+25% XP/золото · +10 ботов/день · ×2 за бой · +3 квеста · 🕐 аренда мификов</div>
       <div style="font-size:10px;color:rgba(255,255,255,.25);margin-top:2px">21 день</div>
+      ${_disc}
     </div>
   </div>
   <div style="display:flex;flex-direction:column;gap:4px;min-width:90px">${sBtn}${uBtn}</div>

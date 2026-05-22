@@ -86,7 +86,13 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             description = "Duel Arena — сброс прогресса (💰💎 клан рефералка сохраняются, USDT)"
             payload_str = f"uid:{uid}:full_reset:1"
         elif is_premium:
-            description = "Duel Arena — 👑 Premium подписка"
+            # Скидка 50% на ПЕРВУЮ покупку Premium (этап 9). Цена считается на
+            # сервере — фронт не подделает. Одноразово (premium_until заполнится).
+            if db.is_premium_first_available(uid):
+                amount = "4.00"
+                description = "Duel Arena — 👑 Premium со скидкой 50% (первая покупка)"
+            else:
+                description = "Duel Arena — 👑 Premium подписка"
             payload_str = f"uid:{uid}:premium:1"
         elif is_diamond_first:
             description = f"Duel Arena — {pkg['diamonds']} 💎 алмазов (🔥 первая покупка)"

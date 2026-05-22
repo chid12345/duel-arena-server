@@ -216,6 +216,9 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             cnt for cnt, col in ((100, "diamond_first_100"), (300, "diamond_first_300"), (500, "diamond_first_500"))
             if not int(player.get(col) or 0)
         ],
+        # Скидка 50% на первую покупку Premium доступна, пока игрок ни разу
+        # не активировал Premium (ни покупкой, ни рефералкой). Этап 9 аудита.
+        "premium_first_available": not (player.get("premium_until") or player.get("first_premium_at")),
         "wins": int(player.get("wins", 0)),
         "losses": int(player.get("losses", 0)),
         "rating": int(player.get("rating", 1000)),

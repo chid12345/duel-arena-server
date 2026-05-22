@@ -14,6 +14,29 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 
+def test_premium_first_discount_one_time(db):
+    """Этап 9: скидка 50% на первую покупку Premium доступна, пока игрок ни
+    разу не активировал Premium. После activate_premium — скидка пропадает."""
+    db.get_or_create_player(2201, "u")
+    # Новичок — скидка доступна
+    assert db.is_premium_first_available(2201) is True
+    # Купил/активировал Premium → premium_until заполнен → скидка пропала
+    db.activate_premium(2201, days=21)
+    assert db.is_premium_first_available(2201) is False
+
+
+def test_premium_first_discount_blocked_by_first_premium_at(db):
+    """Если first_premium_at стоит (премиум получен через рефералку/подарок) —
+    скидка тоже недоступна, даже если premium_until пуст."""
+    db.get_or_create_player(2202, "u")
+    conn = db.get_connection()
+    conn.execute("UPDATE players SET first_premium_at = ? WHERE user_id = ?",
+                 ("2026-01-01T00:00:00", 2202))
+    conn.commit()
+    conn.close()
+    assert db.is_premium_first_available(2202) is False
+
+
 def test_activate_premium_sets_days_left(db):
     """activate_premium(21) → days_left=20 или 21 (зависит от хвоста секунд)."""
     db.get_or_create_player(1001, "u1")
