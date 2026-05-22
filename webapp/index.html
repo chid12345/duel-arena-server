@@ -271,14 +271,11 @@ setTimeout(function(){
 <script defer src="inv_boxes_html.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_inventory_overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_inventory_overlay_ext1.js?v=__BUILD_VERSION__"></script>
-<!-- Shop сцена -->
+<!-- Shop сцена (только обёртка ShopScene → открывает HTML-магазин ShopHtml).
+     Старый Phaser-магазин (scene_shop_ext1..4 / detail / inv_btn) удалён —
+     был мёртвым дублёром (карточки рисовались Phaser'ом, но ShopScene давно
+     делегирует в HTML shop_html_*). Этап 9 аудита. -->
 <script defer src="scene_shop.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_shop_ext1.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_shop_ext2.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_shop_ext3.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_shop_ext4.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_shop_detail.js?v=__BUILD_VERSION__"></script>
-<script defer src="scene_shop_inv_btn.js?v=__BUILD_VERSION__"></script>
 <!-- Avatar HTML overlay (cyberpunk, парящие иконки) -->
 <script defer src="avatar_html_overlay.js?v=__BUILD_VERSION__"></script>
 <script defer src="avatar_html_actions.js?v=__BUILD_VERSION__"></script>
