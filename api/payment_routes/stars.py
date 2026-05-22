@@ -129,7 +129,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 uid,
                 f"👑 <b>Premium подписка активирована!</b>\n"
                 f"Срок действия: <b>{days_left} дней</b>{bonus_txt}\n"
-                f"📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\n"
+                f"📈 Опыт и золото за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>\n\n"
                 f"Спасибо за покупку! ⚔️ Duel Arena",
             )
             fresh = db.get_or_create_player(uid, "")

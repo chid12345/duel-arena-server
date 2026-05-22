@@ -48,6 +48,9 @@ def register_rental_routes(app: FastAPI) -> None:
         item = get_item(body.item_id)
         if not item or item.get("rarity") != "mythic":
             return {"ok": False, "reason": "Аренда доступна только для мифических предметов"}
+        # Аренда — перк Premium-подписки (решение игрока, этап 9 аудита).
+        if not db.get_premium_status(uid).get("is_active"):
+            return {"ok": False, "reason": "🔒 Аренда доступна только Premium-подписчикам"}
         if not BOT_TOKEN:
             return {"ok": False, "reason": "Бот не настроен"}
 
@@ -87,6 +90,9 @@ def register_rental_routes(app: FastAPI) -> None:
         item = get_item(body.item_id)
         if not item or item.get("rarity") != "mythic":
             return {"ok": False, "reason": "Аренда доступна только для мифических предметов"}
+        # Аренда — перк Premium-подписки (решение игрока, этап 9 аудита).
+        if not db.get_premium_status(uid).get("is_active"):
+            return {"ok": False, "reason": "🔒 Аренда доступна только Premium-подписчикам"}
         if not CRYPTOPAY_TOKEN:
             return {"ok": False, "reason": "CryptoPay не настроен"}
 

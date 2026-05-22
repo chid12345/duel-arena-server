@@ -16,9 +16,15 @@
   const RENTAL_USDT = '2.00';
   const RENTAL_DAYS = 7;
 
+  function _isPremium() {
+    try { return !!(window.State && State.player && State.player.is_premium); } catch (_) { return false; }
+  }
+
   function buildButton(itemId, _legacyArg) {
-    // Открывает модалку с выбором Stars/USDT (цены в самой модалке).
-    return `<button class="wd-btn btn-rental" style="margin-top:4px;font-size:10px;padding:6px 2px;width:100%;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#dbeafe;border:1px solid rgba(96,165,250,.5);font-weight:700;letter-spacing:.3px" data-act="buy_rental" data-id="${itemId}">🕐 АРЕНДА · 7 ДНЕЙ</button>`;
+    // Аренда — перк Premium-подписки. Не-премам кнопка показывает замок
+    // (клик → апселл подписки), серверные маршруты тоже отклоняют без премиума.
+    const label = _isPremium() ? '🕐 АРЕНДА · 7 ДНЕЙ' : '🔒 АРЕНДА · только Premium';
+    return `<button class="wd-btn btn-rental" style="margin-top:4px;font-size:10px;padding:6px 2px;width:100%;background:linear-gradient(135deg,#1e3a8a,#3b82f6);color:#dbeafe;border:1px solid rgba(96,165,250,.5);font-weight:700;letter-spacing:.3px" data-act="buy_rental" data-id="${itemId}">${label}</button>`;
   }
 
   // Совместимость: старый код мог звать rentalStarsFor(590).
@@ -37,6 +43,12 @@
 
   function openModal(item, onSuccess, notifyFn) {
     const tg = window.Telegram?.WebApp;
+    // Аренда — только для Premium-подписчиков (апселл вместо модалки оплаты).
+    if (!_isPremium()) {
+      if (typeof notifyFn === 'function')
+        notifyFn('🔒 Аренда мифик-вещей доступна только Premium-подписчикам. Оформи подписку в магазине.', false);
+      return;
+    }
     const itemName = item.name || item.id;
     const itemEmoji = item.emoji || '🕐';
 

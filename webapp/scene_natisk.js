@@ -123,8 +123,8 @@ class NatiskScene extends Phaser.Scene {
 
     /* ── Premium ── */
     const premLine = d.is_premium
-      ? '⭐ Premium активен: +5 попыток/день'
-      : '⭐ Premium: +5 бесплатных попыток/день';
+      ? '⭐ Premium активен: +3 попытки/день'
+      : '⭐ Premium: +3 бесплатные попытки/день';
     txt(this, W / 2, y + 6, premLine, 10, d.is_premium ? '#ffc83c' : '#445566').setOrigin(0.5);
   }
 

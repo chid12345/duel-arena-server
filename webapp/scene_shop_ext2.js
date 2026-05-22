@@ -108,7 +108,7 @@ Object.assign(ShopScene.prototype, {
       this._gcBadge(container, 12, y + 3, 'VIP', gc.purple);
       container.add(txt(this, 40, y + 26, '👑', 18));
       container.add(txt(this, 60, y + 24, 'Premium подписка', 12, '#c8a0ff', true));
-      container.add(txt(this, 60, y + 38, '+15% XP · ящик · скидки · значок', 9, '#a888dd'));
+      container.add(txt(this, 60, y + 38, '+25% XP/золота · аренда мификов · ящик +10💎', 9, '#a888dd'));
       const isPrem = !!(State.player || {}).is_premium;
       const prLabel = isPrem ? '✅ Активен' : `⭐ ${premPkg.stars}`;
       this._gcPriceBtn(container, W - 80, y + 52, 66, prLabel, { bg: isPrem ? 0x4a2a8a : gc.purple, text: '#fff' });
@@ -116,7 +116,7 @@ Object.assign(ShopScene.prototype, {
       taps.push({ x: 8, y, w: W - 16, h: 72, fn: () => {
         showItemDetailPopup(this, {
           icon: '👑', name: 'Premium подписка',
-          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
+          desc: '⚔️ +25% опыта и золота за каждый бой\n💎 Ежедневный ящик +10 алмазов\n🕐 Аренда мифик-вещей на 7 дней (только Premium)\n💀 +3 попытки Натиска в день\n👑 Значок Premium у имени',
           actionLabel: isPrem ? '✅ Уже активен' : `⭐ ${premPkg.stars} — Купить`,
           canAct: !isPrem,
           actionFn: () => { closeItemDetailPopup(this); if (!isPrem) this._buyStars(premPkg); },
@@ -274,7 +274,7 @@ Object.assign(ShopScene.prototype, {
       this._gcBadge(container, 12, y + 3, 'VIP', gc.purple);
       container.add(txt(this, 40, y + 26, '👑', 18));
       container.add(txt(this, 60, y + 24, 'Premium подписка', 12, '#c8a0ff', true));
-      container.add(txt(this, 60, y + 38, '+15% XP · ящик · скидки · значок', 9, '#a888dd'));
+      container.add(txt(this, 60, y + 38, '+25% XP/золота · аренда мификов · ящик +10💎', 9, '#a888dd'));
       const isPremC = !!(State.player || {}).is_premium;
       const prLabelC = isPremC ? '✅ Активен' : `${cpPrem.usdt} USDT`;
       this._gcPriceBtn(container, W - 86, y + 52, 72, prLabelC, { bg: isPremC ? 0x4a2a8a : gc.purple, text: '#fff' });
@@ -282,7 +282,7 @@ Object.assign(ShopScene.prototype, {
       taps.push({ x: 8, y, w: W - 16, h: 72, fn: () => {
         showItemDetailPopup(this, {
           icon: '👑', name: 'Premium подписка',
-          desc: '⚔️ +15% XP за каждый бой\n📦 Бесплатный ящик каждый день\n🏷️ Скидки в магазине\n👑 Значок Premium у имени',
+          desc: '⚔️ +25% опыта и золота за каждый бой\n💎 Ежедневный ящик +10 алмазов\n🕐 Аренда мифик-вещей на 7 дней (только Premium)\n💀 +3 попытки Натиска в день\n👑 Значок Premium у имени',
           actionLabel: isPremC ? '✅ Уже активен' : `${cpPrem.usdt} USDT — Купить`,
           canAct: !isPremC,
           actionFn: () => { closeItemDetailPopup(this); if (!isPremC) this._buyCrypto(cpPrem); },

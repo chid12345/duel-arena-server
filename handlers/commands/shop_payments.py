@@ -84,7 +84,7 @@ class BotHandlersShopPayments:
                 logger.error("process_referral_stars_premium bot error uid=%s: %s", user.id, _ref_exc)
                 ref = {}
 
-            xp_line = f"\n📈 Опыт за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>"
+            xp_line = f"\n📈 Опыт и золото за бои: <b>+{PREMIUM_XP_BONUS_PERCENT}%</b>"
             if is_renewal:
                 msg = f"✅ <b>Подписка продлена!</b> Срок: <b>{days_left} дн.</b>{xp_line}"
             else:
