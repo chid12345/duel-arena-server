@@ -168,6 +168,15 @@ def register_tma_player_route(
                 player = db.get_or_create_player(uid, username)
             except Exception as exc:
                 log.warning("avatar bonus apply failed uid=%s: %s", uid, exc)
+        else:
+            # Масштаб бонуса аватара (+1 за 20 ур.) — досчитать до текущего
+            # уровня. Раньше масштаб запекался один раз и в бой не доезжал.
+            try:
+                if db.resync_avatar_scale(uid):
+                    _cache_invalidate(uid)
+                    player = db.get_or_create_player(uid, username)
+            except Exception as exc:
+                log.warning("avatar scale resync failed uid=%s: %s", uid, exc)
 
         inv = stamina_stats_invested(player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1))
         regen = db.apply_hp_regen_from_player(player, inv)

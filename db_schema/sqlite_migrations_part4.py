@@ -43,4 +43,10 @@ MIGRATIONS_PART4 = [
     ("2026_04_27_001_avatar_bonus_applied", [
         "ALTER TABLE players ADD COLUMN avatar_bonus_applied INTEGER DEFAULT 0",
     ]),
+
+    # Этап 7 аудита: уровень, на котором запечён масштаб бонуса аватара.
+    # По нему resync_avatar_scale досчитывает прирост (+1/20 ур.) при прокачке.
+    ("2026_05_22_001_avatar_bonus_level", [
+        "ALTER TABLE players ADD COLUMN avatar_bonus_level INTEGER DEFAULT 0",
+    ]),
 ]

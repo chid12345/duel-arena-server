@@ -28,6 +28,10 @@ class AvatarsSchemaMixin:
             for col_name, col_def in [
                 ("equipped_avatar_id", "TEXT"),
                 ("avatar_bonus_applied", "INTEGER DEFAULT 0"),
+                # Уровень, на котором был «запечён» масштаб бонуса аватара
+                # (+1 за 20 ур.). По нему resync_avatar_scale досчитывает прирост
+                # при прокачке — иначе рост, показанный на витрине, не доезжал в бой.
+                ("avatar_bonus_level", "INTEGER DEFAULT 0"),
             ]:
                 cursor.execute(
                     f"ALTER TABLE players ADD COLUMN IF NOT EXISTS {col_name} {col_def}"
@@ -39,6 +43,8 @@ class AvatarsSchemaMixin:
                 cursor.execute("ALTER TABLE players ADD COLUMN equipped_avatar_id TEXT")
             if "avatar_bonus_applied" not in cols:
                 cursor.execute("ALTER TABLE players ADD COLUMN avatar_bonus_applied INTEGER DEFAULT 0")
+            if "avatar_bonus_level" not in cols:
+                cursor.execute("ALTER TABLE players ADD COLUMN avatar_bonus_level INTEGER DEFAULT 0")
 
     def _ensure_elite_builds_schema(self, cursor) -> None:
         cursor.execute(

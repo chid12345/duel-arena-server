@@ -109,6 +109,7 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
     # Система образов (аватарок)
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS equipped_avatar_id TEXT",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS avatar_bonus_applied INTEGER DEFAULT 0",
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS avatar_bonus_level INTEGER DEFAULT 0",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS current_class TEXT",
     "ALTER TABLE players ADD COLUMN IF NOT EXISTS current_class_type TEXT",
     # Реферальная система: UNIQUE constraint мог отсутствовать если таблица создана раньше

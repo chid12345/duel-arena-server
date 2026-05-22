@@ -214,7 +214,7 @@ function _buildGrid(avatars, tab) {
     const spec = avatars.filter(a => a.currency !== 'stars');
     let h = '';
     if (prem.length) {
-      h += `<div class="av-sec" style="--lc:rgba(249,115,22,.3);--tc:#c2410c"><div class="av-sec-line"></div><div class="av-sec-txt">⭐ Premium · 50⭐ / $1</div><div class="av-sec-line"></div></div>`;
+      h += `<div class="av-sec" style="--lc:rgba(249,115,22,.3);--tc:#c2410c"><div class="av-sec-line"></div><div class="av-sec-txt">⭐ Premium · 67⭐ / $1</div><div class="av-sec-line"></div></div>`;
       h += prem.map(_cell).join('');
     }
     if (spec.length) {
@@ -254,7 +254,7 @@ function _buildModal(av) {
     </div>`;
   } else if (av.currency === 'usdt_stars') {
     btns = `<div class="av-btn-row">
-      <button class="av-btn av-btn-stars" data-act="buy_stars" data-id="${av.id}">⭐ ${av.price || 590} Stars</button>
+      <button class="av-btn av-btn-stars" data-act="buy_stars" data-id="${av.id}">⭐ ${av.price || 800} Stars</button>
       <button class="av-btn av-btn-elite" data-act="buy_crypto" data-id="${av.id}">💵 $${av.usdt_price || '11.99'} USDT</button>
     </div>`;
   } else if (av.currency === 'subscription') {

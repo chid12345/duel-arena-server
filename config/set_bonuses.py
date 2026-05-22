@@ -42,26 +42,6 @@ SET_PERKS = {}
 PERK_INFO = {}
 
 
-def class_id_to_rarity(class_id: str | None) -> str | None:
-    """Legacy: парсер class_id (гардероб) в редкость сета. Не используется
-    в новой системе (см. config/class_set_mapping.class_id_to_set_id).
-    Оставлен для совместимости consumers."""
-    if not class_id:
-        return None
-    cid = str(class_id)
-    if cid.startswith("usdt_custom_"):
-        return RARITY_MYTHIC
-    if cid.endswith("_mythic") or cid.endswith("_usdt"):
-        return RARITY_MYTHIC
-    if cid.endswith("_diamonds"):
-        return RARITY_EPIC
-    if cid.endswith("_gold"):
-        return RARITY_RARE
-    if cid.endswith("_free"):
-        return RARITY_COMMON
-    return None
-
-
 def count_set_rarities(equipped: dict, current_class: str | None = None) -> dict[str, int]:  # noqa: ARG001
     """Legacy. Возвращает {rarity: count} для совместимости. В новой системе
     рарити больше не основа сетов — используется set_id. Эта функция оставлена

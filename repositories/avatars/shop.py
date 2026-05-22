@@ -147,9 +147,10 @@ class AvatarsShopMixin:
 
             cursor.execute(
                 """UPDATE players
-                   SET strength = ?, endurance = ?, crit = ?, max_hp = ?, current_hp = ?, equipped_avatar_id = ?
+                   SET strength = ?, endurance = ?, crit = ?, max_hp = ?, current_hp = ?,
+                       equipped_avatar_id = ?, avatar_bonus_level = ?
                    WHERE user_id = ?""",
-                (new_strength, new_endurance, new_crit, new_max_hp, new_current_hp, avatar_id, user_id),
+                (new_strength, new_endurance, new_crit, new_max_hp, new_current_hp, avatar_id, level, user_id),
             )
             conn.commit()
             return {

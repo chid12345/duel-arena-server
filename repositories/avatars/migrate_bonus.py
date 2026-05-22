@@ -35,13 +35,18 @@ class AvatarsMigrateBonusMixin:
 
             # Читаем актуальное состояние из БД
             cursor.execute(
-                "SELECT avatar_bonus_applied, equipped_avatar_id, level, strength, endurance, crit, max_hp, current_hp FROM players WHERE user_id = ?",
+                "SELECT avatar_bonus_applied, equipped_avatar_id, level, avatar_bonus_level, strength, endurance, crit, max_hp, current_hp FROM players WHERE user_id = ?",
                 (user_id,),
             )
             row = cursor.fetchone()
             if not row:
                 return
             if int(self._row_get(row, "avatar_bonus_applied", 0) or 0):
+                # База уже применена — досчитываем масштаб (+1 за 20 ур.) до
+                # текущего уровня. Раньше масштаб запекался один раз при
+                # экипировке и при прокачке в бой не доезжал (этап 7 аудита).
+                self._resync_avatar_scale_cursor(cursor, user_id, row=row)
+                conn.commit()
                 _migrated.add(user_id)
                 return
 
@@ -67,9 +72,10 @@ class AvatarsMigrateBonusMixin:
                        crit = crit + ?,
                        max_hp = ?,
                        current_hp = ?,
-                       avatar_bonus_applied = 1
+                       avatar_bonus_applied = 1,
+                       avatar_bonus_level = ?
                    WHERE user_id = ?""",
-                (d_str, d_end, d_crit, new_mhp, new_chp, user_id),
+                (d_str, d_end, d_crit, new_mhp, new_chp, level, user_id),
             )
             conn.commit()
             _migrated.add(user_id)
@@ -81,6 +87,75 @@ class AvatarsMigrateBonusMixin:
                 conn.rollback()
             except Exception:
                 pass
+        finally:
+            conn.close()
+
+    def _resync_avatar_scale_cursor(self, cursor, user_id: int, *, row=None) -> bool:
+        """Досчитать масштаб бонуса аватара (+1 за 20 ур., макс +3) до текущего
+        уровня. Работает по дельте: сравнивает scale(текущий ур.) и
+        scale(уровень, на котором масштаб запечён = avatar_bonus_level), и
+        добавляет разницу к str/end/crit. База аватара сокращается в дельте,
+        остаётся только масштаб (hp_flat не масштабируется).
+
+        Если avatar_bonus_level не задан (0/None) — инициализируем его текущим
+        уровнем без изменения статов (считаем, что запечённый масштаб уже
+        соответствует текущему — безопасно, без задвоения)."""
+        if row is None:
+            cursor.execute(
+                "SELECT equipped_avatar_id, level, avatar_bonus_level FROM players WHERE user_id = ?",
+                (user_id,),
+            )
+            row = cursor.fetchone()
+            if not row:
+                return False
+        level = int(self._row_get(row, "level", 1) or 1)
+        applied_lvl = int(self._row_get(row, "avatar_bonus_level", 0) or 0)
+        if applied_lvl <= 0:
+            cursor.execute(
+                "UPDATE players SET avatar_bonus_level = ? WHERE user_id = ?",
+                (level, user_id),
+            )
+            return False
+        if applied_lvl == level:
+            return False
+        avatar_id = self._row_get(row, "equipped_avatar_id") or "base_neutral"
+        target = self._effective_avatar_bonus(avatar_id, level)
+        prev = self._effective_avatar_bonus(avatar_id, applied_lvl)
+        d_str = int(target["strength"]) - int(prev["strength"])
+        d_end = int(target["endurance"]) - int(prev["endurance"])
+        d_crit = int(target["crit"]) - int(prev["crit"])
+        if d_str or d_end or d_crit:
+            cursor.execute(
+                """UPDATE players
+                   SET strength = strength + ?, endurance = endurance + ?,
+                       crit = crit + ?, avatar_bonus_level = ?
+                   WHERE user_id = ?""",
+                (d_str, d_end, d_crit, level, user_id),
+            )
+            return True
+        cursor.execute(
+            "UPDATE players SET avatar_bonus_level = ? WHERE user_id = ?",
+            (level, user_id),
+        )
+        return False
+
+    def resync_avatar_scale(self, user_id: int) -> bool:
+        """Публичная обёртка: досчитать масштаб бонуса аватара до текущего уровня
+        (собственное соединение). Безопасно вызывать часто. Возвращает True,
+        если статы изменились (тогда вызывающему стоит сбросить кэш игрока)."""
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            changed = self._resync_avatar_scale_cursor(cursor, user_id)
+            conn.commit()
+            return bool(changed)
+        except Exception as e:
+            log.warning("resync_avatar_scale FAIL uid=%s: %s", user_id, e)
+            try:
+                conn.rollback()
+            except Exception:
+                pass
+            return False
         finally:
             conn.close()
 
@@ -125,14 +200,15 @@ class AvatarsMigrateBonusMixin:
                            crit = crit + ?,
                            max_hp = ?,
                            current_hp = ?,
-                           avatar_bonus_applied = 1
+                           avatar_bonus_applied = 1,
+                           avatar_bonus_level = ?
                        WHERE user_id = ?""",
-                    (d_str, d_end, d_crit, new_mhp, new_chp, user_id),
+                    (d_str, d_end, d_crit, new_mhp, new_chp, level, user_id),
                 )
             else:
                 cursor.execute(
-                    "UPDATE players SET avatar_bonus_applied = 1 WHERE user_id = ?",
-                    (user_id,),
+                    "UPDATE players SET avatar_bonus_applied = 1, avatar_bonus_level = ? WHERE user_id = ?",
+                    (level, user_id),
                 )
             _migrated.add(user_id)
             log.info("avatar bonus applied uid=%s: str+%s end+%s crit+%s hp+%s", user_id, d_str, d_end, d_crit, d_hp)

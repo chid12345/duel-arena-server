@@ -72,7 +72,7 @@ AVATAR_CATALOG = [
     {"id": "dia_juggernaut", "name": "🦾 Джаггернаут",       "tier": "diamond", "rarity": "epic", "currency": "diamonds", "price": 280, "strength": 7,  "endurance": 6, "crit": 2, "hp_flat": 12, "badge": "🦾", "description": "Тяжёлая машина."},
     {"id": "dia_liquidator", "name": "🎭 Ликвидатор",        "tier": "diamond", "rarity": "epic", "currency": "diamonds", "price": 300, "strength": 5,  "endurance": 5, "crit": 9, "hp_flat": 4,  "badge": "🎭", "description": "Максимум крита."},
 
-    # ── PREMIUM (stars/usdt, legendary, ~29 очков, $1 / 50⭐) ────────
+    # ── PREMIUM (stars/usdt, legendary, ~29 очков, $1 / 67⭐) ────────
     {"id": "prem_dragon",  "name": "🐉 Дракон Хаоса", "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 8, "endurance": 7, "crit": 5, "hp_flat": 10, "badge": "🐉", "description": "Древний зверь."},
     {"id": "prem_phoenix", "name": "🔥 Феникс",       "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 6, "endurance": 8, "crit": 6, "hp_flat": 8,  "badge": "🔥", "description": "Возрождение."},
     {"id": "prem_kraken",  "name": "🦑 Кракен",       "tier": "premium", "rarity": "legendary", "currency": "stars", "price": 67, "usdt_price": "1.00", "strength": 5, "endurance": 9, "crit": 3, "hp_flat": 14, "badge": "🦑", "description": "Монстр глубин."},

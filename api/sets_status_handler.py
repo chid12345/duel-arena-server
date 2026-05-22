@@ -15,25 +15,13 @@ from repositories.sets import resolve_active_sets
 _log = logging.getLogger(__name__)
 
 
-def _player_class(uid: int) -> str | None:
-    """current_class игрока (или warrior_type как fallback)."""
-    conn = db.get_connection()
-    try:
-        cur = conn.cursor()
-        cur.execute(
-            "SELECT current_class, warrior_type FROM players WHERE user_id = ?", (uid,),
-        )
-        row = cur.fetchone()
-        if not row:
-            return None
-        return (row["current_class"] or row["warrior_type"]) if row else None
-    finally:
-        conn.close()
+def _count_set_ids(equipped: dict) -> dict[str, int]:
+    """Сколько предметов каждого set_id у игрока.
 
-
-def _count_set_ids(equipped: dict, current_class: str | None) -> dict[str, int]:
-    """Сколько предметов каждого set_id у игрока (включая виртуальный armor-слот)."""
-    from config.class_set_mapping import class_id_to_set_id
+    Аватар (образ) в сетах НЕ участвует — сет собирается ТОЛЬКО из надетых вещей
+    (6 слотов), ровно как в боевом resolve_active_sets. Раньше тут добавлялся
+    виртуальный +1 по образу (class_id_to_set_id), из-за чего статус показывал
+    прогресс выше реального, а в бою бонуса не было (этап 7 аудита)."""
     counts: dict[str, int] = {}
     for slot, item in (equipped or {}).items():
         if slot == "ring2":
@@ -41,9 +29,6 @@ def _count_set_ids(equipped: dict, current_class: str | None) -> dict[str, int]:
         sid = (item or {}).get("set_id") if isinstance(item, dict) else None
         if sid:
             counts[str(sid)] = counts.get(str(sid), 0) + 1
-    armor_sid = class_id_to_set_id(current_class)
-    if armor_sid:
-        counts[armor_sid] = counts.get(armor_sid, 0) + 1
     return counts
 
 
@@ -61,8 +46,7 @@ def register_sets_status_route(app: FastAPI) -> None:
             tg_user = get_user_from_init_data(init_data)
             uid = int(tg_user["id"])
             equipped = db.get_equipment(uid)
-            cur_class = _player_class(uid)
-            counts = _count_set_ids(equipped, cur_class)
+            counts = _count_set_ids(equipped)
 
             archetypes_payload = []
             for sid, meta in SETS_V2.items():
@@ -87,7 +71,7 @@ def register_sets_status_route(app: FastAPI) -> None:
                 })
 
             active_payload = []
-            for s in resolve_active_sets(equipped, current_class=cur_class):
+            for s in resolve_active_sets(equipped):
                 active_payload.append({
                     "set_id": s["set_id"],
                     "name": s["name"],
