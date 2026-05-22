@@ -51,6 +51,16 @@ class UsersPremiumMixin:
         finally:
             conn.close()
 
+        # Этап 9 аудита (решение игрока — единый Premium): подписка ТАКЖЕ
+        # открывает premium-трек боевого пропуска текущего сезона. Раньше
+        # activate_bp_premium не вызывался ниоткуда → трек был недоступен,
+        # хотя кнопка «купить трек» брала деньги. Отдельное соединение,
+        # не критично для активации подписки.
+        try:
+            self.activate_bp_premium(user_id)
+        except Exception:
+            pass
+
         return {
             "ok": True,
             "premium_until": new_until.isoformat(),

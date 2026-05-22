@@ -102,7 +102,7 @@ async def _create_premium_invoice_link() -> str:
 
     payload: dict[str, Any] = {
         "title": "Premium-подписка",
-        "description": "Premium-трек батл-пасса + бонусы (XP +30%, золото +18%, ящик в день)",
+        "description": "Premium: +25% опыта и золота, ежедневный ящик +10💎, +премиум-награды боевого пропуска",
         "payload": "premium_sub",
         "currency": "XTR",  # Telegram Stars
         "prices": [{"label": "Premium", "amount": int(PREMIUM_SUBSCRIPTION_STARS)}],

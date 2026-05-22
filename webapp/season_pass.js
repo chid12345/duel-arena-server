@@ -72,11 +72,11 @@ function renderHeader(s, p) {
   // Premium-row: либо «активирован», либо кнопка «купить»
   const pr = $("premium-row");
   if (p.has_premium) {
-    pr.innerHTML = `<div class="bp-premium-active">✓ Premium-трек активирован</div>`;
+    pr.innerHTML = `<div class="bp-premium-active">✓ Premium активен — премиум-награды открыты</div>`;
   } else {
     const sub = STATE.premium_subscription || {};
     pr.innerHTML = `<button class="bp-buy-premium" onclick="buyPremium()">
-      💎 Активировать Premium-трек · ${sub.stars_price || "?"} ⭐
+      💎 Premium-подписка · ${sub.stars_price || "?"} ⭐ <span style="opacity:.7;font-size:.85em">(бусты + премиум-награды пасса)</span>
     </button>`;
   }
 }

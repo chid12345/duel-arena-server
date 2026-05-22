@@ -32,10 +32,10 @@
   },
 
   "premium_subscription": {
-    "stars_price": 390,
-    "usdt_price": 4.99,
+    "stars_price": 536,
+    "usdt_price": 8.00,
     "duration_days": 90,
-    "_comment": "Премиум активирует premium track на пассе текущего сезона до его окончания. Если куплен в середине — игрок получает премиум-награды задним числом за уже взятые free-уровни."
+    "_comment": "ЕДИНЫЙ Premium (решение игрока, этап 9): кнопка «активировать premium-трек» покупает ту же Premium-подписку (536⭐/$8, payload premium_sub) — цена ДОЛЖНА совпадать с PREMIUM_SUBSCRIPTION_STARS. activate_premium теперь также вызывает activate_bp_premium → premium-награды пасса открываются на весь сезон. Если куплен в середине — премиум-награды задним числом за уже взятые free-уровни."
   },
 
   "rewards_grid": {

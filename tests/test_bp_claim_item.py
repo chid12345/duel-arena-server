@@ -66,3 +66,20 @@ def test_bp_premium_item_requires_premium(db):
     res = db.claim_bp_reward(5004, 5, "premium")  # box_rare premium
     assert res["ok"] is False
     assert res["reason"] == "premium_required"
+
+
+def test_subscription_unlocks_bp_premium_track(db):
+    """Этап 9 (решение А — единый Premium): activate_premium ТАКЖЕ открывает
+    premium-трек пасса → premium-награды становятся доступны. Раньше трек был
+    невозможен (activate_bp_premium нигде не вызывался)."""
+    uid = 5005
+    _reach_level(db, uid)
+    # До подписки — premium-трек закрыт
+    assert db.claim_bp_reward(uid, 5, "premium")["reason"] == "premium_required"
+    # Покупка Premium-подписки должна открыть трек
+    db.activate_premium(uid, days=21)
+    res = db.claim_bp_reward(uid, 5, "premium")  # box_rare premium
+    assert res["ok"] is True, res
+    assert res["reward"].get("item") == "box_rare"
+    # И предмет реально доставлен в player_inventory
+    assert _inv(db, uid).get("box_rare", 0) >= 1
