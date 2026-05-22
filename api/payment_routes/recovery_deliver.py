@@ -1,7 +1,10 @@
 """Доставка вторичных наград из recovery-цикла (paid но items_delivered=0).
 
 Вызывается из `api/tma_startup._recover_pending_invoices` каждые 10 мин.
-Симметрична c `crypto_check.py` — обрабатывает те же 12 типов payload.
+Симметрична c `crypto_check.py` — обрабатывает те же типы payload
+(equip×6, rental, usdt_scroll, armor2_legendary[_reset], avatar, premium,
+full_reset, default-алмазы). diamond_first не нужен — алмазы зачисляются
+атомически в confirm_crypto_invoice.
 
 Возвращает True при успехе → caller вызывает `db.mark_items_delivered(invoice_id)`.
 False → флаг items_delivered остаётся 0, recovery повторит на следующем цикле.
@@ -107,6 +110,34 @@ async def deliver_recovery_payload(
             await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
         bonus_txt = f"\n💎 Бонус: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
         await send_tg_message(uid, f"👑 <b>Premium подписка активирована!</b>\nСрок действия: <b>{days_left} дней</b>{bonus_txt}\n\nСпасибо за покупку! ⚔️ Duel Arena")
+        return True
+
+    if ":full_reset:" in payload:
+        # Полный сброс прогресса за USDT. Раньше recovery его НЕ обрабатывал →
+        # при промахе webhook+check инвойс помечался delivered БЕЗ сброса
+        # (деньги списаны, сброс не выполнен). Теперь симметрично с webhook/check.
+        # keep_wallet_clan_and_referrals — keyword-only, поэтому через lambda.
+        try:
+            await _exec(lambda: db.wipe_player_profile(uid, keep_wallet_clan_and_referrals=True))
+            await _exec(db.get_or_create_player, uid, "")
+        except Exception as e:
+            _log.error("CRITICAL: recovery full_reset uid=%s inv=%s err=%s", uid, inv_id, e)
+            return False
+        try:
+            from battle_system import battle_system
+            battle_system.mark_profile_reset(uid, ttl_seconds=600)
+        except Exception:
+            pass
+        cache_invalidate(uid)
+        if manager is not None:
+            await manager.send(uid, {"event": "profile_reset", "source": "cryptopay_usdt"})
+        await send_tg_message(
+            uid,
+            "🔄 <b>Прогресс сброшен</b>\n"
+            "Оплата USDT получена. Уровень и бои — с нуля.\n"
+            "<b>Сохранены:</b> золото, алмазы, клан, реферальная программа и Легендарные образы.\n\n"
+            "⚔️ Duel Arena",
+        )
         return True
 
     _equip_map = (
