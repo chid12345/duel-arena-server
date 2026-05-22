@@ -90,6 +90,7 @@ def _award_season_top(db, season_id: int) -> int:
             (int(season_id),),
         )
         rows = cursor.fetchall()
+        items_to_deliver: list[tuple[int, str]] = []
         for rank, row in enumerate(rows, start=1):
             uid = int(row["user_id"])
             diamonds, item = _reward_for_rank(rank)
@@ -102,17 +103,21 @@ def _award_season_top(db, season_id: int) -> int:
                         (int(diamonds), uid),
                     )
                 if item:
-                    cursor.execute(
-                        f"INSERT INTO user_inventory (user_id, item_name, quantity) "
-                        f"VALUES ({ph}, {ph}, 1)",
-                        (uid, item),
-                    )
+                    items_to_deliver.append((uid, item))
                 awarded += 1
             except Exception as e:
                 logger.warning("season_top reward uid=%s rank=%s failed: %s", uid, rank, e)
         conn.commit()
     finally:
         conn.close()
+    # Предметы — в реальный инвентарь player_inventory через общий хелпер (после
+    # коммита алмазов). Раньше сырой INSERT шёл в снесённую user_inventory →
+    # предмет молча терялся (этап 8 аудита).
+    for uid, item in items_to_deliver:
+        try:
+            db.add_to_inventory(uid, item)
+        except Exception as e:
+            logger.warning("season_top item add uid=%s item=%s failed: %s", uid, item, e)
     return awarded
 
 

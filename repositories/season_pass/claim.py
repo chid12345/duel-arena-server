@@ -58,7 +58,7 @@ class SeasonPassClaimMixin:
         if not reward:
             return {"ok": False, "reason": "no_reward_at_level"}
 
-        # Применяем награду
+        # Применяем валюту + запись о клейме в одной транзакции.
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
@@ -71,15 +71,6 @@ class SeasonPassClaimMixin:
                     f"WHERE user_id = {ph}",
                     (gold, diamond, user_id),
                 )
-
-            item = reward.get("item")
-            if item:
-                cursor.execute(
-                    f"INSERT INTO user_inventory (user_id, item_name, quantity) "
-                    f"VALUES ({ph}, {ph}, 1)",
-                    (user_id, item),
-                )
-
             cursor.execute(
                 f"INSERT INTO bp_rewards_claimed (user_id, season_id, level, track) "
                 f"VALUES ({ph}, {ph}, {ph}, {ph})",
@@ -88,5 +79,15 @@ class SeasonPassClaimMixin:
             conn.commit()
         finally:
             conn.close()
+
+        # Предмет — в реальный инвентарь player_inventory через общий хелпер.
+        # Раньше шёл сырой INSERT в снесённую таблицу user_inventory(item_name)
+        # → клейм падал HTTP 500 и игрок не получал НИЧЕГО (этап 8 аудита).
+        item = reward.get("item")
+        if item:
+            try:
+                self.add_to_inventory(user_id, item)
+            except Exception:
+                pass
 
         return {"ok": True, "reward": reward, "level": level, "track": track}
