@@ -68,7 +68,9 @@
   };
   const MOCK_EQUIPMENT = {
     belt:   { item_id: 'helmet_gold1', rarity: 'rare',   name: 'Золотой шлем' },
-    armor:  { item_id: 'armor_gold',   rarity: 'rare',   name: 'Золотая броня' },
+    // Слот брони — реальный ключ armor2 (старый armor снесён). Раньше тут стоял
+    // armor → слот «БРОНЯ» рисовался пустым в превью. Теперь заполнен.
+    armor2: { item_id: 'armor_gold',   rarity: 'rare',   name: 'Золотая броня' },
     boots:  { item_id: 'boots_gold1',  rarity: 'rare',   name: 'Золотые сапоги' },
     weapon: { item_id: 'sword_gold',   rarity: 'rare',   name: 'Золотой меч', emoji: '⚔️' },
     shield: { item_id: 'shield_gold1', rarity: 'rare',   name: 'Золотой щит' },
