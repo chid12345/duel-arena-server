@@ -22,12 +22,16 @@ def persona_weights_for_level(level: int) -> tuple[tuple[str, float], ...]:
     if lv < 10:
         return (("novice", 1.00),)
     if lv < 20:
-        return (("novice", 0.70), ("farmer", 0.28), ("major", 0.02))
+        return (("novice", 0.60), ("farmer", 0.36), ("major", 0.04))
     if lv < 35:
-        return (("novice", 0.50), ("farmer", 0.40), ("major", 0.09), ("donator", 0.01))
+        return (("novice", 0.40), ("farmer", 0.42), ("major", 0.15), ("donator", 0.03))
     if lv < 60:
-        return (("novice", 0.40), ("farmer", 0.40), ("major", 0.17), ("donator", 0.03))
-    return (("novice", 0.35), ("farmer", 0.35), ("major", 0.25), ("donator", 0.05))
+        # Этап буста ботов: на средних уровнях больше «богатых» соперников
+        # (был 40/40/17/3) — игрок к 35-60 уже в gold/diamond, бой должен тяжелеть.
+        return (("novice", 0.20), ("farmer", 0.38), ("major", 0.32), ("donator", 0.10))
+    # 60+: больше половины ботов в эпике/мифике (был 35/35/25/5) — топ-игроку
+    # должно быть реально сложно, шмот снова решает.
+    return (("novice", 0.10), ("farmer", 0.30), ("major", 0.40), ("donator", 0.20))
 
 
 # Старый плоский набор — оставлен для обратной совместимости (preview-страница).

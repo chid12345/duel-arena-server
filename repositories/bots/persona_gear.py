@@ -126,19 +126,23 @@ def pick_gear_for_persona(persona: str, level: int,
       stats = {"_eq_atk_bonus": 70, "_eq_def_pct": 0.18, ..., "_extra": {hp/str/...}}
     """
     r = rng or random
-    # На низких уровнях бот не одевает все слоты — экипировка появляется постепенно.
     lv = max(1, int(level))
-    coverage = max(0.30, min(1.0, lv / 60.0 + 0.20))
+    # Со среднего уровня (20+) бот ВСЕГДА полностью одет — без пустых слотов.
+    # На среднем/высоком уровне голый соперник выглядит нелепо и слишком слаб.
+    # Новички (<20) донашивают экипировку постепенно (имитация новых аккаунтов).
+    FULL_GEAR_LEVEL = 20
+    full_gear = lv >= FULL_GEAR_LEVEL
+    coverage = 1.0 if full_gear else max(0.30, min(1.0, lv / 60.0 + 0.20))
 
     items: Dict[str, str] = {}
     for slot in SLOTS_FOR_BOT:
-        # Шанс что слот вообще одет — растёт с уровнем
-        if r.random() > coverage:
-            continue
-        # Новички часто голые (имитация новых аккаунтов).
-        # 60% слотов проскакивают — карточка не пустая, но и не залита эпиком.
-        if persona == "novice" and r.random() > 0.40:
-            continue
+        if not full_gear:
+            # Шанс что слот вообще одет — растёт с уровнем (только до 20 lvl)
+            if r.random() > coverage:
+                continue
+            # Новички часто полуголые — имитация новых аккаунтов (только до 20 lvl)
+            if persona == "novice" and r.random() > 0.40:
+                continue
         iid = _pick_item_for_slot(slot, persona, r)
         if iid:
             items[slot] = iid
