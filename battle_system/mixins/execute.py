@@ -32,11 +32,16 @@ class BattleExecuteMixin:
 
         # Если второй игрок - бот, делаем выбор за него
         if battle['is_bot2'] and not p2_choices:
-            # AI-память: храним историю защит игрока в battle dict (живёт между раундами).
-            # Бот-«стратег» читает паттерн и бьёт мимо предсказуемой защиты.
-            player2["_opp_def_history"] = battle.setdefault("_bot_opp_def_history", [])
-            if battle.get('rounds'):
-                _last = getattr(battle['rounds'][-1], 'player1_defense', None)
+            # AI-память: «умный» бот (стратег) читает паттерны игрока за весь бой —
+            # куда чаще БЬЁТ (туда ставит блок) и куда чаще ЗАЩИЩАЕТСЯ (бьёт в другое).
+            # Истории берём из battle['rounds'] → переживают AFK/перезагрузку сессии.
+            rounds = battle.get('rounds') or []
+            player1["_atk_history"] = [getattr(r, 'player1_attack', None) for r in rounds
+                                       if getattr(r, 'player1_attack', None)]
+            player1["_def_history"] = [getattr(r, 'player1_defense', None) for r in rounds
+                                       if getattr(r, 'player1_defense', None)]
+            if rounds:
+                _last = getattr(rounds[-1], 'player1_defense', None)
                 if _last:
                     player1["_last_defense_zone"] = _last
             p2_choices = self._get_bot_choice(player2, player1)

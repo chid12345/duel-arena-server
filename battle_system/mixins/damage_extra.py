@@ -49,44 +49,70 @@ class BattleDamageExtraMixin:
         return 15
 
     def _get_bot_choice(self, bot: Dict, opponent: Dict) -> Dict:
-        """Выбор хода бота. Учитывает ai_pattern + историю последних защит игрока (память на 2 хода).
+        """Выбор хода бота.
 
-        «Стратег» (мажор/донатер): если игрок 2 раза подряд защищал зону X —
-        в 60% случаев бьёт в одну из ДВУХ других зон (читает паттерн).
+        Простые боты (novice/farmer → aggressive/defensive/balanced) — почти
+        случайны: низкие уровни остаются лёгкими. «Стратег» (мажор/донатер,
+        высокие уровни) — умный: читает паттерны игрока и реагирует на HP
+        (см. _strategist_choice). ~20% случайности — стратега можно переиграть.
         """
         bot_type = bot.get("ai_pattern", "balanced")
-        # История последних защит игрока живёт в bot dict (мутируется каждый ход)
-        hist = bot.setdefault("_opp_def_history", [])
-        opp_last_def = opponent.get("_last_defense_zone")
-        if opp_last_def:
-            hist.append(opp_last_def)
-            if len(hist) > 3:
-                hist.pop(0)
-
         zones = ["ГОЛОВА", "ТУЛОВИЩЕ", "НОГИ"]
-        # Базовый выбор по архетипу
+
+        # Базовый выбор по архетипу (фон + поведение простых ботов)
         if bot_type == "aggressive":
             attack = random.choices(zones, weights=[0.5, 0.3, 0.2])[0]
             defense = random.choices(zones, weights=[0.2, 0.4, 0.4])[0]
         elif bot_type == "defensive":
             attack = random.choices(zones, weights=[0.3, 0.4, 0.3])[0]
             defense = random.choices(zones, weights=[0.5, 0.3, 0.2])[0]
-        elif bot_type == "strategist":
-            # Стратег чаще атакует туда, где НЕ была защита игрока
-            avoid = hist[-1] if hist else None
-            opts = [z for z in zones if z != avoid] or zones
-            attack = random.choice(opts)
-            defense = random.choices(zones, weights=[0.4, 0.4, 0.2])[0]
         else:
             attack = random.choice(zones)
             defense = random.choice(zones)
 
-        # Память: 2 одинаковых защиты подряд → читаем паттерн (60% бьём в другие)
-        if len(hist) >= 2 and hist[-1] == hist[-2]:
-            if random.random() < 0.60:
-                others = [z for z in zones if z != hist[-1]]
-                attack = random.choice(others)
-
-        if random.random() < 0.10:
+        if bot_type == "strategist":
+            attack, defense = self._strategist_choice(bot, opponent, zones, attack, defense)
+        elif random.random() < 0.10:
+            # Лёгкий шум для простых ботов (как было)
             attack = random.choice(zones)
+
         return {"attack": attack, "defense": defense}
+
+    def _strategist_choice(self, bot: Dict, opponent: Dict, zones: List[str],
+                           attack: str, defense: str):
+        """Умный ход стратега: чтение паттернов игрока + реакция на HP.
+
+        ~80% решений «умные», ~20% — фоновая случайность (база attack/defense).
+        АТАКА: бьём туда, где игрок защищается РЕЖЕ всего; если у игрока мало HP —
+        добиваем в самую открытую зону. ЗАЩИТА: блок самого ЧАСТОГО удара игрока;
+        при своём низком HP блокируем почти всегда (выживание).
+        """
+        SMART_P = 0.80
+
+        def _hp_pct(d):
+            mh = max(1, int(d.get("max_hp", 1) or 1))
+            return max(0.0, min(1.0, int(d.get("current_hp", mh) or mh) / mh))
+
+        bot_hp = _hp_pct(bot)
+        opp_hp = _hp_pct(opponent)
+
+        atk_hist = [z for z in (opponent.get("_atk_history") or []) if z in zones]
+        def_hist = [z for z in (opponent.get("_def_history") or []) if z in zones]
+        af = {z: atk_hist.count(z) for z in zones}
+        df = {z: def_hist.count(z) for z in zones}
+        most_atk = max(zones, key=lambda z: af[z]) if atk_hist else None
+
+        # АТАКА — по тому, как игрок ЗАЩИЩАЕТСЯ (бьём в самую открытую зону)
+        if def_hist and random.random() < SMART_P:
+            ranked = sorted(zones, key=lambda z: df[z])  # [реже всего защищает, ..., чаще всего]
+            if opp_hp <= 0.30 and bot_hp >= opp_hp:
+                attack = ranked[0]                       # добивание — точно в слабую защиту
+            else:
+                attack = ranked[0] if random.random() < 0.70 else ranked[1]
+
+        # ЗАЩИТА — блок самого частого удара игрока; при низком HP — почти всегда
+        block_p = 0.90 if bot_hp <= 0.30 else SMART_P
+        if most_atk and random.random() < block_p:
+            defense = most_atk
+
+        return attack, defense
