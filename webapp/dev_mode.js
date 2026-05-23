@@ -8,14 +8,25 @@
    ============================================================ */
 (() => {
   const params = new URLSearchParams(location.search);
-  if (params.get('dev') !== '1') return;
+  const mode = params.get('dev');
+  if (mode !== '1' && mode !== '2') return;
+  // dev=1 — полный мок (без сервера, fetch /api/* подменяется).
+  // dev=2 — РЕАЛЬНЫЙ бэкенд: мокаем ТОЛЬКО Telegram-авторизацию (initData с user),
+  //         fetch и WebSocket идут на настоящий сервер на :8000.
+  //         Сервер запускать с ALLOW_UNSIGNED_TMA=1 и пустым TELEGRAM_BOT_TOKEN.
+  const BACKEND = (mode === '2');
 
   window.__DEV_MODE__ = true;
-  console.log('[DevMode] ON — API calls are mocked, no Telegram auth');
+  const DEV_USER = { id: 777000001, first_name: 'DevHero', username: 'dev_hero' };
+  // Валидная initData-строка с полем user — сервер с ALLOW_UNSIGNED_TMA=1 её примет.
+  const REAL_INIT = 'user=' + encodeURIComponent(JSON.stringify(DEV_USER)) +
+    '&auth_date=' + Math.floor(Date.now() / 1000) + '&hash=dev';
+  const INIT_DATA = BACKEND ? REAL_INIT : 'dev_mock_init_data';
+  console.log('[DevMode] ON — mode=' + mode + (BACKEND ? ' (real backend, mocked auth only)' : ' (full mock)'));
 
   // --- 1. Telegram stub ---------------------------------------------------
   const tgStub = {
-    initData: 'dev_mock_init_data',
+    initData: INIT_DATA,
     initDataUnsafe: { user: { id: 777000001, first_name: 'DevHero', username: 'dev_hero' } },
     ready: () => {}, expand: () => {},
     viewportStableHeight: window.innerHeight,
@@ -34,7 +45,7 @@
   // initData возвращается геттером — assignment извне тоже игнорируется.
   Object.defineProperty(tgStub, 'initData', {
     configurable: false,
-    get: () => 'dev_mock_init_data',
+    get: () => INIT_DATA,
     set: () => {},
   });
   try {
@@ -94,7 +105,9 @@
   };
   const DEFAULT = () => R({ _dev: 'no-mock', data: null });
 
-  // --- 4. Fetch interceptor ----------------------------------------------
+  // --- 4. Fetch interceptor + WS stub — ТОЛЬКО в полном моке (dev=1) -------
+  // В backend-режиме (dev=2) ничего не перехватываем: запросы идут на сервер.
+  if (!BACKEND) {
   const origFetch = window.fetch.bind(window);
   window.fetch = (url, opts) => {
     try {
@@ -123,6 +136,7 @@
   window.WebSocket.OPEN       = 1;
   window.WebSocket.CLOSING    = 2;
   window.WebSocket.CLOSED     = 3;
+  } // end if(!BACKEND)
 
   // --- 6. Watchdog: форс-старт Menu ---------------------------------------
   // В preview-среде Boot.create → scene.start('Menu') иногда не срабатывает
