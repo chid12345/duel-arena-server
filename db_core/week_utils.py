@@ -31,15 +31,17 @@ def prev_iso_week_bounds_utc() -> Tuple[str, datetime, datetime]:
 
 
 def weekly_pvp_rank_reward(rank: int) -> Tuple[int, int, str]:
-    """Возвращает (diamonds, gold, title)."""
+    """Возвращает (diamonds, gold, title). Эталон — UI rating_html_overlay
+    (решение игрока, этап 10): 🥇 500💰+200💎 · 🥈 300💰+120💎 · 🥉 200💰+75💎 ·
+    4-10: 50💰+20💎. «Что написано на экране, то и выдаём»."""
     if rank == 1:
-        return 120, 1200, "Легенда PvP"
+        return 200, 500, "Легенда PvP"
     if rank == 2:
-        return 80, 720, "Мастер PvP"
+        return 120, 300, "Мастер PvP"
     if rank == 3:
-        return 50, 480, "Герой арены"
+        return 75, 200, "Герой арены"
     if 4 <= rank <= 10:
-        return 20, 180, "Участник топа"
+        return 20, 50, "Участник топа"
     return 0, 0, ""
 
 
@@ -74,13 +76,14 @@ def weekly_wb_rank_reward(rank: int) -> Tuple[int, int, str]:
 
 
 def weekly_natisk_rank_reward(rank: int) -> Tuple[int, int, str]:
-    """Возвращает (diamonds, gold, title)."""
+    """Возвращает (diamonds, gold, title). Эталон — UI (решение игрока, этап 10):
+    🥇 300💰+100💎 · 🥈 200💰+60💎 · 🥉 100💰+40💎 · 4-10: 50💰+15💎."""
     if rank == 1:
-        return 100, 700, "Покоритель Волн"
+        return 100, 300, "Покоритель Волн"
     if rank == 2:
-        return 60, 420, "Штормовой боец"
+        return 60, 200, "Штормовой боец"
     if rank == 3:
-        return 40, 280, "Волновой боец"
+        return 40, 100, "Волновой боец"
     if 4 <= rank <= 10:
-        return 15, 100, "Участник натиска"
+        return 15, 50, "Участник натиска"
     return 0, 0, ""

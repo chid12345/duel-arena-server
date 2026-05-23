@@ -2,7 +2,7 @@
 tests/test_leaderboard_payouts.py — недельные выплаты по лидербордам.
 
 Покрывает:
-- PvP: топ-1 получает 120💎 + 1200g + титул,
+- PvP: топ-1 получает 200💎 + 500g + титул (= цифры UI, этап 10),
 - идемпотентность (повторный вызов pvp_paid=0),
 - Titan: payout + сброс titan_progress.current_floor=1,
 - Natisk: топ-5 получает награды,
@@ -50,7 +50,7 @@ def _insert_battle(db, p1: int, p2: int, winner: int, when):
 
 
 def test_pvp_payout_credits_top_player(db):
-    """PvP топ-1 получает 120💎 + 1200g + титул «Легенда PvP»."""
+    """PvP топ-1 получает 200💎 + 500g + титул «Легенда PvP» (= цифры UI, этап 10)."""
     week_key, start, end = _prev_week()
     db.get_or_create_player(1001, "winner")
     db.get_or_create_player(1002, "loser")
@@ -66,8 +66,8 @@ def test_pvp_payout_credits_top_player(db):
 
     assert out["pvp_paid"] >= 1, f"Должна быть выплата, получили {out['pvp_paid']}"
     d, g, title = _diamonds_gold(db, 1001)
-    assert d - diamonds_before == 120, f"Алмазы должны быть +120, получили дельту {d - diamonds_before}"
-    assert g - gold_before == 1200
+    assert d - diamonds_before == 200, f"Алмазы должны быть +200, получили дельту {d - diamonds_before}"
+    assert g - gold_before == 500
     assert title == "Легенда PvP"
 
 
@@ -131,7 +131,7 @@ def test_natisk_payout_credits_top_player(db):
     assert out.get("natisk_paid", 0) >= 1
     d, g, _title = _diamonds_gold(db, 1006)
     assert d - diamonds_before == 100, f"Натиск топ-1 должен дать 100💎, получили дельту {d - diamonds_before}"
-    assert g - gold_before == 700
+    assert g - gold_before == 300
 
 
 def test_wb_payout_credits_top_player(db):
