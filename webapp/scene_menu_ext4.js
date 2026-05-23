@@ -420,8 +420,8 @@ Object.assign(MenuScene.prototype, {
       const pb3Title = ca(mkT(icoX + 22, pb3CY, 'Забрать награду', 14, '#ffd700', true))
         .setOrigin(0, 0.5).setAlpha(0);
 
-      // Countdown — под кнопкой, не внутри
-      const pb3Timer = ca(mkT(PAD + actW / 2, pb3Y + b2H + 9, '', 9, '#00dcff')).setOrigin(0.5).setAlpha(0);
+      // Countdown — ВНУТРИ рамки, нижней строкой (заголовок при показе уезжает вверх)
+      const pb3Timer = ca(mkT(PAD + actW / 2, pb3CY + 11, '', 9, '#00dcff')).setOrigin(0.5).setAlpha(0);
 
       // Shimmer (diagonal gold flash, masked)
       const pb3MaskG = this.make.graphics({}, false);
@@ -452,10 +452,12 @@ Object.assign(MenuScene.prototype, {
           : `🕒 ${m}:${String(sc).padStart(2,'0')}`;
       };
 
-      // Запуск живого отсчёта под кнопкой (кнопка остаётся как есть — только тускнеет)
+      // Живой отсчёт ВНУТРИ рамки: заголовок+иконку поднимаем вверх, таймер —
+      // нижней строкой. Кнопка того же размера, строки не накладываются.
       const _pb3StartTimer = (secsLeft) => {
         if (!secsLeft) return;
         if (this._premBoxTimerEvent) { try { this._premBoxTimerEvent.remove(); } catch(_) {} }
+        pb3Title.setY(pb3CY - 8); pb3Ico.setY(pb3CY - 8);
         let secs = secsLeft;
         pb3Timer.setText('✓ Получено · ' + _fmtSecs(secs)).setAlpha(0.7);
         this._premBoxTimerEvent = this.time.addEvent({
