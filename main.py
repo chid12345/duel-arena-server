@@ -219,6 +219,10 @@ def _build_app(bot_count: int) -> Application:
     app.add_handler(CommandHandler("recover",        BotHandlers.recover_command))
     app.add_handler(CommandHandler("recover_all_my", BotHandlers.recover_all_my_command))
     app.add_handler(CommandHandler("dismiss_my_lost", BotHandlers.dismiss_my_lost_command))
+    # Ручные реферальные выплаты (владелец платит сам через @CryptoBot)
+    app.add_handler(CommandHandler("payouts",        BotHandlers.payouts_command))
+    app.add_handler(CommandHandler("payout_done",    BotHandlers.payout_done_command))
+    app.add_handler(CommandHandler("payout_reject",  BotHandlers.payout_reject_command))
     # Диагностика бага аренды (2026-05-18, временная)
     from handlers.commands.debug_rentals import BotHandlersDebugRentals
     app.add_handler(CommandHandler("debug_rentals", BotHandlersDebugRentals.debug_rentals_command))

@@ -214,9 +214,10 @@ const ReferralHTML = (() => {
           const res = await post('/api/referral/withdraw');
           if (res.ok) {
             try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
-            topEl.textContent = `✅ $${res.amount?.toFixed(2)} USDT отправлен!`;
+            topEl.textContent = `✅ Заявка на $${res.amount?.toFixed(2)} USDT принята`;
             topEl.style.color = '#7affb8';
-            _toast('✅ USDT отправлен через @CryptoBot!');
+            el.querySelector('.rf-wd-sub').textContent = 'Придёт в @CryptoBot в течение 24ч';
+            _toast('✅ Заявка принята — скоро придёт в @CryptoBot');
           } else if (res.cryptobot_required) {
             topEl.textContent = `💸 Вывести $${usdtBal.toFixed(2)} USDT`;
             _toast('📲 Откройте @CryptoBot в Telegram один раз');

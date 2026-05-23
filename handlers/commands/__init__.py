@@ -13,9 +13,11 @@ from handlers.commands.admin_balance import BotHandlersAdminBalance
 from handlers.commands.battle_pass import BotHandlersBattlePass
 from handlers.commands.reset_prembox import BotHandlersResetPremBox
 from handlers.commands.recover_payments import BotHandlersRecoverPayments
+from handlers.commands.payout_admin import BotHandlersPayoutAdmin
 
 
 class BotHandlers(
+    BotHandlersPayoutAdmin,
     BotHandlersRecoverPayments,
     BotHandlersResetPremBox,
     BotHandlersBattlePass,
