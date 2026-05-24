@@ -358,9 +358,7 @@ function open(scene) {
   wrap.innerHTML=`
     <div class="wd-panel">
       <div class="wd-head">
-        <span class="wd-title">⛑️ Шлемы</span>
-        ${window.ShardsBar ? ShardsBar.build() : ''}
-        <button class="wd-close" id="hm-close">✕</button>
+        <span class="wd-title">⛑️ Шлемы</span>        <button class="wd-close" id="hm-close">✕</button>
       </div>
       <div class="wd-tabs">
         <div class="wd-tab active _hm-view" id="hm-tab-all" data-hv="all"><span>⛑️ Все шлемы</span></div>

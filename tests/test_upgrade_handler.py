@@ -15,6 +15,12 @@ def _make_body(init_data: str, item_id: str):
     return b
 
 
+def _make_batch_body(init_data: str, item_id: str, count: int):
+    b = _make_body(init_data, item_id)
+    b.count = count
+    return b
+
+
 def _setup(monkeypatch, db, uid: int, level: int = 80, gold: int = 100_000, diamonds: int = 1_000):
     monkeypatch.setattr("api.upgrade_handler.db", db)
     monkeypatch.setattr("api.upgrade_handler.get_user_from_init_data", lambda _i: {"id": uid})
@@ -126,6 +132,37 @@ def test_apply_legacy_item_blocked(db, monkeypatch):
     res = _get_endpoint("upgrade_apply")(_make_body("ok", "sword_iron"))
     assert res["ok"] is False
     assert "legacy" in res["reason"].lower() or "tier" in res["reason"].lower()
+
+
+# ── apply_batch ───────────────────────────────────────────────────────────────
+
+def test_apply_batch_ten_levels(db, monkeypatch):
+    """count=10 за один запрос: plus=10, золото списано суммой."""
+    _setup(monkeypatch, db, uid=6001, gold=100_000)
+    res = _get_endpoint("upgrade_apply_batch")(_make_batch_body("ok", "helmet_free1", 10))
+    assert res["ok"] is True
+    assert res["applied"] == 10
+    assert res["new_plus"] == 10
+    assert res["gold_spent"] > 0
+    gold, _ = _player_gold(db, 6001)
+    assert gold == 100_000 - res["gold_spent"]
+
+
+def test_apply_batch_max_capped_by_level(db, monkeypatch):
+    """count<=0 (Макс) ограничен уровнем игрока."""
+    _setup(monkeypatch, db, uid=6002, level=5, gold=100_000)
+    res = _get_endpoint("upgrade_apply_batch")(_make_batch_body("ok", "helmet_free1", 0))
+    assert res["ok"] is True
+    assert res["applied"] == 5
+    assert res["new_plus"] == 5
+
+
+def test_apply_batch_partial_when_low_gold(db, monkeypatch):
+    """Денег хватает не на все 10 — применяем сколько хватило."""
+    _setup(monkeypatch, db, uid=6003, gold=200)
+    res = _get_endpoint("upgrade_apply_batch")(_make_batch_body("ok", "helmet_free1", 10))
+    assert res["ok"] is True
+    assert 0 < res["applied"] < 10
 
 
 # ── preview / status ──────────────────────────────────────────────────────────

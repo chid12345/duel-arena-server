@@ -135,7 +135,10 @@ async def handle_upgrade_do(query, user_id: int, item_id: str) -> None:
 
     gold_spent = amount if (not is_free and currency == "gold") else 0
     diamonds_spent = amount if (not is_free and currency == "diamond") else 0
-    new_plus = db.record_upgrade(user_id, item_id, gold_spent, diamonds_spent, was_free=is_free)
+    new_plus = db.record_upgrade(
+        user_id, item_id, gold_spent=gold_spent, diamonds_spent=diamonds_spent,
+        free_added=1 if is_free else 0,
+    )
 
     if is_free:
         await query.answer(f"🎁 Удача! Улучшение бесплатно → +{new_plus}", show_alert=True)

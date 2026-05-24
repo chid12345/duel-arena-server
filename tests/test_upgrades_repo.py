@@ -45,8 +45,16 @@ def test_free_used_default_zero(db):
 def test_record_upgrade_counts_free(db):
     """was_free=True увеличивает free_used; платный — нет."""
     db.get_or_create_player(1006, "u")
-    db.record_upgrade(1006, "helmet_free1", gold_spent=100)            # платный
-    db.record_upgrade(1006, "helmet_free1", was_free=True)            # бесплатный
-    db.record_upgrade(1006, "helmet_free1", diamonds_spent=10)        # платный (алмазы)
+    db.record_upgrade(1006, "helmet_free1", gold_spent=100)              # платный
+    db.record_upgrade(1006, "helmet_free1", free_added=1)               # бесплатный
+    db.record_upgrade(1006, "helmet_free1", diamonds_spent=10)          # платный (алмазы)
     assert db.get_item_plus(1006, "helmet_free1") == 3
     assert db.get_item_free_used(1006, "helmet_free1") == 1
+
+
+def test_record_upgrade_batch_levels(db):
+    """levels>1 — батч за один вызов: plus += levels, free_used += free_added."""
+    db.get_or_create_player(1007, "u")
+    new_plus = db.record_upgrade(1007, "helmet_free1", levels=10, gold_spent=1041, free_added=0)
+    assert new_plus == 10
+    assert db.get_item_plus(1007, "helmet_free1") == 10

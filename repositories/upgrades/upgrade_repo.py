@@ -59,14 +59,16 @@ class UpgradeRepoMixin:
         self,
         user_id: int,
         item_id: str,
+        levels: int = 1,
         gold_spent: int = 0,
         diamonds_spent: int = 0,
-        was_free: bool = False,
+        free_added: int = 0,
     ) -> int:
-        """Записать успешный апгрейд: +1 к plus_level. Возвращает новый plus_level.
+        """Записать успешный апгрейд: +levels к plus_level. Возвращает новый plus_level.
 
         Деньги уже списаны вызывающим — здесь только обновляем item_upgrades.
-        Идемпотентно через UPSERT. Голые имена столбцов в DO UPDATE неоднозначны
+        levels>1 — батч-апгрейд за один запрос. free_added — сколько из них прошли
+        бесплатно (для лимита казино). Голые имена столбцов в DO UPDATE неоднозначны
         в PostgreSQL (есть и в таблице, и в excluded) → квалифицируем обе стороны.
         """
         now = datetime.utcnow().isoformat()
@@ -77,17 +79,17 @@ class UpgradeRepoMixin:
                 """INSERT INTO item_upgrades
                    (user_id, item_id, plus_level, gold_invested, diamonds_invested,
                     free_used, updated_at)
-                   VALUES (?, ?, 1, ?, ?, ?, ?)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)
                    ON CONFLICT(user_id, item_id) DO UPDATE SET
-                     plus_level = item_upgrades.plus_level + 1,
+                     plus_level = item_upgrades.plus_level + excluded.plus_level,
                      gold_invested = item_upgrades.gold_invested + excluded.gold_invested,
                      diamonds_invested = item_upgrades.diamonds_invested + excluded.diamonds_invested,
                      free_used = item_upgrades.free_used + excluded.free_used,
                      updated_at = excluded.updated_at""",
                 (
-                    int(user_id), str(item_id),
+                    int(user_id), str(item_id), max(1, int(levels)),
                     int(gold_spent), int(diamonds_spent),
-                    1 if was_free else 0, now,
+                    int(free_added), now,
                 ),
             )
             conn.commit()
