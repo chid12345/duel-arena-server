@@ -13,4 +13,10 @@ POSTGRES_DDL_07_UPGRADES: tuple[str, ...] = (
         PRIMARY KEY (user_id, item_id)
     )""",
     "CREATE INDEX IF NOT EXISTS idx_item_upgrades_user ON item_upgrades (user_id)",
+    # Миграция уже существующей PG-таблицы на схему v2 (идемпотентно):
+    # CREATE IF NOT EXISTS не добавляет столбцы в готовую таблицу, поэтому отдельно.
+    "ALTER TABLE item_upgrades ADD COLUMN IF NOT EXISTS diamonds_invested INTEGER NOT NULL DEFAULT 0",
+    "ALTER TABLE item_upgrades ADD COLUMN IF NOT EXISTS free_used INTEGER NOT NULL DEFAULT 0",
+    # Шарды убраны — таблица материалов больше не нужна.
+    "DROP TABLE IF EXISTS upgrade_materials",
 )

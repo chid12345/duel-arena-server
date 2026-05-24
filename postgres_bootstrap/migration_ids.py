@@ -106,4 +106,8 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     "2026_05_19_011_armor2_custom_mods",
     # Апгрейды v2 — снос шардов, новая схема item_upgrades (PG bootstrap делает сам)
     "2026_05_24_001_upgrade_v2_reset",
+    # Добавление столбцов diamonds_invested/free_used в существующую PG-таблицу
+    # (CREATE IF NOT EXISTS их не добавил → ALTER в ddl_07). Новый id заставляет
+    # bootstrap снова прогнать DDL, иначе skip-логика его бы пропустила.
+    "2026_05_24_002_upgrade_v2_pg_columns",
 )
