@@ -4,19 +4,17 @@
    Бой УЖЕ учитывает +N (см. economy/upgrades_formulas.py:plus_stats_for) —
    здесь ВИЗУАЛ: показать значок +N и усиленные числа, чтобы игрок видел эффект.
 
-   Сила прокачки растёт по редкости (мягкий P2W) — синхронно с
-   config/balance_curve.json → upgrades.stat_step_pct_per_tier:
-     обычная +10% / редкая +16% / эпическая +22% / мифическая +30% за уровень.
-   Целочисленные статы — минимум +1 за уровень (как на сервере).
+   Формула 1:1 с сервером (economy/upgrades_formulas.py:plus_stats_for):
+     целые статы +2%/уровень, проценты +0,8%/уровень, БЕЗ «минимум +1».
+   Единый шаг для всех редкостей (баланс держится за счёт разной базы).
    ============================================================ */
 (() => {
   'use strict';
 
-  // ЦЕЛЫЕ статы — сильный множитель по редкости + минимум +1 за уровень.
-  const INT_STEP = { common: 0.06, rare: 0.09, epic: 0.12, mythic: 0.15 };
+  // Целые статы +2%/ур, проценты +0,8%/ур — единый шаг, без «минимум +1».
+  const INT_STEP = 0.02;
   const INT_FIELDS = ['atk', 'crit', 'hp', 'str', 'agi', 'intu', 'dodge', 'regen', 'acc'];
-  // ПРОЦЕНТНЫЕ статы — мягкий множитель (нельзя умножать сильно — улетают).
-  const PCT_STEP = { common: 0.02, rare: 0.03, epic: 0.04, mythic: 0.05 };
+  const PCT_STEP = 0.008;
   const PCT_FIELDS = ['def', 'pen', 'lifesteal', 'crit_resist', 'anti_dodge', 'silence', 'slow', 'gold', 'xp', 'regen_speed'];
 
   function level(itemId) {
@@ -27,18 +25,16 @@
   }
 
   // Вернуть копию предмета с усиленными статами под его +N. Не мутирует оригинал.
-  // rarity берём из item.r (как в карточках) или item.rarity.
   function boostItem(item) {
     if (!item || !item.id) return item;
     const n = level(item.id);
     if (n <= 0) return item;
-    const r = item.r || item.rarity;
-    const intMult = 1 + (INT_STEP[r] || 0.08) * n;
-    const pctMult = 1 + (PCT_STEP[r] || 0.04) * n;
+    const intMult = 1 + INT_STEP * n;
+    const pctMult = 1 + PCT_STEP * n;
     const out = Object.assign({}, item);
     for (const f of INT_FIELDS) {
       const v = out[f];
-      if (typeof v === 'number' && v > 0) out[f] = Math.max(Math.round(v * intMult), Math.round(v) + n);
+      if (typeof v === 'number' && v > 0) out[f] = Math.round(v * intMult);
     }
     for (const f of PCT_FIELDS) {
       const v = out[f];
