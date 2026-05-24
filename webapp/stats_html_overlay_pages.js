@@ -69,7 +69,7 @@ function bonusHTML(p, inv){
     eq.str_bonus&&['Сила (щит)',`+${eq.str_bonus}`],eq.agi_bonus&&['Ловкость (щит)',`+${eq.agi_bonus}`],
     eq.intu_bonus&&['Интуиция (щит)',`+${eq.intu_bonus}`],eq.accuracy&&['Точность',`+${eq.accuracy}%`],
     // Броня armor2 — защитные механики
-    eq.body_def_pct&&['Защита тела',`−${eq.body_def_pct}%`],eq.reflect_pct&&['🪞 Шипы',`${eq.reflect_pct}%`],
+    eq.body_def_pct&&['🦺 Защита тела',`+${eq.body_def_pct}%`],eq.reflect_pct&&['🪞 Шипы',`+${eq.reflect_pct}%`],
     eq.block_chance&&['🛡 Блок',`${eq.block_chance}%`],eq.crit_resist_pct&&['Защита от крита',`−${eq.crit_resist_pct}%`],
     // Прочие боевые
     eq.double_pct&&['Двойной удар',`+${eq.double_pct}%`],eq.anti_dodge_pct&&['Анти-уворот',`−${eq.anti_dodge_pct}%`],

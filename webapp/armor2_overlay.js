@@ -19,25 +19,25 @@ const ARMOR2_IMG = {
 
 const ARMOR2_DATA = [
   // ── Обычные (common) — 800 gold, T1, уровень 1
-  {id:'armor2_free1',  r:'common', ht:'🛡 Броня', name:'Кираса Ополченца', stars:'★☆☆☆', str:5, agi:0, intu:0, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела −3% · 🪞 Шипы 4%'},
-  {id:'armor2_free2',  r:'common', ht:'🛡 Броня', name:'Жилет Следопыта',  stars:'★☆☆☆', str:0, agi:5, intu:0, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела −3% · 🛡 Блок 3%'},
-  {id:'armor2_free3',  r:'common', ht:'🛡 Броня', name:'Роба Ученика',     stars:'★☆☆☆', str:0, agi:0, intu:5, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела −3% · −3% крит врага'},
-  {id:'armor2_free4',  r:'common', ht:'🛡 Броня', name:'Плащ Странника',   stars:'★☆☆☆', str:2, agi:2, intu:2, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела −3% · −2% от всего урона'},
+  {id:'armor2_free1',  r:'common', ht:'🛡 Броня', name:'Кираса Ополченца', stars:'★☆☆☆', str:5, agi:0, intu:0, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела +3% · 🪞 Шипы 4%'},
+  {id:'armor2_free2',  r:'common', ht:'🛡 Броня', name:'Жилет Следопыта',  stars:'★☆☆☆', str:0, agi:5, intu:0, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела +3% · 🛡 Блок 3%'},
+  {id:'armor2_free3',  r:'common', ht:'🛡 Броня', name:'Роба Ученика',     stars:'★☆☆☆', str:0, agi:0, intu:5, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела +3% · −3% крит врага'},
+  {id:'armor2_free4',  r:'common', ht:'🛡 Броня', name:'Плащ Странника',   stars:'★☆☆☆', str:2, agi:2, intu:2, hp:40, type:'gold', price:'810', tier:'T1', recLevel:1, bonus:'🛡 Защита тела +3% · −2% от всего урона'},
   // ── Редкие (rare) — 8000 gold, T2, уровень 20
-  {id:'armor2_gold1',  r:'rare',   ht:'🛡 Броня', name:'Панцирь Берсерка', stars:'★★☆☆', str:7, agi:0, intu:0, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела −6% · 🪞 Шипы 7%'},
-  {id:'armor2_gold2',  r:'rare',   ht:'🛡 Броня', name:'Кольчуга Теней',   stars:'★★☆☆', str:0, agi:7, intu:0, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела −6% · 🛡 Блок 5%'},
-  {id:'armor2_gold3',  r:'rare',   ht:'🛡 Броня', name:'Мантия Чародея',   stars:'★★☆☆', str:0, agi:0, intu:7, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела −6% · −6% крит врага'},
-  {id:'armor2_gold4',  r:'rare',   ht:'🛡 Броня', name:'Броня Стража',     stars:'★★☆☆', str:4, agi:4, intu:4, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела −6% · −4% от всего урона'},
+  {id:'armor2_gold1',  r:'rare',   ht:'🛡 Броня', name:'Панцирь Берсерка', stars:'★★☆☆', str:7, agi:0, intu:0, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела +6% · 🪞 Шипы 7%'},
+  {id:'armor2_gold2',  r:'rare',   ht:'🛡 Броня', name:'Кольчуга Теней',   stars:'★★☆☆', str:0, agi:7, intu:0, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела +6% · 🛡 Блок 5%'},
+  {id:'armor2_gold3',  r:'rare',   ht:'🛡 Броня', name:'Мантия Чародея',   stars:'★★☆☆', str:0, agi:0, intu:7, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела +6% · −6% крит врага'},
+  {id:'armor2_gold4',  r:'rare',   ht:'🛡 Броня', name:'Броня Стража',     stars:'★★☆☆', str:4, agi:4, intu:4, hp:75, type:'gold', price:'7965', tier:'T2', recLevel:20, bonus:'🛡 Защита тела +6% · −4% от всего урона'},
   // ── Эпические (epic) — 75 алмазов, T3, уровень 45
-  {id:'armor2_dia1',   r:'epic',   ht:'🛡 Броня', name:'Латы Кровавого Вождя', stars:'★★★☆', str:9, agi:0, intu:0, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела −9% · 🪞 Шипы 10%'},
-  {id:'armor2_dia2',   r:'epic',   ht:'🛡 Броня', name:'Плащ Ночного Клинка',  stars:'★★★☆', str:0, agi:9, intu:0, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела −9% · 🛡 Блок 8%'},
-  {id:'armor2_dia3',   r:'epic',   ht:'🛡 Броня', name:'Одеяние Архимага',     stars:'★★★☆', str:0, agi:0, intu:9, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела −9% · −9% крит врага'},
-  {id:'armor2_dia4',   r:'epic',   ht:'🛡 Броня', name:'Латы Паладина Зари',   stars:'★★★☆', str:6, agi:6, intu:6, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела −9% · −6% от всего урона'},
+  {id:'armor2_dia1',   r:'epic',   ht:'🛡 Броня', name:'Латы Кровавого Вождя', stars:'★★★☆', str:9, agi:0, intu:0, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела +9% · 🪞 Шипы 10%'},
+  {id:'armor2_dia2',   r:'epic',   ht:'🛡 Броня', name:'Плащ Ночного Клинка',  stars:'★★★☆', str:0, agi:9, intu:0, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела +9% · 🛡 Блок 8%'},
+  {id:'armor2_dia3',   r:'epic',   ht:'🛡 Броня', name:'Одеяние Архимага',     stars:'★★★☆', str:0, agi:0, intu:9, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела +9% · −9% крит врага'},
+  {id:'armor2_dia4',   r:'epic',   ht:'🛡 Броня', name:'Латы Паладина Зари',   stars:'★★★☆', str:6, agi:6, intu:6, hp:120, type:'diamonds', price:'77', tier:'T3', recLevel:45, bonus:'🛡 Защита тела +9% · −6% от всего урона'},
   // ── Мифические (mythic) — $11.99 / ⭐800, T4, уровень 65
-  {id:'armor2_mythic1',r:'mythic', ht:'🛡 Броня', name:'Доспех Пламенного Титана', stars:'★★★★', str:12, agi:0, intu:0, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · 🪞 Шипы 15%'},
-  {id:'armor2_mythic2',r:'mythic', ht:'🛡 Броня', name:'Облачение Призрака Ветров',stars:'★★★★', str:0, agi:12, intu:0, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · 🛡 Блок 12%'},
-  {id:'armor2_mythic3',r:'mythic', ht:'🛡 Броня', name:'Регалии Повелителя Молний',stars:'★★★★', str:0, agi:0, intu:12, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · −15% крит врага'},
-  {id:'armor2_mythic4',r:'mythic', ht:'🛡 Броня', name:'Доспех Светоносного Бога', stars:'★★★★', str:0, agi:0, intu:0,  hp:0,  type:'legendary', tier:'T4', recLevel:65, bonus:'🛡 Защита тела −15% · +19 свободных статов · пассивка'},
+  {id:'armor2_mythic1',r:'mythic', ht:'🛡 Броня', name:'Доспех Пламенного Титана', stars:'★★★★', str:12, agi:0, intu:0, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела +15% · 🪞 Шипы 15%'},
+  {id:'armor2_mythic2',r:'mythic', ht:'🛡 Броня', name:'Облачение Призрака Ветров',stars:'★★★★', str:0, agi:12, intu:0, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела +15% · 🛡 Блок 12%'},
+  {id:'armor2_mythic3',r:'mythic', ht:'🛡 Броня', name:'Регалии Повелителя Молний',stars:'★★★★', str:0, agi:0, intu:12, hp:180, type:'mythic', tier:'T4', recLevel:65, bonus:'🛡 Защита тела +15% · −15% крит врага'},
+  {id:'armor2_mythic4',r:'mythic', ht:'🛡 Броня', name:'Доспех Светоносного Бога', stars:'★★★★', str:0, agi:0, intu:0,  hp:0,  type:'legendary', tier:'T4', recLevel:65, bonus:'🛡 Защита тела +15% · +19 свободных статов · пассивка'},
 ];
 
 const RC = {common:'#9ca3af',rare:'#60a5fa',epic:'#c084fc',mythic:'#fb923c'};
