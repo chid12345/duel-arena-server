@@ -24,10 +24,14 @@ const CSS = `<style id="tsk-popup-style">
 .tpop-bar{height:100%;border-radius:3px;background:linear-gradient(90deg,#5096ff,#00f0ff);box-shadow:0 0 8px rgba(0,240,255,.6)}
 .tpop-bar.done{background:linear-gradient(90deg,#3cc864,#80ff9c);box-shadow:0 0 8px rgba(60,200,100,.6)}
 .tpop-rewards{font-size:16px;font-weight:800;color:#ffd166;text-align:center;margin-top:10px;letter-spacing:2px;text-shadow:0 0 16px rgba(255,209,102,.8),0 0 32px rgba(255,209,102,.4);filter:drop-shadow(0 0 6px rgba(255,209,102,.5))}
-.tsk-reward-toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:300;pointer-events:none;background:rgba(0,0,0,.45);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-radius:60px;padding:12px 28px 14px;animation:tskRwdIn .28s cubic-bezier(.34,1.56,.64,1) both;transition:opacity .38s ease;white-space:nowrap}
+.tsk-reward-toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;z-index:300;pointer-events:none;max-width:min(280px,calc(100vw - 48px));background:linear-gradient(160deg,rgba(8,2,20,.96),rgba(2,4,16,.96));border:1px solid rgba(0,240,255,.5);border-radius:16px;padding:14px 22px 16px;white-space:normal;box-shadow:0 0 22px rgba(0,240,255,.18),0 0 50px rgba(255,59,168,.08),inset 0 0 18px rgba(0,240,255,.04);overflow:hidden;animation:tskRwdIn .28s cubic-bezier(.34,1.56,.64,1) both;transition:opacity .38s ease}
+.tsk-reward-toast::before{content:'';position:absolute;inset:0 0 auto 0;height:3px;background:linear-gradient(90deg,#ff3ba8,#00f0ff,#b45aff,#00f0ff,#ff3ba8);background-size:200% 100%;animation:tskRwdShift 3s linear infinite}
+.tsk-reward-toast::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,255,220,.018) 3px 4px);pointer-events:none;border-radius:16px}
+@keyframes tskRwdShift{0%{background-position:0% 0}100%{background-position:200% 0}}
 @keyframes tskRwdIn{from{transform:translate(-50%,-50%) scale(.6);opacity:0}to{transform:translate(-50%,-50%) scale(1);opacity:1}}
-.tsk-rt-title{font-size:9px;font-weight:700;color:rgba(255,255,255,.55);letter-spacing:3px;text-transform:uppercase;display:block;margin-bottom:4px}
-.tsk-rt-items{font-size:20px;font-weight:900;color:#ffd166;letter-spacing:3px;display:block;text-shadow:0 0 18px rgba(255,209,102,1),0 0 36px rgba(255,209,102,.6),0 2px 8px rgba(0,0,0,.95);filter:drop-shadow(0 0 8px rgba(255,209,102,.6))}
+.tsk-rt-title{font-size:9px;font-weight:700;color:rgba(255,255,255,.6);letter-spacing:3px;text-transform:uppercase;display:block;margin-bottom:8px;position:relative;z-index:1}
+.tsk-rt-items{font-size:16px;font-weight:800;color:#ffd166;letter-spacing:1px;display:block;line-height:1.4;text-shadow:0 0 14px rgba(255,209,102,.85),0 2px 6px rgba(0,0,0,.85);position:relative;z-index:1}
+.tsk-rt-items .tsk-rt-xpfb{display:block;margin-top:4px;font-size:10px;font-weight:600;color:rgba(255,209,102,.7);letter-spacing:.5px;text-shadow:none}
 </style>`;
 
 let _cssInjected = false;
@@ -93,8 +97,9 @@ window.TasksHTML_showReward = function(r, onDone) {
   if ((r.gold     || 0) > 0) parts.push(`+${r.gold}💰`);
   if ((r.diamonds || 0) > 0) parts.push(`+${r.diamonds}💎`);
   if ((r.xp       || 0) > 0) parts.push(`+${r.xp}⭐`);
-  if (xpToGold > 0) parts.push(`+${xpToGold}💰<span style="opacity:.7;font-size:.85em"> (XP→💰 макс.ур.)</span>`);
-  const itemsText = parts.length ? parts.join('  ') : '🎁';
+  if (xpToGold > 0) parts.push(`+${xpToGold}💰`);
+  const xpFbHtml = xpToGold > 0 ? `<span class="tsk-rt-xpfb">XP → 💰 (макс. ур.)</span>` : '';
+  const itemsText = (parts.length ? parts.join('  ') : '🎁') + xpFbHtml;
 
   const toast = document.createElement('div');
   toast.className = 'tsk-reward-toast';
