@@ -24,25 +24,37 @@ from economy.upgrades_formulas import (
     upgrade_cost,
 )
 
-# Боевые статы для карточки апгрейда: поле → (подпись, %-стат?)
+# Боевые статы для карточки апгрейда: поле → (подпись, вид).
+# вид: "int" — целое (без %); "frac" — хранится дробью, показываем ×100 с %;
+#      "pct" — хранится уже в процентах, показываем как есть с %.
+# Только def_pct/pen_pct — дроби (см. tma_player_api: им единственным ×100).
 _STAT_LABELS = {
-    "atk_bonus": ("Атака", False), "hp_bonus": ("HP", False),
-    "crit_bonus": ("Крит", False), "str_bonus": ("Сила", False),
-    "agi_bonus": ("Ловкость", False), "intu_bonus": ("Интуиция", False),
-    "dodge_bonus": ("Уворот", False), "accuracy": ("Точность", False),
-    "def_pct": ("Защита", True), "crit_resist_pct": ("Крит-защита", True),
-    "lifesteal_pct": ("Вампиризм", True), "pen_pct": ("Пробитие", True),
+    "atk_bonus": ("Атака", "int"), "hp_bonus": ("HP", "int"),
+    "crit_bonus": ("Крит", "int"), "str_bonus": ("Сила", "int"),
+    "agi_bonus": ("Ловкость", "int"), "intu_bonus": ("Интуиция", "int"),
+    "dodge_bonus": ("Уворот", "int"), "regen_bonus": ("Реген HP/раунд", "int"),
+    "def_pct": ("Защита", "frac"), "pen_pct": ("Пробой", "frac"),
+    "accuracy": ("Точность", "pct"), "lifesteal_pct": ("Вампиризм", "pct"),
+    "crit_resist_pct": ("Крит-сопр.", "pct"), "double_pct": ("Двойной удар", "pct"),
+    "gold_pct": ("Золото", "pct"), "xp_pct": ("Опыт", "pct"),
+    "anti_dodge_pct": ("Антиуклон", "pct"), "silence_pct": ("Тишина", "pct"),
+    "slow_pct": ("Замедление", "pct"), "regen_speed_pct": ("Восст. вне боя", "pct"),
 }
 
 
 def _stats_view(stats: dict) -> dict:
-    """Только ненулевые боевые статы с подписями — для карточки апгрейда."""
+    """Все ненулевые боевые статы вещи с подписями — для карточки апгрейда."""
     out = {}
-    for field, (label, is_pct) in _STAT_LABELS.items():
+    for field, (label, kind) in _STAT_LABELS.items():
         val = stats.get(field)
-        if val:
-            out[field] = {"label": label, "pct": is_pct,
-                          "value": round(float(val) * 100, 1) if is_pct else int(round(float(val)))}
+        if not val:
+            continue
+        if kind == "frac":
+            out[field] = {"label": label, "pct": True, "value": round(float(val) * 100, 1)}
+        elif kind == "pct":
+            out[field] = {"label": label, "pct": True, "value": round(float(val), 1)}
+        else:
+            out[field] = {"label": label, "pct": False, "value": int(round(float(val)))}
     return out
 
 
@@ -54,8 +66,8 @@ def _levels_until_next_gain(base_stats: dict, tier: str, current_plus: int) -> d
     out = {}
     cap = max_plus()
     now = plus_stats_for(base_stats, current_plus, tier=tier)
-    for field, (_label, is_pct) in _STAT_LABELS.items():
-        if is_pct or not base_stats.get(field):
+    for field, (_label, kind) in _STAT_LABELS.items():
+        if kind != "int" or not base_stats.get(field):
             continue
         cur_v = int(round(float(now.get(field, 0))))
         for lvl in range(current_plus + 1, cap + 1):
