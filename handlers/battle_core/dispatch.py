@@ -153,10 +153,6 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
             item_id = callback_data.split(":", 1)[1]
             from handlers.ui_helpers.upgrade_ui import handle_upgrade_do
             await handle_upgrade_do(query, user.id, item_id)
-        elif callback_data.startswith("dismantle:"):
-            item_id = callback_data.split(":", 1)[1]
-            from handlers.ui_helpers.upgrade_ui import handle_dismantle
-            await handle_dismantle(query, user.id, item_id)
         else:
             await CallbackHandlers._callback_set_message(query, "❌ Неизвестное действие")
 

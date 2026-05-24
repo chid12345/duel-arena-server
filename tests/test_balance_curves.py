@@ -174,13 +174,18 @@ def test_premium_effects_present():
     assert eff["wb_cooldown_reduction_pct"] >= 0
 
 
-def test_upgrades_config_has_all_tiers():
+def test_upgrades_config_v2_shape():
     cfg = upgrades_config()
-    assert set(cfg["max_plus_per_tier"]) == {"T1", "T2", "T3", "T4"}
-    # T4 должен апаться сильнее T1
-    assert cfg["max_plus_per_tier"]["T4"] > cfg["max_plus_per_tier"]["T1"]
+    assert cfg["max_plus"] == 80
     assert 0 < cfg["stat_step_pct"] < 1
-    assert cfg["fail_chance_start"] >= 1
+    assert 0 < cfg["pct_step_pct"] < cfg["stat_step_pct"]  # проценты растут мягче
+    assert cfg["cost_pct_start"] < cfg["cost_pct_end"]
+    # Базы тиров растут по редкости, валюта-порог задан для всех тиров
+    bases = cfg["tier_base_gold"]
+    assert bases["T1"] < bases["T2"] < bases["T3"] < bases["T4"]
+    assert set(cfg["diamond_from_level"]) == {"T1", "T2", "T3", "T4"}
+    assert 0 < cfg["free_roll_chance"] < 1
+    assert cfg["free_roll_max_per_item"] >= 1
 
 
 def test_sets_catalog_has_six_sets():

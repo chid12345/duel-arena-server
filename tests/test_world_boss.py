@@ -154,51 +154,6 @@ def test_rewards_defeat_no_diamonds(db):
     assert r["gold"] > 0
 
 
-# ── Test 5: WB-дроп шардов (этап 4D.5 редизайна) ──────────────────────────────
-
-def test_wb_no_longer_drops_shards(db):
-    """Решение 2026-05-17: WB больше НЕ даёт шарды.
-    Шарды добываются только разборкой ненужного шмота (упрощает экономику).
-    """
-    from repositories.world_boss.rewards_calc import compute_and_create_rewards
-
-    db.get_or_create_player(4001, "u_t1")
-    db.get_or_create_player(4002, "u_t2")
-    db.get_or_create_player(4003, "u_t4")
-    conn = db.get_connection()
-    conn.execute("UPDATE players SET level = 1 WHERE user_id = 4001")
-    conn.execute("UPDATE players SET level = 30 WHERE user_id = 4002")
-    conn.execute("UPDATE players SET level = 70 WHERE user_id = 4003")
-    conn.commit()
-    conn.close()
-
-    spawn_id = _make_spawn(db)
-    db.log_wb_hit(spawn_id, 4001, damage=1000)
-    db.log_wb_hit(spawn_id, 4002, damage=2000)
-    db.log_wb_hit(spawn_id, 4003, damage=5000)
-
-    compute_and_create_rewards(db, spawn_id, is_victory=True)
-
-    # Никаких шардов всем участникам — даже топ-1
-    assert db.get_shards(4001, "T1") == 0
-    assert db.get_shards(4002, "T2") == 0
-    assert db.get_shards(4003, "T4") == 0
-
-
-def test_wb_no_shards_on_defeat(db):
-    """Поражение: шарды не выдаются (как и алмазы)."""
-    from repositories.world_boss.rewards_calc import compute_and_create_rewards
-    db.get_or_create_player(4101, "d")
-    spawn_id = _make_spawn(db)
-    db.log_wb_hit(spawn_id, 4101, damage=1500)
-
-    compute_and_create_rewards(db, spawn_id, is_victory=False)
-
-    # Все шарды = 0 (defeat)
-    for t in ("T1", "T2", "T3", "T4"):
-        assert db.get_shards(4101, t) == 0
-
-
 # ── Test 5: победы для ach_wb_wins ────────────────────────────────────────────
 
 def test_wb_wins_count_distinct_spawns(db):

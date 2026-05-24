@@ -182,9 +182,9 @@ def test_equip_legacy_item_no_tier_works(db):
 
 
 def test_equipment_stats_with_plus_upgrade(db):
-    """Этап 4C: get_equipment_stats умножает статы на +N через plus_stats_for.
+    """get_equipment_stats умножает статы на +N через plus_stats_for.
 
-    helmet_free1: hp_bonus=60 (база), тир T1 (целый шаг +6%/ур). +5 → ×1.30 = 78 HP.
+    helmet_free1: hp_bonus=60 (база). Целый шаг +2%/ур. +5 → ×1.10 = 66 HP.
     """
     db.get_or_create_player(3001, "u_plus")
     db.equip_item(3001, "belt", "helmet_free1")
@@ -192,14 +192,14 @@ def test_equipment_stats_with_plus_upgrade(db):
     stats_base = db.get_equipment_stats(3001)
     assert stats_base["hp_bonus"] == 60, f"База: {stats_base['hp_bonus']}"
 
-    # Прокачиваем 5 успешных попыток → plus_level = 5
+    # Прокачиваем до +5
     for _ in range(5):
-        db.record_upgrade_attempt(3001, "helmet_free1", 300, 1, success=True)
+        db.record_upgrade(3001, "helmet_free1")
 
     stats_plus5 = db.get_equipment_stats(3001)
-    # T1 целый шаг +6%/ур: 60 × (1 + 0.06 × 5) = 60 × 1.30 = 78
-    assert stats_plus5["hp_bonus"] == 78, (
-        f"+5 → ожидали 78 HP, получили {stats_plus5['hp_bonus']}"
+    # Целый шаг +2%/ур: 60 × (1 + 0.02 × 5) = 60 × 1.10 = 66
+    assert stats_plus5["hp_bonus"] == 66, (
+        f"+5 → ожидали 66 HP, получили {stats_plus5['hp_bonus']}"
     )
 
 
@@ -217,11 +217,11 @@ def test_equipment_stats_pct_field_with_plus(db):
     db.get_or_create_player(3003, "u_def")
     db.equip_item(3003, "belt", "helmet_free2")  # def_pct = 0.03
     for _ in range(3):
-        db.record_upgrade_attempt(3003, "helmet_free2", 300, 1, success=True)
+        db.record_upgrade(3003, "helmet_free2")
     stats = db.get_equipment_stats(3003)
-    # T1 процентный шаг +2%/ур: 0.03 × (1 + 0.02 × 3) = 0.03 × 1.06 = 0.0318
-    assert abs(stats["def_pct"] - 0.0318) < 0.0001, (
-        f"+3 def_pct: ожидали 0.0318, получили {stats['def_pct']}"
+    # Процентный шаг +0.8%/ур: 0.03 × (1 + 0.008 × 3) = 0.03 × 1.024 = 0.0307
+    assert abs(stats["def_pct"] - 0.0307) < 0.0001, (
+        f"+3 def_pct: ожидали ~0.0307, получили {stats['def_pct']}"
     )
 
 
@@ -243,11 +243,11 @@ def test_ring_secondary_stats_scale_with_plus(db):
     db.add_owned_weapon(3005, "ring_mythic1")
     db.equip_item(3005, "ring1", "ring_mythic1", force=True)
     for _ in range(5):
-        db.record_upgrade_attempt(3005, "ring_mythic1", 0, 0, success=True)
+        db.record_upgrade(3005, "ring_mythic1")
     stats = db.get_equipment_stats(3005)
-    # T4 процентный шаг +5%/ур (×1.25): regen_speed 10→12.5, gold 7→8.75
-    assert abs(stats["regen_speed_pct"] - 12.5) < 0.0001
-    assert abs(stats["gold_pct"] - 8.75) < 0.0001
+    # Процентный шаг +0.8%/ур (+5 → ×1.04): regen_speed 10→10.4, gold 7→7.28
+    assert abs(stats["regen_speed_pct"] - 10.4) < 0.0001
+    assert abs(stats["gold_pct"] - 7.28) < 0.0001
 
 
 def test_add_owned_weapon_idempotent(db):

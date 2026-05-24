@@ -14,6 +14,7 @@ from .sqlite_migrations_part10_armor_unify import MIGRATIONS_PART10_ARMOR_UNIFY
 from .sqlite_migrations_part11_legacy_class_purge import MIGRATIONS_PART11_LEGACY_PURGE
 from .sqlite_migrations_part12_armor_wipe import MIGRATIONS_PART12_ARMOR_WIPE
 from .sqlite_migrations_part13_armor2 import MIGRATIONS_PART13_ARMOR2
+from .sqlite_migrations_part14_upgrade_v2 import MIGRATIONS_PART14_UPGRADE_V2
 from .sqlite_migrations_part_clan_v2 import MIGRATIONS_PART_CLAN_V2
 from .sqlite_migrations_part_season_pass import MIGRATIONS_PART_SEASON_PASS
 from .sqlite_migrations_part_world_boss import MIGRATIONS_PART_WORLD_BOSS
@@ -28,4 +29,5 @@ SQLITE_MIGRATIONS = (
     + MIGRATIONS_PART11_LEGACY_PURGE
     + MIGRATIONS_PART12_ARMOR_WIPE
     + MIGRATIONS_PART13_ARMOR2
+    + MIGRATIONS_PART14_UPGRADE_V2
 )

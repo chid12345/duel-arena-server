@@ -1,12 +1,13 @@
-"""CRUD для item_upgrades. Хранит +N и статистику попыток на (user_id, item_id).
+"""CRUD для item_upgrades (система апгрейдов v2, без шардов).
 
-Этап 4B редизайна. Используется битвой (4C) — учёт +N в статах,
-и API (4D) — попытка апгрейда.
+Хранит уровень вещи +N и потраченное на (user_id, item_id), плюс счётчик
+бесплатных «удачных» апгрейдов (free_used) — лимит казино на вещь.
+Читается боем (equipment_repo.get_equipment_stats) и API апгрейда.
 """
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Dict
 
 
 class UpgradeRepoMixin:
@@ -40,46 +41,53 @@ class UpgradeRepoMixin:
         finally:
             conn.close()
 
-    def record_upgrade_attempt(
+    def get_item_free_used(self, user_id: int, item_id: str) -> int:
+        """Сколько бесплатных «удачных» апгрейдов уже сработало на этой вещи."""
+        conn = self.get_connection()
+        try:
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT free_used FROM item_upgrades WHERE user_id = ? AND item_id = ?",
+                (int(user_id), str(item_id)),
+            )
+            row = cur.fetchone()
+            return int(row["free_used"] or 0) if row else 0
+        finally:
+            conn.close()
+
+    def record_upgrade(
         self,
         user_id: int,
         item_id: str,
-        gold_cost: int,
-        shards_cost: int,
-        success: bool,
+        gold_spent: int = 0,
+        diamonds_spent: int = 0,
+        was_free: bool = False,
     ) -> int:
-        """Записать попытку апгрейда. При успехе +1 к plus_level.
-        Возвращает новый plus_level. Идемпотентно через UPSERT.
+        """Записать успешный апгрейд: +1 к plus_level. Возвращает новый plus_level.
 
-        gold/shards уже списаны вызывающим (через consume_shards / UPDATE players).
-        Эта функция только обновляет item_upgrades.
+        Деньги уже списаны вызывающим — здесь только обновляем item_upgrades.
+        Идемпотентно через UPSERT. Голые имена столбцов в DO UPDATE неоднозначны
+        в PostgreSQL (есть и в таблице, и в excluded) → квалифицируем обе стороны.
         """
         now = datetime.utcnow().isoformat()
         conn = self.get_connection()
         try:
             cur = conn.cursor()
-            # UPSERT: если строки нет — создаём с plus_level=0, attempts=1, далее +1 при успехе.
-            # Голые имена столбцов в DO UPDATE неоднозначны в PostgreSQL
-            # (есть и в item_upgrades, и в excluded) → AmbiguousColumn.
-            # Квалифицируем обе стороны через excluded.* — вставляемые значения
-            # как раз равны приростам (plus +1/0, fails +0/1, gold/shards/now).
             cur.execute(
                 """INSERT INTO item_upgrades
-                   (user_id, item_id, plus_level, gold_invested, shards_invested,
-                    attempts, fails, updated_at)
-                   VALUES (?, ?, ?, ?, ?, 1, ?, ?)
+                   (user_id, item_id, plus_level, gold_invested, diamonds_invested,
+                    free_used, updated_at)
+                   VALUES (?, ?, 1, ?, ?, ?, ?)
                    ON CONFLICT(user_id, item_id) DO UPDATE SET
-                     plus_level = item_upgrades.plus_level + excluded.plus_level,
+                     plus_level = item_upgrades.plus_level + 1,
                      gold_invested = item_upgrades.gold_invested + excluded.gold_invested,
-                     shards_invested = item_upgrades.shards_invested + excluded.shards_invested,
-                     attempts = item_upgrades.attempts + excluded.attempts,
-                     fails = item_upgrades.fails + excluded.fails,
+                     diamonds_invested = item_upgrades.diamonds_invested + excluded.diamonds_invested,
+                     free_used = item_upgrades.free_used + excluded.free_used,
                      updated_at = excluded.updated_at""",
                 (
                     int(user_id), str(item_id),
-                    1 if success else 0,
-                    int(gold_cost), int(shards_cost),
-                    0 if success else 1, now,
+                    int(gold_spent), int(diamonds_spent),
+                    1 if was_free else 0, now,
                 ),
             )
             conn.commit()
@@ -89,18 +97,5 @@ class UpgradeRepoMixin:
             )
             row = cur.fetchone()
             return int(row["plus_level"] or 0) if row else 0
-        finally:
-            conn.close()
-
-    def reset_item_plus(self, user_id: int, item_id: str) -> None:
-        """Сбросить +N для предмета (например при разборке). Удаляет запись."""
-        conn = self.get_connection()
-        try:
-            cur = conn.cursor()
-            cur.execute(
-                "DELETE FROM item_upgrades WHERE user_id = ? AND item_id = ?",
-                (int(user_id), str(item_id)),
-            )
-            conn.commit()
         finally:
             conn.close()

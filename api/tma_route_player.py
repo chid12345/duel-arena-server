@@ -153,7 +153,7 @@ def register_tma_player_route(
                 db, uid, current_class=cached.get("current_class") or cached.get("warrior_type"))
             return {"ok": True, "player": _player_api(cached, combined_buffs=cb, eq_stats=eq_stats_cached), "equipment": equipment,
                     "owned_weapons": owned_weapons, "owned_armor2": owned_armor2,
-                    "set_bonus": set_info, "shards": db.get_all_shards(uid),
+                    "set_bonus": set_info,
                     "plus": db.get_all_item_plus(uid),
                     "active_rentals": db.list_active_rentals(uid),
                     "cached": True, "_sv": VERSION}
@@ -228,7 +228,6 @@ def register_tma_player_route(
             "owned_weapons": owned_weapons,
             "owned_armor2": owned_armor2,
             "set_bonus": set_info,
-            "shards": db.get_all_shards(uid),
             "plus": db.get_all_item_plus(uid),
             "active_rentals": db.list_active_rentals(uid),
             "_sv": VERSION,

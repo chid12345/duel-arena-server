@@ -143,10 +143,6 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         except Exception as _ce:
             logger.warning("wb_rewards_calc: consume_charges uid=%s: %s", uid, _ce)
 
-        # Этап 4D.5 редизайна — WB-дроп шардов УБРАН (решение 2026-05-17).
-        # Шарды теперь добываются ТОЛЬКО разборкой ненужного шмота.
-        # Позже могут добавиться другие источники (отдельная задача).
-
         try:
             db.create_wb_reward(
                 spawn_id=int(spawn_id),

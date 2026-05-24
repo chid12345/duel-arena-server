@@ -104,4 +104,6 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     # Новый чистый armor2 (Этап 2 — старт с нуля)
     "2026_05_19_010_player_owned_armor2",
     "2026_05_19_011_armor2_custom_mods",
+    # Апгрейды v2 — снос шардов, новая схема item_upgrades (PG bootstrap делает сам)
+    "2026_05_24_001_upgrade_v2_reset",
 )

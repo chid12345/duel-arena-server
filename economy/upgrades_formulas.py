@@ -1,176 +1,172 @@
 """
-economy/upgrades_formulas.py — формулы апгрейда предметов (этап 4A).
+economy/upgrades_formulas.py — формулы апгрейда предметов (система v2, без шардов).
 
-Без БД, без UI — чистые функции. Используются:
-- repositories/upgrades/ — apply_upgrade, dismantle (4B)
-- battle_system/mixins/damage.py — учитывает +N в статах (4C)
-- api/upgrade_handler.py — эндпоинт (4D)
+Чистые функции, без БД и UI. Используются:
+- repositories/equipment/equipment_repo.py — учёт +N в статах
+- api/upgrade_handler.py — попытка апгрейда
+- handlers/ui_helpers/upgrade_ui.py — меню в боте
 
-Якоря — из config/balance_curve.json/upgrades через economy.curves.upgrades_config:
-- max_plus_per_tier: {T1: 5, T2: 8, T3: 10, T4: 12}
-- stat_step_pct_per_tier: {T1:.06, T2:.09, T3:.12, T4:.15} — % усиления ЦЕЛЫХ
-  статов за +N (сила/HP/атака), растёт по редкости. Минимум +1 за уровень.
-- pct_step_pct_per_tier: {T1:.02, T2:.03, T3:.04, T4:.05} — мягкий % для
-  ПРОЦЕНТНЫХ статов (защита%/крит-сопр%): их нельзя умножать сильно (улетают
-  в 60-138%). Fallback — половина целочисленного шага.
-- fail_chance_start: 6 (с +7 начинается риск провала)
-
-Стоимость попытки: pct = 0.20 + 0.15 × target_plus от базовой цены предмета.
-Шанс успеха: 100% до +6, далее −10% за каждый шаг, минимум 40% на +12.
-При провале — потеря денег и шардов, +N не меняется (мягкая модель).
+Модель (все якоря — config/balance_curve.json/upgrades):
+- Уровень вещи 0..max_plus(80). Потолок попытки = min(80, уровень игрока).
+- Стат растёт на stat_step_pct (2%) от базы за каждый +N (целые статы),
+  проценты (защита%/крит-сопр%) — мягче, pct_step_pct (0.8%). Без «минимум +1»:
+  на +80 целые статы ≈ ×2.6, проценты ≈ ×1.64.
+- Цена попытки = база_тира × процент(уровень). Процент линейно растёт от
+  cost_pct_start (10%) на +1 до cost_pct_end (60%) на +80.
+  Базы тиров: T1=810, T2=1458, T3=2592, T4=4455 (серебро × множитель тира).
+- Валюта зависит от тира и уровня (diamond_from_level): начиная с этого уровня
+  платим алмазами, до — золотом. Алмазы = округление вверх от золото ÷ курс (75).
+- «Доброе казино»: с free_roll_from_level (61) есть free_roll_chance (10%) шанс,
+  что апгрейд пройдёт бесплатно. Не больше free_roll_max_per_item (3) раз на вещь.
 """
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from economy.curves import upgrades_config
+from economy.loader import get_anchor
 
 # Поля стата, которые масштабируются с +N. Целочисленные:
 _INT_STATS = (
     "atk_bonus", "hp_bonus", "crit_bonus", "dodge_bonus", "regen_bonus",
     "str_bonus", "agi_bonus", "intu_bonus", "accuracy",
 )
-# Поля % (хранятся как float или int). Масштабируются и округляются:
+# Поля % (хранятся как float или int). Масштабируются мягче и округляются:
 _PCT_STATS = (
     "def_pct", "pen_pct", "lifesteal_pct", "crit_resist_pct",
     "double_pct", "gold_pct", "xp_pct",
     "anti_dodge_pct", "silence_pct", "slow_pct", "regen_speed_pct",
 )
 
-# Шарды от разборки по тиру: T1 = 1, T2 = 3, T3 = 6, T4 = 12.
-_DISMANTLE_SHARDS = {"T1": 1, "T2": 3, "T3": 6, "T4": 12}
+
+def max_plus() -> int:
+    """Глобальный потолок уровня вещи (80)."""
+    return int(upgrades_config().get("max_plus", 80))
 
 
-def max_plus_for(tier: str) -> int:
-    """Максимальный +N для тира (T1=5, T2=8, T3=10, T4=12)."""
+def max_plus_for_player(player_level: int) -> int:
+    """Максимальный +N, доступный игроку: min(потолок, его уровень).
+
+    Вещь нельзя качать выше своего уровня — это главный замок прогресса.
+    """
+    return min(max_plus(), max(0, int(player_level)))
+
+
+def _stat_step() -> float:
+    return float(upgrades_config().get("stat_step_pct", 0.02))
+
+
+def _pct_step() -> float:
+    return float(upgrades_config().get("pct_step_pct", 0.008))
+
+
+def cost_pct(level: int) -> float:
+    """Процент от базы тира за попытку до +level. Линейно start→end по уровням."""
     cfg = upgrades_config()
-    cap = cfg.get("max_plus_per_tier") or {}
-    return int(cap.get(str(tier), 0))
+    start = float(cfg.get("cost_pct_start", 0.10))
+    end = float(cfg.get("cost_pct_end", 0.60))
+    cap = max(1, max_plus())
+    n = min(max(1, int(level)), cap)
+    if cap <= 1:
+        return start
+    return start + (end - start) * (n - 1) / (cap - 1)
 
 
-def step_for_tier(tier: str | None) -> float:
-    """% усиления ЦЕЛОЧИСЛЕННЫХ статов (сила/HP/атака/…) за каждый +N.
+def tier_base_gold(tier: str | None) -> int:
+    """Базовая цена тира для расчёта апгрейда (T1=810 … T4=4455)."""
+    bases = upgrades_config().get("tier_base_gold") or {}
+    return int(bases.get(str(tier), 0))
 
-    Дороже редкость — сильнее прокачка (мягкий P2W): T1<T2<T3<T4. Берётся из
-    stat_step_pct_per_tier; fallback — общий stat_step_pct (legacy 8%).
+
+def gold_to_diamond_rate() -> int:
+    """Курс: сколько золота в 1 алмазе (из economy.json/anchor, обычно 75)."""
+    return max(1, int(get_anchor("GOLD_TO_DIAMOND")))
+
+
+def currency_for_level(tier: str | None, level: int) -> str:
+    """Чем платим за апгрейд до +level: 'gold' или 'diamond'.
+
+    diamond_from_level задаёт, с какого уровня тир переходит на алмазы.
     """
     cfg = upgrades_config()
-    per = cfg.get("stat_step_pct_per_tier") or {}
-    if str(tier) in per:
-        return float(per[str(tier)])
-    return float(cfg.get("stat_step_pct", 0.08))
+    threshold = (cfg.get("diamond_from_level") or {}).get(str(tier))
+    if threshold is None:
+        return "gold"
+    return "diamond" if int(level) >= int(threshold) else "gold"
 
 
-def pct_step_for_tier(tier: str | None) -> float:
-    """% усиления ПРОЦЕНТНЫХ статов (защита%/крит-сопр%/…) за каждый +N.
+def upgrade_cost(tier: str | None, target_level: int) -> tuple[int, str]:
+    """Стоимость попытки апгрейда до +target_level: (сумма, валюта).
 
-    Намного мягче целочисленного шага: проценты нельзя умножать сильно —
-    они улетают за разумные пределы (64% защиты, 138% крит-сопра). Здесь
-    мягкий множитель: T4 +5%/ур → ×1.6 на максе (14%→~22%, 30%→48%).
-    Fallback — половина целочисленного шага.
+    Сначала считаем цену в золоте (база тира × процент), затем, если уровень
+    оплачивается алмазами, переводим золото в алмазы (вверх, минимум 1).
     """
-    cfg = upgrades_config()
-    per = cfg.get("pct_step_pct_per_tier") or {}
-    if str(tier) in per:
-        return float(per[str(tier)])
-    return step_for_tier(tier) * 0.5
+    gold = round(tier_base_gold(tier) * cost_pct(int(target_level)))
+    currency = currency_for_level(tier, int(target_level))
+    if currency == "diamond":
+        amount = max(1, math.ceil(gold / gold_to_diamond_rate()))
+    else:
+        amount = max(1, int(gold))
+    return amount, currency
 
 
-def success_chance(target_plus: int) -> float:
-    """Шанс успеха для попытки апгрейда до +N (0..1).
+def free_roll_from_level() -> int:
+    return int(upgrades_config().get("free_roll_from_level", 61))
 
-    До fail_chance_start (по умолчанию 6) — всегда 100%. После — снижается
-    на 10% за шаг, минимум 40% (на +12 для T4).
+
+def free_roll_chance() -> float:
+    return float(upgrades_config().get("free_roll_chance", 0.10))
+
+
+def free_roll_max_per_item() -> int:
+    return int(upgrades_config().get("free_roll_max_per_item", 3))
+
+
+def free_roll_eligible(target_level: int, free_used: int) -> bool:
+    """Доступен ли «бесплатный» ролл для уровня (без учёта случайности).
+
+    Только с free_roll_from_level и пока лимит бесплатных на вещь не исчерпан.
     """
-    fail_start = int(upgrades_config().get("fail_chance_start", 6))
-    if target_plus <= fail_start:
-        return 1.0
-    excess = target_plus - fail_start
-    return max(0.4, 1.0 - 0.10 * excess)
-
-
-def shards_cost_for(target_plus: int) -> int:
-    """Сколько шардов нужно для попытки апгрейда до +N (одного тира)."""
-    return max(1, target_plus // 2)
-
-
-def cost_to_upgrade_gold(base_price_gold: int, target_plus: int) -> int:
-    """Стоимость попытки апгрейда в золоте.
-
-    Формула: pct = 0.20 + 0.15 × target_plus от base_price.
-    На +1: 35% от цены, на +5: 95%, на +10: 170%, на +12: 200%.
-    """
-    pct = 0.20 + 0.15 * float(target_plus)
-    return max(1, round(float(base_price_gold) * pct))
-
-
-def dismantle_shards_for(tier: str) -> int:
-    """Сколько шардов даёт разборка предмета указанного тира."""
-    return int(_DISMANTLE_SHARDS.get(str(tier), 0))
+    return (
+        int(target_level) >= free_roll_from_level()
+        and int(free_used) < free_roll_max_per_item()
+    )
 
 
 def plus_stats_for(item: dict, plus_level: int, tier: str | None = None) -> dict:
-    """Возвращает item-подобный dict со статами, увеличенными на (1 + step × N).
+    """item-подобный dict со статами, увеличенными на +N.
 
-    step зависит от редкости/тира (step_for_tier): дороже вещь — сильнее прокачка.
-    tier берётся из аргумента, иначе из item["tier"] (вызовы с «голыми» статами
-    из get_item_stats обязаны передать tier явно).
-
-    ДВА разных правила (бонусы разной природы):
-    - Целочисленные статы (atk/str/hp/…): сильный множитель step_for_tier +
-      минимум +1 за уровень — всегда видимый прирост, потолка нет.
-    - Процентные статы (def_pct/crit_resist_pct/…): мягкий множитель
-      pct_step_for_tier — иначе проценты улетают за разумные пределы.
-    Не мутирует исходник. plus_level <= 0 → копия без изменений.
+    Целые статы ×(1 + stat_step × N), процентные ×(1 + pct_step × N). tier не
+    влияет на множитель (единый рост для всех редкостей — баланс держится за счёт
+    разной базы). Параметр оставлен для совместимости вызовов. Не мутирует исходник.
     """
     result = dict(item)
     n = int(plus_level)
     if n <= 0:
         return result
-    t = tier if tier is not None else item.get("tier")
-    int_mult = 1.0 + step_for_tier(t) * n
-    pct_mult = 1.0 + pct_step_for_tier(t) * n
+    int_mult = 1.0 + _stat_step() * n
+    pct_mult = 1.0 + _pct_step() * n
     for stat in _INT_STATS:
         if stat in result and isinstance(result[stat], (int, float)):
-            base = float(result[stat])
-            if base > 0:
-                # минимум +1 за уровень, иначе по проценту (что больше)
-                result[stat] = max(round(base * int_mult), int(round(base)) + n)
-            else:
-                result[stat] = round(base * int_mult)
+            result[stat] = round(float(result[stat]) * int_mult)
     for stat in _PCT_STATS:
         if stat in result and isinstance(result[stat], (int, float)):
             result[stat] = round(float(result[stat]) * pct_mult, 4)
     return result
 
 
-def can_attempt_upgrade(item: dict, current_plus: int) -> tuple[bool, str]:
-    """Можно ли попробовать апгрейд от +current_plus до +(current_plus+1)?
+def can_attempt_upgrade(item: dict, current_plus: int, player_level: int) -> tuple[bool, str]:
+    """Можно ли апгрейд от +current_plus до +(current_plus+1)? (можно, причина).
 
-    Возвращает (можно, причина-если-нет).
+    Блок: нет tier (legacy), достигнут глобальный потолок, или цель выше уровня игрока.
     """
     tier = item.get("tier")
     if not tier:
-        return False, "У предмета нет tier"
-    cap = max_plus_for(tier)
-    if cap <= 0:
-        return False, f"Тир {tier} не поддерживает апгрейды"
+        return False, "Legacy предмет не апгрейдится (нет tier)"
     target = int(current_plus) + 1
-    if target > cap:
-        return False, f"Достигнут максимум +{cap} для {tier}"
+    if target > max_plus():
+        return False, f"Достигнут максимум +{max_plus()}"
+    if target > max_plus_for_player(player_level):
+        return False, f"Нужен уровень {target} (качать можно только до своего уровня)"
     return True, ""
-
-
-if __name__ == "__main__":
-    print("=== Кривая апгрейдов ===")
-    for tier in ("T1", "T2", "T3", "T4"):
-        cap = max_plus_for(tier)
-        print(f"\n{tier} max+{cap}:")
-        # Базовая цена предмета — для примера power=27 (T1 free), power=59 (T2)…
-        # Здесь упрощённо: 810g для T1, 7965g для T2, ~5700g для T3, ~44k для T4
-        base_gold = {"T1": 810, "T2": 7965, "T3": 5775, "T4": 44325}[tier]
-        for plus in range(1, cap + 1):
-            cost = cost_to_upgrade_gold(base_gold, plus)
-            shards = shards_cost_for(plus)
-            chance = success_chance(plus)
-            print(f"  +{plus:2d}: cost={cost:>6d}g, shards={shards} {tier}, chance={chance*100:.0f}%")

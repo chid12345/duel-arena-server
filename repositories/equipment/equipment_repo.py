@@ -132,11 +132,10 @@ class EquipmentMixin:
         return affected > 0
 
     def get_equipment_stats(self, user_id: int) -> Dict[str, float]:
-        """Суммарные бонусы от всей экипировки. С учётом +N апгрейдов (этап 4C).
+        """Суммарные бонусы от всей экипировки. С учётом уровня вещи +N.
 
-        Каждый предмет с plus_level > 0 даёт умноженные статы:
-        stat × (1 + 0.08 × plus). Применяется к каждому стату независимо.
-        Базовые статы — из get_item_stats (db_schema/equipment_catalog).
+        Каждый предмет с plus_level > 0 усиливается через plus_stats_for
+        (целые статы +2%/ур, проценты мягче). Базовые статы — из get_item_stats.
         """
         from economy.upgrades_formulas import plus_stats_for
 
