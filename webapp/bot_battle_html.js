@@ -148,10 +148,20 @@ const BotBattleHtml = (() => {
       scene = s; mounted = true; _injectCss();
       const b0 = _S()?.battle || {};
       const isPvp = !b0.opp_is_bot;
-      // PvE-бот: skin_id с сервера → случайный из 31 бот-скина.
-      // PvP: skin_id не нужен (спрайт = warrior_type соперника), фон — рандом из 5.
-      const skinId = isPvp ? null : (s._currentBotSkinId
-        || b0.opp_skin_id
+      // PvE-бот: ПРИОРИТЕТ — opp_skin_id с сервера (привязан к persona бота).
+      // Phaser-сцена живёт между боями, s._currentBotSkinId остаётся со
+      // ПРОШЛОГО боя → если ставить его первым, новый бой получит чужой скин
+      // (карточка покажет правильного бота, в бою — старого). Кэш только как
+      // fallback (если сервер вдруг не прислал skin_id) и как страховка от
+      // ре-маунта внутри одного боя. Тот же подход для PvP-фона.
+      const battleKey = b0.battle_id || null;
+      if (s._currentBattleKey !== battleKey) {
+        s._currentBattleKey = battleKey;
+        s._currentBotSkinId = null;
+        s._currentPvpBgIdx = 0;
+      }
+      const skinId = isPvp ? null : (b0.opp_skin_id
+        || s._currentBotSkinId
         || (typeof BotSkinPicker !== 'undefined' ? BotSkinPicker.pick() : null));
       s._currentBotSkinId = skinId;
       const pvpBgIdx = isPvp ? (s._currentPvpBgIdx || (1 + Math.floor(Math.random() * 5))) : 0;
