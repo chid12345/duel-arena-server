@@ -18,6 +18,7 @@ from economy.upgrades_formulas import (
     free_roll_chance,
     free_roll_eligible,
     free_roll_max_per_item,
+    max_plus,
     max_plus_for_player,
     plus_stats_for,
     upgrade_cost,
@@ -42,6 +43,26 @@ def _stats_view(stats: dict) -> dict:
         if val:
             out[field] = {"label": label, "pct": is_pct,
                           "value": round(float(val) * 100, 1) if is_pct else int(round(float(val)))}
+    return out
+
+
+def _levels_until_next_gain(base_stats: dict, tier: str, current_plus: int) -> dict:
+    """Через сколько уровней целый стат вырастет на +1 (для подсказки в UI).
+
+    Проценты пропускаем — они растут плавно. Считаем только целые статы.
+    """
+    out = {}
+    cap = max_plus()
+    now = plus_stats_for(base_stats, current_plus, tier=tier)
+    for field, (_label, is_pct) in _STAT_LABELS.items():
+        if is_pct or not base_stats.get(field):
+            continue
+        cur_v = int(round(float(now.get(field, 0))))
+        for lvl in range(current_plus + 1, cap + 1):
+            nxt = int(round(float(plus_stats_for(base_stats, lvl, tier=tier).get(field, 0))))
+            if nxt > cur_v:
+                out[field] = lvl - current_plus
+                break
     return out
 
 _log = logging.getLogger(__name__)
@@ -288,6 +309,7 @@ def register_upgrade_routes(app: FastAPI) -> None:
                 "player_diamonds": diamonds,
                 "stats_now": _stats_view(stats_now),
                 "stats_next": _stats_view(stats_next),
+                "stats_up_in": _levels_until_next_gain(base_stats, tier, current_plus) if ok_check else {},
             }
         except Exception as e:
             _log.error("upgrade_preview error: %s", e, exc_info=True)

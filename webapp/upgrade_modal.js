@@ -24,6 +24,7 @@ const CSS = `
 .um-slab{color:#9fb6cc}
 .um-sval{font-weight:700;color:#cfe9ff}
 .um-sval .up{color:#46ffa3}
+.um-sval .soon{color:#b48bff;font-size:9.5px;font-weight:600;margin-left:5px}
 .um-cost{display:flex;justify-content:center;align-items:center;gap:8px;font-size:15px;font-weight:800;margin:4px 0 2px;color:#ffe79a}
 .um-purse{text-align:center;font-size:10.5px;color:#7da6c8;margin-bottom:6px}
 .um-free{text-align:center;font-size:11.5px;color:#46ffa3;margin:4px 0 8px;padding:5px;border-radius:9px;background:rgba(70,255,163,.08);border:1px solid rgba(70,255,163,.2)}
@@ -69,18 +70,23 @@ async function _fetchPreview(itemId) {
 }
 
 // Строки «что прибавится»: подпись — сейчас → станет (зелёным, если выросло).
-function _statRows(now, next) {
-  const fields = Array.from(new Set([...Object.keys(next || {}), ...Object.keys(now || {})]));
+function _statRows(p) {
+  const now = p.stats_now || {}, next = p.stats_next || {}, upIn = p.stats_up_in || {};
+  const fields = Array.from(new Set([...Object.keys(next), ...Object.keys(now)]));
   if (!fields.length) return '';
   const rows = fields.map(f => {
-    const a = now?.[f], b = next?.[f] || a;
+    const a = now[f], b = next[f] || a;
     if (!b) return '';
     const suf = b.pct ? '%' : '';
     const av = a ? a.value : 0;
-    const grew = b.value > av;
-    const right = grew
-      ? `${av}${suf} <span class="up">→ ${b.value}${suf}</span>`
-      : `${b.value}${suf}`;
+    let right;
+    if (b.value > av) {                      // вырастет уже на этом уровне
+      right = `${av}${suf} <span class="up">→ ${b.value}${suf}</span>`;
+    } else if (upIn[f]) {                    // подскажем, через сколько прыгнет
+      right = `${b.value}${suf} <span class="soon">+1 через ${upIn[f]} ур.</span>`;
+    } else {
+      right = `${b.value}${suf}`;
+    }
     return `<div class="um-srow"><span class="um-slab">${b.label}</span><span class="um-sval">${right}</span></div>`;
   }).join('');
   return `<div class="um-stats">${rows}</div>`;
@@ -102,7 +108,7 @@ function _renderModal(p, opts) {
   let body;
   if (can) {
     body = `
-      ${_statRows(p.stats_now, p.stats_next)}
+      ${_statRows(p)}
       <div class="um-cost">Цена: ${p.cost}${icon}</div>
       <div class="um-purse">${purse}</div>
       ${p.free_chance ? `<div class="um-free">🎁 Шанс ${Math.round(p.free_chance*100)}% улучшить бесплатно · осталось ${p.free_remaining}</div>` : ''}
@@ -142,7 +148,8 @@ function _applyState(r, itemId) {
 }
 
 async function _rerender(itemId, opts) {
-  _refreshOpenEquipOverlay();
+  // Карточку под модалкой НЕ перерисовываем на каждый ап — это тяжёлый ре-рендер
+  // всей сетки каталога и подвешивает WebView. Обновим один раз при закрытии.
   const fresh = await _fetchPreview(itemId);
   _close();
   if (fresh?.ok) {
@@ -180,7 +187,11 @@ async function _doBatch(itemId, opts, count) {
 }
 
 function _bindEvents(itemId, opts) {
-  document.getElementById('um-close')?.addEventListener('click', () => { _close(); opts?.onClose?.(); });
+  document.getElementById('um-close')?.addEventListener('click', () => {
+    _close();
+    _refreshOpenEquipOverlay();  // один раз при закрытии — карточка подхватит финальный +N
+    opts?.onClose?.();
+  });
   document.getElementById('um-1')?.addEventListener('click', () => _doSingle(itemId, opts));
   document.getElementById('um-10')?.addEventListener('click', () => _doBatch(itemId, opts, 10));
   document.getElementById('um-25')?.addEventListener('click', () => _doBatch(itemId, opts, 25));
