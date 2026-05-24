@@ -15,8 +15,8 @@ const CSS = `
 .um-title{font-size:15px;font-weight:800;text-align:center;margin-bottom:4px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .um-tier{display:inline-block;padding:1px 7px;border-radius:6px;background:rgba(0,240,255,.15);color:#00f0ff;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle}
 .um-plus{text-align:center;font-size:32px;font-weight:900;color:#ffd55a;margin:6px 0 2px;letter-spacing:1px;text-shadow:0 0 14px rgba(255,213,90,.5)}
-.um-plus.bump{animation:umBump .45s ease}
-@keyframes umBump{0%{transform:scale(1)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
+.um-plus.bump{animation:umBump .5s ease}
+@keyframes umBump{0%{text-shadow:0 0 14px rgba(255,213,90,.5)}40%{text-shadow:0 0 26px rgba(255,213,90,1),0 0 10px rgba(70,255,163,.6)}100%{text-shadow:0 0 14px rgba(255,213,90,.5)}}
 .um-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 2px 4px}
 .um-bar>i{display:block;height:100%;background:linear-gradient(90deg,#00f0ff,#ff3ba8);box-shadow:0 0 8px rgba(0,240,255,.6)}
 .um-prog{text-align:center;font-size:10px;color:#7da6c8;margin-bottom:10px;letter-spacing:.5px}
