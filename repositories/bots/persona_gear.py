@@ -83,6 +83,9 @@ def _accumulate_eq_stats(items: Dict[str, str]) -> Dict:
     total = {
         "_eq_atk_bonus":     0,
         "_eq_def_pct":       0.0,
+        "_eq_body_def_pct":  0.0,   # зональная защита тела (броня) — её бот раньше терял
+        "_eq_block_chance":  0.0,   # глухой блок брони — шанс погасить удар
+        "_eq_reflect_pct":   0.0,   # шипы брони — возврат урона атакующему
         "_eq_pen_pct":       0.0,
         "_eq_dodge_bonus":   0,
         "_eq_regen_bonus":   0,
@@ -99,6 +102,9 @@ def _accumulate_eq_stats(items: Dict[str, str]) -> Dict:
         s = get_item_stats(iid)
         total["_eq_atk_bonus"]      += s.get("atk_bonus", 0)
         total["_eq_def_pct"]        += s.get("def_pct", 0.0)
+        total["_eq_body_def_pct"]   += s.get("body_def_pct", 0.0)
+        total["_eq_block_chance"]   += s.get("block_chance", 0)
+        total["_eq_reflect_pct"]    += s.get("reflect_pct", 0)
         total["_eq_pen_pct"]        += s.get("pen_pct", 0.0)
         total["_eq_dodge_bonus"]    += s.get("dodge_bonus", 0)
         total["_eq_regen_bonus"]    += s.get("regen_bonus", 0)
@@ -127,6 +133,14 @@ def pick_gear_for_persona(persona: str, level: int,
     """
     r = rng or random
     lv = max(1, int(level))
+    # Высокоуровневые «богатые» соперники (мажор/донатер) носят ПОЛНЫЙ комплект
+    # одного архетипа → сет-бонус 6/6 + перк, как у топ-игрока. Это и делает бой
+    # на больших уровнях тяжёлым (см. repositories/bots/persona_set).
+    from repositories.bots.persona_set import pick_matched_set, SET_GEAR_MIN_LEVEL
+    if persona in ("major", "donator") and lv >= SET_GEAR_MIN_LEVEL:
+        set_items = pick_matched_set(r, allow_mythic=(persona == "donator"))
+        if len(set_items) == len(SLOTS_FOR_BOT):
+            return set_items, _accumulate_eq_stats(set_items)
     # Со среднего уровня (20+) бот ВСЕГДА полностью одет — без пустых слотов.
     # На среднем/высоком уровне голый соперник выглядит нелепо и слишком слаб.
     # Новички (<20) донашивают экипировку постепенно (имитация новых аккаунтов).

@@ -10,7 +10,6 @@ from __future__ import annotations
 import random
 from typing import Dict, Tuple
 
-from repositories.bots.persona_gear import pick_gear_for_persona
 from repositories.bots.persona_skins import pick_skin_for_persona
 
 
@@ -26,12 +25,13 @@ def persona_weights_for_level(level: int) -> tuple[tuple[str, float], ...]:
     if lv < 35:
         return (("novice", 0.40), ("farmer", 0.42), ("major", 0.15), ("donator", 0.03))
     if lv < 60:
-        # Этап буста ботов: на средних уровнях больше «богатых» соперников
-        # (был 40/40/17/3) — игрок к 35-60 уже в gold/diamond, бой должен тяжелеть.
-        return (("novice", 0.20), ("farmer", 0.38), ("major", 0.32), ("donator", 0.10))
-    # 60+: больше половины ботов в эпике/мифике (был 35/35/25/5) — топ-игроку
-    # должно быть реально сложно, шмот снова решает.
-    return (("novice", 0.10), ("farmer", 0.30), ("major", 0.40), ("donator", 0.20))
+        # 35-60: игрок уже в gold/diamond, с 45 ур. у мажора/донатера появляется
+        # полный сет → больше элиты, бой ощутимо тяжелеет (был 20/38/32/10).
+        return (("novice", 0.14), ("farmer", 0.31), ("major", 0.37), ("donator", 0.18))
+    # 60+: топ-пул — почти сплошь элита в полном сете. Донатер (мифик-сет 6/6) —
+    # самый тяжёлый соперник, его доля поднята (0.20→0.30), новичков почти нет.
+    # Цель: средний бой топ-игрока ≈ 50/50, лёгких «мясных» боёв мало.
+    return (("novice", 0.08), ("farmer", 0.22), ("major", 0.40), ("donator", 0.30))
 
 
 # Старый плоский набор — оставлен для обратной совместимости (preview-страница).
@@ -117,22 +117,10 @@ def apply_persona_to_bot(bot: Dict, level: int,
     if skin_id:
         bot["skin_id"] = int(skin_id)
 
-    # Виртуальная экипировка по слотам: реальные item_id из каталога.
-    items, stats = pick_gear_for_persona(persona, level, r)
-    bot["equipment_items"] = items  # {slot: item_id} — для UI карточки соперника
-    # Чистые _eq_* — для боевой формулы; _extra (hp/str/...) — на статы выше
-    extra = stats.pop("_extra", {})
-    bot.update(stats)
-    if extra.get("hp_bonus"):
-        bot["max_hp"] = int(bot.get("max_hp", 100)) + extra["hp_bonus"]
-        bot["current_hp"] = bot["max_hp"]
-    if extra.get("str_bonus"):
-        bot["strength"] = max(1, int(bot.get("strength", 1)) + extra["str_bonus"])
-    if extra.get("agi_bonus"):
-        bot["endurance"] = max(1, int(bot.get("endurance", 1)) + extra["agi_bonus"])
-    if extra.get("intu_bonus") or extra.get("crit_bonus"):
-        bot["crit"] = max(0, int(bot.get("crit", 0))
-                            + extra.get("intu_bonus", 0) + extra.get("crit_bonus", 0))
+    # Экипировка + сет-бонус: единая «одевалка» equip_bot (та же для Натиска/Башни).
+    # Кладёт equipment_items, _eq_* (вкл. защиту брони) и сет-перк у богатых персон.
+    from repositories.bots.persona_set import equip_bot
+    equip_bot(bot, persona, level, r)
 
     # AI-стиль из персоны (перекрывает старый случайный выбор)
     bot["ai_pattern"] = _ai_pattern_for_persona(persona, r)
