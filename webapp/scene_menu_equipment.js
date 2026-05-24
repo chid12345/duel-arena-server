@@ -13,7 +13,7 @@ Object.assign(MenuScene.prototype, {
     }
     // Fallback: если overlay не загрузился — показываем текстовые метки.
     // Старый slot=armor снесён под корень, заменён на armor2 («БРОНЯ»).
-    const _LABELS = { belt:'ГОЛОВА', armor2:'БРОНЯ', boots:'НОГИ',
+    const _LABELS = { belt:'ШЛЕМ', armor2:'БРОНЯ', boots:'ОБУВЬ',
                       weapon:'ОРУЖИЕ', shield:'ЩИТ', ring1:'КОЛЬЦО' };
     const SW = 60, SH = 64;
     const colW = Math.round((W - PAD * 2) / 4);

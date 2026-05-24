@@ -5,7 +5,7 @@
    ============================================================ */
 (() => {
 const _RARITY_COLOR = { common:'#a0aec0', rare:'#fbbf24', epic:'#c084fc', mythic:'#ff6b2b' };
-const _LABELS = { belt:'ГОЛОВА', armor2:'БРОНЯ', boots:'НОГИ', weapon:'ОРУЖИЕ', shield:'ЩИТ', ring1:'КОЛЬЦО' };
+const _LABELS = { belt:'ШЛЕМ', armor2:'БРОНЯ', boots:'ОБУВЬ', weapon:'ОРУЖИЕ', shield:'ЩИТ', ring1:'КОЛЬЦО' };
 const _EMPTY  = { belt:'⛑', armor2:'🛡', boots:'👢', weapon:'⚔', shield:'🛡', ring1:'💍' };
 const _imgCache = new Map();
 
