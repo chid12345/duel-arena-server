@@ -50,6 +50,35 @@ def _premium_fields(player: dict) -> dict:
         return {"is_premium": False, "premium_until": None, "premium_days_left": 0}
 
 
+def eq_stats_display(raw: dict | None) -> dict:
+    """Сырые eq_stats (из get_equipment_stats) → единый вид для UI/панели бонусов.
+
+    ЕДИНЫЙ источник формата для _player_api И /api/shop/inventory (раньше инвентарь
+    отдавал сырые данные → панель «Герой→Бонусы» показывала 0.0322% вместо 3.2%).
+    Дробные def_pct/pen_pct/body_def_pct хранятся как 0.03 → показываем 3.0 (×100);
+    остальные проценты уже целые (20 = 20%) → как есть. Целые статы — int.
+    """
+    r = raw or {}
+    def _i(k):
+        return int(r.get(k, 0) or 0)
+    def _p(k):
+        return round(float(r.get(k, 0.0) or 0.0) * 100, 1)
+    return {
+        "atk_bonus": _i("atk_bonus"), "def_pct": _p("def_pct"),
+        "hp_bonus": _i("hp_bonus"), "crit_bonus": _i("crit_bonus"),
+        "pen_pct": _p("pen_pct"), "dodge_bonus": _i("dodge_bonus"),
+        "regen_bonus": _i("regen_bonus"), "lifesteal_pct": _i("lifesteal_pct"),
+        "crit_resist_pct": _i("crit_resist_pct"), "str_bonus": _i("str_bonus"),
+        "agi_bonus": _i("agi_bonus"), "intu_bonus": _i("intu_bonus"),
+        "double_pct": _i("double_pct"), "gold_pct": _i("gold_pct"),
+        "xp_pct": _i("xp_pct"), "accuracy": _i("accuracy"),
+        "anti_dodge_pct": _i("anti_dodge_pct"), "silence_pct": _i("silence_pct"),
+        "slow_pct": _i("slow_pct"), "regen_speed_pct": _i("regen_speed_pct"),
+        "body_def_pct": _p("body_def_pct"), "reflect_pct": _i("reflect_pct"),
+        "block_chance": _i("block_chance"),
+    }
+
+
 def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None) -> dict:
     """Сериализовать игрока для API."""
     lv = int(player.get("level", 1))
@@ -281,30 +310,6 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
         "warrior_type": (player.get("warrior_type") or "default"),
         "current_class": (player.get("current_class") or ""),
         "inventory_unseen": int(player.get("inventory_unseen", 0) or 0),
-        "eq_stats": {
-            "atk_bonus":    _eq_atk,
-            "def_pct":      round(_eq_def * 100, 1),
-            "hp_bonus":     _eq_hp,
-            "crit_bonus":   _eq_crit,
-            "pen_pct":      round(_eq_pen * 100, 1),
-            "dodge_bonus":  _eq_dodge,
-            "regen_bonus":  _eq_regen,
-            "lifesteal_pct":   _eq_lifesteal,
-            "crit_resist_pct": _eq_crit_resist,
-            "str_bonus":  _eq_str,
-            "agi_bonus":  _eq_agi,
-            "intu_bonus": _eq_intu,
-            "double_pct": _eq_double,
-            "gold_pct":   _eq_gold,
-            "xp_pct":     _eq_xp,
-            "accuracy":        _eq_accuracy,
-            "anti_dodge_pct":  _eq_anti_dodge,
-            "silence_pct":     _eq_silence,
-            "slow_pct":        _eq_slow,
-            "regen_speed_pct": _eq_regen_speed,
-            "body_def_pct":    round(_eq_body_def * 100, 1),
-            "reflect_pct":     _eq_reflect,
-            "block_chance":    _eq_block,
-        },
+        "eq_stats": eq_stats_display(eq_stats),
         **_premium_fields(player),
     }

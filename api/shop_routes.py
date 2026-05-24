@@ -121,9 +121,12 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                         }
             except Exception:
                 pass
-            # eq_stats нужны HTML-оверлею «Герой→Бонусы» как источник истины
+            # eq_stats нужны HTML-оверлею «Герой→Бонусы» как источник истины.
+            # Через тот же формат, что и _player_api (дробные %-статы ×100),
+            # иначе панель показывает 0.0322% вместо 3.2%.
             try:
-                eq_stats = db.get_equipment_stats(uid)
+                from api.tma_player_api import eq_stats_display
+                eq_stats = eq_stats_display(db.get_equipment_stats(uid))
             except Exception:
                 eq_stats = {}
             return {"ok": True, "inventory": items, "active_buffs": buffs,
