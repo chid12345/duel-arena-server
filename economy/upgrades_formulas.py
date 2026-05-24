@@ -116,7 +116,7 @@ def free_roll_from_level() -> int:
 
 
 def free_roll_chance() -> float:
-    return float(upgrades_config().get("free_roll_chance", 0.10))
+    return float(upgrades_config().get("free_roll_chance", 0.25))
 
 
 def free_roll_max_per_item() -> int:

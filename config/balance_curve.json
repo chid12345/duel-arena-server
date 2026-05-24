@@ -69,7 +69,7 @@
       "T4": 21
     },
     "free_roll_from_level": 61,
-    "free_roll_chance": 0.10,
+    "free_roll_chance": 0.25,
     "free_roll_max_per_item": 3
   },
   "sets": [

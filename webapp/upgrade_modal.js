@@ -14,8 +14,9 @@ const CSS = `
 .um-box{width:min(360px,92vw);max-height:90vh;overflow-y:auto;position:relative;background:linear-gradient(160deg,#120a2a 0%,#0a0617 70%);border:1px solid rgba(0,240,255,.35);border-radius:18px;box-shadow:0 8px 40px rgba(0,200,255,.28),0 0 22px rgba(255,59,168,.12) inset;padding:18px 16px;color:#e6f7ff;font-family:'Share Tech Mono',-apple-system,"Segoe UI",Roboto,sans-serif}
 .um-title{font-size:15px;font-weight:800;text-align:center;margin-bottom:4px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .um-tier{display:inline-block;padding:1px 7px;border-radius:6px;background:rgba(0,240,255,.15);color:#00f0ff;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle}
-.um-plus{text-align:center;font-size:30px;font-weight:900;color:#ffd55a;margin:6px 0 2px;letter-spacing:1px;text-shadow:0 0 14px rgba(255,213,90,.5)}
-.um-plus .nx{color:#46ffa3;text-shadow:0 0 14px rgba(70,255,163,.5)}
+.um-plus{text-align:center;font-size:32px;font-weight:900;color:#ffd55a;margin:6px 0 2px;letter-spacing:1px;text-shadow:0 0 14px rgba(255,213,90,.5)}
+.um-plus.bump{animation:umBump .4s ease}
+@keyframes umBump{0%{transform:scale(1)}35%{transform:scale(1.3);color:#46ffa3;text-shadow:0 0 22px rgba(70,255,163,.8)}100%{transform:scale(1);color:#ffd55a}}
 .um-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 2px 4px}
 .um-bar>i{display:block;height:100%;background:linear-gradient(90deg,#00f0ff,#ff3ba8);box-shadow:0 0 8px rgba(0,240,255,.6)}
 .um-prog{text-align:center;font-size:10px;color:#7da6c8;margin-bottom:10px;letter-spacing:.5px}
@@ -93,7 +94,7 @@ function _statRows(p) {
 }
 
 function _renderModal(p, opts) {
-  const cur = p.current_plus, tgt = p.target_plus, can = p.can_attempt;
+  const cur = p.current_plus, can = p.can_attempt;
   const maxp = p.max_plus || 80;
   const icon = ICON[p.currency] || '🪙';
   const purse = p.currency === 'diamond'
@@ -103,7 +104,6 @@ function _renderModal(p, opts) {
   const barPct = Math.min(100, Math.round(cur / 80 * 100));
 
   const title = (opts.itemName || 'Улучшение') + `<span class="um-tier">${p.tier}</span>`;
-  const plusLine = can ? `+${cur} <span class="nx">→ +${tgt}</span>` : `+${cur}`;
 
   let body;
   if (can) {
@@ -126,7 +126,7 @@ function _renderModal(p, opts) {
     <div class="um-ov" id="um-root">
       <div class="um-box">
         <div class="um-title">🔧 ${title}</div>
-        <div class="um-plus">${plusLine}</div>
+        <div class="um-plus" id="um-plusnum">+${cur}</div>
         <div class="um-bar"><i style="width:${barPct}%"></i></div>
         <div class="um-prog">Уровень ${cur} из 80${maxp < 80 ? ` · твой потолок сейчас +${maxp}` : ''}</div>
         ${body}
@@ -154,7 +154,9 @@ async function _rerender(itemId, opts) {
   _close();
   if (fresh?.ok) {
     document.body.insertAdjacentHTML('beforeend', _renderModal(fresh, opts));
-    _bindEvents(itemId, opts, fresh);
+    _bindEvents(itemId, opts);
+    const pn = document.getElementById('um-plusnum');  // подсветка: число прыгнуло
+    if (pn) pn.classList.add('bump');
   } else { opts?.onClose?.(); }
 }
 
@@ -163,8 +165,10 @@ async function _doSingle(itemId, opts) {
   try {
     const r = await post('/api/upgrade/apply', { item_id: itemId });
     if (!r?.ok) { _toast('❌ ' + (r?.reason || 'Ошибка'), false); _busy = false; return; }
-    if (r.was_free) { _toast(`🎁 Удача! Бесплатно → +${r.new_plus}`, true); tg?.HapticFeedback?.notificationOccurred('success'); }
-    else { _toast(`✅ Улучшено → +${r.new_plus} (−${r.spent}${ICON[r.currency] || '🪙'})`, true); tg?.HapticFeedback?.impactOccurred('medium'); }
+    // Без всплывающего тоста на каждый ап — число в шапке само прыгает (bump).
+    // Бесплатный ролл редкий и приятный — его подсветим коротким тостом.
+    if (r.was_free) { _toast('🎁 Удача! Бесплатное улучшение!', true); tg?.HapticFeedback?.notificationOccurred('success'); }
+    else { tg?.HapticFeedback?.impactOccurred('medium'); }
     _applyState(r, itemId); _busy = false;
     await _rerender(itemId, opts);
   } catch (_) { _busy = false; _toast('❌ Ошибка', false); }
@@ -175,11 +179,9 @@ async function _doBatch(itemId, opts, count) {
   try {
     const r = await post('/api/upgrade/apply_batch', { item_id: itemId, count });
     if (!r?.ok) { _toast('❌ ' + (r?.reason || 'Ошибка'), false); _busy = false; return; }
-    const parts = [];
-    if (r.gold_spent) parts.push(`−${r.gold_spent}🪙`);
-    if (r.diamonds_spent) parts.push(`−${r.diamonds_spent}💎`);
-    if (r.freebies) parts.push(`🎁×${r.freebies}`);
-    _toast(`✅ +${r.applied} → +${r.new_plus}${parts.length ? '  ' + parts.join(' ') : ''}`, true);
+    // Стандартный тост убран (число прыгает, остаток золота в окне обновляется).
+    // Если в пачке были бесплатные апы — порадуем коротким тостом.
+    if (r.freebies) _toast(`🎁 ${r.freebies}× бесплатно в этой пачке!`, true);
     tg?.HapticFeedback?.notificationOccurred('success');
     _applyState(r, itemId); _busy = false;
     await _rerender(itemId, opts);
