@@ -32,7 +32,7 @@ Object.assign(BattleScene.prototype, {
     const oppItems   = (!isMe && isBot) ? (b.opp_items || []) : [];
     const personaMeta = oppPersona ? PERSONA_META[oppPersona] : null;
     // Эмодзи слотов — для компактного списка предметов
-    const SLOT_ICON = {weapon:'🗡', shield:'🛡', armor:'👕', belt:'🪖', boots:'👢', ring1:'💍', ring2:'💍'};
+    const SLOT_ICON = {weapon:'🗡', shield:'🛡', armor2:'👕', belt:'🪖', boots:'👢', ring1:'💍', ring2:'💍'};
     const curHp  = isMe ? (me.current_hp || b.my_hp)  : (b.opp_hp  || 0);
     const maxHp  = isMe ? (me.max_hp   || b.my_max_hp): (b.opp_max_hp || 1);
     const stats  = isMe

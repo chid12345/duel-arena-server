@@ -83,15 +83,9 @@
     }
   }
 
-  const _ARMOR_MAP = {
-    tank_free:'armor_free1',agile_free:'armor_free2',crit_free:'armor_free3',universal_free:'armor_free4',
-    berserker_gold:'armor_gold1',assassin_gold:'armor_gold2',mage_gold:'armor_gold3',paladin_gold:'armor_gold4',
-    dragonknight_diamonds:'armor_dia1',shadowdancer_diamonds:'armor_dia2',archmage_diamonds:'armor_dia3',universal_diamonds:'armor_dia4',
-    berserker_mythic:'armor_mythic1',assassin_mythic:'armor_mythic2',archmage_mythic:'armor_mythic3',legendary_usdt:'armor_mythic4',
-  };
-  const _SLOT_ICON  = {weapon:'🗡',shield:'🛡',armor:'👕',belt:'🪖',boots:'👢',ring1:'💍'};
-  const _SLOT_LABEL = {weapon:'Оружие',shield:'Щит',armor:'Броня',belt:'Шлем',boots:'Сапоги',ring1:'Кольцо'};
-  const _SLOT_POS   = {belt:{r:1,c:1},armor:{r:2,c:1},boots:{r:3,c:1},weapon:{r:1,c:3},shield:{r:2,c:3},ring1:{r:3,c:3}};
+  const _SLOT_ICON  = {weapon:'🗡',shield:'🛡',armor2:'👕',belt:'🪖',boots:'👢',ring1:'💍'};
+  const _SLOT_LABEL = {weapon:'Оружие',shield:'Щит',armor2:'Броня',belt:'Шлем',boots:'Сапоги',ring1:'Кольцо'};
+  const _SLOT_POS   = {belt:{r:1,c:1},armor2:{r:2,c:1},boots:{r:3,c:1},weapon:{r:1,c:3},shield:{r:2,c:3},ring1:{r:3,c:3}};
 
   function _imgFb(img) {
     const tries = (img.dataset.tries||'').split(',').filter(Boolean);
@@ -107,7 +101,7 @@
   function _itemBase(it) {
     const id = it.item_id||'', slot = it.slot, rar = it.rarity||'common';
     if (['shield','belt','ring1','boots'].includes(slot)) return id;
-    if (slot === 'armor') return _ARMOR_MAP[id] || ({common:'armor_free1',rare:'armor_gold1',epic:'armor_dia1',mythic:'armor_mythic1'}[rar]||'armor_free1');
+    if (slot === 'armor2') return (id||'').startsWith('armor2_') ? id.replace('armor2_','armor_') : ({common:'armor_free1',rare:'armor_gold1',epic:'armor_dia1',mythic:'armor_mythic1'}[rar]||'armor_free1');
     if (slot === 'weapon') {
       const parts = id.split('_'), wt = parts[0]||'sword', sfx = parts[1]||'';
       const rcl = {gold:'rare',diamond:'epic',mythic:'mythic',free:'free',steel:'rare',iron:'free'}[sfx]||{common:'free',rare:'rare',epic:'epic',mythic:'mythic'}[rar]||'free';

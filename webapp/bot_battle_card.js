@@ -11,7 +11,7 @@ const BotBattleCard = (() => {
     major:   {emoji:'💎', label:'Мажор',       col:'#c89aff'},
     donator: {emoji:'👑', label:'Босс-донатер', col:'#ffc83c'},
   };
-  const SLOT_ICON = {weapon:'🗡', shield:'🛡', armor:'👕', belt:'🪖', boots:'👢', ring1:'💍', ring2:'💍'};
+  const SLOT_ICON = {weapon:'🗡', shield:'🛡', armor2:'👕', belt:'🪖', boots:'👢', ring1:'💍', ring2:'💍'};
   let overlay = null;
 
   function _injectCss() {
@@ -139,7 +139,7 @@ const BotBattleCard = (() => {
       const tries = (img.dataset.tries || '').split(',').filter(Boolean);
       if (!tries.length) {
         const slot = img.dataset.slot || '';
-        const E = {weapon:'🗡',shield:'🛡',armor:'👕',belt:'🪖',boots:'👢',ring1:'💍'};
+        const E = {weapon:'🗡',shield:'🛡',armor2:'👕',belt:'🪖',boots:'👢',ring1:'💍'};
         if (img.parentNode) img.parentNode.innerHTML = '<span class="bbc-eq-emoji">' + (E[slot]||'•') + '</span>';
         return;
       }
@@ -200,7 +200,7 @@ const BotBattleCard = (() => {
     // центр — спрайт бота на 3 ряда, правая колонка — Оружие/Щит/Кольцо.
     const SLOT_LAYOUT = {
       belt:   {row: 1, col: 1, label: 'Шлем'},
-      armor:  {row: 2, col: 1, label: 'Броня'},
+      armor2: {row: 2, col: 1, label: 'Броня'},
       boots:  {row: 3, col: 1, label: 'Сапоги'},
       weapon: {row: 1, col: 3, label: 'Оружие'},
       shield: {row: 2, col: 3, label: 'Щит'},
