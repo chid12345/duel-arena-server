@@ -155,7 +155,10 @@ const BotBattleCard = (() => {
       const url = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.png';
       return `<img src="${url}" alt="">`;
     }
-    const skinId = b.opp_skin_id;
+    // Маскированный под PvP бой (auto-fallback): сервер всё ещё шлёт opp_skin_id,
+    // но opp_is_bot=false → игрок видит «реального игрока». Карточка обязана
+    // совпадать с тем что в бою (там тоже рисуется спрайт воина, не бот-скин).
+    const skinId = b.opp_is_bot ? b.opp_skin_id : null;
     if (skinId) return `<img src="bot_skins/${skinId}.png" alt="">`;
     const oppWt = b.opp_warrior_type || 'tank';
     const oppUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(oppWt) : 'skins/sila/1.png';
