@@ -15,8 +15,8 @@ const CSS = `
 .um-title{font-size:15px;font-weight:800;text-align:center;margin-bottom:4px;background:linear-gradient(90deg,#ff3ba8,#00f0ff);-webkit-background-clip:text;background-clip:text;color:transparent}
 .um-tier{display:inline-block;padding:1px 7px;border-radius:6px;background:rgba(0,240,255,.15);color:#00f0ff;font-size:10px;font-weight:800;margin-left:6px;vertical-align:middle}
 .um-plus{text-align:center;font-size:32px;font-weight:900;color:#ffd55a;margin:6px 0 2px;letter-spacing:1px;text-shadow:0 0 14px rgba(255,213,90,.5)}
-.um-plus.bump{animation:umBump .4s ease}
-@keyframes umBump{0%{transform:scale(1)}35%{transform:scale(1.3);color:#46ffa3;text-shadow:0 0 22px rgba(70,255,163,.8)}100%{transform:scale(1);color:#ffd55a}}
+.um-plus.bump{animation:umBump .45s ease}
+@keyframes umBump{0%{transform:scale(1)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
 .um-bar{height:6px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden;margin:8px 2px 4px}
 .um-bar>i{display:block;height:100%;background:linear-gradient(90deg,#00f0ff,#ff3ba8);box-shadow:0 0 8px rgba(0,240,255,.6)}
 .um-prog{text-align:center;font-size:10px;color:#7da6c8;margin-bottom:10px;letter-spacing:.5px}
@@ -93,7 +93,7 @@ function _statRows(p) {
   return `<div class="um-stats">${rows}</div>`;
 }
 
-function _renderModal(p, opts) {
+function _boxHtml(p, opts) {
   const cur = p.current_plus, can = p.can_attempt;
   const maxp = p.max_plus || 80;
   const icon = ICON[p.currency] || '🪙';
@@ -123,16 +123,18 @@ function _renderModal(p, opts) {
   }
 
   return `
-    <div class="um-ov" id="um-root">
-      <div class="um-box">
-        <div class="um-title">🔧 ${title}</div>
-        <div class="um-plus" id="um-plusnum">+${cur}</div>
-        <div class="um-bar"><i style="width:${barPct}%"></i></div>
-        <div class="um-prog">Уровень ${cur} из 80${maxp < 80 ? ` · твой потолок сейчас +${maxp}` : ''}</div>
-        ${body}
-        <button class="um-close" id="um-close">Закрыть</button>
-      </div>
+    <div class="um-box">
+      <div class="um-title">🔧 ${title}</div>
+      <div class="um-plus" id="um-plusnum">+${cur}</div>
+      <div class="um-bar"><i style="width:${barPct}%"></i></div>
+      <div class="um-prog">Уровень ${cur} из 80${maxp < 80 ? ` · твой потолок сейчас +${maxp}` : ''}</div>
+      ${body}
+      <button class="um-close" id="um-close">Закрыть</button>
     </div>`;
+}
+
+function _renderModal(p, opts) {
+  return `<div class="um-ov" id="um-root">${_boxHtml(p, opts)}</div>`;
 }
 
 function _close() { document.getElementById('um-root')?.remove(); }
@@ -151,13 +153,16 @@ async function _rerender(itemId, opts) {
   // Карточку под модалкой НЕ перерисовываем на каждый ап — это тяжёлый ре-рендер
   // всей сетки каталога и подвешивает WebView. Обновим один раз при закрытии.
   const fresh = await _fetchPreview(itemId);
-  _close();
+  const root = document.getElementById('um-root');
+  if (!root) return;
   if (fresh?.ok) {
-    document.body.insertAdjacentHTML('beforeend', _renderModal(fresh, opts));
+    // Обновляем СОДЕРЖИМОЕ на месте, не пересоздавая оверлей — иначе весь экран
+    // мигал бы анимацией появления .um-ov на каждый ап (бьёт по глазам).
+    root.innerHTML = _boxHtml(fresh, opts);
     _bindEvents(itemId, opts);
-    const pn = document.getElementById('um-plusnum');  // подсветка: число прыгнуло
+    const pn = document.getElementById('um-plusnum');  // мягкий «вдох» числа
     if (pn) pn.classList.add('bump');
-  } else { opts?.onClose?.(); }
+  } else { _close(); opts?.onClose?.(); }
 }
 
 async function _doSingle(itemId, opts) {
