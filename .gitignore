@@ -5,8 +5,22 @@ __pycache__/
 
 # Database & logs
 *.db
+*.db-wal
+*.db-shm
+*.db-journal
 *.log
 *.log.*
+
+# Локальные эксперименты и артефакты (личное/временное, не коммитим;
+# на диске остаются — просто не мешают в git)
+*.xlsx
+Telegram.bat
+foto/
+webapp/serve_preview.py
+webapp/paper_doll_preview.html
+webapp/paper_doll_base.png
+webapp/warriors_preview.html
+webapp/crit_variants.html
 
 # Cursor/Claude agent artifacts
 .claude/
