@@ -196,8 +196,19 @@ function show(scene) {
       img.style.height = p.sz + 'px';
       img.src = info.url;
       img.onload  = () => _removeDarkBg(img);
+      // Ретраи: на мобильном Telegram WebView `<img>` иногда отваливается
+      // (особенно когда параллельно работает Phaser-лоадер тяжёлых PNG).
+      // Раньше после первого onerror рисовали emoji и прятали `<img>`
+      // навсегда — игрок видел пустые слоты, пока не подвигает меню.
+      // 3 попытки с растущей паузой; кэш-бастинг через ?r=N, чтобы
+      // браузер не отдал тот же failed-response из памяти.
+      let _retry = 0;
       img.onerror = () => {
-        // При ошибке — показываем emoji-заглушку вместо broken-image
+        if (_retry < 3) {
+          _retry++;
+          setTimeout(() => { img.src = info.url + '?r=' + _retry; }, 300 * _retry);
+          return;
+        }
         img.style.display = 'none';
         const em = document.createElement('div');
         em.className = 'eqs-empty';
