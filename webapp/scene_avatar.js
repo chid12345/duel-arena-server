@@ -33,19 +33,34 @@ class AvatarScene extends Phaser.Scene {
     if (cached) {
       this._avatars = State.avatarsCache.avatars;
     } else {
-      try {
-        const j = await get('/api/avatars');
-        if (!j.ok) throw new Error(j.reason || 'err');
-        this._avatars = j.avatars || [];
-        if (this._avatars.length > 0) {
-          State.avatarsCache = { avatars: this._avatars, at: Date.now() };
+      // Ретраи: на нестабильной мобильной сети одиночный запрос периодически
+      // отваливается → игрок видит «Ошибка загрузки» без шансов восстановиться.
+      // 3 попытки с растущей паузой (400/800/1200мс) прежде чем сдаться.
+      let _lastErr = null;
+      let _success = false;
+      for (let i = 0; i < 3; i++) {
+        try {
+          if (i > 0 && this._loading) this._loading.setText(`Загрузка... (попытка ${i + 1})`);
+          const j = await get('/api/avatars');
+          if (!j.ok) throw new Error(j.reason || 'err');
+          this._avatars = j.avatars || [];
+          if (this._avatars.length > 0) {
+            State.avatarsCache = { avatars: this._avatars, at: Date.now() };
+          }
+          _success = true;
+          break;
+        } catch (e) {
+          _lastErr = e;
+          if (i < 2) await new Promise(r => setTimeout(r, 400 * (i + 1)));
         }
-      } catch (e) {
+      }
+      if (!_success) {
         if (State.avatarsCache?.avatars?.length > 0) {
           this._avatars = State.avatarsCache.avatars;
         } else {
           this._avatars = [];
           if (this._loading) { this._loading.setText('Ошибка загрузки'); }
+          console.warn('[Avatar] load failed after 3 retries:', _lastErr);
           return;
         }
       }

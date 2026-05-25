@@ -72,6 +72,21 @@ const MoreMenuHTML = (() => {
         </div>
       </div>
     `;
+    // Ретраи иконок: Telegram WebView периодически роняет `<img>` (особенно
+    // при холодном старте, когда параллельно качаются другие ресурсы) —
+    // без повторов игрок видит broken-image, пока не перезайдёт. 3 попытки
+    // с растущей паузой и кэш-бастингом — тот же приём что в
+    // equipment_slots_html.js (фикс v2.22.94).
+    el.querySelectorAll('.mo-icon').forEach(img => {
+      const origSrc = img.getAttribute('src');
+      let _retry = 0;
+      img.addEventListener('error', () => {
+        if (_retry < 3) {
+          _retry++;
+          setTimeout(() => { img.src = origSrc + '&r=' + _retry; }, 300 * _retry);
+        }
+      });
+    });
     return el;
   }
 
