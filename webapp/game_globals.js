@@ -299,6 +299,13 @@ function post(path, body = {}, timeoutMs = 15000) {
   }).then(r => {
     clearTimeout(t);
     return r.json().catch(() => ({ ok: false, _httpStatus: r.status }));
+  }).then(d => {
+    // Любой ответ с обновлённым игроком (покупка/прокачка/бой) → событие для
+    // живого обновления плашки баланса в меню (см. scene_menu_ext4). Передаём
+    // свежего игрока в detail, чтобы не зависеть от того, успел ли вызывающий
+    // код записать State.player.
+    try { if (d && d.player) window.dispatchEvent(new CustomEvent('duel:balance', { detail: d.player })); } catch (_) {}
+    return d;
   }).catch(e => { clearTimeout(t); throw e; });
 }
 

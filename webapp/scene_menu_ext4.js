@@ -127,9 +127,26 @@ Object.assign(MenuScene.prototype, {
         iG.fillStyle(0x93c5fd, 0.7); iG.fillTriangle(ix, iy-6, ix-4.5, iy, ix, iy-3);
         iG.fillStyle(0x1d4ed8, 0.9); iG.fillTriangle(ix-5, iy, ix+5, iy, ix, iy+4);
       }
-      ca(mkT(cx + cw / 2 + 5, avY + 53, String(val), 9, col, true)).setOrigin(0.5);
+      const _balTxt = ca(mkT(cx + cw / 2 + 5, avY + 53, String(val), 9, col, true)).setOrigin(0.5);
+      if (type === 'coin') this._balGoldTxt = _balTxt; else this._balDiamTxt = _balTxt;
       cx += cw + 5;
     });
+
+    // Живое обновление баланса в меню: любой ответ сервера с обновлённым игроком
+    // (покупка/прокачка/бой) шлёт событие 'duel:balance' → меняем ТОЛЬКО число,
+    // без перестройки сцены и мигания. Раньше плашка висела со старым балансом
+    // до перезахода в игру. Хэндлер храним на window (стабильная ссылка для
+    // снятия при пересборке меню — иначе слушатели копились бы).
+    if (window._menuBalanceHandler) window.removeEventListener('duel:balance', window._menuBalanceHandler);
+    window._menuBalanceHandler = (e) => {
+      try {
+        const pl = (e && e.detail) || State.player || {};
+        const g = String(pl.gold || 0), d = String(pl.diamonds || 0);
+        if (this._balGoldTxt && this._balGoldTxt.scene && this._balGoldTxt.text !== g) this._balGoldTxt.setText(g);
+        if (this._balDiamTxt && this._balDiamTxt.scene && this._balDiamTxt.text !== d) this._balDiamTxt.setText(d);
+      } catch (_) {}
+    };
+    window.addEventListener('duel:balance', window._menuBalanceHandler);
 
     // Level badge
     const lvlBg = ca(mkG());
