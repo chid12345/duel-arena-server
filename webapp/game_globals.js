@@ -266,6 +266,21 @@ function getWarriorDisplayKey(type) {
   return 'warrior_tank_png';
 }
 
+// Стабильный «отпечаток устройства» (localStorage). Сервер отличает «то же
+// устройство переподключилось» от «зашли со второго» → не кидает ложный баннер
+// «открыто на другом устройстве» при реконнекте Telegram/перезагрузке.
+let _devIdCache = null;
+function _deviceId() {
+  if (_devIdCache) return _devIdCache;
+  let d = '';
+  try {
+    d = localStorage.getItem('duel_device_id') || '';
+    if (!d) { d = Date.now().toString(36) + Math.random().toString(36).slice(2, 10); localStorage.setItem('duel_device_id', d); }
+  } catch (_) { d = 'dev' + Math.random().toString(36).slice(2, 10); }
+  _devIdCache = d;
+  return d;
+}
+
 function post(path, body = {}, timeoutMs = 15000) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -273,6 +288,9 @@ function post(path, body = {}, timeoutMs = 15000) {
   // токен устарел, сервер отклонит ход (предотвращает управление боем с 2 устройств).
   const sk = State.sessionKey;
   if (sk) body = { session_key: sk, ...body };
+  // device_id — стабильный отпечаток этого устройства (ход своего устройства
+  // всегда валиден, даже если ключ ротировался при реконнекте WS).
+  body = { device_id: _deviceId(), ...body };
   return fetch(API + path, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -381,7 +399,7 @@ function connectWS(userId, onMessage) {
   // строка 2KB+, Render proxy её обрезает → подпись битая → WS закрывается
   // с code 1008 → Chrome шлёт "closed before connection established".
   // Шлём init_data в первом сообщении после onopen (сервер ждёт 5 сек).
-  const url   = `${proto}:${host}/ws/${userId}`;
+  const url   = `${proto}:${host}/ws/${userId}?device=${encodeURIComponent(_deviceId())}`;
   const ws    = new WebSocket(url);
   ws.onopen = () => {
     try {

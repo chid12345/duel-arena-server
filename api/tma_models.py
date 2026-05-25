@@ -12,12 +12,14 @@ class BattleChoiceBody(BaseModel):
     attack: str  # HEAD / TORSO / LEGS
     defense: str
     session_key: str | None = None
+    device_id: str | None = None
 
 
 class BattleTimeoutBody(BaseModel):
     """Игрок не успел сходить за отведённое время — честный пропуск (без случайного хода)."""
     init_data: str
     session_key: str | None = None
+    device_id: str | None = None
 
 
 class FindBattleBody(BaseModel):

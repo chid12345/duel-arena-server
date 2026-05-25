@@ -146,31 +146,44 @@ class ConnectionManager:
         # «старым» ключом с ошибкой «открыта на другом устройстве».
         self._prev_keys: Dict[int, tuple] = {}     # user_id → (old_key, valid_until_epoch)
         self._key_grace_sec = 25
+        self._device_ids: Dict[int, str] = {}      # user_id → device_id текущей сессии
 
-    async def connect(self, user_id: int, ws: WebSocket) -> str | None:
+    async def connect(self, user_id: int, ws: WebSocket, device_id: str | None = None) -> str | None:
         # ВАЖНО: ws.accept() теперь делается в handler'е (system_realtime_routes)
         # ДО auth-проверки — иначе закрытие WS даёт HTTP 403 на handshake,
         # и Chrome показывает "closed before connection established".
         import secrets, time
         old = self.connections.get(user_id)
+        # ТО ЖЕ устройство (совпал device_id) переподключается — это НЕ «второе
+        # устройство». Telegram сворачивает/разворачивает мини-апп, моргает сеть,
+        # перезагружается вкладка → новый WS. Проводим МОЛЧА: без kicked-сообщения
+        # и без 30с-защиты (иначе ловный баннер «открыто на другом устройстве»).
+        same_device = bool(device_id) and self._device_ids.get(user_id) == device_id
         if old:
-            # Если активная сессия защищена — отклоняем новое подключение.
-            # Так старое устройство не может переподключиться сразу после кика:
-            # Telegram закрывает мини-апп, но иногда переоткрывает его автоматически.
-            if time.time() < self._protected_until.get(user_id, 0):
+            if same_device:
                 try:
-                    await ws.send_json({"event": "kicked", "reason": "Игра уже открыта на другом устройстве"})
-                    await ws.close(code=1008)
+                    await old.close(code=1000)  # тихо закрываем прошлый сокет того же устройства
                 except Exception:
                     pass
-                return None  # соединение отклонено, старая сессия защищена
-            # Кикаем старое устройство и защищаем новую сессию на 30 сек
-            try:
-                await old.send_json({"event": "kicked", "reason": "Игра открыта на другом устройстве"})
-                await old.close(code=1000)
-            except Exception:
-                pass
-            self._protected_until[user_id] = time.time() + 30
+                # защиту НЕ ставим — это не вытеснение чужого
+            else:
+                # Если активная сессия защищена — отклоняем новое подключение.
+                # Так старое устройство не может переподключиться сразу после кика:
+                # Telegram закрывает мини-апп, но иногда переоткрывает его автоматически.
+                if time.time() < self._protected_until.get(user_id, 0):
+                    try:
+                        await ws.send_json({"event": "kicked", "reason": "Игра уже открыта на другом устройстве"})
+                        await ws.close(code=1008)
+                    except Exception:
+                        pass
+                    return None  # соединение отклонено, старая сессия защищена
+                # Кикаем старое (ДРУГОЕ) устройство и защищаем новую сессию на 30 сек
+                try:
+                    await old.send_json({"event": "kicked", "reason": "Игра открыта на другом устройстве"})
+                    await old.close(code=1000)
+                except Exception:
+                    pass
+                self._protected_until[user_id] = time.time() + 30
         else:
             # Нет активной сессии — очищаем защиту (нормальное переподключение)
             self._protected_until.pop(user_id, None)
@@ -181,16 +194,21 @@ class ConnectionManager:
             self._prev_keys[user_id] = (_old_key, time.time() + self._key_grace_sec)
         key = secrets.token_hex(16)
         self._session_keys[user_id] = key
+        if device_id:
+            self._device_ids[user_id] = device_id
         self.connections[user_id] = ws
         return key
 
-    def validate_session(self, user_id: int, key: str | None) -> bool:
-        """True если key совпадает с текущей сессией пользователя.
+    def validate_session(self, user_id: int, key: str | None, device_id: str | None = None) -> bool:
+        """True если ход разрешён.
 
-        Также принимаем ПРЕДЫДУЩИЙ ключ короткое время (grace): на одном устройстве
-        при переподключении WS ключ ротируется, и ход со «старым» ключом иначе ложно
-        падает с «открыта на другом устройстве». Реальное 2-е устройство это не пускает —
-        его UI уже закрыт событием kicked, ходить оно не может."""
+        ГЛАВНОЕ: если device_id совпадает с устройством текущей сессии — ход всегда
+        валиден (то же устройство, ключ мог ротироваться при реконнекте WS — это не
+        повод ронять ход «открыто на другом устройстве»).
+        Иначе — старая логика по ключу: текущий ключ или ПРЕДЫДУЩИЙ в пределах grace.
+        Реальное 2-е устройство (другой device_id) сюда не пройдёт — его UI закрыт kicked."""
+        if device_id and self._device_ids.get(user_id) == device_id:
+            return True
         if not key:
             return True  # клиент ещё не получил токен (старая версия) — пропускаем
         if self._session_keys.get(user_id) == key:

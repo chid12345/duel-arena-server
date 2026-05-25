@@ -83,7 +83,7 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
         return result
 
     @app.websocket("/ws/{user_id}")
-    async def websocket_endpoint(ws: WebSocket, user_id: int, init_data: str = ""):
+    async def websocket_endpoint(ws: WebSocket, user_id: int, init_data: str = "", device: str = ""):
         # Без валидации init_data любой мог бы открыть /ws/<чужой_uid> и:
         #  а) слушать события другого игрока;
         #  б) вытеснить его сокет (manager.connect закрывает старый).
@@ -122,7 +122,7 @@ def register_system_realtime_routes(app, ctx: Dict[str, Any]) -> None:
                 pass
             return
         ping_task = None
-        session_key = await manager.connect(user_id, ws)
+        session_key = await manager.connect(user_id, ws, device or None)
         if session_key is None:
             # Соединение отклонено: активная сессия защищена (другое устройство
             # только что подключилось и защитное окно 30 сек ещё не истекло).

@@ -28,7 +28,7 @@ def register_battle_choice_route(
         uid = int(tg_user["id"])
         _rl_check(uid, "battle_choice", max_hits=35, window_sec=60)
 
-        if not manager.validate_session(uid, body.session_key):
+        if not manager.validate_session(uid, body.session_key, body.device_id):
             return {"ok": False, "error": "Игра открыта на другом устройстве. Обновите страницу."}
 
         ZONE_MAP = {
