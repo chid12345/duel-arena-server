@@ -14,7 +14,7 @@ from config import (
     GOLD_CLASSES,
     HP_MIN_BATTLE_PCT,
     HP_REGEN_BASE_SECONDS,
-    HP_REGEN_ENDURANCE_BONUS,
+    hp_regen_multiplier,
     INT_BONUS_PCT_PER_STEP,
     INT_BONUS_STEP,
     MAX_LEVEL,
@@ -277,8 +277,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             "stamina":   bonus_stamina,
         },
         "regen_per_min": round(
-            _base_eq_mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS) * 60
-            * (1.0 + _eq_regen_speed / 100.0),
+            _base_eq_mhp / HP_REGEN_BASE_SECONDS * hp_regen_multiplier(vyn, _eq_regen_speed) * 60,
             1,
         ),
         "regen_secs_to_full": (
@@ -286,11 +285,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             if _display_chp >= _base_eq_mhp
             else int(
                 (_base_eq_mhp - _display_chp)
-                / max(
-                    0.001,
-                    mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
-                    * (1.0 + _eq_regen_speed / 100.0),
-                )
+                / max(0.001, mhp / HP_REGEN_BASE_SECONDS * hp_regen_multiplier(vyn, _eq_regen_speed))
             )
         ),
         # секунд до порога входа в бой (HP_MIN_BATTLE_PCT). 0 = уже можно в бой.
@@ -299,11 +294,7 @@ def _player_api(player: dict, combined_buffs: dict = None, eq_stats: dict = None
             if _display_chp >= int(_base_eq_mhp * HP_MIN_BATTLE_PCT)
             else int(
                 (int(_base_eq_mhp * HP_MIN_BATTLE_PCT) - _display_chp)
-                / max(
-                    0.001,
-                    mhp / HP_REGEN_BASE_SECONDS * (1.0 + max(0, vyn) * HP_REGEN_ENDURANCE_BONUS)
-                    * (1.0 + _eq_regen_speed / 100.0),
-                )
+                / max(0.001, mhp / HP_REGEN_BASE_SECONDS * hp_regen_multiplier(vyn, _eq_regen_speed))
             )
         ),
         "battle_min_hp_pct": int(HP_MIN_BATTLE_PCT * 100),

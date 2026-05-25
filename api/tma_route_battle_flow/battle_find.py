@@ -12,6 +12,7 @@ from api.tma_infra import manager
 from api.tma_models import FindBattleBody
 from api.warrior_guard import no_warrior_response, warrior_selected
 from config.battle_constants import ONBOARDING_BATTLES_EASY
+from config import hp_regen_multiplier
 
 
 def register_find_battle_route(
@@ -63,7 +64,7 @@ def register_find_battle_route(
         chp = int(player.get("current_hp", mhp))
         if chp < int(mhp * HP_MIN_BATTLE_PCT):
             inv = stamina_stats_invested(mhp, player.get("level", 1))
-            mult = 1.0 + inv * HP_REGEN_ENDURANCE_BONUS
+            mult = hp_regen_multiplier(inv)
             hp_needed = int(mhp * HP_MIN_BATTLE_PCT) - chp
             secs = int(hp_needed / max(0.001, mhp / HP_REGEN_BASE_SECONDS * mult))
             return {

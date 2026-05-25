@@ -100,6 +100,16 @@ EMOJI = {
 HP_REGEN_BASE_SECONDS = 300       # 5 минут — полный реген без вложений в выносливость
 HP_REGEN_ENDURANCE_BONUS = 0.05   # +5% скорости за каждое вложение свободного стата в выносливость
 HP_MIN_BATTLE_PCT = 0.70          # нельзя начать бой если текущий HP < 70% от макс. (восстановление как «энергия»)
+# Потолок множителя скорости регена. Без него прокачанный в HP игрок (сотни
+# вложений × +5%) восстанавливался за секунды → порог 70% не успевал сработать.
+# ×2.5 → полный реген НЕ быстрее HP_REGEN_BASE_SECONDS/2.5 ≈ 120с (2 мин).
+HP_REGEN_SPEED_MULT_MAX = 2.5
+
+
+def hp_regen_multiplier(endurance_invested: int, regen_speed_pct: float = 0.0) -> float:
+    """Множитель скорости регена (выносливость + % от гира) с потолком HP_REGEN_SPEED_MULT_MAX."""
+    m = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS + float(regen_speed_pct or 0) / 100.0
+    return min(HP_REGEN_SPEED_MULT_MAX, m)
 
 # CryptoPay (https://t.me/CryptoBot)
 # Дефолт = тестовый токен (@CryptoTestnetBot). Боевой прописать в CRYPTOPAY_TOKEN на Render.

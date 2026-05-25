@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Dict
 
-from config import HP_REGEN_BASE_SECONDS, HP_REGEN_ENDURANCE_BONUS, PLAYER_START_MAX_HP
+from config import HP_REGEN_BASE_SECONDS, PLAYER_START_MAX_HP, hp_regen_multiplier
 
 
 class UsersHpRegenMixin:
@@ -49,7 +49,7 @@ class UsersHpRegenMixin:
                     last_regen = now
                 elapsed = max(0.0, (now - last_regen).total_seconds())
                 speed = self._equipped_regen_speed_pct(user_id)  # % скорость от снаряжения
-                mult = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS + speed / 100.0
+                mult = hp_regen_multiplier(endurance_invested, speed)
                 gained = int(elapsed * (max_hp / HP_REGEN_BASE_SECONDS * mult))
                 current_hp = min(max_hp, current_hp + gained)
             cursor.execute(
@@ -80,7 +80,7 @@ class UsersHpRegenMixin:
                 last_regen = now
             elapsed = max(0.0, (now - last_regen).total_seconds())
             speed = self._equipped_regen_speed_pct(user_id)  # % скорость от снаряжения
-            mult = 1.0 + max(0, int(endurance_invested)) * HP_REGEN_ENDURANCE_BONUS + speed / 100.0
+            mult = hp_regen_multiplier(endurance_invested, speed)
             gained = int(elapsed * (max_hp / HP_REGEN_BASE_SECONDS * mult))
             current_hp = min(max_hp, current_hp + gained)
         conn = self.get_connection()
