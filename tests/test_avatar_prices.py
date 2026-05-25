@@ -54,3 +54,32 @@ def test_avatar_cheaper_than_equivalent_gear():
             f"Золотая аватарка {a['id']}={a['price']}g слишком дорогая (rare-броня=8000g, "
             "аватарка по статам ~четверть от брони — не должна быть выше ~2000g)"
         )
+
+
+def _power(a: dict) -> int:
+    """Суммарная сила: статы + проценты + HP. Аватарки имеют только эти 4 поля."""
+    return int(a["strength"]) + int(a["endurance"]) + int(a["crit"]) + int(a["hp_flat"])
+
+
+def test_clean_tier_ladder():
+    """Никаких перекрытий между тирами: free < gold < diamond < premium.
+
+    Игрок не должен иметь возможности за дешёвую валюту получить аватарку
+    сильнее, чем за дорогую. Иначе платная валюта обесценивается.
+    """
+    base_max = max(_power(a) for a in _by_tier("base"))
+    gold_min = min(_power(a) for a in _by_tier("gold"))
+    gold_max = max(_power(a) for a in _by_tier("gold"))
+    dia_min = min(_power(a) for a in _by_tier("diamond"))
+    dia_max = max(_power(a) for a in _by_tier("diamond"))
+    prem_min = min(_power(a) for a in _by_tier("premium"))
+
+    assert base_max < gold_min, (
+        f"base max={base_max} >= gold min={gold_min} — бесплатная сильнее платной"
+    )
+    assert gold_max < dia_min, (
+        f"gold max={gold_max} >= diamond min={dia_min} — золото перекрывает алмазы"
+    )
+    assert dia_max < prem_min, (
+        f"diamond max={dia_max} >= premium min={prem_min} — алмазы перекрывают донат"
+    )
