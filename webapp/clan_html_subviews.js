@@ -163,82 +163,20 @@ async function openSeason(scene) {
   _setBody(body);
 }
 
-/* ── Войны ── */
+/* ── Войны (заглушка «СКОРО»): функционал в коде есть (challenge/accept/
+   bump_war_score/end_finished_wars + cron jobs/clan_wars_finalize),
+   но фича не запущена в живую — кнопку «⚔️ Вызвать» убираем, чтобы
+   игрок не пытался начать войну до раскатки. Когда будем запускать —
+   просто откатить эту функцию к предыдущему виду из git. ── */
 async function openWars(scene) {
-  _shell(scene, '⚔️', 'ВОЙНЫ', '<div class="cl-empty"><div class="em">⏳</div>Загрузка...</div>',
-    '24ч · победа = +1 очко · награда 100🪙+1💎 каждому');
-  let wd, cd;
-  try { [wd, cd] = await Promise.all([get('/api/clan/war'), get('/api/clan')]); }
-  catch(_) { return _setBody('<div class="cl-err">❌ Нет соединения</div>'); }
-  if (!wd?.ok) return _setBody(`<div class="cl-err">❌ ${_esc(wd?.reason||'Нет клана')}</div>`);
-  const myCid = wd.my_clan_id, isLeader = !!cd?.is_leader, war = wd.war;
-  let body = '';
-  if (war) {
-    const isA = (war.clan_a === myCid);
-    const myScore = isA ? war.score_a : war.score_b;
-    const opScore = isA ? war.score_b : war.score_a;
-    const opCid = isA ? war.clan_b : war.clan_a;
-    if (war.status === 'pending') {
-      const incoming = !isA;
-      body = `<div class="cl-card-ng gold">
-        <div class="cl-card-tl" style="text-align:center;color:#ffd166">${incoming?'📨 ВЫЗОВ НА ВОЙНУ':'⏳ ОЖИДАНИЕ ОТВЕТА'}</div>
-        <div style="text-align:center;font-size:13px;color:#fff;margin-top:6px">${incoming?`Клан #${war.clan_a} вызывает вас!`:`Вы вызвали клан #${war.clan_b}`}</div>
-        ${incoming && isLeader
-          ? `<div class="cl-accept-row"><div class="b ok" data-act="accept" data-id="${war.id}">✓ Принять</div><div class="b no" data-act="decline" data-id="${war.id}">✕ Отклонить</div></div>`
-          : `<div style="text-align:center;font-size:10px;color:#80c8ff;margin-top:8px;opacity:.8">${incoming?'Только лидер может ответить':'Жди ответа лидера соперника'}</div>`}
-      </div>`;
-    } else {
-      body = `<div class="cl-card-ng cyan">
-        <div class="cl-card-tl" style="text-align:center;color:#00f0ff">⚔️ ИДЁТ ВОЙНА</div>
-        <div class="cl-vs">
-          <div class="cl-vs-side me"><div class="nm">ВЫ</div><div class="sc">${myScore}</div></div>
-          <div class="cl-vs-sep">:</div>
-          <div class="cl-vs-side op"><div class="nm">Клан #${opCid}</div><div class="sc">${opScore}</div></div>
-        </div>
-        <div class="cl-timer">⏱️ ${_fmtTime(war.ends_at)}</div>
-      </div>`;
-    }
-  } else if (isLeader) {
-    body = '<div class="cl-mlabel">ВЫЗВАТЬ КЛАН НА ВОЙНУ</div><div id="cl-wars-top" class="cl-rlist"><div class="cl-empty">⏳</div></div>';
-  } else {
-    body = '<div class="cl-empty"><div class="em">😴</div>Войн нет<br><span style="font-size:10px;opacity:.7">Только лидер может бросить вызов</span></div>';
-  }
-  _setBody(body);
-  _bind(scene, async (act, id) => {
-    if (act === 'accept' || act === 'decline') {
-      if (scene._clanSubBusy) return; scene._clanSubBusy = true;
-      const action = act === 'accept' ? 'accept' : 'decline';
-      const res = await post('/api/clan/war/'+action, { war_id: +id }).catch(() => ({ok:false,reason:'Нет соединения'}));
-      scene._clanSubBusy = false;
-      if (res.ok) { window.ClanHTML._toast?.(act==='accept'?'⚔️ Война началась!':'❌ Отклонено'); setTimeout(()=>openWars(scene), 700); }
-      else window.ClanHTML._toast?.('❌ '+res.reason);
-    }
-    if (act === 'challenge') {
-      if (scene._clanSubBusy) return; scene._clanSubBusy = true;
-      const res = await post('/api/clan/war/challenge', { target_clan_id: +id }).catch(() => ({ok:false,reason:'Нет соединения'}));
-      scene._clanSubBusy = false;
-      if (res.ok) { window.ClanHTML._toast?.('⚔️ Вызов отправлен'); setTimeout(()=>openWars(scene), 700); }
-      else window.ClanHTML._toast?.('❌ '+res.reason);
-    }
-  });
-  if (!war && isLeader) {
-    try {
-      const tr = await get('/api/clan/top');
-      const list = (tr?.clans||[]).filter(c => c.id !== myCid).slice(0, 5);
-      const topEl = document.getElementById('cl-wars-top');
-      if (topEl) {
-        topEl.innerHTML = list.length ? list.map(c => `
-          <div class="cl-rrow">
-            <div class="cl-ric">${EM_IC[c.emblem]||'⚖️'}</div>
-            <div class="cl-rbody">
-              <div class="cl-rt"><span style="color:#00f0ff">[${_esc(c.tag||'')}]</span> ${_esc(_trunc(c.name,14))}</div>
-              <div class="cl-rs">Ур.${c.level} · 🏆 ${c.wins|0}</div>
-            </div>
-            <div class="cl-wbtn" data-act="challenge" data-id="${c.id}">⚔️ Вызвать</div>
-          </div>`).join('') : '<div class="cl-empty">Нет доступных кланов</div>';
-      }
-    } catch(_) {}
-  }
+  _shell(scene, '⚔️', 'ВОЙНЫ КЛАНОВ', `
+    <div class="cl-card-ng" style="margin:18px 8px;border:1.5px solid rgba(0,240,255,.35);background:linear-gradient(135deg,rgba(0,40,80,.6),rgba(8,4,24,.85));text-align:center;padding:22px 16px;border-radius:14px;box-shadow:0 0 24px rgba(0,240,255,.18)">
+      <div style="font-size:46px;line-height:1;margin-bottom:8px;filter:drop-shadow(0 0 12px rgba(0,240,255,.7))">⏳</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:900;letter-spacing:2px;color:#00f0ff;text-shadow:0 0 12px rgba(0,240,255,.6);margin-bottom:6px">СКОРО</div>
+      <div style="font-size:11px;color:#80d8ff;opacity:.85;line-height:1.5;margin-bottom:10px">Войны клан против клана сейчас в разработке.<br>Бьёшь соперников 24ч — у кого больше побед, тот забирает награду каждому участнику.</div>
+      <div style="display:inline-block;font-size:10px;color:#ffd166;padding:4px 12px;border:1px solid rgba(255,209,102,.4);border-radius:14px;background:rgba(255,209,102,.08)">🏆 Награда победителю: 100🪙 + 1💎 каждому</div>
+    </div>`,
+    'Скоро будет доступно');
 }
 
 /* ── Награды (достижения) ── */
