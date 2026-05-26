@@ -4,7 +4,10 @@
    ============================================================ */
 
 const _WS_CSS = `
-#ws-overlay{position:fixed;inset:0;z-index:9100;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px)}
+/* z-index 9300 > TabBarHTML (9200): даже если что-то после открытия
+   оверлея позовёт TabBar.sync (это case при ленивой подгрузке PNG
+   профиля), бар останется ПОД оверлеем — Apply-кнопка не перекроется. */
+#ws-overlay{position:fixed;inset:0;z-index:9300;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px)}
 #ws-panel{width:100%;max-width:430px;max-height:92dvh;display:flex;flex-direction:column;background:#040212;border-top:1px solid rgba(0,240,255,.18);border-left:1px solid rgba(0,240,255,.08);border-right:1px solid rgba(0,240,255,.08);border-radius:20px 20px 0 0;overflow:hidden;position:relative}
 #ws-panel::before{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,240,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,240,255,.03) 1px,transparent 1px);background-size:34px 34px}
 #ws-panel::after{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.14) 2px,rgba(0,0,0,.14) 4px)}
