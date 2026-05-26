@@ -128,39 +128,26 @@ function _fmtTime(endsAt) {
 }
 const EM_IC = { light:'☀️', dark:'🌑', neutral:'⚖️' };
 
+/* ── СКОРО-заглушка: универсальная карточка для фич клана которые
+   технически работают (есть код, БД, кроны), но ещё не запущены
+   в живую — пока собираем людей в кланы. Когда придёт время —
+   функция выключается переключателем CLAN_FEATURES_LIVE ниже. ── */
+function _comingSoonCard(emoji, title, descLine, rewardLine) {
+  return `
+    <div class="cl-card-ng" style="margin:18px 8px;border:1.5px solid rgba(0,240,255,.35);background:linear-gradient(135deg,rgba(0,40,80,.6),rgba(8,4,24,.85));text-align:center;padding:22px 16px;border-radius:14px;box-shadow:0 0 24px rgba(0,240,255,.18)">
+      <div style="font-size:46px;line-height:1;margin-bottom:8px;filter:drop-shadow(0 0 12px rgba(0,240,255,.7))">${emoji}</div>
+      <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:900;letter-spacing:2px;color:#00f0ff;text-shadow:0 0 12px rgba(0,240,255,.6);margin-bottom:6px">СКОРО</div>
+      <div style="font-size:11px;color:#80d8ff;opacity:.85;line-height:1.5;margin-bottom:${rewardLine?'10px':'0'}">${descLine}</div>
+      ${rewardLine?`<div style="display:inline-block;font-size:10px;color:#ffd166;padding:4px 12px;border:1px solid rgba(255,209,102,.4);border-radius:14px;background:rgba(255,209,102,.08)">${rewardLine}</div>`:''}
+    </div>`;
+}
+
 async function openSeason(scene) {
-  _shell(scene, '🏆', 'СЕЗОН', '<div class="cl-empty"><div class="em">⏳</div>Загрузка...</div>');
-  let d;
-  try { d = await get('/api/clan/season'); } catch(_) { return _setBody('<div class="cl-err">❌ Нет соединения</div>'); }
-  if (!d?.ok) return _setBody('<div class="cl-err">❌ Ошибка загрузки</div>');
-  const season = d.season || {}, top = d.top || [];
-  let body = `<div class="cl-card-ng gold">
-    <div class="cl-card-tl">⏱️ ДО КОНЦА СЕЗОНА</div>
-    <div class="cl-card-v">${_fmtTime(season.ends_at)}</div>
-    <div class="cl-card-tl" style="margin-top:10px">🏅 НАГРАДЫ (КАЖДОМУ В КЛАНЕ)</div>
-    <div style="font-size:11px;color:#ffd166;font-weight:700;margin-top:4px;text-shadow:0 0 6px currentColor">🥇 500🪙+5💎 · 🥈 300🪙+3💎 · 🥉 150🪙+1💎</div>
-  </div>
-  <div class="cl-mlabel">ТОП СЕЗОНА</div>`;
-  if (!top.length) body += '<div class="cl-empty">😔 Никто пока не набрал очков</div>';
-  else {
-    body += '<div class="cl-rlist">';
-    top.forEach((c,i) => {
-      const top3 = i < 3;
-      const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`${i+1}.`;
-      const em = EM_IC[c.emblem] || '⚖️';
-      body += `<div class="cl-rrow${top3?' gold':''}">
-        <div class="cl-medal${top3?' top3':''}">${medal}</div>
-        <div class="cl-ric">${em}</div>
-        <div class="cl-rbody">
-          <div class="cl-rt"><span style="color:#00f0ff">[${_esc(c.tag||'')}]</span> ${_esc(_trunc(c.name,14))}</div>
-          <div class="cl-rs">👥 ${c.member_count}/20 · Ур.${c.level}</div>
-        </div>
-        <div class="cl-rval">${c.season_score} оч</div>
-      </div>`;
-    });
-    body += '</div>';
-  }
-  _setBody(body);
+  _shell(scene, '🏆', 'СЕЗОН',
+    _comingSoonCard('⏳', 'СЕЗОН',
+      'Сезонный топ кланов сейчас в разработке.<br>За очки сезона топ-3 кланы получат золото и алмазы каждому участнику.',
+      '🏆 Награды топ-3: 500/300/150🪙 + 5/3/1💎'),
+    'Скоро будет доступно');
 }
 
 /* ── Войны (заглушка «СКОРО»): функционал в коде есть (challenge/accept/
@@ -169,42 +156,20 @@ async function openSeason(scene) {
    игрок не пытался начать войну до раскатки. Когда будем запускать —
    просто откатить эту функцию к предыдущему виду из git. ── */
 async function openWars(scene) {
-  _shell(scene, '⚔️', 'ВОЙНЫ КЛАНОВ', `
-    <div class="cl-card-ng" style="margin:18px 8px;border:1.5px solid rgba(0,240,255,.35);background:linear-gradient(135deg,rgba(0,40,80,.6),rgba(8,4,24,.85));text-align:center;padding:22px 16px;border-radius:14px;box-shadow:0 0 24px rgba(0,240,255,.18)">
-      <div style="font-size:46px;line-height:1;margin-bottom:8px;filter:drop-shadow(0 0 12px rgba(0,240,255,.7))">⏳</div>
-      <div style="font-family:Orbitron,sans-serif;font-size:14px;font-weight:900;letter-spacing:2px;color:#00f0ff;text-shadow:0 0 12px rgba(0,240,255,.6);margin-bottom:6px">СКОРО</div>
-      <div style="font-size:11px;color:#80d8ff;opacity:.85;line-height:1.5;margin-bottom:10px">Войны клан против клана сейчас в разработке.<br>Бьёшь соперников 24ч — у кого больше побед, тот забирает награду каждому участнику.</div>
-      <div style="display:inline-block;font-size:10px;color:#ffd166;padding:4px 12px;border:1px solid rgba(255,209,102,.4);border-radius:14px;background:rgba(255,209,102,.08)">🏆 Награда победителю: 100🪙 + 1💎 каждому</div>
-    </div>`,
+  _shell(scene, '⚔️', 'ВОЙНЫ КЛАНОВ',
+    _comingSoonCard('⏳', 'ВОЙНЫ КЛАНОВ',
+      'Войны клан против клана сейчас в разработке.<br>Бьёшь соперников 24ч — у кого больше побед, тот забирает награду каждому участнику.',
+      '🏆 Награда победителю: 100🪙 + 1💎 каждому'),
     'Скоро будет доступно');
 }
 
-/* ── Награды (достижения) ── */
+/* ── Награды (достижения) — пока «СКОРО»; код выплат живёт ─ */
 async function openAchievements(scene) {
-  _shell(scene, '🏅', 'НАГРАДЫ', '<div class="cl-empty"><div class="em">⏳</div>Загрузка...</div>');
-  let d;
-  try { d = await get('/api/clan/achievements'); } catch(_) { return _setBody('<div class="cl-err">❌ Нет соединения</div>'); }
-  if (!d?.ok) return _setBody(`<div class="cl-err">❌ ${_esc(d?.reason||'Нет клана')}</div>`);
-  const items = d.achievements || [];
-  const unlocked = items.filter(i => i.unlocked).length;
-  let body = `<div style="text-align:center;font-size:11px;color:#80d8ff;margin:-6px 0 10px">Открыто: <span style="color:#ffd166;font-weight:800;text-shadow:0 0 6px currentColor">${unlocked}</span> / ${items.length} · награда — каждому в клане</div><div class="cl-rlist">`;
-  items.forEach(it => {
-    const open = !!it.unlocked;
-    const rg = +(it.reward_gold || 0), rd = +(it.reward_diamonds || 0);
-    const rewardTxt = rg || rd
-      ? `${rg?`${rg}🪙`:''}${(rg && rd)?' + ':''}${rd?`${rd}💎`:''}`
-      : '';
-    body += `<div class="cl-rrow${open?' gold':''}">
-      <div class="cl-ric" style="${open?'filter:drop-shadow(0 0 6px #ffd166)':'opacity:.5'}">${it.icon||'🏅'}</div>
-      <div class="cl-rbody">
-        <div class="cl-rt" style="color:${open?'#ffd166':'#a8b4d8'}">${_esc(it.name)}</div>
-        <div class="cl-rs">${_esc(it.description||'')}${rewardTxt?` · <span style="color:#ffd166">🏆 ${rewardTxt}</span>`:''}</div>
-      </div>
-      <div class="cl-rval" style="color:${open?'#00f0ff':'#80c8ff'}">${open?'✓':'≥ '+it.threshold}</div>
-    </div>`;
-  });
-  body += '</div>';
-  _setBody(body);
+  _shell(scene, '🏅', 'НАГРАДЫ',
+    _comingSoonCard('⏳', 'НАГРАДЫ КЛАНА',
+      '6 достижений клана: за 100/500/1000 побед, очки сезона и уровень клана.<br>Каждое разблокирует золото и алмазы каждому участнику.',
+      '🏆 От 100🪙 до 500🪙 + 5💎 за топ-ачивку'),
+    'Скоро будет доступно');
 }
 
 /* ── История ── */
@@ -230,27 +195,11 @@ function _histTime(ts) {
   } catch(_) { return ''; }
 }
 async function openHistory(scene) {
-  _shell(scene, '📜', 'ИСТОРИЯ', '<div class="cl-empty"><div class="em">⏳</div>Загрузка...</div>');
-  let d;
-  try { d = await get('/api/clan/history'); } catch(_) { return _setBody('<div class="cl-err">❌ Нет соединения</div>'); }
-  if (!d?.ok) return _setBody(`<div class="cl-err">❌ ${_esc(d?.reason||'Нет клана')}</div>`);
-  const events = d.events || [];
-  if (!events.length) return _setBody('<div class="cl-empty"><div class="em">✨</div>Событий пока нет</div>');
-  let body = '<div class="cl-rlist">';
-  events.forEach(ev => {
-    const meta = HIST[ev.event_type] || {i:'•',t:ev.event_type,c:'#c8d4f0'};
-    const who = _trunc(ev.actor_name || (ev.actor_id?`User${ev.actor_id}`:''), 14);
-    body += `<div class="cl-rrow">
-      <div class="cl-ric">${meta.i}</div>
-      <div class="cl-rbody">
-        <div class="cl-rt" style="color:${meta.c}">${who?_esc(who)+' — ':''}${meta.t}</div>
-        ${ev.extra?`<div class="cl-rs">${_esc(_trunc(ev.extra,30))}</div>`:''}
-      </div>
-      <div class="cl-rval" style="color:#80c8ff;text-shadow:none;font-size:10px;font-weight:600">${_histTime(ev.created_at)}</div>
-    </div>`;
-  });
-  body += '</div>';
-  _setBody(body);
+  _shell(scene, '📜', 'ИСТОРИЯ',
+    _comingSoonCard('⏳', 'ИСТОРИЯ КЛАНА',
+      'Лента событий клана: кто вступил, ушёл, получил достижение, что в сезоне и войнах.',
+      ''),
+    'Скоро будет доступно');
 }
 
 /* ── helpers ── */
