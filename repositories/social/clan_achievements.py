@@ -1,6 +1,9 @@
 """Достижения клана: разблокируются по wins (100/500/1000)
 и/или season_score / clan_xp. Записываются в clan_achievements
-один раз (UNIQUE по clan_id + key).
+один раз (UNIQUE по clan_id + key). При разблокировке КАЖДЫЙ
+участник клана получает gold/diamonds на счёт (см. reward_gold/
+reward_diamonds). Тариф калиброван под `once`-события из economy.json
+reward_grid: 100g (easy), 250+2 (medium), 500+5 (epic).
 """
 
 from __future__ import annotations
@@ -10,17 +13,18 @@ from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
-# Список достижений: ключ → (название, описание, иконка, поле, порог)
+# Список достижений: ключ → (название, описание, иконка, поле, порог,
+#                             reward_gold, reward_diamonds)
 CLAN_ACHIEVEMENTS = [
     # Победы клана
-    ("wins_100",   "100 побед",   "Сотня боёв позади",       "🥉", "wins", 100),
-    ("wins_500",   "500 побед",   "Грозная сила",            "🥈", "wins", 500),
-    ("wins_1000",  "1000 побед",  "Легенда арены",           "🥇", "wins", 1000),
+    ("wins_100",   "100 побед",   "Сотня боёв позади",       "🥉", "wins", 100,           100, 0),
+    ("wins_500",   "500 побед",   "Грозная сила",            "🥈", "wins", 500,           250, 2),
+    ("wins_1000",  "1000 побед",  "Легенда арены",           "🥇", "wins", 1000,          500, 5),
     # Очки сезона (одно достижение за активный сезон)
-    ("season_50",  "50 очков сезона", "Активный клан",       "🏆", "season_score", 50),
+    ("season_50",  "50 очков сезона", "Активный клан",       "🏆", "season_score", 50,    150, 1),
     # Уровень клана
-    ("level_5",    "Уровень 5",   "Клан крепчает",           "⚔️", "level", 5),
-    ("level_10",   "Уровень 10",  "Опытный клан",            "💠", "level", 10),
+    ("level_5",    "Уровень 5",   "Клан крепчает",           "⚔️", "level", 5,            100, 0),
+    ("level_10",   "Уровень 10",  "Опытный клан",            "💠", "level", 10,           300, 3),
 ]
 
 
@@ -52,7 +56,9 @@ class SocialClanAchMixin:
         )
         unlocked = {r["achievement_key"] for r in cursor.fetchall()}
         new_keys: List[str] = []
-        for key, _name, _desc, _icon, field, threshold in CLAN_ACHIEVEMENTS:
+        # Берём участников один раз — выплата всем по каждой новой ачивке.
+        members: List[int] = []
+        for key, _name, _desc, _icon, field, threshold, r_gold, r_dia in CLAN_ACHIEVEMENTS:
             if key in unlocked:
                 continue
             if cur_vals.get(field, 0) >= threshold:
@@ -69,10 +75,24 @@ class SocialClanAchMixin:
                             "VALUES (?, ?)",
                             (int(clan_id), key),
                         )
+                    # Выплата каждому участнику: ленивая выборка, один раз на клан.
+                    if (r_gold or r_dia):
+                        if not members:
+                            cursor.execute(
+                                "SELECT user_id FROM clan_members WHERE clan_id = ?",
+                                (int(clan_id),),
+                            )
+                            members = [int(r["user_id"]) for r in cursor.fetchall()]
+                        for uid in members:
+                            cursor.execute(
+                                "UPDATE players SET gold = gold + ?, diamonds = diamonds + ? "
+                                "WHERE user_id = ?",
+                                (int(r_gold), int(r_dia), uid),
+                            )
                     cursor.execute(
                         "INSERT INTO clan_history (clan_id, event_type, actor_id, actor_name, extra) "
                         "VALUES (?, 'achievement', 0, '', ?)",
-                        (int(clan_id), key),
+                        (int(clan_id), f"{key}: +{r_gold}g +{r_dia}d each" if (r_gold or r_dia) else key),
                     )
                     new_keys.append(key)
                 except Exception as e:
@@ -95,13 +115,15 @@ class SocialClanAchMixin:
         unlocked = {r["achievement_key"]: r["unlocked_at"] for r in cursor.fetchall()}
         conn.close()
         out = []
-        for key, name, desc, icon, _field, threshold in CLAN_ACHIEVEMENTS:
+        for key, name, desc, icon, _field, threshold, r_gold, r_dia in CLAN_ACHIEVEMENTS:
             out.append({
                 "key": key,
                 "name": name,
                 "description": desc,
                 "icon": icon,
                 "threshold": threshold,
+                "reward_gold": int(r_gold),
+                "reward_diamonds": int(r_dia),
                 "unlocked": key in unlocked,
                 "unlocked_at": unlocked.get(key),
             })

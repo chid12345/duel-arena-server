@@ -4,7 +4,10 @@
 - Только лидер может бросить вызов или принять.
 - Один активный вызов на клан (входящий или исходящий).
 - 24 часа после старта: каждая победа участника = +1 очко клану в войне.
-- По окончании: победитель получает 200 🪙 + 2 💎 каждому участнику.
+- По окончании: победитель получает 100 🪙 + 1 💎 каждому участнику
+  (= weekly_medium из economy reward_grid; раньше 200+2 при возможности
+  5-7 войн/нед сильно превышало weekly_epic 160+2 квестов — снижено
+  по фидбеку 2026-05-26).
 """
 
 from __future__ import annotations
@@ -16,8 +19,8 @@ from typing import Any, Dict, List, Optional
 logger = logging.getLogger(__name__)
 
 WAR_DURATION_HOURS = 24
-WAR_REWARD_GOLD = 200
-WAR_REWARD_DIAMONDS = 2
+WAR_REWARD_GOLD = 100
+WAR_REWARD_DIAMONDS = 1
 
 
 def _is_leader(cursor, user_id: int) -> Optional[int]:

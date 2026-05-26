@@ -166,7 +166,7 @@ async function openSeason(scene) {
 /* ── Войны ── */
 async function openWars(scene) {
   _shell(scene, '⚔️', 'ВОЙНЫ', '<div class="cl-empty"><div class="em">⏳</div>Загрузка...</div>',
-    '24ч · победа = +1 очко · награда 200🪙+2💎 каждому');
+    '24ч · победа = +1 очко · награда 100🪙+1💎 каждому');
   let wd, cd;
   try { [wd, cd] = await Promise.all([get('/api/clan/war'), get('/api/clan')]); }
   catch(_) { return _setBody('<div class="cl-err">❌ Нет соединения</div>'); }
@@ -249,14 +249,18 @@ async function openAchievements(scene) {
   if (!d?.ok) return _setBody(`<div class="cl-err">❌ ${_esc(d?.reason||'Нет клана')}</div>`);
   const items = d.achievements || [];
   const unlocked = items.filter(i => i.unlocked).length;
-  let body = `<div style="text-align:center;font-size:11px;color:#80d8ff;margin:-6px 0 10px">Открыто: <span style="color:#ffd166;font-weight:800;text-shadow:0 0 6px currentColor">${unlocked}</span> / ${items.length}</div><div class="cl-rlist">`;
+  let body = `<div style="text-align:center;font-size:11px;color:#80d8ff;margin:-6px 0 10px">Открыто: <span style="color:#ffd166;font-weight:800;text-shadow:0 0 6px currentColor">${unlocked}</span> / ${items.length} · награда — каждому в клане</div><div class="cl-rlist">`;
   items.forEach(it => {
     const open = !!it.unlocked;
+    const rg = +(it.reward_gold || 0), rd = +(it.reward_diamonds || 0);
+    const rewardTxt = rg || rd
+      ? `${rg?`${rg}🪙`:''}${(rg && rd)?' + ':''}${rd?`${rd}💎`:''}`
+      : '';
     body += `<div class="cl-rrow${open?' gold':''}">
       <div class="cl-ric" style="${open?'filter:drop-shadow(0 0 6px #ffd166)':'opacity:.5'}">${it.icon||'🏅'}</div>
       <div class="cl-rbody">
         <div class="cl-rt" style="color:${open?'#ffd166':'#a8b4d8'}">${_esc(it.name)}</div>
-        <div class="cl-rs">${_esc(it.description||'')}</div>
+        <div class="cl-rs">${_esc(it.description||'')}${rewardTxt?` · <span style="color:#ffd166">🏆 ${rewardTxt}</span>`:''}</div>
       </div>
       <div class="cl-rval" style="color:${open?'#00f0ff':'#80c8ff'}">${open?'✓':'≥ '+it.threshold}</div>
     </div>`;
