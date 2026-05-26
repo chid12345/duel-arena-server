@@ -64,6 +64,26 @@ class AvatarsShopMixin:
             return {"ok": False, "reason": "Образ не найден"}
         currency = avatar.get("currency")
         price = int(avatar.get("price", 0) or 0)
+        # Бесплатный образ (tier=base) — выдаём без оплаты. Раньше падал в ветку
+        # «покупается через Stars/USDT», потому что 'free' не входил в {gold,diamonds}.
+        # Идемпотентно (ON CONFLICT DO NOTHING) и без _ensure_avatar_rows — у того
+        # на Postgres есть риск ABORTED-транзакции, из-за которого базовые образы и
+        # оставались «не выданы». Здесь только лёгкое ensure_schema + один INSERT.
+        if currency == "free":
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            try:
+                self._ensure_avatar_schema(cursor)
+                cursor.execute(
+                    """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
+                       VALUES (?, ?, 'free')
+                       ON CONFLICT (user_id, avatar_id) DO NOTHING""",
+                    (user_id, avatar_id),
+                )
+                conn.commit()
+                return {"ok": True, "currency": "free", "price": 0}
+            finally:
+                conn.close()
         if currency not in {"gold", "diamonds"}:
             return {"ok": False, "reason": "Этот образ покупается через Stars/USDT"}
 
