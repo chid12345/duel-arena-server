@@ -158,7 +158,22 @@ Object.assign(MenuScene.prototype, {
       d.skins.forEach((sk, i) => {
         const pos = i - curSkin; if (Math.abs(pos) > 1) return;
         const c = document.createElement('div'); c.className = 'ws-card'; c.dataset.pos = pos;
-        c.innerHTML = `<div class="ws-img-wrap"><img class="ws-img" src="${sk.img}" alt="${sk.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="ws-fb">${sk.e}</div><div class="ws-glow" style="background:${d.glow}"></div></div><div class="ws-lbl"><div class="ws-sname">${sk.name}</div></div>`;
+        c.innerHTML = `<div class="ws-img-wrap"><img class="ws-img" src="${sk.img}" alt="${sk.name}"><div class="ws-fb">${sk.e}</div><div class="ws-glow" style="background:${d.glow}"></div></div><div class="ws-lbl"><div class="ws-sname">${sk.name}</div></div>`;
+        // 3 ретрая с паузами 300/600/1200мс + кэш-бастинг ?r=N. Иначе на
+        // нестабильной мобильной сети одиночный отвал `<img>` → пустая
+        // рамка навсегда (даже emoji-фолбэк не всегда успевал отрисоваться).
+        const _img = c.querySelector('.ws-img');
+        const _fb  = c.querySelector('.ws-fb');
+        let _retry = 0;
+        _img.addEventListener('error', () => {
+          if (_retry < 3) {
+            _retry++;
+            setTimeout(() => { _img.src = sk.img + '?r=' + _retry; }, 300 * _retry);
+            return;
+          }
+          _img.style.display = 'none';
+          if (_fb) _fb.style.display = 'block';
+        });
         c.onclick = () => { if (i !== curSkin) { curSkin = i; render(); } };
         box.appendChild(c);
       });
