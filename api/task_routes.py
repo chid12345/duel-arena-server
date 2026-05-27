@@ -67,6 +67,15 @@ def register_task_routes(app, ctx: Dict[str, Any]) -> None:
             uid = int(tg["id"])
             week_key = _iso_week()
 
+            # Реконсиляция стрика по датам при ОТКРЫТИИ «Заданий»: сброс при
+            # пропуске дня и продвижение за последовательные дни. Раньше это делал
+            # только /api/tasks/login → если фронт его не дёрнул, на экране висел
+            # устаревший день (не сбрасывался после пропуска). Идемпотентно за день.
+            try:
+                db.process_login_streak(uid)
+            except Exception as _se:
+                _log.warning("tasks_status streak reconcile failed uid=%s: %s", uid, _se)
+
             daily = db.get_daily_tasks_status(uid)
             weekly_extra = db.get_weekly_extra_status(uid, week_key)
             achievements = db.get_achievements_status(uid)
