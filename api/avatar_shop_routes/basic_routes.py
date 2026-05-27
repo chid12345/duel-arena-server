@@ -40,19 +40,23 @@ def attach_avatar_basic(router: APIRouter, ctx: Dict[str, Any]) -> None:
                 username = tg_user.get("username") or tg_user.get("first_name") or ""
                 db.get_or_create_player(uid, username)
                 result = db.buy_avatar(uid, body.avatar_id.strip())
-                if result.get("ok"):
+            except Exception as e:
+                # Сама покупка упала → понятный ответ вместо HTTP 500 («Ошибка» без причины).
+                logger.error("avatars_buy failed uid=%s avatar=%s: %s", uid, body.avatar_id, e, exc_info=True)
+                return {"ok": False, "reason": "Не удалось купить образ. Попробуйте ещё раз."}
+            # Покупка УЖЕ зафиксирована в БД — обогащение ответа (список образов,
+            # игрок) НЕ должно её «отменять». Если упадёт здесь — вернём ok как есть.
+            if result.get("ok"):
+                try:
                     db.track_purchase(uid, body.avatar_id.strip(), result.get("currency", "gold"), result.get("price", 0))
                     _cache_invalidate(uid)
                     state = db.get_player_avatar_state(uid)
                     player = db.get_or_create_player(uid, "")
                     result["avatars"] = state.get("avatars", [])
                     result["player"] = _player_api(dict(player))
-                return result
-            except Exception as e:
-                # Иначе любое исключение → HTTP 500 → фронт показывает голую «Ошибка»
-                # без причины. Возвращаем понятный ответ (и пишем в лог для разбора).
-                logger.error("avatars_buy failed uid=%s avatar=%s: %s", uid, body.avatar_id, e, exc_info=True)
-                return {"ok": False, "reason": "Не удалось купить образ. Попробуйте ещё раз."}
+                except Exception as e:
+                    logger.error("avatars_buy enrich failed uid=%s avatar=%s: %s", uid, body.avatar_id, e, exc_info=True)
+            return result
 
     @router.post("/api/avatars/equip")
     async def avatars_equip(body: AvatarBody):

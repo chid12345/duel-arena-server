@@ -70,20 +70,14 @@ class AvatarsShopMixin:
         # на Postgres есть риск ABORTED-транзакции, из-за которого базовые образы и
         # оставались «не выданы». Здесь только лёгкое ensure_schema + один INSERT.
         if currency == "free":
-            conn = self.get_connection()
-            cursor = conn.cursor()
-            try:
-                self._ensure_avatar_schema(cursor)
-                cursor.execute(
-                    """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
-                       VALUES (?, ?, 'free')
-                       ON CONFLICT (user_id, avatar_id) DO NOTHING""",
-                    (user_id, avatar_id),
-                )
-                conn.commit()
+            # Делегируем проверенному unlock_avatar: он гоняет _ensure_avatar_rows в
+            # ОТДЕЛЬНОМ соединении и сам ловит ошибки (не бросает). Наша прежняя
+            # реализация звала _ensure_avatar_schema на ОБЩЕЙ транзакции со вставкой —
+            # на Postgres это срывало транзакцию и покупка падала с «Ошибка».
+            res = self.unlock_avatar(user_id, avatar_id, source="free")
+            if res.get("ok"):
                 return {"ok": True, "currency": "free", "price": 0}
-            finally:
-                conn.close()
+            return res
         if currency not in {"gold", "diamonds"}:
             return {"ok": False, "reason": "Этот образ покупается через Stars/USDT"}
 
