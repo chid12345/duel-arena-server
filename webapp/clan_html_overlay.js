@@ -232,6 +232,7 @@ function openMyClan(scene, data) {
         <div class="cl-pills">
           ${isLeader?'<span class="cl-pill">👑 Лидер</span>':''}
           <span class="cl-pill wins">🏆 ${clan.wins|0}</span>
+          <span class="cl-pill wins">🪙 +5% за победу</span>
           ${isLeader
             ? `<span class="cl-pill ${isClosed?'closed':'open'} clickable" data-act="toggle-closed">${isClosed?'🔒 Закрыт':'🔓 Открыт'}</span>`
             : `<span class="cl-pill ${isClosed?'closed':'open'}">${isClosed?'🔒 Закрыт':'🔓 Открыт'}</span>`
