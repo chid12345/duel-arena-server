@@ -87,10 +87,28 @@ class AvatarsShopMixin:
         if currency not in {"gold", "diamonds"}:
             return {"ok": False, "reason": "Этот образ покупается через Stars/USDT"}
 
+        # _ensure_avatar_rows — в ОТДЕЛЬНОМ соединении: на Postgres оно при внутренней
+        # ошибке оставляет транзакцию ABORTED, и тогда основное списание золота/алмазов
+        # падало с 500 → игрок видел голую «Ошибка» при покупке золотой/алмазной аватарки.
+        try:
+            c0 = self.get_connection()
+            cr0 = c0.cursor()
+            try:
+                self._ensure_avatar_rows(cr0, user_id)
+                c0.commit()
+            except Exception:
+                try:
+                    c0.rollback()
+                except Exception:
+                    pass
+            finally:
+                c0.close()
+        except Exception:
+            pass
+
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            self._ensure_avatar_rows(cursor, user_id)
             cursor.execute(
                 "SELECT 1 FROM user_avatar_unlocks WHERE user_id = ? AND avatar_id = ? LIMIT 1",
                 (user_id, avatar_id),
@@ -115,7 +133,8 @@ class AvatarsShopMixin:
 
             cursor.execute(
                 """INSERT INTO user_avatar_unlocks (user_id, avatar_id, source)
-                   VALUES (?, ?, ?)""",
+                   VALUES (?, ?, ?)
+                   ON CONFLICT (user_id, avatar_id) DO NOTHING""",
                 (user_id, avatar_id, currency),
             )
             conn.commit()
