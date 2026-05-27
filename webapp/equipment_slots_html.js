@@ -26,6 +26,11 @@ function _injectCSS() {
   filter:drop-shadow(0 0 20px var(--eqc,#607090)) drop-shadow(0 0 6px rgba(0,0,0,.9));
   transform:scale(.88)}
 .eqs-empty{display:flex;align-items:center;justify-content:center;opacity:.28}
+/* Лоадинг-плейсхолдер: НАДЕТЫЙ слот, ждёт PNG. opacity намного выше (.8 + пульс),
+   чтобы игрок ВИДЕЛ что вещь надета, а не считал слот пустым. */
+.eqs-loading{display:flex;align-items:center;justify-content:center;opacity:.8;animation:eqsPulse 1.4s ease-in-out infinite;
+  filter:drop-shadow(0 0 6px var(--eqc,#607090))}
+@keyframes eqsPulse{0%,100%{opacity:.55}50%{opacity:.95}}
 .eqs-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--eqc,#607090);
   text-shadow:0 0 5px var(--eqc,#607090);letter-spacing:.8px;white-space:nowrap}
 .eqs-lbl.empty{color:#607090;text-shadow:none;opacity:.45}
@@ -192,10 +197,12 @@ function show(scene) {
     if (info?.url) {
       // Сразу рисуем emoji-плейсхолдер ⚔/💍/🛡, картинка качается ПОВЕРХ.
       // Раньше пока PNG идёт по сети (до 2с на холодной мобильной + 3
-      // ретрая) — игрок видел СОВСЕМ пустой слот. Теперь видит хотя
-      // бы emoji — никогда не пусто.
+      // ретрая) — игрок видел СОВСЕМ пустой слот.
+      // Используем класс `eqs-loading` (opacity .8 + пульс), а не
+      // `eqs-empty` (opacity .28 для незанятых слотов) — иначе игрок
+      // принимал тусклую emoji за «слот не работает».
       const ph = document.createElement('div');
-      ph.className = 'eqs-empty';
+      ph.className = 'eqs-loading';
       ph.style.cssText = `width:${p.sz}px;height:${p.sz}px;font-size:${Math.round(p.sz*.52)}px`;
       ph.textContent = _EMPTY[slot];
 
