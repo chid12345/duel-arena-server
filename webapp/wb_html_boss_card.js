@@ -20,10 +20,18 @@
   font-size:14px;color:rgba(255,255,255,.5);line-height:1;z-index:2;}
 .wb-bcard-close:active{background:rgba(255,255,255,.15);}
 
-/* эмодзи-шапка */
-.wb-bcard-top{display:flex;flex-direction:column;align-items:center;padding:28px 20px 16px;
+/* шапка-портрет */
+.wb-bcard-top{display:flex;flex-direction:column;align-items:center;padding:22px 20px 16px;
   border-bottom:1px solid rgba(255,0,200,.1);}
-.wb-bcard-em{font-size:64px;line-height:1;margin-bottom:10px;
+.wb-bcard-portrait{position:relative;display:flex;align-items:center;justify-content:center;
+  width:128px;height:128px;margin-bottom:8px;}
+.wb-bcard-portrait::before{content:"";position:absolute;left:50%;top:54%;transform:translate(-50%,-50%);
+  width:120px;height:120px;border-radius:50%;
+  background:radial-gradient(circle,var(--bglow,rgba(255,0,200,.5)) 0%,transparent 70%);
+  filter:blur(3px);}
+.wb-bcard-portrait img{position:relative;max-width:100%;max-height:100%;object-fit:contain;
+  filter:drop-shadow(0 5px 10px rgba(0,0,0,.55)) drop-shadow(0 0 12px var(--bglow,rgba(255,0,200,.55)));}
+.wb-bcard-em{position:relative;font-size:64px;line-height:1;
   filter:drop-shadow(0 0 20px rgba(255,0,200,.7)) drop-shadow(0 0 8px rgba(255,0,200,.4));}
 .wb-bcard-badge{font-size:8px;font-weight:800;letter-spacing:2.5px;margin-bottom:8px;
   padding:3px 10px;border-radius:20px;background:rgba(255,255,255,.06);}
@@ -89,9 +97,18 @@
   };
 
   const TYPE_COLOR = {
-    universal: '#cc88ff', fire: '#ff8844', ice: '#55ccff',
-    poison: '#88ff88', shadow: '#bb88ff',
+    universal: '#cc88ff', fire: '#ff6600', ice: '#55ccff',
+    poison: '#00e64d', shadow: '#7b2fff',
+    lich: '#9b30ff', spider: '#cc44ff', lava: '#ff3300', demon: '#cc0000',
   };
+
+  function _hexA(hex, a) {
+    const h = (hex || '#cc88ff').replace('#', '');
+    const r = parseInt(h.substr(0, 2), 16) || 0;
+    const g = parseInt(h.substr(2, 2), 16) || 0;
+    const b = parseInt(h.substr(4, 2), 16) || 0;
+    return `rgba(${r},${g},${b},${a})`;
+  }
 
   function _inject() {
     if (document.getElementById('wb-style-bcard')) return;
@@ -120,6 +137,8 @@
     const tip   = (TYPES[type] || TYPES.universal).tip;
     const prof  = src.stat_profile || BASE_PROFILES[type] || BASE_PROFILES.universal;
     const badgeColor = TYPE_COLOR[type] || TYPE_COLOR.universal;
+    const sprite = src.boss_sprite || ('boss_' + type + '.png');
+    const glow   = _hexA(badgeColor, 0.5);
 
     const str = parseFloat(prof.str) || 1, agi = parseFloat(prof.agi) || 1, int_ = parseFloat(prof.int) || 1;
     const hp  = state?.active
@@ -142,7 +161,10 @@
     ov.innerHTML = `<div class="wb-bcard">
       <div class="wb-bcard-close" id="wb-bcard-close">×</div>
       <div class="wb-bcard-top">
-        <div class="wb-bcard-em">${emoji}</div>
+        <div class="wb-bcard-portrait" style="--bglow:${glow}">
+          <img src="bosses/${sprite}?v=a10" alt="" onerror="this.style.display='none';var e=this.nextElementSibling;if(e)e.style.display='block';">
+          <div class="wb-bcard-em" style="display:none;">${emoji}</div>
+        </div>
         <div class="wb-bcard-badge" style="color:${badgeColor};">${label.toUpperCase()} · ТИП БОССА</div>
         <div class="wb-bcard-name">${name}</div>
         <div class="wb-bcard-hp">${hp}</div>
