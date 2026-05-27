@@ -25,7 +25,20 @@ function _injectCSS() {
 .eqs-btn:active .eqs-img{
   filter:drop-shadow(0 0 20px var(--eqc,#607090)) drop-shadow(0 0 6px rgba(0,0,0,.9));
   transform:scale(.88)}
-.eqs-empty{display:flex;align-items:center;justify-content:center;opacity:.28}
+/* Пустой (незанятый) слот: было opacity .28 — почти невидимо, игрок не понимал
+   что туда можно выбрать вещь. Теперь это явное «гнездо»: пунктирная пульсирующая
+   рамка + значок ＋ в углу + видимая иконка → сразу ясно «нажми и выбери». */
+.eqs-empty{display:flex;align-items:center;justify-content:center;position:relative;
+  border:1.6px dashed rgba(140,180,240,.6);border-radius:12px;
+  background:radial-gradient(ellipse at center,rgba(80,120,200,.16),transparent 72%);
+  box-shadow:inset 0 0 14px rgba(80,120,200,.2);
+  animation:eqsEmptyPulse 1.8s ease-in-out infinite}
+.eqs-empty::after{content:'＋';position:absolute;top:-5px;right:-5px;width:16px;height:16px;
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;line-height:1;
+  color:#06101f;background:linear-gradient(135deg,#7dd3fc,#38bdf8);border-radius:50%;
+  box-shadow:0 0 7px rgba(56,189,248,.85);font-family:Arial,sans-serif}
+@keyframes eqsEmptyPulse{0%,100%{border-color:rgba(130,170,230,.45);box-shadow:inset 0 0 10px rgba(80,120,200,.15)}
+  50%{border-color:rgba(150,200,255,.95);box-shadow:inset 0 0 18px rgba(120,170,255,.32)}}
 /* Лоадинг-плейсхолдер: НАДЕТЫЙ слот, ждёт PNG. opacity намного выше (.8 + пульс),
    чтобы игрок ВИДЕЛ что вещь надета, а не считал слот пустым. */
 .eqs-loading{display:flex;align-items:center;justify-content:center;opacity:.8;animation:eqsPulse 1.4s ease-in-out infinite;
@@ -33,7 +46,7 @@ function _injectCSS() {
 @keyframes eqsPulse{0%,100%{opacity:.55}50%{opacity:.95}}
 .eqs-lbl{font-family:'Share Tech Mono',monospace;font-size:9px;color:var(--eqc,#607090);
   text-shadow:0 0 5px var(--eqc,#607090);letter-spacing:.8px;white-space:nowrap}
-.eqs-lbl.empty{color:#607090;text-shadow:none;opacity:.45}
+.eqs-lbl.empty{color:#bcd2f5;text-shadow:0 0 6px rgba(130,170,230,.7);opacity:1}
 `;
   document.head.appendChild(s);
 }
