@@ -49,9 +49,9 @@
     "scroll_accuracy":  { "rarity": "rare",   "tier": "T1", "power": 6,  "comment": "Точность +15% × 3" },
     "scroll_vampire_d": { "rarity": "rare",   "tier": "T2", "power": 12, "comment": "Вампиризм 15% × 3" },
 
-    "exchange_small":   { "rarity": "common", "tier": "T1", "power": 5,  "comment": "5💎 → 350🪙 (обмен)" },
-    "exchange_medium":  { "rarity": "common", "tier": "T2", "power": 15, "comment": "15💎 → 1100🪙" },
-    "exchange_large":   { "rarity": "common", "tier": "T3", "power": 50, "comment": "50💎 → 4000🪙" },
+    "exchange_small":   { "rarity": "common", "tier": "T1", "power": 5,  "comment": "5💎 → 450🪙 (обмен)" },
+    "exchange_medium":  { "rarity": "common", "tier": "T2", "power": 15, "comment": "15💎 → 1400🪙" },
+    "exchange_large":   { "rarity": "common", "tier": "T3", "power": 50, "comment": "50💎 → 5000🪙" },
 
     "box_common":       { "rarity": "common", "tier": "T2", "power": 9,  "comment": "Обычный ящик 150🪙" },
     "box_rare":         { "rarity": "rare",   "tier": "T2", "power": 11, "comment": "Редкий ящик 50💎" },
