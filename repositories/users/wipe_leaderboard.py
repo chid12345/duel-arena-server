@@ -23,23 +23,50 @@ from config import (
 )
 
 
+# Все per-user таблицы прогресса/контента, которые СНОСЯТСЯ при сбросе.
+# Сохраняются (НЕ в списке): players (кошелёк/клан/рефералы/USDT — через UPDATE,
+# не DELETE), referrals/referral_rewards/referral_withdrawals (рефералка + вывод),
+# clans/clan_members (клан), stars_payments/crypto_invoices (аудит платежей).
+_WIPE_TABLES = (
+    "improvements", "inventory", "player_inventory",
+    "daily_quests", "daily_bonuses", "achievements",
+    "task_progress", "task_claims", "login_streak_v2", "weekly_claims",
+    "titan_progress", "titan_weekly_scores",
+    "endless_progress", "endless_attempts", "endless_weekly_scores",
+    "player_buffs", "metric_events",
+    "season_stats", "season_rewards", "battle_pass",
+    "bp_progress", "bp_rewards_claimed",
+    "item_upgrades", "player_equipment",
+    "player_owned_weapons", "player_owned_armor2", "armor2_custom_mods",
+    "equipment_rentals",
+    "user_avatar_unlocks", "user_elite_builds",
+    "world_boss_hits", "world_boss_player_state",
+    "world_boss_rewards", "world_boss_registrations",
+    "pvp_queue",
+)
+
+
 class UsersWipeLeaderboardMixin:
+    def _existing_user_tables(self, cursor) -> set:
+        """Имена существующих таблиц — чтобы DELETE не падал на ещё не созданных
+        (часть схемы создаётся лениво и различается между SQLite и Postgres)."""
+        if getattr(self, "_pg", False):
+            cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+        else:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
+        return {row[0] for row in cursor.fetchall()}
+
     def wipe_player_profile(self, user_id: int, *, keep_wallet_clan_and_referrals: bool = False) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
-        for table in ("improvements", "daily_quests", "daily_bonuses", "achievements",
-                      "inventory", "task_progress", "task_claims", "login_streak_v2",
-                      "titan_progress", "endless_progress", "endless_attempts",
-                      "player_buffs"):
-            cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
-        cursor.execute("DELETE FROM metric_events WHERE user_id = ?", (user_id,))
-        # Старый armor (player_owned_armor, armor_custom_mods) снесён под корень.
-        # Снимаем все слоты экипировки (сами вещи в player_owned_weapons остаются —
-        # они куплены).
-        cursor.execute("DELETE FROM player_equipment WHERE user_id = ?", (user_id,))
-        if keep_wallet_clan_and_referrals:
-            for table in ("season_stats", "battle_pass", "season_rewards", "pvp_queue"):
+        existing = self._existing_user_tables(cursor)
+        for table in _WIPE_TABLES:
+            if table in existing:
                 cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
+        if keep_wallet_clan_and_referrals:
+            # Сброс до новичка. Уходит ВСЁ, кроме кошелька/клана/рефералов/USDT:
+            # уровень и статы → стартовые, Premium снимается, образы/бонус образа
+            # сбрасываются на стартовый, счётчик «новых» покупок обнуляется.
             now_iso = datetime.utcnow().isoformat()
             now_ts = int(time.time())
             start_hp = PLAYER_START_MAX_HP
@@ -52,6 +79,10 @@ class UsersWipeLeaderboardMixin:
                    daily_streak = 0, last_daily = NULL,
                    xp_boost_charges = 0, profile_reset_ts = ?,
                    current_class = NULL, current_class_type = NULL,
+                   premium_until = NULL,
+                   equipped_avatar_id = 'default_start',
+                   avatar_bonus_applied = 0, avatar_bonus_level = 0,
+                   inventory_unseen = 0,
                    last_active = CURRENT_TIMESTAMP, last_hp_regen = ?
                    WHERE user_id = ?""",
                 (

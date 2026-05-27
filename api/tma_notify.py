@@ -28,7 +28,7 @@ async def _send_tg_message(chat_id: int, text: str, parse_mode: str = "HTML") ->
 
 
 async def _notify_paid_full_reset(uid: int) -> None:
-    """Сброс прогресса после оплаты USDT: золото, алмазы, клан и рефералка сохраняются."""
+    """Сброс прогресса до новичка: остаются только золото, алмазы, клан, рефералы и USDT за рефералов."""
     from battle_system import battle_system
     from database import db
 

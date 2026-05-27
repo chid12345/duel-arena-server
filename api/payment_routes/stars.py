@@ -209,7 +209,7 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
         if pkg.get("full_reset"):
             payload = "stars_full_reset"
             title = "Сброс прогресса"
-            desc = "Полный сброс уровня и боёв в Duel Arena (золото и алмазы сохраняются)"
+            desc = "Полный сброс до новичка (вещи, образы, Premium тоже). Останутся золото, алмазы, клан, рефералы и USDT за рефералов"
         elif pkg.get("first_purchase"):
             if not db.is_diamond_first_available(uid):
                 fresh = db.get_or_create_player(uid, "")

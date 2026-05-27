@@ -79,11 +79,11 @@ function _contentRows(base, { isPrem, isReset, isBox, isLeg, isDia, sid }) {
   ].join('');
 
   if (isReset) return [
-    _row('⚠️', 'Уровень', 'сбросится', 'vr'),
-    _row('⚠️', 'Все статы', 'сбросятся', 'vr'),
-    _row('✅', 'Золото', 'сохраняется', 'vc'),
-    _row('✅', 'Алмазы', 'сохраняются', 'vc'),
-    _row('✅', 'Инвентарь', 'сохраняется', 'vc'),
+    _row('⚠️', 'Уровень и статы', 'сбросятся', 'vr'),
+    _row('⚠️', 'Вещи, образы, Premium', 'удалятся', 'vr'),
+    _row('✅', 'Золото и алмазы', 'сохранятся', 'vc'),
+    _row('✅', 'Клан и рефералы', 'сохранятся', 'vc'),
+    _row('✅', 'USDT за рефералов', 'сохранится', 'vc'),
   ].join('');
 
   if (sid === 'box_epic_e2') return [
@@ -168,7 +168,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
                : (base.label || '').replace(/^[^\s]+\s/, '');
 
     const subLine = isPrem  ? '21 день · значок · бонусы'
-               : isReset    ? 'необратимо · только прогресс'
+               : isReset    ? 'необратимо · до нового игрока'
                : rs.subTxt;
 
     const icoHtml = isPrem  ? '<div style="font-size:72px;line-height:1">👑</div>'
@@ -288,7 +288,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
       return;
     }
     if (p.full_reset) {
-      ShopHtml.showDetail({ icon:'<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Уровень и статы обнулятся. Золото, алмазы и инвентарь сохраняются.', price:p.stars, currency:'stars', rarity:'d', actionLabel:`Сбросить за ⭐ ${p.stars}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyStars(id) });
+      ShopHtml.showDetail({ icon:'<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Сбросится всё: уровень, статы, вещи, образы и Premium. Сохранятся золото, алмазы, клан, рефералы и USDT за рефералов.', price:p.stars, currency:'stars', rarity:'d', actionLabel:`Сбросить за ⭐ ${p.stars}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyStars(id) });
       return;
     }
     ShopHtmlPay._showCombinedDetail(id, null);
@@ -299,7 +299,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     const p = [...(d.crypto || []), ...(d.usdt_scrolls || [])].find(x => x.id === id);
     if (!p) return;
     if (p.full_reset) {
-      ShopHtml.showDetail({ icon:'<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Уровень и статы обнулятся. Золото, алмазы и инвентарь сохраняются.', price:p.usdt, currency:'usdt', rarity:'d', actionLabel:`Сбросить за 💲 ${p.usdt}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyCrypto(id) });
+      ShopHtml.showDetail({ icon:'<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Сбросится всё: уровень, статы, вещи, образы и Premium. Сохранятся золото, алмазы, клан, рефералы и USDT за рефералов.', price:p.usdt, currency:'usdt', rarity:'d', actionLabel:`Сбросить за 💲 ${p.usdt}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyCrypto(id) });
       return;
     }
     if (p.premium) {

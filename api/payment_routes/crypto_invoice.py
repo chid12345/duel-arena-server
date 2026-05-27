@@ -83,7 +83,7 @@ def register_crypto_invoice_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             return {"ok": False, "reason": "Скидка первой покупки уже использована — деньги не списаны"}
 
         if is_full_reset:
-            description = "Duel Arena — сброс прогресса (💰💎 клан рефералка сохраняются, USDT)"
+            description = "Duel Arena — сброс прогресса (останутся 🪙💎 клан рефералы и USDT за рефералов; вещи/образы/Premium снесутся)"
             payload_str = f"uid:{uid}:full_reset:1"
         elif is_premium:
             # Скидка 50% на ПЕРВУЮ покупку Premium (этап 9). Цена считается на
