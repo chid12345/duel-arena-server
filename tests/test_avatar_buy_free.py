@@ -66,6 +66,15 @@ def test_gold_avatar_buys_with_enough_gold(db):
     assert r.get("currency") == "gold"
 
 
+def test_big_telegram_id_supported(db):
+    """user_id > 2^31 (новые Telegram-ID) не должен падать (на PG был INTEGER overflow)."""
+    big = 8123456789  # > 2_147_483_647
+    db.get_or_create_player(big, "t")
+    r = db.buy_avatar(big, "base_tank")
+    assert r["ok"] is True, r
+    assert _is_unlocked(db, big, "base_tank")
+
+
 def test_premium_avatar_still_routed_to_stars(db):
     db.get_or_create_player(5, "t")
     r = db.buy_avatar(5, "prem_dragon")  # stars — не через обычную покупку

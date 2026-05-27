@@ -12,7 +12,7 @@ class AvatarsSchemaMixin:
     def _ensure_avatar_schema(self, cursor) -> None:
         cursor.execute(
             """CREATE TABLE IF NOT EXISTS user_avatar_unlocks (
-                user_id INTEGER NOT NULL,
+                user_id BIGINT NOT NULL,
                 avatar_id TEXT NOT NULL,
                 source TEXT DEFAULT 'shop',
                 unlocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -36,6 +36,28 @@ class AvatarsSchemaMixin:
                 cursor.execute(
                     f"ALTER TABLE players ADD COLUMN IF NOT EXISTS {col_name} {col_def}"
                 )
+            # Миграция user_id INTEGER → BIGINT: Telegram-ID новых аккаунтов > 2^31
+            # переполнял INTEGER → INSERT падал «integer out of range», ломая выдачу
+            # и покупку образов. Чиним один раз (по проверке текущего типа столбца).
+            try:
+                cursor.execute(
+                    "SELECT data_type FROM information_schema.columns "
+                    "WHERE table_name='user_avatar_unlocks' AND column_name='user_id'"
+                )
+                _r = cursor.fetchone()
+                _dt = ""
+                if _r is not None:
+                    try:
+                        _dt = str(_r["data_type"]).lower()
+                    except (TypeError, KeyError, IndexError):
+                        try:
+                            _dt = str(_r[0]).lower()
+                        except Exception:
+                            _dt = ""
+                if _dt == "integer":
+                    cursor.execute("ALTER TABLE user_avatar_unlocks ALTER COLUMN user_id TYPE BIGINT")
+            except Exception:
+                pass
         else:
             cursor.execute("PRAGMA table_info(players)")
             cols = {r[1] for r in cursor.fetchall()}
@@ -50,7 +72,7 @@ class AvatarsSchemaMixin:
         cursor.execute(
             """CREATE TABLE IF NOT EXISTS user_elite_builds (
                 build_id TEXT PRIMARY KEY,
-                user_id INTEGER NOT NULL,
+                user_id BIGINT NOT NULL,
                 title TEXT DEFAULT 'Император',
                 alloc_strength INTEGER DEFAULT 0,
                 alloc_endurance INTEGER DEFAULT 0,
@@ -64,6 +86,27 @@ class AvatarsSchemaMixin:
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_elite_builds_user ON user_elite_builds (user_id)"
         )
+        # Миграция user_id INTEGER → BIGINT для существующих PG-таблиц (Telegram-ID > 2^31).
+        if bool(getattr(self, "_pg", False)):
+            try:
+                cursor.execute(
+                    "SELECT data_type FROM information_schema.columns "
+                    "WHERE table_name='user_elite_builds' AND column_name='user_id'"
+                )
+                _r = cursor.fetchone()
+                _dt = ""
+                if _r is not None:
+                    try:
+                        _dt = str(_r["data_type"]).lower()
+                    except (TypeError, KeyError, IndexError):
+                        try:
+                            _dt = str(_r[0]).lower()
+                        except Exception:
+                            _dt = ""
+                if _dt == "integer":
+                    cursor.execute("ALTER TABLE user_elite_builds ALTER COLUMN user_id TYPE BIGINT")
+            except Exception:
+                pass
 
     def _elite_half_price(self) -> Dict[str, Any]:
         try:
