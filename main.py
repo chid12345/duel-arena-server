@@ -223,6 +223,7 @@ def _build_app(bot_count: int) -> Application:
     app.add_handler(CommandHandler("payouts",        BotHandlers.payouts_command))
     app.add_handler(CommandHandler("payout_done",    BotHandlers.payout_done_command))
     app.add_handler(CommandHandler("payout_reject",  BotHandlers.payout_reject_command))
+    app.add_handler(CommandHandler("reconcile_refs", BotHandlers.reconcile_refs_command))
     # Диагностика бага аренды (2026-05-18, временная)
     from handlers.commands.debug_rentals import BotHandlersDebugRentals
     app.add_handler(CommandHandler("debug_rentals", BotHandlersDebugRentals.debug_rentals_command))

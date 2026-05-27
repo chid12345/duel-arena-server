@@ -113,3 +113,42 @@ def test_reconcile_writes_reward_row(db):
     assert row is not None
     assert row["reward_type"] == "crypto_premium"
     assert round(float(row["reward_usdt"]), 4) == 0.40
+
+
+def test_reconcile_all_backfills_existing_referrals(db):
+    """Бэкафилл проходит по ВСЕМ рефералам и доначисляет за уже купленный премиум."""
+    db.get_or_create_player(5101, "boss")
+    code = db.get_referral_code(5101)
+    # Два реферала, оба купили премиум ДО появления доплаты
+    for i, buyer in enumerate((5201, 5202)):
+        db.get_or_create_player(buyer, f"b{i}")
+        db.create_crypto_invoice(buyer, 910000 + i, 0, "USDT", "8.00", payload=f"uid:{buyer}:premium:1")
+        db.confirm_crypto_invoice(910000 + i)
+        db.register_referral(buyer, code)
+    # Третий — только зашёл, премиум не покупал
+    db.get_or_create_player(5203, "b3")
+    db.register_referral(5203, code)
+
+    res = db.reconcile_all_premium_referrals()
+
+    assert res["count"] == 2, "Доначислить должны только двоим (третий премиум не покупал)"
+    # 2 × 5% от $8 = 0.40 каждому = 0.80
+    assert res["total_usdt"] == 0.80
+    assert _balance(db, 5101) == 0.80
+
+
+def test_reconcile_all_idempotent(db):
+    """Повторный бэкафилл не доначисляет повторно."""
+    db.get_or_create_player(5101, "boss")
+    code = db.get_referral_code(5101)
+    db.get_or_create_player(5201, "b")
+    db.create_crypto_invoice(5201, 910100, 0, "USDT", "8.00", payload="uid:5201:premium:1")
+    db.confirm_crypto_invoice(910100)
+    db.register_referral(5201, code)
+
+    first = db.reconcile_all_premium_referrals()
+    second = db.reconcile_all_premium_referrals()
+
+    assert first["count"] == 1
+    assert second["count"] == 0, "Второй прогон ничего не платит"
+    assert _balance(db, 5101) == 0.40

@@ -107,6 +107,30 @@ class SocialReferralCryptoStarsMixin:
             return out
         return self.process_referral_crypto_premium(buyer_id, usdt_paid)
 
+    def reconcile_all_premium_referrals(self) -> Dict[str, Any]:
+        """Разовый бэкафилл: пройти по ВСЕМ рефералам и доплатить рефереру за
+        Premium, который был куплен ДО того, как доплату задним числом завезли
+        в код (старые рефералы уже зарегистрированы и не перерегистрируются →
+        авто-триггер на них не сработает). Идемпотентно (guard first_premium_at).
+        Возвращает список начислений (для уведомлений) и сводку.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT referred_id FROM referrals")
+            ids = [int(r["referred_id"]) for r in cursor.fetchall()]
+        finally:
+            conn.close()
+        credited = []
+        total = 0.0
+        for buyer_id in ids:
+            res = self.reconcile_premium_referral(buyer_id)
+            if res.get("ok") and res.get("reward_usdt"):
+                rw = float(res["reward_usdt"])
+                credited.append({"buyer_id": buyer_id, "referrer_id": res.get("referrer_id"), "reward_usdt": rw})
+                total += rw
+        return {"ok": True, "credited": credited, "count": len(credited), "total_usdt": round(total, 4)}
+
     def process_referral_stars_premium(self, buyer_id: int, stars_paid: int) -> Dict[str, Any]:
         STAR_TO_USDT = 0.013
         referrer_id = self.get_referrer_id(buyer_id)

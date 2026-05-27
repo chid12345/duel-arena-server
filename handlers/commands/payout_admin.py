@@ -3,8 +3,11 @@
 /payouts            — список заявок «ожидает»
 /payout_done <id>   — пометить выплаченной (после перевода через @CryptoBot)
 /payout_reject <id> — отклонить и вернуть деньги игроку
+/reconcile_refs     — разово доначислить рефералам комиссию за Premium,
+                      купленный ДО появления доплаты задним числом (идемпотентно)
 """
 
+import asyncio
 import logging
 
 from telegram import Update
@@ -99,3 +102,33 @@ class BotHandlersPayoutAdmin:
             )
         except Exception as e:
             logger.warning("notify player reject failed uid=%s: %s", res.get("user_id"), e)
+
+    @staticmethod
+    async def reconcile_refs_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+        """Разовый бэкафилл: доначислить рефереру за уже купленный реферой Premium."""
+        user = update.effective_user
+        if user.id not in ADMIN_USER_IDS:
+            await tg_api_call(update.message.reply_text, "🚫 Только для администратора.")
+            return
+        res = await asyncio.to_thread(db.reconcile_all_premium_referrals)
+        credited = res.get("credited", [])
+        if not credited:
+            await tg_api_call(
+                update.message.reply_text,
+                "✅ Доначислять нечего: либо все премиум-комиссии уже выплачены, "
+                "либо рефералы пока не покупали Premium.",
+            )
+            return
+        # Уведомляем каждого реферера о доплате (через проверенный helper с chat_id).
+        from handlers.commands import BotHandlers
+        for c in credited:
+            try:
+                await BotHandlers.notify_referrer_premium_reward(context.bot, c)
+            except Exception as e:
+                logger.warning("reconcile notify failed referrer=%s: %s", c.get("referrer_id"), e)
+        await tg_api_call(
+            update.message.reply_text,
+            f"✅ Доначислено комиссий: <b>{res['count']}</b> на сумму <b>{res['total_usdt']:.4f} USDT</b>.\n"
+            "Рефереры уведомлены, баланс обновлён.",
+            parse_mode="HTML",
+        )
