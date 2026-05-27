@@ -59,12 +59,13 @@
     const rewGrid = rewCells.length ? `<div class="wb-mvp-rew-grid" style="grid-template-columns:repeat(${rewCols},1fr)">${rewCells.join('')}</div>` : '';
 
     let chest = '';
+    const _chestImg = (id, em) => (window.BoxIcons?.htmlIcon ? window.BoxIcons.htmlIcon(id, em, 24) : `<span>${em}</span>`);
     if (r.chest_type === 'wb_diamond_chest') {
-      chest = `<div class="wb-mvp-chest">💠 Алмазный сундук рейда · топ-1 по урону</div>`;
+      chest = `<div class="wb-mvp-chest">${_chestImg('wb_diamond_chest', '💠')}<span>Алмазный сундук рейда · топ-1 по урону</span></div>`;
     } else if (r.chest_type === 'scroll_all_12') {
-      chest = `<div class="wb-mvp-chest">✨ Свиток «+12 ко всем пассивкам» · удача 5%!</div>`;
+      chest = `<div class="wb-mvp-chest"><img src="scroll_icon.png" alt="" style="width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(180,80,255,.7))"><span>Свиток «+12 ко всем пассивкам» · удача 5%!</span></div>`;
     } else if (r.chest_type) {
-      chest = `<div class="wb-mvp-chest">🎁 ${_esc(r.chest_type)}</div>`;
+      chest = `<div class="wb-mvp-chest">${_chestImg(r.chest_type, '🎁')}<span>${_esc(r.chest_type)}</span></div>`;
     }
 
     // Статы боя — что показать в логе при клике на «📜 Лог боя».

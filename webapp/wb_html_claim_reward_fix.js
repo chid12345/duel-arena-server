@@ -33,12 +33,23 @@
       const r = await post('/api/world_boss/claim_reward', { reward_id });
       if (r?.ok) {
         try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
-        const parts = [];
-        if (r.gold)     parts.push(`💰 ${r.gold}`);
-        if (r.exp)      parts.push(`⭐ ${r.exp}`);
-        if (r.diamonds) parts.push(`💎 ${r.diamonds}`);
-        if (r.chest_added) parts.push('🎁 сундук');
-        _toast('🏆 Награда: ' + (parts.length ? parts.join(' · ') : 'получена'));
+        // Полный объект награды (несёт chest_type) — забираем ДО очистки state.
+        let rewardObj = null;
+        try {
+          const list = window.WBHtml?._scene?._state?.unclaimed_rewards;
+          rewardObj = (list || []).find(x => x.reward_id === reward_id) || null;
+        } catch(_) {}
+        // Быстрое окно «✅ Получено» с настоящей картинкой сундука/свитка.
+        if (window.WBHtml?.showClaimReward) {
+          window.WBHtml.showClaimReward(rewardObj, r);
+        } else {
+          const parts = [];
+          if (r.gold)     parts.push(`💰 ${r.gold}`);
+          if (r.exp)      parts.push(`⭐ ${r.exp}`);
+          if (r.diamonds) parts.push(`💎 ${r.diamonds}`);
+          if (r.chest_added) parts.push('🎁 сундук');
+          _toast('🏆 Награда: ' + (parts.length ? parts.join(' · ') : 'получена'));
+        }
         // Чистим из state.unclaimed_rewards чтобы не показалась снова
         try {
           const sc = window.WBHtml?._scene;
