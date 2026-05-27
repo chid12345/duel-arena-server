@@ -796,8 +796,8 @@ window.WBBattleCSS = (() => {
   background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.18) 2px 4px);
   opacity:.55;}
 
-/* Шапка */
-.wb-gth-top{position:absolute;top:14px;left:14px;right:14px;z-index:10;}
+/* Шапка (декор — не должна перехватывать клики по списку справа) */
+.wb-gth-top{position:absolute;top:14px;left:14px;right:14px;z-index:10;pointer-events:none;}
 .wb-gth-badge{display:inline-flex;align-items:center;gap:5px;
   padding:3px 9px;border-radius:20px;
   background:rgba(0,245,255,.07);border:1px solid rgba(0,245,255,.25);
@@ -863,10 +863,12 @@ window.WBBattleCSS = (() => {
 .wb-gth-row-body{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;}
 .wb-gth-row .nm{font-size:9px;color:#00f5ff;font-weight:700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  text-shadow:0 0 6px rgba(0,245,255,.4);}
+  text-shadow:0 0 6px rgba(0,245,255,.4);
+  text-decoration:underline dotted rgba(0,245,255,.5);text-underline-offset:2px;}
+.wb-gth-row:active .nm,.wb-gth-row:hover .nm{text-decoration-color:rgba(0,245,255,.95);}
 .wb-gth-row .lv{font-size:7px;color:rgba(255,255,255,.35);font-family:'Courier New',monospace;}
-.wb-gth-row-ic{font-size:13px;flex-shrink:0;opacity:.7;transition:opacity .12s;}
-.wb-gth-row:hover .wb-gth-row-ic{opacity:1;}
+.wb-gth-row-ic{font-size:11px;flex-shrink:0;opacity:.5;color:#00f5ff;transition:opacity .12s;}
+.wb-gth-row:hover .wb-gth-row-ic{opacity:.95;}
 .wb-gth-empty{padding:18px 8px;text-align:center;font-size:8px;
   color:rgba(0,245,255,.3);letter-spacing:1px;}
 

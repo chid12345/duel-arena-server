@@ -77,7 +77,7 @@
           <span class="nm">${_esc(_nameFor(p))}</span>
           <span class="lv">Ур.${p.level||'?'}</span>
         </div>
-        <span class="wb-gth-row-ic">👤</span>
+        <span class="wb-gth-row-ic">ⓘ</span>
       </div>`;
     }).join('');
 
