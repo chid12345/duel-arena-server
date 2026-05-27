@@ -190,35 +190,41 @@ function show(scene) {
     btn.style.cssText = `left:${p.left}px;top:${p.top}px;--eqc:${color}`;
 
     if (info?.url) {
+      // Сразу рисуем emoji-плейсхолдер ⚔/💍/🛡, картинка качается ПОВЕРХ.
+      // Раньше пока PNG идёт по сети (до 2с на холодной мобильной + 3
+      // ретрая) — игрок видел СОВСЕМ пустой слот. Теперь видит хотя
+      // бы emoji — никогда не пусто.
+      const ph = document.createElement('div');
+      ph.className = 'eqs-empty';
+      ph.style.cssText = `width:${p.sz}px;height:${p.sz}px;font-size:${Math.round(p.sz*.52)}px`;
+      ph.textContent = _EMPTY[slot];
+
       const img = document.createElement('img');
       img.className  = 'eqs-img';
       img.style.width  = p.sz + 'px';
       img.style.height = p.sz + 'px';
+      img.style.display = 'none';  // прячем до успешной загрузки, в слоте — emoji
       img.src = info.url;
-      img.onload  = () => _removeDarkBg(img);
-      // Ретраи: на мобильном Telegram WebView `<img>` иногда отваливается
-      // (особенно когда параллельно работает Phaser-лоадер тяжёлых PNG).
-      // Раньше после первого onerror рисовали emoji и прятали `<img>`
-      // навсегда — игрок видел пустые слоты, пока не подвигает меню.
-      // 3 попытки с растущей паузой; кэш-бастинг через ?r=N, чтобы
-      // браузер не отдал тот же failed-response из памяти.
+      img.onload = () => {
+        _removeDarkBg(img);
+        img.style.display = '';
+        if (ph.parentNode) ph.remove();  // PNG приехал — emoji убираем
+      };
+      // Ретраи на нестабильной мобильной сети. 3 попытки с растущей
+      // паузой и кэш-бастингом ?r=N. Emoji-плейсхолдер всё это время
+      // на месте — никогда не пусто.
       let _retry = 0;
       img.onerror = () => {
         if (_retry < 3) {
           _retry++;
           setTimeout(() => { img.src = info.url + '?r=' + _retry; }, 300 * _retry);
-          return;
         }
-        img.style.display = 'none';
-        const em = document.createElement('div');
-        em.className = 'eqs-empty';
-        em.style.cssText = `width:${p.sz}px;height:${p.sz}px;font-size:${Math.round(p.sz*.52)}px`;
-        em.textContent   = _EMPTY[slot];
-        btn.insertBefore(em, btn.firstChild);
+        // Все 3 попытки провалились — оставляем emoji-плейсхолдер.
       };
       const lbl = document.createElement('span');
       lbl.className   = 'eqs-lbl';
       lbl.textContent = _LABELS[slot];
+      btn.appendChild(ph);
       btn.appendChild(img);
       btn.appendChild(lbl);
     } else {
