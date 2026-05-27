@@ -189,4 +189,22 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
       END IF;
     END $$;
     """,
+    # Образы: user_id INTEGER → BIGINT. Таблицы создаются в рантайме и
+    # исторически были INTEGER (32-бит), а Telegram-ID новых аккаунтов > 2^31 →
+    # INSERT падал «integer out of range», ломая выдачу/покупку образов.
+    # Мигрируем ОДИН РАЗ на старте (не на каждый запрос — иначе ALTER берёт
+    # эксклюзивную блокировку таблицы и подвешивает покупку/надевание).
+    """
+    DO $$
+    BEGIN
+      IF EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name='user_avatar_unlocks' AND column_name='user_id' AND data_type='integer') THEN
+        ALTER TABLE user_avatar_unlocks ALTER COLUMN user_id TYPE BIGINT;
+      END IF;
+      IF EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_name='user_elite_builds' AND column_name='user_id' AND data_type='integer') THEN
+        ALTER TABLE user_elite_builds ALTER COLUMN user_id TYPE BIGINT;
+      END IF;
+    END $$;
+    """,
 )

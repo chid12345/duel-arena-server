@@ -36,28 +36,9 @@ class AvatarsSchemaMixin:
                 cursor.execute(
                     f"ALTER TABLE players ADD COLUMN IF NOT EXISTS {col_name} {col_def}"
                 )
-            # Миграция user_id INTEGER → BIGINT: Telegram-ID новых аккаунтов > 2^31
-            # переполнял INTEGER → INSERT падал «integer out of range», ломая выдачу
-            # и покупку образов. Чиним один раз (по проверке текущего типа столбца).
-            try:
-                cursor.execute(
-                    "SELECT data_type FROM information_schema.columns "
-                    "WHERE table_name='user_avatar_unlocks' AND column_name='user_id'"
-                )
-                _r = cursor.fetchone()
-                _dt = ""
-                if _r is not None:
-                    try:
-                        _dt = str(_r["data_type"]).lower()
-                    except (TypeError, KeyError, IndexError):
-                        try:
-                            _dt = str(_r[0]).lower()
-                        except Exception:
-                            _dt = ""
-                if _dt == "integer":
-                    cursor.execute("ALTER TABLE user_avatar_unlocks ALTER COLUMN user_id TYPE BIGINT")
-            except Exception:
-                pass
+            # Миграция типа user_id INTEGER → BIGINT перенесена в postgres_bootstrap/
+            # after_ddl (один раз на старте). Лениво на каждый запрос её делать НЕЛЬЗЯ:
+            # ALTER берёт эксклюзивную блокировку таблицы и подвешивает покупки.
         else:
             cursor.execute("PRAGMA table_info(players)")
             cols = {r[1] for r in cursor.fetchall()}
@@ -86,27 +67,7 @@ class AvatarsSchemaMixin:
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_elite_builds_user ON user_elite_builds (user_id)"
         )
-        # Миграция user_id INTEGER → BIGINT для существующих PG-таблиц (Telegram-ID > 2^31).
-        if bool(getattr(self, "_pg", False)):
-            try:
-                cursor.execute(
-                    "SELECT data_type FROM information_schema.columns "
-                    "WHERE table_name='user_elite_builds' AND column_name='user_id'"
-                )
-                _r = cursor.fetchone()
-                _dt = ""
-                if _r is not None:
-                    try:
-                        _dt = str(_r["data_type"]).lower()
-                    except (TypeError, KeyError, IndexError):
-                        try:
-                            _dt = str(_r[0]).lower()
-                        except Exception:
-                            _dt = ""
-                if _dt == "integer":
-                    cursor.execute("ALTER TABLE user_elite_builds ALTER COLUMN user_id TYPE BIGINT")
-            except Exception:
-                pass
+        # Миграция user_id INTEGER → BIGINT перенесена в after_ddl (один раз на старте).
 
     def _elite_half_price(self) -> Dict[str, Any]:
         try:
