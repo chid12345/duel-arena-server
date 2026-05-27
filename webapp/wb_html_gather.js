@@ -62,14 +62,10 @@
     }, 1000);
   }
 
-  function renderGather(root, s) {
-    const g = s.gather || {};
-    const players = g.players || [];
-    const count = g.count || players.length || 0;
-    const sec = g.seconds_left || 0;
-
+  // Строки ростера — отдельно, чтобы обновлять список БЕЗ полной перерисовки экрана.
+  function _rowsHtml(players) {
     const myId = _myTgId();
-    const rows = players.map(p => {
+    return (players || []).map(p => {
       const isMe = myId && _uidNum(p.user_id) === myId;
       return `<div class="wb-gth-row${isMe?' me':''}" data-uid="${p.user_id}" data-act="gth-card">
         <span class="av">${_avatarFor(p.user_id)}</span>
@@ -79,6 +75,15 @@
         </div>
       </div>`;
     }).join('');
+  }
+
+  function renderGather(root, s) {
+    const g = s.gather || {};
+    const players = g.players || [];
+    const count = g.count || players.length || 0;
+    const sec = g.seconds_left || 0;
+
+    const rows = _rowsHtml(players);
 
     root.innerHTML = `
 <div class="wb-gth">
@@ -159,5 +164,21 @@
     }
   }
 
-  Object.assign(window.WBHtml = window.WBHtml || {}, { renderGather, updateGatherTimer, updateGatherCount });
+  // Перестраивает СПИСОК участников (строки) без полной перерисовки экрана.
+  // Нужно потому, что _render (renderGather) вызывается только при смене
+  // «формы» состояния, а вход нового игрока форму не меняет → список застывал.
+  // Клик-хендлер висит на родителе .wb-gth (делегирование) — не ломается.
+  function updateGatherRoster(s) {
+    const list = document.querySelector('.wb-gth-roster-list');
+    if (!list) return; // зона сбора не на экране
+    const g = (s && s.gather) || {};
+    const players = g.players || [];
+    const count = g.count || players.length || 0;
+    list.innerHTML = _rowsHtml(players) || '<div class="wb-gth-empty">— ОЖИДАЕМ БОЙЦОВ —</div>';
+    const cntEl = document.querySelector('.wb-gth-roster-h .cnt');
+    if (cntEl) cntEl.textContent = count;
+    window.WBHtml._lastGatherState = s;
+  }
+
+  Object.assign(window.WBHtml = window.WBHtml || {}, { renderGather, updateGatherTimer, updateGatherCount, updateGatherRoster });
 })();

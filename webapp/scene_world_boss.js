@@ -102,6 +102,9 @@ class WorldBossScene extends Phaser.Scene {
         try { this._render(); } catch(e) { console.warn('WB render error:', e); }
       } else {
         try { window.WBHtml?.updateHUD(this._state); } catch(_) {}
+        // Список участников зоны сбора не входит в _shapeKey → при входе нового
+        // игрока форма не меняется и _render не зовётся, список застывал. Обновим тут.
+        try { window.WBHtml?.updateGatherRoster?.(this._state); } catch(_) {}
       }
       this._openWS();
     } catch(_) {
