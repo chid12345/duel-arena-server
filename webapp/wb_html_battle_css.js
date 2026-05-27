@@ -858,17 +858,14 @@ window.WBBattleCSS = (() => {
 .wb-gth-row:active{background:rgba(0,245,255,.18);transform:scale(.98);}
 .wb-gth-row.me{border-left-color:#ff44cc;background:rgba(255,68,204,.08);}
 .wb-gth-row.me .nm{color:#ff88ee;}
-.wb-gth-row.me .wb-gth-row-ic{color:rgba(255,68,204,.8);}
-.wb-gth-row .av{font-size:12px;flex-shrink:0;}
+.wb-gth-row .av{font-size:14px;flex-shrink:0;}
 .wb-gth-row-body{flex:1;display:flex;flex-direction:column;gap:1px;min-width:0;}
-.wb-gth-row .nm{font-size:9px;color:#00f5ff;font-weight:700;
+.wb-gth-row .nm{font-size:12px;color:#00f5ff;font-weight:700;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   text-shadow:0 0 6px rgba(0,245,255,.4);
   text-decoration:underline dotted rgba(0,245,255,.5);text-underline-offset:2px;}
 .wb-gth-row:active .nm,.wb-gth-row:hover .nm{text-decoration-color:rgba(0,245,255,.95);}
-.wb-gth-row .lv{font-size:7px;color:rgba(255,255,255,.35);font-family:'Courier New',monospace;}
-.wb-gth-row-ic{font-size:11px;flex-shrink:0;opacity:.5;color:#00f5ff;transition:opacity .12s;}
-.wb-gth-row:hover .wb-gth-row-ic{opacity:.95;}
+.wb-gth-row .lv{font-size:8px;color:rgba(255,255,255,.4);font-family:'Courier New',monospace;}
 .wb-gth-empty{padding:18px 8px;text-align:center;font-size:8px;
   color:rgba(0,245,255,.3);letter-spacing:1px;}
 
