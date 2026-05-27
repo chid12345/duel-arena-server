@@ -132,9 +132,10 @@ window.ShopHtml = {
           const r = await get(`/api/shop/crypto_check/${_pendingId}`);
           if (r?.ok && r?.paid) {
             try { localStorage.removeItem('cryptoPendingInvoice'); } catch(_) {}
+            if (r.profile_reset) { ShopHtmlPay._reloadAfterReset(); return; }
             if (r.scroll_received) ShopHtml.bumpInvBadge();
             if (r.player) { State.player = r.player; ShopHtml._updateBalance(); }
-            const msg = r.profile_reset ? '🔄 Аккаунт сброшен' : r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
+            const msg = r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
             ShopHtml.toast(msg);
           }
         } catch(_) {}

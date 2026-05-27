@@ -356,6 +356,16 @@ window.ShopHtmlPay = {
   _pkgs() { return _pkgs; },
   _resetCache() { _pkgs = null; },
 
+  // После полного сброса прогресса перезагружаем мини-апп целиком: игрок видит,
+  // что сброс сработал, и заходит уже «новичком» (свежий State.player с нуля).
+  _reloadAfterReset() {
+    if (ShopHtmlPay._reloading) return;
+    ShopHtmlPay._reloading = true;
+    try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
+    ShopHtml.toast('🔄 Аккаунт сброшен — перезагружаем игру...');
+    setTimeout(() => { try { window.location.reload(); } catch(_) {} }, 1600);
+  },
+
   async _buyStars(pkgId) {
     ShopHtml.toast('⏳ Открываем оплату...');
     try {
@@ -374,9 +384,10 @@ window.ShopHtmlPay = {
           try {
             const c = await post('/api/shop/stars_confirm', { package_id: pkgId });
             if (c.ok) {
+              if (c.profile_reset) { ShopHtmlPay._reloadAfterReset(); return; }
               if (c.player) { State.player = c.player; ShopHtml._updateBalance(); }
               if (c.scroll_received) ShopHtml.bumpInvBadge();
-              ShopHtml.toast(c.scroll_received ? '✅ Свиток получен! → Рюкзак' : c.profile_reset ? '🔄 Аккаунт сброшен' : c.premium_activated ? '👑 Premium активирован!' : `✅ +${c.diamonds_added || 0} 💎`);
+              ShopHtml.toast(c.scroll_received ? '✅ Свиток получен! → Рюкзак' : c.premium_activated ? '👑 Premium активирован!' : `✅ +${c.diamonds_added || 0} 💎`);
             }
           } catch(_) {}
           _pkgs = null; ShopHtmlPay._buildStars(); ShopHtmlPay._buildCombined();
@@ -410,8 +421,9 @@ window.ShopHtmlPay = {
         if (r.ok && r.paid) {
           tg?.HapticFeedback?.notificationOccurred('success');
           localStorage.removeItem('cryptoPendingInvoice');
+          if (r.profile_reset) { ShopHtmlPay._reloadAfterReset(); return; }
           if (r.scroll_received) ShopHtml.bumpInvBadge();
-          const msg = r.profile_reset ? '🔄 Аккаунт сброшен' : r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
+          const msg = r.premium_activated ? '👑 Premium активирован!' : `✅ +${r.diamonds || 0} 💎`;
           ShopHtml.toast(msg);
           try { const d = await post('/api/player'); if (d.ok && d.player) { State.player = d.player; ShopHtml._updateBalance(); } } catch(_) {}
           _pkgs = null; ShopHtmlPay._buildCombined(); ShopHtmlPay._buildStars();

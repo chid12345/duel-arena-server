@@ -68,6 +68,15 @@ Object.assign(MenuScene.prototype, {
         State.playerLoadedAt = 0;
         post('/api/player').then(d => { if (d.ok && d.player) { State.player = d.player; State.playerLoadedAt = Date.now(); } }).catch(() => {});
       }
+      if (msg.event === 'profile_reset') {
+        // Полный сброс прогресса доставлен (Stars/USDT/вебхук) — перезагружаем
+        // мини-апп целиком, чтобы игрок увидел себя «новичком».
+        if (window.ShopHtmlPay?._reloadAfterReset) { ShopHtmlPay._reloadAfterReset(); return; }
+        tg?.HapticFeedback?.notificationOccurred('success');
+        this._toast?.('🔄 Аккаунт сброшен — перезагружаем игру...');
+        setTimeout(() => { try { window.location.reload(); } catch(_) {} }, 1600);
+        return;
+      }
       if (msg.event === 'usdt_slot_reset') {
         tg?.HapticFeedback?.notificationOccurred('success');
         State.playerLoadedAt = 0;
