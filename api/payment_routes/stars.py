@@ -85,21 +85,23 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             return {"ok": True, "profile_reset": True, "player": _player_api(dict(fresh))}
 
         if pkg.get("first_purchase"):
-            if not db.is_diamond_first_available(uid, diamonds):
-                fresh = db.get_or_create_player(uid, "")
-                return {"ok": False, "reason": "Скидка первой покупки уже использована.", "player": _player_api(dict(fresh))}
-            ok = db.mark_diamond_first_purchased(uid, diamonds)
-            if not ok:
-                # Гонка или повторная попытка — флаг уже выставлен другим запросом
-                fresh = db.get_or_create_player(uid, "")
-                return {"ok": False, "reason": "Скидка первой покупки уже использована.", "player": _player_api(dict(fresh))}
+            # Анти-эксплойт уже проверен выше (check_stars_bot_payment). Начисление
+            # идемпотентно: mark_* ставит флаг пакета атомарно, поэтому если бот
+            # уже выдал (этот же платёж) — credited=False, и это НЕ ошибка.
+            credited = db.mark_diamond_first_purchased(uid, diamonds)
             await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "stars_first"})
-            await _send_tg_message(uid,
-                f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
-                "🔥 Скидка первой покупки использована.\n\n"
-                "⚔️ Duel Arena")
+            if credited:
+                await _send_tg_message(uid,
+                    f"💎 <b>+{diamonds} алмазов зачислено!</b>\n"
+                    "🔥 Скидка первой покупки использована.\n\n"
+                    "⚔️ Duel Arena")
             fresh = db.get_or_create_player(uid, "")
-            return {"ok": True, "diamonds_added": diamonds, "player": _player_api(dict(fresh))}
+            return {
+                "ok": True,
+                "diamonds_added": diamonds if credited else 0,
+                "already_credited": not credited,
+                "player": _player_api(dict(fresh)),
+            }
 
         is_premium = pkg["id"] == "premium"
         if is_premium:

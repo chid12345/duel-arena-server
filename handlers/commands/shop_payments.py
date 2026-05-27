@@ -13,6 +13,21 @@ from handlers.commands.shop_equip_stars import handle_stars_equip_payload
 logger = logging.getLogger(__name__)
 
 
+def parse_diamond_first_payload(payload: str) -> int:
+    """`diamond_first_{N}` → N (>0), иначе 0.
+
+    Stars-чек скидки первой покупки алмазов. Отдельная метка от `diamonds_{N}`:
+    раньше successful_payment не распознавал её → алмазы и флаг не выдавались
+    (деньги списаны, товар не пришёл, скидка не сгорала)."""
+    if not payload.startswith("diamond_first_"):
+        return 0
+    try:
+        n = int(payload.rsplit("_", 1)[1])
+    except (ValueError, IndexError):
+        return 0
+    return n if n > 0 else 0
+
+
 class BotHandlersShopPayments:
     @staticmethod
     async def buy_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -174,6 +189,26 @@ class BotHandlersShopPayments:
                 update.message.reply_text,
                 "✅ Оплата получена! Сброс прогресса применится при следующем открытии игры. ⚔️ Duel Arena",
             )
+            return
+
+        # Скидка первой покупки алмазов (payload `diamond_first_{N}`).
+        # Выдаём здесь, как и обычные алмазы: бот — надёжный резерв на случай
+        # закрытого mini app. mark_diamond_first_purchased идемпотентна (флаг
+        # пакета), поэтому двойного начисления с mini app-подтверждением нет.
+        df_diamonds = parse_diamond_first_payload(payload)
+        if df_diamonds:
+            package_id = f"d{df_diamonds}_first"
+            db.record_stars_bot_payment(user.id, package_id, stars)
+            credited = db.mark_diamond_first_purchased(user.id, df_diamonds)
+            try:
+                db.process_referral_vip_shop_purchase(user.id, stars=stars)
+            except Exception as _ve:
+                logger.error("vip_shop diamond_first stars uid=%s: %s", user.id, _ve)
+            if credited:
+                msg = f"✅ Оплата прошла! +{df_diamonds} 💎 начислено (🔥 скидка первой покупки). Спасибо!"
+            else:
+                msg = f"✅ Оплата подтверждена! +{df_diamonds} 💎 уже на счету. Спасибо!"
+            await tg_api_call(update.message.reply_text, msg)
             return
 
         if not payload.startswith("diamonds_"):

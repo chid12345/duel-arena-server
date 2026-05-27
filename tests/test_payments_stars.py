@@ -95,3 +95,37 @@ def test_mark_stars_tma_delivered_dedup(db):
 
     assert first is True
     assert second is False, "Повторная пометка в том же окне → False"
+
+
+def test_parse_diamond_first_payload_routing():
+    """Регресс: payload `diamond_first_{N}` распознаётся (раньше — нет, деньги
+    списаны, алмазы/флаг не выдавались). `diamonds_{N}` и прочее → 0."""
+    from handlers.commands.shop_payments import parse_diamond_first_payload as p
+
+    assert p("diamond_first_100") == 100
+    assert p("diamond_first_300") == 300
+    assert p("diamond_first_500") == 500
+    # Обычные алмазы и другие типы — НЕ перехватываем
+    assert p("diamonds_500") == 0
+    assert p("premium_sub") == 0
+    assert p("stars_full_reset") == 0
+    # Мусор/неполный payload — безопасно 0
+    assert p("diamond_first_") == 0
+    assert p("diamond_first_abc") == 0
+
+
+def test_diamond_first_credited_once_no_double(db):
+    """Bot и mini app оба зовут mark_diamond_first_purchased (резерв + быстрый
+    путь). Флаг пакета атомарен → начисление РОВНО один раз, без задвоения."""
+    db.get_or_create_player(1007, "u7")
+
+    first = db.mark_diamond_first_purchased(1007, 500)   # бот выдал
+    second = db.mark_diamond_first_purchased(1007, 500)  # mini app догоняет
+
+    assert first is True
+    assert second is False, "Второй вызов того же пакета → False (уже выдано)"
+    conn = db.get_connection()
+    p = conn.execute("SELECT diamonds FROM players WHERE user_id=?", (1007,)).fetchone()
+    conn.close()
+    assert p["diamonds"] == 500, "Алмазы зачислены ровно один раз"
+    assert 500 not in db.get_diamond_first_available(1007), "Скидка пакета 500 сгорела"
