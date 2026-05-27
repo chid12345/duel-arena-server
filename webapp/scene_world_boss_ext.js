@@ -193,26 +193,15 @@ Object.assign(WorldBossScene.prototype, {
         }
         this._render();  // Перерисовываем без overlay
 
-        // Строим сплэш-тост (3.5с, не убивается render)
-        const lines = [
-          { text: r.is_victory ? '🏆 Награда за победу!' : '💀 Утешительная награда', size: 13, bold: true, color: r.is_victory ? '#ffc83c' : '#ff8888' },
-          { text: `💰 ${r.gold}   ⭐ ${r.exp}${r.diamonds ? '   💎 ' + r.diamonds : ''}`, size: 12, color: '#ffffff' },
-        ];
-        if (r.chest_type) {
-          const isScroll = r.chest_type === 'scroll_all_12';
-          const chIcon = isScroll ? '✨' : '💠';
-          const chName = isScroll ? 'Свиток: +12 ко всем пассивкам' : 'Алмазный сундук';
-          const chHint = isScroll ? 'Инвентарь → 🏆 Особые' : 'Инвентарь → 🏆 Особые → 🎲 Открыть';
-          if (r.chest_added) {
-            lines.push({ text: `${chIcon} ${chName}!`, size: 12, bold: true, color: '#3cff8c' });
-            lines.push({ text: chHint, size: 10, color: '#aaddff' });
-          } else {
-            lines.push({ text: `❌ Награда не выдана`, size: 11, color: '#ff6666' });
-            if (r.chest_error) lines.push({ text: r.chest_error.slice(0, 50), size: 9, color: '#ff4444' });
-          }
+        // Маленькое окно «✅ Получено» с настоящей картинкой сундука/свитка
+        // (единый стиль как тост награды в «Заданиях»). r от API несёт
+        // gold/exp/diamonds/chest_type. Старый Phaser-сплэш убран.
+        if (window.WBHtml?.showClaimReward) {
+          window.WBHtml.showClaimReward(r, r);
+        } else {
+          this._toast(`🏆 ${r.gold}💰 ${r.exp}⭐${r.diamonds ? ' ' + r.diamonds + '💎' : ''}${r.chest_added ? ' 🎁' : ''}`);
         }
-        this._toastSplash(lines);
-        // Refresh через 3с — после прочтения сплэша
+        // Refresh через 3с — после прочтения окна
         setTimeout(() => { if (this._alive) this._refresh(); }, 3000);
       } else {
         this._toast('❌ ' + r.reason);

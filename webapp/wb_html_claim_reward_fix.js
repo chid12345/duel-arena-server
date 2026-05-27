@@ -33,15 +33,12 @@
       const r = await post('/api/world_boss/claim_reward', { reward_id });
       if (r?.ok) {
         try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
-        // Полный объект награды (несёт chest_type) — забираем ДО очистки state.
-        let rewardObj = null;
-        try {
-          const list = window.WBHtml?._scene?._state?.unclaimed_rewards;
-          rewardObj = (list || []).find(x => x.reward_id === reward_id) || null;
-        } catch(_) {}
         // Быстрое окно «✅ Получено» с настоящей картинкой сундука/свитка.
+        // r от API несёт gold/exp/diamonds/chest_type. Этот путь — резервный:
+        // обычно claim успевает scene._claimReward (он и покажет окно), а сюда
+        // приходит ok:false («уже забрана»). Если же выиграл этот путь — покажем тут.
         if (window.WBHtml?.showClaimReward) {
-          window.WBHtml.showClaimReward(rewardObj, r);
+          window.WBHtml.showClaimReward(r, r);
         } else {
           const parts = [];
           if (r.gold)     parts.push(`💰 ${r.gold}`);
