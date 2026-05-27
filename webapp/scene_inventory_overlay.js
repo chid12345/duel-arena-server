@@ -97,7 +97,7 @@
     strength: '⚔️ Сила', endurance: '🌀 Ловкость', stamina: '🛡 Выносливость', crit: '🎯 Интуиция',
     armor_pct: '🔰 Броня', dodge_pct: '💨 Уворот', hp_bonus: '❤️ HP',
     double_pct: '⚡ Двойной', accuracy: '👁 Точность',
-    lifesteal_pct: '🩸 Вампир', gold_pct: '💰 Золото',
+    lifesteal_pct: '🩸 Вампир', gold_pct: '💰 Золото', xp_pct: '📚 Опыт',
   };
 
   StatsScene.prototype._renderInvOverlay = function() {
@@ -105,6 +105,7 @@
     const data = this._invData || {};
     const inventory = data.inventory || [];
     const activeBuffs = data.active_buffs || [];
+    const xpBoost = data.xp_boost_charges || 0;  // заряды XP Буста ×1.5 (живут в players)
     const { W, H } = this, ov = [], panelY = 56, panelH = H - 112;
 
     // Затемнение
@@ -170,7 +171,7 @@
     // ── Блок активных бафов ─────────────────────────────
     const buffCardY = panelY + 63;
     let buffCardH = 0;
-    if (activeBuffs.length > 0) {
+    if (activeBuffs.length > 0 || xpBoost > 0) {
       const chargeBased = activeBuffs.filter(b => b.charges != null);
       const timeBased   = activeBuffs.filter(b => b.expires_at != null);
       const lines = [];
@@ -193,6 +194,10 @@
         const label = BUFF_LABEL[b.buff_type] || b.buff_type;
         lines.push({ text: `${label}+${b.value}%   · ${timeStr}`, color: '#ffe04a' });
       });
+      if (xpBoost > 0) {
+        const w = xpBoost === 1 ? 'бой' : xpBoost < 5 ? 'боя' : 'боёв';
+        lines.push({ text: `⚡ XP Буст ×1.5   · ${xpBoost} ${w}`, color: '#9ad9ff' });
+      }
       buffCardH = 18 + lines.length * 17 + 4;
       const bcg = this.add.graphics().setDepth(132);
       bcg.fillStyle(0x3c1e0a, 0.95);

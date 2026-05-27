@@ -102,6 +102,13 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             uid = int(tg_user["id"])
             items = db.get_inventory(uid)
             buffs = db.get_raw_buffs(uid)
+            # Заряды XP-буста (×1.5) живут в колонке players.xp_boost_charges, а не
+            # в player_buffs — поэтому раньше активный буст НЕ показывался в Рюкзаке.
+            # Отдаём фронту, чтобы вывести «⚡ XP Буст ×1.5 · N боёв».
+            try:
+                _xp_boost_charges = int((db.get_or_create_player(uid, "") or {}).get("xp_boost_charges", 0) or 0)
+            except Exception:
+                _xp_boost_charges = 0
             # Сброс счётчика «новых покупок» — игрок открыл инвентарь, всё увидел
             try: db.reset_inventory_unseen(uid)
             except Exception: pass
@@ -130,6 +137,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
             except Exception:
                 eq_stats = {}
             return {"ok": True, "inventory": items, "active_buffs": buffs,
+                    "xp_boost_charges": _xp_boost_charges,
                     "inventory_unseen": 0, "clan_bonus": clan_bonus, "eq_stats": eq_stats}
         except Exception as exc:
             logger.exception("shop error:")
