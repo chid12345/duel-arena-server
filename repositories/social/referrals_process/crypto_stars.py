@@ -64,6 +64,49 @@ class SocialReferralCryptoStarsMixin:
         finally:
             conn.close()
 
+    def reconcile_premium_referral(self, buyer_id: int) -> Dict[str, Any]:
+        """Доплатить рефереру за Premium, КУПЛЕННЫЙ ДО появления реф-связи.
+
+        Корень бага: комиссия считалась РОВНО в момент подтверждения оплаты и
+        только если у покупателя УЖЕ был реферер. Если игрок зашёл по реф-ссылке
+        ПОЗЖЕ покупки (или премиум выдал recovery-цикл, который реферала не звал) —
+        комиссия терялась навсегда. Этот метод вызывается при регистрации реферала
+        и при доставке премиума recovery/already_paid: если есть ОПЛАЧЕННЫЙ
+        premium-инвойс, а комиссия ещё не выдана (first_premium_at пуст) —
+        начисляет её задним числом. Идемпотентно: повторный вызов после успешной
+        выплаты упрётся в guard first_premium_at внутри process_referral_crypto_premium.
+        """
+        out: Dict[str, Any] = {"ok": False}
+        if not self.get_referrer_id(buyer_id):
+            return out
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            # Если первая премиум-комиссия уже выдана — реконсилить нечего.
+            cursor.execute("SELECT first_premium_at FROM players WHERE user_id = ?", (buyer_id,))
+            prow = cursor.fetchone()
+            if prow and prow["first_premium_at"]:
+                return out
+            # Самый свежий ОПЛАЧЕННЫЙ premium-инвойс этого покупателя (USDT).
+            # % в LIKE — параметром (Postgres-совместимо).
+            cursor.execute(
+                "SELECT amount FROM crypto_invoices WHERE user_id = ? AND status = 'paid' "
+                "AND UPPER(asset) = 'USDT' AND payload LIKE ? ORDER BY paid_at DESC LIMIT 1",
+                (buyer_id, "%:premium:%"),
+            )
+            row = cursor.fetchone()
+        finally:
+            conn.close()
+        if not row:
+            return out
+        try:
+            usdt_paid = float(row["amount"] or 0)
+        except (TypeError, ValueError):
+            usdt_paid = 0.0
+        if usdt_paid <= 0:
+            return out
+        return self.process_referral_crypto_premium(buyer_id, usdt_paid)
+
     def process_referral_stars_premium(self, buyer_id: int, stars_paid: int) -> Dict[str, Any]:
         STAR_TO_USDT = 0.013
         referrer_id = self.get_referrer_id(buyer_id)

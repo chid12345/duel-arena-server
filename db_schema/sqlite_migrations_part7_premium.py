@@ -11,4 +11,11 @@ MIGRATIONS_PART7_PREMIUM = [
         "ALTER TABLE players ADD COLUMN next_battle_x2 INTEGER DEFAULT 0",
         "ALTER TABLE players ADD COLUMN next_battle_x2_date TEXT DEFAULT ''",
     ]),
+    # Паритет с Postgres (ddl_01): players.is_premium есть в проде, но в SQLite
+    # был только на inventory → реферальная премиум-обработка
+    # (process_referral_crypto_premium пишет players.is_premium) падала в тестах
+    # «no such column». Добавляем флаг и в SQLite-схему.
+    ("2026_05_28_001_players_is_premium", [
+        "ALTER TABLE players ADD COLUMN is_premium BOOLEAN DEFAULT 0",
+    ]),
 ]

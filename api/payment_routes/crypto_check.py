@@ -375,6 +375,14 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     prem = db.activate_premium(uid, days=21)
                     bonus_d = prem.get("bonus_diamonds", 0)
                     days_left = prem.get("days_left", 21)
+                    # Реферальная комиссия задним числом (если реферер появился ПОСЛЕ
+                    # первого подтверждения). Идемпотентно (guard first_premium_at).
+                    try:
+                        ref_res = db.reconcile_premium_referral(uid)
+                        if ref_res.get("ok") and ref_res.get("reward_usdt"):
+                            await _send_tg_message(ref_res["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил Premium через CryptoPay.\n<b>+{ref_res['reward_usdt']:.4f} USDT</b> добавлено на ваш баланс.\n\n⚔️ Duel Arena")
+                    except Exception as e:
+                        logger.error("Referral crypto premium (check already_paid) error: %s", e)
                     await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "already_confirmed": True, "premium_activated": True, "premium_days_left": days_left}

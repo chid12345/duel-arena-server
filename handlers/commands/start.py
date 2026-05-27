@@ -45,6 +45,15 @@ class BotHandlersStart:
                         from handlers.commands import BotHandlers
 
                         await BotHandlers.notify_referrer_join(context.bot, referrer_uid, user)
+                        # Реферал мог КУПИТЬ Premium ещё до того, как зашёл по ссылке
+                        # (на момент оплаты реферера не было → комиссия не начислялась).
+                        # Доплачиваем задним числом и уведомляем реферера. Идемпотентно.
+                        try:
+                            ref_pay = await asyncio.to_thread(db.reconcile_premium_referral, user.id)
+                            if ref_pay.get("ok") and ref_pay.get("reward_usdt"):
+                                await BotHandlers.notify_referrer_premium_reward(context.bot, ref_pay)
+                        except Exception as _rec_exc:
+                            logger.error("reconcile_premium_referral error uid=%s: %s", user.id, _rec_exc)
                 except Exception as _ref_exc:
                     logger.error(
                         "event=register_referral_error user_id=%s ref_code=%s error=%s",

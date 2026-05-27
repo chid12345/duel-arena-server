@@ -106,6 +106,19 @@ async def deliver_recovery_payload(
             return False
         bonus_d = prem.get("bonus_diamonds", 0)
         days_left = prem.get("days_left", 21)
+        # Реферальная комиссия (раньше recovery её НЕ начислял → если премиум
+        # доехал только через recovery, реферер не получал ни USDT, ни уведомления).
+        # reconcile идемпотентен (guard first_premium_at).
+        try:
+            ref_res = await _exec(db.reconcile_premium_referral, uid)
+            if ref_res.get("ok") and ref_res.get("reward_usdt"):
+                await send_tg_message(
+                    ref_res["referrer_id"],
+                    f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил Premium через CryptoPay.\n"
+                    f"<b>+{ref_res['reward_usdt']:.4f} USDT</b> добавлено на ваш баланс.\n\n⚔️ Duel Arena",
+                )
+        except Exception as e:
+            _log.error("recovery premium referral uid=%s inv=%s err=%s", uid, inv_id, e)
         if manager is not None:
             await manager.send(uid, {"event": "premium_activated", "days_left": days_left, "bonus_diamonds": bonus_d, "source": "cryptopay"})
         bonus_txt = f"\n💎 Бонус: <b>+{bonus_d} алмазов</b>" if bonus_d > 0 else ""
