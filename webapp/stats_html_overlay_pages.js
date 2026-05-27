@@ -133,7 +133,11 @@ function invHTML(inv, subTab){
     const tail=b.charges!=null?`· ${b.charges} боёв`:(b.expires_at?'· ⏳':'');
     return `<div class="r"><span class="k">${_esc(lbl)} ${tail}</span><span class="v">${_esc(val)}</span></div>`;
   }).join('');
-  const buffsCard=buffsRows?`<div class="st-bon"><div class="t">✦ Активные</div>${buffsRows}</div>`:'';
+  // XP Буст ×1.5 живёт в players.xp_boost_charges (НЕ в player_buffs), поэтому
+  // в «Активные» не попадал — игрок думал, что буст не работает. Добавляем строкой.
+  const xpBoost=inv?.xp_boost_charges||0;
+  const xpBoostRow=xpBoost>0?`<div class="r"><span class="k">⚡ XP Буст · ${xpBoost} боёв</span><span class="v">×1.5</span></div>`:'';
+  const buffsCard=(buffsRows||xpBoostRow)?`<div class="st-bon"><div class="t">✦ Активные</div>${buffsRows}${xpBoostRow}</div>`:'';
   const curItems=items.filter(it=>(META[it.item_id]?.tab||'scrolls')===subTab);
   const itemsHtml=curItems.length
     ? curItems.map(it=>{
