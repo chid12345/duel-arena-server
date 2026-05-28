@@ -184,7 +184,9 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                         db.track_purchase(uid, avatar_id, "usdt", 0)
                         if asset == "USDT":
                             try:
-                                db.process_referral_vip_shop_purchase(uid, usdt=float(amount_str))
+                                _vs = db.process_referral_vip_shop_purchase(uid, usdt=float(amount_str), invoice_id=int(invoice_id))
+                                if _vs.get("ok") and _vs.get("reward_usdt"):
+                                    await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил аватар.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
                             except Exception as _ve:
                                 logger.error("vip_shop avatar usdt uid=%s: %s", uid, _ve)
                     _cache_invalidate(uid)
@@ -215,7 +217,7 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 days_left = prem.get("days_left", 21)
                 if asset == "USDT":
                     try:
-                        ref_res = db.process_referral_crypto_premium(uid, float(amount_str))
+                        ref_res = db.process_referral_crypto_premium(uid, float(amount_str), invoice_id=int(invoice_id))
                         if ref_res.get("ok"):
                             await _send_tg_message(ref_res["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил Premium через CryptoPay.\n<b>+{ref_res['reward_usdt']:.4f} USDT</b> добавлено на ваш баланс.\n\n⚔️ Duel Arena")
                     except Exception as e:
@@ -230,7 +232,9 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
             else:
                 if asset == "USDT":
                     try:
-                        db.process_referral_vip_shop_purchase(uid, usdt=float(amount_str))
+                        _vs = db.process_referral_vip_shop_purchase(uid, usdt=float(amount_str), invoice_id=int(invoice_id))
+                        if _vs.get("ok") and _vs.get("reward_usdt"):
+                            await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил <b>{diamonds}</b> 💎.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
                     except Exception as _ve:
                         logger.error("vip_shop diamonds usdt uid=%s: %s", uid, _ve)
                 await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})

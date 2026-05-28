@@ -154,6 +154,98 @@ def test_reconcile_all_idempotent(db):
     assert _balance(db, 5101) == 0.40
 
 
+def test_shop_purchase_pays_referrer_by_rank(db):
+    """Покупка алмазов за USDT платит рефереру по ранговой шкале (5%/7%/10%)."""
+    db.get_or_create_player(5101, "boss")
+    # Реферал покупает алмазы на $10
+    db.get_or_create_player(5401, "diamond_buyer")
+    db.register_referral(5401, db.get_referral_code(5101))
+
+    res = db.process_referral_vip_shop_purchase(5401, usdt=10.0, invoice_id=931000)
+
+    assert res["ok"] is True
+    # Ранг 1 (нет премиум-рефералов) → 5%
+    assert res["percent"] == 5
+    assert res["reward_usdt"] == 0.50  # 10 × 5% = 0.50
+    assert _balance(db, 5101) == 0.50
+
+
+def test_shop_purchase_dedup_by_invoice_id(db):
+    """Повторный вызов с тем же invoice_id не платит повторно."""
+    db.get_or_create_player(5101, "boss")
+    db.get_or_create_player(5401, "buyer")
+    db.register_referral(5401, db.get_referral_code(5101))
+
+    first = db.process_referral_vip_shop_purchase(5401, usdt=10.0, invoice_id=931100)
+    second = db.process_referral_vip_shop_purchase(5401, usdt=10.0, invoice_id=931100)
+
+    assert first["ok"] is True
+    assert second["ok"] is False, "Дубль по invoice_id запрещён"
+    assert _balance(db, 5101) == 0.50
+
+
+def test_shop_stars_uses_new_curse_0015(db):
+    """Stars→USDT курс 0.015 — реферер получает столько же, сколько за эквивалентную USDT-покупку."""
+    db.get_or_create_player(5101, "boss")
+    db.get_or_create_player(5401, "buyer")
+    db.register_referral(5401, db.get_referral_code(5101))
+
+    # 536⭐ = $8 по магазину. 5% от $8 = $0.40
+    res = db.process_referral_vip_shop_purchase(5401, stars=536, invoice_id=None)
+
+    assert res["ok"] is True
+    # 536 × 0.015 × 5% = 0.402 → округление до 0.4020
+    assert abs(res["reward_usdt"] - 0.402) < 0.001
+
+
+def test_reconcile_all_shop_backfills_existing(db):
+    """Бэкафилл проходит по всем оплаченным USDT-инвойсам рефералов и доначисляет."""
+    db.get_or_create_player(5101, "boss")
+    code = db.get_referral_code(5101)
+    # Реферал купил 500 алмазов за $5 ДО появления комиссии за алмазы
+    db.get_or_create_player(5401, "buyer")
+    db.create_crypto_invoice(5401, 932000, 500, "USDT", "5.00", payload="uid:5401:diamonds:500")
+    db.confirm_crypto_invoice(932000)
+    db.register_referral(5401, code)
+
+    res = db.reconcile_all_shop_referrals()
+
+    assert res["count"] == 1
+    assert res["total_usdt"] == 0.25  # $5 × 5% = $0.25
+    assert _balance(db, 5101) == 0.25
+
+
+def test_reconcile_all_shop_idempotent(db):
+    """Второй прогон бэкафилла шоп-покупок не задваивает."""
+    db.get_or_create_player(5101, "boss")
+    code = db.get_referral_code(5101)
+    db.get_or_create_player(5401, "buyer")
+    db.create_crypto_invoice(5401, 932100, 500, "USDT", "5.00", payload="uid:5401:diamonds:500")
+    db.confirm_crypto_invoice(932100)
+    db.register_referral(5401, code)
+
+    first = db.reconcile_all_shop_referrals()
+    second = db.reconcile_all_shop_referrals()
+
+    assert first["count"] == 1
+    assert second["count"] == 0, "Повтор не должен задваивать"
+    assert _balance(db, 5101) == 0.25
+
+
+def test_reconcile_skips_premium_invoices_in_shop_backfill(db):
+    """Premium-инвойсы не попадают в shop-бэкафилл (премиум идёт через свой)."""
+    db.get_or_create_player(5101, "boss")
+    code = db.get_referral_code(5101)
+    db.get_or_create_player(5401, "buyer")
+    db.create_crypto_invoice(5401, 932200, 0, "USDT", "8.00", payload="uid:5401:premium:1")
+    db.confirm_crypto_invoice(932200)
+    db.register_referral(5401, code)
+
+    shop_res = db.reconcile_all_shop_referrals()
+
+    assert shop_res["count"] == 0, "Premium-инвойс не должен учитываться в shop-бэкафилле"
+
+
 def test_purchase_breakdown_premium_vs_diamonds(db):
     """Диагностика различает покупку Premium и покупку алмазов за USDT."""
     db.get_or_create_player(5101, "boss")

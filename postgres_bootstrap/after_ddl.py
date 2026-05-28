@@ -189,6 +189,15 @@ POSTGRES_AFTER_DDL: tuple[str, ...] = (
       END IF;
     END $$;
     """,
+    # Реферальная премиум-комиссия: process_referral_crypto_premium пишет
+    # players.is_premium. Колонка ЕСТЬ в ddl_01, но если БД создана РАНЬШЕ
+    # её добавления — CREATE TABLE IF NOT EXISTS не доехало до прода. Все
+    # премиум-комиссии падали «UndefinedColumn». Идемпотентно добавляем.
+    "ALTER TABLE players ADD COLUMN IF NOT EXISTS is_premium BOOLEAN DEFAULT FALSE",
+    # Идентификатор инвойса в реферальных наградах — для дедупликации при
+    # бэкафилле прошлых покупок (один инвойс = одна реферальная награда).
+    "ALTER TABLE referral_rewards ADD COLUMN IF NOT EXISTS invoice_id BIGINT",
+    "CREATE INDEX IF NOT EXISTS idx_referral_rewards_invoice ON referral_rewards (invoice_id)",
     # Образы: user_id INTEGER → BIGINT. Таблицы создаются в рантайме и
     # исторически были INTEGER (32-бит), а Telegram-ID новых аккаунтов > 2^31 →
     # INSERT падал «integer out of range», ломая выдачу/покупку образов.

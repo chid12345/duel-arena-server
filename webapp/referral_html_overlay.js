@@ -154,13 +154,17 @@ const ReferralHTML = (() => {
     <div class="rf-steps">
       <div class="rf-step"><div class="rf-snum">1</div><div><div class="rf-stitle">Поделись ссылкой с другом</div><div class="rf-ssub">Кнопка «Скопировать» на вкладке «Статистика»</div></div></div>
       <div class="rf-step"><div class="rf-snum">2</div><div><div class="rf-stitle">Друг регистрируется по ссылке</div><div class="rf-ssub">Один раз — привязка навсегда</div></div></div>
-      <div class="rf-step"><div class="rf-snum">3</div><div><div class="rf-stitle">Друг покупает Premium — ты получаешь USDT</div><div class="rf-ssub">Бонус USDT зачисляется автоматически</div></div></div>
+      <div class="rf-step"><div class="rf-snum">3</div><div><div class="rf-stitle">Друг покупает Premium или алмазы — ты получаешь USDT</div><div class="rf-ssub">Бонус зачисляется автоматически с любой реальной оплаты (USDT или Stars)</div></div></div>
     </div>
     <div class="rf-sch-hdr">🔥 СХЕМА ВОЗНАГРАЖДЕНИЙ</div>
     <div class="rf-tiers">
-      <div class="rf-tier"><span class="rf-tier-r">1–10 Premium-покупок</span><span class="rf-tier-p t1">5% разово → USDT</span></div>
-      <div class="rf-tier"><span class="rf-tier-r">11–30 Premium-покупок</span><span class="rf-tier-p t2">7% разово → USDT</span></div>
-      <div class="rf-tier"><span class="rf-tier-r">31+ Premium-покупок</span><span class="rf-tier-p t3">10% всегда → USDT</span></div>
+      <div class="rf-tier"><span class="rf-tier-r">1–10 платящих рефералов</span><span class="rf-tier-p t1">5% со всех покупок → USDT</span></div>
+      <div class="rf-tier"><span class="rf-tier-r">11–30 платящих</span><span class="rf-tier-p t2">7% со всех покупок → USDT</span></div>
+      <div class="rf-tier"><span class="rf-tier-r">31+ платящих</span><span class="rf-tier-p t3">10% со всех покупок → USDT</span></div>
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:#88c;opacity:.85;line-height:1.5">
+      Платят за Premium, алмазы, аватарки, свитки и любую покупку за USDT или Stars.<br>
+      Stars пересчитываются в USDT по магазинному курсу.
     </div>
   </div>
 </div>`;

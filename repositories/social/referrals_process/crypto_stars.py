@@ -1,9 +1,13 @@
-"""Premium через CryptoPay и Stars — USDT рефереру."""
+"""Premium через CryptoPay и Stars — USDT-комиссия рефереру.
+
+Реконсиляция/бэкафилл живут в reconcile.py — здесь ТОЛЬКО мгновенная
+обработка в момент платежа.
+"""
 
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from config import (
     REFERRAL_PCT_SUB_RANK_1_10,
@@ -11,9 +15,28 @@ from config import (
     REFERRAL_PCT_SUB_RANK_31_PLUS,
 )
 
+# Реальный курс магазина: $1 ≈ 67⭐ (Premium 536⭐ = $8 → 0.01493). Раньше
+# в коде стояло 0.013 — занижало комиссию за Stars-покупки на ~13%.
+STAR_TO_USDT = 0.015
+
+
+def _rank_to_pct(rank: int) -> int:
+    if rank <= 10:
+        return REFERRAL_PCT_SUB_RANK_1_10
+    if rank <= 30:
+        return REFERRAL_PCT_SUB_RANK_11_30
+    return REFERRAL_PCT_SUB_RANK_31_PLUS
+
 
 class SocialReferralCryptoStarsMixin:
-    def process_referral_crypto_premium(self, buyer_id: int, usdt_paid: float) -> Dict[str, Any]:
+    def process_referral_crypto_premium(
+        self, buyer_id: int, usdt_paid: float, *, invoice_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Начислить рефереру USDT-комиссию за оплаченный реферой Premium (CryptoPay).
+        Идемпотентность: guard first_premium_at (выставляется при первой выплате;
+        повторный вызов возвращает renewal без оплаты).
+        invoice_id — для трассировки/дедупликации в referral_rewards (опционально).
+        """
         referrer_id = self.get_referrer_id(buyer_id)
         out: Dict[str, Any] = {"ok": False}
         if not referrer_id:
@@ -24,7 +47,6 @@ class SocialReferralCryptoStarsMixin:
             cursor.execute("SELECT first_premium_at, referral_tier FROM players WHERE user_id = ?", (buyer_id,))
             row = cursor.fetchone()
             if row and row["first_premium_at"]:
-                # Продление — только обновляем is_premium, без повторных наград
                 cursor.execute("UPDATE players SET is_premium = 1 WHERE user_id = ?", (buyer_id,))
                 conn.commit()
                 out["ok"] = True
@@ -36,15 +58,10 @@ class SocialReferralCryptoStarsMixin:
                 (referrer_id,),
             )
             rank = int(cursor.fetchone()["c"]) + 1
-            pct = (
-                REFERRAL_PCT_SUB_RANK_1_10
-                if rank <= 10
-                else (REFERRAL_PCT_SUB_RANK_11_30 if rank <= 30 else REFERRAL_PCT_SUB_RANK_31_PLUS)
-            )
+            pct = _rank_to_pct(rank)
             tier = "vip" if rank >= 31 else "early"
             now = datetime.utcnow().isoformat()
-            reward_usdt = round(usdt_paid * pct / 100, 4)
-            # Фиксируем первую покупку — чтобы игрок считался "платящим" в статистике
+            reward_usdt = round(float(usdt_paid) * pct / 100, 4)
             cursor.execute(
                 "UPDATE players SET is_premium = 1, first_premium_at = ?, referral_subscriber_rank = ?, referral_tier = ? WHERE user_id = ?",
                 (now, rank, tier, buyer_id),
@@ -55,8 +72,9 @@ class SocialReferralCryptoStarsMixin:
                     (reward_usdt, referrer_id),
                 )
             cursor.execute(
-                "INSERT INTO referral_rewards (referrer_id, buyer_id, reward_type, percent, reward_usdt) VALUES (?, ?, 'crypto_premium', ?, ?)",
-                (referrer_id, buyer_id, pct, reward_usdt),
+                "INSERT INTO referral_rewards (referrer_id, buyer_id, reward_type, percent, reward_usdt, invoice_id) "
+                "VALUES (?, ?, 'crypto_premium', ?, ?, ?)",
+                (referrer_id, buyer_id, pct, reward_usdt, invoice_id),
             )
             conn.commit()
             out.update({"ok": True, "referrer_id": referrer_id, "reward_usdt": reward_usdt, "rank": rank, "percent": pct, "tier": tier})
@@ -64,102 +82,12 @@ class SocialReferralCryptoStarsMixin:
         finally:
             conn.close()
 
-    def reconcile_premium_referral(self, buyer_id: int) -> Dict[str, Any]:
-        """Доплатить рефереру за Premium, КУПЛЕННЫЙ ДО появления реф-связи.
-
-        Корень бага: комиссия считалась РОВНО в момент подтверждения оплаты и
-        только если у покупателя УЖЕ был реферер. Если игрок зашёл по реф-ссылке
-        ПОЗЖЕ покупки (или премиум выдал recovery-цикл, который реферала не звал) —
-        комиссия терялась навсегда. Этот метод вызывается при регистрации реферала
-        и при доставке премиума recovery/already_paid: если есть ОПЛАЧЕННЫЙ
-        premium-инвойс, а комиссия ещё не выдана (first_premium_at пуст) —
-        начисляет её задним числом. Идемпотентно: повторный вызов после успешной
-        выплаты упрётся в guard first_premium_at внутри process_referral_crypto_premium.
+    def process_referral_stars_premium(
+        self, buyer_id: int, stars_paid: int, *, invoice_id: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """Начислить рефереру USDT-комиссию за оплаченный реферой Premium (Stars).
+        Stars пересчитываются в USDT по курсу 0.015 (магазинный).
         """
-        out: Dict[str, Any] = {"ok": False}
-        if not self.get_referrer_id(buyer_id):
-            return out
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            # Если первая премиум-комиссия уже выдана — реконсилить нечего.
-            cursor.execute("SELECT first_premium_at FROM players WHERE user_id = ?", (buyer_id,))
-            prow = cursor.fetchone()
-            if prow and prow["first_premium_at"]:
-                return out
-            # Самый свежий ОПЛАЧЕННЫЙ premium-инвойс этого покупателя (USDT).
-            # % в LIKE — параметром (Postgres-совместимо).
-            cursor.execute(
-                "SELECT amount FROM crypto_invoices WHERE user_id = ? AND status = 'paid' "
-                "AND UPPER(asset) = 'USDT' AND payload LIKE ? ORDER BY paid_at DESC LIMIT 1",
-                (buyer_id, "%:premium:%"),
-            )
-            row = cursor.fetchone()
-        finally:
-            conn.close()
-        if not row:
-            return out
-        try:
-            usdt_paid = float(row["amount"] or 0)
-        except (TypeError, ValueError):
-            usdt_paid = 0.0
-        if usdt_paid <= 0:
-            return out
-        return self.process_referral_crypto_premium(buyer_id, usdt_paid)
-
-    def reconcile_all_premium_referrals(self) -> Dict[str, Any]:
-        """Разовый бэкафилл: пройти по ВСЕМ рефералам и доплатить рефереру за
-        Premium, который был куплен ДО того, как доплату задним числом завезли
-        в код (старые рефералы уже зарегистрированы и не перерегистрируются →
-        авто-триггер на них не сработает). Идемпотентно (guard first_premium_at).
-        Возвращает список начислений (для уведомлений) и сводку.
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT referred_id FROM referrals")
-            ids = [int(r["referred_id"]) for r in cursor.fetchall()]
-        finally:
-            conn.close()
-        credited = []
-        total = 0.0
-        for buyer_id in ids:
-            res = self.reconcile_premium_referral(buyer_id)
-            if res.get("ok") and res.get("reward_usdt"):
-                rw = float(res["reward_usdt"])
-                credited.append({"buyer_id": buyer_id, "referrer_id": res.get("referrer_id"), "reward_usdt": rw})
-                total += rw
-        return {"ok": True, "credited": credited, "count": len(credited), "total_usdt": round(total, 4)}
-
-    def referral_purchase_breakdown(self) -> Dict[str, Any]:
-        """Диагностика: что реально покупали рефералы (за реальные USDT).
-        Помогает понять, почему комиссии нет: за алмазы обычному рефереру не
-        платят (только VIP с 31-го), за Premium — платят всем.
-        """
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        try:
-            cursor.execute("SELECT referred_id FROM referrals")
-            ids = [int(r["referred_id"]) for r in cursor.fetchall()]
-            with_premium = 0
-            with_diamond = 0
-            for buyer in ids:
-                cursor.execute(
-                    "SELECT payload FROM crypto_invoices WHERE user_id = ? AND status = 'paid' "
-                    "AND UPPER(asset) = 'USDT'",
-                    (buyer,),
-                )
-                payloads = [str(r["payload"] or "") for r in cursor.fetchall()]
-                if any(":premium:" in p for p in payloads):
-                    with_premium += 1
-                if any((":diamonds:" in p or ":diamond_first:" in p) for p in payloads):
-                    with_diamond += 1
-            return {"total_refs": len(ids), "with_premium": with_premium, "with_diamond_usdt": with_diamond}
-        finally:
-            conn.close()
-
-    def process_referral_stars_premium(self, buyer_id: int, stars_paid: int) -> Dict[str, Any]:
-        STAR_TO_USDT = 0.013
         referrer_id = self.get_referrer_id(buyer_id)
         out: Dict[str, Any] = {"ok": False}
         if not referrer_id:
@@ -177,11 +105,7 @@ class SocialReferralCryptoStarsMixin:
                 (referrer_id,),
             )
             rank = int(cursor.fetchone()["c"]) + 1
-            pct = (
-                REFERRAL_PCT_SUB_RANK_1_10
-                if rank <= 10
-                else (REFERRAL_PCT_SUB_RANK_11_30 if rank <= 30 else REFERRAL_PCT_SUB_RANK_31_PLUS)
-            )
+            pct = _rank_to_pct(rank)
             tier = "vip" if rank >= 31 else "early"
             reward_usdt = round(stars_paid * STAR_TO_USDT * pct / 100, 4)
             now = datetime.utcnow().isoformat()
@@ -195,8 +119,9 @@ class SocialReferralCryptoStarsMixin:
                     (reward_usdt, referrer_id),
                 )
             cursor.execute(
-                "INSERT INTO referral_rewards (referrer_id, buyer_id, reward_type, percent, base_stars, reward_usdt) VALUES (?, ?, 'stars_premium', ?, ?, ?)",
-                (referrer_id, buyer_id, pct, stars_paid, reward_usdt),
+                "INSERT INTO referral_rewards (referrer_id, buyer_id, reward_type, percent, base_stars, reward_usdt, invoice_id) "
+                "VALUES (?, ?, 'stars_premium', ?, ?, ?, ?)",
+                (referrer_id, buyer_id, pct, stars_paid, reward_usdt, invoice_id),
             )
             conn.commit()
             out.update({"ok": True, "referrer_id": referrer_id, "reward_usdt": reward_usdt, "rank": rank, "percent": pct})

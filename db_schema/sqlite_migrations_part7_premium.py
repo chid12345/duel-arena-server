@@ -18,4 +18,9 @@ MIGRATIONS_PART7_PREMIUM = [
     ("2026_05_28_001_players_is_premium", [
         "ALTER TABLE players ADD COLUMN is_premium BOOLEAN DEFAULT 0",
     ]),
+    # Дедупликация реферальных наград при бэкафилле — один инвойс = одна выплата.
+    ("2026_05_28_002_referral_rewards_invoice_id", [
+        "ALTER TABLE referral_rewards ADD COLUMN invoice_id INTEGER",
+        "CREATE INDEX IF NOT EXISTS idx_referral_rewards_invoice ON referral_rewards (invoice_id)",
+    ]),
 ]

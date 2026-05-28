@@ -53,7 +53,9 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             if db.mark_stars_tma_delivered(uid, f"scroll:{scroll_id}", scroll_stars):
                 db.add_to_inventory(uid, scroll_id)
                 try:
-                    db.process_referral_vip_shop_purchase(uid, stars=scroll_stars)
+                    _vs = db.process_referral_vip_shop_purchase(uid, stars=scroll_stars)
+                    if _vs.get("ok") and _vs.get("reward_usdt"):
+                        await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил свиток за Stars.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
                 except Exception as _ve:
                     logger.error("vip_shop scroll stars uid=%s: %s", uid, _ve)
                 is_box = scroll_id.startswith("box_")
@@ -146,7 +148,9 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
         result = db.confirm_stars_payment(uid, body.package_id, diamonds, stars)
         try:
-            db.process_referral_vip_shop_purchase(uid, stars=stars)
+            _vs = db.process_referral_vip_shop_purchase(uid, stars=stars)
+            if _vs.get("ok") and _vs.get("reward_usdt"):
+                await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил <b>{diamonds}</b> 💎 за Stars.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
         except Exception as _ve:
             logger.error("vip_shop diamonds stars uid=%s: %s", uid, _ve)
         if result.get("ok") and diamonds > 0:

@@ -111,7 +111,8 @@ class BotHandlersPayoutAdmin:
             await tg_api_call(update.message.reply_text, "🚫 Только для администратора.")
             return
         try:
-            res = await asyncio.to_thread(db.reconcile_all_premium_referrals)
+            prem = await asyncio.to_thread(db.reconcile_all_premium_referrals)
+            shop = await asyncio.to_thread(db.reconcile_all_shop_referrals)
             brk = await asyncio.to_thread(db.referral_purchase_breakdown)
         except Exception as e:
             logger.exception("reconcile_refs failed")
@@ -126,27 +127,29 @@ class BotHandlersPayoutAdmin:
             f"купили Premium: <b>{brk['with_premium']}</b> · "
             f"купили алмазы за USDT: <b>{brk['with_diamond_usdt']}</b>"
         )
-        credited = res.get("credited", [])
-        if not credited:
+        total_count = int(prem.get("count", 0)) + int(shop.get("count", 0))
+        total_usdt = round(float(prem.get("total_usdt", 0)) + float(shop.get("total_usdt", 0)), 4)
+        all_credited = list(prem.get("credited", [])) + list(shop.get("credited", []))
+        if total_count == 0:
             await tg_api_call(
                 update.message.reply_text,
-                "✅ Доначислять за Premium нечего (премиум-комиссии уже выплачены "
-                "или рефералы Premium не покупали)." + diag +
-                "\n\nℹ️ USDT-комиссия идёт за покупку <b>Premium</b>. За покупку "
-                "<b>алмазов</b> платится только VIP-рефереру (с 31-го платящего).",
+                "✅ Доначислять нечего — все реферальные комиссии (Premium и магазин) "
+                "уже выплачены или рефералы реальные деньги не тратили." + diag,
                 parse_mode="HTML",
             )
             return
-        # Уведомляем каждого реферера о доплате (через проверенный helper с chat_id).
+        # Уведомляем каждого реферера о доплате.
         from handlers.commands import BotHandlers
-        for c in credited:
+        for c in all_credited:
             try:
                 await BotHandlers.notify_referrer_premium_reward(context.bot, c)
             except Exception as e:
                 logger.warning("reconcile notify failed referrer=%s: %s", c.get("referrer_id"), e)
         await tg_api_call(
             update.message.reply_text,
-            f"✅ Доначислено комиссий: <b>{res['count']}</b> на сумму <b>{res['total_usdt']:.4f} USDT</b>.\n"
+            f"✅ Доначислено комиссий: <b>{total_count}</b> на сумму <b>{total_usdt:.4f} USDT</b>\n"
+            f"  • Premium: {prem.get('count', 0)} ({float(prem.get('total_usdt', 0)):.4f} USDT)\n"
+            f"  • Магазин (алмазы/аватарки/свитки за USDT): {shop.get('count', 0)} ({float(shop.get('total_usdt', 0)):.4f} USDT)\n"
             "Рефереры уведомлены, баланс обновлён." + diag,
             parse_mode="HTML",
         )

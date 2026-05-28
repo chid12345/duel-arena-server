@@ -232,6 +232,14 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     if not unlock.get("already_unlocked"):
                         db.track_purchase(owner_uid, avatar_id, "usdt", 0)
                     _cache_invalidate(owner_uid)
+                    # Реферальная комиссия за покупку аватара за USDT (единая шкала 5/7/10%).
+                    if asset == "USDT":
+                        try:
+                            _vs = db.process_referral_vip_shop_purchase(owner_uid, usdt=float(amount_str), invoice_id=int(invoice_id))
+                            if _vs.get("ok") and _vs.get("reward_usdt"):
+                                await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил аватар.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
+                        except Exception as _ve:
+                            logger.error("vip_shop avatar (check) uid=%s: %s", owner_uid, _ve)
                     await manager.send(owner_uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
                     await _send_tg_message(owner_uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
                     db.mark_items_delivered(invoice_id)
@@ -243,7 +251,7 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     days_left = prem.get("days_left", 21)
                     if asset == "USDT":
                         try:
-                            ref_res = db.process_referral_crypto_premium(owner_uid, float(amount_str))
+                            ref_res = db.process_referral_crypto_premium(owner_uid, float(amount_str), invoice_id=int(invoice_id))
                             if ref_res.get("ok"):
                                 await _send_tg_message(ref_res["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил Premium через CryptoPay.\n<b>+{ref_res['reward_usdt']:.4f} USDT</b> добавлено на ваш баланс.\n\n⚔️ Duel Arena")
                         except Exception as e:
@@ -258,6 +266,14 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "profile_reset": True}
                 _cache_invalidate(owner_uid)
+                # Реферальная комиссия за покупку алмазов за USDT (единая шкала 5/7/10%).
+                if asset == "USDT":
+                    try:
+                        _vs = db.process_referral_vip_shop_purchase(owner_uid, usdt=float(amount_str), invoice_id=int(invoice_id))
+                        if _vs.get("ok") and _vs.get("reward_usdt"):
+                            await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил <b>{diamonds}</b> 💎.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
+                    except Exception as _ve:
+                        logger.error("vip_shop diamonds (check) uid=%s: %s", owner_uid, _ve)
                 event_source = "cryptopay_first" if is_diamond_first else "cryptopay"
                 await manager.send(owner_uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": event_source})
                 await _send_tg_message(owner_uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")
