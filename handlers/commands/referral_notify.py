@@ -35,12 +35,12 @@ class BotHandlersReferralNotify:
             logger.warning("referrer join notify failed: %s", exc)
 
     @staticmethod
-    async def notify_referrer_premium_reward(bot, ref_res: dict):
-        """Рефереру: реферал купил Premium → начислена комиссия USDT.
+    async def notify_referrer_premium_reward(bot, ref_res: dict, kind: str = "premium"):
+        """Рефереру: реферал что-то купил → начислена комиссия USDT.
 
-        ref_res — результат process_referral_crypto_premium / reconcile_premium_referral
-        (содержит referrer_id и reward_usdt). Шлётся при доплате задним числом,
-        когда реферал зашёл по ссылке уже ПОСЛЕ покупки премиума.
+        kind = "premium" → «купил Premium», иначе «совершил покупку в магазине».
+        Используется и при мгновенной доплате задним числом (start.py), и при
+        бэкафилле /reconcile_refs (там вызывается для премиума И для магазина).
         """
         rid = ref_res.get("referrer_id")
         reward = float(ref_res.get("reward_usdt") or 0)
@@ -49,18 +49,19 @@ class BotHandlersReferralNotify:
         cid = db.get_player_chat_id(rid)
         if not cid:
             return
+        what = "Premium" if kind == "premium" else "покупку в магазине (USDT)"
         try:
             await bot.send_message(
                 chat_id=cid,
                 text=(
                     "💰 <b>Реферальный бонус!</b>\n"
-                    "Ваш приглашённый купил <b>Premium</b>.\n"
+                    f"Ваш приглашённый купил <b>{what}</b>.\n"
                     f"<b>+{reward:.4f} USDT</b> добавлено на ваш баланс.\n\n⚔️ Duel Arena"
                 ),
                 parse_mode="HTML",
             )
         except Exception as exc:
-            logger.warning("referrer premium reward notify failed: %s", exc)
+            logger.warning("referrer %s reward notify failed: %s", kind, exc)
 
     @staticmethod
     async def notify_referrer_stars_payment(bot, buyer_id: int, payload: str, diamonds: int, stars: int, ref: dict):

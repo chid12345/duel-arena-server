@@ -129,7 +129,8 @@ class BotHandlersPayoutAdmin:
         )
         total_count = int(prem.get("count", 0)) + int(shop.get("count", 0))
         total_usdt = round(float(prem.get("total_usdt", 0)) + float(shop.get("total_usdt", 0)), 4)
-        all_credited = list(prem.get("credited", [])) + list(shop.get("credited", []))
+        prem_credited = list(prem.get("credited", []))
+        shop_credited = list(shop.get("credited", []))
         if total_count == 0:
             await tg_api_call(
                 update.message.reply_text,
@@ -138,13 +139,18 @@ class BotHandlersPayoutAdmin:
                 parse_mode="HTML",
             )
             return
-        # Уведомляем каждого реферера о доплате.
+        # Уведомляем каждого реферера о доплате — с правильным текстом по типу покупки.
         from handlers.commands import BotHandlers
-        for c in all_credited:
+        for c in prem_credited:
             try:
-                await BotHandlers.notify_referrer_premium_reward(context.bot, c)
+                await BotHandlers.notify_referrer_premium_reward(context.bot, c, kind="premium")
             except Exception as e:
-                logger.warning("reconcile notify failed referrer=%s: %s", c.get("referrer_id"), e)
+                logger.warning("reconcile premium notify failed referrer=%s: %s", c.get("referrer_id"), e)
+        for c in shop_credited:
+            try:
+                await BotHandlers.notify_referrer_premium_reward(context.bot, c, kind="shop")
+            except Exception as e:
+                logger.warning("reconcile shop notify failed referrer=%s: %s", c.get("referrer_id"), e)
         await tg_api_call(
             update.message.reply_text,
             f"✅ Доначислено комиссий: <b>{total_count}</b> на сумму <b>{total_usdt:.4f} USDT</b>\n"
