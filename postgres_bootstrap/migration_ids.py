@@ -110,4 +110,10 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     # (CREATE IF NOT EXISTS их не добавил → ALTER в ddl_07). Новый id заставляет
     # bootstrap снова прогнать DDL, иначе skip-логика его бы пропустила.
     "2026_05_24_002_upgrade_v2_pg_columns",
+    # КРИТИЧНО: players.is_premium и referral_rewards.invoice_id добавлены в
+    # after_ddl, но без нового migration_id skip-логика bootstrap_postgres_schema
+    # ПРОПУСКАЕТ все DDL (старая БД уже считается «полной») → ALTER не доедет
+    # → реферальные премиум-комиссии продолжают падать UndefinedColumn.
+    # Этот id заставляет bootstrap снова прогнать ВСЕ DDL/after_ddl на старте.
+    "2026_05_28_001_referral_is_premium_and_invoice_id",
 )
