@@ -38,6 +38,7 @@ from api.world_boss_entry import (
     RegisterBody,
     world_boss_enter_active_inner,
     world_boss_register_inner,
+    world_boss_unregister_inner,
 )
 from api.world_boss_qte import QteBonusBody, world_boss_qte_bonus_inner
 from api.world_boss_state import build_wb_state_payload
@@ -107,6 +108,14 @@ def register_world_boss_routes(app, ctx: Dict[str, Any]) -> None:
             return await world_boss_register_inner(body, **_inner_ctx)
         except Exception as e:
             log.error("wb_register error: %s", e, exc_info=True)
+            return {"ok": False, "reason": str(e)}
+
+    @router.post("/api/world_boss/unregister")
+    async def wb_unregister(body: RegisterBody):
+        try:
+            return await world_boss_unregister_inner(body, **_inner_ctx)
+        except Exception as e:
+            log.error("wb_unregister error: %s", e, exc_info=True)
             return {"ok": False, "reason": str(e)}
 
     @router.post("/api/world_boss/enter_active")

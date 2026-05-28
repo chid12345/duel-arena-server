@@ -124,6 +124,59 @@ async def world_boss_register_inner(body: RegisterBody, *, db, get_user_from_ini
             "spawn_id": spawn_id, "gold_left": gold_left}
 
 
+async def world_boss_unregister_inner(body: RegisterBody, *, db, get_user_from_init_data) -> dict:
+    """Снять регистрацию со СЛЕДУЮЩЕГО рейда + вернуть взнос (50 🪙).
+    Если рейд уже active (стартовал) — отмена закрыта (бой идёт).
+    Идемпотентно: если не был зарегистрирован — ok без денежных операций."""
+    tg_user = get_user_from_init_data(body.init_data)
+    uid = int(tg_user["id"])
+
+    nxt = db.get_wb_next_scheduled()
+    if not nxt:
+        return {"ok": False, "reason": "Нет запланированного рейда"}
+    spawn_id = int(nxt["spawn_id"])
+
+    # Если этот же spawn уже active — отмена закрыта (бой начался)
+    active = db.get_wb_active_spawn()
+    if active and int(active.get("spawn_id") or 0) == spawn_id:
+        return {"ok": False, "reason": "Рейд уже идёт — отмена невозможна"}
+
+    conn = db.get_connection()
+    try:
+        cur = conn.cursor()
+        cur.execute(
+            "DELETE FROM world_boss_registrations WHERE spawn_id=? AND user_id=?",
+            (spawn_id, uid),
+        )
+        was_registered = cur.rowcount > 0
+        if was_registered:
+            # Возвращаем взнос обратно (обратная операция к register)
+            cur.execute(
+                "UPDATE players SET gold = gold + ? WHERE user_id = ?",
+                (WB_ENTRY_FEE, uid),
+            )
+        cur.execute("SELECT gold FROM players WHERE user_id=?", (uid,))
+        row = cur.fetchone()
+        gold_left = int(row["gold"]) if row else 0
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM world_boss_registrations WHERE spawn_id=?",
+            (spawn_id,),
+        )
+        count = int(cur.fetchone()["c"])
+        conn.commit()
+    finally:
+        conn.close()
+
+    return {
+        "ok": True,
+        "was_registered": was_registered,
+        "refunded": WB_ENTRY_FEE if was_registered else 0,
+        "registrants_count": count,
+        "gold_left": gold_left,
+        "spawn_id": spawn_id,
+    }
+
+
 async def world_boss_enter_active_inner(body: EnterActiveBody, *, db, get_user_from_init_data) -> dict:
     """Оплата входа в АКТИВНЫЙ рейд (в первые 2 мин). Если уже зарегистрирован — бесплатно."""
     from datetime import datetime, timezone

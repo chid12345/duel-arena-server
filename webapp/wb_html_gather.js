@@ -125,6 +125,15 @@
         const el = e.target.closest('[data-act]'); if (!el) return;
         const act = el.dataset.act;
         if (act === 'gth-leave') {
+          // Снимаем регистрацию на сервере + возврат 50 🪙 (раньше клиент только
+          // прятал экран — другие игроки видели «ушедшего» в списке).
+          try {
+            if (typeof post === 'function') {
+              post('/api/world_boss/unregister', {}).then(() => {
+                try { window.WBHtml._scene?._refresh?.(); } catch(_) {}
+              }).catch(() => {});
+            }
+          } catch(_) {}
           try { sessionStorage.removeItem('wb_in_gather'); } catch(_) {}
           _stopLocalTick();
           try {
