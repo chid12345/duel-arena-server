@@ -490,7 +490,15 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     // Комната ожидания: за 5 мин до старта, если игрок тапнул «ВОЙТИ В БОЙ»
     // (sessionStorage флаг wb_in_gather=spawn_id), показываем gather-экран.
     const _gatherSid = (() => { try { return sessionStorage.getItem('wb_in_gather'); } catch(_) { return null; } })();
-    if (s.gather?.is_open && _gatherSid && _gatherSid === String(s.next_scheduled?.spawn_id)) {
+    const _gatherSpawnMatch = _gatherSid && _gatherSid === String(s.next_scheduled?.spawn_id);
+    // ЗАЩИТА от «фантомного зала»: если флаг есть, но сервер говорит is_registered=false
+    // (старый баг с set-before-register, ручная чистка БД, или просто рассинхрон),
+    // зал НЕ показываем и флаг чистим — иначе у других игроков «1 игрок» вместо 2,
+    // т.к. этот клиент висит на gather-экране без записи в world_boss_registrations.
+    if (_gatherSpawnMatch && s.gather?.is_open && !s.is_registered) {
+      try { sessionStorage.removeItem('wb_in_gather'); } catch(_) {}
+      // Падаем дальше в рендер лобби — игрок увидит кнопку «ВОЙТИ В БОЙ — 50 🪙».
+    } else if (_gatherSpawnMatch && s.gather?.is_open && s.is_registered) {
       _setTabBar(false);
       root.style.top='0'; root.style.left='0'; root.style.right='0'; root.style.bottom='0'; root.style.width=''; root.style.height='';
       // ОБЯЗАТЕЛЬНО инжектим стили боевого экрана — там же CSS .wb-gth-*
