@@ -33,6 +33,8 @@ async def deliver_recovery_payload(
     inv_id: int,
     payload: str,
     diamonds: int = 0,
+    amount: str = "0",
+    asset: str = "USDT",
 ) -> bool:
     """Выдать вторичную награду по payload инвойса. True при успехе."""
     if loop is None:
@@ -93,6 +95,14 @@ async def deliver_recovery_payload(
         except Exception as e:
             _log.error("CRITICAL: recovery unlock_avatar exc uid=%s avatar=%s inv=%s err=%s", uid, avatar_id, inv_id, e)
             return False
+        # Реферальная комиссия за аватарку — идемпотентно по invoice_id.
+        if asset.upper() == "USDT":
+            try:
+                _vs = await _exec(lambda: db.process_referral_vip_shop_purchase(uid, usdt=float(amount or 0), invoice_id=int(inv_id)))
+                if _vs.get("ok") and _vs.get("reward_usdt"):
+                    await send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил аватар.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
+            except Exception as e:
+                _log.error("recovery vip_shop avatar uid=%s inv=%s err=%s", uid, inv_id, e)
         if manager is not None:
             await manager.send(uid, {"event": "avatar_unlocked", "avatar_id": avatar_id, "source": "cryptopay"})
         await send_tg_message(uid, f"👑 <b>Новый образ разблокирован!</b>\nОбраз: <b>{avatar_id}</b>\nОткройте «Статы → Образы» и наденьте его.\n\n⚔️ Duel Arena")
@@ -201,8 +211,16 @@ async def deliver_recovery_payload(
         await send_tg_message(uid, "⏳ <b>Аренда мифик-предмета активирована!</b>\nДействует 7 дней.\n\n⚔️ Duel Arena")
         return True
 
-    # default: только базовое начисление алмазов (уже сделано confirm_crypto_invoice)
+    # default: алмазы (уже зачислены в confirm_crypto_invoice) + реферальная комиссия
     if diamonds > 0:
+        # Реферальная комиссия за алмазы — идемпотентно по invoice_id.
+        if asset.upper() == "USDT":
+            try:
+                _vs = await _exec(lambda: db.process_referral_vip_shop_purchase(uid, usdt=float(amount or 0), invoice_id=int(inv_id)))
+                if _vs.get("ok") and _vs.get("reward_usdt"):
+                    await send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил <b>{diamonds}</b> 💎.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
+            except Exception as e:
+                _log.error("recovery vip_shop diamonds uid=%s inv=%s err=%s", uid, inv_id, e)
         if manager is not None:
             await manager.send(uid, {"event": "diamonds_credited", "diamonds": diamonds, "source": "cryptopay"})
         await send_tg_message(uid, f"💎 <b>+{diamonds} алмазов зачислено!</b>\nОплата через CryptoPay подтверждена.\n\n⚔️ Duel Arena")

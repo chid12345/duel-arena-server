@@ -90,7 +90,8 @@ def attach_tma_startup(
             from api.payment_routes.recovery_deliver import deliver_recovery_payload
             loop = asyncio.get_event_loop()
 
-            async def _deliver(uid: int, inv_id: int, payload: str, diamonds: int = 0) -> bool:
+            async def _deliver(uid: int, inv_id: int, payload: str, diamonds: int = 0,
+                               amount: str = "0", asset: str = "USDT") -> bool:
                 return await deliver_recovery_payload(
                     db,
                     manager=manager,
@@ -101,6 +102,8 @@ def attach_tma_startup(
                     inv_id=inv_id,
                     payload=payload,
                     diamonds=diamonds,
+                    amount=amount,
+                    asset=asset,
                 )
 
             # Phase 1: PENDING инвойсы — подтвердить + выдать
@@ -126,7 +129,9 @@ def attach_tma_startup(
                     uid = int(result["user_id"])
                     payload = str(inv.get("payload") or "")
                     logger.info("invoice recovery: confirmed invoice=%s uid=%s", inv_id, uid)
-                    if await _deliver(uid, inv_id, payload, int(result.get("diamonds") or 0)):
+                    if await _deliver(uid, inv_id, payload, int(result.get("diamonds") or 0),
+                                       amount=str(result.get("amount") or "0"),
+                                       asset=str(result.get("asset") or "USDT")):
                         await loop.run_in_executor(None, db.mark_items_delivered, inv_id)
 
             # Phase 2: PAID но items_delivered=0 — выдать без повторного confirm
@@ -136,7 +141,9 @@ def attach_tma_startup(
                 inv_id = inv["invoice_id"]
                 payload = str(inv.get("payload") or "")
                 logger.info("delivery recovery: undelivered invoice=%s uid=%s", inv_id, uid)
-                if await _deliver(uid, inv_id, payload, int(inv.get("diamonds") or 0)):
+                if await _deliver(uid, inv_id, payload, int(inv.get("diamonds") or 0),
+                                   amount=str(inv.get("amount") or "0"),
+                                   asset=str(inv.get("asset") or "USDT")):
                     await loop.run_in_executor(None, db.mark_items_delivered, inv_id)
         except Exception as exc:
             logger.warning("invoice recovery failed: %s", exc)
