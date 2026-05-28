@@ -63,12 +63,22 @@ class SocialReferralWithdrawMixin:
                 conn.rollback()
                 return {"ok": False, "reason": "Заявка уже в обработке"}
             uname = (username or row["username"] or "")
-            cursor.execute(
-                "INSERT INTO referral_withdrawals (user_id, amount, status, telegram_username, created_at) "
-                "VALUES (?, ?, 'pending', ?, ?)",
-                (user_id, balance, uname, now),
-            )
-            wid = cursor.lastrowid
+            # Postgres: lastrowid не работает → RETURNING id. SQLite: lastrowid.
+            # На проде раньше тут падал TypeError(int(None)) → 500 → UI «❌ undefined».
+            if getattr(self, "_pg", False):
+                cursor.execute(
+                    "INSERT INTO referral_withdrawals (user_id, amount, status, telegram_username, created_at) "
+                    "VALUES (?, ?, 'pending', ?, ?) RETURNING id",
+                    (user_id, balance, uname, now),
+                )
+                wid = int(cursor.fetchone()["id"])
+            else:
+                cursor.execute(
+                    "INSERT INTO referral_withdrawals (user_id, amount, status, telegram_username, created_at) "
+                    "VALUES (?, ?, 'pending', ?, ?)",
+                    (user_id, balance, uname, now),
+                )
+                wid = int(cursor.lastrowid)
             conn.commit()
             return {
                 "ok": True,

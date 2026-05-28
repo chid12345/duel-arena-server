@@ -229,7 +229,7 @@ const ReferralHTML = (() => {
             busy = false;
           } else {
             topEl.textContent = `💸 Вывести $${usdtBal.toFixed(2)} USDT`;
-            _toast(`❌ ${res.reason}`);
+            _toast(`❌ ${res.reason || 'Ошибка сервера'}`);
             busy = false;
           }
         } catch(_) {

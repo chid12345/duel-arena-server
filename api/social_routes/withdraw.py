@@ -39,10 +39,14 @@ def attach_social_withdraw(router: APIRouter, ctx: Dict[str, Any]) -> None:
 
     @router.post("/api/referral/withdraw")
     async def referral_withdraw(body: ReferralWithdrawBody):
-        tg_user = get_user_from_init_data(body.init_data)
-        uid = int(tg_user["id"])
-        username = (tg_user.get("username") or "").strip()
-        res = db.request_referral_withdrawal(uid, username=username)
+        try:
+            tg_user = get_user_from_init_data(body.init_data)
+            uid = int(tg_user["id"])
+            username = (tg_user.get("username") or "").strip()
+            res = db.request_referral_withdrawal(uid, username=username)
+        except Exception as e:
+            logger.exception("referral_withdraw failed")
+            return {"ok": False, "reason": f"Ошибка сервера: {type(e).__name__}"}
         if not res.get("ok"):
             return res
         amount = res["amount"]
