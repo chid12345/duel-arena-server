@@ -232,8 +232,15 @@ const ReferralHTML = (() => {
             try { tg?.HapticFeedback?.notificationOccurred('success'); } catch(_) {}
             topEl.textContent = `✅ Заявка на $${res.amount?.toFixed(2)} USDT принята`;
             topEl.style.color = '#7affb8';
-            el.querySelector('.rf-wd-sub').textContent = 'Придёт в @CryptoBot в течение 24ч';
-            _toast('✅ Заявка принята — скоро придёт в @CryptoBot');
+            el.querySelector('.rf-wd-sub').textContent = 'Жди подтверждения /payout_done';
+            // Чёткое модальное окно с инструкцией — заменяет улетающий тост,
+            // который игрок не успевал прочитать. Стиль киберпанк, как в заданиях.
+            try {
+              window.ReferralConfirmPopup?.show({
+                wid: res.withdrawal_id,
+                amount: res.amount,
+              });
+            } catch(_) {}
           } else if (res.cryptobot_required) {
             topEl.textContent = `💸 Вывести $${usdtBal.toFixed(2)} USDT`;
             _toast('📲 Откройте @CryptoBot в Telegram один раз');
