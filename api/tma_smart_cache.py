@@ -45,9 +45,15 @@ async def smart_cache_middleware(request: Request, call_next):
         response.headers["Pragma"] = "no-cache"
         response.headers["Expires"] = "0"
     elif has_version and path.endswith((".js", ".css")):
-        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
-        response.headers["Pragma"] = "no-cache"
-        response.headers["Expires"] = "0"
+        # ?v=BUILD_VERSION уже работает как cache-buster: при выкатке новой
+        # версии index.html (no-store) приходит со свежей строкой подстановки,
+        # и URL у скриптов меняется → браузер сам тянет новый файл.
+        # Поэтому отданный файл можно кэшировать максимально долго: на следующих
+        # заходах 170 *.js + *.css берутся из дискового кэша мгновенно вместо
+        # повторной выгрузки ~5 МБ. До этой правки тут стояло no-store — игра
+        # перекачивала ВСЮ статику при каждом открытии (главный корень долгого
+        # старта на мобильном Telegram WebView).
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     elif path.endswith((".png", ".jpg", ".jpeg", ".webp", ".svg", ".ico", ".gif")):
         response.headers["Cache-Control"] = "public, max-age=604800"
 
