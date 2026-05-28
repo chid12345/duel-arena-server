@@ -106,17 +106,22 @@ const ReferralHTML = (() => {
       ? 'Перевод через @CryptoBot'
       : (coolH > 0 ? 'Вывод доступен раз в сутки' : `У вас: $${usdtBal.toFixed(4)} USDT · зарабатывай больше`);
 
+    // Главная цифра — В КОПИЛКЕ (что сейчас доступно к выводу), не «всего за время»
+    // (history путала игрока: после вывода $5.10 → счётчик «заработано $5.10» оставался,
+    //  казалось «у меня есть деньги», хотя баланс пустой).
     const premLine = prem > 0
-      ? `<div style="font-size:10px;color:#ffc83c;text-align:center;margin:0 14px 8px">⭐ Из них купили Premium: ${prem}</div>`
+      ? `<div style="font-size:10px;color:#ffc83c;text-align:center;margin:0 14px 6px">⭐ Из них купили Premium: ${prem}</div>`
       : '';
-    const paidLine = usdtPaid > 0
-      ? `<div style="font-size:10px;color:#8ec5ff;text-align:center;margin:0 14px 8px">💸 Из них уже выведено: $${usdtPaid.toFixed(2)}</div>`
+    // Компактная справка снизу: «всего заработано» и «всего выведено» — мелким текстом.
+    const histLine = (usdtTotal > 0 || usdtPaid > 0)
+      ? `<div style="font-size:10px;color:#8a99b5;text-align:center;margin:0 14px 8px;opacity:.85">📊 За всё время: заработано $${usdtTotal.toFixed(2)} · выведено $${usdtPaid.toFixed(2)}</div>`
       : '';
+    // Большая строка-статус под карточками — то ЧТО ИГРОК ДОЛЖЕН ВИДЕТЬ ПЕРВЫМ.
     const balLine = usdtBal > 0
-      ? `<div class="rf-bal" style="border-color:rgba(60,200,100,.3);color:#80ffb0">💸 Доступно к выводу: $${usdtBal.toFixed(4)} USDT</div>`
+      ? `<div class="rf-bal" style="border-color:rgba(60,200,100,.3);color:#80ffb0">💰 В копилке: $${usdtBal.toFixed(4)} USDT — готово к выводу!</div>`
       : (usdtPaid > 0
-          ? `<div class="rf-bal">Баланс: $0.00 — всё уже выведено</div>`
-          : `<div class="rf-bal">Баланс: $0.00 — зарабатывай приглашая</div>`);
+          ? `<div class="rf-bal">💰 В копилке: $0.00 — копи дальше до следующего вывода</div>`
+          : `<div class="rf-bal">💰 В копилке: $0.00 — зарабатывай приглашая</div>`);
 
     const el = document.createElement('div');
     el.className = 'rf-ov'; el.id = 'rf-root';
@@ -139,12 +144,12 @@ const ReferralHTML = (() => {
       </div>
       <div class="rf-card gold">
         <span class="rf-card-icon">💰</span>
-        <div class="rf-card-label">USDT ЗАРАБОТАНО</div>
-        <div class="rf-card-val">$${usdtTotal.toFixed(2)}</div>
+        <div class="rf-card-label">В КОПИЛКЕ</div>
+        <div class="rf-card-val">$${usdtBal.toFixed(2)}</div>
       </div>
     </div>
     ${premLine}
-    ${paidLine}
+    ${histLine}
     ${balLine}
     <div class="rf-lnk-lbl">🔗 ТВОЯ РЕФЕРАЛЬНАЯ ССЫЛКА</div>
     <div class="rf-lnk-box" id="rf-link">${link.replace('https://','')}</div>
