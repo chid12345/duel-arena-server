@@ -336,11 +336,20 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
           try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
           _scene?.scene?.restart?.();
         } else {
-          // Ещё не платил — показываем диалог
+          // Ещё не платил — показываем диалог.
+          // ВАЖНО: флаг wb_in_gather и рестарт сцены — ТОЛЬКО после успешной
+          // регистрации. Раньше флаг ставился до register'а → если запрос падал
+          // (сеть/мало золота), клиент всё равно попадал в зал ожидания без
+          // записи на сервере → у других игроков ты не появлялся (баг «1 игрок»).
           _showJoinConfirm(root, el, _scene, async () => {
-            try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
             try { await _scene._registerForRaid?.(); } catch(_) {}
-            _scene?.scene?.restart?.();
+            if (_state?.is_registered) {
+              try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
+              try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
+              _scene?.scene?.restart?.();
+            }
+            // Если registerForRaid не прошёл — он уже показал toast «❌ ...».
+            // Игрок остаётся в лобби с кнопкой «Войти в бой» для повтора.
           });
         }
       }
