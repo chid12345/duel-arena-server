@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import threading
 import time
 from datetime import datetime
 from typing import Dict, List
+
+_logger = logging.getLogger(__name__)
 
 _TOP_CACHE: List[Dict] = []
 _TOP_CACHE_TS: float = 0.0
@@ -65,8 +68,12 @@ class UsersWipeLeaderboardMixin:
                 cursor.execute(f"DELETE FROM {table} WHERE user_id = ?", (user_id,))
         if keep_wallet_clan_and_referrals:
             # Сброс до новичка. Уходит ВСЁ, кроме кошелька/клана/рефералов/USDT:
-            # уровень и статы → стартовые, Premium снимается, образы/бонус образа
-            # сбрасываются на стартовый, счётчик «новых» покупок обнуляется.
+            # уровень и статы → стартовые, Premium снимается полностью (включая
+            # is_premium флаг и first_premium_at — иначе скидка первой покупки
+            # Premium не вернётся, а реферальная логика будет считать игрока
+            # «уже премом»), образы/бонус образа сбрасываются на стартовый,
+            # счётчик «новых» покупок обнуляется. Этап 7C-кнопка «×2 следующий
+            # бой» и ежедневный премиум-ящик — также сбрасываются.
             now_iso = datetime.utcnow().isoformat()
             now_ts = int(time.time())
             start_hp = PLAYER_START_MAX_HP
@@ -79,7 +86,9 @@ class UsersWipeLeaderboardMixin:
                    daily_streak = 0, last_daily = NULL,
                    xp_boost_charges = 0, profile_reset_ts = ?,
                    current_class = NULL, current_class_type = NULL,
-                   premium_until = NULL,
+                   premium_until = NULL, is_premium = 0,
+                   first_premium_at = NULL, premium_box_claimed = NULL,
+                   next_battle_x2 = 0, next_battle_x2_date = '',
                    equipped_avatar_id = 'default_start',
                    avatar_bonus_applied = 0, avatar_bonus_level = 0,
                    inventory_unseen = 0,
@@ -95,6 +104,26 @@ class UsersWipeLeaderboardMixin:
         else:
             cursor.execute("DELETE FROM players WHERE user_id = ?", (user_id,))
         conn.commit()
+        # Диагностика: убеждаемся, что Premium действительно снят. Помогает
+        # ловить ситуацию, когда UPDATE «прошёл», но игрок продолжает видеть
+        # премиум-баннер (например, отдельная транзакция/recovery его вернула).
+        if keep_wallet_clan_and_referrals:
+            try:
+                cursor.execute(
+                    "SELECT premium_until, is_premium FROM players WHERE user_id = ?",
+                    (user_id,),
+                )
+                row = cursor.fetchone()
+                if row is not None:
+                    pu = row["premium_until"] if hasattr(row, "keys") else row[0]
+                    ip = row["is_premium"] if hasattr(row, "keys") else row[1]
+                    if pu is not None or (ip and int(ip) != 0):
+                        _logger.warning(
+                            "wipe_player_profile: premium НЕ сброшен uid=%s premium_until=%r is_premium=%r",
+                            user_id, pu, ip,
+                        )
+            except Exception as _e:
+                _logger.warning("wipe_player_profile diag uid=%s: %s", user_id, _e)
         conn.close()
 
     def _refresh_top_cache(self, limit: int) -> None:

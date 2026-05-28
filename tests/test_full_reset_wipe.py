@@ -22,6 +22,8 @@ def _setup_rich_player(db, uid):
         """UPDATE players SET level=50, wins=100, exp=99999,
            gold=5000, diamonds=300, clan_id=7,
            referral_usdt_balance=12.5, premium_until='2099-01-01',
+           is_premium=1, first_premium_at='2025-01-01T00:00:00',
+           next_battle_x2=1, next_battle_x2_date='2026-05-28',
            equipped_avatar_id='elite_emperor', avatar_bonus_applied=1,
            inventory_unseen=4
            WHERE user_id=?""",
@@ -83,7 +85,11 @@ def test_full_reset_keeps_only_wallet_clan_referrals(db):
     # Сбрасывается
     assert int(p["level"]) == 1, "уровень → 1"
     assert int(p["wins"]) == 0, "победы → 0"
-    assert p["premium_until"] is None, "Premium должен сняться"
+    assert p["premium_until"] is None, "Premium должен сняться (premium_until)"
+    assert int(p["is_premium"] or 0) == 0, "Premium-флаг (is_premium) должен сняться"
+    assert p["first_premium_at"] is None, "first_premium_at должен сброситься (для скидки −50%)"
+    assert int(p["next_battle_x2"] or 0) == 0, "×2 следующий бой — сброшен"
+    assert (p["next_battle_x2_date"] or "") == "", "дата ×2 — сброшена"
     assert p["equipped_avatar_id"] == "default_start", "образ → стартовый"
     assert int(p["avatar_bonus_applied"]) == 0, "бонус образа сброшен"
     assert int(p["inventory_unseen"]) == 0, "счётчик новых покупок сброшен"
