@@ -30,6 +30,7 @@ def attach_social_referral_clan(router: APIRouter, ctx: Dict[str, Any]) -> None:
             "total_reward_diamonds": stats["total_reward_diamonds"],
             "total_reward_gold": stats["total_reward_gold"],
             "total_reward_usdt": stats["total_reward_usdt"],
+            "total_withdrawn_usdt": stats.get("total_withdrawn_usdt", 0.0),
             "usdt_balance": stats["usdt_balance"],
             "can_withdraw": stats["can_withdraw"],
             "cooldown_hours": stats["cooldown_hours"],
