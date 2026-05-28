@@ -141,7 +141,7 @@ function open(scene, avatars, equippedId, initialTab) {
     if (!el) return;
     if (el.dataset.act === 'back') {
       close();
-      scene.scene.start('Menu', {});
+      scene.scene.start('Menu', { returnTab: 'more' });
     }
   });
 

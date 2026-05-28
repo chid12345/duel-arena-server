@@ -123,11 +123,11 @@ const MoreMenuHTML = (() => {
     _onTap(el.querySelector('#mo-btn-ref'), () => {
       try { tg?.HapticFeedback?.selectionChanged(); } catch(_) {}
       try { Sound.click(); } catch(_) {}
-      MoreMenuHTML.close(); // попап Рефералки рисуется на canvas — убираем overlay
-      setTimeout(() => {
-        try { scene._onInvite(); }
-        catch(err) { console.error('[MoreMenu] Invite:', err); }
-      }, 60);
+      // Рефералка теперь HTML-оверлей (z-index 9100) — рисуем поверх,
+      // НЕ закрывая «Меню». Иначе при ✕ на Рефералке игрок видит пустой
+      // экран Menu вместо панели «Настройки & Разделы».
+      try { scene._onInvite(); }
+      catch(err) { console.error('[MoreMenu] Invite:', err); }
     });
 
     _onTap(el.querySelector('#mo-btn-guide'), () => {
