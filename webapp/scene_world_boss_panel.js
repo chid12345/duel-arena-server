@@ -53,9 +53,9 @@ Object.assign(WorldBossScene.prototype, {
       const bC   = RANK_C[i] || 'rgba(255,255,255,.1)';
       const totTxt = p.damage >= 1000 ? (p.damage/1000).toFixed(1)+'k' : String(p.damage);
       const cls  = 'wbp-row' + (p.is_dead ? ' dead' : '') + (flash.has(p.user_id) ? ' flash' : '');
-      // Последний удар: иконка + число
-      // last_dmg из памяти сервера; fallback — среднее по ударам
-      const effDmg = p.last_dmg > 0 ? p.last_dmg : (p.hits > 0 ? Math.round(p.damage / p.hits) : 0);
+      // Последний удар: ТОЛЬКО реальный last_dmg от сервера. Без fallback на
+      // среднее — оно меняется медленно и казалось «застывшим» между ударами.
+      const effDmg = (+p.last_dmg) > 0 ? +p.last_dmg : 0;
       let lastTxt, lastC;
       if (p.is_dead) { lastTxt = '💀'; lastC = '#884444'; }
       else if (effDmg > 0) {
@@ -82,10 +82,14 @@ Object.assign(WorldBossScene.prototype, {
     list.querySelectorAll('[data-i]').forEach(r => {
       r.addEventListener('click', () => this._openRaidCard(participants[+r.dataset.i], totalDmg));
     });
+    // Если уже открыта карточка участника — обновляем её содержимое свежими
+    // данными из этого тика. Раньше карточка была «снимком» и «последний удар»
+    // не обновлялся без закрытия/открытия.
+    try { this._refreshOpenRaidCard?.(participants, totalDmg); } catch(_) {}
   },
 
-  _openRaidCard(p, totalDmg) {
-    document.getElementById('wbp-card-bg')?.remove();
+  // Содержимое #wbp-card отдельно, чтобы переиспользовать в open и refresh.
+  _cardInnerHtml(p, totalDmg) {
     const pct = Math.round((p.damage || 0) / (totalDmg || 1) * 100);
     const hpPct = p.max_hp > 0 ? Math.round(p.hp / p.max_hp * 100) : 0;
     const hpC = p.is_dead ? '#ff3344' : hpPct > 50 ? '#00cc55' : hpPct > 25 ? '#ffaa00' : '#ff3344';
@@ -94,27 +98,50 @@ Object.assign(WorldBossScene.prototype, {
     const statusLine = p.is_dead
       ? '<span style="color:#ff4466">💀 Погиб в бою</span>'
       : '<span style="color:#00cc55">❤️ Жив · ' + p.hp + ' HP</span>';
+    // ПОСЛЕДНИЙ удар: ТОЛЬКО реальный last_dmg, без fallback на среднее.
+    const ld = (+p.last_dmg) > 0 ? +p.last_dmg : 0;
+    const lastTxt = p.is_dead ? '💀'
+      : (p.last_action==='crit'?'✨ ':'⚔ ') + (ld>0 ? (ld>=1000?(ld/1000).toFixed(1)+'k':ld) : '—');
+    return ''
+      + '<div class="wbpc-hdr">'
+        + '<div class="wbpc-ico">' + ico + '</div>'
+        + '<div><div class="wbpc-name">' + _wbpEsc(p.name) + '</div>'
+             + '<div class="wbpc-sub">Ур. ' + p.level + ' · ' + statusLine + '</div></div>'
+      + '</div>'
+      + '<div class="wbpc-hp-wrap"><div class="wbpc-hp-fill" style="width:' + hpPct + '%;background:' + hpC + '"></div></div>'
+      + '<div class="wbpc-hp-lbl">' + p.hp + ' / ' + p.max_hp + ' HP</div>'
+      + '<div class="wbpc-stats">'
+        + '<div class="wbpc-stat"><div class="wbpc-sl">УРОН</div><div class="wbpc-sv">' + (p.damage||0).toLocaleString() + '</div></div>'
+        + '<div class="wbpc-stat"><div class="wbpc-sl">ВКЛАД</div><div class="wbpc-sv">' + pct + '%</div></div>'
+        + '<div class="wbpc-stat"><div class="wbpc-sl">ПОСЛЕДНИЙ</div><div class="wbpc-sv" style="font-size:13px;color:' + (p.last_action==='crit'?'#ffdd44':'#00ccff') + '">' + lastTxt + '</div></div>'
+      + '</div>'
+      + '<button class="wbpc-close">Закрыть</button>';
+  },
+
+  _openRaidCard(p, totalDmg) {
+    document.getElementById('wbp-card-bg')?.remove();
     const bg = document.createElement('div');
     bg.id = 'wbp-card-bg';
-    bg.innerHTML =
-      '<div id="wbp-card">' +
-        '<div class="wbpc-hdr">' +
-          '<div class="wbpc-ico">' + ico + '</div>' +
-          '<div><div class="wbpc-name">' + _wbpEsc(p.name) + '</div>' +
-               '<div class="wbpc-sub">Ур. ' + p.level + ' · ' + statusLine + '</div></div>' +
-        '</div>' +
-        '<div class="wbpc-hp-wrap"><div class="wbpc-hp-fill" style="width:' + hpPct + '%;background:' + hpC + '"></div></div>' +
-        '<div class="wbpc-hp-lbl">' + p.hp + ' / ' + p.max_hp + ' HP</div>' +
-        '<div class="wbpc-stats">' +
-          '<div class="wbpc-stat"><div class="wbpc-sl">УРОН</div><div class="wbpc-sv">' + (p.damage||0).toLocaleString() + '</div></div>' +
-          '<div class="wbpc-stat"><div class="wbpc-sl">ВКЛАД</div><div class="wbpc-sv">' + pct + '%</div></div>' +
-          '<div class="wbpc-stat"><div class="wbpc-sl">ПОСЛЕДНИЙ</div><div class="wbpc-sv" style="font-size:13px;color:' + (p.last_action==='crit'?'#ffdd44':'#00ccff') + '">' + (function(){ var d=p.last_dmg>0?p.last_dmg:(p.hits>0?Math.round(p.damage/p.hits):0); return p.is_dead?'💀':(p.last_action==='crit'?'✨ ':'⚔ ')+(d>0?(d>=1000?(d/1000).toFixed(1)+'k':d):'—'); }()) + '</div></div>' +
-        '</div>' +
-        '<button class="wbpc-close">Закрыть</button>' +
-      '</div>';
+    bg.dataset.openUid = String(p.user_id);
+    bg.innerHTML = '<div id="wbp-card">' + this._cardInnerHtml(p, totalDmg) + '</div>';
     document.body.appendChild(bg);
     bg.addEventListener('click', e => { if (e.target === bg) bg.remove(); });
     bg.querySelector('.wbpc-close').addEventListener('click', () => bg.remove());
+  },
+
+  // Перерисовываем содержимое уже открытой карточки участника — без закрытия,
+  // без анимации заново. Зовётся из _updateRaidPanel на каждом тике WS.
+  _refreshOpenRaidCard(participants, totalDmg) {
+    const bg = document.getElementById('wbp-card-bg');
+    if (!bg) return;
+    const openUid = parseInt(bg.dataset.openUid || '0', 10);
+    if (!openUid) return;
+    const fresh = (participants || []).find(p => parseInt(p.user_id, 10) === openUid);
+    if (!fresh) return;
+    const card = bg.querySelector('#wbp-card');
+    if (!card) return;
+    card.innerHTML = this._cardInnerHtml(fresh, totalDmg);
+    card.querySelector('.wbpc-close')?.addEventListener('click', () => bg.remove());
   },
 
   _destroyRaidPanel() {
