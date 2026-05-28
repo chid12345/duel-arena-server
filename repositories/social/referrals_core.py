@@ -53,6 +53,15 @@ class SocialReferralCoreMixin:
             (user_id,),
         )
         bal_row = cursor.fetchone()
+        # Сколько уже фактически выведено (status='completed') — для UI разделения
+        # «всего заработано / из них выведено / доступно сейчас».
+        cursor.execute(
+            "SELECT COALESCE(SUM(amount), 0) AS w FROM referral_withdrawals "
+            "WHERE user_id = ? AND status = 'completed'",
+            (user_id,),
+        )
+        wd_row = cursor.fetchone()
+        total_withdrawn = round(float(wd_row["w"] if wd_row else 0), 4)
         conn.close()
         balance = round(float(bal_row["bal"] if bal_row else 0), 4)
         cooldown_hours = 0
@@ -71,6 +80,7 @@ class SocialReferralCoreMixin:
             "total_reward_diamonds": int(rw["d"] or 0),
             "total_reward_gold": int(rw["g"] or 0),
             "total_reward_usdt": round(float(rw["u"] or 0), 4),
+            "total_withdrawn_usdt": total_withdrawn,
             "usdt_balance": balance,
             "can_withdraw": balance >= 5.0 and cooldown_hours == 0,
             "cooldown_hours": cooldown_hours,

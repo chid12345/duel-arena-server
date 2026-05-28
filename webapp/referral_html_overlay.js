@@ -91,8 +91,9 @@ const ReferralHTML = (() => {
     const link = rd.link || '';
     const inv  = rd.invited_count      || 0;
     const prem = rd.paying_subscribers || 0;
-    const usdtBal   = rd.usdt_balance      || 0;
-    const usdtTotal = rd.total_reward_usdt || 0;
+    const usdtBal   = rd.usdt_balance         || 0;
+    const usdtTotal = rd.total_reward_usdt    || 0;
+    const usdtPaid  = rd.total_withdrawn_usdt || 0;
     const canWd   = rd.can_withdraw   || false;
     const coolH   = rd.cooldown_hours || 0;
     const wdMin   = rd.withdraw_min   || 5;
@@ -108,9 +109,14 @@ const ReferralHTML = (() => {
     const premLine = prem > 0
       ? `<div style="font-size:10px;color:#ffc83c;text-align:center;margin:0 14px 8px">⭐ Из них купили Premium: ${prem}</div>`
       : '';
+    const paidLine = usdtPaid > 0
+      ? `<div style="font-size:10px;color:#8ec5ff;text-align:center;margin:0 14px 8px">💸 Из них уже выведено: $${usdtPaid.toFixed(2)}</div>`
+      : '';
     const balLine = usdtBal > 0
       ? `<div class="rf-bal" style="border-color:rgba(60,200,100,.3);color:#80ffb0">💸 Доступно к выводу: $${usdtBal.toFixed(4)} USDT</div>`
-      : `<div class="rf-bal">Баланс: $0.00 — зарабатывай приглашая</div>`;
+      : (usdtPaid > 0
+          ? `<div class="rf-bal">Баланс: $0.00 — всё уже выведено</div>`
+          : `<div class="rf-bal">Баланс: $0.00 — зарабатывай приглашая</div>`);
 
     const el = document.createElement('div');
     el.className = 'rf-ov'; el.id = 'rf-root';
@@ -138,6 +144,7 @@ const ReferralHTML = (() => {
       </div>
     </div>
     ${premLine}
+    ${paidLine}
     ${balLine}
     <div class="rf-lnk-lbl">🔗 ТВОЯ РЕФЕРАЛЬНАЯ ССЫЛКА</div>
     <div class="rf-lnk-box" id="rf-link">${link.replace('https://','')}</div>

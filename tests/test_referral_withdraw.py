@@ -115,6 +115,34 @@ def test_reject_refunds_and_clears_cooldown(db):
     assert again["ok"] is True
 
 
+def test_stats_total_withdrawn_only_counts_completed(db):
+    """total_withdrawn_usdt в stats считает только status='completed' заявки."""
+    db.get_or_create_player(3010, "stats")
+    _set_balance(db, 3010, 5.0)
+    req = db.request_referral_withdrawal(3010, username="stats")
+
+    # Pending заявка — НЕ должна считаться как «выведено»
+    stats = db.get_referral_stats(3010)
+    assert stats["total_withdrawn_usdt"] == 0.0, "Pending не считается"
+
+    db.mark_withdrawal_paid(req["withdrawal_id"])
+
+    stats = db.get_referral_stats(3010)
+    assert stats["total_withdrawn_usdt"] == 5.0, "Completed считается"
+
+
+def test_stats_rejected_not_counted_as_withdrawn(db):
+    """Отклонённая заявка не считается как выведенная (деньги вернулись)."""
+    db.get_or_create_player(3011, "rej")
+    _set_balance(db, 3011, 5.0)
+    req = db.request_referral_withdrawal(3011, username="rej")
+    db.reject_withdrawal(req["withdrawal_id"])
+
+    stats = db.get_referral_stats(3011)
+    assert stats["total_withdrawn_usdt"] == 0.0
+    assert _balance(db, 3011) == 5.0  # деньги вернулись на баланс
+
+
 def test_pending_list_shows_open_requests(db):
     """list_pending_withdrawals возвращает только открытые заявки."""
     db.get_or_create_player(3007, "p1")
