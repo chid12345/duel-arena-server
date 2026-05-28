@@ -152,6 +152,14 @@ async def deliver_recovery_payload(
         except Exception:
             pass
         cache_invalidate(uid)
+        # Реферальная комиссия — full_reset это оплата за реальные деньги.
+        if asset.upper() == "USDT":
+            try:
+                _vs = await _exec(lambda: db.process_referral_vip_shop_purchase(uid, usdt=float(amount or 0), invoice_id=int(inv_id)))
+                if _vs.get("ok") and _vs.get("reward_usdt"):
+                    await send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил сброс прогресса.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
+            except Exception as e:
+                _log.error("recovery vip_shop full_reset uid=%s inv=%s err=%s", uid, inv_id, e)
         if manager is not None:
             await manager.send(uid, {"event": "profile_reset", "source": "cryptopay_usdt"})
         await send_tg_message(

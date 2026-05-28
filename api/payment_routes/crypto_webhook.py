@@ -228,6 +228,14 @@ def register_crypto_webhook_route(router: APIRouter, ctx: Dict[str, Any]) -> Non
                 db.mark_items_delivered(int(invoice_id))
             elif is_full_reset:
                 await _notify_paid_full_reset(uid)
+                # Реферальная комиссия — сброс прогресса это тоже покупка за реальные деньги.
+                if asset == "USDT":
+                    try:
+                        _vs = db.process_referral_vip_shop_purchase(uid, usdt=float(amount_str), invoice_id=int(invoice_id))
+                        if _vs.get("ok") and _vs.get("reward_usdt"):
+                            await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил сброс прогресса.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
+                    except Exception as _ve:
+                        logger.error("vip_shop full_reset usdt uid=%s: %s", uid, _ve)
                 db.mark_items_delivered(int(invoice_id))
             else:
                 if asset == "USDT":

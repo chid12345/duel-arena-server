@@ -263,6 +263,14 @@ def register_crypto_check_route(router: APIRouter, ctx: Dict[str, Any]) -> None:
                     return {"ok": True, "paid": True, "diamonds": bonus_d, "premium_activated": True, "premium_days_left": days_left, "bonus_diamonds": bonus_d}
                 if is_full_reset:
                     await _notify_paid_full_reset(owner_uid)
+                    # Реферальная комиссия — сброс прогресса это оплата за реальные деньги.
+                    if asset == "USDT":
+                        try:
+                            _vs = db.process_referral_vip_shop_purchase(owner_uid, usdt=float(amount_str), invoice_id=int(invoice_id))
+                            if _vs.get("ok") and _vs.get("reward_usdt"):
+                                await _send_tg_message(_vs["referrer_id"], f"💰 <b>Реферальный бонус!</b>\nВаш приглашённый купил сброс прогресса.\n<b>+{_vs['reward_usdt']:.4f} USDT</b> ({_vs.get('percent', 0)}% ранг {_vs.get('rank', 1)})\n\n⚔️ Duel Arena")
+                        except Exception as _ve:
+                            logger.error("vip_shop full_reset (check) uid=%s: %s", owner_uid, _ve)
                     db.mark_items_delivered(invoice_id)
                     return {"ok": True, "paid": True, "profile_reset": True}
                 _cache_invalidate(owner_uid)

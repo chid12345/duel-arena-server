@@ -246,6 +246,23 @@ def test_reconcile_skips_premium_invoices_in_shop_backfill(db):
     assert shop_res["count"] == 0, "Premium-инвойс не должен учитываться в shop-бэкафилле"
 
 
+def test_reconcile_includes_full_reset_purchases(db):
+    """Сброс прогресса (full_reset за USDT) — реальная оплата, должна платить рефереру."""
+    db.get_or_create_player(5101, "boss")
+    code = db.get_referral_code(5101)
+    db.get_or_create_player(5401, "buyer")
+    db.create_crypto_invoice(5401, 932300, 0, "USDT", "12.00", payload="uid:5401:full_reset:1")
+    db.confirm_crypto_invoice(932300)
+    db.register_referral(5401, code)
+
+    res = db.reconcile_all_shop_referrals()
+
+    assert res["count"] == 1, "full_reset должен учитываться (это оплата услуги)"
+    # $12 × 5% = $0.60
+    assert res["total_usdt"] == 0.60
+    assert _balance(db, 5101) == 0.60
+
+
 def test_purchase_breakdown_premium_vs_diamonds(db):
     """Диагностика различает покупку Premium и покупку алмазов за USDT."""
     db.get_or_create_player(5101, "boss")

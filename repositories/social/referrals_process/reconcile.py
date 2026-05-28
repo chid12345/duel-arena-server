@@ -81,14 +81,15 @@ class SocialReferralReconcileMixin:
         conn = self.get_connection()
         cursor = conn.cursor()
         try:
-            # Все ОПЛАЧЕННЫЕ USDT-инвойсы рефералов, КРОМЕ premium/full_reset
-            # (premium идёт через свой бэкафилл, full_reset не приносит комиссии).
+            # Все ОПЛАЧЕННЫЕ USDT-инвойсы рефералов, КРОМЕ premium (premium идёт
+            # через свой бэкафилл). full_reset раньше исключался ошибочно — это
+            # реальная оплата $12 за услугу, такая же как любая shop-покупка.
             cursor.execute(
                 "SELECT c.invoice_id, c.user_id, c.amount FROM crypto_invoices c "
                 "INNER JOIN referrals r ON r.referred_id = c.user_id "
                 "WHERE c.status = 'paid' AND UPPER(c.asset) = 'USDT' "
-                "AND c.payload NOT LIKE ? AND c.payload NOT LIKE ?",
-                ("%:premium:%", "%:full_reset:%"),
+                "AND c.payload NOT LIKE ?",
+                ("%:premium:%",),
             )
             rows = [dict(r) for r in cursor.fetchall()]
         finally:
