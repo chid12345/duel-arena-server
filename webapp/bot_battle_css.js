@@ -94,14 +94,14 @@ const BotBattleCss = (() => {
     #bb-root .col-lbl{font-size:9px;font-weight:900;letter-spacing:1.6px;text-align:center;font-family:"Courier New","Consolas",monospace;text-transform:uppercase;margin-bottom:1px;}
     #bb-root .atk-col .col-lbl{color:#ff7acb;text-shadow:0 0 6px rgba(255,59,168,.7);}
     #bb-root .def-col .col-lbl{color:#80e8ff;text-shadow:0 0 6px rgba(0,240,255,.7);}
-    #bb-root .ic-btn{width:54px;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;user-select:none;position:relative;padding:2px 0;}
-    #bb-root .ic-btn img{width:30px;height:30px;object-fit:contain;}
-    #bb-root .ic-btn .nm{font-size:7.5px;font-weight:800;letter-spacing:.4px;font-family:"Courier New","Consolas",monospace;text-transform:uppercase;}
+    #bb-root .ic-btn{width:38px;display:flex;flex-direction:column;align-items:center;gap:0;cursor:pointer;user-select:none;position:relative;padding:2px 0;}
+    #bb-root .ic-btn img{width:21px;height:21px;object-fit:contain;}
+    #bb-root .ic-btn .nm{font-size:7px;font-weight:800;letter-spacing:.4px;font-family:"Courier New","Consolas",monospace;text-transform:uppercase;}
     #bb-root .atk-col .ic-btn img{filter:drop-shadow(0 0 5px rgba(255,59,168,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.8));}
     #bb-root .def-col .ic-btn img{filter:drop-shadow(0 0 5px rgba(0,240,255,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.8));}
     #bb-root .atk-col .ic-btn .nm{color:#ff9ed4;text-shadow:0 0 5px rgba(255,59,168,.7);}
     #bb-root .def-col .ic-btn .nm{color:#a8eaff;text-shadow:0 0 5px rgba(0,240,255,.7);}
-    #bb-root .ic-btn .halo{position:absolute;top:-4px;left:50%;transform:translateX(-50%);width:56px;height:56px;border-radius:50%;pointer-events:none;opacity:0;}
+    #bb-root .ic-btn .halo{position:absolute;top:-3px;left:50%;transform:translateX(-50%);width:40px;height:40px;border-radius:50%;pointer-events:none;opacity:0;}
     #bb-root .atk-col .ic-btn .halo{background:radial-gradient(circle,rgba(255,59,168,.85) 0%,rgba(255,59,168,.25) 45%,transparent 70%);}
     #bb-root .def-col .ic-btn .halo{background:radial-gradient(circle,rgba(0,240,255,.85) 0%,rgba(0,240,255,.25) 45%,transparent 70%);}
     #bb-root .ic-btn.sel .halo{opacity:1;animation:bbHalo 1.2s ease-in-out infinite;}

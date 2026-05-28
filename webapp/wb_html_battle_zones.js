@@ -28,9 +28,9 @@
       .wbz-col-atk .wbz-lbl{color:#ff8ac0;text-shadow:0 0 6px rgba(255,80,160,.65),0 1px 2px rgba(0,0,0,.9)}
       .wbz-col-def .wbz-lbl{color:#8acfff;text-shadow:0 0 6px rgba(80,180,255,.65),0 1px 2px rgba(0,0,0,.9)}
       /* Skin-style: без рамки/фона, компактные иконка + надпись. ФИКСИРОВАНЫ */
-      .wbz-btn{width:42px;display:flex;flex-direction:column;align-items:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
-      .wbz-btn img{width:24px;height:24px;object-fit:contain;transition:filter .2s,transform .2s}
-      .wbz-btn .nm{font-size:7px;font-weight:800;letter-spacing:.3px;font-family:Consolas,monospace;text-transform:uppercase;margin-top:1px;text-shadow:0 1px 3px rgba(0,0,0,.95)}
+      .wbz-btn{width:30px;display:flex;flex-direction:column;align-items:center;cursor:pointer;background:transparent;border:none;padding:0;user-select:none}
+      .wbz-btn img{width:17px;height:17px;object-fit:contain;transition:filter .2s,transform .2s}
+      .wbz-btn .nm{font-size:6.5px;font-weight:800;letter-spacing:.3px;font-family:Consolas,monospace;text-transform:uppercase;margin-top:1px;text-shadow:0 1px 3px rgba(0,0,0,.95)}
       .wbz-col-atk .wbz-btn img{filter:drop-shadow(0 0 6px rgba(255,80,160,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
       .wbz-col-def .wbz-btn img{filter:drop-shadow(0 0 6px rgba(80,180,255,.85)) drop-shadow(0 1px 2px rgba(0,0,0,.85))}
       .wbz-col-atk .wbz-btn .nm{color:#ff8ac0;text-shadow:0 0 5px rgba(255,80,160,.7),0 1px 3px rgba(0,0,0,.95)}
