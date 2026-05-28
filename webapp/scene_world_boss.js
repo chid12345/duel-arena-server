@@ -128,7 +128,11 @@ class WorldBossScene extends Phaser.Scene {
     const prep   = (s.prep_seconds_left || 0) > 0 ? 1 : 0;
     const hasPs  = s.player_state ? 1 : 0;
     const dead   = s.player_state?.is_dead ? 1 : 0;
-    const unc    = (s.unclaimed_rewards || []).length > 0 ? 1 : 0;
+    // Игнорируем «локально забранные» — иначе устаревшее состояние сервера
+    // с этой наградой триггерит re-render и баннер «горит дальше».
+    const _claimedSh = window.WBHtml?._claimedRewardIds;
+    const _uncList = (s.unclaimed_rewards || []).filter(x => !(_claimedSh && _claimedSh.has(x.reward_id)));
+    const unc    = _uncList.length > 0 ? 1 : 0;
     // gather.is_open — открыта ли "комната ожидания" (за ~5 мин до старта).
     // Без этого: сервер открывает gather, but shape не меняется → _render не вызывается
     // → кнопка "ВОЙТИ В ЗАЛ ОЖИДАНИЯ" не появляется до ручного обновления страницы.

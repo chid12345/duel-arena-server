@@ -126,7 +126,11 @@ window.WBHtml = (() => {
     const avEmojis = top5.length > 0 ? top5.map(t=>t.emoji||'⚔️') : DEF_EM.slice(0,7);
     const avatarsHTML = avEmojis.map(em=>`<div class="wb-av">${em}</div>`).join('');
 
-    const hasUnclaimed = (s.unclaimed_rewards||[]).length > 0;
+    // Фильтруем те награды, которые игрок ТОЛЬКО ЧТО забрал на клиенте,
+    // но сервер ещё мог не догнать и вернуть их в state → баннер «горел дальше».
+    const _claimed = window.WBHtml?._claimedRewardIds;
+    const _effUnc = (s.unclaimed_rewards||[]).filter(x => !(_claimed && _claimed.has(x.reward_id)));
+    const hasUnclaimed = _effUnc.length > 0;
     const unclaimedBanner = hasUnclaimed
       ? `<div class="wb-unclaimed" data-act="show-rewards">🎁 У тебя есть незабранная награда — нажми</div>`
       : '';
@@ -411,7 +415,11 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
 
   function render(scene, state) {
     _scene = scene; _state = state; window.WBHtml._scene = scene;
-    if (state?.unclaimed_rewards?.length) { window.WBBattleCSS?.inject(); window.WBHtml.showMvpResult?.(state, scene); }
+    // То же фильтрование «локально забранных» — чтобы MVP-попап не открывался
+    // заново сразу после клейма, пока сервер не догнал.
+    const _claimedM = window.WBHtml?._claimedRewardIds;
+    const _mvpList = (state?.unclaimed_rewards || []).filter(x => !(_claimedM && _claimedM.has(x.reward_id)));
+    if (_mvpList.length) { window.WBBattleCSS?.inject(); window.WBHtml.showMvpResult?.({ ...state, unclaimed_rewards: _mvpList }, scene); }
     window.WBLobbyCSS?.inject();
     try { window._closeAllTabOverlays?.(); } catch(_) {}
     const s = state || {};

@@ -185,6 +185,12 @@ Object.assign(WorldBossScene.prototype, {
       const r = await post('/api/world_boss/claim_reward', { reward_id });
       if (r.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
+        // Помечаем «локально забрано» — баннер не вернётся из-за гонки рефреша.
+        try {
+          window.WBHtml = window.WBHtml || {};
+          window.WBHtml._claimedRewardIds = window.WBHtml._claimedRewardIds || new Set();
+          window.WBHtml._claimedRewardIds.add(reward_id);
+        } catch(_) {}
         // Закрываем overlay немедленно (убираем reward из стейта)
         if (this._state?.unclaimed_rewards) {
           this._state.unclaimed_rewards = this._state.unclaimed_rewards.filter(

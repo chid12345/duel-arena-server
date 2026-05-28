@@ -16,6 +16,11 @@
 
   // Защита от дубль-вызова (kunstantik кликает дважды или scene+мы оба)
   const _claimedIds = new Set();
+  // Общий с лобби/шейп-ключом Set «локально забранных» reward_id —
+  // нужен чтобы баннер «незабранная награда» не возвращался из-за гонки
+  // обновлений с сервера (старое состояние ещё может вернуть награду).
+  window.WBHtml = window.WBHtml || {};
+  window.WBHtml._claimedRewardIds = window.WBHtml._claimedRewardIds || new Set();
 
   function _toast(msg) {
     try {
@@ -33,6 +38,8 @@
       const r = await post('/api/world_boss/claim_reward', { reward_id });
       if (r?.ok) {
         try { window.Telegram?.WebApp?.HapticFeedback?.notificationOccurred?.('success'); } catch(_) {}
+        // Помечаем «локально забрано» — баннер не вернётся из-за гонки рефреша.
+        try { window.WBHtml._claimedRewardIds.add(reward_id); } catch(_) {}
         // Быстрое окно «✅ Получено» с настоящей картинкой сундука/свитка.
         // r от API несёт gold/exp/diamonds/chest_type. Этот путь — резервный:
         // обычно claim успевает scene._claimReward (он и покажет окно), а сюда
