@@ -148,6 +148,45 @@ def attach_tma_startup(
         except Exception as exc:
             logger.warning("invoice recovery failed: %s", exc)
 
+    async def _referral_auto_reconcile_loop() -> None:
+        """Подстраховка реферальной комиссии: каждые 60 секунд проверяем
+        не пропустил ли какой из путей доставки (webhook/check/recovery)
+        вызов process_referral_*. Идемпотентно (дедуп по first_premium_at
+        для премиума и по invoice_id для shop). Шлёт рефереру уведомление
+        с правильным текстом — реферер видит результат В ТЕЧЕНИЕ МИНУТЫ
+        даже если все мгновенные пути почему-то промахнулись.
+        Цель: чтобы игроку никогда не приходилось руками жать /reconcile_refs.
+        """
+        await asyncio.sleep(30)  # дать серверу прогреться
+        loop = asyncio.get_event_loop()
+        while True:
+            try:
+                prem = await loop.run_in_executor(None, db.reconcile_all_premium_referrals)
+                shop = await loop.run_in_executor(None, db.reconcile_all_shop_referrals)
+                for c in prem.get("credited", []) or []:
+                    reward = float(c.get("reward_usdt") or 0)
+                    rid = c.get("referrer_id")
+                    if reward > 0 and rid:
+                        await _send_tg_message(
+                            rid,
+                            "💰 <b>Реферальный бонус!</b>\n"
+                            "Ваш приглашённый купил <b>Premium</b>.\n"
+                            f"<b>+{reward:.4f} USDT</b> добавлено на ваш баланс.\n\n⚔️ Duel Arena",
+                        )
+                for c in shop.get("credited", []) or []:
+                    reward = float(c.get("reward_usdt") or 0)
+                    rid = c.get("referrer_id")
+                    if reward > 0 and rid:
+                        await _send_tg_message(
+                            rid,
+                            "💰 <b>Реферальный бонус!</b>\n"
+                            "Ваш приглашённый совершил покупку в магазине (USDT).\n"
+                            f"<b>+{reward:.4f} USDT</b> добавлено на ваш баланс.\n\n⚔️ Duel Arena",
+                        )
+            except Exception as exc:
+                logger.warning("referral auto reconcile failed: %s", exc)
+            await asyncio.sleep(60)
+
     async def _keepalive_loop(health_url: str) -> None:
         await asyncio.sleep(120)
         while True:
@@ -180,6 +219,12 @@ def attach_tma_startup(
         t2 = asyncio.create_task(_recover_pending_invoices(), name="invoice_recovery")
         t1.add_done_callback(_on_task_done)
         t2.add_done_callback(_on_task_done)
+        # Реферальная авто-страховка каждые 60 секунд — догоняет любую покупку,
+        # которую пропустили все 3 мгновенных пути доставки. Игроку НЕ нужно
+        # руками жать /reconcile_refs — система сама шлёт уведомление и USDT.
+        t_ref = asyncio.create_task(_referral_auto_reconcile_loop(), name="referral_auto_reconcile")
+        t_ref.add_done_callback(_on_task_done)
+        logger.info("referral auto-reconcile task started (every 60s)")
         render_url = (os.getenv("RENDER_EXTERNAL_URL") or "").strip().rstrip("/")
         if render_url:
             t3 = asyncio.create_task(_keepalive_loop(f"{render_url}/api/health"), name="keepalive")
