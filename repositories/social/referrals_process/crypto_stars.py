@@ -131,6 +131,33 @@ class SocialReferralCryptoStarsMixin:
                 total += rw
         return {"ok": True, "credited": credited, "count": len(credited), "total_usdt": round(total, 4)}
 
+    def referral_purchase_breakdown(self) -> Dict[str, Any]:
+        """Диагностика: что реально покупали рефералы (за реальные USDT).
+        Помогает понять, почему комиссии нет: за алмазы обычному рефереру не
+        платят (только VIP с 31-го), за Premium — платят всем.
+        """
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT referred_id FROM referrals")
+            ids = [int(r["referred_id"]) for r in cursor.fetchall()]
+            with_premium = 0
+            with_diamond = 0
+            for buyer in ids:
+                cursor.execute(
+                    "SELECT payload FROM crypto_invoices WHERE user_id = ? AND status = 'paid' "
+                    "AND UPPER(asset) = 'USDT'",
+                    (buyer,),
+                )
+                payloads = [str(r["payload"] or "") for r in cursor.fetchall()]
+                if any(":premium:" in p for p in payloads):
+                    with_premium += 1
+                if any((":diamonds:" in p or ":diamond_first:" in p) for p in payloads):
+                    with_diamond += 1
+            return {"total_refs": len(ids), "with_premium": with_premium, "with_diamond_usdt": with_diamond}
+        finally:
+            conn.close()
+
     def process_referral_stars_premium(self, buyer_id: int, stars_paid: int) -> Dict[str, Any]:
         STAR_TO_USDT = 0.013
         referrer_id = self.get_referrer_id(buyer_id)

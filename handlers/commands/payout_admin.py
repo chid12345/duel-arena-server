@@ -110,13 +110,31 @@ class BotHandlersPayoutAdmin:
         if user.id not in ADMIN_USER_IDS:
             await tg_api_call(update.message.reply_text, "🚫 Только для администратора.")
             return
-        res = await asyncio.to_thread(db.reconcile_all_premium_referrals)
+        try:
+            res = await asyncio.to_thread(db.reconcile_all_premium_referrals)
+            brk = await asyncio.to_thread(db.referral_purchase_breakdown)
+        except Exception as e:
+            logger.exception("reconcile_refs failed")
+            await tg_api_call(
+                update.message.reply_text,
+                f"⚠️ Ошибка бэкафилла: <code>{type(e).__name__}: {e}</code>",
+                parse_mode="HTML",
+            )
+            return
+        diag = (
+            f"\n\n📊 Рефералов: <b>{brk['total_refs']}</b> · "
+            f"купили Premium: <b>{brk['with_premium']}</b> · "
+            f"купили алмазы за USDT: <b>{brk['with_diamond_usdt']}</b>"
+        )
         credited = res.get("credited", [])
         if not credited:
             await tg_api_call(
                 update.message.reply_text,
-                "✅ Доначислять нечего: либо все премиум-комиссии уже выплачены, "
-                "либо рефералы пока не покупали Premium.",
+                "✅ Доначислять за Premium нечего (премиум-комиссии уже выплачены "
+                "или рефералы Premium не покупали)." + diag +
+                "\n\nℹ️ USDT-комиссия идёт за покупку <b>Premium</b>. За покупку "
+                "<b>алмазов</b> платится только VIP-рефереру (с 31-го платящего).",
+                parse_mode="HTML",
             )
             return
         # Уведомляем каждого реферера о доплате (через проверенный helper с chat_id).
@@ -129,6 +147,6 @@ class BotHandlersPayoutAdmin:
         await tg_api_call(
             update.message.reply_text,
             f"✅ Доначислено комиссий: <b>{res['count']}</b> на сумму <b>{res['total_usdt']:.4f} USDT</b>.\n"
-            "Рефереры уведомлены, баланс обновлён.",
+            "Рефереры уведомлены, баланс обновлён." + diag,
             parse_mode="HTML",
         )

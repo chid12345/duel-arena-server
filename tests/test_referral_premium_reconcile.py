@@ -152,3 +152,25 @@ def test_reconcile_all_idempotent(db):
     assert first["count"] == 1
     assert second["count"] == 0, "Второй прогон ничего не платит"
     assert _balance(db, 5101) == 0.40
+
+
+def test_purchase_breakdown_premium_vs_diamonds(db):
+    """Диагностика различает покупку Premium и покупку алмазов за USDT."""
+    db.get_or_create_player(5101, "boss")
+    code = db.get_referral_code(5101)
+    # Реферал 1 — купил Premium
+    db.get_or_create_player(5301, "prem")
+    db.create_crypto_invoice(5301, 920000, 0, "USDT", "8.00", payload="uid:5301:premium:1")
+    db.confirm_crypto_invoice(920000)
+    db.register_referral(5301, code)
+    # Реферал 2 — купил 500 алмазов за USDT (как на скрине игрока)
+    db.get_or_create_player(5302, "dia")
+    db.create_crypto_invoice(5302, 920001, 500, "USDT", "5.00", payload="uid:5302:diamonds:500")
+    db.confirm_crypto_invoice(920001)
+    db.register_referral(5302, code)
+
+    brk = db.referral_purchase_breakdown()
+
+    assert brk["total_refs"] == 2
+    assert brk["with_premium"] == 1
+    assert brk["with_diamond_usdt"] == 1
