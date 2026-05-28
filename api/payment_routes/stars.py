@@ -81,8 +81,15 @@ def register_stars_routes(router: APIRouter, ctx: Dict[str, Any]) -> None:
             return {"ok": False, "reason": "not_verified", "player": _player_api(dict(fresh))}
 
         if pkg.get("full_reset"):
-            if db.mark_stars_tma_delivered(uid, bot_key, stars):
-                await _notify_paid_full_reset(uid)
+            # Сброс ВСЕГДА запускаем при подтверждённом bot-платеже
+            # (check_stars_bot_payment выше). wipe идемпотентен, поэтому
+            # повторный запуск безопасен. Раньше mark_stars_tma_delivered
+            # с окном 15 мин по package_id блокировал второй сброс в течение
+            # тех же 15 мин (фронт получал profile_reset=True, но в БД
+            # ничего не менялось → премиум/вещи оставались). Запись в
+            # stars_payments остаётся для аудита, но не гейтит wipe.
+            db.mark_stars_tma_delivered(uid, bot_key, stars)
+            await _notify_paid_full_reset(uid)
             fresh = db.get_or_create_player(uid, "")
             return {"ok": True, "profile_reset": True, "player": _player_api(dict(fresh))}
 
