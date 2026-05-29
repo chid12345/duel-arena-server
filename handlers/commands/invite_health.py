@@ -73,15 +73,58 @@ class BotHandlersInviteHealth:
                 parse_mode="HTML",
             )
             return
+        # Снимок состояния ДО сброса — для диагностики (видно, что именно
+        # стояло у игрока и реально ли wipe всё это занулил).
+        try:
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT level, premium_until, is_premium, first_premium_at, "
+                "equipped_avatar_id, gold, diamonds FROM players WHERE user_id = ?",
+                (user.id,),
+            )
+            before_row = cur.fetchone()
+            conn.close()
+            before = dict(before_row) if before_row else {}
+        except Exception as _e:
+            before = {"error": str(_e)}
         try:
             battle_system.force_abandon_battle(user.id)
             battle_system.mark_profile_reset(user.id, ttl_seconds=600)
         except Exception:
             pass
-        db.wipe_player_profile(user.id)
+        # keep_wallet_clan_and_referrals=True — ровно тот же путь, что платный
+        # сброс (раньше /wipe_me звал wipe БЕЗ keep → удалял всю строку, что
+        # противоречило тексту «Золото, алмазы и клан не затронуты»).
+        db.wipe_player_profile(user.id, keep_wallet_clan_and_referrals=True)
         db.get_or_create_player(user.id, user.username or "")
-        db.update_player_stats(user.id, {"profile_reset_ts": int(time.time())})
+        # Снимок ПОСЛЕ — сразу видно, что в БД действительно изменилось.
+        try:
+            conn = db.get_connection()
+            cur = conn.cursor()
+            cur.execute(
+                "SELECT level, premium_until, is_premium, first_premium_at, "
+                "equipped_avatar_id, gold, diamonds FROM players WHERE user_id = ?",
+                (user.id,),
+            )
+            after_row = cur.fetchone()
+            conn.close()
+            after = dict(after_row) if after_row else {}
+        except Exception as _e:
+            after = {"error": str(_e)}
+        logger.info("event=wipe_me_diag uid=%s before=%s after=%s", user.id, before, after)
+        diag = (
+            f"\n\n🔍 Диагностика:\n"
+            f"premium_until: {before.get('premium_until')!r} → {after.get('premium_until')!r}\n"
+            f"is_premium: {before.get('is_premium')!r} → {after.get('is_premium')!r}\n"
+            f"first_premium_at: {before.get('first_premium_at')!r} → {after.get('first_premium_at')!r}\n"
+            f"avatar: {before.get('equipped_avatar_id')!r} → {after.get('equipped_avatar_id')!r}\n"
+            f"level: {before.get('level')!r} → {after.get('level')!r}\n"
+            f"gold/diamonds (должны сохраниться): "
+            f"{before.get('gold')}/{before.get('diamonds')} → "
+            f"{after.get('gold')}/{after.get('diamonds')}"
+        )
         await tg_api_call(
             update.message.reply_text,
-            "✅ Профиль сброшен — добро пожаловать снова! Откройте /start.",
+            "✅ Профиль сброшен — добро пожаловать снова! Откройте /start." + diag,
         )
