@@ -18,7 +18,7 @@
 
 Алмазы — фиксированные бонусы топ-3 и last-hit (только при победе).
 Сундуки — top-1 по урону (алмазный) при победе.
-Свитки — 3% шанс scroll_all_12 для остальных при победе.
+Свитки — 5% шанс scroll_all_12 для остальных при победе (см. economy.json victory_scroll_drop_chance).
 """
 from __future__ import annotations
 
@@ -127,8 +127,9 @@ def compute_and_create_rewards(db: Any, spawn_id: int, is_victory: bool) -> int:
         diamonds = int(diamonds_by_rank.get(uid, 0))
 
         # Сундук: только топ-1 по урону при победе → 💠 алмазный.
-        # Свиток scroll_all_12: один случайный счастливчик за рейд (3% боёв),
-        # выбран до цикла в scroll_lucky_uid. 130⭐/$2 в магазине.
+        # Свиток scroll_all_12: один случайный счастливчик за рейд (~5% боёв,
+        # economy.json victory_scroll_drop_chance), выбран до цикла в scroll_lucky_uid.
+        # 130⭐/$2 в магазине.
         # Поражение: ничего сверх утешительного золота/опыта.
         chest_type = None
         if is_victory and top_uid and uid == top_uid:
