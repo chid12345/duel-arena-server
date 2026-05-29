@@ -59,6 +59,39 @@ def test_recovery_full_reset_performs_wipe(db):
     assert int(row["gold"]) == 999, "золото (кошелёк) должно сохраниться"
 
 
+def test_auto_settler_full_reset_performs_wipe(db, monkeypatch):
+    """jobs.payment_settler → recover_one → _deliver: для payload :full_reset:
+    раньше возвращалась заглушка 'full_reset:flagged' БЕЗ wipe (инвойс
+    помечался delivered → деньги списаны, премиум/уровень оставались).
+    Теперь _deliver реально чистит профиль. Регрессионный тест."""
+    from tools import recover_crypto_invoice as rci
+    monkeypatch.setattr(rci, "db", db)
+
+    uid = 9103
+    _set_progress(db, uid, level=42, wins=17)
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE players SET premium_until='2099-01-01', is_premium=1 WHERE user_id=?",
+        (uid,),
+    )
+    conn.commit(); conn.close()
+
+    kind = rci._deliver(uid, invoice_id=42424242,
+                        payload=f"uid:{uid}:full_reset:1", diamonds=0)
+    assert kind == "full_reset:wiped", f"вместо wipe вернулось {kind!r}"
+    row = _read(db, uid)
+    assert int(row["level"]) == 1, "уровень должен сброситься"
+    assert int(row["wins"]) == 0, "победы должны обнулиться"
+    conn = db.get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT premium_until, is_premium FROM players WHERE user_id=?", (uid,))
+    r = cur.fetchone()
+    conn.close()
+    assert r["premium_until"] is None, "Premium должен сняться через auto-settler"
+    assert int(r["is_premium"] or 0) == 0, "is_premium-флаг должен сняться"
+
+
 def test_recovery_diamonds_default_still_ok(db):
     """Обычный алмазный payload (без маркеров) — recovery возвращает True
     и не трогает прогресс (алмазы уже начислены в confirm)."""

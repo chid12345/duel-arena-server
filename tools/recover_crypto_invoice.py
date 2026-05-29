@@ -101,7 +101,21 @@ def _deliver(uid: int, invoice_id: int, payload: str, diamonds: int) -> str:
         return f"premium:{result.get('days_left')}d"
 
     if p["is_full_reset"]:
-        return "full_reset:flagged"  # handler doesn't auto-reset; admin uses notify path
+        # Реальный сброс прогресса. Раньше CLI/auto-settler возвращал
+        # заглушку "full_reset:flagged" и помечал invoice доставленным
+        # БЕЗ wipe → игрок оплатил USDT, но премиум/вещи/уровень
+        # оставались. Это срабатывало, когда webhook + crypto_check не
+        # доставили вовремя и тихий фоновый jobs.payment_settler
+        # «дочищал» инвойс пустышкой. Теперь симметрично с
+        # api/payment_routes/recovery_deliver.py.
+        db.wipe_player_profile(uid, keep_wallet_clan_and_referrals=True)
+        db.get_or_create_player(uid, "")
+        try:
+            from battle_system import battle_system as _bs
+            _bs.mark_profile_reset(uid, ttl_seconds=600)
+        except Exception:
+            pass
+        return "full_reset:wiped"
 
     if p["avatar_id"]:
         u = db.unlock_avatar(uid, p["avatar_id"], source="usdt")
