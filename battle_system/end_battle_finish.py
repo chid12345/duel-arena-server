@@ -6,11 +6,9 @@ import asyncio
 import logging
 from typing import Any, Dict
 
-from config import STREAK_BONUS_EVERY, STREAK_BONUS_GOLD
-
 from battle_system.end_battle_finalize import (
-    cleanup_queue_and_active, invalidate_tma_cache, log_stat, remember_ui,
-    update_bot_win_streak,
+    cleanup_queue_and_active, compute_player_win_streak, invalidate_tma_cache,
+    log_stat, player_win_streak_after_loss, remember_ui, update_bot_win_streak,
 )
 from battle_system.end_battle_finish_modes import run_titan_endless_progress
 from battle_system.end_battle_finish_result import build_battle_ended_result
@@ -43,17 +41,17 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     level_up_level = None
 
     winner_stats = None
+    is_pvp = not battle.get("is_bot2")
     if not is_test and winner_user_id is not None and not winner_locked:
-        new_win_streak = winner_live.get("win_streak", 0) + 1
+        new_win_streak, streak_bonus_gold = compute_player_win_streak(
+            winner_live.get("win_streak", 0), is_pvp_win=is_pvp,
+        )
         # Бафф клана: +5% к золоту победителю + bump activity + clan progress
         from database import db as _db
         gold_reward = apply_clan_win_bonus(_db, winner_user_id, gold_reward)
         # Шаг 5: BP-очки за победу. is_bot2 — бой против бота (PvE).
         award_battle_win(_db, winner_user_id, vs_bot=bool(battle.get("is_bot2")))
-        total_gold = winner_live.get("gold", 0) + gold_reward
-        if new_win_streak > 0 and new_win_streak % STREAK_BONUS_EVERY == 0:
-            streak_bonus_gold = STREAK_BONUS_GOLD
-            total_gold += streak_bonus_gold
+        total_gold = winner_live.get("gold", 0) + gold_reward + streak_bonus_gold
         pl = dict(winner_live)
         pl["gold"] = total_gold
         exp_patch, did_level = bs._exp_progression_updates(pl, exp_reward, max_level_ups=1)
@@ -98,7 +96,9 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
         loser_hp = loser_exp_patch["current_hp"] if loser_did_level else loser_battle_hp
         loser_stats = {
             "losses": loser_live.get("losses", 0) + 1,
-            "win_streak": 0,
+            "win_streak": player_win_streak_after_loss(
+                loser_live.get("win_streak", 0), is_pvp_loss=is_pvp,
+            ),
             "current_hp": loser_hp,
             "rating": max(0, int(loser_live.get("rating", 0)) + elo_delta_l),
             "exp": loser_exp_patch["exp"],

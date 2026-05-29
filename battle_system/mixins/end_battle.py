@@ -12,6 +12,7 @@ from database import db
 from economy.curves import pvp_bracket_at, pvp_gold_base, pvp_xp_base
 from economy.loader import get_combat, get_combat_dict
 
+from battle_system.end_battle_finalize import compute_elo_deltas
 from battle_system.end_battle_finish import end_battle_rewards_and_finish
 
 logger = logging.getLogger(__name__)
@@ -231,20 +232,15 @@ class BattleEndBattleMixin:
         combat_log_html = "\n\n".join(battle.get("combat_log_lines", []))
 
         _is_pvp = not battle.get("is_bot2")
-        if not is_test and _is_pvp and battle_mode not in ("titan", "endless"):
-            _elo_k = 32
-            _r_w = int(winner_live.get("rating", 0))
-            _r_l = int(loser_live.get("rating", 0))
-            _e_w = 1.0 / (1.0 + 10.0 ** ((_r_l - _r_w) / 400.0))
-            _e_l = 1.0 - _e_w
-            elo_delta_w = max(1, round(_elo_k * (1.0 - _e_w)))
-            elo_delta_l = min(-1, round(_elo_k * (0.0 - _e_l)))
-        elif not is_test and not _is_pvp and battle_mode not in ("titan", "endless"):
-            elo_delta_w = 5
-            elo_delta_l = 0
+        if is_test:
+            elo_delta_w, elo_delta_l = 0, 0
         else:
-            elo_delta_w = 0
-            elo_delta_l = 0
+            elo_delta_w, elo_delta_l = compute_elo_deltas(
+                is_pvp=_is_pvp,
+                battle_mode=battle_mode,
+                winner_rating=int(winner_live.get("rating", 0)),
+                loser_rating=int(loser_live.get("rating", 0)),
+            )
 
         ctx: Dict[str, Any] = {
             "loop": loop,

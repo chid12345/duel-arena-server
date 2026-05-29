@@ -5,11 +5,39 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
+from config import STREAK_BONUS_EVERY, STREAK_BONUS_GOLD
 from stats.battle_stats import log_battle as _log_battle_stat
 
 logger = logging.getLogger(__name__)
+
+
+def compute_player_win_streak(prev_streak: int, is_pvp_win: bool) -> Tuple[int, int]:
+    """Серия побед игрока считается ТОЛЬКО за PvP-победы.
+    Возврат: (новая серия, бонусное золото за кратность 5).
+    PvE-победа не трогает серию и не платит бонус."""
+    if not is_pvp_win:
+        return prev_streak, 0
+    new = prev_streak + 1
+    bonus = STREAK_BONUS_GOLD if new % STREAK_BONUS_EVERY == 0 else 0
+    return new, bonus
+
+
+def player_win_streak_after_loss(prev_streak: int, is_pvp_loss: bool) -> int:
+    """PvP-поражение сбрасывает серию. PvE-поражение её не трогает."""
+    return 0 if is_pvp_loss else prev_streak
+
+
+def compute_elo_deltas(is_pvp: bool, battle_mode: str,
+                       winner_rating: int, loser_rating: int) -> Tuple[int, int]:
+    """ELO растёт только в PvP-боях обычного режима. PvE/titan/endless = 0/0."""
+    if not is_pvp or battle_mode in ("titan", "endless"):
+        return 0, 0
+    k = 32
+    e_w = 1.0 / (1.0 + 10.0 ** ((loser_rating - winner_rating) / 400.0))
+    e_l = 1.0 - e_w
+    return max(1, round(k * (1.0 - e_w))), min(-1, round(k * (0.0 - e_l)))
 
 
 def cleanup_queue_and_active(bs: Any, battle: Dict[str, Any], battle_id: str,
