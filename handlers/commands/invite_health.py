@@ -73,58 +73,95 @@ class BotHandlersInviteHealth:
                 parse_mode="HTML",
             )
             return
-        # Снимок состояния ДО сброса — для диагностики (видно, что именно
-        # стояло у игрока и реально ли wipe всё это занулил).
-        try:
+        # Каждый шаг отдельно: при сбое — точный текст ошибки и
+        # на каком этапе. Игрок видит факт ошибки в чате, я вижу
+        # полный traceback в логах Render.
+        import traceback as _tb
+        steps: list[str] = []
+        before: dict = {}
+        after: dict = {}
+
+        def _snap(tag: str) -> dict:
             conn = db.get_connection()
             cur = conn.cursor()
-            cur.execute(
-                "SELECT level, premium_until, is_premium, first_premium_at, "
-                "equipped_avatar_id, gold, diamonds FROM players WHERE user_id = ?",
-                (user.id,),
-            )
-            before_row = cur.fetchone()
-            conn.close()
-            before = dict(before_row) if before_row else {}
-        except Exception as _e:
-            before = {"error": str(_e)}
+            try:
+                cur.execute(
+                    "SELECT level, premium_until, is_premium, first_premium_at, "
+                    "equipped_avatar_id, gold, diamonds FROM players WHERE user_id = ?",
+                    (user.id,),
+                )
+                row = cur.fetchone()
+                return dict(row) if row else {"_note": "no player row"}
+            finally:
+                conn.close()
+
+        # 1) Snapshot до
+        try:
+            before = _snap("before")
+            steps.append("✓ snapshot ДО")
+        except Exception as e:
+            logger.exception("wipe_me before-snap uid=%s", user.id)
+            steps.append(f"✗ snapshot ДО: {type(e).__name__}: {e}")
+
+        # 2) battle_system locks (best-effort)
         try:
             battle_system.force_abandon_battle(user.id)
             battle_system.mark_profile_reset(user.id, ttl_seconds=600)
-        except Exception:
-            pass
-        # keep_wallet_clan_and_referrals=True — ровно тот же путь, что платный
-        # сброс (раньше /wipe_me звал wipe БЕЗ keep → удалял всю строку, что
-        # противоречило тексту «Золото, алмазы и клан не затронуты»).
-        db.wipe_player_profile(user.id, keep_wallet_clan_and_referrals=True)
-        db.get_or_create_player(user.id, user.username or "")
-        # Снимок ПОСЛЕ — сразу видно, что в БД действительно изменилось.
+            steps.append("✓ battle_system unlock")
+        except Exception as e:
+            steps.append(f"⚠ battle_system: {type(e).__name__}: {e}")
+
+        # 3) САМ WIPE — критичный шаг, ловим явно
+        wipe_err = None
         try:
-            conn = db.get_connection()
-            cur = conn.cursor()
-            cur.execute(
-                "SELECT level, premium_until, is_premium, first_premium_at, "
-                "equipped_avatar_id, gold, diamonds FROM players WHERE user_id = ?",
-                (user.id,),
-            )
-            after_row = cur.fetchone()
-            conn.close()
-            after = dict(after_row) if after_row else {}
-        except Exception as _e:
-            after = {"error": str(_e)}
-        logger.info("event=wipe_me_diag uid=%s before=%s after=%s", user.id, before, after)
-        diag = (
-            f"\n\n🔍 Диагностика:\n"
-            f"premium_until: {before.get('premium_until')!r} → {after.get('premium_until')!r}\n"
-            f"is_premium: {before.get('is_premium')!r} → {after.get('is_premium')!r}\n"
-            f"first_premium_at: {before.get('first_premium_at')!r} → {after.get('first_premium_at')!r}\n"
-            f"avatar: {before.get('equipped_avatar_id')!r} → {after.get('equipped_avatar_id')!r}\n"
-            f"level: {before.get('level')!r} → {after.get('level')!r}\n"
-            f"gold/diamonds (должны сохраниться): "
-            f"{before.get('gold')}/{before.get('diamonds')} → "
-            f"{after.get('gold')}/{after.get('diamonds')}"
-        )
+            db.wipe_player_profile(user.id, keep_wallet_clan_and_referrals=True)
+            steps.append("✓ wipe_player_profile")
+        except Exception as e:
+            wipe_err = f"{type(e).__name__}: {e}"
+            logger.exception("wipe_me WIPE FAILED uid=%s", user.id)
+            steps.append(f"✗ wipe_player_profile: {wipe_err}")
+            # Полный traceback тоже в чат — короткий, последние 6 строк
+            tb_lines = _tb.format_exc().splitlines()[-6:]
+            steps.append("traceback:\n" + "\n".join(tb_lines))
+
+        # 4) get_or_create (recreate row if wipe deleted it)
+        try:
+            db.get_or_create_player(user.id, user.username or "")
+            steps.append("✓ get_or_create_player")
+        except Exception as e:
+            logger.exception("wipe_me get_or_create FAILED uid=%s", user.id)
+            steps.append(f"✗ get_or_create_player: {type(e).__name__}: {e}")
+
+        # 5) Snapshot после
+        try:
+            after = _snap("after")
+            steps.append("✓ snapshot ПОСЛЕ")
+        except Exception as e:
+            logger.exception("wipe_me after-snap uid=%s", user.id)
+            steps.append(f"✗ snapshot ПОСЛЕ: {type(e).__name__}: {e}")
+
+        logger.info("event=wipe_me_diag uid=%s before=%s after=%s steps=%s",
+                    user.id, before, after, steps)
+
+        diag_lines = [
+            "🔍 Диагностика сброса:",
+            "",
+            "Шаги:",
+            *steps,
+            "",
+            f"premium_until: {before.get('premium_until')!r} → {after.get('premium_until')!r}",
+            f"is_premium: {before.get('is_premium')!r} → {after.get('is_premium')!r}",
+            f"first_premium_at: {before.get('first_premium_at')!r} → {after.get('first_premium_at')!r}",
+            f"avatar: {before.get('equipped_avatar_id')!r} → {after.get('equipped_avatar_id')!r}",
+            f"level: {before.get('level')!r} → {after.get('level')!r}",
+            f"gold/diamonds: {before.get('gold')}/{before.get('diamonds')} → "
+            f"{after.get('gold')}/{after.get('diamonds')}",
+        ]
+        header = "❌ Сброс УПАЛ на этапе wipe_player_profile" if wipe_err \
+            else "✅ Сброс выполнен. Откройте /start."
+        # Telegram-сообщение максимум ~4096 символов — обрезаем с запасом.
+        body = "\n".join(diag_lines)[:3500]
         await tg_api_call(
             update.message.reply_text,
-            "✅ Профиль сброшен — добро пожаловать снова! Откройте /start." + diag,
+            f"{header}\n\n{body}",
         )
