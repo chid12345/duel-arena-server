@@ -10,7 +10,8 @@ from config import *
 from database import db
 
 from battle_system.end_battle_finalize import (
-    compute_elo_deltas, compute_player_win_streak, player_win_streak_after_loss,
+    compute_elo_deltas, compute_player_win_streak, effective_elo_ratings,
+    is_pvp_battle, player_win_streak_after_loss,
 )
 from battle_system.mixins.afk_end_titan import run_titan_progress_afk
 
@@ -81,7 +82,7 @@ class BattleAfkEndMixin:
         loser_stats     = None
         afk_elo_delta_w = 0
         afk_elo_delta_l = 0
-        _is_pvp_afk = not battle.get("is_bot2")
+        _is_pvp_afk = is_pvp_battle(battle)
         if not is_test and winner_user_id is not None and not winner_locked:
             new_ws_afk, streak_bonus_afk = compute_player_win_streak(
                 winner_live.get('win_streak', 0), is_pvp_win=_is_pvp_afk,
@@ -92,11 +93,12 @@ class BattleAfkEndMixin:
             exp_patch, did_level_afk = self._exp_progression_updates(pl, exp_reward, max_level_ups=1)
             if did_level_afk:
                 level_up_level = exp_patch['level']
+            _w_rate, _l_rate = effective_elo_ratings(
+                battle, winner_live, loser_live, winner_user_id, loser_user_id,
+            )
             afk_elo_delta_w, afk_elo_delta_l = compute_elo_deltas(
-                is_pvp=_is_pvp_afk,
-                battle_mode=battle_mode,
-                winner_rating=int(winner_live.get('rating', 1000)),
-                loser_rating=int(loser_live.get('rating', 1000)),
+                is_pvp=_is_pvp_afk, battle_mode=battle_mode,
+                winner_rating=_w_rate, loser_rating=_l_rate,
             )
             # HP победителя: при левелапе — полное, иначе — боевое HP
             winner_battle_hp = max(0, int(winner.get('current_hp', 0)))

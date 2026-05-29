@@ -12,7 +12,9 @@ from database import db
 from economy.curves import pvp_bracket_at, pvp_gold_base, pvp_xp_base
 from economy.loader import get_combat, get_combat_dict
 
-from battle_system.end_battle_finalize import compute_elo_deltas
+from battle_system.end_battle_finalize import (
+    compute_elo_deltas, effective_elo_ratings, is_pvp_battle,
+)
 from battle_system.end_battle_finish import end_battle_rewards_and_finish
 
 logger = logging.getLogger(__name__)
@@ -231,15 +233,16 @@ class BattleEndBattleMixin:
 
         combat_log_html = "\n\n".join(battle.get("combat_log_lines", []))
 
-        _is_pvp = not battle.get("is_bot2")
+        _is_pvp = is_pvp_battle(battle)
         if is_test:
             elo_delta_w, elo_delta_l = 0, 0
         else:
+            _w_rate, _l_rate = effective_elo_ratings(
+                battle, winner_live, loser_live, winner_user_id, loser_user_id,
+            )
             elo_delta_w, elo_delta_l = compute_elo_deltas(
-                is_pvp=_is_pvp,
-                battle_mode=battle_mode,
-                winner_rating=int(winner_live.get("rating", 0)),
-                loser_rating=int(loser_live.get("rating", 0)),
+                is_pvp=_is_pvp, battle_mode=battle_mode,
+                winner_rating=_w_rate, loser_rating=_l_rate,
             )
 
         ctx: Dict[str, Any] = {

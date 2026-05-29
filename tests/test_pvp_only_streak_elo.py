@@ -12,6 +12,8 @@ from __future__ import annotations
 from battle_system.end_battle_finalize import (
     compute_elo_deltas,
     compute_player_win_streak,
+    effective_elo_ratings,
+    is_pvp_battle,
     player_win_streak_after_loss,
 )
 from config import STREAK_BONUS_EVERY, STREAK_BONUS_GOLD
@@ -104,6 +106,77 @@ def test_endless_mode_gives_zero_elo_even_in_pvp():
                                 winner_rating=1000, loser_rating=1000)
     assert dw == 0
     assert dl == 0
+
+
+# ---------- Замаскированный PvP-фоллбек (Этап 9) ----------
+
+
+def test_real_pvp_is_pvp():
+    """Живой PvP-бой: is_bot2=False → PvP."""
+    assert is_pvp_battle({"is_bot2": False}) is True
+
+
+def test_plain_pve_is_not_pvp():
+    """Обычный бой с ботом (ручной выбор) — PvE."""
+    assert is_pvp_battle({"is_bot2": True}) is False
+
+
+def test_disguised_fallback_counts_as_pvp():
+    """Замаскированный фоллбек (Этап 9): is_bot2=True, но _disguise_as_pvp=True.
+    Игрок видит «человека» — должен получать PvP-награды."""
+    battle = {"is_bot2": True, "_disguise_as_pvp": True}
+    assert is_pvp_battle(battle) is True
+
+
+def test_disguised_fallback_gives_pvp_streak_and_bonus():
+    """В замаскированном PvP серия растёт, бонус +30 капает."""
+    battle = {"is_bot2": True, "_disguise_as_pvp": True}
+    new, bonus = compute_player_win_streak(
+        prev_streak=4, is_pvp_win=is_pvp_battle(battle),
+    )
+    assert new == 5
+    assert bonus == STREAK_BONUS_GOLD
+
+
+def test_effective_elo_ratings_disguised_uses_human_rating_for_both():
+    """В замаскированном PvP у бота нет рейтинга — берём рейтинг живого
+    игрока с обеих сторон, ELO ±16 как у равных."""
+    battle = {"is_bot2": True, "_disguise_as_pvp": True}
+    # Человек выиграл: winner_user_id=42, loser — бот без user_id и rating.
+    w, l = effective_elo_ratings(
+        battle,
+        winner_live={"rating": 1200},
+        loser_live={},  # бот, нет rating
+        winner_user_id=42,
+        loser_user_id=None,
+    )
+    assert w == 1200 and l == 1200
+
+
+def test_effective_elo_ratings_disguised_bot_winner():
+    """Если бот выиграл замаскированный PvP, берём рейтинг проигравшего человека."""
+    battle = {"is_bot2": True, "_disguise_as_pvp": True}
+    w, l = effective_elo_ratings(
+        battle,
+        winner_live={},  # бот победил, нет rating
+        loser_live={"rating": 1500},
+        winner_user_id=None,
+        loser_user_id=42,
+    )
+    assert w == 1500 and l == 1500
+
+
+def test_effective_elo_ratings_real_pvp_uses_actual_ratings():
+    """Живой PvP: берём фактические рейтинги обоих."""
+    battle = {"is_bot2": False}
+    w, l = effective_elo_ratings(
+        battle,
+        winner_live={"rating": 1100},
+        loser_live={"rating": 950},
+        winner_user_id=10,
+        loser_user_id=20,
+    )
+    assert w == 1100 and l == 950
 
 
 def test_pvp_underdog_wins_more_elo():

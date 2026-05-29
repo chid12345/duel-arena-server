@@ -13,6 +13,28 @@ from stats.battle_stats import log_battle as _log_battle_stat
 logger = logging.getLogger(__name__)
 
 
+def is_pvp_battle(battle: Dict[str, Any]) -> bool:
+    """True для живого PvP И для замаскированного бот-фоллбека (Этап 9).
+    Замаскированный фоллбек получает PvP-награды (ELO/серия/+30 бонус),
+    т.к. игрок видит «человека» — обман без награды ломает UX."""
+    return not battle.get("is_bot2") or bool(battle.get("_disguise_as_pvp"))
+
+
+def effective_elo_ratings(battle: Dict[str, Any],
+                          winner_live: Dict[str, Any], loser_live: Dict[str, Any],
+                          winner_user_id, loser_user_id) -> Tuple[int, int]:
+    """Рейтинги для ELO-формулы. В замаскированном PvP у бота нет колонки
+    rating — используем рейтинг живого игрока с обеих сторон, чтобы выйти
+    на равную пару (±16 ELO как в равном PvP)."""
+    if not battle.get("_disguise_as_pvp"):
+        return int(winner_live.get("rating", 0)), int(loser_live.get("rating", 0))
+    if winner_user_id is not None:
+        h = int(winner_live.get("rating", 1000))
+    else:
+        h = int(loser_live.get("rating", 1000))
+    return h, h
+
+
 def compute_player_win_streak(prev_streak: int, is_pvp_win: bool) -> Tuple[int, int]:
     """Серия побед игрока считается ТОЛЬКО за PvP-победы.
     Возврат: (новая серия, бонусное золото за кратность 5).

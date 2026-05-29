@@ -8,7 +8,8 @@ from typing import Any, Dict
 
 from battle_system.end_battle_finalize import (
     cleanup_queue_and_active, compute_player_win_streak, invalidate_tma_cache,
-    log_stat, player_win_streak_after_loss, remember_ui, update_bot_win_streak,
+    is_pvp_battle, log_stat, player_win_streak_after_loss, remember_ui,
+    update_bot_win_streak,
 )
 from battle_system.end_battle_finish_modes import run_titan_endless_progress
 from battle_system.end_battle_finish_result import build_battle_ended_result
@@ -41,7 +42,7 @@ async def end_battle_rewards_and_finish(bs: Any, ctx: Dict[str, Any]) -> Dict[st
     level_up_level = None
 
     winner_stats = None
-    is_pvp = not battle.get("is_bot2")
+    is_pvp = is_pvp_battle(battle)
     if not is_test and winner_user_id is not None and not winner_locked:
         new_win_streak, streak_bonus_gold = compute_player_win_streak(
             winner_live.get("win_streak", 0), is_pvp_win=is_pvp,
