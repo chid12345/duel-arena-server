@@ -52,12 +52,30 @@ _WIPE_TABLES = (
 class UsersWipeLeaderboardMixin:
     def _existing_user_tables(self, cursor) -> set:
         """Имена существующих таблиц — чтобы DELETE не падал на ещё не созданных
-        (часть схемы создаётся лениво и различается между SQLite и Postgres)."""
+        (часть схемы создаётся лениво и различается между SQLite и Postgres).
+
+        В проде на Postgres соединение настроено как dict-style cursor —
+        row[0] там падает с KeyError: 0. SQLite-Row поддерживает и индекс,
+        и имя, поэтому SQLite-тесты этого бага не ловили, а wipe тихо падал
+        на ВСЕХ путях сброса (Stars / USDT-webhook / crypto_check /
+        auto-settler). Используем имя колонки и принимаем обе формы строк."""
         if getattr(self, "_pg", False):
             cursor.execute("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+            col = "tablename"
         else:
             cursor.execute("SELECT name FROM sqlite_master WHERE type = 'table'")
-        return {row[0] for row in cursor.fetchall()}
+            col = "name"
+        out: set = set()
+        for row in cursor.fetchall():
+            # dict-cursor / sqlite3.Row / tuple — все три формата сразу
+            try:
+                out.add(row[col])
+            except (TypeError, KeyError, IndexError):
+                try:
+                    out.add(row[0])
+                except Exception:
+                    pass
+        return out
 
     def wipe_player_profile(self, user_id: int, *, keep_wallet_clan_and_referrals: bool = False) -> None:
         conn = self.get_connection()

@@ -118,6 +118,33 @@ def test_full_reset_no_owned_content_still_ok(db):
     assert int(p["level"]) == 1, "уровень сброшен"
 
 
+def test_existing_user_tables_handles_dict_rows(db):
+    """Регрессия: на проде Postgres-курсор отдаёт dict-rows, в которых
+    row[0] кидает KeyError. _existing_user_tables должен переживать оба
+    формата (dict-row из psycopg + sqlite3.Row из тестов). Раньше падал
+    с KeyError: 0 и весь wipe ронялся в самой первой строке."""
+    class _DictRow(dict):
+        pass
+
+    class _FakeCursor:
+        """Эмулирует dict-cursor: row['name'] работает, row[0] — KeyError."""
+        def __init__(self, names):
+            self._rows = [_DictRow({"name": n, "tablename": n}) for n in names]
+            self._stage = None
+
+        def execute(self, sql, *a, **k):
+            self._stage = "ok"
+
+        def fetchall(self):
+            return self._rows
+
+    # Сам метод вызываем напрямую — psycopg не нужен в тестах.
+    out = db._existing_user_tables(_FakeCursor(["players", "improvements", "battles"]))
+    assert out == {"players", "improvements", "battles"}, (
+        f"_existing_user_tables не разобрал dict-rows: {out!r}"
+    )
+
+
 def test_full_account_delete_removes_player(db):
     """keep=False (админский полный снос аккаунта) — строка игрока удаляется."""
     uid = 7003
