@@ -104,6 +104,13 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
             pass
         ps = db.get_wb_player_state(spawn_id, uid)
         if ps:
+            # Активные свитки: новая модель (JSON-список до 5), легаси для UI.
+            import json as _json_st
+            try:
+                _scrolls_active = _json_st.loads(ps.get("raid_scrolls_active") or "[]")
+                if not isinstance(_scrolls_active, list): _scrolls_active = []
+            except Exception:
+                _scrolls_active = []
             player_state = {
                 "current_hp": int(ps.get("current_hp") or 0),
                 "max_hp": int(ps.get("max_hp") or 100),
@@ -112,6 +119,7 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
                 "hits_count": int(ps.get("hits_count") or 0),
                 "raid_scroll_1": ps.get("raid_scroll_1"),
                 "raid_scroll_2": ps.get("raid_scroll_2"),
+                "raid_scrolls_active": _scrolls_active,
                 "auto_bot": bool(int(ps.get("auto_bot") or 0)),
             }
 

@@ -113,4 +113,11 @@ POSTGRES_DDL_05_WORLD_BOSS: tuple[str, ...] = (
 
     # 8. Щит игрока (-30% урона на 2 сек). Timestamp в мс окончания.
     "ALTER TABLE world_boss_player_state ADD COLUMN IF NOT EXISTS shield_until_ms BIGINT DEFAULT 0",
+
+    # 9. Расширенный список активных рейд-свитков (до 5 одновременно — по одному
+    #    каждого типа). JSON-список вида '["damage_25","power_10","defense_20"]'.
+    #    На первом ударе сервер забирает все купленные WB-свитки из инвентаря
+    #    и кладёт сюда. Источник правды для damage_calc. Старые raid_scroll_1/2
+    #    остаются для миграции / диагностики.
+    "ALTER TABLE world_boss_player_state ADD COLUMN IF NOT EXISTS raid_scrolls_active TEXT DEFAULT '[]'",
 )

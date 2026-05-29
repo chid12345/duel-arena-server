@@ -37,9 +37,14 @@ BOSS_ATTACK_PCT_HP = 0.08
 PLAYER_HIT_COOLDOWN_MS = 300
 
 
-def _collect_raid_mults(scroll_1: Optional[str], scroll_2: Optional[str]) -> Dict[str, float]:
+def _collect_raid_mults(*scrolls: Optional[str]) -> Dict[str, float]:
+    """Собирает мультипликаторы со всех активных рейд-свитков.
+    Принимает произвольное число свитков (раньше — фиксированно 2). Это нужно
+    т.к. игрок может купить до 5 разных свитков (по 1 каждого типа), все
+    активны одновременно. damage_mult и defense_mult стакаются мультипликативно,
+    dodge_bonus и crit_chance_bonus — аддитивно (по сумме процентов)."""
     mults = {"damage_mult": 1.0, "defense_mult": 1.0, "dodge_bonus": 0.0, "crit_chance_bonus": 0.0}
-    for s in (scroll_1, scroll_2):
+    for s in scrolls:
         eff = RAID_SCROLL_EFFECTS.get(s or "", {})
         if "damage_mult" in eff:
             mults["damage_mult"] *= eff["damage_mult"]
@@ -57,11 +62,15 @@ def calc_player_damage_to_boss(
     boss_stat_profile: Dict[str, float],
     scroll_1: Optional[str] = None,
     scroll_2: Optional[str] = None,
+    scrolls: Optional[list] = None,
     is_vulnerability_window: bool = False,
     rng: Optional[random.Random] = None,
 ) -> Tuple[int, bool, Dict[str, Any]]:
     """Считает урон игрока по боссу.
     Возвращает (damage, is_crit, debug).
+    Можно передать либо scroll_1+scroll_2 (legacy 2 слота), либо scrolls=[...] —
+    полный список активных свитков (новая модель «до 5 одновременно»). Если
+    передано и то, и другое — приоритет у scrolls (legacy игнорируется).
     """
     rng = rng or random
     base = max(1, int(player_stats.get("strength", 10)))
@@ -72,7 +81,8 @@ def calc_player_damage_to_boss(
     crit_inv = max(0, atk_crit - PLAYER_START_CRIT)
     crit_base = min(CRIT_MAX_CHANCE, crit_base + (crit_inv // max(1, AGI_BONUS_STEP)) * AGI_BONUS_PCT_PER_STEP)
 
-    mults = _collect_raid_mults(scroll_1, scroll_2)
+    active = scrolls if scrolls is not None else [scroll_1, scroll_2]
+    mults = _collect_raid_mults(*active)
     crit_chance = min(CRIT_MAX_CHANCE, crit_base + mults["crit_chance_bonus"])
     is_crit = rng.random() < crit_chance
 
@@ -99,15 +109,19 @@ def calc_boss_attack_damage(
     boss_stat_profile: Dict[str, float],
     scroll_1: Optional[str] = None,
     scroll_2: Optional[str] = None,
+    scrolls: Optional[list] = None,
     rng: Optional[random.Random] = None,
 ) -> Tuple[int, bool, Dict[str, Any]]:
     """Считает урон босса по игроку (ответка каждые 6 сек).
     Возвращает (damage, is_dodged, debug).
     Если игрок увернулся — damage=0, is_dodged=True.
+    scrolls=[...] — список ВСЕХ активных свитков (новая модель до 5);
+    scroll_1+scroll_2 — legacy 2 слота. При передаче scrolls legacy игнорируется.
     """
     rng = rng or random
     max_hp = int(player_state.get("max_hp", 100))
-    mults = _collect_raid_mults(scroll_1, scroll_2)
+    active = scrolls if scrolls is not None else [scroll_1, scroll_2]
+    mults = _collect_raid_mults(*active)
 
     # Уворот по PvP-формуле: ловкость (endurance) игрока vs ловкость босса (~30)
     def_end = int(player_state.get("endurance", PLAYER_START_ENDURANCE))

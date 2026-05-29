@@ -118,24 +118,38 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         if int(ps.get("is_dead") or 0):
             return {"ok": False, "reason": "Вы мертвы — нужен свиток воскрешения"}
 
-        # Авто-применение рейд-свитков при ПЕРВОМ входе (existing_ps не было).
-        # Купил до боя → зашёл → сами применились → работают весь рейд → сброс после.
+        # Авто-применение ВСЕХ купленных рейд-свитков при ПЕРВОМ входе.
+        # Каждый из 5 типов покупается в лобби максимум 1 раз перед рейдом.
+        # Здесь забираем их все из инвентаря и кладём в JSON-список
+        # raid_scrolls_active — он же источник правды для damage_calc.
         if not existing_ps:
             _RAID_ORDER = ["damage_25", "power_10", "defense_20", "dodge_10", "crit_10"]
             try:
                 inv_rows = db.get_inventory(uid)
                 inv = {r["item_id"]: int(r["quantity"]) for r in inv_rows
                        if r["item_id"] in _RAID_ORDER}
-                for scroll_id in _RAID_ORDER:
-                    if inv.get(scroll_id, 0) > 0:
-                        db.wb_apply_raid_scroll(user_id=uid, scroll_name=scroll_id, slot=None)
-                        # Обновляем ps чтобы урон считался уже с учётом свитка
-                        fresh = db.get_wb_player_state(spawn_id, uid)
-                        if fresh:
-                            ps = fresh
-                        # Если оба слота заняты — стоп
-                        if ps.get("raid_scroll_1") and ps.get("raid_scroll_2"):
-                            break
+                bought = [sid for sid in _RAID_ORDER if inv.get(sid, 0) > 0]
+                for scroll_id in bought:
+                    try:
+                        db.remove_from_inventory(uid, scroll_id, quantity=1)
+                    except Exception:
+                        pass
+                if bought:
+                    import json as _json
+                    try:
+                        conn_ = db.get_connection()
+                        cur_ = conn_.cursor()
+                        cur_.execute(
+                            "UPDATE world_boss_player_state SET raid_scrolls_active=? "
+                            "WHERE spawn_id=? AND user_id=?",
+                            (_json.dumps(bought), int(spawn_id), int(uid)),
+                        )
+                        conn_.commit(); conn_.close()
+                    except Exception as _ue:
+                        log.warning("wb auto-apply set raid_scrolls_active uid=%s: %s", uid, _ue)
+                    # Обновляем локальный ps чтобы свитки сразу учлись в этом ударе
+                    ps = dict(ps)
+                    ps["raid_scrolls_active"] = _json.dumps(bought)
             except Exception as _ae:
                 log.warning("wb auto-apply scrolls uid=%s: %s", uid, _ae)
 
@@ -158,10 +172,20 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             "crit": max(0, eff_crit),
         }
         stat_profile = active.get("stat_profile") or {}
+        # Парсим активные свитки из JSON. Фолбэк на legacy slot_1/slot_2
+        # для старых player_state-записей (или если миграция ещё не отработала).
+        import json as _json_dc
+        try:
+            _active = _json_dc.loads(ps.get("raid_scrolls_active") or "[]")
+            if not isinstance(_active, list): _active = []
+        except Exception:
+            _active = []
+        if not _active:
+            _legacy = [ps.get("raid_scroll_1"), ps.get("raid_scroll_2")]
+            _active = [s for s in _legacy if s]
         dmg, is_crit, _dbg = calc_player_damage_to_boss(
             player_stats, stat_profile,
-            scroll_1=ps.get("raid_scroll_1"),
-            scroll_2=ps.get("raid_scroll_2"),
+            scrolls=_active,
             is_vulnerability_window=vuln,
         )
 

@@ -211,4 +211,13 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_05_14_119_wb_set_perks", [
         "ALTER TABLE world_boss_player_state ADD COLUMN sb_second_wind_used INTEGER DEFAULT 0",
     ]),
+
+    # 21. Расширение слотов рейд-свитков до 5 (все 5 типов могут быть активны
+    #     одновременно — по 1 каждого). raid_scroll_1/2 остаются для совместимости,
+    #     добавляем JSON-список raid_scrolls_active как источник правды для
+    #     damage_calc. На первом ударе сервер забирает ВСЕ купленные WB-свитки из
+    #     инвентаря, кладёт сюда списком, в инвентаре их больше нет.
+    ("2026_05_29_120_wb_raid_scrolls_active", [
+        "ALTER TABLE world_boss_player_state ADD COLUMN raid_scrolls_active TEXT DEFAULT '[]'",
+    ]),
 ]

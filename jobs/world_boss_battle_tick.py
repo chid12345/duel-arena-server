@@ -78,10 +78,19 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
         _eq_reflect = float(eq.get("reflect_pct", 0) or 0)
     except Exception:
         pass
+    # Активные свитки: JSON-список (новая модель «до 5»), фолбэк на slot_1/2.
+    import json as _json_bt
+    try:
+        _active_bt = _json_bt.loads(ps.get("raid_scrolls_active") or "[]")
+        if not isinstance(_active_bt, list): _active_bt = []
+    except Exception:
+        _active_bt = []
+    if not _active_bt:
+        _legacy_bt = [ps.get("raid_scroll_1"), ps.get("raid_scroll_2")]
+        _active_bt = [s for s in _legacy_bt if s]
     dmg, dodged, _dbg_atk = calc_boss_attack_damage(
         ps, stat_profile,
-        scroll_1=ps.get("raid_scroll_1"),
-        scroll_2=ps.get("raid_scroll_2"),
+        scrolls=_active_bt,
     )
     if dodged:
         logger.debug("wb battle: boss hit user=%s dodged/blocked", user_id)

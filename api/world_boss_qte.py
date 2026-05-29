@@ -88,10 +88,19 @@ async def world_boss_qte_bonus_inner(body: QteBonusBody, *, db, get_user_from_in
 
         player_stats = {"strength": max(1, eff_strength), "crit": max(0, eff_crit)}
         stat_profile = active.get("stat_profile") or {}
+        # Активные свитки: JSON-список (до 5), фолбэк на legacy slot_1/2.
+        import json as _json_qte
+        try:
+            _active_qte = _json_qte.loads(ps.get("raid_scrolls_active") or "[]")
+            if not isinstance(_active_qte, list): _active_qte = []
+        except Exception:
+            _active_qte = []
+        if not _active_qte:
+            _legacy_qte = [ps.get("raid_scroll_1"), ps.get("raid_scroll_2")]
+            _active_qte = [s for s in _legacy_qte if s]
         base_dmg, _, _ = calc_player_damage_to_boss(
             player_stats, stat_profile,
-            scroll_1=ps.get("raid_scroll_1"),
-            scroll_2=ps.get("raid_scroll_2"),
+            scrolls=_active_qte,
             is_vulnerability_window=vuln,
         )
         bonus_dmg = int(base_dmg * 1.5)
