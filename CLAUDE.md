@@ -73,6 +73,32 @@
 
 **❌ ЗАПРЕЩЕНО:** оставлять красные тесты в коммите. Привычка «игнорить красное» = убийство всей системы за месяц.
 
+### Закон 12. Справка живёт вместе с кодом
+Игровая справка для пользователя — `webapp/scene_guide_data*.js` (4 файла). Если правка кода меняет что-то, что **видит игрок** (цифры, цены, шаги, названия кнопок), карточка в справке правится **в той же правке**. Иначе игрок откроет «Справка» и прочтёт враньё.
+
+**Карта «правишь Х → проверь Y»:**
+| Что меняешь в коде | Где смотреть в справке |
+|---|---|
+| `config/battle_constants.py` (зоны, крит, уклон, броня, таймер) | `scene_guide_data.js` — Бой, Статы |
+| `battle_system/`, `config/progression_*` | `scene_guide_data.js` — Бой, Статы |
+| `repositories/equipment/`, `config/sets_catalog_v2.py` | `scene_guide_data.js` — Снаряга |
+| `api/shop_*.py`, `economy/`, `api/shop_loot_box.py` (цены, ящики, зелья, свитки) | `scene_guide_data2.js` — Магазин |
+| `config/avatar_catalog.py` (категории, цены, бонусы образов) | `scene_guide_data2.js` — Образы |
+| `repositories/social/clans*.py`, `clan_bonus.py` | `scene_guide_data4.js` — Социал (клан) |
+| `config/world_boss/`, `repositories/world_boss/` | `scene_guide_data4.js` — Социал (босс) |
+| `repositories/social/referrals_*` (шкала %, минимум вывода, кулдаун) | `scene_guide_data4.js` — Социал (рефералы) |
+| `repositories/quests/`, `definitions_tasks.py`, `tma_weekly_quests.py` | `scene_guide_data3.js` — Задания |
+| `repositories/users/premium.py`, `economy/premium_bonus.py`, `wipe_leaderboard.py` | `scene_guide_data3.js` — VIP |
+| Новая вкладка в магазине / новый экран в меню — добавь карточку «как зайти, что увидишь, что нажать» | соответствующий `scene_guide_data*.js` |
+
+**Проверка перед коммитом:**
+1. Открой соответствующий `scene_guide_data*.js`, найди карточку (Ctrl+F по теме).
+2. Сверь цифры/тексты в `detail` с тем, что в коде. Расходится → обнови.
+3. Новая фича → добавь карточку (icon, title, desc, detail, where).
+4. Удалил фичу → удали карточку.
+
+**❌ Запрещено:** оставлять в справке устаревшие цифры/инструкции. «Игрок прочтёт неправду» = убийство доверия за неделю.
+
 ## Где лежат подробности (9 блоков + навигатор)
 - Навигатор по ключевым словам → `docs/INDEX.md`
 - Архитектура/карта/куда класть/SQL/Mixin → `docs/ARCHITECTURE.md`
