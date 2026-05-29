@@ -125,36 +125,14 @@
         const el = e.target.closest('[data-act]'); if (!el) return;
         const act = el.dataset.act;
         if (act === 'gth-leave') {
-          // 1. Оптимистично снимаем флаг регистрации и убираем себя из списка
-          //    ЛОКАЛЬНО — иначе рендер лобби увидит stale is_registered=true и
-          //    при следующем «ВОЙТИ В БОЙ» войдёт «бесплатно» без новой оплаты,
-          //    а сервер уже снял регистрацию — итог: оба телефона видят пусто.
-          try {
-            const sc = window.WBHtml._scene;
-            if (sc?._state) {
-              sc._state.is_registered = false;
-              const myId = _myTgId();
-              if (myId && sc._state.gather?.players) {
-                sc._state.gather.players = sc._state.gather.players.filter(p => _uidNum(p.user_id) !== myId);
-                sc._state.gather.count = sc._state.gather.players.length;
-              }
-              if (typeof sc._state.registrants_count === 'number') {
-                sc._state.registrants_count = Math.max(0, sc._state.registrants_count - 1);
-              }
-            }
-          } catch(_) {}
-          // 2. Снимаем регистрацию на сервере + возврат 50 🪙 (раньше клиент
-          //    только прятал экран — другие игроки видели «ушедшего» в списке).
-          try {
-            if (typeof post === 'function') {
-              post('/api/world_boss/unregister', {}).then(() => {
-                try { window.WBHtml._scene?._refresh?.(); } catch(_) {}
-              }).catch(() => {});
-            }
-          } catch(_) {}
+          // ВАЖНО: «выйти из зоны» — это только скрыть экран ЛОКАЛЬНО.
+          // По дизайну игры (диалог входа: «Отменить нельзя — даже если не
+          // зайдёшь в бой») 50 🪙 уже в призовом фонде, регистрация коммитнута
+          // до старта рейда. На повторный «ВОЙТИ В БОЙ» войдёшь БЕСПЛАТНО,
+          // т.к. is_registered=true — лобби увидит это и пропустит без оплаты.
+          // Другие игроки продолжают видеть тебя в списке — ты участник рейда.
           try { sessionStorage.removeItem('wb_in_gather'); } catch(_) {}
           _stopLocalTick();
-          // 3. Рендерим лобби (теперь с is_registered=false → покажет «Войти в бой» с ценой).
           try {
             const sc = window.WBHtml._scene;
             if (sc && sc._state) window.WBHtml.render(sc, sc._state);
