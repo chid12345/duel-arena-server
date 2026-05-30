@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>V3 · HOLO BLADE — Duel Arena</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#020816;color:#e0f2ff;
+  font-family:-apple-system,"Segoe UI",Roboto,sans-serif;user-select:none}
+
+/* ── Голо-фон: тёмно-синий с лучом ── */
+.bg{position:fixed;inset:0;background:
+  radial-gradient(ellipse at 50% 100%, rgba(0,180,255,.32), transparent 65%),
+  radial-gradient(ellipse at 50% 0%, rgba(80,120,255,.18), transparent 60%),
+  linear-gradient(180deg,#020816 0%,#061030 60%,#02060f 100%);}
+
+/* ── Гекс-сетка ── */
+.hex{position:fixed;inset:0;opacity:.18;
+  background-image:
+    linear-gradient(60deg,transparent 49.5%,rgba(0,210,255,.5) 49.5% 50.5%,transparent 50.5%),
+    linear-gradient(-60deg,transparent 49.5%,rgba(0,210,255,.5) 49.5% 50.5%,transparent 50.5%),
+    linear-gradient(0deg,transparent 49.5%,rgba(0,210,255,.3) 49.5% 50.5%,transparent 50.5%);
+  background-size:54px 94px;animation:hexPan 30s linear infinite}
+@keyframes hexPan{from{background-position:0 0}to{background-position:54px 94px}}
+
+/* ── Частицы (CSS-точки) ── */
+.dust{position:fixed;inset:0;pointer-events:none;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(180,230,255,.7) 1px, transparent 2px),
+    radial-gradient(circle at 80% 60%, rgba(180,230,255,.7) 1px, transparent 2px),
+    radial-gradient(circle at 40% 80%, rgba(180,230,255,.7) 1px, transparent 2px),
+    radial-gradient(circle at 60% 30%, rgba(180,230,255,.7) 1px, transparent 2px),
+    radial-gradient(circle at 25% 65%, rgba(180,230,255,.7) 1px, transparent 2px),
+    radial-gradient(circle at 90% 15%, rgba(180,230,255,.7) 1px, transparent 2px);
+  background-size:300px 300px;animation:dustFloat 18s linear infinite}
+@keyframes dustFloat{from{background-position:0 0,0 0,0 0,0 0,0 0,0 0}to{background-position:0 -300px,0 -300px,0 -300px,0 -300px,0 -300px,0 -300px}}
+
+/* ── Луч-голограмма посередине ── */
+.beam{position:fixed;left:50%;top:0;bottom:0;width:240px;transform:translateX(-50%);
+  background:linear-gradient(180deg,transparent 0%,rgba(0,220,255,.18) 30%,rgba(0,220,255,.10) 70%,transparent 100%);
+  filter:blur(20px);pointer-events:none}
+
+/* ── Декор-рамка ── */
+.corner{position:fixed;width:38px;height:38px;border:2px solid #00e1ff;opacity:.85;box-shadow:0 0 12px #00e1ff}
+.corner.tl{top:18px;left:18px;border-right:none;border-bottom:none}
+.corner.tr{top:18px;right:18px;border-left:none;border-bottom:none}
+.corner.bl{bottom:18px;left:18px;border-right:none;border-top:none}
+.corner.br{bottom:18px;right:18px;border-left:none;border-top:none}
+
+.wrap{position:relative;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px 24px;text-align:center}
+
+.brand{font-size:11px;letter-spacing:10px;color:#7cd6ff;text-transform:uppercase;margin-bottom:6px;opacity:.85}
+.title{font-size:clamp(42px,12vw,90px);font-weight:200;letter-spacing:14px;line-height:1;color:#fff;
+  text-shadow:0 0 30px #00d4ff,0 0 60px rgba(0,180,255,.35)}
+.title b{font-weight:900;background:linear-gradient(180deg,#fff 0%,#7ee8ff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+.line{margin:18px auto 0;width:200px;height:1px;background:linear-gradient(90deg,transparent,#00e1ff,transparent);box-shadow:0 0 8px #00e1ff}
+
+.tag{margin-top:14px;font-size:12px;letter-spacing:6px;color:#7cd6ff;text-transform:uppercase}
+
+.desc{margin-top:32px;max-width:480px;font-size:15px;line-height:1.7;color:#cfe6f5;
+  position:relative;padding:22px 26px;
+  border-top:1px solid rgba(0,225,255,.45);border-bottom:1px solid rgba(0,225,255,.45);
+  background:linear-gradient(180deg,rgba(0,225,255,.05),rgba(0,225,255,.0));}
+.desc::before,.desc::after{content:'';position:absolute;width:12px;height:12px;border:1px solid #00e1ff}
+.desc::before{top:-7px;left:-7px;border-right:none;border-bottom:none}
+.desc::after{bottom:-7px;right:-7px;border-left:none;border-top:none}
+.desc b{color:#fff}
+.desc span{color:#7ee8ff}
+
+.cta{margin-top:36px;display:inline-flex;align-items:center;gap:12px;padding:16px 38px;
+  font-size:15px;font-weight:700;letter-spacing:6px;color:#02060f;
+  background:linear-gradient(90deg,#7ee8ff,#00d4ff,#7ee8ff);background-size:200% 100%;
+  border:none;border-radius:2px;cursor:pointer;text-transform:uppercase;
+  box-shadow:0 0 30px rgba(0,212,255,.6),inset 0 0 14px rgba(255,255,255,.4);
+  animation:ctaShine 3s linear infinite}
+@keyframes ctaShine{from{background-position:0 0}to{background-position:200% 0}}
+.cta:active{transform:scale(.98)}
+.cta .arr{font-size:18px}
+
+.bar{margin-top:22px;width:240px;height:2px;background:rgba(0,225,255,.18);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:#00e1ff;
+  box-shadow:0 0 12px #00e1ff;animation:bar 3s ease-out forwards}
+@keyframes bar{from{width:0}to{width:82%}}
+.barTxt{margin-top:8px;font-size:10px;letter-spacing:4px;color:#7cd6ff;text-transform:uppercase;opacity:.7}
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="hex"></div>
+  <div class="beam"></div>
+  <div class="dust"></div>
+  <div class="corner tl"></div><div class="corner tr"></div>
+  <div class="corner bl"></div><div class="corner br"></div>
+
+  <div class="wrap">
+    <div class="brand">// holo · combat · network //</div>
+    <div class="title"><b>DUEL</b> ARENA</div>
+    <div class="line"></div>
+    <div class="tag">арена будущего</div>
+
+    <div class="desc">
+      Каждый бой — это <b>проекция твоей воли</b>.<br>
+      Поднимай уровень, открывай редкую экипировку, врывайся в <span>дуэли</span> и штурмуй <span>мировых боссов</span> вместе с кланом.<br>
+      Здесь каждый удар оставляет след.
+    </div>
+
+    <button class="cta">ВОЙТИ <span class="arr">▸</span></button>
+
+    <div class="bar"><i></i></div>
+    <div class="barTxt">калибровка нейро-канала</div>
+  </div>
+</body>
+</html>

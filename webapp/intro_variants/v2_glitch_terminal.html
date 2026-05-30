@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>V2 · GLITCH TERMINAL — Duel Arena</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#020608;color:#a8ffe0;
+  font-family:"Courier New","Consolas",monospace;user-select:none}
+
+/* ── Зелёный CRT-фон ── */
+.bg{position:fixed;inset:0;background:
+  radial-gradient(ellipse at center, rgba(0,80,40,.4) 0%, #020608 65%);}
+
+/* ── Сканлайны CRT ── */
+.scan{position:fixed;inset:0;z-index:5;pointer-events:none;
+  background:linear-gradient(180deg, rgba(0,255,180,.05) 50%, transparent 50%);
+  background-size:100% 4px;animation:scanMove 8s linear infinite;mix-blend-mode:overlay}
+@keyframes scanMove{from{background-position:0 0}to{background-position:0 100vh}}
+
+/* ── Сильный «шум» CRT ── */
+.noise{position:fixed;inset:0;z-index:6;pointer-events:none;opacity:.07;
+  background-image:radial-gradient(circle at 0 0,#fff 1px,transparent 1px),radial-gradient(circle at 3px 5px,#fff 1px,transparent 1px);
+  background-size:3px 3px,5px 5px;animation:noiseShift .12s steps(2) infinite}
+@keyframes noiseShift{from{transform:translate(0,0)}to{transform:translate(1px,1px)}}
+
+/* ── «Свечение» по краям ── */
+.vignette{position:fixed;inset:0;z-index:7;pointer-events:none;
+  box-shadow:inset 0 0 200px rgba(0,40,20,.9),inset 0 0 80px rgba(0,255,140,.10)}
+
+/* ── Бегущие красные «глитч»-полосы ── */
+.glitch-bar{position:fixed;left:0;right:0;height:1px;background:#ff003c;opacity:.7;z-index:8;
+  box-shadow:0 0 8px #ff003c;animation:gbar 6s infinite}
+.glitch-bar:nth-child(2){animation-delay:2s}
+.glitch-bar:nth-child(3){animation-delay:4.2s}
+@keyframes gbar{0%,100%{top:-2%;opacity:0}5%{opacity:.7}50%{top:102%;opacity:.7}55%{opacity:0}}
+
+.wrap{position:relative;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:32px 20px}
+.frame{width:100%;max-width:560px;border:1px solid #00ff88;padding:24px 24px 22px;
+  box-shadow:0 0 30px rgba(0,255,140,.25),inset 0 0 20px rgba(0,255,140,.08);
+  background:rgba(0,20,10,.45)}
+
+.head{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:2px;color:#7affd0;margin-bottom:14px;border-bottom:1px dashed rgba(0,255,140,.35);padding-bottom:8px}
+.head .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#00ff88;box-shadow:0 0 8px #00ff88;animation:dotBlink 1.2s infinite}
+@keyframes dotBlink{0%,100%{opacity:1}50%{opacity:.25}}
+
+.title{font-size:clamp(38px,11vw,72px);font-weight:900;letter-spacing:6px;line-height:.95;color:#00ff88;
+  text-shadow:0 0 14px #00ff88,2px 0 0 #ff003c,-2px 0 0 #00d4ff;
+  animation:glitch 4s infinite}
+@keyframes glitch{
+  0%,90%,100%{text-shadow:0 0 14px #00ff88,2px 0 0 #ff003c,-2px 0 0 #00d4ff;transform:translate(0,0)}
+  92%{text-shadow:0 0 14px #00ff88,5px 0 0 #ff003c,-5px 0 0 #00d4ff;transform:translate(-2px,1px)}
+  94%{text-shadow:0 0 14px #00ff88,-3px 0 0 #ff003c,3px 0 0 #00d4ff;transform:translate(2px,-1px)}
+  96%{text-shadow:0 0 14px #00ff88,4px 0 0 #ff003c,-4px 0 0 #00d4ff;transform:translate(-1px,2px)}
+}
+
+.log{margin-top:18px;font-size:13px;line-height:1.85;color:#7affd0}
+.log .sys{color:#7affd0;opacity:.6}
+.log .ok{color:#00ff88}
+.log .warn{color:#ffd55a}
+.log .red{color:#ff5577}
+.log p{opacity:0;animation:typeIn .6s forwards}
+.log p:nth-child(1){animation-delay:.2s}
+.log p:nth-child(2){animation-delay:.7s}
+.log p:nth-child(3){animation-delay:1.2s}
+.log p:nth-child(4){animation-delay:1.7s}
+.log p:nth-child(5){animation-delay:2.3s}
+.log p:nth-child(6){animation-delay:2.9s}
+.log p:nth-child(7){animation-delay:3.5s}
+@keyframes typeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+.cursor{display:inline-block;width:9px;height:14px;background:#00ff88;vertical-align:-2px;margin-left:3px;animation:cur 1s steps(2) infinite}
+@keyframes cur{50%{opacity:0}}
+
+.cta{margin-top:22px;display:block;width:100%;padding:16px 24px;font-family:inherit;
+  font-size:16px;font-weight:900;letter-spacing:5px;color:#020608;background:#00ff88;
+  border:none;cursor:pointer;text-transform:uppercase;
+  box-shadow:0 0 25px rgba(0,255,140,.7),inset 0 0 10px rgba(0,0,0,.2);
+  animation:ctaShake 5s infinite}
+@keyframes ctaShake{0%,95%,100%{transform:translate(0,0)}97%{transform:translate(-2px,1px);background:#ff003c;color:#fff}98%{transform:translate(2px,-1px);background:#00ff88;color:#020608}}
+.cta:active{transform:scale(.98)}
+
+.bar{margin-top:14px;width:100%;height:4px;background:rgba(0,255,140,.15);overflow:hidden;border:1px solid rgba(0,255,140,.3)}
+.bar>i{display:block;height:100%;width:0;background:#00ff88;
+  box-shadow:0 0 10px #00ff88;animation:bar 4s ease-out forwards}
+@keyframes bar{from{width:0}to{width:72%}}
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="glitch-bar"></div>
+  <div class="glitch-bar"></div>
+  <div class="glitch-bar"></div>
+  <div class="noise"></div>
+  <div class="scan"></div>
+  <div class="vignette"></div>
+
+  <div class="wrap">
+    <div class="frame">
+      <div class="head"><span><span class="dot"></span> NEXUS // ONLINE</span><span>uplink 99.7%</span></div>
+
+      <div class="title">DUEL.ARENA</div>
+
+      <div class="log">
+        <p><span class="sys">[SYS]</span> <span class="ok">connection established</span></p>
+        <p><span class="sys">[SYS]</span> combat protocol <span class="ok">loaded</span></p>
+        <p><span class="sys">[SYS]</span> rival scan: <span class="warn">12,438 active</span></p>
+        <p>&gt; ты в Арене.</p>
+        <p>&gt; здесь дерутся <span class="red">за титул, за честь, за след в истории.</span></p>
+        <p>&gt; выбирай воина. точи клинок. иди вперёд.<span class="cursor"></span></p>
+      </div>
+
+      <button class="cta">// ВОЙТИ В АРЕНУ</button>
+
+      <div class="bar"><i></i></div>
+    </div>
+  </div>
+</body>
+</html>
