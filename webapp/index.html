@@ -90,34 +90,10 @@ window.BUILD_VERSION = '__BUILD_VERSION__';
   .log-heal   { color: #3cd870; }
   .log-system { color: #ffc83c; font-weight: 600; }
   .log-normal { color: #c0b8e0; }
-  #loading-screen {
-    position: fixed; inset: 0;
-    background: #12121c;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    z-index: 1000;
-    transition: opacity 0.5s;
-  }
-  #loading-screen .logo {
-    font-size: 2.2rem; font-weight: 900;
-    color: #ffc83c;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-    text-shadow: 0 0 24px #ffc83c88;
-  }
-  #loading-screen .sub {
-    color: #ccccee; font-size: 0.85rem; margin-bottom: 32px;
-  }
-  #loading-bar-wrap {
-    width: 200px; height: 6px;
-    background: #2a2840; border-radius: 3px; overflow: hidden;
-  }
-  #loading-bar {
-    height: 100%; width: 0%;
-    background: linear-gradient(90deg, #5096ff, #ffc83c);
-    border-radius: 3px;
-    transition: width 0.3s;
-  }
+  /* Стили экрана загрузки V1 «NEON CITY» — вынесены в intro_loading.css */
+</style>
+<link rel="stylesheet" href="intro_loading.css?v=__BUILD_VERSION__">
+<style>
   /* На тач-устройствах (Telegram mobile) :hover «залипает» после тапа —
      карточка остаётся приподнятой, кнопка остаётся красной и т.д.
      Отключаем все hover-эффекты глобально на устройствах без настоящего hover,
@@ -140,11 +116,26 @@ window.BUILD_VERSION = '__BUILD_VERSION__';
 </head>
 <body>
 
+<!-- Экран загрузки V1 «NEON CITY» (стили в intro_loading.css, гейт новичка в intro_welcome.js) -->
 <div id="loading-screen">
-  <div class="logo">⚔️ DUEL ARENA</div>
-  <div class="sub" id="loading-sub">Подготовка арены...</div>
-  <div id="loading-bar-wrap">
-    <div id="loading-bar"></div>
+  <div class="il-sky"></div>
+  <div class="il-grid"></div>
+  <div class="il-city"></div>
+  <div class="il-windows"></div>
+  <div class="il-noise"></div>
+  <div class="il-deco-top"></div>
+  <div class="il-deco-bot"></div>
+  <div class="il-wrap">
+    <div class="il-title">DUEL<br>ARENA</div>
+    <div class="il-tagline">// NEON · COMBAT · LEGEND //</div>
+    <div class="il-desc">
+      <span class="il-neon">DUEL ARENA</span> — место, где сражаются тысячи бойцов.<br>
+      <b>Дуэли. Кланы. Мировые боссы. Рейтинг.</b><br>
+      Выбирай воина, бери клинок — и вперёд, на Топ-1.
+    </div>
+    <button class="il-cta" id="loading-cta">ВОЙТИ В АРЕНУ</button>
+    <div class="il-bar-wrap"><div id="loading-bar"></div></div>
+    <div id="loading-sub">вход в арену</div>
   </div>
 </div>
 <script>
@@ -203,6 +194,8 @@ setTimeout(function(){
 <script defer src="bot_battle_html.js?v=__BUILD_VERSION__"></script>
 <script defer src="bot_battle_autobattle.js?v=__BUILD_VERSION__"></script>
 <script defer src="bot_battle_card.js?v=__BUILD_VERSION__"></script>
+<!-- Гейт «новичок vs возвращающийся» на экране загрузки (V1 NEON CITY). Должен быть до scene_boot. -->
+<script defer src="intro_welcome.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_boot.js?v=__BUILD_VERSION__"></script>
 <script defer src="scene_boot_warriors.js?v=__BUILD_VERSION__"></script>
 <!-- Вспомогательные утилиты для extras-сцен -->

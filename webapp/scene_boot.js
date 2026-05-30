@@ -245,12 +245,10 @@ class BootScene extends Phaser.Scene {
   }
 
   create() {
-    const ls = document.getElementById('loading-screen');
-    if (ls) { ls.style.opacity = '0'; setTimeout(() => ls.remove(), 500); }
     // Анти-эксплойт: если игрок refresh/перезашёл во время активного боя
     // (рейд босса, PvP, натиск, башня) — возвращаем в нужную сцену.
     // Универсальный эндпоинт /api/player/active_session отвечает где быть.
-    (async () => {
+    const continueToScene = async () => {
       try {
         const d = await post('/api/player/active_session', {});
         if (d?.ok && d.scene) {
@@ -262,7 +260,18 @@ class BootScene extends Phaser.Scene {
         }
       } catch(_) {}
       this.scene.start('Menu', {});
-    })();
+    };
+
+    // Welcome-gate: новичок (без флага localStorage.da_welcome_seen) увидит
+    // кнопку «ВОЙТИ В АРЕНУ» и решит сам, когда стартовать. Возвращающийся
+    // проваливается дальше моментально (старое поведение).
+    if (window.IntroWelcome && typeof window.IntroWelcome.gate === 'function') {
+      window.IntroWelcome.gate(() => { continueToScene(); });
+    } else {
+      const ls = document.getElementById('loading-screen');
+      if (ls) { ls.style.opacity = '0'; setTimeout(() => ls.remove(), 500); }
+      continueToScene();
+    }
   }
 }
 

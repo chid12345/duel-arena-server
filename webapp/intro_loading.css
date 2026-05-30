@@ -1,0 +1,93 @@
+/* ─────────────────────────────────────────────────────────────
+   intro_loading.css — V1 «NEON CITY» как экран загрузки/welcome
+   Все классы префикс .il- чтобы не конфликтовать с игрой.
+   ID #loading-screen #loading-bar #loading-sub сохранены —
+   scene_boot.js обновляет их без изменений.
+   ───────────────────────────────────────────────────────────── */
+
+#loading-screen{position:fixed;inset:0;z-index:1000;overflow:hidden;
+  background:#05030f;color:#e8e3ff;
+  font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+  transition:opacity .5s;user-select:none}
+
+/* Слой 1: глубокий градиент-небо */
+.il-sky{position:absolute;inset:0;background:
+  radial-gradient(ellipse at 50% 100%, rgba(255,40,180,.35), transparent 60%),
+  radial-gradient(ellipse at 30% 30%, rgba(0,200,255,.18), transparent 55%),
+  radial-gradient(ellipse at 80% 20%, rgba(120,60,255,.20), transparent 50%),
+  linear-gradient(180deg,#0a061a 0%,#1a0530 50%,#05030f 100%);}
+
+/* Слой 2: бегущая сетка-пол */
+.il-grid{position:absolute;left:50%;bottom:-20vh;width:300vw;height:80vh;
+  transform:translateX(-50%) perspective(500px) rotateX(60deg);
+  background:
+    linear-gradient(90deg, transparent 49.7%, rgba(0,240,255,.55) 50%, transparent 50.3%) 0 0/40px 100%,
+    linear-gradient(0deg, transparent 49.7%, rgba(255,60,200,.45) 50%, transparent 50.3%) 0 0/100% 40px;
+  animation:ilGridScroll 6s linear infinite;
+  mask-image:linear-gradient(180deg,transparent 0%,#000 30%,#000 100%);}
+@keyframes ilGridScroll{from{background-position:0 0,0 0}to{background-position:0 40px,0 40px}}
+
+/* Слой 3: силуэты небоскрёбов + мерцающие окна */
+.il-city{position:absolute;left:0;right:0;bottom:30vh;height:35vh;
+  background:linear-gradient(90deg,#0a0420 0 6%,#1a0c2e 6% 8%,#0a0420 8% 14%,#180a28 14% 17%,#0a0420 17% 22%,#1f0e36 22% 26%,#0a0420 26% 33%,#170926 33% 36%,#0a0420 36% 44%,#220f40 44% 48%,#0a0420 48% 56%,#180a28 56% 60%,#0a0420 60% 66%,#1f0e36 66% 70%,#0a0420 70% 78%,#170926 78% 82%,#0a0420 82% 90%,#180a28 90% 94%,#0a0420 94% 100%);
+  mask-image:linear-gradient(180deg,transparent 0%,#000 60%);opacity:.85}
+.il-windows{position:absolute;left:0;right:0;bottom:30vh;height:35vh;
+  background-image:radial-gradient(circle at 1px 1px, rgba(255,200,80,.7) 1px, transparent 2px);
+  background-size:8px 12px;
+  mask-image:linear-gradient(180deg,transparent 0%,#000 60%);
+  opacity:.35;animation:ilWinFlicker 4s steps(20) infinite}
+@keyframes ilWinFlicker{0%,100%{opacity:.35}48%{opacity:.55}50%{opacity:.20}}
+
+/* Шум поверх */
+.il-noise{position:absolute;inset:0;pointer-events:none;opacity:.06;mix-blend-mode:overlay;
+  background-image:radial-gradient(circle at 0 0,#fff 1px,transparent 1px),radial-gradient(circle at 5px 7px,#fff 1px,transparent 1px);
+  background-size:3px 3px,7px 7px}
+
+/* Декор-полоски по краям */
+.il-deco-top,.il-deco-bot{position:absolute;left:0;right:0;height:3px;
+  background:linear-gradient(90deg,transparent,#00f0ff 30%,#ff3ba8 70%,transparent);opacity:.7}
+.il-deco-top{top:0}.il-deco-bot{bottom:0}
+
+/* Контент */
+.il-wrap{position:relative;z-index:10;width:100%;height:100%;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;padding:40px 24px;text-align:center}
+
+.il-title{font-size:clamp(40px,12vw,84px);font-weight:900;letter-spacing:6px;line-height:.95;
+  background:linear-gradient(90deg,#00f0ff,#ff3ba8 50%,#ffd55a);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 40px rgba(255,60,200,.35);
+  animation:ilTitleBreath 4s ease-in-out infinite}
+@keyframes ilTitleBreath{0%,100%{filter:drop-shadow(0 0 20px rgba(0,240,255,.4))}50%{filter:drop-shadow(0 0 36px rgba(255,60,200,.55))}}
+
+.il-tagline{margin-top:10px;font-size:13px;letter-spacing:8px;color:#7ce6ff;text-transform:uppercase;opacity:.85}
+
+.il-desc{margin-top:28px;max-width:520px;font-size:15px;line-height:1.65;color:#cfc6ee;
+  border:1px solid rgba(120,90,220,.35);border-radius:16px;padding:18px 22px;
+  background:rgba(15,8,32,.55);backdrop-filter:blur(8px);
+  box-shadow:0 0 40px rgba(255,60,200,.15) inset, 0 8px 30px rgba(0,0,0,.45)}
+.il-desc b{color:#ffd55a}
+.il-desc .il-neon{color:#00f0ff;font-weight:700}
+
+/* Кнопка "ВОЙТИ В АРЕНУ" — по умолчанию СКРЫТА, JS показывает после прелоада только новичкам */
+.il-cta{margin-top:30px;display:none;padding:18px 48px;font-size:17px;font-weight:900;letter-spacing:4px;
+  color:#fff;text-transform:uppercase;border:none;border-radius:14px;cursor:pointer;
+  background:linear-gradient(90deg,#ff2bb0,#7c3aed,#00d4ff);
+  box-shadow:0 0 30px rgba(255,60,200,.55),0 0 60px rgba(0,200,255,.35),inset 0 0 12px rgba(255,255,255,.15);
+  animation:ilCtaPulse 2.2s ease-in-out infinite}
+@keyframes ilCtaPulse{0%,100%{box-shadow:0 0 30px rgba(255,60,200,.55),0 0 60px rgba(0,200,255,.35),inset 0 0 12px rgba(255,255,255,.15)}50%{box-shadow:0 0 50px rgba(255,60,200,.85),0 0 100px rgba(0,200,255,.55),inset 0 0 12px rgba(255,255,255,.25)}}
+.il-cta:active{transform:translateY(1px) scale(.98)}
+#loading-screen.il-ready .il-cta{display:inline-block}
+
+/* Прогресс-бар: scene_boot.js пишет width в #loading-bar */
+.il-bar-wrap{margin-top:24px;width:240px;height:5px;border-radius:3px;overflow:hidden;
+  background:rgba(120,90,220,.20);border:1px solid rgba(120,90,220,.35)}
+#loading-bar{display:block;height:100%;width:0;border-radius:3px;
+  background:linear-gradient(90deg,#00f0ff,#ff3ba8);
+  box-shadow:0 0 12px #ff3ba8;transition:width .25s}
+
+/* Подпись под баром */
+#loading-sub{margin-top:8px;font-size:11px;letter-spacing:3px;color:#9a90c0;text-transform:uppercase}
+
+/* Когда показываем кнопку новичку — прячем бар (он уже на 100%) */
+#loading-screen.il-ready .il-bar-wrap,
+#loading-screen.il-ready #loading-sub{display:none}
