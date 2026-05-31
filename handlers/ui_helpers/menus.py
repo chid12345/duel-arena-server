@@ -14,7 +14,7 @@ class CallbackHandlersMenus:
             rows.append(
                 [
                     InlineKeyboardButton(
-                        "🎮 Mini App",
+                        "⚡ ВОЙТИ В АРЕНУ",
                         web_app=WebAppInfo(url=WEBAPP_PUBLIC_URL),
                     )
                 ]

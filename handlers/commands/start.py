@@ -95,14 +95,27 @@ class BotHandlersStart:
                         await update.message.reply_text(bonus_line, parse_mode="HTML")
                     return
 
+        # Киберпанк-приветствие для новичков (показывается 1 раз на самом первом /start).
+        # _is_new ставится в repositories/users/player_core.py:get_or_create_player.
         extra_text = ""
-        if battle_system.get_battle_status(user.id):
+        if player.get("_is_new"):
             extra_text = (
+                "⚡ <b>DUEL ARENA</b> ⚡\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                "▸ Место, где сражаются <b>тысячи бойцов</b>.\n"
+                "▸ Дуэли · Кланы · Мировые боссы · Рейтинг.\n\n"
+                "Жми <b>«⚡ ВОЙТИ В АРЕНУ»</b> — попадёшь в первый бой."
+            )
+
+        if battle_system.get_battle_status(user.id):
+            battle_line = (
                 "⚔️ <b>Бой ещё идёт на сервере</b> (в фоне).\n"
                 "Прокрутите чат к сообщению с кнопками удара/блока или нажмите «Сбросить»."
             )
+            extra_text = f"{extra_text}\n\n{battle_line}".strip() if extra_text else battle_line
         elif battle_system.peek_battle_end_ui(user.id):
-            extra_text = "📋 <b>Есть итог прошлого боя</b> — нажмите «🔄 Обновить», чтобы увидеть."
+            end_line = "📋 <b>Есть итог прошлого боя</b> — нажмите «🔄 Обновить», чтобы увидеть."
+            extra_text = f"{extra_text}\n\n{end_line}".strip() if extra_text else end_line
         if daily_bonus["can_claim"]:
             bonus_line = f"🎁 <b>Ежедневный бонус!</b> +{daily_bonus['bonus']} золота"
             if daily_bonus["streak"] % 7 == 0:

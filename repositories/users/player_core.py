@@ -23,7 +23,9 @@ class UsersPlayerCoreMixin:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM players WHERE user_id = ?", (user_id,))
         player = cursor.fetchone()
+        is_new = False  # ставим в True ТОЛЬКО при первой записи строки игрока в БД
         if not player:
+            is_new = True
             _g1 = gold_when_reaching_level(1)
             start_max_hp = PLAYER_START_MAX_HP
             cursor.execute(
@@ -53,7 +55,12 @@ class UsersPlayerCoreMixin:
             cursor.execute("SELECT * FROM players WHERE user_id = ?", (user_id,))
             player = cursor.fetchone()
         conn.close()
-        return dict(player)
+        result = dict(player)
+        # Транзиентный флаг: True ТОЛЬКО если игрока создали в этом вызове.
+        # /start использует его для показа киберпанк-приветствия 1 раз.
+        # В БД не хранится — каждый следующий вызов вернёт False.
+        result["_is_new"] = is_new
+        return result
 
     def _init_player_improvements_with_cursor(self, cursor, user_id: int):
         for imp_type in ("attack_power", "dodge", "block_mastery", "critical_strike"):
