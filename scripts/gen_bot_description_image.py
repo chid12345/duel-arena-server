@@ -17,12 +17,41 @@ Telegram показывает эту картинку над текстом оп
 from __future__ import annotations
 
 import os
-from PIL import Image, ImageDraw, ImageFont, ImageFilter
+from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageOps
 
 # Telegram BotFather требует ровно один из: 320×180 / 640×360 / 960×540 (всё 16:9).
 # Берём 640×360 — стандарт, читаемо и на мобильном, и в десктопном клиенте.
 W, H = 640, 360
 OUT_PATH = os.path.join(os.path.dirname(__file__), "..", "webapp", "bot_description.png")
+
+# Если положить картинку по этому пути — она станет фоном (центр-кроп до 640×360,
+# затем небольшой dim-overlay чтобы текст читался). Не положил — берётся
+# процедурный неон-градиент с сеткой-полом (старое поведение).
+BG_IMAGE_CANDIDATES = [
+    os.path.join(os.path.dirname(__file__), "..", "webapp", "bot_description_bg.png"),
+    os.path.join(os.path.dirname(__file__), "..", "webapp", "bot_description_bg.jpg"),
+    os.path.join(os.path.dirname(__file__), "..", "webapp", "bot_description_bg.jpeg"),
+]
+
+
+def _load_custom_bg() -> Image.Image | None:
+    """Если есть готовая bot_description_bg.{png,jpg} — вписываем 640×360
+    центр-кропом и слегка затемняем (35%) чтобы текст поверх читался."""
+    for path in BG_IMAGE_CANDIDATES:
+        if not os.path.exists(path):
+            continue
+        try:
+            bg = Image.open(path).convert("RGB")
+            bg = ImageOps.fit(bg, (W, H), method=Image.LANCZOS)
+            # Затемнение поверх — иначе яркая AI-картинка съест текст
+            dim = Image.new("RGBA", (W, H), (0, 0, 0, 90))
+            bg = bg.convert("RGBA")
+            bg.alpha_composite(dim)
+            return bg
+        except Exception as exc:
+            print(f"warn: фон {path} не загрузился ({exc}) — fallback на процедурный")
+            return None
+    return None
 
 
 def _gradient_bg() -> Image.Image:
@@ -124,13 +153,20 @@ def _centered_x(d, text: str, font, total_w: int = W) -> int:
 
 
 def main() -> None:
-    img = _gradient_bg().convert("RGBA")
-    img = _add_glow(img, W // 2, H + 40, 350, (255, 40, 180), 130)   # розовый снизу
-    img = _add_glow(img, W // 3, H // 3, 230, (0, 200, 255), 80)     # голубой сверху-слева
-    img = _add_glow(img, W * 4 // 5, H // 4, 190, (140, 80, 255), 70)  # фиолет сверху-справа
-    img = _draw_grid_floor(img)
+    # Если есть webapp/bot_description_bg.{png,jpg} — используем как фон,
+    # иначе процедурный градиент + сетка-пол (старое поведение).
+    custom_bg = _load_custom_bg()
+    if custom_bg is not None:
+        img = custom_bg
+        print("используем кастомный фон webapp/bot_description_bg.*")
+    else:
+        img = _gradient_bg().convert("RGBA")
+        img = _add_glow(img, W // 2, H + 40, 350, (255, 40, 180), 130)   # розовый снизу
+        img = _add_glow(img, W // 3, H // 3, 230, (0, 200, 255), 80)     # голубой сверху-слева
+        img = _add_glow(img, W * 4 // 5, H // 4, 190, (140, 80, 255), 70)  # фиолет сверху-справа
+        img = _draw_grid_floor(img)
 
-    # Декор-полоски сверху/снизу
+    # Декор-полоски сверху/снизу — нужны и на кастомном фоне (фирменный кант)
     d = ImageDraw.Draw(img, "RGBA")
     d.rectangle([0, 0, W, 3], fill=(0, 240, 255, 200))
     d.rectangle([0, H - 3, W, H], fill=(255, 60, 200, 200))
