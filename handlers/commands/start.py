@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ContextTypes
 from telegram import Update
 
@@ -60,6 +60,31 @@ class BotHandlersStart:
                         user.id, ref_code, _ref_exc,
                     )
 
+        # ─── Новичок: первый /start ───
+        # У новичка статы пустые (lv1, 0 побед), а 10 кнопок меню сбивают с толку.
+        # Показываем ТОЛЬКО короткое описание игры + одну большую кнопку
+        # «⚡ ВОЙТИ В АРЕНУ» (запуск Mini App). После первого захода игрок
+        # перестаёт быть новичком (_is_new=False), при следующем /start увидит
+        # обычное меню со своей карточкой.
+        if player.get("_is_new"):
+            welcome_text = (
+                "⚡ <b>DUEL ARENA</b> ⚡\n"
+                "━━━━━━━━━━━━━━━━━━\n\n"
+                "▸ Место, где сражаются <b>тысячи бойцов</b>.\n"
+                "▸ Дуэли · Кланы · Мировые боссы · Рейтинг.\n\n"
+                "Жми <b>«⚡ ВОЙТИ В АРЕНУ»</b> — попадёшь в первый бой."
+            )
+            kbd = None
+            if WEBAPP_PUBLIC_URL:
+                kbd = InlineKeyboardMarkup([[
+                    InlineKeyboardButton(
+                        "⚡ ВОЙТИ В АРЕНУ",
+                        web_app=WebAppInfo(url=WEBAPP_PUBLIC_URL),
+                    )
+                ]])
+            await update.message.reply_text(welcome_text, reply_markup=kbd, parse_mode="HTML")
+            return
+
         endurance_inv = stamina_stats_invested(
             player.get("max_hp", PLAYER_START_MAX_HP), player.get("level", 1)
         )
@@ -95,27 +120,16 @@ class BotHandlersStart:
                         await update.message.reply_text(bonus_line, parse_mode="HTML")
                     return
 
-        # Киберпанк-приветствие для новичков (показывается 1 раз на самом первом /start).
-        # _is_new ставится в repositories/users/player_core.py:get_or_create_player.
+        # Подсказки в подписи к карточке (только для возвращающегося —
+        # новичок ушёл раньше через _is_new branch).
         extra_text = ""
-        if player.get("_is_new"):
-            extra_text = (
-                "⚡ <b>DUEL ARENA</b> ⚡\n"
-                "━━━━━━━━━━━━━━━━━━\n\n"
-                "▸ Место, где сражаются <b>тысячи бойцов</b>.\n"
-                "▸ Дуэли · Кланы · Мировые боссы · Рейтинг.\n\n"
-                "Жми <b>«⚡ ВОЙТИ В АРЕНУ»</b> — попадёшь в первый бой."
-            )
-
         if battle_system.get_battle_status(user.id):
-            battle_line = (
+            extra_text = (
                 "⚔️ <b>Бой ещё идёт на сервере</b> (в фоне).\n"
                 "Прокрутите чат к сообщению с кнопками удара/блока или нажмите «Сбросить»."
             )
-            extra_text = f"{extra_text}\n\n{battle_line}".strip() if extra_text else battle_line
         elif battle_system.peek_battle_end_ui(user.id):
-            end_line = "📋 <b>Есть итог прошлого боя</b> — нажмите «🔄 Обновить», чтобы увидеть."
-            extra_text = f"{extra_text}\n\n{end_line}".strip() if extra_text else end_line
+            extra_text = "📋 <b>Есть итог прошлого боя</b> — нажмите «🔄 Обновить», чтобы увидеть."
         if daily_bonus["can_claim"]:
             bonus_line = f"🎁 <b>Ежедневный бонус!</b> +{daily_bonus['bonus']} золота"
             if daily_bonus["streak"] % 7 == 0:
