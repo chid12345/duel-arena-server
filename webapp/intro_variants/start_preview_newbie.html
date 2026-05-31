@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Превью: /start для новичка</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{background:#0a0a14;color:#e8e3ff;font-family:-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh;padding:24px 12px;display:flex;justify-content:center}
+
+.note{position:fixed;top:8px;left:0;right:0;text-align:center;font-size:11px;color:#9a90c0;letter-spacing:1px;opacity:.7}
+
+.tg-chat{
+  width:100%;max-width:420px;
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(80,200,140,.18), transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(120,180,80,.12), transparent 60%),
+    linear-gradient(180deg,#0d1418,#0a0f12);
+  border-radius:16px;padding:50px 14px 14px;position:relative;min-height:600px;
+  box-shadow:0 8px 30px rgba(0,0,0,.6)
+}
+
+/* header */
+.tg-head{position:absolute;top:0;left:0;right:0;height:42px;background:rgba(20,30,38,.95);
+  border-top-left-radius:16px;border-top-right-radius:16px;display:flex;align-items:center;padding:0 14px;gap:10px;border-bottom:1px solid rgba(255,255,255,.05)}
+.tg-head .avatar{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#00d4ff)}
+.tg-head .nm{font-size:13px;font-weight:700}
+.tg-head .sub{font-size:10px;color:#8a99a7;margin-top:1px}
+
+/* user message bubble */
+.msg-mine{align-self:flex-end;background:#2ea6e0;color:#fff;padding:6px 10px;border-radius:12px 12px 4px 12px;font-size:13px;max-width:60%;margin-left:auto;margin-bottom:8px}
+
+/* bot message bubble */
+.msg-bot{background:#1a2228;border-radius:12px 12px 12px 4px;padding:12px 14px;font-size:14px;line-height:1.55;max-width:90%;margin-bottom:6px;color:#dfe6ec}
+.msg-bot b{color:#fff}
+.msg-bot .hr{color:rgba(255,255,255,.18);letter-spacing:-1px}
+
+/* inline button (web_app) */
+.tg-btn{
+  display:block;width:90%;margin:8px auto 14px;
+  background:linear-gradient(180deg,#2a3a44,#1c2830);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:10px;
+  padding:13px 12px;text-align:center;
+  color:#65d4ff;font-weight:600;font-size:14px;letter-spacing:.5px;
+  position:relative
+}
+.tg-btn::after{
+  content:"⤴";position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  font-size:12px;color:rgba(101,212,255,.6)
+}
+
+.chat-list{display:flex;flex-direction:column;gap:4px}
+
+.foot{margin-top:18px;font-size:11px;color:#9a90c0;text-align:center;line-height:1.5;padding:0 14px}
+.foot b{color:#ffd55a}
+</style>
+</head>
+<body>
+<div class="note">↓ так увидит первый /start новый игрок (после пуша, через ~1-2 мин Render) ↓</div>
+<div class="tg-chat">
+  <div class="tg-head">
+    <div class="avatar"></div>
+    <div>
+      <div class="nm">Duel Arena</div>
+      <div class="sub">бот</div>
+    </div>
+  </div>
+
+  <div class="chat-list">
+    <div class="msg-mine">/start</div>
+
+    <div class="msg-bot">
+      ⚡ <b>DUEL ARENA</b> ⚡<br>
+      <span class="hr">━━━━━━━━━━━━━━━━━━</span><br><br>
+      ▸ Место, где сражаются <b>тысячи бойцов</b>.<br>
+      ▸ Дуэли · Кланы · Мировые боссы · Рейтинг.<br><br>
+      Жми <b>«⚡ ВОЙТИ В АРЕНУ»</b> — попадёшь в первый бой.
+    </div>
+
+    <button class="tg-btn">⚡ ВОЙТИ В АРЕНУ</button>
+  </div>
+</div>
+
+<div class="foot">
+  Это превью.<br>
+  Карточки профиля <b>НЕТ</b>. Меню из 10 кнопок <b>НЕТ</b>. Только описание + одна кнопка.<br>
+  Тап по кнопке → Mini App → V1 NEON CITY экран загрузки → выбор воина.<br><br>
+  У возвращающегося (тебя) <b>всё как раньше</b>: карточка профиля + полное меню.
+</div>
+</body>
+</html>
