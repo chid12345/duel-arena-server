@@ -1,28 +1,24 @@
 """
-Duel Arena Bot - Главная точка входа
-Портативный сервер для быстрых PvP боев в Telegram
+Duel Arena Bot — главная точка входа.
+Bootstrap + retry-цикл. Вся сборка Application — в bot_app/.
 """
 
 import asyncio
 import logging
 import sys
 import time as _time
-import urllib.request
-import urllib.parse
-from datetime import time as dt_time
-from telegram import Update, BotCommand, MenuButtonWebApp, MenuButtonDefault, WebAppInfo
 from telegram.error import Conflict as TelegramConflict
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, PreCheckoutQueryHandler, MessageHandler, filters
 
 # Устанавливаем кодировку для Windows
 if sys.platform == 'win32':
     sys.stdout.reconfigure(encoding='utf-8')
     sys.stderr.reconfigure(encoding='utf-8')
 
-from config import BOT_TOKEN, WEBAPP_PUBLIC_URL, DATABASE_URL
+from config import BOT_TOKEN
 from database import db
-from bot_handlers import BotHandlers, CallbackHandlers
 import progression_loader
+from bot_app.builder import _build_app
+from bot_app.polling_steal import force_steal_polling_session
 
 # Настройка логирования
 logging.basicConfig(
@@ -32,238 +28,6 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 logger.info("Прогрессия: %s", progression_loader.describe_progression_summary())
-
-async def error_handler(update: object, context):
-    """Глобальный обработчик ошибок Telegram."""
-    # Conflict во время работы = конкурирующий инстанс (Render zero-downtime deploy).
-    # Ставим флаг и останавливаем → while-loop в main() увидит флаг и сделает retry.
-    if isinstance(context.error, TelegramConflict):
-        logger.warning("⚠️ Conflict во время polling — останавливаю приложение для рестарта...")
-        context.application.bot_data["__conflict_retry"] = True
-        context.application.stop_running()
-        return
-
-    logger.exception("Unhandled error in update handling", exc_info=context.error)
-
-    if isinstance(update, Update):
-        try:
-            if update.callback_query:
-                await update.callback_query.answer("❌ Произошла ошибка. Попробуйте еще раз.", show_alert=True)
-                return
-            if update.effective_message:
-                await update.effective_message.reply_text("❌ Произошла ошибка. Попробуйте еще раз.")
-        except Exception:
-            logger.exception("Failed to notify user about error")
-
-async def daily_bonus_reminder(context):
-    """Push-уведомление: напоминание о ежедневном бонусе (запускается в 12:00)."""
-    # Шлём всем у кого есть chat_id и кто не заходил 20+ часов
-    conn = db.get_connection()
-    cursor = conn.cursor()
-    if DATABASE_URL:
-        stale = "last_active < (NOW() - INTERVAL '20 hours')"
-    else:
-        stale = "last_active < datetime('now', '-20 hours')"
-    cursor.execute(
-        f"""SELECT user_id, chat_id FROM players
-           WHERE chat_id IS NOT NULL
-             AND {stale}
-           LIMIT 1000"""
-    )
-    rows = cursor.fetchall()
-    conn.close()
-    for row in rows:
-        try:
-            await context.bot.send_message(
-                chat_id=row['chat_id'],
-                text="🎁 Не забудь забрать ежедневный бонус! Открой /start",
-            )
-        except Exception:
-            pass
-
-async def setup_bot_menu(application: Application):
-    """Настроить меню команд Telegram."""
-    commands = [
-        BotCommand("start", "Главное меню"),
-        BotCommand("help", "Справка по игре"),
-        BotCommand("stats", "Ваша статистика"),
-        BotCommand("rating", "Топ игроков"),
-        BotCommand("quests", "Ежедневные квесты"),
-        BotCommand("season", "Текущий сезон"),
-        BotCommand("pass", "Боевой пропуск"),
-        BotCommand("clan", "Кланы"),
-        BotCommand("buy", "Купить алмазы"),
-        BotCommand("invite", "Пригласить друга"),
-        BotCommand("health", "Проверка состояния (админ)"),
-    ]
-    await application.bot.set_my_commands(commands)
-
-    # Описание бота — Telegram показывает в ПУСТОМ чате до первого /start
-    # как «Что умеет этот бот?». Без этого новичок видит зелёные дудлы и пустоту.
-    # Short description идёт на страницу бота (под аватаром).
-    try:
-        await application.bot.set_my_description(
-            "⚡ DUEL ARENA — арена дуэлей в Telegram. Сражайся в PvP, штурмуй мировых боссов, "
-            "прокачивай воина, объединяйся в кланы. Жми «СТАРТ» — попадёшь в арену."
-        )
-        await application.bot.set_my_short_description(
-            "⚡ Арена дуэлей: PvP, кланы, мировые боссы. Прокачивай воина и иди в Топ-1."
-        )
-        logger.info("✅ Bot description / short_description обновлены")
-    except Exception as e:
-        logger.warning("set_my_description failed: %s", e)
-
-    if WEBAPP_PUBLIC_URL:
-        await application.bot.set_chat_menu_button(
-            menu_button=MenuButtonWebApp(
-                text="🎮 Арена",
-                web_app=WebAppInfo(url=WEBAPP_PUBLIC_URL),
-            )
-        )
-        logger.info("✅ Кнопка меню Mini App: %s", WEBAPP_PUBLIC_URL)
-    else:
-        await application.bot.set_chat_menu_button(menu_button=MenuButtonDefault())
-    logger.info("✅ Меню команд Telegram обновлено")
-
-def _build_app(bot_count: int) -> Application:
-    """Собрать и настроить Application (вызывается при каждом retry)."""
-    async def post_init(application: Application):
-        # Удаляем вебхук — иначе «другой getUpdates» при первом деплое
-        await application.bot.delete_webhook(drop_pending_updates=True)
-        await setup_bot_menu(application)
-        from battle_system import battle_system
-        battle_system.attach(application)
-        application.job_queue.run_daily(
-            daily_bonus_reminder,
-            time=dt_time(hour=12, minute=0),
-            name="daily_bonus_reminder",
-        )
-        async def _pvp_clear_stale_job(context):
-            deleted = db.pvp_clear_stale(older_than_seconds=300)
-            if deleted:
-                logger.info("pvp_clear_stale: удалено %s устаревших записей", deleted)
-        application.job_queue.run_repeating(
-            _pvp_clear_stale_job, interval=120, first=120,
-            name="pvp_clear_stale",
-        )
-        from jobs.hp_full_notify import hp_full_notify_job
-        application.job_queue.run_repeating(
-            hp_full_notify_job, interval=90, first=90,
-            name="hp_full_notify",
-        )
-        # Очистка боёв без реплея (старый формат до фичи replay) — раз в час, пачками.
-        from jobs.battles_cleanup import battles_cleanup_job
-        application.job_queue.run_repeating(
-            battles_cleanup_job, interval=3600, first=60,
-            name="battles_cleanup",
-        )
-        # Авто-кик неактивных участников клана (30+ дней без боя), раз в сутки.
-        from jobs.clan_inactive_kick import clan_inactive_kick_job
-        application.job_queue.run_repeating(
-            clan_inactive_kick_job, interval=86400, first=300,
-            name="clan_inactive_kick",
-        )
-        # Ротация сезона клана (7д) — раз в час: закрывает просроченный + новый.
-        from jobs.clan_season_rotate import clan_season_rotate_job
-        application.job_queue.run_repeating(
-            clan_season_rotate_job, interval=3600, first=120,
-            name="clan_season_rotate",
-        )
-        # Ротация сезона батл-пасса (90 дней) — раз в час: закрывает просроченный, создаёт новый.
-        from jobs.bp_season_rotate import bp_season_rotate_job
-        application.job_queue.run_repeating(
-            bp_season_rotate_job, interval=3600, first=180,
-            name="bp_season_rotate",
-        )
-        # Мировой босс — тик раз в 10 сек (расписание 10 мин: рейды
-        # стартуют/закрываются точно по слотам, без задержки до минуты).
-        from jobs.world_boss_scheduler import world_boss_scheduler_job
-        application.job_queue.run_repeating(
-            world_boss_scheduler_job, interval=10, first=5,
-            name="world_boss_scheduler",
-        )
-        # Мировой босс — анонс в общий чат за 5 мин до рейда (раз в 60 сек, идемпотентно).
-        from jobs.world_boss_announce import world_boss_announce_5min_job
-        application.job_queue.run_repeating(
-            world_boss_announce_5min_job, interval=60, first=45,
-            name="world_boss_announce_5min",
-        )
-        # Мировой босс — индивидуальные пуши подписчикам за 5 мин до рейда.
-        from jobs.world_boss_remind import world_boss_reminder_push_job
-        application.job_queue.run_repeating(
-            world_boss_reminder_push_job, interval=60, first=50,
-            name="world_boss_reminder_push",
-        )
-        # Финализация клан-войн (24ч ends_at) — раз в 10 минут
-        from jobs.clan_wars_finalize import clan_wars_finalize_job
-        application.job_queue.run_repeating(
-            clan_wars_finalize_job, interval=600, first=180,
-            name="clan_wars_finalize",
-        )
-        # Авто-healing кланов (мёртвый лидер → передача или роспуск), раз в сутки.
-        from jobs.clan_heal import clan_heal_job
-        application.job_queue.run_repeating(
-            clan_heal_job, interval=86400, first=600,
-            name="clan_heal",
-        )
-
-    app = Application.builder().token(BOT_TOKEN).post_init(post_init).build()
-
-    app.add_handler(CommandHandler("start",      BotHandlers.start_command))
-    app.add_handler(CommandHandler("help",       BotHandlers.help_command))
-    app.add_handler(CommandHandler("stats",      BotHandlers.stats_command))
-    app.add_handler(CommandHandler("rating",     BotHandlers.rating_command))
-    app.add_handler(CommandHandler("quests",     BotHandlers.quests_command))
-    app.add_handler(CommandHandler("invite",     BotHandlers.invite_command))
-    app.add_handler(CommandHandler("season",     BotHandlers.season_command))
-    app.add_handler(CommandHandler("end_season", BotHandlers.end_season_command))
-    app.add_handler(CommandHandler("clan",       BotHandlers.clan_command))
-    app.add_handler(CommandHandler("buy",        BotHandlers.buy_command))
-    app.add_handler(CommandHandler("health",     BotHandlers.health_command))
-    app.add_handler(CommandHandler("wipe_me",    BotHandlers.wipe_me_command))
-    app.add_handler(CommandHandler("agent_code", BotHandlers.agent_code_command))
-    app.add_handler(CommandHandler("admin",         BotHandlers.admin_balance_command))
-    app.add_handler(CommandHandler("admin_balance", BotHandlers.admin_balance_command))
-    app.add_handler(CommandHandler("pass",          BotHandlers.battle_pass_command))
-    app.add_handler(CommandHandler("battle_pass",   BotHandlers.battle_pass_command))
-    app.add_handler(CommandHandler("admin_list_clans",  BotHandlers.admin_list_clans_command))
-    app.add_handler(CommandHandler("admin_delete_clan", BotHandlers.admin_delete_clan_command))
-    app.add_handler(CommandHandler("reset_prembox",     BotHandlers.reset_prembox_command))
-    # Восстановление потерянных USDT-платежей (после фикса webhook UnboundLocalError)
-    app.add_handler(CommandHandler("lost_payments",  BotHandlers.lost_payments_command))
-    app.add_handler(CommandHandler("my_lost",        BotHandlers.my_lost_command))
-    app.add_handler(CommandHandler("recover",        BotHandlers.recover_command))
-    app.add_handler(CommandHandler("recover_all_my", BotHandlers.recover_all_my_command))
-    app.add_handler(CommandHandler("dismiss_my_lost", BotHandlers.dismiss_my_lost_command))
-    # Ручные реферальные выплаты (владелец платит сам через @CryptoBot)
-    app.add_handler(CommandHandler("payouts",        BotHandlers.payouts_command))
-    app.add_handler(CommandHandler("payout_done",    BotHandlers.payout_done_command))
-    app.add_handler(CommandHandler("payout_reject",  BotHandlers.payout_reject_command))
-    app.add_handler(CommandHandler("reconcile_refs", BotHandlers.reconcile_refs_command))
-    # Диагностика бага аренды (2026-05-18, временная)
-    from handlers.commands.debug_rentals import BotHandlersDebugRentals
-    app.add_handler(CommandHandler("debug_rentals", BotHandlersDebugRentals.debug_rentals_command))
-    app.add_handler(PreCheckoutQueryHandler(BotHandlers.pre_checkout_handler))
-    app.add_handler(MessageHandler(filters.SUCCESSFUL_PAYMENT, BotHandlers.successful_payment_handler))
-    app.add_handler(CallbackQueryHandler(CallbackHandlers.handle_callback))
-    app.add_error_handler(error_handler)
-    return app
-
-
-def _force_steal_polling_session() -> None:
-    """
-    Принудительно убиваем чужой polling-сессию через прямой HTTP-запрос.
-    Telegram отдаёт getUpdates одному клиенту — наш запрос "выигрывает" у старого.
-    """
-    try:
-        base = f"https://api.telegram.org/bot{BOT_TOKEN}"
-        # 1. deleteWebhook чтобы не было конфликта вебхук vs polling
-        urllib.request.urlopen(f"{base}/deleteWebhook?drop_pending_updates=true", timeout=10)
-        # 2. getUpdates с offset=-1 — захватываем сессию, старый инстанс получит Conflict
-        urllib.request.urlopen(f"{base}/getUpdates?offset=-1&timeout=0", timeout=10)
-        logger.info("🔄 Polling-сессия сброшена (steal OK)")
-    except Exception as e:
-        logger.warning("⚠️ _force_steal_polling_session: %s", e)
 
 
 def main():
@@ -294,7 +58,7 @@ def main():
             # PTB закрывает event loop внутри run_polling → на retry нужен свежий.
             # Без этого вторая попытка падает с RuntimeError: Event loop is closed.
             asyncio.set_event_loop(asyncio.new_event_loop())
-            _force_steal_polling_session()
+            force_steal_polling_session()
             _time.sleep(3)  # дать Telegram зарегистрировать смену владельца сессии
             logger.info("⚔️ Запуск бота (попытка %d)...", attempt + 1)
             app = _build_app(bot_count)
@@ -333,6 +97,7 @@ def main():
         except Exception as e:
             logger.error("❌ Ошибка запуска бота: %s", e, exc_info=True)
             break
+
 
 if __name__ == '__main__':
     main()
