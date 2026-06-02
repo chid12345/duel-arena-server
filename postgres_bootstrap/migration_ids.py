@@ -116,4 +116,10 @@ POSTGRES_MIGRATION_IDS: tuple[str, ...] = (
     # → реферальные премиум-комиссии продолжают падать UndefinedColumn.
     # Этот id заставляет bootstrap снова прогнать ВСЕ DDL/after_ddl на старте.
     "2026_05_28_001_referral_is_premium_and_invoice_id",
+    # КРИТИЧНО: таблица world_boss_lobby_chat (чат зала ожидания) добавлена в
+    # ddl_05, но без нового migration_id skip-логика bootstrap ПРОПУСКАЛА весь DDL
+    # (старая БД считалась «полной») → таблицы в Postgres нет → wb_scheduler_loop
+    # каждый тик падал «relation world_boss_lobby_chat does not exist». Этот id
+    # заставляет bootstrap снова прогнать DDL (CREATE TABLE IF NOT EXISTS — безопасно).
+    "2026_06_03_121_wb_lobby_chat",
 )
