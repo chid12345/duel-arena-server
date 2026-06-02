@@ -14,7 +14,7 @@ const CSS = `
 .rt-tab{flex:1;padding:4px 2px;border-radius:16px;font-size:9.5px;font-weight:700;cursor:pointer;background:rgba(10,5,20,.8);border:1px solid rgba(255,215,0,.25);color:#aaa;transition:all .15s;user-select:none;white-space:nowrap;text-align:center;min-width:0}
 .rt-tab.active{background:linear-gradient(135deg,rgba(30,18,0,.9),rgba(15,10,0,.9));border-color:#ffd700;color:#ffd700;box-shadow:0 0 10px rgba(255,215,0,.3)}
 .rt-tab:active{transform:scale(.93)}
-.rt-body{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:2;padding-bottom:6px}
+.rt-body{flex:1;overflow-y:auto;overflow-x:hidden;position:relative;z-index:2;padding-bottom:100px}
 .rt-body::-webkit-scrollbar{width:3px}
 .rt-body::-webkit-scrollbar-thumb{background:rgba(255,215,0,.25);border-radius:3px}
 .rt-loading{display:flex;align-items:center;justify-content:center;height:160px;font-size:13px;color:#aabbcc}
