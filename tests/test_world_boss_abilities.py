@@ -27,6 +27,7 @@ from config.world_boss.abilities import (  # noqa: E402
     wb_crown_dmg_pct,
     wb_crown_labels,
     wb_enrage_profile,
+    wb_lifesteal_pct,
     wb_periodic_aoe,
 )
 
@@ -215,6 +216,15 @@ def test_periodic_aoe_fire_supernova_only_below_25():
 def test_periodic_aoe_other_types_and_start_zero():
     assert wb_periodic_aoe("lich", 0.20, 9) == 0.0     # у Лича периодики нет
     assert wb_periodic_aoe("lava", 0.10, 0) == 0.0     # на секунде 0 не бьём
+
+
+# ── Test 9: вампиризм Демона ──────────────────────────────────────────────────
+
+def test_lifesteal_demon_scales_with_hp():
+    assert wb_lifesteal_pct("demon", 0.80) == 0.30   # Кровавый пир (пассив)
+    assert wb_lifesteal_pct("demon", 0.50) == 0.50   # Кровавая ярость ≤50%
+    assert wb_lifesteal_pct("demon", 0.20) == 0.50
+    assert wb_lifesteal_pct("fire", 0.40) == 0.0     # не демон — нет вампиризма
 
 
 def test_ability_meta_by_bit_and_key():

@@ -14,7 +14,7 @@ import logging
 import random
 import time as _time
 
-from config.world_boss.abilities import wb_counter_plan
+from config.world_boss.abilities import wb_counter_plan, wb_lifesteal_pct
 from repositories.world_boss.damage_calc import calc_boss_attack_damage
 
 logger = logging.getLogger(__name__)
@@ -51,9 +51,11 @@ def _select_targets(top_alive: list, all_alive: list, plan: dict) -> list:
     return chosen
 
 
-def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict) -> None:
+def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict,
+                           boss_type: str = "", hp_pct: float = 1.0) -> None:
     """Применяет одну ответку босса к конкретному игроку (защита/свитки/щит/
-    шипы/второе дыхание). Если увернулся/заблокировал — урона нет."""
+    шипы/второе дыхание). Если увернулся/заблокировал — урона нет.
+    Демон («Кровавый пир») лечится долей нанесённого урона (wb_lifesteal_pct)."""
     ps = db.get_wb_player_state(spawn_id, user_id)
     if not ps or int(ps.get("is_dead") or 0):
         return
@@ -97,6 +99,14 @@ def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict) 
     except Exception:
         pass
     new_hp, is_dead = db.wb_apply_damage_to_player(spawn_id, user_id, dmg)
+    # Вампиризм Демона («Кровавый пир»): лечится долей нанесённого урона.
+    # Хорошая защита/уворот игрока (меньше dmg) = босс меньше лечится.
+    ls = wb_lifesteal_pct(boss_type, hp_pct)
+    if ls and dmg > 0:
+        try:
+            db.wb_heal_boss(spawn_id, max(1, int(dmg * ls)))
+        except Exception:
+            pass
     # Шипы (reflect_pct, броня №1): % полученного урона → в HP босса.
     # Помогает рейду, но НЕ идёт в личный total_damage (нельзя фармить награду).
     if _eq_reflect and dmg > 0:
@@ -125,4 +135,4 @@ def do_boss_counter_attack(db, spawn_id: int, stat_profile: dict,
     top = db.wb_get_top_alive(spawn_id, limit=5)
     all_alive = db.wb_get_any_alive(spawn_id)
     for target in _select_targets(top, all_alive, plan):
-        _apply_counter_to_user(db, spawn_id, int(target["user_id"]), stat_profile)
+        _apply_counter_to_user(db, spawn_id, int(target["user_id"]), stat_profile, boss_type, hp_pct)

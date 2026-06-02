@@ -82,7 +82,7 @@ WB_ABILITIES: Dict[str, Dict[str, Dict[str, Any]]] = {
         "t25": {"name": "Каскад", "desc": "Ниже 25% извержения почти без остановки — жёсткий тест на выживание.", "stage": 3, "live": True},
     },
     "demon": {
-        "passive": {"name": "Кровавый пир", "desc": "Лечится от урона, который наносит ИГРОКАМ. Хорошая защита/уворот = он меньше лечится. Защита и спасает, и морит его голодом.", "stage": 3, "live": False},
+        "passive": {"name": "Кровавый пир", "desc": "Лечится от урона, который наносит ИГРОКАМ. Хорошая защита/уворот = он меньше лечится. Защита и спасает, и морит его голодом.", "stage": 3, "live": True},
         "t75": {"name": "Жажда крови", "desc": "С 75% HP любая смерть игрока лечит босса и ненадолго усиливает его удары.", "stage": 3, "live": False},
         "t50": {"name": "Кровавая ярость", "desc": "С 50% HP свирепеет (сила ×1.2) и усиливает вампиризм. Нужно переуронить его лечение.", "stage": 2, "live": True},
         "t25": {"name": "Кровопускание", "desc": "Ниже 25% кровит уже ОН — твои удары вешают кровотечение. Бурстом докрути.", "stage": 3, "live": False},
@@ -128,6 +128,15 @@ def wb_counter_cooldown(boss_type: str, hp_pct: float, default: int) -> int:
     if boss_type == "shadow" and hp_pct <= 0.50:
         return 4
     return int(default)
+
+
+def wb_lifesteal_pct(boss_type: str, hp_pct: float) -> float:
+    """Доля урона по игроку, которой лечится босс (вампиризм Демона).
+    «Кровавый пир» (пассив) — 30%; на ≤50% HP «Кровавая ярость» — 50%.
+    Прочие типы — 0."""
+    if boss_type == "demon":
+        return 0.50 if hp_pct <= 0.50 else 0.30
+    return 0.0
 
 
 def wb_periodic_aoe(boss_type: str, hp_pct: float, elapsed: float) -> float:

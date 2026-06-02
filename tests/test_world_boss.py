@@ -246,6 +246,19 @@ def test_boss_attack_block_negates():
     assert dmg == 0 and blocked and dbg.get("blocked")
 
 
+def test_wb_heal_boss_caps_and_no_revive(db):
+    """Вампиризм Демона (wb_heal_boss): лечит босса не выше max_hp и НЕ воскрешает добитого."""
+    spawn_id = _make_spawn(db)
+    db.start_wb_spawn(spawn_id, online_at_start=10, max_hp=10000)  # active, hp=10000
+    db.apply_damage_to_boss(spawn_id, 4000)                        # hp=6000
+    assert db.wb_heal_boss(spawn_id, 1000) == 7000
+    assert db.wb_heal_boss(spawn_id, 999999) == 10000             # упирается в max_hp
+    db.apply_damage_to_boss(spawn_id, 10000)                       # hp=0 (добит)
+    db.wb_heal_boss(spawn_id, 5000)                                # не должно воскресить
+    sp = db.get_wb_spawn(spawn_id)
+    assert int(sp["current_hp"]) == 0
+
+
 def test_wb_heal_player_caps_at_max(db):
     """Вампиризм по боссу (wb_heal_player) лечит живого игрока, не выше max_hp."""
     spawn_id = _make_spawn(db)
