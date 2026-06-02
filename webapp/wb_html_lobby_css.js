@@ -314,12 +314,14 @@ window.WBLobbyCSS = (() => {
 .wb-gth.v2 .wb-gth-topbar-timer .val{font-size:20px;font-weight:900;line-height:1;color:#00f5ff;
   text-shadow:0 0 10px #00f5ff;letter-spacing:.5px;font-variant-numeric:tabular-nums}
 
-/* Среднюю секцию ограничиваем по высоте — не отжираем весь экран.
-   Между mid и кнопкой «Выйти» — empty space с фоном для атмосферы. */
-.wb-gth.v2 .wb-gth-mid{flex:0 1 auto;height:50vh;min-height:240px;max-height:380px;
-  display:flex;gap:7px;min-width:0;position:relative;z-index:2}
+/* Средняя секция — на ВСЁ свободное место. Внутри неё ростер тянется
+   на всю высоту правого края, а ЧАТ слева ограничен 50vh / 380px max
+   и прижат к ВЕРХУ — снизу под чатом проглядывает фон зала ожидания. */
+.wb-gth.v2 .wb-gth-mid{flex:1;display:flex;gap:7px;min-height:0;position:relative;z-index:2}
 
 .wb-chat-wrap{flex:1;display:flex;flex-direction:column;min-width:0;
+  /* Только чат ограничиваем — ростер справа стянется на всю высоту mid */
+  height:50vh;min-height:240px;max-height:380px;align-self:flex-start;
   background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
   border:1px solid rgba(0,240,255,.28);border-radius:12px;overflow:hidden;
   box-shadow:0 0 14px rgba(0,240,255,.08) inset}
@@ -383,7 +385,6 @@ window.WBLobbyCSS = (() => {
 
 .wb-gth.v2 .wb-gth-leave{position:relative;z-index:2;flex-shrink:0;padding:11px;
   text-align:center;border-radius:11px;cursor:pointer;
-  margin-top:auto;  /* прижимаем к низу — между mid и кнопкой остаётся фон зала */
   background:linear-gradient(135deg,rgba(255,59,168,.15),rgba(120,30,90,.2));
   border:1px solid rgba(255,59,168,.4);font-size:11px;font-weight:900;letter-spacing:1px;
   color:#ff7acb;text-shadow:0 0 5px currentColor;box-shadow:0 0 12px rgba(255,59,168,.12)}
