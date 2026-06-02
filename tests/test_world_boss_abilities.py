@@ -27,6 +27,7 @@ from config.world_boss.abilities import (  # noqa: E402
     wb_crown_dmg_pct,
     wb_crown_labels,
     wb_enrage_profile,
+    wb_periodic_aoe,
 )
 
 
@@ -137,11 +138,11 @@ def test_card_features_unknown_type_empty():
 
 # ── Test 6: подписи порогов для тостов (только live) ──────────────────────────
 
-def test_crown_labels_fire_live_subset():
+def test_crown_labels_fire_all_live():
     lbl = wb_crown_labels("fire")
     assert lbl[BIT_75] == "Тепловая волна"   # включена
     assert lbl[BIT_50] == "Плавится ядро"    # включена
-    assert lbl[BIT_25] is None               # 25% ещё не live → общий тост
+    assert lbl[BIT_25] == "Сверхновая"       # включена (Заход 2 — сверхнова)
 
 
 def test_crown_labels_lich_75_and_50():
@@ -191,6 +192,29 @@ def test_select_targets_counts():
     assert len(one) == 1
     # нет живых → пусто
     assert _select_targets([], [], {"targets": 2, "mode": "mixed"}) == []
+
+
+# ── Test 8: периодический AoE (извержения Лавы / сверхнова Огня) ──────────────
+
+def test_periodic_aoe_lava_escalates_by_hp():
+    # Толчки (фон, >75%): каждые 30 сек
+    assert wb_periodic_aoe("lava", 0.90, 30) == 0.015
+    assert wb_periodic_aoe("lava", 0.90, 29) == 0.0
+    # Извержение (≤75%): каждые 18 сек, сильнее
+    assert wb_periodic_aoe("lava", 0.60, 18) == 0.02
+    # Каскад (≤25%): каждые 9 сек, ещё сильнее
+    assert wb_periodic_aoe("lava", 0.20, 9) == 0.025
+
+
+def test_periodic_aoe_fire_supernova_only_below_25():
+    assert wb_periodic_aoe("fire", 0.20, 4) == 0.015   # сверхнова — тик
+    assert wb_periodic_aoe("fire", 0.20, 5) == 0.0     # не тик
+    assert wb_periodic_aoe("fire", 0.50, 4) == 0.0     # выше 25% — нет
+
+
+def test_periodic_aoe_other_types_and_start_zero():
+    assert wb_periodic_aoe("lich", 0.20, 9) == 0.0     # у Лича периодики нет
+    assert wb_periodic_aoe("lava", 0.10, 0) == 0.0     # на секунде 0 не бьём
 
 
 def test_ability_meta_by_bit_and_key():

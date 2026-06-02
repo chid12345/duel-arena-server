@@ -23,6 +23,7 @@ from config.world_boss.abilities import (
     wb_counter_cooldown,
     wb_crown_dmg_pct,
     wb_enrage_profile,
+    wb_periodic_aoe,
 )
 from repositories.world_boss.damage_calc import BOSS_ATTACK_COOLDOWN_SEC
 from jobs.world_boss_counter import do_boss_counter_attack
@@ -122,6 +123,17 @@ async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
                         logger.debug("wb battle: auto-bots dealt %s dmg", total_bot_dmg)
             except Exception as e:
                 logger.warning("wb battle: auto-bots tick error: %s", e)
+
+            # 3.6. Периодический AoE по типу (извержения Лавы / сверхнова Огня).
+            # ТОЛЬКО здесь (JOB раз/сек), НЕ в WS — иначе двойной AoE.
+            try:
+                aoe_pct = wb_periodic_aoe(boss_type, hp_pct, elapsed)
+                if aoe_pct > 0 and current_hp > 0:
+                    killed = db.wb_aoe_damage_all_alive(spawn_id, aoe_pct)
+                    if killed:
+                        logger.debug("wb battle: periodic AoE %.3f — killed=%d", aoe_pct, len(killed))
+            except Exception as e:
+                logger.warning("wb battle: periodic AoE error: %s", e)
 
         # 4. WS-бродкаст подписчикам (работает даже без активного рейда — event=wb_idle).
         await wb_broadcast_tick(db)
