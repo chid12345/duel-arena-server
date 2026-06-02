@@ -57,6 +57,18 @@
 .wb-bcard-tip-lbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#00cc66;margin-bottom:5px;}
 .wb-bcard-tip-txt{font-size:11px;color:rgba(255,255,255,.65);line-height:1.5;}
 
+/* фишки босса */
+.wb-bcard-feats{margin:0 14px 12px;padding:11px 13px;border-radius:12px;
+  background:rgba(255,90,40,.05);border:1px solid rgba(255,90,40,.18);}
+.wb-bcard-feats-lbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#ff7a3c;margin-bottom:8px;}
+.wb-feat{display:flex;gap:9px;align-items:flex-start;margin-bottom:8px;}
+.wb-feat:last-child{margin-bottom:0;}
+.wb-feat-when{flex:0 0 auto;min-width:46px;font-size:9px;font-weight:900;letter-spacing:.3px;
+  color:#ffce54;padding-top:1px;}
+.wb-feat-body{flex:1;}
+.wb-feat-nm{font-size:11px;font-weight:800;color:#ffd9c4;}
+.wb-feat-ds{font-size:10px;color:rgba(255,255,255,.6);line-height:1.4;}
+
 /* кнопка понятно */
 .wb-bcard-ok{margin:0 14px 18px;padding:13px;border-radius:14px;text-align:center;cursor:pointer;
   background:linear-gradient(135deg,rgba(200,0,150,.35),rgba(100,0,200,.35));
@@ -69,10 +81,13 @@
 
   const TYPES = {
     universal: { tip:'Нет особых слабостей — любая стратегия работает одинаково эффективно.' },
-    fire:      { tip:'Огненный урон усилен физически. Магические атаки ослаблены — Интуиция рулит.' },
-    ice:       { tip:'Мощная магия — ставь Ловкость и Уворот. Физ. урон немного снижен.' },
-    poison:    { tip:'Высокая скорость атак — нужна Защита и Уклонение. Сила чуть ослаблена.' },
-    shadow:    { tip:'Двойной физ. урон (Сила + Ловкость) — максимальная Защита обязательна.' },
+    lich:      { tip:'Юркий (высокая Ловкость) — твой урон по нему частично гасится. На 50% уходит в глухую защиту, бить станет ещё труднее — копи на окна ×3.' },
+    shadow:    { tip:'Сбалансирован — всё чуть выше нормы. На 50% свирепеет, бьёт сильнее и увёртливее. Держи Защиту.' },
+    fire:      { tip:'Бьёт сильно, но низкая Интуиция — его легко критовать. Качай крит. На 50% бьёт ещё больнее, лечись.' },
+    poison:    { tip:'Медленный (низкая Ловкость) — по нему легко попадать. Но удар тяжёлый, а на 50% землетрясение −10% HP всем. Береги HP.' },
+    spider:    { tip:'Самый юркий — урон по нему сильно срезается Ловкостью. Вынеси максимум ДО 50%: потом уходит в прыть и почти не получает урона, кроме окон ×3.' },
+    lava:      { tip:'Самый тяжёлый удар, но медленный — попадать легко. На 50% бьёт ещё сильнее. Максимум Защиты и лечения.' },
+    demon:     { tip:'Сильно бьёт и легко критуется. Защита + крит. На 50% свирепеет.' },
   };
 
   function _statClass(v) {
@@ -90,10 +105,13 @@
 
   const BASE_PROFILES = {
     universal: {str:1.00,agi:1.00,int:1.00},
-    fire:      {str:1.15,agi:1.00,int:0.85},
-    ice:       {str:0.90,agi:0.90,int:1.25},
-    poison:    {str:0.95,agi:1.20,int:1.05},
+    lich:      {str:0.95,agi:1.20,int:1.05},
     shadow:    {str:1.10,agi:1.10,int:1.00},
+    fire:      {str:1.15,agi:1.00,int:0.85},
+    poison:    {str:1.20,agi:0.80,int:1.10},
+    spider:    {str:1.05,agi:1.25,int:0.90},
+    lava:      {str:1.30,agi:0.75,int:1.00},
+    demon:     {str:1.25,agi:1.05,int:0.90},
   };
 
   const TYPE_COLOR = {
@@ -157,6 +175,21 @@
       </div>`
     ).join('');
 
+    // Фишки босса (приходят с сервера — показываем только включённые, Закон 12).
+    const _e = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => (
+      {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    const feats = Array.isArray(src.boss_features) ? src.boss_features : [];
+    const featsHTML = feats.length ? `<div class="wb-bcard-feats">
+        <div class="wb-bcard-feats-lbl">⚡ ФИШКИ БОССА</div>
+        ${feats.map(f => `<div class="wb-feat">
+          <div class="wb-feat-when">${f.hp == null ? 'Всегда' : f.hp + '% HP'}</div>
+          <div class="wb-feat-body">
+            <div class="wb-feat-nm">${_e(f.name)}</div>
+            <div class="wb-feat-ds">${_e(f.desc)}</div>
+          </div>
+        </div>`).join('')}
+      </div>` : '';
+
     const ov = document.createElement('div'); ov.id = 'wb-bcard-ov'; ov.className = 'wb-bcard-ov';
     ov.innerHTML = `<div class="wb-bcard">
       <div class="wb-bcard-close" id="wb-bcard-close">×</div>
@@ -170,6 +203,7 @@
         <div class="wb-bcard-hp">${hp}</div>
       </div>
       <div class="wb-bcard-stats">${statsHTML}</div>
+      ${featsHTML}
       <div class="wb-bcard-tip">
         <div class="wb-bcard-tip-lbl">💡 ТАКТИКА</div>
         <div class="wb-bcard-tip-txt">${tip}</div>

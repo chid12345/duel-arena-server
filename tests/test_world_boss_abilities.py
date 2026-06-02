@@ -23,6 +23,7 @@ from config.world_boss.abilities import (  # noqa: E402
     wb_ability_meta,
     wb_crown_dmg_pct,
     wb_enrage_profile,
+    wb_live_features,
 )
 
 
@@ -96,6 +97,32 @@ def test_registry_has_7_bosses_each_with_4_abilities():
             assert meta.get("name"), f"{boss_type}.{key}: нет name"
             assert meta.get("desc"), f"{boss_type}.{key}: нет desc"
             assert meta.get("stage") in (2, 3), f"{boss_type}.{key}: stage не 2/3"
+            assert isinstance(meta.get("live"), bool), f"{boss_type}.{key}: live не bool"
+
+
+# ── Test 5: live-фишки для карточки/Справки ───────────────────────────────────
+
+def test_live_features_returns_only_live_fire():
+    names = [f["name"] for f in wb_live_features("fire")]
+    assert "Плавится ядро" in names         # t50 — включена
+    assert "Тепловая волна" in names        # t75 — включена
+    assert "Опаляющая аура" not in names    # пассивка ещё не live
+
+
+def test_live_features_sorted_by_hp_desc():
+    feats = wb_live_features("fire")
+    hps = [f["hp"] for f in feats]
+    assert hps == sorted(hps, reverse=True)
+
+
+def test_live_features_every_boss_has_50pct_after_zahod1():
+    for t in ("lich", "shadow", "fire", "poison", "spider", "lava", "demon"):
+        feats = wb_live_features(t)
+        assert any(f["hp"] == 50 for f in feats), f"{t}: нет live-фишки на 50%"
+
+
+def test_live_features_unknown_type_empty():
+    assert wb_live_features("nope") == []
 
 
 def test_ability_meta_by_bit_and_key():

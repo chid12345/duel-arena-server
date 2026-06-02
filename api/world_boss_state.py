@@ -20,6 +20,7 @@ from config.world_boss_constants import (
     is_vulnerability_window,
 )
 from config.world_boss import get_boss_type as _get_boss_type
+from config.world_boss.abilities import wb_live_features
 from api.world_boss_state_gather import build_gather_payload
 
 _log = logging.getLogger(__name__)
@@ -223,6 +224,7 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
             "current_hp": int(active.get("current_hp") or 0),
             "max_hp": int(active.get("max_hp") or 0),
             "stat_profile": active.get("stat_profile") or {},
+            "boss_features": wb_live_features(_bt.get("type")),
             "seconds_left": seconds_left,
             "vulnerable": vulnerable,
             "crown_flags": int(active.get("crown_flags") or 0),
@@ -235,6 +237,7 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
             "boss_type": _bt.get("type"),
             "boss_emoji": _bt.get("emoji"),
             "boss_type_label": _bt.get("label"),
+            "boss_features": wb_live_features(_bt.get("type")),
         })(_get_boss_type(next_sched.get("boss_type"))) if next_sched else None,
         "last_finished": {
             "spawn_id": int(last.get("spawn_id")),
