@@ -246,6 +246,18 @@ def test_boss_attack_block_negates():
     assert dmg == 0 and blocked and dbg.get("blocked")
 
 
+def test_wb_count_dead(db):
+    """Подсчёт павших в рейде (Лич «Армия мёртвых»)."""
+    spawn_id = _make_spawn(db)
+    db.get_or_create_player(8001, "d1")
+    db.get_or_create_player(8002, "d2")
+    db.wb_join_raid(spawn_id, 8001, max_hp=100, endurance=5, crit=5)
+    db.wb_join_raid(spawn_id, 8002, max_hp=100, endurance=5, crit=5)
+    assert db.wb_count_dead(spawn_id) == 0
+    db.wb_apply_damage_to_player(spawn_id, 8001, 200)  # добиваем 8001
+    assert db.wb_count_dead(spawn_id) == 1
+
+
 def test_wb_heal_boss_caps_and_no_revive(db):
     """Вампиризм Демона (wb_heal_boss): лечит босса не выше max_hp и НЕ воскрешает добитого."""
     spawn_id = _make_spawn(db)

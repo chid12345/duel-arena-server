@@ -29,6 +29,7 @@ from config.world_boss.abilities import (  # noqa: E402
     wb_enrage_profile,
     wb_lifesteal_pct,
     wb_periodic_aoe,
+    wb_str_death_mult,
 )
 
 
@@ -225,6 +226,15 @@ def test_lifesteal_demon_scales_with_hp():
     assert wb_lifesteal_pct("demon", 0.50) == 0.50   # Кровавая ярость ≤50%
     assert wb_lifesteal_pct("demon", 0.20) == 0.50
     assert wb_lifesteal_pct("fire", 0.40) == 0.0     # не демон — нет вампиризма
+
+
+# ── Test 10: Лич «Армия мёртвых» ──────────────────────────────────────────────
+
+def test_str_death_mult_lich_scales_and_caps():
+    assert wb_str_death_mult("lich", 0) == 1.0       # нет смертей — без бонуса
+    assert wb_str_death_mult("lich", 5) == 1.15      # +3% × 5
+    assert wb_str_death_mult("lich", 20) == 1.30     # кап +30% (10 смертей)
+    assert wb_str_death_mult("demon", 5) == 1.0      # только Лич
 
 
 def test_ability_meta_by_bit_and_key():

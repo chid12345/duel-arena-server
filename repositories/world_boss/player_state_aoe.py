@@ -6,6 +6,19 @@ from typing import Any, Dict, List
 
 class WorldBossPlayerStateAoeMixin:
 
+    def wb_count_dead(self, spawn_id: int) -> int:
+        """Сколько игроков уже погибло в рейде (для Лича «Армия мёртвых»)."""
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT COUNT(*) AS c FROM world_boss_player_state "
+            "WHERE spawn_id=? AND is_dead=1",
+            (int(spawn_id),),
+        )
+        row = cur.fetchone()
+        conn.close()
+        return int(row["c"]) if row else 0
+
     def wb_aoe_damage_all_alive(
         self, spawn_id: int, dmg_pct: float
     ) -> List[Dict[str, Any]]:

@@ -14,7 +14,11 @@ import logging
 import random
 import time as _time
 
-from config.world_boss.abilities import wb_counter_plan, wb_lifesteal_pct
+from config.world_boss.abilities import (
+    wb_counter_plan,
+    wb_lifesteal_pct,
+    wb_str_death_mult,
+)
 from repositories.world_boss.damage_calc import calc_boss_attack_damage
 
 logger = logging.getLogger(__name__)
@@ -132,7 +136,17 @@ def do_boss_counter_attack(db, spawn_id: int, stat_profile: dict,
                            boss_type: str = "", hp_pct: float = 1.0) -> None:
     """Ответка босса: выбирает цели по плану типа и бьёт каждую."""
     plan = wb_counter_plan(boss_type, hp_pct)
+    # Лич «Армия мёртвых»: ответка крепчает за каждого павшего в рейде.
+    profile = stat_profile
+    if boss_type == "lich":
+        try:
+            mult = wb_str_death_mult(boss_type, db.wb_count_dead(spawn_id))
+            if mult != 1.0:
+                profile = dict(stat_profile)
+                profile["str"] = round(float(profile.get("str", 1.0)) * mult, 3)
+        except Exception:
+            profile = stat_profile
     top = db.wb_get_top_alive(spawn_id, limit=5)
     all_alive = db.wb_get_any_alive(spawn_id)
     for target in _select_targets(top, all_alive, plan):
-        _apply_counter_to_user(db, spawn_id, int(target["user_id"]), stat_profile, boss_type, hp_pct)
+        _apply_counter_to_user(db, spawn_id, int(target["user_id"]), profile, boss_type, hp_pct)

@@ -46,7 +46,7 @@ CROWN_PCT: Dict[str, Dict[int, float]] = {
 # desc у live-фишек описывает РОВНО то, что реально происходит сейчас.
 WB_ABILITIES: Dict[str, Dict[str, Dict[str, Any]]] = {
     "lich": {
-        "passive": {"name": "Армия мёртвых", "desc": "За каждого погибшего в рейде босс бьёт всё больнее. Чем больше потерь — тем он злее. Берегите слабых.", "stage": 3, "live": False},
+        "passive": {"name": "Армия мёртвых", "desc": "За каждого погибшего в рейде босс бьёт всё больнее (до +30%). Чем больше потерь — тем он злее. Берегите слабых.", "stage": 3, "live": True},
         "t75": {"name": "Эпидемия", "desc": "С 75% HP ответка бьёт сразу ДВЕ цели за раз — урон расходится по рейду, танкам тяжелее.", "stage": 2, "live": True},
         "t50": {"name": "Костяной доспех", "desc": "С 50% HP уходит в глухую защиту — твой урон по нему заметно падает. Бей в окна уязвимости ×3.", "stage": 2, "live": True},
         "t25": {"name": "Жатва", "desc": "Ниже 25% HP каждая смерть игрока ЛЕЧИТ босса. Не дайте добивать друг друга, спасайте низких по HP.", "stage": 3, "live": False},
@@ -128,6 +128,14 @@ def wb_counter_cooldown(boss_type: str, hp_pct: float, default: int) -> int:
     if boss_type == "shadow" and hp_pct <= 0.50:
         return 4
     return int(default)
+
+
+def wb_str_death_mult(boss_type: str, dead_count: int) -> float:
+    """Лич «Армия мёртвых»: +3% к силе ответки за каждую смерть, максимум +30%.
+    Прочие типы — 1.0 (без изменений)."""
+    if boss_type == "lich" and dead_count > 0:
+        return round(1.0 + 0.03 * min(int(dead_count), 10), 3)
+    return 1.0
 
 
 def wb_lifesteal_pct(boss_type: str, hp_pct: float) -> float:
