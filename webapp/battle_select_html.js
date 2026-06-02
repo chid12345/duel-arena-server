@@ -21,7 +21,7 @@ function _fitToCanvas(root) {
 
 const CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@700;900&display=swap');
-.bs-overlay{position:fixed;inset:0;z-index:9000;display:flex;align-items:stretch;justify-content:center;background:rgba(2,1,10,.97);animation:bsFadeIn .18s ease-out}
+.bs-overlay{position:fixed;inset:0;z-index:9300;display:flex;align-items:stretch;justify-content:center;background:rgba(2,1,10,.97);animation:bsFadeIn .18s ease-out}
 .bs-panel{width:100%;max-width:430px;height:100%;display:flex;flex-direction:column;background:#04050f;border:none;border-radius:0;overflow:hidden;animation:bsFadeIn .22s ease-out;position:relative}
 .bs-panel::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.07) 2px,rgba(0,0,0,.07) 4px);pointer-events:none;z-index:0}
 .bs-panel::after{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(0,229,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,229,255,.025) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
