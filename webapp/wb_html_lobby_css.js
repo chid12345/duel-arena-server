@@ -295,6 +295,94 @@ window.WBLobbyCSS = (() => {
 .wb-prep{padding:20px 14px;text-align:center;}
 .wb-prep-t{font-size:28px;font-weight:900;color:#ff00cc;text-shadow:0 0 16px currentColor;letter-spacing:2px;}
 .wb-prep-s{font-size:11px;color:#8899aa;margin-top:8px;}
+
+/* ─── НОВЫЙ LAYOUT ЗАЛА ОЖИДАНИЯ V2 (таймер сверху, чат, выход снизу) ─── */
+.wb-gth.v2{display:flex;flex-direction:column;height:100%;padding:10px 10px 8px;gap:8px}
+.wb-gth.v2 .wb-gth-topbar{flex-shrink:0;display:flex;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:12px;
+  background:linear-gradient(180deg,rgba(20,5,40,.85),rgba(10,3,25,.55));
+  border:1px solid rgba(140,80,255,.3);box-shadow:0 0 14px rgba(140,80,255,.15);position:relative;z-index:2}
+.wb-gth.v2 .wb-gth-topbar-l{flex:1;display:flex;align-items:center;gap:8px;min-width:0}
+.wb-gth.v2 .wb-gth-topbar-l .wb-gth-badge{flex-shrink:0;font-size:9px;font-weight:900;letter-spacing:1.2px;
+  color:#80e8ff;background:rgba(0,240,255,.12);border:1px solid rgba(0,240,255,.4);
+  border-radius:6px;padding:3px 7px}
+.wb-gth.v2 .wb-gth-topbar-l .wb-gth-head{font-size:13px;font-weight:900;letter-spacing:.8px;
+  color:#ff7acb;text-shadow:0 0 7px rgba(255,122,203,.55);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wb-gth.v2 .wb-gth-topbar-l .wb-gth-sub{font-size:8px;color:#7caaf0;opacity:.8;letter-spacing:1px;margin-top:1px}
+.wb-gth.v2 .wb-gth-topbar-timer{flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end}
+.wb-gth.v2 .wb-gth-topbar-timer .lbl{font-size:7px;color:#80c8ff;letter-spacing:1.2px}
+.wb-gth.v2 .wb-gth-topbar-timer .val{font-size:20px;font-weight:900;line-height:1;color:#00f5ff;
+  text-shadow:0 0 10px #00f5ff;letter-spacing:.5px;font-variant-numeric:tabular-nums}
+
+.wb-gth.v2 .wb-gth-mid{flex:1;display:flex;gap:7px;min-height:0;position:relative;z-index:2}
+
+.wb-chat-wrap{flex:1;display:flex;flex-direction:column;min-width:0;
+  background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
+  border:1px solid rgba(0,240,255,.28);border-radius:12px;overflow:hidden;
+  box-shadow:0 0 14px rgba(0,240,255,.08) inset}
+.wb-chat-hdr{flex-shrink:0;padding:7px 10px;display:flex;align-items:center;gap:6px;
+  border-bottom:1px solid rgba(0,240,255,.18);background:rgba(0,240,255,.04)}
+.wb-chat-hdr .icon{font-size:13px}
+.wb-chat-hdr .title{font-size:10px;font-weight:800;letter-spacing:.5px;color:#80e8ff}
+.wb-chat-hdr .info{margin-left:auto;font-size:8px;color:#60a8c0;opacity:.65}
+.wb-chat-list{flex:1;overflow-y:auto;padding:7px 8px;display:flex;flex-direction:column;gap:4px;
+  scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.wb-chat-list::-webkit-scrollbar{display:none}
+.wb-chat-list:empty::after{content:'— тишина в эфире —';display:block;font-size:10px;
+  color:#60a8c0;opacity:.5;text-align:center;padding:14px 0;font-style:italic}
+.wb-chat-msg{max-width:92%;padding:5px 8px;border-radius:9px;
+  background:linear-gradient(135deg,rgba(25,10,40,.85),rgba(10,5,20,.85));
+  border:1px solid rgba(255,59,168,.3);animation:wbCmIn .18s ease;word-break:break-word}
+.wb-chat-msg.me{align-self:flex-end;border-color:rgba(0,240,255,.4);
+  background:linear-gradient(135deg,rgba(10,20,50,.9),rgba(5,15,40,.9))}
+.wb-chat-msg-nm{font-size:9px;font-weight:800;color:#ff7acb;margin-bottom:2px;letter-spacing:.3px}
+.wb-chat-msg.me .wb-chat-msg-nm{color:#00f0ff}
+.wb-chat-msg-tx{font-size:11px;color:#fff;line-height:1.35}
+@keyframes wbCmIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+.wb-chat-input{flex-shrink:0;display:flex;align-items:center;gap:5px;padding:6px 7px;position:relative;
+  border-top:1px solid rgba(0,240,255,.18);background:rgba(0,240,255,.04)}
+.wb-chat-input input{flex:1;height:30px;border-radius:7px;padding:0 9px;font-size:11px;
+  color:#fff;background:rgba(10,5,25,.9);border:1px solid rgba(0,240,255,.3);outline:none;
+  font-family:inherit;transition:border-color .15s,box-shadow .15s}
+.wb-chat-input input:focus{border-color:#00f0ff;box-shadow:0 0 6px rgba(0,240,255,.4)}
+.wb-chat-input input.err{border-color:#ff3344;box-shadow:0 0 8px rgba(255,51,68,.5);
+  animation:wbInpShake .25s ease}
+@keyframes wbInpShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.wb-chat-len{font-size:8px;color:#60a8c0;opacity:.55;letter-spacing:.5px;flex-shrink:0;width:36px;text-align:right}
+.wb-chat-len.warn{color:#ff8c40;opacity:.9}
+.wb-chat-send{width:36px;height:30px;border-radius:7px;display:grid;place-items:center;
+  font-size:12px;cursor:pointer;background:linear-gradient(135deg,#ff3ba8,#b81d6b);
+  color:#fff;border:none;font-weight:700;flex-shrink:0;transition:transform .1s,opacity .15s}
+.wb-chat-send:active{transform:scale(.9)}
+.wb-chat-send.dis{opacity:.4;pointer-events:none;filter:grayscale(.5)}
+
+.wb-gth.v2 .wb-gth-roster{width:108px;flex-shrink:0;display:flex;flex-direction:column;
+  background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
+  border:1px solid rgba(140,80,255,.3);border-radius:12px;overflow:hidden}
+.wb-gth.v2 .wb-gth-roster-h{flex-shrink:0;padding:6px 9px;font-size:9px;font-weight:800;color:#80e8ff;
+  letter-spacing:.4px;border-bottom:1px solid rgba(140,80,255,.2);
+  display:flex;justify-content:space-between;align-items:center;background:rgba(140,80,255,.06)}
+.wb-gth.v2 .wb-gth-roster-h .cnt{background:rgba(0,240,255,.15);color:#00f0ff;
+  border:1px solid rgba(0,240,255,.4);border-radius:5px;padding:1px 5px;font-size:8px}
+.wb-gth.v2 .wb-gth-roster-list{flex:1;overflow-y:auto;padding:5px;scrollbar-width:none}
+.wb-gth.v2 .wb-gth-roster-list::-webkit-scrollbar{display:none}
+.wb-gth.v2 .wb-gth-row{display:flex;align-items:center;gap:5px;padding:4px 5px;border-radius:6px;
+  margin-bottom:3px;background:rgba(20,5,35,.7);border:1px solid rgba(140,80,255,.2);cursor:pointer}
+.wb-gth.v2 .wb-gth-row.me{border-color:rgba(0,240,255,.5);background:rgba(0,30,50,.7)}
+.wb-gth.v2 .wb-gth-row .av{font-size:12px;flex-shrink:0}
+.wb-gth.v2 .wb-gth-row .wb-gth-row-body{flex:1;display:flex;flex-direction:column;min-width:0}
+.wb-gth.v2 .wb-gth-row .nm{font-size:9px;font-weight:700;color:#e6f7ff;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.wb-gth.v2 .wb-gth-row.me .nm{color:#00f0ff}
+.wb-gth.v2 .wb-gth-row .lv{font-size:7px;color:#80c8ff;opacity:.7}
+
+.wb-gth.v2 .wb-gth-leave{position:relative;z-index:2;flex-shrink:0;padding:11px;
+  text-align:center;border-radius:11px;cursor:pointer;
+  background:linear-gradient(135deg,rgba(255,59,168,.15),rgba(120,30,90,.2));
+  border:1px solid rgba(255,59,168,.4);font-size:11px;font-weight:900;letter-spacing:1px;
+  color:#ff7acb;text-shadow:0 0 5px currentColor;box-shadow:0 0 12px rgba(255,59,168,.12)}
+.wb-gth.v2 .wb-gth-leave:active{transform:scale(.98)}
+.wb-gth.v2 .wb-gth-leave-ic{margin-right:6px}
 `;
   function inject() {
     if (document.getElementById('wb-style-lobby')) return;

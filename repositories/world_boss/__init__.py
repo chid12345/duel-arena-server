@@ -13,6 +13,7 @@ from .player_state_aoe import WorldBossPlayerStateAoeMixin
 from .raid_scroll_apply import WorldBossRaidScrollApplyMixin
 from .rewards import WorldBossRewardsMixin
 from .registration import WorldBossRegistrationMixin
+from .lobby_chat import WorldBossLobbyChatMixin
 
 
 class WorldBossMixin(
@@ -25,6 +26,7 @@ class WorldBossMixin(
     WorldBossRaidScrollApplyMixin,
     WorldBossRewardsMixin,
     WorldBossRegistrationMixin,
+    WorldBossLobbyChatMixin,
 ):
     """Объединённый Mixin для всей системы Мирового босса."""
 

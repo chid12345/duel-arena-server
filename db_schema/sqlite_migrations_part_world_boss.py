@@ -220,4 +220,20 @@ MIGRATIONS_PART_WORLD_BOSS = [
     ("2026_05_29_120_wb_raid_scrolls_active", [
         "ALTER TABLE world_boss_player_state ADD COLUMN raid_scrolls_active TEXT DEFAULT '[]'",
     ]),
+
+    # 22. Чат в зале ожидания рейда. Живёт только во время фазы сбора
+    #     (5 мин до старта). На start_wb_spawn чистится. Видят только
+    #     зарегистрированные на рейд. Лимит 200 символов, мат-фильтр,
+    #     кулдаун 2с между сообщениями — на стороне API.
+    ("2026_06_03_121_wb_lobby_chat", [
+        """CREATE TABLE IF NOT EXISTS world_boss_lobby_chat (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            username TEXT NOT NULL,
+            message TEXT NOT NULL,
+            ts INTEGER NOT NULL
+        )""",
+        "CREATE INDEX IF NOT EXISTS idx_wb_lobby_chat_ts ON world_boss_lobby_chat (ts)",
+        "CREATE INDEX IF NOT EXISTS idx_wb_lobby_chat_user_ts ON world_boss_lobby_chat (user_id, ts DESC)",
+    ]),
 ]

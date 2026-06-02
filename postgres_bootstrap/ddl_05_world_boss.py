@@ -120,4 +120,19 @@ POSTGRES_DDL_05_WORLD_BOSS: tuple[str, ...] = (
     #    и кладёт сюда. Источник правды для damage_calc. Старые raid_scroll_1/2
     #    остаются для миграции / диагностики.
     "ALTER TABLE world_boss_player_state ADD COLUMN IF NOT EXISTS raid_scrolls_active TEXT DEFAULT '[]'",
+
+    # 10. Чат зала ожидания рейда. Живёт только в фазе сбора (5 мин до старта),
+    #     чистится на start_wb_spawn. Видят только зарегистрированные. Лимит
+    #     200 символов, мат-фильтр, кулдаун 2с — на стороне API.
+    """
+    CREATE TABLE IF NOT EXISTS world_boss_lobby_chat (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        username TEXT NOT NULL,
+        message TEXT NOT NULL,
+        ts BIGINT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_wb_lobby_chat_ts ON world_boss_lobby_chat (ts)",
+    "CREATE INDEX IF NOT EXISTS idx_wb_lobby_chat_user_ts ON world_boss_lobby_chat (user_id, ts DESC)",
 )

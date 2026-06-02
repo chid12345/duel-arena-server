@@ -16,7 +16,8 @@ class WorldBossSpawnsLifecycleMixin:
     def start_wb_spawn(
         self, spawn_id: int, online_at_start: int, max_hp: int
     ) -> None:
-        """Переводит scheduled→active и пересчитывает HP под реальный онлайн."""
+        """Переводит scheduled→active и пересчитывает HP под реальный онлайн.
+        Также чистит чат зала ожидания — бой начался, лобби-чат конец."""
         conn = self.get_connection()
         cur = conn.cursor()
         cur.execute(
@@ -26,6 +27,8 @@ class WorldBossSpawnsLifecycleMixin:
             "WHERE spawn_id=? AND status='scheduled'",
             (int(online_at_start), int(max_hp), int(max_hp), int(spawn_id)),
         )
+        # Чистим лобби-чат в той же транзакции — атомарно с переходом scheduled→active.
+        cur.execute("DELETE FROM world_boss_lobby_chat")
         conn.commit()
         conn.close()
 

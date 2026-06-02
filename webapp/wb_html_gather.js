@@ -39,6 +39,8 @@
   let _gatherTickInterval = null;
   function _stopLocalTick() {
     if (_gatherTickInterval) { clearInterval(_gatherTickInterval); _gatherTickInterval = null; }
+    // Гасим и чат — иначе поллинг продолжается даже после ухода из лобби
+    try { window.WBHtml?.stopLobbyChat?.(); } catch(_) {}
   }
   function _startLocalTick(initialSec) {
     _stopLocalTick();
@@ -86,32 +88,54 @@
     const rows = _rowsHtml(players);
 
     root.innerHTML = `
-<div class="wb-gth">
+<div class="wb-gth v2">
   <div class="wb-gth-bg b1"></div>
   <div class="wb-gth-bg b2"></div>
   <div class="wb-gth-vignette"></div>
   <div class="wb-gth-scanlines"></div>
 
-  <div class="wb-gth-top">
-    <div class="wb-gth-badge"><span class="wb-gth-dot"></span>RAID LOBBY</div>
-    <div class="wb-gth-head">⬡ ЗОНА СБОРА</div>
-    <div class="wb-gth-sub">BOSS RAID · автовход в 00:00</div>
-  </div>
-
-  <div class="wb-gth-timer">
-    <div class="wb-gth-timer-lbl">СТАРТ ЧЕРЕЗ</div>
-    <div class="wb-gth-timer-val" id="wb-gth-cnt">${_fmtCountdown(sec)}</div>
-    <div class="wb-gth-timer-bar"><div class="wb-gth-timer-fill" id="wb-gth-fill"></div></div>
-  </div>
-
-  <div class="wb-gth-roster">
-    <div class="wb-gth-roster-h">
-      <span>✅ ЗАРЕГУ</span>
-      <span class="cnt">${count}</span>
+  <!-- Компактная шапка: badge + название + таймер справа -->
+  <div class="wb-gth-topbar">
+    <div class="wb-gth-topbar-l">
+      <div class="wb-gth-badge"><span class="wb-gth-dot"></span>RAID</div>
+      <div>
+        <div class="wb-gth-head">⬡ ЗОНА СБОРА</div>
+        <div class="wb-gth-sub">BOSS RAID</div>
+      </div>
     </div>
-    <div class="wb-gth-roster-list">${rows || '<div class="wb-gth-empty">— ОЖИДАЕМ БОЙЦОВ —</div>'}</div>
+    <div class="wb-gth-topbar-timer">
+      <div class="lbl">СТАРТ</div>
+      <div class="val" id="wb-gth-cnt">${_fmtCountdown(sec)}</div>
+    </div>
   </div>
 
+  <!-- Середина: чат слева, ростер справа -->
+  <div class="wb-gth-mid">
+    <div class="wb-chat-wrap" id="wb-chat-wrap">
+      <div class="wb-chat-hdr">
+        <span class="icon">💬</span>
+        <span class="title">ЧАТ ЛОББИ</span>
+        <span class="info">видят только в зоне</span>
+      </div>
+      <div class="wb-chat-list" id="wb-chat-list"></div>
+      <div class="wb-chat-input">
+        <input id="wb-chat-inp" type="text" maxlength="200" placeholder="Сообщение…"
+               autocomplete="off" autocorrect="off" autocapitalize="sentences" />
+        <span class="wb-chat-len" id="wb-chat-len">0/200</span>
+        <button class="wb-chat-send" id="wb-chat-send">➤</button>
+      </div>
+    </div>
+
+    <div class="wb-gth-roster">
+      <div class="wb-gth-roster-h">
+        <span>✅ ЗАРЕГУ</span>
+        <span class="cnt">${count}</span>
+      </div>
+      <div class="wb-gth-roster-list">${rows || '<div class="wb-gth-empty">— ОЖИДАЕМ —</div>'}</div>
+    </div>
+  </div>
+
+  <!-- Кнопка выхода снизу -->
   <div class="wb-gth-leave" data-act="gth-leave">
     <span class="wb-gth-leave-ic">⏎</span> ВЫЙТИ ИЗ ЗОНЫ
   </div>
@@ -150,6 +174,8 @@
     window.WBHtml._lastGatherState = s;
     // Запускаем локальный отсчёт сразу после рендера
     _startLocalTick(sec);
+    // Запускаем чат лобби (поллинг GET сообщений каждые 3с)
+    try { window.WBHtml.initLobbyChat?.(); } catch(_) {}
   }
 
   // Обновление таймера без перерисовки всего ростера (вызывается из _refresh / _onWsTick).
