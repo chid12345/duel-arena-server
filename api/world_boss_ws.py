@@ -100,11 +100,13 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
     except Exception:
         pass
     from config.world_boss import get_boss_type
+    from config.world_boss.abilities import wb_crown_labels
     _bt = get_boss_type(active.get("boss_type"))
     return {
         "hp": int(active.get("current_hp") or 0),
         "max_hp": int(active.get("max_hp") or 0),
         "crown_flags": int(active.get("crown_flags") or 0),
+        "crown_labels": wb_crown_labels(active.get("boss_type")),
         "seconds_left": seconds_left,
         "vulnerable": vulnerable,
         "stage": int(active.get("stage") or 1),

@@ -118,6 +118,18 @@ def wb_ability_meta(boss_type: str, bit_or_key) -> Dict[str, Any]:
     return WB_ABILITIES.get(boss_type or "", {}).get(key, {})
 
 
+def wb_crown_labels(boss_type: str) -> Dict[int, Any]:
+    """Подписи коронных порогов для UI-тостов: {bit: name|None}.
+    None — фишка ещё не live, UI покажет общий «Коронный удар» (Закон 12).
+    Ключи-int станут строками в JSON ('1'/'2'/'4') — JS обращается одинаково."""
+    abilities = WB_ABILITIES.get(boss_type or "", {})
+    out: Dict[int, Any] = {}
+    for bit, key in ((BIT_75, "t75"), (BIT_50, "t50"), (BIT_25, "t25")):
+        meta = abilities.get(key)
+        out[bit] = meta["name"] if (meta and meta.get("live")) else None
+    return out
+
+
 def wb_live_features(boss_type: str) -> list:
     """Включённые (live) фишки босса — для карточки и Справки.
     [{hp: 75|50|25|None, name, desc}], от пассивки к 25%. None = пассивка.

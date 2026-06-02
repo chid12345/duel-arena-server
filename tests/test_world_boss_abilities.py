@@ -22,6 +22,7 @@ from config.world_boss.abilities import (  # noqa: E402
     WB_ABILITIES,
     wb_ability_meta,
     wb_crown_dmg_pct,
+    wb_crown_labels,
     wb_enrage_profile,
     wb_live_features,
 )
@@ -123,6 +124,27 @@ def test_live_features_every_boss_has_50pct_after_zahod1():
 
 def test_live_features_unknown_type_empty():
     assert wb_live_features("nope") == []
+
+
+# ── Test 6: подписи порогов для тостов (только live) ──────────────────────────
+
+def test_crown_labels_fire_live_subset():
+    lbl = wb_crown_labels("fire")
+    assert lbl[BIT_75] == "Тепловая волна"   # включена
+    assert lbl[BIT_50] == "Плавится ядро"    # включена
+    assert lbl[BIT_25] is None               # 25% ещё не live → общий тост
+
+
+def test_crown_labels_lich_only_50():
+    lbl = wb_crown_labels("lich")
+    assert lbl[BIT_75] is None
+    assert lbl[BIT_50] == "Костяной доспех"
+    assert lbl[BIT_25] is None
+
+
+def test_crown_labels_unknown_all_none():
+    lbl = wb_crown_labels("nope")
+    assert lbl[BIT_75] is None and lbl[BIT_50] is None and lbl[BIT_25] is None
 
 
 def test_ability_meta_by_bit_and_key():

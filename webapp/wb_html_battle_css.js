@@ -391,6 +391,15 @@ window.WBBattleCSS = (() => {
   70%{transform:translate(-2px,1px)}
   85%{transform:translate(2px,-1px)}}
 
+/* Заход 2: дрожь картинки босса на коронах/ярости (любой тип) + алое свечение
+   зоны после ярости (stage 2). Классы вешает scene_world_boss_fx.js. */
+@keyframes wb-rage-quake{0%,100%{transform:translate(0,0)}
+  15%{transform:translate(-4px,2px)}30%{transform:translate(4px,-2px)}
+  45%{transform:translate(-5px,-1px)}60%{transform:translate(5px,1px)}
+  75%{transform:translate(-3px,2px)}}
+.wb-boss-zone.wb-rage-quake .wb-bimg2{animation:wb-rage-quake .34s ease-in-out !important;}
+.wb-boss-zone.wb-enraged{box-shadow:inset 0 0 70px rgba(255,30,20,.42);}
+
 /* Дополнительные искры для огненного — много мелких частиц снизу вверх.
    Включается через ::before на отдельном слое .wb-fire-sparks. */
 .wb-boss-zone.bt-fire .wb-ghost{

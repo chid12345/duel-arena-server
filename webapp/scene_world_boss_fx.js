@@ -19,16 +19,23 @@ Object.assign(WorldBossScene.prototype, {
       this._fxFlashBar(this._bossHpBar);
     }
 
-    // 2) Появился новый бит в crown_flags → shake (интенсивность по биту).
+    // 2) Появился новый бит в crown_flags → shake + тост + дрожь босса.
     const oldCF = prevA.crown_flags | 0;
     const newCF = newA.crown_flags  | 0;
     const added = (~oldCF) & newCF; // только новые биты
     if (added) {
+      const labels = newA.crown_labels || {};
       // бит 0 = 75% (лёгкий), бит 1 = 50% (средний), бит 2 = 25% (тяжёлый).
-      if (added & 0b100) { this._fxShake('heavy'); this._fxChaosOverlay(); }
-      else if (added & 0b010) this._fxShake('medium');
-      else if (added & 0b001) this._fxShake('light');
-      else this._fxShake('light');
+      if (added & 0b100) {            // 25% — Хаос (свой оверлей-подпись)
+        this._fxShake('heavy'); this._fxBossTremble('heavy'); this._fxChaosOverlay();
+      } else if (added & 0b010) {     // 50% — тост покажет _fxEnrageAnnounce (с именем ярости)
+        this._fxShake('medium'); this._fxBossTremble('medium');
+      } else if (added & 0b001) {     // 75% — имя фишки если включена, иначе общий
+        this._fxShake('light'); this._fxBossTremble('light');
+        this._fxAbilityToast(labels[1] || 'КОРОННЫЙ УДАР', '#ffaa3c');
+      } else {
+        this._fxShake('light');
+      }
     }
 
     // 3а) Игрок умер → драматический красный экран + вибро.
@@ -53,22 +60,26 @@ Object.assign(WorldBossScene.prototype, {
       } catch(_) {}
     }
 
-    // 4) Переход 1→2 стадия (ярость на 50% HP) → анонс + тяжёлый shake.
+    // 4) Переход 1→2 стадия (ярость на 50% HP) → анонс с именем фишки типа.
     const prevStage = (prevA.stage | 0) || 1;
     const newStage  = (newA.stage  | 0) || 1;
     if (newStage >= 2 && prevStage < 2) {
-      this._fxEnrageAnnounce();
+      this._fxEnrageAnnounce((newA.crown_labels || {})[2]);
     }
   },
 
-  _fxEnrageAnnounce() {
+  _fxEnrageAnnounce(abilityName) {
     if (this._enrageShown) return;
     this._enrageShown = true;
     try { this._fxShake('heavy'); } catch(_) {}
+    try { this._fxBossTremble('heavy'); } catch(_) {}
+    try { this._fxBossEnragedGlow(); } catch(_) {}
     try { tg?.HapticFeedback?.notificationOccurred?.('warning'); } catch(_) {}
     try {
       const W = this.W, H = this.H;
-      const lbl = txt(this, W/2, H/2, '⚡ БОСС РАЗЪЯРЁН ⚡', 22, '#ff6a30')
+      // Имя фишки типа (напр. «Плавится ядро») или общий «Босс разъярён».
+      const head = abilityName ? `⚡ ${String(abilityName).toUpperCase()} ⚡` : '⚡ БОСС РАЗЪЯРЁН ⚡';
+      const lbl = txt(this, W/2, H/2, head, 22, '#ff6a30')
                     .setOrigin(0.5).setDepth(10001);
       lbl.setStroke('#200000', 5);
       this.tweens.add({
@@ -78,6 +89,39 @@ Object.assign(WorldBossScene.prototype, {
         onComplete: () => { try { lbl.destroy(); } catch(_) {} },
       });
     } catch(_) {}
+  },
+
+  // Тост с именем фишки сверху-центра (короны/пороги, кроме 50% и 25%).
+  _fxAbilityToast(text, color) {
+    try {
+      const W = this.W, H = this.H;
+      const lbl = txt(this, W/2, H * 0.34, `⚡ ${String(text).toUpperCase()} ⚡`,
+                      18, color || '#ff8a3c').setOrigin(0.5).setDepth(10001);
+      lbl.setStroke('#200000', 5);
+      this.tweens.add({
+        targets: lbl, alpha: { from: 1, to: 0 },
+        y: H * 0.28, scale: { from: 0.9, to: 1.25 },
+        duration: 1600, ease: 'Sine.easeOut',
+        onComplete: () => { try { lbl.destroy(); } catch(_) {} },
+      });
+    } catch(_) {}
+  },
+
+  // Картинка босса дёргается (CSS-класс на #wb-boss-zone, авто-снятие).
+  _fxBossTremble(intensity) {
+    try {
+      const z = document.getElementById('wb-boss-zone');
+      if (!z) return;
+      z.classList.remove('wb-rage-quake'); void z.offsetWidth; // рестарт анимации
+      z.classList.add('wb-rage-quake');
+      const dur = intensity === 'heavy' ? 700 : intensity === 'medium' ? 480 : 340;
+      setTimeout(() => { try { z.classList.remove('wb-rage-quake'); } catch(_) {} }, dur);
+    } catch(_) {}
+  },
+
+  // Стойкое алое свечение зоны после ярости (до конца рейда / пересоздания).
+  _fxBossEnragedGlow() {
+    try { document.getElementById('wb-boss-zone')?.classList.add('wb-enraged'); } catch(_) {}
   },
 
   _fxShake(intensity) {
