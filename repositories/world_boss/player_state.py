@@ -94,8 +94,8 @@ class WorldBossPlayerStateMixin:
 
     def wb_activate_shield(self, spawn_id: int, user_id: int, duration_ms: int = 2000) -> int:
         """Активирует щит игроку: записывает timestamp окончания (now + duration_ms).
-        В битве `_do_boss_counter_attack` проверит этот timestamp и если он
-        в будущем — снизит урон на 30%. Возвращает timestamp окончания."""
+        В битве `do_boss_counter_attack` (jobs/world_boss_counter.py) проверит этот
+        timestamp и если он в будущем — снизит урон на 30%. Возвращает timestamp."""
         import time
         end_ms = int(time.time() * 1000) + int(duration_ms)
         conn = self.get_connection()

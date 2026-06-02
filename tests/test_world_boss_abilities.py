@@ -21,6 +21,8 @@ from config.world_boss.abilities import (  # noqa: E402
     BIT_75,
     WB_ABILITIES,
     wb_ability_meta,
+    wb_counter_cooldown,
+    wb_counter_plan,
     wb_crown_dmg_pct,
     wb_crown_labels,
     wb_enrage_profile,
@@ -135,9 +137,9 @@ def test_crown_labels_fire_live_subset():
     assert lbl[BIT_25] is None               # 25% ещё не live → общий тост
 
 
-def test_crown_labels_lich_only_50():
+def test_crown_labels_lich_75_and_50():
     lbl = wb_crown_labels("lich")
-    assert lbl[BIT_75] is None
+    assert lbl[BIT_75] == "Эпидемия"        # Заход 2b — включена
     assert lbl[BIT_50] == "Костяной доспех"
     assert lbl[BIT_25] is None
 
@@ -145,6 +147,43 @@ def test_crown_labels_lich_only_50():
 def test_crown_labels_unknown_all_none():
     lbl = wb_crown_labels("nope")
     assert lbl[BIT_75] is None and lbl[BIT_50] is None and lbl[BIT_25] is None
+
+
+# ── Test 7: план ответки по типам (Заход 2b) ──────────────────────────────────
+
+def test_counter_plan_lich_two_targets_below_75():
+    assert wb_counter_plan("lich", 0.74)["targets"] == 2
+    assert wb_counter_plan("lich", 0.80)["targets"] == 1   # выше 75% — обычная
+
+
+def test_counter_plan_shadow_top1_below_75():
+    assert wb_counter_plan("shadow", 0.70)["mode"] == "top1"
+    assert wb_counter_plan("shadow", 0.90)["mode"] == "mixed"
+
+
+def test_counter_plan_default_single_mixed():
+    p = wb_counter_plan("fire", 0.40)
+    assert p["targets"] == 1 and p["mode"] == "mixed"
+
+
+def test_counter_cooldown_shadow_faster_below_50():
+    assert wb_counter_cooldown("shadow", 0.49, 6) == 4   # Танец теней
+    assert wb_counter_cooldown("shadow", 0.60, 6) == 6
+    assert wb_counter_cooldown("lich", 0.20, 6) == 6
+
+
+def test_select_targets_counts():
+    from jobs.world_boss_counter import _select_targets
+    top = [{"user_id": 1}, {"user_id": 2}, {"user_id": 3}]
+    allv = [{"user_id": 1}, {"user_id": 2}, {"user_id": 3}, {"user_id": 4}]
+    # Лич ≤75% → 2 разные цели
+    two = _select_targets(top, allv, {"targets": 2, "mode": "mixed"})
+    assert len(two) == 2 and len({t["user_id"] for t in two}) == 2
+    # обычный → 1 цель
+    one = _select_targets(top, allv, {"targets": 1, "mode": "mixed"})
+    assert len(one) == 1
+    # нет живых → пусто
+    assert _select_targets([], [], {"targets": 2, "mode": "mixed"}) == []
 
 
 def test_ability_meta_by_bit_and_key():

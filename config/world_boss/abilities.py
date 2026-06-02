@@ -47,14 +47,14 @@ CROWN_PCT: Dict[str, Dict[int, float]] = {
 WB_ABILITIES: Dict[str, Dict[str, Dict[str, Any]]] = {
     "lich": {
         "passive": {"name": "Армия мёртвых", "desc": "Каждая смерть в рейде усиливает босса", "stage": 3, "live": False},
-        "t75": {"name": "Эпидемия", "desc": "Ответка бьёт сразу 2 цели", "stage": 2, "live": False},
+        "t75": {"name": "Эпидемия", "desc": "Ответка бьёт сразу 2 цели", "stage": 2, "live": True},
         "t50": {"name": "Костяной доспех", "desc": "Уходит в защиту — твой урон по нему падает", "stage": 2, "live": True},
         "t25": {"name": "Жатва", "desc": "Смерти игроков лечат босса", "stage": 3, "live": False},
     },
     "shadow": {
         "passive": {"name": "Покров теней", "desc": "Прячется в тень, затем открывает окно", "stage": 3, "live": False},
-        "t75": {"name": "Слепая зона", "desc": "Чаще бьёт лидера по урону", "stage": 2, "live": False},
-        "t50": {"name": "Танец теней", "desc": "Свирепеет — бьёт сильнее и увёртливее", "stage": 2, "live": True},
+        "t75": {"name": "Слепая зона", "desc": "Чаще бьёт лидера по урону", "stage": 2, "live": True},
+        "t50": {"name": "Танец теней", "desc": "Свирепеет: бьёт сильнее и чаще", "stage": 2, "live": True},
         "t25": {"name": "Затмение", "desc": "Фазы тени и окна — чаще", "stage": 3, "live": False},
     },
     "fire": {
@@ -109,6 +109,25 @@ def wb_enrage_profile(boss_type: str, base_profile: Dict[str, Any]) -> Dict[str,
 def wb_crown_dmg_pct(boss_type: str, flag_bit: int, default: float) -> float:
     """Доля max_hp для коронного удара. Если у типа нет своего числа — дефолт."""
     return float(CROWN_PCT.get(boss_type or "", {}).get(int(flag_bit), default))
+
+
+def wb_counter_plan(boss_type: str, hp_pct: float) -> Dict[str, Any]:
+    """План ответки по типу и текущему HP-проценту босса:
+    {'targets': int, 'mode': 'mixed'|'top1'}.
+    Заход 2b: Лич ≤75% — «Эпидемия» (2 цели), Тень ≤75% — «Слепая зона» (лидер)."""
+    targets, mode = 1, "mixed"
+    if boss_type == "lich" and hp_pct <= 0.75:
+        targets = 2
+    elif boss_type == "shadow" and hp_pct <= 0.75:
+        mode = "top1"
+    return {"targets": targets, "mode": mode}
+
+
+def wb_counter_cooldown(boss_type: str, hp_pct: float, default: int) -> int:
+    """Кулдаун ответки (сек). Тень ≤50% — «Танец теней» (бьёт чаще)."""
+    if boss_type == "shadow" and hp_pct <= 0.50:
+        return 4
+    return int(default)
 
 
 def wb_ability_meta(boss_type: str, bit_or_key) -> Dict[str, Any]:

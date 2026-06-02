@@ -169,7 +169,9 @@ def _run_battle_tick(db) -> None:
     """Боевая логика тика: ответка босса + коронные удары + завершение рейда.
     Вызывается внутри _load_tick_data (уже в потоке) — не нужен отдельный to_thread."""
     try:
-        from jobs.world_boss_battle_tick import _check_crown_strikes, _do_boss_counter_attack
+        from jobs.world_boss_battle_tick import _check_crown_strikes
+        from jobs.world_boss_counter import do_boss_counter_attack
+        from config.world_boss.abilities import wb_counter_cooldown
         from repositories.world_boss.damage_calc import BOSS_ATTACK_COOLDOWN_SEC
         active = db.get_wb_active_spawn()
         if not active:
@@ -193,8 +195,10 @@ def _run_battle_tick(db) -> None:
 
         if current_hp > 0:
             stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile, boss_type)
-        if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
-            _do_boss_counter_attack(db, spawn_id, stat_profile)
+        hp_pct = (current_hp / max_hp) if max_hp > 0 else 1.0
+        cooldown = wb_counter_cooldown(boss_type, hp_pct, BOSS_ATTACK_COOLDOWN_SEC)
+        if db.wb_try_mark_boss_attacked(spawn_id, cooldown):
+            do_boss_counter_attack(db, spawn_id, stat_profile, boss_type, hp_pct)
     except Exception as e:
         logger.warning("_run_battle_tick: %s", e)
 
