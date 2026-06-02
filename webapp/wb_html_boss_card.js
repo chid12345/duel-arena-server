@@ -5,7 +5,8 @@
 .wb-bcard-ov{position:fixed;inset:0;z-index:9998;display:flex;align-items:center;justify-content:center;
   background:rgba(0,0,0,.75);backdrop-filter:blur(6px);opacity:0;pointer-events:none;transition:opacity .2s;}
 .wb-bcard-ov.open{opacity:1;pointer-events:all;}
-.wb-bcard{position:relative;width:calc(100% - 40px);max-width:340px;border-radius:20px;overflow:hidden;
+.wb-bcard{position:relative;width:calc(100% - 40px);max-width:340px;border-radius:20px;
+  overflow:hidden auto;max-height:92vh;
   background:linear-gradient(180deg,#14003a 0%,#06030f 100%);
   border:1px solid rgba(255,0,200,.35);
   box-shadow:0 8px 60px rgba(255,0,200,.3),0 2px 20px rgba(0,0,0,.8);
@@ -68,6 +69,10 @@
 .wb-feat-body{flex:1;}
 .wb-feat-nm{font-size:11px;font-weight:800;color:#ffd9c4;}
 .wb-feat-ds{font-size:10px;color:rgba(255,255,255,.6);line-height:1.4;}
+.wb-feat.soon{opacity:.5;}
+.wb-feat-soon{font-size:7px;font-weight:800;letter-spacing:.5px;color:#8fb3c4;
+  background:rgba(120,160,190,.16);padding:1px 5px;border-radius:6px;margin-left:5px;
+  vertical-align:middle;text-transform:uppercase;}
 
 /* кнопка понятно */
 .wb-bcard-ok{margin:0 14px 18px;padding:13px;border-radius:14px;text-align:center;cursor:pointer;
@@ -181,10 +186,10 @@
     const feats = Array.isArray(src.boss_features) ? src.boss_features : [];
     const featsHTML = feats.length ? `<div class="wb-bcard-feats">
         <div class="wb-bcard-feats-lbl">⚡ ФИШКИ БОССА</div>
-        ${feats.map(f => `<div class="wb-feat">
-          <div class="wb-feat-when">${f.hp == null ? 'Всегда' : f.hp + '% HP'}</div>
+        ${feats.map(f => `<div class="wb-feat${f.live ? '' : ' soon'}">
+          <div class="wb-feat-when">${f.hp == null ? 'Всегда' : f.hp + '%'}</div>
           <div class="wb-feat-body">
-            <div class="wb-feat-nm">${_e(f.name)}</div>
+            <div class="wb-feat-nm">${_e(f.name)}${f.live ? '' : ' <span class="wb-feat-soon">скоро</span>'}</div>
             <div class="wb-feat-ds">${_e(f.desc)}</div>
           </div>
         </div>`).join('')}

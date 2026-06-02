@@ -21,12 +21,12 @@ from config.world_boss.abilities import (  # noqa: E402
     BIT_75,
     WB_ABILITIES,
     wb_ability_meta,
+    wb_card_features,
     wb_counter_cooldown,
     wb_counter_plan,
     wb_crown_dmg_pct,
     wb_crown_labels,
     wb_enrage_profile,
-    wb_live_features,
 )
 
 
@@ -103,29 +103,36 @@ def test_registry_has_7_bosses_each_with_4_abilities():
             assert isinstance(meta.get("live"), bool), f"{boss_type}.{key}: live не bool"
 
 
-# ── Test 5: live-фишки для карточки/Справки ───────────────────────────────────
+# ── Test 5: фишки для карточки (весь набор + флаг live) ───────────────────────
 
-def test_live_features_returns_only_live_fire():
-    names = [f["name"] for f in wb_live_features("fire")]
-    assert "Плавится ядро" in names         # t50 — включена
-    assert "Тепловая волна" in names        # t75 — включена
-    assert "Опаляющая аура" not in names    # пассивка ещё не live
-
-
-def test_live_features_sorted_by_hp_desc():
-    feats = wb_live_features("fire")
-    hps = [f["hp"] for f in feats]
-    assert hps == sorted(hps, reverse=True)
+def test_card_features_returns_all_four():
+    feats = wb_card_features("fire")
+    assert len(feats) == 4                       # пассивка + 3 порога
+    names = [f["name"] for f in feats]
+    assert "Опаляющая аура" in names             # пассивка тоже показывается
+    assert "Плавится ядро" in names
 
 
-def test_live_features_every_boss_has_50pct_after_zahod1():
+def test_card_features_live_flag_correct():
+    feats = {f["name"]: f for f in wb_card_features("fire")}
+    assert feats["Плавится ядро"]["live"] is True       # включена
+    assert feats["Опаляющая аура"]["live"] is False     # «скоро»
+
+
+def test_card_features_passive_hp_none_first():
+    feats = wb_card_features("lich")
+    assert feats[0]["hp"] is None                # пассивка первой, «Всегда»
+    assert feats[0]["name"] == "Армия мёртвых"
+
+
+def test_card_features_every_boss_has_live_50pct():
     for t in ("lich", "shadow", "fire", "poison", "spider", "lava", "demon"):
-        feats = wb_live_features(t)
-        assert any(f["hp"] == 50 for f in feats), f"{t}: нет live-фишки на 50%"
+        feats = wb_card_features(t)
+        assert any(f["hp"] == 50 and f["live"] for f in feats), f"{t}: нет live 50%"
 
 
-def test_live_features_unknown_type_empty():
-    assert wb_live_features("nope") == []
+def test_card_features_unknown_type_empty():
+    assert wb_card_features("nope") == []
 
 
 # ── Test 6: подписи порогов для тостов (только live) ──────────────────────────
