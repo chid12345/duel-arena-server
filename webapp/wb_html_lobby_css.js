@@ -314,7 +314,10 @@ window.WBLobbyCSS = (() => {
 .wb-gth.v2 .wb-gth-topbar-timer .val{font-size:20px;font-weight:900;line-height:1;color:#00f5ff;
   text-shadow:0 0 10px #00f5ff;letter-spacing:.5px;font-variant-numeric:tabular-nums}
 
-.wb-gth.v2 .wb-gth-mid{flex:1;display:flex;gap:7px;min-height:0;position:relative;z-index:2}
+/* Среднюю секцию ограничиваем по высоте — не отжираем весь экран.
+   Между mid и кнопкой «Выйти» — empty space с фоном для атмосферы. */
+.wb-gth.v2 .wb-gth-mid{flex:0 1 auto;height:50vh;min-height:240px;max-height:380px;
+  display:flex;gap:7px;min-width:0;position:relative;z-index:2}
 
 .wb-chat-wrap{flex:1;display:flex;flex-direction:column;min-width:0;
   background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
@@ -350,11 +353,13 @@ window.WBLobbyCSS = (() => {
 @keyframes wbInpShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
 .wb-chat-len{font-size:8px;color:#60a8c0;opacity:.55;letter-spacing:.5px;flex-shrink:0;width:36px;text-align:right}
 .wb-chat-len.warn{color:#ff8c40;opacity:.9}
-.wb-chat-send{width:36px;height:30px;border-radius:7px;display:grid;place-items:center;
-  font-size:12px;cursor:pointer;background:linear-gradient(135deg,#ff3ba8,#b81d6b);
-  color:#fff;border:none;font-weight:700;flex-shrink:0;transition:transform .1s,opacity .15s}
-.wb-chat-send:active{transform:scale(.9)}
-.wb-chat-send.dis{opacity:.4;pointer-events:none;filter:grayscale(.5)}
+.wb-chat-send{width:40px;height:30px;border-radius:7px;display:grid;place-items:center;
+  font-size:15px;cursor:pointer;background:linear-gradient(135deg,#ff3ba8,#ff1488);
+  color:#fff;border:1px solid rgba(255,255,255,.25);font-weight:900;flex-shrink:0;
+  box-shadow:0 0 10px rgba(255,59,168,.6),inset 0 0 4px rgba(255,255,255,.2);
+  transition:transform .1s,opacity .15s,box-shadow .15s}
+.wb-chat-send:active{transform:scale(.9);box-shadow:0 0 16px rgba(255,59,168,.9)}
+.wb-chat-send.dis{opacity:.35;pointer-events:none;filter:grayscale(.6);box-shadow:none}
 
 .wb-gth.v2 .wb-gth-roster{width:108px;flex-shrink:0;display:flex;flex-direction:column;
   background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
@@ -378,6 +383,7 @@ window.WBLobbyCSS = (() => {
 
 .wb-gth.v2 .wb-gth-leave{position:relative;z-index:2;flex-shrink:0;padding:11px;
   text-align:center;border-radius:11px;cursor:pointer;
+  margin-top:auto;  /* прижимаем к низу — между mid и кнопкой остаётся фон зала */
   background:linear-gradient(135deg,rgba(255,59,168,.15),rgba(120,30,90,.2));
   border:1px solid rgba(255,59,168,.4);font-size:11px;font-weight:900;letter-spacing:1px;
   color:#ff7acb;text-shadow:0 0 5px currentColor;box-shadow:0 0 12px rgba(255,59,168,.12)}
