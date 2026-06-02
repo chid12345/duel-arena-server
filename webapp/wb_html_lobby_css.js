@@ -320,8 +320,8 @@ window.WBLobbyCSS = (() => {
 .wb-gth.v2 .wb-gth-mid{flex:1;display:flex;gap:7px;min-height:0;position:relative;z-index:2}
 
 .wb-chat-wrap{flex:1;display:flex;flex-direction:column;min-width:0;
-  /* Только чат ограничиваем — ростер справа стянется на всю высоту mid */
-  height:50vh;min-height:240px;max-height:380px;align-self:flex-start;
+  /* Как в мокапе: чат + ростер заполняют всю среднюю часть.
+     Никаких лимитов по высоте — flex:1 тянется до самой кнопки «Выйти». */
   background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
   border:1px solid rgba(0,240,255,.28);border-radius:12px;overflow:hidden;
   box-shadow:0 0 14px rgba(0,240,255,.08) inset}
