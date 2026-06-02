@@ -1,4 +1,4 @@
-"""Команда /start — минимальный экран: описание + одна кнопка «ВОЙТИ В АРЕНУ».
+"""Команда /start — минимальный экран: киберпанк-баннер + описание + 1 кнопка.
 
 Все игровые функции (бой, магазин, клан, рейтинг, статы) — внутри Mini App,
 в Telegram-чате не дублируются. Это решение для единого UX: один тап → игра.
@@ -7,7 +7,9 @@ HP-реген, ежедневный бонус, итог боя, активны�
 """
 
 import asyncio
+import io
 import logging
+import os
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 from telegram.ext import ContextTypes
@@ -27,6 +29,20 @@ WELCOME_TEXT = (
     "▸ Дуэли · Кланы · Мировые боссы · Рейтинг.\n\n"
     "Жми <b>«⚡ ВОЙТИ В АРЕНУ»</b> — попадёшь в первый бой."
 )
+
+# Киберпанк-баннер с воинами — тот же что и BotFather description picture.
+# Загружается в память один раз при импорте модуля → потом каждый /start
+# отсылается мгновенно (Telegram сам кэширует фото по content-hash).
+_BANNER_PATH = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "..", "webapp", "bot_description.png")
+)
+try:
+    with open(_BANNER_PATH, "rb") as _f:
+        _BANNER_BYTES: bytes | None = _f.read()
+    logger.info("✅ /start баннер загружен (%d КБ)", len(_BANNER_BYTES) // 1024)
+except Exception as _exc:
+    _BANNER_BYTES = None
+    logger.warning("⚠️ /start баннер не загружен (%s) — fallback на text-only", _exc)
 
 
 def _build_arena_keyboard() -> InlineKeyboardMarkup | None:
@@ -90,8 +106,20 @@ class BotHandlersStart:
 
         await _process_referral(update, context)
 
-        await update.message.reply_text(
-            WELCOME_TEXT,
-            reply_markup=_build_arena_keyboard(),
-            parse_mode="HTML",
-        )
+        kbd = _build_arena_keyboard()
+        # С баннером сообщение визуально крупнее в 5x — фото шириной с чат,
+        # текст под фото, кнопка под текстом такой же ширины. Без баннера —
+        # обычный text-only fallback (баннер мог не загрузиться).
+        if _BANNER_BYTES is not None:
+            await update.message.reply_photo(
+                photo=io.BytesIO(_BANNER_BYTES),
+                caption=WELCOME_TEXT,
+                reply_markup=kbd,
+                parse_mode="HTML",
+            )
+        else:
+            await update.message.reply_text(
+                WELCOME_TEXT,
+                reply_markup=kbd,
+                parse_mode="HTML",
+            )
