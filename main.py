@@ -1,6 +1,10 @@
 """
 Duel Arena Bot — главная точка входа.
 Bootstrap + retry-цикл. Вся сборка Application — в bot_app/.
+
+Поведение при Render zero-downtime деплое: новый контейнер встаёт,
+старый ловит Conflict → bot_app/stale_check сверяет commits, старый
+видит «я устарел» → выходит без retry. Подробнее: bot_app/stale_check.py.
 """
 
 import asyncio
