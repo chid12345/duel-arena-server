@@ -554,13 +554,18 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     clearInterval(window._wbTimer);
     let _zeroTs = 0, _gatherCheckTs = 0;
     window._wbTimer = setInterval(() => {
-      const el = document.getElementById('wb-timer'); if (!el) { clearInterval(window._wbTimer); return; }
+      const el = document.getElementById('wb-timer');
+      // НЕ убиваем интервал если элемента нет — он мог пропасть на 1 тик
+      // во время перерисовки. close() очистит при реальном выходе из WB.
+      // Раньше: clearInterval тут → опрос мёртвый, страница зависала на 0:00.
+      if (!el) return;
       const sa = _state?.next_scheduled?.scheduled_at;
       if (!sa) return;
       const msLeft = new Date(_toUtcIso(sa)).getTime() - Date.now();
       el.textContent = _fmtCountdown(sa);
-      // Когда таймер на нуле и нет активного боя — поллим каждые 2с пока не стартует
-      if (msLeft < 1000 && !_state?.active && Date.now() - _zeroTs > 2000) {
+      // Когда таймер на нуле и нет активного боя — поллим каждую секунду
+      // пока не стартует (раньше каждые 2с — игрок видел зависание 0:00).
+      if (msLeft < 1000 && !_state?.active && Date.now() - _zeroTs > 1000) {
         _zeroTs = Date.now();
         try { _scene?._refresh?.(); } catch(_) {}
       }
