@@ -101,16 +101,6 @@
     }
   }
 
-  function _onInput(e) {
-    const inp = e.target;
-    const counter = document.getElementById('wb-chat-len');
-    if (counter) {
-      const n = (inp.value || '').length;
-      counter.textContent = `${n}/${MAX_MSG_LEN}`;
-      counter.classList.toggle('warn', n > MAX_MSG_LEN * 0.85);
-    }
-  }
-
   function init() {
     stop();
     _lastId = 0;
@@ -122,7 +112,6 @@
     });
     const inp = document.getElementById('wb-chat-inp');
     if (inp) {
-      inp.addEventListener('input', _onInput);
       inp.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); _send(); }
       });

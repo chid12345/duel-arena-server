@@ -121,7 +121,6 @@
       <div class="wb-chat-input">
         <input id="wb-chat-inp" type="text" maxlength="200" placeholder="Сообщение…"
                autocomplete="off" autocorrect="off" autocapitalize="sentences" />
-        <span class="wb-chat-len" id="wb-chat-len">0/200</span>
         <button class="wb-chat-send" id="wb-chat-send">➤</button>
       </div>
     </div>
