@@ -61,17 +61,18 @@
 /* фишки босса */
 .wb-bcard-feats{margin:0 14px 12px;padding:11px 13px;border-radius:12px;
   background:rgba(255,90,40,.05);border:1px solid rgba(255,90,40,.18);}
-.wb-bcard-feats-lbl{font-size:8px;font-weight:800;letter-spacing:2px;color:#ff7a3c;margin-bottom:8px;}
-.wb-feat{display:flex;gap:9px;align-items:flex-start;margin-bottom:8px;}
+.wb-bcard-feats-lbl{font-size:9px;font-weight:800;letter-spacing:2px;color:#ff8a4c;margin-bottom:9px;}
+.wb-feat{display:flex;gap:9px;align-items:flex-start;margin-bottom:10px;}
 .wb-feat:last-child{margin-bottom:0;}
-.wb-feat-when{flex:0 0 auto;min-width:46px;font-size:9px;font-weight:900;letter-spacing:.3px;
-  color:#ffce54;padding-top:1px;}
+.wb-feat-when{flex:0 0 auto;min-width:46px;font-size:10px;font-weight:900;letter-spacing:.3px;
+  color:#ffd766;padding-top:1px;}
 .wb-feat-body{flex:1;}
-.wb-feat-nm{font-size:11px;font-weight:800;color:#ffd9c4;}
-.wb-feat-ds{font-size:10px;color:rgba(255,255,255,.6);line-height:1.4;}
-.wb-feat.soon{opacity:.5;}
-.wb-feat-soon{font-size:7px;font-weight:800;letter-spacing:.5px;color:#8fb3c4;
-  background:rgba(120,160,190,.16);padding:1px 5px;border-radius:6px;margin-left:5px;
+.wb-feat-nm{font-size:12px;font-weight:800;color:#ffe7d8;margin-bottom:2px;}
+.wb-feat-ds{font-size:11.5px;color:rgba(255,255,255,.85);line-height:1.5;}
+.wb-feat.soon{opacity:.78;}
+.wb-feat.soon .wb-feat-ds{color:rgba(255,255,255,.7);}
+.wb-feat-soon{font-size:8px;font-weight:800;letter-spacing:.5px;color:#a8cad8;
+  background:rgba(120,160,190,.2);padding:1px 6px;border-radius:6px;margin-left:6px;
   vertical-align:middle;text-transform:uppercase;}
 
 /* кнопка понятно */
