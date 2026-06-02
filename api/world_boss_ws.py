@@ -176,6 +176,7 @@ def _run_battle_tick(db) -> None:
         current_hp = int(active.get("current_hp") or 0)
         max_hp = int(active.get("max_hp") or 0)
         stat_profile = active.get("stat_profile") or {}
+        boss_type = active.get("boss_type") or ""
 
         # Завершаем рейд из WS-тика если scheduler (бот) недоступен.
         # Проверяем: HP=0 или время вышло.
@@ -189,7 +190,7 @@ def _run_battle_tick(db) -> None:
             logger.debug("_run_battle_tick finish check: %s", _fe)
 
         if current_hp > 0:
-            stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
+            stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile, boss_type)
         if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
             _do_boss_counter_attack(db, spawn_id, stat_profile)
     except Exception as e:

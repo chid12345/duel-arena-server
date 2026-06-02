@@ -18,9 +18,9 @@ import json
 
 from config.world_boss_constants import (
     WB_CROWN_THRESHOLDS,
-    WB_ENRAGE_MULT,
     is_vulnerability_window,
 )
+from config.world_boss.abilities import wb_crown_dmg_pct, wb_enrage_profile
 from repositories.world_boss.damage_calc import (
     BOSS_ATTACK_COOLDOWN_SEC,
     calc_boss_attack_damage,
@@ -129,17 +129,16 @@ def _do_boss_counter_attack(db, spawn_id: int, stat_profile: dict) -> None:
         logger.warning("wb battle: second_wind error uid=%s: %s", user_id, e)
 
 
-def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict) -> dict | None:
+def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict, boss_type: str = "") -> dict | None:
     """Вместе с короной 50% переводим босса в stage=2 (ярость).
-    Множим stat_profile на WB_ENRAGE_MULT → ответка усиливается.
+    У каждого типа своя ярость (config.world_boss.abilities.wb_enrage_profile):
+    Огонь/Лава бьют сильнее по str, Паук уходит в agi, Лич — в защиту и т.д.
+    Неизвестный тип → ×1.2 по всем (старое поведение).
     Идемпотентно (UPDATE ... WHERE stage<2).
     Возвращает новый профиль если ярость сработала, иначе None.
     """
     try:
-        new_profile = {
-            k: round(float(v) * WB_ENRAGE_MULT, 3)
-            for k, v in (stat_profile or {}).items()
-        }
+        new_profile = wb_enrage_profile(boss_type, stat_profile)
         if db.wb_try_enrage(spawn_id, json.dumps(new_profile)):
             logger.info("wb battle: ⚡ ENRAGE spawn=%s profile→%s", spawn_id, new_profile)
             return new_profile
@@ -149,8 +148,10 @@ def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict) -> dict | None:
 
 
 def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int,
-                         stat_profile: dict) -> dict:
+                         stat_profile: dict, boss_type: str = "") -> dict:
     """Срабатывает 0/1/2/3 коронных ударов (атомарно, по одному за тик).
+    Сила удара — своя у каждого типа (wb_crown_dmg_pct), напр. Голем на 50%
+    бьёт −10% вместо −5%, Огонь на 75% −5% вместо −3%.
     На пороге 50% (flag_bit=0b010) дополнительно триггерит ярость (stage=2).
     Возвращает актуальный stat_profile (обновлённый если произошла ярость).
     """
@@ -159,13 +160,14 @@ def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int,
     hp_pct = current_hp / max_hp
     for threshold_pct, dmg_pct, flag_bit, label in WB_CROWN_THRESHOLDS:
         if hp_pct <= threshold_pct and db.wb_try_trigger_crown(spawn_id, flag_bit):
+            dmg_pct = wb_crown_dmg_pct(boss_type, flag_bit, dmg_pct)
             killed = db.wb_aoe_damage_all_alive(spawn_id, dmg_pct)
             logger.info(
-                "wb battle: crown strike %s (dmg_pct=%.2f) — killed=%d",
-                label, dmg_pct, len(killed),
+                "wb battle: crown strike %s (%s, dmg_pct=%.2f) — killed=%d",
+                label, boss_type or "universal", dmg_pct, len(killed),
             )
             if flag_bit == 0b010:
-                enraged_profile = _try_enrage_on_50(db, spawn_id, stat_profile)
+                enraged_profile = _try_enrage_on_50(db, spawn_id, stat_profile, boss_type)
                 if enraged_profile:
                     stat_profile = enraged_profile
     return stat_profile
@@ -182,10 +184,11 @@ async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
             current_hp = int(active.get("current_hp") or 0)
             max_hp = int(active.get("max_hp") or 0)
             stat_profile = active.get("stat_profile") or {}
+            boss_type = active.get("boss_type") or ""
 
             # 1. Коронные удары — сначала, чтобы ярость обновила профиль до ответки.
             if current_hp > 0:
-                stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile)
+                stat_profile = _check_crown_strikes(db, spawn_id, current_hp, max_hp, stat_profile, boss_type)
 
             # 2. Ответка: уже с актуальным профилем (с учётом возможной ярости).
             if db.wb_try_mark_boss_attacked(spawn_id, BOSS_ATTACK_COOLDOWN_SEC):
