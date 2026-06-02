@@ -16,7 +16,7 @@ const CSS = `
 .gd-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;padding:8px 12px;flex-shrink:0}
 .gd-tab{padding:8px 4px;border-radius:10px;font-size:10.5px;font-weight:700;color:#80a8c0;background:rgba(0,240,255,.06);border:1px solid rgba(0,240,255,.15);cursor:pointer;user-select:none;text-align:center;transition:all .2s;-webkit-tap-highlight-color:transparent}
 .gd-tab.on{background:linear-gradient(135deg,rgba(0,240,255,.2),rgba(255,59,168,.15));color:#e6f7ff;border-color:rgba(0,240,255,.4);box-shadow:0 0 10px rgba(0,240,255,.2)}
-.gd-cards{flex:1;overflow-y:auto;padding:6px 12px 20px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.gd-cards{flex:1;overflow-y:auto;padding:6px 12px 100px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
 .gd-cards::-webkit-scrollbar{display:none}
 .gd-card{display:flex;align-items:center;gap:12px;padding:14px 12px;border-radius:14px;margin-bottom:8px;background:linear-gradient(135deg,rgba(20,5,35,.9),rgba(5,5,18,.9));border:1px solid rgba(0,240,255,.2);cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;transition:border-color .15s,box-shadow .15s}
 .gd-card:active{border-color:rgba(0,240,255,.5);box-shadow:0 0 14px rgba(0,240,255,.2)}
