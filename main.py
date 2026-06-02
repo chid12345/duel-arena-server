@@ -63,6 +63,13 @@ def main():
             logger.info("⚔️ Запуск бота (попытка %d)...", attempt + 1)
             app = _build_app(bot_count)
             app.run_polling(drop_pending_updates=True)
+
+            # Stale-exit: я устаревший контейнер (есть новый деплой), error_handler
+            # это распознал → выхожу без retry, чтоб не пинать нового.
+            if app.bot_data.get("__stale_exit"):
+                logger.info("🪦 Старый контейнер выходит — новый деплой live.")
+                return
+
             # error_handler ловит Conflict и вызывает stop_running → run_polling
             # возвращается БЕЗ исключения. Проверяем флаг чтобы отличить Conflict от
             # штатного выхода (Ctrl-C / SIGTERM).
@@ -80,6 +87,11 @@ def main():
             break
 
         except TelegramConflict:
+            # Тоже проверяем stale — если новый деплой уже live, не ждём 60с зря.
+            from bot_app.stale_check import is_stale_container
+            if is_stale_container():
+                logger.info("🪦 Conflict + я устарел — выхожу без retry.")
+                return
             attempt += 1
             wait = min(60, 15 * attempt)       # 15 → 30 → 45 → 60 → 60 → … сек
             logger.warning(

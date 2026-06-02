@@ -3,14 +3,22 @@ import logging
 from telegram import Update
 from telegram.error import Conflict as TelegramConflict
 
+from bot_app.stale_check import is_stale_container
+
 logger = logging.getLogger(__name__)
 
 
 async def error_handler(update: object, context):
     """Глобальный обработчик ошибок Telegram."""
     # Conflict во время работы = конкурирующий инстанс (Render zero-downtime deploy).
-    # Ставим флаг и останавливаем → while-loop в main() увидит флаг и сделает retry.
     if isinstance(context.error, TelegramConflict):
+        # Сначала проверяем: вдруг МЫ старый. Если live /api/health показывает
+        # другой commit hash — выходим без retry, не пинаем нового.
+        if is_stale_container():
+            context.application.bot_data["__stale_exit"] = True
+            context.application.stop_running()
+            return
+        # Иначе — обычный путь: retry через main loop.
         logger.warning("⚠️ Conflict во время polling — останавливаю приложение для рестарта...")
         context.application.bot_data["__conflict_retry"] = True
         context.application.stop_running()
