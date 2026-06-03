@@ -57,6 +57,28 @@ class WorldBossBattleStateMixin:
         conn.close()
         return int(row["current_hp"]) if row else None
 
+    def wb_heal_boss_pct(self, spawn_id: int, pct: float) -> Optional[int]:
+        """Лечит босса на долю max_hp (хил на смерть: Лич «Жатва», Демон «Жажда»).
+        Не выше max_hp, не воскрешает добитого. Возвращает новое HP или None."""
+        if pct <= 0:
+            return None
+        conn = self.get_connection()
+        cur = conn.cursor()
+        cur.execute(
+            "UPDATE world_boss_spawns "
+            "SET current_hp = MIN(max_hp, current_hp + CAST(max_hp * ? AS INTEGER)) "
+            "WHERE spawn_id=? AND status='active' AND current_hp > 0",
+            (float(pct), int(spawn_id)),
+        )
+        conn.commit()
+        cur.execute(
+            "SELECT current_hp FROM world_boss_spawns WHERE spawn_id=?",
+            (int(spawn_id),),
+        )
+        row = cur.fetchone()
+        conn.close()
+        return int(row["current_hp"]) if row else None
+
     def wb_try_trigger_crown(self, spawn_id: int, flag_bit: int) -> bool:
         """Атомарно поднимает бит в crown_flags. True — если это был первый раз.
         Используется чтобы коронный удар сработал ровно 1 раз за рейд.

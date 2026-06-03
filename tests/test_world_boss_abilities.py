@@ -24,11 +24,14 @@ from config.world_boss.abilities import (  # noqa: E402
     wb_card_features,
     wb_counter_cooldown,
     wb_counter_plan,
+    wb_counter_str_mult,
     wb_crown_dmg_pct,
     wb_crown_labels,
+    wb_death_heal_pct,
     wb_enrage_profile,
     wb_lifesteal_pct,
     wb_periodic_aoe,
+    wb_player_dmg_mult,
     wb_str_death_mult,
 )
 
@@ -147,11 +150,11 @@ def test_crown_labels_fire_all_live():
     assert lbl[BIT_25] == "Сверхновая"       # включена (Заход 2 — сверхнова)
 
 
-def test_crown_labels_lich_75_and_50():
+def test_crown_labels_lich_all_live():
     lbl = wb_crown_labels("lich")
-    assert lbl[BIT_75] == "Эпидемия"        # Заход 2b — включена
+    assert lbl[BIT_75] == "Эпидемия"
     assert lbl[BIT_50] == "Костяной доспех"
-    assert lbl[BIT_25] is None
+    assert lbl[BIT_25] == "Жатва"           # Заход 3 — хил на смерть включён
 
 
 def test_crown_labels_unknown_all_none():
@@ -235,6 +238,36 @@ def test_str_death_mult_lich_scales_and_caps():
     assert wb_str_death_mult("lich", 5) == 1.15      # +3% × 5
     assert wb_str_death_mult("lich", 20) == 1.30     # кап +30% (10 смертей)
     assert wb_str_death_mult("demon", 5) == 1.0      # только Лич
+
+
+# ── Test 11: хил на смерть / броня-фазы / сила раскола ────────────────────────
+
+def test_death_heal_pct_by_type_and_threshold():
+    assert wb_death_heal_pct("lich", 0.20) == 0.03   # Жатва ≤25%
+    assert wb_death_heal_pct("lich", 0.40) == 0.0    # выше 25% — нет
+    assert wb_death_heal_pct("demon", 0.70) == 0.02  # Жажда крови ≤75%
+    assert wb_death_heal_pct("demon", 0.80) == 0.0
+    assert wb_death_heal_pct("fire", 0.10) == 0.0
+
+
+def test_player_dmg_mult_golem_armor_and_crit_bypass():
+    assert wb_player_dmg_mult("poison", 0.90, False) == round(1 / 1.3, 3)  # Каменная кожа
+    assert wb_player_dmg_mult("poison", 0.90, True) == 1.0                 # крит сквозь
+    assert wb_player_dmg_mult("poison", 0.50, False) == round(1 / 1.15, 3) # Трещины
+    assert wb_player_dmg_mult("poison", 0.20, False) == 1.0               # Раскол — брони нет
+
+
+def test_player_dmg_mult_shadow_phase():
+    # фаза: 4 сек каждые 20 — на e=1 в фазе (÷2), на e=10 нет
+    assert wb_player_dmg_mult("shadow", 0.90, False, 1) == 0.5
+    assert wb_player_dmg_mult("shadow", 0.90, False, 10) == 1.0
+    assert wb_player_dmg_mult("shadow", 0.90, False, 0) == 1.0   # секунда 0 — не фаза
+
+
+def test_counter_str_mult_golem_raskol():
+    assert wb_counter_str_mult("poison", 0.20, 0) == 1.6   # Раскол ≤25%
+    assert wb_counter_str_mult("poison", 0.40, 0) == 1.0
+    assert wb_counter_str_mult("lich", 1.0, 5) == 1.15     # делегирует Армии мёртвых
 
 
 def test_ability_meta_by_bit_and_key():

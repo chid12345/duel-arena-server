@@ -16,8 +16,9 @@ import time as _time
 
 from config.world_boss.abilities import (
     wb_counter_plan,
+    wb_counter_str_mult,
+    wb_death_heal_pct,
     wb_lifesteal_pct,
-    wb_str_death_mult,
 )
 from repositories.world_boss.damage_calc import calc_boss_attack_damage
 
@@ -111,6 +112,14 @@ def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict,
             db.wb_heal_boss(spawn_id, max(1, int(dmg * ls)))
         except Exception:
             pass
+    # Хил на смерть: Лич «Жатва» (≤25%), Демон «Жажда крови» (≤75%).
+    if is_dead:
+        try:
+            dh = wb_death_heal_pct(boss_type, hp_pct)
+            if dh > 0:
+                db.wb_heal_boss_pct(spawn_id, dh)
+        except Exception:
+            pass
     # Шипы (reflect_pct, броня №1): % полученного урона → в HP босса.
     # Помогает рейду, но НЕ идёт в личный total_damage (нельзя фармить награду).
     if _eq_reflect and dmg > 0:
@@ -136,16 +145,16 @@ def do_boss_counter_attack(db, spawn_id: int, stat_profile: dict,
                            boss_type: str = "", hp_pct: float = 1.0) -> None:
     """Ответка босса: выбирает цели по плану типа и бьёт каждую."""
     plan = wb_counter_plan(boss_type, hp_pct)
-    # Лич «Армия мёртвых»: ответка крепчает за каждого павшего в рейде.
+    # Сила ответки по типу: Лич «Армия мёртвых» (за павших), Голем «Раскол» (≤25%).
     profile = stat_profile
-    if boss_type == "lich":
-        try:
-            mult = wb_str_death_mult(boss_type, db.wb_count_dead(spawn_id))
-            if mult != 1.0:
-                profile = dict(stat_profile)
-                profile["str"] = round(float(profile.get("str", 1.0)) * mult, 3)
-        except Exception:
-            profile = stat_profile
+    try:
+        dead = db.wb_count_dead(spawn_id) if boss_type == "lich" else 0
+        mult = wb_counter_str_mult(boss_type, hp_pct, dead)
+        if mult != 1.0:
+            profile = dict(stat_profile)
+            profile["str"] = round(float(profile.get("str", 1.0)) * mult, 3)
+    except Exception:
+        profile = stat_profile
     top = db.wb_get_top_alive(spawn_id, limit=5)
     all_alive = db.wb_get_any_alive(spawn_id)
     for target in _select_targets(top, all_alive, plan):

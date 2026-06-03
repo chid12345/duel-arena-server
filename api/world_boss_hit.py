@@ -189,6 +189,17 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             is_vulnerability_window=vuln,
         )
 
+        # Броня Голема (криты сквозь) / фазы Тени — множитель к урону по боссу.
+        try:
+            from config.world_boss.abilities import wb_player_dmg_mult
+            _mhp = int(active.get("max_hp") or 0)
+            _hpp = (int(active.get("current_hp") or 0) / _mhp) if _mhp > 0 else 1.0
+            _pm = wb_player_dmg_mult(active.get("boss_type") or "", _hpp, is_crit, elapsed)
+            if _pm != 1.0:
+                dmg = max(1, int(dmg * _pm))
+        except Exception:
+            pass
+
         # Set-bonus перки (атака игрока по боссу). hits_count — кол-во УЖЕ нанесённых
         # ударов; этот удар — следующий по счёту (hits_count + 1).
         _perk = _sb.get("perk_id")

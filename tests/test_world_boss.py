@@ -246,6 +246,18 @@ def test_boss_attack_block_negates():
     assert dmg == 0 and blocked and dbg.get("blocked")
 
 
+def test_wb_heal_boss_pct(db):
+    """Хил босса долей max_hp (Жатва/Жажда): кап и без воскрешения."""
+    spawn_id = _make_spawn(db)
+    db.start_wb_spawn(spawn_id, online_at_start=10, max_hp=10000)  # active, hp=10000
+    db.apply_damage_to_boss(spawn_id, 5000)                        # hp=5000
+    assert db.wb_heal_boss_pct(spawn_id, 0.10) == 6000            # +10% max_hp
+    assert db.wb_heal_boss_pct(spawn_id, 5.0) == 10000           # упирается в max_hp
+    db.apply_damage_to_boss(spawn_id, 10000)                       # hp=0
+    db.wb_heal_boss_pct(spawn_id, 0.5)                            # не воскрешает
+    assert int(db.get_wb_spawn(spawn_id)["current_hp"]) == 0
+
+
 def test_wb_count_dead(db):
     """Подсчёт павших в рейде (Лич «Армия мёртвых»)."""
     spawn_id = _make_spawn(db)

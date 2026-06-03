@@ -22,6 +22,7 @@ from config.world_boss_constants import (
 from config.world_boss.abilities import (
     wb_counter_cooldown,
     wb_crown_dmg_pct,
+    wb_death_heal_pct,
     wb_enrage_profile,
     wb_periodic_aoe,
 )
@@ -36,6 +37,19 @@ def _parse_ts(value) -> datetime:
         return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
     s = str(value).replace("T", " ").split(".")[0]
     return datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
+
+
+def _heal_boss_on_deaths(db, spawn_id: int, boss_type: str, hp_pct: float,
+                         num_deaths: int) -> None:
+    """Хил босса при смертях игроков: Лич «Жатва» (≤25%), Демон «Жажда» (≤75%)."""
+    if num_deaths <= 0:
+        return
+    try:
+        dh = wb_death_heal_pct(boss_type, hp_pct)
+        if dh > 0:
+            db.wb_heal_boss_pct(spawn_id, dh * num_deaths)
+    except Exception as e:
+        logger.warning("wb battle: death-heal error: %s", e)
 
 
 def _try_enrage_on_50(db, spawn_id: int, stat_profile: dict, boss_type: str = "") -> dict | None:
@@ -75,6 +89,7 @@ def _check_crown_strikes(db, spawn_id: int, current_hp: int, max_hp: int,
                 "wb battle: crown strike %s (%s, dmg_pct=%.2f) — killed=%d",
                 label, boss_type or "universal", dmg_pct, len(killed),
             )
+            _heal_boss_on_deaths(db, spawn_id, boss_type, hp_pct, len(killed))
             if flag_bit == 0b010:
                 enraged_profile = _try_enrage_on_50(db, spawn_id, stat_profile, boss_type)
                 if enraged_profile:
@@ -132,6 +147,7 @@ async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
                     killed = db.wb_aoe_damage_all_alive(spawn_id, aoe_pct)
                     if killed:
                         logger.debug("wb battle: periodic AoE %.3f — killed=%d", aoe_pct, len(killed))
+                        _heal_boss_on_deaths(db, spawn_id, boss_type, hp_pct, len(killed))
             except Exception as e:
                 logger.warning("wb battle: periodic AoE error: %s", e)
 
