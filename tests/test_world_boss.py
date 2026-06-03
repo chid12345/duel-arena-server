@@ -258,6 +258,96 @@ def test_wb_heal_boss_pct(db):
     assert int(db.get_wb_spawn(spawn_id)["current_hp"]) == 0
 
 
+def test_lava_raid_end_to_end(db):
+    """E2E «своими руками»: реальный боевой код Лавы против БД.
+    Проверяем что игрок РЕАЛЬНО получает урон: ответка + извержения, и что
+    на 50% HP Лава разъяряется (stage=2). Это тот же код, что крутится в проде.
+    """
+    from jobs.world_boss_battle_tick import _check_crown_strikes
+    from jobs.world_boss_counter import do_boss_counter_attack
+    from config.world_boss.abilities import wb_periodic_aoe
+
+    profile = {"str": 1.4, "agi": 0.75, "int": 1.0}  # лавовый профиль
+    spawn_id = db.create_wb_spawn(
+        scheduled_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        boss_name="Вулканический Страж", stat_profile=profile,
+        max_hp=10000, boss_type="lava",
+    )
+    db.start_wb_spawn(spawn_id, online_at_start=1, max_hp=10000)  # active, hp=10000
+    db.get_or_create_player(9100, "tester")
+    db.wb_join_raid(spawn_id, 9100, max_hp=5000, endurance=5, crit=5)
+    db.log_wb_hit(spawn_id, 9100, damage=100)        # чтобы попасть в топ (цель ответки)
+    db.wb_add_player_damage(spawn_id, 9100, 100)
+
+    # 1) Ответка Лавы реально бьёт игрока.
+    before = int(db.get_wb_player_state(spawn_id, 9100)["current_hp"])
+    for _ in range(4):
+        do_boss_counter_attack(db, spawn_id, profile, "lava", 0.9)
+    after = int(db.get_wb_player_state(spawn_id, 9100)["current_hp"])
+    assert after < before, "Лава должна бить игрока ответкой"
+
+    # 2) Извержение (Толчки): периодический AoE капает HP по всем живым.
+    pct = wb_periodic_aoe("lava", 0.9, 30)           # тик толчка (каждые 30с)
+    assert pct > 0
+    hp1 = int(db.get_wb_player_state(spawn_id, 9100)["current_hp"])
+    db.wb_aoe_damage_all_alive(spawn_id, pct)
+    hp2 = int(db.get_wb_player_state(spawn_id, 9100)["current_hp"])
+    assert hp2 < hp1, "Извержение должно капать HP игроку"
+
+    # 3) На 50% HP — ярость (stage=2): тот же _check_crown_strikes что в тике.
+    db.apply_damage_to_boss(spawn_id, 5500)          # boss hp=4500 (45% ≤ 50%)
+    sp = db.get_wb_spawn(spawn_id)
+    _check_crown_strikes(db, spawn_id, int(sp["current_hp"]), 10000, profile, "lava")
+    assert int(db.get_wb_spawn(spawn_id).get("stage") or 1) == 2, \
+        "На 50% HP Лава должна разъяриться (stage=2)"
+
+
+def test_demon_vampirism_e2e(db):
+    """E2E: Демон реально лечится, когда бьёт игрока ответкой («Кровавый пир»)."""
+    from jobs.world_boss_counter import do_boss_counter_attack
+    profile = {"str": 1.25, "agi": 1.05, "int": 0.9}
+    spawn_id = db.create_wb_spawn(
+        scheduled_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        boss_name="Кровавый Демон", stat_profile=profile, max_hp=10000, boss_type="demon",
+    )
+    db.start_wb_spawn(spawn_id, online_at_start=1, max_hp=10000)
+    db.apply_damage_to_boss(spawn_id, 5000)          # boss hp=5000
+    db.get_or_create_player(9200, "vtester")
+    db.wb_join_raid(spawn_id, 9200, max_hp=5000, endurance=5, crit=5)
+    db.log_wb_hit(spawn_id, 9200, damage=100)
+    db.wb_add_player_damage(spawn_id, 9200, 100)
+    boss_before = int(db.get_wb_spawn(spawn_id)["current_hp"])  # 5000
+    for _ in range(5):
+        do_boss_counter_attack(db, spawn_id, profile, "demon", 0.5)  # ≤50% → вампир 50%
+    boss_after = int(db.get_wb_spawn(spawn_id)["current_hp"])
+    assert boss_after > boss_before, "Демон должен лечиться от ответки (вампиризм)"
+
+
+def test_lich_reap_heals_on_death_e2e(db):
+    """E2E: Лич «Жатва» — лечится, когда игрок гибнет на ≤25% HP босса."""
+    from jobs.world_boss_counter import do_boss_counter_attack
+    profile = {"str": 0.95, "agi": 1.2, "int": 1.05}
+    spawn_id = db.create_wb_spawn(
+        scheduled_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
+        boss_name="Проклятый Рыцарь", stat_profile=profile, max_hp=10000, boss_type="lich",
+    )
+    db.start_wb_spawn(spawn_id, online_at_start=1, max_hp=10000)
+    db.apply_damage_to_boss(spawn_id, 8000)          # boss hp=2000 (20% ≤ 25%)
+    db.get_or_create_player(9300, "fragile")
+    db.wb_join_raid(spawn_id, 9300, max_hp=100, endurance=1, crit=1)
+    db.log_wb_hit(spawn_id, 9300, damage=50)
+    db.wb_add_player_damage(spawn_id, 9300, 50)
+    boss_before = int(db.get_wb_spawn(spawn_id)["current_hp"])  # 2000
+    for _ in range(25):
+        do_boss_counter_attack(db, spawn_id, profile, "lich", 0.2)  # ≤25% → Жатва
+        if int(db.get_wb_player_state(spawn_id, 9300).get("is_dead") or 0):
+            break
+    ps = db.get_wb_player_state(spawn_id, 9300)
+    boss_after = int(db.get_wb_spawn(spawn_id)["current_hp"])
+    assert int(ps.get("is_dead") or 0) == 1, "игрок должен погибнуть от ответки"
+    assert boss_after > boss_before, "Лич должен полечиться на смерть игрока (Жатва +3%)"
+
+
 def test_wb_count_dead(db):
     """Подсчёт павших в рейде (Лич «Армия мёртвых»)."""
     spawn_id = _make_spawn(db)
