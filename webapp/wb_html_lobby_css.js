@@ -367,9 +367,14 @@ window.WBLobbyCSS = (() => {
 .wb-chat-send:active{transform:translateY(-50%) scale(.9);box-shadow:0 0 18px rgba(255,59,168,1)}
 .wb-chat-send.dis{opacity:.4;pointer-events:none;filter:grayscale(.5);box-shadow:none}
 
-.wb-gth.v2 .wb-gth-roster{width:108px;flex-shrink:0;display:flex;flex-direction:column;
+/* ВАЖНО: сбрасываем position:absolute из старого battle_css (там ростер
+   приклеен к правому краю поверх чата). В v2 ростер — обычный flex-item
+   в строке .wb-gth-mid, рядом с чатом, иначе чат залазит ПОД ростер. */
+.wb-gth.v2 .wb-gth-roster{position:static;right:auto;top:auto;bottom:auto;
+  width:108px;flex-shrink:0;display:flex;flex-direction:column;
   background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
-  border:1px solid rgba(140,80,255,.3);border-radius:12px;overflow:hidden}
+  border:1px solid rgba(140,80,255,.3);border-radius:12px;overflow:hidden;
+  box-shadow:none}
 .wb-gth.v2 .wb-gth-roster-h{flex-shrink:0;padding:6px 9px;font-size:9px;font-weight:800;color:#80e8ff;
   letter-spacing:.4px;border-bottom:1px solid rgba(140,80,255,.2);
   display:flex;justify-content:space-between;align-items:center;background:rgba(140,80,255,.06)}
