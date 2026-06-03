@@ -217,6 +217,11 @@ def test_periodic_aoe_fire_supernova_only_below_25():
     assert wb_periodic_aoe("fire", 0.50, 4) == 0.0     # выше 25% — нет
 
 
+def test_periodic_aoe_spider_swarm_below_25():
+    assert wb_periodic_aoe("spider", 0.20, 10) == 0.02  # Полчище — рой
+    assert wb_periodic_aoe("spider", 0.50, 10) == 0.0   # выше 25% — нет
+
+
 def test_periodic_aoe_other_types_and_start_zero():
     assert wb_periodic_aoe("lich", 0.20, 9) == 0.0     # у Лича периодики нет
     assert wb_periodic_aoe("lava", 0.10, 0) == 0.0     # на секунде 0 не бьём
@@ -255,6 +260,11 @@ def test_player_dmg_mult_golem_armor_and_crit_bypass():
     assert wb_player_dmg_mult("poison", 0.90, True) == 1.0                 # крит сквозь
     assert wb_player_dmg_mult("poison", 0.50, False) == round(1 / 1.15, 3) # Трещины
     assert wb_player_dmg_mult("poison", 0.20, False) == 1.0               # Раскол — брони нет
+
+
+def test_player_dmg_mult_demon_bleed_below_25():
+    assert wb_player_dmg_mult("demon", 0.20, False) == 1.1   # Кровопускание +10%
+    assert wb_player_dmg_mult("demon", 0.50, False) == 1.0   # выше 25% — нет
 
 
 def test_player_dmg_mult_shadow_phase():
