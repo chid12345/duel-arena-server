@@ -10,6 +10,8 @@
   let _pollTimer = null;
   let _lastId = 0;
   let _sendingCooldownUntil = 0;
+  let _polling = false;          // защита от параллельных опросов (гонка → дубли)
+  let _seenIds = new Set();      // уже отрисованные id — дедуп наверняка
 
   function _initData() {
     return window.Telegram?.WebApp?.initData || '';
@@ -27,7 +29,18 @@
 
   function _renderMessages(listEl, messages) {
     const myId = _myUid();
-    const html = messages.map(m => {
+    // Дедуп по id: даже если два опроса пересеклись и принесли одно и то же
+    // сообщение — рисуем его РОВНО раз. Заодно двигаем _lastId по максимуму.
+    const fresh = [];
+    for (const m of messages) {
+      const id = Number(m && m.id);
+      if (!id || _seenIds.has(id)) continue;
+      _seenIds.add(id);
+      if (id > _lastId) _lastId = id;
+      fresh.push(m);
+    }
+    if (!fresh.length) return;
+    const html = fresh.map(m => {
       const isMe = Number(m.user_id) === myId;
       const nm = _esc(m.username || 'Воин');
       const tx = _esc(m.message || '');
@@ -42,17 +55,19 @@
   }
 
   async function _poll() {
+    if (_polling) return;               // уже идёт опрос — не плодим параллельный (гонка → дубли)
     const listEl = document.getElementById('wb-chat-list');
     if (!listEl) return; // экран сменился
+    _polling = true;
     try {
       const r = await get('/api/world_boss/lobby_chat/messages', {
         init_data: _initData(), since: _lastId,
       });
       if (r?.ok && Array.isArray(r.messages) && r.messages.length) {
-        _renderMessages(listEl, r.messages);
-        _lastId = r.messages[r.messages.length - 1].id;
+        _renderMessages(listEl, r.messages);  // дедуп + сдвиг _lastId внутри
       }
     } catch (_) { /* сеть — молча, попробуем в следующий тик */ }
+    finally { _polling = false; }
   }
 
   function _startCooldown(sec) {
@@ -125,6 +140,8 @@
     if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
     _lastId = 0;
     _sendingCooldownUntil = 0;
+    _polling = false;
+    _seenIds = new Set();
   }
 
   Object.assign(window.WBHtml = window.WBHtml || {}, {
