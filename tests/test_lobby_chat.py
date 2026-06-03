@@ -74,6 +74,81 @@ def test_mat_filter_masks_to_stars(db):
     assert "бля" not in msgs[0]["message"]
 
 
+def test_mat_filter_covers_many_words(db):
+    """Расширенный список — должны ловиться все основные русские маты
+    в разных формах: падежи, приставки, суффиксы."""
+    _seed_schema(db)
+    cases = [
+        # (вход, что НЕ должно остаться)
+        ("иди нахуй", "нахуй"),
+        ("вот пиздец", "пиздец"),
+        ("ты мудак конченый", "мудак"),
+        ("гондон штопаный", "гондон"),
+        ("шлюха ты", "шлюх"),
+        ("охуенно играешь", "охуен"),
+        ("пидор тут?", "пидор"),
+        ("сука как заебало", "сук"),
+        ("дрочер несчастный", "дроч"),
+        ("долбоёб ты", "долбое"),
+    ]
+    for i, (text, forbidden) in enumerate(cases, start=10):
+        ok, _id, _why = db.lobby_chat_send(i, "u", text)
+        assert ok is True, f"Не записалось: {text!r}"
+    msgs = db.lobby_chat_get_since(0)
+    assert len(msgs) == len(cases)
+    for m, (orig, forbidden) in zip(msgs, cases):
+        msg = m["message"].lower()
+        assert "***" in msg, f"Не замаскировалось: {orig!r} → {m['message']!r}"
+        assert forbidden not in msg, f"Мат прошёл: {orig!r} → {m['message']!r}"
+
+
+def test_mat_filter_blocks_obfuscation(db):
+    """Обходы через латиницу, цифры и разделители — должны ловиться.
+    Раньше «xуй», «6лядь», «б л я т ь» проходили насквозь."""
+    _seed_schema(db)
+    obfuscated = [
+        "xуй",          # латинская x
+        "6лядь",        # цифра 6 вместо б
+        "п и з д а",    # пробелы между букв (fallback на полное сообщение)
+        "б.л.я.т.ь",    # точки между букв
+        "пиZда",        # латинская Z (не маппится, но 'пизда' всё равно в leet)
+        "h@x@l",        # не мат — не должно срабатывать
+    ]
+    expect_masked = [True, True, True, True, True, False]
+    for i, txt in enumerate(obfuscated, start=100):
+        db.lobby_chat_send(i, "u", txt)
+    msgs = db.lobby_chat_get_since(0)
+    assert len(msgs) == len(obfuscated)
+    for m, txt, should_mask in zip(msgs, obfuscated, expect_masked):
+        if should_mask:
+            assert "***" in m["message"], f"Обход прошёл: {txt!r} → {m['message']!r}"
+        else:
+            assert "***" not in m["message"], f"Ложное срабатывание: {txt!r} → {m['message']!r}"
+
+
+def test_mat_filter_does_not_eat_clean_words(db):
+    """Чистые слова с подстроками типа «склад», «классные», «бляха» (хм...) —
+    проверяем что обычная речь не ломается."""
+    _seed_schema(db)
+    clean = [
+        "склад на втором этаже",
+        "классные ребята",
+        "пиздец как круто",   # ВНИМАНИЕ: это мат, должен замаскироваться
+        "Спасибо за игру!",
+        "Гладиатор тут?",
+        "Кто идёт сегодня вечером в рейд",
+    ]
+    expect_masked_idx = {2}  # только «пиздец как круто»
+    for i, txt in enumerate(clean, start=200):
+        db.lobby_chat_send(i, "u", txt)
+    msgs = db.lobby_chat_get_since(0)
+    for idx, (m, orig) in enumerate(zip(msgs, clean)):
+        if idx in expect_masked_idx:
+            assert "***" in m["message"], f"Должен был замаскироваться: {orig!r}"
+        else:
+            assert "***" not in m["message"], f"Чистое слово замаскировалось: {orig!r} → {m['message']!r}"
+
+
 def test_get_since_filters_old(db):
     """get_since возвращает только сообщения с id > since."""
     _seed_schema(db)
