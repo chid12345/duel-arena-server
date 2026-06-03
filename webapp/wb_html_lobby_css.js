@@ -345,22 +345,26 @@ window.WBLobbyCSS = (() => {
 .wb-chat-msg-tx{font-size:11px;color:#fff;line-height:1.35}
 @keyframes wbCmIn{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
 /* Минимальный input — как в мокапе: только input + большая яркая кнопка ➤.
-   Счётчик убрали (зажирал место и прятал кнопку), maxlength=200 на input. */
-.wb-chat-input{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:7px 8px;
+   Счётчик убрали (зажирал место и прятал кнопку), maxlength=200 на input.
+   Кнопка ➤ позиционирована absolute, чтобы её НЕ съел overflow:hidden
+   родителя и flex-сжатие в узком чате на мобайле — раньше она
+   фактически уезжала за правый край и казалась "пропавшей". */
+.wb-chat-input{position:relative;flex-shrink:0;padding:7px 64px 7px 8px;
   border-top:1px solid rgba(0,240,255,.18);background:rgba(0,240,255,.04)}
-.wb-chat-input input{flex:1;min-width:0;height:34px;border-radius:8px;padding:0 12px;font-size:12px;
+.wb-chat-input input{display:block;width:100%;height:34px;border-radius:8px;padding:0 12px;font-size:12px;
   color:#fff;background:rgba(10,5,25,.9);border:1px solid rgba(0,240,255,.35);outline:none;
-  font-family:inherit;transition:border-color .15s,box-shadow .15s}
+  font-family:inherit;transition:border-color .15s,box-shadow .15s;box-sizing:border-box}
 .wb-chat-input input:focus{border-color:#00f0ff;box-shadow:0 0 8px rgba(0,240,255,.4)}
 .wb-chat-input input.err{border-color:#ff3344;box-shadow:0 0 8px rgba(255,51,68,.5);
   animation:wbInpShake .25s ease}
 @keyframes wbInpShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
-.wb-chat-send{width:48px;height:34px;border-radius:8px;display:grid;place-items:center;
+.wb-chat-send{position:absolute;right:8px;top:50%;transform:translateY(-50%);
+  width:48px;height:34px;border-radius:8px;display:grid;place-items:center;
   font-size:17px;cursor:pointer;background:linear-gradient(135deg,#ff3ba8,#ff1488);
-  color:#fff;border:1px solid rgba(255,255,255,.3);font-weight:900;flex-shrink:0;
+  color:#fff;border:1px solid rgba(255,255,255,.3);font-weight:900;
   box-shadow:0 0 12px rgba(255,59,168,.7),inset 0 0 5px rgba(255,255,255,.25);
-  transition:transform .1s,opacity .15s,box-shadow .15s}
-.wb-chat-send:active{transform:scale(.9);box-shadow:0 0 18px rgba(255,59,168,1)}
+  transition:transform .1s,opacity .15s,box-shadow .15s;z-index:3}
+.wb-chat-send:active{transform:translateY(-50%) scale(.9);box-shadow:0 0 18px rgba(255,59,168,1)}
 .wb-chat-send.dis{opacity:.4;pointer-events:none;filter:grayscale(.5);box-shadow:none}
 
 .wb-gth.v2 .wb-gth-roster{width:108px;flex-shrink:0;display:flex;flex-direction:column;
