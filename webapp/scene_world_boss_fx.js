@@ -30,14 +30,14 @@ Object.assign(WorldBossScene.prototype, {
       if (added & 0b100) {            // 25% — имя фишки + Хаос
         this._fxShake('heavy'); this._fxBossTremble('heavy');
         this._fxHtmlAnnounce(labels[4] || 'ХАОС', '#ff5a3c', true);
-        this._fxBossEvent('25% · ' + (labels[4] || 'Хаос'), '#ff5a3c');
+        this._fxBossEvent('25% · ' + (labels[4] || 'Хаос'), '#ff5a3c', 't25');
         this._fxChaosOverlay();
       } else if (added & 0b010) {     // 50% — анонс ярости покажет _fxEnrageAnnounce
         this._fxShake('medium'); this._fxBossTremble('medium');
       } else if (added & 0b001) {     // 75% — имя фишки если включена, иначе общий
         this._fxShake('light'); this._fxBossTremble('light');
         this._fxHtmlAnnounce(labels[1] || 'КОРОННЫЙ УДАР', '#ffaa3c');
-        this._fxBossEvent('75% · ' + (labels[1] || 'Коронный удар'), '#ffaa3c');
+        this._fxBossEvent('75% · ' + (labels[1] || 'Коронный удар'), '#ffaa3c', 't75');
       } else {
         this._fxShake('light');
       }
@@ -81,7 +81,7 @@ Object.assign(WorldBossScene.prototype, {
     try { this._fxBossTremble('heavy'); } catch(_) {}
     try { this._fxBossEnragedGlow(); } catch(_) {}
     try { this._fxHtmlAnnounce(abilityName || 'БОСС РАЗЪЯРЁН', '#ff6a30', true); } catch(_) {}
-    try { this._fxBossEvent('50% · ' + (abilityName || 'Ярость'), '#ff6a30'); } catch(_) {}
+    try { this._fxBossEvent('50% · ' + (abilityName || 'Ярость'), '#ff6a30', 't50'); } catch(_) {}
     try { tg?.HapticFeedback?.notificationOccurred?.('warning'); } catch(_) {}
     try {
       const W = this.W, H = this.H;
@@ -182,9 +182,10 @@ Object.assign(WorldBossScene.prototype, {
     } catch(_) {}
   },
 
-  // Накопительная лента событий босса слева — висит ~8с, до 4 строк.
-  // Чтобы не прозевать порог в быстром бою (баннер мелькает, а тут остаётся).
-  _fxBossEvent(text, color) {
+  // Накопительная лента событий босса слева — висит ВЕСЬ бой, до 5 строк.
+  // key — порог ('t75'/'t50'/'t25'): показываем раз за рейд (анти-дубль, т.к.
+  // событие может прийти и из WS-эффектов, и из детекта кибер-боя).
+  _fxBossEvent(text, color, key) {
     try {
       this._fxEnsureCss();
       const host = document.getElementById('wb-root') || document.body;
@@ -196,7 +197,12 @@ Object.assign(WorldBossScene.prototype, {
       }
       // Новый рейд → чистим ленту прошлого боя (spawn_id сменился).
       const sid = String(this._state?.active?.spawn_id || '');
-      if (box.dataset.spawn !== sid) { box.innerHTML = ''; box.dataset.spawn = sid; }
+      if (box.dataset.spawn !== sid) { box.innerHTML = ''; box.dataset.spawn = sid; this._fxEvtKeys = {}; }
+      if (key) {
+        this._fxEvtKeys = this._fxEvtKeys || {};
+        if (this._fxEvtKeys[key]) return;   // этот порог уже показан в этом рейде
+        this._fxEvtKeys[key] = true;
+      }
       const line = document.createElement('div');
       line.className = 'wb-fx-evt';
       if (color) { line.style.borderColor = color + '88'; line.style.color = color; }

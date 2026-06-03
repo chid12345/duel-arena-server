@@ -14,6 +14,7 @@
     if (root.__cyBound) return;
     root.__cyBound = true;
     let selA = null, selD = null, busy = false;
+    let _lastHpPct = 1;   // для детекта порогов босса 75/50/25 по HP
     const apply = root.querySelector('#cy-apply');
     const auto  = root.querySelector('#cy-auto');
 
@@ -97,6 +98,32 @@
 
           const sc = window.WBHtml?._scene;
           if (sc?._state?.active) sc._state.active.current_hp = r.boss_hp;
+
+          // Пороги босса (75/50/25) ПО HP — надёжно, т.к. идёт на каждом ударе
+          // (WS-эффекты до кибер-боя не доходят). Имена фишек — из boss_features.
+          try {
+            const act = sc?._state?.active;
+            const mhp = Number(act?.max_hp) || 0;
+            if (mhp > 0 && r.boss_hp != null) {
+              const pct = r.boss_hp / mhp;
+              const feats = act?.boss_features || [];
+              const nameAt = (h) => (feats.find(f => f && f.hp === h) || {}).name;
+              [[0.75, 75, 't75', '#ffaa3c', 'light'],
+               [0.50, 50, 't50', '#ff6a30', 'medium'],
+               [0.25, 25, 't25', '#ff5a3c', 'heavy']].forEach(([thr, lab, key, col, sh]) => {
+                if (_lastHpPct > thr && pct <= thr) {
+                  const nm = nameAt(lab) || (lab === 50 ? 'Ярость' : lab === 25 ? 'Хаос' : 'Коронный удар');
+                  try { sc._fxBossEvent?.(lab + '% · ' + nm, col, key); } catch (_) {}
+                  try { sc._fxHtmlAnnounce?.(nm, col, lab !== 75); } catch (_) {}
+                  try { sc._fxDomShake?.(); } catch (_) {}
+                  try { sc._fxBossTremble?.(sh); } catch (_) {}
+                  if (lab === 50) { try { sc._fxBossEnragedGlow?.(); } catch (_) {} }
+                }
+              });
+              _lastHpPct = pct;
+            }
+          } catch (_) {}
+
           if (sc?._state?.player_state && r.player_hp != null) {
             sc._state.player_state.current_hp = r.player_hp;
             if (r.player_died) sc._state.player_state.is_dead = 1;
