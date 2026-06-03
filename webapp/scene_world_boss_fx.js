@@ -194,13 +194,16 @@ Object.assign(WorldBossScene.prototype, {
         box.id = 'wb-fx-events'; box.className = 'wb-fx-events';
         host.appendChild(box);
       }
+      // Новый рейд → чистим ленту прошлого боя (spawn_id сменился).
+      const sid = String(this._state?.active?.spawn_id || '');
+      if (box.dataset.spawn !== sid) { box.innerHTML = ''; box.dataset.spawn = sid; }
       const line = document.createElement('div');
       line.className = 'wb-fx-evt';
       if (color) { line.style.borderColor = color + '88'; line.style.color = color; }
       line.textContent = text;
       box.appendChild(line);
-      while (box.children.length > 4) box.removeChild(box.firstChild);
-      setTimeout(() => { try { line.remove(); } catch(_) {} }, 8000);
+      // Висят ВЕСЬ бой (не 8 сек) — чтобы порог нельзя было прозевать.
+      while (box.children.length > 5) box.removeChild(box.firstChild);
     } catch(_) {}
   },
 
