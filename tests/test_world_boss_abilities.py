@@ -30,8 +30,8 @@ from config.world_boss.abilities import (  # noqa: E402
     wb_death_heal_pct,
     wb_enrage_profile,
     wb_is_vuln_window,
-    wb_lifesteal_pct,
     wb_periodic_aoe,
+    wb_regen_pct,
     wb_player_dmg_mult,
     wb_str_death_mult,
 )
@@ -276,11 +276,11 @@ def test_periodic_aoe_other_types_and_start_zero():
 
 # ── Test 9: вампиризм Демона ──────────────────────────────────────────────────
 
-def test_lifesteal_demon_scales_with_hp():
-    assert wb_lifesteal_pct("demon", 0.80) == 0.30   # Кровавый пир (пассив)
-    assert wb_lifesteal_pct("demon", 0.50) == 0.50   # Кровавая ярость ≤50%
-    assert wb_lifesteal_pct("demon", 0.20) == 0.50
-    assert wb_lifesteal_pct("fire", 0.40) == 0.0     # не демон — нет вампиризма
+def test_regen_demon_scales_with_hp():
+    assert wb_regen_pct("demon", 0.80) == 0.20   # Кровавый пир (реген от урона по нему)
+    assert wb_regen_pct("demon", 0.50) == 0.35   # Кровавая ярость ≤50%
+    assert wb_regen_pct("demon", 0.20) == 0.35
+    assert wb_regen_pct("fire", 0.40) == 0.0     # не демон — нет регена
 
 
 # ── Test 10: Лич «Армия мёртвых» ──────────────────────────────────────────────

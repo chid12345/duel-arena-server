@@ -302,25 +302,24 @@ def test_lava_raid_end_to_end(db):
         "На 50% HP Лава должна разъяриться (stage=2)"
 
 
-def test_demon_vampirism_e2e(db):
-    """E2E: Демон реально лечится, когда бьёт игрока ответкой («Кровавый пир»)."""
-    from jobs.world_boss_counter import do_boss_counter_attack
+def test_demon_regen_e2e(db):
+    """E2E: Демон отъедает назад часть урона ПО НЕМУ (реген «Кровавый пир»).
+    Воспроизводит логику боевого эндпоинта: урон по боссу → реген части назад."""
+    from config.world_boss.abilities import wb_regen_pct
     profile = {"str": 1.25, "agi": 1.05, "int": 0.9}
     spawn_id = db.create_wb_spawn(
         scheduled_at=datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S"),
         boss_name="Кровавый Демон", stat_profile=profile, max_hp=10000, boss_type="demon",
     )
     db.start_wb_spawn(spawn_id, online_at_start=1, max_hp=10000)
-    db.apply_damage_to_boss(spawn_id, 5000)          # boss hp=5000
-    db.get_or_create_player(9200, "vtester")
-    db.wb_join_raid(spawn_id, 9200, max_hp=5000, endurance=5, crit=5)
-    db.log_wb_hit(spawn_id, 9200, damage=100)
-    db.wb_add_player_damage(spawn_id, 9200, 100)
-    boss_before = int(db.get_wb_spawn(spawn_id)["current_hp"])  # 5000
-    for _ in range(5):
-        do_boss_counter_attack(db, spawn_id, profile, "demon", 0.5)  # ≤50% → вампир 50%
-    boss_after = int(db.get_wb_spawn(spawn_id)["current_hp"])
-    assert boss_after > boss_before, "Демон должен лечиться от ответки (вампиризм)"
+    db.apply_damage_to_boss(spawn_id, 4000)          # boss hp=6000
+    dmg = 1000
+    after_hit = db.apply_damage_to_boss(spawn_id, dmg)            # 5000
+    rg = wb_regen_pct("demon", after_hit / 10000)                # 0.5 → 0.35
+    assert rg == 0.35
+    healed = db.wb_heal_boss(spawn_id, int(dmg * rg))            # +350
+    assert healed > after_hit, "Демон должен отъесть часть урона назад (реген)"
+    assert wb_regen_pct("lava", 0.5) == 0.0, "у не-демона регена нет"
 
 
 def test_lich_reap_heals_on_death_e2e(db):

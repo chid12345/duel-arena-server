@@ -12,7 +12,7 @@ from pydantic import BaseModel
 
 from api.tma_infra import get_user_lock
 from config.battle_constants import PLAYER_START_CRIT, PLAYER_START_ENDURANCE
-from config.world_boss.abilities import wb_is_vuln_window
+from config.world_boss.abilities import wb_is_vuln_window, wb_regen_pct
 from jobs.world_boss_status import is_webbed
 from repositories.world_boss.damage_calc import (
     PLAYER_HIT_COOLDOWN_MS,
@@ -236,6 +236,19 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
         new_hp = db.apply_damage_to_boss(spawn_id, dmg)
         if new_hp is None:
             return {"ok": False, "reason": "Рейд уже завершён"}
+
+        # Демон «Кровавый пир»: реген — отъедает часть нанесённого ЕМУ урона назад
+        # (видно по полоске, надо переуронить лечение). 20% / ≤50% HP — 35%.
+        try:
+            _mhp2 = int(active.get("max_hp") or 0)
+            _hpp2 = (new_hp / _mhp2) if _mhp2 > 0 else 1.0
+            _rg = wb_regen_pct(_boss_type, _hpp2)
+            if _rg > 0 and dmg > 0 and new_hp > 0:
+                _healed = db.wb_heal_boss(spawn_id, int(dmg * _rg))
+                if _healed is not None:
+                    new_hp = _healed
+        except Exception:
+            pass
 
         # Вампиризм (lifesteal_pct, ботинки): лечим игрока на % от урона по боссу.
         if _eq_lifesteal_pct and dmg > 0 and not int(ps.get("is_dead") or 0):

@@ -18,7 +18,6 @@ from config.world_boss.abilities import (
     wb_counter_plan,
     wb_counter_str_mult,
     wb_death_heal_pct,
-    wb_lifesteal_pct,
 )
 from repositories.world_boss.damage_calc import calc_boss_attack_damage
 
@@ -59,8 +58,8 @@ def _select_targets(top_alive: list, all_alive: list, plan: dict) -> list:
 def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict,
                            boss_type: str = "", hp_pct: float = 1.0) -> None:
     """Применяет одну ответку босса к конкретному игроку (защита/свитки/щит/
-    шипы/второе дыхание). Если увернулся/заблокировал — урона нет.
-    Демон («Кровавый пир») лечится долей нанесённого урона (wb_lifesteal_pct)."""
+    шипы/второе дыхание/ожоги Огня/ярость Демона). Если увернулся/заблокировал —
+    урона нет. (Реген Демона «Кровавый пир» — в api/world_boss_hit.py.)"""
     ps = db.get_wb_player_state(spawn_id, user_id)
     if not ps or int(ps.get("is_dead") or 0):
         return
@@ -120,14 +119,8 @@ def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict,
         except Exception:
             pass
     new_hp, is_dead = db.wb_apply_damage_to_player(spawn_id, user_id, dmg)
-    # Вампиризм Демона («Кровавый пир»): лечится долей нанесённого урона.
-    # Хорошая защита/уворот игрока (меньше dmg) = босс меньше лечится.
-    ls = wb_lifesteal_pct(boss_type, hp_pct)
-    if ls and dmg > 0:
-        try:
-            db.wb_heal_boss(spawn_id, max(1, int(dmg * ls)))
-        except Exception:
-            pass
+    # (Вампиризм Демона «Кровавый пир» теперь — реген от урона ПО боссу,
+    #  в api/world_boss_hit.py: бьёшь его → он отъедает часть назад.)
     # Хил на смерть: Лич «Жатва» (≤25%), Демон «Жажда крови» (≤75% + ярость).
     if is_dead:
         try:
