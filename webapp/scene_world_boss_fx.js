@@ -25,16 +25,17 @@ Object.assign(WorldBossScene.prototype, {
     const added = (~oldCF) & newCF; // только новые биты
     if (added) {
       const labels = newA.crown_labels || {};
+      this._fxDomShake();  // видимая тряска боя (DOM)
       // бит 0 = 75% (лёгкий), бит 1 = 50% (средний), бит 2 = 25% (тяжёлый).
       if (added & 0b100) {            // 25% — имя фишки + Хаос
         this._fxShake('heavy'); this._fxBossTremble('heavy');
-        if (labels[4]) this._fxAbilityToast(labels[4], '#ff5a3c');
+        this._fxHtmlAnnounce(labels[4] || 'ХАОС', '#ff5a3c', true);
         this._fxChaosOverlay();
-      } else if (added & 0b010) {     // 50% — тост покажет _fxEnrageAnnounce (с именем ярости)
+      } else if (added & 0b010) {     // 50% — анонс ярости покажет _fxEnrageAnnounce
         this._fxShake('medium'); this._fxBossTremble('medium');
       } else if (added & 0b001) {     // 75% — имя фишки если включена, иначе общий
         this._fxShake('light'); this._fxBossTremble('light');
-        this._fxAbilityToast(labels[1] || 'КОРОННЫЙ УДАР', '#ffaa3c');
+        this._fxHtmlAnnounce(labels[1] || 'КОРОННЫЙ УДАР', '#ffaa3c');
       } else {
         this._fxShake('light');
       }
@@ -74,8 +75,10 @@ Object.assign(WorldBossScene.prototype, {
     if (this._enrageShown) return;
     this._enrageShown = true;
     try { this._fxShake('heavy'); } catch(_) {}
+    try { this._fxDomShake(); } catch(_) {}
     try { this._fxBossTremble('heavy'); } catch(_) {}
     try { this._fxBossEnragedGlow(); } catch(_) {}
+    try { this._fxHtmlAnnounce(abilityName || 'БОСС РАЗЪЯРЁН', '#ff6a30', true); } catch(_) {}
     try { tg?.HapticFeedback?.notificationOccurred?.('warning'); } catch(_) {}
     try {
       const W = this.W, H = this.H;
@@ -124,6 +127,60 @@ Object.assign(WorldBossScene.prototype, {
   // Стойкое алое свечение зоны после ярости (до конца рейда / пересоздания).
   _fxBossEnragedGlow() {
     try { document.getElementById('wb-boss-zone')?.classList.add('wb-enraged'); } catch(_) {}
+  },
+
+  // ── HTML-эффекты: бой рисуется DOM-слоем поверх Phaser, поэтому тосты/тряска
+  //    должны быть в DOM, иначе их не видно (Phaser-текст лежит ПОД боем). ──
+  _fxEnsureCss() {
+    if (document.getElementById('wb-fx-css')) return;
+    const s = document.createElement('style'); s.id = 'wb-fx-css';
+    s.textContent = `
+      .wb-fx-ann{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%) scale(.7);
+        z-index:2147483000;pointer-events:none;font-weight:900;letter-spacing:1px;
+        text-align:center;white-space:nowrap;padding:10px 18px;border-radius:14px;
+        background:rgba(10,0,20,.62);border:1px solid rgba(255,120,60,.45);
+        text-shadow:0 0 14px rgba(0,0,0,.9);opacity:0;
+        animation:wb-fx-pop 1.9s cubic-bezier(.2,1,.4,1) forwards;}
+      @keyframes wb-fx-pop{
+        0%{opacity:0;transform:translate(-50%,-50%) scale(.7)}
+        14%{opacity:1;transform:translate(-50%,-50%) scale(1.08)}
+        26%{transform:translate(-50%,-50%) scale(1)}
+        78%{opacity:1}
+        100%{opacity:0;transform:translate(-50%,-58%) scale(1.04)}}
+      #wb-root.wb-fx-shake{animation:wb-fx-shk .42s ease-in-out;}
+      @keyframes wb-fx-shk{0%,100%{transform:translate(0,0)}
+        15%{transform:translate(-5px,3px)}30%{transform:translate(6px,-3px)}
+        45%{transform:translate(-6px,-2px)}60%{transform:translate(5px,3px)}
+        75%{transform:translate(-3px,2px)}}
+    `;
+    document.head.appendChild(s);
+  },
+
+  // Видимый поверх боя тост-анонс фишки (DOM).
+  _fxHtmlAnnounce(text, color, big) {
+    try {
+      this._fxEnsureCss();
+      const host = document.getElementById('wb-root') || document.body;
+      const el = document.createElement('div');
+      el.className = 'wb-fx-ann';
+      el.style.color = color || '#ffae5c';
+      el.style.fontSize = (big ? 23 : 17) + 'px';
+      el.style.borderColor = (color || '#ff7a3c') + '88';
+      el.textContent = '⚡ ' + String(text).toUpperCase() + ' ⚡';
+      host.appendChild(el);
+      setTimeout(() => { try { el.remove(); } catch(_) {} }, 2000);
+    } catch(_) {}
+  },
+
+  // DOM-тряска всего боевого экрана (Phaser-камера не видна под HTML-боем).
+  _fxDomShake() {
+    try {
+      const r = document.getElementById('wb-root');
+      if (!r) return;
+      r.classList.remove('wb-fx-shake'); void r.offsetWidth;
+      r.classList.add('wb-fx-shake');
+      setTimeout(() => { try { r.classList.remove('wb-fx-shake'); } catch(_) {} }, 450);
+    } catch(_) {}
   },
 
   _fxShake(intensity) {
