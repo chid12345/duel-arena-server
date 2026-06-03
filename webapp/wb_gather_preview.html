@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- Preview-страница для отладки экрана «Зона сбора» WB-лобби.
+     Подключает РЕАЛЬНЫЕ CSS из проекта (battle + lobby) — те же
+     конфликты, что и в Telegram. Размер контейнера задаётся в URL:
+     ?w=412&h=600  (по умолчанию 412x740, как Telegram mini-app). -->
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>WB Gather Preview</title>
+<style id="preview-overrides">
+  html,body{margin:0;padding:0;background:#222;font-family:-apple-system,Segoe UI,Roboto,sans-serif;color:#aaa;overflow:hidden}
+  body{display:flex;flex-direction:column;align-items:flex-start;padding:8px;gap:4px}
+  .hdr{font-size:11px;color:#ccc;letter-spacing:.5px}
+  .frame{position:relative;border:2px dashed #555;border-radius:14px;overflow:hidden;background:#000;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="hdr" id="hdr">Preview…</div>
+<div class="frame" id="frame">
+  <div id="wb-root"></div>
+</div>
+
+<!-- Реальные файлы проекта. Cache-buster через timestamp в URL,
+     иначе превью видит кеш старого CSS и фикс не виден. -->
+<script>
+  const _cb = '?cb=' + Date.now();
+  document.write(`<script src="wb_html_battle_css.js${_cb}"><\/script>`);
+  document.write(`<script src="wb_html_lobby_css.js${_cb}"><\/script>`);
+  document.write(`<script src="wb_html_gather.js${_cb}"><\/script>`);
+</script>
+
+<script>
+(function(){
+  // Мокаем window.Telegram чтобы _myTgId() вернул что-то
+  window.Telegram = { WebApp: { initData:'', initDataUnsafe:{ user:{ id: 12345, username:'me', first_name:'Я' } } } };
+  // Мокаем глобальные хелперы api
+  window.get = async () => ({ ok:true, messages:[] });
+  window.post = async () => ({ ok:true });
+
+  // Размер фрейма из URL
+  const q = new URLSearchParams(location.search);
+  const W = Number(q.get('w')) || 412;
+  const H = Number(q.get('h')) || 740;
+  const frame = document.getElementById('frame');
+  frame.style.width = W + 'px';
+  frame.style.height = H + 'px';
+  document.getElementById('hdr').textContent = `Preview ${W}×${H}px — реальные CSS из проекта`;
+
+  // Инжектим оба CSS как в проде
+  window.WBBattleCSS?.inject();
+  window.WBLobbyCSS?.inject();
+
+  // ПОСЛЕ injection всех CSS — добавляем preview-override с !important.
+  // Битва за специфичность: battle_css задаёт .wb-gth{position:fixed!important;inset:0!important},
+  // в Telegram это норм, но в preview нам нужно ограничить контейнер фреймом.
+  const ovr = document.createElement('style');
+  ovr.id = 'preview-frame-overrides';
+  ovr.textContent = `
+    #wb-root{position:relative !important;inset:auto !important;width:100%;height:100%}
+    .wb-gth, .wb-gth.v2{position:relative !important;inset:auto !important;
+      top:auto !important;right:auto !important;bottom:auto !important;left:auto !important;
+      width:100% !important;height:100% !important}
+  `;
+  document.head.appendChild(ovr);
+
+  // Мок состояния зоны сбора
+  const mockState = {
+    gather: {
+      is_open: true,
+      seconds_left: 247,
+      count: 3,
+      players: [
+        { user_id: 12345, name: 'flykiller', level: 80 },
+        { user_id: 67890, name: 'Гладиатор', level: 65 },
+        { user_id: 11111, name: 'Тёмный_Лорд', level: 92 },
+      ],
+    },
+    is_registered: true,
+    next_scheduled: { spawn_id: 999 },
+  };
+
+  // Рендерим
+  const root = document.getElementById('wb-root');
+  window.WBHtml.renderGather(root, mockState);
+
+  // Накидаем несколько мок-сообщений в чат для оценки переполнения/баблов
+  if (q.get('msgs') !== '0') {
+    const list = document.getElementById('wb-chat-list');
+    if (list) {
+      const fakes = [
+        { id:1, user_id:67890, username:'Гладиатор', message:'Народ, кто идёт сегодня?' },
+        { id:2, user_id:11111, username:'Тёмный_Лорд', message:'Я в деле, готовлю свитки' },
+        { id:3, user_id:12345, username:'me',         message:'+1 со мной, у меня клан-бафф' },
+        { id:4, user_id:67890, username:'Гладиатор', message:'Ок, начинаем когда таймер истечёт' },
+      ];
+      const myId = 12345;
+      list.innerHTML = fakes.map(m => {
+        const isMe = m.user_id === myId;
+        return `<div class="wb-chat-msg${isMe?' me':''}">
+          <div class="wb-chat-msg-nm">${m.username}${isMe?' (вы)':''}</div>
+          <div class="wb-chat-msg-tx">${m.message}</div>
+        </div>`;
+      }).join('');
+    }
+  }
+})();
+</script>
+</body>
+</html>

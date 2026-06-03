@@ -321,10 +321,11 @@ window.WBLobbyCSS = (() => {
 
 .wb-chat-wrap{flex:1;display:flex;flex-direction:column;min-width:0;
   /* Как в мокапе: чат + ростер заполняют всю среднюю часть.
-     Никаких лимитов по высоте — flex:1 тянется до самой кнопки «Выйти». */
-  background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
-  border:1px solid rgba(0,240,255,.28);border-radius:12px;overflow:hidden;
-  box-shadow:0 0 14px rgba(0,240,255,.08) inset}
+     Никаких лимитов по высоте — flex:1 тянется до самой кнопки «Выйти».
+     Граница чёткая (0.7), чтобы было видно где чат заканчивается. */
+  background:linear-gradient(180deg,rgba(15,3,30,.92),rgba(5,1,15,.96));
+  border:1.5px solid rgba(0,240,255,.7);border-radius:12px;overflow:hidden;
+  box-shadow:0 0 18px rgba(0,240,255,.15),inset 0 0 12px rgba(0,240,255,.06)}
 .wb-chat-hdr{flex-shrink:0;padding:7px 10px;display:flex;align-items:center;gap:6px;
   border-bottom:1px solid rgba(0,240,255,.18);background:rgba(0,240,255,.04)}
 .wb-chat-hdr .icon{font-size:13px}
@@ -369,12 +370,14 @@ window.WBLobbyCSS = (() => {
 
 /* ВАЖНО: сбрасываем position:absolute из старого battle_css (там ростер
    приклеен к правому краю поверх чата). В v2 ростер — обычный flex-item
-   в строке .wb-gth-mid, рядом с чатом, иначе чат залазит ПОД ростер. */
-.wb-gth.v2 .wb-gth-roster{position:static;right:auto;top:auto;bottom:auto;
+   в строке .wb-gth-mid, рядом с чатом, иначе чат залазит ПОД ростер.
+   Также явно сбрасываем top/left/right/bottom — иначе они продолжают
+   действовать при position:static и портят геометрию. */
+.wb-gth.v2 .wb-gth-roster{position:static;top:auto;right:auto;bottom:auto;left:auto;
   width:108px;flex-shrink:0;display:flex;flex-direction:column;
-  background:linear-gradient(180deg,rgba(15,3,30,.85),rgba(5,1,15,.92));
-  border:1px solid rgba(140,80,255,.3);border-radius:12px;overflow:hidden;
-  box-shadow:none}
+  background:linear-gradient(180deg,rgba(15,3,30,.92),rgba(5,1,15,.96));
+  border:1.5px solid rgba(140,80,255,.55);border-radius:12px;overflow:hidden;
+  box-shadow:0 0 14px rgba(140,80,255,.12)}
 .wb-gth.v2 .wb-gth-roster-h{flex-shrink:0;padding:6px 9px;font-size:9px;font-weight:800;color:#80e8ff;
   letter-spacing:.4px;border-bottom:1px solid rgba(140,80,255,.2);
   display:flex;justify-content:space-between;align-items:center;background:rgba(140,80,255,.06)}
@@ -392,13 +395,19 @@ window.WBLobbyCSS = (() => {
 .wb-gth.v2 .wb-gth-row.me .nm{color:#00f0ff}
 .wb-gth.v2 .wb-gth-row .lv{font-size:7px;color:#80c8ff;opacity:.7}
 
-.wb-gth.v2 .wb-gth-leave{position:relative;z-index:2;flex-shrink:0;padding:11px;
+/* ВАЖНО: в старом battle_css .wb-gth-leave задан position:absolute
+   left:14px;right:128px;bottom:14px — эти смещения остаются, даже когда
+   мы перебиваем position. Явно сбрасываем top/right/bottom/left,
+   иначе кнопка наезжает на чат сверху и сдвигается вбок. */
+.wb-gth.v2 .wb-gth-leave{position:static;top:auto;right:auto;bottom:auto;left:auto;
+  z-index:2;flex-shrink:0;width:auto;padding:11px;margin:0;
   text-align:center;border-radius:11px;cursor:pointer;
   background:linear-gradient(135deg,rgba(255,59,168,.15),rgba(120,30,90,.2));
-  border:1px solid rgba(255,59,168,.4);font-size:11px;font-weight:900;letter-spacing:1px;
-  color:#ff7acb;text-shadow:0 0 5px currentColor;box-shadow:0 0 12px rgba(255,59,168,.12)}
+  border:1px solid rgba(255,59,168,.4);font-size:12px;font-weight:900;letter-spacing:1.5px;
+  color:#ff7acb;text-shadow:0 0 5px currentColor;box-shadow:0 0 12px rgba(255,59,168,.12);
+  display:flex;align-items:center;justify-content:center;gap:7px}
 .wb-gth.v2 .wb-gth-leave:active{transform:scale(.98)}
-.wb-gth.v2 .wb-gth-leave-ic{margin-right:6px}
+.wb-gth.v2 .wb-gth-leave-ic{margin-right:0;font-size:14px}
 `;
   function inject() {
     if (document.getElementById('wb-style-lobby')) return;
