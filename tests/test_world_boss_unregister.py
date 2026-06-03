@@ -220,3 +220,44 @@ def test_unregister_blocked_during_active_raid(db):
     # Деньги НЕ возвращены, запись НЕ удалена — главные инварианты безопасности
     assert _gold(db, 400) == 600 - WB_ENTRY_FEE
     assert _registered(db, 400)
+
+
+def test_register_idempotent_no_double_charge(db):
+    """Двойной register подряд — золото списывается ОДИН раз.
+    Сценарий: игрок жмёт «Участвовать» дважды (двойной тап / зависший _regBusy
+    флаг). Сервер должен видеть, что запись уже есть, и не списывать второй раз."""
+    from api.world_boss_entry import world_boss_register_inner, WB_ENTRY_FEE
+
+    _make_player(db, 500, gold=1000)
+    _schedule_raid(db, spawn_id=1)
+    ctx, RegisterBody = _make_inner_ctx(db)
+
+    # Первый клик: списали 50, зарегали
+    r1 = asyncio.run(world_boss_register_inner(RegisterBody(init_data="500"), **ctx))
+    assert r1["ok"] and r1["is_registered"]
+    assert _gold(db, 500) == 1000 - WB_ENTRY_FEE
+    assert r1["gold_left"] == 1000 - WB_ENTRY_FEE
+
+    # Второй клик: уже зарегистрирован — ok без второго списания
+    r2 = asyncio.run(world_boss_register_inner(RegisterBody(init_data="500"), **ctx))
+    assert r2["ok"] and r2["is_registered"]
+    assert _gold(db, 500) == 1000 - WB_ENTRY_FEE, "Двойного списания быть не должно"
+    assert r2["gold_left"] == 1000 - WB_ENTRY_FEE
+    assert r2["registrants_count"] == 1, "Регистрация должна быть одна, не две"
+
+
+def test_register_insufficient_gold_returns_reason(db):
+    """Не хватает золота → ok:false с понятным reason. Клиент покажет тост,
+    юзер увидит почему «Участвовать» не сработало (раньше молча игнорировалось)."""
+    from api.world_boss_entry import world_boss_register_inner, WB_ENTRY_FEE
+
+    _make_player(db, 600, gold=WB_ENTRY_FEE - 1)  # на 1 меньше чем взнос
+    _schedule_raid(db, spawn_id=1)
+    ctx, RegisterBody = _make_inner_ctx(db)
+
+    r = asyncio.run(world_boss_register_inner(RegisterBody(init_data="600"), **ctx))
+    assert r["ok"] is False
+    assert "reason" in r and r["reason"], "Должен быть текст причины для тоста"
+    # Золото не списано, регистрации нет
+    assert _gold(db, 600) == WB_ENTRY_FEE - 1
+    assert not _registered(db, 600)

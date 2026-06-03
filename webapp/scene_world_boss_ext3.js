@@ -191,11 +191,25 @@ Object.assign(WorldBossScene.prototype, {
   },
 
   async _registerForRaid() {
-    if (this._regBusy) return;
+    // ВАЖНО: если _regBusy завис (старая ошибка не сбросила флаг) —
+    // авто-сброс через 20 сек, чтобы клик не игнорировался навечно.
+    // Симптом до фикса: «нажимаю Участвовать, ничего не происходит,
+    // помогает только закрыть-открыть приложение».
+    if (this._regBusy) {
+      if (this._regBusyTs && (Date.now() - this._regBusyTs) > 20000) {
+        // Старый флаг завис >20с — снимаем принудительно
+        this._regBusy = false;
+        this._regBusyTs = 0;
+      } else {
+        return;
+      }
+    }
     this._regBusy = true;
+    this._regBusyTs = Date.now();
+    let _toastMsg = null;
     try {
       const r = await post('/api/world_boss/register', { init_data: tg?.initData || '' });
-      if (r.ok) {
+      if (r && r.ok) {
         tg?.HapticFeedback?.notificationOccurred('success');
         if (this._state) {
           this._state.is_registered = r.is_registered;
@@ -203,17 +217,24 @@ Object.assign(WorldBossScene.prototype, {
           // Обновляем золото игрока после списания взноса
           if (typeof r.gold_left === 'number') this._state.gold = r.gold_left;
         }
-        this._toast('✅ Записался! 50 🪙 списано в призовой фонд');
-        this._render();
+        _toastMsg = '✅ Записался! 50 🪙 списано в призовой фонд';
       } else {
-        this._toast('❌ ' + (r.reason || 'Ошибка'));
-        this._render();
+        // Сервер ответил, но ok:false — обязательно показываем причину
+        _toastMsg = '❌ ' + ((r && r.reason) || 'Ошибка регистрации');
       }
-    } catch (_) {
-      this._toast('❌ Нет соединения');
-      this._render();
+    } catch (e) {
+      // Сеть/таймаут/AbortError — показываем юзеру, не молчим
+      _toastMsg = '❌ Нет соединения, попробуй ещё раз';
+      try { console.warn('[WB register] failed:', e); } catch(_) {}
+    } finally {
+      // ОБЯЗАТЕЛЬНО сбрасываем флаг, даже если render/toast упадут.
+      // Без finally один сбой убивает все следующие клики до перезапуска.
+      this._regBusy = false;
+      this._regBusyTs = 0;
     }
-    this._regBusy = false;
+    // Toast и render вне try — если они упадут, _regBusy уже сброшен в finally
+    if (_toastMsg) { try { this._toast(_toastMsg); } catch(_) {} }
+    try { this._render(); } catch(_) {}
   },
 
   // ─── Тик обратного отсчёта подготовки ───────────────────────────────────
