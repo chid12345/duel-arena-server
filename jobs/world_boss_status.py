@@ -16,8 +16,12 @@ _BURN_DECAY_SEC = 12      # стаки спадают, если по игрок�
 _BURN_MAX = 5             # потолок стаков
 _BURN_PER_STACK = 0.08    # +8% к урону ответки за стак
 
-_burn: dict = {}   # (spawn_id, uid) -> (stacks, last_ts)
-_web: dict = {}    # (spawn_id, uid) -> web_until_ms
+_FRENZY_DMG_MULT = 1.30   # Демон «Жажда крови»: +30% к ответке после смерти
+_FRENZY_SEC = 6           # длительность ярости
+
+_burn: dict = {}     # (spawn_id, uid) -> (stacks, last_ts)
+_web: dict = {}      # (spawn_id, uid) -> web_until_ms
+_frenzy: dict = {}   # spawn_id -> frenzy_until_ms (Демон «Жажда крови»)
 
 
 def burn_apply_and_bump(spawn_id: int, uid: int) -> float:
@@ -45,6 +49,18 @@ def set_web(spawn_id: int, uid: int, until_ms: int) -> None:
 def is_webbed(spawn_id: int, uid: int, now_ms: int) -> bool:
     """В паутине ли игрок сейчас (кулдаун удвоен)."""
     return _web.get((int(spawn_id), int(uid)), 0) > int(now_ms)
+
+
+def trigger_frenzy(spawn_id: int, now_ms: int) -> None:
+    """Демон «Жажда крови»: разъярить на _FRENZY_SEC после смерти игрока."""
+    _frenzy[int(spawn_id)] = int(now_ms) + _FRENZY_SEC * 1000
+    if len(_frenzy) > 4000:
+        _frenzy.clear()
+
+
+def frenzy_dmg_mult(spawn_id: int, now_ms: int) -> float:
+    """Множитель к урону ответки, если босс в ярости сейчас (иначе 1.0)."""
+    return _FRENZY_DMG_MULT if _frenzy.get(int(spawn_id), 0) > int(now_ms) else 1.0
 
 
 def _prune_burn(now: float) -> None:

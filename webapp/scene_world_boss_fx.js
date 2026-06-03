@@ -26,8 +26,10 @@ Object.assign(WorldBossScene.prototype, {
     if (added) {
       const labels = newA.crown_labels || {};
       // бит 0 = 75% (лёгкий), бит 1 = 50% (средний), бит 2 = 25% (тяжёлый).
-      if (added & 0b100) {            // 25% — Хаос (свой оверлей-подпись)
-        this._fxShake('heavy'); this._fxBossTremble('heavy'); this._fxChaosOverlay();
+      if (added & 0b100) {            // 25% — имя фишки + Хаос
+        this._fxShake('heavy'); this._fxBossTremble('heavy');
+        if (labels[4]) this._fxAbilityToast(labels[4], '#ff5a3c');
+        this._fxChaosOverlay();
       } else if (added & 0b010) {     // 50% — тост покажет _fxEnrageAnnounce (с именем ярости)
         this._fxShake('medium'); this._fxBossTremble('medium');
       } else if (added & 0b001) {     // 75% — имя фишки если включена, иначе общий

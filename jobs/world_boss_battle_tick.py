@@ -48,6 +48,10 @@ def _heal_boss_on_deaths(db, spawn_id: int, boss_type: str, hp_pct: float,
         dh = wb_death_heal_pct(boss_type, hp_pct)
         if dh > 0:
             db.wb_heal_boss_pct(spawn_id, dh * num_deaths)
+        if boss_type == "demon" and hp_pct <= 0.75:
+            import time as _t
+            from jobs.world_boss_status import trigger_frenzy
+            trigger_frenzy(spawn_id, int(_t.time() * 1000))
     except Exception as e:
         logger.warning("wb battle: death-heal error: %s", e)
 

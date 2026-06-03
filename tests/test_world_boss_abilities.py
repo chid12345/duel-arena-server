@@ -252,6 +252,23 @@ def test_web_set_and_expire():
     assert not is_webbed(999, 222, 6000)   # истекла
 
 
+def test_vuln_window_shadow_burst_after_phase():
+    # фаза 0-3 (÷2, НЕ окно), бурст 4-6 (×3), дальше обычное время
+    assert wb_is_vuln_window("shadow", 0.90, 2) is False    # в тени — не окно
+    assert wb_is_vuln_window("shadow", 0.90, 5) is True     # бурст сразу после тени
+    assert wb_is_vuln_window("shadow", 0.90, 10) is False
+    assert wb_is_vuln_window("shadow", 0.20, 18) is True    # ≤25%: цикл 14, 18%14=4 — бурст
+
+
+def test_demon_frenzy_trigger_and_expire():
+    from jobs.world_boss_status import trigger_frenzy, frenzy_dmg_mult, _frenzy
+    _frenzy.clear()
+    assert frenzy_dmg_mult(777, 1000) == 1.0   # ярости нет
+    trigger_frenzy(777, 1000)                   # +6 сек → до 7000 мс
+    assert frenzy_dmg_mult(777, 4000) == 1.3   # в ярости — ответка +30%
+    assert frenzy_dmg_mult(777, 8000) == 1.0   # истекла
+
+
 def test_periodic_aoe_other_types_and_start_zero():
     assert wb_periodic_aoe("lich", 0.20, 9) == 0.0     # у Лича периодики нет
     assert wb_periodic_aoe("lava", 0.10, 0) == 0.0     # на секунде 0 не бьём

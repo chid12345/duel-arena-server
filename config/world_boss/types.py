@@ -93,7 +93,7 @@ WB_DEFAULT_TYPE: Dict[str, Any] = WB_BOSS_TYPE_BY_KEY["lich"]
 
 
 def roll_boss_type(rng: Optional[random.Random] = None) -> Dict[str, Any]:
-    """Равновероятно выбирает один из 9 типов."""
+    """Равновероятно выбирает один из 7 типов."""
     r = rng or random
     return r.choice(WB_BOSS_TYPES)
 

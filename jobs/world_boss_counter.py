@@ -110,6 +110,15 @@ def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict,
             dmg = max(1, int(dmg * burn_apply_and_bump(spawn_id, user_id)))
         except Exception:
             pass
+    # Демон «Жажда крови»: 6 сек после смерти игрока ответка +30%.
+    elif boss_type == "demon":
+        try:
+            from jobs.world_boss_status import frenzy_dmg_mult
+            fm = frenzy_dmg_mult(spawn_id, int(_time.time() * 1000))
+            if fm != 1.0:
+                dmg = max(1, int(dmg * fm))
+        except Exception:
+            pass
     new_hp, is_dead = db.wb_apply_damage_to_player(spawn_id, user_id, dmg)
     # Вампиризм Демона («Кровавый пир»): лечится долей нанесённого урона.
     # Хорошая защита/уворот игрока (меньше dmg) = босс меньше лечится.
@@ -119,12 +128,15 @@ def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict,
             db.wb_heal_boss(spawn_id, max(1, int(dmg * ls)))
         except Exception:
             pass
-    # Хил на смерть: Лич «Жатва» (≤25%), Демон «Жажда крови» (≤75%).
+    # Хил на смерть: Лич «Жатва» (≤25%), Демон «Жажда крови» (≤75% + ярость).
     if is_dead:
         try:
             dh = wb_death_heal_pct(boss_type, hp_pct)
             if dh > 0:
                 db.wb_heal_boss_pct(spawn_id, dh)
+            if boss_type == "demon" and hp_pct <= 0.75:
+                from jobs.world_boss_status import trigger_frenzy
+                trigger_frenzy(spawn_id, int(_time.time() * 1000))
         except Exception:
             pass
     # Шипы (reflect_pct, броня №1): % полученного урона → в HP босса.

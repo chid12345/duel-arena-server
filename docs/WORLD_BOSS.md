@@ -13,7 +13,7 @@
 | Расписание спавна | 6 раз/день: 00:00, 04:00, 08:00, 12:00, 16:00, 20:00 (UTC) |
 | Длительность боя | 10 минут |
 | HP босса | `500 × онлайн_игроков`, минимум 10 000 |
-| Типы босса (Фаза 2.2) | 5: universal / fire / ice / poison / shadow — у каждого свой `stat_profile_base` и пул имён |
+| Типы босса | 7: lich / shadow / fire / poison / spider / lava / demon — у каждого свой `stat_profile_base`, пул имён, спрайт и **4 индивидуальные фишки** (пассив + пороги 75/50/25%), см. `config/world_boss/abilities.py` |
 | Рандом статов при спавне | base × uniform(0.9..1.1) по `str/agi/int` |
 | Имя босса | рандом из `name_pool` выбранного типа |
 | Ответка босса | каждые 6 сек, 8% HP случайного из **топ-5 по урону** |
@@ -30,10 +30,31 @@
 
 ---
 
+## Индивидуальные фишки 7 боссов (Заход 1-3, готово)
+
+Каждый босс = 1 пассив + 3 фишки на порогах HP (75/50/25%). **Единый источник правды — `config/world_boss/abilities.py`** (реестр `WB_ABILITIES` с полями name/desc/stage/live + чистые резолверы). Карточка/Справка берут фишки С СЕРВЕРА (`wb_card_features` → `/state` → `boss_features`), числа/тосты — оттуда же. **Новых колонок БД не понадобилось:** состояние выводится из времени боя / % HP / числа павших, а стаки ожога и паутина — эфемерный dict в памяти (`jobs/world_boss_status.py`).
+
+Ключевые резолверы (`abilities.py`):
+- `wb_enrage_profile` — своя ярость на 50% по типу; `wb_crown_dmg_pct` — свои числа корон.
+- `wb_counter_plan` / `wb_counter_cooldown` — цели и частота ответки (Лич 2 цели, Тень лидер/чаще).
+- `wb_counter_str_mult` — сила ответки (Лич «Армия мёртвых», Голем «Раскол»).
+- `wb_lifesteal_pct` (вампиризм Демона), `wb_death_heal_pct` (Лич «Жатва» / Демон «Жажда»).
+- `wb_player_dmg_mult` — урон ИГРОКА по боссу (броня Голема + крит сквозь, фазы Тени, кровь Демона).
+- `wb_periodic_aoe` — извержения Лавы / сверхнова Огня / рой Паука (ТОЛЬКО в battle_tick JOB!).
+- `wb_is_vuln_window` — окно ×3 (Паук «Сеть ловушек» короче/чаще; синхронно в hit/ws/state).
+- `wb_crown_labels` / `wb_card_features` — подписи тостов и список фишек для UI (только live).
+
+Боевые точки: ответка — `jobs/world_boss_counter.py`; тик (короны/ярость/извержения/паутина) — `jobs/world_boss_battle_tick.py` (+ дубль-вызов в `api/world_boss_ws._run_battle_tick` — править сигнатуры в ОБОИХ); удар игрока — `api/world_boss_hit.py`; FX/тосты/дрожь — `webapp/scene_world_boss_fx.js`; карточка — `webapp/wb_html_boss_card.js`.
+
+---
+
 ## Слои / файлы
 
 | Слой | Пакет / файл |
 |---|---|
+| Способности 7 боссов (реестр + резолверы) | `config/world_boss/abilities.py` |
+| Эфемерный статус (ожоги/паутина, in-memory) | `jobs/world_boss_status.py` |
+| Ответка босса (выбор целей + урон) | `jobs/world_boss_counter.py` |
 | Схема БД (миграции, вкл. 107/108 announce_5min/reminders, 109 stage) | `db_schema/sqlite_migrations_part_world_boss.py` |
 | Репозиторий | `repositories/world_boss/` |
 | Расчёт наград (чистая функция) | `repositories/world_boss/rewards_calc.py` |
