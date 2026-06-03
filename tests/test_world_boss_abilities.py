@@ -29,6 +29,7 @@ from config.world_boss.abilities import (  # noqa: E402
     wb_crown_labels,
     wb_death_heal_pct,
     wb_enrage_profile,
+    wb_is_vuln_window,
     wb_lifesteal_pct,
     wb_periodic_aoe,
     wb_player_dmg_mult,
@@ -119,10 +120,12 @@ def test_card_features_returns_all_four():
     assert "Плавится ядро" in names
 
 
-def test_card_features_live_flag_correct():
+def test_card_features_live_flag_is_bool_and_fire_done():
     feats = {f["name"]: f for f in wb_card_features("fire")}
-    assert feats["Плавится ядро"]["live"] is True       # включена
-    assert feats["Опаляющая аура"]["live"] is False     # «скоро»
+    # Заход 3 завершён — у Огня все 4 фишки включены (в т.ч. ожоги).
+    assert feats["Плавится ядро"]["live"] is True
+    assert feats["Опаляющая аура"]["live"] is True
+    assert all(isinstance(f["live"], bool) for f in wb_card_features("fire"))
 
 
 def test_card_features_passive_hp_none_first():
@@ -220,6 +223,33 @@ def test_periodic_aoe_fire_supernova_only_below_25():
 def test_periodic_aoe_spider_swarm_below_25():
     assert wb_periodic_aoe("spider", 0.20, 10) == 0.02  # Полчище — рой
     assert wb_periodic_aoe("spider", 0.50, 10) == 0.0   # выше 25% — нет
+
+
+# ── Test 12: Паук «Сеть ловушек» (темп окна) + эфемерный статус ──────────────
+
+def test_vuln_window_spider_tempo():
+    assert wb_is_vuln_window("spider", 0.60, 41) is True   # ≤75%: 3с каждые 40
+    assert wb_is_vuln_window("spider", 0.60, 43) is False
+    assert wb_is_vuln_window("fire", 0.50, 61) is True      # дефолт: 5с каждые 60
+    assert wb_is_vuln_window("fire", 0.50, 10) is False
+    assert wb_is_vuln_window("spider", 0.90, 61) is True    # Паук >75% — дефолт
+
+
+def test_burn_stacks_escalate():
+    from jobs.world_boss_status import burn_apply_and_bump, _burn
+    _burn.clear()
+    assert burn_apply_and_bump(999, 111) == 1.0    # 0 стаков
+    assert burn_apply_and_bump(999, 111) == 1.08   # 1 стак
+    assert burn_apply_and_bump(999, 111) == 1.16   # 2 стака
+
+
+def test_web_set_and_expire():
+    from jobs.world_boss_status import set_web, is_webbed, _web
+    _web.clear()
+    assert not is_webbed(999, 222, 1000)
+    set_web(999, 222, 5000)
+    assert is_webbed(999, 222, 4000)       # ещё в паутине
+    assert not is_webbed(999, 222, 6000)   # истекла
 
 
 def test_periodic_aoe_other_types_and_start_zero():

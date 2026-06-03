@@ -103,6 +103,13 @@ def _apply_counter_to_user(db, spawn_id: int, user_id: int, stat_profile: dict,
             dmg = int(dmg * 0.7)
     except Exception:
         pass
+    # Огонь «Опаляющая аура»: стаки ожога усиливают удары по этому же игроку.
+    if boss_type == "fire":
+        try:
+            from jobs.world_boss_status import burn_apply_and_bump
+            dmg = max(1, int(dmg * burn_apply_and_bump(spawn_id, user_id)))
+        except Exception:
+            pass
     new_hp, is_dead = db.wb_apply_damage_to_player(spawn_id, user_id, dmg)
     # Вампиризм Демона («Кровавый пир»): лечится долей нанесённого урона.
     # Хорошая защита/уворот игрока (меньше dmg) = босс меньше лечится.

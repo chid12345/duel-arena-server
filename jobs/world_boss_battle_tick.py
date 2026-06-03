@@ -151,6 +151,18 @@ async def world_boss_battle_tick_job(context) -> None:  # noqa: ARG001
             except Exception as e:
                 logger.warning("wb battle: periodic AoE error: %s", e)
 
+            # 3.7. Паук «Паутина»: раз в 25 сек опутывает лидера (кулдаун ×2 на 8 сек).
+            try:
+                if boss_type == "spider" and int(elapsed) % 25 == 0 and current_hp > 0:
+                    _top = db.get_wb_top_damagers(spawn_id, limit=1)
+                    if _top:
+                        import time as _t
+                        from jobs.world_boss_status import set_web
+                        set_web(spawn_id, int(_top[0]["user_id"]),
+                                int(_t.time() * 1000) + 8000)
+            except Exception as e:
+                logger.warning("wb battle: spider web error: %s", e)
+
         # 4. WS-бродкаст подписчикам (работает даже без активного рейда — event=wb_idle).
         await wb_broadcast_tick(db)
 

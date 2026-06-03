@@ -26,7 +26,8 @@ from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from config.world_boss_constants import WB_DURATION_SEC, WB_PREP_SEC, is_vulnerability_window
+from config.world_boss_constants import WB_DURATION_SEC, WB_PREP_SEC
+from config.world_boss.abilities import wb_is_vuln_window
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +97,9 @@ def _build_boss_block(active: Dict[str, Any]) -> Dict[str, Any]:
         started_at = _parse_ts(active["started_at"])
         elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
         seconds_left = max(0, int(WB_DURATION_SEC - elapsed))
-        vulnerable = is_vulnerability_window(elapsed)
+        _mhp = int(active.get("max_hp") or 0)
+        _hpp = (int(active.get("current_hp") or 0) / _mhp) if _mhp > 0 else 1.0
+        vulnerable = wb_is_vuln_window(active.get("boss_type") or "", _hpp, elapsed)
     except Exception:
         pass
     from config.world_boss import get_boss_type

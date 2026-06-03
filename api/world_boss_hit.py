@@ -12,7 +12,8 @@ from pydantic import BaseModel
 
 from api.tma_infra import get_user_lock
 from config.battle_constants import PLAYER_START_CRIT, PLAYER_START_ENDURANCE
-from config.world_boss_constants import is_vulnerability_window
+from config.world_boss.abilities import wb_is_vuln_window
+from jobs.world_boss_status import is_webbed
 from repositories.world_boss.damage_calc import (
     PLAYER_HIT_COOLDOWN_MS,
     calc_player_damage_to_boss,
@@ -153,16 +154,23 @@ async def world_boss_hit_inner(body: HitBody, *, db, get_user_from_init_data) ->
             except Exception as _ae:
                 log.warning("wb auto-apply scrolls uid=%s: %s", uid, _ae)
 
-        # Атомарный кулдаун 300 мс (ms-точность, анти-чит)
+        # Атомарный кулдаун 300 мс (ms-точность, анти-чит).
+        # Паук «Паутина»: опутанный лидер бьёт вдвое реже (кулдаун ×2).
         now_ms = int(now_utc.timestamp() * 1000)
-        if not db.wb_try_record_hit(spawn_id, uid, now_ms, PLAYER_HIT_COOLDOWN_MS):
+        _boss_type = active.get("boss_type") or ""
+        _cd = PLAYER_HIT_COOLDOWN_MS
+        if _boss_type == "spider" and is_webbed(spawn_id, uid, now_ms):
+            _cd = PLAYER_HIT_COOLDOWN_MS * 2
+        if not db.wb_try_record_hit(spawn_id, uid, now_ms, _cd):
             return {"ok": False, "reason": "Слишком быстро"}
 
-        # Окно уязвимости x3 (5 сек каждые 60 сек)
+        # Окно уязвимости x3. Паук «Сеть ловушек» (≤75%) — короче, но чаще.
         try:
             started_at = _parse_ts(active["started_at"])
             elapsed = (now_utc - started_at).total_seconds()
-            vuln = is_vulnerability_window(elapsed)
+            _mhp0 = int(active.get("max_hp") or 0)
+            _hpp0 = (int(active.get("current_hp") or 0) / _mhp0) if _mhp0 > 0 else 1.0
+            vuln = wb_is_vuln_window(_boss_type, _hpp0, elapsed)
         except Exception:
             vuln = False
 

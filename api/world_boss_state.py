@@ -17,10 +17,9 @@ import logging
 
 from config.world_boss_constants import (
     WB_DURATION_SEC, WB_PREP_SEC, WB_GATHER_OPEN_SEC,
-    is_vulnerability_window,
 )
 from config.world_boss import get_boss_type as _get_boss_type
-from config.world_boss.abilities import wb_card_features
+from config.world_boss.abilities import wb_card_features, wb_is_vuln_window
 from api.world_boss_state_gather import build_gather_payload
 
 _log = logging.getLogger(__name__)
@@ -100,7 +99,9 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
             started_at = _parse_ts(active["started_at"])
             elapsed = (datetime.now(timezone.utc) - started_at).total_seconds()
             seconds_left = max(0, int(WB_DURATION_SEC - elapsed))
-            vulnerable = is_vulnerability_window(elapsed)
+            _mhp = int(active.get("max_hp") or 0)
+            _hpp = (int(active.get("current_hp") or 0) / _mhp) if _mhp > 0 else 1.0
+            vulnerable = wb_is_vuln_window(active.get("boss_type") or "", _hpp, elapsed)
         except Exception:
             pass
         ps = db.get_wb_player_state(spawn_id, uid)
