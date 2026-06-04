@@ -79,7 +79,8 @@
     const pct = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
     const phase = pct > 50 ? 'ФАЗА 1' : pct > 20 ? 'ФАЗА 2' : 'ФИНАЛ ☠';
     const isDead = !!ps?.is_dead;
-    const sprite = a.boss_sprite || ('boss_' + bt + '.png');
+    // Бэк отдаёт boss_lich.png — на клиенте подменяем на .webp (в 8× легче).
+    const sprite = (a.boss_sprite || ('boss_' + bt + '.png')).replace(/\.png$/i, '.webp');
 
     root.innerHTML = `
       <div class="cy-hdr">
@@ -110,7 +111,7 @@
         </div>
       </div>
       <div class="cy-arena" id="cy-arena">
-        <img class="cy-boss" id="cy-boss" src="bosses/${esc(sprite)}?v=a10" onerror="this.style.display='none'">
+        <img class="cy-boss" id="cy-boss" src="bosses/${esc(sprite)}?v=a11" onerror="this.style.display='none'">
         ${ps && !isDead ? _zonesHTML('atk') + _zonesHTML('def') : ''}
       </div>
       ${isDead

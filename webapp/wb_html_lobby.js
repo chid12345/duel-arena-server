@@ -422,8 +422,26 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     };
   }
 
+  // Прелоадер картинок босса: пока игрок в лобби, тихо тянем фон+спрайт
+  // активного/следующего босса в кеш браузера. К моменту входа в бой
+  // CSS-фон арены и <img class="cy-boss"> уже доступны мгновенно.
+  const _preloaded = new Set();
+  function _preloadBossAssets(s) {
+    const types = new Set();
+    if (s?.active?.boss_type) types.add(s.active.boss_type);
+    if (s?.next_scheduled?.boss_type) types.add(s.next_scheduled.boss_type);
+    for (const t of types) {
+      if (_preloaded.has(t)) continue;
+      _preloaded.add(t);
+      const bt = String(t).replace(/[^a-z]/g, '') || 'lich';
+      try { new Image().src = `bosses/bg/${bt}.webp?v=a11`; } catch(_) {}
+      try { new Image().src = `bosses/boss_${bt}.webp?v=a11`; } catch(_) {}
+    }
+  }
+
   function render(scene, state) {
     _scene = scene; _state = state; window.WBHtml._scene = scene;
+    try { _preloadBossAssets(state); } catch(_) {}
     // То же фильтрование «локально забранных» — чтобы MVP-попап не открывался
     // заново сразу после клейма, пока сервер не догнал.
     const _claimedM = window.WBHtml?._claimedRewardIds;

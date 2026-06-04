@@ -48,14 +48,14 @@
       #wb-root.wbz-fill .wb-pcard-ov{position:fixed!important;left:0!important;top:0!important;right:0!important;bottom:0!important;z-index:1000}
 
       /* Фон босса на весь экран — отдельные правила для каждого типа */
-      #wb-root.wbz-fill.bt-lich    {background-image:url('bosses/bg/lich.png?v=${BG_VER}')!important}
-      #wb-root.wbz-fill.bt-shadow  {background-image:url('bosses/bg/shadow.png?v=${BG_VER}')!important}
-      #wb-root.wbz-fill.bt-spider  {background-image:url('bosses/bg/spider.png?v=${BG_VER}')!important}
-      #wb-root.wbz-fill.bt-fire    {background-image:url('bosses/bg/fire.png?v=${BG_VER}')!important}
-      #wb-root.wbz-fill.bt-poison  {background-image:url('bosses/bg/poison.png?v=${BG_VER}')!important}
-      #wb-root.wbz-fill.bt-lava    {background-image:url('bosses/bg/lava.png?v=${BG_VER}')!important}
-      #wb-root.wbz-fill.bt-demon   {background-image:url('bosses/bg/demon.png?v=${BG_VER}')!important}
-      #wb-root.wbz-fill.bt-universal{background-image:url('bosses/bg/lich.png?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-lich    {background-image:url('bosses/bg/lich.webp?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-shadow  {background-image:url('bosses/bg/shadow.webp?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-spider  {background-image:url('bosses/bg/spider.webp?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-fire    {background-image:url('bosses/bg/fire.webp?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-poison  {background-image:url('bosses/bg/poison.webp?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-lava    {background-image:url('bosses/bg/lava.webp?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-demon   {background-image:url('bosses/bg/demon.webp?v=${BG_VER}')!important}
+      #wb-root.wbz-fill.bt-universal{background-image:url('bosses/bg/lich.webp?v=${BG_VER}')!important}
 
       /* Полупрозрачные плашки. Шапка sticky сверху (как было изначально). */
       #wb-root.wbz-fill > .wb-bhdr2{background:linear-gradient(180deg,rgba(0,0,0,.7),rgba(0,0,0,.3))!important;border-bottom:1px solid rgba(255,0,85,.2)!important}

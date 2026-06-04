@@ -45,34 +45,44 @@ def _parse_ts(value):
     return datetime.strptime(s, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
 
 
-def _get_spawn_participants(db, spawn_id: int) -> list:
+def _get_spawns_participants_batch(db, spawn_ids: list[int]) -> dict[int, list]:
+    """ОДИН SQL для всех spawn_id из списка наград — вместо N+1 запросов.
+    Раньше: для каждой unclaimed_reward отдельный SELECT (+1 запрос). При 5 наградах
+    — 5 лишних походов в БД на каждый /world_boss/state (а его дёргают каждые 3–8 сек).
+    """
+    if not spawn_ids:
+        return {}
+    ids = list({int(x) for x in spawn_ids})
+    out: dict[int, list] = {sid: [] for sid in ids}
     try:
         conn = db.get_connection()
         cur = conn.cursor()
+        placeholders = ", ".join(["?"] * len(ids))
         cur.execute(
-            "SELECT r.user_id, p.username, r.contribution_pct, r.gold, r.exp, r.diamonds "
-            "FROM world_boss_rewards r "
-            "JOIN players p ON p.user_id = r.user_id "
-            "WHERE r.spawn_id = ? "
-            "ORDER BY r.contribution_pct DESC",
-            (int(spawn_id),),
+            f"SELECT r.spawn_id, r.user_id, p.username, r.contribution_pct, r.gold, r.exp, r.diamonds "
+            f"FROM world_boss_rewards r "
+            f"JOIN players p ON p.user_id = r.user_id "
+            f"WHERE r.spawn_id IN ({placeholders}) "
+            f"ORDER BY r.spawn_id, r.contribution_pct DESC",
+            tuple(ids),
         )
         rows = cur.fetchall()
         conn.close()
-        return [
-            {
-                "user_id": int(r["user_id"]),
-                "name": r.get("username") or "Игрок",
-                "contribution_pct": float(r.get("contribution_pct") or 0.0),
-                "gold": int(r.get("gold") or 0),
-                "exp": int(r.get("exp") or 0),
-                "diamonds": int(r.get("diamonds") or 0),
-            }
-            for r in rows
-        ]
+        for r in rows:
+            # SQLite Row не умеет .get() — приходится через dict(). На Postgres DictRow это no-op.
+            d = dict(r)
+            sid = int(d["spawn_id"])
+            out.setdefault(sid, []).append({
+                "user_id": int(d["user_id"]),
+                "name": d.get("username") or "Игрок",
+                "contribution_pct": float(d.get("contribution_pct") or 0.0),
+                "gold": int(d.get("gold") or 0),
+                "exp": int(d.get("exp") or 0),
+                "diamonds": int(d.get("diamonds") or 0),
+            })
     except Exception as e:
-        _log.warning("_get_spawn_participants spawn=%s: %s", spawn_id, e)
-        return []
+        _log.warning("_get_spawns_participants_batch ids=%s: %s", ids, e)
+    return out
 
 
 def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) -> Dict[str, Any]:
@@ -174,6 +184,10 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
     except Exception as _e:
         _log.warning("get_wb_unclaimed_rewards uid=%s: %s", uid, _e)
         unclaimed = []
+    # Один SQL для участников всех unclaimed-наград (раньше был N+1 — по запросу на награду).
+    _parts_by_spawn = _get_spawns_participants_batch(
+        db, [int(r["spawn_id"]) for r in unclaimed]
+    )
     player_row = db.get_or_create_player(uid, real_username)
     reminder_opt_in = bool(int(player_row.get("wb_reminder_opt_in") or 0))
     auto_bot_pending = bool(int(player_row.get("wb_auto_bot_pending") or 0))
@@ -268,7 +282,7 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
         "reminder_opt_in": reminder_opt_in,
         "auto_bot_pending": auto_bot_pending,
         "unclaimed_rewards": [
-            (lambda _bt: {
+            (lambda _bt, _parts: {
                 "reward_id": int(r["reward_id"]),
                 "spawn_id": int(r["spawn_id"]),
                 "boss_name": r.get("boss_name"),
@@ -282,7 +296,9 @@ def build_wb_state_payload(db, uid: int, tg_user: Dict[str, Any] | None = None) 
                 "contribution_pct": float(r.get("contribution_pct") or 0.0),
                 "is_victory": bool(r.get("is_victory")),
                 "total_damage": int(r.get("total_damage") or 0),
-                "participants": _get_spawn_participants(db, int(r["spawn_id"])),
-            })(_get_boss_type(r.get("boss_type"))) for r in unclaimed
+                "participants": _parts,
+            })(_get_boss_type(r.get("boss_type")),
+               _parts_by_spawn.get(int(r["spawn_id"]), []))
+            for r in unclaimed
         ],
     }

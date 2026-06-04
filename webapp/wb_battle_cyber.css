@@ -244,13 +244,13 @@
   background:linear-gradient(180deg,rgba(5,5,15,.45) 0%,rgba(5,5,15,.05) 35%,rgba(5,5,15,.7) 100%);
 }
 /* фоны типов босса */
-#wb-root.cy.bt-lich   .cy-arena { background-image:url('bosses/bg/lich.png?v=a10'); }
-#wb-root.cy.bt-shadow .cy-arena { background-image:url('bosses/bg/shadow.png?v=a10'); }
-#wb-root.cy.bt-spider .cy-arena { background-image:url('bosses/bg/spider.png?v=a10'); }
-#wb-root.cy.bt-fire   .cy-arena { background-image:url('bosses/bg/fire.png?v=a10'); }
-#wb-root.cy.bt-poison .cy-arena { background-image:url('bosses/bg/poison.png?v=a10'); }
-#wb-root.cy.bt-lava   .cy-arena { background-image:url('bosses/bg/lava.png?v=a10'); }
-#wb-root.cy.bt-demon  .cy-arena { background-image:url('bosses/bg/demon.png?v=a10'); }
+#wb-root.cy.bt-lich   .cy-arena { background-image:url('bosses/bg/lich.webp?v=a11'); }
+#wb-root.cy.bt-shadow .cy-arena { background-image:url('bosses/bg/shadow.webp?v=a11'); }
+#wb-root.cy.bt-spider .cy-arena { background-image:url('bosses/bg/spider.webp?v=a11'); }
+#wb-root.cy.bt-fire   .cy-arena { background-image:url('bosses/bg/fire.webp?v=a11'); }
+#wb-root.cy.bt-poison .cy-arena { background-image:url('bosses/bg/poison.webp?v=a11'); }
+#wb-root.cy.bt-lava   .cy-arena { background-image:url('bosses/bg/lava.webp?v=a11'); }
+#wb-root.cy.bt-demon  .cy-arena { background-image:url('bosses/bg/demon.webp?v=a11'); }
 
 .cy-boss {
   position:absolute; left:50%; top:48%;
