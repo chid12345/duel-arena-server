@@ -44,7 +44,7 @@ const BotBattleHtml = (() => {
     // PvE-бот: фон + скин из bot_skins/ (как было).
     const isPvp = !b.opp_is_bot;
     const ext = skinId <= 25 ? 'png' : 'jpg';
-    const bgUrl = isPvp ? `pvp_bg/${pvpBgIdx || 1}.png` : (skinId ? `bot_skins/bg/${skinId}.${ext}` : '');
+    const bgUrl = isPvp ? `pvp_bg/${pvpBgIdx || 1}.webp` : (skinId ? `bot_skins/bg/${skinId}.${ext}` : '');
     const skinUrl = isPvp
       ? ((typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(b.opp_warrior_type || 'tank') : 'skins/sila/1.png')
       : (skinId ? `bot_skins/${skinId}.png` : '');

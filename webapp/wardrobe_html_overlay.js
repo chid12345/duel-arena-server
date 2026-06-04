@@ -174,14 +174,14 @@ const CSS = `
 `;
 
 const ARMOR_IMG = {
-  tank_free:'armor_free1.png',      agile_free:'armor_free2.png',
-  crit_free:'armor_free3.png',      universal_free:'armor_free4.png',
-  berserker_gold:'armor_gold1.png', assassin_gold:'armor_gold2.png',
-  mage_gold:'armor_gold3.png',      paladin_gold:'armor_gold4.png',
-  dragonknight_diamonds:'armor_dia1.png', shadowdancer_diamonds:'armor_dia2.png',
-  archmage_diamonds:'armor_dia3.png',     universal_diamonds:'armor_dia4.png',
-  berserker_mythic:'armor_mythic1.png',   assassin_mythic:'armor_mythic2.png',
-  archmage_mythic:'armor_mythic3.png',    legendary_usdt:'armor_mythic4.png',
+  tank_free:'armor_free1.webp',      agile_free:'armor_free2.webp',
+  crit_free:'armor_free3.webp',      universal_free:'armor_free4.webp',
+  berserker_gold:'armor_gold1.webp', assassin_gold:'armor_gold2.webp',
+  mage_gold:'armor_gold3.webp',      paladin_gold:'armor_gold4.webp',
+  dragonknight_diamonds:'armor_dia1.webp', shadowdancer_diamonds:'armor_dia2.webp',
+  archmage_diamonds:'armor_dia3.webp',     universal_diamonds:'armor_dia4.webp',
+  berserker_mythic:'armor_mythic1.webp',   assassin_mythic:'armor_mythic2.webp',
+  archmage_mythic:'armor_mythic3.webp',    legendary_usdt:'armor_mythic4.webp',
 };
 const RARITY_COLOR = { common:'#9ca3af', rare:'#60a5fa', epic:'#c084fc', mythic:'#fb923c' };
 const RARITY_LABEL = { common:'Обычная', rare:'Редкая', epic:'Эпическая', mythic:'Мифическая' };

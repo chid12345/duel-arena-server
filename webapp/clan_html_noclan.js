@@ -58,7 +58,7 @@ function openNoClan(scene) {
         </div>
       </div>
       <div class="nc-emblem">
-        <img src="clan_emblem.png" class="nc-em-img" alt="">
+        <img src="clan_emblem.webp" class="nc-em-img" alt="">
       </div>
       <div class="nc-title">ТЫ ОДИНОЧКА</div>
       <div class="nc-sub">Вступи в клан — вместе сила</div>

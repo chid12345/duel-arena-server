@@ -7,14 +7,14 @@
 (() => {
 
 const ARMOR2_IMG = {
-  armor2_free1:'armor_free1.png',    armor2_free2:'armor_free2.png',
-  armor2_free3:'armor_free3.png',    armor2_free4:'armor_free4.png',
-  armor2_gold1:'armor_gold1.png',    armor2_gold2:'armor_gold2.png',
-  armor2_gold3:'armor_gold3.png',    armor2_gold4:'armor_gold4.png',
-  armor2_dia1:'armor_dia1.png',      armor2_dia2:'armor_dia2.png',
-  armor2_dia3:'armor_dia3.png',      armor2_dia4:'armor_dia4.png',
-  armor2_mythic1:'armor_mythic1.png',armor2_mythic2:'armor_mythic2.png',
-  armor2_mythic3:'armor_mythic3.png',armor2_mythic4:'armor_mythic4.png',
+  armor2_free1:'armor_free1.webp',    armor2_free2:'armor_free2.webp',
+  armor2_free3:'armor_free3.webp',    armor2_free4:'armor_free4.webp',
+  armor2_gold1:'armor_gold1.webp',    armor2_gold2:'armor_gold2.webp',
+  armor2_gold3:'armor_gold3.webp',    armor2_gold4:'armor_gold4.webp',
+  armor2_dia1:'armor_dia1.webp',      armor2_dia2:'armor_dia2.webp',
+  armor2_dia3:'armor_dia3.webp',      armor2_dia4:'armor_dia4.webp',
+  armor2_mythic1:'armor_mythic1.webp',armor2_mythic2:'armor_mythic2.webp',
+  armor2_mythic3:'armor_mythic3.webp',armor2_mythic4:'armor_mythic4.webp',
 };
 
 const ARMOR2_DATA = [

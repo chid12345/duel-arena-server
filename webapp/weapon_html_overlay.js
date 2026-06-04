@@ -5,14 +5,14 @@
 (() => {
 
 const WEAPON_IMG = {
-  sword_free:'weapon_sword_free.png',   sword_gold:'weapon_sword_rare.png',
-  sword_diamond:'weapon_sword_epic.png',sword_mythic:'weapon_sword_mythic.png',
-  axe_free:'weapon_axe_free.png',       axe_gold:'weapon_axe_rare.png',
-  axe_diamond:'weapon_axe_epic.png',    axe_mythic:'weapon_axe_mythic.png',
-  club_free:'weapon_club_free.png',     club_gold:'weapon_club_rare.png',
-  club_diamond:'weapon_club_epic.png',  club_mythic:'weapon_club_mythic.png',
-  gs_free:'weapon_gs_free.png',         gs_gold:'weapon_gs_rare.png',
-  gs_diamond:'weapon_gs_epic.png',      gs_mythic:'weapon_gs_mythic.png',
+  sword_free:'weapon_sword_free.webp',   sword_gold:'weapon_sword_rare.webp',
+  sword_diamond:'weapon_sword_epic.webp',sword_mythic:'weapon_sword_mythic.webp',
+  axe_free:'weapon_axe_free.webp',       axe_gold:'weapon_axe_rare.webp',
+  axe_diamond:'weapon_axe_epic.webp',    axe_mythic:'weapon_axe_mythic.webp',
+  club_free:'weapon_club_free.webp',     club_gold:'weapon_club_rare.webp',
+  club_diamond:'weapon_club_epic.webp',  club_mythic:'weapon_club_mythic.webp',
+  gs_free:'weapon_gs_free.webp',         gs_gold:'weapon_gs_rare.webp',
+  gs_diamond:'weapon_gs_epic.webp',      gs_mythic:'weapon_gs_mythic.webp',
 };
 
 const WEAPONS_DATA = [

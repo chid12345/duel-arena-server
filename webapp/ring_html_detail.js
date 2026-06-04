@@ -4,14 +4,14 @@
 (() => {
 
 const RING_IMG = {
-  ring_free1:'ring_free1.png',  ring_free2:'ring_free2.png',
-  ring_free3:'ring_free3.png',  ring_free4:'ring_free4.png',
-  ring_gold1:'ring_gold1.png',  ring_gold2:'ring_gold2.png',
-  ring_gold3:'ring_gold3.png',  ring_gold4:'ring_gold4.png',
-  ring_dia1:'ring_dia1.png',    ring_dia2:'ring_dia2.png',
-  ring_dia3:'ring_dia3.png',    ring_dia4:'ring_dia4.png',
-  ring_mythic1:'ring_mythic1.png', ring_mythic2:'ring_mythic2.png',
-  ring_mythic3:'ring_mythic3.png', ring_mythic4:'ring_mythic4.png',
+  ring_free1:'ring_free1.webp',  ring_free2:'ring_free2.webp',
+  ring_free3:'ring_free3.webp',  ring_free4:'ring_free4.webp',
+  ring_gold1:'ring_gold1.webp',  ring_gold2:'ring_gold2.webp',
+  ring_gold3:'ring_gold3.webp',  ring_gold4:'ring_gold4.webp',
+  ring_dia1:'ring_dia1.webp',    ring_dia2:'ring_dia2.webp',
+  ring_dia3:'ring_dia3.webp',    ring_dia4:'ring_dia4.webp',
+  ring_mythic1:'ring_mythic1.webp', ring_mythic2:'ring_mythic2.webp',
+  ring_mythic3:'ring_mythic3.webp', ring_mythic4:'ring_mythic4.webp',
 };
 
 const RING_DESC = {

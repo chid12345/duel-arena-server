@@ -4,14 +4,14 @@
 (() => {
 
 const HELMET_IMG = {
-  helmet_free1:'helmet_free1.png',    helmet_free2:'helmet_free2.png',
-  helmet_free3:'helmet_free3.png',    helmet_free4:'helmet_free4.png',
-  helmet_gold1:'helmet_gold1.png',    helmet_gold2:'helmet_gold2.png',
-  helmet_gold3:'helmet_gold3.png',    helmet_gold4:'helmet_gold4.png',
-  helmet_dia1:'helmet_dia1.png',      helmet_dia2:'helmet_dia2.png',
-  helmet_dia3:'helmet_dia3.png',      helmet_dia4:'helmet_dia4.png',
-  helmet_mythic1:'helmet_mythic1.png',helmet_mythic2:'helmet_mythic2.png',
-  helmet_mythic3:'helmet_mythic3.png',helmet_mythic4:'helmet_mythic4.png',
+  helmet_free1:'helmet_free1.webp',    helmet_free2:'helmet_free2.webp',
+  helmet_free3:'helmet_free3.webp',    helmet_free4:'helmet_free4.webp',
+  helmet_gold1:'helmet_gold1.webp',    helmet_gold2:'helmet_gold2.webp',
+  helmet_gold3:'helmet_gold3.webp',    helmet_gold4:'helmet_gold4.webp',
+  helmet_dia1:'helmet_dia1.webp',      helmet_dia2:'helmet_dia2.webp',
+  helmet_dia3:'helmet_dia3.webp',      helmet_dia4:'helmet_dia4.webp',
+  helmet_mythic1:'helmet_mythic1.webp',helmet_mythic2:'helmet_mythic2.webp',
+  helmet_mythic3:'helmet_mythic3.webp',helmet_mythic4:'helmet_mythic4.webp',
 };
 
 const HELMET_DESC = {

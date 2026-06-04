@@ -62,7 +62,7 @@ Object.assign(BattleScene.prototype, {
       this.load.start();
     } else if (!isBot && pvpBgIdx > 0 && initBgKey === 'arena_bg') {
       const k = `pvp_bg_${pvpBgIdx}`;
-      this.load.image(k, `pvp_bg/${pvpBgIdx}.png`);
+      this.load.image(k, `pvp_bg/${pvpBgIdx}.webp`);
       this.load.once(`filecomplete-image-${k}`, () => bg.setTexture(k).setDisplaySize(W, H * 0.5));
       this.load.start();
     }

@@ -9,36 +9,36 @@
 
 const _LAZY_EQUIPMENT_ASSETS = [
   // armor
-  ['armor_free1','armor_free1.png'], ['armor_free2','armor_free2.png'],
-  ['armor_free3','armor_free3.png'], ['armor_free4','armor_free4.png'],
-  ['armor_gold1','armor_gold1.png'], ['armor_gold2','armor_gold2.png'],
-  ['armor_gold3','armor_gold3.png'], ['armor_gold4','armor_gold4.png'],
-  ['armor_dia1','armor_dia1.png'],   ['armor_dia2','armor_dia2.png'],
-  ['armor_dia3','armor_dia3.png'],   ['armor_dia4','armor_dia4.png'],
-  ['armor_mythic1','armor_mythic1.png'], ['armor_mythic2','armor_mythic2.png'],
-  ['armor_mythic3','armor_mythic3.png'], ['armor_mythic4','armor_mythic4.png'],
+  ['armor_free1','armor_free1.webp'], ['armor_free2','armor_free2.webp'],
+  ['armor_free3','armor_free3.webp'], ['armor_free4','armor_free4.webp'],
+  ['armor_gold1','armor_gold1.webp'], ['armor_gold2','armor_gold2.webp'],
+  ['armor_gold3','armor_gold3.webp'], ['armor_gold4','armor_gold4.webp'],
+  ['armor_dia1','armor_dia1.webp'],   ['armor_dia2','armor_dia2.webp'],
+  ['armor_dia3','armor_dia3.webp'],   ['armor_dia4','armor_dia4.webp'],
+  ['armor_mythic1','armor_mythic1.webp'], ['armor_mythic2','armor_mythic2.webp'],
+  ['armor_mythic3','armor_mythic3.webp'], ['armor_mythic4','armor_mythic4.webp'],
   // weapons
-  ['weapon_sword_free','weapon_sword_free.png'], ['weapon_sword_rare','weapon_sword_rare.png'],
-  ['weapon_sword_epic','weapon_sword_epic.png'], ['weapon_sword_mythic','weapon_sword_mythic.png'],
-  ['weapon_axe_free','weapon_axe_free.png'],     ['weapon_axe_rare','weapon_axe_rare.png'],
-  ['weapon_axe_epic','weapon_axe_epic.png'],     ['weapon_axe_mythic','weapon_axe_mythic.png'],
-  ['weapon_club_free','weapon_club_free.png'],   ['weapon_club_rare','weapon_club_rare.png'],
-  ['weapon_club_epic','weapon_club_epic.png'],   ['weapon_club_mythic','weapon_club_mythic.png'],
-  ['weapon_gs_free','weapon_gs_free.png'],       ['weapon_gs_rare','weapon_gs_rare.png'],
-  ['weapon_gs_epic','weapon_gs_epic.png'],       ['weapon_gs_mythic','weapon_gs_mythic.png'],
+  ['weapon_sword_free','weapon_sword_free.webp'], ['weapon_sword_rare','weapon_sword_rare.webp'],
+  ['weapon_sword_epic','weapon_sword_epic.webp'], ['weapon_sword_mythic','weapon_sword_mythic.webp'],
+  ['weapon_axe_free','weapon_axe_free.webp'],     ['weapon_axe_rare','weapon_axe_rare.webp'],
+  ['weapon_axe_epic','weapon_axe_epic.webp'],     ['weapon_axe_mythic','weapon_axe_mythic.webp'],
+  ['weapon_club_free','weapon_club_free.webp'],   ['weapon_club_rare','weapon_club_rare.webp'],
+  ['weapon_club_epic','weapon_club_epic.webp'],   ['weapon_club_mythic','weapon_club_mythic.webp'],
+  ['weapon_gs_free','weapon_gs_free.webp'],       ['weapon_gs_rare','weapon_gs_rare.webp'],
+  ['weapon_gs_epic','weapon_gs_epic.webp'],       ['weapon_gs_mythic','weapon_gs_mythic.webp'],
   // helmets
-  ['helmet_free1','helmet_free1.png'], ['helmet_free2','helmet_free2.png'],
-  ['helmet_free3','helmet_free3.png'], ['helmet_free4','helmet_free4.png'],
-  ['helmet_gold1','helmet_gold1.png'], ['helmet_gold2','helmet_gold2.png'],
-  ['helmet_gold3','helmet_gold3.png'], ['helmet_gold4','helmet_gold4.png'],
-  ['helmet_dia1','helmet_dia1.png'],   ['helmet_dia2','helmet_dia2.png'],
-  ['helmet_dia3','helmet_dia3.png'],   ['helmet_dia4','helmet_dia4.png'],
-  ['helmet_mythic1','helmet_mythic1.png'], ['helmet_mythic2','helmet_mythic2.png'],
-  ['helmet_mythic3','helmet_mythic3.png'], ['helmet_mythic4','helmet_mythic4.png'],
+  ['helmet_free1','helmet_free1.webp'], ['helmet_free2','helmet_free2.webp'],
+  ['helmet_free3','helmet_free3.webp'], ['helmet_free4','helmet_free4.webp'],
+  ['helmet_gold1','helmet_gold1.webp'], ['helmet_gold2','helmet_gold2.webp'],
+  ['helmet_gold3','helmet_gold3.webp'], ['helmet_gold4','helmet_gold4.webp'],
+  ['helmet_dia1','helmet_dia1.webp'],   ['helmet_dia2','helmet_dia2.webp'],
+  ['helmet_dia3','helmet_dia3.webp'],   ['helmet_dia4','helmet_dia4.webp'],
+  ['helmet_mythic1','helmet_mythic1.webp'], ['helmet_mythic2','helmet_mythic2.webp'],
+  ['helmet_mythic3','helmet_mythic3.webp'], ['helmet_mythic4','helmet_mythic4.webp'],
   // boots
-  ['boots_free1','boots_free1.png'], ['boots_free2','boots_free2.png'],
-  ['boots_free3','boots_free3.png'], ['boots_free4','boots_free4.jpeg'],
-  ['boots_gold1','boots_gold1.png'], ['boots_gold2','boots_gold2.jpg'],
+  ['boots_free1','boots_free1.webp'], ['boots_free2','boots_free2.webp'],
+  ['boots_free3','boots_free3.webp'], ['boots_free4','boots_free4.jpeg'],
+  ['boots_gold1','boots_gold1.webp'], ['boots_gold2','boots_gold2.jpg'],
   ['boots_gold3','boots_gold3.jpg'], ['boots_gold4','boots_gold4.jpg'],
   ['boots_dia1','boots_dia1.jpg'],   ['boots_dia2','boots_dia2.jpg'],
   ['boots_dia3','boots_dia3.jpg'],   ['boots_dia4','boots_dia4.jpg'],
@@ -49,19 +49,19 @@ const _LAZY_EQUIPMENT_ASSETS = [
   ['shield_free3','shield_free3.jpeg'], ['shield_free4','shield_free4.jpeg'],
   ['shield_gold1','shield_gold1.jpeg'], ['shield_gold2','shield_gold2.jpeg'],
   ['shield_gold3','shield_gold3.jpeg'], ['shield_gold4','shield_gold4.jpeg'],
-  ['shield_dia1','shield_dia1.png'],    ['shield_dia2','shield_dia2.png'],
-  ['shield_dia3','shield_dia3.png'],    ['shield_dia4','shield_dia4.png'],
-  ['shield_mythic1','shield_mythic1.png'], ['shield_mythic2','shield_mythic2.png'],
-  ['shield_mythic3','shield_mythic3.png'], ['shield_mythic4','shield_mythic4.png'],
+  ['shield_dia1','shield_dia1.webp'],    ['shield_dia2','shield_dia2.webp'],
+  ['shield_dia3','shield_dia3.webp'],    ['shield_dia4','shield_dia4.webp'],
+  ['shield_mythic1','shield_mythic1.webp'], ['shield_mythic2','shield_mythic2.webp'],
+  ['shield_mythic3','shield_mythic3.webp'], ['shield_mythic4','shield_mythic4.webp'],
   // rings
-  ['ring_free1','ring_free1.png'], ['ring_free2','ring_free2.png'],
-  ['ring_free3','ring_free3.png'], ['ring_free4','ring_free4.png'],
-  ['ring_gold1','ring_gold1.png'], ['ring_gold2','ring_gold2.png'],
-  ['ring_gold3','ring_gold3.png'], ['ring_gold4','ring_gold4.png'],
-  ['ring_dia1','ring_dia1.png'],   ['ring_dia2','ring_dia2.png'],
-  ['ring_dia3','ring_dia3.png'],   ['ring_dia4','ring_dia4.png'],
-  ['ring_mythic1','ring_mythic1.png'], ['ring_mythic2','ring_mythic2.png'],
-  ['ring_mythic3','ring_mythic3.png'], ['ring_mythic4','ring_mythic4.png'],
+  ['ring_free1','ring_free1.webp'], ['ring_free2','ring_free2.webp'],
+  ['ring_free3','ring_free3.webp'], ['ring_free4','ring_free4.webp'],
+  ['ring_gold1','ring_gold1.webp'], ['ring_gold2','ring_gold2.webp'],
+  ['ring_gold3','ring_gold3.webp'], ['ring_gold4','ring_gold4.webp'],
+  ['ring_dia1','ring_dia1.webp'],   ['ring_dia2','ring_dia2.webp'],
+  ['ring_dia3','ring_dia3.webp'],   ['ring_dia4','ring_dia4.webp'],
+  ['ring_mythic1','ring_mythic1.webp'], ['ring_mythic2','ring_mythic2.webp'],
+  ['ring_mythic3','ring_mythic3.webp'], ['ring_mythic4','ring_mythic4.webp'],
 ];
 
 Object.assign(MenuScene.prototype, {
@@ -226,7 +226,7 @@ Object.assign(MenuScene.prototype, {
       // pvp backgrounds
       for (let i = 1; i <= 5; i++) {
         if (!this.textures.exists(`pvp_bg_${i}`))
-          this.load.image(`pvp_bg_${i}`, `pvp_bg/${i}.png${V}`);
+          this.load.image(`pvp_bg_${i}`, `pvp_bg/${i}.webp${V}`);
       }
       const onErr = f => console.warn('[LazyBotSkins] loaderror:', f?.key);
       this.load.on('loaderror', onErr);

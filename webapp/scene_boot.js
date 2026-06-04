@@ -25,7 +25,7 @@ class BootScene extends Phaser.Scene {
     this.load.image('warrior_crit',   `skins/crit/1.png${V}`);
     this.load.image('ws_crt_1',       `skins/crit/2.png${V}`);
     this.load.image('ws_crt_2',       `skins/crit/3.png${V}`);
-    this.load.image('clan_emblem',   `clan_emblem.png${V}`);
+    this.load.image('clan_emblem',   `clan_emblem.webp${V}`);
     this.load.image('clan_em_light',   `clan_em_light.png${V}`);
     this.load.image('clan_em_dark',    `clan_em_dark.png${V}`);
     this.load.image('clan_em_neutral', `clan_em_neutral.png${V}`);
@@ -35,17 +35,17 @@ class BootScene extends Phaser.Scene {
     this.load.image('tab_boss',      `tab_boss.png${V}`);
     this.load.image('tab_rating',    `tab_rating.png${V}`);
     this.load.image('tab_more',      `tab_more.png${V}`);
-    this.load.image('hero_profile_bg', `hero_profile_bg.png${V}`);
-    this.load.image('radar_target',    `radar_target.png${V}`);
+    this.load.image('hero_profile_bg', `hero_profile_bg.webp${V}`);
+    this.load.image('radar_target',    `radar_target.webp${V}`);
     this.load.image('skull_bot',       `skull_bot.png${V}`);
     this.load.image('bot_icon',        `bot_icon.png${V}`);
-    this.load.image('natisk_mech',     `natisk_mech.png${V}`);
-    this.load.image('natisk_gold',     `natisk_gold.png${V}`);
+    this.load.image('natisk_mech',     `natisk_mech.webp${V}`);
+    this.load.image('natisk_gold',     `natisk_gold.webp${V}`);
     this.load.image('prem_box',        `prem_box.png${V}`);
     this.load.image('chest_gold',      `chest_gold.png${V}`);
     this.load.image('chest_diamond',   `chest_diamond.png${V}`);
     this.load.image('chest_epic',      `chest_epic.png${V}`);
-    this.load.image('natisk_diamond',  `natisk_diamond.png${V}`);
+    this.load.image('natisk_diamond',  `natisk_diamond.webp${V}`);
     // Иконки сегмент-табов Stats overlay (CSS background-image). В Boot не
     // нужны Phaser-сцене, но проход через HTTP даёт браузерный кеш, и при
     // первом открытии «Герой» картинки отрисуются мгновенно без задержки.

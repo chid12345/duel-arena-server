@@ -4,9 +4,9 @@
 (() => {
 
 const BOOTS_IMG = {
-  boots_free1:'boots_free1.png',     boots_free2:'boots_free2.png',
-  boots_free3:'boots_free3.png',     boots_free4:'boots_free4.jpeg',
-  boots_gold1:'boots_gold1.png',     boots_gold2:'boots_gold2.jpg',
+  boots_free1:'boots_free1.webp',     boots_free2:'boots_free2.webp',
+  boots_free3:'boots_free3.webp',     boots_free4:'boots_free4.jpeg',
+  boots_gold1:'boots_gold1.webp',     boots_gold2:'boots_gold2.jpg',
   boots_gold3:'boots_gold3.jpg',     boots_gold4:'boots_gold4.jpg',
   boots_dia1:'boots_dia1.jpg',       boots_dia2:'boots_dia2.jpg',
   boots_dia3:'boots_dia3.jpg',       boots_dia4:'boots_dia4.jpg',
