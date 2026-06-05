@@ -51,6 +51,7 @@
         return;
       }
       if (ev.target.closest('#cy-clog')) { try { window.WBHtml?.showBattleHistory?.(); } catch(_) {} return; }
+      if (ev.target.closest('[data-act="boss-fx"]')) { _showBossFishki(); return; }
       const res = ev.target.closest('[data-act="res"]');
       if (res) { try { sc?._resurrect?.(res.dataset.t); } catch(_) {} return; }
       const resBuy = ev.target.closest('[data-act="res-buy"]');
@@ -113,16 +114,18 @@
                [0.25, 25, '#ff5a3c']].forEach(([thr, lab, col]) => {
                 if (_lastHpPct > thr && pct <= thr) {
                   const nm = nameAt(lab) || (lab === 50 ? 'Ярость' : lab === 25 ? 'Хаос' : 'Коронный удар');
-                  // Вариант Б: тонкая строка ПОД HP-баром (не двигает экран).
+                  // Верхняя плашка (бывшая ФАЗА) → новая фишка + вспышка.
                   try {
-                    const fx = root.querySelector('#cy-boss-fx');
-                    if (fx) {
-                      fx.textContent = '⚡ ' + lab + '% · ' + nm;
-                      fx.style.color = col;
-                      fx.style.background = 'rgba(255,120,40,.22)';
-                      setTimeout(() => { try { fx.style.background = 'transparent'; } catch (_) {} }, 800);
+                    const badge = root.querySelector('#cy-fx-badge');
+                    if (badge) {
+                      badge.textContent = '⚡ ' + nm + ' ▾';
+                      badge.style.color = col;
+                      badge.style.boxShadow = '0 0 14px ' + col;
+                      setTimeout(() => { try { badge.style.boxShadow = 'none'; } catch (_) {} }, 1200);
                     }
                   } catch (_) {}
+                  // Всплывающее сообщение над ареной (само исчезает, экран не двигает).
+                  try { window.CyberFx?.spawnAnnounce?.(root.querySelector('#cy-arena'), nm, col); } catch (_) {}
                   try { sc?._fxDomShake?.(); } catch (_) {}        // лёгкая тряска экрана
                   try {                                            // вспышка картинки босса
                     const b = root.querySelector('#cy-boss');
@@ -188,6 +191,45 @@
       if (apply?.classList.contains('cd')) return;
       dice?.click();
     }, 1100); // ~1.1с между раундами (apply CD = 800мс + запас)
+  }
+
+  // Окно «Фишки босса» по тапу на верхнюю плашку. Показывает пассивку (всегда)
+  // + все пройденные пороги (pct ≤ hp) с описанием. Накапливается по ходу боя.
+  function _showBossFishki() {
+    try {
+      const a = window.WBHtml?._scene?._state?.active || {};
+      const feats = a.boss_features || [];
+      const pct = a.max_hp > 0 ? (a.current_hp / a.max_hp * 100) : 100;
+      document.getElementById('cy-fx-pop')?.remove();
+      const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c =>
+        ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c]));
+      const shown = feats
+        .filter(f => f && (f.hp == null || pct <= f.hp))
+        .sort((x, y) => ((y.hp == null ? 101 : y.hp) - (x.hp == null ? 101 : x.hp)));
+      const rows = shown.map(f => {
+        const when = f.hp == null ? 'Всегда' : f.hp + '%';
+        return '<div style="margin-bottom:11px;">'
+          + '<div style="color:#ffce54;font-weight:800;font-size:12px;">' + when + ' · ' + esc(f.name) + '</div>'
+          + '<div style="color:#cfd6e6;font-size:11px;line-height:1.45;margin-top:2px;">' + esc(f.desc) + '</div>'
+          + '</div>';
+      }).join('');
+      const title = esc((a.boss_emoji || '⚡') + ' ' + (a.boss_name || 'Босс') + ' — фишки');
+      const ov = document.createElement('div');
+      ov.id = 'cy-fx-pop';
+      ov.style.cssText = 'position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;'
+        + 'justify-content:center;background:rgba(0,0,0,.78);padding:18px;';
+      ov.innerHTML = '<div style="width:100%;max-width:340px;max-height:80vh;overflow-y:auto;'
+        + 'background:linear-gradient(180deg,#140a2a,#06030f);border:1px solid rgba(255,120,60,.35);'
+        + 'border-radius:16px;padding:16px;box-shadow:0 8px 50px rgba(0,0,0,.7);">'
+        + '<div style="font-size:14px;font-weight:900;color:#ffae5c;margin-bottom:12px;">' + title + '</div>'
+        + (rows || '<div style="color:#8899aa;font-size:12px;">Фишки ещё не сработали</div>')
+        + '<div id="cy-fx-pop-x" style="margin-top:8px;text-align:center;padding:11px;border-radius:12px;'
+        + 'background:rgba(255,120,60,.22);color:#fff;font-weight:800;cursor:pointer;">ПОНЯТНО</div></div>';
+      document.body.appendChild(ov);
+      ov.addEventListener('click', e => {
+        if (e.target === ov || e.target.id === 'cy-fx-pop-x') ov.remove();
+      });
+    } catch (_) {}
   }
 
   function _hook() {

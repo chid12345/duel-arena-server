@@ -139,5 +139,22 @@
     return Math.floor(s/60) + ':' + String(s%60).padStart(2,'0');
   }
 
-  window.CyberFx = { spawnImpact, spawnDmg, flashZone, pushClog, _fmtSec, ZONES, ZONE_NAME };
+  // Всплывающее сообщение «фишка началась» над ареной — само исчезает,
+  // в layout места не занимает (absolute внутри #cy-arena).
+  function spawnAnnounce(arena, text, color) {
+    if (!arena) return;
+    const e = document.createElement('div');
+    e.textContent = '⚡ ' + String(text == null ? '' : text);
+    e.style.cssText = 'position:absolute;left:50%;top:15%;transform:translate(-50%,0) scale(.85);'
+      + 'z-index:60;pointer-events:none;font-weight:900;font-size:15px;white-space:nowrap;'
+      + 'padding:7px 14px;border-radius:12px;background:rgba(8,0,18,.8);color:' + (color || '#ff8a4c') + ';'
+      + 'border:1px solid ' + (color || '#ff7a3c') + '99;text-shadow:0 0 10px #000;opacity:0;'
+      + 'transition:opacity .25s ease, transform .25s ease;';
+    arena.appendChild(e);
+    requestAnimationFrame(() => { e.style.opacity = '1'; e.style.transform = 'translate(-50%,0) scale(1)'; });
+    setTimeout(() => { e.style.opacity = '0'; e.style.transform = 'translate(-50%,-10px) scale(1)'; }, 1400);
+    setTimeout(() => { try { e.remove(); } catch (_) {} }, 1750);
+  }
+
+  window.CyberFx = { spawnImpact, spawnDmg, flashZone, pushClog, spawnAnnounce, _fmtSec, ZONES, ZONE_NAME };
 })();

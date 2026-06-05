@@ -10,6 +10,16 @@
   const fmtHp = v => (Number(v) || 0).toLocaleString('ru');
   const esc = v => String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;');
 
+  // Текущая активная фишка босса по % HP: глубочайший пройденный порог,
+  // иначе пассивка. feats = active.boss_features ([{hp:null|75|50|25,name,desc}]).
+  function activeFishka(feats, pct) {
+    if (!Array.isArray(feats) || !feats.length) return null;
+    const passed = feats.filter(f => f && typeof f.hp === 'number' && pct <= f.hp)
+                        .sort((a, b) => a.hp - b.hp);
+    if (passed.length) return passed[0];
+    return feats.find(f => f && f.hp == null) || null;
+  }
+
   function _zonesHTML(side) {
     const lbl = side === 'atk' ? '⚔ АТАКА' : '🛡 ЗАЩИТА';
     return `<div class="cy-col cy-col-${side}"><div class="cy-col-lbl">${lbl}</div>${
@@ -77,7 +87,8 @@
     root.classList.add('bt-' + bt);
 
     const pct = a.max_hp > 0 ? Math.round(a.current_hp / a.max_hp * 100) : 0;
-    const phase = pct > 50 ? 'ФАЗА 1' : pct > 20 ? 'ФАЗА 2' : 'ФИНАЛ ☠';
+    const curFx = activeFishka(a.boss_features, pct);
+    const fxName = curFx ? curFx.name : 'Фишки';
     const isDead = !!ps?.is_dead;
     // Бэк отдаёт boss_lich.png — на клиенте подменяем на .webp (в 8× легче).
     const sprite = (a.boss_sprite || ('boss_' + bt + '.png')).replace(/\.png$/i, '.webp');
@@ -90,7 +101,7 @@
             <div class="cy-title">${esc(a.boss_emoji || '⚡')} ${esc(a.boss_name || 'BOSS')}</div>
             <div class="cy-title-sub">BOSS RAID · ${esc(a.boss_type_label || 'РЕЙД АКТИВЕН')}</div>
           </div>
-          <div class="cy-phase">${phase}</div>
+          <div class="cy-phase" id="cy-fx-badge" data-act="boss-fx" title="Фишки босса — тап для описания" style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:pointer;">⚡ ${esc(fxName)} ▾</div>
           <div class="cy-timer"><div class="cy-timer-dot"></div><div class="cy-timer-val" id="cy-bl-timer">${fmtSec(a.seconds_left)}</div></div>
         </div>
         <div class="cy-bhp">
@@ -101,7 +112,6 @@
           </div>
           <div class="cy-bhp-nums" id="cy-boss-nums">${fmtHp(a.current_hp)} / ${fmtHp(a.max_hp)} · ${pct}%</div>
         </div>
-        <div class="cy-boss-fx" id="cy-boss-fx" style="min-height:15px;line-height:15px;font-size:10.5px;font-weight:800;text-align:center;letter-spacing:.3px;color:#7a8aa0;padding:2px 0;border-radius:8px;transition:background .3s;">⚡ фишки босса — на 75 / 50 / 25% HP</div>
         <div class="cy-hdr-bottom">
           <div class="cy-clog" id="cy-clog" data-act="clog" title="Полная история раундов">
             <div class="cy-clog-empty" id="cy-clog-empty">— РАУНД ЕЩЁ НЕ СЫГРАН —</div>
@@ -148,5 +158,5 @@
     }
   }
 
-  window.CyberView = { render, updateHUD, ZONES, ZONE_NAME, fmtSec };
+  window.CyberView = { render, updateHUD, ZONES, ZONE_NAME, fmtSec, activeFishka };
 })();
