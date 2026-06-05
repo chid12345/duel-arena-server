@@ -269,6 +269,17 @@ def test_demon_frenzy_trigger_and_expire():
     assert frenzy_dmg_mult(777, 8000) == 1.0   # истекла
 
 
+# ── Test 13: HP босса масштабируется под толпу (баланс 6000/чел, мин 15000) ──
+
+def test_boss_hp_scales_with_online():
+    from config.world_boss_constants import calc_boss_hp
+    assert calc_boss_hp(1) == 15000     # соло — минимум
+    assert calc_boss_hp(2) == 15000     # 6000×2=12000 < мин → мин
+    assert calc_boss_hp(3) == 18000     # 6000×3
+    assert calc_boss_hp(20) == 120000   # рейд 20 чел — реальный бой
+    assert calc_boss_hp(0) == 15000     # фолбэк (планирование до старта)
+
+
 def test_periodic_aoe_other_types_and_start_zero():
     assert wb_periodic_aoe("lich", 0.20, 9) == 0.0     # у Лича периодики нет
     assert wb_periodic_aoe("lava", 0.10, 0) == 0.0     # на секунде 0 не бьём
