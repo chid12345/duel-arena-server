@@ -108,16 +108,26 @@
               const pct = r.boss_hp / mhp;
               const feats = act?.boss_features || [];
               const nameAt = (h) => (feats.find(f => f && f.hp === h) || {}).name;
-              [[0.75, 75, 't75', '#ffaa3c', 'light'],
-               [0.50, 50, 't50', '#ff6a30', 'medium'],
-               [0.25, 25, 't25', '#ff5a3c', 'heavy']].forEach(([thr, lab, key, col, sh]) => {
+              [[0.75, 75, '#ffaa3c'],
+               [0.50, 50, '#ff6a30'],
+               [0.25, 25, '#ff5a3c']].forEach(([thr, lab, col]) => {
                 if (_lastHpPct > thr && pct <= thr) {
                   const nm = nameAt(lab) || (lab === 50 ? 'Ярость' : lab === 25 ? 'Хаос' : 'Коронный удар');
-                  try { sc._fxBossEvent?.(lab + '% · ' + nm, col, key); } catch (_) {}
-                  try { sc._fxHtmlAnnounce?.(nm, col, lab !== 75); } catch (_) {}
-                  try { sc._fxDomShake?.(); } catch (_) {}
-                  try { sc._fxBossTremble?.(sh); } catch (_) {}
-                  if (lab === 50) { try { sc._fxBossEnragedGlow?.(); } catch (_) {} }
+                  // Вариант Б: тонкая строка ПОД HP-баром (не двигает экран).
+                  try {
+                    const fx = root.querySelector('#cy-boss-fx');
+                    if (fx) {
+                      fx.textContent = '⚡ ' + lab + '% · ' + nm;
+                      fx.style.color = col;
+                      fx.style.background = 'rgba(255,120,40,.22)';
+                      setTimeout(() => { try { fx.style.background = 'transparent'; } catch (_) {} }, 800);
+                    }
+                  } catch (_) {}
+                  try { sc?._fxDomShake?.(); } catch (_) {}        // лёгкая тряска экрана
+                  try {                                            // вспышка картинки босса
+                    const b = root.querySelector('#cy-boss');
+                    if (b) { b.classList.remove('hit'); void b.offsetWidth; b.classList.add('hit'); }
+                  } catch (_) {}
                 }
               });
               _lastHpPct = pct;

@@ -101,6 +101,7 @@
           </div>
           <div class="cy-bhp-nums" id="cy-boss-nums">${fmtHp(a.current_hp)} / ${fmtHp(a.max_hp)} · ${pct}%</div>
         </div>
+        <div class="cy-boss-fx" id="cy-boss-fx" style="min-height:15px;line-height:15px;font-size:10.5px;font-weight:800;text-align:center;letter-spacing:.3px;color:#7a8aa0;padding:2px 0;border-radius:8px;transition:background .3s;">⚡ фишки босса — на 75 / 50 / 25% HP</div>
         <div class="cy-hdr-bottom">
           <div class="cy-clog" id="cy-clog" data-act="clog" title="Полная история раундов">
             <div class="cy-clog-empty" id="cy-clog-empty">— РАУНД ЕЩЁ НЕ СЫГРАН —</div>
