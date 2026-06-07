@@ -161,7 +161,9 @@
     const tip   = (TYPES[type] || TYPES.universal).tip;
     const prof  = src.stat_profile || BASE_PROFILES[type] || BASE_PROFILES.universal;
     const badgeColor = TYPE_COLOR[type] || TYPE_COLOR.universal;
-    const sprite = src.boss_sprite || ('boss_' + type + '.png');
+    // Реальные файлы боссов лежат как .webp (в ~8× легче). Бэк отдаёт boss_xxx.png —
+    // подменяем расширение, иначе .png не находится и карточка падала в эмодзи.
+    const sprite = (src.boss_sprite || ('boss_' + type + '.png')).replace(/\.png$/i, '.webp');
     const glow   = _hexA(badgeColor, 0.5);
 
     const str = parseFloat(prof.str) || 1, agi = parseFloat(prof.agi) || 1, int_ = parseFloat(prof.int) || 1;

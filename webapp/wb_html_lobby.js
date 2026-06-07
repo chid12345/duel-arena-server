@@ -353,24 +353,6 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
       }
       else if (act==='enter-gather') {
         const sid = _state?.next_scheduled?.spawn_id;
-        // [ВРЕМЕННЫЙ ОТЛАДЧИК — убрать после диагностики зала]
-        try {
-          let _d = document.getElementById('wbz-dbg');
-          if (!_d) {
-            _d = document.createElement('div'); _d.id = 'wbz-dbg';
-            _d.style.cssText = 'position:fixed;left:6px;bottom:130px;z-index:2147483601;'
-              + 'background:rgba(0,0,0,.88);color:#3f6;font:11px/1.45 monospace;padding:8px 10px;'
-              + 'border:1px solid #3f6;border-radius:7px;white-space:pre;max-width:92vw;';
-            document.body.appendChild(_d);
-          }
-          _d.textContent = '[ЗАЛ] клик ПОЙМАН ✓'
-            + '\nsid=' + sid
-            + '\nreg=' + (_state && _state.is_registered)
-            + '\ngather.open=' + (_state && _state.gather && _state.gather.is_open)
-            + '\nscene=' + !!_scene
-            + '\nrenderGather=' + (typeof (window.WBHtml && window.WBHtml.renderGather))
-            + '\nrestart=' + (typeof (_scene && _scene.scene && _scene.scene.restart));
-        } catch (_) {}
         if (!sid) return;
         if (_state?.is_registered) {
           // Уже заплатил — входим бесплатно, СРАЗУ (без restart, без гонки).
@@ -478,41 +460,6 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
 
   function render(scene, state) {
     _scene = scene; _state = state; window.WBHtml._scene = scene;
-    // [ВРЕМЕННЫЙ ЗОНД КЛИКОВ — убрать после диагностики зала]
-    // Ловит КАЖДЫЙ клик в фазе capture (раньше любого оверлея) и показывает,
-    // куда реально попал палец: в кнопку зала или в невидимый слой сверху.
-    if (!window.__wbzClickProbe) {
-      window.__wbzClickProbe = true;
-      const _desc = (el) => {
-        if (!el) return 'null';
-        let s = el.tagName || '?';
-        if (el.id) s += '#' + el.id;
-        if (el.className && typeof el.className === 'string') {
-          s += '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.');
-        }
-        return s;
-      };
-      document.addEventListener('click', (ev) => {
-        try {
-          const top = document.elementFromPoint(ev.clientX, ev.clientY);
-          const onGather = !!(ev.target.closest && ev.target.closest('[data-act="enter-gather"]'));
-          const topGather = !!(top && top.closest && top.closest('[data-act="enter-gather"]'));
-          let p = document.getElementById('wbz-probe');
-          if (!p) {
-            p = document.createElement('div'); p.id = 'wbz-probe';
-            p.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:2147483600;'
-              + 'background:rgba(0,0,0,.88);color:#7cf;font:11px/1.45 monospace;padding:8px 10px;'
-              + 'border:1px solid #7cf;border-radius:7px;white-space:pre;max-width:92vw;';
-            document.body.appendChild(p);
-          }
-          p.textContent = '[ЗОНД КЛИКА]'
-            + '\nцель: ' + _desc(ev.target)
-            + '\nсверху в точке: ' + _desc(top)
-            + '\nцель=зал? ' + (onGather ? 'ДА' : 'нет')
-            + '\nсверху=зал? ' + (topGather ? 'ДА' : 'НЕТ ← перехват!');
-        } catch (_) {}
-      }, true);
-    }
     try { _preloadBossAssets(state); } catch(_) {}
     // То же фильтрование «локально забранных» — чтобы MVP-попап не открывался
     // заново сразу после клейма, пока сервер не догнал.
