@@ -257,6 +257,30 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
     };
   }
 
+  // Войти в зал ожидания НАПРЯМУЮ из текущего состояния — без scene.restart().
+  // Почему: restart перезапрашивал /state, и если сервер на миг отдавал
+  // is_registered=false (гонка после регистрации), защита «фантомного зала»
+  // выкидывала игрока обратно в лобби → выглядело как «нажал — ничего».
+  // Регистрация уже подтверждена ЭТИМ же кликом, поэтому рисуем зал сразу.
+  function _enterGatherDirect(sid) {
+    try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
+    if (_state) _state.is_registered = true;
+    try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
+    const root = _root();
+    if (window.WBHtml?.renderGather && _state?.gather?.is_open) {
+      try {
+        _setTabBar(false);
+        root.style.top='0'; root.style.left='0'; root.style.right='0';
+        root.style.bottom='0'; root.style.width=''; root.style.height='';
+        window.WBBattleCSS?.inject();
+        window.WBHtml.renderGather(root, _state);
+        return;
+      } catch(_) {}
+    }
+    // Фолбэк — старый путь через рестарт сцены.
+    _scene?.scene?.restart?.();
+  }
+
   function _bind(root) {
     // Защита от дубликатов: каждый _render() вызывает _bind, но listener на root
     // переживает innerHTML. Без флага получаем 2-3-N обработчиков → join-toggle
@@ -349,22 +373,17 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
         } catch (_) {}
         if (!sid) return;
         if (_state?.is_registered) {
-          // Уже заплатил — входим бесплатно
-          try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
-          try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
-          _scene?.scene?.restart?.();
+          // Уже заплатил — входим бесплатно, СРАЗУ (без restart, без гонки).
+          _enterGatherDirect(sid);
         } else {
           // Ещё не платил — показываем диалог.
-          // ВАЖНО: флаг wb_in_gather и рестарт сцены — ТОЛЬКО после успешной
-          // регистрации. Раньше флаг ставился до register'а → если запрос падал
-          // (сеть/мало золота), клиент всё равно попадал в зал ожидания без
-          // записи на сервере → у других игроков ты не появлялся (баг «1 игрок»).
+          // ВАЖНО: вход в зал — ТОЛЬКО после успешной регистрации. Раньше флаг
+          // ставился до register'а → если запрос падал (сеть/мало золота), клиент
+          // всё равно попадал в зал без записи на сервере → баг «1 игрок».
           _showJoinConfirm(root, el, _scene, async () => {
             try { await _scene._registerForRaid?.(); } catch(_) {}
             if (_state?.is_registered) {
-              try { sessionStorage.setItem('wb_in_gather', String(sid)); } catch(_) {}
-              try { window.Telegram?.WebApp?.HapticFeedback?.impactOccurred?.('medium'); } catch(_) {}
-              _scene?.scene?.restart?.();
+              _enterGatherDirect(sid);
             }
             // Если registerForRaid не прошёл — он уже показал toast «❌ ...».
             // Игрок остаётся в лобби с кнопкой «Войти в бой» для повтора.
