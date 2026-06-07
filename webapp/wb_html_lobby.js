@@ -329,6 +329,24 @@ ${joinedAll?`<div class="wb-remind-toggle${reminded?' on':''}" data-act="remind"
       }
       else if (act==='enter-gather') {
         const sid = _state?.next_scheduled?.spawn_id;
+        // [ВРЕМЕННЫЙ ОТЛАДЧИК — убрать после диагностики зала]
+        try {
+          let _d = document.getElementById('wbz-dbg');
+          if (!_d) {
+            _d = document.createElement('div'); _d.id = 'wbz-dbg';
+            _d.style.cssText = 'position:fixed;left:6px;bottom:6px;z-index:2147483600;'
+              + 'background:rgba(0,0,0,.88);color:#3f6;font:11px/1.45 monospace;padding:8px 10px;'
+              + 'border:1px solid #3f6;border-radius:7px;white-space:pre;max-width:92vw;';
+            document.body.appendChild(_d);
+          }
+          _d.textContent = '[ЗАЛ] клик ПОЙМАН ✓'
+            + '\nsid=' + sid
+            + '\nreg=' + (_state && _state.is_registered)
+            + '\ngather.open=' + (_state && _state.gather && _state.gather.is_open)
+            + '\nscene=' + !!_scene
+            + '\nrenderGather=' + (typeof (window.WBHtml && window.WBHtml.renderGather))
+            + '\nrestart=' + (typeof (_scene && _scene.scene && _scene.scene.restart));
+        } catch (_) {}
         if (!sid) return;
         if (_state?.is_registered) {
           // Уже заплатил — входим бесплатно
