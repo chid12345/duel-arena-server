@@ -92,25 +92,26 @@ function _removeDarkBg(img) {
 /* Точные расширения для сапог и щитов (смесь .png/.jpg/.jpeg) */
 const _EXT = {
   boots_free1:'boots_free1.webp',     boots_free2:'boots_free2.webp',
-  boots_free3:'boots_free3.webp',     boots_free4:'boots_free4.jpeg',
-  boots_gold1:'boots_gold1.webp',     boots_gold2:'boots_gold2.jpg',
-  boots_gold3:'boots_gold3.jpg',     boots_gold4:'boots_gold4.jpg',
-  boots_dia1:'boots_dia1.jpg',       boots_dia2:'boots_dia2.jpg',
-  boots_dia3:'boots_dia3.jpg',       boots_dia4:'boots_dia4.jpg',
-  boots_mythic1:'boots_mythic1.jpeg',boots_mythic2:'boots_mythic2.jpeg',
-  boots_mythic3:'boots_mythic3.jpeg',boots_mythic4:'boots_mythic4.jpeg',
-  shield_free1:'shield_free1.jpeg',  shield_free2:'shield_free2.jpeg',
-  shield_free3:'shield_free3.jpeg',  shield_free4:'shield_free4.jpeg',
-  shield_gold1:'shield_gold1.jpeg',  shield_gold2:'shield_gold2.jpeg',
-  shield_gold3:'shield_gold3.jpeg',  shield_gold4:'shield_gold4.jpeg',
+  boots_free3:'boots_free3.webp',     boots_free4:'boots_free4.webp',
+  boots_gold1:'boots_gold1.webp',     boots_gold2:'boots_gold2.webp',
+  boots_gold3:'boots_gold3.webp',     boots_gold4:'boots_gold4.webp',
+  boots_dia1:'boots_dia1.webp',       boots_dia2:'boots_dia2.webp',
+  boots_dia3:'boots_dia3.webp',       boots_dia4:'boots_dia4.webp',
+  boots_mythic1:'boots_mythic1.webp',boots_mythic2:'boots_mythic2.webp',
+  boots_mythic3:'boots_mythic3.webp',boots_mythic4:'boots_mythic4.webp',
+  shield_free1:'shield_free1.webp',  shield_free2:'shield_free2.webp',
+  shield_free3:'shield_free3.webp',  shield_free4:'shield_free4.webp',
+  shield_gold1:'shield_gold1.webp',  shield_gold2:'shield_gold2.webp',
+  shield_gold3:'shield_gold3.webp',  shield_gold4:'shield_gold4.webp',
   shield_dia1:'shield_dia1.webp',     shield_dia2:'shield_dia2.webp',
   shield_dia3:'shield_dia3.webp',     shield_dia4:'shield_dia4.webp',
   shield_mythic1:'shield_mythic1.webp',shield_mythic2:'shield_mythic2.webp',
   shield_mythic3:'shield_mythic3.webp',shield_mythic4:'shield_mythic4.webp',
 };
 
-/* Texture key → filename (с правильным расширением) */
-function _texUrl(key) { return key ? (_EXT[key] || key + '.png') : null; }
+/* Texture key → filename (с правильным расширением). _EXT остался для совместимости —
+   там лежат явные .webp; для всех остальных ключей дефолтный .webp (после WebP-пасса). */
+function _texUrl(key) { return key ? (_EXT[key] || key + '.webp') : null; }
 
 /* Данные слота: texKey (→ filename) + rarity.
    armor2 — новая чистая броня (item_id='armor2_free1'..'armor2_mythic4').

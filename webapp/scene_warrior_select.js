@@ -87,17 +87,17 @@ const _WS_DATA = {
     desc:'Каждый удар наносит на 10% больше урона — ты бьёшь тяжелее всех. За это платишь скоростью: противник уклоняется от тебя на 5% легче. Выбирай если хочешь ломить напролом.',
     aura:'radial-gradient(ellipse,rgba(255,80,15,.22) 0%,transparent 68%)',
     glow:'rgba(255,80,20,.8)',
-    skins:[{img:'skins/sila/1.png',name:'МОЛОТ',e:'⚔️'},{img:'skins/sila/2.png',name:'ТИРАН',e:'🛡️'},{img:'skins/sila/3.png',name:'ДРАКОН',e:'🔥'}] },
+    skins:[{img:'skins/sila/1.webp',name:'МОЛОТ',e:'⚔️'},{img:'skins/sila/2.webp',name:'ТИРАН',e:'🛡️'},{img:'skins/sila/3.webp',name:'ДРАКОН',e:'🔥'}] },
   agile: { cls:'agi', label:'Ловкость', bonus:'+8% УКЛОН',     penalty:'↓10% броня',
     desc:'Ты скользишь как тень — уклоняешься от ударов на 8% чаще. Но лёгкая броня трещит: защита снижена на 10%. Выбирай если хочешь уходить от урона и бить первым.',
     aura:'radial-gradient(ellipse,rgba(0,200,70,.2) 0%,transparent 68%)',
     glow:'rgba(0,210,80,.75)',
-    skins:[{img:'skins/agility/1.png',name:'ПРИЗРАК',e:'🌑'},{img:'skins/agility/2.png',name:'КОГОТЬ',e:'🗡️'},{img:'skins/agility/3.png',name:'ШТОРМ',e:'💨'}] },
+    skins:[{img:'skins/agility/1.webp',name:'ПРИЗРАК',e:'🌑'},{img:'skins/agility/2.webp',name:'КОГОТЬ',e:'🗡️'},{img:'skins/agility/3.webp',name:'ШТОРМ',e:'💨'}] },
   crit:  { cls:'crt', label:'Интуиция', bonus:'+5% КРИТ ×1.65',penalty:'↓10% HP',
     desc:'Критические удары срабатывают чаще (+5%) и бьют в 1.65× сильнее обычного. Но твоё HP ниже на 10% — ты хрупкий. Выбирай если хочешь убивать с одного удара.',
     aura:'radial-gradient(ellipse,rgba(160,55,255,.2) 0%,transparent 68%)',
     glow:'rgba(160,60,255,.75)',
-    skins:[{img:'skins/crit/1.png',name:'ХАОС',e:'💜'},{img:'skins/crit/2.png',name:'ПУСТОТА',e:'🔮'},{img:'skins/crit/3.png',name:'РОК',e:'✨'}] },
+    skins:[{img:'skins/crit/1.webp',name:'ХАОС',e:'💜'},{img:'skins/crit/2.webp',name:'ПУСТОТА',e:'🔮'},{img:'skins/crit/3.webp',name:'РОК',e:'✨'}] },
 };
 
 Object.assign(MenuScene.prototype, {

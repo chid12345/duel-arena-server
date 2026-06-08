@@ -34,7 +34,7 @@ WELCOME_TEXT = (
 # Загружается в память один раз при импорте модуля → потом каждый /start
 # отсылается мгновенно (Telegram сам кэширует фото по content-hash).
 _BANNER_PATH = os.path.normpath(
-    os.path.join(os.path.dirname(__file__), "..", "..", "webapp", "bot_description.png")
+    os.path.join(os.path.dirname(__file__), "..", "..", "webapp", "bot_description.webp")
 )
 try:
     with open(_BANNER_PATH, "rb") as _f:

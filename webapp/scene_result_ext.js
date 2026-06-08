@@ -201,23 +201,23 @@ Object.assign(ResultScene.prototype, {
 
     if (isEndless && won) {
       ResultButtonsHTML.show(this, { info, big: [
-        { icon: 'btn_fight.png', label: bigLabel,    color: '#ff8c00', cb: bigCb },
-        { icon: 'btn_home.png',  label: 'Завершить', color: '#7eb8ff',
+        { icon: 'btn_fight.webp', label: bigLabel,    color: '#ff8c00', cb: bigCb },
+        { icon: 'btn_home.webp',  label: 'Завершить', color: '#7eb8ff',
           cb: () => post('/api/endless/abandon', {}).catch(()=>{}).finally(() => _go('Natisk')) },
       ]});
       return;
     }
 
     const rows = isTitan
-      ? [{ icon: 'btn_home.png', label: 'К боям', color: '#7eb8ff', cb: () => _goMenu() }]
+      ? [{ icon: 'btn_home.webp', label: 'К боям', color: '#7eb8ff', cb: () => _goMenu() }]
       : replayLog.length > 0
-        ? [{ icon: 'btn_home.png',       label: 'Главная', color: '#7eb8ff', cb: () => _goMenu('profile') },
-           { icon: 'btn_battle_log.png', label: 'История', color: '#cc44ff', cb: hisCb },
-           { icon: 'btn_history.png',    label: 'Все бои', color: '#4499ff', cb: allCb }]
-        : [{ icon: 'btn_home.png',    label: 'Главная', color: '#7eb8ff', cb: () => _goMenu('profile') },
-           { icon: 'btn_history.png', label: 'Все бои', color: '#4499ff', cb: allCb }];
+        ? [{ icon: 'btn_home.webp',       label: 'Главная', color: '#7eb8ff', cb: () => _goMenu('profile') },
+           { icon: 'btn_battle_log.webp', label: 'История', color: '#cc44ff', cb: hisCb },
+           { icon: 'btn_history.webp',    label: 'Все бои', color: '#4499ff', cb: allCb }]
+        : [{ icon: 'btn_home.webp',    label: 'Главная', color: '#7eb8ff', cb: () => _goMenu('profile') },
+           { icon: 'btn_history.webp', label: 'Все бои', color: '#4499ff', cb: allCb }];
 
-    ResultButtonsHTML.show(this, { info, big: [{ icon: 'btn_fight.png', label: bigLabel, color: bigCol, cb: bigCb }], rows });
+    ResultButtonsHTML.show(this, { info, big: [{ icon: 'btn_fight.webp', label: bigLabel, color: bigCol, cb: bigCb }], rows });
   },
 
 });

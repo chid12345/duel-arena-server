@@ -63,7 +63,7 @@
     if (r.chest_type === 'wb_diamond_chest') {
       chest = `<div class="wb-mvp-chest">${_chestImg('wb_diamond_chest', '💠')}<span>Алмазный сундук рейда · топ-1 по урону</span></div>`;
     } else if (r.chest_type === 'scroll_all_12') {
-      chest = `<div class="wb-mvp-chest"><img src="scroll_icon.png" alt="" style="width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(180,80,255,.7))"><span>Свиток «+12 ко всем пассивкам» · удача 5%!</span></div>`;
+      chest = `<div class="wb-mvp-chest"><img src="scroll_icon.webp" alt="" style="width:24px;height:24px;object-fit:contain;filter:drop-shadow(0 0 6px rgba(180,80,255,.7))"><span>Свиток «+12 ко всем пассивкам» · удача 5%!</span></div>`;
     } else if (r.chest_type) {
       chest = `<div class="wb-mvp-chest">${_chestImg(r.chest_type, '🎁')}<span>${_esc(r.chest_type)}</span></div>`;
     }

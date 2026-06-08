@@ -18,7 +18,7 @@ const BotBattleHtml = (() => {
   const _pWt = () => { try { return _S().player?.warrior_type || null; } catch(_) { return null; } };
   const _pSkin = () => (typeof getWarriorSkinPath === 'function')
     ? getWarriorSkinPath(_pWt())
-    : 'skins/crit/1.png';
+    : 'skins/crit/1.webp';
 
   function _renderShell(b, skinId, pvpBgIdx) {
     try { return _renderShellImpl(b, skinId, pvpBgIdx); }
@@ -46,8 +46,8 @@ const BotBattleHtml = (() => {
     const ext = skinId <= 25 ? 'png' : 'jpg';
     const bgUrl = isPvp ? `pvp_bg/${pvpBgIdx || 1}.webp` : (skinId ? `bot_skins/bg/${skinId}.${ext}` : '');
     const skinUrl = isPvp
-      ? ((typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(b.opp_warrior_type || 'tank') : 'skins/sila/1.png')
-      : (skinId ? `bot_skins/${skinId}.png` : '');
+      ? ((typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(b.opp_warrior_type || 'tank') : 'skins/sila/1.webp')
+      : (skinId ? `bot_skins/${skinId}.webp` : '');
     const flipBoss = isPvp ? false : (skinId && typeof BotSkinPicker !== 'undefined' && BotSkinPicker.shouldFlip(skinId));
     const meName = String(_S()?.player?.username || 'Вы').toUpperCase();
     const oppName = String(b.opp_name || 'Соперник').toUpperCase();
@@ -57,7 +57,7 @@ const BotBattleHtml = (() => {
     const oppRatingHtml = oppRating > 0 ? `<span class="hp-rating">★ ${oppRating}</span>` : '';
     const ic = k => k === 'HEAD' ? 'head' : k === 'TORSO' ? 'torso' : 'legs';
     const nm = k => k === 'HEAD' ? 'Голова' : k === 'TORSO' ? 'Тело' : 'Ноги';
-    const btn = (s, k) => `<div class="ic-btn" data-side="${s}" data-key="${k}"><div class="halo"></div><img src="battle_icons/${ic(k)}.png"><div class="nm">${nm(k)}</div></div>`;
+    const btn = (s, k) => `<div class="ic-btn" data-side="${s}" data-key="${k}"><div class="halo"></div><img src="battle_icons/${ic(k)}.webp"><div class="nm">${nm(k)}</div></div>`;
     // Fallback: если сервер вернул null HP (race при старте), берём данные игрока из State
     const myHp    = b.my_hp     != null ? b.my_hp     : (_S()?.player?.current_hp ?? 0);
     const myMaxHp = b.my_max_hp != null ? b.my_max_hp : (_S()?.player?.max_hp ?? 100);
@@ -82,9 +82,9 @@ const BotBattleHtml = (() => {
       <div class="col atk-col"><div class="col-lbl">⚔ АТАКА</div>${['HEAD','TORSO','LEGS'].map(k => btn('atk', k)).join('')}</div>
       <div class="col def-col"><div class="col-lbl">🛡 ЗАЩИТА</div>${['HEAD','TORSO','LEGS'].map(k => btn('def', k)).join('')}</div>
       <div class="action-row">
-        <div class="auto-btn" id="bb-auto" title="Случайный ход (один раз)"><img src="btn_autoattack.png" alt="auto"></div>
+        <div class="auto-btn" id="bb-auto" title="Случайный ход (один раз)"><img src="btn_autoattack.webp" alt="auto"></div>
         <div class="confirm-btn" id="bb-confirm" data-text="⚔ Совершить ход"></div>
-        <div class="autobattle-btn" id="bb-autobattle" title="Автобой (премиум)"><img src="btn_auto.png" alt="autobattle"></div>
+        <div class="autobattle-btn" id="bb-autobattle" title="Автобой (премиум)"><img src="btn_auto.webp" alt="autobattle"></div>
       </div>
       <div class="bb-php-row">
         <div class="bb-php-ic">❤</div>

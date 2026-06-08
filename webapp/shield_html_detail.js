@@ -4,10 +4,10 @@
 (() => {
 
 const SHIELD_IMG = {
-  shield_free1:'shield_free1.jpeg', shield_free2:'shield_free2.jpeg',
-  shield_free3:'shield_free3.jpeg', shield_free4:'shield_free4.jpeg',
-  shield_gold1:'shield_gold1.jpeg', shield_gold2:'shield_gold2.jpeg',
-  shield_gold3:'shield_gold3.jpeg', shield_gold4:'shield_gold4.jpeg',
+  shield_free1:'shield_free1.webp', shield_free2:'shield_free2.webp',
+  shield_free3:'shield_free3.webp', shield_free4:'shield_free4.webp',
+  shield_gold1:'shield_gold1.webp', shield_gold2:'shield_gold2.webp',
+  shield_gold3:'shield_gold3.webp', shield_gold4:'shield_gold4.webp',
   shield_dia1:'shield_dia1.webp',    shield_dia2:'shield_dia2.webp',
   shield_dia3:'shield_dia3.webp',    shield_dia4:'shield_dia4.webp',
   shield_mythic1:'shield_mythic1.webp', shield_mythic2:'shield_mythic2.webp',

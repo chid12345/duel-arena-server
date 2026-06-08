@@ -247,14 +247,14 @@ function getWarriorKey(type) {
 }
 
 /* URL PNG-скина воина для HTML-оверлеев (бой с ботом, попап карточки).
-   type='tank'→skins/sila/1.png, 'tank_1'→skins/sila/2.png, 'crit_2'→skins/crit/3.png */
+   type='tank'→skins/sila/1.webp, 'tank_1'→skins/sila/2.webp, 'crit_2'→skins/crit/3.webp */
 function getWarriorSkinPath(type) {
   const parts = String(type || 'tank').split('_');
   const base  = parts[0];
   const idx   = parts.length > 1 ? (parseInt(parts[1]) || 0) : 0;
   const folders = { tank: 'sila', agile: 'agility', crit: 'crit' };
   const folder = folders[base] || 'sila';
-  return `skins/${folder}/${Math.min(idx, 2) + 1}.png`;
+  return `skins/${folder}/${Math.min(idx, 2) + 1}.webp`;
 }
 
 /* PNG-скин воина для главного экрана. tank_1/agile_2/crit_0 → базовый PNG класса. */

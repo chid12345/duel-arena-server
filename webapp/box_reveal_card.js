@@ -8,11 +8,11 @@
 const _ID = 'brc-wrap';
 
 const _BOX_IMG = {
-  box_common: 'chest_gold.png',
-  box_rare: 'chest_diamond.png', box_rare_c: 'chest_diamond.png',
-  box_epic_e2: 'chest_epic.png', box_epic_e3: 'chest_epic.png',
-  wb_gold_chest: 'chest_gold.png', wb_diamond_chest: 'chest_diamond.png',
-  prem_box: 'prem_box.png',
+  box_common: 'chest_gold.webp',
+  box_rare: 'chest_diamond.webp', box_rare_c: 'chest_diamond.webp',
+  box_epic_e2: 'chest_epic.webp', box_epic_e3: 'chest_epic.webp',
+  wb_gold_chest: 'chest_gold.webp', wb_diamond_chest: 'chest_diamond.webp',
+  prem_box: 'prem_box.webp',
 };
 
 // Таблицы редкости и helpers — в window.BoxRevealHelpers (см. box_reveal_helpers.js).
@@ -128,7 +128,7 @@ window.BoxRevealCard = {
     const isGold  = topRar === 'legendary' || topRar === 'epic';
     const glowCol = topRar === 'legendary' ? '#ff8800' : topRar === 'epic' ? '#9944cc'
                   : topRar === 'rare' ? '#2266cc' : '#00bcd4';
-    const imgSrc  = _BOX_IMG[boxId] || 'chest_gold.png';
+    const imgSrc  = _BOX_IMG[boxId] || 'chest_gold.webp';
     const cnt     = arr.length > 1 ? ` (${arr.length})` : '';
     const subHtml = subtitle ? `<div class="brc-sub">${subtitle}</div>` : '';
 

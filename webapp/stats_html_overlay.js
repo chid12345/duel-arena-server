@@ -35,10 +35,10 @@ function _renderShell(){
       <div class="st-pts${fs>0?'':' zero'}">${ptsTxt}</div>
     </div>
     <div class="st-seg">
-      <div class="s${_currentTab==='st'?' on':''}" data-tab="st"><span class="sk" style="background-image:url('hero_tab_stats.png?v=${_bv}')"></span><div class="lb">СТАТЫ</div></div>
-      <div class="s${_currentTab==='bo'?' on':''}" data-tab="bo"><span class="sk" style="background-image:url('hero_tab_bonus.png?v=${_bv}')"></span><div class="lb">БОНУСЫ</div></div>
-      <div class="s${_currentTab==='in'?' on':''}" data-tab="in"><span class="sk" style="background-image:url('hero_tab_inv.png?v=${_bv}')"></span><div class="lb">РЮКЗАК</div></div>
-      <div class="s${_currentTab==='ra'?' on':''}" data-tab="ra"><span class="sk" style="background-image:url('hero_tab_rate.png?v=${_bv}')"></span><div class="lb">КОМПЛЕКТ</div></div>
+      <div class="s${_currentTab==='st'?' on':''}" data-tab="st"><span class="sk" style="background-image:url('hero_tab_stats.webp?v=${_bv}')"></span><div class="lb">СТАТЫ</div></div>
+      <div class="s${_currentTab==='bo'?' on':''}" data-tab="bo"><span class="sk" style="background-image:url('hero_tab_bonus.webp?v=${_bv}')"></span><div class="lb">БОНУСЫ</div></div>
+      <div class="s${_currentTab==='in'?' on':''}" data-tab="in"><span class="sk" style="background-image:url('hero_tab_inv.webp?v=${_bv}')"></span><div class="lb">РЮКЗАК</div></div>
+      <div class="s${_currentTab==='ra'?' on':''}" data-tab="ra"><span class="sk" style="background-image:url('hero_tab_rate.webp?v=${_bv}')"></span><div class="lb">КОМПЛЕКТ</div></div>
     </div>
     <div class="st-page${_currentTab==='st'?' on':''}" data-p="st">${_currentTab==='st'?P.statsHTML(p):''}</div>
     <div class="st-page${_currentTab==='bo'?' on':''}" data-p="bo">${_currentTab==='bo'?P.bonusHTML(p,_inv):''}</div>

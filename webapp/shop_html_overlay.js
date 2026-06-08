@@ -224,7 +224,7 @@ function _html() {
     </div>
 <div class="sh-bp" id="sh-bp">
       <div class="sh-bp-btn">
-        <img src="рюкзак.png" class="sh-bp-img" alt="Рюкзак">
+        <img src="рюкзак.webp" class="sh-bp-img" alt="Рюкзак">
         <span class="sh-bp-badge" id="sh-bp-badge"></span>
       </div>
       <div class="sh-bp-lbl">Рюкзак</div>

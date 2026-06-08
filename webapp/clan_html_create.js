@@ -37,9 +37,9 @@ const CSS = `
 `;
 function _injectCSS(){ if(document.getElementById('cr-style'))return; const s=document.createElement('style'); s.id='cr-style'; s.textContent=CSS; document.head.appendChild(s); }
 const EMBLEMS = [
-  { key: 'light',   label: 'СВЕТ',    img: 'clan_em_light.png' },
-  { key: 'dark',    label: 'ТЬМА',    img: 'clan_em_dark.png' },
-  { key: 'neutral', label: 'НЕЙТРАЛ', img: 'clan_em_neutral.png' },
+  { key: 'light',   label: 'СВЕТ',    img: 'clan_em_light.webp' },
+  { key: 'dark',    label: 'ТЬМА',    img: 'clan_em_dark.webp' },
+  { key: 'neutral', label: 'НЕЙТРАЛ', img: 'clan_em_neutral.webp' },
 ];
 
 function openCreate(scene) {

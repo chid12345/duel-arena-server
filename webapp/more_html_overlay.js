@@ -51,15 +51,15 @@ const MoreMenuHTML = (() => {
         <div class="mo-title">Настройки &amp; Разделы</div>
         <div class="mo-btns">
           <div class="mo-btn mo-av"    id="mo-btn-av"    role="button">
-            <img class="mo-icon" src="menu_avatarki.png?v=${version}" alt="Аватарки">
+            <img class="mo-icon" src="menu_avatarki.webp?v=${version}" alt="Аватарки">
             <span class="mo-label">Аватарки</span>
           </div>
           <div class="mo-btn mo-ref"   id="mo-btn-ref"   role="button">
-            <img class="mo-icon" src="menu_referalka.png?v=${version}" alt="Рефералка">
+            <img class="mo-icon" src="menu_referalka.webp?v=${version}" alt="Рефералка">
             <span class="mo-label">Рефералка</span>
           </div>
           <div class="mo-btn mo-guide" id="mo-btn-guide" role="button">
-            <img class="mo-icon" src="menu_spravka.png?v=${version}" alt="Справка">
+            <img class="mo-icon" src="menu_spravka.webp?v=${version}" alt="Справка">
             <span class="mo-label">Справка</span>
           </div>
         </div>

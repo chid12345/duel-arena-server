@@ -164,7 +164,7 @@ function _podiumHTML(top3, meta, tabKey) {
     const tagHTML = scoreTag ? `<div class="rt-pod-tag" style="color:${colors[i]}">${scoreTag}</div>` : '';
     const lvl = p.level ? `<div class="rt-pod-lvl">Ур. ${p.level}</div>` : '';
     return `<div class="rt-pod-col" data-pid="${p.user_id}" data-rank="${ranks[i]}" data-tab="${tabKey}">
-      <div class="rt-pod-medal rt-pod-medal-${ranks[i]}"><img src="rating_medal_${ranks[i]}.png" alt="" draggable="false" onerror="this.style.display='none';this.parentNode.textContent='${medals[i]}';this.parentNode.style.fontSize='28px';this.parentNode.style.color='${colors[i]}';"></div>
+      <div class="rt-pod-medal rt-pod-medal-${ranks[i]}"><img src="rating_medal_${ranks[i]}.webp" alt="" draggable="false" onerror="this.style.display='none';this.parentNode.textContent='${medals[i]}';this.parentNode.style.fontSize='28px';this.parentNode.style.color='${colors[i]}';"></div>
       <div class="rt-pod-name">${nm}</div>
       ${avHTML}
       <div class="rt-pod-block rt-pod-rank-${ranks[i]}${meClass}" style="height:${heights[i]}px;background:${bgs[i]};border:1.5px solid ${borders[i]};box-shadow:0 0 22px ${glows[i]},inset 0 0 16px rgba(255,255,255,.04);--medal-c-soft:${energySoft[i]};--medal-c-strong:${energyStrong[i]}">
@@ -344,7 +344,7 @@ function _bbcSlotHtml(slot, it) {
   const style = `grid-row:${L.r};grid-column:${L.c};`+(it?`border-color:${it.color};box-shadow:inset 0 0 8px ${it.color}33;`:'');
   const base = it ? _bbcItemBase(it) : null;
   const visual = base
-    ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onload="window._bbcRemoveBg&&window._bbcRemoveBg(this)" onerror="window._bbcImgFbRt&&window._bbcImgFbRt(this)"></div>`
+    ? `<div class="bbc-eq-img"><img src="${base}.webp" data-base="${base}" data-slot="${slot}" onload="window._bbcRemoveBg&&window._bbcRemoveBg(this)" onerror="window._bbcImgFbRt&&window._bbcImgFbRt(this)"></div>`
     : `<div class="bbc-eq-img"><span class="bbc-eq-emoji">${_BBC_SLOT_ICON[slot]||'•'}</span></div>`;
   const nm = it ? _esc(_trunc(it.name, 13)) : '';
   return `<div class="bbc-eq-slot${it?'':' empty'}" style="${style}">
@@ -382,7 +382,7 @@ async function _fetchAndShowCard(uid, rank, tabKey, fallbackData) {
   const isPrem = d.is_premium;
   const nm     = _esc(_trunc(d.username||`ID${uid}`, 22));
   const wt     = d.warrior_type || 'tank';
-  const skinUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.png';
+  const skinUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.webp';
   const hpPct  = d.max_hp > 0 ? Math.min(1, Math.max(0, d.current_hp / d.max_hp)) : 1;
   const hpCol  = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
 

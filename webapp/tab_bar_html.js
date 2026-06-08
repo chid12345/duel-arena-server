@@ -7,12 +7,12 @@
    ============================================================ */
 window.TabBarHTML = (() => {
   const TABS = [
-    { key: 'profile', label: 'Профиль', img: 'tab_profile.png', em: '⚔️', col: '#22d3ee' },
-    { key: 'clan',    label: 'Клан',    img: 'tab_clan.png',    em: '🏰', col: '#fb7185' },
-    { key: 'stats',   label: 'Герой',   img: 'tab_stats.png',   em: '🛡️', col: '#818cf8' },
-    { key: 'boss',    label: 'Босс',    img: 'tab_boss.png',    em: '💀', col: '#fb923c' },
-    { key: 'rating',  label: 'Рейтинг', img: 'tab_rating.png',  em: '👑', col: '#fbbf24' },
-    { key: 'more',    label: 'Меню',    img: 'tab_more.png',    em: '📜', col: '#a78bfa' },
+    { key: 'profile', label: 'Профиль', img: 'tab_profile.webp', em: '⚔️', col: '#22d3ee' },
+    { key: 'clan',    label: 'Клан',    img: 'tab_clan.webp',    em: '🏰', col: '#fb7185' },
+    { key: 'stats',   label: 'Герой',   img: 'tab_stats.webp',   em: '🛡️', col: '#818cf8' },
+    { key: 'boss',    label: 'Босс',    img: 'tab_boss.webp',    em: '💀', col: '#fb923c' },
+    { key: 'rating',  label: 'Рейтинг', img: 'tab_rating.webp',  em: '👑', col: '#fbbf24' },
+    { key: 'more',    label: 'Меню',    img: 'tab_more.webp',    em: '📜', col: '#a78bfa' },
   ];
 
   let _root = null, _scene = null, _onInternal = null, _activeKey = null;

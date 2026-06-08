@@ -25,7 +25,7 @@ const CSS = `
 .ct-hc-l{font-size:9px;color:#ffa8d8;letter-spacing:.4px;margin-top:1px}
 `;
 function _injectCSS(){ if(document.getElementById('ct-style'))return; const s=document.createElement('style'); s.id='ct-style'; s.textContent=CSS; document.head.appendChild(s); }
-const EM_IMG = { light: 'clan_em_light.png', dark: 'clan_em_dark.png', neutral: 'clan_em_neutral.png' };
+const EM_IMG = { light: 'clan_em_light.webp', dark: 'clan_em_dark.webp', neutral: 'clan_em_neutral.webp' };
 
 function _row(c, i) {
   const trunc = window.ClanHTML._trunc, esc = window.ClanHTML._esc;

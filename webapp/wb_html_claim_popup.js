@@ -50,7 +50,7 @@
 
   function _iconHtml(chestType, res) {
     if (chestType === 'scroll_all_12') {
-      return `<img src="scroll_icon.png" alt="" style="filter:drop-shadow(0 0 12px rgba(180,80,255,.75)) drop-shadow(0 0 3px rgba(180,80,255,.5))">`;
+      return `<img src="scroll_icon.webp" alt="" style="filter:drop-shadow(0 0 12px rgba(180,80,255,.75)) drop-shadow(0 0 3px rgba(180,80,255,.5))">`;
     }
     // Настоящая картинка сундука из единого реестра BoxIcons
     if (chestType && window.BoxIcons?.imageFor?.(chestType)) {

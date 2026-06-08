@@ -202,10 +202,10 @@ function openMyClan(scene, data) {
   root.id = 'cl-root';
   root.className = 'cl-overlay';
   const rightBtn = isLeader
-    ? `<div class="cl-abtn danger" data-act="disband"><img src="clan_btn_disband.png" class="cl-bi" alt=""><div class="cl-bt">Распустить</div></div>`
+    ? `<div class="cl-abtn danger" data-act="disband"><img src="clan_btn_disband.webp" class="cl-bi" alt=""><div class="cl-bt">Распустить</div></div>`
     : `<div class="cl-abtn danger" data-act="leave"><div class="cl-bi-em">🚪</div><div class="cl-bt">Выйти</div></div>`;
   const midBtn = threeBtns
-    ? `<div class="cl-abtn req" data-act="requests"><img src="clan_btn_req.png" class="cl-bi" alt=""><div class="cl-bt">Заявки</div>${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
+    ? `<div class="cl-abtn req" data-act="requests"><img src="clan_btn_req.webp" class="cl-bi" alt=""><div class="cl-bt">Заявки</div>${pending>0?`<div class="cl-reqdot">${pending>9?'9+':pending}</div>`:''}</div>`
     : '';
 
   root.innerHTML = `
@@ -220,7 +220,7 @@ function openMyClan(scene, data) {
     </div>
     <div class="cl-card">
       <div class="cl-av">
-        <img class="cl-av-img" src="clan_em_${clan.emblem||'neutral'}.png" alt="">
+        <img class="cl-av-img" src="clan_em_${clan.emblem||'neutral'}.webp" alt="">
       </div>
       <div class="cl-info">
         <div class="cl-tagrow">
@@ -255,7 +255,7 @@ function openMyClan(scene, data) {
     <div class="cl-mlist">${myMember ? _memberRow(myMember, isLeader) : ''}</div>
   </div>
   <div class="cl-actions ${threeBtns?'three':'two'}">
-    <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.png" class="cl-bi" alt=""><div class="cl-bt">Чат</div></div>
+    <div class="cl-abtn chat" data-act="chat"><img src="clan_btn_chat.webp" class="cl-bi" alt=""><div class="cl-bt">Чат</div></div>
     ${midBtn}
     ${rightBtn}
   </div>`;

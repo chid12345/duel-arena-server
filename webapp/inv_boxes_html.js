@@ -8,13 +8,13 @@
 const _ID = 'ibh-list';
 
 const _CFG = {
-  box_common:      { img:'chest_gold.png',    bc:'#e8a800', gc:'rgba(232,168,0,.22)',  tier:'ЗОЛОТО',    nc:'#ffe080', fi:'📦' },
-  box_rare:        { img:'chest_diamond.png', bc:'#00c8ff', gc:'rgba(0,200,255,.18)',  tier:'АЛМАЗЫ',    nc:'#80ddff', fi:'🟦' },
-  box_rare_c:      { img:'chest_diamond.png', bc:'#b44fff', gc:'rgba(180,79,255,.18)', tier:'АЛМАЗЫ+',   nc:'#cc88ff', fi:'🟪' },
-  box_epic_e2:     { img:'chest_epic.png',    bc:'#00ff88', gc:'rgba(0,255,136,.18)',  tier:'USDT',      nc:'#80ffbb', fi:'🔮' },
-  box_epic_e3:     { img:'chest_epic.png',    bc:'#00ff88', gc:'rgba(0,255,136,.18)',  tier:'USDT',      nc:'#80ffbb', fi:'⚔️' },
-  wb_gold_chest:   { img:'chest_gold.png',    bc:'#e8a800', gc:'rgba(232,168,0,.18)',  tier:'РЕЙД 🏆',  nc:'#ffe080', fi:'🏆' },
-  wb_diamond_chest:{ img:'chest_diamond.png', bc:'#00c8ff', gc:'rgba(0,200,255,.15)',  tier:'РЕЙД 💠',  nc:'#80ddff', fi:'💠' },
+  box_common:      { img:'chest_gold.webp',    bc:'#e8a800', gc:'rgba(232,168,0,.22)',  tier:'ЗОЛОТО',    nc:'#ffe080', fi:'📦' },
+  box_rare:        { img:'chest_diamond.webp', bc:'#00c8ff', gc:'rgba(0,200,255,.18)',  tier:'АЛМАЗЫ',    nc:'#80ddff', fi:'🟦' },
+  box_rare_c:      { img:'chest_diamond.webp', bc:'#b44fff', gc:'rgba(180,79,255,.18)', tier:'АЛМАЗЫ+',   nc:'#cc88ff', fi:'🟪' },
+  box_epic_e2:     { img:'chest_epic.webp',    bc:'#00ff88', gc:'rgba(0,255,136,.18)',  tier:'USDT',      nc:'#80ffbb', fi:'🔮' },
+  box_epic_e3:     { img:'chest_epic.webp',    bc:'#00ff88', gc:'rgba(0,255,136,.18)',  tier:'USDT',      nc:'#80ffbb', fi:'⚔️' },
+  wb_gold_chest:   { img:'chest_gold.webp',    bc:'#e8a800', gc:'rgba(232,168,0,.18)',  tier:'РЕЙД 🏆',  nc:'#ffe080', fi:'🏆' },
+  wb_diamond_chest:{ img:'chest_diamond.webp', bc:'#00c8ff', gc:'rgba(0,200,255,.15)',  tier:'РЕЙД 💠',  nc:'#80ddff', fi:'💠' },
 };
 
 function _cfg(id) {

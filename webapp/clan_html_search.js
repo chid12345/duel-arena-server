@@ -25,7 +25,7 @@ const CSS = `
 .cs-mlabel{font-size:10px;font-weight:700;padding:6px 16px 4px;color:#00f0ff;letter-spacing:.6px;opacity:.9}
 `;
 function _injectCSS(){ if(document.getElementById('cs-style'))return; const s=document.createElement('style'); s.id='cs-style'; s.textContent=CSS; document.head.appendChild(s); }
-const EM_IMG = { light: 'clan_em_light.png', dark: 'clan_em_dark.png', neutral: 'clan_em_neutral.png' };
+const EM_IMG = { light: 'clan_em_light.webp', dark: 'clan_em_dark.webp', neutral: 'clan_em_neutral.webp' };
 
 function _row(c, i) {
   const trunc = window.ClanHTML._trunc, esc = window.ClanHTML._esc;

@@ -10,7 +10,7 @@
 
   const HKEY = 'wbz_history_';
   const MAX = 5;
-  const ZONE_ICON = { HEAD:'battle_icons/head.png', TORSO:'battle_icons/torso.png', LEGS:'battle_icons/legs.png' };
+  const ZONE_ICON = { HEAD:'battle_icons/head.webp', TORSO:'battle_icons/torso.webp', LEGS:'battle_icons/legs.webp' };
   const BG_VER = 'a10';
 
   function _key(scene) {

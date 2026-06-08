@@ -90,7 +90,7 @@ window.TasksHTML_Achieve = function(achievements) {
     ${a.next_gold ? `<div class="ta-rg">+${a.next_gold}💰</div>` : ''}
     ${a.next_diamonds ? `<div class="ta-rd">+${a.next_diamonds}💎</div>` : ''}
     ${canClaim
-      ? `<button class="tsk-gift-btn" data-claim-ach="${_e(a.key)}|${a.can_claim_tier}" style="color:#ff3ba8"><img src="task_gift.png" alt=""><span>ВЗЯТЬ</span></button>`
+      ? `<button class="tsk-gift-btn" data-claim-ach="${_e(a.key)}|${a.can_claim_tier}" style="color:#ff3ba8"><img src="task_gift.webp" alt=""><span>ВЗЯТЬ</span></button>`
       : `<div class="tsk-lock">🔒</div>`}
   </div>
 </div>`;

@@ -7,14 +7,14 @@
 window.BoxIcons = {
   // item_id → путь к PNG (относительно webapp/)
   MAP: {
-    'box_common':       'chest_gold.png',
-    'box_rare':         'chest_diamond.png',
-    'box_rare_c':       'chest_diamond.png',
-    'box_epic_e2':      'chest_epic.png',
-    'box_epic_e3':      'chest_epic.png',
-    'wb_gold_chest':    'chest_gold.png',
-    'wb_diamond_chest': 'chest_diamond.png',
-    'prem_box':         'prem_box.png',
+    'box_common':       'chest_gold.webp',
+    'box_rare':         'chest_diamond.webp',
+    'box_rare_c':       'chest_diamond.webp',
+    'box_epic_e2':      'chest_epic.webp',
+    'box_epic_e3':      'chest_epic.webp',
+    'wb_gold_chest':    'chest_gold.webp',
+    'wb_diamond_chest': 'chest_diamond.webp',
+    'prem_box':         'prem_box.webp',
   },
 
   // item_id → цвет лёгкого свечения (по валюте: золото / алмазы / USDT / звёзды).

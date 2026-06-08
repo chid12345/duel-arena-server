@@ -58,7 +58,7 @@ const BotSkinPicker = (() => {
 
   function preloadInto(scene, V = '') {
     ALL_IDS.forEach(id => {
-      scene.load.image(`bot_skin_${id}`, `bot_skins/${id}.png${V}`);
+      scene.load.image(`bot_skin_${id}`, `bot_skins/${id}.webp${V}`);
       scene.load.image(`bot_bg_${id}`,   `bot_skins/bg/${id}.${BG_EXT(id)}${V}`);
     });
   }

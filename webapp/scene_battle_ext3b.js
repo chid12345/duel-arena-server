@@ -96,7 +96,7 @@ Object.assign(BattleScene.prototype, {
       this.warrior2.setOrigin(0.5, 1).setY(footY + BotSkinPicker.nudgeFor(skinId) * 0.5);
       this._fitBotSize(this.warrior2, skinId);
       if (!haveSkn) {
-        this.load.image(skinKey, `bot_skins/${skinId}.png`);
+        this.load.image(skinKey, `bot_skins/${skinId}.webp`);
         this.load.once(`filecomplete-image-${skinKey}`, () => {
           this.warrior2.setTexture(skinKey);
           this._fitBotSize(this.warrior2, skinId);

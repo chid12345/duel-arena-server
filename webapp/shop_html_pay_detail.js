@@ -73,7 +73,7 @@ function _contentRows(base, { isPrem, isReset, isBox, isLeg, isDia, sid }) {
     _row('🤖', 'Побед над ботом',  '30/день (+10)',       'vc'),
     _row('×2', 'Удвоить бой',      '1 раз в день',        'vp'),
     _row('📋', 'Эксклюзив-квесты', '+3 в день',           'vp'),
-    _row('<img src="chest_gold.png" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
+    _row('<img src="chest_gold.webp" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
     _row('💎', 'Алмазы',           '+10 в день (×21=210)', 'vp'),
     _row('👑', 'Значок Premium',   '21 день',             'vg'),
   ].join('');
@@ -172,11 +172,11 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
                : rs.subTxt;
 
     const icoHtml = isPrem  ? '<div style="font-size:72px;line-height:1">👑</div>'
-      : isReset   ? '<img src="reset_icon.png?v=2" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,51,51,.7))">'
-      : isBox     ? '<img src="chest_epic.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,200,80,.55))">'
-      : isLeg     ? '<img src="scroll_titan.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(255,140,0,.8))">'
+      : isReset   ? '<img src="reset_icon.webp?v=2" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,51,51,.7))">'
+      : isBox     ? '<img src="chest_epic.webp" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(255,200,80,.55))">'
+      : isLeg     ? '<img src="scroll_titan.webp" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 16px rgba(255,140,0,.8))">'
       : isDia     ? '<div style="font-size:72px;line-height:1">💎</div>'
-      : '<img src="scroll_icon.png" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(0,200,255,.55))">';
+      : '<img src="scroll_icon.webp" style="width:72px;height:72px;object-fit:contain;filter:drop-shadow(0 0 14px rgba(0,200,255,.55))">';
 
     // First-purchase strikethrough
     const _nS = {'100':150,'300':350,'500':500};
@@ -257,7 +257,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
       _row('🤖', 'Побед над ботом',  '30/день (+10)',        'vc'),
       _row('×2', 'Удвоить бой',      '1 раз в день',         'vp'),
       _row('📋', 'Эксклюзив-квесты', '+3 в день',            'vp'),
-      _row('<img src="chest_gold.png" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
+      _row('<img src="chest_gold.webp" style="width:22px;height:22px;object-fit:contain;filter:drop-shadow(0 0 5px rgba(255,200,80,.5))">', 'Ежедневный ящик', 'каждый день', 'vg'),
       _row('💎', 'Алмазы',           '+10 в день',           'vp'),
       _row('👑', 'Значок Premium',   `ещё ${daysLeft} дн.`,  'vg'),
     ].join('');
@@ -288,7 +288,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
       return;
     }
     if (p.full_reset) {
-      ShopHtml.showDetail({ icon:'<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Сбросится всё: уровень, статы, вещи, образы и Premium. Сохранятся золото, алмазы, клан, рефералы и USDT за рефералов.', price:p.stars, currency:'stars', rarity:'d', actionLabel:`Сбросить за ⭐ ${p.stars}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyStars(id) });
+      ShopHtml.showDetail({ icon:'<img src="reset_icon.webp?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Сбросится всё: уровень, статы, вещи, образы и Premium. Сохранятся золото, алмазы, клан, рефералы и USDT за рефералов.', price:p.stars, currency:'stars', rarity:'d', actionLabel:`Сбросить за ⭐ ${p.stars}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyStars(id) });
       return;
     }
     ShopHtmlPay._showCombinedDetail(id, null);
@@ -299,7 +299,7 @@ Object.assign(window.ShopHtmlPay = window.ShopHtmlPay || {}, {
     const p = [...(d.crypto || []), ...(d.usdt_scrolls || [])].find(x => x.id === id);
     if (!p) return;
     if (p.full_reset) {
-      ShopHtml.showDetail({ icon:'<img src="reset_icon.png?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Сбросится всё: уровень, статы, вещи, образы и Premium. Сохранятся золото, алмазы, клан, рефералы и USDT за рефералов.', price:p.usdt, currency:'usdt', rarity:'d', actionLabel:`Сбросить за 💲 ${p.usdt}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyCrypto(id) });
+      ShopHtml.showDetail({ icon:'<img src="reset_icon.webp?v=2" style="width:64px;height:64px;object-fit:contain;filter:drop-shadow(0 0 9px rgba(255,51,51,.6))">', name:'Сброс прогресса', desc:'Сбросится всё: уровень, статы, вещи, образы и Premium. Сохранятся золото, алмазы, клан, рефералы и USDT за рефералов.', price:p.usdt, currency:'usdt', rarity:'d', actionLabel:`Сбросить за 💲 ${p.usdt}`, btnClass:'btn-danger', action:() => ShopHtmlPay._buyCrypto(id) });
       return;
     }
     if (p.premium) {

@@ -23,7 +23,7 @@
   function _zonesHTML(side) {
     const lbl = side === 'atk' ? '⚔ АТАКА' : '🛡 ЗАЩИТА';
     return `<div class="cy-col cy-col-${side}"><div class="cy-col-lbl">${lbl}</div>${
-      ZONES.map(z => `<div class="cy-zbtn" data-side="${side}" data-zone="${z}"><img src="battle_icons/${z === 'HEAD' ? 'head' : z === 'TORSO' ? 'torso' : 'legs'}.png"><div class="cy-lbl">${ZONE_NAME[z]}</div></div>`).join('')
+      ZONES.map(z => `<div class="cy-zbtn" data-side="${side}" data-zone="${z}"><img src="battle_icons/${z === 'HEAD' ? 'head' : z === 'TORSO' ? 'torso' : 'legs'}.webp"><div class="cy-lbl">${ZONE_NAME[z]}</div></div>`).join('')
     }</div>`;
   }
 
@@ -54,7 +54,7 @@
   function _bottomHTML(ps) {
     return `<div class="cy-bottom">
       <div class="cy-acts">
-        <div class="cy-dice" id="cy-dice" title="Автоудар"><img src="btn_autoattack.png" alt="автоудар"></div>
+        <div class="cy-dice" id="cy-dice" title="Автоудар"><img src="btn_autoattack.webp" alt="автоудар"></div>
         <div class="cy-apply" id="cy-apply"><div class="cy-apply-text" id="cy-apply-text">⚔ Совершить ход</div></div>
       </div>
       <div class="cy-lower">
@@ -90,7 +90,7 @@
     const curFx = activeFishka(a.boss_features, pct);
     const fxName = curFx ? curFx.name : 'Фишки';
     const isDead = !!ps?.is_dead;
-    // Бэк отдаёт boss_lich.png — на клиенте подменяем на .webp (в 8× легче).
+    // Бэк отдаёт boss_lich.webp — на клиенте подменяем на .webp (в 8× легче).
     const sprite = (a.boss_sprite || ('boss_' + bt + '.png')).replace(/\.png$/i, '.webp');
 
     root.innerHTML = `
@@ -118,7 +118,7 @@
             <div class="cy-clog-row" id="cy-clog-prev" style="display:none"></div>
             <div class="cy-clog-row" id="cy-clog-curr" style="display:none"></div>
           </div>
-          <div class="cy-auto" id="cy-auto" title="Автобой (премиум)"><img src="btn_auto.png" alt="АВТО"></div>
+          <div class="cy-auto" id="cy-auto" title="Автобой (премиум)"><img src="btn_auto.webp" alt="АВТО"></div>
         </div>
       </div>
       <div class="cy-arena" id="cy-arena">

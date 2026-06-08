@@ -16,48 +16,48 @@ class BootScene extends Phaser.Scene {
     // пользователь увидит СТАРУЮ картинку ещё долго (и это выглядит как «сломанный»
     // оранжевый квадрат на активном табе, пока не придёт новая версия).
     const V = (typeof window !== 'undefined' && window.BUILD_VERSION) ? `?v=${window.BUILD_VERSION}` : '';
-    this.load.image('warrior_tank',   `skins/sila/1.png${V}`);
-    this.load.image('ws_tank_1',      `skins/sila/2.png${V}`);
-    this.load.image('ws_tank_2',      `skins/sila/3.png${V}`);
-    this.load.image('warrior_agile',  `skins/agility/1.png${V}`);
-    this.load.image('ws_agi_1',       `skins/agility/2.png${V}`);
-    this.load.image('ws_agi_2',       `skins/agility/3.png${V}`);
-    this.load.image('warrior_crit',   `skins/crit/1.png${V}`);
-    this.load.image('ws_crt_1',       `skins/crit/2.png${V}`);
-    this.load.image('ws_crt_2',       `skins/crit/3.png${V}`);
+    this.load.image('warrior_tank',   `skins/sila/1.webp${V}`);
+    this.load.image('ws_tank_1',      `skins/sila/2.webp${V}`);
+    this.load.image('ws_tank_2',      `skins/sila/3.webp${V}`);
+    this.load.image('warrior_agile',  `skins/agility/1.webp${V}`);
+    this.load.image('ws_agi_1',       `skins/agility/2.webp${V}`);
+    this.load.image('ws_agi_2',       `skins/agility/3.webp${V}`);
+    this.load.image('warrior_crit',   `skins/crit/1.webp${V}`);
+    this.load.image('ws_crt_1',       `skins/crit/2.webp${V}`);
+    this.load.image('ws_crt_2',       `skins/crit/3.webp${V}`);
     this.load.image('clan_emblem',   `clan_emblem.webp${V}`);
-    this.load.image('clan_em_light',   `clan_em_light.png${V}`);
-    this.load.image('clan_em_dark',    `clan_em_dark.png${V}`);
-    this.load.image('clan_em_neutral', `clan_em_neutral.png${V}`);
-    this.load.image('tab_profile',   `tab_profile.png${V}`);
-    this.load.image('tab_clan',      `tab_clan.png${V}`);
-    this.load.image('tab_stats',     `tab_stats.png${V}`);
-    this.load.image('tab_boss',      `tab_boss.png${V}`);
-    this.load.image('tab_rating',    `tab_rating.png${V}`);
-    this.load.image('tab_more',      `tab_more.png${V}`);
+    this.load.image('clan_em_light',   `clan_em_light.webp${V}`);
+    this.load.image('clan_em_dark',    `clan_em_dark.webp${V}`);
+    this.load.image('clan_em_neutral', `clan_em_neutral.webp${V}`);
+    this.load.image('tab_profile',   `tab_profile.webp${V}`);
+    this.load.image('tab_clan',      `tab_clan.webp${V}`);
+    this.load.image('tab_stats',     `tab_stats.webp${V}`);
+    this.load.image('tab_boss',      `tab_boss.webp${V}`);
+    this.load.image('tab_rating',    `tab_rating.webp${V}`);
+    this.load.image('tab_more',      `tab_more.webp${V}`);
     this.load.image('hero_profile_bg', `hero_profile_bg.webp${V}`);
     this.load.image('radar_target',    `radar_target.webp${V}`);
-    this.load.image('skull_bot',       `skull_bot.png${V}`);
-    this.load.image('bot_icon',        `bot_icon.png${V}`);
+    this.load.image('skull_bot',       `skull_bot.webp${V}`);
+    this.load.image('bot_icon',        `bot_icon.webp${V}`);
     this.load.image('natisk_mech',     `natisk_mech.webp${V}`);
     this.load.image('natisk_gold',     `natisk_gold.webp${V}`);
-    this.load.image('prem_box',        `prem_box.png${V}`);
-    this.load.image('chest_gold',      `chest_gold.png${V}`);
-    this.load.image('chest_diamond',   `chest_diamond.png${V}`);
-    this.load.image('chest_epic',      `chest_epic.png${V}`);
+    this.load.image('prem_box',        `prem_box.webp${V}`);
+    this.load.image('chest_gold',      `chest_gold.webp${V}`);
+    this.load.image('chest_diamond',   `chest_diamond.webp${V}`);
+    this.load.image('chest_epic',      `chest_epic.webp${V}`);
     this.load.image('natisk_diamond',  `natisk_diamond.webp${V}`);
     // Иконки сегмент-табов Stats overlay (CSS background-image). В Boot не
     // нужны Phaser-сцене, но проход через HTTP даёт браузерный кеш, и при
     // первом открытии «Герой» картинки отрисуются мгновенно без задержки.
-    this.load.image('hero_tab_stats',  `hero_tab_stats.png${V}`);
-    this.load.image('hero_tab_bonus',  `hero_tab_bonus.png${V}`);
-    this.load.image('hero_tab_inv',    `hero_tab_inv.png${V}`);
-    this.load.image('hero_tab_rate',   `hero_tab_rate.png${V}`);
+    this.load.image('hero_tab_stats',  `hero_tab_stats.webp${V}`);
+    this.load.image('hero_tab_bonus',  `hero_tab_bonus.webp${V}`);
+    this.load.image('hero_tab_inv',    `hero_tab_inv.webp${V}`);
+    this.load.image('hero_tab_rate',   `hero_tab_rate.webp${V}`);
     // То же для кнопок Clan overlay (Чат/Заявки/Распустить) — без preload
     // первый рендер клана дёргается, пока браузер тащит 3 PNG.
-    this.load.image('clan_btn_chat',    `clan_btn_chat.png${V}`);
-    this.load.image('clan_btn_req',     `clan_btn_req.png${V}`);
-    this.load.image('clan_btn_disband', `clan_btn_disband.png${V}`);
+    this.load.image('clan_btn_chat',    `clan_btn_chat.webp${V}`);
+    this.load.image('clan_btn_req',     `clan_btn_req.webp${V}`);
+    this.load.image('clan_btn_disband', `clan_btn_disband.webp${V}`);
     // bot_skins (62 PNG, ~33МБ) и pvp_bg (5 PNG, ~5МБ) грузятся лениво в MenuScene
     // после показа меню — иначе Boot зависает на 30-90с на мобильном интернете.
     // Inline-fallback в BattleScene._buildArena() подгрузит нужный скин если

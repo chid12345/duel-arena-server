@@ -66,7 +66,7 @@
     </div>
     <div class="tw-right">
       ${done
-        ? `<button class="tsk-gift-btn" ${claimAttr}><img src="task_gift.png" alt=""><span>ЗАБРАТЬ</span></button>`
+        ? `<button class="tsk-gift-btn" ${claimAttr}><img src="task_gift.webp" alt=""><span>ЗАБРАТЬ</span></button>`
         : `<div class="tsk-lock">🔒</div>`}
     </div>
   </div>

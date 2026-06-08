@@ -23,7 +23,7 @@ WB_BOSS_TYPES: List[Dict[str, Any]] = [
         "stat_profile_base": {"str": 0.95, "agi": 1.20, "int": 1.05},
         "bg_tint_hex": 0x44aa30,
         "name_pool": ["Титан-Лич", "Проклятый Рыцарь"],
-        "sprite": "boss_lich.png",
+        "sprite": "boss_lich.webp",
         "glow_color": "#9b30ff",
     },
     {
@@ -33,7 +33,7 @@ WB_BOSS_TYPES: List[Dict[str, Any]] = [
         "stat_profile_base": {"str": 1.10, "agi": 1.10, "int": 1.00},
         "bg_tint_hex": 0x3a1a50,
         "name_pool": ["Теневой Джинн", "Гоблин-Король"],
-        "sprite": "boss_shadow.png",
+        "sprite": "boss_shadow.webp",
         "glow_color": "#7b2fff",
     },
     {
@@ -43,7 +43,7 @@ WB_BOSS_TYPES: List[Dict[str, Any]] = [
         "stat_profile_base": {"str": 1.15, "agi": 1.00, "int": 0.85},
         "bg_tint_hex": 0xd8202c,
         "name_pool": ["Огненный Колосс", "Железный Страж"],
-        "sprite": "boss_fire.png",
+        "sprite": "boss_fire.webp",
         "glow_color": "#ff6600",
     },
     {
@@ -53,7 +53,7 @@ WB_BOSS_TYPES: List[Dict[str, Any]] = [
         "stat_profile_base": {"str": 1.20, "agi": 0.80, "int": 1.10},
         "bg_tint_hex": 0x1a6b1a,
         "name_pool": ["Каменный Голем", "Кристальный Страж"],
-        "sprite": "boss_poison.png",
+        "sprite": "boss_poison.webp",
         "glow_color": "#00e64d",
     },
     {
@@ -63,7 +63,7 @@ WB_BOSS_TYPES: List[Dict[str, Any]] = [
         "stat_profile_base": {"str": 1.05, "agi": 1.25, "int": 0.90},
         "bg_tint_hex": 0x2a0a40,
         "name_pool": ["Древний Страж", "Паучий Владыка"],
-        "sprite": "boss_spider.png",
+        "sprite": "boss_spider.webp",
         "glow_color": "#cc44ff",
     },
     {
@@ -73,7 +73,7 @@ WB_BOSS_TYPES: List[Dict[str, Any]] = [
         "stat_profile_base": {"str": 1.30, "agi": 0.75, "int": 1.00},
         "bg_tint_hex": 0xcc2200,
         "name_pool": ["Лавовый Титан", "Вулканический Страж"],
-        "sprite": "boss_lava.png",
+        "sprite": "boss_lava.webp",
         "glow_color": "#ff3300",
     },
     {
@@ -83,7 +83,7 @@ WB_BOSS_TYPES: List[Dict[str, Any]] = [
         "stat_profile_base": {"str": 1.25, "agi": 1.05, "int": 0.90},
         "bg_tint_hex": 0x880000,
         "name_pool": ["Кровавый Демон", "Адский Владыка"],
-        "sprite": "boss_demon.png",
+        "sprite": "boss_demon.webp",
         "glow_color": "#cc0000",
     },
 ]

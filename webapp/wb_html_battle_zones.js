@@ -5,7 +5,7 @@
 (() => {
   const ZONES = ['HEAD','TORSO','LEGS'];
   const NAME  = { HEAD:'Голова', TORSO:'Тело', LEGS:'Ноги' };
-  const ICON  = { HEAD:'battle_icons/head.png', TORSO:'battle_icons/torso.png', LEGS:'battle_icons/legs.png' };
+  const ICON  = { HEAD:'battle_icons/head.webp', TORSO:'battle_icons/torso.webp', LEGS:'battle_icons/legs.webp' };
 
   let _selA = null, _selD = null;
   let _busy = false;
@@ -82,7 +82,7 @@
     zoneEl.appendChild(_buildCol('def'));
     const a = document.createElement('div');
     a.className = 'wbz-actions';
-    a.innerHTML = `<div class="wbz-auto" id="wbz-auto" title="Случайный ход"><img src="dice.png" alt="dice"></div><div class="wbz-apply" id="wbz-apply">⚔ Совершить ход</div>`;
+    a.innerHTML = `<div class="wbz-auto" id="wbz-auto" title="Случайный ход"><img src="dice.webp" alt="dice"></div><div class="wbz-apply" id="wbz-apply">⚔ Совершить ход</div>`;
     zoneEl.appendChild(a);
   }
 

@@ -5,13 +5,13 @@
 
 const BOOTS_IMG = {
   boots_free1:'boots_free1.webp',     boots_free2:'boots_free2.webp',
-  boots_free3:'boots_free3.webp',     boots_free4:'boots_free4.jpeg',
-  boots_gold1:'boots_gold1.webp',     boots_gold2:'boots_gold2.jpg',
-  boots_gold3:'boots_gold3.jpg',     boots_gold4:'boots_gold4.jpg',
-  boots_dia1:'boots_dia1.jpg',       boots_dia2:'boots_dia2.jpg',
-  boots_dia3:'boots_dia3.jpg',       boots_dia4:'boots_dia4.jpg',
-  boots_mythic1:'boots_mythic1.jpeg',boots_mythic2:'boots_mythic2.jpeg',
-  boots_mythic3:'boots_mythic3.jpeg',boots_mythic4:'boots_mythic4.jpeg',
+  boots_free3:'boots_free3.webp',     boots_free4:'boots_free4.webp',
+  boots_gold1:'boots_gold1.webp',     boots_gold2:'boots_gold2.webp',
+  boots_gold3:'boots_gold3.webp',     boots_gold4:'boots_gold4.webp',
+  boots_dia1:'boots_dia1.webp',       boots_dia2:'boots_dia2.webp',
+  boots_dia3:'boots_dia3.webp',       boots_dia4:'boots_dia4.webp',
+  boots_mythic1:'boots_mythic1.webp',boots_mythic2:'boots_mythic2.webp',
+  boots_mythic3:'boots_mythic3.webp',boots_mythic4:'boots_mythic4.webp',
 };
 
 const BOOTS_DESC = {

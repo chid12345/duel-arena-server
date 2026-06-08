@@ -152,16 +152,16 @@ const BotBattleCard = (() => {
   function _spriteHtml(b, who) {
     if (who === 'me') {
       const wt = ((typeof State !== 'undefined' ? State : window.State)?.player?.warrior_type || 'tank');
-      const url = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.png';
+      const url = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.webp';
       return `<img src="${url}" alt="">`;
     }
     // Маскированный под PvP бой (auto-fallback): сервер всё ещё шлёт opp_skin_id,
     // но opp_is_bot=false → игрок видит «реального игрока». Карточка обязана
     // совпадать с тем что в бою (там тоже рисуется спрайт воина, не бот-скин).
     const skinId = b.opp_is_bot ? b.opp_skin_id : null;
-    if (skinId) return `<img src="bot_skins/${skinId}.png" alt="">`;
+    if (skinId) return `<img src="bot_skins/${skinId}.webp" alt="">`;
     const oppWt = b.opp_warrior_type || 'tank';
-    const oppUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(oppWt) : 'skins/sila/1.png';
+    const oppUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(oppWt) : 'skins/sila/1.webp';
     return `<img src="${oppUrl}" alt="">`;
   }
 
@@ -219,7 +219,7 @@ const BotBattleCard = (() => {
       // Картинка предмета: пробуем .png → .jpg → .jpeg → fallback эмодзи.
       const base = it ? _itemImageBase(it) : null;
       const visual = base
-        ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onload="window._bbcRemoveBg && window._bbcRemoveBg(this)" onerror="window._bbcImgFb && window._bbcImgFb(this)"></div>`
+        ? `<div class="bbc-eq-img"><img src="${base}.webp" data-base="${base}" data-slot="${slot}" onload="window._bbcRemoveBg && window._bbcRemoveBg(this)" onerror="window._bbcImgFb && window._bbcImgFb(this)"></div>`
         : `<div class="bbc-eq-img"><span class="bbc-eq-emoji">${SLOT_ICON[slot] || '•'}</span></div>`;
       return `<div class="bbc-eq-slot ${cls}" style="${style}">
         <div class="bbc-eq-label">${meta.label}</div>

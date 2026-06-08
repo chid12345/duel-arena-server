@@ -115,7 +115,7 @@
     const style = `grid-row:${L.r};grid-column:${L.c};`+(it?`border-color:${it.color};box-shadow:inset 0 0 8px ${it.color}33;`:'');
     const base = it ? _itemBase(it) : null;
     const visual = base
-      ? `<div class="bbc-eq-img"><img src="${base}.png" data-base="${base}" data-tries="jpg,jpeg" data-slot="${slot}" onload="window._bbcRemoveBg&&window._bbcRemoveBg(this)" onerror="window._wbGthImgFb&&window._wbGthImgFb(this)"></div>`
+      ? `<div class="bbc-eq-img"><img src="${base}.webp" data-base="${base}" data-slot="${slot}" onload="window._bbcRemoveBg&&window._bbcRemoveBg(this)" onerror="window._wbGthImgFb&&window._wbGthImgFb(this)"></div>`
       : `<div class="bbc-eq-img"><span class="bbc-eq-emoji">${_SLOT_ICON[slot]||'•'}</span></div>`;
     const nm = it ? _esc(String(it.name||'').slice(0,13)) : '';
     return `<div class="bbc-eq-slot${it?'':' empty'}" style="${style}">
@@ -152,7 +152,7 @@
     const isPrem = d.is_premium;
     const nm     = _esc(String(d.username||`ID${uid}`).slice(0,22));
     const wt     = d.warrior_type || 'tank';
-    const skinUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.png';
+    const skinUrl = (typeof getWarriorSkinPath === 'function') ? getWarriorSkinPath(wt) : 'skins/sila/1.webp';
     const hpPct  = d.max_hp > 0 ? Math.min(1, Math.max(0, d.current_hp / d.max_hp)) : 1;
     const hpCol  = hpPct > 0.5 ? '#3cc864' : hpPct > 0.25 ? '#ffc83c' : '#dc3c46';
 
