@@ -28,19 +28,23 @@ class BattleChoicesMixin:
         if not battle or not battle['battle_active']:
             return {'error': 'Бой не найден или завершен'}
         
-        # Определяем номер игрока
+        # Определяем игрока и фиксируем выбор. AFK-счётчик сбрасываем симметрично
+        # обоим: иначе у P2 счётчик «застревает» (timer.process_turn_timeout
+        # сбрасывает его только при срабатывании таймера, а в норме оба успевают
+        # вовремя и таймер не срабатывает — P2_afk оставался > 0 от старой просрочки).
+        # Таймер раунда НЕ отменяем: в PvE он сам перезапустится через schedule_turn_timer
+        # в конце execute_round; в PvP отмена раньше времени «замораживала» бой,
+        # если первый игрок успел, а второй ушёл и не нажимал ничего.
         if battle['player1']['user_id'] == user_id:
             if battle['player1_choices']:
                 return {'status': 'duplicate_choice', 'message': 'Выбор уже принят в этом раунде'}
-            self.cancel_turn_timer(battle)
             battle['player1_consecutive_afk'] = 0
             battle['player1_choices'] = {'attack': attack, 'defense': defense}
-            player_num = 1
         elif battle['player2'].get('user_id') == user_id:
             if battle['player2_choices']:
                 return {'status': 'duplicate_choice', 'message': 'Выбор уже принят в этом раунде'}
+            battle['player2_consecutive_afk'] = 0
             battle['player2_choices'] = {'attack': attack, 'defense': defense}
-            player_num = 2
         else:
             return {'error': 'Игрок не найден в бою'}
         

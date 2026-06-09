@@ -51,7 +51,7 @@ def _imports(tree: ast.AST) -> set[str]:
 
 # Эти числа ОБЯЗАНЫ идти из get_combat() — Этап 2 их вынес из кода.
 # Если кто-то регрессирует — fail с указанием строки.
-PVP_FORBIDDEN_LITERALS = {1.30, 1.3, 1.5, 0.8}
+PVP_FORBIDDEN_LITERALS = {1.30, 1.5, 0.8}  # 1.30 == 1.3 — одно значение, два литерала бессмысленны
 PVP_REPEAT_FORBIDDEN = {0.5, 0.2}  # старые pvp_repeat_factor значения
 
 

@@ -89,7 +89,7 @@ def register_shop_routes(app, ctx: Dict[str, Any]) -> None:
                 if iid == "hp_full":
                     items[iid] = {**it, "price": potion_price_for_hp("hp_full", max_hp)}
             return {"ok": True, "items": items}
-        except Exception as exc:
+        except Exception:
             logger.exception("shop catalog dynamic error:")
             # Безопасный фолбек — обычный каталог, чтобы UI не падал
             return {"ok": True, "items": SHOP_CATALOG}

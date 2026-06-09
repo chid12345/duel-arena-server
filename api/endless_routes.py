@@ -172,7 +172,7 @@ def register_endless_routes(app, ctx: Dict[str, Any]) -> None:
 
         async with get_user_lock(uid):
             username = tg_user.get("username") or ""
-            player = db.get_or_create_player(uid, username)
+            db.get_or_create_player(uid, username)
 
             if kind == "gold":
                 attempts_data = db.endless_get_attempts(uid)

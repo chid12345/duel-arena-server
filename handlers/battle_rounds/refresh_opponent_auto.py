@@ -43,8 +43,8 @@ async def show_battle_opponent_stats(query, user_id):
     dmg = int(STRENGTH_DAMAGE_FLAT_PER_LEVEL * lv + STRENGTH_DAMAGE_SCALE * (s ** STRENGTH_DAMAGE_POWER))
     txt = (
         f"{nm} · ур.{lv} · 🏆{ctx['opp_rating']}\n"
-        f"💪 {s}  🛡 -{armor_p}%\n"
-        f"🤸 {agi}  💥 {intu}\n"
+        f"💪 {s} (~{dmg} урон)  🛡 -{armor_p}%\n"
+        f"🤸 {agi} ({dodge_p}% уклон)  💥 {intu} ({crit_p}% крит)\n"
         f"❤️ {chp}/{mhp} HP  ·  вын: {vyn}"
     )
     if len(txt) > 195:

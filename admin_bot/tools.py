@@ -112,11 +112,6 @@ def list_files(path: str) -> str:
 def search_code(pattern: str, path: str = ".") -> str:
     try:
         search_path = _safe_path(path)
-        result = subprocess.run(
-            ["python", "-m", "grep_wrapper"],
-            capture_output=True, text=True, cwd=PROJECT_ROOT
-        )
-        # Используем встроенный поиск
         matches = []
         files = list(search_path.rglob("*.py")) if search_path.is_dir() else [search_path]
         import re

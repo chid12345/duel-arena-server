@@ -30,7 +30,6 @@ class BattlePersistMixin:
         ВАЖНО: update_player_stats ДОЛЖЕН выполниться ДО остальных задач,
         иначе параллельный quest/BP может прочитать стейл-данные.
         """
-        import asyncio
         loop = asyncio.get_event_loop()
         event_name = 'battle_test_ended' if is_test else 'battle_ended'
 
