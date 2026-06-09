@@ -123,12 +123,32 @@ def attach_tma_startup(
                     inv_id = inv["invoice_id"]
                     if inv_id not in paid_map:
                         continue
-                    result = await loop.run_in_executor(None, db.confirm_crypto_invoice, inv_id)
+                    # ":diamond_first:N" в payload → пометить колонку первой покупки
+                    # ДО confirm (так же как делают crypto_check и crypto_webhook).
+                    # Без этого invoice'ы, доехавшие только через recovery, оставались
+                    # без флага → игрок мог второй раз получить скидку на тот же пакет.
+                    payload = str(inv.get("payload") or "")
+                    _diamond_first_col = None
+                    if ":diamond_first:" in payload:
+                        try:
+                            _df_n = int(payload.split(":diamond_first:", 1)[1].strip())
+                            if _df_n > 0:
+                                if _df_n <= 100:
+                                    _diamond_first_col = "diamond_first_100"
+                                elif _df_n <= 300:
+                                    _diamond_first_col = "diamond_first_300"
+                                else:
+                                    _diamond_first_col = "diamond_first_500"
+                        except (ValueError, IndexError):
+                            _diamond_first_col = None
+                    result = await loop.run_in_executor(
+                        None,
+                        lambda i=inv_id, c=_diamond_first_col: db.confirm_crypto_invoice(i, first_purchase_col=c),
+                    )
                     if not result.get("ok"):
                         continue
                     uid = int(result["user_id"])
-                    payload = str(inv.get("payload") or "")
-                    logger.info("invoice recovery: confirmed invoice=%s uid=%s", inv_id, uid)
+                    logger.info("invoice recovery: confirmed invoice=%s uid=%s first_col=%s", inv_id, uid, _diamond_first_col)
                     if await _deliver(uid, inv_id, payload, int(result.get("diamonds") or 0),
                                        amount=str(result.get("amount") or "0"),
                                        asset=str(result.get("asset") or "USDT")):
